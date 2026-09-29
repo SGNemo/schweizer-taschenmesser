@@ -7,7 +7,7 @@ Code, comments and commits are **English**; the UI is **German only** (all texts
 Deep design notes live in [`docs/architecture.md`](docs/architecture.md) (unchanged text; read the section for the area you touch and keep it current when a decision changes). This file holds the rules and commands you need every day.
 
 ## Repo layout
-- `web/src-tauri/` – native shell (Tauri 2, Rust) around the web app: Windows installers, Android APK. Thin by design.
+- `web/src-tauri/` – native shell (Tauri 2, Rust) around the web app: portable Windows exe, Android APK. Thin by design.
 - `web/` – the PWA (Vite, React 19, TypeScript strict). Own `package.json`.
 - `server/` – sync server (Fastify 5 + better-sqlite3, own `package.json`, Dockerfile, compose). Separate project, no shared package.
 - `contract/` – JSON fixtures of the sync merge rule, read by the tests of both projects.
@@ -48,7 +48,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 - **Secrets:** no secrets in the repo; API keys via `getPlatform().secrets`. The bundle identifier `io.github.sgnemo.taschenmesser` must never change. The Android keystore and updater private key must never be lost or committed.
 - **UI:** German only (`web/src/strings.ts`), CSS Modules + tokens, `data-autofocus` instead of `autoFocus` in dialogs, touch targets ≥ 44 px.
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them.
-- **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml` (signed Windows installers + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
+- **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml` (signed portable Windows exe + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
 
 ## Create a new module
 1. `npm run gen:module -- habits "Habit-Tracker"` (id: lowercase alphanumeric). This copies `templates/module`, fills placeholders and runs `db:bump`.
@@ -81,7 +81,7 @@ Phases 1–12 are done (foundation, core modules, finance, sync + backup, AI ass
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
 
 ### Schritt 11b – OS-Keystore, Biometrie, Bildschirmschutz
-**Windows (installierte App, `Taschenmesser-Setup.exe`)**
+**Windows (`Taschenmesser-Portable.exe`)**
 1. *API-Schlüssel im Credential Manager:* Einstellungen → KI-Assistent → Anbieter hinzufügen → Schlüssel eintragen → Speichern → „Verbindung testen". Dann Windows-Suche „Anmeldeinformationsverwaltung" → „Windows-Anmeldeinformationen": Es gibt einen Eintrag `ai-key:<anbieter>` (Adresse `io.github.sgnemo.taschenmesser`). ☐
 2. *Migration:* Ein Schlüssel, der schon mit einer älteren Version gespeichert war, funktioniert nach dem Update weiter (nach der ersten Nutzung erscheint er im Credential Manager). ☐
 3. *Windows Hello:* Accounts → Tresor anlegen/entsperren → „Import, Export & Sicherheit" → „Biometrisches Entsperren aktivieren" (Master-Passwort eingeben) → Windows-Hello-Fenster erscheint und bestätigt. Danach „Sperren" → beim Sperrbildschirm fragt Windows Hello automatisch → Tresor offen. ☐
@@ -99,16 +99,24 @@ Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per 
 
 **Beide:** Tresor-Daten und KI-Schlüssel bleiben nach einem App-Update erhalten (Update-Test, siehe unten). ☐
 
+### Portable Windows-Build (Phase 13)
+Nur auf echtem Windows prüfbar (CI baut nur; der Smoke-Test dort ist informativ):
+P1. *Start:* `Taschenmesser-Portable.exe` (Pre-Release-Download) starten, SmartScreen „Weitere Informationen → Trotzdem ausführen". Die App öffnet sich, die Daten der bisher installierten Version sind da (gleiche App-Kennung). ☐
+P2. *WebView2 fehlt:* auf einem Rechner/VM ohne WebView2 startet die exe → deutsches Meldungsfenster mit „OK" (öffnet die Microsoft-Seite) statt stillem Absturz. ☐
+P3. *Portabler Modus:* Ordner `data` neben die exe legen, starten → die App ist leer (neues Profil), `data\` füllt sich; ohne den Ordner wieder das Benutzerprofil. ☐
+P4. *Update (erst ab dem zweiten portablen Release):* Kanal Beta → „Jetzt prüfen" → „Jetzt aktualisieren": Backup, Download, die exe ersetzt sich, startet neu, neue Version, Daten da, im Ordner bleiben keine `.old`/`.new`-Dateien (nach dem nächsten Start). ☐
+P5. *Fehlerfall:* exe in einen schreibgeschützten Ordner legen und aktualisieren → verständliche Meldung („Ordner nicht beschreibbar"), alte Version läuft weiter. ☐
+
 ## Offen – macht Sven
 Installation und Update auf echten Geräten (Windows und Android) – Schritt für Schritt:
 
-1. **Installer holen (Pre-Release).** GitHub → Repository → *Releases* → Eintrag `v0.2.0-beta.1` (Pre-Release). Die README-Badges („Windows herunterladen" …) zeigen auf das *neueste stabile* Release und funktionieren erst, wenn es ein stabiles Release gibt – bis dahin die Dateien direkt von der Release-Seite laden: `Taschenmesser-Setup.exe` (Windows) und `Taschenmesser.apk` (Android). Prüfsumme optional: `Taschenmesser.apk.sha256`.
-2. **Windows installieren.** `Taschenmesser-Setup.exe` starten. SmartScreen: „Weitere Informationen" → „Trotzdem ausführen" (die Datei hat kein Authenticode-Zertifikat, der Update-Inhalt ist mit dem Updater-Key signiert). Installation läuft pro Benutzer. App starten → Einstellungen → „App-Updates" zeigt die Version `0.2.0-beta.1`.
-3. **Android installieren.** `Taschenmesser.apk` aufs Handy laden und öffnen. Beim ersten Mal „Installation aus unbekannten Quellen" für den Browser/Dateimanager erlauben, dann installieren. Öffnen → Einstellungen → „App-Updates" zeigt `0.2.0-beta.1`. (Vorherige Debug-/anders signierte Version vorher deinstallieren.)
+1. **Dateien holen (Pre-Release).** GitHub → Repository → *Releases* → das neueste Pre-Release. Die README-Badges („Windows (portabel) herunterladen" …) zeigen auf das *neueste stabile* Release und funktionieren erst, wenn es ein stabiles Release gibt – bis dahin die Dateien direkt von der Release-Seite laden: `Taschenmesser-Portable.exe` (Windows) und `Taschenmesser.apk` (Android). Prüfsumme optional: `Taschenmesser.apk.sha256`.
+2. **Von der installierten Windows-Version umsteigen (einmalig, `0.2.0-beta.1` kann sich nicht selbst auf die portable Datei aktualisieren).** (a) Alte App: Einstellungen → Backup → exportieren. (b) `Taschenmesser-Portable.exe` in einen beschreibbaren Ordner legen und starten (SmartScreen: „Weitere Informationen" → „Trotzdem ausführen"; die Datei hat kein Authenticode-Zertifikat, der Update-Inhalt ist mit dem Updater-Key signiert). Die Daten sind sofort da. (c) Alte Version deinstallieren – **„Anwendungsdaten löschen" nicht ankreuzen.** Einstellungen → „App-Updates" zeigt die Version.
+3. **Android installieren.** `Taschenmesser.apk` aufs Handy laden und öffnen. Beim ersten Mal „Installation aus unbekannten Quellen" für den Browser/Dateimanager erlauben, dann installieren. Öffnen → Einstellungen → „App-Updates" zeigt die Version. (Vorherige Debug-/anders signierte Version vorher deinstallieren.)
 4. **Etwas Testdaten anlegen** (ein ToDo, eine Notiz, ein KI-Anbieter, optional ein Tresor-Eintrag), damit man nach dem Update sieht, dass nichts verloren geht.
-5. **Zweites Pre-Release erzeugen (der Update-Test).** Auf deinem Rechner im Repo: `cd web && npm run version:set -- 0.2.0-beta.2`, dann `git commit -am "chore(release): 0.2.0-beta.2"`, `git tag v0.2.0-beta.2`, `git push origin develop v0.2.0-beta.2`. Der Workflow *Release* baut, prüft (Secret-Scan + Artefakt-Audit) und veröffentlicht (~15 Min.; Fortschritt unter *Actions*). Oder sag mir Bescheid, dann mache ich das.
-6. **In der installierten `beta.1`-App aktualisieren.** Einstellungen → „App-Updates" → Kanal **Beta** wählen → „Jetzt prüfen" → Banner „Update verfügbar (v0.2.0-beta.2)" mit Änderungsliste → „Jetzt aktualisieren".
-   - *Windows:* Die App legt zuerst ein Backup an (`%APPDATA%\io.github.sgnemo.taschenmesser\backups\pre-update-…json`), lädt herunter, installiert und startet neu. Version zeigt `0.2.0-beta.2`, Daten sind da. ☐
-   - *Android:* Backup → Download → Android-Installer öffnet sich → „Aktualisieren". Beim ersten Mal ggf. „Installation aus dieser Quelle erlauben" aktivieren, zurück in die App und nochmal „Jetzt aktualisieren". Danach Version `0.2.0-beta.2`, Daten sind da. ☐
+5. **Nächstes Pre-Release erzeugen (der Update-Test).** Auf deinem Rechner im Repo: `cd web && npm run version:set -- 0.2.0-beta.3`, dann `git commit -am "chore(release): 0.2.0-beta.3"`, `git tag v0.2.0-beta.3`, `git push origin develop v0.2.0-beta.3`. Der Workflow *Release* baut, prüft (Secret-Scan + Artefakt-Audit), veröffentlicht und prüft danach alle Download-Links (~15 Min.; Fortschritt unter *Actions*). Oder sag mir Bescheid, dann mache ich das.
+6. **In der portablen App aktualisieren.** Einstellungen → „App-Updates" → Kanal **Beta** wählen → „Jetzt prüfen" → Banner „Update verfügbar" mit Änderungsliste → „Jetzt aktualisieren".
+   - *Windows:* Backup (`%APPDATA%\io.github.sgnemo.taschenmesser\backups\pre-update-…json`), Download, Signaturprüfung, die exe ersetzt sich selbst und startet neu. Version stimmt, Daten sind da. ☐
+   - *Android:* Backup → Download → Android-Installer öffnet sich → „Aktualisieren". Beim ersten Mal ggf. „Installation aus dieser Quelle erlauben" aktivieren, zurück in die App und nochmal „Jetzt aktualisieren". Danach neue Version, Daten sind da. ☐
 7. **Stabil-Kanal prüfen (optional).** Kanal „Stabil" zeigt die Beta nicht an; erst ein Tag `v0.2.0` (ohne Suffix) wird dort angeboten, und die README-Download-Badges gehen dann.
-8. **Rückmeldung.** Klappt etwas nicht: Fehlermeldung/Screenshot und Gerät nennen. Die Update-Logik ist Unit-getestet, aber Installer-Übergabe und Signaturprüfung sind erst hier real geprüft. Danach die Checkliste oben („Manuelle Tests offen") durchgehen.
+8. **Rückmeldung.** Klappt etwas nicht: Fehlermeldung/Screenshot und Gerät nennen. Die Update-Logik ist Unit-getestet, aber Austausch der laufenden exe, Installer-Übergabe (Android) und Signaturprüfung sind erst hier real geprüft. Danach die Checklisten oben („Manuelle Tests offen") durchgehen.

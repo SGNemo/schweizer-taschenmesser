@@ -3,10 +3,48 @@
 //! `PlatformService` interface. Keep it thin: logic belongs into the (tested) TypeScript side.
 
 #[cfg(desktop)]
+mod portable;
+#[cfg(desktop)]
 mod update;
+#[cfg(desktop)]
+mod webview2;
+
+/// Windows creates the main window itself (config `tauri.windows.conf.json` sets `create: false`) so
+/// that portable mode can point WebView2 at a `data/` folder next to the executable.
+#[cfg(windows)]
+fn create_main_window(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let config = app
+        .config()
+        .app
+        .windows
+        .first()
+        .cloned()
+        .ok_or("no window configured")?;
+    let mut builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
+    if let Some(dir) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| portable::data_dir(&exe))
+    {
+        builder = builder.data_directory(dir);
+    }
+    builder.build()?;
+    Ok(())
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Windows: explain a missing WebView2 runtime instead of failing silently, then tidy up after an update.
+    #[cfg(windows)]
+    {
+        if !webview2::ensure_runtime() {
+            return;
+        }
+        if let Ok(exe) = std::env::current_exe() {
+            let args: Vec<String> = std::env::args().collect();
+            portable::startup(&exe, &args);
+        }
+    }
+
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_http::init())
@@ -28,6 +66,9 @@ pub fn run() {
             update::check_update,
             update::install_update
         ]);
+
+    #[cfg(windows)]
+    let builder = builder.setup(create_main_window);
 
     builder
         .run(tauri::generate_context!())
