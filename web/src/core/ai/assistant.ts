@@ -18,7 +18,7 @@ import {
   InvalidModelAnswer,
   schemaHash,
 } from './prompt';
-import { AiError, type AiErrorCode, type AiProvider } from './providers/types';
+import { AiError, type AiErrorCode, type AiProvider, type Attempt } from './providers/types';
 import { searchText } from './search/fulltext';
 import type { Intent } from './query/schema';
 import { aiModules } from './scope';
@@ -90,8 +90,6 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
       question: q,
       today: deps.today,
       schemaHash: schemaHash(manifests),
-      provider: deps.provider.id,
-      model: deps.provider.model,
     });
     const cached = await getCachedIntent(key, database);
     if (cached) {
@@ -115,14 +113,22 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
       user: buildUserMessage(q, deps.today),
       tools: buildTools(manifests),
       signal: deps.signal,
+      // An answer that is not even a well-formed intent is a reason to try the next provider.
+      check: (r) => {
+        if (r.toolCalls[0]) intentFromToolCall(r.toolCalls[0]);
+      },
     });
+    await recordAttempts(response.attempts, database);
     await recordUsage(
       {
-        provider: deps.provider.id,
+        provider: response.providerId ?? deps.provider.id,
         model: response.model,
         inputTokens: response.usage.inputTokens,
         outputTokens: response.usage.outputTokens,
         cacheHit: false,
+        outcome: 'ok',
+        viaFallback: (response.attempts?.length ?? 0) > 0,
+        costUsd: response.costUsd,
       },
       database,
     );
@@ -141,6 +147,28 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
       usage: { ...response.usage, model: response.model },
     };
   } catch (e) {
+    if (e instanceof AiError) await recordAttempts(e.attempts, database);
     return fail(e);
+  }
+}
+
+/** Failed provider calls (from the router) go into the statistics. */
+async function recordAttempts(
+  attempts: readonly Attempt[] | undefined,
+  database: TaschenmesserDB,
+): Promise<void> {
+  for (const a of attempts ?? []) {
+    await recordUsage(
+      {
+        provider: a.providerId,
+        model: a.model,
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheHit: false,
+        outcome: 'error',
+        errorCode: a.error,
+      },
+      database,
+    );
   }
 }

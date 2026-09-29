@@ -1,3 +1,4 @@
+import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
 import type { PlatformService, SaveFileRequest } from './types';
 
@@ -88,6 +89,8 @@ export function createWebPlatform(): PlatformService {
       check: async () => undefined,
       install: unsupported,
     },
+    // OS keystore (Windows Credential Manager / Android Keystore) is planned as step 11b.
+    secrets: createDeviceKeyStore(),
     lifecycle: { onBackground: onPageHidden },
   };
 }

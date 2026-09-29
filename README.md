@@ -89,12 +89,16 @@ Strg+K (Handy: das Suchfeld oben) öffnet die Befehlspalette: springen, in allen
   „überfällige Aufgaben“, „Kontostand“, „Was kosten meine Abos?“, „Wie viel muss ich noch bezahlen?“, „suche Zahnarzt“.
   Kurze Stichworte starten die Volltextsuche.
 - **Mit KI (optional):** komplexere Fragen („Wie viel habe ich im September für Lebensmittel ausgegeben?“) und Sätze wie
-  „Erinnere mich jeden 1. an Miete“ kann die App an ein Modell geben. *Einstellungen → KI-Assistent*: **Claude** (API-Schlüssel von
-  console.anthropic.com, Standard: Claude Haiku 4.5) oder **Ollama** (lokal; Ollama mit `OLLAMA_ORIGINS=*` bzw. der Adresse der App starten,
-  das Modell muss Tool-Aufrufe können, z. B. `qwen2.5:7b`).
-- **Datenschutz:** an das Modell gehen nur deine Frage, das heutige Datum und eine kurze Beschreibung der aktiven Module – **niemals deine
-  Daten**. Das Modell wählt nur eine strukturierte Abfrage; sie wird lokal geprüft und ausgeführt. Der API-Schlüssel bleibt in der Datenbank
-  dieses Browsers (nicht synchronisiert, nicht im Backup) und wird direkt von hier an Anthropic gesendet.
+  „Erinnere mich jeden 1. an Miete“ kann die App an KI-Anbieter geben. *Einstellungen → KI-Assistent*: Anbieter hinzufügen –
+  **Claude**, **OpenAI**, **Google Gemini**, **Groq**, **OpenRouter** (auch kostenlose Modelle), **Mistral**, **Ollama** (lokal) oder ein
+  eigener OpenAI-kompatibler Server. Mehrere Anbieter werden **der Reihe nach** gefragt (lokal → kostenlos → bezahlt, per Pfeiltasten
+  änderbar); ist einer erschöpft, gestört oder abgelehnt, springt der nächste ein. Pro Anbieter lassen sich Limits (Anfragen pro Tag, Kosten
+  pro Monat) und Preise einstellen; die Einstellungen zeigen Anfragen, Fehler, Ersatz-Einsätze und geschätzte Kosten. „Verbindung testen“
+  prüft einen Anbieter mit einer Minimal-Anfrage. Kostenlose Anbieter nutzen Eingaben teils für Training – die App weist darauf hin.
+  In der installierten App (Windows/Android) gibt es keine CORS-Einschränkung; im Browser hängt die Erreichbarkeit vom Anbieter ab.
+- **Datenschutz:** an die Anbieter gehen nur deine Frage, das heutige Datum und eine kurze Beschreibung der aktiven Module – **niemals deine
+  Daten** (und nie der Passwort-Tresor „Accounts“). Das Modell wählt nur eine strukturierte Abfrage; sie wird lokal geprüft und ausgeführt.
+  API-Schlüssel bleiben verschlüsselt in der Datenbank dieses Geräts (nicht synchronisiert, nicht im Backup).
 - **Kosten im Blick:** identische Fragen am selben Tag kommen aus dem Cache (0 Token); Verbrauch pro Antwort und insgesamt steht in der Antwort
   bzw. den Einstellungen.
 - **Anlegen nur mit Bestätigung:** schlägt die KI einen neuen Eintrag vor, zeigt die App ihn erst an; gespeichert wird nach „Anlegen“.

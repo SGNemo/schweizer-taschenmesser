@@ -1,4 +1,5 @@
 import type { NotificationService } from '@/core/notifications/service';
+import type { SecretStore } from '@/core/secrets/types';
 import type { UpdateService } from '@/core/update/types';
 
 /**
@@ -24,6 +25,8 @@ export interface PlatformService {
    */
   fetch: typeof fetch;
   notifications: NotificationService;
+  /** Where API keys are kept (device-local; see `core/secrets`). */
+  secrets: SecretStore;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {

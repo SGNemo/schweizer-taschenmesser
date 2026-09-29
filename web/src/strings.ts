@@ -504,6 +504,11 @@ export const t = {
       unavailable:
         'Das lokale Modell ist nicht erreichbar. Läuft Ollama und ist OLLAMA_ORIGINS gesetzt?',
       'not-configured': 'Es ist noch kein KI-Modell eingerichtet (Einstellungen → KI-Assistent).',
+      'invalid-response': 'Der KI-Dienst hat in einem unbrauchbaren Format geantwortet.',
+      'limit-reached':
+        'Die eingestellten Limits aller KI-Anbieter sind erreicht (Einstellungen → KI-Assistent).',
+      exhausted:
+        'Kein KI-Anbieter konnte antworten (Limit, Fehler oder nicht erreichbar). Details in den Einstellungen → KI-Assistent.',
       'inactive-module': 'Dafür muss das passende Modul aktiviert sein (Modul-Bibliothek).',
       'invalid-entry':
         'Die Angaben reichen für einen Eintrag nicht aus. Nenne z. B. Titel und Datum genauer.',
@@ -513,25 +518,56 @@ export const t = {
     } as Record<string, string>,
     settings: {
       intro:
-        'Fragen wie „Was steht morgen an?“ beantwortet die App lokal und ohne Kosten. Nur für schwierigere Fragen kann sie ein KI-Modell fragen.',
+        'Fragen wie „Was steht morgen an?“ beantwortet die App lokal und ohne Kosten. Nur für schwierigere Fragen kann sie KI-Anbieter fragen – der Reihe nach, bis einer antwortet.',
       privacy:
-        'Datenschutz: An das Modell gehen nur deine Frage, das heutige Datum und die kurze Beschreibung der aktiven Module – niemals deine Daten. Die Antwort wird lokal berechnet.',
-      provider: 'Modell',
-      providerOff: 'Aus (nur lokale Suche)',
-      providerClaude: 'Claude (Anthropic)',
-      providerOllama: 'Ollama (lokal)',
+        'Datenschutz: An die Anbieter gehen nur deine Frage, das heutige Datum und die kurze Beschreibung der aktiven Module – niemals deine Daten (und nie der Passwort-Tresor). Die Antwort wird lokal berechnet.',
+      providers: 'Anbieter (Reihenfolge = Priorität)',
+      noProviders: 'Noch kein Anbieter eingerichtet – die App beantwortet Fragen nur lokal.',
+      addProvider: 'Anbieter hinzufügen',
+      addPlaceholder: 'Anbieter wählen …',
+      tiers: { local: 'Lokal', free: 'Kostenlos', paid: 'Bezahlt' } as Record<string, string>,
+      trainingNotice: 'Eingaben können vom Anbieter für Training genutzt werden',
+      browserNote:
+        'Im Browser hängt die Erreichbarkeit vom CORS-Verhalten des Anbieters ab (ungetestet). Die installierte App (Windows/Android) hat diese Einschränkung nicht.',
+      keyStorage:
+        'Der Schlüssel wird nur auf diesem Gerät gespeichert – verschlüsselt, nicht synchronisiert und nicht im Backup.',
+      enabled: 'Aktiv',
+      moveUp: (label: string) => `${label} weiter nach oben`,
+      moveDown: (label: string) => `${label} weiter nach unten`,
+      edit: 'Bearbeiten',
+      collapse: 'Einklappen',
+      remove: 'Entfernen',
+      confirmRemove: 'Wirklich entfernen?',
+      label: 'Name',
       apiKey: 'API-Schlüssel',
-      apiKeyHint:
-        'Wird nur auf diesem Gerät gespeichert (nicht synchronisiert, nicht im Backup) und direkt aus dem Browser an Anthropic gesendet.',
-      claudeModel: 'Modell',
-      claudeModelHint: 'Standard ist das günstige Claude Haiku 4.5.',
-      ollamaUrl: 'Ollama-Adresse',
-      ollamaModel: 'Ollama-Modell',
-      ollamaHint:
-        'Ollama muss Anfragen dieser App erlauben, z. B. mit OLLAMA_ORIGINS=* (siehe README). Das Modell muss Tool-Aufrufe unterstützen.',
+      apiKeySet: 'Schlüssel gespeichert – zum Ändern neuen eingeben',
+      apiKeyOptional: 'Optional bei eigenen Servern.',
+      getKey: 'Schlüssel erstellen',
+      baseUrl: 'Adresse (Base-URL)',
+      model: 'Modell',
+      toolMode: 'Tool-Modus',
+      toolModeNative: 'Nativ (Tool-Calling)',
+      toolModeJson: 'JSON im Text (für kleine/freie Modelle)',
+      limitRequests: 'Limit: Anfragen pro Tag',
+      limitCost: 'Limit: Kosten pro Monat (US-Dollar)',
+      limitHint: 'Leer = kein Limit. Ist ein Limit erreicht, wird der nächste Anbieter gefragt.',
+      priceIn: 'Preis: US-Dollar pro Mio. Eingabe-Token',
+      priceOut: 'Preis: US-Dollar pro Mio. Ausgabe-Token',
+      priceHint: 'Schätzung für die Kostenanzeige; bitte beim Anbieter prüfen.',
       save: 'Speichern',
       saved: 'Gespeichert.',
-      usageTitle: 'Verbrauch',
+      test: 'Verbindung testen',
+      testing: 'Teste …',
+      testOk: (ms: number) => `Verbindung funktioniert (${ms} ms).`,
+      testFailed: (reason: string) => `Test fehlgeschlagen: ${reason}`,
+      coolingDown: (minutes: number) =>
+        `Pausiert (noch ca. ${minutes} min), weil zuletzt ein Fehler auftrat.`,
+      stats: (requests: number, errors: number, fallbacks: number) =>
+        `${requests} Anfragen · ${errors} Fehler · ${fallbacks}× als Ersatz eingesprungen`,
+      statsTokens: (input: number, output: number) =>
+        `${input} Token gesendet, ${output} empfangen`,
+      statsCost: (usd: string) => `ca. ${usd} US-Dollar`,
+      usageTitle: 'Verbrauch gesamt',
       usageEmpty: 'Noch keine KI-Anfragen.',
       usageRequests: (n: number) => (n === 1 ? '1 KI-Anfrage' : `${n} KI-Anfragen`),
       usageCacheHits: (n: number) =>
@@ -542,6 +578,17 @@ export const t = {
       usageReset: 'Zähler zurücksetzen',
       clearCache: 'Cache leeren',
       cacheCleared: 'Cache geleert.',
+      errors: {
+        auth: 'Schlüssel abgelehnt',
+        'rate-limit': 'Zu viele Anfragen',
+        network: 'Nicht erreichbar',
+        'bad-request': 'Anfrage abgelehnt (unterstützt das Modell Tool-Aufrufe?)',
+        server: 'Serverfehler beim Anbieter',
+        refusal: 'Antwort verweigert',
+        unavailable: 'Nicht erreichbar',
+        'not-configured': 'Unvollständig eingerichtet',
+        'invalid-response': 'Unbrauchbare Antwort',
+      } as Record<string, string>,
     },
   },
   bookmarks: {

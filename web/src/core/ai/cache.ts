@@ -1,6 +1,6 @@
 /**
  * Cache of *structured intents* (not results): the same question on the same day with the same
- * schema and model costs no tokens the second time, and the answer is still computed from live data.
+ * schema costs no tokens the second time (whichever provider answered first), and the answer is still computed from live data.
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { now } from '@/core/time/now';
@@ -27,16 +27,10 @@ export async function cacheKey(parts: {
   question: string;
   today: string;
   schemaHash: string;
-  provider: string;
-  model: string;
 }): Promise<string> {
-  const text = [
-    normalizeQuestion(parts.question),
-    parts.today,
-    parts.schemaHash,
-    parts.provider,
-    parts.model,
-  ].join('|');
+  // Provider and model are deliberately NOT part of the key: the cache holds the validated
+  // intent, which is the same whoever produced it – so fallbacks and provider changes share hits.
+  const text = [normalizeQuestion(parts.question), parts.today, parts.schemaHash].join('|');
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }

@@ -10,6 +10,8 @@ export const DEFAULT_OLLAMA_MODEL = 'qwen2.5:7b';
 const TIMEOUT_MS = 120_000;
 
 export interface OllamaOptions {
+  /** Id of the configured provider entry (default `ollama`). */
+  id?: string;
   baseUrl?: string;
   model?: string;
   fetch?: typeof fetch;
@@ -30,7 +32,7 @@ export function createOllamaProvider(opts: OllamaOptions = {}): AiProvider {
   const base = (opts.baseUrl || DEFAULT_OLLAMA_URL).replace(/\/+$/, '');
   const doFetch = opts.fetch ?? ((input, init) => getPlatform().fetch(input, init));
   return {
-    id: 'ollama',
+    id: opts.id ?? 'ollama',
     model,
     async complete(req: CompletionRequest): Promise<CompletionResult> {
       const timeout = AbortSignal.timeout(TIMEOUT_MS);
@@ -48,10 +50,19 @@ export function createOllamaProvider(opts: OllamaOptions = {}): AiProvider {
               { role: 'system', content: req.system },
               { role: 'user', content: req.user },
             ],
-            tools: req.tools.map((t) => ({
-              type: 'function',
-              function: { name: t.name, description: t.description, parameters: t.input_schema },
-            })),
+            ...(req.tools.length > 0
+              ? {
+                  tools: req.tools.map((t) => ({
+                    type: 'function',
+                    function: {
+                      name: t.name,
+                      description: t.description,
+                      parameters: t.input_schema,
+                    },
+                  })),
+                }
+              : {}),
+            ...(req.maxTokens ? { options: { num_predict: req.maxTokens } } : {}),
           }),
         });
       } catch (e) {
@@ -61,7 +72,12 @@ export function createOllamaProvider(opts: OllamaOptions = {}): AiProvider {
       if (!res.ok) {
         throw new AiError(res.status >= 500 ? 'server' : 'bad-request', `HTTP ${res.status}`);
       }
-      const body = (await res.json()) as OllamaResponse;
+      let body: OllamaResponse;
+      try {
+        body = (await res.json()) as OllamaResponse;
+      } catch {
+        throw new AiError('invalid-response', 'not JSON');
+      }
       const toolCalls = (body.message?.tool_calls ?? []).flatMap((c) => {
         const name = c.function?.name;
         if (!name) return [];

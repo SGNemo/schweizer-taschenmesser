@@ -113,6 +113,15 @@ for (const scheme of ['light', 'dark'] as const) {
       });
     }
 
+    test('settings: AI providers (list, expanded form)', async ({ page }) => {
+      await page.goto('/settings');
+      const section = page.locator('section[aria-labelledby="ai"]');
+      await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Groq' });
+      await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Ollama (lokal)' });
+      await expect(section.getByTestId('provider-groq')).toBeVisible();
+      await audit(page, `ai providers (${scheme})`);
+    });
+
     test('accounts: lock screen, list, entry dialogs, tools', async ({ page }) => {
       const MASTER = 'Mein-Master-Passwort-1';
       await page.goto('/accounts');

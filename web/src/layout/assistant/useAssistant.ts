@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ask, type AskResponse } from '@/core/ai/assistant';
-import { createProvider, loadAiConfig } from '@/core/ai/config';
+import { createRouterProvider, loadAiConfig } from '@/core/ai/config';
 import { searchEntries } from '@/core/ai/search/fulltext';
 import type { ResultRow } from '@/core/ai/query/types';
 import { db } from '@/core/db/db';
@@ -31,7 +31,7 @@ export function useAssistant() {
       manifests: activeManifests(states),
       known: visibleManifests,
       today: today(),
-      provider: createProvider(config),
+      provider: await createRouterProvider(config),
       database: db,
       forceModel,
       signal: ctl.signal,

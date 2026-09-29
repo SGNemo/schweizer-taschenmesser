@@ -21,6 +21,7 @@ import type {
   NotificationService,
   ScheduledNotification,
 } from '@/core/notifications/service';
+import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { onPageHidden, sensitiveClipboard } from '../web';
 import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
 import { createUpdater } from './updater';
@@ -138,6 +139,8 @@ export async function createTauriPlatform(): Promise<PlatformService> {
       remove: (path) => remove(path, inAppData),
     },
     updater: createUpdater(kind, fetchFn),
+    // OS keystore (Windows Credential Manager / Android Keystore) is planned as step 11b.
+    secrets: createDeviceKeyStore(),
     lifecycle: { onBackground: onPageHidden },
   };
 }

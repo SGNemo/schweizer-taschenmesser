@@ -10,6 +10,8 @@ const MAX_TOKENS = 1024;
 const TIMEOUT_MS = 30_000;
 
 export interface ClaudeOptions {
+  /** Id of the configured provider entry (default `claude`). */
+  id?: string;
   apiKey: string;
   model?: string;
   /** Injectable for tests. */
@@ -21,7 +23,7 @@ export interface ClaudeOptions {
 export function createClaudeProvider(opts: ClaudeOptions): AiProvider {
   const model = opts.model || DEFAULT_CLAUDE_MODEL;
   return {
-    id: 'claude',
+    id: opts.id ?? 'claude',
     model,
     async complete(req: CompletionRequest): Promise<CompletionResult> {
       if (!opts.apiKey) throw new AiError('not-configured');
@@ -37,15 +39,19 @@ export function createClaudeProvider(opts: ClaudeOptions): AiProvider {
         const res = await client.messages.create(
           {
             model,
-            max_tokens: MAX_TOKENS,
+            max_tokens: req.maxTokens ?? MAX_TOKENS,
             system: req.system,
             // `auto` (the default): forcing a tool is rejected by newer models, so the
             // system prompt asks for exactly one tool call instead.
-            tools: req.tools.map((t) => ({
-              name: t.name,
-              description: t.description,
-              input_schema: t.input_schema as { type: 'object' },
-            })),
+            ...(req.tools.length > 0
+              ? {
+                  tools: req.tools.map((t) => ({
+                    name: t.name,
+                    description: t.description,
+                    input_schema: t.input_schema as { type: 'object' },
+                  })),
+                }
+              : {}),
             messages: [{ role: 'user', content: req.user }],
           },
           { signal: req.signal },
@@ -75,9 +81,23 @@ function mapClaudeError(e: unknown, sdk: typeof Anthropic): AiError {
   if (e instanceof sdk.APIUserAbortError) return new AiError('aborted');
   if (e instanceof sdk.AuthenticationError || e instanceof sdk.PermissionDeniedError)
     return new AiError('auth');
-  if (e instanceof sdk.RateLimitError) return new AiError('rate-limit');
+  if (e instanceof sdk.RateLimitError) {
+    return new AiError('rate-limit', undefined, { retryAfterMs: retryAfterMs(e.headers) });
+  }
   if (e instanceof sdk.APIConnectionError) return new AiError('network');
   if (e instanceof sdk.BadRequestError) return new AiError('bad-request', String(e.message));
   if (e instanceof sdk.APIError) return new AiError('server', String(e.message));
   return new AiError('network', e instanceof Error ? e.message : String(e));
+}
+
+/** `retry-after` (seconds or an HTTP date) → ms. */
+export function retryAfterMs(
+  headers: { get(name: string): string | null } | undefined,
+): number | undefined {
+  const raw = headers?.get('retry-after');
+  if (!raw) return undefined;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds) * 1000;
+  const at = Date.parse(raw);
+  return Number.isNaN(at) ? undefined : Math.max(0, at - Date.now());
 }
