@@ -20,7 +20,20 @@ import type { InstallProgress, UpdateInfo } from './types';
 /** Automatic checks run at most once per day. */
 export const AUTO_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-export type UpdateErrorCode = 'check-failed' | 'backup-failed' | 'install-failed';
+export type UpdateErrorCode =
+  | 'check-failed'
+  | 'backup-failed'
+  | 'install-failed'
+  | 'folder-not-writable'
+  | 'signature-invalid';
+
+/** The Rust side prefixes its errors with a code (`folder-not-writable: …`); everything else is generic. */
+export function installErrorCode(e: unknown): UpdateErrorCode {
+  const text = e instanceof Error ? e.message : String(e);
+  if (text.startsWith('folder-not-writable')) return 'folder-not-writable';
+  if (text.startsWith('signature-invalid')) return 'signature-invalid';
+  return 'install-failed';
+}
 
 export type UpdateState =
   | { phase: 'idle' }
@@ -136,7 +149,7 @@ export async function installUpdate(
     return next;
   } catch (e) {
     console.warn('[update] install failed', e);
-    const failed: UpdateState = { phase: 'error', code: 'install-failed', info };
+    const failed: UpdateState = { phase: 'error', code: installErrorCode(e), info };
     deps.setState(failed);
     return failed;
   }

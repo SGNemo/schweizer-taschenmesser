@@ -28,9 +28,22 @@ tauri-plugin-secure-store = { path = "plugins/secure-store" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# The Windows updater. Android updates through the apk-installer plugin instead.
+# The desktop updater. Android updates through the apk-installer plugin instead.
+# `minisign-verify` + `base64` re-check the signature of the portable executable before it replaces
+# the running program (see src/portable.rs).
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2.13"
+minisign-verify = "0.2"
+base64 = "0.22"
+
+# WebView2 runtime detection and the "runtime missing" message box (src/webview2.rs).
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_System_Registry",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }
 
 [profile.release]
 codegen-units = 1

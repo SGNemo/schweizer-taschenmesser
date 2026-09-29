@@ -5,25 +5,42 @@
 
 Modulare, local-first Alltags-App – Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos und weitere
 aktivierbare Module. Die Daten liegen lokal auf dem Gerät; ein eigener Sync-Server (optional, auch Ende-zu-Ende
-verschlüsselt) gleicht mehrere Geräte ab. Als **Windows-Programm**, **Android-App** oder **PWA** nutzbar.
+verschlüsselt) gleicht mehrere Geräte ab. Als **portables Windows-Programm** (eine einzelne `.exe`), **Android-App** oder **PWA** nutzbar.
 
 ## Herunterladen
 
-[![Windows herunterladen](https://img.shields.io/badge/Windows-herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Setup.exe)
+[![Windows (portabel) herunterladen](https://img.shields.io/badge/Windows-herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Portable.exe)
 [![Android-APK herunterladen](https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk)
 
 Die Links zeigen immer auf die **neueste stabile Version**. Alle Versionen (auch Beta) und die Änderungsliste:
 [Releases](https://github.com/SGNemo/schweizer-taschenmesser/releases).
 
-### Installation unter Windows
+### Windows: eine einzelne Datei, keine Installation
 
-1. `Taschenmesser-Setup.exe` herunterladen und starten. Die Installation gilt nur für dein Benutzerkonto (keine
-   Administratorrechte nötig); die Web-Komponente „WebView2“ wird bei Bedarf automatisch nachgeladen.
-2. Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen), weil das Programm (noch) kein
-   gekauftes Signaturzertifikat hat: **„Weitere Informationen“ → „Trotzdem ausführen“**. Die Datei ist mit dem
-   Update-Schlüssel des Projekts signiert; Updates prüft die App vor der Installation selbst.
-3. Wer eine MSI braucht (z. B. für die Verteilung im Netzwerk): `Taschenmesser.msi` aus den
-   [Releases](https://github.com/SGNemo/schweizer-taschenmesser/releases) (nur für stabile Versionen).
+1. `Taschenmesser-Portable.exe` herunterladen und an einen beliebigen Ort legen, an dem du schreiben darfst
+   (z. B. in einen Ordner unter deinem Benutzerverzeichnis; **nicht** nach `C:\Programme`), und doppelklicken.
+2. Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen), weil unbekannte
+   `.exe`-Dateien ohne gekauftes Code-Signing-Zertifikat immer so behandelt werden: **„Weitere Informationen“ →
+   „Trotzdem ausführen“**. Der Update-Inhalt ist mit dem Update-Schlüssel des Projekts signiert; die App prüft
+   die Signatur vor jedem Update selbst (und verweigert unsignierte oder fremd signierte Dateien).
+3. **Voraussetzung: Microsoft WebView2.** Unter Windows 10/11 ist die Komponente in der Regel schon da (sie gehört zu
+   Edge). Fehlt sie, erklärt die App das in einem Fenster und öffnet auf Wunsch die
+   [Download-Seite](https://developer.microsoft.com/microsoft-edge/webview2/) („Evergreen Bootstrapper“).
+4. **Updates:** Einstellungen → App-Updates. Die App legt zuerst eine Sicherungskopie an, lädt die neue `.exe`,
+   prüft die Signatur, ersetzt sich selbst und startet neu (bei einem Fehler bleibt die alte Version erhalten).
+   Dafür braucht der Ordner der `.exe` Schreibrechte.
+5. **Wo liegen meine Daten?** Standardmäßig im Benutzerprofil (`%LOCALAPPDATA%\io.github.sgnemo.taschenmesser`), nicht
+   neben der `.exe`; du kannst die Datei also jederzeit austauschen oder verschieben. **Portabler Modus (z. B. USB-Stick):**
+   Lege einen leeren Ordner `data` neben die `.exe` – dann liegen die App-Daten dort statt im Benutzerprofil (die
+   automatischen Update-Sicherungen bleiben in `%APPDATA%`).
+
+**Von der installierten Version (Setup/MSI, bis `0.2.0-beta.1`) umsteigen:** Die portable App nutzt dieselbe
+App-Kennung und findet deine Daten im Benutzerprofil deshalb sofort wieder.
+1. In der alten App: Einstellungen → Backup → exportieren (Sicherheitskopie).
+2. `Taschenmesser-Portable.exe` starten und prüfen, dass alles da ist (nicht gleichzeitig mit der alten App laufen lassen).
+3. Die alte Version über „Apps & Features“ deinstallieren – im Deinstallationsfenster **„Anwendungsdaten löschen“ NICHT
+   ankreuzen**. Falls doch etwas fehlt: Backup in der neuen App importieren.
+Die alte installierte Version kann sich nicht selbst auf die portable Datei aktualisieren; der Umstieg ist einmalig manuell.
 
 ### Installation unter Android
 
