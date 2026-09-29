@@ -1,4 +1,4 @@
-import type { ModuleManifest } from './types';
+import { PAGE_LAYOUTS, type ModuleManifest } from './types';
 
 // Manifests are eager (small); heavy parts (routes, widgets) are lazy inside each manifest.
 const found = import.meta.glob<{ default: ModuleManifest }>('../../modules/*/manifest.ts', {
@@ -30,7 +30,10 @@ export function validateManifest(m: ModuleManifest): string[] {
   if (!/^[a-z][a-z0-9]*$/.test(m.id)) errors.push(`id "${m.id}" must be lowercase alphanumeric`);
   if (!Number.isInteger(m.version) || m.version < 1)
     errors.push('version must be a positive integer');
+  if (m.layout && !PAGE_LAYOUTS.includes(m.layout)) errors.push(`layout "${m.layout}" is unknown`);
   for (const r of m.routes) {
+    if (r.layout && !PAGE_LAYOUTS.includes(r.layout))
+      errors.push(`route "${r.path}" has unknown layout "${r.layout}"`);
     if (r.path !== `/${m.id}` && !r.path.startsWith(`/${m.id}/`)) {
       errors.push(`route "${r.path}" must start with "/${m.id}"`);
     }

@@ -8,7 +8,7 @@
   --text-md: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
+  --text-2xl: clamp(1.5rem, 1.3rem + 0.6vw, 2rem);
   --leading: 1.5;
 
   --space-1: 0.25rem;
@@ -27,7 +27,11 @@
   --touch: 44px;
   --sidebar-w: 248px;
   --bottom-nav-h: 64px;
-  --content-max: 960px;
+  /* Page widths (see layout/PageContainer) and the fluid gutter around the page. */
+  --page-narrow: 45rem;
+  --page-content: 70rem;
+  --page-wide: 100rem;
+  --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
 
   --dur-fast: 120ms;
   --dur: 220ms;
