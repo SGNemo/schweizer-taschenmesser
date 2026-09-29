@@ -1,0 +1,83 @@
+import { useEffect, type ReactNode } from 'react';
+import { t } from '@/strings';
+import { useUiStore } from '@/stores/ui';
+import { Icon, type IconName } from './icons';
+import styles from './Misc.module.css';
+
+export function Badge({
+  children,
+  tone = 'neutral',
+}: {
+  children: ReactNode;
+  tone?: 'neutral' | 'accent';
+}) {
+  return (
+    <span className={[styles.badge, tone === 'accent' ? styles.accent : ''].join(' ')}>
+      {children}
+    </span>
+  );
+}
+
+export function EmptyState({
+  icon = 'puzzle',
+  title,
+  children,
+}: {
+  icon?: IconName;
+  title: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={styles.empty}>
+      <Icon name={icon} size={32} />
+      <h2 className={styles.emptyTitle}>{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+export function Fab({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" className={styles.fab} aria-label={label} title={label} onClick={onClick}>
+      <Icon name="plus" size={26} />
+    </button>
+  );
+}
+
+const TOAST_MS = 5000;
+
+export function Toaster() {
+  const toasts = useUiStore((s) => s.toasts);
+  const dismiss = useUiStore((s) => s.dismissToast);
+
+  useEffect(() => {
+    const timers = toasts.map((x) => setTimeout(() => dismiss(x.id), TOAST_MS));
+    return () => timers.forEach(clearTimeout);
+  }, [toasts, dismiss]);
+
+  return (
+    <div className={styles.toasts} role="status" aria-live="polite">
+      {toasts.map((x) => (
+        <div key={x.id} className={styles.toast}>
+          <span>{x.message}</span>
+          {x.action ? (
+            <button
+              type="button"
+              className={styles.toastAction}
+              onClick={() => {
+                x.action?.run();
+                dismiss(x.id);
+              }}
+            >
+              {x.action.label}
+            </button>
+          ) : (
+            <button type="button" className={styles.toastAction} onClick={() => dismiss(x.id)}>
+              {t.actions.close}
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

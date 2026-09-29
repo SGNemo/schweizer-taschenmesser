@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "stores": {
+    "_meta": "key",
+    "_modules": "id, updatedAt",
+    "_outbox": "[collection+id]",
+    "_secrets": "key",
+    "_settings": "id, updatedAt",
+    "example_entry": "id, updatedAt, createdAt"
+  }
+}
