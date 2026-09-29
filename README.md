@@ -54,7 +54,7 @@ Die alte installierte Version kann sich nicht selbst auf die portable Datei aktu
 > **Daten aus der PWA übernehmen:** Die installierte App hat einen eigenen Speicher. Umzug über *Einstellungen → Backup*
 > (Export in der PWA, Import in der App) oder einfach über den Sync-Server.
 
-Architektur, Konventionen, Releases und der Ablauf „neues Modul anlegen“: siehe [CLAUDE.md](CLAUDE.md).
+Architektur, Konventionen, Releases und der Ablauf „neues Modul anlegen“: siehe [CLAUDE.md](CLAUDE.md) und [docs/architecture.md](docs/architecture.md).
 
 ```
 web/            die App (Vite, React 19, TypeScript) – als PWA und als Tauri-Shell

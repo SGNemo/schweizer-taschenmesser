@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.app.json && tsc -p tsconfig.sw.json && tsc -p tsconfig.node.json",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test && playwright test -c playwright.sync.config.ts",
