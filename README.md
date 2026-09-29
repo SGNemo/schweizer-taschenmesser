@@ -1,15 +1,49 @@
 # Taschenmesser
 
-Modulare, local-first Alltags-App (PWA) – Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos und weitere
-aktivierbare Module. Die Daten liegen lokal in IndexedDB; ein eigener Sync-Server (optional, auch Ende-zu-Ende
-verschlüsselt) gleicht mehrere Geräte ab.
+[![Neueste Version](https://img.shields.io/github/v/release/SGNemo/schweizer-taschenmesser?include_prereleases&label=Version)](https://github.com/SGNemo/schweizer-taschenmesser/releases)
+[![CI](https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml)
 
-Architektur, Konventionen und der Ablauf „neues Modul anlegen“: siehe [CLAUDE.md](CLAUDE.md).
+Modulare, local-first Alltags-App – Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos und weitere
+aktivierbare Module. Die Daten liegen lokal auf dem Gerät; ein eigener Sync-Server (optional, auch Ende-zu-Ende
+verschlüsselt) gleicht mehrere Geräte ab. Als **Windows-Programm**, **Android-App** oder **PWA** nutzbar.
+
+## Herunterladen
+
+[![Windows herunterladen](https://img.shields.io/badge/Windows-herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Setup.exe)
+[![Android-APK herunterladen](https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk)
+
+Die Links zeigen immer auf die **neueste stabile Version**. Alle Versionen (auch Beta) und die Änderungsliste:
+[Releases](https://github.com/SGNemo/schweizer-taschenmesser/releases).
+
+### Installation unter Windows
+
+1. `Taschenmesser-Setup.exe` herunterladen und starten. Die Installation gilt nur für dein Benutzerkonto (keine
+   Administratorrechte nötig); die Web-Komponente „WebView2“ wird bei Bedarf automatisch nachgeladen.
+2. Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen), weil das Programm (noch) kein
+   gekauftes Signaturzertifikat hat: **„Weitere Informationen“ → „Trotzdem ausführen“**. Die Datei ist mit dem
+   Update-Schlüssel des Projekts signiert; Updates prüft die App vor der Installation selbst.
+3. Wer eine MSI braucht (z. B. für die Verteilung im Netzwerk): `Taschenmesser.msi` aus den
+   [Releases](https://github.com/SGNemo/schweizer-taschenmesser/releases) (nur für stabile Versionen).
+
+### Installation unter Android
+
+1. `Taschenmesser.apk` auf dem Handy herunterladen (z. B. im Chrome-Browser) und öffnen.
+2. Android fragt beim ersten Mal, ob die **Installation aus unbekannten Quellen** erlaubt ist: **„Einstellungen“ →
+   „Aus dieser Quelle zulassen“** für den Browser bzw. die Dateien-App, dann zurück und „Installieren“. Play Protect
+   kann eine zusätzliche Prüfung anbieten („Trotzdem installieren“ bzw. „App scannen“).
+3. Für spätere Updates fragt die App selbst nach der Erlaubnis („Update installieren“); die neue APK muss mit demselben
+   Schlüssel signiert sein, sonst lehnt Android sie ab.
+
+> **Daten aus der PWA übernehmen:** Die installierte App hat einen eigenen Speicher. Umzug über *Einstellungen → Backup*
+> (Export in der PWA, Import in der App) oder einfach über den Sync-Server.
+
+Architektur, Konventionen, Releases und der Ablauf „neues Modul anlegen“: siehe [CLAUDE.md](CLAUDE.md).
 
 ```
-web/       die PWA (Vite, React 19, TypeScript)
-server/    der Sync-Server (Fastify + SQLite), liefert auf Wunsch auch die PWA aus
-contract/  gemeinsame Testfälle für die Sync-Regel (Server und App prüfen dieselben Fälle)
+web/            die App (Vite, React 19, TypeScript) – als PWA und als Tauri-Shell
+web/src-tauri/  native Hülle (Tauri 2, Rust) für Windows und Android
+server/         der Sync-Server (Fastify + SQLite), liefert auf Wunsch auch die PWA aus
+contract/       gemeinsame Testfälle für die Sync-Regel (Server und App prüfen dieselben Fälle)
 ```
 
 ## App (`web/`)
