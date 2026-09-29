@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   isPermissionGranted: vi.fn(async () => false),
   requestPermission: vi.fn(async () => 'granted' as string),
   sendNotification: vi.fn(),
+  pending: vi.fn(async () => [] as { id: number }[]),
+  cancel: vi.fn(async (_ids: number[]) => undefined),
   openUrl: vi.fn(async (_u: string) => undefined),
 }));
 
@@ -27,12 +29,20 @@ vi.mock('@tauri-apps/plugin-notification', () => ({
   isPermissionGranted: mocks.isPermissionGranted,
   requestPermission: mocks.requestPermission,
   sendNotification: mocks.sendNotification,
+  pending: mocks.pending,
+  cancel: mocks.cancel,
+  Schedule: {
+    at: (date: Date, repeating: boolean, allowWhileIdle: boolean) => ({
+      at: { date, repeating, allowWhileIdle },
+    }),
+  },
 }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: mocks.openUrl }));
 
-import { createTauriPlatform } from './index';
+import { createTauriPlatform, notificationId } from './index';
 
 beforeEach(() => {
+  vi.restoreAllMocks(); // spies such as the faked user agent
   vi.clearAllMocks();
   mocks.isPermissionGranted.mockResolvedValue(false);
   mocks.requestPermission.mockResolvedValue('granted');
@@ -106,6 +116,43 @@ describe('tauri platform', () => {
     const p = await createTauriPlatform();
     await p.notifications.show({ title: 'Miete', body: 'heute', tag: 'k' });
     expect(mocks.sendNotification).toHaveBeenCalledWith({ title: 'Miete', body: 'heute' });
+  });
+
+  it('only the Android app schedules notifications with the OS', async () => {
+    expect((await createTauriPlatform()).notifications.scheduleUpcoming).toBeUndefined();
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    expect((await createTauriPlatform()).notifications.scheduleUpcoming).toBeTypeOf('function');
+  });
+
+  it('replaces the pending OS notifications: cancels stale ones, (re)schedules the wanted', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const keep = notificationId('rem:1');
+    mocks.pending.mockResolvedValue([{ id: keep }, { id: 111 }, { id: 222 }]);
+    const p = await createTauriPlatform();
+    await p.notifications.scheduleUpcoming!([
+      { key: 'rem:1', at: 1_800_000_000_000, title: 'Miete', body: 'heute', url: '/reminders' },
+      { key: 'inv:2', at: 1_800_000_100_000, title: 'Rechnung' },
+    ]);
+    expect(mocks.cancel).toHaveBeenCalledWith([111, 222]);
+    expect(mocks.sendNotification).toHaveBeenCalledTimes(2);
+    expect(mocks.sendNotification).toHaveBeenCalledWith({
+      id: keep,
+      title: 'Miete',
+      body: 'heute',
+      schedule: {
+        at: { date: new Date(1_800_000_000_000), repeating: false, allowWhileIdle: true },
+      },
+      extra: { url: '/reminders' },
+    });
+  });
+
+  it('derives stable, distinct 31-bit ids', () => {
+    expect(notificationId('a')).toBe(notificationId('a'));
+    expect(notificationId('a')).not.toBe(notificationId('b'));
+    for (const k of ['x', 'reminders:1234:2026-10-01', 'ü']) {
+      const id = notificationId(k);
+      expect(Number.isInteger(id) && id >= 0 && id <= 0x7fffffff).toBe(true);
+    }
   });
 
   it('clears the clipboard through the plugin after the delay when unchanged', async () => {

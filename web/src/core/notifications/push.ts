@@ -6,7 +6,6 @@
  * Privacy: titles and texts reach the sync server; with end-to-end encryption enabled they are
  * encrypted with the sync key (the service worker decrypts them, see `pushPayload.ts`).
  */
-import { liveQuery } from 'dexie';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { activeManifests, collectNotifications } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
@@ -17,6 +16,7 @@ import { encryptValue, fromBase64Url } from '@/core/sync/crypto';
 import { loadSyncConfig, type SyncConfig } from '@/core/sync/service';
 import { now as clockNow } from '@/core/time/now';
 import { pushAad, type PushPayload } from './pushPayload';
+import { startScheduleTriggers } from './triggers';
 
 const CONFIG_KEY = 'pushConfig';
 const WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
@@ -278,41 +278,11 @@ export async function sendTestPush(deps: PushDeps = defaultPushDeps()): Promise<
 
 /* ------------------------------------- triggers ------------------------------------- */
 
-const INTERVAL_MS = 10 * 60 * 1000;
-const DEBOUNCE_MS = 5_000;
-
-/** Keeps the server's schedule current: at start, every 10 minutes, when visible, and after local changes. */
+/** Keeps the server's schedule current (see `startScheduleTriggers`). */
 export function startPushSync(deps: PushDeps = defaultPushDeps()): () => void {
-  let debounce: ReturnType<typeof setTimeout> | undefined;
-  const run = () =>
-    void syncPushSchedule(deps).catch((e) => console.warn('[push] schedule upload failed', e));
-  const onVisible = () => {
-    if (document.visibilityState === 'visible') run();
-  };
-  run();
-  const interval = setInterval(run, INTERVAL_MS);
-  document.addEventListener('visibilitychange', onVisible);
-  // Any synced change (new reminder, edited date, module toggle) passes the outbox.
-  const sub = liveOutbox(deps.database, () => {
-    clearTimeout(debounce);
-    debounce = setTimeout(run, DEBOUNCE_MS);
-  });
-  return () => {
-    clearInterval(interval);
-    clearTimeout(debounce);
-    document.removeEventListener('visibilitychange', onVisible);
-    sub();
-  };
-}
-
-function liveOutbox(database: TaschenmesserDB, onChange: () => void): () => void {
-  let first = true;
-  const subscription = liveQuery(() => database.table('_outbox').count()).subscribe({
-    next: () => {
-      if (first) first = false;
-      else onChange();
-    },
-    error: (e) => console.warn('[push] outbox stream failed', e),
-  });
-  return () => subscription.unsubscribe();
+  return startScheduleTriggers(
+    () =>
+      void syncPushSchedule(deps).catch((e) => console.warn('[push] schedule upload failed', e)),
+    deps.database,
+  );
 }

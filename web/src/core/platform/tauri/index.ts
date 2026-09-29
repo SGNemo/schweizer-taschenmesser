@@ -8,14 +8,18 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { writeFile } from '@tauri-apps/plugin-fs';
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http';
 import {
+  cancel,
   isPermissionGranted,
+  pending,
   requestPermission,
+  Schedule,
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import type {
   NotificationPermissionState,
   NotificationService,
+  ScheduledNotification,
 } from '@/core/notifications/service';
 import { onPageHidden, sensitiveClipboard } from '../web';
 import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
@@ -39,7 +43,17 @@ const detectKind = (): PlatformKind =>
  * `NotificationService.permission()` is synchronous, the plugin's check is not: the state is read
  * once at startup and refreshed whenever we ask for permission.
  */
-async function createNotifications(): Promise<NotificationService> {
+/** Stable 31-bit id for a notification key (the plugin needs a 32-bit integer). */
+export function notificationId(key: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0) & 0x7fffffff;
+}
+
+async function createNotifications(kind: PlatformKind): Promise<NotificationService> {
   let state: NotificationPermissionState = (await isPermissionGranted()) ? 'granted' : 'default';
   return {
     permission: () => state,
@@ -51,7 +65,27 @@ async function createNotifications(): Promise<NotificationService> {
     async show({ title, body }) {
       sendNotification({ title, body });
     },
+    // Only the Android app hands reminders to the OS alarm manager; on desktop the app itself
+    // fires them while it is running.
+    scheduleUpcoming: kind === 'android' ? scheduleUpcoming : undefined,
   };
+}
+
+/** Replaces the pending OS notifications with `items`. */
+async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
+  const wanted = new Map(items.map((n) => [notificationId(n.key), n]));
+  const stale = (await pending()).map((p) => p.id).filter((id) => !wanted.has(id));
+  if (stale.length > 0) await cancel(stale);
+  for (const [id, n] of wanted) {
+    // Same id = replaces the earlier entry; `allowWhileIdle` lets it fire in Doze mode.
+    sendNotification({
+      id,
+      title: n.title,
+      body: n.body,
+      schedule: Schedule.at(new Date(n.at), false, true),
+      extra: { url: n.url ?? '/' },
+    });
+  }
 }
 
 export async function createTauriPlatform(): Promise<PlatformService> {
@@ -60,7 +94,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     kind,
     isNative: true,
     fetch: (input, init) => nativeFetch(input as string | URL | Request, init),
-    notifications: await createNotifications(),
+    notifications: await createNotifications(kind),
     async saveFile(req) {
       const extension = req.fileName.split('.').pop()?.toLowerCase();
       const path = await save({

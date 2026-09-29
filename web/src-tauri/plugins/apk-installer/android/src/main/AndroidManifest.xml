@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Lets the user allow this app to hand a downloaded update to the package installer. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application>
+        <!-- A subclass: the app's own FileProvider has the same base class and manifest merging keys on the name. -->
+        <provider
+            android:name="io.github.sgnemo.taschenmesser.apkinstaller.ApkFileProvider"
+            android:authorities="${applicationId}.apkinstaller.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/apkinstaller_file_paths" />
+        </provider>
+    </application>
+</manifest>

@@ -11,7 +11,7 @@ export const MAX_CATCH_UP_MS = 24 * 60 * 60 * 1000;
 const CURSOR_KEY = 'notifyCursor';
 
 export interface SchedulerDeps {
-  service: Pick<NotificationService, 'permission' | 'show'>;
+  service: Pick<NotificationService, 'permission' | 'show' | 'scheduleUpcoming'>;
   loadDue(range: { from: number; to: number }): Promise<DueNotification[]>;
   getCursor(): Promise<number | undefined>;
   setCursor(at: number): Promise<void>;
@@ -29,6 +29,8 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
   await deps.setCursor(now);
   if (stored === undefined) return 0;
   if (deps.service.permission() !== 'granted') return 0;
+  // The OS fires scheduled notifications itself (see nativeSchedule.ts); firing here would duplicate them.
+  if (deps.service.scheduleUpcoming) return 0;
 
   const from = Math.max(stored, now - MAX_CATCH_UP_MS);
   if (from >= now) return 0;

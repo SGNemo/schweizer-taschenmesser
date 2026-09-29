@@ -8,11 +8,26 @@ export interface ShowNotification {
   url?: string;
 }
 
-/** Abstraction over the platform so a Web Push implementation can be added later. */
+/** A notification the operating system should show at `at` (epoch ms), even while the app is closed. */
+export interface ScheduledNotification {
+  /** Stable per occurrence; the same key replaces the earlier schedule entry. */
+  key: string;
+  at: number;
+  title: string;
+  body?: string;
+  url?: string;
+}
+
+/** Abstraction over the platform's notifications (browser API, native plugin). */
 export interface NotificationService {
   permission(): NotificationPermissionState;
   requestPermission(): Promise<NotificationPermissionState>;
   show(n: ShowNotification): Promise<void>;
+  /**
+   * Only where the OS can fire notifications by itself (the Android app): replaces the whole set of
+   * pending scheduled notifications. When present, the in-app scheduler stays quiet to avoid duplicates.
+   */
+  scheduleUpcoming?(items: ScheduledNotification[]): Promise<void>;
 }
 
 export const localNotificationService: NotificationService = {

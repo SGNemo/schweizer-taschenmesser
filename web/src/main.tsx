@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startModuleServices } from '@/core/modules/services';
 import { startSync } from '@/core/sync/service';
+import { startNativeSchedule } from '@/core/notifications/nativeSchedule';
 import { startPushSync } from '@/core/notifications/push';
 import { initPlatform } from '@/core/platform';
 import { startNotificationScheduler } from '@/core/notifications/scheduler';
@@ -21,5 +22,6 @@ void initPlatform().then(() => {
     startModuleServices();
     startSync();
     startPushSync();
+    startNativeSchedule();
   });
 });

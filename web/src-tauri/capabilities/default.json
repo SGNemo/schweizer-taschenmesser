@@ -24,9 +24,15 @@
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-clear",
     "opener:allow-open-url",
+    "apk-installer:default",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://*" }, { "url": "http://*" }, { "url": "https://*:*" }, { "url": "http://*:*" }]
+      "allow": [
+        { "url": "https://*" },
+        { "url": "http://*" },
+        { "url": "https://*:*" },
+        { "url": "http://*:*" }
+      ]
     }
   ]
 }

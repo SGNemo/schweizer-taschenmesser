@@ -11,6 +11,8 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
+        // Android self-update (download + installer intent); a stub that reports `unsupported` elsewhere.
+        .plugin(tauri_plugin_apk_installer::init())
         .run(tauri::generate_context!())
         .expect("error while running Taschenmesser");
 }

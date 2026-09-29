@@ -1,0 +1,3 @@
+[default]
+description = "Everything the self-update flow needs: check, download (with progress) and install."
+permissions = ["allow-can-install", "allow-download", "allow-download-progress", "allow-install"]
