@@ -22,6 +22,7 @@ const MODULES = [
   'budgets',
   'packing',
   'vault',
+  'accounts',
 ];
 
 /** Enables every module (raw write into the module table, like the library would do). */
@@ -94,6 +95,7 @@ const PAGES = [
   ['budgets goals', '/budgets?tab=goals'],
   ['packing', '/packing'],
   ['vault', '/vault'],
+  ['accounts (set up)', '/accounts'],
 ] as const;
 
 for (const scheme of ['light', 'dark'] as const) {
@@ -110,6 +112,44 @@ for (const scheme of ['light', 'dark'] as const) {
         await audit(page, `${name} (${scheme})`);
       });
     }
+
+    test('accounts: lock screen, list, entry dialogs, tools', async ({ page }) => {
+      const MASTER = 'Mein-Master-Passwort-1';
+      await page.goto('/accounts');
+      await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
+      await page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
+      await page.getByRole('button', { name: 'Tresor erstellen' }).click();
+      await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+        timeout: 20_000,
+      });
+      await audit(page, `accounts empty (${scheme})`);
+
+      await page.getByRole('button', { name: 'Zugang hinzufügen' }).click();
+      const form = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+      await form.getByLabel('Name', { exact: true }).fill('Beispiel');
+      await form.getByLabel('Passwort', { exact: true }).fill('ein-ganz-normales-passwort-1');
+      await form.getByLabel('Einmalcode (TOTP)').fill('JBSWY3DPEHPK3PXP');
+      await form.getByRole('button', { name: 'Generator' }).click();
+      await expect(form.getByTestId('generated')).toHaveText(/\S{20}/);
+      await expect(form.getByTestId('strength')).toBeVisible();
+      await audit(page, `accounts form + generator (${scheme})`);
+      await form.getByRole('button', { name: 'Speichern' }).click();
+
+      const detail = page.getByRole('dialog', { name: 'Beispiel' });
+      await expect(detail.getByTestId('totp-code')).toBeVisible();
+      await audit(page, `accounts detail (${scheme})`);
+      await page.keyboard.press('Escape');
+      await audit(page, `accounts list (${scheme})`);
+
+      await page.getByRole('button', { name: 'Import, Export & Sicherheit' }).click();
+      await expect(page.getByRole('dialog', { name: 'Import, Export & Sicherheit' })).toBeVisible();
+      await audit(page, `accounts tools (${scheme})`);
+      await page.keyboard.press('Escape');
+
+      await page.getByRole('button', { name: 'Sperren' }).click();
+      await expect(page.getByLabel('Master-Passwort')).toBeVisible();
+      await audit(page, `accounts locked (${scheme})`);
+    });
 
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {
       await page.goto('/');

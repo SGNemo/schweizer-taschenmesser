@@ -173,7 +173,12 @@ export interface ModuleManifest {
   /** Key = target version; runs once when the stored version is lower. */
   migrations: Record<number, (ctx: ModuleContext) => Promise<void>>;
   widgets: WidgetDef[];
-  aiSchema: ModuleAiSchema;
+  /**
+   * Compact description for the assistant. **Optional on purpose:** a module without one does not
+   * exist for the AI – not in the prompt, the full-text search, the parser or the executor
+   * (`core/ai/scope.ts`). Modules holding secrets (`accounts`) must leave it out.
+   */
+  aiSchema?: ModuleAiSchema;
   settings: ModuleSettings;
   /** Enabled without user action on a fresh install. */
   defaultEnabled: boolean;

@@ -38,7 +38,7 @@ export function validateManifest(m: ModuleManifest): string[] {
   for (const v of Object.keys(m.migrations).map(Number)) {
     if (v > m.version) errors.push(`migration ${v} is newer than manifest version ${m.version}`);
   }
-  for (const [name, c] of Object.entries(m.aiSchema.collections)) {
+  for (const [name, c] of Object.entries(m.aiSchema?.collections ?? {})) {
     if (!(name in m.dataSchema.collections))
       errors.push(`aiSchema collection "${name}" has no dataSchema`);
     if (!(c.titleField in c.fields)) errors.push(`aiSchema "${name}".titleField is not a field`);

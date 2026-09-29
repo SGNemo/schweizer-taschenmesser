@@ -6,6 +6,7 @@ import MiniSearch from 'minisearch';
 import { tableName } from '@/core/db/schema';
 import { t } from '@/strings';
 import { fold } from '../text';
+import { aiModules } from '../scope';
 import { toResultRow } from '../query/rows';
 import type { AiResult, ExecContext, ResultRow } from '../query/types';
 
@@ -34,7 +35,7 @@ export async function searchEntries(
   const docs: Doc[] = [];
   const rowsByUid = new Map<string, () => ResultRow>();
 
-  for (const manifest of ctx.manifests) {
+  for (const manifest of aiModules(ctx.manifests)) {
     for (const [collection, schema] of Object.entries(manifest.aiSchema.collections)) {
       const fields = schema.searchable ?? [];
       if (fields.length === 0) continue;

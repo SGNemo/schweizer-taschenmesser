@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -9,6 +9,8 @@
     "_outbox": "[collection+id], queuedAt",
     "_secrets": "key",
     "_settings": "id, updatedAt",
+    "accounts_entry": "id, updatedAt",
+    "accounts_vault": "id, updatedAt",
     "birthdays_birthday": "id, updatedAt, month",
     "bookmarks_item": "id, updatedAt, done, kind, *tags",
     "budgets_budget": "id, updatedAt, categoryId",

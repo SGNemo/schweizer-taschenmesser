@@ -21,6 +21,7 @@ import {
 import { AiError, type AiErrorCode, type AiProvider } from './providers/types';
 import { searchText } from './search/fulltext';
 import type { Intent } from './query/schema';
+import { aiModules } from './scope';
 import { recordUsage } from './usage';
 
 export type AskErrorCode = AiErrorCode | AiQueryErrorCode | 'invalid-answer' | 'no-answer';
@@ -60,7 +61,10 @@ const fail = (e: unknown): AskResponse => {
 
 export async function ask(question: string, deps: AskDeps): Promise<AskResponse> {
   const database = deps.database ?? defaultDb;
-  const ctx = { manifests: deps.manifests, known: deps.known, database, today: deps.today };
+  // Modules without an aiSchema (the password vault) do not exist for the assistant.
+  const manifests = aiModules(deps.manifests);
+  const known = aiModules(deps.known);
+  const ctx = { manifests, known, database, today: deps.today };
   const q = question.trim();
   if (!q) return { ok: false, error: 'no-answer' };
 
@@ -85,7 +89,7 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
     const key = await cacheKey({
       question: q,
       today: deps.today,
-      schemaHash: schemaHash(deps.manifests),
+      schemaHash: schemaHash(manifests),
       provider: deps.provider.id,
       model: deps.provider.model,
     });
@@ -107,9 +111,9 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
 
     // Tier 3: model. Only the question, today's date and the compact schemas leave the device.
     const response = await deps.provider.complete({
-      system: buildSystemPrompt(deps.manifests),
+      system: buildSystemPrompt(manifests),
       user: buildUserMessage(q, deps.today),
-      tools: buildTools(deps.manifests),
+      tools: buildTools(manifests),
       signal: deps.signal,
     });
     await recordUsage(

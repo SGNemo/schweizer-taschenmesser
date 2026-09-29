@@ -152,7 +152,7 @@ async function runAgenda(agenda: Agenda, ctx: ExecContext): Promise<AiResult> {
 
 async function runComputed(module: string, name: string, ctx: ExecContext): Promise<AiResult> {
   const manifest = findModule(module, ctx);
-  const known = Object.keys(manifest.aiSchema.computed ?? {}).find(
+  const known = Object.keys(manifest.aiSchema?.computed ?? {}).find(
     (n) => n.toLowerCase() === name.trim().toLowerCase(),
   );
   const load = manifest.contributions?.aiComputed;

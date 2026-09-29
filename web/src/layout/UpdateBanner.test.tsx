@@ -59,14 +59,12 @@ describe('UpdateBanner', () => {
   });
 
   it('shows the progress while installing and disables the buttons', () => {
-    useUpdateStore
-      .getState()
-      .set({
-        phase: 'installing',
-        info,
-        step: 'download',
-        progress: { downloaded: 50, total: 200 },
-      });
+    useUpdateStore.getState().set({
+      phase: 'installing',
+      info,
+      step: 'download',
+      progress: { downloaded: 50, total: 200 },
+    });
     render(<UpdateBanner />);
     expect(screen.getByRole('status')).toHaveTextContent('25 %');
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25');

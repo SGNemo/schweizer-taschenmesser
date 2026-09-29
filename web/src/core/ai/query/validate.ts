@@ -37,7 +37,7 @@ export function findCollection(
   manifest: ModuleManifest,
   name: string,
 ): { collection: string; schema: AiCollectionSchema } {
-  const ai: ModuleAiSchema = manifest.aiSchema;
+  const ai: ModuleAiSchema = manifest.aiSchema ?? { description: '', collections: {} };
   const key = Object.keys(ai.collections).find((c) => squash(c) === squash(name));
   if (!key) throw new AiQueryError('unknown-collection', `${manifest.id}.${name}`);
   return { collection: key, schema: ai.collections[key]! };

@@ -297,6 +297,61 @@ test.describe('end-to-end encryption', () => {
   });
 });
 
+test.describe('password vault', () => {
+  const MASTER = 'Mein-Master-Passwort-1';
+  const TITLE = 'Sync-Konto-Geheim';
+  const PASSWORD = 'sync-passwort-geheim-99';
+
+  test('a second device unlocks the same vault with the master password; the server only sees ciphertext', async ({
+    browser,
+    request,
+  }) => {
+    const a = await newDevice(browser);
+    const b = await newDevice(browser);
+
+    // A: enable, set up, add an entry
+    await a.page.goto('/library');
+    const card = a.page.getByTestId('module-accounts');
+    await card.getByRole('button', { name: 'Aktivieren' }).click();
+    await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
+    await a.page.goto('/accounts');
+    await a.page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
+    await a.page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
+    await a.page.getByRole('button', { name: 'Tresor erstellen' }).click();
+    await expect(a.page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+      timeout: 20_000,
+    });
+    await a.page.getByRole('button', { name: 'Zugang hinzufügen' }).click();
+    const form = a.page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await form.getByLabel('Name', { exact: true }).fill(TITLE);
+    await form.getByLabel('Passwort', { exact: true }).fill(PASSWORD);
+    await form.getByRole('button', { name: 'Speichern' }).click();
+    await expect(a.page.getByRole('dialog', { name: 'Zugang hinzufügen' })).toHaveCount(0);
+    await expect.poll(() => outboxCount(a.page)).toBeGreaterThan(0);
+
+    await connect(a.page);
+    await syncNow(a.page);
+
+    // The server holds ciphertext (and the vault header), never a title, password or the master password.
+    const { text } = await serverDump(request);
+    expect(text).toContain('accounts_entry');
+    for (const secret of [TITLE, PASSWORD, MASTER]) expect(text, secret).not.toContain(secret);
+
+    // B: sync, then unlock the very same vault – no second setup is offered
+    await connect(b.page);
+    await b.page.goto('/accounts');
+    await expect(b.page.getByRole('button', { name: 'Tresor erstellen' })).toHaveCount(0);
+    await b.page.getByLabel('Master-Passwort').fill(MASTER);
+    await b.page.getByRole('button', { name: 'Entsperren' }).click();
+    await expect(b.page.getByRole('listitem').filter({ hasText: TITLE })).toBeVisible({
+      timeout: 20_000,
+    });
+
+    await a.context.close();
+    await b.context.close();
+  });
+});
+
 test.describe('web push API of the real server', () => {
   const headers = { authorization: `Bearer ${TOKEN}` };
   const endpoint = 'https://push.example.test/send/e2e';

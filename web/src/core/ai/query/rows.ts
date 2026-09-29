@@ -12,7 +12,7 @@ export function toResultRow(
   row: Record<string, unknown> & { id: string },
   opts: { withSubtitle?: boolean } = {},
 ): ResultRow {
-  const schema = manifest.aiSchema.collections[collection]!;
+  const schema = manifest.aiSchema!.collections[collection]!;
   const fields: ResultRow['fields'] = [];
   const ordered = Object.entries(schema.fields).sort(([a], [b]) =>
     a === schema.dateField ? -1 : b === schema.dateField ? 1 : 0,

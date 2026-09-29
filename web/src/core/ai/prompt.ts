@@ -15,6 +15,7 @@ import {
   type Intent,
 } from './query/schema';
 import type { ToolDef } from './providers/types';
+import { aiModules } from './scope';
 
 function requiredFields(manifest: ModuleManifest, collection: string): Set<string> {
   const shape = manifest.dataSchema.collections[collection]?.schema.shape ?? {};
@@ -39,7 +40,7 @@ function collectionLine(manifest: ModuleManifest, name: string, c: AiCollectionS
 
 /** Compact schema text of the given modules (this is what costs tokens). */
 export function buildSchemaText(manifests: readonly ModuleManifest[]): string {
-  return manifests
+  return aiModules(manifests)
     .map((m) => {
       const lines = [`${m.id}: ${m.aiSchema.description}`];
       for (const [name, c] of Object.entries(m.aiSchema.collections)) {
@@ -74,6 +75,7 @@ export function buildUserMessage(question: string, today: string): string {
 const stringEnum = (values: readonly string[]) => ({ type: 'string', enum: [...values] });
 
 export function buildTools(manifests: readonly ModuleManifest[]): ToolDef[] {
+  manifests = aiModules(manifests);
   const ids = manifests.map((m) => m.id);
   const range = {
     relative: stringEnum(RELATIVE_RANGES),
@@ -127,7 +129,7 @@ export function buildTools(manifests: readonly ModuleManifest[]): ToolDef[] {
       },
     },
   ];
-  if (manifests.some((m) => Object.keys(m.aiSchema.computed ?? {}).length > 0)) {
+  if (aiModules(manifests).some((m) => Object.keys(m.aiSchema.computed ?? {}).length > 0)) {
     tools.push({
       name: 'run_computed',
       description: 'A named computed view of a module (see "computed" above).',
