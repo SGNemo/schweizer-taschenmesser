@@ -15,6 +15,9 @@ interface ViewProps {
   onOpenItem: (item: CalendarItem) => void;
 }
 
+/** From this width week and day switch from plain lists to the hour grid. */
+const TIME_GRID_QUERY = '(min-width: 1400px)';
+
 /** Chips per month cell: taller windows have taller cells and room for more entries. */
 function useChipLimit(): number {
   const h800 = useMediaQuery('(min-height: 800px)');
@@ -113,7 +116,7 @@ export function WeekView({
 }: Omit<ViewProps, 'date'> & { days: string[] }) {
   const byDate = groupByDate(items);
   const now = today();
-  const grid = useMediaQuery('(min-width: 1100px)');
+  const grid = useMediaQuery(TIME_GRID_QUERY);
   if (grid)
     return <TimeGrid days={days} items={items} onPickDay={onPickDay} onOpenItem={onOpenItem} />;
   return (
@@ -153,7 +156,7 @@ export function DayView({
   onOpenItem,
   onAdd,
 }: Omit<ViewProps, 'onPickDay'> & { onAdd: (date: string) => void }) {
-  const grid = useMediaQuery('(min-width: 900px)');
+  const grid = useMediaQuery(TIME_GRID_QUERY);
   if (grid)
     return (
       <TimeGrid days={[date]} items={items} onPickDay={() => undefined} onOpenItem={onOpenItem} />

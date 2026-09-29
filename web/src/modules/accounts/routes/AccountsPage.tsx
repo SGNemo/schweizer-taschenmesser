@@ -76,7 +76,7 @@ function Unlocked() {
   const [form, setForm] = useState<EntryTarget>(null);
   const [tools, setTools] = useState(false);
   // Wide screens: list and detail side by side (same detail content, just not in a dialog).
-  const panel = useSplitView('(min-width: 1200px)');
+  const panel = useSplitView();
 
   const shown = useMemo(() => searchEntries(data?.entries ?? [], query), [data, query]);
   const detail = data?.entries.find((e) => e.id === detailId) ?? null;

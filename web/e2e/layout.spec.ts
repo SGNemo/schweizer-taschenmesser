@@ -134,3 +134,54 @@ for (const vp of VIEWPORTS) {
     });
   });
 }
+
+test.describe('wide screens (1920x1080)', () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
+
+  test('week and day show an hour grid, the agenda sits next to it', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/calendar?view=week&date=2026-09-29');
+    const grid = page.getByRole('group', { name: 'Zeitraster' });
+    await expect(grid).toBeVisible();
+    await expect(grid.getByRole('heading', { level: 3 })).toHaveCount(7);
+    await expect(grid.getByRole('button', { name: /Beispieltermin 0/ })).toBeVisible();
+    await expect(page.getByRole('complementary', { name: 'Agenda' })).toBeVisible();
+    await page.goto('/calendar?view=day&date=2026-09-29');
+    await expect(page.getByRole('group', { name: 'Zeitraster' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Zeitraster' }).getByRole('heading')).toHaveCount(
+      1,
+    );
+  });
+
+  test('the hour grid scrolls to the current time', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/calendar?view=day&date=2026-09-29');
+    const body = page.getByRole('group', { name: 'Zeitraster' }).locator('div[class*="tgBody"]');
+    await expect(body).toBeVisible();
+    // "now" is 10:00 (fixed clock); the grid starts 1.5 h earlier, so it is scrolled down.
+    await expect.poll(() => body.evaluate((el) => el.scrollTop)).toBeGreaterThan(200);
+  });
+
+  test('accounts: the selected entry opens in a side panel instead of a dialog', async ({
+    page,
+  }) => {
+    await prepare(page);
+    await page.goto('/accounts');
+    await page.getByLabel('Master-Passwort', { exact: true }).fill('Demo-Master-Passwort-1'); // gitleaks:allow
+    await page.getByLabel('Master-Passwort wiederholen').fill('Demo-Master-Passwort-1'); // gitleaks:allow
+    await page.getByRole('button', { name: 'Tresor erstellen' }).click();
+    await page.getByRole('button', { name: 'Zugang hinzufügen' }).click({ timeout: 30_000 });
+    const form = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await form.getByLabel('Name', { exact: true }).fill('Demo-Shop example.org');
+    await form.getByLabel('Passwort', { exact: true }).fill('demo-passwort-000'); // gitleaks:allow
+    await form.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    const panel = page.getByRole('complementary', { name: 'Details' });
+    await expect(panel.getByRole('heading', { name: 'Demo-Shop example.org' })).toBeVisible();
+    // The secret stays hidden until revealed, exactly as in the dialog.
+    await expect(panel.getByText('demo-passwort-000')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Sperren' }).click();
+    await expect(page.getByLabel('Master-Passwort')).toBeVisible();
+    await expect(page.getByRole('complementary', { name: 'Details' })).toHaveCount(0);
+  });
+});
