@@ -794,6 +794,8 @@ export const t = {
     widgetEmpty: 'Nichts läuft bald ab.',
   },
   accounts: {
+    pickEntry: 'Zugang auswählen',
+    detail: 'Details',
     title: 'Accounts',
     setup: {
       title: 'Tresor einrichten',

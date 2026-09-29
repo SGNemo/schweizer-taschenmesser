@@ -1,8 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, ItemList, ItemRow, PageHeader, TextField } from '@/ui';
-import { EntryDetail } from '../components/EntryDetail';
+import {
+  Button,
+  EmptyState,
+  Icon,
+  ItemList,
+  ItemRow,
+  PageHeader,
+  SplitView,
+  TextField,
+  useSplitView,
+} from '@/ui';
+import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
 import { LockScreen } from '../components/LockScreen';
 import { SetupScreen } from '../components/SetupScreen';
@@ -65,6 +75,8 @@ function Unlocked() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [form, setForm] = useState<EntryTarget>(null);
   const [tools, setTools] = useState(false);
+  // Wide screens: list and detail side by side (same detail content, just not in a dialog).
+  const panel = useSplitView('(min-width: 1200px)');
 
   const shown = useMemo(() => searchEntries(data?.entries ?? [], query), [data, query]);
   const detail = data?.entries.find((e) => e.id === detailId) ?? null;
@@ -96,24 +108,40 @@ function Unlocked() {
           </Button>
         </div>
       ) : null}
-      {shown.length === 0 ? (
-        <EmptyState
-          icon="lock"
-          title={data.entries.length === 0 ? t.accounts.empty : t.accounts.emptyFiltered}
-        />
-      ) : null}
-      <ItemList label={t.accounts.title}>
-        {shown.map((e) => (
-          <ItemRow
-            key={e.id}
-            title={e.data.title}
-            meta={e.data.username || undefined}
-            onOpen={() => setDetailId(e.id)}
+      <SplitView
+        enabled={panel}
+        asideLabel={t.accounts.detail}
+        aside={
+          detail ? (
+            <EntryPanel
+              entry={detail}
+              onClose={() => setDetailId(null)}
+              onEdit={(entry) => setForm(entry)}
+            />
+          ) : (
+            <EmptyState icon="lock" title={t.accounts.pickEntry} />
+          )
+        }
+      >
+        {shown.length === 0 ? (
+          <EmptyState
+            icon="lock"
+            title={data.entries.length === 0 ? t.accounts.empty : t.accounts.emptyFiltered}
           />
-        ))}
-      </ItemList>
+        ) : null}
+        <ItemList label={t.accounts.title}>
+          {shown.map((e) => (
+            <ItemRow
+              key={e.id}
+              title={e.data.title}
+              meta={e.data.username || undefined}
+              onOpen={() => setDetailId(e.id)}
+            />
+          ))}
+        </ItemList>
+      </SplitView>
       <EntryDetail
-        entry={detail}
+        entry={panel ? null : detail}
         onClose={() => setDetailId(null)}
         onEdit={(entry) => {
           setDetailId(null);
