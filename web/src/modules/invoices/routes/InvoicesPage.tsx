@@ -12,6 +12,7 @@ import { markOpen, markPaid } from '../actions';
 import { openTotal, sortInvoices } from '../logic';
 import { invoiceRepo } from '../repo';
 import styles from './invoices.module.css';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 type View = 'open' | 'paid';
 
@@ -67,7 +68,9 @@ export default function InvoicesPage() {
         <EmptyState
           icon="receipt"
           title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
-        />
+        >
+          {view === 'open' ? <StartDataButton moduleId="invoices" /> : null}
+        </EmptyState>
       ) : null}
       <ul className={styles.list}>
         {shown.map((i) => {

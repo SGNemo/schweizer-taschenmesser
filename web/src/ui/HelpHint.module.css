@@ -1,0 +1,49 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+/* The visible glyph is small, the tap target is the full 44 px. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  margin: calc((var(--touch) - 1.5rem) / -2);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: help;
+}
+
+.button:hover {
+  color: var(--text);
+}
+
+.button[aria-expanded='true'] {
+  color: var(--accent);
+}
+
+.bubble {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + var(--space-1));
+  left: 50%;
+  margin-left: calc(min(18rem, 80vw) / -2);
+  width: min(18rem, 80vw);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-2);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+}

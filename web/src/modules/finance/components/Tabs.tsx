@@ -9,6 +9,7 @@ import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
 import type { Transaction } from '../schema';
 import styles from '../routes/finance.module.css';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 export function TransactionsTab({
   data,
@@ -24,7 +25,12 @@ export function TransactionsTab({
   const inMonth = data.txs
     .filter((x) => x.date.slice(0, 7) === month)
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
-  if (inMonth.length === 0) return <EmptyState icon="wallet" title={t.finance.noTransactions} />;
+  if (inMonth.length === 0)
+    return (
+      <EmptyState icon="wallet" title={t.finance.noTransactions}>
+        <StartDataButton moduleId="finance" />
+      </EmptyState>
+    );
 
   const days = [...new Set(inMonth.map((x) => x.date))];
   return (

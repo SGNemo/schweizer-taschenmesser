@@ -8,6 +8,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  CircleHelp,
   Download,
   Ellipsis,
   ExternalLink,
@@ -46,6 +47,7 @@ import {
 } from 'lucide-react';
 
 const ICONS = {
+  help: CircleHelp,
   home: House,
   calendar: Calendar,
   checklist: ListChecks,

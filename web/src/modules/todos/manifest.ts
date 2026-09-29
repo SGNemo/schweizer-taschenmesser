@@ -1,3 +1,4 @@
+import { onboarding } from './onboarding';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -34,6 +35,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 20,
   contributions: {
+    onboarding: onboarding,
     quickAdd: [{ id: 'task', label: 'ToDo', to: '/todos?new=1' }],
     calendarItems: () => import('./calendar'),
     aiCreateDefaults: () => import('./aiDefaults'),

@@ -28,6 +28,12 @@ export interface Repo<T> {
   /** A live record, or undefined if missing / deleted. */
   get(id: string): Promise<Stored<T> | undefined>;
   create(data: T, opts?: { id?: string }): Promise<Stored<T>>;
+  /**
+   * Creates many records in ONE transaction (bulk imports). Each item may carry a fixed id; an id that
+   * already exists (also as a tombstone) is skipped – the call is idempotent. Validation happens
+   * before anything is written, so one invalid item rejects the whole batch.
+   */
+  createMany(items: { data: T; id?: string }[]): Promise<Stored<T>[]>;
   update(id: string, patch: Partial<T>): Promise<Stored<T>>;
   /** Create with a fixed id, or replace all data fields of the existing record. */
   upsert(id: string, data: T): Promise<Stored<T>>;
@@ -179,6 +185,18 @@ export function createRepo<T extends Record<string, unknown>>(
         const row = buildCreated(ctx, data, opts?.id ?? randomId());
         await saveAll([row]);
         return row;
+      }),
+    createMany: (items) =>
+      write(async (ctx) => {
+        const ids = items.map((item) => item.id ?? randomId());
+        const existing = await table().bulkGet(ids);
+        const rows: Row[] = [];
+        items.forEach((item, i) => {
+          if (existing[i]) return;
+          rows.push(buildCreated(ctx, item.data, ids[i]!));
+        });
+        await saveAll(rows);
+        return rows;
       }),
     update: (id, patch) =>
       write(async (ctx) => {

@@ -1,0 +1,48 @@
+import { parseDateInput } from '@/core/io/dates';
+import { formatMoney, parseMoney } from '@/core/money';
+import type { ImporterRuntime } from '@/core/importer/types';
+import { formatDay } from '@/core/time/dates';
+import { t } from '@/strings';
+import { invoiceRepo } from './repo';
+
+const keyOf = (payee: string, amountMinor: number, dueDate: string) =>
+  `${payee.trim().toLowerCase()}|${amountMinor}|${dueDate}`;
+
+const runtime: ImporterRuntime = {
+  parse(_id, input) {
+    if (input.kind !== 'form') return { candidates: [], notes: [] };
+    const v = input.values;
+    const payee = (v.payee ?? '').trim();
+    const amount = parseMoney(v.amount ?? '');
+    const due = parseDateInput(v.due ?? '');
+    if (!payee) return { candidates: [], notes: [t.onboarding.required] };
+    if (amount === undefined || amount < 1)
+      return { candidates: [], notes: [t.onboarding.invoices.badAmount] };
+    if (!due) return { candidates: [], notes: [t.onboarding.invoices.badDate] };
+    const reference = (v.reference ?? '').trim();
+    return {
+      candidates: [
+        {
+          collection: 'invoice',
+          data: {
+            payee,
+            amountMinor: amount,
+            dueDate: due,
+            status: 'open',
+            ...(reference ? { reference } : {}),
+          },
+          label: payee,
+          detail: `${formatMoney(amount)} · fällig ${formatDay(due, 'd. MMM yyyy')}`,
+          dedupeKey: keyOf(payee, amount, due),
+        },
+      ],
+      notes: [],
+    };
+  },
+  async existingKeys() {
+    const rows = await invoiceRepo.active().toArray();
+    return new Set(rows.map((r) => keyOf(r.payee, r.amountMinor, r.dueDate)));
+  },
+};
+
+export default runtime;

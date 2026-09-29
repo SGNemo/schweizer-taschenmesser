@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
+import type { OnboardingDef } from '@/core/importer/types';
 import type { IconName } from '@/ui/icons';
 
 type LazyComponent = () => Promise<{ default: ComponentType }>;
@@ -151,6 +152,11 @@ export type NotificationSource = (range: {
 }) => Promise<DueNotification[]>;
 
 export interface ModuleContributions {
+  /**
+   * Start-data importers of the module ("Startdaten einrichten"). **Required** so new modules think
+   * about it; use `noOnboarding` when there is nothing to import.
+   */
+  onboarding?: OnboardingDef;
   quickAdd?: QuickAddAction[];
   /** Lazy so manifests stay free of database imports. */
   calendarItems?: () => Promise<{ default: CalendarSource }>;

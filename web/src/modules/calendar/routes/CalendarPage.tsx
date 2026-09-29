@@ -21,6 +21,7 @@ import {
   type CalendarView,
 } from '../views';
 import styles from './calendar.module.css';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 const VIEW_LABEL: Record<CalendarView, string> = {
   month: t.calendar.month,
@@ -79,6 +80,7 @@ export default function CalendarPage() {
     <>
       <div className={styles.header}>
         <h1>{t.calendar.title}</h1>
+        {items && list.length === 0 ? <StartDataButton moduleId="calendar" /> : null}
         <Button variant="primary" onClick={() => setTarget({ draft: { startDate: date } })}>
           <Icon name="plus" size={18} />
           {t.calendar.newEvent}

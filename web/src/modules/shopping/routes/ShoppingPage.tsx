@@ -6,6 +6,7 @@ import { useUiStore } from '@/stores/ui';
 import { Button, Card, Checkbox, EmptyState, Icon, IconButton, PageHeader } from '@/ui';
 import { isDuplicate, parseEntry, sortItems } from '../logic';
 import { clearBought, itemRepo } from '../repo';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 export default function ShoppingPage() {
   const items = useLiveQuery(async () => sortItems(await itemRepo.active().toArray()), []);
@@ -62,7 +63,11 @@ export default function ShoppingPage() {
         </Button>
       </form>
 
-      {items && items.length === 0 ? <EmptyState icon="cart" title={t.shopping.empty} /> : null}
+      {items && items.length === 0 ? (
+        <EmptyState icon="cart" title={t.shopping.empty}>
+          <StartDataButton moduleId="shopping" />
+        </EmptyState>
+      ) : null}
       <Card as="div">
         <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {(items ?? []).map((i) => (

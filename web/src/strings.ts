@@ -930,6 +930,166 @@ export const t = {
       working: 'Wird berechnet …',
     },
   },
+  help: {
+    label: 'Hilfe',
+    sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und die Passphrase kennen nur deine Geräte.',
+    aiRouter:
+      'Mehrere KI-Anbieter stehen in einer Reihenfolge. Die App fragt den ersten verfügbaren; ist er überlastet, nicht erreichbar oder sein Limit ist erreicht, springt sie zum nächsten. Es werden nur deine Frage und ein kurzes Schema gesendet, nie deine Daten.',
+    updateChannel:
+      '„Stabil“ bietet nur fertige Versionen an. „Beta“ zeigt auch Vorabversionen, die neue Funktionen früher, aber weniger erprobt enthalten. Vor jedem Update legt die App eine Sicherungskopie an.',
+    vault:
+      'Der Tresor ist mit deinem Master-Passwort verschlüsselt, das nirgends gespeichert wird. Vergisst du es, kann niemand die Einträge wiederherstellen – auch nicht wir. Lege es deshalb an einem sicheren Ort ab.',
+    startData:
+      'Der Assistent liest Text oder Dateien ein und zeigt zuerst eine Vorschau. Erst nach deiner Bestätigung wird gespeichert, und jeder Import lässt sich als Ganzes wieder rückgängig machen.',
+  },
+  onboarding: {
+    button: 'Startdaten einrichten',
+    emptyHint: 'Du kannst vorhandene Daten auch gleich importieren.',
+    title: (module: string) => `Startdaten: ${module}`,
+    chooseIntro:
+      'Woher sollen die ersten Einträge kommen? Nichts wird gespeichert, bevor du die Vorschau bestätigt hast.',
+    skip: 'Überspringen',
+    skipHint: 'Später erreichst du den Assistenten wieder über die Einstellungen des Moduls.',
+    back: 'Zurück',
+    preview: 'Vorschau anzeigen',
+    parsing: 'Wird gelesen …',
+    chooseFile: 'Datei wählen …',
+    fileChosen: (name: string) => `Datei: ${name}`,
+    textLabel: 'Eine Zeile = ein Eintrag',
+    pickTemplates: 'Vorschläge auswählen',
+    noInput: 'Bitte gib etwas ein.',
+    nothingFound: 'Es wurden keine Einträge erkannt.',
+    fileTooLarge: 'Die Datei ist zu groß (höchstens 10 MB).',
+    readError: 'Die Datei konnte nicht gelesen werden.',
+    previewTitle: 'Vorschau',
+    previewIntro:
+      'Hier siehst du, was gespeichert würde. Entferne das Häkchen bei Einträgen, die du nicht willst.',
+    found: (n: number) => (n === 1 ? '1 Eintrag erkannt' : `${n} Einträge erkannt`),
+    selectAll: 'Alle auswählen',
+    selectNone: 'Keine auswählen',
+    duplicate: 'Schon vorhanden',
+    invalid: 'Nicht importierbar',
+    importN: (n: number) => (n === 1 ? '1 Eintrag importieren' : `${n} Einträge importieren`),
+    nothingSelected: 'Nichts ausgewählt.',
+    importing: 'Wird gespeichert …',
+    doneTitle: 'Fertig',
+    imported: (n: number) =>
+      n === 1 ? '1 Eintrag wurde importiert.' : `${n} Einträge wurden importiert.`,
+    undo: 'Import rückgängig machen',
+    undone: (removed: number, kept: number) =>
+      kept > 0
+        ? `${removed} Einträge entfernt. ${kept} wurden inzwischen bearbeitet und bleiben erhalten.`
+        : `${removed} Einträge entfernt.`,
+    close: 'Schließen',
+    recent: 'Zuletzt importiert',
+    recentEntry: (source: string, n: number, date: string) => `${source} · ${n} Einträge · ${date}`,
+    recentUndone: 'rückgängig gemacht',
+    errors: {
+      'unknown-collection': 'Der Import passt nicht zu diesem Modul.',
+      'nothing-selected': 'Nichts ausgewählt.',
+      fallback: 'Das hat nicht geklappt.',
+    } as Record<string, string>,
+    add: 'Hinzufügen',
+    required: 'Bitte ausfüllen.',
+    ics: {
+      exdate: (n: number) =>
+        `${n} wiederkehrende Termine hatten Ausnahmetage (einzelne ausgelassene Tage); diese Ausnahmen werden nicht übernommen.`,
+      rruleUnsupported: (n: number) =>
+        `${n} Termine haben eine Wiederholung, die diese App nicht kennt; sie werden als einzelner Termin importiert.`,
+      override: (n: number) => `${n} geänderte Einzeltermine einer Serie wurden übersprungen.`,
+      cancelled: (n: number) => `${n} abgesagte Termine wurden übersprungen.`,
+      invalid: (n: number) => `${n} Termine ohne gültiges Datum wurden übersprungen.`,
+    },
+    lines: (skipped: number) =>
+      skipped === 1 ? '1 Zeile wurde nicht erkannt.' : `${skipped} Zeilen wurden nicht erkannt.`,
+    calendar: {
+      ics: 'Kalenderdatei (.ics)',
+      icsHint:
+        'Exportiere deinen Kalender (z. B. Google Kalender, Outlook, Thunderbird) als .ics-Datei und wähle sie hier aus.',
+    },
+    todos: {
+      text: 'Aufgaben einfügen',
+      textHint:
+        'Füge eine Liste aus einer Notiz-App oder einer Nachricht ein: eine Zeile pro Aufgabe.',
+      placeholder: 'Steuerunterlagen sortieren\nZahnarzt anrufen\nFahrrad reparieren',
+      list: 'In diese Liste',
+    },
+    reminders: {
+      templates: 'Vorlagen für typische Erinnerungen',
+      templatesHint:
+        'Wähle aus, woran dich die App erinnern soll. Zeiten und Tage kannst du danach ändern.',
+      text: 'Erinnerungen einfügen',
+      textHint:
+        'Eine Zeile pro Erinnerung; sie gilt ab heute um 09:00 Uhr und kann danach angepasst werden.',
+      placeholder: 'Reifen wechseln\nGeschenk für Mama besorgen',
+      rent: ['Miete überweisen', 'jeden Monat am 1.'],
+      trash: ['Mülltonne rausstellen', 'jede Woche, Sonntag 19:00 – Wochentag danach anpassen'],
+      insurance: [
+        'Kfz-Versicherung vergleichen',
+        'jedes Jahr am 1. November (Wechselfrist meist 30.11.)',
+      ],
+      energy: ['Strom- und Gasvertrag prüfen', 'jedes Jahr am 1. September'],
+      tax: ['Steuerunterlagen sammeln', 'jedes Jahr am 1. Juni'],
+      dentist: ['Zahnarzt-Vorsorge vereinbaren', 'alle 6 Monate'],
+      smoke: ['Rauchmelder testen', 'jedes Jahr am 1. Januar'],
+      statements: ['Kontoauszüge prüfen', 'jeden Monat am 1.'],
+    },
+    finance: {
+      account: 'Konto mit Startsaldo anlegen',
+      accountHint:
+        'Für ein weiteres Konto. Das vorhandene Konto änderst du unter Finanzen → Konten.',
+      name: 'Kontoname',
+      balance: 'Kontostand heute',
+      balanceHint: 'z. B. 1.234,56 – bei einem Minus mit „-“.',
+      badBalance: 'Bitte einen Betrag wie 1.234,56 eingeben.',
+    },
+    invoices: {
+      form: 'Offene Rechnung erfassen',
+      payee: 'Rechnungssteller',
+      amount: 'Betrag',
+      due: 'Fällig am',
+      reference: 'Referenz (optional)',
+      badAmount: 'Bitte einen Betrag wie 49,90 eingeben.',
+      badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
+    },
+    subscriptions: {
+      form: 'Abo erfassen',
+      name: 'Name',
+      amount: 'Preis pro Abbuchung',
+      rhythm: 'Rhythmus',
+      monthly: 'monatlich',
+      quarterly: 'vierteljährlich',
+      yearly: 'jährlich',
+      next: 'Nächste Abbuchung am',
+      notice: 'Kündigungsfrist in Tagen (optional)',
+      badAmount: 'Bitte einen Betrag wie 9,99 eingeben.',
+      badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
+      badNotice: 'Bitte eine ganze Zahl eingeben.',
+    },
+    bookmarks: {
+      html: 'Browser-Lesezeichen (HTML)',
+      htmlHint:
+        'Exportiere die Lesezeichen in deinem Browser als HTML-Datei (Chrome/Edge: Lesezeichen-Manager → ⋮ → Lesezeichen exportieren). Ordnernamen werden zu Schlagwörtern.',
+      text: 'Links einfügen',
+      textHint: 'Eine Zeile pro Link, optional mit Titel davor.',
+      placeholder: 'https://example.org/artikel\nSchöne Wanderung https://example.org/wandern',
+    },
+    birthdays: {
+      text: 'Geburtstage einfügen',
+      textHint: 'Eine Zeile pro Person: Name und Datum, mit oder ohne Jahr.',
+      placeholder: 'Anna Beispiel 15.03.1985\nOnkel Max 02.11.\n24.12. Oma',
+    },
+    shopping: {
+      text: 'Einkaufsliste einfügen',
+      textHint: 'Eine Zeile pro Artikel, Mengen wie „2 Milch“ werden erkannt.',
+      placeholder: '2 Milch\nBrot\n500 g Mehl',
+    },
+    habits: {
+      text: 'Gewohnheiten einfügen',
+      textHint: 'Eine Zeile pro Gewohnheit; sie gelten jeden Tag.',
+      placeholder: 'Wasser trinken\nSpazieren gehen',
+    },
+  },
   update: {
     title: 'App-Updates',
     available: (version: string) => `Update verfügbar (v${version})`,

@@ -1,9 +1,10 @@
 {
-  "version": 8,
+  "version": 9,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
     "_blobs": "key",
+    "_imports": "id, createdAt, moduleId",
     "_meta": "key",
     "_modules": "id, updatedAt",
     "_outbox": "[collection+id], queuedAt",

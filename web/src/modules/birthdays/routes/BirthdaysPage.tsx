@@ -7,6 +7,7 @@ import { Button, EmptyState, Icon, ItemList, ItemRow, PageHeader } from '@/ui';
 import { BirthdayEditor, type BirthdayTarget } from '../components/BirthdayEditor';
 import { ageOn, daysUntil, nextBirthday, sortByNext, whenLabel } from '../logic';
 import { birthdayRepo } from '../repo';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 export default function BirthdaysPage() {
   const list = useLiveQuery(() => birthdayRepo.active().toArray(), []);
@@ -28,7 +29,11 @@ export default function BirthdaysPage() {
           {t.birthdays.add}
         </Button>
       </PageHeader>
-      {list && list.length === 0 ? <EmptyState icon="cake" title={t.birthdays.empty} /> : null}
+      {list && list.length === 0 ? (
+        <EmptyState icon="cake" title={t.birthdays.empty}>
+          <StartDataButton moduleId="birthdays" />
+        </EmptyState>
+      ) : null}
       <ItemList layout="grid" label={t.birthdays.title}>
         {sortByNext(list ?? [], day).map((b) => {
           const next = nextBirthday(b, day);

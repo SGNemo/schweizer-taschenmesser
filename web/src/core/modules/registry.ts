@@ -42,5 +42,27 @@ export function validateManifest(m: ModuleManifest): string[] {
       errors.push(`aiSchema collection "${name}" has no dataSchema`);
     if (!(c.titleField in c.fields)) errors.push(`aiSchema "${name}".titleField is not a field`);
   }
+  const onboarding = m.contributions?.onboarding;
+  if (!onboarding) {
+    errors.push(
+      'contributions.onboarding is required (use noOnboarding when there is nothing to import)',
+    );
+  } else {
+    const ids = new Set<string>();
+    for (const imp of onboarding.importers) {
+      if (ids.has(imp.id)) errors.push(`onboarding importer id "${imp.id}" is used twice`);
+      ids.add(imp.id);
+      if (imp.kind === 'template' && !imp.templates?.length)
+        errors.push(`onboarding importer "${imp.id}" (template) needs templates`);
+      if (imp.kind === 'form' && !imp.fields?.length)
+        errors.push(`onboarding importer "${imp.id}" (form) needs fields`);
+      if (imp.kind === 'file' && !imp.accept)
+        errors.push(`onboarding importer "${imp.id}" (file) needs accept`);
+      if (imp.kind === 'connector' && !imp.connectorId)
+        errors.push(`onboarding importer "${imp.id}" (connector) needs connectorId`);
+    }
+    if (onboarding.importers.length > 0 && !onboarding.load)
+      errors.push('onboarding.load is required when importers are declared');
+  }
   return errors;
 }

@@ -1,3 +1,4 @@
+import { onboarding } from './onboarding';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -34,7 +35,10 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   layout: 'content',
   order: 90,
-  contributions: { quickAdd: [{ id: 'item', label: 'Einkaufsartikel', to: '/shopping?new=1' }] },
+  contributions: {
+    onboarding: onboarding,
+    quickAdd: [{ id: 'item', label: 'Einkaufsartikel', to: '/shopping?new=1' }],
+  },
 };
 
 export default manifest;

@@ -1,3 +1,4 @@
+import { noOnboarding } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -37,6 +38,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 150,
   contributions: {
+    onboarding: noOnboarding,
     quickAdd: [{ id: 'document', label: 'Dokument', to: '/vault?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),

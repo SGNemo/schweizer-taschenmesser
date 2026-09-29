@@ -1,3 +1,4 @@
+import { onboarding } from './onboarding';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -39,6 +40,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 70,
   contributions: {
+    onboarding: onboarding,
     quickAdd: [{ id: 'item', label: 'Merkzettel', to: '/bookmarks?new=1' }],
   },
 };

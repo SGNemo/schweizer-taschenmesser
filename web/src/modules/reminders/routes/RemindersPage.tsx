@@ -13,6 +13,7 @@ import { nextOccurrenceAt, reminderStatus, sortReminders } from '../logic';
 import { reminderRepo } from '../repo';
 import { settings } from '../settings';
 import styles from './reminders.module.css';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 export default function RemindersPage() {
   const reminders = useLiveQuery(
@@ -53,7 +54,9 @@ export default function RemindersPage() {
       ) : null}
 
       {reminders && reminders.length === 0 ? (
-        <EmptyState icon="bell" title={t.reminders.empty} />
+        <EmptyState icon="bell" title={t.reminders.empty}>
+          <StartDataButton moduleId="reminders" />
+        </EmptyState>
       ) : null}
       <ul className={styles.list}>
         {reminders?.map((r) => {

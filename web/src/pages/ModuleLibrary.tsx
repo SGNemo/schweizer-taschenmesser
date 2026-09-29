@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/batches';
+import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
 import { visibleManifests } from '@/core/modules/registry';
 import type { ModuleManifest } from '@/core/modules/types';
@@ -9,6 +11,13 @@ import styles from './Page.module.css';
 export function ModuleLibrary() {
   const states = useModuleStates();
   const [pending, setPending] = useState<ModuleManifest | null>(null);
+  const [offer, setOffer] = useState<ModuleManifest | null>(null);
+
+  async function enable(m: ModuleManifest) {
+    await enableModule(m);
+    // Offer the start-data wizard once per device; "Überspringen" and every import count as handled.
+    if (hasImporters(m) && !(await wasOnboardingHandled(m.id))) setOffer(m);
+  }
 
   async function disable(policy: 'keep' | 'delete') {
     if (!pending) return;
@@ -44,7 +53,7 @@ export function ModuleLibrary() {
                   {t.actions.disable}
                 </Button>
               ) : (
-                <Button variant="primary" onClick={() => void enableModule(m)} disabled={!states}>
+                <Button variant="primary" onClick={() => void enable(m)} disabled={!states}>
                   {t.actions.enable}
                 </Button>
               )}
@@ -52,6 +61,17 @@ export function ModuleLibrary() {
           );
         })}
       </ul>
+
+      {offer ? (
+        <OnboardingWizard
+          manifest={offer}
+          open
+          onClose={() => {
+            void markOnboardingHandled(offer.id);
+            setOffer(null);
+          }}
+        />
+      ) : null}
 
       <Dialog
         open={pending !== null}

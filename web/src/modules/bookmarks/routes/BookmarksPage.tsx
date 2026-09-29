@@ -21,6 +21,7 @@ import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import { filterItems, hostOf, normalizeUrl, tagCounts, type Filter } from '../logic';
 import { itemRepo } from '../repo';
 import { KINDS, type Kind } from '../schema';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 /** The Web Share Target sends `title`, `text` and `url`; some apps put the link into `text`. */
 function sharedDraft(params: URLSearchParams): { draft: true; title?: string; url?: string } {
@@ -113,7 +114,9 @@ export default function BookmarksPage() {
         <EmptyState
           icon="bookmark"
           title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}
-        />
+        >
+          {items.length === 0 ? <StartDataButton moduleId="bookmarks" /> : null}
+        </EmptyState>
       ) : null}
       <ItemList layout="grid" label={t.bookmarks.title}>
         {shown.map((i) => (

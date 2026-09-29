@@ -1,3 +1,4 @@
+import { onboarding } from './onboarding';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -39,7 +40,10 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   layout: 'content',
   order: 110,
-  contributions: { quickAdd: [{ id: 'habit', label: 'Gewohnheit', to: '/habits?new=1' }] },
+  contributions: {
+    onboarding: onboarding,
+    quickAdd: [{ id: 'habit', label: 'Gewohnheit', to: '/habits?new=1' }],
+  },
 };
 
 export default manifest;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { t } from '@/strings';
-import { Button, Form, TextField } from '@/ui';
+import { Button, Form, HelpHint, TextField } from '@/ui';
 import { createVault, MIN_MASTER_LENGTH, VaultError } from '../vault';
 import styles from '../accounts.module.css';
 import { StrengthMeter } from './StrengthMeter';
@@ -31,7 +31,9 @@ export function SetupScreen() {
 
   return (
     <div className={styles.center}>
-      <p className={styles.intro}>{t.accounts.setup.intro}</p>
+      <p className={styles.intro}>
+        {t.accounts.setup.intro} <HelpHint text={t.help.vault} label={t.help.label} />
+      </p>
       <p className={styles.warning} role="note">
         {t.accounts.setup.warning}
       </p>

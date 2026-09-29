@@ -1,3 +1,4 @@
+import { noOnboarding } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { entrySchema, vaultSchema } from './schema';
@@ -35,7 +36,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   layout: 'wide',
   order: 160,
-  contributions: { services: () => import('./service') },
+  contributions: { onboarding: noOnboarding, services: () => import('./service') },
 };
 
 export default manifest;

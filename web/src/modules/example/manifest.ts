@@ -1,3 +1,4 @@
+import { noOnboarding } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -40,6 +41,7 @@ const manifest: ModuleManifest = {
   // Reference module: visible in dev builds and E2E (VITE_INCLUDE_EXAMPLE=true) only.
   devOnly: true,
   contributions: {
+    onboarding: noOnboarding,
     quickAdd: [{ id: 'new', label: 'Beispiel: neuer Eintrag', to: '/example?new=1' }],
   },
 };

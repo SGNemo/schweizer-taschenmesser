@@ -16,6 +16,7 @@ import {
 import { HabitEditor, type HabitTarget } from '../components/HabitEditor';
 import { completionRate, doneByHabit, isScheduled, recentDays, streak } from '../logic';
 import { checkRepo, habitRepo, setChecked } from '../repo';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 export default function HabitsPage() {
   const habits = useLiveQuery(
@@ -46,7 +47,11 @@ export default function HabitsPage() {
           {t.habits.add}
         </Button>
       </PageHeader>
-      {habits && visible.length === 0 ? <EmptyState icon="flame" title={t.habits.empty} /> : null}
+      {habits && visible.length === 0 ? (
+        <EmptyState icon="flame" title={t.habits.empty}>
+          <StartDataButton moduleId="habits" />
+        </EmptyState>
+      ) : null}
       <ItemList label={t.habits.title}>
         {visible.map((h) => {
           const set = done.get(h.id) ?? new Set<string>();

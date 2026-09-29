@@ -10,6 +10,7 @@ import { SubscriptionEditor, type SubscriptionTarget } from '../components/Subsc
 import { nextCancelDeadline, nextCharge, sortSubscriptions, totals } from '../logic';
 import { subscriptionRepo } from '../repo';
 import styles from './subscriptions.module.css';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 /** Highlight a cancellation deadline that is closer than this many days. */
 const WARN_DAYS = 14;
@@ -58,7 +59,9 @@ export default function SubscriptionsPage() {
       </div>
 
       {subs && subs.length === 0 ? (
-        <EmptyState icon="repeat" title={t.subscriptions.empty} />
+        <EmptyState icon="repeat" title={t.subscriptions.empty}>
+          <StartDataButton moduleId="subscriptions" />
+        </EmptyState>
       ) : null}
       <ul className={styles.list}>
         {subs?.map((s) => {

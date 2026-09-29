@@ -1,3 +1,4 @@
+import { noOnboarding } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -40,7 +41,10 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   layout: 'wide',
   order: 130,
-  contributions: { quickAdd: [{ id: 'goal', label: 'Sparziel', to: '/budgets?tab=goals&new=1' }] },
+  contributions: {
+    onboarding: noOnboarding,
+    quickAdd: [{ id: 'goal', label: 'Sparziel', to: '/budgets?tab=goals&new=1' }],
+  },
 };
 
 export default manifest;

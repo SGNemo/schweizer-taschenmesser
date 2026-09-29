@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { StartDataButton } from '@/core/importer/StartDataButton';
+import { hasImporters } from '@/core/importer/OnboardingWizard';
 import { useModuleStates } from '@/core/modules/activation';
 import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
@@ -7,13 +9,22 @@ import type { ModuleManifest, SettingField } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { useUiStore, type ThemeChoice } from '@/stores/ui';
-import { Button, Card, SelectField, Switch, TextField } from '@/ui';
+import { Button, Card, HelpHint, SelectField, Switch, TextField } from '@/ui';
 import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
 import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
 import { UpdateSection } from './settings/UpdateSection';
 import styles from './Page.module.css';
+
+function SectionTitle({ id, hint, children }: { id: string; hint?: string; children: string }) {
+  return (
+    <div className={styles.titleRow}>
+      <h2 id={id}>{children}</h2>
+      {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
+    </div>
+  );
+}
 
 function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
   const { schema, defaults, fields } = manifest.settings;
@@ -118,6 +129,8 @@ export function Settings() {
     (m) => states?.[m.id] && m.settings.fields.length > 0,
   );
 
+  const withStartData = visibleManifests.filter((m) => states?.[m.id] && hasImporters(m));
+
   return (
     <>
       <div className={styles.header}>
@@ -143,11 +156,15 @@ export function Settings() {
         <PushSection />
       </section>
       <section className={styles.section} aria-labelledby="ai">
-        <h2 id="ai">{t.ai.title}</h2>
+        <SectionTitle id="ai" hint={t.help.aiRouter}>
+          {t.ai.title}
+        </SectionTitle>
         <AiSection />
       </section>
       <section className={styles.section} aria-labelledby="sync">
-        <h2 id="sync">{t.sync.title}</h2>
+        <SectionTitle id="sync" hint={t.help.sync}>
+          {t.sync.title}
+        </SectionTitle>
         <SyncSection />
       </section>
       <section className={styles.section} aria-labelledby="backup">
@@ -155,9 +172,26 @@ export function Settings() {
         <BackupSection />
       </section>
       <section className={styles.section} aria-labelledby="updates">
-        <h2 id="updates">{t.update.title}</h2>
+        <SectionTitle id="updates" hint={t.help.updateChannel}>
+          {t.update.title}
+        </SectionTitle>
         <UpdateSection />
       </section>
+      {withStartData.length > 0 ? (
+        <section className={styles.section} aria-labelledby="startdata">
+          <h2 id="startdata">{t.onboarding.button}</h2>
+          <Card>
+            <ul className={styles.list}>
+              {withStartData.map((m) => (
+                <li key={m.id} className={styles.startRow}>
+                  <span>{m.name}</span>
+                  <StartDataButton moduleId={m.id} />
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      ) : null}
       <section className={styles.section} aria-labelledby="modules">
         <h2 id="modules">{t.settings.modules}</h2>
         {states && withSettings.length === 0 ? <p>{t.settings.noModuleSettings}</p> : null}

@@ -1,3 +1,4 @@
+import { noOnboarding } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -39,7 +40,10 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   layout: 'content',
   order: 140,
-  contributions: { quickAdd: [{ id: 'list', label: 'Packliste', to: '/packing?new=1' }] },
+  contributions: {
+    onboarding: noOnboarding,
+    quickAdd: [{ id: 'list', label: 'Packliste', to: '/packing?new=1' }],
+  },
 };
 
 export default manifest;

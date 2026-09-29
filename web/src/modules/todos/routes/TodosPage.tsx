@@ -14,6 +14,7 @@ import { ensureInbox, listRepo, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
 import styles from './todos.module.css';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 
 type StoredTask = Stored<Task>;
 
@@ -209,7 +210,11 @@ export default function TodosPage() {
             </Button>
           </form>
 
-          {tasks && top.length === 0 ? <EmptyState icon="checklist" title={t.todos.empty} /> : null}
+          {tasks && top.length === 0 ? (
+            <EmptyState icon="checklist" title={t.todos.empty}>
+              <StartDataButton moduleId="todos" />
+            </EmptyState>
+          ) : null}
           <ul className={styles.list}>
             {top.map((task) => (
               <TaskRow
