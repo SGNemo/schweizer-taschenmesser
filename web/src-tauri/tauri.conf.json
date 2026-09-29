@@ -60,7 +60,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc2NzYwRDExOTgxRjJCQUMKUldTc0t4K1lFUTEyZG5lQmJVVWhyZkhRVkNERUczY2RLMFhkd1VCcFkrNitMUEM5YzlTbHE5QVgK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDREU2NEMxNEY0OTI3N0UKUldSK0owbFB3V1RlUEVQL2lDS28rdk1ud3BTdEU1bElzQjlOQWVCTUpINVZaL24yMWpuV2lDREIK",
       "endpoints": [
         "https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/latest.json"
       ],
