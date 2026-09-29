@@ -1,7 +1,6 @@
 import { formatDay } from '@/core/time/dates';
 import type { Recurrence } from './types';
 
-const WEEKDAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 const WEEKDAYS_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const MONTHS = [
   'Januar',
@@ -18,7 +17,6 @@ const MONTHS = [
   'Dezember',
 ];
 
-export const weekdayName = (iso: number): string => WEEKDAYS[iso - 1] ?? '';
 export const weekdayShort = (iso: number): string => WEEKDAYS_SHORT[iso - 1] ?? '';
 export const monthName = (m: number): string => MONTHS[m - 1] ?? '';
 
