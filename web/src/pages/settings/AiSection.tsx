@@ -82,6 +82,9 @@ function ProviderCard({
     const outPrice = parseNumber(priceOut);
     return {
       ...draft,
+      // toggled / key state live in the stored entry, not in this form's draft
+      enabled: entry.enabled,
+      keySet: entry.keySet,
       limits: {
         requestsPerDay:
           requestsPerDay !== undefined && requestsPerDay >= 0

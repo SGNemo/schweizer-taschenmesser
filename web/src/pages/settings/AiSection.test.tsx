@@ -90,6 +90,17 @@ describe('AI settings', () => {
     await waitFor(async () => expect((await loadAiConfig()).providers[0]!.enabled).toBe(false));
   });
 
+  it('saving the form does not undo the on/off switch', async () => {
+    render(<AiSection />);
+    const user = await addProvider('Ollama (lokal)');
+    const card = await screen.findByTestId('provider-ollama');
+    await user.click(within(card).getByRole('switch', { name: s.enabled }));
+    await waitFor(async () => expect((await loadAiConfig()).providers[0]!.enabled).toBe(false));
+    await user.click(within(card).getByRole('button', { name: s.save }));
+    await waitFor(() => expect(within(card).getByText(s.saved)).toBeInTheDocument());
+    expect((await loadAiConfig()).providers[0]!.enabled).toBe(false);
+  });
+
   it('saves limits and prices as numbers (German decimal comma accepted)', async () => {
     render(<AiSection />);
     const user = await addProvider('Mistral');
