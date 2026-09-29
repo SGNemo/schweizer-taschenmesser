@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
+import { getPlatform } from '@/core/platform';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
@@ -24,14 +25,11 @@ import { CATEGORIES, type DocCategory } from '../schema';
 async function download(id: string, name: string) {
   const blob = await getBlob(id);
   if (!blob) return;
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = safeFileName(name);
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  await getPlatform().saveFile({
+    fileName: safeFileName(name),
+    data: blob,
+    mime: blob.type || 'application/octet-stream',
+  });
 }
 
 export default function VaultPage() {

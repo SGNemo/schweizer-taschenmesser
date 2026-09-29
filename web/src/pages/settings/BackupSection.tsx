@@ -23,8 +23,8 @@ export function BackupSection() {
   const [busy, setBusy] = useState(false);
 
   async function exportNow() {
-    downloadTextFile(backupFileName(), serializeBackup(await createBackup()));
-    toast(t.backup.exported);
+    const result = await downloadTextFile(backupFileName(), serializeBackup(await createBackup()));
+    if (result === 'saved') toast(t.backup.exported);
   }
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {

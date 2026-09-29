@@ -2,6 +2,7 @@
  * Local Ollama server (`/api/chat` with tools). The browser may only reach it when Ollama runs
  * with `OLLAMA_ORIGINS` including this app's origin.
  */
+import { getPlatform } from '@/core/platform';
 import { AiError, type AiProvider, type CompletionRequest, type CompletionResult } from './types';
 
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
@@ -27,7 +28,7 @@ interface OllamaResponse {
 export function createOllamaProvider(opts: OllamaOptions = {}): AiProvider {
   const model = opts.model || DEFAULT_OLLAMA_MODEL;
   const base = (opts.baseUrl || DEFAULT_OLLAMA_URL).replace(/\/+$/, '');
-  const doFetch = opts.fetch ?? fetch;
+  const doFetch = opts.fetch ?? ((input, init) => getPlatform().fetch(input, init));
   return {
     id: 'ollama',
     model,

@@ -1,3 +1,4 @@
+import { getPlatform } from '@/core/platform';
 import { SyncError, type FieldOp, type PullPage, type SyncAdapter } from '../types';
 
 export interface VaultInfo {
@@ -15,7 +16,7 @@ export class SelfHostedAdapter implements SyncAdapter {
   constructor(
     url: string,
     private readonly token: string,
-    private readonly fetchFn: typeof fetch = (input, init) => fetch(input, init),
+    private readonly fetchFn: typeof fetch = (input, init) => getPlatform().fetch(input, init),
   ) {
     this.base = normalizeServerUrl(url) ?? url;
   }

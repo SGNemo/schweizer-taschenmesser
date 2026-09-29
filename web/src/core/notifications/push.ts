@@ -11,6 +11,7 @@ import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { activeManifests, collectNotifications } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
 import type { DueNotification } from '@/core/modules/types';
+import { getPlatform } from '@/core/platform';
 import { normalizeServerUrl } from '@/core/sync/adapters/selfHosted';
 import { encryptValue, fromBase64Url } from '@/core/sync/crypto';
 import { loadSyncConfig, type SyncConfig } from '@/core/sync/service';
@@ -63,7 +64,7 @@ export interface PushRemote {
 
 export function createPushRemote(
   config: Pick<SyncConfig, 'url' | 'token'>,
-  fetchFn: typeof fetch = (input, init) => fetch(input, init),
+  fetchFn: typeof fetch = (input, init) => getPlatform().fetch(input, init),
 ): PushRemote {
   const base = normalizeServerUrl(config.url) ?? config.url;
   async function request(path: string, method: string, body?: unknown, ok: number[] = []) {
@@ -123,7 +124,9 @@ export function defaultPushDeps(): PushDeps {
   return {
     database: defaultDb,
     now: clockNow,
+    // Web Push is a browser feature; the native app schedules local notifications itself.
     supported: () =>
+      !getPlatform().isNative &&
       typeof navigator !== 'undefined' &&
       'serviceWorker' in navigator &&
       typeof PushManager !== 'undefined' &&

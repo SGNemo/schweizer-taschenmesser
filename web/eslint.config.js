@@ -7,7 +7,17 @@ import reactHooks from 'eslint-plugin-react-hooks';
 // Exception (see CLAUDE.md): finance may read subscriptions/invoices via their public.ts.
 
 export default tseslint.config(
-  { ignores: ['dist', 'dev-dist', 'playwright-report', 'test-results', 'templates'] },
+  {
+    ignores: [
+      'dist',
+      'dev-dist',
+      'playwright-report',
+      'test-results',
+      'templates',
+      'src-tauri/target',
+      'src-tauri/gen',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -26,6 +36,31 @@ export default tseslint.config(
   {
     files: ['scripts/**/*.mjs', '*.config.{js,ts}'],
     languageOptions: { globals: { ...globals.node } },
+  },
+  {
+    // Platform isolation: only `core/platform` may know that a native shell exists, and only
+    // `core/platform/tauri` may import Tauri packages. Everything else uses `getPlatform()`.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/core/platform/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ImportDeclaration[source.value=/^@tauri-apps\\//]',
+          message:
+            'Use getPlatform() from @/core/platform; Tauri packages belong in core/platform/tauri.',
+        },
+        {
+          selector: 'ImportExpression[source.value=/^@tauri-apps\\//]',
+          message:
+            'Use getPlatform() from @/core/platform; Tauri packages belong in core/platform/tauri.',
+        },
+        {
+          selector: 'Identifier[name=/^__TAURI/], Literal[value=/^__TAURI/]',
+          message: 'Do not detect the native shell yourself; ask getPlatform().',
+        },
+      ],
+    },
   },
   {
     // Feature modules: no imports of sibling modules, no raw table writes.

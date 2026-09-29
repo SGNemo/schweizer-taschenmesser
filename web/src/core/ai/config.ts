@@ -2,6 +2,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
+import { getPlatform } from '@/core/platform';
 import { createClaudeProvider, DEFAULT_CLAUDE_MODEL } from './providers/claude';
 import { createOllamaProvider, DEFAULT_OLLAMA_MODEL, DEFAULT_OLLAMA_URL } from './providers/ollama';
 import type { AiProvider } from './providers/types';
@@ -54,15 +55,16 @@ export function createProvider(
   opts: { fetch?: typeof fetch } = {},
 ): AiProvider | undefined {
   if (!isAiConfigured(c)) return undefined;
+  const fetchFn = opts.fetch ?? getPlatform().fetch;
   return c.provider === 'claude'
     ? createClaudeProvider({
         apiKey: c.anthropicKey.trim(),
         model: c.claudeModel.trim(),
-        fetch: opts.fetch,
+        fetch: fetchFn,
       })
     : createOllamaProvider({
         baseUrl: c.ollamaUrl.trim(),
         model: c.ollamaModel.trim(),
-        fetch: opts.fetch,
+        fetch: fetchFn,
       });
 }

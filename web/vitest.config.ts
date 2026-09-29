@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
     css: false,
     // One Dexie copy for app code and dexie-react-hooks, otherwise liveQuery misses local writes.
     server: { deps: { inline: ['dexie', 'dexie-react-hooks'] } },

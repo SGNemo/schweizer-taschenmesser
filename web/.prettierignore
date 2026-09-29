@@ -3,3 +3,6 @@ node_modules
 playwright-report
 test-results
 src/core/db/schema.snapshot.json
+src-tauri/target
+src-tauri/gen
+src-tauri/icons

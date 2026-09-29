@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
-import {
-  localNotificationService,
-  type NotificationPermissionState,
-} from '@/core/notifications/service';
+import type { NotificationPermissionState } from '@/core/notifications/service';
+import { getPlatform } from '@/core/platform';
 import { visibleManifests } from '@/core/modules/registry';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
@@ -74,7 +72,7 @@ function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
 
 function NotificationsCard() {
   const [permission, setPermission] = useState<NotificationPermissionState>(() =>
-    localNotificationService.permission(),
+    getPlatform().notifications.permission(),
   );
   return (
     <Card>
@@ -86,7 +84,9 @@ function NotificationsCard() {
         {permission === 'default' ? (
           <Button
             variant="primary"
-            onClick={async () => setPermission(await localNotificationService.requestPermission())}
+            onClick={async () =>
+              setPermission(await getPlatform().notifications.requestPermission())
+            }
           >
             {t.notifications.enable}
           </Button>
@@ -94,7 +94,7 @@ function NotificationsCard() {
         {permission === 'granted' ? (
           <Button
             onClick={() =>
-              void localNotificationService.show({
+              void getPlatform().notifications.show({
                 title: t.appName,
                 body: t.notifications.testBody,
                 tag: 'test',

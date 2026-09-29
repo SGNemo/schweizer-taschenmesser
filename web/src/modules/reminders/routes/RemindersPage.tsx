@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { localNotificationService } from '@/core/notifications/service';
+import { getPlatform } from '@/core/platform';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, today } from '@/core/time/dates';
@@ -23,7 +23,7 @@ export default function RemindersPage() {
   const [target, setTarget] = useState<EditorTarget>(null);
   const [params, setParams] = useSearchParams();
   const defaultTime = (prefs as { defaultTime?: string } | undefined)?.defaultTime ?? '09:00';
-  const permission = localNotificationService.permission();
+  const permission = getPlatform().notifications.permission();
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL, so no effect is needed.
   const draft: EditorTarget = {

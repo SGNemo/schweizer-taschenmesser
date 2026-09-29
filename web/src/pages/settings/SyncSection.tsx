@@ -8,6 +8,7 @@ import {
   type ConnectParams,
 } from '@/core/sync/service';
 import { useSyncStatus } from '@/core/sync/status';
+import { getPlatform } from '@/core/platform';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Badge, Button, Card, Dialog, Switch, TextField } from '@/ui';
@@ -34,6 +35,8 @@ export function SyncSection() {
 
   // When the sync server itself serves this app, its address is this origin: suggest it.
   useEffect(() => {
+    // The installed app is not served by the sync server, so there is nothing to suggest.
+    if (getPlatform().isNative) return;
     const controller = new AbortController();
     fetch('/v1/health', { signal: controller.signal })
       .then((res) => (res.ok ? (res.json() as Promise<{ ok?: boolean }>) : undefined))

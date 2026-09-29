@@ -3,7 +3,8 @@ import { activeManifests, collectNotifications } from '@/core/modules/contributi
 import { loadModuleStates } from '@/core/modules/activation';
 import type { DueNotification } from '@/core/modules/types';
 import { now as clockNow } from '@/core/time/now';
-import { localNotificationService, type NotificationService } from './service';
+import { getPlatform } from '@/core/platform';
+import type { NotificationService } from './service';
 
 /** Never replay more than a day of missed notifications after the app was closed for a long time. */
 export const MAX_CATCH_UP_MS = 24 * 60 * 60 * 1000;
@@ -49,7 +50,7 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
 function defaultDeps(): SchedulerDeps {
   const meta = db.table<{ key: string; value: number }, string>('_meta');
   return {
-    service: localNotificationService,
+    service: getPlatform().notifications,
     async loadDue(range) {
       return collectNotifications(range, activeManifests(await loadModuleStates()));
     },
