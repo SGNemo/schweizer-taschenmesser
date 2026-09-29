@@ -115,9 +115,6 @@ export async function loadUsageTotals(database: TaschenmesserDB = defaultDb): Pr
 export const loadUsageRows = (database: TaschenmesserDB = defaultDb): Promise<UsageRow[]> =>
   table(database).toArray();
 
-export const useUsageTotals = (): UsageTotals | undefined =>
-  useLiveQuery(() => loadUsageTotals(), []);
-
 export const useUsageRows = (): UsageRow[] | undefined => useLiveQuery(() => loadUsageRows(), []);
 
 export const resetUsage = (database: TaschenmesserDB = defaultDb): Promise<void> =>
