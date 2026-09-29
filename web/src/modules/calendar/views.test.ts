@@ -6,8 +6,10 @@ import {
   monthWeeks,
   rangeFor,
   shiftDate,
+  splitDay,
   viewTitle,
 } from './views';
+import type { CalendarItem } from '@/core/modules/types';
 import { eventSchema } from './schema';
 
 const ev = (over: Record<string, unknown>) =>
@@ -152,5 +154,43 @@ describe('event schema', () => {
         endTime: '09:00',
       }).success,
     ).toBe(true);
+  });
+});
+
+describe('splitDay', () => {
+  const at = (id: string, time?: string, endTime?: string, allDay = false): CalendarItem => ({
+    id,
+    source: 'calendar',
+    kind: 'event',
+    title: id,
+    date: '2026-09-29',
+    time,
+    endTime,
+    allDay,
+  });
+
+  it('separates untimed items and defaults the duration to one hour', () => {
+    const { untimed, timed } = splitDay([at('a', undefined, undefined, true), at('b', '09:00')]);
+    expect(untimed.map((i) => i.id)).toEqual(['a']);
+    expect(timed).toHaveLength(1);
+    expect([timed[0]!.start, timed[0]!.end]).toEqual([540, 600]);
+  });
+
+  it('puts overlapping items into separate lanes and reuses lanes afterwards', () => {
+    const { timed } = splitDay([
+      at('a', '09:00', '10:30'),
+      at('b', '10:00', '11:00'),
+      at('c', '12:00', '13:00'),
+    ]);
+    const by = Object.fromEntries(timed.map((t) => [t.item.id, t]));
+    expect([by.a!.lane, by.a!.lanes]).toEqual([0, 2]);
+    expect([by.b!.lane, by.b!.lanes]).toEqual([1, 2]);
+    expect([by.c!.lane, by.c!.lanes]).toEqual([0, 1]);
+  });
+
+  it('gives very short items a minimum height and clamps to midnight', () => {
+    const { timed } = splitDay([at('a', '09:00', '09:05'), at('b', '23:30', '01:00')]);
+    expect(timed[0]!.end - timed[0]!.start).toBe(30);
+    expect(timed[1]!.end).toBe(24 * 60);
   });
 });

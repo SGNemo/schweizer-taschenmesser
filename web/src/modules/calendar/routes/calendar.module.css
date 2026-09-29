@@ -279,3 +279,154 @@ button.itemRow:hover {
 .error {
   color: var(--danger);
 }
+
+/* Page body: takes the height left under the header and toolbar. */
+.body {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.monthWrap {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 900px) {
+  /* Desktop: the month grid stretches over the free height; rows share it evenly. */
+  .monthWrap {
+    position: relative;
+    min-height: 34rem;
+  }
+  .month {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+  }
+}
+
+/* Time grid (week / day) */
+.tg {
+  flex: 1 0 auto;
+  position: relative;
+  min-height: 32rem;
+}
+.tgInner {
+  --hour: 3.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.tgHead {
+  display: grid;
+  grid-template-columns: 3.5rem repeat(var(--cols), minmax(0, 1fr));
+  border-bottom: 1px solid var(--border);
+}
+.tgGutter {
+  min-width: 0;
+}
+.tgDay {
+  margin: 0;
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  border-left: 1px solid var(--border);
+}
+.tgUntimed {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  border-left: 1px solid var(--border);
+}
+.tgBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 3.5rem repeat(var(--cols), minmax(0, 1fr));
+}
+.tgHours {
+  display: flex;
+  flex-direction: column;
+}
+.tgHours span {
+  height: var(--hour);
+  flex: none;
+  padding-right: var(--space-2);
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-0.5em);
+}
+.tgCol {
+  position: relative;
+  height: calc(var(--hour) * 24);
+  border-left: 1px solid var(--border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--border) 0,
+    var(--border) 1px,
+    transparent 1px,
+    transparent var(--hour)
+  );
+}
+.tgToday {
+  background-color: var(--accent-soft);
+}
+.tgItem {
+  position: absolute;
+  top: calc(var(--start) / 60 * var(--hour));
+  height: calc(var(--dur) / 60 * var(--hour) - 2px);
+  left: calc(var(--lane) / var(--lanes) * 100% + 2px);
+  width: calc(100% / var(--lanes) - 4px);
+  overflow: hidden;
+  padding: 2px var(--space-1);
+  border: 0;
+  border-left: 3px solid currentColor;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.tgTime {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+.tgNow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--start) / 60 * var(--hour));
+  height: 2px;
+  background: var(--danger);
+  pointer-events: none;
+}
+
+/* Agenda side panel */
+.agenda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-height: 100%;
+}
+.agendaTitle {
+  font-size: var(--text-md);
+}
+.agendaHead {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}

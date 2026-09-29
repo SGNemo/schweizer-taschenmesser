@@ -14,6 +14,9 @@ const VIEWPORTS = [
   { name: '820x1180', width: 820, height: 1180 },
   { name: '412x915', width: 412, height: 915, mobile: true },
 ];
+/** Optional filters for quick iterations, e.g. SCREENS_VIEWPORTS=1920x1080 SCREENS_PAGES=calendar. */
+const ONLY_VIEWPORTS = process.env.SCREENS_VIEWPORTS?.split(',');
+const ONLY_PAGES = process.env.SCREENS_PAGES ? new RegExp(process.env.SCREENS_PAGES) : undefined;
 const MODULES = [
   'calendar',
   'todos',
@@ -119,12 +122,27 @@ async function seed(page: Page) {
             }),
           ),
           { id: 'h1', listId: 'home', title: 'Fenster putzen', done: false, priority: 1, order: 0 },
-          { id: 'w1', listId: 'work', title: 'Bericht Q3 fertigstellen', done: false, priority: 3, order: 0, dueDate: '2026-10-02' },
+          {
+            id: 'w1',
+            listId: 'work',
+            title: 'Bericht Q3 fertigstellen',
+            done: false,
+            priority: 3,
+            order: 0,
+            dueDate: '2026-10-02',
+          },
         ],
         reminders_reminder: many('r', 6, (i) => ({
-          title: ['Medikamente', 'Müll rausstellen', 'Pflanzen gießen', 'Oma anrufen', 'Auto-TÜV', 'Backup prüfen'][i],
+          title: [
+            'Medikamente',
+            'Müll rausstellen',
+            'Pflanzen gießen',
+            'Oma anrufen',
+            'Auto-TÜV',
+            'Backup prüfen',
+          ][i],
           startDate: '2026-09-29',
-          time: `0${7 + i}:30`,
+          time: `${String(7 + i).padStart(2, '0')}:30`,
           active: i !== 4,
           recurrence: i % 2 === 0 ? { freq: 'daily', interval: 1 } : undefined,
         })),
@@ -133,21 +151,61 @@ async function seed(page: Page) {
           { id: 'acc-save', name: 'Sparkonto Demo', openingBalanceMinor: 1200000, order: 1 },
         ],
         finance_transaction: [
-          { id: 'inc0', accountId: 'acc-main', kind: 'income', amountMinor: 320000, date: '2026-09-01', payee: 'Arbeitgeber Muster GmbH' },
+          {
+            id: 'inc0',
+            accountId: 'acc-main',
+            kind: 'income',
+            amountMinor: 320000,
+            date: '2026-09-01',
+            payee: 'Arbeitgeber Muster GmbH',
+          },
           ...many('x', 14, (i) => ({
             accountId: 'acc-main',
             kind: 'expense',
             amountMinor: 1500 + i * 2300,
             date: `2026-09-${String(2 + i).padStart(2, '0')}`,
-            payee: ['Supermarkt', 'Bäckerei', 'Tankstelle', 'Kino', 'Drogerie', 'Restaurant', 'Bahn'][i % 7],
+            payee: [
+              'Supermarkt',
+              'Bäckerei',
+              'Tankstelle',
+              'Kino',
+              'Drogerie',
+              'Restaurant',
+              'Bahn',
+            ][i % 7],
             categoryId: ['cat-food', 'cat-home', 'cat-mobility', 'cat-leisure'][i % 4],
           })),
         ],
         invoices_invoice: [
-          { id: 'i1', payee: 'Stadtwerke Musterstadt', amountMinor: 8990, dueDate: '2026-10-05', status: 'open' },
-          { id: 'i2', payee: 'Internet Beispiel AG', amountMinor: 3999, dueDate: '2026-09-25', status: 'open' },
-          { id: 'i3', payee: 'Versicherung Demo', amountMinor: 12500, dueDate: '2026-10-15', status: 'open' },
-          { id: 'i4', payee: 'Telefon Muster', amountMinor: 2500, dueDate: '2026-09-10', status: 'paid', paidAt: '2026-09-11' },
+          {
+            id: 'i1',
+            payee: 'Stadtwerke Musterstadt',
+            amountMinor: 8990,
+            dueDate: '2026-10-05',
+            status: 'open',
+          },
+          {
+            id: 'i2',
+            payee: 'Internet Beispiel AG',
+            amountMinor: 3999,
+            dueDate: '2026-09-25',
+            status: 'open',
+          },
+          {
+            id: 'i3',
+            payee: 'Versicherung Demo',
+            amountMinor: 12500,
+            dueDate: '2026-10-15',
+            status: 'open',
+          },
+          {
+            id: 'i4',
+            payee: 'Telefon Muster',
+            amountMinor: 2500,
+            dueDate: '2026-09-10',
+            status: 'paid',
+            paidAt: '2026-09-11',
+          },
         ],
         subscriptions_subscription: [
           ['Streaming Demo', 1299],
@@ -164,7 +222,14 @@ async function seed(page: Page) {
           active: i !== 3,
         })),
         bookmarks_item: many('b', 6, (i) => ({
-          title: ['Rezept: Kürbissuppe', 'Wanderweg Beispieltal', 'Buch: Demo-Roman', 'Film: Muster', 'Café Beispiel', 'Idee: Balkon-Garten'][i],
+          title: [
+            'Rezept: Kürbissuppe',
+            'Wanderweg Beispieltal',
+            'Buch: Demo-Roman',
+            'Film: Muster',
+            'Café Beispiel',
+            'Idee: Balkon-Garten',
+          ][i],
           kind: ['read', 'place', 'read', 'watch', 'place', 'idea'][i],
           tags: i % 2 ? ['freizeit'] : ['küche', 'herbst'],
           done: false,
@@ -255,14 +320,17 @@ async function seedVault(page: Page) {
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog', { name: 'Zugang hinzufügen' })).toHaveCount(0);
     // Saving opens the detail dialog of the new entry.
-    await page.getByRole('dialog', { name: title }).getByRole('button', { name: 'Schließen' }).click();
+    await page
+      .getByRole('dialog', { name: title })
+      .getByRole('button', { name: 'Schließen' })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 }
 
 test('capture layout screenshots', async ({ browser }) => {
   mkdirSync(OUT, { recursive: true });
-  for (const vp of VIEWPORTS) {
+  for (const vp of VIEWPORTS.filter((v) => !ONLY_VIEWPORTS || ONLY_VIEWPORTS.includes(v.name))) {
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
       isMobile: vp.mobile ?? false,
@@ -275,11 +343,15 @@ test('capture layout screenshots', async ({ browser }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     await seed(page);
     await seedVault(page);
-    for (const p of PAGES) {
+    for (const p of PAGES.filter((x) => !ONLY_PAGES || ONLY_PAGES.test(x.name))) {
       await page.goto(p.path);
       await expect(page.locator('main')).toBeVisible();
       await page.waitForTimeout(600);
       await page.screenshot({ path: `${OUT}/${vp.name}--${p.name}.png` });
+    }
+    if (ONLY_PAGES && !ONLY_PAGES.test('accounts')) {
+      await context.close();
+      continue;
     }
     // Unlocked vault list (the session key is in memory only, so use client-side navigation).
     await page.goto('/accounts');

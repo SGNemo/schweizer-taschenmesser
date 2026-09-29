@@ -98,3 +98,60 @@ export function expandEvent(id: string, e: CalendarEvent, range: DateRange): Cal
 
 /** Event id encoded in an item id (`<eventId>:<date>`). */
 export const eventIdOf = (itemId: string): string => itemId.slice(0, itemId.lastIndexOf(':'));
+
+export interface TimedItem {
+  item: CalendarItem;
+  /** Minutes since 00:00. */
+  start: number;
+  end: number;
+  /** Column within the overlap cluster and the cluster's column count. */
+  lane: number;
+  lanes: number;
+}
+
+/** Shortest block shown for an item without (or with a too short) duration, in minutes. */
+export const MIN_BLOCK_MINUTES = 30;
+/** Duration assumed for an item that has a start time but no end time, in minutes. */
+export const DEFAULT_BLOCK_MINUTES = 60;
+
+const toMinutes = (hhmm: string): number =>
+  Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+
+/** Splits one day into timed items (positioned in a time grid) and untimed ones (all-day row). */
+export function splitDay(items: CalendarItem[]): { untimed: CalendarItem[]; timed: TimedItem[] } {
+  const untimed = items.filter((i) => i.allDay || !i.time);
+  const sorted = items
+    .filter((i) => !i.allDay && i.time)
+    .map((item) => {
+      const start = toMinutes(item.time!);
+      const rawEnd = item.endTime ? toMinutes(item.endTime) : start + DEFAULT_BLOCK_MINUTES;
+      // Clamp to the day; an end before the start (multi-day) runs to midnight.
+      const end = Math.min(
+        24 * 60,
+        Math.max(rawEnd > start ? rawEnd : 24 * 60, start + MIN_BLOCK_MINUTES),
+      );
+      return { item, start, end, lane: 0, lanes: 1 };
+    })
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+
+  // Overlap clusters: consecutive items that touch a running end time share columns.
+  let cluster: TimedItem[] = [];
+  let clusterEnd = 0;
+  const laneEnds: number[] = [];
+  const close = () => {
+    for (const t of cluster) t.lanes = laneEnds.length;
+    cluster = [];
+    laneEnds.length = 0;
+  };
+  for (const t of sorted) {
+    if (cluster.length && t.start >= clusterEnd) close();
+    let lane = laneEnds.findIndex((e) => e <= t.start);
+    if (lane === -1) lane = laneEnds.length;
+    laneEnds[lane] = t.end;
+    t.lane = lane;
+    cluster.push(t);
+    clusterEnd = Math.max(clusterEnd, t.end);
+  }
+  close();
+  return { untimed, timed: sorted };
+}

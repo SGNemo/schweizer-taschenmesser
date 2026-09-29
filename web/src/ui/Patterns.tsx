@@ -168,7 +168,8 @@ export function SplitView({
     <div className={styles.splitView}>
       <div className={styles.splitMain}>{children}</div>
       <aside className={styles.splitAside} aria-label={asideLabel}>
-        {aside}
+        {/* Absolutely positioned so the panel never makes the row taller than the main content. */}
+        <div className={styles.splitAsideInner}>{aside}</div>
       </aside>
     </div>
   );
