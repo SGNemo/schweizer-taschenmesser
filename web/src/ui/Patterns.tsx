@@ -1,6 +1,7 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
 import type { ReactNode } from 'react';
 import { Card } from './Card';
+import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
 
 export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
@@ -83,9 +84,21 @@ export function FormActions({ start, children }: { start?: ReactNode; children: 
   );
 }
 
-export function ItemList({ children, label }: { children: ReactNode; label?: string }) {
+/** `layout="grid"` turns the list into an auto-fill card grid once the page is wide enough. */
+export function ItemList({
+  children,
+  label,
+  layout = 'list',
+}: {
+  children: ReactNode;
+  label?: string;
+  layout?: 'list' | 'grid';
+}) {
   return (
-    <ul className={styles.list} aria-label={label}>
+    <ul
+      className={layout === 'grid' ? `${styles.list} ${styles.grid}` : styles.list}
+      aria-label={label}
+    >
       {children}
     </ul>
   );
@@ -130,6 +143,34 @@ export function ItemRow({
       </div>
       {children}
     </Card>
+  );
+}
+
+/**
+ * Main content plus a side panel. The panel only exists while the viewport is at least `minWidth`
+ * px wide (a structural decision, so it is not merely hidden and never duplicates the DOM);
+ * below that only the main content renders.
+ */
+export function SplitView({
+  children,
+  aside,
+  asideLabel,
+  minWidth = 1500,
+}: {
+  children: ReactNode;
+  aside: ReactNode;
+  asideLabel: string;
+  minWidth?: number;
+}) {
+  const wide = useMediaQuery(`(min-width: ${minWidth}px)`);
+  if (!wide) return <>{children}</>;
+  return (
+    <div className={styles.splitView}>
+      <div className={styles.splitMain}>{children}</div>
+      <aside className={styles.splitAside} aria-label={asideLabel}>
+        {aside}
+      </aside>
+    </div>
   );
 }
 

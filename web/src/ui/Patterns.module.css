@@ -154,3 +154,27 @@ button.chip[aria-pressed='true'] {
   color: var(--danger);
   font-weight: 600;
 }
+
+/* Card grid: only when the page container is wide enough for two columns. */
+@container page (min-width: 44rem) {
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+  }
+}
+.splitView {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(20rem, 24vw, 30rem);
+  gap: var(--space-5);
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+}
+.splitMain {
+  min-width: 0;
+}
+.splitAside {
+  position: sticky;
+  top: 0;
+  min-width: 0;
+}

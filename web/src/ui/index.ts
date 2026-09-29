@@ -16,8 +16,10 @@ export {
   Progress,
   Segmented,
   Split,
+  SplitView,
   Stat,
   Toolbar,
   patternStyles,
 } from './Patterns';
+export { useMediaQuery } from './useMediaQuery';
 export { WidgetList, type WidgetEntry } from './WidgetList';
