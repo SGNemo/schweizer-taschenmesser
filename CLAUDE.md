@@ -168,7 +168,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 6. **Extras & polish** – done: Merkliste, eight extra modules (off by default), local-only file storage, optional Web Push through the sync server (VAPID, encrypted payloads), PWA share target + shortcuts, axe-core accessibility E2E. Known limits: Push needs HTTPS and a real push service (not testable headless); vault files are not synced/backed up; no Lighthouse run in CI.
 7. **Tauri desktop + Windows installers** – done (see "Native distribution").
 8. **Android (Tauri Mobile)** – done: builds in CI (unsigned in dry runs); device behaviour unverified.
-9. **GitHub Actions, signing, releases, README** – done and verified through CI dry runs (Windows NSIS/MSI + Android APK artifacts); the first real release (pre-release tag `v0.2.0-beta.1`) needs the user's signing secrets and approval.
+9. **GitHub Actions, signing, releases, README** – done and verified through CI dry runs (Windows NSIS/MSI + Android APK artifacts); signing secrets exist and were verified by a full dry run (signing, `.sig` key match, audits); the first public pre-release is `v0.2.0-beta.1`.
 10. **Self-update** – done (see "Self-update (Phase 10)"); real update on devices unverified.
 11. **Password vault "Accounts"** – done incl. step 11b (OS keystore, biometrics, `FLAG_SECURE`; device behaviour still to be tested by hand), see "Password vault".
 12. **Multi-AI providers + router** – done (see "Multi-provider AI (Phase 12)").
