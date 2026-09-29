@@ -68,7 +68,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 
 **State.** Data = Dexie + `useLiveQuery`. Zustand (`stores/ui.ts`) = UI-only state (theme, palette, quick add, toasts). Theme lives in `localStorage` + inline script in `index.html` (no flash).
 
-**UI.** CSS Modules + tokens (`ui/tokens.css`), light/dark, `prefers-reduced-motion` respected. Primitives in `web/src/ui` (Button, Dialog on native `<dialog>`, Fields, Card, Toaster…). Icons: `lucide-react` via `ui/icons.tsx` (`IconName`). Sidebar ≥ 900 px, bottom nav below, quick-add FAB, command palette (Ctrl+K). Touch targets ≥ 44 px, visible focus. Dialog autofocus: use `data-autofocus` (React `autoFocus` runs before `showModal()`).
+**UI.** CSS Modules + tokens (`ui/tokens.css`), light/dark, `prefers-reduced-motion` respected. Primitives in `web/src/ui` (Button, Dialog on native `<dialog>`, Fields, Card, Toaster…). Icons: `lucide-react` via `ui/icons.tsx` (`IconName`). Sidebar ≥ 900 px, bottom nav below, quick-add FAB, command palette (Ctrl+K). Touch targets ≥ 44 px, visible focus. **Page layout:** the shell has no width cap; every page sits in `layout/PageContainer` (variants `narrow` 45rem · `content` 70rem (default) · `wide` 100rem · `full`), chosen by `manifest.layout` (or `route.layout`) – modules never set their own `max-width`. The container is a CSS size container named `page`: use `@container page (min-width: …)` for inner layouts (card grids, columns), `useMediaQuery` / `useSplitView` only for structural changes (side panel vs. dialog). On desktop (≥ 900 px) `main` scrolls, not the window; pages that should fill the height are flex children of `.page`. Dialog autofocus: use `data-autofocus` (React `autoFocus` runs before `showModal()`).
 
 **PWA.** `vite-plugin-pwa` with `injectManifest` (`src/sw.ts`), update prompt via toast. Android Chrome has no `new Notification()` → notifications must go through `registration.showNotification`.
 
@@ -154,7 +154,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 ## Create a new module
 1. `npm run gen:module -- habits "Habit-Tracker"` (id: lowercase alphanumeric). This copies `templates/module`, fills placeholders and runs `db:bump`.
 2. Edit in `src/modules/habits/`: `schema.ts` (Zod data), `repo.ts` (`createRepo`), `ai.ts` (compact AI schema; `titleField` must be a field), `settings.ts`, `routes/`, `widgets/`, `migrations.ts`, manifest `icon`/`description`/`defaultEnabled`.
-3. Route paths must start with `/<id>`; add `nav: true` for navigation entries; add `contributions.quickAdd` for the FAB.
+3. Route paths must start with `/<id>`; add `nav: true` for navigation entries; add `contributions.quickAdd` for the FAB; set `layout` (`narrow` | `content` | `wide` | `full`, default `content`) to the page width the module needs.
 4. Add UI strings to `src/strings.ts` (German).
 5. If you change collections/indexes later: `npm run db:bump`. If you change stored data shape: bump `manifest.version` and add a migration.
 6. Run `npm run lint && npm run typecheck && npm test`; add an E2E case for user-visible flows.
