@@ -37,7 +37,7 @@ Die Links zeigen immer auf die **neueste stabile Version**. Alle Versionen (auch
 > **Daten aus der PWA übernehmen:** Die installierte App hat einen eigenen Speicher. Umzug über *Einstellungen → Backup*
 > (Export in der PWA, Import in der App) oder einfach über den Sync-Server.
 
-Architektur, Konventionen, Releases und der Ablauf „neues Modul anlegen“: siehe [CLAUDE.md](CLAUDE.md).
+Architektur, Konventionen, Releases und der Ablauf „neues Modul anlegen“: siehe [CLAUDE.md](CLAUDE.md) und [docs/architecture.md](docs/architecture.md).
 
 ```
 web/            die App (Vite, React 19, TypeScript) – als PWA und als Tauri-Shell
