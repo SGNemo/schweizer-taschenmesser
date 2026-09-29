@@ -1,9 +1,9 @@
 {
-  "version": 3,
+  "version": 4,
   "stores": {
     "_meta": "key",
     "_modules": "id, updatedAt",
-    "_outbox": "[collection+id]",
+    "_outbox": "[collection+id], queuedAt",
     "_secrets": "key",
     "_settings": "id, updatedAt",
     "calendar_event": "id, updatedAt, startDate",

@@ -3,7 +3,7 @@ import type { ModuleManifest } from '@/core/modules/types';
 /** System tables. `synced` ones use the record envelope and travel through sync. */
 export const SYSTEM_TABLES = {
   _meta: { stores: 'key', synced: false },
-  _outbox: { stores: '[collection+id]', synced: false },
+  _outbox: { stores: '[collection+id], queuedAt', synced: false },
   _secrets: { stores: 'key', synced: false },
   _settings: { stores: 'id, updatedAt', synced: true },
   _modules: { stores: 'id, updatedAt', synced: true },
@@ -34,4 +34,12 @@ export function buildStores(manifests: readonly ModuleManifest[]): Record<string
   }
   // Stable key order → stable snapshot.
   return Object.fromEntries(Object.entries(stores).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/** Tables whose records travel through sync (module collections plus the synced system tables). */
+export function syncedTableNames(manifests: readonly ModuleManifest[]): string[] {
+  return Object.keys(buildStores(manifests)).filter((name) => {
+    const system = SYSTEM_TABLES[name as SystemTableName];
+    return system ? system.synced : true;
+  });
 }

@@ -6,7 +6,7 @@ describe('buildStores', () => {
   it('derives prefixed tables with default indexes and system tables', () => {
     const stores = buildStores([example]);
     expect(stores[tableName('example', 'entry')]).toBe('id, updatedAt, createdAt');
-    expect(stores._outbox).toBe('[collection+id]');
+    expect(stores._outbox).toBe('[collection+id], queuedAt');
   });
 
   it('is sorted (stable snapshot)', () => {

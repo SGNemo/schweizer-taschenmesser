@@ -10,6 +10,8 @@ import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { useUiStore, type ThemeChoice } from '@/stores/ui';
 import { Button, Card, SelectField, Switch, TextField } from '@/ui';
+import { BackupSection } from './settings/BackupSection';
+import { SyncSection } from './settings/SyncSection';
 import styles from './Page.module.css';
 
 function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
@@ -135,6 +137,14 @@ export function Settings() {
       <section className={styles.section} aria-labelledby="notifications">
         <h2 id="notifications">{t.notifications.title}</h2>
         <NotificationsCard />
+      </section>
+      <section className={styles.section} aria-labelledby="sync">
+        <h2 id="sync">{t.sync.title}</h2>
+        <SyncSection />
+      </section>
+      <section className={styles.section} aria-labelledby="backup">
+        <h2 id="backup">{t.backup.title}</h2>
+        <BackupSection />
       </section>
       <section className={styles.section} aria-labelledby="modules">
         <h2 id="modules">{t.settings.modules}</h2>

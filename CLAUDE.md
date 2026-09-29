@@ -8,7 +8,8 @@ Full architecture plan: approved in the first session (phases below). Keep this 
 
 ## Repo layout
 - `web/` – the PWA (Vite, React 19, TypeScript strict). Own `package.json`.
-- `server/` – sync server (Fastify + SQLite). **Phase 4, not started.** Separate project, no shared package.
+- `server/` – sync server (Fastify 5 + better-sqlite3, own `package.json`, Dockerfile, compose). Separate project, no shared package.
+- `contract/` – JSON fixtures of the sync merge rule, read by the tests of both projects.
 
 ## Commands (run in `web/`)
 | Command | Purpose |
@@ -18,10 +19,12 @@ Full architecture plan: approved in the first session (phases below). Keep this 
 | `npm run typecheck` | tsc for app, service worker, node configs |
 | `npm run lint` | ESLint (incl. module isolation rules) |
 | `npm test` | Vitest unit + component tests |
-| `npm run e2e` | Playwright, projects `desktop-chrome` + `pixel-7` (builds with `--mode e2e`) |
+| `npm run e2e` | `e2e:app` (Playwright, projects `desktop-chrome` + `pixel-7`, builds with `--mode e2e`) followed by `e2e:sync` (`playwright.sync.config.ts`: serial multi-device tests against the real server started from `../server`, in-memory DB) |
 | `npm run gen:module -- <id> "<Name>"` | Generate a new module from `templates/module` |
 | `npm run db:bump` | Regenerate `src/core/db/schema.snapshot.json` + bump Dexie version |
 | `npm run gen:icons` | Re-render PWA PNG icons from `public/icon.svg` |
+
+Server (run in `server/`): `npm test` (Vitest + `fastify.inject`, in-memory SQLite), `npm run typecheck`, `npm run lint`, `npm run build` (→ `dist/`), `npm start`, `npm run dev`.
 
 Definition of done for every phase: `lint`, `typecheck`, `test`, `e2e` green; app starts; CLAUDE.md updated; commit + push to `develop`.
 
@@ -65,8 +68,17 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 
 **PWA.** `vite-plugin-pwa` with `injectManifest` (`src/sw.ts`), update prompt via toast. Android Chrome has no `new Notification()` → notifications must go through `registration.showNotification`.
 
+**Sync & backup (Phase 4).**
+- **Model:** field-operation store. `FieldOp = {collection, id, field, hlc, value}` (`core/sync/types.ts`); `null` = field removed, `deletedAt` = tombstone. Per `(collection,id,field)` the op with the **greatest HLC string wins, equal/older ops change nothing** – implemented twice on purpose, in `core/sync/ops.ts` (`mergeOps`, pure) and in the server's single SQL upsert (`server/src/store.ts`), and pinned by the shared fixtures in `contract/lww-cases.json` (each case also runs with reversed arrival order). The server never merges values; it only assigns a monotonic `seq` to accepted ops (pull cursor).
+- **Layers:** `StorageAdapter` (`core/storage`, Dexie impl: outbox, `applyRemote`, cursor/epoch in `_meta`) ⟷ `runSync` in `core/sync/engine.ts` ⟷ `SyncAdapter` (`push`/`pull`; `adapters/selfHosted.ts`; `googleDrive.stub.ts` documents the unbuilt second backend). `core/sync/service.ts` holds config (`_secrets.syncConfig`, local only), `connect/disconnect/resetServer`, `syncNow` (serialised per tab and via Web Locks across tabs) and `startSync` triggers (start, 60 s, online, visibility, debounced after outbox changes); UI status in `useSyncStatus`.
+- **Cycle:** pull first, then push. A response `epoch` that differs from the stored one (first contact, server reset/replaced) restarts the cursor at 0 and queues **every** local record (`markAllDirty`), so a new server is filled automatically. The cursor only advances after a page was applied. Outbox entries carry a write counter `rev`; an entry is cleared only if `rev` is unchanged, otherwise the record is pushed again in the same round. Remote-applied data is not re-queued. `applyRemote` calls `clock.receive()`, so later local edits sort after remote stamps even with a skewed clock. Ops for unknown collections are skipped; malformed ops, reserved envelope fields and `__proto__`-like names are ignored by `mergeOps`. `createdAt` of remote-created records is derived from the oldest stamp, `updatedAt`/`deviceId` from the newest.
+- **Which tables sync:** `syncedTableNames()` = module collections + `_settings` + `_modules`. `_meta`, `_outbox`, `_secrets` never do.
+- **Encryption (optional):** PBKDF2-SHA-256 (600 000 iterations) → non-extractable AES-GCM key, stored as `CryptoKey` in `_secrets` (the passphrase itself is not stored). Each op value is encrypted separately (`enc:v1:<iv>:<ct>`, AAD = `collection/id/field`, so values cannot be swapped); collection/id/field/hlc stay readable because the server needs them. The server keeps a *vault* (`salt` + encrypted check string, first writer wins, `PUT /v1/vault`) so other devices can verify the passphrase without any data. Encryption can only be started on an empty server; unencrypted data on the server → explicit `POST /v1/reset` (confirm `"RESET"`) → new `epoch`. Wrong key → `decrypt`, encrypted data without key → `no-key`; nothing is applied and the cursor does not move.
+- **Server API** (`server/src/app.ts`, all but health need `Authorization: Bearer`): `GET /v1/health`, `GET|PUT /v1/vault`, `POST /v1/push` (≤ 5000 ops, strict JSON schema, unknown properties rejected), `GET /v1/pull?since&limit`, `POST /v1/reset`. Tokens (≥ 16 chars, hashed + `timingSafeEqual`) from `SYNC_TOKEN(S)`; refuses to start without one. CORS (`CORS_ORIGINS`, default `*`), rate limit, `cache-control: no-store`; with `WEB_DIR` it serves the PWA with SPA fallback (plugins are registered *before* routes – `buildApp` is async for that reason).
+- **Backup** (`core/backup`): JSON `{format:'taschenmesser-backup', version, exportedAt, tables}` of all synced tables incl. tombstones and stamps, validated with Zod on import; secrets are never included. *Merge* = same LWW rule as sync. *Replace* = tombstone records not in the backup, write every backup record as a fresh edit (new stamps, also for fields that must disappear) and queue everything, so the restore wins on other devices too. Tables missing from the file are left alone.
+- **Not built / known limits:** Google Drive adapter; binary attachments; no tombstone GC (grows forever); the server is single-tenant (all tokens share one data set); the Docker image could not be built in the dev sandbox (no daemon) – the compiled server, static serving, persistence and token checks were verified by running it directly.
+
 **Planned (not built yet)** – see phase plan:
-- Sync: field-operation store. Server keeps `(collection,id,field) → (hlc,value,seq)` and accepts an upsert only if the HLC is greater; merge logic lives only in the client. Optional per-field AES-GCM encryption (PBKDF2 key from passphrase). Token auth. Server also serves the PWA (HTTPS via `tailscale serve`).
 - AI: one Zod `Query` format for stage 1 (local German intent parser + full-text) and stage 2 (LLM tool call with only question + date + compact `aiSchema`s, no user data). Executor validates against `aiSchema`, runs locally. `AiProvider` interface (Claude Haiku default, Ollama). Cache the structured query, show token usage. Creating entries always needs a confirmation dialog.
 - Notifications: local first (`NotificationService`), Web Push in phase 6 as option.
 
@@ -82,11 +94,14 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 1. **Foundation** – done: PWA shell, design system, layout, module registry/library, Dexie core (envelope, HLC, repo, outbox), event bus, settings, generator, example module, tests + E2E.
 2. **Core modules** – done: `core/recurrence`, ToDo (lists, priority, due date, subtasks), Reminders (recurrence + local notifications), Calendar (month/week/day, aggregates other modules; week/day are agenda lists, no hour grid), Dashboard (drag & drop, hide/show, widgets "Heute & Morgen", "Offene ToDos", "Nächste Erinnerungen"). Core modules are `defaultEnabled`.
 3. **Finance, Invoices, Subscriptions** – done: cross-links via bus + service + public read API, calendar/notification contributions, dashboard widgets (`Kontostand`, `Fällige Rechnungen`, `Nächste Abbuchungen`), month overview with charts, accounts/categories/bookings. Core modules: calendar 10, todos 20, reminders 30, finance 40, invoices 50, subscriptions 60 (all `defaultEnabled`).
-4. Sync adapters + server + backup (JSON export/import) + encryption.
+4. **Sync + backup** – done: self-hosted server (Fastify + SQLite, Docker, token auth), field-level LWW sync with epochs/outbox, optional end-to-end encryption, JSON backup (merge/replace), settings UI + status badge, two-device E2E against the real server.
 5. AI assistant (stage 1, then stage 2).
 6. Bookmarks (Merkliste), extra modules (off by default), notifications/Web Push option, a11y/PWA polish.
 
 ## Gotchas
+- `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.
+- Multi-device E2E lives in `e2e/sync/` (own config, `workers: 1`, shared server) and is ignored by `playwright.config.ts`. Helpers wait on IndexedDB (`_outbox` count) instead of UI state; use client-side navigation while a context is offline (a `goto` would fail).
+- Tests that need "another device" create a second `TaschenmesserDB` (unit) or a second browser context (E2E); `MemoryServer` (`core/sync/testing.ts`, tests only) mirrors the server rule.
 - Do not leave your own `vite preview` running on :4173 – Playwright reuses that port (`reuseExistingServer`) and would test a stale build. Stop it (`pkill -f "[v]ite preview"`) before `npm run e2e`.
 - Async bus handlers (finance booking) finish *after* the UI action; E2E waits for their effect (e.g. poll IndexedDB) before navigating.
 - E2E: a write is finished when the dialog that saved it has closed – wait for that (and for the UI to reflect it) before `goto`/`reload`. Fix the date with `page.clock.setFixedTime(...)`; `page.clock.install` + `fastForward` drives the notification scheduler. dnd-kit keyboard steps: wait for the live region (`[id^="DndLiveRegion"]`) between key presses.

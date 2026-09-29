@@ -1,0 +1,18 @@
+# Sync server + PWA in one container.
+#   1. cp .env.example .env   and set SYNC_TOKEN
+#   2. docker compose up -d --build
+# The PWA is then available at http://<host>:8787 (use `tailscale serve` for HTTPS, see README).
+services:
+  sync:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '${PORT:-8787}:8787'
+    volumes:
+      - sync-data:/data
+
+volumes:
+  sync-data:

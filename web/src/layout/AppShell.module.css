@@ -182,3 +182,28 @@
     padding: var(--space-6) var(--space-6) var(--space-7);
   }
 }
+
+.syncBadge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+}
+.syncBadge:hover {
+  background: var(--surface-2);
+}
+.syncError {
+  color: var(--danger);
+}
+.spin {
+  display: grid;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

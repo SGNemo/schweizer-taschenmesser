@@ -5,6 +5,7 @@ import { useUiStore } from '@/stores/ui';
 import { Fab, Icon, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { QuickAdd } from './QuickAdd';
+import { SyncBadge } from './SyncBadge';
 import { MoreSheet } from './MoreSheet';
 import { useModuleNavItems, type NavItem } from './useNavItems';
 import styles from './AppShell.module.css';
@@ -99,6 +100,7 @@ export function AppShell() {
             <span>{t.actions.search}</span>
             <kbd className={`${styles.kbd} ${styles.hideMobile}`}>{t.palette.hint}</kbd>
           </button>
+          <SyncBadge />
         </header>
         <main id="main" tabIndex={-1} className={styles.main}>
           <Outlet />

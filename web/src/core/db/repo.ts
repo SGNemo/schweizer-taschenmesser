@@ -129,8 +129,18 @@ export function createRepo<T extends Record<string, unknown>>(
   async function saveAll(rows: Row[]): Promise<void> {
     if (rows.length === 0) return;
     await table().bulkPut(rows);
+    // `rev` counts writes per record, so the sync engine can tell whether a record changed
+    // again while it was being pushed (it only clears entries whose rev it has seen).
+    const previous = await outbox().bulkGet(rows.map((r) => [name, r.id]));
     const queuedAt = now();
-    await outbox().bulkPut(rows.map((r) => ({ collection: name, id: r.id, queuedAt })));
+    await outbox().bulkPut(
+      rows.map((r, i) => ({
+        collection: name,
+        id: r.id,
+        queuedAt,
+        rev: (previous[i]?.rev ?? 0) + 1,
+      })),
+    );
   }
 
   /** Loads the device context first: nothing foreign may be awaited inside a Dexie transaction. */

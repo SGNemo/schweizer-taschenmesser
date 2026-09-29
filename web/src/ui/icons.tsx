@@ -2,6 +2,7 @@ import {
   Bell,
   Bookmark,
   Cake,
+  CloudOff,
   Calendar,
   Check,
   Download,
@@ -23,6 +24,7 @@ import {
   Plus,
   Puzzle,
   Receipt,
+  RefreshCw,
   Repeat,
   Search,
   Settings,
@@ -73,6 +75,8 @@ const ICONS = {
   download: Download,
   upload: Upload,
   flame: Flame,
+  sync: RefreshCw,
+  cloudOff: CloudOff,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

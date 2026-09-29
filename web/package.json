@@ -12,11 +12,13 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test",
+    "e2e": "playwright test && playwright test -c playwright.sync.config.ts",
     "gen:module": "node scripts/gen-module.mjs",
     "db:bump": "node scripts/db-bump.mjs",
     "build:e2e": "vite build --mode e2e",
-    "gen:icons": "node scripts/gen-icons.mjs"
+    "gen:icons": "node scripts/gen-icons.mjs",
+    "e2e:app": "playwright test",
+    "e2e:sync": "playwright test -c playwright.sync.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

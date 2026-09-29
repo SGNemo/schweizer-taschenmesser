@@ -1,0 +1,383 @@
+{
+  "cases": [
+    {
+      "name": "newer stamp wins over older",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "old"
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000002000-0000-aaaa0001",
+            "value": "new"
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "title": {
+            "hlc": "0000000002000-0000-aaaa0001",
+            "value": "new"
+          }
+        }
+      }
+    },
+    {
+      "name": "different fields merge independently",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "A-title"
+          },
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "done",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": false
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "done",
+            "hlc": "0000000003000-0000-bbbb0002",
+            "value": true
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000002000-0000-bbbb0002",
+            "value": "B-title"
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "title": {
+            "hlc": "0000000002000-0000-bbbb0002",
+            "value": "B-title"
+          },
+          "done": {
+            "hlc": "0000000003000-0000-bbbb0002",
+            "value": true
+          }
+        }
+      }
+    },
+    {
+      "name": "same wall clock: higher counter wins",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0001-aaaa0001",
+            "value": "first"
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0002-aaaa0001",
+            "value": "second"
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "title": {
+            "hlc": "0000000001000-0002-aaaa0001",
+            "value": "second"
+          }
+        }
+      }
+    },
+    {
+      "name": "same wall clock and counter: higher device id wins",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "1700000000000-0000-bbbb0002",
+            "value": "from-b"
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "1700000000000-0000-aaaa0001",
+            "value": "from-a"
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "title": {
+            "hlc": "1700000000000-0000-bbbb0002",
+            "value": "from-b"
+          }
+        }
+      }
+    },
+    {
+      "name": "identical stamp is a no-op",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "same"
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "same"
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "title": {
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "same"
+          }
+        }
+      }
+    },
+    {
+      "name": "a newer null (removed field) wins over an older value",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "note",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "text"
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "note",
+            "hlc": "0000000002000-0000-aaaa0001",
+            "value": null
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "note": {
+            "hlc": "0000000002000-0000-aaaa0001",
+            "value": null
+          }
+        }
+      }
+    },
+    {
+      "name": "delete (deletedAt) versus a concurrent edit: each field resolves on its own",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "deletedAt",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": null
+          },
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "v1"
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "deletedAt",
+            "hlc": "0000000005000-0000-bbbb0002",
+            "value": 1234567890
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000004000-0000-aaaa0001",
+            "value": "v2"
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "deletedAt": {
+            "hlc": "0000000005000-0000-bbbb0002",
+            "value": 1234567890
+          },
+          "title": {
+            "hlc": "0000000004000-0000-aaaa0001",
+            "value": "v2"
+          }
+        }
+      }
+    },
+    {
+      "name": "undelete with a newer stamp",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "deletedAt",
+            "hlc": "0000000002000-0000-aaaa0001",
+            "value": 1234567890
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "deletedAt",
+            "hlc": "0000000003000-0000-aaaa0001",
+            "value": null
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "deletedAt": {
+            "hlc": "0000000003000-0000-aaaa0001",
+            "value": null
+          }
+        }
+      }
+    },
+    {
+      "name": "structured values (arrays and objects) are stored verbatim",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "recurrence",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": {
+              "freq": "weekly",
+              "byWeekday": [
+                1,
+                3
+              ]
+            }
+          }
+        ],
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "recurrence",
+            "hlc": "0000000002000-0000-aaaa0001",
+            "value": {
+              "freq": "daily",
+              "interval": 2
+            }
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "recurrence": {
+            "hlc": "0000000002000-0000-aaaa0001",
+            "value": {
+              "freq": "daily",
+              "interval": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "records and collections are independent",
+      "batches": [
+        [
+          {
+            "collection": "todos_task",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "r1-title"
+          },
+          {
+            "collection": "todos_task",
+            "id": "r2",
+            "field": "title",
+            "hlc": "0000000009000-0000-aaaa0001",
+            "value": "r2-title"
+          },
+          {
+            "collection": "reminders_reminder",
+            "id": "r1",
+            "field": "title",
+            "hlc": "0000000000500-0000-aaaa0001",
+            "value": "other-collection"
+          }
+        ]
+      ],
+      "expected": {
+        "todos_task/r1": {
+          "title": {
+            "hlc": "0000000001000-0000-aaaa0001",
+            "value": "r1-title"
+          }
+        },
+        "todos_task/r2": {
+          "title": {
+            "hlc": "0000000009000-0000-aaaa0001",
+            "value": "r2-title"
+          }
+        },
+        "reminders_reminder/r1": {
+          "title": {
+            "hlc": "0000000000500-0000-aaaa0001",
+            "value": "other-collection"
+          }
+        }
+      }
+    }
+  ]
+}

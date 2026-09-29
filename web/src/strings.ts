@@ -306,6 +306,90 @@ export const t = {
     deleteCategoryHint: 'Buchungen bleiben erhalten und zeigen „Ohne Kategorie“.',
     tooltipTotal: 'Gesamt',
   },
+  sync: {
+    title: 'Synchronisation',
+    intro:
+      'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im LAN oder über Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
+    serverUrl: 'Server-Adresse',
+    serverUrlHint: 'z. B. https://mein-pc.tailnet.ts.net',
+    token: 'Zugangstoken',
+    encrypt: 'Ende-zu-Ende-Verschlüsselung',
+    encryptHint:
+      'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur Chiffretext. Nur auf einem leeren Server möglich.',
+    passphrase: 'Passphrase',
+    passphraseHint:
+      'Mindestens 8 Zeichen. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
+    passphraseJoinHint: 'Nur nötig, wenn der Server verschlüsselt ist.',
+    connect: 'Verbinden',
+    connecting: 'Verbinde …',
+    connected: (host: string) => `Verbunden mit ${host}`,
+    encryptedBadge: 'Verschlüsselt',
+    plainBadge: 'Unverschlüsselt',
+    lastSync: 'Zuletzt synchronisiert',
+    never: 'noch nicht',
+    pending: (n: number) =>
+      n === 0 ? 'Alles gesendet' : n === 1 ? '1 Änderung wartet' : `${n} Änderungen warten`,
+    syncNow: 'Jetzt synchronisieren',
+    disconnect: 'Trennen',
+    disconnectHint: 'Deine lokalen Daten bleiben erhalten; der Server wird nicht verändert.',
+    state: { off: 'Aus', idle: 'Synchronisiert', syncing: 'Synchronisiere …', error: 'Fehler' },
+    badge: (state: string) => `Synchronisation: ${state}`,
+    errors: {
+      network: 'Server nicht erreichbar.',
+      unauthorized: 'Der Server hat das Token abgelehnt.',
+      server: 'Der Server hat einen Fehler gemeldet.',
+      decrypt: 'Entschlüsselung fehlgeschlagen – stimmt die Passphrase?',
+      'no-key':
+        'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit Passphrase verbinden.',
+      unsupported: 'Nicht unterstützt.',
+      unknown: 'Unbekannter Fehler.',
+    } as Record<string, string>,
+    failures: {
+      'invalid-url': 'Bitte eine gültige Adresse mit http:// oder https:// eingeben.',
+      unreachable:
+        'Server nicht erreichbar. Wird die App per HTTPS geöffnet, muss auch der Server per HTTPS erreichbar sein (z. B. mit „tailscale serve“).',
+      unauthorized: 'Das Token wurde abgelehnt.',
+      'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte die Passphrase eingeben.',
+      'passphrase-too-short': 'Die Passphrase braucht mindestens 8 Zeichen.',
+      'wrong-passphrase': 'Falsche Passphrase.',
+      'server-has-plain-data':
+        'Auf dem Server liegen bereits unverschlüsselte Daten. Verschlüsselung ist nur auf einem leeren Server möglich.',
+      'server-error': 'Der Server hat einen Fehler gemeldet.',
+    } as Record<string, string>,
+    resetServer: 'Server zurücksetzen und verschlüsselt neu aufbauen',
+    resetTitle: 'Server zurücksetzen?',
+    resetText:
+      'Alle Daten auf dem Server werden gelöscht. Deine lokalen Daten bleiben erhalten und werden erneut hochgeladen; andere Geräte laden ihre Daten beim nächsten Sync ebenfalls wieder hoch.',
+    resetConfirm: 'Zurücksetzen',
+  },
+  backup: {
+    title: 'Backup',
+    intro:
+      'Sichere alle Daten als Datei oder spiele ein Backup wieder ein. Zugangsdaten (Sync-Token, Schlüssel) sind nie im Backup enthalten.',
+    export: 'Backup herunterladen',
+    exported: 'Backup heruntergeladen.',
+    file: 'Backup-Datei',
+    mode: 'Wiederherstellung',
+    merge: 'Zusammenführen',
+    mergeHint: 'Es geht nichts verloren; bei Konflikten gewinnt die jeweils neuere Änderung.',
+    replace: 'Ersetzen',
+    replaceHint: 'Das Backup wird zum Stand: Einträge, die nicht im Backup sind, werden gelöscht.',
+    doImport: 'Importieren',
+    contains: (records: number, tables: number) => `${records} Einträge in ${tables} Tabellen`,
+    confirmTitle: 'Backup ersetzen?',
+    confirmText:
+      'Alle Einträge, die nicht im Backup stehen, werden gelöscht – auch auf anderen Geräten, sobald sie synchronisieren.',
+    done: (records: number, removed: number) =>
+      removed > 0
+        ? `${records} Einträge wiederhergestellt, ${removed} entfernt.`
+        : `${records} Einträge wiederhergestellt.`,
+    errors: {
+      'not-json': 'Die Datei ist keine gültige JSON-Datei.',
+      'wrong-format': 'Das ist keine Taschenmesser-Backup-Datei.',
+      'newer-version': 'Das Backup stammt aus einer neueren App-Version.',
+      invalid: 'Die Backup-Datei ist beschädigt.',
+    } as Record<string, string>,
+  },
   example: {
     addPlaceholder: 'Neuer Eintrag …',
     empty: 'Noch keine Einträge.',

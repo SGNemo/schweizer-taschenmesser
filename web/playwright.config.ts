@@ -8,6 +8,8 @@ const executablePath =
 
 export default defineConfig({
   testDir: './e2e',
+  // Multi-device tests need the real sync server: see playwright.sync.config.ts
+  testIgnore: '**/sync/**',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
