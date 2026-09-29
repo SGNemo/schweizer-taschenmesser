@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  layout: 'full',
   order: 10,
   contributions: {
     quickAdd: [{ id: 'event', label: 'Termin', to: '/calendar?new=1' }],

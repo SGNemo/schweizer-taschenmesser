@@ -33,6 +33,7 @@ const manifest: ModuleManifest = {
   widgets: [],
   settings,
   defaultEnabled: false,
+  layout: 'wide',
   order: 160,
   contributions: { services: () => import('./service') },
 };

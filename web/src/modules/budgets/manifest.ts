@@ -38,6 +38,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'wide',
   order: 130,
   contributions: { quickAdd: [{ id: 'goal', label: 'Sparziel', to: '/budgets?tab=goals&new=1' }] },
 };

@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  layout: 'wide',
   order: 50,
   contributions: {
     quickAdd: [{ id: 'invoice', label: 'Rechnung', to: '/invoices?new=1' }],

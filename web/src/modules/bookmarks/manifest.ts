@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'wide',
   order: 70,
   contributions: {
     quickAdd: [{ id: 'item', label: 'Merkzettel', to: '/bookmarks?new=1' }],

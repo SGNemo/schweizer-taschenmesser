@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  layout: 'wide',
   order: 60,
   contributions: {
     quickAdd: [{ id: 'subscription', label: 'Abo', to: '/subscriptions?new=1' }],

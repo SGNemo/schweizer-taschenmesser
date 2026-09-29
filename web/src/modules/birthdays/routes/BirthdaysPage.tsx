@@ -29,7 +29,7 @@ export default function BirthdaysPage() {
         </Button>
       </PageHeader>
       {list && list.length === 0 ? <EmptyState icon="cake" title={t.birthdays.empty} /> : null}
-      <ItemList label={t.birthdays.title}>
+      <ItemList layout="grid" label={t.birthdays.title}>
         {sortByNext(list ?? [], day).map((b) => {
           const next = nextBirthday(b, day);
           const age = ageOn(b, next);

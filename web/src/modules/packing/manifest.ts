@@ -37,6 +37,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'content',
   order: 140,
   contributions: { quickAdd: [{ id: 'list', label: 'Packliste', to: '/packing?new=1' }] },
 };

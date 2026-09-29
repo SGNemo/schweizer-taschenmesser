@@ -38,6 +38,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  layout: 'wide',
   order: 40,
   contributions: {
     quickAdd: [{ id: 'transaction', label: 'Buchung', to: '/finance?tab=transactions&new=1' }],

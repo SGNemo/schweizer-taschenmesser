@@ -37,6 +37,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'content',
   order: 110,
   contributions: { quickAdd: [{ id: 'habit', label: 'Gewohnheit', to: '/habits?new=1' }] },
 };

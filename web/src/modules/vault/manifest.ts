@@ -34,6 +34,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'wide',
   order: 150,
   contributions: {
     quickAdd: [{ id: 'document', label: 'Dokument', to: '/vault?new=1' }],

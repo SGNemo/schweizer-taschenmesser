@@ -26,6 +26,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'wide',
   order: 80,
   contributions: { quickAdd: [{ id: 'note', label: 'Notiz', to: '/notes?new=1' }] },
 };

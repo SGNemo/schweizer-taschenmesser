@@ -32,6 +32,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'wide',
   order: 120,
   contributions: {
     quickAdd: [{ id: 'contract', label: 'Vertrag', to: '/contracts?new=1' }],
