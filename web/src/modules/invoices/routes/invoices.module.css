@@ -27,6 +27,8 @@
 }
 .segment {
   display: inline-flex;
+  /* Pages are flex columns: keep the switch as wide as its buttons. */
+  align-self: flex-start;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   overflow: hidden;

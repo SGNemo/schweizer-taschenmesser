@@ -319,12 +319,13 @@ async function seedVault(page: Page) {
     await dialog.getByLabel('Passwort', { exact: true }).fill('demo-passwort-000'); // gitleaks:allow
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog', { name: 'Zugang hinzufügen' })).toHaveCount(0);
-    // Saving opens the detail dialog of the new entry.
-    await page
-      .getByRole('dialog', { name: title })
-      .getByRole('button', { name: 'Schließen' })
-      .click();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
+    // Saving selects the new entry: as a dialog on narrow screens, in the side panel on wide ones.
+    await page.waitForTimeout(400);
+    const detail = page.getByRole('dialog', { name: title });
+    if (await detail.count()) {
+      await detail.getByRole('button', { name: 'Schließen' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+    }
   }
 }
 

@@ -146,24 +146,30 @@ export function ItemRow({
   );
 }
 
+/** Viewport width from which a page can afford a side panel next to its main content. */
+export const SPLIT_QUERY = '(min-width: 1500px)';
+
+/** True while the viewport is wide enough for a `SplitView` panel (see `SPLIT_QUERY`). */
+export function useSplitView(query: string = SPLIT_QUERY): boolean {
+  return useMediaQuery(query);
+}
+
 /**
- * Main content plus a side panel. The panel only exists while the viewport is at least `minWidth`
- * px wide (a structural decision, so it is not merely hidden and never duplicates the DOM);
- * below that only the main content renders.
+ * Main content plus a side panel. With `enabled` false only the main content renders, so the
+ * panel is a structural decision (never merely hidden, never a duplicate in the DOM).
  */
 export function SplitView({
   children,
   aside,
   asideLabel,
-  minWidth = 1500,
+  enabled,
 }: {
   children: ReactNode;
   aside: ReactNode;
   asideLabel: string;
-  minWidth?: number;
+  enabled: boolean;
 }) {
-  const wide = useMediaQuery(`(min-width: ${minWidth}px)`);
-  if (!wide) return <>{children}</>;
+  if (!enabled) return <>{children}</>;
   return (
     <div className={styles.splitView}>
       <div className={styles.splitMain}>{children}</div>

@@ -17,6 +17,7 @@ export {
   Segmented,
   Split,
   SplitView,
+  useSplitView,
   Stat,
   Toolbar,
   patternStyles,

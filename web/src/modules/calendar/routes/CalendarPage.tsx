@@ -5,7 +5,7 @@ import type { CalendarItem } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, SplitView } from '@/ui';
+import { Button, Icon, IconButton, SplitView, useSplitView } from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { DayView, MonthView, WeekView } from '../components/Views';
@@ -33,6 +33,7 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const [prefs] = useSettings('module.calendar', settings.schema, settings.defaults);
   const [target, setTarget] = useState<EventTarget>(null);
+  const split = useSplitView();
 
   const rawView = params.get('view');
   const view: CalendarView | null = isView(rawView)
@@ -114,7 +115,7 @@ export default function CalendarPage() {
 
       <div className={styles.body}>
         <SplitView
-          minWidth={1500}
+          enabled={split}
           asideLabel={t.calendar.agenda}
           aside={<Agenda date={date} onOpenItem={(i) => void openItem(i)} />}
         >
