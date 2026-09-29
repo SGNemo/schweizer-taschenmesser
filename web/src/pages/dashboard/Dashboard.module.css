@@ -1,0 +1,57 @@
+.grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 700px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .m {
+    grid-column: span 2;
+  }
+}
+.l {
+  grid-column: 1 / -1;
+}
+.widget {
+  position: relative;
+  min-width: 0;
+}
+.widget > section {
+  height: 100%;
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.title {
+  flex: 1;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.editing .widget > section {
+  outline: 2px dashed var(--border);
+  outline-offset: 2px;
+}
+.hidden {
+  opacity: 0.55;
+}
+.dragging {
+  z-index: 5;
+  opacity: 0.9;
+}
+.dragging > section {
+  box-shadow: var(--shadow-2);
+}
+.handle {
+  touch-action: none;
+  cursor: grab;
+}
+.hint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+}

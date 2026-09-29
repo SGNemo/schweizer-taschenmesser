@@ -10,12 +10,15 @@ export const allManifests: readonly ModuleManifest[] = Object.values(found)
   .map((m) => m.default)
   .sort((a, b) => a.id.localeCompare(b.id));
 
+const byOrder = (a: ModuleManifest, b: ModuleManifest) =>
+  (a.order ?? 100) - (b.order ?? 100) || a.id.localeCompare(b.id);
+
 const includeDevOnly = import.meta.env.DEV || import.meta.env.VITE_INCLUDE_EXAMPLE === 'true';
 
 /** Manifests shown in the library (dev-only modules are hidden in normal production builds). */
-export const visibleManifests: readonly ModuleManifest[] = allManifests.filter(
-  (m) => !m.devOnly || includeDevOnly,
-);
+export const visibleManifests: readonly ModuleManifest[] = allManifests
+  .filter((m) => !m.devOnly || includeDevOnly)
+  .sort(byOrder);
 
 export function getManifest(id: string): ModuleManifest | undefined {
   return visibleManifests.find((m) => m.id === id);

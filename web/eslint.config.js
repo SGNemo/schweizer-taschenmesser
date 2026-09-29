@@ -51,6 +51,23 @@ export default tseslint.config(
     },
   },
   {
+    // Tests may use the app database directly (fixtures, cleanup); module isolation still applies.
+    files: ['src/modules/*/__tests__/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/modules/*'],
+              message: 'Modules must not import other modules.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Sanctioned cross-read: finance may import public.ts of subscriptions and invoices.
     files: ['src/modules/finance/**/*.{ts,tsx}'],
     rules: {

@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
+import {
+  localNotificationService,
+  type NotificationPermissionState,
+} from '@/core/notifications/service';
 import { visibleManifests } from '@/core/modules/registry';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { useUiStore, type ThemeChoice } from '@/stores/ui';
-import { Card, SelectField, Switch, TextField } from '@/ui';
+import { Button, Card, SelectField, Switch, TextField } from '@/ui';
 import styles from './Page.module.css';
 
 function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
@@ -63,6 +68,43 @@ function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
   );
 }
 
+function NotificationsCard() {
+  const [permission, setPermission] = useState<NotificationPermissionState>(() =>
+    localNotificationService.permission(),
+  );
+  return (
+    <Card>
+      <div className={styles.form}>
+        <p>{t.notifications.intro}</p>
+        <p role="status" data-testid="notification-status">
+          {t.notifications[permission]}
+        </p>
+        {permission === 'default' ? (
+          <Button
+            variant="primary"
+            onClick={async () => setPermission(await localNotificationService.requestPermission())}
+          >
+            {t.notifications.enable}
+          </Button>
+        ) : null}
+        {permission === 'granted' ? (
+          <Button
+            onClick={() =>
+              void localNotificationService.show({
+                title: t.appName,
+                body: t.notifications.testBody,
+                tag: 'test',
+              })
+            }
+          >
+            {t.notifications.test}
+          </Button>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
 export function Settings() {
   const theme = useUiStore((s) => s.theme);
   const setTheme = useUiStore((s) => s.setTheme);
@@ -89,6 +131,10 @@ export function Settings() {
             <option value="dark">{t.settings.themeDark}</option>
           </SelectField>
         </Card>
+      </section>
+      <section className={styles.section} aria-labelledby="notifications">
+        <h2 id="notifications">{t.notifications.title}</h2>
+        <NotificationsCard />
       </section>
       <section className={styles.section} aria-labelledby="modules">
         <h2 id="modules">{t.settings.modules}</h2>

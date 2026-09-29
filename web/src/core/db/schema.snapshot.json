@@ -1,11 +1,15 @@
 {
-  "version": 1,
+  "version": 2,
   "stores": {
     "_meta": "key",
     "_modules": "id, updatedAt",
     "_outbox": "[collection+id]",
     "_secrets": "key",
     "_settings": "id, updatedAt",
-    "example_entry": "id, updatedAt, createdAt"
+    "calendar_event": "id, updatedAt, startDate",
+    "example_entry": "id, updatedAt, createdAt",
+    "reminders_reminder": "id, updatedAt, startDate",
+    "todos_list": "id, updatedAt, order",
+    "todos_task": "id, updatedAt, listId, dueDate, parentId"
   }
 }

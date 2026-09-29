@@ -1,4 +1,10 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import {
+  useId,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 import styles from './Fields.module.css';
 
 interface BaseProps {
@@ -40,6 +46,23 @@ export function TextField({
           {error}
         </span>
       ) : null}
+    </div>
+  );
+}
+
+export function TextArea({
+  label,
+  hint,
+  ...rest
+}: Omit<BaseProps, 'error'> & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const id = useId();
+  return (
+    <div className={styles.field}>
+      <label htmlFor={id} className={styles.label}>
+        {label}
+      </label>
+      <textarea id={id} className={`${styles.control} ${styles.area}`} rows={3} {...rest} />
+      {hint ? <span className={styles.hint}>{hint}</span> : null}
     </div>
   );
 }

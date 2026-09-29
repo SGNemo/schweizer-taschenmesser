@@ -6,7 +6,7 @@ import { visibleManifests } from '@/core/modules/registry';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
-import { Dashboard } from '@/pages/Dashboard';
+import { Dashboard } from '@/pages/dashboard/Dashboard';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
 import { Settings } from '@/pages/Settings';

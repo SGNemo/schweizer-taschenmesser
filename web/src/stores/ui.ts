@@ -31,6 +31,8 @@ interface UiState {
   setPaletteOpen(open: boolean): void;
   quickAddOpen: boolean;
   setQuickAddOpen(open: boolean): void;
+  dashboardEditing: boolean;
+  setDashboardEditing(editing: boolean): void;
   toasts: Toast[];
   toast(message: string, action?: Toast['action']): number;
   dismissToast(id: number): void;
@@ -55,6 +57,8 @@ export const useUiStore = create<UiState>((set) => ({
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
   quickAddOpen: false,
   setQuickAddOpen: (quickAddOpen) => set({ quickAddOpen }),
+  dashboardEditing: false,
+  setDashboardEditing: (dashboardEditing) => set({ dashboardEditing }),
   toasts: [],
   toast(message, action) {
     const id = ++toastId;

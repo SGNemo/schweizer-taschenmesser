@@ -80,8 +80,51 @@ export interface QuickAddAction {
   to: string;
 }
 
+/** Inclusive date range, 'YYYY-MM-DD'. */
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
+/** One entry on the calendar / timeline, contributed by any module. */
+export interface CalendarItem {
+  /** Unique within its source. */
+  id: string;
+  /** Module id that contributed the item. */
+  source: string;
+  kind: string;
+  title: string;
+  date: string;
+  /** 'HH:mm'; absent for all-day items. */
+  time?: string;
+  endTime?: string;
+  allDay: boolean;
+  done?: boolean;
+  /** Route to open when the item is activated. */
+  to?: string;
+}
+
+export type CalendarSource = (range: DateRange) => Promise<CalendarItem[]>;
+
+/** A notification that should fire at `at` (epoch ms). `key` must be stable per occurrence. */
+export interface DueNotification {
+  key: string;
+  at: number;
+  title: string;
+  body?: string;
+  url?: string;
+}
+
+export type NotificationSource = (range: {
+  from: number;
+  to: number;
+}) => Promise<DueNotification[]>;
+
 export interface ModuleContributions {
   quickAdd?: QuickAddAction[];
+  /** Lazy so manifests stay free of database imports. */
+  calendarItems?: () => Promise<{ default: CalendarSource }>;
+  notifications?: () => Promise<{ default: NotificationSource }>;
 }
 
 export interface ModuleManifest {
@@ -101,6 +144,8 @@ export interface ModuleManifest {
   settings: ModuleSettings;
   /** Enabled without user action on a fresh install. */
   defaultEnabled: boolean;
+  /** Sort key for navigation and library (lower first, default 100). */
+  order?: number;
   /** Only listed in the library in dev builds / when VITE_INCLUDE_EXAMPLE=true. */
   devOnly?: boolean;
   contributions?: ModuleContributions;

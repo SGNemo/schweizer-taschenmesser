@@ -1,0 +1,152 @@
+import type { CalendarItem } from '@/core/modules/types';
+import { formatDay, today } from '@/core/time/dates';
+import { weekdayShort } from '@/core/recurrence/describe';
+import { t } from '@/strings';
+import { Button } from '@/ui';
+import { groupByDate, monthWeeks } from '../views';
+import { ItemRow, kindLabel } from './ItemRow';
+import styles from '../routes/calendar.module.css';
+
+interface ViewProps {
+  date: string;
+  items: CalendarItem[];
+  onPickDay: (date: string) => void;
+  onOpenItem: (item: CalendarItem) => void;
+}
+
+const MAX_CHIPS = 3;
+
+export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
+  const byDate = groupByDate(items);
+  const now = today();
+  return (
+    <table className={styles.month}>
+      <thead>
+        <tr>
+          {[1, 2, 3, 4, 5, 6, 7].map((wd) => (
+            <th key={wd} scope="col">
+              {weekdayShort(wd)}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {monthWeeks(date).map((week) => (
+          <tr key={week[0]}>
+            {week.map((d) => {
+              const list = byDate.get(d) ?? [];
+              const inMonth = d.slice(0, 7) === date.slice(0, 7);
+              return (
+                <td
+                  key={d}
+                  className={`${styles.cell} ${inMonth ? '' : styles.outside} ${d === now ? styles.todayCell : ''}`}
+                >
+                  <button
+                    type="button"
+                    className={styles.dayNum}
+                    aria-label={`${formatDay(d, 'EEEE, d. MMMM')}${list.length ? `, ${list.length} Einträge` : ''}`}
+                    onClick={() => onPickDay(d)}
+                  >
+                    {Number(d.slice(8, 10))}
+                  </button>
+                  <ul className={styles.chips}>
+                    {list.slice(0, MAX_CHIPS).map((i) => (
+                      <li key={`${i.source}:${i.id}`}>
+                        <button
+                          type="button"
+                          className={`${styles.chip} ${styles[`kind_${i.kind}`] ?? ''} ${i.done ? styles.done : ''}`}
+                          title={`${kindLabel(i.kind)}: ${i.title}`}
+                          onClick={() => onOpenItem(i)}
+                        >
+                          {i.time ? `${i.time} ` : ''}
+                          {i.title}
+                        </button>
+                      </li>
+                    ))}
+                    {list.length > MAX_CHIPS ? (
+                      <li>
+                        <button type="button" className={styles.more} onClick={() => onPickDay(d)}>
+                          {t.calendar.more(list.length - MAX_CHIPS)}
+                        </button>
+                      </li>
+                    ) : null}
+                  </ul>
+                  {list.length > 0 ? (
+                    <span className={styles.dots} aria-hidden="true">
+                      {list.slice(0, 3).map((i) => (
+                        <span
+                          key={`${i.source}:${i.id}`}
+                          className={`${styles.dot} ${styles[`kind_${i.kind}`] ?? ''}`}
+                        />
+                      ))}
+                    </span>
+                  ) : null}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+export function WeekView({
+  days,
+  items,
+  onPickDay,
+  onOpenItem,
+}: Omit<ViewProps, 'date'> & { days: string[] }) {
+  const byDate = groupByDate(items);
+  const now = today();
+  return (
+    <div className={styles.week}>
+      {days.map((d) => {
+        const list = byDate.get(d) ?? [];
+        return (
+          <section
+            key={d}
+            className={`${styles.weekDay} ${d === now ? styles.todayCell : ''}`}
+            aria-label={formatDay(d, 'EEEE, d. MMMM')}
+          >
+            <h3 className={styles.weekHead}>
+              <button type="button" className={styles.linkBtn} onClick={() => onPickDay(d)}>
+                {formatDay(d, 'EEEE, d. MMMM')}
+              </button>
+            </h3>
+            {list.length === 0 ? (
+              <p className={styles.muted}>{t.calendar.nothing}</p>
+            ) : (
+              <ul className={styles.itemList}>
+                {list.map((i) => (
+                  <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} />
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+export function DayView({
+  date,
+  items,
+  onOpenItem,
+  onAdd,
+}: Omit<ViewProps, 'onPickDay'> & { onAdd: (date: string) => void }) {
+  return (
+    <div>
+      {items.length === 0 ? <p className={styles.muted}>{t.calendar.nothing}</p> : null}
+      <ul className={styles.itemList}>
+        {items.map((i) => (
+          <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} />
+        ))}
+      </ul>
+      <div style={{ marginTop: 'var(--space-4)' }}>
+        <Button onClick={() => onAdd(date)}>{t.calendar.newEvent}</Button>
+      </div>
+    </div>
+  );
+}

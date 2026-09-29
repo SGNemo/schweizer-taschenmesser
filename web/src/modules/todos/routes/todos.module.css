@@ -1,0 +1,141 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.chips {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.chip {
+  flex: none;
+  min-height: var(--touch);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+}
+.chip[aria-current='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+.add {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+  margin-bottom: var(--space-4);
+}
+.grow {
+  flex: 1;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.sub {
+  margin-left: var(--space-6);
+}
+.check {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.open {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.title {
+  overflow-wrap: anywhere;
+}
+.done .title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.meta {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.overdue {
+  color: var(--danger);
+  font-weight: 600;
+}
+.today {
+  color: var(--accent);
+  font-weight: 600;
+}
+.prio3 {
+  color: var(--danger);
+}
+.prio2 {
+  color: var(--warning);
+}
+.subs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.subRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}

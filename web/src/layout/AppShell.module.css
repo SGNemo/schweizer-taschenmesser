@@ -79,6 +79,10 @@
   padding: var(--space-5) var(--space-4) calc(var(--bottom-nav-h) + var(--space-7));
   max-width: var(--content-max);
   margin: 0 auto;
+}
+/* Focus is moved here programmatically after navigation; a ring around the whole page is noise. */
+.main:focus,
+.main:focus-visible {
   outline: none;
 }
 .bottom {
