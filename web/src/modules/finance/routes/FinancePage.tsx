@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton } from '@/ui';
+import { Button, Card, Icon, IconButton, SplitView, useSplitView } from '@/ui';
 import { TransactionEditor, type TransactionTarget } from '../components/Editors';
 import { OverviewTab } from '../components/OverviewTab';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
@@ -18,6 +18,7 @@ export default function FinancePage() {
   const data = useFinanceData();
   const [params, setParams] = useSearchParams();
   const [target, setTarget] = useState<TransactionTarget>(null);
+  const wideScreen = useSplitView();
 
   useEffect(() => {
     void ensureDefaults();
@@ -103,12 +104,25 @@ export default function FinancePage() {
 
       {data ? (
         <>
-          {tab === 'overview' ? <OverviewTab data={data} month={month} /> : null}
-          {tab === 'transactions' ? (
-            <TransactionsTab data={data} month={month} onOpen={setTarget} />
-          ) : null}
-          {tab === 'accounts' ? <AccountsTab data={data} /> : null}
-          {tab === 'categories' ? <CategoriesTab data={data} /> : null}
+          {/* Wide screens: the month's bookings sit next to the overview instead of a tab away. */}
+          <SplitView
+            enabled={wideScreen && tab === 'overview'}
+            asideLabel={t.finance.tabs.transactions}
+            aside={
+              <Card title={t.finance.tabs.transactions}>
+                <TransactionsTab data={data} month={month} onOpen={setTarget} />
+              </Card>
+            }
+          >
+            {tab === 'overview' ? (
+              <OverviewTab data={data} month={month} narrow={wideScreen} />
+            ) : null}
+            {tab === 'transactions' ? (
+              <TransactionsTab data={data} month={month} onOpen={setTarget} />
+            ) : null}
+            {tab === 'accounts' ? <AccountsTab data={data} /> : null}
+            {tab === 'categories' ? <CategoriesTab data={data} /> : null}
+          </SplitView>
           <TransactionEditor target={openTarget} data={data} onClose={closeEditor} />
         </>
       ) : null}
