@@ -260,6 +260,8 @@ test('Packlisten: pack, reset, copy as template', async ({ page }) => {
   for (const item of ['Zahnbürste', 'Ladekabel']) {
     await input.fill(item);
     await input.press('Enter');
+    // the write is async: wait for the row before the next fill, or the field is reset under it
+    await expect(page.getByRole('checkbox', { name: item })).toBeVisible();
   }
   await expect(page.getByTestId('packing-progress')).toContainText('0 von 2 gepackt');
   await tick(page.getByRole('checkbox', { name: 'Zahnbürste' }));

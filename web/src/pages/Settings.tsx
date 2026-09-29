@@ -12,6 +12,7 @@ import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
 import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
+import { UpdateSection } from './settings/UpdateSection';
 import styles from './Page.module.css';
 
 function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
@@ -152,6 +153,10 @@ export function Settings() {
       <section className={styles.section} aria-labelledby="backup">
         <h2 id="backup">{t.backup.title}</h2>
         <BackupSection />
+      </section>
+      <section className={styles.section} aria-labelledby="updates">
+        <h2 id="updates">{t.update.title}</h2>
+        <UpdateSection />
       </section>
       <section className={styles.section} aria-labelledby="modules">
         <h2 id="modules">{t.settings.modules}</h2>

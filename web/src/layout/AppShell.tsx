@@ -4,6 +4,7 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Fab, Icon, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
+import { UpdateBanner } from './UpdateBanner';
 import { QuickAdd } from './QuickAdd';
 import { SyncBadge } from './SyncBadge';
 import { MoreSheet } from './MoreSheet';
@@ -111,6 +112,7 @@ export function AppShell() {
           </button>
           <SyncBadge />
         </header>
+        <UpdateBanner />
         <main id="main" tabIndex={-1} className={styles.main}>
           <Outlet />
         </main>

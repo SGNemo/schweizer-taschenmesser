@@ -1,4 +1,5 @@
 import type { NotificationService } from '@/core/notifications/service';
+import type { UpdateService } from '@/core/update/types';
 
 /**
  * Everything that differs between running in a browser (PWA) and inside the native Tauri shell.
@@ -33,6 +34,15 @@ export interface PlatformService {
     version(): Promise<string>;
     openUrl(url: string): Promise<void>;
   };
+  /** Files in the app's private data folder (pre-update backups). Not available in the browser. */
+  files: {
+    write(path: string, data: string | Uint8Array): Promise<void>;
+    /** File names inside `dir` (empty when it does not exist). */
+    list(dir: string): Promise<string[]>;
+    remove(path: string): Promise<void>;
+  };
+  /** Self-update of the installed app; `supported` is false in the browser. */
+  updater: UpdateService;
   lifecycle: {
     /** Calls back when the app goes to the background / is minimised. Returns an unsubscribe function. */
     onBackground(callback: () => void): () => void;

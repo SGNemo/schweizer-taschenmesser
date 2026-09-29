@@ -5,7 +5,7 @@
 import { getVersion } from '@tauri-apps/api/app';
 import { clear, readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
-import { writeFile } from '@tauri-apps/plugin-fs';
+import { BaseDirectory, mkdir, readDir, remove, writeFile } from '@tauri-apps/plugin-fs';
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http';
 import {
   cancel,
@@ -23,6 +23,7 @@ import type {
 } from '@/core/notifications/service';
 import { onPageHidden, sensitiveClipboard } from '../web';
 import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
+import { createUpdater } from './updater';
 
 const FILTER_NAMES: Record<string, string> = {
   json: 'JSON',
@@ -88,12 +89,15 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
   }
 }
 
+const inAppData = { baseDir: BaseDirectory.AppData } as const;
+
 export async function createTauriPlatform(): Promise<PlatformService> {
   const kind = detectKind();
+  const fetchFn: typeof fetch = (input, init) => nativeFetch(input as string | URL | Request, init);
   return {
     kind,
     isNative: true,
-    fetch: (input, init) => nativeFetch(input as string | URL | Request, init),
+    fetch: fetchFn,
     notifications: await createNotifications(kind),
     async saveFile(req) {
       const extension = req.fileName.split('.').pop()?.toLowerCase();
@@ -118,6 +122,22 @@ export async function createTauriPlatform(): Promise<PlatformService> {
       version: () => getVersion(),
       openUrl: (url) => openUrl(url),
     },
+    files: {
+      async write(path, data) {
+        const dir = path.split('/').slice(0, -1).join('/');
+        if (dir) await mkdir(dir, { ...inAppData, recursive: true });
+        await writeFile(path, await toBytes(data), inAppData);
+      },
+      async list(dir) {
+        try {
+          return (await readDir(dir, inAppData)).filter((e) => e.isFile).map((e) => e.name);
+        } catch {
+          return []; // the folder does not exist yet
+        }
+      },
+      remove: (path) => remove(path, inAppData),
+    },
+    updater: createUpdater(kind, fetchFn),
     lifecycle: { onBackground: onPageHidden },
   };
 }

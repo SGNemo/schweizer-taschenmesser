@@ -6,7 +6,10 @@ const mocks = vi.hoisted(() => ({
   readText: vi.fn(async () => 'clip'),
   clear: vi.fn(async () => undefined),
   save: vi.fn(async (_o: unknown): Promise<string | null> => '/tmp/out.json'),
-  writeFile: vi.fn(async (_p: string, _d: Uint8Array) => undefined),
+  writeFile: vi.fn(async (_p: string, _d: Uint8Array, _o?: unknown) => undefined),
+  mkdir: vi.fn(async (_p: string, _o?: unknown) => undefined),
+  readDir: vi.fn(async (_p: string, _o?: unknown) => [] as { name: string; isFile: boolean }[]),
+  remove: vi.fn(async (_p: string, _o?: unknown) => undefined),
   nativeFetch: vi.fn(async (_i: unknown, _init?: unknown) => new Response('native')),
   isPermissionGranted: vi.fn(async () => false),
   requestPermission: vi.fn(async () => 'granted' as string),
@@ -23,7 +26,13 @@ vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
   clear: mocks.clear,
 }));
 vi.mock('@tauri-apps/plugin-dialog', () => ({ save: mocks.save }));
-vi.mock('@tauri-apps/plugin-fs', () => ({ writeFile: mocks.writeFile }));
+vi.mock('@tauri-apps/plugin-fs', () => ({
+  BaseDirectory: { AppData: 14 },
+  writeFile: mocks.writeFile,
+  mkdir: mocks.mkdir,
+  readDir: mocks.readDir,
+  remove: mocks.remove,
+}));
 vi.mock('@tauri-apps/plugin-http', () => ({ fetch: mocks.nativeFetch }));
 vi.mock('@tauri-apps/plugin-notification', () => ({
   isPermissionGranted: mocks.isPermissionGranted,
@@ -167,6 +176,30 @@ describe('tauri platform', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('keeps app files in the private data folder (creating the folder, listing only files)', async () => {
+    const p = await createTauriPlatform();
+    await p.files.write('backups/a.json', 'x');
+    expect(mocks.mkdir).toHaveBeenCalledWith('backups', { baseDir: 14, recursive: true });
+    expect(mocks.writeFile).toHaveBeenCalledWith('backups/a.json', expect.anything(), {
+      baseDir: 14,
+    });
+
+    mocks.readDir.mockResolvedValue([
+      { name: 'a.json', isFile: true },
+      { name: 'sub', isFile: false },
+    ]);
+    expect(await p.files.list('backups')).toEqual(['a.json']);
+    mocks.readDir.mockRejectedValue(new Error('missing'));
+    expect(await p.files.list('backups')).toEqual([]);
+
+    await p.files.remove('backups/a.json');
+    expect(mocks.remove).toHaveBeenCalledWith('backups/a.json', { baseDir: 14 });
+  });
+
+  it('is wired to the desktop or Android updater', async () => {
+    expect((await createTauriPlatform()).updater.supported).toBe(true);
   });
 
   it('reports the app version and opens links via the opener plugin', async () => {

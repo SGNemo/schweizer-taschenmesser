@@ -48,6 +48,13 @@ test('a due reminder fires a notification while the app is open', async ({ page 
 });
 
 test('settings show the notification permission', async ({ page }) => {
+  // Headless Chromium builds differ in how they report a granted permission: pin it.
+  await page.addInitScript(() => {
+    (window as unknown as { Notification: unknown }).Notification = class {
+      static permission = 'granted';
+      static requestPermission = () => Promise.resolve('granted');
+    };
+  });
   await page.goto('/settings');
   await expect(page.getByTestId('notification-status')).toHaveText('Aktiviert');
   await expect(page.getByRole('button', { name: 'Testbenachrichtigung senden' })).toBeVisible();

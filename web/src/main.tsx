@@ -5,6 +5,7 @@ import { startSync } from '@/core/sync/service';
 import { startNativeSchedule } from '@/core/notifications/nativeSchedule';
 import { startPushSync } from '@/core/notifications/push';
 import { initPlatform } from '@/core/platform';
+import { startUpdateChecks } from '@/core/update/controller';
 import { startNotificationScheduler } from '@/core/notifications/scheduler';
 import { initCore } from '@/core/startup';
 import { App } from './App';
@@ -23,5 +24,6 @@ void initPlatform().then(() => {
     startSync();
     startPushSync();
     startNativeSchedule();
+    startUpdateChecks();
   });
 });

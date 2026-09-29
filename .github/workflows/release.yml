@@ -85,6 +85,17 @@ jobs:
             exit 1
           fi
 
+      - name: Updater public key must not be the development placeholder
+        if: steps.meta.outputs.publish == 'true'
+        working-directory: web
+        run: |
+          KEY_ID="$(node -e "const c=require('./src-tauri/tauri.conf.json');console.log(Buffer.from(c.plugins.updater.pubkey,'base64').toString().split('\n')[0])")"
+          echo "$KEY_ID"
+          if [[ "$KEY_ID" == *76760D11981F2BAC* ]]; then
+            echo "::error::plugins.updater.pubkey in web/src-tauri/tauri.conf.json is still the development placeholder. Put the public key from 'node scripts/keys.mjs updater' there (CLAUDE.md → Releases) - otherwise installed apps could never verify an update."
+            exit 1
+          fi
+
       - name: Release notes from Conventional Commits
         working-directory: web
         run: node scripts/changelog.mjs --version "${{ steps.meta.outputs.version }}" --repo "https://github.com/${{ github.repository }}" --out "$RUNNER_TEMP/RELEASE_NOTES.md"

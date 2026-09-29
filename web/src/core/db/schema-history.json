@@ -1,0 +1,78 @@
+{
+  "_comment": "Dexie stores of every released schema version (from git history), used by schema-upgrade.test.ts. Add the previous version here whenever the schema is bumped.",
+  "versions": {
+    "1": {
+      "_meta": "key",
+      "_modules": "id, updatedAt",
+      "_outbox": "[collection+id]",
+      "_secrets": "key",
+      "_settings": "id, updatedAt",
+      "example_entry": "id, updatedAt, createdAt"
+    },
+    "2": {
+      "_meta": "key",
+      "_modules": "id, updatedAt",
+      "_outbox": "[collection+id]",
+      "_secrets": "key",
+      "_settings": "id, updatedAt",
+      "calendar_event": "id, updatedAt, startDate",
+      "example_entry": "id, updatedAt, createdAt",
+      "reminders_reminder": "id, updatedAt, startDate",
+      "todos_list": "id, updatedAt, order",
+      "todos_task": "id, updatedAt, listId, dueDate, parentId"
+    },
+    "3": {
+      "_meta": "key",
+      "_modules": "id, updatedAt",
+      "_outbox": "[collection+id]",
+      "_secrets": "key",
+      "_settings": "id, updatedAt",
+      "calendar_event": "id, updatedAt, startDate",
+      "example_entry": "id, updatedAt, createdAt",
+      "finance_account": "id, updatedAt, order",
+      "finance_category": "id, updatedAt, kind",
+      "finance_transaction": "id, updatedAt, accountId, date, categoryId",
+      "invoices_invoice": "id, updatedAt, dueDate, status",
+      "reminders_reminder": "id, updatedAt, startDate",
+      "subscriptions_subscription": "id, updatedAt, startDate",
+      "todos_list": "id, updatedAt, order",
+      "todos_task": "id, updatedAt, listId, dueDate, parentId"
+    },
+    "4": {
+      "_meta": "key",
+      "_modules": "id, updatedAt",
+      "_outbox": "[collection+id], queuedAt",
+      "_secrets": "key",
+      "_settings": "id, updatedAt",
+      "calendar_event": "id, updatedAt, startDate",
+      "example_entry": "id, updatedAt, createdAt",
+      "finance_account": "id, updatedAt, order",
+      "finance_category": "id, updatedAt, kind",
+      "finance_transaction": "id, updatedAt, accountId, date, categoryId",
+      "invoices_invoice": "id, updatedAt, dueDate, status",
+      "reminders_reminder": "id, updatedAt, startDate",
+      "subscriptions_subscription": "id, updatedAt, startDate",
+      "todos_list": "id, updatedAt, order",
+      "todos_task": "id, updatedAt, listId, dueDate, parentId"
+    },
+    "5": {
+      "_aiCache": "key, createdAt",
+      "_aiUsage": "++id, at",
+      "_meta": "key",
+      "_modules": "id, updatedAt",
+      "_outbox": "[collection+id], queuedAt",
+      "_secrets": "key",
+      "_settings": "id, updatedAt",
+      "calendar_event": "id, updatedAt, startDate",
+      "example_entry": "id, updatedAt, createdAt",
+      "finance_account": "id, updatedAt, order",
+      "finance_category": "id, updatedAt, kind",
+      "finance_transaction": "id, updatedAt, accountId, date, categoryId",
+      "invoices_invoice": "id, updatedAt, dueDate, status",
+      "reminders_reminder": "id, updatedAt, startDate",
+      "subscriptions_subscription": "id, updatedAt, startDate",
+      "todos_list": "id, updatedAt, order",
+      "todos_task": "id, updatedAt, listId, dueDate, parentId"
+    }
+  }
+}

@@ -52,6 +52,8 @@ export function sensitiveClipboard(io: {
   };
 }
 
+const unsupported = (): Promise<never> => Promise.reject(new Error('Not available in the browser'));
+
 export function createWebPlatform(): PlatformService {
   return {
     kind: 'web',
@@ -74,6 +76,17 @@ export function createWebPlatform(): PlatformService {
       async openUrl(url) {
         window.open(url, '_blank', 'noopener,noreferrer');
       },
+    },
+    files: {
+      write: unsupported,
+      list: unsupported,
+      remove: unsupported,
+    },
+    // The PWA updates through its service worker (see pwa/UpdatePrompt).
+    updater: {
+      supported: false,
+      check: async () => undefined,
+      install: unsupported,
     },
     lifecycle: { onBackground: onPageHidden },
   };
