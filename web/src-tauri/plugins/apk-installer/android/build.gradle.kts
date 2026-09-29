@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "io.github.sgnemo.taschenmesser.apkinstaller"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
