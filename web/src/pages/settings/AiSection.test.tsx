@@ -19,6 +19,13 @@ beforeEach(async () => {
 });
 afterEach(() => setPlatform(undefined));
 
+/** The provider card once its form is open (the card renders a moment before it expands). */
+async function cardOf(id: string) {
+  const card = await screen.findByTestId(`provider-${id}`);
+  await within(card).findByLabelText(s.model);
+  return card;
+}
+
 async function addProvider(label: string) {
   const user = userEvent.setup();
   await user.selectOptions(await screen.findByLabelText(s.addProvider), label);
@@ -35,10 +42,10 @@ describe('AI settings', () => {
   it('adds a free provider from a preset (with the training notice) and opens its form', async () => {
     render(<AiSection />);
     await addProvider('Groq');
-    const card = await screen.findByTestId('provider-groq');
+    const card = await cardOf('groq');
     expect(within(card).getByText(s.tiers.free!)).toBeInTheDocument();
     expect(within(card).getByText(s.trainingNotice)).toBeInTheDocument();
-    expect(within(card).getByLabelText(s.model)).toHaveValue('llama-3.3-70b-versatile');
+    expect(await within(card).findByLabelText(s.model)).toHaveValue('llama-3.3-70b-versatile');
     expect(within(card).getByLabelText(s.baseUrl)).toHaveValue('https://api.groq.com/openai/v1');
     expect(within(card).getByText(s.browserNote)).toBeInTheDocument(); // web build
     expect((await loadAiConfig()).providers.map((p) => p.id)).toEqual(['groq']);
@@ -47,14 +54,16 @@ describe('AI settings', () => {
   it('stores the key encrypted, remembers only that one exists, and never shows it again', async () => {
     render(<AiSection />);
     const user = await addProvider('Groq');
-    const card = await screen.findByTestId('provider-groq');
+    const card = await cardOf('groq');
     await user.type(within(card).getByLabelText(s.apiKey), 'gsk-super-secret');
     await user.click(within(card).getByRole('button', { name: s.save }));
     await waitFor(async () => expect((await loadAiConfig()).providers[0]!.keySet).toBe(true));
 
     expect(JSON.stringify(await db.table('_secrets').toArray())).not.toContain('gsk-super-secret');
-    expect(within(card).getByLabelText(s.apiKey)).toHaveValue('');
-    expect(within(card).getByText(new RegExp(s.apiKeySet))).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(card).getByLabelText(s.apiKey)).toHaveValue('');
+      expect(within(card).getByText(new RegExp(s.apiKeySet))).toBeInTheDocument();
+    });
   });
 
   it('keeps the providers in priority order: local first, moved with the buttons', async () => {
@@ -78,14 +87,17 @@ describe('AI settings', () => {
         'groq',
       ]),
     );
-    expect(screen.getByRole('button', { name: s.moveUp('Ollama (lokal)') })).toBeDisabled();
-    expect(screen.getByRole('button', { name: s.moveDown('Groq') })).toBeDisabled();
+    // the list re-renders after the stored config changed
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: s.moveUp('Ollama (lokal)') })).toBeDisabled();
+      expect(screen.getByRole('button', { name: s.moveDown('Groq') })).toBeDisabled();
+    });
   });
 
   it('switches a provider off without deleting it', async () => {
     render(<AiSection />);
     const user = await addProvider('Ollama (lokal)');
-    const card = await screen.findByTestId('provider-ollama');
+    const card = await cardOf('ollama');
     await user.click(within(card).getByRole('switch', { name: s.enabled }));
     await waitFor(async () => expect((await loadAiConfig()).providers[0]!.enabled).toBe(false));
   });
@@ -93,7 +105,7 @@ describe('AI settings', () => {
   it('saving the form does not undo the on/off switch', async () => {
     render(<AiSection />);
     const user = await addProvider('Ollama (lokal)');
-    const card = await screen.findByTestId('provider-ollama');
+    const card = await cardOf('ollama');
     await user.click(within(card).getByRole('switch', { name: s.enabled }));
     await waitFor(async () => expect((await loadAiConfig()).providers[0]!.enabled).toBe(false));
     await user.click(within(card).getByRole('button', { name: s.save }));
@@ -104,7 +116,7 @@ describe('AI settings', () => {
   it('saves limits and prices as numbers (German decimal comma accepted)', async () => {
     render(<AiSection />);
     const user = await addProvider('Mistral');
-    const card = await screen.findByTestId('provider-mistral');
+    const card = await cardOf('mistral');
     const requests = within(card).getByLabelText(s.limitRequests);
     await user.clear(requests);
     await user.type(requests, '40');
@@ -174,7 +186,7 @@ describe('AI settings', () => {
     });
     render(<AiSection />);
     const user = await addProvider('Groq');
-    const card = await screen.findByTestId('provider-groq');
+    const card = await cardOf('groq');
     await user.type(within(card).getByLabelText(s.apiKey), 'gsk-typed');
     await user.click(within(card).getByRole('button', { name: s.test }));
     expect(await within(card).findByTestId('test-groq')).toHaveTextContent(
@@ -197,7 +209,7 @@ describe('AI settings', () => {
   it('removes a provider after confirmation, together with its key', async () => {
     render(<AiSection />);
     const user = await addProvider('Groq');
-    const card = await screen.findByTestId('provider-groq');
+    const card = await cardOf('groq');
     await user.type(within(card).getByLabelText(s.apiKey), 'gsk-x');
     await user.click(within(card).getByRole('button', { name: s.save }));
     await waitFor(async () => expect((await loadAiConfig()).providers[0]!.keySet).toBe(true));
