@@ -7,3 +7,4 @@
 7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/exclusion.test.ts:generic-api-key:19
 7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/vault.test.ts:generic-api-key:37
 dcf3250befaa0f189f1975ec93d783807ec8a5d0:web/src/core/notifications/push.test.ts:generic-api-key:21
+a599384ccb1ccf60c9be86cba879c7a2e9865323:web/scripts/lib/audit.test.ts:private-key:114
