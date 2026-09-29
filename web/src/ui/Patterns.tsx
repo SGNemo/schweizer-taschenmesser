@@ -1,0 +1,191 @@
+/** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
+import type { ReactNode } from 'react';
+import { Card } from './Card';
+import styles from './Patterns.module.css';
+
+export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <div className={styles.header}>
+      <h1>{title}</h1>
+      {children}
+    </div>
+  );
+}
+
+export function Toolbar({ children }: { children: ReactNode }) {
+  return <div className={styles.toolbar}>{children}</div>;
+}
+
+export function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className={styles.segment} role="group" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Stat({ label, value, testId }: { label: string; value: string; testId?: string }) {
+  return (
+    <div className={styles.stat}>
+      <span className={styles.statLabel}>{label}</span>
+      <span className={styles.statValue} data-testid={testId}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/** Two or three form fields side by side. */
+export function Split({ children }: { children: ReactNode }) {
+  return <div className={styles.split}>{children}</div>;
+}
+
+export function Form({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
+  return (
+    <form
+      className={styles.form}
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+    >
+      {children}
+    </form>
+  );
+}
+
+/** Footer of an editor form: `start` (e.g. delete) on the left, `children` (cancel/save) on the right. */
+export function FormActions({ start, children }: { start?: ReactNode; children: ReactNode }) {
+  return (
+    <div className={styles.actions}>
+      {start ?? <span />}
+      <span className={styles.actionsEnd}>{children}</span>
+    </div>
+  );
+}
+
+export function ItemList({ children, label }: { children: ReactNode; label?: string }) {
+  return (
+    <ul className={styles.list} aria-label={label}>
+      {children}
+    </ul>
+  );
+}
+
+/** A card row: a main button (title + meta lines, opens the editor) and optional trailing content. */
+export function ItemRow({
+  title,
+  meta,
+  onOpen,
+  lead,
+  end,
+  children,
+}: {
+  title: ReactNode;
+  meta?: ReactNode;
+  onOpen?: () => void;
+  lead?: ReactNode;
+  end?: ReactNode;
+  children?: ReactNode;
+}) {
+  const body = (
+    <>
+      <span className={styles.title}>{title}</span>
+      {meta ? <span className={styles.muted}>{meta}</span> : null}
+    </>
+  );
+  return (
+    <Card as="li">
+      <div className={styles.row}>
+        {lead}
+        {onOpen ? (
+          <button type="button" className={styles.main} onClick={onOpen}>
+            {body}
+          </button>
+        ) : (
+          <div className={styles.main} style={{ cursor: 'default' }}>
+            {body}
+          </div>
+        )}
+        {end}
+      </div>
+      {children}
+    </Card>
+  );
+}
+
+export function Chip({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected?: boolean;
+  onClick?: () => void;
+}) {
+  return onClick ? (
+    <button type="button" className={styles.chip} aria-pressed={selected} onClick={onClick}>
+      {label}
+    </button>
+  ) : (
+    <span className={styles.chip}>{label}</span>
+  );
+}
+
+export function Chips({ children, label }: { children: ReactNode; label?: string }) {
+  return (
+    <div className={styles.chips} role={label ? 'group' : undefined} aria-label={label}>
+      {children}
+    </div>
+  );
+}
+
+export function Progress({
+  value,
+  max,
+  label,
+  over,
+}: {
+  value: number;
+  max: number;
+  label: string;
+  over?: boolean;
+}) {
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+  return (
+    <div
+      className={styles.progress}
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+    >
+      <div
+        className={[styles.progressBar, over ? styles.progressOver : ''].join(' ')}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
+export const patternStyles = styles;

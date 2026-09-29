@@ -27,6 +27,12 @@ export function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
+/** base64url (as used for VAPID keys) → bytes. */
+export function fromBase64Url(b64url: string): Uint8Array<ArrayBuffer> {
+  const padded = b64url.replace(/-/g, '+').replace(/_/g, '/');
+  return fromBase64(padded + '='.repeat((4 - (padded.length % 4)) % 4));
+}
+
 export function newSalt(): string {
   return toBase64(crypto.getRandomValues(new Uint8Array(16)));
 }

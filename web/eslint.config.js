@@ -74,6 +74,28 @@ export default tseslint.config(
     },
   },
   {
+    // Sanctioned cross-read: budgets may import public.ts of finance (expenses per category).
+    files: ['src/modules/budgets/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^@/modules/(?!finance/public$)',
+              message: 'budgets may only import finance/public.',
+            },
+            {
+              group: ['@/core/db/dexie', '@/core/db/db'],
+              message:
+                'Use createRepo() from @/core/db/repo instead of touching Dexie tables directly.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Tests may use the app database directly (fixtures, cleanup); module isolation still applies.
     files: ['src/modules/*/__tests__/**/*.{ts,tsx}'],
     rules: {

@@ -17,11 +17,23 @@ export default defineConfig({
         short_name: 'Taschenmesser',
         description: 'Modulare, lokale Alltags-App',
         lang: 'de',
+        id: '/',
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        categories: ['productivity', 'utilities'],
         background_color: '#f7f7f5',
         theme_color: '#2f6f8f',
+        // Android "Teilen" → Merkliste (opens the create dialog with the shared link).
+        share_target: {
+          action: '/bookmarks',
+          method: 'GET',
+          params: { title: 'title', text: 'text', url: 'url' },
+        },
+        shortcuts: [
+          { name: 'Merkzettel anlegen', url: '/bookmarks?new=1' },
+          { name: 'Suchen', url: '/?search=1' },
+        ],
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },

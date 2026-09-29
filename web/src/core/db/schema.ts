@@ -5,6 +5,8 @@ export const SYSTEM_TABLES = {
   _meta: { stores: 'key', synced: false },
   _outbox: { stores: '[collection+id], queuedAt', synced: false },
   _secrets: { stores: 'key', synced: false },
+  /** Binary files (vault documents). Local only: never synced, not part of the JSON backup. */
+  _blobs: { stores: 'key', synced: false },
   /** Assistant: validated structured queries by question (never results). */
   _aiCache: { stores: 'key, createdAt', synced: false },
   /** Assistant: one row per model call or cache hit (token accounting). */

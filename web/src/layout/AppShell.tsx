@@ -43,6 +43,15 @@ export function AppShell() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setPaletteOpen]);
 
+  // PWA shortcut "Suchen" (`/?search=1`) opens the palette.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('search')) {
+      setPaletteOpen(true);
+      void navigate(location.pathname, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the first render of the shell
+  }, []);
+
   // Move focus to the main region on navigation (screen readers / keyboard users).
   useEffect(() => {
     document.getElementById('main')?.focus({ preventScroll: true });

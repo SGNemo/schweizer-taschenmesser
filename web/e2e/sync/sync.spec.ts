@@ -6,8 +6,10 @@ import {
   openSettings,
   outboxCount,
   resetServer,
+  SERVER,
   serverDump,
   submitConnect,
+  TOKEN,
   syncNow,
 } from './helpers';
 
@@ -292,5 +294,37 @@ test.describe('end-to-end encryption', () => {
     await expect(b.page.getByRole('checkbox', { name: 'lag unverschlüsselt' })).toBeVisible();
     await a.context.close();
     await b.context.close();
+  });
+});
+
+test.describe('web push API of the real server', () => {
+  const headers = { authorization: `Bearer ${TOKEN}` };
+  const endpoint = 'https://push.example.test/send/e2e';
+
+  test('key, subscription and schedule endpoints work and are protected', async ({ request }) => {
+    expect((await request.get(`${SERVER}/v1/push/key`)).status()).toBe(401);
+    const { publicKey } = (await (
+      await request.get(`${SERVER}/v1/push/key`, { headers })
+    ).json()) as {
+      publicKey: string;
+    };
+    expect(publicKey).toMatch(/^[A-Za-z0-9_-]{87}$/);
+
+    const sub = await request.put(`${SERVER}/v1/push/subscription`, {
+      headers,
+      data: { endpoint, keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) } },
+    });
+    expect(sub.ok()).toBe(true);
+    const schedule = await request.put(`${SERVER}/v1/push/schedule`, {
+      headers,
+      data: {
+        endpoint,
+        items: [{ key: 'k', at: Date.now() + 3600_000, payload: '{"title":"x"}' }],
+      },
+    });
+    expect(await schedule.json()).toEqual({ stored: 1 });
+    expect(
+      (await request.post(`${SERVER}/v1/push/unsubscribe`, { headers, data: { endpoint } })).ok(),
+    ).toBe(true);
   });
 });

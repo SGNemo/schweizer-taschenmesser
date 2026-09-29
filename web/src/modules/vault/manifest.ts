@@ -1,0 +1,45 @@
+import type { ModuleManifest } from '@/core/modules/types';
+import { aiSchema } from './ai';
+import { migrations } from './migrations';
+import { documentSchema } from './schema';
+import { settings } from './settings';
+
+const manifest: ModuleManifest = {
+  id: 'vault',
+  name: 'Dokumente',
+  icon: 'lock',
+  version: 1,
+  description:
+    'Wichtige Dokumente mit Kategorie, Notiz und Ablaufdatum (z. B. Ausweis) und angehängter Datei. Dateien bleiben nur auf diesem Gerät.',
+  routes: [
+    {
+      path: '/vault',
+      label: 'Dokumente',
+      nav: true,
+      component: () => import('./routes/VaultPage'),
+    },
+  ],
+  dataSchema: {
+    collections: { document: { schema: documentSchema, indexes: ['category', 'expiresOn'] } },
+  },
+  migrations,
+  widgets: [
+    {
+      id: 'expiring',
+      title: 'Dokumente: Ablauf',
+      size: 's',
+      component: () => import('./widgets/ExpiringWidget'),
+    },
+  ],
+  aiSchema,
+  settings,
+  defaultEnabled: false,
+  order: 150,
+  contributions: {
+    quickAdd: [{ id: 'document', label: 'Dokument', to: '/vault?new=1' }],
+    calendarItems: () => import('./calendar'),
+    notifications: () => import('./notifications'),
+  },
+};
+
+export default manifest;

@@ -2,6 +2,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { buildApp } from './app.js';
 import { MIN_TOKEN_LENGTH } from './auth.js';
+import { createPushService, createWebPushSender, ensureVapidKeys } from './push.js';
 import { openStore } from './store.js';
 
 const env = process.env;
@@ -28,8 +29,23 @@ const origins = (env.CORS_ORIGINS ?? '*')
   .filter(Boolean);
 
 const store = openStore(dbPath);
+const vapid = ensureVapidKeys(store, {
+  publicKey: env.VAPID_PUBLIC_KEY,
+  privateKey: env.VAPID_PRIVATE_KEY,
+});
+const pushSender = createWebPushSender(
+  vapid,
+  env.VAPID_SUBJECT ?? 'mailto:admin@taschenmesser.invalid',
+);
+const push = createPushService({
+  store,
+  sender: pushSender,
+  onError: (e) => console.error('[push]', e instanceof Error ? e.message : e),
+});
 const app = await buildApp({
   store,
+  pushSender,
+  vapid,
   tokens,
   corsOrigins: origins.includes('*') ? '*' : origins,
   webDir: env.WEB_DIR ? resolve(env.WEB_DIR) : undefined,
@@ -37,7 +53,10 @@ const app = await buildApp({
   logger: true,
 });
 
+push.start();
+
 const shutdown = async () => {
+  push.stop();
   await app.close();
   store.close();
   process.exit(0);

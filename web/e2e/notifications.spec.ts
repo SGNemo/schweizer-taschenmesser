@@ -52,3 +52,9 @@ test('settings show the notification permission', async ({ page }) => {
   await expect(page.getByTestId('notification-status')).toHaveText('Aktiviert');
   await expect(page.getByRole('button', { name: 'Testbenachrichtigung senden' })).toBeVisible();
 });
+
+test('push explains that it needs the sync server', async ({ page }) => {
+  await page.goto('/settings');
+  await expect(page.getByTestId('push-status')).toContainText('Sync-Server');
+  await expect(page.getByRole('button', { name: 'Push aktivieren' })).toHaveCount(0);
+});

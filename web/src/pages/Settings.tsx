@@ -12,6 +12,7 @@ import { useUiStore, type ThemeChoice } from '@/stores/ui';
 import { Button, Card, SelectField, Switch, TextField } from '@/ui';
 import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
+import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
 import styles from './Page.module.css';
 
@@ -138,6 +139,7 @@ export function Settings() {
       <section className={styles.section} aria-labelledby="notifications">
         <h2 id="notifications">{t.notifications.title}</h2>
         <NotificationsCard />
+        <PushSection />
       </section>
       <section className={styles.section} aria-labelledby="ai">
         <h2 id="ai">{t.ai.title}</h2>

@@ -5,6 +5,7 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { createAuth } from './auth.js';
+import { ensureVapidKeys, messageFor, type PushSender } from './push.js';
 import type { FieldOp, Store } from './store.js';
 
 export interface AppOptions {
@@ -17,10 +18,15 @@ export interface AppOptions {
   /** Requests per minute and client address. */
   rateLimit?: number;
   logger?: boolean;
+  /** Sends Web Push messages. Without one, push routes still work but nothing is delivered. */
+  pushSender?: PushSender;
+  /** VAPID keys from the environment; otherwise they are generated once and stored. */
+  vapid?: { publicKey?: string; privateKey?: string };
 }
 
 export const MAX_OPS_PER_PUSH = 5000;
 export const MAX_PULL_LIMIT = 5000;
+export const MAX_SCHEDULE_ITEMS = 500;
 const MAX_VALUE_BYTES = 1_000_000;
 
 const HLC_PATTERN = '^\\d{13}-\\d{4}-[a-z0-9]{1,32}$';
@@ -149,6 +155,112 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     },
     async () => ({ epoch: store.reset() }),
   );
+
+  const vapid = ensureVapidKeys(store, opts.vapid);
+  const subscriptionBody = {
+    type: 'object',
+    required: ['endpoint', 'keys'],
+    additionalProperties: false,
+    properties: {
+      endpoint: { type: 'string', format: 'uri', pattern: '^https://', maxLength: 1024 },
+      keys: {
+        type: 'object',
+        required: ['p256dh', 'auth'],
+        additionalProperties: false,
+        properties: {
+          p256dh: { type: 'string', minLength: 16, maxLength: 256 },
+          auth: { type: 'string', minLength: 8, maxLength: 128 },
+        },
+      },
+    },
+  } as const;
+  const endpointBody = {
+    type: 'object',
+    required: ['endpoint'],
+    additionalProperties: false,
+    properties: { endpoint: { type: 'string', maxLength: 1024 } },
+  } as const;
+
+  app.get('/v1/push/key', async () => ({ publicKey: vapid.publicKey }));
+
+  app.put('/v1/push/subscription', { schema: { body: subscriptionBody } }, async (req) => {
+    const { endpoint, keys } = req.body as {
+      endpoint: string;
+      keys: { p256dh: string; auth: string };
+    };
+    store.upsertSubscription({ endpoint, p256dh: keys.p256dh, auth: keys.auth });
+    return { ok: true };
+  });
+
+  app.post('/v1/push/unsubscribe', { schema: { body: endpointBody } }, async (req) => {
+    store.removeSubscription((req.body as { endpoint: string }).endpoint);
+    return { ok: true };
+  });
+
+  app.put(
+    '/v1/push/schedule',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['endpoint', 'items'],
+          additionalProperties: false,
+          properties: {
+            endpoint: { type: 'string', maxLength: 1024 },
+            items: {
+              type: 'array',
+              maxItems: MAX_SCHEDULE_ITEMS,
+              items: {
+                type: 'object',
+                required: ['key', 'at', 'payload'],
+                additionalProperties: false,
+                properties: {
+                  key: { type: 'string', minLength: 1, maxLength: 200 },
+                  at: { type: 'integer', minimum: 0 },
+                  payload: { type: 'string', minLength: 1, maxLength: 4000 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { endpoint, items } = req.body as {
+        endpoint: string;
+        items: { key: string; at: number; payload: string }[];
+      };
+      if (!store.getSubscription(endpoint)) {
+        return reply.code(404).send({ error: 'unknown-subscription' });
+      }
+      return { stored: store.replaceSchedule(endpoint, items) };
+    },
+  );
+
+  // Lets the settings page verify the whole chain (server → push service → browser) right away.
+  app.post('/v1/push/test', { schema: { body: endpointBody } }, async (req, reply) => {
+    const sub = store.getSubscription((req.body as { endpoint: string }).endpoint);
+    if (!sub) return reply.code(404).send({ error: 'unknown-subscription' });
+    if (!opts.pushSender) return reply.code(503).send({ error: 'push-disabled' });
+    try {
+      await opts.pushSender.send(
+        sub,
+        messageFor({
+          key: 'test',
+          payload: JSON.stringify({
+            title: 'Taschenmesser',
+            body: 'Push funktioniert.',
+            url: '/settings',
+          }),
+        }),
+      );
+      return { sent: true };
+    } catch (e) {
+      const status = (e as { statusCode?: number }).statusCode;
+      if (status === 404 || status === 410) store.removeSubscription(sub.endpoint);
+      return reply.code(502).send({ error: 'push-failed', status: status ?? null });
+    }
+  });
 
   if (opts.webDir && existsSync(join(opts.webDir, 'index.html'))) {
     await app.register(fastifyStatic, { root: opts.webDir });

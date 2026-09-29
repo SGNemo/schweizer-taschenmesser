@@ -1,6 +1,6 @@
 # Taschenmesser
 
-Modulare, local-first Alltags-App (PWA) – Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos und mehr als
+Modulare, local-first Alltags-App (PWA) – Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos und weitere
 aktivierbare Module. Die Daten liegen lokal in IndexedDB; ein eigener Sync-Server (optional, auch Ende-zu-Ende
 verschlüsselt) gleicht mehrere Geräte ab.
 
@@ -27,12 +27,25 @@ npm run dev          # http://localhost:5173
 | `npm run build && npm run preview` | Produktionsbuild auf http://localhost:4173 |
 | `npm run lint` / `npm run typecheck` | Statische Prüfungen |
 | `npm test` | Unit- und Komponententests (Vitest) |
-| `npm run e2e` | Alle Ende-zu-Ende-Tests (Playwright, Desktop + „Pixel 7“, danach die Multi-Geräte-Sync-Tests mit echtem Server) |
+| `npm run e2e` | Alle Ende-zu-Ende-Tests (inkl. Barrierefreiheits-Prüfung mit axe-core) (Playwright, Desktop + „Pixel 7“, danach die Multi-Geräte-Sync-Tests mit echtem Server) |
 | `npm run e2e:app` / `npm run e2e:sync` | Nur App-Tests / nur Sync-Tests |
 | `npm run gen:module -- <id> "<Name>"` | Neues Modul aus dem Template erzeugen |
 
 Für die E2E-Tests braucht Playwright einen Chromium (`npx playwright install chromium`, oder `PW_CHROMIUM_PATH` setzen).
 Die Sync-Tests starten den Server aus `../server` selbst (Abhängigkeiten dort vorher mit `npm install` installieren).
+
+### Module
+
+In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: Daten behalten oder löschen).
+
+| Standardmäßig an | Optional (aus, in der Bibliothek aktivieren) |
+|---|---|
+| Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos | **Merkliste** (Links, Lesen, Ansehen, Orte, Ideen mit Tags; auf dem Handy per „Teilen“), **Notizen**, **Einkaufsliste**, **Geburtstage**, **Habit-Tracker**, **Verträge & Garantien** (Kündigungsfristen im Kalender + Erinnerung), **Budgets & Sparziele** (Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen), **Packlisten** (als Vorlage kopieren), **Dokumente** (Ablaufdatum + Datei) |
+
+- **Dokumente:** Titel, Kategorie, Ablaufdatum und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem
+  Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).
+- **Teilen → Merkliste (Android):** Nach der Installation als PWA erscheint „Taschenmesser“ im Teilen-Menü; ein geteilter Link öffnet
+  „Merken“ mit ausgefülltem Link (Modul „Merkliste“ muss aktiv sein).
 
 ### Suche und KI-Assistent
 
@@ -115,6 +128,19 @@ tailscale serve --bg 8787       # je nach Tailscale-Version; HTTPS-Zertifikate i
 Diese Adresse auf dem Handy und am PC öffnen, die PWA von dort installieren und in den Einstellungen unter
 **Synchronisation** verbinden (die Adresse wird automatisch vorgeschlagen). Im LAN ohne HTTPS funktioniert der Sync,
 wenn die App selbst per `http://` (oder `localhost`) geöffnet wurde.
+
+### Push-Benachrichtigungen (optional)
+
+Ohne Push erscheinen Erinnerungen nur, solange die App geöffnet ist. Mit **Web Push** schickt dein Sync-Server sie auch bei geschlossener
+App (Windows/Android Chrome/Edge; braucht HTTPS, z. B. über Tailscale, und einen Browser mit Push-Dienst). Aktivieren:
+*Einstellungen → Benachrichtigungen → Push aktivieren* (die App muss mit dem Sync-Server verbunden sein).
+
+- Die App lädt die anstehenden Benachrichtigungen der nächsten 14 Tage (Zeitpunkt, Titel, Text) zum Server hoch und hält sie aktuell;
+  der Server sendet sie zum Zeitpunkt über den Push-Dienst des Browsers (Google/Mozilla/Microsoft sehen nur verschlüsselte Nachrichten).
+- Mit **Ende-zu-Ende-Verschlüsselung** sind Titel und Text auch für den Server verschlüsselt (der Service Worker entschlüsselt sie).
+- Die VAPID-Schlüssel erzeugt der Server beim ersten Start und speichert sie in der Datenbank; optional `VAPID_PUBLIC_KEY`,
+  `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (siehe `server/.env.example`). Der Button „Test über den Server senden“ prüft die ganze Kette.
+- Ein Gerät, das die App gerade offen hat, zeigt die Benachrichtigung nur einmal (gleicher Tag wie die lokale Erinnerung).
 
 ### In der App verbinden
 

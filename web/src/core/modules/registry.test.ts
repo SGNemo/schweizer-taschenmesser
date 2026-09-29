@@ -21,7 +21,7 @@ describe('module registry', () => {
 
 /**
  * Isolation rule: modules never import each other. Only finance may import the public.ts of
- * subscriptions and invoices. Checked on the real source files (relative + alias imports).
+ * subscriptions and invoices, and budgets the public.ts of finance. Checked on the real source files (relative + alias imports).
  */
 describe('module isolation', () => {
   const modulesDir = resolve(process.cwd(), 'src/modules');
@@ -36,6 +36,7 @@ describe('module isolation', () => {
 
   const allowed: Record<string, string[]> = {
     finance: ['subscriptions/public', 'invoices/public'],
+    budgets: ['finance/public'],
   };
 
   for (const id of readdirSync(modulesDir).filter((e) =>
