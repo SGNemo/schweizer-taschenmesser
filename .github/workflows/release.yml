@@ -1,6 +1,6 @@
 name: Release
 
-# Tag `vX.Y.Z` (or `vX.Y.Z-beta.N`) → signed Windows installers + signed Android APK + GitHub Release.
+# Tag `vX.Y.Z` (or `vX.Y.Z-beta.N`) → signed portable Windows exe + signed Android APK + GitHub Release.
 # Pushes to `develop` that touch the native shell, and manual runs, are DRY RUNS: they build and
 # upload artifacts but never create a release. How to create keys/secrets and cut a release:
 # see CLAUDE.md ("Releases").
@@ -138,7 +138,7 @@ jobs:
           path: ${{ runner.temp }}/RELEASE_NOTES.md
 
   windows:
-    name: Windows installers
+    name: Windows (portable)
     needs: prepare
     runs-on: windows-latest
     defaults:
@@ -158,39 +158,49 @@ jobs:
           workspaces: web/src-tauri
       - run: npm ci
 
+      # One self-contained executable with the frontend embedded – no NSIS/MSI installer.
       - name: Build
+        run: npx tauri build --no-bundle
+
+      - name: Sign with the updater key
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           set -euo pipefail
-          # WiX (MSI) cannot version pre-release identifiers such as "-beta.1": pre-releases ship the NSIS setup only.
-          BUNDLES="nsis,msi"
-          if [ "${{ needs.prepare.outputs.prerelease }}" = "true" ]; then BUNDLES="nsis"; fi
-          CONFIG='{}'
           if [ "${{ needs.prepare.outputs.updater_key }}" = "true" ]; then
-            CONFIG='{"bundle":{"createUpdaterArtifacts":true}}'
+            npx tauri signer sign src-tauri/target/release/taschenmesser.exe
           else
-            echo "::warning::No updater signing key: building UNSIGNED installers (dry run only)."
+            echo "::warning::No updater signing key: the portable executable is UNSIGNED (dry run only)."
           fi
-          npx tauri build --bundles "$BUNDLES" --config "$CONFIG"
 
       - name: Collect assets under their stable names
         run: |
           set -euo pipefail
           mkdir -p ../assets
-          BUNDLE=src-tauri/target/release/bundle
-          SETUP="$(find "$BUNDLE/nsis" -name '*-setup.exe' | head -n1)"
-          cp "$SETUP" ../assets/Taschenmesser-Setup.exe
-          [ -f "$SETUP.sig" ] && cp "$SETUP.sig" ../assets/Taschenmesser-Setup.exe.sig
-          MSI="$(find "$BUNDLE/msi" -name '*.msi' 2>/dev/null | head -n1 || true)"
-          if [ -n "$MSI" ]; then
-            cp "$MSI" ../assets/Taschenmesser.msi
-            [ -f "$MSI.sig" ] && cp "$MSI.sig" ../assets/Taschenmesser.msi.sig
-          fi
+          EXE=src-tauri/target/release/taschenmesser.exe
+          cp "$EXE" ../assets/Taschenmesser-Portable.exe
+          [ -f "$EXE.sig" ] && cp "$EXE.sig" ../assets/Taschenmesser-Portable.exe.sig
           ls -l ../assets
 
-      - name: Audit – no secrets in the installers or what goes into them
+      # The program has to stay alive for a while (window created, WebView2 found). Informational only:
+      # a hosted runner is not a real desktop.
+      - name: Smoke test – the executable starts
+        continue-on-error: true
+        run: |
+          set +e
+          ../assets/Taschenmesser-Portable.exe &
+          PID=$!
+          sleep 20
+          if kill -0 "$PID" 2>/dev/null; then
+            echo "The portable executable is still running after 20 s."
+            kill "$PID"
+          else
+            echo "::warning::The portable executable exited within 20 s."
+            exit 1
+          fi
+
+      - name: Audit – no secrets in the executable or what goes into it
         env:
           AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -350,13 +360,24 @@ jobs:
         run: |
           set -euo pipefail
           FILES=()
-          for f in Taschenmesser-Setup.exe Taschenmesser-Setup.exe.sig Taschenmesser.msi Taschenmesser.msi.sig \
+          for f in Taschenmesser-Portable.exe Taschenmesser-Portable.exe.sig \
                    Taschenmesser.apk Taschenmesser.apk.sha256 latest.json; do
             [ -f "dl/$f" ] && FILES+=("dl/$f")
           done
+          if [ "${#FILES[@]}" -ne 5 ]; then
+            echo "::error::A release needs all five assets, found ${#FILES[@]}: ${FILES[*]}"
+            exit 1
+          fi
           ARGS=(--verify-tag --title "Taschenmesser ${{ needs.prepare.outputs.version }}" --notes-file dl/RELEASE_NOTES.md)
           if [ "${{ needs.prepare.outputs.prerelease }}" = "true" ]; then ARGS+=(--prerelease); fi
           gh release create "${{ needs.prepare.outputs.tag }}" "${ARGS[@]}" "${FILES[@]}"
+
+      # The README badges and the in-app updater rely on these URLs.
+      - name: Check the download links of the published release
+        run: |
+          STABLE=""
+          if [ "${{ needs.prepare.outputs.prerelease }}" != "true" ]; then STABLE="--stable"; fi
+          node web/scripts/check-links.mjs --repo "$GITHUB_REPOSITORY" --tag "${{ needs.prepare.outputs.tag }}" $STABLE
 
   summary:
     name: Dry-run summary

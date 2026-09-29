@@ -181,4 +181,19 @@ describe('installUpdate', () => {
     updater.install.mockResolvedValue('installer-opened');
     expect((await installUpdate(info, deps)).phase).toBe('installing');
   });
+
+  it('tells apart the failures the native updater reports with a code', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    // Tauri rejects `invoke` with a plain string, not an Error.
+    const cases: [unknown, string][] = [
+      ['folder-not-writable: Access is denied. (os error 5)', 'folder-not-writable'],
+      ['signature-invalid: signature does not match', 'signature-invalid'],
+      ['swap-failed: boom', 'install-failed'],
+      [new Error('network'), 'install-failed'],
+    ];
+    for (const [rejection, code] of cases) {
+      const { deps } = setup({ install: async () => Promise.reject(rejection) });
+      expect(await installUpdate(info, deps)).toMatchObject({ phase: 'error', code });
+    }
+  });
 });

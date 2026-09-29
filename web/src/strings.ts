@@ -949,6 +949,10 @@ export const t = {
       'backup-failed':
         'Die Sicherungskopie konnte nicht angelegt werden – das Update wurde deshalb nicht gestartet.',
       'install-failed': 'Das Update konnte nicht installiert werden.',
+      'folder-not-writable':
+        'Die Programmdatei liegt in einem Ordner, in den die App nicht schreiben darf (schreibgeschützt oder ohne Berechtigung). Verschiebe Taschenmesser-Portable.exe in einen normalen Ordner, z. B. in deinen Benutzerordner, und versuche es erneut.',
+      'signature-invalid':
+        'Die Signatur des Updates ist ungültig – es wurde deshalb nicht installiert.',
     } as Record<string, string>,
     settings: {
       intro:

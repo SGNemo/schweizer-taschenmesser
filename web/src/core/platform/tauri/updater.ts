@@ -2,7 +2,9 @@
  * Self-update for the native app.
  *
  * Desktop: the Rust side (`src-tauri/src/update.rs`, on `tauri-plugin-updater`) downloads and
- * installs; the plugin verifies the minisign signature, so nothing unsigned can be installed.
+ * installs; the plugin verifies the minisign signature, so nothing unsigned can be installed. On
+ * Windows the app is one portable executable: the plugin only checks + downloads, `portable.rs`
+ * re-verifies and swaps the running file (errors arrive as `<code>: <detail>` strings).
  * Android: no store and no updater plugin – the release APK is downloaded by the `apk-installer`
  * plugin, its SHA-256 (from the release's `.sha256` asset) is checked, and the system installer
  * takes over; Android itself only accepts an APK signed with our keystore.
