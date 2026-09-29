@@ -1,0 +1,9 @@
+# Reviewed false positives: fake passwords, a well-known example TOTP secret and a public VAPID key in tests.
+# New fixtures: put `gitleaks:allow` in a comment on the line instead of extending this file.
+
+6125aa1619bf5897d9d764b0fe40789b735e707a:web/src/core/ai/privacy.test.ts:generic-api-key:17
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/e2e/accounts.spec.ts:generic-api-key:5
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/totp.test.ts:generic-api-key:70
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/exclusion.test.ts:generic-api-key:19
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/vault.test.ts:generic-api-key:37
+dcf3250befaa0f189f1975ec93d783807ec8a5d0:web/src/core/notifications/push.test.ts:generic-api-key:21

@@ -67,7 +67,7 @@ describe('TOTP (RFC 6238 test vectors)', () => {
 describe('TOTP input', () => {
   it('accepts a bare secret with spaces/lower case', () => {
     expect(parseTotpInput('gezd gnbv gy3t qojq gezd gnbv gy3t qojq')).toMatchObject({
-      secret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',
+      secret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', // gitleaks:allow (test fixture)
       digits: 6,
       period: 30,
       algorithm: 'SHA1',

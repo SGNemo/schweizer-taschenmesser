@@ -34,7 +34,7 @@ const SECRETS = [
 const draft = {
   title: 'GitHub-Konto-Geheim',
   username: 'alice@example.org',
-  password: 'hunter2-passwort-xyz',
+  password: 'hunter2-passwort-xyz', // gitleaks:allow (test fixture)
   url: 'https://github.com',
   notes: 'meine private Notiz',
   tags: ['Arbeit'],

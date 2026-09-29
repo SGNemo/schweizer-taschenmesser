@@ -14,7 +14,7 @@ import { clearAll, ctxFor, seed, TODAY, useFixedClock } from './testing';
 import { testConnection } from './testConnection';
 
 const QUESTION = 'Wie viel habe ich im September für Lebensmittel ausgegeben?';
-const KEY = 'sk-test-privacy-key-123';
+const KEY = 'sk-test-privacy-key-123'; // gitleaks:allow (test fixture)
 const DATA = [
   'Geheimfirma',
   'Sonnenschein',

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const MASTER = 'Mein-Master-Passwort-1';
 const SECRET_TITLE = 'Beispiel-Bank-Konto';
-const SECRET_PASSWORD = 'geheimes-passwort-4711';
+const SECRET_PASSWORD = 'geheimes-passwort-4711'; // gitleaks:allow (test fixture)
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));

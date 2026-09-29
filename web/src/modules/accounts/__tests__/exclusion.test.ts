@@ -16,7 +16,7 @@ import { resetAttempts, createVault, lockVault, saveEntry } from '../vault';
 
 const FAST = { m: 64, t: 1, p: 1 };
 const SECRET_TITLE = 'Streng-Geheimes-Bankkonto';
-const SECRET_PASSWORD = 'Ultra-Geheimes-Passwort-42';
+const SECRET_PASSWORD = 'Ultra-Geheimes-Passwort-42'; // gitleaks:allow (test fixture)
 
 beforeEach(async () => {
   useFixedClock();

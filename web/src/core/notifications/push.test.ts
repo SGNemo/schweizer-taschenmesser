@@ -18,8 +18,8 @@ import {
 import { asPayload, parsePushMessage, pushAad } from './pushPayload';
 
 const NOW = 1_000_000_000_000;
-const SERVER_KEY =
-  'BPiEAmDbB0m_4GcXhIYVHW0qKzUgCWyZ3wkzp_2FjG3E3Nl4TGcCZ8Xy7yqJCpLQ2oWc0QyVN5hV3DPrfgO5U3o';
+const SERVER_KEY = // gitleaks:allow (test fixture)
+  'BPiEAmDbB0m_4GcXhIYVHW0qKzUgCWyZ3wkzp_2FjG3E3Nl4TGcCZ8Xy7yqJCpLQ2oWc0QyVN5hV3DPrfgO5U3o'; // gitleaks:allow (test fixture)
 const due = (key: string, at: number, over: Partial<DueNotification> = {}): DueNotification => ({
   key,
   at,

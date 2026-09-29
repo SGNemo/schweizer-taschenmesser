@@ -27,7 +27,25 @@ env:
   NDK_VERSION: '27.2.12479018'
 
 jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the whole history is scanned, not just the last commit
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      # Built from source through the Go module proxy (checksum-verified by go.sum / sumdb): no binary download to trust.
+      - name: Scan the history for secrets
+        run: |
+          set -euo pipefail
+          go install github.com/zricethezav/gitleaks/v8@v8.21.2
+          "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
+
   prepare:
+    needs: secret-scan
     name: Version, changelog, signing check
     runs-on: ubuntu-latest
     outputs:
@@ -37,6 +55,7 @@ jobs:
       publish: ${{ steps.meta.outputs.publish }}
       updater_key: ${{ steps.keys.outputs.updater }}
       android_key: ${{ steps.keys.outputs.android }}
+      missing_secrets: ${{ steps.keys.outputs.missing }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,16 +91,29 @@ jobs:
         id: keys
         env:
           TAURI_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           ANDROID_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KS_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$TAURI_KEY" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY)
+          [ -n "$TAURI_KEY_PASSWORD" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
+          [ -n "$ANDROID_KS" ] || missing+=(ANDROID_KEYSTORE_BASE64)
+          [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
+          [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
+          [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
           echo "updater=$([ -n "$TAURI_KEY" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "android=$([ -n "$ANDROID_KS" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "missing=${missing[*]:-}" >> "$GITHUB_OUTPUT"
 
-      - name: Published releases must be signed
+      - name: Published releases must be signed (all six secrets present)
         if: steps.meta.outputs.publish == 'true'
         run: |
-          if [ "${{ steps.keys.outputs.updater }}" != "true" ] || [ "${{ steps.keys.outputs.android }}" != "true" ]; then
-            echo "::error::Signing secrets are missing (TAURI_SIGNING_PRIVATE_KEY, ANDROID_KEYSTORE_BASE64, …). See CLAUDE.md → Releases."
+          if [ -n "${{ steps.keys.outputs.missing }}" ]; then
+            echo "::error::Missing GitHub secrets: ${{ steps.keys.outputs.missing }}. Nothing was built or published – see CLAUDE.md → Releases."
             exit 1
           fi
 
@@ -158,6 +190,19 @@ jobs:
           fi
           ls -l ../assets
 
+      - name: Audit – no secrets in the installers or what goes into them
+        env:
+          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          EXE=src-tauri/target/release/taschenmesser.exe
+          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.conf.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: windows
@@ -223,10 +268,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ../assets
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-          ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/release.jks" \
+          KEYSTORE="$RUNNER_TEMP/release.jks"
+          # The keystore file exists only while signing – removed on success AND on failure.
+          trap 'rm -f "$KEYSTORE"' EXIT
+          umask 077
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
+          ANDROID_KEYSTORE_PATH="$KEYSTORE" \
             node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Taschenmesser.apk
-          rm -f "$RUNNER_TEMP/release.jks"
           (cd ../assets && sha256sum Taschenmesser.apk > Taschenmesser.apk.sha256 && cat Taschenmesser.apk.sha256)
 
       - name: Unsigned APK (dry run without keystore)
@@ -236,6 +284,22 @@ jobs:
           echo "::warning::No Android keystore configured: the APK is UNSIGNED and cannot be installed."
           mkdir -p ../assets
           cp "${{ steps.apk.outputs.path }}" ../assets/Taschenmesser-unsigned.apk
+
+      - name: Audit – no secrets in the APK or what goes into it
+        env:
+          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          node scripts/audit-release.mjs --path dist --path ../assets
+
+      - name: Make sure no keystore file is left on the runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -260,6 +324,16 @@ jobs:
           path: dl
           merge-multiple: true
 
+      - name: Final audit before anything is published
+        env:
+          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.conf.json
+
       - name: Updater manifest (latest.json)
         run: |
           node web/scripts/latest-json.mjs --dir dl \
@@ -268,6 +342,7 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --notes dl/RELEASE_NOTES.md --out dl/latest.json
           cat dl/latest.json
+          node web/scripts/audit-release.mjs --path dl/latest.json
 
       - name: Create the release
         env:
@@ -298,7 +373,7 @@ jobs:
           {
             echo "## Dry run – nothing was published"
             echo
-            echo "Version \`${{ needs.prepare.outputs.version }}\`, updater key: **${{ needs.prepare.outputs.updater_key }}**, Android keystore: **${{ needs.prepare.outputs.android_key }}**"
+            echo "Version \`${{ needs.prepare.outputs.version }}\`, updater key: **${{ needs.prepare.outputs.updater_key }}**, Android keystore: **${{ needs.prepare.outputs.android_key }}**, missing secrets: **${{ needs.prepare.outputs.missing_secrets || 'none' }}**"
             echo
             echo '```'
             ls -l dl
