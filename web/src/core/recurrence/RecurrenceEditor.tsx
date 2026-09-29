@@ -17,6 +17,8 @@ interface Props {
   onChange: (value: Recurrence | undefined) => void;
   /** Start date; used to pre-select sensible weekday / month day defaults. */
   startDate: string;
+  /** Hide the "none" option (items that always repeat, e.g. subscriptions). */
+  required?: boolean;
 }
 
 function ends(r: Recurrence): 'never' | 'until' | 'count' {
@@ -24,7 +26,7 @@ function ends(r: Recurrence): 'never' | 'until' | 'count' {
 }
 
 /** Form control for a recurrence rule (shared by reminders, calendar, subscriptions …). */
-export function RecurrenceEditor({ value, onChange, startDate }: Props) {
+export function RecurrenceEditor({ value, onChange, startDate, required }: Props) {
   const set = (patch: Partial<Recurrence>) => value && onChange({ ...value, ...patch });
 
   function changeFreq(freq: string) {
@@ -54,7 +56,7 @@ export function RecurrenceEditor({ value, onChange, startDate }: Props) {
         value={value?.freq ?? 'none'}
         onChange={(e) => changeFreq(e.target.value)}
       >
-        <option value="none">{t.recurrence.none}</option>
+        {required ? null : <option value="none">{t.recurrence.none}</option>}
         <option value="daily">{t.recurrence.daily}</option>
         <option value="weekly">{t.recurrence.weekly}</option>
         <option value="monthly">{t.recurrence.monthly}</option>

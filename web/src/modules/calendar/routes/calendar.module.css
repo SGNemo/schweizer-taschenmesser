@@ -149,6 +149,19 @@
   background: var(--surface-2);
   color: var(--text);
 }
+.kind_invoice,
+.kind_cancel {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.kind_subscription {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.dot.kind_invoice,
+.dot.kind_cancel {
+  background: var(--danger);
+}
 .dot.kind_event {
   background: var(--accent);
 }

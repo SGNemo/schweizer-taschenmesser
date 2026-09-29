@@ -1,4 +1,3 @@
-import { daysBetween } from '@/core/time/dates';
 import type { Task } from './schema';
 
 type T = Pick<Task, 'done' | 'dueDate' | 'priority' | 'order'> & { createdAt: number };
@@ -40,12 +39,4 @@ export function groupTasks<X extends T & { id: string; parentId?: string }>(
   return { top, children };
 }
 
-export type DueTone = 'overdue' | 'today' | 'soon' | 'later' | 'none';
-
-export function dueTone(dueDate: string | undefined, done: boolean, today: string): DueTone {
-  if (!dueDate) return 'none';
-  const d = daysBetween(today, dueDate);
-  if (d < 0) return done ? 'later' : 'overdue';
-  if (d === 0) return 'today';
-  return d <= 3 ? 'soon' : 'later';
-}
+export { dueTone, type DueTone } from '@/core/time/due';

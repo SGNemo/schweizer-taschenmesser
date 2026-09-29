@@ -32,6 +32,12 @@ export const startOfWeekStr = (s: string): string => toDateString(startOfISOWeek
 export const startOfMonthStr = (s: string): string => `${s.slice(0, 7)}-01`;
 export const endOfMonthStr = (s: string): string =>
   toDateString(new Date(parseDate(s).getFullYear(), parseDate(s).getMonth() + 1, 0));
+/** 'YYYY-MM' of a date string. */
+export const monthOf = (s: string): string => s.slice(0, 7);
+export const addMonthsToMonth = (month: string, n: number): string =>
+  monthOf(addMonthsStr(`${month}-01`, n));
+export const formatMonth = (month: string): string => formatDay(`${month}-01`, 'LLLL yyyy');
+
 export const tomorrow = (): string => addDaysStr(today(), 1);
 
 export function eachDay(from: string, to: string): string[] {

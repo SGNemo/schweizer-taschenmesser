@@ -125,6 +125,11 @@ export interface ModuleContributions {
   /** Lazy so manifests stay free of database imports. */
   calendarItems?: () => Promise<{ default: CalendarSource }>;
   notifications?: () => Promise<{ default: NotificationSource }>;
+  /**
+   * Background service that runs while the module is enabled (e.g. reacting to bus events).
+   * The default export starts it and returns a function that stops it.
+   */
+  services?: () => Promise<{ default: () => (() => void) | void }>;
 }
 
 export interface ModuleManifest {

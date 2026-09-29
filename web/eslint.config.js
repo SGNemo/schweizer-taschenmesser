@@ -51,6 +51,29 @@ export default tseslint.config(
     },
   },
   {
+    // Sanctioned cross-read: finance may import public.ts of subscriptions and invoices.
+    files: ['src/modules/finance/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              // Everything under @/modules/ except the two read-only public APIs.
+              regex: '^@/modules/(?!(?:invoices|subscriptions)/public$)',
+              message: 'finance may only import subscriptions/public and invoices/public.',
+            },
+            {
+              group: ['@/core/db/dexie', '@/core/db/db'],
+              message:
+                'Use createRepo() from @/core/db/repo instead of touching Dexie tables directly.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Tests may use the app database directly (fixtures, cleanup); module isolation still applies.
     files: ['src/modules/*/__tests__/**/*.{ts,tsx}'],
     rules: {
@@ -61,32 +84,6 @@ export default tseslint.config(
             {
               group: ['@/modules/*'],
               message: 'Modules must not import other modules.',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    // Sanctioned cross-read: finance may import public.ts of subscriptions and invoices.
-    files: ['src/modules/finance/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: [
-                '@/modules/*',
-                '!@/modules/subscriptions/public',
-                '!@/modules/invoices/public',
-              ],
-              message: 'finance may only import subscriptions/public and invoices/public.',
-            },
-            {
-              group: ['@/core/db/dexie', '@/core/db/db'],
-              message:
-                'Use createRepo() from @/core/db/repo instead of touching Dexie tables directly.',
             },
           ],
         },

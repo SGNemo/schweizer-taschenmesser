@@ -249,7 +249,14 @@ test.describe('Dashboard', () => {
     await ready(page, '/');
     await expect(page.getByTestId('widget-reminders:next')).toBeVisible();
     const before = await order();
-    expect(before).toEqual(['widget-calendar:today', 'widget-todos:open', 'widget-reminders:next']);
+    expect(before).toEqual([
+      'widget-calendar:today',
+      'widget-todos:open',
+      'widget-reminders:next',
+      'widget-finance:balance',
+      'widget-invoices:due',
+      'widget-subscriptions:next',
+    ]);
 
     await page.getByRole('button', { name: 'Anpassen' }).click();
     const handle = page.getByRole('button', { name: 'Nächste Erinnerungen verschieben' });
@@ -258,9 +265,11 @@ test.describe('Dashboard', () => {
     const live = page.locator('[id^="DndLiveRegion"]');
     await page.keyboard.press('Space');
     await expect(live).toContainText('Position 3 verschoben'); // picked up (starts at position 3)
-    await page.keyboard.press('ArrowUp');
-    await expect(live).not.toContainText('Position 3');
-    await page.keyboard.press('ArrowUp');
+    // dnd-kit needs a moment to measure the drop targets; keep pressing until the item moved.
+    await expect(async () => {
+      await page.keyboard.press('ArrowUp');
+      await expect(live).not.toContainText('Position 3', { timeout: 500 });
+    }).toPass();
     await page.keyboard.press('Space');
     await expect(live).toContainText('abgelegt');
 

@@ -8,8 +8,11 @@ test.describe('module library', () => {
     await expect(page.getByTestId('widget-calendar:today')).toBeVisible();
     await expect(page.getByTestId('widget-todos:open')).toBeVisible();
     await expect(page.getByTestId('widget-reminders:next')).toBeVisible();
+    await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
+    await expect(page.getByTestId('widget-invoices:due')).toBeVisible();
+    await expect(page.getByTestId('widget-subscriptions:next')).toBeVisible();
     await page.goto('/library');
-    for (const id of ['calendar', 'todos', 'reminders']) {
+    for (const id of ['calendar', 'todos', 'reminders', 'finance', 'invoices', 'subscriptions']) {
       await expect(
         page.getByTestId(`module-${id}`).getByText('Aktiv', { exact: true }),
       ).toBeVisible();
@@ -21,7 +24,7 @@ test.describe('module library', () => {
     page,
   }) => {
     await page.goto('/library');
-    for (const id of ['calendar', 'todos', 'reminders']) {
+    for (const id of ['calendar', 'todos', 'reminders', 'finance', 'invoices', 'subscriptions']) {
       const card = page.getByTestId(`module-${id}`);
       await card.getByRole('button', { name: 'Deaktivieren' }).click();
       await page.getByRole('button', { name: 'Daten behalten (ausgeblendet)' }).click();

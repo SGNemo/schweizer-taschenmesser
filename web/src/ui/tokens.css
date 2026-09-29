@@ -50,6 +50,9 @@
   --success: #1e7a46;
   --warning: #8a5a00;
   --focus: #1a5fd0;
+  /* Chart series (validated categorical slots 1 and 2, see CLAUDE.md) */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
   --overlay: rgb(20 22 25 / 0.45);
   --shadow-1: 0 1px 2px rgb(20 22 25 / 0.06), 0 1px 3px rgb(20 22 25 / 0.05);
   --shadow-2: 0 8px 24px rgb(20 22 25 / 0.12), 0 2px 6px rgb(20 22 25 / 0.06);
@@ -72,6 +75,8 @@
   --success: #6fcf97;
   --warning: #e0b050;
   --focus: #8ab4ff;
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
   --overlay: rgb(0 0 0 / 0.6);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
@@ -95,6 +100,8 @@
     --success: #6fcf97;
     --warning: #e0b050;
     --focus: #8ab4ff;
+    --viz-1: #3987e5;
+    --viz-2: #d95926;
     --overlay: rgb(0 0 0 / 0.6);
     --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
