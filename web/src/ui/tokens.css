@@ -1,0 +1,109 @@
+/* Design tokens. Components only use these variables – no hard-coded colours. */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --leading: 1.5;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 999px;
+
+  --touch: 44px;
+  --sidebar-w: 248px;
+  --bottom-nav-h: 64px;
+  --content-max: 960px;
+
+  --dur-fast: 120ms;
+  --dur: 220ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Light theme (default) */
+  color-scheme: light;
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #f0f0ed;
+  --border: #e4e4df;
+  --text: #1c1d1f;
+  --text-muted: #5f6368;
+  --accent: #2f6f8f;
+  --accent-hover: #275c76;
+  --accent-contrast: #ffffff;
+  --accent-soft: #e3eff5;
+  --danger: #b3261e;
+  --danger-soft: #fbe9e7;
+  --success: #1e7a46;
+  --warning: #8a5a00;
+  --focus: #1a5fd0;
+  --overlay: rgb(20 22 25 / 0.45);
+  --shadow-1: 0 1px 2px rgb(20 22 25 / 0.06), 0 1px 3px rgb(20 22 25 / 0.05);
+  --shadow-2: 0 8px 24px rgb(20 22 25 / 0.12), 0 2px 6px rgb(20 22 25 / 0.06);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #141517;
+  --surface: #1d1f22;
+  --surface-2: #26282c;
+  --border: #33363b;
+  --text: #ececea;
+  --text-muted: #a3a7ad;
+  --accent: #6cb4d4;
+  --accent-hover: #86c4e0;
+  --accent-contrast: #0e2530;
+  --accent-soft: #1f3540;
+  --danger: #f2a09a;
+  --danger-soft: #3a2220;
+  --success: #6fcf97;
+  --warning: #e0b050;
+  --focus: #8ab4ff;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #141517;
+    --surface: #1d1f22;
+    --surface-2: #26282c;
+    --border: #33363b;
+    --text: #ececea;
+    --text-muted: #a3a7ad;
+    --accent: #6cb4d4;
+    --accent-hover: #86c4e0;
+    --accent-contrast: #0e2530;
+    --accent-soft: #1f3540;
+    --danger: #f2a09a;
+    --danger-soft: #3a2220;
+    --success: #6fcf97;
+    --warning: #e0b050;
+    --focus: #8ab4ff;
+    --overlay: rgb(0 0 0 / 0.6);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+  }
+}
