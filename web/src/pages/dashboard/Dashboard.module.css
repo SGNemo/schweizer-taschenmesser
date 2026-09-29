@@ -3,12 +3,23 @@
   gap: var(--space-4);
   grid-template-columns: minmax(0, 1fr);
 }
-@media (min-width: 700px) {
+/* The column count follows the width of the page container (also in a narrow window). */
+@container page (min-width: 44rem) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .m {
     grid-column: span 2;
+  }
+}
+@container page (min-width: 70rem) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container page (min-width: 95rem) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 .l {
