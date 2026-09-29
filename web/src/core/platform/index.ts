@@ -1,7 +1,15 @@
 import { createWebPlatform } from './web';
 import type { PlatformService } from './types';
 
-export type { PlatformKind, PlatformService, SaveFileRequest } from './types';
+export type {
+  BiometricPromptText,
+  BiometricService,
+  PlatformKind,
+  PlatformService,
+  SaveFileRequest,
+  ScreenService,
+  UnsealResult,
+} from './types';
 
 let current: PlatformService = createWebPlatform();
 

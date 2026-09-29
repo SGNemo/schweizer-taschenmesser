@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, ItemList, ItemRow, PageHeader, TextField } from '@/ui';
 import { EntryDetail } from '../components/EntryDetail';
@@ -31,6 +32,13 @@ export function searchEntries(entries: readonly DecryptedEntry[], query: string)
 export default function AccountsPage() {
   const header = useHeaderState();
   const session = useSession((s) => s.session);
+
+  // No screenshots / app-switcher preview of the vault (Android FLAG_SECURE; a no-op elsewhere).
+  useEffect(() => {
+    const { screen } = getPlatform();
+    void screen.setSecure(true);
+    return () => void screen.setSecure(false);
+  }, []);
 
   if (!header) return <PageHeader title={t.accounts.title} />;
   return (

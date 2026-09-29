@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-biometric-delete"
+description = "Enables the biometric_delete command without any pre-configured scope."
+commands.allow = ["biometric_delete"]
+
+[[permission]]
+identifier = "deny-biometric-delete"
+description = "Denies the biometric_delete command without any pre-configured scope."
+commands.deny = ["biometric_delete"]

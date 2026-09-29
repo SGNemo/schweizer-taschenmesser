@@ -876,6 +876,26 @@ export const t = {
       levels: ['Sehr schwach', 'Schwach', 'Mittel', 'Stark', 'Sehr stark'] as string[],
       crack: (time: string) => `Offline-Knackzeit ca. ${time}`,
     },
+    biometric: {
+      title: 'Biometrisches Entsperren',
+      unlock: 'Mit Biometrie entsperren',
+      promptTitle: 'Tresor entsperren',
+      promptSubtitle: 'Bestätige mit Fingerabdruck, Gesicht oder Windows Hello.',
+      enable: 'Biometrisches Entsperren aktivieren',
+      disable: 'Biometrisches Entsperren deaktivieren',
+      enabledNote:
+        'Aktiv: Der Tresor lässt sich mit Biometrie entsperren. Das Master-Passwort bleibt jederzeit möglich.',
+      enterPassword: 'Master-Passwort zur Bestätigung',
+      enabled: 'Biometrisches Entsperren ist aktiv.',
+      disabled: 'Biometrisches Entsperren ist aus.',
+      cancelled: 'Abgebrochen.',
+      invalid:
+        'Biometrisches Entsperren ist nicht mehr gültig (z. B. wurden Fingerabdrücke geändert). Bitte mit dem Master-Passwort entsperren und neu aktivieren.',
+      unavailable:
+        'Nicht verfügbar: Dafür braucht es die installierte App (Windows Hello oder Fingerabdruck/Gesicht auf Android) mit eingerichteter Biometrie.',
+      windowsNote:
+        'Unter Windows fragt Windows Hello vor dem Öffnen nach; das schützt vor fremden Personen am entsperrten PC, ersetzt aber nicht das Master-Passwort.',
+    },
     tools: {
       open: 'Import, Export & Sicherheit',
       title: 'Import, Export & Sicherheit',

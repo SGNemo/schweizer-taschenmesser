@@ -91,6 +91,15 @@ export function createWebPlatform(): PlatformService {
     },
     // OS keystore (Windows Credential Manager / Android Keystore) is planned as step 11b.
     secrets: createDeviceKeyStore(),
+    // No biometric hardware access from a web page.
+    biometrics: {
+      available: async () => false,
+      seal: unsupported,
+      unseal: unsupported,
+      has: async () => false,
+      remove: async () => undefined,
+    },
+    screen: { setSecure: async () => undefined },
     lifecycle: { onBackground: onPageHidden },
   };
 }

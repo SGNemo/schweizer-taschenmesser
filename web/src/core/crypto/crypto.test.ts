@@ -18,6 +18,9 @@ import {
   serializeHeader,
   shuffled,
   unlockKeychain,
+  unwrapDekBytes,
+  dekFromBytes,
+  verifyDek,
   wipe,
 } from './index';
 
@@ -150,6 +153,28 @@ describe('keychain (KEK/DEK)', () => {
     });
   });
 
+  it('recognises its own data key – and only that one', async () => {
+    const a = await createKeychain('pw', FAST);
+    const b = await createKeychain('pw', FAST);
+    expect(await verifyDek(a.header, a.dek)).toBe(true);
+    expect(await verifyDek(a.header, b.dek)).toBe(false);
+    expect(await verifyDek(a.header, await aesKey())).toBe(false);
+    // the check is bound to the vault id: another vault's check does not verify
+    expect(await verifyDek({ ...a.header, check: b.header.check }, a.dek)).toBe(false);
+  });
+
+  it('hands out the raw key for sealing and imports it back as a non-extractable key', async () => {
+    const { header, dek } = await createKeychain('pw', FAST);
+    const token = await sealJson(dek, 'e', 'hello');
+    const raw = await unwrapDekBytes('pw', header);
+    expect(raw).toHaveLength(32);
+    await expect(unwrapDekBytes('nope', header)).rejects.toMatchObject({ code: 'wrong-key' });
+    const back = await dekFromBytes(raw);
+    expect(back.extractable).toBe(false);
+    expect([...raw]).toEqual(new Array(32).fill(0)); // wiped by the import
+    expect(await openJson(back, 'e', token)).toBe('hello');
+  });
+
   it('serialises and validates the header', async () => {
     const { header } = await createKeychain('pw', FAST);
     expect(parseHeader(serializeHeader(header))).toEqual(header);
@@ -161,7 +186,7 @@ describe('keychain (KEK/DEK)', () => {
     const { header } = await createKeychain('super-secret-master', FAST);
     const text = serializeHeader(header);
     expect(text).not.toContain('super-secret-master');
-    expect(Object.keys(header).sort()).toEqual(['kdf', 'v', 'vaultId', 'wrappedDek']);
+    expect(Object.keys(header).sort()).toEqual(['check', 'kdf', 'v', 'vaultId', 'wrappedDek']);
   });
 
   it('logs nothing while creating, unlocking and re-wrapping', async () => {

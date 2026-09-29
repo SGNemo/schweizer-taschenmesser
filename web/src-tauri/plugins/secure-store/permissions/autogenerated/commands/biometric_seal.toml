@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-biometric-seal"
+description = "Enables the biometric_seal command without any pre-configured scope."
+commands.allow = ["biometric_seal"]
+
+[[permission]]
+identifier = "deny-biometric-seal"
+description = "Denies the biometric_seal command without any pre-configured scope."
+commands.deny = ["biometric_seal"]

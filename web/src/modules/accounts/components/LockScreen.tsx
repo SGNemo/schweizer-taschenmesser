@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { t } from '@/strings';
 import { Button, Form, Icon, TextField } from '@/ui';
+import { biometricStatus, unlockWithBiometrics, type BiometricStatus } from '../biometric';
 import { unlockVault, VaultError } from '../vault';
 import styles from '../accounts.module.css';
 
@@ -8,6 +9,26 @@ export function LockScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [bio, setBio] = useState<BiometricStatus>();
+  const prompted = useRef(false);
+
+  async function unlockWithBiometric() {
+    setError('');
+    const result = await unlockWithBiometrics();
+    if (result === 'invalid') setError(t.accounts.biometric.invalid);
+    if (result === 'invalid' || result === 'unavailable') setBio(await biometricStatus());
+  }
+
+  useEffect(() => {
+    void biometricStatus().then((status) => {
+      setBio(status);
+      // Offer the prompt once when the lock screen appears; dismissing it leaves the password field.
+      if (status.enrolled && !prompted.current) {
+        prompted.current = true;
+        void unlockWithBiometric();
+      }
+    });
+  }, []);
 
   async function submit() {
     setBusy(true);
@@ -48,6 +69,9 @@ export function LockScreen() {
           {busy ? t.accounts.lock.unlocking : t.accounts.lock.unlock}
         </Button>
       </Form>
+      {bio?.enrolled ? (
+        <Button onClick={() => void unlockWithBiometric()}>{t.accounts.biometric.unlock}</Button>
+      ) : null}
     </div>
   );
 }

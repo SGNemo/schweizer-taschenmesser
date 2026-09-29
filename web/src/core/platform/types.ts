@@ -15,6 +15,44 @@ export interface SaveFileRequest {
   mime: string;
 }
 
+/** Texts of the system biometric prompt (they come from the app: the UI is German only). */
+export interface BiometricPromptText {
+  title: string;
+  subtitle: string;
+  cancel: string;
+}
+
+export type UnsealResult =
+  | { status: 'ok'; secret: Uint8Array<ArrayBuffer> }
+  /** The user dismissed the prompt. */
+  | { status: 'cancelled' }
+  /** Nothing is sealed under that name. */
+  | { status: 'missing' }
+  /** The device's biometrics changed; the sealed secret was destroyed by the OS. */
+  | { status: 'invalidated' };
+
+/**
+ * A biometric gate in front of one small secret (the vault's data key). `available()` is false in the
+ * browser and wherever the device has no enrolled biometrics / Windows Hello.
+ */
+export interface BiometricService {
+  available(): Promise<boolean>;
+  /** Stores `secret` behind the biometric prompt. `cancelled` = the user dismissed the prompt. */
+  seal(
+    name: string,
+    secret: Uint8Array<ArrayBuffer>,
+    prompt: BiometricPromptText,
+  ): Promise<'sealed' | 'cancelled'>;
+  unseal(name: string, prompt: BiometricPromptText): Promise<UnsealResult>;
+  has(name: string): Promise<boolean>;
+  remove(name: string): Promise<void>;
+}
+
+/** Screen-level protection (Android FLAG_SECURE); a no-op elsewhere. */
+export interface ScreenService {
+  setSecure(enabled: boolean): Promise<void>;
+}
+
 export interface PlatformService {
   readonly kind: PlatformKind;
   /** True inside the native shell (installed app), false in a browser tab / PWA. */
@@ -27,6 +65,8 @@ export interface PlatformService {
   notifications: NotificationService;
   /** Where API keys are kept (device-local; see `core/secrets`). */
   secrets: SecretStore;
+  biometrics: BiometricService;
+  screen: ScreenService;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {

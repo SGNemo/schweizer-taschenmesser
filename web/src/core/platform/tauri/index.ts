@@ -21,9 +21,9 @@ import type {
   NotificationService,
   ScheduledNotification,
 } from '@/core/notifications/service';
-import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { onPageHidden, sensitiveClipboard } from '../web';
 import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
+import { createSecureParts } from './secureStore';
 import { createUpdater } from './updater';
 
 const FILTER_NAMES: Record<string, string> = {
@@ -139,8 +139,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
       remove: (path) => remove(path, inAppData),
     },
     updater: createUpdater(kind, fetchFn),
-    // OS keystore (Windows Credential Manager / Android Keystore) is planned as step 11b.
-    secrets: createDeviceKeyStore(),
+    ...(await createSecureParts(kind)), // secrets (OS keystore), biometrics, screen protection
     lifecycle: { onBackground: onPageHidden },
   };
 }

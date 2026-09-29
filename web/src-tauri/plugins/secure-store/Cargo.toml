@@ -1,0 +1,33 @@
+[package]
+name = "tauri-plugin-secure-store"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "OS keystore (Windows Credential Manager / Android Keystore), biometric gate and screenshot protection."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+links = "tauri-plugin-secure-store"
+
+[dependencies]
+tauri = { version = "2.12" }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+base64 = "0.22"
+serde_json = "1"
+
+# Desktop keystores: Windows Credential Manager, macOS Keychain, Linux kernel keyring (no D-Bus needed).
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+keyring = { version = "3", features = ["windows-native", "apple-native", "linux-native"] }
+
+# Windows Hello (consent verification) for the biometric gate.
+[target.'cfg(windows)'.dependencies]
+windows-future = "0.2"
+windows = { version = "0.61", features = [
+  "Foundation",
+  "Security_Credentials_UI",
+  "Win32_Foundation",
+  "Win32_System_WinRT",
+] }
+
+[build-dependencies]
+tauri-plugin = { version = "2.7", features = ["build"] }

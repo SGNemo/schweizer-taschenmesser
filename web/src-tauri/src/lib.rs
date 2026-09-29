@@ -15,7 +15,9 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
         // Android self-update (download + installer intent); a stub that reports `unsupported` elsewhere.
-        .plugin(tauri_plugin_apk_installer::init());
+        .plugin(tauri_plugin_apk_installer::init())
+        // OS keystore, biometric gate for the vault key, screenshot protection (Android).
+        .plugin(tauri_plugin_secure_store::init());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]

@@ -12,10 +12,13 @@ export {
 } from './kdf';
 export {
   createKeychain,
+  dekFromBytes,
   parseHeader,
   rewrapKeychain,
   serializeHeader,
   unlockKeychain,
+  unwrapDekBytes,
+  verifyDek,
   type KeychainHeader,
 } from './keychain';
 export { decryptWithPassword, encryptWithPassword, type PasswordBlob } from './passwordBlob';

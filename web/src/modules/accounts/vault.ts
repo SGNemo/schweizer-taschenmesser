@@ -105,6 +105,11 @@ export async function unlockVault(password: string): Promise<void> {
   }
 }
 
+/** Opens the vault with an already known data key (biometric unlock); the caller has verified it. */
+export function unlockWithDek(header: KeychainHeader, dek: CryptoKey): void {
+  start(header, dek);
+}
+
 /** Drops the key and every reference to decrypted data. */
 export function lockVault(): void {
   setSession({ status: 'locked' });

@@ -25,6 +25,7 @@
     "clipboard-manager:allow-clear",
     "opener:allow-open-url",
     "apk-installer:default",
+    "secure-store:default",
     {
       "identifier": "http:default",
       "allow": [

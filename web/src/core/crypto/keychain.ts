@@ -26,11 +26,15 @@ const headerSchema = z.object({
     salt: z.string().min(1),
   }),
   wrappedDek: z.string().min(1),
+  /** A known plaintext sealed with the DEK: proves that a key (e.g. one released by a biometric prompt) is *this vault's* key. */
+  check: z.string().min(1),
 });
 
 export type KeychainHeader = z.output<typeof headerSchema>;
 
 const dekAad = (vaultId: string) => `${vaultId}/dek`;
+const checkAad = (vaultId: string) => `${vaultId}/check`;
+const CHECK_TEXT = new TextEncoder().encode('taschenmesser-vault-key-check');
 
 export function parseHeader(json: string): KeychainHeader {
   let raw: unknown;
@@ -45,6 +49,11 @@ export function parseHeader(json: string): KeychainHeader {
 }
 
 export const serializeHeader = (header: KeychainHeader): string => JSON.stringify(header);
+
+/** Non-extractable AES-GCM key from raw DEK bytes; the bytes are overwritten afterwards. */
+export async function dekFromBytes(raw: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
+  return importDek(raw);
+}
 
 async function importDek(raw: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   try {
@@ -71,13 +80,37 @@ export async function createKeychain(
   const raw = randomBytes(32);
   const wrappedDek = await seal(kek, dekAad(vaultId), raw);
   const dek = await importDek(raw);
-  return { header: { v: 1, vaultId, kdf: params, wrappedDek }, dek };
+  const check = await seal(dek, checkAad(vaultId), CHECK_TEXT);
+  return { header: { v: 1, vaultId, kdf: params, wrappedDek, check }, dek };
 }
 
 /** Wrong password (or tampered header) → `CryptoError('wrong-key')`. */
 export async function unlockKeychain(password: string, header: KeychainHeader): Promise<CryptoKey> {
   const kek = await deriveKey(password, header.kdf as KdfParams);
   return importDek(await open(kek, dekAad(header.vaultId), header.wrappedDek));
+}
+
+/** Does `dek` belong to this vault? (`false` for any other key, including a stale or foreign one.) */
+export async function verifyDek(header: KeychainHeader, dek: CryptoKey): Promise<boolean> {
+  try {
+    const plain = await open(dek, checkAad(header.vaultId), header.check);
+    return plain.length === CHECK_TEXT.length && plain.every((b, i) => b === CHECK_TEXT[i]);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The raw data key, for sealing it in an OS keystore behind a biometric prompt (the only place where
+ * it leaves the non-extractable form). The caller must `wipe` it right after use. Wrong password →
+ * `CryptoError('wrong-key')`.
+ */
+export async function unwrapDekBytes(
+  password: string,
+  header: KeychainHeader,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const kek = await deriveKey(password, header.kdf as KdfParams);
+  return open(kek, dekAad(header.vaultId), header.wrappedDek);
 }
 
 /** New master password, same DEK: only the header changes (new salt, new KEK). */

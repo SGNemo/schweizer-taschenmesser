@@ -1,0 +1,13 @@
+[default]
+description = "OS keystore for small secrets, the biometric gate for the vault key and screenshot protection."
+permissions = [
+  "allow-available",
+  "allow-set",
+  "allow-get",
+  "allow-delete",
+  "allow-biometric-seal",
+  "allow-biometric-unseal",
+  "allow-biometric-has",
+  "allow-biometric-delete",
+  "allow-set-secure-window",
+]
