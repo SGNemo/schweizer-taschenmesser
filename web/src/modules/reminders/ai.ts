@@ -5,7 +5,14 @@ export const aiSchema: ModuleAiSchema = {
   collections: {
     reminder: {
       label: 'Erinnerung',
-      fields: { title: 'text', startDate: 'date', time: 'text', active: 'bool', note: 'text' },
+      fields: {
+        title: 'text',
+        startDate: 'date',
+        time: 'text',
+        active: 'bool',
+        note: 'text',
+        recurrence: 'recurrence',
+      },
       dateField: 'startDate',
       titleField: 'title',
       searchable: ['title', 'note'],

@@ -34,6 +34,24 @@ npm run dev          # http://localhost:5173
 Für die E2E-Tests braucht Playwright einen Chromium (`npx playwright install chromium`, oder `PW_CHROMIUM_PATH` setzen).
 Die Sync-Tests starten den Server aus `../server` selbst (Abhängigkeiten dort vorher mit `npm install` installieren).
 
+### Suche und KI-Assistent
+
+Strg+K (Handy: das Suchfeld oben) öffnet die Befehlspalette: springen, in allen Modulen suchen und Fragen stellen.
+
+- **Lokal, ohne Kosten:** einfache Fragen versteht die App selbst – „Was steht heute an?“, „Termine morgen“, „offene Rechnungen“,
+  „überfällige Aufgaben“, „Kontostand“, „Was kosten meine Abos?“, „Wie viel muss ich noch bezahlen?“, „suche Zahnarzt“.
+  Kurze Stichworte starten die Volltextsuche.
+- **Mit KI (optional):** komplexere Fragen („Wie viel habe ich im September für Lebensmittel ausgegeben?“) und Sätze wie
+  „Erinnere mich jeden 1. an Miete“ kann die App an ein Modell geben. *Einstellungen → KI-Assistent*: **Claude** (API-Schlüssel von
+  console.anthropic.com, Standard: Claude Haiku 4.5) oder **Ollama** (lokal; Ollama mit `OLLAMA_ORIGINS=*` bzw. der Adresse der App starten,
+  das Modell muss Tool-Aufrufe können, z. B. `qwen2.5:7b`).
+- **Datenschutz:** an das Modell gehen nur deine Frage, das heutige Datum und eine kurze Beschreibung der aktiven Module – **niemals deine
+  Daten**. Das Modell wählt nur eine strukturierte Abfrage; sie wird lokal geprüft und ausgeführt. Der API-Schlüssel bleibt in der Datenbank
+  dieses Browsers (nicht synchronisiert, nicht im Backup) und wird direkt von hier an Anthropic gesendet.
+- **Kosten im Blick:** identische Fragen am selben Tag kommen aus dem Cache (0 Token); Verbrauch pro Antwort und insgesamt steht in der Antwort
+  bzw. den Einstellungen.
+- **Anlegen nur mit Bestätigung:** schlägt die KI einen neuen Eintrag vor, zeigt die App ihn erst an; gespeichert wird nach „Anlegen“.
+
 ### Als PWA installieren
 Chrome/Edge (Windows) bzw. Chrome (Android) öffnen → „App installieren“. Service Worker und Installation brauchen
 HTTPS (oder `localhost`).

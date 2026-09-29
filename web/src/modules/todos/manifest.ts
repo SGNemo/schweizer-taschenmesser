@@ -35,6 +35,7 @@ const manifest: ModuleManifest = {
   contributions: {
     quickAdd: [{ id: 'task', label: 'ToDo', to: '/todos?new=1' }],
     calendarItems: () => import('./calendar'),
+    aiCreateDefaults: () => import('./aiDefaults'),
   },
 };
 

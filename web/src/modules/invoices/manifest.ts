@@ -41,6 +41,7 @@ const manifest: ModuleManifest = {
     quickAdd: [{ id: 'invoice', label: 'Rechnung', to: '/invoices?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    aiComputed: () => import('./aiComputed'),
   },
 };
 

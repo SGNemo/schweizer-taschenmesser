@@ -41,6 +41,7 @@ const manifest: ModuleManifest = {
     quickAdd: [{ id: 'subscription', label: 'Abo', to: '/subscriptions?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    aiComputed: () => import('./aiComputed'),
   },
 };
 

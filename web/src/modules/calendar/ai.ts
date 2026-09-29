@@ -10,6 +10,7 @@ export const aiSchema: ModuleAiSchema = {
         startDate: 'date',
         startTime: 'text',
         location: 'text',
+        recurrence: 'recurrence',
         note: 'text',
       },
       dateField: 'startDate',

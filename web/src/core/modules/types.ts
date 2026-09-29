@@ -38,7 +38,16 @@ export interface WidgetDef {
 
 /* ---- AI schema (compact, sent to the LLM in stage 2; never contains user data) ---- */
 export type AiFieldType =
-  'text' | 'num' | 'money' | 'date' | 'ts' | 'bool' | 'tags' | `enum:${string}`;
+  | 'text'
+  | 'num'
+  | 'money'
+  | 'date'
+  | 'ts'
+  | 'bool'
+  | 'tags'
+  /** Recurrence rule object (`core/recurrence`); can be set when creating, not filtered on. */
+  | 'recurrence'
+  | `enum:${string}`;
 
 export interface AiCollectionSchema {
   /** Short German label, e.g. "Rechnung". */
@@ -55,6 +64,17 @@ export interface AiCollectionSchema {
 export interface ModuleAiSchema {
   description: string;
   collections: Record<string, AiCollectionSchema>;
+  /**
+   * Named read-only calculations the module answers locally (see `contributions.aiComputed`),
+   * name → short German description, e.g. `balance: 'Kontostand'`.
+   */
+  computed?: Record<string, string>;
+}
+
+/** Answer of a computed view: labelled, already formatted lines. */
+export interface AiComputedResult {
+  title: string;
+  lines: { label: string; value: string }[];
 }
 
 /* ---- Settings ---- */
@@ -130,6 +150,14 @@ export interface ModuleContributions {
    * The default export starts it and returns a function that stops it.
    */
   services?: () => Promise<{ default: () => (() => void) | void }>;
+  /** Values the assistant cannot know when creating an entry (e.g. the default list or account). */
+  aiCreateDefaults?: () => Promise<{
+    default: (collection: string) => Promise<Record<string, unknown>>;
+  }>;
+  /** Implements the views declared in `aiSchema.computed`. */
+  aiComputed?: () => Promise<{
+    default: (name: string, ctx: { today: string }) => Promise<AiComputedResult | undefined>;
+  }>;
 }
 
 export interface ModuleManifest {

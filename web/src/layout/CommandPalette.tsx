@@ -1,10 +1,15 @@
 import { useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { isAiConfigured, useAiConfig } from '@/core/ai/config';
+import type { ResultRow } from '@/core/ai/query/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Dialog, Icon, type IconName } from '@/ui';
+import { Button, Dialog, Icon, type IconName } from '@/ui';
+import { AnswerView } from './assistant/AnswerView';
+import { useAssistant, useSearchHits } from './assistant/useAssistant';
 import { useModuleNavItems } from './useNavItems';
 import styles from './CommandPalette.module.css';
+import answerStyles from './assistant/assistant.module.css';
 
 export interface Command {
   id: string;
@@ -35,9 +40,16 @@ export function CommandPalette() {
   );
 }
 
+type Option =
+  | { kind: 'command'; key: string; label: string; icon: IconName; command: Command }
+  | { kind: 'hit'; key: string; label: string; icon: IconName; row: ResultRow }
+  | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean };
+
 function PaletteBody({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate();
   const moduleItems = useModuleNavItems();
+  const config = useAiConfig();
+  const { state, submit, reset } = useAssistant();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const listId = useId();
@@ -52,13 +64,73 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     ];
   }, [navigate, moduleItems]);
 
-  const results = useMemo(() => filterCommands(commands, query), [commands, query]);
+  const hits = useSearchHits(query);
+  const hasModel = config ? isAiConfigured(config) : false;
 
-  const run = (c: Command | undefined) => {
-    if (!c) return;
+  const options = useMemo<Option[]>(() => {
+    const list: Option[] = filterCommands(commands, query).map((c) => ({
+      kind: 'command',
+      key: `c-${c.id}`,
+      label: c.label,
+      icon: c.icon,
+      command: c,
+    }));
+    if (query.trim()) {
+      list.push({
+        kind: 'ask',
+        key: 'ask',
+        label: t.ai.palette.ask,
+        icon: 'sparkles',
+        forceModel: false,
+      });
+      if (hasModel) {
+        list.push({
+          kind: 'ask',
+          key: 'ask-model',
+          label: t.ai.palette.askModel,
+          icon: 'sparkles',
+          forceModel: true,
+        });
+      }
+    }
+    for (const row of hits) {
+      list.push({
+        kind: 'hit',
+        key: `h-${row.subtitle}-${row.id}`,
+        label: row.title,
+        icon: 'search',
+        row,
+      });
+    }
+    return list;
+  }, [commands, hits, query, hasModel]);
+
+  const run = (o: Option | undefined) => {
+    if (!o) return;
+    if (o.kind === 'ask') return void submit(query.trim(), o.forceModel);
     onDone();
-    c.run();
+    if (o.kind === 'command') o.command.run();
+    else if (o.row.to) void navigate(o.row.to);
   };
+
+  if (state.phase !== 'idle') {
+    return (
+      <div className={answerStyles.answer} aria-live="polite" data-testid="ai-answer">
+        <Button variant="ghost" className={answerStyles.back} onClick={reset}>
+          {t.ai.palette.back}
+        </Button>
+        <p className={answerStyles.question}>
+          <Icon name="sparkles" size={16} />
+          {state.question}
+        </p>
+        {state.phase === 'loading' ? (
+          <p role="status">{t.ai.palette.thinking}</p>
+        ) : (
+          <AnswerView response={state.response} onDone={onDone} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -67,7 +139,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         role="combobox"
         aria-expanded="true"
         aria-controls={listId}
-        aria-activedescendant={results[active] ? `${listId}-${active}` : undefined}
+        aria-activedescendant={options[active] ? `${listId}-${active}` : undefined}
         aria-label={t.palette.placeholder}
         placeholder={t.palette.placeholder}
         className={styles.input}
@@ -79,32 +151,37 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setActive((a) => Math.min(a + 1, results.length - 1));
+            setActive((a) => Math.min(a + 1, options.length - 1));
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             setActive((a) => Math.max(a - 1, 0));
           } else if (e.key === 'Enter') {
             e.preventDefault();
-            run(results[active]);
+            run(options[active]);
           }
         }}
       />
-      {results.length === 0 ? (
+      {options.length === 0 ? (
         <p className={styles.empty}>{t.palette.empty}</p>
       ) : (
         <ul id={listId} role="listbox" className={styles.list}>
-          {results.map((c, i) => (
+          {options.map((o, i) => (
             <li
-              key={c.id}
+              key={o.key}
               id={`${listId}-${i}`}
               role="option"
               aria-selected={i === active}
               className={styles.option}
               onMouseEnter={() => setActive(i)}
-              onClick={() => run(c)}
+              onClick={() => run(o)}
             >
-              <Icon name={c.icon} />
-              {c.label}
+              <Icon name={o.icon} />
+              <span className={styles.optionText}>
+                {o.kind === 'ask' ? `${o.label}: „${query.trim()}“` : o.label}
+                {o.kind === 'hit' && o.row.subtitle ? (
+                  <span className={styles.optionMeta}>{o.row.subtitle}</span>
+                ) : null}
+              </span>
             </li>
           ))}
         </ul>

@@ -3,6 +3,9 @@ import type { ModuleAiSchema } from '@/core/modules/types';
 export const aiSchema: ModuleAiSchema = {
   description:
     'Konten mit Anfangssaldo, Buchungen (Ausgabe/Einnahme, Betrag in Cent, positiv) und Kategorien; Kontostand = Anfangssaldo + Einnahmen - Ausgaben',
+  computed: {
+    balance: 'Kontostand je Konto, gesamt und verfügbar nach offenen Rechnungen und Abos',
+  },
   collections: {
     transaction: {
       label: 'Buchung',

@@ -5,6 +5,10 @@ export const SYSTEM_TABLES = {
   _meta: { stores: 'key', synced: false },
   _outbox: { stores: '[collection+id], queuedAt', synced: false },
   _secrets: { stores: 'key', synced: false },
+  /** Assistant: validated structured queries by question (never results). */
+  _aiCache: { stores: 'key, createdAt', synced: false },
+  /** Assistant: one row per model call or cache hit (token accounting). */
+  _aiUsage: { stores: '++id, at', synced: false },
   _settings: { stores: 'id, updatedAt', synced: true },
   _modules: { stores: 'id, updatedAt', synced: true },
 } as const;

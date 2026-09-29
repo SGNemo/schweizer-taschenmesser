@@ -42,6 +42,8 @@ const manifest: ModuleManifest = {
   contributions: {
     quickAdd: [{ id: 'transaction', label: 'Buchung', to: '/finance?tab=transactions&new=1' }],
     services: () => import('./services'),
+    aiCreateDefaults: () => import('./aiDefaults'),
+    aiComputed: () => import('./aiComputed'),
   },
 };
 
