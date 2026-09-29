@@ -4,6 +4,7 @@ import {
   addProvider,
   entryFromPreset,
   keyName,
+  loadAiConfig,
   moveProvider,
   removeProvider,
   saveAiConfig,
@@ -53,9 +54,7 @@ function ProviderCard({
   stats: UsageTotals | undefined;
   open: boolean;
   onToggleOpen: () => void;
-  onConfig: (
-    next: AiConfig | ((current: AiConfig) => AiConfig | Promise<AiConfig>),
-  ) => Promise<void>;
+  onConfig: (next: (current: AiConfig) => AiConfig | Promise<AiConfig>) => Promise<void>;
 }) {
   const [draft, setDraft] = useState(entry);
   const [key, setKey] = useState('');
@@ -371,15 +370,20 @@ export function AiSection() {
   if (!config) return <Card>{null}</Card>;
   const stats = totalsByProvider(rows ?? []);
 
-  async function apply(next: AiConfig | ((current: AiConfig) => AiConfig | Promise<AiConfig>)) {
-    const value = typeof next === 'function' ? await next(config!) : next;
-    await saveAiConfig(value);
+  // Always start from the stored config (not the last render): quick successive changes must not
+  // overwrite each other.
+  async function apply(next: (current: AiConfig) => AiConfig | Promise<AiConfig>) {
+    await saveAiConfig(await next(await loadAiConfig()));
   }
 
   async function add(id: PresetId) {
-    const entry = entryFromPreset(id, config!.providers);
-    await apply(addProvider(config!, entry));
-    setOpenId(entry.id);
+    let addedId = '';
+    await apply((c) => {
+      const entry = entryFromPreset(id, c.providers);
+      addedId = entry.id;
+      return addProvider(c, entry);
+    });
+    setOpenId(addedId);
   }
 
   return (

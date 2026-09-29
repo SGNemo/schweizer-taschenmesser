@@ -117,8 +117,9 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.goto('/settings');
       const section = page.locator('section[aria-labelledby="ai"]');
       await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Groq' });
-      await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Ollama (lokal)' });
       await expect(section.getByTestId('provider-groq')).toBeVisible();
+      await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Ollama (lokal)' });
+      await expect(section.getByTestId('provider-ollama')).toBeVisible();
       await audit(page, `ai providers (${scheme})`);
     });
 

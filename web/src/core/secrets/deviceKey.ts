@@ -1,4 +1,4 @@
-import { open, seal } from '@/core/crypto';
+import { open, seal } from '@/core/crypto/aead';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import type { SecretStore } from './types';
 
