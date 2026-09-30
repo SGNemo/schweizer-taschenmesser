@@ -60,6 +60,32 @@ describe('command palette', () => {
     expect(screen.getByRole('option')).toHaveTextContent(`${t.ai.palette.ask}: „zzzzz“`);
   });
 
+  it('calculates arithmetic on the spot, before the assistant, without leaving the palette', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), '240 + 19%');
+    const options = screen.getAllByRole('option');
+    expect(options[0]).toHaveTextContent('240 + 19% = 285,6');
+    expect(options[1]).toHaveTextContent(t.ai.palette.ask);
+    await user.type(screen.getByRole('combobox'), '{Enter}');
+    expect(useUiStore.getState().paletteOpen).toBe(true); // copying does not close it
+  });
+
+  it('does not treat a plain number as a calculation', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), '2026');
+    expect(screen.queryByRole('option', { name: /=/ })).toBeNull();
+  });
+
   it('lists the navigation commands for an empty query', async () => {
     render(
       <MemoryRouter>

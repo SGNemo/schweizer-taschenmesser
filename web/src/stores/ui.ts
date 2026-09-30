@@ -31,6 +31,11 @@ interface UiState {
   setPaletteOpen(open: boolean): void;
   quickAddOpen: boolean;
   setQuickAddOpen(open: boolean): void;
+  /** The toolbar sheet and the tool shown in it (`null` = the tile grid). */
+  toolsOpen: boolean;
+  activeTool: string | null;
+  openTools(toolId?: string | null): void;
+  closeTools(): void;
   dashboardEditing: boolean;
   setDashboardEditing(editing: boolean): void;
   toasts: Toast[];
@@ -57,6 +62,10 @@ export const useUiStore = create<UiState>((set) => ({
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
   quickAddOpen: false,
   setQuickAddOpen: (quickAddOpen) => set({ quickAddOpen }),
+  toolsOpen: false,
+  activeTool: null,
+  openTools: (toolId = null) => set({ toolsOpen: true, activeTool: toolId }),
+  closeTools: () => set({ toolsOpen: false, activeTool: null }),
   dashboardEditing: false,
   setDashboardEditing: (dashboardEditing) => set({ dashboardEditing }),
   toasts: [],

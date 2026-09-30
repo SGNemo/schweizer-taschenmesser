@@ -123,6 +123,11 @@ N2. *Browser (PWA):* Abrufen geht nur mit Sync-Server (Proxy); ohne erscheint de
 N3. *„Für später"* legt den Artikel in der Merkliste ab (Modul „Merkliste" muss an sein); „Im Browser lesen" öffnet den Artikel im Standardbrowser. ☐
 N4. *KI-Tagesüberblick:* mit eingerichtetem KI-Anbieter → „Tagesüberblick mit KI" → kurze Punktliste; in Einstellungen → KI-Assistent steht der Verbrauch; es werden nur Schlagzeilen gesendet. ☐
 
+### Werkzeuge (Phase 13, Schritt 5)
+T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
+T2. *Währung:* mit Internet: Kurse laden, umrechnen; danach Netz aus → gespeicherte Kurse mit Datum. Die Schnittstelle `api.frankfurter.dev` ist nur per Doku geprüft (in der Windows-App keine CORS-Hürde, im Browser hängt es an deren CORS-Erlaubnis). ☐
+T3. *Timer:* Timer starten, Sheet schließen – läuft weiter; bei Ablauf kommt die Benachrichtigung (Windows und Android). ☐
+
 ## Offen – macht Sven
 Installation und Update auf echten Geräten (Windows und Android) – Schritt für Schritt:
 

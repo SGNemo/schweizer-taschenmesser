@@ -11,6 +11,7 @@ import { Dashboard } from '@/pages/dashboard/Dashboard';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
 import { Settings } from '@/pages/Settings';
+import { ToolLibrary } from '@/pages/ToolLibrary';
 
 function ModuleDisabled() {
   const toast = useUiStore((s) => s.toast);
@@ -56,6 +57,14 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           element: (
             <PageContainer variant="wide">
               <ModuleLibrary />
+            </PageContainer>
+          ),
+        },
+        {
+          path: 'tools',
+          element: (
+            <PageContainer variant="wide">
+              <ToolLibrary />
             </PageContainer>
           ),
         },

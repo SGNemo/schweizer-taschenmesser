@@ -76,9 +76,9 @@ export default tseslint.config(
                 'Modules must not import other modules. Use the event bus or manifest contributions.',
             },
             {
-              group: ['@/connectors', '@/connectors/*'],
+              group: ['@/connectors', '@/connectors/*', '@/tools', '@/tools/*'],
               message:
-                'Modules must not import connectors. They receive data through manifest contributions.',
+                'Modules must not import connectors or tools. They receive data through manifest contributions.',
             },
             {
               group: ['@/core/db/dexie', '@/core/db/db'],
@@ -104,9 +104,9 @@ export default tseslint.config(
               message: 'finance may only import subscriptions/public and invoices/public.',
             },
             {
-              group: ['@/connectors', '@/connectors/*'],
+              group: ['@/connectors', '@/connectors/*', '@/tools', '@/tools/*'],
               message:
-                'Modules must not import connectors. They receive data through manifest contributions.',
+                'Modules must not import connectors or tools. They receive data through manifest contributions.',
             },
             {
               group: ['@/core/db/dexie', '@/core/db/db'],
@@ -131,9 +131,9 @@ export default tseslint.config(
               message: 'budgets may only import finance/public.',
             },
             {
-              group: ['@/connectors', '@/connectors/*'],
+              group: ['@/connectors', '@/connectors/*', '@/tools', '@/tools/*'],
               message:
-                'Modules must not import connectors. They receive data through manifest contributions.',
+                'Modules must not import connectors or tools. They receive data through manifest contributions.',
             },
             {
               group: ['@/core/db/dexie', '@/core/db/db'],
@@ -158,9 +158,9 @@ export default tseslint.config(
               message: 'Modules must not import other modules.',
             },
             {
-              group: ['@/connectors', '@/connectors/*'],
+              group: ['@/connectors', '@/connectors/*', '@/tools', '@/tools/*'],
               message:
-                'Modules must not import connectors. They receive data through manifest contributions.',
+                'Modules must not import connectors or tools. They receive data through manifest contributions.',
             },
           ],
         },
@@ -192,6 +192,31 @@ export default tseslint.config(
             {
               group: ['@/core/sync', '@/core/sync/*', '@/core/backup', '@/core/backup/*'],
               message: 'Use the ConnectorContext instead of the sync or backup internals.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Tools are self-contained helpers: no modules, no database. (They may use settings and UI.)
+    files: ['src/tools/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/modules', '@/modules/*'],
+              message: 'Tools must not import modules.',
+            },
+            {
+              group: ['@/core/db', '@/core/db/*'],
+              message: 'Tools never touch the database; use core/settings for what must persist.',
+            },
+            {
+              group: ['@/connectors', '@/connectors/*', '@/core/connectors', '@/core/connectors/*'],
+              message: 'Tools do not use connectors.',
             },
           ],
         },

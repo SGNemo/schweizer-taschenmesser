@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
+import { calculate } from '@/core/calc/phrases';
 import type { ResultRow } from '@/core/ai/query/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -43,6 +44,7 @@ export function CommandPalette() {
 type Option =
   | { kind: 'command'; key: string; label: string; icon: IconName; command: Command }
   | { kind: 'hit'; key: string; label: string; icon: IconName; row: ResultRow }
+  | { kind: 'calc'; key: string; label: string; icon: IconName; value: number }
   | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean };
 
 function PaletteBody({ onDone }: { onDone: () => void }) {
@@ -53,6 +55,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const listId = useId();
+  const toast = useUiStore((s) => s.toast);
 
   const commands = useMemo<Command[]>(() => {
     const go = (to: string) => () => void navigate(to);
@@ -75,6 +78,17 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       icon: c.icon,
       command: c,
     }));
+    // Arithmetic is answered on the spot (0 tokens, nothing leaves the device); Enter copies it.
+    const sum = calculate(query);
+    if (sum) {
+      list.push({
+        kind: 'calc',
+        key: 'calc',
+        label: sum.text,
+        icon: 'calculator',
+        value: sum.value,
+      });
+    }
     if (query.trim()) {
       list.push({
         kind: 'ask',
@@ -108,6 +122,15 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const run = (o: Option | undefined) => {
     if (!o) return;
     if (o.kind === 'ask') return void submit(query.trim(), o.forceModel);
+    if (o.kind === 'calc') {
+      // Plain decimal without thousands separators so it pastes into any field.
+      const text = String(o.value).replace('.', ',');
+      void navigator.clipboard.writeText(text).then(
+        () => toast(t.tools.calc.copied),
+        () => undefined,
+      );
+      return;
+    }
     onDone();
     if (o.kind === 'command') o.command.run();
     else if (o.row.to) void navigate(o.row.to);

@@ -36,7 +36,7 @@ const MODULES = [
   'accounts',
   'news',
 ];
-const PAGES = ['/', ...MODULES.map((m) => `/${m}`), '/library', '/settings'];
+const PAGES = ['/', ...MODULES.map((m) => `/${m}`), '/library', '/tools', '/settings'];
 
 /** Enables every module and adds a few calendar events, straight into IndexedDB. */
 async function prepare(page: Page) {

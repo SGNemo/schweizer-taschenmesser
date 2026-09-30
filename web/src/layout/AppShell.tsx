@@ -3,8 +3,9 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
-import { Fab, Icon, Toaster } from '@/ui';
+import { Fab, Icon, IconButton, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
+import { ToolsSheet } from './ToolsSheet';
 import { UpdateBanner } from './UpdateBanner';
 import { QuickAdd } from './QuickAdd';
 import { SyncBadge } from './SyncBadge';
@@ -29,6 +30,7 @@ export function AppShell() {
   const moduleItems = useModuleNavItems();
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
+  const openTools = useUiStore((s) => s.openTools);
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -111,6 +113,9 @@ export function AppShell() {
             <span>{t.actions.search}</span>
             <kbd className={`${styles.kbd} ${styles.hideMobile}`}>{t.palette.hint}</kbd>
           </button>
+          <IconButton label={t.tools.open} onClick={() => openTools()}>
+            <Icon name="wrench" />
+          </IconButton>
           <SyncBadge />
         </header>
         <UpdateBanner />
@@ -136,6 +141,7 @@ export function AppShell() {
       <QuickAdd />
       <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} items={overflow} />
       <CommandPalette />
+      <ToolsSheet />
       <OnboardingHost />
       <Toaster />
     </div>

@@ -78,6 +78,7 @@ async function audit(page: Page, label: string) {
 const PAGES = [
   ['dashboard', '/'],
   ['library', '/library'],
+  ['tools', '/tools'],
   ['settings', '/settings'],
   ['calendar', '/calendar'],
   ['todos', '/todos'],
@@ -114,6 +115,29 @@ for (const scheme of ['light', 'dark'] as const) {
         await audit(page, `${name} (${scheme})`);
       });
     }
+
+    test('tools: toolbar sheet and every tool', async ({ page }) => {
+      await page.goto('/tools');
+      await expect(page.getByTestId('tool-calc')).toBeVisible();
+      const names: string[] = [];
+      for (const card of await page.locator('[data-testid^="tool-"]').all()) {
+        const name = (await card.locator('span[class*="moduleName"]').innerText()).trim();
+        const toggle = card.getByLabel(`${name} einschalten`);
+        if (!(await toggle.isChecked())) await toggle.click();
+        await expect(toggle).toBeChecked();
+        names.push(name);
+      }
+      expect(names.length).toBeGreaterThanOrEqual(14);
+      await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
+      await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
+      await audit(page, `tools sheet (${scheme})`);
+      for (const name of names) {
+        await page.getByRole('dialog').getByRole('button', { name, exact: true }).click();
+        await expect(page.getByRole('dialog', { name })).toBeVisible();
+        await audit(page, `tool ${name} (${scheme})`);
+        await page.getByRole('button', { name: 'Zurück zu den Werkzeugen' }).click();
+      }
+    });
 
     test('settings: AI providers (list, expanded form)', async ({ page }) => {
       await page.goto('/settings');
