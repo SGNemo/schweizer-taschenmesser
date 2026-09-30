@@ -13,7 +13,7 @@
     "allow-local-api-stop",
     "allow-local-api-set-tokens",
     "allow-local-api-respond",
-	"allow-disk-list-drives",
+    "allow-disk-list-drives",
     "allow-disk-scan-start",
     "allow-disk-scan-cancel",
     "allow-disk-scan-pause",
@@ -31,7 +31,7 @@
     "allow-disk-delete",
     "allow-disk-delete-cancel",
     "allow-system-info",
-    "allow-system-processes"
+    "allow-system-processes",
     "allow-capture-set-hotkey",
     "allow-desktop-set-close-to-tray",
     "allow-desktop-set-tray-labels",
