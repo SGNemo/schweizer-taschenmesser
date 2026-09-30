@@ -6,7 +6,14 @@ import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
 import { clear, readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
-import { BaseDirectory, mkdir, readDir, remove, writeFile } from '@tauri-apps/plugin-fs';
+import {
+  BaseDirectory,
+  mkdir,
+  readDir,
+  readTextFile,
+  remove,
+  writeFile,
+} from '@tauri-apps/plugin-fs';
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http';
 import {
   cancel,
@@ -140,6 +147,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
         }
       },
       remove: (path) => remove(path, inAppData),
+      read: (path) => readTextFile(path, inAppData),
     },
     updater: createUpdater(kind, fetchFn),
     oauth: {

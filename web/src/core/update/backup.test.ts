@@ -73,6 +73,24 @@ describe('createPreUpdateBackup', () => {
     void db;
   });
 
+  it('encrypts the copy when a backup passphrase is stored', async () => {
+    const { platform, written } = fakePlatform();
+    setPlatform({
+      ...platform,
+      secrets: {
+        protection: 'device-key',
+        get: async (name) =>
+          name === 'backup.autoPassphrase' ? 'a-long-test-passphrase' : undefined,
+        set: async () => undefined,
+        delete: async () => undefined,
+      },
+    });
+    const path = await createPreUpdateBackup('0.1.0', '0.2.0', at);
+    const text = written.get(path) as string;
+    expect(JSON.parse(text).format).toBe('taschenmesser-backup-encrypted');
+    expect(text).not.toContain('taschenmesser-backup"');
+  }, 30_000);
+
   it('prunes old backups after writing', async () => {
     const old = ['20250101-000000', '20250201-000000', '20250301-000000'].map(
       (t) => `pre-update-0.0.1-to-0.1.0-${t}.json`,
