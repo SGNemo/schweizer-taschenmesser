@@ -36,7 +36,12 @@ export async function ensureSetupState(
 ): Promise<SetupState> {
   const existing = await readSetupState(database);
   if (existing) return existing;
-  const state = initialState((await appHasData(database, manifests)) ? 'dismissed' : 'notStarted');
+  const hasData = await appHasData(database, manifests);
+  // An existing installation never sees the assistant by itself: dismissed, and no checklist card
+  // until the user switches it on in the settings.
+  const state = hasData
+    ? { ...initialState('dismissed'), checklistHidden: true }
+    : initialState('notStarted');
   await database.table('_meta').put({ key: SETUP_STATE_KEY, value: state });
   return state;
 }

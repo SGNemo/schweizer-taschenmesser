@@ -94,6 +94,9 @@ export const t = {
     isNew: 'Neu',
     settingsHint: 'Fortschritt und Checkliste',
     showChecklist: 'Checkliste auf der Übersicht anzeigen',
+    checklistProgress: (done: number, total: number) => `${done} von ${total} Schritten erledigt`,
+    moreOpen: (n: number) => `… und ${n} weitere`,
+    hideChecklist: 'Ausblenden',
     steps: {
       basics: {
         title: 'Grundlagen',

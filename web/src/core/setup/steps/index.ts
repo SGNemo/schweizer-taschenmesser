@@ -1,3 +1,8 @@
+import { isAiConfigured, loadAiConfig } from '@/core/ai/config';
+import { connectors } from '@/core/connectors/registry';
+import { loadStatus } from '@/core/connectors/state';
+import { db } from '@/core/db/db';
+import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import type { SetupStepDef } from '../types';
 
@@ -24,7 +29,6 @@ export const CORE_STEPS: SetupStepDef[] = [
     order: 20,
     since: 1,
     isDone: async () => {
-      const { db } = await import('@/core/db/db');
       return !!(await db.table('_secrets').get('syncConfig'));
     },
     component: () => import('@/layout/setup/steps/SyncStep'),
@@ -52,7 +56,6 @@ export const CORE_STEPS: SetupStepDef[] = [
     order: 60,
     since: 1,
     isDone: async () => {
-      const { loadAiConfig, isAiConfigured } = await import('@/core/ai/config');
       return isAiConfigured(await loadAiConfig());
     },
     component: () => import('@/layout/setup/steps/AiStep'),
@@ -63,10 +66,8 @@ export const CORE_STEPS: SetupStepDef[] = [
     description: s.connectors.description,
     order: 70,
     since: 1,
-    when: async () => (await import('@/core/connectors/registry')).connectors.length > 0,
+    when: () => connectors.length > 0,
     isDone: async () => {
-      const { connectors } = await import('@/core/connectors/registry');
-      const { loadStatus } = await import('@/core/connectors/state');
       for (const c of connectors) if ((await loadStatus(c.id)).state === 'connected') return true;
       return false;
     },
@@ -103,8 +104,7 @@ export const CORE_STEPS: SetupStepDef[] = [
     description: s.notifications.description,
     order: 100,
     since: 1,
-    isDone: async () =>
-      (await import('@/core/platform')).getPlatform().notifications.permission() === 'granted',
+    isDone: async () => getPlatform().notifications.permission() === 'granted',
     component: () => import('@/layout/setup/steps/NotificationsStep'),
   },
   {

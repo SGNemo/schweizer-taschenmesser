@@ -25,6 +25,7 @@ import { setSettings, useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
+import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
 import { Button, Card, EmptyState, Icon, IconButton } from '@/ui';
 import styles from './Dashboard.module.css';
@@ -121,6 +122,7 @@ export function Dashboard() {
       </div>
 
       <WelcomeCard />
+      <ChecklistCard />
 
       {states && visibleManifests.every((m) => !states[m.id]) ? (
         <EmptyState icon="grid" title={t.dashboard.emptyTitle}>

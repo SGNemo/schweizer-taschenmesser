@@ -33,7 +33,7 @@ describe('start migration', () => {
   ])('an installation with %s becomes dismissed', async (_name, seed) => {
     await seed();
     expect(await appHasData()).toBe(true);
-    expect((await ensureSetupState()).status).toBe('dismissed');
+    expect(await ensureSetupState()).toMatchObject({ status: 'dismissed', checklistHidden: true });
   });
 
   it('is idempotent and never overwrites existing progress', async () => {
