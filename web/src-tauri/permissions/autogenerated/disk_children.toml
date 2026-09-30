@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-disk-children"
+description = "Enables the disk_children command without any pre-configured scope."
+commands.allow = ["disk_children"]
+
+[[permission]]
+identifier = "deny-disk-children"
+description = "Denies the disk_children command without any pre-configured scope."
+commands.deny = ["disk_children"]

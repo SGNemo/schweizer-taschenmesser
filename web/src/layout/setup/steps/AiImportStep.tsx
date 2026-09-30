@@ -2,7 +2,7 @@ import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
 import { JSON_IMPORTER_ID } from '@/core/dataapi/importer';
 import { importersOf } from '@/core/dataapi/onboarding';
 import { useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
@@ -11,7 +11,7 @@ import { patternStyles } from '@/ui';
 const s = t.setup.steps.aiimport;
 
 export const aiImportModules = (states: Readonly<Record<string, boolean>>) =>
-  visibleManifests.filter(
+  availableManifests().filter(
     (m) => states[m.id] && importersOf(m).some((i) => i.id === JSON_IMPORTER_ID),
   );
 

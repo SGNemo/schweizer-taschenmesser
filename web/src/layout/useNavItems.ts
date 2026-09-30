@@ -1,5 +1,5 @@
 import { useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import type { IconName } from '@/ui';
 
 export interface NavItem {
@@ -13,7 +13,7 @@ export interface NavItem {
 export function useModuleNavItems(): NavItem[] {
   const states = useModuleStates();
   if (!states) return [];
-  return visibleManifests
+  return availableManifests()
     .filter((m) => states[m.id])
     .flatMap((m) =>
       m.routes

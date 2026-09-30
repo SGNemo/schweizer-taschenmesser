@@ -1,0 +1,30 @@
+/* Fill colours per file type; read by the treemap canvas and the legend swatches. */
+.palette {
+  --k-video: #2a78d6;
+  --k-image: #1f9d63;
+  --k-audio: #8a5cd0;
+  --k-archive: #c78a0a;
+  --k-program: #d24a5a;
+  --k-document: #1d94a3;
+  --k-other: #7a7f87;
+}
+:global([data-theme='dark']) .palette {
+  --k-video: #5aa0f0;
+  --k-image: #4cc38a;
+  --k-audio: #b28cf0;
+  --k-archive: #e6b13a;
+  --k-program: #f07c88;
+  --k-document: #4fc0cf;
+  --k-other: #9aa0a8;
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .palette {
+    --k-video: #5aa0f0;
+    --k-image: #4cc38a;
+    --k-audio: #b28cf0;
+    --k-archive: #e6b13a;
+    --k-program: #f07c88;
+    --k-document: #4fc0cf;
+    --k-other: #9aa0a8;
+  }
+}

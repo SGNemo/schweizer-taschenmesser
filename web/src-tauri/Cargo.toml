@@ -45,6 +45,8 @@ tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
 # Local AI import API (loopback only, off by default; src/local_api.rs).
 taschenmesser-local-api = { path = "crates/local-api" }
+taschenmesser-disk-scan = { path = "crates/disk-scan" }
+taschenmesser-system-info = { path = "crates/system-info" }
 
 # WebView2 runtime detection and the "runtime missing" message box (src/webview2.rs).
 [target.'cfg(windows)'.dependencies]

@@ -80,9 +80,9 @@ export const CORE_STEPS: SetupStepDef[] = [
     order: 80,
     since: 1,
     when: async (ctx) => {
-      const { visibleManifests } = await import('@/core/modules/registry');
+      const { availableManifests } = await import('@/core/modules/available');
       const { hasStartData } = await import('@/core/dataapi/onboarding');
-      return visibleManifests.some((m) => ctx.modules[m.id] && hasStartData(m));
+      return availableManifests().some((m) => ctx.modules[m.id] && hasStartData(m));
     },
     component: () => import('@/layout/setup/steps/StartDataStep'),
   },

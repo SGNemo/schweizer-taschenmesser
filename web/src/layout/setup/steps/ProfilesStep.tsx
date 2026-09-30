@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import {
   diffSelection,
@@ -17,7 +17,7 @@ import { Button, Card, Checkbox, patternStyles, Switch } from '@/ui';
 
 const s = t.setup.steps.profiles;
 const names = (ids: string[]) =>
-  ids.map((id) => visibleManifests.find((m) => m.id === id)?.name ?? id).join(', ');
+  ids.map((id) => availableManifests().find((m) => m.id === id)?.name ?? id).join(', ');
 const toolNames = (ids: string[]) =>
   ids.map((id) => allTools.find((x) => x.id === id)?.name ?? id).join(', ');
 
@@ -38,7 +38,12 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
   const [via, setVia] = useState<Record<string, string[]>>({});
 
   const current = useMemo(
-    () => new Set(visibleManifests.filter((m) => states?.[m.id]).map((m) => m.id)),
+    () =>
+      new Set(
+        availableManifests()
+          .filter((m) => states?.[m.id])
+          .map((m) => m.id),
+      ),
     [states],
   );
   const currentTools = useMemo(
@@ -67,11 +72,11 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
     }
     registerCommit(async () => {
       for (const id of modDiff.enable) {
-        const m = visibleManifests.find((x) => x.id === id);
+        const m = availableManifests().find((x) => x.id === id);
         if (m) await enableModule(m);
       }
       for (const id of modDiff.disable) {
-        const m = visibleManifests.find((x) => x.id === id);
+        const m = availableManifests().find((x) => x.id === id);
         if (m) await disableModule(m, 'keep');
       }
       if (toolDiff.enable.length + toolDiff.disable.length > 0) {
@@ -91,15 +96,15 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
 
   const pick = (id: string) => {
     const profile = PROFILES.find((p) => p.id === id)!;
-    const r = resolveProfile(profile, visibleManifests, nonDevTools);
+    const r = resolveProfile(profile, availableManifests(), nonDevTools);
     setVia(r.viaDependency);
     setConfirmed(false);
     setTouched({ modules: r.modules, tools: r.tools });
   };
   const toggle = (id: string, on: boolean) => {
     setConfirmed(false);
-    const next = toggleModule(selection, id, on, visibleManifests);
-    setVia(withDependencies(next, visibleManifests).viaDependency);
+    const next = toggleModule(selection, id, on, availableManifests());
+    setVia(withDependencies(next, availableManifests()).viaDependency);
     setTouched({ modules: next, tools: toolSelection });
   };
 
@@ -123,7 +128,7 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
 
       <h4>{s.modules}</h4>
       <ul className={patternStyles.gridList}>
-        {visibleManifests.map((m) => (
+        {availableManifests().map((m) => (
           <li key={m.id}>
             <Switch
               label={m.name}

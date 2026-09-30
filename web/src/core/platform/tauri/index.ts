@@ -32,8 +32,10 @@ import type {
 import { onPageHidden, sensitiveClipboard } from '../web';
 import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
 import { createDesktopService } from './desktop';
+import { createDisk } from './disk';
 import { createLocalApi } from './localApi';
 import { createShare } from './share';
+import { createSystem } from './system';
 import { createSecureParts } from './secureStore';
 import { createUpdater } from './updater';
 
@@ -173,6 +175,8 @@ export async function createTauriPlatform(): Promise<PlatformService> {
       },
     },
     localApi: createLocalApi(kind === 'desktop'),
+    disk: createDisk(kind === 'desktop'),
+    system: createSystem(kind === 'desktop'),
     desktop: createDesktopService(kind === 'desktop'),
     share: createShare(kind === 'android'),
     ...(await createSecureParts(kind)), // secrets (OS keystore), biometrics, screen protection

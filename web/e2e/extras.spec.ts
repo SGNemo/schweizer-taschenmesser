@@ -190,6 +190,7 @@ test.describe('Budgets & Sparziele', () => {
       .getByRole('dialog')
       .getByRole('button', { name: /behalten/i })
       .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
     await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
     await open(page, '/budgets');
     await expect(page.getByText('Budgets brauchen das Modul „Finanzen“.')).toBeVisible();

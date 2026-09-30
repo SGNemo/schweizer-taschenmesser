@@ -5,11 +5,15 @@
 #[cfg(desktop)]
 mod capture;
 #[cfg(desktop)]
+mod disk;
+#[cfg(desktop)]
 mod local_api;
 #[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
 mod portable;
+#[cfg(desktop)]
+mod system;
 #[cfg(desktop)]
 mod update;
 #[cfg(desktop)]
@@ -96,6 +100,8 @@ pub fn run() {
         .manage(update::PendingUpdate::default())
         .manage(oauth::OAuthListener::default())
         .manage(local_api::LocalApi::default())
+        .manage(disk::DiskScans::default())
+        .manage(system::SystemMonitor::default())
         .invoke_handler(tauri::generate_handler![
             update::check_update,
             update::install_update,
@@ -105,6 +111,25 @@ pub fn run() {
             local_api::local_api_stop,
             local_api::local_api_set_tokens,
             local_api::local_api_respond,
+            disk::disk_list_drives,
+            disk::disk_scan_start,
+            disk::disk_scan_cancel,
+            disk::disk_scan_pause,
+            disk::disk_scan_drop,
+            disk::disk_children,
+            disk::disk_node,
+            disk::disk_query,
+            disk::disk_known_places,
+            disk::disk_node_path,
+            disk::disk_reveal,
+            disk::disk_find_duplicates,
+            disk::disk_duplicates_cancel,
+            disk::disk_can_delete,
+            disk::disk_delete_plan,
+            disk::disk_delete,
+            disk::disk_delete_cancel,
+            system::system_info,
+            system::system_processes,
             capture::capture_set_hotkey,
             capture::capture_hide,
             capture::capture_read_clipboard,
