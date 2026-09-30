@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { PDFDocument } from 'pdf-lib';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -120,4 +122,76 @@ test('image tool: a file the browser cannot read gets a clear message', async ({
     buffer: Buffer.from('das ist kein bild'),
   });
   await expect(sheet.getByRole('alert')).toContainText('HEIC');
+});
+
+/** A PDF whose page n is 100 + n points wide, so pages can be told apart. */
+async function pdf(pages: number): Promise<Buffer> {
+  const doc = await PDFDocument.create();
+  for (let n = 1; n <= pages; n++) doc.addPage([100 + n, 200]);
+  return Buffer.from(await doc.save());
+}
+
+test('pdf tool: merges, selects pages and rotates on the device', async ({ page }) => {
+  const sheet = await openTool(page, 'pdf', 'PDF-Werkzeug');
+
+  // Merge: two files, second one moved to the front.
+  await sheet.locator('#pdf-merge-input').setInputFiles([
+    { name: 'a.pdf', mimeType: 'application/pdf', buffer: await pdf(2) },
+    { name: 'b.pdf', mimeType: 'application/pdf', buffer: await pdf(3) },
+  ]);
+  const list = sheet.getByTestId('pdf-files');
+  await expect(list).toContainText('1. a.pdf');
+  await sheet.getByRole('button', { name: 'b.pdf nach oben' }).click();
+  await expect(list.getByRole('listitem').first()).toContainText('b.pdf');
+  const merged = page.waitForEvent('download');
+  await sheet.getByRole('button', { name: 'Zusammenfügen und speichern' }).click();
+  const mergedFile = await merged;
+  expect(mergedFile.suggestedFilename()).toBe('b-zusammengefuegt.pdf');
+  const widths = async (path: string) =>
+    (await PDFDocument.load(readFileSync(path))).getPages().map((p) => p.getWidth());
+  expect(await widths((await mergedFile.path())!)).toEqual([101, 102, 103, 101, 102]);
+
+  // Remove pages 2-3 of a 4 page file.
+  await sheet.getByRole('button', { name: 'Seiten', exact: true }).click();
+  await sheet
+    .locator('#pdf-single-input')
+    .setInputFiles({ name: 'vier.pdf', mimeType: 'application/pdf', buffer: await pdf(4) });
+  await expect(sheet.getByTestId('pdf-info')).toContainText('4 Seiten');
+  await sheet.getByLabel('Seiten', { exact: true }).fill('9');
+  await sheet.getByRole('button', { name: 'Seiten auswählen und speichern' }).click();
+  await expect(sheet.getByText('Bitte gültige Seiten zwischen 1 und 4 angeben.')).toBeVisible();
+  await sheet.getByLabel('Seiten', { exact: true }).fill('2-3');
+  await sheet.getByRole('button', { name: 'Diese Seiten entfernen' }).click();
+  const cut = page.waitForEvent('download');
+  await sheet.getByRole('button', { name: 'Seiten auswählen und speichern' }).click();
+  const cutFile = await cut;
+  expect(cutFile.suggestedFilename()).toBe('vier-gekuerzt.pdf');
+  expect(await widths((await cutFile.path())!)).toEqual([101, 104]);
+
+  // Rotate: only page 1 by 90 degrees.
+  await sheet.getByRole('button', { name: 'Drehen', exact: true }).click();
+  await sheet
+    .locator('#pdf-single-input')
+    .setInputFiles({ name: 'drei.pdf', mimeType: 'application/pdf', buffer: await pdf(3) });
+  await sheet.getByLabel('Seiten', { exact: true }).fill('1');
+  const turned = page.waitForEvent('download');
+  await sheet.getByRole('button', { name: 'Drehen und speichern' }).click();
+  const turnedFile = await turned;
+  const angles = (await PDFDocument.load(readFileSync((await turnedFile.path())!)))
+    .getPages()
+    .map((p) => p.getRotation().angle);
+  expect(angles).toEqual([90, 0, 0]);
+});
+
+test('pdf tool: a file that is not a PDF gets a clear message', async ({ page }) => {
+  const sheet = await openTool(page, 'pdf', 'PDF-Werkzeug');
+  await sheet.getByRole('button', { name: 'Seiten', exact: true }).click();
+  await sheet
+    .locator('#pdf-single-input')
+    .setInputFiles({
+      name: 'kaputt.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('kein pdf'),
+    });
+  await expect(sheet.getByRole('alert')).toContainText('kein lesbares PDF');
 });
