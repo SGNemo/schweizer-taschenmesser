@@ -143,5 +143,5 @@ jobs:
       - name: Placeholder frontend
         run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
       - run: cargo fmt --check
-      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p taschenmesser-local-api -- -D warnings
-      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p taschenmesser-local-api
+      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -- -D warnings
+      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info

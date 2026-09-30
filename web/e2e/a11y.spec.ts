@@ -25,6 +25,9 @@ const MODULES = [
   'accounts',
   'news',
   'launcher',
+  'pantry',
+  'timetrack',
+  'gifts',
 ];
 
 /** Enables every module (raw write into the module table, like the library would do). */
@@ -101,6 +104,9 @@ const PAGES = [
   ['accounts (set up)', '/accounts'],
   ['news', '/news'],
   ['launcher', '/launcher'],
+  ['pantry', '/pantry'],
+  ['timetrack', '/timetrack'],
+  ['gifts', '/gifts'],
   ['share', '/share?title=Beispiel&text=Schau%20mal%20https%3A%2F%2Fbeispiel.example%2Fx'],
 ] as const;
 

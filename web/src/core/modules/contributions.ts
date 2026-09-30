@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useModuleStates } from './activation';
-import { visibleManifests } from './registry';
+import { availableManifests } from '@/core/modules/available';
 import type { CalendarItem, DateRange, DueNotification, ModuleManifest } from './types';
 
 export function compareCalendarItems(a: CalendarItem, b: CalendarItem): number {
@@ -53,7 +53,7 @@ export async function collectNotifications(
 }
 
 export function activeManifests(states: Record<string, boolean> | undefined): ModuleManifest[] {
-  return states ? visibleManifests.filter((m) => states[m.id]) : [];
+  return states ? availableManifests().filter((m) => states[m.id]) : [];
 }
 
 /** Live calendar items of all active modules for a date range; `undefined` while loading. */

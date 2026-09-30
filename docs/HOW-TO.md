@@ -17,9 +17,10 @@ Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHIT
 | One spec | `npx playwright test e2e/<name>.spec.ts` |
 | Server | `cd server && npm test` (+ `typecheck`, `lint`, `build`) |
 | MCP wrapper | `cd mcp && npm test` (+ `typecheck`, `lint`) |
-| Rust | `cd web/src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` (local API only: `cargo test -p taschenmesser-local-api`) |
+| Rust | `cd web/src-tauri && cargo fmt --check && cargo clippy --all-targets --locked -p taschenmesser -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -- -D warnings && cargo test --locked -p …` (per crate: `cargo test -p taschenmesser-disk-scan`; perf: `DISK_SCAN_PERF_FILES=1000000 cargo test -p taschenmesser-disk-scan --release -- --ignored --nocapture perf`). Windows-only code compiles without a Windows box: `rustup target add x86_64-pc-windows-msvc`, then `cargo check -p taschenmesser-disk-scan --target x86_64-pc-windows-msvc` (the main crate needs the Windows toolchain). |
 | Version consistency | `npm run version:check` |
 - Definition of done: `lint`, `typecheck`, `test`, `e2e` green; CLAUDE.md/docs updated.
+- Sandbox: run e2e/vitest in the foreground (`timeout 115 …`, or `--shard`); background jobs only make progress while a foreground command runs. Never `pkill -f` a pattern that appears in your own command line.
 - Before `npm run e2e` stop any own `vite preview` on :4173 (`pkill -f "[v]ite preview"`). Chromium is at `/opt/pw-browsers/chromium`; never `playwright install`.
 
 ## New module
@@ -31,6 +32,13 @@ Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHIT
 6. German strings in `src/strings.ts`. Add the route to `PAGES` and the id to `MODULES` in `e2e/a11y.spec.ts`. Add an E2E case for user flows.
 7. Collection/index change later → `npm run db:bump` **and** add previous stores to `src/core/db/schema-history.json`; data-shape change → bump `manifest.version` + `manifest.migrations`.
 8. `npm run lint && npm run typecheck && npm test`.
+
+## New module for some platforms only (e.g. desktop)
+1. In `manifest.ts` add `platforms: ['desktop']` (`'web' | 'desktop' | 'android'`; missing = everywhere). Use `availableManifests()` (`core/modules/available.ts`) in runtime code, never `visibleManifests`.
+2. Native part: put the logic in a Tauri-free crate under `web/src-tauri/crates/<name>` (testable on Linux), wrap it in `src/<name>.rs`, register commands in `src/lib.rs` (desktop block), list them in `build.rs` `COMMANDS` and grant `allow-<command>` in `capabilities/desktop.json`; add the crate to the `-p` lists in `.github/workflows/ci.yml`.
+3. JS side: a service in `core/platform/<name>.ts` on `PlatformService`, bridge in `core/platform/tauri/<name>.ts` (`supported` only on desktop), unsupported stub + e2e fake in `web.ts` (`--mode e2e` only).
+4. Data that must not leave the device: no collections, no `aiSchema`, `dataApi: false`, id in `BLOCKED_MODULES` (`core/dataapi/scope.ts`), listed in the "no aiSchema" test in `modules/accounts/__tests__/exclusion.test.ts`.
+5. E2E: `localStorage.__tmPlatformKind = 'desktop'` (init script) makes the e2e build pose as desktop; see `e2e/disk.spec.ts`.
 
 ## New tool
 Tools are not modules (no own data, no cross-imports; see `tools/isolation.test.ts`).

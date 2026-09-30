@@ -8,7 +8,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | Path | What |
 |---|---|
 | `web/` | PWA (Vite, React 19, TS strict); own `package.json`; all UI/logic |
-| `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK |
+| `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info` |
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
@@ -17,8 +17,8 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
-- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, birthdays, bookmarks, budgets, calendar, contracts, example (dev only), finance, habits, invoices, launcher, news, notes, packing, reminders, shopping, subscriptions, todos, vault.
-- `src/tools/<id>/` – small stateless helpers (base64, calc, currency, dates, dice, hash, json, percent, qr, scratch, split, timer, units, uuid).
+- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, birthdays, bookmarks, budgets, calendar, contracts, **disk** (desktop only), example (dev only), finance, gifts, habits, invoices, launcher, news, notes, packing, pantry, reminders, shopping, subscriptions, **system** (desktop only), timetrack, todos, vault.
+- `src/tools/<id>/` – small stateless helpers (base64, calc, currency, dates, dice, hash, image, json, pdf, percent, qr, scratch, split, text, timer, timezones, units, uuid).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell.tsx`, `PageContainer.tsx`, `CommandPalette.tsx`, `QuickAdd.tsx`, `ToolsSheet.tsx`, `MoreSheet.tsx`, `PendingImports.tsx`, `UpdateBanner.tsx`, `SyncBadge.tsx`, `useNavItems.ts`, `assistant/` (palette answer UI).
 - `src/pages/` – `Settings.tsx` + `settings/*Section.tsx`, `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
@@ -32,7 +32,8 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 ## Where things live
 | Area | Location | Key names |
 |---|---|---|
-| **Module registry** | `web/src/core/modules/registry.ts` (`import.meta.glob('../../modules/*/manifest.ts')`) | `allManifests`, `visibleManifests`, `validateManifest` |
+| **Module registry** | `web/src/core/modules/registry.ts` (`import.meta.glob('../../modules/*/manifest.ts')`) | `allManifests`, `visibleManifests`, `availableManifestsFor(kind)`, `validateManifest` |
+| **Platform filter (`platforms`)** | `manifest.platforms?: PlatformKind[]` (missing = everywhere); runtime code uses `availableManifests()` in `core/modules/available.ts` (asks `getPlatform()`; separate file to avoid an import cycle through the DB). Router, nav, dashboard, library, services, settings all use it. E2E builds can pose as another platform via `localStorage.__tmPlatformKind` (`core/platform/web.ts`). | `availableManifests`, `isAvailableOn` |
 | Manifest types | `web/src/core/modules/types.ts` | `ModuleManifest`, `ModuleContributions`, `CollectionDef`, `PageLayout`, `CalendarItem`, `ExternalCalendarSink` |
 | Contributions (calendar, notifications) | `web/src/core/modules/contributions.ts` | `collectCalendarItems`, `collectNotifications`, `useCalendarItems` |
 | Module services / activation / migrations | `core/modules/services.ts`, `activation.ts`, `migrate.ts`, `lazy.ts` | `startModuleServices`, `enableModule`, `disableModule` |
@@ -57,12 +58,20 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | **Local import API** | app side `web/src/core/localapi/{config,handler,service,log,prompt}.ts`; Rust transport `web/src-tauri/crates/local-api/src/{auth,http,limiter,server,lib}.rs` (+ `tests/server.rs`); Tauri wiring `web/src-tauri/src/local_api.rs`; JS bridge `core/platform/tauri/localApi.ts`; e2e fake `core/platform/fakeLocalApi.ts`; UI `pages/settings/LocalApiSection.tsx`, `layout/PendingImports.tsx`; guide `docs/AI-IMPORT.md` | |
 | **MCP wrapper** | `mcp/src/{index,server,api,config}.ts`, tests `mcp/test/` | 8 tools, 1 API call each |
 | **Setup assistant** ("Einrichtungsassistent") | logic `web/src/core/setup/`: `types.ts` (`SetupStepDef`, `SetupStepProps`, `SETUP_VERSION`), `state.ts` (local progress in `_meta` `setup.state`), `detect.ts` (`appHasData`, `ensureSetupState` = start migration), `registry.ts` (`allSetupSteps`, `applicableSteps`, `detectDone`), `profiles.ts` (presets, `requires`), `checklist.ts`, `hooks.ts` (`useBackClose`), `host.ts`, `steps/index.ts` (`CORE_STEPS`); UI `web/src/layout/setup/` (`SetupWizard`, `SetupHost`, `WelcomeCard`, `ChecklistCard`, `SetupLink`, `steps/*Step.tsx`); module step `modules/accounts/setup.ts`; settings `pages/settings/SetupSection.tsx`; app-wide prefs `core/settings/core.ts` (scope `core`); e2e `e2e/setup.spec.ts` | `SetupStepDef`, `useSetupHost` |
-| Platform layer | `web/src/core/platform/{index,types,web}.ts`, `tauri/{index,localApi,secureStore,updater}.ts` | `getPlatform()`, `PlatformService` |
+| Platform layer | `web/src/core/platform/{index,types,web}.ts`, `tauri/{index,localApi,disk,system,secureStore,updater}.ts` | `getPlatform()`, `PlatformService` |
+| **Disk module (desktop)** | UI `web/src/modules/disk/` (`routes/{DrivesPage,ScanPage}`, `components/{ScanView,TreemapView,NodeList,Details,DeleteDialog,Basket,Duplicates,Legend,Breadcrumb}`, `logic/{treemap,tree,colors}.ts`, `store.ts` = session only); seam `core/platform/disk.ts` (`DiskService`), bridge `tauri/disk.ts`, e2e fake `fakeDisk.ts`; Rust `web/src-tauri/crates/disk-scan/src/{scan,tree,drives,guard,delete,trash_win,duplicates,system,kinds}.rs` (+ `tests/{scan,delete,duplicates}.rs`), Tauri wrapper `src-tauri/src/disk.rs`. No collections, no `aiSchema`, `dataApi: false` + id block. | `DiskService`, `Guard`, `Tree` |
+| **System module (desktop)** | UI `web/src/modules/system/`; seam `core/platform/system.ts`, `tauri/system.ts`, `fakeSystem.ts`; Rust `src-tauri/crates/system-info` + `src-tauri/src/system.rs` | `SystemService` |
+| **Tauri command permissions** | `web/src-tauri/build.rs` lists every app command (`AppManifest::commands`) → `allow-<command>` permissions (`permissions/autogenerated/`); granted to the main window in `capabilities/default.json` (shared) or `capabilities/desktop.json` (desktop only, not Android), to the capture window only via `capabilities/capture.json`. `web/src-tauri/tests/commands.rs` guards all three (every handler listed, every non-capture command granted to `main`, capture window limited to its own two). A wrong name fails the build. New desktop command = handler in `lib.rs` + `build.rs` + `desktop.json`. | `COMMANDS` |
 | **Tauri shell** | `web/src-tauri/`: `src/{lib,main,local_api,oauth,portable,update,webview2}.rs`, `tauri.conf.json`, `tauri.windows.conf.json`, `capabilities/default.json`, `Cargo.toml` | identifier `io.github.sgnemo.taschenmesser` |
 | Tauri plugins (local) | `web/src-tauri/plugins/apk-installer/` (Android APK update), `plugins/secure-store/` (OS keystore, biometrics, screen protection; Kotlin in `android/`) | |
 | Self-update (TS) | `web/src/core/update/{controller,github,notes,prefs,semver,backup,types}.ts`; UI `layout/UpdateBanner.tsx`, `pages/settings/UpdateSection.tsx` | |
 | Notifications | `web/src/core/notifications/{scheduler,service,push,pushPayload,nativeSchedule,triggers}.ts` | |
 | Vault (passwords) | `web/src/modules/accounts/` (never AI-visible) | |
+
+## Disk module: scan and delete flow
+1. **Scan:** `disk_scan_start(root)` → thread → rayon walk (`scan.rs`): one task per folder returns a `DirTemp`; arena `Tree` built at the end. Symlinks/junctions/mount points never entered; cloud placeholders never opened; unreadable folders listed; files under 1 MiB folded into one entry per folder (type totals stay exact); size = space on volume (cluster rounded). Progress/`done` via Tauri `Channel`; `disk_scan_cancel/pause`. Tree stays in Rust behind `RwLock`; the webview gets views (`disk_children`, `disk_query`) by node id.
+2. **Delete:** UI sends node ids only → `disk_delete_plan` (block list, sizes, flags) → confirmation (typed phrase checked in Rust) → `disk_delete(plan, mode)`: block list again + resolved path must equal the planned one; trash via `IFileOperation` sink that aborts a would-be permanent delete (`trash_win.rs`), permanent via bottom-up walker (links removed, never followed); report per entry; tree corrected in place (`apply_to_tree`).
+3. **Block list** (`guard.rs`): text-segment rules on canonicalised paths: drive roots, `Windows`, `Program Files (x86)`, `ProgramData`, `System Volume Information`, `$Recycle.Bin`, `Users` + every profile root, `AppData` + `Local|Roaming|LocalLow`, pagefile/hiberfil/swapfile/DumpStack, own exe dir + app data dirs + everything above them, running programs' folders. Known-folder API adds the real locations.
 
 ## Data flow
 1. **Write:** UI → module `repo.ts` (`createRepo`) → Zod validation → HLC-stamped fields → Dexie table + `_outbox` (unless `local: true`).
@@ -78,14 +87,15 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 - `ConnectorDef` / `ConnectorContext` (`core/connectors/types.ts`).
 - `AiProvider { id, model, complete(req) }` (`core/ai/providers/types.ts`).
 - `SyncAdapter` (`core/sync/types.ts`), `StorageAdapter` (`core/storage/types.ts`), `FieldOp`.
-- `PlatformService` (`core/platform/types.ts`): `fetch`, `notifications`, `saveFile`, `clipboard`, `secrets`, `biometrics`, `screen`, `oauth`, `updater`, `localApi`, `lifecycle`, `app`.
+- `PlatformService` (`core/platform/types.ts`): `fetch`, `notifications`, `saveFile`, `clipboard`, `secrets`, `biometrics`, `screen`, `oauth`, `updater`, `localApi`, `disk`, `system`, `lifecycle`, `app`.
 - `ImporterMeta` / `ImporterRuntime` / `ImportBatch` (`core/importer/types.ts`).
 - Server REST (`server/src/app.ts`): `GET /v1/health`, `GET|PUT /v1/vault`, `POST /v1/push`, `GET /v1/pull`, `POST /v1/reset`, push routes `/v1/push/*`, `GET /v1/proxy?url=`. Local API routes: see `architecture.md` → "Local AI import API".
 
 ## Tests
 - Unit/component: co-located `*.test.ts(x)` (some in `__tests__/`); `web/vitest.config.ts`, `web/vitest.setup.ts`.
+- Disk/system: `modules/disk/__tests__/exclusion.test.ts`, `modules/system/__tests__/system.test.ts`, e2e `e2e/disk.spec.ts`, `e2e/system.spec.ts` (fake platform, invented data only).
 - Isolation/privacy guards: `core/modules/registry.test.ts`, `tools/isolation.test.ts`, `connectors/isolation.test.ts`, `core/ai/privacy.test.ts`, `modules/accounts/__tests__/exclusion.test.ts`, `core/sync/contract.test.ts`, `server/test/contract.test.ts`.
-- Server: `server/test/*.test.ts` (Vitest + `fastify.inject`). MCP: `mcp/test/mcp.test.ts`. Rust: `web/src-tauri/crates/local-api/tests/server.rs`.
+- Server: `server/test/*.test.ts` (Vitest + `fastify.inject`). MCP: `mcp/test/mcp.test.ts`. Rust: `web/src-tauri/crates/local-api/tests/server.rs`, `crates/disk-scan/{src,tests}`, `crates/system-info/src`.
 - CI jobs (`.github/workflows/ci.yml`, on push to `develop`/`main` and PRs): secret scan (gitleaks), web (lint, types, unit, E2E), server, mcp, multi-device sync E2E, rust (fmt, clippy, tests).
 - Release (`.github/workflows/release.yml`): tag `v*.*.*`, plus dry runs on `develop` pushes touching `web/src-tauri/**`, `web/scripts/**`, the workflow, and manual dispatch; jobs `secret-scan`, `prepare`, `windows`, `android`, `release`, `summary`.
 

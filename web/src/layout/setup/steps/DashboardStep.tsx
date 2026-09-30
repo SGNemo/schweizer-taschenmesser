@@ -16,7 +16,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useEffect, useMemo, useState } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import type { SetupStepProps } from '@/core/setup/types';
 import {
@@ -91,7 +91,7 @@ export default function DashboardStep({ registerCommit }: SetupStepProps) {
 
   const rows = useMemo<Row[]>(
     () =>
-      visibleManifests
+      availableManifests()
         .filter((m) => states?.[m.id])
         .flatMap((m) =>
           m.widgets.map((w) => ({ key: widgetKey(m.id, w.id), title: `${m.name}: ${w.title}` })),

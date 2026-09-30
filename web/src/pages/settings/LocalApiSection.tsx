@@ -18,7 +18,8 @@ import { clearLog, lastUsed, useAccessLog } from '@/core/localapi/log';
 import { buildApiPrompt } from '@/core/localapi/prompt';
 import { useLocalApiStatus } from '@/core/localapi/service';
 import { useModuleStates } from '@/core/modules/activation';
-import { getManifest, visibleManifests } from '@/core/modules/registry';
+import { getManifest } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -58,7 +59,7 @@ export function LocalApiSection() {
   }
   if (!config) return null;
 
-  const modules = states ? apiModules(visibleManifests, states) : [];
+  const modules = states ? apiModules(availableManifests(), states) : [];
   const used = lastUsed(log ?? []);
   const statusText = () => {
     if (status.state === 'error') return t.localApi.startErrors[status.error ?? 'listen-failed'];

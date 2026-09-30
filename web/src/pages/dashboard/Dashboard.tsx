@@ -19,7 +19,7 @@ import { Suspense, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { lazyComponent } from '@/core/modules/lazy';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import type { WidgetDef } from '@/core/modules/types';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
@@ -46,15 +46,22 @@ interface Entry extends WidgetDef {
   Component: ReturnType<typeof lazyComponent>;
 }
 
-/** All widgets of all modules; lazy components are created once at module scope. */
-const ALL_ENTRIES: Entry[] = visibleManifests.flatMap((m) =>
-  m.widgets.map((w) => ({
-    ...w,
-    moduleId: m.id,
-    key: widgetKey(m.id, w.id),
-    Component: lazyComponent(w.component),
-  })),
-);
+/** Lazy components are created once per widget, not per render. */
+const componentCache = new Map<string, Entry['Component']>();
+const componentFor = (key: string, load: WidgetDef['component']) => {
+  let c = componentCache.get(key);
+  if (!c) componentCache.set(key, (c = lazyComponent(load)));
+  return c;
+};
+
+/** Widgets of the modules available on this platform (resolved after `initPlatform()`). */
+const allEntries = (): Entry[] =>
+  availableManifests().flatMap((m) =>
+    m.widgets.map((w) => {
+      const key = widgetKey(m.id, w.id);
+      return { ...w, moduleId: m.id, key, Component: componentFor(key, w.component) };
+    }),
+  );
 
 const SIZE_CLASS = { s: '', m: styles.m, l: styles.l } as const;
 
@@ -64,7 +71,7 @@ export function Dashboard() {
   const editing = useUiStore((s) => s.dashboardEditing);
   const setEditing = useUiStore((s) => s.setDashboardEditing);
 
-  const entries = useMemo(() => ALL_ENTRIES.filter((e) => states?.[e.moduleId]), [states]);
+  const entries = useMemo(() => allEntries().filter((e) => states?.[e.moduleId]), [states]);
   const layout = saved ?? DEFAULT_LAYOUT;
   const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
   const shown = editing ? ordered : ordered.filter((e) => !layout.hidden.includes(e.key));
@@ -124,7 +131,7 @@ export function Dashboard() {
       <WelcomeCard />
       <ChecklistCard />
 
-      {states && visibleManifests.every((m) => !states[m.id]) ? (
+      {states && availableManifests().every((m) => !states[m.id]) ? (
         <EmptyState icon="grid" title={t.dashboard.emptyTitle}>
           <p>{t.dashboard.emptyText}</p>
           <Link to="/library">{t.dashboard.toLibrary}</Link>

@@ -1,0 +1,17 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.help {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  max-width: 70ch;
+}

@@ -9,6 +9,17 @@ Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK
 - KI-Import-Runde (PR #4): JSON-Import je Modul, lokale Import-API (nur Desktop, Loopback, Tokens, Vorschau/Undo), MCP-Wrapper `mcp/`, Anleitung [`AI-IMPORT.md`](AI-IMPORT.md).
 - Releases: `v0.2.0-beta.1`, `v0.2.0-beta.2` (erste portable Version), `v0.2.0`.
 
+## Diese Runde (Branch `feat/disk-cleaner-and-modules`)
+- **Datenträger** (nur Desktop): Laufwerkskarten, paralleler Rust-Scan (Fortschritt, Pause, Abbruch, „Nicht gelesen“-Liste), Treemap + Liste + Schnellfilter + Details, Auswahl-Korb, Löschen in den Papierkorb (Standard) oder endgültig mit Sperrliste, Tippbestätigung, Bericht; Aufräum-Helfer (bekannte Temp-/Cache-Ordner, leere Ordner, doppelte Dateien).
+- **Systeminfo** (nur Desktop), **Zeiterfassung**, **Vorräte** (mit Weitergabe an die Einkaufsliste), **Geschenkideen**; Werkzeuge **Text**, **Zeitzonen**, **Bilder verkleinern**, **PDF**.
+- `manifest.platforms` + `availableManifests()`; Tauri-Befehle einzeln freigegeben (`build.rs`, `capabilities/desktop.json`); DB-Version 13.
+
+## Ideen (nicht gebaut)
+- Datenträger: Sunburst-Ansicht, „Letzten Scan zwischenspeichern“ (lokal, standardmäßig aus), MFT-Schnellscan mit Adminrechten, Ordner frei wählen (Dialog), Android-Speicherübersicht (belegt/frei, ohne Scan/Löschen), eigene Aufräum-Regeln.
+- Module: Fahrzeug (Tanken, Verbrauch, TÜV/Service), Journal/Tagebuch, Garantie-/Belegverwaltung mit Foto, Zwischenablage-Verlauf (Passwörter ausschließen), Text-Snippets, Autostart-Übersicht (nur Anzeige), Medikamenten-/Wasser-Erinnerung, Watchlist/Leseliste, Putzplan, Sparziele (Haushaltsbuch), Reise (Packlisten, Reisedokumente, Zeitzonen), Speedtest/WLAN-Name (Systeminfo).
+- Werkzeuge: Farbwähler/Kontrast-Check, Datei-Prüfsumme + Text-Diff, WLAN-QR, Regex-Tester, Notenrechner, BMI/Kalorien (ohne Speicherung), Massen-Umbenennen, Bild-Farben extrahieren, PDF komprimieren.
+- Zeiterfassung: Stundensätze/Beträge, Projektfarben.
+
 ## Nicht gebaut / bekannte Grenzen
 - Google-Drive-Sync-Adapter (nur `core/sync/adapters/googleDrive.stub.ts`), Binär-Anhänge im Sync, Tombstone-GC, Mehrmandanten-Server.
 - Google-Login auf Android, zweiseitiger Kalender-Sync, FinTS/PSD2, Mail-Body-Parsing.
@@ -35,6 +46,25 @@ Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK
 
 ## Manuelle Tests offen
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
+
+### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
+Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
+D1. *Scan echtes Laufwerk:* Datenträger → C: scannen. Fortschritt läuft, UI bleibt flüssig, Summe stimmt grob mit dem Explorer („Größe auf Datenträger“ des Ordners) überein. Ergebnis mit „Nicht gelesen“-Liste (z. B. `System Volume Information`). ☐
+D2. *Treemap navigieren:* Klick in einen Ordner, Brotkrumen zurück, Umschalt+Klick wählt nur aus, Pfeiltasten/Eingabe/Rücktaste, Tooltip, Legende, Farbe nach Tiefe, Filter „Älter als“, „Dateityp“. ☐
+D3. *Laufwerksarten:* USB-Stick und Netzlaufwerk erscheinen mit richtigem Typ; SSD/HDD-Angabe stimmt (kann „Festplatte“ ohne Angabe sein). ☐
+D4. *Cloud-Platzhalter:* Ein OneDrive-Ordner mit „Nur online“-Dateien wird gescannt, ohne dass etwas heruntergeladen wird; Hinweis „liegen nur online“ erscheint. ☐
+D5. *Verknüpfungen:* Ein Ordner mit Junction/Symlink auf einen großen Ordner: wird nicht doppelt gezählt (Hinweis „nicht betreten“). ☐
+D6. *Papierkorb:* Testordner (mit ein paar Dateien) → Löschen → „In den Papierkorb“: Ordner liegt im Windows-Papierkorb, lässt sich wiederherstellen; Baum und Summen aktualisieren sich ohne Neu-Scan. ☐
+D7. *Papierkorb nicht möglich:* Einen Testordner auf einem USB-Stick/Netzlaufwerk ohne Papierkorb löschen: Bericht „Papierkorb nicht möglich – nichts gelöscht“, der Ordner ist noch da; erst der bewusste „endgültig“-Schritt löscht. ☐
+D8. *Sperrliste:* Diese Pfade zeigen **keine** Löschen-Schaltfläche, sondern „Geschützt“: Laufwerkswurzel, `C:\Windows` (und darin), `C:\Program Files`, `C:\ProgramData`, `C:\Users`, dein Profilordner, `AppData`, `System Volume Information`, `$Recycle.Bin`, `pagefile.sys`/`hiberfil.sys`, Ordner der Taschenmesser-App und ihrer Daten, Ordner eines laufenden Programms. Mit 8.3-Namen (`dir /x`) und über eine Junction auf `C:\Windows` ebenfalls nicht löschbar. ☐
+D9. *Abbruch:* Scan während der Laufzeit abbrechen (Teilergebnis bleibt nutzbar); Löschen einer großen Testordner-Auswahl mit „Stoppen“ unterbrechen (Rest bleibt unberührt). ☐
+D10. *Datei in Benutzung:* Eine geöffnete Testdatei in einem Testordner: Bericht „Teilweise gelöscht“ mit Grund „Datei in Benutzung“. ☐
+D11. *Bestätigungen:* Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ verlangen das Eintippen des Namens; Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
+D12. *Aufräum-Helfer:* „Aufräumen“ auf der Startseite listet Temp/Downloads/Browser-Caches (nur vorhandene); „Doppelte Dateien“ findet zwei gleiche Testdateien, ein Exemplar bleibt immer. ☐
+D13. *Im Explorer zeigen / Pfad kopieren* funktionieren (auch bei langen Pfaden). ☐
+D14. *Berechtigungen:* App startet, Updater, Google-Login und lokale API funktionieren weiterhin (alle App-Befehle sind jetzt einzeln freigegeben; `capabilities/desktop.json`). ☐
+D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, RAM, Akku am Laptop, Grafikkarte, lokale IP). ☐
+D16. *Android/PWA:* „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
 
 ### Schritt 11b – OS-Keystore, Biometrie, Bildschirmschutz
 **Windows (`Taschenmesser-Portable.exe`)**
@@ -117,6 +147,8 @@ N6. *Alte Backups:* eine `taschenmesser-backup-…json` (auch verschlüsselt) ei
 N7. *Diagramm-Farben:* Türkis/Orange bei Farbfehlsichtigkeit prüfen (Validator des dataviz-Skills nach dem Rebrand noch nicht erneut gelaufen).
 
 ## Offen – macht Sven
+**Neu (Datenträger):** Die Checkliste D1–D16 oben auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
+
 Installation und Update auf echten Geräten (Windows und Android) – Schritt für Schritt:
 
 1. **Dateien holen (Pre-Release).** GitHub → Repository → *Releases* → das neueste Pre-Release. Die README-Badges („Windows (portabel) herunterladen" …) zeigen auf das *neueste stabile* Release und funktionieren erst, wenn es ein stabiles Release gibt – bis dahin die Dateien direkt von der Release-Seite laden: `Taschenmesser-Portable.exe` (Windows) und `Taschenmesser.apk` (Android). Prüfsumme optional: `Taschenmesser.apk.sha256`.

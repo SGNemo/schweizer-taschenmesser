@@ -1,0 +1,22 @@
+[package]
+name = "taschenmesser-system-info"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Read-only system facts for the system module: CPU, memory, battery, graphics adapters, local network addresses and the biggest processes. No Tauri, so it is unit-tested on any machine."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "system_info"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+sysinfo = { version = "0.38", default-features = false, features = ["system", "network"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Dxgi",
+  "Win32_System_Power",
+] }

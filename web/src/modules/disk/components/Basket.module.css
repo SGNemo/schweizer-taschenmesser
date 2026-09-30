@@ -1,0 +1,34 @@
+.list {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  max-height: 12rem;
+  overflow: auto;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+}
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.size {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.total {
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}

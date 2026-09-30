@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { wasOnboardingHandled } from '@/core/importer/batches';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { hasStartData } from '@/core/dataapi/onboarding';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
@@ -17,7 +17,7 @@ const s = t.setup.steps.startdata;
 export default function StartDataStep(_props: SetupStepProps) {
   const states = useModuleStates();
   const [handled, setHandled] = useState<Record<string, boolean>>({});
-  const modules = visibleManifests.filter((m) => states?.[m.id] && hasStartData(m));
+  const modules = availableManifests().filter((m) => states?.[m.id] && hasStartData(m));
 
   useEffect(() => {
     let live = true;

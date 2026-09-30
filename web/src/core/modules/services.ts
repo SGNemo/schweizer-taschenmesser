@@ -1,6 +1,6 @@
 import { liveQuery } from 'dexie';
 import { loadModuleStates, type ModuleStates } from './activation';
-import { visibleManifests } from './registry';
+import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from './types';
 
 export interface ServiceManager {
@@ -53,7 +53,7 @@ export function createServiceManager(manifests: readonly ModuleManifest[]): Serv
 
 /** Runs the services of all enabled modules for the lifetime of the app; follows module toggles. */
 export function startModuleServices(): () => void {
-  const manager = createServiceManager(visibleManifests);
+  const manager = createServiceManager(availableManifests());
   const sub = liveQuery(() => loadModuleStates()).subscribe({
     next: (states) => void manager.update(states),
     error: (e) => console.error('[services] module state stream failed', e),
