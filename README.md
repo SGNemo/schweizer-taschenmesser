@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/brand/header.png" alt="Nemo – Modulare, lokale Alltags-App" width="640"></p>
+
 # Nemo
 
 [![Neueste Version](https://img.shields.io/github/v/release/SGNemo/schweizer-taschenmesser?include_prereleases&label=Version)](https://github.com/SGNemo/schweizer-taschenmesser/releases)

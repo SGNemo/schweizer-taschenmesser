@@ -1,6 +1,18 @@
 /** All user-facing German UI text lives here (i18n-ready later). */
 export const t = {
   appName: 'Nemo',
+  about: {
+    title: 'Über Nemo',
+    tagline: 'Modulare, lokale Alltags-App',
+    version: 'Version',
+    licenses: 'Lizenzhinweise',
+    licenseList: [
+      'Schrift „Inter“ – SIL Open Font License 1.1, © The Inter Project Authors.',
+      'Schriftzug „Nemo“ (Logo) in „Nunito“ – SIL Open Font License 1.1, © The Nunito Project Authors.',
+      'Icons „Lucide“ – ISC-Lizenz, © Lucide Contributors.',
+      'Das Nemo-Logo (Clownfisch) ist eine eigene Zeichnung dieses Projekts.',
+    ],
+  },
   nav: {
     dashboard: 'Übersicht',
     library: 'Modul-Bibliothek',

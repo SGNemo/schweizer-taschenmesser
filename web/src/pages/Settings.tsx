@@ -20,6 +20,7 @@ import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
 import { LocalApiSection } from './settings/LocalApiSection';
 import { UpdateSection } from './settings/UpdateSection';
+import { AboutSection } from './settings/AboutSection';
 import styles from './Page.module.css';
 
 function SectionTitle({ id, hint, children }: { id: string; hint?: string; children: string }) {
@@ -197,6 +198,10 @@ export function Settings() {
           {t.update.title}
         </SectionTitle>
         <UpdateSection />
+      </section>
+      <section className={styles.section} aria-labelledby="about">
+        <h2 id="about">{t.about.title}</h2>
+        <AboutSection />
       </section>
       {withStartData.length > 0 ? (
         <section className={styles.section} aria-labelledby="startdata">

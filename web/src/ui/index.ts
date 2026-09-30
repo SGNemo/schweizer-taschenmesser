@@ -5,6 +5,7 @@ export { TextField, TextArea, SelectField, Checkbox, Switch } from './Fields';
 export { Badge, EmptyState, Fab, Toaster } from './Misc';
 export { HelpHint } from './HelpHint';
 export { Icon } from './icons';
+export { Logo } from './Logo';
 export type { IconName } from './icons';
 export {
   Chip,
