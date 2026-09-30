@@ -63,6 +63,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 - **Sync:** field-level last-write-wins by greatest HLC; the rule exists twice (`core/sync/ops.ts`, `server/src/store.ts`) and is pinned by `contract/lww-cases.json` – change both or neither.
 - **Platform:** only `core/platform/**` knows about Tauri (`@tauri-apps/*` only in `core/platform/tauri/**`); everything else uses `getPlatform()`.
 - **AI privacy:** the assistant sends only instructions, the compact `aiSchema` of enabled modules, the date and the question – never user data (`privacy.test.ts`). The `accounts` module must never get an `aiSchema`, `searchable`, widget or calendar item (`exclusion.test.ts`).
+- **Setup assistant:** progress lives device-local in `_meta` `setup.state` (step ids only – never values or secrets, never synced); each step saves on its own "Weiter", cancelling drops only the draft; it never appears by itself on an installation with data. Steps come from `setupSteps` (recipe in `docs/HOW-TO.md`).
 - **Secrets:** no secrets in the repo; API keys via `getPlatform().secrets`. The bundle identifier `io.github.sgnemo.taschenmesser` must never change. The Android keystore and updater private key must never be lost or committed.
 - **UI:** German only (`web/src/strings.ts`), CSS Modules + tokens, `data-autofocus` instead of `autoFocus` in dialogs, touch targets ≥ 44 px, page width via `manifest.layout` (`PageContainer`), never a module-level `max-width`.
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them.
@@ -72,7 +73,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 Step-by-step recipes: `docs/HOW-TO.md`. Short form for a module: `npm run gen:module -- <id> "<Name>"`, then edit `src/modules/<id>/`, `contributions.onboarding` is required, strings in `strings.ts`, `db:bump` on collection changes, `npm run lint && npm run typecheck && npm test`.
 
 ## Status
-Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON import, local import API, `mcp/`). Details, open items and next steps: `docs/STATUS.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there. The setup assistant is being built in a parallel chat.
+Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON import, local import API, `mcp/`). Details, open items and next steps: `docs/STATUS.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there. The setup assistant (`web/src/core/setup`, `web/src/layout/setup`) is in; see the map and `docs/HOW-TO.md` to add steps.
 
 ## Gotchas
 - `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.

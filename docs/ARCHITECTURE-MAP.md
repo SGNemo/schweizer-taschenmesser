@@ -55,7 +55,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | **Data API (JSON import)** | `web/src/core/dataapi/` (`format.ts`, `parse.ts`, `importer.ts`, `scope.ts`, `openapi.ts`, `pending.ts`, `text.ts`) | |
 | **Local import API** | app side `web/src/core/localapi/{config,handler,service,log,prompt}.ts`; Rust transport `web/src-tauri/crates/local-api/src/{auth,http,limiter,server,lib}.rs` (+ `tests/server.rs`); Tauri wiring `web/src-tauri/src/local_api.rs`; JS bridge `core/platform/tauri/localApi.ts`; e2e fake `core/platform/fakeLocalApi.ts`; UI `pages/settings/LocalApiSection.tsx`, `layout/PendingImports.tsx`; guide `docs/AI-IMPORT.md` | |
 | **MCP wrapper** | `mcp/src/{index,server,api,config}.ts`, tests `mcp/test/` | 8 tools, 1 API call each |
-| **Setup assistant** ("Einrichtungsassistent") | **not in this branch.** Closest: `core/importer/OnboardingWizard.tsx` (per-module start data) | update when the parallel work lands |
+| **Setup assistant** ("Einrichtungsassistent") | logic `web/src/core/setup/`: `types.ts` (`SetupStepDef`, `SetupStepProps`, `SETUP_VERSION`), `state.ts` (local progress in `_meta` `setup.state`), `detect.ts` (`appHasData`, `ensureSetupState` = start migration), `registry.ts` (`allSetupSteps`, `applicableSteps`, `detectDone`), `profiles.ts` (presets, `requires`), `checklist.ts`, `hooks.ts` (`useBackClose`), `host.ts`, `steps/index.ts` (`CORE_STEPS`); UI `web/src/layout/setup/` (`SetupWizard`, `SetupHost`, `WelcomeCard`, `ChecklistCard`, `SetupLink`, `steps/*Step.tsx`); module step `modules/accounts/setup.ts`; settings `pages/settings/SetupSection.tsx`; app-wide prefs `core/settings/core.ts` (scope `core`); e2e `e2e/setup.spec.ts` | `SetupStepDef`, `useSetupHost` |
 | Platform layer | `web/src/core/platform/{index,types,web}.ts`, `tauri/{index,localApi,secureStore,updater}.ts` | `getPlatform()`, `PlatformService` |
 | **Tauri shell** | `web/src-tauri/`: `src/{lib,main,local_api,oauth,portable,update,webview2}.rs`, `tauri.conf.json`, `tauri.windows.conf.json`, `capabilities/default.json`, `Cargo.toml` | identifier `io.github.sgnemo.taschenmesser` |
 | Tauri plugins (local) | `web/src-tauri/plugins/apk-installer/` (Android APK update), `plugins/secure-store/` (OS keystore, biometrics, screen protection; Kotlin in `android/`) | |
@@ -72,7 +72,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 6. **Native calls:** anything OS-specific goes through `getPlatform()`; only `core/platform/tauri/**` imports `@tauri-apps/*`.
 
 ## Important interfaces
-- `ModuleManifest` (`core/modules/types.ts`): id, routes, `collections`, `widgets`, `aiSchema?`, `contributions` (`quickAdd`, `calendarItems`, `notifications`, `services`, `onboarding` (required), `aiComputed`, `aiCreateDefaults`, `externalCalendar`), `layout`, `migrations`, `defaultEnabled`, `order`, `devOnly`.
+- `ModuleManifest` (`core/modules/types.ts`): id, routes, `setupSteps?`, `requires?`, `collections`, `widgets`, `aiSchema?`, `contributions` (`quickAdd`, `calendarItems`, `notifications`, `services`, `onboarding` (required), `aiComputed`, `aiCreateDefaults`, `externalCalendar`), `layout`, `migrations`, `defaultEnabled`, `order`, `devOnly`. `ToolManifest` / `ConnectorDef` also take `setupSteps?`.
 - `ToolManifest` (`core/tools/types.ts`).
 - `ConnectorDef` / `ConnectorContext` (`core/connectors/types.ts`).
 - `AiProvider { id, model, complete(req) }` (`core/ai/providers/types.ts`).
@@ -87,3 +87,11 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 - Server: `server/test/*.test.ts` (Vitest + `fastify.inject`). MCP: `mcp/test/mcp.test.ts`. Rust: `web/src-tauri/crates/local-api/tests/server.rs`.
 - CI jobs (`.github/workflows/ci.yml`, on push to `develop`/`main` and PRs): secret scan (gitleaks), web (lint, types, unit, E2E), server, mcp, multi-device sync E2E, rust (fmt, clippy, tests).
 - Release (`.github/workflows/release.yml`): tag `v*.*.*`, plus dry runs on `develop` pushes touching `web/src-tauri/**`, `web/scripts/**`, the workflow, and manual dispatch; jobs `secret-scan`, `prepare`, `windows`, `android`, `release`, `summary`.
+
+## Setup assistant (data flow)
+1. **Start:** `initCore` → `ensureSetupState()` (first thing). Missing row: app has data → `dismissed` + `checklistHidden`; empty app → `notStarted`. Never runs the wizard by itself.
+2. **Open:** `useSetupHost.openWizard(stepId?)` from Settings, palette command "Einrichtung", dashboard cards, empty dashboard, module library. `SetupHost` (in `AppShell`) mounts `SetupWizard`.
+3. **Steps:** `allSetupSteps` = `CORE_STEPS` + `setupSteps` of manifests (sorted by `order`; core: basics 10, sync 20, profiles 30, tools 40, vault 50 (module), ai 60, connectors 70, startdata 80, aiimport 90, notifications 100, backupupdates 110, dashboard 120). `when` filters, `isDone` auto-detects.
+4. **Save:** a step keeps a local draft, registers `registerCommit(fn)`; "Weiter" runs it, then `markStepDone` (or `markStepSkipped` if `fn` returns `'skipped'`). Cancel drops the draft. Actions that are explicit in the reused settings UI (sync connect, backup restore, OAuth login, import wizard) write on their own button.
+5. **Leave:** X / Esc / back gesture (`useBackClose`) → confirm view: later (`inProgress`), end (`dismissed`), keep going.
+6. **Checklist:** `useChecklist` → `ChecklistCard` on the dashboard while status is `inProgress|dismissed` (or steps newer than `state.version`), not hidden, and something is open.
