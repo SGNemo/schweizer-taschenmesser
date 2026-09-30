@@ -47,3 +47,41 @@ test('start-data wizard: paste lines → preview → import → undo', async ({ 
   await page.goto('/todos');
   await expect(page.getByRole('checkbox', { name: 'Zahnarzt anrufen' })).toHaveCount(0);
 });
+
+test('JSON fallback: paste → preview with a bad entry → import → repeat is a duplicate', async ({
+  page,
+}) => {
+  await ready(page, '/todos');
+  await page.getByRole('button', { name: 'Startdaten einrichten' }).click();
+  const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+  await dialog.getByRole('button', { name: /JSON einfügen/ }).click();
+  await expect(dialog.getByRole('button', { name: 'Schema für KI kopieren' })).toBeVisible();
+
+  const json = JSON.stringify({
+    items: [
+      { collection: 'task', title: 'Steuererklärung', dueDate: '2026-10-15', priority: 2 },
+      { collection: 'task', title: 'Kaputtes Datum', dueDate: '15.10.2026' },
+    ],
+  });
+  await dialog.getByLabel('JSON', { exact: true }).fill(json);
+  await dialog.getByRole('button', { name: 'Vorschau anzeigen' }).click();
+  await expect(dialog.getByText('2 Einträge erkannt')).toBeVisible();
+  await expect(dialog.getByText('Nicht importierbar')).toBeVisible();
+  await dialog.getByRole('button', { name: '1 Eintrag importieren' }).click();
+  await expect(dialog.getByRole('status')).toHaveText('1 Eintrag wurde importiert.');
+  await dialog.getByRole('button', { name: 'Schließen' }).last().click();
+  await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
+
+  // The same data again is recognised.
+  await page.goto('/settings');
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: 'ToDos' })
+    .getByRole('button', { name: 'Startdaten einrichten' })
+    .click();
+  const again = page.getByRole('dialog', { name: /Startdaten/ });
+  await again.getByRole('button', { name: /JSON einfügen/ }).click();
+  await again.getByLabel('JSON', { exact: true }).fill(json);
+  await again.getByRole('button', { name: 'Vorschau anzeigen' }).click();
+  await expect(again.getByText('Schon vorhanden')).toBeVisible();
+});

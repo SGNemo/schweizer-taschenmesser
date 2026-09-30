@@ -14,7 +14,15 @@ const manifest: ModuleManifest = {
   routes: [
     { path: '/notes', label: 'Notizen', nav: true, component: () => import('./routes/NotesPage') },
   ],
-  dataSchema: { collections: { note: { schema: noteSchema, indexes: ['pinned'] } } },
+  dataSchema: {
+    collections: {
+      note: {
+        schema: noteSchema,
+        indexes: ['pinned'],
+        example: { title: 'Geschenkideen', body: 'Buch, Kerze, Tee' },
+      },
+    },
+  },
   migrations,
   widgets: [
     {

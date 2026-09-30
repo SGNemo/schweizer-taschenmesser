@@ -4,6 +4,9 @@
  */
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
+import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
+import { importersOf, runtimeFor } from '@/core/dataapi/onboarding';
+import { ImportJsonError } from '@/core/dataapi/parse';
 import { getConnector } from '@/core/connectors/registry';
 import { scanMail } from '@/core/connectors/service';
 import { loadStatus } from '@/core/connectors/state';
@@ -59,6 +62,7 @@ export function OnboardingWizard({
 }
 
 function errorText(e: unknown): string {
+  if (e instanceof ImportJsonError) return e.text;
   if (e instanceof ImportError) return t.onboarding.errors[e.code] ?? t.onboarding.errors.fallback!;
   if (e instanceof Error && e.message === 'file-too-large') return t.onboarding.fileTooLarge;
   return t.onboarding.errors.fallback!;
@@ -107,7 +111,7 @@ function FieldInput({
 
 function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () => void }) {
   const toast = useUiStore((s) => s.toast);
-  const declared = manifest.contributions?.onboarding?.importers ?? [];
+  const declared = importersOf(manifest);
   // A connector scan is only offered while that connector is connected with the needed feature.
   const connectorIds = [...new Set(declared.map((i) => i.connectorId).filter(Boolean))] as string[];
   const connectorStatus = useLiveQuery(
@@ -155,7 +159,7 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
     setError('');
     setBusy(true);
     try {
-      const rt = (await manifest.contributions!.onboarding!.load!()).default;
+      const rt = await runtimeFor(manifest, meta.id);
       const defaults: Record<string, string> = {};
       const dynamic: Record<string, Choice[]> = {};
       for (const field of [...(meta.options ?? []), ...(meta.fields ?? [])]) {
@@ -262,9 +266,9 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
 
   async function submitInput() {
     if (!importer) return;
-    if (importer.kind === 'text') {
+    if (importer.kind === 'text' || importer.kind === 'json') {
       if (!text.trim()) return setError(t.onboarding.noInput);
-      await runParse({ kind: 'text', text });
+      await runParse({ kind: importer.kind, text });
     } else if (importer.kind === 'template') {
       if (ticked.length === 0) return setError(t.onboarding.noInput);
       await runParse({ kind: 'template', ids: ticked });
@@ -398,6 +402,27 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
             data-autofocus
             onChange={(e) => setText(e.target.value)}
           />
+        ) : null}
+        {importer.kind === 'json' ? (
+          <>
+            <TextArea
+              label={t.dataApi.jsonLabel}
+              rows={8}
+              value={text}
+              placeholder={importer.placeholder}
+              data-autofocus
+              onChange={(e) => setText(e.target.value)}
+            />
+            <div className={styles.bar}>
+              <Button disabled={busy} onClick={() => void chooseFile()}>
+                {t.onboarding.chooseFile}
+              </Button>
+              <CopySchemaButton manifest={manifest} />
+              {fileName ? (
+                <span className={styles.muted}>{t.onboarding.fileChosen(fileName)}</span>
+              ) : null}
+            </div>
+          </>
         ) : null}
         {importer.kind === 'template' ? (
           <fieldset className={styles.fields} style={{ border: 0, padding: 0, margin: 0 }}>

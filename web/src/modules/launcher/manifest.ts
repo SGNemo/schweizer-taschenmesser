@@ -25,7 +25,11 @@ const manifest: ModuleManifest = {
   ],
   dataSchema: {
     collections: {
-      link: { schema: linkSchema, indexes: ['group'] },
+      link: {
+        schema: linkSchema,
+        indexes: ['group'],
+        example: { title: 'Beispielseite', url: 'https://example.org' },
+      },
     },
   },
   migrations,

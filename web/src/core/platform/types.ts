@@ -85,6 +85,8 @@ export interface PlatformService {
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {
+    /** Plain copy for non-secret text (e.g. the schema handed to an AI tool). */
+    writeText(text: string): Promise<void>;
     /** Copies `text` and clears the clipboard after `clearAfterMs` – unless something else was copied meanwhile. */
     writeSensitive(text: string, clearAfterMs: number): Promise<void>;
   };

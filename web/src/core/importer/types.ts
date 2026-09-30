@@ -11,6 +11,8 @@ import type { MailFinding } from '@/core/connectors/types';
 export type ImporterKind =
   /** Pasted text, one line = one entry. */
   | 'text'
+  /** Pasted or chosen JSON in the generic import format (`core/dataapi`); offered by the core. */
+  | 'json'
   /** A file chosen by the user (CSV, ICS, HTML, JSON …). */
   | 'file'
   /** Ready-made suggestions the user ticks. */
@@ -81,6 +83,7 @@ export const noOnboarding: OnboardingDef = { importers: [] };
 /** What the wizard hands to an importer. */
 export type ImportInput =
   | { kind: 'text'; text: string }
+  | { kind: 'json'; text: string }
   | { kind: 'file'; text: string; fileName: string }
   | { kind: 'template'; ids: string[] }
   | { kind: 'form'; values: Record<string, string> }
@@ -112,6 +115,8 @@ export interface ImportCandidate {
   warning?: string;
   /** Reference to the origin (mail id …). */
   ref?: string;
+  /** Set when the importer already knows the entry cannot be stored; shown instead of the Zod issue. */
+  error?: string;
 }
 
 export interface ImportParseResult {

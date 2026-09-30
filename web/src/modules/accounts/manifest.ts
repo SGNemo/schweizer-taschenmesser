@@ -14,6 +14,7 @@ const manifest: ModuleManifest = {
   name: 'Accounts',
   icon: 'lock',
   version: 1,
+  dataApi: false,
   description:
     'Passwort-Tresor: Zugangsdaten mit Master-Passwort verschlüsselt (Argon2id, AES-256), Generator, Einmalcodes (TOTP), Import/Export. Komplett von der KI ausgeschlossen.',
   routes: [

@@ -23,7 +23,7 @@ const manifest: ModuleManifest = {
   dataSchema: {
     collections: {
       event: { schema: eventSchema, indexes: ['startDate'] },
-      external: { schema: externalEventSchema, indexes: ['startDate', 'source'] },
+      external: { schema: externalEventSchema, indexes: ['startDate', 'source'], dataApi: false },
     },
   },
   migrations,

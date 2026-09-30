@@ -36,6 +36,17 @@ export interface CollectionDef {
    * `{ local: true }` (see `createCollectionRepo`).
    */
   local?: boolean;
+  /**
+   * `false` keeps the collection out of the data API and the JSON import (collections owned by a
+   * connector, e.g. `calendar.external`). Device-local collections are always left out.
+   */
+  dataApi?: false;
+  /**
+   * Optional hand-written example in the import format (see `core/dataapi`): plain field names,
+   * money as a number in euro, references by title. Made-up data only. Without it the example is
+   * generated from the schema.
+   */
+  example?: Record<string, unknown>;
 }
 
 export interface ModuleContext {
@@ -239,6 +250,11 @@ export interface ModuleManifest {
   settings: ModuleSettings;
   /** Preferred page width of the module's routes; default `content`. */
   layout?: PageLayout;
+  /**
+   * `false` = the module does not exist for the data API / JSON import. Required for modules that
+   * hold secrets (`accounts`, which is also blocked by id in `core/dataapi/scope.ts`).
+   */
+  dataApi?: false;
   /** Enabled without user action on a fresh install. */
   defaultEnabled: boolean;
   /** Sort key for navigation and library (lower first, default 100). */

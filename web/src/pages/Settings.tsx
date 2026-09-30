@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { ConnectorsSection } from './settings/ConnectorsSection';
 import { StartDataButton } from '@/core/importer/StartDataButton';
-import { hasImporters } from '@/core/importer/OnboardingWizard';
+import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
+import { hasStartData, importersOf } from '@/core/dataapi/onboarding';
+import { JSON_IMPORTER_ID } from '@/core/dataapi/importer';
 import { useModuleStates } from '@/core/modules/activation';
 import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
@@ -130,7 +132,7 @@ export function Settings() {
     (m) => states?.[m.id] && m.settings.fields.length > 0,
   );
 
-  const withStartData = visibleManifests.filter((m) => states?.[m.id] && hasImporters(m));
+  const withStartData = visibleManifests.filter((m) => states?.[m.id] && hasStartData(m));
 
   return (
     <>
@@ -192,7 +194,12 @@ export function Settings() {
               {withStartData.map((m) => (
                 <li key={m.id} className={styles.startRow}>
                   <span>{m.name}</span>
-                  <StartDataButton moduleId={m.id} />
+                  <span className={styles.startActions}>
+                    {importersOf(m).some((i) => i.id === JSON_IMPORTER_ID) ? (
+                      <CopySchemaButton manifest={m} />
+                    ) : null}
+                    <StartDataButton moduleId={m.id} />
+                  </span>
                 </li>
               ))}
             </ul>
