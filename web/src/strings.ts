@@ -1,6 +1,18 @@
 /** All user-facing German UI text lives here (i18n-ready later). */
 export const t = {
-  appName: 'Taschenmesser',
+  appName: 'Nemo',
+  about: {
+    title: 'Über Nemo',
+    tagline: 'Modulare, lokale Alltags-App',
+    version: 'Version',
+    licenses: 'Lizenzhinweise',
+    licenseList: [
+      'Schrift „Inter“ – SIL Open Font License 1.1, © The Inter Project Authors.',
+      'Schriftzug „Nemo“ (Logo) in „Nunito“ – SIL Open Font License 1.1, © The Nunito Project Authors.',
+      'Icons „Lucide“ – ISC-Lizenz, © Lucide Contributors.',
+      'Das Nemo-Logo (Clownfisch) ist eine eigene Zeichnung dieses Projekts.',
+    ],
+  },
   nav: {
     dashboard: 'Übersicht',
     library: 'Modul-Bibliothek',
@@ -50,6 +62,13 @@ export const t = {
     themeSystem: 'System',
     themeLight: 'Hell',
     themeDark: 'Dunkel',
+    accent: 'Akzentfarbe',
+    accentOptions: {
+      orange: 'Nemo-Orange',
+      teal: 'Türkis',
+      coral: 'Koralle',
+      lagoon: 'Lagune',
+    },
     modules: 'Module',
     noModuleSettings: 'Aktive Module haben keine eigenen Einstellungen.',
   },
@@ -61,7 +80,7 @@ export const t = {
     resume: 'Einrichtung fortsetzen',
     open: 'Einrichtung öffnen',
     paletteCommand: 'Einrichtung',
-    welcomeTitle: 'Willkommen im Taschenmesser',
+    welcomeTitle: 'Willkommen bei Nemo',
     welcomeText:
       'Möchtest du die App Schritt für Schritt einrichten? Du kannst das auch später in den Einstellungen tun.',
     welcomeLater: 'Später',
@@ -221,7 +240,7 @@ export const t = {
           unsupported: 'Auf diesem Gerät nicht verfügbar.',
         } as Record<string, string>,
         android:
-          'Android: Erinnerungen bei geschlossener App braucht das System-Recht für genaue Alarme, und die Akku-Optimierung darf die App nicht einschränken. Beides stellst du in den Android-Einstellungen unter „Apps → Taschenmesser“ ein.',
+          'Android: Erinnerungen bei geschlossener App braucht das System-Recht für genaue Alarme, und die Akku-Optimierung darf die App nicht einschränken. Beides stellst du in den Android-Einstellungen unter „Apps → Nemo“ ein.',
       },
       backupupdates: {
         title: 'Backup und Updates',
@@ -275,8 +294,7 @@ export const t = {
     intro: 'Wohin soll der geteilte Inhalt?',
     content: 'Geteilt',
     where: 'Ziele',
-    nothing:
-      'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Taschenmesser.',
+    nothing: 'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Nemo.',
     noTargets:
       'Schalte in der Modul-Bibliothek Merkliste, Notizen oder ToDos ein, um Inhalte zu empfangen.',
     toBookmarks: 'In die Merkliste',
@@ -352,7 +370,7 @@ export const t = {
       capture: 'Erfassen',
       open: 'App öffnen',
       quit: 'Beenden',
-      tooltip: 'Taschenmesser',
+      tooltip: 'Nemo',
     },
     window: {
       hint: 'Enter speichert · Tab wechselt den Typ · Esc schließt',
@@ -1214,7 +1232,7 @@ export const t = {
     autoSaveAs: 'Speichern unter …',
     errors: {
       'not-json': 'Die Datei ist keine gültige JSON-Datei.',
-      'wrong-format': 'Das ist keine Taschenmesser-Backup-Datei.',
+      'wrong-format': 'Das ist keine Nemo-Backup-Datei.',
       'newer-version': 'Das Backup stammt aus einer neueren App-Version.',
       invalid: 'Die Backup-Datei ist beschädigt.',
       'passphrase-required': 'Dieses Backup ist verschlüsselt. Gib das Passwort ein.',
@@ -1998,7 +2016,7 @@ export const t = {
   dataApi: {
     importerLabel: 'JSON einfügen',
     importerDescription:
-      'Daten, die dir eine KI (oder ein anderes Programm) im Taschenmesser-Format geliefert hat. Nichts wird gespeichert, bevor du die Vorschau bestätigst.',
+      'Daten, die dir eine KI (oder ein anderes Programm) im Nemo-Format geliefert hat. Nichts wird gespeichert, bevor du die Vorschau bestätigst.',
     jsonLabel: 'JSON',
     copySchema: 'Schema für KI kopieren',
     schemaCopied: 'Schema kopiert. Füge es in dein KI-Werkzeug ein.',
@@ -2261,7 +2279,7 @@ export const t = {
         'Die Sicherungskopie konnte nicht angelegt werden – das Update wurde deshalb nicht gestartet.',
       'install-failed': 'Das Update konnte nicht installiert werden.',
       'folder-not-writable':
-        'Die Programmdatei liegt in einem Ordner, in den die App nicht schreiben darf (schreibgeschützt oder ohne Berechtigung). Verschiebe Taschenmesser-Portable.exe in einen normalen Ordner, z. B. in deinen Benutzerordner, und versuche es erneut.',
+        'Die Programmdatei liegt in einem Ordner, in den die App nicht schreiben darf (schreibgeschützt oder ohne Berechtigung). Verschiebe die Programmdatei in einen normalen Ordner, z. B. in deinen Benutzerordner, und versuche es erneut.',
       'signature-invalid':
         'Die Signatur des Updates ist ungültig – es wurde deshalb nicht installiert.',
     } as Record<string, string>,

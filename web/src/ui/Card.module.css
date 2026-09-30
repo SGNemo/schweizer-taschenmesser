@@ -3,7 +3,8 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  box-shadow: var(--shadow-1);
+  /* Soft shadow plus a faint top highlight ("gloss"). */
+  box-shadow: var(--shadow-1), var(--card-edge);
 }
 .title {
   font-size: var(--text-md);

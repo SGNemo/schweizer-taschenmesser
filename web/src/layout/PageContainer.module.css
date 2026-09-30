@@ -7,6 +7,14 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* Fade + slide in when the page (router key = module) changes; transform/opacity only. */
+  animation: pageIn var(--dur-slow) var(--ease-out);
+}
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 .narrow {
   max-width: var(--page-narrow);

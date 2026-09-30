@@ -23,8 +23,8 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       manifest: {
-        name: 'Taschenmesser',
-        short_name: 'Taschenmesser',
+        name: 'Nemo',
+        short_name: 'Nemo',
         description: 'Modulare, lokale Alltags-App',
         lang: 'de',
         id: '/',
@@ -32,8 +32,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         categories: ['productivity', 'utilities'],
-        background_color: '#f7f7f5',
-        theme_color: '#2f6f8f',
+        background_color: '#0b1d2b',
+        theme_color: '#0f3440',
         // Android "Teilen" → neutral page where the destination is chosen (Merkliste, Notiz, ToDo).
         // `/bookmarks?title&text&url` keeps working for old bookmarks/links.
         share_target: {

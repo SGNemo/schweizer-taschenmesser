@@ -4,7 +4,7 @@ import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
-import { Fab, Icon, IconButton, Toaster } from '@/ui';
+import { Fab, Icon, IconButton, Logo, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
@@ -92,7 +92,7 @@ export function AppShell() {
           }}
         >
           <span className={styles.brandMark}>
-            <Icon name="grid" size={18} />
+            <Logo size={22} />
           </span>
           {t.appName}
         </a>
@@ -114,7 +114,7 @@ export function AppShell() {
         <header className={styles.topbar}>
           <span className={`${styles.brand} ${styles.hideDesktop}`}>
             <span className={styles.brandMark}>
-              <Icon name="grid" size={18} />
+              <Logo size={22} />
             </span>
           </span>
           <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>

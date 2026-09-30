@@ -12,6 +12,18 @@
   background: var(--accent-soft);
   color: var(--accent);
 }
+.badge.success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+.badge.warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.badge.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
 .empty {
   display: flex;
   flex-direction: column;
@@ -23,6 +35,15 @@
   /* In a flex-column page the empty state takes the free height and centres itself. */
   flex: 1;
   justify-content: center;
+}
+.emptyMark {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .emptyTitle {
   color: var(--text);
@@ -39,16 +60,18 @@
   height: 56px;
   border-radius: var(--radius-full);
   border: 0;
-  background: var(--accent);
+  background: var(--accent-gradient);
   color: var(--accent-contrast);
   display: grid;
   place-items: center;
   box-shadow: var(--shadow-2);
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
-.fab:hover {
-  background: var(--accent-hover);
+@media (hover: hover) {
+  .fab:hover {
+    transform: translateY(-2px);
+  }
 }
 .fab:active {
   transform: scale(0.94);
@@ -85,7 +108,7 @@
   background: var(--text);
   color: var(--bg);
   box-shadow: var(--shadow-2);
-  animation: rise var(--dur) var(--ease);
+  animation: rise var(--dur) var(--ease-out);
 }
 .toastAction {
   background: none;
@@ -101,5 +124,33 @@
   from {
     opacity: 0;
     transform: translateY(8px);
+  }
+}
+
+/* Shimmer: one translating highlight (transform only). Static under reduced motion. */
+.skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--surface-glass), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.4s var(--ease-in-out) infinite;
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+    display: none;
   }
 }

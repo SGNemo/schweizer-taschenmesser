@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Taschenmesser MCP server (stdio). Configure with the environment variables
+ * Nemo MCP server (stdio). Configure with the environment variables
  * TASCHENMESSER_TOKEN (required) and TASCHENMESSER_URL (default http://127.0.0.1:47631).
  * stdout belongs to the protocol; messages go to stderr and never contain the token.
  */

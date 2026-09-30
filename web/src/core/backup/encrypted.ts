@@ -88,7 +88,7 @@ export async function encryptBackup(
 export const serializeEncryptedBackup = (file: EncryptedBackupFile): string => JSON.stringify(file);
 
 export function encryptedBackupFileName(date: Date = new Date()): string {
-  return `taschenmesser-backup-${date.toISOString().slice(0, 10)}.enc.json`;
+  return `nemo-backup-${date.toISOString().slice(0, 10)}.enc.json`;
 }
 
 /** Cheap sniffing so the UI knows whether to ask for a passphrase. */

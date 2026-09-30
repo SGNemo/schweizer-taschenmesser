@@ -1,6 +1,6 @@
 .dialog {
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--surface);
   color: var(--text);
   padding: 0;
@@ -11,24 +11,29 @@
 .dialog::backdrop {
   background: var(--overlay);
 }
+@supports (backdrop-filter: blur(1px)) {
+  .dialog::backdrop {
+    backdrop-filter: blur(3px);
+  }
+}
 .dialog[open] {
-  animation: pop var(--dur) var(--ease);
+  animation: pop var(--dur) var(--ease-out);
 }
 .sheet {
   margin: auto auto 0;
   width: 100%;
   max-width: none;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
 .sheet[open] {
-  animation: slide var(--dur) var(--ease);
+  animation: slide var(--dur-slow) var(--ease-out);
 }
 @media (min-width: 900px) {
   .sheet {
     margin: auto;
     width: min(92vw, 30rem);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
   }
 }
 .inner {

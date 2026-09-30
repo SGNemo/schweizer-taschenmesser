@@ -30,7 +30,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           return {
             path: r.path.replace(/^\//, ''),
             element: (
-              <PageContainer variant={r.layout ?? m.layout ?? 'content'}>
+              <PageContainer key={m.id} variant={r.layout ?? m.layout ?? 'content'}>
                 <Suspense fallback={<PageFallback />}>
                   <Cmp />
                 </Suspense>
@@ -48,7 +48,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           index: true,
           element: (
-            <PageContainer variant="wide">
+            <PageContainer key="Dashboard" variant="wide">
               <Dashboard />
             </PageContainer>
           ),
@@ -56,7 +56,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           path: 'library',
           element: (
-            <PageContainer variant="wide">
+            <PageContainer key="ModuleLibrary" variant="wide">
               <ModuleLibrary />
             </PageContainer>
           ),
@@ -64,7 +64,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           path: 'tools',
           element: (
-            <PageContainer variant="wide">
+            <PageContainer key="ToolLibrary" variant="wide">
               <ToolLibrary />
             </PageContainer>
           ),
@@ -72,7 +72,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           path: 'share',
           element: (
-            <PageContainer variant="narrow">
+            <PageContainer key="ShareTarget" variant="narrow">
               <ShareTarget />
             </PageContainer>
           ),
@@ -80,7 +80,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           path: 'settings',
           element: (
-            <PageContainer variant="narrow">
+            <PageContainer key="Settings" variant="narrow">
               <Settings />
             </PageContainer>
           ),

@@ -12,7 +12,13 @@
   text-decoration: none;
   transition:
     background-color var(--dur-fast) var(--ease),
-    transform var(--dur-fast) var(--ease);
+    border-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
 }
 .btn:active:not(:disabled) {
   transform: scale(0.98);
@@ -22,16 +28,16 @@
   cursor: not-allowed;
 }
 .primary {
-  background: var(--accent);
+  background: var(--accent-gradient);
   color: var(--accent-contrast);
-}
-.primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  box-shadow:
+    var(--shadow-1),
+    inset 0 1px 0 rgb(255 255 255 / 0.18);
 }
 .secondary {
   background: var(--surface);
   color: var(--text);
-  border-color: var(--border);
+  border-color: var(--border-strong);
 }
 .secondary:hover:not(:disabled) {
   background: var(--surface-2);

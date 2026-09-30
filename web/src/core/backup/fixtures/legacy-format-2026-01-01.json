@@ -1,0 +1,23 @@
+{
+  "format": "taschenmesser-backup",
+  "version": 1,
+  "exportedAt": "2026-01-01T09:00:00.000Z",
+  "tables": {
+    "example_entry": [
+      {
+        "id": "legacy-1",
+        "title": "Milch kaufen",
+        "done": false,
+        "createdAt": 1767258000000,
+        "updatedAt": 1767258000000,
+        "deviceId": "olddevice",
+        "deletedAt": null,
+        "_f": {
+          "title": "1767258000000-0000-olddevice",
+          "done": "1767258000000-0000-olddevice",
+          "createdAt": "1767258000000-0000-olddevice"
+        }
+      }
+    ]
+  }
+}

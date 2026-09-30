@@ -38,7 +38,7 @@ export function buildOpenApi(modules: readonly ModuleManifest[], version = '1'):
   return {
     openapi: '3.1.0',
     info: {
-      title: 'Taschenmesser – lokale Import-API',
+      title: 'Nemo – lokale Import-API',
       version,
       description:
         'Lokale Schnittstelle der Desktop-App (nur 127.0.0.1). Importe warten in der App auf Bestätigung; es gibt keinen Endpunkt zum Löschen einzelner Einträge.',

@@ -338,7 +338,7 @@ test('capture layout screenshots', async ({ browser }) => {
       hasTouch: vp.mobile ?? false,
       deviceScaleFactor: 1,
       reducedMotion: 'reduce',
-      colorScheme: 'light',
+      colorScheme: (process.env.SCREENS_SCHEME as 'light' | 'dark') ?? 'light',
     });
     const page = await context.newPage();
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));

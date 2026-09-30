@@ -27,9 +27,9 @@ pub fn is_usable_version(pv: Option<&str>) -> bool {
 }
 
 #[cfg_attr(not(windows), allow(dead_code))]
-pub const MESSAGE_TITLE: &str = "Taschenmesser – WebView2 fehlt";
+pub const MESSAGE_TITLE: &str = "Nemo – WebView2 fehlt";
 #[cfg_attr(not(windows), allow(dead_code))]
-pub const MESSAGE_TEXT: &str = "Taschenmesser braucht die Microsoft-Komponente „WebView2“, die auf diesem Computer nicht gefunden wurde.\n\nKlicke auf „OK“, um die Download-Seite zu öffnen. Installiere dort die „Evergreen Bootstrapper“-Version und starte Taschenmesser danach erneut.";
+pub const MESSAGE_TEXT: &str = "Nemo braucht die Microsoft-Komponente „WebView2“, die auf diesem Computer nicht gefunden wurde.\n\nKlicke auf „OK“, um die Download-Seite zu öffnen. Installiere dort die „Evergreen Bootstrapper“-Version und starte Nemo danach erneut.";
 
 #[cfg(windows)]
 mod imp {

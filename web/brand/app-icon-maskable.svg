@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nemo">
+  <defs><linearGradient id="nemo-sea" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1D6B7A"/><stop offset="1" stop-color="#0E2F45"/></linearGradient><clipPath id="nemo-body"><ellipse cx="296" cy="262" rx="172" ry="126"/></clipPath></defs>
+  <rect width="512" height="512" fill="url(#nemo-sea)"/>
+  <g transform="translate(256 256) scale(.62) translate(-252 -250)">
+  <path d="M236 150c14-40 60-58 104-40 12 5 12 20 2 28l-24 18z" fill="#F26A1E"/>
+  <path d="M170 262C136 220 98 188 58 176c-14-4-24 8-20 22l18 64-18 64c-4 14 6 26 20 22 40-12 78-44 112-86z" fill="#F26A1E"/>
+  <ellipse cx="296" cy="262" rx="172" ry="126" fill="#F57A2A"/>
+  <g clip-path="url(#nemo-body)" fill="#fff">
+    <rect x="338" y="100" width="46" height="330" rx="23"/>
+    <rect x="214" y="100" width="50" height="330" rx="25"/>
+  </g>
+  <circle cx="420" cy="238" r="18" fill="#12303A"/>
+  </g>
+</svg>
