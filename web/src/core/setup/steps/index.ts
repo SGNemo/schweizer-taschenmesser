@@ -46,6 +46,33 @@ export const CORE_STEPS: SetupStepDef[] = [
     component: () => import('@/layout/setup/steps/ToolsStep'),
   },
   {
+    id: 'core.ai',
+    title: s.ai.title,
+    description: s.ai.description,
+    order: 60,
+    since: 1,
+    isDone: async () => {
+      const { loadAiConfig, isAiConfigured } = await import('@/core/ai/config');
+      return isAiConfigured(await loadAiConfig());
+    },
+    component: () => import('@/layout/setup/steps/AiStep'),
+  },
+  {
+    id: 'core.connectors',
+    title: s.connectors.title,
+    description: s.connectors.description,
+    order: 70,
+    since: 1,
+    when: async () => (await import('@/core/connectors/registry')).connectors.length > 0,
+    isDone: async () => {
+      const { connectors } = await import('@/core/connectors/registry');
+      const { loadStatus } = await import('@/core/connectors/state');
+      for (const c of connectors) if ((await loadStatus(c.id)).state === 'connected') return true;
+      return false;
+    },
+    component: () => import('@/layout/setup/steps/ConnectorsStep'),
+  },
+  {
     id: 'core.dashboard',
     title: s.dashboard.title,
     description: s.dashboard.description,
