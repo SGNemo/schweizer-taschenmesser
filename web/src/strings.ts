@@ -1500,7 +1500,9 @@ export const t = {
       fileSize: 'Dateigröße gesamt',
       cloud: (size: string) => `${size} liegen nur online (Cloud) und belegen hier keinen Platz.`,
       links: (n: number) =>
-        `${n} Verknüpfungen bzw. Online-Ordner wurden nicht betreten (keine doppelte Zählung).`,
+        n === 1
+          ? '1 Verknüpfung oder Online-Ordner wurde nicht betreten (keine doppelte Zählung).'
+          : `${n} Verknüpfungen oder Online-Ordner wurden nicht betreten (keine doppelte Zählung).`,
       duration: (s: string) => `Dauer: ${s}`,
       notRead: 'Nicht gelesen (Zugriff verweigert)',
       notReadHint:

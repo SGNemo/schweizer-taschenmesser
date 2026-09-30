@@ -55,6 +55,19 @@ Each entry: decision → why → source. Only what is documented in `CLAUDE.md`,
 - **Sync-server proxy `/v1/proxy` is deliberately narrow (SSRF hardening)** – needed by the PWA for ICS/RSS; native app fetches directly. Source: commit 7e93948; architecture.md.
 - **Spotify connector not built** (docs unreachable, API constraints); launcher preset opens the web player. Source: architecture.md step 6.
 
+## Disk module & platform-only modules
+- **Modules can declare `platforms`; the filter is `availableManifests()`, resolved lazily.** Module states are synced, so a desktop-only module must vanish from router, nav, dashboard and services on the other platforms, not only from the library. The platform is known only after `initPlatform()`; importing it in the registry would create a cycle through the DB, hence `core/modules/available.ts`. Source: this PR.
+- **Own recursive scan with `read_dir` + `rayon`, not `jwalk`/`walkdir`.** Folder sums come straight from the recursion (jwalk yields flat entries and would need a rebuild), cancel is per folder, errors are collected per folder, no hidden-file skipping by default. `walkdir` is single-threaded. Source: this PR.
+- **Size = space on the volume (rounded to clusters), file size shown next to it; cloud-only files count 0.** The tool answers "what eats my space". `GetCompressedFileSizeW` per file would be too slow. Source: this PR.
+- **Scan tree stays in Rust; the webview gets views by node id.** Keeps IPC small for millions of files and means a compromised webview cannot name arbitrary paths to delete. Source: this PR.
+- **Recycle bin through `IFileOperation` with an abort sink instead of the `trash` crate.** `trash` runs with `FOF_NO_UI` (includes no-confirmation) so an item the bin cannot take is deleted silently. Here `PreDeleteItem` without `TSF_DELETE_RECYCLE_IF_POSSIBLE` returns `E_ABORT`; the report offers a separate, deliberate "permanent" step. Source: `trash` 5.2.9 source; this PR.
+- **Block list checked in Rust on resolved paths, twice (plan and run), text-based rules.** Deleting takes node ids, never paths; the resolved path must equal the planned one (link swap after the scan is refused). Source: this PR.
+- **Typed confirmation is enforced in Rust** (name for one entry, `LÖSCHEN` for several) for permanent or large (> 10 GiB / > 10 000 files) deletions. Source: this PR.
+- **Per-command Tauri permissions (`AppManifest::commands`) granted on desktop only.** Before, every app command was open to the webview. Source: this PR.
+- **Scan results are never persisted, synced, backed up or given to the assistant/local API** (no collections, no `aiSchema`, `dataApi: false` + id block). Optional scan cache and MFT quick scan (admin) are ideas only. Source: this PR.
+- **`pdf-lib` 1.17.1 pinned, loaded only when the PDF tool opens.** Last release (unmaintained, MIT); the alternative is a WASM PDF engine (much bigger). Source: this PR.
+- **Pantry → shopping list through the event `shopping.requested`**; the shopping module subscribes while enabled (no module import). Source: this PR.
+
 ## UI
 - **`PageContainer` layout system replaces a global `max-width`;** modules choose `manifest.layout`, never their own max-width; inner layouts use container queries. Source: PR #3.
 - **CSS Modules + tokens, touch targets ≥ 44 px, `data-autofocus` (React `autoFocus` runs before `showModal()`).** Source: architecture.md "UI".
