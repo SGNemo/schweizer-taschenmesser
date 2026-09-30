@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!--
+          Merged into the app's launcher activity (Tauri's template declares it as ".MainActivity",
+          singleTask, so a share while the app runs arrives in onNewIntent). Only plain text and
+          links are accepted; files and images are not offered to this app.
+        -->
+        <activity android:name="io.github.sgnemo.taschenmesser.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

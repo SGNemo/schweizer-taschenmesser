@@ -19,6 +19,7 @@ import { SetupSection } from './settings/SetupSection';
 import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
 import { LocalApiSection } from './settings/LocalApiSection';
+import { QuickCaptureSection } from './settings/QuickCaptureSection';
 import { UpdateSection } from './settings/UpdateSection';
 import { AboutSection } from './settings/AboutSection';
 import styles from './Page.module.css';
@@ -207,6 +208,10 @@ export function Settings() {
           {t.localApi.title}
         </SectionTitle>
         <LocalApiSection />
+      </section>
+      <section className={styles.section} aria-labelledby="quickcapture">
+        <h2 id="quickcapture">{t.quickCapture.settings.title}</h2>
+        <QuickCaptureSection />
       </section>
       <section className={styles.section} aria-labelledby="updates">
         <SectionTitle id="updates" hint={t.help.updateChannel}>
