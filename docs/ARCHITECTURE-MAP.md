@@ -22,7 +22,8 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell.tsx`, `PageContainer.tsx`, `CommandPalette.tsx`, `QuickAdd.tsx`, `ToolsSheet.tsx`, `MoreSheet.tsx`, `PendingImports.tsx`, `UpdateBanner.tsx`, `SyncBadge.tsx`, `useNavItems.ts`, `assistant/` (palette answer UI).
 - `src/pages/` – `Settings.tsx` + `settings/*Section.tsx`, `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
-- `src/ui/` – design system (Button, Dialog, Fields, Patterns, HelpHint, tokens.css, icons.tsx).
+- `src/ui/` – design system: `tokens.css` (all colours/radii/shadows/motion, light + dark + accent variants, guarded by `tokens.test.ts`), `global.css` (Inter, gradient background), Button, Card, Dialog, Fields, Patterns, Misc (Badge, EmptyState, Fab, Skeleton, Toaster), HelpHint, `Logo.tsx`, `icons.tsx`.
+- `web/brand/` – logo/icon SVG sources + font licences; `scripts/gen-icons.mjs` renders all raster assets (see HOW-TO → Icons).
 - `src/router.tsx`, `src/App.tsx`, `src/main.tsx` (startup order), `src/sw.ts` (service worker), `src/stores/ui.ts` (zustand UI state), `src/strings.ts` (**all German UI text**).
 - `templates/module/` – scaffold used by `scripts/gen-module.mjs`.
 - `scripts/` – `db-bump`, `gen-module`, `gen-icons`, `version`, `changelog`, `keys`, `android-sign`, `audit-release`, `latest-json`, `check-links` (+ tested `scripts/lib/*.ts`).

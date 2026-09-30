@@ -107,6 +107,15 @@ E3. *Wiederherstellung aus Backup:* frische App → Schritt „Sync und Wiederhe
 E4. *Bestehende Installation bleibt unberührt:* Update einer App mit Daten: keine Willkommenskarte, keine Checkliste, Daten unverändert; Einstellungen → „Einrichtung starten“ zeigt den aktuellen Zustand, nichts wird ohne Bestätigung geändert (Profil zeigt erst den Diff). ☐
 E5. *Google-Verbindung im Assistenten (Windows):* Schritt „Konten verknüpfen“ → Anmeldung starten und im Browser abbrechen bzw. den Assistenten schließen: kein Token gespeichert, Status bleibt „Nicht verbunden“. ☐
 
+### Nemo: Umbenennung und Design
+N1. *Windows-Portable starten (frische Datei und als Update):* Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt bewusst noch auf `Taschenmesser-Portable.exe`), Daten bleiben erhalten.
+N2. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
+N3. *Hell / Dunkel / System, Akzentfarben:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
+N4. *Reduzierte Bewegung:* Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
+N5. *Neue Module der anderen Chats:* nach dem Merge Dashboard, Datenträger-Aufräumer und weitere neue Seiten hell/dunkel ansehen (sollten das Design über Tokens erben; Sonderstyles melden).
+N6. *Alte Backups:* eine `taschenmesser-backup-…json` (auch verschlüsselt) einspielen; neue Exporte heißen `nemo-backup-…`.
+N7. *Diagramm-Farben:* Türkis/Orange bei Farbfehlsichtigkeit prüfen (Validator des dataviz-Skills nach dem Rebrand noch nicht erneut gelaufen).
+
 ## Offen – macht Sven
 Installation und Update auf echten Geräten (Windows und Android) – Schritt für Schritt:
 
@@ -122,6 +131,11 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 8. **Rückmeldung.** Klappt etwas nicht: Fehlermeldung/Screenshot und Gerät nennen. Die Update-Logik ist Unit-getestet, aber Austausch der laufenden exe, Installer-Übergabe (Android) und Signaturprüfung sind erst hier real geprüft. Danach die Checklisten oben („Manuelle Tests offen") durchgehen.
 
 9. **Einrichtungsassistent prüfen.** Die Punkte E1–E5 unter „Manuelle Tests offen“ auf Windows-Portable und Android durchgehen (frische Installation und eine mit Daten).
+
+### Nemo-Rebranding
+10. **GitHub-Repo umbenennen (optional).** Betrifft `REPO` (`core/update/github.ts`), den Updater-Endpunkt in `tauri.conf.json`, `RELEASES_PREFIX` in `update.rs`, README-Links und den Link-Check. GitHub leitet alte URLs zwar um, aber ein Update-Endpunkt darf nie kaputtgehen: erst einen Plan mit Übergangs-Release schreiben lassen, dann umbenennen.
+11. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
+12. **Später (eigener PR):** wenn alle Installationen ≥ diese Version haben, `latest.json` auf `Nemo-Portable.exe` umstellen und die `Taschenmesser-*`-Kopien aus dem Release entfernen. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
 
 ### Google-Verbindung einrichten (einmalig, für Kalender/Gmail)
 1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Nemo".

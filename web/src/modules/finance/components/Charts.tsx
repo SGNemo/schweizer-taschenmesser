@@ -10,6 +10,7 @@ import {
   type TooltipContentProps,
 } from 'recharts';
 import { formatMoney, formatMoneyAxis } from '@/core/money';
+import { useMediaQuery } from '@/ui';
 import { t } from '@/strings';
 import type { CategoryTotal, MonthPoint } from '../logic';
 import styles from '../routes/finance.module.css';
@@ -40,6 +41,7 @@ function CategoryTooltip({ active, payload }: TooltipContentProps) {
  * size, value at the bar tip. Hit target = the bar; the table twin carries every value.
  */
 export function CategoryBars({ rows }: { rows: CategoryTotal[] }) {
+  const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
   return (
     <div style={{ height: rows.length * ROW + 8 }} data-testid="chart-categories">
       <ResponsiveContainer width="100%" height="100%">
@@ -67,7 +69,9 @@ export function CategoryBars({ rows }: { rows: CategoryTotal[] }) {
             barSize={BAR}
             radius={[0, 4, 4, 0]}
             activeBar={{ fillOpacity: 0.8 }}
-            isAnimationActive={false}
+            isAnimationActive={motion}
+            animationDuration={240}
+            animationEasing="ease-out"
           >
             <LabelList
               dataKey="amountMinor"
@@ -107,6 +111,7 @@ function TrendTooltip({ active, payload }: TooltipContentProps) {
 
 /** Income vs. expenses per month: two series → legend (rect swatches) above, grouped columns with a 2px gap. */
 export function TrendColumns({ points }: { points: MonthPoint[] }) {
+  const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
   return (
     <div data-testid="chart-trend">
       <ul className={styles.legend} aria-label="Legende">
@@ -149,7 +154,9 @@ export function TrendColumns({ points }: { points: MonthPoint[] }) {
                 barSize={14}
                 radius={[4, 4, 0, 0]}
                 activeBar={{ fillOpacity: 0.8 }}
-                isAnimationActive={false}
+                isAnimationActive={motion}
+                animationDuration={240}
+                animationEasing="ease-out"
               />
             ))}
           </BarChart>
