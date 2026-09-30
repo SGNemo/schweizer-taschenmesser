@@ -6,6 +6,12 @@ import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { createAuth } from './auth.js';
 import { ensureVapidKeys, messageFor, type PushSender } from './push.js';
+import {
+  defaultDeps as defaultProxyDeps,
+  proxyFetch,
+  ProxyError,
+  type ProxyDeps,
+} from './proxy.js';
 import type { FieldOp, Store } from './store.js';
 
 export interface AppOptions {
@@ -20,6 +26,8 @@ export interface AppOptions {
   logger?: boolean;
   /** Sends Web Push messages. Without one, push routes still work but nothing is delivered. */
   pushSender?: PushSender;
+  /** DNS + HTTP used by `/v1/proxy`; tests inject fakes. */
+  proxy?: ProxyDeps;
   /** VAPID keys from the environment; otherwise they are generated once and stored. */
   vapid?: { publicKey?: string; privateKey?: string };
 }
@@ -58,7 +66,8 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   await app.register(cors, {
     origin: opts.corsOrigins ?? '*',
     methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
-    allowedHeaders: ['authorization', 'content-type'],
+    allowedHeaders: ['authorization', 'content-type', 'if-none-match', 'if-modified-since'],
+    exposedHeaders: ['etag', 'last-modified'],
     maxAge: 600,
   });
   await app.register(rateLimit, { max: opts.rateLimit ?? 600, timeWindow: '1 minute' });
@@ -261,6 +270,56 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
       return reply.code(502).send({ error: 'push-failed', status: status ?? null });
     }
   });
+
+  const PROXY_STATUS: Record<string, number> = {
+    'invalid-url': 400,
+    blocked: 403,
+    'unsupported-type': 415,
+    'too-large': 413,
+    'too-many-redirects': 502,
+    timeout: 504,
+    'upstream-error': 502,
+  };
+  app.get(
+    '/v1/proxy',
+    {
+      // Stricter than the global limit: this route makes the server open outgoing connections.
+      config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
+      schema: {
+        querystring: {
+          type: 'object',
+          required: ['url'],
+          additionalProperties: false,
+          properties: { url: { type: 'string', minLength: 8, maxLength: 2048 } },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { url } = req.query as { url: string };
+      try {
+        const r = await proxyFetch(
+          url,
+          {
+            ifNoneMatch: req.headers['if-none-match'],
+            ifModifiedSince: req.headers['if-modified-since'],
+          },
+          opts.proxy ?? defaultProxyDeps,
+        );
+        if (r.etag) reply.header('etag', r.etag);
+        if (r.lastModified) reply.header('last-modified', r.lastModified);
+        if (r.status === 304) return reply.code(304).send();
+        // Never let a fetched page run as HTML/script on our origin.
+        reply.header('content-security-policy', "default-src 'none'; sandbox");
+        return reply
+          .code(200)
+          .type(r.contentType ?? 'text/plain')
+          .send(r.body);
+      } catch (e) {
+        const code = e instanceof ProxyError ? e.code : 'upstream-error';
+        return reply.code(PROXY_STATUS[code] ?? 502).send({ error: code });
+      }
+    },
+  );
 
   if (opts.webDir && existsSync(join(opts.webDir, 'index.html'))) {
     await app.register(fastifyStatic, { root: opts.webDir });
