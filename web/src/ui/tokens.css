@@ -1,16 +1,39 @@
-/* Design tokens. Components only use these variables – no hard-coded colours. */
+/*
+ * Design tokens – the single place where Nemo's look is defined. Components and modules use only
+ * these variables (no hex colours, no fixed radii/shadows), so a change here restyles everything.
+ * Guide: CLAUDE.md → "Design-Richtlinien". Contrast values (WCAG AA) are noted next to the palette.
+ *
+ * Look ("Klar", decided 2026-09-30, docs/DECISIONS.md): flat surfaces on a solid page background,
+ * borders instead of shadows, one accent colour reserved for the primary action, calm controls.
+ *
+ * Structure: (1) scale tokens, (2) light theme = default, (3) dark theme – the block exists twice
+ * (explicit `data-theme='dark'` and the system preference); `tokens.test.ts` keeps both identical,
+ * (4) accent variants set through `data-accent` on <html> (orange is the default).
+ */
 :root {
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  /* Tabular figures for amounts, dates and tables: apply with `font-variant-numeric: var(--font-num)`. */
+  --font-num: tabular-nums;
 
+  /* Type scale */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.375rem;
   --text-2xl: clamp(1.5rem, 1.3rem + 0.6vw, 2rem);
+  /* Hero numbers (finance balance, tool results) */
+  --text-3xl: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
   --leading: 1.5;
+  --leading-tight: 1.25;
+  /* Three weights only: body 400, labels/buttons 500, titles 600, hero 700. */
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
 
+  /* Spacing */
+  --space-hair: 2px;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -20,9 +43,15 @@
   --space-7: 3rem;
 
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-full: 999px;
+
+  /* Icon sizes (lucide) */
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 28px;
 
   --touch: 44px;
   --sidebar-w: 248px;
@@ -33,82 +62,154 @@
   --page-wide: 100rem;
   --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
 
-  --dur-fast: 120ms;
-  --dur: 220ms;
-  --ease: cubic-bezier(0.2, 0, 0, 1);
+  /* Layer order (never write a bare z-index) */
+  --z-raised: 5;
+  --z-sticky: 10;
+  --z-nav: 15;
+  --z-fab: 20;
+  --z-hint: 30;
+  --z-toast: 60;
+  --z-skip: 100;
 
-  /* Light theme (default) */
+  /* Motion: 120–250 ms, transform/opacity only (see Design-Richtlinien). */
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 250ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ---- Light theme (default) ---- */
   color-scheme: light;
-  --bg: #f7f7f5;
+  --bg: #fbf8f3;
   --surface: #ffffff;
-  --surface-2: #f0f0ed;
-  --border: #e4e4df;
-  --text: #1c1d1f;
-  --text-muted: #5f6368;
-  --accent: #2f6f8f;
-  --accent-hover: #275c76;
-  --accent-contrast: #ffffff;
-  --accent-soft: #e3eff5;
+  --surface-2: #f3efe8;
+  /* Translucent surface for the skeleton shimmer and overlays on images. */
+  --surface-glass: rgb(255 255 255 / 0.78);
+  --border: #e6e1d8; /* decorative dividers */
+  --border-strong: #788489; /* form controls: 3.9:1 on surface, 3.4:1 on surface-2 (WCAG 1.4.11) */
+  --text: #13262f; /* 15.6:1 on surface */
+  --text-muted: #51616a; /* 6.1:1 on bg, 5.6:1 on surface-2 */
+  --accent-2: #0b6f72; /* turquoise, secondary accent (5.95:1 on surface) */
+  --accent-2-soft: #ddf1f0;
   --danger: #b3261e;
   --danger-soft: #fbe9e7;
-  --success: #1e7a46;
+  --success: #1b7545;
+  --success-soft: #e3f3ea;
   --warning: #8a5a00;
-  --focus: #1a5fd0;
-  /* Chart series (validated categorical slots 1 and 2, see CLAUDE.md) */
-  --viz-1: #2a78d6;
-  --viz-2: #eb6834;
-  --overlay: rgb(20 22 25 / 0.45);
-  --shadow-1: 0 1px 2px rgb(20 22 25 / 0.06), 0 1px 3px rgb(20 22 25 / 0.05);
-  --shadow-2: 0 8px 24px rgb(20 22 25 / 0.12), 0 2px 6px rgb(20 22 25 / 0.06);
+  --warning-soft: #fbf0da;
+  --focus: #0b6f72;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent);
+  /* Chart series (categorical slots 1 and 2) */
+  --viz-1: #16847f;
+  --viz-2: #e0601c;
+  --overlay: rgb(11 29 43 / 0.5);
+  /* Shadows only for floating layers (menus, dialogs, FAB); cards use borders. */
+  --shadow-1: 0 1px 2px rgb(19 38 47 / 0.06), 0 2px 8px rgb(19 38 47 / 0.05);
+  --shadow-2: 0 12px 32px rgb(19 38 47 / 0.14), 0 2px 6px rgb(19 38 47 / 0.06);
+  /* Accent (orange): filled primary action + FAB, text/link/icon colour. */
+  --accent: #b5430c; /* 5.6:1 on surface */
+  --accent-hover: #963709;
+  --accent-contrast: #ffffff; /* text on the filled accent, 5.6:1 */
+  --accent-soft: #fdebdd;
+  /* Ocean gradient, kept for the places that say "Nemo": splash, empty states, brand images. */
+  --ocean-from: #1d6b7a;
+  --ocean-to: #0e2f45;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #141517;
-  --surface: #1d1f22;
-  --surface-2: #26282c;
-  --border: #33363b;
-  --text: #ececea;
-  --text-muted: #a3a7ad;
-  --accent: #6cb4d4;
-  --accent-hover: #86c4e0;
-  --accent-contrast: #0e2530;
-  --accent-soft: #1f3540;
-  --danger: #f2a09a;
-  --danger-soft: #3a2220;
-  --success: #6fcf97;
-  --warning: #e0b050;
-  --focus: #8ab4ff;
-  --viz-1: #3987e5;
-  --viz-2: #d95926;
-  --overlay: rgb(0 0 0 / 0.6);
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
+  --bg: #0b1d2b;
+  --surface: #132b3a;
+  --surface-2: #1a3747;
+  --surface-glass: rgb(19 43 58 / 0.78);
+  --border: #26485b;
+  --border-strong: #71919e; /* 4.4:1 on surface, 3.7:1 on surface-2 */
+  --text: #e7f1f2;
+  --text-muted: #9fb6bc;
+  --accent-2: #4fd1c5;
+  --accent-2-soft: #16403f;
+  --danger: #f4a39c;
+  --danger-soft: #3a2426;
+  --success: #74d39c;
+  --success-soft: #163a2b;
+  --warning: #e8b85a;
+  --warning-soft: #3a3020;
+  --focus: #4fd1c5;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
+  --viz-1: #34b3ac;
+  --viz-2: #f27a38;
+  --overlay: rgb(3 12 20 / 0.65);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.18);
+  --shadow-2: 0 12px 32px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.25);
+  --accent: #ff9a57;
+  --accent-hover: #ffb07a;
+  --accent-contrast: #1b0f06;
+  --accent-soft: #3a2a22;
+  --ocean-from: #1d6b7a;
+  --ocean-to: #0e2f45;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bg: #141517;
-    --surface: #1d1f22;
-    --surface-2: #26282c;
-    --border: #33363b;
-    --text: #ececea;
-    --text-muted: #a3a7ad;
-    --accent: #6cb4d4;
-    --accent-hover: #86c4e0;
-    --accent-contrast: #0e2530;
-    --accent-soft: #1f3540;
-    --danger: #f2a09a;
-    --danger-soft: #3a2220;
-    --success: #6fcf97;
-    --warning: #e0b050;
-    --focus: #8ab4ff;
-    --viz-1: #3987e5;
-    --viz-2: #d95926;
-    --overlay: rgb(0 0 0 / 0.6);
-    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
+    --bg: #0b1d2b;
+    --surface: #132b3a;
+    --surface-2: #1a3747;
+    --surface-glass: rgb(19 43 58 / 0.78);
+    --border: #26485b;
+    --border-strong: #71919e; /* 4.4:1 on surface, 3.7:1 on surface-2 */
+    --text: #e7f1f2;
+    --text-muted: #9fb6bc;
+    --accent-2: #4fd1c5;
+    --accent-2-soft: #16403f;
+    --danger: #f4a39c;
+    --danger-soft: #3a2426;
+    --success: #74d39c;
+    --success-soft: #163a2b;
+    --warning: #e8b85a;
+    --warning-soft: #3a3020;
+    --focus: #4fd1c5;
+    --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
+    --viz-1: #34b3ac;
+    --viz-2: #f27a38;
+    --overlay: rgb(3 12 20 / 0.65);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.18);
+    --shadow-2: 0 12px 32px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.25);
+    --accent: #ff9a57;
+    --accent-hover: #ffb07a;
+    --accent-contrast: #1b0f06;
+    --accent-soft: #3a2a22;
+    --ocean-from: #1d6b7a;
+    --ocean-to: #0e2f45;
+  }
+}
+
+/*
+ * Accent variants (Einstellungen → Darstellung). Each value pair is (light, dark); every combination
+ * was checked for AA: accent text ≥ 5.2:1 on surface/bg, button text ≥ 4.6:1 on the accent.
+ * Browsers without light-dark() keep the orange default.
+ */
+@supports (color: light-dark(#000, #fff)) {
+  :root[data-accent='teal'] {
+    --accent: light-dark(#0b6f72, #4fd1c5);
+    --accent-hover: light-dark(#095c5f, #7fe3da);
+    --accent-contrast: light-dark(#ffffff, #06201f);
+    --accent-soft: light-dark(#ddf1f0, #16403f);
+    --accent-2: light-dark(#b5430c, #ff9a57);
+    --accent-2-soft: light-dark(#fdebdd, #3a2a22);
+  }
+  :root[data-accent='coral'] {
+    --accent: light-dark(#b3374a, #ff93a5);
+    --accent-hover: light-dark(#962d3e, #ffb0bd);
+    --accent-contrast: light-dark(#ffffff, #2a0a12);
+    --accent-soft: light-dark(#fce6ea, #40252d);
+  }
+  :root[data-accent='lagoon'] {
+    --accent: light-dark(#1f5fa8, #8dbdf5);
+    --accent-hover: light-dark(#194f8d, #b0d3fa);
+    --accent-contrast: light-dark(#ffffff, #08192b);
+    --accent-soft: light-dark(#e0ecfa, #1d3550);
   }
 }
 
@@ -116,5 +217,6 @@
   :root {
     --dur-fast: 0ms;
     --dur: 0ms;
+    --dur-slow: 0ms;
   }
 }

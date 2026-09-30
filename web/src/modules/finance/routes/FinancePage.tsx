@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Card, Icon, IconButton, SplitView, useSplitView } from '@/ui';
+import { Button, Card, Icon, IconButton, Segmented, SplitView, useSplitView } from '@/ui';
 import { TransactionEditor, type TransactionTarget } from '../components/Editors';
 import { OverviewTab } from '../components/OverviewTab';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
@@ -65,16 +65,13 @@ export default function FinancePage() {
         </Button>
       </div>
 
-      <div
-        className={`${styles.segment} ${styles.tabs}`}
-        role="group"
-        aria-label={t.finance.tabsLabel}
-      >
-        {TABS.map((k) => (
-          <button key={k} type="button" aria-pressed={tab === k} onClick={() => go({ tab: k })}>
-            {t.finance.tabs[k]}
-          </button>
-        ))}
+      <div className={styles.tabs}>
+        <Segmented
+          label={t.finance.tabsLabel}
+          value={tab}
+          options={TABS.map((k) => ({ value: k, label: t.finance.tabs[k] }))}
+          onChange={(k) => go({ tab: k })}
+        />
       </div>
 
       {tab === 'overview' || tab === 'transactions' ? (

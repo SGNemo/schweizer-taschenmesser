@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { createElement, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createContext } from '@/core/connectors/context';
 import { connectors } from '@/core/connectors/registry';
 import {
@@ -17,7 +17,7 @@ import {
 import { saveStatus, useConnectorStatus } from '@/core/connectors/state';
 import type { ConnectorContext, ConnectorDef, ExternalCalendar } from '@/core/connectors/types';
 import { getPlatform } from '@/core/platform';
-import { formatDay } from '@/core/time/dates';
+import { formatDay, pad2, toDateString } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Card, Checkbox, Dialog, Icon, TextField } from '@/ui';
@@ -27,9 +27,8 @@ const s = t.connectors;
 
 function formatWhen(ms: number): string {
   const d = new Date(ms);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const day = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  return `${formatDay(day, 'd. MMM yyyy')}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const day = toDateString(d);
+  return `${formatDay(day, 'd. MMM yyyy')}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
 function ClientForm({ def, onSaved }: { def: ConnectorDef; onSaved: () => void }) {
@@ -97,7 +96,7 @@ function ExtraSettings({
   return def.settings ? createElement(def.settings, { ctx, onChanged }) : null;
 }
 
-function ConnectorCard({ def }: { def: ConnectorDef }) {
+export function ConnectorCard({ def }: { def: ConnectorDef }) {
   const platform = getPlatform();
   const toast = useUiStore((st) => st.toast);
   const status = useConnectorStatus(def.id);
@@ -117,10 +116,17 @@ function ConnectorCard({ def }: { def: ConnectorDef }) {
   const active = features ?? status?.features ?? def.features.map((f) => f.id);
   const connected = state === 'connected' || state === 'rate-limited' || state === 'error';
 
+  // A login that is still waiting for the browser is abandoned when the card goes away.
+  const loginAbort = useRef<AbortController | null>(null);
+  useEffect(() => () => loginAbort.current?.abort(), []);
+
   async function login() {
     setBusy('connect');
+    const controller = new AbortController();
+    loginAbort.current = controller;
     try {
-      const next = await connectOAuth(def, active);
+      const next = await connectOAuth(def, active, { signal: controller.signal });
+      if (controller.signal.aborted) return;
       if (next.state === 'connected' && def.calendar && active.includes('calendar')) {
         try {
           await listCalendars(def);
@@ -224,6 +230,9 @@ function ConnectorCard({ def }: { def: ConnectorDef }) {
                     ? s.reconnect
                     : s.connect}
               </Button>
+              {busy === 'connect' ? (
+                <Button onClick={() => loginAbort.current?.abort()}>{s.cancelLogin}</Button>
+              ) : null}
               {connected ? <Button onClick={() => setConfirm(true)}>{s.disconnect}</Button> : null}
             </div>
           </>

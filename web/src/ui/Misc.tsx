@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Icon, type IconName } from './icons';
+import { Logo } from './Logo';
 import styles from './Misc.module.css';
 
 export function Badge({
@@ -9,28 +10,58 @@ export function Badge({
   tone = 'neutral',
 }: {
   children: ReactNode;
-  tone?: 'neutral' | 'accent';
+  tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
 }) {
   return (
-    <span className={[styles.badge, tone === 'accent' ? styles.accent : ''].join(' ')}>
+    <span className={[styles.badge, tone === 'neutral' ? '' : styles[tone]].join(' ')}>
       {children}
     </span>
   );
 }
 
-export function EmptyState({
-  icon = 'puzzle',
-  title,
-  children,
+/** Loading placeholder with a soft shimmer (use instead of a spinner). Size it with CSS/props. */
+export function Skeleton({
+  width = '100%',
+  height = '1rem',
+  radius,
 }: {
-  icon?: IconName;
-  title: string;
-  children?: ReactNode;
+  width?: string | number;
+  height?: string | number;
+  radius?: string;
 }) {
   return (
-    <div className={styles.empty}>
-      <Icon name={icon} size={32} />
-      <h2 className={styles.emptyTitle}>{title}</h2>
+    <span
+      className={styles.skeleton}
+      style={{ width, height, borderRadius: radius }}
+      aria-hidden="true"
+    />
+  );
+}
+
+export function EmptyState({
+  icon,
+  title,
+  compact,
+  children,
+}: {
+  /** Without an icon the empty state shows the (faded) Nemo fish. */
+  icon?: IconName;
+  title: string;
+  /** One-line variant for dashboard widgets and other small containers. */
+  compact?: boolean;
+  children?: ReactNode;
+}) {
+  const mark = compact ? 22 : 28;
+  return (
+    <div className={compact ? `${styles.empty} ${styles.emptyCompact}` : styles.empty}>
+      <span className={styles.emptyMark}>
+        {icon ? <Icon name={icon} size={mark} /> : <Logo size={compact ? 22 : 36} />}
+      </span>
+      {compact ? (
+        <p className={styles.emptyTitle}>{title}</p>
+      ) : (
+        <h2 className={styles.emptyTitle}>{title}</h2>
+      )}
       {children}
     </div>
   );

@@ -5,7 +5,6 @@
 //! read the credential without the prompt. It keeps other people at an unlocked PC out of the vault;
 //! the master password remains the real protection (documented in CLAUDE.md).
 
-use windows_future::IAsyncOperation;
 use windows::{
     core::{factory, HSTRING},
     Security::Credentials::UI::{
@@ -13,6 +12,7 @@ use windows::{
     },
     Win32::{Foundation::HWND, System::WinRT::IUserConsentVerifierInterop},
 };
+use windows_future::IAsyncOperation;
 
 pub fn available() -> bool {
     UserConsentVerifier::CheckAvailabilityAsync()
@@ -23,8 +23,8 @@ pub fn available() -> bool {
 
 /// `Ok(true)` verified, `Ok(false)` cancelled/failed by the user.
 pub fn verify(hwnd: isize, message: &str) -> Result<bool, String> {
-    let interop = factory::<UserConsentVerifier, IUserConsentVerifierInterop>()
-        .map_err(|e| e.to_string())?;
+    let interop =
+        factory::<UserConsentVerifier, IUserConsentVerifierInterop>().map_err(|e| e.to_string())?;
     // SAFETY: `hwnd` is the handle of our own main window; `message` outlives the call.
     let op: IAsyncOperation<UserConsentVerificationResult> = unsafe {
         interop

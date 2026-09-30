@@ -7,12 +7,15 @@
   padding: 0 var(--space-4);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  font-weight: 550;
+  font-weight: var(--weight-medium);
   cursor: pointer;
   text-decoration: none;
-  transition:
-    background-color var(--dur-fast) var(--ease),
-    transform var(--dur-fast) var(--ease);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
 }
 .btn:active:not(:disabled) {
   transform: scale(0.98);
@@ -31,7 +34,7 @@
 .secondary {
   background: var(--surface);
   color: var(--text);
-  border-color: var(--border);
+  border-color: var(--border-strong);
 }
 .secondary:hover:not(:disabled) {
   background: var(--surface-2);

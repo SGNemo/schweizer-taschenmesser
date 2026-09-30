@@ -91,6 +91,40 @@ export default tseslint.config(
     },
   },
   {
+    // Quick capture writes into modules only through manifests + createRepo (targets/*), never by
+    // importing module code. The parser is a pure package: relative imports only.
+    files: ['src/quickCapture/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/modules/*', '@/modules'],
+              message:
+                'Quick capture must not import modules. Write through the manifest and createRepo in targets/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/quickCapture/parser/**/*.ts'],
+    ignores: ['**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { regex: '^[^.]', message: 'The parser is pure TypeScript: relative imports only.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Sanctioned cross-read: finance may import public.ts of subscriptions and invoices.
     files: ['src/modules/finance/**/*.{ts,tsx}'],
     rules: {

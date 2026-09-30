@@ -1,8 +1,9 @@
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, today } from '@/core/time/dates';
 import { weekdayShort } from '@/core/recurrence/describe';
+import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
-import { Button, useMediaQuery } from '@/ui';
+import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
 import { groupByDate, monthWeeks } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
 import { TimeGrid } from './TimeGrid';
@@ -30,12 +31,13 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
   const byDate = groupByDate(items);
   const now = today();
   const MAX_CHIPS = useChipLimit();
+  const weekStart = useWeekStart();
   return (
     <div className={styles.monthWrap}>
       <table className={styles.month}>
         <thead>
           <tr>
-            {[1, 2, 3, 4, 5, 6, 7].map((wd) => (
+            {(weekStart === 7 ? [7, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 7]).map((wd) => (
               <th key={wd} scope="col">
                 {weekdayShort(wd)}
               </th>
@@ -43,7 +45,7 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
           </tr>
         </thead>
         <tbody>
-          {monthWeeks(date).map((week) => (
+          {monthWeeks(date, weekStart).map((week) => (
             <tr key={week[0]}>
               {week.map((d) => {
                 const list = byDate.get(d) ?? [];
@@ -135,7 +137,7 @@ export function WeekView({
               </button>
             </h3>
             {list.length === 0 ? (
-              <p className={styles.muted}>{t.calendar.nothing}</p>
+              <EmptyState compact title={t.calendar.nothing} />
             ) : (
               <ul className={styles.itemList}>
                 {list.map((i) => (
@@ -163,13 +165,13 @@ export function DayView({
     );
   return (
     <div>
-      {items.length === 0 ? <p className={styles.muted}>{t.calendar.nothing}</p> : null}
+      {items.length === 0 ? <EmptyState compact title={t.calendar.nothing} /> : null}
       <ul className={styles.itemList}>
         {items.map((i) => (
           <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} />
         ))}
       </ul>
-      <div style={{ marginTop: 'var(--space-4)' }}>
+      <div className={patternStyles.gapTop}>
         <Button onClick={() => onAdd(date)}>{t.calendar.newEvent}</Button>
       </div>
     </div>

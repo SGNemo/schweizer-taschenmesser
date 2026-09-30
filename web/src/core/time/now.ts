@@ -10,13 +10,14 @@ export function setNow(fn?: () => number): void {
   nowFn = fn ?? (() => Date.now());
 }
 
-function pad(n: number): string {
+/** Two-digit zero padding for dates and times ('7' → '07'). */
+export function pad2(n: number): string {
   return String(n).padStart(2, '0');
 }
 
 /** Local calendar date as 'YYYY-MM-DD'. */
 export function toDateString(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
 /** Today's local date as 'YYYY-MM-DD'. */

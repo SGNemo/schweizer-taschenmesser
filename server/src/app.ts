@@ -3,8 +3,14 @@ import { join } from 'node:path';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
-import Fastify, { type FastifyInstance } from 'fastify';
-import { createAuth } from './auth.js';
+import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
+import {
+  createAuthenticator,
+  createFailureLimiter,
+  hashToken,
+  newDeviceToken,
+  type AuthResult,
+} from './auth.js';
 import { ensureVapidKeys, messageFor, type PushSender } from './push.js';
 import {
   defaultDeps as defaultProxyDeps,
@@ -12,7 +18,25 @@ import {
   ProxyError,
   type ProxyDeps,
 } from './proxy.js';
-import type { FieldOp, Store } from './store.js';
+import type { FieldOp, Store, Vault } from './store.js';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    /** Who the bearer token belongs to (set for every authenticated `/v1/` request). */
+    auth?: AuthResult;
+  }
+}
+
+/** Protocol level of this server. 2 adds devices, `/v1/info`, `/v1/status` and Argon2id vaults. */
+export const PROTOCOL_VERSION = 2;
+export const FEATURES = ['devices', 'stats', 'vault-v2'] as const;
+
+/** Feed URLs may carry private tokens: never write the query of `/v1/proxy` to the log. */
+export const redactUrl = (url: string): string =>
+  url.startsWith('/v1/proxy?') ? '/v1/proxy?url=[redacted]' : url;
+
+const DEVICE_ID_PATTERN = '^[a-z0-9]{1,32}$';
+const TOUCH_INTERVAL_MS = 60_000;
 
 export interface AppOptions {
   store: Store;
@@ -24,6 +48,12 @@ export interface AppOptions {
   /** Requests per minute and client address. */
   rateLimit?: number;
   logger?: boolean;
+  /** Trust `X-Forwarded-For` (set only behind your own reverse proxy), so limits count real clients. */
+  trustProxy?: boolean;
+  /** Failed logins per client address and minute before it is blocked (default 20). */
+  authFailureLimit?: number;
+  /** Clock override for tests. */
+  clock?: () => number;
   /** Sends Web Push messages. Without one, push routes still work but nothing is delivered. */
   pushSender?: PushSender;
   /** DNS + HTTP used by `/v1/proxy`; tests inject fakes. */
@@ -55,9 +85,27 @@ const opSchema = {
 /** Async because plugins (rate limit!) must be loaded before the routes they protect are added. */
 export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   const { store } = opts;
-  const isAuthorized = createAuth(opts.tokens);
+  const clock = opts.clock ?? Date.now;
+  const authenticate = createAuthenticator(opts.tokens, (h) => {
+    const d = store.deviceByTokenHash(h);
+    return d && { id: d.id, revoked: d.revoked };
+  });
+  const failures = createFailureLimiter(opts.authFailureLimit ?? 20, 60_000, clock);
+  const lastTouch = new Map<string, number>();
   const app = Fastify({
-    logger: opts.logger ?? false,
+    logger: opts.logger
+      ? {
+          serializers: {
+            req: (req: FastifyRequest) => ({
+              method: req.method,
+              url: redactUrl(req.url),
+              host: req.host,
+              remoteAddress: req.ip,
+            }),
+          },
+        }
+      : false,
+    trustProxy: opts.trustProxy ?? false,
     bodyLimit: 8 * 1024 * 1024,
     // Reject unknown properties instead of silently stripping them (Fastify's default).
     ajv: { customOptions: { removeAdditional: false } },
@@ -65,7 +113,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
 
   await app.register(cors, {
     origin: opts.corsOrigins ?? '*',
-    methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['authorization', 'content-type', 'if-none-match', 'if-modified-since'],
     exposedHeaders: ['etag', 'last-modified'],
     maxAge: 600,
@@ -78,8 +126,25 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     reply.header('x-content-type-options', 'nosniff');
     // CORS preflight carries no credentials; the cors plugin answers it before this hook matters.
     if (req.method === 'OPTIONS' || req.url === '/v1/health') return;
-    if (!isAuthorized(req.headers.authorization)) {
+    const wait = failures.blockedFor(req.ip);
+    if (wait > 0) {
+      return reply.code(429).header('retry-after', wait).send({ error: 'too-many-failures' });
+    }
+    const who = authenticate(req.headers.authorization);
+    if (!who) {
+      failures.fail(req.ip);
       return reply.code(401).header('www-authenticate', 'Bearer').send({ error: 'unauthorized' });
+    }
+    if (who.role === 'revoked') {
+      return reply.code(401).header('www-authenticate', 'Bearer').send({ error: 'revoked' });
+    }
+    req.auth = who;
+    if (who.role === 'device') {
+      const at = clock();
+      if (at - (lastTouch.get(who.deviceId) ?? 0) >= TOUCH_INTERVAL_MS) {
+        lastTouch.set(who.deviceId, at);
+        store.touchDevice(who.deviceId, at, 'seen');
+      }
     }
   });
 
@@ -98,12 +163,27 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
           properties: {
             salt: { type: 'string', minLength: 8, maxLength: 256 },
             check: { type: 'string', minLength: 8, maxLength: 1024 },
+            v: { const: 2 },
+            kdf: {
+              type: 'object',
+              required: ['alg', 'm', 't', 'p'],
+              additionalProperties: false,
+              properties: {
+                alg: { const: 'argon2id' },
+                m: { type: 'integer', minimum: 8, maximum: 1_048_576 },
+                t: { type: 'integer', minimum: 1, maximum: 32 },
+                p: { type: 'integer', minimum: 1, maximum: 16 },
+              },
+            },
           },
         },
       },
     },
     async (req, reply) => {
-      const created = store.setVault(req.body as { salt: string; check: string });
+      const body = req.body as Vault;
+      // A v2 vault needs its KDF parameters and the other way round.
+      if ((body.v === 2) !== Boolean(body.kdf)) return reply.code(400).send({ error: 'bad-vault' });
+      const created = store.setVault(body);
       if (!created) return reply.code(409).send({ error: 'vault-exists', vault: store.vault() });
       return reply.code(201).send({ epoch: store.epoch() });
     },
@@ -127,6 +207,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
         return reply.code(413).send({ error: 'value-too-large' });
       }
       const { accepted, cursor } = store.push(ops);
+      if (req.auth?.role === 'device') store.touchDevice(req.auth.deviceId, clock(), 'push');
       return { epoch: store.epoch(), accepted, cursor };
     },
   );
@@ -146,6 +227,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     },
     async (req) => {
       const { since = 0, limit = 1000 } = req.query as { since?: number; limit?: number };
+      if (req.auth?.role === 'device') store.touchDevice(req.auth.deviceId, clock(), 'pull');
       return { epoch: store.epoch(), ...store.pull(since, limit) };
     },
   );
@@ -162,8 +244,90 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
         },
       },
     },
-    async () => ({ epoch: store.reset() }),
+    async (req, reply) => {
+      // Wiping the data set is an admin action; a device token (possibly stolen) must not do it.
+      if (req.auth?.role !== 'admin') return reply.code(403).send({ error: 'forbidden' });
+      return { epoch: store.reset() };
+    },
   );
+
+  /* ---- Protocol info, size and devices (protocol 2) ---- */
+  app.get('/v1/info', async (req) => ({
+    protocol: PROTOCOL_VERSION,
+    features: FEATURES,
+    role: req.auth?.role ?? 'admin',
+    deviceId: req.auth?.role === 'device' ? req.auth.deviceId : null,
+  }));
+
+  app.get('/v1/status', async () => ({
+    epoch: store.epoch(),
+    ...store.stats(),
+    devices: store.listDevices().filter((d) => d.revokedAt === null).length,
+  }));
+
+  const deviceView = (d: ReturnType<Store['listDevices']>[number], current?: string) => ({
+    ...d,
+    current: d.id === current,
+  });
+
+  app.get('/v1/devices', async (req) => ({
+    devices: store
+      .listDevices()
+      .map((d) => deviceView(d, req.auth?.role === 'device' ? req.auth.deviceId : undefined)),
+  }));
+
+  app.post(
+    '/v1/devices',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['id', 'name'],
+          additionalProperties: false,
+          properties: {
+            id: { type: 'string', pattern: DEVICE_ID_PATTERN },
+            name: { type: 'string', minLength: 1, maxLength: 64 },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      // Only the shared (admin) token registers devices; the device then works with its own token.
+      if (req.auth?.role !== 'admin') return reply.code(403).send({ error: 'forbidden' });
+      const { id, name } = req.body as { id: string; name: string };
+      const token = newDeviceToken();
+      if (!store.createDevice({ id, name, tokenHash: hashToken(token), at: clock() })) {
+        return reply.code(409).send({ error: 'device-exists' });
+      }
+      return reply.code(201).send({ id, name, token });
+    },
+  );
+
+  const idParams = {
+    type: 'object',
+    required: ['id'],
+    properties: { id: { type: 'string', pattern: DEVICE_ID_PATTERN } },
+  } as const;
+
+  // Token rotation: admin for any device, a device for itself. The old token stops working at once.
+  app.post('/v1/devices/:id/rotate', { schema: { params: idParams } }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const own = req.auth?.role === 'device' && req.auth.deviceId === id;
+    if (req.auth?.role !== 'admin' && !own) return reply.code(403).send({ error: 'forbidden' });
+    const token = newDeviceToken();
+    if (!store.rotateDeviceToken(id, hashToken(token))) {
+      return reply.code(404).send({ error: 'unknown-device' });
+    }
+    return { id, token };
+  });
+
+  // Locks a device out. Any authenticated device may do it, so a lost phone can be locked from the
+  // laptop; devices cannot create devices or reset the server.
+  app.delete('/v1/devices/:id', { schema: { params: idParams } }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    if (!store.revokeDevice(id, clock())) return reply.code(404).send({ error: 'unknown-device' });
+    return { ok: true };
+  });
 
   const vapid = ensureVapidKeys(store, opts.vapid);
   const subscriptionBody = {
@@ -257,7 +421,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
         messageFor({
           key: 'test',
           payload: JSON.stringify({
-            title: 'Taschenmesser',
+            title: 'Nemo',
             body: 'Push funktioniert.',
             url: '/settings',
           }),

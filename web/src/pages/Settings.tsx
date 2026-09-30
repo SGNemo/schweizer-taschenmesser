@@ -7,18 +7,21 @@ import { JSON_IMPORTER_ID } from '@/core/dataapi/importer';
 import { useModuleStates } from '@/core/modules/activation';
 import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
-import { useUiStore, type ThemeChoice } from '@/stores/ui';
+import { ACCENTS, useUiStore, type AccentChoice, type ThemeChoice } from '@/stores/ui';
 import { Button, Card, HelpHint, SelectField, Switch, TextField } from '@/ui';
 import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
+import { SetupSection } from './settings/SetupSection';
 import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
 import { LocalApiSection } from './settings/LocalApiSection';
+import { QuickCaptureSection } from './settings/QuickCaptureSection';
 import { UpdateSection } from './settings/UpdateSection';
+import { AboutSection } from './settings/AboutSection';
 import styles from './Page.module.css';
 
 function SectionTitle({ id, hint, children }: { id: string; hint?: string; children: string }) {
@@ -127,31 +130,50 @@ function NotificationsCard() {
 
 export function Settings() {
   const theme = useUiStore((s) => s.theme);
+  const accent = useUiStore((s) => s.accent);
+  const setAccent = useUiStore((s) => s.setAccent);
   const setTheme = useUiStore((s) => s.setTheme);
   const states = useModuleStates();
-  const withSettings = visibleManifests.filter(
+  const withSettings = availableManifests().filter(
     (m) => states?.[m.id] && m.settings.fields.length > 0,
   );
 
-  const withStartData = visibleManifests.filter((m) => states?.[m.id] && hasStartData(m));
+  const withStartData = availableManifests().filter((m) => states?.[m.id] && hasStartData(m));
 
   return (
     <>
       <div className={styles.header}>
         <h1>{t.settings.title}</h1>
       </div>
+      <section className={styles.section} aria-labelledby="setup">
+        <h2 id="setup">{t.setup.title}</h2>
+        <SetupSection />
+      </section>
       <section className={styles.section} aria-labelledby="appearance">
         <h2 id="appearance">{t.settings.appearance}</h2>
         <Card>
-          <SelectField
-            label={t.settings.theme}
-            value={theme}
-            onChange={(e) => setTheme(e.target.value as ThemeChoice)}
-          >
-            <option value="system">{t.settings.themeSystem}</option>
-            <option value="light">{t.settings.themeLight}</option>
-            <option value="dark">{t.settings.themeDark}</option>
-          </SelectField>
+          <div className={styles.appearance}>
+            <SelectField
+              label={t.settings.theme}
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as ThemeChoice)}
+            >
+              <option value="system">{t.settings.themeSystem}</option>
+              <option value="light">{t.settings.themeLight}</option>
+              <option value="dark">{t.settings.themeDark}</option>
+            </SelectField>
+            <SelectField
+              label={t.settings.accent}
+              value={accent}
+              onChange={(e) => setAccent(e.target.value as AccentChoice)}
+            >
+              {ACCENTS.map((a) => (
+                <option key={a} value={a}>
+                  {t.settings.accentOptions[a]}
+                </option>
+              ))}
+            </SelectField>
+          </div>
         </Card>
       </section>
       <section className={styles.section} aria-labelledby="notifications">
@@ -187,11 +209,19 @@ export function Settings() {
         </SectionTitle>
         <LocalApiSection />
       </section>
+      <section className={styles.section} aria-labelledby="quickcapture">
+        <h2 id="quickcapture">{t.quickCapture.settings.title}</h2>
+        <QuickCaptureSection />
+      </section>
       <section className={styles.section} aria-labelledby="updates">
         <SectionTitle id="updates" hint={t.help.updateChannel}>
           {t.update.title}
         </SectionTitle>
         <UpdateSection />
+      </section>
+      <section className={styles.section} aria-labelledby="about">
+        <h2 id="about">{t.about.title}</h2>
+        <AboutSection />
       </section>
       {withStartData.length > 0 ? (
         <section className={styles.section} aria-labelledby="startdata">

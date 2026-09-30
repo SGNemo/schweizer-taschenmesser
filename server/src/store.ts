@@ -23,6 +23,28 @@ export interface Vault {
   salt: string;
   /** Encrypted known plaintext, lets clients verify a passphrase without any user data. */
   check: string;
+  /** Key derivation of the passphrase. Absent = legacy PBKDF2 vault; 2 = Argon2id with `kdf`. */
+  v?: 2;
+  kdf?: { alg: 'argon2id'; m: number; t: number; p: number };
+}
+
+export interface DeviceRecord {
+  id: string;
+  name: string;
+  createdAt: number;
+  lastSeenAt: number | null;
+  lastPushAt: number | null;
+  lastPullAt: number | null;
+  revokedAt: number | null;
+}
+
+export interface StoreStats {
+  /** Stored field values. */
+  fields: number;
+  /** Distinct records. */
+  records: number;
+  /** Size of the stored values in bytes (ciphertext when end-to-end encrypted). */
+  bytes: number;
 }
 
 export interface PushSubscriptionRecord {
@@ -50,8 +72,21 @@ export interface Store {
   /** Accepts an op only if its HLC is greater than the stored one (field-level last-write-wins). */
   push(ops: FieldOp[]): { accepted: number; cursor: number };
   pull(since: number, limit: number): PullResult;
-  /** Wipes all data and the vault; returns the new epoch. Push subscriptions survive, their schedules do not. */
+  /** Wipes all data and the vault; returns the new epoch. Push subscriptions and devices survive. */
   reset(): string;
+  stats(): StoreStats;
+
+  /* ---- Devices (per-device tokens; only SHA-256 hashes are stored) ---- */
+  /** False when the id exists already. */
+  createDevice(device: { id: string; name: string; tokenHash: string; at: number }): boolean;
+  /** Replaces the token of an existing, not revoked device; false otherwise. */
+  rotateDeviceToken(id: string, tokenHash: string): boolean;
+  deviceByTokenHash(tokenHash: string): (DeviceRecord & { revoked: boolean }) | undefined;
+  getDevice(id: string): DeviceRecord | undefined;
+  listDevices(): DeviceRecord[];
+  /** False when unknown; revoking twice keeps the first timestamp. */
+  revokeDevice(id: string, at: number): boolean;
+  touchDevice(id: string, at: number, kind: 'seen' | 'push' | 'pull'): void;
 
   /* ---- Web Push ---- */
   vapid(): { publicKey: string; privateKey: string } | null;
@@ -86,6 +121,16 @@ CREATE TABLE IF NOT EXISTS field_state (
   PRIMARY KEY (collection, id, field)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS field_state_seq ON field_state (seq);
+CREATE TABLE IF NOT EXISTS device (
+  id           TEXT PRIMARY KEY,
+  name         TEXT NOT NULL,
+  token_hash   TEXT NOT NULL UNIQUE,
+  created_at   INTEGER NOT NULL,
+  last_seen_at INTEGER,
+  last_push_at INTEGER,
+  last_pull_at INTEGER,
+  revoked_at   INTEGER
+) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS push_subscription (
   endpoint TEXT PRIMARY KEY,
   p256dh   TEXT NOT NULL,
@@ -170,11 +215,42 @@ export function openStore(path: string): Store {
     db.exec('DELETE FROM push_sent');
     delMeta.run('vault.salt');
     delMeta.run('vault.check');
+    delMeta.run('vault.kdf');
     const epoch = newEpoch();
     setMeta.run('epoch', epoch);
     seq = 0;
     return epoch;
   });
+
+  const deviceCols = `id, name, created_at AS createdAt, last_seen_at AS lastSeenAt,
+    last_push_at AS lastPushAt, last_pull_at AS lastPullAt, revoked_at AS revokedAt`;
+  const insertDevice = db.prepare(
+    `INSERT OR IGNORE INTO device (id, name, token_hash, created_at) VALUES (@id, @name, @tokenHash, @at)`,
+  );
+  const rotateDevice = db.prepare(
+    'UPDATE device SET token_hash = ? WHERE id = ? AND revoked_at IS NULL',
+  );
+  const deviceByHash = db.prepare<[string], DeviceRecord>(
+    `SELECT ${deviceCols} FROM device WHERE token_hash = ?`,
+  );
+  const deviceById = db.prepare<[string], DeviceRecord>(
+    `SELECT ${deviceCols} FROM device WHERE id = ?`,
+  );
+  const allDevices = db.prepare<[], DeviceRecord>(
+    `SELECT ${deviceCols} FROM device ORDER BY created_at, id`,
+  );
+  const revoke = db.prepare('UPDATE device SET revoked_at = COALESCE(revoked_at, ?) WHERE id = ?');
+  const touchCols = {
+    seen: db.prepare('UPDATE device SET last_seen_at = ? WHERE id = ?'),
+    push: db.prepare('UPDATE device SET last_seen_at = ?, last_push_at = ? WHERE id = ?'),
+    pull: db.prepare('UPDATE device SET last_seen_at = ?, last_pull_at = ? WHERE id = ?'),
+  };
+  const statsRow = db.prepare<[], StoreStats>(
+    `SELECT COUNT(*) AS fields,
+            COALESCE(SUM(LENGTH(value)), 0) AS bytes,
+            (SELECT COUNT(*) FROM (SELECT 1 FROM field_state GROUP BY collection, id)) AS records
+     FROM field_state`,
+  );
 
   const upsertSub = db.prepare(
     `INSERT INTO push_subscription (endpoint, p256dh, auth) VALUES (@endpoint, @p256dh, @auth)
@@ -265,15 +341,34 @@ export function openStore(path: string): Store {
     vault() {
       const salt = meta('vault.salt');
       const check = meta('vault.check');
-      return salt && check ? { salt, check } : null;
+      if (!salt || !check) return null;
+      const kdf = meta('vault.kdf');
+      return kdf
+        ? { salt, check, v: 2, kdf: JSON.parse(kdf) as NonNullable<Vault['kdf']> }
+        : { salt, check };
     },
     setVault(v) {
       if (meta('vault.salt')) return false;
       db.transaction(() => {
         setMeta.run('vault.salt', v.salt);
         setMeta.run('vault.check', v.check);
+        if (v.kdf) setMeta.run('vault.kdf', JSON.stringify(v.kdf));
       })();
       return true;
+    },
+    stats: () => statsRow.get()!,
+    createDevice: (d) => insertDevice.run(d).changes > 0,
+    rotateDeviceToken: (id, tokenHash) => rotateDevice.run(tokenHash, id).changes > 0,
+    deviceByTokenHash(tokenHash) {
+      const d = deviceByHash.get(tokenHash);
+      return d ? { ...d, revoked: d.revokedAt !== null } : undefined;
+    },
+    getDevice: (id) => deviceById.get(id),
+    listDevices: () => allDevices.all(),
+    revokeDevice: (id, at) => revoke.run(at, id).changes > 0,
+    touchDevice(id, at, kind) {
+      if (kind === 'seen') touchCols.seen.run(at, id);
+      else touchCols[kind].run(at, at, id);
     },
     push(ops) {
       const accepted = pushTx(ops);

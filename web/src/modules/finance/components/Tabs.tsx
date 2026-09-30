@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { formatMoney } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon } from '@/ui';
+import { Button, EmptyState, Icon, patternStyles } from '@/ui';
 import { AccountEditor, CategoryEditor, type AccountTarget, type CategoryTarget } from './Editors';
 import { balances, signed } from '../logic';
 import type { FinanceData } from '../types';
@@ -74,7 +74,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
   const map = balances(data.accounts, data.txs, today());
   return (
     <>
-      <div style={{ marginBottom: 'var(--space-4)' }}>
+      <div className={patternStyles.gapBottom}>
         <Button
           variant="primary"
           onClick={() => setTarget({ draft: true, order: data.accounts.length })}

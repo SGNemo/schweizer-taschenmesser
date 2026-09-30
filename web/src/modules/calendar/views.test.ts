@@ -194,3 +194,18 @@ describe('splitDay', () => {
     expect(timed[1]!.end).toBe(24 * 60);
   });
 });
+
+describe('calendar with Sunday as first weekday', () => {
+  it('starts weeks on Sunday and keeps the ISO week number of the Monday', () => {
+    expect(rangeFor('week', '2026-09-29', 7)).toEqual({ from: '2026-09-27', to: '2026-10-03' });
+    // A Sunday starts its own week instead of belonging to the one before.
+    expect(rangeFor('week', '2026-09-27', 7)).toEqual({ from: '2026-09-27', to: '2026-10-03' });
+    expect(rangeFor('month', '2026-09-15', 7)).toEqual({ from: '2026-08-30', to: '2026-10-03' });
+    expect(monthWeeks('2026-09-15', 7)[0]![0]).toBe('2026-08-30');
+    expect(viewTitle('week', '2026-09-29', 7)).toBe('KW 40 · 27. Sep. – 3. Okt. 2026');
+  });
+
+  it('keeps Monday-first as the default', () => {
+    expect(rangeFor('week', '2026-09-29')).toEqual(rangeFor('week', '2026-09-29', 1));
+  });
+});

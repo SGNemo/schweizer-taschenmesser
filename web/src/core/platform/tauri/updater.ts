@@ -12,8 +12,7 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
 import type { PlatformKind } from '../types';
 import {
-  APK_ASSET,
-  APK_SHA256_ASSET,
+  APK_ASSET_PAIRS,
   MANIFEST_ASSET,
   STABLE_MANIFEST_URL,
   assetUrl,
@@ -83,9 +82,14 @@ export function createAndroidUpdater(fetchFn: typeof fetch): UpdateService {
     async check(channel, current) {
       const release = pickUpdate(await fetchReleases(fetchFn), channel, current);
       if (!release) return undefined;
-      const apkUrl = assetUrl(release, APK_ASSET);
-      const sha256Url = assetUrl(release, APK_SHA256_ASSET);
       // Without both the APK and its checksum the release is not installable from inside the app.
+      let apkUrl: string | undefined;
+      let sha256Url: string | undefined;
+      for (const pair of APK_ASSET_PAIRS) {
+        apkUrl = assetUrl(release, pair.apk);
+        sha256Url = assetUrl(release, pair.sha256);
+        if (apkUrl && sha256Url) break;
+      }
       if (!apkUrl || !sha256Url) return undefined;
       const version = versionOf(release);
       const info: UpdateInfo = {

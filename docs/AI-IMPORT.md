@@ -1,7 +1,7 @@
 # Daten per KI importieren
 
 Du musst vorhandene Daten nicht abtippen: Eine KI deiner Wahl (Claude Code, Claude Desktop, ChatGPT o. ä.) kann sie
-für dich in die Module des Taschenmessers schreiben. Dafür gibt es zwei Wege:
+für dich in die Module von Nemo schreiben. Dafür gibt es zwei Wege:
 
 | Weg | Wo | Wie |
 |---|---|---|
@@ -63,7 +63,7 @@ getrennt dazu, am besten als Umgebungsvariable statt im Chat:
 #### Der fertige Prompt
 
 ```text
-Du hilfst mir, Daten in meine App „Taschenmesser“ zu übertragen. Sie hat eine lokale Schnittstelle:
+Du hilfst mir, Daten in meine App „Nemo“ zu übertragen. Sie hat eine lokale Schnittstelle:
 - Adresse: http://127.0.0.1:47631
 - Jede Anfrage braucht den Header "Authorization: Bearer <TOKEN>" (den Schlüssel gebe ich dir getrennt).
 - Sende keine Header "Origin" (die App lehnt Anfragen aus dem Browser ab).

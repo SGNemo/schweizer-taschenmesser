@@ -81,3 +81,28 @@
   display: grid;
   gap: var(--space-3);
 }
+.about {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.aboutName {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+.aboutSub {
+  margin-top: var(--space-4);
+  font-size: var(--text-md);
+}
+.aboutList {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  display: grid;
+  gap: var(--space-1);
+}
+.appearance {
+  display: grid;
+  gap: var(--space-4);
+}

@@ -11,7 +11,7 @@ import {
   startOfISOWeek,
 } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { now, toDateString, today } from './now';
+import { now, pad2, toDateString, today } from './now';
 
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -28,7 +28,14 @@ export const daysBetween = (a: string, b: string): number =>
   differenceInCalendarDays(parseDate(b), parseDate(a));
 /** ISO weekday: Monday = 1 … Sunday = 7. */
 export const isoWeekday = (s: string): number => getISODay(parseDate(s));
-export const startOfWeekStr = (s: string): string => toDateString(startOfISOWeek(parseDate(s)));
+/** Start of the week containing `s`: Monday (default, ISO) or Sunday (`weekStart` 7). */
+export const startOfWeekStr = (s: string, weekStart: 1 | 7 = 1): string => {
+  const monday = startOfISOWeek(parseDate(s));
+  // Sunday-first weeks start the day before that week's Monday (Sunday itself belongs to the next).
+  if (weekStart === 7)
+    return toDateString(isoWeekday(s) === 7 ? parseDate(s) : addDays(monday, -1));
+  return toDateString(monday);
+};
 export const startOfMonthStr = (s: string): string => `${s.slice(0, 7)}-01`;
 export const endOfMonthStr = (s: string): string =>
   toDateString(new Date(parseDate(s).getFullYear(), parseDate(s).getMonth() + 1, 0));
@@ -67,9 +74,15 @@ export function toEpoch(date: string, time: string): number {
   return d.getTime();
 }
 
-export function nowTime(): string {
-  const d = new Date(now());
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+/** Local "d. MMM HH:mm" of an epoch timestamp, e.g. "31. Jan. 23:30" (day and time from the same local clock). */
+export function formatDateTime(at: number): string {
+  const d = new Date(at);
+  return `${formatDay(toDateString(d), 'd. MMM')} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-export { today, toDateString };
+export function nowTime(): string {
+  const d = new Date(now());
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+export { pad2, today, toDateString };

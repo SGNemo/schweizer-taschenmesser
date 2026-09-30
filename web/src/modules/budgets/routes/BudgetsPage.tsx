@@ -84,7 +84,7 @@ export default function BudgetsPage() {
           </Button>
         )}
       </PageHeader>
-      <div style={{ marginBottom: 'var(--space-4)' }}>
+      <div className={patternStyles.gapBottom}>
         <Segmented
           label={t.budgets.tabs}
           value={tab}

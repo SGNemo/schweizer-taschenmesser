@@ -13,7 +13,9 @@ import {
   Icon,
   IconButton,
   PageHeader,
+  patternStyles,
   Progress,
+  TextField,
 } from '@/ui';
 import { ListEditor, type ListTarget } from '../components/ListEditor';
 import { nextOrder, progress, sortItems } from '../logic';
@@ -59,7 +61,7 @@ export default function PackingPage() {
 
       {lists && lists.length === 0 ? <EmptyState icon="luggage" title={t.packing.empty} /> : null}
       {lists && lists.length > 0 ? (
-        <div style={{ marginBottom: 'var(--space-4)' }}>
+        <div className={patternStyles.gapBottom}>
           <Chips label={t.packing.lists}>
             {lists.map((l) => (
               <Chip
@@ -75,7 +77,7 @@ export default function PackingPage() {
 
       {current ? (
         <Card as="section" title={current.name}>
-          {current.note ? <p style={{ color: 'var(--text-muted)' }}>{current.note}</p> : null}
+          {current.note ? <p className={patternStyles.muted}>{current.note}</p> : null}
           <p aria-live="polite" data-testid="packing-progress">
             {t.packing.progress(p.packed, p.total)}
             {p.complete ? ` · ${t.packing.complete}` : ''}
@@ -86,33 +88,20 @@ export default function PackingPage() {
               e.preventDefault();
               void addItem();
             }}
-            style={{ display: 'flex', gap: 'var(--space-2)', margin: 'var(--space-3) 0' }}
+            className={patternStyles.inlineForm}
           >
-            <input
-              aria-label={t.packing.addItem}
+            <TextField
+              label={t.packing.addItem}
+              labelHidden
               placeholder={t.packing.itemPlaceholder}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              style={{
-                flex: 1,
-                minHeight: 'var(--touch)',
-                padding: '0 var(--space-3)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--surface)',
-                color: 'inherit',
-              }}
             />
-            <Button type="submit" variant="primary">
-              {t.actions.add}
-            </Button>
+            <Button type="submit">{t.actions.add}</Button>
           </form>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className={patternStyles.plainList}>
             {items.map((i) => (
-              <li
-                key={i.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}
-              >
+              <li key={i.id} className={patternStyles.hstackCenter}>
                 <div style={{ flex: 1, opacity: i.packed ? 0.55 : 1 }}>
                   <Checkbox
                     label={i.name}

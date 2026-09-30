@@ -4,7 +4,7 @@ import type { AskResponse } from '@/core/ai/assistant';
 import { commitCreate } from '@/core/ai/query/create';
 import type { AiResult, PreparedCreate, ResultRow } from '@/core/ai/query/types';
 import { db } from '@/core/db/db';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -76,7 +76,7 @@ function Agenda({
     from === to
       ? relativeDayLabel(from)
       : `${formatDay(from, 'd. MMM')} – ${formatDay(to, 'd. MMM yyyy')}`;
-  const sourceName = (id: string) => visibleManifests.find((m) => m.id === id)?.name ?? id;
+  const sourceName = (id: string) => availableManifests().find((m) => m.id === id)?.name ?? id;
   return (
     <>
       <h3 className={styles.heading}>{range}</h3>
@@ -117,7 +117,7 @@ function CreateCard({ prepared, onDone }: { prepared: PreparedCreate; onDone: ()
     setBusy(true);
     setFailed(false);
     try {
-      await commitCreate(prepared, { known: visibleManifests, database: db });
+      await commitCreate(prepared, { known: availableManifests(), database: db });
       toast(t.ai.create.done(prepared.label));
       onDone();
     } catch (e) {

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-disk-can-delete"
+description = "Enables the disk_can_delete command without any pre-configured scope."
+commands.allow = ["disk_can_delete"]
+
+[[permission]]
+identifier = "deny-disk-can-delete"
+description = "Denies the disk_can_delete command without any pre-configured scope."
+commands.deny = ["disk_can_delete"]

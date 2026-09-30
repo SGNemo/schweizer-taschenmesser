@@ -8,7 +8,7 @@ describe('serving the PWA', () => {
   let dir: string;
   beforeAll(() => {
     dir = mkdtempSync(join(tmpdir(), 'tm-web-'));
-    writeFileSync(join(dir, 'index.html'), '<!doctype html><title>Taschenmesser</title>');
+    writeFileSync(join(dir, 'index.html'), '<!doctype html><title>Nemo</title>');
     writeFileSync(join(dir, 'app.js'), 'console.log(1)');
   });
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
@@ -18,7 +18,7 @@ describe('serving the PWA', () => {
     expect((await app.inject({ url: '/app.js' })).body).toBe('console.log(1)');
     const route = await app.inject({ url: '/finance?tab=accounts' });
     expect(route.statusCode).toBe(200);
-    expect(route.body).toContain('Taschenmesser');
+    expect(route.body).toContain('Nemo');
     expect(
       (
         await app.inject({

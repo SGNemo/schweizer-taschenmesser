@@ -59,14 +59,24 @@ describe('module definition', () => {
     expect(c).not.toHaveProperty('aiCreateDefaults');
   });
 
-  it('is registered, off by default, and one of only three manifests without aiSchema', () => {
+  it('only offers its own setup step (no data, no AI, no widget)', () => {
+    expect(manifest.setupSteps?.map((s) => s.id)).toEqual(['accounts.vault']);
+    expect(manifest.aiSchema).toBeUndefined();
+  });
+
+  it('is registered, off by default, and one of only six manifests without aiSchema', () => {
     expect(allManifests.map((m) => m.id)).toContain('accounts');
     expect(visibleManifests.find((m) => m.id === 'accounts')?.defaultEnabled).toBe(false);
-    // `news` (public third-party text) and `launcher` (a list of links) have none by design; a new module without one must be a decision.
+    // `news` (public third-party text), `launcher` (a list of links), `disk` (scan results with
+    // file paths, never stored), `gifts` (surprises) and `system` (live facts, no data) have none by
+    // design; a new module without one must be a decision.
     expect(allManifests.filter((m) => !m.aiSchema).map((m) => m.id)).toEqual([
       'accounts',
+      'disk',
+      'gifts',
       'launcher',
       'news',
+      'system',
     ]);
   });
 });

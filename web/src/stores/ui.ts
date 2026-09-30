@@ -3,6 +3,26 @@ import { create } from 'zustand';
 export type ThemeChoice = 'system' | 'light' | 'dark';
 const THEME_KEY = 'tm-theme';
 
+/** Accent colour of the app (tokens.css `data-accent`); orange is the default and sets no attribute. */
+export const ACCENTS = ['orange', 'teal', 'coral', 'lagoon'] as const;
+export type AccentChoice = (typeof ACCENTS)[number];
+const ACCENT_KEY = 'tm-accent';
+
+function readAccent(): AccentChoice {
+  try {
+    const v = localStorage.getItem(ACCENT_KEY);
+    return ACCENTS.find((a) => a === v) ?? 'orange';
+  } catch {
+    return 'orange';
+  }
+}
+
+export function applyAccent(accent: AccentChoice): void {
+  const el = document.documentElement;
+  if (accent === 'orange') delete el.dataset.accent;
+  else el.dataset.accent = accent;
+}
+
 function readTheme(): ThemeChoice {
   try {
     const v = localStorage.getItem(THEME_KEY);
@@ -16,6 +36,22 @@ export function applyTheme(theme: ThemeChoice): void {
   const el = document.documentElement;
   if (theme === 'system') delete el.dataset.theme;
   else el.dataset.theme = theme;
+  syncThemeColor(theme);
+}
+
+/**
+ * Keeps the browser/PWA title bar in step with the chosen theme. `index.html` ships two
+ * `theme-color` metas with `media` queries for the system preference; a forced theme sets both to
+ * the page background of that theme, `system` restores the originals.
+ */
+function syncThemeColor(theme: ThemeChoice): void {
+  const metas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+  if (metas.length === 0) return;
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  for (const meta of metas) {
+    if (!meta.dataset.default) meta.dataset.default = meta.content;
+    meta.content = theme === 'system' || !bg ? meta.dataset.default : bg;
+  }
 }
 
 export interface Toast {
@@ -27,6 +63,8 @@ export interface Toast {
 interface UiState {
   theme: ThemeChoice;
   setTheme(theme: ThemeChoice): void;
+  accent: AccentChoice;
+  setAccent(accent: AccentChoice): void;
   paletteOpen: boolean;
   setPaletteOpen(open: boolean): void;
   quickAddOpen: boolean;
@@ -57,6 +95,17 @@ export const useUiStore = create<UiState>((set) => ({
     }
     applyTheme(theme);
     set({ theme });
+  },
+  accent: readAccent(),
+  setAccent(accent) {
+    try {
+      if (accent === 'orange') localStorage.removeItem(ACCENT_KEY);
+      else localStorage.setItem(ACCENT_KEY, accent);
+    } catch {
+      // Storage may be blocked; the accent still applies for this session.
+    }
+    applyAccent(accent);
+    set({ accent });
   },
   paletteOpen: false,
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),

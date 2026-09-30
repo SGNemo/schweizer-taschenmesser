@@ -230,7 +230,7 @@ export function Progress({
     >
       <div
         className={[styles.progressBar, over ? styles.progressOver : ''].join(' ')}
-        style={{ width: `${pct}%` }}
+        style={{ transform: `scaleX(${pct / 100})` }}
       />
     </div>
   );

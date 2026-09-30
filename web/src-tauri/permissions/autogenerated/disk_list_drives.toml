@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-disk-list-drives"
+description = "Enables the disk_list_drives command without any pre-configured scope."
+commands.allow = ["disk_list_drives"]
+
+[[permission]]
+identifier = "deny-disk-list-drives"
+description = "Denies the disk_list_drives command without any pre-configured scope."
+commands.deny = ["disk_list_drives"]

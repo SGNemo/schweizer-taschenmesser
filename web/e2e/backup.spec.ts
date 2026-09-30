@@ -40,7 +40,7 @@ test.describe('backup', () => {
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Backup herunterladen' }).click();
     const file = await download;
-    expect(file.suggestedFilename()).toMatch(/^taschenmesser-backup-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(file.suggestedFilename()).toMatch(/^nemo-backup-\d{4}-\d{2}-\d{2}\.json$/);
     const path = info.outputPath('backup.json');
     await file.saveAs(path);
 
@@ -97,6 +97,46 @@ test.describe('backup', () => {
     await context.close();
   });
 
+  test('encrypted backup: no clear text, wrong password is refused, verify passes, restore works', async ({
+    page,
+    browser,
+  }, info) => {
+    await addTask(page, 'Streng geheim');
+    await page.goto('/settings');
+    await page.getByLabel('Passwort für das Backup').fill('kurz');
+    await page.getByRole('button', { name: 'Verschlüsselt exportieren' }).click();
+    await expect(page.getByText('Das Passwort braucht mindestens 8 Zeichen.')).toBeVisible();
+
+    await page.getByLabel('Passwort für das Backup').fill('ein-gutes-passwort');
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Verschlüsselt exportieren' }).click();
+    const file = await download;
+    expect(file.suggestedFilename()).toMatch(/\.enc\.json$/);
+    const path = info.outputPath('backup.enc.json');
+    await file.saveAs(path);
+    expect(readFileSync(path, 'utf8')).not.toContain('Streng geheim');
+
+    const context = await browser.newContext();
+    const fresh = await context.newPage();
+    await fresh.goto('/settings');
+    await fresh.locator('#backup-file').setInputFiles(path);
+    await fresh.getByLabel('Passwort des Backups').fill('falsches-passwort');
+    await fresh.getByRole('button', { name: 'Öffnen' }).click();
+    await expect(fresh.getByTestId('backup-error')).toContainText('Falsches Passwort');
+
+    await fresh.getByLabel('Passwort des Backups').fill('ein-gutes-passwort');
+    await fresh.getByRole('button', { name: 'Öffnen' }).click();
+    await expect(fresh.getByTestId('backup-contents')).toContainText('Einträge in');
+    await fresh.getByRole('button', { name: 'Backup prüfen' }).click();
+    await expect(fresh.getByTestId('backup-verify')).toContainText('lässt sich wiederherstellen');
+    await expect(fresh.getByTestId('backup-plan')).toContainText('neu');
+
+    await fresh.getByRole('button', { name: 'Importieren' }).click();
+    await expect(fresh.getByText(/Einträge wiederhergestellt/)).toBeVisible();
+    expect(await titles(fresh)).toEqual(['Streng geheim']);
+    await context.close();
+  });
+
   test('rejects files that are not backups', async ({ page }) => {
     await page.goto('/settings');
     const input = page.locator('#backup-file');
@@ -113,9 +153,7 @@ test.describe('backup', () => {
       mimeType: 'application/json',
       buffer: Buffer.from('{"format":"anderes"}'),
     });
-    await expect(page.getByTestId('backup-error')).toHaveText(
-      'Das ist keine Taschenmesser-Backup-Datei.',
-    );
+    await expect(page.getByTestId('backup-error')).toHaveText('Das ist keine Nemo-Backup-Datei.');
     await input.setInputFiles({
       name: 'x.json',
       mimeType: 'application/json',

@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { startAutoBackup } from '@/core/backup/auto';
 import { startModuleServices } from '@/core/modules/services';
 import { startSync } from '@/core/sync/service';
 import { startNativeSchedule } from '@/core/notifications/nativeSchedule';
@@ -10,6 +11,7 @@ import { startUpdateChecks } from '@/core/update/controller';
 import { startNotificationScheduler } from '@/core/notifications/scheduler';
 import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
+import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
 import { App } from './App';
 import './ui/global.css';
 
@@ -29,5 +31,7 @@ void initPlatform().then(() => {
     startUpdateChecks();
     startConnectorSync();
     startLocalApi();
+    void startQuickCaptureDesktop();
+    startAutoBackup();
   });
 });

@@ -149,7 +149,7 @@ describe('push API', () => {
     expect((await post('/v1/push/test', { endpoint: ENDPOINT })).json()).toEqual({ sent: true });
     const message = JSON.parse(sent[0]!.body) as { v: number; key: string; payload: string };
     expect(message).toMatchObject({ v: 1, key: 'test' });
-    expect(JSON.parse(message.payload)).toMatchObject({ title: 'Taschenmesser' });
+    expect(JSON.parse(message.payload)).toMatchObject({ title: 'Nemo' });
 
     failWith = Object.assign(new Error('gone'), { statusCode: 410 });
     expect((await post('/v1/push/test', { endpoint: ENDPOINT })).statusCode).toBe(502);

@@ -1,7 +1,15 @@
+import { createFakeDisk } from './fakeDisk';
 import { createFakeLocalApi } from './fakeLocalApi';
+import { createFakeSystem } from './fakeSystem';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
-import type { PlatformService, SaveFileRequest } from './types';
+import type {
+  DesktopService,
+  PlatformKind,
+  PlatformService,
+  SaveFileRequest,
+  ShareService,
+} from './types';
 
 /** Injected at build time from `web/package.json` (see vite.config.ts). */
 declare const __APP_VERSION__: string;
@@ -54,11 +62,48 @@ export function sensitiveClipboard(io: {
   };
 }
 
+/** E2E builds only: lets a browser test pose as another platform (`localStorage.__tmPlatformKind`). */
+function e2eKind(): PlatformKind {
+  try {
+    const v = localStorage.getItem('__tmPlatformKind');
+    if (v === 'desktop' || v === 'android') return v;
+  } catch {
+    // Storage blocked: stay a plain browser.
+  }
+  return 'web';
+}
+
 const unsupported = (): Promise<never> => Promise.reject(new Error('Not available in the browser'));
+
+/** The DOM event the native shell dispatches into the capture window each time it opens. */
+export const CAPTURE_OPEN_EVENT = 'tm-capture-open';
+
+export const onCaptureOpenEvent = (callback: () => void): (() => void) => {
+  window.addEventListener(CAPTURE_OPEN_EVENT, callback);
+  return () => window.removeEventListener(CAPTURE_OPEN_EVENT, callback);
+};
+
+/** No tray, hotkey or autostart in a browser; the capture page itself still works there. */
+export const webDesktop: DesktopService = {
+  supported: false,
+  setHotkey: async () => 'failed',
+  setCloseToTray: async () => undefined,
+  setTrayLabels: async () => undefined,
+  setAutostart: async () => undefined,
+  autostart: async () => false,
+  info: async () => ({ portable: false }),
+  showMain: async () => undefined,
+  hideCapture: async () => undefined,
+  readClipboard: () => navigator.clipboard.readText().catch(() => undefined),
+  onCaptureOpen: onCaptureOpenEvent,
+};
+
+/** The PWA receives shares through its web manifest (`share_target`), not through this service. */
+export const webShare: ShareService = { supported: false, takePending: async () => undefined };
 
 export function createWebPlatform(): PlatformService {
   return {
-    kind: 'web',
+    kind: import.meta.env.MODE === 'e2e' ? e2eKind() : 'web',
     isNative: false,
     fetch: (input, init) => fetch(input, init),
     notifications: localNotificationService,
@@ -109,6 +154,37 @@ export function createWebPlatform(): PlatformService {
       import.meta.env.MODE === 'e2e'
         ? createFakeLocalApi()
         : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    // E2E builds only: an invented folder tree instead of the native scan.
+    disk:
+      import.meta.env.MODE === 'e2e'
+        ? createFakeDisk()
+        : {
+            supported: false,
+            listDrives: unsupported,
+            startScan: unsupported,
+            cancelScan: unsupported,
+            pauseScan: unsupported,
+            dropScan: unsupported,
+            children: unsupported,
+            node: unsupported,
+            query: unsupported,
+            knownPlaces: unsupported,
+            nodePath: unsupported,
+            reveal: unsupported,
+            canDelete: unsupported,
+            planDelete: unsupported,
+            runDelete: unsupported,
+            cancelDelete: unsupported,
+            findDuplicates: unsupported,
+            cancelDuplicates: unsupported,
+          },
+    // E2E builds only: invented facts instead of the native reading.
+    system:
+      import.meta.env.MODE === 'e2e'
+        ? createFakeSystem()
+        : { supported: false, info: unsupported, processes: unsupported },
+    desktop: webDesktop,
+    share: webShare,
     lifecycle: { onBackground: onPageHidden },
   };
 }

@@ -5,7 +5,7 @@
   position: absolute;
   left: var(--space-3);
   top: -100px;
-  z-index: 100;
+  z-index: var(--z-skip);
   padding: var(--space-2) var(--space-4);
   background: var(--accent);
   color: var(--accent-contrast);
@@ -23,21 +23,20 @@
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--z-sticky);
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   padding-top: calc(var(--space-3) + env(safe-area-inset-top));
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 .brand {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   font-size: var(--text-lg);
   color: var(--text);
   text-decoration: none;
@@ -45,11 +44,8 @@
 .brandMark {
   display: grid;
   place-items: center;
-  width: 32px;
+  min-width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
 }
 .searchBtn {
   display: flex;
@@ -58,12 +54,15 @@
   flex: 1;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
+}
+.searchBtn:hover {
+  border-color: var(--accent);
 }
 .kbd {
   margin-left: auto;
@@ -89,11 +88,11 @@
 .bottom {
   position: fixed;
   inset: auto 0 0 0;
-  z-index: 15;
+  z-index: var(--z-nav);
   display: flex;
   height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--surface);
+  background: var(--bg);
   border-top: 1px solid var(--border);
 }
 .bottomLink {
@@ -111,9 +110,29 @@
   border: 0;
   cursor: pointer;
 }
+.bottomLink {
+  position: relative;
+}
 .bottomLink[aria-current='page'] {
   color: var(--accent);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
+}
+/* Active marker: a small pill above the icon. */
+.bottomLink[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  width: 28px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  animation: pillIn var(--dur) var(--ease-out);
+}
+@keyframes pillIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
 }
 
 .navList {
@@ -133,7 +152,7 @@
   border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;
-  transition: background-color var(--dur-fast) var(--ease);
+  position: relative;
 }
 .navLink:hover {
   background: var(--surface-2);
@@ -141,7 +160,7 @@
 .navLink[aria-current='page'] {
   background: var(--accent-soft);
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 @media (min-width: 900px) {
@@ -167,7 +186,7 @@
     height: 100dvh;
     padding: var(--space-4);
     border-right: 1px solid var(--border);
-    background: var(--surface);
+    background: var(--bg);
   }
   .sidebarNav {
     flex: 1;

@@ -1,14 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
+import { ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
-
-async function ready(page: Page, url: string) {
-  await page.goto(url);
-  await expect(page.locator('main h1')).toBeVisible();
-}
 
 // Invented calendar feed.
 const FEED = [

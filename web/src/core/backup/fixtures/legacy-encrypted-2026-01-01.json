@@ -1,0 +1,18 @@
+{
+  "format": "taschenmesser-backup-encrypted",
+  "version": 1,
+  "createdAt": "2026-01-01T10:00:00.000Z",
+  "checksum": "ec521752763a85024bf5b7a4daf0c76548be9714154ae38f6459c04562ba94ab",
+  "blob": {
+    "format": "taschenmesser-backup-payload",
+    "v": 1,
+    "kdf": {
+      "alg": "argon2id",
+      "m": 19456,
+      "t": 2,
+      "p": 1,
+      "salt": "NJm5eDnOCnnIgtgKnGKLlw=="
+    },
+    "data": "v1.SOOEZDhJHJIQ3mYo.Y1r2k9kOOuIQoq8Kc/CFmF8M+8k/V5wMTBflA48+Jg/jQRzMHRS9GHyaCiT0d0veXfpkT4Jq1vyzwlKl2L+QTHZd3aVeYsVedyhkS4OtdGSqgNaaVtQE1KO9ZOYX3zbWLx9Vqil8VaFrtk/38l+0KLykiQ66JN6RBdaHrv19qTPahVlXFdWH6EFqYMG9KMQ1I+zOCK7jHI5SR6O6t84w6oMkuSxS6wVhQfA8sy7dbnckqzng6DneOas6Mo9sLs2igR3ceRAuUPN3ArwGvRc8fJnmX/uW6YBBldLXq3HEIANHTMLW9xBE17TXXjpI7arwY2w9/rnhmn+NPi8evOahQ/F7cnmKsgn7kndmn4gYVEP7G65dB8Islqzb6wiQcaQr+tY5qY+pVqB8szbnntjJRwmit4Z8W1vfUXXZii13DsMJyAfScFUKBXE66MnUmjNQ3r/DaG/OiNPLndx3mYhnljd9sr/RGwn9u3OKs5lhnXXZe6rR5VQIBzwl9TVLjYbu5pCcFXUB2EdY5pt/r2WWO2EQPQ=="
+  }
+}

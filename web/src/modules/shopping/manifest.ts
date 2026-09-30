@@ -38,6 +38,7 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'item', label: 'Einkaufsartikel', to: '/shopping?new=1' }],
+    services: () => import('./services'),
   },
 };
 

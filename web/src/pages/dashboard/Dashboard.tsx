@@ -19,12 +19,15 @@ import { Suspense, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { lazyComponent } from '@/core/modules/lazy';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import type { WidgetDef } from '@/core/modules/types';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, EmptyState, Icon, IconButton } from '@/ui';
+import { SetupLink } from '@/layout/setup/SetupLink';
+import { ChecklistCard } from '@/layout/setup/ChecklistCard';
+import { WelcomeCard } from '@/layout/setup/WelcomeCard';
+import { Button, Card, EmptyState, Icon, IconButton, PageHeader, Skeleton } from '@/ui';
 import styles from './Dashboard.module.css';
 import {
   DASHBOARD_SCOPE,
@@ -43,15 +46,22 @@ interface Entry extends WidgetDef {
   Component: ReturnType<typeof lazyComponent>;
 }
 
-/** All widgets of all modules; lazy components are created once at module scope. */
-const ALL_ENTRIES: Entry[] = visibleManifests.flatMap((m) =>
-  m.widgets.map((w) => ({
-    ...w,
-    moduleId: m.id,
-    key: widgetKey(m.id, w.id),
-    Component: lazyComponent(w.component),
-  })),
-);
+/** Lazy components are created once per widget, not per render. */
+const componentCache = new Map<string, Entry['Component']>();
+const componentFor = (key: string, load: WidgetDef['component']) => {
+  let c = componentCache.get(key);
+  if (!c) componentCache.set(key, (c = lazyComponent(load)));
+  return c;
+};
+
+/** Widgets of the modules available on this platform (resolved after `initPlatform()`). */
+const allEntries = (): Entry[] =>
+  availableManifests().flatMap((m) =>
+    m.widgets.map((w) => {
+      const key = widgetKey(m.id, w.id);
+      return { ...w, moduleId: m.id, key, Component: componentFor(key, w.component) };
+    }),
+  );
 
 const SIZE_CLASS = { s: '', m: styles.m, l: styles.l } as const;
 
@@ -61,7 +71,7 @@ export function Dashboard() {
   const editing = useUiStore((s) => s.dashboardEditing);
   const setEditing = useUiStore((s) => s.setDashboardEditing);
 
-  const entries = useMemo(() => ALL_ENTRIES.filter((e) => states?.[e.moduleId]), [states]);
+  const entries = useMemo(() => allEntries().filter((e) => states?.[e.moduleId]), [states]);
   const layout = saved ?? DEFAULT_LAYOUT;
   const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
   const shown = editing ? ordered : ordered.filter((e) => !layout.hidden.includes(e.key));
@@ -95,17 +105,7 @@ export function Dashboard() {
 
   return (
     <>
-      <div
-        className="page-header"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 'var(--space-3)',
-          marginBottom: 'var(--space-5)',
-        }}
-      >
-        <h1>{t.dashboard.title}</h1>
+      <PageHeader title={t.dashboard.title}>
         {entries.length > 0 ? (
           <Button
             variant={editing ? 'primary' : 'secondary'}
@@ -116,15 +116,19 @@ export function Dashboard() {
             {editing ? t.dashboardEdit.done : t.dashboardEdit.customize}
           </Button>
         ) : null}
-      </div>
+      </PageHeader>
 
-      {states && visibleManifests.every((m) => !states[m.id]) ? (
+      <WelcomeCard />
+      <ChecklistCard />
+
+      {states && availableManifests().every((m) => !states[m.id]) ? (
         <EmptyState icon="grid" title={t.dashboard.emptyTitle}>
           <p>{t.dashboard.emptyText}</p>
           <Link to="/library">{t.dashboard.toLibrary}</Link>
+          <SetupLink />
         </EmptyState>
       ) : states && entries.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)' }}>{t.dashboard.noWidgets}</p>
+        <p className={styles.hint}>{t.dashboard.noWidgets}</p>
       ) : (
         <DndContext
           sensors={sensors}
@@ -153,6 +157,14 @@ export function Dashboard() {
         </DndContext>
       )}
     </>
+  );
+}
+
+function WidgetFallback() {
+  return (
+    <div role="status" aria-label="…">
+      <Skeleton width="60%" height="1.25rem" />
+    </div>
   );
 }
 
@@ -215,7 +227,7 @@ function SortableWidget({ entry, editing, hidden, onToggleHidden }: WidgetProps)
         {hidden && editing ? (
           <p className={styles.hint}>{t.dashboardEdit.hidden}</p>
         ) : (
-          <Suspense fallback={<p role="status">…</p>}>
+          <Suspense fallback={<WidgetFallback />}>
             <Widget />
           </Suspense>
         )}

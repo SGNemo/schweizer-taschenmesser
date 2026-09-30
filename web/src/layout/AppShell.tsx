@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
-import { Fab, Icon, IconButton, Toaster } from '@/ui';
+import { Fab, Icon, IconButton, Logo, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
+import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
 import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
@@ -35,6 +37,7 @@ export function AppShell() {
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  useNativeShare();
 
   // Global shortcut: Ctrl/Cmd+K opens the command palette.
   useEffect(() => {
@@ -48,10 +51,15 @@ export function AppShell() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setPaletteOpen]);
 
-  // PWA shortcut "Suchen" (`/?search=1`) opens the palette.
+  // PWA shortcuts: "Suchen" (`/?search=1`) opens the palette, "Schnell erfassen" the capture sheet.
   useEffect(() => {
-    if (new URLSearchParams(location.search).get('search')) {
+    const params = new URLSearchParams(location.search);
+    if (params.get('search')) {
       setPaletteOpen(true);
+      void navigate(location.pathname, { replace: true });
+    } else if (params.get('capture')) {
+      // PWA / Android shortcut "Schnell erfassen" (`/?capture=1`).
+      setQuickAddOpen(true);
       void navigate(location.pathname, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the first render of the shell
@@ -84,7 +92,7 @@ export function AppShell() {
           }}
         >
           <span className={styles.brandMark}>
-            <Icon name="grid" size={18} />
+            <Logo size={22} />
           </span>
           {t.appName}
         </a>
@@ -106,7 +114,7 @@ export function AppShell() {
         <header className={styles.topbar}>
           <span className={`${styles.brand} ${styles.hideDesktop}`}>
             <span className={styles.brandMark}>
-              <Icon name="grid" size={18} />
+              <Logo size={22} />
             </span>
           </span>
           <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
@@ -145,6 +153,7 @@ export function AppShell() {
       <CommandPalette />
       <ToolsSheet />
       <OnboardingHost />
+      <SetupHost />
       <Toaster />
     </div>
   );

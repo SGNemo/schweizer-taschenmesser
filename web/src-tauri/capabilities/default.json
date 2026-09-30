@@ -1,10 +1,44 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions of the main window: only what core/platform/tauri uses.",
+  "description": "Permissions of the main window: only what core/platform/tauri uses. App commands are granted one by one (build.rs).",
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "allow-check-update",
+    "allow-install-update",
+    "allow-oauth-listen-start",
+    "allow-oauth-listen-wait",
+    "allow-local-api-start",
+    "allow-local-api-stop",
+    "allow-local-api-set-tokens",
+    "allow-local-api-respond",
+    "allow-disk-list-drives",
+    "allow-disk-scan-start",
+    "allow-disk-scan-cancel",
+    "allow-disk-scan-pause",
+    "allow-disk-scan-drop",
+    "allow-disk-children",
+    "allow-disk-node",
+    "allow-disk-query",
+    "allow-disk-known-places",
+    "allow-disk-node-path",
+    "allow-disk-reveal",
+    "allow-disk-find-duplicates",
+    "allow-disk-duplicates-cancel",
+    "allow-disk-can-delete",
+    "allow-disk-delete-plan",
+    "allow-disk-delete",
+    "allow-disk-delete-cancel",
+    "allow-system-info",
+    "allow-system-processes",
+    "allow-capture-set-hotkey",
+    "allow-desktop-set-close-to-tray",
+    "allow-desktop-set-tray-labels",
+    "allow-desktop-set-autostart",
+    "allow-desktop-autostart-enabled",
+    "allow-desktop-info",
+    "allow-desktop-show-main",
     "notification:default",
     "dialog:allow-save",
     "dialog:allow-open",
@@ -18,7 +52,14 @@
     "fs:allow-read-dir",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "$APPDATA/**" }, { "path": "$APPDATA" }]
+      "allow": [
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$APPDATA"
+        }
+      ]
     },
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
@@ -26,13 +67,22 @@
     "opener:allow-open-url",
     "apk-installer:default",
     "secure-store:default",
+    "share-intent:default",
     {
       "identifier": "http:default",
       "allow": [
-        { "url": "https://*" },
-        { "url": "http://*" },
-        { "url": "https://*:*" },
-        { "url": "http://*:*" }
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://*"
+        },
+        {
+          "url": "https://*:*"
+        },
+        {
+          "url": "http://*:*"
+        }
       ]
     }
   ]

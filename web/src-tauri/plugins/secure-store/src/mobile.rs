@@ -22,7 +22,9 @@ pub struct SecureStore<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> SecureStore<R> {
     pub fn available(&self) -> Result<AvailableResponse> {
-        self.0.run_mobile_plugin("available", ()).map_err(Into::into)
+        self.0
+            .run_mobile_plugin("available", ())
+            .map_err(Into::into)
     }
 
     pub fn set(&self, request: SetRequest) -> Result<()> {

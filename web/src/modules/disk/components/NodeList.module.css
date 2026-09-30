@@ -1,0 +1,129 @@
+.table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+  container-type: inline-size;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 3fr) 6rem minmax(7rem, 2fr) 5rem 6.5rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.head {
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  min-height: var(--touch);
+}
+.body {
+  overflow-y: auto;
+}
+.selected {
+  background: var(--accent-soft);
+}
+.sort {
+  background: none;
+  border: 0;
+  padding: 0;
+  min-height: var(--touch);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.nameCell {
+  min-width: 0;
+}
+.name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--touch);
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.kind {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--k-other);
+}
+.kind[data-kind='video'] {
+  background: var(--k-video);
+}
+.kind[data-kind='image'] {
+  background: var(--k-image);
+}
+.kind[data-kind='audio'] {
+  background: var(--k-audio);
+}
+.kind[data-kind='archive'] {
+  background: var(--k-archive);
+}
+.kind[data-kind='program'] {
+  background: var(--k-program);
+}
+.kind[data-kind='document'] {
+  background: var(--k-document);
+}
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.title,
+.where {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.where {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-sm);
+}
+.shareCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.bar {
+  flex: 1;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.empty {
+  padding: var(--space-4);
+  color: var(--text-muted);
+}
+@container (max-width: 40rem) {
+  .row {
+    grid-template-columns: minmax(8rem, 1fr) 5.5rem 5rem;
+  }
+  .row > :nth-child(3),
+  .row > :nth-child(5) {
+    display: none;
+  }
+}

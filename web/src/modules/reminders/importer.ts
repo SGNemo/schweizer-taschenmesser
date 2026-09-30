@@ -1,4 +1,4 @@
-import { addDaysStr, isoWeekday } from '@/core/time/dates';
+import { addDaysStr, isoWeekday, pad2 } from '@/core/time/dates';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import type { Recurrence } from '@/core/recurrence/types';
 import { parseLines } from '@/core/io/textLines';
@@ -6,7 +6,6 @@ import type { ImportCandidate, ImporterRuntime } from '@/core/importer/types';
 import { t } from '@/strings';
 import { reminderRepo } from './repo';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const titleKey = (title: string) => title.trim().toLowerCase();
 
 /** The next date on or after `today` that is day `day` of `month` (any month when omitted). */
@@ -17,7 +16,7 @@ export function nextDayOfMonth(today: string, day: number, month?: number): stri
     const year = Math.floor(total / 12);
     const mon = (total % 12) + 1;
     if (month !== undefined && mon !== month) continue;
-    const candidate = `${year}-${pad(mon)}-${pad(day)}`;
+    const candidate = `${year}-${pad2(mon)}-${pad2(day)}`;
     if (candidate >= today) return candidate;
   }
   return today;

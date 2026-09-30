@@ -5,7 +5,7 @@ import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, Switch, TextArea, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, Switch, TextArea, TextField } from '@/ui';
 import { annualCost } from '../logic';
 import { subscriptionRepo } from '../repo';
 import type { Subscription } from '../schema';
@@ -143,7 +143,7 @@ function Form({
         ) : (
           <span />
         )}
-        <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <span className={patternStyles.hstack}>
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

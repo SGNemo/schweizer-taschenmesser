@@ -4,7 +4,7 @@ import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo, createRepo } from '@/core/db/repo';
 import { bus, type DataPolicy } from '@/core/events';
 import { runMigrations } from './migrate';
-import { visibleManifests } from './registry';
+import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from './types';
 
 const moduleStateSchema = z.object({
@@ -21,7 +21,7 @@ export type ModuleStates = Record<string, boolean>;
 
 /** Explicit user choice wins; otherwise the manifest default applies. */
 export async function loadModuleStates(
-  manifests: readonly ModuleManifest[] = visibleManifests,
+  manifests: readonly ModuleManifest[] = availableManifests(),
   database: TaschenmesserDB = defaultDb,
 ): Promise<ModuleStates> {
   const rows = await stateRepo(database).active().toArray();

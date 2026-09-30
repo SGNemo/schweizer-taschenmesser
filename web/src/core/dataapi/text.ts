@@ -39,7 +39,7 @@ function typeText(f: FieldFormat): string {
 
 export function buildAiSchemaText(manifest: ModuleManifest): string {
   const lines: string[] = [
-    `Erzeuge Daten für die App „Taschenmesser“, Modul „${manifest.name}“, als JSON.`,
+    `Erzeuge Daten für die App „Nemo“, Modul „${manifest.name}“, als JSON.`,
     `Antworte nur mit JSON der Form {"items":[…]} (höchstens ${MAX_ITEMS} Einträge).`,
     '',
     'Regeln:',

@@ -1,14 +1,10 @@
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { getDeviceContext } from '@/core/db/device';
-import { maxHlc } from '@/core/db/hlc';
-import { createRepo } from '@/core/db/repo';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
-import { DexieStorageAdapter } from '@/core/storage/dexie';
 import type { StorageAdapter } from '@/core/storage/types';
-import { recordToOps, type SyncRow } from '@/core/sync/ops';
-import type { FieldOp } from '@/core/sync/types';
+import type { SyncRow } from '@/core/sync/ops';
+import { applyBackup } from './apply';
 
 export const BACKUP_FORMAT = 'taschenmesser-backup';
 export const BACKUP_VERSION = 1;
@@ -74,7 +70,7 @@ export async function createBackup(
 export const serializeBackup = (backup: Backup): string => JSON.stringify(backup);
 
 export function backupFileName(date: Date = new Date()): string {
-  return `taschenmesser-backup-${date.toISOString().slice(0, 10)}.json`;
+  return `nemo-backup-${date.toISOString().slice(0, 10)}.json`;
 }
 
 export function parseBackup(text: string): ParseResult {
@@ -100,72 +96,23 @@ export function parseBackup(text: string): ParseResult {
 }
 
 /**
- * Restores a backup.
+ * Restores a backup – in one transaction, so a failure leaves the data untouched (see `apply.ts`).
  *  - merge:   field-level last-write-wins against the current data (same rule as sync), nothing is
  *             deleted. Everything that changed is queued for sync.
  *  - replace: the backup becomes the truth. Records that are not in the backup are deleted
  *             (tombstones) and every backup record is written as a fresh edit, so the restore also
  *             wins against other devices when sync pushes it. Tables missing from the file are kept.
+ *
+ * `_storage` is only kept so that existing callers keep compiling; the import no longer goes
+ * through the storage adapter.
  */
 export async function importBackup(
   backup: Backup,
   mode: ImportMode,
   database: TaschenmesserDB = defaultDb,
   tableNames: string[] = syncedTableNames(allManifests),
-  storage: StorageAdapter = new DexieStorageAdapter(database, tableNames),
+  _storage?: StorageAdapter,
 ): Promise<ImportSummary> {
-  const known = new Set(tableNames);
-  const summary: ImportSummary = { records: 0, removed: 0, skippedTables: 0 };
-  const tables = Object.entries(backup.tables).filter(([name]) => {
-    if (known.has(name)) return true;
-    summary.skippedTables++;
-    return false;
-  });
-
-  if (mode === 'merge') {
-    const ops = tables.flatMap(([name, rows]) => rows.flatMap((row) => recordToOps(name, row)));
-    for (const [, rows] of tables) summary.records += rows.length;
-    await storage.applyRemote(ops, { markDirty: true });
-    return summary;
-  }
-
-  const { clock } = await getDeviceContext(database);
-  const ops: FieldOp[] = [];
-  for (const [name, rows] of tables) {
-    const table = database.table<SyncRow, string>(name);
-    const existing = await table.toArray();
-    // Fresh stamps must beat everything already stored, even stamps this session has not seen.
-    const newest = maxHlc(existing.flatMap((r) => Object.values(r._f)));
-    if (newest) clock.receive(newest);
-
-    const inBackup = new Set(rows.map((r) => r.id));
-    const gone = existing
-      .filter((r) => r.deletedAt === null && !inBackup.has(r.id))
-      .map((r) => r.id);
-    if (gone.length) {
-      await createRepo(name, z.looseObject({}), database).removeMany(gone);
-      summary.removed += gone.length;
-    }
-
-    const byId = new Map(existing.map((r) => [r.id, r]));
-    for (const row of rows) {
-      const stamp = clock.tick();
-      const fields = new Set(Object.keys(row._f));
-      fields.add('deletedAt');
-      // Fields the record has locally but the backup does not have are removed.
-      for (const field of Object.keys(byId.get(row.id)?._f ?? {})) fields.add(field);
-      for (const field of fields) {
-        ops.push({
-          collection: name,
-          id: row.id,
-          field,
-          hlc: stamp,
-          value: field === 'deletedAt' ? (row.deletedAt ?? null) : (row[field] ?? null),
-        });
-      }
-      summary.records++;
-    }
-  }
-  await storage.applyRemote(ops, { markDirty: true });
-  return summary;
+  void _storage;
+  return applyBackup(backup, mode, database, tableNames);
 }

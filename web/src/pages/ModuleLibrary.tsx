@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/batches';
 import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from '@/core/modules/types';
+import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
 import { Badge, Button, Card, Dialog, Icon } from '@/ui';
 import styles from './Page.module.css';
@@ -22,8 +23,10 @@ export function ModuleLibrary() {
   async function disable(policy: 'keep' | 'delete') {
     if (!pending) return;
     const m = pending;
-    setPending(null);
+    // Close the dialog only after the write: "the dialog has closed" must mean "the write is
+    // finished" (E2E rule in CLAUDE.md), otherwise a reload right after can lose the change.
     await disableModule(m, policy);
+    setPending(null);
   }
 
   return (
@@ -32,10 +35,11 @@ export function ModuleLibrary() {
         <div>
           <h1>{t.library.title}</h1>
           <p className={styles.lead}>{t.library.intro}</p>
+          <SetupLink />
         </div>
       </div>
       <ul className={`${styles.list} ${styles.grid}`}>
-        {visibleManifests.map((m) => {
+        {availableManifests().map((m) => {
           const enabled = states?.[m.id] ?? false;
           return (
             <Card as="li" key={m.id} className={styles.moduleCard} data-testid={`module-${m.id}`}>
@@ -48,15 +52,17 @@ export function ModuleLibrary() {
                 {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
               </div>
               <p className={styles.desc}>{m.description}</p>
-              {enabled ? (
-                <Button onClick={() => setPending(m)} disabled={!states}>
-                  {t.actions.disable}
-                </Button>
-              ) : (
-                <Button variant="primary" onClick={() => void enable(m)} disabled={!states}>
-                  {t.actions.enable}
-                </Button>
-              )}
+              <div className={styles.moduleActions}>
+                {enabled ? (
+                  <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>
+                    {t.actions.disable}
+                  </Button>
+                ) : (
+                  <Button onClick={() => void enable(m)} disabled={!states}>
+                    {t.actions.enable}
+                  </Button>
+                )}
+              </div>
             </Card>
           );
         })}

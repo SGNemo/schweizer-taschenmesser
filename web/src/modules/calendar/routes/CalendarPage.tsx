@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
+import { useWeekStart } from '@/core/settings/core';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, SplitView, useSplitView } from '@/ui';
+import { Button, Icon, IconButton, Segmented, SplitView, useSplitView } from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
@@ -37,6 +38,7 @@ export default function CalendarPage() {
   const [target, setTarget] = useState<EventTarget>(null);
   const [externalId, setExternalId] = useState<string | null>(null);
   const split = useSplitView();
+  const weekStart = useWeekStart();
 
   const rawView = params.get('view');
   const view: CalendarView | null = isView(rawView)
@@ -46,7 +48,7 @@ export default function CalendarPage() {
       : null;
   const rawDate = params.get('date');
   const date = rawDate && DATE_RE.test(rawDate) ? rawDate : today();
-  const range = rangeFor(view ?? 'month', date);
+  const range = rangeFor(view ?? 'month', date, weekStart);
   const items = useCalendarItems(range);
 
   function go(next: { view?: CalendarView; date?: string }) {
@@ -108,15 +110,14 @@ export default function CalendarPage() {
           </IconButton>
         </div>
         <h2 className={styles.title} aria-live="polite">
-          {viewTitle(view, date)}
+          {viewTitle(view, date, weekStart)}
         </h2>
-        <div className={styles.segment} role="group" aria-label={t.calendar.view}>
-          {VIEWS.map((v) => (
-            <button key={v} type="button" aria-pressed={v === view} onClick={() => go({ view: v })}>
-              {VIEW_LABEL[v]}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label={t.calendar.view}
+          value={view}
+          options={VIEWS.map((v) => ({ value: v, label: VIEW_LABEL[v] }))}
+          onChange={(v) => go({ view: v })}
+        />
       </div>
 
       <div className={styles.body}>

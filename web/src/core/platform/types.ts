@@ -1,6 +1,8 @@
 import type { NotificationService } from '@/core/notifications/service';
 import type { SecretStore } from '@/core/secrets/types';
 import type { UpdateService } from '@/core/update/types';
+import type { DiskService } from './disk';
+import type { SystemService } from './system';
 
 /**
  * Everything that differs between running in a browser (PWA) and inside the native Tauri shell.
@@ -99,6 +101,53 @@ export interface LocalApiService {
   stop(): Promise<void>;
 }
 
+/** Text or a link another Android app shared with this app. */
+export interface SharedContent {
+  title: string;
+  text: string;
+}
+
+/** Android "Share" target. `supported` is false everywhere except the Android app. */
+export interface ShareService {
+  supported: boolean;
+  /** The latest share since the last call (each share is returned once), or `undefined`. */
+  takePending(): Promise<SharedContent | undefined>;
+}
+
+/** Why a global hotkey could not be set: unparsable, owned by another program, or refused by the OS. */
+export type HotkeyError = 'invalid' | 'taken' | 'failed';
+
+export interface TrayLabels {
+  capture: string;
+  open: string;
+  quit: string;
+  tooltip: string;
+}
+
+/**
+ * Desktop shell extras for quick capture (tray, global hotkey, start with Windows). `supported` is
+ * true only in the native desktop app; everything else is a no-op there.
+ */
+export interface DesktopService {
+  supported: boolean;
+  /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
+  setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
+  /** True = the window's close button hides the app in the tray instead of quitting. */
+  setCloseToTray(enabled: boolean): Promise<void>;
+  setTrayLabels(labels: TrayLabels): Promise<void>;
+  setAutostart(enabled: boolean): Promise<void>;
+  autostart(): Promise<boolean>;
+  /** `portable`: the app runs from a folder with a `data/` directory (e.g. a USB stick). */
+  info(): Promise<{ portable: boolean }>;
+  showMain(): Promise<void>;
+  /** Capture window only. */
+  hideCapture(): Promise<void>;
+  /** Capture window only; call it only when the user turned clipboard prefill on. */
+  readClipboard(): Promise<string | undefined>;
+  /** Capture window only: fires every time the window is opened. Returns an unsubscribe function. */
+  onCaptureOpen(callback: () => void): () => void;
+}
+
 export interface PlatformService {
   readonly kind: PlatformKind;
   /** True inside the native shell (installed app), false in a browser tab / PWA. */
@@ -115,6 +164,12 @@ export interface PlatformService {
   screen: ScreenService;
   oauth: OAuthLoopback;
   localApi: LocalApiService;
+  /** Drive overview and read-only scans for the disk module (desktop only). */
+  disk: DiskService;
+  /** Read-only system facts for the system module (desktop only). */
+  system: SystemService;
+  desktop: DesktopService;
+  share: ShareService;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {
@@ -133,6 +188,8 @@ export interface PlatformService {
     /** File names inside `dir` (empty when it does not exist). */
     list(dir: string): Promise<string[]>;
     remove(path: string): Promise<void>;
+    /** Reads a text file from the app's data folder (native only; optional so existing fakes keep compiling). */
+    read?(path: string): Promise<string>;
   };
   /** Self-update of the installed app; `supported` is false in the browser. */
   updater: UpdateService;

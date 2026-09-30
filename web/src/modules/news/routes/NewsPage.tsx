@@ -16,6 +16,7 @@ import {
   ItemList,
   ItemRow,
   PageHeader,
+  patternStyles,
   Segmented,
   TextField,
   Toolbar,
@@ -149,7 +150,7 @@ export default function NewsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <div style={{ height: 'var(--space-4)' }} />
+          <div className={patternStyles.spacer} />
           {articles && shown.length === 0 ? (
             <EmptyState
               icon="note"

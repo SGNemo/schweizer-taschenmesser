@@ -1,0 +1,21 @@
+# Read by ripgrep / fd (and tools built on them): keeps scans cheap. Not a git or build file.
+# Lockfiles
+package-lock.json
+Cargo.lock
+# Build output and reports
+dist/
+dev-dist/
+target/
+playwright-report/
+test-results/
+web/src-tauri/gen/
+# Generated files
+web/src/core/db/schema.snapshot.json
+web/src-tauri/plugins/*/permissions/
+# Data blobs, icons, images, screenshots
+web/src/modules/accounts/wordlist-eff-large.json
+web/src-tauri/icons/
+docs/screenshots/
+*.png
+*.icns
+*.ico

@@ -6,7 +6,14 @@ import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
 import { clear, readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
-import { BaseDirectory, mkdir, readDir, remove, writeFile } from '@tauri-apps/plugin-fs';
+import {
+  BaseDirectory,
+  mkdir,
+  readDir,
+  readTextFile,
+  remove,
+  writeFile,
+} from '@tauri-apps/plugin-fs';
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http';
 import {
   cancel,
@@ -24,7 +31,11 @@ import type {
 } from '@/core/notifications/service';
 import { onPageHidden, sensitiveClipboard } from '../web';
 import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
+import { createDesktopService } from './desktop';
+import { createDisk } from './disk';
 import { createLocalApi } from './localApi';
+import { createShare } from './share';
+import { createSystem } from './system';
 import { createSecureParts } from './secureStore';
 import { createUpdater } from './updater';
 
@@ -67,13 +78,18 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
       return state;
     },
     async show({ title, body }) {
-      sendNotification({ title, body });
+      // Android needs a monochrome status-bar icon (`res/drawable/ic_notification`, rendered by
+      // gen-icons); the launcher icon would appear as a white square. Desktop uses the app icon.
+      sendNotification(kind === 'android' ? { title, body, ...ANDROID_ICON } : { title, body });
     },
     // Only the Android app hands reminders to the OS alarm manager; on desktop the app itself
     // fires them while it is running.
     scheduleUpcoming: kind === 'android' ? scheduleUpcoming : undefined,
   };
 }
+
+/** Small icon + accent tint for Android notifications (drawable name, see `scripts/gen-icons.mjs`). */
+const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#F26A1E' } as const;
 
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
@@ -88,6 +104,7 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
       body: n.body,
       schedule: Schedule.at(new Date(n.at), false, true),
       extra: { url: n.url ?? '/' },
+      ...ANDROID_ICON,
     });
   }
 }
@@ -140,6 +157,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
         }
       },
       remove: (path) => remove(path, inAppData),
+      read: (path) => readTextFile(path, inAppData),
     },
     updater: createUpdater(kind, fetchFn),
     oauth: {
@@ -157,6 +175,10 @@ export async function createTauriPlatform(): Promise<PlatformService> {
       },
     },
     localApi: createLocalApi(kind === 'desktop'),
+    disk: createDisk(kind === 'desktop'),
+    system: createSystem(kind === 'desktop'),
+    desktop: createDesktopService(kind === 'desktop'),
+    share: createShare(kind === 'android'),
     ...(await createSecureParts(kind)), // secrets (OS keystore), biometrics, screen protection
     lifecycle: { onBackground: onPageHidden },
   };

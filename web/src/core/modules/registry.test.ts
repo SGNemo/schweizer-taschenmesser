@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { allManifests, validateManifest } from './registry';
+import { allManifests, availableManifestsFor, isAvailableOn, validateManifest } from './registry';
 
 describe('module registry', () => {
   it('discovers manifests', () => {
@@ -24,6 +24,29 @@ describe('module registry', () => {
     expect(validateManifest({ ...base, layout: 'huge' as never })).toHaveLength(1);
     const routes = base.routes.map((r) => ({ ...r, layout: 'tiny' as never }));
     expect(validateManifest({ ...base, routes })).toHaveLength(routes.length);
+  });
+
+  it('validates the platforms of a module', () => {
+    const base = allManifests[0]!;
+    expect(validateManifest({ ...base, platforms: ['desktop'] })).toEqual([]);
+    expect(validateManifest({ ...base, platforms: ['ios' as never] })).toHaveLength(1);
+    expect(validateManifest({ ...base, platforms: [] })).toHaveLength(1);
+  });
+
+  it('filters by platform; a missing field means everywhere', () => {
+    const base = allManifests[0]!;
+    expect(isAvailableOn(base, 'android')).toBe(base.platforms?.includes('android') ?? true);
+    const desktopOnly = { ...base, platforms: ['desktop' as const] };
+    expect(isAvailableOn(desktopOnly, 'desktop')).toBe(true);
+    expect(isAvailableOn(desktopOnly, 'android')).toBe(false);
+    expect(isAvailableOn(desktopOnly, 'web')).toBe(false);
+    expect(isAvailableOn({ ...base, platforms: undefined }, 'web')).toBe(true);
+  });
+
+  it('availableManifests keeps every all-platform module', () => {
+    const web = availableManifestsFor('web');
+    for (const m of allManifests.filter((x) => !x.platforms && !x.devOnly))
+      expect(web).toContain(m);
   });
 });
 
