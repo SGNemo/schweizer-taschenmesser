@@ -81,6 +81,6 @@ Add `ImporterMeta` entries in the module manifest `contributions.onboarding` and
 - Work on a feature branch, PRs into `develop`; `main` only receives release merges. Conventional Commits (`feat(scope):`, `fix:`, `feat!:`). Merge `develop` into your branch (no rebase of shared history).
 
 ## Other recipes
-- Regenerate PWA icons: `npm run gen:icons` (native: `npx tauri icon public/icon.svg`).
+- Regenerate PWA icons: `npm run gen:icons` (native: `npx tauri icon brand/app-icon.svg`, see *Icons / branding*).
 - Screenshots (manual, not CI): `npm run screenshots`.
 - Use the local AI import API / MCP: `docs/AI-IMPORT.md`.

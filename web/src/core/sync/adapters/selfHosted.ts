@@ -19,7 +19,7 @@ export interface VaultInfo {
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
-/** Talks to the Taschenmesser sync server (`server/`): plain HTTP + bearer token. */
+/** Talks to the Nemo sync server (`server/`): plain HTTP + bearer token. */
 export class SelfHostedAdapter implements SyncAdapter {
   readonly kind = 'selfHosted';
   private readonly base: string;

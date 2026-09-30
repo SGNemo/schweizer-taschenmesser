@@ -1,6 +1,6 @@
 # CLAUDE.md – Nemo
 
-Modular, local-first everyday app ("Swiss army knife"): PWA, plus a portable Windows exe and an Android APK (Tauri 2 shell around the same web app).
+Modular, local-first everyday app (formerly "Schweizer Taschenmesser" – internal identifiers keep that name): PWA, plus a portable Windows exe and an Android APK (Tauri 2 shell around the same web app).
 Data lives in IndexedDB; sync is a separate optional layer; an AI assistant answers questions with as few tokens as possible and never sees user data.
 Code, comments and commits are **English**; the UI is **German only** (all texts in `web/src/strings.ts`).
 
