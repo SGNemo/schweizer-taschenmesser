@@ -1,37 +1,54 @@
 import { useId } from 'react';
 
 /**
- * The Nemo fish (source of truth: `web/brand/logo-mark.svg`, keep both in step). Decorative by
- * default; pass `title` where the logo is the only label.
+ * The Nemo fish ("Welle"). Source of truth: `web/brand/logo-mark.svg`; the splash in
+ * `web/index.html` repeats the same paths (`brand-sync.test.ts` keeps the three in step).
+ * Decorative by default; pass `title` where the logo is the only label. `mono` draws it in the
+ * current text colour (empty states, monochrome contexts).
  */
-export function Logo({ size = 32, title }: { size?: number; title?: string }) {
-  const clip = useId();
+export const LOGO_PATHS = {
+  body: 'M168 256c0-76 80-128 176-128 64 0 120 58 120 128s-56 128-120 128c-96 0-176-52-176-128z',
+  tail: 'M184 256 100 182c-20-17-46 4-34 28l20 46-20 46c-12 24 14 45 34 28z',
+  cut1: 'M262 118c-34 40-34 236 0 276',
+  cut2: 'M364 152c-22 30-22 178 0 208',
+} as const;
+/** Bounding box of the fish inside the 512 canvas (tail tip to nose). */
+export const LOGO_VIEWBOX = '60 120 410 272';
+
+export function Logo({
+  size = 32,
+  title,
+  mono = false,
+}: {
+  size?: number;
+  title?: string;
+  mono?: boolean;
+}) {
+  const cut = useId();
   return (
     <svg
-      viewBox="24 96 456 304"
+      viewBox={LOGO_VIEWBOX}
       height={size}
-      width={Math.round((size * 456) / 304)}
+      width={Math.round((size * 410) / 272)}
       role={title ? 'img' : undefined}
       aria-label={title}
       aria-hidden={title ? undefined : true}
       focusable="false"
     >
       <defs>
-        <clipPath id={clip}>
-          <ellipse cx="296" cy="262" rx="172" ry="126" />
-        </clipPath>
+        <mask id={cut} maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+          <rect width="512" height="512" fill="#fff" />
+          <g fill="none" stroke="#000" strokeLinecap="round">
+            <path d={LOGO_PATHS.cut1} strokeWidth="42" />
+            <path d={LOGO_PATHS.cut2} strokeWidth="34" />
+          </g>
+          <circle cx="420" cy="230" r="15" fill="#000" />
+        </mask>
       </defs>
-      <path d="M236 150c14-40 60-58 104-40 12 5 12 20 2 28l-24 18z" fill="#F26A1E" />
-      <path
-        d="M170 262C136 220 98 188 58 176c-14-4-24 8-20 22l18 64-18 64c-4 14 6 26 20 22 40-12 78-44 112-86z"
-        fill="#F26A1E"
-      />
-      <ellipse cx="296" cy="262" rx="172" ry="126" fill="#F57A2A" />
-      <g clipPath={`url(#${clip})`} fill="#fff">
-        <rect x="338" y="100" width="46" height="330" rx="23" />
-        <rect x="214" y="100" width="50" height="330" rx="25" />
+      <g fill={mono ? 'currentColor' : '#F26A1E'} mask={`url(#${cut})`}>
+        <path d={LOGO_PATHS.body} />
+        <path d={LOGO_PATHS.tail} />
       </g>
-      <circle cx="420" cy="238" r="18" fill="#12303A" />
     </svg>
   );
 }

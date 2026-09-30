@@ -3,19 +3,21 @@
  * Renders every brand raster asset from the SVG sources in `brand/` (uses Playwright's Chromium, so
  * no image library is required). Run after changing a source: `npm run gen:icons`.
  *
- *   public/            icon.svg, favicon.svg, favicon-32.png, apple-touch-icon.png, pwa-*.png
+ *   public/            icon.svg, favicon.svg, favicon.ico, favicon-32.png, apple-touch-icon.png,
+ *                      pwa-*.png, pwa-badge-96.png (monochrome web-push badge)
  *   src-tauri/icons/   icon.png + icon.ico (16–256, incl. 128) and the Android launcher layers
  *                      (foreground, monochrome, notification icon, background colour)
- *   docs/brand/        README header and social preview image
+ *   docs/brand/        README header (light + dark) and social preview image
  *
- * The other native icons (Square*Logo, icon.icns, Android legacy mipmaps) come from the Tauri CLI:
- *   npx tauri icon brand/app-icon.svg      (then re-run this script: it restores icon.ico + Android layers)
+ * The other native icons (icon.icns, Android legacy mipmaps) come from the Tauri CLI:
+ *   npx tauri icon brand/app-icon.svg      (then re-run this script: it restores icon.ico + Android
+ *   layers and removes the iOS / appx sets no target uses)
  *
  * Set PW_CHROMIUM_PATH to use a specific Chromium binary.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -28,15 +30,22 @@ const executablePath =
 const appIcon = brand('app-icon.svg');
 const maskable = brand('app-icon-maskable.svg');
 // Tiny sizes: the fish is enlarged and the corners are less round so it stays readable at 16–32 px.
-const appIconSmall = appIcon.replace('scale(.72)', 'scale(.9)').replace('rx="112"', 'rx="96"');
+const appIconSmall = appIcon.replace('scale(.74)', 'scale(.92)').replace('rx="112"', 'rx="96"');
 const mark = brand('logo-mark.svg');
-// Favicon: the fish alone, cropped to its bounding box, on a transparent tab.
-const favicon = mark.replace('viewBox="0 0 512 512"', 'viewBox="24 96 456 304"');
+// Favicon: the fish alone on a transparent tab, in a square frame around its bounding box.
+const favicon = mark.replace('viewBox="0 0 512 512"', 'viewBox="60 51 410 410"');
 const androidFg = brand('android-foreground.svg');
 const androidMono = brand('android-monochrome.svg');
 const mono = brand('logo-mono.svg');
+const monoWhite = mono.replace('<g fill="#000"', '<g fill="#fff"');
+const wordmark = brand('logo-wordmark.svg');
 const wordmarkLight = brand('logo-wordmark-light.svg');
 const OCEAN = 'linear-gradient(135deg, #0B1D2B 0%, #0F3440 100%)';
+const LIGHT = '#fbf8f3';
+/* Inter as a data URL: Chromium blocks file:// fonts on about:blank pages (setContent). */
+const interData = `data:font/woff2;base64,${readFileSync(
+  join(root, 'node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2'),
+).toString('base64')}`;
 
 const out = (...p) => {
   const file = join(...p);
@@ -93,10 +102,15 @@ try {
   write(pub('icon.svg'), appIcon);
   write(pub('favicon.svg'), favicon);
   write(pub('favicon-32.png'), await png(favicon, 32));
+  const faviconFrames = [];
+  for (const size of [16, 32, 48]) faviconFrames.push({ size, data: await png(favicon, size) });
+  write(pub('favicon.ico'), ico(faviconFrames));
   write(pub('apple-touch-icon.png'), await png(maskable, 180, 180, { transparent: false }));
   write(pub('pwa-192.png'), await png(appIcon, 192));
   write(pub('pwa-512.png'), await png(appIcon, 512));
   write(pub('pwa-maskable-512.png'), await png(maskable, 512));
+  // Web push badge (Android status bar): white silhouette on transparent.
+  write(pub('pwa-badge-96.png'), await png(monoWhite, 96));
 
   // ---- Windows / Tauri -------------------------------------------------------------------
   const icons = join(root, 'src-tauri', 'icons');
@@ -106,6 +120,13 @@ try {
     frames.push({ size, data: await png(size <= 32 ? appIconSmall : appIcon, size) });
   }
   write(out(icons, 'icon.ico'), ico(frames));
+  // `tauri icon` also writes iOS and appx (Square*Logo, StoreLogo) sets; no target of this app uses them.
+  for (const name of readdirSync(icons)) {
+    if (name === 'ios' || /^Square\d+x\d+Logo\.png$|^StoreLogo\.png$/.test(name)) {
+      rmSync(join(icons, name), { recursive: true, force: true });
+      console.log(`removed src-tauri/icons/${name}`);
+    }
+  }
 
   // ---- Android layers (108 dp canvas; the launcher mask keeps the central 66 dp) ------------
   const density = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
@@ -120,15 +141,14 @@ try {
       await png(androidMono, layer),
     );
     // Status-bar icon: white silhouette on transparent, 24 dp.
-    const notif = mono.replace('<g fill="#000"', '<g fill="#fff"');
     write(
       out(icons, 'android', `drawable-${name}`, 'ic_notification.png'),
-      await png(notif, Math.round(24 * factor)),
+      await png(monoWhite, Math.round(24 * factor)),
     );
   }
   write(
     out(icons, 'android', 'values', 'ic_launcher_background.xml'),
-    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">#12384A</color>\n</resources>\n`,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">#164D60</color>\n</resources>\n`,
   );
   write(
     out(icons, 'android', 'mipmap-anydpi-v26', 'ic_launcher.xml'),
@@ -142,20 +162,30 @@ try {
   );
 
   // ---- README header + social preview -----------------------------------------------------
-  const inter = pathToFileURL(
-    join(root, 'node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2'),
-  ).href;
-  const page = (w, h, body) => `<style>
-    @font-face{font-family:Inter;src:url(${inter});font-weight:100 900}
+  const page = (w, h, body, { bg = OCEAN, fg = '#E7F1F2', muted = '#9FB6BC' } = {}) => `<style>
+    @font-face{font-family:Inter;src:url(${interData});font-weight:100 900}
     html,body{margin:0}
-    .bg{width:${w}px;height:${h}px;background:${OCEAN};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;color:#E7F1F2;font-family:Inter,sans-serif}
+    .bg{width:${w}px;height:${h}px;background:${bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;color:${fg};font-family:Inter,sans-serif}
     .bg svg{height:${Math.round(h * 0.34)}px;width:auto}
-    .tag{font-size:${Math.round(h * 0.055)}px;font-weight:500;letter-spacing:.01em;color:#9FB6BC}
+    .tag{font-size:${Math.round(h * 0.055)}px;font-weight:500;letter-spacing:.01em;color:${muted}}
   </style><div class="bg">${body}</div>`;
   const tag = 'Modulare, lokale Alltags-App';
+  // README header: a dark and a light version, picked by GitHub through <picture>.
   write(
     out(repo, 'docs', 'brand', 'header.png'),
     await pageShot(page(1280, 320, `${wordmarkLight}<div class="tag">${tag}</div>`), 1280, 320),
+  );
+  write(
+    out(repo, 'docs', 'brand', 'header-light.png'),
+    await pageShot(
+      page(1280, 320, `${wordmark}<div class="tag">${tag}</div>`, {
+        bg: LIGHT,
+        fg: '#13262F',
+        muted: '#51616A',
+      }),
+      1280,
+      320,
+    ),
   );
   write(
     out(repo, 'docs', 'brand', 'social-preview.png'),
