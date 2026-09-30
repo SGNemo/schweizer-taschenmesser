@@ -12,12 +12,21 @@ import { createJsonRuntime } from '@/core/dataapi/importer';
 import { buildOpenApi } from '@/core/dataapi/openapi';
 import { ImportJsonError } from '@/core/dataapi/parse';
 import { apiCollections, apiModules } from '@/core/dataapi/scope';
+import { batchStatus, countRecords, newBatchId, undoImport } from '@/core/importer/batches';
 import { buildPreview } from '@/core/importer/plan';
+import type { ImportBatch } from '@/core/importer/types';
+import {
+  commitPendingBatch,
+  createPendingBatch,
+  getBatch,
+  listApiBatches,
+  rejectBatch,
+} from '@/core/dataapi/pending';
 import { loadModuleStates } from '@/core/modules/activation';
 import type { ModuleManifest } from '@/core/modules/types';
 import { now as clockNow, today } from '@/core/time/now';
 import { t } from '@/strings';
-import { isExpired, loadConfig, type ApiToken, type Grant } from './config';
+import { hashToken, isExpired, loadConfig, type ApiToken, type Grant } from './config';
 import type { AccessEntry } from './log';
 
 export interface ApiRequest {
@@ -74,8 +83,10 @@ function grantOf(token: ApiToken, moduleId: string): Grant {
 interface Route {
   name: string;
   module?: string;
-  rest?: string;
+  batchId?: string;
 }
+
+const BATCH_RE = /^[a-z0-9]{1,40}$/;
 
 function route(method: string, path: string): Route {
   const parts = path.split('/').filter(Boolean);
@@ -85,8 +96,11 @@ function route(method: string, path: string): Route {
   if (parts.length === 2 && a === 'openapi.json' && method === 'GET') return { name: 'openapi' };
   if (a === 'batches') {
     if (parts.length === 2 && method === 'GET') return { name: 'batches' };
-    if (parts.length === 3 && (method === 'GET' || method === 'DELETE')) return { name: 'batch' };
-    if (parts.length === 4 && c === 'commit' && method === 'POST') return { name: 'commit' };
+    const batchId = b && BATCH_RE.test(b) ? b : undefined;
+    if (parts.length === 3 && batchId && (method === 'GET' || method === 'DELETE'))
+      return { name: 'batch', batchId };
+    if (parts.length === 4 && batchId && c === 'commit' && method === 'POST')
+      return { name: 'commit', batchId };
   }
   if (parts.length === 3 && a && MODULE_RE.test(a)) {
     if (b === 'items' && method === 'GET') return { name: 'items', module: a };
@@ -157,15 +171,85 @@ export async function handleRequest(req: ApiRequest, ctx: HandlerContext): Promi
         log.module = manifest.id;
         if (!grantOf(token, manifest.id).write) throw new ApiError(403, 'forbidden');
         const dryRun = params.get('dryRun') === 'true' || params.get('dryRun') === '1';
-        const result = await checkImport(manifest, req.body ?? '', database);
-        if (!dryRun) {
-          // Batches waiting for confirmation come with the next step (phase 3).
-          throw new ApiError(501, 'not-implemented', t.localApi.notYetText);
+        const text = req.body ?? '';
+        const bodyHash = await hashToken(text);
+        const key = req.idempotencyKey ?? undefined;
+        if (!dryRun && key) {
+          const earlier = (await listApiBatches(database, token.id)).find(
+            (b) => b.idempotencyKey === key,
+          );
+          if (earlier) {
+            if (earlier.bodyHash !== bodyHash) throw new ApiError(409, 'idempotency-conflict');
+            return done(200, batchView(earlier), { count: 0 });
+          }
         }
-        return done(200, { dryRun: true, ...result }, { count: result.items.length });
+        const batchId = newBatchId();
+        const check = await checkImport(manifest, text, batchId, database);
+        const result = { summary: check.summary, items: check.items };
+        const count = { count: check.items.length };
+        if (dryRun) return done(200, { dryRun: true, ...result }, count);
+        if (check.summary.ok + check.summary.update === 0) {
+          return done(200, { batchId: null, status: 'nothing', ...result }, count);
+        }
+        const batch = await createPendingBatch(
+          manifest,
+          {
+            batchId,
+            rows: check.rows,
+            tokenId: token.id,
+            tokenName: token.name,
+            idempotencyKey: key,
+            bodyHash,
+            result,
+          },
+          database,
+        );
+        // Auto-commit takes new entries only; changes of existing ones always need the preview.
+        if (token.autoCommit && check.summary.update === 0) {
+          const committed = await commitPendingBatch(manifest, batch.id, undefined, database);
+          return done(201, batchView(committed), count);
+        }
+        return done(202, batchView(batch), count);
+      }
+      case 'batches': {
+        const list = (await listApiBatches(database, token.id)).slice(0, 50);
+        return done(200, { batches: list.map((b) => batchSummary(b)) }, { count: list.length });
+      }
+      case 'batch':
+      case 'commit': {
+        const batch = r.batchId ? await getBatch(r.batchId, database) : undefined;
+        // Other tokens' batches, wizard imports and unknown ids look the same.
+        if (!batch || batch.origin !== 'api' || batch.tokenId !== token.id) {
+          throw new ApiError(404, 'unknown-batch');
+        }
+        log.module = batch.moduleId;
+        if (r.name === 'batch' && req.method === 'GET') return done(200, batchView(batch));
+        const manifest = permitted.find((m) => m.id === batch.moduleId);
+        if (!manifest) throw new ApiError(404, 'unknown-batch');
+        if (!grantOf(token, manifest.id).write) throw new ApiError(403, 'forbidden');
+        const status = batchStatus(batch);
+        if (r.name === 'commit') {
+          if (status !== 'pending') throw new ApiError(409, 'not-pending');
+          const hasUpdates = (batch.rows ?? []).some((row) => row.candidate.update);
+          if (!token.autoCommit || hasUpdates) throw new ApiError(403, 'confirmation-required');
+          const committed = await commitPendingBatch(manifest, batch.id, undefined, database);
+          return done(200, batchView(committed));
+        }
+        // DELETE: reject a waiting batch, undo a committed one; repeating it changes nothing.
+        if (status === 'pending') {
+          await rejectBatch(batch.id, database);
+        } else if (status === 'committed') {
+          const undone = await undoImport(manifest, batch.id, database);
+          return done(200, {
+            ...batchView((await getBatch(batch.id, database))!),
+            removed: undone.removed,
+            kept: undone.kept,
+          });
+        }
+        return done(200, batchView((await getBatch(batch.id, database))!));
       }
       default:
-        throw new ApiError(501, 'not-implemented', t.localApi.notYetText);
+        throw new ApiError(404, 'not-found');
     }
   } catch (e) {
     if (e instanceof ApiError) {
@@ -251,30 +335,78 @@ async function readItemsPage(
   };
 }
 
-async function checkImport(manifest: ModuleManifest, text: string, database: TaschenmesserDB) {
+async function checkImport(
+  manifest: ModuleManifest,
+  text: string,
+  batchId: string,
+  database: TaschenmesserDB,
+) {
   const runtime = createJsonRuntime(manifest, database);
   let candidates;
   try {
     ({ candidates } = await runtime.parse(
       'json',
       { kind: 'json', text },
-      { today: today(), options: {}, batchId: 'check' },
+      { today: today(), options: {}, batchId },
     ));
   } catch (e) {
     if (e instanceof ImportJsonError) throw new ApiError(400, 'bad-body', e.text);
     throw e;
   }
   const rows = await buildPreview(manifest, runtime, candidates);
-  const items2 = rows.map((row) => ({
-    index: row.index,
-    collection: row.candidate.collection || undefined,
-    label: row.candidate.label,
-    status: row.invalid ? 'invalid' : row.duplicate ? 'duplicate' : 'ok',
-    ...(row.invalid ? { errors: [row.invalid] } : {}),
-  }));
-  const count = (s: string) => items2.filter((i) => i.status === s).length;
+  const items = rows.map((row) => {
+    const update = row.candidate.update;
+    const status = row.invalid
+      ? 'invalid'
+      : row.duplicate
+        ? update
+          ? 'unchanged'
+          : 'duplicate'
+        : update
+          ? 'update'
+          : 'ok';
+    return {
+      index: row.index,
+      collection: row.candidate.collection || undefined,
+      label: row.candidate.label,
+      status,
+      ...(row.invalid ? { errors: [row.invalid] } : {}),
+      ...(status === 'update' ? { changes: update!.lines } : {}),
+    };
+  });
+  const count = (...states: string[]) => items.filter((i) => states.includes(i.status)).length;
   return {
-    summary: { ok: count('ok'), duplicate: count('duplicate'), invalid: count('invalid') },
-    items: items2,
+    rows,
+    summary: {
+      ok: count('ok'),
+      update: count('update'),
+      duplicate: count('duplicate', 'unchanged'),
+      invalid: count('invalid'),
+    },
+    items,
   };
+}
+
+function batchSummary(batch: ImportBatch) {
+  const result = batch.result as { summary?: unknown } | undefined;
+  return {
+    batchId: batch.id,
+    module: batch.moduleId,
+    status: batchStatus(batch),
+    createdAt: new Date(batch.createdAt).toISOString(),
+    ...(result?.summary ? { summary: result.summary } : {}),
+    ...(batchStatus(batch) === 'pending' ? { message: t.localApi.pendingText } : {}),
+    ...(batch.committedAt
+      ? {
+          committedAt: new Date(batch.committedAt).toISOString(),
+          written: countRecords(batch),
+          ...(batch.conflicts ? { conflicts: batch.conflicts } : {}),
+        }
+      : {}),
+  };
+}
+
+function batchView(batch: ImportBatch) {
+  const result = batch.result as { items?: unknown } | undefined;
+  return { ...batchSummary(batch), ...(result?.items ? { items: result.items } : {}) };
 }

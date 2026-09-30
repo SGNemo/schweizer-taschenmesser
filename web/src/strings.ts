@@ -1390,6 +1390,24 @@ export const t = {
       mailFeatureHint: 'Auf Knopfdruck nach Rechnungen, Abos, Terminen und Verträgen suchen.',
     },
   },
+  pendingImport: {
+    title: 'Wartender Import',
+    banner: (source: string, n: number, module: string) =>
+      `${source || 'Eine KI'} möchte ${n === 1 ? '1 Eintrag' : `${n} Einträge`} in „${module}“ übernehmen.`,
+    review: 'Ansehen',
+    dialogTitle: (module: string) => `Import prüfen: ${module}`,
+    intro: (source: string) =>
+      `Gesendet über den Zugang „${source}“. Nur angehakte Einträge werden gespeichert; Änderungen an vorhandenen Einträgen musst du einzeln anhaken.`,
+    accept: (n: number) => (n === 1 ? '1 Eintrag übernehmen' : `${n} Einträge übernehmen`),
+    reject: 'Ablehnen',
+    accepted: (n: number, conflicts: number) =>
+      `${n === 1 ? '1 Eintrag' : `${n} Einträge`} übernommen.` +
+      (conflicts > 0
+        ? ` ${conflicts} Änderung(en) übersprungen, weil der Eintrag inzwischen bearbeitet wurde.`
+        : ''),
+    rejected: 'Import abgelehnt.',
+    failed: 'Das hat nicht geklappt. Bitte erneut versuchen.',
+  },
   localApi: {
     title: 'KI-Zugriff',
     intro:
@@ -1455,6 +1473,14 @@ export const t = {
     unused: 'noch nie benutzt',
     rightsSummary: (read: boolean, write: boolean) =>
       [read ? 'lesen' : '', write ? 'schreiben' : ''].filter(Boolean).join(' + '),
+    imports: 'Importe über die Schnittstelle',
+    noImports: 'Noch keine.',
+    importState: {
+      pending: 'wartet auf Bestätigung',
+      committed: (n: number) => (n === 1 ? '1 Eintrag übernommen' : `${n} Einträge übernommen`),
+      rejected: 'abgelehnt',
+      undone: 'rückgängig gemacht',
+    },
     log: 'Letzte Zugriffe',
     noLog: 'Noch keine Zugriffe.',
     clearLog: 'Liste leeren',
@@ -1469,11 +1495,16 @@ export const t = {
       'bad-cursor': 'Ungültiger cursor.',
       'bad-query': 'Suchtext zu lang.',
       'bad-body': 'Der Inhalt ist kein gültiger Import.',
-      'not-implemented': 'Noch nicht verfügbar.',
+      'unknown-batch': 'Diesen Import gibt es nicht (oder er gehört zu einem anderen Zugang).',
+      'not-pending': 'Der Import wartet nicht mehr auf Bestätigung.',
+      'confirmation-required':
+        'Dieser Import muss in der App bestätigt werden (Zugang ohne „Automatisch übernehmen“ oder er ändert vorhandene Einträge).',
+      'idempotency-conflict':
+        'Dieser Idempotency-Key wurde schon für einen anderen Inhalt verwendet.',
       internal: 'Interner Fehler.',
     } as Record<string, string>,
-    notYetText:
-      'Importe ohne dryRun (Vorschau in der App, Batches, Rückgängig) kommen im nächsten Schritt. Bitte vorerst ?dryRun=true verwenden.',
+    pendingText:
+      'Der Import wartet auf Bestätigung in der App. Der Nutzer sieht eine Vorschau und entscheidet je Eintrag.',
   },
   dataApi: {
     importerLabel: 'JSON einfügen',
@@ -1495,7 +1526,10 @@ export const t = {
     unknownCollection: (names: string[]) => `Unbekannte Sammlung (erlaubt: ${names.join(', ')}).`,
     badKey: 'key muss ein nicht leerer Text sein.',
     duplicateKey: 'key kommt mehrfach vor.',
-    idNotAllowed: 'id wird von der App vergeben und darf nicht mitgeschickt werden.',
+    badId: 'id muss ein Text sein (die id eines vorhandenen Eintrags).',
+    idUnknown: 'Kein vorhandener Eintrag mit dieser id. Für neue Einträge die id weglassen.',
+    yes: 'Ja',
+    no: 'Nein',
     unknownField: (name: string) => `Unbekanntes Feld „${name}“.`,
     badMoney: 'Betrag als Zahl in Euro mit höchstens zwei Nachkommastellen.',
     badCurrency: 'Nur EUR wird unterstützt.',
@@ -1537,6 +1571,8 @@ export const t = {
     selectAll: 'Alle auswählen',
     selectNone: 'Keine auswählen',
     duplicate: 'Schon vorhanden',
+    change: 'Änderung',
+    unchanged: 'Keine Änderung',
     invalid: 'Nicht importierbar',
     importN: (n: number) => (n === 1 ? '1 Eintrag importieren' : `${n} Einträge importieren`),
     nothingSelected: 'Nichts ausgewählt.',

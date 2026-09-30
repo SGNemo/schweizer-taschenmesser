@@ -258,7 +258,7 @@ describe('handler: import check', () => {
       summary: Record<string, number>;
       items: { status: string; errors?: string[] }[];
     };
-    expect(body.summary).toEqual({ ok: 1, duplicate: 1, invalid: 1 });
+    expect(body.summary).toEqual({ ok: 1, update: 0, duplicate: 1, invalid: 1 });
     expect(body.items.map((i) => i.status)).toEqual(['ok', 'duplicate', 'invalid']);
     expect(body.items[2]!.errors![0]).toContain('dueDate');
     expect(body.items[2]!.errors![0]).not.toContain('morgen');
@@ -266,7 +266,7 @@ describe('handler: import check', () => {
     expect(await db.table('_imports').count()).toBe(0);
   });
 
-  it('rejects bodies that are not an import; real imports come in the next phase', async () => {
+  it('rejects bodies that are not an import', async () => {
     const entry = await token({ todos: { read: false, write: true } });
     const bad = await call(entry.id, 'POST', '/v1/todos/import', {
       query: 'dryRun=true',
@@ -274,8 +274,6 @@ describe('handler: import check', () => {
     });
     expect(bad.status).toBe(400);
     expect(bad.body).toMatchObject({ error: 'bad-body' });
-    const real = await call(entry.id, 'POST', '/v1/todos/import', { body: '[{"title":"x"}]' });
-    expect(real.status).toBe(501);
   });
 });
 
@@ -289,4 +287,176 @@ it('every visible data-API module can be described for a token', async () => {
   const ids = (res.body as { modules: { id: string }[] }).modules.map((m) => m.id);
   expect(ids).not.toContain('accounts');
   expect(ids).toContain('todos');
+});
+
+describe('handler: batches', () => {
+  const tasks = (...titles: string[]) =>
+    JSON.stringify({ items: titles.map((title) => ({ collection: 'task', title })) });
+  const titles = async () => (await taskRepo.active().toArray()).map((x) => x.title).sort();
+
+  it('an import waits for confirmation; the client cannot commit it without auto-commit', async () => {
+    const entry = await token({ todos: { read: true, write: true } });
+    const res = await call(entry.id, 'POST', '/v1/todos/import', { body: tasks('A', 'B') });
+    expect(res.status).toBe(202);
+    const body = res.body as { batchId: string; status: string; summary: Record<string, number> };
+    expect(body.status).toBe('pending');
+    expect(body.summary.ok).toBe(2);
+    expect(await titles()).toEqual([]);
+
+    const list = await call(entry.id, 'GET', '/v1/batches');
+    expect((list.body as { batches: { batchId: string }[] }).batches.map((b) => b.batchId)).toEqual(
+      [body.batchId],
+    );
+    const commit = await call(entry.id, 'POST', `/v1/batches/${body.batchId}/commit`);
+    expect(commit.status).toBe(403);
+    expect(commit.body).toMatchObject({ error: 'confirmation-required' });
+
+    // The user confirms in the app.
+    const { commitPendingBatch } = await import('@/core/dataapi/pending');
+    await commitPendingBatch(getManifest('todos')!, body.batchId);
+    expect(await titles()).toEqual(['A', 'B']);
+    const detail = await call(entry.id, 'GET', `/v1/batches/${body.batchId}`);
+    expect(detail.body).toMatchObject({ status: 'committed', written: 2 });
+    expect(await db.table('_outbox').count()).toBeGreaterThanOrEqual(2);
+
+    // Undo through the API.
+    const undo = await call(entry.id, 'DELETE', `/v1/batches/${body.batchId}`);
+    expect(undo.body).toMatchObject({ status: 'undone', removed: 2, kept: 0 });
+    expect(await titles()).toEqual([]);
+    const again = await call(entry.id, 'DELETE', `/v1/batches/${body.batchId}`);
+    expect(again.body).toMatchObject({ status: 'undone' });
+  });
+
+  it('auto-commit tokens store new entries at once; undo still works', async () => {
+    const { entry } = await createToken({
+      name: 'Auto',
+      grants: { todos: { read: false, write: true } },
+      expiresInDays: 30,
+      autoCommit: true,
+    });
+    const res = await call(entry.id, 'POST', '/v1/todos/import', { body: tasks('C') });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ status: 'committed', written: 1 });
+    expect(await titles()).toEqual(['C']);
+    const id = (res.body as { batchId: string }).batchId;
+    await call(entry.id, 'DELETE', `/v1/batches/${id}`);
+    expect(await titles()).toEqual([]);
+  });
+
+  it('a waiting batch can be rejected by the client', async () => {
+    const entry = await token({ todos: { read: false, write: true } });
+    const res = await call(entry.id, 'POST', '/v1/todos/import', { body: tasks('D') });
+    const id = (res.body as { batchId: string }).batchId;
+    const del = await call(entry.id, 'DELETE', `/v1/batches/${id}`);
+    expect(del.body).toMatchObject({ status: 'rejected' });
+    expect(await titles()).toEqual([]);
+  });
+
+  it('the same Idempotency-Key returns the same batch; another body conflicts', async () => {
+    const entry = await token({ todos: { read: false, write: true } });
+    const first = await call(entry.id, 'POST', '/v1/todos/import', {
+      body: tasks('E'),
+      idempotencyKey: 'k1',
+    });
+    const second = await call(entry.id, 'POST', '/v1/todos/import', {
+      body: tasks('E'),
+      idempotencyKey: 'k1',
+    });
+    expect(second.status).toBe(200);
+    expect((second.body as { batchId: string }).batchId).toBe(
+      (first.body as { batchId: string }).batchId,
+    );
+    expect(await db.table('_imports').count()).toBe(1);
+    const other = await call(entry.id, 'POST', '/v1/todos/import', {
+      body: tasks('F'),
+      idempotencyKey: 'k1',
+    });
+    expect(other.status).toBe(409);
+  });
+
+  it('sending data that already exists creates nothing', async () => {
+    const entry = await token({ todos: { read: false, write: true } });
+    await taskRepo.create({ listId: 'inbox', title: 'G', done: false, priority: 0, order: 0 });
+    const res = await call(entry.id, 'POST', '/v1/todos/import', { body: tasks('G') });
+    expect(res.body).toMatchObject({ batchId: null, status: 'nothing' });
+    expect(await db.table('_imports').count()).toBe(0);
+  });
+
+  it('batches of other tokens are invisible', async () => {
+    const a = await token({ todos: { read: false, write: true } });
+    const b = await token({ todos: { read: false, write: true } });
+    const res = await call(a.id, 'POST', '/v1/todos/import', { body: tasks('H') });
+    const id = (res.body as { batchId: string }).batchId;
+    expect((await call(b.id, 'GET', `/v1/batches/${id}`)).status).toBe(404);
+    expect((await call(b.id, 'DELETE', `/v1/batches/${id}`)).status).toBe(404);
+    expect((await call(b.id, 'GET', '/v1/batches')).body).toEqual({ batches: [] });
+  });
+
+  it('changes of existing entries are shown as a diff and never auto-committed', async () => {
+    const { entry } = await createToken({
+      name: 'Auto',
+      grants: { todos: { read: true, write: true } },
+      expiresInDays: 30,
+      autoCommit: true,
+    });
+    const task = await taskRepo.create({
+      listId: 'inbox',
+      title: 'Alt',
+      done: false,
+      priority: 0,
+      order: 0,
+    });
+    const res = await call(entry.id, 'POST', '/v1/todos/import', {
+      body: JSON.stringify([{ collection: 'task', id: task.id, title: 'Neu', priority: 2 }]),
+    });
+    expect(res.status).toBe(202);
+    const body = res.body as { batchId: string; items: { status: string; changes: unknown }[] };
+    expect(body.items[0]!.status).toBe('update');
+    expect(body.items[0]!.changes).toEqual([
+      { field: 'title', from: 'Alt', to: 'Neu' },
+      { field: 'priority', from: '0', to: '2' },
+    ]);
+    expect((await call(entry.id, 'POST', `/v1/batches/${body.batchId}/commit`)).status).toBe(403);
+    expect((await taskRepo.get(task.id))!.title).toBe('Alt');
+
+    const { commitPendingBatch, getBatch, reviewRows } = await import('@/core/dataapi/pending');
+    const todos = getManifest('todos')!;
+    const rows = await reviewRows(todos, (await getBatch(body.batchId))!);
+    expect(rows[0]!.selected).toBe(false); // never pre-ticked
+    await commitPendingBatch(todos, body.batchId, [0]);
+    expect(await taskRepo.get(task.id)).toMatchObject({ title: 'Neu', priority: 2 });
+
+    await call(entry.id, 'DELETE', `/v1/batches/${body.batchId}`);
+    expect(await taskRepo.get(task.id)).toMatchObject({ title: 'Alt', priority: 0 });
+  });
+
+  it('a change is skipped when the entry was edited meanwhile', async () => {
+    const entry = await token({ todos: { read: true, write: true } });
+    const task = await taskRepo.create({
+      listId: 'inbox',
+      title: 'X',
+      done: false,
+      priority: 0,
+      order: 0,
+    });
+    const res = await call(entry.id, 'POST', '/v1/todos/import', {
+      body: JSON.stringify([{ collection: 'task', id: task.id, title: 'Y' }]),
+    });
+    const id = (res.body as { batchId: string }).batchId;
+    setNow(() => T0 + 1000);
+    await taskRepo.update(task.id, { title: 'Von Hand' });
+    const { commitPendingBatch } = await import('@/core/dataapi/pending');
+    const done = await commitPendingBatch(getManifest('todos')!, id, [0]);
+    expect(done.conflicts).toBe(1);
+    expect((await taskRepo.get(task.id))!.title).toBe('Von Hand');
+  });
+
+  it('an id from another collection or module is not found', async () => {
+    const entry = await token({ todos: { read: true, write: true } });
+    const res = await call(entry.id, 'POST', '/v1/todos/import', {
+      query: 'dryRun=true',
+      body: JSON.stringify([{ collection: 'task', id: 'inbox', title: 'x' }]),
+    });
+    expect((res.body as { items: { status: string }[] }).items[0]!.status).toBe('invalid');
+  });
 });

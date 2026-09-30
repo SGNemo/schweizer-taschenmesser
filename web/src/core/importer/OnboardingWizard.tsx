@@ -35,6 +35,7 @@ import type {
   ImporterRuntime,
   PreviewRow,
 } from './types';
+import { ImportPreview } from './ImportPreview';
 import styles from './OnboardingWizard.module.css';
 
 type Step = 'choose' | 'input' | 'preview' | 'done';
@@ -507,52 +508,10 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
   }
 
   if (step === 'preview') {
-    const allSelected = rows.every((r) => r.invalid || r.selected);
     return (
       <div className={styles.stack}>
         <p className={styles.lead}>{t.onboarding.previewIntro}</p>
-        <div className={styles.bar}>
-          <strong>{t.onboarding.found(rows.length)}</strong>
-          <Button
-            onClick={() =>
-              setRows(rows.map((r) => ({ ...r, selected: !r.invalid && !allSelected })))
-            }
-          >
-            {allSelected ? t.onboarding.selectNone : t.onboarding.selectAll}
-          </Button>
-        </div>
-        <ul className={styles.rows} aria-label={t.onboarding.previewTitle}>
-          {rows.map((r) => (
-            <li key={r.index} className={styles.row}>
-              <Checkbox
-                checked={r.selected}
-                disabled={Boolean(r.invalid)}
-                onChange={(e) =>
-                  setRows(
-                    rows.map((x) =>
-                      x.index === r.index ? { ...x, selected: e.target.checked } : x,
-                    ),
-                  )
-                }
-                label={
-                  <span className={styles.rowText}>
-                    <span className={styles.rowTitle}>{r.candidate.label}</span>
-                    {r.candidate.detail ? (
-                      <span className={styles.muted}>{r.candidate.detail}</span>
-                    ) : null}
-                    {r.duplicate || r.invalid || r.candidate.warning ? (
-                      <span className={styles.badges}>
-                        {r.duplicate ? <Badge>{t.onboarding.duplicate}</Badge> : null}
-                        {r.invalid ? <Badge>{t.onboarding.invalid}</Badge> : null}
-                        {r.candidate.warning ? <Badge>{r.candidate.warning}</Badge> : null}
-                      </span>
-                    ) : null}
-                  </span>
-                }
-              />
-            </li>
-          ))}
-        </ul>
+        <ImportPreview rows={rows} onChange={setRows} />
         {notes.length > 0 ? (
           <ul className={styles.notes}>
             {notes.map((n) => (

@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useApiBatches } from '@/core/dataapi/pending';
 import { apiModules } from '@/core/dataapi/scope';
+import { batchStatus, countRecords, undoImport } from '@/core/importer/batches';
 import {
   createToken,
   DEFAULT_PORT,
@@ -34,6 +36,7 @@ export function LocalApiSection() {
   const status = useLocalApiStatus();
   const config = useLocalApiConfig();
   const log = useAccessLog();
+  const batches = useApiBatches();
   const states = useModuleStates();
   const toast = useUiStore((s) => s.toast);
   const [port, setPort] = useState<string | undefined>();
@@ -215,6 +218,40 @@ export function LocalApiSection() {
             {t.localApi.newToken}
           </Button>
         </div>
+
+        <h3>{t.localApi.imports}</h3>
+        {(batches ?? []).length === 0 ? (
+          <p className={styles.muted}>{t.localApi.noImports}</p>
+        ) : (
+          <ul className={styles.providerList} aria-label={t.localApi.imports}>
+            {(batches ?? []).slice(0, 10).map((b) => {
+              const state = batchStatus(b);
+              const manifest = getManifest(b.moduleId);
+              return (
+                <li key={b.id} className={styles.row}>
+                  <span className={styles.muted}>
+                    {dateTime.format(b.createdAt)} · {manifest?.name ?? b.moduleId} · {b.tokenName}{' '}
+                    ·{' '}
+                    {state === 'committed'
+                      ? t.localApi.importState.committed(countRecords(b))
+                      : t.localApi.importState[state]}
+                  </span>
+                  {state === 'committed' && manifest ? (
+                    <Button
+                      onClick={() =>
+                        void undoImport(manifest, b.id).then(({ removed, kept }) =>
+                          toast(t.onboarding.undone(removed, kept)),
+                        )
+                      }
+                    >
+                      {t.onboarding.undo}
+                    </Button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         <h3>{t.localApi.log}</h3>
         {(log ?? []).length === 0 ? (

@@ -33,13 +33,21 @@ export async function buildPreview(
   const seen = new Set<string>();
   return candidates.map((candidate, index) => {
     const key = `${candidate.collection}\u0000${candidate.dedupeKey}`;
-    const duplicate =
-      (existing.get(candidate.collection)?.has(candidate.dedupeKey) ?? false) || seen.has(key);
+    // A change without any difference counts as "already there"; changes are never pre-ticked.
+    const duplicate = candidate.update
+      ? Object.keys(candidate.update.after).length === 0 || seen.has(key)
+      : (existing.get(candidate.collection)?.has(candidate.dedupeKey) ?? false) || seen.has(key);
     seen.add(key);
     const schema = manifest.dataSchema.collections[candidate.collection]?.schema;
     const parsed = schema?.safeParse(candidate.data);
     const invalid =
       candidate.error ?? (parsed && !parsed.success ? issueText(parsed.error) : undefined);
-    return { index, candidate, duplicate, invalid, selected: !duplicate && !invalid };
+    return {
+      index,
+      candidate,
+      duplicate,
+      invalid,
+      selected: !duplicate && !invalid && !candidate.update,
+    };
   });
 }

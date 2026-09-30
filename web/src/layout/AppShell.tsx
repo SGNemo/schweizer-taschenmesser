@@ -6,6 +6,7 @@ import { OnboardingHost } from '@/core/importer/host';
 import { Fab, Icon, IconButton, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { ToolsSheet } from './ToolsSheet';
+import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
 import { QuickAdd } from './QuickAdd';
 import { SyncBadge } from './SyncBadge';
@@ -119,6 +120,7 @@ export function AppShell() {
           <SyncBadge />
         </header>
         <UpdateBanner />
+        <PendingImports />
         <main id="main" tabIndex={-1} className={styles.main}>
           <Outlet />
         </main>

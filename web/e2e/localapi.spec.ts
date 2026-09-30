@@ -73,7 +73,7 @@ test('KI-Zugriff: enable, create a token, use it, revoke it', async ({ page }) =
     body: { items: [{ collection: 'task', title: 'Steuer machen', dueDate: '2026-10-15' }] },
   });
   expect(check.status).toBe(200);
-  expect(check.body.summary).toEqual({ ok: 1, duplicate: 0, invalid: 0 });
+  expect(check.body.summary).toEqual({ ok: 1, update: 0, duplicate: 0, invalid: 0 });
 
   expect((await api(page, { method: 'GET', path: '/v1/modules', token: 'tm_wrong' })).status).toBe(
     401,
@@ -85,6 +85,60 @@ test('KI-Zugriff: enable, create a token, use it, revoke it', async ({ page }) =
     'POST /v1/{module}/import (ToDos) · 200',
   );
   await expect(section.getByText('Steuer machen')).toHaveCount(0);
+
+  // A real import waits for confirmation in the app.
+  const sent = await api(page, {
+    method: 'POST',
+    path: '/v1/todos/import',
+    token,
+    body: {
+      items: [
+        { collection: 'task', title: 'Steuer machen', dueDate: '2026-10-15' },
+        { collection: 'task', title: 'Fahrrad putzen' },
+      ],
+    },
+  });
+  expect(sent.status).toBe(202);
+  const banner = page.getByTestId('pending-import');
+  await expect(banner).toContainText('Claude Code möchte 2 Einträge in „ToDos“ übernehmen.');
+  await banner.getByRole('button', { name: 'Ansehen' }).click();
+  const review = page.getByRole('dialog', { name: 'Import prüfen: ToDos' });
+  await review.getByRole('checkbox', { name: /Fahrrad putzen/ }).click();
+  await review.getByRole('button', { name: '1 Eintrag übernehmen' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(banner).toHaveCount(0);
+  await expect(section.getByRole('list', { name: 'Importe über die Schnittstelle' })).toContainText(
+    '1 Eintrag übernommen',
+  );
+  const status = await api(page, {
+    method: 'GET',
+    path: `/v1/batches/${sent.body.batchId}`,
+    token,
+  });
+  expect(status.body).toMatchObject({ status: 'committed', written: 1 });
+  const read = await api(page, {
+    method: 'GET',
+    path: '/v1/todos/items',
+    query: 'collection=task',
+    token,
+  });
+  expect(read.body.items.map((i: { title: string }) => i.title)).toEqual(['Steuer machen']);
+
+  // Undo from the settings list.
+  await section
+    .getByRole('list', { name: 'Importe über die Schnittstelle' })
+    .getByRole('button', { name: 'Import rückgängig machen' })
+    .click();
+  await expect(section.getByRole('list', { name: 'Importe über die Schnittstelle' })).toContainText(
+    'rückgängig gemacht',
+  );
+  const after = await api(page, {
+    method: 'GET',
+    path: '/v1/todos/items',
+    query: 'collection=task',
+    token,
+  });
+  expect(after.body.items).toEqual([]);
 
   await section.getByRole('button', { name: 'Widerrufen' }).click();
   await page
