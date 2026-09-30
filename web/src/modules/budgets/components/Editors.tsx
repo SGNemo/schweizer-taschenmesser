@@ -10,6 +10,7 @@ import {
   FormActions,
   Icon,
   IconButton,
+  patternStyles,
   SelectField,
   Split,
   TextField,
@@ -320,13 +321,13 @@ export function HistoryDialog({
         deposits.length === 0 ? (
           <p>{t.budgets.noDeposits}</p>
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className={patternStyles.plainList}>
             {deposits.map((d) => (
               <li
                 key={d.id}
                 style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}
               >
-                <span style={{ flex: 1 }}>{d.date.split('-').reverse().join('.')}</span>
+                <span className={patternStyles.grow}>{d.date.split('-').reverse().join('.')}</span>
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>
                   {formatMoney(d.amountMinor)}
                 </span>

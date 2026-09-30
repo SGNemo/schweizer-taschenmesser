@@ -3,7 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { t } from '@/strings';
-import { Button, Dialog, Switch, TextArea, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, Switch, TextArea, TextField } from '@/ui';
 import { reminderRepo } from '../repo';
 import type { Reminder } from '../schema';
 import styles from '../routes/reminders.module.css';
@@ -94,7 +94,7 @@ function Form({ target, onClose }: { target: NonNullable<EditorTarget>; onClose:
         ) : (
           <span />
         )}
-        <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <span className={patternStyles.hstack}>
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

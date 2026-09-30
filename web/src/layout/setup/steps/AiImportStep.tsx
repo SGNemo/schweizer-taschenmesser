@@ -6,6 +6,7 @@ import { visibleManifests } from '@/core/modules/registry';
 import { getPlatform } from '@/core/platform';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
+import { patternStyles } from '@/ui';
 
 const s = t.setup.steps.aiimport;
 
@@ -22,11 +23,9 @@ export default function AiImportStep(_props: SetupStepProps) {
   if (modules.length === 0) return <p>{s.none}</p>;
   return (
     <>
-      <p style={{ color: 'var(--text-muted)' }}>{s.hint}</p>
+      <p className={patternStyles.muted}>{s.hint}</p>
       {getPlatform().kind === 'desktop' ? <p>{s.desktop}</p> : null}
-      <ul
-        style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--space-2)' }}
-      >
+      <ul className={patternStyles.gridList}>
         {modules.map((m) => (
           <li
             key={m.id}

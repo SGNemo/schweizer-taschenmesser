@@ -4,6 +4,7 @@ import { SyncSection } from '@/pages/settings/SyncSection';
 import { useSyncStatus } from '@/core/sync/status';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
+import { patternStyles } from '@/ui';
 
 const s = t.setup.steps.sync;
 type Choice = 'local' | 'backup' | 'connect';
@@ -19,7 +20,7 @@ export default function SyncStep(_props: SetupStepProps) {
   return (
     <>
       {connected ? <p role="status">{s.connected}</p> : null}
-      <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+      <fieldset className={patternStyles.fieldset}>
         {(
           [
             ['local', s.local],
@@ -41,12 +42,12 @@ export default function SyncStep(_props: SetupStepProps) {
           </label>
         ))}
       </fieldset>
-      {choice === 'local' ? <p style={{ color: 'var(--text-muted)' }}>{s.localHint}</p> : null}
+      {choice === 'local' ? <p className={patternStyles.muted}>{s.localHint}</p> : null}
       {choice === 'backup' ? <BackupSection /> : null}
       {choice === 'connect' ? (
         <>
           <SyncSection />
-          <p style={{ color: 'var(--text-muted)' }}>{s.afterConnect}</p>
+          <p className={patternStyles.muted}>{s.afterConnect}</p>
         </>
       ) : null}
     </>

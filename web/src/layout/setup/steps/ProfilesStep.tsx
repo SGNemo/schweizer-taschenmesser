@@ -13,7 +13,7 @@ import type { SetupStepProps } from '@/core/setup/types';
 import { DEFAULT_TOOLS, isEnabled, toolsSettingsSchema, TOOLS_SCOPE } from '@/core/tools/layout';
 import { allTools } from '@/core/tools/registry';
 import { t } from '@/strings';
-import { Button, Card, Checkbox, Switch } from '@/ui';
+import { Button, Card, Checkbox, patternStyles, Switch } from '@/ui';
 
 const s = t.setup.steps.profiles;
 const names = (ids: string[]) =>
@@ -105,18 +105,14 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
 
   return (
     <>
-      <p style={{ color: 'var(--text-muted)' }}>{s.currentState}</p>
+      <p className={patternStyles.muted}>{s.currentState}</p>
       <h4>{s.choose}</h4>
-      <ul
-        style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--space-2)' }}
-      >
+      <ul className={patternStyles.gridList}>
         {PROFILES.map((p) => (
           <li key={p.id}>
             <Card>
               <strong>{t.setup.profiles[p.id]?.name}</strong>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                {t.setup.profiles[p.id]?.description}
-              </p>
+              <p className={patternStyles.muted}>{t.setup.profiles[p.id]?.description}</p>
               <Button data-testid={`profile-${p.id}`} onClick={() => pick(p.id)}>
                 {t.setup.profiles[p.id]?.name}
               </Button>
@@ -126,9 +122,7 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
       </ul>
 
       <h4>{s.modules}</h4>
-      <ul
-        style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--space-2)' }}
-      >
+      <ul className={patternStyles.gridList}>
         {visibleManifests.map((m) => (
           <li key={m.id}>
             <Switch

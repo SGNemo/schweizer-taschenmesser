@@ -2,7 +2,7 @@ import { connectors } from '@/core/connectors/registry';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
 import { ConnectorCard } from '@/pages/settings/ConnectorsSection';
-import { HelpHint } from '@/ui';
+import { HelpHint, patternStyles } from '@/ui';
 
 const s = t.setup.steps.connectors;
 
@@ -15,7 +15,7 @@ export default function ConnectorsStep(_props: SetupStepProps) {
   if (connectors.length === 0) return <p>{s.none}</p>;
   return (
     <>
-      <p style={{ color: 'var(--text-muted)' }}>
+      <p className={patternStyles.muted}>
         {t.connectors.intro} <HelpHint text={t.help.connectors} label={t.help.label} />
       </p>
       {connectors.map((def) => (

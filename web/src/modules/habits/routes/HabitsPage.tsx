@@ -100,7 +100,7 @@ export default function HabitsPage() {
         })}
       </ItemList>
       {hasArchived ? (
-        <div style={{ marginTop: 'var(--space-4)' }}>
+        <div className={patternStyles.gapTop}>
           <Button variant="ghost" onClick={() => setShowArchived(!showArchived)}>
             {showArchived ? t.habits.hideArchived : t.habits.showArchived}
           </Button>

@@ -69,9 +69,9 @@ export default function ShoppingPage() {
         </EmptyState>
       ) : null}
       <Card as="div">
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ul className={patternStyles.plainList}>
           {(items ?? []).map((i) => (
-            <li key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <li key={i.id} className={patternStyles.hstackCenter}>
               <div style={{ flex: 1, opacity: i.done ? 0.55 : 1 }}>
                 <Checkbox
                   label={
@@ -95,7 +95,7 @@ export default function ShoppingPage() {
         </ul>
       </Card>
       {bought > 0 ? (
-        <div style={{ marginTop: 'var(--space-4)' }}>
+        <div className={patternStyles.gapTop}>
           <Button
             onClick={async () => {
               const n = await clearBought();

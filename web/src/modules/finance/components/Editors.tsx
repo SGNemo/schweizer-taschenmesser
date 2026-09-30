@@ -3,7 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, Segmented, SelectField, TextArea, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, Segmented, SelectField, TextArea, TextField } from '@/ui';
 import { accountRepo, categoryRepo, deleteAccount, transactionRepo } from '../repo';
 import type { Account, Category, Transaction } from '../schema';
 import type { FinanceData } from '../types';
@@ -27,7 +27,7 @@ function Actions({ onDelete, onClose }: { onDelete?: () => Promise<void>; onClos
       ) : (
         <span />
       )}
-      <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+      <span className={patternStyles.hstack}>
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
           {t.actions.save}

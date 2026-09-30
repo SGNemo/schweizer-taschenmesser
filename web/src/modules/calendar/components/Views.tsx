@@ -3,7 +3,7 @@ import { formatDay, today } from '@/core/time/dates';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
-import { Button, EmptyState, useMediaQuery } from '@/ui';
+import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
 import { groupByDate, monthWeeks } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
 import { TimeGrid } from './TimeGrid';
@@ -171,7 +171,7 @@ export function DayView({
           <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} />
         ))}
       </ul>
-      <div style={{ marginTop: 'var(--space-4)' }}>
+      <div className={patternStyles.gapTop}>
         <Button onClick={() => onAdd(date)}>{t.calendar.newEvent}</Button>
       </div>
     </div>

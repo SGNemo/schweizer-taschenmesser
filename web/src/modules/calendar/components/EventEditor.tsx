@@ -5,7 +5,7 @@ import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { t } from '@/strings';
-import { Button, Dialog, Icon, Switch, TextArea, TextField } from '@/ui';
+import { Button, Dialog, Icon, patternStyles, Switch, TextArea, TextField } from '@/ui';
 import { eventRepo } from '../repo';
 import { eventSchema, type CalendarEvent } from '../schema';
 import styles from '../routes/calendar.module.css';
@@ -143,7 +143,7 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
         ) : (
           <span />
         )}
-        <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <span className={patternStyles.hstack}>
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

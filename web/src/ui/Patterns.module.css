@@ -292,3 +292,48 @@ button.chip[aria-pressed='true'] {
     animation-delay: 0ms;
   }
 }
+
+/* Layout utilities for module pages (replace one-off inline styles). */
+.hstack {
+  display: flex;
+  gap: var(--space-2);
+}
+.hstackCenter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.hstackWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.grow {
+  flex: 1;
+}
+.plainList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gridList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.gapTop {
+  margin-top: var(--space-4);
+}
+.gapBottom {
+  margin-bottom: var(--space-4);
+}
+.spacer {
+  height: var(--space-4);
+}
+.fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
