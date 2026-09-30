@@ -83,7 +83,8 @@ Add `ImporterMeta` entries in the module manifest `contributions.onboarding` and
 2. `cd web && npm run version:set -- X.Y.Z[-beta.N]` (suffix only `alpha|beta|rc`), commit `chore(release): X.Y.Z`.
 3. Stable release: merge `develop` into `main` (as for 0.2.0: `Merge develop into main (release X.Y.Z)`); pre-release tags were cut from `develop`.
 4. `git tag vX.Y.Z && git push origin <branch> vX.Y.Z` (tag must equal `web/package.json`). Workflow `release.yml` builds portable exe + APK, gitleaks, audit, publishes; then checks all download links.
-5. Changelog preview: `npm run changelog -- --version X.Y.Z`. Keys/secrets/audit details: `architecture.md` → "Releases & CI". Dry run without release: push to `develop` touching `web/src-tauri/**`, `web/scripts/**` or the workflow, or run the workflow manually.
+   Alternative without pushing a tag: Actions → Release → Run workflow on `main` with `version` = X.Y.Z (must equal `web/package.json`; fails if tag `vX.Y.Z` exists). The workflow creates tag + release on that commit. Use one way per release, never tag push AND dispatch.
+5. Changelog preview: `npm run changelog -- --version X.Y.Z`. Keys/secrets/audit details: `architecture.md` → "Releases & CI". Dry run without release: push to `develop` touching `web/src-tauri/**`, `web/scripts/**` or the workflow, or run the workflow manually without `version`.
 
 ## Git workflow
 - Work on a feature branch, PRs into `develop`; `main` only receives release merges. Conventional Commits (`feat(scope):`, `fix:`, `feat!:`). Merge `develop` into your branch (no rebase of shared history).
