@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { ProcInfo, SystemInfo } from '@/core/platform/system';
 import { t } from '@/strings';
-import { Button, Card, PageHeader } from '@/ui';
+import { Button, Card, PageHeader, Progress } from '@/ui';
 import { formatBytes, formatUptime, percent } from '../format';
 import styles from '@/pages/Page.module.css';
 
 const REFRESH_MS = 3000;
 
+/** Usage bar; from 90 % on it turns to the warning colour of `Progress`. */
 function Meter({ label, value }: { label: string; value: number }) {
-  return <meter aria-label={label} min={0} max={100} value={value} style={{ width: '100%' }} />;
+  return <Progress label={label} value={value} max={100} over={value >= 90} />;
 }
 
 export default function SystemPage() {
