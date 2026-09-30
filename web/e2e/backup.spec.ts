@@ -40,7 +40,7 @@ test.describe('backup', () => {
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Backup herunterladen' }).click();
     const file = await download;
-    expect(file.suggestedFilename()).toMatch(/^taschenmesser-backup-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(file.suggestedFilename()).toMatch(/^nemo-backup-\d{4}-\d{2}-\d{2}\.json$/);
     const path = info.outputPath('backup.json');
     await file.saveAs(path);
 
@@ -113,9 +113,7 @@ test.describe('backup', () => {
       mimeType: 'application/json',
       buffer: Buffer.from('{"format":"anderes"}'),
     });
-    await expect(page.getByTestId('backup-error')).toHaveText(
-      'Das ist keine Taschenmesser-Backup-Datei.',
-    );
+    await expect(page.getByTestId('backup-error')).toHaveText('Das ist keine Nemo-Backup-Datei.');
     await input.setInputFiles({
       name: 'x.json',
       mimeType: 'application/json',

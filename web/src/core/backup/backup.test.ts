@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createRepo, type Repo } from '@/core/db/repo';
 import { allManifests } from '@/core/modules/registry';
@@ -72,9 +74,7 @@ describe('createBackup / parseBackup', () => {
       expect(backup.tables).not.toHaveProperty(local);
     expect(backup.tables.example_entry!.map((r) => r.id).sort()).toEqual([keep.id, gone.id].sort());
     expect(serializeBackup(backup)).not.toContain('geheim');
-    expect(backupFileName(new Date('2026-09-29T10:00:00Z'))).toBe(
-      'taschenmesser-backup-2026-09-29.json',
-    );
+    expect(backupFileName(new Date('2026-09-29T10:00:00Z'))).toBe('nemo-backup-2026-09-29.json');
   });
 
   it('round-trips through JSON text', async () => {
@@ -112,6 +112,28 @@ describe('createBackup / parseBackup', () => {
     expect(parseBackup(JSON.stringify({ ...base, tables: { t: [{ ...row, _f: {} }] } })).ok).toBe(
       true,
     );
+  });
+});
+
+describe('backups written before the rename to Nemo', () => {
+  it('a taschenmesser-backup file still parses and imports (the format name is data, not branding)', async () => {
+    const text = readFileSync(
+      resolve(__dirname, 'fixtures/taschenmesser-backup-2026-01-01.json'),
+      'utf8',
+    );
+    const parsed = parseBackup(text);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const b = dev();
+    const summary = await importBackup(parsed.backup, 'merge', b.db);
+    expect(summary.records).toBe(1);
+    expect(await titles(b)).toEqual(['Milch kaufen']);
+  });
+
+  it('new exports are named nemo-backup-… but keep the internal format id', async () => {
+    expect(backupFileName(new Date('2026-09-29T10:00:00Z'))).toMatch(/^nemo-backup-/);
+    const backup = await createBackup(dev().db);
+    expect(backup.format).toBe('taschenmesser-backup');
   });
 });
 

@@ -257,7 +257,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
         messageFor({
           key: 'test',
           payload: JSON.stringify({
-            title: 'Taschenmesser',
+            title: 'Nemo',
             body: 'Push funktioniert.',
             url: '/settings',
           }),

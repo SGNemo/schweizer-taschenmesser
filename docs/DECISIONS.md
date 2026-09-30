@@ -1,4 +1,4 @@
-# Decisions – Taschenmesser
+# Decisions – Nemo
 
 Each entry: decision → why → source. Only what is documented in `CLAUDE.md`, `docs/architecture.md`, code, commit messages or PRs. Details: [`architecture.md`](architecture.md).
 

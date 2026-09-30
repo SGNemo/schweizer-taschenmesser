@@ -74,7 +74,7 @@ export async function createBackup(
 export const serializeBackup = (backup: Backup): string => JSON.stringify(backup);
 
 export function backupFileName(date: Date = new Date()): string {
-  return `taschenmesser-backup-${date.toISOString().slice(0, 10)}.json`;
+  return `nemo-backup-${date.toISOString().slice(0, 10)}.json`;
 }
 
 export function parseBackup(text: string): ParseResult {

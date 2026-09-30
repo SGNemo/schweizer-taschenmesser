@@ -23,8 +23,8 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       manifest: {
-        name: 'Taschenmesser',
-        short_name: 'Taschenmesser',
+        name: 'Nemo',
+        short_name: 'Nemo',
         description: 'Modulare, lokale Alltags-App',
         lang: 'de',
         id: '/',

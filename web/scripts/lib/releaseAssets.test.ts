@@ -27,7 +27,8 @@ describe('release assets', () => {
   it('README only links to assets a release really has – no leftover installer names', () => {
     const readme = read('README.md');
     expect(unknownAssetLinks(readme)).toEqual([]);
-    expect(readme).toContain('Taschenmesser-Portable.exe');
+    expect(readme).toContain('Nemo-Portable.exe');
+    expect(readme).toContain('Nemo.apk');
     expect(readme).not.toMatch(/Setup\.exe|\.msi\b/);
   });
 
@@ -37,11 +38,16 @@ describe('release assets', () => {
     expect(workflow).not.toMatch(/Setup\.exe|Taschenmesser\.msi/);
   });
 
+  it('keeps the legacy names installed apps look for (updater transition)', () => {
+    expect(RELEASE_ASSETS).toContain('Taschenmesser-Portable.exe');
+    expect(RELEASE_ASSETS).toContain('Taschenmesser.apk');
+  });
+
   it('builds the URLs the post-release check requests', () => {
     const beta = assetUrls('o/r', 'v1.0.0-beta.1', { stable: false });
     expect(beta).toHaveLength(RELEASE_ASSETS.length);
     expect(beta[0]).toBe(
-      'https://github.com/o/r/releases/download/v1.0.0-beta.1/Taschenmesser-Portable.exe',
+      'https://github.com/o/r/releases/download/v1.0.0-beta.1/Nemo-Portable.exe',
     );
     const stable = assetUrls('o/r', 'v1.0.0', { stable: true });
     expect(stable).toHaveLength(RELEASE_ASSETS.length * 2);

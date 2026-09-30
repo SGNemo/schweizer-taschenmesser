@@ -1,4 +1,4 @@
-# Architecture map – Taschenmesser
+# Architecture map – Nemo
 
 Fast "where is what" index. Paths are repo-relative and were checked against the tree. Rationale and long design notes: [`architecture.md`](architecture.md) (section names in brackets below). Decisions: [`DECISIONS.md`](DECISIONS.md).
 

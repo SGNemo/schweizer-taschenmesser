@@ -1,4 +1,4 @@
-# Architecture reference – Taschenmesser
+# Architecture reference – Nemo
 
 Detailed design notes, moved out of `CLAUDE.md` unchanged so the working guide stays short. Read the section that matches the area you are changing; keep it current when a decision changes.
 

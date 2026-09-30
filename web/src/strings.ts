@@ -1,6 +1,6 @@
 /** All user-facing German UI text lives here (i18n-ready later). */
 export const t = {
-  appName: 'Taschenmesser',
+  appName: 'Nemo',
   nav: {
     dashboard: 'Übersicht',
     library: 'Modul-Bibliothek',
@@ -61,7 +61,7 @@ export const t = {
     resume: 'Einrichtung fortsetzen',
     open: 'Einrichtung öffnen',
     paletteCommand: 'Einrichtung',
-    welcomeTitle: 'Willkommen im Taschenmesser',
+    welcomeTitle: 'Willkommen bei Nemo',
     welcomeText:
       'Möchtest du die App Schritt für Schritt einrichten? Du kannst das auch später in den Einstellungen tun.',
     welcomeLater: 'Später',
@@ -221,7 +221,7 @@ export const t = {
           unsupported: 'Auf diesem Gerät nicht verfügbar.',
         } as Record<string, string>,
         android:
-          'Android: Erinnerungen bei geschlossener App braucht das System-Recht für genaue Alarme, und die Akku-Optimierung darf die App nicht einschränken. Beides stellst du in den Android-Einstellungen unter „Apps → Taschenmesser“ ein.',
+          'Android: Erinnerungen bei geschlossener App braucht das System-Recht für genaue Alarme, und die Akku-Optimierung darf die App nicht einschränken. Beides stellst du in den Android-Einstellungen unter „Apps → Nemo“ ein.',
       },
       backupupdates: {
         title: 'Backup und Updates',
@@ -275,8 +275,7 @@ export const t = {
     intro: 'Wohin soll der geteilte Inhalt?',
     content: 'Geteilt',
     where: 'Ziele',
-    nothing:
-      'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Taschenmesser.',
+    nothing: 'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Nemo.',
     noTargets:
       'Schalte in der Modul-Bibliothek Merkliste, Notizen oder ToDos ein, um Inhalte zu empfangen.',
     toBookmarks: 'In die Merkliste',
@@ -970,7 +969,7 @@ export const t = {
         : `${records} Einträge wiederhergestellt.`,
     errors: {
       'not-json': 'Die Datei ist keine gültige JSON-Datei.',
-      'wrong-format': 'Das ist keine Taschenmesser-Backup-Datei.',
+      'wrong-format': 'Das ist keine Nemo-Backup-Datei.',
       'newer-version': 'Das Backup stammt aus einer neueren App-Version.',
       invalid: 'Die Backup-Datei ist beschädigt.',
     } as Record<string, string>,
@@ -1743,7 +1742,7 @@ export const t = {
   dataApi: {
     importerLabel: 'JSON einfügen',
     importerDescription:
-      'Daten, die dir eine KI (oder ein anderes Programm) im Taschenmesser-Format geliefert hat. Nichts wird gespeichert, bevor du die Vorschau bestätigst.',
+      'Daten, die dir eine KI (oder ein anderes Programm) im Nemo-Format geliefert hat. Nichts wird gespeichert, bevor du die Vorschau bestätigst.',
     jsonLabel: 'JSON',
     copySchema: 'Schema für KI kopieren',
     schemaCopied: 'Schema kopiert. Füge es in dein KI-Werkzeug ein.',
@@ -2006,7 +2005,7 @@ export const t = {
         'Die Sicherungskopie konnte nicht angelegt werden – das Update wurde deshalb nicht gestartet.',
       'install-failed': 'Das Update konnte nicht installiert werden.',
       'folder-not-writable':
-        'Die Programmdatei liegt in einem Ordner, in den die App nicht schreiben darf (schreibgeschützt oder ohne Berechtigung). Verschiebe Taschenmesser-Portable.exe in einen normalen Ordner, z. B. in deinen Benutzerordner, und versuche es erneut.',
+        'Die Programmdatei liegt in einem Ordner, in den die App nicht schreiben darf (schreibgeschützt oder ohne Berechtigung). Verschiebe die Programmdatei in einen normalen Ordner, z. B. in deinen Benutzerordner, und versuche es erneut.',
       'signature-invalid':
         'Die Signatur des Updates ist ungültig – es wurde deshalb nicht installiert.',
     } as Record<string, string>,

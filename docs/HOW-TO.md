@@ -1,4 +1,4 @@
-# How-to recipes – Taschenmesser
+# How-to recipes – Nemo
 
 Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHITECTURE-MAP.md), [`architecture.md`](architecture.md).
 

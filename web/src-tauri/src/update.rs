@@ -44,8 +44,10 @@ pub fn validate_endpoint(raw: &str) -> Result<Url, String> {
 /// Manifest key and asset name of the portable Windows build.
 #[cfg_attr(not(windows), allow(dead_code))]
 const PORTABLE_TARGET: &str = "windows-x86_64-portable";
+/// Accepted asset names: `latest.json` still points to the legacy name (installed apps depend on
+/// it), releases also carry the same signed file as `Nemo-Portable.exe`.
 #[cfg_attr(not(windows), allow(dead_code))]
-const PORTABLE_ASSET: &str = "Taschenmesser-Portable.exe";
+const PORTABLE_ASSETS: [&str; 2] = ["Nemo-Portable.exe", "Taschenmesser-Portable.exe"];
 
 /// The executable may only be downloaded from a release of this repository (defence in depth: the
 /// minisign signature must match as well).
@@ -61,7 +63,9 @@ pub fn is_portable_asset_url(url: &Url) -> bool {
         && url
             .path()
             .starts_with(&format!("{RELEASES_PREFIX}download/"))
-        && url.path().ends_with(&format!("/{PORTABLE_ASSET}"))
+        && PORTABLE_ASSETS
+            .iter()
+            .any(|asset| url.path().ends_with(&format!("/{asset}")))
         && !url
             .path()
             .split('/')
@@ -251,7 +255,10 @@ mod tests {
     fn only_portable_release_assets_of_this_repository_are_downloaded() {
         let ok = format!("{OK}/download/v1.2.0/Taschenmesser-Portable.exe");
         assert!(is_portable_asset_url(&Url::parse(&ok).unwrap()));
+        let nemo = format!("{OK}/download/v1.2.0/Nemo-Portable.exe");
+        assert!(is_portable_asset_url(&Url::parse(&nemo).unwrap()));
         for bad in [
+            format!("{OK}/download/v1.2.0/Nemo-Setup.exe"),
             format!("{OK}/download/v1.2.0/Taschenmesser-Setup.exe"),
             format!("{OK}/download/v1.2.0/Taschenmesser-Portable.exe?x=1"),
             format!("{OK}/download/../../evil/Taschenmesser-Portable.exe"),

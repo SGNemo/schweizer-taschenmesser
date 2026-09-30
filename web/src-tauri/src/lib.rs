@@ -1,4 +1,4 @@
-//! Native shell of Taschenmesser. The app itself is the web frontend in `../src`; this crate only
+//! Native shell of Nemo. The app itself is the web frontend in `../src`; this crate only
 //! provides the window and the plugins that `web/src/core/platform/tauri` wraps behind the
 //! `PlatformService` interface. Keep it thin: logic belongs into the (tested) TypeScript side.
 
@@ -84,5 +84,5 @@ pub fn run() {
 
     builder
         .run(tauri::generate_context!())
-        .expect("error while running Taschenmesser");
+        .expect("error while running Nemo");
 }

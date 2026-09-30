@@ -3,6 +3,11 @@
  * (`../check-links.mjs`) and the test that keeps README links and this list in step. Erasable TypeScript.
  */
 export const RELEASE_ASSETS = [
+  'Nemo-Portable.exe',
+  'Nemo-Portable.exe.sig',
+  'Nemo.apk',
+  'Nemo.apk.sha256',
+  // Legacy names: installed apps still look for these (latest.json points to them) – see docs/DECISIONS.md.
   'Taschenmesser-Portable.exe',
   'Taschenmesser-Portable.exe.sig',
   'Taschenmesser.apk',

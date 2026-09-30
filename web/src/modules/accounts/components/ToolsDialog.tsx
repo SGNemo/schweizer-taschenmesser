@@ -108,7 +108,7 @@ function Body({ entries, onClose }: { entries: readonly DecryptedEntry[]; onClos
         disabled={busy || !csvConfirmed || entries.length === 0}
         onClick={() =>
           void saveText(
-            `taschenmesser-accounts-${stamp()}.csv`,
+            `nemo-accounts-${stamp()}.csv`,
             exportBitwardenCsv(entries.map((e) => e.data)),
             'text/csv',
           )
@@ -127,7 +127,7 @@ function Body({ entries, onClose }: { entries: readonly DecryptedEntry[]; onClos
               backupPw,
             );
             setBackupPw('');
-            await saveText(`taschenmesser-accounts-${stamp()}.json`, json, 'application/json');
+            await saveText(`nemo-accounts-${stamp()}.json`, json, 'application/json');
           })
         }
       >
