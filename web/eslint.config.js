@@ -76,6 +76,11 @@ export default tseslint.config(
                 'Modules must not import other modules. Use the event bus or manifest contributions.',
             },
             {
+              group: ['@/connectors', '@/connectors/*'],
+              message:
+                'Modules must not import connectors. They receive data through manifest contributions.',
+            },
+            {
               group: ['@/core/db/dexie', '@/core/db/db'],
               message:
                 'Use createRepo() from @/core/db/repo instead of touching Dexie tables directly.',
@@ -97,6 +102,11 @@ export default tseslint.config(
               // Everything under @/modules/ except the two read-only public APIs.
               regex: '^@/modules/(?!(?:invoices|subscriptions)/public$)',
               message: 'finance may only import subscriptions/public and invoices/public.',
+            },
+            {
+              group: ['@/connectors', '@/connectors/*'],
+              message:
+                'Modules must not import connectors. They receive data through manifest contributions.',
             },
             {
               group: ['@/core/db/dexie', '@/core/db/db'],
@@ -121,6 +131,11 @@ export default tseslint.config(
               message: 'budgets may only import finance/public.',
             },
             {
+              group: ['@/connectors', '@/connectors/*'],
+              message:
+                'Modules must not import connectors. They receive data through manifest contributions.',
+            },
+            {
               group: ['@/core/db/dexie', '@/core/db/db'],
               message:
                 'Use createRepo() from @/core/db/repo instead of touching Dexie tables directly.',
@@ -141,6 +156,42 @@ export default tseslint.config(
             {
               group: ['@/modules/*'],
               message: 'Modules must not import other modules.',
+            },
+            {
+              group: ['@/connectors', '@/connectors/*'],
+              message:
+                'Modules must not import connectors. They receive data through manifest contributions.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Connectors talk to one outside service and return plain data. They never touch the database,
+    // never import a module, and never reach the AI code: what they read from a mailbox stays local.
+    files: ['src/connectors/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/modules', '@/modules/*'],
+              message: 'Connectors must not import modules; data goes out through the framework.',
+            },
+            {
+              group: ['@/core/db', '@/core/db/*'],
+              message:
+                'Connectors never touch the database; the modules store what they are given.',
+            },
+            {
+              group: ['@/core/ai', '@/core/ai/*'],
+              message: 'Connector code handles mail content and must never reach the AI code.',
+            },
+            {
+              group: ['@/core/sync', '@/core/sync/*', '@/core/backup', '@/core/backup/*'],
+              message: 'Use the ConnectorContext instead of the sync or backup internals.',
             },
           ],
         },

@@ -23,7 +23,12 @@ export function ItemRow({ item, onOpen, compact }: Props) {
       <span className={`${styles.kind} ${styles[`kind_${item.kind}`] ?? ''}`}>
         {kindLabel(item.kind)}
       </span>
-      <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`}>{item.title}</span>
+      <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`}>
+        {item.color ? (
+          <span className={styles.colorDot} style={{ background: item.color }} aria-hidden="true" />
+        ) : null}
+        {item.title}
+      </span>
     </>
   );
   return (

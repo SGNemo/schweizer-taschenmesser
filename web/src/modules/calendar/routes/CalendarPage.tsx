@@ -8,6 +8,7 @@ import { t } from '@/strings';
 import { Button, Icon, IconButton, SplitView, useSplitView } from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
+import { ExternalDetail } from '../components/ExternalDetail';
 import { DayView, MonthView, WeekView } from '../components/Views';
 import { eventRepo } from '../repo';
 import { settings } from '../settings';
@@ -34,6 +35,7 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const [prefs] = useSettings('module.calendar', settings.schema, settings.defaults);
   const [target, setTarget] = useState<EventTarget>(null);
+  const [externalId, setExternalId] = useState<string | null>(null);
   const split = useSplitView();
 
   const rawView = params.get('view');
@@ -67,7 +69,9 @@ export default function CalendarPage() {
   };
 
   async function openItem(item: CalendarItem) {
-    if (item.source === 'calendar') {
+    if (item.source === 'calendar' && item.external) {
+      setExternalId(eventIdOf(item.id));
+    } else if (item.source === 'calendar') {
       const ev = await eventRepo.get(eventIdOf(item.id));
       if (ev) setTarget(ev);
     } else if (item.to) void navigate(item.to);
@@ -147,6 +151,7 @@ export default function CalendarPage() {
       </div>
 
       <EventEditor target={openTarget} onClose={closeEditor} />
+      <ExternalDetail id={externalId} onClose={() => setExternalId(null)} />
     </>
   );
 }

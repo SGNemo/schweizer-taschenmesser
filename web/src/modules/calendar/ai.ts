@@ -17,5 +17,12 @@ export const aiSchema: ModuleAiSchema = {
       titleField: 'title',
       searchable: ['title', 'location', 'note'],
     },
+    external: {
+      label: 'Externer Termin',
+      fields: { title: 'text', startDate: 'date', startTime: 'text', location: 'text' },
+      dateField: 'startDate',
+      titleField: 'title',
+      searchable: ['title', 'location'],
+    },
   },
 };

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { startModuleServices } from '@/core/modules/services';
 import { startSync } from '@/core/sync/service';
 import { startNativeSchedule } from '@/core/notifications/nativeSchedule';
+import { startConnectorSync } from '@/core/connectors/service';
 import { startPushSync } from '@/core/notifications/push';
 import { initPlatform } from '@/core/platform';
 import { startUpdateChecks } from '@/core/update/controller';
@@ -25,5 +26,6 @@ void initPlatform().then(() => {
     startPushSync();
     startNativeSchedule();
     startUpdateChecks();
+    startConnectorSync();
   });
 });

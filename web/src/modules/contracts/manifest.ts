@@ -1,7 +1,7 @@
-import { noOnboarding } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
+import { onboarding } from './onboarding';
 import { contractSchema } from './schema';
 import { settings } from './settings';
 
@@ -36,7 +36,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 120,
   contributions: {
-    onboarding: noOnboarding,
+    onboarding,
     quickAdd: [{ id: 'contract', label: 'Vertrag', to: '/contracts?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),

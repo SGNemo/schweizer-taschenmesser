@@ -1,9 +1,15 @@
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { parseIcs, type IcsEvent, type IcsIssueCode } from '@/core/io/ics';
-import type { ImportCandidate, ImporterRuntime } from '@/core/importer/types';
+import type {
+  ImportCandidate,
+  ImportInput,
+  ImporterRuntime,
+  ImportParseResult,
+} from '@/core/importer/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { eventRepo } from './repo';
+import { eventKey } from './external';
+import { eventRepo, externalRepo } from './repo';
 
 /** Same day, time and title (ignoring case) = same event. */
 const keyOf = (e: { startDate: string; startTime?: string; title: string }) =>
@@ -27,8 +33,35 @@ const ISSUE_TEXT: Record<IcsIssueCode, (n: number) => string> = {
   invalid: t.onboarding.ics.invalid,
 };
 
+function fromMail(input: ImportInput): ImportParseResult {
+  if (input.kind !== 'connector') return { candidates: [], notes: [] };
+  const candidates: ImportCandidate[] = [];
+  for (const f of input.findings) {
+    if (f.kind !== 'event' || !f.date) continue;
+    candidates.push({
+      collection: 'event',
+      data: {
+        title: f.title,
+        allDay: !f.time,
+        startDate: f.date,
+        startTime: f.time,
+        location: f.place,
+        note: f.url ? t.onboarding.mail.source(f.url) : undefined,
+      },
+      label: f.title,
+      detail: [formatDay(f.date, 'EEE, d. MMM yyyy'), f.time ?? 'ganztägig', f.place]
+        .filter(Boolean)
+        .join(' · '),
+      dedupeKey: eventKey({ startDate: f.date, startTime: f.time, title: f.title }),
+      ref: f.ref,
+    });
+  }
+  return { candidates, notes: [] };
+}
+
 const runtime: ImporterRuntime = {
-  parse(_id, input) {
+  parse(id, input) {
+    if (id === 'mail') return fromMail(input);
     if (input.kind !== 'file') return { candidates: [], notes: [] };
     const { events, issues } = parseIcs(input.text);
     const candidates: ImportCandidate[] = events.map((e) => {
@@ -48,7 +81,13 @@ const runtime: ImporterRuntime = {
     return { candidates, notes };
   },
   async existingKeys() {
-    return new Set((await eventRepo.active().toArray()).map(keyOf));
+    // Own events and events synced from other calendars (an appointment Google already knows about
+    // must not be suggested again).
+    const [own, external] = await Promise.all([
+      eventRepo.active().toArray(),
+      externalRepo.active().toArray(),
+    ]);
+    return new Set([...own.map(keyOf), ...own.map(eventKey), ...external.map(eventKey)]);
   },
 };
 

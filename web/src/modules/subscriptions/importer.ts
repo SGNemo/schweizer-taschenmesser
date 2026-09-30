@@ -4,7 +4,12 @@ import { detectSubscriptions, type DetectedSubscription } from '@/core/io/subscr
 import { formatMoney, parseMoney } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import type { Recurrence } from '@/core/recurrence/types';
-import type { ImportInput, ImporterRuntime, ImportParseResult } from '@/core/importer/types';
+import type {
+  ImportCandidate,
+  ImportInput,
+  ImporterRuntime,
+  ImportParseResult,
+} from '@/core/importer/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { subscriptionRepo } from './repo';
@@ -23,6 +28,34 @@ const DETECTED_RHYTHMS: Record<DetectedSubscription['freq'], Recurrence> = {
   quarterly: { freq: 'monthly', interval: 3 },
   yearly: { freq: 'yearly', interval: 1 },
 };
+
+function fromMail(input: ImportInput): ImportParseResult {
+  if (input.kind !== 'connector') return { candidates: [], notes: [] };
+  const m = t.onboarding.mail;
+  const candidates: ImportCandidate[] = [];
+  for (const f of input.findings) {
+    if (f.kind !== 'subscription' || f.amountMinor === undefined) continue;
+    const recurrence = DETECTED_RHYTHMS[f.freq ?? 'monthly'];
+    const start = f.date ?? f.mailDate;
+    candidates.push({
+      collection: 'subscription',
+      data: {
+        name: f.title,
+        amountMinor: f.amountMinor,
+        recurrence,
+        startDate: start,
+        active: true,
+        note: f.url ? m.source(f.url) : undefined,
+      },
+      label: f.title,
+      detail: `${formatMoney(f.amountMinor)} · ${describeRecurrence(recurrence)} · ${formatDay(start, 'd. MMM yyyy')}`,
+      dedupeKey: nameKey(f.title),
+      ref: f.ref,
+      ...(f.date ? {} : { warning: m.startUnclear }),
+    });
+  }
+  return { candidates, notes: [] };
+}
 
 /** Recurring debits found in a bank statement, as suggestions (nothing is stored before the preview). */
 function parseBank(input: ImportInput): ImportParseResult {
@@ -61,6 +94,7 @@ function parseBank(input: ImportInput): ImportParseResult {
 const runtime: ImporterRuntime = {
   parse(id, input) {
     if (id === 'bank') return parseBank(input);
+    if (id === 'mail') return fromMail(input);
     if (input.kind !== 'form') return { candidates: [], notes: [] };
     const v = input.values;
     const name = (v.name ?? '').trim();

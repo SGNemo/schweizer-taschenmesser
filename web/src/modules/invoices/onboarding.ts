@@ -16,6 +16,14 @@ export const onboarding: OnboardingDef = {
         { key: 'reference', label: s.reference, type: 'text' },
       ],
     },
+    {
+      id: 'mail',
+      kind: 'connector',
+      connectorId: 'google',
+      connectorFeature: 'mail',
+      label: t.onboarding.mail.invoices,
+      description: t.onboarding.mail.hint,
+    },
   ],
   load: () => import('./importer'),
 };

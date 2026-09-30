@@ -34,6 +34,14 @@ export const onboarding: OnboardingDef = {
       description: s.bankHint,
       accept: '.csv,.xml,text/csv,text/xml',
     },
+    {
+      id: 'mail',
+      kind: 'connector',
+      connectorId: 'google',
+      connectorFeature: 'mail',
+      label: t.onboarding.mail.subscriptions,
+      description: t.onboarding.mail.hint,
+    },
   ],
   load: () => import('./importer'),
 };

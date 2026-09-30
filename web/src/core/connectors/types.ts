@@ -7,6 +7,7 @@
  * Mail content is processed by local heuristics only – connector code must not import `core/ai`
  * (ESLint), so nothing that was read from a mailbox can reach a model.
  */
+import type { ComponentType } from 'react';
 import type { PlatformKind } from '@/core/platform/types';
 import type { Recurrence } from '@/core/recurrence/types';
 import type { IconName } from '@/ui/icons';
@@ -152,8 +153,14 @@ export interface CalendarCapability {
   sync(ctx: ConnectorContext, req: CalendarSyncRequest): Promise<CalendarSyncResult>;
 }
 
+export interface MailScanResult {
+  findings: MailFinding[];
+  /** How many messages were looked at (shown to the user: "N Mails gelesen"). */
+  read: number;
+}
+
 export interface MailCapability {
-  scan(ctx: ConnectorContext, req: MailScanRequest): Promise<MailFinding[]>;
+  scan(ctx: ConnectorContext, req: MailScanRequest): Promise<MailScanResult>;
 }
 
 export interface ConnectorDef {
@@ -170,8 +177,12 @@ export interface ConnectorDef {
   features: ConnectorFeature[];
   calendar?: CalendarCapability;
   mail?: MailCapability;
-  /** Connectors that need no login but a configuration (an ICS address) render their own form. */
-  settings?: () => Promise<{ default: React.ComponentType<{ ctx: ConnectorContext }> }>;
+  /** Connectors without a login: true once they have what they need (an ICS address …). */
+  isConfigured?(ctx: ConnectorContext): Promise<boolean>;
+  /** Extra settings UI shown in the connector's card (an address form …). */
+  settings?: () => Promise<{
+    default: ComponentType<{ ctx: ConnectorContext; onChanged: () => void }>;
+  }>;
 }
 
 export type ConnectorErrorCode =

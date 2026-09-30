@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConnectorsSection } from './settings/ConnectorsSection';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { hasImporters } from '@/core/importer/OnboardingWizard';
 import { useModuleStates } from '@/core/modules/activation';
@@ -170,6 +171,12 @@ export function Settings() {
       <section className={styles.section} aria-labelledby="backup">
         <h2 id="backup">{t.backup.title}</h2>
         <BackupSection />
+      </section>
+      <section className={styles.section} aria-labelledby="connectors">
+        <SectionTitle id="connectors" hint={t.help.connectors}>
+          {t.connectors.title}
+        </SectionTitle>
+        <ConnectorsSection />
       </section>
       <section className={styles.section} aria-labelledby="updates">
         <SectionTitle id="updates" hint={t.help.updateChannel}>

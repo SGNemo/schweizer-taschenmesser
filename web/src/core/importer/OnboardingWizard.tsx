@@ -2,7 +2,12 @@
  * "Startdaten einrichten": choose a way (text, file, templates, form), see a preview with ticks and
  * duplicate flags, confirm – only then anything is stored, as one batch that can be undone.
  */
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
+import { getConnector } from '@/core/connectors/registry';
+import { scanMail } from '@/core/connectors/service';
+import { loadStatus } from '@/core/connectors/state';
+import { describeError } from '@/core/connectors/service';
 import type { ModuleManifest } from '@/core/modules/types';
 import { pickTextFile } from '@/core/io/pickFile';
 import { today } from '@/core/time/now';
@@ -32,8 +37,10 @@ import styles from './OnboardingWizard.module.css';
 type Step = 'choose' | 'input' | 'preview' | 'done';
 
 export function hasImporters(manifest: ModuleManifest): boolean {
-  return (manifest.contributions?.onboarding?.importers ?? []).some((i) => i.kind !== 'connector');
+  return (manifest.contributions?.onboarding?.importers ?? []).length > 0;
 }
+
+const SCAN_MONTHS = [1, 3, 6, 12];
 
 export function OnboardingWizard({
   manifest,
@@ -100,10 +107,26 @@ function FieldInput({
 
 function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () => void }) {
   const toast = useUiStore((s) => s.toast);
-  const importers = (manifest.contributions?.onboarding?.importers ?? []).filter(
-    (i) => i.kind !== 'connector',
+  const declared = manifest.contributions?.onboarding?.importers ?? [];
+  // A connector scan is only offered while that connector is connected with the needed feature.
+  const connectorIds = [...new Set(declared.map((i) => i.connectorId).filter(Boolean))] as string[];
+  const connectorStatus = useLiveQuery(
+    async () =>
+      Object.fromEntries(
+        await Promise.all(connectorIds.map(async (id) => [id, await loadStatus(id)])),
+      ),
+    [connectorIds.join(',')],
   );
+  const available = (i: ImporterMeta) =>
+    i.kind !== 'connector' ||
+    (connectorStatus?.[i.connectorId ?? '']?.state === 'connected' &&
+      (i.connectorFeature === undefined ||
+        connectorStatus[i.connectorId ?? '']!.features.includes(i.connectorFeature)));
+  const importers = declared.filter(available);
+  const hiddenConnectors = declared.filter((i) => !available(i));
   const batches = useImportBatches(manifest.id);
+  const [months, setMonths] = useState('3');
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const [step, setStep] = useState<Step>('choose');
   const [importer, setImporter] = useState<ImporterMeta | null>(null);
@@ -163,7 +186,10 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
     }
   }
 
-  async function runParse(input: Parameters<ImporterRuntime['parse']>[1]) {
+  async function runParse(
+    input: Parameters<ImporterRuntime['parse']>[1],
+    prefaceNotes: string[] = [],
+  ) {
     if (!importer || !runtime) return;
     setError('');
     setBusy(true);
@@ -175,12 +201,12 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
       });
       if (!alive.current) return;
       if (result.candidates.length === 0) {
-        setNotes(result.notes);
+        setNotes([...prefaceNotes, ...result.notes]);
         setError(result.notes.length === 0 ? t.onboarding.nothingFound : '');
         return;
       }
       setRows(await buildPreview(manifest, runtime, result.candidates));
-      setNotes(result.notes);
+      setNotes([...prefaceNotes, ...result.notes]);
       setStep('preview');
     } catch (e) {
       setError(errorText(e));
@@ -203,6 +229,34 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
           ? t.onboarding.fileTooLarge
           : t.onboarding.readError,
       );
+    }
+  }
+
+  async function scan() {
+    const connector = importer?.connectorId ? getConnector(importer.connectorId) : undefined;
+    if (!importer || !connector) return;
+    setError('');
+    setBusy(true);
+    setProgress({ done: 0, total: 0 });
+    try {
+      const n = Number(months);
+      const { findings, read } = await scanMail(connector, n, (done, total) =>
+        setProgress({ done, total }),
+      );
+      if (!alive.current) return;
+      const summary = t.connectors.scan.summary(read, n);
+      setBusy(false);
+      if (findings.length === 0) {
+        setNotes([summary]);
+        setError(t.connectors.scan.none);
+        return;
+      }
+      await runParse({ kind: 'connector', findings }, [summary]);
+    } catch (e) {
+      setError(describeError(e));
+    } finally {
+      setProgress(null);
+      if (alive.current) setBusy(false);
     }
   }
 
@@ -302,6 +356,9 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
             ))}
           </section>
         ) : null}
+        {hiddenConnectors.length > 0 ? (
+          <p className={styles.muted}>{t.connectors.scan.notConnected}</p>
+        ) : null}
         <div className={styles.bar}>
           <span className={styles.muted}>{t.onboarding.skipHint}</span>
           <Button onClick={() => void skip()}>{t.onboarding.skip}</Button>
@@ -367,6 +424,29 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
         {importer.kind === 'form' ? (
           <div className={styles.fields}>{fieldsFor(importer.fields!, values, setValues)}</div>
         ) : null}
+        {importer.kind === 'connector' ? (
+          <div className={styles.fields}>
+            <p className={styles.lead}>{t.connectors.scan.intro}</p>
+            <SelectField
+              label={t.connectors.scan.period}
+              value={months}
+              onChange={(e) => setMonths(e.target.value)}
+            >
+              {SCAN_MONTHS.map((n) => (
+                <option key={n} value={String(n)}>
+                  {t.connectors.scan.months(n)}
+                </option>
+              ))}
+            </SelectField>
+            <div className={styles.bar}>
+              <Button variant="primary" disabled={busy} onClick={() => void scan()}>
+                {progress
+                  ? t.connectors.scan.reading(progress.done, progress.total)
+                  : t.connectors.scan.start}
+              </Button>
+            </div>
+          </div>
+        ) : null}
         {importer.kind === 'file' ? (
           <div className={styles.bar}>
             <Button variant="primary" disabled={busy} onClick={() => void chooseFile()}>
@@ -391,7 +471,7 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
         ) : null}
         <div className={styles.bar}>
           <Button onClick={() => setStep('choose')}>{t.onboarding.back}</Button>
-          {importer.kind !== 'file' ? (
+          {importer.kind !== 'file' && importer.kind !== 'connector' ? (
             <Button variant="primary" disabled={busy} onClick={() => void submitInput()}>
               {busy ? t.onboarding.parsing : t.onboarding.preview}
             </Button>

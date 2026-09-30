@@ -11,6 +11,9 @@ import { habitRepo } from '@/modules/habits/repo';
 import { invoiceRepo } from '@/modules/invoices/repo';
 import { reminderRepo } from '@/modules/reminders/repo';
 import { subscriptionRepo } from '@/modules/subscriptions/repo';
+import { contractRepo } from '@/modules/contracts/repo';
+import { externalRepo } from '@/modules/calendar/repo';
+import type { MailFinding } from '@/core/connectors/types';
 import { INBOX_ID, listRepo, taskRepo } from '@/modules/todos/repo';
 import { commitImport } from './batches';
 import { buildPreview } from './plan';
@@ -40,6 +43,7 @@ beforeEach(async () => {
     for (const c of Object.keys(m.dataSchema.collections)) await db.table(`${m.id}_${c}`).clear();
   }
   await db.table('_imports').clear();
+  await db.table('calendar_external').clear();
   await db.table('_outbox').clear();
 });
 afterEach(() => setNow());
@@ -287,6 +291,137 @@ describe('bank statement import', () => {
     });
     expect(none.rows).toEqual([]);
     expect(none.notes[0]).toMatch(/keine regelmäßigen/);
+  });
+});
+
+const findings: MailFinding[] = [
+  {
+    kind: 'invoice',
+    ref: 'gmail:1',
+    title: 'Stadtwerke Muster',
+    url: 'https://mail.example.test/1',
+    mailDate: '2026-09-20',
+    amountMinor: 8740,
+    date: '2026-10-15',
+  },
+  { kind: 'invoice', ref: 'gmail:2', title: 'Zahlung ohne Betrag', mailDate: '2026-09-20' },
+  {
+    kind: 'subscription',
+    ref: 'gmail:3',
+    title: 'Filmfreund',
+    mailDate: '2026-09-21',
+    amountMinor: 999,
+    freq: 'monthly',
+    date: '2026-10-03',
+  },
+  {
+    kind: 'subscription',
+    ref: 'gmail:4',
+    title: 'Zeitung Jahresabo',
+    mailDate: '2026-09-22',
+    amountMinor: 5900,
+    freq: 'yearly',
+  },
+  {
+    kind: 'contract',
+    ref: 'gmail:5',
+    title: 'Versicherung Muster',
+    mailDate: '2026-09-23',
+    date: '2027-12-31',
+    noticeDays: 90,
+  },
+  {
+    kind: 'event',
+    ref: 'gmail:6',
+    title: 'Konzert Beispielband',
+    mailDate: '2026-09-24',
+    date: '2026-11-21',
+    time: '19:30',
+    place: 'Stadthalle',
+  },
+  {
+    kind: 'event',
+    ref: 'gmail:7',
+    title: 'Zahnarzt',
+    mailDate: '2026-09-24',
+    date: '2026-10-05',
+    time: '14:30',
+  },
+];
+const scan: ImportInput = { kind: 'connector', findings };
+
+describe('suggestions from a mail scan', () => {
+  it('turns invoice findings into open invoices and skips those without an amount', async () => {
+    const r = await run('invoices', 'mail', scan);
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]!.candidate.data).toMatchObject({
+      payee: 'Stadtwerke Muster',
+      amountMinor: 8740,
+      dueDate: '2026-10-15',
+      status: 'open',
+    });
+    expect(String(r.rows[0]!.candidate.data.note)).toContain('https://mail.example.test/1');
+    expect(r.notes[0]).toMatch(/ohne erkennbaren Betrag/);
+    await commitImport(r.manifest, {
+      batchId: 'tb',
+      importerId: 'mail',
+      source: 'm',
+      rows: r.rows,
+    });
+    expect((await run('invoices', 'mail', scan)).rows[0]!.duplicate).toBe(true);
+  });
+
+  it('builds subscriptions with the detected rhythm and flags a guessed start date', async () => {
+    const r = await run('subscriptions', 'mail', scan);
+    expect(r.rows.map((x) => x.candidate.label)).toEqual(['Filmfreund', 'Zeitung Jahresabo']);
+    expect(r.rows[0]!.candidate.data).toMatchObject({
+      amountMinor: 999,
+      startDate: '2026-10-03',
+      recurrence: { freq: 'monthly', interval: 1 },
+    });
+    expect(r.rows[0]!.candidate.warning).toBeUndefined();
+    expect(r.rows[1]!.candidate.data).toMatchObject({
+      recurrence: { freq: 'yearly' },
+      startDate: '2026-09-22',
+    });
+    expect(r.rows[1]!.candidate.warning).toBeDefined();
+  });
+
+  it('builds contracts with end date and notice period', async () => {
+    const r = await run('contracts', 'mail', scan);
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]!.candidate.data).toMatchObject({
+      name: 'Versicherung Muster',
+      endDate: '2027-12-31',
+      noticeDays: 90,
+    });
+    await contractRepo.create({ name: 'versicherung muster', kind: 'contract' });
+    expect((await run('contracts', 'mail', scan)).rows[0]!.duplicate).toBe(true);
+  });
+
+  it('suggests events and drops the ones a synced external calendar already has', async () => {
+    await externalRepo.create({
+      source: 'google',
+      calendarId: 'primary',
+      extId: 'g1',
+      title: 'Zahnarzt',
+      allDay: false,
+      startDate: '2026-10-05',
+      startTime: '14:30',
+      kind: 'event',
+    });
+    const r = await run('calendar', 'mail', scan);
+    expect(r.rows.map((x) => [x.candidate.label, x.duplicate])).toEqual([
+      ['Konzert Beispielband', false],
+      ['Zahnarzt', true],
+    ]);
+    expect(r.rows[0]!.candidate.data).toMatchObject({
+      allDay: false,
+      startDate: '2026-11-21',
+      startTime: '19:30',
+      location: 'Stadthalle',
+    });
+    expect(r.rows[1]!.selected).toBe(false);
   });
 });
 

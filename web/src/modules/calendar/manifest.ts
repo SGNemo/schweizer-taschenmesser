@@ -2,7 +2,7 @@ import { onboarding } from './onboarding';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
-import { eventSchema } from './schema';
+import { eventSchema, externalEventSchema } from './schema';
 import { settings } from './settings';
 
 const manifest: ModuleManifest = {
@@ -23,6 +23,7 @@ const manifest: ModuleManifest = {
   dataSchema: {
     collections: {
       event: { schema: eventSchema, indexes: ['startDate'] },
+      external: { schema: externalEventSchema, indexes: ['startDate', 'source'] },
     },
   },
   migrations,
@@ -43,6 +44,7 @@ const manifest: ModuleManifest = {
     onboarding: onboarding,
     quickAdd: [{ id: 'event', label: 'Termin', to: '/calendar?new=1' }],
     calendarItems: () => import('./calendar'),
+    externalCalendar: () => import('./external'),
   },
 };
 

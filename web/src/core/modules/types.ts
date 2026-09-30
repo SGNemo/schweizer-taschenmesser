@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
+import type { ExternalEvent } from '@/core/connectors/types';
 import type { OnboardingDef } from '@/core/importer/types';
 import type { IconName } from '@/ui/icons';
 
@@ -133,9 +134,41 @@ export interface CalendarItem {
   done?: boolean;
   /** Route to open when the item is activated. */
   to?: string;
+  /** Colour of an external calendar ('#rrggbb'). */
+  color?: string;
+  location?: string;
+  /** Link that opens the item in the service it came from. */
+  url?: string;
+  /** True for events copied from an outside service (read-only). */
+  external?: boolean;
 }
 
 export type CalendarSource = (range: DateRange) => Promise<CalendarItem[]>;
+
+/**
+ * Where connectors put external calendar events. The calendar module implements it, so connectors
+ * never touch the database or import a module.
+ */
+export interface ExternalCalendarSink {
+  /**
+   * Applies one sync of one source calendar. `replaceAll` = `upsert` is the complete window: stored
+   * events of that calendar that are not in it are removed.
+   */
+  apply(args: {
+    source: string;
+    calendarId: string;
+    color?: string;
+    upsert: ExternalEvent[];
+    removeExtIds: string[];
+    replaceAll: boolean;
+  }): Promise<{ added: number; updated: number; removed: number }>;
+  /** Removes what a source (or one of its calendars) created; returns the number of events. */
+  clear(source: string, calendarId?: string): Promise<number>;
+  /** How many events a source has stored (for the settings card). */
+  count(source: string): Promise<number>;
+  /** Keys (date|time|normalised title) of all stored events – for de-duplicating suggestions. */
+  knownKeys(): Promise<Set<string>>;
+}
 
 /** A notification that should fire at `at` (epoch ms). `key` must be stable per occurrence. */
 export interface DueNotification {
@@ -161,6 +194,8 @@ export interface ModuleContributions {
   /** Lazy so manifests stay free of database imports. */
   calendarItems?: () => Promise<{ default: CalendarSource }>;
   notifications?: () => Promise<{ default: NotificationSource }>;
+  /** The calendar module only: receives events synced by connectors. */
+  externalCalendar?: () => Promise<{ default: ExternalCalendarSink }>;
   /**
    * Background service that runs while the module is enabled (e.g. reacting to bus events).
    * The default export starts it and returns a function that stops it.

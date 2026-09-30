@@ -1,3 +1,4 @@
+import type { MailFinding } from '@/core/connectors/types';
 /**
  * Start-data importers. A module declares them in `contributions.onboarding`; the generic wizard
  * (`OnboardingWizard`) shows them, runs the chosen one, previews the result and only after the user's
@@ -64,6 +65,8 @@ export interface ImporterMeta {
   options?: ImportField[];
   /** kind `connector`: id of the connector that provides the suggestions. */
   connectorId?: string;
+  /** kind `connector`: the connector feature that must be switched on (`mail`). */
+  connectorFeature?: string;
 }
 
 export interface OnboardingDef {
@@ -80,7 +83,9 @@ export type ImportInput =
   | { kind: 'text'; text: string }
   | { kind: 'file'; text: string; fileName: string }
   | { kind: 'template'; ids: string[] }
-  | { kind: 'form'; values: Record<string, string> };
+  | { kind: 'form'; values: Record<string, string> }
+  /** Suggestions a connector scan found (`MailFinding`s); nothing of the source text is included. */
+  | { kind: 'connector'; findings: MailFinding[] };
 
 export interface ImportContext {
   /** 'YYYY-MM-DD' (from `core/time/now`). */

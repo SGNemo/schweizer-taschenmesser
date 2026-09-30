@@ -160,6 +160,23 @@
   background: var(--surface-2);
   color: var(--text);
 }
+.kind_external {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px dashed var(--border);
+}
+.kind_birthday {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.kind_end,
+.kind_expiry {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.dot.kind_external {
+  background: var(--text-muted);
+}
 .dot.kind_invoice,
 .dot.kind_cancel {
   background: var(--danger);
@@ -431,4 +448,29 @@ button.itemRow:hover {
   color: var(--text-muted);
   font-weight: 600;
   margin-bottom: var(--space-1);
+}
+
+/* Read-only detail of an external event */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.detailNote {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.detailActions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.colorDot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-inline-end: var(--space-2);
+  border-radius: 50%;
 }
