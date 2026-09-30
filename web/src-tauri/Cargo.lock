@@ -4299,6 +4299,7 @@ dependencies = [
  "minisign-verify",
  "serde",
  "serde_json",
+ "taschenmesser-local-api",
  "tauri",
  "tauri-build",
  "tauri-plugin-apk-installer",
@@ -4311,6 +4312,16 @@ dependencies = [
  "tauri-plugin-secure-store",
  "tauri-plugin-updater",
  "windows 0.61.3",
+]
+
+[[package]]
+name = "taschenmesser-local-api"
+version = "0.1.0"
+dependencies = [
+ "httparse",
+ "serde",
+ "sha2",
+ "subtle",
 ]
 
 [[package]]

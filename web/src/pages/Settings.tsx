@@ -17,6 +17,7 @@ import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
 import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
+import { LocalApiSection } from './settings/LocalApiSection';
 import { UpdateSection } from './settings/UpdateSection';
 import styles from './Page.module.css';
 
@@ -179,6 +180,12 @@ export function Settings() {
           {t.connectors.title}
         </SectionTitle>
         <ConnectorsSection />
+      </section>
+      <section className={styles.section} aria-labelledby="localapi">
+        <SectionTitle id="localapi" hint={t.help.localApi}>
+          {t.localApi.title}
+        </SectionTitle>
+        <LocalApiSection />
       </section>
       <section className={styles.section} aria-labelledby="updates">
         <SectionTitle id="updates" hint={t.help.updateChannel}>

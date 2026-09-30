@@ -3,6 +3,8 @@
 //! `PlatformService` interface. Keep it thin: logic belongs into the (tested) TypeScript side.
 
 #[cfg(desktop)]
+mod local_api;
+#[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
 mod portable;
@@ -65,11 +67,16 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(update::PendingUpdate::default())
         .manage(oauth::OAuthListener::default())
+        .manage(local_api::LocalApi::default())
         .invoke_handler(tauri::generate_handler![
             update::check_update,
             update::install_update,
             oauth::oauth_listen_start,
-            oauth::oauth_listen_wait
+            oauth::oauth_listen_wait,
+            local_api::local_api_start,
+            local_api::local_api_stop,
+            local_api::local_api_set_tokens,
+            local_api::local_api_respond
         ]);
 
     #[cfg(windows)]

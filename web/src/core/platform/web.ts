@@ -1,3 +1,4 @@
+import { createFakeLocalApi } from './fakeLocalApi';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
 import type { PlatformService, SaveFileRequest } from './types';
@@ -103,6 +104,11 @@ export function createWebPlatform(): PlatformService {
     screen: { setSecure: async () => undefined },
     // No listening sockets in a browser: OAuth logins that need a loopback redirect are desktop-only.
     oauth: { supported: false, start: unsupported },
+    // E2E builds only: a stand-in for the native server (the branch is removed from other builds).
+    localApi:
+      import.meta.env.MODE === 'e2e'
+        ? createFakeLocalApi()
+        : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
     lifecycle: { onBackground: onPageHidden },
   };
 }

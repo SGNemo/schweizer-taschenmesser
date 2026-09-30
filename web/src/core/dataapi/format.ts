@@ -173,3 +173,21 @@ export function itemJsonSchema(format: CollectionFormat): JsonObject {
     additionalProperties: false,
   };
 }
+
+/** A stored record in the import format (for reading): euro amounts, ISO time of the last change. */
+export function toImportItem(
+  format: CollectionFormat,
+  record: Record<string, unknown> & { id: string; updatedAt: number },
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {
+    id: record.id,
+    collection: format.collection,
+    updatedAt: new Date(record.updatedAt).toISOString(),
+  };
+  for (const f of format.fields) {
+    const v = record[f.storeName];
+    if (v === undefined || v === null) continue;
+    out[f.name] = f.kind === 'money' && typeof v === 'number' ? v / 100 : v;
+  }
+  return out;
+}
