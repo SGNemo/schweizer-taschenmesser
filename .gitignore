@@ -30,3 +30,13 @@ google-services.json
 taschenmesser-backup*.json
 taschenmesser-accounts-*.json
 taschenmesser-accounts-*.csv
+
+# --- Build output and tool caches (also covered per project; repeated here for stray runs at the root) ---
+**/dist/
+**/dev-dist/
+**/target/
+**/playwright-report/
+**/test-results/
+**/coverage/
+**/.vite/
+*.tsbuildinfo
