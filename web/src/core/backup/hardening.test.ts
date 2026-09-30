@@ -452,12 +452,12 @@ describe('automatic backups', () => {
 describe('no secrets in backups', () => {
   it('device-local secrets never reach a plain or encrypted backup', async () => {
     const db = newDb();
-    await db.table('_secrets').put({ key: 'syncConfig', value: { token: 'tok-SECRET-1234' } });
+    await db.table('_secrets').put({ key: 'syncConfig', value: { token: 'invented-sync-credential' } });
     await db.table('_secrets').put({ key: 'secret:ai.claude', value: 'sk-test-fake-key' });
     await db.table('_meta').put({ key: 'backup.auto.config', value: {} });
     const backup = await createBackup(db);
     const plain = serializeBackup(backup);
-    for (const needle of ['tok-SECRET-1234', 'sk-test-fake-key', 'syncConfig', '_secrets'])
+    for (const needle of ['invented-sync-credential', 'sk-test-fake-key', 'syncConfig', '_secrets'])
       expect(plain).not.toContain(needle);
     expect(Object.keys(backup.tables)).not.toContain('_meta');
   });
