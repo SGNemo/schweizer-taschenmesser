@@ -48,6 +48,7 @@
     "opener:allow-open-url",
     "apk-installer:default",
     "secure-store:default",
+    "share-intent:default",
     {
       "identifier": "http:default",
       "allow": [

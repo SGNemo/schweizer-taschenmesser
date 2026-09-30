@@ -4383,6 +4383,7 @@ dependencies = [
  "tauri-plugin-notification",
  "tauri-plugin-opener",
  "tauri-plugin-secure-store",
+ "tauri-plugin-share-intent",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
  "windows 0.61.3",
@@ -4701,6 +4702,16 @@ dependencies = [
  "thiserror 2.0.21",
  "windows 0.61.3",
  "windows-future 0.2.1",
+]
+
+[[package]]
+name = "tauri-plugin-share-intent"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

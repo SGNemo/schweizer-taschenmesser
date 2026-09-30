@@ -5,6 +5,8 @@ export type {
   BiometricPromptText,
   DesktopService,
   HotkeyError,
+  SharedContent,
+  ShareService,
   TrayLabels,
   BiometricService,
   PlatformKind,

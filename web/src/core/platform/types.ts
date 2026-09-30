@@ -99,6 +99,19 @@ export interface LocalApiService {
   stop(): Promise<void>;
 }
 
+/** Text or a link another Android app shared with this app. */
+export interface SharedContent {
+  title: string;
+  text: string;
+}
+
+/** Android "Share" target. `supported` is false everywhere except the Android app. */
+export interface ShareService {
+  supported: boolean;
+  /** The latest share since the last call (each share is returned once), or `undefined`. */
+  takePending(): Promise<SharedContent | undefined>;
+}
+
 /** Why a global hotkey could not be set: unparsable, owned by another program, or refused by the OS. */
 export type HotkeyError = 'invalid' | 'taken' | 'failed';
 
@@ -150,6 +163,7 @@ export interface PlatformService {
   oauth: OAuthLoopback;
   localApi: LocalApiService;
   desktop: DesktopService;
+  share: ShareService;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {

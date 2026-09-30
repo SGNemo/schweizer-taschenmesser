@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
@@ -35,6 +36,7 @@ export function AppShell() {
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  useNativeShare();
 
   // Global shortcut: Ctrl/Cmd+K opens the command palette.
   useEffect(() => {

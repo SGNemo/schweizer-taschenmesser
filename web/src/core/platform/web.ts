@@ -1,7 +1,7 @@
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
-import type { DesktopService, PlatformService, SaveFileRequest } from './types';
+import type { DesktopService, PlatformService, SaveFileRequest, ShareService } from './types';
 
 /** Injected at build time from `web/package.json` (see vite.config.ts). */
 declare const __APP_VERSION__: string;
@@ -79,6 +79,9 @@ export const webDesktop: DesktopService = {
   onCaptureOpen: onCaptureOpenEvent,
 };
 
+/** The PWA receives shares through its web manifest (`share_target`), not through this service. */
+export const webShare: ShareService = { supported: false, takePending: async () => undefined };
+
 export function createWebPlatform(): PlatformService {
   return {
     kind: 'web',
@@ -133,6 +136,7 @@ export function createWebPlatform(): PlatformService {
         ? createFakeLocalApi()
         : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
     desktop: webDesktop,
+    share: webShare,
     lifecycle: { onBackground: onPageHidden },
   };
 }
