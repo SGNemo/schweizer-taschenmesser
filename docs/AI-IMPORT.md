@@ -186,6 +186,7 @@ Je Eintrag steht in `items[]` ein `status`: `ok`, `duplicate` (schon vorhanden),
 | `413 body-too-large` | mehr als 1 MB | in mehrere Sendungen teilen |
 | `421 bad-host` | falsche Adresse | genau `127.0.0.1:<Port>` oder `localhost:<Port>` verwenden |
 | `429 too-many-requests` | zu viele Anfragen oder Fehlversuche | eine Minute warten |
+| `429 too-many-pending` | 20 Importe warten schon auf Bestätigung | in der App bestätigen oder ablehnen |
 | `503 app-not-ready` / `504 timeout` | App beschäftigt oder geschlossen | App öffnen, erneut versuchen |
 
 ---
@@ -267,7 +268,7 @@ Rechte und eine begrenzte Gültigkeit. Der MCP-Server ist (noch) nicht Teil der 
 | Webseiten im Browser, die den Port ansprechen | Anfragen mit `Origin`/`Sec-Fetch-Site` werden abgelehnt, es gibt kein CORS, der `Host` muss stimmen (Schutz vor DNS-Rebinding). |
 | Erraten des Schlüssels | 256-Bit-Zufallsschlüssel, Vergleich in konstanter Zeit, höchstens 20 Fehlversuche pro Minute. |
 | Gestohlener Schlüssel | nur die angekreuzten Module und Rechte, Ablaufdatum, sofortiger Widerruf, Vorschau vor jedem Speichern. |
-| Überlastung | 120 Anfragen pro Minute und Zugang, höchstens 1 MB pro Anfrage, 8 gleichzeitige Verbindungen, Zeitlimits. |
+| Überlastung | 120 Anfragen pro Minute und Zugang, höchstens 1 MB pro Anfrage, 20 wartende Importe pro Zugang, 8 gleichzeitige Verbindungen, Zeitlimits. |
 | Datenlecks | Schlüssel, Inhalte und Personendaten werden nicht protokolliert; Fehlermeldungen wiederholen keine Werte. |
 | Tresor und Geheimnisse | „Accounts“, Einstellungen, Verbindungen und API-Schlüssel sind für die Schnittstelle nicht vorhanden. |
 | Schadsoftware auf demselben PC | nicht abwehrbar – sie könnte auch die Datenbank der App direkt lesen. Halte Windows aktuell. |

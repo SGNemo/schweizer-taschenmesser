@@ -53,6 +53,8 @@ export interface HandlerContext {
 }
 
 export const MAX_LIMIT = 200;
+/** Waiting imports per token; more are refused until the user confirms or rejects some. */
+export const MAX_PENDING = 20;
 const DEFAULT_LIMIT = 50;
 const MODULE_RE = /^[a-z][a-z0-9]*$/;
 
@@ -185,6 +187,12 @@ export async function handleRequest(req: ApiRequest, ctx: HandlerContext): Promi
         }
         const batchId = newBatchId();
         const check = await checkImport(manifest, text, batchId, database);
+        if (!dryRun) {
+          const waiting = (await listApiBatches(database, token.id)).filter(
+            (b) => batchStatus(b) === 'pending',
+          ).length;
+          if (waiting >= MAX_PENDING) throw new ApiError(429, 'too-many-pending');
+        }
         const result = { summary: check.summary, items: check.items };
         const count = { count: check.items.length };
         if (dryRun) return done(200, { dryRun: true, ...result }, count);

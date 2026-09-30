@@ -1503,6 +1503,8 @@ export const t = {
       'not-pending': 'Der Import wartet nicht mehr auf Bestätigung.',
       'confirmation-required':
         'Dieser Import muss in der App bestätigt werden (Zugang ohne „Automatisch übernehmen“ oder er ändert vorhandene Einträge).',
+      'too-many-pending':
+        'Zu viele Importe warten auf Bestätigung. Bitte zuerst in der App bestätigen oder ablehnen.',
       'idempotency-conflict':
         'Dieser Idempotency-Key wurde schon für einen anderen Inhalt verwendet.',
       internal: 'Interner Fehler.',

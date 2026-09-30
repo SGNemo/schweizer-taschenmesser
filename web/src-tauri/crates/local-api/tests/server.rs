@@ -321,3 +321,31 @@ fn large_bodies_with_expect_continue_do_not_wait() {
     let _ = stream.read_to_string(&mut out);
     assert!(out.starts_with("HTTP/1.1 200"), "{out}");
 }
+
+#[test]
+fn a_slow_trickle_cannot_hold_a_connection() {
+    let limits = Limits {
+        request_deadline: Duration::from_millis(300),
+        ..Limits::default()
+    };
+    let (_slot, port, _) = start(limits);
+    let mut stream = TcpStream::connect(bind_addr(port)).unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(3)))
+        .unwrap();
+    let started = std::time::Instant::now();
+    let head = format!("GET /v1/modules HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n");
+    for byte in head.bytes() {
+        if stream.write_all(&[byte]).is_err() {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+        if started.elapsed() > Duration::from_secs(2) {
+            break;
+        }
+    }
+    let mut out = String::new();
+    let _ = stream.read_to_string(&mut out);
+    assert!(out.starts_with("HTTP/1.1 408"), "{out}");
+    assert!(started.elapsed() < Duration::from_secs(2));
+}
