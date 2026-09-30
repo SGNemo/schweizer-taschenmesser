@@ -1,7 +1,7 @@
 [package]
 name = "taschenmesser"
 # Mirrors web/package.json (the single source of truth); `npm run version:sync` keeps it in step.
-version = "0.2.0"
+version = "0.3.0-beta.1"
 description = "Modular, local-first everyday app"
 authors = ["SGNemo"]
 license = "MIT"
