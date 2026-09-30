@@ -1,5 +1,5 @@
 {
-  "version": 11,
+  "version": 12,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -27,6 +27,7 @@
     "habits_check": "id, updatedAt, habitId, date",
     "habits_habit": "id, updatedAt, archived",
     "invoices_invoice": "id, updatedAt, dueDate, status",
+    "launcher_link": "id, updatedAt, group",
     "news_article": "id, updatedAt, feedId, publishedAt",
     "news_feed": "id, updatedAt, category",
     "news_feedstate": "id, updatedAt",

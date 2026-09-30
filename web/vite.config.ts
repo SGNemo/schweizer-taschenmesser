@@ -34,9 +34,10 @@ export default defineConfig({
         categories: ['productivity', 'utilities'],
         background_color: '#f7f7f5',
         theme_color: '#2f6f8f',
-        // Android "Teilen" → Merkliste (opens the create dialog with the shared link).
+        // Android "Teilen" → neutral page where the destination is chosen (Merkliste, Notiz, ToDo).
+        // `/bookmarks?title&text&url` keeps working for old bookmarks/links.
         share_target: {
-          action: '/bookmarks',
+          action: '/share',
           method: 'GET',
           params: { title: 'title', text: 'text', url: 'url' },
         },

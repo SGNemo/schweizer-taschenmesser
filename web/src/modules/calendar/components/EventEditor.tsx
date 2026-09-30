@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
+import { mapsUrl } from '@/core/links';
+import { getPlatform } from '@/core/platform';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { t } from '@/strings';
-import { Button, Dialog, Switch, TextArea, TextField } from '@/ui';
+import { Button, Dialog, Icon, Switch, TextArea, TextField } from '@/ui';
 import { eventRepo } from '../repo';
 import { eventSchema, type CalendarEvent } from '../schema';
 import styles from '../routes/calendar.module.css';
@@ -112,6 +114,14 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
         value={location}
         onChange={(e) => setLocation(e.target.value)}
       />
+      {location.trim() ? (
+        <div>
+          <Button variant="ghost" onClick={() => void getPlatform().app.openUrl(mapsUrl(location))}>
+            <Icon name="pin" size={16} />
+            {t.calendar.showOnMap}
+          </Button>
+        </div>
+      ) : null}
       <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       {error ? (

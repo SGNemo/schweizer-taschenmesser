@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, ItemList, ItemRow, PageHeader } from '@/ui';
+import { getPlatform } from '@/core/platform';
+import { whatsappUrl } from '@/core/links';
+import { Button, EmptyState, Icon, IconButton, ItemList, ItemRow, PageHeader } from '@/ui';
 import { BirthdayEditor, type BirthdayTarget } from '../components/BirthdayEditor';
 import { ageOn, daysUntil, nextBirthday, sortByNext, whenLabel } from '../logic';
 import { birthdayRepo } from '../repo';
@@ -50,6 +52,16 @@ export default function BirthdaysPage() {
                 .filter(Boolean)
                 .join(' · ')}
               onOpen={() => setTarget(b)}
+              end={
+                <IconButton
+                  label={t.birthdays.congratulate(b.name)}
+                  onClick={() =>
+                    void getPlatform().app.openUrl(whatsappUrl(t.birthdays.wish(b.name)))
+                  }
+                >
+                  <Icon name="external" size={18} />
+                </IconButton>
+              }
             />
           );
         })}

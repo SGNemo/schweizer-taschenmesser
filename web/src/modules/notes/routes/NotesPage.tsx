@@ -13,7 +13,16 @@ export default function NotesPage() {
   const [target, setTarget] = useState<NoteTarget>(null);
   const [params, setParams] = useSearchParams();
 
-  const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
+  // `?new=1` opens an empty note; `title`/`text` come from the share page and prefill it.
+  const openTarget =
+    target ??
+    (params.get('new')
+      ? {
+          draft: true as const,
+          title: params.get('title') ?? undefined,
+          body: params.get('text') ?? undefined,
+        }
+      : null);
   const closeEditor = () => {
     setTarget(null);
     if (params.get('new')) setParams({}, { replace: true });

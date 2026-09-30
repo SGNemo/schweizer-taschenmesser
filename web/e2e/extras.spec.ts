@@ -143,7 +143,7 @@ test('Geburtstage: next date, age, calendar and dashboard widget', async ({ page
   await dialog.getByLabel('Name').fill('Anna');
   await dialog.getByLabel('Geburtsdatum').fill('1990-10-03');
   await save(page);
-  const row = page.getByRole('button', { name: /Anna/ });
+  const row = page.getByRole('button', { name: /Anna/ }).filter({ hasNotText: 'WhatsApp' });
   await expect(row).toContainText('wird 36');
   await expect(row).toContainText('in 4 Tagen');
 

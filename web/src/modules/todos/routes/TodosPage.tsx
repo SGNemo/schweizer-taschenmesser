@@ -98,7 +98,8 @@ export default function TodosPage() {
   const tasks = useLiveQuery(() => taskRepo.active().toArray(), []);
   const [prefs] = useSettings('module.todos', settings.schema, settings.defaults);
   const [params, setParams] = useSearchParams();
-  const [title, setTitle] = useState('');
+  // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
+  const [title, setTitle] = useState(() => params.get('title') ?? '');
   const [editing, setEditing] = useState<StoredTask | null>(null);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
   const addRef = useRef<HTMLFormElement>(null);
@@ -113,6 +114,7 @@ export default function TodosPage() {
       addRef.current?.querySelector('input')?.focus();
       const next = new URLSearchParams(params);
       next.delete('new');
+      next.delete('title');
       setParams(next, { replace: true });
     }
   }, [params, setParams]);

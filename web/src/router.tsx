@@ -11,6 +11,7 @@ import { Dashboard } from '@/pages/dashboard/Dashboard';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
 import { Settings } from '@/pages/Settings';
+import { ShareTarget } from '@/pages/ShareTarget';
 import { ToolLibrary } from '@/pages/ToolLibrary';
 
 function ModuleDisabled() {
@@ -65,6 +66,14 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           element: (
             <PageContainer variant="wide">
               <ToolLibrary />
+            </PageContainer>
+          ),
+        },
+        {
+          path: 'share',
+          element: (
+            <PageContainer variant="narrow">
+              <ShareTarget />
             </PageContainer>
           ),
         },

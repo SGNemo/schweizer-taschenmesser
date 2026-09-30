@@ -59,6 +59,19 @@ export const t = {
     empty: 'Keine Treffer',
     hint: 'Ctrl+K',
   },
+  share: {
+    title: 'Teilen',
+    intro: 'Wohin soll der geteilte Inhalt?',
+    content: 'Geteilt',
+    where: 'Ziele',
+    nothing:
+      'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Taschenmesser.',
+    noTargets:
+      'Schalte in der Modul-Bibliothek Merkliste, Notizen oder ToDos ein, um Inhalte zu empfangen.',
+    toBookmarks: 'In die Merkliste',
+    toNote: 'Als Notiz',
+    toTodo: 'Als ToDo',
+  },
   quickAdd: {
     title: 'Schnell hinzufügen',
     empty: 'Aktive Module bieten noch keine Schnellaktionen an.',
@@ -143,6 +156,7 @@ export const t = {
     start: 'Beginn',
     end: 'Ende',
     location: 'Ort',
+    showOnMap: 'Auf der Karte zeigen',
     nothing: 'Keine Einträge',
     endBeforeStart: 'Das Ende darf nicht vor dem Beginn liegen.',
     more: (n: number) => `+${n} weitere`,
@@ -973,6 +987,20 @@ export const t = {
     widgetEmpty: 'Nichts einzukaufen.',
     openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
   },
+  launcher: {
+    title: 'Apps & Links',
+    add: 'Link hinzufügen',
+    edit: 'Link bearbeiten',
+    editLink: (name: string) => `${name} bearbeiten`,
+    empty: 'Noch keine Links. Lege ein Startpaket an oder füge einen Link hinzu.',
+    url: 'Adresse',
+    urlHint: 'https://…, mailto: oder tel: – ohne Angabe wird https:// ergänzt.',
+    badUrl: 'Das ist keine gültige Adresse.',
+    group: 'Gruppe (optional)',
+    groupHint: 'z. B. Pakete oder Reisen',
+    noGroup: 'Ohne Gruppe',
+    widgetEmpty: 'Noch keine Links.',
+  },
   birthdays: {
     title: 'Geburtstage',
     add: 'Geburtstag hinzufügen',
@@ -982,6 +1010,8 @@ export const t = {
     yearUnknown: 'Geburtsjahr unbekannt',
     invalidDate: 'Bitte ein gültiges Datum eingeben.',
     turns: (age: number) => `wird ${age}`,
+    congratulate: (name: string) => `${name} per WhatsApp gratulieren`,
+    wish: (name: string) => `Alles Gute zum Geburtstag, ${name}! 🎂`,
     empty: 'Noch keine Geburtstage.',
     widgetEmpty: 'Noch keine Geburtstage.',
   },
@@ -1407,6 +1437,16 @@ export const t = {
     } as Record<string, string>,
     add: 'Hinzufügen',
     required: 'Bitte ausfüllen.',
+    launcher: {
+      presets: 'Vorschläge auswählen',
+      presetsHint:
+        'Häufig genutzte Dienste (Paketverfolgung, Bahn, Karten …). Es sind nur die Startseiten der Anbieter; du kannst sie danach ändern.',
+      single: 'Einen Link hinzufügen',
+      title: 'Name',
+      url: 'Adresse',
+      group: 'Gruppe (optional)',
+      invalid: 'Name und eine gültige Adresse (https://…) werden gebraucht.',
+    },
     news: {
       starter: 'Startpaket auswählen',
       starterHint:

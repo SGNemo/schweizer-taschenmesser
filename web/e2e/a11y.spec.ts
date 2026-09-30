@@ -24,6 +24,7 @@ const MODULES = [
   'vault',
   'accounts',
   'news',
+  'launcher',
 ];
 
 /** Enables every module (raw write into the module table, like the library would do). */
@@ -99,6 +100,8 @@ const PAGES = [
   ['vault', '/vault'],
   ['accounts (set up)', '/accounts'],
   ['news', '/news'],
+  ['launcher', '/launcher'],
+  ['share', '/share?title=Beispiel&text=Schau%20mal%20https%3A%2F%2Fbeispiel.example%2Fx'],
 ] as const;
 
 for (const scheme of ['light', 'dark'] as const) {
@@ -117,6 +120,7 @@ for (const scheme of ['light', 'dark'] as const) {
     }
 
     test('tools: toolbar sheet and every tool', async ({ page }) => {
+      test.setTimeout(120_000); // audits 14 tools one after the other
       await page.goto('/tools');
       await expect(page.getByTestId('tool-calc')).toBeVisible();
       const names: string[] = [];

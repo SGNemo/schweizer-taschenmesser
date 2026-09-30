@@ -35,6 +35,7 @@ const MODULES = [
   'vault',
   'accounts',
   'news',
+  'launcher',
 ];
 const PAGES = ['/', ...MODULES.map((m) => `/${m}`), '/library', '/tools', '/settings'];
 

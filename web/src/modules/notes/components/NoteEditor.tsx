@@ -5,20 +5,35 @@ import { Button, Dialog, Form, FormActions, Switch, TextArea, TextField } from '
 import { noteRepo } from '../repo';
 import type { Note } from '../schema';
 
-export type NoteTarget = Stored<Note> | { draft: true } | null;
+export type NoteTarget = Stored<Note> | { draft: true; title?: string; body?: string } | null;
 
 export function NoteEditor({ target, onClose }: { target: NoteTarget; onClose: () => void }) {
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog open={target !== null} onClose={onClose} title={existing ? t.notes.edit : t.notes.add}>
-      {target ? <Fields key={existing?.id ?? 'new'} existing={existing} onClose={onClose} /> : null}
+      {target ? (
+        <Fields
+          key={existing?.id ?? 'new'}
+          existing={existing}
+          draft={existing ? undefined : target}
+          onClose={onClose}
+        />
+      ) : null}
     </Dialog>
   );
 }
 
-function Fields({ existing, onClose }: { existing: Stored<Note> | null; onClose: () => void }) {
-  const [title, setTitle] = useState(existing?.title ?? '');
-  const [body, setBody] = useState(existing?.body ?? '');
+function Fields({
+  existing,
+  draft,
+  onClose,
+}: {
+  existing: Stored<Note> | null;
+  draft?: { title?: string; body?: string };
+  onClose: () => void;
+}) {
+  const [title, setTitle] = useState(existing?.title ?? draft?.title ?? '');
+  const [body, setBody] = useState(existing?.body ?? draft?.body ?? '');
   const [pinned, setPinned] = useState(existing?.pinned ?? false);
   const [error, setError] = useState('');
 
