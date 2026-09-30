@@ -23,8 +23,10 @@ export function ModuleLibrary() {
   async function disable(policy: 'keep' | 'delete') {
     if (!pending) return;
     const m = pending;
-    setPending(null);
+    // Close the dialog only after the write: "the dialog has closed" must mean "the write is
+    // finished" (E2E rule in CLAUDE.md), otherwise a reload right after can lose the change.
     await disableModule(m, policy);
+    setPending(null);
   }
 
   return (
