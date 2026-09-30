@@ -24,11 +24,19 @@ jobs:
         with:
           go-version: stable
       # Built from source through the Go module proxy (checksum-verified): no binary download to trust.
+      # The compiled binary is cached per version so later runs skip the build (a miss rebuilds it).
       # Reviewed false positives live in .gitleaksignore; new test fixtures use a `gitleaks:allow` comment.
+      - uses: actions/cache@v4
+        id: gitleaks-cache
+        with:
+          path: ~/go/bin/gitleaks
+          key: gitleaks-v8.21.2-${{ runner.os }}
+      - name: Build gitleaks from source
+        if: steps.gitleaks-cache.outputs.cache-hit != 'true'
+        run: go install github.com/zricethezav/gitleaks/v8@v8.21.2
       - name: Scan the history for secrets
         run: |
           set -euo pipefail
-          go install github.com/zricethezav/gitleaks/v8@v8.21.2
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
   web:
@@ -47,10 +55,21 @@ jobs:
       - run: npm ci
       - name: Version files agree (package.json, Cargo, Tauri)
         run: npm run version:check
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - name: Playwright browser cache
+        uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
       - run: npx playwright install --with-deps chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+      # System libraries are needed even when the browser itself comes from the cache.
+      - run: npx playwright install-deps chromium
+        if: steps.pw-cache.outputs.cache-hit == 'true'
       - name: E2E (app + accessibility)
         run: npm run e2e:app
       - name: Upload Playwright report
@@ -75,9 +94,11 @@ jobs:
           cache: npm
           cache-dependency-path: server/package-lock.json
       - run: npm ci
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run build
 
   mcp:
     name: MCP wrapper (lint, types, tests)
@@ -115,7 +136,17 @@ jobs:
         working-directory: server
       - run: npm ci
         working-directory: web
+      - name: Playwright browser cache
+        uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
       - run: npx playwright install --with-deps chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        working-directory: web
+      - run: npx playwright install-deps chromium
+        if: steps.pw-cache.outputs.cache-hit == 'true'
         working-directory: web
       - run: npm run e2e:sync
         working-directory: web
