@@ -129,7 +129,90 @@ function swoosh(p, theme) {
   return wrap([-pad, -214 - pad, xj + tl + 14 + 2 * pad, 214 + y + h * 1.5 + 2 * pad], inner);
 }
 
-const CONCEPTS = { body, headfin, ofish, swoosh };
+// Head (facing left, flat/curved back edge at hx) and fan tail (joint at fx), centred on cy.
+function headAt(hx, cy, hh, len) {
+  const nose = hx - len;
+  return {
+    nose,
+    d: `M${hx} ${cy - hh}Q${hx - 26} ${cy} ${hx} ${cy + hh}C${hx - 70} ${cy + hh} ${nose} ${cy + 70} ${nose} ${cy}C${nose} ${cy - 70} ${hx - 70} ${cy - hh} ${hx} ${cy - hh}Z`,
+  };
+}
+function tailAt(fx, cy, hh, fl, st) {
+  return `M${fx} ${cy - st}L${fx} ${cy + st}C${fx + fl * 0.5} ${cy + st} ${fx + fl * 0.8} ${cy + hh} ${fx + fl} ${cy + hh}C${fx + fl + 22} ${cy + hh * 0.35} ${fx + fl + 22} ${cy - hh * 0.35} ${fx + fl} ${cy - hh}C${fx + fl * 0.8} ${cy - hh} ${fx + fl * 0.5} ${cy - st} ${fx} ${cy - st}Z`;
+}
+
+// E · Gräten: W2's head and tail on a spine along the baseline; the thin letters stand on it
+// like the upper bones, short ribs hang below (and optionally between the letters).
+const BONE_LETTERS = [
+  'M30 0V-214L190 0V-214',
+  'M232 -75H370A70 70 0 1 0 353.6 -30',
+  'M410 0V-150M410 -95C410 -135 432 -150 467 -150C502 -150 525 -135 525 -95V0M525 -95C525 -135 547 -150 582 -150C617 -150 640 -135 640 -95V0',
+  'M745 -147A72 72 0 1 1 744.99 -147',
+];
+const RIBS_BELOW = [30, 110, 190, 300, 410, 467, 525, 582, 640, 745];
+const RIBS_ABOVE = [206, 386, 652];
+function bones(p, theme) {
+  const c = p.colors;
+  const sw = p.stroke ?? 24;
+  const cy = 0; // spine = baseline
+  const ink = p.bone ? p.bone[theme] : c.fish;
+  const hx = -30;
+  const head = headAt(hx, cy - 20, 128, p.head ?? 160);
+  const fx = 858;
+  const fl = p.tail ?? 120;
+  const rib = (x, dir, len) => `M${x} ${cy}Q${x + 6} ${cy + dir * len * 0.6} ${x + 26} ${cy + dir * len}`;
+  let inner = `<g fill="none" stroke="${ink}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">`;
+  inner += `<path d="M${hx} ${cy}H${fx}"/>`;
+  inner += BONE_LETTERS.map((d) => `<path d="${d}"/>`).join('');
+  inner += `</g><g fill="none" stroke="${ink}" stroke-width="${sw * 0.7}" stroke-linecap="round">`;
+  inner += RIBS_BELOW.map((x) => `<path d="${rib(x, 1, p.ribLen ?? 70)}"/>`).join('');
+  if (p.ribsAbove) inner += RIBS_ABOVE.map((x) => `<path d="M${x} ${cy}Q${x + 2} ${cy - 40} ${x + 10} ${cy - 62}"/>`).join('');
+  inner += `</g>`;
+  inner += `<path fill="${c.fish}" d="${f(head.d)}"/><path fill="${c.fish}" d="${f(tailAt(fx - 6, cy - 20, 110, fl, 34))}"/>`;
+  inner += `<circle cx="${head.nose + 60}" cy="${cy - 60}" r="${p.eye}" fill="${c.eye}"/>`;
+  const pad = p.pad;
+  return wrap([head.nose - pad, -214 - sw / 2 - pad, fx + fl + 22 - head.nose + 2 * pad, 214 + sw + 2 * pad + 100], inner);
+}
+
+// F · Schreibschrift: one pen line writes "Nem" and flows into the fish, which ends with its tail.
+// Broad-nib look: the same centre line stamped along the nib direction.
+const SCRIPT = {
+  // Lead-in swash + N (ends with a small hook, pen lifts), e, m flowing into the fish.
+  word:
+    'M18 196C60 198 92 150 112 60C116 42 120 28 124 22C136 70 168 160 188 196C196 150 204 70 214 24C220 18 232 20 240 30' +
+    'M238 170C270 170 300 150 298 125C296 100 258 100 252 135C246 172 268 200 305 196' +
+    'C315 190 318 140 322 112L322 196C322 150 330 108 350 108C370 108 375 130 375 196C375 150 383 108 403 108C423 108 428 130 428 170C428 192 432 198 440 196',
+  fish: 'M440 196C450 196 460 160 490 145C520 132 560 128 590 128C592 108 602 96 610 96C620 96 626 112 630 128C672 130 710 140 745 158C775 145 800 115 820 95C810 130 810 190 825 230C800 215 772 195 745 178C700 205 620 215 560 212C510 210 475 200 462 185C456 178 458 166 472 160',
+  body: 'M465 170C470 155 480 150 490 145C520 132 560 128 590 128L630 128C672 130 710 140 745 158L745 178C700 205 620 215 560 212C510 210 475 200 462 185C458 180 460 175 465 170Z',
+  band: 'M540 110Q525 170 542 230',
+  eye: [494, 163],
+};
+function script(p, theme) {
+  const c = p.colors;
+  const ink = p.ink ? p.ink[theme] : c.text[theme];
+  const nib = p.nib ?? 12;
+  const a = ((p.nibAngle ?? 40) * Math.PI) / 180;
+  const steps = 9;
+  const stamp = (d, w) => {
+    let o = '';
+    for (let i = 0; i < steps; i++) {
+      const t = -nib / 2 + (nib * i) / (steps - 1);
+      o += `<path d="${d}" transform="translate(${r2(Math.cos(a) * t)} ${r2(-Math.sin(a) * t)})"/>`;
+    }
+    return `<g fill="none" stroke="${ink}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${o}</g>`;
+  };
+  let inner = '';
+  if (p.fill) {
+    inner += `<defs><clipPath id="wm-f"><path d="${SCRIPT.body}"/></clipPath></defs>`;
+    inner += `<path fill="${c.fish}" d="${SCRIPT.body}"/>`;
+    inner += `<path clip-path="url(#wm-f)" d="${SCRIPT.band}" fill="none" stroke="${c.stripe}" stroke-width="${p.band ?? 30}"/>`;
+  }
+  inner += stamp(SCRIPT.word, p.hair ?? 3.2) + stamp(SCRIPT.fish, p.hair ?? 3.2);
+  inner += `<circle cx="${SCRIPT.eye[0]}" cy="${SCRIPT.eye[1]}" r="${p.eye * 0.45}" fill="${ink}"/>`;
+  return wrap([0, 0, 850, 250], inner);
+}
+
+const CONCEPTS = { body, headfin, ofish, swoosh, bones, script };
 
 export function buildWordmark(concept, params = {}, theme = 'light') {
   const p = merge(WM_DEFAULTS, params);
