@@ -987,6 +987,71 @@ export const t = {
     widgetEmpty: 'Nichts einzukaufen.',
     openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
   },
+  disk: {
+    title: 'Datenträger',
+    lead: 'Was belegt den Platz? Scanne ein Laufwerk und erkunde die größten Ordner. Es wird nichts verändert oder hochgeladen.',
+    loading: 'Laufwerke werden gelesen …',
+    empty: 'Es wurden keine Laufwerke gefunden.',
+    failedDrives: 'Die Laufwerke konnten nicht gelesen werden.',
+    kind: {
+      ssd: 'SSD',
+      hdd: 'Festplatte (HDD)',
+      fixed: 'Festplatte',
+      removable: 'Wechseldatenträger / USB',
+      network: 'Netzlaufwerk',
+      ram: 'RAM-Disk',
+      unknown: 'Laufwerk',
+    },
+    driveName: (root: string, label: string) => (label ? `${root} (${label})` : root),
+    open: (name: string) => `${name} scannen`,
+    usedOf: (used: string, total: string) => `${used} von ${total} belegt`,
+    free: (free: string) => `${free} frei`,
+    percentUsed: (p: number) => `${p} % belegt`,
+    almostFull: 'Fast voll',
+    getting: 'Wird knapp',
+    scan: {
+      back: 'Zurück zu den Laufwerken',
+      title: (root: string) => `Scan von ${root}`,
+      scanning: 'Scan läuft …',
+      paused: 'Scan pausiert',
+      files: 'Dateien',
+      folders: 'Ordner',
+      used: 'Belegt',
+      current: 'Aktueller Ordner',
+      cancel: 'Abbrechen',
+      pause: 'Pause',
+      resume: 'Fortsetzen',
+      cancelled: 'Der Scan wurde abgebrochen. Das Ergebnis ist unvollständig.',
+      failed: (reason: string) =>
+        reason === 'not-found'
+          ? 'Das Laufwerk oder der Ordner wurde nicht gefunden.'
+          : reason === 'denied'
+            ? 'Der Zugriff auf dieses Laufwerk wurde verweigert.'
+            : 'Der Scan ist fehlgeschlagen.',
+      noSession: 'Es läuft kein Scan. Wähle zuerst ein Laufwerk.',
+      done: 'Scan fertig',
+      totalUsed: 'Belegt (auf Datenträger)',
+      sizeHelp:
+        'Belegter Platz auf dem Datenträger: Jede Datei zählt in ganzen Zuordnungseinheiten (Clustern), deshalb liegt der Wert leicht über der reinen Dateigröße. Nur online verfügbare Cloud-Dateien zählen nicht mit.',
+      fileSize: 'Dateigröße gesamt',
+      cloud: (size: string) => `${size} liegen nur online (Cloud) und belegen hier keinen Platz.`,
+      links: (n: number) =>
+        `${n} Verknüpfungen bzw. Online-Ordner wurden nicht betreten (keine doppelte Zählung).`,
+      duration: (s: string) => `Dauer: ${s}`,
+      notRead: 'Nicht gelesen (Zugriff verweigert)',
+      notReadHint:
+        'Diese Ordner konnten ohne Administratorrechte nicht gelesen werden. Sie fehlen in der Summe.',
+      notReadMore: (n: number) => `… und ${n} weitere`,
+      reason: {
+        denied: 'Zugriff verweigert',
+        vanished: 'inzwischen gelöscht',
+        'too-deep': 'zu tief verschachtelt',
+        error: 'nicht lesbar',
+      },
+      topFolders: 'Größte Einträge',
+      smallFiles: (n: number) => `${n} kleinere Dateien`,
+    },
+  },
   launcher: {
     title: 'Apps & Links',
     add: 'Link hinzufügen',

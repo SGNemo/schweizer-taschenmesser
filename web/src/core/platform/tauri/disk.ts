@@ -35,7 +35,7 @@ export function createDisk(supported: boolean): DiskService {
     try {
       return await invoke<T>(cmd, args);
     } catch (e) {
-      throw new Error(typeof e === 'string' ? e : 'error');
+      throw new Error(typeof e === 'string' ? e : 'error', { cause: e });
     }
   };
   return {

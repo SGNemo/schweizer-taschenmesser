@@ -17,6 +17,7 @@ import {
   FileText,
   Flame,
   GripVertical,
+  HardDrive,
   House,
   LayoutGrid,
   ListChecks,
@@ -64,6 +65,7 @@ import {
 
 const ICONS = {
   help: CircleHelp,
+  disk: HardDrive,
   home: House,
   calendar: Calendar,
   checklist: ListChecks,
