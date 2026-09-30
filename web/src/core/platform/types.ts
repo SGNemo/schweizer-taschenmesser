@@ -53,6 +53,20 @@ export interface ScreenService {
   setSecure(enabled: boolean): Promise<void>;
 }
 
+/**
+ * Receives the redirect of an OAuth "installed app" login on a one-shot loopback port
+ * (`http://127.0.0.1:<port>/callback`). Only the desktop shell can; elsewhere `supported` is false.
+ */
+export interface OAuthLoopback {
+  supported: boolean;
+  /** Binds the port. Call `wait` after the browser was opened with `redirectUri`. */
+  start(): Promise<{
+    redirectUri: string;
+    /** Resolves with the authorization code; rejects with `timeout`, `denied: …` or `listen-failed: …`. */
+    wait(state: string, timeoutSeconds?: number): Promise<{ code: string }>;
+  }>;
+}
+
 export interface PlatformService {
   readonly kind: PlatformKind;
   /** True inside the native shell (installed app), false in a browser tab / PWA. */
@@ -67,6 +81,7 @@ export interface PlatformService {
   secrets: SecretStore;
   biometrics: BiometricService;
   screen: ScreenService;
+  oauth: OAuthLoopback;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {

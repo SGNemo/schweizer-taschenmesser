@@ -3,6 +3,7 @@
  * import `@tauri-apps/*` (ESLint). Keep each capability small and mockable.
  */
 import { getVersion } from '@tauri-apps/api/app';
+import { invoke } from '@tauri-apps/api/core';
 import { clear, readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
 import { BaseDirectory, mkdir, readDir, remove, writeFile } from '@tauri-apps/plugin-fs';
@@ -139,6 +140,20 @@ export async function createTauriPlatform(): Promise<PlatformService> {
       remove: (path) => remove(path, inAppData),
     },
     updater: createUpdater(kind, fetchFn),
+    oauth: {
+      supported: kind === 'desktop',
+      async start() {
+        const port = await invoke<number>('oauth_listen_start');
+        return {
+          redirectUri: `http://127.0.0.1:${port}/callback`,
+          wait: (state, timeoutSeconds = 300) =>
+            invoke<{ code: string }>('oauth_listen_wait', {
+              expectedState: state,
+              timeoutSecs: timeoutSeconds,
+            }),
+        };
+      },
+    },
     ...(await createSecureParts(kind)), // secrets (OS keystore), biometrics, screen protection
     lifecycle: { onBackground: onPageHidden },
   };

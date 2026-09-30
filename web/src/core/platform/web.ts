@@ -100,6 +100,8 @@ export function createWebPlatform(): PlatformService {
       remove: async () => undefined,
     },
     screen: { setSecure: async () => undefined },
+    // No listening sockets in a browser: OAuth logins that need a loopback redirect are desktop-only.
+    oauth: { supported: false, start: unsupported },
     lifecycle: { onBackground: onPageHidden },
   };
 }
