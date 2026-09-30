@@ -5,11 +5,11 @@
  *   node scripts/latest-json.mjs --dir <assets> --version 1.2.0 --tag v1.2.0 \
  *        --repo owner/name --notes <RELEASE_NOTES.md> --out <latest.json>
  *
- * Expects (inside --dir) Taschenmesser-Portable.exe and its signature Taschenmesser-Portable.exe.sig.
+ * Expects (inside --dir) the portable exe named `UPDATER_PORTABLE_ASSET` and its `.sig` file.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildLatestJson } from './lib/latestJson.ts';
+import { UPDATER_PORTABLE_ASSET, buildLatestJson } from './lib/latestJson.ts';
 
 const args = Object.fromEntries(
   process.argv
@@ -40,7 +40,7 @@ try {
     repo: args.repo,
     notes: args.notes && existsSync(args.notes) ? readFileSync(args.notes, 'utf8') : '',
     pubDate: new Date().toISOString(),
-    portable: signed('Taschenmesser-Portable.exe'),
+    portable: signed(UPDATER_PORTABLE_ASSET),
   });
   writeFileSync(args.out, `${JSON.stringify(json, null, 2)}\n`);
   console.log(`✓ ${args.out}: ${Object.keys(json.platforms).join(', ')}`);
