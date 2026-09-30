@@ -34,6 +34,12 @@ export function createLookup(
         return { id: r.id, title: typeof v === 'string' ? v : '' };
       });
     },
+    async record(collection, id) {
+      const row = await createCollectionRepo(manifest, collection, database).get(id);
+      return row
+        ? Object.fromEntries(Object.entries(row).filter(([k]) => !envelope.has(k)))
+        : undefined;
+    },
   };
 }
 

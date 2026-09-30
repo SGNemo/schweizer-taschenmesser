@@ -117,6 +117,18 @@ export interface ImportCandidate {
   ref?: string;
   /** Set when the importer already knows the entry cannot be stored; shown instead of the Zod issue. */
   error?: string;
+  /**
+   * Change of an existing record (`id` = that record) instead of a new one. Never pre-ticked; the
+   * preview shows `lines` as a diff. `before`/`after` hold only the changed fields (stored names).
+   */
+  update?: CandidateUpdate;
+}
+
+export interface CandidateUpdate {
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+  /** Display text per changed field ("Titel: alt → neu"), already formatted. */
+  lines: { field: string; from: string; to: string }[];
 }
 
 export interface ImportParseResult {
@@ -148,6 +160,16 @@ export interface PreviewRow {
   selected: boolean;
 }
 
+export type BatchStatus = 'pending' | 'committed' | 'rejected' | 'undone';
+
+/** A change the batch made to an existing record; `before` restores it on undo. */
+export interface BatchUpdate {
+  collection: string;
+  id: string;
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+}
+
 /** Local record of one import (`_imports`), the basis of "Import rückgängig machen". */
 export interface ImportBatch {
   id: string;
@@ -161,4 +183,23 @@ export interface ImportBatch {
   undoneAt?: number;
   /** Records skipped by the undo because they had been edited since. */
   keptOnUndo?: number;
+  /** Absent on rows written before the local API existed: then committed (or undone). */
+  status?: BatchStatus;
+  /** Where it came from: the wizard (default) or the local AI import API. */
+  origin?: 'wizard' | 'api';
+  /** Changes of existing records made by this batch. */
+  updates?: BatchUpdate[];
+  /** Changes skipped on commit because the record had been edited meanwhile. */
+  conflicts?: number;
+  committedAt?: number;
+  /* ---- API batches ---- */
+  tokenId?: string;
+  tokenName?: string;
+  idempotencyKey?: string;
+  /** SHA-256 of the request body (same key + other body = conflict). */
+  bodyHash?: string;
+  /** The checked entries while the batch waits for confirmation. */
+  rows?: PreviewRow[];
+  /** Per-entry result as reported to the API client (no stored data beyond what it sent). */
+  result?: unknown;
 }

@@ -5,9 +5,10 @@
  * Text stays plain text: nothing here renders or executes content.
  */
 import type { ZodIssue } from 'zod';
-import type { ImportCandidate, ImportParseResult } from '@/core/importer/types';
+import type { CandidateUpdate, ImportCandidate, ImportParseResult } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
-import { CURRENCY, parseMoney } from '@/core/money';
+import { deepEqual } from '@/core/db/util';
+import { CURRENCY, formatMoney, parseMoney } from '@/core/money';
 import { t } from '@/strings';
 import { describeCollection, hasMoney, type CollectionFormat, type FieldFormat } from './format';
 import { apiCollections } from './scope';
@@ -25,6 +26,8 @@ export interface RefEntry {
 export interface RefLookup {
   /** Active entries of a collection of the module. */
   entries(collection: string): Promise<RefEntry[]>;
+  /** Data fields (no envelope) of one active entry, for changes sent with an `id`. */
+  record(collection: string, id: string): Promise<Record<string, unknown> | undefined>;
 }
 
 export interface ParseOptions {
@@ -137,6 +140,8 @@ interface Draft {
   collection?: string;
   key?: string;
   id: string;
+  /** Set when the entry changes an existing record (`id` sent). */
+  updateId?: string;
   errors: string[];
 }
 
@@ -179,7 +184,15 @@ export async function buildCandidates(
         keys.set(draft.key, draft);
       }
     }
-    if ('id' in draft.raw) draft.errors.push(t.dataApi.idNotAllowed);
+    if ('id' in draft.raw) {
+      const id = draft.raw.id;
+      if (typeof id !== 'string' || id === '' || id.length > 200)
+        draft.errors.push(t.dataApi.badId);
+      else {
+        draft.updateId = id;
+        draft.id = id;
+      }
+    }
   });
 
   const titleOfDraft = (d: Draft): string | undefined => {
@@ -216,14 +229,24 @@ export async function buildCandidates(
     const def = manifest.dataSchema.collections[collection]!;
     const errors = [...draft.errors];
     const data: Record<string, unknown> = {};
+    let existing: Record<string, unknown> | undefined;
+    if (draft.updateId) {
+      existing = await opts.lookup.record(collection, draft.updateId);
+      if (!existing) errors.push(t.dataApi.idUnknown);
+      else Object.assign(data, existing);
+    }
     const refIds = new Map<string, string>();
 
     for (const [name, value] of Object.entries(draft.raw)) {
-      if (META_KEYS.includes(name) || name === 'id' || value === undefined || value === null)
-        continue;
+      if (META_KEYS.includes(name) || name === 'id' || value === undefined) continue;
       const field = format.fields.find((f) => f.name === name);
       if (!field) {
         errors.push(t.dataApi.unknownField(name));
+        continue;
+      }
+      if (value === null) {
+        // In a change, null clears an optional field; in a new entry it is simply absent.
+        if (existing) data[field.storeName] = undefined;
         continue;
       }
       if (field.kind === 'money') {
@@ -256,7 +279,7 @@ export async function buildCandidates(
 
     // Values the sender cannot know (default list, main account) – only for missing fields.
     const missing = format.fields.some((f) => f.required && data[f.storeName] === undefined);
-    if (missing && opts.defaults && errors.length === 0) {
+    if (missing && !existing && opts.defaults && errors.length === 0) {
       const defaults = await opts.defaults(collection);
       for (const [k, v] of Object.entries(defaults)) if (!(k in data)) data[k] = v;
     }
@@ -281,11 +304,11 @@ export async function buildCandidates(
       const existing = new Map((await entriesOf(f.refCollection)).map((e) => [e.id, e.title]));
       titles.set(f.refCollection, existing);
     }
-    const dedupeKey = canonicalKey(
-      format,
-      clean,
-      (f, id) => batchTitles.get(id) ?? titles.get(f.refCollection ?? '')?.get(id) ?? id,
-    );
+    const refTitle = (f: FieldFormat, id: string) =>
+      batchTitles.get(id) ?? titles.get(f.refCollection ?? '')?.get(id) ?? id;
+    const dedupeKey = existing ? `update:${draft.id}` : canonicalKey(format, clean, refTitle);
+    const update =
+      existing && errors.length === 0 ? diffOf(format, existing, clean, refTitle) : undefined;
     const titleField = format.titleField;
     const label = String(
       (titleField && clean[titleField]) ?? draft.raw[titleField ?? ''] ?? collection,
@@ -297,6 +320,7 @@ export async function buildCandidates(
       label: label.length > 0 ? label : collection,
       detail: format.label,
       dedupeKey,
+      ...(update ? { update } : {}),
       error:
         errors.length > 0
           ? `${t.dataApi.item(draft.index + 1)}: ${errors.slice(0, 3).join('; ')}`
@@ -349,4 +373,40 @@ async function resolveRef(
   const matches = [...inBatch.map((d) => d.id), ...stored.map((e) => e.id)];
   if (matches.length === 1) return { id: matches[0]! };
   return matches.length === 0 ? t.dataApi.refNotFound(target) : t.dataApi.refAmbiguous(target);
+}
+
+function display(
+  field: FieldFormat | undefined,
+  v: unknown,
+  refTitle: (f: FieldFormat, id: string) => string,
+): string {
+  if (v === undefined || v === null || v === '') return '—';
+  if (field?.kind === 'money' && typeof v === 'number') return formatMoney(v);
+  if (field?.kind === 'ref' && typeof v === 'string') return refTitle(field, v);
+  if (typeof v === 'boolean') return v ? t.dataApi.yes : t.dataApi.no;
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
+/** Changed fields between the stored record and the merged, validated data. */
+function diffOf(
+  format: CollectionFormat,
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+  refTitle: (f: FieldFormat, id: string) => string,
+): CandidateUpdate {
+  const out: CandidateUpdate = { before: {}, after: {}, lines: [] };
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  for (const k of keys) {
+    if (deepEqual(before[k], after[k])) continue;
+    const field = format.fields.find((f) => f.storeName === k);
+    out.before[k] = before[k];
+    out.after[k] = after[k];
+    out.lines.push({
+      field: field?.name ?? k,
+      from: display(field, before[k], refTitle),
+      to: display(field, after[k], refTitle),
+    });
+  }
+  return out;
 }

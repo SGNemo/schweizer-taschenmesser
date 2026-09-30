@@ -78,7 +78,8 @@ export function buildOpenApi(modules: readonly ModuleManifest[], version = '1'):
       },
       '/v1/{module}/import': {
         post: {
-          summary: 'Einträge senden (Recht „write“); landen als Batch zur Bestätigung',
+          summary:
+            'Einträge senden (Recht „write“); landen als Batch zur Bestätigung in der App. Mit "id" wird ein vorhandener Eintrag geändert (nur als Vorschlag, der Nutzer bestätigt einzeln).',
           parameters: [
             {
               name: 'module',
