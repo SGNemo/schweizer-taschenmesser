@@ -3,6 +3,7 @@ name = "tauri-plugin-apk-installer"
 version = "0.1.0"
 authors = ["SGNemo"]
 description = "Downloads a release APK, verifies its SHA-256 and hands it to the Android package installer."
+license = "MIT"
 edition = "2021"
 rust-version = "1.77"
 publish = false
