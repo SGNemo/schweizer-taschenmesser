@@ -134,8 +134,9 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 
 ### Nemo-Rebranding
 10. **GitHub-Repo umbenennen (optional).** Betrifft `REPO` (`core/update/github.ts`), den Updater-Endpunkt in `tauri.conf.json`, `RELEASES_PREFIX` in `update.rs`, README-Links und den Link-Check. GitHub leitet alte URLs zwar um, aber ein Update-Endpunkt darf nie kaputtgehen: erst einen Plan mit Übergangs-Release schreiben lassen, dann umbenennen.
-11. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
-12. **Später (eigener PR):** wenn alle Installationen ≥ diese Version haben, `latest.json` auf `Nemo-Portable.exe` umstellen und die `Taschenmesser-*`-Kopien aus dem Release entfernen. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
+11. **Download-Buttons der README reparieren (v0.2.0):** Die Buttons zeigen auf `Nemo-Portable.exe` / `Nemo.apk` im *neuesten stabilen* Release. v0.2.0 wurde vor der Umbenennung gebaut und hat nur die `Taschenmesser-*`-Dateien, die Links liefern bis zum nächsten stabilen Release 404. Einmalig nachziehen: `gh release download v0.2.0 -p 'Taschenmesser*' -D /tmp/v020 && cd /tmp/v020 && cp Taschenmesser-Portable.exe Nemo-Portable.exe && cp Taschenmesser-Portable.exe.sig Nemo-Portable.exe.sig && cp Taschenmesser.apk Nemo.apk && sha256sum Nemo.apk > Nemo.apk.sha256 && gh release upload v0.2.0 Nemo-Portable.exe Nemo-Portable.exe.sig Nemo.apk Nemo.apk.sha256` (gleiche signierte Bytes, nur andere Namen). Alternativ: nächstes stabiles Release taggen.
+12. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
+13. **Später (eigener PR):** wenn alle Installationen ≥ diese Version haben, `latest.json` auf `Nemo-Portable.exe` umstellen und die `Taschenmesser-*`-Kopien aus dem Release entfernen. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
 
 ### Google-Verbindung einrichten (einmalig, für Kalender/Gmail)
 1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Nemo".
