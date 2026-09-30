@@ -60,7 +60,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 
 
 ## Status
-Phases 1–12 are done (foundation, core modules, finance, sync + backup, AI assistant + multi-provider router, extra modules, Tauri desktop + Android, CI/signed releases, self-update, password vault incl. OS keystore/biometrics). First public pre-release: `v0.2.0-beta.1`. Per-phase notes: `docs/architecture.md`. Device behaviour of the native shells is only verified by hand – see the two German sections at the end.
+Phases 1–13 are done (foundation, core modules, finance, sync + backup, AI assistant + multi-provider router, extra modules, Tauri desktop + Android, CI/signed releases, self-update, password vault incl. OS keystore/biometrics; extension round: portable exe, start-data wizard, connectors, news, tools, links/share/launcher). First public pre-release: `v0.2.0-beta.1`, next: `v0.2.0-beta.2` (first portable build). Per-phase notes: `docs/architecture.md`. Device behaviour of the native shells is only verified by hand – see the two German sections at the end.
 
 ## Gotchas
 - `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.
