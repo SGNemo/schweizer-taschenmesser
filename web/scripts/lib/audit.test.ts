@@ -133,6 +133,20 @@ describe('auditFiles', () => {
     );
   });
 
+  it('finds a Google OAuth client secret but not the prefix in code or docs', () => {
+    // assembled at run time so this file itself does not look like a leaked secret
+    const secret = `${'GOCSPX'}-${'a1B2c3D4e5F6g7H8i9J0k1L2m3N4'}`;
+    const findings = auditFiles(
+      [
+        file('bundle.js', `const c="${secret}";`),
+        file('redact.js', 'replace(/\\bGOCSPX-[\\w-]+/g,"[secret]")'),
+        file('doc.md', 'Client secrets start with GOCSPX-.'),
+      ],
+      [],
+    );
+    expect(findings).toEqual([{ file: 'bundle.js', rule: 'google-client-secret' }]);
+  });
+
   it('does not flag the harmless phrase "secret key" or a public key', () => {
     const pub = Buffer.from(
       'untrusted comment: minisign public key: 3CDE64C14F49277E\nRWR+J0lP',

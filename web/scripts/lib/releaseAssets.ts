@@ -27,7 +27,9 @@ export function unknownAssetLinks(text: string): string[] {
 /** URLs a finished release must serve; `latest` ones only exist for stable releases. */
 export function assetUrls(repo: string, tag: string, opts: { stable: boolean }): string[] {
   const base = `https://github.com/${repo}/releases`;
-  const versioned = RELEASE_ASSETS.map((name) => `${base}/download/${tag}/${encodeURIComponent(name)}`);
+  const versioned = RELEASE_ASSETS.map(
+    (name) => `${base}/download/${tag}/${encodeURIComponent(name)}`,
+  );
   const latest = opts.stable
     ? RELEASE_ASSETS.map((name) => `${base}/latest/download/${encodeURIComponent(name)}`)
     : [];

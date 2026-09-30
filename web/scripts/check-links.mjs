@@ -11,7 +11,10 @@ const args = Object.fromEntries(
   process.argv
     .slice(2)
     .filter((a) => a.startsWith('--'))
-    .map((a, i, all) => [a.slice(2), all[i + 1] && !all[i + 1].startsWith('--') ? all[i + 1] : true]),
+    .map((a, i, all) => [
+      a.slice(2),
+      all[i + 1] && !all[i + 1].startsWith('--') ? all[i + 1] : true,
+    ]),
 );
 if (!args.repo || !args.tag) {
   console.error('Usage: check-links.mjs --repo owner/name --tag vX.Y.Z [--stable]');

@@ -12,7 +12,10 @@ describe('release assets', () => {
       [a](https://github.com/o/r/releases/latest/download/Taschenmesser-Portable.exe)
       [b](https://github.com/o/r/releases/download/v1.0.0/Taschenmesser.apk)
       [c](https://github.com/o/r/releases) and https://example.com/x.exe`;
-    expect(releaseAssetNames(text).sort()).toEqual(['Taschenmesser-Portable.exe', 'Taschenmesser.apk']);
+    expect(releaseAssetNames(text).sort()).toEqual([
+      'Taschenmesser-Portable.exe',
+      'Taschenmesser.apk',
+    ]);
   });
 
   it('flags links to files that no release carries', () => {
@@ -37,7 +40,9 @@ describe('release assets', () => {
   it('builds the URLs the post-release check requests', () => {
     const beta = assetUrls('o/r', 'v1.0.0-beta.1', { stable: false });
     expect(beta).toHaveLength(RELEASE_ASSETS.length);
-    expect(beta[0]).toBe('https://github.com/o/r/releases/download/v1.0.0-beta.1/Taschenmesser-Portable.exe');
+    expect(beta[0]).toBe(
+      'https://github.com/o/r/releases/download/v1.0.0-beta.1/Taschenmesser-Portable.exe',
+    );
     const stable = assetUrls('o/r', 'v1.0.0', { stable: true });
     expect(stable).toHaveLength(RELEASE_ASSETS.length * 2);
     expect(stable.at(-1)).toContain('/releases/latest/download/latest.json');

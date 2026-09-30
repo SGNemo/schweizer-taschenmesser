@@ -51,6 +51,13 @@ const MARKERS: { rule: string; needle: Buffer }[] = [
   },
 ];
 
+/**
+ * Google OAuth client secrets ("GOCSPX-" + 28 characters). The user types theirs into the app at run
+ * time, so one must never appear in a build; the length keeps the prefix inside code, regexes and
+ * documentation from matching.
+ */
+const GOOGLE_CLIENT_SECRET = /GOCSPX-[A-Za-z0-9_-]{20,}/;
+
 function pemIsPrivate(data: Buffer): boolean {
   return /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/.test(data.toString('latin1'));
 }
@@ -137,6 +144,9 @@ export function auditFiles(
         findings.push({ file: f.name, rule: 'forbidden-file-name' });
       }
       if (pemIsPrivate(f.data)) findings.push({ file: f.name, rule: 'pem-private-key' });
+      if (f.data.includes('GOCSPX-') && GOOGLE_CLIENT_SECRET.test(f.data.toString('latin1'))) {
+        findings.push({ file: f.name, rule: 'google-client-secret' });
+      }
       for (const m of MARKERS.filter((x) => x.rule !== 'pem-private-key')) {
         if (f.data.includes(m.needle)) {
           // "secret key" is a generic phrase (docs, licences): only flag it next to minisign/rsign wording.
