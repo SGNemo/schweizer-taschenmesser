@@ -20,7 +20,7 @@ const todoTable = tableName('todos', Object.keys(todos.dataSchema.collections)[0
 const ctx: SetupCtx = { modules: {}, platform: 'web', isNative: false };
 
 function harness() {
-  let commit: (() => Promise<void>) | null = null;
+  let commit: (() => Promise<void | 'skipped'>) | null = null;
   const canContinue = vi.fn();
   const props: SetupStepProps = {
     ctx,

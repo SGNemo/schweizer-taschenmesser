@@ -68,7 +68,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [canContinue, setCanContinue] = useState(true);
-  const commit = useRef<(() => Promise<void>) | null>(null);
+  const commit = useRef<(() => Promise<void | 'skipped'>) | null>(null);
   const cancelled = useRef(false);
 
   // Load the applicable steps once.
@@ -122,8 +122,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
     if (!step) return;
     setBusy(true);
     setError(false);
+    let outcome: void | 'skipped';
     try {
-      await commit.current?.();
+      outcome = await commit.current?.();
     } catch {
       // Deliberately generic: a failing step must never echo values (or secrets) into the UI.
       setError(true);
@@ -132,7 +133,8 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
     }
     setBusy(false);
     if (cancelled.current) return;
-    await markStepDone(step.id);
+    if (outcome === 'skipped') await markStepSkipped(step.id);
+    else await markStepDone(step.id);
     go(index + 1);
   }
 

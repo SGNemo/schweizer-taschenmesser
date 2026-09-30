@@ -21,9 +21,10 @@ export interface SetupStepProps {
   /**
    * Registers what "Weiter" writes. A step keeps its draft in component state and hands the write
    * here; the wizard runs it, marks the step done only when it succeeded, and drops it on cancel.
-   * Pass `null` to unregister (nothing to write).
+   * Returning `'skipped'` records the step as skipped instead (e.g. a permission that was not
+   * granted), so it stays visible in the checklist. Pass `null` to unregister (nothing to write).
    */
-  registerCommit(commit: (() => Promise<void>) | null): void;
+  registerCommit(commit: (() => Promise<void | 'skipped'>) | null): void;
   /** `false` disables "Weiter" (e.g. a change that still needs an explicit confirmation). */
   setCanContinue(ok: boolean): void;
 }

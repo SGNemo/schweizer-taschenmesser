@@ -40,7 +40,7 @@ function installPlatform() {
 }
 
 function harness() {
-  let commit: (() => Promise<void>) | null = null;
+  let commit: (() => Promise<void | 'skipped'>) | null = null;
   const canContinue = vi.fn();
   const props: SetupStepProps = {
     ctx,

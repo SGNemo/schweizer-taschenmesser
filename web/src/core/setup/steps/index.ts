@@ -73,6 +73,49 @@ export const CORE_STEPS: SetupStepDef[] = [
     component: () => import('@/layout/setup/steps/ConnectorsStep'),
   },
   {
+    id: 'core.startdata',
+    title: s.startdata.title,
+    description: s.startdata.description,
+    order: 80,
+    since: 1,
+    when: async (ctx) => {
+      const { visibleManifests } = await import('@/core/modules/registry');
+      const { hasStartData } = await import('@/core/dataapi/onboarding');
+      return visibleManifests.some((m) => ctx.modules[m.id] && hasStartData(m));
+    },
+    component: () => import('@/layout/setup/steps/StartDataStep'),
+  },
+  {
+    id: 'core.aiimport',
+    title: s.aiimport.title,
+    description: s.aiimport.description,
+    order: 90,
+    since: 1,
+    when: async (ctx) => {
+      const { aiImportModules } = await import('@/layout/setup/steps/AiImportStep');
+      return aiImportModules(ctx.modules).length > 0;
+    },
+    component: () => import('@/layout/setup/steps/AiImportStep'),
+  },
+  {
+    id: 'core.notifications',
+    title: s.notifications.title,
+    description: s.notifications.description,
+    order: 100,
+    since: 1,
+    isDone: async () =>
+      (await import('@/core/platform')).getPlatform().notifications.permission() === 'granted',
+    component: () => import('@/layout/setup/steps/NotificationsStep'),
+  },
+  {
+    id: 'core.backupupdates',
+    title: s.backupupdates.title,
+    description: s.backupupdates.description,
+    order: 110,
+    since: 1,
+    component: () => import('@/layout/setup/steps/BackupUpdatesStep'),
+  },
+  {
     id: 'core.dashboard',
     title: s.dashboard.title,
     description: s.dashboard.description,

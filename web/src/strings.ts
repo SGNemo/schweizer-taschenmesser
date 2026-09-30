@@ -183,6 +183,55 @@ export const t = {
         stepsNote: 'Schritte: docs/STATUS.md → „Google-Verbindung einrichten“.',
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
+      startdata: {
+        title: 'Startdaten',
+        description:
+          'Trage erste Einträge ein oder importiere sie: per Text, Datei, Vorlage oder Verbindung. Vor dem Speichern siehst du immer eine Vorschau, und jeder Import lässt sich rückgängig machen.',
+        none: 'Aktive Module bieten keine Startdaten an.',
+        handled: 'Schon bearbeitet',
+        hints: {
+          finance: 'Konten, Kategorien und Startsalden.',
+          reminders: 'Vorlagen für Miete, Versicherungen, Müll und mehr.',
+          news: 'Startpaket mit öffentlichen Nachrichten-Feeds.',
+          birthdays: 'Geburtstage als Liste einfügen.',
+        } as Record<string, string>,
+      },
+      aiimport: {
+        title: 'Import per KI',
+        description:
+          'Lass eine KI deiner Wahl Daten aufbereiten: Du kopierst das Schema, sie liefert JSON, du siehst eine Vorschau.',
+        none: 'Kein aktives Modul unterstützt den JSON-Import.',
+        hint: 'Es wird nur das Schema kopiert, nie deine Daten. Den Tresor (Accounts) gibt es hier nie.',
+        desktop:
+          'Am Computer gibt es zusätzlich die lokale Schnittstelle (Einstellungen → Lokale Schnittstelle).',
+      },
+      notifications: {
+        title: 'Benachrichtigungen',
+        description:
+          'Damit Erinnerungen, Fristen und Geburtstage dich erreichen, braucht die App die Erlaubnis für Benachrichtigungen.',
+        why: 'Ohne Erlaubnis bleibt alles nutzbar, du wirst nur nicht erinnert. Die Entscheidung kannst du jederzeit in den Einstellungen ändern.',
+        allow: 'Benachrichtigungen erlauben',
+        state: {
+          granted: 'Erlaubt.',
+          denied: 'Abgelehnt. Der Schritt bleibt in der Checkliste.',
+          default: 'Noch nicht entschieden.',
+          unsupported: 'Auf diesem Gerät nicht verfügbar.',
+        } as Record<string, string>,
+        android:
+          'Android: Erinnerungen bei geschlossener App braucht das System-Recht für genaue Alarme, und die Akku-Optimierung darf die App nicht einschränken. Beides stellst du in den Android-Einstellungen unter „Apps → Taschenmesser“ ein.',
+      },
+      backupupdates: {
+        title: 'Backup und Updates',
+        description: 'Sicherung deiner Daten und der Update-Kanal.',
+        backupNow: 'Backup jetzt speichern',
+        autoNote:
+          'Automatische Backups gibt es noch nicht; vor jedem Update legt die App aber eine Sicherungskopie an.',
+        channel: 'Update-Kanal',
+        stable: 'Stabil',
+        beta: 'Beta',
+        auto: 'Automatisch nach Updates suchen',
+        browser: 'Im Browser aktualisiert sich die App selbst (Seite neu laden).',
+      },
       dashboard: {
         title: 'Übersicht',
         description: 'Welche Widgets erscheinen und in welcher Reihenfolge. Ziehen oder Tastatur.',
