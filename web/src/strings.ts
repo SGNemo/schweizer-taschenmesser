@@ -370,7 +370,7 @@ export const t = {
       capture: 'Erfassen',
       open: 'App öffnen',
       quit: 'Beenden',
-      tooltip: 'Taschenmesser',
+      tooltip: 'Nemo',
     },
     window: {
       hint: 'Enter speichert · Tab wechselt den Typ · Esc schließt',

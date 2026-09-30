@@ -117,10 +117,7 @@ describe('createBackup / parseBackup', () => {
 
 describe('backups written before the rename to Nemo', () => {
   it('a taschenmesser-backup file still parses and imports (the format name is data, not branding)', async () => {
-    const text = readFileSync(
-      resolve(__dirname, 'fixtures/legacy-format-2026-01-01.json'),
-      'utf8',
-    );
+    const text = readFileSync(resolve(__dirname, 'fixtures/legacy-format-2026-01-01.json'), 'utf8');
     const parsed = parseBackup(text);
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
