@@ -72,6 +72,7 @@ export interface ConnectOptions {
   token?: string;
   passphrase?: string;
   encrypt?: boolean;
+  deviceName?: string;
 }
 
 /** Fills the connection form and submits it; the caller asserts the outcome. */
@@ -79,6 +80,7 @@ export async function submitConnect(page: Page, o: ConnectOptions = {}): Promise
   await openSettings(page);
   await page.getByLabel('Server-Adresse').fill(o.url ?? SERVER);
   await page.getByLabel('Zugangstoken').fill(o.token ?? TOKEN);
+  if (o.deviceName) await page.getByLabel('Gerätename').fill(o.deviceName);
   const encrypt = page.getByRole('switch', { name: /Ende-zu-Ende/ });
   if (o.encrypt && (await encrypt.getAttribute('aria-checked')) !== 'true') await encrypt.click();
   if (o.passphrase !== undefined) {

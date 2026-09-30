@@ -1,6 +1,6 @@
 import type { StorageAdapter } from '@/core/storage/types';
 import { decryptOps, encryptOps, isEncrypted } from './crypto';
-import { SyncError, type SyncAdapter } from './types';
+import { SyncError, type FieldOp, type SyncAdapter } from './types';
 
 export interface EngineDeps {
   storage: StorageAdapter;
@@ -30,6 +30,35 @@ export interface SyncResult {
 class EpochChanged extends Error {}
 
 const MAX_ROUNDS = 1000;
+/** Server limit is 5000 ops and 8 MB per request; stay well below both. */
+export const MAX_OPS_PER_REQUEST = 2000;
+export const MAX_BYTES_PER_REQUEST = 3_000_000;
+
+/**
+ * Splits ops into requests of bounded count and size. Ops are independent (one field each), so a
+ * record may span requests; the outbox entry is only cleared after every chunk was accepted.
+ */
+export function chunkOps(
+  ops: FieldOp[],
+  maxOps: number = MAX_OPS_PER_REQUEST,
+  maxBytes: number = MAX_BYTES_PER_REQUEST,
+): FieldOp[][] {
+  const chunks: FieldOp[][] = [];
+  let current: FieldOp[] = [];
+  let bytes = 0;
+  for (const op of ops) {
+    const size = JSON.stringify(op.value ?? null).length + 120;
+    if (current.length > 0 && (current.length >= maxOps || bytes + size > maxBytes)) {
+      chunks.push(current);
+      current = [];
+      bytes = 0;
+    }
+    current.push(op);
+    bytes += size;
+  }
+  if (current.length > 0) chunks.push(current);
+  return chunks;
+}
 
 /**
  * One sync cycle: pull everything new, then push local changes.
@@ -99,12 +128,16 @@ async function pushAll(deps: EngineDeps, result: SyncResult): Promise<void> {
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const batch = await storage.readOutbox(records);
     if (batch.entries.length === 0) return;
-    const ops = key ? await encryptOps(key, batch.ops) : batch.ops;
-    const { epoch } = await adapter.push(ops);
-    if (epoch !== (await storage.getEpoch())) {
-      await adoptEpoch(deps, epoch, result);
-      throw new EpochChanged();
+    for (const chunk of chunkOps(batch.ops)) {
+      const ops = key ? await encryptOps(key, chunk) : chunk;
+      const { epoch } = await adapter.push(ops);
+      if (epoch !== (await storage.getEpoch())) {
+        await adoptEpoch(deps, epoch, result);
+        throw new EpochChanged();
+      }
     }
+    // Only now: an interruption above leaves the entries queued and the next run pushes them again
+    // (the server ignores ops it already has, so nothing is duplicated).
     await storage.acknowledge(batch.entries);
     result.pushed += batch.entries.length;
   }

@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { startAutoBackup } from '@/core/backup/auto';
 import { startModuleServices } from '@/core/modules/services';
 import { startSync } from '@/core/sync/service';
 import { startNativeSchedule } from '@/core/notifications/nativeSchedule';
@@ -29,5 +30,6 @@ void initPlatform().then(() => {
     startUpdateChecks();
     startConnectorSync();
     startLocalApi();
+    startAutoBackup();
   });
 });
