@@ -188,6 +188,11 @@ export function SyncSection() {
               checked={encrypt}
               onChange={setEncrypt}
             />
+            {!encrypt ? (
+              <p className={styles.muted} data-testid="sync-plain-warning">
+                {t.sync.plainWarning}
+              </p>
+            ) : null}
             <TextField
               label={t.sync.passphrase}
               hint={encrypt ? t.sync.passphraseHint : t.sync.passphraseJoinHint}

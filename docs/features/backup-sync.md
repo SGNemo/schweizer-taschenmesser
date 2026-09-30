@@ -83,6 +83,40 @@ What the copy contains: exactly what the server holds. With end-to-end encryptio
 ciphertext; without it they are readable. Ids, field names and HLC stamps are readable in both
 cases. Treat the folder like the live volume (permissions 0700 are set on creation).
 
+## Sync (protocol 2, additive)
+
+Servers announce protocol 2 on `GET /v1/info` (`features: devices, stats, vault-v2`). Older servers
+keep working with the shared token; the app then shows that device management is unavailable.
+
+**Devices.** Connecting with the shared token registers this device (`POST /v1/devices`, id = the
+local device id) and stores the returned per-device token instead; the shared token is not kept.
+Only SHA-256 hashes are stored on the server. `GET /v1/devices` lists devices with last seen/push/pull;
+`DELETE /v1/devices/:id` locks a device out (any authenticated device may do it, so a lost phone can
+be locked from the laptop); `POST /v1/devices/:id/rotate` issues a new token (admin, or the device
+itself). A locked device gets `401 {"error":"revoked"}`, shows "gesperrt" and stops retrying; its
+data stays on the server. Registering devices and `POST /v1/reset` need the shared token.
+
+**Vault v2.** `PUT /v1/vault` accepts `v: 2` with `kdf: {alg: 'argon2id', m, t, p}`; the client derives
+the key with the crypto service (Argon2id, same parameters as the password vault). Legacy PBKDF2
+vaults are refused (`vault-outdated`); reset the server data to create a v2 vault.
+
+**Conflicts.** When a remote edit meets a local edit of the same field that was not synced yet
+(record still in the outbox), last-write-wins keeps the newer value and the other one is logged in the
+local table `_conflicts` (schema v13; never synced or exported). Ops written by this device itself
+(echoes) are ignored. Settings → Synchronisation → Konflikte shows the overwritten value and can restore
+it as a fresh edit (syncs to the other devices) or dismiss it. Values above 20 000 characters are not kept.
+Entries expire after 30 days (resolved) or 90 days (open); at most 500 rows.
+
+**Robustness.** Push requests are split to at most 2000 ops / 3 MB; an outbox entry is cleared only
+after all its chunks were accepted, so an interrupted first upload resumes and the server ignores
+duplicates. Pull advances the cursor page by page. Failed cycles retry with exponential backoff
+(5 s doubling to 5 min, ±20 % jitter); locked device, wrong key and similar errors are not retried in
+the background. Server: `TRUST_PROXY=true` behind a reverse proxy, `AUTH_FAILURE_LIMIT` (default 20 per
+minute and address, then `429`).
+
+**Tombstones.** Synced deletions older than 90 days are removed locally once a day, only after a
+successful sync and never while unsynced.
+
 ## Proposals (not built)
 
 - **Backup target in a user-chosen folder** (for example a cloud-synced folder): write only the

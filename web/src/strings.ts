@@ -696,6 +696,8 @@ export const t = {
     encrypt: 'Ende-zu-Ende-Verschlüsselung',
     encryptHint:
       'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur Chiffretext. Nur auf einem leeren Server möglich.',
+    plainWarning:
+      'Ohne Ende-zu-Ende-Verschlüsselung liegen deine Daten auf dem Server im Klartext. Nutze sie, wenn der Server nicht nur dir gehört oder nicht verschlüsselt gespeichert wird.',
     passphrase: 'Passphrase',
     passphraseHint:
       'Mindestens 8 Zeichen. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
