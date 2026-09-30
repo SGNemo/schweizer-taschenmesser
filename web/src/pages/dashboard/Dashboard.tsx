@@ -24,6 +24,8 @@ import type { WidgetDef } from '@/core/modules/types';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import { SetupLink } from '@/layout/setup/SetupLink';
+import { WelcomeCard } from '@/layout/setup/WelcomeCard';
 import { Button, Card, EmptyState, Icon, IconButton } from '@/ui';
 import styles from './Dashboard.module.css';
 import {
@@ -118,10 +120,13 @@ export function Dashboard() {
         ) : null}
       </div>
 
+      <WelcomeCard />
+
       {states && visibleManifests.every((m) => !states[m.id]) ? (
         <EmptyState icon="grid" title={t.dashboard.emptyTitle}>
           <p>{t.dashboard.emptyText}</p>
           <Link to="/library">{t.dashboard.toLibrary}</Link>
+          <SetupLink />
         </EmptyState>
       ) : states && entries.length === 0 ? (
         <p style={{ color: 'var(--text-muted)' }}>{t.dashboard.noWidgets}</p>
