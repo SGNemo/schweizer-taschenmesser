@@ -3,6 +3,8 @@
 //! `PlatformService` interface. Keep it thin: logic belongs into the (tested) TypeScript side.
 
 #[cfg(desktop)]
+mod disk;
+#[cfg(desktop)]
 mod local_api;
 #[cfg(desktop)]
 mod oauth;
@@ -68,6 +70,7 @@ pub fn run() {
         .manage(update::PendingUpdate::default())
         .manage(oauth::OAuthListener::default())
         .manage(local_api::LocalApi::default())
+        .manage(disk::DiskScans::default())
         .invoke_handler(tauri::generate_handler![
             update::check_update,
             update::install_update,
@@ -76,7 +79,15 @@ pub fn run() {
             local_api::local_api_start,
             local_api::local_api_stop,
             local_api::local_api_set_tokens,
-            local_api::local_api_respond
+            local_api::local_api_respond,
+            disk::disk_list_drives,
+            disk::disk_scan_start,
+            disk::disk_scan_cancel,
+            disk::disk_scan_pause,
+            disk::disk_scan_drop,
+            disk::disk_children,
+            disk::disk_node,
+            disk::disk_query
         ]);
 
     #[cfg(windows)]
