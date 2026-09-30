@@ -40,6 +40,7 @@ Module schaltest du in der **Modul-Bibliothek** einzeln ein. Alles funktioniert 
 | Geld | **Finanzen** (Konten, Buchungen, Kategorien, Kontoauszug-Import), **Rechnungen**, **Abos**, **Budgets & Sparziele**, **Verträge & Garantien** (Kündigungsfristen) |
 | Merken | **Notizen**, **Merkliste** (Links, Lesen, Ansehen, Orte), **Einkaufsliste**, **Packlisten**, **Dokumente** (Ablaufdaten) |
 | Sicher | **Accounts**: Passwort-Tresor mit Argon2id/AES-256, TOTP, Generator, Biometrie. Für KI, Suche und Import unsichtbar |
+| Haushalt & PC | **Vorräte** (Ablaufdaten, Nachkaufen), **Geschenke**, **Zeiterfassung** (Timer, Stundenzettel), **Datenträger** und **System** (nur Windows-App: Platz analysieren, sicher aufräumen, Systeminfo) |
 | Dazu | **Nachrichten** (RSS/Atom), **Apps & Links**, **Werkzeuge** (Rechner, Prozent, Währung, Timer, QR, Einheiten, JSON, Hash …), **Schnell erfassen** (Tastenkürzel, Tray, Teilen-Menü) |
 
 Dazu eine **Befehlspalette** (Strg+K) mit Suche über alle Module und einem **KI-Assistenten**, der einfache Fragen selbst beantwortet („Was steht heute an?“) und komplexere optional an einen Anbieter deiner Wahl gibt, ohne deine Daten zu senden. Details: [Module und Werkzeuge](docs/user/module.md), [Suche und KI](docs/user/ki-assistent.md).

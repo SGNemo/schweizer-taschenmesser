@@ -5,6 +5,7 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 ## Unreleased
 - Rebrand to **Nemo**: new clownfish mark ("Welle"), flat "Klar" design (tokens, shared controls), MIT licence, short README with user docs under `docs/user/`, roadmap, review report.
 - Fixes: Android launcher icons are copied into the generated project, monochrome status-bar icon for notifications, local day in the last-sync timestamp, all internal identifiers pinned by tests, legacy encrypted/vault backup fixtures, release asset pairs verified byte for byte.
+- Merged `develop` (#8: disk cleaner, pantry, timetrack, gifts, system, four tools); the system page uses the shared progress bar.
 - Housekeeping: dead exports and strings removed, shared helpers (`pad2`, e2e `ready`/`enable`), CI caches, format checks.
 
 ## 0.2.0 (2026-09-30) – "Taschenmesser 0.2.0"
