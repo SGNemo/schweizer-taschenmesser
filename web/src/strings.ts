@@ -146,6 +146,9 @@ export const t = {
     nothing: 'Keine Einträge',
     endBeforeStart: 'Das Ende darf nicht vor dem Beginn liegen.',
     more: (n: number) => `+${n} weitere`,
+    agenda: 'Agenda',
+    allDayRow: 'Ganztägig und ohne Uhrzeit',
+    timeGrid: 'Zeitraster',
     widgetTitle: 'Heute & Morgen',
     widgetEmpty: 'Nichts geplant.',
     week_: (n: number) => `KW ${n}`,
@@ -791,6 +794,8 @@ export const t = {
     widgetEmpty: 'Nichts läuft bald ab.',
   },
   accounts: {
+    pickEntry: 'Zugang auswählen',
+    detail: 'Details',
     title: 'Accounts',
     setup: {
       title: 'Tresor einrichten',

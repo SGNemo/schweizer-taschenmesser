@@ -24,7 +24,8 @@
     "version:check": "node scripts/version.mjs check",
     "version:sync": "node scripts/version.mjs sync",
     "version:set": "node scripts/version.mjs set",
-    "changelog": "node scripts/changelog.mjs"
+    "changelog": "node scripts/changelog.mjs",
+    "screenshots": "playwright test -c playwright.screens.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

@@ -17,6 +17,14 @@ describe('module registry', () => {
     const bad = { ...allManifests[0]!, id: 'Bad-Id', version: 0 };
     expect(validateManifest(bad).length).toBeGreaterThanOrEqual(2);
   });
+
+  it('validates the page layout of a module and its routes', () => {
+    const base = allManifests[0]!;
+    expect(validateManifest({ ...base, layout: 'wide' })).toEqual([]);
+    expect(validateManifest({ ...base, layout: 'huge' as never })).toHaveLength(1);
+    const routes = base.routes.map((r) => ({ ...r, layout: 'tiny' as never }));
+    expect(validateManifest({ ...base, routes })).toHaveLength(routes.length);
+  });
 });
 
 /**

@@ -4,12 +4,22 @@ import type { IconName } from '@/ui/icons';
 
 type LazyComponent = () => Promise<{ default: ComponentType }>;
 
+/**
+ * Preferred page width of a route (see `layout/PageContainer`): `narrow` ≈ 720 px (forms),
+ * `content` ≈ 1120 px (default, single-column lists), `wide` ≈ 1600 px (calendar, dashboards,
+ * card grids), `full` uses the whole area.
+ */
+export type PageLayout = 'narrow' | 'content' | 'wide' | 'full';
+export const PAGE_LAYOUTS: readonly PageLayout[] = ['narrow', 'content', 'wide', 'full'];
+
 export interface ModuleRoute {
   /** Absolute path; must start with `/<module id>`. A trailing `/*` lets the module own sub-routes. */
   path: string;
   label: string;
   /** Show in the sidebar / bottom navigation. */
   nav?: boolean;
+  /** Overrides the module's `layout` for this route. */
+  layout?: PageLayout;
   component: LazyComponent;
 }
 
@@ -180,6 +190,8 @@ export interface ModuleManifest {
    */
   aiSchema?: ModuleAiSchema;
   settings: ModuleSettings;
+  /** Preferred page width of the module's routes; default `content`. */
+  layout?: PageLayout;
   /** Enabled without user action on a fresh install. */
   defaultEnabled: boolean;
   /** Sort key for navigation and library (lower first, default 100). */

@@ -20,6 +20,9 @@
   text-align: center;
   padding: var(--space-7) var(--space-4);
   color: var(--text-muted);
+  /* In a flex-column page the empty state takes the free height and centres itself. */
+  flex: 1;
+  justify-content: center;
 }
 .emptyTitle {
   color: var(--text);

@@ -115,7 +115,7 @@ export default function BookmarksPage() {
           title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}
         />
       ) : null}
-      <ItemList label={t.bookmarks.title}>
+      <ItemList layout="grid" label={t.bookmarks.title}>
         {shown.map((i) => (
           <ItemRow
             key={i.id}

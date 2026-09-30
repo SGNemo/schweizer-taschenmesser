@@ -5,7 +5,8 @@ import type { CalendarItem } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton } from '@/ui';
+import { Button, Icon, IconButton, SplitView, useSplitView } from '@/ui';
+import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { DayView, MonthView, WeekView } from '../components/Views';
 import { eventRepo } from '../repo';
@@ -32,6 +33,7 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const [prefs] = useSettings('module.calendar', settings.schema, settings.defaults);
   const [target, setTarget] = useState<EventTarget>(null);
+  const split = useSplitView();
 
   const rawView = params.get('view');
   const view: CalendarView | null = isView(rawView)
@@ -111,28 +113,36 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {view === 'month' ? (
-        <MonthView
-          date={date}
-          items={list}
-          onPickDay={(d) => go({ view: 'day', date: d })}
-          onOpenItem={(i) => void openItem(i)}
-        />
-      ) : view === 'week' ? (
-        <WeekView
-          days={eachDay(range.from, range.to)}
-          items={list}
-          onPickDay={(d) => go({ view: 'day', date: d })}
-          onOpenItem={(i) => void openItem(i)}
-        />
-      ) : (
-        <DayView
-          date={date}
-          items={list}
-          onOpenItem={(i) => void openItem(i)}
-          onAdd={(d) => setTarget({ draft: { startDate: d } })}
-        />
-      )}
+      <div className={styles.body}>
+        <SplitView
+          enabled={split}
+          asideLabel={t.calendar.agenda}
+          aside={<Agenda date={date} onOpenItem={(i) => void openItem(i)} />}
+        >
+          {view === 'month' ? (
+            <MonthView
+              date={date}
+              items={list}
+              onPickDay={(d) => go({ view: 'day', date: d })}
+              onOpenItem={(i) => void openItem(i)}
+            />
+          ) : view === 'week' ? (
+            <WeekView
+              days={eachDay(range.from, range.to)}
+              items={list}
+              onPickDay={(d) => go({ view: 'day', date: d })}
+              onOpenItem={(i) => void openItem(i)}
+            />
+          ) : (
+            <DayView
+              date={date}
+              items={list}
+              onOpenItem={(i) => void openItem(i)}
+              onAdd={(d) => setTarget({ draft: { startDate: d } })}
+            />
+          )}
+        </SplitView>
+      </div>
 
       <EventEditor target={openTarget} onClose={closeEditor} />
     </>

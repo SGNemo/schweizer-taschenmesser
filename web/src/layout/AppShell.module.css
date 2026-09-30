@@ -76,9 +76,10 @@
   display: none;
 }
 .main {
-  padding: var(--space-5) var(--space-4) calc(var(--bottom-nav-h) + var(--space-7));
-  max-width: var(--content-max);
-  margin: 0 auto;
+  /* Width is decided per page by <PageContainer>; the shell only provides the fluid gutter. */
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5) var(--page-gutter) calc(var(--bottom-nav-h) + var(--space-7));
 }
 /* Focus is moved here programmatically after navigation; a ring around the whole page is noise. */
 .main:focus,
@@ -147,6 +148,15 @@
   .shell {
     display: grid;
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    /* Desktop: sidebar and topbar stay put, the content area scrolls. */
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
   .sidebar {
     display: flex;
@@ -179,7 +189,10 @@
     max-width: 28rem;
   }
   .main {
-    padding: var(--space-6) var(--space-6) var(--space-7);
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-5) var(--page-gutter) var(--space-6);
   }
 }
 

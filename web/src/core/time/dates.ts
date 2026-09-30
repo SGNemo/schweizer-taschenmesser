@@ -11,7 +11,7 @@ import {
   startOfISOWeek,
 } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { toDateString, today } from './now';
+import { now, toDateString, today } from './now';
 
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -65,6 +65,11 @@ export function toEpoch(date: string, time: string): number {
   const d = parseDate(date);
   d.setHours(h!, m!, 0, 0);
   return d.getTime();
+}
+
+export function nowTime(): string {
+  const d = new Date(now());
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 export { today, toDateString };

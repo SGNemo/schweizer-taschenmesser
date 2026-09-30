@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  layout: 'wide',
   order: 30,
   contributions: {
     quickAdd: [{ id: 'reminder', label: 'Erinnerung', to: '/reminders?new=1' }],

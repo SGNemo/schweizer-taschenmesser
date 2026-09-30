@@ -1,6 +1,7 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
 import type { ReactNode } from 'react';
 import { Card } from './Card';
+import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
 
 export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
@@ -83,9 +84,21 @@ export function FormActions({ start, children }: { start?: ReactNode; children: 
   );
 }
 
-export function ItemList({ children, label }: { children: ReactNode; label?: string }) {
+/** `layout="grid"` turns the list into an auto-fill card grid once the page is wide enough. */
+export function ItemList({
+  children,
+  label,
+  layout = 'list',
+}: {
+  children: ReactNode;
+  label?: string;
+  layout?: 'list' | 'grid';
+}) {
   return (
-    <ul className={styles.list} aria-label={label}>
+    <ul
+      className={layout === 'grid' ? `${styles.list} ${styles.grid}` : styles.list}
+      aria-label={label}
+    >
       {children}
     </ul>
   );
@@ -130,6 +143,41 @@ export function ItemRow({
       </div>
       {children}
     </Card>
+  );
+}
+
+/** Viewport width from which a page can afford a side panel next to its main content. */
+export const SPLIT_QUERY = '(min-width: 1500px)';
+
+/** True while the viewport is wide enough for a `SplitView` panel (see `SPLIT_QUERY`). */
+export function useSplitView(query: string = SPLIT_QUERY): boolean {
+  return useMediaQuery(query);
+}
+
+/**
+ * Main content plus a side panel. With `enabled` false only the main content renders, so the
+ * panel is a structural decision (never merely hidden, never a duplicate in the DOM).
+ */
+export function SplitView({
+  children,
+  aside,
+  asideLabel,
+  enabled,
+}: {
+  children: ReactNode;
+  aside: ReactNode;
+  asideLabel: string;
+  enabled: boolean;
+}) {
+  if (!enabled) return <>{children}</>;
+  return (
+    <div className={styles.splitView}>
+      <div className={styles.splitMain}>{children}</div>
+      <aside className={styles.splitAside} aria-label={asideLabel}>
+        {/* Absolutely positioned so the panel never makes the row taller than the main content. */}
+        <div className={styles.splitAsideInner}>{aside}</div>
+      </aside>
+    </div>
   );
 }
 

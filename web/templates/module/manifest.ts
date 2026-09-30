@@ -35,6 +35,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  // layout: 'content', // page width: 'narrow' | 'content' | 'wide' | 'full' (default 'content')
   // order: 50, // lower = earlier in navigation and library (default 100)
   contributions: {
     quickAdd: [{ id: 'new', label: '__NAME__: neuer Eintrag', to: '/__ID__?new=1' }],

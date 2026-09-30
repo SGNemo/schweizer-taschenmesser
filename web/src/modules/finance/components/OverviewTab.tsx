@@ -32,7 +32,16 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
   );
 }
 
-export function OverviewTab({ data, month }: { data: FinanceData; month: string }) {
+/** `narrow`: the overview shares the row with a side panel, so the charts stay in one column. */
+export function OverviewTab({
+  data,
+  month,
+  narrow = false,
+}: {
+  data: FinanceData;
+  month: string;
+  narrow?: boolean;
+}) {
   const balance = totalBalance(data);
   const a = useAvailability(balance);
   const sum = monthSummary(data.txs, month);
@@ -92,7 +101,7 @@ export function OverviewTab({ data, month }: { data: FinanceData; month: string 
         </Card>
       </div>
 
-      <div className={styles.charts}>
+      <div className={`${styles.charts} ${narrow ? styles.chartsOne : ''}`}>
         <ChartCard
           title={t.finance.expensesByCategory}
           chart={

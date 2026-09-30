@@ -31,6 +31,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  layout: 'wide',
   order: 20,
   contributions: {
     quickAdd: [{ id: 'task', label: 'ToDo', to: '/todos?new=1' }],

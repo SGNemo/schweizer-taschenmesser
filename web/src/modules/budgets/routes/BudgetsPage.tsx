@@ -122,7 +122,7 @@ export default function BudgetsPage() {
               {data && budgets.length === 0 ? (
                 <EmptyState icon="piggy" title={t.budgets.emptyBudgets} />
               ) : null}
-              <ItemList label={t.budgets.tabBudgets}>
+              <ItemList layout="grid" label={t.budgets.tabBudgets}>
                 {budgets.map((b) => {
                   const s = budgetStatus(b.monthlyLimitMinor, data?.spent.get(b.categoryId) ?? 0);
                   return (
@@ -166,7 +166,7 @@ export default function BudgetsPage() {
           {goals && goals.length === 0 ? (
             <EmptyState icon="target" title={t.budgets.emptyGoals} />
           ) : null}
-          <ItemList label={t.budgets.tabGoals}>
+          <ItemList layout="grid" label={t.budgets.tabGoals}>
             {(goals ?? []).map((g) => {
               const own = (deposits ?? []).filter((d) => d.goalId === g.id);
               const p = goalProgress(g, own, day);

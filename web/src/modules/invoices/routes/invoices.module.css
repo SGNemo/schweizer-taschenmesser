@@ -27,6 +27,8 @@
 }
 .segment {
   display: inline-flex;
+  /* Pages are flex columns: keep the switch as wide as its buttons. */
+  align-self: flex-start;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -114,4 +116,12 @@
 }
 .error {
   color: var(--danger);
+}
+
+/* Wide pages: cards in an auto-fill grid instead of one stretched column. */
+@container page (min-width: 44rem) {
+  .list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+  }
 }

@@ -166,62 +166,66 @@ export default function TodosPage() {
         </Button>
       </div>
 
-      <nav className={styles.chips} aria-label={t.todos.list}>
-        <button
-          type="button"
-          className={styles.chip}
-          aria-current={selected === ALL}
-          onClick={() => select(ALL)}
-        >
-          {t.todos.allOpen}
-        </button>
-        {lists?.map((l) => (
+      <div className={styles.layout}>
+        <nav className={styles.chips} aria-label={t.todos.list}>
           <button
-            key={l.id}
             type="button"
             className={styles.chip}
-            aria-current={selected === l.id}
-            onClick={() => select(l.id)}
+            aria-current={selected === ALL}
+            onClick={() => select(ALL)}
           >
-            {l.name}
+            {t.todos.allOpen}
           </button>
-        ))}
-        {currentList ? (
-          <IconButton label={t.todos.renameList} onClick={() => setListTarget(currentList)}>
-            <Icon name="edit" />
-          </IconButton>
-        ) : null}
-      </nav>
+          {lists?.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              className={styles.chip}
+              aria-current={selected === l.id}
+              onClick={() => select(l.id)}
+            >
+              {l.name}
+            </button>
+          ))}
+          {currentList ? (
+            <IconButton label={t.todos.renameList} onClick={() => setListTarget(currentList)}>
+              <Icon name="edit" />
+            </IconButton>
+          ) : null}
+        </nav>
 
-      <form ref={addRef} onSubmit={add} className={styles.add}>
-        <div className={styles.grow}>
-          <TextField
-            label={t.todos.add}
-            placeholder={t.todos.addPlaceholder}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+        <div className={styles.main}>
+          <form ref={addRef} onSubmit={add} className={styles.add}>
+            <div className={styles.grow}>
+              <TextField
+                label={t.todos.add}
+                placeholder={t.todos.addPlaceholder}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <Button type="submit" variant="primary" disabled={!targetListId}>
+              {t.actions.add}
+            </Button>
+          </form>
+
+          {tasks && top.length === 0 ? <EmptyState icon="checklist" title={t.todos.empty} /> : null}
+          <ul className={styles.list}>
+            {top.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                subs={children.get(task.id) ?? []}
+                allSubs={(tasks ?? []).filter((x) => x.parentId === task.id)}
+                day={day}
+                showList={selected === ALL ? listName(task.listId) : undefined}
+                onToggle={toggle}
+                onOpen={setEditing}
+              />
+            ))}
+          </ul>
         </div>
-        <Button type="submit" variant="primary" disabled={!targetListId}>
-          {t.actions.add}
-        </Button>
-      </form>
-
-      {tasks && top.length === 0 ? <EmptyState icon="checklist" title={t.todos.empty} /> : null}
-      <ul className={styles.list}>
-        {top.map((task) => (
-          <TaskRow
-            key={task.id}
-            task={task}
-            subs={children.get(task.id) ?? []}
-            allSubs={(tasks ?? []).filter((x) => x.parentId === task.id)}
-            day={day}
-            showList={selected === ALL ? listName(task.listId) : undefined}
-            onToggle={toggle}
-            onOpen={setEditing}
-          />
-        ))}
-      </ul>
+      </div>
 
       <TaskEditor
         task={editingLive}

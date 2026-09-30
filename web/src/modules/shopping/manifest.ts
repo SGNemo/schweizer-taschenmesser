@@ -32,6 +32,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'content',
   order: 90,
   contributions: { quickAdd: [{ id: 'item', label: 'Einkaufsartikel', to: '/shopping?new=1' }] },
 };

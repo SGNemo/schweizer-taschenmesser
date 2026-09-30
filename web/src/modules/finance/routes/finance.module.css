@@ -7,6 +7,8 @@
 }
 .segment {
   display: inline-flex;
+  /* Pages are flex columns: keep the switch as wide as its buttons. */
+  align-self: flex-start;
   max-width: 100%;
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -262,5 +264,13 @@
   }
   .kpis {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Wide pages without a side panel: the two charts sit next to each other. */
+@container page (min-width: 62rem) {
+  .charts:not(.chartsOne) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
   }
 }

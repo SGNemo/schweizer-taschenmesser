@@ -31,6 +31,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  layout: 'wide',
   order: 100,
   contributions: {
     quickAdd: [{ id: 'birthday', label: 'Geburtstag', to: '/birthdays?new=1' }],

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
-import { Button, Dialog, Icon, IconButton } from '@/ui';
+import { Button, Card, Dialog, Icon, IconButton } from '@/ui';
 import type { DecryptedEntry } from '../vault';
 import { deleteEntry } from '../vault';
 import { copySecret } from '../copy';
@@ -30,6 +30,23 @@ export function EntryDetail({
     <Dialog open={entry !== null} onClose={onClose} title={entry?.data.title ?? ''}>
       {entry ? <Body key={entry.id} entry={entry} onClose={onClose} onEdit={onEdit} /> : null}
     </Dialog>
+  );
+}
+
+/** The same detail content as a side panel (wide screens) instead of a dialog. */
+export function EntryPanel({
+  entry,
+  onClose,
+  onEdit,
+}: {
+  entry: DecryptedEntry;
+  onClose: () => void;
+  onEdit: (entry: DecryptedEntry) => void;
+}) {
+  return (
+    <Card title={entry.data.title}>
+      <Body key={entry.id} entry={entry} onClose={onClose} onEdit={onEdit} />
+    </Card>
   );
 }
 

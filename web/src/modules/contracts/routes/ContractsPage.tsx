@@ -29,7 +29,7 @@ export default function ContractsPage() {
         </Button>
       </PageHeader>
       {list && list.length === 0 ? <EmptyState icon="file" title={t.contracts.empty} /> : null}
-      <ItemList label={t.contracts.title}>
+      <ItemList layout="grid" label={t.contracts.title}>
         {sortContracts(list ?? [], day).map((c) => {
           const status = statusOf(c, day);
           const deadline = cancelDeadline(c);

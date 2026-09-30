@@ -42,7 +42,7 @@ export default function NotesPage() {
           title={notes.length === 0 ? t.notes.empty : t.notes.emptyFiltered}
         />
       ) : null}
-      <ItemList label={t.notes.title}>
+      <ItemList layout="grid" label={t.notes.title}>
         {shown.map((n) => (
           <ItemRow
             key={n.id}

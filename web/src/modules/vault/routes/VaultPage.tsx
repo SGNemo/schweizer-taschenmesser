@@ -92,7 +92,7 @@ export default function VaultPage() {
       {docs && shown.length === 0 ? (
         <EmptyState icon="lock" title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered} />
       ) : null}
-      <ItemList label={t.vault.title}>
+      <ItemList layout="grid" label={t.vault.title}>
         {shown.map((d) => {
           const state = expiryState(d, day);
           const hasFile = files?.has(d.id) ?? false;
