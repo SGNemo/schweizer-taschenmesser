@@ -1,13 +1,13 @@
 # Installation
 
-Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser. Die Downloads zeigen immer auf die neueste **stabile** Version; Vorabversionen (Beta) findest du auf der [Release-Seite](https://github.com/SGNemo/schweizer-taschenmesser/releases).
+Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser. Die Downloads zeigen immer auf die neueste **stabile** Version. Bis zum ersten stabilen Release mit neuen Dateinamen heißen die Dateien noch `Taschenmesser-…` (der alte Projektname); Inhalt und Funktion sind Nemo. Vorabversionen (Beta) findest du auf der [Release-Seite](https://github.com/SGNemo/schweizer-taschenmesser/releases).
 
-- **Windows:** [Nemo-Portable.exe](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo-Portable.exe)
-- **Android:** [Nemo.apk](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk) (Prüfsumme: [Nemo.apk.sha256](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk.sha256))
+- **Windows:** [Taschenmesser-Portable.exe](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Portable.exe)
+- **Android:** [Taschenmesser.apk](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk) (Prüfsumme: [Taschenmesser.apk.sha256](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk.sha256))
 
 ## Windows: eine einzelne Datei, keine Installation
 
-1. `Nemo-Portable.exe` herunterladen und an einen beliebigen Ort legen, an dem du schreiben darfst
+1. `Taschenmesser-Portable.exe` herunterladen und an einen beliebigen Ort legen, an dem du schreiben darfst
    (z. B. in einen Ordner unter deinem Benutzerverzeichnis; **nicht** nach `C:\Programme`), und doppelklicken.
 2. Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen), weil unbekannte
    `.exe`-Dateien ohne gekauftes Code-Signing-Zertifikat immer so behandelt werden: **„Weitere Informationen“ →
@@ -27,14 +27,14 @@ Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser.
 **Von der installierten Version (Setup/MSI, bis `0.2.0-beta.1`) umsteigen:** Die portable App nutzt dieselbe
 App-Kennung und findet deine Daten im Benutzerprofil deshalb sofort wieder.
 1. In der alten App: Einstellungen → Backup → exportieren (Sicherheitskopie).
-2. `Nemo-Portable.exe` starten und prüfen, dass alles da ist (nicht gleichzeitig mit der alten App laufen lassen).
+2. `Taschenmesser-Portable.exe` starten und prüfen, dass alles da ist (nicht gleichzeitig mit der alten App laufen lassen).
 3. Die alte Version über „Apps & Features“ deinstallieren – im Deinstallationsfenster **„Anwendungsdaten löschen“ NICHT
    ankreuzen**. Falls doch etwas fehlt: Backup in der neuen App importieren.
 Die alte installierte Version kann sich nicht selbst auf die portable Datei aktualisieren; der Umstieg ist einmalig manuell.
 
 ## Installation unter Android
 
-1. `Nemo.apk` auf dem Handy herunterladen (z. B. im Chrome-Browser) und öffnen.
+1. `Taschenmesser.apk` auf dem Handy herunterladen (z. B. im Chrome-Browser) und öffnen.
 2. Android fragt beim ersten Mal, ob die **Installation aus unbekannten Quellen** erlaubt ist: **„Einstellungen“ →
    „Aus dieser Quelle zulassen“** für den Browser bzw. die Dateien-App, dann zurück und „Installieren“. Play Protect
    kann eine zusätzliche Prüfung anbieten („Trotzdem installieren“ bzw. „App scannen“).
@@ -48,4 +48,4 @@ Die alte installierte Version kann sich nicht selbst auf die portable Datei aktu
 Chrome/Edge (Windows) bzw. Chrome (Android) öffnen → „App installieren“. Service Worker und Installation brauchen
 HTTPS (oder `localhost`).
 
-> Die Dateien `Taschenmesser-Portable.exe` und `Taschenmesser.apk` im selben Release sind identische Kopien unter dem alten Namen; bereits installierte Versionen aktualisieren sich darüber.
+> Spätere Releases tragen dieselben Dateien zusätzlich als `Nemo-Portable.exe` und `Nemo.apk`; bereits installierte Versionen aktualisieren sich weiter über die `Taschenmesser-…`-Namen.

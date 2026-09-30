@@ -17,11 +17,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo-Portable.exe"><img src="https://img.shields.io/badge/Windows-Nemo--Portable.exe-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows: Nemo-Portable.exe herunterladen"></a>
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk"><img src="https://img.shields.io/badge/Android-Nemo.apk-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: Nemo.apk herunterladen"></a>
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Portable.exe"><img src="https://img.shields.io/badge/Windows-portabel_herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows: portable Version herunterladen"></a>
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk"><img src="https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: APK herunterladen"></a>
 </p>
 
-<p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>.</p>
+<p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Die Dateien heißen vorerst noch <code>Taschenmesser-…</code> (alter Projektname), der Inhalt ist Nemo. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>.</p>
 
 <p align="center">
   <picture>
@@ -47,7 +47,7 @@ Dazu eine **Befehlspalette** (Strg+K) mit Suche über alle Module und einem **KI
 
 ## Schnellstart
 
-1. **Herunterladen:** Windows `Nemo-Portable.exe` (eine Datei, keine Installation) oder Android `Nemo.apk`, Buttons oben.
+1. **Herunterladen:** Windows-Portable (eine Datei, keine Installation) oder Android-APK, Buttons oben.
 2. **Starten:** Unter Windows die Datei doppelklicken (beim ersten Mal SmartScreen: „Weitere Informationen“ → „Trotzdem ausführen“). Unter Android die APK öffnen und die Installation aus dieser Quelle erlauben.
 3. **Einrichten:** Der Einrichtungsassistent führt durch Module, Tresor, optionalen Sync und KI. Alles ist optional und später in den Einstellungen änderbar.
 
