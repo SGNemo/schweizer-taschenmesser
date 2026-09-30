@@ -11,19 +11,14 @@ import {
 } from '@/core/sync/service';
 import { useSyncStatus } from '@/core/sync/status';
 import { getPlatform } from '@/core/platform';
-import { formatDay } from '@/core/time/dates';
+import { formatDateTime } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Badge, Button, Card, Dialog, Switch, TextField } from '@/ui';
 import { SyncConflicts } from './SyncConflicts';
 import { SyncDevices } from './SyncDevices';
 import styles from './settings.module.css';
 
-function formatTime(at: number | undefined): string {
-  if (!at) return t.sync.never;
-  const d = new Date(at);
-  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  return `${formatDay(d.toISOString().slice(0, 10), 'd. MMM')} ${time}`;
-}
+const formatTime = (at: number | undefined): string => (at ? formatDateTime(at) : t.sync.never);
 
 export function SyncSection() {
   const status = useSyncStatus();

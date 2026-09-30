@@ -74,6 +74,13 @@ export function toEpoch(date: string, time: string): number {
   return d.getTime();
 }
 
+/** Local "d. MMM HH:mm" of an epoch timestamp, e.g. "31. Jan. 23:30" (day and time from the same local clock). */
+export function formatDateTime(at: number): string {
+  const d = new Date(at);
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${formatDay(toDateString(d), 'd. MMM')} ${time}`;
+}
+
 export function nowTime(): string {
   const d = new Date(now());
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
