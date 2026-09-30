@@ -2,7 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   connect,
   disconnect,
+  refreshServerStatus,
   resetServer,
+  signOutThisDevice,
   syncNow,
   type ConnectFailure,
   type ConnectParams,
@@ -12,6 +14,8 @@ import { getPlatform } from '@/core/platform';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Badge, Button, Card, Dialog, Switch, TextField } from '@/ui';
+import { SyncConflicts } from './SyncConflicts';
+import { SyncDevices } from './SyncDevices';
 import styles from './settings.module.css';
 
 function formatTime(at: number | undefined): string {
@@ -27,11 +31,19 @@ export function SyncSection() {
   const [token, setToken] = useState('');
   const [encrypt, setEncrypt] = useState(false);
   const [passphrase, setPassphrase] = useState('');
+  const [deviceName, setDeviceName] = useState(
+    () => t.sync.deviceNames[getPlatform().kind] ?? t.sync.deviceNames.web!,
+  );
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ConnectFailure | undefined>();
   const [confirmReset, setConfirmReset] = useState(false);
 
   const connected = status.phase !== 'off';
+
+  // The size on the server is read once per successful sync, not on every render.
+  useEffect(() => {
+    if (connected && status.lastSyncAt) void refreshServerStatus();
+  }, [connected, status.lastSyncAt]);
 
   // When the sync server itself serves this app, its address is this origin: suggest it.
   useEffect(() => {
@@ -58,7 +70,7 @@ export function SyncSection() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    void run({ url, token, encrypt, passphrase: passphrase || undefined });
+    void run({ url, token, encrypt, passphrase: passphrase || undefined, deviceName });
   };
 
   async function resetAndConnect() {
@@ -67,7 +79,7 @@ export function SyncSection() {
     const problem = await resetServer({ url, token });
     setBusy(false);
     if (problem && !problem.ok) return setFailure(problem.reason);
-    await run({ url, token, encrypt, passphrase: passphrase || undefined });
+    await run({ url, token, encrypt, passphrase: passphrase || undefined, deviceName });
   }
 
   return (
@@ -89,10 +101,39 @@ export function SyncSection() {
               <dd>{formatTime(status.lastSyncAt)}</dd>
               <dt>&nbsp;</dt>
               <dd data-testid="sync-pending">{t.sync.pending(status.pending)}</dd>
+              {status.lastResult ? (
+                <>
+                  <dt>{t.sync.detailsTitle}</dt>
+                  <dd data-testid="sync-last-result">
+                    {t.sync.lastResult(status.lastResult.pulled, status.lastResult.pushed)}
+                  </dd>
+                </>
+              ) : null}
+              {status.serverStats ? (
+                <>
+                  <dt>{t.sync.serverSize}</dt>
+                  <dd data-testid="sync-server-size">
+                    {t.sync.serverSizeValue(
+                      status.serverStats.records,
+                      Math.max(1, Math.round(status.serverStats.bytes / 1024)),
+                    )}
+                  </dd>
+                </>
+              ) : null}
             </dl>
+            {status.rejected > 0 ? (
+              <p role="alert" className={styles.error}>
+                {t.sync.rejected(status.rejected)}
+              </p>
+            ) : null}
             {status.phase === 'error' ? (
               <p role="alert" className={styles.error}>
                 {t.sync.errors[status.error ?? 'unknown']}
+              </p>
+            ) : null}
+            {status.phase === 'error' && status.failures > 1 ? (
+              <p className={styles.muted} data-testid="sync-failures">
+                {t.sync.failuresInRow(status.failures)}
               </p>
             ) : null}
             <div className={styles.row}>
@@ -104,8 +145,14 @@ export function SyncSection() {
                 {t.sync.syncNow}
               </Button>
               <Button onClick={() => void disconnect()}>{t.sync.disconnect}</Button>
+              <Button variant="danger" onClick={() => void signOutThisDevice()}>
+                {t.sync.signOut}
+              </Button>
             </div>
             <p className={styles.muted}>{t.sync.disconnectHint}</p>
+            <p className={styles.muted}>{t.sync.signOutHint}</p>
+            <SyncDevices />
+            <SyncConflicts />
           </>
         ) : (
           <form onSubmit={submit} className={styles.form}>
@@ -126,6 +173,14 @@ export function SyncSection() {
               value={token}
               onChange={(e) => setToken(e.target.value)}
               required
+            />
+            <TextField
+              label={t.sync.deviceName}
+              hint={t.sync.deviceNameHint}
+              maxLength={64}
+              autoComplete="off"
+              value={deviceName}
+              onChange={(e) => setDeviceName(e.target.value)}
             />
             <Switch
               label={t.sync.encrypt}
@@ -150,7 +205,7 @@ export function SyncSection() {
               <Button type="submit" variant="primary" disabled={busy}>
                 {busy ? t.sync.connecting : t.sync.connect}
               </Button>
-              {failure === 'server-has-plain-data' ? (
+              {failure === 'server-has-plain-data' || failure === 'vault-outdated' ? (
                 <Button variant="danger" onClick={() => setConfirmReset(true)}>
                   {t.sync.resetServer}
                 </Button>

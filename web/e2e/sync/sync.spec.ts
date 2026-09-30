@@ -383,3 +383,81 @@ test.describe('web push API of the real server', () => {
     ).toBe(true);
   });
 });
+
+test.describe('devices and conflicts', () => {
+  test('a device can be locked from another one and is then refused', async ({ browser }) => {
+    const a = await newDevice(browser);
+    const b = await newDevice(browser);
+    await connect(a.page, { deviceName: 'Laptop' });
+    await connect(b.page, { deviceName: 'Handy' });
+
+    await syncNow(a.page); // the list is refreshed after every sync
+    const devices = a.page.getByTestId('sync-devices');
+    await expect(devices).toContainText('Laptop');
+    await expect(devices).toContainText('Handy');
+    await expect(devices).toContainText('dieses Gerät');
+
+    const phone = devices.locator('[data-testid^="device-"]', { hasText: 'Handy' });
+    await phone.getByRole('button', { name: 'Sperren' }).click();
+    await a.page
+      .getByRole('dialog', { name: /„Handy“ sperren\?/ })
+      .getByRole('button', { name: 'Sperren' })
+      .click();
+    await expect(phone).toContainText('Gesperrt am');
+
+    await openSettings(b.page);
+    await b.page.getByRole('button', { name: 'Jetzt synchronisieren' }).click();
+    await expect(b.page.getByTestId('sync-status')).toContainText('Fehler');
+    await expect(b.page.getByRole('alert')).toContainText('gesperrt');
+
+    await a.context.close();
+    await b.context.close();
+  });
+
+  test('a conflict shows the overwritten value and can restore it', async ({ browser }) => {
+    const a = await newDevice(browser);
+    const b = await newDevice(browser);
+    await addTask(a.page, 'Konfliktaufgabe');
+    await connect(a.page);
+    await connect(b.page);
+    await b.page.goto('/todos?list=inbox');
+    await expect(b.page.getByRole('checkbox', { name: 'Konfliktaufgabe' })).toBeVisible();
+
+    // B renames it while offline, A renames it later and syncs first
+    await b.context.setOffline(true);
+    await b.page.getByRole('button', { name: /Konfliktaufgabe/ }).click();
+    await b.page.getByRole('dialog').getByLabel('Titel').fill('Titel von B');
+    await b.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await expect(b.page.getByRole('dialog')).toHaveCount(0);
+
+    await a.page.goto('/todos?list=inbox');
+    await a.page.getByRole('button', { name: /Konfliktaufgabe/ }).click();
+    await a.page.getByRole('dialog').getByLabel('Titel').fill('Titel von A');
+    await a.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await expect(a.page.getByRole('dialog')).toHaveCount(0);
+    await syncNow(a.page);
+
+    await b.context.setOffline(false);
+    await syncNow(b.page);
+    await b.page.goto('/todos?list=inbox');
+    await expect(b.page.getByRole('checkbox', { name: 'Titel von A' })).toBeVisible();
+
+    await openSettings(b.page);
+    const row = b.page.getByTestId('conflict-row');
+    await expect(row).toHaveCount(1);
+    await expect(row).toContainText('Überschrieben: Titel von B');
+    await expect(row).toContainText('Jetzt gilt: Titel von A');
+    await row.getByRole('button', { name: 'Wiederherstellen' }).click();
+    await expect(b.page.getByTestId('conflict-row')).toHaveCount(0);
+
+    await b.page.goto('/todos?list=inbox');
+    await expect(b.page.getByRole('checkbox', { name: 'Titel von B' })).toBeVisible();
+    await syncNow(b.page);
+    await syncNow(a.page);
+    await a.page.goto('/todos?list=inbox');
+    await expect(a.page.getByRole('checkbox', { name: 'Titel von B' })).toBeVisible();
+
+    await a.context.close();
+    await b.context.close();
+  });
+});
