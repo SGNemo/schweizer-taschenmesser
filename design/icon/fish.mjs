@@ -48,7 +48,7 @@ export const DEFAULTS = {
     clip: false, // clip the fish to the plate (for crops)
     stroke: null, // { color, width } inner border, helps dark plates on dark taskbars
   },
-  mark: { scale: 1, dx: 0, dy: 0 }, // transparent mark (logo-mark.svg)
+  mark: { scale: 1, dx: 0, dy: 0, colors: null }, // transparent mark (logo-mark.svg); colors overrides for it
   adaptive: { bg: null, scale: 0.62, dx: 0, dy: 0 }, // Android: 512 box = 108 dp canvas
   mono: { style: 'mark', scale: 1, dx: 0, dy: 0 }, // mark | negative (plate with fish cut out)
 };
@@ -268,7 +268,7 @@ export function buildLayers(input = {}) {
   const full = svg(`<defs>${fullDefs}</defs>${fullBody}`);
 
   // Transparent mark.
-  const m = fishColor(p, 'nemo-m');
+  const m = fishColor(p.mark.colors ? merge(p, { colors: p.mark.colors }) : p, 'nemo-m');
   const mark = svg(`<defs>${m.defs}</defs><g transform="${viewTransform(p, p.mark)}">${m.body}</g>`);
 
   // One-colour variant (tray, notification, themed icon source).

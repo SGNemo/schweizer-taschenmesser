@@ -8,6 +8,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
 import { buildLayers, squirclePath } from './fish.mjs';
+import { buildWordmark } from './wordmark.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -121,7 +122,7 @@ function block(v, y) {
   const L = layersOf(v);
   let s = `<rect x="0" y="${y}" width="${W}" height="1010" fill="#E4E7EB"/>`;
   s += text(24, y + 40, v.label, 34, '#0E2F45', 'bold');
-  s += text(v.label.length > 2 ? 110 : 80, y + 38, v.title, 24, '#0E2F45', 'bold');
+  s += text(40 + v.label.length * 26, y + 38, v.title, 24, '#0E2F45', 'bold');
   s += text(24, y + 68, v.desc, 16, '#3b434b');
   const y1 = y + 84;
   s += sizesPanel(L, 20, y1, LIGHT, '#555');
@@ -176,11 +177,59 @@ function block(v, y) {
   return { svg: s, layers: L };
 }
 
-const H = 120 + spec.variants.length * 1030;
-let body = `<rect width="${W}" height="${H}" fill="#F3F4F6"/>`;
+// ---------- wordmarks ----------
+const raster = (s, mode, value) => {
+  const r = new Resvg(s, { fitTo: { mode, value }, font: FONT }).render();
+  return { buf: r.asPng(), w: r.width, h: r.height };
+};
+const placeFit = (s, x, y, w, h) => {
+  const byH = raster(s, 'height', h);
+  const r = byH.w <= w ? byH : raster(s, 'width', w);
+  return img(r.buf, Math.round(x + (w - r.w) / 2), Math.round(y + (h - r.h) / 2), r.w, r.h);
+};
+const WM_H = 500;
+function wordmarkBlock(v, y) {
+  const light = buildWordmark(v.concept, v.params, 'light');
+  const dark = buildWordmark(v.concept, v.params, 'dark');
+  let s = `<rect x="0" y="${y}" width="${W}" height="${WM_H - 20}" fill="#E4E7EB"/>`;
+  s += text(24, y + 40, v.label, 34, '#0E2F45', 'bold');
+  s += text(40 + v.label.length * 26, y + 38, v.title, 24, '#0E2F45', 'bold');
+  s += text(24, y + 68, v.desc, 16, '#3b434b');
+  const y1 = y + 84;
+  s += `<rect x="20" y="${y1}" width="600" height="180" rx="10" fill="${LIGHT}"/>` + placeFit(light, 40, y1 + 20, 560, 140);
+  s += `<rect x="640" y="${y1}" width="600" height="180" rx="10" fill="${DARK}"/>` + placeFit(dark, 660, y1 + 20, 560, 140);
+  // README header (640 x 160 like docs/brand), dark ocean and light.
+  for (const [i, bg, wm, tag] of [
+    [0, 'url(#ocean)', dark, '#9FB6BC'],
+    [1, '#FBF8F3', light, '#51616A'],
+  ]) {
+    const hx = 1270 + i * 660;
+    s += `<rect x="${hx}" y="${y1 + 10}" width="640" height="160" fill="${bg}"/>` + placeFit(wm, hx + 120, y1 + 30, 400, 78);
+    s += text(hx + 320, y1 + 140, 'Modulare, lokale Alltags-App', 13, tag, 'normal', 'middle');
+  }
+  s += text(1270, y1 + 4, 'README-Header 640×160 (dunkel / hell)', 14, '#3b434b');
+  // Sidebar at real size (22 px like <Logo size={22}/>) and 3x zoom.
+  const y2 = y1 + 200;
+  s += text(20, y2 + 14, 'Sidebar in echter Grösse (Höhe 22 px) dunkel / hell, rechts 3× vergrössert', 14, '#3b434b');
+  const side = (x, bg, wm, zoom) => {
+    const r = raster(wm, 'height', 22);
+    const w = 240;
+    let o = `<rect x="${x}" y="${y2 + 24}" width="${w * zoom}" height="${48 * zoom}" fill="${bg}"/>`;
+    return o + img(r.buf, x + 16 * zoom, y2 + 24 + 13 * zoom, r.w * zoom, r.h * zoom, zoom > 1);
+  };
+  s += side(20, '#15181C', dark, 1) + side(280, '#FFFFFF', light, 1);
+  s += side(560, '#15181C', dark, 3) + side(1300, '#FFFFFF', light, 3);
+  return { svg: s, light, dark };
+}
+
+const variants = spec.variants ?? [];
+const wordmarks = spec.wordmarks ?? [];
+const H = 120 + variants.length * 1030 + (wordmarks.length ? 70 + wordmarks.length * WM_H : 0);
+let body = `<defs><linearGradient id="ocean" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B1D2B"/><stop offset="1" stop-color="#0F3440"/></linearGradient></defs>`;
+body += `<rect width="${W}" height="${H}" fill="#F3F4F6"/>`;
 body += text(24, 56, `Nemo App-Icon · Runde ${round}${spec.title ? ' · ' + spec.title : ''}`, 36, '#0E2F45', 'bold');
 body += text(24, 92, spec.subtitle ?? '', 18, '#3b434b');
-spec.variants.forEach((v, i) => {
+variants.forEach((v, i) => {
   const { svg, layers } = block(v, 120 + i * 1030);
   body += svg;
   const out = join(dir, v.label);
@@ -191,6 +240,19 @@ spec.variants.forEach((v, i) => {
   }
   if (layers.params) writeFileSync(join(out, 'params.json'), JSON.stringify(v.params, null, 2) + '\n');
 });
+if (wordmarks.length) {
+  const y0 = 120 + variants.length * 1030;
+  body += text(24, y0 + 48, 'Wortmarken: „Nemo“ wird selbst zum Fisch', 30, '#0E2F45', 'bold');
+  wordmarks.forEach((v, i) => {
+    const { svg, light, dark } = wordmarkBlock(v, y0 + 70 + i * WM_H);
+    body += svg;
+    const out = join(dir, v.label);
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, 'logo-wordmark.svg'), light);
+    writeFileSync(join(out, 'logo-wordmark-light.svg'), dark);
+    writeFileSync(join(out, 'params.json'), JSON.stringify({ concept: v.concept, params: v.params ?? {} }, null, 2) + '\n');
+  });
+}
 const sheet = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${body}</svg>`;
 writeFileSync(join(dir, 'sheet.png'), new Resvg(sheet, { font: FONT }).render().asPng());
-console.log(`round ${round}: ${spec.variants.length} variants -> ${join(dir, 'sheet.png')}`);
+console.log(`round ${round}: ${variants.length} icon variants, ${wordmarks.length} wordmarks -> ${join(dir, 'sheet.png')}`);
