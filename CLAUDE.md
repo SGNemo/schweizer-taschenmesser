@@ -10,9 +10,11 @@ Code, comments and commits are **English**; the UI is **German only** (all texts
 @docs/ARCHITECTURE-MAP.md
 @docs/HOW-TO.md
 @docs/DECISIONS.md
+- [`docs/README.md`](docs/README.md) – index: German user docs (`docs/user/`), developer docs, reviews.
 - [`docs/architecture.md`](docs/architecture.md) – long design notes per phase (not imported; read the section you need).
 - [`docs/STATUS.md`](docs/STATUS.md) – done / open / known problems / next steps, plus the German hardware checklists "Manuelle Tests offen" and "Offen – macht Sven" (not imported).
-- [`docs/AI-IMPORT.md`](docs/AI-IMPORT.md) – German guide of the local AI import API + MCP.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) – ideas for later (not implemented); [`docs/AI-IMPORT.md`](docs/AI-IMPORT.md) – German guide of the local AI import API + MCP.
+- The README is short and German for users; details live in `docs/user/`. Keep it that way (no new sections in the README).
 
 ## Repo layout
 - `web/src-tauri/` – native shell (Tauri 2, Rust) around the web app: portable Windows exe, Android APK. Thin by design.
@@ -69,19 +71,21 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them.
 - **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml` (signed portable Windows exe + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
 
-## Design-Richtlinien (for every new module, tool and component)
-- **Tokens, never hard-coded values.** Colours, radii, shadows, spacing, durations come from `web/src/ui/tokens.css` (`var(--…)`). No hex/rgb in module CSS, no own `border-radius`/`box-shadow` values, no fixed fonts. New modules inherit the look through `@/ui` components (Button, Card, Fields, Dialog, Patterns, Misc) – use them instead of restyling native elements.
-- **Surfaces:** `--surface` cards on the gradient page, `--surface-2` for quiet areas; filled actions use `--accent-gradient` (Button `primary`), text/icons in accent use `--accent`; form controls use `--border-strong`. Status colours are `--danger/--success/--warning` (+ `-soft` backgrounds); charts use `--viz-1/--viz-2`. Amounts and dates: `font-variant-numeric: var(--font-num)`.
-- **Contrast:** WCAG AA (4.5:1 text, 3:1 UI). `ui/tokens.test.ts` checks the palette; a new colour token needs a light and a dark value and an entry in that test.
-- **Motion:** CSS only, `transform`/`opacity` only, 120–250 ms (`--dur-fast/--dur/--dur-slow`, `--ease-out`), no endless animation except the `Skeleton` shimmer. Everything must be fine with `prefers-reduced-motion` (tokens go to 0 ms, the global rule cuts the rest). Loading states: `Skeleton`, not spinners. No animation library.
-- **Empty states:** `EmptyState` (shows the faded Nemo fish without an icon) – no extra illustrations per module.
-- **Special styles** (like the black/white QR code in `tools/`) need a comment saying why and are listed in `docs/DECISIONS.md`.
+## Design-Richtlinien (for every new module, tool and component) – look "Klar" (flat, calm)
+- **Tokens, never hard-coded values.** Colours, radii, shadows, spacing, type sizes, weights, z-index, durations come from `web/src/ui/tokens.css` (`var(--…)`). No hex/rgb in module CSS, no own `border-radius`/`box-shadow`/`z-index`/`font-weight` numbers (use `--weight-medium/semibold/bold`, `--z-*`, `--text-3xl` for hero numbers). Modules inherit the look through `@/ui`: Button, Card, Fields (`TextField` with `labelHidden` for inline add rows), Dialog, Patterns (`Segmented`, `ItemRow`, `Progress`, `Chip`, layout utilities `patternStyles.hstack/plainList/gapBottom/inlineForm`), Misc (`Badge`, `EmptyState` incl. `compact`, `Skeleton`), `WidgetList` for dashboard widgets. Never re-implement a segmented control, progress bar or input in a module; no inline `style={{}}` for layout or colour.
+- **Surfaces:** solid `--bg` page, `--surface` cards with a `--border` (no shadows, no glass), `--surface-2` for quiet areas and control tracks. Shadows (`--shadow-1/2`) only on floating layers (menus, dialogs, FAB). Form controls use `--border-strong`.
+- **One accent, one job:** filled `--accent` only for the page's primary action and the FAB; everything else (tabs, chips, nav, links, active states) uses `--accent` as text/icon colour or `--accent-soft`. Status colours `--danger/--success/--warning` (+ `-soft`), charts `--viz-1/--viz-2`. Amounts and dates: `font-variant-numeric: var(--font-num)`. The ocean gradient (`--ocean-from/to`) is brand only (splash, empty states, images), never a page background.
+- **Contrast:** WCAG AA (4.5:1 text, 3:1 UI). `ui/tokens.test.ts` checks the palette incl. `--border-strong` on `--surface-2`; a new colour token needs a light and a dark value and an entry in that test. Touch targets ≥ 44 px (`--touch`), inline checkboxes 24 px.
+- **Motion:** CSS only, `transform`/`opacity` only (progress bars scale, nothing animates width, colour or shadow), 120–250 ms (`--dur-fast/--dur/--dur-slow`, `--ease-out`), no endless animation except the `Skeleton` shimmer. Everything must be fine with `prefers-reduced-motion`. Loading: `Skeleton`, not spinners or "…".
+- **Empty states:** `EmptyState` (page) or `EmptyState compact` / `WidgetList empty` (widgets); the faded Nemo fish, no illustrations per module.
+- **Brand:** the fish exists once as `web/brand/logo-mark.svg`; `Logo.tsx` and the splash repeat its paths and `brand-sync.test.ts` enforces it. Icons: `docs/HOW-TO.md` → Icons. Special styles (QR black/white) need a comment and an entry in `docs/DECISIONS.md`.
+- **Checking a design change:** `SCREENS_SCHEME=dark SCREENS_VIEWPORTS=1280x720,412x915 SCREENS_PAGES='^(dashboard|finance-overview)$' npm run screenshots` renders invented data; `SCREENS_CSS=<file>` injects token overrides for experiments; `npx playwright test e2e/a11y.spec.ts` runs axe in both themes.
 
 ## Create a new module / tool / connector / provider
 Step-by-step recipes: `docs/HOW-TO.md`. Short form for a module: `npm run gen:module -- <id> "<Name>"`, then edit `src/modules/<id>/`, `contributions.onboarding` is required, strings in `strings.ts`, `db:bump` on collection changes, `npm run lint && npm run typecheck && npm test`.
 
 ## Status
-Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON import, local import API, `mcp/`). Details, open items and next steps: `docs/STATUS.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there. The setup assistant (`web/src/core/setup`, `web/src/layout/setup`) is in; see the map and `docs/HOW-TO.md` to add steps.
+Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON import, local import API, `mcp/`); since then: setup assistant, backup/sync hardening, quick capture, the Nemo rebrand (new mark "Welle", flat design, MIT licence, review in `docs/REVIEW-2026-09-30.md`). Details, open items and next steps: `docs/STATUS.md`; ideas: `docs/ROADMAP.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there.
 
 ## Gotchas
 - `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.

@@ -63,12 +63,15 @@ Tools are not modules (no own data, no cross-imports; see `tools/isolation.test.
 Add `ImporterMeta` entries in the module manifest `contributions.onboarding` and a lazy `load()` returning `ImporterRuntime` (parse, dedupe key) – see `modules/todos/onboarding.ts` and `core/importer/types.ts`. Parsers shared in `core/io/`.
 
 ## Icons / branding
-- Change the logo: edit the SVGs in `web/brand/` (`logo-mark.svg` is the source; `web/src/ui/Logo.tsx` and the splash in `web/index.html` repeat its paths), then `cd web && npx tauri icon brand/app-icon.svg && npm run gen:icons`. The first command regenerates the Tauri set (Windows sizes, `icon.icns`, Android legacy mipmaps), the second re-renders PWA/favicon/ICO/Android adaptive + monochrome + notification layers and the README/social images. Commit the results.
-- Wordmark: re-outline "Nemo" from Nunito ExtraBold (see `web/brand/LICENSES.md`); the SVGs contain paths, no font.
+- Change the logo: edit `web/brand/logo-mark.svg` (the fish: body, tail, two stroke paths and the eye circle inside a mask), copy the same `d` strings into the other `web/brand/*.svg`, `web/src/ui/Logo.tsx` (`LOGO_PATHS`) and the splash in `web/index.html` – `src/brand-sync.test.ts` fails until all three agree. Then `cd web && npx tauri icon brand/app-icon.svg && npm run gen:icons`. The first command regenerates the Tauri set (Windows sizes, `icon.icns`, Android legacy mipmaps), the second re-renders PWA icons, `favicon.svg/.ico/-32.png`, `pwa-badge-96.png`, `icon.ico`, the Android adaptive/monochrome/notification layers, the README headers (light + dark) and the social preview, and deletes the unused iOS/appx sets. Commit the results. Keep SVG ids unique per file (test).
+- Wordmark: re-outline "Nemo" from Nunito ExtraBold (see `web/brand/LICENSES.md`); the SVGs contain paths, no font. The fish group in the wordmark uses `translate(-40 -78) scale(0.78)`.
+- Android: the launcher layers reach the APK through the copy step after `tauri android init` in `release.yml`; the status-bar icon is `ic_notification` (referenced from `core/platform/tauri/index.ts`).
 
 ## Design tokens
-- Colours, radii, shadows, motion live in `web/src/ui/tokens.css` only. Change a semantic token there; components pick it up. The dark palette exists twice in the file – edit both (`tokens.test.ts` fails if they differ) and keep the contrast pairs AA (the test checks them).
-- New accent colour: add a `:root[data-accent='<name>']` block with `light-dark()` pairs, extend `ACCENTS` in `web/src/stores/ui.ts`, the `settings.accentOptions` strings and the inline script in `web/index.html`; `tokens.test.ts` lists the variants to check.
+- Colours, radii, shadows, type scale, weights, z-index, motion live in `web/src/ui/tokens.css` only. Change a semantic token there; components pick it up. The dark palette exists twice in the file – edit both (`tokens.test.ts` fails if they differ) and keep the contrast pairs AA (the test checks them, incl. `--border-strong` on `--surface-2`). Do not put `--name:` patterns into comments inside the file (the test's parser reads them as declarations).
+- New accent colour: add a `:root[data-accent='<name>']` block with `light-dark()` pairs (`--accent`, `-hover`, `-contrast`, `-soft`), extend `ACCENTS` in `web/src/stores/ui.ts`, the `settings.accentOptions` strings and the inline script in `web/index.html`; `tokens.test.ts` lists the variants to check.
+- Trying a look before changing tokens: write overrides into a CSS file and render invented data with `SCREENS_CSS=<file> SCREENS_SCHEME=dark npm run screenshots` (see `docs/design-proposals/variant-*.css`). Compare against `docs/screenshots/`.
+- Layout helpers instead of inline styles: `patternStyles.hstack/hstackCenter/hstackWrap/grow/plainList/gridList/gapTop/gapBottom/spacer/fieldset/inlineForm` (`web/src/ui/Patterns.module.css`).
 
 ## Release (needs the maintainer; keys never in CI/repo)
 1. `develop` green in CI. Do not weaken signing/audit steps.
@@ -82,5 +85,5 @@ Add `ImporterMeta` entries in the module manifest `contributions.onboarding` and
 
 ## Other recipes
 - Regenerate PWA icons: `npm run gen:icons` (native: `npx tauri icon brand/app-icon.svg`, see *Icons / branding*).
-- Screenshots (manual, not CI): `npm run screenshots`.
+- Screenshots (manual, not CI): `npm run screenshots`; filters `SCREENS_VIEWPORTS`, `SCREENS_PAGES`, `SCREENS_SCHEME=dark`, `SCREENS_DIR`, `SCREENS_CSS`. The README images are `docs/screenshots/readme/dashboard-{light,dark}.png` (1280×720 dashboard).
 - Use the local AI import API / MCP: `docs/AI-IMPORT.md`.

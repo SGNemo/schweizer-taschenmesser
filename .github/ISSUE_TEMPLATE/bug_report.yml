@@ -1,0 +1,45 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie erwartet
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Danke! Bitte keine echten Daten (Namen, Beträge, Tokens) in Screenshots oder Logs. Sicherheitslücken bitte über SECURITY.md melden.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Einstellungen → App-Updates
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Plattform
+      options:
+        - Windows (Nemo-Portable.exe)
+        - Android (Nemo.apk)
+        - PWA im Browser
+        - Sync-Server
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Nachstellen
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartet und tatsächlich passiert
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot oder Fehlermeldung (optional)
