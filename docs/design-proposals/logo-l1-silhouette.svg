@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nemo">
+  <defs>
+    <mask id="l1-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect width="512" height="512" fill="#fff"/>
+      <rect x="248" y="96" width="40" height="320" rx="20" fill="#000"/>
+      <rect x="350" y="120" width="34" height="272" rx="17" fill="#000"/>
+    </mask>
+  </defs>
+  <g fill="#F26A1E" mask="url(#l1-cut)">
+    <path d="M170 256c0-72 70-130 160-130 78 0 140 58 140 130s-62 130-140 130c-90 0-160-58-160-130z"/>
+    <path d="M186 256 84 166c-14-12-34 0-30 18l24 72-24 72c-4 18 16 30 30 18z"/>
+  </g>
+</svg>

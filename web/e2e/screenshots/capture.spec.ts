@@ -14,7 +14,7 @@ const VIEWPORTS = [
   { name: '820x1180', width: 820, height: 1180 },
   { name: '412x915', width: 412, height: 915, mobile: true },
 ];
-/** Optional filters for quick iterations, e.g. SCREENS_VIEWPORTS=1920x1080 SCREENS_PAGES=calendar. */
+/** Optional filters for quick iterations, e.g. SCREENS_VIEWPORTS=1920x1080 SCREENS_PAGES=calendar; SCREENS_SCHEME=dark. */
 const ONLY_VIEWPORTS = process.env.SCREENS_VIEWPORTS?.split(',');
 const ONLY_PAGES = process.env.SCREENS_PAGES ? new RegExp(process.env.SCREENS_PAGES) : undefined;
 const MODULES = [
@@ -347,6 +347,8 @@ test('capture layout screenshots', async ({ browser }) => {
     for (const p of PAGES.filter((x) => !ONLY_PAGES || ONLY_PAGES.test(x.name))) {
       await page.goto(p.path);
       await expect(page.locator('main')).toBeVisible();
+      // Design experiments: SCREENS_CSS=<file> injects a stylesheet (token overrides) before the shot.
+      if (process.env.SCREENS_CSS) await page.addStyleTag({ path: process.env.SCREENS_CSS });
       await page.waitForTimeout(600);
       await page.screenshot({ path: `${OUT}/${vp.name}--${p.name}.png` });
     }

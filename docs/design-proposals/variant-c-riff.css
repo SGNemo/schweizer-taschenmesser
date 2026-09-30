@@ -1,0 +1,13 @@
+:root { --radius-lg: 16px; }
+@media (prefers-color-scheme: light) { :root { --bg: #f6f9f9; --bg-gradient: linear-gradient(160deg, #f8f9f7 0%, #eef5f5 55%, #e3f0f0 100%); --surface-2: #ecf3f3; --border: #d9e5e5; --shadow-1: 0 1px 2px rgb(11 45 60 / 0.05), 0 6px 18px -10px rgb(11 45 60 / 0.18); } }
+@media (prefers-color-scheme: dark) { :root { --surface: #12303c; --surface-2: #183d4a; --border: #24505e; } }
+a { color: var(--accent-2); }
+[class*="_navLink_"][aria-current='page'] { background: var(--accent-2-soft) !important; color: var(--accent-2) !important; }
+[class*="_navLink_"][aria-current='page']::before { background: var(--accent-2) !important; }
+[class*="_bottomLink_"][aria-current='page'] { color: var(--accent-2) !important; }
+[class*="_bottomLink_"][aria-current='page']::before { background: var(--accent-2) !important; }
+[class*="_segment_"] { background: var(--surface) !important; border-color: var(--border) !important; padding: 3px !important; gap: 2px !important; }
+[class*="_segment_"] button { min-height: 38px !important; border-radius: 999px !important; color: var(--text) !important; }
+[class*="_segment_"] button[aria-pressed='true'] { background: var(--accent-2-soft) !important; color: var(--accent-2) !important; }
+[class*="_badge_"] { background: var(--surface-2) !important; color: var(--text-muted) !important; }
+h1, h2 { font-weight: 700; letter-spacing: -0.02em; }
