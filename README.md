@@ -125,6 +125,13 @@ Strg+K (Handy: das Suchfeld oben) öffnet die Befehlspalette: springen, in allen
   bzw. den Einstellungen.
 - **Anlegen nur mit Bestätigung:** schlägt die KI einen neuen Eintrag vor, zeigt die App ihn erst an; gespeichert wird nach „Anlegen“.
 
+### Daten per KI importieren
+
+Vorhandene Daten muss man nicht abtippen: Eine KI (Claude Code, ChatGPT …) liefert sie im Format der App, du bestätigst eine
+Vorschau. In der Windows-App über eine lokale, abgesicherte Schnittstelle (*Einstellungen → KI-Zugriff*, standardmäßig aus),
+überall sonst per „JSON einfügen“ im Startdaten-Assistenten. Anleitung, Beispiele und fertiger Prompt:
+[`docs/AI-IMPORT.md`](docs/AI-IMPORT.md).
+
 ### Als PWA installieren
 Chrome/Edge (Windows) bzw. Chrome (Android) öffnen → „App installieren“. Service Worker und Installation brauchen
 HTTPS (oder `localhost`).

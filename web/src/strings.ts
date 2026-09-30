@@ -1432,6 +1432,10 @@ export const t = {
       'port-denied': 'Dieser Port darf nicht benutzt werden. Wähle einen anderen.',
       'listen-failed': 'Die Schnittstelle konnte nicht gestartet werden.',
     } as Record<string, string>,
+    copyPrompt: 'Anleitung für KI kopieren',
+    copyPromptHint:
+      'Fertiger Text für dein KI-Werkzeug (Adresse, Ablauf, Regeln) – ohne Schlüssel und ohne deine Daten. Mehr in docs/AI-IMPORT.md.',
+    promptCopied: 'Anleitung kopiert. Den Schlüssel gibst du der KI getrennt.',
     tokens: 'Zugänge',
     noTokens: 'Noch kein Zugang angelegt. Ohne Zugang ist nichts erreichbar.',
     newToken: 'Zugang anlegen',
