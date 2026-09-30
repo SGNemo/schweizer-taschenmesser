@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { createElement, lazy, Suspense, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { createElement, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { createContext } from '@/core/connectors/context';
 import { connectors } from '@/core/connectors/registry';
 import {
@@ -24,11 +24,6 @@ import { Badge, Button, Card, Checkbox, Dialog, Icon, TextField } from '@/ui';
 import styles from './settings.module.css';
 
 const s = t.connectors;
-
-/** Extra settings UIs of connectors, created once (React must not create components while rendering). */
-const extras = new Map(
-  connectors.filter((c) => c.settings).map((c) => [c.id, lazy(c.settings!)] as const),
-);
 
 function formatWhen(ms: number): string {
   const d = new Date(ms);
@@ -89,7 +84,7 @@ function ClientForm({ def, onSaved }: { def: ConnectorDef; onSaved: () => void }
   );
 }
 
-/** The connector's own settings UI (loaded on demand); the component itself is static, see `extras`. */
+/** The connector's own settings UI (a static component of the connector). */
 function ExtraSettings({
   def,
   ctx,
@@ -99,9 +94,7 @@ function ExtraSettings({
   ctx: ConnectorContext;
   onChanged: () => void;
 }) {
-  return (
-    <Suspense fallback={null}>{createElement(extras.get(def.id)!, { ctx, onChanged })}</Suspense>
-  );
+  return def.settings ? createElement(def.settings, { ctx, onChanged }) : null;
 }
 
 function ConnectorCard({ def }: { def: ConnectorDef }) {
@@ -236,7 +229,7 @@ function ConnectorCard({ def }: { def: ConnectorDef }) {
           </>
         ) : null}
 
-        {extras.has(def.id) ? (
+        {def.settings ? (
           <ExtraSettings def={def} ctx={ctx} onChanged={() => void configurationChanged()} />
         ) : null}
 

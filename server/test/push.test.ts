@@ -6,6 +6,7 @@ import {
   createPushService,
   ensureVapidKeys,
   generateVapidKeys,
+  padPrivateKey,
   MAX_ATTEMPTS,
   requestOptions,
   type PushSender,
@@ -292,6 +293,19 @@ describe('VAPID keys', () => {
     });
     expect(mem.vapid()).toEqual(generated); // the environment does not overwrite the stored pair
     mem.close();
+  });
+});
+
+describe('VAPID private key length', () => {
+  it('pads a scalar with leading zero bytes to 32 bytes', () => {
+    const short = Buffer.from([1, 2, 3]);
+    expect(padPrivateKey(short)).toHaveLength(32);
+    expect(padPrivateKey(short).subarray(29)).toEqual(short);
+    expect(padPrivateKey(Buffer.alloc(32, 7))).toHaveLength(32);
+  });
+  it('every generated key decodes to 32 bytes', () => {
+    for (let i = 0; i < 600; i++)
+      expect(Buffer.from(generateVapidKeys().privateKey, 'base64url')).toHaveLength(32);
   });
 });
 

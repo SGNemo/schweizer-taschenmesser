@@ -179,10 +179,11 @@ export interface ConnectorDef {
   mail?: MailCapability;
   /** Connectors without a login: true once they have what they need (an ICS address …). */
   isConfigured?(ctx: ConnectorContext): Promise<boolean>;
-  /** Extra settings UI shown in the connector's card (an address form …). */
-  settings?: () => Promise<{
-    default: ComponentType<{ ctx: ConnectorContext; onChanged: () => void }>;
-  }>;
+  /**
+   * Extra settings UI shown in the connector's card (an address form …). Bundled with the settings
+   * page on purpose: a separate chunk cannot be fetched while the device is offline.
+   */
+  settings?: ComponentType<{ ctx: ConnectorContext; onChanged: () => void }>;
 }
 
 export type ConnectorErrorCode =

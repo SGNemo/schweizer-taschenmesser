@@ -1,4 +1,5 @@
 import type { ConnectorDef } from '@/core/connectors/types';
+import IcsSettings from './Settings';
 import { loadSubscriptions } from './subscriptions';
 import { syncIcs } from './sync';
 
@@ -17,7 +18,7 @@ const connector: ConnectorDef = {
   platforms: ['web', 'desktop', 'android'],
   features: [],
   isConfigured: async (ctx) => (await loadSubscriptions(ctx)).length > 0,
-  settings: () => import('./Settings'),
+  settings: IcsSettings,
   calendar: {
     async listCalendars(ctx) {
       return (await loadSubscriptions(ctx)).map((s) => ({ id: s.id, name: s.name, primary: true }));

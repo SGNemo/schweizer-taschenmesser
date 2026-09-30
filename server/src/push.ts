@@ -12,13 +12,19 @@ export interface VapidKeys {
   privateKey: string;
 }
 
+/** Left-pads a P-256 private scalar to 32 bytes. */
+export function padPrivateKey(key: Buffer): Buffer {
+  return key.length >= 32 ? key : Buffer.concat([Buffer.alloc(32 - key.length), key]);
+}
+
 /** A P-256 key pair in the base64url form the Web Push protocol (VAPID) uses. */
 export function generateVapidKeys(): VapidKeys {
   const ecdh = createECDH('prime256v1');
   ecdh.generateKeys();
   return {
     publicKey: ecdh.getPublicKey().toString('base64url'),
-    privateKey: ecdh.getPrivateKey().toString('base64url'),
+    // getPrivateKey() drops leading zero bytes (1 in 256 keys); VAPID needs exactly 32 bytes.
+    privateKey: padPrivateKey(ecdh.getPrivateKey()).toString('base64url'),
   };
 }
 
