@@ -348,6 +348,31 @@ impl Tree {
             .collect()
     }
 
+    /// Ids of all files (not folders, not aggregates) below `under`, in tree order.
+    pub fn files_under(&self, under: u32) -> Vec<u32> {
+        let mut out = Vec::new();
+        if self.nodes.get(under as usize).is_none_or(|n| n.removed) {
+            return out;
+        }
+        let mut stack = vec![under];
+        while let Some(x) = stack.pop() {
+            let n = &self.nodes[x as usize];
+            if n.kind == NodeKind::File {
+                out.push(x);
+            }
+            stack.extend(n.children.iter().copied());
+        }
+        out.sort_unstable();
+        out
+    }
+
+    /// Like `view`, with the parent folder path filled in (for lists that show where an entry lives).
+    pub fn view_with_path(&self, id: u32) -> Option<NodeView> {
+        let mut v = self.view(id)?;
+        v.rel_path = self.parent_rel_path(id);
+        Some(v)
+    }
+
     /// True when `id` lies inside `ancestor` (or is it).
     pub fn is_under(&self, id: u32, ancestor: u32) -> bool {
         (id as usize) < self.nodes.len() && self.is_under_inner(id, ancestor)

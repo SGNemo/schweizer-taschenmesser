@@ -5,6 +5,7 @@
 
 mod delete;
 mod drives;
+mod duplicates;
 mod guard;
 mod kinds;
 mod scan;
@@ -19,8 +20,12 @@ pub use delete::{
     LARGE_BYTES, LARGE_FILES,
 };
 pub use drives::{list_drives, DriveInfo, DriveKind, Media};
+pub use duplicates::{find_duplicates, DupGroup};
 pub use guard::{Denied, Guard, Norm};
 pub use kinds::{classify, FileKind, KIND_COUNT};
 pub use scan::{scan, NotRead, Progress, ScanControl, ScanOptions, ScanResult};
-pub use system::{drive_kind_of, known_places, running_programs, system_guard, Place};
+pub use system::{
+    drive_kind_of, known_places, reveal_in_file_manager, running_programs, system_guard,
+    user_data_dirs, Place,
+};
 pub use tree::{NodeKind, NodeView, Query, QueryScope, Tree};

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-disk-find-duplicates"
+description = "Enables the disk_find_duplicates command without any pre-configured scope."
+commands.allow = ["disk_find_duplicates"]
+
+[[permission]]
+identifier = "deny-disk-find-duplicates"
+description = "Denies the disk_find_duplicates command without any pre-configured scope."
+commands.deny = ["disk_find_duplicates"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-disk-known-places"
+description = "Enables the disk_known_places command without any pre-configured scope."
+commands.allow = ["disk_known_places"]
+
+[[permission]]
+identifier = "deny-disk-known-places"
+description = "Denies the disk_known_places command without any pre-configured scope."
+commands.deny = ["disk_known_places"]

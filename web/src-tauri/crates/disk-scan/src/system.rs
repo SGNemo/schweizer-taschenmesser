@@ -40,6 +40,17 @@ pub fn drive_kind_of(path: &Path) -> DriveKind {
     imp::drive_kind_of(path)
 }
 
+/// Documents, Pictures, Desktop, Videos and Music of the current user: deleting inside them gets
+/// the stronger warning.
+pub fn user_data_dirs() -> Vec<String> {
+    imp::user_data_dirs()
+}
+
+/// Opens the file manager with `path` selected (Windows Explorer). Errors on other platforms.
+pub fn reveal_in_file_manager(path: &Path) -> std::io::Result<()> {
+    imp::reveal(path)
+}
+
 /// Well-known cache and temp folders that exist on this machine.
 pub fn known_places() -> Vec<Place> {
     imp::known_places()
@@ -64,10 +75,11 @@ mod imp {
         PROCESS_QUERY_LIMITED_INFORMATION,
     };
     use windows::Win32::UI::Shell::{
-        FOLDERID_Downloads, FOLDERID_LocalAppData, FOLDERID_LocalAppDataLow, FOLDERID_Profile,
+        FOLDERID_Desktop, FOLDERID_Documents, FOLDERID_Downloads, FOLDERID_LocalAppData,
+        FOLDERID_LocalAppDataLow, FOLDERID_Music, FOLDERID_Pictures, FOLDERID_Profile,
         FOLDERID_ProgramData, FOLDERID_ProgramFiles, FOLDERID_ProgramFilesX86,
-        FOLDERID_RoamingAppData, FOLDERID_UserProfiles, FOLDERID_Windows, SHGetKnownFolderPath,
-        KF_FLAG_DEFAULT,
+        FOLDERID_RoamingAppData, FOLDERID_UserProfiles, FOLDERID_Videos, FOLDERID_Windows,
+        SHGetKnownFolderPath, KF_FLAG_DEFAULT,
     };
 
     /// Known-folder lookup (the real location, not an environment variable a user could change).
@@ -173,6 +185,29 @@ mod imp {
         }
     }
 
+    pub fn user_data_dirs() -> Vec<String> {
+        [
+            &FOLDERID_Documents,
+            &FOLDERID_Pictures,
+            &FOLDERID_Desktop,
+            &FOLDERID_Videos,
+            &FOLDERID_Music,
+        ]
+        .into_iter()
+        .filter_map(known)
+        .collect()
+    }
+
+    pub fn reveal(path: &Path) -> std::io::Result<()> {
+        use std::os::windows::process::CommandExt;
+        let s = path.to_string_lossy();
+        let s = s.strip_prefix(r"\\?\").unwrap_or(&s);
+        std::process::Command::new("explorer.exe")
+            .raw_arg(format!("/select,\"{s}\""))
+            .spawn()
+            .map(|_| ())
+    }
+
     pub fn known_places() -> Vec<Place> {
         let mut v = vec![Place {
             id: "temp",
@@ -251,6 +286,23 @@ mod imp {
         DriveKind::Unknown
     }
 
+    pub fn user_data_dirs() -> Vec<String> {
+        let Ok(home) = std::env::var("HOME") else {
+            return Vec::new();
+        };
+        ["Documents", "Pictures", "Desktop", "Videos", "Music"]
+            .iter()
+            .map(|d| format!("{home}/{d}"))
+            .collect()
+    }
+
+    pub fn reveal(_path: &Path) -> std::io::Result<()> {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "not available on this platform",
+        ))
+    }
+
     pub fn known_places() -> Vec<Place> {
         let mut v = vec![Place {
             id: "temp",
@@ -281,6 +333,24 @@ mod imp {
     }
     pub fn drive_kind_of(_path: &Path) -> DriveKind {
         DriveKind::Unknown
+    }
+    pub fn user_data_dirs() -> Vec<String> {
+        Vec::new()
+    }
+    pub fn reveal(_path: &Path) -> std::io::Result<()> {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "not available on this platform",
+        ))
+    }
+    pub fn user_data_dirs() -> Vec<String> {
+        Vec::new()
+    }
+    pub fn reveal(_path: &Path) -> std::io::Result<()> {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "not available on this platform",
+        ))
     }
     pub fn known_places() -> Vec<Place> {
         Vec::new()

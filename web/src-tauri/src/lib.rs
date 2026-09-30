@@ -87,7 +87,16 @@ pub fn run() {
             disk::disk_scan_drop,
             disk::disk_children,
             disk::disk_node,
-            disk::disk_query
+            disk::disk_query,
+            disk::disk_known_places,
+            disk::disk_node_path,
+            disk::disk_reveal,
+            disk::disk_find_duplicates,
+            disk::disk_duplicates_cancel,
+            disk::disk_can_delete,
+            disk::disk_delete_plan,
+            disk::disk_delete,
+            disk::disk_delete_cancel
         ]);
 
     #[cfg(windows)]
