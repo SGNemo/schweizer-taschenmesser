@@ -119,6 +119,7 @@ fn queries_find_the_biggest_folder_and_file() {
         file_kind: None,
         min_bytes: None,
         limit: Some(1),
+        only_empty: false,
     });
     assert_eq!(files[0].name, "d.mp4");
     let dirs = r.tree.query(&Query {
@@ -128,6 +129,7 @@ fn queries_find_the_biggest_folder_and_file() {
         file_kind: None,
         min_bytes: None,
         limit: Some(1),
+        only_empty: false,
     });
     assert_eq!(dirs[0].name, "media");
     let path = r.tree.path(files[0].id).unwrap();

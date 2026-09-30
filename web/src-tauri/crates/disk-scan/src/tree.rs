@@ -29,6 +29,8 @@ struct Node {
     modified: i64,
     kind_bytes: [u64; KIND_COUNT],
     children: Vec<u32>,
+    /// Deleted (or inside a deleted folder) after the scan; hidden from every query.
+    removed: bool,
 }
 
 /// What the scanner collects per folder before the arena is built (lock-free, bottom-up).
@@ -98,6 +100,9 @@ pub struct Query {
     pub file_kind: Option<FileKind>,
     pub min_bytes: Option<u64>,
     pub limit: Option<usize>,
+    /// Folders without any file (own or nested); ranked by name. Folders only.
+    #[serde(default)]
+    pub only_empty: bool,
 }
 
 pub struct Tree {
@@ -139,6 +144,7 @@ impl Tree {
             modified: dir.modified,
             kind_bytes: [0; KIND_COUNT],
             children: Vec::new(),
+            removed: false,
         });
         let mut children = Vec::new();
         for child in dir.dirs {
@@ -158,6 +164,7 @@ impl Tree {
                 modified: f.modified,
                 kind_bytes,
                 children: Vec::new(),
+                removed: false,
             });
             children.push(fid);
         }
@@ -173,6 +180,7 @@ impl Tree {
                 modified: dir.small.modified,
                 kind_bytes: dir.small.kind_bytes,
                 children: Vec::new(),
+                removed: false,
             });
             children.push(sid);
         }
@@ -250,14 +258,17 @@ impl Tree {
     }
 
     pub fn view(&self, id: u32) -> Option<NodeView> {
-        ((id as usize) < self.nodes.len()).then(|| self.make_view(id))
+        self.nodes
+            .get(id as usize)
+            .filter(|n| !n.removed)
+            .map(|_| self.make_view(id))
     }
 
     /// Descendants of `id` down to `depth` levels (breadth first), biggest first within a parent,
     /// skipping everything smaller than `min_bytes`. Capped so a huge folder cannot flood the IPC.
     pub fn children(&self, id: u32, depth: u32, min_bytes: u64) -> Vec<NodeView> {
         let mut out = Vec::new();
-        if (id as usize) >= self.nodes.len() {
+        if self.nodes.get(id as usize).is_none_or(|n| n.removed) {
             return out;
         }
         let mut level = vec![id];
@@ -291,16 +302,6 @@ impl Tree {
         out
     }
 
-    fn is_under(&self, mut id: u32, ancestor: u32) -> bool {
-        while id != NO_PARENT {
-            if id == ancestor {
-                return true;
-            }
-            id = self.nodes[id as usize].parent;
-        }
-        false
-    }
-
     /// Ranked lists behind the quick filters (biggest folders/files, older than, by type).
     pub fn query(&self, q: &Query) -> Vec<NodeView> {
         let want = match q.scope {
@@ -312,13 +313,19 @@ impl Tree {
         let mut hits: Vec<(u64, u32)> = Vec::new();
         for (i, n) in self.nodes.iter().enumerate() {
             let id = i as u32;
-            if n.kind != want || (want == NodeKind::Dir && id == under) {
+            if n.removed || n.kind != want || (want == NodeKind::Dir && id == under) {
                 continue;
             }
-            if under != 0 && !self.is_under(id, under) {
+            if under != 0 && !self.is_under_inner(id, under) {
                 continue;
             }
             if q.older_than.is_some_and(|t| n.modified >= t) {
+                continue;
+            }
+            if q.only_empty {
+                if want == NodeKind::Dir && n.files == 0 && n.bytes == 0 {
+                    hits.push((0, id));
+                }
                 continue;
             }
             let key = match q.file_kind {
@@ -341,10 +348,57 @@ impl Tree {
             .collect()
     }
 
+    /// True when `id` lies inside `ancestor` (or is it).
+    pub fn is_under(&self, id: u32, ancestor: u32) -> bool {
+        (id as usize) < self.nodes.len() && self.is_under_inner(id, ancestor)
+    }
+
+    fn is_under_inner(&self, mut id: u32, ancestor: u32) -> bool {
+        while id != NO_PARENT {
+            if id == ancestor {
+                return true;
+            }
+            id = self.nodes[id as usize].parent;
+        }
+        false
+    }
+
+    /// Takes a deleted entry out of the tree and subtracts its sums from every folder above, so the
+    /// view stays right without rescanning. Returns false for the root, unknown or removed ids.
+    pub fn remove(&mut self, id: u32) -> bool {
+        if id == 0 || self.nodes.get(id as usize).is_none_or(|n| n.removed) {
+            return false;
+        }
+        let (bytes, logical, files, kind_bytes, parent) = {
+            let n = &self.nodes[id as usize];
+            (n.bytes, n.logical, n.files, n.kind_bytes, n.parent)
+        };
+        let mut cur = parent;
+        while cur != NO_PARENT {
+            let a = &mut self.nodes[cur as usize];
+            a.bytes = a.bytes.saturating_sub(bytes);
+            a.logical = a.logical.saturating_sub(logical);
+            a.files = a.files.saturating_sub(files);
+            for (i, b) in kind_bytes.iter().enumerate() {
+                a.kind_bytes[i] = a.kind_bytes[i].saturating_sub(*b);
+            }
+            cur = a.parent;
+        }
+        if parent != NO_PARENT {
+            self.nodes[parent as usize].children.retain(|&c| c != id);
+        }
+        let mut stack = vec![id];
+        while let Some(x) = stack.pop() {
+            self.nodes[x as usize].removed = true;
+            stack.extend(self.nodes[x as usize].children.iter().copied());
+        }
+        true
+    }
+
     /// Full path of a folder or file. `None` for aggregates ("small files") and unknown ids.
     pub fn path(&self, id: u32) -> Option<PathBuf> {
         let n = self.nodes.get(id as usize)?;
-        if n.kind == NodeKind::Small {
+        if n.kind == NodeKind::Small || n.removed {
             return None;
         }
         let mut parts = Vec::new();
@@ -462,6 +516,7 @@ mod tests {
             file_kind: None,
             min_bytes: None,
             limit: None,
+            only_empty: false,
         });
         assert_eq!(
             dirs.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
@@ -474,6 +529,7 @@ mod tests {
             file_kind: None,
             min_bytes: None,
             limit: Some(2),
+            only_empty: false,
         });
         assert_eq!(
             files.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
@@ -486,6 +542,7 @@ mod tests {
             file_kind: None,
             min_bytes: None,
             limit: None,
+            only_empty: false,
         });
         assert_eq!(
             old.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
@@ -498,6 +555,7 @@ mod tests {
             file_kind: Some(FileKind::Document),
             min_bytes: None,
             limit: None,
+            only_empty: false,
         });
         assert_eq!(docs_only.len(), 1);
         assert_eq!(docs_only[0].name, "docs");
@@ -509,6 +567,7 @@ mod tests {
             file_kind: None,
             min_bytes: None,
             limit: Some(1),
+            only_empty: false,
         });
         assert_eq!(deep[0].rel_path, "videos");
         let under = t.query(&Query {
@@ -518,6 +577,7 @@ mod tests {
             file_kind: None,
             min_bytes: None,
             limit: None,
+            only_empty: false,
         });
         assert_eq!(under.len(), 2);
     }
