@@ -50,12 +50,16 @@ async function skipEverything(page: Page) {
   const dialog = wizard(page);
   const summary = dialog.getByTestId('setup-summary');
   const skip = dialog.getByRole('button', { name: 'Überspringen' });
+  const stepOf = dialog.getByText(/^Schritt \d+ von \d+$/);
   for (let i = 0; i < 40; i++) {
     // Either the next step (with its skip button) or the summary shows up after each click.
-    await expect(skip.or(summary)).toBeVisible();
+    await expect(stepOf.or(summary)).toBeVisible();
     if (await summary.isVisible()) return;
-    // The step may have changed between the check and now; then the next round decides again.
-    if (await skip.isVisible()) await skip.click();
+    const label = await stepOf.textContent();
+    await skip.click();
+    // The skip button of the old step stays clickable until the save finished and the wizard
+    // moved on; only a changed counter (or the summary) proves the step really changed.
+    await expect(stepOf.or(summary)).not.toHaveText(label ?? '');
   }
 }
 
@@ -189,6 +193,8 @@ test('starts from the command palette; ending leaves a checklist on the dashboar
   await expect(wizard(page)).toBeVisible();
   await wizard(page).getByLabel('Dein Name (optional)').fill('Erika');
   await wizard(page).getByRole('button', { name: 'Weiter' }).click();
+  // Closing while "Weiter" still saves would be undone when the wizard moves on to step 2.
+  await expect(wizard(page).getByText('Schritt 2 von')).toBeVisible();
   await wizard(page).getByRole('button', { name: 'Schließen' }).first().click();
   await wizard(page).getByRole('button', { name: 'Einrichtung beenden' }).click();
   await expect(wizard(page)).toHaveCount(0);
@@ -209,7 +215,9 @@ test('starts from the command palette; ending leaves a checklist on the dashboar
   await checklist.getByRole('button', { name: 'Ausblenden' }).click();
   await expect(checklist).toHaveCount(0);
   await page.goto('/settings');
-  await page.getByRole('switch', { name: 'Checkliste auf der Übersicht anzeigen' }).click();
+  const show = page.getByRole('switch', { name: 'Checkliste auf der Übersicht anzeigen' });
+  await show.click();
+  await expect(show).toBeChecked(); // the write is done once the switch reflects it
   await page.goto('/');
   await expect(page.getByTestId('setup-checklist')).toBeVisible();
 });
@@ -221,6 +229,8 @@ test('a profile shows its diff and needs a confirmation before it switches modul
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   const dialog = wizard(page);
   await dialog.getByRole('button', { name: 'Überspringen' }).click(); // basics
+  // Wait for the next step: the old step's skip button is clickable until the wizard moved on.
+  await expect(dialog.getByRole('heading', { name: 'Sync und Wiederherstellung' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Überspringen' }).click(); // sync
   await expect(dialog.getByRole('heading', { name: 'Profil und Module' })).toBeVisible();
   await dialog.getByTestId('profile-minimal').click();
