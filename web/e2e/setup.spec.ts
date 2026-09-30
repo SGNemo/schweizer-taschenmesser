@@ -38,9 +38,13 @@ async function dbName(page: Page) {
 
 async function skipEverything(page: Page) {
   const dialog = wizard(page);
+  const summary = dialog.getByTestId('setup-summary');
+  const skip = dialog.getByRole('button', { name: 'Überspringen' });
   for (let i = 0; i < 20; i++) {
-    if (await dialog.getByTestId('setup-summary').isVisible()) return;
-    await dialog.getByRole('button', { name: 'Überspringen' }).click();
+    // Either the next step (with its skip button) or the summary shows up after each click.
+    await expect(skip.or(summary)).toBeVisible();
+    if (await summary.isVisible()) return;
+    await skip.click();
   }
 }
 
