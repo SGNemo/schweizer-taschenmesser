@@ -28,7 +28,14 @@ export const daysBetween = (a: string, b: string): number =>
   differenceInCalendarDays(parseDate(b), parseDate(a));
 /** ISO weekday: Monday = 1 … Sunday = 7. */
 export const isoWeekday = (s: string): number => getISODay(parseDate(s));
-export const startOfWeekStr = (s: string): string => toDateString(startOfISOWeek(parseDate(s)));
+/** Start of the week containing `s`: Monday (default, ISO) or Sunday (`weekStart` 7). */
+export const startOfWeekStr = (s: string, weekStart: 1 | 7 = 1): string => {
+  const monday = startOfISOWeek(parseDate(s));
+  // Sunday-first weeks start the day before that week's Monday (Sunday itself belongs to the next).
+  if (weekStart === 7)
+    return toDateString(isoWeekday(s) === 7 ? parseDate(s) : addDays(monday, -1));
+  return toDateString(monday);
+};
 export const startOfMonthStr = (s: string): string => `${s.slice(0, 7)}-01`;
 export const endOfMonthStr = (s: string): string =>
   toDateString(new Date(parseDate(s).getFullYear(), parseDate(s).getMonth() + 1, 0));

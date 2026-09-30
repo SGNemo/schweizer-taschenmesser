@@ -6,6 +6,7 @@ import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
 import { Fab, Icon, IconButton, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
+import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
 import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
@@ -152,6 +153,7 @@ export function AppShell() {
       <CommandPalette />
       <ToolsSheet />
       <OnboardingHost />
+      <SetupHost />
       <Toaster />
     </div>
   );

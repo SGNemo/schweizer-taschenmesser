@@ -15,6 +15,7 @@ import { useUiStore, type ThemeChoice } from '@/stores/ui';
 import { Button, Card, HelpHint, SelectField, Switch, TextField } from '@/ui';
 import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
+import { SetupSection } from './settings/SetupSection';
 import { PushSection } from './settings/PushSection';
 import { SyncSection } from './settings/SyncSection';
 import { LocalApiSection } from './settings/LocalApiSection';
@@ -141,6 +142,10 @@ export function Settings() {
       <div className={styles.header}>
         <h1>{t.settings.title}</h1>
       </div>
+      <section className={styles.section} aria-labelledby="setup">
+        <h2 id="setup">{t.setup.title}</h2>
+        <SetupSection />
+      </section>
       <section className={styles.section} aria-labelledby="appearance">
         <h2 id="appearance">{t.settings.appearance}</h2>
         <Card>

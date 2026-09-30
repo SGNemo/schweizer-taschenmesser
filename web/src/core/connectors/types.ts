@@ -10,6 +10,7 @@
 import type { ComponentType } from 'react';
 import type { PlatformKind } from '@/core/platform/types';
 import type { Recurrence } from '@/core/recurrence/types';
+import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
 export type ConnectorAuth = 'oauth-pkce' | 'api-key' | 'file' | 'deeplink' | 'none';
@@ -175,6 +176,8 @@ export interface ConnectorDef {
   /** Explains a limit ("Nur am PC"), shown on platforms that cannot connect. */
   unavailableHint?: string;
   features: ConnectorFeature[];
+  /** Optional steps for the setup assistant; ids must start with `<connector id>.`. */
+  setupSteps?: SetupStepDef[];
   calendar?: CalendarCapability;
   mail?: MailCapability;
   /** Connectors without a login: true once they have what they need (an ICS address …). */

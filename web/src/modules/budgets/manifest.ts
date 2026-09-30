@@ -7,6 +7,7 @@ import { settings } from './settings';
 
 const manifest: ModuleManifest = {
   id: 'budgets',
+  requires: ['finance'],
   name: 'Budgets & Sparziele',
   icon: 'piggy',
   version: 1,
