@@ -1210,6 +1210,42 @@ export const t = {
     calendarTitle: (who: string, what: string) => `Geschenk für ${who}: ${what}`,
     openLink: 'Link öffnen',
   },
+  system: {
+    title: 'Systeminfo',
+    lead: 'Was steckt in diesem Computer und wie ausgelastet ist er? Die Werte werden nur angezeigt: nichts wird gespeichert oder gesendet.',
+    loading: 'Werte werden gelesen …',
+    failed: 'Die Werte konnten nicht gelesen werden.',
+    refresh: 'Alle 3 Sekunden aktualisiert.',
+    refreshNow: 'Jetzt aktualisieren',
+    system: 'System',
+    os: 'Betriebssystem',
+    uptime: 'Läuft seit',
+    uptimeValue: (d: number, h: number, m: number) =>
+      d > 0
+        ? `${d} ${d === 1 ? 'Tag' : 'Tage'}, ${h} Std.`
+        : h > 0
+          ? `${h} Std., ${m} Min.`
+          : `${m} Min.`,
+    cpu: 'Prozessor',
+    cores: (physical: number | null, threads: number) =>
+      physical ? `${physical} Kerne, ${threads} Threads` : `${threads} Threads`,
+    load: (p: number) => `Auslastung ${p} %`,
+    memory: 'Arbeitsspeicher',
+    memoryUsed: (used: string, total: string, p: number) => `${used} von ${total} belegt (${p} %)`,
+    battery: 'Akku',
+    noBattery: 'Kein Akku gefunden.',
+    batteryValue: (p: number | null, charging: boolean, plugged: boolean) =>
+      `${p === null ? 'Ladestand unbekannt' : `${p} %`}${charging ? ', wird geladen' : plugged ? ', am Netz' : ', im Akkubetrieb'}`,
+    gpu: 'Grafik',
+    noGpu: 'Keine Grafikkarte gefunden.',
+    gpuValue: (name: string, mem: string) => `${name} (${mem} Grafikspeicher)`,
+    network: 'Netzwerk (lokale Adressen)',
+    noNetwork: 'Keine Netzwerkverbindung gefunden.',
+    processes: 'Programme mit dem größten Speicherverbrauch',
+    processesHint: 'Nur zur Ansicht. Beenden kannst du Programme im Task-Manager von Windows.',
+    program: 'Programm',
+    instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
+  },
   disk: {
     title: 'Datenträger',
     lead: 'Was belegt den Platz? Scanne ein Laufwerk und erkunde die größten Ordner. Es wird nichts verändert oder hochgeladen.',

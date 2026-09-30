@@ -27,6 +27,8 @@ const APP_COMMANDS: &[&str] = &[
     "disk_delete_plan",
     "disk_delete",
     "disk_delete_cancel",
+    "system_info",
+    "system_processes",
 ];
 
 fn main() {

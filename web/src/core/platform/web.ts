@@ -1,5 +1,6 @@
 import { createFakeDisk } from './fakeDisk';
 import { createFakeLocalApi } from './fakeLocalApi';
+import { createFakeSystem } from './fakeSystem';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
 import type { PlatformKind, PlatformService, SaveFileRequest } from './types';
@@ -145,6 +146,11 @@ export function createWebPlatform(): PlatformService {
             findDuplicates: unsupported,
             cancelDuplicates: unsupported,
           },
+    // E2E builds only: invented facts instead of the native reading.
+    system:
+      import.meta.env.MODE === 'e2e'
+        ? createFakeSystem()
+        : { supported: false, info: unsupported, processes: unsupported },
     lifecycle: { onBackground: onPageHidden },
   };
 }

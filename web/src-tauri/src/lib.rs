@@ -11,6 +11,8 @@ mod oauth;
 #[cfg(desktop)]
 mod portable;
 #[cfg(desktop)]
+mod system;
+#[cfg(desktop)]
 mod update;
 #[cfg(desktop)]
 mod webview2;
@@ -71,6 +73,7 @@ pub fn run() {
         .manage(oauth::OAuthListener::default())
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
+        .manage(system::SystemMonitor::default())
         .invoke_handler(tauri::generate_handler![
             update::check_update,
             update::install_update,
@@ -96,7 +99,9 @@ pub fn run() {
             disk::disk_can_delete,
             disk::disk_delete_plan,
             disk::disk_delete,
-            disk::disk_delete_cancel
+            disk::disk_delete_cancel,
+            system::system_info,
+            system::system_processes
         ]);
 
     #[cfg(windows)]
