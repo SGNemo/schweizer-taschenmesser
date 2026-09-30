@@ -297,7 +297,7 @@ describe('syncCalendars', () => {
   it('never puts token text into the stored message', async () => {
     await connected();
     nextSync = () => {
-      throw new ConnectorError('bad-response', 'x access_token=ya29.abcdefghijklmnop');
+      throw new ConnectorError('bad-response', 'x access_token=ya29.abcdefghijklmnop'); // gitleaks:allow (invented test value)
     };
     await syncCalendars(def);
     const status = await loadStatus('testco');

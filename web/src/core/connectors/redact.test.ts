@@ -12,6 +12,7 @@ describe('redact', () => {
 
   it('removes JSON-style and form-style secrets', () => {
     expect(redact('{"refresh_token":"abc123def456","expires_in":3599}')).not.toContain(
+      // gitleaks:allow (invented test value)
       'abc123def456',
     );
     expect(redact('client_secret=topsecretvalue&grant_type=refresh_token')).toBe(

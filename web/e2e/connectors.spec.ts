@@ -46,7 +46,7 @@ async function useMockSyncServer(page: Page) {
             value: {
               kind: 'selfHosted',
               url: 'https://sync.example.test',
-              token: 'tok-1234567890abcdef',
+              token: 'tok-1234567890abcdef', // gitleaks:allow (invented test value)
             },
           });
           tx.oncomplete = () => resolve();
