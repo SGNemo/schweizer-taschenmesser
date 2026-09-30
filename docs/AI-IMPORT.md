@@ -7,6 +7,7 @@ für dich in die Module des Taschenmessers schreiben. Dafür gibt es zwei Wege:
 |---|---|---|
 | **A. Lokale Schnittstelle** | nur Windows-App | Die KI spricht direkt mit der App auf deinem PC (`http://127.0.0.1:47631`). |
 | **B. JSON einfügen** | überall (Windows, Browser/PWA, Android) | Die KI erzeugt JSON-Text, du fügst ihn im Startdaten-Assistenten ein. |
+| **C. MCP-Werkzeug** | Windows-App + Claude Desktop / Claude Code | wie A, aber Claude bekommt fertige Werkzeuge (`list_modules`, `import_items` …). |
 
 In beiden Fällen gilt:
 
@@ -55,8 +56,9 @@ getrennt dazu, am besten als Umgebungsvariable statt im Chat:
 
 - **Claude Code / Terminal (PowerShell):** `$env:TASCHENMESSER_TOKEN = "tm_…"` und im Prompt sagen, dass der Schlüssel in
   `TASCHENMESSER_TOKEN` steht.
-- **Claude Desktop, ChatGPT & Co.:** Diese Programme können `127.0.0.1` meist nicht selbst aufrufen. Nutze dort Weg B
-  (JSON einfügen) oder ein Werkzeug, das lokale HTTP-Aufrufe ausführen darf.
+- **Claude Desktop / Claude Code als Werkzeug:** mit dem kleinen MCP-Server aus diesem Repo (siehe
+  [„C. Als Werkzeug in Claude (MCP)“](#c-als-werkzeug-in-claude-mcp)) – die KI ruft die Schnittstelle dann selbst auf.
+- **ChatGPT & Co.:** Diese Programme können `127.0.0.1` meist nicht aufrufen. Nutze dort Weg B (JSON einfügen).
 
 #### Der fertige Prompt
 
@@ -196,6 +198,64 @@ Je Eintrag steht in `items[]` ein `status`: `ok`, `duplicate` (schon vorhanden),
 3. Die Antwort der KI (`{"items": [ … ]}`) ins Feld einfügen oder als `.json`-Datei wählen → **„Vorschau anzeigen“**.
 4. Fehlerhafte Einträge stehen mit Grund in der Vorschau („Nicht importierbar“); gib sie der KI zur Korrektur zurück.
 5. Häkchen prüfen → importieren. „Import rückgängig machen“ findest du im selben Assistenten unter „Zuletzt importiert“.
+
+---
+
+## C. Als Werkzeug in Claude (MCP)
+
+Der Ordner [`mcp/`](../mcp) enthält einen kleinen MCP-Server (stdio) – eine dünne Hülle um dieselbe Schnittstelle wie in A.
+Er hat keinen eigenen Datenzugriff: Rechte, Prüfung, Vorschau und Rückgängig macht weiterhin die App. Den Schlüssel sendet er
+nur an `127.0.0.1`/`localhost`; jede andere Adresse lehnt er ab.
+
+**Voraussetzungen:** Windows-App mit eingeschalteter Schnittstelle und einem Zugang (siehe A), [Node.js](https://nodejs.org) ab
+Version 22 und eine Kopie dieses Repos.
+
+1. Bauen (einmalig, in PowerShell im Repo-Ordner):
+
+   ```powershell
+   cd mcp
+   npm ci
+   npm run build
+   ```
+
+2. **Claude Code:**
+
+   ```powershell
+   claude mcp add --env TASCHENMESSER_TOKEN=tm_… --transport stdio taschenmesser -- node C:\Pfad\zum\Repo\mcp\dist\index.js
+   ```
+
+   **Claude Desktop:** *Einstellungen → Entwickler → Konfiguration bearbeiten* (`claude_desktop_config.json`), dann Claude
+   Desktop neu starten:
+
+   ```json
+   {
+     "mcpServers": {
+       "taschenmesser": {
+         "command": "node",
+         "args": ["C:\\Pfad\\zum\\Repo\\mcp\\dist\\index.js"],
+         "env": { "TASCHENMESSER_TOKEN": "tm_…" }
+       }
+     }
+   }
+   ```
+
+   Anderer Port: zusätzlich `TASCHENMESSER_URL` setzen, z. B. `http://127.0.0.1:50000`.
+
+3. In Claude z. B. schreiben: *„Nutze das Werkzeug taschenmesser. Lies mit list_modules, was erlaubt ist, und übertrage die
+   Aufgaben aus der angehängten Liste nach ToDos – erst mit dryRun prüfen, dann senden.“* Danach in der App bestätigen.
+
+| Werkzeug | Aufruf der Schnittstelle |
+|---|---|
+| `list_modules` | `GET /v1/modules` |
+| `get_schema` | `GET /v1/openapi.json` |
+| `read_items` | `GET /v1/{modul}/items` |
+| `import_items` (`dryRun` ist Pflicht) | `POST /v1/{modul}/import` – ohne dryRun mit automatischem `Idempotency-Key` |
+| `list_batches` · `get_batch` | `GET /v1/batches[/{id}]` |
+| `commit_batch` | `POST /v1/batches/{id}/commit` (nur mit „Automatisch übernehmen“) |
+| `undo_batch` | `DELETE /v1/batches/{id}` |
+
+Der Schlüssel steht in der Konfigurationsdatei deines KI-Programms im Klartext – gib dem Zugang deshalb nur die nötigen
+Rechte und eine begrenzte Gültigkeit. Der MCP-Server ist (noch) nicht Teil der Release-Downloads.
 
 ---
 

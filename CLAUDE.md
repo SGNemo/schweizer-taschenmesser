@@ -10,6 +10,7 @@ Deep design notes live in [`docs/architecture.md`](docs/architecture.md) (unchan
 - `web/src-tauri/` – native shell (Tauri 2, Rust) around the web app: portable Windows exe, Android APK. Thin by design.
 - `web/` – the PWA (Vite, React 19, TypeScript strict). Own `package.json`.
 - `server/` – sync server (Fastify 5 + better-sqlite3, own `package.json`, Dockerfile, compose). Separate project, no shared package.
+- `mcp/` – MCP server (stdio, `@modelcontextprotocol/sdk`) wrapping the local import API; own `package.json`, no data access of its own.
 - `contract/` – JSON fixtures of the sync merge rule, read by the tests of both projects.
 
 
@@ -29,6 +30,8 @@ Deep design notes live in [`docs/architecture.md`](docs/architecture.md) (unchan
 | `npm run tauri -- dev` / `build` | Native app (needs Rust; on Linux `libwebkit2gtk-4.1-dev libgtk-3-dev …`). `tauri build --debug --no-bundle` compiles the binary with the embedded frontend |
 | `npm run version:check` / `version:sync` / `version:set -- <semver>` | Version consistency, Cargo mirror, release bump (see *Versioning*) |
 | `npm run changelog -- --version <x.y.z>` | Release notes from Conventional Commits |
+
+MCP wrapper (run in `mcp/`): `npm test`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build` (→ `dist/index.js`).
 
 Server (run in `server/`): `npm test` (Vitest + `fastify.inject`, in-memory SQLite), `npm run typecheck`, `npm run lint`, `npm run build` (→ `dist/`), `npm start`, `npm run dev`.
 
