@@ -1,10 +1,27 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions of the main window: only what core/platform/tauri uses.",
-  "windows": ["main"],
+  "description": "Permissions of the main window: only what core/platform/tauri uses. App commands are granted one by one (build.rs).",
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
+    "allow-check-update",
+    "allow-install-update",
+    "allow-oauth-listen-start",
+    "allow-oauth-listen-wait",
+    "allow-local-api-start",
+    "allow-local-api-stop",
+    "allow-local-api-set-tokens",
+    "allow-local-api-respond",
+    "allow-capture-set-hotkey",
+    "allow-desktop-set-close-to-tray",
+    "allow-desktop-set-tray-labels",
+    "allow-desktop-set-autostart",
+    "allow-desktop-autostart-enabled",
+    "allow-desktop-info",
+    "allow-desktop-show-main",
     "notification:default",
     "dialog:allow-save",
     "dialog:allow-open",
@@ -18,7 +35,14 @@
     "fs:allow-read-dir",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "$APPDATA/**" }, { "path": "$APPDATA" }]
+      "allow": [
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$APPDATA"
+        }
+      ]
     },
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
@@ -29,10 +53,18 @@
     {
       "identifier": "http:default",
       "allow": [
-        { "url": "https://*" },
-        { "url": "http://*" },
-        { "url": "https://*:*" },
-        { "url": "http://*:*" }
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://*"
+        },
+        {
+          "url": "https://*:*"
+        },
+        {
+          "url": "http://*:*"
+        }
       ]
     }
   ]
