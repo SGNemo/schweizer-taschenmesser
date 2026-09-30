@@ -12,13 +12,19 @@ export const taskSchema = z.object({
   title: z.string().min(1),
   done: z.boolean().default(false),
   /** 0 = none, 1 = low, 2 = medium, 3 = high. */
-  priority: z.number().int().min(0).max(3).default(0),
+  priority: z
+    .number()
+    .int()
+    .min(0)
+    .max(3)
+    .default(0)
+    .meta({ description: '0 = keine, 1 = niedrig, 2 = mittel, 3 = hoch' }),
   dueDate: z.string().regex(DATE_RE).optional(),
   /** Set for subtasks (one level only). */
   parentId: z.string().optional(),
   note: z.string().optional(),
   order: z.number().default(0),
-  completedAt: z.number().optional(),
+  completedAt: z.number().optional().meta({ internal: true }),
 });
 
 export type TodoList = z.output<typeof listSchema>;

@@ -25,7 +25,7 @@ export async function buildPreview(
   candidates: ImportCandidate[],
 ): Promise<PreviewRow[]> {
   const existing = new Map<string, Set<string>>();
-  for (const collection of new Set(candidates.map((c) => c.collection))) {
+  for (const collection of new Set(candidates.filter((c) => !c.error).map((c) => c.collection))) {
     if (!(collection in manifest.dataSchema.collections))
       throw new ImportError('unknown-collection');
     existing.set(collection, await runtime.existingKeys(collection));
@@ -33,12 +33,13 @@ export async function buildPreview(
   const seen = new Set<string>();
   return candidates.map((candidate, index) => {
     const key = `${candidate.collection}\u0000${candidate.dedupeKey}`;
-    const duplicate = existing.get(candidate.collection)!.has(candidate.dedupeKey) || seen.has(key);
+    const duplicate =
+      (existing.get(candidate.collection)?.has(candidate.dedupeKey) ?? false) || seen.has(key);
     seen.add(key);
-    const parsed = manifest.dataSchema.collections[candidate.collection]!.schema.safeParse(
-      candidate.data,
-    );
-    const invalid = parsed.success ? undefined : issueText(parsed.error);
+    const schema = manifest.dataSchema.collections[candidate.collection]?.schema;
+    const parsed = schema?.safeParse(candidate.data);
+    const invalid =
+      candidate.error ?? (parsed && !parsed.success ? issueText(parsed.error) : undefined);
     return { index, candidate, duplicate, invalid, selected: !duplicate && !invalid };
   });
 }

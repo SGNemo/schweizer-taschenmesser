@@ -66,6 +66,7 @@ export function createWebPlatform(): PlatformService {
       return 'saved';
     },
     clipboard: {
+      writeText: (text) => navigator.clipboard.writeText(text),
       writeSensitive: sensitiveClipboard({
         write: (text) => navigator.clipboard.writeText(text),
         read: () => navigator.clipboard.readText(),

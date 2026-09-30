@@ -16,14 +16,14 @@ export const categorySchema = z.object({
 export const transactionSchema = z.object({
   accountId: z.string().min(1),
   categoryId: z.string().optional(),
-  kind: z.enum(['expense', 'income']),
+  kind: z.enum(['expense', 'income']).meta({ description: 'expense = Ausgabe, income = Einnahme' }),
   /** Always positive; the kind decides the direction. Cents. */
   amountMinor: z.number().int().min(1),
   date: z.string().regex(DATE_RE),
   payee: z.string().optional(),
   note: z.string().optional(),
   /** Origin of automatically booked entries, e.g. "invoice:<id>". */
-  sourceRef: z.string().optional(),
+  sourceRef: z.string().optional().meta({ internal: true }),
 });
 
 export type Account = z.output<typeof accountSchema>;
