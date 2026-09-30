@@ -152,6 +152,20 @@ describe('tauri platform', () => {
         at: { date: new Date(1_800_000_000_000), repeating: false, allowWhileIdle: true },
       },
       extra: { url: '/reminders' },
+      icon: 'ic_notification',
+      iconColor: '#F26A1E',
+    });
+  });
+
+  it('Android notifications carry the monochrome status-bar icon, desktop ones do not', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)');
+    const p = await createTauriPlatform();
+    await p.notifications.show({ title: 'Miete', body: 'heute', tag: 'k' });
+    expect(mocks.sendNotification).toHaveBeenCalledWith({
+      title: 'Miete',
+      body: 'heute',
+      icon: 'ic_notification',
+      iconColor: '#F26A1E',
     });
   });
 
