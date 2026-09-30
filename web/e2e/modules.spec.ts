@@ -28,6 +28,8 @@ test.describe('module library', () => {
       const card = page.getByTestId(`module-${id}`);
       await card.getByRole('button', { name: 'Deaktivieren' }).click();
       await page.getByRole('button', { name: 'Daten behalten (ausgeblendet)' }).click();
+      // the write is finished when the dialog has closed (a `goto` before that can lose it)
+      await expect(page.getByRole('dialog')).toBeHidden();
       await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
     }
     await page.goto('/');
