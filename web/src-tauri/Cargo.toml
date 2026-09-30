@@ -35,6 +35,8 @@ serde_json = "1"
 tauri-plugin-updater = "2.13"
 minisign-verify = "0.2"
 base64 = "0.22"
+# Local AI import API (loopback only, off by default; src/local_api.rs).
+taschenmesser-local-api = { path = "crates/local-api" }
 
 # WebView2 runtime detection and the "runtime missing" message box (src/webview2.rs).
 [target.'cfg(windows)'.dependencies]

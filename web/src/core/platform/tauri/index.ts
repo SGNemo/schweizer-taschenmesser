@@ -24,6 +24,7 @@ import type {
 } from '@/core/notifications/service';
 import { onPageHidden, sensitiveClipboard } from '../web';
 import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
+import { createLocalApi } from './localApi';
 import { createSecureParts } from './secureStore';
 import { createUpdater } from './updater';
 
@@ -155,6 +156,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
         };
       },
     },
+    localApi: createLocalApi(kind === 'desktop'),
     ...(await createSecureParts(kind)), // secrets (OS keystore), biometrics, screen protection
     lifecycle: { onBackground: onPageHidden },
   };

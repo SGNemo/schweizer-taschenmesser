@@ -67,6 +67,38 @@ export interface OAuthLoopback {
   }>;
 }
 
+/** A request to the local AI import API that passed the native checks (Host, Origin, token, limits). */
+export interface LocalApiRequest {
+  id: number;
+  /** Id of the token that authenticated it (never the token itself). */
+  tokenId: string;
+  method: string;
+  path: string;
+  query: string;
+  idempotencyKey: string | null;
+  body: string | null;
+}
+
+export interface LocalApiServerToken {
+  id: string;
+  /** SHA-256 of the token, hex. */
+  hash: string;
+  expiresAt: number | null;
+}
+
+/** Loopback-only HTTP server of the desktop shell (`src-tauri/crates/local-api`); elsewhere unsupported. */
+export interface LocalApiService {
+  supported: boolean;
+  /** Starts (or restarts) on `127.0.0.1:<port>`; resolves with the bound port. Errors: `port-in-use`, `port-denied`, `listen-failed`. */
+  start(
+    port: number,
+    tokens: LocalApiServerToken[],
+    onRequest: (req: LocalApiRequest) => Promise<{ status: number; body: string }>,
+  ): Promise<number>;
+  setTokens(tokens: LocalApiServerToken[]): Promise<void>;
+  stop(): Promise<void>;
+}
+
 export interface PlatformService {
   readonly kind: PlatformKind;
   /** True inside the native shell (installed app), false in a browser tab / PWA. */
@@ -82,6 +114,7 @@ export interface PlatformService {
   biometrics: BiometricService;
   screen: ScreenService;
   oauth: OAuthLoopback;
+  localApi: LocalApiService;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {
