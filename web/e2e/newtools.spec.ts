@@ -186,12 +186,10 @@ test('pdf tool: merges, selects pages and rotates on the device', async ({ page 
 test('pdf tool: a file that is not a PDF gets a clear message', async ({ page }) => {
   const sheet = await openTool(page, 'pdf', 'PDF-Werkzeug');
   await sheet.getByRole('button', { name: 'Seiten', exact: true }).click();
-  await sheet
-    .locator('#pdf-single-input')
-    .setInputFiles({
-      name: 'kaputt.pdf',
-      mimeType: 'application/pdf',
-      buffer: Buffer.from('kein pdf'),
-    });
+  await sheet.locator('#pdf-single-input').setInputFiles({
+    name: 'kaputt.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('kein pdf'),
+  });
   await expect(sheet.getByRole('alert')).toContainText('kein lesbares PDF');
 });
