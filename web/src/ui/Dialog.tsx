@@ -10,8 +10,8 @@ interface DialogProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
-  /** `sheet` slides up from the bottom on phones. */
-  variant?: 'center' | 'sheet';
+  /** `sheet` slides up from the bottom on phones; `full` fills the screen (setup assistant). */
+  variant?: 'center' | 'sheet' | 'full';
 }
 
 /** Modal built on the native <dialog>: focus trap, Esc handling and inert background for free. */
@@ -43,7 +43,11 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      className={[styles.dialog, variant === 'sheet' ? styles.sheet : ''].join(' ')}
+      className={[
+        styles.dialog,
+        variant === 'sheet' ? styles.sheet : '',
+        variant === 'full' ? styles.full : '',
+      ].join(' ')}
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();

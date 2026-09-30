@@ -64,3 +64,20 @@
     opacity: 0;
   }
 }
+.full {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.full .inner {
+  min-height: 100dvh;
+  padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+}
+.full .footer {
+  justify-content: space-between;
+  margin-top: auto;
+}
