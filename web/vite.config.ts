@@ -57,6 +57,15 @@ export default defineConfig({
       },
     }),
   ],
+  // Two entries: the app and the small quick-capture window of the desktop shell (capture.html).
+  build: {
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        capture: fileURLToPath(new URL('./capture.html', import.meta.url)),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

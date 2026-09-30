@@ -10,6 +10,7 @@ import { startUpdateChecks } from '@/core/update/controller';
 import { startNotificationScheduler } from '@/core/notifications/scheduler';
 import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
+import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
 import { App } from './App';
 import './ui/global.css';
 
@@ -29,5 +30,6 @@ void initPlatform().then(() => {
     startUpdateChecks();
     startConnectorSync();
     startLocalApi();
+    void startQuickCaptureDesktop();
   });
 });

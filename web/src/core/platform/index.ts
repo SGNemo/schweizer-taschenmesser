@@ -3,6 +3,9 @@ import type { PlatformService } from './types';
 
 export type {
   BiometricPromptText,
+  DesktopService,
+  HotkeyError,
+  TrayLabels,
   BiometricService,
   PlatformKind,
   PlatformService,
@@ -30,6 +33,19 @@ export async function initPlatform(): Promise<PlatformService> {
   if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
     const { createTauriPlatform } = await import('./tauri');
     current = await createTauriPlatform();
+  }
+  return current;
+}
+
+/**
+ * The quick-capture window is a second webview with a much smaller permission set (no
+ * notifications, files or updater). It therefore gets the plain web platform plus the desktop
+ * commands it is allowed to call, never the full native platform.
+ */
+export async function initCapturePlatform(): Promise<PlatformService> {
+  if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+    const { createDesktopService } = await import('./tauri/desktop');
+    current = { ...createWebPlatform(), desktop: createDesktopService(true) };
   }
   return current;
 }

@@ -137,6 +137,46 @@ export const t = {
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,
     noTargets: 'Es ist kein Zielmodul eingeschaltet.',
+    tray: {
+      capture: 'Erfassen',
+      open: 'App öffnen',
+      quit: 'Beenden',
+      tooltip: 'Taschenmesser',
+    },
+    window: {
+      hint: 'Enter speichert · Tab wechselt den Typ · Esc schließt',
+    },
+    settings: {
+      title: 'Schnellerfassung',
+      intro:
+        'Einträge in Sekunden anlegen: tippe z. B. „morgen 15 Uhr Zahnarzt“, die App erkennt Typ und Datum lokal, ohne Netzwerk.',
+      defaultType: 'Standardziel für Text ohne Hinweis',
+      hotkey: 'Tastenkürzel',
+      hotkeyHint: 'Öffnet das Eingabefenster von überall, solange die App läuft.',
+      hotkeyRecord: 'Neue Tastenkombination aufnehmen',
+      hotkeyRecording: 'Drücke die Tastenkombination …',
+      hotkeyOff: 'Aus',
+      hotkeyClear: 'Tastenkürzel entfernen',
+      hotkeyNeedsModifier: 'Bitte mindestens Strg, Alt oder Umschalt zusätzlich drücken.',
+      hotkeyErrors: {
+        invalid: 'Diese Tastenkombination wird nicht unterstützt.',
+        taken:
+          'Diese Tastenkombination ist schon von einem anderen Programm belegt. Wähle eine andere.',
+        failed: 'Das Tastenkürzel konnte nicht registriert werden.',
+      },
+      hotkeyStartupError: (keys: string) =>
+        `Das Tastenkürzel ${keys} konnte nicht registriert werden.`,
+      closeToTray: 'In den Tray minimieren statt beenden',
+      autostart: 'Mit Windows starten',
+      autostartPortable:
+        'Die App läuft aus einem Ordner mit „data“ (z. B. USB-Stick). Der Autostart-Eintrag zeigt auf diesen Ort; ist der Stick beim Anmelden nicht da, startet nichts.',
+      autostartFailed: 'Der Autostart konnte nicht geändert werden.',
+      clipboard: 'Zwischenablage beim Öffnen einfügen',
+      clipboardHint: 'Liest die Zwischenablage nur, wenn du das einschaltest. Standard: aus.',
+      trayHelp:
+        'Das Tastenkürzel funktioniert nur, solange die App läuft. Mit „In den Tray minimieren“ bleibt sie beim Schließen im Hintergrund und das Kürzel bleibt aktiv.',
+      desktopOnly: 'Tastenkürzel, Tray und Autostart gibt es nur in der Windows-App.',
+    },
     share: {
       title: 'Teilen',
       suggestion: 'Vorschlag',

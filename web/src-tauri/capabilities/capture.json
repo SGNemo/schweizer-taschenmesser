@@ -2,16 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "capture",
   "description": "The quick-capture window: hide itself and read the clipboard when the user enabled that. It has no file, network, dialog or update access.",
-  "windows": [
-    "capture"
-  ],
-  "platforms": [
-    "windows",
-    "macOS",
-    "linux"
-  ],
-  "permissions": [
-    "allow-capture-hide",
-    "allow-capture-read-clipboard"
-  ]
+  "windows": ["capture"],
+  "platforms": ["windows", "macOS", "linux"],
+  "permissions": ["allow-capture-hide", "allow-capture-read-clipboard"]
 }
