@@ -452,7 +452,9 @@ describe('automatic backups', () => {
 describe('no secrets in backups', () => {
   it('device-local secrets never reach a plain or encrypted backup', async () => {
     const db = newDb();
-    await db.table('_secrets').put({ key: 'syncConfig', value: { token: 'invented-sync-credential' } });
+    await db
+      .table('_secrets')
+      .put({ key: 'syncConfig', value: { token: 'invented-sync-credential' } });
     await db.table('_secrets').put({ key: 'secret:ai.claude', value: 'sk-test-fake-key' });
     await db.table('_meta').put({ key: 'backup.auto.config', value: {} });
     const backup = await createBackup(db);
