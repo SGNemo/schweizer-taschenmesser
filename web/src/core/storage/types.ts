@@ -19,6 +19,8 @@ export interface ApplyResult {
   records: number;
   /** Ops for collections this app version does not know. */
   skippedUnknown: number;
+  /** Fields where a remote edit met a local edit that was not synced yet (logged for review). */
+  conflicts?: number;
 }
 
 /**

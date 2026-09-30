@@ -182,6 +182,8 @@ export interface PlatformService {
     /** File names inside `dir` (empty when it does not exist). */
     list(dir: string): Promise<string[]>;
     remove(path: string): Promise<void>;
+    /** Reads a text file from the app's data folder (native only; optional so existing fakes keep compiling). */
+    read?(path: string): Promise<string>;
   };
   /** Self-update of the installed app; `supported` is false in the browser. */
   updater: UpdateService;

@@ -13,6 +13,8 @@ export const SYSTEM_TABLES = {
   _aiUsage: { stores: '++id, at', synced: false },
   /** Start-data wizard: one row per import batch (basis of "Import rückgängig machen"). Local only. */
   _imports: { stores: 'id, createdAt, moduleId', synced: false },
+  /** Sync conflicts where last-write-wins overwrote a value (kept for review/restore). Local only. */
+  _conflicts: { stores: '++id, at, status', synced: false },
   _settings: { stores: 'id, updatedAt', synced: true },
   _modules: { stores: 'id, updatedAt', synced: true },
 } as const;

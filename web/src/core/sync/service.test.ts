@@ -35,7 +35,7 @@ function device(): { db: TaschenmesserDB; repo: Repo<Entry>; deps: SyncServiceDe
       database,
       storage: new DexieStorageAdapter(database),
       remote: (_url, token) => server.remote(token),
-      iterations: 1000,
+      kdf: { m: 8, t: 1, p: 1 },
     },
   };
 }

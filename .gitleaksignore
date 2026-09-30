@@ -13,3 +13,4 @@ e9a2e525763149bd70e4a1161ef439509eb128be:web/src/core/connectors/redact.test.ts:
 40b263bcfd1ba185b6746d5e7297eedc4315f98a:web/e2e/connectors.spec.ts:generic-api-key:49
 40b263bcfd1ba185b6746d5e7297eedc4315f98a:web/src/core/connectors/service.test.ts:generic-api-key:300
 2744cf2a64243c36b01545b7443cc3be22f22c5f:web/e2e/news.spec.ts:generic-api-key:36
+33615e21593df62e8d9b0aacfca03b366c5fa543:web/src/core/backup/hardening.test.ts:generic-api-key:455

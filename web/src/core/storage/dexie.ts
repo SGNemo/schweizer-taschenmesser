@@ -3,7 +3,8 @@ import { getDeviceContext } from '@/core/db/device';
 import { rwTransaction } from '@/core/db/tx';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
-import { mergeOps, recordToOps, type SyncRow } from '@/core/sync/ops';
+import { findConflicts, mergeOps, recordToOps, type SyncRow } from '@/core/sync/ops';
+import { conflictRows } from '@/core/sync/conflictLog';
 import type { FieldOp } from '@/core/sync/types';
 import { now } from '@/core/time/now';
 import type { ApplyResult, OutboxBatch, OutboxEntry, StorageAdapter } from './types';
@@ -70,7 +71,7 @@ export class DexieStorageAdapter implements StorageAdapter {
   }
 
   async applyRemote(ops: FieldOp[], opts: { markDirty?: boolean } = {}): Promise<ApplyResult> {
-    const result: ApplyResult = { applied: 0, records: 0, skippedUnknown: 0 };
+    const result: ApplyResult = { applied: 0, records: 0, skippedUnknown: 0, conflicts: 0 };
     const groups = new Map<string, { collection: string; id: string; ops: FieldOp[] }>();
     let newest = '';
     for (const op of ops) {
@@ -87,19 +88,30 @@ export class DexieStorageAdapter implements StorageAdapter {
     if (groups.size === 0) return result;
 
     // Later local edits must sort after everything seen from remote (also with a skewed clock).
-    const { clock } = await getDeviceContext(this.database);
+    const { clock, deviceId } = await getDeviceContext(this.database);
     if (newest) clock.receive(newest);
 
     const all = [...groups.values()];
     for (let i = 0; i < all.length; i += APPLY_CHUNK) {
       const chunk = all.slice(i, i + APPLY_CHUNK);
       const names = [...new Set(chunk.map((g) => g.collection))];
-      const stores = [...names.map((n) => this.database.table(n)), this.outbox()];
+      const conflictTable = this.database.table('_conflicts');
+      const stores = [...names.map((n) => this.database.table(n)), this.outbox(), conflictTable];
       await rwTransaction(this.database, stores, async () => {
         const dirty: OutboxRow[] = [];
-        for (const g of chunk) {
+        // A record with unsynced local edits that meets a remote edit of the same field is a conflict
+        // (restores pass `markDirty` and are deliberate, so they are not logged).
+        const queued = opts.markDirty
+          ? []
+          : await this.outbox().bulkGet(chunk.map((g): [string, string] => [g.collection, g.id]));
+        const found: ReturnType<typeof conflictRows> = [];
+        for (const [i, g] of chunk.entries()) {
           const table = this.database.table<SyncRow, string>(g.collection);
           const existing = await table.get(g.id);
+          if (queued[i] && existing)
+            found.push(
+              ...conflictRows(g.collection, g.id, findConflicts(existing, g.ops, deviceId), now()),
+            );
           const { row, changed } = mergeOps(existing, g.id, g.ops);
           if (!changed) continue;
           await table.put(row);
@@ -107,6 +119,10 @@ export class DexieStorageAdapter implements StorageAdapter {
           result.applied += g.ops.length;
           if (opts.markDirty)
             dirty.push({ collection: g.collection, id: g.id, rev: 0, queuedAt: now() });
+        }
+        if (found.length) {
+          await conflictTable.bulkAdd(found);
+          result.conflicts! += found.length;
         }
         if (dirty.length) {
           const prev = await this.outbox().bulkGet(dirty.map((d) => [d.collection, d.id]));

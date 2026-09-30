@@ -50,6 +50,8 @@ const app = await buildApp({
   corsOrigins: origins.includes('*') ? '*' : origins,
   webDir: env.WEB_DIR ? resolve(env.WEB_DIR) : undefined,
   rateLimit: env.RATE_LIMIT ? Number(env.RATE_LIMIT) : undefined,
+  trustProxy: env.TRUST_PROXY === 'true',
+  authFailureLimit: env.AUTH_FAILURE_LIMIT ? Number(env.AUTH_FAILURE_LIMIT) : undefined,
   logger: true,
 });
 
