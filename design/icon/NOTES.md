@@ -4,5 +4,6 @@
 - Round 2: C4 (rounded tile instead of circle) is "more modern"; fish should lean more towards the top-right corner.
 - Round 3: tilted variants C5 (25°), C6 (35°), C7 (45°) – C6 chosen.
 - Round 4: C6 refined one change at a time (C8 eye, C9 stripes, C10 deeper orange, C11 own small-size artwork) – C8 chosen.
-- Round 5: C8 refined (C12 deeper orange, C13 wider stripes, C14 eye r 20, C15 small-size artwork) – choice pending.
+- Round 5: C8 refined (C12 deeper orange, C13 wider stripes, C14 eye r 20, C15 small-size artwork) – C12 chosen.
+- Round 6: C12 refined (C16 wider stripes, C17 small-size artwork, C18 fish 88 %) – choice pending.
 - Wordmark: W2 (orange Nunito letters between a fish head and a tail fin, `wordmark.mjs` concept `headfin`) is taken for now; bones (G1–G3) and script (S1–S3) stay in round 3 for a later, targeted pass.
