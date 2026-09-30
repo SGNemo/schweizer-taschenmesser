@@ -18,21 +18,27 @@
   display: inline-flex;
   /* Pages are flex columns: keep the switch as wide as its buttons. */
   align-self: flex-start;
-  border: 1px solid var(--border);
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
-  overflow: hidden;
   background: var(--surface);
 }
 .segment button {
-  min-height: var(--touch);
+  min-height: calc(var(--touch) - 8px);
   padding: 0 var(--space-4);
   border: 0;
+  border-radius: var(--radius-full);
   background: none;
   color: inherit;
   cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+.segment button:hover:not([aria-pressed='true']) {
+  background: var(--surface-2);
 }
 .segment button[aria-pressed='true'] {
-  background: var(--accent);
+  background: var(--accent-gradient);
   color: var(--accent-contrast);
   font-weight: 600;
 }
@@ -109,12 +115,15 @@
   align-items: center;
   min-height: 28px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
   background: var(--surface);
   color: var(--text-muted);
   font: inherit;
   font-size: var(--text-sm);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
 }
 button.chip {
   min-height: var(--touch);
@@ -137,7 +146,7 @@ button.chip[aria-pressed='true'] {
 .statValue {
   font-size: var(--text-xl);
   font-weight: 650;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: var(--font-num);
 }
 .progress {
   width: 100%;
@@ -148,7 +157,9 @@ button.chip[aria-pressed='true'] {
 }
 .progressBar {
   height: 100%;
-  background: var(--accent);
+  background: var(--accent-gradient);
+  border-radius: inherit;
+  transition: width var(--dur-slow) var(--ease-out);
 }
 .progressOver {
   background: var(--danger);

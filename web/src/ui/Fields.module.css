@@ -11,10 +11,18 @@
   min-width: 0;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--surface);
   width: 100%;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
+}
+.control:focus-visible {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent);
 }
 .control[aria-invalid='true'] {
   border-color: var(--danger);
@@ -52,13 +60,15 @@
   width: 3rem;
   height: 1.75rem;
   border-radius: var(--radius-full);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   background: var(--surface-2);
   cursor: pointer;
-  transition: background-color var(--dur) var(--ease);
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
 }
 .track[aria-checked='true'] {
-  background: var(--accent);
+  background: var(--accent-gradient);
   border-color: var(--accent);
 }
 .thumb {
@@ -70,7 +80,7 @@
   border-radius: 50%;
   background: var(--surface);
   box-shadow: var(--shadow-1);
-  transition: transform var(--dur) var(--ease);
+  transition: transform var(--dur) var(--ease-out);
 }
 .track[aria-checked='true'] .thumb {
   transform: translateX(1.25rem);

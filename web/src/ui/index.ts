@@ -2,7 +2,7 @@ export { Button, IconButton } from './Button';
 export { Card } from './Card';
 export { Dialog } from './Dialog';
 export { TextField, TextArea, SelectField, Checkbox, Switch } from './Fields';
-export { Badge, EmptyState, Fab, Toaster } from './Misc';
+export { Badge, EmptyState, Fab, Skeleton, Toaster } from './Misc';
 export { HelpHint } from './HelpHint';
 export { Icon } from './icons';
 export { Logo } from './Logo';

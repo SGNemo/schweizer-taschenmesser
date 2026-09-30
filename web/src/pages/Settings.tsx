@@ -11,7 +11,7 @@ import { visibleManifests } from '@/core/modules/registry';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
-import { useUiStore, type ThemeChoice } from '@/stores/ui';
+import { ACCENTS, useUiStore, type AccentChoice, type ThemeChoice } from '@/stores/ui';
 import { Button, Card, HelpHint, SelectField, Switch, TextField } from '@/ui';
 import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
@@ -129,6 +129,8 @@ function NotificationsCard() {
 
 export function Settings() {
   const theme = useUiStore((s) => s.theme);
+  const accent = useUiStore((s) => s.accent);
+  const setAccent = useUiStore((s) => s.setAccent);
   const setTheme = useUiStore((s) => s.setTheme);
   const states = useModuleStates();
   const withSettings = visibleManifests.filter(
@@ -149,15 +151,28 @@ export function Settings() {
       <section className={styles.section} aria-labelledby="appearance">
         <h2 id="appearance">{t.settings.appearance}</h2>
         <Card>
-          <SelectField
-            label={t.settings.theme}
-            value={theme}
-            onChange={(e) => setTheme(e.target.value as ThemeChoice)}
-          >
-            <option value="system">{t.settings.themeSystem}</option>
-            <option value="light">{t.settings.themeLight}</option>
-            <option value="dark">{t.settings.themeDark}</option>
-          </SelectField>
+          <div className={styles.appearance}>
+            <SelectField
+              label={t.settings.theme}
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as ThemeChoice)}
+            >
+              <option value="system">{t.settings.themeSystem}</option>
+              <option value="light">{t.settings.themeLight}</option>
+              <option value="dark">{t.settings.themeDark}</option>
+            </SelectField>
+            <SelectField
+              label={t.settings.accent}
+              value={accent}
+              onChange={(e) => setAccent(e.target.value as AccentChoice)}
+            >
+              {ACCENTS.map((a) => (
+                <option key={a} value={a}>
+                  {t.settings.accentOptions[a]}
+                </option>
+              ))}
+            </SelectField>
+          </div>
         </Card>
       </section>
       <section className={styles.section} aria-labelledby="notifications">

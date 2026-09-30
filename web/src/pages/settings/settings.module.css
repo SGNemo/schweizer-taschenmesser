@@ -102,3 +102,7 @@
   display: grid;
   gap: var(--space-1);
 }
+.appearance {
+  display: grid;
+  gap: var(--space-4);
+}

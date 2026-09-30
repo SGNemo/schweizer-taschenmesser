@@ -62,6 +62,13 @@ export const t = {
     themeSystem: 'System',
     themeLight: 'Hell',
     themeDark: 'Dunkel',
+    accent: 'Akzentfarbe',
+    accentOptions: {
+      orange: 'Nemo-Orange',
+      teal: 'Türkis',
+      coral: 'Koralle',
+      lagoon: 'Lagune',
+    },
     modules: 'Module',
     noModuleSettings: 'Aktive Module haben keine eigenen Einstellungen.',
   },
