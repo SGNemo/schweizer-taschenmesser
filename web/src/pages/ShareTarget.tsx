@@ -1,5 +1,7 @@
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
+import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
+import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Card, EmptyState, Icon, type IconName } from '@/ui';
 import styles from './Page.module.css';
@@ -51,7 +53,15 @@ const TARGETS: Target[] = [
 export function ShareTarget() {
   const [params] = useSearchParams();
   const states = useModuleStates();
+  const navigate = useNavigate();
   const content = sharedContent(params);
+  // The link is dropped when the text already contains it.
+  const parts = [content.title, content.text, content.url].filter(
+    (v, i, all) =>
+      v &&
+      all.indexOf(v) === i &&
+      !all.some((o) => o && o !== v && o.includes(v) && v === content.url),
+  );
   const has = content.title || content.text || content.url;
   const targets = TARGETS.filter((x) => states?.[x.module]);
 
@@ -69,12 +79,21 @@ export function ShareTarget() {
         <>
           <Card title={t.share.content}>
             <p data-testid="shared-content" style={{ overflowWrap: 'anywhere' }}>
-              {[content.title, content.text, content.url]
-                .filter((v, i, all) => v && all.indexOf(v) === i)
-                .join('\n')}
+              {parts.join('\n')}
             </p>
           </Card>
+          <Card title={t.quickCapture.share.suggestion}>
+            <CaptureForm
+              initialText={parts.join(' ')}
+              extra={{ note: parts.join('\n') }}
+              onSaved={(saved) => {
+                announceSaved(saved);
+                void navigate('/');
+              }}
+            />
+          </Card>
           {states && targets.length === 0 ? <p>{t.share.noTargets}</p> : null}
+          <h2>{t.quickCapture.share.or}</h2>
           <ul className={styles.list} aria-label={t.share.where}>
             {targets.map((x) => (
               <Card as="li" key={x.module}>

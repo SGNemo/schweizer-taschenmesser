@@ -1,7 +1,7 @@
-/// Every app command the webview may call. Listing them here makes Tauri generate one
-/// `allow-<command>` permission each, and a command that no capability grants cannot be invoked.
-/// Keep in step with `generate_handler!` in `src/lib.rs` (the desktop capability grants them).
-const APP_COMMANDS: &[&str] = &[
+/// Every app command, so that capabilities can grant them per window (`allow-<name>`). A command
+/// missing from this list cannot be invoked by any window; `tests/commands.rs` compares the list
+/// with the `generate_handler!` block in `src/lib.rs`.
+const COMMANDS: &[&str] = &[
     "check_update",
     "install_update",
     "oauth_listen_start",
@@ -29,12 +29,21 @@ const APP_COMMANDS: &[&str] = &[
     "disk_delete_cancel",
     "system_info",
     "system_processes",
+    "capture_set_hotkey",
+    "capture_hide",
+    "capture_read_clipboard",
+    "desktop_set_close_to_tray",
+    "desktop_set_tray_labels",
+    "desktop_set_autostart",
+    "desktop_autostart_enabled",
+    "desktop_info",
+    "desktop_show_main",
 ];
 
 fn main() {
     tauri_build::try_build(
         tauri_build::Attributes::new()
-            .app_manifest(tauri_build::AppManifest::new().commands(APP_COMMANDS)),
+            .app_manifest(tauri_build::AppManifest::new().commands(COMMANDS)),
     )
     .expect("failed to run tauri-build");
 }
