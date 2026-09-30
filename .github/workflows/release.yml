@@ -1,8 +1,10 @@
 name: Release
 
 # Tag `vX.Y.Z` (or `vX.Y.Z-beta.N`) → signed portable Windows exe + signed Android APK + GitHub Release.
-# Pushes to `develop` that touch the native shell, and manual runs, are DRY RUNS: they build and
-# upload artifacts but never create a release. How to create keys/secrets and cut a release:
+# Second way: a manual run on `main` with the input `version` (must equal web/package.json, tag must not
+# exist yet) builds the same and creates the tag + release itself. Use one way per release, never both.
+# Pushes to `develop` that touch the native shell, and manual runs WITHOUT `version`, are DRY RUNS: they
+# build and upload artifacts but never create a release. How to create keys/secrets and cut a release:
 # see CLAUDE.md ("Releases").
 
 on:
@@ -14,6 +16,12 @@ on:
       - 'web/scripts/**'
       - '.github/workflows/release.yml'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Publish this version from main (must equal web/package.json; creates tag vX.Y.Z). Empty = dry run.'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -67,6 +75,8 @@ jobs:
       - name: Version
         id: meta
         working-directory: web
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           VERSION="$(node scripts/version.mjs print)"
@@ -78,6 +88,20 @@ jobs:
               echo "::error::Tag $GITHUB_REF_NAME does not match the version in web/package.json ($VERSION). Run 'npm run version:set -- <version>' and commit before tagging."
               exit 1
             fi
+          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && -n "$INPUT_VERSION" ]]; then
+            if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+              echo "::error::Publishing by manual run is only allowed on main (this run: $GITHUB_REF)."
+              exit 1
+            fi
+            if [[ "$INPUT_VERSION" != "$VERSION" ]]; then
+              echo "::error::Input version '$INPUT_VERSION' does not match the version in web/package.json ($VERSION)."
+              exit 1
+            fi
+            if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+              echo "::error::Tag v$VERSION already exists. Existing releases are never overwritten."
+              exit 1
+            fi
+            PUBLISH=true
           fi
           {
             echo "version=$VERSION"
@@ -376,7 +400,12 @@ jobs:
             echo "::error::A release needs all nine assets, found ${#FILES[@]}: ${FILES[*]}"
             exit 1
           fi
-          ARGS=(--verify-tag --title "Nemo ${{ needs.prepare.outputs.version }}" --notes-file dl/RELEASE_NOTES.md)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG_ARGS=(--verify-tag)
+          else
+            TAG_ARGS=(--target "$GITHUB_SHA") # manual run on main: gh creates the tag on exactly this commit
+          fi
+          ARGS=("${TAG_ARGS[@]}" --title "Nemo ${{ needs.prepare.outputs.version }}" --notes-file dl/RELEASE_NOTES.md)
           if [ "${{ needs.prepare.outputs.prerelease }}" = "true" ]; then ARGS+=(--prerelease); fi
           gh release create "${{ needs.prepare.outputs.tag }}" "${ARGS[@]}" "${FILES[@]}"
 

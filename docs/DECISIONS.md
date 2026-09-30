@@ -39,7 +39,7 @@ Each entry: decision → why → source. Only what is documented in `CLAUDE.md`,
 ## Releases & security
 - **Conventional Commits; release notes generated from them** (`scripts/changelog.mjs`). Source: architecture.md; CLAUDE.md.
 - **Integration branch `develop`, PRs go there; `main` only for releases.** Source: PRs #2–#4 (base `develop`, PR #2 text: `main` would bury changes in the release diff); tag/merge history (`Merge develop into main (release 0.2.0)`).
-- **Tag `vX.Y.Z[-beta.N]` triggers a signed release; tag must equal `web/package.json`; run fails without signing secrets.** Pushes to `develop` touching native/scripts are dry runs. Source: architecture.md "Releases & CI".
+- **Tag `vX.Y.Z[-beta.N]` triggers a signed release; tag must equal `web/package.json`; run fails without signing secrets.** Second way: `workflow_dispatch` on `main` with input `version` (must equal `web/package.json`, tag must not exist) creates tag + release itself; never use both for one release. Pushes to `develop` touching native/scripts and dispatch without `version` are dry runs. Source: architecture.md "Releases & CI".
 - **Public-repo safety by construction:** gitleaks over history, `scripts/audit-release.mjs` on artifacts (secret values, key markers, forbidden file names, `.sig` key id), keystore file with `umask 077` + cleanup. Do not weaken. Source: architecture.md "Public downloads are safe by construction".
 - **Windows binaries carry no Authenticode certificate** (SmartScreen warning documented); updater payload is verified with the updater key. Source: architecture.md.
 
