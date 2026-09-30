@@ -78,6 +78,8 @@ test('plain text becomes a ToDo; ArrowDown switches the type before saving', asy
 test('a doubtful input is not saved until the user chooses', async ({ page }) => {
   await page.goto('/?capture=1');
   await input(page).fill('Zahnarzt morgen 15 Uhr 80 €');
+  // The type buttons appear once the module states are loaded; only then does Enter mean something.
+  await expect(page.getByRole('radio', { name: 'Termin' })).toBeVisible();
   await input(page).press('Enter');
   await expect(page.getByRole('alert')).toContainText('Bitte wähle');
   expect(await rows(page, 'calendar_event')).toHaveLength(0);
@@ -89,6 +91,7 @@ test('a doubtful input is not saved until the user chooses', async ({ page }) =>
 test('finance stays a draft until it is confirmed', async ({ page }) => {
   await page.goto('/?capture=1');
   await input(page).fill('$ 12,50 Mittagessen');
+  await expect(page.getByTestId('capture-chips')).toContainText('Ziel: Finanzen');
   await input(page).press('Enter');
   await expect(page.getByTestId('capture-draft')).toContainText('12,50');
   expect(await rows(page, 'finance_transaction')).toHaveLength(0);
@@ -102,6 +105,7 @@ test('a disabled module is never written to', async ({ page }) => {
   await page.goto('/?capture=1');
   await input(page).fill('https://beispiel.example/artikel lesen');
   // Merkliste is off by default: the type is not offered, so the user has to choose another.
+  await expect(page.getByRole('radio', { name: 'ToDo' })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'Merkliste' })).toHaveCount(0);
   await input(page).press('Enter');
   await expect(page.getByRole('alert')).toContainText('Bitte wähle');

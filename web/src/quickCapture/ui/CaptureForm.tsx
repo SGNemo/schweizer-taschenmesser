@@ -129,6 +129,8 @@ export function CaptureForm({
   };
 
   const submit = () => {
+    // Module states are still loading: which modules are on is not known yet, so do not guess.
+    if (!states) return;
     if (!text.trim()) return setError(t.quickCapture.empty);
     if (!type) return setError(t.quickCapture.chooseType);
     if (targetFor(type).requiresConfirm && !confirming) return setConfirming(true);
