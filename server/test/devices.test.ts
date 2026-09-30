@@ -269,7 +269,7 @@ describe('vault v2, status, logging', () => {
   it('stores Argon2id parameters and rejects inconsistent vaults', async () => {
     await boot();
     const kdf = { alg: 'argon2id', m: 65536, t: 3, p: 1 };
-    const put = (payload: unknown) =>
+    const put = (payload: Record<string, unknown>) =>
       app.inject({ method: 'PUT', url: '/v1/vault', headers: auth, payload });
     expect((await put({ salt: 'c2FsdHNhbHRz', check: 'checkcheck', v: 2 })).statusCode).toBe(400);
     expect((await put({ salt: 'c2FsdHNhbHRz', check: 'checkcheck', kdf })).statusCode).toBe(400);
