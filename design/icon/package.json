@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Parametric master SVG for the Nemo app icon plus preview-sheet renderer (design work only, not part of the app build).",
   "scripts": {
-    "round": "node render-round.mjs"
+    "round": "node render-round.mjs",
+    "export": "node export-brand.mjs"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2"

@@ -2,8 +2,8 @@
 // sheet (PNG) with all sizes, light/dark, Windows taskbar + tray, Android
 // adaptive masks (+ safe zone) and the monochrome/themed variants.
 //
-//   node render-round.mjs <N>      reads rounds/<N>/variants.mjs, writes rounds/<N>/
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+//   node render-round.mjs <N>      reads rounds/<N>/variants.mjs (rounds 1-5 live in rounds/archive/), writes there too
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
@@ -14,7 +14,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const round = process.argv[2];
 if (!round) throw new Error('usage: node render-round.mjs <round>');
-const dir = join(here, 'rounds', round);
+const numbered = join(here, 'rounds', round);
+const dir = /^\d+$/.test(round) ? (existsSync(numbered) ? numbered : join(here, 'rounds', 'archive', round)) : resolve(here, round);
 const spec = (await import(pathToFileURL(join(dir, 'variants.mjs')).href)).default;
 
 const FONT = { loadSystemFonts: true, defaultFontFamily: 'DejaVu Sans' };
@@ -29,7 +30,11 @@ const text = (x, y, t, size = 15, fill = '#3b434b', weight = 'normal', anchor = 
   `<text x="${x}" y="${y}" font-family="DejaVu Sans" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}">${esc(t)}</text>`;
 
 /** Recolour a one-colour SVG (ink is the element that carries fill="#000" + mask). */
-const tint = (s, color) => s.replace(/fill="#(?:000|fff)"(\s+mask=)/gi, `fill="${color}"$1`);
+const tint = (s, color) =>
+  s
+    .replace(/fill="#(?:000|fff)"(\s+stroke="#(?:000|fff)")/gi, `fill="${color}"$1`)
+    .replace(/fill="#(?:000|fff)"(\s+mask=)/gi, `fill="${color}"$1`)
+    .replace(/(fill="[^"]+"\s+)stroke="#(?:000|fff)"/gi, `$1stroke="${color}"`);
 
 // ---------- layers per variant ----------
 function layersOf(v) {
@@ -195,8 +200,8 @@ const placeFit = (s, x, y, w, h) => {
 };
 const WM_H = 500;
 function wordmarkBlock(v, y) {
-  const light = buildWordmark(v.concept, v.params, 'light');
-  const dark = buildWordmark(v.concept, v.params, 'dark');
+  const light = v.files ? readFileSync(join(repo, v.files.light), 'utf8') : buildWordmark(v.concept, v.params, 'light');
+  const dark = v.files ? readFileSync(join(repo, v.files.dark), 'utf8') : buildWordmark(v.concept, v.params, 'dark');
   let s = `<rect x="0" y="${y}" width="${W}" height="${WM_H - 20}" fill="#E4E7EB"/>`;
   s += text(24, y + 40, v.label, 34, '#0E2F45', 'bold');
   s += text(40 + v.label.length * 26, y + 38, v.title, 24, '#0E2F45', 'bold');
@@ -238,6 +243,7 @@ body += text(24, 92, spec.subtitle ?? '', 18, '#3b434b');
 variants.forEach((v, i) => {
   const { svg, layers } = block(v, 120 + i * 1030);
   body += svg;
+  if (v.files) return; // sources live in web/brand, do not copy them
   const out = join(dir, v.label);
   mkdirSync(out, { recursive: true });
   for (const k of ['full', 'mark', 'mono', 'adFg', 'adBg', 'adMono']) {
@@ -252,6 +258,7 @@ if (wordmarks.length) {
   wordmarks.forEach((v, i) => {
     const { svg, light, dark } = wordmarkBlock(v, y0 + 70 + i * WM_H);
     body += svg;
+    if (v.files) return;
     const out = join(dir, v.label);
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'logo-wordmark.svg'), light);

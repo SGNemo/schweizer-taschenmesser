@@ -1,18 +1,15 @@
 // Wordmark concepts where the word "Nemo" itself becomes the fish.
-// Letters: Nunito ExtraBold outlines (OFL) taken from web/brand/logo-wordmark.svg,
+// Letters: Nunito ExtraBold outlines (OFL) from glyphs.json (taken from the previous logo-wordmark.svg),
 // in glyph units (baseline y = 0, cap height 214, x-height 150, word spans x 21..824).
 //
 // buildWordmark(concept, params, theme) -> standalone SVG string (theme: light | dark)
 import { readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { merge } from './fish.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const src = readFileSync(resolve(here, '../../web/brand/logo-wordmark.svg'), 'utf8');
-const glyphD = src.match(/translate\(343\.7 225\.8\)"[^>]*\sd="([^"]+)"/)[1];
-const sub = glyphD.split(/(?=M)/);
-export const GLYPHS = { N: sub[0], e: sub[1] + sub[2], m: sub[3], o: sub[4] + sub[5] };
+export const GLYPHS = JSON.parse(readFileSync(join(here, 'glyphs.json'), 'utf8')).glyphs;
 const O = { cx: 745.5, cy: -73.5, r: 78 };
 
 export const WM_DEFAULTS = {

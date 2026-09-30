@@ -1,13 +1,14 @@
 // Quick contact strip while tuning: node preview.mjs <round> -> rounds/<round>/_contact.png (not committed)
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
 import { buildLayers } from './fish.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const r = process.argv[2];
-const out = process.argv[3] ?? join(here, 'rounds', r, '_contact.png');
-const spec = (await import(pathToFileURL(join(here, 'rounds', r, 'variants.mjs')).href)).default;
+const dir = existsSync(join(here, 'rounds', r)) ? join(here, 'rounds', r) : join(here, 'rounds', 'archive', r);
+const out = process.argv[3] ?? join(dir, '_contact.png');
+const spec = (await import(pathToFileURL(join(dir, 'variants.mjs')).href)).default;
 const vs = spec.variants.filter((v) => v.params);
 const b64 = (s) => Buffer.from(s).toString('base64');
 let body = '';

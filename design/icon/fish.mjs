@@ -298,3 +298,107 @@ export function buildLayers(input = {}) {
 
   return { full, mark, mono, adFg, adBg, adMono, params: p };
 }
+
+// ---------- baked geometry (for the brand SVGs, Logo.tsx and the splash) ----------
+
+/** Apply `fn([x, y]) -> [x, y]` to every coordinate pair of an absolute M/L/C/Q/Z path. */
+export function transformPath(d, fn, digits = 1) {
+  const out = [];
+  let pair = [];
+  for (const [, cmd, num] of d.matchAll(/([MLCQZ])|(-?\d*\.?\d+)/g)) {
+    if (cmd) {
+      out.push(cmd);
+      continue;
+    }
+    pair.push(Number(num));
+    if (pair.length === 2) {
+      const [x, y] = fn(pair);
+      out.push(`${Number(x.toFixed(digits))} ${Number(y.toFixed(digits))}`);
+      pair = [];
+    }
+  }
+  return out.join(' ').replace(/([MLCQZ]) /g, '$1').replace(/ ([MLCQZ])/g, '$1');
+}
+
+/** Points along an absolute M/L/C/Q/Z path (for bounding boxes and safe-zone checks). */
+export function pathPoints(d, steps = 40) {
+  const pts = [];
+  const toks = [...d.matchAll(/([MLCQZ])|(-?\d*\.?\d+)/g)].map((m) => m[1] ?? Number(m[2]));
+  let i = 0;
+  let cur = [0, 0];
+  let start = [0, 0];
+  const num = () => toks[i++];
+  while (i < toks.length) {
+    const c = toks[i++];
+    if (c === 'M') {
+      cur = start = [num(), num()];
+      pts.push(cur);
+    } else if (c === 'L') {
+      cur = [num(), num()];
+      pts.push(cur);
+    } else if (c === 'C' || c === 'Q') {
+      const n = c === 'C' ? 3 : 2;
+      const p = [cur];
+      for (let k = 0; k < n; k++) p.push([num(), num()]);
+      for (let s = 1; s <= steps; s++) {
+        const t = s / steps;
+        const u = 1 - t;
+        const x = n === 3 ? u ** 3 * p[0][0] + 3 * u * u * t * p[1][0] + 3 * u * t * t * p[2][0] + t ** 3 * p[3][0] : u * u * p[0][0] + 2 * u * t * p[1][0] + t * t * p[2][0];
+        const y = n === 3 ? u ** 3 * p[0][1] + 3 * u * u * t * p[1][1] + 3 * u * t * t * p[2][1] + t ** 3 * p[3][1] : u * u * p[0][1] + 2 * u * t * p[1][1] + t * t * p[2][1];
+        pts.push([x, y]);
+      }
+      cur = p[n];
+    } else if (c === 'Z') {
+      cur = start;
+    }
+  }
+  return pts;
+}
+
+/**
+ * The mark with its tilt already applied to the coordinates, centred at (256, 256) in a 512 box
+ * (scale 1). Other views (tile, adaptive layer, maskable) only add a translate/scale wrapper, so
+ * every brand SVG, Logo.tsx and the splash share identical `d` strings.
+ */
+export function markGeometry(input = {}) {
+  const p = merge(DEFAULTS, input);
+  if (p.stripes.mode !== 'cut') throw new Error('markGeometry expects cut stripes');
+  const sil = silhouette(p);
+  const stripes = stripeList(p);
+  if (sil.length !== 2 || stripes.length !== 2) throw new Error('expected body + tail and two stripes');
+  const e = extent(p);
+  const a = (p.tilt * Math.PI) / 180;
+  const cos = Math.cos(a);
+  const sin = Math.sin(a);
+  const pt = ([x, y]) => {
+    const dx = x - e.cx;
+    const dy = y - e.cy;
+    return [256 + dx * cos - dy * sin, 256 + dx * sin + dy * cos];
+  };
+  const eye = eyeOf(p);
+  const [ex, ey] = pt([eye.x, eye.y]);
+  const paths = sil.map((d) => transformPath(d, pt));
+  const pts = paths.flatMap((d) => pathPoints(d));
+  const pad = p.soften / 2;
+  const xs = pts.map((q) => q[0]);
+  const ys = pts.map((q) => q[1]);
+  const bbox = {
+    x: Math.min(...xs) - pad,
+    y: Math.min(...ys) - pad,
+    w: Math.max(...xs) - Math.min(...xs) + 2 * pad,
+    h: Math.max(...ys) - Math.min(...ys) + 2 * pad,
+  };
+  /** Largest distance of the outline from (256, 256) after `scale` and an offset. */
+  const radius = (scale = 1, dx = 0, dy = 0) =>
+    Math.max(...pts.map(([x, y]) => Math.hypot((x - 256) * scale + dx, (y - 256) * scale + dy))) + (pad * scale);
+  return {
+    params: p,
+    body: paths[0],
+    tail: paths[1],
+    cuts: stripes.map((s) => ({ d: transformPath(s.d, pt), w: s.w })),
+    eye: { cx: Number(ex.toFixed(1)), cy: Number(ey.toFixed(1)), r: eye.r },
+    soften: p.soften,
+    bbox,
+    radius,
+  };
+}
