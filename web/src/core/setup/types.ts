@@ -24,6 +24,8 @@ export interface SetupStepProps {
    * Pass `null` to unregister (nothing to write).
    */
   registerCommit(commit: (() => Promise<void>) | null): void;
+  /** `false` disables "Weiter" (e.g. a change that still needs an explicit confirmation). */
+  setCanContinue(ok: boolean): void;
 }
 
 export interface SetupStepDef {

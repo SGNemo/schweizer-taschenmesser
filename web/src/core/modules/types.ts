@@ -260,6 +260,11 @@ export interface ModuleManifest {
   defaultEnabled: boolean;
   /** Sort key for navigation and library (lower first, default 100). */
   order?: number;
+  /**
+   * Ids of modules this one builds on (e.g. budgets read finance). Only informs the setup
+   * assistant and the library; it never blocks enabling or disabling.
+   */
+  requires?: string[];
   /** Only listed in the library in dev builds / when VITE_INCLUDE_EXAMPLE=true. */
   devOnly?: boolean;
   contributions?: ModuleContributions;

@@ -94,6 +94,86 @@ export const t = {
     isNew: 'Neu',
     settingsHint: 'Fortschritt und Checkliste',
     showChecklist: 'Checkliste auf der Übersicht anzeigen',
+    steps: {
+      basics: {
+        title: 'Grundlagen',
+        description: 'Name, Farbschema und Wochenstart. Alles lässt sich später ändern.',
+        name: 'Dein Name (optional)',
+        nameHint: 'Nur für Begrüßungen, bleibt in deinen Daten.',
+        weekStart: 'Woche beginnt am',
+        monday: 'Montag',
+        sunday: 'Sonntag',
+        fixedTitle: 'Feste Vorgaben',
+        language: 'Sprache: Deutsch',
+        timezone: (zone: string) => `Zeitzone: ${zone} (Uhrzeiten bleiben lokale Wanduhrzeit)`,
+        currency: 'Währung: Euro (EUR), Beträge im deutschen Format',
+      },
+      sync: {
+        title: 'Sync und Wiederherstellung',
+        description: 'Wähle, ob deine Daten nur auf diesem Gerät bleiben oder von woanders kommen.',
+        local: 'Nur auf diesem Gerät (Standard)',
+        localHint: 'Nichts wird verbunden. Sync und Backup gibt es später in den Einstellungen.',
+        backup: 'Backup-Datei einspielen',
+        connect: 'Mit Sync-Server verbinden',
+        connected: 'Dieses Gerät ist bereits mit einem Sync-Server verbunden.',
+        afterConnect:
+          'Liefert der Server bereits Module und Daten, kannst du die Schritte Profil und Startdaten überspringen.',
+      },
+      profiles: {
+        title: 'Profil und Module',
+        description:
+          'Ein Profil schaltet passende Module und Werkzeuge vor. Danach kannst du alles einzeln anpassen.',
+        currentState: 'Aktueller Zustand bleibt, bis du ein Profil wählst oder etwas umschaltest.',
+        choose: 'Profil wählen',
+        modules: 'Module',
+        requires: (names: string) => `Baut auf auf: ${names}`,
+        viaDependency: (names: string) => `Automatisch dabei wegen: ${names}`,
+        diffTitle: 'Das ändert sich',
+        diffNone: 'Keine Änderung.',
+        willEnable: (names: string) => `Wird aktiviert: ${names}`,
+        willDisable: (names: string) => `Wird deaktiviert: ${names}`,
+        keepData: 'Die Daten deaktivierter Module bleiben erhalten.',
+        toolsOn: (names: string) => `Werkzeuge an: ${names}`,
+        toolsOff: (names: string) => `Werkzeuge aus: ${names}`,
+        confirm: 'Ich habe die Änderungen geprüft und möchte sie übernehmen.',
+        confirmNeeded: 'Bestätige die Änderungen, um fortzufahren.',
+      },
+      tools: {
+        title: 'Werkzeugkasten',
+        description: 'Kleine Helfer für die Symbolleiste. Schalte ein, was du brauchst.',
+        showDev: 'Entwickler-Werkzeuge anzeigen',
+        up: (name: string) => `${name} nach oben`,
+        down: (name: string) => `${name} nach unten`,
+        groups: { basis: 'Basis', extra: 'Extra', dev: 'Entwickler' },
+      },
+      dashboard: {
+        title: 'Übersicht',
+        description: 'Welche Widgets erscheinen und in welcher Reihenfolge. Ziehen oder Tastatur.',
+        empty: 'Die aktiven Module haben keine Widgets.',
+        hide: (title: string) => `${title} anzeigen`,
+        drag: (title: string) => `${title} verschieben`,
+        instructions:
+          'Leertaste zum Aufnehmen, Pfeiltasten zum Verschieben, Leertaste zum Ablegen.',
+      },
+    },
+    profiles: {
+      everyday: {
+        name: 'Alltag',
+        description:
+          'Kalender, Aufgaben, Erinnerungen, Einkauf, Notizen, Geburtstage, Gewohnheiten.',
+      },
+      finance: {
+        name: 'Finanz-Fokus',
+        description:
+          'Finanzen, Budgets, Abos, Rechnungen, Verträge – dazu Kalender und Erinnerungen.',
+      },
+      productive: {
+        name: 'Produktiv',
+        description:
+          'Aufgaben, Notizen, Kalender, Gewohnheiten, Lesezeichen, Starter, Nachrichten.',
+      },
+      minimal: { name: 'Minimal', description: 'Nur Kalender und Aufgaben.' },
+    } as Record<string, { name: string; description: string }>,
   },
   palette: {
     title: 'Befehlspalette',

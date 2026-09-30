@@ -67,6 +67,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   const [pickedIndex, setIndex] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [canContinue, setCanContinue] = useState(true);
   const commit = useRef<(() => Promise<void>) | null>(null);
   const cancelled = useRef(false);
 
@@ -108,6 +109,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   function go(next: number) {
     commit.current = null;
+    setCanContinue(true);
     setError(false);
     if (next >= total) setView('summary');
     else {
@@ -260,6 +262,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             registerCommit={(fn) => {
               commit.current = fn;
             }}
+            setCanContinue={setCanContinue}
           />
         </Suspense>
         {error ? (
@@ -278,7 +281,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
           <Button onClick={() => void onSkip()} disabled={busy}>
             {t.setup.skip}
           </Button>
-          <Button variant="primary" onClick={() => void onNext()} disabled={busy}>
+          <Button variant="primary" onClick={() => void onNext()} disabled={busy || !canContinue}>
             {index + 1 >= total ? t.setup.finish : t.setup.next}
           </Button>
         </span>
