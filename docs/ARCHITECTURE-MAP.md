@@ -12,7 +12,8 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
-| `docs/` | `architecture.md` (details), `AI-IMPORT.md` (German user guide of the local API), this map, `DECISIONS.md`, `HOW-TO.md`, `STATUS.md` |
+| `docs/` | `README.md` (index), `user/` (German user docs), `architecture.md` (details), `AI-IMPORT.md`, this map, `DECISIONS.md`, `HOW-TO.md`, `STATUS.md`, `ROADMAP.md`, `REVIEW-*.md`, `DESIGN-CONCEPT-*.md` + `design-proposals/`, `security/`, `brand/` (rendered headers, social preview), `screenshots/` |
+| root files | `README.md` (short, German), `LICENSE` (MIT), `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` |
 | `.github/workflows/` | `ci.yml`, `release.yml` |
 
 ## `web/` layout
@@ -22,12 +23,12 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell.tsx`, `PageContainer.tsx`, `CommandPalette.tsx`, `QuickAdd.tsx`, `ToolsSheet.tsx`, `MoreSheet.tsx`, `PendingImports.tsx`, `UpdateBanner.tsx`, `SyncBadge.tsx`, `useNavItems.ts`, `assistant/` (palette answer UI).
 - `src/pages/` – `Settings.tsx` + `settings/*Section.tsx`, `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
-- `src/ui/` – design system: `tokens.css` (all colours/radii/shadows/motion, light + dark + accent variants, guarded by `tokens.test.ts`), `global.css` (Inter, gradient background), Button, Card, Dialog, Fields, Patterns, Misc (Badge, EmptyState, Fab, Skeleton, Toaster), HelpHint, `Logo.tsx`, `icons.tsx`.
-- `web/brand/` – logo/icon SVG sources + font licences; `scripts/gen-icons.mjs` renders all raster assets (see HOW-TO → Icons).
+- `src/ui/` – design system: `tokens.css` (colours, radii, type scale, weights, z-index, motion; light + dark + accent variants, guarded by `tokens.test.ts`), `global.css` (Inter, solid background, focus ring), Button, Card, Dialog, Fields (`TextField` with `labelHidden`), Patterns (`Segmented`, `ItemRow`, `Progress`, layout utilities), Misc (Badge, EmptyState incl. `compact`, Fab, Skeleton, Toaster), `WidgetList.tsx`, HelpHint, `Logo.tsx` (`LOGO_PATHS`, `mono`), `icons.tsx`.
+- `web/brand/` – logo/icon SVG sources + font licences (one fish, mask-based; `src/brand-sync.test.ts` keeps Logo/splash in step); `scripts/gen-icons.mjs` renders all raster assets (see HOW-TO → Icons).
 - `src/router.tsx`, `src/App.tsx`, `src/main.tsx` (startup order), `src/sw.ts` (service worker), `src/stores/ui.ts` (zustand UI state), `src/strings.ts` (**all German UI text**).
 - `templates/module/` – scaffold used by `scripts/gen-module.mjs`.
-- `scripts/` – `db-bump`, `gen-module`, `gen-icons`, `version`, `changelog`, `keys`, `android-sign`, `audit-release`, `latest-json`, `check-links` (+ tested `scripts/lib/*.ts`).
-- `e2e/` – Playwright specs (`a11y, accounts, assistant, backup, connectors, core, extras, layout, links, localapi, modules, money, news, notifications, onboarding, tools`); `e2e/sync/` multi-device; `e2e/screenshots/capture.spec.ts` (manual tool, not CI). Config: `playwright.config.ts`, `playwright.sync.config.ts`, `playwright.screens.config.ts`, env `.env.e2e`.
+- `scripts/` – `db-bump`, `gen-module`, `gen-icons`, `version`, `changelog`, `keys`, `android-sign`, `audit-release`, `latest-json` (`UPDATER_PORTABLE_ASSET`), `release-assets` (asset list for the workflow), `check-links` (+ tested `scripts/lib/*.ts`).
+- `e2e/` – Playwright specs (`a11y, accounts, assistant, backup, connectors, core, extras, layout, links, localapi, modules, money, news, notifications, onboarding, quick-capture, setup, tools`), shared `helpers.ts` (`ready`, `enable`, `mainNav`); `e2e/sync/` multi-device; `e2e/screenshots/capture.spec.ts` (manual tool, not CI; `SCREENS_*` env filters). Config: `playwright.config.ts`, `playwright.sync.config.ts`, `playwright.screens.config.ts`, env `.env.e2e`.
 
 ## Where things live
 | Area | Location | Key names |

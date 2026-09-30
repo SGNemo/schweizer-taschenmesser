@@ -3,7 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, SelectField, TextArea, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, Segmented, SelectField, TextArea, TextField } from '@/ui';
 import { accountRepo, categoryRepo, deleteAccount, transactionRepo } from '../repo';
 import type { Account, Category, Transaction } from '../schema';
 import type { FinanceData } from '../types';
@@ -27,7 +27,7 @@ function Actions({ onDelete, onClose }: { onDelete?: () => Promise<void>; onClos
       ) : (
         <span />
       )}
-      <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+      <span className={patternStyles.hstack}>
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
           {t.actions.save}
@@ -116,13 +116,15 @@ function TransactionForm({
 
   return (
     <form onSubmit={save} className={styles.form}>
-      <div className={styles.segment} role="group" aria-label={t.finance.kind}>
-        {(['expense', 'income'] as const).map((k) => (
-          <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>
-            {k === 'expense' ? t.finance.expenseOne : t.finance.incomeOne}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        label={t.finance.kind}
+        value={kind}
+        options={[
+          { value: 'expense', label: t.finance.expenseOne },
+          { value: 'income', label: t.finance.incomeOne },
+        ]}
+        onChange={setKind}
+      />
       <div className={styles.split}>
         <TextField
           label={t.money.amount}

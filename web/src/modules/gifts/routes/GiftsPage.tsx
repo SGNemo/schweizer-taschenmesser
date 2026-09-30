@@ -14,6 +14,7 @@ import {
   ItemList,
   ItemRow,
   PageHeader,
+  patternStyles,
   Segmented,
 } from '@/ui';
 import { IdeaEditor, type IdeaTarget } from '../components/IdeaEditor';
@@ -87,7 +88,7 @@ export default function GiftsPage() {
                   .join(' · ')}
                 onOpen={() => setTarget(i)}
                 end={
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+                  <span className={patternStyles.hstackTight}>
                     <Badge tone={i.status === 'idea' ? 'accent' : 'neutral'}>
                       {t.gifts.statuses[i.status]}
                     </Badge>

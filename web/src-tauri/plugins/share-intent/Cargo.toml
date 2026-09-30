@@ -3,6 +3,7 @@ name = "tauri-plugin-share-intent"
 version = "0.1.0"
 authors = ["SGNemo"]
 description = "Android: text and links shared from other apps (ACTION_SEND). A stub elsewhere."
+license = "MIT"
 edition = "2021"
 rust-version = "1.77"
 publish = false

@@ -36,6 +36,22 @@ export function applyTheme(theme: ThemeChoice): void {
   const el = document.documentElement;
   if (theme === 'system') delete el.dataset.theme;
   else el.dataset.theme = theme;
+  syncThemeColor(theme);
+}
+
+/**
+ * Keeps the browser/PWA title bar in step with the chosen theme. `index.html` ships two
+ * `theme-color` metas with `media` queries for the system preference; a forced theme sets both to
+ * the page background of that theme, `system` restores the originals.
+ */
+function syncThemeColor(theme: ThemeChoice): void {
+  const metas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+  if (metas.length === 0) return;
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  for (const meta of metas) {
+    if (!meta.dataset.default) meta.dataset.default = meta.content;
+    meta.content = theme === 'system' || !bg ? meta.dataset.default : bg;
+  }
 }
 
 export interface Toast {

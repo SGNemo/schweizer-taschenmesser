@@ -11,8 +11,6 @@ import type { SecretStore } from '@/core/secrets/types';
 import { fromBase64, toBase64 } from '@/core/sync/crypto';
 import type { BiometricService, PlatformKind, ScreenService, UnsealResult } from '../types';
 
-export type Invoke = <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
-
 interface Availability {
   keystore: boolean;
   biometric: boolean;

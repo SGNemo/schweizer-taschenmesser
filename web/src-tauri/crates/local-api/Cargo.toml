@@ -3,6 +3,7 @@ name = "taschenmesser-local-api"
 version = "0.1.0"
 authors = ["SGNemo"]
 description = "Loopback-only HTTP transport of the local AI import API: parsing, Host/Origin checks, token auth, limits. No Tauri, so it is unit-tested on any machine."
+license = "MIT"
 edition = "2021"
 rust-version = "1.77"
 publish = false

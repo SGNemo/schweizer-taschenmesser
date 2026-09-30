@@ -1,0 +1,24 @@
+name: Idee oder Wunsch
+description: Ein Modul, Werkzeug oder eine Verbesserung vorschlagen
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Schau kurz in [docs/ROADMAP.md](../blob/develop/docs/ROADMAP.md), vielleicht steht die Idee schon dort.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem löst das?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Vorschlag
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Bereich
+      options: [Modul, Werkzeug, Kern (Sync, Backup, Suche), Design, Sicherheit, Plattform (Windows, Android, PWA), Sonstiges]

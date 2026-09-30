@@ -78,13 +78,18 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
       return state;
     },
     async show({ title, body }) {
-      sendNotification({ title, body });
+      // Android needs a monochrome status-bar icon (`res/drawable/ic_notification`, rendered by
+      // gen-icons); the launcher icon would appear as a white square. Desktop uses the app icon.
+      sendNotification(kind === 'android' ? { title, body, ...ANDROID_ICON } : { title, body });
     },
     // Only the Android app hands reminders to the OS alarm manager; on desktop the app itself
     // fires them while it is running.
     scheduleUpcoming: kind === 'android' ? scheduleUpcoming : undefined,
   };
 }
+
+/** Small icon + accent tint for Android notifications (drawable name, see `scripts/gen-icons.mjs`). */
+const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#F26A1E' } as const;
 
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
@@ -99,6 +104,7 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
       body: n.body,
       schedule: Schedule.at(new Date(n.at), false, true),
       extra: { url: n.url ?? '/' },
+      ...ANDROID_ICON,
     });
   }
 }

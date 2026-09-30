@@ -1,6 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { Button, Dialog, Icon, IconButton, SelectField, TextArea, TextField } from '@/ui';
+import {
+  Button,
+  Dialog,
+  Icon,
+  IconButton,
+  patternStyles,
+  SelectField,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { t } from '@/strings';
 import { now } from '@/core/time/now';
 import { deleteTask, taskRepo } from '../repo';
@@ -179,7 +188,7 @@ function EditorForm({
         >
           {t.actions.delete}
         </Button>
-        <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <span className={patternStyles.hstack}>
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

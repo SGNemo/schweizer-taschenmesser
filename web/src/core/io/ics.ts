@@ -4,7 +4,7 @@
  * DURATION, folded lines, escaped text and the common RRULE forms. Anything the calendar cannot
  * represent is reported as an issue and the event is still imported as far as possible.
  */
-import { addDaysStr } from '@/core/time/dates';
+import { addDaysStr, pad2, toDateString } from '@/core/time/dates';
 import { recurrenceSchema, type Recurrence } from '@/core/recurrence/types';
 
 export interface IcsEvent {
@@ -73,8 +73,6 @@ function parseProp(line: string): Prop | undefined {
 
 export const unescapeText = (v: string): string =>
   v.replace(/\\([nN,;\\])/g, (_, c: string) => (c === 'n' || c === 'N' ? '\n' : c));
-
-const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Offset (ms) of `zone` at the given instant, via Intl (works for any IANA zone the runtime knows). */
 function zoneOffsetMs(zone: string, at: Date): number {
@@ -167,8 +165,8 @@ export function parseWhen(value: string, params: Record<string, string>): When |
   }
   if (instant) {
     return {
-      date: `${instant.getFullYear()}-${pad(instant.getMonth() + 1)}-${pad(instant.getDate())}`,
-      time: `${pad(instant.getHours())}:${pad(instant.getMinutes())}`,
+      date: toDateString(instant),
+      time: `${pad2(instant.getHours())}:${pad2(instant.getMinutes())}`,
     };
   }
   // Floating time: already wall clock.
@@ -254,8 +252,8 @@ function addMinutes(when: When, minutes: number): When {
   const [h, mi] = (when.time ?? '00:00').split(':').map(Number) as [number, number];
   const date = new Date(y, mo - 1, d, h, mi + minutes);
   return {
-    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+    date: toDateString(date),
+    time: `${pad2(date.getHours())}:${pad2(date.getMinutes())}`,
   };
 }
 

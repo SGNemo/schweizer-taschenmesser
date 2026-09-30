@@ -2,7 +2,16 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, ItemList, ItemRow, PageHeader, TextField } from '@/ui';
+import {
+  Button,
+  EmptyState,
+  Icon,
+  ItemList,
+  ItemRow,
+  PageHeader,
+  patternStyles,
+  TextField,
+} from '@/ui';
 import { NoteEditor, type NoteTarget } from '../components/NoteEditor';
 import { displayTitle, excerpt, searchNotes, sortNotes } from '../logic';
 import { noteRepo } from '../repo';
@@ -38,13 +47,16 @@ export default function NotesPage() {
           {t.notes.add}
         </Button>
       </PageHeader>
-      <TextField
-        label={t.notes.search}
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      <div style={{ height: 'var(--space-4)' }} />
+      <div className={patternStyles.gapBottom}>
+        <TextField
+          label={t.notes.search}
+          labelHidden
+          placeholder={t.notes.search}
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
       {notes && shown.length === 0 ? (
         <EmptyState
           icon="note"

@@ -13,7 +13,10 @@ pub(crate) async fn set<R: Runtime>(app: AppHandle<R>, request: SetRequest) -> R
 }
 
 #[command]
-pub(crate) async fn get<R: Runtime>(app: AppHandle<R>, request: NameRequest) -> Result<ValueResponse> {
+pub(crate) async fn get<R: Runtime>(
+    app: AppHandle<R>,
+    request: NameRequest,
+) -> Result<ValueResponse> {
     app.secure_store().get(request)
 }
 
@@ -23,7 +26,10 @@ pub(crate) async fn delete<R: Runtime>(app: AppHandle<R>, request: NameRequest) 
 }
 
 #[command]
-pub(crate) async fn biometric_seal<R: Runtime>(app: AppHandle<R>, request: SealRequest) -> Result<()> {
+pub(crate) async fn biometric_seal<R: Runtime>(
+    app: AppHandle<R>,
+    request: SealRequest,
+) -> Result<()> {
     app.secure_store().biometric_seal(request).await
 }
 
@@ -44,7 +50,10 @@ pub(crate) async fn biometric_has<R: Runtime>(
 }
 
 #[command]
-pub(crate) async fn biometric_delete<R: Runtime>(app: AppHandle<R>, request: NameRequest) -> Result<()> {
+pub(crate) async fn biometric_delete<R: Runtime>(
+    app: AppHandle<R>,
+    request: NameRequest,
+) -> Result<()> {
     app.secure_store().biometric_delete(request)
 }
 

@@ -106,7 +106,12 @@ mod tests {
 
     #[test]
     fn accepts_the_names_the_app_uses() {
-        for n in ["ai-key:groq", "ai-key:custom-2", "vault.3f2a-91", "bio:0b1c_d2"] {
+        for n in [
+            "ai-key:groq",
+            "ai-key:custom-2",
+            "vault.3f2a-91",
+            "bio:0b1c_d2",
+        ] {
             assert!(validate_name(n).is_ok(), "{n}");
         }
     }

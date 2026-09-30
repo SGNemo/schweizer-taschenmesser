@@ -23,7 +23,15 @@ mod tests {
     #[test]
     fn empty_and_blank_shares_count_as_nothing() {
         assert!(SharedContent::default().is_empty());
-        assert!(SharedContent { title: " ".into(), text: "\n".into() }.is_empty());
-        assert!(!SharedContent { title: String::new(), text: "Hallo".into() }.is_empty());
+        assert!(SharedContent {
+            title: " ".into(),
+            text: "\n".into()
+        }
+        .is_empty());
+        assert!(!SharedContent {
+            title: String::new(),
+            text: "Hallo".into()
+        }
+        .is_empty());
     }
 }

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { Button, Dialog, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, TextField } from '@/ui';
 import { t } from '@/strings';
 import { deleteList, listRepo } from '../repo';
 import type { TodoList } from '../schema';
@@ -68,7 +68,7 @@ function ListForm({
         required
         data-autofocus
       />
-      {existing ? <p style={{ color: 'var(--text-muted)' }}>{t.todos.deleteListHint}</p> : null}
+      {existing ? <p className={patternStyles.muted}>{t.todos.deleteListHint}</p> : null}
       <div
         style={{
           display: 'flex',
@@ -90,7 +90,7 @@ function ListForm({
         ) : (
           <span />
         )}
-        <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <span className={patternStyles.hstack}>
           <Button onClick={() => onClose()}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

@@ -8,7 +8,7 @@ Einträge in Sekunden anlegen, ohne das passende Modul zu öffnen. Der Parser l�
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | In der App (alle Plattformen) | Schnell-Hinzufügen-Button (Plus unten rechts) → Eingabefeld oben im Blatt. Auch über `/?capture=1` (PWA-Shortcut „Schnell erfassen“). |
 | Windows-App                   | Globales Tastenkürzel (Standard `Strg+Umschalt+Leertaste`) oder Tray-Symbol → kleines Eingabefenster.                                 |
-| Android-App                   | Text oder Link in einer anderen App „Teilen“ → Taschenmesser → Vorschlag, Speichern mit einem Tipp.                                   |
+| Android-App                   | Text oder Link in einer anderen App „Teilen“ → Nemo → Vorschlag, Speichern mit einem Tipp.                                   |
 | PWA                           | Share-Target `/share` (wie bisher), jetzt mit Parser-Vorschlag.                                                                       |
 
 Im Eingabefenster: **Enter** speichert, **Tab / Umschalt+Tab** oder **↑/↓** wechseln den Typ, **Esc** schließt. Nach dem Speichern erscheint eine Bestätigung mit „Rückgängig“.

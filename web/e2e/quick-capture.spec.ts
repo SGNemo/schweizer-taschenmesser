@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { enable } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -25,13 +26,6 @@ async function rows(page: Page, table: string): Promise<Record<string, unknown>[
       }),
     table,
   );
-}
-
-async function enable(page: Page, id: string) {
-  await page.goto('/library');
-  const card = page.getByTestId(`module-${id}`);
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
-  await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
 }
 
 const input = (page: Page) => page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });

@@ -3,6 +3,9 @@
  * these variables (no hex colours, no fixed radii/shadows), so a change here restyles everything.
  * Guide: CLAUDE.md → "Design-Richtlinien". Contrast values (WCAG AA) are noted next to the palette.
  *
+ * Look ("Klar", decided 2026-09-30, docs/DECISIONS.md): flat surfaces on a solid page background,
+ * borders instead of shadows, one accent colour reserved for the primary action, calm controls.
+ *
  * Structure: (1) scale tokens, (2) light theme = default, (3) dark theme – the block exists twice
  * (explicit `data-theme='dark'` and the system preference); `tokens.test.ts` keeps both identical,
  * (4) accent variants set through `data-accent` on <html> (orange is the default).
@@ -13,14 +16,24 @@
   /* Tabular figures for amounts, dates and tables: apply with `font-variant-numeric: var(--font-num)`. */
   --font-num: tabular-nums;
 
+  /* Type scale */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.375rem;
   --text-2xl: clamp(1.5rem, 1.3rem + 0.6vw, 2rem);
+  /* Hero numbers (finance balance, tool results) */
+  --text-3xl: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
   --leading: 1.5;
+  --leading-tight: 1.25;
+  /* Three weights only: body 400, labels/buttons 500, titles 600, hero 700. */
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
 
+  /* Spacing */
+  --space-hair: 2px;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -30,10 +43,15 @@
   --space-7: 3rem;
 
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-full: 999px;
+
+  /* Icon sizes (lucide) */
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 28px;
 
   --touch: 44px;
   --sidebar-w: 248px;
@@ -44,6 +62,15 @@
   --page-wide: 100rem;
   --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
 
+  /* Layer order (never write a bare z-index) */
+  --z-raised: 5;
+  --z-sticky: 10;
+  --z-nav: 15;
+  --z-fab: 20;
+  --z-hint: 30;
+  --z-toast: 60;
+  --z-skip: 100;
+
   /* Motion: 120–250 ms, transform/opacity only (see Design-Richtlinien). */
   --dur-fast: 120ms;
   --dur: 200ms;
@@ -52,18 +79,15 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
-  /* Glass surfaces (header, sheets): blur only where it is cheap, see `@supports` below. */
-  --glass-blur: 14px;
-
   /* ---- Light theme (default) ---- */
   color-scheme: light;
   --bg: #fbf8f3;
-  --bg-gradient: linear-gradient(160deg, #fbf8f3 0%, #f5f6f2 55%, #eef5f5 100%);
   --surface: #ffffff;
   --surface-2: #f3efe8;
+  /* Translucent surface for the skeleton shimmer and overlays on images. */
   --surface-glass: rgb(255 255 255 / 0.78);
   --border: #e6e1d8; /* decorative dividers */
-  --border-strong: #8a9499; /* form controls: 3.1:1 on white (WCAG 1.4.11) */
+  --border-strong: #788489; /* form controls: 3.9:1 on surface, 3.4:1 on surface-2 (WCAG 1.4.11) */
   --text: #13262f; /* 15.6:1 on surface */
   --text-muted: #51616a; /* 6.1:1 on bg, 5.6:1 on surface-2 */
   --accent-2: #0b6f72; /* turquoise, secondary accent (5.95:1 on surface) */
@@ -75,35 +99,32 @@
   --warning: #8a5a00;
   --warning-soft: #fbf0da;
   --focus: #0b6f72;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent);
   /* Chart series (categorical slots 1 and 2) */
   --viz-1: #16847f;
   --viz-2: #e0601c;
   --overlay: rgb(11 29 43 / 0.5);
-  --shadow-1: 0 1px 2px rgb(19 38 47 / 0.05), 0 2px 8px rgb(19 38 47 / 0.04);
+  /* Shadows only for floating layers (menus, dialogs, FAB); cards use borders. */
+  --shadow-1: 0 1px 2px rgb(19 38 47 / 0.06), 0 2px 8px rgb(19 38 47 / 0.05);
   --shadow-2: 0 12px 32px rgb(19 38 47 / 0.14), 0 2px 6px rgb(19 38 47 / 0.06);
-  --card-edge: inset 0 1px 0 rgb(255 255 255 / 0.7);
-  /* Accent (orange): --accent is text/link/icon colour, the gradient is for filled buttons. */
+  /* Accent (orange): filled primary action + FAB, text/link/icon colour. */
   --accent: #b5430c; /* 5.6:1 on surface */
   --accent-hover: #963709;
-  --accent-contrast: #ffffff; /* text on the gradient: 4.6:1 at the light end */
+  --accent-contrast: #ffffff; /* text on the filled accent, 5.6:1 */
   --accent-soft: #fdebdd;
-  --accent-grad-from: #c94e15;
-  --accent-grad-to: #b5430c;
-}
-
-:root {
-  --accent-gradient: linear-gradient(135deg, var(--accent-grad-from), var(--accent-grad-to));
+  /* Ocean gradient, kept for the places that say "Nemo": splash, empty states, brand images. */
+  --ocean-from: #1d6b7a;
+  --ocean-to: #0e2f45;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
   --bg: #0b1d2b;
-  --bg-gradient: linear-gradient(160deg, #0b1d2b 0%, #0d2a38 55%, #0f3440 100%);
   --surface: #132b3a;
   --surface-2: #1a3747;
   --surface-glass: rgb(19 43 58 / 0.78);
-  --border: #24475a;
-  --border-strong: #5f7f8c;
+  --border: #26485b;
+  --border-strong: #71919e; /* 4.4:1 on surface, 3.7:1 on surface-2 */
   --text: #e7f1f2;
   --text-muted: #9fb6bc;
   --accent-2: #4fd1c5;
@@ -115,30 +136,29 @@
   --warning: #e8b85a;
   --warning-soft: #3a3020;
   --focus: #4fd1c5;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
   --viz-1: #34b3ac;
   --viz-2: #f27a38;
   --overlay: rgb(3 12 20 / 0.65);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.18);
   --shadow-2: 0 12px 32px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.25);
-  --card-edge: inset 0 1px 0 rgb(255 255 255 / 0.05);
   --accent: #ff9a57;
   --accent-hover: #ffb07a;
   --accent-contrast: #1b0f06;
   --accent-soft: #3a2a22;
-  --accent-grad-from: #ffa466;
-  --accent-grad-to: #f07a36;
+  --ocean-from: #1d6b7a;
+  --ocean-to: #0e2f45;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
     --bg: #0b1d2b;
-    --bg-gradient: linear-gradient(160deg, #0b1d2b 0%, #0d2a38 55%, #0f3440 100%);
     --surface: #132b3a;
     --surface-2: #1a3747;
     --surface-glass: rgb(19 43 58 / 0.78);
-    --border: #24475a;
-    --border-strong: #5f7f8c;
+    --border: #26485b;
+    --border-strong: #71919e; /* 4.4:1 on surface, 3.7:1 on surface-2 */
     --text: #e7f1f2;
     --text-muted: #9fb6bc;
     --accent-2: #4fd1c5;
@@ -150,24 +170,24 @@
     --warning: #e8b85a;
     --warning-soft: #3a3020;
     --focus: #4fd1c5;
+    --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
     --viz-1: #34b3ac;
     --viz-2: #f27a38;
     --overlay: rgb(3 12 20 / 0.65);
     --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.18);
     --shadow-2: 0 12px 32px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.25);
-    --card-edge: inset 0 1px 0 rgb(255 255 255 / 0.05);
     --accent: #ff9a57;
     --accent-hover: #ffb07a;
     --accent-contrast: #1b0f06;
     --accent-soft: #3a2a22;
-    --accent-grad-from: #ffa466;
-    --accent-grad-to: #f07a36;
+    --ocean-from: #1d6b7a;
+    --ocean-to: #0e2f45;
   }
 }
 
 /*
  * Accent variants (Einstellungen → Darstellung). Each value pair is (light, dark); every combination
- * was checked for AA: accent text ≥ 5.2:1 on surface/bg, button text ≥ 4.6:1 on both gradient ends.
+ * was checked for AA: accent text ≥ 5.2:1 on surface/bg, button text ≥ 4.6:1 on the accent.
  * Browsers without light-dark() keep the orange default.
  */
 @supports (color: light-dark(#000, #fff)) {
@@ -176,8 +196,6 @@
     --accent-hover: light-dark(#095c5f, #7fe3da);
     --accent-contrast: light-dark(#ffffff, #06201f);
     --accent-soft: light-dark(#ddf1f0, #16403f);
-    --accent-grad-from: light-dark(#0d7c80, #5fddd1);
-    --accent-grad-to: light-dark(#0b6f72, #36bdb1);
     --accent-2: light-dark(#b5430c, #ff9a57);
     --accent-2-soft: light-dark(#fdebdd, #3a2a22);
   }
@@ -186,16 +204,12 @@
     --accent-hover: light-dark(#962d3e, #ffb0bd);
     --accent-contrast: light-dark(#ffffff, #2a0a12);
     --accent-soft: light-dark(#fce6ea, #40252d);
-    --accent-grad-from: light-dark(#c1405a, #ffa3b2);
-    --accent-grad-to: light-dark(#b3374a, #f27488);
   }
   :root[data-accent='lagoon'] {
     --accent: light-dark(#1f5fa8, #8dbdf5);
     --accent-hover: light-dark(#194f8d, #b0d3fa);
     --accent-contrast: light-dark(#ffffff, #08192b);
     --accent-soft: light-dark(#e0ecfa, #1d3550);
-    --accent-grad-from: light-dark(#2668b4, #9cc8f8);
-    --accent-grad-to: light-dark(#1f5fa8, #6aa8ee);
   }
 }
 

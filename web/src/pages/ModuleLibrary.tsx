@@ -52,15 +52,17 @@ export function ModuleLibrary() {
                 {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
               </div>
               <p className={styles.desc}>{m.description}</p>
-              {enabled ? (
-                <Button onClick={() => setPending(m)} disabled={!states}>
-                  {t.actions.disable}
-                </Button>
-              ) : (
-                <Button variant="primary" onClick={() => void enable(m)} disabled={!states}>
-                  {t.actions.enable}
-                </Button>
-              )}
+              <div className={styles.moduleActions}>
+                {enabled ? (
+                  <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>
+                    {t.actions.disable}
+                  </Button>
+                ) : (
+                  <Button onClick={() => void enable(m)} disabled={!states}>
+                    {t.actions.enable}
+                  </Button>
+                )}
+              </div>
             </Card>
           );
         })}

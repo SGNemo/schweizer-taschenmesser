@@ -6,7 +6,7 @@ import type { SetupStepProps } from '@/core/setup/types';
 import { loadPrefs, savePrefs, type UpdatePrefs } from '@/core/update/prefs';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, SelectField, Switch } from '@/ui';
+import { Button, patternStyles, SelectField, Switch } from '@/ui';
 
 const s = t.setup.steps.backupupdates;
 
@@ -40,7 +40,7 @@ export default function BackupUpdatesStep({ registerCommit }: SetupStepProps) {
     <>
       <div>
         <Button onClick={() => void backupNow()}>{s.backupNow}</Button>
-        <p style={{ color: 'var(--text-muted)' }}>{s.autoNote}</p>
+        <p className={patternStyles.muted}>{s.autoNote}</p>
       </div>
       {!native ? <p>{s.browser}</p> : null}
       {native && values ? (

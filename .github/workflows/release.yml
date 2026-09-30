@@ -46,10 +46,18 @@ jobs:
         with:
           go-version: stable
       # Built from source through the Go module proxy (checksum-verified by go.sum / sumdb): no binary download to trust.
+      # The compiled binary is cached per version so later runs skip the build (a miss rebuilds it).
+      - uses: actions/cache@v4
+        id: gitleaks-cache
+        with:
+          path: ~/go/bin/gitleaks
+          key: gitleaks-v8.21.2-${{ runner.os }}
+      - name: Build gitleaks from source
+        if: steps.gitleaks-cache.outputs.cache-hit != 'true'
+        run: go install github.com/zricethezav/gitleaks/v8@v8.21.2
       - name: Scan the history for secrets
         run: |
           set -euo pipefail
-          go install github.com/zricethezav/gitleaks/v8@v8.21.2
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
   prepare:
@@ -260,6 +268,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: gradle
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -283,6 +292,10 @@ jobs:
 
       # The Gradle project is generated, not committed (src-tauri/gen is git-ignored).
       - run: npx tauri android init --ci
+      # `tauri android init` writes the CLI's template icons; the project's launcher layers
+      # (adaptive foreground/monochrome, notification icon, rendered by gen-icons) live in git.
+      - name: Project icons into the generated Android project
+        run: cp -r src-tauri/icons/android/. src-tauri/gen/android/app/src/main/res/
 
       - name: Build the (unsigned) universal APK
         run: npx tauri android build --apk --target aarch64 armv7 --config "$(node scripts/version.mjs android-config)"
@@ -385,19 +398,30 @@ jobs:
           cat dl/latest.json
           node web/scripts/audit-release.mjs --path dl/latest.json
 
+      # Both name sets must be the same signed bytes and every checksum must match its file.
+      - name: Verify the asset pairs
+        run: |
+          set -euo pipefail
+          cd dl
+          cmp Nemo-Portable.exe Taschenmesser-Portable.exe
+          cmp Nemo-Portable.exe.sig Taschenmesser-Portable.exe.sig
+          cmp Nemo.apk Taschenmesser.apk
+          sha256sum -c Nemo.apk.sha256 Taschenmesser.apk.sha256
+          grep -q '/Taschenmesser-Portable.exe"' latest.json
+
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          # The list of assets lives in web/scripts/lib/releaseAssets.ts (also used by the link check).
+          mapfile -t NAMES < <(node web/scripts/release-assets.mjs)
           FILES=()
-          for f in Taschenmesser-Portable.exe Taschenmesser-Portable.exe.sig \
-                   Taschenmesser.apk Taschenmesser.apk.sha256 \
-                   Nemo-Portable.exe Nemo-Portable.exe.sig Nemo.apk Nemo.apk.sha256 latest.json; do
+          for f in "${NAMES[@]}"; do
             [ -f "dl/$f" ] && FILES+=("dl/$f")
           done
-          if [ "${#FILES[@]}" -ne 9 ]; then
-            echo "::error::A release needs all nine assets, found ${#FILES[@]}: ${FILES[*]}"
+          if [ "${#FILES[@]}" -ne "${#NAMES[@]}" ]; then
+            echo "::error::A release needs all ${#NAMES[@]} assets, found ${#FILES[@]}: ${FILES[*]}"
             exit 1
           fi
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then

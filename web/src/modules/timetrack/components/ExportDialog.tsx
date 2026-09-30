@@ -4,7 +4,7 @@ import { getPlatform } from '@/core/platform';
 import { monthOf, today } from '@/core/time/dates';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, TextField } from '@/ui';
 import { buildCsv } from '../logic';
 import type { Entry, Project } from '../schema';
 
@@ -48,7 +48,7 @@ export function ExportDialog({
         data-autofocus
       />
       {month && inMonth.length === 0 ? <p role="status">{t.timetrack.noEntriesMonth}</p> : null}
-      <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-4)' }}>
+      <div className={`${patternStyles.hstack} ${patternStyles.gapTop}`}>
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button
           variant="primary"

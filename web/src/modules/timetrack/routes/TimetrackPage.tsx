@@ -12,6 +12,7 @@ import {
   ItemList,
   ItemRow,
   PageHeader,
+  patternStyles,
   SelectField,
   Stat,
 } from '@/ui';
@@ -103,16 +104,7 @@ export default function TimetrackPage() {
               {t.timetrack.running}: <strong>{names.get(running.projectId) ?? ''}</strong>{' '}
               {t.timetrack.runningSince(new Date(running.startedAt).toTimeString().slice(0, 5))}
             </p>
-            <p
-              style={{
-                fontSize: '2.25rem',
-                fontVariantNumeric: 'tabular-nums',
-                fontWeight: 650,
-                margin: 'var(--space-2) 0',
-              }}
-            >
-              {formatClock(tick - running.startedAt)}
-            </p>
+            <p className={patternStyles.bigNumber}>{formatClock(tick - running.startedAt)}</p>
             <Button variant="danger" onClick={() => void stop()}>
               {t.timetrack.stop}
             </Button>
@@ -124,15 +116,8 @@ export default function TimetrackPage() {
             </Button>
           </EmptyState>
         ) : (
-          <div
-            style={{
-              display: 'flex',
-              gap: 'var(--space-3)',
-              alignItems: 'flex-end',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ flex: '1 1 12rem' }}>
+          <div className={patternStyles.clusterEnd}>
+            <div className={patternStyles.growField}>
               <SelectField
                 label={t.timetrack.project}
                 value={projectId}
@@ -153,14 +138,7 @@ export default function TimetrackPage() {
         )}
       </Card>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 'var(--space-3)',
-          flexWrap: 'wrap',
-          margin: 'var(--space-4) 0',
-        }}
-      >
+      <div className={patternStyles.actionRow}>
         <Button onClick={() => setTarget({ draft: true })} disabled={active.length === 0}>
           <Icon name="plus" size={18} />
           {t.timetrack.addEntry}
@@ -174,7 +152,7 @@ export default function TimetrackPage() {
       {entries && entries.length > 0 ? (
         <>
           <Card title={t.timetrack.week}>
-            <div style={{ display: 'flex', gap: 'var(--space-5)', flexWrap: 'wrap' }}>
+            <div className={patternStyles.clusterLoose}>
               <Stat
                 label={t.timetrack.today}
                 value={t.timetrack.hours(formatMinutes(todaySum))}
@@ -186,9 +164,9 @@ export default function TimetrackPage() {
                 testId="week-total"
               />
             </div>
-            <ul className={styles.list} style={{ marginTop: 'var(--space-3)' }}>
+            <ul className={patternStyles.stackList}>
               {weekTotals.map((x) => (
-                <li key={x.projectId} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <li key={x.projectId} className={patternStyles.spaceBetween}>
                   <span>{names.get(x.projectId) ?? '—'}</span>
                   <span>
                     {t.timetrack.hours(formatMinutes(x.minutes))} · {formatDecimalHours(x.minutes)}

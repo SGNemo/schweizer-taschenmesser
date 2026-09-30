@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
-import { Button, Chip, Chips, Dialog, Form, FormActions, Switch, TextField } from '@/ui';
+import {
+  Button,
+  Chip,
+  Chips,
+  Dialog,
+  Form,
+  FormActions,
+  patternStyles,
+  Switch,
+  TextField,
+} from '@/ui';
 import { deleteHabit, habitRepo } from '../repo';
 import { ALL_DAYS, type Habit } from '../schema';
 
@@ -44,7 +54,7 @@ function Fields({ existing, onClose }: { existing: Stored<Habit> | null; onClose
         required
         data-autofocus
       />
-      <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+      <fieldset className={patternStyles.fieldset}>
         <legend
           style={{ fontSize: 'var(--text-sm)', fontWeight: 550, marginBottom: 'var(--space-2)' }}
         >

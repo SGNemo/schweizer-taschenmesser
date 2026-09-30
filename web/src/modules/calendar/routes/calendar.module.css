@@ -23,27 +23,6 @@
   font-size: var(--text-lg);
   text-transform: capitalize;
 }
-.segment {
-  display: inline-flex;
-  /* Pages are flex columns: keep the switch as wide as its buttons. */
-  align-self: flex-start;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  background: var(--surface);
-}
-.segment button {
-  min-height: var(--touch);
-  padding: 0 var(--space-4);
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-.segment button[aria-pressed='true'] {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-weight: 600;
-}
 
 /* Month grid */
 .month {
@@ -403,7 +382,7 @@ button.itemRow:hover {
 .tgItem {
   position: absolute;
   top: calc(var(--start) / 60 * var(--hour));
-  height: calc(var(--dur) / 60 * var(--hour) - 2px);
+  height: calc(var(--minutes) / 60 * var(--hour) - 2px);
   left: calc(var(--lane) / var(--lanes) * 100% + 2px);
   width: calc(100% / var(--lanes) - 4px);
   overflow: hidden;

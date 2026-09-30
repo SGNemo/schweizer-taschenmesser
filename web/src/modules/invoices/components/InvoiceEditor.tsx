@@ -3,7 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, TextArea, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, TextArea, TextField } from '@/ui';
 import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
@@ -111,7 +111,7 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
         ) : (
           <span />
         )}
-        <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <span className={patternStyles.hstack}>
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

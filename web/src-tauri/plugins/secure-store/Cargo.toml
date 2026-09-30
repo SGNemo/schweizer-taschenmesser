@@ -3,6 +3,7 @@ name = "tauri-plugin-secure-store"
 version = "0.1.0"
 authors = ["SGNemo"]
 description = "OS keystore (Windows Credential Manager / Android Keystore), biometric gate and screenshot protection."
+license = "MIT"
 edition = "2021"
 rust-version = "1.77"
 publish = false

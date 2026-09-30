@@ -11,7 +11,7 @@ import {
 import { setSettings, useSettings } from '@/core/settings/settings';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
-import { Button, Icon, Switch } from '@/ui';
+import { Button, Icon, patternStyles, Switch } from '@/ui';
 
 const s = t.setup.steps.tools;
 
@@ -34,15 +34,13 @@ export default function ToolsStep({ registerCommit }: SetupStepProps) {
   return (
     <>
       <Switch label={s.showDev} checked={showDev} onChange={setShowDev} />
-      <ul
-        style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--space-2)' }}
-      >
+      <ul className={patternStyles.gridList}>
         {shown.map((tool) => (
           <li
             key={tool.id}
             style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', minHeight: 44 }}
           >
-            <span style={{ flex: 1 }}>
+            <span className={patternStyles.grow}>
               <Switch
                 label={`${tool.name} (${s.groups[tool.group]})`}
                 hint={tool.description}

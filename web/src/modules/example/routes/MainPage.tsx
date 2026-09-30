@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
-import { Button, Checkbox, EmptyState, Icon, IconButton, TextField } from '@/ui';
+import { Button, Checkbox, EmptyState, Icon, IconButton, patternStyles, TextField } from '@/ui';
 import { entryRepo } from '../repo';
 import { settings } from '../settings';
 
@@ -46,7 +46,7 @@ export default function MainPage() {
           alignItems: 'flex-end',
         }}
       >
-        <div style={{ flex: 1 }}>
+        <div className={patternStyles.grow}>
           <TextField
             label={t.actions.add}
             placeholder={t.example.addPlaceholder}
@@ -59,10 +59,10 @@ export default function MainPage() {
         </Button>
       </form>
       {entries && visible.length === 0 ? <EmptyState title={t.example.empty} /> : null}
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      <ul className={patternStyles.plainList}>
         {visible.map((e) => (
-          <li key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <div style={{ flex: 1 }}>
+          <li key={e.id} className={patternStyles.hstackCenter}>
+            <div className={patternStyles.grow}>
               <Checkbox
                 label={e.title}
                 checked={e.done}
