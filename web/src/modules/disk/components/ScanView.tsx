@@ -2,12 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import {
   FILE_KINDS,
+  type DeleteMode,
+  type DenyReason,
   type DiskNode,
   type DiskQuery,
   type FileKind,
   type ScanSummary,
 } from '@/core/platform/disk';
 import { now } from '@/core/time/now';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Card, Chip, Chips, SelectField, Segmented, SplitView, Toolbar, useSplitView } from '@/ui';
 import { formatBytes, formatCount, percent } from '../format';
@@ -19,15 +22,19 @@ import {
   type SortDir,
   type SortKey,
 } from '../logic/tree';
+import { useDiskStore } from '../store';
+import { Basket } from './Basket';
 import { Breadcrumb } from './Breadcrumb';
+import { DeleteDialog } from './DeleteDialog';
 import { Details } from './Details';
+import { Duplicates } from './Duplicates';
 import { Legend } from './Legend';
 import { NodeList, formatDate } from './NodeList';
 import { TreemapView, type ColorMode } from './TreemapView';
 import palette from './Palette.module.css';
 import styles from './ScanView.module.css';
 
-type FilterKind = 'none' | 'topDirs' | 'topFiles' | 'old' | 'type';
+type FilterKind = 'none' | 'topDirs' | 'topFiles' | 'old' | 'type' | 'empty' | 'dupes';
 interface Filter {
   kind: FilterKind;
   months: number;
@@ -47,6 +54,8 @@ function toQuery(f: Filter, under: number | undefined): DiskQuery | null {
       return { ...base, scope: f.scope, olderThan: monthsAgoSeconds(now(), f.months) };
     case 'type':
       return { ...base, scope: f.scope, fileKind: f.fileKind };
+    case 'empty':
+      return { ...base, scope: 'dirs', onlyEmpty: true };
     default:
       return null;
   }
@@ -74,6 +83,14 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
   const [results, setResults] = useState<DiskNode[]>([]);
   const split = useSplitView();
   const cache = useRef(new Map<number, DiskNode>());
+  // Bumped after a delete run: every list and the trail are fetched again (no rescan).
+  const [version, setVersion] = useState(0);
+  const [deleting, setDeleting] = useState<{ ids: number[]; mode?: DeleteMode } | null>(null);
+  const [verdict, setVerdict] = useState<{ key: string; value: DenyReason | null } | null>(null);
+  const basket = useDiskStore((s) => s.basket);
+  const addToBasket = useDiskStore((s) => s.addToBasket);
+  const applyRoot = useDiskStore((s) => s.applyRoot);
+  const toast = useUiStore((s) => s.toast);
 
   const filtering = filter.kind !== 'none';
   const shown: 'map' | 'list' = filtering ? 'list' : view;
@@ -95,7 +112,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
     return () => {
       alive = false;
     };
-  }, [disk, scanId, current.id, shown, size.w, minBytes]);
+  }, [disk, scanId, current.id, shown, size.w, minBytes, version]);
 
   useEffect(() => {
     if (shown !== 'list' || filtering) return;
@@ -107,7 +124,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
     return () => {
       alive = false;
     };
-  }, [disk, scanId, current.id, shown, filtering]);
+  }, [disk, scanId, current.id, shown, filtering, version]);
 
   useEffect(() => {
     const q = toQuery(filter, current.id === rootNode.id ? undefined : current.id);
@@ -120,7 +137,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
     return () => {
       alive = false;
     };
-  }, [disk, scanId, filter, current.id, rootNode.id]);
+  }, [disk, scanId, filter, current.id, rootNode.id, version]);
 
   const lookup = useMemo(
     () => new Map([...trail, ...mapNodes, ...listNodes, ...results].map((n) => [n.id, n])),
@@ -228,6 +245,55 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
 
   const setKind = (kind: FilterKind) => setFilter((f) => ({ ...f, kind }));
   const detailNode = selected ?? current;
+  const actionable = detailNode.id !== rootNode.id && detailNode.kind !== 'small';
+
+  // Ask the native block list before the delete buttons are offered. A verdict only counts for the
+  // entry (and refresh) it was asked for; until it arrives the buttons stay hidden.
+  const verdictKey = `${detailNode.id}:${version}`;
+  useEffect(() => {
+    if (!actionable) return;
+    let alive = true;
+    const set = (value: DenyReason | null) => alive && setVerdict({ key: verdictKey, value });
+    disk
+      .canDelete(scanId, detailNode.id)
+      .then(set)
+      .catch(() => set('missing'));
+    return () => {
+      alive = false;
+    };
+  }, [disk, scanId, detailNode.id, actionable, verdictKey]);
+  const denied = verdict?.key === verdictKey ? verdict.value : undefined;
+
+  // After a delete run: fetch the trail and the basket again; whatever is gone drops out.
+  const refresh = useCallback(async () => {
+    const fresh = await Promise.all(trail.map((n) => disk.node(scanId, n.id).catch(() => null)));
+    const firstGone = fresh.findIndex((n) => n === null);
+    const kept = (firstGone === -1 ? fresh : fresh.slice(0, firstGone)) as DiskNode[];
+    setTrail(kept.length ? kept : [rootNode]);
+    setSelected(null);
+    for (const b of useDiskStore.getState().basket) {
+      const still = await disk.node(scanId, b.id).catch(() => null);
+      if (!still) useDiskStore.getState().removeFromBasket(b.id);
+    }
+    setVersion((v) => v + 1);
+  }, [disk, scanId, trail, rootNode]);
+
+  const closeDelete = (changed: boolean, newRoot: DiskNode | null) => {
+    setDeleting(null);
+    if (!changed) return;
+    if (newRoot) applyRoot(newRoot);
+    void refresh();
+  };
+
+  const copyPath = async () => {
+    try {
+      await getPlatform().clipboard.writeText(await disk.nodePath(scanId, detailNode.id));
+      toast(t.disk.actions.copied);
+    } catch {
+      // Clipboard not available: nothing to report beyond the missing toast.
+    }
+  };
+
   const detailsCard = (
     <Card>
       <Details
@@ -237,9 +303,29 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
         biggest={entries}
         onOpen={(n) => void open(n)}
         onSelect={setSelected}
+        actions={
+          actionable
+            ? {
+                denied,
+                inBasket: basket.some((b) => b.id === detailNode.id),
+                onReveal: () => void disk.reveal(scanId, detailNode.id).catch(() => undefined),
+                onCopyPath: () => void copyPath(),
+                onBasket: () =>
+                  addToBasket({
+                    id: detailNode.id,
+                    name: detailNode.name,
+                    bytes: detailNode.bytes,
+                    files: detailNode.files,
+                    isDir: detailNode.kind === 'dir',
+                  }),
+                onDelete: () => setDeleting({ ids: [detailNode.id] }),
+              }
+            : undefined
+        }
       />
     </Card>
   );
+  const basketCard = <Basket onDeleteAll={(ids) => setDeleting({ ids })} />;
 
   return (
     <div className={`${palette.palette} ${styles.root}`}>
@@ -292,6 +378,16 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
           selected={filter.kind === 'type'}
           onClick={() => setKind('type')}
         />
+        <Chip
+          label={t.disk.filter.empty}
+          selected={filter.kind === 'empty'}
+          onClick={() => setKind('empty')}
+        />
+        <Chip
+          label={t.disk.filter.dupes}
+          selected={filter.kind === 'dupes'}
+          onClick={() => setKind('dupes')}
+        />
       </Chips>
       {filter.kind === 'old' || filter.kind === 'type' ? (
         <Toolbar>
@@ -332,7 +428,16 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
         </Toolbar>
       ) : null}
 
-      <SplitView enabled={split} aside={detailsCard} asideLabel={t.disk.details.title}>
+      <SplitView
+        enabled={split}
+        aside={
+          <>
+            {basketCard}
+            {detailsCard}
+          </>
+        }
+        asideLabel={t.disk.details.title}
+      >
         <div className={styles.main}>
           {shown === 'map' ? (
             <>
@@ -352,6 +457,8 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
                 {t.disk.map.help}
               </p>
             </>
+          ) : filter.kind === 'dupes' ? (
+            <Duplicates scanId={scanId} under={current.id} root={root} />
           ) : filtering ? (
             <>
               <p className={styles.help} aria-live="polite">
@@ -387,9 +494,23 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
               label={t.disk.list.label}
             />
           )}
-          {split ? null : detailsCard}
+          {split ? null : (
+            <>
+              {basketCard}
+              {detailsCard}
+            </>
+          )}
         </div>
       </SplitView>
+      {deleting ? (
+        <DeleteDialog
+          key={deleting.ids.join(',') + (deleting.mode ?? '')}
+          scanId={scanId}
+          nodeIds={deleting.ids}
+          presetMode={deleting.mode}
+          onClose={closeDelete}
+        />
+      ) : null}
     </div>
   );
 }

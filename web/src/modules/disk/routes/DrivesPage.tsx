@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { getPlatform } from '@/core/platform';
-import type { DriveInfo } from '@/core/platform/disk';
+import type { DriveInfo, Place } from '@/core/platform/disk';
 import { t } from '@/strings';
-import { Badge, Card, EmptyState, PageHeader } from '@/ui';
+import { Badge, Button, Card, EmptyState, PageHeader } from '@/ui';
 import { UsageRing } from '../components/UsageRing';
 import { driveLevel, formatBytes, percent } from '../format';
 import { useDiskStore } from '../store';
@@ -15,6 +15,7 @@ const kindLabel = (d: DriveInfo): string =>
 export default function DrivesPage() {
   const [drives, setDrives] = useState<DriveInfo[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [places, setPlaces] = useState<Place[]>([]);
   const navigate = useNavigate();
   const start = useDiskStore((s) => s.start);
 
@@ -24,15 +25,20 @@ export default function DrivesPage() {
       .disk.listDrives()
       .then((d) => alive && setDrives(d))
       .catch(() => alive && setFailed(true));
+    getPlatform()
+      .disk.knownPlaces()
+      .then((p) => alive && setPlaces(p))
+      .catch(() => undefined);
     return () => {
       alive = false;
     };
   }, []);
 
-  const open = (d: DriveInfo) => {
-    void start(d.root);
+  const scanRoot = (root: string) => {
+    void start(root);
     void navigate('/disk/scan');
   };
+  const open = (d: DriveInfo) => scanRoot(d.root);
 
   return (
     <>
@@ -80,6 +86,26 @@ export default function DrivesPage() {
             );
           })}
         </ul>
+      ) : null}
+      {places.length > 0 ? (
+        <section className={styles.places} aria-label={t.disk.places.title}>
+          <h2>{t.disk.places.title}</h2>
+          <p className={styles.lead}>{t.disk.places.lead}</p>
+          <ul className={styles.grid}>
+            {places.map((p) => (
+              <li key={p.path}>
+                <Card className={styles.placeCard}>
+                  <span className={styles.name}>{t.disk.places.name[p.id]}</span>
+                  <span className={styles.path}>{p.path}</span>
+                  <span className={styles.meta}>{t.disk.places.hint[p.id]}</span>
+                  <Button onClick={() => scanRoot(p.path)}>
+                    {t.disk.places.scan(t.disk.places.name[p.id]!)}
+                  </Button>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
     </>
   );

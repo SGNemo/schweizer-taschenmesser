@@ -91,6 +91,107 @@ export interface DiskQuery {
   fileKind?: FileKind;
   minBytes?: number;
   limit?: number;
+  /** Folders without any file (own or nested); folders only. */
+  onlyEmpty?: boolean;
+}
+
+/** Well-known cache/temp folders offered as scan roots (only ones that exist). */
+export interface Place {
+  id: 'temp' | 'chrome' | 'edge' | 'firefox' | 'downloads' | 'cache';
+  path: string;
+}
+
+/** Why the block list refuses an entry (`Denied::code()` in Rust). */
+export type DenyReason =
+  | 'missing'
+  | 'drive-root'
+  | 'system-folder'
+  | 'user-profile'
+  | 'app-data'
+  | 'system-file'
+  | 'own-app'
+  | 'running-program'
+  | 'scan-root'
+  | 'not-an-entry';
+
+export type DeleteMode = 'trash' | 'permanent';
+export type PlanFlag = 'large' | 'userData' | 'program';
+
+export interface PlanItem {
+  nodeId: number;
+  name: string;
+  /** Full path, as shown in the confirmation. */
+  path: string;
+  isDir: boolean;
+  bytes: number;
+  files: number;
+  flags: PlanFlag[];
+  drive: DriveKind;
+}
+
+export interface PlanDenied {
+  nodeId: number;
+  name: string;
+  reason: DenyReason;
+}
+
+/** Result of the check before deleting; nothing has been touched yet. Valid for five minutes. */
+export interface DeletePlan {
+  planId: number;
+  items: PlanItem[];
+  denied: PlanDenied[];
+  totalBytes: number;
+  totalFiles: number;
+  large: boolean;
+  /** Exact text to type before a move to the recycle bin (null = plain confirmation). */
+  trashConfirmation: string | null;
+  /** Exact text to type before a permanent delete (null only when nothing can be deleted). */
+  permanentConfirmation: string | null;
+  /** False when an item is on a network/removable drive, where the recycle bin often cannot be used. */
+  trashLikely: boolean;
+}
+
+export type DeleteOutcome =
+  'deleted' | 'partial' | 'failed' | 'skipped' | 'trashUnavailable' | 'cancelled';
+
+export interface EntryError {
+  path: string;
+  reason: 'in-use' | 'denied' | 'other';
+}
+
+export interface DeleteItemReport {
+  node: number;
+  name: string;
+  outcome: DeleteOutcome;
+  /** A `DenyReason`, `changed`, or an error reason. */
+  reason: string | null;
+  filesDeleted: number;
+  bytes: number;
+  errors: EntryError[];
+  errorsTotal: number;
+}
+
+export interface DeleteReport {
+  mode: DeleteMode;
+  items: DeleteItemReport[];
+  cancelled: boolean;
+  filesDeleted: number;
+  freedBytes: number;
+  /** The scan root after the tree was corrected. */
+  rootNode: DiskNode | null;
+}
+
+export interface DeleteProgress {
+  itemsDone: number;
+  itemsTotal: number;
+  current: string;
+  filesDeleted: number;
+}
+
+export interface DupGroup {
+  size: number;
+  wasted: number;
+  files: DiskNode[];
 }
 
 export interface ScanHandle {
@@ -111,4 +212,25 @@ export interface DiskService {
   children(scanId: number, node: number, depth: number, minBytes: number): Promise<DiskNode[]>;
   node(scanId: number, node: number): Promise<DiskNode | null>;
   query(scanId: number, query: DiskQuery): Promise<DiskNode[]>;
+  knownPlaces(): Promise<Place[]>;
+  nodePath(scanId: number, node: number): Promise<string>;
+  /** Shows the entry in Explorer. */
+  reveal(scanId: number, node: number): Promise<void>;
+  /** The block list's verdict for one entry: null = may be offered for deletion. */
+  canDelete(scanId: number, node: number): Promise<DenyReason | null>;
+  planDelete(scanId: number, nodes: number[]): Promise<DeletePlan>;
+  /**
+   * Runs a plan. `confirm` must be the phrase the plan asks for (checked natively, too).
+   * Rejects with `Error(code)`, e.g. `confirmation-mismatch`, `plan-expired`.
+   */
+  runDelete(
+    planId: number,
+    mode: DeleteMode,
+    confirm: string | null,
+    onProgress: (p: DeleteProgress) => void,
+  ): Promise<DeleteReport>;
+  cancelDelete(planId: number): Promise<void>;
+  /** Identical files below `under` (size, partial hash, full hash). Nothing is deleted. */
+  findDuplicates(scanId: number, under: number): Promise<DupGroup[]>;
+  cancelDuplicates(scanId: number): Promise<void>;
 }

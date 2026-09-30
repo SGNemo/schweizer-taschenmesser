@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { getPlatform } from '@/core/platform';
-import type { ScanProgress, ScanSummary } from '@/core/platform/disk';
+import type { DiskNode, ScanProgress, ScanSummary } from '@/core/platform/disk';
+
+/** What the basket needs to show an entry; the entry itself stays in the native scan tree. */
+export interface BasketItem {
+  id: number;
+  name: string;
+  bytes: number;
+  files: number;
+  isDir: boolean;
+}
 
 export type ScanPhase = 'idle' | 'scanning' | 'done' | 'failed';
 
@@ -12,6 +21,12 @@ interface DiskState {
   summary: ScanSummary | null;
   error: string | null;
   paused: boolean;
+  basket: BasketItem[];
+  addToBasket(item: BasketItem): void;
+  removeFromBasket(id: number): void;
+  clearBasket(): void;
+  /** After a delete run: the scan root's new totals. */
+  applyRoot(root: DiskNode): void;
   start(root: string): Promise<void>;
   cancel(): Promise<void>;
   togglePause(): Promise<void>;
@@ -30,6 +45,32 @@ export const useDiskStore = create<DiskState>((set, get) => ({
   summary: null,
   error: null,
   paused: false,
+  basket: [],
+
+  addToBasket(item) {
+    set((s) => (s.basket.some((b) => b.id === item.id) ? s : { basket: [...s.basket, item] }));
+  },
+  removeFromBasket(id) {
+    set((s) => ({ basket: s.basket.filter((b) => b.id !== id) }));
+  },
+  clearBasket() {
+    set({ basket: [] });
+  },
+  applyRoot(root) {
+    set((s) =>
+      s.summary
+        ? {
+            summary: {
+              ...s.summary,
+              rootNode: root,
+              bytes: root.bytes,
+              logicalBytes: root.logicalBytes,
+              files: root.files,
+            },
+          }
+        : s,
+    );
+  },
 
   async start(root) {
     await get().reset();
@@ -69,6 +110,7 @@ export const useDiskStore = create<DiskState>((set, get) => ({
       summary: null,
       error: null,
       paused: false,
+      basket: [],
     });
     if (scanId !== null) {
       try {

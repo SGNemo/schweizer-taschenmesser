@@ -231,3 +231,215 @@ test('a result row opens the folder of the file in the map', async ({ page }) =>
     page.getByRole('navigation', { name: 'Pfad' }).getByRole('button', { name: 'Spiel' }),
   ).toHaveAttribute('aria-current', 'location');
 });
+
+// --- deleting (against the in-memory fake only; never a real path) -----------------------------
+
+const rowButton = (page: Page, table: string, name: string) =>
+  page.getByRole('table', { name: table }).getByRole('button', { name });
+
+/** Opens the "biggest files/folders" list and selects one entry, so its details show. */
+async function pick(page: Page, filter: 'Größte Dateien' | 'Größte Ordner', name: string) {
+  await page.getByRole('button', { name: filter }).click();
+  await rowButton(page, 'Schnellfilter', name).click();
+  await expect(page.getByTestId('details').getByRole('heading', { name })).toBeVisible();
+}
+
+const deleteButton = (page: Page) =>
+  page.getByTestId('details').getByRole('button', { name: /^Löschen/ });
+
+test('protected entries are not offered for deletion, with the reason', async ({ page }) => {
+  await openScan(page);
+  await pick(page, 'Größte Ordner', 'System');
+  await expect(page.getByTestId('protected-note')).toContainText('Windows');
+  await expect(deleteButton(page)).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Zum Korb' })).toHaveCount(0);
+  await pick(page, 'Größte Dateien', 'auslagerung.sys');
+  await expect(page.getByTestId('protected-note')).toContainText('Systemdatei');
+  await expect(deleteButton(page)).toHaveCount(0);
+});
+
+test('basket: collect two files, one confirmation with the sum, then the bin', async ({ page }) => {
+  await openScan(page);
+  await pick(page, 'Größte Dateien', 'alt.iso');
+  await page.getByRole('button', { name: 'Zum Korb' }).click();
+  await pick(page, 'Größte Dateien', 'archiv.zip');
+  await page.getByRole('button', { name: 'Zum Korb' }).click();
+  const basket = page.getByTestId('basket');
+  await expect(basket).toContainText('alt.iso');
+  await expect(basket).toContainText('archiv.zip');
+  await expect(page.getByTestId('basket-total')).toContainText('2 Einträge');
+  await basket.getByRole('button', { name: 'Alle löschen …' }).click();
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByTestId('delete-items')).toContainText(
+    'C:\\Nutzer\\Beispiel\\Downloads\\alt.iso',
+  );
+  await expect(dialog.getByTestId('delete-items')).toContainText(
+    'C:\\Nutzer\\Beispiel\\Downloads\\archiv.zip',
+  );
+  await expect(dialog.getByTestId('delete-total')).toContainText('2 Einträge');
+  await expect(dialog.getByRole('radio', { name: /In den Papierkorb verschieben/ })).toBeChecked();
+  await audit(page, 'delete dialog');
+  // Small, not permanent: no typing needed.
+  await dialog.getByRole('button', { name: 'In den Papierkorb' }).click();
+  const report = page.getByTestId('delete-report');
+  await expect(report).toContainText('Gelöscht');
+  await expect(report).toContainText('Papierkorb');
+  await page.getByRole('button', { name: 'Schließen' }).last().click();
+  await expect(page.getByTestId('basket')).toHaveCount(0);
+
+  // The tree was corrected: the files are gone from the ranking without a new scan.
+  await page.getByRole('button', { name: 'Größte Dateien' }).click();
+  const table = page.getByRole('table', { name: 'Schnellfilter' });
+  await expect(table).toBeVisible();
+  await expect(table).not.toContainText('alt.iso');
+  await expect(table).toContainText('daten.pak');
+});
+
+test('large deletions need the name typed in; a wrong text keeps the button off', async ({
+  page,
+}) => {
+  await openScan(page);
+  await pick(page, 'Größte Dateien', 'daten.pak');
+  await deleteButton(page).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Sehr große Löschung');
+  const confirm = dialog.getByRole('button', { name: 'In den Papierkorb' });
+  await expect(confirm).toBeDisabled();
+  const field = dialog.getByLabel('Tippe zur Bestätigung „daten.pak“ ein');
+  await field.fill('daten');
+  await expect(confirm).toBeDisabled();
+  await field.fill('daten.pak');
+  await expect(confirm).toBeEnabled();
+  await confirm.click();
+  await expect(page.getByTestId('delete-report')).toContainText('Gelöscht');
+});
+
+test('permanent delete is a deliberate second choice with its own confirmation', async ({
+  page,
+}) => {
+  await openScan(page);
+  await pick(page, 'Größte Dateien', 'Steuer.pdf');
+  await deleteButton(page).click();
+  const dialog = page.getByRole('dialog');
+  // Bin is the default and needs no typing for this small file.
+  await expect(dialog.getByRole('button', { name: 'In den Papierkorb' })).toBeEnabled();
+  await dialog.getByRole('radio', { name: /Endgültig löschen/ }).check();
+  await expect(dialog).toContainText('nicht rückgängig');
+  const confirm = dialog.getByRole('button', { name: 'Endgültig löschen' });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel('Tippe zur Bestätigung „Steuer.pdf“ ein').fill('Steuer.pdf');
+  await confirm.click();
+  await expect(page.getByTestId('delete-report')).toContainText('endgültig gelöscht');
+});
+
+test('user folders and programs get their own, clearer warning', async ({ page }) => {
+  await openScan(page);
+  await pick(page, 'Größte Ordner', 'Dokumente');
+  await deleteButton(page).click();
+  await expect(page.getByRole('dialog')).toContainText('persönlichen Ordnern');
+  await page.getByRole('button', { name: 'Abbrechen' }).click();
+  await pick(page, 'Größte Ordner', 'Editor');
+  await deleteButton(page).click();
+  await expect(page.getByRole('dialog')).toContainText('sieht nach einem Programm aus');
+});
+
+test('files in use: the report lists what stayed, with the reason', async ({ page }) => {
+  await openScan(page);
+  await pick(page, 'Größte Ordner', 'Editor');
+  await deleteButton(page).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('radio', { name: /Endgültig löschen/ }).check();
+  await dialog.getByLabel('Tippe zur Bestätigung „Editor“ ein').fill('Editor');
+  await dialog.getByRole('button', { name: 'Endgültig löschen' }).click();
+  const report = page.getByTestId('delete-report');
+  await expect(report).toContainText('Teilweise gelöscht');
+  await expect(report).toContainText('C:\\Programme\\Editor\\Editor.exe');
+  await expect(report).toContainText('Datei in Benutzung');
+});
+
+test('a bin that cannot take the item never deletes it silently', async ({ page }) => {
+  await openScan(page, 'E:\\ (USB-Stick) scannen');
+  await pick(page, 'Größte Dateien', 'Urlaub-2024.mp4');
+  await deleteButton(page).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Wechseldatenträgern');
+  await dialog.getByRole('button', { name: 'In den Papierkorb' }).click();
+  const report = page.getByTestId('delete-report');
+  await expect(report).toContainText('Papierkorb nicht möglich – nichts gelöscht');
+  // Still there: the second, deliberate step is offered instead.
+  await report.getByRole('button', { name: /Diese endgültig löschen/ }).click();
+  const next = page.getByRole('dialog');
+  await expect(next.getByRole('radio', { name: /Endgültig löschen/ })).toBeChecked();
+  await next.getByLabel('Tippe zur Bestätigung „Urlaub-2024.mp4“ ein').fill('Urlaub-2024.mp4');
+  await next.getByRole('button', { name: 'Endgültig löschen' }).click();
+  await expect(page.getByTestId('delete-report')).toContainText('endgültig gelöscht');
+});
+
+test('a running delete can be stopped; what is left stays untouched', async ({ page }) => {
+  await openScan(page);
+  for (const name of ['alt.iso', 'archiv.zip', 'setup-beispiel.exe', 'Steuer.pdf']) {
+    await pick(page, 'Größte Dateien', name);
+    await page.getByRole('button', { name: 'Zum Korb' }).click();
+  }
+  await page.getByTestId('basket').getByRole('button', { name: 'Alle löschen …' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'In den Papierkorb' }).click();
+  await expect(dialog.getByText('Löschen läuft …').first()).toBeVisible();
+  await dialog.getByRole('button', { name: 'Stoppen' }).click();
+  const report = page.getByTestId('delete-report');
+  await expect(report).toContainText('abgebrochen');
+  await expect(report).toContainText('Abgebrochen');
+});
+
+test('reveal and copy path use the native path of the entry', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openScan(page);
+  await pick(page, 'Größte Dateien', 'daten.pak');
+  await page.getByRole('button', { name: 'Im Explorer zeigen' }).click();
+  expect(
+    await page.evaluate(() => (globalThis as { __tmDiskRevealed?: string[] }).__tmDiskRevealed),
+  ).toEqual(['C:\\Programme\\Spiel\\daten.pak']);
+  await page.getByRole('button', { name: 'Pfad kopieren' }).click();
+  await expect(page.getByText('Pfad kopiert.')).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    'C:\\Programme\\Spiel\\daten.pak',
+  );
+});
+
+test('duplicates: found by content, one copy always stays, the user fills the basket', async ({
+  page,
+}) => {
+  await openScan(page);
+  await page.getByRole('button', { name: 'Doppelte Dateien' }).click();
+  await page.getByRole('button', { name: 'Doppelte Dateien suchen' }).click();
+  const box = page.getByTestId('duplicates');
+  await expect(box).toContainText('2 gleiche Dateien');
+  const first = box.getByRole('checkbox').nth(0);
+  const second = box.getByRole('checkbox').nth(1);
+  await first.check();
+  await expect(second).toBeDisabled();
+  await expect(box).toContainText('Mindestens eine Datei bleibt');
+  await expect(page.getByTestId('basket')).toContainText('Urlaub-2024');
+  await first.uncheck();
+  await expect(second).toBeEnabled();
+});
+
+test('empty folders are listed', async ({ page }) => {
+  await openScan(page);
+  await page.getByRole('button', { name: 'Leere Ordner' }).click();
+  await expect(page.getByRole('table', { name: 'Schnellfilter' })).toContainText('Leer');
+});
+
+test('clean-up places on the drives page start a scan of that folder', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2025-06-15T00:00:00Z'));
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk');
+  await expect(page.getByRole('heading', { name: 'Aufräumen' })).toBeVisible();
+  await page.getByRole('button', { name: 'Downloads scannen' }).click();
+  await expect(
+    page.getByRole('heading', { name: /Scan von C:\\Nutzer\\Beispiel\\Downloads/ }),
+  ).toBeVisible();
+  await expect(page.getByTestId('treemap')).toBeVisible();
+});

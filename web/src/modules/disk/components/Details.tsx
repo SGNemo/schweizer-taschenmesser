@@ -1,4 +1,4 @@
-import type { DiskNode } from '@/core/platform/disk';
+import type { DenyReason, DiskNode } from '@/core/platform/disk';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { formatBytes, formatCount, percent } from '../format';
@@ -16,9 +16,19 @@ interface Props {
   biggest: readonly DiskNode[];
   onOpen: (node: DiskNode) => void;
   onSelect: (node: DiskNode) => void;
+  /** Actions on the entry; `undefined` hides them (scan root, aggregates). */
+  actions?: {
+    /** The block list's verdict: `undefined` while loading, `null` = may be deleted. */
+    denied: DenyReason | null | undefined;
+    inBasket: boolean;
+    onReveal: () => void;
+    onCopyPath: () => void;
+    onBasket: () => void;
+    onDelete: () => void;
+  };
 }
 
-export function Details({ node, current, path, biggest, onOpen, onSelect }: Props) {
+export function Details({ node, current, path, biggest, onOpen, onSelect, actions }: Props) {
   const isDir = node.kind === 'dir';
   const kinds = kindShares(node);
   const showBiggest = node.id === current.id && biggest.length > 0;
@@ -75,6 +85,30 @@ export function Details({ node, current, path, biggest, onOpen, onSelect }: Prop
             {isDir ? t.disk.details.open : t.disk.nav.open}
           </Button>
         </div>
+      ) : null}
+      {actions ? (
+        <>
+          <h3 className={styles.label}>{t.disk.actions.heading}</h3>
+          <div className={styles.actionRow}>
+            <Button onClick={actions.onReveal}>{t.disk.actions.reveal}</Button>
+            <Button onClick={actions.onCopyPath}>{t.disk.actions.copyPath}</Button>
+          </div>
+          {actions.denied === undefined ? null : actions.denied === null ? (
+            <div className={styles.actionRow}>
+              <Button onClick={actions.onBasket} disabled={actions.inBasket}>
+                {actions.inBasket ? t.disk.actions.inBasket : t.disk.actions.addBasket}
+              </Button>
+              <Button variant="danger" onClick={actions.onDelete}>
+                {t.disk.actions.delete}
+              </Button>
+            </div>
+          ) : (
+            <p className={styles.protected} role="note" data-testid="protected-note">
+              <strong>{t.disk.actions.protectedTitle}.</strong>{' '}
+              {t.disk.actions.protectedText(t.disk.deny[actions.denied])}
+            </p>
+          )}
+        </>
       ) : null}
       {showBiggest ? (
         <>

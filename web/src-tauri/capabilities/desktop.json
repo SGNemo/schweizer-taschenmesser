@@ -2,14 +2,8 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "desktop-commands",
   "description": "App commands of the desktop shell (updater, OAuth loopback, local API, disk module). Not granted on Android, which has none of them. Nothing here opens the file system to the webview: the disk commands only take scan/plan ids and node ids.",
-  "windows": [
-    "main"
-  ],
-  "platforms": [
-    "windows",
-    "linux",
-    "macOS"
-  ],
+  "windows": ["main"],
+  "platforms": ["windows", "linux", "macOS"],
   "permissions": [
     "allow-check-update",
     "allow-install-update",
