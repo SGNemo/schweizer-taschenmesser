@@ -36,15 +36,26 @@ async function dbName(page: Page) {
   return names.find((n) => n?.toLowerCase().includes('taschenmesser')) ?? 'taschenmesser';
 }
 
+/**
+ * Closing the wizard pops its history entry with `history.back()` (see `useBackClose`), which is
+ * asynchronous. A `goto` right after the dialog disappears can collide with it (ERR_ABORTED, or the
+ * back navigation lands on the new page). Wait until the overlay entry is gone.
+ */
+async function overlayGone(page: Page) {
+  await expect(wizard(page)).toHaveCount(0);
+  await page.waitForFunction(() => !(history.state as { tmOverlay?: boolean } | null)?.tmOverlay);
+}
+
 async function skipEverything(page: Page) {
   const dialog = wizard(page);
   const summary = dialog.getByTestId('setup-summary');
   const skip = dialog.getByRole('button', { name: 'Überspringen' });
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 40; i++) {
     // Either the next step (with its skip button) or the summary shows up after each click.
     await expect(skip.or(summary)).toBeVisible();
     if (await summary.isVisible()) return;
-    await skip.click();
+    // The step may have changed between the check and now; then the next round decides again.
+    if (await skip.isVisible()) await skip.click();
   }
 }
 
@@ -103,6 +114,7 @@ test('an existing installation never shows the assistant by itself, but it start
   // The existing data is untouched by merely looking.
   await wizard(page).getByRole('button', { name: 'Schließen' }).first().click();
   await wizard(page).getByRole('button', { name: 'Einrichtung beenden' }).click();
+  await overlayGone(page);
   await page.goto('/todos');
   await expect(page.getByText('Erfundene Aufgabe')).toBeVisible();
 });
