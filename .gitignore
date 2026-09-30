@@ -28,8 +28,11 @@ google-services.json
 *.db-shm
 **/data/
 taschenmesser-backup*.json
+nemo-backup*.json
 taschenmesser-accounts-*.json
 taschenmesser-accounts-*.csv
+nemo-accounts-*.json
+nemo-accounts-*.csv
 
 # --- Build output and tool caches (also covered per project; repeated here for stray runs at the root) ---
 **/dist/

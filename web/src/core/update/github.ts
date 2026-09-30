@@ -7,8 +7,14 @@ export const REPO = 'SGNemo/schweizer-taschenmesser';
 export const RELEASES_API = `https://api.github.com/repos/${REPO}/releases?per_page=30`;
 
 export const STABLE_MANIFEST_URL = `https://github.com/${REPO}/releases/latest/download/latest.json`;
-export const APK_ASSET = 'Taschenmesser.apk';
-export const APK_SHA256_ASSET = 'Taschenmesser.apk.sha256';
+/**
+ * APK + checksum pairs, newest name first. Releases carry the same signed file under the legacy name
+ * (older releases only have that one), so both are accepted while the rebrand settles.
+ */
+export const APK_ASSET_PAIRS = [
+  { apk: 'Nemo.apk', sha256: 'Nemo.apk.sha256' },
+  { apk: 'Taschenmesser.apk', sha256: 'Taschenmesser.apk.sha256' },
+] as const;
 export const MANIFEST_ASSET = 'latest.json';
 
 const releaseSchema = z.object({

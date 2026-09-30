@@ -1,4 +1,4 @@
-# Status – Taschenmesser
+# Status – Nemo
 
 Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
 
@@ -126,7 +126,7 @@ T3. *Timer:* Timer starten, Sheet schließen – läuft weiter; bei Ablauf kommt
 ### Links, Teilen, Apps & Links (Phase 13, Schritt 6)
 L1. *Karte:* Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Maps (Windows: Browser, Android: Maps-App). ☐
 L2. *WhatsApp:* Geburtstage → Knopf neben dem Namen → WhatsApp (Web/App) mit Glückwunschtext, Kontakt wählen. ☐
-L3. *Teilen (Android, PWA in Chrome installiert):* in einer anderen App „Teilen“ → Taschenmesser → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
+L3. *Teilen (Android, PWA in Chrome installiert):* in einer anderen App „Teilen“ → Nemo → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
 L4. *Apps & Links:* Modul einschalten → „Startdaten einrichten“ → Vorschläge; die acht Startseiten (DHL, Hermes, DPD, Bahn, Maps, WhatsApp Web, Spotify, DWD) im Browser öffnen und melden, welche nicht stimmt. ☐
 L5. *Spotify:* nicht gebaut (siehe docs/architecture.md). Soll ein Now-Playing-Widget kommen, brauche ich eine Entscheidung: Premium-Konto als Entwickler nötig, max. 5 Nutzer. ☐
 
@@ -136,6 +136,15 @@ E2. *Frische Installation (Windows-Portable, dann Android-APK):* Übersicht zeig
 E3. *Wiederherstellung aus Backup:* frische App → Schritt „Sync und Wiederherstellung“ → „Backup-Datei einspielen“ → Module/Daten sind da; danach Profile/Startdaten überspringen. ☐
 E4. *Bestehende Installation bleibt unberührt:* Update einer App mit Daten: keine Willkommenskarte, keine Checkliste, Daten unverändert; Einstellungen → „Einrichtung starten“ zeigt den aktuellen Zustand, nichts wird ohne Bestätigung geändert (Profil zeigt erst den Diff). ☐
 E5. *Google-Verbindung im Assistenten (Windows):* Schritt „Konten verknüpfen“ → Anmeldung starten und im Browser abbrechen bzw. den Assistenten schließen: kein Token gespeichert, Status bleibt „Nicht verbunden“. ☐
+
+### Nemo: Umbenennung und Design
+N1. *Windows-Portable starten (frische Datei und als Update):* Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt bewusst noch auf `Taschenmesser-Portable.exe`), Daten bleiben erhalten.
+N2. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
+N3. *Hell / Dunkel / System, Akzentfarben:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
+N4. *Reduzierte Bewegung:* Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
+N5. *Neue Module der anderen Chats:* nach dem Merge Dashboard, Datenträger-Aufräumer und weitere neue Seiten hell/dunkel ansehen (sollten das Design über Tokens erben; Sonderstyles melden).
+N6. *Alte Backups:* eine `taschenmesser-backup-…json` (auch verschlüsselt) einspielen; neue Exporte heißen `nemo-backup-…`.
+N7. *Diagramm-Farben:* Türkis/Orange bei Farbfehlsichtigkeit prüfen (Validator des dataviz-Skills nach dem Rebrand noch nicht erneut gelaufen).
 
 ## Offen – macht Sven
 **Neu (Datenträger):** Die Checkliste D1–D16 oben auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
@@ -155,10 +164,15 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 
 9. **Einrichtungsassistent prüfen.** Die Punkte E1–E5 unter „Manuelle Tests offen“ auf Windows-Portable und Android durchgehen (frische Installation und eine mit Daten).
 
+### Nemo-Rebranding
+10. **GitHub-Repo umbenennen (optional).** Betrifft `REPO` (`core/update/github.ts`), den Updater-Endpunkt in `tauri.conf.json`, `RELEASES_PREFIX` in `update.rs`, README-Links und den Link-Check. GitHub leitet alte URLs zwar um, aber ein Update-Endpunkt darf nie kaputtgehen: erst einen Plan mit Übergangs-Release schreiben lassen, dann umbenennen.
+11. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
+12. **Später (eigener PR):** wenn alle Installationen ≥ diese Version haben, `latest.json` auf `Nemo-Portable.exe` umstellen und die `Taschenmesser-*`-Kopien aus dem Release entfernen. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
+
 ### Google-Verbindung einrichten (einmalig, für Kalender/Gmail)
-1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Taschenmesser".
+1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Nemo".
 2. *APIs & Dienste → Bibliothek*: „Google Calendar API" und „Gmail API" aktivieren.
-3. *OAuth-Zustimmungsbildschirm* → Typ „Extern"; Name „Taschenmesser", deine Adresse als Support-/Entwickler-Mail. *Bereiche*: `…/auth/calendar.readonly` und `…/auth/gmail.readonly` hinzufügen. **Veröffentlichungsstatus auf „In Produktion" stellen** (ohne Prüfung; beim Login erscheint eine Warnung „nicht überprüft", nur du selbst nutzt es). Im Status „Testing" laufen Refresh-Tokens nach 7 Tagen ab (dann „Neu anmelden").
+3. *OAuth-Zustimmungsbildschirm* → Typ „Extern"; Name „Nemo", deine Adresse als Support-/Entwickler-Mail. *Bereiche*: `…/auth/calendar.readonly` und `…/auth/gmail.readonly` hinzufügen. **Veröffentlichungsstatus auf „In Produktion" stellen** (ohne Prüfung; beim Login erscheint eine Warnung „nicht überprüft", nur du selbst nutzt es). Im Status „Testing" laufen Refresh-Tokens nach 7 Tagen ab (dann „Neu anmelden").
 4. *Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID* → Typ **Desktop-App**. Client-ID und Client-Secret kopieren und in der Windows-App unter Einstellungen → Verbindungen → Google eintragen (landen im Windows-Anmeldeinformationsspeicher, nicht im Repo).
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.

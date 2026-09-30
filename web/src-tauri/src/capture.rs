@@ -32,8 +32,7 @@ const BLUR_GRACE: Duration = Duration::from_millis(400);
 const CLIPBOARD_MAX_CHARS: usize = 1000;
 
 /// Menu texts; the web app replaces them from `strings.ts` right after start (German only).
-const DEFAULT_LABELS: (&str, &str, &str, &str) =
-    ("Erfassen", "App öffnen", "Beenden", "Taschenmesser");
+const DEFAULT_LABELS: (&str, &str, &str, &str) = ("Erfassen", "App öffnen", "Beenden", "Nemo");
 
 struct TrayItems {
     capture: MenuItem<Wry>,

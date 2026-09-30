@@ -11,7 +11,7 @@ export const pushAad = (key: string): string => `push/${key}`;
 
 /** Shown when a payload cannot be read (e.g. no key on this device). */
 export const FALLBACK_PAYLOAD: PushPayload = {
-  title: 'Taschenmesser',
+  title: 'Nemo',
   body: 'Erinnerung',
   url: '/',
 };

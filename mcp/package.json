@@ -2,7 +2,7 @@
   "name": "taschenmesser-mcp",
   "private": true,
   "version": "0.1.0",
-  "description": "MCP server (stdio) for the Taschenmesser local import API – a thin wrapper, no own data access.",
+  "description": "MCP server (stdio) for the Nemo local import API – a thin wrapper, no own data access.",
   "type": "module",
   "engines": {
     "node": ">=22"

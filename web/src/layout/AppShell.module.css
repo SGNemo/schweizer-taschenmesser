@@ -30,8 +30,13 @@
   padding: var(--space-3) var(--space-4);
   padding-top: calc(var(--space-3) + env(safe-area-inset-top));
   background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .topbar {
+    background: var(--surface-glass);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  }
 }
 .brand {
   display: flex;
@@ -45,11 +50,8 @@
 .brandMark {
   display: grid;
   place-items: center;
-  width: 32px;
+  min-width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
 }
 .searchBtn {
   display: flex;
@@ -58,12 +60,16 @@
   flex: 1;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+.searchBtn:hover {
+  border-color: var(--accent);
 }
 .kbd {
   margin-left: auto;
@@ -96,6 +102,12 @@
   background: var(--surface);
   border-top: 1px solid var(--border);
 }
+@supports (backdrop-filter: blur(1px)) {
+  .bottom {
+    background: var(--surface-glass);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  }
+}
 .bottomLink {
   flex: 1;
   display: flex;
@@ -111,9 +123,30 @@
   border: 0;
   cursor: pointer;
 }
+.bottomLink {
+  position: relative;
+  transition: color var(--dur-fast) var(--ease);
+}
 .bottomLink[aria-current='page'] {
   color: var(--accent);
   font-weight: 650;
+}
+/* Active marker: a small pill above the icon. */
+.bottomLink[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  width: 28px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--accent-gradient);
+  animation: pillIn var(--dur) var(--ease-out);
+}
+@keyframes pillIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
 }
 
 .navList {
@@ -133,15 +166,28 @@
   border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;
-  transition: background-color var(--dur-fast) var(--ease);
+  position: relative;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
 .navLink:hover {
   background: var(--surface-2);
 }
 .navLink[aria-current='page'] {
-  background: var(--accent-soft);
+  background: linear-gradient(90deg, var(--accent-soft), transparent 130%);
   color: var(--accent);
   font-weight: 600;
+}
+.navLink[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--accent-gradient);
 }
 
 @media (min-width: 900px) {
@@ -167,7 +213,7 @@
     height: 100dvh;
     padding: var(--space-4);
     border-right: 1px solid var(--border);
-    background: var(--surface);
+    background: var(--surface-glass);
   }
   .sidebarNav {
     flex: 1;

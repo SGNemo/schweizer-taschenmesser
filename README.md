@@ -1,4 +1,6 @@
-# Taschenmesser
+<p align="center"><img src="docs/brand/header.png" alt="Nemo – Modulare, lokale Alltags-App" width="640"></p>
+
+# Nemo
 
 [![Neueste Version](https://img.shields.io/github/v/release/SGNemo/schweizer-taschenmesser?include_prereleases&label=Version)](https://github.com/SGNemo/schweizer-taschenmesser/releases)
 [![CI](https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml)
@@ -9,15 +11,15 @@ verschlüsselt) gleicht mehrere Geräte ab. Als **portables Windows-Programm** (
 
 ## Herunterladen
 
-[![Windows (portabel) herunterladen](https://img.shields.io/badge/Windows-herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Portable.exe)
-[![Android-APK herunterladen](https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk)
+[![Windows (portabel) herunterladen](https://img.shields.io/badge/Windows-herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo-Portable.exe)
+[![Android-APK herunterladen](https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk)
 
 Die Links zeigen immer auf die **neueste stabile Version**. Alle Versionen (auch Beta) und die Änderungsliste:
 [Releases](https://github.com/SGNemo/schweizer-taschenmesser/releases).
 
 ### Windows: eine einzelne Datei, keine Installation
 
-1. `Taschenmesser-Portable.exe` herunterladen und an einen beliebigen Ort legen, an dem du schreiben darfst
+1. `Nemo-Portable.exe` herunterladen und an einen beliebigen Ort legen, an dem du schreiben darfst
    (z. B. in einen Ordner unter deinem Benutzerverzeichnis; **nicht** nach `C:\Programme`), und doppelklicken.
 2. Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen), weil unbekannte
    `.exe`-Dateien ohne gekauftes Code-Signing-Zertifikat immer so behandelt werden: **„Weitere Informationen“ →
@@ -37,14 +39,14 @@ Die Links zeigen immer auf die **neueste stabile Version**. Alle Versionen (auch
 **Von der installierten Version (Setup/MSI, bis `0.2.0-beta.1`) umsteigen:** Die portable App nutzt dieselbe
 App-Kennung und findet deine Daten im Benutzerprofil deshalb sofort wieder.
 1. In der alten App: Einstellungen → Backup → exportieren (Sicherheitskopie).
-2. `Taschenmesser-Portable.exe` starten und prüfen, dass alles da ist (nicht gleichzeitig mit der alten App laufen lassen).
+2. `Nemo-Portable.exe` starten und prüfen, dass alles da ist (nicht gleichzeitig mit der alten App laufen lassen).
 3. Die alte Version über „Apps & Features“ deinstallieren – im Deinstallationsfenster **„Anwendungsdaten löschen“ NICHT
    ankreuzen**. Falls doch etwas fehlt: Backup in der neuen App importieren.
 Die alte installierte Version kann sich nicht selbst auf die portable Datei aktualisieren; der Umstieg ist einmalig manuell.
 
 ### Installation unter Android
 
-1. `Taschenmesser.apk` auf dem Handy herunterladen (z. B. im Chrome-Browser) und öffnen.
+1. `Nemo.apk` auf dem Handy herunterladen (z. B. im Chrome-Browser) und öffnen.
 2. Android fragt beim ersten Mal, ob die **Installation aus unbekannten Quellen** erlaubt ist: **„Einstellungen“ →
    „Aus dieser Quelle zulassen“** für den Browser bzw. die Dateien-App, dann zurück und „Installieren“. Play Protect
    kann eine zusätzliche Prüfung anbieten („Trotzdem installieren“ bzw. „App scannen“).
@@ -95,7 +97,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 
 - **Dokumente:** Titel, Kategorie, Ablaufdatum und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem
   Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).
-- **Teilen (Android, als PWA installiert):** „Taschenmesser“ erscheint im Teilen-Menü; die Seite „Teilen“ fragt, wohin der Inhalt soll
+- **Teilen (Android, als PWA installiert):** „Nemo“ erscheint im Teilen-Menü; die Seite „Teilen“ fragt, wohin der Inhalt soll
   (Merkliste, Notiz oder ToDo – nur eingeschaltete Module werden angeboten). In der nativen Android-App (APK) gibt es das Teilen-Ziel noch nicht.
 - **Werkzeuge:** Der Knopf „Werkzeuge“ oben öffnet Rechner, Prozent/MwSt, Währung, Timer, QR-Code und Notizzettel; weitere (Einheiten,
   Kosten teilen, Datumsrechner, Würfel, Base64, JSON, UUID, Hash) schaltest du unter „Werkzeuge verwalten“ ein. In der Befehlspalette

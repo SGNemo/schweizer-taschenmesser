@@ -181,6 +181,10 @@ jobs:
           EXE=src-tauri/target/release/taschenmesser.exe
           cp "$EXE" ../assets/Taschenmesser-Portable.exe
           [ -f "$EXE.sig" ] && cp "$EXE.sig" ../assets/Taschenmesser-Portable.exe.sig
+          # Transition (rebrand to Nemo): the same signed bytes also under the new name. Installed
+          # apps still look for the legacy name; latest.json keeps pointing to it (see docs/DECISIONS.md).
+          cp "$EXE" ../assets/Nemo-Portable.exe
+          [ -f "$EXE.sig" ] && cp "$EXE.sig" ../assets/Nemo-Portable.exe.sig
           ls -l ../assets
 
       # The program has to stay alive for a while (window created, WebView2 found). Informational only:
@@ -286,6 +290,9 @@ jobs:
           ANDROID_KEYSTORE_PATH="$KEYSTORE" \
             node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Taschenmesser.apk
           (cd ../assets && sha256sum Taschenmesser.apk > Taschenmesser.apk.sha256 && cat Taschenmesser.apk.sha256)
+          # Transition (rebrand to Nemo): identical signed APK under the new name.
+          cp ../assets/Taschenmesser.apk ../assets/Nemo.apk
+          (cd ../assets && sha256sum Nemo.apk > Nemo.apk.sha256 && cat Nemo.apk.sha256)
 
       - name: Unsigned APK (dry run without keystore)
         if: needs.prepare.outputs.android_key != 'true'
@@ -361,14 +368,15 @@ jobs:
           set -euo pipefail
           FILES=()
           for f in Taschenmesser-Portable.exe Taschenmesser-Portable.exe.sig \
-                   Taschenmesser.apk Taschenmesser.apk.sha256 latest.json; do
+                   Taschenmesser.apk Taschenmesser.apk.sha256 \
+                   Nemo-Portable.exe Nemo-Portable.exe.sig Nemo.apk Nemo.apk.sha256 latest.json; do
             [ -f "dl/$f" ] && FILES+=("dl/$f")
           done
-          if [ "${#FILES[@]}" -ne 5 ]; then
-            echo "::error::A release needs all five assets, found ${#FILES[@]}: ${FILES[*]}"
+          if [ "${#FILES[@]}" -ne 9 ]; then
+            echo "::error::A release needs all nine assets, found ${#FILES[@]}: ${FILES[*]}"
             exit 1
           fi
-          ARGS=(--verify-tag --title "Taschenmesser ${{ needs.prepare.outputs.version }}" --notes-file dl/RELEASE_NOTES.md)
+          ARGS=(--verify-tag --title "Nemo ${{ needs.prepare.outputs.version }}" --notes-file dl/RELEASE_NOTES.md)
           if [ "${{ needs.prepare.outputs.prerelease }}" = "true" ]; then ARGS+=(--prerelease); fi
           gh release create "${{ needs.prepare.outputs.tag }}" "${ARGS[@]}" "${FILES[@]}"
 

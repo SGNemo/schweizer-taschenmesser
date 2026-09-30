@@ -93,13 +93,14 @@ fn classify(request: &str, expected_state: &str) -> Callback {
     }
 }
 
-const PAGE_OK: &str = "Die Anmeldung ist abgeschlossen. Du kannst dieses Fenster schließen und zu Taschenmesser zurückkehren.";
+const PAGE_OK: &str =
+    "Die Anmeldung ist abgeschlossen. Du kannst dieses Fenster schließen und zu Nemo zurückkehren.";
 const PAGE_FAIL: &str =
-    "Die Anmeldung wurde nicht abgeschlossen. Du kannst dieses Fenster schließen und es in Taschenmesser erneut versuchen.";
+    "Die Anmeldung wurde nicht abgeschlossen. Du kannst dieses Fenster schließen und es in Nemo erneut versuchen.";
 
 fn respond(stream: &mut TcpStream, status: &str, message: &str) {
     let body = format!(
-        "<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\"><title>Taschenmesser</title></head><body style=\"font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem\"><h1>Taschenmesser</h1><p>{message}</p></body></html>"
+        "<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\"><title>Nemo</title></head><body style=\"font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem\"><h1>Nemo</h1><p>{message}</p></body></html>"
     );
     let _ = write!(
         stream,

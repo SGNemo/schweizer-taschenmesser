@@ -1,4 +1,4 @@
-# CLAUDE.md – Taschenmesser
+# CLAUDE.md – Nemo
 
 Modular, local-first everyday app ("Swiss army knife"): PWA, plus a portable Windows exe and an Android APK (Tauri 2 shell around the same web app).
 Data lives in IndexedDB; sync is a separate optional layer; an AI assistant answers questions with as few tokens as possible and never sees user data.
@@ -34,7 +34,7 @@ Code, comments and commits are **English**; the UI is **German only** (all texts
 | `npm run e2e` | `e2e:app` (Playwright, projects `desktop-chrome` + `pixel-7`, builds with `--mode e2e`) followed by `e2e:sync` (`playwright.sync.config.ts`: serial multi-device tests against the real server started from `../server`, in-memory DB) |
 | `npm run gen:module -- <id> "<Name>"` | Generate a new module from `templates/module` |
 | `npm run db:bump` | Regenerate `src/core/db/schema.snapshot.json` + bump Dexie version |
-| `npm run gen:icons` | Re-render PWA PNG icons from `public/icon.svg` (native icons: `npx tauri icon public/icon.svg`) |
+| `npm run gen:icons` | Re-render all brand rasters (PWA, favicon, ICO, Android layers, README/social images) from `web/brand/*.svg` (native base set first: `npx tauri icon brand/app-icon.svg`) |
 | `npm run tauri -- dev` / `build` | Native app (needs Rust; on Linux `libwebkit2gtk-4.1-dev libgtk-3-dev …`). `tauri build --debug --no-bundle` compiles the binary with the embedded frontend |
 | `npm run version:check` / `version:sync` / `version:set -- <semver>` | Version consistency, Cargo mirror, release bump (see *Versioning*) |
 | `npm run changelog -- --version <x.y.z>` | Release notes from Conventional Commits |
@@ -66,9 +66,17 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 - **AI privacy:** the assistant sends only instructions, the compact `aiSchema` of enabled modules, the date and the question – never user data (`privacy.test.ts`). The `accounts` module must never get an `aiSchema`, `searchable`, widget or calendar item (`exclusion.test.ts`).
 - **Setup assistant:** progress lives device-local in `_meta` `setup.state` (step ids only – never values or secrets, never synced); each step saves on its own "Weiter", cancelling drops only the draft; it never appears by itself on an installation with data. Steps come from `setupSteps` (recipe in `docs/HOW-TO.md`).
 - **Secrets:** no secrets in the repo; API keys via `getPlatform().secrets`. The bundle identifier `io.github.sgnemo.taschenmesser` must never change. The Android keystore and updater private key must never be lost or committed.
-- **UI:** German only (`web/src/strings.ts`), CSS Modules + tokens, `data-autofocus` instead of `autoFocus` in dialogs, touch targets ≥ 44 px, page width via `manifest.layout` (`PageContainer`), never a module-level `max-width`.
+- **UI:** the app is called **Nemo** (identifiers keep the old names, see `docs/DECISIONS.md`); German only (`web/src/strings.ts`), CSS Modules + tokens, `data-autofocus` instead of `autoFocus` in dialogs, touch targets ≥ 44 px, page width via `manifest.layout` (`PageContainer`), never a module-level `max-width`.
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them.
 - **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml` (signed portable Windows exe + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
+
+## Design-Richtlinien (for every new module, tool and component)
+- **Tokens, never hard-coded values.** Colours, radii, shadows, spacing, durations come from `web/src/ui/tokens.css` (`var(--…)`). No hex/rgb in module CSS, no own `border-radius`/`box-shadow` values, no fixed fonts. New modules inherit the look through `@/ui` components (Button, Card, Fields, Dialog, Patterns, Misc) – use them instead of restyling native elements.
+- **Surfaces:** `--surface` cards on the gradient page, `--surface-2` for quiet areas; filled actions use `--accent-gradient` (Button `primary`), text/icons in accent use `--accent`; form controls use `--border-strong`. Status colours are `--danger/--success/--warning` (+ `-soft` backgrounds); charts use `--viz-1/--viz-2`. Amounts and dates: `font-variant-numeric: var(--font-num)`.
+- **Contrast:** WCAG AA (4.5:1 text, 3:1 UI). `ui/tokens.test.ts` checks the palette; a new colour token needs a light and a dark value and an entry in that test.
+- **Motion:** CSS only, `transform`/`opacity` only, 120–250 ms (`--dur-fast/--dur/--dur-slow`, `--ease-out`), no endless animation except the `Skeleton` shimmer. Everything must be fine with `prefers-reduced-motion` (tokens go to 0 ms, the global rule cuts the rest). Loading states: `Skeleton`, not spinners. No animation library.
+- **Empty states:** `EmptyState` (shows the faded Nemo fish without an icon) – no extra illustrations per module.
+- **Special styles** (like the black/white QR code in `tools/`) need a comment saying why and are listed in `docs/DECISIONS.md`.
 
 ## Create a new module / tool / connector / provider
 Step-by-step recipes: `docs/HOW-TO.md`. Short form for a module: `npm run gen:module -- <id> "<Name>"`, then edit `src/modules/<id>/`, `contributions.onboarding` is required, strings in `strings.ts`, `db:bump` on collection changes, `npm run lint && npm run typecheck && npm test`.

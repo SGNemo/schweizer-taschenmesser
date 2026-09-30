@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Taschenmesser",
+  "productName": "Nemo",
   "version": "../package.json",
   "identifier": "io.github.sgnemo.taschenmesser",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Taschenmesser",
+        "title": "Nemo",
         "width": 1100,
         "height": 800,
         "minWidth": 380,

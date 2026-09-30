@@ -1,4 +1,4 @@
-# How-to recipes – Taschenmesser
+# How-to recipes – Nemo
 
 Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHITECTURE-MAP.md), [`architecture.md`](architecture.md).
 
@@ -69,6 +69,14 @@ Tools are not modules (no own data, no cross-imports; see `tools/isolation.test.
 
 ## Import: new importer for a module
 Add `ImporterMeta` entries in the module manifest `contributions.onboarding` and a lazy `load()` returning `ImporterRuntime` (parse, dedupe key) – see `modules/todos/onboarding.ts` and `core/importer/types.ts`. Parsers shared in `core/io/`.
+
+## Icons / branding
+- Change the logo: edit the SVGs in `web/brand/` (`logo-mark.svg` is the source; `web/src/ui/Logo.tsx` and the splash in `web/index.html` repeat its paths), then `cd web && npx tauri icon brand/app-icon.svg && npm run gen:icons`. The first command regenerates the Tauri set (Windows sizes, `icon.icns`, Android legacy mipmaps), the second re-renders PWA/favicon/ICO/Android adaptive + monochrome + notification layers and the README/social images. Commit the results.
+- Wordmark: re-outline "Nemo" from Nunito ExtraBold (see `web/brand/LICENSES.md`); the SVGs contain paths, no font.
+
+## Design tokens
+- Colours, radii, shadows, motion live in `web/src/ui/tokens.css` only. Change a semantic token there; components pick it up. The dark palette exists twice in the file – edit both (`tokens.test.ts` fails if they differ) and keep the contrast pairs AA (the test checks them).
+- New accent colour: add a `:root[data-accent='<name>']` block with `light-dark()` pairs, extend `ACCENTS` in `web/src/stores/ui.ts`, the `settings.accentOptions` strings and the inline script in `web/index.html`; `tokens.test.ts` lists the variants to check.
 
 ## Release (needs the maintainer; keys never in CI/repo)
 1. `develop` green in CI. Do not weaken signing/audit steps.

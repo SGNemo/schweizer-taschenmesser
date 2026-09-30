@@ -9,7 +9,7 @@ export function buildApiPrompt(
 ): string {
   const base = `http://127.0.0.1:${port}`;
   return [
-    'Du hilfst mir, Daten in meine App „Taschenmesser“ zu übertragen. Sie hat eine lokale Schnittstelle:',
+    'Du hilfst mir, Daten in meine App „Nemo“ zu übertragen. Sie hat eine lokale Schnittstelle:',
     `- Adresse: ${base}`,
     '- Jede Anfrage braucht den Header "Authorization: Bearer <TOKEN>" (den Schlüssel gebe ich dir getrennt).',
     '- Sende keine Header "Origin" (die App lehnt Anfragen aus dem Browser ab).',

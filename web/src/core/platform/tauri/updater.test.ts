@@ -121,6 +121,27 @@ describe('android updater', () => {
     });
   });
 
+  it('prefers the Nemo names and falls back to the legacy pair', async () => {
+    const both = list(
+      release('v1.1.0', [
+        'Taschenmesser.apk',
+        'Taschenmesser.apk.sha256',
+        'Nemo.apk',
+        'Nemo.apk.sha256',
+      ]),
+    );
+    const info = await createAndroidUpdater(both).check('stable', '1.0.0');
+    expect(info?.payload).toMatchObject({ apkUrl: expect.stringContaining('/Nemo.apk') });
+    // A half-published new pair must not hide the complete legacy pair.
+    const half = list(
+      release('v1.1.0', ['Nemo.apk', 'Taschenmesser.apk', 'Taschenmesser.apk.sha256']),
+    );
+    const legacy = await createAndroidUpdater(half).check('stable', '1.0.0');
+    expect(legacy?.payload).toMatchObject({
+      apkUrl: expect.stringContaining('/Taschenmesser.apk'),
+    });
+  });
+
   it('does not offer a release without APK or checksum', async () => {
     expect(
       await createAndroidUpdater(list(release('v1.1.0', ['Taschenmesser-Setup.exe']))).check(
