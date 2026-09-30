@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { ProcInfo, SystemInfo } from '@/core/platform/system';
 import { t } from '@/strings';
-import { Button, Card, PageHeader, Progress } from '@/ui';
+import { Button, Card, PageHeader, patternStyles, Progress } from '@/ui';
 import { formatBytes, formatUptime, percent } from '../format';
 import styles from '@/pages/Page.module.css';
 
@@ -62,7 +62,7 @@ export default function SystemPage() {
       {info && up ? (
         <div className={styles.grid} data-testid="system-info">
           <Card title={t.system.system}>
-            <dl style={{ margin: 0 }}>
+            <dl className={patternStyles.flush}>
               <dt>{t.system.os}</dt>
               <dd>{info.os}</dd>
               <dt>{t.system.uptime}</dt>
@@ -70,16 +70,18 @@ export default function SystemPage() {
             </dl>
           </Card>
           <Card title={t.system.cpu}>
-            <p style={{ margin: 0 }}>{info.cpu.brand}</p>
+            <p className={patternStyles.flush}>{info.cpu.brand}</p>
             <p className={styles.lead}>
               {t.system.cores(info.cpu.physicalCores, info.cpu.threads)}
             </p>
             <Meter label={t.system.cpu} value={info.cpu.usagePercent} />
-            <p style={{ margin: 0 }}>{t.system.load(Math.round(info.cpu.usagePercent))}</p>
+            <p className={patternStyles.flush}>
+              {t.system.load(Math.round(info.cpu.usagePercent))}
+            </p>
           </Card>
           <Card title={t.system.memory}>
             <Meter label={t.system.memory} value={memPct} />
-            <p style={{ margin: 0 }}>
+            <p className={patternStyles.flush}>
               {t.system.memoryUsed(
                 formatBytes(info.memory.usedBytes),
                 formatBytes(info.memory.totalBytes),
@@ -88,7 +90,7 @@ export default function SystemPage() {
             </p>
           </Card>
           <Card title={t.system.battery}>
-            <p style={{ margin: 0 }}>
+            <p className={patternStyles.flush}>
               {info.battery
                 ? t.system.batteryValue(
                     info.battery.percent,
@@ -103,7 +105,7 @@ export default function SystemPage() {
           </Card>
           <Card title={t.system.gpu}>
             {info.gpus.length === 0 ? (
-              <p style={{ margin: 0 }}>{t.system.noGpu}</p>
+              <p className={patternStyles.flush}>{t.system.noGpu}</p>
             ) : (
               <ul className={styles.list}>
                 {info.gpus.map((g) => (
@@ -114,7 +116,7 @@ export default function SystemPage() {
           </Card>
           <Card title={t.system.network}>
             {info.network.length === 0 ? (
-              <p style={{ margin: 0 }}>{t.system.noNetwork}</p>
+              <p className={patternStyles.flush}>{t.system.noNetwork}</p>
             ) : (
               <ul className={styles.list}>
                 {info.network.map((n) => (
@@ -131,16 +133,13 @@ export default function SystemPage() {
         <section className={styles.section} aria-label={t.system.processes}>
           <h2>{t.system.processes}</h2>
           <p className={styles.lead}>{t.system.processesHint}</p>
-          <table
-            data-testid="system-processes"
-            style={{ width: '100%', borderCollapse: 'collapse' }}
-          >
+          <table data-testid="system-processes" className={patternStyles.dataTable}>
             <thead>
               <tr>
-                <th scope="col" style={{ textAlign: 'left' }}>
+                <th scope="col" className={patternStyles.alignStart}>
                   {t.system.program}
                 </th>
-                <th scope="col" style={{ textAlign: 'right' }}>
+                <th scope="col" className={patternStyles.alignEnd}>
                   {t.system.memory}
                 </th>
               </tr>
@@ -152,7 +151,7 @@ export default function SystemPage() {
                     {p.name}{' '}
                     <span className={styles.lead}>({t.system.instances(p.instances)})</span>
                   </td>
-                  <td style={{ textAlign: 'right' }}>{formatBytes(p.memoryBytes)}</td>
+                  <td className={patternStyles.alignEnd}>{formatBytes(p.memoryBytes)}</td>
                 </tr>
               ))}
             </tbody>

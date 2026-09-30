@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
-import { Button, Dialog, Form, TextField } from '@/ui';
+import { Button, Dialog, Form, patternStyles, TextField } from '@/ui';
 import { projectRepo } from '../repo';
 import type { Project } from '../schema';
 
@@ -36,19 +36,10 @@ export function ProjectsDialog({
           </Button>
         </div>
       </Form>
-      <ul style={{ listStyle: 'none', margin: 'var(--space-4) 0 0', padding: 0 }}>
+      <ul className={patternStyles.plainListGap}>
         {projects.map((p) => (
-          <li
-            key={p.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 'var(--space-3)',
-              minHeight: 'var(--touch)',
-            }}
-          >
-            <span style={{ opacity: p.archived ? 0.6 : 1 }}>
+          <li key={p.id} className={patternStyles.listRow}>
+            <span className={p.archived ? patternStyles.dimmed : undefined}>
               {p.name}
               {p.archived ? ` (${t.timetrack.archived})` : ''}
             </span>
