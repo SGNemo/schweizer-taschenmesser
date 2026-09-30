@@ -2,6 +2,7 @@
  * In-memory stand-in for the sync server, used by unit tests only (never imported by the app).
  * Implements the same rule as the real server: per field the greatest HLC wins.
  */
+import type { VaultInfo } from './adapters/selfHosted';
 import type { RemoteServer } from './service';
 import { SyncError, type DeviceInfo, type FieldOp, type PullPage, type SyncAdapter } from './types';
 
@@ -13,7 +14,7 @@ export class MemoryServer {
   epoch = 'epoch-1';
   private seq = 0;
   private readonly fields = new Map<string, Entry>();
-  vault: import('./adapters/selfHosted').VaultInfo | null = null;
+  vault: VaultInfo | null = null;
   /** Protocol 2: per-device tokens, `info`, `status`. Off = behaves like a legacy server. */
   supportsDevices = false;
   private readonly devices = new Map<string, DeviceInfo & { token: string }>();
