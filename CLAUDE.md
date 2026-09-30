@@ -51,7 +51,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 
 ## Git workflow
 - **`develop`** is the integration branch: feature branches and PRs go there. **`main`** only receives release merges (`Merge develop into main (release X.Y.Z)`); never commit or push to `main` directly.
-- Tags `vX.Y.Z[-beta.N]` trigger `release.yml` – only the maintainer cuts releases (recipe in `docs/HOW-TO.md`). No force-push, no history rewriting on shared branches; bring `develop` in with a merge.
+- Tags `vX.Y.Z[-beta.N]` trigger `release.yml` (alternative: manual run on `main` with input `version`, which creates the tag itself – never both) – only the maintainer cuts releases (recipe in `docs/HOW-TO.md`). No force-push, no history rewriting on shared branches; bring `develop` in with a merge.
 - Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them. Do not change branch protection.
 
 
@@ -70,7 +70,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 - **Secrets:** no secrets in the repo; API keys via `getPlatform().secrets`. The bundle identifier `io.github.sgnemo.taschenmesser` must never change. The Android keystore and updater private key must never be lost or committed.
 - **UI:** the app is called **Nemo** (identifiers keep the old names, see `docs/DECISIONS.md`); German only (`web/src/strings.ts`), CSS Modules + tokens, `data-autofocus` instead of `autoFocus` in dialogs, touch targets ≥ 44 px, page width via `manifest.layout` (`PageContainer`), never a module-level `max-width`.
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them.
-- **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml` (signed portable Windows exe + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
+- **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml`, or a manual run on `main` with input `version` (creates the tag; use one way, never tag push AND dispatch) (signed portable Windows exe + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
 
 ## Design-Richtlinien (for every new module, tool and component) – look "Klar" (flat, calm)
 - **Tokens, never hard-coded values.** Colours, radii, shadows, spacing, type sizes, weights, z-index, durations come from `web/src/ui/tokens.css` (`var(--…)`). No hex/rgb in module CSS, no own `border-radius`/`box-shadow`/`z-index`/`font-weight` numbers (use `--weight-medium/semibold/bold`, `--z-*`, `--text-3xl` for hero numbers). Modules inherit the look through `@/ui`: Button, Card, Fields (`TextField` with `labelHidden` for inline add rows), Dialog, Patterns (`Segmented`, `ItemRow`, `Progress`, `Chip`, layout utilities `patternStyles.hstack/plainList/gapBottom/inlineForm`), Misc (`Badge`, `EmptyState` incl. `compact`, `Skeleton`), `WidgetList` for dashboard widgets. Never re-implement a segmented control, progress bar or input in a module; no inline `style={{}}` for layout or colour.
