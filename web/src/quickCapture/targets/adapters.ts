@@ -81,7 +81,6 @@ const bookmarks: CaptureTarget = {
       title: name,
       kind: 'link',
       ...(url ? { url } : {}),
-      ...(f.note ? { note: f.note } : {}),
     };
   },
 };

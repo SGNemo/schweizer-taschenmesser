@@ -120,6 +120,8 @@ export const t = {
       weeks: 'Wochen',
       months: 'Monate',
       years: 'Jahre',
+      weekdays: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'],
+      everyWeekday: (name: string) => `jeden ${name}`,
       monthDay: (d: number) => (d === -1 ? 'am letzten Tag des Monats' : `jeden ${d}. des Monats`),
     },
     chooseType: 'Bitte wähle, wohin der Eintrag soll.',

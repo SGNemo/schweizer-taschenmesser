@@ -42,6 +42,7 @@ export default defineConfig({
           params: { title: 'title', text: 'text', url: 'url' },
         },
         shortcuts: [
+          { name: 'Schnell erfassen', url: '/?capture=1' },
           { name: 'Merkzettel anlegen', url: '/bookmarks?new=1' },
           { name: 'Suchen', url: '/?search=1' },
         ],

@@ -48,10 +48,15 @@ export function AppShell() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setPaletteOpen]);
 
-  // PWA shortcut "Suchen" (`/?search=1`) opens the palette.
+  // PWA shortcuts: "Suchen" (`/?search=1`) opens the palette, "Schnell erfassen" the capture sheet.
   useEffect(() => {
-    if (new URLSearchParams(location.search).get('search')) {
+    const params = new URLSearchParams(location.search);
+    if (params.get('search')) {
       setPaletteOpen(true);
+      void navigate(location.pathname, { replace: true });
+    } else if (params.get('capture')) {
+      // PWA / Android shortcut "Schnell erfassen" (`/?capture=1`).
+      setQuickAddOpen(true);
       void navigate(location.pathname, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the first render of the shell
