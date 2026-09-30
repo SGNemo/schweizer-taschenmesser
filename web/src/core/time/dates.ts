@@ -11,7 +11,7 @@ import {
   startOfISOWeek,
 } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { now, toDateString, today } from './now';
+import { now, pad2, toDateString, today } from './now';
 
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -77,13 +77,12 @@ export function toEpoch(date: string, time: string): number {
 /** Local "d. MMM HH:mm" of an epoch timestamp, e.g. "31. Jan. 23:30" (day and time from the same local clock). */
 export function formatDateTime(at: number): string {
   const d = new Date(at);
-  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  return `${formatDay(toDateString(d), 'd. MMM')} ${time}`;
+  return `${formatDay(toDateString(d), 'd. MMM')} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
 export function nowTime(): string {
   const d = new Date(now());
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-export { today, toDateString };
+export { pad2, today, toDateString };

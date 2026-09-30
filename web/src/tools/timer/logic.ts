@@ -1,4 +1,5 @@
 /** Pure timer arithmetic; the engine feeds it the current time. */
+import { pad2 } from '@/core/time/now';
 
 export interface Countdown {
   durationMs: number;
@@ -60,6 +61,5 @@ export function clock(ms: number, up = false): string {
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${pad2(m)}:${pad2(s)}`;
 }

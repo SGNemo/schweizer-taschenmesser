@@ -8,8 +8,6 @@ import type { VaultInfo } from './adapters/selfHosted';
 
 export { DEFAULT_KDF };
 
-export type VaultKdf = NonNullable<VaultInfo['kdf']>;
-
 /** Fresh parameters and salt for a new vault. */
 export function newVaultParams(overrides: { m?: number; t?: number; p?: number } = {}): KdfParams {
   return newKdfParams(overrides);

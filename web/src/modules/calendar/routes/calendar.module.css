@@ -382,7 +382,7 @@ button.itemRow:hover {
 .tgItem {
   position: absolute;
   top: calc(var(--start) / 60 * var(--hour));
-  height: calc(var(--dur) / 60 * var(--hour) - 2px);
+  height: calc(var(--minutes) / 60 * var(--hour) - 2px);
   left: calc(var(--lane) / var(--lanes) * 100% + 2px);
   width: calc(100% / var(--lanes) - 4px);
   overflow: hidden;

@@ -1,4 +1,5 @@
 /** Date input as people type or paste it: "15.03.2026", "15.3.26", "2026-03-15", "15.03." */
+import { pad2 } from '@/core/time/now';
 
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
@@ -11,21 +12,19 @@ function isRealDate(year: number, month: number, day: number): boolean {
   return d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day;
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
 /** 'YYYY-MM-DD' for ISO and German full dates (two-digit years mean 20xx); otherwise undefined. */
 export function parseDateInput(input: string): string | undefined {
   const s = input.trim();
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
   if (iso) {
     const [y, m, d] = [Number(iso[1]), Number(iso[2]), Number(iso[3])] as [number, number, number];
-    return isRealDate(y, m, d) ? `${y}-${pad(m)}-${pad(d)}` : undefined;
+    return isRealDate(y, m, d) ? `${y}-${pad2(m)}-${pad2(d)}` : undefined;
   }
   const de = /^(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{2}|\d{4})$/.exec(s);
   if (de) {
     const [d, m] = [Number(de[1]), Number(de[2])] as [number, number];
     const y = de[3]!.length === 2 ? 2000 + Number(de[3]) : Number(de[3]);
-    return isRealDate(y, m, d) ? `${y}-${pad(m)}-${pad(d)}` : undefined;
+    return isRealDate(y, m, d) ? `${y}-${pad2(m)}-${pad2(d)}` : undefined;
   }
   return undefined;
 }

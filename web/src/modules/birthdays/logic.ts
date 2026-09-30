@@ -1,15 +1,14 @@
-import { addDaysStr, daysBetween } from '@/core/time/dates';
+import { addDaysStr, daysBetween, pad2 } from '@/core/time/dates';
 import type { Birthday } from './schema';
 
 type B = Pick<Birthday, 'month' | 'day' | 'year'>;
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const isLeap = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
 
 /** Birthday in a given year as 'YYYY-MM-DD'; 29 February falls back to 28 February in common years. */
 export function dateInYear(b: B, year: number): string {
   const day = b.month === 2 && b.day === 29 && !isLeap(year) ? 28 : b.day;
-  return `${year}-${pad(b.month)}-${pad(day)}`;
+  return `${year}-${pad2(b.month)}-${pad2(day)}`;
 }
 
 /** First birthday on or after `from` ('YYYY-MM-DD'). */

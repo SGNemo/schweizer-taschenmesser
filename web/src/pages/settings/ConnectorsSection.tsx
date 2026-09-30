@@ -17,7 +17,7 @@ import {
 import { saveStatus, useConnectorStatus } from '@/core/connectors/state';
 import type { ConnectorContext, ConnectorDef, ExternalCalendar } from '@/core/connectors/types';
 import { getPlatform } from '@/core/platform';
-import { formatDay } from '@/core/time/dates';
+import { formatDay, pad2, toDateString } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Card, Checkbox, Dialog, Icon, TextField } from '@/ui';
@@ -27,9 +27,8 @@ const s = t.connectors;
 
 function formatWhen(ms: number): string {
   const d = new Date(ms);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const day = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  return `${formatDay(day, 'd. MMM yyyy')}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const day = toDateString(d);
+  return `${formatDay(day, 'd. MMM yyyy')}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
 function ClientForm({ def, onSaved }: { def: ConnectorDef; onSaved: () => void }) {
