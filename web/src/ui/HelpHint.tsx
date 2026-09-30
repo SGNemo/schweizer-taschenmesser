@@ -17,15 +17,19 @@ export function HelpHint({ text, label = 'Hilfe' }: { text: string; label?: stri
   const [shift, setShift] = useState(0);
   const visible = pinned || hover || focused;
 
-  // Keep the bubble inside the viewport (the "?" can sit at either edge of a narrow screen).
+  // Keep the bubble inside the viewport (the "?" can sit at either edge of a narrow screen). The
+  // shift is derived from the *unshifted* position, so it settles in one step and cannot oscillate.
   useLayoutEffect(() => {
     if (!visible || !bubble.current) return setShift(0);
     const rect = bubble.current.getBoundingClientRect();
     const margin = 8;
     const width = document.documentElement.clientWidth;
-    const current = shift;
-    if (rect.right > width - margin) setShift(current - (rect.right - (width - margin)));
-    else if (rect.left < margin) setShift(current + (margin - rect.left));
+    const left = rect.left - shift;
+    const right = rect.right - shift;
+    let next = 0;
+    if (right > width - margin) next = width - margin - right;
+    if (left + next < margin) next = margin - left;
+    if (next !== shift) setShift(next);
   }, [visible, shift]);
 
   useEffect(() => {
@@ -33,8 +37,10 @@ export function HelpHint({ text, label = 'Hilfe' }: { text: string; label?: stri
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation(); // do not close a dialog that contains the hint
+        e.preventDefault(); // a native <dialog> closes on Esc as the default action
         setPinned(false);
         setHover(false);
+        setFocused(false);
       }
     };
     const onPointer = (e: PointerEvent) => {

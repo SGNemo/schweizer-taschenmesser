@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import { OnboardingHost } from '@/core/importer/host';
 import { Fab, Icon, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { UpdateBanner } from './UpdateBanner';
@@ -135,6 +136,7 @@ export function AppShell() {
       <QuickAdd />
       <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} items={overflow} />
       <CommandPalette />
+      <OnboardingHost />
       <Toaster />
     </div>
   );

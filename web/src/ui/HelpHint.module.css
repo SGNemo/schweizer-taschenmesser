@@ -46,4 +46,8 @@
   line-height: 1.4;
   text-align: left;
   white-space: normal;
+  /* The global reduced-motion rule sets every duration to 0.01ms, which turns the default
+     `transition: all 0s` into a real (tiny) transition; the position check would then measure
+     the old position again and again. */
+  transition: none;
 }

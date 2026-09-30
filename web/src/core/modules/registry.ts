@@ -20,6 +20,11 @@ export const visibleManifests: readonly ModuleManifest[] = allManifests
   .filter((m) => !m.devOnly || includeDevOnly)
   .sort(byOrder);
 
+/** One manifest by id (also dev-only ones). */
+export function getManifest(id: string): ModuleManifest | undefined {
+  return allManifests.find((m) => m.id === id);
+}
+
 /** Structural checks shared by the registry unit test and the generator docs. */
 export function validateManifest(m: ModuleManifest): string[] {
   const errors: string[] = [];

@@ -1,3 +1,4 @@
+import { noOnboarding } from '@/core/importer/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
@@ -38,6 +39,8 @@ const manifest: ModuleManifest = {
   // layout: 'content', // page width: 'narrow' | 'content' | 'wide' | 'full' (default 'content')
   // order: 50, // lower = earlier in navigation and library (default 100)
   contributions: {
+    // Start-data importers (see modules/todos/importer.ts); `noOnboarding` = nothing to import.
+    onboarding: noOnboarding,
     quickAdd: [{ id: 'new', label: '__NAME__: neuer Eintrag', to: '/__ID__?new=1' }],
   },
 };

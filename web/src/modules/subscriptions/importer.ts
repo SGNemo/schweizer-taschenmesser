@@ -1,8 +1,10 @@
+import { BankFormatError, parseBankFile } from '@/core/io/bank';
 import { parseDateInput } from '@/core/io/dates';
+import { detectSubscriptions, type DetectedSubscription } from '@/core/io/subscriptionDetect';
 import { formatMoney, parseMoney } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import type { Recurrence } from '@/core/recurrence/types';
-import type { ImporterRuntime } from '@/core/importer/types';
+import type { ImportInput, ImporterRuntime, ImportParseResult } from '@/core/importer/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { subscriptionRepo } from './repo';
@@ -15,8 +17,50 @@ const RHYTHMS: Record<string, Recurrence> = {
 
 const nameKey = (name: string) => name.trim().toLowerCase();
 
+const DETECTED_RHYTHMS: Record<DetectedSubscription['freq'], Recurrence> = {
+  weekly: { freq: 'weekly', interval: 1 },
+  monthly: { freq: 'monthly', interval: 1 },
+  quarterly: { freq: 'monthly', interval: 3 },
+  yearly: { freq: 'yearly', interval: 1 },
+};
+
+/** Recurring debits found in a bank statement, as suggestions (nothing is stored before the preview). */
+function parseBank(input: ImportInput): ImportParseResult {
+  const s = t.onboarding.subscriptions;
+  if (input.kind !== 'file') return { candidates: [], notes: [] };
+  let transactions;
+  try {
+    transactions = parseBankFile(input.text).transactions;
+  } catch (e) {
+    if (e instanceof BankFormatError) return { candidates: [], notes: [s.bankFormat] };
+    throw e;
+  }
+  const found = detectSubscriptions(transactions);
+  if (found.length === 0) return { candidates: [], notes: [s.bankNone] };
+  return {
+    candidates: found.map((d) => {
+      const recurrence = DETECTED_RHYTHMS[d.freq];
+      return {
+        collection: 'subscription',
+        data: {
+          name: d.payee,
+          amountMinor: d.amountMinor,
+          recurrence,
+          startDate: d.nextDate,
+          active: true,
+        },
+        label: d.payee,
+        detail: `${formatMoney(d.amountMinor)} · ${describeRecurrence(recurrence)} · ${s.seen(d.occurrences, formatDay(d.lastDate, 'd. MMM yyyy'))}`,
+        dedupeKey: nameKey(d.payee),
+      };
+    }),
+    notes: [],
+  };
+}
+
 const runtime: ImporterRuntime = {
-  parse(_id, input) {
+  parse(id, input) {
+    if (id === 'bank') return parseBank(input);
     if (input.kind !== 'form') return { candidates: [], notes: [] };
     const v = input.values;
     const name = (v.name ?? '').trim();

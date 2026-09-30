@@ -10,7 +10,15 @@ describe('parseDateInput', () => {
   });
 
   it('rejects impossible or unknown formats', () => {
-    for (const bad of ['31.02.2026', '2026-13-01', '15.03.', 'morgen', '', '15/03/2026', '2026-02-29']) {
+    for (const bad of [
+      '31.02.2026',
+      '2026-13-01',
+      '15.03.',
+      'morgen',
+      '',
+      '15/03/2026',
+      '2026-02-29',
+    ]) {
       expect(parseDateInput(bad), bad).toBeUndefined();
     }
     expect(parseDateInput('29.02.2028')).toBe('2028-02-29');

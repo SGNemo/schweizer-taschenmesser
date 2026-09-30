@@ -161,6 +161,29 @@ for (const scheme of ['light', 'dark'] as const) {
       await audit(page, `accounts locked (${scheme})`);
     });
 
+    test('start-data wizard: choose, input, preview, result, help hint', async ({ page }) => {
+      await page.goto('/todos');
+      await page.getByRole('button', { name: 'Startdaten einrichten' }).click();
+      const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+      await expect(dialog).toBeVisible();
+      await audit(page, `wizard choose (${scheme})`);
+      await dialog.getByRole('button', { name: /Hilfe/ }).click();
+      await expect(dialog.getByRole('tooltip')).toBeVisible();
+      await audit(page, `wizard help hint open (${scheme})`);
+      await page.keyboard.press('Escape'); // closes the hint first, not the dialog
+      await expect(dialog).toBeVisible();
+
+      await dialog.getByRole('button', { name: /Aufgaben einfügen/ }).click();
+      await audit(page, `wizard input (${scheme})`);
+      await dialog.getByLabel('Eine Zeile = ein Eintrag').fill('Erste Aufgabe\nZweite Aufgabe');
+      await dialog.getByRole('button', { name: 'Vorschau anzeigen' }).click();
+      await expect(dialog.getByText('2 Einträge erkannt')).toBeVisible();
+      await audit(page, `wizard preview (${scheme})`);
+      await dialog.getByRole('button', { name: '2 Einträge importieren' }).click();
+      await expect(dialog.getByRole('status')).toHaveText('2 Einträge wurden importiert.');
+      await audit(page, `wizard result (${scheme})`);
+    });
+
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {
       await page.goto('/');
       await page.locator('header button', { hasText: 'Suchen' }).click();

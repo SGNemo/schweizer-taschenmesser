@@ -22,6 +22,22 @@ export const onboarding: OnboardingDef = {
         },
       ],
     },
+    {
+      id: 'bank',
+      kind: 'file',
+      label: s.bank,
+      description: s.bankHint,
+      accept: '.csv,.xml,text/csv,text/xml',
+      options: [
+        {
+          key: 'accountId',
+          label: s.bankAccount,
+          type: 'select',
+          required: true,
+          dynamicChoices: true,
+        },
+      ],
+    },
   ],
   load: () => import('./importer'),
 };

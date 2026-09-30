@@ -27,6 +27,13 @@ export const onboarding: OnboardingDef = {
         { key: 'notice', label: s.notice, type: 'number' },
       ],
     },
+    {
+      id: 'bank',
+      kind: 'file',
+      label: s.bank,
+      description: s.bankHint,
+      accept: '.csv,.xml,text/csv,text/xml',
+    },
   ],
   load: () => import('./importer'),
 };

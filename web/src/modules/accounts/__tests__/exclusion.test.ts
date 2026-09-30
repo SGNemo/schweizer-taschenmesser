@@ -49,7 +49,9 @@ describe('module definition', () => {
     expect(manifest.aiSchema).toBeUndefined();
     expect(manifest.widgets).toEqual([]);
     const c = manifest.contributions ?? {};
-    expect(Object.keys(c)).toEqual(['services']); // only its own auto-lock service
+    // only its own auto-lock service plus the (empty) onboarding declaration every module carries
+    expect(Object.keys(c).sort()).toEqual(['onboarding', 'services']);
+    expect(c.onboarding?.importers).toEqual([]);
     expect(c).not.toHaveProperty('calendarItems');
     expect(c).not.toHaveProperty('notifications');
     expect(c).not.toHaveProperty('quickAdd');

@@ -53,7 +53,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 ## Create a new module
 1. `npm run gen:module -- habits "Habit-Tracker"` (id: lowercase alphanumeric). This copies `templates/module`, fills placeholders and runs `db:bump`.
 2. Edit in `src/modules/habits/`: `schema.ts` (Zod data), `repo.ts` (`createRepo`), `ai.ts` (compact AI schema; `titleField` must be a field), `settings.ts`, `routes/`, `widgets/`, `migrations.ts`, manifest `icon`/`description`/`defaultEnabled`.
-3. Route paths must start with `/<id>`; add `nav: true` for navigation entries; add `contributions.quickAdd` for the FAB; set `layout` (`narrow` | `content` | `wide` | `full`, default `content`) to the page width the module needs.
+3. Route paths must start with `/<id>`; add `nav: true` for navigation entries; add `contributions.quickAdd` for the FAB; set `layout` (`narrow` | `content` | `wide` | `full`, default `content`) to the page width the module needs; `contributions.onboarding` is required (start-data importers, or `noOnboarding`; see docs/architecture.md → Start data).
 4. Add UI strings to `src/strings.ts` (German).
 5. If you change collections/indexes later: `npm run db:bump`. If you change stored data shape: bump `manifest.version` and add a migration.
 6. Run `npm run lint && npm run typecheck && npm test`; add an E2E case for user-visible flows.

@@ -3,7 +3,7 @@ import { db } from '@/core/db/db';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
-import { accountRepo } from '@/modules/finance/repo';
+import { accountRepo, transactionRepo } from '@/modules/finance/repo';
 import { birthdayRepo } from '@/modules/birthdays/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
 import { itemRepo as shoppingRepo } from '@/modules/shopping/repo';
@@ -211,6 +211,82 @@ describe('finance', () => {
     const bad = await run('finance', 'account', form({ name: 'X', balance: 'viel' }));
     expect(bad.rows).toEqual([]);
     expect(bad.notes[0]).toMatch(/Betrag/);
+  });
+});
+
+// Invented statement in the layout of the savings banks' CSV export.
+const STATEMENT = [
+  'Buchungstag;Verwendungszweck;Beguenstigter/Zahlungspflichtiger;Betrag;Waehrung',
+  '03.09.26;Streaming Monatsbeitrag;Filmfreund GmbH;-9,99;EUR',
+  '03.08.26;Streaming Monatsbeitrag;Filmfreund GmbH;-9,99;EUR',
+  '03.07.26;Streaming Monatsbeitrag;Filmfreund GmbH;-9,99;EUR',
+  '01.09.26;Gehalt;Beispiel AG;2.345,67;EUR',
+  '05.09.26;Kaffee;Baeckerei Muster;-2,50;EUR',
+  '05.09.26;Kaffee;Baeckerei Muster;-2,50;EUR',
+].join('\n');
+
+describe('bank statement import', () => {
+  it('books the statement on the chosen account and treats a second import as duplicates', async () => {
+    const acc = await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 });
+    const file: ImportInput = { kind: 'file', text: STATEMENT, fileName: 'umsaetze.csv' };
+    const first = await run('finance', 'bank', file, { accountId: acc.id });
+    expect(first.rows).toHaveLength(6);
+    expect(first.rows.every((r) => r.selected && !r.duplicate)).toBe(true); // repeated coffee is not a duplicate
+    expect(
+      first.rows.find((r) => r.candidate.label === 'Beispiel AG')!.candidate.data,
+    ).toMatchObject({
+      kind: 'income',
+      amountMinor: 234567,
+      date: '2026-09-01',
+      accountId: acc.id,
+    });
+    await commitImport(first.manifest, {
+      batchId: 'tb',
+      importerId: 'bank',
+      source: 'f',
+      rows: first.rows,
+    });
+    expect(await transactionRepo.active().count()).toBe(6);
+
+    const second = await run('finance', 'bank', file, { accountId: acc.id });
+    expect(second.rows.every((r) => r.duplicate && !r.selected)).toBe(true);
+  });
+
+  it('asks for an account and explains an unknown file format', async () => {
+    const file = (text: string): ImportInput => ({ kind: 'file', text, fileName: 'x' });
+    expect((await run('finance', 'bank', file(STATEMENT), {})).notes[0]).toMatch(/Konto/);
+    const acc = await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 });
+    const bad = await run('finance', 'bank', file('irgendwas'), { accountId: acc.id });
+    expect(bad.rows).toEqual([]);
+    expect(bad.notes[0]).toMatch(/Dateiformat/);
+  });
+
+  it('offers the accounts as choices', async () => {
+    await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 });
+    const { runtime } = await run('finance', 'bank', {
+      kind: 'file',
+      text: STATEMENT,
+      fileName: 'x',
+    });
+    expect((await runtime.optionChoices!('accountId')).map((c) => c.label)).toEqual(['Giro']);
+  });
+
+  it('suggests subscriptions from recurring debits only', async () => {
+    const r = await run('subscriptions', 'bank', { kind: 'file', text: STATEMENT, fileName: 'x' });
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]!.candidate.data).toMatchObject({
+      name: 'Filmfreund GmbH',
+      amountMinor: 999,
+      startDate: '2026-10-03',
+      recurrence: { freq: 'monthly', interval: 1 },
+    });
+    const none = await run('subscriptions', 'bank', {
+      kind: 'file',
+      text: 'Buchungstag;Betrag\n01.09.26;-1,00',
+      fileName: 'x',
+    });
+    expect(none.rows).toEqual([]);
+    expect(none.notes[0]).toMatch(/keine regelmäßigen/);
   });
 });
 

@@ -1042,6 +1042,18 @@ export const t = {
       balance: 'Kontostand heute',
       balanceHint: 'z. B. 1.234,56 – bei einem Minus mit „-“.',
       badBalance: 'Bitte einen Betrag wie 1.234,56 eingeben.',
+      bank: 'Kontoauszug importieren (CSV oder CAMT)',
+      bankHint:
+        'Im Online-Banking unter Umsätze exportieren (z. B. „CSV-CAMT“ oder „CAMT“) und die Datei hier auswählen. Die Datei wird nur auf diesem Gerät gelesen.',
+      bankAccount: 'Buchen auf Konto',
+      noAccounts: 'Lege zuerst ein Konto an.',
+      bankFormat:
+        'Das Dateiformat wurde nicht erkannt. Erwartet wird eine CSV-Datei mit Buchungstag und Betrag oder eine CAMT-Datei (XML).',
+      bankSkipped: (n: number) =>
+        n === 1
+          ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
+          : `${n} Zeilen ohne gültiges Datum oder Betrag wurden übersprungen.`,
+      bankTruncated: (n: number) => `Es werden nur die ersten ${n} Buchungen angezeigt.`,
     },
     invoices: {
       form: 'Offene Rechnung erfassen',
@@ -1065,6 +1077,14 @@ export const t = {
       badAmount: 'Bitte einen Betrag wie 9,99 eingeben.',
       badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
       badNotice: 'Bitte eine ganze Zahl eingeben.',
+      bank: 'Abos im Kontoauszug erkennen',
+      bankHint:
+        'Wähle einen Kontoauszug (CSV oder CAMT, am besten ein Jahr). Die App sucht regelmäßige Abbuchungen mit gleichem Betrag und schlägt sie als Abo vor. Die Datei wird nur auf diesem Gerät gelesen.',
+      bankFormat:
+        'Das Dateiformat wurde nicht erkannt. Erwartet wird eine CSV-Datei mit Buchungstag und Betrag oder eine CAMT-Datei (XML).',
+      bankNone:
+        'Es wurden keine regelmäßigen Abbuchungen gefunden. Für die Erkennung braucht es mindestens drei gleiche Abbuchungen im ähnlichen Abstand.',
+      seen: (n: number, last: string) => `${n} Abbuchungen, zuletzt am ${last}`,
     },
     bookmarks: {
       html: 'Browser-Lesezeichen (HTML)',
