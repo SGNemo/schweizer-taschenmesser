@@ -4,6 +4,7 @@ import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from '@/core/modules/types';
+import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
 import { Badge, Button, Card, Dialog, Icon } from '@/ui';
 import styles from './Page.module.css';
@@ -32,6 +33,7 @@ export function ModuleLibrary() {
         <div>
           <h1>{t.library.title}</h1>
           <p className={styles.lead}>{t.library.intro}</p>
+          <SetupLink />
         </div>
       </div>
       <ul className={`${styles.list} ${styles.grid}`}>

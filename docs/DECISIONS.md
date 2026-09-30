@@ -72,3 +72,13 @@ Each entry: decision → why → source. Only what is documented in `CLAUDE.md`,
 - **`PageContainer` layout system replaces a global `max-width`;** modules choose `manifest.layout`, never their own max-width; inner layouts use container queries. Source: PR #3.
 - **CSS Modules + tokens, touch targets ≥ 44 px, `data-autofocus` (React `autoFocus` runs before `showModal()`).** Source: architecture.md "UI".
 - **Docs split:** `CLAUDE.md` is the short working guide; long design notes live in `docs/architecture.md`. Source: PR #2.
+
+## Setup assistant
+- **Manual start, never forced.** Fresh empty app: a discreet welcome card ("Später" = `dismissed` for good). Existing installations: the start migration sets `dismissed` + hidden checklist, the assistant stays available in the settings. Why: no surprise for users with data. Source: task brief; `core/setup/detect.ts`.
+- **Progress is device-local (`_meta` `setup.state`), holds step ids only.** Not synced, not in backups, no values/secrets (strict Zod schema, tested). Why: setup differs per device (notifications, keystore), and secrets must never leak through it.
+- **Each step saves on its own "Weiter"; cancelling drops only the current draft.** No end-of-run commit, so an abort never applies half a setup. Vault is created only with a confirmed password on "Weiter".
+- **Steps are contributed via `setupSteps` on module/tool/connector manifests** (`core/setup/types.ts`); ids carry the owner's id as prefix. Why: new modules extend the assistant without special cases. The vault step lives in `modules/accounts` and carries no data (exclusion test).
+- **Reuse instead of rebuild:** sync/backup/connector steps embed the settings sections/cards; start data opens the existing wizard; AI keys go through `setProviderKey` (secret store), test result shows only the mapped reason.
+- **Profiles set the target state, including switching modules off, but only after a visible diff and an explicit confirmation; always `keep` data.** `ModuleManifest.requires` (invoices, budgets → finance) only informs/auto-adds, never blocks.
+- **`connectOAuth` takes an `AbortSignal`:** an abandoned login stores no token and writes no status (the loopback listener times out by itself). The connector card aborts on unmount.
+- **First weekday is a synced setting (scope `core`, `useWeekStart`).** Currency/format/language/time zone are shown as info only (fixed: EUR, de-DE, local wall clock). AI week ranges still use Monday.

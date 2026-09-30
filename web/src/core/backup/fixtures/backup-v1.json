@@ -1,0 +1,38 @@
+{
+  "format": "taschenmesser-backup",
+  "version": 1,
+  "exportedAt": "2026-01-15T08:30:00.000Z",
+  "tables": {
+    "example_entry": [
+      {
+        "id": "fixture-entry-1",
+        "createdAt": 1768000000000,
+        "updatedAt": 1768000100000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1768000100000-0000-fixdev01",
+          "done": "1768000000000-0000-fixdev01",
+          "deletedAt": "1768000000000-0000-fixdev01"
+        },
+        "title": "Beispiel: Milch kaufen",
+        "done": true
+      },
+      {
+        "id": "fixture-entry-2",
+        "createdAt": 1768000000000,
+        "updatedAt": 1768000200000,
+        "deviceId": "fixdev01",
+        "deletedAt": 1768000200000,
+        "_f": {
+          "title": "1768000000000-0000-fixdev01",
+          "done": "1768000000000-0000-fixdev01",
+          "deletedAt": "1768000200000-0000-fixdev01"
+        },
+        "title": "Beispiel: schon gelöscht",
+        "done": false
+      }
+    ],
+    "todos_task": []
+  }
+}

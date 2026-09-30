@@ -4,6 +4,7 @@
  * ones are on and their order), and never import modules or the database (ESLint).
  */
 import type { ComponentType } from 'react';
+import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
 export type ToolGroup = 'basis' | 'extra' | 'dev';
@@ -22,4 +23,6 @@ export interface ToolManifest {
   /** Lower = earlier. */
   order: number;
   component: () => Promise<{ default: ComponentType }>;
+  /** Optional steps for the setup assistant; ids must start with `<tool id>.`. */
+  setupSteps?: SetupStepDef[];
 }

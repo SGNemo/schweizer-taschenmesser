@@ -3,6 +3,7 @@ import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { entrySchema, vaultSchema } from './schema';
 import { settings } from './settings';
+import { setupSteps } from './setup';
 
 /**
  * Password vault. **No `aiSchema`, no widgets, no calendar/notification contributions, no quick-add:**
@@ -37,6 +38,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   layout: 'wide',
   order: 160,
+  setupSteps,
   contributions: { onboarding: noOnboarding, services: () => import('./service') },
 };
 

@@ -19,15 +19,15 @@ export function isView(v: string | null): v is CalendarView {
 }
 
 /** The visible date range of a view around `date` (month view includes the surrounding weeks). */
-export function rangeFor(view: CalendarView, date: string): DateRange {
+export function rangeFor(view: CalendarView, date: string, weekStart: 1 | 7 = 1): DateRange {
   if (view === 'day') return { from: date, to: date };
   if (view === 'week') {
-    const from = startOfWeekStr(date);
+    const from = startOfWeekStr(date, weekStart);
     return { from, to: addDaysStr(from, 6) };
   }
   return {
-    from: startOfWeekStr(startOfMonthStr(date)),
-    to: addDaysStr(startOfWeekStr(endOfMonthStr(date)), 6),
+    from: startOfWeekStr(startOfMonthStr(date), weekStart),
+    to: addDaysStr(startOfWeekStr(endOfMonthStr(date), weekStart), 6),
   };
 }
 
@@ -37,9 +37,9 @@ export function shiftDate(view: CalendarView, date: string, dir: 1 | -1): string
   return addMonthsStr(startOfMonthStr(date), dir);
 }
 
-/** Weeks (Monday first) of the month grid, each an array of 7 dates. */
-export function monthWeeks(date: string): string[][] {
-  const { from, to } = rangeFor('month', date);
+/** Weeks (Monday first unless `weekStart` is 7) of the month grid, each an array of 7 dates. */
+export function monthWeeks(date: string, weekStart: 1 | 7 = 1): string[][] {
+  const { from, to } = rangeFor('month', date, weekStart);
   const weeks: string[][] = [];
   for (let start = from; start <= to; start = addDaysStr(start, 7)) {
     weeks.push(Array.from({ length: 7 }, (_, i) => addDaysStr(start, i)));
@@ -47,11 +47,13 @@ export function monthWeeks(date: string): string[][] {
   return weeks;
 }
 
-export function viewTitle(view: CalendarView, date: string): string {
+export function viewTitle(view: CalendarView, date: string, weekStart: 1 | 7 = 1): string {
   if (view === 'month') return formatDay(date, 'LLLL yyyy');
   if (view === 'day') return formatDay(date, 'EEEE, d. MMMM yyyy');
-  const { from, to } = rangeFor('week', date);
-  return `${formatDay(from, "'KW' II")} · ${formatDay(from, 'd. MMM')} – ${formatDay(to, 'd. MMM yyyy')}`;
+  const { from, to } = rangeFor('week', date, weekStart);
+  // Sunday-first weeks take the ISO week number of their Monday, not of the Sunday before it.
+  const kw = weekStart === 7 ? addDaysStr(from, 1) : from;
+  return `${formatDay(kw, "'KW' II")} · ${formatDay(from, 'd. MMM')} – ${formatDay(to, 'd. MMM yyyy')}`;
 }
 
 export function groupByDate(items: CalendarItem[]): Map<string, CalendarItem[]> {

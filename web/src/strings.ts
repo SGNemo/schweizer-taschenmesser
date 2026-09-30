@@ -53,6 +53,217 @@ export const t = {
     modules: 'Module',
     noModuleSettings: 'Aktive Module haben keine eigenen Einstellungen.',
   },
+  setup: {
+    title: 'Einrichtung',
+    intro:
+      'Der Assistent hilft dir, Module, Werkzeuge, Konten und mehr einzurichten. Alles ist optional, du kannst jederzeit abbrechen und später weitermachen.',
+    start: 'Einrichtung starten',
+    resume: 'Einrichtung fortsetzen',
+    open: 'Einrichtung öffnen',
+    paletteCommand: 'Einrichtung',
+    welcomeTitle: 'Willkommen im Taschenmesser',
+    welcomeText:
+      'Möchtest du die App Schritt für Schritt einrichten? Du kannst das auch später in den Einstellungen tun.',
+    welcomeLater: 'Später',
+    dialogTitle: 'Einrichtung',
+    stepOf: (n: number, total: number) => `Schritt ${n} von ${total}`,
+    progressLabel: 'Fortschritt der Einrichtung',
+    back: 'Zurück',
+    next: 'Weiter',
+    skip: 'Überspringen',
+    finish: 'Fertig',
+    noSteps: 'Aktuell gibt es nichts einzurichten.',
+    startTitle: 'Willkommen zurück',
+    startIntro: 'Deine bisherigen Schritte bleiben erhalten.',
+    resumeAt: (title: string) => `Fortsetzen bei „${title}“`,
+    fromStart: 'Von vorn ansehen',
+    fromStartHint: 'Zeigt alle Schritte erneut. Bereits gesetzte Daten bleiben unverändert.',
+    cancelTitle: 'Einrichtung unterbrechen?',
+    cancelText:
+      'Erledigte Schritte bleiben erhalten. Nur der aktuelle, noch nicht bestätigte Schritt wird verworfen.',
+    later: 'Später fortsetzen',
+    end: 'Einrichtung beenden',
+    endHint: 'Offene Schritte findest du danach in der Checkliste auf der Übersicht.',
+    keepGoing: 'Weiter einrichten',
+    commitFailed: 'Der Schritt konnte nicht gespeichert werden. Bitte versuche es noch einmal.',
+    summaryTitle: 'Zusammenfassung',
+    summaryIntro: 'So steht es um deine Einrichtung:',
+    statusDone: 'Erledigt',
+    statusSkipped: 'Übersprungen',
+    statusOpen: 'Offen',
+    isNew: 'Neu',
+    settingsHint: 'Fortschritt und Checkliste',
+    showChecklist: 'Checkliste auf der Übersicht anzeigen',
+    checklistProgress: (done: number, total: number) => `${done} von ${total} Schritten erledigt`,
+    moreOpen: (n: number) => `… und ${n} weitere`,
+    hideChecklist: 'Ausblenden',
+    steps: {
+      basics: {
+        title: 'Grundlagen',
+        description: 'Name, Farbschema und Wochenstart. Alles lässt sich später ändern.',
+        name: 'Dein Name (optional)',
+        nameHint: 'Nur für Begrüßungen, bleibt in deinen Daten.',
+        weekStart: 'Woche beginnt am',
+        monday: 'Montag',
+        sunday: 'Sonntag',
+        fixedTitle: 'Feste Vorgaben',
+        language: 'Sprache: Deutsch',
+        timezone: (zone: string) => `Zeitzone: ${zone} (Uhrzeiten bleiben lokale Wanduhrzeit)`,
+        currency: 'Währung: Euro (EUR), Beträge im deutschen Format',
+      },
+      sync: {
+        title: 'Sync und Wiederherstellung',
+        description: 'Wähle, ob deine Daten nur auf diesem Gerät bleiben oder von woanders kommen.',
+        local: 'Nur auf diesem Gerät (Standard)',
+        localHint: 'Nichts wird verbunden. Sync und Backup gibt es später in den Einstellungen.',
+        backup: 'Backup-Datei einspielen',
+        connect: 'Mit Sync-Server verbinden',
+        connected: 'Dieses Gerät ist bereits mit einem Sync-Server verbunden.',
+        afterConnect:
+          'Liefert der Server bereits Module und Daten, kannst du die Schritte Profil und Startdaten überspringen.',
+      },
+      profiles: {
+        title: 'Profil und Module',
+        description:
+          'Ein Profil schaltet passende Module und Werkzeuge vor. Danach kannst du alles einzeln anpassen.',
+        currentState: 'Aktueller Zustand bleibt, bis du ein Profil wählst oder etwas umschaltest.',
+        choose: 'Profil wählen',
+        modules: 'Module',
+        requires: (names: string) => `Baut auf auf: ${names}`,
+        viaDependency: (names: string) => `Automatisch dabei wegen: ${names}`,
+        diffTitle: 'Das ändert sich',
+        diffNone: 'Keine Änderung.',
+        willEnable: (names: string) => `Wird aktiviert: ${names}`,
+        willDisable: (names: string) => `Wird deaktiviert: ${names}`,
+        keepData: 'Die Daten deaktivierter Module bleiben erhalten.',
+        toolsOn: (names: string) => `Werkzeuge an: ${names}`,
+        toolsOff: (names: string) => `Werkzeuge aus: ${names}`,
+        confirm: 'Ich habe die Änderungen geprüft und möchte sie übernehmen.',
+        confirmNeeded: 'Bestätige die Änderungen, um fortzufahren.',
+      },
+      tools: {
+        title: 'Werkzeugkasten',
+        description: 'Kleine Helfer für die Symbolleiste. Schalte ein, was du brauchst.',
+        showDev: 'Entwickler-Werkzeuge anzeigen',
+        up: (name: string) => `${name} nach oben`,
+        down: (name: string) => `${name} nach unten`,
+        groups: { basis: 'Basis', extra: 'Extra', dev: 'Entwickler' },
+      },
+      ai: {
+        title: 'KI-Anbieter',
+        description:
+          'Optional. Ohne Anbieter bleibt die lokale Suche voll nutzbar. Es gehen nur deine Frage und ein kurzes Schema an die KI, nie deine Daten.',
+        existing: 'Bereits eingerichtet',
+        none: 'Noch kein Anbieter eingerichtet.',
+        usable: 'einsatzbereit',
+        incomplete: 'unvollständig (Schlüssel fehlt)',
+        add: 'Anbieter hinzufügen',
+        key: 'API-Schlüssel',
+        keyHint: 'Wird nur im geschützten Speicher dieses Geräts abgelegt, nie synchronisiert.',
+        keyLink: 'Schlüssel beim Anbieter erstellen',
+        model: 'Modell',
+        limit: 'Tageslimit (Anfragen, leer = keins)',
+        test: 'Verbindung testen',
+        testing: 'Teste …',
+        remove: 'Entfernen',
+        order: 'Reihenfolge (Fallback)',
+        up: (name: string) => `${name} nach oben`,
+        down: (name: string) => `${name} nach unten`,
+        mayTrain: 'Dieser Anbieter kann Eingaben zum Verbessern seiner Modelle nutzen.',
+        ollamaFound: 'Ollama läuft auf diesem Computer.',
+        ollamaAdd: 'Ollama hinzufügen',
+        ollamaMissing: 'Ollama wurde nicht gefunden (läuft es, und erlaubt es diese Adresse?).',
+      },
+      connectors: {
+        title: 'Konten verknüpfen',
+        description:
+          'Optional. Verbindungen lesen nur, sie ändern nichts beim Dienst. Zugangsdaten liegen im Schlüsselspeicher dieses Geräts.',
+        scopes: 'Berechtigungen dieser Verbindung',
+        scopeLine: (label: string, scopes: string) => `${label}: ${scopes}`,
+        noScopes: 'keine Anmeldung nötig',
+        testingNote:
+          'Ist dein Google-Projekt im Status „Testing“, läuft die Anmeldung nach 7 Tagen ab. Stelle es auf „In Produktion“.',
+        stepsNote: 'Schritte: docs/STATUS.md → „Google-Verbindung einrichten“.',
+        none: 'In dieser Version gibt es keine Verbindungen.',
+      },
+      startdata: {
+        title: 'Startdaten',
+        description:
+          'Trage erste Einträge ein oder importiere sie: per Text, Datei, Vorlage oder Verbindung. Vor dem Speichern siehst du immer eine Vorschau, und jeder Import lässt sich rückgängig machen.',
+        none: 'Aktive Module bieten keine Startdaten an.',
+        handled: 'Schon bearbeitet',
+        hints: {
+          finance: 'Konten, Kategorien und Startsalden.',
+          reminders: 'Vorlagen für Miete, Versicherungen, Müll und mehr.',
+          news: 'Startpaket mit öffentlichen Nachrichten-Feeds.',
+          birthdays: 'Geburtstage als Liste einfügen.',
+        } as Record<string, string>,
+      },
+      aiimport: {
+        title: 'Import per KI',
+        description:
+          'Lass eine KI deiner Wahl Daten aufbereiten: Du kopierst das Schema, sie liefert JSON, du siehst eine Vorschau.',
+        none: 'Kein aktives Modul unterstützt den JSON-Import.',
+        hint: 'Es wird nur das Schema kopiert, nie deine Daten. Den Tresor (Accounts) gibt es hier nie.',
+        desktop:
+          'Am Computer gibt es zusätzlich die lokale Schnittstelle (Einstellungen → Lokale Schnittstelle).',
+      },
+      notifications: {
+        title: 'Benachrichtigungen',
+        description:
+          'Damit Erinnerungen, Fristen und Geburtstage dich erreichen, braucht die App die Erlaubnis für Benachrichtigungen.',
+        why: 'Ohne Erlaubnis bleibt alles nutzbar, du wirst nur nicht erinnert. Die Entscheidung kannst du jederzeit in den Einstellungen ändern.',
+        allow: 'Benachrichtigungen erlauben',
+        state: {
+          granted: 'Erlaubt.',
+          denied: 'Abgelehnt. Der Schritt bleibt in der Checkliste.',
+          default: 'Noch nicht entschieden.',
+          unsupported: 'Auf diesem Gerät nicht verfügbar.',
+        } as Record<string, string>,
+        android:
+          'Android: Erinnerungen bei geschlossener App braucht das System-Recht für genaue Alarme, und die Akku-Optimierung darf die App nicht einschränken. Beides stellst du in den Android-Einstellungen unter „Apps → Taschenmesser“ ein.',
+      },
+      backupupdates: {
+        title: 'Backup und Updates',
+        description: 'Sicherung deiner Daten und der Update-Kanal.',
+        backupNow: 'Backup jetzt speichern',
+        autoNote:
+          'Automatische Backups gibt es noch nicht; vor jedem Update legt die App aber eine Sicherungskopie an.',
+        channel: 'Update-Kanal',
+        stable: 'Stabil',
+        beta: 'Beta',
+        auto: 'Automatisch nach Updates suchen',
+        browser: 'Im Browser aktualisiert sich die App selbst (Seite neu laden).',
+      },
+      dashboard: {
+        title: 'Übersicht',
+        description: 'Welche Widgets erscheinen und in welcher Reihenfolge. Ziehen oder Tastatur.',
+        empty: 'Die aktiven Module haben keine Widgets.',
+        hide: (title: string) => `${title} anzeigen`,
+        drag: (title: string) => `${title} verschieben`,
+        instructions:
+          'Leertaste zum Aufnehmen, Pfeiltasten zum Verschieben, Leertaste zum Ablegen.',
+      },
+    },
+    profiles: {
+      everyday: {
+        name: 'Alltag',
+        description:
+          'Kalender, Aufgaben, Erinnerungen, Einkauf, Notizen, Geburtstage, Gewohnheiten.',
+      },
+      finance: {
+        name: 'Finanz-Fokus',
+        description:
+          'Finanzen, Budgets, Abos, Rechnungen, Verträge – dazu Kalender und Erinnerungen.',
+      },
+      productive: {
+        name: 'Produktiv',
+        description:
+          'Aufgaben, Notizen, Kalender, Gewohnheiten, Lesezeichen, Starter, Nachrichten.',
+      },
+      minimal: { name: 'Minimal', description: 'Nur Kalender und Aufgaben.' },
+    } as Record<string, { name: string; description: string }>,
+  },
   palette: {
     title: 'Befehlspalette',
     placeholder: 'Suchen, springen oder fragen …',
@@ -799,9 +1010,17 @@ export const t = {
     serverUrl: 'Server-Adresse',
     serverUrlHint: 'z. B. https://mein-pc.tailnet.ts.net',
     token: 'Zugangstoken',
+    deviceName: 'Gerätename',
+    deviceNameHint: 'So erscheint dieses Gerät in der Geräteliste.',
+    deviceNames: { desktop: 'Windows-App', android: 'Android-Handy', web: 'Browser' } as Record<
+      string,
+      string
+    >,
     encrypt: 'Ende-zu-Ende-Verschlüsselung',
     encryptHint:
       'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur Chiffretext. Nur auf einem leeren Server möglich.',
+    plainWarning:
+      'Ohne Ende-zu-Ende-Verschlüsselung liegen deine Daten auf dem Server im Klartext. Nutze sie, wenn der Server nicht nur dir gehört oder nicht verschlüsselt gespeichert wird.',
     passphrase: 'Passphrase',
     passphraseHint:
       'Mindestens 8 Zeichen. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
@@ -817,11 +1036,69 @@ export const t = {
       n === 0 ? 'Alles gesendet' : n === 1 ? '1 Änderung wartet' : `${n} Änderungen warten`,
     syncNow: 'Jetzt synchronisieren',
     disconnect: 'Trennen',
+    signOut: 'Dieses Gerät abmelden',
+    signOutHint:
+      'Sperrt das Token dieses Geräts auf dem Server und trennt es. Deine lokalen Daten bleiben erhalten.',
     disconnectHint: 'Deine lokalen Daten bleiben erhalten; der Server wird nicht verändert.',
     state: { off: 'Aus', idle: 'Synchronisiert', syncing: 'Synchronisiere …', error: 'Fehler' },
     badge: (state: string) => `Synchronisation: ${state}`,
+    detailsTitle: 'Status',
+    lastResult: (pulled: number, pushed: number) =>
+      `Zuletzt: ${pulled} empfangen, ${pushed} gesendet`,
+    rejected: (n: number) =>
+      `${n} empfangene Änderungen konnten nicht entschlüsselt werden und wurden übersprungen.`,
+    retryIn: (seconds: number) => `Nächster Versuch in ${seconds} s.`,
+    failuresInRow: (n: number) => (n === 1 ? '1 Fehlversuch' : `${n} Fehlversuche in Folge`),
+    serverSize: 'Daten auf dem Server',
+    serverSizeValue: (records: number, kb: number) =>
+      `${records} Einträge, ${kb < 1024 ? `${kb} KB` : `${(kb / 1024).toFixed(1)} MB`}`,
+    devicesTitle: 'Geräte',
+    devicesIntro:
+      'Alle Geräte, die mit diesem Server synchronisieren. Ein gesperrtes Gerät kann nicht mehr synchronisieren; seine bereits gesendeten Daten bleiben erhalten.',
+    devicesUnsupported:
+      'Dieser Server kennt keine Geräteverwaltung (ältere Version). Aktualisiere den Server, um Geräte zu sperren.',
+    deviceThis: 'dieses Gerät',
+    deviceLastSeen: (when: string) => `Zuletzt aktiv: ${when}`,
+    deviceNever: 'noch nie',
+    deviceRevoked: (when: string) => `Gesperrt am ${when}`,
+    deviceStale: (days: number) =>
+      `Seit ${days} Tagen nicht aktiv. Sperre es, wenn du es nicht mehr nutzt: Sehr alte Geräte können gelöschte Einträge zurückbringen.`,
+    deviceLock: 'Sperren',
+    deviceLockTitle: (name: string) => `„${name}“ sperren?`,
+    deviceLockText:
+      'Das Gerät kann danach nicht mehr synchronisieren. Bereits gesendete Daten bleiben auf dem Server. Zum erneuten Verbinden braucht das Gerät das Server-Token.',
+    deviceLocked: 'Gerät gesperrt.',
+    deviceLockFailed: 'Das Gerät konnte nicht gesperrt werden.',
+    deviceId: (id: string) => `Geräte-ID: ${id}`,
+    rotateToken: 'Token dieses Geräts erneuern',
+    rotated: 'Token erneuert.',
+    conflictsTitle: 'Konflikte',
+    conflictsIntro:
+      'Wenn zwei Geräte dasselbe Feld gleichzeitig geändert haben, gewinnt die neuere Änderung. Der überschriebene Wert steht hier und lässt sich wiederherstellen.',
+    conflictsNone: 'Keine offenen Konflikte.',
+    conflictKept: {
+      remote: 'Die Änderung eines anderen Geräts hat deine überschrieben.',
+      local: 'Deine Änderung hat die eines anderen Geräts überschrieben.',
+    } as Record<string, string>,
+    conflictLost: 'Überschrieben',
+    conflictNow: 'Jetzt gilt',
+    conflictEmpty: '(leer)',
+    conflictDeleted: '(gelöscht)',
+    conflictTooLarge: 'Wert zu groß zum Aufbewahren',
+    conflictRestore: 'Wiederherstellen',
+    conflictDismiss: 'Verwerfen',
+    conflictDismissAll: 'Alle verwerfen',
+    conflictRestored: 'Wert wiederhergestellt.',
+    conflictOutcome: {
+      'already-current': 'Der Wert gilt bereits.',
+      'record-gone': 'Der Eintrag existiert nicht mehr.',
+      'not-restorable': 'Dieser Wert lässt sich nicht wiederherstellen.',
+    } as Record<string, string>,
     errors: {
       network: 'Server nicht erreichbar.',
+      revoked:
+        'Dieses Gerät wurde gesperrt. Trenne es und verbinde es neu, wenn du es wieder zulassen willst.',
+      'rate-limited': 'Zu viele Anfragen oder Fehlversuche – es wird automatisch erneut versucht.',
       unauthorized: 'Der Server hat das Token abgelehnt.',
       server: 'Der Server hat einen Fehler gemeldet.',
       decrypt: 'Entschlüsselung fehlgeschlagen – stimmt die Passphrase?',
@@ -840,6 +1117,10 @@ export const t = {
       'wrong-passphrase': 'Falsche Passphrase.',
       'server-has-plain-data':
         'Auf dem Server liegen bereits unverschlüsselte Daten. Verschlüsselung ist nur auf einem leeren Server möglich.',
+      revoked: 'Dieses Gerät ist auf dem Server gesperrt.',
+      'rate-limited': 'Zu viele Fehlversuche. Bitte in einer Minute erneut versuchen.',
+      'vault-outdated':
+        'Der Server nutzt noch das alte Verschlüsselungsformat. Setze den Server zurück, um es neu aufzubauen.',
       'server-error': 'Der Server hat einen Fehler gemeldet.',
     } as Record<string, string>,
     resetServer: 'Server zurücksetzen und verschlüsselt neu aufbauen',
@@ -869,11 +1150,88 @@ export const t = {
       removed > 0
         ? `${records} Einträge wiederhergestellt, ${removed} entfernt.`
         : `${records} Einträge wiederhergestellt.`,
+    encryptedExport: 'Verschlüsselt exportieren',
+    encryptedExported: 'Verschlüsseltes Backup heruntergeladen.',
+    exportHint:
+      'Empfohlen: verschlüsselt exportieren (Argon2id, AES-256). Das normale Backup enthält alle Einträge im Klartext.',
+    exportPassphrase: 'Passwort für das Backup',
+    exportPassphraseHint:
+      'Mindestens 8 Zeichen. Ohne dieses Passwort lässt sich das Backup nicht öffnen – es gibt keine Rücksetzung.',
+    passphraseTooShort: 'Das Passwort braucht mindestens 8 Zeichen.',
+    openPassphrase: 'Passwort des Backups',
+    unlock: 'Öffnen',
+    verify: 'Backup prüfen',
+    verifyHint:
+      'Prüft die Datei und spielt sie zur Probe in eine temporäre Datenbank ein. Deine Daten bleiben unberührt.',
+    verifying: 'Prüfe …',
+    verifyOk: 'Das Backup ist in Ordnung und lässt sich wiederherstellen.',
+    verifyFailed: 'Das Backup ist nicht in Ordnung.',
+    verifyExported: (when: string) => `Erstellt am ${when}`,
+    verifyTotals: (records: number, tombstones: number) =>
+      `${records} Einträge, ${tombstones} gelöschte Markierungen`,
+    verifySkipped: (n: number) =>
+      `${n} Tabellen stammen aus einer anderen App-Version und werden übersprungen.`,
+    steps: {
+      format: 'Dateiformat',
+      checksum: 'Prüfsumme (SHA-256)',
+      decrypt: 'Entschlüsselung',
+      structure: 'Inhalt gültig',
+      restore: 'Probe-Wiederherstellung',
+      counts: 'Anzahl je Modul stimmt',
+    } as Record<string, string>,
+    stepStatus: { ok: 'ok', failed: 'Fehler', skipped: '–' } as Record<string, string>,
+    core: 'Einstellungen',
+    previewTitle: 'Das passiert bei der Wiederherstellung',
+    previewRow: (module: string, added: number, replaced: number, removed: number) =>
+      `${module}: ${added} neu, ${replaced} ersetzt${removed > 0 ? `, ${removed} gelöscht` : ''}`,
+    previewTotals: (added: number, replaced: number, removed: number) =>
+      `Gesamt: ${added} kommen dazu, ${replaced} werden ersetzt, ${removed} werden gelöscht.`,
+    previewNothing: 'Es ändert sich nichts.',
+    safetyNote:
+      'Vorher legt die App automatisch eine Sicherheitskopie deiner aktuellen Daten an. Bricht etwas ab, bleibt alles unverändert.',
+    restoring: 'Stelle wieder her …',
+    safetyDone: (where: string) => `Sicherheitskopie: ${where}`,
+    autoTitle: 'Automatische Backups',
+    autoIntro:
+      'Die App sichert regelmäßig verschlüsselt in ihren Datenordner und behält die neuesten Kopien. Das Passwort liegt im Schlüsselspeicher des Geräts.',
+    autoUnsupported:
+      'Automatische Backups gibt es nur in der installierten App (Windows, Android).',
+    autoEnable: 'Automatisch sichern',
+    autoInterval: 'Rhythmus',
+    autoDaily: 'Täglich',
+    autoWeekly: 'Wöchentlich',
+    autoKeep: 'Anzahl Kopien',
+    autoPassphrase: 'Passwort für automatische Backups',
+    autoPassphraseSet: 'Passwort gespeichert. Neues Passwort eingeben, um es zu ersetzen.',
+    autoPassphraseHint:
+      'Mindestens 8 Zeichen. Notiere es dir: Ohne das Passwort lassen sich die Kopien nicht öffnen.',
+    autoSavePassphrase: 'Passwort speichern',
+    autoRunNow: 'Jetzt sichern',
+    autoLast: 'Letztes Backup',
+    autoNever: 'noch keins',
+    autoLastFailed: 'Das letzte Backup ist fehlgeschlagen.',
+    autoNeedPassphrase: 'Lege zuerst ein Passwort fest.',
+    autoCreated: 'Backup angelegt.',
+    autoFiles: 'Vorhandene Kopien',
+    autoNoFiles: 'Noch keine Kopien.',
+    autoUse: 'Öffnen',
+    autoSaveAs: 'Speichern unter …',
     errors: {
       'not-json': 'Die Datei ist keine gültige JSON-Datei.',
       'wrong-format': 'Das ist keine Taschenmesser-Backup-Datei.',
       'newer-version': 'Das Backup stammt aus einer neueren App-Version.',
       invalid: 'Die Backup-Datei ist beschädigt.',
+      'passphrase-required': 'Dieses Backup ist verschlüsselt. Gib das Passwort ein.',
+      'wrong-passphrase': 'Falsches Passwort – oder die Datei wurde verändert.',
+      'checksum-mismatch':
+        'Die Prüfsumme stimmt nicht: Die Datei ist beschädigt oder unvollständig.',
+      'restore-failed': 'Die Probe-Wiederherstellung ist fehlgeschlagen.',
+      'count-mismatch': 'Nach der Probe-Wiederherstellung fehlen Einträge.',
+      'safety-failed':
+        'Die Sicherheitskopie konnte nicht angelegt werden. Es wurde nichts geändert.',
+      'safety-cancelled':
+        'Ohne Sicherheitskopie wird nicht wiederhergestellt. Es wurde nichts geändert.',
+      'restore-error': 'Die Wiederherstellung ist fehlgeschlagen. Es wurde nichts geändert.',
     } as Record<string, string>,
   },
   ai: {
@@ -1701,6 +2059,22 @@ export const t = {
       tooShort: (n: number) => `Mindestens ${n} Zeichen.`,
       exists: 'Es gibt bereits einen Tresor (z. B. von einem anderen Gerät).',
     },
+    setupStep: {
+      title: 'Tresor und Sicherheit',
+      description:
+        'Lege dein Master-Passwort fest und wähle, wann sich der Tresor sperrt. Ohne Master-Passwort wird nichts angelegt.',
+      hasVault: 'Dein Tresor ist eingerichtet. Das Master-Passwort bleibt unverändert.',
+      needed:
+        'Zum Fortfahren: Master-Passwort festlegen und wiederholen, oder den Schritt überspringen.',
+      biometric: 'Mit Fingerabdruck bzw. Windows Hello entsperren',
+      biometricHint: 'Das Master-Passwort wird dabei nie gespeichert.',
+      autoLock: 'Tresor sperren nach Inaktivität',
+      minutes: (n: string) => `${n} ${n === '1' ? 'Minute' : 'Minuten'}`,
+      backgroundLock: 'Tresor sperren, wenn die App im Hintergrund ist',
+      now: 'Sofort',
+      after30: 'Nach 30 Sekunden',
+      corrupt: 'Der vorhandene Tresor ist beschädigt. Hier wird nichts verändert.',
+    },
     lock: {
       title: 'Tresor gesperrt',
       intro: 'Gib dein Master-Passwort ein, um deine Zugangsdaten zu sehen.',
@@ -1853,6 +2227,7 @@ export const t = {
     events: (n: number) => (n === 1 ? '1 Termin übernommen' : `${n} Termine übernommen`),
     connect: 'Verbinden',
     reconnect: 'Neu anmelden',
+    cancelLogin: 'Anmeldung abbrechen',
     connecting: 'Warte auf die Anmeldung im Browser …',
     disconnect: 'Trennen',
     syncNow: 'Jetzt abgleichen',

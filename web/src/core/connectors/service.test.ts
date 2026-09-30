@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { setPlatform, type PlatformService } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
@@ -33,7 +33,8 @@ const secrets = new Map<string, string>();
 const opened: string[] = [];
 const tokenBodies: URLSearchParams[] = [];
 let waited: { state?: string } = {};
-let waitOutcome: 'code' | 'denied' | 'timeout' = 'code';
+let waitOutcome: 'code' | 'denied' | 'timeout' | 'pending' = 'code';
+let release: () => void = () => {};
 let tokenResponse: () => Response;
 let revoked = 0;
 
@@ -74,6 +75,10 @@ function installPlatform() {
             waited = { state };
             if (waitOutcome === 'denied') throw new Error('denied: access_denied');
             if (waitOutcome === 'timeout') throw new Error('timeout');
+            if (waitOutcome === 'pending')
+              return new Promise<{ code: string }>((resolve) => {
+                release = () => resolve({ code: 'CODE-1' });
+              });
             return { code: 'CODE-1' };
           },
         };
@@ -190,6 +195,32 @@ describe('connectOAuth', () => {
     expect((await connectOAuth(def, ['calendar'])).state).toBe('disconnected');
     waitOutcome = 'timeout';
     expect((await connectOAuth(def, ['calendar'])).state).toBe('error');
+    expect(secrets.has('oauth:testco:refresh')).toBe(false);
+  });
+
+  it('an abandoned login stops waiting and stores no token, even if the browser finishes later', async () => {
+    await saveClient('testco', { clientId: 'client-abc-123' });
+    waitOutcome = 'pending';
+    const controller = new AbortController();
+    const before = await loadStatus('testco');
+    const result = connectOAuth(def, ['calendar'], { signal: controller.signal });
+    await vi.waitFor(() => expect(opened).toHaveLength(1));
+    controller.abort();
+    // Resolves at once (does not wait for the browser) and leaves the status alone.
+    expect(await result).toEqual(before);
+    release(); // the user completes the login in the browser after the assistant was closed
+    await new Promise((r) => setTimeout(r, 20));
+    expect(tokenBodies).toHaveLength(0);
+    expect(secrets.has('oauth:testco:refresh')).toBe(false);
+    expect(await loadStatus('testco')).toEqual(before);
+  });
+
+  it('a login aborted before the browser opens does nothing at all', async () => {
+    await saveClient('testco', { clientId: 'client-abc-123' });
+    const controller = new AbortController();
+    controller.abort();
+    await connectOAuth(def, ['calendar'], { signal: controller.signal });
+    expect(opened).toEqual([]);
     expect(secrets.has('oauth:testco:refresh')).toBe(false);
   });
 

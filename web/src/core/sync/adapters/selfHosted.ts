@@ -1,9 +1,20 @@
 import { getPlatform } from '@/core/platform';
-import { SyncError, type FieldOp, type PullPage, type SyncAdapter } from '../types';
+import {
+  SyncError,
+  type DeviceInfo,
+  type FieldOp,
+  type PullPage,
+  type ServerInfo,
+  type ServerStatus,
+  type SyncAdapter,
+} from '../types';
 
 export interface VaultInfo {
   salt: string;
   check: string;
+  /** 2 = Argon2id with `kdf`. Vaults without it are the legacy PBKDF2 kind and are not supported. */
+  v?: 2;
+  kdf?: { alg: 'argon2id'; m: number; t: number; p: number };
 }
 
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -40,7 +51,11 @@ export class SelfHostedAdapter implements SyncAdapter {
       // Offline, server down, blocked by CORS or mixed content: the browser does not tell which.
       throw new SyncError('network');
     }
-    if (res.status === 401) throw new SyncError('unauthorized');
+    if (res.status === 401) {
+      const body = (await res.json().catch(() => undefined)) as { error?: string } | undefined;
+      throw new SyncError(body?.error === 'revoked' ? 'revoked' : 'unauthorized');
+    }
+    if (res.status === 429) throw new SyncError('rate-limited');
     if (!res.ok && !okStatuses.includes(res.status))
       throw new SyncError('server', `HTTP ${res.status}`);
     return res;
@@ -81,6 +96,58 @@ export class SelfHostedAdapter implements SyncAdapter {
       [409],
     );
     return res.status !== 409;
+  }
+
+  /** Protocol level and features; `undefined` for a server that predates protocol 2. */
+  async info(): Promise<ServerInfo | undefined> {
+    const res = await this.request('/v1/info', {}, [404]);
+    return res.status === 404 ? undefined : ((await res.json()) as ServerInfo);
+  }
+
+  /** Registers this device (needs the shared token). `exists`: the id is taken, rotate instead. */
+  async registerDevice(device: {
+    id: string;
+    name: string;
+  }): Promise<{ token: string } | 'exists' | 'forbidden'> {
+    const res = await this.request(
+      '/v1/devices',
+      { method: 'POST', body: JSON.stringify(device) },
+      [403, 409],
+    );
+    if (res.status === 409) return 'exists';
+    if (res.status === 403) return 'forbidden';
+    return { token: ((await res.json()) as { token: string }).token };
+  }
+
+  /** New token for a device; the old one stops working. `undefined`: unknown or revoked device. */
+  async rotateDevice(id: string): Promise<{ token: string } | undefined> {
+    const res = await this.request(
+      `/v1/devices/${encodeURIComponent(id)}/rotate`,
+      { method: 'POST' },
+      [404],
+    );
+    return res.status === 404
+      ? undefined
+      : { token: ((await res.json()) as { token: string }).token };
+  }
+
+  async listDevices(): Promise<DeviceInfo[]> {
+    const res = await this.request('/v1/devices');
+    return ((await res.json()) as { devices: DeviceInfo[] }).devices;
+  }
+
+  /** Locks a device out. `false` when the server does not know it. */
+  async revokeDevice(id: string): Promise<boolean> {
+    const res = await this.request(
+      `/v1/devices/${encodeURIComponent(id)}`,
+      { method: 'DELETE' },
+      [404],
+    );
+    return res.status !== 404;
+  }
+
+  async status(): Promise<ServerStatus> {
+    return (await (await this.request('/v1/status')).json()) as ServerStatus;
   }
 
   /** Deletes all data on the server (and its vault). */

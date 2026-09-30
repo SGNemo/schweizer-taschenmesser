@@ -1,6 +1,7 @@
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, today } from '@/core/time/dates';
 import { weekdayShort } from '@/core/recurrence/describe';
+import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
 import { Button, useMediaQuery } from '@/ui';
 import { groupByDate, monthWeeks } from '../views';
@@ -30,12 +31,13 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
   const byDate = groupByDate(items);
   const now = today();
   const MAX_CHIPS = useChipLimit();
+  const weekStart = useWeekStart();
   return (
     <div className={styles.monthWrap}>
       <table className={styles.month}>
         <thead>
           <tr>
-            {[1, 2, 3, 4, 5, 6, 7].map((wd) => (
+            {(weekStart === 7 ? [7, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 7]).map((wd) => (
               <th key={wd} scope="col">
                 {weekdayShort(wd)}
               </th>
@@ -43,7 +45,7 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
           </tr>
         </thead>
         <tbody>
-          {monthWeeks(date).map((week) => (
+          {monthWeeks(date, weekStart).map((week) => (
             <tr key={week[0]}>
               {week.map((d) => {
                 const list = byDate.get(d) ?? [];

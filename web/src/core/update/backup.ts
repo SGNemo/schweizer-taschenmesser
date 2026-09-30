@@ -1,5 +1,7 @@
 /** Local safety copy taken right before an update is installed. */
 import { createBackup, serializeBackup } from '@/core/backup/backup';
+import { encryptBackup, serializeEncryptedBackup } from '@/core/backup/encrypted';
+import { AUTO_PASSPHRASE_SECRET } from '@/core/backup/safety';
 import { getPlatform } from '@/core/platform';
 
 export const BACKUP_DIR = 'backups';
@@ -24,7 +26,7 @@ export function backupsToPrune(names: readonly string[], keep = KEEP_BACKUPS): s
 }
 
 /**
- * Writes a full JSON backup into the app's data folder and prunes old ones. Throws when the copy
+ * Writes a full backup (encrypted if a backup passphrase is set) into the app's data folder and prunes old ones. Throws when the copy
  * cannot be written – the caller must then not install the update.
  */
 export async function createPreUpdateBackup(
@@ -34,7 +36,17 @@ export async function createPreUpdateBackup(
 ): Promise<string> {
   const { files } = getPlatform();
   const path = `${BACKUP_DIR}/${preUpdateBackupName(from, to, at)}`;
-  await files.write(path, serializeBackup(await createBackup()));
+  const backup = await createBackup();
+  // Encrypted when a backup passphrase is set (automatic backups); the name stays the same, the
+  // content is recognised by its format. Without a passphrase it stays plain JSON as before.
+  let text = serializeBackup(backup);
+  try {
+    const passphrase = await getPlatform().secrets.get(AUTO_PASSPHRASE_SECRET);
+    if (passphrase) text = serializeEncryptedBackup(await encryptBackup(backup, passphrase));
+  } catch {
+    // no readable secret store: keep the plain copy rather than blocking the update
+  }
+  await files.write(path, text);
   try {
     for (const name of backupsToPrune(await files.list(BACKUP_DIR))) {
       await files.remove(`${BACKUP_DIR}/${name}`);
