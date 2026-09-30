@@ -28,6 +28,8 @@ export interface CaptureFields {
   amountMinor?: number;
   kind?: 'expense' | 'income';
   url?: string;
+  /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
+  note?: string;
 }
 
 /** Hints the UI can surface next to the chips; the parser never hides an assumption. */
