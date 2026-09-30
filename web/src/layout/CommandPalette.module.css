@@ -33,3 +33,14 @@
   color: var(--text-muted);
   padding: var(--space-3);
 }
+.optionText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.optionMeta {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}

@@ -8,6 +8,7 @@
   font-weight: 550;
 }
 .control {
+  min-width: 0;
   min-height: var(--touch);
   padding: 0 var(--space-3);
   border: 1px solid var(--border);
@@ -73,4 +74,10 @@
 }
 .track[aria-checked='true'] .thumb {
   transform: translateX(1.25rem);
+}
+
+.area {
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+  min-height: 5rem;
 }

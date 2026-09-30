@@ -1,11 +1,34 @@
+import { useState } from 'react';
+import { ConnectorsSection } from './settings/ConnectorsSection';
+import { StartDataButton } from '@/core/importer/StartDataButton';
+import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
+import { hasStartData, importersOf } from '@/core/dataapi/onboarding';
+import { JSON_IMPORTER_ID } from '@/core/dataapi/importer';
 import { useModuleStates } from '@/core/modules/activation';
+import type { NotificationPermissionState } from '@/core/notifications/service';
+import { getPlatform } from '@/core/platform';
 import { visibleManifests } from '@/core/modules/registry';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { useUiStore, type ThemeChoice } from '@/stores/ui';
-import { Card, SelectField, Switch, TextField } from '@/ui';
+import { Button, Card, HelpHint, SelectField, Switch, TextField } from '@/ui';
+import { AiSection } from './settings/AiSection';
+import { BackupSection } from './settings/BackupSection';
+import { PushSection } from './settings/PushSection';
+import { SyncSection } from './settings/SyncSection';
+import { LocalApiSection } from './settings/LocalApiSection';
+import { UpdateSection } from './settings/UpdateSection';
 import styles from './Page.module.css';
+
+function SectionTitle({ id, hint, children }: { id: string; hint?: string; children: string }) {
+  return (
+    <div className={styles.titleRow}>
+      <h2 id={id}>{children}</h2>
+      {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
+    </div>
+  );
+}
 
 function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
   const { schema, defaults, fields } = manifest.settings;
@@ -63,6 +86,45 @@ function ModuleSettingsForm({ manifest }: { manifest: ModuleManifest }) {
   );
 }
 
+function NotificationsCard() {
+  const [permission, setPermission] = useState<NotificationPermissionState>(() =>
+    getPlatform().notifications.permission(),
+  );
+  return (
+    <Card>
+      <div className={styles.form}>
+        <p>{t.notifications.intro}</p>
+        <p role="status" data-testid="notification-status">
+          {t.notifications[permission]}
+        </p>
+        {permission === 'default' ? (
+          <Button
+            variant="primary"
+            onClick={async () =>
+              setPermission(await getPlatform().notifications.requestPermission())
+            }
+          >
+            {t.notifications.enable}
+          </Button>
+        ) : null}
+        {permission === 'granted' ? (
+          <Button
+            onClick={() =>
+              void getPlatform().notifications.show({
+                title: t.appName,
+                body: t.notifications.testBody,
+                tag: 'test',
+              })
+            }
+          >
+            {t.notifications.test}
+          </Button>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
 export function Settings() {
   const theme = useUiStore((s) => s.theme);
   const setTheme = useUiStore((s) => s.setTheme);
@@ -70,6 +132,8 @@ export function Settings() {
   const withSettings = visibleManifests.filter(
     (m) => states?.[m.id] && m.settings.fields.length > 0,
   );
+
+  const withStartData = visibleManifests.filter((m) => states?.[m.id] && hasStartData(m));
 
   return (
     <>
@@ -90,6 +154,65 @@ export function Settings() {
           </SelectField>
         </Card>
       </section>
+      <section className={styles.section} aria-labelledby="notifications">
+        <h2 id="notifications">{t.notifications.title}</h2>
+        <NotificationsCard />
+        <PushSection />
+      </section>
+      <section className={styles.section} aria-labelledby="ai">
+        <SectionTitle id="ai" hint={t.help.aiRouter}>
+          {t.ai.title}
+        </SectionTitle>
+        <AiSection />
+      </section>
+      <section className={styles.section} aria-labelledby="sync">
+        <SectionTitle id="sync" hint={t.help.sync}>
+          {t.sync.title}
+        </SectionTitle>
+        <SyncSection />
+      </section>
+      <section className={styles.section} aria-labelledby="backup">
+        <h2 id="backup">{t.backup.title}</h2>
+        <BackupSection />
+      </section>
+      <section className={styles.section} aria-labelledby="connectors">
+        <SectionTitle id="connectors" hint={t.help.connectors}>
+          {t.connectors.title}
+        </SectionTitle>
+        <ConnectorsSection />
+      </section>
+      <section className={styles.section} aria-labelledby="localapi">
+        <SectionTitle id="localapi" hint={t.help.localApi}>
+          {t.localApi.title}
+        </SectionTitle>
+        <LocalApiSection />
+      </section>
+      <section className={styles.section} aria-labelledby="updates">
+        <SectionTitle id="updates" hint={t.help.updateChannel}>
+          {t.update.title}
+        </SectionTitle>
+        <UpdateSection />
+      </section>
+      {withStartData.length > 0 ? (
+        <section className={styles.section} aria-labelledby="startdata">
+          <h2 id="startdata">{t.onboarding.button}</h2>
+          <Card>
+            <ul className={styles.list}>
+              {withStartData.map((m) => (
+                <li key={m.id} className={styles.startRow}>
+                  <span>{m.name}</span>
+                  <span className={styles.startActions}>
+                    {importersOf(m).some((i) => i.id === JSON_IMPORTER_ID) ? (
+                      <CopySchemaButton manifest={m} />
+                    ) : null}
+                    <StartDataButton moduleId={m.id} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      ) : null}
       <section className={styles.section} aria-labelledby="modules">
         <h2 id="modules">{t.settings.modules}</h2>
         {states && withSettings.length === 0 ? <p>{t.settings.noModuleSettings}</p> : null}

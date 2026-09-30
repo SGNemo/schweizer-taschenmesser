@@ -1,0 +1,276 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.segment {
+  display: inline-flex;
+  /* Pages are flex columns: keep the switch as wide as its buttons. */
+  align-self: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+}
+.segment button {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.segment button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+.tabs {
+  margin-bottom: var(--space-4);
+}
+.filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+.monthLabel {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  min-width: 9rem;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+/* Hero + KPI tiles */
+.hero {
+  margin-bottom: var(--space-5);
+}
+.heroLabel {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.heroValue {
+  font-size: 3rem;
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.negative {
+  color: var(--danger);
+}
+.heroNote {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kpiLabel {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.kpiValue {
+  font-size: var(--text-lg);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.income {
+  color: var(--success);
+}
+
+/* Charts */
+.charts {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.chartHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.chartHead button {
+  flex: none;
+  white-space: nowrap;
+}
+.chartTitle {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.legend {
+  list-style: none;
+  display: flex;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.tooltip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.tooltipTitle {
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.lineKey {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  flex: none;
+}
+.tooltipValue {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.tooltipName {
+  color: var(--text-muted);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.table td.num,
+.table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.empty {
+  color: var(--text-muted);
+}
+
+/* Lists */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.dayHead {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: var(--space-4) 0 var(--space-2);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.rowMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rowTitle {
+  overflow-wrap: anywhere;
+}
+.rowMeta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.amount {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sectionTitle {
+  font-size: var(--text-md);
+  font-weight: 600;
+  margin: var(--space-5) 0 var(--space-2);
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.split {
+  display: flex;
+  gap: var(--space-3);
+}
+.split > * {
+  flex: 1;
+  min-width: 0;
+}
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.muted {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+@media (max-width: 520px) {
+  .heroValue {
+    font-size: 2.5rem;
+  }
+  .kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Wide pages without a side panel: the two charts sit next to each other. */
+@container page (min-width: 62rem) {
+  .charts:not(.chartsOne) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}

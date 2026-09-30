@@ -1,0 +1,15 @@
+# Reviewed false positives: fake passwords, a well-known example TOTP secret and a public VAPID key in tests.
+# New fixtures: put `gitleaks:allow` in a comment on the line instead of extending this file.
+
+6125aa1619bf5897d9d764b0fe40789b735e707a:web/src/core/ai/privacy.test.ts:generic-api-key:17
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/e2e/accounts.spec.ts:generic-api-key:5
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/totp.test.ts:generic-api-key:70
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/exclusion.test.ts:generic-api-key:19
+7e85212fe1226eebb1c6843f4356d145a7f08b3b:web/src/modules/accounts/__tests__/vault.test.ts:generic-api-key:37
+dcf3250befaa0f189f1975ec93d783807ec8a5d0:web/src/core/notifications/push.test.ts:generic-api-key:21
+a599384ccb1ccf60c9be86cba879c7a2e9865323:web/scripts/lib/audit.test.ts:private-key:114
+# Invented tokens in connector/news tests (reviewed): sync token of the mock server, fake OAuth token text.
+e9a2e525763149bd70e4a1161ef439509eb128be:web/src/core/connectors/redact.test.ts:generic-api-key:14
+40b263bcfd1ba185b6746d5e7297eedc4315f98a:web/e2e/connectors.spec.ts:generic-api-key:49
+40b263bcfd1ba185b6746d5e7297eedc4315f98a:web/src/core/connectors/service.test.ts:generic-api-key:300
+2744cf2a64243c36b01545b7443cc3be22f22c5f:web/e2e/news.spec.ts:generic-api-key:36

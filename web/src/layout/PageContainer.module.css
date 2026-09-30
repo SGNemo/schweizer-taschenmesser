@@ -1,0 +1,29 @@
+.page {
+  container: page / inline-size;
+  width: 100%;
+  margin-inline: auto;
+  /* Grows with the (flex column) main region so pages can fill the height. */
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.narrow {
+  max-width: var(--page-narrow);
+}
+.content {
+  max-width: var(--page-content);
+}
+.wide {
+  max-width: var(--page-wide);
+}
+.full {
+  max-width: none;
+}
+.loading {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--text-muted);
+}

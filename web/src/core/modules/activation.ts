@@ -1,8 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { createRepo } from '@/core/db/repo';
-import { tableName } from '@/core/db/schema';
+import { createCollectionRepo, createRepo } from '@/core/db/repo';
 import { bus, type DataPolicy } from '@/core/events';
 import { runMigrations } from './migrate';
 import { visibleManifests } from './registry';
@@ -56,8 +55,8 @@ export async function wipeModuleData(
   manifest: ModuleManifest,
   database: TaschenmesserDB = defaultDb,
 ): Promise<void> {
-  for (const [collection, def] of Object.entries(manifest.dataSchema.collections)) {
-    const repo = createRepo(tableName(manifest.id, collection), def.schema, database);
+  for (const collection of Object.keys(manifest.dataSchema.collections)) {
+    const repo = createCollectionRepo(manifest, collection, database);
     await repo.removeMany((await repo.active().primaryKeys()) as string[]);
   }
 }

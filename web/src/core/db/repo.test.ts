@@ -111,9 +111,59 @@ describe('createRepo', () => {
     expect(await repo.active().count()).toBe(0);
   });
 
+  it('createMany writes everything in one go, with fixed ids, stamps and outbox entries', async () => {
+    const rows = await repo.createMany([
+      { data: { title: 'a', done: false }, id: 'imp-1-0' },
+      { data: { title: 'b', done: true }, id: 'imp-1-1' },
+      { data: { title: 'c', done: false } },
+    ]);
+    expect(rows).toHaveLength(3);
+    expect(rows[0]!.id).toBe('imp-1-0');
+    expect(rows[2]!.id).toBeTruthy();
+    expect(Object.keys(rows[1]!._f).sort()).toEqual(['deletedAt', 'done', 'title']);
+    expect(await repo.active().count()).toBe(3);
+    const queued = await db.table('_outbox').toArray();
+    expect(queued.map((q) => q.id).sort()).toEqual(rows.map((r) => r.id).sort());
+  });
+
+  it('createMany is idempotent for fixed ids, also for tombstones, and validates first', async () => {
+    await repo.createMany([{ data: { title: 'a', done: false }, id: 'x' }]);
+    await repo.remove('x');
+    const again = await repo.createMany([
+      { data: { title: 'other', done: false }, id: 'x' },
+      { data: { title: 'new', done: false }, id: 'y' },
+    ]);
+    expect(again.map((r) => r.id)).toEqual(['y']);
+    expect(await repo.get('x')).toBeUndefined(); // the tombstone is not resurrected
+    await expect(
+      repo.createMany([
+        { data: { title: 'ok', done: false }, id: 'z1' },
+        { data: { title: '', done: false }, id: 'z2' },
+      ]),
+    ).rejects.toThrow();
+    expect(await repo.get('z1')).toBeUndefined(); // nothing was written
+  });
+
   it('persists one device id per database', async () => {
     const a = await repo.create({ title: 'a', done: false });
     const b = await repo.create({ title: 'b', done: false });
     expect(a.deviceId).toBe(b.deviceId);
+  });
+});
+
+describe('local repos', () => {
+  it('store records like any other but never queue them for sync', async () => {
+    const local = createRepo('example_entry', schema, db, { local: true });
+    const a = await local.create({ title: 'cache', done: false });
+    await local.update(a.id, { done: true });
+    await local.createMany([{ data: { title: 'b', done: false } }]);
+    await local.remove(a.id);
+    expect(await local.active().count()).toBe(1);
+    expect(await db.table('_outbox').count()).toBe(0);
+
+    // A normal repo on the same table still queues.
+    const normal = await repo.create({ title: 'synced', done: false });
+    expect(await db.table('_outbox').count()).toBe(1);
+    expect((await db.table('_outbox').toArray())[0]).toMatchObject({ id: normal.id });
   });
 });

@@ -2,9 +2,14 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Fab, Icon, Toaster } from '@/ui';
+import { OnboardingHost } from '@/core/importer/host';
+import { Fab, Icon, IconButton, Toaster } from '@/ui';
 import { CommandPalette } from './CommandPalette';
+import { ToolsSheet } from './ToolsSheet';
+import { PendingImports } from './PendingImports';
+import { UpdateBanner } from './UpdateBanner';
 import { QuickAdd } from './QuickAdd';
+import { SyncBadge } from './SyncBadge';
 import { MoreSheet } from './MoreSheet';
 import { useModuleNavItems, type NavItem } from './useNavItems';
 import styles from './AppShell.module.css';
@@ -26,6 +31,7 @@ export function AppShell() {
   const moduleItems = useModuleNavItems();
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
+  const openTools = useUiStore((s) => s.openTools);
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,6 +47,15 @@ export function AppShell() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [setPaletteOpen]);
+
+  // PWA shortcut "Suchen" (`/?search=1`) opens the palette.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('search')) {
+      setPaletteOpen(true);
+      void navigate(location.pathname, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the first render of the shell
+  }, []);
 
   // Move focus to the main region on navigation (screen readers / keyboard users).
   useEffect(() => {
@@ -99,7 +114,13 @@ export function AppShell() {
             <span>{t.actions.search}</span>
             <kbd className={`${styles.kbd} ${styles.hideMobile}`}>{t.palette.hint}</kbd>
           </button>
+          <IconButton label={t.tools.open} onClick={() => openTools()}>
+            <Icon name="wrench" />
+          </IconButton>
+          <SyncBadge />
         </header>
+        <UpdateBanner />
+        <PendingImports />
         <main id="main" tabIndex={-1} className={styles.main}>
           <Outlet />
         </main>
@@ -122,6 +143,8 @@ export function AppShell() {
       <QuickAdd />
       <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} items={overflow} />
       <CommandPalette />
+      <ToolsSheet />
+      <OnboardingHost />
       <Toaster />
     </div>
   );

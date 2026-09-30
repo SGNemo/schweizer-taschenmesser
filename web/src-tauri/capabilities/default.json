@@ -1,0 +1,39 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions of the main window: only what core/platform/tauri uses.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "notification:default",
+    "dialog:allow-save",
+    "dialog:allow-open",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-read-file",
+    "fs:allow-read-text-file",
+    "fs:allow-mkdir",
+    "fs:allow-exists",
+    "fs:allow-remove",
+    "fs:allow-read-dir",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$APPDATA/**" }, { "path": "$APPDATA" }]
+    },
+    "clipboard-manager:allow-write-text",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-clear",
+    "opener:allow-open-url",
+    "apk-installer:default",
+    "secure-store:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://*" },
+        { "url": "http://*" },
+        { "url": "https://*:*" },
+        { "url": "http://*:*" }
+      ]
+    }
+  ]
+}

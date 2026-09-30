@@ -1,0 +1,17 @@
+[package]
+name = "tauri-plugin-apk-installer"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Downloads a release APK, verifies its SHA-256 and hands it to the Android package installer."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+links = "tauri-plugin-apk-installer"
+
+[dependencies]
+tauri = { version = "2.12" }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+
+[build-dependencies]
+tauri-plugin = { version = "2.7", features = ["build"] }

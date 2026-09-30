@@ -3,8 +3,16 @@ import type { ModuleManifest } from '@/core/modules/types';
 /** System tables. `synced` ones use the record envelope and travel through sync. */
 export const SYSTEM_TABLES = {
   _meta: { stores: 'key', synced: false },
-  _outbox: { stores: '[collection+id]', synced: false },
+  _outbox: { stores: '[collection+id], queuedAt', synced: false },
   _secrets: { stores: 'key', synced: false },
+  /** Binary files (vault documents). Local only: never synced, not part of the JSON backup. */
+  _blobs: { stores: 'key', synced: false },
+  /** Assistant: validated structured queries by question (never results). */
+  _aiCache: { stores: 'key, createdAt', synced: false },
+  /** Assistant: one row per model call or cache hit (token accounting). */
+  _aiUsage: { stores: '++id, at', synced: false },
+  /** Start-data wizard: one row per import batch (basis of "Import rückgängig machen"). Local only. */
+  _imports: { stores: 'id, createdAt, moduleId', synced: false },
   _settings: { stores: 'id, updatedAt', synced: true },
   _modules: { stores: 'id, updatedAt', synced: true },
 } as const;
@@ -34,4 +42,20 @@ export function buildStores(manifests: readonly ModuleManifest[]): Record<string
   }
   // Stable key order → stable snapshot.
   return Object.fromEntries(Object.entries(stores).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/** Tables whose records travel through sync (module collections plus the synced system tables). */
+export function syncedTableNames(manifests: readonly ModuleManifest[]): string[] {
+  const local = new Set(
+    manifests.flatMap((m) =>
+      Object.entries(m.dataSchema.collections)
+        .filter(([, def]) => def.local)
+        .map(([collection]) => tableName(m.id, collection)),
+    ),
+  );
+  return Object.keys(buildStores(manifests)).filter((name) => {
+    if (local.has(name)) return false;
+    const system = SYSTEM_TABLES[name as SystemTableName];
+    return system ? system.synced : true;
+  });
 }

@@ -6,10 +6,13 @@ import { visibleManifests } from '@/core/modules/registry';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
-import { Dashboard } from '@/pages/Dashboard';
+import { PageContainer, PageFallback } from '@/layout/PageContainer';
+import { Dashboard } from '@/pages/dashboard/Dashboard';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
 import { Settings } from '@/pages/Settings';
+import { ShareTarget } from '@/pages/ShareTarget';
+import { ToolLibrary } from '@/pages/ToolLibrary';
 
 function ModuleDisabled() {
   const toast = useUiStore((s) => s.toast);
@@ -27,9 +30,11 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           return {
             path: r.path.replace(/^\//, ''),
             element: (
-              <Suspense fallback={<p role="status">…</p>}>
-                <Cmp />
-              </Suspense>
+              <PageContainer variant={r.layout ?? m.layout ?? 'content'}>
+                <Suspense fallback={<PageFallback />}>
+                  <Cmp />
+                </Suspense>
+              </PageContainer>
             ),
           } satisfies RouteObject;
         })
@@ -40,11 +45,55 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
     {
       element: <AppShell />,
       children: [
-        { index: true, element: <Dashboard /> },
-        { path: 'library', element: <ModuleLibrary /> },
-        { path: 'settings', element: <Settings /> },
+        {
+          index: true,
+          element: (
+            <PageContainer variant="wide">
+              <Dashboard />
+            </PageContainer>
+          ),
+        },
+        {
+          path: 'library',
+          element: (
+            <PageContainer variant="wide">
+              <ModuleLibrary />
+            </PageContainer>
+          ),
+        },
+        {
+          path: 'tools',
+          element: (
+            <PageContainer variant="wide">
+              <ToolLibrary />
+            </PageContainer>
+          ),
+        },
+        {
+          path: 'share',
+          element: (
+            <PageContainer variant="narrow">
+              <ShareTarget />
+            </PageContainer>
+          ),
+        },
+        {
+          path: 'settings',
+          element: (
+            <PageContainer variant="narrow">
+              <Settings />
+            </PageContainer>
+          ),
+        },
         ...moduleRoutes,
-        { path: '*', element: <NotFound /> },
+        {
+          path: '*',
+          element: (
+            <PageContainer>
+              <NotFound />
+            </PageContainer>
+          ),
+        },
       ],
     },
   ];

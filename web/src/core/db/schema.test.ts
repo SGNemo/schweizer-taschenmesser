@@ -2,7 +2,8 @@ import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { allManifests } from '@/core/modules/registry';
-import { buildStores } from './schema';
+import type { ModuleManifest } from '@/core/modules/types';
+import { buildStores, syncedTableNames } from './schema';
 import snapshot from './schema.snapshot.json';
 
 // Vitest runs with the project root as cwd (also when started via scripts/db-bump.mjs).
@@ -28,5 +29,27 @@ describe('database schema snapshot', () => {
       stores,
       'Dexie stores changed. Run `npm run db:bump` to bump the DB version and update the snapshot.',
     ).toEqual(snapshot.stores);
+  });
+});
+
+describe('local collections', () => {
+  it('are stored like the others but are not part of sync and backup', () => {
+    const manifest = {
+      id: 'demo',
+      dataSchema: {
+        collections: {
+          feed: { schema: {}, indexes: [] },
+          article: { schema: {}, indexes: ['publishedAt'], local: true },
+        },
+      },
+    } as unknown as ModuleManifest;
+    expect(Object.keys(buildStores([manifest]))).toEqual(
+      expect.arrayContaining(['demo_feed', 'demo_article']),
+    );
+    const synced = syncedTableNames([manifest]);
+    expect(synced).toContain('demo_feed');
+    expect(synced).not.toContain('demo_article');
+    expect(synced).toContain('_settings');
+    expect(synced).not.toContain('_meta');
   });
 });

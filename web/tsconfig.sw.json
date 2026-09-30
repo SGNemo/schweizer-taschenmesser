@@ -9,7 +9,10 @@
     "skipLibCheck": true,
     "noEmit": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/sw.ts"]
 }

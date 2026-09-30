@@ -17,11 +17,19 @@ describe('module registry', () => {
     const bad = { ...allManifests[0]!, id: 'Bad-Id', version: 0 };
     expect(validateManifest(bad).length).toBeGreaterThanOrEqual(2);
   });
+
+  it('validates the page layout of a module and its routes', () => {
+    const base = allManifests[0]!;
+    expect(validateManifest({ ...base, layout: 'wide' })).toEqual([]);
+    expect(validateManifest({ ...base, layout: 'huge' as never })).toHaveLength(1);
+    const routes = base.routes.map((r) => ({ ...r, layout: 'tiny' as never }));
+    expect(validateManifest({ ...base, routes })).toHaveLength(routes.length);
+  });
 });
 
 /**
  * Isolation rule: modules never import each other. Only finance may import the public.ts of
- * subscriptions and invoices. Checked on the real source files (relative + alias imports).
+ * subscriptions and invoices, and budgets the public.ts of finance. Checked on the real source files (relative + alias imports).
  */
 describe('module isolation', () => {
   const modulesDir = resolve(process.cwd(), 'src/modules');
@@ -36,6 +44,7 @@ describe('module isolation', () => {
 
   const allowed: Record<string, string[]> = {
     finance: ['subscriptions/public', 'invoices/public'],
+    budgets: ['finance/public'],
   };
 
   for (const id of readdirSync(modulesDir).filter((e) =>

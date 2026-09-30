@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import styles from './Button.module.css';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -28,6 +28,7 @@ interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
   label: string;
   variant?: Variant;
   children: ReactNode;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function IconButton({

@@ -1,0 +1,402 @@
+name: Release
+
+# Tag `vX.Y.Z` (or `vX.Y.Z-beta.N`) → signed portable Windows exe + signed Android APK + GitHub Release.
+# Pushes to `develop` that touch the native shell, and manual runs, are DRY RUNS: they build and
+# upload artifacts but never create a release. How to create keys/secrets and cut a release:
+# see CLAUDE.md ("Releases").
+
+on:
+  push:
+    tags: ['v*.*.*']
+    branches: [develop]
+    paths:
+      - 'web/src-tauri/**'
+      - 'web/scripts/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 22
+  NDK_VERSION: '27.2.12479018'
+
+jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the whole history is scanned, not just the last commit
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      # Built from source through the Go module proxy (checksum-verified by go.sum / sumdb): no binary download to trust.
+      - name: Scan the history for secrets
+        run: |
+          set -euo pipefail
+          go install github.com/zricethezav/gitleaks/v8@v8.21.2
+          "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
+
+  prepare:
+    needs: secret-scan
+    name: Version, changelog, signing check
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
+      publish: ${{ steps.meta.outputs.publish }}
+      updater_key: ${{ steps.keys.outputs.updater }}
+      android_key: ${{ steps.keys.outputs.android }}
+      missing_secrets: ${{ steps.keys.outputs.missing }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags and history for the changelog
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Version
+        id: meta
+        working-directory: web
+        run: |
+          set -euo pipefail
+          VERSION="$(node scripts/version.mjs print)"
+          node scripts/version.mjs check
+          PUBLISH=false
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            PUBLISH=true
+            if [[ "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match the version in web/package.json ($VERSION). Run 'npm run version:set -- <version>' and commit before tagging."
+              exit 1
+            fi
+          fi
+          {
+            echo "version=$VERSION"
+            echo "tag=v$VERSION"
+            echo "prerelease=$([[ "$VERSION" == *-* ]] && echo true || echo false)"
+            echo "publish=$PUBLISH"
+          } >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION, versionCode $(node scripts/version.mjs code), publish=$PUBLISH"
+
+      - name: Which signing keys are configured
+        id: keys
+        env:
+          TAURI_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KS_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$TAURI_KEY" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY)
+          [ -n "$TAURI_KEY_PASSWORD" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
+          [ -n "$ANDROID_KS" ] || missing+=(ANDROID_KEYSTORE_BASE64)
+          [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
+          [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
+          [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
+          echo "updater=$([ -n "$TAURI_KEY" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "android=$([ -n "$ANDROID_KS" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "missing=${missing[*]:-}" >> "$GITHUB_OUTPUT"
+
+      - name: Published releases must be signed (all six secrets present)
+        if: steps.meta.outputs.publish == 'true'
+        run: |
+          if [ -n "${{ steps.keys.outputs.missing }}" ]; then
+            echo "::error::Missing GitHub secrets: ${{ steps.keys.outputs.missing }}. Nothing was built or published – see CLAUDE.md → Releases."
+            exit 1
+          fi
+
+      - name: Updater public key must not be the development placeholder
+        if: steps.meta.outputs.publish == 'true'
+        working-directory: web
+        run: |
+          KEY_ID="$(node -e "const c=require('./src-tauri/tauri.conf.json');console.log(Buffer.from(c.plugins.updater.pubkey,'base64').toString().split('\n')[0])")"
+          echo "$KEY_ID"
+          if [[ "$KEY_ID" == *76760D11981F2BAC* ]]; then
+            echo "::error::plugins.updater.pubkey in web/src-tauri/tauri.conf.json is still the development placeholder. Put the public key from 'node scripts/keys.mjs updater' there (CLAUDE.md → Releases) - otherwise installed apps could never verify an update."
+            exit 1
+          fi
+
+      - name: Release notes from Conventional Commits
+        working-directory: web
+        run: node scripts/changelog.mjs --version "${{ steps.meta.outputs.version }}" --repo "https://github.com/${{ github.repository }}" --out "$RUNNER_TEMP/RELEASE_NOTES.md"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: ${{ runner.temp }}/RELEASE_NOTES.md
+
+  windows:
+    name: Windows (portable)
+    needs: prepare
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: web
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: web/src-tauri
+      - run: npm ci
+
+      # One self-contained executable with the frontend embedded – no NSIS/MSI installer.
+      - name: Build
+        run: npx tauri build --no-bundle
+
+      - name: Sign with the updater key
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ "${{ needs.prepare.outputs.updater_key }}" = "true" ]; then
+            npx tauri signer sign src-tauri/target/release/taschenmesser.exe
+          else
+            echo "::warning::No updater signing key: the portable executable is UNSIGNED (dry run only)."
+          fi
+
+      - name: Collect assets under their stable names
+        run: |
+          set -euo pipefail
+          mkdir -p ../assets
+          EXE=src-tauri/target/release/taschenmesser.exe
+          cp "$EXE" ../assets/Taschenmesser-Portable.exe
+          [ -f "$EXE.sig" ] && cp "$EXE.sig" ../assets/Taschenmesser-Portable.exe.sig
+          ls -l ../assets
+
+      # The program has to stay alive for a while (window created, WebView2 found). Informational only:
+      # a hosted runner is not a real desktop.
+      - name: Smoke test – the executable starts
+        continue-on-error: true
+        run: |
+          set +e
+          ../assets/Taschenmesser-Portable.exe &
+          PID=$!
+          sleep 20
+          if kill -0 "$PID" 2>/dev/null; then
+            echo "The portable executable is still running after 20 s."
+            kill "$PID"
+          else
+            echo "::warning::The portable executable exited within 20 s."
+            exit 1
+          fi
+
+      - name: Audit – no secrets in the executable or what goes into it
+        env:
+          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          EXE=src-tauri/target/release/taschenmesser.exe
+          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.conf.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: assets/*
+          if-no-files-found: error
+
+  android:
+    name: Android APK
+    needs: prepare
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: web/src-tauri
+      - run: npm ci
+
+      - name: Android SDK and NDK
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-34" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "ndk;$NDK_VERSION"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      # The Gradle project is generated, not committed (src-tauri/gen is git-ignored).
+      - run: npx tauri android init --ci
+
+      - name: Build the (unsigned) universal APK
+        run: npx tauri android build --apk --target aarch64 armv7 --config "$(node scripts/version.mjs android-config)"
+
+      - name: Locate the APK
+        id: apk
+        run: |
+          set -euo pipefail
+          APK="$(find src-tauri/gen/android/app/build/outputs/apk -name '*.apk' | head -n1)"
+          test -n "$APK"
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
+          ls -l "$APK"
+
+      - name: Sign
+        if: needs.prepare.outputs.android_key == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p ../assets
+          KEYSTORE="$RUNNER_TEMP/release.jks"
+          # The keystore file exists only while signing – removed on success AND on failure.
+          trap 'rm -f "$KEYSTORE"' EXIT
+          umask 077
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
+          ANDROID_KEYSTORE_PATH="$KEYSTORE" \
+            node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Taschenmesser.apk
+          (cd ../assets && sha256sum Taschenmesser.apk > Taschenmesser.apk.sha256 && cat Taschenmesser.apk.sha256)
+
+      - name: Unsigned APK (dry run without keystore)
+        if: needs.prepare.outputs.android_key != 'true'
+        run: |
+          set -euo pipefail
+          echo "::warning::No Android keystore configured: the APK is UNSIGNED and cannot be installed."
+          mkdir -p ../assets
+          cp "${{ steps.apk.outputs.path }}" ../assets/Taschenmesser-unsigned.apk
+
+      - name: Audit – no secrets in the APK or what goes into it
+        env:
+          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          node scripts/audit-release.mjs --path dist --path ../assets
+
+      - name: Make sure no keystore file is left on the runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: assets/*
+          if-no-files-found: error
+
+  release:
+    name: GitHub Release
+    needs: [prepare, windows, android]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: dl
+          merge-multiple: true
+
+      - name: Final audit before anything is published
+        env:
+          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.conf.json
+
+      - name: Updater manifest (latest.json)
+        run: |
+          node web/scripts/latest-json.mjs --dir dl \
+            --version "${{ needs.prepare.outputs.version }}" \
+            --tag "${{ needs.prepare.outputs.tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --notes dl/RELEASE_NOTES.md --out dl/latest.json
+          cat dl/latest.json
+          node web/scripts/audit-release.mjs --path dl/latest.json
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          FILES=()
+          for f in Taschenmesser-Portable.exe Taschenmesser-Portable.exe.sig \
+                   Taschenmesser.apk Taschenmesser.apk.sha256 latest.json; do
+            [ -f "dl/$f" ] && FILES+=("dl/$f")
+          done
+          if [ "${#FILES[@]}" -ne 5 ]; then
+            echo "::error::A release needs all five assets, found ${#FILES[@]}: ${FILES[*]}"
+            exit 1
+          fi
+          ARGS=(--verify-tag --title "Taschenmesser ${{ needs.prepare.outputs.version }}" --notes-file dl/RELEASE_NOTES.md)
+          if [ "${{ needs.prepare.outputs.prerelease }}" = "true" ]; then ARGS+=(--prerelease); fi
+          gh release create "${{ needs.prepare.outputs.tag }}" "${ARGS[@]}" "${FILES[@]}"
+
+      # The README badges and the in-app updater rely on these URLs.
+      - name: Check the download links of the published release
+        run: |
+          STABLE=""
+          if [ "${{ needs.prepare.outputs.prerelease }}" != "true" ]; then STABLE="--stable"; fi
+          node web/scripts/check-links.mjs --repo "$GITHUB_REPOSITORY" --tag "${{ needs.prepare.outputs.tag }}" $STABLE
+
+  summary:
+    name: Dry-run summary
+    needs: [prepare, windows, android]
+    if: always() && needs.prepare.outputs.publish != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dl
+          merge-multiple: true
+      - name: List what was built
+        run: |
+          {
+            echo "## Dry run – nothing was published"
+            echo
+            echo "Version \`${{ needs.prepare.outputs.version }}\`, updater key: **${{ needs.prepare.outputs.updater_key }}**, Android keystore: **${{ needs.prepare.outputs.android_key }}**, missing secrets: **${{ needs.prepare.outputs.missing_secrets || 'none' }}**"
+            echo
+            echo '```'
+            ls -l dl
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

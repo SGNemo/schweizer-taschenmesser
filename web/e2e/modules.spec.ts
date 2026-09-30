@@ -2,12 +2,38 @@ import { expect, test } from '@playwright/test';
 import { enableExample, mainNav } from './helpers';
 
 test.describe('module library', () => {
-  test('fresh install shows the empty dashboard and leads to the library', async ({ page }) => {
+  test('fresh install has the core modules active with their widgets', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Übersicht', level: 1 })).toBeVisible();
+    await expect(page.getByTestId('widget-calendar:today')).toBeVisible();
+    await expect(page.getByTestId('widget-todos:open')).toBeVisible();
+    await expect(page.getByTestId('widget-reminders:next')).toBeVisible();
+    await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
+    await expect(page.getByTestId('widget-invoices:due')).toBeVisible();
+    await expect(page.getByTestId('widget-subscriptions:next')).toBeVisible();
+    await page.goto('/library');
+    for (const id of ['calendar', 'todos', 'reminders', 'finance', 'invoices', 'subscriptions']) {
+      await expect(
+        page.getByTestId(`module-${id}`).getByText('Aktiv', { exact: true }),
+      ).toBeVisible();
+    }
+    await expect(page.getByTestId('module-example')).toContainText('Referenzmodul');
+  });
+
+  test('disabling every module shows the empty dashboard and leads to the library', async ({
+    page,
+  }) => {
+    await page.goto('/library');
+    for (const id of ['calendar', 'todos', 'reminders', 'finance', 'invoices', 'subscriptions']) {
+      const card = page.getByTestId(`module-${id}`);
+      await card.getByRole('button', { name: 'Deaktivieren' }).click();
+      await page.getByRole('button', { name: 'Daten behalten (ausgeblendet)' }).click();
+      await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
+    }
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Noch keine Module aktiv' })).toBeVisible();
     await page.getByRole('link', { name: 'Zur Bibliothek' }).click();
     await expect(page).toHaveURL(/\/library$/);
-    await expect(page.getByTestId('module-example')).toContainText('Referenzmodul');
   });
 
   test('enabling adds navigation, disabling removes it', async ({ page }) => {

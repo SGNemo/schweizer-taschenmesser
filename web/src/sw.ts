@@ -5,6 +5,14 @@ import {
   precacheAndRoute,
 } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
+import {
+  asPayload,
+  FALLBACK_PAYLOAD,
+  parsePushMessage,
+  pushAad,
+  type PushPayload,
+} from '@/core/notifications/pushPayload';
+import { decryptValue, isEncrypted } from '@/core/sync/crypto';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -32,6 +40,66 @@ self.addEventListener('notificationclick', (event) => {
       } else {
         await self.clients.openWindow(url);
       }
+    })(),
+  );
+});
+
+/** The sync key for encrypted push payloads lives in the app's IndexedDB (`_secrets.syncConfig`). */
+function readSyncKey(): Promise<CryptoKey | undefined> {
+  return new Promise((resolve) => {
+    const open = indexedDB.open('taschenmesser');
+    open.onerror = () => resolve(undefined);
+    open.onsuccess = () => {
+      const db = open.result;
+      if (!db.objectStoreNames.contains('_secrets')) {
+        db.close();
+        return resolve(undefined);
+      }
+      const req = db.transaction('_secrets').objectStore('_secrets').get('syncConfig');
+      req.onsuccess = () => {
+        db.close();
+        resolve((req.result as { value?: { key?: CryptoKey } } | undefined)?.value?.key);
+      };
+      req.onerror = () => {
+        db.close();
+        resolve(undefined);
+      };
+    };
+  });
+}
+
+async function payloadOf(text: string): Promise<{ key?: string; payload: PushPayload }> {
+  const message = parsePushMessage(text);
+  if (!message) return { payload: FALLBACK_PAYLOAD };
+  try {
+    if (!isEncrypted(message.payload)) {
+      return {
+        key: message.key,
+        payload: asPayload(JSON.parse(message.payload)) ?? FALLBACK_PAYLOAD,
+      };
+    }
+    const key = await readSyncKey();
+    if (!key) return { key: message.key, payload: FALLBACK_PAYLOAD };
+    const plain = await decryptValue(key, pushAad(message.key), message.payload);
+    return { key: message.key, payload: asPayload(plain) ?? FALLBACK_PAYLOAD };
+  } catch {
+    return { key: message.key, payload: FALLBACK_PAYLOAD };
+  }
+}
+
+// Web Push (optional, via the user's sync server): show the notification even when the app is closed.
+self.addEventListener('push', (event) => {
+  event.waitUntil(
+    (async () => {
+      const { key, payload } = await payloadOf(event.data?.text() ?? '');
+      await self.registration.showNotification(payload.title, {
+        body: payload.body,
+        // Same tag as the local scheduler: a notification shown by both appears only once.
+        tag: key,
+        icon: '/pwa-192.png',
+        badge: '/pwa-192.png',
+        data: { url: payload.url ?? '/' },
+      });
     })(),
   );
 });

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Taschenmesser",
+  "version": "../package.json",
+  "identifier": "io.github.sgnemo.taschenmesser",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Taschenmesser",
+        "width": 1100,
+        "height": 800,
+        "minWidth": 380,
+        "minHeight": 560
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https: http:; worker-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "category": "Productivity",
+    "shortDescription": "Modular, local-first everyday app",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "android": {
+      "minSdkVersion": 24
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDREU2NEMxNEY0OTI3N0UKUldSK0owbFB3V1RlUEVQL2lDS28rdk1ud3BTdEU1bElzQjlOQWVCTUpINVZaL24yMWpuV2lDREIK",
+      "endpoints": [
+        "https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}
