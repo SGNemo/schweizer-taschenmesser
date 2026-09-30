@@ -6,7 +6,9 @@
           singleTask, so a share while the app runs arrives in onNewIntent). Only plain text and
           links are accepted; files and images are not offered to this app.
         -->
-        <activity android:name="io.github.sgnemo.taschenmesser.MainActivity">
+        <activity
+            android:name="io.github.sgnemo.taschenmesser.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
