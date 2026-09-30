@@ -2,7 +2,7 @@ import { showChecklist, useChecklist } from '@/core/setup/checklist';
 import { useSetupHost } from '@/core/setup/host';
 import { setChecklistHidden } from '@/core/setup/state';
 import { t } from '@/strings';
-import { Badge, Button, Card } from '@/ui';
+import { Badge, Button, Card, patternStyles } from '@/ui';
 
 const MAX_SHOWN = 5;
 
@@ -16,9 +16,7 @@ export function ChecklistCard() {
     <div data-testid="setup-checklist" style={{ marginBottom: 'var(--space-5)' }}>
       <Card>
         <h2>{t.setup.title}</h2>
-        <p style={{ color: 'var(--text-muted)' }}>
-          {t.setup.checklistProgress(list.done, list.total)}
-        </p>
+        <p className={patternStyles.muted}>{t.setup.checklistProgress(list.done, list.total)}</p>
         <progress
           value={list.done}
           max={list.total}
@@ -56,11 +54,9 @@ export function ChecklistCard() {
           ))}
         </ul>
         {list.open.length > MAX_SHOWN ? (
-          <p style={{ color: 'var(--text-muted)' }}>
-            {t.setup.moreOpen(list.open.length - MAX_SHOWN)}
-          </p>
+          <p className={patternStyles.muted}>{t.setup.moreOpen(list.open.length - MAX_SHOWN)}</p>
         ) : null}
-        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+        <div className={patternStyles.hstackWrap}>
           <Button variant="primary" onClick={() => open()}>
             {t.setup.resume}
           </Button>

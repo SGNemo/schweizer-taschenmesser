@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
-import { today } from '@/core/time/dates';
+import { pad2, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
 import { birthdayRepo } from '../repo';
@@ -27,7 +27,6 @@ export function BirthdayEditor({
   );
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
 /** A leap year, so 29 February is a valid value while the year is unknown. */
 const PLACEHOLDER_YEAR = 2000;
 
@@ -35,7 +34,7 @@ function Fields({ existing, onClose }: { existing: Stored<Birthday> | null; onCl
   const [name, setName] = useState(existing?.name ?? '');
   const [date, setDate] = useState(
     existing
-      ? `${existing.year ?? PLACEHOLDER_YEAR}-${pad(existing.month)}-${pad(existing.day)}`
+      ? `${existing.year ?? PLACEHOLDER_YEAR}-${pad2(existing.month)}-${pad2(existing.day)}`
       : today(),
   );
   const [yearUnknown, setYearUnknown] = useState(existing ? existing.year === undefined : false);

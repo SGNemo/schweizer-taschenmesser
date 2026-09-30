@@ -121,19 +121,6 @@ export async function createToken(
 const cleanGrants = (grants: Record<string, Grant>): Record<string, Grant> =>
   Object.fromEntries(Object.entries(grants).filter(([, g]) => g.read || g.write));
 
-export async function updateToken(
-  id: string,
-  patch: Partial<Pick<ApiToken, 'name' | 'grants' | 'autoCommit'>>,
-  database: TaschenmesserDB = defaultDb,
-): Promise<void> {
-  await mutate(database, (config) => ({
-    ...config,
-    tokens: config.tokens.map((t) =>
-      t.id === id ? { ...t, ...patch, grants: cleanGrants(patch.grants ?? t.grants) } : t,
-    ),
-  }));
-}
-
 export async function revokeToken(
   id: string,
   database: TaschenmesserDB = defaultDb,

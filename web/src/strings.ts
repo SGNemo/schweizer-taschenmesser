@@ -111,7 +111,6 @@ export const t = {
     statusSkipped: 'Übersprungen',
     statusOpen: 'Offen',
     isNew: 'Neu',
-    settingsHint: 'Fortschritt und Checkliste',
     showChecklist: 'Checkliste auf der Übersicht anzeigen',
     checklistProgress: (done: number, total: number) => `${done} von ${total} Schritten erledigt`,
     moreOpen: (n: number) => `… und ${n} weitere`,
@@ -158,7 +157,6 @@ export const t = {
         toolsOn: (names: string) => `Werkzeuge an: ${names}`,
         toolsOff: (names: string) => `Werkzeuge aus: ${names}`,
         confirm: 'Ich habe die Änderungen geprüft und möchte sie übernehmen.',
-        confirmNeeded: 'Bestätige die Änderungen, um fortzufahren.',
       },
       tools: {
         title: 'Werkzeugkasten',
@@ -191,7 +189,6 @@ export const t = {
         mayTrain: 'Dieser Anbieter kann Eingaben zum Verbessern seiner Modelle nutzen.',
         ollamaFound: 'Ollama läuft auf diesem Computer.',
         ollamaAdd: 'Ollama hinzufügen',
-        ollamaMissing: 'Ollama wurde nicht gefunden (läuft es, und erlaubt es diese Adresse?).',
       },
       connectors: {
         title: 'Konten verknüpfen',
@@ -468,7 +465,6 @@ export const t = {
     priority: 'Priorität',
     prio: ['Keine', 'Niedrig', 'Mittel', 'Hoch'],
     due: 'Fällig am',
-    noDue: 'Ohne Datum',
     subtasks: 'Unteraufgaben',
     addSubtask: 'Unteraufgabe hinzufügen',
     editTask: 'Aufgabe bearbeiten',
@@ -500,9 +496,7 @@ export const t = {
     agenda: 'Agenda',
     allDayRow: 'Ganztägig und ohne Uhrzeit',
     timeGrid: 'Zeitraster',
-    widgetTitle: 'Heute & Morgen',
     widgetEmpty: 'Nichts geplant.',
-    week_: (n: number) => `KW ${n}`,
     kinds: {
       event: 'Termin',
       task: 'ToDo',
@@ -593,7 +587,6 @@ export const t = {
       close: 'Schließen',
       copy: 'Kopieren',
     },
-    widgetTitle: 'Schlagzeilen',
     widgetEmpty: 'Keine ungelesenen Artikel.',
     widgetNone: 'Noch keine Feeds.',
     widgetOpen: 'Alle Nachrichten',
@@ -963,7 +956,6 @@ export const t = {
     ended: 'Beendet',
     paused: 'Pausiert',
     active: 'Aktiv',
-    widgetTitle: 'Nächste Erinnerungen',
     widgetEmpty: 'Keine anstehenden Erinnerungen.',
   },
   notifications: {
@@ -1052,7 +1044,6 @@ export const t = {
     edit: 'Abo bearbeiten',
     name: 'Name',
     firstCharge: 'Abbuchung am',
-    firstChargeHint: 'Ein bekanntes Abbuchungsdatum – daraus ergeben sich die weiteren.',
     noticeDays: 'Kündigungsfrist (Tage vor Abbuchung)',
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
     active: 'Aktiv',
@@ -1127,7 +1118,6 @@ export const t = {
     expenseCategories: 'Ausgabenkategorien',
     incomeCategories: 'Einnahmenkategorien',
     deleteCategoryHint: 'Buchungen bleiben erhalten und zeigen „Ohne Kategorie“.',
-    tooltipTotal: 'Gesamt',
   },
   sync: {
     title: 'Synchronisation',
@@ -1173,7 +1163,6 @@ export const t = {
       `Zuletzt: ${pulled} empfangen, ${pushed} gesendet`,
     rejected: (n: number) =>
       `${n} empfangene Änderungen konnten nicht entschlüsselt werden und wurden übersprungen.`,
-    retryIn: (seconds: number) => `Nächster Versuch in ${seconds} s.`,
     failuresInRow: (n: number) => (n === 1 ? '1 Fehlversuch' : `${n} Fehlversuche in Folge`),
     serverSize: 'Daten auf dem Server',
     serverSizeValue: (records: number, kb: number) =>
@@ -1316,7 +1305,6 @@ export const t = {
     safetyNote:
       'Vorher legt die App automatisch eine Sicherheitskopie deiner aktuellen Daten an. Bricht etwas ab, bleibt alles unverändert.',
     restoring: 'Stelle wieder her …',
-    safetyDone: (where: string) => `Sicherheitskopie: ${where}`,
     autoTitle: 'Automatische Backups',
     autoIntro:
       'Die App sichert regelmäßig verschlüsselt in ihren Datenordner und behält die neuesten Kopien. Das Passwort liegt im Schlüsselspeicher des Geräts.',
@@ -1408,17 +1396,14 @@ export const t = {
     },
     palette: {
       askModel: 'Mit KI fragen',
-      askModelHint: 'Die Frage geht an das eingerichtete Modell (ohne deine Daten).',
       thinking: 'Ich überlege …',
       back: 'Zurück',
       answer: 'Antwort',
       noResults: 'Keine Treffer.',
       more: (n: number) => `… und ${n} weitere`,
       agendaEmpty: 'In diesem Zeitraum steht nichts an.',
-      agendaRange: (from: string, to: string) => (from === to ? from : `${from} – ${to}`),
       noModelHint:
         'Für komplexere Fragen kannst du unter Einstellungen → KI-Assistent ein Modell einrichten.',
-      searchHits: 'Gefunden',
       ask: 'Assistent fragen',
     },
     tier: {
@@ -2349,7 +2334,6 @@ export const t = {
       error: 'Fehler',
     } as Record<string, string>,
     lastSync: (when: string) => `Zuletzt abgeglichen: ${when}`,
-    neverSynced: 'Noch nicht abgeglichen.',
     events: (n: number) => (n === 1 ? '1 Termin übernommen' : `${n} Termine übernommen`),
     connect: 'Verbinden',
     reconnect: 'Neu anmelden',
@@ -2394,7 +2378,6 @@ export const t = {
       notConnected:
         'Verbinde zuerst Google unter Einstellungen → Verbindungen und schalte „E-Mails“ ein.',
       none: 'In diesen Mails wurde nichts Passendes erkannt.',
-      openMail: 'Mail öffnen',
     },
     ics: {
       listLabel: 'Kalender-Abos',
@@ -2585,7 +2568,6 @@ export const t = {
   },
   onboarding: {
     button: 'Startdaten einrichten',
-    emptyHint: 'Du kannst vorhandene Daten auch gleich importieren.',
     title: (module: string) => `Startdaten: ${module}`,
     chooseIntro:
       'Woher sollen die ersten Einträge kommen? Nichts wird gespeichert, bevor du die Vorschau bestätigt hast.',
@@ -2613,9 +2595,7 @@ export const t = {
     unchanged: 'Keine Änderung',
     invalid: 'Nicht importierbar',
     importN: (n: number) => (n === 1 ? '1 Eintrag importieren' : `${n} Einträge importieren`),
-    nothingSelected: 'Nichts ausgewählt.',
     importing: 'Wird gespeichert …',
-    doneTitle: 'Fertig',
     imported: (n: number) =>
       n === 1 ? '1 Eintrag wurde importiert.' : `${n} Einträge wurden importiert.`,
     undo: 'Import rückgängig machen',

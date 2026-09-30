@@ -38,8 +38,6 @@ html {
 body {
   margin: 0;
   background: var(--bg);
-  background-image: var(--bg-gradient);
-  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-sans);
   font-size: var(--text-md);
@@ -51,8 +49,13 @@ h1,
 h2,
 h3 {
   margin: 0;
-  line-height: 1.25;
+  line-height: var(--leading-tight);
   letter-spacing: -0.01em;
+  font-weight: var(--weight-semibold);
+}
+h1 {
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
 }
 h1 {
   font-size: var(--text-2xl);

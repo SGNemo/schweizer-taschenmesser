@@ -91,7 +91,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem }: Props) {
                   style={
                     {
                       '--start': start,
-                      '--dur': end - start,
+                      '--minutes': end - start,
                       '--lane': lane,
                       '--lanes': lanes,
                     } as CSSProperties

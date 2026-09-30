@@ -6,7 +6,7 @@ import { availableManifests } from '@/core/modules/available';
 import { hasStartData } from '@/core/dataapi/onboarding';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
-import { Badge } from '@/ui';
+import { Badge, patternStyles } from '@/ui';
 
 const s = t.setup.steps.startdata;
 
@@ -51,7 +51,7 @@ export default function StartDataStep(_props: SetupStepProps) {
             {s.hints[m.id] ? (
               <>
                 <br />
-                <span style={{ color: 'var(--text-muted)' }}>{s.hints[m.id]}</span>
+                <span className={patternStyles.muted}>{s.hints[m.id]}</span>
               </>
             ) : null}
           </span>

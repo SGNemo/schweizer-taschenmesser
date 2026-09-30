@@ -3,7 +3,7 @@
  * Input is only what the connector reads (sender, subject, date, preview line); this file is pure
  * and deliberately has no access to anything else – no AI, no database.
  */
-import { addDaysStr } from '@/core/time/dates';
+import { addDaysStr, pad2 } from '@/core/time/dates';
 import { parseMoney } from '@/core/money';
 import type { MailFinding } from '@/core/connectors/types';
 
@@ -47,13 +47,11 @@ const MONTHS: Record<string, number> = {
   dez: 12,
 };
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
 function validDate(y: number, m: number, d: number): string | undefined {
   const dt = new Date(Date.UTC(y, m - 1, d));
   if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d)
     return undefined;
-  return `${y}-${pad(m)}-${pad(d)}`;
+  return `${y}-${pad2(m)}-${pad2(d)}`;
 }
 
 /** A year-less date means "the next time it occurs after the mail". */
@@ -158,7 +156,7 @@ function noticeDays(text: string): number | undefined {
 
 function timeOf(text: string): string | undefined {
   const m = /\b([01]?\d|2[0-3]):([0-5]\d)\b(?:\s?uhr)?/i.exec(text);
-  return m ? `${pad(Number(m[1]))}:${m[2]}` : undefined;
+  return m ? `${pad2(Number(m[1]))}:${m[2]}` : undefined;
 }
 
 function placeOf(text: string): string | undefined {

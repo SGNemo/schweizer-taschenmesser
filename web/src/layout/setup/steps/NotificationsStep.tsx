@@ -3,7 +3,7 @@ import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
-import { Button } from '@/ui';
+import { Button, patternStyles } from '@/ui';
 
 const s = t.setup.steps.notifications;
 
@@ -24,7 +24,7 @@ export default function NotificationsStep({ registerCommit }: SetupStepProps) {
 
   return (
     <>
-      <p style={{ color: 'var(--text-muted)' }}>{s.why}</p>
+      <p className={patternStyles.muted}>{s.why}</p>
       <p role="status" data-testid="setup-notification-status">
         {s.state[permission]}
       </p>

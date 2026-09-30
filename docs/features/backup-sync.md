@@ -8,8 +8,8 @@ All data in examples is invented.
 
 | File | Format | Notes |
 |---|---|---|
-| `taschenmesser-backup-YYYY-MM-DD.json` | `taschenmesser-backup`, `version: 1` | Plain JSON, unchanged. Old files stay importable (test fixture: `web/src/core/backup/fixtures/backup-v1.json`). |
-| `taschenmesser-backup-YYYY-MM-DD.enc.json` | `taschenmesser-backup-encrypted`, `version: 1` | The plain backup sealed with a passphrase. |
+| `nemo-backup-YYYY-MM-DD.json` (before the rename: `taschenmesser-backup-…`) | `taschenmesser-backup`, `version: 1` | Plain JSON, unchanged. Old files stay importable (test fixture: `web/src/core/backup/fixtures/backup-v1.json`). |
+| `nemo-backup-YYYY-MM-DD.enc.json` (before the rename: `taschenmesser-backup-….enc.json`) | `taschenmesser-backup-encrypted`, `version: 1` | The plain backup sealed with a passphrase. |
 
 Encrypted layout: `{ format, version, createdAt, checksum, blob }`. `blob` is the existing
 `encryptWithPassword` payload of the crypto service (Argon2id, 64 MiB / t=3 / p=1 stored in the

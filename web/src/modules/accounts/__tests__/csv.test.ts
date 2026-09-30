@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { exportEncryptedBackup, importEncryptedBackup, withoutDuplicates } from '../backup';
 import {
@@ -100,6 +102,15 @@ describe('encrypted backup file', () => {
     await expect(importEncryptedBackup('kein json', 'x')).rejects.toMatchObject({
       code: 'malformed',
     });
+  });
+
+  it('a taschenmesser-vault-backup file written before the rename to Nemo still imports', async () => {
+    const text = readFileSync(resolve(__dirname, 'fixtures/legacy-vault-2026-01-01.json'), 'utf8');
+    expect(text).toContain('"taschenmesser-vault-backup"');
+    const imported = await importEncryptedBackup(text, 'legacy-vault-passphrase');
+    expect(imported).toHaveLength(1);
+    expect(imported[0]).toMatchObject({ title: 'Beispiel-Postfach', username: 'nemo@example.com' });
+    await expect(importEncryptedBackup(text, 'wrong')).rejects.toMatchObject({ code: 'wrong-key' });
   });
 
   it('skips entries that already exist', () => {

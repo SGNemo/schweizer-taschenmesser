@@ -3,7 +3,7 @@ import { formatDay, today } from '@/core/time/dates';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
-import { Button, useMediaQuery } from '@/ui';
+import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
 import { groupByDate, monthWeeks } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
 import { TimeGrid } from './TimeGrid';
@@ -137,7 +137,7 @@ export function WeekView({
               </button>
             </h3>
             {list.length === 0 ? (
-              <p className={styles.muted}>{t.calendar.nothing}</p>
+              <EmptyState compact title={t.calendar.nothing} />
             ) : (
               <ul className={styles.itemList}>
                 {list.map((i) => (
@@ -165,13 +165,13 @@ export function DayView({
     );
   return (
     <div>
-      {items.length === 0 ? <p className={styles.muted}>{t.calendar.nothing}</p> : null}
+      {items.length === 0 ? <EmptyState compact title={t.calendar.nothing} /> : null}
       <ul className={styles.itemList}>
         {items.map((i) => (
           <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} />
         ))}
       </ul>
-      <div style={{ marginTop: 'var(--space-4)' }}>
+      <div className={patternStyles.gapTop}>
         <Button onClick={() => onAdd(date)}>{t.calendar.newEvent}</Button>
       </div>
     </div>

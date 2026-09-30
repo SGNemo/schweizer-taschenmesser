@@ -15,6 +15,7 @@ import {
   ItemList,
   ItemRow,
   PageHeader,
+  patternStyles,
   Segmented,
 } from '@/ui';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
@@ -98,9 +99,7 @@ export default function PantryPage() {
                     }
                     onOpen={() => setTarget(i)}
                     end={
-                      <span
-                        style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}
-                      >
+                      <span className={patternStyles.hstackTight}>
                         {state === 'expired' || state === 'soon' ? (
                           <Badge tone="accent">{text}</Badge>
                         ) : null}

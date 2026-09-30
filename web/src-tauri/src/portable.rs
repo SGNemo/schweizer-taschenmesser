@@ -1,4 +1,5 @@
-//! Self-update of the portable Windows build (a single `Taschenmesser-Portable.exe`).
+//! Self-update of the portable Windows build (a single `Nemo-Portable.exe`; the legacy name
+//! `Taschenmesser-Portable.exe` is still accepted, see `PORTABLE_ASSETS`).
 //!
 //! `tauri-plugin-updater` cannot install a raw executable, so it only checks, downloads and verifies
 //! (minisign, mandatory). This module adds the two pieces around it:

@@ -27,7 +27,7 @@ import { useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
-import { Button, Card, EmptyState, Icon, IconButton } from '@/ui';
+import { Button, Card, EmptyState, Icon, IconButton, PageHeader, Skeleton } from '@/ui';
 import styles from './Dashboard.module.css';
 import {
   DASHBOARD_SCOPE,
@@ -105,17 +105,7 @@ export function Dashboard() {
 
   return (
     <>
-      <div
-        className="page-header"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 'var(--space-3)',
-          marginBottom: 'var(--space-5)',
-        }}
-      >
-        <h1>{t.dashboard.title}</h1>
+      <PageHeader title={t.dashboard.title}>
         {entries.length > 0 ? (
           <Button
             variant={editing ? 'primary' : 'secondary'}
@@ -126,7 +116,7 @@ export function Dashboard() {
             {editing ? t.dashboardEdit.done : t.dashboardEdit.customize}
           </Button>
         ) : null}
-      </div>
+      </PageHeader>
 
       <WelcomeCard />
       <ChecklistCard />
@@ -138,7 +128,7 @@ export function Dashboard() {
           <SetupLink />
         </EmptyState>
       ) : states && entries.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)' }}>{t.dashboard.noWidgets}</p>
+        <p className={styles.hint}>{t.dashboard.noWidgets}</p>
       ) : (
         <DndContext
           sensors={sensors}
@@ -167,6 +157,14 @@ export function Dashboard() {
         </DndContext>
       )}
     </>
+  );
+}
+
+function WidgetFallback() {
+  return (
+    <div role="status" aria-label="…">
+      <Skeleton width="60%" height="1.25rem" />
+    </div>
   );
 }
 
@@ -229,7 +227,7 @@ function SortableWidget({ entry, editing, hidden, onToggleHidden }: WidgetProps)
         {hidden && editing ? (
           <p className={styles.hint}>{t.dashboardEdit.hidden}</p>
         ) : (
-          <Suspense fallback={<p role="status">…</p>}>
+          <Suspense fallback={<WidgetFallback />}>
             <Widget />
           </Suspense>
         )}

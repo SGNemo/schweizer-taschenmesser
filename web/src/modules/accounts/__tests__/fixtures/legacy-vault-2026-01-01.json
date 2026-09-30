@@ -1,0 +1,12 @@
+{
+  "format": "taschenmesser-vault-backup",
+  "v": 1,
+  "kdf": {
+    "alg": "argon2id",
+    "m": 19456,
+    "t": 2,
+    "p": 1,
+    "salt": "3u1iP4R9w6+o2/DMxJ87qA=="
+  },
+  "data": "v1.61mYNd6AUyBdUcEd.66CbViKPnzDu4Vkx4b7QZS0/0JttnonWRIEdBXO97sGoDmSCYovhq33Ht4I8zm2eGZfHW6Hv/DFye4TOeeGYHx6lLWx/WbV8/T4zgGJLxU71LAy75ac5ZEjyu1xHe97TApr98l5V5qiDuF2NvRlngNMeX3n+SCbUTRGYog4tEvrS77BL2i/Kf9lt1GhCk90+XM74blpzVc+Px/uHCilnLg2lnZV2aghnbRwaJaa5JmrtugwWMxZst5wMauHP9irfIuauHakuyZgGylxyTl0lzSo6DKhVcHtXuZXUmFI6Gw6PvU9/+C0TOP8KTTXr1ZI2WJrzqnfW0awHNdQQYmJ5d9+b0NaqeMrzOSY+8YZ+XDmuic3uWvRCmV+jjdy0/Hc="
+}

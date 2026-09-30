@@ -1,5 +1,5 @@
 /** Google Calendar API v3 (read only): calendar list and incremental event sync. */
-import { addDaysStr } from '@/core/time/dates';
+import { addDaysStr, pad2, toDateString } from '@/core/time/dates';
 import type {
   CalendarCapability,
   CalendarSyncRequest,
@@ -35,15 +35,13 @@ interface ApiEvent {
   end?: { date?: string; dateTime?: string };
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
 /** An RFC 3339 instant as the wall clock of this device. */
 export function localParts(dateTime: string): { date: string; time: string } | undefined {
   const d = new Date(dateTime);
   if (Number.isNaN(d.getTime())) return undefined;
   return {
-    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    date: toDateString(d),
+    time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
   };
 }
 

@@ -8,6 +8,7 @@ Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK
 - Layout-System (`PageContainer`, PR #3), Aufräumen + Doku-Split (PR #2).
 - KI-Import-Runde (PR #4): JSON-Import je Modul, lokale Import-API (nur Desktop, Loopback, Tokens, Vorschau/Undo), MCP-Wrapper `mcp/`, Anleitung [`AI-IMPORT.md`](AI-IMPORT.md).
 - Releases: `v0.2.0-beta.1`, `v0.2.0-beta.2` (erste portable Version), `v0.2.0`.
+- Review-Runde 2026-09-30 (Branch `chore/nemo-review-polish`): Review des Rebrandings ([`REVIEW-2026-09-30.md`](REVIEW-2026-09-30.md)), Korrekturen (IDs gepinnt, Legacy-Fixtures, Release-Prüfung, Android-Icons in die APK, Benachrichtigungs-Icon), Design „Klar“ + neues Logo „Welle“ ([`DESIGN-CONCEPT-2026-09-30.md`](DESIGN-CONCEPT-2026-09-30.md)), Aufräumen (tote Exporte/Strings, `pad2`, E2E-Helfer, CI-Caches), [`ROADMAP.md`](ROADMAP.md), kurze README + `docs/user/`, MIT-Lizenz, CHANGELOG/CONTRIBUTING/SECURITY, Issue-/PR-Vorlagen.
 
 ## Diese Runde (Branch `feat/disk-cleaner-and-modules`)
 - **Datenträger** (nur Desktop): Laufwerkskarten, paralleler Rust-Scan (Fortschritt, Pause, Abbruch, „Nicht gelesen“-Liste), Treemap + Liste + Schnellfilter + Details, Auswahl-Korb, Löschen in den Papierkorb (Standard) oder endgültig mit Sperrliste, Tippbestätigung, Bericht; Aufräum-Helfer (bekannte Temp-/Cache-Ordner, leere Ordner, doppelte Dateien).
@@ -32,7 +33,8 @@ Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK
 ## Bekannte Probleme / Hinweise
 - README-Download-Badges zeigen auf das neueste *stabile* Release und funktionieren jetzt (seit `v0.2.0`).
 - TypeScript ist auf 6.0.x gepinnt (typescript-eslint unterstützt `<6.1`).
-- Aus PR #2 zurückgestellte Vorschläge: Plugin-Bumps `@tauri-apps/plugin-http` 2.8 / `plugin-opener` 2.7 (JS und Rust gemeinsam, per CI verifizieren), TypeScript 7 / `@types/node` 26, zxcvbn-Wörterbücher aus dem Precache nehmen (Entscheidung nötig), Vitest-`node`-Projekt für reine Logiktests, CI-Caching, evtl. `serde_json` in `web/src-tauri/Cargo.toml` entfernen.
+- Aus PR #2 zurückgestellte Vorschläge: TypeScript 7 / `@types/node` 26, zxcvbn-Wörterbücher aus dem Precache nehmen (Entscheidung nötig, ~2,5 MB beim ersten Laden), Vitest-`node`-Projekt für reine Logiktests, `windows`-Crate 0.61 → 0.62 (nur per CI prüfbar). Erledigt 2026-09-30: JS-Plugin-Bumps (`plugin-http` 2.8.0, `plugin-opener` 2.7.0; die Rust-Seite bleibt `~2.7`, siehe Cargo), CI-Caching. `serde_json` bleibt: `tauri::generate_context!` braucht es.
+- Commit `792e7aa` (Logo) hat zwei durch Shell-Backticks verschluckte Wörter im Text („after . Logo gets a prop“) – bewusst nicht per Force-Push korrigiert.
 - Aus PR #3 offene Vorschläge: globaler „+“-FAB ab 900 px durch „+ Neu“ in der Top-Bar ersetzen; ToDo-Board mit Listen als Spalten.
 
 ## Nächste sinnvolle Schritte
@@ -67,7 +69,7 @@ D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, R
 D16. *Android/PWA:* „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
 
 ### Schritt 11b – OS-Keystore, Biometrie, Bildschirmschutz
-**Windows (`Taschenmesser-Portable.exe`)**
+**Windows (`Nemo-Portable.exe`)**
 1. *API-Schlüssel im Credential Manager:* Einstellungen → KI-Assistent → Anbieter hinzufügen → Schlüssel eintragen → Speichern → „Verbindung testen". Dann Windows-Suche „Anmeldeinformationsverwaltung" → „Windows-Anmeldeinformationen": Es gibt einen Eintrag `ai-key:<anbieter>` (Adresse `io.github.sgnemo.taschenmesser`). ☐
 2. *Migration:* Ein Schlüssel, der schon mit einer älteren Version gespeichert war, funktioniert nach dem Update weiter (nach der ersten Nutzung erscheint er im Credential Manager). ☐
 3. *Windows Hello:* Accounts → Tresor anlegen/entsperren → „Import, Export & Sicherheit" → „Biometrisches Entsperren aktivieren" (Master-Passwort eingeben) → Windows-Hello-Fenster erscheint und bestätigt. Danach „Sperren" → beim Sperrbildschirm fragt Windows Hello automatisch → Tresor offen. ☐
@@ -96,7 +98,7 @@ K5. *Widerrufen / Port belegt:* Zugang widerrufen → nächste Anfrage 401. Port
 
 ### Portable Windows-Build (Phase 13)
 Nur auf echtem Windows prüfbar (CI baut nur; der Smoke-Test dort ist informativ):
-P1. *Start:* `Taschenmesser-Portable.exe` (Pre-Release-Download) starten, SmartScreen „Weitere Informationen → Trotzdem ausführen". Die App öffnet sich, die Daten der bisher installierten Version sind da (gleiche App-Kennung). ☐
+P1. *Start:* `Nemo-Portable.exe` (Pre-Release-Download) starten, SmartScreen „Weitere Informationen → Trotzdem ausführen". Die App öffnet sich, die Daten der bisher installierten Version sind da (gleiche App-Kennung). ☐
 P2. *WebView2 fehlt:* auf einem Rechner/VM ohne WebView2 startet die exe → deutsches Meldungsfenster mit „OK" (öffnet die Microsoft-Seite) statt stillem Absturz. ☐
 P3. *Portabler Modus:* Ordner `data` neben die exe legen, starten → die App ist leer (neues Profil), `data\` füllt sich; ohne den Ordner wieder das Benutzerprofil. ☐
 P4. *Update (erst ab dem zweiten portablen Release):* Kanal Beta → „Jetzt prüfen" → „Jetzt aktualisieren": Backup, Download, die exe ersetzt sich, startet neu, neue Version, Daten da, im Ordner bleiben keine `.old`/`.new`-Dateien (nach dem nächsten Start). ☐
@@ -145,15 +147,23 @@ N4. *Reduzierte Bewegung:* Betriebssystem-Einstellung „Animationen reduzieren�
 N5. *Neue Module der anderen Chats:* nach dem Merge Dashboard, Datenträger-Aufräumer und weitere neue Seiten hell/dunkel ansehen (sollten das Design über Tokens erben; Sonderstyles melden).
 N6. *Alte Backups:* eine `taschenmesser-backup-…json` (auch verschlüsselt) einspielen; neue Exporte heißen `nemo-backup-…`.
 N7. *Diagramm-Farben:* Türkis/Orange bei Farbfehlsichtigkeit prüfen (Validator des dataviz-Skills nach dem Rebrand noch nicht erneut gelaufen).
+N8. *Windows-Portable mit dem Logo „Welle“:* Icon in Taskleiste, Titelleiste, Tray und Alt-Tab zeigt den neuen Fisch (7 ICO-Größen), Fenstertitel „Nemo“, Tray-Tooltip „Nemo“. ☐
+N9. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo“, **neues Launcher-Icon** (adaptiv: runde und eckige Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), **Benachrichtigungs-Icon** in der Statusleiste ist der weiße Fisch (kein weißer Klotz), alle Daten und der Tresor bleiben. Vorher war unklar, ob die Icons überhaupt in der APK landen (Kopierschritt in `release.yml` neu). ☐
+N10. *Hell / Dunkel / System, Akzente, Design „Klar“:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes; Karten mit Rahmen statt Schatten, Tabs als ruhige Pille, nur ein orangefarbener Hauptbutton je Seite; Titelleisten-Farbe (PWA/Browser) folgt der gewählten Darstellung. ☐
+N11. *Reduzierte Bewegung:* Systemeinstellung an → keine Seiten-/Listen-/Balken-Animation, Listen erscheinen sofort (kein Verzögern), Skeleton ohne Schimmer. ☐
+N12. *README auf GitHub im hellen und dunklen Modus:* Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
+N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐
 
 ## Offen – macht Sven
+0. **Repo-Auftritt setzen (kein API-Zugriff durch Sessions):** GitHub → Settings → *Social preview*: `docs/brand/social-preview.png` hochladen. Repository-Beschreibung: „Nemo – modulare, lokale Alltags-App: Kalender, ToDos, Finanzen, Passwörter und mehr. Windows portable, Android, PWA. Daten bleiben auf dem Gerät.“ Topics: `local-first`, `pwa`, `tauri`, `react`, `typescript`, `rust`, `android`, `windows`, `offline-first`, `personal-finance`, `todo`, `calendar`, `password-manager`, `self-hosted`, `privacy`. Website-Feld: `https://github.com/SGNemo/schweizer-taschenmesser/releases/latest`. Danach in den Repo-Settings *Private vulnerability reporting* einschalten (SECURITY.md verweist darauf).
+
 **Neu (Datenträger):** Die Checkliste D1–D16 oben auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
 
 Installation und Update auf echten Geräten (Windows und Android) – Schritt für Schritt:
 
-1. **Dateien holen (Pre-Release).** GitHub → Repository → *Releases* → das neueste Pre-Release. Die README-Badges („Windows (portabel) herunterladen" …) zeigen auf das *neueste stabile* Release und funktionieren erst, wenn es ein stabiles Release gibt – bis dahin die Dateien direkt von der Release-Seite laden: `Taschenmesser-Portable.exe` (Windows) und `Taschenmesser.apk` (Android). Prüfsumme optional: `Taschenmesser.apk.sha256`.
-2. **Von der installierten Windows-Version umsteigen (einmalig, `0.2.0-beta.1` kann sich nicht selbst auf die portable Datei aktualisieren).** (a) Alte App: Einstellungen → Backup → exportieren. (b) `Taschenmesser-Portable.exe` in einen beschreibbaren Ordner legen und starten (SmartScreen: „Weitere Informationen" → „Trotzdem ausführen"; die Datei hat kein Authenticode-Zertifikat, der Update-Inhalt ist mit dem Updater-Key signiert). Die Daten sind sofort da. (c) Alte Version deinstallieren – **„Anwendungsdaten löschen" nicht ankreuzen.** Einstellungen → „App-Updates" zeigt die Version.
-3. **Android installieren.** `Taschenmesser.apk` aufs Handy laden und öffnen. Beim ersten Mal „Installation aus unbekannten Quellen" für den Browser/Dateimanager erlauben, dann installieren. Öffnen → Einstellungen → „App-Updates" zeigt die Version. (Vorherige Debug-/anders signierte Version vorher deinstallieren.)
+1. **Dateien holen (Pre-Release).** GitHub → Repository → *Releases* → das neueste Pre-Release. Die README-Badges („Windows (portabel) herunterladen" …) zeigen auf das *neueste stabile* Release und funktionieren erst, wenn es ein stabiles Release gibt – bis dahin die Dateien direkt von der Release-Seite laden: `Nemo-Portable.exe` (Windows) und `Nemo.apk` (Android); die `Taschenmesser-*`-Dateien im selben Release sind identische Kopien für alte Installationen. Prüfsumme optional: `Nemo.apk.sha256`.
+2. **Von der installierten Windows-Version umsteigen (einmalig, `0.2.0-beta.1` kann sich nicht selbst auf die portable Datei aktualisieren).** (a) Alte App: Einstellungen → Backup → exportieren. (b) `Nemo-Portable.exe` in einen beschreibbaren Ordner legen und starten (SmartScreen: „Weitere Informationen" → „Trotzdem ausführen"; die Datei hat kein Authenticode-Zertifikat, der Update-Inhalt ist mit dem Updater-Key signiert). Die Daten sind sofort da. (c) Alte Version deinstallieren – **„Anwendungsdaten löschen" nicht ankreuzen.** Einstellungen → „App-Updates" zeigt die Version.
+3. **Android installieren.** `Nemo.apk` aufs Handy laden und öffnen. Beim ersten Mal „Installation aus unbekannten Quellen" für den Browser/Dateimanager erlauben, dann installieren. Öffnen → Einstellungen → „App-Updates" zeigt die Version. (Vorherige Debug-/anders signierte Version vorher deinstallieren.)
 4. **Etwas Testdaten anlegen** (ein ToDo, eine Notiz, ein KI-Anbieter, optional ein Tresor-Eintrag), damit man nach dem Update sieht, dass nichts verloren geht.
 5. **Nächstes Pre-Release erzeugen (der Update-Test).** Auf deinem Rechner im Repo: `cd web && npm run version:set -- 0.2.0-beta.3`, dann `git commit -am "chore(release): 0.2.0-beta.3"`, `git tag v0.2.0-beta.3`, `git push origin develop v0.2.0-beta.3`. Der Workflow *Release* baut, prüft (Secret-Scan + Artefakt-Audit), veröffentlicht und prüft danach alle Download-Links (~15 Min.; Fortschritt unter *Actions*). Oder sag mir Bescheid, dann mache ich das.
 6. **In der portablen App aktualisieren.** Einstellungen → „App-Updates" → Kanal **Beta** wählen → „Jetzt prüfen" → Banner „Update verfügbar" mit Änderungsliste → „Jetzt aktualisieren".
@@ -166,8 +176,9 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 
 ### Nemo-Rebranding
 10. **GitHub-Repo umbenennen (optional).** Betrifft `REPO` (`core/update/github.ts`), den Updater-Endpunkt in `tauri.conf.json`, `RELEASES_PREFIX` in `update.rs`, README-Links und den Link-Check. GitHub leitet alte URLs zwar um, aber ein Update-Endpunkt darf nie kaputtgehen: erst einen Plan mit Übergangs-Release schreiben lassen, dann umbenennen.
-11. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
-12. **Später (eigener PR):** wenn alle Installationen ≥ diese Version haben, `latest.json` auf `Nemo-Portable.exe` umstellen und die `Taschenmesser-*`-Kopien aus dem Release entfernen. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
+11. **Download-Buttons der README (Zwischenlösung, optional abzulösen):** Die Buttons zeigen vorerst auf `Taschenmesser-Portable.exe` / `Taschenmesser.apk`, weil das *neueste stabile* Release (v0.2.0) nur diese Dateien hat; README und `docs/user/installation.md` erklären das. Zum Umstellen auf `Nemo-*` (README, Installationsanleitung, `releaseAssets.test.ts`) gibt es zwei Wege: entweder mit dem nächsten stabilen Release (es trägt beide Namen), oder vorher die Kopien an v0.2.0 hängen. Ursprüngliche Begründung: Die Buttons zeigten auf `Nemo-Portable.exe` / `Nemo.apk` im *neuesten stabilen* Release. v0.2.0 wurde vor der Umbenennung gebaut und hat nur die `Taschenmesser-*`-Dateien, die Links liefern bis zum nächsten stabilen Release 404. Einmalig nachziehen: `gh release download v0.2.0 -p 'Taschenmesser*' -D /tmp/v020 && cd /tmp/v020 && cp Taschenmesser-Portable.exe Nemo-Portable.exe && cp Taschenmesser-Portable.exe.sig Nemo-Portable.exe.sig && cp Taschenmesser.apk Nemo.apk && sha256sum Nemo.apk > Nemo.apk.sha256 && gh release upload v0.2.0 Nemo-Portable.exe Nemo-Portable.exe.sig Nemo.apk Nemo.apk.sha256` (gleiche signierte Bytes, nur andere Namen). Alternativ: nächstes stabiles Release taggen.
+12. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
+13. **Später (eigener PR):** wenn alle Installationen ≥ diese Version haben, `latest.json` auf `Nemo-Portable.exe` umstellen und die `Taschenmesser-*`-Kopien aus dem Release entfernen. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
 
 ### Google-Verbindung einrichten (einmalig, für Kalender/Gmail)
 1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Nemo".

@@ -2,6 +2,7 @@ import {
   useId,
   type InputHTMLAttributes,
   type ReactNode,
+  type Ref,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
@@ -11,26 +12,31 @@ interface BaseProps {
   label: string;
   hint?: string;
   error?: string;
+  /** Keep the label for screen readers only (inline "add" forms with a clear placeholder). */
+  labelHidden?: boolean;
 }
 
 export function TextField({
   label,
   hint,
   error,
+  labelHidden,
   className,
+  ref,
   ...rest
-}: BaseProps & InputHTMLAttributes<HTMLInputElement>) {
+}: BaseProps & InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
   const id = useId();
   const describedBy = [hint ? `${id}-hint` : '', error ? `${id}-err` : '']
     .filter(Boolean)
     .join(' ');
   return (
     <div className={styles.field}>
-      <label htmlFor={id} className={styles.label}>
+      <label htmlFor={id} className={labelHidden ? 'sr-only' : styles.label}>
         {label}
       </label>
       <input
         id={id}
+        ref={ref}
         className={[styles.control, className].filter(Boolean).join(' ')}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}

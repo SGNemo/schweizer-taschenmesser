@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { EmptyState, Skeleton } from './Misc';
 import styles from './Patterns.module.css';
 
 export interface WidgetEntry {
@@ -8,11 +9,15 @@ export interface WidgetEntry {
   overdue?: boolean;
 }
 
-/** Standard dashboard widget body: optional headline, a few entries and a link to the module. */
+/**
+ * Standard dashboard widget body: optional headline (+ subline), a few entries and a link to the
+ * module. Loading shows skeleton lines, an empty module the compact empty state.
+ */
 export function WidgetList({
   loading,
   empty,
   headline,
+  subline,
   entries,
   to,
   linkLabel,
@@ -20,26 +25,30 @@ export function WidgetList({
   loading: boolean;
   empty?: string;
   headline?: string;
+  subline?: string;
   entries: WidgetEntry[];
   to: string;
   linkLabel: string;
 }) {
-  if (loading) return <p role="status">…</p>;
-  if (entries.length === 0 && empty) return <p className={styles.muted}>{empty}</p>;
+  if (loading)
+    return (
+      <div className={styles.widgetSkeleton} role="status" aria-label="…">
+        <Skeleton width="60%" height="1.25rem" />
+        <Skeleton width="85%" />
+        <Skeleton width="70%" />
+      </div>
+    );
+  if (entries.length === 0 && empty) return <EmptyState compact title={empty} />;
   return (
     <div>
       {headline ? <p className={styles.statValue}>{headline}</p> : null}
-      <ul className={styles.list} style={{ gap: 'var(--space-1)', margin: 'var(--space-2) 0' }}>
+      {subline ? <p className={styles.widgetSub}>{subline}</p> : null}
+      <ul className={styles.widgetList}>
         {entries.map((e) => (
-          <li
-            key={e.key}
-            style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-2)' }}
-          >
-            <span className={styles.title} style={{ fontWeight: 500 }}>
-              {e.title}
-            </span>
+          <li key={e.key} className={styles.widgetItem}>
+            <span className={styles.widgetItemTitle}>{e.title}</span>
             {e.meta ? (
-              <span className={e.overdue ? styles.overdue : styles.muted}>{e.meta}</span>
+              <span className={e.overdue ? styles.overdue : styles.widgetMeta}>{e.meta}</span>
             ) : null}
           </li>
         ))}

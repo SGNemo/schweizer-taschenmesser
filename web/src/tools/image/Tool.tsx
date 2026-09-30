@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, SelectField, TextField } from '@/ui';
+import { Button, patternStyles, SelectField, TextField } from '@/ui';
 import { num } from '../shared';
 import styles from '../tools.module.css';
 import { convert, decode, type Converted } from './convert';
@@ -193,11 +193,7 @@ export default function ImageTool() {
           </p>
           <p className={styles.muted}>{pct > 0 ? s.smaller(pct) : s.larger}</p>
           {result.url ? (
-            <img
-              src={result.url}
-              alt={s.preview}
-              style={{ maxWidth: '100%', maxHeight: '16rem', objectFit: 'contain' }}
-            />
+            <img src={result.url} alt={s.preview} className={patternStyles.previewImage} />
           ) : null}
           <div className={styles.row}>
             <Button onClick={() => void save()}>{s.save}</Button>

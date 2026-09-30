@@ -11,11 +11,6 @@
 .dialog::backdrop {
   background: var(--overlay);
 }
-@supports (backdrop-filter: blur(1px)) {
-  .dialog::backdrop {
-    backdrop-filter: blur(3px);
-  }
-}
 .dialog[open] {
   animation: pop var(--dur) var(--ease-out);
 }

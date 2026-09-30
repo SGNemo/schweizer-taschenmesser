@@ -97,7 +97,7 @@ self.addEventListener('push', (event) => {
         // Same tag as the local scheduler: a notification shown by both appears only once.
         tag: key,
         icon: '/pwa-192.png',
-        badge: '/pwa-192.png',
+        badge: '/pwa-badge-96.png',
         data: { url: payload.url ?? '/' },
       });
     })(),

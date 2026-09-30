@@ -2,7 +2,7 @@ import { useSetupHost } from '@/core/setup/host';
 import { useSetupState } from '@/core/setup/hooks';
 import { dismissSetup } from '@/core/setup/state';
 import { t } from '@/strings';
-import { Button, Card } from '@/ui';
+import { Button, Card, patternStyles } from '@/ui';
 
 /**
  * Discreet offer on the dashboard, only for a really empty app (`notStarted`; the start migration
@@ -16,8 +16,8 @@ export function WelcomeCard() {
     <div data-testid="setup-welcome" style={{ marginBottom: 'var(--space-5)' }}>
       <Card>
         <h2>{t.setup.welcomeTitle}</h2>
-        <p style={{ color: 'var(--text-muted)' }}>{t.setup.welcomeText}</p>
-        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+        <p className={patternStyles.muted}>{t.setup.welcomeText}</p>
+        <div className={patternStyles.hstackWrap}>
           <Button variant="primary" onClick={() => open()}>
             {t.setup.start}
           </Button>

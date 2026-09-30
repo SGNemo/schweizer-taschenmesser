@@ -17,6 +17,7 @@ import {
   parseBackup,
   serializeBackup,
 } from './backup';
+import { readBackupText } from './encrypted';
 
 const schema = allManifests.find((m) => m.id === 'example')!.dataSchema.collections.entry!.schema;
 type Entry = { title: string; done: boolean; note?: string };
@@ -124,6 +125,21 @@ describe('backups written before the rename to Nemo', () => {
     const b = dev();
     const summary = await importBackup(parsed.backup, 'merge', b.db);
     expect(summary.records).toBe(1);
+    expect(await titles(b)).toEqual(['Milch kaufen']);
+  });
+
+  it('an encrypted taschenmesser-backup file (0.2.0 format, AAD "taschenmesser-backup-payload") still opens', async () => {
+    const text = readFileSync(
+      resolve(__dirname, 'fixtures/legacy-encrypted-2026-01-01.json'),
+      'utf8',
+    );
+    expect(await readBackupText(text)).toEqual({ ok: false, reason: 'passphrase-required' });
+    const read = await readBackupText(text, 'legacy-fixture-passphrase');
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(read.encrypted).toBe(true);
+    const b = dev();
+    expect((await importBackup(read.backup, 'merge', b.db)).records).toBe(1);
     expect(await titles(b)).toEqual(['Milch kaufen']);
   });
 

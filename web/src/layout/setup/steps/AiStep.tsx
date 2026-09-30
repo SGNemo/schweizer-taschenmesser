@@ -16,7 +16,7 @@ import type { PresetId } from '@/core/ai/providers/presets';
 import { testConnection, type ConnectionTest } from '@/core/ai/testConnection';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
-import { Button, Card, HelpHint, SelectField, TextField } from '@/ui';
+import { Button, Card, HelpHint, patternStyles, SelectField, TextField } from '@/ui';
 
 const s = t.setup.steps.ai;
 
@@ -122,21 +122,19 @@ export default function AiStep({ registerCommit }: SetupStepProps) {
   const ollamaAdded = added.some((a) => a.entry.preset === 'ollama');
   return (
     <>
-      <p style={{ color: 'var(--text-muted)' }}>
+      <p className={patternStyles.muted}>
         {t.ai.settings.privacy} <HelpHint text={t.help.aiRouter} label={t.help.label} />
       </p>
 
       <h4>{s.existing}</h4>
       {existing.length === 0 ? <p>{s.none}</p> : null}
-      <ul
-        style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--space-2)' }}
-      >
+      <ul className={patternStyles.gridList}>
         {existing.map((p, i) => (
           <li
             key={p.id}
             style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', minHeight: 44 }}
           >
-            <span style={{ flex: 1 }}>
+            <span className={patternStyles.grow}>
               {p.label} – {isEntryUsable(p) ? s.usable : s.incomplete}
             </span>
             <Button aria-label={s.up(p.label)} disabled={i === 0} onClick={() => move(p.id, -1)}>
@@ -196,7 +194,7 @@ export default function AiStep({ registerCommit }: SetupStepProps) {
                 value={a.limit}
                 onChange={(e) => update(id, { limit: e.target.value })}
               />
-              <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+              <div className={patternStyles.hstackWrap}>
                 <Button onClick={() => void runTest(a)} disabled={a.test === 'running'}>
                   {a.test === 'running' ? s.testing : s.test}
                 </Button>

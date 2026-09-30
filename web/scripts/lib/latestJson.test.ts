@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLatestJson } from './latestJson';
+import { UPDATER_PORTABLE_ASSET, buildLatestJson } from './latestJson';
 
 const base = {
   version: '1.2.0',
@@ -9,11 +9,15 @@ const base = {
   tag: 'v1.2.0',
 };
 const portable = {
-  fileName: 'Taschenmesser-Portable.exe',
+  fileName: UPDATER_PORTABLE_ASSET,
   signature: 'dW50cnVzdGVkIGNvbW1lbnQ=\n',
 };
 
 describe('buildLatestJson', () => {
+  it('the manifest asset is the legacy name installed apps look for', () => {
+    expect(UPDATER_PORTABLE_ASSET).toBe('Taschenmesser-Portable.exe');
+  });
+
   it('points at the versioned asset URL of this release', () => {
     const json = buildLatestJson({ ...base, portable });
     expect(json.platforms['windows-x86_64-portable']).toEqual({

@@ -44,7 +44,7 @@ export const localNotificationService: NotificationService = {
       body,
       tag,
       icon: '/pwa-192.png',
-      badge: '/pwa-192.png',
+      badge: '/pwa-badge-96.png',
       data: { url: url ?? '/' },
     };
     // Android Chrome only supports notifications through the service worker registration.
