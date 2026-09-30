@@ -1,6 +1,7 @@
 import type { NotificationService } from '@/core/notifications/service';
 import type { SecretStore } from '@/core/secrets/types';
 import type { UpdateService } from '@/core/update/types';
+import type { DiskService } from './disk';
 
 /**
  * Everything that differs between running in a browser (PWA) and inside the native Tauri shell.
@@ -115,6 +116,8 @@ export interface PlatformService {
   screen: ScreenService;
   oauth: OAuthLoopback;
   localApi: LocalApiService;
+  /** Drive overview and read-only scans for the disk module (desktop only). */
+  disk: DiskService;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
   saveFile(req: SaveFileRequest): Promise<'saved' | 'cancelled'>;
   clipboard: {

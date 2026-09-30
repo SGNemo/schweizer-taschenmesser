@@ -1,3 +1,4 @@
+import { createFakeDisk } from './fakeDisk';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
@@ -120,6 +121,21 @@ export function createWebPlatform(): PlatformService {
       import.meta.env.MODE === 'e2e'
         ? createFakeLocalApi()
         : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    // E2E builds only: an invented folder tree instead of the native scan.
+    disk:
+      import.meta.env.MODE === 'e2e'
+        ? createFakeDisk()
+        : {
+            supported: false,
+            listDrives: unsupported,
+            startScan: unsupported,
+            cancelScan: unsupported,
+            pauseScan: unsupported,
+            dropScan: unsupported,
+            children: unsupported,
+            node: unsupported,
+            query: unsupported,
+          },
     lifecycle: { onBackground: onPageHidden },
   };
 }
