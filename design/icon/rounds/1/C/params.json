@@ -1,0 +1,39 @@
+{
+  "body": {
+    "height": 112
+  },
+  "stripes": {
+    "at": [
+      0.72,
+      0.36
+    ],
+    "width": 40,
+    "bend": [
+      -16,
+      -10
+    ],
+    "mode": "cut"
+  },
+  "eye": {
+    "style": "cut",
+    "r": 17
+  },
+  "colors": {
+    "body": "#FFFFFF"
+  },
+  "tilt": -14,
+  "soften": 10,
+  "plate": {
+    "shape": "circle",
+    "fill": "#F26A1E",
+    "scale": 0.8,
+    "dx": 6
+  },
+  "adaptive": {
+    "scale": 0.62,
+    "bg": "#F26A1E"
+  },
+  "mono": {
+    "style": "negative"
+  }
+}

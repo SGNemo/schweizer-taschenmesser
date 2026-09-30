@@ -1,0 +1,42 @@
+{
+  "dorsal": {
+    "height": 30,
+    "from": 0.22,
+    "to": 0.68
+  },
+  "stripes": {
+    "at": [
+      0.76,
+      0.42,
+      0.1
+    ],
+    "width": [
+      36,
+      38,
+      26
+    ],
+    "bend": [
+      -14,
+      -10,
+      0
+    ],
+    "edge": 7
+  },
+  "outline": 7,
+  "soften": 6,
+  "eye": {
+    "r": 15
+  },
+  "plate": {
+    "shape": "rounded",
+    "radius": 112,
+    "fill": {
+      "from": "#1D6B7A",
+      "to": "#0E2F45"
+    },
+    "scale": 0.8
+  },
+  "adaptive": {
+    "scale": 0.64
+  }
+}

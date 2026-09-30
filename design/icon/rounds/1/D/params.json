@@ -1,0 +1,45 @@
+{
+  "body": {
+    "height": 132,
+    "peak": 0.5,
+    "blunt": 0.55,
+    "stalk": 30
+  },
+  "tail": {
+    "style": "triangle",
+    "length": 104,
+    "spread": 104,
+    "overlap": 30
+  },
+  "stripes": {
+    "at": [
+      0.7,
+      0.32
+    ],
+    "width": 46,
+    "bend": 0,
+    "edge": 10
+  },
+  "outline": 13,
+  "soften": 14,
+  "eye": {
+    "at": 0.84,
+    "dy": -0.2,
+    "r": 19
+  },
+  "colors": {
+    "edge": "#0E2F45",
+    "eye": "#0E2F45"
+  },
+  "plate": {
+    "shape": "none",
+    "scale": 1.04
+  },
+  "adaptive": {
+    "scale": 0.62,
+    "bg": "#FBF8F3"
+  },
+  "mono": {
+    "scale": 1.04
+  }
+}
