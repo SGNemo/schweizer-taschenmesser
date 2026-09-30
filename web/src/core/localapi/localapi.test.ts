@@ -14,7 +14,7 @@ import {
   updateConfig,
   type Grant,
 } from './config';
-import { handleRequest, type ApiRequest } from './handler';
+import { handleRequest, MAX_PENDING, type ApiRequest } from './handler';
 import { appendLog, lastUsed, loadLog, LOG_SIZE } from './log';
 
 const T0 = new Date(2026, 8, 29, 10, 0).getTime();
@@ -380,6 +380,23 @@ describe('handler: batches', () => {
     const res = await call(entry.id, 'POST', '/v1/todos/import', { body: tasks('G') });
     expect(res.body).toMatchObject({ batchId: null, status: 'nothing' });
     expect(await db.table('_imports').count()).toBe(0);
+  });
+
+  it('limits the number of waiting imports per token', async () => {
+    const entry = await token({ todos: { read: false, write: true } });
+    for (let i = 0; i < MAX_PENDING; i++) {
+      const res = await call(entry.id, 'POST', '/v1/todos/import', { body: tasks(`T${i}`) });
+      expect(res.status).toBe(202);
+    }
+    const over = await call(entry.id, 'POST', '/v1/todos/import', { body: tasks('zu viel') });
+    expect(over.status).toBe(429);
+    expect(over.body).toMatchObject({ error: 'too-many-pending' });
+    // A dry run still works.
+    const dry = await call(entry.id, 'POST', '/v1/todos/import', {
+      query: 'dryRun=true',
+      body: tasks('zu viel'),
+    });
+    expect(dry.status).toBe(200);
   });
 
   it('batches of other tokens are invisible', async () => {

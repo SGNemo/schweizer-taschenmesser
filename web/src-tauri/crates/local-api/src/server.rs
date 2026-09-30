@@ -23,6 +23,8 @@ pub struct Limits {
     pub max_header_bytes: usize,
     pub max_body_bytes: usize,
     pub read_timeout: Duration,
+    /// Total time a client gets to deliver its whole request (a slow trickle cannot hold a slot).
+    pub request_deadline: Duration,
     /// How long the app may take to answer.
     pub response_timeout: Duration,
     pub max_connections: usize,
@@ -36,6 +38,7 @@ impl Default for Limits {
             max_header_bytes: 16 * 1024,
             max_body_bytes: 1024 * 1024,
             read_timeout: Duration::from_secs(5),
+            request_deadline: Duration::from_secs(15),
             response_timeout: Duration::from_secs(30),
             max_connections: 8,
             requests_per_minute: 120,
@@ -222,9 +225,13 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>) {
 }
 
 fn handle_connection(stream: &mut TcpStream, shared: &Shared) {
-    let _ = stream.set_read_timeout(Some(shared.limits.read_timeout));
+    let mut timed = Deadline {
+        stream: &mut *stream,
+        until: Instant::now() + shared.limits.request_deadline,
+        per_read: shared.limits.read_timeout,
+    };
     let request = match read_request(
-        stream,
+        &mut timed,
         shared.limits.max_header_bytes,
         shared.limits.max_body_bytes,
     ) {
@@ -238,6 +245,34 @@ fn handle_connection(stream: &mut TcpStream, shared: &Shared) {
     };
     let reply = process(&request, shared);
     let _ = write_response(stream, &reply);
+}
+
+/// Reads with a per-read timeout that never extends past the request's overall deadline.
+struct Deadline<'a> {
+    stream: &'a mut TcpStream,
+    until: Instant,
+    per_read: Duration,
+}
+
+impl io::Read for Deadline<'_> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let left = self.until.saturating_duration_since(Instant::now());
+        if left.is_zero() {
+            return Err(io::Error::new(ErrorKind::TimedOut, "request deadline"));
+        }
+        self.stream
+            .set_read_timeout(Some(left.min(self.per_read)))?;
+        self.stream.read(buf)
+    }
+}
+
+impl io::Write for Deadline<'_> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.stream.write(buf)
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        self.stream.flush()
+    }
 }
 
 fn error(status: u16, code: &str) -> Reply {
