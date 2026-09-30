@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
-import { buildLayers, squirclePath } from './fish.mjs';
+import { buildLayers, merge, squirclePath } from './fish.mjs';
 import { buildWordmark } from './wordmark.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -40,8 +40,14 @@ function layersOf(v) {
       f.adBg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="${f.adBg}"/></svg>`;
     return f;
   }
-  return buildLayers(v.params);
+  const L = buildLayers(v.params);
+  // Optional small-size artwork (ICO/PNG sizes <= 24 px), e.g. fewer details.
+  if (v.small) L.small = buildLayers(merge(v.params, v.small));
+  return L;
 }
+const SMALL_MAX = 24;
+const fullAt = (L, size) => (L.small && size <= SMALL_MAX ? L.small.full : L.full);
+const monoAt = (L, size) => (L.small && size <= SMALL_MAX ? L.small.mono : L.mono);
 
 // ---------- Android adaptive ----------
 const MASKS = {
@@ -72,7 +78,7 @@ function sizesPanel(L, x, y, bg, fg) {
   let cx = x + 20;
   const base = y + 20 + 512;
   for (const size of SIZES) {
-    s += img(png(L.full, size), cx, base - size, size);
+    s += img(png(fullAt(L, size), size), cx, base - size, size);
     s += text(cx + size / 2, base + 26, `${size}`, 14, fg, 'normal', 'middle');
     cx += size + 22;
   }
@@ -91,7 +97,7 @@ function taskbar(L, x, y, dark, scale) {
     const gy = y + (slot - icon) / 2;
     if (i === 4) {
       s += `<rect x="${x + i * slot + 4 * scale}" y="${y + 4 * scale}" width="${slot - 8 * scale}" height="${slot - 8 * scale}" rx="${4 * scale}" fill="${dark ? '#2D2D2D' : '#FFFFFF'}"/>`;
-      s += img(png(L.full, icon), gx, gy, icon);
+      s += img(png(fullAt(L, icon), icon), gx, gy, icon);
       s += `<rect x="${x + i * slot + slot / 2 - 8 * scale}" y="${y + slot - 5 * scale}" width="${16 * scale}" height="${3 * scale}" rx="${1.5 * scale}" fill="${dark ? '#8AB4C8' : '#2F6F86'}"/>`;
     } else {
       // Neutral placeholder glyphs (no real app icons).
@@ -110,10 +116,10 @@ function tray(L, x, y, dark) {
   const bg = dark ? '#1F1F1F' : '#EEF0F3';
   const ink = dark ? '#FFFFFF' : '#000000';
   let s = `<rect x="${x}" y="${y}" width="230" height="44" fill="${bg}"/>`;
-  s += img(png(L.full, 16), x + 14, y + 14, 16);
-  s += img(png(tint(L.mono, ink), 16), x + 46, y + 14, 16);
-  s += img(png(L.full, 24), x + 92, y + 10, 24);
-  s += img(png(tint(L.mono, ink), 24), x + 132, y + 10, 24);
+  s += img(png(fullAt(L, 16), 16), x + 14, y + 14, 16);
+  s += img(png(tint(monoAt(L, 16), ink), 16), x + 46, y + 14, 16);
+  s += img(png(fullAt(L, 24), 24), x + 92, y + 10, 24);
+  s += img(png(tint(monoAt(L, 24), ink), 24), x + 132, y + 10, 24);
   s += img(png(tint(L.mono, ink), 24 * 1.5), x + 176, y + 4, 36);
   return s;
 }
@@ -132,8 +138,8 @@ function block(v, y) {
   const lab = (x, t) => text(x, y2 - 6 + 0, t, 14, '#3b434b');
   // Zoomed small sizes (nearest neighbour) to judge real pixels.
   s += lab(20, '16 px ×8 / 24 px ×5 (echte Pixel)');
-  const z16 = png(L.full, 16);
-  const z24 = png(L.full, 24);
+  const z16 = png(fullAt(L, 16), 16);
+  const z24 = png(fullAt(L, 24), 24);
   s += `<rect x="20" y="${y2 + 4}" width="136" height="136" fill="${LIGHT}"/>` + img(z16, 24, y2 + 8, 128, 128, true);
   s += `<rect x="166" y="${y2 + 4}" width="136" height="136" fill="${DARK}"/>` + img(z16, 170, y2 + 8, 128, 128, true);
   s += `<rect x="20" y="${y2 + 150}" width="136" height="136" fill="${LIGHT}"/>` + img(z24, 28, y2 + 154, 120, 120, true);
