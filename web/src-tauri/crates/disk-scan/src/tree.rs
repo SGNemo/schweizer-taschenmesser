@@ -73,6 +73,10 @@ pub struct NodeView {
     pub file_kind: FileKind,
     pub kind_bytes: [u64; KIND_COUNT],
     pub child_count: u32,
+    /// Path relative to the scan root (OS separator; empty for the root). Only filled in
+    /// query results, where the caller needs to show where an entry lives.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub rel_path: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -229,7 +233,20 @@ impl Tree {
             file_kind: dominant(&n.kind_bytes),
             kind_bytes: n.kind_bytes,
             child_count: n.children.len() as u32,
+            rel_path: String::new(),
         }
+    }
+
+    /// Parent folder of `id` relative to the scan root (aggregates: their folder).
+    fn parent_rel_path(&self, id: u32) -> String {
+        let mut names = Vec::new();
+        let mut cur = self.nodes[id as usize].parent;
+        while cur != NO_PARENT && cur != 0 {
+            names.push(self.nodes[cur as usize].name.as_str());
+            cur = self.nodes[cur as usize].parent;
+        }
+        names.reverse();
+        names.join(std::path::MAIN_SEPARATOR_STR)
     }
 
     pub fn view(&self, id: u32) -> Option<NodeView> {
@@ -315,7 +332,13 @@ impl Tree {
         }
         hits.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
         hits.truncate(q.limit.unwrap_or(100).min(MAX_QUERY));
-        hits.into_iter().map(|(_, id)| self.make_view(id)).collect()
+        hits.into_iter()
+            .map(|(_, id)| {
+                let mut v = self.make_view(id);
+                v.rel_path = self.parent_rel_path(id);
+                v
+            })
+            .collect()
     }
 
     /// Full path of a folder or file. `None` for aggregates ("small files") and unknown ids.
@@ -479,6 +502,15 @@ mod tests {
         assert_eq!(docs_only.len(), 1);
         assert_eq!(docs_only[0].name, "docs");
         let videos = t.children(0, 1, 0)[0].id;
+        let deep = t.query(&Query {
+            scope: QueryScope::Files,
+            under: None,
+            older_than: None,
+            file_kind: None,
+            min_bytes: None,
+            limit: Some(1),
+        });
+        assert_eq!(deep[0].rel_path, "videos");
         let under = t.query(&Query {
             scope: QueryScope::Files,
             under: Some(videos),

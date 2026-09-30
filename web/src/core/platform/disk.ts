@@ -47,6 +47,8 @@ export interface DiskNode {
   fileKind: FileKind;
   kindBytes: number[];
   childCount: number;
+  /** Parent folder relative to the scan root; only present in `query` results. */
+  relPath?: string;
 }
 
 export interface ScanProgress {

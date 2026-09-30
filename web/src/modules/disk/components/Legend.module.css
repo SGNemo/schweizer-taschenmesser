@@ -1,0 +1,28 @@
+.legend {
+  margin-top: var(--space-3);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.swatch {
+  width: 24px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.text {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}

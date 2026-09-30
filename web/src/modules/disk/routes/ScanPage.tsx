@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router';
-import { getPlatform } from '@/core/platform';
-import type { DiskNode } from '@/core/platform/disk';
 import { t } from '@/strings';
 import { Button, Card, HelpHint, Icon, PageHeader, Stat } from '@/ui';
-import { formatBytes, formatCount, formatDuration, percent } from '../format';
+import { ScanView } from '../components/ScanView';
+import { formatBytes, formatCount, formatDuration } from '../format';
 import { useDiskStore } from '../store';
 import styles from './ScanPage.module.css';
 
@@ -46,18 +44,6 @@ function Running() {
 
 function Result() {
   const summary = useDiskStore((s) => s.summary)!;
-  const [top, setTop] = useState<DiskNode[]>([]);
-
-  useEffect(() => {
-    let alive = true;
-    void getPlatform()
-      .disk.children(summary.scanId, summary.rootNode.id, 1, 0)
-      .then((n) => alive && setTop(n.slice(0, 30)));
-    return () => {
-      alive = false;
-    };
-  }, [summary]);
-
   return (
     <>
       {summary.cancelled ? <p role="status">{t.disk.scan.cancelled}</p> : null}
@@ -83,21 +69,7 @@ function Result() {
           <p className={styles.muted}>{t.disk.scan.links(summary.skippedLinks)}</p>
         ) : null}
       </Card>
-      <Card title={t.disk.scan.topFolders}>
-        <ul className={styles.rows}>
-          {top.map((n) => (
-            <li key={n.id} className={styles.row}>
-              <span className={styles.rowName}>
-                {n.kind === 'small' ? t.disk.scan.smallFiles(n.files) : n.name}
-              </span>
-              <span className={styles.rowBar} aria-hidden="true">
-                <span style={{ width: `${percent(n.bytes, summary.bytes)}%` }} />
-              </span>
-              <span className={styles.rowSize}>{formatBytes(n.bytes)}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      <ScanView summary={summary} />
       {summary.notReadTotal > 0 ? (
         <Card title={t.disk.scan.notRead}>
           <p className={styles.muted}>{t.disk.scan.notReadHint}</p>

@@ -249,7 +249,20 @@ class FakeTree {
       hits.push({ key, n });
     }
     hits.sort((a, b) => b.key - a.key || a.n.id - b.n.id);
-    return hits.slice(0, Math.min(q.limit ?? 100, 500)).map((h) => h.n);
+    return hits
+      .slice(0, Math.min(q.limit ?? 100, 500))
+      .map((h) => ({ ...h.n, relPath: this.parentPath(h.n.id) }));
+  }
+
+  private parentPath(id: number): string {
+    const names: string[] = [];
+    for (
+      let cur = this.nodes[id]!.parentId;
+      cur !== null && cur !== 0;
+      cur = this.nodes[cur]!.parentId
+    )
+      names.unshift(this.nodes[cur]!.name);
+    return names.join('\\');
   }
 }
 
