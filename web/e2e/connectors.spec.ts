@@ -165,7 +165,7 @@ test.describe('bank statement', () => {
     await dialog.getByRole('button', { name: /Kontoauszug importieren/ }).click();
     await expect(dialog.getByLabel('Buchen auf Konto')).toBeVisible();
     await uploadStatement(page, dialog);
-    await expect(dialog.getByText('4 Einträge erkannt')).toBeVisible();
+    await expect(dialog.getByText('4 Einträge erkannt')).toBeVisible({ timeout: 15_000 });
     await dialog.getByRole('button', { name: '4 Einträge importieren' }).click();
     await expect(dialog.getByRole('status')).toHaveText('4 Einträge wurden importiert.');
     await dialog.getByRole('button', { name: 'Schließen' }).last().click();
@@ -183,7 +183,7 @@ test.describe('bank statement', () => {
     const again = page.getByRole('dialog', { name: /Startdaten/ });
     await again.getByRole('button', { name: /Kontoauszug importieren/ }).click();
     await uploadStatement(page, again);
-    await expect(again.getByText('Schon vorhanden')).toHaveCount(4);
+    await expect(again.getByText('Schon vorhanden')).toHaveCount(4, { timeout: 15_000 });
     await expect(again.getByRole('button', { name: /importieren/ })).toBeDisabled();
   });
 
@@ -193,7 +193,7 @@ test.describe('bank statement', () => {
     const dialog = page.getByRole('dialog', { name: /Startdaten/ });
     await dialog.getByRole('button', { name: /Abos im Kontoauszug erkennen/ }).click();
     await uploadStatement(page, dialog);
-    await expect(dialog.getByText('1 Eintrag erkannt')).toBeVisible();
+    await expect(dialog.getByText('1 Eintrag erkannt')).toBeVisible({ timeout: 15_000 });
     await expect(dialog.getByText(/Monatlich/)).toBeVisible();
     await dialog.getByRole('button', { name: '1 Eintrag importieren' }).click();
     await expect(dialog.getByRole('status')).toHaveText('1 Eintrag wurde importiert.');

@@ -150,3 +150,20 @@ describe('createRepo', () => {
     expect(a.deviceId).toBe(b.deviceId);
   });
 });
+
+describe('local repos', () => {
+  it('store records like any other but never queue them for sync', async () => {
+    const local = createRepo('example_entry', schema, db, { local: true });
+    const a = await local.create({ title: 'cache', done: false });
+    await local.update(a.id, { done: true });
+    await local.createMany([{ data: { title: 'b', done: false } }]);
+    await local.remove(a.id);
+    expect(await local.active().count()).toBe(1);
+    expect(await db.table('_outbox').count()).toBe(0);
+
+    // A normal repo on the same table still queues.
+    const normal = await repo.create({ title: 'synced', done: false });
+    expect(await db.table('_outbox').count()).toBe(1);
+    expect((await db.table('_outbox').toArray())[0]).toMatchObject({ id: normal.id });
+  });
+});

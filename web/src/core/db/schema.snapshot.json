@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 11,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -27,6 +27,9 @@
     "habits_check": "id, updatedAt, habitId, date",
     "habits_habit": "id, updatedAt, archived",
     "invoices_invoice": "id, updatedAt, dueDate, status",
+    "news_article": "id, updatedAt, feedId, publishedAt",
+    "news_feed": "id, updatedAt, category",
+    "news_feedstate": "id, updatedAt",
     "notes_note": "id, updatedAt, pinned",
     "packing_item": "id, updatedAt, listId",
     "packing_list": "id, updatedAt",

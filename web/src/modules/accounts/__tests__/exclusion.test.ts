@@ -59,10 +59,11 @@ describe('module definition', () => {
     expect(c).not.toHaveProperty('aiCreateDefaults');
   });
 
-  it('is registered, off by default, and the only manifest without aiSchema', () => {
+  it('is registered, off by default, and one of only two manifests without aiSchema', () => {
     expect(allManifests.map((m) => m.id)).toContain('accounts');
     expect(visibleManifests.find((m) => m.id === 'accounts')?.defaultEnabled).toBe(false);
-    expect(allManifests.filter((m) => !m.aiSchema).map((m) => m.id)).toEqual(['accounts']);
+    // `news` has none by design (public third-party text); a new module without one must be a decision.
+    expect(allManifests.filter((m) => !m.aiSchema).map((m) => m.id)).toEqual(['accounts', 'news']);
   });
 });
 

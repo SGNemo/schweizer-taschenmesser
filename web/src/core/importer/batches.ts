@@ -1,8 +1,7 @@
 /** Batch bookkeeping, the write step and "Import rückgängig machen". Local only (`_imports`). */
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { createRepo } from '@/core/db/repo';
-import { tableName } from '@/core/db/schema';
+import { createCollectionRepo } from '@/core/db/repo';
 import type { ModuleManifest } from '@/core/modules/types';
 import { now } from '@/core/time/now';
 import { ImportError } from './plan';
@@ -40,8 +39,8 @@ export async function commitImport(
   for (const [collection, items] of byCollection) {
     const def = manifest.dataSchema.collections[collection];
     if (!def) throw new ImportError('unknown-collection');
-    const repo = createRepo(tableName(manifest.id, collection), def.schema, database);
-    const written = await repo.createMany(items as { data: never; id: string }[]);
+    const repo = createCollectionRepo(manifest, collection, database);
+    const written = await repo.createMany(items);
     records.push({ collection, ids: written.map((r) => r.id) });
   }
 
@@ -77,7 +76,7 @@ export async function undoImport(
   for (const { collection, ids } of batch.records) {
     const def = manifest.dataSchema.collections[collection];
     if (!def) continue;
-    const repo = createRepo(tableName(manifest.id, collection), def.schema, database);
+    const repo = createCollectionRepo(manifest, collection, database);
     const rows = await repo.table.bulkGet(ids);
     const untouched: string[] = [];
     for (const row of rows) {

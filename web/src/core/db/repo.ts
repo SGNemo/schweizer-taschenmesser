@@ -8,7 +8,9 @@
 import type { Collection, Table } from 'dexie';
 import type { z } from 'zod';
 import { now } from '@/core/time/now';
+import type { ModuleManifest } from '@/core/modules/types';
 import { db as defaultDb, type TaschenmesserDB } from './db';
+import { tableName } from './schema';
 import { getDeviceContext, type DeviceContext } from './device';
 import { maxHlc } from './hlc';
 import { ENVELOPE_KEYS, type Stored } from './types';
@@ -41,6 +43,8 @@ export interface Repo<T> {
   remove(id: string): Promise<void>;
   removeMany(ids: string[]): Promise<void>;
   restore(id: string): Promise<void>;
+  /** Really deletes rows (caches). Only allowed for local repos; synced data needs tombstones. */
+  purge(ids: string[]): Promise<void>;
 }
 
 export const notDeleted = (r: { deletedAt: number | null }): boolean => r.deletedAt === null;
@@ -51,10 +55,32 @@ function dataOf(record: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(record).filter(([k]) => !envelope.has(k)));
 }
 
+export interface RepoOptions {
+  /** Device-local collection: same envelope, but nothing is queued for sync. */
+  local?: boolean;
+}
+
+/** Repo for a manifest collection; honours `CollectionDef.local`. */
+export function createCollectionRepo(
+  manifest: ModuleManifest,
+  collection: string,
+  database: TaschenmesserDB = defaultDb,
+): Repo<Record<string, unknown>> {
+  const def = manifest.dataSchema.collections[collection];
+  if (!def) throw new Error(`${manifest.id}: unknown collection "${collection}"`);
+  return createRepo(
+    tableName(manifest.id, collection),
+    def.schema as unknown as z.ZodType<Record<string, unknown>>,
+    database,
+    { local: def.local },
+  );
+}
+
 export function createRepo<T extends Record<string, unknown>>(
   name: string,
   schema: z.ZodType<T>,
   database: TaschenmesserDB = defaultDb,
+  options: RepoOptions = {},
 ): Repo<T> {
   type Row = Stored<T>;
   const table = () => database.table<Row, string>(name);
@@ -135,6 +161,7 @@ export function createRepo<T extends Record<string, unknown>>(
   async function saveAll(rows: Row[]): Promise<void> {
     if (rows.length === 0) return;
     await table().bulkPut(rows);
+    if (options.local) return; // caches stay on this device
     // `rev` counts writes per record, so the sync engine can tell whether a record changed
     // again while it was being pushed (it only clears entries whose rev it has seen).
     const previous = await outbox().bulkGet(rows.map((r) => [name, r.id]));
@@ -222,5 +249,9 @@ export function createRepo<T extends Record<string, unknown>>(
     remove: (id) => setDeletedMany([id], true),
     removeMany: (ids) => setDeletedMany(ids, true),
     restore: (id) => setDeletedMany([id], false),
+    async purge(ids) {
+      if (!options.local) throw new Error(`${name}: only local collections can be purged`);
+      await table().bulkDelete(ids);
+    },
   };
 }

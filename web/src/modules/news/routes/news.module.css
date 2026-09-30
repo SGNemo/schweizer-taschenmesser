@@ -1,0 +1,65 @@
+.unreadTitle {
+  font-weight: 650;
+}
+.read {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.teaser {
+  display: block;
+  margin-top: var(--space-1);
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  gap: var(--space-1);
+}
+.manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.feedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.feedRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.feedMain {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.muted {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.error {
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+.briefText {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0 0 var(--space-2);
+}

@@ -1,6 +1,6 @@
 /** Builds the `ConnectorContext` a connector works with: platform fetch, tokens, secrets, redaction. */
 import { getPlatform } from '@/core/platform';
-import { loadSyncConfig } from '@/core/sync/service';
+import { fetchPublic as publicFetch, PublicFetchError } from '@/core/net/fetchPublic';
 import { refreshTokens } from './oauth';
 import { redactWith } from './redact';
 import { ConnectorError, type ConnectorContext, type ConnectorDef } from './types';
@@ -51,16 +51,15 @@ export function createContext(def: ConnectorDef, now: () => number = Date.now): 
   }
 
   async function fetchPublic(url: string, init?: RequestInit): Promise<Response> {
-    if (platform.isNative) return platform.fetch(url, init);
-    const config = await loadSyncConfig();
-    if (!config) throw new ConnectorError('no-proxy', 'no sync server');
-    const proxied = `${config.url.replace(/\/+$/, '')}/v1/proxy?url=${encodeURIComponent(url)}`;
-    const headers = new Headers(init?.headers);
-    headers.set('authorization', `Bearer ${config.token}`);
     try {
-      return await fetch(proxied, { ...init, headers });
+      return await publicFetch(url, init);
     } catch (e) {
-      throw new ConnectorError('network', redact(String(e)));
+      if (e instanceof PublicFetchError)
+        throw new ConnectorError(
+          e.code,
+          e.code === 'no-proxy' ? 'no sync server' : redact(e.message),
+        );
+      throw e;
     }
   }
 

@@ -30,6 +30,12 @@ export interface CollectionDef {
   schema: z.ZodObject;
   /** Extra Dexie indexes (besides id, updatedAt). */
   indexes: string[];
+  /**
+   * Device-local data (caches such as fetched news articles): stored with the same envelope, but
+   * never queued for sync and not part of the JSON backup. Repos must be created with
+   * `{ local: true }` (see `createCollectionRepo`).
+   */
+  local?: boolean;
 }
 
 export interface ModuleContext {

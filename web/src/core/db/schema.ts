@@ -46,7 +46,15 @@ export function buildStores(manifests: readonly ModuleManifest[]): Record<string
 
 /** Tables whose records travel through sync (module collections plus the synced system tables). */
 export function syncedTableNames(manifests: readonly ModuleManifest[]): string[] {
+  const local = new Set(
+    manifests.flatMap((m) =>
+      Object.entries(m.dataSchema.collections)
+        .filter(([, def]) => def.local)
+        .map(([collection]) => tableName(m.id, collection)),
+    ),
+  );
   return Object.keys(buildStores(manifests)).filter((name) => {
+    if (local.has(name)) return false;
     const system = SYSTEM_TABLES[name as SystemTableName];
     return system ? system.synced : true;
   });

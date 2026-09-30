@@ -23,6 +23,7 @@ const MODULES = [
   'packing',
   'vault',
   'accounts',
+  'news',
 ];
 
 /** Enables every module (raw write into the module table, like the library would do). */
@@ -96,6 +97,7 @@ const PAGES = [
   ['packing', '/packing'],
   ['vault', '/vault'],
   ['accounts (set up)', '/accounts'],
+  ['news', '/news'],
 ] as const;
 
 for (const scheme of ['light', 'dark'] as const) {
@@ -182,6 +184,13 @@ for (const scheme of ['light', 'dark'] as const) {
       await dialog.getByRole('button', { name: '2 Einträge importieren' }).click();
       await expect(dialog.getByRole('status')).toHaveText('2 Einträge wurden importiert.');
       await audit(page, `wizard result (${scheme})`);
+    });
+
+    test('news: feed manager dialog', async ({ page }) => {
+      await page.goto('/news');
+      await page.getByRole('button', { name: 'Feeds verwalten' }).click();
+      await expect(page.getByRole('dialog', { name: 'Feeds verwalten' })).toBeVisible();
+      await audit(page, `news feed manager (${scheme})`);
     });
 
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {

@@ -42,6 +42,7 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'item', label: 'Merkzettel', to: '/bookmarks?new=1' }],
+    services: () => import('./services'),
   },
 };
 

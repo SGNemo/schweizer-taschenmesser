@@ -1,6 +1,5 @@
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { createRepo } from '@/core/db/repo';
-import { tableName } from '@/core/db/schema';
+import { createCollectionRepo } from '@/core/db/repo';
 import type { ModuleContext, ModuleManifest } from './types';
 
 const versionKey = (id: string) => `moduleVersion.${id}`;
@@ -28,7 +27,7 @@ export async function runMigrations(
     async forEachRecord(collection, fn) {
       const def = manifest.dataSchema.collections[collection];
       if (!def) throw new Error(`Unknown collection "${collection}" in module "${manifest.id}"`);
-      const repo = createRepo(tableName(manifest.id, collection), def.schema, database);
+      const repo = createCollectionRepo(manifest, collection, database);
       for (const rec of await repo.active().toArray()) {
         const patch = fn(rec as unknown as Record<string, unknown>);
         if (patch) await repo.update(rec.id, patch);
