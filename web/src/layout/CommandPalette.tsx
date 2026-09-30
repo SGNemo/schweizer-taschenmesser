@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
 import type { ResultRow } from '@/core/ai/query/types';
+import { useSetupHost } from '@/core/setup/host';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, type IconName } from '@/ui';
@@ -56,6 +57,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const [active, setActive] = useState(0);
   const listId = useId();
   const toast = useUiStore((s) => s.toast);
+  const openSetup = useSetupHost((s) => s.openWizard);
 
   const commands = useMemo<Command[]>(() => {
     const go = (to: string) => () => void navigate(to);
@@ -64,8 +66,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       ...moduleItems.map((i) => ({ id: i.to, label: i.label, icon: i.icon, run: go(i.to) })),
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
+      { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
     ];
-  }, [navigate, moduleItems]);
+  }, [navigate, moduleItems, openSetup]);
 
   const hits = useSearchHits(query);
   const hasModel = config ? isAiConfigured(config) : false;

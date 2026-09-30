@@ -96,8 +96,10 @@ export async function hasClient(id: string): Promise<boolean> {
 export async function connectOAuth(
   def: ConnectorDef,
   featureIds: string[],
+  opts: { signal?: AbortSignal } = {},
 ): Promise<ConnectorStatus> {
   const platform = getPlatform();
+  const { signal } = opts;
   try {
     if (!def.oauth || !platform.oauth.supported) throw new ConnectorError('unsupported');
     const { clientId, clientSecret } = await loadClient(def.id);
@@ -109,6 +111,7 @@ export async function connectOAuth(
     const verifier = createVerifier();
     const state = randomToken(24);
     const { redirectUri, wait } = await platform.oauth.start();
+    if (signal?.aborted) return await loadStatus(def.id);
     await platform.app.openUrl(
       buildAuthUrl({
         endpoints: def.oauth,
@@ -121,16 +124,29 @@ export async function connectOAuth(
     );
     let code: string;
     try {
-      ({ code } = await wait(state));
+      // An abandoned login (the caller aborted): stop waiting and touch nothing – no token is
+      // exchanged and no status is written. The one-shot loopback listener times out on its own.
+      const waiting = wait(state);
+      waiting.catch(() => undefined);
+      const outcome = await new Promise<{ code: string } | 'aborted'>((resolve, reject) => {
+        if (signal?.aborted) return resolve('aborted');
+        signal?.addEventListener('abort', () => resolve('aborted'), { once: true });
+        waiting.then(resolve, reject);
+      });
+      if (outcome === 'aborted') return await loadStatus(def.id);
+      ({ code } = outcome);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       throw new ConnectorError(message.startsWith('denied') ? 'denied' : 'network', 'login');
     }
+    if (signal?.aborted) return await loadStatus(def.id);
     const tokens = await exchangeCode(
       { fetch: platform.fetch, endpoints: def.oauth, clientId, clientSecret },
       { code, verifier, redirectUri },
     );
     if (!tokens.refreshToken) throw new ConnectorError('bad-response', 'no refresh token');
+    // Tokens are stored only for a login that was carried through to the end.
+    if (signal?.aborted) return await loadStatus(def.id);
     await platform.secrets.set(secretName(def.id, 'refresh'), tokens.refreshToken);
     forgetAccessToken(def.id);
     return await saveStatus(def.id, {

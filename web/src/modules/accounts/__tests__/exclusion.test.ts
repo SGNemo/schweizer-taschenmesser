@@ -59,6 +59,11 @@ describe('module definition', () => {
     expect(c).not.toHaveProperty('aiCreateDefaults');
   });
 
+  it('only offers its own setup step (no data, no AI, no widget)', () => {
+    expect(manifest.setupSteps?.map((s) => s.id)).toEqual(['accounts.vault']);
+    expect(manifest.aiSchema).toBeUndefined();
+  });
+
   it('is registered, off by default, and one of only three manifests without aiSchema', () => {
     expect(allManifests.map((m) => m.id)).toContain('accounts');
     expect(visibleManifests.find((m) => m.id === 'accounts')?.defaultEnabled).toBe(false);

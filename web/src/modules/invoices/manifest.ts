@@ -7,6 +7,7 @@ import { settings } from './settings';
 
 const manifest: ModuleManifest = {
   id: 'invoices',
+  requires: ['finance'],
   name: 'Rechnungen',
   icon: 'receipt',
   version: 1,
