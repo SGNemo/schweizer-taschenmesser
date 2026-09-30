@@ -41,19 +41,27 @@ export function Skeleton({
 export function EmptyState({
   icon,
   title,
+  compact,
   children,
 }: {
   /** Without an icon the empty state shows the (faded) Nemo fish. */
   icon?: IconName;
   title: string;
+  /** One-line variant for dashboard widgets and other small containers. */
+  compact?: boolean;
   children?: ReactNode;
 }) {
+  const mark = compact ? 22 : 28;
   return (
-    <div className={styles.empty}>
+    <div className={compact ? `${styles.empty} ${styles.emptyCompact}` : styles.empty}>
       <span className={styles.emptyMark}>
-        {icon ? <Icon name={icon} size={28} /> : <Logo size={36} />}
+        {icon ? <Icon name={icon} size={mark} /> : <Logo size={compact ? 22 : 36} />}
       </span>
-      <h2 className={styles.emptyTitle}>{title}</h2>
+      {compact ? (
+        <p className={styles.emptyTitle}>{title}</p>
+      ) : (
+        <h2 className={styles.emptyTitle}>{title}</h2>
+      )}
       {children}
     </div>
   );

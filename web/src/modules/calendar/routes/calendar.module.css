@@ -23,27 +23,6 @@
   font-size: var(--text-lg);
   text-transform: capitalize;
 }
-.segment {
-  display: inline-flex;
-  /* Pages are flex columns: keep the switch as wide as its buttons. */
-  align-self: flex-start;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  background: var(--surface);
-}
-.segment button {
-  min-height: var(--touch);
-  padding: 0 var(--space-4);
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-.segment button[aria-pressed='true'] {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-weight: 600;
-}
 
 /* Month grid */
 .month {

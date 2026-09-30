@@ -18,29 +18,37 @@
   display: inline-flex;
   /* Pages are flex columns: keep the switch as wide as its buttons. */
   align-self: flex-start;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--border-strong);
+  max-width: 100%;
+  overflow-x: auto;
+  gap: var(--space-hair);
+  padding: 4px;
   border-radius: var(--radius-full);
-  background: var(--surface);
+  background: var(--surface-2);
 }
 .segment button {
-  min-height: calc(var(--touch) - 8px);
+  min-height: 36px;
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-full);
   background: none;
-  color: inherit;
+  color: var(--text);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color var(--dur) var(--ease);
+}
+/* Touch devices get the full 44 px target. */
+@media (pointer: coarse) {
+  .segment button {
+    min-height: calc(var(--touch) - 8px);
+  }
 }
 .segment button:hover:not([aria-pressed='true']) {
-  background: var(--surface-2);
+  color: var(--accent);
 }
 .segment button[aria-pressed='true'] {
-  background: var(--accent-gradient);
-  color: var(--accent-contrast);
-  font-weight: 600;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-1);
 }
 .split {
   display: flex;
@@ -64,6 +72,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+/* One-line "add" form: field grows, button keeps its width. */
+.inlineForm {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.inlineForm > :first-child {
+  flex: 1;
+  min-width: 0;
 }
 .list {
   list-style: none;
@@ -97,7 +116,7 @@
   justify-content: center;
 }
 .title {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 .muted {
@@ -121,9 +140,6 @@
   color: var(--text-muted);
   font: inherit;
   font-size: var(--text-sm);
-  transition:
-    background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease);
 }
 button.chip {
   min-height: var(--touch);
@@ -133,7 +149,7 @@ button.chip[aria-pressed='true'] {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .stat {
   display: flex;
@@ -145,7 +161,7 @@ button.chip[aria-pressed='true'] {
 }
 .statValue {
   font-size: var(--text-xl);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: var(--font-num);
 }
 .progress {
@@ -157,16 +173,55 @@ button.chip[aria-pressed='true'] {
 }
 .progressBar {
   height: 100%;
-  background: var(--accent-gradient);
+  width: 100%;
+  background: var(--accent);
   border-radius: inherit;
-  transition: width var(--dur-slow) var(--ease-out);
+  /* Filled via scaleX (see Progress) so the change animates on the compositor only. */
+  transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 .progressOver {
   background: var(--danger);
 }
 .overdue {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
+}
+
+/* Dashboard widget body (WidgetList) */
+.widgetList {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.widgetItem {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.widgetItemTitle {
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+.widgetMeta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  font-variant-numeric: var(--font-num);
+}
+.widgetSub {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-top: calc(-1 * var(--space-1));
+}
+.widgetSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
 }
 
 /* Card grid: only when the page container is wide enough for two columns. */
@@ -229,5 +284,11 @@ button.chip[aria-pressed='true'] {
   from {
     opacity: 0;
     transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .list > *,
+  .grid > * {
+    animation-delay: 0ms;
   }
 }

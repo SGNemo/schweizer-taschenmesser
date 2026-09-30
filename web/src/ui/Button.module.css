@@ -7,13 +7,10 @@
   padding: 0 var(--space-4);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  font-weight: 550;
+  font-weight: var(--weight-medium);
   cursor: pointer;
   text-decoration: none;
-  transition:
-    background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease),
-    transform var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 @media (hover: hover) {
   .btn:hover:not(:disabled) {
@@ -28,11 +25,11 @@
   cursor: not-allowed;
 }
 .primary {
-  background: var(--accent-gradient);
+  background: var(--accent);
   color: var(--accent-contrast);
-  box-shadow:
-    var(--shadow-1),
-    inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
 }
 .secondary {
   background: var(--surface);

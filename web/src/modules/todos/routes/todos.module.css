@@ -63,8 +63,9 @@
 }
 .check {
   flex: none;
-  width: 1.4rem;
-  height: 1.4rem;
+  /* 24 px: WCAG 2.2 minimum target for inline controls. */
+  width: 1.5rem;
+  height: 1.5rem;
   accent-color: var(--accent);
   cursor: pointer;
 }

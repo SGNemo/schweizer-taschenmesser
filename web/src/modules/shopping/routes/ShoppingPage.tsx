@@ -3,7 +3,17 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, Checkbox, EmptyState, Icon, IconButton, PageHeader } from '@/ui';
+import {
+  Button,
+  Card,
+  Checkbox,
+  EmptyState,
+  Icon,
+  IconButton,
+  PageHeader,
+  patternStyles,
+  TextField,
+} from '@/ui';
 import { isDuplicate, parseEntry, sortItems } from '../logic';
 import { clearBought, itemRepo } from '../repo';
 import { StartDataButton } from '@/core/importer/StartDataButton';
@@ -40,27 +50,17 @@ export default function ShoppingPage() {
           e.preventDefault();
           void add();
         }}
-        style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}
+        className={patternStyles.inlineForm}
       >
-        <input
+        <TextField
           ref={input}
-          aria-label={t.shopping.addLabel}
+          label={t.shopping.addLabel}
+          labelHidden
           placeholder={t.shopping.placeholder}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          style={{
-            flex: 1,
-            minHeight: 'var(--touch)',
-            padding: '0 var(--space-3)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--surface)',
-            color: 'inherit',
-          }}
         />
-        <Button type="submit" variant="primary">
-          {t.actions.add}
-        </Button>
+        <Button type="submit">{t.actions.add}</Button>
       </form>
 
       {items && items.length === 0 ? (

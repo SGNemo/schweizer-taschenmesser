@@ -6,7 +6,7 @@ import { useWeekStart } from '@/core/settings/core';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, SplitView, useSplitView } from '@/ui';
+import { Button, Icon, IconButton, Segmented, SplitView, useSplitView } from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
@@ -112,13 +112,12 @@ export default function CalendarPage() {
         <h2 className={styles.title} aria-live="polite">
           {viewTitle(view, date, weekStart)}
         </h2>
-        <div className={styles.segment} role="group" aria-label={t.calendar.view}>
-          {VIEWS.map((v) => (
-            <button key={v} type="button" aria-pressed={v === view} onClick={() => go({ view: v })}>
-              {VIEW_LABEL[v]}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label={t.calendar.view}
+          value={view}
+          options={VIEWS.map((v) => ({ value: v, label: VIEW_LABEL[v] }))}
+          onChange={(v) => go({ view: v })}
+        />
       </div>
 
       <div className={styles.body}>

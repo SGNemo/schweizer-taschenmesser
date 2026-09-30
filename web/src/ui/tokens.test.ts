@@ -64,19 +64,17 @@ describe('design tokens', () => {
         text('--warning', '--warning-soft');
         text('--accent-2', '--surface');
       });
-      it('page background (both gradient ends) and button text', () => {
-        const ends = t['--bg-gradient']!.match(/#[0-9a-f]{6}/g)!;
-        for (const end of ends) {
-          expect(ratio(t['--text']!, end)).toBeGreaterThanOrEqual(4.5);
-          expect(ratio(t['--text-muted']!, end)).toBeGreaterThanOrEqual(4.5);
-          expect(ratio(t['--accent']!, end)).toBeGreaterThanOrEqual(4.5);
-        }
-        text('--accent-contrast', '--accent-grad-from');
-        text('--accent-contrast', '--accent-grad-to');
+      it('page background and text on the filled accent', () => {
+        text('--text', '--bg');
+        text('--text-muted', '--bg');
+        text('--accent', '--bg');
+        text('--accent-contrast', '--accent');
       });
       it('non-text UI (form borders, focus ring, chart series) reaches 3:1', () => {
         text('--border-strong', '--surface', 3);
+        text('--border-strong', '--surface-2', 3); // switch off-track, controls on quiet areas
         text('--focus', '--surface', 3);
+        text('--focus', '--surface-2', 3);
         text('--viz-1', '--surface', 3);
         text('--viz-2', '--surface', 3);
       });
@@ -99,11 +97,10 @@ describe('design tokens', () => {
           ratio(pair('--accent')[i]!, pair('--accent-soft')[i]!),
           `${label} on soft`,
         ).toBeGreaterThanOrEqual(4.5);
-        for (const end of ['--accent-grad-from', '--accent-grad-to'])
-          expect(
-            ratio(pair('--accent-contrast')[i]!, pair(end)[i]!),
-            `${label} ${end}`,
-          ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          ratio(pair('--accent-contrast')[i]!, pair('--accent')[i]!),
+          `${label} button text`,
+        ).toBeGreaterThanOrEqual(4.5);
       }
     }
   });

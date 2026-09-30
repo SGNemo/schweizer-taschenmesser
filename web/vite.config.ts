@@ -32,8 +32,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         categories: ['productivity', 'utilities'],
-        background_color: '#0b1d2b',
-        theme_color: '#0f3440',
+        background_color: '#fbf8f3',
+        theme_color: '#fbf8f3',
         // Android "Teilen" → neutral page where the destination is chosen (Merkliste, Notiz, ToDo).
         // `/bookmarks?title&text&url` keeps working for old bookmarks/links.
         share_target: {

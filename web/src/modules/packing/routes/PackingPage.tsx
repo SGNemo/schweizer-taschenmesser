@@ -13,7 +13,9 @@ import {
   Icon,
   IconButton,
   PageHeader,
+  patternStyles,
   Progress,
+  TextField,
 } from '@/ui';
 import { ListEditor, type ListTarget } from '../components/ListEditor';
 import { nextOrder, progress, sortItems } from '../logic';
@@ -86,26 +88,16 @@ export default function PackingPage() {
               e.preventDefault();
               void addItem();
             }}
-            style={{ display: 'flex', gap: 'var(--space-2)', margin: 'var(--space-3) 0' }}
+            className={patternStyles.inlineForm}
           >
-            <input
-              aria-label={t.packing.addItem}
+            <TextField
+              label={t.packing.addItem}
+              labelHidden
               placeholder={t.packing.itemPlaceholder}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              style={{
-                flex: 1,
-                minHeight: 'var(--touch)',
-                padding: '0 var(--space-3)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--surface)',
-                color: 'inherit',
-              }}
             />
-            <Button type="submit" variant="primary">
-              {t.actions.add}
-            </Button>
+            <Button type="submit">{t.actions.add}</Button>
           </form>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {items.map((i) => (

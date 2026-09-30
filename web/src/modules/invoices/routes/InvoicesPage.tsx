@@ -6,7 +6,7 @@ import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { dueTone } from '@/core/time/due';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, EmptyState, Icon } from '@/ui';
+import { Button, Card, EmptyState, Icon, Segmented } from '@/ui';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { markOpen, markPaid } from '../actions';
 import { openTotal, sortInvoices } from '../logic';
@@ -55,13 +55,15 @@ export default function InvoicesPage() {
             {formatMoney(openTotal(invoices ?? []))}
           </span>
         </div>
-        <div className={styles.segment} role="group" aria-label={t.invoices.view}>
-          {(['open', 'paid'] as const).map((v) => (
-            <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)}>
-              {t.invoices[v]}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label={t.invoices.view}
+          value={view}
+          options={[
+            { value: 'open', label: t.invoices.open },
+            { value: 'paid', label: t.invoices.paid },
+          ]}
+          onChange={setView}
+        />
       </div>
 
       {invoices && shown.length === 0 ? (
