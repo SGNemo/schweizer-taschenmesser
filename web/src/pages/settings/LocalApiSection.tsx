@@ -15,6 +15,7 @@ import {
   type Grant,
 } from '@/core/localapi/config';
 import { clearLog, lastUsed, useAccessLog } from '@/core/localapi/log';
+import { buildApiPrompt } from '@/core/localapi/prompt';
 import { useLocalApiStatus } from '@/core/localapi/service';
 import { useModuleStates } from '@/core/modules/activation';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
@@ -160,6 +161,22 @@ export function LocalApiSection() {
             {portError}
           </p>
         ) : null}
+
+        <div className={styles.row}>
+          <Button
+            onClick={() =>
+              void getPlatform()
+                .clipboard.writeText(buildApiPrompt(config.port))
+                .then(
+                  () => toast(t.localApi.promptCopied),
+                  () => toast(t.dataApi.copyFailed),
+                )
+            }
+          >
+            {t.localApi.copyPrompt}
+          </Button>
+          <span className={styles.muted}>{t.localApi.copyPromptHint}</span>
+        </div>
 
         <h3>{t.localApi.tokens}</h3>
         {config.tokens.length === 0 ? <p className={styles.muted}>{t.localApi.noTokens}</p> : null}

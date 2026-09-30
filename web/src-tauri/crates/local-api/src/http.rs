@@ -1,7 +1,7 @@
 //! A deliberately small HTTP/1.1 request reader: one request per connection, header block limited,
 //! body only with a single `Content-Length` (no chunked encoding), everything else rejected.
 
-use std::io::{ErrorKind, Read};
+use std::io::{ErrorKind, Read, Write};
 
 const MAX_HEADERS: usize = 32;
 
@@ -74,7 +74,7 @@ fn find_head_end(buf: &[u8]) -> Option<usize> {
 }
 
 pub fn read_request(
-    stream: &mut impl Read,
+    stream: &mut (impl Read + Write),
     max_header_bytes: usize,
     max_body_bytes: usize,
 ) -> Result<Request, ReadError> {
@@ -160,6 +160,14 @@ pub fn read_request(
     }
     let mut body = buf[head_end..].to_vec();
     body.truncate(length);
+    // curl and Windows PowerShell wait up to a second for this before they send a larger body.
+    let expects_continue =
+        matches!(request.header("expect"), Ok(Some(v)) if v.eq_ignore_ascii_case("100-continue"));
+    if expects_continue && body.len() < length {
+        stream
+            .write_all(b"HTTP/1.1 100 Continue\r\n\r\n")
+            .map_err(|_| ReadError::Closed)?;
+    }
     while body.len() < length {
         let want = (length - body.len()).min(chunk.len());
         let n = stream.read(&mut chunk[..want]).map_err(io_error)?;
@@ -176,8 +184,80 @@ pub fn read_request(
 mod tests {
     use super::*;
 
+    /// In-memory stream: reads `input`, records what the reader writes back.
+    struct Fake<'a> {
+        input: &'a [u8],
+        written: Vec<u8>,
+    }
+
+    impl Read for Fake<'_> {
+        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+            self.input.read(buf)
+        }
+    }
+
+    impl Write for Fake<'_> {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.written.write(buf)
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
     fn read(raw: &str) -> Result<Request, ReadError> {
-        read_request(&mut raw.as_bytes(), 16 * 1024, 64)
+        let mut stream = Fake {
+            input: raw.as_bytes(),
+            written: Vec::new(),
+        };
+        read_request(&mut stream, 16 * 1024, 64)
+    }
+
+    #[test]
+    fn answers_expect_continue_before_reading_the_body() {
+        let mut stream = Fake {
+            input: b"POST / HTTP/1.1\r\nExpect: 100-continue\r\nContent-Length: 2\r\n\r\n{}",
+            written: Vec::new(),
+        };
+        // The whole input arrives in one read here, so the body is already there: no 100 needed.
+        assert_eq!(read_request(&mut stream, 1024, 64).unwrap().body, b"{}");
+        assert!(stream.written.is_empty());
+
+        let mut split = Split {
+            parts: vec![
+                b"POST / HTTP/1.1\r\nExpect: 100-continue\r\nContent-Length: 2\r\n\r\n".to_vec(),
+                b"{}".to_vec(),
+            ],
+            written: Vec::new(),
+        };
+        assert_eq!(read_request(&mut split, 1024, 64).unwrap().body, b"{}");
+        assert_eq!(split.written, b"HTTP/1.1 100 Continue\r\n\r\n");
+    }
+
+    /// Delivers the input in separate reads, like a client that waits for `100 Continue`.
+    struct Split {
+        parts: Vec<Vec<u8>>,
+        written: Vec<u8>,
+    }
+
+    impl Read for Split {
+        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+            if self.parts.is_empty() {
+                return Ok(0);
+            }
+            let part = self.parts.remove(0);
+            buf[..part.len()].copy_from_slice(&part);
+            Ok(part.len())
+        }
+    }
+
+    impl Write for Split {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.written.write(buf)
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
     }
 
     #[test]

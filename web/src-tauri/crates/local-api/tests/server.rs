@@ -294,3 +294,30 @@ fn stop_frees_the_port() {
     server.stop();
     assert!(TcpStream::connect(bind_addr(port)).is_err());
 }
+
+#[test]
+fn large_bodies_with_expect_continue_do_not_wait() {
+    let (_slot, port, _) = start(Limits::default());
+    let body = format!("{{\"items\":[\"{}\"]}}", "x".repeat(4000));
+    let mut stream = TcpStream::connect(bind_addr(port)).unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(2)))
+        .unwrap();
+    stream
+        .write_all(
+            format!(
+                "POST /v1/todos/import HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{}Content-Type: application/json\r\nExpect: 100-continue\r\nContent-Length: {}\r\n\r\n",
+                auth(),
+                body.len()
+            )
+            .as_bytes(),
+        )
+        .unwrap();
+    let mut first = [0u8; 25];
+    stream.read_exact(&mut first).unwrap();
+    assert_eq!(&first, b"HTTP/1.1 100 Continue\r\n\r\n");
+    stream.write_all(body.as_bytes()).unwrap();
+    let mut out = String::new();
+    let _ = stream.read_to_string(&mut out);
+    assert!(out.starts_with("HTTP/1.1 200"), "{out}");
+}
