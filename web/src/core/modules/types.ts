@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
 import type { ExternalEvent } from '@/core/connectors/types';
+import type { PlatformKind } from '@/core/platform/types';
 import type { OnboardingDef } from '@/core/importer/types';
 import type { IconName } from '@/ui/icons';
 
@@ -255,6 +256,11 @@ export interface ModuleManifest {
    * hold secrets (`accounts`, which is also blocked by id in `core/dataapi/scope.ts`).
    */
   dataApi?: false;
+  /**
+   * Platforms the module exists on (library, navigation, dashboard, services). Omitted = all.
+   * Filtered by `availableManifests()` in the registry.
+   */
+  platforms?: PlatformKind[];
   /** Enabled without user action on a fresh install. */
   defaultEnabled: boolean;
   /** Sort key for navigation and library (lower first, default 100). */

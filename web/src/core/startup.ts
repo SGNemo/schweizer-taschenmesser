@@ -1,6 +1,6 @@
 import { loadModuleStates } from '@/core/modules/activation';
 import { runMigrations } from '@/core/modules/migrate';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 
 /** One-time app start work: storage persistence and pending module migrations. */
 export async function initCore(): Promise<void> {
@@ -10,7 +10,7 @@ export async function initCore(): Promise<void> {
     // Best effort only.
   }
   const states = await loadModuleStates();
-  for (const m of visibleManifests) {
+  for (const m of availableManifests()) {
     if (states[m.id]) await runMigrations(m);
   }
 }

@@ -5,7 +5,7 @@
  */
 import { liveQuery } from 'dexie';
 import { create } from 'zustand';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
 import type { LocalApiRequest } from '@/core/platform/types';
 import { loadConfig, serverTokens, type LocalApiConfig } from './config';
@@ -22,7 +22,7 @@ export interface LocalApiStatus {
 export const useLocalApiStatus = create<LocalApiStatus>(() => ({ state: 'off' }));
 
 async function onRequest(req: LocalApiRequest): Promise<{ status: number; body: string }> {
-  const result = await handleRequest(req, { manifests: visibleManifests });
+  const result = await handleRequest(req, { manifests: availableManifests() });
   await appendLog(result.log).catch(() => undefined);
   return { status: result.status, body: JSON.stringify(result.body) };
 }

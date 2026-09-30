@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo } from 'react';
 import { Navigate, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
@@ -23,7 +23,7 @@ function ModuleDisabled() {
 }
 
 export function buildRoutes(states: ModuleStates): RouteObject[] {
-  const moduleRoutes = visibleManifests.flatMap((m) =>
+  const moduleRoutes = availableManifests().flatMap((m) =>
     states[m.id]
       ? m.routes.map((r) => {
           const Cmp = lazyComponent(r.component);

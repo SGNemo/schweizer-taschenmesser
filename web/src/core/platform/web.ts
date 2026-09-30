@@ -1,7 +1,7 @@
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
-import type { PlatformService, SaveFileRequest } from './types';
+import type { PlatformKind, PlatformService, SaveFileRequest } from './types';
 
 /** Injected at build time from `web/package.json` (see vite.config.ts). */
 declare const __APP_VERSION__: string;
@@ -54,11 +54,22 @@ export function sensitiveClipboard(io: {
   };
 }
 
+/** E2E builds only: lets a browser test pose as another platform (`localStorage.__tmPlatformKind`). */
+function e2eKind(): PlatformKind {
+  try {
+    const v = localStorage.getItem('__tmPlatformKind');
+    if (v === 'desktop' || v === 'android') return v;
+  } catch {
+    // Storage blocked: stay a plain browser.
+  }
+  return 'web';
+}
+
 const unsupported = (): Promise<never> => Promise.reject(new Error('Not available in the browser'));
 
 export function createWebPlatform(): PlatformService {
   return {
-    kind: 'web',
+    kind: import.meta.env.MODE === 'e2e' ? e2eKind() : 'web',
     isNative: false,
     fetch: (input, init) => fetch(input, init),
     notifications: localNotificationService,

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Dialog, Icon } from '@/ui';
@@ -11,7 +11,7 @@ export function QuickAdd() {
   const setOpen = useUiStore((s) => s.setQuickAddOpen);
   const states = useModuleStates();
 
-  const actions = visibleManifests
+  const actions = availableManifests()
     .filter((m) => states?.[m.id])
     .flatMap((m) => (m.contributions?.quickAdd ?? []).map((a) => ({ ...a, icon: m.icon })));
 

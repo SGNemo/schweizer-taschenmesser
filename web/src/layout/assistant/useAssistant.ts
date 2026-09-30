@@ -6,7 +6,7 @@ import type { ResultRow } from '@/core/ai/query/types';
 import { db } from '@/core/db/db';
 import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import { today } from '@/core/time/dates';
 
 export type AnswerState =
@@ -29,7 +29,7 @@ export function useAssistant() {
     const [config, states] = await Promise.all([loadAiConfig(), loadModuleStates()]);
     const response = await ask(question, {
       manifests: activeManifests(states),
-      known: visibleManifests,
+      known: availableManifests(),
       today: today(),
       provider: await createRouterProvider(config),
       database: db,

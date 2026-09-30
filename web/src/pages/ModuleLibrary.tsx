@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/batches';
 import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
-import { visibleManifests } from '@/core/modules/registry';
+import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from '@/core/modules/types';
 import { t } from '@/strings';
 import { Badge, Button, Card, Dialog, Icon } from '@/ui';
@@ -35,7 +35,7 @@ export function ModuleLibrary() {
         </div>
       </div>
       <ul className={`${styles.list} ${styles.grid}`}>
-        {visibleManifests.map((m) => {
+        {availableManifests().map((m) => {
           const enabled = states?.[m.id] ?? false;
           return (
             <Card as="li" key={m.id} className={styles.moduleCard} data-testid={`module-${m.id}`}>
