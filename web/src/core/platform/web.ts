@@ -1,7 +1,7 @@
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
-import type { PlatformService, SaveFileRequest } from './types';
+import type { DesktopService, PlatformService, SaveFileRequest, ShareService } from './types';
 
 /** Injected at build time from `web/package.json` (see vite.config.ts). */
 declare const __APP_VERSION__: string;
@@ -56,6 +56,32 @@ export function sensitiveClipboard(io: {
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('Not available in the browser'));
 
+/** The DOM event the native shell dispatches into the capture window each time it opens. */
+export const CAPTURE_OPEN_EVENT = 'tm-capture-open';
+
+export const onCaptureOpenEvent = (callback: () => void): (() => void) => {
+  window.addEventListener(CAPTURE_OPEN_EVENT, callback);
+  return () => window.removeEventListener(CAPTURE_OPEN_EVENT, callback);
+};
+
+/** No tray, hotkey or autostart in a browser; the capture page itself still works there. */
+export const webDesktop: DesktopService = {
+  supported: false,
+  setHotkey: async () => 'failed',
+  setCloseToTray: async () => undefined,
+  setTrayLabels: async () => undefined,
+  setAutostart: async () => undefined,
+  autostart: async () => false,
+  info: async () => ({ portable: false }),
+  showMain: async () => undefined,
+  hideCapture: async () => undefined,
+  readClipboard: () => navigator.clipboard.readText().catch(() => undefined),
+  onCaptureOpen: onCaptureOpenEvent,
+};
+
+/** The PWA receives shares through its web manifest (`share_target`), not through this service. */
+export const webShare: ShareService = { supported: false, takePending: async () => undefined };
+
 export function createWebPlatform(): PlatformService {
   return {
     kind: 'web',
@@ -109,6 +135,8 @@ export function createWebPlatform(): PlatformService {
       import.meta.env.MODE === 'e2e'
         ? createFakeLocalApi()
         : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    desktop: webDesktop,
+    share: webShare,
     lifecycle: { onBackground: onPageHidden },
   };
 }

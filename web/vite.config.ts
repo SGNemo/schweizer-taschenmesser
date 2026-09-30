@@ -42,6 +42,7 @@ export default defineConfig({
           params: { title: 'title', text: 'text', url: 'url' },
         },
         shortcuts: [
+          { name: 'Schnell erfassen', url: '/?capture=1' },
           { name: 'Merkzettel anlegen', url: '/bookmarks?new=1' },
           { name: 'Suchen', url: '/?search=1' },
         ],
@@ -56,6 +57,15 @@ export default defineConfig({
       },
     }),
   ],
+  // Two entries: the app and the small quick-capture window of the desktop shell (capture.html).
+  build: {
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        capture: fileURLToPath(new URL('./capture.html', import.meta.url)),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
