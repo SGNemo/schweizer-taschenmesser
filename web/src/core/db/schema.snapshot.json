@@ -1,9 +1,10 @@
 {
-  "version": 12,
+  "version": 13,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
     "_blobs": "key",
+    "_conflicts": "++id, at, status",
     "_imports": "id, createdAt, moduleId",
     "_meta": "key",
     "_modules": "id, updatedAt",

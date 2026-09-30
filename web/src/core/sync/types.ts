@@ -30,7 +30,43 @@ export interface SyncAdapter {
 }
 
 export type SyncErrorCode =
-  'network' | 'unauthorized' | 'server' | 'decrypt' | 'no-key' | 'unsupported';
+  | 'network'
+  | 'unauthorized'
+  /** This device was locked out from another device (its token was revoked). */
+  | 'revoked'
+  | 'rate-limited'
+  | 'server'
+  | 'decrypt'
+  | 'no-key'
+  | 'unsupported';
+
+/** A device registered on the sync server. */
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  createdAt: number;
+  lastSeenAt: number | null;
+  lastPushAt: number | null;
+  lastPullAt: number | null;
+  revokedAt: number | null;
+  /** True for the device that asked. */
+  current: boolean;
+}
+
+export interface ServerInfo {
+  protocol: number;
+  features: string[];
+  role: 'admin' | 'device';
+  deviceId: string | null;
+}
+
+export interface ServerStatus {
+  epoch: string;
+  fields: number;
+  records: number;
+  bytes: number;
+  devices: number;
+}
 
 export class SyncError extends Error {
   constructor(
