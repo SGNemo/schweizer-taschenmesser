@@ -276,7 +276,15 @@ function clown(p, theme) {
   const bh = (p.finBase ?? 72) / 2;
   const tipX = bx + tl * (p.finTip ?? 0.66);
   const fh = (p.finHeight ?? 230) / 2;
-  const fanTail = `M${bx + 4} ${oc - bh}Q${bx - 4} ${oc} ${bx + 4} ${oc + bh}L${tipX} ${oc + fh}C${bx + tl * 0.92} ${oc + fh} ${bx + tl + 6} ${oc + fh * 0.55} ${bx + tl + 6} ${oc}C${bx + tl + 6} ${oc - fh * 0.55} ${bx + tl * 0.92} ${oc - fh} ${tipX} ${oc - fh}Z`;
+  // the straight edges run into the outer arc through rounded tips (quadratic corners)
+  const rt = p.finRound ?? 34; // tip rounding
+  const ex = bx + tl + 6;
+  const fanTail =
+    `M${bx + 4} ${oc - bh}Q${bx - 4} ${oc} ${bx + 4} ${oc + bh}` +
+    `L${tipX - rt} ${oc + fh - rt * 0.45}Q${tipX} ${oc + fh} ${tipX + rt} ${oc + fh}` +
+    `C${bx + tl * 0.94} ${oc + fh} ${ex} ${oc + fh * 0.6} ${ex} ${oc}` +
+    `C${ex} ${oc - fh * 0.6} ${bx + tl * 0.94} ${oc - fh} ${tipX + rt} ${oc - fh}` +
+    `Q${tipX} ${oc - fh} ${tipX - rt} ${oc - fh + rt * 0.45}Z`;
   const tail = p.tailStyle === 'fan' ? fanTail : `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
   // dorsal fin above the x-height letters (e, m, o): spiny front, soft round back; the tall N is the head side
   const xh = -150;
