@@ -19,6 +19,7 @@ Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser.
 4. **Updates:** Einstellungen → App-Updates. Die App legt zuerst eine Sicherungskopie an, lädt die neue `.exe`,
    prüft die Signatur, ersetzt sich selbst und startet neu (bei einem Fehler bleibt die alte Version erhalten).
    Dafür braucht der Ordner der `.exe` Schreibrechte.
+   Hinweis: Version 0.2.x (Name „Taschenmesser“) kann sich nicht mehr selbst aktualisieren, weil neue Releases keine `Taschenmesser-…`-Dateien mehr enthalten. Einmal die aktuelle `Nemo-Portable.exe` bzw. `Nemo.apk` laden und installieren (Daten über Backup oder Sync mitnehmen).
 5. **Wo liegen meine Daten?** Standardmäßig im Benutzerprofil (`%LOCALAPPDATA%\io.github.sgnemo.taschenmesser`), nicht
    neben der `.exe`; du kannst die Datei also jederzeit austauschen oder verschieben. **Portabler Modus (z. B. USB-Stick):**
    Lege einen leeren Ordner `data` neben die `.exe` – dann liegen die App-Daten dort statt im Benutzerprofil (die

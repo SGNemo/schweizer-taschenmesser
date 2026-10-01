@@ -7,7 +7,7 @@ Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per 
 ### Release 0.3.1 prüfen
 R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release-Seite `v0.3.1`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.1`. ☐
 R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
-R3. *In-App-Update:* eine 0.3.0-Installation (Windows-Portable und Android) prüft Updates und aktualisiert auf 0.3.1 (`releases/latest` zeigt auf `v0.3.1`; `latest.json` verweist auf die `Taschenmesser-*`-Datei). Daten bleiben erhalten. Zusätzlich einmal von 0.2.0 aus. ☐
+R3. *In-App-Update:* eine 0.3.x-Installation (Windows-Portable und Android) prüft Updates und aktualisiert auf das erste Release ohne `Taschenmesser-*`-Dateien (`latest.json` verweist auf `Nemo-Portable.exe`, Android nimmt `Nemo.apk`). Daten bleiben erhalten. Von 0.2.x aus ist kein Selbst-Update mehr möglich (nur Neuinstallation). ☐
 R4. *Sync-Tresor v2 (Argon2id) mit einem 0.2.0-Gerät:* zweites, altes Gerät am selben Server; prüfen, ob ein älterer Tresor weiter entschlüsselt. ☐
 R5. Datenträger-Modul D1–D16 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
 
@@ -108,7 +108,7 @@ H3. *Sync der Anordnung:* auf Gerät A Reihenfolge/Größe/Sichtbarkeit ändern,
 H4. *Status-Widgets (Windows):* Datenträger zeigt Füllstände, Systeminfo CPU/RAM/Akku, Tresor nur gesperrt/entsperrt (nie Einträge). ☐
 
 ### Nemo: Umbenennung und Design
-N1. *Windows-Portable starten (frische Datei und als Update):* Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt bewusst noch auf `Taschenmesser-Portable.exe`), Daten bleiben erhalten.
+N1. *Windows-Portable starten (frische Datei und als Update):* Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt ab dem nächsten Release auf `Nemo-Portable.exe`), Daten bleiben erhalten.
 N2. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
 N3. *Hell / Dunkel / System, Akzentfarben:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
 N4. *Reduzierte Bewegung:* Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
