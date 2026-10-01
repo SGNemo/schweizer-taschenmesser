@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { getManifest, visibleManifests } from '@/core/modules/registry';

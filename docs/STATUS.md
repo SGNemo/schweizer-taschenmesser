@@ -20,6 +20,16 @@ Letztes Release: `v0.3.0-beta.1` am 2026-09-30 (Pre-Release, auf `main`; Nemo-*-
 - Module: Fahrzeug (Tanken, Verbrauch, TÜV/Service), Journal/Tagebuch, Garantie-/Belegverwaltung mit Foto, Zwischenablage-Verlauf (Passwörter ausschließen), Text-Snippets, Autostart-Übersicht (nur Anzeige), Medikamenten-/Wasser-Erinnerung, Watchlist/Leseliste, Putzplan, Sparziele (Haushaltsbuch), Reise (Packlisten, Reisedokumente, Zeitzonen), Speedtest/WLAN-Name (Systeminfo).
 - Werkzeuge: Farbwähler/Kontrast-Check, Datei-Prüfsumme + Text-Diff, WLAN-QR, Regex-Tester, Notenrechner, BMI/Kalorien (ohne Speicherung), Massen-Umbenennen, Bild-Farben extrahieren, PDF komprimieren.
 - Zeiterfassung: Stundensätze/Beträge, Projektfarben.
+- **Build-/CI-Tempo (Runde `chore/build-performance`, nicht umgesetzt; Zahlen in [`perf/BUILD-BASELINE-2026-10-01.md`](perf/BUILD-BASELINE-2026-10-01.md)):**
+  - Vitest ohne Testisolation (`--no-isolate`): lokal 222 s → 27 s, aber 5 Tests brauchen eine leere, gemeinsame Dexie-Datenbank je Datei. Möglich für die reinen Logik-Tests oder mit einem DB-Reset je Datei; gibt die Isolation je Datei auf – Entscheidung nötig.
+  - Der größte Rest der Unit-Testzeit ist Import: `core/db/db.ts` zieht alle Manifeste, jede Testdatei wertet ~1200 Module neu aus (73 % der Zeit). Leichtere Test-Einstiege wären eine Architekturänderung.
+  - `retries: 1` in beiden Playwright-Konfigurationen (CI) kann instabile Tests verdecken. In den ausgewerteten Läufen wurde kein Test wiederholt; Empfehlung: auf 0 setzen und Auffälligkeiten beheben (Entscheidung).
+  - E2E nur auf `develop`/nächtlich mit kleiner PR-Auswahl: seit dem Sharding nicht nötig (PR-Lauf ~ 5 Minuten) und würde die PR-Abdeckung senken.
+  - Android: die aarch64-Rust-Bibliothek wird zweimal gebaut (erst von `tauri android build`, dann von Gradle, je ~1 Minute). Ursache klären, z. B. mit `cargo build -vv` die Fingerprints vergleichen.
+  - `beforeBuildCommand: npm run build` führt im Windows- und Android-Job den Typecheck erneut aus (25–40 s). Bewusst belassen, damit Tag-Builds nie ohne Typprüfung entstehen.
+  - Release-Profil (fat LTO, `opt-level = "s"`) macht den Windows-Build zu 7 Minuten. Eine Änderung würde das Artefakt verändern; ein schnelleres Profil nur für Trockenläufe würde nicht mehr das echte Artefakt prüfen.
+  - Läufe von Feature-Branches starten ohne Rust-/Gradle-Cache (Cache-Scope je Branch): Trockenlauf des Release-Workflows besser von `develop` aus starten.
+  - Rust `[profile.dev] debug = "line-tables-only"`: ~ 20 % kleineres `target`, aber keine Zeitersparnis bei den kleinen Crates und Debugger ohne Variablen – nicht gesetzt. Außerdem: apt-Cache-Action für die Tauri-Bibliotheken (~ 30 s, neue Abhängigkeit) und eine kürzere Paketliste, jeweils erst messen.
 
 ## Nicht gebaut / bekannte Grenzen
 - Google-Drive-Sync-Adapter (nur `core/sync/adapters/googleDrive.stub.ts`), Binär-Anhänge im Sync, Tombstone-GC, Mehrmandanten-Server.

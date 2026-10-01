@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type { KeychainHeader } from '@/core/crypto';
 import { startAutoLock, type AutoLockDeps } from '../autolock';

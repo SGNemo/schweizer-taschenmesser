@@ -13,9 +13,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Decides whether anything but documentation changed. Used only to skip the heavy jobs on docs-only
+  # changes; the secret scan below always runs. Any doubt (no diff available, unreadable range, an error)
+  # means "code changed", and the heavy jobs also run when this job itself fails.
+  changes:
+    name: Which parts changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Does the change touch more than documentation?
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set +e
+          code=true
+          range=""
+          if [ "$EVENT" = "pull_request" ] && [ -n "$PR_BASE" ] && [ -n "$PR_HEAD" ]; then
+            range="$PR_BASE...$PR_HEAD"
+          elif [ "$EVENT" = "push" ] && [ -n "$PUSH_BEFORE" ] && [ "${PUSH_BEFORE//0/}" != "" ]; then
+            range="$PUSH_BEFORE..$PUSH_AFTER"
+          fi
+          if [ -n "$range" ] && files="$(git diff --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
+            # Documentation that no test reads. README.md, docs/AI-IMPORT.md and docs/user/installation.md
+            # are read by unit tests (prompt and download-link checks), so they count as code.
+            ignorable='^(docs/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
+            pinned='^docs/(AI-IMPORT\.md|user/installation\.md)$'
+            relevant="$( { printf '%s\n' "$files" | grep -E "$pinned"; printf '%s\n' "$files" | grep -Ev "$ignorable"; } )"
+            if [ -z "$relevant" ]; then code=false; fi
+            echo "Changed files:"; printf '%s\n' "$files"
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Heavy jobs needed: $code"
+
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,9 +82,14 @@ jobs:
           set -euo pipefail
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
-  web:
-    name: Web (lint, types, unit, E2E)
+  # The former single `web` job (about 14 min, one after the other) is split so that the pieces run side by
+  # side; `web` at the bottom of this group keeps the old check name for branch protection.
+  web-static:
+    name: Web static (format, lint, types)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web
@@ -58,7 +106,50 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
+
+  web-unit:
+    name: Web unit tests
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
       - run: npm test
+
+  # The Playwright suite is split into four slices, each on its own runner with the same two workers as
+  # before (more workers on four cores were slower per test and failed under load). Sharding is by test,
+  # so every test runs exactly once across the matrix.
+  web-e2e:
+    name: E2E app (shard ${{ matrix.shard }}/4)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
       - name: Playwright browser cache
         uses: actions/cache@v4
         id: pw-cache
@@ -70,19 +161,48 @@ jobs:
       # System libraries are needed even when the browser itself comes from the cache.
       - run: npx playwright install-deps chromium
         if: steps.pw-cache.outputs.cache-hit == 'true'
-      - name: E2E (app + accessibility)
-        run: npm run e2e:app
+      - name: E2E (app + accessibility), shard ${{ matrix.shard }} of 4
+        run: npx playwright test --shard=${{ matrix.shard }}/4
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: web/playwright-report
           retention-days: 7
 
+  # One stable check name for everything web: this is what the former single job was called.
+  # Skipped parts count as fine only when the change was documentation only.
+  web:
+    name: Web (lint, types, unit, E2E)
+    needs: [changes, web-static, web-unit, web-e2e]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: All web checks passed (or nothing but documentation changed)
+        env:
+          CODE: ${{ needs.changes.outputs.code }}
+          RESULTS: ${{ needs.web-static.result }} ${{ needs.web-unit.result }} ${{ needs.web-e2e.result }}
+        run: |
+          echo "code=$CODE results: $RESULTS"
+          if [ "$CODE" = "false" ]; then
+            for r in $RESULTS; do
+              [ "$r" = "skipped" ] || { echo "::error::Unexpected result '$r' on a documentation-only change."; exit 1; }
+            done
+            echo "Documentation-only change: the web checks were skipped on purpose."
+            exit 0
+          fi
+          for r in $RESULTS; do
+            [ "$r" = "success" ] || { echo "::error::A web check did not succeed (result '$r')."; exit 1; }
+          done
+
   server:
     name: Sync server
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: server
@@ -102,7 +222,10 @@ jobs:
 
   mcp:
     name: MCP wrapper (lint, types, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: mcp
@@ -122,7 +245,10 @@ jobs:
 
   e2e-sync:
     name: Multi-device sync E2E
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -153,7 +279,10 @@ jobs:
 
   rust:
     name: Native shell (fmt, clippy, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: web/src-tauri

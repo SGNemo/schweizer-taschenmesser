@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { connectors } from '@/core/connectors/registry';
 import { allManifests } from '@/core/modules/registry';

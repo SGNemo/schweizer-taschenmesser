@@ -31,8 +31,9 @@ Code, comments and commits are **English**; the UI is **German only** (all texts
 | `npm run build` / `npm run preview` | Production build / serve on :4173 |
 | `npm run typecheck` | tsc for app, service worker, node configs |
 | `npm run lint` | ESLint (incl. module isolation rules) |
+| `npm run check` | format + lint + typecheck in parallel with caches (fast everyday gate; CI runs the plain commands) |
 | `npm run format:check` / `format` | Prettier check / write (also in `server/`) |
-| `npm test` | Vitest unit + component tests |
+| `npm test` | Vitest unit + component tests (`test:changed` = only files touched since the last commit) |
 | `npm run e2e` | `e2e:app` (Playwright, projects `desktop-chrome` + `pixel-7`, builds with `--mode e2e`) followed by `e2e:sync` (`playwright.sync.config.ts`: serial multi-device tests against the real server started from `../server`, in-memory DB) |
 | `npm run gen:module -- <id> "<Name>"` | Generate a new module from `templates/module` |
 | `npm run db:bump` | Regenerate `src/core/db/schema.snapshot.json` + bump Dexie version |
@@ -95,6 +96,7 @@ Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON imp
 - Do not leave your own `vite preview` running on :4173 – Playwright reuses that port (`reuseExistingServer`) and would test a stale build. Stop it (`pkill -f "[v]ite preview"`) before `npm run e2e`.
 - Async bus handlers (finance booking) finish *after* the UI action; E2E waits for their effect (e.g. poll IndexedDB) before navigating.
 - E2E: a write is finished when the dialog that saved it has closed – wait for that (and for the UI to reflect it) before `goto`/`reload`. Fix the date with `page.clock.setFixedTime(...)`; `page.clock.install` + `fastForward` drives the notification scheduler. dnd-kit keyboard steps: wait for the live region (`[id^="DndLiveRegion"]`) between key presses.
+- Unit tests run in the `node` environment; a test that needs a DOM starts with `// @vitest-environment jsdom` (docs/HOW-TO.md → Tests & checks).
 - Vitest inlines `dexie` + `dexie-react-hooks` (`vitest.config.ts`); otherwise two Dexie copies break `useLiveQuery`.
 - TypeScript is pinned to 6.0.x (typescript-eslint supports `<6.1`); `baseUrl` is not used (paths are relative).
 - Controlled checkboxes update after an async DB write: in E2E use `click()` + `expect(...).toBeChecked()` instead of `check()` (Playwright's `check()` fails with "did not change its state").
