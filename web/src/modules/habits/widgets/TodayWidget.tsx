@@ -19,6 +19,7 @@ export default function TodayWidget() {
   const open = data?.habits.filter((h) => !data.done.has(h.id)) ?? [];
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.habits, to: '/habits?new=1' }}
       loading={!data}
       empty={data && data.habits.length === 0 ? t.habits.widgetEmpty : undefined}
       headline={

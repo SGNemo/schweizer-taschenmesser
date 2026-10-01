@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { formatMoney } from '@/core/money';
 import { monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { Skeleton, WidgetList } from '@/ui';
 import { useBudgetData } from '../data';
 import { budgetStatus, goalProgress } from '../logic';
 import { depositRepo, goalRepo } from '../repo';
@@ -12,7 +12,7 @@ export default function OverviewWidget() {
   const { data } = useBudgetData(monthOf(day));
   const goals = useLiveQuery(() => goalRepo.active().toArray(), []);
   const deposits = useLiveQuery(() => depositRepo.active().toArray(), []);
-  if (!data || !goals || !deposits) return <p role="status">…</p>;
+  if (!data || !goals || !deposits) return <Skeleton width="60%" height="1.25rem" />;
 
   const name = (id: string) =>
     data.categories.find((c) => c.id === id)?.name ?? t.budgets.unknownCategory;
@@ -35,6 +35,7 @@ export default function OverviewWidget() {
   });
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.budgets, to: '/budgets?tab=goals&new=1' }}
       loading={false}
       empty={budgetEntries.length + goalEntries.length === 0 ? t.budgets.widgetEmpty : undefined}
       entries={[...budgetEntries, ...goalEntries]}

@@ -16,6 +16,7 @@ export default function ListsWidget() {
   }, []);
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.packing, to: '/packing?new=1' }}
       loading={!data}
       empty={t.packing.widgetEmpty}
       entries={(data ?? []).slice(0, 4).map(({ l, p }) => ({

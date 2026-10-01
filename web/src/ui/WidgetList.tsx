@@ -21,6 +21,7 @@ export function WidgetList({
   entries,
   to,
   linkLabel,
+  emptyAction,
 }: {
   loading: boolean;
   empty?: string;
@@ -29,6 +30,11 @@ export function WidgetList({
   entries: WidgetEntry[];
   to: string;
   linkLabel: string;
+  /**
+   * Primary action of the empty state (e.g. "Termin anlegen" → `/calendar?new=1`). Without one the
+   * empty state links to the module, so an empty widget always offers a next step.
+   */
+  emptyAction?: { label: string; to: string };
 }) {
   if (loading)
     return (
@@ -38,7 +44,14 @@ export function WidgetList({
         <Skeleton width="70%" />
       </div>
     );
-  if (entries.length === 0 && empty) return <EmptyState compact title={empty} />;
+  if (entries.length === 0 && empty) {
+    const action = emptyAction ?? { label: linkLabel, to };
+    return (
+      <EmptyState compact title={empty}>
+        <Link to={action.to}>{action.label}</Link>
+      </EmptyState>
+    );
+  }
   return (
     <div>
       {headline ? <p className={styles.statValue}>{headline}</p> : null}

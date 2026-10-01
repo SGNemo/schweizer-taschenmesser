@@ -15,6 +15,7 @@ export default function HeadlinesWidget() {
   }, []);
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.news, to: '/news' }}
       loading={!data}
       empty={data && data.feeds === 0 ? t.news.widgetNone : t.news.widgetEmpty}
       entries={(data?.unread ?? []).slice(0, 5).map((a) => ({ key: a.id, title: a.title }))}

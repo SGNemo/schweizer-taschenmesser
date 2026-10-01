@@ -14,6 +14,7 @@ export default function ExpiringWidget() {
   });
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.vault, to: '/vault?new=1' }}
       loading={!docs}
       empty={list.length === 0 ? t.vault.widgetEmpty : undefined}
       entries={list.slice(0, 4).map((d) => ({
