@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–6 decided; round 7 (modules) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–6 decided; round 7 (modules) mocked up, waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -78,7 +78,7 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 - **Decided removals:** `pageIn`, `itemIn` stagger, `pillIn`, endless sync spin (replaced by a one-time pulse), backdrop blur, width/colour/shadow transitions. Reduced motion: all durations 0, shimmer static, delays 0.
 
 ## 10. Modules
-- open (round 7)
+- Proposed (round 7, `ROUND-7-MODULES.md`): Kalender week grid + agenda, Finanzen overview, Tresor list + secret panel, Datenträger treemap + Korb; table for all 25 modules (main view, detail, create, widget, special). **Not decided yet.**
 
 ## 11. Accessibility
 - Facts today: AA tokens tested, axe in e2e (light/dark, desktop/Pixel 7), touch 44 px rule (3 known exceptions).

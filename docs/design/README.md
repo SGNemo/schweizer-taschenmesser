@@ -17,6 +17,8 @@ Working folder of the design review done together with the maintainer. Nothing h
 | `mockups/round-5/` | `components.html`, `form-rechnung.html`, `form-rechnung-phone.html`, `quickadd.html` + renders dark/light |
 | [`ROUND-6-MOTION.md`](ROUND-6-MOTION.md) | round 6: motion principles, six patterns, what is not animated |
 | `mockups/round-6/` | `motion.html` (interactive demo, reduced-motion switch) + captured frames |
+| [`ROUND-7-MODULES.md`](ROUND-7-MODULES.md) | round 7: Kalender, Finanzen, Tresor, Datenträger mocked; every other module as a short spec |
+| `mockups/round-7/` | `kalender.html`, `finanzen.html`, `tresor.html`, `datentraeger.html` + renders desktop dark/light, phone dark |
 | `mockups/fonts/` | Inter Variable (OFL, copied from `@fontsource-variable/inter`) so the mockups use the app font without importing anything |
 | `IMPLEMENTATION-PROMPT.md` | round 8: the prompt for the implementation chat |
 
