@@ -11,6 +11,8 @@ Working folder of the design review done together with the maintainer. Nothing h
 | `mockups/round-2/` | `variant-a|b|c.html` (standalone; `?theme=light`, toggle bottom right) + PNG renders desktop/phone, dark/light |
 | [`ROUND-3-LAYOUT.md`](ROUND-3-LAYOUT.md) | round 3: areas instead of a flat module list, three shell layouts (L1/L2/L3), rules for master–detail and ultrawide, click paths |
 | `mockups/round-3/` | `layout-l1|l2|l3.html` + PNG (desktop 1920, wide 2560, phone 412, dark; desktop light) |
+| [`ROUND-4-TOKENS.md`](ROUND-4-TOKENS.md) | round 4: palette (three neutral bases, AA-checked), depth, radii, spacing, typography, icons |
+| `mockups/round-4/` | `tokens.html`, `home.html`, `rechnungen.html` (`?theme=…&palette=cool|warm|graphite`) + renders, `palette-compare-dark.png` |
 | `mockups/fonts/` | Inter Variable (OFL, copied from `@fontsource-variable/inter`) so the mockups use the app font without importing anything |
 | `IMPLEMENTATION-PROMPT.md` | round 8: the prompt for the implementation chat |
 

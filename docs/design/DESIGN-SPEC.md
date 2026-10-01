@@ -48,11 +48,11 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 
 ## 5. Tokens (colour, radius, shadow, spacing)
 - Facts today: `web/src/ui/tokens.css` (light default, dark twice, accents orange/teal/coral/lagoon, radii 8/10/14/18, shadows only floating, motion 120/200/250 ms).
-- open (round 4)
+- Proposed (round 4, `ROUND-4-TOKENS.md`): neutral base cool | warm | graphite (AA-checked tables), shared accent/status/viz/focus tokens, depth levels 0–2 with shadow values, radii 8/12/16/20/full, 4-px spacing scale. **Base not decided yet.**
 
 ## 6. Typography
 - Facts today: Inter Variable (local), scale xs 12 → 3xl clamp(32–44), weights 400/500/600/700, tabular numerals.
-- open (round 4)
+- Proposed (round 4 § 4–5): Inter stays; scale hero/h1 32/h2 20/body 16/label 15/meta 13/caps 11; tabular numerals everywhere; Lucide 20 px at 1.5 px stroke; empty state = fish 64 px at 35 %. **Not decided yet.**
 
 ## 7. Components
 - open (round 5)
