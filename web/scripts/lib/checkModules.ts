@@ -59,6 +59,18 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
     for (const p of list) if (!PLATFORMS.includes(p)) fail(`unknown platform "${p}"`);
   }
 
+  // Seed contract: `seed: { version, dependsOn }` plus a `seed.ts` (docs/HOW-TO.md "Seed bauen").
+  const seed = /\bseed:\s*\{([^}]*)\}/.exec(manifest)?.[1];
+  if (seed === undefined)
+    fail('manifest has no `seed: { version, dependsOn }` (test data is mandatory)');
+  else {
+    if (!/\bversion:\s*\d+/.test(seed)) fail('`seed.version` must be a number');
+    if (!/\bdependsOn:\s*\[/.test(seed)) fail('`seed.dependsOn` is missing (use [] for none)');
+    const none = /\bnone:\s*['"]live-data['"]/.test(seed);
+    if (!none && !fileExists('seed.ts')) fail('seed.ts is missing (every module ships test data)');
+    if (none && fileExists('seed.ts')) fail('`seed.none` is set but seed.ts exists');
+  }
+
   return errors;
 }
 

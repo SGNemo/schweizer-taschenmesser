@@ -38,6 +38,7 @@ const manifest: ModuleManifest = {
   settings,
   dataApi: false,
   defaultEnabled: false,
+  seed: { version: 1, dependsOn: [], none: 'live-data' },
   layout: 'content',
   order: 195,
   contributions: { onboarding: noOnboarding },

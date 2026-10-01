@@ -10,6 +10,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      'dist-e2e-seed',
       'dev-dist',
       'playwright-report',
       'test-results',

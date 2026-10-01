@@ -1,5 +1,5 @@
 {
-  "version": 13,
+  "version": 14,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -10,6 +10,7 @@
     "_modules": "id, updatedAt",
     "_outbox": "[collection+id], queuedAt",
     "_secrets": "key",
+    "_seeds": "id, batchId, table",
     "_settings": "id, updatedAt",
     "accounts_entry": "id, updatedAt",
     "accounts_vault": "id, updatedAt",

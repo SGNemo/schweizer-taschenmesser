@@ -5,6 +5,7 @@ import { allManifests } from '@/core/modules/registry';
 import type { StorageAdapter } from '@/core/storage/types';
 import type { SyncRow } from '@/core/sync/ops';
 import { applyBackup } from './apply';
+import { seededIdsOfTable } from '@/core/seed/guard';
 
 export const BACKUP_FORMAT = 'taschenmesser-backup';
 export const BACKUP_VERSION = 1;
@@ -57,8 +58,12 @@ export async function createBackup(
   exportedAt: Date = new Date(),
 ): Promise<Backup> {
   const tables: Record<string, SyncRow[]> = {};
-  for (const name of tableNames)
-    tables[name] = await database.table<SyncRow, string>(name).toArray();
+  for (const name of tableNames) {
+    const rows = await database.table<SyncRow, string>(name).toArray();
+    // Generated test data never goes into a backup.
+    const seeded = await seededIdsOfTable(database, name);
+    tables[name] = seeded.size > 0 ? rows.filter((r) => !seeded.has(r.id)) : rows;
+  }
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
