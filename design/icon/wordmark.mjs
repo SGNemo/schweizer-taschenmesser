@@ -270,8 +270,13 @@ function clown(p, theme) {
   const bx = tx + 26; // just behind the o
   // reference fin: short, slightly concave base in the middle, straight diagonals out to rounded tips,
   // big round outer edge; taller than the letters
-  const tipX = bx + tl * (p.finTip ?? 0.42);
-  const fanTail = `M${bx + 6} ${-112}Q${bx - 4} ${-75} ${bx + 6} ${-38}L${tipX} ${34}C${bx + tl * 0.62} ${40} ${bx + tl + 4} ${0} ${bx + tl + 4} ${-75}C${bx + tl + 4} ${-150} ${bx + tl * 0.62} ${-190} ${tipX} ${-184}Z`;
+  // fan: narrow base on the o's centre line (slightly concave), straight edges opening to the right,
+  // widest point far right, round outer edge (the crop: narrow at the o, wide and round at the end)
+  const oc = -73; // centre of the x-height letters
+  const bh = (p.finBase ?? 72) / 2;
+  const tipX = bx + tl * (p.finTip ?? 0.66);
+  const fh = (p.finHeight ?? 230) / 2;
+  const fanTail = `M${bx + 4} ${oc - bh}Q${bx - 4} ${oc} ${bx + 4} ${oc + bh}L${tipX} ${oc + fh}C${bx + tl * 0.92} ${oc + fh} ${bx + tl + 6} ${oc + fh * 0.55} ${bx + tl + 6} ${oc}C${bx + tl + 6} ${oc - fh * 0.55} ${bx + tl * 0.92} ${oc - fh} ${tipX} ${oc - fh}Z`;
   const tail = p.tailStyle === 'fan' ? fanTail : `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
   // dorsal fin above the x-height letters (e, m, o): spiny front, soft round back; the tall N is the head side
   const xh = -150;
