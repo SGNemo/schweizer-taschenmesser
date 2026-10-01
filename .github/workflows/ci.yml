@@ -259,6 +259,28 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  vault-core:
+    name: Shared vault package (lint, types, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: packages/vault-core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vault-core/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
   e2e-sync:
     name: Multi-device sync E2E
     needs: changes
@@ -327,7 +349,7 @@ jobs:
   # See dev-preview.yml and docs/howto/ci.md -> "Dev-Preview".
   dev-preview:
     name: Dev-Preview build
-    needs: [changes, secret-scan, web, server, mcp, e2e-sync, rust]
+    needs: [changes, secret-scan, web, server, mcp, vault-core, e2e-sync, rust]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
     permissions:
       contents: write

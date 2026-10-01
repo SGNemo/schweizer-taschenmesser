@@ -66,9 +66,16 @@ export default defineConfig({
       },
     },
   },
+  // The shared package lives outside `web/` (dev server must be allowed to serve it).
+  server: { fs: { allow: ['..'] } },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // The shared package resolves its own dependency from the web install (no second `npm ci`).
+      tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
+      '@nemo/vault-core': fileURLToPath(
+        new URL('../packages/vault-core/src/index.ts', import.meta.url),
+      ),
       ...(native
         ? {
             'virtual:pwa-register/react': fileURLToPath(

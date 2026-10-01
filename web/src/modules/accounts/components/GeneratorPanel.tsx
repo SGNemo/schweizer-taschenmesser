@@ -14,7 +14,7 @@ import {
   passwordEntropyBits,
   type PassphraseOptions,
   type PasswordOptions,
-} from '../generator';
+} from '@nemo/vault-core';
 import styles from '../accounts.module.css';
 
 type Mode = 'password' | 'passphrase';

@@ -4,7 +4,15 @@ import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   plugins: [react()],
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
+      '@nemo/vault-core': fileURLToPath(
+        new URL('../packages/vault-core/src/index.ts', import.meta.url),
+      ),
+    },
+  },
   test: {
     // Node by default: building a jsdom per file cost more than all test bodies together. A file that
     // needs a DOM starts with `// @vitest-environment jsdom`; a forgotten marker fails with

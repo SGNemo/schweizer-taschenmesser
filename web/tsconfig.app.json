@@ -19,7 +19,9 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@nemo/vault-core": ["../packages/vault-core/src/index.ts"],
+      "tldts": ["./node_modules/tldts"]
     }
   },
   "include": ["src", "vitest.setup.ts"],
