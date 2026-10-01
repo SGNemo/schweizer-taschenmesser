@@ -53,7 +53,8 @@ if (bump.status !== 0) process.exit(bump.status ?? 1);
 console.log(`
 Next steps:
   1. Edit src/modules/${id}/schema.ts (data), ai.ts (AI schema), routes/, widgets/
+     (the home-screen widget is mandatory: keep it in manifest.ts, with its empty state + test)
   2. Adjust description/icon in manifest.ts
   3. Enable the module in the Module Library (defaultEnabled: false by default)
-  4. npm run lint && npm run typecheck && npm test
+  4. npm run check:modules && npm run lint && npm run typecheck && npm test
 `);

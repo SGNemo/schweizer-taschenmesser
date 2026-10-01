@@ -62,7 +62,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const commands = useMemo<Command[]>(() => {
     const go = (to: string) => () => void navigate(to);
     return [
-      { id: 'dashboard', label: t.nav.dashboard, icon: 'home', run: go('/') },
+      { id: 'dashboard', label: t.nav.home, icon: 'home', run: go('/') },
       ...moduleItems.map((i) => ({ id: i.to, label: i.label, icon: i.icon, run: go(i.to) })),
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },

@@ -1,5 +1,5 @@
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { entrySchema, projectSchema } from './schema';
@@ -39,7 +39,8 @@ const manifest: ModuleManifest = {
     {
       id: 'today',
       title: 'Zeiterfassung',
-      size: 's',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/TodayWidget'),
     },
   ],

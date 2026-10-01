@@ -13,6 +13,7 @@ export default function RecentWidget() {
   );
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.bookmarks, to: '/bookmarks?new=1' }}
       loading={!open}
       empty={t.bookmarks.widgetEmpty}
       subline={open && open.length > 0 ? t.bookmarks.openCount(open.length) : undefined}

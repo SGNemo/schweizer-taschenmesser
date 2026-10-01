@@ -14,6 +14,7 @@ export default function NextChargesWidget() {
   const day = today();
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.subscriptions, to: '/subscriptions?new=1' }}
       loading={!subs}
       empty={t.subscriptions.widgetEmpty}
       headline={subs && subs.length > 0 ? formatMoney(totals(subs).monthly) : undefined}

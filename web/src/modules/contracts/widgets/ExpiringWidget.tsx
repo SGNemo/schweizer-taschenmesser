@@ -14,6 +14,7 @@ export default function ExpiringWidget() {
   });
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.contracts, to: '/contracts?new=1' }}
       loading={!list}
       empty={urgent.length === 0 ? t.contracts.widgetEmpty : undefined}
       entries={urgent.slice(0, 4).map((c) => ({

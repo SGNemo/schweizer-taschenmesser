@@ -19,6 +19,7 @@ export default function NextRemindersWidget() {
   }, []);
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.reminders, to: '/reminders?new=1' }}
       loading={!next}
       empty={t.reminders.widgetEmpty}
       entries={(next ?? []).map((o) => ({

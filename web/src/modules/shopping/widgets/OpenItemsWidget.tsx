@@ -11,6 +11,7 @@ export default function OpenItemsWidget() {
   );
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.shopping, to: '/shopping?new=1' }}
       loading={!open}
       empty={t.shopping.widgetEmpty}
       headline={open ? t.shopping.openCount(open.length) : undefined}

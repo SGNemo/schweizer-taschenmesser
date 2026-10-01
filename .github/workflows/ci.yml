@@ -103,6 +103,8 @@ jobs:
       - run: npm ci
       - name: Version files agree (package.json, Cargo, Tauri)
         run: npm run version:check
+      - name: Every module has a complete manifest and a home-screen widget
+        run: npm run check:modules
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck

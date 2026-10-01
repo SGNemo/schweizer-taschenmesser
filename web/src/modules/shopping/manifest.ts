@@ -1,5 +1,5 @@
 import { onboarding } from './onboarding';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { itemSchema } from './schema';
@@ -26,7 +26,8 @@ const manifest: ModuleManifest = {
     {
       id: 'open',
       title: 'Einkauf',
-      size: 's',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OpenItemsWidget'),
     },
   ],

@@ -1,14 +1,25 @@
-import { useLiveQuery } from 'dexie-react-hooks';
-import { entryRepo } from '../repo';
+import { WidgetList } from '@/ui';
+import { useSummary } from './useSummary';
 
+// TODO: move these texts to src/strings.ts (all UI text lives there, German only).
+const EMPTY = 'Noch keine Einträge.';
+const ACTION = 'Eintrag anlegen';
+const LINK = '__NAME__ öffnen';
+
+/**
+ * Home-screen widget. Contract: lazy default export, live data, an empty state that offers a
+ * next step (`emptyAction`), nothing heavy. Registered in `manifest.ts` under `widgets`.
+ */
 export default function SummaryWidget() {
-  const open = useLiveQuery(
-    () =>
-      entryRepo
-        .active()
-        .filter((e) => !e.done)
-        .count(),
-    [],
+  const open = useSummary();
+  return (
+    <WidgetList
+      loading={!open}
+      empty={EMPTY}
+      emptyAction={{ label: ACTION, to: '/__ID__?new=1' }}
+      entries={(open ?? []).map((e) => ({ key: e.id, title: e.title }))}
+      to="/__ID__"
+      linkLabel={LINK}
+    />
   );
-  return <p>{open === undefined ? '…' : `${open} offen`}</p>;
 }

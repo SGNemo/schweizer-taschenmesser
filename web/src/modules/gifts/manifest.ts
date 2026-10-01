@@ -1,5 +1,5 @@
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { ideaSchema } from './schema';
 import { settings } from './settings';
@@ -37,7 +37,8 @@ const manifest: ModuleManifest = {
     {
       id: 'open',
       title: 'Geschenkideen',
-      size: 's',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/SummaryWidget'),
     },
   ],

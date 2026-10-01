@@ -1,5 +1,5 @@
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { budgetSchema, depositSchema, goalSchema } from './schema';
@@ -33,7 +33,8 @@ const manifest: ModuleManifest = {
     {
       id: 'overview',
       title: 'Budgets & Sparziele',
-      size: 'm',
+      defaultSize: 'm',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OverviewWidget'),
     },
   ],

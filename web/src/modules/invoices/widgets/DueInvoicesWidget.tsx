@@ -16,6 +16,7 @@ export default function DueInvoicesWidget() {
   const day = today();
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.invoices, to: '/invoices?new=1' }}
       loading={!open}
       empty={t.invoices.widgetEmpty}
       headline={open && open.length > 0 ? formatMoney(openTotal(open)) : undefined}

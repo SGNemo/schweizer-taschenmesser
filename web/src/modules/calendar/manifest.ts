@@ -1,5 +1,5 @@
 import { onboarding } from './onboarding';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { eventSchema, externalEventSchema } from './schema';
@@ -31,7 +31,8 @@ const manifest: ModuleManifest = {
     {
       id: 'today',
       title: 'Heute & Morgen',
-      size: 'm',
+      defaultSize: 'm',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/TodayWidget'),
     },
   ],

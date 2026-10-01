@@ -1,4 +1,4 @@
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { onboarding } from './onboarding';
 import { articleSchema, feedSchema, feedStateSchema } from './schema';
@@ -35,7 +35,8 @@ const manifest: ModuleManifest = {
     {
       id: 'headlines',
       title: 'Schlagzeilen',
-      size: 'm',
+      defaultSize: 'm',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/HeadlinesWidget'),
     },
   ],

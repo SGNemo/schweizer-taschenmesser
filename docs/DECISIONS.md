@@ -76,6 +76,10 @@ Each entry: decision → why → source. Only what is documented in `CLAUDE.md`,
 - **Pantry → shopping list through the event `shopping.requested`**; the shopping module subscribes while enabled (no module import). Source: this PR.
 
 ## UI
+- **The home screen ("Übersicht") is not a module.** It lives in `web/src/home/`, is the start route, cannot be deactivated and is not in the library. The logo (sidebar and mobile top bar), Alt+Home and the palette lead there. Why: a module list entry that can be switched off made no sense for the page that shows all modules. Source: this PR.
+- **Hiding a widget is not deactivating the module.** The home config (`_settings` scope `home`: `order`, `hidden`, `sizes`, keys `<moduleId>:<widgetId>`) is synced and one layout serves all devices (the grid is responsive, `l` spans the full row on narrow pages); keys of disabled modules stay so a re-enabled module returns to its place; new modules are visible and go last. The old scope `dashboard` is read until the first edit and never deleted. Source: this PR.
+- **Every module must ship a widget.** `widgets` needs ≥ 1 entry (type, `validateManifest`, `npm run check:modules` in CI, `widgets.test.tsx` rendering empty + example data); the generated fallback widget only covers modules loaded without one. Why: future modules must appear on the home screen without anyone remembering it. Source: this PR.
+- **Vault and desktop modules get status-only widgets.** The exclusion tests changed from "no widget" to "exactly one status widget": the vault widget shows locked/unlocked and a link (the test greps its source for entry access), the disk widget only drive sizes, the system widget live CPU/RAM/battery. Source: this PR.
 - **`PageContainer` layout system replaces a global `max-width`;** modules choose `manifest.layout`, never their own max-width; inner layouts use container queries. Source: PR #3.
 - **CSS Modules + tokens, touch targets ≥ 44 px, `data-autofocus` (React `autoFocus` runs before `showModal()`).** Source: architecture.md "UI".
 - **Docs split:** `CLAUDE.md` is the short working guide; long design notes live in `docs/architecture.md`. Source: PR #2.
