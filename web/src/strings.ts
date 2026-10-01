@@ -2808,7 +2808,18 @@ export const t = {
       upToDate: 'Du hast die neueste Version.',
       browserHint:
         'Im Browser aktualisiert sich die App selbst (Hinweis oben nach dem Laden einer neuen Version).',
+      channelDev: 'Dev-Preview (jeder Stand von develop)',
+      devHelp:
+        'Dev-Previews sind ungetestete Zwischenstände. Diese App ist getrennt von der stabilen Nemo-App und hat eigene Daten: Übertrage Daten per Sync oder Backup. Vor jedem Update wird automatisch eine Sicherungskopie angelegt. Zurück zur stabilen Version geht nur durch Installieren der stabilen App.',
+      devVersion: (version: string, sha: string) =>
+        `Dev-Preview ${version}${sha ? ` (${sha})` : ''}`,
     },
+  },
+  devPreview: {
+    badge: 'Dev',
+    badgeTitle: 'Dev-Preview: ungetestete Zwischenversion',
+    notice:
+      'Dev-Preview: ungetestete Zwischenversion mit eigenen Daten, getrennt von der stabilen App.',
   },
   example: {
     addPlaceholder: 'Neuer Eintrag …',

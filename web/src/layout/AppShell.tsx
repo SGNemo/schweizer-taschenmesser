@@ -4,7 +4,8 @@ import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
-import { Fab, Icon, IconButton, Toaster, Wordmark } from '@/ui';
+import { isDevBuild } from '@/core/update/buildInfo';
+import { Badge, Fab, Icon, IconButton, Toaster, Wordmark } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
@@ -29,11 +30,20 @@ function SideLink({ item }: { item: NavItem }) {
   );
 }
 
+let devNoticeShown = false;
+
 export function AppShell() {
   const moduleItems = useModuleNavItems();
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
   const openTools = useUiStore((s) => s.openTools);
+
+  // Dev-Preview builds say so once per start (a module flag survives StrictMode's double effect).
+  useEffect(() => {
+    if (!isDevBuild() || devNoticeShown) return;
+    devNoticeShown = true;
+    useUiStore.getState().toast(t.devPreview.notice);
+  }, []);
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -117,6 +127,11 @@ export function AppShell() {
             <span>{t.actions.search}</span>
             <kbd className={`${styles.kbd} ${styles.hideMobile}`}>{t.palette.hint}</kbd>
           </button>
+          {isDevBuild() ? (
+            <span title={t.devPreview.badgeTitle} data-testid="dev-badge">
+              <Badge tone="warning">{t.devPreview.badge}</Badge>
+            </span>
+          ) : null}
           <IconButton label={t.tools.open} onClick={() => openTools()}>
             <Icon name="wrench" />
           </IconButton>

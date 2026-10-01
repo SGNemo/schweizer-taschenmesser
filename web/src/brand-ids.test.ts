@@ -19,6 +19,25 @@ interface TauriConfig {
 }
 const json = (path: string) => JSON.parse(read(path)) as TauriConfig;
 
+describe('Dev-Preview flavor', () => {
+  const stable = json('src-tauri/tauri.conf.json');
+  const dev = JSON.parse(read('src-tauri/tauri.dev.conf.json')) as Record<string, unknown>;
+
+  it('only overrides name and identifier; the identifier is the stable one plus ".dev"', () => {
+    expect(
+      Object.keys(dev)
+        .filter((k) => k !== '$schema')
+        .sort(),
+    ).toEqual(['identifier', 'productName']);
+    expect(dev.identifier).toBe(`${stable.identifier}.dev`);
+    expect(dev.productName).toBe('Nemo Dev');
+  });
+
+  it('cannot touch the updater key or endpoint of the stable app', () => {
+    expect(JSON.stringify(dev)).not.toMatch(/updater|pubkey|endpoints/);
+  });
+});
+
 describe('internal identifiers stay unchanged', () => {
   const tauri = json('src-tauri/tauri.conf.json');
 

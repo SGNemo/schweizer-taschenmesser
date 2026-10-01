@@ -13,9 +13,12 @@ import { Channel, invoke } from '@tauri-apps/api/core';
 import type { PlatformKind } from '../types';
 import {
   APK_ASSET_PAIRS,
+  DEV_APK_PAIR,
+  DEV_MANIFEST_URL,
   MANIFEST_ASSET,
   STABLE_MANIFEST_URL,
   assetUrl,
+  fetchDevManifest,
   fetchReleases,
   parseSha256,
   pickUpdate,
@@ -39,7 +42,7 @@ export function createDesktopUpdater(fetchFn: typeof fetch): UpdateService {
   return {
     supported: true,
     async check(channel, current) {
-      let endpoint: string | undefined = STABLE_MANIFEST_URL;
+      let endpoint: string | undefined = channel === 'dev' ? DEV_MANIFEST_URL : STABLE_MANIFEST_URL;
       if (channel === 'beta') {
         // The newest release of any kind carries its own manifest.
         const release = pickUpdate(await fetchReleases(fetchFn), 'beta', current);
@@ -80,6 +83,19 @@ export function createAndroidUpdater(fetchFn: typeof fetch): UpdateService {
   return {
     supported: true,
     async check(channel, current) {
+      if (channel === 'dev') {
+        const manifest = await fetchDevManifest(fetchFn);
+        if (!isNewer(manifest.version, current)) return undefined;
+        return {
+          version: manifest.version,
+          notes: manifest.notes,
+          prerelease: true,
+          payload: {
+            apkUrl: DEV_APK_PAIR.apk,
+            sha256Url: DEV_APK_PAIR.sha256,
+          } satisfies AndroidPayload,
+        };
+      }
       const release = pickUpdate(await fetchReleases(fetchFn), channel, current);
       if (!release) return undefined;
       // Without both the APK and its checksum the release is not installable from inside the app.

@@ -32,7 +32,8 @@ const MAX_CODE = 2_100_000_000;
 export function nextBaseVersion(pkgVersion: string, tags: readonly string[]): string {
   const v = parseSemver(pkgVersion);
   if (!v) throw new Error(`Not a valid SemVer version: "${pkgVersion}"`);
-  let { major, minor, patch } = v;
+  const { major, minor } = v;
+  let { patch } = v;
   const stable = new Set(tags.map((t) => t.trim()));
   // A pre-release in package.json (0.4.0-beta.1) is already "before" 0.4.0, no bump needed.
   if (v.prerelease.length === 0) {

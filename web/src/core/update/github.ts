@@ -17,6 +17,27 @@ export const APK_ASSET_PAIRS = [
 ] as const;
 export const MANIFEST_ASSET = 'latest.json';
 
+/** The rolling Dev-Preview release (tag `dev-preview`); only Dev-Preview builds ever read it. */
+export const DEV_TAG = 'dev-preview';
+export const DEV_MANIFEST_URL = `https://github.com/${REPO}/releases/download/${DEV_TAG}/dev-latest.json`;
+export const DEV_APK_PAIR = {
+  apk: `https://github.com/${REPO}/releases/download/${DEV_TAG}/Nemo-dev.apk`,
+  sha256: `https://github.com/${REPO}/releases/download/${DEV_TAG}/Nemo-dev.apk.sha256`,
+} as const;
+
+const devManifestSchema = z.object({ version: z.string(), notes: z.string().nullish() });
+
+/** Reads `dev-latest.json`; the version must be valid SemVer. */
+export async function fetchDevManifest(
+  fetchFn: typeof fetch,
+): Promise<{ version: string; notes: string }> {
+  const res = await fetchFn(DEV_MANIFEST_URL, { signal: AbortSignal.timeout(20_000) });
+  if (!res.ok) throw new Error(`GitHub answered HTTP ${res.status}`);
+  const parsed = devManifestSchema.parse(await res.json());
+  if (!parseSemver(parsed.version)) throw new Error('Dev manifest has an invalid version');
+  return { version: parsed.version, notes: parsed.notes ?? '' };
+}
+
 const releaseSchema = z.object({
   tag_name: z.string(),
   body: z.string().nullish(),
@@ -65,7 +86,8 @@ export const versionOf = (release: Pick<Release, 'tag_name'>): string =>
 /**
  * The newest release on the channel that is newer than `current`. Stable users only see releases
  * without a pre-release suffix; beta users see everything (so a stable release that follows their
- * beta reaches them too). Drafts and tags that are not SemVer are ignored.
+ * beta reaches them too). Drafts and tags that are not SemVer are ignored – which is what keeps the
+ * rolling `dev-preview` release away from every stable and beta installation.
  */
 export function pickUpdate(
   releases: readonly Release[],

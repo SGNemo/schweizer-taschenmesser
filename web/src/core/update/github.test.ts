@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  DEV_APK_PAIR,
+  DEV_MANIFEST_URL,
   assetUrl,
+  fetchDevManifest,
   fetchReleases,
   isTrustedAssetUrl,
   parseSha256,
@@ -20,6 +23,29 @@ const rel = (tag: string, over: Partial<Release> = {}): Release => ({
   published_at: '2026-10-01T00:00:00Z',
   assets: [asset('Taschenmesser.apk', tag), asset('latest.json', tag)],
   ...over,
+});
+
+describe('fetchDevManifest', () => {
+  const json = (body: unknown, status = 200) =>
+    vi.fn(async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
+
+  it('reads version and notes from the rolling release', async () => {
+    const fetchFn = json({ version: '0.3.2-dev.57', notes: 'n', platforms: {} });
+    await expect(fetchDevManifest(fetchFn)).resolves.toEqual({
+      version: '0.3.2-dev.57',
+      notes: 'n',
+    });
+    expect(vi.mocked(fetchFn).mock.calls[0]![0]).toBe(DEV_MANIFEST_URL);
+    expect(DEV_MANIFEST_URL).toContain('/releases/download/dev-preview/dev-latest.json');
+  });
+  it('rejects bad versions and HTTP errors', async () => {
+    await expect(fetchDevManifest(json({ version: 'nightly' }))).rejects.toThrow();
+    await expect(fetchDevManifest(json({}, 404))).rejects.toThrow();
+  });
+  it('dev downloads pass the trusted-URL check', () => {
+    expect(isTrustedAssetUrl(DEV_APK_PAIR.apk)).toBe(true);
+    expect(isTrustedAssetUrl(DEV_APK_PAIR.sha256)).toBe(true);
+  });
 });
 
 describe('pickUpdate', () => {
@@ -52,6 +78,18 @@ describe('pickUpdate', () => {
     expect(pickUpdate([rel('v1.2.0', { draft: true })], 'beta', '1.0.0')).toBeUndefined();
     expect(pickUpdate([rel('release-2026')], 'beta', '0.1.0')).toBeUndefined();
     expect(pickUpdate([rel('v0.5.0')], 'stable', '1.0.0')).toBeUndefined();
+  });
+
+  it('never offers the rolling dev-preview release, on any channel and whatever its flags', () => {
+    const dev = [
+      rel('dev-preview', { prerelease: true }),
+      rel('dev-preview', { prerelease: false }),
+      rel('dev-preview-test', { prerelease: true }),
+    ];
+    for (const channel of ['stable', 'beta'] as const) {
+      expect(pickUpdate(dev, channel, '0.0.1')).toBeUndefined();
+      expect(pickUpdate([...dev, rel('v1.0.0')], channel, '0.0.1')?.tag_name).toBe('v1.0.0');
+    }
   });
 
   it('picks by SemVer precedence, not by list order or text', () => {
