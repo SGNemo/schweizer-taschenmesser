@@ -6,6 +6,7 @@ Several Claude chats work in parallel and only see each other through GitHub. Ke
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 | Docs for token-efficient chats | `docs/token-efficiency` | `docs/**`, `CLAUDE.md`, `*/CLAUDE.md`, `.ignore`, `web/scripts/check-docs.mjs` | PR open | see branch | 2026-10-01 |
+| Vault generator + browser extension (Brave) | `feat/vault-generator-extension` | `web/src/modules/accounts/**`, `packages/vault-core/`, `extension/`, `web/src-tauri/crates/vault-bridge/`, `web/src-tauri/src/{main,lib,capture,vault_bridge}.rs`, hotspot `core/platform/types.ts` (adds `vaultBridge`) | in progress | see branch | 2026-10-01 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
