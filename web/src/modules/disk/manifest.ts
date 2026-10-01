@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 
 /**
  * Disk overview and cleaner (desktop only). Holds no data of its own: scan results live in memory
  * (Rust side) for the session and are never synced, stored, backed up or offered to the assistant –
- * hence no collections, no `aiSchema`, no widget, and `dataApi: false` (also blocked by id in
+ * hence no collections, no `aiSchema`, a single widget that only shows drive fill levels, and `dataApi: false` (also blocked by id in
  * `core/dataapi/scope.ts`).
  */
 const manifest: ModuleManifest = {
@@ -31,7 +31,15 @@ const manifest: ModuleManifest = {
   ],
   dataSchema: { collections: {} },
   migrations: {},
-  widgets: [],
+  widgets: [
+    {
+      id: 'status',
+      title: 'Laufwerke',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/DrivesWidget'),
+    },
+  ],
   settings: { schema: z.object({}), defaults: {}, fields: [] },
   dataApi: false,
   defaultEnabled: false,

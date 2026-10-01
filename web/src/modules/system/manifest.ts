@@ -1,11 +1,11 @@
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { settings } from './settings';
 
 /**
  * Live facts about this computer (desktop only). Holds no data: nothing is stored, synced, backed
- * up or shown to the assistant, so it has no collections, no `aiSchema`, no widget and
+ * up or shown to the assistant, so it has no collections, no `aiSchema`, one live status widget and
  * `dataApi: false` (also blocked by id in `core/dataapi/scope.ts`).
  */
 const manifest: ModuleManifest = {
@@ -26,7 +26,15 @@ const manifest: ModuleManifest = {
   ],
   dataSchema: { collections: {} },
   migrations,
-  widgets: [],
+  widgets: [
+    {
+      id: 'status',
+      title: 'System',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/SystemWidget'),
+    },
+  ],
   settings,
   dataApi: false,
   defaultEnabled: false,

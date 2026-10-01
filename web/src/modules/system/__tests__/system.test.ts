@@ -13,7 +13,7 @@ describe('system module', () => {
     expect(manifest.defaultEnabled).toBe(false);
     expect(manifest.dataSchema.collections).toEqual({});
     expect(hasAiSchema(manifest)).toBe(false);
-    expect(manifest.widgets).toEqual([]);
+    expect(manifest.widgets.map((w) => w.id)).toEqual(['status']);
     expect(Object.keys(manifest.contributions ?? {})).toEqual(['onboarding']);
     expect(manifest.dataApi).toBe(false);
     expect(BLOCKED_MODULES).toContain('system');

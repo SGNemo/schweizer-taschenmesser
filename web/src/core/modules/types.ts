@@ -60,10 +60,21 @@ export interface ModuleContext {
   ): Promise<void>;
 }
 
+export type WidgetSize = 's' | 'm' | 'l';
+export const ALL_WIDGET_SIZES: readonly WidgetSize[] = ['s', 'm', 'l'];
+
+/**
+ * A preview of a module on the home screen. Every module offers at least one (enforced by
+ * `registry.test.ts` and `npm run check:modules`). The component loads lazily, reads its own data
+ * with `useLiveQuery`, and shows an empty state with a primary action when there is no data.
+ */
 export interface WidgetDef {
+  /** Unique within the module; the stored key is `<moduleId>:<id>`. */
   id: string;
   title: string;
-  size: 's' | 'm' | 'l';
+  /** Sizes the user can pick in the edit mode (`defaultSize` must be one of them). */
+  sizes: readonly WidgetSize[];
+  defaultSize: WidgetSize;
   component: LazyComponent;
 }
 

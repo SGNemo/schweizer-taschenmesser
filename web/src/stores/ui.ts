@@ -74,8 +74,8 @@ interface UiState {
   activeTool: string | null;
   openTools(toolId?: string | null): void;
   closeTools(): void;
-  dashboardEditing: boolean;
-  setDashboardEditing(editing: boolean): void;
+  homeEditing: boolean;
+  setHomeEditing(editing: boolean): void;
   toasts: Toast[];
   toast(message: string, action?: Toast['action']): number;
   dismissToast(id: number): void;
@@ -115,8 +115,8 @@ export const useUiStore = create<UiState>((set) => ({
   activeTool: null,
   openTools: (toolId = null) => set({ toolsOpen: true, activeTool: toolId }),
   closeTools: () => set({ toolsOpen: false, activeTool: null }),
-  dashboardEditing: false,
-  setDashboardEditing: (dashboardEditing) => set({ dashboardEditing }),
+  homeEditing: false,
+  setHomeEditing: (homeEditing) => set({ homeEditing }),
   toasts: [],
   toast(message, action) {
     const id = ++toastId;

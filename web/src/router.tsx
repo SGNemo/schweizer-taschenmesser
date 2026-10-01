@@ -7,7 +7,7 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
-import { Dashboard } from '@/pages/dashboard/Dashboard';
+import { Home } from '@/home/Home';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
 import { Settings } from '@/pages/Settings';
@@ -48,8 +48,8 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           index: true,
           element: (
-            <PageContainer key="Dashboard" variant="wide">
-              <Dashboard />
+            <PageContainer key="Home" variant="wide">
+              <Home />
             </PageContainer>
           ),
         },

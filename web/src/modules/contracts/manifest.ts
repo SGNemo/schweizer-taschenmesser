@@ -1,4 +1,4 @@
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { onboarding } from './onboarding';
@@ -26,7 +26,8 @@ const manifest: ModuleManifest = {
     {
       id: 'expiring',
       title: 'Fristen & Ablauf',
-      size: 's',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/ExpiringWidget'),
     },
   ],
