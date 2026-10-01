@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–5 decided; round 6 (motion) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–5 decided; round 6 (motion) demoed, waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -73,7 +73,7 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 
 ## 9. Motion
 - Facts today: transform/opacity only, page fade+slide 250 ms, list stagger, reduced motion zeroes durations.
-- open (round 6)
+- Proposed (round 6, `ROUND-6-MOTION.md`): 120/200/250 ms, ease-out, transform/opacity only, motion only as feedback (tick, save, open, close, sort, delete), no page/tab slide (120 ms crossfade), no list stagger, no endless spin, skeleton the only loop, reduced motion = instant. **Not decided yet.**
 
 ## 10. Modules
 - open (round 7)

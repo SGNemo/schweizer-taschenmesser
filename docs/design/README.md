@@ -15,6 +15,8 @@ Working folder of the design review done together with the maintainer. Nothing h
 | `mockups/round-4/` | `tokens.html`, `home.html`, `rechnungen.html` (`?theme=…&palette=cool|warm|graphite`) + renders, `palette-compare-dark.png` |
 | [`ROUND-5-COMPONENTS.md`](ROUND-5-COMPONENTS.md) | round 5: base components, quick capture vs. full form, keyboard/touch/undo concept |
 | `mockups/round-5/` | `components.html`, `form-rechnung.html`, `form-rechnung-phone.html`, `quickadd.html` + renders dark/light |
+| [`ROUND-6-MOTION.md`](ROUND-6-MOTION.md) | round 6: motion principles, six patterns, what is not animated |
+| `mockups/round-6/` | `motion.html` (interactive demo, reduced-motion switch) + captured frames |
 | `mockups/fonts/` | Inter Variable (OFL, copied from `@fontsource-variable/inter`) so the mockups use the app font without importing anything |
 | `IMPLEMENTATION-PROMPT.md` | round 8: the prompt for the implementation chat |
 

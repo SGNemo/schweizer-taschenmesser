@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de" data-theme="dark" data-palette="cool"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nemo – Runde 5: Komponenten</title><style>
+<title>Nemo – Runde 6: Bewegung</title><style>
 @font-face{font-family:Inter;font-weight:100 900;font-display:swap;src:url(../fonts/inter-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Inter;font-weight:100 900;font-display:swap;src:url(../fonts/inter-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 *{box-sizing:border-box;margin:0}
@@ -126,10 +126,6 @@ html[data-theme="light"][data-palette="cool"]{--page-bg:#f3f4f4;--card-bg:#fffff
 html[data-theme="light"][data-palette="warm"]{--page-bg:#f5f3ef;--card-bg:#ffffff;--chip-bg:#ece9e3;--border:#e5e1da;--border-strong:#83817a;--text:#1d1a16;--text-2:#5c5852;--text-3:#6a665f;--accent:#b5430c;--accent-contrast:#ffffff;--accent-soft:#fbe9de;--danger:#b3261e;--success:#1b7545;--warning:#8a5a00;--info:#1f5fa8;--viz-1:#16847f;--viz-2:#c94f12;--focus:#0b6f72;--side-bg:var(--page-bg);--top-bg:color-mix(in srgb,var(--page-bg) 85%,transparent);--line:var(--border);--field-bg:var(--card-bg);--ph:var(--chip-bg);--card-shadow:0 1px 2px rgb(23 31 36 / .06),0 8px 24px rgb(23 31 36 / .07)}
 html[data-theme="light"][data-palette="graphite"]{--page-bg:#f4f4f4;--card-bg:#ffffff;--chip-bg:#ebebeb;--border:#e3e3e3;--border-strong:#808080;--text:#1a1a1a;--text-2:#595959;--text-3:#686868;--accent:#b5430c;--accent-contrast:#ffffff;--accent-soft:#fbe9de;--danger:#b3261e;--success:#1b7545;--warning:#8a5a00;--info:#1f5fa8;--viz-1:#16847f;--viz-2:#c94f12;--focus:#0b6f72;--side-bg:var(--page-bg);--top-bg:color-mix(in srgb,var(--page-bg) 85%,transparent);--line:var(--border);--field-bg:var(--card-bg);--ph:var(--chip-bg);--card-shadow:0 1px 2px rgb(23 31 36 / .06),0 8px 24px rgb(23 31 36 / .07)}
 
-.sidebar{position:relative}
-.collapse{position:absolute;right:-14px;top:22px;width:28px;height:28px;border-radius:999px;border:1px solid var(--border-strong);background:var(--card-bg);color:var(--text-3);display:grid;place-items:center;cursor:pointer;box-shadow:var(--card-shadow);z-index:2}
-.collapse .chev{transform:rotate(135deg);margin:0 0 0 3px}
-
 .sheet{max-width:1500px;margin:0 auto;padding:var(--s6) var(--gutter) var(--s7);display:grid;gap:var(--s5)}
 .sheet section{background:var(--card-bg);border-radius:var(--r);box-shadow:var(--card-shadow);padding:var(--s5)}
 .sheet h2{font-size:1.125rem;margin-bottom:var(--s3)}
@@ -195,7 +191,58 @@ html[data-theme=light] .dlg{box-shadow:0 16px 48px rgb(23 31 36 / .18),0 2px 6px
 .swipe .row2{flex:1;background:var(--card-bg);margin:0;padding-left:12px;border-radius:0}
 .swipe .lbl{width:72px;display:grid;place-items:center;font-weight:600;font-size:.8125rem}
 @media (max-width:900px){.topbar{gap:8px}.topbar .search{flex:1 1 0;max-width:none;min-width:0;overflow:hidden}.search span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iconbtn{padding:0 6px}}
-html{font-size:16px}.app.l1{grid-template-columns:248px minmax(0,1fr)}</style></head>
+
+:root{--dur-fast:120ms;--dur:200ms;--dur-slow:250ms;--ease-out:cubic-bezier(.22,1,.36,1);--ease:cubic-bezier(.2,0,0,1)}
+@media (prefers-reduced-motion:reduce){:root{--dur-fast:0ms;--dur:0ms;--dur-slow:0ms}}
+html[data-rm=reduce]{--dur-fast:0ms;--dur:0ms;--dur-slow:0ms}
+.sheet{max-width:1500px;margin:0 auto;padding:var(--s6) var(--gutter) var(--s7);display:grid;gap:var(--s5)}
+.demos{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s5)}
+.demo{background:var(--card-bg);border-radius:var(--r);box-shadow:var(--card-shadow);padding:var(--s5);min-height:280px;display:flex;flex-direction:column;gap:var(--s3);position:relative;overflow:hidden}
+.demo h2{font-size:1rem}.demo p{color:var(--text-2);font-size:.875rem;min-height:3.4em}
+.demo .stage{flex:1;position:relative;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.demo .ctl{display:flex;gap:8px;align-items:center}
+.demo .spec{font-size:.75rem;color:var(--text-3);font-variant-numeric:tabular-nums;border-top:1px solid var(--border);padding-top:8px}
+/* 1 tick */
+.cb{transition:background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease)}
+.cb .ic{transform:scale(0);transition:transform var(--dur) var(--ease-out)}
+.go .d1 .cb{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+.go .d1 .cb .ic{transform:scale(1)}
+.d1 .row2 .title{transition:color var(--dur),opacity var(--dur)}
+.go .d1 .row2 .title{color:var(--text-3);text-decoration:line-through}
+.go .d1 .row2{animation:rowOut var(--dur-slow) var(--ease) var(--d-out,600ms) forwards}
+@keyframes rowOut{to{opacity:0;transform:translateX(16px)}}
+.d1 .row2.next{transition:transform var(--dur-slow) var(--ease) var(--d-next,700ms)}
+.go .d1 .row2.next{transform:translateY(-52px)}
+/* 2 save + toast */
+.d2 .btn.primary{transition:transform var(--dur-fast) var(--ease)}
+.go .d2 .btn.primary{transform:scale(.97)}
+.d2 .toast{position:absolute;left:50%;bottom:16px;transform:translate(-50%,24px);opacity:0;transition:transform var(--dur-slow) var(--ease-out),opacity var(--dur) var(--ease-out)}
+.go .d2 .toast{transform:translate(-50%,0);opacity:1}
+/* 3 dialog + sheet */
+.d3 .mini{position:relative;height:170px;border-radius:12px;background:var(--page-bg);overflow:hidden}
+.d3 .bd{position:absolute;inset:0;background:rgb(0 0 0 / .55);opacity:0;transition:opacity var(--dur) var(--ease-out)}
+.d3 .dlg{position:absolute;left:50%;top:50%;width:60%;height:70px;border-radius:14px;background:var(--card-bg);box-shadow:0 16px 48px rgb(0 0 0 / .45);transform:translate(-50%,-50%) scale(.96);opacity:0;transition:transform var(--dur) var(--ease-out),opacity var(--dur-fast) var(--ease-out)}
+.d3 .sh{position:absolute;left:12px;right:12px;bottom:0;height:90px;border-radius:14px 14px 0 0;background:var(--card-bg);transform:translateY(100%);transition:transform var(--dur-slow) var(--ease-out)}
+.go .d3 .bd{opacity:1}.go .d3 .dlg{transform:translate(-50%,-50%) scale(1);opacity:1}.go .d3 .sh{transform:translateY(0)}
+/* 4 tab switch: crossfade only */
+.d4 .pane{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;transition:opacity var(--dur-fast) linear}
+.d4 .pane.b{opacity:0}.go .d4 .pane.a{opacity:0}.go .d4 .pane.b{opacity:1}
+.d4 .tabs span{transition:color var(--dur-fast)}
+.d4 .ind{height:2px;background:var(--accent);width:92px;transform:translateX(0);transition:transform var(--dur) var(--ease-out)}
+.go .d4 .ind{transform:translateX(100px)}
+/* 5 skeleton -> content */
+.d5 .skel,.d5 .content{position:absolute;inset:0;transition:opacity var(--dur) var(--ease-out)}
+.d5 .content{opacity:0}.go .d5 .skel{opacity:0}.go .d5 .content{opacity:1}
+/* 6 chart build */
+.d6 .bars{display:flex;align-items:flex-end;gap:10px;height:120px}
+.d6 .bars i{flex:1;border-radius:4px 4px 0 0;background:var(--viz-1);transform:scaleY(0);transform-origin:bottom;transition:transform var(--dur-slow) var(--ease-out)}
+.d6 .bars i:nth-child(2n){background:var(--viz-2)}
+.go .d6 .bars i{transform:scaleY(1)}
+.go .d6 .bars i:nth-child(2){transition-delay:calc(var(--stag,30ms)*1)}.go .d6 .bars i:nth-child(3){transition-delay:calc(var(--stag,30ms)*2)}.go .d6 .bars i:nth-child(4){transition-delay:calc(var(--stag,30ms)*3)}.go .d6 .bars i:nth-child(5){transition-delay:calc(var(--stag,30ms)*4)}.go .d6 .bars i:nth-child(6){transition-delay:calc(var(--stag,30ms)*5)}
+/* hover/press samples */
+.hp .btn{transition:transform var(--dur-fast) var(--ease),background var(--dur-fast)}.hp .btn:active{transform:scale(.97)}
+.topctl{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+html{font-size:16px}</style></head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-6h4v6"/></symbol>
@@ -229,50 +276,22 @@ html{font-size:16px}.app.l1{grid-template-columns:248px minmax(0,1fr)}</style></
  <symbol id="i-pen" viewBox="0 0 24 24"><path d="m4 20 4-1 11-11-3-3L5 16zM13 8l3 3"/></symbol>
  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
 </svg><div class="sheet">
-<div><div class="eyebrow">Runde 5</div><h1>Komponenten</h1><p style="color:var(--text-2)">Eine Zeile, ein Segmentschalter, ein Seitenkopf, ein Leerzustand – für alle Module. ?theme=light|dark.</p></div>
-<section><h2>Buttons – Hierarchie (eine gefüllte pro Ansicht)</h2>
-<div class="rowx"><button class="btn primary"><svg class="ic "><use href="#i-plus"/></svg><span>Hauptaktion</span></button><button class="btn">Sekundär</button><button class="btn ghost" style="color:var(--text-2)">Still</button><button class="btn ghost">Löschen</button><button class="btn danger">Endgültig löschen</button><button class="btn" disabled>Deaktiviert</button><a class="iconbtn sq" href="#" title="Bearbeiten"><svg class="ic "><use href="#i-pen"/></svg></a><button class="btn sm">Klein (Zeile)</button><button class="btn mini">Bezahlt</button></div>
-<h3>Regeln</h3><p style="color:var(--text-2);font-size:.9375rem">Primär: gefüllt, nur einmal pro Ansicht (Seitenkopf oder Dialogfuß). Sekundär: Rahmen. Still: nur Text, für Abbrechen und Nebenwege. Löschen: Text in Gefahrfarbe; gefüllt rot nur im Bestätigungsdialog. Zeilenbuttons 28–32 px, mit 44-px-Trefferfläche.</p></section>
-<div class="two">
-<section><h2>Eingaben</h2><div class="rowx" style="align-items:flex-start">
-<div class="field"><label>Empfänger</label><div class="inp">Stadtwerke Musterstadt</div></div>
-<div class="field"><label>Betrag</label><div class="inp ph">0,00 €</div><div class="hint">In Euro, Komma als Trenner</div></div>
-<div class="field"><label>Fällig am</label><div class="inp focus"><svg class="ic "><use href="#i-cal"/></svg>05.10.2026</div></div>
-<div class="field"><label>Konto</label><div class="inp err">—</div><div class="hint err">Bitte ein Konto wählen</div></div>
-<div class="field"><label>Suche (im Seitenkopf)</label><div class="inp ph"><svg class="ic "><use href="#i-search"/></svg>Rechnungen durchsuchen …</div></div>
+<div><div class="eyebrow">Runde 6</div><h1>Bewegung</h1><p style="color:var(--text-2)">Sechs Beispiele, nur CSS, nur transform und opacity (plus Farbe am Kästchen). Alle respektieren prefers-reduced-motion.</p>
+<div class="topctl" style="margin-top:12px"><button class="btn primary" id="play">Abspielen</button><button class="btn" id="reset">Zurücksetzen</button><label class="chip" style="cursor:pointer"><input type="checkbox" id="rm" style="margin-right:6px">Reduzierte Bewegung simulieren</label><span class="chip hp"><span class="btn sm" style="margin:-6px -8px">Hover/Press testen</span></span></div></div>
+<div class="demos"><section class="demo d1"><h2>1. Abhaken</h2><p>Kästchen füllt sich (120 ms), Häkchen wächst (200 ms), Titel wird grau und durchgestrichen; nach 600 ms rutscht die Zeile weg (250 ms), die nächste rückt nach.</p><div class="stage"><ul class="list"><li class="row2"><span class="cb"><svg class="ic "><use href="#i-todo"/></svg></span><div class="main"><span class="title">Milch kaufen</span><span class="meta">Eingang · Do., 1. Okt.</span></div></li><li class="row2 next"><span class="cb"></span><div class="main"><span class="title">Paket abholen</span><span class="meta">Eingang · Fr., 2. Okt.</span></div></li></ul></div><div class="spec">transform/opacity + Farbe nur am 24-px-Kästchen · 120 / 200 / 250 ms · ease-out · reduced motion: Zustand springt, Zeile verschwindet ohne Weg</div></section><section class="demo d2"><h2>2. Speichern und Toast</h2><p>Button drückt sich 3 % (120 ms), Toast gleitet 24 px von unten ein (250 ms) und bleibt 6 s; Rückgängig im Toast.</p><div class="stage"><div class="ctl"><button class="btn primary">Speichern</button><button class="btn ghost" style="color:var(--text-2)">Abbrechen</button></div><div class="toast"><svg class="ic "><use href="#i-todo"/></svg><span>Rechnung gespeichert</span><b>Rückgängig</b></div></div><div class="spec">scale .97 · translateY 24→0 + opacity · ease-out · reduced motion: Toast erscheint sofort</div></section><section class="demo d3"><h2>3. Dialog und Sheet öffnen</h2><p>Desktop: Hintergrund dunkelt (200 ms), Dialog skaliert .96→1 mit Einblenden (200 ms). Handy: Sheet gleitet von unten (250 ms). Schließen in halber Zeit.</p><div class="stage"><div class="mini"><div class="bd"></div><div class="dlg"></div><div class="sh"></div></div></div><div class="spec">opacity + scale / translateY · 200 / 250 ms · ease-out · kein Blur · reduced motion: sofort</div></section><section class="demo d4"><h2>4. Reiter und Seiten wechseln</h2><p>Kein Slide, kein Fade der ganzen Seite mehr. Nur der Indikator gleitet (200 ms) und der Inhalt wechselt mit einem 120-ms-Crossfade.</p><div class="stage"><div class="tabs"><span class="on">Rechnungen</span><span>Abos</span></div><div class="ind"></div><div style="position:relative;flex:1;min-height:120px"><div class="pane a"><div class="row2"><div class="main"><span class="title">Internet Beispiel AG</span><span class="meta">überfällig</span></div><span class="amt">39,99 €</span></div><div class="row2"><div class="main"><span class="title">Stadtwerke</span><span class="meta">Mo., 5. Okt.</span></div><span class="amt">89,90 €</span></div></div><div class="pane b"><div class="row2"><div class="main"><span class="title">Cloud-Speicher</span><span class="meta">15. Okt.</span></div><span class="amt">2,99 €</span></div><div class="row2"><div class="main"><span class="title">Musik Beispiel</span><span class="meta">15. Okt.</span></div><span class="amt">9,99 €</span></div></div></div></div><div class="spec">Indikator translateX 200 ms · Inhalt opacity 120 ms linear · ersetzt pageIn (fade + 6 px slide) · reduced motion: sofort</div></section><section class="demo d5"><h2>5. Laden: Skeleton → Inhalt</h2><p>Skeleton schimmert (1,4 s, einzige Dauerschleife), der Inhalt blendet darüber ein (200 ms). Kein Spinner, kein „…“.</p><div class="stage"><div style="position:relative;flex:1;min-height:120px"><div class="skel"><i style="width:60%"></i><i style="width:85%"></i><i style="width:40%"></i><i style="width:70%"></i></div><div class="content"><div class="row2"><div class="main"><span class="title">Girokonto Demo</span><span class="meta">Kontostand</span></div><span class="amt">2.500,00 €</span></div><div class="row2"><div class="main"><span class="title">Sparkonto Demo</span></div><span class="amt">12.897,00 €</span></div></div></div></div><div class="spec">opacity 200 ms · Shimmer: background-position (billig, GPU) · reduced motion: Shimmer steht, Inhalt sofort</div></section><section class="demo d6"><h2>6. Diagramm aufbauen</h2><p>Balken wachsen von unten (250 ms), Versatz 30 ms pro Balken, Gesamtdauer unter 450 ms. Nur beim ersten Erscheinen, nie bei Datenänderung.</p><div class="stage"><div class="bars"><i style="height:70%"></i><i style="height:45%"></i><i style="height:90%"></i><i style="height:30%"></i><i style="height:60%"></i><i style="height:50%"></i></div></div><div class="spec">scaleY 0→1, transform-origin bottom · 250 ms + 30 ms Stagger · ease-out · reduced motion: Balken stehen sofort</div></section></div>
+<section class="demo" style="min-height:0"><h2>Was bewusst nicht animiert wird</h2><p style="min-height:0">Seitenwechsel (kein Slide, kein Fade der ganzen Seite), Listen beim ersten Rendern (kein Stagger), Hover-Hintergründe (sofort), Breite, Höhe, Farbe von Flächen, Schatten, Blur, Zahlen (kein Hochzählen), Sync-Icon (kein Dauerdrehen – stattdessen ein Punkt, der kurz pulst, wenn ein Sync endet).</p></section>
 </div>
-<h3>Schalter, Kästchen, Auswahl</h3><div class="rowx"><span class="sw on"></span><span class="sw"></span><span class="cb on"><svg class="ic "><use href="#i-todo"/></svg></span><span class="cb"></span><div class="seg"><span class="on">Offen</span><span>Bezahlt</span><span>Alle</span></div><span class="chip on">Lebensmittel</span><span class="chip">Wohnen</span><span class="chip">Freizeit</span></div>
-<h3>Regeln</h3><p style="color:var(--text-2);font-size:.9375rem">Label immer über dem Feld (am Handy kein Platzhalter als Label). Rahmen 1 px `--border-strong`, Fokus 2 px Ring. Fehler: rote Linie + Satz darunter, nie nur Farbe. Segmentschalter 38 px hoch, Chips 32 px, Kästchen 24 px – alle mit 44-px-Trefferzone.</p></section>
-<section><h2>Reiter, Abzeichen, Rückmeldung</h2>
-<div class="tabs"><span>Finanzen</span><span class="on">Rechnungen</span><span>Abos</span><span>Budgets</span></div>
-<h3>Abzeichen (Status, nie Dekoration)</h3><div class="rowx"><span class="badge" style="background:var(--accent-soft);color:var(--accent)">Termin</span><span class="badge" style="background:var(--chip-bg);color:var(--text-2)">Erinnerung</span><span class="badge" style="background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger)">überfällig</span><span class="badge" style="background:color-mix(in srgb,var(--success) 15%,transparent);color:var(--success)">bezahlt</span><span class="badge" style="background:color-mix(in srgb,var(--warning) 15%,transparent);color:var(--warning)">läuft ab</span><span class="badge" style="background:color-mix(in srgb,var(--info) 15%,transparent);color:var(--info)">Beta</span></div>
-<h3>Toast mit Rückgängig (6 s, unten Mitte)</h3><div class="toast"><svg class="ic "><use href="#i-todo"/></svg><span>Rechnung als bezahlt markiert</span><b>Rückgängig</b></div>
-<h3>Fehler in der Ansicht</h3><div class="errbox"><svg class="ic "><use href="#i-info"/></svg><div><b>Sync fehlgeschlagen</b><div style="color:var(--text-2);font-size:.9375rem">Server nicht erreichbar. Deine Daten sind lokal gespeichert.</div><button class="btn sm" style="margin-top:8px">Erneut versuchen</button></div></div>
-<h3>Laden und leer</h3><div class="two"><div class="skel"><i style="width:60%"></i><i style="width:85%"></i><i style="width:40%"></i></div><div class="empty"><svg class="fish" viewBox="51 93 393 344" aria-hidden="true"><defs><mask id="cutE5" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/><g fill="none" stroke="#000"><path d="M262.4 66Q323.3 208.9 436.7 315" stroke-width="40"/><path d="M173.3 128.4Q244.1 264.3 347.7 377.4" stroke-width="40"/></g><circle cx="370" cy="146.1" r="23" fill="#000"/></mask></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round" mask="url(#cutE5)"><path d="M142.7 274.3C165.3 224.4 177.9 173.9 235.8 133.4C307.1 83.5 380.3 87 418.8 142C457.4 197 435.6 267 364.3 316.9C306.4 357.4 254.7 352 200.1 356.2Z"/><path d="M162.4 260.5C122.6 288.4 66.1 286.4 56.1 293.4C67.8 341.6 111.2 403.5 152.4 431.1C162.5 424 180 370.3 219.8 342.4Z"/></g></svg><b>Noch keine Abos</b><span>Füge dein erstes Abo hinzu.</span></div></div></section>
-</div>
-<div class="two">
-<section><h2>Zeile und Liste (ein Muster)</h2><ul class="list">
-<li class="row2"><span class="cb"></span><div class="main"><span class="title">Milch kaufen</span><span class="meta">Eingang · Do., 1. Okt.</span></div><span class="amt"></span></li>
-<li class="row2 hover"><span class="cb"></span><div class="main"><span class="title">Bericht Q3 fertigstellen (Hover: Aktionen erscheinen)</span><span class="meta">Arbeit · Fr., 2. Okt.</span></div><span class="act"><a class="iconbtn sq" href="#"><svg class="ic "><use href="#i-pen"/></svg></a><a class="iconbtn sq" href="#"><svg class="ic "><use href="#i-cal"/></svg></a></span></li>
-<li class="row2 sel"><div class="main"><span class="title">Stadtwerke Musterstadt (ausgewählt)</span><span class="meta">fällig Mo., 5. Okt.</span></div><span class="amt">89,90 €</span><button class="btn mini">Bezahlt</button></li>
-<li class="row2"><span class="cb on"><svg class="ic "><use href="#i-todo"/></svg></span><div class="main"><span class="title" style="color:var(--text-3);text-decoration:line-through">Paket abholen (erledigt)</span><span class="meta">heute 09:12</span></div></li>
-</ul>
-<h3>Wischen am Handy (rechts = erledigt/bezahlt, links = verschieben)</h3><div class="swipe"><div class="lbl">Erledigt</div><div class="row2"><div class="main"><span class="title">Fenster putzen</span><span class="meta">Haushalt</span></div></div></div>
-<h3>Mehrfachauswahl</h3><div class="rowx"><span class="cb on"><svg class="ic "><use href="#i-todo"/></svg></span><span style="color:var(--text-2)">3 ausgewählt</span><button class="btn sm">Erledigt</button><button class="btn sm">Verschieben …</button><button class="btn sm ghost">Löschen</button><button class="btn sm ghost" style="color:var(--text-2)">Abbrechen</button></div></section>
-<section><h2>Tabelle (nur Finanzen, Zeiterfassung)</h2><table class="tbl"><tr><th>Datum</th><th>Empfänger</th><th>Kategorie</th><th class="r">Betrag</th></tr>
-<tr><td>15.09.</td><td>Bahn</td><td>Mobilität</td><td class="r">−314,00 €</td></tr><tr><td>14.09.</td><td>Restaurant</td><td>Freizeit</td><td class="r">−291,00 €</td></tr><tr><td>01.09.</td><td>Arbeitgeber Muster GmbH</td><td>Gehalt</td><td class="r" style="color:var(--success)">+3.200,00 €</td></tr></table>
-<h3>Tastatur (Desktop)</h3><div class="sc">
-<div class="k"><span class="kbd">Ctrl</span><span class="kbd">K</span></div><div>Suchen oder fragen (Palette)</div>
-<div class="k"><span class="kbd">N</span></div><div>Neu (Schnellerfassung; im Modul dessen Typ)</div>
-<div class="k"><span class="kbd">G</span> <span class="kbd">H</span> … <span class="kbd">G</span> <span class="kbd">G</span></div><div>Gehe zu: Heute, Planen, Geld, Haushalt, Wissen, Tresor</div>
-<div class="k"><span class="kbd">J</span> / <span class="kbd">K</span>, <span class="kbd">↑</span> / <span class="kbd">↓</span></div><div>Zeile wählen</div>
-<div class="k"><span class="kbd">Enter</span> / <span class="kbd">E</span> / <span class="kbd">Space</span></div><div>Öffnen / Bearbeiten / Abhaken</div>
-<div class="k"><span class="kbd">Ctrl</span><span class="kbd">Z</span></div><div>Rückgängig (letzte Änderung, auch nach Toast)</div>
-<div class="k"><span class="kbd">?</span></div><div>Alle Kürzel</div>
-<div class="k"><span class="kbd">Esc</span></div><div>Schließen, Auswahl aufheben</div></div></section>
-</div>
-</div>
+<script>
+const b=document.body;document.getElementById('play').onclick=()=>{b.classList.remove('go');void b.offsetWidth;b.classList.add('go')};
+document.getElementById('reset').onclick=()=>b.classList.remove('go');
+document.getElementById('rm').onchange=e=>document.documentElement.dataset.rm=e.target.checked?'reduce':'';
+const q6=new URLSearchParams(location.search);
+if(q6.get('rm'))document.documentElement.dataset.rm='reduce';
+// ?t=<ms>: freeze every transition/animation at that moment (for frame renders)
+if(q6.get('t')!==null&&q6.get('t')!==undefined){const t=q6.get('t');const st=document.createElement('style');st.textContent=`.go *{animation-play-state:paused!important;animation-delay:calc(var(--d,0ms) - ${t}ms)!important;transition-duration:0ms!important;transition-delay:0ms!important}`;document.head.appendChild(st);}
+if(q6.get('go'))setTimeout(()=>b.classList.add('go'),50);
+</script>
 <a class="toggle" href="#" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';return false">hell/dunkel</a>
 <script>var q=new URLSearchParams(location.search);if(q.get('theme'))document.documentElement.dataset.theme=q.get('theme');if(q.get('shot'))document.querySelector('.toggle').style.display='none';</script>
-<!-- Round 5 "Komponenten": decided tokens (cool), invented data, standalone. -->
+<!-- Round 6 motion demo. Open in a browser and press "Abspielen"; the checkbox simulates prefers-reduced-motion. ?go=1 plays on load. -->
 </body></html>
