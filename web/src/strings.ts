@@ -1024,7 +1024,6 @@ export const t = {
       'Reihenfolge, Größen und ausgeblendete Widgets gehen auf den Standard zurück. Deine Module und Daten bleiben unverändert.',
     resetConfirm: 'Auf Standard zurücksetzen',
     cancel: 'Abbrechen',
-    close: 'Schließen',
     size: (title: string) => `Größe von ${title}`,
     sizeOptions: { s: 'S', m: 'M', l: 'L' } as Record<string, string>,
   },

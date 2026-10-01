@@ -10,6 +10,10 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Releases: `v0.2.0-beta.1`, `v0.2.0-beta.2` (erste portable Version), `v0.2.0`, `v0.3.0-beta.1` (Pre-Release), `v0.3.0` (stabil, erstes Release unter dem Namen Nemo), `v0.3.1` (stabil, neue Wortmarke).
 - Review-Runde 2026-09-30 (Branch `chore/nemo-review-polish`): Review des Rebrandings ([`REVIEW-2026-09-30.md`](REVIEW-2026-09-30.md)), Korrekturen (IDs gepinnt, Legacy-Fixtures, Release-Prüfung, Android-Icons in die APK, Benachrichtigungs-Icon), Design „Klar“ + neues Logo „Welle“ ([`DESIGN-CONCEPT-2026-09-30.md`](DESIGN-CONCEPT-2026-09-30.md)), Aufräumen (tote Exporte/Strings, `pad2`, E2E-Helfer, CI-Caches), [`ROADMAP.md`](ROADMAP.md), kurze README + `docs/user/`, MIT-Lizenz, CHANGELOG/CONTRIBUTING/SECURITY, Issue-/PR-Vorlagen.
 
+## Home-Screen-Runde (Branch `feat/home-screen`)
+- Übersicht ist kein Modul mehr (`web/src/home/`): Startroute, Logo-Klick, Alt+Pos1, abgesetzter Navigationsblock; Widgets für alle Module (Tresor, Datenträger, Systeminfo mit Status-Widgets, Fallback-Widget); eigener Bearbeitungsmodus (Reihenfolge, Größe S/M/L, Widget-Liste, Zurücksetzen); Konfiguration synchronisiert (Scope `home`, alter Scope `dashboard` wird migriert).
+- Widget-Pflicht abgesichert: Typ, `validateManifest`, `npm run check:modules` (CI), `widgets.test.tsx`, Generator/Template, PR-Vorlage.
+
 ## Diese Runde (Branch `feat/disk-cleaner-and-modules`)
 - **Datenträger** (nur Desktop): Laufwerkskarten, paralleler Rust-Scan (Fortschritt, Pause, Abbruch, „Nicht gelesen“-Liste), Treemap + Liste + Schnellfilter + Details, Auswahl-Korb, Löschen in den Papierkorb (Standard) oder endgültig mit Sperrliste, Tippbestätigung, Bericht; Aufräum-Helfer (bekannte Temp-/Cache-Ordner, leere Ordner, doppelte Dateien).
 - **Systeminfo** (nur Desktop), **Zeiterfassung**, **Vorräte** (mit Weitergabe an die Einkaufsliste), **Geschenkideen**; Werkzeuge **Text**, **Zeitzonen**, **Bilder verkleinern**, **PDF**.
@@ -155,6 +159,12 @@ E2. *Frische Installation (Windows-Portable, dann Android-APK):* Übersicht zeig
 E3. *Wiederherstellung aus Backup:* frische App → Schritt „Sync und Wiederherstellung“ → „Backup-Datei einspielen“ → Module/Daten sind da; danach Profile/Startdaten überspringen. ☐
 E4. *Bestehende Installation bleibt unberührt:* Update einer App mit Daten: keine Willkommenskarte, keine Checkliste, Daten unverändert; Einstellungen → „Einrichtung starten“ zeigt den aktuellen Zustand, nichts wird ohne Bestätigung geändert (Profil zeigt erst den Diff). ☐
 E5. *Google-Verbindung im Assistenten (Windows):* Schritt „Konten verknüpfen“ → Anmeldung starten und im Browser abbrechen bzw. den Assistenten schließen: kein Token gespeichert, Status bleibt „Nicht verbunden“. ☐
+
+### Übersicht als Home-Screen
+H1. *Windows-Portable und Android:* App öffnen → Start ist die Übersicht; Logo (Sidebar bzw. Kopfzeile) führt von jedem Modul zurück; Android-Zurück: Modul → Übersicht, Übersicht beendet die App. ☐
+H2. *Bearbeitungsmodus per Touch (Android):* „Anpassen“ → Widget am Griff lange drücken und verschieben, Größe S/M/L wählen, Widget-Liste öffnen und ein-/ausblenden, „Zurücksetzen“; alle Ziele gut treffbar, Seite scrollt beim Wischen nicht versehentlich mit. ☐
+H3. *Sync der Anordnung:* auf Gerät A Reihenfolge/Größe/Sichtbarkeit ändern, Gerät B synchronisieren: gleiche Übersicht; ein altes Layout (vor dem Update angepasst) bleibt erhalten. ☐
+H4. *Status-Widgets (Windows):* Datenträger zeigt Füllstände, Systeminfo CPU/RAM/Akku, Tresor nur gesperrt/entsperrt (nie Einträge). ☐
 
 ### Nemo: Umbenennung und Design
 N1. *Windows-Portable starten (frische Datei und als Update):* Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt bewusst noch auf `Taschenmesser-Portable.exe`), Daten bleiben erhalten.

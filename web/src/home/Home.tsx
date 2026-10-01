@@ -199,7 +199,6 @@ export function Home() {
         onClose={() => setSheetOpen(false)}
         title={t.homeEdit.widgetsTitle}
         variant="sheet"
-        footer={<Button onClick={() => setSheetOpen(false)}>{t.homeEdit.close}</Button>}
       >
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
         {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}

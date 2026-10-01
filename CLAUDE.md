@@ -35,7 +35,8 @@ Code, comments and commits are **English**; the UI is **German only** (all texts
 | `npm run format:check` / `format` | Prettier check / write (also in `server/`) |
 | `npm test` | Vitest unit + component tests (`test:changed` = only files touched since the last commit) |
 | `npm run e2e` | `e2e:app` (Playwright, projects `desktop-chrome` + `pixel-7`, builds with `--mode e2e`) followed by `e2e:sync` (`playwright.sync.config.ts`: serial multi-device tests against the real server started from `../server`, in-memory DB) |
-| `npm run gen:module -- <id> "<Name>"` | Generate a new module from `templates/module` |
+| `npm run gen:module -- <id> "<Name>"` (alias `new:module`) | Generate a new module from `templates/module` (incl. widget + test) |
+| `npm run check:modules` | Manifest completeness incl. the mandatory home-screen widget (CI, before the tests) |
 | `npm run db:bump` | Regenerate `src/core/db/schema.snapshot.json` + bump Dexie version |
 | `npm run gen:icons` | Re-render all brand rasters (PWA, favicon, ICO, Android layers, README/social images) from `web/brand/*.svg` (native base set first: `npx tauri icon brand/app-icon.svg`) |
 | `npm run tauri -- dev` / `build` | Native app (needs Rust; on Linux `libwebkit2gtk-4.1-dev libgtk-3-dev …`). `tauri build --debug --no-bundle` compiles the binary with the embedded frontend |
@@ -72,6 +73,13 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 - **UI:** the app is called **Nemo** (identifiers keep the old names, see `docs/DECISIONS.md`); German only (`web/src/strings.ts`), CSS Modules + tokens, `data-autofocus` instead of `autoFocus` in dialogs, touch targets ≥ 44 px, page width via `manifest.layout` (`PageContainer`), never a module-level `max-width`.
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them.
 - **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml`, or a manual run on `main` with input `version` (creates the tag; use one way, never tag push AND dispatch) (signed portable Windows exe + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
+
+## Home screen & widgets (every new module)
+- The home screen ("Übersicht", `web/src/home/`) is **not a module**: route `/`, not deactivatable, config in the synced `_settings` scope `home` (`home/layout.ts`; the old `dashboard` scope is migrated on first edit). Logo click, Alt+Home and the palette lead there.
+- **Every module must ship a widget:** `manifest.widgets` needs ≥ 1 entry `{ id, title, sizes, defaultSize, component: () => import('./widgets/X') }`. `validateManifest`, `npm run check:modules` (runs in CI first) and `core/modules/widgets.test.tsx` fail otherwise; a module that declares none still gets a generated fallback (`home/AutoWidget.tsx`) but must not rely on it.
+- Widget rules: lazy default export, live data (`useLiveQuery`), `WidgetList` with `empty` + `emptyAction` (a next step, not just "Keine …"), `Skeleton` while loading, no full views, tokens only. `npm run gen:module` / `new:module` creates widget, `useSummary` hook and widget test.
+- Hiding a widget affects only the home screen, never the module. Vault (`accounts`) and desktop modules show status only (no entries, no file names): see their `exclusion.test.ts`.
+- Home layout = one record `{ order, hidden, sizes }` keyed `<moduleId>:<widgetId>` for all devices (responsive grid via `PageContainer`); disabled modules keep their saved position.
 
 ## Design-Richtlinien (for every new module, tool and component) – look "Klar" (flat, calm)
 - **Tokens, never hard-coded values.** Colours, radii, shadows, spacing, type sizes, weights, z-index, durations come from `web/src/ui/tokens.css` (`var(--…)`). No hex/rgb in module CSS, no own `border-radius`/`box-shadow`/`z-index`/`font-weight` numbers (use `--weight-medium/semibold/bold`, `--z-*`, `--text-3xl` for hero numbers). Modules inherit the look through `@/ui`: Button, Card, Fields (`TextField` with `labelHidden` for inline add rows), Dialog, Patterns (`Segmented`, `ItemRow`, `Progress`, `Chip`, layout utilities `patternStyles.hstack/plainList/gapBottom/inlineForm`), Misc (`Badge`, `EmptyState` incl. `compact`, `Skeleton`), `WidgetList` for dashboard widgets. Never re-implement a segmented control, progress bar or input in a module; no inline `style={{}}` for layout or colour.
