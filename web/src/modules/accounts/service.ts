@@ -1,6 +1,7 @@
 import { getPlatform } from '@/core/platform';
 import { startAutoLock } from './autolock';
-import { isUnlocked } from './session';
+import { getBridge, resumeBridge, stopBridge } from './bridge/control';
+import { isUnlocked, useSession } from './session';
 import { lockVault } from './vault';
 
 let findRequests = 0;
@@ -19,7 +20,14 @@ export function openVaultSearch(): void {
 export default function startAccountsService(): () => void {
   const stop = startAutoLock();
   const stopSearchKey = getPlatform().desktop.onVaultSearch(openVaultSearch);
+  // The extension bridge (desktop, off unless the user switched it on); a lock ends its sessions.
+  const stopLockWatch = useSession.subscribe((s) => {
+    if (s.session.status === 'locked') getBridge().endSessions();
+  });
+  void resumeBridge();
   return () => {
+    stopLockWatch();
+    void stopBridge();
     stopSearchKey();
     stop();
     lockVault(); // disabling the module must not leave an open vault behind

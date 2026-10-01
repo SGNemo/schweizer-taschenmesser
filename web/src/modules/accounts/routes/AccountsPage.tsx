@@ -13,6 +13,7 @@ import {
   TextField,
   useSplitView,
 } from '@/ui';
+import { BridgeDialog, PairingDialog } from '../components/BridgeDialog';
 import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
 import { GeneratorDialog } from '../components/GeneratorDialog';
@@ -78,6 +79,7 @@ function Unlocked() {
   const [form, setForm] = useState<EntryTarget>(null);
   const [tools, setTools] = useState(false);
   const [generator, setGenerator] = useState(false);
+  const [bridge, setBridge] = useState(false);
   const searchBox = useRef<HTMLInputElement>(null);
   // `?find=n` (vault search key): focus the search field.
   const [params] = useSearchParams();
@@ -108,6 +110,9 @@ function Unlocked() {
         </Button>
         <Button onClick={() => setGenerator(true)}>{t.accounts.generator.newPassword}</Button>
         <Button onClick={() => setTools(true)}>{t.accounts.tools.open}</Button>
+        {getPlatform().vaultBridge.supported ? (
+          <Button onClick={() => setBridge(true)}>{t.accounts.bridge.open}</Button>
+        ) : null}
       </div>
       {data.broken.length > 0 ? (
         <div className={styles.banner} role="status">
@@ -169,6 +174,8 @@ function Unlocked() {
           setForm({ draft: true, password });
         }}
       />
+      <BridgeDialog open={bridge} onClose={() => setBridge(false)} />
+      <PairingDialog />
       <ToolsDialog open={tools} onClose={() => setTools(false)} entries={data.entries} />
     </>
   );

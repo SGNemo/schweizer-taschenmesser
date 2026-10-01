@@ -2380,6 +2380,48 @@ export const t = {
       passwordChanged: 'Master-Passwort geändert.',
       working: 'Wird berechnet …',
     },
+    bridge: {
+      open: 'Browser-Erweiterung',
+      title: 'Browser-Erweiterung verbinden',
+      intro:
+        'Die Erweiterung für Brave (und andere Chromium-Browser) legt neue Zugänge in diesem Tresor an und füllt Logins aus. Sie hat keinen eigenen Tresor und speichert nichts. Ohne diese App und ohne entsperrten Tresor tut sie nichts.',
+      enable: 'Verbindung zur Browser-Erweiterung aktivieren',
+      enableHint:
+        'Trägt die App bei Brave, Chrome, Edge und Chromium als Gegenstelle ein (nur für dein Windows-Konto, ohne Administratorrechte).',
+      extensionId: 'Erwartete Erweiterungs-ID',
+      status: 'Status',
+      statusOff: 'Aus – nichts lauscht, nichts ist eingetragen.',
+      statusOn: 'Bereit. Die Erweiterung kann sich jetzt verbinden.',
+      browsers: 'Eingetragen für',
+      registered: 'ja',
+      notRegistered: 'nein',
+      stale:
+        'Der eingetragene Pfad passt nicht mehr zu dieser App (z. B. Ordner verschoben). Neu eintragen behebt das.',
+      reregister: 'Neu eintragen',
+      reregistered: 'Neu eingetragen.',
+      paired: 'Bestätigte Erweiterungen',
+      pairedNone: 'Noch keine Erweiterung bestätigt.',
+      disconnect: 'Trennen',
+      pairingTitle: 'Erweiterung verbinden?',
+      pairingText: (id: string) =>
+        `Eine Browser-Erweiterung mit der ID ${id} möchte auf diesen Tresor zugreifen. Verbinde nur, wenn der Code unten auch im Popup der Erweiterung steht.`,
+      pairingCode: 'Code',
+      pairingConfirm: 'Verbinden',
+      pairingDecline: 'Ablehnen',
+      pairingToast: 'Eine Browser-Erweiterung möchte sich verbinden.',
+      connected: 'Erweiterung verbunden.',
+      errors: {
+        'register-failed': 'Die App konnte sich nicht bei den Browsern eintragen.',
+        'channel-taken':
+          'Eine andere Nemo-Instanz belegt die Verbindung. Beende sie und versuche es erneut.',
+        failed: 'Die Verbindung konnte nicht gestartet werden.',
+      },
+      startErrors: {
+        'channel-taken':
+          'Die Verbindung zur Browser-Erweiterung ist von einer anderen Nemo-Instanz belegt.',
+        failed: 'Die Verbindung zur Browser-Erweiterung konnte nicht gestartet werden.',
+      },
+    },
   },
   help: {
     label: 'Hilfe',
