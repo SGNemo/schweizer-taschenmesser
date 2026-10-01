@@ -17,6 +17,7 @@ const executablePath = process.env.PW_CHROMIUM_PATH ?? '/opt/pw-browsers/chromiu
 const inter = `data:font/woff2;base64,${readFileSync(join(web, 'node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')).toString('base64')}`;
 
 const TAG = 'Modulare, lokale Alltags-App';
+const tagHtml = (t, accent) => typeof t === 'string' ? t : t.parts.map(([a, b]) => `<b style="color:${accent};font-weight:700">${a}</b>${b}`).join(t.sep ?? ' · ');
 const OCEAN = 'linear-gradient(135deg, #0B1D2B 0%, #0F3440 100%)';
 const THEME = {
   dark: { bg: OCEAN, text: '#E7F1F2', muted: '#9FB6BC', deco: '#7FC4CC', decoAlpha: 0.09, wave: '#2B7A87', edge: '#14202B' },
@@ -79,7 +80,7 @@ export function bannerHtml(v, t, w, h) {
       padding-left:${left ? Math.round(w * 0.09) : 0}px;box-sizing:border-box;font-family:Inter,sans-serif;color:${c.text}}
     .bg>svg.wm{position:relative;height:${wmH}px;width:auto}
     .tag{position:relative;font-size:${Math.round(h * 0.066)}px;font-weight:500;letter-spacing:.01em;color:${c.muted}}
-  </style><div class="bg">${SYMBOL}${deco(v, t, w, h)}${wm.replace('<svg ', '<svg class="wm" ')}<div class="tag">${TAG}</div></div>`;
+  </style><div class="bg">${SYMBOL}${deco(v, t, w, h)}${wm.replace('<svg ', '<svg class="wm" ')}<div class="tag">${tagHtml(v.tag ?? TAG, DEEP)}</div></div>`;
 }
 
 export async function renderRound(dir) {
