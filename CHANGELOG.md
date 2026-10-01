@@ -4,6 +4,20 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 
 ## Unreleased
 
+## 0.3.1 (2026-10-01) – "Nemo 0.3.1"
+Kleines Update: neue Wortmarke. Installationen von 0.3.0 bekommen es per In-App-Update angeboten, die Daten bleiben erhalten.
+
+### Geändert
+- Neue Wortmarke „Nemo“ im Clownfisch-Stil: In der Seitenleiste und der Kopfzeile erscheint der Schriftzug statt nur des Fisch-Symbols.
+- README-Kopfbild und Vorschaubild für soziale Netzwerke mit der neuen Wortmarke und dem Claim.
+
+### Behoben, Sicherheit
+- Keine Änderungen.
+
+### Hinweise
+- **Keine Breaking Changes:** interne IDs, Backup-Formate, Datenbank und Updater-Endpunkt sind unverändert.
+- **Bekanntes:** Die Geräte-Funktionen (Datenträger, Windows Hello, Android-Biometrie, Sync mit älteren Geräten) sind weiter nur von Hand geprüft. Bitte Fehler melden.
+
 ## 0.3.0 (2026-10-01) – "Nemo 0.3.0"
 Erste stabile Version unter dem Namen Nemo. Sie ist die „neueste Version“: Installationen von 0.2.0 bekommen sie per In-App-Update angeboten, die Daten bleiben erhalten. Sie enthält alles aus 0.3.0-beta.1 (siehe unten) plus die Änderungen hier.
 
