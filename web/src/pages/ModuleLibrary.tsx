@@ -24,7 +24,7 @@ export function ModuleLibrary() {
     if (!pending) return;
     const m = pending;
     // Close the dialog only after the write: "the dialog has closed" must mean "the write is
-    // finished" (E2E rule in CLAUDE.md), otherwise a reload right after can lose the change.
+    // finished" (E2E rule in docs/howto/gotchas.md), otherwise a reload right after can lose the change.
     await disableModule(m, policy);
     setPending(null);
   }

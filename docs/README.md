@@ -1,23 +1,24 @@
-# Nemo – Dokumentation
+# Nemo – docs index
 
-## Für Nutzerinnen und Nutzer (Deutsch)
-- [Installation](user/installation.md): Windows-Portable, Android-APK, PWA, Umstieg von alten Versionen
-- [Module und Werkzeuge](user/module.md): was die App kann
-- [Suche, KI-Assistent und KI-Import](user/ki-assistent.md), Details zum Import: [AI-IMPORT.md](AI-IMPORT.md)
-- [Sync-Server](user/sync-server.md): Docker, Node, Tailscale, Push, Backup
-- [Sicherheit und Datenschutz](user/sicherheit.md)
-- [Entwicklung: App lokal starten](user/entwicklung.md)
+Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you need. Budgets: [meta/DOCS-GUIDE.md](meta/DOCS-GUIDE.md).
 
-## Für Entwicklung (English)
-- [ARCHITECTURE-MAP.md](ARCHITECTURE-MAP.md): where things live
-- [architecture.md](architecture.md): long design notes per phase
-- [DECISIONS.md](DECISIONS.md): decisions and their reasons
-- [HOW-TO.md](HOW-TO.md): recipes (new module, tool, connector, icons, tokens, release)
-- [STATUS.md](STATUS.md): done, open, known problems, manual test checklists
-- [ROADMAP.md](ROADMAP.md): ideas for later, prioritised
-- [DESIGN-CONCEPT-2026-09-30.md](DESIGN-CONCEPT-2026-09-30.md): design concept and logo choice; proposals in [design-proposals/](design-proposals/)
-- Reviews and audits: [REVIEW-2026-09-30.md](REVIEW-2026-09-30.md), [security/](security/)
-- Feature notes: [features/backup-sync.md](features/backup-sync.md), [features/quick-capture.md](features/quick-capture.md)
-- Brand assets: [brand/](brand/) (rendered), sources in `web/brand/`
+## Developer docs (English)
+| File | What | Read when |
+|---|---|---|
+| [ARCHITECTURE-MAP.md](ARCHITECTURE-MAP.md) | where things live (paths, interfaces, data flow) | locating code |
+| [architecture.md](architecture.md) → [architecture/](architecture/) | design notes by topic (core, sync, ai, native, releases, vault, importer, local-api, connectors, …) | changing that area |
+| [RULES.md](RULES.md) | hard rules, unabridged (root has the short list) | touching data, security, modules, platform |
+| [DECISIONS.md](DECISIONS.md) → [decisions/](decisions/) | one line per decision, full text per area | asking "why" |
+| [HOW-TO.md](HOW-TO.md) → [howto/](howto/) | commands, tests, recipes (module, tool, connector, setup step, provider, icons, tokens, CI, release, gotchas) | doing a known task |
+| [STATUS.md](STATUS.md) | current release, open, known limits, next steps, "Offen – macht Sven" (German) | planning, hand-over |
+| [MANUAL-TESTS.md](MANUAL-TESTS.md) | hardware checklists (German) | device testing |
+| [ROADMAP.md](ROADMAP.md) | ideas, not built | proposing features |
+| [CHATS.md](CHATS.md) | running work, hotspots, hand-over rules | first and last step of every chat |
+| [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md) | reusable prompt blocks | writing a prompt |
+| [meta/](meta/) | docs guide, audit reports | changing docs |
+| [security/](security/), [perf/](perf/), [features/](features/) | reports and feature notes (each has an index) | that topic |
+| [archive/](archive/) | historical reports (hidden from scans) | history only |
+| design-proposals/, brand/, screenshots/ | images and token experiments | design work |
 
-The working guide for AI sessions is [`CLAUDE.md`](../CLAUDE.md) in the repository root.
+## For users (German)
+[user/installation.md](user/installation.md) · [user/module.md](user/module.md) · [user/ki-assistent.md](user/ki-assistent.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync-server.md](user/sync-server.md) · [user/sicherheit.md](user/sicherheit.md) · [user/entwicklung.md](user/entwicklung.md)

@@ -82,6 +82,20 @@ jobs:
           set -euo pipefail
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
+  # Non-blocking docs budget check (start context, file sizes, dead links; needs only Node, no install).
+  # Warnings never fail the run; budgets: docs/meta/DOCS-GUIDE.md.
+  docs-budget:
+    name: Docs budget (warnings only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node web/scripts/check-docs.mjs
+
   # The former single `web` job (about 14 min, one after the other) is split so that the pieces run side by
   # side; `web` at the bottom of this group keeps the old check name for branch protection.
   web-static:
@@ -310,7 +324,7 @@ jobs:
 
   # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
   # push to develop that changed more than documentation. Never on pull requests, never a stable release.
-  # See dev-preview.yml and docs/HOW-TO.md -> "Dev-Preview".
+  # See dev-preview.yml and docs/howto/ci.md -> "Dev-Preview".
   dev-preview:
     name: Dev-Preview build
     needs: [changes, secret-scan, web, server, mcp, e2e-sync, rust]

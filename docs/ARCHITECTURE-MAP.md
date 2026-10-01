@@ -1,8 +1,8 @@
 # Architecture map – Nemo
 
-Fast "where is what" index. Paths are repo-relative and were checked against the tree. Rationale and long design notes: [`architecture.md`](architecture.md) (section names in brackets below). Decisions: [`DECISIONS.md`](DECISIONS.md).
+Fast "where is what" index (paths checked against the tree). Rationale and long design notes: [architecture.md](architecture.md) (topic files in `docs/architecture/`). Decisions: [DECISIONS.md](DECISIONS.md). Detail rows for home/setup/desktop/update channels live in the topic files.
 
-> Filename note: this map is `ARCHITECTURE-MAP.md`, not `ARCHITECTURE.md`, because `architecture.md` already exists and is referenced from code (`web/src-tauri/crates/local-api/src/lib.rs`); the two names would collide on Windows/macOS checkouts.
+> Filename note: `ARCHITECTURE-MAP.md` (not `ARCHITECTURE.md`) because `architecture.md` exists and is referenced from code (`web/src-tauri/crates/local-api/src/lib.rs`); the names would collide on Windows/macOS.
 
 ## Top level
 | Path | What |
@@ -13,7 +13,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
-| `docs/` | `README.md` (index), `user/` (German user docs), `architecture.md` (details), `AI-IMPORT.md`, this map, `DECISIONS.md`, `HOW-TO.md`, `STATUS.md`, `ROADMAP.md`, `REVIEW-*.md`, `DESIGN-CONCEPT-*.md` + `design-proposals/`, `security/`, `brand/` (rendered headers, social preview), `screenshots/` |
+| `docs/` | index [`README.md`](README.md); `user/` (German user docs), `architecture.md` + `architecture/`, `howto/`, `decisions/`, `AI-IMPORT.md`, `STATUS.md`, `MANUAL-TESTS.md`, `ROADMAP.md`, `CHATS.md`, `PROMPT-TEMPLATES.md`, `meta/`, `security/`, `perf/`, `features/`, `archive/`, `design-proposals/`, `brand/` (rendered headers), `screenshots/` |
 | root files | `README.md` (short, German), `LICENSE` (MIT), `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` |
 | `.github/workflows/` | `ci.yml`, `release.yml`, `dev-preview.yml` (reusable, called from `ci.yml`) |
 
@@ -54,28 +54,23 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | **AI router / config** | `web/src/core/ai/router.ts` (`createRouter`), `config.ts` (`ProviderEntry`, `createRouterProvider`), `usage.ts`, `testConnection.ts`; UI `pages/settings/AiSection.tsx` | |
 | Assistant pipeline | `web/src/core/ai/assistant.ts` (`ask`), `intent/parser.ts` (tier 1), `search/fulltext.ts`, `cache.ts` (tier 2), `prompt.ts`, `scope.ts` (`aiModules` filter), `query/{schema,executor,validate,create}.ts`, `newsBrief.ts` | |
 | **Connectors** | framework `web/src/core/connectors/{types,registry,context,oauth,redact,service,state}.ts` (glob `connectors/*/index.ts`); impls `web/src/connectors/google/*`, `web/src/connectors/ics/*`; UI `pages/settings/ConnectorsSection.tsx`; isolation `connectors/isolation.test.ts` | `ConnectorDef` |
-| **Home screen** (not a module) | `web/src/home/`: `Home.tsx` (page, edit mode: dnd-kit with mouse/touch(long press)/keyboard sensors, size `Segmented`, widget sheet, reset), `layout.ts` (scope `home` in `_settings`: `{order, hidden, sizes}`, `loadLayout`, `updateLayout`, `resetLayout`, `migrateLegacyLayout` from the old scope `dashboard`), `AutoWidget.tsx` (`widgetsOf`: generated fallback widget for a module without widgets). Route `/` in `router.tsx`; logo link + Alt+Home + palette in `layout/AppShell.tsx`. **Widget contract:** `ModuleManifest.widgets` (`WidgetDef`: `id, title, sizes, defaultSize, component`), checked by `validateManifest`, `scripts/check-modules.mjs` (+ `scripts/lib/checkModules.ts`, CI `web-static`) and `core/modules/widgets.test.tsx` (renders every widget empty and with example data). Tests `home/*.test.ts(x)`, `e2e/home.spec.ts` | `WidgetDef`, `useHomeLayout` |
+| **Home screen (not a module)** | `web/src/home/` (`Home.tsx`, `layout.ts` scope `home`, `AutoWidget.tsx`); widget contract `ModuleManifest.widgets` (`WidgetDef`) checked by `validateManifest`, `scripts/check-modules.mjs`, `core/modules/widgets.test.tsx`; route `/` in `router.tsx`. Details: [architecture/setup-home.md](architecture/setup-home.md) | |
 | **Layout system** | `web/src/layout/PageContainer.tsx` + `.module.css`; `PageLayout`/`PAGE_LAYOUTS` in `core/modules/types.ts`; applied once in `router.tsx` via `manifest.layout` / `route.layout` | `narrow`/`content`/`wide`/`full` |
 | **Onboarding / import framework** | `web/src/core/importer/` (`types.ts`, `plan.ts`, `batches.ts`, `host.tsx`, `OnboardingWizard.tsx`, `ImportPreview.tsx`, `StartDataButton.tsx`); parsers `web/src/core/io/*`; per-module `modules/<id>/onboarding.ts` + `importer.ts`; e2e `e2e/onboarding.spec.ts` | `ImporterMeta`, `ImportBatch`, table `_imports` |
 | **Data API (JSON import)** | `web/src/core/dataapi/` (`format.ts`, `parse.ts`, `importer.ts`, `scope.ts`, `openapi.ts`, `pending.ts`, `text.ts`) | |
 | **Local import API** | app side `web/src/core/localapi/{config,handler,service,log,prompt}.ts`; Rust transport `web/src-tauri/crates/local-api/src/{auth,http,limiter,server,lib}.rs` (+ `tests/server.rs`); Tauri wiring `web/src-tauri/src/local_api.rs`; JS bridge `core/platform/tauri/localApi.ts`; e2e fake `core/platform/fakeLocalApi.ts`; UI `pages/settings/LocalApiSection.tsx`, `layout/PendingImports.tsx`; guide `docs/AI-IMPORT.md` | |
 | **MCP wrapper** | `mcp/src/{index,server,api,config}.ts`, tests `mcp/test/` | 8 tools, 1 API call each |
-| **Setup assistant** ("Einrichtungsassistent") | logic `web/src/core/setup/`: `types.ts` (`SetupStepDef`, `SetupStepProps`, `SETUP_VERSION`), `state.ts` (local progress in `_meta` `setup.state`), `detect.ts` (`appHasData`, `ensureSetupState` = start migration), `registry.ts` (`allSetupSteps`, `applicableSteps`, `detectDone`), `profiles.ts` (presets, `requires`), `checklist.ts`, `hooks.ts` (`useBackClose`), `host.ts`, `steps/index.ts` (`CORE_STEPS`); UI `web/src/layout/setup/` (`SetupWizard`, `SetupHost`, `WelcomeCard`, `ChecklistCard`, `SetupLink`, `steps/*Step.tsx`); module step `modules/accounts/setup.ts`; settings `pages/settings/SetupSection.tsx`; app-wide prefs `core/settings/core.ts` (scope `core`); e2e `e2e/setup.spec.ts` | `SetupStepDef`, `useSetupHost` |
+| **Setup assistant** | logic `web/src/core/setup/`, UI `web/src/layout/setup/`, module step `modules/accounts/setup.ts`, e2e `e2e/setup.spec.ts`. Details: [architecture/setup-home.md](architecture/setup-home.md) | |
 | Platform layer | `web/src/core/platform/{index,types,web}.ts`, `tauri/{index,localApi,disk,system,secureStore,updater}.ts` | `getPlatform()`, `PlatformService` |
-| **Disk module (desktop)** | UI `web/src/modules/disk/` (`routes/{DrivesPage,ScanPage}`, `components/{ScanView,TreemapView,NodeList,Details,DeleteDialog,Basket,Duplicates,Legend,Breadcrumb}`, `logic/{treemap,tree,colors}.ts`, `store.ts` = session only); seam `core/platform/disk.ts` (`DiskService`), bridge `tauri/disk.ts`, e2e fake `fakeDisk.ts`; Rust `web/src-tauri/crates/disk-scan/src/{scan,tree,drives,guard,delete,trash_win,duplicates,system,kinds}.rs` (+ `tests/{scan,delete,duplicates}.rs`), Tauri wrapper `src-tauri/src/disk.rs`. No collections, no `aiSchema`, `dataApi: false` + id block. | `DiskService`, `Guard`, `Tree` |
-| **System module (desktop)** | UI `web/src/modules/system/`; seam `core/platform/system.ts`, `tauri/system.ts`, `fakeSystem.ts`; Rust `src-tauri/crates/system-info` + `src-tauri/src/system.rs` | `SystemService` |
-| **Tauri command permissions** | `web/src-tauri/build.rs` lists every app command (`AppManifest::commands`) → `allow-<command>` permissions (`permissions/autogenerated/`); granted to the main window in `capabilities/default.json` (shared) or `capabilities/desktop.json` (desktop only, not Android), to the capture window only via `capabilities/capture.json`. `web/src-tauri/tests/commands.rs` guards all three (every handler listed, every non-capture command granted to `main`, capture window limited to its own two). A wrong name fails the build. New desktop command = handler in `lib.rs` + `build.rs` + `desktop.json`. | `COMMANDS` |
+| **Disk module (desktop)** | UI `web/src/modules/disk/`, seam `core/platform/disk.ts`, Rust `web/src-tauri/crates/disk-scan/`, wrapper `src-tauri/src/disk.rs`; no collections, no `aiSchema`. Details: [architecture/desktop.md](architecture/desktop.md) | |
+| **System module (desktop)** | `web/src/modules/system/`, `core/platform/system.ts`, Rust `crates/system-info` + `src/system.rs`. Details: [architecture/desktop.md](architecture/desktop.md) | |
+| **Tauri command permissions** | `web/src-tauri/build.rs` `COMMANDS` + `capabilities/{default,desktop,capture}.json`; guard test `web/src-tauri/tests/commands.rs`. New desktop command = handler in `lib.rs` + `build.rs` + `desktop.json`. Details: [architecture/desktop.md](architecture/desktop.md) | |
 | **Tauri shell** | `web/src-tauri/`: `src/{lib,main,local_api,oauth,portable,update,webview2}.rs`, `tauri.conf.json`, `tauri.windows.conf.json`, `capabilities/default.json`, `Cargo.toml` | identifier `io.github.sgnemo.taschenmesser` |
 | Tauri plugins (local) | `web/src-tauri/plugins/apk-installer/` (Android APK update), `plugins/secure-store/` (OS keystore, biometrics, screen protection; Kotlin in `android/`) | |
 | Self-update (TS) | `web/src/core/update/{controller,github,notes,prefs,semver,backup,types}.ts`; UI `layout/UpdateBanner.tsx`, `pages/settings/UpdateSection.tsx` | |
-| **Update channels & manifests** | `stable`: `releases/latest/download/latest.json` (+ APK from releases); `beta`: newest SemVer release's own `latest.json`; `dev` (Dev-Preview builds only, `core/update/buildInfo.ts` `effectiveChannel`): `releases/download/dev-preview/dev-latest.json` (+ `Nemo-dev.apk`). Rust accepts the dev manifest/exe only at that fixed path (`update.rs`); dev flavor = identifier `….dev` (`tauri.dev.conf.json`), portable folder `data-dev` (`portable.rs`), own keystore service (`plugins/secure-store`). Build side: `web/scripts/{dev-preview.mjs,verify-sig.mjs}`, `scripts/lib/{devPreview,minisign}.ts`. | `BUILD_CHANNEL`, `DEV_MANIFEST_URL` |
+| **Update channels & manifests** | stable/beta/dev channels, `core/update/buildInfo.ts` `effectiveChannel`, `update.rs`, `web/scripts/dev-preview.mjs`. Details: [architecture/native.md](architecture/native.md) | |
 | Notifications | `web/src/core/notifications/{scheduler,service,push,pushPayload,nativeSchedule,triggers}.ts` | |
 | Vault (passwords) | `web/src/modules/accounts/` (never AI-visible) | |
-
-## Disk module: scan and delete flow
-1. **Scan:** `disk_scan_start(root)` → thread → rayon walk (`scan.rs`): one task per folder returns a `DirTemp`; arena `Tree` built at the end. Symlinks/junctions/mount points never entered; cloud placeholders never opened; unreadable folders listed; files under 1 MiB folded into one entry per folder (type totals stay exact); size = space on volume (cluster rounded). Progress/`done` via Tauri `Channel`; `disk_scan_cancel/pause`. Tree stays in Rust behind `RwLock`; the webview gets views (`disk_children`, `disk_query`) by node id.
-2. **Delete:** UI sends node ids only → `disk_delete_plan` (block list, sizes, flags) → confirmation (typed phrase checked in Rust) → `disk_delete(plan, mode)`: block list again + resolved path must equal the planned one; trash via `IFileOperation` sink that aborts a would-be permanent delete (`trash_win.rs`), permanent via bottom-up walker (links removed, never followed); report per entry; tree corrected in place (`apply_to_tree`).
-3. **Block list** (`guard.rs`): text-segment rules on canonicalised paths: drive roots, `Windows`, `Program Files (x86)`, `ProgramData`, `System Volume Information`, `$Recycle.Bin`, `Users` + every profile root, `AppData` + `Local|Roaming|LocalLow`, pagefile/hiberfil/swapfile/DumpStack, own exe dir + app data dirs + everything above them, running programs' folders. Known-folder API adds the real locations.
 
 ## Data flow
 1. **Write:** UI → module `repo.ts` (`createRepo`) → Zod validation → HLC-stamped fields → Dexie table + `_outbox` (unless `local: true`).
@@ -85,28 +80,5 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 5. **Import:** wizard/JSON paste/local API → `buildPreview` (dedupe, validation) → user confirms → `commitImport` → `repo.createMany` → batch row in `_imports` (undo).
 6. **Native calls:** anything OS-specific goes through `getPlatform()`; only `core/platform/tauri/**` imports `@tauri-apps/*`.
 
-## Important interfaces
-- `ModuleManifest` (`core/modules/types.ts`): id, routes, `setupSteps?`, `requires?`, `collections`, `widgets`, `aiSchema?`, `contributions` (`quickAdd`, `calendarItems`, `notifications`, `services`, `onboarding` (required), `aiComputed`, `aiCreateDefaults`, `externalCalendar`), `layout`, `migrations`, `defaultEnabled`, `order`, `devOnly`. `ToolManifest` / `ConnectorDef` also take `setupSteps?`.
-- `ToolManifest` (`core/tools/types.ts`).
-- `ConnectorDef` / `ConnectorContext` (`core/connectors/types.ts`).
-- `AiProvider { id, model, complete(req) }` (`core/ai/providers/types.ts`).
-- `SyncAdapter` (`core/sync/types.ts`), `StorageAdapter` (`core/storage/types.ts`), `FieldOp`.
-- `PlatformService` (`core/platform/types.ts`): `fetch`, `notifications`, `saveFile`, `clipboard`, `secrets`, `biometrics`, `screen`, `oauth`, `updater`, `localApi`, `disk`, `system`, `lifecycle`, `app`.
-- `ImporterMeta` / `ImporterRuntime` / `ImportBatch` (`core/importer/types.ts`).
-- Server REST (`server/src/app.ts`): `GET /v1/health`, `GET|PUT /v1/vault`, `POST /v1/push`, `GET /v1/pull`, `POST /v1/reset`, push routes `/v1/push/*`, `GET /v1/proxy?url=`. Local API routes: see `architecture.md` → "Local AI import API".
-
-## Tests
-- Unit/component: co-located `*.test.ts(x)` (some in `__tests__/`); `web/vitest.config.ts`, `web/vitest.setup.ts`.
-- Disk/system: `modules/disk/__tests__/exclusion.test.ts`, `modules/system/__tests__/system.test.ts`, e2e `e2e/disk.spec.ts`, `e2e/system.spec.ts` (fake platform, invented data only).
-- Isolation/privacy guards: `core/modules/registry.test.ts`, `tools/isolation.test.ts`, `connectors/isolation.test.ts`, `core/ai/privacy.test.ts`, `modules/accounts/__tests__/exclusion.test.ts`, `core/sync/contract.test.ts`, `server/test/contract.test.ts`.
-- Server: `server/test/*.test.ts` (Vitest + `fastify.inject`). MCP: `mcp/test/mcp.test.ts`. Rust: `web/src-tauri/crates/local-api/tests/server.rs`, `crates/disk-scan/{src,tests}`, `crates/system-info/src`.
-- CI jobs (`.github/workflows/ci.yml`, on push to `develop`/`main` and PRs, all in parallel): `changes` (docs-only gate), secret scan (gitleaks, always), web-static, web-unit, web-e2e (4 shards), `web` (aggregates the three under the old check name), server, mcp, multi-device sync E2E, rust (fmt, clippy, tests). Details and cache rules: `HOW-TO.md` → "CI layout, caches and sharding".
-- Release (`.github/workflows/release.yml`): tag `v*.*.*`, plus dry runs on `develop` pushes touching `web/src-tauri/**`, `web/scripts/**`, the workflow, and manual dispatch; jobs `secret-scan`, `prepare`, `windows`, `android`, `release`, `summary`.
-
-## Setup assistant (data flow)
-1. **Start:** `initCore` → `ensureSetupState()` (first thing). Missing row: app has data → `dismissed` + `checklistHidden`; empty app → `notStarted`. Never runs the wizard by itself.
-2. **Open:** `useSetupHost.openWizard(stepId?)` from Settings, palette command "Einrichtung", dashboard cards, empty dashboard, module library. `SetupHost` (in `AppShell`) mounts `SetupWizard`.
-3. **Steps:** `allSetupSteps` = `CORE_STEPS` + `setupSteps` of manifests (sorted by `order`; core: basics 10, sync 20, profiles 30, tools 40, vault 50 (module), ai 60, connectors 70, startdata 80, aiimport 90, notifications 100, backupupdates 110, dashboard 120). `when` filters, `isDone` auto-detects.
-4. **Save:** a step keeps a local draft, registers `registerCommit(fn)`; "Weiter" runs it, then `markStepDone` (or `markStepSkipped` if `fn` returns `'skipped'`). Cancel drops the draft. Actions that are explicit in the reused settings UI (sync connect, backup restore, OAuth login, import wizard) write on their own button.
-5. **Leave:** X / Esc / back gesture (`useBackClose`) → confirm view: later (`inProgress`), end (`dismissed`), keep going.
-6. **Checklist:** `useChecklist` → `ChecklistCard` on the dashboard while status is `inProgress|dismissed` (or steps newer than `state.version`), not hidden, and something is open.
+## Interfaces and tests
+Key interfaces (`ModuleManifest`, `PlatformService`, `SyncAdapter`, server REST …) and the test/CI map: [architecture/interfaces-tests.md](architecture/interfaces-tests.md).

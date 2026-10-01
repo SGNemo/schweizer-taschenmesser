@@ -5,7 +5,7 @@ name: Release
 # exist yet) builds the same and creates the tag + release itself. Use one way per release, never both.
 # Pushes to `develop` that touch the native shell, and manual runs WITHOUT `version`, are DRY RUNS: they
 # build and upload artifacts but never create a release. How to create keys/secrets and cut a release:
-# see CLAUDE.md ("Releases").
+# see docs/howto/release-deps.md ("Release").
 
 on:
   push:
@@ -147,7 +147,7 @@ jobs:
         if: steps.meta.outputs.publish == 'true'
         run: |
           if [ -n "${{ steps.keys.outputs.missing }}" ]; then
-            echo "::error::Missing GitHub secrets: ${{ steps.keys.outputs.missing }}. Nothing was built or published – see CLAUDE.md → Releases."
+            echo "::error::Missing GitHub secrets: ${{ steps.keys.outputs.missing }}. Nothing was built or published – see docs/howto/release-deps.md → Release."
             exit 1
           fi
 
@@ -158,7 +158,7 @@ jobs:
           KEY_ID="$(node -e "const c=require('./src-tauri/tauri.conf.json');console.log(Buffer.from(c.plugins.updater.pubkey,'base64').toString().split('\n')[0])")"
           echo "$KEY_ID"
           if [[ "$KEY_ID" == *76760D11981F2BAC* ]]; then
-            echo "::error::plugins.updater.pubkey in web/src-tauri/tauri.conf.json is still the development placeholder. Put the public key from 'node scripts/keys.mjs updater' there (CLAUDE.md → Releases) - otherwise installed apps could never verify an update."
+            echo "::error::plugins.updater.pubkey in web/src-tauri/tauri.conf.json is still the development placeholder. Put the public key from 'node scripts/keys.mjs updater' there (docs/howto/release-deps.md → Release) - otherwise installed apps could never verify an update."
             exit 1
           fi
 
