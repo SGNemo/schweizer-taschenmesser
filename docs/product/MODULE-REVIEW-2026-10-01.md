@@ -162,6 +162,7 @@ Hintergrund-Sync alle 5 Min. (sichtbar), je Connector max. alle 30 Min. Google-L
 - **Habits und Zeiterfassung werden in Paket 1 stillgelegt** (nicht eingefroren); Daten bleiben exportierbar (Runde 3, Korrektur von Runde 2).
 - **Versionen:** MINOR-Kette 0.4 … 0.7 mit `feat!:` und Changelog-Abschnitt „Breaking“; 1.0.0 nach Paket 6 (Runde 3).
 - **Roadmap statt Paket:** K3 Anhänge in Sync/Backup, M2, M3, Nachrichten als optionale Erweiterung (Runde 3).
+- **Abgleich mit der Design-Spezifikation (2026-10-01):** Design-PR 1 + 2 (Tokens, Shell + Bereiche `manifest.area`) laufen vor Paket 1; Paket 1 baut keine Gruppen-Mechanik; Paket 2 entfällt (Widget-Aktionen liegen im Design-PR 4); Design-PRs 5b/5c/5d restylen nur bleibende Module, `lists`/`people`/Unterlagen entstehen im neuen Stil; die Merklisten-Art aus Apps & Links heißt **„Lesezeichen“**, „Favoriten“ bleibt der Navigation vorbehalten.
 
 ## Anhang · Screenshots reproduzieren
 Repo-Skript deckt 19 Module ab; für diese Review wurde eine Kopie um Vorräte, Zeiterfassung, Geschenke, Dokumente, Apps & Links, Nachrichten und alle 18 Werkzeuge erweitert (nicht eingecheckt). Repo-Variante:
@@ -392,4 +393,4 @@ Parallel zu dieser Review wurde die Design-Evaluation beschlossen ([`docs/design
 Für diese Review wurden die Screenshots noch mit dem alten Skript und eigenen Fake-Daten gemacht (vor #37). Die Inventar-Spalte „Seeds“ in Abschnitt 3 beschreibt den Stand vor #37; seit #37 hat jedes Modul außer Datenträger/Systeminfo (`none: 'live-data'`) einen Seed.
 
 ## 26 · Fragen zum Abgleich
-Siehe Chat; Antworten → Abschnitt 10.
+Beantwortet, siehe Abschnitt 10. Offen für den Design-Chat: `docs/design/IMPLEMENTATION-PROMPT.md` Teil B um die wegfallenden Module in 5b/5c/5d kürzen und § 13 der Spezifikation um die Antwort „Erinnerungen → Kalender (Paket 5), Merkliste bleibt“ ergänzen (nicht in diesem PR, Umfang `docs/product/**`).
