@@ -3,10 +3,37 @@
 Release notes are generated from Conventional Commits (`npm run changelog -- --version <x.y.z>` in `web/`); this file mirrors the published releases. Full lists with commit links: [GitHub Releases](https://github.com/SGNemo/schweizer-taschenmesser/releases).
 
 ## Unreleased
-- Rebrand to **Nemo**: new clownfish mark ("Welle"), flat "Klar" design (tokens, shared controls), MIT licence, short README with user docs under `docs/user/`, roadmap, review report.
-- Fixes: Android launcher icons are copied into the generated project, monochrome status-bar icon for notifications, local day in the last-sync timestamp, all internal identifiers pinned by tests, legacy encrypted/vault backup fixtures, release asset pairs verified byte for byte.
-- Merged `develop` (#8: disk cleaner, pantry, timetrack, gifts, system, four tools); the system page uses the shared progress bar.
-- Housekeeping: dead exports and strings removed, shared helpers (`pad2`, e2e `ready`/`enable`), CI caches, format checks.
+
+## 0.3.0-beta.1 (2026-09-30) – "Nemo 0.3.0-beta.1" (Vorabversion)
+Vorabversion zum Ausprobieren: Sie erscheint nicht als „neueste Version“ und wird nicht automatisch per App-Update angeboten. Die Installation über eine bestehende Installation behält alle Daten.
+
+### Neu
+- **Nemo:** neuer Name, neues Logo („Welle“) und ein ruhiges, flaches Design mit Akzentfarben (Hell/Dunkel).
+- **Einrichtungsassistent** für den Start (manuell, nie erzwungen).
+- **Schnell erfassen:** Tastenkürzel, Tray-Symbol und Autostart (Windows), Teilen-Ziel (Android), Eingabe in Alltagssprache.
+- **Datenträger (Windows):** Laufwerke scannen, Treemap, Aufräum-Helfer, doppelte Dateien; Löschen nur mit Sperrliste, Papierkorb als Standard und Bestätigung per Namenseingabe.
+- **Systeminfo (Windows):** CPU, Speicher, Akku, Grafik, Netzwerk.
+- **Neue Module:** Vorrat, Zeiterfassung, Geschenkideen.
+- **Neue Werkzeuge:** Text, Zeitzonen, Bild, PDF.
+- Lizenz: MIT.
+
+### Geändert
+- Kurze README mit Nutzer-Dokumentation unter `docs/user/`.
+- Alle Dateien heißen jetzt Nemo-*; die bisherigen Taschenmesser-*-Dateien liegen als Kopie dabei, damit installierte Apps weiter aktualisieren können.
+
+### Behoben
+- Android: Teilen-Ziel baute nicht (Android 12+), Statusleisten-Symbol für Benachrichtigungen.
+- Falscher Tag im Zeitstempel der letzten Synchronisierung.
+
+### Sicherheit
+- Verschlüsselte Backups mit Prüfung vor dem Wiederherstellen; automatische Sicherungen (Windows).
+- Sync: Geräte-Tokens, Sperre bei Fehlversuchen, neuer Tresor (Argon2id), Konfliktprotokoll.
+- Sicherungskopien vor Updates sind verschlüsselt.
+
+### Hinweise
+- **Keine Breaking Changes:** interne IDs, Backup-Formate und Updater-Endpunkt sind unverändert; alte Backups lassen sich weiter importieren. Die lokale Datenbank wird beim ersten Start automatisch auf Version 13 migriert.
+- **Bekanntes:** Die Geräte-Funktionen (Datenträger, Windows Hello, Android-Biometrie, Update auf bestehender Installation) sind nur von Hand geprüft. Bitte Fehler melden.
+- **Vorabversion:** Windows-Portable und APK von Hand von der Releases-Seite laden (SmartScreen-Hinweis bei der EXE ist zu erwarten).
 
 ## 0.2.0 (2026-09-30) – "Taschenmesser 0.2.0"
 ### Breaking changes
