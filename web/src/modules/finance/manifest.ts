@@ -40,6 +40,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 40,
   contributions: {

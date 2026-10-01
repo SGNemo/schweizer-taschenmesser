@@ -124,3 +124,10 @@ N13. *Clownfisch-Icon im Browser/PWA:* Favicon im Tab (hell/dunkel), „Zum Star
 N11. *Reduzierte Bewegung:* Systemeinstellung an → keine Seiten-/Listen-/Balken-Animation, Listen erscheinen sofort (kein Verzögern), Skeleton ohne Schimmer. ☐
 N12. *README auf GitHub im hellen und dunklen Modus:* Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
 N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐
+
+### Testdaten (Dev-Preview)
+T1. *Dev-Preview frisch installieren* (`Nemo-Portable-dev.exe` / `Nemo-dev.apk`, leere Datenbank): Die App startet mit Daten in Übersicht und allen Modulen, Hinweis „Testdaten geladen“ erscheint einmal. ☐
+T2. *Einstellungen → Entwickler → „Testdaten entfernen“:* alle Testdaten sind weg, eigene Einträge (vorher angelegt) bleiben. Nach Neustart werden sie nicht erneut geladen. ☐
+T3. *Tresor:* Accounts zeigt einen Demo-Tresor mit der Passphrase `nemo-demo-tresor`; ein vorhandener Tresor wird nie überschrieben. ☐
+T4. *Sync:* Mit eingerichtetem Sync-Server werden Testdaten nicht übertragen (Server hat sie nicht); erst „Seed-Sync erlauben“ schickt sie. ☐
+T5. *Stabile App* (`Nemo-Portable.exe`/`Nemo.apk`) hat keinen Bereich „Entwickler“ und keinen Palette-Befehl „Testdaten laden“. ☐

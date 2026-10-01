@@ -29,7 +29,7 @@ function sampleRow(definition: string, n: number): Record<string, unknown> {
 
 describe('database upgrades', () => {
   it('has fixtures for the versions that were released', () => {
-    expect(versions.map(([v]) => v)).toEqual([1, 2, 3, 4, 5, 7, 8, 12]);
+    expect(versions.map(([v]) => v)).toEqual([1, 2, 3, 4, 5, 7, 8, 12, 13]);
     expect(snapshot.version).toBeGreaterThan(Math.max(...versions.map(([v]) => v)));
   });
 

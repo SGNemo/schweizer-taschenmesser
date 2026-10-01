@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import type { ExternalEvent } from '@/core/connectors/types';
 import type { PlatformKind } from '@/core/platform/types';
 import type { OnboardingDef } from '@/core/importer/types';
+import type { SeedMeta } from '@/core/seed/types';
 import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
@@ -284,6 +285,11 @@ export interface ModuleManifest {
   requires?: string[];
   /** Only listed in the library in dev builds / when VITE_INCLUDE_EXAMPLE=true. */
   devOnly?: boolean;
+  /**
+   * Test data contract (required): version and dependencies of `seed.ts`, which generates the
+   * module's demo data for the Dev-Preview build, E2E tests and screenshots. See `core/seed/`.
+   */
+  seed: SeedMeta;
   contributions?: ModuleContributions;
   /** Optional steps for the setup assistant; ids must start with `<module id>.`. */
   setupSteps?: SetupStepDef[];

@@ -6,6 +6,7 @@ import { allManifests } from '@/core/modules/registry';
 import { findConflicts, mergeOps, recordToOps, type SyncRow } from '@/core/sync/ops';
 import { conflictRows } from '@/core/sync/conflictLog';
 import type { FieldOp } from '@/core/sync/types';
+import { seededOf, seedSyncAllowed } from '@/core/seed/guard';
 import { now } from '@/core/time/now';
 import type { ApplyResult, OutboxBatch, OutboxEntry, StorageAdapter } from './types';
 
@@ -37,7 +38,19 @@ export class DexieStorageAdapter implements StorageAdapter {
   }
 
   async readOutbox(maxRecords: number): Promise<OutboxBatch> {
-    const rows = await this.outbox().orderBy('queuedAt').limit(maxRecords).toArray();
+    let rows = await this.outbox().orderBy('queuedAt').limit(maxRecords).toArray();
+    // Generated test data stays on the device unless the dev switch allows it.
+    if (!(await seedSyncAllowed(this.database))) {
+      const seeded = await seededOf(
+        this.database,
+        rows.map((r) => [r.collection, r.id] as const),
+      );
+      if (seeded.size > 0) {
+        const isSeed = (r: OutboxRow) => seeded.has(`${r.collection}|${r.id}`);
+        await this.outbox().bulkDelete(rows.filter(isSeed).map((r) => [r.collection, r.id]));
+        rows = rows.filter((r) => !isSeed(r));
+      }
+    }
     const ops: FieldOp[] = [];
     const entries: OutboxEntry[] = [];
     const orphans: [string, string][] = [];
@@ -136,8 +149,16 @@ export class DexieStorageAdapter implements StorageAdapter {
   }
 
   async markAllDirty(): Promise<void> {
+    const allowSeeds = await seedSyncAllowed(this.database);
     for (const name of this.tables) {
-      const ids = (await this.database.table(name).toCollection().primaryKeys()) as string[];
+      let ids = (await this.database.table(name).toCollection().primaryKeys()) as string[];
+      if (!allowSeeds) {
+        const seeded = await seededOf(
+          this.database,
+          ids.map((id) => [name, id] as const),
+        );
+        if (seeded.size > 0) ids = ids.filter((id) => !seeded.has(`${name}|${id}`));
+      }
       if (ids.length === 0) continue;
       await rwTransaction(this.database, [this.outbox()], async () => {
         const prev = await this.outbox().bulkGet(ids.map((id) => [name, id]));

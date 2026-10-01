@@ -5,6 +5,7 @@ node_modules
 .env.*
 !.env.example
 !.env.e2e
+!.env.e2e-seed
 .env.local
 *.jks
 *.keystore

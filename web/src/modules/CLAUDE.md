@@ -10,3 +10,7 @@ Recipes: `docs/HOW-TO.md`. Example of a small complete module: `notes/`; scaffol
 - **`accounts/` (password vault): never add `aiSchema`, `searchable`, widget, calendar item or data-API exposure** (`accounts/__tests__/exclusion.test.ts`). Decrypted data stays in memory only.
 - Money = integer cents; dates `YYYY-MM-DD`, times `HH:mm`; `now()`/`today()` from `core/time/now.ts`.
 - UI: German only via `src/strings.ts`, primitives from `ui/` (`Patterns.tsx`), `data-autofocus` in dialogs, touch targets ≥ 44 px. Add new pages to `e2e/a11y.spec.ts`.
+
+## Module: Pflichtbestandteile
+
+- **Seed data:** `seed: { version, dependsOn }` in the manifest (required by the type) + `seed.ts` (deterministic, `small|medium|large`). Recipe: `docs/howto/seed-data.md`. No module without a seed; output changed → bump `seed.version`. Enforced by `core/seed/registry.test.ts` and `npm run check:modules`.
