@@ -4,6 +4,27 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 
 ## Unreleased
 
+## 0.3.0 (2026-10-01) – "Nemo 0.3.0"
+Erste stabile Version unter dem Namen Nemo. Sie ist die „neueste Version“: Installationen von 0.2.0 bekommen sie per In-App-Update angeboten, die Daten bleiben erhalten. Sie enthält alles aus 0.3.0-beta.1 (siehe unten) plus die Änderungen hier.
+
+### Neu
+- Neues App-Icon (Clownfisch) und neue Wortmarke „Nemo“.
+- Dazu alles aus der Vorabversion: Einrichtungsassistent, Schnell erfassen, Datenträger- und Systeminfo-Modul (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge Text/Zeitzonen/Bild/PDF, flaches Design „Klar“, MIT-Lizenz.
+
+### Geändert
+- Interne Verbesserungen an Build und Tests (schnellere Prüfungen). Keine Änderung am Verhalten der App.
+
+### Behoben
+- Release-Prüfung der Download-Links las ihre Parameter falsch (nur Build-Werkzeug, betrifft die App nicht).
+
+### Sicherheit
+- Keine neuen Änderungen gegenüber 0.3.0-beta.1 (verschlüsselte Backups, Geräte-Tokens, Sync-Tresor v2, verschlüsselte Sicherungskopien vor Updates).
+
+### Hinweise
+- **Keine Breaking Changes:** interne IDs, Backup-Formate und Updater-Endpunkt sind unverändert; alte Backups lassen sich weiter importieren. Die lokale Datenbank wird beim ersten Start automatisch auf Version 13 migriert.
+- **Download-Namen:** Dateien heißen jetzt `Nemo-Portable.exe` und `Nemo.apk`; die bisherigen `Taschenmesser-*`-Dateien liegen als Kopie dabei, damit installierte Apps weiter aktualisieren können.
+- **Bekanntes:** Geräte-Funktionen (Datenträger, Windows Hello, Android-Biometrie, Sync mit älteren Geräten) sind nur von Hand geprüft. Bitte Fehler melden.
+
 ## 0.3.0-beta.1 (2026-09-30) – "Nemo 0.3.0-beta.1" (Vorabversion)
 Vorabversion zum Ausprobieren: Sie erscheint nicht als „neueste Version“ und wird nicht automatisch per App-Update angeboten. Die Installation über eine bestehende Installation behält alle Daten.
 
