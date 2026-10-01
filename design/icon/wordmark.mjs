@@ -96,7 +96,7 @@ function headfin(p, theme) {
   }
   inner += `<path fill="${c.fish}" d="${f(tail)}"/>`;
   if (flat) {
-    inner += `<circle cx="${nose + 52}" cy="${mid - 22}" r="${p.eye}" fill="${c.stripe}"/><circle cx="${nose + 55}" cy="${mid - 22}" r="${p.eye * 0.55}" fill="${c.eye}"/>`;
+    inner += `<circle cx="${nose + 56}" cy="${mid - 26}" r="${p.eye}" fill="${c.eye}"/><circle cx="${nose + 56 - p.eye * 0.35}" cy="${mid - 26 - p.eye * 0.35}" r="${p.eye * 0.3}" fill="${c.stripe}"/>`;
   } else {
     inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
   }
@@ -246,7 +246,7 @@ function clown(p, theme) {
   const flat = p.headStyle === 'flat';
   // flat: straight vertical back edge, pointed nose (reference picture); default: slightly concave back
   const head = flat
-    ? `M${hx} ${top + 4}L${hx} ${bot - 4}C${hx - 110} ${bot + 4} ${nose} ${mid + 95} ${nose} ${mid}C${nose} ${mid - 95} ${hx - 110} ${top - 4} ${hx} ${top + 4}Z`
+    ? `M${hx} ${top + 4}L${hx} ${bot - 4}C${hx - 80} ${bot + 2} ${nose + 60} ${mid + 62} ${nose} ${mid}C${nose + 60} ${mid - 62} ${hx - 80} ${top - 2} ${hx} ${top + 4}Z`
     : `M${hx} ${top}Q${hx - 26} ${mid} ${hx} ${bot}C${hx - 70} ${bot} ${nose} ${mid + 70} ${nose} ${mid}C${nose} ${mid - 70} ${hx - 70} ${top} ${hx} ${top}Z`;
   const e = p.edge;
   const rim = p.rim ?? 8; // pale inner rim of every fin
@@ -267,7 +267,9 @@ function clown(p, theme) {
   const ped = `M${px} ${-150}C${px + 30} ${-142} ${px + 55} ${-128} ${tx} ${-122}L${tx} ${-25}C${px + 55} ${-19} ${px + 30} ${-5} ${px} ${bot}Z`;
   const tl = p.tail ?? 140;
   // fan: flat vertical base right after the o, convex rounded fin (reference picture)
-  const fanTail = `M${tx + 26} ${-150}L${tx + 26} ${bot}C${tx + tl * 0.55} ${bot + 22} ${tx + tl + 22} ${-30} ${tx + tl + 22} ${-75}C${tx + tl + 22} ${-120} ${tx + tl * 0.55} ${-172} ${tx + 26} ${-150}Z`;
+  const bx = tx + 24; // just behind the o
+  // concave base (curves into the fin), big round outer edge, slightly pointed tips – like the reference
+  const fanTail = `M${bx} ${-172}C${bx + tl * 0.7} ${-188} ${bx + tl + 12} ${-135} ${bx + tl + 12} ${-75}C${bx + tl + 12} ${-15} ${bx + tl * 0.7} ${38} ${bx} ${22}Q${bx + 46} ${-75} ${bx} ${-172}Z`;
   const tail = p.tailStyle === 'fan' ? fanTail : `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
   // dorsal fin above the x-height letters (e, m, o): spiny front, soft round back; the tall N is the head side
   const xh = -150;
@@ -325,7 +327,7 @@ function clown(p, theme) {
   inner += `<path fill="${c.fish}" d="${f(head)}"/>`;
   if (p.pectoral) inner += fin(pect);
   const sx = nose + (p.stripeAt ?? 128);
-  const headBand = flat ? `M${sx} ${top - 20}L${sx} ${bot + 20}` : `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`;
+  const headBand = `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`;
   inner += band(`wm-cl-h-${t}`, head, headBand, p.band ?? 32);
   if (p.tailStyle !== 'fan') inner += band(`wm-cl-t-${t}`, ped, `M${px + pw * 0.55} ${-170}L${px + pw * 0.55} ${bot + 20}`, (p.band ?? 32) * 0.8);
   for (const mb of [].concat(p.midBand ?? [])) {
