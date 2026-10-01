@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { bootDev, seedApp } from './helpers';
+import { bootDev, SEED_TODAY, seedApp } from './helpers';
 
 const MODULES = [
   'calendar',
@@ -120,6 +120,25 @@ test.describe('Dev-Preview test data', () => {
     await expect(page.locator('section[aria-labelledby="developer"]')).toBeVisible();
     await expect(page.getByTestId('seed-status')).toHaveCount(0);
     expect(total(await countRows(page))).toBe(0);
+  });
+
+  test('large set: 5,000 bookings load in chunks while the page stays responsive', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await bootDev(page);
+    await page.goto('/settings');
+    const section = page.locator('section[aria-labelledby="developer"]');
+    await section.getByLabel('Umfang').selectOption('large');
+    const started = Date.now();
+    await section.getByTestId('seed-load').click();
+    // The button shows progress while chunks are written, i.e. the UI thread is not blocked.
+    await expect(section.getByTestId('seed-load')).toContainText('Lade …', { timeout: 30_000 });
+    await expect(section.getByTestId('seed-status')).toContainText(SEED_TODAY, {
+      timeout: 150_000,
+    });
+    expect(Date.now() - started).toBeLessThan(150_000);
+    expect((await countRows(page))['finance_transaction']).toBeGreaterThanOrEqual(5000);
   });
 
   test('palette command loads test data', async ({ page }) => {
