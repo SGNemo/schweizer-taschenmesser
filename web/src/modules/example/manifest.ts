@@ -38,6 +38,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  seed: { version: 1, dependsOn: [] },
   order: 5,
   // Reference module: visible in dev builds and E2E (VITE_INCLUDE_EXAMPLE=true) only.
   devOnly: true,

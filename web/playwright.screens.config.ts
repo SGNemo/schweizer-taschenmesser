@@ -13,14 +13,35 @@ export default defineConfig({
   timeout: 180_000,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4173',
     serviceWorkers: 'block',
     launchOptions: { executablePath },
   },
-  webServer: {
-    command: 'npm run build:e2e && npm run preview',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  projects: [
+    {
+      // The layout tour runs on the Dev-Preview flavour with the shared, seeded test data.
+      name: 'seeded',
+      testMatch: 'capture.spec.ts',
+      use: { baseURL: 'http://localhost:4174' },
+    },
+    {
+      // Specs that start from an empty app (setup assistant, disk) need the stable e2e build.
+      name: 'plain',
+      testIgnore: 'capture.spec.ts',
+      use: { baseURL: 'http://localhost:4173' },
+    },
+  ],
+  webServer: [
+    {
+      command: 'npm run build:e2e && npm run preview',
+      url: 'http://localhost:4173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+    {
+      command: 'npm run build:e2e-seed && npm run preview:e2e-seed',
+      url: 'http://localhost:4174',
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+  ],
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { ConnectorsSection } from './settings/ConnectorsSection';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
@@ -22,6 +22,8 @@ import { LocalApiSection } from './settings/LocalApiSection';
 import { QuickCaptureSection } from './settings/QuickCaptureSection';
 import { UpdateSection } from './settings/UpdateSection';
 import { AboutSection } from './settings/AboutSection';
+import { DeveloperSection } from '@/layout/devTools';
+import { tDev } from '@/strings.dev';
 import styles from './Page.module.css';
 
 function SectionTitle({ id, hint, children }: { id: string; hint?: string; children: string }) {
@@ -223,6 +225,14 @@ export function Settings() {
         <h2 id="about">{t.about.title}</h2>
         <AboutSection />
       </section>
+      {DeveloperSection ? (
+        <section className={styles.section} aria-labelledby="developer">
+          <h2 id="developer">{tDev.title}</h2>
+          <Suspense fallback={null}>
+            <DeveloperSection />
+          </Suspense>
+        </section>
+      ) : null}
       {withStartData.length > 0 ? (
         <section className={styles.section} aria-labelledby="startdata">
           <h2 id="startdata">{t.onboarding.button}</h2>
