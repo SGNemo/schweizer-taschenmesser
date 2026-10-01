@@ -3,11 +3,13 @@
     <application>
         <!--
           Merged into the app's launcher activity (Tauri's template declares it as ".MainActivity",
-          singleTask, so a share while the app runs arrives in onNewIntent). Only plain text and
-          links are accepted; files and images are not offered to this app.
+          singleTask, so a share while the app runs arrives in onNewIntent). The class lives in the
+          app's own package, which equals the application id, hence the placeholder: it resolves to
+          the stable id and to the Dev-Preview id alike. Only plain text and links are accepted;
+          files and images are not offered to this app.
         -->
         <activity
-            android:name="io.github.sgnemo.taschenmesser.MainActivity"
+            android:name="${applicationId}.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
