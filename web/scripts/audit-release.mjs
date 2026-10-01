@@ -59,9 +59,7 @@ if (confPath) {
   console.log(`Checked ${sigs.length} updater signature(s) against the public key in ${confPath}.`);
 }
 
-console.log(
-  `Audited ${files.length} file(s); searched for ${configured.length} secret value(s) (${configured.join(', ') || 'none configured'}).`,
-);
+console.log(`Audited ${files.length} file(s).`);
 if (findings.length > 0) {
   for (const f of findings) {
     console.error(`::error::${f.rule}: ${f.file}${f.detail ? ` (${f.detail})` : ''}`);
