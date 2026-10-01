@@ -151,12 +151,6 @@ export const replySchema = z.union([
 ]);
 export type BridgeReply = z.infer<typeof replySchema>;
 
-/** Pushed by the app (through the host) to every connected extension. */
-export const eventSchema = z.strictObject({
-  v: z.literal(PROTOCOL_VERSION),
-  event: z.enum(['locked']),
-});
-
 export const okReply = (requestId: string, data: unknown): BridgeReply => ({
   v: PROTOCOL_VERSION,
   id: requestId,

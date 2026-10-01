@@ -47,6 +47,8 @@ tauri-plugin-single-instance = "2"
 taschenmesser-local-api = { path = "crates/local-api" }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }
 taschenmesser-system-info = { path = "crates/system-info" }
+# Browser extension bridge (native messaging host + pipe server; src/vault_bridge.rs).
+taschenmesser-vault-bridge = { path = "crates/vault-bridge" }
 
 # WebView2 runtime detection and the "runtime missing" message box (src/webview2.rs).
 [target.'cfg(windows)'.dependencies]
