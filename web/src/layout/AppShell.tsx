@@ -92,9 +92,8 @@ export function AppShell() {
           }}
         >
           <span className={styles.brandMark}>
-            <Logo size={22} />
+            <Logo size={26} title={t.appName} />
           </span>
-          {t.appName}
         </a>
         <nav aria-label={t.nav.main} className={styles.sidebarNav}>
           <ul className={styles.navList}>
