@@ -268,8 +268,25 @@ function clown(p, theme) {
   const anal = `M${560} ${bot - 10}C${600} ${bot + 72} ${700} ${bot + 66} ${760} ${bot + 22}C${770} ${bot + 8} ${750} ${bot - 6} ${730} ${bot - 10}Z`;
   // pectoral fin: small, behind the head band, over the body
   const pect = `M${-10} ${mid + 10}C${20} ${mid + 15} ${70} ${mid + 50} ${60} ${mid + 95}C${30} ${mid + 100} ${-5} ${mid + 70} ${-10} ${mid + 10}Z`;
+  // small fins centred on single letters: `dorsalOn` / `ventralOn` name a letter (N, e, m, o)
+  const LC = { N: [113, 184], e: [309, 146], m: [524, 231], o: [746, 156] };
+  const smallDorsal = (l) => {
+    const [cx, w] = LC[l];
+    const hw = w * (p.finW ?? 0.42);
+    const base = l === 'N' ? top : xh;
+    const h = p.finH ?? 64;
+    return `M${cx - hw} ${base + 8}L${cx - hw * 0.55} ${base - h * 0.75}L${cx - hw * 0.2} ${base - h * 0.45}L${cx + hw * 0.1} ${base - h}C${cx + hw * 0.6} ${base - h * 0.9} ${cx + hw} ${base - h * 0.4} ${cx + hw} ${base + 8}Z`;
+  };
+  const smallVentral = (l) => {
+    const [cx, w] = LC[l];
+    const hw = w * (p.finW ?? 0.42);
+    const h = p.finH ?? 64;
+    return `M${cx - hw} ${bot - 8}C${cx - hw * 0.8} ${bot + h * 0.7} ${cx - hw * 0.1} ${bot + h} ${cx + hw * 0.5} ${bot + h * 0.8}C${cx + hw * 0.9} ${bot + h * 0.55} ${cx + hw} ${bot + h * 0.2} ${cx + hw} ${bot - 8}Z`;
+  };
   let inner = '';
-  if (p.fins !== false) inner += fin(dorsal) + fin(pelvic) + fin(anal);
+  if (p.fins === 'all') inner += fin(dorsal) + fin(pelvic) + fin(anal);
+  for (const l of [].concat(p.dorsalOn ?? [])) inner += fin(smallDorsal(l));
+  for (const l of [].concat(p.ventralOn ?? [])) inner += fin(smallVentral(l));
   inner += fin(tail);
   inner += `<path fill="${c.fish}" d="${f(ped)}"/>`;
   inner += word(['N', 'e', 'm', 'o'], c.fish);
