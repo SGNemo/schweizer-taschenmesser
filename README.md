@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/header.png">
-    <img src="docs/brand/header-light.png" alt="Nemo: orangefarbener Clownfisch neben dem Schriftzug Nemo, darunter der Claim „Modulare, lokale Alltags-App“" width="640">
+    <img src="docs/brand/header-light.png" alt="Nemo: der Schriftzug Nemo als Clownfisch mit Kopf, weißen Streifen und Schwanzflosse, darunter „Notizen · Erinnerungen · Module · Offline“" width="640">
   </picture>
 </p>
 
