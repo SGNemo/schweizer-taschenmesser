@@ -30,15 +30,15 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 
 ## 2. Layout (desktop / phone)
 - Facts today: sidebar 248 px from 900 px, bottom nav 5 slots (Home + 3 modules + Mehr) below; page widths narrow 45 rem / content 70 rem / wide 100 rem / full; split views from 1500 px viewport.
-- open (round 3)
+- Proposed (round 3, `ROUND-3-LAYOUT.md` § 2–3): L1 grouped sidebar (collapsible to rail) / L2 rail + area column / L3 top navigation; master–detail from 1200 px; ultrawide content 1800 px centred; one "+ Neu" in the top bar, FAB only on the phone; editors as bottom sheets on the phone. **Shell not decided yet.**
 
 ## 3. Navigation and module order
 - Facts today: flat manifest order, not configurable; bottom nav takes the first three modules.
-- open (round 3)
+- Proposed (round 3, § 1): 7 areas – Heute, Planen, Geld, Haushalt, Wissen, Tresor, System – each an area page with the modules as sub-views (`area` field in the manifest, no code merge); favourites (3–5) at the top; phone bottom nav by area or by module. **Not decided yet.**
 
 ## 4. Home screen
 - Facts today: widget grid 1/2/3/4 columns at 44/70/95 rem container width, sizes s/m/l, edit mode, synced layout.
-- open (round 3)
+- Proposed (round 2 D + round 3 § 3): greeting + date + count strip; "Heute" the only L widget top-left; hero number per widget; two-line rows; actions inside widgets. **Not decided yet.**
 
 ## 5. Tokens (colour, radius, shadow, spacing)
 - Facts today: `web/src/ui/tokens.css` (light default, dark twice, accents orange/teal/coral/lagoon, radii 8/10/14/18, shadows only floating, motion 120/200/250 ms).

@@ -9,6 +9,8 @@ Working folder of the design review done together with the maintainer. Nothing h
 | `screenshots/round-1/` | annotated screenshots (markers = problem ids), reduced to ≤ 1280 px |
 | [`ROUND-2-DIRECTION.md`](ROUND-2-DIRECTION.md) | round 2: three directions (A/B/C) compared, proposed principles |
 | `mockups/round-2/` | `variant-a|b|c.html` (standalone; `?theme=light`, toggle bottom right) + PNG renders desktop/phone, dark/light |
+| [`ROUND-3-LAYOUT.md`](ROUND-3-LAYOUT.md) | round 3: areas instead of a flat module list, three shell layouts (L1/L2/L3), rules for master–detail and ultrawide, click paths |
+| `mockups/round-3/` | `layout-l1|l2|l3.html` + PNG (desktop 1920, wide 2560, phone 412, dark; desktop light) |
 | `mockups/fonts/` | Inter Variable (OFL, copied from `@fontsource-variable/inter`) so the mockups use the app font without importing anything |
 | `IMPLEMENTATION-PROMPT.md` | round 8: the prompt for the implementation chat |
 
