@@ -41,12 +41,6 @@
   color: var(--text);
   text-decoration: none;
 }
-.brandMark {
-  display: grid;
-  place-items: center;
-  min-width: 32px;
-  height: 32px;
-}
 .searchBtn {
   display: flex;
   align-items: center;

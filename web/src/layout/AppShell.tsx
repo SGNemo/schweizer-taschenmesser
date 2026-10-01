@@ -4,7 +4,7 @@ import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
-import { Fab, Icon, IconButton, Logo, Toaster } from '@/ui';
+import { Fab, Icon, IconButton, Toaster, Wordmark } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
@@ -91,10 +91,7 @@ export function AppShell() {
             void navigate('/');
           }}
         >
-          <span className={styles.brandMark}>
-            <Logo size={22} />
-          </span>
-          {t.appName}
+          <Wordmark height={44} title={t.appName} />
         </a>
         <nav aria-label={t.nav.main} className={styles.sidebarNav}>
           <ul className={styles.navList}>
@@ -113,9 +110,7 @@ export function AppShell() {
       <div className={styles.col}>
         <header className={styles.topbar}>
           <span className={`${styles.brand} ${styles.hideDesktop}`}>
-            <span className={styles.brandMark}>
-              <Logo size={22} />
-            </span>
+            <Wordmark height={32} title={t.appName} />
           </span>
           <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
             <Icon name="search" size={18} />
