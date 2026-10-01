@@ -12,7 +12,8 @@ Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHIT
 | What | Command |
 |---|---|
 | Lint / types / format | `npm run lint`, `npm run typecheck`, `npm run format:check` (also in `server/`, `mcp/`) |
-| Unit + component | `npm test` (single file: `npx vitest run <path>`) |
+| Unit + component | `npm test` (single file: `npx vitest run <path>`; only files touched since the last commit: `npm run test:changed`; watch mode: `npm run test:watch`) |
+| Everyday gate, fast | `npm run check` = format + lint + the three `tsc` projects in parallel with tool caches (~34 s cold, ~6 s warm; CI keeps the plain uncached commands) |
 | E2E app (desktop-chrome + pixel-7) then sync | `npm run e2e`; parts: `npm run e2e:app`, `npm run e2e:sync` |
 | One spec | `npx playwright test e2e/<name>.spec.ts` |
 | Server | `cd server && npm test` (+ `typecheck`, `lint`, `build`) |
@@ -20,8 +21,18 @@ Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHIT
 | Rust | `cd web/src-tauri && cargo fmt --check && cargo clippy --all-targets --locked -p taschenmesser -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -- -D warnings && cargo test --locked -p …` (per crate: `cargo test -p taschenmesser-disk-scan`; perf: `DISK_SCAN_PERF_FILES=1000000 cargo test -p taschenmesser-disk-scan --release -- --ignored --nocapture perf`). Windows-only code compiles without a Windows box: `rustup target add x86_64-pc-windows-msvc`, then `cargo check -p taschenmesser-disk-scan --target x86_64-pc-windows-msvc` (the main crate needs the Windows toolchain). |
 | Version consistency | `npm run version:check` |
 - Definition of done: `lint`, `typecheck`, `test`, `e2e` green; CLAUDE.md/docs updated.
+- **Unit-test environment:** test files run in `node` by default; a file that needs a DOM (React components, `document`, `localStorage`, `window`, `DOMParser`, code such as `stores/ui.ts` that reads them) starts with `// @vitest-environment jsdom`. A forgotten marker fails with "document is not defined" (or, where app code guards the access with try/catch, silently takes the fallback path – add the marker to any test whose subject touches a DOM global). Building a jsdom per file used to cost more than all test bodies together.
 - Sandbox: run e2e/vitest in the foreground (`timeout 115 …`, or `--shard`); background jobs only make progress while a foreground command runs. Never `pkill -f` a pattern that appears in your own command line.
 - Before `npm run e2e` stop any own `vite preview` on :4173 (`pkill -f "[v]ite preview"`). Chromium is at `/opt/pw-browsers/chromium`; never `playwright install`.
+
+## CI layout, caches and sharding
+- `ci.yml` jobs run side by side: `changes` (decides whether anything but documentation changed), `secret-scan`, `web-static` (version check, format, lint, typecheck), `web-unit`, `web-e2e` (four Playwright shards `--shard=i/4`, two workers each), `server`, `mcp`, `e2e-sync`, `rust`. The job named **Web (lint, types, unit, E2E)** only aggregates the three web parts and keeps the check name that branch protection may list.
+- **Documentation-only changes** (everything under `docs/` except `docs/AI-IMPORT.md` and `docs/user/installation.md`, plus `CLAUDE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `LICENSE`, issue/PR templates) skip every job except the secret scan; skipped jobs count as passed. Files that tests read (`README.md`, the two docs above, `contract/`, workflows) always count as code. When a test starts reading another file, add it to `pinned` in the `changes` job. Any doubt (no diff, new branch, error) runs everything.
+- **Shards:** a new E2E spec needs no registration; tests are split by test, not by file. Locally `npx playwright test --shard=1/4` runs one slice. More than two workers per 4-core runner was slower per test and failed under load – add shards, not workers.
+- **Caches** (all keyed so that a hit is the normal case): npm per lock file (`setup-node`), Playwright browsers per web lock file, `gitleaks` binary per version, Rust `target` and registry through `Swatinem/rust-cache` (per `Cargo.lock`), Gradle through `setup-java`. Caches are scoped per branch: a pull request restores what `develop` saved, a manual release run on a feature branch starts cold (Android ~9 min instead of ~5 min, Windows ~10 min instead of ~7 min).
+- **Cache problems:** a job that is suddenly slow usually missed its cache (look for "cache not found" in the step log). Re-running does not help; changing the lock file or `Cargo.lock` creates a new key. To drop a poisoned cache delete it under Actions → Caches (needs write access), then re-run the job. Never fix a red job by skipping a test or a security step.
+- Each job has a `timeout-minutes` so a hang cannot hold a runner for the default six hours.
+- Timings before/after: [`docs/perf/BUILD-BASELINE-2026-10-01.md`](perf/BUILD-BASELINE-2026-10-01.md).
 
 ## New module
 1. `npm run gen:module -- <id> "<Name>"` (id lowercase alphanumeric; copies `templates/module`, runs `db:bump`).
