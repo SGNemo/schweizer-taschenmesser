@@ -2,6 +2,9 @@
 
 Detailed design notes, moved out of `CLAUDE.md` unchanged so the working guide stays short. Read the section that matches the area you are changing; keep it current when a decision changes.
 
+## Dev-Preview (summary)
+See `docs/HOW-TO.md` → "Dev-Preview" and `docs/DECISIONS.md` (Releases & security). Flow: push to `develop` → `ci.yml` jobs green → job `dev-preview` → `dev-preview.yml` (`secret-scan` → `prepare` → `windows` ‖ `android` → `publish`) → rolling pre-release `dev-preview`.
+
 ## Architecture decisions
 
 **Modules.** Each module is `web/src/modules/<id>/` with a `manifest.ts` (`ModuleManifest`, see `core/modules/types.ts`). Manifests are discovered with `import.meta.glob` (eager, tiny); routes and widgets are `import()`-lazy. State (enabled/disabled) is in the synced `_modules` table; without an explicit choice `defaultEnabled` applies. Disabling asks: keep data (hidden) or delete (tombstones, so the deletion syncs). `devOnly` modules (the `example` module) are only listed in dev builds / with `VITE_INCLUDE_EXAMPLE=true` (`.env.e2e`).

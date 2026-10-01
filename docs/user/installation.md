@@ -49,3 +49,12 @@ Chrome/Edge (Windows) bzw. Chrome (Android) öffnen → „App installieren“. 
 HTTPS (oder `localhost`).
 
 > Spätere Releases tragen dieselben Dateien zusätzlich als `Nemo-Portable.exe` und `Nemo.apk`; bereits installierte Versionen aktualisieren sich weiter über die `Taschenmesser-…`-Namen.
+
+## Dev-Preview (ungetestete Zwischenstände)
+
+Nach jedem Stand von `develop` baut GitHub automatisch eine Vorschau (Windows-Portable und Android-APK). Sie ist für Tester gedacht und kann Fehler enthalten.
+
+- **Eigene App, eigene Daten.** Die Dev-Preview heißt „Nemo Dev“ und läuft neben der stabilen App. Daten der stabilen App sind dort nicht vorhanden; hole sie per Sync oder Backup herüber. Unter Windows hat sie einen eigenen Datenordner (portabel: Ordner `data-dev` statt `data` neben der exe).
+- **Download:** [Windows](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe) · [Android](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk). In der App zeigt ein „Dev“-Abzeichen, dass es die Vorschau ist.
+- **Updates:** Die Dev-Preview folgt immer dem Dev-Kanal (Einstellungen → App-Updates) und legt vor jedem Update eine Sicherungskopie an. Die stabile App bietet nie eine Dev-Preview an.
+- **Zurück zur stabilen Version:** Die stabile App ist ein separates Programm. Nutze sie weiter oder installiere sie neu; die Dev-Preview kannst du einfach löschen.

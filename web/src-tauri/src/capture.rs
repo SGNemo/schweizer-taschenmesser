@@ -93,7 +93,7 @@ fn create_capture_window(app: &AppHandle) -> tauri::Result<()> {
     #[cfg(windows)]
     let builder = match std::env::current_exe()
         .ok()
-        .and_then(|exe| crate::portable::data_dir(&exe))
+        .and_then(|exe| crate::portable::data_dir(&exe, &app.config().identifier))
     {
         Some(dir) => builder.data_directory(dir),
         None => builder,
@@ -325,11 +325,11 @@ pub fn desktop_autostart_enabled(app: AppHandle) -> bool {
 }
 
 #[tauri::command]
-pub fn desktop_info() -> DesktopInfo {
+pub fn desktop_info(app: AppHandle) -> DesktopInfo {
     DesktopInfo {
         portable: std::env::current_exe()
             .ok()
-            .and_then(|exe| crate::portable::data_dir(&exe))
+            .and_then(|exe| crate::portable::data_dir(&exe, &app.config().identifier))
             .is_some(),
     }
 }

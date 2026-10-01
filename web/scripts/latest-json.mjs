@@ -3,9 +3,10 @@
  * Writes the Tauri updater manifest for a release from the signed Windows assets.
  *
  *   node scripts/latest-json.mjs --dir <assets> --version 1.2.0 --tag v1.2.0 \
- *        --repo owner/name --notes <RELEASE_NOTES.md> --out <latest.json>
+ *        --repo owner/name --notes <RELEASE_NOTES.md> --out <latest.json> [--exe <name>]
  *
- * Expects (inside --dir) the portable exe named `UPDATER_PORTABLE_ASSET` and its `.sig` file.
+ * Expects (inside --dir) the portable exe and its `.sig` file: `UPDATER_PORTABLE_ASSET` by default,
+ * `--exe Nemo-Portable-dev.exe` for the Dev-Preview manifest (`dev-latest.json`, tag `dev-preview`).
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -40,7 +41,7 @@ try {
     repo: args.repo,
     notes: args.notes && existsSync(args.notes) ? readFileSync(args.notes, 'utf8') : '',
     pubDate: new Date().toISOString(),
-    portable: signed(UPDATER_PORTABLE_ASSET),
+    portable: signed(args.exe || UPDATER_PORTABLE_ASSET),
   });
   writeFileSync(args.out, `${JSON.stringify(json, null, 2)}\n`);
   console.log(`✓ ${args.out}: ${Object.keys(json.platforms).join(', ')}`);

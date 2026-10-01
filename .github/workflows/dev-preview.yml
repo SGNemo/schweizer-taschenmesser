@@ -1,0 +1,453 @@
+name: Dev-Preview
+
+# Signed Dev-Preview builds (portable Windows exe + Android APK) of the current `develop` state, published
+# as the rolling PRE-RELEASE `dev-preview`. Never a stable release: tag `dev-preview` does not match
+# `v*.*.*`, the release is created with --prerelease --latest=false, `releases/latest` is checked before and
+# after, and the stable updater (which reads `latest.json`) never sees these files.
+#
+# Called as the last job of ci.yml after a green push to `develop` (a `workflow_run` trigger would only
+# fire for workflow files on the default branch, i.e. never for develop). `workflow_dispatch` works once
+# this file is on `main`; `target` decides what happens:
+#   dev-preview       publish to the rolling release (only allowed on develop)
+#   dev-preview-test  publish to a throw-away pre-release `dev-preview-test` (to test this workflow)
+#   artifact-only     build and upload workflow artifacts only
+# Same signing and audit steps as release.yml (gitleaks, audit, keystore cleanup, signature check).
+# Docs: docs/HOW-TO.md -> "Dev-Preview".
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        type: string
+        default: dev-preview
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'dev-preview (rolling release, develop only) | dev-preview-test | artifact-only'
+        type: choice
+        options: [artifact-only, dev-preview-test, dev-preview]
+        default: artifact-only
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-preview
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22
+  NDK_VERSION: '27.2.12479018'
+  AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
+
+jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the whole history is scanned, not just the last commit
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      # Same build-from-source, cached binary as in ci.yml / release.yml.
+      - uses: actions/cache@v4
+        id: gitleaks-cache
+        with:
+          path: ~/go/bin/gitleaks
+          key: gitleaks-v8.21.2-${{ runner.os }}
+      - name: Build gitleaks from source
+        if: steps.gitleaks-cache.outputs.cache-hit != 'true'
+        run: go install github.com/zricethezav/gitleaks/v8@v8.21.2
+      - name: Scan the history for secrets
+        run: |
+          set -euo pipefail
+          "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
+
+  prepare:
+    needs: secret-scan
+    name: Version, notes, signing check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      full: ${{ steps.meta.outputs.full }}
+      tag: ${{ steps.meta.outputs.tag }}
+      publish: ${{ steps.meta.outputs.publish }}
+      tauri_config: ${{ steps.meta.outputs.tauri_config }}
+      android_config: ${{ steps.meta.outputs.android_config }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the build number is the commit count, the base version comes from the tags
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Version and target
+        id: meta
+        working-directory: web
+        env:
+          TARGET: ${{ inputs.target || 'dev-preview' }}
+        run: |
+          set -euo pipefail
+          PUBLISH=false
+          TAG=dev-preview
+          case "$TARGET" in
+            dev-preview)
+              if [[ "$GITHUB_REF" != "refs/heads/develop" ]]; then
+                echo "::error::The rolling dev-preview release is only published from develop (this run: $GITHUB_REF)."
+                exit 1
+              fi
+              PUBLISH=true ;;
+            dev-preview-test) PUBLISH=true; TAG=dev-preview-test ;;
+            artifact-only) ;;
+            *) echo "::error::Unknown target '$TARGET'."; exit 1 ;;
+          esac
+          VERSION="$(node scripts/dev-preview.mjs version)"
+          {
+            echo "version=$VERSION"
+            echo "full=$(node scripts/dev-preview.mjs full)"
+            echo "tag=$TAG"
+            echo "publish=$PUBLISH"
+            echo "tauri_config=$(node scripts/dev-preview.mjs tauri-config)"
+            echo "android_config=$(node scripts/dev-preview.mjs android-config)"
+          } >> "$GITHUB_OUTPUT"
+          echo "Dev-Preview $VERSION, target=$TARGET, publish=$PUBLISH, tag=$TAG"
+
+      # A preview must be installable: no unsigned builds, not even as artifacts.
+      - name: All six signing secrets must be present
+        env:
+          TAURI_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KS_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$TAURI_KEY" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY)
+          [ -n "$TAURI_KEY_PASSWORD" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
+          [ -n "$ANDROID_KS" ] || missing+=(ANDROID_KEYSTORE_BASE64)
+          [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
+          [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
+          [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Missing GitHub secrets: ${missing[*]}. Nothing was built or published."
+            exit 1
+          fi
+
+      - name: Updater public key must not be the development placeholder
+        working-directory: web
+        run: |
+          KEY_ID="$(node -e "const c=require('./src-tauri/tauri.conf.json');console.log(Buffer.from(c.plugins.updater.pubkey,'base64').toString().split('\n')[0])")"
+          if [[ "$KEY_ID" == *76760D11981F2BAC* ]]; then
+            echo "::error::plugins.updater.pubkey is still the development placeholder."
+            exit 1
+          fi
+
+      - name: Release notes (commits since the last stable release)
+        working-directory: web
+        env:
+          FULL: ${{ steps.meta.outputs.full }}
+        run: |
+          set -euo pipefail
+          LAST="$(node scripts/dev-preview.mjs last-stable-tag)"
+          node scripts/changelog.mjs --version "${FULL%%+*}" ${LAST:+--from "$LAST"} \
+            --repo "https://github.com/${{ github.repository }}" --out "$RUNNER_TEMP/NOTES.md"
+          {
+            echo "> **Dev-Preview $FULL** – untested intermediate build of \`develop\`, a separate app with its own data."
+            echo "> Not a release. Stable downloads: https://github.com/${{ github.repository }}/releases/latest"
+            echo
+            cat "$RUNNER_TEMP/NOTES.md"
+          } > "$RUNNER_TEMP/DEV_NOTES.md"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev-notes
+          path: ${{ runner.temp }}/DEV_NOTES.md
+          retention-days: 3
+
+  windows:
+    name: Windows (portable, dev)
+    needs: prepare
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: web
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: web/src-tauri
+      - run: npm ci
+
+      # Own identifier (…taschenmesser.dev), name "Nemo Dev", version from the prepare job; the frontend is
+      # built with the dev flags (badge, dev update channel). package.json is not touched.
+      - name: Build
+        env:
+          VITE_RELEASE_CHANNEL: dev
+          VITE_BUILD_SHA: ${{ github.sha }}
+          TAURI_VERSION_CONFIG: ${{ needs.prepare.outputs.tauri_config }}
+        run: npx tauri build --no-bundle --config src-tauri/tauri.dev.conf.json --config "$TAURI_VERSION_CONFIG"
+
+      - name: Sign with the updater key
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npx tauri signer sign src-tauri/target/release/taschenmesser.exe
+
+      - name: Collect assets under their stable names
+        run: |
+          set -euo pipefail
+          mkdir -p ../assets
+          EXE=src-tauri/target/release/taschenmesser.exe
+          cp "$EXE" ../assets/Nemo-Portable-dev.exe
+          cp "$EXE.sig" ../assets/Nemo-Portable-dev.exe.sig
+          ls -l ../assets
+
+      - name: Verify the signature against the public key in the config
+        run: node scripts/verify-sig.mjs ../assets/Nemo-Portable-dev.exe --pubkey-from src-tauri/tauri.conf.json
+
+      - name: Smoke test – the executable starts
+        continue-on-error: true
+        run: |
+          set +e
+          ../assets/Nemo-Portable-dev.exe &
+          PID=$!
+          sleep 20
+          if kill -0 "$PID" 2>/dev/null; then
+            echo "The portable executable is still running after 20 s."
+            kill "$PID"
+          else
+            echo "::warning::The portable executable exited within 20 s."
+            exit 1
+          fi
+
+      - name: Audit – no secrets in the executable or what goes into it
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          EXE=src-tauri/target/release/taschenmesser.exe
+          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.conf.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev-windows
+          path: assets/*
+          if-no-files-found: error
+          retention-days: 3
+
+  android:
+    name: Android APK (dev)
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: web/src-tauri
+      - run: npm ci
+
+      - name: Android SDK and NDK
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-34" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "ndk;$NDK_VERSION"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      # The dev identifier is applied at `init`, so the generated project gets the package id
+      # io.github.sgnemo.taschenmesser.dev and the label "Nemo Dev" (the stable app is a different app).
+      - run: npx tauri android init --ci --config src-tauri/tauri.dev.conf.json
+      - name: Project icons into the generated Android project
+        run: cp -r src-tauri/icons/android/. src-tauri/gen/android/app/src/main/res/
+
+      - name: Build the (unsigned) universal APK
+        env:
+          VITE_RELEASE_CHANNEL: dev
+          VITE_BUILD_SHA: ${{ github.sha }}
+          ANDROID_VERSION_CONFIG: ${{ needs.prepare.outputs.android_config }}
+        run: npx tauri android build --apk --target aarch64 armv7 --config src-tauri/tauri.dev.conf.json --config "$ANDROID_VERSION_CONFIG"
+
+      - name: Locate the APK
+        id: apk
+        run: |
+          set -euo pipefail
+          APK="$(find src-tauri/gen/android/app/build/outputs/apk -name '*.apk' | head -n1)"
+          test -n "$APK"
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
+          ls -l "$APK"
+
+      - name: Sign
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p ../assets
+          KEYSTORE="$RUNNER_TEMP/release.jks"
+          # The keystore file exists only while signing – removed on success AND on failure.
+          trap 'rm -f "$KEYSTORE"' EXIT
+          umask 077
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
+          ANDROID_KEYSTORE_PATH="$KEYSTORE" \
+            node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Nemo-dev.apk
+          (cd ../assets && sha256sum Nemo-dev.apk > Nemo-dev.apk.sha256 && cat Nemo-dev.apk.sha256)
+
+      - name: Verify the APK signature and the package id
+        run: |
+          set -euo pipefail
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n1)"
+          "${BT}apksigner" verify --print-certs ../assets/Nemo-dev.apk | grep -E "Verifies|SHA-256 digest" | sed 's/^/  /'
+          "${BT}aapt2" dump badging ../assets/Nemo-dev.apk | grep -E "^package: name='io.github.sgnemo.taschenmesser.dev'" 
+
+      - name: Audit – no secrets in the APK or what goes into it
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          node scripts/audit-release.mjs --path dist --path ../assets
+
+      - name: Make sure no keystore file is left on the runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev-android
+          path: assets/*
+          if-no-files-found: error
+          retention-days: 3
+
+  publish:
+    name: Publish rolling pre-release
+    needs: [prepare, windows, android]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: dl
+          merge-multiple: true
+
+      - name: Final audit before anything is published
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.conf.json
+
+      - name: Updater manifest (dev-latest.json) and verification
+        run: |
+          set -euo pipefail
+          node web/scripts/latest-json.mjs --dir dl --exe Nemo-Portable-dev.exe \
+            --version "${{ needs.prepare.outputs.version }}" --tag "$TAG" \
+            --repo "$GITHUB_REPOSITORY" --notes dl/DEV_NOTES.md --out dl/dev-latest.json
+          cat dl/dev-latest.json
+          node web/scripts/audit-release.mjs --path dl/dev-latest.json
+          node web/scripts/verify-sig.mjs dl/Nemo-Portable-dev.exe --pubkey-from web/src-tauri/tauri.conf.json
+          (cd dl && sha256sum -c Nemo-dev.apk.sha256)
+          # Exactly the dev assets, nothing else goes up.
+          mapfile -t NAMES < <(node web/scripts/dev-preview.mjs assets)
+          for n in "${NAMES[@]}"; do test -f "dl/$n" || { echo "::error::Missing $n"; exit 1; }; done
+          printf '%s\n' "${NAMES[@]}" > assets.txt
+
+      - name: Publish (stable release and releases/latest stay untouched)
+        run: |
+          set -euo pipefail
+          LATEST_BEFORE="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || echo none)"
+          echo "releases/latest before: $LATEST_BEFORE"
+          if [[ "$LATEST_BEFORE" == "$TAG" ]]; then
+            echo "::error::releases/latest points at $TAG – refusing to continue."
+            exit 1
+          fi
+          cp dl/DEV_NOTES.md notes.md
+          mapfile -t NAMES < assets.txt
+          BINARIES=(); MANIFEST=()
+          for n in "${NAMES[@]}"; do
+            if [[ "$n" == dev-latest.json ]]; then MANIFEST+=("dl/$n"); else BINARIES+=("dl/$n"); fi
+          done
+          TITLE="Nemo Dev-Preview ${{ needs.prepare.outputs.full }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Move the tag to this commit, keep the release a pre-release, replace the assets. The
+            # manifest goes last: until then it still describes the previous (consistent) state.
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG" -f sha="$GITHUB_SHA" -F force=true >/dev/null
+            gh release edit "$TAG" --prerelease --latest=false --title "$TITLE" --notes-file notes.md
+            gh release upload "$TAG" "${BINARIES[@]}" --clobber
+            gh release upload "$TAG" "${MANIFEST[@]}" --clobber
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title "$TITLE" --notes-file notes.md "${BINARIES[@]}" "${MANIFEST[@]}"
+          fi
+          LATEST_AFTER="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || echo none)"
+          echo "releases/latest after: $LATEST_AFTER"
+          if [[ "$LATEST_AFTER" != "$LATEST_BEFORE" ]]; then
+            echo "::error::releases/latest changed ($LATEST_BEFORE -> $LATEST_AFTER)."
+            exit 1
+          fi
+          PRE="$(gh release view "$TAG" --json isPrerelease --jq .isPrerelease)"
+          [[ "$PRE" == true ]] || { echo "::error::$TAG is not a pre-release."; exit 1; }
+
+      - name: Check the download links
+        run: node web/scripts/check-links.mjs --repo "$GITHUB_REPOSITORY" --dev --tag "$TAG"
+
+      - name: Summary
+        run: |
+          {
+            echo "## Dev-Preview ${{ needs.prepare.outputs.full }}"
+            echo
+            echo "- Windows: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Nemo-Portable-dev.exe"
+            echo "- Android: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Nemo-dev.apk"
+          } >> "$GITHUB_STEP_SUMMARY"
