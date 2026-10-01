@@ -15,6 +15,8 @@ export const SYSTEM_TABLES = {
   _imports: { stores: 'id, createdAt, moduleId', synced: false },
   /** Sync conflicts where last-write-wins overwrote a value (kept for review/restore). Local only. */
   _conflicts: { stores: '++id, at, status', synced: false },
+  /** Registry of generated test data (Dev-Preview only writes it); sync and backup skip these rows. */
+  _seeds: { stores: 'id, batchId, table', synced: false },
   _settings: { stores: 'id, updatedAt', synced: true },
   _modules: { stores: 'id, updatedAt', synced: true },
 } as const;

@@ -44,6 +44,7 @@ const manifest: ModuleManifest = {
   ],
   settings,
   defaultEnabled: false,
+  seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 170,
   contributions: {

@@ -37,6 +37,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  seed: { version: 1, dependsOn: [] },
   // layout: 'content', // page width: 'narrow' | 'content' | 'wide' | 'full' (default 'content')
   // order: 50, // lower = earlier in navigation and library (default 100)
   contributions: {
