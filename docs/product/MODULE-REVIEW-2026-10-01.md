@@ -157,6 +157,11 @@ Hintergrund-Sync alle 5 Min. (sichtbar), je Connector max. alle 30 Min. Google-L
 - **Entfernt wird nur Nachrichten** (mit Export). Habits, Zeiterfassung bleiben eingefroren (aus, keine Investition); Vorräte bleibt, als Tab in „Listen“ (Gruppe, keine Migration) (Runde 2).
 - **Erinnerungen → Kalender** verschmelzen (Termin mit `notify`, Tab „Erinnerungen“), als letztes Verschmelzungspaket (Runde 2).
 - **Werkzeuge 18 → 12** + Rahmen (breiter Dialog, Route, Palette, Kürzel); Notizzettel wird fester „Zettel“ in Notizen (Runde 2).
+- **Paketreihenfolge** 1 Aufräumen → 2 Übersicht-Aktionen → 3 Listen + Favoriten → 4 Unterlagen + Personen → 5 Zeit → 6 Tabellen entfernen → 7 Passwort-Health (S1) (Runde 3).
+- **Stilllegen statt entfernen:** ersetzte Module werden `retired` (unsichtbar, Tabellen bleiben, Vorwärtskopie); Tabellen fallen erst in Paket 6 (Runde 3).
+- **Habits und Zeiterfassung werden in Paket 1 stillgelegt** (nicht eingefroren); Daten bleiben exportierbar (Runde 3, Korrektur von Runde 2).
+- **Versionen:** MINOR-Kette 0.4 … 0.7 mit `feat!:` und Changelog-Abschnitt „Breaking“; 1.0.0 nach Paket 6 (Runde 3).
+- **Roadmap statt Paket:** K3 Anhänge in Sync/Backup, M2, M3, Nachrichten als optionale Erweiterung (Runde 3).
 
 ## Anhang · Screenshots reproduzieren
 Repo-Skript deckt 19 Module ab; für diese Review wurde eine Kopie um Vorräte, Zeiterfassung, Geschenke, Dokumente, Apps & Links, Nachrichten und alle 18 Werkzeuge erweitert (nicht eingecheckt). Repo-Variante:
@@ -364,4 +369,4 @@ Konflikt-Hotspots mit anderen Chats (CHATS.md: aktuell keine laufenden): Paket 1
 | Tests mit festen Listen | Abschnitt 21, letzte Zeile | Checkliste je Paket im Prompt; `exclusion.test` Liste pflegen (`retired` Module ohne aiSchema) |
 
 ## 24 · Fragen Runde 3
-Siehe Chat; Antworten → Abschnitt 10.
+Beantwortet, siehe Abschnitt 10. Ergebnis: [MODULE-PLAN.md](MODULE-PLAN.md), [IMPLEMENTATION-PROMPT.md](IMPLEMENTATION-PROMPT.md).
