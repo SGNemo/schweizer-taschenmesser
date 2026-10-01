@@ -1,10 +1,11 @@
 # Design evaluation (2026-10)
 
-Working folder of the design review done together with the maintainer. Nothing here is imported by the app; mockups are standalone HTML/SVG.
+Result of the design review done together with the maintainer in eight rounds. Nothing here is imported by the app; mockups are standalone HTML (embedded CSS, invented data) with PNG renders. Start with the spec, then the prompt.
 
 | File | What |
 |---|---|
-| [`DESIGN-SPEC.md`](DESIGN-SPEC.md) | the specification: decided facts + open items, updated every round |
+| [`DESIGN-SPEC.md`](DESIGN-SPEC.md) | **the specification** (final): principles, shell, areas, home, tokens table, typography, components, interaction, motion, modules, a11y, open items |
+| [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) | **the prompt** for the implementation chats (German) + part B: split into parallel PRs |
 | [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md) | round 1: what works, problems P1–P17 with severity, daily scenarios (clicks) |
 | `screenshots/round-1/` | annotated screenshots (markers = problem ids), reduced to ≤ 1280 px |
 | [`ROUND-2-DIRECTION.md`](ROUND-2-DIRECTION.md) | round 2: three directions (A/B/C) compared, proposed principles |
@@ -20,6 +21,5 @@ Working folder of the design review done together with the maintainer. Nothing h
 | [`ROUND-7-MODULES.md`](ROUND-7-MODULES.md) | round 7: Kalender, Finanzen, Tresor, Datenträger mocked; every other module as a short spec |
 | `mockups/round-7/` | `kalender.html`, `finanzen.html`, `tresor.html`, `datentraeger.html`, `einstellungen.html` + renders desktop dark/light, phone dark |
 | `mockups/fonts/` | Inter Variable (OFL, copied from `@fontsource-variable/inter`) so the mockups use the app font without importing anything |
-| `IMPLEMENTATION-PROMPT.md` | round 8: the prompt for the implementation chat |
 
 How the screenshots were made: `cd web && SCREENS_DESKTOP=1 SCREENS_SCHEME=light|dark SCREENS_VIEWPORTS=1280x720,1920x1080,2560x1440,412x915 SCREENS_DIR=<dir> npm run screenshots` (invented data, fixed clock 2026-09-29).

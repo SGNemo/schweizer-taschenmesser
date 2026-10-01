@@ -1,17 +1,10 @@
-# Nemo design specification (working document)
+# Nemo design specification (final, 2026-10-01)
 
-Status: **rounds 1–7 decided (Einstellungen mockup pending); round 8 (final spec, implementation prompt) next.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Result of the eight-round design evaluation with the maintainer (rounds: [1 diagnosis](ROUND-1-DIAGNOSIS.md) · [2 direction](ROUND-2-DIRECTION.md) · [3 layout](ROUND-3-LAYOUT.md) · [4 tokens](ROUND-4-TOKENS.md) · [5 components](ROUND-5-COMPONENTS.md) · [6 motion](ROUND-6-MOTION.md) · [7 modules](ROUND-7-MODULES.md)). Everything below is **decided** unless listed under § 13. The implementation prompt is [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md). Mockups (standalone HTML + PNG) live in [`mockups/`](mockups/); the reference renders are named per section.
 
-Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
+Guiding idea: pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded. Main use: desktop with the mouse; dark theme first; phone must never break.
 
-## 0. Decided in round 1 (maintainer's answers, 2026-10-01)
-- **Main use: desktop, mouse-heavy.** Click paths and visible controls count more than shortcuts; keyboard stays a bonus. Phone is secondary but must not break (P1).
-- **Dark theme first.** Mockups and token work start dark; light is derived and checked, not the other way round.
-- **Must keep:** free-text quick capture (FAB → sentence → local parser), movable home widgets (order, size, hide, synced), a sidebar that shows every active module (no icon-only rail as the default), Nemo orange and the fish.
-- **All four pains confirmed:** home does not show "today" (P3), flat navigation and rigid bottom nav (P5), tall cards and phone wrapping (P1, P8, P9), accent doubling and the FAB everywhere (P2).
-- **New input:** "I sometimes have to search a lot – maybe modules can be combined." → round 3 brings a proposal for grouping and merging modules in the navigation (information architecture), without changing module code boundaries.
-
-## 1. Principles (decided 2026-10-01, round 2)
+## 1. Principles
 1. **Heute zuerst.** The home screen answers "what needs me today" without scrolling: date, counts, the day list, due money.
 2. **Eine Hauptaktion pro Ansicht.** One filled accent per screen; everything else uses accent as text/icon colour. FAB only on the phone.
 3. **Daten vor Dekoration.** Names, numbers and dates carry the hierarchy. No badge, colour or icon that does not help a decision.
@@ -20,72 +13,129 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 6. **Bewegung nur als Rückmeldung.** Motion confirms what the user did (tick, save, open); navigation does not animate.
 7. **Ruhe durch Weglassen.** Fewer borders and labels, generous edges, tight centres; dark is the reference theme, light is derived and checked for AA.
 
-## 1b. Direction (decided 2026-10-01, round 2) – "D", a mix
-- **Colour and space from A:** near-neutral dark page (#101417 family, no blue cast), cards one step lighter, 16 px base, 44 px rows, generous gaps and card padding, thin 1.5 px icons.
-- **Row dividers from B:** entries inside a card are separated by hairlines (1 px, low-contrast); cards themselves have no border.
-- **Depth from C:** cards sit on the page as layered surfaces with a soft shadow (and a 1 px inner highlight in dark); the top bar may be translucent. No page gradient.
-- **Accent: Nemo orange only.** Teal (`--accent-2`) stays for charts and focus ring only; status colours separate.
-- **Gradients: brand only** (splash, empty states, fish). No gradients on page, cards, buttons.
-- Reference mockup: `mockups/round-2/variant-d.html` (next to A for comparison).
+Direction "D": colour and space from "Ruhig und luftig" (A), hairline row dividers from "Dicht und effizient" (B), layered depth from "Weich mit Tiefe" (C); orange is the only accent; gradients brand-only. Reference: `mockups/round-2/variant-d.html`.
 
-## 2. Layout (desktop / phone)
-- Facts today: sidebar 248 px from 900 px, bottom nav 5 slots (Home + 3 modules + Mehr) below; page widths narrow 45 rem / content 70 rem / wide 100 rem / full; split views from 1500 px viewport.
-- **Decided (round 3):** hybrid shell – L1 grouped sidebar (248 px: favourites, then collapsible areas with their modules, Bibliothek/Einstellungen at the bottom) that **collapses to the L2 icon rail** (76 px, areas as icons) by a click on the sidebar edge and automatically below 1200 px viewport. Rail state device-local.
-- **Decided:** top bar = search ("Suchen oder fragen", Ctrl+K) · one primary "+ Neu" (quick capture, pre-selects the current module's type) · Werkzeuge with label · sync badge; logo = home. **No FAB on desktop.**
-- **Decided:** master–detail from **1200 px** viewport (list + panel `clamp(22rem, 30%, 30rem)`), below as sheet/dialog. Ultrawide ≥ 2200 px: content max 1800 px centred, panel 32 rem, home grid 4 columns.
-- **Decided:** phone = bottom nav **by area** (Heute · Planen · Geld · Haushalt · Mehr) + FAB (quick capture); area page shows its modules as a scrollable tab row; editors open as bottom sheets.
-- Wireframes: `mockups/round-3/layout-l1.html` (sidebar state) and `layout-l2.html` (rail state).
+## 2. Shell and layout
+| | Decision |
+|---|---|
+| Desktop shell | **Hybrid sidebar**: 248 px with Favoriten (≤ 5, starred, synced), then collapsible **Bereiche** with their modules, Modul-Bibliothek + Einstellungen at the bottom. One click on the edge handle (or automatically below **1200 px** viewport) collapses it to a **76 px icon rail** (areas as icon + label, Werkzeuge, Einstellungen). Rail state is device-local (setting "Seitenleiste: Breit/Schmal"). Mockups: `round-3/layout-l1.html` (wide), `layout-l2.html` (rail). |
+| Top bar | search "Suchen oder fragen" (Ctrl+K, max 28 rem) · **one primary "+ Neu"** (quick capture) · "Werkzeuge" icon **with label** · sync badge (no endless spin) · logo = Home. Translucent (`color-mix(--bg 85%, transparent)` + blur 12 px) with a 1 px hairline. **No FAB on desktop.** |
+| Page frame | eyebrow = area name, h1 = module/view, sub-tabs (underline) for the area's modules, toolbar row (filters, period, segmented view switch), then content. Page widths: narrow 45 rem (Einstellungen content 44 rem), content 70 rem, wide 100 rem, full. |
+| Master–detail | from **1200 px** viewport: list + detail panel `clamp(22rem, 30%, 30rem)` (sticky); below: detail as sheet/dialog. Applies to Rechnungen, Abos, Verträge, Buchungen, Notizen, Accounts, Dokumente, Nachrichten, Kalender (agenda), Datenträger. |
+| Ultrawide ≥ 2200 px | content max 1800 px centred in the content area, panel 32 rem, home grid 4 columns, type stays 16 px (user can choose "Groß"). |
+| Window snapping / 1280 laptops | sidebar → rail automatically below 1200 px; split views fold to dialogs below 1200 px. |
+| Phone (< 900 px) | bottom nav **by area**: Heute · Planen · Geld · Haushalt · Mehr (sheet with Wissen, Tresor, System, Werkzeuge, Bibliothek, Einstellungen); FAB bottom-right = quick capture; page "+" = module's own type; area page shows its modules as a scrollable tab row; editors and details are **bottom sheets**. Top bar: logo, search, Werkzeuge icon. |
 
-## 3. Navigation and module order
-- Facts today: flat manifest order, not configurable; bottom nav takes the first three modules.
-- **Decided (round 3):** 7 areas – **Heute** (home) · **Planen** (Kalender, ToDos, Erinnerungen, Geburtstage, Habits, Zeiterfassung) · **Geld** (Finanzen, Rechnungen, Abos, Budgets, Verträge) · **Haushalt** (Einkauf, Vorräte, Packlisten, Geschenkideen) · **Wissen** (Notizen, Merkliste, Nachrichten, Links) · **Tresor** (Accounts, Dokumente) · **System** (desktop: Datenträger, Systeminfo). Each area is a page; its modules are sub-views (tabs). Implementation: an `area` field on the manifest; modules stay separate in code and data; disabled modules vanish from their area; an area with no enabled module is hidden.
-- **Decided:** favourites chosen by the user (star in the menu or settings), max 5, synced; shown above the areas. No automatic reordering.
+## 3. Navigation and information architecture
+- **Seven areas** (manifest field `area`; modules stay separate in code and data; disabled modules vanish from their area; an area with no enabled module is hidden): **Heute** (home) · **Planen** (Kalender, ToDos, Erinnerungen, Geburtstage, Habits, Zeiterfassung) · **Geld** (Finanzen, Rechnungen, Abos, Budgets, Verträge) · **Haushalt** (Einkauf, Vorräte, Packlisten, Geschenkideen) · **Wissen** (Notizen, Merkliste, Nachrichten, Links) · **Tresor** (Accounts, Dokumente) · **System** (desktop only: Datenträger, Systeminfo). Order inside an area = manifest `order`.
+- **Favourites:** chosen by the user (star in the sidebar/settings), max 5, synced; shown above the areas; no automatic reordering. Default on a fresh install: Kalender, ToDos, Finanzen.
+- **Werkzeuge** stay a sheet (tile grid, 44 px tiles with labels, search on top, 3 recent tools first), reachable from the top bar label and the palette.
+- **Palette (Ctrl+K)** adds "Neu: ToDo / Termin / …", the area pages and settings sections.
 - Later candidates (not decided): Erinnerungen as a tab inside Kalender, Merkliste inside Notizen.
 
-## 4. Home screen
-- Facts today: widget grid 1/2/3/4 columns at 44/70/95 rem container width, sizes s/m/l, edit mode, synced layout.
-- Proposed (round 2 D + round 3 § 3): greeting + date + count strip; "Heute" the only L widget top-left; hero number per widget; two-line rows; actions inside widgets. **Not decided yet.**
+## 4. Home screen ("Heute")
+- Header: greeting ("Guten Morgen/Tag/Abend") + full date + count strip (Termine, Erinnerungen, überfällige Rechnungen, ToDos) + "Anpassen". Setting "Begrüßung und Datum" can hide the greeting.
+- Grid: container-query columns 1 / 2 / 3 / 4 at 44 / 70 / 95 rem; **"Heute" is the only L widget**, top-left, spans 2 columns; small widgets flow into the remaining columns (column-based flow, no stretched rows). Phone order: Heute, ToDos, Rechnungen, Kontostand, Abbuchungen, Einkauf, Geburtstage, Erinnerungen.
+- Widget anatomy: title 15/600 → hero number 32/700 → sub line 14 → rows (two-line on narrow) → "Modul →" link. **Actions inside widgets:** tick ToDos, "Bezahlt" on invoices, snooze reminders, tick shopping chips. Edit mode (drag, size s/m/l, hide, reset) stays. Vault and desktop modules show status only.
+- Reference: `mockups/round-4/home.html` (`home--cool-dark-desktop.png`, `home--cool-dark-phone.png`).
 
-## 5. Tokens (colour, radius, shadow, spacing)
-- Facts today: `web/src/ui/tokens.css` (light default, dark twice, accents orange/teal/coral/lagoon, radii 8/10/14/18, shadows only floating, motion 120/200/250 ms).
-- **Decided (round 4):** neutral base **cool**. Dark: page `#0f1316`, card `#171c20`, chip/track `#1f2529`, hairline `#262d32`, input border `#6b767e`, text `#eceff1` / `#aab4bb` / `#88939b`. Light: page `#f3f4f4`, card `#ffffff`, chip `#eaecee`, hairline `#e2e5e8`, input border `#76838c`, text `#171f24` / `#55636b` / `#5f6c75`.
-- **Decided:** accent orange `#ff9a57` (dark) / `#b5430c` (light), contrast `#1b0f06` / `#ffffff`, soft `#2e241c` / `#fbe9de`; status danger/success/warning/info dark `#f4a39c` / `#7fd3a3` / `#e8b85a` / `#7cc7e8`, light `#b3261e` / `#1b7545` / `#8a5a00` / `#1f5fa8`; soft status backgrounds = `color-mix(status 15%, transparent)`; charts `--viz-1` `#4fb3ad` / `#16847f`, `--viz-2` `#ff9a57` / `#c94f12`, further series `--border-strong`; focus `#ffb07a` / `#0b6f72` as a 2 px outline with 2 px offset.
-- **Decided:** teal is no UI colour any more (charts + light focus ring only). Accent variants teal/coral/lagoon stay as user options replacing `--accent*`.
-- **Decided:** depth without gradients: level 0 page, level 1 card (no border, shadow `0 1px 0 rgb(255 255 255 / .04) inset, 0 8px 24px rgb(0 0 0 / .35), 0 1px 2px rgb(0 0 0 / .3)` dark / `0 1px 2px rgb(23 31 36 / .06), 0 8px 24px rgb(23 31 36 / .07)` light), level 2 menu/dialog/sheet/FAB (`0 16px 48px rgb(0 0 0 / .45), 0 2px 6px rgb(0 0 0 / .3)` / `0 16px 48px rgb(23 31 36 / .18), 0 2px 6px rgb(23 31 36 / .08)`); top bar and bottom nav `color-mix(--bg 85%, transparent)` + blur 12 px + 1 px hairline. Gradients brand only.
-- **Decided:** radii sm 8 / md 12 / lg 16 / xl 20 / full; spacing 4 / 8 / 12 / 16 / 24 / 32 / 48; card padding 22–24; grid gap 24; row 44 (phone 48). Full tables with contrast ratios: `ROUND-4-TOKENS.md`.
+## 5. Tokens
+Neutral base **cool**; every pair checked AA (`ROUND-4-TOKENS.md` has the ratios). Hex values are the implementation targets for `web/src/ui/tokens.css`.
 
-## 6. Typography
-- Facts today: Inter Variable (local), scale xs 12 → 3xl clamp(32–44), weights 400/500/600/700, tabular numerals.
-- **Decided (round 4):** Inter Variable stays the only family (local, OFL). Scale: hero `clamp(2rem, 1.6rem + 1.2vw, 2.75rem)`/700/1.1 · h1 32/600/1.1 (phone 28) · h2 20/600/1.25 · body 16/400/1.5 · label 15/500 · meta 13/400 `--text-3` · caps 11/600/+6 % · badge 12. Letter-spacing −0.02 em at ≥ 28 px. Tabular numerals for every amount, time and date.
-- **Decided:** icons Lucide only, 20 px at 1.5 px stroke (1.75 at 16 px, rail 22 px); no filled icons, no emoji. Empty state: fish 64 px at 35 % in `--text-3`, one sentence, one button; no module illustrations.
+| Token | Dark | Light | Use |
+|---|---|---|---|
+| `--bg` | `#0f1316` | `#f3f4f4` | page, sidebar, rail |
+| `--surface` | `#171c20` | `#ffffff` | cards, widgets, panels, dialogs, inputs |
+| `--surface-2` | `#1f2529` | `#eaecee` | chips, segmented track, skeleton, placeholders |
+| `--border` | `#262d32` | `#e2e5e8` | hairline row dividers, top/bottom bar line |
+| `--border-strong` | `#6b767e` | `#76838c` | input and secondary-button borders (≥ 3:1 on surface-2) |
+| `--text` | `#eceff1` | `#171f24` | body, titles, amounts |
+| `--text-muted` (text-2) | `#aab4bb` | `#55636b` | secondary text, nav items |
+| `--text-3` (new) | `#88939b` | `#5f6c75` | meta, captions, eyebrows (≥ 4.5:1 on surface-2) |
+| `--accent` | `#ff9a57` | `#b5430c` | primary action, active nav, links, "Termin" |
+| `--accent-hover` | `#ffb07a` | `#963709` | hover on filled primary |
+| `--accent-contrast` | `#1b0f06` | `#ffffff` | text on filled accent |
+| `--accent-soft` | `#2e241c` | `#fbe9de` | active nav bg, selected row, Termin chip |
+| `--danger` / `--success` / `--warning` / `--info` | `#f4a39c` / `#7fd3a3` / `#e8b85a` / `#7cc7e8` | `#b3261e` / `#1b7545` / `#8a5a00` / `#1f5fa8` | status text; soft bg = `color-mix(in srgb, <status> 15%, transparent)` (replaces the four `-soft` hexes) |
+| `--viz-1` / `--viz-2` | `#4fb3ad` / `#ff9a57` | `#16847f` / `#c94f12` | chart series 1/2; further series `--border-strong` |
+| `--focus` | `#ffb07a` | `#0b6f72` | `outline: 2px solid` + `outline-offset: 2px` (replaces the 3 px box-shadow ring) |
+| `--overlay` | `rgb(0 0 0 / .55)` | `rgb(0 0 0 / .45)` | dialog backdrop, no blur |
+| `--shadow-1` (level 1) | `0 1px 0 rgb(255 255 255 / .04) inset, 0 8px 24px rgb(0 0 0 / .35), 0 1px 2px rgb(0 0 0 / .3)` | `0 1px 2px rgb(23 31 36 / .06), 0 8px 24px rgb(23 31 36 / .07)` | cards, widgets, panels (no border) |
+| `--shadow-2` (level 2) | `0 16px 48px rgb(0 0 0 / .45), 0 2px 6px rgb(0 0 0 / .3)` | `0 16px 48px rgb(23 31 36 / .18), 0 2px 6px rgb(23 31 36 / .08)` | menus, dialogs, sheets, FAB, toast, drag overlay |
+| `--ocean-from/to` | unchanged | unchanged | **brand only**: splash, empty-state fish, images |
+| Removed | `--accent-2`, `--accent-2-soft`, `--surface-glass`, `--danger-soft` … `--warning-soft` | | teal is no UI colour (charts via `--viz-1`, light focus keeps teal); soft backgrounds via `color-mix` |
 
-## 7. Components
-- **Decided (round 5, full tables in `ROUND-5-COMPONENTS.md` § 1):** button hierarchy primary (filled, once per view) / secondary (border) / quiet (text) / danger (text; filled red only in the confirm dialog) / row 28–32 px with 44 px hit area / icon 40 px square · inputs: label above, 44 px, radius 12, 1 px `--border-strong`, focus 2 px ring + 2 px offset, error = red border + sentence, hint 13 px · switch 44×26, checkbox 24, segmented 38 px pill (filters only), chips 32, tabs underline (sub-views) · card = grouping only (radius 16, level-1 shadow, no border) · **ItemRow is the single list pattern** (44 px, phone 48, hairline, hover actions, selected `--accent-soft`, done strike) · table only for Buchungen and Zeiterfassung · dialog desktop 34/40 rem radius 20, **bottom sheet on the phone**, backdrop 55 % without blur, draft kept 30 s · toast bottom centre with Rückgängig, 6 s, max 2 · badges = status only · loading Skeleton, empty fish 56–64 px, error inline box with retry.
-- **Decided:** module-level copies of Segmented, progress bars and inputs are removed in favour of `@/ui`.
-- **Decided:** "+ Neu", `N` and the FAB open **quick capture everywhere** (text → parsed chips; Tab cycles type, Enter creates, Ctrl+Enter opens the full form pre-filled; inside a module its type is pre-selected). Full form: required fields first, optional behind "Mehr" chips, footer Abbrechen · Speichern und neu · Speichern, first field auto-focused, validation on blur/submit. Inline add stays for ToDos, Einkauf, Packlisten.
+- Accent variants teal / coral / lagoon stay as user options and replace only `--accent*`.
+- Radii: `--radius-sm` 8 (chips in rows, kbd) · `--radius-md` 12 (buttons, inputs, nav items, icon buttons) · `--radius-lg` 16 (cards, widgets, panels) · `--radius-xl` 20 (dialogs, sheets) · full.
+- Spacing: 4-px grid `--space-1…7` = 4 / 8 / 12 / 16 / 24 / 32 / 48; card padding 22–24; grid gap 24 (compact 16); row height 44 (phone 48, compact 36); hairline 1.
+- Depth: level 0 page (solid) · level 1 cards (shadow-1, no border) · level 2 floating (shadow-2). Top bar / bottom nav translucent + blur 12 px. No gradients outside brand surfaces.
+- Reference: `mockups/round-4/tokens.html` (`tokens--cool-dark-desktop.png`, `tokens--cool-light-desktop.png`).
 
-## 8. Interaction (keyboard, touch, undo)
-- Facts today: Ctrl+K palette, Alt+Home, Esc; FAB → quick capture; no other shortcuts.
-- **Decided (round 5):** full keyboard scheme: `Ctrl+K` search/ask · `N` new · `G` then `H/P/G/A/W/T` go to area · `J/K` or arrows select row · `Enter` open, `E` edit, `Space` tick · `Ctrl+Z` undo (last 10, also after the toast) · `?` shortcut sheet · `Esc` close/clear · `/` list search. Single letters never fire inside inputs. Palette gets "Neu: …" and area commands.
-- **Decided:** row actions on hover/focus; drag-and-drop stays (ToDos, home, Einkauf); multi-select via checkbox / Shift-click / long press with a bulk bar (Erledigt · Verschieben · Löschen · Abbrechen); swipe right = done/paid, left = move/snooze; undo everywhere through the toast and `Ctrl+Z`; soft delete with a 30-day Papierkorb page under Einstellungen.
-- **Decided:** focus ring 2 px on everything interactive; focus moves to `main` on navigation, into dialogs on open, back to the opener on close. Reduced motion = all durations 0, shimmer static.
-- **Decided:** settings "Textgröße Normal/Groß" (16/18 px root) and "Dichte Normal/Kompakt" (rows 44/36, gaps 24/16), both device-local.
+## 6. Typography and icons
+- **Inter Variable**, local, OFL, the only family; `--font-mono` system stack for tokens/keys only.
+- Scale: hero `clamp(2rem, 1.6rem + 1.2vw, 2.75rem)`/700/1.1 · h1 32/600/1.1 (phone 28) · h2 20/600/1.25 · body 16/400/1.5 · label 15/500 · meta 13/400 `--text-3` · caps 11/600/+0.06 em uppercase · badge 12/600. Letter-spacing −0.02 em at ≥ 28 px. Weights 400/500/600/700 only.
+- `font-variant-numeric: tabular-nums` on every amount, time, date, counter, table.
+- Hierarchy in a row: title 16/400 `--text`, meta 13 `--text-3`, amount 16/600 right. In a widget: title → hero → sub → rows.
+- Root size follows the setting "Textgröße": Normal 16 px / Groß 18 px; everything is rem-based.
+- Icons: **Lucide** only, 20 px at **1.5 px stroke** (1.75 at 16 px; rail 22 px). No filled icons, no emoji. Empty state: fish mark 56–64 px at 35 % in `--text-3`, one sentence, one button; no module illustrations.
+
+## 7. Components (`web/src/ui`)
+| Component | Spec |
+|---|---|
+| Button | primary = filled accent, **once per view** (page head or dialog foot) · secondary = 1 px `--border-strong` · quiet = text (Abbrechen, side paths) · danger = text in `--danger`, filled red only in confirm dialogs · row button 28–32 px with 44 px hit area · icon button 40 px, radius 12, `--surface-2`. Disabled 45 % opacity. Hover: background change, no transition; press: scale .97. |
+| Fields | label above (never placeholder-as-label), 44 px, radius 12, 1 px `--border-strong`, focus = 2 px `--focus` outline + 2 px offset; error = `--danger` border + sentence below; hint 13 px `--text-3`; date fields show a human hint ("Montag, in 6 Tagen"); search fields with icon, in the page head/toolbar. `SelectField` replaces native `<select>` styling. |
+| Switch / Checkbox / Segmented / Chips / Tabs | switch 44×26 accent-on; checkbox 24 px radius 7 accent fill; segmented 38 px pill track `--surface-2`, active = `--surface` + accent text (filters only); chips 32 px, active `--accent-soft`; tabs = underline (sub-views). All hit areas ≥ 44 px. **Module-level copies of Segmented, progress bars and inputs are removed.** |
+| Card | grouping only: radius 16, shadow-1, no border, padding 22–24, title 15/600, optional hero. |
+| ItemRow | **the single list pattern**: 44 px (phone 48, compact 36), hairline between rows, radius 10 on hover/selected; left checkbox/icon/avatar; main = title + 13 px meta (stacked on narrow); right = tabular amount/date; row actions appear on hover/focus (desktop) or by swipe (phone). Selected `--accent-soft`; done = `--text-3` + strike. `ItemList` grid mode is kept only for Links tiles and Werkzeuge. |
+| Table | only Finanzen Buchungen and Zeiterfassung: caps header, hairlines, right-aligned tabular amounts, income in `--success`. |
+| Dialog / Sheet | desktop centred dialog 34 rem (forms) / 40 rem (quick capture), radius 20, shadow-2, backdrop `--overlay` without blur; phone = bottom sheet with grab handle, max 88 vh, keyboard-safe; Esc / backdrop / swipe-down closes, draft kept 30 s, confirm only if fields were filled. Setup assistant keeps full-screen. Focus into the dialog on open, back to the opener on close; `data-autofocus` on the first field. |
+| Toast | bottom centre, shadow-2, icon + sentence + **Rückgängig**, 6 s, max 2 stacked; every state-changing action gets one. |
+| Badge | status only: Termin (accent-soft), Erinnerung (surface-2), überfällig (danger 15 %), bezahlt (success 15 %), läuft ab (warning 15 %), Beta/Info (info 15 %). Never decorative. |
+| States | loading = `Skeleton` (3 bars, shimmer, static under reduced motion); empty = `EmptyState` (fish, sentence, button) / `compact` in widgets; error = inline box (icon, sentence, retry); sync errors in the shell banner, not toasts. |
+| Progress | `ui/Progress` (`scaleX`) everywhere (Budgets, Packlisten, setup, vault meter). |
+| Quick capture | "+ Neu", `N`, FAB: one text field → locally parsed chips (type, amount, date, recurrence, account default); `Tab` cycles the type, `Enter` creates, `Ctrl+Enter` opens the full form pre-filled; inside a module its type is pre-selected. Phone: sheet. Reference `mockups/round-5/quickadd.html`. |
+| Full form | required fields first (big amount with sign toggle in finance), optional behind "Mehr" chips expanding inline; footer Abbrechen · Speichern und neu · **Speichern**; validation on blur and submit, focus to the first error. Inline add row stays for ToDos, Einkauf, Packlisten. Reference `mockups/round-5/form-rechnung*.html`. |
+| Reference sheet | `mockups/round-5/components.html` (`components--dark.png`, `components--light.png`). |
+
+## 8. Interaction
+- **Keyboard (desktop):** `Ctrl+K` search/ask · `N` new (quick capture) · `G` then `H/P/G/A/W/T` go to area (Heute, Planen, Geld, hAushalt, Wissen, Tresor) · `J/K` or arrows select row · `Enter` open, `E` edit, `Space` tick · `Ctrl+Z` undo (last 10, also after the toast) · `?` shortcut sheet · `Esc` close / clear selection · `/` focus list search · `Alt+Home` stays. Single letters never fire inside inputs or dialogs.
+- **Mouse:** row actions on hover; right-click = same menu as "…"; drag-and-drop (dnd-kit) for ToDo order, home widgets, Einkauf, calendar move/resize (15-min steps).
+- **Multi-select:** checkbox / Shift-click ranges / long press → bulk bar (Erledigt · Verschieben · Löschen · Abbrechen).
+- **Touch:** swipe right = done/paid (green reveal 72 px), swipe left = move/snooze; long press = multi-select; pull-to-refresh only with sync on.
+- **Undo everywhere:** every write via `createRepo` is undoable through the toast and `Ctrl+Z`; deletes are soft with a 30-day "Papierkorb" page under Einstellungen (tombstones exist; GC stays as today).
+- **Focus:** 2 px ring on everything interactive; focus moves to `main` on navigation (kept), into dialogs on open and back on close.
+- **Settings (device-local):** Textgröße Normal/Groß · Dichte Normal/Kompakt · Seitenleiste Breit/Schmal · Bewegung follows the OS (read-only note).
 
 ## 9. Motion
-- Facts today: transform/opacity only, page fade+slide 250 ms, list stagger, reduced motion zeroes durations.
-- **Decided (round 6, `ROUND-6-MOTION.md`):** durations fast 120 / normal 200 / slow 250 ms, closing in half; easing `cubic-bezier(.22,1,.36,1)` entering, `cubic-bezier(.2,0,0,1)` state changes, linear crossfades; only `transform`/`opacity` (+ background/border on controls ≤ 44 px); never width, height, surface colour, shadow, blur.
-- **Decided patterns:** tick (box 120, check 200, title strike, row leaves after 600 ms with translateX 16 + fade 250, next row moves up) · save = button scale .97 + toast translateY 24→0 (250), 6 s, Rückgängig · dialog = backdrop 55 % fade 200 + scale .96→1, sheet translateY 250, no blur · **page/area/tab switch = 120 ms crossfade + sliding tab indicator (200)**, no slide · loading = skeleton shimmer (only loop) → content fade 200 · charts = scaleY bars 250 + 30 ms stagger, first appearance only · hover instant, press scale .97, drag lift level-2 shadow + scale 1.02, notification badge pop once.
-- **Decided removals:** `pageIn`, `itemIn` stagger, `pillIn`, endless sync spin (replaced by a one-time pulse), backdrop blur, width/colour/shadow transitions. Reduced motion: all durations 0, shimmer static, delays 0.
+- Durations `--dur-fast` 120 / `--dur` 200 / `--dur-slow` 250 ms; closing in half; easing `cubic-bezier(.22,1,.36,1)` entering, `cubic-bezier(.2,0,0,1)` state changes, linear crossfades. Only `transform`/`opacity` (+ `background`/`border-color` on controls ≤ 44 px); never width, height, surface colour, shadow, blur.
+- Patterns: tick (box 120, check scale 200, strike; row leaves after 600 ms via translateX 16 + fade 250, next row moves up) · save = press scale .97 + toast translateY 24→0 250 · dialog = backdrop fade 200 + scale .96→1, sheet translateY 250 · **page/area/tab switch = 120 ms crossfade + tab indicator translateX 200** · skeleton shimmer (only loop) → content fade 200 · chart bars scaleY 250 + 30 ms stagger on first appearance only · drag lift shadow-2 + scale 1.02, settle 200 · badge pop once.
+- Removed: `pageIn`, `itemIn` stagger, `pillIn`, endless sync spin (one pulse when a sync ends), backdrop blur, width/colour/shadow transitions. `prefers-reduced-motion`: all durations and delays 0, shimmer static.
+- Reference: `mockups/round-6/motion.html` + frames.
 
 ## 10. Modules
-- **Decided (round 7, `ROUND-7-MODULES.md`):** Kalender = week time grid 07–21 h (44 px/h, all-day row, today column tinted, now line, one colour per kind: Termin accent, Erinnerung grey, extern info) + agenda column from 1200 px; phone default Agenda, week = 3 days; create by quick capture, slot click, drag. Finanzen = hero "Verfügbar" + one-line breakdown, 3 KPI cards with delta, 6-month bars (`--viz-1/2`), categories as rows with bars, Buchungen side column from 1200 px; Buchungen tab = table. Tresor = status pill (Entsperrt · Windows Hello), auto-lock countdown, per-row copy, secret rows with reveal/copy, TOTP ring, health line, "schwach" badge; red only for weak/reused. Datenträger = treemap with its documented palette + accent selection outline, detail panel with facts, Korb with "Frei danach", one primary "In den Papierkorb".
-- **Decided:** every other module follows the table in `ROUND-7-MODULES.md` § 2 (rows instead of card grids, panel/sheet details, quick capture where sensible, inline add kept for ToDos/Einkauf/Packlisten, widgets with hero + rows + action). Abos lose the visible switch label; Notizen editor becomes a panel; Systeminfo becomes one facts list; Werkzeuge tiles get labels and a search; Einstellungen gets a section list and the new options (mockup follows).
+Decided per module in [`ROUND-7-MODULES.md`](ROUND-7-MODULES.md) § 1–2 (table for all 25). Highlights:
+- **Kalender:** week = time grid 07–21 h (44 px/h), all-day row (ToDos with date, birthdays, invoices), today column tint 5 %, now line, one colour per kind (Termin accent, Erinnerung grey, extern info), overlapping items share width; agenda column 22 rem from 1200 px; phone default Agenda, week = 3 days, month = dot grid; slot click creates, drag moves. `mockups/round-7/kalender.html`.
+- **Finanzen:** hero "Verfügbar" + breakdown line, 3 KPI cards with delta, 6-month bar chart, categories as rows with inline bars, Buchungen side column; Buchungen tab = table. Phone: KPIs as one-line rows. `finanzen.html`.
+- **Rechnungen / Abos / Verträge / Budgets:** rows with sums in the toolbar, panel details, "Bezahlt" row button; Abos without a visible switch label; Budgets with `ui/Progress`. `mockups/round-3/layout-l1.html`.
+- **Tresor (Accounts):** status pill "Entsperrt · Windows Hello", "Sperren" always visible, auto-lock countdown in the panel, per-row copy, secret rows (reveal/copy), TOTP ring, health line; red only for weak/reused; lock screen = one centred card; widget status only. `tresor.html`.
+- **Datenträger:** treemap keeps its categorical palette (documented exception) + accent selection outline; detail panel with facts, Korb with "Frei danach", one primary "In den Papierkorb"; safety text once. `datentraeger.html`.
+- **Einstellungen:** section list left (16 rem), content 44 rem, option rows ≥ 56 px, segmented instead of native selects, order Darstellung · Favoriten & Bereiche · Übersicht · Benachrichtigungen · Sync & Backup · KI-Assistent · Werkzeuge · Tresor & Sicherheit · Lokale API · Einrichtung (end, when data exists) · Über Nemo; phone = chip row + stacked options. `einstellungen.html`.
+- **ToDos, Erinnerungen, Geburtstage, Habits, Zeiterfassung, Einkauf, Vorräte, Packlisten, Geschenkideen, Notizen, Merkliste, Nachrichten, Links, Dokumente, Systeminfo, Werkzeuge, Setup-Assistent:** per the table (rows instead of card grids, panels/sheets, quick capture where sensible, inline add kept, widgets with hero + rows + action).
 
 ## 11. Accessibility
-- Facts today: AA tokens tested, axe in e2e (light/dark, desktop/Pixel 7), touch 44 px rule (3 known exceptions).
-- open
+- Contrast: all token pairs AA (text ≥ 4.5:1 on bg/surface/surface-2, UI ≥ 3:1), guarded by `ui/tokens.test.ts` extended with `--text-3`, `--border-strong` on `--surface-2`, status on surface, `--focus` on surface, both dark blocks identical.
+- Targets ≥ 44 px everywhere (segmented 38 px visual + padding, checkbox 24 px + hit area); phone rows 48 px.
+- Focus visible on everything; dialogs trap focus; `aria-current`, live regions for toasts and drag announcements (kept).
+- Reduced motion = no motion; "Textgröße Groß" = 18 px root; "Dichte Kompakt" never below 36 px rows.
+- axe (`e2e/a11y.spec.ts`) extended to seeded data, `data-theme` and accent variants, both densities.
 
-## 12. Open items (all rounds)
-- Language of this spec: English (repo convention); the implementation prompt will be German like the maintainer's prompts – confirm.
-- `docs/design/` is not exempt in `web/scripts/check-docs.mjs` (budget warnings only) and `docs/CHATS.md` has no row for this branch – both left untouched on purpose (brief: only `docs/design/**`); decide at PR time.
-- Round 1 questions: see `ROUND-1-DIAGNOSIS.md` § 5.
+## 12. Repo rules that stay untouched
+Internal identifiers (`io.github.sgnemo.taschenmesser`, storage keys `tm-*`, DB name, backup ids, package names), security and signing, vault crypto, AI privacy (no user data to models, `accounts` without `aiSchema`/widget entries), local API rules, data envelope and `createRepo`, module isolation (areas are navigation only). The Disk block list, typed confirmation and recycle-bin-first stay as they are.
+
+## 13. Open items (not decided, implementation may propose)
+- Merging Erinnerungen into Kalender and Merkliste into Notizen (navigation-level candidates).
+- Exact favourites UI (star in sidebar hover vs. settings list only); default favourites on a fresh install.
+- Papierkorb page scope (which collections, 30-day purge vs. manual).
+- Werkzeuge: whether the sheet becomes an area page on the phone.
+- Phone week view = 3 days vs. 1 day with horizontal swipe.
+- `docs/design/` is not exempt in `web/scripts/check-docs.mjs` (this file exceeds the 3 000-token budget, warning only); `docs/CHATS.md` has no row for this branch – both deliberately untouched (brief: only `docs/design/**`); decide at merge time.
