@@ -71,7 +71,7 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['@/modules/*', '../../*/*', '../../../*/*'.replace('*/*', '*/*')].slice(0, 1),
+              group: ['@/modules/*', '../../*/*', '../../../*/*'].slice(0, 1),
               message:
                 'Modules must not import other modules. Use the event bus or manifest contributions.',
             },
