@@ -310,7 +310,7 @@ jobs:
 
   # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
   # push to develop that changed more than documentation. Never on pull requests, never a stable release.
-  # See dev-preview.yml and docs/HOW-TO.md -> "Dev-Preview".
+  # See dev-preview.yml and docs/howto/ci.md -> "Dev-Preview".
   dev-preview:
     name: Dev-Preview build
     needs: [changes, secret-scan, web, server, mcp, e2e-sync, rust]

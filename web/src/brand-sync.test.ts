@@ -34,7 +34,7 @@ describe('brand assets stay in step', () => {
   });
 
   it('the wordmark (own fish head and tail, letters outlined) uses the logo colour', () => {
-    // The wordmark is a separate drawing (DECISIONS.md: "Wordmark W2"), so it shares the colour, not the paths.
+    // The wordmark is a separate drawing (docs/decisions/ui-brand.md: "Wordmark W2"), so it shares the colour, not the paths.
     for (const file of ['logo-wordmark.svg', 'logo-wordmark-light.svg']) {
       expect(read(`brand/${file}`), file).toContain(`fill="${LOGO_COLOR}"`);
     }

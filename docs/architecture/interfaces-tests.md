@@ -10,7 +10,7 @@ Part of the architecture notes ([index](../architecture.md)); map: [ARCHITECTURE
 - `SyncAdapter` (`core/sync/types.ts`), `StorageAdapter` (`core/storage/types.ts`), `FieldOp`.
 - `PlatformService` (`core/platform/types.ts`): `fetch`, `notifications`, `saveFile`, `clipboard`, `secrets`, `biometrics`, `screen`, `oauth`, `updater`, `localApi`, `disk`, `system`, `lifecycle`, `app`.
 - `ImporterMeta` / `ImporterRuntime` / `ImportBatch` (`core/importer/types.ts`).
-- Server REST (`server/src/app.ts`): `GET /v1/health`, `GET|PUT /v1/vault`, `POST /v1/push`, `GET /v1/pull`, `POST /v1/reset`, push routes `/v1/push/*`, `GET /v1/proxy?url=`. Local API routes: see [local-api.md](architecture/local-api.md).
+- Server REST (`server/src/app.ts`): `GET /v1/health`, `GET|PUT /v1/vault`, `POST /v1/push`, `GET /v1/pull`, `POST /v1/reset`, push routes `/v1/push/*`, `GET /v1/proxy?url=`. Local API routes: see [local-api.md](local-api.md).
 
 ## Tests
 - Unit/component: co-located `*.test.ts(x)` (some in `__tests__/`); `web/vitest.config.ts`, `web/vitest.setup.ts`.

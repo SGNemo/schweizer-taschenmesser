@@ -12,7 +12,7 @@ name: Dev-Preview
 #   dev-preview-test  publish to a throw-away pre-release `dev-preview-test` (to test this workflow)
 #   artifact-only     build and upload workflow artifacts only
 # Same signing and audit steps as release.yml (gitleaks, audit, keystore cleanup, signature check).
-# Docs: docs/HOW-TO.md -> "Dev-Preview".
+# Docs: docs/howto/ci.md -> "Dev-Preview".
 
 on:
   workflow_call:

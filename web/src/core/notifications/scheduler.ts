@@ -66,7 +66,7 @@ const INTERVAL_MS = 30_000;
 
 /**
  * Local scheduler: checks on start, every 30 s and whenever the app becomes visible again.
- * Works only while the app is open – see CLAUDE.md for the Web Push option (phase 6).
+ * Works only while the app is open – see docs/architecture/extras.md for the Web Push option (phase 6).
  */
 export function startNotificationScheduler(deps: SchedulerDeps = defaultDeps()): () => void {
   let running = false;
