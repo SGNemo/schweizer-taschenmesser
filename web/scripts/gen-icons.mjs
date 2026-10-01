@@ -29,15 +29,23 @@ const executablePath =
 
 const appIcon = brand('app-icon.svg');
 const maskable = brand('app-icon-maskable.svg');
-// Tiny sizes: the fish is enlarged and the corners are less round so it stays readable at 16–32 px.
-const appIconSmall = appIcon.replace('scale(.74)', 'scale(.92)').replace('rx="112"', 'rx="96"');
+// Tiny sizes: the corners are less round so the tile keeps its area at 16–32 px.
+const appIconSmall = appIcon.replace('rx="112"', 'rx="96"');
 const mark = brand('logo-mark.svg');
 // Favicon: the fish alone on a transparent tab, in a square frame around its bounding box.
-const favicon = mark.replace('viewBox="0 0 512 512"', 'viewBox="60 51 410 410"');
+const [vx, vy, vw, vh] = mark
+  .match(/viewBox="([^"]+)"/)[1]
+  .split(' ')
+  .map(Number);
+const side = Math.round(Math.max(vw, vh) * 1.06);
+const favicon = mark.replace(
+  /viewBox="[^"]+"/,
+  `viewBox="${Math.round(vx + vw / 2 - side / 2)} ${Math.round(vy + vh / 2 - side / 2)} ${side} ${side}"`,
+);
 const androidFg = brand('android-foreground.svg');
 const androidMono = brand('android-monochrome.svg');
 const mono = brand('logo-mono.svg');
-const monoWhite = mono.replace('<g fill="#000"', '<g fill="#fff"');
+const monoWhite = mono.replace('fill="#000" stroke="#000"', 'fill="#fff" stroke="#fff"');
 const wordmark = brand('logo-wordmark.svg');
 const wordmarkLight = brand('logo-wordmark-light.svg');
 const OCEAN = 'linear-gradient(135deg, #0B1D2B 0%, #0F3440 100%)';
@@ -148,7 +156,7 @@ try {
   }
   write(
     out(icons, 'android', 'values', 'ic_launcher_background.xml'),
-    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">#164D60</color>\n</resources>\n`,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">#E0550F</color>\n</resources>\n`,
   );
   write(
     out(icons, 'android', 'mipmap-anydpi-v26', 'ic_launcher.xml'),

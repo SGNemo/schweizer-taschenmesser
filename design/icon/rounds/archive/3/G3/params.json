@@ -1,0 +1,10 @@
+{
+  "concept": "bones",
+  "params": {
+    "bone": {
+      "light": "#B3A994",
+      "dark": "#EDE6D6"
+    },
+    "ribsAbove": true
+  }
+}

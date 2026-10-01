@@ -1,0 +1,9 @@
+{
+  "concept": "script",
+  "params": {
+    "ink": {
+      "light": "#E0601A",
+      "dark": "#F26A1E"
+    }
+  }
+}

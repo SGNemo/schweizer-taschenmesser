@@ -1,0 +1,47 @@
+{
+  "body": {
+    "height": 112
+  },
+  "stripes": {
+    "at": [
+      0.74,
+      0.33
+    ],
+    "width": 50,
+    "bend": [
+      -16,
+      -10
+    ],
+    "mode": "cut"
+  },
+  "eye": {
+    "style": "cut",
+    "r": 17
+  },
+  "colors": {
+    "body": "#FFFFFF"
+  },
+  "soften": 10,
+  "mono": {
+    "style": "negative"
+  },
+  "mark": {
+    "colors": {
+      "body": "#F26A1E"
+    }
+  },
+  "tilt": -35,
+  "plate": {
+    "shape": "rounded",
+    "radius": 112,
+    "fill": "#F26A1E",
+    "scale": 0.96,
+    "dx": 0,
+    "dy": 6
+  },
+  "adaptive": {
+    "scale": 0.68,
+    "bg": "#F26A1E",
+    "dy": 4
+  }
+}
