@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–5 decided; round 6 (motion) demoed, waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–6 decided; round 7 (modules) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -73,7 +73,9 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 
 ## 9. Motion
 - Facts today: transform/opacity only, page fade+slide 250 ms, list stagger, reduced motion zeroes durations.
-- Proposed (round 6, `ROUND-6-MOTION.md`): 120/200/250 ms, ease-out, transform/opacity only, motion only as feedback (tick, save, open, close, sort, delete), no page/tab slide (120 ms crossfade), no list stagger, no endless spin, skeleton the only loop, reduced motion = instant. **Not decided yet.**
+- **Decided (round 6, `ROUND-6-MOTION.md`):** durations fast 120 / normal 200 / slow 250 ms, closing in half; easing `cubic-bezier(.22,1,.36,1)` entering, `cubic-bezier(.2,0,0,1)` state changes, linear crossfades; only `transform`/`opacity` (+ background/border on controls ≤ 44 px); never width, height, surface colour, shadow, blur.
+- **Decided patterns:** tick (box 120, check 200, title strike, row leaves after 600 ms with translateX 16 + fade 250, next row moves up) · save = button scale .97 + toast translateY 24→0 (250), 6 s, Rückgängig · dialog = backdrop 55 % fade 200 + scale .96→1, sheet translateY 250, no blur · **page/area/tab switch = 120 ms crossfade + sliding tab indicator (200)**, no slide · loading = skeleton shimmer (only loop) → content fade 200 · charts = scaleY bars 250 + 30 ms stagger, first appearance only · hover instant, press scale .97, drag lift level-2 shadow + scale 1.02, notification badge pop once.
+- **Decided removals:** `pageIn`, `itemIn` stagger, `pillIn`, endless sync spin (replaced by a one-time pulse), backdrop blur, width/colour/shadow transitions. Reduced motion: all durations 0, shimmer static, delays 0.
 
 ## 10. Modules
 - open (round 7)
