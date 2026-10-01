@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
-import { Fab, Icon, IconButton, Toaster, Wordmark } from '@/ui';
+import { isDevBuild } from '@/core/update/buildInfo';
+import { Badge, Fab, Icon, IconButton, Toaster, Wordmark } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
@@ -18,10 +19,14 @@ import styles from './AppShell.module.css';
 
 const BOTTOM_MODULE_SLOTS = 3;
 
-function SideLink({ item }: { item: NavItem }) {
+function SideLink({ item, home }: { item: NavItem; home?: boolean }) {
   return (
     <li>
-      <NavLink to={item.to} className={styles.navLink} end={item.to === '/'}>
+      <NavLink
+        to={item.to}
+        className={home ? `${styles.navLink} ${styles.homeLink}` : styles.navLink}
+        end={item.to === '/'}
+      >
         <Icon name={item.icon} />
         {item.label}
       </NavLink>
@@ -29,27 +34,39 @@ function SideLink({ item }: { item: NavItem }) {
   );
 }
 
+let devNoticeShown = false;
+
 export function AppShell() {
   const moduleItems = useModuleNavItems();
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
   const openTools = useUiStore((s) => s.openTools);
+
+  // Dev-Preview builds say so once per start (a module flag survives StrictMode's double effect).
+  useEffect(() => {
+    if (!isDevBuild() || devNoticeShown) return;
+    devNoticeShown = true;
+    useUiStore.getState().toast(t.devPreview.notice);
+  }, []);
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   useNativeShare();
 
-  // Global shortcut: Ctrl/Cmd+K opens the command palette.
+  // Global shortcuts: Ctrl/Cmd+K opens the command palette, Alt+Home goes to the home screen.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPaletteOpen(!useUiStore.getState().paletteOpen);
+      } else if (e.altKey && e.key === 'Home') {
+        e.preventDefault();
+        void navigate('/');
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [setPaletteOpen]);
+  }, [setPaletteOpen, navigate]);
 
   // PWA shortcuts: "Suchen" (`/?search=1`) opens the palette, "Schnell erfassen" the capture sheet.
   useEffect(() => {
@@ -70,7 +87,7 @@ export function AppShell() {
     document.getElementById('main')?.focus({ preventScroll: true });
   }, [location.pathname]);
 
-  const top: NavItem = { to: '/', label: t.nav.dashboard, icon: 'home' };
+  const top: NavItem = { to: '/', label: t.nav.home, icon: 'home' };
   const library: NavItem = { to: '/library', label: t.nav.library, icon: 'grid' };
   const settings: NavItem = { to: '/settings', label: t.nav.settings, icon: 'settings' };
   const bottomItems = [top, ...moduleItems.slice(0, BOTTOM_MODULE_SLOTS)];
@@ -84,8 +101,9 @@ export function AppShell() {
 
       <aside className={styles.sidebar}>
         <a
-          className={styles.brand}
+          className={`${styles.brand} ${styles.brandLink}`}
           href="/"
+          aria-label={t.nav.homeAria}
           onClick={(e) => {
             e.preventDefault();
             void navigate('/');
@@ -95,7 +113,10 @@ export function AppShell() {
         </a>
         <nav aria-label={t.nav.main} className={styles.sidebarNav}>
           <ul className={styles.navList}>
-            <SideLink item={top} />
+            <SideLink item={top} home />
+          </ul>
+          <h2 className={styles.navHeading}>{t.nav.modules}</h2>
+          <ul className={styles.navList}>
             {moduleItems.map((i) => (
               <SideLink key={i.to} item={i} />
             ))}
@@ -109,14 +130,23 @@ export function AppShell() {
 
       <div className={styles.col}>
         <header className={styles.topbar}>
-          <span className={`${styles.brand} ${styles.hideDesktop}`}>
+          <Link
+            to="/"
+            className={`${styles.brand} ${styles.brandLink} ${styles.hideDesktop}`}
+            aria-label={t.nav.homeAria}
+          >
             <Wordmark height={32} title={t.appName} />
-          </span>
+          </Link>
           <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
             <Icon name="search" size={18} />
             <span>{t.actions.search}</span>
             <kbd className={`${styles.kbd} ${styles.hideMobile}`}>{t.palette.hint}</kbd>
           </button>
+          {isDevBuild() ? (
+            <span title={t.devPreview.badgeTitle} data-testid="dev-badge">
+              <Badge tone="warning">{t.devPreview.badge}</Badge>
+            </span>
+          ) : null}
           <IconButton label={t.tools.open} onClick={() => openTools()}>
             <Icon name="wrench" />
           </IconButton>

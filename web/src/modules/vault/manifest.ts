@@ -1,5 +1,5 @@
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { documentSchema } from './schema';
@@ -28,7 +28,8 @@ const manifest: ModuleManifest = {
     {
       id: 'expiring',
       title: 'Dokumente: Ablauf',
-      size: 's',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/ExpiringWidget'),
     },
   ],

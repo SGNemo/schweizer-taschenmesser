@@ -27,6 +27,19 @@ describe('buildLatestJson', () => {
     expect(JSON.stringify(json)).not.toContain('/latest/');
   });
 
+  it('builds the Dev-Preview manifest on the rolling tag with the dev exe', () => {
+    const json = buildLatestJson({
+      ...base,
+      version: '1.2.1-dev.57',
+      tag: 'dev-preview',
+      portable: { ...portable, fileName: 'Nemo-Portable-dev.exe' },
+    });
+    expect(json.version).toBe('1.2.1-dev.57');
+    expect(json.platforms['windows-x86_64-portable']!.url).toBe(
+      'https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe',
+    );
+  });
+
   it('has no generic or installer entries an old installed app could pick up', () => {
     const keys = Object.keys(buildLatestJson({ ...base, portable }).platforms);
     expect(keys).toEqual(['windows-x86_64-portable']);

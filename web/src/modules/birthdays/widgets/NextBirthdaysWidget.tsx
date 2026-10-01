@@ -10,6 +10,7 @@ export default function NextBirthdaysWidget() {
   const day = today();
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.birthdays, to: '/birthdays?new=1' }}
       loading={!list}
       empty={t.birthdays.widgetEmpty}
       entries={sortByNext(list ?? [], day)

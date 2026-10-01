@@ -13,6 +13,7 @@ export default function OpenTasksWidget() {
   const now = today();
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.todos, to: '/todos?new=1' }}
       loading={!open}
       empty={t.todos.widgetEmpty}
       headline={open && open.length > 0 ? t.todos.openCount(open.length) : undefined}

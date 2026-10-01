@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
 import { addDaysStr, today } from '@/core/time/dates';
 import { t } from '@/strings';
+import { EmptyState, Skeleton } from '@/ui';
 import { ItemRow } from '../components/ItemRow';
 import styles from './widget.module.css';
 
@@ -9,7 +10,7 @@ export default function TodayWidget() {
   const day = today();
   const next = addDaysStr(day, 1);
   const items = useCalendarItems({ from: day, to: next });
-  if (!items) return <p role="status">…</p>;
+  if (!items) return <Skeleton width="60%" height="1.25rem" />;
   const open = items.filter((i) => !i.done);
   const groups = [
     { label: t.calendar.today, date: day },
@@ -17,7 +18,11 @@ export default function TodayWidget() {
   ];
   return (
     <div className={styles.wrap}>
-      {open.length === 0 ? <p className={styles.muted}>{t.calendar.widgetEmpty}</p> : null}
+      {open.length === 0 ? (
+        <EmptyState compact title={t.calendar.widgetEmpty}>
+          <Link to="/calendar?new=1">{t.homeEmpty.calendar}</Link>
+        </EmptyState>
+      ) : null}
       {groups.map((g) => {
         const list = open.filter((i) => i.date === g.date);
         if (list.length === 0) return null;

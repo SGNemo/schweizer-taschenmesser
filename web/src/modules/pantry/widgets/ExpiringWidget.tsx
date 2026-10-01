@@ -19,6 +19,7 @@ export default function ExpiringWidget() {
   );
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.pantry, to: '/pantry?new=1' }}
       loading={!items}
       empty={items && due.length === 0 ? t.pantry.widgetEmpty : undefined}
       headline={due.length > 0 ? t.pantry.widgetHeadline(due.length) : undefined}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BUILD_SHA, isDevBuild } from '@/core/update/buildInfo';
 import { Card, Logo } from '@/ui';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
@@ -17,7 +18,12 @@ export function AboutSection() {
           <p className={styles.aboutName}>{t.appName}</p>
           <p>{t.about.tagline}</p>
           <p data-testid="about-version">
-            {t.about.version}: <strong>{version || '…'}</strong>
+            {t.about.version}:{' '}
+            <strong>
+              {isDevBuild()
+                ? t.update.settings.devVersion(version || '…', BUILD_SHA)
+                : version || '…'}
+            </strong>
           </p>
         </div>
       </div>

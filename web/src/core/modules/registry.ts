@@ -1,5 +1,5 @@
 import type { PlatformKind } from '@/core/platform/types';
-import { PAGE_LAYOUTS, type ModuleManifest } from './types';
+import { ALL_WIDGET_SIZES, PAGE_LAYOUTS, type ModuleManifest } from './types';
 
 // Manifests are eager (small); heavy parts (routes, widgets) are lazy inside each manifest.
 const found = import.meta.glob<{ default: ModuleManifest }>('../../modules/*/manifest.ts', {
@@ -60,6 +60,19 @@ export function validateManifest(m: ModuleManifest): string[] {
     if (r.path !== `/${m.id}` && !r.path.startsWith(`/${m.id}/`)) {
       errors.push(`route "${r.path}" must start with "/${m.id}"`);
     }
+  }
+  if (m.widgets.length === 0)
+    errors.push('widgets: every module needs at least one home-screen widget');
+  const widgetIds = new Set<string>();
+  for (const w of m.widgets) {
+    if (!/^[a-z][a-zA-Z0-9-]*$/.test(w.id)) errors.push(`widget id "${w.id}" is invalid`);
+    if (widgetIds.has(w.id)) errors.push(`widget id "${w.id}" is used twice`);
+    widgetIds.add(w.id);
+    if (!w.title.trim()) errors.push(`widget "${w.id}" needs a title`);
+    if (w.sizes.length === 0 || w.sizes.some((z) => !ALL_WIDGET_SIZES.includes(z)))
+      errors.push(`widget "${w.id}" has invalid sizes`);
+    if (!w.sizes.includes(w.defaultSize))
+      errors.push(`widget "${w.id}": defaultSize must be one of sizes`);
   }
   for (const v of Object.keys(m.migrations).map(Number)) {
     if (v > m.version) errors.push(`migration ${v} is newer than manifest version ${m.version}`);

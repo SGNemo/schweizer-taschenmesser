@@ -17,19 +17,18 @@ import { CSS } from '@dnd-kit/utilities';
 import { useEffect, useMemo, useState } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
-import { setSettings, useSettings } from '@/core/settings/settings';
 import type { SetupStepProps } from '@/core/setup/types';
 import {
-  DASHBOARD_SCOPE,
-  dashboardLayoutSchema,
-  DEFAULT_LAYOUT,
   mergeOrder,
   moveKey,
   orderWidgets,
+  saveLayout,
   toggleHidden,
+  useHomeLayout,
   widgetKey,
-  type DashboardLayout,
-} from '@/pages/dashboard/layout';
+  type HomeLayout,
+} from '@/home/layout';
+import { widgetsOf } from '@/home/AutoWidget';
 import { t } from '@/strings';
 import { Icon, Switch } from '@/ui';
 
@@ -81,8 +80,8 @@ function SortableRow({
 /** Widget visibility and order of the active modules as a local draft; written on "Weiter". */
 export default function DashboardStep({ registerCommit }: SetupStepProps) {
   const states = useModuleStates();
-  const [saved] = useSettings(DASHBOARD_SCOPE, dashboardLayoutSchema, DEFAULT_LAYOUT);
-  const [draft, setDraft] = useState<DashboardLayout | undefined>();
+  const saved = useHomeLayout();
+  const [draft, setDraft] = useState<HomeLayout | undefined>();
   const layout = draft ?? saved;
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -94,13 +93,13 @@ export default function DashboardStep({ registerCommit }: SetupStepProps) {
       availableManifests()
         .filter((m) => states?.[m.id])
         .flatMap((m) =>
-          m.widgets.map((w) => ({ key: widgetKey(m.id, w.id), title: `${m.name}: ${w.title}` })),
+          widgetsOf(m).map((w) => ({ key: widgetKey(m.id, w.id), title: `${m.name}: ${w.title}` })),
         ),
     [states],
   );
 
   useEffect(() => {
-    registerCommit(draft ? () => setSettings(DASHBOARD_SCOPE, draft).then(() => undefined) : null);
+    registerCommit(draft ? () => saveLayout(draft) : null);
     return () => registerCommit(null);
   }, [registerCommit, draft]);
 

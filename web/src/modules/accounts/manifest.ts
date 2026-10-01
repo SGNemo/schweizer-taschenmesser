@@ -1,13 +1,14 @@
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { entrySchema, vaultSchema } from './schema';
 import { settings } from './settings';
 import { setupSteps } from './setup';
 
 /**
- * Password vault. **No `aiSchema`, no widgets, no calendar/notification contributions, no quick-add:**
- * the module must not exist for the assistant, the dashboard or any other module (enforced by
+ * Password vault. **No `aiSchema`, no calendar/notification contributions, no quick-add, and only one
+ * status widget (locked/unlocked + link, never entries):** the module must not exist for the
+ * assistant or any other module (enforced by
  * `__tests__/exclusion.test.ts`). Everything it stores is ciphertext.
  */
 const manifest: ModuleManifest = {
@@ -33,7 +34,15 @@ const manifest: ModuleManifest = {
     },
   },
   migrations,
-  widgets: [],
+  widgets: [
+    {
+      id: 'status',
+      title: 'Passwort-Tresor',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/StatusWidget'),
+    },
+  ],
   settings,
   defaultEnabled: false,
   layout: 'wide',

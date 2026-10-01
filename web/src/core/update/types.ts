@@ -1,4 +1,5 @@
-export type UpdateChannel = 'stable' | 'beta';
+/** `dev` exists only in Dev-Preview builds (`buildInfo.ts`); it is never stored as a preference. */
+export type UpdateChannel = 'stable' | 'beta' | 'dev';
 
 /** A newer version that can be installed. */
 export interface UpdateInfo {

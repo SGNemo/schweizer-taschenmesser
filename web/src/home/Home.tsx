@@ -2,7 +2,8 @@ import {
   closestCenter,
   DndContext,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type Announcements,
@@ -15,29 +16,46 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { lazyComponent } from '@/core/modules/lazy';
 import { availableManifests } from '@/core/modules/available';
-import type { WidgetDef } from '@/core/modules/types';
-import { setSettings, useSettings } from '@/core/settings/settings';
+import { allManifests } from '@/core/modules/registry';
+import type { WidgetDef, WidgetSize } from '@/core/modules/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
-import { Button, Card, EmptyState, Icon, IconButton, PageHeader, Skeleton } from '@/ui';
-import styles from './Dashboard.module.css';
 import {
-  DASHBOARD_SCOPE,
-  dashboardLayoutSchema,
+  Button,
+  Card,
+  Dialog,
+  EmptyState,
+  Icon,
+  IconButton,
+  PageHeader,
+  patternStyles,
+  Segmented,
+  Skeleton,
+  Switch,
+} from '@/ui';
+import { widgetsOf } from './AutoWidget';
+
+import styles from './Home.module.css';
+import {
   DEFAULT_LAYOUT,
+  effectiveSize,
   mergeOrder,
   moveKey,
   orderWidgets,
+  resetLayout,
   toggleHidden,
+  updateLayout,
+  useHomeLayout,
   widgetKey,
+  withSize,
 } from './layout';
 
 interface Entry extends WidgetDef {
@@ -57,19 +75,21 @@ const componentFor = (key: string, load: WidgetDef['component']) => {
 /** Widgets of the modules available on this platform (resolved after `initPlatform()`). */
 const allEntries = (): Entry[] =>
   availableManifests().flatMap((m) =>
-    m.widgets.map((w) => {
+    widgetsOf(m).map((w) => {
       const key = widgetKey(m.id, w.id);
       return { ...w, moduleId: m.id, key, Component: componentFor(key, w.component) };
     }),
   );
 
-const SIZE_CLASS = { s: '', m: styles.m, l: styles.l } as const;
+const SIZE_CLASS: Record<WidgetSize, string> = { s: '', m: styles.m!, l: styles.l! };
 
-export function Dashboard() {
+export function Home() {
   const states = useModuleStates();
-  const [saved] = useSettings(DASHBOARD_SCOPE, dashboardLayoutSchema, DEFAULT_LAYOUT);
-  const editing = useUiStore((s) => s.dashboardEditing);
-  const setEditing = useUiStore((s) => s.setDashboardEditing);
+  const saved = useHomeLayout();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const editing = useUiStore((s) => s.homeEditing);
+  const setEditing = useUiStore((s) => s.setHomeEditing);
 
   const entries = useMemo(() => allEntries().filter((e) => states?.[e.moduleId]), [states]);
   const layout = saved ?? DEFAULT_LAYOUT;
@@ -77,7 +97,9 @@ export function Dashboard() {
   const shown = editing ? ordered : ordered.filter((e) => !layout.hidden.includes(e.key));
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    // Long press on the handle on touch screens, so scrolling the page never moves a widget.
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -88,33 +110,46 @@ export function Dashboard() {
       String(active.id),
       String(over.id),
     );
-    void setSettings(DASHBOARD_SCOPE, { order: mergeOrder(keys, layout) });
+    void updateLayout({ order: mergeOrder(keys, layout) });
   }
 
   const title = (id: string | number) => ordered.find((e) => e.key === id)?.title ?? String(id);
   const position = (id: string | number, overId?: string | number) =>
     ordered.findIndex((e) => e.key === (overId ?? id)) + 1;
   const announcements: Announcements = {
-    onDragStart: ({ active }) => t.dashboardEdit.picked(title(active.id)),
+    onDragStart: ({ active }) => t.homeEdit.picked(title(active.id)),
     onDragOver: ({ active, over }) =>
-      over ? t.dashboardEdit.moved(title(active.id), position(active.id, over.id)) : undefined,
+      over ? t.homeEdit.moved(title(active.id), position(active.id, over.id)) : undefined,
     onDragEnd: ({ active, over }) =>
-      over ? t.dashboardEdit.dropped(title(active.id), position(active.id, over.id)) : undefined,
-    onDragCancel: () => t.dashboardEdit.cancelled,
+      over ? t.homeEdit.dropped(title(active.id), position(active.id, over.id)) : undefined,
+    onDragCancel: () => t.homeEdit.cancelled,
   };
 
   return (
     <>
-      <PageHeader title={t.dashboard.title}>
+      <PageHeader title={t.home.title}>
         {entries.length > 0 ? (
-          <Button
-            variant={editing ? 'primary' : 'secondary'}
-            onClick={() => setEditing(!editing)}
-            aria-pressed={editing}
-          >
-            <Icon name={editing ? 'check' : 'edit'} size={18} />
-            {editing ? t.dashboardEdit.done : t.dashboardEdit.customize}
-          </Button>
+          <>
+            {editing ? (
+              <>
+                <Button variant="secondary" onClick={() => setSheetOpen(true)}>
+                  <Icon name="eye" size={18} />
+                  {t.homeEdit.widgets}
+                </Button>
+                <Button variant="secondary" onClick={() => setResetOpen(true)}>
+                  {t.homeEdit.reset}
+                </Button>
+              </>
+            ) : null}
+            <Button
+              variant={editing ? 'primary' : 'secondary'}
+              onClick={() => setEditing(!editing)}
+              aria-pressed={editing}
+            >
+              <Icon name={editing ? 'check' : 'edit'} size={18} />
+              {editing ? t.homeEdit.done : t.homeEdit.customize}
+            </Button>
+          </>
         ) : null}
       </PageHeader>
 
@@ -122,13 +157,13 @@ export function Dashboard() {
       <ChecklistCard />
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
-        <EmptyState icon="grid" title={t.dashboard.emptyTitle}>
-          <p>{t.dashboard.emptyText}</p>
-          <Link to="/library">{t.dashboard.toLibrary}</Link>
+        <EmptyState icon="grid" title={t.home.emptyTitle}>
+          <p>{t.home.emptyText}</p>
+          <Link to="/library">{t.home.toLibrary}</Link>
           <SetupLink />
         </EmptyState>
       ) : states && entries.length === 0 ? (
-        <p className={styles.hint}>{t.dashboard.noWidgets}</p>
+        <p className={styles.hint}>{t.home.noWidgets}</p>
       ) : (
         <DndContext
           sensors={sensors}
@@ -136,7 +171,7 @@ export function Dashboard() {
           onDragEnd={onDragEnd}
           accessibility={{
             announcements,
-            screenReaderInstructions: { draggable: t.dashboardEdit.instructions },
+            screenReaderInstructions: { draggable: t.homeEdit.instructions },
           }}
         >
           <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
@@ -146,9 +181,11 @@ export function Dashboard() {
                   key={e.key}
                   entry={e}
                   editing={editing}
+                  size={effectiveSize(e, e.key, layout)}
                   hidden={layout.hidden.includes(e.key)}
-                  onToggleHidden={() =>
-                    void setSettings(DASHBOARD_SCOPE, { hidden: toggleHidden(layout, e.key) })
+                  onToggleHidden={() => void updateLayout({ hidden: toggleHidden(layout, e.key) })}
+                  onSize={(size) =>
+                    void updateLayout({ sizes: withSize(layout, e.key, size, e.defaultSize) })
                   }
                 />
               ))}
@@ -156,6 +193,51 @@ export function Dashboard() {
           </SortableContext>
         </DndContext>
       )}
+
+      <Dialog
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={t.homeEdit.widgetsTitle}
+        variant="sheet"
+      >
+        <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
+        {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}
+        <ul className={patternStyles.plainList}>
+          {ordered.map((e) => (
+            <li key={e.key}>
+              <Switch
+                label={e.title}
+                hint={allManifests.find((m) => m.id === e.moduleId)?.name}
+                checked={!layout.hidden.includes(e.key)}
+                onChange={() => void updateLayout({ hidden: toggleHidden(layout, e.key) })}
+              />
+            </li>
+          ))}
+        </ul>
+      </Dialog>
+
+      <Dialog
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        title={t.homeEdit.resetTitle}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setResetOpen(false)}>
+              {t.homeEdit.cancel}
+            </Button>
+            <Button
+              onClick={() => {
+                void resetLayout();
+                setResetOpen(false);
+              }}
+            >
+              {t.homeEdit.resetConfirm}
+            </Button>
+          </>
+        }
+      >
+        <p>{t.homeEdit.resetText}</p>
+      </Dialog>
     </>
   );
 }
@@ -171,11 +253,13 @@ function WidgetFallback() {
 interface WidgetProps {
   entry: Entry;
   editing: boolean;
+  size: WidgetSize;
   hidden: boolean;
   onToggleHidden: () => void;
+  onSize: (size: WidgetSize) => void;
 }
 
-function SortableWidget({ entry, editing, hidden, onToggleHidden }: WidgetProps) {
+function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }: WidgetProps) {
   const {
     attributes,
     listeners,
@@ -195,7 +279,7 @@ function SortableWidget({ entry, editing, hidden, onToggleHidden }: WidgetProps)
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={[
         styles.widget,
-        SIZE_CLASS[entry.size],
+        SIZE_CLASS[size],
         hidden ? styles.hidden : '',
         isDragging ? styles.dragging : '',
       ].join(' ')}
@@ -206,14 +290,25 @@ function SortableWidget({ entry, editing, hidden, onToggleHidden }: WidgetProps)
           <h2 className={styles.title}>{entry.title}</h2>
           {editing ? (
             <>
+              {entry.sizes.length > 1 ? (
+                <Segmented
+                  label={t.homeEdit.size(entry.title)}
+                  value={size}
+                  options={entry.sizes.map((z) => ({
+                    value: z,
+                    label: t.homeEdit.sizeOptions[z]!,
+                  }))}
+                  onChange={onSize}
+                />
+              ) : null}
               <IconButton
-                label={hidden ? t.dashboardEdit.show : t.dashboardEdit.hide}
+                label={hidden ? t.homeEdit.show : t.homeEdit.hide}
                 onClick={onToggleHidden}
               >
                 <Icon name={hidden ? 'eyeOff' : 'eye'} />
               </IconButton>
               <IconButton
-                label={t.dashboardEdit.handle(entry.title)}
+                label={t.homeEdit.handle(entry.title)}
                 className={styles.handle}
                 ref={setActivatorNodeRef}
                 {...attributes}
@@ -225,7 +320,7 @@ function SortableWidget({ entry, editing, hidden, onToggleHidden }: WidgetProps)
           ) : null}
         </div>
         {hidden && editing ? (
-          <p className={styles.hint}>{t.dashboardEdit.hidden}</p>
+          <p className={styles.hint}>{t.homeEdit.hidden}</p>
         ) : (
           <Suspense fallback={<WidgetFallback />}>
             <Widget />

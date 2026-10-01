@@ -1,4 +1,4 @@
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { onboarding } from './onboarding';
 import { linkSchema } from './schema';
@@ -37,7 +37,8 @@ const manifest: ModuleManifest = {
     {
       id: 'links',
       title: 'Apps & Links',
-      size: 's',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/LinksWidget'),
     },
   ],

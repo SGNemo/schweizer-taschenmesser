@@ -10,6 +10,7 @@ export default function SummaryWidget() {
   const open = (ideas ?? []).filter((i) => i.status === 'idea').slice(0, 4);
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.gifts, to: '/gifts?new=1' }}
       loading={!ideas}
       empty={ideas && sum.open === 0 && sum.bought === 0 ? t.gifts.widgetEmpty : undefined}
       headline={

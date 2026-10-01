@@ -1,5 +1,5 @@
 import { onboarding } from './onboarding';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { birthdaySchema } from './schema';
@@ -25,7 +25,8 @@ const manifest: ModuleManifest = {
     {
       id: 'next',
       title: 'Nächste Geburtstage',
-      size: 's',
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/NextBirthdaysWidget'),
     },
   ],

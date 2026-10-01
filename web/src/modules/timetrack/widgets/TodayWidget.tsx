@@ -20,6 +20,7 @@ export default function TodayWidget() {
   const name = running ? data?.projects.find((p) => p.id === running.projectId)?.name : undefined;
   return (
     <WidgetList
+      emptyAction={{ label: t.homeEmpty.timetrack, to: '/timetrack?new=1' }}
       loading={!data}
       empty={data && !running && minutes === 0 ? t.timetrack.widgetIdle : undefined}
       headline={
