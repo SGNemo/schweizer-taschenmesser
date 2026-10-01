@@ -71,7 +71,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Self-update (TS) | `web/src/core/update/{controller,github,notes,prefs,semver,backup,types}.ts`; UI `layout/UpdateBanner.tsx`, `pages/settings/UpdateSection.tsx` | |
 | **Update channels & manifests** | stable/beta/dev channels, `core/update/buildInfo.ts` `effectiveChannel`, `update.rs`, `web/scripts/dev-preview.mjs`. Details: [architecture/native.md](architecture/native.md) | |
 | Notifications | `web/src/core/notifications/{scheduler,service,push,pushPayload,nativeSchedule,triggers}.ts` | |
-| **Browser extension + vault bridge** | `extension/`, `packages/vault-core/`, `web/src-tauri/crates/vault-bridge/`, `web/src/modules/accounts/bridge/` – file-level map and data flow: [architecture/browser-extension.md](architecture/browser-extension.md) | `createBridgeHandler`, `Server`, `relay` |
+| Browser extension, vault bridge | see [architecture/browser-extension.md](architecture/browser-extension.md) | |
 | Vault (passwords) | `web/src/modules/accounts/` (never AI-visible) | |
 
 ## Data flow
