@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–4 decided; round 5 (components, interaction) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–4 decided; round 5 (components, interaction) mocked up, waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -60,11 +60,11 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 - **Decided:** icons Lucide only, 20 px at 1.5 px stroke (1.75 at 16 px, rail 22 px); no filled icons, no emoji. Empty state: fish 64 px at 35 % in `--text-3`, one sentence, one button; no module illustrations.
 
 ## 7. Components
-- open (round 5)
+- Proposed (round 5, `ROUND-5-COMPONENTS.md` § 1–2): one button hierarchy, inputs with label above and 2 px focus ring, segmented/chips/checkbox sizes, ItemRow as the single list pattern, tables only for Buchungen/Zeiterfassung, dialog on desktop + bottom sheet on phone, toast with Rückgängig, skeleton/empty/error states; quick capture as default "Neu", full form with required-first and "Mehr" chips. **Not decided yet.**
 
 ## 8. Interaction (keyboard, touch, undo)
 - Facts today: Ctrl+K palette, Alt+Home, Esc; FAB → quick capture; no other shortcuts.
-- open (round 5)
+- Proposed (round 5 § 3): `N`, `G`+letter, `J/K`, `Enter/E/Space`, `Ctrl+Z`, `?`; row actions on hover; multi-select with bulk bar; swipe right = done, left = move; undo everywhere + Papierkorb; text size and density settings. **Not decided yet.**
 
 ## 9. Motion
 - Facts today: transform/opacity only, page fade+slide 250 ms, list stagger, reduced motion zeroes durations.
