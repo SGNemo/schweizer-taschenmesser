@@ -89,3 +89,77 @@ Slowest single tests: a11y "tools: toolbar sheet and every tool" about 30 s, a11
 | eslint `--cache` / prettier `--cache`, warm | 2.6 s instead of 31.5 s / 3.8 s instead of 16.5 s |
 | cargo `debug=line-tables-only` | no time gain on small crates, target dir 340 -> 272 MB |
 | lld linker | no gain |
+
+---
+
+# After (same document, measured on branch `chore/build-performance`)
+
+Measured on the pull request (#18): CI run `36825777063` (head `4057d25`) and `36826601517` (head `f748902`, with
+`develop` merged in), Release dry run `36826255580` (manual run on the branch, no `version` input, nothing published).
+Local numbers on the same 4 vCPU sandbox as the baseline. Timings of unchanged commands vary by about 30 % between
+runs (compare `lint` 33.5 s before, 24.2 s after, with no change to lint), so read small differences as noise.
+
+## CI wall clock
+
+| Run | Before | After |
+|---|---|---|
+| PR / push CI run | 14 min 26 s, 14 min 30 s, 16 min 32 s | **4 min 19 s**, 4 min 10 s |
+| Runner minutes of all jobs added up | about 20.5 min | about 21 min (the work is spread over more runners, not reduced) |
+
+## CI jobs
+
+| Job | Before | After |
+|---|---|---|
+| Web (one job: static checks, unit tests, 468 E2E tests in sequence) | 14 min 22 s | replaced by the five rows below |
+| Web static (format, lint, types) | 47 s of steps inside the web job | 1 min 3 s (own runner, includes install) |
+| Web unit tests | 2 min 35 s inside the web job | 1 min 55 s (vitest 90.6 s) |
+| E2E app, four shards | 10 min 35 s | 3 min 2 s, 3 min 6 s, 2 min 57 s, 3 min 57 s (the slowest shard sets the wall clock) |
+| Web (lint, types, unit, E2E), aggregate with the old check name | – | 4 s |
+| Which parts changed (docs-only gate) | – | 6 s |
+| Native shell | 2 min 49 s | 1 min 56 s (cache restore luck, job unchanged) |
+| Multi-device sync E2E | 1 min 53 s | 1 min 53 s |
+| Secret scan, Sync server, MCP wrapper | 22 s, 22 s, 17 s | 16 s, 25 s, 14 s |
+
+E2E per shard: 117 + 117 + 117 + 114 passed (plus 3 skipped) = the same 465 passed + 3 skipped as the single job.
+
+## Release workflow (dry run)
+
+Only six `timeout-minutes` lines were added to `release.yml`; no build, signing, audit or cleanup step changed. The
+differences below come from cache state and runner speed, not from the change.
+
+| | Baseline (develop push `36788198521`) | After (manual run on the branch `36826255580`) |
+|---|---|---|
+| Wall clock | 11 min 5 s | 7 min 38 s |
+| Windows job / build step | 10 min 27 s / 7 min 9 s | 6 min 52 s / 5 min 13 s |
+| Android job / build step | 6 min 32 s / 4 min 50 s | 6 min 2 s / 4 min 41 s |
+| GitHub Release job | skipped | skipped (no publish) |
+
+Artifacts, compared from the job logs (the artifact storage host is not reachable from the sandbox):
+
+| | Baseline | After |
+|---|---|---|
+| Signed APK, SHA-256 | `bdc9f8b829a6cb11…8f71893f` | `bdc9f8b829a6cb11…8f71893f` (identical) |
+| `Nemo-Portable.exe` / `.sig` size | 10 555 392 B / 404 B | 10 555 392 B / 404 B |
+| Android artifact zip | 24 562 080 B | 24 562 080 B |
+| Release audit | 247 files, 5 secret values searched, passed | 247 files, 5 secret values searched, passed |
+
+## Local
+
+| Step | Before | After |
+|---|---|---|
+| `npm test` | 221.6 s | 115.1 s (118.0 s after merging `develop`) |
+| Everyday gate: format + lint + typecheck | 75.9 s one after the other | `npm run check`: 34.2 s cold, 5.7 to 5.9 s warm |
+| `lint` / `typecheck` / `format:check` (unchanged commands) | 33.5 / 25.8 / 16.6 s | 24.2 / 18.4 / 11.2 s (machine noise) |
+
+## Tests still check the same things
+
+- Unit: 168 files and 1596 tests before and after; the per-test list (file, full name, status) is identical, all
+  passed. 27 files start with `// @vitest-environment jsdom` (the 22 that fail without a DOM, plus 5 whose app code
+  silently falls back when `localStorage`/`window` are missing, found by a probe that logged every DOM-global read in
+  node). The other 141 run in node.
+- E2E: 468 tests listed before and after, 465 passed and 3 skipped, split over four shards. Sync E2E 14, server and
+  MCP unchanged.
+- There is no coverage tooling in the repository and none was added; the per-test comparison above replaces a
+  coverage diff.
+- Security steps: `git diff origin/develop -- .github/workflows/release.yml` is six added `timeout-minutes` lines;
+  in `ci.yml` the secret-scan job gained only its own `timeout-minutes` and runs on every change.
