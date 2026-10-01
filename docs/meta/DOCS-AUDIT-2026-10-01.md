@@ -83,7 +83,7 @@ docs/CHATS.md                 new: active work table, hotspots, hand-over rules
 docs/PROMPT-TEMPLATES.md      new: #git #rules #knowledge #pr-text blocks
 docs/meta/DOCS-GUIDE.md       new: what goes where, budgets, style, archive rule
 docs/meta/DOCS-AUDIT-*.md     this report (+ after-numbers)
-docs/archive/2026-09/         REVIEW-2026-09-30, DESIGN-CONCEPT-2026-09-30 (with "historical" banner + outcome line)
+docs/archive/2026-10/         REVIEW-2026-09-30, DESIGN-CONCEPT-2026-09-30 (with "historical" banner + outcome line)
 docs/security/ docs/perf/ docs/features/   keep, add 5-line README.md index each; perf baseline condensed if > 12 KB
 ```
 Per file:
@@ -116,3 +116,20 @@ Start context 21 700 → ≤ 2 000 tok (−90 %); every lookup doc ≤ 3 000 tok
 4. Is `.github/PULL_REQUEST_TEMPLATE.md` / `CONTRIBUTING.md` edit OK (brief says yes)? Assumed yes.
 5. Condensing DECISIONS: OK to keep full old text in `docs/decisions/` (lossless) instead of cutting?
 6. `docs/user/installation.md` and README still link `Taschenmesser-*` assets: left as is (intentional transition).
+
+## 8. After (measured with `npm run check:docs`, bytes / 4)
+| Metric | Before | After |
+|---|---|---|
+| **Start context** (root `CLAUDE.md` + `@imports`) | ≈ 21 700 tok (CLAUDE 4 530 + MAP 5 250 + HOW-TO 5 570 + DECISIONS 6 350) | **≈ 1 740 tok** (`CLAUDE.md` 6.9 KB, no imports) |
+| Area `CLAUDE.md` | 405 / 355 tok | 405 (`modules`), 350 (`server`), 430 (`src-tauri`, new) |
+| Largest lookup doc | `architecture.md` ≈ 20 500 tok | ≤ 3 400 (MAP 3 388, STATUS 3 104, `architecture/releases.md` 2 993) – all within budget |
+| `.md` files / total tokens (excl. generated plugin docs) | 33 / ≈ 89 000 | 73 / ≈ 101 000 |
+| Never auto-loaded (user docs, archive, reports, checklists, ideas) | – | ≈ 41 700 tok of the total |
+Total grew ≈ 12 000 tok: indexes, headers on split files, new files (CHATS, PROMPT-TEMPLATES, DOCS-GUIDE, RULES index parts, this audit). Nothing was dropped; only start-context cost fell.
+
+**Duplicates removed:** module/data/format rules (root vs `modules/CLAUDE.md` vs architecture: root keeps one short list, full text in `RULES.md`); "Git workflow" ×2 in CLAUDE.md, CONTRIBUTING and HOW-TO now point to CLAUDE.md; commands table (root only, HOW-TO keeps test/Rust detail); docs index (CLAUDE "Docs" removed, `docs/README.md` is the one index); status paragraph in CLAUDE.md removed (STATUS); STATUS "Ideen" merged into ROADMAP; DECISIONS shortened to one line each with full text in `decisions/`. Intentional repeats kept: widget rule (root list + `RULES.md` + recipe), release names (DECISIONS vs `release-deps`/README, German user docs untouched).
+
+**Stale/wrong items found and handled:** pointers "CLAUDE.md → Releases/Offen" in `.gitignore`, `release.yml` (3×), `strings.ts` (user-visible hint, now `docs/STATUS.md`), plus 8 comments citing moved sections (`tokens.css`, `platform/types.ts`, `scheduler.ts`, `ModuleLibrary.tsx`, `hello.rs`, `lib.rs`, `design/icon/final.params.mjs`, `brand-sync.test.ts`, CI/Dev-Preview comments) – all comment/string-only; 16× "Source: this PR" in DECISIONS resolved to PR #8/#26/#28 via git history; STATUS round logs/branch names moved to the archive; STATUS "Offen – macht Sven" got a v0.3.1 note (steps 1, 5, 7 are beta-era; text kept); `npm run check` and `check:modules` added to the command list; "Definition of done" no longer mandates editing CLAUDE.md (hotspot, 42/100 commits). Open fact for the maintainer: README/`docs/user/installation.md` still link `Taschenmesser-*` assets (intentional transition per DECISIONS, not changed).
+
+**Decisions taken (user answers 2026-10-01):** keep `ARCHITECTURE-MAP.md` name; fix dangling comments now (done, comment/string only); `check:docs` script + `package.json` entry + non-blocking CI job `docs-budget` (Node only, no install, `continue-on-error`); DECISIONS kept lossless in `docs/decisions/`.
+Differences to plan: `docs/howto/design-rules.md` and `gotchas.md` hold the moved CLAUDE.md design/gotcha blocks; `docs/RULES.md` is new (unabridged rules, widgets, Dev-Preview note); `docs/architecture/{desktop,setup-home,interfaces-tests}.md` hold rows moved out of the MAP; archive folder is `2026-10`; `docs/architecture.md` stayed as the index/pointer file.
