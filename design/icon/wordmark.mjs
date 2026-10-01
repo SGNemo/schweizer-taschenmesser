@@ -244,8 +244,8 @@ function clown(p, theme) {
   const rim = p.rim ?? 8; // pale inner rim of every fin
   // fin: orange fill, dark outer edge, pale rim just inside (stroke order: edge, rim, fill)
   const fin = (d) =>
-    `<path d="${f(d)}" fill="none" stroke="${c.edge}" stroke-width="${2 * (e + rim)}" stroke-linejoin="round"/>` +
-    `<path d="${f(d)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * rim}" stroke-linejoin="round"/>` +
+    `<path d="${f(d)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * (e + rim)}" stroke-linejoin="round"/>` +
+    `<path d="${f(d)}" fill="none" stroke="${c.edge}" stroke-width="${2 * e}" stroke-linejoin="round"/>` +
     `<path d="${f(d)}" fill="${c.fish}"/>`;
   // white band with dark edge, clipped to a shape
   const band = (clipId, shape, d, w) =>
@@ -271,17 +271,21 @@ function clown(p, theme) {
   // small fins centred on single letters: `dorsalOn` / `ventralOn` name a letter (N, e, m, o)
   const LC = { N: [113, 184], e: [309, 146], m: [524, 231], o: [746, 156] };
   const smallDorsal = (l) => {
+    // spiny front (serrated, rising towards the back), soft rounded rear lobe
     const [cx, w] = LC[l];
-    const hw = w * (p.finW ?? 0.42);
+    const hw = w * (p.finW ?? 0.46);
     const base = l === 'N' ? top : xh;
-    const h = p.finH ?? 64;
-    return `M${cx - hw} ${base + 8}L${cx - hw * 0.55} ${base - h * 0.75}L${cx - hw * 0.2} ${base - h * 0.45}L${cx + hw * 0.1} ${base - h}C${cx + hw * 0.6} ${base - h * 0.9} ${cx + hw} ${base - h * 0.4} ${cx + hw} ${base + 8}Z`;
+    const h = p.finH ?? 70;
+    const x0 = cx - hw;
+    const sp = (i, n) => `L${x0 + (hw * 1.1 * i) / n} ${base - h * (0.45 + (0.4 * i) / n)}L${x0 + (hw * 1.1 * (i + 0.5)) / n} ${base - h * (0.3 + (0.4 * i) / n)}`;
+    return `M${x0} ${base + 8}${[0, 1, 2, 3].map((i) => sp(i, 4)).join('')}L${cx + hw * 0.15} ${base - h}C${cx + hw * 0.7} ${base - h * 1.02} ${cx + hw * 1.05} ${base - h * 0.5} ${cx + hw} ${base + 8}Z`;
   };
   const smallVentral = (l) => {
+    // rounded lobe, slightly swept back
     const [cx, w] = LC[l];
-    const hw = w * (p.finW ?? 0.42);
-    const h = p.finH ?? 64;
-    return `M${cx - hw} ${bot - 8}C${cx - hw * 0.8} ${bot + h * 0.7} ${cx - hw * 0.1} ${bot + h} ${cx + hw * 0.5} ${bot + h * 0.8}C${cx + hw * 0.9} ${bot + h * 0.55} ${cx + hw} ${bot + h * 0.2} ${cx + hw} ${bot - 8}Z`;
+    const hw = w * (p.finW ?? 0.46) * 0.8;
+    const h = p.finH ?? 70;
+    return `M${cx - hw} ${bot - 8}C${cx - hw * 1.05} ${bot + h * 0.55} ${cx - hw * 0.4} ${bot + h} ${cx + hw * 0.45} ${bot + h * 0.92}C${cx + hw * 0.95} ${bot + h * 0.8} ${cx + hw * 1.1} ${bot + h * 0.35} ${cx + hw} ${bot - 8}Z`;
   };
   let inner = '';
   if (p.fins === 'all') inner += fin(dorsal) + fin(pelvic) + fin(anal);
@@ -295,12 +299,10 @@ function clown(p, theme) {
   const sx = nose + (p.stripeAt ?? 128);
   inner += band(`wm-cl-h-${t}`, head, `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`, p.band ?? 32);
   inner += band(`wm-cl-t-${t}`, ped, `M${px + pw * 0.55} ${-170}L${px + pw * 0.55} ${bot + 20}`, (p.band ?? 32) * 0.8);
-  if (p.midBand) {
-    // third band through the body: between e and m, cut by the word itself
-    const mx = p.midBand;
-    const bodyClip = `M${mx - 60} ${top}H${mx + 60}V${bot}H${mx - 60}Z`;
-    inner += `<defs><clipPath id="wm-cl-m-${t}"><path d="${f(bodyClip)}"/></clipPath><mask id="wm-cl-mm-${t}" maskUnits="userSpaceOnUse" x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}"><rect x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}" fill="#000"/>${word(['N', 'e', 'm', 'o'], '#fff')}</mask></defs>`;
-    inner += `<g mask="url(#wm-cl-mm-${t})" fill="none"><path d="M${mx + 6} ${top - 20}Q${mx - 14} ${mid} ${mx + 6} ${bot + 20}" stroke="${c.edge}" stroke-width="${(p.band ?? 32) + 2 * e}"/><path d="M${mx + 6} ${top - 20}Q${mx - 14} ${mid} ${mx + 6} ${bot + 20}" stroke="${c.stripe}" stroke-width="${p.band ?? 32}"/></g>`;
+  for (const mx of [].concat(p.midBand ?? [])) {
+    // band through the body, visible only inside the letters
+    inner += `<defs><mask id="wm-cl-mm-${t}-${mx}" maskUnits="userSpaceOnUse" x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}"><rect x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}" fill="#000"/>${word(['N', 'e', 'm', 'o'], '#fff')}</mask></defs>`;
+    inner += `<g mask="url(#wm-cl-mm-${t}-${mx})" fill="none"><path d="M${mx + 6} ${top - 20}Q${mx - 14} ${mid} ${mx + 6} ${bot + 20}" stroke="${c.edge}" stroke-width="${(p.band ?? 32) + 2 * e}"/><path d="M${mx + 6} ${top - 20}Q${mx - 14} ${mid} ${mx + 6} ${bot + 20}" stroke="${c.stripe}" stroke-width="${p.band ?? 32}"/></g>`;
   }
   inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
   const pad = p.pad;
