@@ -27,6 +27,11 @@ Mockups for the four modules that change most: [`mockups/round-7/`](mockups/roun
 - Detail panel (22 rem): folder facts, three actions (Öffnen, In den Korb, Duplikate), then the **Korb** with running total and "Frei danach"; the one primary button is "In den Papierkorb (16,7 GB)". The warning box states the safety rule once (recycle bin first, typed LÖSCHEN for permanent, system folders locked). System folders render in the muted grey and are not selectable.
 - Phone/web: module stays desktop-only (no mockup for the phone beyond the unchanged drive cards).
 
+### Einstellungen (added on request)
+- Desktop: section list left (16 rem, sticky), content column 44 rem; sections as cards with option rows (label + one-line explanation left, control right). Order: Darstellung · Favoriten & Bereiche · Übersicht · Benachrichtigungen · Sync & Backup · KI-Assistent · Werkzeuge · Tresor & Sicherheit · Lokale API · Einrichtung (moved to the end for installations with data) · Über Nemo.
+- Darstellung gets: Farbschema (segmented System · Hell · Dunkel), Akzentfarbe (swatches), Textgröße (Normal · Groß), Dichte (Normal · Kompakt), Bewegung (follows the system, read-only note), Seitenleiste (Breit · Schmal). Favoriten = drag list with stars (max 5, synced); Bereiche = switches per area with the module names as explanation.
+- Native `<select>` controls are replaced by segmented/`SelectField`; every row ≥ 56 px; phone = section list as a scrollable chip row, cards stacked. Mockup: `einstellungen.html`.
+
 ## 2. All modules – what changes (short spec)
 | Module (area) | Main view | Detail | Create | Widget | Special |
 |---|---|---|---|---|---|

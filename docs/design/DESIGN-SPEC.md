@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–6 decided; round 7 (modules) mocked up, waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–7 decided (Einstellungen mockup pending); round 8 (final spec, implementation prompt) next.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -78,7 +78,8 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 - **Decided removals:** `pageIn`, `itemIn` stagger, `pillIn`, endless sync spin (replaced by a one-time pulse), backdrop blur, width/colour/shadow transitions. Reduced motion: all durations 0, shimmer static, delays 0.
 
 ## 10. Modules
-- Proposed (round 7, `ROUND-7-MODULES.md`): Kalender week grid + agenda, Finanzen overview, Tresor list + secret panel, Datenträger treemap + Korb; table for all 25 modules (main view, detail, create, widget, special). **Not decided yet.**
+- **Decided (round 7, `ROUND-7-MODULES.md`):** Kalender = week time grid 07–21 h (44 px/h, all-day row, today column tinted, now line, one colour per kind: Termin accent, Erinnerung grey, extern info) + agenda column from 1200 px; phone default Agenda, week = 3 days; create by quick capture, slot click, drag. Finanzen = hero "Verfügbar" + one-line breakdown, 3 KPI cards with delta, 6-month bars (`--viz-1/2`), categories as rows with bars, Buchungen side column from 1200 px; Buchungen tab = table. Tresor = status pill (Entsperrt · Windows Hello), auto-lock countdown, per-row copy, secret rows with reveal/copy, TOTP ring, health line, "schwach" badge; red only for weak/reused. Datenträger = treemap with its documented palette + accent selection outline, detail panel with facts, Korb with "Frei danach", one primary "In den Papierkorb".
+- **Decided:** every other module follows the table in `ROUND-7-MODULES.md` § 2 (rows instead of card grids, panel/sheet details, quick capture where sensible, inline add kept for ToDos/Einkauf/Packlisten, widgets with hero + rows + action). Abos lose the visible switch label; Notizen editor becomes a panel; Systeminfo becomes one facts list; Werkzeuge tiles get labels and a search; Einstellungen gets a section list and the new options (mockup follows).
 
 ## 11. Accessibility
 - Facts today: AA tokens tested, axe in e2e (light/dark, desktop/Pixel 7), touch 44 px rule (3 known exceptions).
