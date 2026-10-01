@@ -45,9 +45,7 @@ jobs:
         include:
         - language: actions
           build-mode: none
-        # build-mode none: the Gradle project is only generated in CI (tauri android init), so autobuild finds nothing to build
-        - language: java-kotlin
-          build-mode: none
+        # java-kotlin is not analysed: the Gradle project is generated only in CI (tauri android init), so autobuild fails, and build-mode none reads .java only (the plugins are Kotlin)
         - language: javascript-typescript
           build-mode: none
         - language: rust
