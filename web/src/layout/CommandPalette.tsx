@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
@@ -11,6 +11,7 @@ import { AnswerView } from './assistant/AnswerView';
 import { useAssistant, useSearchHits } from './assistant/useAssistant';
 import { useModuleNavItems } from './useNavItems';
 import styles from './CommandPalette.module.css';
+import { loadDevCommands } from './devTools';
 import answerStyles from './assistant/assistant.module.css';
 
 export interface Command {
@@ -59,6 +60,11 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const toast = useUiStore((s) => s.toast);
   const openSetup = useSetupHost((s) => s.openWizard);
 
+  const [devCommands, setDevCommands] = useState<Command[]>([]);
+  useEffect(() => {
+    void loadDevCommands?.().then((m) => setDevCommands(m.devCommands()));
+  }, []);
+
   const commands = useMemo<Command[]>(() => {
     const go = (to: string) => () => void navigate(to);
     return [
@@ -67,8 +73,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
+      ...devCommands,
     ];
-  }, [navigate, moduleItems, openSetup]);
+  }, [navigate, moduleItems, openSetup, devCommands]);
 
   const hits = useSearchHits(query);
   const hasModel = config ? isAiConfigured(config) : false;

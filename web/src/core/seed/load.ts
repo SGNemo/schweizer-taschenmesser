@@ -3,5 +3,7 @@
  * builds contain neither this import nor the runner, the per-module `seed.ts` files or the dev UI
  * (checked by `core/seed/devFlag.test.ts`). Always go through `loadSeed`, never import `./dev`.
  */
-export const loadSeed: (() => Promise<typeof import('./dev')>) | undefined =
+import type * as SeedRunner from './dev';
+
+export const loadSeed: (() => Promise<typeof SeedRunner>) | undefined =
   import.meta.env.VITE_RELEASE_CHANNEL === 'dev' ? () => import('./dev') : undefined;

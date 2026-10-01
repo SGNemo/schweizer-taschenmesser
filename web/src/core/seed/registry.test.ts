@@ -36,8 +36,11 @@ describe('seed contract', () => {
   it('every manifest declares a seed with a version and known dependencies', () => {
     const ids = new Set(allManifests.map((m) => m.id));
     for (const m of allManifests) {
-      expect(Number.isInteger(m.seed.version) && m.seed.version >= 1, `${m.id}: seed.version`).toBe(true);
-      for (const dep of m.seed.dependsOn) expect(ids.has(dep), `${m.id} depends on ${dep}`).toBe(true);
+      expect(Number.isInteger(m.seed.version) && m.seed.version >= 1, `${m.id}: seed.version`).toBe(
+        true,
+      );
+      for (const dep of m.seed.dependsOn)
+        expect(ids.has(dep), `${m.id} depends on ${dep}`).toBe(true);
     }
   });
 
@@ -51,13 +54,15 @@ describe('seed contract', () => {
   it('dependencies are seeded first and there are no cycles', () => {
     const order = orderBySeedDeps(allManifests).map((m) => m.id);
     for (const m of allManifests)
-      for (const dep of m.seed.dependsOn) expect(order.indexOf(dep)).toBeLessThan(order.indexOf(m.id));
+      for (const dep of m.seed.dependsOn)
+        expect(order.indexOf(dep)).toBeLessThan(order.indexOf(m.id));
   });
 
   describe.each(withData.map((m) => [m.id, m] as const))('%s', (_id, manifest) => {
     it.each(SEED_SCALES)('is deterministic and valid (%s)', async (scale) => {
       const mod = (await loadSeedModule(manifest.id))!;
-      const make = () => mod.seed(createSeedContext({ moduleId: manifest.id, today: TODAY, scale }));
+      const make = () =>
+        mod.seed(createSeedContext({ moduleId: manifest.id, today: TODAY, scale }));
       const first = make();
       expect(JSON.stringify(first)).toBe(JSON.stringify(make()));
       const plan = planRows(manifest, first, allManifests);
@@ -67,18 +72,26 @@ describe('seed contract', () => {
         for (const item of write.items) {
           expect(ids.has(item.id), `${manifest.id}: duplicate id ${item.id}`).toBe(false);
           ids.add(item.id);
-          const parsed = write.manifest.dataSchema.collections[write.collection]!.schema.safeParse(item.data);
-          expect(parsed.success, `${manifest.id}.${write.collection} ${item.id}: ${JSON.stringify(parsed.error?.issues)}`).toBe(true);
+          const parsed = write.manifest.dataSchema.collections[write.collection]!.schema.safeParse(
+            item.data,
+          );
+          expect(
+            parsed.success,
+            `${manifest.id}.${write.collection} ${item.id}: ${JSON.stringify(parsed.error?.issues)}`,
+          ).toBe(true);
         }
         total += write.items.length;
       }
-      expect(total, `${manifest.id} seeds nothing`).toBeGreaterThan(0);
+      // Modules that build their data in `afterSeed` (the vault demo) may return no plain rows.
+      if (!mod.afterSeed) expect(total, `${manifest.id} seeds nothing`).toBeGreaterThan(0);
     });
 
     it('scales up: small ≤ medium ≤ large', async () => {
       const mod = (await loadSeedModule(manifest.id))!;
       const count = (scale: 'small' | 'medium' | 'large') =>
-        Object.values(mod.seed(createSeedContext({ moduleId: manifest.id, today: TODAY, scale }))).reduce((n, r) => n + r.length, 0);
+        Object.values(
+          mod.seed(createSeedContext({ moduleId: manifest.id, today: TODAY, scale })),
+        ).reduce((n, r) => n + r.length, 0);
       expect(count('small')).toBeLessThanOrEqual(count('medium'));
       expect(count('medium')).toBeLessThanOrEqual(count('large'));
     });
@@ -88,7 +101,13 @@ describe('seed contract', () => {
 describe('seed runner', () => {
   it('writes through the repos without queueing sync, then removes everything again', async () => {
     const database = freshDb();
-    const state = await applySeed({ scale: 'small', today: TODAY, database, manifests: allManifests, afterSeed: false });
+    const state = await applySeed({
+      scale: 'small',
+      today: TODAY,
+      database,
+      manifests: allManifests,
+      afterSeed: false,
+    });
     expect(state.scale).toBe('small');
     expect(await database.table('_outbox').count()).toBe(0);
     const registered = await database.table('_seeds').count();
@@ -109,12 +128,31 @@ describe('seed runner', () => {
   it('is repeatable with identical output (same ids, same data)', async () => {
     const a = freshDb();
     const b = freshDb();
-    await applySeed({ scale: 'small', today: TODAY, database: a, manifests: allManifests, afterSeed: false });
-    await applySeed({ scale: 'small', today: TODAY, database: b, manifests: allManifests, afterSeed: false });
+    await applySeed({
+      scale: 'small',
+      today: TODAY,
+      database: a,
+      manifests: allManifests,
+      afterSeed: false,
+    });
+    await applySeed({
+      scale: 'small',
+      today: TODAY,
+      database: b,
+      manifests: allManifests,
+      afterSeed: false,
+    });
     for (const m of withData)
       for (const c of Object.keys(m.dataSchema.collections)) {
         const strip = (rows: Record<string, unknown>[]) =>
-          rows.map(({ createdAt, updatedAt, deviceId, _f, ...rest }) => (void [createdAt, updatedAt, deviceId, _f], rest)).sort((x, y) => String(x.id).localeCompare(String(y.id)));
+          rows
+            .map(
+              ({ createdAt, updatedAt, deviceId, _f, ...rest }) => (
+                void [createdAt, updatedAt, deviceId, _f],
+                rest
+              ),
+            )
+            .sort((x, y) => String(x.id).localeCompare(String(y.id)));
         const t = tableName(m.id, c);
         expect(strip(await a.table(t).toArray())).toEqual(strip(await b.table(t).toArray()));
       }

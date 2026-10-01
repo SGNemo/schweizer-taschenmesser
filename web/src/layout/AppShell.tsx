@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
@@ -11,6 +11,7 @@ import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
 import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
+import { SeedBanner } from './devTools';
 import { QuickAdd } from './QuickAdd';
 import { SyncBadge } from './SyncBadge';
 import { MoreSheet } from './MoreSheet';
@@ -154,6 +155,11 @@ export function AppShell() {
         </header>
         <UpdateBanner />
         <PendingImports />
+        {SeedBanner ? (
+          <Suspense fallback={null}>
+            <SeedBanner />
+          </Suspense>
+        ) : null}
         <main id="main" tabIndex={-1} className={styles.main}>
           <Outlet />
         </main>

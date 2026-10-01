@@ -27,7 +27,8 @@ const SEED_SYNCED_ONCE_KEY = 'seed.syncedOnce';
 export const SEED_BANNER_KEY = 'seed.banner';
 const AUTOFILL_MARK = 'tm-seed-autofilled';
 const CHUNK = 500;
-export const DEMO_PASSPHRASE = 'nemo-demo';
+/** Keep equal to `DEMO_PASSPHRASE` in modules/accounts/seed.ts (core may not import modules). */
+export const DEMO_PASSPHRASE = 'nemo-demo-tresor'; // gitleaks:allow
 
 export interface SeedState {
   scale: SeedScale;
@@ -141,13 +142,32 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
   const manifests = opts.manifests ?? availableManifests();
   const today = opts.today ?? realToday();
   const ordered = orderBySeedDeps(manifests);
+  const enabledRows: string[] = [];
 
   if (opts.prepareApp !== false) {
     const states = await loadModuleStates(manifests, database);
-    for (const m of ordered) if (!states[m.id]) await enableModule(m, database);
+    for (const m of ordered) {
+      if (states[m.id]) continue;
+      const hadRow = (await database.table('_modules').get(m.id)) !== undefined;
+      await enableModule(m, database);
+      // Switching a module on for the test data is part of the test data: register the new state
+      // row (never one the user had) so it neither syncs nor survives "remove".
+      if (!hadRow) enabledRows.push(m.id);
+    }
   }
 
   const batchId = `seed-${newBatchId()}`;
+  if (enabledRows.length > 0) {
+    await registry(database).bulkPut(
+      enabledRows.map((id) => ({
+        id: seedKey('_modules', id),
+        table: '_modules',
+        rowId: id,
+        batchId,
+      })),
+    );
+    await outbox(database).bulkDelete(enabledRows.map((id) => ['_modules', id]));
+  }
   const modules = new Map<string, SeedModule>();
   const plans: PlannedWrite[] = [];
   for (const m of ordered) {
@@ -325,4 +345,16 @@ export async function autoFillIfEmpty(database: TaschenmesserDB = defaultDb): Pr
   await meta(database).put({ key: SEED_BANNER_KEY, value: true });
   safeLocal(() => localStorage.setItem(AUTOFILL_MARK, '1'));
   return true;
+}
+
+/** Number of registered seed rows per module id (for the dev settings). */
+export async function seedCounts(
+  database: TaschenmesserDB = defaultDb,
+): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  await registry(database).each((r) => {
+    const id = r.table.split('_')[0]!;
+    out[id] = (out[id] ?? 0) + 1;
+  });
+  return out;
 }

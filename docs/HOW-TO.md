@@ -44,9 +44,29 @@ Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHIT
 - **Trigger manually:** Actions → Dev-Preview → Run workflow (`artifact-only`, `dev-preview-test` = throw-away pre-release `dev-preview-test`, or `dev-preview` on `develop`). Manual runs work once the workflow file is on `main` (GitHub only offers dispatch for the default branch's workflows); otherwise push to `develop`. Delete a test release with `gh release delete dev-preview-test --cleanup-tag`.
 - **Cleanup:** the rolling release keeps only the latest state; workflow artifacts expire after 3 days.
 
+## Seed bauen (test data for every module)
+Every module ships generated test data: the Dev-Preview app fills an empty database with it, E2E tests and screenshots use the `small` set.
+1. Manifest: `seed: { version: 1, dependsOn: [] }` (`dependsOn` = modules whose seed rows you reference or write to, e.g. `['finance']`). No stored data (live desktop data) → `seed: { version: 1, dependsOn: [], none: 'live-data' }` and no `seed.ts`.
+2. `src/modules/<id>/seed.ts`: `export default { seed } satisfies SeedModule` (`core/seed/types.ts`; the generator writes a starting point). `seed(ctx)` returns `{ <collection>: [{ id, data }] }`; `data` must match the collection's Zod schema. Rows for a dependency module use the key `<moduleId>.<collection>` (an invoice seed books its paid invoices as `finance.transaction`, id `inv-<invoiceId>`, like the real event handler).
+3. Pure and deterministic: use only `ctx.rng` (mulberry32, one stream per module), `ctx.today`, `ctx.day(n)`, `ctx.at(n, 'HH:mm')`, `ctx.count({ small, medium, large })`, `ctx.id(module, collection, key)`. Never `Date.now()`, `Math.random()`, `new Date()`. Same seed and reference date → identical data.
+4. Content: invented German data only (no real names, addresses, IBANs, mails; `example.org`), dates relative to `ctx.today` (appointments this and next week, overdue and due invoices, subscriptions with a next charge, reminders in a few hours) so every widget is non-empty. Scales: `small` = what E2E needs (≈ 3–12 rows per collection), `medium` = realistic default, `large` = performance (5,000 bookings). `small ≤ medium ≤ large` is tested.
+5. Special data (the vault demo): export `afterSeed(ctx)` (returns the created record ids, which are registered) and optionally `beforeRemove()`; only the module's own API, crypto unchanged. The vault is only created when none exists, with the visible passphrase `nemo-demo-tresor`.
+6. Changed the output of a seed → bump `seed.version` in the manifest and renew E2E snapshots on purpose.
+7. `npx vitest run src/core/seed` (contract for ALL modules: schema validity, determinism, dependency order, removal) and `npm run check:modules`.
+
+## Dev app with test data
+- Only builds with `VITE_RELEASE_CHANNEL=dev` (the Dev-Preview workflow) contain the tooling (`core/seed/load.ts` is the only door; a build test proves stable builds contain nothing). Dev UI texts live in `strings.dev.ts` for the same reason.
+- First start with an empty database: all modules are switched on, the `medium` set is loaded, the setup assistant counts as done, and a banner says where to remove it. Never with existing data; after "Alles zurücksetzen" or removal it does not come back (mark in `localStorage`).
+- Settings → Entwickler: load (scale), remove (only registered seed rows, real data stays), reset everything (type `ZURÜCKSETZEN`), "Seed-Sync erlauben" (default off), seed version, reference date, counts per module. Palette: "Testdaten laden/entfernen".
+- Seed rows are registered in the local table `_seeds` before they are written; sync (`readOutbox`, `markAllDirty`) and backup skip them. With the switch on they are queued once and removal then writes tombstones.
+
+## Test data for E2E and screenshots
+- E2E against the dev flavour: `npm run e2e:seed` (build mode `e2e-seed`, `VITE_RELEASE_CHANNEL=dev`, port 4174, specs in `e2e/seed/`); the normal `e2e` build stays a stable build.
+- Helper `seedApp(page, 'small')` in `e2e/seed/helpers.ts` clicks "Testdaten laden"; the reference date is fixed with `page.clock.setFixedTime` (`SEED_TODAY`). Screenshots (`npm run screenshots`) use the same seeds in the dev flavour.
+
 ## New module
 1. `npm run gen:module -- <id> "<Name>"` (alias `npm run new:module`; id lowercase alphanumeric; copies `templates/module` incl. widget, widget hook and widget test, runs `db:bump`).
-2. Edit `src/modules/<id>/`: `schema.ts` (Zod), `repo.ts` (`createRepo`), `ai.ts` (compact; `titleField` must be a field; omit for private data), `settings.ts`, `routes/`, `widgets/`, `migrations.ts`, `manifest.ts` (`icon`, `description`, `defaultEnabled`, `layout`, `order`).
+2. Edit `src/modules/<id>/`: `seed.ts` + `seed` in the manifest (mandatory, see "Seed bauen"), `schema.ts` (Zod), `repo.ts` (`createRepo`), `ai.ts` (compact; `titleField` must be a field; omit for private data), `settings.ts`, `routes/`, `widgets/`, `migrations.ts`, `manifest.ts` (`icon`, `description`, `defaultEnabled`, `layout`, `order`).
 3. Routes start with `/<id>`; `nav: true` for navigation; `contributions.quickAdd` for the FAB.
 4. `contributions.onboarding` is required: importers (`onboarding.ts`, `importer.ts`, see `modules/todos`) or `noOnboarding`.
 5. Data-API: every synced collection gets the generic JSON importer; collections holding secrets/connector data need `dataApi: false`.
