@@ -38,6 +38,7 @@ jobs:
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,6 +65,7 @@ jobs:
     needs: secret-scan
     name: Version, changelog, signing check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       version: ${{ steps.meta.outputs.version }}
       tag: ${{ steps.meta.outputs.tag }}
@@ -173,6 +175,7 @@ jobs:
     name: Windows (portable)
     needs: prepare
     runs-on: windows-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: web
@@ -259,6 +262,7 @@ jobs:
     name: Android APK
     needs: prepare
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: web
@@ -366,6 +370,7 @@ jobs:
     needs: [prepare, windows, android]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:
@@ -445,6 +450,7 @@ jobs:
     needs: [prepare, windows, android]
     if: always() && needs.prepare.outputs.publish != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/download-artifact@v4
         with:
