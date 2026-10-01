@@ -11,7 +11,16 @@ import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
-import { ACCENTS, useUiStore, type AccentChoice, type ThemeChoice } from '@/stores/ui';
+import {
+  ACCENTS,
+  DENSITIES,
+  TEXT_SIZES,
+  useUiStore,
+  type AccentChoice,
+  type DensityChoice,
+  type TextSizeChoice,
+  type ThemeChoice,
+} from '@/stores/ui';
 import { Button, Card, HelpHint, SelectField, Switch, TextField } from '@/ui';
 import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
@@ -135,6 +144,10 @@ export function Settings() {
   const accent = useUiStore((s) => s.accent);
   const setAccent = useUiStore((s) => s.setAccent);
   const setTheme = useUiStore((s) => s.setTheme);
+  const textSize = useUiStore((s) => s.textSize);
+  const setTextSize = useUiStore((s) => s.setTextSize);
+  const density = useUiStore((s) => s.density);
+  const setDensity = useUiStore((s) => s.setDensity);
   const states = useModuleStates();
   const withSettings = availableManifests().filter(
     (m) => states?.[m.id] && m.settings.fields.length > 0,
@@ -172,6 +185,28 @@ export function Settings() {
               {ACCENTS.map((a) => (
                 <option key={a} value={a}>
                   {t.settings.accentOptions[a]}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label={t.settings.textSize}
+              value={textSize}
+              onChange={(e) => setTextSize(e.target.value as TextSizeChoice)}
+            >
+              {TEXT_SIZES.map((v) => (
+                <option key={v} value={v}>
+                  {t.settings.textSizeOptions[v]}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label={t.settings.density}
+              value={density}
+              onChange={(e) => setDensity(e.target.value as DensityChoice)}
+            >
+              {DENSITIES.map((v) => (
+                <option key={v} value={v}>
+                  {t.settings.densityOptions[v]}
                 </option>
               ))}
             </SelectField>
