@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–4 decided; round 5 (components, interaction) mocked up, waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–5 decided; round 6 (motion) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -60,11 +60,16 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 - **Decided:** icons Lucide only, 20 px at 1.5 px stroke (1.75 at 16 px, rail 22 px); no filled icons, no emoji. Empty state: fish 64 px at 35 % in `--text-3`, one sentence, one button; no module illustrations.
 
 ## 7. Components
-- Proposed (round 5, `ROUND-5-COMPONENTS.md` § 1–2): one button hierarchy, inputs with label above and 2 px focus ring, segmented/chips/checkbox sizes, ItemRow as the single list pattern, tables only for Buchungen/Zeiterfassung, dialog on desktop + bottom sheet on phone, toast with Rückgängig, skeleton/empty/error states; quick capture as default "Neu", full form with required-first and "Mehr" chips. **Not decided yet.**
+- **Decided (round 5, full tables in `ROUND-5-COMPONENTS.md` § 1):** button hierarchy primary (filled, once per view) / secondary (border) / quiet (text) / danger (text; filled red only in the confirm dialog) / row 28–32 px with 44 px hit area / icon 40 px square · inputs: label above, 44 px, radius 12, 1 px `--border-strong`, focus 2 px ring + 2 px offset, error = red border + sentence, hint 13 px · switch 44×26, checkbox 24, segmented 38 px pill (filters only), chips 32, tabs underline (sub-views) · card = grouping only (radius 16, level-1 shadow, no border) · **ItemRow is the single list pattern** (44 px, phone 48, hairline, hover actions, selected `--accent-soft`, done strike) · table only for Buchungen and Zeiterfassung · dialog desktop 34/40 rem radius 20, **bottom sheet on the phone**, backdrop 55 % without blur, draft kept 30 s · toast bottom centre with Rückgängig, 6 s, max 2 · badges = status only · loading Skeleton, empty fish 56–64 px, error inline box with retry.
+- **Decided:** module-level copies of Segmented, progress bars and inputs are removed in favour of `@/ui`.
+- **Decided:** "+ Neu", `N` and the FAB open **quick capture everywhere** (text → parsed chips; Tab cycles type, Enter creates, Ctrl+Enter opens the full form pre-filled; inside a module its type is pre-selected). Full form: required fields first, optional behind "Mehr" chips, footer Abbrechen · Speichern und neu · Speichern, first field auto-focused, validation on blur/submit. Inline add stays for ToDos, Einkauf, Packlisten.
 
 ## 8. Interaction (keyboard, touch, undo)
 - Facts today: Ctrl+K palette, Alt+Home, Esc; FAB → quick capture; no other shortcuts.
-- Proposed (round 5 § 3): `N`, `G`+letter, `J/K`, `Enter/E/Space`, `Ctrl+Z`, `?`; row actions on hover; multi-select with bulk bar; swipe right = done, left = move; undo everywhere + Papierkorb; text size and density settings. **Not decided yet.**
+- **Decided (round 5):** full keyboard scheme: `Ctrl+K` search/ask · `N` new · `G` then `H/P/G/A/W/T` go to area · `J/K` or arrows select row · `Enter` open, `E` edit, `Space` tick · `Ctrl+Z` undo (last 10, also after the toast) · `?` shortcut sheet · `Esc` close/clear · `/` list search. Single letters never fire inside inputs. Palette gets "Neu: …" and area commands.
+- **Decided:** row actions on hover/focus; drag-and-drop stays (ToDos, home, Einkauf); multi-select via checkbox / Shift-click / long press with a bulk bar (Erledigt · Verschieben · Löschen · Abbrechen); swipe right = done/paid, left = move/snooze; undo everywhere through the toast and `Ctrl+Z`; soft delete with a 30-day Papierkorb page under Einstellungen.
+- **Decided:** focus ring 2 px on everything interactive; focus moves to `main` on navigation, into dialogs on open, back to the opener on close. Reduced motion = all durations 0, shimmer static.
+- **Decided:** settings "Textgröße Normal/Groß" (16/18 px root) and "Dichte Normal/Kompakt" (rows 44/36, gaps 24/16), both device-local.
 
 ## 9. Motion
 - Facts today: transform/opacity only, page fade+slide 250 ms, list stagger, reduced motion zeroes durations.
