@@ -4,6 +4,8 @@ import {
   activeTools,
   DEFAULT_TOOLS,
   isEnabled,
+  LEGACY_TOOL_IDS,
+  migrateToolIds,
   moveTool,
   orderTools,
   toolsSettingsSchema,
@@ -14,9 +16,9 @@ describe('tool registry', () => {
     const ids = allTools.map((x) => x.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(allTools.map((x) => x.order)).size).toBe(allTools.length);
-    expect(ids).toEqual(
-      expect.arrayContaining(['calc', 'percent', 'currency', 'timer', 'qr', 'scratch']),
-    );
+    expect(ids).toHaveLength(12);
+    expect(ids).toEqual(expect.arrayContaining(['calc', 'dev', 'currency', 'timer', 'qr']));
+    for (const gone of Object.keys(LEGACY_TOOL_IDS)) expect(ids).not.toContain(gone);
     for (const tool of allTools) {
       expect(tool.id, tool.id).toMatch(/^[a-z0-9]+$/);
       expect(tool.name.length).toBeGreaterThan(0);
@@ -26,7 +28,7 @@ describe('tool registry', () => {
 
   it('turns on the everyday tools and leaves the rest to the library', () => {
     const on = activeTools(allTools, DEFAULT_TOOLS).map((x) => x.id);
-    expect(on).toEqual(['calc', 'percent', 'currency', 'timer', 'qr', 'scratch']);
+    expect(on).toEqual(['calc', 'currency', 'timer', 'qr']);
     expect(allTools.filter((x) => x.group === 'dev').every((x) => !x.defaultEnabled)).toBe(true);
   });
 
@@ -58,5 +60,38 @@ describe('tool layout', () => {
     expect(moveTool(['a', 'b', 'c'], 'a', -1)).toEqual(['a', 'b', 'c']);
     expect(moveTool(['a', 'b', 'c'], 'c', 1)).toEqual(['a', 'b', 'c']);
     expect(moveTool(['a', 'b', 'c'], 'x', 1)).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('tool id migration', () => {
+  const settings = (enabled: Record<string, boolean>, order: string[] = []) =>
+    toolsSettingsSchema.parse({ enabled, order });
+
+  it('leaves current settings untouched', () => {
+    const saved = settings({ qr: false }, ['qr', 'calc']);
+    expect(migrateToolIds(saved)).toBe(saved);
+  });
+
+  it('maps removed ids to their successors, drops scratch, dedupes the order', () => {
+    const out = migrateToolIds(
+      settings({ percent: true, split: false, base64: true, scratch: true, qr: false }, [
+        'calc',
+        'scratch',
+        'percent',
+        'hash',
+        'qr',
+        'base64',
+        'split',
+      ]),
+    );
+    expect(out.enabled).toEqual({ qr: false, calc: true, dev: true });
+    expect(out.order).toEqual(['calc', 'dev', 'qr']);
+  });
+
+  it('an explicit choice for the new id wins; an old "off" stays off', () => {
+    expect(migrateToolIds(settings({ calc: false, percent: true })).enabled).toEqual({
+      calc: false,
+    });
+    expect(migrateToolIds(settings({ hash: false })).enabled).toEqual({ dev: false });
   });
 });

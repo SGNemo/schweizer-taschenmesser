@@ -12,6 +12,10 @@ interface DialogProps {
   footer?: ReactNode;
   /** `sheet` slides up from the bottom on phones; `full` fills the screen (setup assistant). */
   variant?: 'center' | 'sheet' | 'full';
+  /** `wide` lets a `sheet` grow to 900 px from 900 px viewport width (tools). */
+  size?: 'default' | 'wide';
+  /** Shown in the header before the title (e.g. a back button). */
+  headerStart?: ReactNode;
 }
 
 /** Modal built on the native <dialog>: focus trap, Esc handling and inert background for free. */
@@ -22,6 +26,8 @@ export function Dialog({
   children,
   footer,
   variant = 'center',
+  size = 'default',
+  headerStart,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -47,6 +53,7 @@ export function Dialog({
         styles.dialog,
         variant === 'sheet' ? styles.sheet : '',
         variant === 'full' ? styles.full : '',
+        size === 'wide' ? styles.wide : '',
       ].join(' ')}
       aria-labelledby={titleId}
       onCancel={(e) => {
@@ -61,6 +68,7 @@ export function Dialog({
       {open ? (
         <div className={styles.inner}>
           <div className={styles.head}>
+            {headerStart}
             <h2 id={titleId} className={styles.title}>
               {title}
             </h2>

@@ -126,7 +126,7 @@ for (const scheme of ['light', 'dark'] as const) {
     }
 
     test('tools: toolbar sheet and every tool', async ({ page }) => {
-      test.setTimeout(120_000); // audits 14 tools one after the other
+      test.setTimeout(120_000); // audits 12 tools one after the other
       await page.goto('/tools');
       await expect(page.getByTestId('tool-calc')).toBeVisible();
       const names: string[] = [];
@@ -137,7 +137,7 @@ for (const scheme of ['light', 'dark'] as const) {
         await expect(toggle).toBeChecked();
         names.push(name);
       }
-      expect(names.length).toBeGreaterThanOrEqual(14);
+      expect(names.length).toBeGreaterThanOrEqual(12);
       await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
       await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
       await audit(page, `tools sheet (${scheme})`);

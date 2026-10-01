@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseJson } from './logic';
+import { parseJson } from './json';
 
 describe('parseJson', () => {
   it('formats and minifies', () => {

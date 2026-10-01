@@ -3,12 +3,12 @@ import { t } from '@/strings';
 import { Button, SelectField, TextArea } from '@/ui';
 import { copyWithToast } from '../shared';
 import styles from '../tools.module.css';
-import { convertText, type Base64Mode } from './logic';
+import { convertText, type Base64Mode } from './base64';
 
-const s = t.tools.base64;
+const s = t.tools.dev.base64;
 const MODES = Object.keys(s.modes) as Base64Mode[];
 
-export default function Base64Tool() {
+export default function Base64Panel() {
   const [mode, setMode] = useState<Base64Mode>('b64-enc');
   const [input, setInput] = useState('');
   const output = input ? convertText(mode, input) : '';

@@ -13,6 +13,46 @@ export type ToolsSettings = z.output<typeof toolsSettingsSchema>;
 export const TOOLS_SCOPE = 'tools';
 export const DEFAULT_TOOLS: ToolsSettings = { enabled: {}, order: [] };
 
+/** Old tool id → merged tool (`null` = dropped). Package 1 of the module plan merged 18 tools into 12. */
+export const LEGACY_TOOL_IDS: Readonly<Record<string, string | null>> = {
+  percent: 'calc',
+  split: 'calc',
+  base64: 'dev',
+  json: 'dev',
+  uuid: 'dev',
+  hash: 'dev',
+  scratch: null,
+};
+
+/**
+ * Maps saved ids of removed tools to their successors when reading (nothing is written back until
+ * the next normal save). An explicit choice for the new id wins; otherwise "on" if any source was on.
+ */
+export function migrateToolIds(saved: ToolsSettings): ToolsSettings {
+  const legacy = Object.keys(LEGACY_TOOL_IDS);
+  const touched =
+    saved.order.some((id) => id in LEGACY_TOOL_IDS) ||
+    Object.keys(saved.enabled).some((id) => id in LEGACY_TOOL_IDS);
+  if (!touched) return saved;
+  const enabled: Record<string, boolean> = {};
+  const fromLegacy: Record<string, boolean> = {};
+  for (const [id, on] of Object.entries(saved.enabled)) {
+    if (!legacy.includes(id)) {
+      enabled[id] = on;
+      continue;
+    }
+    const target = LEGACY_TOOL_IDS[id];
+    if (target) fromLegacy[target] = (fromLegacy[target] ?? false) || on;
+  }
+  for (const [id, on] of Object.entries(fromLegacy)) if (!(id in enabled)) enabled[id] = on;
+  const order: string[] = [];
+  for (const id of saved.order) {
+    const next = id in LEGACY_TOOL_IDS ? LEGACY_TOOL_IDS[id] : id;
+    if (next && !order.includes(next)) order.push(next);
+  }
+  return { enabled, order };
+}
+
 export const isEnabled = (tool: ToolManifest, saved: ToolsSettings): boolean =>
   saved.enabled[tool.id] ?? tool.defaultEnabled;
 

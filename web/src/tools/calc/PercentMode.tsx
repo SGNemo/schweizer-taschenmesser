@@ -3,11 +3,11 @@ import { t } from '@/strings';
 import { SelectField, TextField } from '@/ui';
 import { fmt, fmt2, num } from '../shared';
 import styles from '../tools.module.css';
-import { percentOf, shareOf, vat } from './logic';
+import { percentOf, shareOf, vat } from './percent';
 
-const s = t.tools.percent;
+const s = t.tools.calc.percent;
 
-export default function PercentTool() {
+export default function PercentMode() {
   const [p, setP] = useState('');
   const [whole, setWhole] = useState('');
   const [part, setPart] = useState('');

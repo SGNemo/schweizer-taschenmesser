@@ -4,9 +4,9 @@ import { Button, TextField } from '@/ui';
 import { copyWithToast, num } from '../shared';
 import styles from '../tools.module.css';
 
-const s = t.tools.uuid;
+const s = t.tools.dev.uuid;
 
-export default function UuidTool() {
+export default function UuidPanel() {
   const [count, setCount] = useState('1');
   const [ids, setIds] = useState<string[]>([]);
   function generate() {
@@ -29,7 +29,7 @@ export default function UuidTool() {
       </div>
       {ids.length > 0 ? (
         <>
-          <p className={styles.mono} role="status" aria-label={s.name}>
+          <p className={styles.mono} role="status" aria-label={s.result}>
             {ids.join('\n')}
           </p>
           <div className={styles.row}>

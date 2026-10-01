@@ -3,11 +3,11 @@ import { t } from '@/strings';
 import { Button, SelectField, TextArea } from '@/ui';
 import { copyWithToast } from '../shared';
 import styles from '../tools.module.css';
-import { ALGORITHMS, digestHex, type HashAlgorithm } from './logic';
+import { ALGORITHMS, digestHex, type HashAlgorithm } from './hash';
 
-const s = t.tools.hash;
+const s = t.tools.dev.hash;
 
-export default function HashTool() {
+export default function HashPanel() {
   const [algorithm, setAlgorithm] = useState<HashAlgorithm>('SHA-256');
   const [input, setInput] = useState('');
   // Keyed by what it was computed from, so a stale answer is never shown for newer input.

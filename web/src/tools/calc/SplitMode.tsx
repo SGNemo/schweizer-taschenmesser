@@ -3,11 +3,11 @@ import { t } from '@/strings';
 import { Checkbox, TextField } from '@/ui';
 import { fmt2, num } from '../shared';
 import styles from '../tools.module.css';
-import { splitBill } from './logic';
+import { splitBill } from './split';
 
-const s = t.tools.split;
+const s = t.tools.calc.split;
 
-export default function SplitTool() {
+export default function SplitMode() {
   const [total, setTotal] = useState('');
   const [people, setPeople] = useState('2');
   const [tip, setTip] = useState('0');

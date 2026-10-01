@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitBill } from './logic';
+import { splitBill } from './split';
 
 describe('splitBill', () => {
   it('splits with tip', () => {

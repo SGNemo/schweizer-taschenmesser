@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convertText, fromBase64, toBase64 } from './logic';
+import { convertText, fromBase64, toBase64 } from './base64';
 
 describe('base64 / url', () => {
   it('round-trips UTF-8', () => {

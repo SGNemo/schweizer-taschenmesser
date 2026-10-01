@@ -2,14 +2,14 @@ import { t } from '@/strings';
 import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
-  id: 'json',
-  name: t.tools.json.name,
+  id: 'dev',
+  name: t.tools.dev.name,
   icon: 'braces',
-  description: t.tools.json.description,
+  description: t.tools.dev.description,
   group: 'dev',
   offline: true,
   defaultEnabled: false,
-  order: 210,
+  order: 200,
   component: () => import('./Tool'),
 };
 export default tool;

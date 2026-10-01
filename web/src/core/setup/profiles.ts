@@ -16,7 +16,7 @@ export const PROFILES: readonly Profile[] = [
   {
     id: 'everyday',
     modules: ['calendar', 'todos', 'reminders', 'shopping', 'notes', 'birthdays', 'habits'],
-    tools: ['calc', 'timer', 'units', 'dates', 'qr', 'scratch'],
+    tools: ['calc', 'timer', 'units', 'dates', 'qr'],
   },
   {
     id: 'finance',
@@ -29,12 +29,12 @@ export const PROFILES: readonly Profile[] = [
       'calendar',
       'reminders',
     ],
-    tools: ['calc', 'percent', 'currency', 'split'],
+    tools: ['calc', 'currency'],
   },
   {
     id: 'productive',
     modules: ['todos', 'notes', 'calendar', 'habits', 'bookmarks', 'launcher', 'news'],
-    tools: ['scratch', 'timer', 'calc', 'dates'],
+    tools: ['timer', 'calc', 'dates'],
   },
   {
     id: 'minimal',

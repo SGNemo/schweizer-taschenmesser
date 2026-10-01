@@ -3,11 +3,11 @@ import { t } from '@/strings';
 import { Button, TextArea } from '@/ui';
 import { copyWithToast } from '../shared';
 import styles from '../tools.module.css';
-import { parseJson } from './logic';
+import { parseJson } from './json';
 
-const s = t.tools.json;
+const s = t.tools.dev.json;
 
-export default function JsonTool() {
+export default function JsonPanel() {
   const [input, setInput] = useState('');
   const [shown, setShown] = useState<string>();
   const parsed = input.trim() ? parseJson(input) : undefined;

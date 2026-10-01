@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { digestHex } from './logic';
+import { digestHex } from './hash';
 
 describe('digestHex', () => {
   it('matches the well-known digests of "abc"', async () => {

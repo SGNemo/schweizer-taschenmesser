@@ -3,6 +3,7 @@ import { allTools } from './registry';
 import {
   activeTools,
   DEFAULT_TOOLS,
+  migrateToolIds,
   moveTool,
   orderTools,
   toolsSettingsSchema,
@@ -22,8 +23,9 @@ export interface ToolsState {
 }
 
 export function useTools(): ToolsState | undefined {
-  const [values, patch] = useSettings(TOOLS_SCOPE, toolsSettingsSchema, DEFAULT_TOOLS);
-  if (!values) return undefined;
+  const [stored, patch] = useSettings(TOOLS_SCOPE, toolsSettingsSchema, DEFAULT_TOOLS);
+  if (!stored) return undefined;
+  const values = migrateToolIds(stored);
   const all = orderTools(allTools, values);
   return {
     all,

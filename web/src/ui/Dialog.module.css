@@ -30,6 +30,9 @@
     width: min(92vw, 30rem);
     border-radius: var(--radius-xl);
   }
+  .sheet.wide {
+    width: min(92vw, 56.25rem);
+  }
 }
 .inner {
   display: flex;
@@ -44,6 +47,7 @@
   gap: var(--space-3);
 }
 .title {
+  flex: 1;
   font-size: var(--text-lg);
 }
 .footer {

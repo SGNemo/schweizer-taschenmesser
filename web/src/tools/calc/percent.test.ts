@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { percentOf, shareOf, vat } from './logic';
+import { percentOf, shareOf, vat } from './percent';
 
 describe('percent tool logic', () => {
   it('computes percentages and shares', () => {

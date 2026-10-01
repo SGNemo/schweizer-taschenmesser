@@ -14,16 +14,10 @@ async function openSheet(page: Page) {
 test('the toolbar lists the everyday tools and the calculator works', async ({ page }) => {
   await openSheet(page);
   const sheet = page.getByRole('dialog');
-  for (const name of [
-    'Rechner',
-    'Prozent & MwSt',
-    'Währung',
-    'Timer & Stoppuhr',
-    'QR-Code',
-    'Notizzettel',
-  ])
+  for (const name of ['Rechner', 'Währung', 'Timer & Stoppuhr', 'QR-Code'])
     await expect(sheet.getByRole('button', { name: name })).toBeVisible();
   await expect(sheet.getByRole('button', { name: 'Würfel & Zufall' })).toHaveCount(0);
+  await expect(sheet.getByRole('button', { name: 'Notizzettel' })).toHaveCount(0);
 
   await sheet.getByRole('button', { name: 'Rechner' }).click();
   await sheet.getByLabel('Rechnung').fill('240 + 19 %');
@@ -32,6 +26,16 @@ test('the toolbar lists the everyday tools and the calculator works', async ({ p
   await sheet.getByLabel('Rechnung').fill('1 / 0');
   await sheet.getByRole('button', { name: 'Ergebnis', exact: true }).click();
   await expect(sheet.getByRole('alert')).toContainText('Durch null');
+
+  // Percent / VAT and cost splitting are modes of the calculator.
+  await sheet.getByRole('button', { name: 'Prozent & MwSt' }).click();
+  await sheet.getByLabel('Prozent', { exact: true }).fill('19');
+  await sheet.getByLabel('von Grundwert').fill('200');
+  await expect(sheet.getByRole('status', { name: 'Ergebnis', exact: true })).toHaveText('38');
+  await sheet.getByRole('button', { name: 'Teilen', exact: true }).click();
+  await sheet.getByLabel('Rechnungsbetrag').fill('90');
+  await sheet.getByLabel('Personen').fill('3');
+  await expect(sheet.getByRole('status')).toContainText('30,00');
 
   await sheet.getByRole('button', { name: 'Zurück zu den Werkzeugen' }).click();
   await expect(sheet.getByRole('button', { name: 'QR-Code' })).toBeVisible();
@@ -61,12 +65,11 @@ test('the tool library switches tools on and off and reorders the toolbar', asyn
   ).toBeChecked();
 });
 
-test('dice, percent and base64 tools compute', async ({ page }) => {
+test('dice and the developer tool compute', async ({ page }) => {
   await page.goto('/tools');
   for (const [id, name] of [
     ['dice', 'Würfel & Zufall'],
-    ['base64', 'Base64 & URL'],
-    ['hash', 'Hash'],
+    ['dev', 'Entwickler'],
   ]) {
     const toggle = page.getByTestId(`tool-${id}`).getByLabel(`${name} einschalten`);
     await toggle.click();
@@ -84,10 +87,14 @@ test('dice, percent and base64 tools compute', async ({ page }) => {
 
   await page
     .getByRole('dialog', { name: 'Werkzeuge' })
-    .getByRole('button', { name: 'Base64 & URL' })
+    .getByRole('button', { name: 'Entwickler' })
     .click();
-  await page.getByRole('dialog', { name: 'Base64 & URL' }).getByLabel('Eingabe').fill('hello');
-  await expect(page.getByRole('status', { name: 'Ergebnis' })).toHaveText('aGVsbG8=');
+  const dev = page.getByRole('dialog', { name: 'Entwickler' });
+  await dev.getByLabel('Eingabe').fill('hello');
+  await expect(dev.getByRole('status', { name: 'Ergebnis' })).toHaveText('aGVsbG8=');
+  await dev.getByRole('button', { name: 'Hash', exact: true }).click();
+  await dev.getByLabel('Text').fill('hello');
+  await expect(dev.getByRole('status', { name: 'Prüfsumme' })).toHaveText(/^2cf24dba/);
 });
 
 test('the palette calculates on the spot', async ({ page }, info) => {
