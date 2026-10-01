@@ -20,7 +20,7 @@ Code, comments, commits **English**; UI **German only** (`web/src/strings.ts`).
 - **Done =** `check` (or lint + typecheck), `test`, `e2e` green; app starts; docs per step 4; commit + push the branch.
 
 ## Layout (map: [docs/ARCHITECTURE-MAP.md](docs/ARCHITECTURE-MAP.md))
-`web/` PWA (`src/core` framework, `src/modules/<id>`, `src/tools`, `src/connectors`, `src/ui`, `src/layout`, `src/home`) · `web/src-tauri/` shell (crates `local-api`, `disk-scan`, `system-info`) · `server/` sync server · `mcp/` MCP wrapper · `contract/` LWW fixtures · `design/icon/` logo workshop.
+`web/` PWA (`src/core` framework, `src/modules/<id>`, `src/tools`, `src/connectors`, `src/ui`, `src/layout`, `src/home`) · `web/src-tauri/` shell (crates `local-api`, `disk-scan`, `system-info`, `vault-bridge`) · `server/` sync server · `mcp/` MCP wrapper · `extension/` Brave extension · `packages/vault-core/` shared generator/origin/protocol · `contract/` LWW fixtures · `design/icon/` logo workshop.
 
 ## Hard rules (unabridged, with file refs: [docs/RULES.md](docs/RULES.md); rationale: [docs/DECISIONS.md](docs/DECISIONS.md))
 - **Secrets/security – never weaken:** no secrets, tokens or real data in the repo (public); API keys only via `getPlatform().secrets`; bundle id `io.github.sgnemo.taschenmesser` never changes (only the sanctioned `.dev` Dev-Preview app); Android keystore and updater private key never lost or committed; release signing, artifact audit, gitleaks untouched.
@@ -34,6 +34,7 @@ Code, comments, commits **English**; UI **German only** (`web/src/strings.ts`).
 - **Disk module:** never holds data; delete = node ids → Rust plan → block list (`guard.rs`, do not weaken) → typed confirmation in Rust; recycle bin by default. New Tauri command: `build.rs` `COMMANDS` + `capabilities/desktop.json`.
 - **Setup assistant:** progress device-local (`_meta` `setup.state`), step ids only, never secrets, never appears by itself on an installation with data.
 - **UI (Nemo, German only):** CSS Modules + tokens from `ui/tokens.css` (no hex, own radius/shadow/z-index/weight), shared `@/ui` components, `data-autofocus`, touch ≥ 44 px, `manifest.layout` (no module `max-width`), motion transform/opacity only, AA contrast. Details: [docs/howto/design-rules.md](docs/howto/design-rules.md).
+- **Browser extension (`extension/`):** no vault and no persistent storage of its own; the desktop app is the only source (native messaging, `crates/vault-bridge`); fill/copy/save only after a click, only for the matching origin; strict message schemas, no logging of messages. Rules: [docs/RULES.md](docs/RULES.md), threat model [docs/security/VAULT-EXTENSION.md](docs/security/VAULT-EXTENSION.md).
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`). **Releases** only by the maintainer: tag or manual dispatch, never both ([docs/howto/release-deps.md](docs/howto/release-deps.md)).
 
 ## Where to look
