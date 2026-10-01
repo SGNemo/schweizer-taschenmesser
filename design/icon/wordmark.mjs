@@ -96,7 +96,7 @@ function headfin(p, theme) {
   }
   inner += `<path fill="${c.fish}" d="${f(tail)}"/>`;
   if (flat) {
-    inner += `<circle cx="${nose + 56}" cy="${mid - 26}" r="${p.eye}" fill="${c.eye}"/><circle cx="${nose + 56 - p.eye * 0.35}" cy="${mid - 26 - p.eye * 0.35}" r="${p.eye * 0.3}" fill="${c.stripe}"/>`;
+    inner += `<circle cx="${nose + 56}" cy="${mid - 26}" r="${p.eye}" fill="${c.eye}"/><circle cx="${nose + 56 + p.eye * 0.35}" cy="${mid - 26 - p.eye * 0.35}" r="${p.eye * 0.3}" fill="${c.stripe}"/>`;
   } else {
     inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
   }
@@ -268,8 +268,10 @@ function clown(p, theme) {
   const tl = p.tail ?? 140;
   // fan: flat vertical base right after the o, convex rounded fin (reference picture)
   const bx = tx + 26; // just behind the o
-  // "D" fan: slightly concave left edge (the base), rounded tips, big round outer edge, taller than the letters
-  const fanTail = `M${bx + 10} ${-186}Q${bx + 44} ${-75} ${bx + 10} ${36}C${bx + tl * 0.7} ${46} ${bx + tl + 14} ${-8} ${bx + tl + 14} ${-75}C${bx + tl + 14} ${-142} ${bx + tl * 0.7} ${-196} ${bx + 10} ${-186}Z`;
+  // reference fin: short, slightly concave base in the middle, straight diagonals out to rounded tips,
+  // big round outer edge; taller than the letters
+  const tipX = bx + tl * (p.finTip ?? 0.42);
+  const fanTail = `M${bx + 6} ${-112}Q${bx - 4} ${-75} ${bx + 6} ${-38}L${tipX} ${34}C${bx + tl * 0.62} ${40} ${bx + tl + 4} ${0} ${bx + tl + 4} ${-75}C${bx + tl + 4} ${-150} ${bx + tl * 0.62} ${-190} ${tipX} ${-184}Z`;
   const tail = p.tailStyle === 'fan' ? fanTail : `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
   // dorsal fin above the x-height letters (e, m, o): spiny front, soft round back; the tall N is the head side
   const xh = -150;
@@ -304,7 +306,7 @@ function clown(p, theme) {
   for (const l of [].concat(p.dorsalOn ?? [])) inner += fin(smallDorsal(l));
   for (const l of [].concat(p.ventralOn ?? [])) inner += fin(smallVentral(l));
   if (p.tailStyle === 'fan') {
-    inner += `<path d="${f(tail)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * rim}" stroke-linejoin="round"/><path d="${f(tail)}" fill="${c.fish}"/>`;
+    inner += `<path d="${f(tail)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * rim + 6}" stroke-linejoin="round"/><path d="${f(tail)}" fill="${c.fish}" stroke="${c.fish}" stroke-width="6" stroke-linejoin="round"/>`;
   } else {
     inner += fin(tail);
     inner += `<path fill="${c.fish}" d="${f(ped)}"/>`;
