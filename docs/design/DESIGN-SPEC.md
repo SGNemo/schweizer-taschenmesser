@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–3 decided; round 4 (colour, typography, surfaces) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–4 decided; round 5 (components, interaction) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -48,11 +48,16 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 
 ## 5. Tokens (colour, radius, shadow, spacing)
 - Facts today: `web/src/ui/tokens.css` (light default, dark twice, accents orange/teal/coral/lagoon, radii 8/10/14/18, shadows only floating, motion 120/200/250 ms).
-- Proposed (round 4, `ROUND-4-TOKENS.md`): neutral base cool | warm | graphite (AA-checked tables), shared accent/status/viz/focus tokens, depth levels 0–2 with shadow values, radii 8/12/16/20/full, 4-px spacing scale. **Base not decided yet.**
+- **Decided (round 4):** neutral base **cool**. Dark: page `#0f1316`, card `#171c20`, chip/track `#1f2529`, hairline `#262d32`, input border `#6b767e`, text `#eceff1` / `#aab4bb` / `#88939b`. Light: page `#f3f4f4`, card `#ffffff`, chip `#eaecee`, hairline `#e2e5e8`, input border `#76838c`, text `#171f24` / `#55636b` / `#5f6c75`.
+- **Decided:** accent orange `#ff9a57` (dark) / `#b5430c` (light), contrast `#1b0f06` / `#ffffff`, soft `#2e241c` / `#fbe9de`; status danger/success/warning/info dark `#f4a39c` / `#7fd3a3` / `#e8b85a` / `#7cc7e8`, light `#b3261e` / `#1b7545` / `#8a5a00` / `#1f5fa8`; soft status backgrounds = `color-mix(status 15%, transparent)`; charts `--viz-1` `#4fb3ad` / `#16847f`, `--viz-2` `#ff9a57` / `#c94f12`, further series `--border-strong`; focus `#ffb07a` / `#0b6f72` as a 2 px outline with 2 px offset.
+- **Decided:** teal is no UI colour any more (charts + light focus ring only). Accent variants teal/coral/lagoon stay as user options replacing `--accent*`.
+- **Decided:** depth without gradients: level 0 page, level 1 card (no border, shadow `0 1px 0 rgb(255 255 255 / .04) inset, 0 8px 24px rgb(0 0 0 / .35), 0 1px 2px rgb(0 0 0 / .3)` dark / `0 1px 2px rgb(23 31 36 / .06), 0 8px 24px rgb(23 31 36 / .07)` light), level 2 menu/dialog/sheet/FAB (`0 16px 48px rgb(0 0 0 / .45), 0 2px 6px rgb(0 0 0 / .3)` / `0 16px 48px rgb(23 31 36 / .18), 0 2px 6px rgb(23 31 36 / .08)`); top bar and bottom nav `color-mix(--bg 85%, transparent)` + blur 12 px + 1 px hairline. Gradients brand only.
+- **Decided:** radii sm 8 / md 12 / lg 16 / xl 20 / full; spacing 4 / 8 / 12 / 16 / 24 / 32 / 48; card padding 22–24; grid gap 24; row 44 (phone 48). Full tables with contrast ratios: `ROUND-4-TOKENS.md`.
 
 ## 6. Typography
 - Facts today: Inter Variable (local), scale xs 12 → 3xl clamp(32–44), weights 400/500/600/700, tabular numerals.
-- Proposed (round 4 § 4–5): Inter stays; scale hero/h1 32/h2 20/body 16/label 15/meta 13/caps 11; tabular numerals everywhere; Lucide 20 px at 1.5 px stroke; empty state = fish 64 px at 35 %. **Not decided yet.**
+- **Decided (round 4):** Inter Variable stays the only family (local, OFL). Scale: hero `clamp(2rem, 1.6rem + 1.2vw, 2.75rem)`/700/1.1 · h1 32/600/1.1 (phone 28) · h2 20/600/1.25 · body 16/400/1.5 · label 15/500 · meta 13/400 `--text-3` · caps 11/600/+6 % · badge 12. Letter-spacing −0.02 em at ≥ 28 px. Tabular numerals for every amount, time and date.
+- **Decided:** icons Lucide only, 20 px at 1.5 px stroke (1.75 at 16 px, rail 22 px); no filled icons, no emoji. Empty state: fish 64 px at 35 % in `--text-3`, one sentence, one button; no module illustrations.
 
 ## 7. Components
 - open (round 5)
