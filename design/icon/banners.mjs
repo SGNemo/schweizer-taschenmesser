@@ -69,7 +69,7 @@ function deco(v, t, w, h) {
 
 export function bannerHtml(v, t, w, h) {
   const c = THEME[t];
-  const wm = buildWordmark(v.concept, { colors: { fish: DEEP, edge: c.edge, eye: c.edge } }, t);
+  const wm = buildWordmark(v.concept, { colors: { fish: DEEP, edge: c.edge, eye: c.edge }, ...(v.wm ?? {}) }, t);
   const wmH = Math.round(h * (v.wmScale ?? (v.concept === 'ofish' ? (h > 400 ? 0.52 : 0.6) : h > 400 ? 0.4 : 0.46)));
   const left = v.layout === 'left';
   return `<style>

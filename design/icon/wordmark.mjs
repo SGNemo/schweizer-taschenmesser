@@ -72,13 +72,33 @@ function headfin(p, theme) {
   const head = `M${hx} ${top}Q${hx - 26} ${mid} ${hx} ${bot}C${hx - 70} ${bot} ${nose} ${mid + 70} ${nose} ${mid}C${nose} ${mid - 70} ${hx - 70} ${top} ${hx} ${top}Z`;
   const fx = 852;
   const fl = p.tail ?? 120;
-  const tail = `M${fx} ${-112}L${fx} ${-35}C${fx + fl * 0.5} ${-35} ${fx + fl * 0.8} ${25} ${fx + fl} ${25}C${fx + fl + 22} ${-40} ${fx + fl + 22} ${-107} ${fx + fl} ${-172}C${fx + fl * 0.8} ${-172} ${fx + fl * 0.5} ${-112} ${fx} ${-112}Z`;
-  const e = p.edge;
+  // fan tail (default) or a forked tail with a notch, closer to the app icon's fish
+  const tail =
+    p.tailStyle === 'fork'
+      ? `M${fx} ${-112}L${fx} ${-35}C${fx + fl * 0.45} ${-30} ${fx + fl * 0.75} ${20} ${fx + fl} ${28}C${fx + fl + 14} ${-20} ${fx + fl * 0.72} ${-55} ${fx + fl * 0.62} ${mid}C${fx + fl * 0.72} ${-150} ${fx + fl + 14} ${-185} ${fx + fl} ${-238}C${fx + fl * 0.75} ${-230} ${fx + fl * 0.45} ${-180} ${fx} ${-112}Z`
+      : `M${fx} ${-112}L${fx} ${-35}C${fx + fl * 0.5} ${-35} ${fx + fl * 0.8} ${25} ${fx + fl} ${25}C${fx + fl + 22} ${-40} ${fx + fl + 22} ${-107} ${fx + fl} ${-172}C${fx + fl * 0.8} ${-172} ${fx + fl * 0.5} ${-112} ${fx} ${-112}Z`;
+  const stripeW = p.stripe ?? 0; // head stripe cut out (background shows through), like the mark
+  const sx = nose + (p.stripeAt ?? 100);
+  const stripe = `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`;
+  const id = `wm-hs-${theme}`;
   let inner = word(['N', 'e', 'm', 'o'], c.fish);
-  inner += `<path fill="${c.fish}" d="${f(head)}"/><path fill="${c.fish}" d="${f(tail)}"/>`;
+  if (stripeW > 0) {
+    inner += `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="${nose - 50}" y="${top - 50}" width="400" height="${bot - top + 100}"><rect x="${nose - 50}" y="${top - 50}" width="400" height="${bot - top + 100}" fill="#fff"/><path d="${f(stripe)}" fill="none" stroke="#000" stroke-width="${stripeW}"/></mask></defs>`;
+    inner += `<path fill="${c.fish}" d="${f(head)}" mask="url(#${id})"/>`;
+  } else {
+    inner += `<path fill="${c.fish}" d="${f(head)}"/>`;
+  }
+  if (p.band) {
+    // white band with a dark edge, clipped to the head (same look as the o-fish in W3)
+    const cid = `wm-hc-${theme}`;
+    inner += `<defs><clipPath id="${cid}"><path d="${f(head)}"/></clipPath></defs>`;
+    inner += `<g clip-path="url(#${cid})" fill="none">${p.edge > 0 ? `<path d="${f(stripe)}" stroke="${c.edge}" stroke-width="${p.band + 2 * p.edge}"/>` : ''}<path d="${f(stripe)}" stroke="${c.stripe}" stroke-width="${p.band}"/></g>`;
+  }
+  inner += `<path fill="${c.fish}" d="${f(tail)}"/>`;
   inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
   const pad = p.pad;
-  return wrap([nose - pad, top - pad, fx + fl + 22 - nose + 2 * pad, bot - top + 2 * pad + 22], inner);
+  const h = p.tailStyle === 'fork' ? 262 : bot - top + 22;
+  return wrap([nose - pad, (p.tailStyle === 'fork' ? -238 : top) - pad, fx + fl + 22 - nose + 2 * pad, h + 2 * pad], inner);
 }
 
 // C · o-Fisch: "Nem" in text colour, the o is a round clownfish swimming into the word,
