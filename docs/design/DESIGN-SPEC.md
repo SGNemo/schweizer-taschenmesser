@@ -31,7 +31,8 @@ Direction "D": colour and space from "Ruhig und luftig" (A), hairline row divide
 - **Favourites:** chosen by the user (star in the sidebar/settings), max 5, synced; shown above the areas; no automatic reordering. Default on a fresh install: Kalender, ToDos, Finanzen.
 - **Werkzeuge** stay a sheet (tile grid, 44 px tiles with labels, search on top, 3 recent tools first), reachable from the top bar label and the palette.
 - **Palette (Ctrl+K)** adds "Neu: ToDo / Termin / …", the area pages and settings sections.
-- Later candidates (not decided): Erinnerungen as a tab inside Kalender, Merkliste inside Notizen.
+- **Module set per area follows the module plan** (`docs/product/MODULE-PLAN.md`, target picture B): Planen = Kalender (with the tab „Erinnerungen“ after package 5), ToDos · Geld = Finanzen, Rechnungen, Abos, Budgets · Haushalt = Listen (`lists`: Einkauf, Packliste, Checkliste), Vorräte · Wissen = Notizen, Merkliste (incl. Lesezeichen) · Tresor = Accounts, Unterlagen (`vault`, incl. former Verträge) · Planen also gets Personen (`people`: Geburtstage + Geschenke) · System = Dieser PC (`disk` with tabs Laufwerke · System). Retired: Nachrichten, Habits, Zeiterfassung. Areas with their remaining modules are hidden when empty.
+- **Decided (module review 2026-10-01):** Erinnerungen are merged into Kalender in package 5 (events with `kind` Termin/Erinnerung and `notify`, tab „Erinnerungen“); Merkliste stays its own module and absorbs Links (`launcher`) in package 3.
 
 ## 4. Home screen ("Heute")
 - Header: greeting ("Guten Morgen/Tag/Abend") + full date + count strip (Termine, Erinnerungen, überfällige Rechnungen, ToDos) + "Anpassen". Setting "Begrüßung und Datum" can hide the greeting.
@@ -119,6 +120,7 @@ Decided per module in [`ROUND-7-MODULES.md`](ROUND-7-MODULES.md) § 1–2 (table
 - **Rechnungen / Abos / Verträge / Budgets:** rows with sums in the toolbar, panel details, "Bezahlt" row button; Abos without a visible switch label; Budgets with `ui/Progress`. `mockups/round-3/layout-l1.html`.
 - **Tresor (Accounts):** status pill "Entsperrt · Windows Hello", "Sperren" always visible, auto-lock countdown in the panel, per-row copy, secret rows (reveal/copy), TOTP ring, health line; red only for weak/reused; lock screen = one centred card; widget status only. `tresor.html`.
 - **Datenträger:** treemap keeps its categorical palette (documented exception) + accent selection outline; detail panel with facts, Korb with "Frei danach", one primary "In den Papierkorb"; safety text once. `datentraeger.html`.
+- **Systeminfo** folds into Dieser PC (`disk`, tab „System“) per the module plan; Datenträger spec applies to the Laufwerke tab.
 - **Einstellungen:** section list left (16 rem), content 44 rem, option rows ≥ 56 px, segmented instead of native selects, order Darstellung · Favoriten & Bereiche · Übersicht · Benachrichtigungen · Sync & Backup · KI-Assistent · Werkzeuge · Tresor & Sicherheit · Lokale API · Einrichtung (end, when data exists) · Über Nemo; phone = chip row + stacked options. `einstellungen.html`.
 - **ToDos, Erinnerungen, Geburtstage, Habits, Zeiterfassung, Einkauf, Vorräte, Packlisten, Geschenkideen, Notizen, Merkliste, Nachrichten, Links, Dokumente, Systeminfo, Werkzeuge, Setup-Assistent:** per the table (rows instead of card grids, panels/sheets, quick capture where sensible, inline add kept, widgets with hero + rows + action).
 
@@ -133,7 +135,7 @@ Decided per module in [`ROUND-7-MODULES.md`](ROUND-7-MODULES.md) § 1–2 (table
 Internal identifiers (`io.github.sgnemo.taschenmesser`, storage keys `tm-*`, DB name, backup ids, package names), security and signing, vault crypto, AI privacy (no user data to models, `accounts` without `aiSchema`/widget entries), local API rules, data envelope and `createRepo`, module isolation (areas are navigation only). The Disk block list, typed confirmation and recycle-bin-first stay as they are.
 
 ## 13. Open items (not decided, implementation may propose)
-- Merging Erinnerungen into Kalender and Merkliste into Notizen (navigation-level candidates).
+- ~~Merging Erinnerungen into Kalender and Merkliste into Notizen~~ – answered by the module review: Erinnerungen → Kalender in package 5; Merkliste stays (see § 3).
 - Exact favourites UI (star in sidebar hover vs. settings list only); default favourites on a fresh install.
 - Papierkorb page scope (which collections, 30-day purge vs. manual).
 - Werkzeuge: whether the sheet becomes an area page on the phone.

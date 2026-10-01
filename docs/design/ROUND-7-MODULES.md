@@ -33,6 +33,7 @@ Mockups for the four modules that change most: [`mockups/round-7/`](mockups/roun
 - Native `<select>` controls are replaced by segmented/`SelectField`; every row ≥ 56 px; phone = section list as a scrollable chip row, cards stacked. Mockup: `einstellungen.html`.
 
 ## 2. All modules – what changes (short spec)
+Note (after the module review, `docs/product/MODULE-PLAN.md`): rows for Erinnerungen, Geburtstage, Geschenkideen, Habits, Zeiterfassung, Einkauf, Packlisten, Verträge, Links, Nachrichten and Systeminfo describe modules that are retired or merged (Erinnerungen → Kalender, Einkauf + Packlisten → Listen, Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Links → Merkliste, Systeminfo → Dieser PC). Their row patterns carry over to the merged module; the retired ones are not restyled.
 | Module (area) | Main view | Detail | Create | Widget | Special |
 |---|---|---|---|---|---|
 | Kalender (Planen) | see above | panel/sheet | quick capture, slot click, drag | Heute list + actions | time grid, agenda, kinds |
