@@ -205,11 +205,11 @@ html[data-rm=reduce]{--dur-fast:0ms;--dur:0ms;--dur-slow:0ms}
 /* 1 tick */
 .cb{transition:background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease)}
 .cb .ic{transform:scale(0);transition:transform var(--dur) var(--ease-out)}
-.go .d1 .cb{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
-.go .d1 .cb .ic{transform:scale(1)}
+.go .d1 .row2:first-child .cb{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+.go .d1 .row2:first-child .cb .ic{transform:scale(1)}
 .d1 .row2 .title{transition:color var(--dur),opacity var(--dur)}
-.go .d1 .row2 .title{color:var(--text-3);text-decoration:line-through}
-.go .d1 .row2{animation:rowOut var(--dur-slow) var(--ease) var(--d-out,600ms) forwards}
+.go .d1 .row2:first-child .title{color:var(--text-3);text-decoration:line-through}
+.go .d1 .row2:first-child{animation:rowOut var(--dur-slow) var(--ease) var(--d-out,600ms) forwards}
 @keyframes rowOut{to{opacity:0;transform:translateX(16px)}}
 .d1 .row2.next{transition:transform var(--dur-slow) var(--ease) var(--d-next,700ms)}
 .go .d1 .row2.next{transform:translateY(-52px)}
