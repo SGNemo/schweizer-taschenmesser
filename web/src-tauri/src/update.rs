@@ -17,6 +17,10 @@ use tauri_plugin_updater::{Update, UpdaterExt};
 const HOST: &str = "github.com";
 const RELEASES_PREFIX: &str = "/SGNemo/schweizer-taschenmesser/releases/";
 const MANIFEST_NAME: &str = "latest.json";
+/// Manifest of the rolling Dev-Preview release. Only the Dev-Preview build ever asks for it; the
+/// stable build would refuse its download anyway (`is_portable_asset_url`).
+const DEV_MANIFEST_PATH: &str =
+    "/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/dev-latest.json";
 
 /// Accepts `https://github.com/SGNemo/schweizer-taschenmesser/releases/…/latest.json` and nothing else.
 pub fn validate_endpoint(raw: &str) -> Result<Url, String> {
@@ -30,7 +34,7 @@ pub fn validate_endpoint(raw: &str) -> Result<Url, String> {
         && url.query().is_none()
         && url.fragment().is_none()
         && path.starts_with(RELEASES_PREFIX)
-        && path.ends_with(&format!("/{MANIFEST_NAME}"))
+        && (path.ends_with(&format!("/{MANIFEST_NAME}")) || path == DEV_MANIFEST_PATH)
         && !path
             .split('/')
             .any(|segment| segment == ".." || segment == ".");
@@ -48,11 +52,14 @@ const PORTABLE_TARGET: &str = "windows-x86_64-portable";
 /// it), releases also carry the same signed file as `Nemo-Portable.exe`.
 #[cfg_attr(not(windows), allow(dead_code))]
 const PORTABLE_ASSETS: [&str; 2] = ["Nemo-Portable.exe", "Taschenmesser-Portable.exe"];
+/// Only the Dev-Preview build accepts this one (and only from the `dev-preview` release).
+#[cfg_attr(not(windows), allow(dead_code))]
+const DEV_PORTABLE_ASSET: &str = "Nemo-Portable-dev.exe";
 
 /// The executable may only be downloaded from a release of this repository (defence in depth: the
 /// minisign signature must match as well).
 #[cfg_attr(not(windows), allow(dead_code))]
-pub fn is_portable_asset_url(url: &Url) -> bool {
+pub fn is_portable_asset_url(url: &Url, dev: bool) -> bool {
     url.scheme() == "https"
         && url.host_str() == Some(HOST)
         && url.port().is_none()
@@ -63,9 +70,12 @@ pub fn is_portable_asset_url(url: &Url) -> bool {
         && url
             .path()
             .starts_with(&format!("{RELEASES_PREFIX}download/"))
-        && PORTABLE_ASSETS
+        && (PORTABLE_ASSETS
             .iter()
             .any(|asset| url.path().ends_with(&format!("/{asset}")))
+            || (dev
+                && url.path()
+                    == format!("{RELEASES_PREFIX}download/dev-preview/{DEV_PORTABLE_ASSET}")))
         && !url
             .path()
             .split('/')
@@ -120,7 +130,10 @@ pub async fn check_update(
         .map_err(|e| e.to_string())?;
     #[cfg(windows)]
     if let Some(u) = &update {
-        if !is_portable_asset_url(&u.download_url) {
+        if !is_portable_asset_url(
+            &u.download_url,
+            crate::portable::is_dev_identifier(&app.config().identifier),
+        ) {
             return Err("update download is not a release asset of this repository".into());
         }
     }
@@ -221,6 +234,28 @@ mod tests {
     }
 
     #[test]
+    fn accepts_the_dev_preview_manifest_only_at_its_fixed_path() {
+        assert!(validate_endpoint(&format!("{OK}/download/dev-preview/dev-latest.json")).is_ok());
+        for bad in [
+            format!("{OK}/latest/download/dev-latest.json"),
+            format!("{OK}/download/v1.2.0/dev-latest.json"),
+            format!("{OK}/download/dev-preview/other.json"),
+            format!("{OK}/download/dev-preview/dev-latest.json?x=1"),
+        ] {
+            assert!(validate_endpoint(&bad).is_err(), "{bad}");
+        }
+    }
+
+    #[test]
+    fn the_dev_exe_is_only_accepted_by_the_dev_build_from_the_dev_release() {
+        let dev = Url::parse(&format!("{OK}/download/dev-preview/Nemo-Portable-dev.exe")).unwrap();
+        assert!(is_portable_asset_url(&dev, true));
+        assert!(!is_portable_asset_url(&dev, false));
+        let elsewhere = Url::parse(&format!("{OK}/download/v1.2.0/Nemo-Portable-dev.exe")).unwrap();
+        assert!(!is_portable_asset_url(&elsewhere, true));
+    }
+
+    #[test]
     fn rejects_other_hosts_repositories_and_schemes() {
         for bad in [
             "http://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/latest.json",
@@ -254,9 +289,9 @@ mod tests {
     #[test]
     fn only_portable_release_assets_of_this_repository_are_downloaded() {
         let ok = format!("{OK}/download/v1.2.0/Taschenmesser-Portable.exe");
-        assert!(is_portable_asset_url(&Url::parse(&ok).unwrap()));
+        assert!(is_portable_asset_url(&Url::parse(&ok).unwrap(), false));
         let nemo = format!("{OK}/download/v1.2.0/Nemo-Portable.exe");
-        assert!(is_portable_asset_url(&Url::parse(&nemo).unwrap()));
+        assert!(is_portable_asset_url(&Url::parse(&nemo).unwrap(), false));
         for bad in [
             format!("{OK}/download/v1.2.0/Nemo-Setup.exe"),
             format!("{OK}/download/v1.2.0/Taschenmesser-Setup.exe"),
@@ -268,7 +303,8 @@ mod tests {
             "https://github.com/SGNemo/schweizer-taschenmesser/archive/Taschenmesser-Portable.exe".into(),
         ] {
             let url = Url::parse(&bad).unwrap();
-            assert!(!is_portable_asset_url(&url), "{bad}");
+            assert!(!is_portable_asset_url(&url, false), "{bad}");
+            assert!(!is_portable_asset_url(&url, true), "{bad}");
         }
     }
 }

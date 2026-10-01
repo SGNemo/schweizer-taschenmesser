@@ -33,7 +33,7 @@ fn create_main_window(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Er
     let mut builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
     if let Some(dir) = std::env::current_exe()
         .ok()
-        .and_then(|exe| portable::data_dir(&exe))
+        .and_then(|exe| portable::data_dir(&exe, &app.config().identifier))
     {
         builder = builder.data_directory(dir);
     }
