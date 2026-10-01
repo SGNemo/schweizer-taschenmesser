@@ -12,4 +12,5 @@ Recipes: `docs/HOW-TO.md`. Example of a small complete module: `notes/`; scaffol
 - UI: German only via `src/strings.ts`, primitives from `ui/` (`Patterns.tsx`), `data-autofocus` in dialogs, touch targets ≥ 44 px. Add new pages to `e2e/a11y.spec.ts`.
 
 ## Module: Pflichtbestandteile
+
 - **Seed data:** `seed: { version, dependsOn }` in the manifest (required by the type) + `seed.ts` (deterministic, `small|medium|large`). Recipe: `docs/howto/seed-data.md`. No module without a seed; output changed → bump `seed.version`. Enforced by `core/seed/registry.test.ts` and `npm run check:modules`.
