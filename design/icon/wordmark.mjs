@@ -293,7 +293,21 @@ function clown(p, theme) {
   for (const l of [].concat(p.ventralOn ?? [])) inner += fin(smallVentral(l));
   inner += fin(tail);
   inner += `<path fill="${c.fish}" d="${f(ped)}"/>`;
-  inner += word(['N', 'e', 'm', 'o'], c.fish);
+  inner += word(['N', 'e', 'm', 'o'], p.textLetters ? c.text[theme] : c.fish);
+  if (p.diag) {
+    // diagonal white stripes with a dark edge across the lettering (candy style), clipped to the letters
+    const { w: dw = 26, gap = 70, angle = 62 } = p.diag;
+    const k = Math.tan((angle * Math.PI) / 180);
+    const seg = (x) => `M${x} ${bot + 40}L${x + (bot + 40 - (top - 40)) / k} ${top - 40}`;
+    let edges = '';
+    let whites = '';
+    for (let x = -400; x < 1100; x += gap) {
+      edges += `<path d="${seg(x)}" stroke="${c.edge}" stroke-width="${dw + 2 * e}"/>`;
+      whites += `<path d="${seg(x)}" stroke="${c.stripe}" stroke-width="${dw}"/>`;
+    }
+    inner += `<defs><clipPath id="wm-cl-wc-${t}">${word(['N', 'e', 'm', 'o'], '#000')}</clipPath></defs>`;
+    inner += `<g clip-path="url(#wm-cl-wc-${t})" fill="none">${e > 0 ? edges : ''}${whites}</g>`;
+  }
   inner += `<path fill="${c.fish}" d="${f(head)}"/>`;
   if (p.pectoral) inner += fin(pect);
   const sx = nose + (p.stripeAt ?? 128);
