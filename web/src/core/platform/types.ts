@@ -132,6 +132,8 @@ export interface DesktopService {
   supported: boolean;
   /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
   setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
+  /** Same for the vault search key (`null` removes it; unset by default). */
+  setVaultHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** True = the window's close button hides the app in the tray instead of quitting. */
   setCloseToTray(enabled: boolean): Promise<void>;
   setTrayLabels(labels: TrayLabels): Promise<void>;
@@ -146,6 +148,8 @@ export interface DesktopService {
   readClipboard(): Promise<string | undefined>;
   /** Capture window only: fires every time the window is opened. Returns an unsubscribe function. */
   onCaptureOpen(callback: () => void): () => void;
+  /** Main window: fires when the vault search key was pressed (the listener checks the vault state). */
+  onVaultSearch(callback: () => void): () => void;
 }
 
 export interface PlatformService {

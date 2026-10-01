@@ -30,6 +30,7 @@ const COMMANDS: &[&str] = &[
     "system_info",
     "system_processes",
     "capture_set_hotkey",
+    "desktop_set_vault_hotkey",
     "capture_hide",
     "capture_read_clipboard",
     "desktop_set_close_to_tray",

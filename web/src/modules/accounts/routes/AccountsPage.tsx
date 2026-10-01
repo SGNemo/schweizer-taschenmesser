@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import {
@@ -77,6 +78,13 @@ function Unlocked() {
   const [form, setForm] = useState<EntryTarget>(null);
   const [tools, setTools] = useState(false);
   const [generator, setGenerator] = useState(false);
+  const searchBox = useRef<HTMLInputElement>(null);
+  // `?find=n` (vault search key): focus the search field.
+  const [params] = useSearchParams();
+  const find = params.get('find');
+  useEffect(() => {
+    if (find) searchBox.current?.focus();
+  }, [find]);
   // Wide screens: list and detail side by side (same detail content, just not in a dialog).
   const panel = useSplitView();
 
@@ -90,6 +98,7 @@ function Unlocked() {
         <TextField
           label={t.accounts.search}
           type="search"
+          ref={searchBox}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

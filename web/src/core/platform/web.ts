@@ -83,10 +83,19 @@ export const onCaptureOpenEvent = (callback: () => void): (() => void) => {
   return () => window.removeEventListener(CAPTURE_OPEN_EVENT, callback);
 };
 
+/** The DOM event the native shell dispatches into the main window for the vault search key. */
+export const VAULT_SEARCH_EVENT = 'tm-vault-search';
+
+export const onVaultSearchEvent = (callback: () => void): (() => void) => {
+  window.addEventListener(VAULT_SEARCH_EVENT, callback);
+  return () => window.removeEventListener(VAULT_SEARCH_EVENT, callback);
+};
+
 /** No tray, hotkey or autostart in a browser; the capture page itself still works there. */
 export const webDesktop: DesktopService = {
   supported: false,
   setHotkey: async () => 'failed',
+  setVaultHotkey: async () => 'failed',
   setCloseToTray: async () => undefined,
   setTrayLabels: async () => undefined,
   setAutostart: async () => undefined,
@@ -96,6 +105,7 @@ export const webDesktop: DesktopService = {
   hideCapture: async () => undefined,
   readClipboard: () => navigator.clipboard.readText().catch(() => undefined),
   onCaptureOpen: onCaptureOpenEvent,
+  onVaultSearch: onVaultSearchEvent,
 };
 
 /** The PWA receives shares through its web manifest (`share_target`), not through this service. */

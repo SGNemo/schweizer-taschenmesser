@@ -206,3 +206,19 @@ test('generate a password and save it as an account in one go', async ({ page })
   expect(stored).not.toContain(generated);
   expect(stored).not.toContain('Beispiel-Shop');
 });
+
+test('the vault search key focuses the search, but only while unlocked', async ({ page }) => {
+  await setUp(page);
+  const search = page.getByLabel('Suchen', { exact: false }).first();
+  await page.getByRole('button', { name: 'Neues Passwort' }).focus(); // somewhere else
+  await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
+  await expect(page).toHaveURL(/\/accounts\?find=\d+/);
+  await expect(search).toBeFocused();
+
+  await page.getByRole('button', { name: 'Sperren' }).click();
+  await expect(page.getByRole('button', { name: 'Entsperren' })).toBeVisible();
+  const before = page.url();
+  await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
+  expect(page.url()).toBe(before);
+  await expect(page.getByRole('button', { name: 'Neues Passwort' })).toHaveCount(0);
+});

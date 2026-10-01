@@ -135,6 +135,7 @@ pub fn run() {
             system::system_info,
             system::system_processes,
             capture::capture_set_hotkey,
+            capture::desktop_set_vault_hotkey,
             capture::capture_hide,
             capture::capture_read_clipboard,
             capture::desktop_set_close_to_tray,

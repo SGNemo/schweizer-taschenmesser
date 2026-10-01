@@ -383,6 +383,9 @@ export const t = {
       hotkeyHint: 'Öffnet das Eingabefenster von überall, solange die App läuft.',
       hotkeyRecord: 'Neue Tastenkombination aufnehmen',
       hotkeyRecording: 'Drücke die Tastenkombination …',
+      vaultHotkey: 'Tastenkürzel Tresor-Suche',
+      vaultHotkeyHint:
+        'Holt die App nach vorn und öffnet die Suche im Tresor – nur wenn der Tresor entsperrt ist. Standardmäßig aus.',
       hotkeyOff: 'Aus',
       hotkeyClear: 'Tastenkürzel entfernen',
       hotkeyNeedsModifier: 'Bitte mindestens Strg, Alt oder Umschalt zusätzlich drücken.',
@@ -2293,6 +2296,7 @@ export const t = {
     copyUser: 'Benutzername kopieren',
     copyPassword: 'Passwort kopieren',
     copyCode: 'Code kopieren',
+    shortcutsHint: 'Tasten: U Benutzername, P Passwort, T Code, O Website öffnen.',
     show: 'Anzeigen',
     hide: 'Verbergen',
     openSite: 'Website öffnen',
