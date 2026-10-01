@@ -5,23 +5,16 @@
  *
  *   node scripts/check-links.mjs --repo owner/name --tag v1.2.0 [--stable]
  */
+import { parseArgs } from './lib/args.ts';
 import { assetUrls } from './lib/releaseAssets.ts';
 
-const args = Object.fromEntries(
-  process.argv
-    .slice(2)
-    .filter((a) => a.startsWith('--'))
-    .map((a, i, all) => [
-      a.slice(2),
-      all[i + 1] && !all[i + 1].startsWith('--') ? all[i + 1] : true,
-    ]),
-);
-if (!args.repo || !args.tag) {
+const args = parseArgs(process.argv.slice(2));
+if (typeof args.repo !== 'string' || typeof args.tag !== 'string') {
   console.error('Usage: check-links.mjs --repo owner/name --tag vX.Y.Z [--stable]');
   process.exit(2);
 }
 
-const urls = assetUrls(String(args.repo), String(args.tag), { stable: args.stable === true });
+const urls = assetUrls(args.repo, args.tag, { stable: args.stable === true });
 const ATTEMPTS = 5;
 let failed = 0;
 
