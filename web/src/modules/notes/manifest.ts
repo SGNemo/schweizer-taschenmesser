@@ -10,7 +10,8 @@ const manifest: ModuleManifest = {
   name: 'Notizen',
   icon: 'note',
   version: 1,
-  description: 'Schnelle Notizen mit Titel und Text, wichtige Notizen oben anheften, mit Suche.',
+  description:
+    'Schnelle Notizen mit Titel und Text, ein fester Zettel immer oben, wichtige Notizen anheften, mit Suche.',
   routes: [
     { path: '/notes', label: 'Notizen', nav: true, component: () => import('./routes/NotesPage') },
   ],
@@ -36,11 +37,12 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'wide',
   order: 80,
   contributions: {
     onboarding: noOnboarding,
+    services: () => import('./services'),
     quickAdd: [{ id: 'note', label: 'Notiz', to: '/notes?new=1' }],
   },
 };
