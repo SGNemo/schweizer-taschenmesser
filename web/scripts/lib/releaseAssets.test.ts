@@ -37,11 +37,9 @@ describe('release assets', () => {
     const readme = read('README.md');
     expect(unknownAssetLinks(readme)).toEqual([]);
     expect(unknownAssetLinks(read('docs/user/installation.md'))).toEqual([]);
-    // The latest *stable* release (v0.2.0) predates the rename and only carries the legacy names, so
-    // the download buttons use them. Switch to `Nemo-*` with the first stable release that has both
-    // (docs/STATUS.md, "Offen – macht Sven", item 11).
-    expect(readme).toContain('releases/latest/download/Taschenmesser-Portable.exe');
-    expect(readme).toContain('releases/latest/download/Taschenmesser.apk');
+    expect(readme).toContain('releases/latest/download/Nemo-Portable.exe');
+    expect(readme).toContain('releases/latest/download/Nemo.apk');
+    expect(readme).not.toContain('download/Taschenmesser');
     expect(readme).not.toMatch(/Setup\.exe|\.msi\b/);
   });
 

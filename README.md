@@ -17,11 +17,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Portable.exe"><img src="https://img.shields.io/badge/Windows-portabel_herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows: portable Version herunterladen"></a>
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk"><img src="https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: APK herunterladen"></a>
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo-Portable.exe"><img src="https://img.shields.io/badge/Windows-portabel_herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows: portable Version herunterladen"></a>
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk"><img src="https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: APK herunterladen"></a>
 </p>
 
-<p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Die Dateien heißen vorerst noch <code>Taschenmesser-…</code> (alter Projektname), der Inhalt ist Nemo. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>.</p>
+<p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>.</p>
 
 <details>
 <summary><strong>Dev-Preview (ungetestet)</strong></summary>
