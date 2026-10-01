@@ -214,10 +214,6 @@ jobs:
           set -euo pipefail
           mkdir -p ../assets
           EXE=src-tauri/target/release/taschenmesser.exe
-          cp "$EXE" ../assets/Taschenmesser-Portable.exe
-          [ -f "$EXE.sig" ] && cp "$EXE.sig" ../assets/Taschenmesser-Portable.exe.sig
-          # Transition (rebrand to Nemo): the same signed bytes also under the new name. Installed
-          # apps still look for the legacy name; latest.json keeps pointing to it (see docs/DECISIONS.md).
           cp "$EXE" ../assets/Nemo-Portable.exe
           [ -f "$EXE.sig" ] && cp "$EXE.sig" ../assets/Nemo-Portable.exe.sig
           ls -l ../assets
@@ -228,7 +224,7 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          ../assets/Taschenmesser-Portable.exe &
+          ../assets/Nemo-Portable.exe &
           PID=$!
           sleep 20
           if kill -0 "$PID" 2>/dev/null; then
@@ -329,10 +325,7 @@ jobs:
           umask 077
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
           ANDROID_KEYSTORE_PATH="$KEYSTORE" \
-            node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Taschenmesser.apk
-          (cd ../assets && sha256sum Taschenmesser.apk > Taschenmesser.apk.sha256 && cat Taschenmesser.apk.sha256)
-          # Transition (rebrand to Nemo): identical signed APK under the new name.
-          cp ../assets/Taschenmesser.apk ../assets/Nemo.apk
+            node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Nemo.apk
           (cd ../assets && sha256sum Nemo.apk > Nemo.apk.sha256 && cat Nemo.apk.sha256)
 
       - name: Unsigned APK (dry run without keystore)
@@ -341,7 +334,7 @@ jobs:
           set -euo pipefail
           echo "::warning::No Android keystore configured: the APK is UNSIGNED and cannot be installed."
           mkdir -p ../assets
-          cp "${{ steps.apk.outputs.path }}" ../assets/Taschenmesser-unsigned.apk
+          cp "${{ steps.apk.outputs.path }}" ../assets/Nemo-unsigned.apk
 
       - name: Audit – no secrets in the APK or what goes into it
         env:
@@ -403,16 +396,13 @@ jobs:
           cat dl/latest.json
           node web/scripts/audit-release.mjs --path dl/latest.json
 
-      # Both name sets must be the same signed bytes and every checksum must match its file.
-      - name: Verify the asset pairs
+      # The checksum must match its file and latest.json must point at the Nemo executable.
+      - name: Verify checksum and manifest
         run: |
           set -euo pipefail
           cd dl
-          cmp Nemo-Portable.exe Taschenmesser-Portable.exe
-          cmp Nemo-Portable.exe.sig Taschenmesser-Portable.exe.sig
-          cmp Nemo.apk Taschenmesser.apk
-          sha256sum -c Nemo.apk.sha256 Taschenmesser.apk.sha256
-          grep -q '/Taschenmesser-Portable.exe"' latest.json
+          sha256sum -c Nemo.apk.sha256
+          grep -q '/Nemo-Portable.exe"' latest.json
 
       - name: Create the release
         env:
