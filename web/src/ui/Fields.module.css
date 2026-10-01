@@ -17,9 +17,7 @@
   width: 100%;
 }
 .control:focus-visible {
-  outline: none;
   border-color: var(--focus);
-  box-shadow: var(--focus-ring);
 }
 .control[aria-invalid='true'] {
   border-color: var(--danger);
