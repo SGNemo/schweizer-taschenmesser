@@ -153,6 +153,10 @@ Hintergrund-Sync alle 5 Min. (sichtbar), je Connector max. alle 30 Min. Google-L
 
 ## 10 · Entschieden
 - Zielgruppe: Alltag von Sven, öffentlich nutzbar (Runde 1).
+- Zielbild **Variante B** (9 Nav-Einträge + „Dieser PC“), **C als erstes Paket** (Gruppen + Aufräumen ohne Migration) (Runde 2).
+- **Entfernt wird nur Nachrichten** (mit Export). Habits, Zeiterfassung bleiben eingefroren (aus, keine Investition); Vorräte bleibt, als Tab in „Listen“ (Gruppe, keine Migration) (Runde 2).
+- **Erinnerungen → Kalender** verschmelzen (Termin mit `notify`, Tab „Erinnerungen“), als letztes Verschmelzungspaket (Runde 2).
+- **Werkzeuge 18 → 12** + Rahmen (breiter Dialog, Route, Palette, Kürzel); Notizzettel wird fester „Zettel“ in Notizen (Runde 2).
 
 ## Anhang · Screenshots reproduzieren
 Repo-Skript deckt 19 Module ab; für diese Review wurde eine Kopie um Vorräte, Zeiterfassung, Geschenke, Dokumente, Apps & Links, Nachrichten und alle 18 Werkzeuge erweitert (nicht eingecheckt). Repo-Variante:
@@ -275,4 +279,41 @@ Gewinn: keine einzige Migration, alles bleibt abschaltbar, in einem Paket machba
 B, aber **C als erstes Paket** (Gruppen-Mechanik, Nachrichten raus, Werkzeuge 18 → 12, Zettel + Favoriten) – das ist in einem Release ohne Migration machbar und bringt sofort Ruhe. Danach die Verschmelzungen von B in der Reihenfolge Listen (klein) → Unterlagen → Personen → Erinnerungen (größte Verhaltensänderung), jede als eigenes Paket mit eigener Migration und Übergangsregel für den Sync.
 
 ## 17 · Fragen Runde 2
-Siehe Chat; Antworten werden in Abschnitt 10 eingetragen.
+Beantwortet, siehe Abschnitt 10.
+
+---
+
+# Runde 3 · Zielbild (2026-10-01)
+
+Interne IDs bleiben, wo ein Modul weiterlebt (Tabellen = Sync-Vertrag). Neue Module bekommen neue IDs. „Kopie“ = App-Migration kopiert alte Zeilen in die neue Sammlung, alte Tabelle bleibt versteckt (Regel aus Abschnitt 11).
+
+## 18 · Zielumfang je Modul
+| Ziel-Modul (ID) | Aus | Rein | Raus | Datenmodell / Migration | Widget · Setup · Seeds · KI | Verknüpfungen |
+|---|---|---|---|---|---|---|
+| **Kalender** (`calendar`) | calendar + reminders | Tab „Erinnerungen“ (Liste der Termine mit `kind: reminder`), Benachrichtigung für jeden Termin, 8 Erinnerungs-Vorlagen als Importer | Agenda-Spalte Desktop (optional), Modul `reminders` | `event` + `kind: 'event' \| 'reminder'` (default event), `notify?: {minutesBefore, enabled}`. **Kopie** `reminders_reminder` → `calendar_event {kind:'reminder', allDay:false, startTime:time, notify:{minutesBefore:0, enabled:active}}`, gleiche `id` | Widget „Heute & Morgen“ (bleibt, zeigt Erinnerungen schon) · kein Setup · Vorlagen · aiSchema: `event` + kind/notify, `reminder` entfällt, Tier-1-Parser „erinnere mich“ → kind reminder | Benachrichtigungs-Beitrag wandert hierher; Schnellerfassung + Teilen schreiben `calendar`; Geburtstage kommen künftig aus Personen |
+| **ToDos** (`todos`) | todos | Wiederholung (`recurrence?`, bei Erledigen nächste Instanz), „Irgendwann“ (`someday: boolean`), Widget-Abhaken (K1) | – | additiv, keine Migration | Widget „Offene ToDos“ mit Checkbox · – · Text · aiSchema + 2 Felder | – |
+| **Geld** (Gruppe `money`: `finance`, `invoices`, `subscriptions`, `budgets`) | 4 Module | ein Nav-Eintrag, Seite mit Tabs Übersicht · Buchungen · Rechnungen · Abos · Budgets · Konten; `remindTime` für Abos; Abo-Kachel-Fix | nichts | **keine** (Gruppe) | 4 Widgets bleiben, optional Gruppen-Widget „Geld“ (Verfügbar, nächste Fälligkeiten) · – · wie heute · wie heute | `public.ts`-Brücken + `invoice.paid` bleiben |
+| **Listen** (Gruppe `household`: neu `lists`, `pantry`) | shopping + packing (→ `lists`), pantry (Tab) | `lists`: Listenarten Einkauf (Mengen-Parser, „Gekauftes entfernen“), Packliste (Zurücksetzen, Vorlage), Checkliste; Vorräte als Tab unverändert | Module `shopping`, `packing` | `lists_list {name, kind: shopping\|packing\|checklist, note, order}`, `lists_item {listId, name, quantity?, done, order}`. **Kopie:** `shopping_item` → Liste `shopping-default` „Einkauf“; `packing_list/item` 1:1 (gleiche ids) | Widget „Listen“ (offene Einkäufe + Packfortschritt) + Vorräte-Widget · – · Text-Import Einkauf, Packlisten-Vorlagen (neu, klein) · aiSchema `list`,`item` ersetzt shopping/packing | `shopping.requested` (Vorräte) → `lists` abonniert; Schnellerfassung „Einkauf“ → `lists` |
+| **Notizen** (`notes`) | notes + Notizzettel-Werkzeug | fester „Zettel“ (eine Notiz mit `id: 'scratch'`, immer oben, Widget zeigt sie), Checklisten `- [ ]` im Text, StartDataButton | Werkzeug `scratch` | `note` + `kind?: 'scratch'`. **Kopie** `_settings tools.scratch.text` → Notiz `scratch` (einmalig, idempotent) | Widget „Zettel + letzte Notizen“ · – · – · aiSchema unverändert | Teilen-Ziel bleibt |
+| **Merkliste** (`bookmarks`) | bookmarks + launcher | Art „Favorit“ mit Kachelansicht und Gruppen (Tags), Browser-Import vorhanden | Modul `launcher`, 8 Presets | `item.kind` + `'favorite'`. **Kopie** `launcher_link` → `bookmarks_item {kind:'favorite', tags:[group]}` | Widget „Merkliste“ + Favoriten-Zeile · – · HTML, Text · aiSchema kind erweitert | `bookmark.requested` bleibt (Nachrichten fällt weg → nur noch Teilen) |
+| **Personen** (neu `people`) | birthdays + gifts | Person mit Geburtstag, Notiz, Tags; Geschenke je Person; Alter, WhatsApp-Gruß, Kalender-Items, Erinnerung | Module `birthdays`, `gifts` | `people_person {name, birthday?: {month, day, year?}, note, tags}`, `people_gift {personId, title, occasion, date, priceCents, url, status, note}`. **Kopie:** birthday → person (gleiche id); gift → gift mit `personId` per Namensabgleich (trim, case-insensitive), sonst neue Person | Widget „Nächste Geburtstage · offene Geschenke“ · – · Text-Import Geburtstage · aiSchema nur `person` (Geschenke bleiben KI-unsichtbar, Überraschung) | Kalender-Items + Benachrichtigung wie Geburtstage heute |
+| **Unterlagen** (`vault`, UI-Name neu) | vault + contracts | Dokument mit Laufzeit/Frist (Vertrag, Versicherung, Garantie), Datei optional; Fristen im Kalender + Erinnerung | Modul `contracts` | `document` + `category 'warranty'`, `provider?`, `startDate?`, `endDate?` (ersetzt `expiresOn`, Alias beim Lesen), `noticeDays?`. **Kopie** `contracts_contract` → `vault_document` (gleiche id) | Widget „Fristen & Ablauf“ · – · Mail-Scan (von Verträgen) + StartDataButton · aiSchema erweitert | Dateien weiter gerätelokal bis K3 |
+| **Accounts** (`accounts`) | – | mobile Kopfzeile | – | – | unverändert, Setup-Schritt bleibt | ausgeschlossen wie heute |
+| **Dieser PC** (`disk`, Desktop) | disk + system | Tabs Laufwerke · System | Modul `system` (UI); Rust-Crate `system-info` + Commands bleiben | keine Daten | Widget „Laufwerke + Auslastung“ · – · – · kein aiSchema, `dataApi: false` | `BLOCKED_MODULES`: `system` raus, `disk` bleibt |
+| Habits (`habits`), Zeiterfassung (`timetrack`) | – | nichts (eingefroren) | – | – | unverändert, Standard aus | – |
+| Nachrichten (`news`) | – | – | **ganzes Modul**, `core/ai/newsBrief.ts`, Startpaket, e2e `news.spec` | Export: Feeds im Backup (alte Tabellen), kein Import mehr | – | Proxy `/v1/proxy` bleibt (ICS) |
+
+Nav-Ergebnis (B): Übersicht · Kalender · ToDos · Geld · Listen · Notizen · Merkliste · Personen · Unterlagen · Accounts · (Dieser PC) · Modul-Bibliothek · Einstellungen. Mobil: Übersicht, Kalender, ToDos, Geld, Mehr. Bibliothek zeigt Gruppen mit Teilmodulen (abschaltbar bleibt jedes Teilmodul).
+
+## 19 · Zielumfang Werkzeuge (12)
+| Werkzeug | Aus | Umfang |
+|---|---|---|
+| Rechner | calc + percent + split | Modi Ausdruck (Verlauf) · Prozent/MwSt · Teilen; Paletten-Rechner unverändert |
+| Währung, Timer & Stoppuhr, QR-Code, Einheiten, Datumsrechner, Zeitzonen, Würfel & Zufall, Text, Bilder, PDF | 1:1 | unverändert; Dateiwähler als `Button` |
+| Entwickler | base64 + json + uuid + hash | Tabs |
+| Rahmen | – | Route `/tools/:id` (Sheet öffnet aus URL), Palette „Werkzeug: …“, Kürzel (z. B. `Strg+.`), Dialog bis 900 px, „Zurück“ in die Kopfzeile; `tools`-Settings migrieren alte IDs (percent/split → calc, base64/json/uuid/hash → dev, scratch entfällt) |
+
+## 20 · Neue Core-Bausteine (einmalig, danach wiederverwendbar)
+1. **`manifest.group`** `{id, name, icon, order}`: Nav zeigt Gruppe, Router hängt Teilmodul-Routen als Tabs unter `/<group>/…` (alte Pfade leiten um), Übersicht kann Gruppen-Widget anbieten, Bibliothek zeigt Teilmodule eingerückt. Teilmodule bleiben einzeln aktivierbar.
+2. **App-Migration** (`core/db/appMigrations.ts`): Liste von idempotenten Schritten (Quelle, Ziel, Mapping), läuft nach dem Öffnen der DB und nach jedem Sync-Pull/Backup-Import, schreibt über `createRepo` (= synchronisiert), kopiert nur Zeilen, deren `id` im Ziel fehlt oder deren `updatedAt` neuer ist; alte Tabellen bleiben im Schema (versteckt), Entfernung frühestens zwei Minor-Versionen später. Fixture-Tests mit Backups aus 0.3.1.
+3. **Tools-ID-Migration** in `core/tools/layout.ts` (`enabled/order` alte → neue IDs).
