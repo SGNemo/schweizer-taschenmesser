@@ -154,7 +154,7 @@ describe('tauri platform', () => {
       },
       extra: { url: '/reminders' },
       icon: 'ic_notification',
-      iconColor: '#F26A1E',
+      iconColor: '#E0550F',
     });
   });
 
@@ -166,7 +166,7 @@ describe('tauri platform', () => {
       title: 'Miete',
       body: 'heute',
       icon: 'ic_notification',
-      iconColor: '#F26A1E',
+      iconColor: '#E0550F',
     });
   });
 

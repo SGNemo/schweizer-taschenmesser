@@ -89,7 +89,7 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
 }
 
 /** Small icon + accent tint for Android notifications (drawable name, see `scripts/gen-icons.mjs`). */
-const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#F26A1E' } as const;
+const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#E0550F' } as const;
 
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {

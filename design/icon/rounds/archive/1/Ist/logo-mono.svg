@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nemo">
+  <defs>
+    <mask id="nemo-mono-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect width="512" height="512" fill="#fff"/>
+      <g fill="none" stroke="#000" stroke-linecap="round">
+        <path d="M262 118c-34 40-34 236 0 276" stroke-width="42"/>
+        <path d="M364 152c-22 30-22 178 0 208" stroke-width="34"/>
+      </g>
+      <circle cx="420" cy="230" r="15" fill="#000"/>
+    </mask>
+  </defs>
+  <g fill="#000" mask="url(#nemo-mono-cut)">
+      <path d="M168 256c0-76 80-128 176-128 64 0 120 58 120 128s-56 128-120 128c-96 0-176-52-176-128z"/>
+      <path d="M184 256 100 182c-20-17-46 4-34 28l20 46-20 46c-12 24 14 45 34 28z"/>
+  </g>
+</svg>

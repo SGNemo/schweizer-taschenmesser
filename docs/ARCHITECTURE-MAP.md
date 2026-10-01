@@ -9,6 +9,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 |---|---|
 | `web/` | PWA (Vite, React 19, TS strict); own `package.json`; all UI/logic |
 | `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info` |
+| `design/icon/` | Icon/logo workshop (own `package.json`, not part of the app): parametric fish generator, master parameters `final.params.mjs`, `npm run export` → `web/brand/*.svg` + `Logo.tsx` + splash, round previews in `rounds/` (`docs/HOW-TO.md` → Icons) |
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
