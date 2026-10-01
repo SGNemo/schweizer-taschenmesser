@@ -7,7 +7,7 @@ import type { SystemService } from './system';
 /**
  * Everything that differs between running in a browser (PWA) and inside the native Tauri shell.
  * The rest of the app only talks to this interface (`getPlatform()`); there are no scattered
- * "am I in Tauri?" checks (enforced by ESLint, see `core/platform` in CLAUDE.md).
+ * "am I in Tauri?" checks (enforced by ESLint, see `core/platform` in docs/RULES.md).
  */
 export type PlatformKind = 'web' | 'desktop' | 'android';
 

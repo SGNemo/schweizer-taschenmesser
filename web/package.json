@@ -20,6 +20,7 @@
     "gen:module": "node scripts/gen-module.mjs",
     "new:module": "node scripts/gen-module.mjs",
     "check:modules": "node scripts/check-modules.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
     "db:bump": "node scripts/db-bump.mjs",
     "build:e2e": "vite build --mode e2e",
     "build:e2e-seed": "vite build --mode e2e-seed --outDir dist-e2e-seed",

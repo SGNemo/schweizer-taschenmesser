@@ -1,6 +1,8 @@
 # Design concept and logo candidates (Phase 3a, 2026-09-30)
 
-Proposal for Sven's choice. Renderings: [`design-proposals/design-variants.png`](design-proposals/design-variants.png) (finance + mobile dashboard, light/dark, current vs. A/B/C), [`design-proposals/logo-candidates.png`](design-proposals/logo-candidates.png) (16–512 px, light/dark, app-icon tile), [`design-proposals/logo-wordmarks.png`](design-proposals/logo-wordmarks.png). The variant sheets are token overrides (`design-proposals/variant-*.css`, injected with `SCREENS_CSS=… npm run screenshots`), so what they show is exactly what Phase 3b can deliver through `tokens.css` and the `ui/` components.
+> **Archived 2026-10-01 – historical report.** State described is v0.3.0-beta era; later facts: [STATUS](../../STATUS.md), [DECISIONS](../../DECISIONS.md), [CHANGELOG](../../../CHANGELOG.md). Kept unchanged below.
+
+Proposal for Sven's choice. Renderings: [`design-proposals/design-variants.png`](../../design-proposals/design-variants.png) (finance + mobile dashboard, light/dark, current vs. A/B/C), [`design-proposals/logo-candidates.png`](../../design-proposals/logo-candidates.png) (16–512 px, light/dark, app-icon tile), [`design-proposals/logo-wordmarks.png`](../../design-proposals/logo-wordmarks.png). The variant sheets are token overrides (`design-proposals/variant-*.css`, injected with `SCREENS_CSS=… npm run screenshots`), so what they show is exactly what Phase 3b can deliver through `tokens.css` and the `ui/` components.
 
 ## 1. Inventory – what is not right yet (screenshots of 14 views, 3 viewports, light + dark)
 - **Accent weight.** Every page has two filled orange controls (header button + FAB), the module library adds a full-width gradient "Aktivieren" per card; module tab bars use a third orange (flat `--accent` rectangles). Orange stops meaning "the one primary action".

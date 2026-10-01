@@ -1,6 +1,6 @@
 # Roadmap – ideas, not commitments (2026-09-30)
 
-Collected in the review round (`REVIEW-2026-09-30.md`): what comparable everyday apps offer, what users ask for, and what the code already prepares. Nothing here is implemented; each idea lists benefit, effort (S = hours, M = days, L = a week or more), risk, dependencies and where it could collide with areas other sessions are working on.
+Collected in the review round ([`archive/2026-10/REVIEW-2026-09-30.md`](archive/2026-10/REVIEW-2026-09-30.md)): what comparable everyday apps offer, what users ask for, and what the code already prepares. Nothing here is implemented; each idea lists benefit, effort (S = hours, M = days, L = a week or more), risk, dependencies and where it could collide with areas other sessions are working on.
 
 **Merged while this roadmap was written (do not duplicate):** PR #8 (`feat/disk-cleaner-and-modules`, now on `develop`) added the modules *Datenträger* (desktop disk cleaner), *Zeiterfassung* (timetrack), *Vorräte* (pantry), *Geschenke* (gifts), *System* (desktop), the tools *text*, *timezones*, *image*, *pdf*, a `manifest.platforms` filter and `PlatformService.disk/system`. Its own idea list (vehicle log, colour and contrast, checksum and text diff, journal, warranty and receipts, clipboard history, snippets, autostart overview, WLAN QR, regex tester, grade and BMI calculators, bulk rename, medication and water, watchlist, cleaning plan, savings goals, travel, Android storage overview, sunburst view, scan cache, MFT quick scan) lives in `docs/STATUS.md`; it is referenced below, not repeated. The backup/sync hardening (PR #7) and quick capture (PR #6) are merged as well. Other sessions may still be working on follow-ups of these areas.
 
@@ -95,3 +95,19 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 - Cloud accounts, telemetry, ads. Nemo stays local-first with an optional self-hosted server.
 - AI features that see user data (the assistant only sees schemas). A "summarise my notes" feature would break that rule; if ever, only with a local model and an explicit switch.
 - FinTS/PSD2 bank connections: regulatory and maintenance burden, see `docs/STATUS.md`.
+
+## Ideas moved from STATUS (2026-10-01, not built)
+- Datenträger: Sunburst-Ansicht, „Letzten Scan zwischenspeichern“ (lokal, standardmäßig aus), MFT-Schnellscan mit Adminrechten, Ordner frei wählen (Dialog), Android-Speicherübersicht (belegt/frei, ohne Scan/Löschen), eigene Aufräum-Regeln.
+- Module: Fahrzeug (Tanken, Verbrauch, TÜV/Service), Journal/Tagebuch, Garantie-/Belegverwaltung mit Foto, Zwischenablage-Verlauf (Passwörter ausschließen), Text-Snippets, Autostart-Übersicht (nur Anzeige), Medikamenten-/Wasser-Erinnerung, Watchlist/Leseliste, Putzplan, Sparziele (Haushaltsbuch), Reise (Packlisten, Reisedokumente, Zeitzonen), Speedtest/WLAN-Name (Systeminfo).
+- Werkzeuge: Farbwähler/Kontrast-Check, Datei-Prüfsumme + Text-Diff, WLAN-QR, Regex-Tester, Notenrechner, BMI/Kalorien (ohne Speicherung), Massen-Umbenennen, Bild-Farben extrahieren, PDF komprimieren.
+- Zeiterfassung: Stundensätze/Beträge, Projektfarben.
+- **Build-/CI-Tempo (Runde `chore/build-performance`, nicht umgesetzt; Zahlen in [`perf/BUILD-BASELINE-2026-10-01.md`](perf/BUILD-BASELINE-2026-10-01.md)):**
+  - Vitest ohne Testisolation (`--no-isolate`): lokal 222 s → 27 s, aber 5 Tests brauchen eine leere, gemeinsame Dexie-Datenbank je Datei. Möglich für die reinen Logik-Tests oder mit einem DB-Reset je Datei; gibt die Isolation je Datei auf – Entscheidung nötig.
+  - Der größte Rest der Unit-Testzeit ist Import: `core/db/db.ts` zieht alle Manifeste, jede Testdatei wertet ~1200 Module neu aus (73 % der Zeit). Leichtere Test-Einstiege wären eine Architekturänderung.
+  - `retries: 1` in beiden Playwright-Konfigurationen (CI) kann instabile Tests verdecken. In den ausgewerteten Läufen wurde kein Test wiederholt; Empfehlung: auf 0 setzen und Auffälligkeiten beheben (Entscheidung).
+  - E2E nur auf `develop`/nächtlich mit kleiner PR-Auswahl: seit dem Sharding nicht nötig (PR-Lauf ~ 5 Minuten) und würde die PR-Abdeckung senken.
+  - Android: die aarch64-Rust-Bibliothek wird zweimal gebaut (erst von `tauri android build`, dann von Gradle, je ~1 Minute). Ursache klären, z. B. mit `cargo build -vv` die Fingerprints vergleichen.
+  - `beforeBuildCommand: npm run build` führt im Windows- und Android-Job den Typecheck erneut aus (25–40 s). Bewusst belassen, damit Tag-Builds nie ohne Typprüfung entstehen.
+  - Release-Profil (fat LTO, `opt-level = "s"`) macht den Windows-Build zu 7 Minuten. Eine Änderung würde das Artefakt verändern; ein schnelleres Profil nur für Trockenläufe würde nicht mehr das echte Artefakt prüfen.
+  - Läufe von Feature-Branches starten ohne Rust-/Gradle-Cache (Cache-Scope je Branch): Trockenlauf des Release-Workflows besser von `develop` aus starten.
+  - Rust `[profile.dev] debug = "line-tables-only"`: ~ 20 % kleineres `target`, aber keine Zeitersparnis bei den kleinen Crates und Debugger ohne Variablen – nicht gesetzt. Außerdem: apt-Cache-Action für die Tauri-Bibliotheken (~ 30 s, neue Abhängigkeit) und eine kürzere Paketliste, jeweils erst messen.

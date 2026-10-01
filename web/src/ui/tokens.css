@@ -1,7 +1,7 @@
 /*
  * Design tokens – the single place where Nemo's look is defined. Components and modules use only
  * these variables (no hex colours, no fixed radii/shadows), so a change here restyles everything.
- * Guide: CLAUDE.md → "Design-Richtlinien". Contrast values (WCAG AA) are noted next to the palette.
+ * Guide: docs/howto/design-rules.md. Contrast values (WCAG AA) are noted next to the palette.
  *
  * Look ("Klar", decided 2026-09-30, docs/DECISIONS.md): flat surfaces on a solid page background,
  * borders instead of shadows, one accent colour reserved for the primary action, calm controls.

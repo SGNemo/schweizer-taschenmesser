@@ -17,6 +17,7 @@ web/src-tauri/plugins/*/permissions/
 web/src/modules/accounts/wordlist-eff-large.json
 web/src-tauri/icons/
 docs/screenshots/
+docs/archive/
 *.png
 *.icns
 *.ico

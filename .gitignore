@@ -1,6 +1,6 @@
 node_modules
 
-# --- Secrets: never commit (see CLAUDE.md → Releases; the audit in the release workflow fails on these) ---
+# --- Secrets: never commit (see docs/howto/release-deps.md; the audit in the release workflow fails on these) ---
 .env
 .env.*
 !.env.example
