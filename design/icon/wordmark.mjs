@@ -262,7 +262,7 @@ function clown(p, theme) {
   const t = theme;
   // tail: tapering peduncle behind the o, then a round caudal fin broader than the peduncle
   const px = 836;
-  const pw = p.tailStyle === 'fan' ? 0 : (p.peduncle ?? 80);
+  const pw = p.tailStyle === 'fan' || p.tailStyle === 'd' ? 0 : (p.peduncle ?? 80);
   const tx = px + pw;
   const ped = `M${px} ${-150}C${px + 30} ${-142} ${px + 55} ${-128} ${tx} ${-122}L${tx} ${-25}C${px + 55} ${-19} ${px + 30} ${-5} ${px} ${bot}Z`;
   const tl = p.tail ?? 140;
@@ -285,7 +285,9 @@ function clown(p, theme) {
     `C${bx + tl * 0.94} ${oc + fh} ${ex} ${oc + fh * 0.6} ${ex} ${oc}` +
     `C${ex} ${oc - fh * 0.6} ${bx + tl * 0.94} ${oc - fh} ${tipX + rt} ${oc - fh}` +
     `Q${tipX} ${oc - fh} ${tipX - rt} ${oc - fh + rt * 0.45}Z`;
-  const tail = p.tailStyle === 'fan' ? fanTail : `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
+  // 'd': the round-17 fin – one "D": slightly concave left edge, rounded tips, big round outer edge
+  const dTail = `M${bx + 10} ${-186}Q${bx + 44} ${-75} ${bx + 10} ${36}C${bx + tl * 0.7} ${46} ${bx + tl + 14} ${-8} ${bx + tl + 14} ${-75}C${bx + tl + 14} ${-142} ${bx + tl * 0.7} ${-196} ${bx + 10} ${-186}Z`;
+  const tail = p.tailStyle === 'd' ? dTail : p.tailStyle === 'fan' ? fanTail : `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
   // dorsal fin above the x-height letters (e, m, o): spiny front, soft round back; the tall N is the head side
   const xh = -150;
   const dTop = xh - (p.dorsal ?? 90);
@@ -318,7 +320,7 @@ function clown(p, theme) {
   if (p.fins === 'all') inner += fin(dorsal) + fin(pelvic) + fin(anal);
   for (const l of [].concat(p.dorsalOn ?? [])) inner += fin(smallDorsal(l));
   for (const l of [].concat(p.ventralOn ?? [])) inner += fin(smallVentral(l));
-  if (p.tailStyle === 'fan') {
+  if (p.tailStyle === 'fan' || p.tailStyle === 'd') {
     inner += `<path d="${f(tail)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * rim + 6}" stroke-linejoin="round"/><path d="${f(tail)}" fill="${c.fish}" stroke="${c.fish}" stroke-width="6" stroke-linejoin="round"/>`;
   } else {
     inner += fin(tail);
@@ -344,7 +346,7 @@ function clown(p, theme) {
   const sx = nose + (p.stripeAt ?? 128);
   const headBand = flat ? `M${sx + 3} ${top - 20}Q${sx - 8} ${mid} ${sx + 3} ${bot + 20}` : `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`;
   inner += band(`wm-cl-h-${t}`, head, headBand, p.band ?? 32);
-  if (p.tailStyle !== 'fan') inner += band(`wm-cl-t-${t}`, ped, `M${px + pw * 0.55} ${-170}L${px + pw * 0.55} ${bot + 20}`, (p.band ?? 32) * 0.8);
+  if (p.tailStyle !== 'fan' && p.tailStyle !== 'd') inner += band(`wm-cl-t-${t}`, ped, `M${px + pw * 0.55} ${-170}L${px + pw * 0.55} ${bot + 20}`, (p.band ?? 32) * 0.8);
   for (const mb of [].concat(p.midBand ?? [])) {
     // band through the body, visible only inside the letters; {x, angle} tilts it
     const mx = typeof mb === 'number' ? mb : mb.x;
