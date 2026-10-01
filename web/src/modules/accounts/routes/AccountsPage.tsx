@@ -96,7 +96,10 @@ function Unlocked() {
   if (!data) return null;
   return (
     <>
-      <div className={styles.inline} style={{ marginBottom: 'var(--space-4)' }}>
+      <div
+        className={`${styles.inline} ${styles.toolbar}`}
+        style={{ marginBottom: 'var(--space-4)' }}
+      >
         <TextField
           label={t.accounts.search}
           type="search"

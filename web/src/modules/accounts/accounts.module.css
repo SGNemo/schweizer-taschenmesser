@@ -44,6 +44,14 @@
 .inline > :first-child {
   flex: 1;
 }
+/* Search plus several buttons: wraps on narrow screens instead of widening the page. */
+.toolbar {
+  flex-wrap: wrap;
+}
+.toolbar > :first-child {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
 .detail {
   display: grid;
   gap: var(--space-3);
