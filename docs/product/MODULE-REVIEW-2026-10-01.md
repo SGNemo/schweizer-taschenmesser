@@ -370,3 +370,26 @@ Konflikt-Hotspots mit anderen Chats (CHATS.md: aktuell keine laufenden): Paket 1
 
 ## 24 · Fragen Runde 3
 Beantwortet, siehe Abschnitt 10. Ergebnis: [MODULE-PLAN.md](MODULE-PLAN.md), [IMPLEMENTATION-PROMPT.md](IMPLEMENTATION-PROMPT.md).
+
+---
+
+# Abgleich mit `develop` (Stand c89c691, nach PR #37 Seeds und PR #39 Design-Evaluation)
+
+## 25 · Überschneidungen mit der Design-Spezifikation und den Seeds
+Parallel zu dieser Review wurde die Design-Evaluation beschlossen ([`docs/design/DESIGN-SPEC.md`](../design/DESIGN-SPEC.md), Prompt mit PR-Aufteilung in [`docs/design/IMPLEMENTATION-PROMPT.md`](../design/IMPLEMENTATION-PROMPT.md)) und das Seed-System gemergt ([`docs/howto/seed-data.md`](../howto/seed-data.md)). Beides berührt diesen Plan:
+
+| Thema | Design-Spezifikation | Dieser Plan | Abgleich (Vorschlag) |
+|---|---|---|---|
+| Navigation | `manifest.area`, sieben **Bereiche** (Planen, Geld, Haushalt, Wissen, Tresor, System + Heute), reine Navigation, Favoriten ≤ 5 synchronisiert, Bereichsseite mit Unterreitern; Design-PR 2 „Shell + Bereiche“ | `manifest.group` für „Geld“ und „Listen“ (Abschnitt 20.1) | **Ein Mechanismus: `area`.** `group` entfällt. Zuordnung nach den Paketen: Planen = Kalender, ToDos (Erinnerungen bis Paket 5) · Geld = Finanzen, Rechnungen, Abos, Budgets (Verträge bis Paket 4) · Haushalt = Listen, Vorräte (Einkauf, Packlisten bis Paket 3; Geschenke bis 4) · Wissen = Notizen, Merkliste (Links bis 3) · Tresor = Accounts, Unterlagen · System = Dieser PC |
+| Reihenfolge | Design-PRs 1 Tokens → 2 Shell → 3 Komponenten, 4 Home → 5a–5d Module → 6 Motion → 7 Abschluss; Hotspots `router.tsx`, `AppShell`, `types.ts`, `strings.ts` | Paket 1 belegt dieselben Hotspots | **Design-PR 1 + 2 zuerst**, dann Paket 1 (ohne Gruppen-Mechanik: Stilllegen, Werkzeuge, Zettel, Dieser PC, Funde), dann Design-PR 3/4, dann Pakete 3–5 verzahnt mit Design-PR 5a–5d |
+| Übersicht-Aktionen | Design-PR 4 „Home“: Aktionen im Widget (abhaken, bezahlt, snoozen), Hero-Zahlen, Raster | Paket 2 (K1) | **Paket 2 entfällt**, Inhalt liegt in Design-PR 4; Listen-/Zettel-Widgets ziehen in Paket 3 bzw. 1 nach |
+| Modul-Umgestaltung | Design-PR 5b restylt Erinnerungen, Geburtstage, Habits, Zeiterfassung; 5c Einkauf, Packlisten, Geschenke, Nachrichten, Links; 5d Systeminfo | diese Module werden stillgelegt oder verschmolzen | **Nicht restylen, was wegfällt:** 5b = Kalender, ToDos; 5c = Vorräte, Notizen, Merkliste; 5d ohne Systeminfo. `lists` (Paket 3) und `people` (Paket 4) entstehen direkt im neuen Stil; Verträge/Dokumente werden als „Unterlagen“ in Paket 4 umgebaut |
+| Offene Punkte der Spezifikation (§ 13) | „Erinnerungen in Kalender, Merkliste in Notizen“ unentschieden | Erinnerungen → Kalender (Paket 5) beschlossen; Merkliste bleibt eigenständig und nimmt Links auf | Beides als Antwort auf § 13 in die Spezifikation eintragen (eine Zeile, im Design-PR 7 oder Paket 1) |
+| Begriff „Favoriten“ | Navigations-Favoriten (≤ 5 Module, Stern) | Merklisten-Art „Favorit“ (Browser-Favoriten aus Apps & Links) | **Namenskonflikt.** Vorschlag: Merklisten-Art heißt „Lesezeichen“ (Kacheln, Gruppen), Navigations-Favoriten bleiben „Favoriten“ |
+| Werkzeuge | Sheet bleibt, Kacheln mit Label, Suche, 3 zuletzt genutzte; Label in der Topbar; Palette | 18 → 12, Route, Palette, Kürzel, breiter Dialog | kompatibel; Paket 1 setzt beides um, Design-PR 5d restylt danach nur noch |
+| Seeds (PR #37) | `manifest.seed` ist **Pflicht**, `seed.ts` je Modul, Vertragstests über alle Module, Screenshots nutzen die Seeds | Prompt verlangte Widget- und Seed-Pflicht ohne Vertrag | Harte Regel ergänzt: neue Module (`lists`, `people`) mit `seed.ts`; stillgelegte Module ohne `seed` (Vertragstest um `retired` erweitern); Screenshots mit `npm run screenshots` (Projekt `seeded`) |
+
+Für diese Review wurden die Screenshots noch mit dem alten Skript und eigenen Fake-Daten gemacht (vor #37). Die Inventar-Spalte „Seeds“ in Abschnitt 3 beschreibt den Stand vor #37; seit #37 hat jedes Modul außer Datenträger/Systeminfo (`none: 'live-data'`) einen Seed.
+
+## 26 · Fragen zum Abgleich
+Siehe Chat; Antworten → Abschnitt 10.

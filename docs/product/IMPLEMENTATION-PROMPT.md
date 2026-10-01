@@ -1,6 +1,6 @@
 # Umsetzungs-Prompts – Modulplan (ein Prompt je Paket)
 
-Grundlage: [MODULE-PLAN.md](MODULE-PLAN.md), Begründungen und geprüfte Core-Fakten in [MODULE-REVIEW-2026-10-01.md](MODULE-REVIEW-2026-10-01.md) (Abschnitte 18–23). Reihenfolge ist verbindlich: 1 → 2/3 (parallel möglich) → 4 → 5 → 6; 7 unabhängig ab Paket 4. Jeder Prompt beginnt mit dem Block **„Gemeinsam für alle Pakete“** (kopieren oder verlinken) und dem Paket-Abschnitt.
+Grundlage: [MODULE-PLAN.md](MODULE-PLAN.md), Begründungen und geprüfte Core-Fakten in [MODULE-REVIEW-2026-10-01.md](MODULE-REVIEW-2026-10-01.md) (Abschnitte 18–23). Reihenfolge ist verbindlich und mit den Design-PRs aus `docs/design/IMPLEMENTATION-PROMPT.md` Teil B verzahnt: **Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Paket 3 → Paket 4 → Paket 5 → Paket 6**; Design-PR 5a–5d nur für bleibende Module, Design-PR 6/7 am Ende; Paket 7 unabhängig ab Paket 4. Paket 2 (Übersicht-Aktionen) ist im Design-PR 4 enthalten und entfällt hier (Abgleich: Review Abschnitt 25). Jeder Prompt beginnt mit dem Block **„Gemeinsam für alle Pakete“** (kopieren oder verlinken) und dem Paket-Abschnitt.
 
 ---
 
@@ -18,7 +18,7 @@ Grundlage: [MODULE-PLAN.md](MODULE-PLAN.md), Begründungen und geprüfte Core-Fa
 4. **Backup-Kompatibilität.** Fixture-Backups aus 0.3.1 (`web/src/core/backup/__fixtures__/`, erfundene Daten) müssen importierbar sein und nach der Migration dieselben Einträge im Ziel ergeben (Snapshot-Test). Neue Exporte bleiben `nemo-backup-…`.
 5. **Interne IDs unverändert** (`brand-ids.test.ts`): DB-Name, Backup-Format-IDs, Bundle-ID, Storage-Keys, bestehende Modul-IDs und Tabellennamen. Neue Module nur mit neuen IDs (`lists`, `people`, Gruppen `money`, `household`).
 6. **Sicherheitsbereiche unberührt:** `modules/accounts` (Krypto, Ausschluss-Tests), `core/localapi` + Rust `local-api`, `src-tauri/crates/disk-scan/guard.rs`, `release.yml`, Secrets-Handling, „nie Nutzerdaten an die KI“ (`privacy.test.ts`).
-7. **Widget- und Seed-Pflicht:** jedes sichtbare Modul hat ein Widget mit Leerzustand und Aktion; neue Module bekommen `contributions.onboarding` (Importer oder `noOnboarding`) und einen `StartDataButton` auf der Seite, wenn Startdaten existieren. Gruppen zeigen in der Bibliothek ihre Teilmodule, jedes einzeln abschaltbar.
+7. **Widget- und Seed-Pflicht:** jedes sichtbare Modul hat ein Widget mit Leerzustand und Aktion, `manifest.seed` + `seed.ts` nach `docs/howto/seed-data.md` (deterministisch, erfundene Daten, `small/medium/large`), `contributions.onboarding` (Importer oder `noOnboarding`) und einen `StartDataButton`, wenn Startdaten existieren. Stillgelegte Module tragen kein `seed`; der Seed-Vertragstest (`core/seed/registry.test.ts`) und `check:modules` werden um `retired` erweitert. Screenshots über `npm run screenshots` (Projekt `seeded`). Bereiche (`manifest.area`, Design-PR 2) zeigen in der Bibliothek ihre Module, jedes einzeln abschaltbar.
 8. **UI:** Texte nur in `strings.ts` (neue Manifest-Texte dorthin, bestehende beim Anfassen mitziehen), Tokens, `@/ui`-Komponenten, Touch ≥ 44 px, `data-autofocus`. Keine neuen Abhängigkeiten ohne Rückfrage.
 9. **Versionen:** Breaking-Pakete mit `feat!:` + `BREAKING CHANGE:`-Fußzeile; `npm run version:set` macht nur Sven. Changelog-Abschnitt „Breaking“ nennt: welche Module unsichtbar werden, dass Daten erhalten bleiben, dass alle Geräte vor Paket 6 aktualisiert sein müssen.
 10. **Feste ID-Listen pflegen** (Abschnitt 21 der Review): `exclusion.test.ts` (Liste ohne aiSchema), `e2e/a11y.spec.ts` (MODULES/PAGES), `core/setup/profiles.ts` + Test, `core/ai/testing.ts`, `intent/parser.ts`, `quickCapture/targets/adapters.ts`, `dataapi.test.ts`, `moduleImporters.test.ts`, `contributions.test.ts`, e2e `modules/layout/extras/newmodules/notifications`, `e2e/screenshots/capture.spec.ts`, `docs/user/module.md`, `docs/AI-IMPORT.md` (muss `buildApiPrompt` gleichen).
@@ -30,7 +30,7 @@ Grundlage: [MODULE-PLAN.md](MODULE-PLAN.md), Begründungen und geprüfte Core-Fa
 - Docs: `docs/STATUS.md` (eine Zeile), `docs/DECISIONS.md` (eine Zeile je Entscheidung + Detail in `docs/decisions/`), `docs/ARCHITECTURE-MAP.md` (neue Pfade), `docs/HOW-TO.md` (Rezept „Modul stilllegen / zusammenlegen“ ab Paket 3), `docs/user/module.md`, `CHANGELOG.md` Unreleased.
 
 ### Parallele Chats
-`docs/CHATS.md` lesen; Paket 1 belegt die Hotspots `router.tsx`, `useNavItems.ts`, `home/Home.tsx`, `core/modules/types.ts`, `pages/Settings.tsx`, `strings.ts` – währenddessen keine Feature-Chats an diesen Dateien. Pakete 3–5 belegen `core/db/schema*.json` (nach Merge von `develop` immer `db:bump` neu). Paket 2 darf parallel zu 3 laufen (nur `home/`, `ui/WidgetList`, Widgets von ToDos/Kalender).
+`docs/CHATS.md` lesen; Design-PRs laufen parallel (Teil B dort): Paket 1 startet erst, wenn Design-PR 2 (Shell + Bereiche) gemergt ist; Paket 1 belegt dann die Hotspots `router.tsx`, `useNavItems.ts`, `home/Home.tsx`, `core/modules/types.ts`, `pages/Settings.tsx`, `strings.ts` – währenddessen keine Feature-Chats an diesen Dateien. Pakete 3–5 belegen `core/db/schema*.json` (nach Merge von `develop` immer `db:bump` neu). Paket 2 darf parallel zu 3 laufen (nur `home/`, `ui/WidgetList`, Widgets von ToDos/Kalender).
 
 ### Abschluss jedes Pakets
 PR gegen `develop` mit `#pr-text` (What and why · Structure/changes · Numbers: Modulzahl, Nav-Einträge, Bundle vorher/nachher · How verified · Open questions · Hand-over), Screenshots, CHATS-Zeile entfernt. Nicht mergen. Abschlussmeldung im Chat: PR-Link, Migrationsergebnis (Zeilen kopiert je Tabelle), offene Punkte.
@@ -40,13 +40,13 @@ PR gegen `develop` mit `#pr-text` (What and why · Structure/changes · Numbers:
 ## Paket 1 · Aufräumen (0.4.0)
 
 ### Ziel
-Nemo wirkt ruhig: Gruppen „Geld“ und „Listen“, 18 → 12 Werkzeuge mit Rahmen, fester Notiz-Zettel, „Dieser PC“, Nachrichten/Habits/Zeiterfassung stillgelegt, bekannte Funde behoben. **Keine Datenmigration außer Zettel und Werkzeug-IDs.**
+Nemo wirkt ruhig: Nachrichten/Habits/Zeiterfassung stillgelegt, 18 → 12 Werkzeuge mit Rahmen, fester Notiz-Zettel, „Dieser PC“, bekannte Funde behoben. Voraussetzung: Design-PR 2 (`manifest.area`, Bereichsseiten) ist gemergt; Bereiche werden hier nur gepflegt (stillgelegte Module verlassen ihren Bereich). **Keine Datenmigration außer Zettel und Werkzeug-IDs.**
 
 ### Was du NICHT tust
 Keine neuen Sammlungen, kein `db:bump` (Sammlungen bleiben), keine Verschmelzung von Daten, keine Änderung an Sync/Backup-Formaten, keine Rust-Änderung.
 
 ### Phasen
-1. **Gruppen-Mechanik:** `manifest.group` (`core/modules/types.ts`, `validateManifest`), Router (Gruppenseite `/<group>` mit Tabs = Routen der Teilmodule; `/finance`, `/invoices`, … leiten auf `/money?tab=…` um – oder umgekehrt, Entscheidung im Plan), `useNavItems`, `MoreSheet`, Übersicht (Widgets der Teilmodule bleiben; optional Gruppen-Widget), Bibliothek (Teilmodule eingerückt, einzeln abschaltbar), Schnellerfassung (Aktionen gruppiert), `a11y.spec` PAGES. Gruppen: `money` (finance, invoices, subscriptions, budgets), `household` (shopping, packing, pantry – Daten unverändert; Paket 3 ersetzt shopping+packing durch `lists`).
+1. **Bereiche prüfen (kein Neubau):** `manifest.area` kommt aus Design-PR 2. Hier nur: stillgelegte Module haben keinen Bereich mehr; Bereiche ohne aktives Modul bleiben verborgen (Spezifikation § 3); `a11y.spec` PAGES. Falls Design-PR 2 noch nicht gemergt ist: STOPP und nachfragen, nicht selbst eine Gruppen-Mechanik bauen.
 2. **Stilllegen:** `manifest.retired` + Auswertung in Registry/`availableManifests`, Import-API-Scope (`core/dataapi/scope.ts`: retired = blockiert), Setup-Profile bereinigen, Umleitungen. Anwenden auf `news` (zusätzlich `core/ai/newsBrief.ts`, Startpaket, `e2e/news.spec.ts`, Strings, `MANUAL-TESTS` N-Punkte entfernen), `habits`, `timetrack`. Seiten-/Komponenten-Code dieser drei entfernen, `schema.ts`/`repo.ts`/`manifest.ts` (retired) behalten. Bibliothek zeigt stillgelegte Module nicht; Backup-Export enthält ihre Tabellen weiter.
 3. **Werkzeuge:** `calc` nimmt Modi Prozent/MwSt und Teilen auf (Logik aus `percent`, `split` übernehmen, Tests mitnehmen); neues `dev` mit Tabs Base64/URL, JSON, UUID, Hash; `scratch` entfernen; `core/tools/layout.ts` migriert gespeicherte IDs (`percent`/`split` → `calc`, `base64`/`json`/`uuid`/`hash` → `dev`, `scratch` weg); Rahmen: Route `/tools/:id` öffnet das Sheet, Paletten-Einträge „Werkzeug: …“, Kürzel (Vorschlag `Strg+.`; in `docs/user/module.md` nennen), Dialogbreite bis 900 px ab 900 px Viewport, „Zurück“ als Icon in der Kopfzeile; Dateiwähler (Bilder, PDF) als `Button`. `core/tools/registry.test.ts`, Setup-Profile, `ToolsStep` anpassen.
 4. **Notizen-Zettel:** Notiz mit fester `id: 'scratch'`, immer oben; einmalige Kopie aus `_settings` Scope `tools.scratch` (nur wenn Notiz fehlt und Text nicht leer); Widget „Notizen“ zeigt Zettel zuerst; `StartDataButton` auf der Notizen-Seite.
@@ -59,25 +59,21 @@ Nav-Einträge vorher/nachher (Web und Desktop), Werkzeug-Kacheln, Zeilen entfern
 
 ---
 
-## Paket 2 · Übersicht-Aktionen (K1)
+## Paket 2 · Übersicht-Aktionen (K1) – entfällt
 
-### Ziel
-Die Übersicht ist bedienbar: ToDo abhaken, Einkauf/Liste abhaken und hinzufügen, Termin/Erinnerung „erledigt“ wo sinnvoll, Widgetgröße je Widget; alles ohne die Seite zu verlassen.
-
-### Umfang
-`ui/WidgetList` + `home/` bekommen generische Aktions-Hooks (Checkbox, Inline-Hinzufügen mit `TextField labelHidden`, Größe s/m/l aus `homeLayout.sizes`); ToDos, Kalender (Heute & Morgen), Listen-Gruppe (Einkauf; nach Paket 3 `lists`), Notizen-Zettel (editierbar) ziehen nach. Optimistisches UI, `Skeleton`, Undo-Toast für Abhaken (10 s). Keine Datenmodell-Änderung. e2e `home.spec.ts` erweitern. Parallel zu Paket 3 erlaubt; Konfliktdateien nur Widgets der betroffenen Module.
+Inhalt (abhaken, bezahlt, snoozen, Inline-Hinzufügen, Größen, Hero-Zahlen) liegt im Design-PR 4 „Home“ (`docs/design/IMPLEMENTATION-PROMPT.md`, Phase 4, Spezifikation § 4). Pakete 1 und 3 liefern nur ihre Widgets über die dort entstehende `WidgetList`-API nach (Zettel editierbar, Listen abhaken).
 
 ---
 
-## Paket 3 · Listen + Favoriten (0.5.0)
+## Paket 3 · Listen + Lesezeichen (0.5.0)
 
 ### Ziel
-Neues Modul `lists` (Einkauf, Packlisten, Checklisten) ersetzt `shopping` und `packing`; Merkliste nimmt Favoriten aus `launcher` auf. Erstes Paket mit App-Migration – der Runner entsteht hier und wird in 4 und 5 wiederverwendet.
+Neues Modul `lists` (Einkauf, Packlisten, Checklisten) ersetzt `shopping` und `packing`; Merkliste nimmt die Links aus `launcher` als Art „Lesezeichen“ auf (Name laut Review 25, nicht „Favorit“: der Begriff ist für die Navigations-Favoriten vergeben). Neue Seiten entstehen im Stil der Design-Spezifikation (Zeilen, Panel/Sheet, Schnellerfassung); `seed.ts` Pflicht. Erstes Paket mit App-Migration – der Runner entsteht hier und wird in 4 und 5 wiederverwendet.
 
 ### Phasen
 1. **Runner** `core/db/appMigrations.ts`: Schrittliste `{id, source, target, map(row), after?}`, Ausführung nach DB-Öffnen (`initCore`), nach `runSync`-Pull und nach `applyBackup`; Fortschritt pro Schritt in `_meta app.migrations.<id>` nur als Marker, die Kopie selbst ist idempotent (gleiche `id`, kopiere wenn Ziel fehlt oder `source.updatedAt > target.updatedAt`); schreibt über `createRepo` (synchron). Unit-Tests: leer, idempotent, LWW, Zieltabelle unbekannt → kein Fehler. STOPP mit Mapping-Tabelle vor dem ersten Lauf.
-2. **`lists`:** `npm run gen:module -- lists "Listen"`, Schema `list {name, kind: shopping|packing|checklist, note, order}`, `item {listId, name, quantity?, done, order}`; Seite mit Listen-Tabs, Einkauf-Parser („2 Milch“), „Gekauftes entfernen“, Packliste „Zurücksetzen“/„Als Vorlage kopieren“; Widget (offene Einkäufe + Packfortschritt); Importer Text (Einkauf) + Vorlagen; `aiSchema` `list`, `item`; Schnellerfassung „Einkauf“; abonniert `shopping.requested`. Gruppe `household` = `lists` + `pantry`. Migration: `shopping_item` → Liste `shopping-default` „Einkauf“ (kind shopping) + Items gleiche `id`; `packing_list` → `list` (kind packing), `packing_item` → `item`. `shopping`, `packing` → `retired`, Pfade umleiten.
-3. **Favoriten:** `bookmarks.item.kind` + `favorite`; Kachelansicht (Segment „Favoriten“), Gruppen = Tags; Migration `launcher_link` → `item {kind:'favorite', url, title, tags:[group], done:false}` gleiche `id`; Widget zeigt Favoriten-Zeile; `launcher` → `retired`; Presets entfallen (HTML-Import bleibt).
+2. **`lists`:** `npm run gen:module -- lists "Listen"` (`seed.ts` Pflicht, Bereich Haushalt), Schema `list {name, kind: shopping|packing|checklist, note, order}`, `item {listId, name, quantity?, done, order}`; Seite mit Listen-Tabs, Einkauf-Parser („2 Milch“), „Gekauftes entfernen“, Packliste „Zurücksetzen“/„Als Vorlage kopieren“; Widget (offene Einkäufe + Packfortschritt); Importer Text (Einkauf) + Vorlagen; `aiSchema` `list`, `item`; Schnellerfassung „Einkauf“; abonniert `shopping.requested`. Bereich Haushalt (`area`) = `lists` + `pantry`. Migration: `shopping_item` → Liste `shopping-default` „Einkauf“ (kind shopping) + Items gleiche `id`; `packing_list` → `list` (kind packing), `packing_item` → `item`. `shopping`, `packing` → `retired`, Pfade umleiten.
+3. **Lesezeichen:** `bookmarks.item.kind` + `link`-Kachelansicht (Segment „Lesezeichen“), Gruppen = Tags; Migration `launcher_link` → `item {kind:'link', url, title, tags:[group], done:false}` gleiche `id`; Widget zeigt Lesezeichen-Zeile; `launcher` → `retired`; Presets entfallen (HTML-Import bleibt). Seed für `bookmarks` um Lesezeichen erweitern (`seed.version` bumpen).
 4. Fixtures (0.3.1-Backup mit Einkauf, Packliste, Links), Sync-Test alt → neu, Screenshots, Docs (`HOW-TO` Rezept „Modul zusammenlegen“, `DECISIONS`), Changelog Breaking.
 
 ---
@@ -89,7 +85,7 @@ Neues Modul `lists` (Einkauf, Packlisten, Checklisten) ersetzt `shopping` und `p
 
 ### Phasen
 1. **Unterlagen:** `document` + `category 'warranty'`, `provider?`, `startDate?`, `endDate?` (ersetzt `expiresOn`; Lesepfad akzeptiert beides, Schreiben nur `endDate`, Modul-Migration `manifest.migrations` v2 benennt um), `noticeDays?`; Kalender-Items Ende + Frist, Benachrichtigung `remindDaysBefore`; Mail-Importer aus `contracts` übernehmen; Widget „Fristen & Ablauf“; UI-Name „Unterlagen“, Icon neu (nicht `lock`). Migration `contracts_contract` → `vault_document` gleiche `id` (kind → category). `contracts` → `retired`. Dateien bleiben gerätelokal (Hinweistext bleibt).
-2. **Personen:** `gen:module -- people "Personen"`, `person {name, birthday?: {month, day, year?}, note, tags}`, `gift {personId, title, occasion, date?, priceCents?, url?, status, note}`; Seite: Personenliste mit nächstem Geburtstag, Detail mit Geschenken; Alter, WhatsApp-Gruß, Kalender-Items (jährlich + Geschenk-Anlass bis verschenkt), Benachrichtigung, Text-Importer Geburtstage; `aiSchema` nur `person`; Widget „Nächste Geburtstage · offene Geschenke“; Schnellerfassung Person, Geschenk. Migration: `birthdays_birthday` → `person` gleiche `id`; `gifts_idea` → `gift`, `personId` = Person mit gleichem Namen (trim, case-insensitive), sonst neue Person `person-<slug>`. STOPP mit Abgleichsliste vor dem Lauf. `birthdays`, `gifts` → `retired`.
+2. **Personen:** `gen:module -- people "Personen"` (Bereich Planen, `seed.ts` Pflicht), `person {name, birthday?: {month, day, year?}, note, tags}`, `gift {personId, title, occasion, date?, priceCents?, url?, status, note}`; Seite: Personenliste mit nächstem Geburtstag, Detail mit Geschenken; Alter, WhatsApp-Gruß, Kalender-Items (jährlich + Geschenk-Anlass bis verschenkt), Benachrichtigung, Text-Importer Geburtstage; `aiSchema` nur `person`; Widget „Nächste Geburtstage · offene Geschenke“; Schnellerfassung Person, Geschenk. Migration: `birthdays_birthday` → `person` gleiche `id`; `gifts_idea` → `gift`, `personId` = Person mit gleichem Namen (trim, case-insensitive), sonst neue Person `person-<slug>`. STOPP mit Abgleichsliste vor dem Lauf. `birthdays`, `gifts` → `retired`.
 3. Fixtures, Sync-Test, Screenshots, Docs, Changelog Breaking.
 
 ---
