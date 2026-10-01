@@ -125,9 +125,17 @@ export function fieldHint(input: HTMLInputElement): string {
 const autocompleteOf = (input: HTMLInputElement): string =>
   (input.getAttribute('autocomplete') ?? '').toLowerCase();
 
+/**
+ * `data-nemo-ignore` on a field, a form or any ancestor opts out: the extension then neither
+ * suggests, offers nor fills there (Nemo's own web app sets it on <body>, so the vault's master
+ * password is never seen by the extension).
+ */
+export const IGNORE_ATTRIBUTE = 'data-nemo-ignore';
+const ignored = (el: Element): boolean => el.closest(`[${IGNORE_ATTRIBUTE}]`) !== null;
+
 export function visiblePasswordFields(root: ParentNode): HTMLInputElement[] {
   return [...root.querySelectorAll<HTMLInputElement>('input[type="password" i]')].filter(
-    (el) => isVisible(el) && !el.readOnly,
+    (el) => isVisible(el) && !el.readOnly && !ignored(el),
   );
 }
 

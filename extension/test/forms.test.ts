@@ -186,3 +186,31 @@ describe('submit button and one-time code', () => {
     expect(findOtpField(document)).toBeUndefined();
   });
 });
+
+describe('opt-out', () => {
+  it('ignores fields, forms and pages marked data-nemo-ignore', () => {
+    page(`<form><input type="email"><input type="password" data-nemo-ignore></form>`);
+    expect(findForms(document)).toEqual([]);
+    page(`<form data-nemo-ignore><input type="email"><input type="password"></form>`);
+    expect(findForms(document)).toEqual([]);
+    document.body.setAttribute('data-nemo-ignore', '');
+    page(`<form><input type="email"><input type="password"></form>`);
+    expect(findForms(document)).toEqual([]);
+    document.body.removeAttribute('data-nemo-ignore');
+  });
+});
+
+describe('provider buttons and login pages with a sign-up link', () => {
+  it('"Sign in with Google" does not turn a registration form into a login', () => {
+    page(
+      `<form><input type="email"><input type="password" autocomplete="new-password"><button>Create account</button><button type="button">Sign in with Google</button></form>`,
+    );
+    expect(only().kind).toBe('signup');
+  });
+  it('a login form with a "Sign up" link stays a login', () => {
+    page(
+      `<form><input type="email"><input type="password"><button>Log in</button><a href="/signup">Sign up</a></form>`,
+    );
+    expect(only().kind).toBe('login');
+  });
+});

@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-properties -- this test checks that Math.random is never used */
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_GEN, generate, levelOf, sanitize } from '../src/lib/generate';
 

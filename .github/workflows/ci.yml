@@ -281,6 +281,59 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
+  extension:
+    name: Browser extension (lint, types, tests, build, E2E)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            extension/package-lock.json
+      # The E2E suite loads the extension into Chromium and talks to the real web app (e2e build).
+      - run: npm ci
+        working-directory: web
+      - run: npm ci
+        working-directory: extension
+      - run: npm run format:check
+        working-directory: extension
+      - run: npm run lint
+        working-directory: extension
+      - run: npm run typecheck
+        working-directory: extension
+      - run: npm test
+        working-directory: extension
+      - run: npm run build
+        working-directory: extension
+      - run: npm run build:e2e
+        working-directory: extension
+      - run: npx playwright install --with-deps chromium
+        working-directory: extension
+      - name: E2E (extension in Chromium against the web app)
+        run: npx playwright test
+        working-directory: extension
+      - name: Pack the unpacked extension
+        run: npm run zip
+        working-directory: extension
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nemo-extension
+          path: extension/nemo-extension-*.zip
+          retention-days: 14
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-test-results
+          path: extension/test-results
+          retention-days: 7
+
   e2e-sync:
     name: Multi-device sync E2E
     needs: changes
@@ -351,7 +404,7 @@ jobs:
   # See dev-preview.yml and docs/howto/ci.md -> "Dev-Preview".
   dev-preview:
     name: Dev-Preview build
-    needs: [changes, secret-scan, web, server, mcp, vault-core, e2e-sync, rust]
+    needs: [changes, secret-scan, web, server, mcp, vault-core, extension, e2e-sync, rust]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
     permissions:
       contents: write
