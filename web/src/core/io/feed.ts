@@ -30,16 +30,11 @@ export const MAX_ITEMS = 200;
 const TEASER_LENGTH = 300;
 const TITLE_LENGTH = 200;
 
-/** Markup → text without ever executing or loading anything (inert document, no scripts run). */
-export function plainText(html: string, limit: number): string {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  // The text of these elements is code or hidden content, not something to show.
-  doc
-    .querySelectorAll('script, style, noscript, template, iframe, object')
-    .forEach((e) => e.remove());
-  const text = doc.body.textContent.replace(/\s+/g, ' ').trim();
-  if (text.length <= limit) return text;
-  const cut = text.slice(0, limit);
+/** Normalize plain text and cap length without interpreting input as HTML. */
+export function plainText(text: string, limit: number): string {
+  const normalized = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (normalized.length <= limit) return normalized;
+  const cut = normalized.slice(0, limit);
   const space = cut.lastIndexOf(' ');
   return `${(space > limit * 0.6 ? cut.slice(0, space) : cut).trimEnd()} …`;
 }
