@@ -229,7 +229,68 @@ function script(p, theme) {
   return wrap([0, 0, 850, 250], inner);
 }
 
-const CONCEPTS = { body, headfin, ofish, swoosh, bones, script };
+
+// F · Clownfisch: the letters are the body; real clownfish fins (rounded, dark edge with a pale
+// rim) sit around the word, the white bands show on head and tail base, the tail fin is round.
+function clown(p, theme) {
+  const c = p.colors;
+  const top = -214;
+  const bot = 3;
+  const mid = (top + bot) / 2;
+  const hx = -18;
+  const nose = hx - (p.head ?? 190);
+  const head = `M${hx} ${top}Q${hx - 26} ${mid} ${hx} ${bot}C${hx - 70} ${bot} ${nose} ${mid + 70} ${nose} ${mid}C${nose} ${mid - 70} ${hx - 70} ${top} ${hx} ${top}Z`;
+  const e = p.edge;
+  const rim = p.rim ?? 8; // pale inner rim of every fin
+  // fin: orange fill, dark outer edge, pale rim just inside (stroke order: edge, rim, fill)
+  const fin = (d) =>
+    `<path d="${f(d)}" fill="none" stroke="${c.edge}" stroke-width="${2 * (e + rim)}" stroke-linejoin="round"/>` +
+    `<path d="${f(d)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * rim}" stroke-linejoin="round"/>` +
+    `<path d="${f(d)}" fill="${c.fish}"/>`;
+  // white band with dark edge, clipped to a shape
+  const band = (clipId, shape, d, w) =>
+    `<defs><clipPath id="${clipId}"><path d="${f(shape)}"/></clipPath></defs>` +
+    `<g clip-path="url(#${clipId})" fill="none"><path d="${f(d)}" stroke="${c.edge}" stroke-width="${w + 2 * e}"/><path d="${f(d)}" stroke="${c.stripe}" stroke-width="${w}"/></g>`;
+  const t = theme;
+  // tail: tapering peduncle behind the o, then a round caudal fin broader than the peduncle
+  const px = 836;
+  const pw = p.peduncle ?? 80;
+  const tx = px + pw;
+  const ped = `M${px} ${-150}C${px + 30} ${-142} ${px + 55} ${-128} ${tx} ${-122}L${tx} ${-25}C${px + 55} ${-19} ${px + 30} ${-5} ${px} ${bot}Z`;
+  const tl = p.tail ?? 140;
+  const tail = `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
+  // dorsal fin above the x-height letters (e, m, o): spiny front, soft round back; the tall N is the head side
+  const xh = -150;
+  const dTop = xh - (p.dorsal ?? 90);
+  const dorsal = `M${232} ${xh + 6}L${270} ${dTop + 30}L${318} ${xh - 40}L${370} ${dTop + 6}L${420} ${xh - 44}L${470} ${dTop}L${520} ${xh - 40}C${600} ${dTop - 4} ${720} ${dTop + 10} ${790} ${xh - 30}C${815} ${xh - 20} ${830} ${xh - 5} ${826} ${xh + 6}Z`;
+  // pelvic fin under N/e, anal fin under m/o
+  const pelvic = `M${150} ${bot - 10}C${175} ${bot + 70} ${235} ${bot + 80} ${290} ${bot + 40}C${300} ${bot + 25} ${280} ${bot - 5} ${260} ${bot - 10}Z`;
+  const anal = `M${560} ${bot - 10}C${600} ${bot + 72} ${700} ${bot + 66} ${760} ${bot + 22}C${770} ${bot + 8} ${750} ${bot - 6} ${730} ${bot - 10}Z`;
+  // pectoral fin: small, behind the head band, over the body
+  const pect = `M${-10} ${mid + 10}C${20} ${mid + 15} ${70} ${mid + 50} ${60} ${mid + 95}C${30} ${mid + 100} ${-5} ${mid + 70} ${-10} ${mid + 10}Z`;
+  let inner = '';
+  if (p.fins !== false) inner += fin(dorsal) + fin(pelvic) + fin(anal);
+  inner += fin(tail);
+  inner += `<path fill="${c.fish}" d="${f(ped)}"/>`;
+  inner += word(['N', 'e', 'm', 'o'], c.fish);
+  inner += `<path fill="${c.fish}" d="${f(head)}"/>`;
+  if (p.pectoral) inner += fin(pect);
+  const sx = nose + (p.stripeAt ?? 128);
+  inner += band(`wm-cl-h-${t}`, head, `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`, p.band ?? 32);
+  inner += band(`wm-cl-t-${t}`, ped, `M${px + pw * 0.55} ${-170}L${px + pw * 0.55} ${bot + 20}`, (p.band ?? 32) * 0.8);
+  if (p.midBand) {
+    // third band through the body: between e and m, cut by the word itself
+    const mx = p.midBand;
+    const bodyClip = `M${mx - 60} ${top}H${mx + 60}V${bot}H${mx - 60}Z`;
+    inner += `<defs><clipPath id="wm-cl-m-${t}"><path d="${f(bodyClip)}"/></clipPath><mask id="wm-cl-mm-${t}" maskUnits="userSpaceOnUse" x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}"><rect x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}" fill="#000"/>${word(['N', 'e', 'm', 'o'], '#fff')}</mask></defs>`;
+    inner += `<g mask="url(#wm-cl-mm-${t})" fill="none"><path d="M${mx + 6} ${top - 20}Q${mx - 14} ${mid} ${mx + 6} ${bot + 20}" stroke="${c.edge}" stroke-width="${(p.band ?? 32) + 2 * e}"/><path d="M${mx + 6} ${top - 20}Q${mx - 14} ${mid} ${mx + 6} ${bot + 20}" stroke="${c.stripe}" stroke-width="${p.band ?? 32}"/></g>`;
+  }
+  inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
+  const pad = p.pad;
+  return wrap([nose - pad - e, Math.min(dTop, top) - pad - e - rim, tx + tl + 26 - nose + 2 * (pad + e + rim), bot + 80 - Math.min(dTop, top) + 2 * (pad + e + rim)], inner);
+}
+
+const CONCEPTS = { body, headfin, ofish, swoosh, bones, script, clown };
 
 export function buildWordmark(concept, params = {}, theme = 'light') {
   const p = merge(WM_DEFAULTS, params);
