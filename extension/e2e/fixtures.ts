@@ -3,8 +3,12 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } 
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { EXTENSION_ID, HOST_NAME } from '../../packages/vault-core/src/protocol';
 import { OTHER, PHISH, SHOP, loginPage, signupPage, welcomePage } from './pages';
+
+// Same values as packages/vault-core/src/protocol.ts (not imported: this file runs in plain Node,
+// where the package's own dependencies are not installed). test/manifest.test.ts pins them.
+const EXTENSION_ID = 'olgcnfjmihlmpgjepkfbdjcpenckemaj';
+const HOST_NAME = 'io.github.sgnemo.taschenmesser.vault';
 
 export const MASTER = 'Mein-Master-Passwort-1';
 const executablePath =
