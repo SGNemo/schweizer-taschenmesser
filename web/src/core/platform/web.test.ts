@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getPlatform, initPlatform, setPlatform } from './index';
 import { browserDownload, createWebPlatform, onPageHidden, sensitiveClipboard } from './web';

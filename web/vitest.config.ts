@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   test: {
-    environment: 'jsdom',
+    // Node by default: building a jsdom per file cost more than all test bodies together. A file that
+    // needs a DOM starts with `// @vitest-environment jsdom`; a forgotten marker fails with
+    // "document is not defined". Files that read DOM globals in app code also need the marker.
+    environment: 'node',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
     css: false,

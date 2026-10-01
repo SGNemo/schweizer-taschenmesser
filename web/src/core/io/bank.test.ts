@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { BankFormatError, bankDedupeKey, parseBankCsv, parseBankFile, parseCamt } from './bank';
 
