@@ -145,11 +145,14 @@ Hintergrund-Sync alle 5 Min. (sichtbar), je Connector max. alle 30 Min. Google-L
 11. Accounts mobil: Kopfzeile mit Suche + 2 Buttons bricht unschön.
 12. `docs/product/` fehlt in `web/scripts/check-docs.mjs` `exemptDirs` → dieser Bericht erzeugt eine Budget-Warnung (CI nur Warnung). Vorschlag: Ordner wie `features/` ausnehmen (eine Zeile, gehört in den Umsetzungs-Prompt).
 
-## 9 · Offene Fragen an Sven (Runde 1)
-Siehe Chat; Antworten werden hier als Fakten eingetragen.
+## 9 · Antworten Runde 1 (Sven, 2026-10-01) – Fakten
+- **Genutzt (täglich/wöchentlich):** Zeit-Trio (Kalender, ToDos, Erinnerungen), Geld-Quartett (Finanzen, Rechnungen, Abos, Budgets), Listen & Sammeln (Merkliste, Notizen, Einkaufsliste, Vorräte, Packlisten). **Nicht gewählt:** Accounts, Dokumente, Verträge, Geburtstage, Geschenke, Zeiterfassung, Habits, Nachrichten, Apps & Links, Datenträger, Systeminfo (Annahme: selten/nie; je Modul in Runde 2 nachgefragt).
+- **Liegt noch woanders, soll nach Nemo:** ein persistenter Notizzettel (Ersatz für Notepad), Browser-Favoriten, Personen/Kontakte, Belege/Dokumente/Fotos, Passwörter/2FA.
+- **Nervt:** zu viele Module (Navigation, Übersicht), Übersicht ist nur Anzeige, Werkzeuge umständlich. *Nicht* als störend gewählt: die Vorab-Entscheidung Termin/Erinnerung/ToDo.
+- **Zielgruppe:** Svens Alltag entscheidet, Nemo bleibt öffentlich nutzbar → Module bleiben zu-/abschaltbar, Zusammenlegungen nur mit sauberer Migration.
 
 ## 10 · Entschieden
-Noch nichts.
+- Zielgruppe: Alltag von Sven, öffentlich nutzbar (Runde 1).
 
 ## Anhang · Screenshots reproduzieren
 Repo-Skript deckt 19 Module ab; für diese Review wurde eine Kopie um Vorräte, Zeiterfassung, Geschenke, Dokumente, Apps & Links, Nachrichten und alle 18 Werkzeuge erweitert (nicht eingecheckt). Repo-Variante:
@@ -158,3 +161,118 @@ cd web && SCREENS_VIEWPORTS=1920x1080,412x915 npm run screenshots
 SCREENS_DESKTOP=1 SCREENS_PAGES='^(system|disk)$' SCREENS_VIEWPORTS=1920x1080,412x915 npm run screenshots
 ```
 Bilder dieser Runde: 50 Paare (Desktop links, Mobil rechts), per Chat geliefert; Ablage im Repo offen (Frage 6).
+
+---
+
+# Runde 2 · Bewertung und Vorschläge (2026-10-01)
+
+Grundlage: Antworten aus Abschnitt 9. Skala Nutzen = für Svens Alltag (hoch/mittel/niedrig); Pflege = Code + Tests + Abhängigkeiten (niedrig < 700 Zeilen ohne Fremdbibliothek, hoch > 2 000 oder Netz/Rust); Bedienung = Schritte bis zur Kernaktion.
+
+## 11 · Zwei Arten von Zusammenlegung (wichtig für jede Entscheidung)
+| | **Gruppe** (UI-Ebene) | **Verschmelzung** (Datenebene) |
+|---|---|---|
+| Was passiert | Mehrere Module bekommen einen gemeinsamen Nav-Eintrag + Seite mit Tabs + ein Sammel-Widget; Modul-IDs, Tabellen, Sync, Backup, KI-Schema bleiben | Neue Sammlung, alte Daten werden kopiert, altes Modul verschwindet |
+| Migration | keine | Pflicht (Kopie, nicht Verschiebung, s. u.) |
+| Sync mit altem Handy | unverändert | Alte Version schreibt weiter in alte Tabellen → Übergangsregel nötig |
+| Deaktivierbar | je Teilmodul weiter möglich | nur das Ganze |
+| Versionssprung | MINOR | Breaking (0.x: MINOR mit Hinweis, sonst MAJOR) |
+| Nötig im Code | `manifest.group` (neu), Nav/Router/Übersicht lesen Gruppen | Core-Migration (gibt es noch nicht: `manifest.migrations` ist nur modul-intern) |
+
+Empfehlung: **Gruppe überall dort, wo die Datenmodelle verschieden bleiben** (Geld), **Verschmelzung nur, wo das Modell faktisch gleich ist oder ein neues Modell gebraucht wird** (Listen, Personen, Unterlagen). Migrationsregel für den Prompt: neue Tabelle anlegen, Daten kopieren, alte Tabelle **nicht** tombstonen (sonst löscht das alte Handy per Sync seine Daten), alte Tabelle versteckt bis zur übernächsten Version, dann entfernen.
+
+## 12 · Bewertung Module
+| Modul | Nutzen | Pflege | Bedienung | Überschn. | Reife | **Empfehlung** |
+|---|---|---|---|---|---|---|
+| Kalender | hoch | hoch | gut | Zeit | fertig | **behalten + erweitern:** Erinnerungen aufnehmen (Termin mit `notify`), Agenda-Spalte = Übersicht-Widget (eins davon weg), später Drag/Resize (M2) |
+| ToDos | hoch | mittel | gut | Zeit | fertig | **behalten + erweitern:** Wiederholung + „Irgendwann“ (M1, `core/recurrence` vorhanden), optional `remindAt` |
+| Erinnerungen | hoch | mittel | gut | Zeit (Kalender, ToDo) | fertig | **verschmelzen → Kalender** als Tab „Erinnerungen“: `event` bekommt `notify {minutesBefore}`; Erinnerung = Termin ohne Dauer mit `notify`. Gewinn: 1 Modul weniger, eine Wiederholungslogik, Benachrichtigung auch für Termine (fehlt heute!). Verlust: eigene Kachel-Seite. Risiko: Benachrichtigungs-Beitrag wandert in den Kalender (Tests `notifications.spec`). **Gegenposition:** du empfindest die Dreiteilung nicht als störend → dann als *Gruppe* „Zeit“ (Kalender, ToDos, Erinnerungen) ohne Migration |
+| Finanzen | hoch | hoch | gut | Geld | fertig | **behalten,** Kern der Gruppe „Geld“ |
+| Rechnungen | hoch | niedrig | sehr gut | Geld | fertig | **Gruppe „Geld“** (Tab); Daten bleiben |
+| Abos | hoch | mittel | gut | Geld, Verträge | fertig | **Gruppe „Geld“** (Tab); Layout-Fehler fixen; Erinnerungszeit als Setting |
+| Budgets | hoch | mittel | gut | Geld | schmal | **Gruppe „Geld“** (Tab); Übertrag + Regeln (M3) später |
+| Merkliste | hoch | niedrig | mittel (viele Filter) | Sammeln | fertig | **behalten + erweitern:** Favoriten-Ansicht (Kacheln, Gruppen) übernimmt Apps & Links; Browser-HTML-Import existiert |
+| Notizen | hoch | niedrig | sehr gut | Sammeln, Notizzettel | schmal | **behalten + erweitern:** fester „Zettel“ (eine angeheftete Schnellnotiz, Widget zeigt sie, Notepad-Ersatz), Checklisten (M7) |
+| Einkaufsliste | hoch | niedrig | sehr gut | Listen | fertig | **verschmelzen → „Listen“** mit Packlisten: `list {name, kind: shopping|packing|checklist}`, `item {listId, name, quantity, done, order}`; Einkauf = Liste mit Mengen-Parser, Packliste = Liste mit „Zurücksetzen/Vorlage“ |
+| Packlisten | mittel | niedrig | gut | Listen | fertig | **verschmelzen → „Listen“** (s. o.). Gewinn: 2 → 1 Modul, Vorlagen für alle Listenarten. Verlust: keiner sichtbar. Migration: `shopping_item` → Liste „Einkauf“, `packing_*` 1:1 |
+| Vorräte | mittel | niedrig | gut | Listen (Einkauf) | fertig | **behalten (Gruppe „Haushalt“ mit Listen)** oder entfernen, wenn du es nicht pflegst – Nachfrage |
+| Geburtstage | mittel | niedrig | sehr gut | Personen | fertig | **verschmelzen → „Personen“** (neu): `person {name, birthday?, note, tags}`; Geburtstags-Logik (Kalender, Alter, WhatsApp) bleibt als Funktion |
+| Geschenkideen | niedrig | niedrig | gut | Personen | fertig | **verschmelzen → „Personen“**: `gift {personId, …}`; `forWhom` wird beim Migrieren per Namensabgleich zur Person. Deckt deinen Wunsch „Personen/Kontakte“ ohne drittes Modul |
+| Verträge | mittel | niedrig | gut | Unterlagen, Abos | schmal | **verschmelzen → „Unterlagen“** mit Dokumente: `document {title, category, provider?, startDate?, endDate?, noticeDays?, note, file*}`; Vertrag = Dokument mit Laufzeit |
+| Dokumente | mittel | niedrig | gut | Unterlagen | schmal | **verschmelzen → „Unterlagen“** (s. o.). Belege/Fotos brauchen zusätzlich Anhänge im Sync (K3, L) – eigenes Paket |
+| Accounts | hoch (gewünscht) | hoch | gut | – | fertig | **behalten,** später Passwort-Health/HIBP (S1); mobile Kopfzeile fixen |
+| Apps & Links | niedrig | niedrig | sehr gut | Sammeln | fertig | **auflösen → Merkliste** (Art „Favorit“, Gruppe = Tag, Kachelansicht). Migration 1:1 |
+| Habits | niedrig (ungenutzt) | niedrig | gut | – | schmal | **behalten, einfrieren** (aus, keine Investition) – oder entfernen; isoliert, 573 Zeilen |
+| Zeiterfassung | niedrig (ungenutzt) | mittel | gut | Timer-Werkzeug | fertig | **behalten, einfrieren** – oder entfernen; 942 Zeilen |
+| Nachrichten | niedrig (ungenutzt) | hoch (Netz, Proxy, Hintergrunddienst, KI-Brief, ungeprüfte Feeds) | mittel | Merkliste | fertig | **entfernen** (→ Roadmap „optionale Erweiterung“). Ersparnis ≈ 1 470 Zeilen + `newsBrief` + Proxy-Pfad in der PWA. Gegenposition: einziges „Lese“-Modul für öffentliche Nutzer |
+| Datenträger | mittel (PC) | hoch (Rust) | gut | PC | ungeprüft | **verschmelzen → „Dieser PC“** mit Systeminfo (Tabs Laufwerke / System); keine Daten, keine Migration |
+| Systeminfo | niedrig | niedrig | sehr gut | PC | ungeprüft | **verschmelzen → „Dieser PC“** |
+
+## 13 · Bewertung Werkzeuge
+| Werkzeug | Nutzen | Empfehlung |
+|---|---|---|
+| Rechner, Prozent & MwSt, Kosten teilen | hoch | **zusammenlegen → ein „Rechner“** mit Modi (Ausdruck · Prozent/MwSt · Teilen); Paletten-Rechner bleibt (gleicher Parser). 3 Kacheln → 1 |
+| Währung | mittel | behalten; Kursdatum anzeigen (T2) |
+| Timer & Stoppuhr | hoch | behalten; optional „in Zeiterfassung buchen“ nur falls Zeiterfassung bleibt (T3) |
+| QR-Code | mittel | behalten |
+| Notizzettel | hoch (als Idee) | **entfernen → Notizen „Zettel“** (synchronisiert, durchsuchbar, Widget). Werkzeuge halten dann wieder keine Daten |
+| Einheiten, Datumsrechner, Zeitzonen, Würfel, Text | mittel/niedrig | behalten (aus); keine Investition |
+| Bilder verkleinern, PDF | mittel | behalten (aus); Dateiwähler als `Button` stylen |
+| Base64, JSON, UUID, Hash | niedrig | **zusammenlegen → ein „Entwickler“-Werkzeug** mit Tabs. 4 Kacheln → 1 |
+| Rahmen | – | **erweitern (S):** breiter Dialog ≥ 900 px, Route `/tools/<id>`, Paletten-Einträge „Werkzeug: …“, Kürzel; „Zurück“-Knopf in die Kopfzeile. Ergebnis: 18 → 12 Werkzeuge |
+
+## 14 · Kürzungen (Funktionen, nicht Module)
+| Was raus | Warum | Ersparnis |
+|---|---|---|
+| Kalender-Agenda-Spalte (Desktop) | doppelt „Heute & Morgen“ | wenig Code, viel Ruhe |
+| Erinnerungs-Kacheln → Liste | Kachel + Schalter + redundanter Text | ca. 100 Zeilen CSS/TSX |
+| Launcher-Presets, Nachrichten-Startpaket (ungeprüfte URLs) | Pflege unverifizierter Adressen | 2 Dateien + Manual-Tests N1 |
+| KI-Tagesüberblick (`newsBrief`) | entfällt mit Nachrichten | ca. 150 Zeilen + Strings |
+| Einrichtungs-Profile „Produktiv/Alltag/…“ | mit 9 statt 23 Modulen reicht die Bibliothek | ca. 200 Zeilen (Entscheidung) |
+
+## 15 · Erweiterungen mit echtem Alltagsnutzen (aus ROADMAP, nichts Neues)
+| Id | Was | Aufwand | Risiko | Paket-Idee |
+|---|---|---|---|---|
+| K1 | Übersicht: abhaken/hinzufügen direkt im Widget, Widgetgröße | M | niedrig | 2 |
+| M7+ | Notizen: fester Zettel, Checklisten, Zettel-Widget | S–M | niedrig | 1 |
+| I2-Teil | Favoriten: Browser-HTML-Import existiert; Kachelansicht + Gruppen | S | niedrig | 1 |
+| M1 | ToDos: Wiederholung, Irgendwann | M | niedrig | 2 |
+| Zeit | Termin-Benachrichtigung (`notify`) – Voraussetzung für Erinnerungen → Kalender | M | mittel | 2 |
+| Personen | neues Modul aus Geburtstage + Geschenke | M | mittel (Migration, Namensabgleich) | 3 |
+| Unterlagen | Verträge + Dokumente | S–M | mittel (Migration) | 3 |
+| K3 | Anhänge in Sync/Backup (Belege, Fotos) | L | hoch | 4 (eigenes Paket) |
+| S1 | Passwort-Health/HIBP | M | niedrig | 4 |
+| D1 | Werkzeuge: Route, Palette, Kürzel, breiter Dialog | S | niedrig | 1 |
+
+## 16 · Drei Gesamtvarianten
+Nav = Einträge in Seitenleiste/„Mehr“; (PC) nur Desktop. Zahlen = Zeilen Web-Code, die wegfallen oder zusammenrücken (Schätzung aus Abschnitt 3).
+
+### A · Minimal – 6 Nav-Einträge
+Kalender (inkl. Erinnerungen, Geburtstage als Termin-Art) · ToDos · Geld (Gruppe) · Listen (Einkauf + Packlisten) · Sammlung (Notizen + Merkliste + Favoriten) · Accounts. Entfernt: Vorräte, Habits, Zeiterfassung, Nachrichten, Geschenke, Verträge, Dokumente, Apps & Links, Systeminfo; Datenträger bleibt als (PC).
+Gewinn: Übersicht passt auf einen Mobil-Bildschirm, 8 000 Zeilen weniger. Verlust: Verträge/Dokumente/Personen fehlen – widerspricht deinen Wünschen (Belege, Personen). **Nicht empfohlen.**
+
+### B · Fokussiert – 9 Nav-Einträge (+ PC) · **Empfehlung**
+| Nav | Enthält | Art |
+|---|---|---|
+| Übersicht | Widgets mit Aktionen (K1) | – |
+| Kalender | Termine + Erinnerungen (Tab) + Fälligkeiten | Verschmelzung |
+| ToDos | Listen, Wiederholung | erweitert |
+| Geld | Finanzen · Rechnungen · Abos · Budgets als Tabs | Gruppe |
+| Listen | Einkauf · Packlisten · Checklisten (+ Vorräte als Tab, falls behalten) | Verschmelzung |
+| Notizen | Notizen + fester Zettel | erweitert |
+| Merkliste | Lesen/Sehen/Orte/Ideen + Favoriten-Kacheln | erweitert (nimmt Apps & Links auf) |
+| Personen | Geburtstage + Geschenke | neu (Verschmelzung) |
+| Unterlagen | Verträge + Dokumente (+ Belege später) | Verschmelzung |
+| Accounts | Tresor | behalten |
+| Dieser PC (PC) | Laufwerke · System | Verschmelzung |
+Entfernt: Nachrichten; Habits und Zeiterfassung eingefroren (aus, bleiben für andere Nutzer) oder entfernt – deine Wahl. Mobil-Leiste: Übersicht, Kalender, ToDos, Geld, Mehr.
+Gewinn: 23 → 11 Einträge, alle Wünsche aus Runde 1 abgedeckt, Geld ohne Migration. Verlust: 4 echte Migrationen (Erinnerungen, Listen, Personen, Unterlagen), Breaking-Version.
+
+### C · Vollständig geordnet – 12 Nav-Einträge (+ PC), nur Gruppen
+Zeit (Kalender, ToDos, Erinnerungen) · Geld (4) · Sammlung (Notizen, Merkliste, Apps & Links) · Haushalt (Einkauf, Vorräte, Packlisten) · Personen (Geburtstage, Geschenke) · Unterlagen (Verträge, Dokumente) · Accounts · Habits · Zeiterfassung · Nachrichten · Dieser PC.
+Gewinn: keine einzige Migration, alles bleibt abschaltbar, in einem Paket machbar (nur `manifest.group` + Nav/Übersicht). Verlust: Datenmodelle bleiben zersplittert (Geschenk kennt Person weiter nur als Text, Erinnerung ≠ Termin, zwei Listen-Modelle), Code schrumpft nicht, Übersicht bleibt voll (ein Widget je Modul, außer Gruppen-Widgets kommen dazu).
+
+### Empfehlung und Reihenfolge (Vorschau auf Runde 3)
+B, aber **C als erstes Paket** (Gruppen-Mechanik, Nachrichten raus, Werkzeuge 18 → 12, Zettel + Favoriten) – das ist in einem Release ohne Migration machbar und bringt sofort Ruhe. Danach die Verschmelzungen von B in der Reihenfolge Listen (klein) → Unterlagen → Personen → Erinnerungen (größte Verhaltensänderung), jede als eigenes Paket mit eigener Migration und Übergangsregel für den Sync.
+
+## 17 · Fragen Runde 2
+Siehe Chat; Antworten werden in Abschnitt 10 eingetragen.
