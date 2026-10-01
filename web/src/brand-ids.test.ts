@@ -122,9 +122,14 @@ describe('internal identifiers stay unchanged', () => {
         `ANDROID_PACKAGE: &str = "${pkg}"`,
       );
     }
-    // The share intent filter is merged into the app's launcher activity by its full class name.
+    // The share intent filter is merged into the app's launcher activity by its full class name. The
+    // activity lives in the app's package (= identifier = application id), so `${applicationId}` is
+    // io.github.sgnemo.taschenmesser for the stable app and the same with `.dev` for the Dev-Preview.
     expect(read('src-tauri/plugins/share-intent/android/src/main/AndroidManifest.xml')).toContain(
-      'android:name="io.github.sgnemo.taschenmesser.MainActivity"',
+      'android:name="${applicationId}.MainActivity"',
+    );
+    expect(read('src-tauri/tauri.conf.json')).toContain(
+      '"identifier": "io.github.sgnemo.taschenmesser"',
     );
   });
 
