@@ -170,26 +170,64 @@ try {
   );
 
   // ---- README header + social preview -----------------------------------------------------
-  const page = (w, h, body, { bg = OCEAN, fg = '#E7F1F2', muted = '#9FB6BC' } = {}) => `<style>
+  // Composition "H1" (design/icon/rounds/13): wordmark centred, a faint school of small marks in
+  // the free thirds, the claim (backronym of NEMO) with orange initials. README/social only.
+  const CLAIM = [
+    ['N', 'otizen'],
+    ['E', 'rinnerungen'],
+    ['M', 'odule'],
+    ['O', 'ffline'],
+  ];
+  const markSymbol = `<svg width="0" height="0" style="position:absolute"><symbol id="fish" viewBox="51 93 393 344">${mark
+    .replace(/^[\s\S]*?<defs>/, '<defs>')
+    .replace(/<\/svg>\s*$/, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replaceAll('"#E0550F"', '"currentColor"')}</symbol></svg>`;
+  const SCHOOL = [
+    [0.05, 0.22, 0.2, 1],
+    [0.14, 0.7, 0.13, 0.8],
+    [0.22, 0.4, 0.09, 0.6],
+    [0.87, 0.2, 0.15, 0.9],
+    [0.93, 0.66, 0.24, 1],
+    [0.79, 0.8, 0.1, 0.7],
+    [0.74, 0.3, 0.08, 0.6],
+  ];
+  const school = (w, h, color, alpha) =>
+    `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="position:absolute;inset:0">${SCHOOL.map(
+      ([x, y, hh, a]) => {
+        const H = hh * h;
+        return `<use href="#fish" x="${x * w - H * 0.57}" y="${y * h - H / 2}" width="${H * 1.142}" height="${H}" opacity="${(alpha * a).toFixed(3)}" style="color:${color}"/>`;
+      },
+    ).join('')}</svg>`;
+  const page = (
+    w,
+    h,
+    wm,
+    { bg = OCEAN, fg = '#E7F1F2', muted = '#9FB6BC', deco = '#7FC4CC', alpha = 0.09 } = {},
+  ) => `<style>
     @font-face{font-family:Inter;src:url(${interData});font-weight:100 900}
     html,body{margin:0}
-    .bg{width:${w}px;height:${h}px;background:${bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;color:${fg};font-family:Inter,sans-serif}
-    .bg svg{height:${Math.round(h * 0.34)}px;width:auto}
-    .tag{font-size:${Math.round(h * 0.055)}px;font-weight:500;letter-spacing:.01em;color:${muted}}
-  </style><div class="bg">${body}</div>`;
-  const tag = 'Modulare, lokale Alltags-App';
+    .bg{position:relative;overflow:hidden;width:${w}px;height:${h}px;background:${bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${Math.round(h * 0.085)}px;color:${fg};font-family:Inter,sans-serif}
+    .bg>svg.wm{position:relative;height:${Math.round(h * 0.56)}px;width:auto}
+    .tag{position:relative;font-size:${Math.round(h * 0.066)}px;font-weight:500;letter-spacing:.01em;color:${muted}}
+    .tag b{color:#E0550F;font-weight:700}
+  </style><div class="bg">${markSymbol}${school(w, h, deco, alpha)}${wm.replace('<svg ', '<svg class="wm" ')}<div class="tag">${CLAIM.map(
+    ([a, b]) => `<b>${a}</b>${b}`,
+  ).join(' · ')}</div></div>`;
   // README header: a dark and a light version, picked by GitHub through <picture>.
   write(
     out(repo, 'docs', 'brand', 'header.png'),
-    await pageShot(page(1280, 320, `${wordmarkLight}<div class="tag">${tag}</div>`), 1280, 320),
+    await pageShot(page(1280, 320, wordmarkLight), 1280, 320),
   );
   write(
     out(repo, 'docs', 'brand', 'header-light.png'),
     await pageShot(
-      page(1280, 320, `${wordmark}<div class="tag">${tag}</div>`, {
+      page(1280, 320, wordmark, {
         bg: LIGHT,
         fg: '#13262F',
         muted: '#51616A',
+        deco: '#E0550F',
+        alpha: 0.1,
       }),
       1280,
       320,
@@ -197,7 +235,7 @@ try {
   );
   write(
     out(repo, 'docs', 'brand', 'social-preview.png'),
-    await pageShot(page(1280, 640, `${wordmarkLight}<div class="tag">${tag}</div>`), 1280, 640),
+    await pageShot(page(1280, 640, wordmarkLight), 1280, 640),
   );
 } finally {
   await browser.close();

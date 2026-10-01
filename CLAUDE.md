@@ -87,7 +87,7 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 Step-by-step recipes: `docs/HOW-TO.md`. Short form for a module: `npm run gen:module -- <id> "<Name>"`, then edit `src/modules/<id>/`, `contributions.onboarding` is required, strings in `strings.ts`, `db:bump` on collection changes, `npm run lint && npm run typecheck && npm test`.
 
 ## Status
-Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON import, local import API, `mcp/`); since then: setup assistant, backup/sync hardening, quick capture, the Nemo rebrand (flat design, clownfish icon C12, MIT licence, review in `docs/REVIEW-2026-09-30.md`). Details, open items and next steps: `docs/STATUS.md`; ideas: `docs/ROADMAP.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there.
+Stable release `v0.3.0` is out (2026-10-01; phases 1–13, the AI import round: JSON import, local import API, `mcp/`, and since `v0.2.0`: setup assistant, backup/sync hardening, quick capture, the Nemo rebrand (flat design, clownfish icon C12, MIT licence, review in `docs/REVIEW-2026-09-30.md`)). Details, open items and next steps: `docs/STATUS.md`; ideas: `docs/ROADMAP.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there.
 
 ## Gotchas
 - `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.

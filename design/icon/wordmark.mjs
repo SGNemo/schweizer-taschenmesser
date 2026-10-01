@@ -72,13 +72,37 @@ function headfin(p, theme) {
   const head = `M${hx} ${top}Q${hx - 26} ${mid} ${hx} ${bot}C${hx - 70} ${bot} ${nose} ${mid + 70} ${nose} ${mid}C${nose} ${mid - 70} ${hx - 70} ${top} ${hx} ${top}Z`;
   const fx = 852;
   const fl = p.tail ?? 120;
-  const tail = `M${fx} ${-112}L${fx} ${-35}C${fx + fl * 0.5} ${-35} ${fx + fl * 0.8} ${25} ${fx + fl} ${25}C${fx + fl + 22} ${-40} ${fx + fl + 22} ${-107} ${fx + fl} ${-172}C${fx + fl * 0.8} ${-172} ${fx + fl * 0.5} ${-112} ${fx} ${-112}Z`;
-  const e = p.edge;
+  // fan tail (default) or a forked tail with a notch, closer to the app icon's fish
+  const tail =
+    p.tailStyle === 'fork'
+      ? `M${fx} ${-112}L${fx} ${-35}C${fx + fl * 0.45} ${-30} ${fx + fl * 0.75} ${20} ${fx + fl} ${28}C${fx + fl + 14} ${-20} ${fx + fl * 0.72} ${-55} ${fx + fl * 0.62} ${mid}C${fx + fl * 0.72} ${-150} ${fx + fl + 14} ${-185} ${fx + fl} ${-238}C${fx + fl * 0.75} ${-230} ${fx + fl * 0.45} ${-180} ${fx} ${-112}Z`
+      : `M${fx} ${-112}L${fx} ${-35}C${fx + fl * 0.5} ${-35} ${fx + fl * 0.8} ${25} ${fx + fl} ${25}C${fx + fl + 22} ${-40} ${fx + fl + 22} ${-107} ${fx + fl} ${-172}C${fx + fl * 0.8} ${-172} ${fx + fl * 0.5} ${-112} ${fx} ${-112}Z`;
+  const stripeW = p.stripe ?? 0; // head stripe cut out (background shows through), like the mark
+  const sx = nose + (p.stripeAt ?? 100);
+  const stripe = `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`;
+  const id = `wm-hs-${theme}`;
   let inner = word(['N', 'e', 'm', 'o'], c.fish);
-  inner += `<path fill="${c.fish}" d="${f(head)}"/><path fill="${c.fish}" d="${f(tail)}"/>`;
-  inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
+  if (stripeW > 0) {
+    inner += `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="${nose - 50}" y="${top - 50}" width="400" height="${bot - top + 100}"><rect x="${nose - 50}" y="${top - 50}" width="400" height="${bot - top + 100}" fill="#fff"/><path d="${f(stripe)}" fill="none" stroke="#000" stroke-width="${stripeW}"/></mask></defs>`;
+    inner += `<path fill="${c.fish}" d="${f(head)}" mask="url(#${id})"/>`;
+  } else {
+    inner += `<path fill="${c.fish}" d="${f(head)}"/>`;
+  }
+  if (p.band) {
+    // white band with a dark edge, clipped to the head (same look as the o-fish in W3)
+    const cid = `wm-hc-${theme}`;
+    inner += `<defs><clipPath id="${cid}"><path d="${f(head)}"/></clipPath></defs>`;
+    inner += `<g clip-path="url(#${cid})" fill="none">${p.edge > 0 ? `<path d="${f(stripe)}" stroke="${c.edge}" stroke-width="${p.band + 2 * p.edge}"/>` : ''}<path d="${f(stripe)}" stroke="${c.stripe}" stroke-width="${p.band}"/></g>`;
+  }
+  inner += `<path fill="${c.fish}" d="${f(tail)}"/>`;
+  if (flat) {
+    inner += `<circle cx="${nose + 56}" cy="${mid - 26}" r="${p.eye}" fill="${c.eye}"/><circle cx="${nose + 56 + p.eye * 0.35}" cy="${mid - 26 - p.eye * 0.35}" r="${p.eye * 0.3}" fill="${c.stripe}"/>`;
+  } else {
+    inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
+  }
   const pad = p.pad;
-  return wrap([nose - pad, top - pad, fx + fl + 22 - nose + 2 * pad, bot - top + 2 * pad + 22], inner);
+  const h = p.tailStyle === 'fork' ? 262 : bot - top + 22;
+  return wrap([nose - pad, (p.tailStyle === 'fork' ? -238 : top) - pad, fx + fl + 22 - nose + 2 * pad, h + 2 * pad], inner);
 }
 
 // C · o-Fisch: "Nem" in text colour, the o is a round clownfish swimming into the word,
@@ -209,7 +233,135 @@ function script(p, theme) {
   return wrap([0, 0, 850, 250], inner);
 }
 
-const CONCEPTS = { body, headfin, ofish, swoosh, bones, script };
+
+// F · Clownfisch: the letters are the body; real clownfish fins (rounded, dark edge with a pale
+// rim) sit around the word, the white bands show on head and tail base, the tail fin is round.
+function clown(p, theme) {
+  const c = p.colors;
+  const top = -214;
+  const bot = 3;
+  const mid = (top + bot) / 2;
+  const hx = -18;
+  const nose = hx - (p.head ?? 190);
+  const flat = p.headStyle === 'flat';
+  // flat: straight vertical back edge, pointed nose (reference picture); default: slightly concave back
+  const head = flat
+    ? `M${hx} ${top + 2}L${hx} ${bot - 2}C${hx - 105} ${bot} ${nose + 34} ${mid + 74} ${nose} ${mid}C${nose + 34} ${mid - 74} ${hx - 105} ${top} ${hx} ${top + 2}Z`
+    : `M${hx} ${top}Q${hx - 26} ${mid} ${hx} ${bot}C${hx - 70} ${bot} ${nose} ${mid + 70} ${nose} ${mid}C${nose} ${mid - 70} ${hx - 70} ${top} ${hx} ${top}Z`;
+  const e = p.edge;
+  const rim = p.rim ?? 8; // pale inner rim of every fin
+  // fin: orange fill, dark outer edge, pale rim just inside (stroke order: edge, rim, fill)
+  const fin = (d) =>
+    `<path d="${f(d)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * (e + rim)}" stroke-linejoin="round"/>` +
+    `<path d="${f(d)}" fill="none" stroke="${c.edge}" stroke-width="${2 * e}" stroke-linejoin="round"/>` +
+    `<path d="${f(d)}" fill="${c.fish}"/>`;
+  // white band with dark edge, clipped to a shape
+  const band = (clipId, shape, d, w) =>
+    `<defs><clipPath id="${clipId}"><path d="${f(shape)}"/></clipPath></defs>` +
+    `<g clip-path="url(#${clipId})" fill="none"><path d="${f(d)}" stroke="${c.edge}" stroke-width="${w + 2 * e}"/><path d="${f(d)}" stroke="${c.stripe}" stroke-width="${w}"/></g>`;
+  const t = theme;
+  // tail: tapering peduncle behind the o, then a round caudal fin broader than the peduncle
+  const px = 836;
+  const pw = p.tailStyle === 'fan' || p.tailStyle === 'd' ? 0 : (p.peduncle ?? 80);
+  const tx = px + pw;
+  const ped = `M${px} ${-150}C${px + 30} ${-142} ${px + 55} ${-128} ${tx} ${-122}L${tx} ${-25}C${px + 55} ${-19} ${px + 30} ${-5} ${px} ${bot}Z`;
+  const tl = p.tail ?? 140;
+  // fan: flat vertical base right after the o, convex rounded fin (reference picture)
+  const bx = tx + 26; // just behind the o
+  // reference fin: short, slightly concave base in the middle, straight diagonals out to rounded tips,
+  // big round outer edge; taller than the letters
+  // fan: narrow base on the o's centre line (slightly concave), straight edges opening to the right,
+  // widest point far right, round outer edge (the crop: narrow at the o, wide and round at the end)
+  const oc = -73; // centre of the x-height letters
+  const bh = (p.finBase ?? 72) / 2;
+  const tipX = bx + tl * (p.finTip ?? 0.66);
+  const fh = (p.finHeight ?? 230) / 2;
+  // the straight edges run into the outer arc through rounded tips (quadratic corners)
+  const rt = p.finRound ?? 34; // tip rounding
+  const ex = bx + tl + 6;
+  const fanTail =
+    `M${bx + 4} ${oc - bh}Q${bx - 4} ${oc} ${bx + 4} ${oc + bh}` +
+    `L${tipX - rt} ${oc + fh - rt * 0.45}Q${tipX} ${oc + fh} ${tipX + rt} ${oc + fh}` +
+    `C${bx + tl * 0.94} ${oc + fh} ${ex} ${oc + fh * 0.6} ${ex} ${oc}` +
+    `C${ex} ${oc - fh * 0.6} ${bx + tl * 0.94} ${oc - fh} ${tipX + rt} ${oc - fh}` +
+    `Q${tipX} ${oc - fh} ${tipX - rt} ${oc - fh + rt * 0.45}Z`;
+  // 'd': the round-17 fin – one "D": slightly concave left edge, rounded tips, big round outer edge
+  const dTail = `M${bx + 10} ${-186}Q${bx + 44} ${-75} ${bx + 10} ${36}C${bx + tl * 0.7} ${46} ${bx + tl + 14} ${-8} ${bx + tl + 14} ${-75}C${bx + tl + 14} ${-142} ${bx + tl * 0.7} ${-196} ${bx + 10} ${-186}Z`;
+  const tail = p.tailStyle === 'd' ? dTail : p.tailStyle === 'fan' ? fanTail : `M${tx - 6} ${-128}C${tx + tl * 0.35} ${-190} ${tx + tl * 0.8} ${-200} ${tx + tl} ${-150}C${tx + tl + 24} ${-110} ${tx + tl + 24} ${-40} ${tx + tl} ${0}C${tx + tl * 0.8} ${50} ${tx + tl * 0.35} ${40} ${tx - 6} ${-20}Z`;
+  // dorsal fin above the x-height letters (e, m, o): spiny front, soft round back; the tall N is the head side
+  const xh = -150;
+  const dTop = xh - (p.dorsal ?? 90);
+  const dorsal = `M${232} ${xh + 6}L${270} ${dTop + 30}L${318} ${xh - 40}L${370} ${dTop + 6}L${420} ${xh - 44}L${470} ${dTop}L${520} ${xh - 40}C${600} ${dTop - 4} ${720} ${dTop + 10} ${790} ${xh - 30}C${815} ${xh - 20} ${830} ${xh - 5} ${826} ${xh + 6}Z`;
+  // pelvic fin under N/e, anal fin under m/o
+  const pelvic = `M${150} ${bot - 10}C${175} ${bot + 70} ${235} ${bot + 80} ${290} ${bot + 40}C${300} ${bot + 25} ${280} ${bot - 5} ${260} ${bot - 10}Z`;
+  const anal = `M${560} ${bot - 10}C${600} ${bot + 72} ${700} ${bot + 66} ${760} ${bot + 22}C${770} ${bot + 8} ${750} ${bot - 6} ${730} ${bot - 10}Z`;
+  // pectoral fin: small, behind the head band, over the body
+  const pect = `M${-10} ${mid + 10}C${20} ${mid + 15} ${70} ${mid + 50} ${60} ${mid + 95}C${30} ${mid + 100} ${-5} ${mid + 70} ${-10} ${mid + 10}Z`;
+  // small fins centred on single letters: `dorsalOn` / `ventralOn` name a letter (N, e, m, o)
+  const LC = { N: [113, 184], e: [309, 146], m: [524, 231], o: [746, 156] };
+  const smallDorsal = (l) => {
+    // spiny front (serrated, rising towards the back), soft rounded rear lobe
+    const [cx, w] = LC[l];
+    const hw = w * (p.finW ?? 0.46);
+    const base = l === 'N' ? top : xh;
+    const h = p.finH ?? 70;
+    const x0 = cx - hw;
+    const sp = (i, n) => `L${x0 + (hw * 1.1 * i) / n} ${base - h * (0.45 + (0.4 * i) / n)}L${x0 + (hw * 1.1 * (i + 0.5)) / n} ${base - h * (0.3 + (0.4 * i) / n)}`;
+    return `M${x0} ${base + 8}${[0, 1, 2, 3].map((i) => sp(i, 4)).join('')}L${cx + hw * 0.15} ${base - h}C${cx + hw * 0.7} ${base - h * 1.02} ${cx + hw * 1.05} ${base - h * 0.5} ${cx + hw} ${base + 8}Z`;
+  };
+  const smallVentral = (l) => {
+    // rounded lobe, slightly swept back
+    const [cx, w] = LC[l];
+    const hw = w * (p.finW ?? 0.46) * 0.8;
+    const h = p.finH ?? 70;
+    return `M${cx - hw} ${bot - 8}C${cx - hw * 1.05} ${bot + h * 0.55} ${cx - hw * 0.4} ${bot + h} ${cx + hw * 0.45} ${bot + h * 0.92}C${cx + hw * 0.95} ${bot + h * 0.8} ${cx + hw * 1.1} ${bot + h * 0.35} ${cx + hw} ${bot - 8}Z`;
+  };
+  let inner = '';
+  if (p.fins === 'all') inner += fin(dorsal) + fin(pelvic) + fin(anal);
+  for (const l of [].concat(p.dorsalOn ?? [])) inner += fin(smallDorsal(l));
+  for (const l of [].concat(p.ventralOn ?? [])) inner += fin(smallVentral(l));
+  if (p.tailStyle === 'fan' || p.tailStyle === 'd') {
+    inner += `<path d="${f(tail)}" fill="none" stroke="${c.stripe}" stroke-width="${2 * rim + 6}" stroke-linejoin="round"/><path d="${f(tail)}" fill="${c.fish}" stroke="${c.fish}" stroke-width="6" stroke-linejoin="round"/>`;
+  } else {
+    inner += fin(tail);
+    inner += `<path fill="${c.fish}" d="${f(ped)}"/>`;
+  }
+  inner += word(['N', 'e', 'm', 'o'], p.textLetters ? c.text[theme] : c.fish);
+  if (p.diag) {
+    // diagonal white stripes with a dark edge across the lettering (candy style), clipped to the letters
+    const { w: dw = 26, gap = 70, angle = 62 } = p.diag;
+    const k = Math.tan((angle * Math.PI) / 180);
+    const seg = (x) => `M${x} ${bot + 40}L${x + (bot + 40 - (top - 40)) / k} ${top - 40}`;
+    let edges = '';
+    let whites = '';
+    for (let x = -400; x < 1100; x += gap) {
+      edges += `<path d="${seg(x)}" stroke="${c.edge}" stroke-width="${dw + 2 * e}"/>`;
+      whites += `<path d="${seg(x)}" stroke="${c.stripe}" stroke-width="${dw}"/>`;
+    }
+    inner += `<defs><clipPath id="wm-cl-wc-${t}">${word(['N', 'e', 'm', 'o'], '#000')}</clipPath></defs>`;
+    inner += `<g clip-path="url(#wm-cl-wc-${t})" fill="none">${e > 0 ? edges : ''}${whites}</g>`;
+  }
+  inner += `<path fill="${c.fish}" d="${f(head)}"/>`;
+  if (p.pectoral) inner += fin(pect);
+  const sx = nose + (p.stripeAt ?? 128);
+  const headBand = flat ? `M${sx + 3} ${top - 20}Q${sx - 8} ${mid} ${sx + 3} ${bot + 20}` : `M${sx + 8} ${top - 20}Q${sx - 26} ${mid} ${sx + 8} ${bot + 20}`;
+  inner += band(`wm-cl-h-${t}`, head, headBand, p.band ?? 32);
+  if (p.tailStyle !== 'fan' && p.tailStyle !== 'd') inner += band(`wm-cl-t-${t}`, ped, `M${px + pw * 0.55} ${-170}L${px + pw * 0.55} ${bot + 20}`, (p.band ?? 32) * 0.8);
+  for (const mb of [].concat(p.midBand ?? [])) {
+    // band through the body, visible only inside the letters; {x, angle} tilts it
+    const mx = typeof mb === 'number' ? mb : mb.x;
+    const tilt = typeof mb === 'number' ? 0 : (mb.angle ?? 0);
+    const dx = tilt ? (bot - top + 40) * Math.tan((tilt * Math.PI) / 180) / 2 : 0;
+    const mbPath = tilt ? `M${mx - dx} ${bot + 20}L${mx + dx} ${top - 20}` : `M${mx + 6} ${top - 20}Q${mx - 14} ${mid} ${mx + 6} ${bot + 20}`;
+    inner += `<defs><mask id="wm-cl-mm-${t}-${mx}" maskUnits="userSpaceOnUse" x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}"><rect x="${mx - 80}" y="${top - 20}" width="160" height="${bot - top + 40}" fill="#000"/>${word(['N', 'e', 'm', 'o'], '#fff')}</mask></defs>`;
+    inner += `<g mask="url(#wm-cl-mm-${t}-${mx})" fill="none"><path d="${mbPath}" stroke="${c.edge}" stroke-width="${(p.band ?? 32) + 2 * e}"/><path d="${mbPath}" stroke="${c.stripe}" stroke-width="${p.band ?? 32}"/></g>`;
+  }
+  inner += `<circle cx="${nose + 58}" cy="${mid - 30}" r="${p.eye}" fill="${c.eye}"/>`;
+  const pad = p.pad;
+  return wrap([nose - pad - e, Math.min(dTop, top) - pad - e - rim, tx + tl + 26 - nose + 2 * (pad + e + rim), bot + 80 - Math.min(dTop, top) + 2 * (pad + e + rim)], inner);
+}
+
+const CONCEPTS = { body, headfin, ofish, swoosh, bones, script, clown };
 
 export function buildWordmark(concept, params = {}, theme = 'light') {
   const p = merge(WM_DEFAULTS, params);

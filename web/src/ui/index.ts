@@ -6,6 +6,7 @@ export { Badge, EmptyState, Fab, Skeleton, Toaster } from './Misc';
 export { HelpHint } from './HelpHint';
 export { Icon } from './icons';
 export { Logo } from './Logo';
+export { Wordmark } from './Wordmark';
 export type { IconName } from './icons';
 export {
   Chip,

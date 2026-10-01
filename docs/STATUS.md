@@ -1,13 +1,13 @@
 # Status – Nemo
 
-Letztes Release: `v0.3.0-beta.1` am 2026-09-30 (Pre-Release, auf `main`; Nemo-*- und Taschenmesser-*-Assets, `latest.json`). Letzte stabile Version: `v0.2.0` (`releases/latest` zeigt dorthin). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
+Letztes Release: `v0.3.0` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf; Nemo-*- und Taschenmesser-*-Assets, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
 
 ## Fertig
 - Phasen 1–13: Fundament, Kernmodule, Finanzen/Rechnungen/Abos, Sync + Backup (E2E-verschlüsselbar), KI-Assistent + Multi-Provider-Router, Extra-Module, Tauri Desktop (portable exe) + Android, CI/signierte Releases, Selbst-Update, Passwort-Tresor inkl. OS-Keystore/Biometrie, Startdaten-Assistent, Verbindungen (Google, ICS), Nachrichten, Werkzeuge, Links/Teilen/Launcher. Notizen je Phase: [`architecture.md`](architecture.md).
 - Einrichtungsassistent (`core/setup/`, `layout/setup/`): manuell startbar (Settings, Palette, Dashboard-Karten), jederzeit abbrechbar, Fortschritt geräte-lokal; Schritte Grundlagen, Sync/Wiederherstellung, Profile, Werkzeuge, Tresor, KI-Anbieter, Verbindungen, Startdaten, Import per KI, Benachrichtigungen, Backup/Updates, Dashboard; Checkliste im Dashboard; `setupSteps` an Manifesten. Details: `ARCHITECTURE-MAP.md`, `DECISIONS.md`, `HOW-TO.md`.
 - Layout-System (`PageContainer`, PR #3), Aufräumen + Doku-Split (PR #2).
 - KI-Import-Runde (PR #4): JSON-Import je Modul, lokale Import-API (nur Desktop, Loopback, Tokens, Vorschau/Undo), MCP-Wrapper `mcp/`, Anleitung [`AI-IMPORT.md`](AI-IMPORT.md).
-- Releases: `v0.2.0-beta.1`, `v0.2.0-beta.2` (erste portable Version), `v0.2.0`, `v0.3.0-beta.1` (Pre-Release, manuell installieren; wird nicht per In-App-Update angeboten).
+- Releases: `v0.2.0-beta.1`, `v0.2.0-beta.2` (erste portable Version), `v0.2.0`, `v0.3.0-beta.1` (Pre-Release), `v0.3.0` (stabil, erstes Release unter dem Namen Nemo).
 - Review-Runde 2026-09-30 (Branch `chore/nemo-review-polish`): Review des Rebrandings ([`REVIEW-2026-09-30.md`](REVIEW-2026-09-30.md)), Korrekturen (IDs gepinnt, Legacy-Fixtures, Release-Prüfung, Android-Icons in die APK, Benachrichtigungs-Icon), Design „Klar“ + neues Logo „Welle“ ([`DESIGN-CONCEPT-2026-09-30.md`](DESIGN-CONCEPT-2026-09-30.md)), Aufräumen (tote Exporte/Strings, `pad2`, E2E-Helfer, CI-Caches), [`ROADMAP.md`](ROADMAP.md), kurze README + `docs/user/`, MIT-Lizenz, CHANGELOG/CONTRIBUTING/SECURITY, Issue-/PR-Vorlagen.
 
 ## Diese Runde (Branch `feat/disk-cleaner-and-modules`)
@@ -59,10 +59,10 @@ Letztes Release: `v0.3.0-beta.1` am 2026-09-30 (Pre-Release, auf `main`; Nemo-*-
 ## Manuelle Tests offen
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
 
-### Release 0.3.0-beta.1 prüfen (vor dem stabilen 0.3.0)
-R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release-Seite `v0.3.0-beta.1`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.0-beta.1`. ☐
+### Release 0.3.0 prüfen
+R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release-Seite `v0.3.0`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.0`. ☐
 R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
-R3. *In-App-Update von der Vorversion:* bei einem Pre-Release nicht möglich (`releases/latest` bleibt bei 0.2.0); erst mit dem stabilen 0.3.0 prüfen. ☐
+R3. *In-App-Update von der Vorversion:* eine 0.2.0-Installation (Windows-Portable und Android) prüft Updates und aktualisiert auf 0.3.0 (`releases/latest` zeigt jetzt auf `v0.3.0`; `latest.json` verweist auf die `Taschenmesser-*`-Datei). Daten bleiben erhalten. ☐
 R4. *Sync-Tresor v2 (Argon2id) mit einem 0.2.0-Gerät:* zweites, altes Gerät am selben Server; prüfen, ob ein älterer Tresor weiter entschlüsselt. ☐
 R5. Datenträger-Modul D1–D16 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
 
@@ -169,7 +169,7 @@ N9. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo
 N10. *Hell / Dunkel / System, Akzente, Design „Klar“:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes; Karten mit Rahmen statt Schatten, Tabs als ruhige Pille, nur ein orangefarbener Hauptbutton je Seite; Titelleisten-Farbe (PWA/Browser) folgt der gewählten Darstellung. ☐
 N11. *Neues Clownfisch-Icon (Branch `design/app-icon`), Windows-Portable:* Taskleiste (hell/dunkel, 100–200 % Skalierung), Tray, Alt-Tab und Fenstertitel zeigen den geneigten Fisch auf der orangen Kachel, nicht unscharf bei 16/24/32 px. ☐
 N12. *Clownfisch-Icon, Android-APK als Update über die bestehende Installation:* Launcher-Icon (runde, eckige und Squircle-Maske: Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), Benachrichtigungs-Icon in der Statusleiste, Splash (hell/dunkel). Benachrichtigungs-Akzent ist jetzt `#E0550F`. ☐
-N13. *Clownfisch-Icon im Browser/PWA:* Favicon im Tab (hell/dunkel), „Zum Startbildschirm“ (maskierbares Icon), Sidebar-Logo, leere Zustände, README-Header auf GitHub in hell und dunkel. ☐
+N13. *Clownfisch-Icon im Browser/PWA:* Favicon im Tab (hell/dunkel), „Zum Startbildschirm“ (maskierbares Icon), Sidebar/Topbar zeigen die Wortmarke (Nemo als Clownfisch), leere Zustände. README-Header „Nemo als Clownfisch“ + Claim „Notizen · Erinnerungen · Module · Offline“ auf GitHub in hell und dunkel, Social-Preview neu hochladen (`docs/brand/social-preview.png`). ☐
 N11. *Reduzierte Bewegung:* Systemeinstellung an → keine Seiten-/Listen-/Balken-Animation, Listen erscheinen sofort (kein Verzögern), Skeleton ohne Schimmer. ☐
 N12. *README auf GitHub im hellen und dunklen Modus:* Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
 N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐
