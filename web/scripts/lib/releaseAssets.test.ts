@@ -49,9 +49,9 @@ describe('release assets', () => {
     expect(workflow).not.toMatch(/Setup\.exe|Taschenmesser\.msi/);
   });
 
-  it('keeps the legacy names installed apps look for (updater transition)', () => {
-    expect(RELEASE_ASSETS).toContain('Taschenmesser-Portable.exe');
-    expect(RELEASE_ASSETS).toContain('Taschenmesser.apk');
+  it('no longer publishes the legacy Taschenmesser-* names', () => {
+    expect(RELEASE_ASSETS.join(' ')).not.toContain('Taschenmesser');
+    expect(read('.github/workflows/release.yml')).not.toMatch(/Taschenmesser[-.]/);
   });
 
   it('builds the URLs the post-release check requests', () => {

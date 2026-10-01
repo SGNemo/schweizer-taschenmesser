@@ -7,11 +7,6 @@ export const RELEASE_ASSETS = [
   'Nemo-Portable.exe.sig',
   'Nemo.apk',
   'Nemo.apk.sha256',
-  // Legacy names: installed apps still look for these (latest.json points to them) – see docs/DECISIONS.md.
-  'Taschenmesser-Portable.exe',
-  'Taschenmesser-Portable.exe.sig',
-  'Taschenmesser.apk',
-  'Taschenmesser.apk.sha256',
   'latest.json',
 ] as const;
 

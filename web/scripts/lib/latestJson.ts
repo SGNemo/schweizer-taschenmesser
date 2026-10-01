@@ -4,13 +4,14 @@
  */
 
 /**
- * The Windows asset `latest.json` points at. Installed apps up to 0.2.0 only accept this exact
- * name (see `update.rs`), so it stays the legacy name until every installation has moved on.
+ * The Windows asset `latest.json` points at. Clients since 0.3.0 accept this name (`update.rs`);
+ * installations up to 0.2.x only knew the former `Taschenmesser-Portable.exe` and cannot self-update
+ * to releases that no longer carry it (docs/DECISIONS.md).
  */
-export const UPDATER_PORTABLE_ASSET = 'Taschenmesser-Portable.exe';
+export const UPDATER_PORTABLE_ASSET = 'Nemo-Portable.exe';
 
 export interface UpdaterFile {
-  /** Asset name inside the release, e.g. `Taschenmesser-Portable.exe`. */
+  /** Asset name inside the release, e.g. `Nemo-Portable.exe`. */
   fileName: string;
   /** Content of the matching `.sig` file (minisign signature made with the updater key). */
   signature: string;

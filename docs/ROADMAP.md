@@ -88,7 +88,7 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 | P2 | Linux/macOS builds of the shell (Tauri already cross-platform) | Reach | M | low | release workflow matrix |
 | P3 | Android: share target for text already exists → add `nemo://` deep links (decide the scheme, see `docs/features/quick-capture.md`) | Automation | S | low | identifiers policy |
 | P4 | PWA: periodic background sync, badging API for due counts | Web parity | S | low | service worker |
-| P5 | Point `latest.json` at `Nemo-Portable.exe`, drop legacy asset copies (after every install is ≥ the transition version) | Cleanup | S | **high if too early** | updater – Sven decides |
+| P5 | ~~Point `latest.json` at `Nemo-Portable.exe`, drop legacy asset copies~~ – done (next release after v0.3.1); optional: drop the legacy names from `PORTABLE_ASSETS` / `APK_ASSET_PAIRS` | Cleanup | S | low | updater |
 | P6 | `windows` crate 0.61 → 0.62 (removes a duplicate crate family), Tauri plugin bumps in step | Build size/time | S | medium (Windows API changes) | verify in CI only |
 
 ## Explicitly not planned

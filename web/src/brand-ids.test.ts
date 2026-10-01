@@ -144,10 +144,12 @@ describe('internal identifiers stay unchanged', () => {
     expect(read('src/core/update/github.ts')).toContain("REPO = 'SGNemo/schweizer-taschenmesser'");
   });
 
-  it('updater transition: latest.json keeps pointing at the legacy asset name', () => {
-    // Installed apps (≤ 0.2.0) only accept this file name; new clients accept both (update.rs).
-    expect(UPDATER_PORTABLE_ASSET).toBe('Taschenmesser-Portable.exe');
+  it('updater: latest.json points at the Nemo asset; clients still accept the legacy name', () => {
+    // Releases no longer carry the Taschenmesser-* copies. Clients ≥ 0.3.0 accept both names
+    // (update.rs, kept on purpose); installations ≤ 0.2.x cannot self-update any more.
+    expect(UPDATER_PORTABLE_ASSET).toBe('Nemo-Portable.exe');
     expect(RELEASE_ASSETS).toContain(UPDATER_PORTABLE_ASSET);
+    expect(RELEASE_ASSETS.join(' ')).not.toContain('Taschenmesser');
     expect(read('src-tauri/src/update.rs')).toContain(
       'PORTABLE_ASSETS: [&str; 2] = ["Nemo-Portable.exe", "Taschenmesser-Portable.exe"]',
     );
