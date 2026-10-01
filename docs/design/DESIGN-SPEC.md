@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **rounds 1–2 decided; round 3 (layout, navigation, module order) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–3 decided; round 4 (colour, typography, surfaces) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -30,11 +30,17 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 
 ## 2. Layout (desktop / phone)
 - Facts today: sidebar 248 px from 900 px, bottom nav 5 slots (Home + 3 modules + Mehr) below; page widths narrow 45 rem / content 70 rem / wide 100 rem / full; split views from 1500 px viewport.
-- Proposed (round 3, `ROUND-3-LAYOUT.md` § 2–3): L1 grouped sidebar (collapsible to rail) / L2 rail + area column / L3 top navigation; master–detail from 1200 px; ultrawide content 1800 px centred; one "+ Neu" in the top bar, FAB only on the phone; editors as bottom sheets on the phone. **Shell not decided yet.**
+- **Decided (round 3):** hybrid shell – L1 grouped sidebar (248 px: favourites, then collapsible areas with their modules, Bibliothek/Einstellungen at the bottom) that **collapses to the L2 icon rail** (76 px, areas as icons) by a click on the sidebar edge and automatically below 1200 px viewport. Rail state device-local.
+- **Decided:** top bar = search ("Suchen oder fragen", Ctrl+K) · one primary "+ Neu" (quick capture, pre-selects the current module's type) · Werkzeuge with label · sync badge; logo = home. **No FAB on desktop.**
+- **Decided:** master–detail from **1200 px** viewport (list + panel `clamp(22rem, 30%, 30rem)`), below as sheet/dialog. Ultrawide ≥ 2200 px: content max 1800 px centred, panel 32 rem, home grid 4 columns.
+- **Decided:** phone = bottom nav **by area** (Heute · Planen · Geld · Haushalt · Mehr) + FAB (quick capture); area page shows its modules as a scrollable tab row; editors open as bottom sheets.
+- Wireframes: `mockups/round-3/layout-l1.html` (sidebar state) and `layout-l2.html` (rail state).
 
 ## 3. Navigation and module order
 - Facts today: flat manifest order, not configurable; bottom nav takes the first three modules.
-- Proposed (round 3, § 1): 7 areas – Heute, Planen, Geld, Haushalt, Wissen, Tresor, System – each an area page with the modules as sub-views (`area` field in the manifest, no code merge); favourites (3–5) at the top; phone bottom nav by area or by module. **Not decided yet.**
+- **Decided (round 3):** 7 areas – **Heute** (home) · **Planen** (Kalender, ToDos, Erinnerungen, Geburtstage, Habits, Zeiterfassung) · **Geld** (Finanzen, Rechnungen, Abos, Budgets, Verträge) · **Haushalt** (Einkauf, Vorräte, Packlisten, Geschenkideen) · **Wissen** (Notizen, Merkliste, Nachrichten, Links) · **Tresor** (Accounts, Dokumente) · **System** (desktop: Datenträger, Systeminfo). Each area is a page; its modules are sub-views (tabs). Implementation: an `area` field on the manifest; modules stay separate in code and data; disabled modules vanish from their area; an area with no enabled module is hidden.
+- **Decided:** favourites chosen by the user (star in the menu or settings), max 5, synced; shown above the areas. No automatic reordering.
+- Later candidates (not decided): Erinnerungen as a tab inside Kalender, Merkliste inside Notizen.
 
 ## 4. Home screen
 - Facts today: widget grid 1/2/3/4 columns at 44/70/95 rem container width, sizes s/m/l, edit mode, synced layout.
