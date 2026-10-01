@@ -1,5 +1,6 @@
 import { createFakeDisk } from './fakeDisk';
 import { createFakeLocalApi } from './fakeLocalApi';
+import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeSystem } from './fakeSystem';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
@@ -164,6 +165,18 @@ export function createWebPlatform(): PlatformService {
       import.meta.env.MODE === 'e2e'
         ? createFakeLocalApi()
         : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    // E2E builds only: a stand-in for the native pipe server (the extension tests call into it).
+    vaultBridge:
+      import.meta.env.MODE === 'e2e'
+        ? createFakeVaultBridge()
+        : {
+            supported: false,
+            start: unsupported,
+            stop: async () => undefined,
+            register: unsupported,
+            unregister: unsupported,
+            status: unsupported,
+          },
     // E2E builds only: an invented folder tree instead of the native scan.
     disk:
       import.meta.env.MODE === 'e2e'
