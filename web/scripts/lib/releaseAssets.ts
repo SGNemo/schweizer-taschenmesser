@@ -15,6 +15,8 @@ export const RELEASE_ASSETS = [
   'latest.json',
 ] as const;
 
+import { DEV_ASSETS, DEV_TAG } from './devPreview.ts';
+
 /** Names in `…/releases/latest/download/<name>` and `…/releases/download/<tag>/<name>` links of a text. */
 export function releaseAssetNames(text: string): string[] {
   const names = new Set<string>();
@@ -23,10 +25,21 @@ export function releaseAssetNames(text: string): string[] {
   return [...names];
 }
 
-/** Release download links in `text` that point to a file no release carries. */
+/**
+ * Release download links in `text` that point to a file no release carries. The Dev-Preview files
+ * are known only under the `dev-preview` tag; `latest/download` and versioned tags never carry them.
+ */
 export function unknownAssetLinks(text: string): string[] {
   const known = new Set<string>(RELEASE_ASSETS);
-  return releaseAssetNames(text).filter((name) => !known.has(name));
+  const dev = new Set<string>(DEV_ASSETS);
+  const unknown = new Set<string>();
+  const re = /\/releases\/(latest\/download|download\/([^/\s)"']+))\/([^\s)"'?#]+)/g;
+  for (const match of text.matchAll(re)) {
+    const name = decodeURIComponent(match[3]!);
+    if (known.has(name) || (match[2] === DEV_TAG && dev.has(name))) continue;
+    unknown.add(name);
+  }
+  return [...unknown];
 }
 
 /** URLs a finished release must serve; `latest` ones only exist for stable releases. */

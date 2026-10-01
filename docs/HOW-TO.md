@@ -34,6 +34,16 @@ Commands run in `web/` unless stated. Background: [`ARCHITECTURE-MAP.md`](ARCHIT
 - Each job has a `timeout-minutes` so a hang cannot hold a runner for the default six hours.
 - Timings before/after: [`docs/perf/BUILD-BASELINE-2026-10-01.md`](perf/BUILD-BASELINE-2026-10-01.md).
 
+## Dev-Preview
+- **What:** after every green push to `develop` that changed more than docs, `ci.yml` calls `dev-preview.yml`: gitleaks → version → signed Windows exe + Android APK (same signing, audit and keystore-cleanup steps as `release.yml`, plus `verify-sig.mjs` and `apksigner verify`) → rolling **pre-release** `dev-preview` (`--prerelease --latest=false`, assets replaced, tag moved to the commit, `dev-latest.json` uploaded last, link check, `releases/latest` compared before/after). A failed run publishes nothing; the previous preview stays.
+- **Files:** `Nemo-Portable-dev.exe(.sig)`, `Nemo-dev.apk(.sha256)`, `dev-latest.json` under `…/releases/download/dev-preview/`. List: `DEV_ASSETS` in `web/scripts/lib/devPreview.ts`.
+- **Version:** `<next stable>-dev.<commit count of HEAD>` (`node scripts/dev-preview.mjs version`; `full` adds `+<sha7>`), only in the build, `package.json` is never changed. Android `versionCode` = minutes since the epoch (own package id, so no relation to the stable codes).
+- **Install:** download the exe/APK from the release page or the README link. It is a separate app ("Nemo Dev", identifier `io.github.sgnemo.taschenmesser.dev`, own data, own Windows Credential Manager entries, portable folder `data-dev`); bring data over via sync or backup.
+- **Dev channel:** Dev builds (`VITE_RELEASE_CHANNEL=dev`, set only by the workflow) always follow `dev-latest.json` (Settings → App updates shows "Dev-Preview"); a pre-update backup is made as for stable. Stable builds cannot select the channel and ignore the `dev-preview` release (not SemVer).
+- **Back to stable:** install/keep the stable app; the Dev app can simply be uninstalled/deleted.
+- **Trigger manually:** Actions → Dev-Preview → Run workflow (`artifact-only`, `dev-preview-test` = throw-away pre-release `dev-preview-test`, or `dev-preview` on `develop`). Manual runs work once the workflow file is on `main` (GitHub only offers dispatch for the default branch's workflows); otherwise push to `develop`. Delete a test release with `gh release delete dev-preview-test --cleanup-tag`.
+- **Cleanup:** the rolling release keeps only the latest state; workflow artifacts expire after 3 days.
+
 ## New module
 1. `npm run gen:module -- <id> "<Name>"` (alias `npm run new:module`; id lowercase alphanumeric; copies `templates/module` incl. widget, widget hook and widget test, runs `db:bump`).
 2. Edit `src/modules/<id>/`: `schema.ts` (Zod), `repo.ts` (`createRepo`), `ai.ts` (compact; `titleField` must be a field; omit for private data), `settings.ts`, `routes/`, `widgets/`, `migrations.ts`, `manifest.ts` (`icon`, `description`, `defaultEnabled`, `layout`, `order`).

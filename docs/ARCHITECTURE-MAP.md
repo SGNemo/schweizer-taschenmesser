@@ -15,7 +15,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
 | `docs/` | `README.md` (index), `user/` (German user docs), `architecture.md` (details), `AI-IMPORT.md`, this map, `DECISIONS.md`, `HOW-TO.md`, `STATUS.md`, `ROADMAP.md`, `REVIEW-*.md`, `DESIGN-CONCEPT-*.md` + `design-proposals/`, `security/`, `brand/` (rendered headers, social preview), `screenshots/` |
 | root files | `README.md` (short, German), `LICENSE` (MIT), `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` |
-| `.github/workflows/` | `ci.yml`, `release.yml` |
+| `.github/workflows/` | `ci.yml`, `release.yml`, `dev-preview.yml` (reusable, called from `ci.yml`) |
 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
@@ -68,6 +68,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 | **Tauri shell** | `web/src-tauri/`: `src/{lib,main,local_api,oauth,portable,update,webview2}.rs`, `tauri.conf.json`, `tauri.windows.conf.json`, `capabilities/default.json`, `Cargo.toml` | identifier `io.github.sgnemo.taschenmesser` |
 | Tauri plugins (local) | `web/src-tauri/plugins/apk-installer/` (Android APK update), `plugins/secure-store/` (OS keystore, biometrics, screen protection; Kotlin in `android/`) | |
 | Self-update (TS) | `web/src/core/update/{controller,github,notes,prefs,semver,backup,types}.ts`; UI `layout/UpdateBanner.tsx`, `pages/settings/UpdateSection.tsx` | |
+| **Update channels & manifests** | `stable`: `releases/latest/download/latest.json` (+ APK from releases); `beta`: newest SemVer release's own `latest.json`; `dev` (Dev-Preview builds only, `core/update/buildInfo.ts` `effectiveChannel`): `releases/download/dev-preview/dev-latest.json` (+ `Nemo-dev.apk`). Rust accepts the dev manifest/exe only at that fixed path (`update.rs`); dev flavor = identifier `….dev` (`tauri.dev.conf.json`), portable folder `data-dev` (`portable.rs`), own keystore service (`plugins/secure-store`). Build side: `web/scripts/{dev-preview.mjs,verify-sig.mjs}`, `scripts/lib/{devPreview,minisign}.ts`. | `BUILD_CHANNEL`, `DEV_MANIFEST_URL` |
 | Notifications | `web/src/core/notifications/{scheduler,service,push,pushPayload,nativeSchedule,triggers}.ts` | |
 | Vault (passwords) | `web/src/modules/accounts/` (never AI-visible) | |
 

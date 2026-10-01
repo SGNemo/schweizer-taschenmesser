@@ -8,6 +8,7 @@ import type { TaschenmesserDB } from '@/core/db/db';
 import { getPlatform, type PlatformService } from '@/core/platform';
 import { now as clockNow } from '@/core/time/now';
 import { createPreUpdateBackup } from './backup';
+import { effectiveChannel } from './buildInfo';
 import {
   getDismissedVersion,
   getLastCheckAt,
@@ -89,7 +90,10 @@ export async function checkForUpdate(
   deps.setState({ phase: 'checking' });
   let result: UpdateState;
   try {
-    const info = await updater.check(prefs.channel, await deps.platform.app.version());
+    const info = await updater.check(
+      effectiveChannel(prefs.channel),
+      await deps.platform.app.version(),
+    );
     await setLastCheckAt(deps.now(), deps.database);
     if (!info) result = { phase: 'up-to-date', checkedAt: deps.now() };
     else if (!opts.manual && (await getDismissedVersion(deps.database)) === info.version) {

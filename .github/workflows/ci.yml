@@ -307,3 +307,17 @@ jobs:
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -- -D warnings
       - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info
+
+  # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
+  # push to develop that changed more than documentation. Never on pull requests, never a stable release.
+  # See dev-preview.yml and docs/HOW-TO.md -> "Dev-Preview".
+  dev-preview:
+    name: Dev-Preview build
+    needs: [changes, secret-scan, web, server, mcp, e2e-sync, rust]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/dev-preview.yml
+    with:
+      target: dev-preview
+    secrets: inherit

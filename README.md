@@ -23,6 +23,12 @@
 
 <p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Die Dateien heißen vorerst noch <code>Taschenmesser-…</code> (alter Projektname), der Inhalt ist Nemo. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>.</p>
 
+<details>
+<summary><strong>Dev-Preview (ungetestet)</strong></summary>
+
+Nach jedem Stand von `develop` entsteht automatisch eine Vorschau: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe">Windows</a> · <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk">Android</a>. Das ist eine **eigene App „Nemo Dev“ mit eigenen Daten**, ungetestet und nicht für den Alltag gedacht. Sie ersetzt die stabile Nemo-App nicht. Mehr dazu: [Installation](docs/user/installation.md#dev-preview-ungetestete-zwischenstände).
+</details>
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readme/dashboard-dark.png">
