@@ -4,6 +4,7 @@ package-lock.json
 Cargo.lock
 # Build output and reports
 dist/
+dist-e2e-seed/
 dev-dist/
 target/
 playwright-report/

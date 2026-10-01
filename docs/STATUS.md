@@ -5,6 +5,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Fertig (eine Zeile je Release; Details: [CHANGELOG](../CHANGELOG.md), Arbeitsprotokoll bis 0.3.1: [archive/2026-10/STATUS-done-until-0.3.1.md](archive/2026-10/STATUS-done-until-0.3.1.md))
 - `v0.2.0` (2026-09-30): Phasen 1–13 (Fundament bis Passwort-Tresor, Sync/Backup, KI-Assistent + Router, Tauri-Shell, Releases, Selbst-Update), KI-Import (JSON, lokale Import-API, `mcp/`).
 - `v0.3.0-beta.1` (2026-09-30) / `v0.3.0` (2026-10-01): Nemo-Rebranding, Einrichtungsassistent, Schnell erfassen, Datenträger/Systeminfo (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge, flaches Design „Klar“, Übersicht + Widgets, Dev-Preview, MIT.
+- Auf `develop` (noch nicht released): Testdaten für alle Module (Seed-Vertrag, Dev-Preview füllt leere App, Einstellungen → Entwickler).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
 
 ## Nicht gebaut / bekannte Grenzen
@@ -25,7 +26,11 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Commit `792e7aa` (Logo) hat zwei durch Shell-Backticks verschluckte Wörter im Text („after . Logo gets a prop“) – bewusst nicht per Force-Push korrigiert.
 - Aus PR #3 offene Vorschläge: globaler „+“-FAB ab 900 px durch „+ Neu“ in der Top-Bar ersetzen; ToDo-Board mit Listen als Spalten.
 
+## Modul-Review 2026-10-01 (entschieden, Doku-PR, noch nicht umgesetzt)
+Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung werden stillgelegt (Tabellen bleiben bis Paket 6); Werkzeuge 18 → 12. Pakete, Versionen (0.4 … 0.7, `feat!:`) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md). Funde aus der Review (Abo-Kachel-Umbruch, veraltete Texte, fehlende `StartDataButton`, `docs/product/` in `check-docs.mjs` ausnehmen) werden in Paket 1 behoben. Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
+
 ## Nächste sinnvolle Schritte
+0. Paket 1 „Aufräumen“ aus [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md) starten (eigener Chat, Hotspots Router/Nav/Settings).
 1. Hardware-Checklisten ([MANUAL-TESTS.md](MANUAL-TESTS.md)) abarbeiten (Sven), Fehler melden.
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
 3. Einrichtungsassistent: offene Kleinigkeiten – Link „Einrichtung öffnen“ in den Leerzuständen der einzelnen Module (12 Seiten mit `StartDataButton`), Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.

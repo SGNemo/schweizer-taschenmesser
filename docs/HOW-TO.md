@@ -6,6 +6,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | File | Covers |
 |---|---|
 | [howto/new-module.md](howto/new-module.md) | `npm run gen:module`, mandatory widget, platform-only (desktop) modules |
+| [howto/seed-data.md](howto/seed-data.md) | seed data per module, Dev-Preview test data, seeds in E2E and screenshots |
 | [howto/new-extension.md](howto/new-extension.md) | tool, connector, setup step, AI provider, importer |
 | [howto/design-brand.md](howto/design-brand.md) | logo/icons pipeline (`design/icon/`), wordmark, banner, design tokens, accents |
 | [howto/ci.md](howto/ci.md) | CI layout, caches, sharding, doc-only gate, Dev-Preview |
@@ -24,7 +25,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Lint / types / format | `npm run lint`, `npm run typecheck`, `npm run format:check` (also in `server/`, `mcp/`) |
 | Unit + component | `npm test` (single file: `npx vitest run <path>`; only files touched since the last commit: `npm run test:changed`; watch mode: `npm run test:watch`) |
 | Everyday gate, fast | `npm run check` = format + lint + the three `tsc` projects in parallel with tool caches (~34 s cold, ~6 s warm; CI keeps the plain uncached commands) |
-| E2E app (desktop-chrome + pixel-7) then sync | `npm run e2e`; parts: `npm run e2e:app`, `npm run e2e:sync` |
+| E2E app (desktop-chrome + pixel-7 + dev flavour `seed-dev`) then sync | `npm run e2e`; parts: `npm run e2e:app`, `npm run e2e:seed`, `npm run e2e:sync` |
 | One spec | `npx playwright test e2e/<name>.spec.ts` |
 | Server | `cd server && npm test` (+ `typecheck`, `lint`, `build`) |
 | MCP wrapper | `cd mcp && npm test` (+ `typecheck`, `lint`) |

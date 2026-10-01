@@ -38,6 +38,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
+  seed: { version: 1, dependsOn: ['finance'] },
   layout: 'wide',
   order: 60,
   contributions: {

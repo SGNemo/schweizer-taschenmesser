@@ -141,3 +141,10 @@ X11. *Pipe nur für dich:* Mit einem zweiten Windows-Benutzer ist die Pipe `\\.\
 X12. *Tresor-Suche-Hotkey:* Einstellungen → Schnellerfassung → „Tastenkürzel Tresor-Suche“ setzen; bei entsperrtem Tresor öffnet es die Suche, bei gesperrtem nur das Fenster mit dem Sperrbildschirm. ☐
 X13. *Tasten im Eintrag:* U/P/T/O kopieren Benutzername/Passwort/Code bzw. öffnen die Website; in Eingabefeldern passiert nichts. ☐
 X14. *Eigene Seiten:* Auf der Nemo-PWA im Browser schlägt die Erweiterung nichts vor und bietet das Master-Passwort nie zum Speichern an. ☐
+
+### Testdaten (Dev-Preview)
+T1. *Dev-Preview frisch installieren* (`Nemo-Portable-dev.exe` / `Nemo-dev.apk`, leere Datenbank): Die App startet mit Daten in Übersicht und allen Modulen, Hinweis „Testdaten geladen“ erscheint einmal. ☐
+T2. *Einstellungen → Entwickler → „Testdaten entfernen“:* alle Testdaten sind weg, eigene Einträge (vorher angelegt) bleiben. Nach Neustart werden sie nicht erneut geladen. ☐
+T3. *Tresor:* Accounts zeigt einen Demo-Tresor mit der Passphrase `nemo-demo-tresor`; ein vorhandener Tresor wird nie überschrieben. ☐
+T4. *Sync:* Mit eingerichtetem Sync-Server werden Testdaten nicht übertragen (Server hat sie nicht); erst „Seed-Sync erlauben“ schickt sie. ☐
+T5. *Stabile App* (`Nemo-Portable.exe`/`Nemo.apk`) hat keinen Bereich „Entwickler“ und keinen Palette-Befehl „Testdaten laden“. ☐
