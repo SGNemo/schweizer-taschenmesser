@@ -1,6 +1,6 @@
 # Nemo design specification (working document)
 
-Status: **round 1 answered; round 2 (direction, principles) mocked up and waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **rounds 1–2 decided; round 3 (layout, navigation, module order) in progress.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
@@ -11,9 +11,22 @@ Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, 
 - **All four pains confirmed:** home does not show "today" (P3), flat navigation and rigid bottom nav (P5), tall cards and phone wrapping (P1, P8, P9), accent doubling and the FAB everywhere (P2).
 - **New input:** "I sometimes have to search a lot – maybe modules can be combined." → round 3 brings a proposal for grouping and merging modules in the navigation (information architecture), without changing module code boundaries.
 
-## 1. Principles
-- Proposed in round 2 (see `ROUND-2-DIRECTION.md`): Heute zuerst · Eine Hauptaktion pro Ansicht · Daten vor Dekoration · Zeilen statt Karten · Gleiches sieht gleich aus · Bewegung nur als Rückmeldung · Ruhe durch Weglassen. **Not decided yet.**
-- Direction candidates: A "Ruhig und luftig", B "Dicht und effizient", C "Weich mit Tiefe" (`mockups/round-2/`). **Not decided yet.**
+## 1. Principles (decided 2026-10-01, round 2)
+1. **Heute zuerst.** The home screen answers "what needs me today" without scrolling: date, counts, the day list, due money.
+2. **Eine Hauptaktion pro Ansicht.** One filled accent per screen; everything else uses accent as text/icon colour. FAB only on the phone.
+3. **Daten vor Dekoration.** Names, numbers and dates carry the hierarchy. No badge, colour or icon that does not help a decision.
+4. **Zeilen statt Karten.** Entries are rows (one line of facts, two on narrow widths); cards only group. Density follows content, not the module.
+5. **Gleiches sieht gleich aus.** One list row, one segmented control, one page head, one empty state, one dialog/sheet pattern for all modules.
+6. **Bewegung nur als Rückmeldung.** Motion confirms what the user did (tick, save, open); navigation does not animate.
+7. **Ruhe durch Weglassen.** Fewer borders and labels, generous edges, tight centres; dark is the reference theme, light is derived and checked for AA.
+
+## 1b. Direction (decided 2026-10-01, round 2) – "D", a mix
+- **Colour and space from A:** near-neutral dark page (#101417 family, no blue cast), cards one step lighter, 16 px base, 44 px rows, generous gaps and card padding, thin 1.5 px icons.
+- **Row dividers from B:** entries inside a card are separated by hairlines (1 px, low-contrast); cards themselves have no border.
+- **Depth from C:** cards sit on the page as layered surfaces with a soft shadow (and a 1 px inner highlight in dark); the top bar may be translucent. No page gradient.
+- **Accent: Nemo orange only.** Teal (`--accent-2`) stays for charts and focus ring only; status colours separate.
+- **Gradients: brand only** (splash, empty states, fish). No gradients on page, cards, buttons.
+- Reference mockup: `mockups/round-2/variant-d.html` (next to A for comparison).
 
 ## 2. Layout (desktop / phone)
 - Facts today: sidebar 248 px from 900 px, bottom nav 5 slots (Home + 3 modules + Mehr) below; page widths narrow 45 rem / content 70 rem / wide 100 rem / full; split views from 1500 px viewport.
