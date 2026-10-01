@@ -1,11 +1,19 @@
 # Nemo design specification (working document)
 
-Status: **round 1 (diagnosis) done, nothing decided yet.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
+Status: **round 1 answered; round 2 (direction, principles) mocked up and waiting for the maintainer.** Updated after every round. Decided items are facts; open items are a list. Implementation prompt: [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) (written in round 8). Mockups: [`mockups/`](mockups/). Round reports: [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md).
 
 Guiding idea (from the brief): pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded.
 
+## 0. Decided in round 1 (maintainer's answers, 2026-10-01)
+- **Main use: desktop, mouse-heavy.** Click paths and visible controls count more than shortcuts; keyboard stays a bonus. Phone is secondary but must not break (P1).
+- **Dark theme first.** Mockups and token work start dark; light is derived and checked, not the other way round.
+- **Must keep:** free-text quick capture (FAB → sentence → local parser), movable home widgets (order, size, hide, synced), a sidebar that shows every active module (no icon-only rail as the default), Nemo orange and the fish.
+- **All four pains confirmed:** home does not show "today" (P3), flat navigation and rigid bottom nav (P5), tall cards and phone wrapping (P1, P8, P9), accent doubling and the FAB everywhere (P2).
+- **New input:** "I sometimes have to search a lot – maybe modules can be combined." → round 3 brings a proposal for grouping and merging modules in the navigation (information architecture), without changing module code boundaries.
+
 ## 1. Principles
-- open (round 2)
+- Proposed in round 2 (see `ROUND-2-DIRECTION.md`): Heute zuerst · Eine Hauptaktion pro Ansicht · Daten vor Dekoration · Zeilen statt Karten · Gleiches sieht gleich aus · Bewegung nur als Rückmeldung · Ruhe durch Weglassen. **Not decided yet.**
+- Direction candidates: A "Ruhig und luftig", B "Dicht und effizient", C "Weich mit Tiefe" (`mockups/round-2/`). **Not decided yet.**
 
 ## 2. Layout (desktop / phone)
 - Facts today: sidebar 248 px from 900 px, bottom nav 5 slots (Home + 3 modules + Mehr) below; page widths narrow 45 rem / content 70 rem / wide 100 rem / full; split views from 1500 px viewport.
