@@ -45,18 +45,19 @@ export function localParts(dateTime: string): { date: string; time: string } | u
   };
 }
 
-/** Descriptions may contain HTML; keep readable text only. */
+/**
+ * Descriptions may contain HTML; keep readable text only. Parsed into an inert document (nothing
+ * runs or loads) instead of stripping tags with regexes, which nested input like `<scr<b>ipt>` defeats.
+ */
 function plainText(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|li)>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc
+    .querySelectorAll('script, style, noscript, template, iframe, object')
+    .forEach((e) => e.remove());
+  doc.querySelectorAll('br').forEach((e) => e.replaceWith('\n'));
+  doc.querySelectorAll('p, div, li').forEach((e) => e.append('\n'));
+  return doc.body.textContent
+    .replace(/\u00a0/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
     .slice(0, NOTE_LIMIT);

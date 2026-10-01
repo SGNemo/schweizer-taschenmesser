@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { ConnectorContext, ConnectorError } from '@/core/connectors/types';
 import { googleCalendar, listGoogleCalendars, toExternalEvent } from './calendar';
@@ -103,6 +104,20 @@ describe('toExternalEvent', () => {
     })!;
     expect(e.note).toBe('Zeile 1\nZeile 2 fett');
     expect(e.title).toBe('Ohne Titel');
+  });
+
+  it('turns descriptions into inert plain text', () => {
+    const note = (description: string) =>
+      toExternalEvent({ id: 'n', description, start: { date: '2026-05-05' } })!.note;
+    // Nested/broken tags must not leave a working tag behind.
+    expect(note('a <scr<b>ipt>x</scr</b>ipt> b')).not.toMatch(/<\/?script/i);
+    expect(note('<script>alert(1)</script>Hallo<style>p{}</style>')).toBe('Hallo');
+    // Entities are decoded once: an escaped tag stays text, `&amp;lt;` is not decoded twice.
+    expect(note('1 &lt; 2 &amp; 3')).toBe('1 < 2 & 3');
+    expect(note('&amp;lt;b&amp;gt;')).toBe('&lt;b&gt;');
+    expect(note('<p>Eins</p><p>Zwei</p><ul><li>a</li><li>b</li></ul>')).toBe('Eins\nZwei\na\nb');
+    expect(note('x'.repeat(5000))).toHaveLength(2000);
+    expect(note('<b></b>')).toBeUndefined();
   });
 
   it('drops events without a usable start', () => {
