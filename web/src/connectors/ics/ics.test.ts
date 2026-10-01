@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import type { ConnectorContext, ConnectorError } from '@/core/connectors/types';
 import { normalizeIcsUrl, saveSubscriptions } from './subscriptions';

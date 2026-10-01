@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { LOGO_PATHS } from './ui/Logo';
+import { LOGO_COLOR, LOGO_PATHS } from './ui/Logo';
 
 /**
  * The fish exists three times: as SVG source (`brand/logo-mark.svg`, rendered to every icon), in
@@ -27,11 +27,16 @@ describe('brand assets stay in step', () => {
       'app-icon-maskable.svg',
       'android-foreground.svg',
       'android-monochrome.svg',
-      'logo-wordmark.svg',
-      'logo-wordmark-light.svg',
     ]) {
       const text = read(`brand/${file}`);
       for (const d of paths) expect(text, file).toContain(`d="${d}"`);
+    }
+  });
+
+  it('the wordmark (own fish head and tail, letters outlined) uses the logo colour', () => {
+    // The wordmark is a separate drawing (DECISIONS.md: "Wordmark W2"), so it shares the colour, not the paths.
+    for (const file of ['logo-wordmark.svg', 'logo-wordmark-light.svg']) {
+      expect(read(`brand/${file}`), file).toContain(`fill="${LOGO_COLOR}"`);
     }
   });
 

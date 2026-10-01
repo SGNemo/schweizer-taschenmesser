@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -153,7 +154,7 @@ describe('tauri platform', () => {
       },
       extra: { url: '/reminders' },
       icon: 'ic_notification',
-      iconColor: '#F26A1E',
+      iconColor: '#E0550F',
     });
   });
 
@@ -165,7 +166,7 @@ describe('tauri platform', () => {
       title: 'Miete',
       body: 'heute',
       icon: 'ic_notification',
-      iconColor: '#F26A1E',
+      iconColor: '#E0550F',
     });
   });
 

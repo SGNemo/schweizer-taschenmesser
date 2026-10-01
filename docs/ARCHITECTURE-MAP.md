@@ -9,6 +9,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 |---|---|
 | `web/` | PWA (Vite, React 19, TS strict); own `package.json`; all UI/logic |
 | `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info` |
+| `design/icon/` | Icon/logo workshop (own `package.json`, not part of the app): parametric fish generator, master parameters `final.params.mjs`, `npm run export` → `web/brand/*.svg` + `Logo.tsx` + splash, round previews in `rounds/` (`docs/HOW-TO.md` → Icons) |
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
@@ -97,7 +98,7 @@ Fast "where is what" index. Paths are repo-relative and were checked against the
 - Disk/system: `modules/disk/__tests__/exclusion.test.ts`, `modules/system/__tests__/system.test.ts`, e2e `e2e/disk.spec.ts`, `e2e/system.spec.ts` (fake platform, invented data only).
 - Isolation/privacy guards: `core/modules/registry.test.ts`, `tools/isolation.test.ts`, `connectors/isolation.test.ts`, `core/ai/privacy.test.ts`, `modules/accounts/__tests__/exclusion.test.ts`, `core/sync/contract.test.ts`, `server/test/contract.test.ts`.
 - Server: `server/test/*.test.ts` (Vitest + `fastify.inject`). MCP: `mcp/test/mcp.test.ts`. Rust: `web/src-tauri/crates/local-api/tests/server.rs`, `crates/disk-scan/{src,tests}`, `crates/system-info/src`.
-- CI jobs (`.github/workflows/ci.yml`, on push to `develop`/`main` and PRs): secret scan (gitleaks), web (lint, types, unit, E2E), server, mcp, multi-device sync E2E, rust (fmt, clippy, tests).
+- CI jobs (`.github/workflows/ci.yml`, on push to `develop`/`main` and PRs, all in parallel): `changes` (docs-only gate), secret scan (gitleaks, always), web-static, web-unit, web-e2e (4 shards), `web` (aggregates the three under the old check name), server, mcp, multi-device sync E2E, rust (fmt, clippy, tests). Details and cache rules: `HOW-TO.md` → "CI layout, caches and sharding".
 - Release (`.github/workflows/release.yml`): tag `v*.*.*`, plus dry runs on `develop` pushes touching `web/src-tauri/**`, `web/scripts/**`, the workflow, and manual dispatch; jobs `secret-scan`, `prepare`, `windows`, `android`, `release`, `summary`.
 
 ## Setup assistant (data flow)

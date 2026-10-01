@@ -1,13 +1,13 @@
 # Status – Nemo
 
-Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
+Letztes Release: `v0.3.0-beta.1` am 2026-09-30 (Pre-Release, auf `main`; Nemo-*- und Taschenmesser-*-Assets, `latest.json`). Letzte stabile Version: `v0.2.0` (`releases/latest` zeigt dorthin). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
 
 ## Fertig
 - Phasen 1–13: Fundament, Kernmodule, Finanzen/Rechnungen/Abos, Sync + Backup (E2E-verschlüsselbar), KI-Assistent + Multi-Provider-Router, Extra-Module, Tauri Desktop (portable exe) + Android, CI/signierte Releases, Selbst-Update, Passwort-Tresor inkl. OS-Keystore/Biometrie, Startdaten-Assistent, Verbindungen (Google, ICS), Nachrichten, Werkzeuge, Links/Teilen/Launcher. Notizen je Phase: [`architecture.md`](architecture.md).
 - Einrichtungsassistent (`core/setup/`, `layout/setup/`): manuell startbar (Settings, Palette, Dashboard-Karten), jederzeit abbrechbar, Fortschritt geräte-lokal; Schritte Grundlagen, Sync/Wiederherstellung, Profile, Werkzeuge, Tresor, KI-Anbieter, Verbindungen, Startdaten, Import per KI, Benachrichtigungen, Backup/Updates, Dashboard; Checkliste im Dashboard; `setupSteps` an Manifesten. Details: `ARCHITECTURE-MAP.md`, `DECISIONS.md`, `HOW-TO.md`.
 - Layout-System (`PageContainer`, PR #3), Aufräumen + Doku-Split (PR #2).
 - KI-Import-Runde (PR #4): JSON-Import je Modul, lokale Import-API (nur Desktop, Loopback, Tokens, Vorschau/Undo), MCP-Wrapper `mcp/`, Anleitung [`AI-IMPORT.md`](AI-IMPORT.md).
-- Releases: `v0.2.0-beta.1`, `v0.2.0-beta.2` (erste portable Version), `v0.2.0`.
+- Releases: `v0.2.0-beta.1`, `v0.2.0-beta.2` (erste portable Version), `v0.2.0`, `v0.3.0-beta.1` (Pre-Release, manuell installieren; wird nicht per In-App-Update angeboten).
 - Review-Runde 2026-09-30 (Branch `chore/nemo-review-polish`): Review des Rebrandings ([`REVIEW-2026-09-30.md`](REVIEW-2026-09-30.md)), Korrekturen (IDs gepinnt, Legacy-Fixtures, Release-Prüfung, Android-Icons in die APK, Benachrichtigungs-Icon), Design „Klar“ + neues Logo „Welle“ ([`DESIGN-CONCEPT-2026-09-30.md`](DESIGN-CONCEPT-2026-09-30.md)), Aufräumen (tote Exporte/Strings, `pad2`, E2E-Helfer, CI-Caches), [`ROADMAP.md`](ROADMAP.md), kurze README + `docs/user/`, MIT-Lizenz, CHANGELOG/CONTRIBUTING/SECURITY, Issue-/PR-Vorlagen.
 
 ## Diese Runde (Branch `feat/disk-cleaner-and-modules`)
@@ -20,6 +20,16 @@ Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK
 - Module: Fahrzeug (Tanken, Verbrauch, TÜV/Service), Journal/Tagebuch, Garantie-/Belegverwaltung mit Foto, Zwischenablage-Verlauf (Passwörter ausschließen), Text-Snippets, Autostart-Übersicht (nur Anzeige), Medikamenten-/Wasser-Erinnerung, Watchlist/Leseliste, Putzplan, Sparziele (Haushaltsbuch), Reise (Packlisten, Reisedokumente, Zeitzonen), Speedtest/WLAN-Name (Systeminfo).
 - Werkzeuge: Farbwähler/Kontrast-Check, Datei-Prüfsumme + Text-Diff, WLAN-QR, Regex-Tester, Notenrechner, BMI/Kalorien (ohne Speicherung), Massen-Umbenennen, Bild-Farben extrahieren, PDF komprimieren.
 - Zeiterfassung: Stundensätze/Beträge, Projektfarben.
+- **Build-/CI-Tempo (Runde `chore/build-performance`, nicht umgesetzt; Zahlen in [`perf/BUILD-BASELINE-2026-10-01.md`](perf/BUILD-BASELINE-2026-10-01.md)):**
+  - Vitest ohne Testisolation (`--no-isolate`): lokal 222 s → 27 s, aber 5 Tests brauchen eine leere, gemeinsame Dexie-Datenbank je Datei. Möglich für die reinen Logik-Tests oder mit einem DB-Reset je Datei; gibt die Isolation je Datei auf – Entscheidung nötig.
+  - Der größte Rest der Unit-Testzeit ist Import: `core/db/db.ts` zieht alle Manifeste, jede Testdatei wertet ~1200 Module neu aus (73 % der Zeit). Leichtere Test-Einstiege wären eine Architekturänderung.
+  - `retries: 1` in beiden Playwright-Konfigurationen (CI) kann instabile Tests verdecken. In den ausgewerteten Läufen wurde kein Test wiederholt; Empfehlung: auf 0 setzen und Auffälligkeiten beheben (Entscheidung).
+  - E2E nur auf `develop`/nächtlich mit kleiner PR-Auswahl: seit dem Sharding nicht nötig (PR-Lauf ~ 5 Minuten) und würde die PR-Abdeckung senken.
+  - Android: die aarch64-Rust-Bibliothek wird zweimal gebaut (erst von `tauri android build`, dann von Gradle, je ~1 Minute). Ursache klären, z. B. mit `cargo build -vv` die Fingerprints vergleichen.
+  - `beforeBuildCommand: npm run build` führt im Windows- und Android-Job den Typecheck erneut aus (25–40 s). Bewusst belassen, damit Tag-Builds nie ohne Typprüfung entstehen.
+  - Release-Profil (fat LTO, `opt-level = "s"`) macht den Windows-Build zu 7 Minuten. Eine Änderung würde das Artefakt verändern; ein schnelleres Profil nur für Trockenläufe würde nicht mehr das echte Artefakt prüfen.
+  - Läufe von Feature-Branches starten ohne Rust-/Gradle-Cache (Cache-Scope je Branch): Trockenlauf des Release-Workflows besser von `develop` aus starten.
+  - Rust `[profile.dev] debug = "line-tables-only"`: ~ 20 % kleineres `target`, aber keine Zeitersparnis bei den kleinen Crates und Debugger ohne Variablen – nicht gesetzt. Außerdem: apt-Cache-Action für die Tauri-Bibliotheken (~ 30 s, neue Abhängigkeit) und eine kürzere Paketliste, jeweils erst messen.
 
 ## Nicht gebaut / bekannte Grenzen
 - Google-Drive-Sync-Adapter (nur `core/sync/adapters/googleDrive.stub.ts`), Binär-Anhänge im Sync, Tombstone-GC, Mehrmandanten-Server.
@@ -48,6 +58,13 @@ Stand: nach Release `v0.2.0` (stabil, auf `main`; enthält Windows-Portable, APK
 
 ## Manuelle Tests offen
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
+
+### Release 0.3.0-beta.1 prüfen (vor dem stabilen 0.3.0)
+R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release-Seite `v0.3.0-beta.1`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.0-beta.1`. ☐
+R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
+R3. *In-App-Update von der Vorversion:* bei einem Pre-Release nicht möglich (`releases/latest` bleibt bei 0.2.0); erst mit dem stabilen 0.3.0 prüfen. ☐
+R4. *Sync-Tresor v2 (Argon2id) mit einem 0.2.0-Gerät:* zweites, altes Gerät am selben Server; prüfen, ob ein älterer Tresor weiter entschlüsselt. ☐
+R5. Datenträger-Modul D1–D16 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
 
 ### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
@@ -150,6 +167,9 @@ N7. *Diagramm-Farben:* Türkis/Orange bei Farbfehlsichtigkeit prüfen (Validator
 N8. *Windows-Portable mit dem Logo „Welle“:* Icon in Taskleiste, Titelleiste, Tray und Alt-Tab zeigt den neuen Fisch (7 ICO-Größen), Fenstertitel „Nemo“, Tray-Tooltip „Nemo“. ☐
 N9. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo“, **neues Launcher-Icon** (adaptiv: runde und eckige Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), **Benachrichtigungs-Icon** in der Statusleiste ist der weiße Fisch (kein weißer Klotz), alle Daten und der Tresor bleiben. Vorher war unklar, ob die Icons überhaupt in der APK landen (Kopierschritt in `release.yml` neu). ☐
 N10. *Hell / Dunkel / System, Akzente, Design „Klar“:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes; Karten mit Rahmen statt Schatten, Tabs als ruhige Pille, nur ein orangefarbener Hauptbutton je Seite; Titelleisten-Farbe (PWA/Browser) folgt der gewählten Darstellung. ☐
+N11. *Neues Clownfisch-Icon (Branch `design/app-icon`), Windows-Portable:* Taskleiste (hell/dunkel, 100–200 % Skalierung), Tray, Alt-Tab und Fenstertitel zeigen den geneigten Fisch auf der orangen Kachel, nicht unscharf bei 16/24/32 px. ☐
+N12. *Clownfisch-Icon, Android-APK als Update über die bestehende Installation:* Launcher-Icon (runde, eckige und Squircle-Maske: Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), Benachrichtigungs-Icon in der Statusleiste, Splash (hell/dunkel). Benachrichtigungs-Akzent ist jetzt `#E0550F`. ☐
+N13. *Clownfisch-Icon im Browser/PWA:* Favicon im Tab (hell/dunkel), „Zum Startbildschirm“ (maskierbares Icon), Sidebar-Logo, leere Zustände, README-Header auf GitHub in hell und dunkel. ☐
 N11. *Reduzierte Bewegung:* Systemeinstellung an → keine Seiten-/Listen-/Balken-Animation, Listen erscheinen sofort (kein Verzögern), Skeleton ohne Schimmer. ☐
 N12. *README auf GitHub im hellen und dunklen Modus:* Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
 N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐

@@ -58,3 +58,23 @@ describe('release assets', () => {
     expect(stable.at(-1)).toContain('/releases/latest/download/latest.json');
   });
 });
+
+describe('assetUrls', () => {
+  it('pre-releases only check the tag URLs, never latest/download', () => {
+    const urls = assetUrls('o/r', 'v0.3.0-beta.1', { stable: false });
+    expect(urls).toHaveLength(RELEASE_ASSETS.length);
+    expect(
+      urls.every((u) => u.startsWith('https://github.com/o/r/releases/download/v0.3.0-beta.1/')),
+    ).toBe(true);
+    expect(urls.some((u) => u.includes('/latest/'))).toBe(false);
+    expect(urls).toContain(
+      'https://github.com/o/r/releases/download/v0.3.0-beta.1/Nemo-Portable.exe',
+    );
+  });
+
+  it('stable releases additionally check the latest links', () => {
+    const urls = assetUrls('o/r', 'v1.0.0', { stable: true });
+    expect(urls).toHaveLength(RELEASE_ASSETS.length * 2);
+    expect(urls).toContain('https://github.com/o/r/releases/latest/download/Nemo.apk');
+  });
+});

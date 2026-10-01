@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Security properties of the setup assistant: no half-created vault when cancelling, secrets only
  * in the crypto service / secret store, never in the setup state, the outbox or the console.

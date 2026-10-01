@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setPlatform, type DesktopService } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';

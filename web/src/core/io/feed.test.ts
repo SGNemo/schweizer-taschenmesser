@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { FeedFormatError, MAX_ITEMS, parseFeed, plainText, safeHttpUrl } from './feed';
 

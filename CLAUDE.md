@@ -31,8 +31,9 @@ Code, comments and commits are **English**; the UI is **German only** (all texts
 | `npm run build` / `npm run preview` | Production build / serve on :4173 |
 | `npm run typecheck` | tsc for app, service worker, node configs |
 | `npm run lint` | ESLint (incl. module isolation rules) |
+| `npm run check` | format + lint + typecheck in parallel with caches (fast everyday gate; CI runs the plain commands) |
 | `npm run format:check` / `format` | Prettier check / write (also in `server/`) |
-| `npm test` | Vitest unit + component tests |
+| `npm test` | Vitest unit + component tests (`test:changed` = only files touched since the last commit) |
 | `npm run e2e` | `e2e:app` (Playwright, projects `desktop-chrome` + `pixel-7`, builds with `--mode e2e`) followed by `e2e:sync` (`playwright.sync.config.ts`: serial multi-device tests against the real server started from `../server`, in-memory DB) |
 | `npm run gen:module -- <id> "<Name>"` | Generate a new module from `templates/module` |
 | `npm run db:bump` | Regenerate `src/core/db/schema.snapshot.json` + bump Dexie version |
@@ -79,14 +80,14 @@ Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playw
 - **Contrast:** WCAG AA (4.5:1 text, 3:1 UI). `ui/tokens.test.ts` checks the palette incl. `--border-strong` on `--surface-2`; a new colour token needs a light and a dark value and an entry in that test. Touch targets ≥ 44 px (`--touch`), inline checkboxes 24 px.
 - **Motion:** CSS only, `transform`/`opacity` only (progress bars scale, nothing animates width, colour or shadow), 120–250 ms (`--dur-fast/--dur/--dur-slow`, `--ease-out`), no endless animation except the `Skeleton` shimmer. Everything must be fine with `prefers-reduced-motion`. Loading: `Skeleton`, not spinners or "…".
 - **Empty states:** `EmptyState` (page) or `EmptyState compact` / `WidgetList empty` (widgets); the faded Nemo fish, no illustrations per module.
-- **Brand:** the fish exists once as `web/brand/logo-mark.svg`; `Logo.tsx` and the splash repeat its paths and `brand-sync.test.ts` enforces it. Icons: `docs/HOW-TO.md` → Icons. Special styles (QR black/white) need a comment and an entry in `docs/DECISIONS.md`.
+- **Brand:** the fish is defined once in `design/icon/final.params.mjs`; `npm run export` (in `design/icon/`) writes `web/brand/*.svg` and the generated blocks in `Logo.tsx` and the splash, `brand-sync.test.ts` enforces they agree. Icons: `docs/HOW-TO.md` → Icons. Special styles (QR black/white) need a comment and an entry in `docs/DECISIONS.md`.
 - **Checking a design change:** `SCREENS_SCHEME=dark SCREENS_VIEWPORTS=1280x720,412x915 SCREENS_PAGES='^(dashboard|finance-overview)$' npm run screenshots` renders invented data; `SCREENS_CSS=<file>` injects token overrides for experiments; `npx playwright test e2e/a11y.spec.ts` runs axe in both themes.
 
 ## Create a new module / tool / connector / provider
 Step-by-step recipes: `docs/HOW-TO.md`. Short form for a module: `npm run gen:module -- <id> "<Name>"`, then edit `src/modules/<id>/`, `contributions.onboarding` is required, strings in `strings.ts`, `db:bump` on collection changes, `npm run lint && npm run typecheck && npm test`.
 
 ## Status
-Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON import, local import API, `mcp/`); since then: setup assistant, backup/sync hardening, quick capture, the Nemo rebrand (new mark "Welle", flat design, MIT licence, review in `docs/REVIEW-2026-09-30.md`). Details, open items and next steps: `docs/STATUS.md`; ideas: `docs/ROADMAP.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there.
+Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON import, local import API, `mcp/`); since then: setup assistant, backup/sync hardening, quick capture, the Nemo rebrand (flat design, clownfish icon C12, MIT licence, review in `docs/REVIEW-2026-09-30.md`). Details, open items and next steps: `docs/STATUS.md`; ideas: `docs/ROADMAP.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there.
 
 ## Gotchas
 - `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.
@@ -95,6 +96,7 @@ Stable release `v0.2.0` is out (phases 1–13 plus the AI import round: JSON imp
 - Do not leave your own `vite preview` running on :4173 – Playwright reuses that port (`reuseExistingServer`) and would test a stale build. Stop it (`pkill -f "[v]ite preview"`) before `npm run e2e`.
 - Async bus handlers (finance booking) finish *after* the UI action; E2E waits for their effect (e.g. poll IndexedDB) before navigating.
 - E2E: a write is finished when the dialog that saved it has closed – wait for that (and for the UI to reflect it) before `goto`/`reload`. Fix the date with `page.clock.setFixedTime(...)`; `page.clock.install` + `fastForward` drives the notification scheduler. dnd-kit keyboard steps: wait for the live region (`[id^="DndLiveRegion"]`) between key presses.
+- Unit tests run in the `node` environment; a test that needs a DOM starts with `// @vitest-environment jsdom` (docs/HOW-TO.md → Tests & checks).
 - Vitest inlines `dexie` + `dexie-react-hooks` (`vitest.config.ts`); otherwise two Dexie copies break `useLiveQuery`.
 - TypeScript is pinned to 6.0.x (typescript-eslint supports `<6.1`); `baseUrl` is not used (paths are relative).
 - Controlled checkboxes update after an async DB write: in E2E use `click()` + `expect(...).toBeChecked()` instead of `check()` (Playwright's `check()` fails with "did not change its state").
