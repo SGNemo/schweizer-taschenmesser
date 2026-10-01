@@ -4,17 +4,22 @@
  * links the README badges use) must be downloadable.
  *
  *   node scripts/check-links.mjs --repo owner/name --tag v1.2.0 [--stable]
+ *   node scripts/check-links.mjs --repo owner/name --dev      (the Dev-Preview files of tag `dev-preview`)
  */
 import { parseArgs } from './lib/args.ts';
+import { devAssetUrls } from './lib/devPreview.ts';
 import { assetUrls } from './lib/releaseAssets.ts';
 
 const args = parseArgs(process.argv.slice(2));
-if (typeof args.repo !== 'string' || typeof args.tag !== 'string') {
-  console.error('Usage: check-links.mjs --repo owner/name --tag vX.Y.Z [--stable]');
+const dev = args.dev === true;
+if (typeof args.repo !== 'string' || (!dev && typeof args.tag !== 'string')) {
+  console.error('Usage: check-links.mjs --repo owner/name (--tag vX.Y.Z [--stable] | --dev)');
   process.exit(2);
 }
 
-const urls = assetUrls(args.repo, args.tag, { stable: args.stable === true });
+const urls = dev
+  ? devAssetUrls(args.repo)
+  : assetUrls(args.repo, args.tag, { stable: args.stable === true });
 const ATTEMPTS = 5;
 let failed = 0;
 

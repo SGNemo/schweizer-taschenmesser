@@ -24,6 +24,15 @@ describe('release assets', () => {
     ).toEqual(['Taschenmesser-Setup.exe']);
   });
 
+  it('knows the Dev-Preview files only under the dev-preview tag', () => {
+    const base = 'https://github.com/o/r/releases';
+    expect(unknownAssetLinks(`${base}/download/dev-preview/Nemo-Portable-dev.exe`)).toEqual([]);
+    expect(unknownAssetLinks(`${base}/download/dev-preview/Nemo-dev.apk`)).toEqual([]);
+    expect(unknownAssetLinks(`${base}/latest/download/Nemo-dev.apk`)).toEqual(['Nemo-dev.apk']);
+    expect(unknownAssetLinks(`${base}/download/v1.0.0/Nemo-dev.apk`)).toEqual(['Nemo-dev.apk']);
+    expect(unknownAssetLinks(`${base}/download/dev-preview/Nemo.apk`)).toEqual([]);
+  });
+
   it('README only links to assets a release really has – no leftover installer names', () => {
     const readme = read('README.md');
     expect(unknownAssetLinks(readme)).toEqual([]);
