@@ -74,5 +74,5 @@ export function devVersionCode(nowMs: number): number {
 export const isDevNewer = (candidate: string, previous: string): boolean =>
   compareSemver(candidate, previous) === 1;
 
-export const devAssetUrls = (repo: string): string[] =>
-  DEV_ASSETS.map((n) => `https://github.com/${repo}/releases/download/${DEV_TAG}/${n}`);
+export const devAssetUrls = (repo: string, tag: string = DEV_TAG): string[] =>
+  DEV_ASSETS.map((n) => `https://github.com/${repo}/releases/download/${tag}/${n}`);

@@ -4,7 +4,7 @@
  * links the README badges use) must be downloadable.
  *
  *   node scripts/check-links.mjs --repo owner/name --tag v1.2.0 [--stable]
- *   node scripts/check-links.mjs --repo owner/name --dev      (the Dev-Preview files of tag `dev-preview`)
+ *   node scripts/check-links.mjs --repo owner/name --dev [--tag dev-preview-test]  (Dev-Preview files; tag defaults to `dev-preview`)
  */
 import { parseArgs } from './lib/args.ts';
 import { devAssetUrls } from './lib/devPreview.ts';
@@ -18,7 +18,7 @@ if (typeof args.repo !== 'string' || (!dev && typeof args.tag !== 'string')) {
 }
 
 const urls = dev
-  ? devAssetUrls(args.repo)
+  ? devAssetUrls(args.repo, typeof args.tag === 'string' ? args.tag : undefined)
   : assetUrls(args.repo, args.tag, { stable: args.stable === true });
 const ATTEMPTS = 5;
 let failed = 0;

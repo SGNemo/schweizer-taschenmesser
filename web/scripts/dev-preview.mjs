@@ -8,6 +8,7 @@
  *   node scripts/dev-preview.mjs tauri-config    JSON for `tauri build --config` (version)
  *   node scripts/dev-preview.mjs android-config  JSON for `tauri android build --config` (version + versionCode)
  *   node scripts/dev-preview.mjs last-stable-tag newest stable `vX.Y.Z` tag (for the release notes)
+ *   node scripts/dev-preview.mjs assets          the file names a Dev-Preview carries, one per line
  *
  * The build number is the commit count of HEAD (monotonic on `develop`, independent of workflow run
  * counters); the commit id comes from GITHUB_SHA or HEAD. Needs full history and tags (fetch-depth 0).
@@ -17,7 +18,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareSemver, isPrerelease } from '../src/core/update/semver.ts';
-import { devVersion, devVersionCode, devVersionFull, nextBaseVersion } from './lib/devPreview.ts';
+import {
+  DEV_ASSETS,
+  devVersion,
+  devVersionCode,
+  devVersionFull,
+  nextBaseVersion,
+} from './lib/devPreview.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (...a) => execFileSync('git', a, { encoding: 'utf8' }).trim();
@@ -57,9 +64,12 @@ try {
     case 'last-stable-tag':
       console.log(lastStableTag());
       break;
+    case 'assets':
+      console.log(DEV_ASSETS.join('\n'));
+      break;
     default:
       console.error(
-        'Usage: dev-preview.mjs version | full | code | tauri-config | android-config | last-stable-tag',
+        'Usage: dev-preview.mjs version | full | code | tauri-config | android-config | last-stable-tag | assets',
       );
       process.exit(2);
   }
