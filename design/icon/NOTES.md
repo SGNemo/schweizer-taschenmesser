@@ -1,6 +1,6 @@
 # Icon rounds – decisions so far
 
-Folders: `rounds/6` (last icon round), `rounds/13` (last banner round), `rounds/final` (icon sheet from the real `web/brand` files), `rounds/archive/` (older rounds, kept for the record). Master parameters: `final.params.mjs`; export: `npm run export`.
+Folders: `rounds/6` (last icon round), `rounds/21` (last banner round), `rounds/final` (icon sheet from the real `web/brand` files), `rounds/archive/` (older rounds, kept for the record). Master parameters: `final.params.mjs`; export: `npm run export`.
 
 - Round 1: direction C (orange emblem, white fish, stripes and eye cut out) chosen for the app icon.
 - Round 2: C4 (rounded tile instead of circle) is "more modern"; fish should lean more towards the top-right corner.
@@ -16,4 +16,6 @@ Folders: `rounds/6` (last icon round), `rounds/13` (last banner round), `rounds/
 - Round 8: claim as a backronym of NEMO – "Notizen · Erinnerungen · Module · Offline" fixed by the maintainer.
 - Rounds 9–10: W2 head as a clownfish (cut stripe, white band, wider head, forked tail) – B7/B8 liked, fins still not right.
 - Rounds 11–13: new wordmark concept `clown` (letters are the body, head band, tail band, round caudal fin, optional fins per letter and bands inside letters). Fins rejected in every form.
-- **Final (2026-10-01): H1** – concept `clown`, bands in every letter (`midBand: [116, 300, 524, 746]`), no fins; banner B1 composition (school of marks, backronym claim with orange initials). The app sidebar shows the mark only (no wordmark, no text).
+- Round 14: readability – letters in text colour (J1/J4) or diagonal candy stripes (J2/J3); maintainer kept orange letters.
+- Rounds 15–20: head and caudal fin after the maintainer's reference picture (pointed nose, nearly straight head band, eye with highlight; many fin shapes: flat fan, concave D, narrow-base fan with rounded tips). Bands 24 wide (M2) chosen.
+- Round 21: earlier fin shapes side by side – **Final (2026-10-01): Q2** – concept `clown`, `headStyle: 'flat'` (head 170, band 24 at 112, eye 18 with highlight), bands 24 in every letter (`midBand: [116, 300, 524, 746]`), tapering tail base with band + round caudal fin with dark edge (tail 140), no other fins; banner B1 composition (school of marks, backronym claim with orange initials). The app shows the same wordmark top left (`ui/Wordmark.tsx`).

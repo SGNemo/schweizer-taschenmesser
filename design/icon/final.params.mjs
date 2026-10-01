@@ -16,9 +16,14 @@ export const ICON = {
   adaptive: { scale: 0.68, bg: DEEP, dx: 0, dy: 4 },
 };
 
-// Wordmark H1 (banner round 13): letters are the body, a white band in every letter, clownfish head
-// with band and eye, tapering tail base with band, round caudal fin. No other fins (rounds 11-13).
-export const WORDMARK = { concept: 'clown', params: { colors: { fish: DEEP }, midBand: [116, 300, 524, 746] } };
+// Wordmark Q2 (banner round 21, final): letters are the body with a white band (24) in every letter;
+// clownfish head (pointed nose, nearly straight band, dark eye with a highlight top right) in front
+// of the N; tapering tail base with band and a round caudal fin with a dark edge after the o.
+// No other fins (rounds 11–13 and 16–20 rejected every fin and fan variant).
+export const WORDMARK = {
+  concept: 'clown',
+  params: { colors: { fish: DEEP }, headStyle: 'flat', stripeAt: 112, band: 24, head: 170, eye: 18, tail: 140, midBand: [116, 300, 524, 746] },
+};
 /** Claim under the wordmark (README header + social preview only, never in the app): a backronym of NEMO. */
 export const CLAIM = { parts: [['N', 'otizen'], ['E', 'rinnerungen'], ['M', 'odule'], ['O', 'ffline']], sep: ' · ' };
 
