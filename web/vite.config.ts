@@ -72,6 +72,7 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       // The shared package resolves its own dependency from the web install (no second `npm ci`).
+      zod: fileURLToPath(new URL('./node_modules/zod', import.meta.url)),
       tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
       '@nemo/vault-core': fileURLToPath(
         new URL('../packages/vault-core/src/index.ts', import.meta.url),

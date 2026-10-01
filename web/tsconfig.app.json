@@ -21,7 +21,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@nemo/vault-core": ["../packages/vault-core/src/index.ts"],
-      "tldts": ["./node_modules/tldts"]
+      "tldts": ["./node_modules/tldts"],
+      "zod": ["./node_modules/zod"]
     }
   },
   "include": ["src", "vitest.setup.ts"],
