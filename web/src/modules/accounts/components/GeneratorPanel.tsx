@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { t } from '@/strings';
 import { Button, Segmented, Switch, TextField } from '@/ui';
 import {
@@ -15,16 +15,26 @@ import {
   type PassphraseOptions,
   type PasswordOptions,
 } from '@nemo/vault-core';
+import { recordGenerated } from '../history';
 import styles from '../accounts.module.css';
 
 type Mode = 'password' | 'passphrase';
 
-export function GeneratorPanel({ onUse }: { onUse?: (value: string) => void }) {
+export function GeneratorPanel({
+  onUse,
+  onChange,
+}: {
+  onUse?: (value: string) => void;
+  /** Called with every new value (also the first one), e.g. to copy or save it from outside. */
+  onChange?: (value: string) => void;
+}) {
   const [mode, setMode] = useState<Mode>('password');
   const [pw, setPw] = useState<PasswordOptions>(DEFAULT_PASSWORD_OPTIONS);
   const [phrase, setPhrase] = useState<PassphraseOptions>(DEFAULT_PASSPHRASE_OPTIONS);
   const [wordlist, setWordlist] = useState<readonly string[]>();
   const [value, setValue] = useState(() => generatePassword(DEFAULT_PASSWORD_OPTIONS));
+
+  useEffect(() => onChange?.(value), [value, onChange]);
 
   /** Every change of an option draws a fresh value (from the event handler, not from an effect). */
   const apply = useCallback(
@@ -149,9 +159,23 @@ export function GeneratorPanel({ onUse }: { onUse?: (value: string) => void }) {
         </>
       )}
       <div className={styles.inline}>
-        <Button onClick={() => apply({})}>{g.regenerate}</Button>
+        <Button
+          onClick={() => {
+            recordGenerated(value);
+            apply({});
+          }}
+        >
+          {g.regenerate}
+        </Button>
         {onUse ? (
-          <Button variant="primary" disabled={!value} onClick={() => onUse(value)}>
+          <Button
+            variant="primary"
+            disabled={!value}
+            onClick={() => {
+              recordGenerated(value);
+              onUse(value);
+            }}
+          >
             {g.use}
           </Button>
         ) : null}

@@ -14,6 +14,7 @@ import {
 } from '@/ui';
 import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
+import { GeneratorDialog } from '../components/GeneratorDialog';
 import { LockScreen } from '../components/LockScreen';
 import { SetupScreen } from '../components/SetupScreen';
 import { ToolsDialog } from '../components/ToolsDialog';
@@ -75,6 +76,7 @@ function Unlocked() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [form, setForm] = useState<EntryTarget>(null);
   const [tools, setTools] = useState(false);
+  const [generator, setGenerator] = useState(false);
   // Wide screens: list and detail side by side (same detail content, just not in a dialog).
   const panel = useSplitView();
 
@@ -95,6 +97,7 @@ function Unlocked() {
           <Icon name="plus" size={18} />
           {t.accounts.add}
         </Button>
+        <Button onClick={() => setGenerator(true)}>{t.accounts.generator.newPassword}</Button>
         <Button onClick={() => setTools(true)}>{t.accounts.tools.open}</Button>
       </div>
       {data.broken.length > 0 ? (
@@ -149,6 +152,14 @@ function Unlocked() {
         }}
       />
       <EntryForm target={form} onClose={() => setForm(null)} onSaved={(id) => setDetailId(id)} />
+      <GeneratorDialog
+        open={generator}
+        onClose={() => setGenerator(false)}
+        onSaveAs={(password) => {
+          setGenerator(false);
+          setForm({ draft: true, password });
+        }}
+      />
       <ToolsDialog open={tools} onClose={() => setTools(false)} entries={data.entries} />
     </>
   );

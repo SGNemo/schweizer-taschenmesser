@@ -2317,6 +2317,11 @@ export const t = {
       number: 'Zahl anhängen',
       bits: (n: number) => `≈ ${Math.round(n)} Bit Entropie`,
       needOne: 'Mindestens eine Zeichenart wählen.',
+      newPassword: 'Neues Passwort',
+      copyOnly: 'Nur kopieren',
+      saveAsAccount: 'Als Account speichern',
+      history: 'Zuletzt erzeugt',
+      historyHint: 'Nur im Arbeitsspeicher – beim Sperren weg.',
     },
     strength: {
       label: 'Stärke',
