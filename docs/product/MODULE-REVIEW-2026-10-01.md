@@ -317,3 +317,51 @@ Nav-Ergebnis (B): Übersicht · Kalender · ToDos · Geld · Listen · Notizen �
 1. **`manifest.group`** `{id, name, icon, order}`: Nav zeigt Gruppe, Router hängt Teilmodul-Routen als Tabs unter `/<group>/…` (alte Pfade leiten um), Übersicht kann Gruppen-Widget anbieten, Bibliothek zeigt Teilmodule eingerückt. Teilmodule bleiben einzeln aktivierbar.
 2. **App-Migration** (`core/db/appMigrations.ts`): Liste von idempotenten Schritten (Quelle, Ziel, Mapping), läuft nach dem Öffnen der DB und nach jedem Sync-Pull/Backup-Import, schreibt über `createRepo` (= synchronisiert), kopiert nur Zeilen, deren `id` im Ziel fehlt oder deren `updatedAt` neuer ist; alte Tabellen bleiben im Schema (versteckt), Entfernung frühestens zwei Minor-Versionen später. Fixture-Tests mit Backups aus 0.3.1.
 3. **Tools-ID-Migration** in `core/tools/layout.ts` (`enabled/order` alte → neue IDs).
+
+## 21 · Geprüfte Fakten zum Core (Grundlage für Migration und Risiken)
+| Verhalten | Fundstelle | Folge für den Plan |
+|---|---|---|
+| Sync-Pull: Ops für unbekannte Tabellen werden **still übersprungen**, der Cursor läuft weiter – die Daten kommen nie wieder | `core/storage/dexie.ts:78-81`, `core/sync/engine.ts:117-120` | Eine stillgelegte Tabelle darf **nicht** aus dem Schema fallen, solange ein altes Gerät noch synchronisiert |
+| Server nimmt jeden Tabellennamen an (Regex), keine Allow-Liste | `server/src/app.ts:77`, `store.ts:172-210` | Altes Handy schreibt weiter `reminders_reminder`; neuer Client muss das nach dem Pull „vorwärts kopieren“ |
+| Dexie löscht beim Versionswechsel fehlende Stores **samt Daten**; nur eine Version deklariert | `core/db/db.ts:14`, Dexie `deleteRemovedTables` | Tabelle entfernen = lokaler Datenverlust ohne vorherige Kopie |
+| `schema-upgrade.test.ts:111` verlangt, dass **jede historische Tabelle überlebt** | `core/db/schema-upgrade.test.ts` | Tabellen-Entfernung ist heute per Test verboten; Aufhebung ist eine bewusste Entscheidung (Frage 2) |
+| Backup-Import überspringt unbekannte Tabellen (`skippedTables`); Export enthält `_settings`, `_modules`, alle synchronisierten Sammlungen | `core/backup/apply.ts:35-44`, `schema.ts:50-63` | Alte Backups bleiben nur vollständig einspielbar, wenn stillgelegte Tabellen bekannt bleiben |
+| `remove` setzt Tombstone **und pusht** (andere Geräte löschen); `purge` nur für lokale Sammlungen | `core/db/repo.ts:144-177, 252-255` | Migration darf alte Zeilen nie per `remove` aufräumen |
+| `manifest.migrations` nur eigene Sammlungen, pro Gerät, erst-gesehen = aktuell; keine App-Migration | `core/modules/migrate.ts`, `startup.ts:16-18` | App-Migration (Abschnitt 20.2) ist neu zu bauen; Vorbild: Lazy-Migration `home/layout.ts` (`LEGACY_DASHBOARD_SCOPE`, nie gelöscht) |
+| Unbekannte Modul-IDs in `_modules`, Home-Layout, Tools-Settings werden ignoriert, nicht entfernt | `activation.ts:31-37`, `home/layout.ts:104-111` | Entfernen ist startsicher; alte Pfade (`/reminders`) landen auf NotFound → Umleitungen nötig |
+| Benachrichtigungs-Beitrag: `NotificationSource(range) → DueNotification{key, at, title, body?, url?}` | `core/modules/types.ts:203-226`, `reminders/notifications.ts` | Kalender braucht `contributions.notifications` + `event.notify`; Wiederholung ist bereits ein gemeinsames Schema (`core/recurrence`) |
+| Finanzen/Budgets haben Tabs per `?tab=` + `Segmented`; kein Gruppenkonzept in Router/Nav/Übersicht | `FinancePage.tsx:13-72`, `router.tsx:25-42`, `useNavItems.ts` | `manifest.group` ist Neubau in drei Dateien (Hotspots) |
+| IDs fest verdrahtet in: `exclusion.test.ts:81-88` (Liste ohne aiSchema), `e2e/a11y.spec.ts` (MODULES/PAGES), `setup/profiles.ts` (+ Test), `core/ai/testing.ts:17`, `intent/parser.ts` (reminders), `quickCapture/targets/adapters.ts:50`, `dataapi.test.ts`, `moduleImporters.test.ts`, `contributions.test.ts`, e2e `modules/layout/extras/newmodules`, `screenshots/capture.spec.ts` | – | Checkliste für jedes Paket |
+| Version 0.3.1; Pre-Release nur `alpha/beta/rc`; CHANGELOG 0.3.1 verspricht „keine Breaking Changes“; keine MAJOR-Regel dokumentiert | `package.json`, `core/update/semver.ts`, `CHANGELOG.md` | Breaking per `feat!:` kennzeichnen; MAJOR/MINOR ist Entscheidung (Frage 3) |
+
+**Konsequenz – Stilllegungsregel (statt „Tabelle weg“):** Ein ersetztes Modul wird `retired`: keine Routen, Nav, Widgets, KI, Import-API, aber **Sammlungen bleiben im Schema**; die App-Migration kopiert vorwärts (beim Start, nach Sync-Pull, nach Backup-Import). Frühestens zwei Minor-Versionen später werden die Tabellen entfernt (dann `schema-upgrade.test` anpassen, Changelog-Hinweis „alle Geräte vorher aktualisieren“).
+
+## 22 · Reihenfolge, Pakete, Abhängigkeiten
+| Paket | Inhalt | Migration | Hängt ab von | Parallel möglich | Version |
+|---|---|---|---|---|---|
+| **1 Aufräumen** | `manifest.group` + Gruppe „Geld“ und „Listen“ (Einkauf, Packlisten, Vorräte als Tabs, Daten unverändert) · Nachrichten stilllegen (`retired`, Export-Hinweis) · Werkzeuge 18 → 12 + Rahmen · Notizen-Zettel (Kopie aus `tools.scratch`) · „Dieser PC“ (UI) · Funde 1–8, 11 · Umleitungen alter Pfade | nur Zettel (idempotent, eine Zeile) + Tools-IDs | – | – (berührt Hotspots Router/Nav/Settings: ein Chat) | 0.4.0, `feat!:` (Nachrichten) |
+| **2 Übersicht-Aktionen (K1)** | Widget-Aktionen (abhaken, hinzufügen, Größe) generisch in `home/` + `WidgetList`; Module ToDos, Listen, Kalender ziehen nach | keine | 1 (Gruppen-Widgets) | ja, parallel zu 3 (andere Dateien: `home/`, Widgets) | 0.4.x / 0.5.0 |
+| **3 Listen + Favoriten** | App-Migrations-Runner (20.2) · `lists` aus Einkauf + Packlisten · Favoriten in Merkliste aus Apps & Links · `shopping`, `packing`, `launcher` → `retired` | 3 Kopien, Fixture-Tests mit 0.3.1-Backups | 1 | zu 2 | 0.5.0, `feat!:` |
+| **4 Unterlagen + Personen** | `vault` erweitern + Verträge-Kopie · `people` aus Geburtstage + Geschenke (Namensabgleich) · `contracts`, `birthdays`, `gifts` → `retired` | 3 Kopien | 3 (Runner) | zu 2 | 0.6.0, `feat!:` |
+| **5 Zeit** | `event.notify` + Kalender-Benachrichtigungen · Erinnerungen-Kopie + Tab · Tier-1-Parser, Schnellerfassung, Teilen auf Kalender · ToDo-Wiederholung + Irgendwann · `reminders` → `retired` | 1 Kopie | 3 (Runner), 1 | nein (Kalender ist größtes Modul) | 0.7.0, `feat!:` |
+| **6 Tabellen entfernen** | stillgelegte Tabellen aus dem Schema, `schema-upgrade.test` anpassen | Schema-Bump | alle Geräte ≥ 0.7 | – | 0.9.0 oder 1.0.0 |
+| **Roadmap** | K3 Anhänge in Sync/Backup (Belege, Fotos) · S1 Passwort-Health · M2 Kalender Drag/Resize · M3 Budget-Übertrag · M4 Habits (eingefroren) · Zeiterfassung-Verknüpfung Timer | – | 4 (K3 braucht Unterlagen) | – | später |
+
+Konflikt-Hotspots mit anderen Chats (CHATS.md: aktuell keine laufenden): Paket 1 berührt `router.tsx`, `useNavItems.ts`, `home/Home.tsx`, `core/modules/types.ts` (Manifest-Vertrag), `strings.ts`, `pages/Settings.tsx` – deshalb ein Chat, kein Parallelbetrieb mit Feature-Chats, bis Paket 1 gemergt ist. Pakete 3/4/5 berühren `core/db/schema*.json` (immer `db:bump` nach Merge von `develop` neu laufen lassen).
+
+## 23 · Risiken
+| Risiko | Wo | Gegenmaßnahme (wird harte Regel im Prompt) |
+|---|---|---|
+| Datenverlust lokal | Tabelle aus Schema → Dexie löscht Daten | Stilllegungsregel: Tabellen bleiben; Entfernung erst Paket 6 |
+| Datenverlust über Sync | neuer Client überspringt Ops alter Tabellen | Tabellen bleiben; Vorwärtskopie nach jedem Pull; Tests mit `MemoryServer` (alt → neu) |
+| Lösch-Lawine | Migration „räumt auf“ per `remove` → Tombstones auf allen Geräten | Kopie statt Verschiebung; nie `remove` auf Quell-Tabellen |
+| Backup alt → App neu | unbekannte Tabellen werden übersprungen | Tabellen bleiben; Migration läuft nach Import; Fixture-Backups aus 0.3.1 im Repo |
+| Doppelte Daten | Migration läuft auf jedem Gerät | gleiche `id` in Quelle und Ziel, `updatedAt`-Vergleich → idempotent; Geschenk-Personen per deterministischer id `person-<slug>` |
+| Benachrichtigungen fallen aus | Scheduler-Cursor + `key` wechseln von `reminder:` auf `event:` | gleiche Key-Konvention beibehalten oder Cursor einmalig setzen; `notifications.spec` erweitern |
+| KI/Import-API | aiSchema, Intent-Parser, Import-Format, lokale API-Rechte je Modul-ID, MCP-Doku | `privacy.test`, `AI-IMPORT.md` (muss `buildApiPrompt` gleichen), Rechte für stillgelegte IDs verweigern |
+| Kompatibilität Handy auf alter Version | schreibt in stillgelegte Tabellen, sieht neue Sammlungen nicht | Übergangsfenster: 1 Minor; Update-Banner-Hinweis; CHANGELOG „Breaking“ je Paket |
+| Versionsversprechen | CHANGELOG 0.3.1 „keine Breaking Changes“ | ab 0.4.0 ausdrücklich `feat!:`; Entscheidung MINOR-Kette vs. 1.0.0 (Frage 3) |
+| Tests mit festen Listen | Abschnitt 21, letzte Zeile | Checkliste je Paket im Prompt; `exclusion.test` Liste pflegen (`retired` Module ohne aiSchema) |
+
+## 24 · Fragen Runde 3
+Siehe Chat; Antworten → Abschnitt 10.
