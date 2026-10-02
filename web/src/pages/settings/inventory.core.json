@@ -26,6 +26,16 @@
   "_settings scope quickCapture": {
     "defaultType": "todo"
   },
+  "_settings scope focus": {
+    "nextOne": true,
+    "dayPlan": true,
+    "planLimit": 3,
+    "calmAttention": true,
+    "timeToNext": true,
+    "focusMinutes": 25,
+    "focusSound": false,
+    "focusIndicator": true
+  },
   "_meta": {
     "update.prefs": {
       "channel": "stable",
@@ -34,6 +44,7 @@
     "update.lastCheckAt": "timestamp",
     "update.dismissedVersion": "version",
     "setup.state": "checklistHidden false, status, steps",
+    "focus.state": "running focus session (task, end time), skipped suggestions of the day",
     "backup.auto.config": {
       "enabled": false,
       "interval": "daily",

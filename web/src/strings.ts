@@ -708,6 +708,32 @@ export const t = {
     endDate: 'Enddatum',
     count: 'Anzahl',
   },
+  focus: {
+    settings: {
+      title: 'Fokus & Aufmerksamkeit',
+      description:
+        'Hilfen für Überblick, Anfangen und Dranbleiben. Jede lässt sich einzeln ausschalten.',
+      keywords: ['Fokus', 'Aufmerksamkeit', 'Timer', 'Ruhe', 'nächste Aufgabe', 'Tagesplan'],
+      nextOne: 'Nächste eine Sache',
+      nextOneHint: 'Zeigt oben auf der Übersicht eine einzige Aufgabe zum Anfangen.',
+      dayPlan: 'Tagesplan',
+      dayPlanHint: 'Eine kurze Liste für heute und wie viel schon erledigt ist.',
+      planLimit: 'Dinge im Tagesplan',
+      planLimitHint: 'Wie viele Aufgaben der Tagesplan zeigt.',
+      calmAttention: 'Ruhiges „Jetzt wichtig“',
+      calmAttentionHint:
+        'Fasst Wartendes in einem Hinweis zusammen und lässt Rot nur bei Geldfristen. Ohne Tageszähler.',
+      timeToNext: 'Zeit bis zum nächsten Termin',
+      timeToNextHint: 'Zeigt groß, wie lange es bis zum nächsten Termin ist.',
+      focusMinutes: 'Länge des Fokus-Timers',
+      focusMinutesHint: 'Gilt für neue Fokus-Runden. Im Fokus lässt sich die Zeit verlängern.',
+      focusMinutesOption: (n: number) => `${n} Min`,
+      focusSound: 'Sanfter Ton am Ende',
+      focusSoundHint: 'Der Hinweis erscheint immer. Der Ton ist zusätzlich und standardmäßig aus.',
+      focusIndicator: 'Fokus-Anzeige oben',
+      focusIndicatorHint: 'Zeigt oben in der Leiste, dass eine Fokus-Runde läuft.',
+    },
+  },
   todos: {
     meta: {
       name: 'ToDos',
