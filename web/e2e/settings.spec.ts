@@ -111,10 +111,10 @@ test('Über Nemo shows the version and the facts of this installation', async ({
 });
 
 test('the danger zone needs the typed phrase and then wipes this device', async ({ page }) => {
-  await ready(page, '/todos');
-  await page.getByRole('textbox').first().fill('Erfundene Aufgabe');
-  await page.keyboard.press('Enter');
-  await expect(page.getByText('Erfundene Aufgabe')).toBeVisible();
+  await ready(page, '/todos?list=inbox');
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Erfundene Aufgabe');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Erfundene Aufgabe' })).toBeVisible();
 
   await ready(page, '/settings/ueber');
   await page.getByRole('button', { name: 'Alle Daten auf diesem Gerät löschen' }).click();
@@ -128,6 +128,6 @@ test('the danger zone needs the typed phrase and then wipes this device', async 
   // The page reloads once the database is gone.
   await Promise.all([page.waitForEvent('load'), confirm.click()]);
   await expect(page.locator('main h1')).toBeVisible();
-  await ready(page, '/todos');
-  await expect(page.getByText('Erfundene Aufgabe')).toHaveCount(0);
+  await ready(page, '/todos?list=inbox');
+  await expect(page.getByRole('checkbox', { name: 'Erfundene Aufgabe' })).toHaveCount(0);
 });

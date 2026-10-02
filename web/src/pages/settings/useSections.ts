@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { hasStartData } from '@/core/dataapi/onboarding';
-import { useModuleStates } from '@/core/modules/activation';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
 import { validateSections, visibleSections } from '@/core/settings/registry/registry';
@@ -41,9 +42,24 @@ export function allSettingsSections(
   return all;
 }
 
+/**
+ * The module states last read. The command palette remounts its body on every open, so a fresh
+ * live query would be empty for a moment and the settings commands would be missing exactly when the
+ * first key is typed.
+ */
+let lastStates: ModuleStates | undefined;
+
 /** Sections visible right now (platform, dev build, enabled modules), in navigation order. */
 export function useSettingsSections(): SettingsSectionDef[] {
-  const states = useModuleStates();
+  const states = useLiveQuery(
+    async () => {
+      const read = await loadModuleStates();
+      lastStates = read;
+      return read;
+    },
+    [],
+    lastStates,
+  );
   return useMemo(() => {
     if (!states) return [];
     const ctx: SettingsContext = {
