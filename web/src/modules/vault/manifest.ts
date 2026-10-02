@@ -4,18 +4,18 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { documentSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'vault',
-  name: 'Dokumente',
+  name: t.vault.meta.name,
   icon: 'files',
   version: 1,
-  description:
-    'Wichtige Dokumente mit Kategorie, Notiz und Ablaufdatum (z. B. Ausweis) und angehängter Datei. Dateien bleiben nur auf diesem Gerät.',
+  description: t.vault.meta.description,
   routes: [
     {
       path: '/vault',
-      label: 'Dokumente',
+      label: t.vault.meta.route,
       nav: true,
       component: () => import('./routes/VaultPage'),
     },
@@ -27,7 +27,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'expiring',
-      title: 'Dokumente: Ablauf',
+      title: t.vault.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/ExpiringWidget'),
@@ -43,7 +43,7 @@ const manifest: ModuleManifest = {
   contributions: {
     attention: () => import('./attention'),
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'document', label: 'Dokument', to: '/vault?new=1' }],
+    quickAdd: [{ id: 'document', label: t.vault.meta.quickAdd, to: '/vault?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
   },

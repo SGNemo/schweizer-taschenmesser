@@ -4,18 +4,18 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { subscriptionSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'subscriptions',
-  name: 'Abos',
+  name: t.subscriptions.meta.name,
   icon: 'repeat',
   version: 1,
-  description:
-    'Abos und wiederkehrende Zahlungen: nächste Abbuchung, Kündigungsfrist und die Summe pro Monat und Jahr.',
+  description: t.subscriptions.meta.description,
   routes: [
     {
       path: '/subscriptions',
-      label: 'Abos',
+      label: t.subscriptions.meta.route,
       nav: true,
       component: () => import('./routes/SubscriptionsPage'),
     },
@@ -29,7 +29,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'next',
-      title: 'Nächste Abbuchungen',
+      title: t.subscriptions.meta.widget,
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/NextChargesWidget'),
@@ -44,7 +44,9 @@ const manifest: ModuleManifest = {
   area: 'money',
   contributions: {
     onboarding: onboarding,
-    quickAdd: [{ id: 'subscription', label: 'Abo', to: '/subscriptions?new=1' }],
+    quickAdd: [
+      { id: 'subscription', label: t.subscriptions.meta.quickAdd, to: '/subscriptions?new=1' },
+    ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
     aiComputed: () => import('./aiComputed'),

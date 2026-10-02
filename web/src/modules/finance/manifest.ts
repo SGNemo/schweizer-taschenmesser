@@ -4,18 +4,18 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { accountSchema, categorySchema, transactionSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'finance',
-  name: 'Finanzen',
+  name: t.finance.meta.name,
   icon: 'wallet',
   version: 1,
-  description:
-    'Konten, Einnahmen und Ausgaben mit Kategorien, Monatsübersicht mit Diagrammen und dem wirklich verfügbaren Geld (nach offenen Rechnungen und Abos).',
+  description: t.finance.meta.description,
   routes: [
     {
       path: '/finance',
-      label: 'Finanzen',
+      label: t.finance.meta.route,
       nav: true,
       component: () => import('./routes/FinancePage'),
     },
@@ -31,7 +31,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'balance',
-      title: 'Kontostand',
+      title: t.finance.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/BalanceWidget'),
@@ -46,7 +46,9 @@ const manifest: ModuleManifest = {
   area: 'money',
   contributions: {
     onboarding: onboarding,
-    quickAdd: [{ id: 'transaction', label: 'Buchung', to: '/finance?tab=transactions&new=1' }],
+    quickAdd: [
+      { id: 'transaction', label: t.finance.meta.quickAdd, to: '/finance?tab=transactions&new=1' },
+    ],
     services: () => import('./services'),
     aiCreateDefaults: () => import('./aiDefaults'),
     aiComputed: () => import('./aiComputed'),

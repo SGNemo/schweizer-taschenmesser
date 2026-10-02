@@ -2,12 +2,13 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as ContributionsModule from '@/core/modules/contributions';
 import { useLiveAttention } from '@/core/modules/liveAttention';
 import { useUpdateStore } from '@/core/update/controller';
 
 const items = vi.hoisted(() => ({ value: [] as unknown[] | undefined }));
 vi.mock('@/core/modules/contributions', async (original) => ({
-  ...(await original<typeof import('@/core/modules/contributions')>()),
+  ...(await original<ContributionsModule>()),
   useAttentionItems: () => items.value,
 }));
 
