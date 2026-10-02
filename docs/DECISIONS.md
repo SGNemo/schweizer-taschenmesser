@@ -58,6 +58,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 0.3 **`PageContainer` layouts replace a global `max-width`; CSS Modules + tokens, touch ≥ 44 px, `data-autofocus`; docs split (CLAUDE.md short, details in docs/).**
 - 2026-09-30 **Design "Klar":** solid bg, bordered cards, no shadows/glass, one flat accent; ocean gradient brand-only; accents via `light-dark()`; CSS-only motion (transform/opacity, reduced motion); disk palette is the one hex-colour special case.
 - 2026-10-01 **Design "Klar 2" tokens (Phase 1):** cool palette, dark first, shadows level 1/2, radii 8/12/16/20, 2 px focus outline; `--*-soft` names kept as `color-mix`; text size/density device-local. [Detail](decisions/ui-brand.md).
+- 2026-10-02 **Settings registry** [Detail](decisions/ui-shell.md)
 - 2026-10-01 **Navigation areas (Klar 2, Phase 2):** `manifest.area` is navigation only (module paths unchanged, area routes redirect to the last used module); favourites ≤ 5 in `_settings` scope `nav`; sidebar 248 px / rail 76 px; one "+ Neu", FAB phone-only. [Detail](decisions/ui-shell.md).
 - 2026-10-02 **0.4.0 cleanup:** modules are retired, not removed; tools 18 → 12; `scratch` note; System tab → [modules](decisions/modules.md)
 - 2026-10-02 **Shared components (Klar 2, Phase 3):** compatible APIs, new look everywhere; flat `ItemRow`, sheets on phones, undo journal in core (`undoable`, modules opt in), keyboard shortcuts. [Detail](decisions/ui-components.md).

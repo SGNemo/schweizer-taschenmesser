@@ -5,7 +5,7 @@ Several Claude chats work in parallel and only see each other through GitHub. Ke
 ## Running work
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Settings overhaul (categories, registry, Über Nemo) | `feat/settings-overhaul` | `pages/Settings.tsx` + `pages/settings/*`, `core/settings/registry`, `router.tsx` (settings route), `core/modules/types.ts` (`ModuleSettings.category`), `ui/SettingsParts` | in progress | wip registry + UI parts | 2026-10-02 |
+| – (none running) | | | | | |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
