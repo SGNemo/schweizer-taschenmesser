@@ -1781,7 +1781,9 @@ export const t = {
     instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
   },
   disk: {
-    title: 'Datenträger',
+    title: 'Dieser PC',
+    tabsLabel: 'Bereich',
+    tabs: { drives: 'Laufwerke', system: 'System' } as const,
     lead: 'Was belegt den Platz? Scanne ein Laufwerk und erkunde die größten Ordner. Es wird nichts verändert oder hochgeladen.',
     loading: 'Laufwerke werden gelesen …',
     empty: 'Es wurden keine Laufwerke gefunden.',

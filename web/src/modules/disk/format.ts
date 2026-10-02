@@ -33,3 +33,13 @@ export function formatDuration(ms: number): string {
   if (s < 60) return `${s} s`;
   return `${Math.floor(s / 60)} min ${s % 60} s`;
 }
+
+/** 273420 → "3 Tage 4 Std." (whole units, the two biggest that are not zero). */
+export function formatUptime(secs: number): { days: number; hours: number; minutes: number } {
+  const s = Math.max(0, Math.floor(secs));
+  return {
+    days: Math.floor(s / 86_400),
+    hours: Math.floor((s % 86_400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+  };
+}

@@ -84,7 +84,6 @@ describe('module definition', () => {
       'gifts',
       'launcher',
       'news',
-      'system',
     ]);
   });
 });

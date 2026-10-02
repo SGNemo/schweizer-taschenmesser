@@ -43,7 +43,7 @@ export default function SystemWidget() {
       {bat != null ? (
         <p>{`${w.battery} ${Math.round(bat)} %${info.battery?.charging ? ` · ${w.charging}` : ''}`}</p>
       ) : null}
-      <Link to="/system">{w.open}</Link>
+      <Link to="/disk?tab=system">{w.open}</Link>
     </div>
   );
 }

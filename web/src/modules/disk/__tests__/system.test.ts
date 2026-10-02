@@ -1,30 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { hasAiSchema } from '@/core/ai/scope';
-import { apiCollections, BLOCKED_MODULES } from '@/core/dataapi/scope';
-import { validateManifest, availableManifestsFor } from '@/core/modules/registry';
 import { createFakeSystem } from '@/core/platform/fakeSystem';
 import { formatBytes, formatUptime, percent } from '../format';
-import manifest from '../manifest';
+import { BLOCKED_MODULES } from '@/core/dataapi/scope';
+import { allManifests } from '@/core/modules/registry';
 
-describe('system module', () => {
-  it('is desktop only, off by default, and closed to every outside reader', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-    expect(manifest.platforms).toEqual(['desktop']);
-    expect(manifest.defaultEnabled).toBe(false);
-    expect(manifest.dataSchema.collections).toEqual({});
-    expect(hasAiSchema(manifest)).toBe(false);
-    expect(manifest.widgets.map((w) => w.id)).toEqual(['status']);
-    expect(Object.keys(manifest.contributions ?? {})).toEqual(['onboarding']);
-    expect(manifest.dataApi).toBe(false);
-    expect(BLOCKED_MODULES).toContain('system');
-    expect(apiCollections(manifest)).toEqual([]);
-    expect(availableManifestsFor('desktop')).toContain(manifest);
-    expect(availableManifestsFor('android')).not.toContain(manifest);
-    expect(availableManifestsFor('web')).not.toContain(manifest);
-  });
-});
-
-describe('formatting', () => {
+describe('system formatting', () => {
   it('formats sizes, shares and uptime', () => {
     expect(formatBytes(16 * 1024 ** 3)).toBe('16 GB');
     expect(formatBytes(1536)).toBe('1,5 KB');
@@ -58,5 +38,12 @@ describe('the e2e stand-in', () => {
     expect((await s.processes()).map((p) => p.memoryBytes)).toEqual(
       [...(await s.processes()).map((p) => p.memoryBytes)].sort((a, b) => b - a),
     );
+  });
+});
+
+describe('the former system module', () => {
+  it('is gone as a module and no longer listed as blocked (it holds no data and no longer exists)', () => {
+    expect(allManifests.map((m) => m.id)).not.toContain('system');
+    expect(BLOCKED_MODULES).not.toContain('system');
   });
 });

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { ProcInfo, SystemInfo } from '@/core/platform/system';
 import { t } from '@/strings';
-import { Button, Card, PageHeader, patternStyles, Progress } from '@/ui';
+import { Button, Card, patternStyles, Progress } from '@/ui';
 import { formatBytes, formatUptime, percent } from '../format';
 import styles from '@/pages/Page.module.css';
 
@@ -13,7 +13,8 @@ function Meter({ label, value }: { label: string; value: number }) {
   return <Progress label={label} value={value} max={100} over={value >= 90} />;
 }
 
-export default function SystemPage() {
+/** Tab "System" of "Dieser PC": live facts about this computer, read-only. */
+export default function SystemTab() {
   const [info, setInfo] = useState<SystemInfo | null>(null);
   const [procs, setProcs] = useState<ProcInfo[]>([]);
   const [failed, setFailed] = useState(false);
@@ -53,10 +54,10 @@ export default function SystemPage() {
 
   return (
     <>
-      <PageHeader title={t.system.title}>
-        <Button onClick={() => setManual((n) => n + 1)}>{t.system.refreshNow}</Button>
-      </PageHeader>
       <p className={styles.lead}>{t.system.lead}</p>
+      <div className={patternStyles.gapBottom}>
+        <Button onClick={() => setManual((n) => n + 1)}>{t.system.refreshNow}</Button>
+      </div>
       {failed ? <p role="alert">{t.system.failed}</p> : null}
       {!info && !failed ? <p aria-live="polite">{t.system.loading}</p> : null}
       {info && up ? (

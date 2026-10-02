@@ -69,7 +69,7 @@ describe('internal identifiers stay unchanged', () => {
       expect(read(html), html).toContain("localStorage.getItem('tm-theme')");
     }
     expect(read('index.html')).toContain("localStorage.getItem('tm-accent')");
-    expect(read('src/tools/calc/Tool.tsx')).toContain("KEY = 'tm-calc-history'");
+    expect(read('src/tools/calc/ExprMode.tsx')).toContain("KEY = 'tm-calc-history'");
     expect(read('src/tools/currency/Tool.tsx')).toContain("CACHE = 'tm-currency-rates'");
     expect(read('src/quickCapture/device.ts')).toContain("KEY = 'tm-quick-capture'");
     expect(read('src/core/backup/backup.ts')).toContain("BACKUP_FORMAT = 'taschenmesser-backup'");

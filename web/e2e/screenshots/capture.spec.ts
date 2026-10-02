@@ -49,7 +49,7 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'gifts', path: '/gifts' },
   ...(process.env.SCREENS_DESKTOP
     ? [
-        { name: 'system', path: '/system' },
+        { name: 'system', path: '/disk?tab=system' },
         { name: 'disk', path: '/disk' },
       ]
     : []),
