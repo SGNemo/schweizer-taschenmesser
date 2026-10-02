@@ -83,7 +83,10 @@ test('an existing installation never shows the assistant by itself, but it start
 }) => {
   await ready(page, '/todos');
   // Give the app some data, then let the start migration run again as if this were an update.
-  await page.getByRole('textbox').first().fill('Erfundene Aufgabe');
+  // On a fresh database the inbox list is created right after the page shows; until then the
+  // add button is disabled and Enter is a silent no-op, so wait for it before typing.
+  await expect(page.getByRole('button', { name: 'Hinzufügen', exact: true })).toBeEnabled();
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Erfundene Aufgabe');
   await page.keyboard.press('Enter');
   await expect(page.getByText('Erfundene Aufgabe')).toBeVisible();
   const name = await dbName(page);
