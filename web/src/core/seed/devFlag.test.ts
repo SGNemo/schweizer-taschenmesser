@@ -14,6 +14,7 @@ const MARKERS = [
   'nemo-demo', // demo vault passphrase
   'Seed-Sync erlauben', // dev settings text (strings.dev.ts)
   'Ideen für den Balkon', // content of a module seed.ts (notes)
+  'Komponentenblatt', // component sheet (pages/ComponentSheet, strings.dev.ts)
 ];
 
 function filesOf(dir: string): string[] {

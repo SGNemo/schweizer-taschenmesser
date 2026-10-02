@@ -350,6 +350,7 @@ export const t = {
     placeholder: 'Suchen, springen oder fragen …',
     empty: 'Keine Treffer',
     hint: 'Ctrl+K',
+    newEntry: (what: string) => `Neu: ${what}`,
   },
   share: {
     title: 'Teilen',
