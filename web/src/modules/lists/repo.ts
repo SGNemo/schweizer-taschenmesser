@@ -1,16 +1,18 @@
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { t } from '@/strings';
-import { copyName, isDuplicate, nextOrder, parseEntry } from './logic';
+import { copyName, isDuplicate, nextOrder, parseEntry, sortItems } from './logic';
 import { itemSchema, listSchema, SHOPPING_LIST_ID, type ListKind } from './schema';
 
 export const listRepo = createRepo(tableName('lists', 'list'), listSchema);
 export const itemRepo = createRepo(tableName('lists', 'item'), itemSchema);
 
-/** Live items of one list (tombstones excluded). */
+/** Live items of one list (tombstones excluded), in list order. */
 export const itemsOf = async (listId: string) =>
-  (await itemRepo.table.where('listId').equals(listId).toArray()).filter(
-    (i) => i.deletedAt === null,
+  sortItems(
+    (await itemRepo.table.where('listId').equals(listId).toArray()).filter(
+      (i) => i.deletedAt === null,
+    ),
   );
 
 /**
