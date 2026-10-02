@@ -8,6 +8,8 @@ import { useSyncExternalStore } from 'react';
 export interface DevicePrefs {
   /** Accelerator string, e.g. `Ctrl+Shift+Space`; empty = no global hotkey. */
   hotkey: string;
+  /** Accelerator that opens the vault search (only acts while the vault is unlocked); off by default. */
+  vaultHotkey: string;
   closeToTray: boolean;
   autostart: boolean;
   /** Pre-fill the capture window from the clipboard. Off unless the user turns it on. */
@@ -17,6 +19,7 @@ export interface DevicePrefs {
 export const DEFAULT_HOTKEY = 'Ctrl+Shift+Space';
 export const DEFAULT_PREFS: DevicePrefs = {
   hotkey: DEFAULT_HOTKEY,
+  vaultHotkey: '',
   closeToTray: false,
   autostart: false,
   clipboard: false,
@@ -31,6 +34,7 @@ export function readPrefs(): DevicePrefs {
     const v = JSON.parse(raw) as Partial<DevicePrefs>;
     return {
       hotkey: typeof v.hotkey === 'string' ? v.hotkey : DEFAULT_PREFS.hotkey,
+      vaultHotkey: typeof v.vaultHotkey === 'string' ? v.vaultHotkey : DEFAULT_PREFS.vaultHotkey,
       closeToTray: v.closeToTray === true,
       autostart: v.autostart === true,
       clipboard: v.clipboard === true,

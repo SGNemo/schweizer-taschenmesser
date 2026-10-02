@@ -34,6 +34,7 @@ import type { PlatformKind, PlatformService, SaveFileRequest } from '../types';
 import { createDesktopService } from './desktop';
 import { createDisk } from './disk';
 import { createLocalApi } from './localApi';
+import { createVaultBridge } from './vaultBridge';
 import { createShare } from './share';
 import { createSystem } from './system';
 import { createSecureParts } from './secureStore';
@@ -175,6 +176,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
       },
     },
     localApi: createLocalApi(kind === 'desktop'),
+    vaultBridge: createVaultBridge(kind === 'desktop'),
     disk: createDisk(kind === 'desktop'),
     system: createSystem(kind === 'desktop'),
     desktop: createDesktopService(kind === 'desktop'),

@@ -17,6 +17,10 @@ mod system;
 #[cfg(desktop)]
 mod update;
 #[cfg(desktop)]
+pub mod vault_bridge;
+#[cfg(desktop)]
+pub mod vault_host;
+#[cfg(desktop)]
 mod webview2;
 
 /// Windows creates the main window itself (config `tauri.windows.conf.json` sets `create: false`) so
@@ -106,6 +110,7 @@ pub fn run() {
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(system::SystemMonitor::default())
+        .manage(vault_bridge::VaultBridge::default())
         .invoke_handler(tauri::generate_handler![
             update::check_update,
             update::install_update,
@@ -135,6 +140,13 @@ pub fn run() {
             system::system_info,
             system::system_processes,
             capture::capture_set_hotkey,
+            capture::desktop_set_vault_hotkey,
+            vault_bridge::vault_bridge_start,
+            vault_bridge::vault_bridge_respond,
+            vault_bridge::vault_bridge_stop,
+            vault_bridge::vault_bridge_register,
+            vault_bridge::vault_bridge_status,
+            vault_bridge::vault_bridge_unregister,
             capture::capture_hide,
             capture::capture_read_clipboard,
             capture::desktop_set_close_to_tray,

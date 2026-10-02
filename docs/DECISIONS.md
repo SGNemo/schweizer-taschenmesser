@@ -63,3 +63,11 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 2026-10-01 **Release assets are `Nemo-*` only** (until v0.3.1 also legacy `Taschenmesser-*` copies); `latest.json` points at `Nemo-Portable.exe`; installations ≤ 0.2.x can no longer self-update (maintainer decision); clients ≥ 0.3.0 still accept both names; verified before publishing (sha256, `UPDATER_PORTABLE_ASSET`).
 - 2026-10-01 **Logo = clownfish C12 (replaces "Welle"), wordmark Q2, README banner with NEMO backronym** – single source `design/icon/final.params.mjs`; `npm run export` writes brand SVGs, `Logo.tsx`, splash; rasters via `tauri icon` + `gen:icons`. Logo orange `#E0550F`.
 - 2026-09-30 **Android icons copied into the generated project after `tauri android init`;** notifications use monochrome `ic_notification`.
+
+## Browser extension & vault bridge → [decisions/features.md](decisions/features.md)
+- 2026-10 **The desktop app is the only source of vault data; the Brave extension has no vault and persists nothing** – one place to lock, back up and sync; the extension only asks live.
+- 2026-10 **Native messaging (host = a mode of the Nemo exe) instead of the loopback API** – the local API refuses every request with an `Origin` header by design (no CORS); a second endpoint there would weaken it.
+- 2026-10 **Brave first (Chromium MV3); Chrome/Edge/Chromium registered too, Firefox only a proposal** – Brave reads only its own registry key, so all four are written.
+- 2026-10 **Trust = fixed extension id (manifest `key`) + one-time confirmation with a code shown on both sides; no pairing key in the extension.**
+- 2026-10 **Origin rule is a global vault setting (same registrable domain / exact host), vault format unchanged.**
+- 2026-10 **Extension zip is a CI artifact only; release integration is a written proposal** – `release.yml` stays untouched.

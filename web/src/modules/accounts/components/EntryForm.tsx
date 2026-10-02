@@ -19,7 +19,8 @@ import styles from '../accounts.module.css';
 import { GeneratorPanel } from './GeneratorPanel';
 import { StrengthMeter } from './StrengthMeter';
 
-export type EntryTarget = DecryptedEntry | { draft: true } | null;
+/** `draft.password` pre-fills a new entry (from the generator dialog). */
+export type EntryTarget = DecryptedEntry | { draft: true; password?: string } | null;
 
 export function EntryForm({
   target,
@@ -31,6 +32,7 @@ export function EntryForm({
   onSaved?: (id: string) => void;
 }) {
   const existing = target && 'id' in target ? target : null;
+  const draftPassword = target && 'draft' in target ? target.password : undefined;
   return (
     <Dialog
       open={target !== null}
@@ -39,8 +41,9 @@ export function EntryForm({
     >
       {target ? (
         <Fields
-          key={existing?.id ?? 'new'}
+          key={existing?.id ?? `new-${draftPassword ?? ''}`}
           existing={existing}
+          initialPassword={draftPassword}
           onClose={onClose}
           onSaved={onSaved}
         />
@@ -51,17 +54,19 @@ export function EntryForm({
 
 function Fields({
   existing,
+  initialPassword,
   onClose,
   onSaved,
 }: {
   existing: DecryptedEntry | null;
+  initialPassword?: string;
   onClose: () => void;
   onSaved?: (id: string) => void;
 }) {
   const d = existing?.data;
   const [title, setTitle] = useState(d?.title ?? '');
   const [username, setUsername] = useState(d?.username ?? '');
-  const [password, setPassword] = useState(d?.password ?? '');
+  const [password, setPassword] = useState(d?.password ?? initialPassword ?? '');
   const [url, setUrl] = useState(d?.url ?? '');
   const [notes, setNotes] = useState(d?.notes ?? '');
   const [tags, setTags] = useState((d?.tags ?? []).join(', '));

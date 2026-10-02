@@ -10,6 +10,7 @@ const fakeDesktop = (over: Partial<DesktopService> = {}): DesktopService => ({
   ...createWebPlatform().desktop,
   supported: true,
   setHotkey: vi.fn(async () => null),
+  setVaultHotkey: vi.fn(async () => null),
   setCloseToTray: vi.fn(async () => undefined),
   setTrayLabels: vi.fn(async () => undefined),
   setAutostart: vi.fn(async () => undefined),
@@ -61,6 +62,16 @@ describe('startQuickCaptureDesktop', () => {
     expect(d.setCloseToTray).toHaveBeenCalledWith(true);
     expect(d.setAutostart).toHaveBeenCalledWith(true);
     expect(d.setHotkey).toHaveBeenCalledWith('Ctrl+Shift+Space');
+  });
+
+  it('leaves the vault search key off unless the user set one', async () => {
+    const d = fakeDesktop();
+    setPlatform({ ...createWebPlatform(), desktop: d });
+    await startQuickCaptureDesktop();
+    expect(d.setVaultHotkey).not.toHaveBeenCalled();
+    writePrefs({ vaultHotkey: 'Ctrl+Alt+V' });
+    await startQuickCaptureDesktop();
+    expect(d.setVaultHotkey).toHaveBeenCalledWith('Ctrl+Alt+V');
   });
 
   it('does not touch autostart when it is off', async () => {

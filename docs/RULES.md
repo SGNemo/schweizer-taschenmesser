@@ -28,3 +28,9 @@ Short list in root [CLAUDE.md](../CLAUDE.md); this file is the unabridged versio
 
 ## Dev-Preview
 A signed preview (portable exe `Nemo-Portable-dev.exe` + `Nemo-dev.apk`, own app `…taschenmesser.dev`, own data) is built automatically after every green push to `develop` (`dev-preview.yml`, called from `ci.yml`) and published as the rolling **pre-release** `dev-preview`; releases still happen only through the release procedure. Dev builds follow the dev channel (`core/update/buildInfo.ts`); stable builds can never select it. Details: `docs/HOW-TO.md` → "Dev-Preview".
+
+## Browser extension & vault bridge
+- The extension has no vault and persists nothing (no `chrome.storage`, no web storage; ESLint + E2E). The desktop app is the only source; every write goes through `saveEntry`.
+- Fill, copy and save only after a user click; never on page load or focus. An entry is offered, revealed or changed only for a page origin that matches its stored URL (`packages/vault-core/src/origin.ts`); the origin comes from the browser, never from a message.
+- Bridge messages are strict Zod schemas (`packages/vault-core/src/protocol.ts`), replies and errors carry codes only; nothing about messages is logged. No "list everything" operation; no bind address, port or CORS for the bridge. Only the allowlisted extension id (`EXTENSION_ID`) is served, after pairing; locking ends every session.
+- The extension never runs on Nemo's own pages (`data-nemo-ignore` on `<body>`). Details: [security/VAULT-EXTENSION.md](security/VAULT-EXTENSION.md).

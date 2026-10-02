@@ -44,6 +44,8 @@ struct TrayItems {
 pub struct CaptureState {
     close_to_tray: AtomicBool,
     hotkey: Mutex<Option<Shortcut>>,
+    /// Second global key: opens the vault search (the web app decides whether the vault is unlocked).
+    vault_hotkey: Mutex<Option<Shortcut>>,
     shown_at: Mutex<Option<Instant>>,
     tray: Mutex<Option<TrayItems>>,
 }
@@ -173,6 +175,15 @@ fn hide_capture(app: &AppHandle) {
     }
 }
 
+/// Brings the main window forward and tells the page to open the vault search. A constant script,
+/// no data crosses here; the page only acts on it while the vault is unlocked.
+fn open_vault_search(app: &AppHandle) {
+    show_main(app);
+    if let Some(window) = app.get_webview_window(MAIN) {
+        let _ = window.eval("window.dispatchEvent(new Event('tm-vault-search'))");
+    }
+}
+
 fn toggle_capture(app: &AppHandle) {
     let open = app
         .get_webview_window(CAPTURE)
@@ -235,21 +246,22 @@ fn hotkey_error_code(message: &str) -> &'static str {
 /// `failed`.
 fn set_hotkey(
     app: &AppHandle,
-    state: &CaptureState,
+    slot: &Mutex<Option<Shortcut>>,
     accelerator: Option<&str>,
+    action: fn(&AppHandle),
 ) -> Result<(), &'static str> {
     let next = match accelerator.map(str::trim).filter(|a| !a.is_empty()) {
         Some(a) => Some(a.parse::<Shortcut>().map_err(|_| "invalid")?),
         None => None,
     };
-    let mut current = state.hotkey.lock().map_err(|_| "failed")?;
+    let mut current = slot.lock().map_err(|_| "failed")?;
     let shortcuts = app.global_shortcut();
     if let Some(n) = next {
         if *current != Some(n) {
             shortcuts
-                .on_shortcut(n, |app, _shortcut, event| {
+                .on_shortcut(n, move |app, _shortcut, event| {
                     if event.state == ShortcutState::Pressed {
-                        toggle_capture(app);
+                        action(app);
                     }
                 })
                 .map_err(|e| match e {
@@ -273,7 +285,23 @@ pub fn capture_set_hotkey(
     state: State<'_, CaptureState>,
     accelerator: Option<String>,
 ) -> Result<(), String> {
-    set_hotkey(&app, &state, accelerator.as_deref()).map_err(str::to_owned)
+    set_hotkey(&app, &state.hotkey, accelerator.as_deref(), toggle_capture).map_err(str::to_owned)
+}
+
+/// Same contract as `capture_set_hotkey`, for the vault search key (off until the user sets one).
+#[tauri::command]
+pub fn desktop_set_vault_hotkey(
+    app: AppHandle,
+    state: State<'_, CaptureState>,
+    accelerator: Option<String>,
+) -> Result<(), String> {
+    set_hotkey(
+        &app,
+        &state.vault_hotkey,
+        accelerator.as_deref(),
+        open_vault_search,
+    )
+    .map_err(str::to_owned)
 }
 
 #[tauri::command]

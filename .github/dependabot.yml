@@ -79,6 +79,200 @@ updates:
       - dependency-name: typescript
         update-types: [version-update:semver-minor, version-update:semver-major]
   - package-ecosystem: npm
+    directory: "/packages/vault-core"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript is pinned to 6.0.x: typescript-eslint supports < 6.1 only.
+      - dependency-name: typescript
+        update-types: [version-update:semver-minor, version-update:semver-major]
+  - package-ecosystem: npm
+    directory: "/design/icon"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+  - package-ecosystem: cargo
+    directory: "/web/src-tauri"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - cargo
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      tauri:
+        patterns: ["tauri*", "wry", "tao"]
+        update-types: [minor, patch]
+      cargo-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Tauri crates move together; a major is a deliberate migration.
+      - dependency-name: "tauri*"
+        update-types: [version-update:semver-major]
+  - package-ecosystem: gradle
+    directory: "/web/src-tauri/plugins/apk-installer/android"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - gradle
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      gradle-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: gradle
+    directory: "/web/src-tauri/plugins/secure-store/android"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - gradle
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      gradle-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: gradle
+    directory: "/web/src-tauri/plugins/share-intent/android"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - gradle
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      gradle-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: docker
+    directory: "/server"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - docker
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      docker-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: docker-compose
+    directory: "/server"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - docker-compose
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: github-actions
+    directory: "/"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: "/extension"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript is pinned to 6.0.x: typescript-eslint supports < 6.1 only.
+      - dependency-name: typescript
+        update-types: [version-update:semver-minor, version-update:semver-major]
+  - package-ecosystem: npm
     directory: "/design/icon"
     target-branch: develop
     schedule:

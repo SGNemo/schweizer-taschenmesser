@@ -14,6 +14,10 @@ export type {
   SaveFileRequest,
   ScreenService,
   UnsealResult,
+  VaultBridgeRegistration,
+  VaultBridgeRequest,
+  VaultBridgeService,
+  VaultBridgeStartError,
 } from './types';
 
 let current: PlatformService = createWebPlatform();
