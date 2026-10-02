@@ -47,6 +47,11 @@ export const t = {
     selectRow: 'Auswählen',
     retry: 'Erneut versuchen',
     loading: 'Wird geladen',
+    discardTitle: 'Entwurf verwerfen?',
+    discardHint: 'Deine Eingaben gehen verloren.',
+    keepEditing: 'Weiter bearbeiten',
+    discard: 'Verwerfen',
+    grabHandle: 'Zum Schließen nach unten ziehen',
   },
   actions: {
     add: 'Hinzufügen',

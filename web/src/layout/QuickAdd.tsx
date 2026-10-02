@@ -6,7 +6,7 @@ import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Dialog, Icon } from '@/ui';
-import styles from './AppShell.module.css';
+import styles from './SheetList.module.css';
 
 export function QuickAdd() {
   const open = useUiStore((s) => s.quickAddOpen);
@@ -23,15 +23,15 @@ export function QuickAdd() {
     .flatMap((m) => (m.contributions?.quickAdd ?? []).map((a) => ({ ...a, icon: m.icon })));
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} title={t.quickAdd.title} variant="sheet">
+    <Dialog open={open} onClose={() => setOpen(false)} title={t.quickAdd.title} size="roomy">
       {open ? <CaptureForm onSaved={onSaved} onCancel={() => setOpen(false)} /> : null}
       {actions.length === 0 ? (
         <p>{t.quickAdd.empty}</p>
       ) : (
-        <ul className={styles.navList}>
+        <ul className={styles.list}>
           {actions.map((a) => (
             <li key={`${a.icon}-${a.id}`}>
-              <NavLink to={a.to} className={styles.navLink} onClick={() => setOpen(false)}>
+              <NavLink to={a.to} className={styles.link} onClick={() => setOpen(false)}>
                 <Icon name={a.icon} />
                 {a.label}
               </NavLink>

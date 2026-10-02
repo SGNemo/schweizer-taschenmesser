@@ -3,7 +3,7 @@ import type { NavArea } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Dialog, Icon } from '@/ui';
-import styles from './MoreSheet.module.css';
+import styles from './SheetList.module.css';
 
 /** "Mehr": areas that did not fit the bottom bar, then tools, library and settings. */
 export function MoreSheet({
@@ -17,7 +17,7 @@ export function MoreSheet({
 }) {
   const openTools = useUiStore((s) => s.openTools);
   return (
-    <Dialog open={open} onClose={onClose} title={t.nav.more} variant="sheet">
+    <Dialog open={open} onClose={onClose} title={t.nav.more}>
       <ul className={styles.list}>
         {areas.map((a) => (
           <li key={a.id}>

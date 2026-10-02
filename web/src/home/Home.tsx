@@ -194,12 +194,7 @@ export function Home() {
         </DndContext>
       )}
 
-      <Dialog
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        title={t.homeEdit.widgetsTitle}
-        variant="sheet"
-      >
+      <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title={t.homeEdit.widgetsTitle}>
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
         {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}
         <ul className={patternStyles.plainList}>
