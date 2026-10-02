@@ -4,15 +4,21 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { listSchema, taskSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'todos',
-  name: 'ToDos',
+  name: t.todos.meta.name,
   icon: 'checklist',
   version: 1,
-  description: 'Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben.',
+  description: t.todos.meta.description,
   routes: [
-    { path: '/todos', label: 'ToDos', nav: true, component: () => import('./routes/TodosPage') },
+    {
+      path: '/todos',
+      label: t.todos.meta.route,
+      nav: true,
+      component: () => import('./routes/TodosPage'),
+    },
   ],
   dataSchema: {
     collections: {
@@ -24,7 +30,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'open',
-      title: 'Offene ToDos',
+      title: t.todos.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OpenTasksWidget'),
@@ -39,7 +45,7 @@ const manifest: ModuleManifest = {
   area: 'plan',
   contributions: {
     onboarding: onboarding,
-    quickAdd: [{ id: 'task', label: 'ToDo', to: '/todos?new=1' }],
+    quickAdd: [{ id: 'task', label: t.todos.meta.quickAdd, to: '/todos?new=1' }],
     calendarItems: () => import('./calendar'),
     aiCreateDefaults: () => import('./aiDefaults'),
   },

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { t } from '@/strings';
 
 export const settingsSchema = z.object({
   cancelRemindDaysBefore: z.number().int().min(0).max(60),
@@ -12,10 +13,15 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'cancelRemindDaysBefore',
-      label: 'Erinnerung vor Ende der Kündigungsfrist (Tage)',
+      label: t.subscriptions.meta.settings.cancelRemindDaysBefore,
       type: 'number',
-      help: '0 = am letzten Tag der Frist',
+      help: t.subscriptions.meta.settings.cancelRemindDaysBeforeHelp,
     },
-    { key: 'remindTime', label: 'Uhrzeit der Erinnerung', type: 'text', help: 'Format HH:mm' },
+    {
+      key: 'remindTime',
+      label: t.subscriptions.meta.settings.remindTime,
+      type: 'text',
+      help: t.subscriptions.meta.settings.remindTimeHelp,
+    },
   ],
 };

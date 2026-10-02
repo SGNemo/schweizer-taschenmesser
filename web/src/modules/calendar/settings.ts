@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { t } from '@/strings';
 
 const schema = z.object({
   defaultView: z.enum(['month', 'week', 'day']),
@@ -11,12 +12,12 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'defaultView',
-      label: 'Standardansicht',
+      label: t.calendar.meta.settings.defaultView,
       type: 'select',
       options: [
-        { value: 'month', label: 'Monat' },
-        { value: 'week', label: 'Woche' },
-        { value: 'day', label: 'Tag' },
+        { value: 'month', label: t.calendar.meta.settings.defaultView_month },
+        { value: 'week', label: t.calendar.meta.settings.defaultView_week },
+        { value: 'day', label: t.calendar.meta.settings.defaultView_day },
       ],
     },
   ],

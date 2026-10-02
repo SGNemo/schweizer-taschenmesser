@@ -4,19 +4,19 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { budgetSchema, depositSchema, goalSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'budgets',
   requires: ['finance'],
-  name: 'Budgets & Sparziele',
+  name: t.budgets.meta.name,
   icon: 'piggy',
   version: 1,
-  description:
-    'Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.',
+  description: t.budgets.meta.description,
   routes: [
     {
       path: '/budgets',
-      label: 'Budgets',
+      label: t.budgets.meta.route,
       nav: true,
       component: () => import('./routes/BudgetsPage'),
     },
@@ -32,7 +32,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'overview',
-      title: 'Budgets & Sparziele',
+      title: t.budgets.meta.widget,
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OverviewWidget'),
@@ -47,7 +47,7 @@ const manifest: ModuleManifest = {
   area: 'money',
   contributions: {
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'goal', label: 'Sparziel', to: '/budgets?tab=goals&new=1' }],
+    quickAdd: [{ id: 'goal', label: t.budgets.meta.quickAdd, to: '/budgets?tab=goals&new=1' }],
   },
 };
 

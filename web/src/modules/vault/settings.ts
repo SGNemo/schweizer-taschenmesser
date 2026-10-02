@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { t } from '@/strings';
 
 export const settingsSchema = z.object({
   remindDaysBefore: z.number().int().min(0).max(365),
@@ -12,9 +13,14 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'remindDaysBefore',
-      label: 'Erinnerung vor Ablauf eines Dokuments (Tage)',
+      label: t.vault.meta.settings.remindDaysBefore,
       type: 'number',
     },
-    { key: 'remindTime', label: 'Uhrzeit der Erinnerung', type: 'text', help: 'Format HH:mm' },
+    {
+      key: 'remindTime',
+      label: t.vault.meta.settings.remindTime,
+      type: 'text',
+      help: t.vault.meta.settings.remindTimeHelp,
+    },
   ],
 };
