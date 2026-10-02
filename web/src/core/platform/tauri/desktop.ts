@@ -29,6 +29,10 @@ export function createDesktopService(supported: boolean): DesktopService {
     setAutostart: (enabled) => invoke('desktop_set_autostart', { enabled }),
     autostart: () => invoke<boolean>('desktop_autostart_enabled'),
     info: () => invoke<{ portable: boolean }>('desktop_info'),
+    async dataDir() {
+      return (await invoke<string | null>('desktop_data_dir')) ?? undefined;
+    },
+    openDataDir: () => invoke('desktop_open_data_dir'),
     showMain: () => invoke('desktop_show_main'),
     hideCapture: () => invoke('capture_hide'),
     async readClipboard() {

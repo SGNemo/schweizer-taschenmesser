@@ -107,6 +107,8 @@ export const webDesktop: DesktopService = {
   setAutostart: async () => undefined,
   autostart: async () => false,
   info: async () => ({ portable: false }),
+  dataDir: async () => undefined,
+  openDataDir: async () => undefined,
   showMain: async () => undefined,
   hideCapture: async () => undefined,
   readClipboard: () => navigator.clipboard.readText().catch(() => undefined),

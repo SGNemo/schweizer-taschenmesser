@@ -267,7 +267,7 @@ const toolUse = (
 
 /** Adds a provider from its preset in the settings; returns its card. */
 async function addProvider(page: Page, presetLabel: string, id: string, key: string) {
-  await page.goto('/settings');
+  await page.goto('/settings/ki');
   const section = page.locator('section[aria-labelledby="ai"]');
   await section.getByLabel('Anbieter hinzufügen').selectOption({ label: presetLabel });
   const card = section.getByTestId(`provider-${id}`);
@@ -335,7 +335,7 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
     expect(mock.requests).toHaveLength(1);
 
     // Usage is accounted in the settings.
-    await page.goto('/settings');
+    await page.goto('/settings/ki');
     const usage = page.getByTestId('ai-usage');
     await expect(usage).toContainText('1 KI-Anfrage');
     await expect(usage).toContainText('1 Antwort aus dem Cache');
@@ -520,9 +520,9 @@ test.describe('KI-Anbieter mit Fallback (gemockt)', () => {
     // client-side navigation: the pause of a rate-limited provider lives in memory, a reload ends it
     await page.keyboard.press('Escape');
     const box = await openPalette(page);
-    await box.fill('Einstellungen');
+    await box.fill('Einstellung: KI-Assistent');
     await box.press('Enter');
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings\/ki/);
     const section = page.locator('section[aria-labelledby="ai"]');
     await expect(section.getByTestId('stats-groq')).toContainText('0 Anfragen · 1 Fehler');
     await expect(section.getByTestId('stats-openrouter')).toContainText(

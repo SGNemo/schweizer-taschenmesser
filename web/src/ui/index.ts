@@ -6,6 +6,7 @@ export { TextField, TextArea, SelectField, DateField, Checkbox, Switch } from '.
 export { Tabs, type TabItem } from './Tabs';
 export { Badge, EmptyState, ErrorState, Fab, Skeleton, SkeletonRows, Toaster } from './Misc';
 export { HelpHint } from './HelpHint';
+export { DangerZone, SettingRow, SettingsGroup, TypedConfirmDialog } from './SettingsParts';
 export { Icon } from './icons';
 export { Logo } from './Logo';
 export { Wordmark } from './Wordmark';

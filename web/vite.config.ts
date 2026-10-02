@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { extractChangelogSection } from './scripts/lib/aboutData.ts';
 import { fileURLToPath } from 'node:url';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
@@ -11,8 +13,33 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 // worker (the shell has its own updater); the PWA hooks are replaced by an inert stub.
 const native = Boolean(process.env.TAURI_ENV_PLATFORM);
 
+/** Short commit id of this build ('' outside a git checkout); shown in Settings → Über Nemo. */
+function gitSha(): string {
+  try {
+    return execSync('git rev-parse --short=7 HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+  } catch {
+    return '';
+  }
+}
+/** This version's section of the changelog (or the unreleased block), shown collapsed in Über Nemo. */
+function changelog(): string {
+  try {
+    const md = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+    return extractChangelogSection(md, pkg.version);
+  } catch {
+    return '';
+  }
+}
+
 export default defineConfig({
-  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __BUILD_SHA__: JSON.stringify(gitSha()),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+    __CHANGELOG__: JSON.stringify(changelog()),
+  },
   plugins: [
     react(),
     VitePWA({

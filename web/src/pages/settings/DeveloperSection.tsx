@@ -14,7 +14,7 @@ import { SEED_SCALES, type SeedScale } from '@/core/seed/types';
 import { availableManifests } from '@/core/modules/available';
 import { tDev } from '@/strings.dev';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, SelectField, Switch, TextField } from '@/ui';
+import { Button, Card, DangerZone, SelectField, Switch, TextField } from '@/ui';
 import styles from './settings.module.css';
 
 /** Dev-Preview only: generated test data (see `core/seed/`). Stable builds never mount this. */
@@ -123,23 +123,25 @@ export default function DeveloperSection() {
         )}
         <p className={styles.muted}>{tDev.status.demoVault(DEMO_PASSPHRASE)}</p>
 
-        <h3>{tDev.reset.title}</h3>
-        <p className={styles.muted}>{tDev.reset.hint}</p>
-        <TextField
-          label={tDev.reset.field}
-          value={confirm}
-          autoComplete="off"
-          onChange={(e) => setConfirm(e.target.value)}
-        />
-        <div className={styles.row}>
-          <Button
-            variant="danger"
-            disabled={confirm !== tDev.reset.phrase}
-            onClick={() => void resetEverything()}
-          >
-            {tDev.reset.button}
-          </Button>
-        </div>
+        <DangerZone>
+          <h3>{tDev.reset.title}</h3>
+          <p className={styles.muted}>{tDev.reset.hint}</p>
+          <TextField
+            label={tDev.reset.field}
+            value={confirm}
+            autoComplete="off"
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+          <div className={styles.row}>
+            <Button
+              variant="danger"
+              disabled={confirm !== tDev.reset.phrase}
+              onClick={() => void resetEverything()}
+            >
+              {tDev.reset.button}
+            </Button>
+          </div>
+        </DangerZone>
       </div>
     </Card>
   );

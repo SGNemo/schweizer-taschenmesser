@@ -23,13 +23,13 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 - `src/tools/<id>/` – small stateless helpers (12: calc, currency, dates, dev, dice, image, pdf, qr, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `ToolsSheet`, `assistant/`.
-- `src/pages/` – `Settings.tsx` + `settings/*Section.tsx`, `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
+- `src/pages/` – `settings/` (layout, sections), `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
 - `src/ui/` – design system: `tokens.css` (+ `tokens.test.ts`), `global.css`, Button, Card, Dialog (sheet on phones), Fields, Tabs, Patterns (`Segmented`, `ItemList`/`ItemRow`, `Progress`, `SplitView`), Misc (Badge, EmptyState, ErrorState, Skeleton, Toaster), `SelectionBar`, `useSelection`/`useSwipeRow`/`useDraft`, `WidgetList.tsx`, HelpHint, `Logo.tsx`, `icons.tsx`.
 - `web/brand/` – logo/icon SVG sources + font licences (one fish, mask-based; `src/brand-sync.test.ts` keeps Logo/splash in step); `scripts/gen-icons.mjs` renders all raster assets (see HOW-TO → Icons).
 - `src/router.tsx`, `src/App.tsx`, `src/main.tsx` (startup order), `src/sw.ts` (service worker), `src/stores/ui.ts` (zustand UI state), `src/strings.ts` (**all German UI text**).
 - `templates/module/` – scaffold used by `scripts/gen-module.mjs`.
 - `scripts/` – `db-bump`, `gen-module`, `gen-icons`, `version`, `changelog`, `keys`, `android-sign`, `audit-release`, `latest-json` (`UPDATER_PORTABLE_ASSET`), `release-assets` (asset list for the workflow), `check-links` (+ tested `scripts/lib/*.ts`).
-- `e2e/` – Playwright specs (`a11y, accounts, assistant, backup, connectors, core, extras, layout, links, localapi, modules, money, notifications, onboarding, quick-capture, setup, tools`), shared `helpers.ts` (`ready`, `enable`, `mainNav`); `e2e/sync/` multi-device; `e2e/screenshots/capture.spec.ts` (manual tool, not CI; `SCREENS_*` env filters). Config: `playwright.config.ts`, `playwright.sync.config.ts`, `playwright.screens.config.ts`, env `.env.e2e`.
+- `e2e/` – Playwright specs (one per area, e.g. `settings`, `a11y`, `backup`), shared `helpers.ts` (`ready`, `enable`, `mainNav`); `e2e/sync/` multi-device; `e2e/screenshots/capture.spec.ts` (manual tool, not CI; `SCREENS_*` env filters). Config: `playwright.config.ts`, `playwright.sync.config.ts`, `playwright.screens.config.ts`, env `.env.e2e`.
 
 ## Where things live
 | Area | Location | Key names |
@@ -42,7 +42,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Tool registry** | `web/src/core/tools/{registry,types,state,layout}.ts` (glob `tools/*/manifest.ts`) | `ToolManifest`, `allTools`; UI `layout/ToolsSheet.tsx`, `/tools/:id` |
 | Event bus | `web/src/core/events/{bus,events,index}.ts` | typed `EventMap` |
 | **DB / data** | `web/src/core/db/` | `repo.ts` (`createRepo`, `createMany`, `purge`), `hlc.ts`, `schema*.json`, `appMigrations.ts` (+`Steps`), `db.ts` (modules: no import) |
-| Settings | `web/src/core/settings/settings.ts` | `useSettings`, scopes in synced `_settings` |
+| Settings | `core/settings/settings.ts` (`useSettings`), `core/settings/registry/`, `pages/settings/sections.tsx`; [howto/new-setting.md](howto/new-setting.md) | `SettingsSectionDef` |
 | Time | `web/src/core/time/{now,dates,due}.ts` | `now()`, `today()` |
 | **Sync client** | `web/src/core/sync/`: `engine.ts` (`runSync`), `ops.ts` (`mergeOps` – the LWW rule), `service.ts` (`syncNow`, `startSync`, `connect`), `types.ts` (`SyncAdapter`, `FieldOp`), `crypto.ts` (sync E2E), `adapters/selfHosted.ts`, `adapters/googleDrive.stub.ts` (unbuilt), `testing.ts` (`MemoryServer`) | |
 | Storage adapter | `web/src/core/storage/{types,dexie}.ts` | `StorageAdapter`, outbox |

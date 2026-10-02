@@ -333,7 +333,7 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('widget-finance:balance')).toContainText(/2\.134,01\s€/);
 
     // Switch the deduction off in the settings
-    await ready(page, '/settings');
+    await ready(page, '/settings/module');
     await page
       .getByRole('switch', { name: 'Offene Rechnungen vom verfügbaren Betrag abziehen' })
       .click();

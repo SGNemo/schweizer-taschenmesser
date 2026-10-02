@@ -102,13 +102,13 @@ for (const vp of VIEWPORTS) {
 
     test('the page container honours its variant', async ({ page }) => {
       await prepare(page);
-      // todos = wide (100rem = 1600 px), settings = narrow (45rem = 720 px).
+      // todos = wide (100rem = 1600 px), settings = content (70rem = 1120 px: category list + 44rem column).
       await page.goto('/todos');
       await expect(page.locator('main h1')).toBeVisible();
       expect((await metrics(page)).pageWidth).toBeLessThanOrEqual(1601);
       await page.goto('/settings');
       await expect(page.locator('main h1')).toBeVisible();
-      expect((await metrics(page)).pageWidth).toBeLessThanOrEqual(721);
+      expect((await metrics(page)).pageWidth).toBeLessThanOrEqual(1121);
     });
 
     test('the calendar month grid uses the available height and width', async ({ page }) => {

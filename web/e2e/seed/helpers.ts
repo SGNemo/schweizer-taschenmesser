@@ -21,7 +21,7 @@ export async function bootDev(page: Page, opts: { autofill?: boolean } = {}) {
 
 /** Settings → Entwickler → "Testdaten laden" for `scale` and waits until the status shows it. */
 export async function seedApp(page: Page, scale: 'small' | 'medium' | 'large' = 'small') {
-  await page.goto('/settings');
+  await page.goto('/settings/entwickler');
   await expect(page.locator('main h1')).toBeVisible();
   const section = page.locator('section[aria-labelledby="developer"]');
   await section.getByLabel('Umfang').selectOption(scale);

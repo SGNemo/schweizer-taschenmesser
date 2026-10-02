@@ -28,6 +28,8 @@ export const defaultSettings: FullAccountsSettings = {
 };
 
 export const settings: ModuleSettings = {
+  category: 'sicherheit',
+  keywords: ['Tresor', 'Passwort', 'Sperre', 'Auto-Lock', 'Browser-Erweiterung'],
   schema: settingsSchema,
   defaults: defaultSettings,
   fields: [

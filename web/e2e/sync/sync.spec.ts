@@ -79,6 +79,10 @@ test.describe('two devices', () => {
     // B is still offline: the badge shows the problem and the change stays queued
     // (client-side navigation: a page load would fail while the browser is offline)
     await b.page.getByRole('link', { name: 'Einstellungen' }).click();
+    await b.page
+      .getByRole('navigation', { name: 'Einstellungs-Kategorien' })
+      .getByRole('link', { name: 'Sync & Backup' })
+      .click();
     await b.page.getByRole('button', { name: 'Jetzt synchronisieren' }).click();
     await expect(b.page.getByTestId('sync-status')).toContainText('Fehler');
     await expect(b.page.getByRole('alert')).toHaveText('Server nicht erreichbar.');

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
-import { BUILD_SHA, isDevBuild } from '@/core/update/buildInfo';
+import { buildCommit, versionLabel } from '@/core/about/info';
+import { isDevBuild } from '@/core/update/buildInfo';
 import { checkForUpdate, useUpdateStore } from '@/core/update/controller';
 import { loadPrefs, savePrefs, type UpdatePrefs } from '@/core/update/prefs';
 import { t } from '@/strings';
@@ -35,9 +36,11 @@ export function UpdateSection() {
         <p data-testid="app-version">
           {t.update.settings.version}:{' '}
           <strong>
-            {isDevBuild()
-              ? t.update.settings.devVersion(version || '…', BUILD_SHA)
-              : version || '…'}
+            {versionLabel({
+              version,
+              channel: isDevBuild() ? 'dev' : 'stable',
+              commit: buildCommit(),
+            })}
           </strong>
         </p>
         {!platform.updater.supported ? (

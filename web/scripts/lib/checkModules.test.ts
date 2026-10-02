@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkModule, checkWidgetSource } from './checkModules';
+import { checkModule, checkSettingsSource, checkWidgetSource } from './checkModules';
 
 const good = `
 const manifest = {
@@ -109,5 +109,20 @@ describe('checkWidgetSource', () => {
     // the catalogue types bring their own empty state; the status card carries its action
     expect(checkWidgetSource('x', 'w', '<GaugeList empty="Leer" entries={[]} />')).toEqual([]);
     expect(checkWidgetSource('x', 'w', '<StatusCard icon="lock" state="x" />')).toEqual([]);
+  });
+});
+
+describe('checkSettingsSource', () => {
+  const categories = ['module', 'sicherheit'];
+  it('accepts a known category and a missing one', () => {
+    expect(
+      checkSettingsSource('x', "export const settings = { category: 'sicherheit' }", categories),
+    ).toEqual([]);
+    expect(checkSettingsSource('x', 'export const settings = { fields: [] }', categories)).toEqual(
+      [],
+    );
+  });
+  it('rejects an unknown category', () => {
+    expect(checkSettingsSource('x', "{ category: 'misc' }", categories)).toHaveLength(1);
   });
 });

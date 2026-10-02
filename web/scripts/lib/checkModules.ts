@@ -89,3 +89,20 @@ export function checkWidgetSource(id: string, file: string, src: string): string
     ? []
     : [`${id}: widget "${file}" shows no empty state / link to the module`];
 }
+
+/**
+ * Settings of a module (`settings.ts`, or the `settings:` block of the manifest): a `category`, if
+ * given, must be a known settings category (`core/settings/registry/types.ts`); without one the
+ * module's section lands in "Module". `categories` are the valid route ids.
+ */
+export function checkSettingsSource(
+  id: string,
+  source: string,
+  categories: readonly string[],
+): string[] {
+  const match = /\bcategory:\s*['"]([^'"]*)['"]/.exec(source);
+  if (!match || categories.includes(match[1]!)) return [];
+  return [
+    `${id}: settings.category "${match[1]}" is not a settings category (${categories.join(', ')})`,
+  ];
+}

@@ -1,0 +1,187 @@
+{
+  "accounts": {
+    "scope": "module.accounts",
+    "fields": {
+      "autoLockMinutes": {
+        "type": "select",
+        "label": "Tresor sperren nach Inaktivität",
+        "default": "5"
+      },
+      "backgroundLock": {
+        "type": "select",
+        "label": "Tresor sperren, wenn die App im Hintergrund ist",
+        "default": "now"
+      },
+      "originMatch": {
+        "type": "select",
+        "label": "Browser-Erweiterung: Zugangsdaten anbieten für",
+        "default": "domain"
+      },
+      "genLength": {
+        "type": "select",
+        "label": "Browser-Erweiterung: Länge neuer Passwörter",
+        "default": "20"
+      },
+      "genSymbols": {
+        "type": "boolean",
+        "label": "Browser-Erweiterung: Sonderzeichen verwenden",
+        "default": true
+      },
+      "genAvoidAmbiguous": {
+        "type": "boolean",
+        "label": "Browser-Erweiterung: Ähnliche Zeichen vermeiden (Il1O0)",
+        "default": false
+      }
+    }
+  },
+  "birthdays": {
+    "scope": "module.birthdays",
+    "fields": {
+      "remindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor dem Geburtstag (Tage)",
+        "default": 0
+      },
+      "remindTime": {
+        "type": "text",
+        "label": "Uhrzeit der Erinnerung",
+        "default": "09:00"
+      }
+    }
+  },
+  "calendar": {
+    "scope": "module.calendar",
+    "fields": {
+      "defaultView": {
+        "type": "select",
+        "label": "Standardansicht",
+        "default": "month"
+      }
+    }
+  },
+  "contracts": {
+    "scope": "module.contracts",
+    "fields": {
+      "remindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor Kündigungsfrist bzw. Ablauf (Tage)",
+        "default": 14
+      },
+      "remindTime": {
+        "type": "text",
+        "label": "Uhrzeit der Erinnerung",
+        "default": "09:00"
+      }
+    }
+  },
+  "example": {
+    "scope": "module.example",
+    "fields": {
+      "showDone": {
+        "type": "boolean",
+        "label": "Erledigte anzeigen",
+        "default": true
+      }
+    }
+  },
+  "finance": {
+    "scope": "module.finance",
+    "fields": {
+      "includeOpenInvoices": {
+        "type": "boolean",
+        "label": "Offene Rechnungen vom verfügbaren Betrag abziehen",
+        "default": true
+      },
+      "includeSubscriptions": {
+        "type": "boolean",
+        "label": "Abo-Abbuchungen bis Monatsende abziehen",
+        "default": true
+      }
+    }
+  },
+  "invoices": {
+    "scope": "module.invoices",
+    "fields": {
+      "remindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor Fälligkeit (Tage)",
+        "default": 2
+      },
+      "remindTime": {
+        "type": "text",
+        "label": "Uhrzeit der Erinnerung",
+        "default": "09:00"
+      }
+    }
+  },
+  "pantry": {
+    "scope": "module.pantry",
+    "fields": {
+      "soonDays": {
+        "type": "number",
+        "label": "Als „läuft bald ab“ zeigen ab (Tage vorher)",
+        "default": 3
+      },
+      "remindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor Ablauf (Tage)",
+        "default": 1
+      },
+      "remindTime": {
+        "type": "text",
+        "label": "Uhrzeit der Erinnerung",
+        "default": "18:00"
+      }
+    }
+  },
+  "reminders": {
+    "scope": "module.reminders",
+    "fields": {
+      "defaultTime": {
+        "type": "text",
+        "label": "Standard-Uhrzeit für neue Erinnerungen",
+        "default": "09:00"
+      }
+    }
+  },
+  "subscriptions": {
+    "scope": "module.subscriptions",
+    "fields": {
+      "cancelRemindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor Ende der Kündigungsfrist (Tage)",
+        "default": 3
+      },
+      "remindTime": {
+        "type": "text",
+        "label": "Uhrzeit der Erinnerung",
+        "default": "09:00"
+      }
+    }
+  },
+  "todos": {
+    "scope": "module.todos",
+    "fields": {
+      "showDone": {
+        "type": "boolean",
+        "label": "Erledigte Aufgaben anzeigen",
+        "default": true
+      }
+    }
+  },
+  "vault": {
+    "scope": "module.vault",
+    "fields": {
+      "remindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor Ablauf eines Dokuments (Tage)",
+        "default": 30
+      },
+      "remindTime": {
+        "type": "text",
+        "label": "Uhrzeit der Erinnerung",
+        "default": "09:00"
+      }
+    }
+  }
+}

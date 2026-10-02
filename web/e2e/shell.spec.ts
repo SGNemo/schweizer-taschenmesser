@@ -83,8 +83,11 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test('the sidebar can be switched to the rail in the settings and back with the handle', async ({
     page,
   }) => {
-    await ready(page, '/settings');
-    await page.getByLabel('Seitenleiste').selectOption('narrow');
+    await ready(page, '/settings/darstellung');
+    await page
+      .getByRole('group', { name: 'Seitenleiste' })
+      .getByRole('button', { name: 'Schmal' })
+      .click();
     const nav = mainNav(page);
     await expect(nav.getByRole('heading', { name: 'Favoriten' })).toHaveCount(0);
     await expect(nav.getByRole('link', { name: 'Geld' })).toHaveAttribute('href', '/geld');
@@ -104,7 +107,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   });
 
   test('favourites can also be set in the settings (touch path)', async ({ page }) => {
-    await ready(page, '/settings');
+    await ready(page, '/settings/darstellung');
     const row = page.getByRole('switch', { name: 'Abos' });
     await expect(row).toHaveAttribute('aria-checked', 'false');
     await row.click();
@@ -138,6 +141,6 @@ test.describe('shell: phone', () => {
     await expect(sheet.getByRole('button', { name: 'Werkzeuge' })).toBeVisible();
     await expect(sheet.getByRole('link', { name: 'Modul-Bibliothek' })).toBeVisible();
     await sheet.getByRole('link', { name: 'Einstellungen' }).click();
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings(\/allgemein)?$/);
   });
 });

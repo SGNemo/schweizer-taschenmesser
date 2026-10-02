@@ -2,6 +2,9 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
+import { settingsPath } from '@/core/settings/registry/paths';
+import { normalize } from '@/core/text/normalize';
+import { useSettingsSections } from '@/pages/settings/useSections';
 import type { ResultRow } from '@/core/ai/query/types';
 import { useSetupHost } from '@/core/setup/host';
 import { useTools } from '@/core/tools/state';
@@ -20,17 +23,23 @@ export interface Command {
   label: string;
   icon: IconName;
   run: () => void;
+  /**
+   * Only offered once the (normalised) query starts with this text – for long lists of commands
+   * (every setting) that would otherwise hijack Enter for natural-language questions.
+   */
+  onlyWhenQueryStartsWith?: string;
 }
 
-/** Lowercase, strip diacritics – "Übersicht" matches "ubersicht". */
-export function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-}
+export { normalize };
 
 export function filterCommands(commands: Command[], query: string): Command[] {
   const q = normalize(query);
   if (!q) return commands;
-  return commands.filter((c) => normalize(c.label).includes(q));
+  return commands.filter(
+    (c) =>
+      (!c.onlyWhenQueryStartsWith || q.startsWith(c.onlyWhenQueryStartsWith)) &&
+      normalize(c.label).includes(q),
+  );
 }
 
 export function CommandPalette() {
@@ -64,6 +73,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const openSetup = useSetupHost((s) => s.openWizard);
   const openTools = useUiStore((s) => s.openTools);
   const tools = useTools();
+  const settingsSections = useSettingsSections();
 
   const [devCommands, setDevCommands] = useState<Command[]>([]);
   useEffect(() => {
@@ -90,6 +100,22 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
+      ...settingsSections.flatMap((sec) => [
+        {
+          id: `settings-${sec.id}`,
+          label: t.settings.paletteCommand(sec.title),
+          icon: 'settings' as IconName,
+          onlyWhenQueryStartsWith: 'einst',
+          run: go(settingsPath(sec.category, sec.id)),
+        },
+        ...(sec.fields ?? []).map((f) => ({
+          id: `settings-${sec.id}--${f.key}`,
+          label: t.settings.paletteCommand(f.label),
+          icon: 'settings' as IconName,
+          onlyWhenQueryStartsWith: 'einst',
+          run: go(settingsPath(sec.category, sec.id, f.key)),
+        })),
+      ]),
       ...(tools?.active ?? []).map((tool) => ({
         id: `tool-${tool.id}`,
         label: t.tools.paletteCommand(tool.name),
@@ -98,7 +124,17 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       })),
       ...devCommands,
     ];
-  }, [navigate, moduleItems, tree, quickActions, openSetup, openTools, tools, devCommands]);
+  }, [
+    navigate,
+    moduleItems,
+    tree,
+    quickActions,
+    openSetup,
+    openTools,
+    tools,
+    devCommands,
+    settingsSections,
+  ]);
 
   const hits = useSearchHits(query);
   const hasModel = config ? isAiConfigured(config) : false;

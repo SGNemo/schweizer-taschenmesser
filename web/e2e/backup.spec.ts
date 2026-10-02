@@ -36,7 +36,7 @@ test.describe('backup', () => {
     await addTask(page, 'Alpha');
     await addTask(page, 'Beta');
 
-    await page.goto('/settings');
+    await page.goto('/settings/sync');
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Backup herunterladen' }).click();
     const file = await download;
@@ -61,7 +61,7 @@ test.describe('backup', () => {
     expect(await titles(page)).toEqual(['Alpha', 'Gamma']);
 
     // Merge: nothing is lost, the newer local delete of Beta wins over the backup
-    await page.goto('/settings');
+    await page.goto('/settings/sync');
     await page.locator('#backup-file').setInputFiles(path);
     await expect(page.getByTestId('backup-contents')).toContainText('Einträge in');
     await page.getByRole('button', { name: 'Importieren' }).click();
@@ -69,7 +69,7 @@ test.describe('backup', () => {
     expect(await titles(page)).toEqual(['Alpha', 'Gamma']);
 
     // Replace: the backup becomes the state
-    await page.goto('/settings');
+    await page.goto('/settings/sync');
     await page.locator('#backup-file').setInputFiles(path);
     await page.getByRole('radio', { name: /Ersetzen/ }).check();
     await page.getByRole('button', { name: 'Importieren' }).click();
@@ -81,7 +81,7 @@ test.describe('backup', () => {
 
   test('a backup can be restored into a fresh browser profile', async ({ page, browser }, info) => {
     await addTask(page, 'Mitnehmen');
-    await page.goto('/settings');
+    await page.goto('/settings/sync');
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Backup herunterladen' }).click();
     const path = info.outputPath('backup.json');
@@ -89,7 +89,7 @@ test.describe('backup', () => {
 
     const context = await browser.newContext();
     const fresh = await context.newPage();
-    await fresh.goto('/settings');
+    await fresh.goto('/settings/sync');
     await fresh.locator('#backup-file').setInputFiles(path);
     await fresh.getByRole('button', { name: 'Importieren' }).click();
     await expect(fresh.getByText(/Einträge wiederhergestellt/)).toBeVisible();
@@ -102,7 +102,7 @@ test.describe('backup', () => {
     browser,
   }, info) => {
     await addTask(page, 'Streng geheim');
-    await page.goto('/settings');
+    await page.goto('/settings/sync');
     await page.getByLabel('Passwort für das Backup').fill('kurz');
     await page.getByRole('button', { name: 'Verschlüsselt exportieren' }).click();
     await expect(page.getByText('Das Passwort braucht mindestens 8 Zeichen.')).toBeVisible();
@@ -118,7 +118,7 @@ test.describe('backup', () => {
 
     const context = await browser.newContext();
     const fresh = await context.newPage();
-    await fresh.goto('/settings');
+    await fresh.goto('/settings/sync');
     await fresh.locator('#backup-file').setInputFiles(path);
     await fresh.getByLabel('Passwort des Backups').fill('falsches-passwort');
     await fresh.getByRole('button', { name: 'Öffnen' }).click();
@@ -138,7 +138,7 @@ test.describe('backup', () => {
   });
 
   test('rejects files that are not backups', async ({ page }) => {
-    await page.goto('/settings');
+    await page.goto('/settings/sync');
     const input = page.locator('#backup-file');
     await input.setInputFiles({
       name: 'x.json',
