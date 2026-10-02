@@ -75,7 +75,10 @@ test('set up the vault, add an entry, lock, wrong password, unlock', async ({ pa
   await addEntry(page, { totp: 'JBSWY3DPEHPK3PXP' });
 
   // the detail view opens after saving: password hidden until "Anzeigen", TOTP code visible
-  const detail = page.getByRole('dialog', { name: SECRET_TITLE });
+  // a dialog on phones, the side panel ("Details") from 1200 px
+  const detail = page
+    .getByRole('dialog', { name: SECRET_TITLE })
+    .or(page.getByRole('complementary', { name: 'Details' }));
   await expect(detail.getByTestId('password-value')).not.toContainText(SECRET_PASSWORD);
   await detail.getByRole('button', { name: 'Anzeigen' }).click();
   await expect(detail.getByTestId('password-value')).toContainText(SECRET_PASSWORD);

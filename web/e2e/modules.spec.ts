@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { enableExample, mainNav } from './helpers';
 
 test.describe('module library', () => {
@@ -38,18 +38,23 @@ test.describe('module library', () => {
     await expect(page).toHaveURL(/\/library$/);
   });
 
-  test('enabling adds navigation, disabling removes it', async ({ page }) => {
+  /** Example sits in the area "Wissen": a sidebar link on desktop, the area entry in the bottom bar on phones. */
+  const exampleNav = (page: Page, phone: boolean) =>
+    mainNav(page).getByRole('link', { name: phone ? 'Wissen' : 'Beispiel' });
+
+  test('enabling adds navigation, disabling removes it', async ({ page }, info) => {
+    const phone = info.project.name === 'pixel-7';
     await page.goto('/library');
-    await expect(mainNav(page).getByRole('link', { name: 'Beispiel' })).toHaveCount(0);
+    await expect(exampleNav(page, phone)).toHaveCount(0);
 
     await enableExample(page);
-    await expect(mainNav(page).getByRole('link', { name: 'Beispiel' })).toBeVisible();
+    await expect(exampleNav(page, phone)).toBeVisible();
 
     const card = page.getByTestId('module-example');
     await card.getByRole('button', { name: 'Deaktivieren' }).click();
     await page.getByRole('button', { name: 'Daten behalten (ausgeblendet)' }).click();
     await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
-    await expect(mainNav(page).getByRole('link', { name: 'Beispiel' })).toHaveCount(0);
+    await expect(exampleNav(page, phone)).toHaveCount(0);
   });
 
   test('a disabled module route redirects to the library', async ({ page }) => {
@@ -62,7 +67,7 @@ test.describe('module library', () => {
 test.describe('entries (local-first data)', () => {
   test('create, complete, persist across reload, delete', async ({ page }) => {
     await enableExample(page);
-    await mainNav(page).getByRole('link', { name: 'Beispiel' }).click();
+    await page.goto('/example'); // navigation to modules is covered by the shell tests
     await expect(page).toHaveURL(/\/example$/);
 
     await page.getByRole('textbox', { name: 'Hinzufügen' }).fill('Milch kaufen');

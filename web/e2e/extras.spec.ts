@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { enable } from './helpers';
+import { enable, calendarEntry } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -142,7 +142,7 @@ test('Geburtstage: next date, age, calendar and dashboard widget', async ({ page
   await expect(row).toContainText('in 4 Tagen');
 
   await open(page, '/calendar?view=week&date=2026-10-03');
-  await expect(page.getByRole('button', { name: /Anna wird 36/ })).toBeVisible();
+  await expect(calendarEntry(page, /Anna wird 36/)).toBeVisible();
 
   await open(page, '/');
   await expect(page.getByTestId('widget-birthdays:next')).toContainText('Anna');
@@ -176,7 +176,7 @@ test('Verträge: cancellation deadline is flagged and on the calendar', async ({
   await expect(page.getByText('Jetzt kündigen')).toBeVisible();
 
   await open(page, '/calendar?view=week&date=2026-10-02');
-  await expect(page.getByRole('button', { name: /Kündigungsfrist: Handyvertrag/ })).toBeVisible();
+  await expect(calendarEntry(page, /Kündigungsfrist: Handyvertrag/)).toBeVisible();
 });
 
 test.describe('Budgets & Sparziele', () => {
@@ -304,5 +304,5 @@ test('Dokumente: metadata, local file and expiry', async ({ page }) => {
   expect(Buffer.concat(chunks).toString()).toBe('mein pass');
 
   await open(page, '/calendar?view=week&date=2026-10-20');
-  await expect(page.getByRole('button', { name: /Läuft ab: Reisepass/ })).toBeVisible();
+  await expect(calendarEntry(page, /Läuft ab: Reisepass/)).toBeVisible();
 });
