@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
+import { t } from '@/strings';
 
 /**
  * Disk overview and cleaner (desktop only). Holds no data of its own: scan results live in memory
@@ -10,22 +11,21 @@ import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
  */
 const manifest: ModuleManifest = {
   id: 'disk',
-  name: 'Dieser PC',
+  name: t.disk.meta.name,
   icon: 'disk',
   version: 1,
-  description:
-    'Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) – nur zum Ansehen, nur am PC; der Scan verändert nichts.',
+  description: t.disk.meta.description,
   platforms: ['desktop'],
   routes: [
     {
       path: '/disk',
-      label: 'Dieser PC',
+      label: t.disk.meta.route,
       nav: true,
       component: () => import('./routes/DrivesPage'),
     },
     {
       path: '/disk/scan',
-      label: 'Datenträger-Scan',
+      label: t.disk.meta.route2,
       component: () => import('./routes/ScanPage'),
     },
   ],
@@ -34,14 +34,14 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'status',
-      title: 'Laufwerke',
+      title: t.disk.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/DrivesWidget'),
     },
     {
       id: 'system',
-      title: 'System',
+      title: t.disk.meta.widget2,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/SystemWidget'),
