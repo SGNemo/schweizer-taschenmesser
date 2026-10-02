@@ -5,12 +5,35 @@ import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { t } from '@/strings';
-import { Button, Dialog, Icon, patternStyles, Switch, TextArea, TextField } from '@/ui';
+import {
+  Button,
+  Dialog,
+  Icon,
+  patternStyles,
+  SelectField,
+  Switch,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { eventRepo } from '../repo';
-import { eventSchema, type CalendarEvent } from '../schema';
+import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
 
-export type EventTarget = Stored<CalendarEvent> | { draft: { startDate: string } } | null;
+export type EventTarget =
+  | Stored<CalendarEvent>
+  | { draft: { startDate: string; kind?: EventKind; startTime?: string } }
+  | null;
+
+/** Lead times offered in the editor, in minutes. */
+export const NOTIFY_LEADS = [0, 5, 10, 15, 30, 60, 1440] as const;
+const leadLabel = (m: number): string =>
+  m === 0
+    ? t.calendar.notify.atStart
+    : m === 60
+      ? t.calendar.notify.hour
+      : m === 1440
+        ? t.calendar.notify.day
+        : t.calendar.notify.minutes(m);
 
 export function EventEditor({ target, onClose }: { target: EventTarget; onClose: () => void }) {
   const existing = target && 'id' in target ? target : null;
@@ -18,32 +41,62 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
     <Dialog
       open={target !== null}
       onClose={onClose}
-      title={existing ? t.calendar.editEvent : t.calendar.newEvent}
+      title={
+        isReminder(target)
+          ? existing
+            ? t.calendar.reminders.edit
+            : t.calendar.reminders.add
+          : existing
+            ? t.calendar.editEvent
+            : t.calendar.newEvent
+      }
     >
       {target ? <Form key={existing?.id ?? 'new'} target={target} onClose={onClose} /> : null}
     </Dialog>
   );
 }
 
+const isReminder = (target: EventTarget): boolean =>
+  !!target && ('id' in target ? target.kind === 'reminder' : target.draft.kind === 'reminder');
+
 function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: () => void }) {
   const existing = 'id' in target ? target : null;
+  const kind: EventKind = isReminder(target) ? 'reminder' : 'event';
+  const reminder = kind === 'reminder';
   const [title, setTitle] = useState(existing?.title ?? '');
-  const [allDay, setAllDay] = useState(existing?.allDay ?? false);
+  const [allDay, setAllDay] = useState(!reminder && (existing?.allDay ?? false));
   const [startDate, setStartDate] = useState(
     existing?.startDate ?? ('draft' in target ? target.draft.startDate : ''),
   );
-  const [startTime, setStartTime] = useState(existing?.startTime ?? (existing ? '' : '09:00'));
+  const [startTime, setStartTime] = useState(
+    existing?.startTime ??
+      ('draft' in target && target.draft.startTime
+        ? target.draft.startTime
+        : existing
+          ? ''
+          : '09:00'),
+  );
   const [endDate, setEndDate] = useState(existing?.endDate ?? '');
   const [endTime, setEndTime] = useState(existing?.endTime ?? '');
   const [location, setLocation] = useState(existing?.location ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
   const [recurrence, setRecurrence] = useState<Recurrence | undefined>(existing?.recurrence);
+  const [notifyChoice, setNotifyChoice] = useState<string>(
+    existing?.notify?.enabled || (reminder && !existing)
+      ? String(existing?.notify?.minutesBefore ?? 0)
+      : existing?.notify && reminder
+        ? String(existing.notify.minutesBefore)
+        : 'none',
+  );
+  const [active, setActive] = useState(existing?.notify?.enabled ?? true);
   const [error, setError] = useState('');
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    const lead = notifyChoice === 'none' ? undefined : Number(notifyChoice);
     const data = {
       title: title.trim(),
+      kind,
       allDay,
       startDate,
       startTime: allDay ? undefined : startTime || undefined,
@@ -52,6 +105,8 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
       location: location.trim() || undefined,
       note: note.trim() || undefined,
       recurrence,
+      notify:
+        lead === undefined ? undefined : { minutesBefore: lead, enabled: reminder ? active : true },
     };
     const parsed = eventSchema.safeParse(data);
     if (!parsed.success) {
@@ -75,7 +130,7 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
         required
         data-autofocus
       />
-      <Switch label={t.calendar.allDay} checked={allDay} onChange={setAllDay} />
+      {reminder ? null : <Switch label={t.calendar.allDay} checked={allDay} onChange={setAllDay} />}
       <div className={styles.split}>
         <TextField
           label={t.form.date}
@@ -93,28 +148,32 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           />
         )}
       </div>
-      <div className={styles.split}>
-        <TextField
-          label={`${t.calendar.end} (${t.form.date})`}
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
-        {allDay ? null : (
+      {reminder ? null : (
+        <div className={styles.split}>
           <TextField
-            label={`${t.calendar.end} (${t.form.time})`}
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
+            label={`${t.calendar.end} (${t.form.date})`}
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
           />
-        )}
-      </div>
-      <TextField
-        label={t.calendar.location}
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-      />
-      {location.trim() ? (
+          {allDay ? null : (
+            <TextField
+              label={`${t.calendar.end} (${t.form.time})`}
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          )}
+        </div>
+      )}
+      {reminder ? null : (
+        <TextField
+          label={t.calendar.location}
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+      )}
+      {!reminder && location.trim() ? (
         <div>
           <Button variant="ghost" onClick={() => void getPlatform().app.openUrl(mapsUrl(location))}>
             <Icon name="pin" size={16} />
@@ -123,6 +182,21 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
         </div>
       ) : null}
       <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+      <SelectField
+        label={t.calendar.notify.label}
+        value={notifyChoice}
+        onChange={(e) => setNotifyChoice(e.target.value)}
+      >
+        {reminder ? null : <option value="none">{t.calendar.notify.none}</option>}
+        {NOTIFY_LEADS.map((m) => (
+          <option key={m} value={m}>
+            {leadLabel(m)}
+          </option>
+        ))}
+      </SelectField>
+      {reminder ? (
+        <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
+      ) : null}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       {error ? (
         <p role="alert" className={styles.error}>

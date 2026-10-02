@@ -1,53 +1,31 @@
-import { onboarding } from './onboarding';
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
-import { aiSchema } from './ai';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { reminderSchema } from './schema';
-import { settings } from './settings';
-
+/**
+ * RETIRED (0.7.0): reminders are events of the kind "reminder" in the calendar.
+ * The collection stays in the schema so sync, backup and older devices keep working; an app
+ * migration copies its rows forward (`core/db/appMigrationSteps.ts`). Tables follow in package 6.
+ */
 const manifest: ModuleManifest = {
   id: 'reminders',
   name: 'Erinnerungen',
   icon: 'bell',
   version: 1,
   description:
-    'Einmalige und wiederkehrende Erinnerungen – täglich, wöchentlich, monatlich, jährlich.',
-  routes: [
-    {
-      path: '/reminders',
-      label: 'Erinnerungen',
-      nav: true,
-      component: () => import('./routes/RemindersPage'),
-    },
-  ],
+    'Stillgelegt: Erinnerungen sind jetzt Termine der Art Erinnerung im Kalender. Die Daten wurden übernommen.',
+  retired: true,
+  routes: [],
   dataSchema: {
     collections: {
       reminder: { schema: reminderSchema, indexes: ['startDate'] },
     },
   },
   migrations,
-  widgets: [
-    {
-      id: 'next',
-      title: 'Nächste Erinnerungen',
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/NextRemindersWidget'),
-    },
-  ],
-  aiSchema,
-  settings,
-  defaultEnabled: true,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'wide',
-  order: 30,
-  area: 'plan',
-  contributions: {
-    onboarding: onboarding,
-    quickAdd: [{ id: 'reminder', label: 'Erinnerung', to: '/reminders?new=1' }],
-    calendarItems: () => import('./calendar'),
-    notifications: () => import('./notifications'),
-  },
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
+  defaultEnabled: false,
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

@@ -9,6 +9,7 @@ import type {
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { eventKey } from './external';
+import { parseReminders, reminderKey } from './reminderImport';
 import { eventRepo, externalRepo } from './repo';
 
 /** Same day, time and title (ignoring case) = same event. */
@@ -60,8 +61,9 @@ function fromMail(input: ImportInput): ImportParseResult {
 }
 
 const runtime: ImporterRuntime = {
-  parse(id, input) {
+  parse(id, input, ctx) {
     if (id === 'mail') return fromMail(input);
+    if (id === 'templates' || id === 'text') return parseReminders(input, ctx);
     if (input.kind !== 'file') return { candidates: [], notes: [] };
     const { events, issues } = parseIcs(input.text);
     const candidates: ImportCandidate[] = events.map((e) => {
@@ -87,7 +89,12 @@ const runtime: ImporterRuntime = {
       eventRepo.active().toArray(),
       externalRepo.active().toArray(),
     ]);
-    return new Set([...own.map(keyOf), ...own.map(eventKey), ...external.map(eventKey)]);
+    return new Set([
+      ...own.map(keyOf),
+      ...own.map(eventKey),
+      ...external.map(eventKey),
+      ...own.filter((e) => e.kind === 'reminder').map((e) => reminderKey(e.title)),
+    ]);
   },
 };
 

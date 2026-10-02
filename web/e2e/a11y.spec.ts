@@ -9,7 +9,6 @@ test.beforeEach(async ({ page }) => {
 const MODULES = [
   'calendar',
   'todos',
-  'reminders',
   'finance',
   'invoices',
   'subscriptions',
@@ -91,7 +90,7 @@ const PAGES = [
   ['settings-ueber', '/settings/ueber'],
   ['calendar', '/calendar'],
   ['todos', '/todos'],
-  ['reminders', '/reminders'],
+  ['calendar reminders', '/calendar?tab=reminders'],
   ['finance', '/finance'],
   ['finance transactions', '/finance?tab=transactions'],
   ['invoices', '/invoices'],
@@ -257,7 +256,7 @@ for (const scheme of ['light', 'dark'] as const) {
         '/vault?new=1',
         '/people?new=1',
         '/budgets?tab=goals&new=1',
-        '/reminders?new=1',
+        '/calendar?tab=reminders&new=1',
       ]) {
         await page.goto(url);
         await expect(page.getByRole('dialog'), url).toBeVisible();

@@ -51,6 +51,7 @@ const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   contracts: '/vault',
   birthdays: '/people',
   gifts: '/people',
+  reminders: '/calendar?tab=reminders',
   system: '/disk?tab=system',
 };
 

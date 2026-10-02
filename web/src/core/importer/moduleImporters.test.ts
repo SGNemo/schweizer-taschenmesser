@@ -10,7 +10,6 @@ import { itemRepo as listItemRepo } from '@/modules/lists/repo';
 import { personRepo } from '@/modules/people/repo';
 import { documentRepo } from '@/modules/vault/repo';
 import { invoiceRepo } from '@/modules/invoices/repo';
-import { reminderRepo } from '@/modules/reminders/repo';
 import { subscriptionRepo } from '@/modules/subscriptions/repo';
 import { externalRepo } from '@/modules/calendar/repo';
 import type { MailFinding } from '@/core/connectors/types';
@@ -148,9 +147,9 @@ describe('calendar', () => {
   });
 });
 
-describe('reminders', () => {
+describe('reminders (calendar events of the kind reminder)', () => {
   it('computes the next start date of each template from today', async () => {
-    const { rows } = await run('reminders', 'templates', {
+    const { rows } = await run('calendar', 'templates', {
       kind: 'template',
       ids: ['rent', 'trash', 'insurance', 'energy', 'tax', 'smoke', 'dentist', 'statements'],
     });
@@ -167,28 +166,32 @@ describe('reminders', () => {
   });
 
   it('accepts pasted reminders for today and skips unknown template ids', async () => {
-    const { rows } = await run('reminders', 'text', text('Reifen wechseln'));
+    const { rows } = await run('calendar', 'text', text('Reifen wechseln'));
     expect(rows[0]!.candidate.data).toMatchObject({
       title: 'Reifen wechseln',
+      kind: 'reminder',
       startDate: TODAY,
-      time: '09:00',
+      startTime: '09:00',
+      notify: { minutesBefore: 0, enabled: true },
     });
-    expect((await run('reminders', 'templates', { kind: 'template', ids: ['nope'] })).rows).toEqual(
+    expect((await run('calendar', 'templates', { kind: 'template', ids: ['nope'] })).rows).toEqual(
       [],
     );
   });
 
   it('recognises templates that were imported before', async () => {
-    const first = await run('reminders', 'templates', { kind: 'template', ids: ['rent'] });
+    const first = await run('calendar', 'templates', { kind: 'template', ids: ['rent'] });
     await commitImport(first.manifest, {
       batchId: 'tb',
       importerId: 'templates',
       source: 't',
       rows: first.rows,
     });
-    expect(await reminderRepo.active().count()).toBe(1);
+    expect((await eventRepo.active().toArray()).filter((e) => e.kind === 'reminder')).toHaveLength(
+      1,
+    );
     expect(
-      (await run('reminders', 'templates', { kind: 'template', ids: ['rent'] })).rows[0]!.duplicate,
+      (await run('calendar', 'templates', { kind: 'template', ids: ['rent'] })).rows[0]!.duplicate,
     ).toBe(true);
   });
 });

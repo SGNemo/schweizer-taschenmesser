@@ -348,12 +348,12 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
     await seed(page);
     await mockClaude(page, () => ({
       body: toolUse('create_entry', {
-        module: 'reminders',
-        collection: 'reminder',
+        module: 'calendar',
+        collection: 'event',
         data: {
           title: 'Miete überweisen',
           startDate: '2026-10-01',
-          time: '09:00',
+          startTime: '09:00',
           recurrence: { freq: 'monthly', byMonthDay: 1 },
         },
       }),
@@ -361,24 +361,25 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
     await configureClaude(page);
     await page.goto('/');
 
+    const before = await countRows(page, 'calendar_event');
     await ask(page, 'Erinnere mich jeden 1. an Miete');
     const preview = page.getByTestId('ai-create-preview');
     await expect(preview).toContainText('Miete überweisen');
     await expect(preview).toContainText('Jeden 1. des Monats');
-    expect(await countRows(page, 'reminders_reminder')).toBe(0);
+    expect(await countRows(page, 'calendar_event')).toBe(before);
 
     // Cancel: nothing is stored.
     await page.getByRole('button', { name: 'Abbrechen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    expect(await countRows(page, 'reminders_reminder')).toBe(0);
+    expect(await countRows(page, 'calendar_event')).toBe(before);
 
     // Ask again (cached intent), confirm: now it is stored and shows up in the module.
     await ask(page, 'Erinnere mich jeden 1. an Miete');
     await expect(page.getByTestId('ai-tier')).toHaveText('Aus dem Cache · 0 Token');
     await page.getByRole('button', { name: 'Anlegen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect.poll(() => countRows(page, 'reminders_reminder')).toBe(1);
-    await page.goto('/reminders');
+    await expect.poll(() => countRows(page, 'calendar_event')).toBe(before + 1);
+    await page.goto('/calendar?view=day&date=2026-10-01');
     await expect(page.getByRole('main').getByText('Miete überweisen').first()).toBeVisible();
   });
 

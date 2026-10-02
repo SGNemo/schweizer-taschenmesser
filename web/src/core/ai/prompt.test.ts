@@ -40,8 +40,8 @@ describe('prompt', () => {
     expect(text).toMatch(
       /invoice\[Rechnung\] .*payee:text!.*amountMinor:money!.*dueDate:date@!.*status:enum\(open\|paid\)/,
     );
-    expect(text).toMatch(/reminder\[Erinnerung\] .*recurrence:recurrence/);
-    expect(text).not.toMatch(/reminder\[Erinnerung\] .*recurrence:recurrence!/); // optional there
+    expect(text).toMatch(/event\[Termin\] .*recurrence:recurrence/);
+    expect(text).not.toMatch(/event\[Termin\] .*recurrence:recurrence!/); // optional there
     expect(text).toMatch(/subscription\[Abo\] .*recurrence:recurrence!/); // required there
     expect(text).toContain('computed: balance (');
   });

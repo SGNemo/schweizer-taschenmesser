@@ -72,7 +72,12 @@ addModule(['abo', 'abos', 'abonnement', 'abonnements', 'abbuchung', 'abbuchungen
 });
 addModule(['todo', 'todos', 'aufgabe', 'aufgaben'], { module: 'todos', collection: 'task' });
 addModule(['termin', 'termine', 'kalender'], { module: 'calendar', collection: 'event' });
-addModule(['erinnerung', 'erinnerungen'], { module: 'reminders', collection: 'reminder' });
+// Reminders are calendar events of the kind "reminder" (since 0.7.0).
+addModule(['erinnerung', 'erinnerungen'], {
+  module: 'calendar',
+  collection: 'event',
+  filter: { field: 'kind', op: 'eq', value: 'reminder' },
+});
 addModule(['buchung', 'buchungen'], { module: 'finance', collection: 'transaction' });
 addModule(['ausgabe', 'ausgaben', 'ausgegeben'], {
   module: 'finance',
@@ -125,7 +130,7 @@ const TIME_PHRASES: Phrase[] = [
   },
 ];
 
-const AGENDA_MODULES = new Set(['calendar', 'todos', 'reminders', 'invoices', 'subscriptions']);
+const AGENDA_MODULES = new Set(['calendar', 'todos', 'invoices', 'subscriptions']);
 
 interface Scan {
   times: TimeSpec[];
@@ -239,9 +244,10 @@ function listFor(ref: ModuleRef, s: Scan, time?: TimeSpec, count = false): Inten
         sort: { field: 'name', dir: 'asc' },
         ...aggregate,
       });
-    case 'reminders':
+    case 'calendar':
+      // Only reached with a filter (reminders); plain "Termine" is a timeline.
       return query(ref, {
-        filters: [eq('active', true)],
+        filters: ref.filter ? [ref.filter] : [],
         sort: { field: 'startDate', dir: 'asc' },
         ...(relative ? { range: { field: 'startDate', ...relative } } : {}),
         ...aggregate,
@@ -315,6 +321,7 @@ function decide(s: Scan, today: string): Intent | undefined {
   if (time) {
     const timeline =
       AGENDA_MODULES.has(only.module) &&
+      !only.filter &&
       !count &&
       !(only.module === 'invoices' && s.mods.has('paid')) &&
       !(only.module === 'todos' && s.mods.has('done'));
@@ -326,7 +333,7 @@ function decide(s: Scan, today: string): Intent | undefined {
     }
     return listFor(only, s, time, count);
   }
-  if (only.module === 'calendar' && !count) {
+  if (only.module === 'calendar' && !only.filter && !count) {
     return { type: 'agenda', agenda: { sources: ['calendar'], relative: 'next_7_days' } };
   }
   return listFor(only, s, undefined, count);

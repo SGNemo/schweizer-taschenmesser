@@ -7,8 +7,8 @@ import { prepareCreate } from '@/core/ai/query/create';
 import { clearAll, ctxFor } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
-import { reminderRepo } from '@/modules/reminders/repo';
-import { reminderSchema } from '@/modules/reminders/schema';
+import { eventRepo } from '@/modules/calendar/repo';
+import { eventSchema } from '@/modules/calendar/schema';
 import { taskRepo } from '@/modules/todos/repo';
 import { taskSchema } from '@/modules/todos/schema';
 import { t } from '@/strings';
@@ -152,8 +152,8 @@ describe('assistant in the palette', () => {
   });
 
   it('lists live full text hits and opens the module', async () => {
-    await reminderRepo.create(
-      reminderSchema.parse({ title: 'Miete überweisen', startDate: '2026-10-01' }),
+    await eventRepo.create(
+      eventSchema.parse({ title: 'Miete überweisen', startDate: '2026-10-01' }),
     );
     const user = userEvent.setup();
     render(
@@ -165,7 +165,7 @@ describe('assistant in the palette', () => {
     await user.type(await screen.findByRole('combobox'), 'miete');
     const hit = await screen.findByRole('option', { name: /Miete überweisen/ });
     await user.click(hit);
-    expect(screen.getByTestId('where')).toHaveTextContent('/reminders');
+    expect(screen.getByTestId('where')).toHaveTextContent('/calendar');
   });
 
   it('confirms before creating an entry', async () => {

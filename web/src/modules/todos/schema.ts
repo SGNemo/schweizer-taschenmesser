@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { recurrenceSchema } from '@/core/recurrence/types';
 import { DATE_RE } from '@/core/time/dates';
 
 export const listSchema = z.object({
@@ -20,6 +21,10 @@ export const taskSchema = z.object({
     .default(0)
     .meta({ description: '0 = keine, 1 = niedrig, 2 = mittel, 3 = hoch' }),
   dueDate: z.string().regex(DATE_RE).optional(),
+  /** Repeats from `dueDate`: ticking it off creates the next one (see `completeTask`). */
+  recurrence: recurrenceSchema.optional(),
+  /** "Irgendwann": kept out of the open views, the widget and the calendar. */
+  someday: z.boolean().optional(),
   /** Set for subtasks (one level only). */
   parentId: z.string().optional(),
   note: z.string().optional(),

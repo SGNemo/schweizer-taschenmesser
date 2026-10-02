@@ -2,11 +2,11 @@ import { addDaysStr, isoWeekday, pad2 } from '@/core/time/dates';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import type { Recurrence } from '@/core/recurrence/types';
 import { parseLines } from '@/core/io/textLines';
-import type { ImportCandidate, ImporterRuntime } from '@/core/importer/types';
+import type { ImportCandidate, ImportInput, ImportParseResult } from '@/core/importer/types';
 import { t } from '@/strings';
-import { reminderRepo } from './repo';
 
-const titleKey = (title: string) => title.trim().toLowerCase();
+/** Reminders are told apart from events by title only (the date moves on). */
+export const reminderKey = (title: string) => `reminder|${title.trim().toLowerCase()}`;
 
 /** The next date on or after `today` that is day `day` of `month` (any month when omitted). */
 export function nextDayOfMonth(today: string, day: number, month?: number): string {
@@ -93,38 +93,42 @@ const TEMPLATES: Record<string, Template> = {
   },
 };
 
-const runtime: ImporterRuntime = {
-  parse(_id, input, ctx) {
-    const candidates: ImportCandidate[] = [];
-    if (input.kind === 'template') {
-      for (const id of input.ids) {
-        const tpl = TEMPLATES[id];
-        if (!tpl) continue;
-        const startDate = tpl.start(ctx.today);
-        candidates.push({
-          collection: 'reminder',
-          data: { title: tpl.title, startDate, time: tpl.time, recurrence: tpl.recurrence },
-          label: tpl.title,
-          detail: `${describeRecurrence(tpl.recurrence)} · ab ${startDate}, ${tpl.time} Uhr`,
-          dedupeKey: titleKey(tpl.title),
-        });
-      }
-    } else if (input.kind === 'text') {
-      for (const title of parseLines(input.text, { max: 200 })) {
-        candidates.push({
-          collection: 'reminder',
-          data: { title, startDate: ctx.today, time: '09:00' },
-          label: title,
-          detail: `heute, 09:00 Uhr`,
-          dedupeKey: titleKey(title),
-        });
-      }
-    }
-    return { candidates, notes: [] };
-  },
-  async existingKeys() {
-    return new Set((await reminderRepo.active().toArray()).map((r) => titleKey(r.title)));
-  },
-};
+const eventData = (title: string, startDate: string, time: string, recurrence?: Recurrence) => ({
+  title,
+  kind: 'reminder',
+  allDay: false,
+  startDate,
+  startTime: time,
+  ...(recurrence ? { recurrence } : {}),
+  notify: { minutesBefore: 0, enabled: true },
+});
 
-export default runtime;
+/** The start-data importers "templates" and "text" of the reminders tab. */
+export function parseReminders(input: ImportInput, ctx: { today: string }): ImportParseResult {
+  const candidates: ImportCandidate[] = [];
+  if (input.kind === 'template') {
+    for (const id of input.ids) {
+      const tpl = TEMPLATES[id];
+      if (!tpl) continue;
+      const startDate = tpl.start(ctx.today);
+      candidates.push({
+        collection: 'event',
+        data: eventData(tpl.title, startDate, tpl.time, tpl.recurrence),
+        label: tpl.title,
+        detail: `${describeRecurrence(tpl.recurrence)} · ab ${startDate}, ${tpl.time} Uhr`,
+        dedupeKey: reminderKey(tpl.title),
+      });
+    }
+  } else if (input.kind === 'text') {
+    for (const title of parseLines(input.text, { max: 200 })) {
+      candidates.push({
+        collection: 'event',
+        data: eventData(title, ctx.today, '09:00'),
+        label: title,
+        detail: `heute, 09:00 Uhr`,
+        dedupeKey: reminderKey(title),
+      });
+    }
+  }
+  return { candidates, notes: [] };
+}

@@ -4,7 +4,9 @@ import { taskRepo } from './repo';
 
 /** Overdue ToDos (danger) and ToDos due today (accent). */
 const source: AttentionSource = async ({ today }) => {
-  const open = (await taskRepo.active().toArray()).filter((x) => !x.done && x.dueDate);
+  const open = (await taskRepo.active().toArray()).filter(
+    (x) => !x.done && x.dueDate && !x.someday,
+  );
   const overdue = open.filter((x) => x.dueDate! < today).length;
   const due = open.filter((x) => x.dueDate === today).length;
   return [
