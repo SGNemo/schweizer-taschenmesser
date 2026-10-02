@@ -1,4 +1,5 @@
 /** Restore with a mandatory safety copy first; the data change itself is one transaction (`apply.ts`). */
+import { runAppMigrations } from '@/core/db/appMigrations';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
@@ -50,5 +51,7 @@ export async function restoreBackup(
   const safetyBackup = await opts.safety();
   if (opts.signal?.aborted) throw new RestoreAborted();
   const summary = await applyBackup(backup, mode, database, tableNames, opts.hooks);
+  // A backup from before a merge only has the old tables: copy them forward.
+  await runAppMigrations(database, { tableNames });
   return { summary, safetyBackup };
 }

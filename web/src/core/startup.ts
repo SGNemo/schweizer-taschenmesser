@@ -1,3 +1,4 @@
+import { runAppMigrations } from '@/core/db/appMigrations';
 import { loadModuleStates } from '@/core/modules/activation';
 import { runMigrations } from '@/core/modules/migrate';
 import { availableManifests } from '@/core/modules/available';
@@ -23,4 +24,6 @@ export async function initCore(): Promise<void> {
   for (const m of availableManifests()) {
     if (states[m.id]) await runMigrations(m);
   }
+  // Forward copies between merged/retired modules (also run after every sync pull and restore).
+  await runAppMigrations();
 }
