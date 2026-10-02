@@ -1653,7 +1653,7 @@ export const t = {
     meta: {
       name: 'Merkliste',
       description:
-        'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
+        'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status; oft gebrauchte Links als Lesezeichen-Kacheln. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
       route: 'Merkliste',
       widget: 'Merkliste',
       quickAdd: 'Merkzettel',
@@ -1679,6 +1679,13 @@ export const t = {
     search: 'Merkliste durchsuchen',
     view: 'Status',
     views: { open: 'Offen', done: 'Erledigt', all: 'Alle' },
+    tabsLabel: 'Ansicht',
+    tabList: 'Merkliste',
+    tabLinks: 'Lesezeichen',
+    addLink: 'Lesezeichen anlegen',
+    noGroup: 'Ohne Gruppe',
+    linksEmpty:
+      'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
     empty: 'Noch nichts gemerkt.',
     emptyFiltered: 'Nichts gefunden.',
     open: 'Link öffnen',
