@@ -27,3 +27,4 @@ export {
 } from './Patterns';
 export { useMediaQuery } from './useMediaQuery';
 export { WidgetList, type WidgetEntry } from './WidgetList';
+export * from './widgets';

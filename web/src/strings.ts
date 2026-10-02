@@ -957,6 +957,16 @@ export const t = {
       } as Record<string, string>,
     },
   },
+  widgets: {
+    done: 'Erledigt',
+    undo: 'Rückgängig',
+    now: 'Jetzt',
+    next: 'Als Nächstes',
+    allDay: 'Ganztägig',
+    tomorrow: 'Morgen',
+    more: (n: number) => `+ ${n} weitere`,
+    openModule: (name: string) => `${name} öffnen`,
+  },
   homeEdit: {
     customize: 'Anpassen',
     done: 'Fertig',

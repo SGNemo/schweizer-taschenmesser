@@ -212,11 +212,14 @@ export function Progress({
   max,
   label,
   over,
+  tone,
 }: {
   value: number;
   max: number;
   label: string;
   over?: boolean;
+  /** Colours the bar for a level (warning / danger) when it is not an overrun. */
+  tone?: 'warning' | 'danger';
 }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
@@ -229,7 +232,11 @@ export function Progress({
       aria-valuenow={pct}
     >
       <div
-        className={[styles.progressBar, over ? styles.progressOver : ''].join(' ')}
+        className={[
+          styles.progressBar,
+          over || tone === 'danger' ? styles.progressOver : '',
+          tone === 'warning' ? styles.progressWarn : '',
+        ].join(' ')}
         style={{ transform: `scaleX(${pct / 100})` }}
       />
     </div>

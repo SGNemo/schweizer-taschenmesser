@@ -1,0 +1,320 @@
+/* Widget type catalogue (KPI, due list, progress, checklist, timeline, tiles, status, gauge). Tokens only. */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+.sub {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
+.summary {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+  margin-bottom: var(--space-2);
+}
+.rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.rowTitle {
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1;
+}
+.rowAmount {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+
+/* KPI */
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.kpiLabel {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.kpiValue {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+  line-height: 1.1;
+}
+.kpiUnit {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+.trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.trend[data-tone='danger'] {
+  color: var(--danger);
+  font-weight: var(--weight-semibold);
+}
+
+/* Due list: the row tone carries the emphasis, the badge carries icon + text */
+.dueRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-height: 1.75rem;
+}
+.dueRow[data-tone='later'] .rowTitle,
+.dueRow[data-tone='none'] .rowTitle {
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+.dueRow[data-tone='overdue'] .rowTitle {
+  font-weight: var(--weight-semibold);
+}
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  font-variant-numeric: var(--font-num);
+  color: var(--text-muted);
+}
+.state_overdue {
+  color: var(--danger);
+  font-weight: var(--weight-semibold);
+}
+.state_today {
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
+}
+.state_soon {
+  color: var(--text);
+}
+
+/* Progress rows */
+.progressRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.over {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  font-variant-numeric: var(--font-num);
+}
+.hintLine {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+.progressRow[data-level='tight'] .hintLine {
+  color: var(--warning);
+}
+.progressRow[data-level='full'] .hintLine {
+  color: var(--danger);
+}
+
+/* Checklist */
+.checkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--touch);
+}
+
+/* Timeline */
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid var(--border);
+  margin-left: var(--space-1);
+}
+.tlRow {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: var(--space-2);
+  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+.tlRow[data-past] {
+  color: var(--text-muted);
+}
+.tlRow[data-next] {
+  background: var(--accent-soft);
+  font-weight: var(--weight-semibold);
+}
+.tlTime {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
+.tlBody {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.tlKind {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.nowRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-left: var(--space-3);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+.nowTime {
+  width: 4.5rem;
+}
+.nowLine {
+  flex: 1;
+  height: 2px;
+  background: var(--accent);
+}
+.dayHead {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+/* Tiles */
+.tiles {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: var(--space-2);
+}
+.tile {
+  width: 100%;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  text-align: left;
+}
+.tile:hover {
+  background: var(--surface-2);
+}
+
+/* Status */
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.statusState {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--weight-semibold);
+}
+.status[data-tone='warning'] .statusState {
+  color: var(--warning);
+}
+.status[data-tone='success'] .statusState {
+  color: var(--success);
+}
+
+/* Ring + sparkline */
+.ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
+  --ring: var(--accent);
+}
+.ring[data-size='sm'] {
+  width: 3rem;
+  height: 3rem;
+}
+.ring[data-level='tight'] {
+  --ring: var(--warning);
+}
+.ring[data-level='full'] {
+  --ring: var(--danger);
+}
+.ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.ringTrack {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 8;
+}
+.ringValue {
+  fill: none;
+  stroke: var(--ring);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+.ringText {
+  position: relative;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+}
+.ring[data-size='sm'] .ringText {
+  font-size: var(--text-xs);
+}
+.gaugeRing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sparkline polyline {
+  stroke: var(--viz-1);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

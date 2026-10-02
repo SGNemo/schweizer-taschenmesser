@@ -183,6 +183,9 @@ button.chip[aria-pressed='true'] {
 .progressOver {
   background: var(--danger);
 }
+.progressWarn {
+  background: var(--warning);
+}
 .overdue {
   color: var(--danger);
   font-weight: var(--weight-semibold);
