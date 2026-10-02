@@ -33,15 +33,17 @@ const PREFIXES: Record<string, CaptureType> = {
   k: 'event',
   e: 'reminder',
   m: 'bookmark',
+  l: 'list',
   $: 'finance',
 };
-const PREFIX_RE = /^\s*(t|k|e|m|\$)(?:\s+|(?<=\$))/i;
+const PREFIX_RE = /^\s*(t|k|e|m|l|\$)(?:\s+|(?<=\$))/i;
 
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 const KEYWORDS = {
   reminder: word(String.raw`erinnere?\s+mich(?:\s+(?:bitte\s+)?(?:daran|an|zu|dass))?`),
   todo: word(String.raw`to-?do|aufgabe|task`),
   bookmark: word(String.raw`merke(?:\s+dir)?`),
+  list: word(String.raw`(?:auf\s+die\s+)?einkaufs?liste`),
 };
 const DANGLING =
   /^(?:um|am|an|den|dem|bis|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|ab|für|und|zu|,|;|:|-|–)+$/iu;
@@ -103,6 +105,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     reminder: !!take(scan, KEYWORDS.reminder),
     todo: !!take(scan, KEYWORDS.todo),
     bookmark: !!take(scan, KEYWORDS.bookmark),
+    list: !!take(scan, KEYWORDS.list),
   };
 
   const recurrence = extractRecurrence(scan);
@@ -125,6 +128,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   const scores = new Map<CaptureType, number>();
   if (fields.url) score(scores, 'bookmark', 90);
   if (kw.bookmark) score(scores, 'bookmark', fields.url ? 95 : 90);
+  if (kw.list) score(scores, 'list', 95);
   if (kw.reminder) score(scores, 'reminder', 95);
   if (kw.todo) score(scores, 'todo', 95);
   if (recurrence && !kw.reminder) {

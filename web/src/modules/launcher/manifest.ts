@@ -1,12 +1,11 @@
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
-import { onboarding } from './onboarding';
 import { linkSchema } from './schema';
-import { settings } from './settings';
-
 /**
- * No `aiSchema` on purpose: the assistant has no use for a list of bookmarks-with-a-button, and
- * every module in the schema text costs tokens on every question.
+ * RETIRED (0.5.0): the links are now bookmarks of the kind "link" in the module "bookmarks".
+ * The collections stay in the schema so sync, backup and older devices keep working; an app
+ * migration copies their rows forward (`core/db/appMigrationSteps.ts`). Tables follow in package 6.
  */
 const manifest: ModuleManifest = {
   id: 'launcher',
@@ -14,44 +13,19 @@ const manifest: ModuleManifest = {
   icon: 'external',
   version: 1,
   description:
-    'Kacheln für Dienste, die du oft brauchst: Paketverfolgung, Bahn, Karten, Musik. Ein Tipp öffnet die Seite im Browser oder in der passenden App.',
-  routes: [
-    {
-      path: '/launcher',
-      label: 'Apps & Links',
-      nav: true,
-      component: () => import('./routes/LauncherPage'),
-    },
-  ],
+    'Stillgelegt: die Links sind jetzt Lesezeichen in der Merkliste. Die Daten wurden übernommen.',
+  retired: true,
+  routes: [],
   dataSchema: {
     collections: {
-      link: {
-        schema: linkSchema,
-        indexes: ['group'],
-        example: { title: 'Beispielseite', url: 'https://example.org' },
-      },
+      link: { schema: linkSchema, indexes: ['group'] },
     },
   },
   migrations,
-  widgets: [
-    {
-      id: 'links',
-      title: 'Apps & Links',
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/LinksWidget'),
-    },
-  ],
-  settings,
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
   defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'wide',
-  order: 170,
-  area: 'knowledge',
-  contributions: {
-    onboarding,
-    quickAdd: [{ id: 'link', label: 'Link hinzufügen', to: '/launcher?new=1' }],
-  },
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

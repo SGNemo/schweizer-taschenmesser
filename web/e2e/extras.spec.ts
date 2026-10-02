@@ -1,16 +1,10 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { enable, calendarEntry } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
-
-/** Controlled checkboxes update after the (async) database write, so click first and then wait for the state. */
-async function tick(box: Locator) {
-  await box.click();
-  await expect(box).toBeChecked();
-}
 
 async function open(page: Page, url: string) {
   await page.goto(url);
@@ -25,16 +19,7 @@ async function save(page: Page) {
 
 test('the extra modules are off until enabled', async ({ page }) => {
   await open(page, '/library');
-  for (const id of [
-    'bookmarks',
-    'notes',
-    'shopping',
-    'birthdays',
-    'contracts',
-    'budgets',
-    'packing',
-    'vault',
-  ]) {
+  for (const id of ['bookmarks', 'notes', 'lists', 'birthdays', 'contracts', 'budgets', 'vault']) {
     await expect(
       page.getByTestId(`module-${id}`).getByRole('button', { name: 'Aktivieren' }),
     ).toBeVisible();
@@ -121,25 +106,6 @@ test('Notizen: create, pin, search', async ({ page }) => {
   await page.getByLabel('Notizen durchsuchen').fill('kase');
   await expect(items).toHaveCount(1);
   await expect(items.first()).toContainText('Einkaufsideen');
-});
-
-test('Einkaufsliste: quantities, ticking, clearing bought items', async ({ page }) => {
-  await enable(page, 'shopping');
-  await open(page, '/shopping');
-  const input = page.getByLabel('Artikel hinzufügen');
-  await input.fill('2 Milch');
-  await input.press('Enter');
-  await input.fill('Brot');
-  await input.press('Enter');
-  await input.fill('brot'); // duplicate of an open item is ignored
-  await input.press('Enter');
-  await expect(page.getByRole('checkbox')).toHaveCount(2);
-  await expect(page.getByText('2 · Milch')).toBeVisible();
-
-  await tick(page.getByRole('checkbox', { name: /Milch/ }));
-  await page.getByRole('button', { name: 'Gekauftes entfernen (1)' }).click();
-  await expect(page.getByText('1 Artikel entfernt.')).toBeVisible();
-  await expect(page.getByRole('checkbox')).toHaveCount(1);
 });
 
 test('Geburtstage: next date, age, calendar and dashboard widget', async ({ page }) => {
@@ -241,33 +207,6 @@ test.describe('Budgets & Sparziele', () => {
     await page.keyboard.press('Escape');
     await expect(card.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
   });
-});
-
-test('Packlisten: pack, reset, copy as template', async ({ page }) => {
-  await enable(page, 'packing');
-  await open(page, '/packing?new=1');
-  await page.getByRole('dialog').getByLabel('Name der Liste').fill('Urlaub');
-  await save(page);
-  const input = page.getByLabel('Gegenstand hinzufügen');
-  for (const item of ['Zahnbürste', 'Ladekabel']) {
-    await input.fill(item);
-    await input.press('Enter');
-    // the write is async: wait for the row before the next fill, or the field is reset under it
-    await expect(page.getByRole('checkbox', { name: item })).toBeVisible();
-  }
-  await expect(page.getByTestId('packing-progress')).toContainText('0 von 2 gepackt');
-  await tick(page.getByRole('checkbox', { name: 'Zahnbürste' }));
-  await expect(page.getByTestId('packing-progress')).toContainText('1 von 2 gepackt');
-  await tick(page.getByRole('checkbox', { name: 'Ladekabel' }));
-  await expect(page.getByTestId('packing-progress')).toContainText('Alles gepackt!');
-
-  await page.getByRole('button', { name: 'Als Vorlage kopieren' }).click();
-  await expect(page.getByRole('heading', { name: 'Kopie von Urlaub' })).toBeVisible();
-  await expect(page.getByTestId('packing-progress')).toContainText('0 von 2 gepackt');
-
-  await page.getByRole('button', { name: 'Urlaub', exact: true }).click();
-  await page.getByRole('button', { name: 'Alles auspacken' }).click();
-  await expect(page.getByTestId('packing-progress')).toContainText('0 von 2 gepackt');
 });
 
 test('Dokumente: metadata, local file and expiry', async ({ page }) => {

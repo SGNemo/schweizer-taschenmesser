@@ -7,7 +7,7 @@ import { eventRepo } from '@/modules/calendar/repo';
 import { accountRepo, transactionRepo } from '@/modules/finance/repo';
 import { birthdayRepo } from '@/modules/birthdays/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
-import { itemRepo as shoppingRepo } from '@/modules/shopping/repo';
+import { itemRepo as listItemRepo } from '@/modules/lists/repo';
 import { invoiceRepo } from '@/modules/invoices/repo';
 import { reminderRepo } from '@/modules/reminders/repo';
 import { subscriptionRepo } from '@/modules/subscriptions/repo';
@@ -535,7 +535,7 @@ describe('bookmarks', () => {
   });
 });
 
-describe('birthdays, shopping', () => {
+describe('birthdays, lists', () => {
   it('parses name and date in either order, with or without a year', async () => {
     const { rows, notes, manifest } = await run(
       'birthdays',
@@ -555,12 +555,12 @@ describe('birthdays, shopping', () => {
     );
   });
 
-  it('shopping keeps quantities and ignores items already on the open list', async () => {
-    const first = await run('shopping', 'text', text('2 Milch\nBrot\n500 g Mehl'));
+  it('the shopping list keeps quantities and ignores items already on the open list', async () => {
+    const first = await run('lists', 'text', text('2 Milch\nBrot\n500 g Mehl'));
     expect(first.rows.map((r) => r.candidate.data)).toEqual([
-      { name: 'Milch', done: false, quantity: '2' },
-      { name: 'Brot', done: false },
-      { name: 'Mehl', done: false, quantity: '500 g' },
+      { listId: 'shopping-default', name: 'Milch', done: false, order: 0, quantity: '2' },
+      { listId: 'shopping-default', name: 'Brot', done: false, order: 1 },
+      { listId: 'shopping-default', name: 'Mehl', done: false, order: 2, quantity: '500 g' },
     ]);
     await commitImport(first.manifest, {
       batchId: 'tb',
@@ -568,7 +568,7 @@ describe('birthdays, shopping', () => {
       source: 't',
       rows: first.rows,
     });
-    expect(await shoppingRepo.active().count()).toBe(3);
-    expect((await run('shopping', 'text', text('milch'))).rows[0]!.duplicate).toBe(true);
+    expect(await listItemRepo.active().count()).toBe(3);
+    expect((await run('lists', 'text', text('milch'))).rows[0]!.duplicate).toBe(true);
   });
 });

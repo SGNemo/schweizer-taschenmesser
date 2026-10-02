@@ -17,3 +17,10 @@ Index: [DECISIONS](../DECISIONS.md). Plan: [product/MODULE-PLAN.md](../product/M
 
 ## Dieser PC
 - `disk` is "Dieser PC" with tabs Laufwerke · System (`?tab=`). Widgets `disk:status` and `disk:system`. Still no data, no aiSchema, blocked twice for the data API (`BLOCKED_MODULES` no longer lists `system`).
+
+## App migrations and Listen (0.5.0)
+- **Runner** (`core/db/appMigrations.ts`, steps in `appMigrationSteps.ts`): copies rows between collections with the source HLCs (1:1 fields keep their stamp, derived fields get the row's newest stamp, made-up rows `BASE_HLC`) via `applyRemote(…, { markDirty: true })`. Every device writes identical ops, so a second run, a second device or a sync echo changes nothing; edits of the target win; an edit of the source on a not-yet-updated device flows in on the next run. Tombstones are copied, sources never deleted. Not `createRepo.create` (fresh stamps per device would diverge).
+- **Triggers:** end of `initCore`, after a sync pull that applied rows, after a backup import (`restamp` after "replace" so copies beat the tombstones the restore left). Serialised, errors swallowed (retry next run). Marker `_meta` `app.migrations.<id>` is informational only.
+- **Steps:** `shopping_item` → `lists_item` (list `shopping-default`, made up with `BASE_HLC`, a tombstone counts as existing), `packing_list` → `lists_list`, `packing_item` → `lists_item` (`packed` → `done`), `launcher_link` → `bookmarks_item` (`kind: link`, `tags: [group]`).
+- **Listen** (`lists`): kinds shopping | packing | checklist; the `shopping.requested` event stays (Pantry checks `moduleStates.lists`); quick capture type "Einkauf" (`l`). **Lesezeichen** are not a module but a view (`?view=links`); the eight launcher presets are gone, mailto:/tel: links are re-saved as http(s) only. Old paths redirect (`LEGACY_REDIRECTS`).
+- Old devices keep writing the old tables (no backward sync): all devices must update.

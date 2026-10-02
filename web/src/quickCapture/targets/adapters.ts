@@ -85,6 +85,14 @@ const bookmarks: CaptureTarget = {
   },
 };
 
+/** The text becomes an entry of the shopping list as typed ("2 Milch"); `listId` comes from the module's `aiCreateDefaults`. */
+const lists: CaptureTarget = {
+  type: 'list',
+  moduleId: 'lists',
+  collection: 'item',
+  build: (f) => ({ name: title(f), done: false }),
+};
+
 const finance: CaptureTarget = {
   type: 'finance',
   moduleId: 'finance',
@@ -122,6 +130,7 @@ export const TARGETS = {
   event: calendar,
   reminder: reminders,
   bookmark: bookmarks,
+  list: lists,
   finance,
   note: notes,
 };

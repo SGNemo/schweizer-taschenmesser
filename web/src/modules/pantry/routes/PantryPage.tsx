@@ -134,7 +134,7 @@ export default function PantryPage() {
                       <Button
                         onClick={() => {
                           // Without the shopping module nobody listens: say so instead of pretending.
-                          if (moduleStates?.shopping !== true) return toast(t.pantry.shoppingOff);
+                          if (moduleStates?.lists !== true) return toast(t.pantry.shoppingOff);
                           void bus.emit('shopping.requested', { name: i.name });
                           toast(t.pantry.restocked(i.name));
                         }}

@@ -6,6 +6,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | File | Covers |
 |---|---|
 | [howto/new-module.md](howto/new-module.md) | `npm run gen:module`, mandatory widget, platform-only (desktop) modules |
+| [howto/merge-retire-module.md](howto/merge-retire-module.md) | merge modules: app migration step, retire the source, redirects |
 | [howto/seed-data.md](howto/seed-data.md) | seed data per module, Dev-Preview test data, seeds in E2E and screenshots |
 | [howto/new-extension.md](howto/new-extension.md) | tool, connector, setup step, AI provider, importer |
 | [howto/design-brand.md](howto/design-brand.md) | logo/icons pipeline (`design/icon/`), wordmark, banner, design tokens, accents |

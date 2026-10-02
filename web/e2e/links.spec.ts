@@ -50,16 +50,17 @@ test('a disabled module is not offered and an empty share says so', async ({ pag
   await expect(page.getByText('Es wurde nichts geteilt', { exact: false })).toBeVisible();
 });
 
-test('Apps & Links: add a link, open it, reject unsafe addresses', async ({ page }) => {
-  await enable(page, 'launcher');
-  await page.goto('/launcher?new=1');
+test('Lesezeichen: add a link, open it, reject unsafe addresses', async ({ page }) => {
+  await enable(page, 'bookmarks');
+  await page.goto('/bookmarks?view=links');
+  await page.getByRole('button', { name: 'Lesezeichen anlegen' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Sendung');
-  await dialog.getByLabel('Adresse', { exact: true }).fill('javascript:alert(1)');
+  await dialog.getByLabel('Adresse (Link)').fill('javascript:alert(1)');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
-  await expect(dialog.getByText('keine gültige Adresse')).toBeVisible();
-  await dialog.getByLabel('Adresse', { exact: true }).fill('dhl.example');
-  await dialog.getByLabel('Gruppe (optional)').fill('Pakete');
+  await expect(dialog.getByText('gültige http(s)-Adresse')).toBeVisible();
+  await dialog.getByLabel('Adresse (Link)').fill('dhl.example');
+  await dialog.getByLabel('Tags').fill('Pakete');
   await save(page);
 
   await expect(page.getByRole('heading', { name: 'Pakete', level: 2 })).toBeVisible();

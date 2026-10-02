@@ -340,7 +340,7 @@ export const t = {
       },
       productive: {
         name: 'Produktiv',
-        description: 'Aufgaben, Notizen, Kalender, Merkliste, Apps & Links.',
+        description: 'Aufgaben, Notizen, Kalender, Merkliste und Lesezeichen.',
       },
       minimal: { name: 'Minimal', description: 'Nur Kalender und Aufgaben.' },
     } as Record<string, { name: string; description: string }>,
@@ -379,6 +379,7 @@ export const t = {
       event: 'Termin',
       reminder: 'Erinnerung',
       bookmark: 'Merkliste',
+      list: 'Einkauf',
       finance: 'Ausgabe',
       income: 'Einnahme',
       note: 'Notiz',
@@ -388,6 +389,7 @@ export const t = {
       event: 'Kalender',
       reminder: 'Erinnerungen',
       bookmark: 'Merkliste',
+      list: 'Listen',
       finance: 'Finanzen',
       note: 'Notizen',
     },
@@ -1054,12 +1056,9 @@ export const t = {
     contracts: 'Vertrag anlegen',
     gifts: 'Geschenkidee anlegen',
     invoices: 'Rechnung anlegen',
-    launcher: 'Link hinzufügen',
     notes: 'Notiz schreiben',
-    packing: 'Packliste anlegen',
     pantry: 'Vorrat hinzufügen',
     reminders: 'Erinnerung anlegen',
-    shopping: 'Artikel hinzufügen',
     subscriptions: 'Abo anlegen',
     todos: 'Aufgabe anlegen',
     vault: 'Dokument hinzufügen',
@@ -1715,16 +1714,7 @@ export const t = {
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Noch keine Notizen.',
   },
-  shopping: {
-    title: 'Einkaufsliste',
-    addLabel: 'Artikel hinzufügen',
-    placeholder: 'z. B. 2 Milch',
-    empty: 'Die Einkaufsliste ist leer.',
-    clearBought: (n: number) => `Gekauftes entfernen (${n})`,
-    cleared: (n: number) => (n === 1 ? '1 Artikel entfernt.' : `${n} Artikel entfernt.`),
-    widgetEmpty: 'Nichts einzukaufen.',
-    openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
-  },
+
   pantry: {
     meta: {
       name: 'Vorräte',
@@ -1769,7 +1759,8 @@ export const t = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
-    shoppingOff: 'Die Einkaufsliste ist ausgeschaltet. Schalte sie in der Modul-Bibliothek ein.',
+    shoppingOff:
+      'Die Einkaufsliste ist ausgeschaltet: Schalte das Modul „Listen“ in der Modul-Bibliothek ein.',
     lowStock: 'Wird knapp',
     usedUp: 'Aufgebraucht',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
@@ -2123,20 +2114,7 @@ export const t = {
       smallFiles: (n: number) => `${n} kleinere Dateien`,
     },
   },
-  launcher: {
-    title: 'Apps & Links',
-    add: 'Link hinzufügen',
-    edit: 'Link bearbeiten',
-    editLink: (name: string) => `${name} bearbeiten`,
-    empty: 'Noch keine Links. Lege ein Startpaket an oder füge einen Link hinzu.',
-    url: 'Adresse',
-    urlHint: 'https://…, mailto: oder tel: – ohne Angabe wird https:// ergänzt.',
-    badUrl: 'Das ist keine gültige Adresse.',
-    group: 'Gruppe (optional)',
-    groupHint: 'z. B. Pakete oder Reisen',
-    noGroup: 'Ohne Gruppe',
-    widgetEmpty: 'Noch keine Links.',
-  },
+
   birthdays: {
     title: 'Geburtstage',
     add: 'Geburtstag hinzufügen',
@@ -2288,22 +2266,7 @@ export const t = {
     packingProgress: (done: number, total: number, name: string) =>
       `${name}: ${done} von ${total} gepackt`,
   },
-  packing: {
-    title: 'Packlisten',
-    lists: 'Listen',
-    addList: 'Liste hinzufügen',
-    editList: 'Liste bearbeiten',
-    listName: 'Name der Liste',
-    addItem: 'Gegenstand hinzufügen',
-    itemPlaceholder: 'z. B. Sonnencreme',
-    progress: (packed: number, total: number) => `${packed} von ${total} gepackt`,
-    complete: 'Alles gepackt!',
-    reset: 'Alles auspacken',
-    duplicate: 'Als Vorlage kopieren',
-    copied: 'Liste kopiert.',
-    empty: 'Noch keine Packlisten.',
-    widgetEmpty: 'Nichts zu packen.',
-  },
+
   vault: {
     meta: {
       name: 'Dokumente',
@@ -2885,16 +2848,6 @@ export const t = {
     } as Record<string, string>,
     add: 'Hinzufügen',
     required: 'Bitte ausfüllen.',
-    launcher: {
-      presets: 'Vorschläge auswählen',
-      presetsHint:
-        'Häufig genutzte Dienste (Paketverfolgung, Bahn, Karten …). Es sind nur die Startseiten der Anbieter; du kannst sie danach ändern.',
-      single: 'Einen Link hinzufügen',
-      title: 'Name',
-      url: 'Adresse',
-      group: 'Gruppe (optional)',
-      invalid: 'Name und eine gültige Adresse (https://…) werden gebraucht.',
-    },
 
     mail: {
       hint: 'Nur mit verbundenem Google-Konto (Einstellungen → Verbindungen). Vorschläge kommen aus Absender, Betreff, Datum und Vorschauzeile; du bestätigst jeden einzelnen.',
@@ -3081,11 +3034,6 @@ export const t = {
           'Lippenpflege',
         ],
       },
-    },
-    shopping: {
-      text: 'Einkaufsliste einfügen',
-      textHint: 'Eine Zeile pro Artikel, Mengen wie „2 Milch“ werden erkannt.',
-      placeholder: '2 Milch\nBrot\n500 g Mehl',
     },
   },
   update: {

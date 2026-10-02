@@ -40,7 +40,7 @@ async function enable(page: Page, ids: string[]) {
 }
 
 test('pantry: expiry, low stock and the hand-over to the shopping list', async ({ page }) => {
-  await enable(page, ['pantry', 'shopping']);
+  await enable(page, ['pantry', 'lists']);
   await page.goto('/pantry');
   await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
@@ -65,8 +65,8 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
 
   await row.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
   await expect(page.getByText('an die Einkaufsliste gesendet')).toBeVisible();
-  await page.goto('/shopping');
-  await expect(page.getByText('Milch')).toBeVisible();
+  await page.goto('/lists');
+  await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
 
   await page.goto('/pantry');
   await page.getByRole('button', { name: 'Milch: einer mehr' }).click();
@@ -76,7 +76,7 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
   );
 });
 
-test('pantry: without the shopping module the hand-over says so and sends nothing', async ({
+test('pantry: without the lists module the hand-over says so and sends nothing', async ({
   page,
 }) => {
   await enable(page, ['pantry']);
