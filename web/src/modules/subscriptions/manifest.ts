@@ -30,7 +30,7 @@ const manifest: ModuleManifest = {
     {
       id: 'next',
       title: t.subscriptions.meta.widget,
-      defaultSize: 's',
+      defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/NextChargesWidget'),
     },

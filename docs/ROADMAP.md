@@ -102,6 +102,11 @@ Target picture B and packages 1–7 are in [`product/MODULE-PLAN.md`](product/MO
 - AI features that see user data (the assistant only sees schemas). A "summarise my notes" feature would break that rule; if ever, only with a local model and an explicit switch.
 - FinTS/PSD2 bank connections: regulatory and maintenance burden, see `docs/STATUS.md`.
 
+## Ideas from the home/Dieser-PC round (2026-10-02, not built)
+- Android: "Dieser Akku/Speicher" (battery, storage, RAM, network) as a mobile counterpart of Dieser PC (new Kotlin plugin command).
+- Feed widget type once a feed module returns (headline with source and time, first entry highlighted).
+- Disk history across restarts (device-local `_meta`, tiny, off by default), GPU load via PDH counters, battery health/cycles via the battery IOCTLs, program icons for the top processes.
+
 ## Ideas moved from STATUS (2026-10-01, not built)
 - Datenträger: Sunburst-Ansicht, „Letzten Scan zwischenspeichern“ (lokal, standardmäßig aus), MFT-Schnellscan mit Adminrechten, Ordner frei wählen (Dialog), Android-Speicherübersicht (belegt/frei, ohne Scan/Löschen), eigene Aufräum-Regeln.
 - Module: Fahrzeug (Tanken, Verbrauch, TÜV/Service), Journal/Tagebuch, Garantie-/Belegverwaltung mit Foto, Zwischenablage-Verlauf (Passwörter ausschließen), Text-Snippets, Autostart-Übersicht (nur Anzeige), Medikamenten-/Wasser-Erinnerung, Watchlist/Leseliste, Putzplan, Sparziele (Haushaltsbuch), Reise (Packlisten, Reisedokumente, Zeitzonen), Speedtest/WLAN-Name (Systeminfo).

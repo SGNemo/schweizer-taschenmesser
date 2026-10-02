@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { enable, mainNav, ready } from './helpers';
 
@@ -90,5 +91,103 @@ test.describe('Home screen', () => {
     ).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('widget-todos:open')).toBeVisible();
     await page.getByRole('button', { name: 'Fertig' }).click();
+  });
+
+  test('"Jetzt wichtig" ranks overdue things first; todos can be ticked in the widget and undone', async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+    await ready(page, '/');
+    // Nothing urgent yet: the strip is not rendered at all (no placeholder text).
+    await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toHaveCount(0);
+
+    for (const [title, due] of [
+      ['Steuer abgeben', '2026-09-26'],
+      ['Müll rausbringen', '2026-09-29'],
+    ] as const) {
+      await ready(page, '/todos');
+      await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
+      await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+      await page.getByRole('button', { name: new RegExp(title) }).click();
+      await page.getByLabel('Fällig am').fill(due);
+      await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+    }
+
+    await ready(page, '/');
+    const strip = page.getByRole('region', { name: 'Jetzt wichtig' });
+    await expect(strip).toBeVisible();
+    const items = strip.getByRole('link');
+    await expect(items.first()).toContainText('1 ToDo überfällig');
+    await expect(items.first()).toHaveAttribute('data-tone', 'danger');
+    await expect(items.nth(1)).toContainText('1 ToDo heute fällig');
+    await expect(items.nth(1)).toHaveAttribute('data-tone', 'accent');
+
+    // State is never colour only: the overdue row says "seit 3 Tagen".
+    const widget = page.getByTestId('widget-todos:open');
+    await expect(widget).toContainText('2 offen · 1 überfällig');
+    await expect(widget).toContainText('seit 3 Tagen');
+    await expect(widget).toContainText('Heute');
+
+    await widget.getByLabel('Steuer abgeben').click();
+    await expect(widget).not.toContainText('Steuer abgeben');
+    const toast = page.getByRole('status').filter({ hasText: 'Erledigt' });
+    await expect(toast).toBeVisible();
+    await toast.getByRole('button', { name: 'Rückgängig' }).click();
+    await expect(widget).toContainText('Steuer abgeben');
+    await expect(widget).toContainText('2 offen · 1 überfällig');
+  });
+
+  test('the strip can be hidden in edit mode and the header links to the module', async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+    await ready(page, '/todos');
+    await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Alt');
+    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page.getByRole('button', { name: /Alt/ }).click();
+    await page.getByLabel('Fällig am').fill('2026-09-20');
+    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await ready(page, '/');
+    await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toBeVisible();
+    await page.getByTestId('widget-todos:open').getByRole('link', { name: 'Offene ToDos' }).click();
+    await expect(page).toHaveURL(/\/todos$/);
+
+    await ready(page, '/');
+    await page.getByRole('button', { name: 'Anpassen' }).click();
+    await page.getByRole('button', { name: 'Widgets', exact: true }).click();
+    await page.getByRole('switch', { name: 'Jetzt wichtig' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Schließen' }).click();
+    await page.getByRole('button', { name: 'Fertig' }).click();
+    await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toHaveCount(0);
+  });
+
+  test('filled home screen (strip, due lists, checklist) passes axe in both themes and densities', async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+    await ready(page, '/todos');
+    await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Alt');
+    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page.getByRole('button', { name: /Alt/ }).click();
+    await page.getByLabel('Fällig am').fill('2026-09-20');
+    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    for (const scheme of ['light', 'dark'] as const) {
+      for (const density of ['normal', 'compact']) {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.addInitScript((d) => localStorage.setItem('tm-density', d), density);
+        await ready(page, '/');
+        await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toBeVisible();
+        const results = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+          .analyze();
+        expect(
+          results.violations.map((v) => `${v.id}: ${v.help}`),
+          `${scheme}/${density}`,
+        ).toEqual([]);
+      }
+    }
   });
 });

@@ -240,6 +240,10 @@ export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
       if (pending > 0 && useSyncStatus.getState().phase !== 'off') {
         clearTimeout(debounce);
         debounce = setTimeout(() => tick(), DEBOUNCE_MS);
+      } else if (pending === 0) {
+        // Whatever armed the timer was already pushed (e.g. by the sync that follows connecting).
+        // A late round for nothing could re-upload data right after another device reset the server.
+        clearTimeout(debounce);
       }
     },
     error: () => console.error('[sync] outbox stream failed'),

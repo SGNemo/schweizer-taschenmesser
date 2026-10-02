@@ -272,6 +272,22 @@ pub fn disk_known_places() -> Vec<Place> {
     known_places()
 }
 
+/// Sizes of the well-known places, summed up with a bounded walk (no scan, nothing is changed).
+#[tauri::command]
+pub async fn disk_place_sizes() -> Result<Vec<::disk_scan::PlaceSize>, String> {
+    tauri::async_runtime::spawn_blocking(::disk_scan::place_sizes)
+        .await
+        .map_err(|_| "internal".to_string())
+}
+
+/// Size of the recycle bin; `None` where it cannot be read. Emptying it stays a job for Explorer.
+#[tauri::command]
+pub async fn disk_recycle_size() -> Result<Option<u64>, String> {
+    tauri::async_runtime::spawn_blocking(::disk_scan::recycle_bin_size)
+        .await
+        .map_err(|_| "internal".to_string())
+}
+
 /// Display form of a resolved path (no `\\?\` prefix).
 fn display_path(p: &Path) -> String {
     let s = p.to_string_lossy();

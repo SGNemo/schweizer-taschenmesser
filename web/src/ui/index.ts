@@ -32,3 +32,4 @@ export { useMediaQuery } from './useMediaQuery';
 export { useSelection } from './useSelection';
 export { SWIPE_PX, useSwipeRow } from './useSwipeRow';
 export { WidgetList, type WidgetEntry } from './WidgetList';
+export * from './widgets';

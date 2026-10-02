@@ -37,7 +37,7 @@ const manifest: ModuleManifest = {
     {
       id: 'links',
       title: 'Apps & Links',
-      defaultSize: 's',
+      defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/LinksWidget'),
     },

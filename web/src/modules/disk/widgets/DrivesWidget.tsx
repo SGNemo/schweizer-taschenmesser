@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { useLiveAttention } from '@/core/modules/liveAttention';
 import { getPlatform } from '@/core/platform';
 import type { DriveInfo } from '@/core/platform/disk';
 import { t } from '@/strings';
-import { EmptyState, Progress, Skeleton } from '@/ui';
-import { formatBytes } from '../format';
+import { GaugeList } from '@/ui';
+import { percent } from '../format';
+import { driveAttention } from '../logic/attention';
+import { fillLevel, formatCapacity } from '../logic/drives';
+
+const SOURCE = 'disk:drives';
+/** Drives change slowly; a minute is plenty for the home screen. */
+const REFRESH_MS = 60_000;
 
 /** Fill level of the drives (sizes only, no file or folder names, nothing from a scan). */
 export default function DrivesWidget() {
@@ -12,35 +18,41 @@ export default function DrivesWidget() {
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let alive = true;
-    getPlatform()
-      .disk.listDrives()
-      .then((d) => alive && setDrives(d))
-      .catch(() => alive && setFailed(true));
+    const load = () =>
+      getPlatform()
+        .disk.listDrives()
+        .then((d) => {
+          if (!alive) return;
+          setDrives(d);
+          useLiveAttention.getState().publish(SOURCE, driveAttention(d));
+        })
+        .catch(() => alive && setFailed(true));
+    void load();
+    const id = setInterval(() => void load(), REFRESH_MS);
     return () => {
       alive = false;
+      clearInterval(id);
+      useLiveAttention.getState().clear(SOURCE);
     };
   }, []);
-  const w = t.disk;
   const dw = t.diskWidget;
-  if (failed) return <EmptyState compact title={dw.unavailable} />;
-  if (!drives) return <Skeleton width="60%" height="1.25rem" />;
-  if (drives.length === 0) return <EmptyState compact title={dw.empty} />;
   return (
-    <div>
-      <ul>
-        {drives.map((d) => (
-          <li key={d.root}>
-            <p>{w.driveName(d.root, d.label)}</p>
-            <Progress
-              value={Math.max(0, d.totalBytes - d.freeBytes)}
-              max={d.totalBytes}
-              label={dw.free(formatBytes(d.freeBytes), formatBytes(d.totalBytes))}
-            />
-            <p>{dw.free(formatBytes(d.freeBytes), formatBytes(d.totalBytes))}</p>
-          </li>
-        ))}
-      </ul>
-      <Link to="/disk">{dw.open}</Link>
-    </div>
+    <GaugeList
+      loading={!drives && !failed}
+      empty={failed ? dw.unavailable : dw.empty}
+      entries={(drives ?? []).map((d) => {
+        const used = Math.max(0, d.totalBytes - d.freeBytes);
+        const pct = percent(used, d.totalBytes);
+        const level = fillLevel(pct, d.freeBytes);
+        return {
+          key: d.root,
+          name: t.disk.driveName(d.root, d.label),
+          percent: pct,
+          level,
+          detail: dw.free(formatCapacity(d.freeBytes), formatCapacity(d.totalBytes)),
+          hint: t.disk.card.advice[level],
+        };
+      })}
+    />
   );
 }

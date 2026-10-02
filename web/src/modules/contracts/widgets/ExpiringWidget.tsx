@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { relativeDayLabel, today } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { DueList } from '@/ui';
 import { nextRelevantDate, sortContracts, statusOf } from '../logic';
 import { contractRepo } from '../repo';
 
@@ -12,19 +13,18 @@ export default function ExpiringWidget() {
     const s = statusOf(c, day);
     return s === 'act-now' || s === 'soon';
   });
+  const act = urgent.filter((c) => statusOf(c, day) === 'act-now').length;
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.contracts, to: '/contracts?new=1' }}
+    <DueList
       loading={!list}
-      empty={urgent.length === 0 ? t.contracts.widgetEmpty : undefined}
-      entries={urgent.slice(0, 4).map((c) => ({
-        key: c.id,
-        title: c.name,
-        meta: relativeDayLabel(nextRelevantDate(c, day)!, day),
-        overdue: statusOf(c, day) === 'act-now',
-      }))}
-      to="/contracts"
-      linkLabel={t.contracts.title}
+      empty={t.contracts.widgetEmpty}
+      emptyAction={{ label: t.homeEmpty.contracts, to: '/contracts?new=1' }}
+      summary={act > 0 ? t.widgets.contractsSummary(act) : undefined}
+      entries={urgent.map((c) => {
+        const s = dueState(nextRelevantDate(c, day)!, day, { soonDays: 7 });
+        return { key: c.id, title: c.name, tone: s.tone, label: s.label };
+      })}
+      moreLabel={t.widgets.more}
     />
   );
 }

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { ProgressList } from '@/ui';
 import { progress } from '../logic';
 import { itemRepo, listRepo } from '../repo';
 
@@ -14,18 +14,21 @@ export default function ListsWidget() {
       .map((l) => ({ l, p: progress(items.filter((i) => i.listId === l.id)) }))
       .filter((x) => x.p.total > 0 && !x.p.complete);
   }, []);
+  const packed = (data ?? []).reduce((n, x) => n + x.p.packed, 0);
+  const total = (data ?? []).reduce((n, x) => n + x.p.total, 0);
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.packing, to: '/packing?new=1' }}
+    <ProgressList
       loading={!data}
       empty={t.packing.widgetEmpty}
-      entries={(data ?? []).slice(0, 4).map(({ l, p }) => ({
+      emptyAction={{ label: t.homeEmpty.packing, to: '/packing?new=1' }}
+      summary={total > 0 ? t.widgets.packingSummary(packed, total) : undefined}
+      entries={(data ?? []).map(({ l, p }) => ({
         key: l.id,
         title: l.name,
-        meta: `${p.packed}/${p.total}`,
+        value: p.packed,
+        max: p.total,
+        detail: `${p.packed} von ${p.total}`,
       }))}
-      to="/packing"
-      linkLabel={t.packing.title}
     />
   );
 }

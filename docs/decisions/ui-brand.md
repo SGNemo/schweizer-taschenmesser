@@ -11,6 +11,12 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **CSS Modules + tokens, touch targets ≥ 44 px, `data-autofocus` (React `autoFocus` runs before `showModal()`).** Source: architecture.md "UI".
 - **Docs split:** `CLAUDE.md` is the short working guide; long design notes live in `docs/architecture.md`. Source: PR #2.
 
+## Home variety (2026-10-02, PR `feat/dashboard-variety-system-module`)
+- **Variety through content types, not decoration:** widgets use base components (KPI, due list, progress, checklist, timeline, tiles, status, fill level) sized by context. Why: all widgets looked alike and nothing stood out; colour fields or animation would add noise.
+- **Red only for overdue/exceeded/expired**, accent = act today, warning = soon/almost full, always with icon or text (`dueState`).
+- **"Jetzt wichtig" is a contribution (`contributions.attention`)**; runtime-only facts go through `liveAttention.ts`. Empty = not rendered; hideable.
+- Numbers carry a context line; the header link replaces "Modul →". Feed type not built (news retired).
+
 ## Nemo rebrand & design system
 - **The app is called Nemo; every internal identifier keeps its old value.** Tauri `identifier` `io.github.sgnemo.taschenmesser`, Android packages/namespaces, keystore alias, updater endpoint/pubkey, repo name, IndexedDB `taschenmesser`, storage keys (`tm-theme`), backup format ids (`taschenmesser-backup`, `-vault-backup`, `-encrypted`), crypto AAD/check strings, Cargo/npm package names, MCP server name and `TASCHENMESSER_TOKEN/URL`. Why: a changed ID makes Android treat an update as a new app, detaches the app from its data and breaks decryption. Only what users see changed. `web/src/brand-ids.test.ts` pins them. New exports are named `nemo-backup-…`, old `taschenmesser-backup` files still import (fixture test).
 - **Release asset names: Nemo only (since the first release after v0.3.1; before: transition with both names).** Releases carry `Nemo-Portable.exe(.sig)` / `Nemo.apk(.sha256)` / `latest.json`; `latest.json` points at `Nemo-Portable.exe`. Transition history: `v0.3.0`/`v0.3.1` also carried identical `Taschenmesser-*` copies because installed apps ≤ 0.2.x only accept those names (`update.rs`). Maintainer decision 2026-10-01: stop shipping them; installations ≤ 0.2.x must reinstall. Clients ≥ 0.3.0 accept both names (`PORTABLE_ASSETS`, `APK_ASSET_PAIRS`, kept, harmless).

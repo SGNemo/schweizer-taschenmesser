@@ -84,6 +84,8 @@ export interface WidgetDef {
   sizes: readonly WidgetSize[];
   defaultSize: WidgetSize;
   component: LazyComponent;
+  /** Where the title links to (a small arrow in the widget header), usually the module page. */
+  to?: string;
 }
 
 /* ---- AI schema (compact, sent to the LLM in stage 2; never contains user data) ---- */
@@ -222,6 +224,25 @@ export type NotificationSource = (range: {
   to: number;
 }) => Promise<DueNotification[]>;
 
+/**
+ * One entry of the home screen's "Jetzt wichtig" strip. `danger` is only for overdue / exceeded /
+ * expired things, `accent` for "act today", `warning` for "running out soon / almost full".
+ */
+export interface AttentionItem {
+  id: string;
+  tone: 'danger' | 'accent' | 'warning';
+  icon: IconName;
+  title: string;
+  /** Short context, e.g. "seit 3 Tagen" or "897,89 €". */
+  detail?: string;
+  to: string;
+  /** Lower comes first within a tone. */
+  rank?: number;
+}
+
+/** Collects what needs attention now; modules may only read their own data. */
+export type AttentionSource = (ctx: { today: string }) => Promise<AttentionItem[]>;
+
 export interface ModuleContributions {
   /**
    * Start-data importers of the module ("Startdaten einrichten"). **Required** so new modules think
@@ -232,6 +253,8 @@ export interface ModuleContributions {
   /** Lazy so manifests stay free of database imports. */
   calendarItems?: () => Promise<{ default: CalendarSource }>;
   notifications?: () => Promise<{ default: NotificationSource }>;
+  /** Items for "Jetzt wichtig" on the home screen (overdue, due today, exceeded, expiring). */
+  attention?: () => Promise<{ default: AttentionSource }>;
   /** The calendar module only: receives events synced by connectors. */
   externalCalendar?: () => Promise<{ default: ExternalCalendarSink }>;
   /**

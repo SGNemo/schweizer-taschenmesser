@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { formatMoney } from '@/core/money';
 import { monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Skeleton, WidgetList } from '@/ui';
+import { ProgressList, Skeleton } from '@/ui';
 import { useBudgetData } from '../data';
 import { budgetStatus, goalProgress } from '../logic';
 import { depositRepo, goalRepo } from '../repo';
@@ -16,31 +16,42 @@ export default function OverviewWidget() {
 
   const name = (id: string) =>
     data.categories.find((c) => c.id === id)?.name ?? t.budgets.unknownCategory;
-  const budgetEntries = data.budgets
+  const budgets = data.budgets
     .map((b) => ({ b, s: budgetStatus(b.monthlyLimitMinor, data.spent.get(b.categoryId) ?? 0) }))
-    .filter((x) => x.s.tone !== 'ok')
-    .map(({ b, s }) => ({
+    .filter((x) => x.s.tone !== 'ok');
+  const over = budgets.filter((x) => x.s.tone === 'over');
+  const budgetEntries = [...over, ...budgets.filter((x) => x.s.tone !== 'over')].map(
+    ({ b, s }) => ({
       key: `b-${b.id}`,
       title: name(b.categoryId),
-      meta: s.tone === 'over' ? t.budgets.over(formatMoney(-s.remaining)) : `${s.pct} %`,
-      overdue: s.tone === 'over',
-    }));
-  const goalEntries = goals.slice(0, 3).map((g) => {
+      value: data.spent.get(b.categoryId) ?? 0,
+      max: b.monthlyLimitMinor,
+      detail: `${s.pct} %`,
+      overText: s.tone === 'over' ? t.budgets.over(formatMoney(-s.remaining)) : undefined,
+    }),
+  );
+  const goalEntries = goals.map((g) => {
     const p = goalProgress(
       g,
       deposits.filter((d) => d.goalId === g.id),
       day,
     );
-    return { key: `g-${g.id}`, title: g.name, meta: `${p.pct} %` };
+    return {
+      key: `g-${g.id}`,
+      title: g.name,
+      value: p.pct,
+      max: 100,
+      detail: `${p.pct} %`,
+    };
   });
+  const entries = [...budgetEntries, ...goalEntries];
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.budgets, to: '/budgets?tab=goals&new=1' }}
+    <ProgressList
       loading={false}
-      empty={budgetEntries.length + goalEntries.length === 0 ? t.budgets.widgetEmpty : undefined}
-      entries={[...budgetEntries, ...goalEntries]}
-      to="/budgets"
-      linkLabel={t.budgets.title}
+      empty={t.budgets.widgetEmpty}
+      emptyAction={{ label: t.homeEmpty.budgets, to: '/budgets?tab=goals&new=1' }}
+      summary={budgetEntries.length > 0 ? t.widgets.budgetsSummary(over.length) : undefined}
+      entries={entries}
     />
   );
 }
