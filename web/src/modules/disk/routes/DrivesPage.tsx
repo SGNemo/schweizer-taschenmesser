@@ -70,7 +70,7 @@ function DrivesTab() {
       <p className={styles.lead}>{t.disk.lead}</p>
       {failed ? <p role="alert">{t.disk.failedDrives}</p> : null}
       {!drives && !failed ? <p aria-live="polite">{t.disk.loading}</p> : null}
-      {drives && drives.length === 0 ? <EmptyState icon="disk" title={t.disk.empty} /> : null}
+      {drives && drives.length === 0 ? <EmptyState title={t.disk.empty} /> : null}
       {drives && drives.length > 0 ? (
         <ul className={styles.grid} aria-label={t.disk.tabs.drives}>
           {drives.map((d) => {

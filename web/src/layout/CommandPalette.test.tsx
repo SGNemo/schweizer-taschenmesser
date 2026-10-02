@@ -63,6 +63,20 @@ describe('command palette', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/geld');
   });
 
+  it('offers "new …" entries of the enabled modules', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'neu: termin');
+    await waitFor(() => expect(screen.getAllByRole('option')[0]).toHaveTextContent(/Termin/));
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('where')).toHaveTextContent(/\/calendar/);
+  });
+
   it('offers the assistant when nothing matches', async () => {
     const user = userEvent.setup();
     render(

@@ -5,7 +5,7 @@ Recipes for modules. Index: [HOW-TO](../HOW-TO.md). Commands run in `web/` unles
 ## New module
 1. `npm run gen:module -- <id> "<Name>"` (alias `npm run new:module`; id lowercase alphanumeric; copies `templates/module` incl. widget, widget hook and widget test, runs `db:bump`).
 2. Edit `src/modules/<id>/`: `seed.ts` + `seed` in the manifest (mandatory, [seed-data.md](seed-data.md)), `schema.ts` (Zod), `repo.ts` (`createRepo`), `ai.ts` (compact; `titleField` must be a field; omit for private data), `settings.ts`, `routes/`, `widgets/`, `migrations.ts`, `manifest.ts` (`icon`, `description`, `defaultEnabled`, `layout`, `order`, `area` = navigation area `plan|money|household|knowledge|vault|system`, required).
-3. Routes start with `/<id>`; `nav: true` for navigation; `contributions.quickAdd` for the FAB.
+3. Routes start with `/<id>`; `nav: true` for navigation; `contributions.quickAdd` for the FAB. State-changing list actions (done, paid, delete, move) go through `undoableWithToast` (`core/undo/withToast`): toast with "Rückgängig" and Ctrl+Z; components and shortcuts hooks: [design-rules.md](design-rules.md).
 4. `contributions.onboarding` is required: importers (`onboarding.ts`, `importer.ts`, see `modules/todos`) or `noOnboarding`.
 5. Data-API: every synced collection gets the generic JSON importer; collections holding secrets/connector data need `dataApi: false`.
 6. German strings in `src/strings.ts`. Add the route to `PAGES` and the id to `MODULES` in `e2e/a11y.spec.ts`. Add an E2E case for user flows.

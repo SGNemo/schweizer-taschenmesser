@@ -25,7 +25,6 @@ export function ToolsSheet() {
       open={toolsOpen}
       onClose={closeTools}
       title={tool ? tool.name : t.tools.title}
-      variant="sheet"
       size="wide"
       headerStart={
         tool ? (

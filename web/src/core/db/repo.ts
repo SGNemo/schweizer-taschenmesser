@@ -12,6 +12,7 @@ import type { ModuleManifest } from '@/core/modules/types';
 import { db as defaultDb, type TaschenmesserDB } from './db';
 import { tableName } from './schema';
 import { getDeviceContext, type DeviceContext } from './device';
+import { recordWrite, type UndoStep } from './recorder';
 import { maxHlc } from './hlc';
 import { ENVELOPE_KEYS, type Stored } from './types';
 import { deepEqual, randomId } from './util';
@@ -188,16 +189,32 @@ export function createRepo<T extends Record<string, unknown>>(
     return run('rw', [table(), outbox()], () => fn(ctx));
   }
 
-  const setDeletedMany = (ids: string[], deleted: boolean): Promise<void> =>
-    write(async (ctx) => {
+  const setDeletedMany = async (ids: string[], deleted: boolean): Promise<void> => {
+    let changed: string[] = [];
+    await write(async (ctx) => {
       const existing = await table().bulkGet(ids);
       const rows = existing
         .map((e) => buildTombstoned(ctx, e, deleted))
         .filter((r): r is Row => r !== undefined);
       await saveAll(rows);
+      changed = rows.map((r) => r.id);
     });
+    if (changed.length > 0) recordWrite(() => setDeletedMany(changed, !deleted));
+  };
 
-  return {
+  /** Data fields of `existing` that `next` changes, with their previous values (for undo). */
+  function previousValues(
+    existing: Row,
+    next: Record<string, unknown>,
+  ): Record<string, unknown> | undefined {
+    const current = dataOf(existing as unknown as Record<string, unknown>);
+    const keys = new Set([...Object.keys(current), ...Object.keys(next)]);
+    const prev: Record<string, unknown> = {};
+    for (const k of keys) if (!deepEqual(current[k], next[k])) prev[k] = current[k];
+    return Object.keys(prev).length > 0 ? prev : undefined;
+  }
+
+  const repo: Repo<T> = {
     name,
     get table() {
       return table();
@@ -207,45 +224,74 @@ export function createRepo<T extends Record<string, unknown>>(
       const r = await table().get(id);
       return r && notDeleted(r) ? r : undefined;
     },
-    create: (data, opts) =>
-      write(async (ctx) => {
-        const row = buildCreated(ctx, data, opts?.id ?? randomId());
-        await saveAll([row]);
-        return row;
-      }),
-    createMany: (items) =>
-      write(async (ctx) => {
+    async create(data, opts) {
+      const row = await write(async (ctx) => {
+        const created = buildCreated(ctx, data, opts?.id ?? randomId());
+        await saveAll([created]);
+        return created;
+      });
+      recordWrite(() => setDeletedMany([row.id], true));
+      return row;
+    },
+    async createMany(items) {
+      const rows = await write(async (ctx) => {
         const ids = items.map((item) => item.id ?? randomId());
         const existing = await table().bulkGet(ids);
-        const rows: Row[] = [];
+        const created: Row[] = [];
         items.forEach((item, i) => {
           if (existing[i]) return;
-          rows.push(buildCreated(ctx, item.data, ids[i]!));
+          created.push(buildCreated(ctx, item.data, ids[i]!));
         });
-        await saveAll(rows);
-        return rows;
-      }),
-    update: (id, patch) =>
-      write(async (ctx) => {
+        await saveAll(created);
+        return created;
+      });
+      if (rows.length > 0)
+        recordWrite(() =>
+          setDeletedMany(
+            rows.map((r) => r.id),
+            true,
+          ),
+        );
+      return rows;
+    },
+    async update(id, patch) {
+      let undo: UndoStep | undefined;
+      const row = await write(async (ctx) => {
         const existing = await table().get(id);
         if (!existing || !notDeleted(existing))
           throw new Error(`${name}: record "${id}" not found`);
         const next = parse({ ...dataOf(existing as unknown as Record<string, unknown>), ...patch });
-        const row = buildUpdated(ctx, existing, next);
-        if (!row) return existing;
-        await saveAll([row]);
-        return row;
-      }),
-    upsert: (id, data) =>
-      write(async (ctx) => {
+        const updated = buildUpdated(ctx, existing, next);
+        if (!updated) return existing;
+        const prev = previousValues(existing, next);
+        if (prev) undo = () => repo.update(id, prev as Partial<T>).then(() => undefined);
+        await saveAll([updated]);
+        return updated;
+      });
+      if (undo) recordWrite(undo);
+      return row;
+    },
+    async upsert(id, data) {
+      let undo: UndoStep | undefined;
+      const row = await write(async (ctx) => {
         const existing = await table().get(id);
-        const row = existing
-          ? buildUpdated(ctx, existing, parse(data))
-          : buildCreated(ctx, data, id);
-        if (!row) return existing!;
-        await saveAll([row]);
-        return row;
-      }),
+        if (!existing) {
+          undo = () => setDeletedMany([id], true);
+          const created = buildCreated(ctx, data, id);
+          await saveAll([created]);
+          return created;
+        }
+        const next = parse(data);
+        const updated = buildUpdated(ctx, existing, next);
+        if (!updated) return existing;
+        const before = dataOf(existing as unknown as Record<string, unknown>) as T;
+        undo = () => repo.upsert(id, before).then(() => undefined);
+        await saveAll([updated]);
+        return updated;
+      });
+      if (undo) recordWrite(undo);
+      return row;
+    },
     remove: (id) => setDeletedMany([id], true),
     removeMany: (ids) => setDeletedMany(ids, true),
     restore: (id) => setDeletedMany([id], false),
@@ -254,4 +300,5 @@ export function createRepo<T extends Record<string, unknown>>(
       await table().bulkDelete(ids);
     },
   };
+  return repo;
 }

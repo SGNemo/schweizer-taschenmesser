@@ -14,6 +14,7 @@ const MARKERS = [
   'nemo-demo', // demo vault passphrase
   'Seed-Sync erlauben', // dev settings text (strings.dev.ts)
   'Ideen für den Balkon', // content of a module seed.ts (notes)
+  'Komponentenblatt', // component sheet (pages/ComponentSheet, strings.dev.ts)
 ];
 
 function filesOf(dir: string): string[] {
@@ -27,6 +28,7 @@ async function buildApp(channel: string): Promise<{ names: string[]; text: strin
   const outDir = mkdtempSync(join(tmpdir(), 'nemo-flag-'));
   dirs.push(outDir);
   vi.stubEnv('VITE_RELEASE_CHANNEL', channel);
+  vi.stubEnv('NODE_ENV', 'production'); // a real build: import.meta.env.DEV is false
   vi.stubEnv('TAURI_ENV_PLATFORM', 'linux'); // no service worker: much faster
   await build({
     configFile: join(process.cwd(), 'vite.config.ts'),

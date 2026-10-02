@@ -7,6 +7,7 @@ import { areaTarget, buildNavTree, type NavArea } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
+import { ComponentSheet } from '@/layout/devTools';
 import { AreaFrame } from '@/layout/AreaFrame';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
@@ -118,6 +119,20 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
             </PageContainer>
           ),
         },
+        ...(ComponentSheet
+          ? [
+              {
+                path: 'dev/components',
+                element: (
+                  <PageContainer key="ComponentSheet" variant="content">
+                    <Suspense fallback={<PageFallback />}>
+                      <ComponentSheet />
+                    </Suspense>
+                  </PageContainer>
+                ),
+              } satisfies RouteObject,
+            ]
+          : []),
         ...areaRoutes,
         ...moduleRoutes,
         ...Object.entries(LEGACY_REDIRECTS).flatMap(([from, to]) => [

@@ -157,7 +157,7 @@ export function Home() {
       <ChecklistCard />
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
-        <EmptyState icon="grid" title={t.home.emptyTitle}>
+        <EmptyState title={t.home.emptyTitle}>
           <p>{t.home.emptyText}</p>
           <Link to="/library">{t.home.toLibrary}</Link>
           <SetupLink />
@@ -194,12 +194,7 @@ export function Home() {
         </DndContext>
       )}
 
-      <Dialog
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        title={t.homeEdit.widgetsTitle}
-        variant="sheet"
-      >
+      <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title={t.homeEdit.widgetsTitle}>
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
         {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}
         <ul className={patternStyles.plainList}>

@@ -1,6 +1,8 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
 import type { ReactNode } from 'react';
-import { Card } from './Card';
+import { t } from '@/strings';
+import { Checkbox } from './Fields';
+import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
 
@@ -84,7 +86,10 @@ export function FormActions({ start, children }: { start?: ReactNode; children: 
   );
 }
 
-/** `layout="grid"` turns the list into an auto-fill card grid once the page is wide enough. */
+/**
+ * The one list pattern. `layout="list"` (default) groups flat rows under hairlines in one surface;
+ * `layout="grid"` turns the same rows into card tiles once the page is wide enough (Links, tools).
+ */
 export function ItemList({
   children,
   label,
@@ -96,7 +101,9 @@ export function ItemList({
 }) {
   return (
     <ul
-      className={layout === 'grid' ? `${styles.list} ${styles.grid}` : styles.list}
+      className={
+        layout === 'grid' ? `${styles.list} ${styles.grid}` : `${styles.list} ${styles.rows}`
+      }
       aria-label={label}
     >
       {children}
@@ -104,13 +111,28 @@ export function ItemList({
   );
 }
 
-/** A card row: a main button (title + meta lines, opens the editor) and optional trailing content. */
+/**
+ * A row: optional selection box and `lead`, a main button (title + meta lines, opens the editor),
+ * trailing `end` content and `actions` that appear on hover/focus. `data-row` marks the main
+ * element for keyboard navigation; put `data-row-edit` / `data-row-tick` on an element inside
+ * the row to give the E and Space shortcuts something to press.
+ */
 export function ItemRow({
   title,
   meta,
   onOpen,
   lead,
   end,
+  actions,
+  selectable,
+  selected,
+  onSelectChange,
+  done,
+  onSwipeRight,
+  swipeRightLabel,
+  onSwipeLeft,
+  swipeLeftLabel,
+  className,
   children,
 }: {
   title: ReactNode;
@@ -118,6 +140,20 @@ export function ItemRow({
   onOpen?: () => void;
   lead?: ReactNode;
   end?: ReactNode;
+  /** Row actions (icon buttons); shown on hover/focus, always on devices without hover. */
+  actions?: ReactNode;
+  /** Shows a checkbox on the left; `onSelectChange` also reports a Shift-click for ranges. */
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectChange?: (selected: boolean, extend: boolean) => void;
+  /** Done entries are struck through and quiet. */
+  done?: boolean;
+  /** Touch swipes (phone): right = done/paid, left = move/snooze; the labels name the revealed action. */
+  onSwipeRight?: () => void;
+  swipeRightLabel?: string;
+  onSwipeLeft?: () => void;
+  swipeLeftLabel?: string;
+  className?: string;
   children?: ReactNode;
 }) {
   const body = (
@@ -126,23 +162,52 @@ export function ItemRow({
       {meta ? <span className={styles.muted}>{meta}</span> : null}
     </>
   );
+  const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
   return (
-    <Card as="li">
-      <div className={styles.row}>
+    <li
+      className={[
+        styles.item,
+        swipe.enabled ? styles.swipeable : '',
+        selected ? styles.selected : '',
+        done ? styles.done : '',
+        className ?? '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {swipe.enabled && swipe.dx !== 0 ? (
+        <div
+          className={`${styles.reveal} ${swipe.dx > 0 ? styles.revealRight : styles.revealLeft}`}
+          aria-hidden="true"
+        >
+          {swipe.dx > 0 ? swipeRightLabel : swipeLeftLabel}
+        </div>
+      ) : null}
+      <div className={styles.row} style={swipe.style} {...swipe.bind}>
+        {selectable ? (
+          <Checkbox
+            label={t.ui.selectRow}
+            labelHidden
+            checked={!!selected}
+            onChange={() => undefined}
+            onClick={(e) => onSelectChange?.(!selected, e.shiftKey)}
+          />
+        ) : null}
         {lead}
         {onOpen ? (
-          <button type="button" className={styles.main} onClick={onOpen}>
+          <button type="button" className={styles.main} data-row onClick={onOpen}>
             {body}
           </button>
         ) : (
-          <div className={styles.main} style={{ cursor: 'default' }}>
+          <div className={`${styles.main} ${styles.static}`} data-row tabIndex={-1}>
             {body}
           </div>
         )}
         {end}
+        {actions ? <div className={styles.actions}>{actions}</div> : null}
       </div>
       {children}
-    </Card>
+    </li>
   );
 }
 

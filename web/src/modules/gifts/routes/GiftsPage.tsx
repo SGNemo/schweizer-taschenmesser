@@ -55,7 +55,7 @@ export default function GiftsPage() {
         </Button>
       </PageHeader>
       {ideas && ideas.length === 0 ? (
-        <EmptyState icon="gift" title={t.gifts.empty}>
+        <EmptyState title={t.gifts.empty}>
           <StartDataButton moduleId="gifts" />
         </EmptyState>
       ) : null}

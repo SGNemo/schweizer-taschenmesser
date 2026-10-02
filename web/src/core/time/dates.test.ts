@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateTime, relativeDayLabel, startOfWeekStr, toEpoch } from './dates';
+import { formatDateTime, humanDateHint, relativeDayLabel, startOfWeekStr, toEpoch } from './dates';
 
 describe('formatDateTime', () => {
   it('takes day and time from the same local clock (no UTC day around midnight)', () => {
@@ -25,5 +25,16 @@ describe('date string helpers', () => {
     expect(relativeDayLabel('2026-10-01', '2026-09-30')).toBe('Morgen');
     expect(relativeDayLabel('2026-09-29', '2026-09-30')).toBe('Gestern');
     expect(relativeDayLabel('2026-10-05', '2026-09-30')).toBe('Mo., 5. Okt.');
+  });
+});
+
+describe('humanDateHint', () => {
+  const ref = '2026-09-29'; // Tuesday
+  it('says what a date means in words', () => {
+    expect(humanDateHint('2026-09-29', ref)).toBe('Heute');
+    expect(humanDateHint('2026-09-30', ref)).toBe('Mittwoch, morgen');
+    expect(humanDateHint('2026-09-28', ref)).toBe('Montag, gestern');
+    expect(humanDateHint('2026-10-05', ref)).toBe('Montag, in 6 Tagen');
+    expect(humanDateHint('2026-09-27', ref)).toBe('Sonntag, vor 2 Tagen');
   });
 });

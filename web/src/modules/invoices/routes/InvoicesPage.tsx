@@ -67,10 +67,7 @@ export default function InvoicesPage() {
       </div>
 
       {invoices && shown.length === 0 ? (
-        <EmptyState
-          icon="receipt"
-          title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
-        >
+        <EmptyState title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}>
           {view === 'open' ? <StartDataButton moduleId="invoices" /> : null}
         </EmptyState>
       ) : null}

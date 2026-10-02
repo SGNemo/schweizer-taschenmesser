@@ -101,6 +101,7 @@ const PAGES = [
   ['launcher', '/launcher'],
   ['pantry', '/pantry'],
   ['gifts', '/gifts'],
+  ['components sheet', '/dev/components'],
   ['share', '/share?title=Beispiel&text=Schau%20mal%20https%3A%2F%2Fbeispiel.example%2Fx'],
 ] as const;
 

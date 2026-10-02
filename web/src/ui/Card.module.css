@@ -1,11 +1,12 @@
+/* Groups only: level-1 shadow, no border (DESIGN-SPEC § 7). */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--space-4);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-5);
 }
 .title {
-  font-size: var(--text-md);
+  font-size: var(--text-label);
   font-weight: var(--weight-semibold);
   margin-bottom: var(--space-3);
 }

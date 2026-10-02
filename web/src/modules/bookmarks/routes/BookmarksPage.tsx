@@ -111,10 +111,7 @@ export default function BookmarksPage() {
       ) : null}
 
       {items && shown.length === 0 ? (
-        <EmptyState
-          icon="bookmark"
-          title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}
-        >
+        <EmptyState title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}>
           {items.length === 0 ? <StartDataButton moduleId="bookmarks" /> : null}
         </EmptyState>
       ) : null}

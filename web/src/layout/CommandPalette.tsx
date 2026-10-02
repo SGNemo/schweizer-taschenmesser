@@ -10,7 +10,7 @@ import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, type IconName } from '@/ui';
 import { AnswerView } from './assistant/AnswerView';
 import { useAssistant, useSearchHits } from './assistant/useAssistant';
-import { useModuleNavItems, useNavTree } from './useNavItems';
+import { useModuleNavItems, useNavTree, useQuickAddActions } from './useNavItems';
 import styles from './CommandPalette.module.css';
 import { loadDevCommands } from './devTools';
 import answerStyles from './assistant/assistant.module.css';
@@ -54,6 +54,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate();
   const moduleItems = useModuleNavItems();
   const tree = useNavTree();
+  const quickActions = useQuickAddActions();
   const config = useAiConfig();
   const { state, submit, reset } = useAssistant();
   const [query, setQuery] = useState('');
@@ -79,6 +80,12 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         icon: a.icon,
         run: go(a.to),
       })),
+      ...quickActions.map((a) => ({
+        id: `new-${a.icon}-${a.id}`,
+        label: t.palette.newEntry(a.label),
+        icon: 'plus' as IconName,
+        run: go(a.to),
+      })),
       ...moduleItems.map((i) => ({ id: i.to, label: i.label, icon: i.icon, run: go(i.to) })),
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
@@ -91,7 +98,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       })),
       ...devCommands,
     ];
-  }, [navigate, moduleItems, tree, openSetup, openTools, tools, devCommands]);
+  }, [navigate, moduleItems, tree, quickActions, openSetup, openTools, tools, devCommands]);
 
   const hits = useSearchHits(query);
   const hasModel = config ? isAiConfigured(config) : false;

@@ -27,7 +27,7 @@ export function TransactionsTab({
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   if (inMonth.length === 0)
     return (
-      <EmptyState icon="wallet" title={t.finance.noTransactions}>
+      <EmptyState title={t.finance.noTransactions}>
         <StartDataButton moduleId="finance" />
       </EmptyState>
     );
@@ -83,9 +83,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
           {t.finance.addAccount}
         </Button>
       </div>
-      {data.accounts.length === 0 ? (
-        <EmptyState icon="wallet" title={t.finance.noAccounts} />
-      ) : null}
+      {data.accounts.length === 0 ? <EmptyState title={t.finance.noAccounts} /> : null}
       <ul className={styles.list}>
         {data.accounts.map((a) => (
           <li key={a.id}>

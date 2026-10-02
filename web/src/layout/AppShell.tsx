@@ -14,11 +14,13 @@ import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
 import { SeedBanner } from './devTools';
 import { QuickAdd } from './QuickAdd';
+import { ShortcutSheet } from './ShortcutSheet';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
 import { useNavTree } from './useNavItems';
+import { useShortcuts } from './useShortcuts';
 import styles from './AppShell.module.css';
 
 let devNoticeShown = false;
@@ -41,6 +43,7 @@ export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   useNativeShare();
+  useShortcuts();
 
   // Global shortcuts: Ctrl/Cmd+K opens the command palette, Ctrl/Cmd+. the tools, Alt+Home goes home.
   useEffect(() => {
@@ -121,6 +124,7 @@ export function AppShell() {
 
       <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
       <QuickAdd />
+      <ShortcutSheet />
       <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />
       <CommandPalette />
       <ToolsSheet />

@@ -12,9 +12,15 @@ import {
 } from '@/ui';
 import { t } from '@/strings';
 import { now } from '@/core/time/now';
+import { undoableWithToast } from '@/core/undo/withToast';
 import { deleteTask, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import styles from '../routes/todos.module.css';
+
+/** Deleting a task (with its subtasks) is one action: the toast and Ctrl+Z bring it back. */
+function deleteTaskUndoable(id: string) {
+  return undoableWithToast(t.todos.taskDeleted, t.todos.taskDeleted, () => deleteTask(id));
+}
 
 type StoredTask = Stored<Task>;
 type StoredList = Stored<TodoList>;
@@ -149,7 +155,7 @@ function EditorForm({
                 <span className={styles.grow} style={{ flex: 1 }}>
                   {s.title}
                 </span>
-                <IconButton label={t.actions.delete} onClick={() => void deleteTask(s.id)}>
+                <IconButton label={t.actions.delete} onClick={() => void deleteTaskUndoable(s.id)}>
                   <Icon name="trash" />
                 </IconButton>
               </li>
@@ -182,8 +188,8 @@ function EditorForm({
         <Button
           variant="danger"
           onClick={async () => {
-            await deleteTask(task.id);
             onClose();
+            await deleteTaskUndoable(task.id);
           }}
         >
           {t.actions.delete}
