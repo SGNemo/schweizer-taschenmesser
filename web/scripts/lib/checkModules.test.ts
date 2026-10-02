@@ -106,5 +106,8 @@ describe('checkWidgetSource', () => {
   it('wants an empty state or a link', () => {
     expect(checkWidgetSource('x', 'w', 'return <p>hi</p>')).toHaveLength(1);
     expect(checkWidgetSource('x', 'w', 'emptyAction={{}}')).toEqual([]);
+    // the catalogue types bring their own empty state; the status card carries its action
+    expect(checkWidgetSource('x', 'w', '<GaugeList empty="Leer" entries={[]} />')).toEqual([]);
+    expect(checkWidgetSource('x', 'w', '<StatusCard icon="lock" state="x" />')).toEqual([]);
   });
 });

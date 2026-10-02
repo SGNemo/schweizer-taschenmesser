@@ -12,11 +12,10 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **Docs split:** `CLAUDE.md` is the short working guide; long design notes live in `docs/architecture.md`. Source: PR #2.
 
 ## Home variety (2026-10-02, PR `feat/dashboard-variety-system-module`)
-- **Variety through content types, not decoration.** Widgets pick a base component (KPI, due list, progress, checklist, timeline, tiles, status, fill level) from the design system instead of per-module styles; the home grid gives them their size through context. Why: every widget looked the same (title, number, list, link) and nothing important stood out, but colour fields, illustrations or animations would only add noise.
-- **Red only for overdue, exceeded or expired; accent for "act today"; warning for "expires soon / almost full"; always with icon or text.** One rule (`dueState`) for all due dates. A drive that is almost full is a warning, never red.
-- **"Jetzt wichtig" is a contribution (`contributions.attention`), not hard-wired in the home code.** Modules read only their own data; runtime-only facts (a full drive) are published through `core/modules/liveAttention.ts`. The strip is empty (renders nothing) when nothing is urgent and can be hidden in edit mode.
-- **Numbers always come with a context line** ("897,89 € offen · 2 überfällig"); the header link replaces the orange "Modul →" links.
-- **Feed type not built** (its only module, news, is retired); listed as "später" in the spec.
+- **Variety through content types, not decoration:** widgets use base components (KPI, due list, progress, checklist, timeline, tiles, status, fill level) sized by context. Why: all widgets looked alike and nothing stood out; colour fields or animation would add noise.
+- **Red only for overdue/exceeded/expired**, accent = act today, warning = soon/almost full, always with icon or text (`dueState`).
+- **"Jetzt wichtig" is a contribution (`contributions.attention`)**; runtime-only facts go through `liveAttention.ts`. Empty = not rendered; hideable.
+- Numbers carry a context line; the header link replaces "Modul →". Feed type not built (news retired).
 
 ## Nemo rebrand & design system
 - **The app is called Nemo; every internal identifier keeps its old value.** Tauri `identifier` `io.github.sgnemo.taschenmesser`, Android packages/namespaces, keystore alias, updater endpoint/pubkey, repo name, IndexedDB `taschenmesser`, storage keys (`tm-theme`), backup format ids (`taschenmesser-backup`, `-vault-backup`, `-encrypted`), crypto AAD/check strings, Cargo/npm package names, MCP server name and `TASCHENMESSER_TOKEN/URL`. Why: a changed ID makes Android treat an update as a new app, detaches the app from its data and breaks decryption. Only what users see changed. `web/src/brand-ids.test.ts` pins them. New exports are named `nemo-backup-…`, old `taschenmesser-backup` files still import (fixture test).
