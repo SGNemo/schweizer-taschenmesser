@@ -30,6 +30,16 @@ D14. *Berechtigungen:* App startet, Updater, Google-Login und lokale API funktio
 D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, RAM, Akku am Laptop, Grafikkarte, lokale IP). ☐
 D16. *Android/PWA:* „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
 
+### Übersicht und Dieser PC (Runde `feat/dashboard-variety-system-module`) – nur auf echtem Windows/Android prüfbar
+V1. *GPU-Erkennung:* Dieser PC → System → Grafik: die **RTX 4070** erscheint (mit Speicher ≈ 12 GB und Treiberversion, „aktiv“), **nicht** „Microsoft Basic Render Driver“. Bei mehreren Grafikkarten (z. B. Prozessorgrafik) sind alle gelistet. ☐
+V2. *Netzwerk-Adapterliste:* Pro Adapter Name, Typ (Kabel/WLAN/virtuell), Status, IPv4, **eine** IPv6; „Alle Adressen anzeigen“ blendet die übrigen ein. vEthernet/WSL/Hyper-V gedämpft am Ende. WLAN-Name und Signal erscheinen (unter Windows 11 24H2 ggf. nur mit Standortberechtigung – dann fehlen sie). Auf/Ab-Rate bewegt sich beim Download. „Öffentliche IP abfragen“ fragt erst nach dem Klick. ☐
+V3. *Laufwerke:* Typ (NVMe/SSD/HDD/USB), Modellname, Systemlaufwerk-Markierung, Füllstand-Hinweis in Worten; Temperatur und Zustand erscheinen **oder** „nicht verfügbar – …“ mit Grund (ohne Adminrechte oft nur die Temperatur). „Belegt seit letztem Scan“ nach einem Scan und etwas Schreiben. Lese-/Schreibrate bei Kopieren einer großen Datei. ☐
+V4. *Schnellübersicht:* Größen von Temp/Downloads/Browser-Cache/Papierkorb stimmen grob mit dem Explorer; „mindestens …“ bei sehr großen Ordnern; kein automatisches Löschen. ☐
+V5. *Mehr Infos:* Mainboard, BIOS, RAM-Riegel (Anzahl, Typ, Takt), Windows-Build, letzter Neustart, Bildschirme (Auflösung, Rate), Standard-Lautsprecher/Mikrofon, Prozesse mit CPU %, „Im Task-Manager öffnen“. Akku am Laptop. ☐
+V6. *Live-Kacheln:* CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-Verlauf füllt sich; Seite verlassen und zurückkehren beginnt neu. ☐
+V7. *Übersicht mit echten Daten:* „Jetzt wichtig“ zeigt Überfälliges (rot), Heute (Akzent), bald Ablaufendes (Warnfarbe) – jeweils mit Icon/Text; leer = Bereich fehlt. ToDo im Widget abhaken → „Rückgängig“. Kachel „Heute“ zeigt Jetzt-Linie und „Als Nächstes“. Dichte „Kompakt“ in Einstellungen → Darstellung. ☐
+V8. *Android:* Übersicht (Widgets, „Jetzt wichtig“ umbrechen sauber, Touch-Ziele), Dieser PC erscheint **nicht**. ☐
+
 ### Schritt 11b – OS-Keystore, Biometrie, Bildschirmschutz
 **Windows (`Nemo-Portable.exe`)**
 1. *API-Schlüssel im Credential Manager:* Einstellungen → KI-Assistent → Anbieter hinzufügen → Schlüssel eintragen → Speichern → „Verbindung testen". Dann Windows-Suche „Anmeldeinformationsverwaltung" → „Windows-Anmeldeinformationen": Es gibt einen Eintrag `ai-key:<anbieter>` (Adresse `io.github.sgnemo.taschenmesser`). ☐
@@ -81,11 +91,11 @@ T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → eine
 T2. *Währung:* mit Internet: Kurse laden, umrechnen; danach Netz aus → gespeicherte Kurse mit Datum. Die Schnittstelle `api.frankfurter.dev` ist nur per Doku geprüft (in der Windows-App keine CORS-Hürde, im Browser hängt es an deren CORS-Erlaubnis). ☐
 T3. *Timer:* Timer starten, Sheet schließen – läuft weiter; bei Ablauf kommt die Benachrichtigung (Windows und Android). ☐
 
-### Links, Teilen, Apps & Links (Phase 13, Schritt 6)
+### Links, Teilen, Lesezeichen (Phase 13, Schritt 6)
 L1. *Karte:* Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Maps (Windows: Browser, Android: Maps-App). ☐
 L2. *WhatsApp:* Geburtstage → Knopf neben dem Namen → WhatsApp (Web/App) mit Glückwunschtext, Kontakt wählen. ☐
 L3. *Teilen (Android, PWA in Chrome installiert):* in einer anderen App „Teilen“ → Nemo → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
-L4. *Apps & Links:* Modul einschalten → „Startdaten einrichten“ → Vorschläge; die acht Startseiten (DHL, Hermes, DPD, Bahn, Maps, WhatsApp Web, Spotify, DWD) im Browser öffnen und melden, welche nicht stimmt. ☐
+L4. *Lesezeichen:* Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
 L5. *Spotify:* nicht gebaut (siehe docs/architecture.md). Soll ein Now-Playing-Widget kommen, brauche ich eine Entscheidung: Premium-Konto als Entwickler nötig, max. 5 Nutzer. ☐
 
 ### Einrichtungsassistent

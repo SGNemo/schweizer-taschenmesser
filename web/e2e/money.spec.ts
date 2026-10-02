@@ -69,7 +69,7 @@ test.describe('Invoices', () => {
 
     await ready(page, '/');
     await expect(page.getByTestId('widget-invoices:due')).toContainText('Stadtwerke');
-    await expect(page.getByTestId('widget-invoices:due')).toContainText('1 offene Rechnung');
+    await expect(page.getByTestId('widget-invoices:due')).toContainText('89,90 € offen');
 
     await ready(page, '/calendar?view=week&date=2026-10-05');
     await expect(calendarEntry(page, /Rechnung.*Stadtwerke · 89,90\s€/)).toBeVisible();

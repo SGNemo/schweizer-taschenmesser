@@ -6,6 +6,19 @@
 export type DriveKind = 'fixed' | 'removable' | 'network' | 'ram' | 'unknown';
 export type DriveMedia = 'ssd' | 'hdd' | 'unknown';
 
+/** How a drive is connected. */
+export type DriveBus = 'nvme' | 'sata' | 'usb' | 'scsi' | 'card' | 'virtual' | 'other' | 'unknown';
+
+export type HealthStatus = 'ok' | 'warning' | 'unknown';
+/** Why a health value is missing: Windows needs admin rights for it, or the drive cannot tell. */
+export type HealthGap = 'needsAdmin' | 'unsupported';
+
+export interface DriveHealth {
+  status: HealthStatus;
+  temperatureC: number | null;
+  gap: HealthGap | null;
+}
+
 export interface DriveInfo {
   /** Scan root, e.g. `C:\`. */
   root: string;
@@ -15,6 +28,12 @@ export interface DriveInfo {
   media: DriveMedia;
   totalBytes: number;
   freeBytes: number;
+  bus: DriveBus;
+  /** Product name from the storage driver; never a serial number. */
+  model: string | null;
+  /** Holds the running Windows. */
+  isSystem: boolean;
+  health: DriveHealth;
 }
 
 /** Same order as `FileKind::ALL` in Rust (index into `kindBytes`). */
@@ -99,6 +118,12 @@ export interface DiskQuery {
 export interface Place {
   id: 'temp' | 'chrome' | 'edge' | 'firefox' | 'downloads' | 'cache';
   path: string;
+}
+
+/** Size of a known place without a scan (bounded walk; `partial` = at least this much). */
+export interface PlaceSize extends Place {
+  sizeBytes: number;
+  partial: boolean;
 }
 
 /** Why the block list refuses an entry (`Denied::code()` in Rust). */
@@ -213,6 +238,10 @@ export interface DiskService {
   node(scanId: number, node: number): Promise<DiskNode | null>;
   query(scanId: number, query: DiskQuery): Promise<DiskNode[]>;
   knownPlaces(): Promise<Place[]>;
+  /** Quick sizes of the known places; nothing is scanned or changed. */
+  placeSizes(): Promise<PlaceSize[]>;
+  /** Size of the recycle bin (null where unknown). Emptying it stays a job for Explorer. */
+  recycleSize(): Promise<number | null>;
   nodePath(scanId: number, node: number): Promise<string>;
   /** Shows the entry in Explorer. */
   reveal(scanId: number, node: number): Promise<void>;

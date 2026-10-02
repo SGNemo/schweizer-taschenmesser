@@ -205,7 +205,7 @@ describe('duplicates, commit and undo', () => {
   });
 
   it('a repeated entry inside one sending is flagged', async () => {
-    const { rows } = await run('shopping', [{ name: 'Brot' }, { name: ' brot ' }]);
+    const { rows } = await run('bookmarks', [{ title: 'Brot' }, { title: ' brot ' }]);
     expect(rows.map((r) => r.duplicate)).toEqual([false, true]);
   });
 });

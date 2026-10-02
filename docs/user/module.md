@@ -6,7 +6,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 
 | Standardmäßig an | Optional (aus, in der Bibliothek aktivieren) |
 |---|---|
-| Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos | **Merkliste** (Links, Lesen, Ansehen, Orte, Ideen mit Tags; auf dem Handy per „Teilen“), **Notizen** (mit festem **Zettel** oben für Zwischendurch), **Einkaufsliste**, **Geburtstage**, **Verträge & Garantien** (Kündigungsfristen im Kalender + Erinnerung), **Budgets & Sparziele** (Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen), **Packlisten** (als Vorlage kopieren), **Dokumente** (Ablaufdatum + Datei), **Apps & Links** (Kacheln für Paketverfolgung, Bahn, Karten …), **Accounts** (Passwort-Tresor) |
+| Kalender, ToDos, Erinnerungen, Finanzen, Rechnungen, Abos | **Merkliste** (Links, Lesen, Ansehen, Orte, Ideen mit Tags; auf dem Handy per „Teilen“), **Notizen** (mit festem **Zettel** oben für Zwischendurch), **Listen** (Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten), **Geburtstage**, **Verträge & Garantien** (Kündigungsfristen im Kalender + Erinnerung), **Budgets & Sparziele** (Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen), **Dokumente** (Ablaufdatum + Datei), **Lesezeichen** (Ansicht der Merkliste: Kacheln nach erstem Tag gruppiert, z. B. Paketverfolgung, Bahn, Karten …), **Accounts** (Passwort-Tresor) |
 
 - **Dokumente:** Titel, Kategorie, Ablaufdatum und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem
   Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).

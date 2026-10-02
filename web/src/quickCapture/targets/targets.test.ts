@@ -90,6 +90,16 @@ describe('saveCapture', () => {
     expect(items.find((i) => i.title === 'Skript')!.url).toBeUndefined();
   });
 
+  it('writes an entry onto the shopping list of the lists module', async () => {
+    await saveCapture('list', { title: '2 Milch' }, { states: { ...ON, lists: true } });
+    const items = await rows('lists_item');
+    expect(items[0]).toMatchObject({ name: '2 Milch', done: false, listId: 'shopping-default' });
+    expect((await rows('lists_list'))[0]).toMatchObject({
+      id: 'shopping-default',
+      kind: 'shopping',
+    });
+  });
+
   it('writes a note from shared text', async () => {
     await saveCapture(
       'note',

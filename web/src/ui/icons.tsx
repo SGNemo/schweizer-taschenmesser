@@ -74,6 +74,21 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  TriangleAlert,
+  TrendingUp,
+  TrendingDown,
+  ArrowRight,
+  Wifi,
+  Network,
+  Monitor,
+  MemoryStick,
+  Battery,
+  Thermometer,
+  Gauge,
+  CircleCheck,
+  Activity,
+  Unlock,
+  Undo2,
 } from 'lucide-react';
 
 const ICONS = {
@@ -151,6 +166,21 @@ const ICONS = {
   chevronRight: ChevronRight,
   panelClose: PanelLeftClose,
   panelOpen: PanelLeftOpen,
+  alert: TriangleAlert,
+  trendUp: TrendingUp,
+  trendDown: TrendingDown,
+  arrowRight: ArrowRight,
+  wifi: Wifi,
+  network: Network,
+  monitor: Monitor,
+  memory: MemoryStick,
+  battery: Battery,
+  thermometer: Thermometer,
+  gauge: Gauge,
+  ok: CircleCheck,
+  activity: Activity,
+  unlock: Unlock,
+  undo: Undo2,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

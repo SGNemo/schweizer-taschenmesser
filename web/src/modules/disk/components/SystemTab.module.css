@@ -1,0 +1,107 @@
+.tiles {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  margin-bottom: var(--space-5);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.tileTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+.tileMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.tileText {
+  min-width: 0;
+}
+.tileValue {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+}
+.sub {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
+.section {
+  margin-top: var(--space-6);
+}
+.section h2 {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-2);
+}
+.facts {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+.facts dt {
+  color: var(--text-muted);
+}
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.adapters {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+}
+.adapter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+/* Virtual adapters (WSL, Hyper-V, VPN) are quiet: muted text, no emphasis. */
+.adapter[data-kind='virtual'] {
+  color: var(--text-muted);
+}
+.adapter[data-kind='virtual'] h3 {
+  color: var(--text-muted);
+}
+.adapterHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.adapterHead h3 {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.gpus {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.muted {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

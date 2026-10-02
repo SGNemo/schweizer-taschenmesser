@@ -15,7 +15,7 @@ export interface Profile {
 export const PROFILES: readonly Profile[] = [
   {
     id: 'everyday',
-    modules: ['calendar', 'todos', 'reminders', 'shopping', 'notes', 'birthdays'],
+    modules: ['calendar', 'todos', 'reminders', 'lists', 'notes', 'birthdays'],
     tools: ['calc', 'timer', 'units', 'dates', 'qr'],
   },
   {
@@ -33,7 +33,7 @@ export const PROFILES: readonly Profile[] = [
   },
   {
     id: 'productive',
-    modules: ['todos', 'notes', 'calendar', 'bookmarks', 'launcher'],
+    modules: ['todos', 'notes', 'calendar', 'bookmarks'],
     tools: ['timer', 'calc', 'dates'],
   },
   {

@@ -187,11 +187,16 @@ describe('type detection', () => {
 });
 
 describe('prefixes', () => {
+  it('the keyword "Einkaufsliste" picks the list type', () => {
+    expect(parse('Milch auf die Einkaufsliste').type).toBe('list');
+  });
+
   it.each([
     ['t Steuer machen', 'todo', 'Steuer machen'],
     ['k morgen 15 Uhr Zahnarzt', 'event', 'Zahnarzt'],
     ['e Tabletten jeden Tag', 'reminder', 'Tabletten'],
     ['m https://example.org', 'bookmark', 'https://example.org'],
+    ['l Milch', 'list', 'Milch'],
     ['$ 12,50 Mittagessen', 'finance', 'Mittagessen'],
     ['$12 Kaffee', 'finance', 'Kaffee'],
   ])('%s', (text, type, title) => {

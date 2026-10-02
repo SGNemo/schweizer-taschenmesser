@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { validateManifest } from '@/core/modules/registry';
-import { filterItems, hostOf, normalizeUrl, parseTags, tagCounts, type Filter } from '../logic';
+import {
+  filterItems,
+  groupLinks,
+  hostOf,
+  normalizeUrl,
+  parseTags,
+  tagCounts,
+  type Filter,
+} from '../logic';
 import manifest from '../manifest';
 import { itemRepo } from '../repo';
 import { itemSchema } from '../schema';
@@ -78,5 +86,21 @@ describe('bookmarks module', () => {
     expect(item()).toMatchObject({ kind: 'link', tags: [], done: false });
     const created = await itemRepo.create(item({ title: 'Wanderweg', tags: ['Urlaub'] }));
     expect((await itemRepo.get(created.id))?.tags).toEqual(['Urlaub']);
+  });
+});
+
+describe('Lesezeichen (links as tiles)', () => {
+  it('groups by the first tag, groups alphabetical, links without a tag last', () => {
+    const l = (title: string, tags: string[]) => ({ title, tags });
+    const groups = groupLinks([
+      l('Wetter', []),
+      l('Bahn', ['Reisen']),
+      l('DHL', ['pakete']),
+      l('Karten', ['Reisen', 'x']),
+      l('Hermes', ['Pakete']),
+    ]);
+    expect(groups.map(([g]) => g)).toEqual(['pakete', 'Reisen', '']);
+    expect(groups[0]![1].map((i) => i.title)).toEqual(['DHL', 'Hermes']);
+    expect(groups[1]![1].map((i) => i.title)).toEqual(['Bahn', 'Karten']);
   });
 });

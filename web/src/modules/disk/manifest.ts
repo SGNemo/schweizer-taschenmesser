@@ -45,6 +45,7 @@ const manifest: ModuleManifest = {
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/SystemWidget'),
+      to: '/disk?tab=system',
     },
   ],
   settings: { schema: z.object({}), defaults: {}, fields: [] },

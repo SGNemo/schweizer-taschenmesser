@@ -1,8 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { relativeDayLabel, today } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
+import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
-import { compareTasks, dueTone } from '../logic';
+import { ChecklistWidget } from '@/ui';
+import { compareTasks } from '../logic';
 import { taskRepo } from '../repo';
 
 export default function OpenTasksWidget() {
@@ -10,21 +12,25 @@ export default function OpenTasksWidget() {
     async () => (await taskRepo.active().toArray()).filter((x) => !x.done).sort(compareTasks),
     [],
   );
-  const now = today();
+  const day = today();
+  const overdue = (open ?? []).filter((x) => x.dueDate && x.dueDate < day).length;
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.todos, to: '/todos?new=1' }}
+    <ChecklistWidget
       loading={!open}
       empty={t.todos.widgetEmpty}
-      headline={open && open.length > 0 ? t.todos.openCount(open.length) : undefined}
-      entries={(open ?? []).slice(0, 5).map((task) => ({
-        key: task.id,
-        title: task.title,
-        meta: task.dueDate ? relativeDayLabel(task.dueDate, now) : undefined,
-        overdue: dueTone(task.dueDate, task.done, now) === 'overdue',
-      }))}
-      to="/todos"
-      linkLabel={t.todos.title}
+      emptyAction={{ label: t.homeEmpty.todos, to: '/todos?new=1' }}
+      summary={open && open.length > 0 ? t.widgets.todosSummary(open.length, overdue) : undefined}
+      entries={(open ?? []).map((task) => {
+        const s = task.dueDate ? dueState(task.dueDate, day) : undefined;
+        return {
+          key: task.id,
+          title: task.title,
+          checked: task.done,
+          tone: s?.tone,
+          label: s?.label,
+        };
+      })}
+      onToggle={(id, done) => taskRepo.update(id, { done, completedAt: done ? now() : undefined })}
     />
   );
 }

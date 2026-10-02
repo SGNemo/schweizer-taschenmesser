@@ -45,6 +45,9 @@ const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   news: '/',
   habits: '/',
   timetrack: '/',
+  shopping: '/lists',
+  packing: '/lists',
+  launcher: '/bookmarks?view=links',
   system: '/disk?tab=system',
 };
 

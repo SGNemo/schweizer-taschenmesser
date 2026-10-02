@@ -40,6 +40,29 @@ Direction "D": colour and space from "Ruhig und luftig" (A), hairline row divide
 - Widget anatomy: title 15/600 → hero number 32/700 → sub line 14 → rows (two-line on narrow) → "Modul →" link. **Actions inside widgets:** tick ToDos, "Bezahlt" on invoices, snooze reminders, tick shopping chips. Edit mode (drag, size s/m/l, hide, reset) stays. Vault and desktop modules show status only.
 - Reference: `mockups/round-4/home.html` (`home--cool-dark-desktop.png`, `home--cool-dark-phone.png`).
 
+### 4a. Widget types and emphasis (2026-10-02, PR `feat/dashboard-variety-system-module`)
+Variety comes from **content types**, not decoration: a widget picks the base component that fits its content (`web/src/ui/widgets/`, exported by `@/ui`). Never a special style per module. Every type reads its size from `useWidgetSize()` (the home grid provides it), has a `Skeleton` loading state, an `EmptyState compact` with a next step, and keyboard-reachable controls.
+
+| Type | Component | Use | s / m / l |
+|---|---|---|---|
+| KPI | `KpiWidget` | one big number + unit, **context line always** ("897,89 € · 2 überfällig"), trend (arrow + text), sparkline | number + context / + trend / + sparkline |
+| Due list | `DueList` | summary line, rows with state right (`StateBadge`), amount | 3 / 5 / 8 rows |
+| Progress | `ProgressList` | `Progress` rows with percent/target, overrun in danger + icon + text ("27,50 € drüber") | 2 / 4 / 6 |
+| Checklist | `ChecklistWidget` | tick in the widget, toast "Erledigt" + "Rückgängig" | 3 / 5 / 8 |
+| Timeline | `TimelineWidget` | "Heute": rail with times, "Jetzt" marker (text on a line), next item highlighted ("Als Nächstes"); l adds tomorrow | – / m / l |
+| Tiles | `TileGrid` | quick launch, ≥ 44 px | 4 / 6 / 9 |
+| Status | `StatusWidget` | state with icon and **one** action (vault: never content) | l adds a hint |
+| Fill level | `GaugeList`, `Ring` | bar per drive (rings at s), CPU/RAM rings | – |
+| Primitives | `Sparkline`, `Ring`, `StateBadge` | inline SVG, no chart library | |
+Not built yet: **Feed** (headlines with source and time) – its only module (news) is retired.
+
+**Emphasis rules (one place each, unit-tested):**
+- `dueState(date, today, { soonDays, done })` in `core/time/due.ts`: `overdue` (danger + alert icon + "seit 3 Tagen"), `today` (accent + clock icon + "Heute"), `soon` (≤ 3 days, neutral, "in 2 Tagen"), `later` (muted, date). A finished item is never overdue.
+- **Red only for overdue, exceeded or expired.** Accent = "act today". `--warning` = "expires soon" / "almost full". Colour is always paired with an icon or text.
+- **"Jetzt wichtig"** (`home/AttentionStrip.tsx`): modules contribute `contributions.attention` (`AttentionItem`: tone `danger|accent|warning`, icon, title, detail, link); `core/modules/contributions.ts` ranks danger → accent → warning, caps at 6. Items that only exist at runtime (a full drive) are published by the widget into `core/modules/liveAttention.ts`. The strip renders nothing when empty and can be hidden in edit mode (`core:attention` in the layout's `hidden`).
+- The widget title links to its module (small chevron, `WidgetDef.to`, default: the module's first route); no orange "Modul →" links inside widgets.
+- Density (normal/compact) is a device setting in Settings → Darstellung; widgets use `--row-h` and `--grid-gap`.
+
 ## 5. Tokens
 Neutral base **cool**; every pair checked AA (`ROUND-4-TOKENS.md` has the ratios). Hex values are the implementation targets for `web/src/ui/tokens.css`.
 

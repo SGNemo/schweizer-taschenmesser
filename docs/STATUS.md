@@ -8,6 +8,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Auf `develop` (noch nicht released): Testdaten für alle Module (Seed-Vertrag, Dev-Preview füllt leere App, Einstellungen → Entwickler).
 - Design „Klar 2“: Tokens (#43), Bereiche + Shell (#45), Basis-Komponenten (#48) auf `develop`. Einstellungen: Kategorien + Registry (`feat/settings-overhaul`).
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
+- Paket 3 (0.5.0, `feat/lists-package-3`): Listen, Lesezeichen, App-Migrationen.
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
 
 ## Nicht gebaut / bekannte Grenzen
@@ -29,7 +30,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Aus PR #3 offene Vorschläge: globaler „+“-FAB ab 900 px durch „+ Neu“ in der Top-Bar ersetzen; ToDo-Board mit Listen als Spalten.
 
 ## Modul-Review 2026-10-01 (entschieden, Doku-PR, noch nicht umgesetzt)
-Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung werden stillgelegt (Tabellen bleiben bis Paket 6); Werkzeuge 18 → 12. Pakete, Versionen (0.4 … 0.7, `feat!:`) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md). Funde der Review: alle behoben oder bewusst belassen (Fund 9 = gewollt, Fund 10 für bleibende Module erledigt; die Texte der zu ersetzenden Module ziehen mit ihren Paketen um). Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
+Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, (Einkauf + Packlisten → Listen, Apps & Links → Merkliste: erledigt), Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung werden stillgelegt (Tabellen bleiben bis Paket 6); Werkzeuge 18 → 12. Pakete, Versionen (0.4 … 0.7, `feat!:`) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md). Review-Funde: alle behoben oder bewusst belassen. Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
 
 ## Nächste sinnvolle Schritte
 0. Paket 1 „Aufräumen“ aus [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md) starten (eigener Chat, Hotspots Router/Nav/Settings).

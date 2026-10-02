@@ -1,5 +1,5 @@
 import { mkdirSync } from 'node:fs';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { bootDev, SEED_TODAY, seedApp } from '../seed/helpers';
 
 /**
@@ -36,12 +36,12 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'invoices', path: '/invoices' },
   { name: 'subscriptions', path: '/subscriptions' },
   { name: 'bookmarks', path: '/bookmarks' },
+  { name: 'bookmarks-links', path: '/bookmarks?view=links' },
   { name: 'notes', path: '/notes' },
-  { name: 'shopping', path: '/shopping' },
+  { name: 'lists', path: '/lists' },
   { name: 'birthdays', path: '/birthdays' },
   { name: 'contracts', path: '/contracts' },
   { name: 'budgets', path: '/budgets' },
-  { name: 'packing', path: '/packing' },
   { name: 'vault', path: '/vault' },
   { name: 'pantry', path: '/pantry' },
   { name: 'gifts', path: '/gifts' },
@@ -64,6 +64,36 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'settings-ueber', path: '/settings/ueber' },
 ];
 
+/** The desktop-only module is off by default: switch it on in IndexedDB (the app has opened the DB by now). */
+async function enableDisk(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('_modules', 'readwrite');
+          tx.objectStore('_modules').put({
+            id: 'disk',
+            enabled: true,
+            dataPolicy: null,
+            createdAt: 1,
+            updatedAt: 1,
+            deviceId: 'screens',
+            deletedAt: null,
+            _f: {},
+          });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+  );
+}
+
 test('capture layout screenshots', async ({ browser }) => {
   mkdirSync(OUT, { recursive: true });
   for (const vp of VIEWPORTS.filter((v) => !ONLY_VIEWPORTS || ONLY_VIEWPORTS.includes(v.name))) {
@@ -80,6 +110,7 @@ test('capture layout screenshots', async ({ browser }) => {
       await page.addInitScript(() => localStorage.setItem('__tmPlatformKind', 'desktop'));
     await bootDev(page);
     await seedApp(page, SCALE);
+    if (process.env.SCREENS_DESKTOP) await enableDisk(page);
     for (const p of PAGES.filter((x) => !ONLY_PAGES || ONLY_PAGES.test(x.name))) {
       await page.goto(p.path);
       await expect(page.locator('main')).toBeVisible();
@@ -89,7 +120,10 @@ test('capture layout screenshots', async ({ browser }) => {
       const notice = page.getByRole('button', { name: 'Schließen', exact: true });
       if (await notice.count()) await notice.first().click();
       await page.waitForTimeout(600);
-      await page.screenshot({ path: `${OUT}/${vp.name}--${p.name}.png` });
+      await page.screenshot({
+        path: `${OUT}/${vp.name}--${p.name}.png`,
+        fullPage: p.name === 'dashboard',
+      });
     }
     if (ONLY_PAGES && !ONLY_PAGES.test('accounts')) {
       await context.close();

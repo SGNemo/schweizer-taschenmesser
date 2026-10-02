@@ -29,6 +29,7 @@ export function WidgetList({
   subline?: string;
   entries: WidgetEntry[];
   to: string;
+  /** Label of the module link of the empty state (the home header links to the module itself). */
   linkLabel: string;
   /**
    * Primary action of the empty state (e.g. "Termin anlegen" → `/calendar?new=1`). Without one the
@@ -66,7 +67,6 @@ export function WidgetList({
           </li>
         ))}
       </ul>
-      <Link to={to}>{linkLabel}</Link>
     </div>
   );
 }

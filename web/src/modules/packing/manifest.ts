@@ -1,25 +1,21 @@
-import { noOnboarding } from '@/core/importer/types';
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
-import { aiSchema } from './ai';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { itemSchema, listSchema } from './schema';
-import { settings } from './settings';
-
+/**
+ * RETIRED (0.5.0): packing lists are now lists of the module "lists".
+ * The collections stay in the schema so sync, backup and older devices keep working; an app
+ * migration copies their rows forward (`core/db/appMigrationSteps.ts`). Tables follow in package 6.
+ */
 const manifest: ModuleManifest = {
   id: 'packing',
   name: 'Packlisten',
   icon: 'luggage',
   version: 1,
   description:
-    'Packlisten für Reisen und Ausflüge: abhaken, zurücksetzen und als Vorlage für die nächste Reise kopieren.',
-  routes: [
-    {
-      path: '/packing',
-      label: 'Packlisten',
-      nav: true,
-      component: () => import('./routes/PackingPage'),
-    },
-  ],
+    'Stillgelegt: Packlisten sind jetzt Listen im Modul Listen. Die Daten wurden übernommen.',
+  retired: true,
+  routes: [],
   dataSchema: {
     collections: {
       list: { schema: listSchema, indexes: [] },
@@ -27,26 +23,10 @@ const manifest: ModuleManifest = {
     },
   },
   migrations,
-  widgets: [
-    {
-      id: 'lists',
-      title: 'Packlisten',
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/ListsWidget'),
-    },
-  ],
-  aiSchema,
-  settings,
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
   defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'content',
-  order: 140,
-  area: 'household',
-  contributions: {
-    onboarding: noOnboarding,
-    quickAdd: [{ id: 'list', label: 'Packliste', to: '/packing?new=1' }],
-  },
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

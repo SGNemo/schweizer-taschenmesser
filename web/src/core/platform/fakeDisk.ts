@@ -326,6 +326,10 @@ const DRIVES: DriveInfo[] = [
     media: 'ssd',
     totalBytes: 512 * GB,
     freeBytes: 41 * GB,
+    bus: 'nvme',
+    model: 'Beispiel NVMe 512',
+    isSystem: true,
+    health: { status: 'ok', temperatureC: 41, gap: null },
   },
   {
     root: 'D:\\',
@@ -335,6 +339,10 @@ const DRIVES: DriveInfo[] = [
     media: 'hdd',
     totalBytes: 2000 * GB,
     freeBytes: 1300 * GB,
+    bus: 'sata',
+    model: 'Beispiel HDD 2TB',
+    isSystem: false,
+    health: { status: 'unknown', temperatureC: null, gap: 'needsAdmin' },
   },
   {
     root: 'E:\\',
@@ -344,6 +352,10 @@ const DRIVES: DriveInfo[] = [
     media: 'unknown',
     totalBytes: 64 * GB,
     freeBytes: 20 * GB,
+    bus: 'usb',
+    model: 'Beispiel USB-Stick',
+    isSystem: false,
+    health: { status: 'unknown', temperatureC: null, gap: 'unsupported' },
   },
 ];
 
@@ -481,6 +493,31 @@ export function createFakeDisk(): DiskService {
         { id: 'chrome', path: 'C:\\Nutzer\\Beispiel\\AppData\\Local\\Chrome\\Cache' },
         { id: 'downloads', path: 'C:\\Nutzer\\Beispiel\\Downloads' },
       ];
+    },
+    async placeSizes() {
+      return [
+        {
+          id: 'temp',
+          path: 'C:\\Nutzer\\Beispiel\\AppData\\Local\\Temp',
+          sizeBytes: 3.4 * GB,
+          partial: false,
+        },
+        {
+          id: 'chrome',
+          path: 'C:\\Nutzer\\Beispiel\\AppData\\Local\\Chrome\\Cache',
+          sizeBytes: 0.9 * GB,
+          partial: false,
+        },
+        {
+          id: 'downloads',
+          path: 'C:\\Nutzer\\Beispiel\\Downloads',
+          sizeBytes: 12.3 * GB,
+          partial: true,
+        },
+      ];
+    },
+    async recycleSize() {
+      return 1.2 * GB;
     },
     async nodePath(id, node) {
       return get(id).tree.pathOf(node);

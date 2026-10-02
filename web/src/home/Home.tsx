@@ -40,8 +40,10 @@ import {
   Segmented,
   Skeleton,
   Switch,
+  WidgetSizeContext,
 } from '@/ui';
 import { widgetsOf } from './AutoWidget';
+import { AttentionStrip } from './AttentionStrip';
 
 import styles from './Home.module.css';
 import {
@@ -77,9 +79,18 @@ const allEntries = (): Entry[] =>
   availableManifests().flatMap((m) =>
     widgetsOf(m).map((w) => {
       const key = widgetKey(m.id, w.id);
-      return { ...w, moduleId: m.id, key, Component: componentFor(key, w.component) };
+      return {
+        ...w,
+        to: w.to ?? m.routes?.[0]?.path,
+        moduleId: m.id,
+        key,
+        Component: componentFor(key, w.component),
+      };
     }),
   );
+
+/** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
+const ATTENTION_KEY = 'core:attention';
 
 const SIZE_CLASS: Record<WidgetSize, string> = { s: '', m: styles.m!, l: styles.l! };
 
@@ -155,6 +166,7 @@ export function Home() {
 
       <WelcomeCard />
       <ChecklistCard />
+      {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
         <EmptyState title={t.home.emptyTitle}>
@@ -198,6 +210,14 @@ export function Home() {
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
         {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}
         <ul className={patternStyles.plainList}>
+          <li>
+            <Switch
+              label={t.attention.title}
+              hint={t.attention.hint}
+              checked={!layout.hidden.includes(ATTENTION_KEY)}
+              onChange={() => void updateLayout({ hidden: toggleHidden(layout, ATTENTION_KEY) })}
+            />
+          </li>
           {ordered.map((e) => (
             <li key={e.key}>
               <Switch
@@ -282,7 +302,16 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
     >
       <Card>
         <div className={styles.head}>
-          <h2 className={styles.title}>{entry.title}</h2>
+          <h2 className={styles.title}>
+            {entry.to && !editing ? (
+              <Link to={entry.to} className={styles.titleLink}>
+                {entry.title}
+                <Icon name="chevronRight" size={16} />
+              </Link>
+            ) : (
+              entry.title
+            )}
+          </h2>
           {editing ? (
             <>
               {entry.sizes.length > 1 ? (
@@ -318,7 +347,9 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
           <p className={styles.hint}>{t.homeEdit.hidden}</p>
         ) : (
           <Suspense fallback={<WidgetFallback />}>
-            <Widget />
+            <WidgetSizeContext.Provider value={size}>
+              <Widget />
+            </WidgetSizeContext.Provider>
           </Suspense>
         )}
       </Card>
