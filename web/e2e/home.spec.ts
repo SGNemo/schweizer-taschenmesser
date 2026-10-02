@@ -54,7 +54,7 @@ test.describe('Home screen', () => {
     await ready(page, '/');
     await page.getByRole('button', { name: 'Anpassen' }).click();
 
-    const size = page.getByRole('group', { name: 'Größe von Fällige Rechnungen' });
+    const size = page.getByRole('group', { name: 'Größe von Kontostand' });
     await size.getByRole('button', { name: 'L', exact: true }).click();
     await expect(size.getByRole('button', { name: 'L', exact: true })).toHaveAttribute(
       'aria-pressed',
@@ -85,7 +85,7 @@ test.describe('Home screen', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(
       page
-        .getByRole('group', { name: 'Größe von Fällige Rechnungen' })
+        .getByRole('group', { name: 'Größe von Kontostand' })
         .getByRole('button', { name: 'S', exact: true }),
     ).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('widget-todos:open')).toBeVisible();

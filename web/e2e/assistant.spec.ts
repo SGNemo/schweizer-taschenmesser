@@ -379,7 +379,7 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
     await page.getByRole('button', { name: 'Anlegen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect.poll(() => countRows(page, 'calendar_event')).toBe(before + 1);
-    await page.goto('/calendar?view=month&date=2026-10-01');
+    await page.goto('/calendar?view=day&date=2026-10-01');
     await expect(page.getByRole('main').getByText('Miete überweisen').first()).toBeVisible();
   });
 

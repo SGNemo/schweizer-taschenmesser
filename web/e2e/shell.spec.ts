@@ -38,11 +38,13 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test('an area can be folded and the choice survives a reload', async ({ page }) => {
     await ready(page, '/');
     const nav = mainNav(page);
-    await expect(nav.getByRole('link', { name: 'ToDos' })).toBeVisible();
+    // ToDos is also a favourite, so look inside the area.
+    const inArea = nav.locator('#area-plan').getByRole('link', { name: 'ToDos' });
+    await expect(inArea).toBeVisible();
     await nav.getByRole('button', { name: 'Planen auf- oder zuklappen' }).click();
-    await expect(nav.getByRole('link', { name: 'ToDos' })).toHaveCount(0);
+    await expect(inArea).toHaveCount(0);
     await page.reload();
-    await expect(nav.getByRole('link', { name: 'ToDos' })).toHaveCount(0);
+    await expect(inArea).toHaveCount(0);
   });
 
   test('an area page opens the module last used there', async ({ page }) => {
