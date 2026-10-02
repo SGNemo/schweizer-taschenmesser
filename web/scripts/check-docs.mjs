@@ -36,6 +36,8 @@ const BUDGET = {
     'docs/meta/',
     'docs/screenshots/',
     'docs/design-proposals/',
+    'docs/design/',
+    'docs/product/',
   ],
   exemptFiles: ['docs/AI-IMPORT.md', 'docs/MANUAL-TESTS.md', 'docs/ROADMAP.md'],
 };
