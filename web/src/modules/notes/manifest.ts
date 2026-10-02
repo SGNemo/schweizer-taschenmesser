@@ -4,16 +4,21 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { noteSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'notes',
-  name: 'Notizen',
+  name: t.notes.meta.name,
   icon: 'note',
   version: 1,
-  description:
-    'Schnelle Notizen mit Titel und Text, ein fester Zettel immer oben, wichtige Notizen anheften, mit Suche.',
+  description: t.notes.meta.description,
   routes: [
-    { path: '/notes', label: 'Notizen', nav: true, component: () => import('./routes/NotesPage') },
+    {
+      path: '/notes',
+      label: t.notes.meta.route,
+      nav: true,
+      component: () => import('./routes/NotesPage'),
+    },
   ],
   dataSchema: {
     collections: {
@@ -28,7 +33,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'recent',
-      title: 'Notizen',
+      title: t.notes.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/RecentNotesWidget'),
@@ -44,7 +49,7 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: noOnboarding,
     services: () => import('./services'),
-    quickAdd: [{ id: 'note', label: 'Notiz', to: '/notes?new=1' }],
+    quickAdd: [{ id: 'note', label: t.notes.meta.quickAdd, to: '/notes?new=1' }],
   },
 };
 

@@ -4,6 +4,7 @@ import { migrations } from './migrations';
 import { entrySchema, vaultSchema } from './schema';
 import { settings } from './settings';
 import { setupSteps } from './setup';
+import { t } from '@/strings';
 
 /**
  * Password vault. **No `aiSchema`, no calendar/notification contributions, no quick-add, and only one
@@ -13,16 +14,15 @@ import { setupSteps } from './setup';
  */
 const manifest: ModuleManifest = {
   id: 'accounts',
-  name: 'Accounts',
+  name: t.accounts.meta.name,
   icon: 'lock',
   version: 1,
   dataApi: false,
-  description:
-    'Passwort-Tresor: Zugangsdaten mit Master-Passwort verschlüsselt (Argon2id, AES-256), Generator, Einmalcodes (TOTP), Import/Export. Komplett von der KI ausgeschlossen.',
+  description: t.accounts.meta.description,
   routes: [
     {
       path: '/accounts',
-      label: 'Accounts',
+      label: t.accounts.meta.route,
       nav: true,
       component: () => import('./routes/AccountsPage'),
     },
@@ -37,7 +37,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'status',
-      title: 'Passwort-Tresor',
+      title: t.accounts.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/StatusWidget'),

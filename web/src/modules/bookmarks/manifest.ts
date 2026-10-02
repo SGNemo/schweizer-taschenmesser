@@ -4,18 +4,18 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { itemSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'bookmarks',
-  name: 'Merkliste',
+  name: t.bookmarks.meta.name,
   icon: 'bookmark',
   version: 1,
-  description:
-    'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
+  description: t.bookmarks.meta.description,
   routes: [
     {
       path: '/bookmarks',
-      label: 'Merkliste',
+      label: t.bookmarks.meta.route,
       nav: true,
       component: () => import('./routes/BookmarksPage'),
     },
@@ -29,7 +29,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'recent',
-      title: 'Merkliste',
+      title: t.bookmarks.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/RecentWidget'),
@@ -44,7 +44,7 @@ const manifest: ModuleManifest = {
   area: 'knowledge',
   contributions: {
     onboarding: onboarding,
-    quickAdd: [{ id: 'item', label: 'Merkzettel', to: '/bookmarks?new=1' }],
+    quickAdd: [{ id: 'item', label: t.bookmarks.meta.quickAdd, to: '/bookmarks?new=1' }],
     services: () => import('./services'),
   },
 };

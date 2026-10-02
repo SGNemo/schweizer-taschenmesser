@@ -136,10 +136,37 @@ const STATEMENT = [
   '01.09.26;Gehalt;Beispiel AG;2.345,67;EUR',
 ].join('\n');
 
+/** Waits until a table of the app database has at least one row (async writes finish after the UI). */
+async function waitForRows(page: Page, table: string) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (name) =>
+          new Promise<number>((resolve, reject) => {
+            const open = indexedDB.open('taschenmesser');
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const db = open.result;
+              const req = db.transaction(name, 'readonly').objectStore(name).count();
+              req.onsuccess = () => {
+                db.close();
+                resolve(req.result);
+              };
+              req.onerror = () => reject(req.error);
+            };
+          }),
+        table,
+      ),
+    )
+    .toBeGreaterThan(0);
+}
+
 async function uploadStatement(page: Page, dialog: ReturnType<Page['getByRole']>) {
   const chooser = page.waitForEvent('filechooser');
   await dialog.getByRole('button', { name: 'Datei wählen …' }).click();
-  (await chooser).setFiles({
+  await (
+    await chooser
+  ).setFiles({
     name: 'umsaetze.csv',
     mimeType: 'text/csv',
     buffer: Buffer.from(STATEMENT),
@@ -151,6 +178,9 @@ test.describe('bank statement', () => {
     page,
   }) => {
     await ready(page, '/finance?tab=transactions');
+    // The finance page creates its default account after the title is shown; the statement import
+    // needs one ("Lege zuerst ein Konto an."), so do not leave before it exists.
+    await waitForRows(page, 'finance_account');
     await page.goto('/settings');
     await page
       .getByRole('listitem')

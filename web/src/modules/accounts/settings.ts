@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { t } from '@/strings';
 
 export const settingsSchema = z.object({
   /** Minutes without interaction until the vault locks. */
@@ -32,48 +33,48 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'autoLockMinutes',
-      label: 'Tresor sperren nach Inaktivität',
+      label: t.accounts.meta.settings.autoLockMinutes,
       type: 'select',
       options: [
-        { value: '1', label: '1 Minute' },
-        { value: '5', label: '5 Minuten' },
-        { value: '15', label: '15 Minuten' },
-        { value: '30', label: '30 Minuten' },
+        { value: '1', label: t.accounts.meta.settings.autoLockMinutes_1 },
+        { value: '5', label: t.accounts.meta.settings.autoLockMinutes_5 },
+        { value: '15', label: t.accounts.meta.settings.autoLockMinutes_15 },
+        { value: '30', label: t.accounts.meta.settings.autoLockMinutes_30 },
       ],
     },
     {
       key: 'backgroundLock',
-      label: 'Tresor sperren, wenn die App im Hintergrund ist',
+      label: t.accounts.meta.settings.backgroundLock,
       type: 'select',
       options: [
-        { value: 'now', label: 'Sofort' },
-        { value: '30s', label: 'Nach 30 Sekunden' },
+        { value: 'now', label: t.accounts.meta.settings.backgroundLock_now },
+        { value: '30s', label: t.accounts.meta.settings.backgroundLock_30s },
       ],
     },
     {
       key: 'originMatch',
-      label: 'Browser-Erweiterung: Zugangsdaten anbieten für',
+      label: t.accounts.meta.settings.originMatch,
       type: 'select',
       options: [
-        { value: 'domain', label: 'Dieselbe Domain (login.beispiel.de passt zu beispiel.de)' },
-        { value: 'host', label: 'Genau denselben Host' },
+        { value: 'domain', label: t.accounts.meta.settings.originMatch_domain },
+        { value: 'host', label: t.accounts.meta.settings.originMatch_host },
       ],
     },
     {
       key: 'genLength',
-      label: 'Browser-Erweiterung: Länge neuer Passwörter',
+      label: t.accounts.meta.settings.genLength,
       type: 'select',
       options: [
-        { value: '16', label: '16 Zeichen' },
-        { value: '20', label: '20 Zeichen' },
-        { value: '24', label: '24 Zeichen' },
-        { value: '32', label: '32 Zeichen' },
+        { value: '16', label: t.accounts.meta.settings.genLength_16 },
+        { value: '20', label: t.accounts.meta.settings.genLength_20 },
+        { value: '24', label: t.accounts.meta.settings.genLength_24 },
+        { value: '32', label: t.accounts.meta.settings.genLength_32 },
       ],
     },
-    { key: 'genSymbols', label: 'Browser-Erweiterung: Sonderzeichen verwenden', type: 'boolean' },
+    { key: 'genSymbols', label: t.accounts.meta.settings.genSymbols, type: 'boolean' },
     {
       key: 'genAvoidAmbiguous',
-      label: 'Browser-Erweiterung: Ähnliche Zeichen vermeiden (Il1O0)',
+      label: t.accounts.meta.settings.genAvoidAmbiguous,
       type: 'boolean',
     },
   ],

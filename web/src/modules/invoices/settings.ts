@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { t } from '@/strings';
 
 export const settingsSchema = z.object({
   remindDaysBefore: z.number().int().min(0).max(60),
@@ -12,10 +13,15 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'remindDaysBefore',
-      label: 'Erinnerung vor Fälligkeit (Tage)',
+      label: t.invoices.meta.settings.remindDaysBefore,
       type: 'number',
-      help: '0 = am Fälligkeitstag',
+      help: t.invoices.meta.settings.remindDaysBeforeHelp,
     },
-    { key: 'remindTime', label: 'Uhrzeit der Erinnerung', type: 'text', help: 'Format HH:mm' },
+    {
+      key: 'remindTime',
+      label: t.invoices.meta.settings.remindTime,
+      type: 'text',
+      help: t.invoices.meta.settings.remindTimeHelp,
+    },
   ],
 };

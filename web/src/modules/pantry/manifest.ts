@@ -4,18 +4,18 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { itemSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'pantry',
-  name: 'Vorräte',
+  name: t.pantry.meta.name,
   icon: 'package',
   version: 1,
-  description:
-    'Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? Mit Ablaufdaten, Erinnerung vor Ablauf und „Auf die Einkaufsliste“, wenn etwas zur Neige geht.',
+  description: t.pantry.meta.description,
   routes: [
     {
       path: '/pantry',
-      label: 'Vorräte',
+      label: t.pantry.meta.route,
       nav: true,
       component: () => import('./routes/PantryPage'),
     },
@@ -33,7 +33,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'expiring',
-      title: 'Vorräte',
+      title: t.pantry.meta.widget,
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/ExpiringWidget'),
@@ -48,7 +48,7 @@ const manifest: ModuleManifest = {
   area: 'household',
   contributions: {
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'item', label: 'Vorrat', to: '/pantry?new=1' }],
+    quickAdd: [{ id: 'item', label: t.pantry.meta.quickAdd, to: '/pantry?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
   },
