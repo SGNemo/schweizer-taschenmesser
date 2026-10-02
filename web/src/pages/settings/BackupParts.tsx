@@ -67,6 +67,11 @@ export function PlanView({ plan }: { plan: RestorePlan }) {
           <p>{t.backup.previewTotals(added, replaced, removed)}</p>
         </>
       )}
+      {plan.skippedTables > 0 ? (
+        <p className={styles.muted} data-testid="backup-skipped">
+          {t.backup.skippedOnRestore(plan.skippedTables)}
+        </p>
+      ) : null}
       <p className={styles.muted}>{t.backup.safetyNote}</p>
     </div>
   );

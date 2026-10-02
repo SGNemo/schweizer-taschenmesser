@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
@@ -8,20 +9,24 @@ import type { SyncRow } from '@/core/sync/ops';
 import { connect, syncNow, type SyncServiceDeps } from '@/core/sync/service';
 import { MemoryServer } from '@/core/sync/testing';
 import { setNow } from '@/core/time/now';
-import { itemSchema as shoppingSchema } from '@/modules/shopping/schema';
 import { noteSchema } from '@/modules/notes/schema';
 import { createTestDb } from '@/test-utils';
 import { BASE_HLC, opsFor, runAppMigrations, type AppMigration } from './appMigrations';
 
 /**
- * The runner against two real, unrelated tables: `shopping_item` (source, written by an "old
- * device") → `notes_note` (target). The concrete steps of a package are tested with their module.
+ * The runner against two real, unrelated tables: `lists_item` (source, written by an "old
+ * device" in its own shape) → `notes_note` (target). Concrete steps are tested with their package.
  */
-const SOURCE = tableName('shopping', 'item');
+const sourceSchema = z.object({
+  name: z.string(),
+  quantity: z.string().optional(),
+  done: z.boolean(),
+});
+const SOURCE = tableName('lists', 'item');
 const TARGET = tableName('notes', 'note');
 
 const step: AppMigration = {
-  id: 'test-shopping-to-notes',
+  id: 'test-old-to-notes',
   source: SOURCE,
   target: TARGET,
   map: (row) => ({
@@ -47,7 +52,7 @@ function dev(): Dev {
   const storage = new DexieStorageAdapter(db);
   return {
     db,
-    source: createRepo(SOURCE, shoppingSchema, db),
+    source: createRepo(SOURCE, sourceSchema, db),
     target: createRepo(TARGET, noteSchema, db) as unknown as Dev['target'],
     deps: { database: db, storage, remote: (_u, t) => server.remote(t), kdf: { m: 8, t: 1, p: 1 } },
   };

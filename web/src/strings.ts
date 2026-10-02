@@ -1670,6 +1670,10 @@ export const t = {
     verifyExported: (when: string) => `Erstellt am ${when}`,
     verifyTotals: (records: number, tombstones: number) =>
       `${records} Einträge, ${tombstones} gelöschte Markierungen`,
+    skippedOnRestore: (n: number) =>
+      n === 1
+        ? '1 Tabelle der Datei kennt diese App-Version nicht mehr (z. B. alte Module wie Einkauf, Packlisten oder Habits) und wird nicht wiederhergestellt.'
+        : `${n} Tabellen der Datei kennt diese App-Version nicht mehr (z. B. alte Module wie Einkauf, Packlisten oder Habits) und werden nicht wiederhergestellt.`,
     verifySkipped: (n: number) =>
       `${n} Tabellen stammen aus einer anderen App-Version und werden übersprungen.`,
     steps: {

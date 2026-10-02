@@ -11,6 +11,29 @@ import { TaschenmesserDB } from './db';
  */
 
 type Stores = Record<string, string>;
+
+/**
+ * Tables that left the schema on purpose (0.9.0, package 6): their data was copied into the
+ * successors by app migrations first (0.5.0–0.7.0), so an old database loses them on upgrade.
+ * A table may only be added here with a decision; never remove the check for the others.
+ */
+const REMOVED_ON_PURPOSE = new Set([
+  'news_article',
+  'news_feed',
+  'news_feedstate',
+  'habits_habit',
+  'habits_check',
+  'timetrack_project',
+  'timetrack_entry',
+  'reminders_reminder',
+  'shopping_item',
+  'packing_list',
+  'packing_item',
+  'launcher_link',
+  'birthdays_birthday',
+  'gifts_idea',
+  'contracts_contract',
+]);
 const versions = Object.entries(history.versions as Record<string, Stores>).map(
   ([v, stores]) => [Number(v), stores] as const,
 );
@@ -29,7 +52,7 @@ function sampleRow(definition: string, n: number): Record<string, unknown> {
 
 describe('database upgrades', () => {
   it('has fixtures for the versions that were released', () => {
-    expect(versions.map(([v]) => v)).toEqual([1, 2, 3, 4, 5, 7, 8, 12, 13, 14, 16]);
+    expect(versions.map(([v]) => v)).toEqual([1, 2, 3, 4, 5, 7, 8, 12, 13, 14, 16, 17]);
     expect(snapshot.version).toBeGreaterThan(Math.max(...versions.map(([v]) => v)));
   });
 
@@ -53,6 +76,10 @@ describe('database upgrades', () => {
         expect(current.verno).toBe(snapshot.version);
         const tables = current.tables.map((t) => t.name);
         for (const [table, count] of Object.entries(seeded)) {
+          if (REMOVED_ON_PURPOSE.has(table)) {
+            expect(tables, `table ${table} was removed on purpose`).not.toContain(table);
+            continue;
+          }
           expect(tables, `table ${table} must survive`).toContain(table);
           expect(await current.table(table).count(), table).toBe(count);
         }
@@ -64,6 +91,11 @@ describe('database upgrades', () => {
       }
     },
   );
+
+  it('the allow-list only names tables that are really gone from the schema', () => {
+    for (const table of REMOVED_ON_PURPOSE)
+      expect(Object.keys(snapshot.stores)).not.toContain(table);
+  });
 
   it('can be written to after an upgrade (new tables and indexes work)', async () => {
     const [version, stores] = versions.at(-1)!;
