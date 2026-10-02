@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { ChecklistWidget } from '@/ui';
 import { sortItems } from '../logic';
 import { itemRepo } from '../repo';
 
@@ -10,18 +10,17 @@ export default function OpenItemsWidget() {
     [],
   );
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.shopping, to: '/shopping?new=1' }}
+    <ChecklistWidget
       loading={!open}
       empty={t.shopping.widgetEmpty}
-      headline={open ? t.shopping.openCount(open.length) : undefined}
-      entries={(open ?? []).slice(0, 4).map((i) => ({
+      emptyAction={{ label: t.homeEmpty.shopping, to: '/shopping?new=1' }}
+      summary={open && open.length > 0 ? t.widgets.shoppingSummary(open.length) : undefined}
+      entries={(open ?? []).map((i) => ({
         key: i.id,
-        title: i.name,
-        meta: i.quantity,
+        title: i.quantity ? `${i.name} (${i.quantity})` : i.name,
+        checked: i.done,
       }))}
-      to="/shopping"
-      linkLabel={t.shopping.title}
+      onToggle={(id, done) => itemRepo.update(id, { done })}
     />
   );
 }

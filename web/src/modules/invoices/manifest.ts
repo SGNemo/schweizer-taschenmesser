@@ -31,7 +31,7 @@ const manifest: ModuleManifest = {
     {
       id: 'due',
       title: 'Fällige Rechnungen',
-      defaultSize: 's',
+      defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/DueInvoicesWidget'),
     },

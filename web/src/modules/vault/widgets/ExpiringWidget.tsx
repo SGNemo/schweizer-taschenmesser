@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { relativeDayLabel, today } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { DueList } from '@/ui';
 import { expiryState, sortDocuments } from '../logic';
 import { documentRepo } from '../repo';
 
@@ -12,19 +13,20 @@ export default function ExpiringWidget() {
     const s = expiryState(d, day);
     return s === 'soon' || s === 'expired';
   });
+  const expired = list.filter((d) => expiryState(d, day) === 'expired').length;
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.vault, to: '/vault?new=1' }}
+    <DueList
       loading={!docs}
-      empty={list.length === 0 ? t.vault.widgetEmpty : undefined}
-      entries={list.slice(0, 4).map((d) => ({
-        key: d.id,
-        title: d.title,
-        meta: relativeDayLabel(d.expiresOn!, day),
-        overdue: expiryState(d, day) === 'expired',
-      }))}
-      to="/vault"
-      linkLabel={t.vault.title}
+      empty={t.vault.widgetEmpty}
+      emptyAction={{ label: t.homeEmpty.vault, to: '/vault?new=1' }}
+      summary={
+        list.length > 0 ? t.widgets.expirySummary(expired, list.length - expired) : undefined
+      }
+      entries={list.map((d) => {
+        const s = dueState(d.expiresOn!, day, { soonDays: 60 });
+        return { key: d.id, title: d.title, tone: s.tone, label: s.label };
+      })}
+      moreLabel={t.widgets.more}
     />
   );
 }

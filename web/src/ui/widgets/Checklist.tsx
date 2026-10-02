@@ -31,7 +31,7 @@ export function ChecklistWidget({
   loading: boolean;
   summary?: string;
   entries: ChecklistEntry[];
-  onToggle: (key: string, checked: boolean) => void | Promise<void>;
+  onToggle: (key: string, checked: boolean) => unknown;
   /** Toast text after ticking, default "Erledigt". */
   doneMessage?: (title: string) => string;
 }) {

@@ -1,8 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { formatMoney } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { DueList } from '@/ui';
 import { nextCharge, sortSubscriptions, totals } from '../logic';
 import { subscriptionRepo } from '../repo';
 
@@ -12,25 +13,35 @@ export default function NextChargesWidget() {
     [],
   );
   const day = today();
+  const rows = sortSubscriptions(subs ?? [], day).map((s) => ({
+    s,
+    charge: nextCharge(s, day),
+  }));
+  const first = rows.find((r) => r.charge)?.charge;
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.subscriptions, to: '/subscriptions?new=1' }}
+    <DueList
       loading={!subs}
       empty={t.subscriptions.widgetEmpty}
-      headline={subs && subs.length > 0 ? formatMoney(totals(subs).monthly) : undefined}
-      subline={subs && subs.length > 0 ? t.subscriptions.perMonthShort : undefined}
-      entries={sortSubscriptions(subs ?? [], day)
-        .slice(0, 4)
-        .map((s) => {
-          const charge = nextCharge(s, day);
-          return {
-            key: s.id,
-            title: s.name,
-            meta: `${charge ? formatDay(charge, 'd. MMM') : '–'} · ${formatMoney(s.amountMinor)}`,
-          };
-        })}
-      to="/subscriptions"
-      linkLabel={t.subscriptions.title}
+      emptyAction={{ label: t.homeEmpty.subscriptions, to: '/subscriptions?new=1' }}
+      summary={
+        subs && subs.length > 0
+          ? t.widgets.subsSummary(
+              formatMoney(totals(subs).monthly),
+              first ? formatDay(first, 'd. MMM') : undefined,
+            )
+          : undefined
+      }
+      entries={rows.map(({ s, charge }) => {
+        const state = charge ? dueState(charge, day) : undefined;
+        return {
+          key: s.id,
+          title: s.name,
+          amount: formatMoney(s.amountMinor),
+          tone: state?.tone ?? 'none',
+          label: state?.label ?? '–',
+        };
+      })}
+      moreLabel={t.widgets.more}
     />
   );
 }

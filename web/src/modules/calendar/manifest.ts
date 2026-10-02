@@ -31,7 +31,7 @@ const manifest: ModuleManifest = {
     {
       id: 'today',
       title: 'Heute & Morgen',
-      defaultSize: 'm',
+      defaultSize: 'l',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/TodayWidget'),
     },

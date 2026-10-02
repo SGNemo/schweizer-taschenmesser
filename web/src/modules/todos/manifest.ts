@@ -25,7 +25,7 @@ const manifest: ModuleManifest = {
     {
       id: 'open',
       title: 'Offene ToDos',
-      defaultSize: 's',
+      defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OpenTasksWidget'),
     },
