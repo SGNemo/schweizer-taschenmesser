@@ -15,6 +15,8 @@ const BIRTHDAYS_BIRTHDAY = tableName('birthdays', 'birthday');
 const GIFTS_IDEA = tableName('gifts', 'idea');
 const PEOPLE_PERSON = tableName('people', 'person');
 const PEOPLE_GIFT = tableName('people', 'gift');
+const REMINDERS_REMINDER = tableName('reminders', 'reminder');
+const CALENDAR_EVENT = tableName('calendar', 'event');
 
 /** Id of the shopping list that exists from the start (`modules/lists/schema.ts`). */
 const SHOPPING_LIST_ID = 'shopping-default';
@@ -210,5 +212,26 @@ export const APP_MIGRATIONS: readonly AppMigration[] = [
         from: { personId: 'forWhom' },
       };
     },
+  },
+  // 0.7.0 – Erinnerungen → Kalender (Termine der Art „Erinnerung“)
+  {
+    id: '0.7.0-reminder',
+    source: REMINDERS_REMINDER,
+    target: CALENDAR_EVENT,
+    map: (row) => ({
+      id: row.id,
+      fields: {
+        title: row.title,
+        kind: 'reminder',
+        allDay: false,
+        startDate: row.startDate,
+        startTime: str(row.time) ?? '09:00',
+        note: str(row.note),
+        recurrence: row.recurrence ?? undefined,
+        // Paused (`active` off) = notification off; the reminder keeps its own time of day.
+        notify: { minutesBefore: 0, enabled: row.active !== false },
+      },
+      from: { startTime: 'time', notify: 'active' },
+    }),
   },
 ];

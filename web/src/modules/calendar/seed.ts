@@ -129,6 +129,90 @@ function toRow(ctx: SeedContext, key: number, b: Base): SeedRow {
   return { id: ctx.id('calendar', 'event', key), data };
 }
 
+interface ReminderBase {
+  title: string;
+  day: number;
+  time: string;
+  note?: string;
+  recurrence?: Record<string, unknown>;
+  active?: boolean;
+}
+
+const REMINDERS: ReminderBase[] = [
+  {
+    title: 'Medikament nehmen',
+    day: -10,
+    time: '08:00',
+    recurrence: { freq: 'daily', interval: 1 },
+  },
+  { title: 'Paket abholen', day: 0, time: '17:30', note: 'Abholschein liegt im Flur' },
+  { title: 'Anna zurückrufen', day: 1, time: '12:15' },
+  {
+    title: 'Pflanzen gießen',
+    day: -14,
+    time: '19:00',
+    recurrence: { freq: 'weekly', interval: 1, byWeekday: [3, 7] },
+  },
+  {
+    title: 'Zählerstand ablesen',
+    day: -3,
+    time: '09:00',
+    recurrence: { freq: 'monthly', interval: 1, byMonthDay: 1 },
+  },
+  { title: 'Rechnung Stadtwerke prüfen', day: 3, time: '10:00' },
+  { title: 'Reifenwechsel buchen', day: 6, time: '09:30', note: 'Werkstatt Rotbuche anrufen' },
+  { title: 'Altes Abo kündigen', day: -20, time: '09:00', active: false },
+];
+const REMINDER_FILLER = [
+  'Wäsche aufhängen',
+  'Müll rausbringen',
+  'Geschenk besorgen',
+  'Termin bestätigen',
+  'Mama anrufen',
+  'Bücher zurückgeben',
+  'Auto tanken',
+  'Backup prüfen',
+  'Blumen kaufen',
+  'Putzplan checken',
+];
+const REMINDER_TIMES = ['07:30', '09:00', '12:00', '14:30', '18:00', '20:00'];
+
+/** Reminders are events of the kind "reminder" (since 0.7.0). */
+function reminderRows(ctx: SeedContext) {
+  const total = ctx.count({ small: 6, medium: 24, large: 250 });
+  const list: ReminderBase[] = REMINDERS.slice(0, Math.min(total, REMINDERS.length));
+  if (ctx.scale === 'small') list[5] = REMINDERS[7]!;
+  for (let i = list.length; i < total; i++) {
+    const recurring = ctx.rng.chance(0.3);
+    list.push({
+      title: ctx.rng.pick(REMINDER_FILLER),
+      day: recurring ? ctx.rng.int(-30, 0) : ctx.rng.int(-5, 30),
+      time: ctx.rng.pick(REMINDER_TIMES),
+      recurrence: recurring
+        ? ctx.rng.pick([
+            { freq: 'daily', interval: 1 },
+            { freq: 'weekly', interval: 1 },
+            { freq: 'monthly', interval: 1 },
+          ])
+        : undefined,
+      active: ctx.rng.chance(0.9),
+    });
+  }
+  return list.map((b, i) => {
+    const data: Record<string, unknown> = {
+      title: b.title,
+      kind: 'reminder',
+      allDay: false,
+      startDate: ctx.day(b.day),
+      startTime: b.time,
+      notify: { minutesBefore: 0, enabled: b.active ?? true },
+    };
+    if (b.note) data.note = b.note;
+    if (b.recurrence) data.recurrence = b.recurrence;
+    return { id: ctx.id('calendar', 'reminder', i), data };
+  });
+}
+
 function seed(ctx: SeedContext): SeedRows {
   const total = ctx.count({ small: 10, medium: 45, large: 300 });
   const base = ctx.scale === 'small' ? BASE.slice(0, total) : BASE;
@@ -158,7 +242,7 @@ function seed(ctx: SeedContext): SeedRows {
     }
     rows.push(toRow(ctx, i, b));
   }
-  return { event: rows };
+  return { event: [...rows, ...reminderRows(ctx)] };
 }
 
 export default { seed } satisfies SeedModule;

@@ -44,8 +44,8 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
       title={
         isReminder(target)
           ? existing
-            ? t.reminders.edit
-            : t.reminders.add
+            ? t.calendar.reminders.edit
+            : t.calendar.reminders.add
           : existing
             ? t.calendar.editEvent
             : t.calendar.newEvent
@@ -195,7 +195,7 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
         ))}
       </SelectField>
       {reminder ? (
-        <Switch label={t.reminders.active} checked={active} onChange={setActive} />
+        <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
       ) : null}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       {error ? (

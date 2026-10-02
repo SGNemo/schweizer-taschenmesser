@@ -39,7 +39,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'full',
   order: 10,
   area: 'plan',
@@ -49,6 +49,7 @@ const manifest: ModuleManifest = {
     quickAdd: [{ id: 'event', label: t.calendar.meta.quickAdd, to: '/calendar?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    services: () => import('./services'),
     externalCalendar: () => import('./external'),
   },
 };

@@ -63,6 +63,7 @@ describe('0.3.1 backup → lists and bookmarks', () => {
       '0.6.0-contract',
       '0.6.0-birthday',
       '0.6.0-gift',
+      '0.7.0-reminder',
     ]);
   });
 

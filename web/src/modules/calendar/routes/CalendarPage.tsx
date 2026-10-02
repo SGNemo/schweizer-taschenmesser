@@ -6,10 +6,11 @@ import { useWeekStart } from '@/core/settings/core';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, Segmented, SplitView, useSplitView } from '@/ui';
+import { Button, Icon, IconButton, Segmented, SplitView, Tabs, useSplitView } from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
+import { RemindersTab } from '../components/RemindersTab';
 import { DayView, MonthView, WeekView } from '../components/Views';
 import { eventRepo } from '../repo';
 import { settings } from '../settings';
@@ -81,6 +82,38 @@ export default function CalendarPage() {
 
   if (!view) return null;
   const list = items ?? [];
+  const tab = params.get('tab') === 'reminders' ? 'reminders' : 'calendar';
+  const pickTab = (next: string) => {
+    const p = new URLSearchParams();
+    if (next === 'reminders') p.set('tab', 'reminders');
+    setParams(p, { replace: true });
+  };
+
+  if (tab === 'reminders') {
+    return (
+      <>
+        <div className={styles.header}>
+          <h1>{t.calendar.title}</h1>
+        </div>
+        <Tabs
+          label={t.calendar.tabsLabel}
+          items={[
+            { id: 'calendar', label: t.calendar.tabCalendar, active: false },
+            { id: 'reminders', label: t.calendar.tabReminders, active: true },
+          ]}
+          onSelect={pickTab}
+        />
+        <RemindersTab
+          newRequested={params.get('new') === '1'}
+          onNewHandled={() => {
+            const p = new URLSearchParams(params);
+            p.delete('new');
+            setParams(p, { replace: true });
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -92,6 +125,15 @@ export default function CalendarPage() {
           {t.calendar.newEvent}
         </Button>
       </div>
+
+      <Tabs
+        label={t.calendar.tabsLabel}
+        items={[
+          { id: 'calendar', label: t.calendar.tabCalendar, active: true },
+          { id: 'reminders', label: t.calendar.tabReminders, active: false },
+        ]}
+        onSelect={pickTab}
+      />
 
       <div className={styles.toolbar}>
         <div className={styles.navBtns}>

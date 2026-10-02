@@ -786,6 +786,17 @@ export const t = {
     allDayRow: 'Ganztägig und ohne Uhrzeit',
     timeGrid: 'Zeitraster',
     widgetEmpty: 'Nichts geplant.',
+    reminders: {
+      title: 'Erinnerungen',
+      add: 'Erinnerung hinzufügen',
+      edit: 'Erinnerung bearbeiten',
+      empty: 'Noch keine Erinnerungen.',
+      next: 'Nächste',
+      ended: 'Beendet',
+      paused: 'Pausiert',
+      active: 'Aktiv',
+      widgetEmpty: 'Keine anstehenden Erinnerungen.',
+    },
     notify: {
       label: 'Benachrichtigen',
       none: 'Nicht benachrichtigen',
