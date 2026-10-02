@@ -41,6 +41,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 30,
+  area: 'plan',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'reminder', label: 'Erinnerung', to: '/reminders?new=1' }],

@@ -50,6 +50,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   order: 105,
+  area: 'plan',
   contributions: {
     onboarding: noOnboarding,
     quickAdd: [{ id: 'entry', label: 'Zeit erfassen', to: '/timetrack?new=1' }],

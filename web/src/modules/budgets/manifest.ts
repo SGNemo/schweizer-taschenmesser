@@ -44,6 +44,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: ['finance'] },
   layout: 'wide',
   order: 130,
+  area: 'money',
   contributions: {
     onboarding: noOnboarding,
     quickAdd: [{ id: 'goal', label: 'Sparziel', to: '/budgets?tab=goals&new=1' }],

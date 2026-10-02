@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#fbf8f3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b1d2b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f3f4f4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1316" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Nemo – modulare, lokale Alltags-App" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -18,7 +18,7 @@
         inset: 0;
         display: grid;
         place-items: center;
-        background: linear-gradient(135deg, #fbf8f3, #eef5f5);
+        background: linear-gradient(135deg, #f3f4f4, #e6f0f0);
       }
       #root:not(:empty) + #splash {
         display: none;
@@ -36,11 +36,11 @@
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme='light']) #splash {
-          background: linear-gradient(135deg, #0b1d2b, #0f3440);
+          background: linear-gradient(135deg, #0f1316, #0f2f38);
         }
       }
       :root[data-theme='dark'] #splash {
-        background: linear-gradient(135deg, #0b1d2b, #0f3440);
+        background: linear-gradient(135deg, #0f1316, #0f2f38);
       }
       @media (prefers-reduced-motion: reduce) {
         #splash svg {
@@ -56,10 +56,15 @@
         var a = localStorage.getItem('tm-accent');
         if (a === 'teal' || a === 'coral' || a === 'lagoon')
           document.documentElement.dataset.accent = a;
+        if (localStorage.getItem('tm-text-size') === 'large')
+          document.documentElement.dataset.textSize = 'large';
+        if (localStorage.getItem('tm-density') === 'compact')
+          document.documentElement.dataset.density = 'compact';
       } catch (e) {}
     </script>
   </head>
-  <body>
+  <!-- data-nemo-ignore: the Nemo browser extension never offers or saves anything on Nemo's own pages. -->
+  <body data-nemo-ignore>
     <div id="root"></div>
     <div id="splash" aria-hidden="true">
       <!-- brand:begin -->

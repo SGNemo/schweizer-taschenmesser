@@ -31,6 +31,12 @@
     "allow-disk-delete",
     "allow-disk-delete-cancel",
     "allow-system-info",
-    "allow-system-processes"
+    "allow-system-processes",
+    "allow-vault-bridge-start",
+    "allow-vault-bridge-respond",
+    "allow-vault-bridge-stop",
+    "allow-vault-bridge-register",
+    "allow-vault-bridge-status",
+    "allow-vault-bridge-unregister"
   ]
 }

@@ -53,6 +53,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [], none: 'live-data' },
   layout: 'full',
   order: 190,
+  area: 'system',
   contributions: { onboarding: noOnboarding },
 };
 

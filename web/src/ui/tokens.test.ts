@@ -33,6 +33,25 @@ const ratio = (a: string, b: string): number => {
   return (hi! + 0.05) / (lo! + 0.05);
 };
 
+/** `fg` at `alpha` over `bg` (what `color-mix(fg alpha%, transparent)` looks like on that surface). */
+const mix = (fg: string, bg: string, alpha: number): string => {
+  const f = fg
+    .replace('#', '')
+    .match(/../g)!
+    .map((h) => parseInt(h, 16));
+  const b = bg
+    .replace('#', '')
+    .match(/../g)!
+    .map((h) => parseInt(h, 16));
+  return `#${f
+    .map((c, i) =>
+      Math.round(c * alpha + b[i]! * (1 - alpha))
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
+};
+
 describe('design tokens', () => {
   it('the dark palette is defined twice (explicit + system) and both copies are identical', () => {
     expect(Object.keys(dark).length).toBeGreaterThan(20);
@@ -50,29 +69,31 @@ describe('design tokens', () => {
       const text = (fg: string, bg: string, min = 4.5) =>
         expect(ratio(t[fg]!, t[bg]!), `${fg} on ${bg}`).toBeGreaterThanOrEqual(min);
       it('text on backgrounds and surfaces', () => {
-        text('--text', '--surface');
-        text('--text', '--surface-2');
-        text('--text-muted', '--surface');
-        text('--text-muted', '--surface-2');
+        for (const bg of ['--bg', '--surface', '--surface-2']) {
+          text('--text', bg);
+          text('--text-muted', bg);
+          text('--text-3', bg);
+        }
         text('--accent', '--surface');
         text('--accent', '--accent-soft');
-        text('--danger', '--surface');
-        text('--danger', '--danger-soft');
-        text('--success', '--surface');
-        text('--success', '--success-soft');
-        text('--warning', '--surface');
-        text('--warning', '--warning-soft');
-        text('--accent-2', '--surface');
+        text('--text', '--accent-soft');
+      });
+      it('status colours on surfaces and on their own 15 % background', () => {
+        for (const s of ['--danger', '--success', '--warning', '--info']) {
+          text(s, '--surface');
+          text(s, '--bg');
+          const mixed = mix(t[s]!, t['--surface']!, 0.15);
+          expect(ratio(t[s]!, mixed), `${s} on ${s}-soft`).toBeGreaterThanOrEqual(4.5);
+        }
       });
       it('page background and text on the filled accent', () => {
-        text('--text', '--bg');
-        text('--text-muted', '--bg');
         text('--accent', '--bg');
         text('--accent-contrast', '--accent');
       });
       it('non-text UI (form borders, focus ring, chart series) reaches 3:1', () => {
         text('--border-strong', '--surface', 3);
         text('--border-strong', '--surface-2', 3); // switch off-track, controls on quiet areas
+        text('--focus', '--bg', 3);
         text('--focus', '--surface', 3);
         text('--focus', '--surface-2', 3);
         text('--viz-1', '--surface', 3);
@@ -80,6 +101,23 @@ describe('design tokens', () => {
       });
     });
   }
+
+  it('removed tokens stay removed; status backgrounds are mixes, not hex', () => {
+    for (const key of ['--accent-2', '--accent-2-soft', '--surface-glass', '--focus-ring'])
+      expect(light, key).not.toHaveProperty(key);
+    for (const s of ['danger', 'success', 'warning', 'info'])
+      expect(light[`--${s}-soft`], `--${s}-soft`).toMatch(/^color-mix\(/);
+    expect(css).not.toMatch(/--accent-2/);
+  });
+
+  it('radii follow the spec (8 / 12 / 16 / 20)', () => {
+    expect([
+      light['--radius-sm'],
+      light['--radius-md'],
+      light['--radius-lg'],
+      light['--radius-xl'],
+    ]).toEqual(['8px', '12px', '16px', '20px']);
+  });
 
   it('accent variants keep AA for every (light, dark) pair', () => {
     const surface = { light: light['--surface']!, dark: dark['--surface']! };

@@ -4451,6 +4451,7 @@ dependencies = [
  "taschenmesser-disk-scan",
  "taschenmesser-local-api",
  "taschenmesser-system-info",
+ "taschenmesser-vault-bridge",
  "tauri",
  "tauri-build",
  "tauri-plugin-apk-installer",
@@ -4497,6 +4498,15 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "sysinfo",
+ "windows 0.61.3",
+]
+
+[[package]]
+name = "taschenmesser-vault-bridge"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
  "windows 0.61.3",
 ]
 

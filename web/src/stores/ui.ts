@@ -23,6 +23,57 @@ export function applyAccent(accent: AccentChoice): void {
   else el.dataset.accent = accent;
 }
 
+/** Device-local reading comfort (tokens.css `data-text-size`, `data-density`); defaults set no attribute. */
+export const TEXT_SIZES = ['normal', 'large'] as const;
+export type TextSizeChoice = (typeof TEXT_SIZES)[number];
+export const DENSITIES = ['normal', 'compact'] as const;
+export type DensityChoice = (typeof DENSITIES)[number];
+export const SIDEBARS = ['wide', 'narrow'] as const;
+export type SidebarChoice = (typeof SIDEBARS)[number];
+const SIDEBAR_KEY = 'tm-sidebar';
+const AREAS_CLOSED_KEY = 'tm-nav-closed';
+const TEXT_SIZE_KEY = 'tm-text-size';
+const DENSITY_KEY = 'tm-density';
+
+function readChoice<T extends string>(key: string, values: readonly T[]): T {
+  try {
+    const v = localStorage.getItem(key);
+    return values.find((x) => x === v) ?? values[0]!;
+  } catch {
+    return values[0]!;
+  }
+}
+
+function storeChoice(key: string, value: string, isDefault: boolean): void {
+  try {
+    if (isDefault) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  } catch {
+    // Storage may be blocked; the choice still applies for this session.
+  }
+}
+
+function readClosedAreas(): string[] {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(AREAS_CLOSED_KEY) ?? '[]');
+    return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export function applyTextSize(size: TextSizeChoice): void {
+  const el = document.documentElement;
+  if (size === 'normal') delete el.dataset.textSize;
+  else el.dataset.textSize = size;
+}
+
+export function applyDensity(density: DensityChoice): void {
+  const el = document.documentElement;
+  if (density === 'normal') delete el.dataset.density;
+  else el.dataset.density = density;
+}
+
 function readTheme(): ThemeChoice {
   try {
     const v = localStorage.getItem(THEME_KEY);
@@ -65,6 +116,16 @@ interface UiState {
   setTheme(theme: ThemeChoice): void;
   accent: AccentChoice;
   setAccent(accent: AccentChoice): void;
+  textSize: TextSizeChoice;
+  setTextSize(size: TextSizeChoice): void;
+  density: DensityChoice;
+  setDensity(density: DensityChoice): void;
+  /** Desktop sidebar: wide (248 px) or rail (76 px); below 1200 px the rail is automatic. */
+  sidebar: SidebarChoice;
+  setSidebar(sidebar: SidebarChoice): void;
+  /** Sidebar areas the user folded (device-local). */
+  closedAreas: string[];
+  toggleAreaOpen(area: string): void;
   paletteOpen: boolean;
   setPaletteOpen(open: boolean): void;
   quickAddOpen: boolean;
@@ -106,6 +167,33 @@ export const useUiStore = create<UiState>((set) => ({
     }
     applyAccent(accent);
     set({ accent });
+  },
+  textSize: readChoice(TEXT_SIZE_KEY, TEXT_SIZES),
+  setTextSize(textSize) {
+    storeChoice(TEXT_SIZE_KEY, textSize, textSize === 'normal');
+    applyTextSize(textSize);
+    set({ textSize });
+  },
+  density: readChoice(DENSITY_KEY, DENSITIES),
+  setDensity(density) {
+    storeChoice(DENSITY_KEY, density, density === 'normal');
+    applyDensity(density);
+    set({ density });
+  },
+  sidebar: readChoice(SIDEBAR_KEY, SIDEBARS),
+  setSidebar(sidebar) {
+    storeChoice(SIDEBAR_KEY, sidebar, sidebar === 'wide');
+    set({ sidebar });
+  },
+  closedAreas: readClosedAreas(),
+  toggleAreaOpen(area) {
+    set((s) => {
+      const closedAreas = s.closedAreas.includes(area)
+        ? s.closedAreas.filter((a) => a !== area)
+        : [...s.closedAreas, area];
+      storeChoice(AREAS_CLOSED_KEY, JSON.stringify(closedAreas), closedAreas.length === 0);
+      return { closedAreas };
+    });
   },
   paletteOpen: false,
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),

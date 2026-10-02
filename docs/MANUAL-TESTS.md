@@ -125,6 +125,23 @@ N11. *Reduzierte Bewegung:* Systemeinstellung an → keine Seiten-/Listen-/Balke
 N12. *README auf GitHub im hellen und dunklen Modus:* Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
 N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐
 
+## Browser-Erweiterung (Brave) und Tresor-Brücke – nur von Hand prüfbar (Windows)
+Vorbereitung: Portable-EXE aus dem Branch/Artefakt, `nemo-extension-….zip` entpacken, Tresor mit Beispieldaten. Hintergrund: [security/VAULT-EXTENSION.md](security/VAULT-EXTENSION.md).
+X1. *Laden:* `brave://extensions` → Entwicklermodus → „Entpackte Erweiterung laden“. Die ID lautet `olgcnfjmihlmpgjepkfbdjcpenckemaj`, keine Fehler im Service-Worker-Log. ☐
+X2. *Verbindung bestätigen:* Nemo → Tresor → Browser-Erweiterung → an (Registry: `HKCU\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\io.github.sgnemo.taschenmesser.vault` zeigt auf die JSON im `data`-Ordner bzw. App-Daten; auch Chrome/Edge/Chromium-Schlüssel). Popup zeigt einen Code, der Dialog in Nemo denselben; „Verbinden“ → Popup „Verbunden“. ☐
+X3. *Host als GUI-EXE:* Der Host-Start (Release-EXE ohne Konsole) liefert Antworten (Popup „Verbunden“, nicht „nicht gefunden“); im Task-Manager erscheint kurz ein zweiter Prozess ohne Fenster, nach Schließen von Brave weg. ☐
+X4. *Registrierung auf einer Test-Site:* Seite mit Registrierungsformular, E-Mail eintragen, ins Passwortfeld klicken → Vorschlag; „Verwenden“ füllt beide Passwortfelder; Speicherkarte zeigt die E-Mail; „Im Tresor speichern“ → in Nemo erscheint der Eintrag (URL = Origin der Seite). ☐
+X5. *Sync aufs Handy:* Nach Sync (oder Auto-Sync) erscheint der Eintrag in der Android-App mit demselben Passwort. ☐
+X6. *Login-Autofill:* Login-Seite derselben Domain: Schlüssel im Feld → Eintrag → Benutzername und Passwort gefüllt; vorher nichts. TOTP-Eintrag: Code-Feld bzw. Popup „Code kopieren“; Zwischenablage nach 30 s leer (und bei zwischenzeitlich kopiertem anderen Text unverändert). ☐
+X7. *Phishing-Test:* Ähnliche Domain (z. B. `shop-example.test` statt `shop.example.test`, `http://` statt `https://`, anderer Port) bekommt keinen Eintrag und kein Passwort. ☐
+X8. *Gesperrt / nicht gestartet:* Tresor sperren → Popup „gesperrt“, Speichern zeigt Hinweis, Daten bleiben im Tab; entsperren → „Erneut versuchen“ speichert. App beenden → „Nemo wurde nicht gefunden“. Auto-Sperre beendet die Sitzung sofort. ☐
+X9. *Portable verschoben:* Ordner mit der EXE verschieben, App starten → Dialog zeigt den Pfad als aktuell (oder „Neu eintragen“), Erweiterung verbindet wieder ohne erneutes Bestätigen. ☐
+X10. *Brave Shields:* Shields hoch/aus auf einer Test-Site: Overlay und Schlüssel erscheinen in beiden Fällen; Fingerprinting-Schutz „streng“ stört das Ausfüllen nicht. ☐
+X11. *Pipe nur für dich:* Mit einem zweiten Windows-Benutzer ist die Pipe `\\.\pipe\nemo-vault-<Benutzer>` nicht öffenbar; ein zweites Nemo (Dev-Preview neben Release) meldet „belegt“ statt zu verdrängen. ☐
+X12. *Tresor-Suche-Hotkey:* Einstellungen → Schnellerfassung → „Tastenkürzel Tresor-Suche“ setzen; bei entsperrtem Tresor öffnet es die Suche, bei gesperrtem nur das Fenster mit dem Sperrbildschirm. ☐
+X13. *Tasten im Eintrag:* U/P/T/O kopieren Benutzername/Passwort/Code bzw. öffnen die Website; in Eingabefeldern passiert nichts. ☐
+X14. *Eigene Seiten:* Auf der Nemo-PWA im Browser schlägt die Erweiterung nichts vor und bietet das Master-Passwort nie zum Speichern an. ☐
+
 ### Testdaten (Dev-Preview)
 T1. *Dev-Preview frisch installieren* (`Nemo-Portable-dev.exe` / `Nemo-dev.apk`, leere Datenbank): Die App startet mit Daten in Übersicht und allen Modulen, Hinweis „Testdaten geladen“ erscheint einmal. ☐
 T2. *Einstellungen → Entwickler → „Testdaten entfernen“:* alle Testdaten sind weg, eigene Einträge (vorher angelegt) bleiben. Nach Neustart werden sie nicht erneut geladen. ☐

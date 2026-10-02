@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 100,
+  area: 'plan',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'birthday', label: 'Geburtstag', to: '/birthdays?new=1' }],

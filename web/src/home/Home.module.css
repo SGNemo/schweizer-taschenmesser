@@ -1,6 +1,6 @@
 .grid {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--grid-gap);
   grid-template-columns: minmax(0, 1fr);
   /* Cards keep their own height; a long list next to a short one leaves no empty box. */
   align-items: start;

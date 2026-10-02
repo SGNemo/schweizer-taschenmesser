@@ -37,6 +37,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 120,
+  area: 'money',
   contributions: {
     onboarding,
     quickAdd: [{ id: 'contract', label: 'Vertrag', to: '/contracts?new=1' }],

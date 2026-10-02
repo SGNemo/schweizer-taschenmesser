@@ -9,7 +9,7 @@ import {
   passphraseEntropyBits,
   passwordEntropyBits,
   type PasswordOptions,
-} from '../generator';
+} from '../src/generator';
 
 const opts = (o: Partial<PasswordOptions> = {}): PasswordOptions => ({
   ...DEFAULT_PASSWORD_OPTIONS,

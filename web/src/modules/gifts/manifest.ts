@@ -47,6 +47,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   order: 175,
+  area: 'household',
   contributions: {
     onboarding: noOnboarding,
     quickAdd: [{ id: 'idea', label: 'Geschenkidee', to: '/gifts?new=1' }],

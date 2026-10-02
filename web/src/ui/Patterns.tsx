@@ -147,7 +147,7 @@ export function ItemRow({
 }
 
 /** Viewport width from which a page can afford a side panel next to its main content. */
-export const SPLIT_QUERY = '(min-width: 1500px)';
+export const SPLIT_QUERY = '(min-width: 1200px)';
 
 /** True while the viewport is wide enough for a `SplitView` panel (see `SPLIT_QUERY`). */
 export function useSplitView(query: string = SPLIT_QUERY): boolean {

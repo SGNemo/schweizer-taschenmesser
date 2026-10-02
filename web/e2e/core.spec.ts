@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, calendarEntry } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 const NOW = new Date('2026-09-29T10:00:00');
@@ -93,13 +93,13 @@ test.describe('Reminders', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     await ready(page, '/calendar?view=week&date=2026-09-30');
-    await expect(page.getByRole('button', { name: /Wasser trinken/ })).toBeVisible();
+    await expect(calendarEntry(page, /Wasser trinken/)).toBeVisible();
 
     await ready(page, '/reminders');
     await page.getByRole('switch', { name: /Wasser trinken/ }).click();
     await expect(page.getByText('Pausiert')).toBeVisible();
     await ready(page, '/calendar?view=week&date=2026-09-30');
-    await expect(page.getByRole('button', { name: /Wasser trinken/ })).toHaveCount(0);
+    await expect(calendarEntry(page, /Wasser trinken/)).toHaveCount(0);
   });
 });
 
@@ -121,7 +121,7 @@ test.describe('Calendar', () => {
     await page.getByLabel('Uhrzeit').fill('18:00');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
-    await expect(page.getByRole('button', { name: /Blumen gießen/ })).toBeVisible();
+    await expect(calendarEntry(page, /Blumen gießen/)).toBeVisible();
 
     // Event via quick-add route
     await ready(page, '/calendar?new=1');
@@ -134,7 +134,9 @@ test.describe('Calendar', () => {
 
     // Day view: all three sources, sorted (all-day task first, then by time)
     await ready(page, '/calendar?view=day&date=2026-09-29');
-    const rows = page.locator('ul[class*="itemList"] > li');
+    const rows = page
+      .locator('ul[class*="itemList"] > li')
+      .and(page.locator('xpath=//*[not(ancestor::aside)]'));
     await expect(rows).toHaveCount(3);
     await expect(rows.nth(0)).toContainText('Paket abholen');
     await expect(rows.nth(1)).toContainText('14:30');
@@ -145,10 +147,10 @@ test.describe('Calendar', () => {
     // Week view and navigation
     await page.getByRole('button', { name: 'Woche' }).click();
     await expect(page.getByRole('heading', { name: /KW 40/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Zahnarzt/ })).toBeVisible();
+    await expect(calendarEntry(page, /Zahnarzt/)).toBeVisible();
     await page.getByRole('button', { name: 'Weiter' }).click();
     await expect(page.getByRole('heading', { name: /KW 41/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Zahnarzt/ })).toHaveCount(0);
+    await expect(calendarEntry(page, /Zahnarzt/)).toHaveCount(0);
     await page.getByRole('button', { name: 'Heute', exact: true }).click();
     await expect(page.getByRole('heading', { name: /KW 40/ })).toBeVisible();
 
@@ -166,22 +168,22 @@ test.describe('Calendar', () => {
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
-    await expect(page.getByRole('button', { name: /Sport/ })).toHaveCount(1);
+    await expect(calendarEntry(page, /Sport/)).toHaveCount(1);
     await page.getByRole('button', { name: 'Weiter' }).click();
-    await expect(page.getByRole('button', { name: /Sport/ })).toHaveCount(1); // next week again
+    await expect(calendarEntry(page, /Sport/)).toHaveCount(1); // next week again
 
-    await page.getByRole('button', { name: /Sport/ }).click();
+    await calendarEntry(page, /Sport/).click();
     await page
       .getByRole('dialog', { name: 'Termin bearbeiten' })
       .getByLabel('Titel')
       .fill('Sport im Park');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
-    await expect(page.getByRole('button', { name: /Sport im Park/ })).toBeVisible();
+    await expect(calendarEntry(page, /Sport im Park/)).toBeVisible();
 
-    await page.getByRole('button', { name: /Sport im Park/ }).click();
+    await calendarEntry(page, /Sport im Park/).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
-    await expect(page.getByRole('button', { name: /Sport/ })).toHaveCount(0);
+    await expect(calendarEntry(page, /Sport/)).toHaveCount(0);
   });
 
   test('rejects an end date before the start', async ({ page }) => {

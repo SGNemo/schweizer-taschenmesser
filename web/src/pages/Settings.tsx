@@ -9,9 +9,22 @@ import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
 import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
+import { setFavourite } from '@/core/settings/nav';
 import { useSettings } from '@/core/settings/settings';
+import { useNavTree } from '@/layout/useNavItems';
 import { t } from '@/strings';
-import { ACCENTS, useUiStore, type AccentChoice, type ThemeChoice } from '@/stores/ui';
+import {
+  ACCENTS,
+  DENSITIES,
+  SIDEBARS,
+  TEXT_SIZES,
+  useUiStore,
+  type AccentChoice,
+  type DensityChoice,
+  type SidebarChoice,
+  type TextSizeChoice,
+  type ThemeChoice,
+} from '@/stores/ui';
 import { Button, Card, HelpHint, SelectField, Switch, TextField } from '@/ui';
 import { AiSection } from './settings/AiSection';
 import { BackupSection } from './settings/BackupSection';
@@ -130,11 +143,42 @@ function NotificationsCard() {
   );
 }
 
+/** Favourites (max. 5): the same choice as the star in the sidebar, reachable on touch devices. */
+function FavouritesCard() {
+  const tree = useNavTree();
+  const toast = useUiStore((s) => s.toast);
+  const shown = tree.favourites.flatMap((i) => (i.moduleId ? [i.moduleId] : []));
+  const items = tree.areas.flatMap((a) => a.items).filter((i) => i.moduleId);
+  return (
+    <Card>
+      <p className={styles.desc}>{t.settings.favouritesHint}</p>
+      {items.map((i) => (
+        <Switch
+          key={i.to}
+          label={i.label}
+          checked={shown.includes(i.moduleId!)}
+          onChange={() => {
+            void setFavourite(i.moduleId!, shown).then((changed) => {
+              if (!changed) toast(t.settings.favouritesFull);
+            });
+          }}
+        />
+      ))}
+    </Card>
+  );
+}
+
 export function Settings() {
   const theme = useUiStore((s) => s.theme);
   const accent = useUiStore((s) => s.accent);
   const setAccent = useUiStore((s) => s.setAccent);
   const setTheme = useUiStore((s) => s.setTheme);
+  const textSize = useUiStore((s) => s.textSize);
+  const setTextSize = useUiStore((s) => s.setTextSize);
+  const sidebar = useUiStore((s) => s.sidebar);
+  const setSidebar = useUiStore((s) => s.setSidebar);
+  const density = useUiStore((s) => s.density);
+  const setDensity = useUiStore((s) => s.setDensity);
   const states = useModuleStates();
   const withSettings = availableManifests().filter(
     (m) => states?.[m.id] && m.settings.fields.length > 0,
@@ -175,8 +219,46 @@ export function Settings() {
                 </option>
               ))}
             </SelectField>
+            <SelectField
+              label={t.settings.textSize}
+              value={textSize}
+              onChange={(e) => setTextSize(e.target.value as TextSizeChoice)}
+            >
+              {TEXT_SIZES.map((v) => (
+                <option key={v} value={v}>
+                  {t.settings.textSizeOptions[v]}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label={t.settings.sidebar}
+              hint={t.settings.sidebarHint}
+              value={sidebar}
+              onChange={(e) => setSidebar(e.target.value as SidebarChoice)}
+            >
+              {SIDEBARS.map((v) => (
+                <option key={v} value={v}>
+                  {t.settings.sidebarOptions[v]}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label={t.settings.density}
+              value={density}
+              onChange={(e) => setDensity(e.target.value as DensityChoice)}
+            >
+              {DENSITIES.map((v) => (
+                <option key={v} value={v}>
+                  {t.settings.densityOptions[v]}
+                </option>
+              ))}
+            </SelectField>
           </div>
         </Card>
+      </section>
+      <section className={styles.section} aria-labelledby="favourites">
+        <h2 id="favourites">{t.settings.favourites}</h2>
+        <FavouritesCard />
       </section>
       <section className={styles.section} aria-labelledby="notifications">
         <h2 id="notifications">{t.notifications.title}</h2>

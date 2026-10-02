@@ -45,6 +45,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   order: 95,
+  area: 'household',
   contributions: {
     onboarding: noOnboarding,
     quickAdd: [{ id: 'item', label: 'Vorrat', to: '/pantry?new=1' }],

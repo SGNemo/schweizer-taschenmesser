@@ -22,3 +22,11 @@ export async function enable(page: Page, id: string) {
 }
 
 export const enableExample = (page: Page) => enable(page, 'example');
+
+/**
+ * A calendar entry in the main content, not the agenda side panel that sits next to it from
+ * 1200 px (the same entry would otherwise match twice).
+ */
+export function calendarEntry(page: Page, name: RegExp) {
+  return page.getByRole('button', { name }).and(page.locator('xpath=//*[not(ancestor::aside)]'));
+}

@@ -45,6 +45,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 95,
+  area: 'knowledge',
   contributions: {
     onboarding,
     services: () => import('./services'),

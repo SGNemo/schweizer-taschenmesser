@@ -26,6 +26,14 @@ describe('desktop service', () => {
     expect(invoke).toHaveBeenLastCalledWith('capture_set_hotkey', { accelerator: null });
   });
 
+  it('registers the vault search key through its own command', async () => {
+    const d = createDesktopService(true);
+    expect(await d.setVaultHotkey('Ctrl+Alt+V')).toBeNull();
+    expect(invoke).toHaveBeenCalledWith('desktop_set_vault_hotkey', { accelerator: 'Ctrl+Alt+V' });
+    invoke.mockRejectedValueOnce('taken');
+    expect(await d.setVaultHotkey('Ctrl+Alt+V')).toBe('taken');
+  });
+
   it('maps registration failures to codes and never throws', async () => {
     const d = createDesktopService(true);
     invoke.mockRejectedValueOnce('taken');

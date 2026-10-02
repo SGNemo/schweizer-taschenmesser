@@ -41,6 +41,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 70,
+  area: 'knowledge',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'item', label: 'Merkzettel', to: '/bookmarks?new=1' }],

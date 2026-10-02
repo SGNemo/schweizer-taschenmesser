@@ -181,7 +181,10 @@ for (const scheme of ['light', 'dark'] as const) {
       await audit(page, `accounts form + generator (${scheme})`);
       await form.getByRole('button', { name: 'Speichern' }).click();
 
-      const detail = page.getByRole('dialog', { name: 'Beispiel' });
+      // a dialog on phones, the side panel ("Details") from 1200 px
+      const detail = page
+        .getByRole('dialog', { name: 'Beispiel' })
+        .or(page.getByRole('complementary', { name: 'Details' }));
       await expect(detail.getByTestId('totp-code')).toBeVisible();
       await audit(page, `accounts detail (${scheme})`);
       await page.keyboard.press('Escape');
@@ -195,6 +198,22 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Sperren' }).click();
       await expect(page.getByLabel('Master-Passwort')).toBeVisible();
       await audit(page, `accounts locked (${scheme})`);
+    });
+
+    test('shell: sidebar, rail and the "Mehr" sheet', async ({ page }, info) => {
+      await page.goto('/');
+      await expect(page.locator('main h1')).toBeVisible();
+      const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+      if (info.project.name === 'pixel-7') {
+        await nav.getByRole('button', { name: 'Mehr' }).click();
+        await expect(page.getByRole('dialog', { name: 'Mehr' })).toBeVisible();
+        await audit(page, `more sheet (${scheme})`);
+        return;
+      }
+      await audit(page, `sidebar (${scheme})`);
+      await page.setViewportSize({ width: 1100, height: 800 });
+      await expect(nav.getByRole('link', { name: 'Planen' })).toBeVisible();
+      await audit(page, `rail (${scheme})`);
     });
 
     test('start-data wizard: choose, input, preview, result, help hint', async ({ page }) => {

@@ -7,13 +7,12 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  /* Fade + slide in when the page (router key = module) changes; transform/opacity only. */
-  animation: pageIn var(--dur-slow) var(--ease-out);
+  /* Crossfade when the page (router key = module) changes; navigation does not slide. */
+  animation: pageIn var(--dur-fast) linear;
 }
 @keyframes pageIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
 }
 .narrow {

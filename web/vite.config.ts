@@ -32,8 +32,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         categories: ['productivity', 'utilities'],
-        background_color: '#fbf8f3',
-        theme_color: '#fbf8f3',
+        background_color: '#f3f4f4',
+        theme_color: '#f3f4f4',
         // Android "Teilen" → neutral page where the destination is chosen (Merkliste, Notiz, ToDo).
         // `/bookmarks?title&text&url` keeps working for old bookmarks/links.
         share_target: {
@@ -66,9 +66,17 @@ export default defineConfig({
       },
     },
   },
+  // The shared package lives outside `web/` (dev server must be allowed to serve it).
+  server: { fs: { allow: ['..'] } },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // The shared package resolves its own dependency from the web install (no second `npm ci`).
+      zod: fileURLToPath(new URL('./node_modules/zod', import.meta.url)),
+      tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
+      '@nemo/vault-core': fileURLToPath(
+        new URL('../packages/vault-core/src/index.ts', import.meta.url),
+      ),
       ...(native
         ? {
             'virtual:pwa-register/react': fileURLToPath(

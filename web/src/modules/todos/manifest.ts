@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 20,
+  area: 'plan',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'task', label: 'ToDo', to: '/todos?new=1' }],

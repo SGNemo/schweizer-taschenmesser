@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, calendarEntry } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -98,7 +98,7 @@ test.describe('connectors', () => {
     await expect(ics.getByText(/Zuletzt abgeglichen/)).toBeVisible(); // the copy is written by then
 
     await page.goto('/calendar?view=day&date=2026-09-30');
-    const entry = page.getByRole('button', { name: /Vereinssitzung/ });
+    const entry = calendarEntry(page, /Vereinssitzung/);
     await expect(entry).toBeVisible();
     await expect(entry).toContainText('Extern');
     await entry.click();
@@ -124,7 +124,7 @@ test.describe('connectors', () => {
       .getByRole('button', { name: /entfernen/ })
       .click();
     await page.goto('/calendar?view=day&date=2026-09-30');
-    await expect(page.getByRole('button', { name: /Vereinssitzung/ })).toHaveCount(0);
+    await expect(calendarEntry(page, /Vereinssitzung/)).toHaveCount(0);
   });
 });
 

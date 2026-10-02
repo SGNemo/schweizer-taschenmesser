@@ -3,9 +3,11 @@ import { Navigate, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
+import { areaTarget, buildNavTree, type NavArea } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
+import { AreaFrame } from '@/layout/AreaFrame';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
@@ -22,6 +24,11 @@ function ModuleDisabled() {
   return <Navigate to="/library" replace />;
 }
 
+/** Area page: no content of its own, it opens the module last used in the area. */
+function AreaRedirect({ area }: { area: NavArea }) {
+  return <Navigate to={areaTarget(area)} replace />;
+}
+
 export function buildRoutes(states: ModuleStates): RouteObject[] {
   const moduleRoutes = availableManifests().flatMap((m) =>
     states[m.id]
@@ -31,15 +38,22 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
             path: r.path.replace(/^\//, ''),
             element: (
               <PageContainer key={m.id} variant={r.layout ?? m.layout ?? 'content'}>
-                <Suspense fallback={<PageFallback />}>
-                  <Cmp />
-                </Suspense>
+                <AreaFrame>
+                  <Suspense fallback={<PageFallback />}>
+                    <Cmp />
+                  </Suspense>
+                </AreaFrame>
               </PageContainer>
             ),
           } satisfies RouteObject;
         })
       : [{ path: `${m.id}/*`, element: <ModuleDisabled /> } satisfies RouteObject],
   );
+
+  const areaRoutes = buildNavTree(availableManifests(), states, undefined).areas.map((area) => ({
+    path: area.to.replace(/^\//, ''),
+    element: <AreaRedirect area={area} />,
+  }));
 
   return [
     {
@@ -85,6 +99,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
             </PageContainer>
           ),
         },
+        ...areaRoutes,
         ...moduleRoutes,
         {
           path: '*',

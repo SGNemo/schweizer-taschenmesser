@@ -42,6 +42,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'full',
   order: 10,
+  area: 'plan',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'event', label: 'Termin', to: '/calendar?new=1' }],

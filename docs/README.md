@@ -18,7 +18,8 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [meta/](meta/) | docs guide, audit reports | changing docs |
 | [security/](security/), [perf/](perf/), [features/](features/) | reports and feature notes (each has an index) | that topic |
 | [archive/](archive/) | historical reports (hidden from scans) | history only |
+| [product/](product/), [design/](design/) | module plan and review (German), design specification, rounds, mockups, implementation prompts (long by nature) | module or design work |
 | design-proposals/, brand/, screenshots/ | images and token experiments | design work |
 
 ## For users (German)
-[user/installation.md](user/installation.md) · [user/module.md](user/module.md) · [user/ki-assistent.md](user/ki-assistent.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync-server.md](user/sync-server.md) · [user/sicherheit.md](user/sicherheit.md) · [user/entwicklung.md](user/entwicklung.md)
+[user/installation.md](user/installation.md) · [user/module.md](user/module.md) · [user/ki-assistent.md](user/ki-assistent.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync-server.md](user/sync-server.md) · [user/sicherheit.md](user/sicherheit.md) · [user/browser-erweiterung.md](user/browser-erweiterung.md) · [user/entwicklung.md](user/entwicklung.md)

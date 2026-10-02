@@ -17,6 +17,13 @@ type LazyComponent = () => Promise<{ default: ComponentType }>;
 export type PageLayout = 'narrow' | 'content' | 'wide' | 'full';
 export const PAGE_LAYOUTS: readonly PageLayout[] = ['narrow', 'content', 'wide', 'full'];
 
+/**
+ * Navigation area of a module (sidebar groups, bottom navigation, area page tabs). Areas are
+ * navigation only: modules never import each other because they share an area.
+ */
+export const AREAS = ['plan', 'money', 'household', 'knowledge', 'vault', 'system'] as const;
+export type AreaId = (typeof AREAS)[number];
+
 export interface ModuleRoute {
   /** Absolute path; must start with `/<module id>`. A trailing `/*` lets the module own sub-routes. */
   path: string;
@@ -278,6 +285,8 @@ export interface ModuleManifest {
   defaultEnabled: boolean;
   /** Sort key for navigation and library (lower first, default 100). */
   order?: number;
+  /** Navigation area the module belongs to (`AREAS`); an area without an enabled module is hidden. */
+  area: AreaId;
   /**
    * Ids of modules this one builds on (e.g. budgets read finance). Only informs the setup
    * assistant and the library; it never blocks enabling or disabling.

@@ -2,7 +2,7 @@
 
 Fast "where is what" index (paths checked against the tree). Rationale and long design notes: [architecture.md](architecture.md) (topic files in `docs/architecture/`). Decisions: [DECISIONS.md](DECISIONS.md). Detail rows for home/setup/desktop/update channels live in the topic files.
 
-> Filename note: `ARCHITECTURE-MAP.md` (not `ARCHITECTURE.md`) because `architecture.md` exists and is referenced from code (`web/src-tauri/crates/local-api/src/lib.rs`); the names would collide on Windows/macOS.
+> Not `ARCHITECTURE.md`: `architecture.md` exists and code references it (`web/src-tauri/crates/local-api/src/lib.rs`); names would collide on Windows/macOS.
 
 ## Top level
 | Path | What |
@@ -22,7 +22,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 - `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, birthdays, bookmarks, budgets, calendar, contracts, **disk** (desktop only), example (dev only), finance, gifts, habits, invoices, launcher, news, notes, packing, pantry, reminders, shopping, subscriptions, **system** (desktop only), timetrack, todos, vault.
 - `src/tools/<id>/` – small stateless helpers (base64, calc, currency, dates, dice, hash, image, json, pdf, percent, qr, scratch, split, text, timer, timezones, units, uuid).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
-- `src/layout/` – app shell: `AppShell.tsx`, `PageContainer.tsx`, `CommandPalette.tsx`, `QuickAdd.tsx`, `ToolsSheet.tsx`, `MoreSheet.tsx`, `PendingImports.tsx`, `UpdateBanner.tsx`, `SyncBadge.tsx`, `useNavItems.ts`, `assistant/` (palette answer UI).
+- `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `ToolsSheet`, `assistant/`.
 - `src/pages/` – `Settings.tsx` + `settings/*Section.tsx`, `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
 - `src/ui/` – design system: `tokens.css` (colours, radii, type scale, weights, z-index, motion; light + dark + accent variants, guarded by `tokens.test.ts`), `global.css` (Inter, solid background, focus ring), Button, Card, Dialog, Fields (`TextField` with `labelHidden`), Patterns (`Segmented`, `ItemRow`, `Progress`, layout utilities), Misc (Badge, EmptyState incl. `compact`, Fab, Skeleton, Toaster), `WidgetList.tsx`, HelpHint, `Logo.tsx` (`LOGO_PATHS`, `mono`), `icons.tsx`.
 - `web/brand/` – logo/icon SVG sources + font licences (one fish, mask-based; `src/brand-sync.test.ts` keeps Logo/splash in step); `scripts/gen-icons.mjs` renders all raster assets (see HOW-TO → Icons).
@@ -55,6 +55,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Assistant pipeline | `web/src/core/ai/assistant.ts` (`ask`), `intent/parser.ts` (tier 1), `search/fulltext.ts`, `cache.ts` (tier 2), `prompt.ts`, `scope.ts` (`aiModules` filter), `query/{schema,executor,validate,create}.ts`, `newsBrief.ts` | |
 | **Connectors** | framework `web/src/core/connectors/{types,registry,context,oauth,redact,service,state}.ts` (glob `connectors/*/index.ts`); impls `web/src/connectors/google/*`, `web/src/connectors/ics/*`; UI `pages/settings/ConnectorsSection.tsx`; isolation `connectors/isolation.test.ts` | `ConnectorDef` |
 | **Home screen (not a module)** | `web/src/home/` (`Home.tsx`, `layout.ts` scope `home`, `AutoWidget.tsx`); widget contract `ModuleManifest.widgets` (`WidgetDef`) checked by `validateManifest`, `scripts/check-modules.mjs`, `core/modules/widgets.test.tsx`; route `/` in `router.tsx`. Details: [architecture/setup-home.md](architecture/setup-home.md) | |
+| **Navigation areas** | `manifest.area`, `core/modules/areas.ts`, `core/settings/nav.ts`, [decisions/ui-shell.md](decisions/ui-shell.md) | `NavTree` |
 | **Layout system** | `web/src/layout/PageContainer.tsx` + `.module.css`; `PageLayout`/`PAGE_LAYOUTS` in `core/modules/types.ts`; applied once in `router.tsx` via `manifest.layout` / `route.layout` | `narrow`/`content`/`wide`/`full` |
 | **Onboarding / import framework** | `web/src/core/importer/` (`types.ts`, `plan.ts`, `batches.ts`, `host.tsx`, `OnboardingWizard.tsx`, `ImportPreview.tsx`, `StartDataButton.tsx`); parsers `web/src/core/io/*`; per-module `modules/<id>/onboarding.ts` + `importer.ts`; e2e `e2e/onboarding.spec.ts` | `ImporterMeta`, `ImportBatch`, table `_imports` |
 | **Data API (JSON import)** | `web/src/core/dataapi/` (`format.ts`, `parse.ts`, `importer.ts`, `scope.ts`, `openapi.ts`, `pending.ts`, `text.ts`) | |
@@ -71,6 +72,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Self-update (TS) | `web/src/core/update/{controller,github,notes,prefs,semver,backup,types}.ts`; UI `layout/UpdateBanner.tsx`, `pages/settings/UpdateSection.tsx` | |
 | **Update channels & manifests** | stable/beta/dev channels, `core/update/buildInfo.ts` `effectiveChannel`, `update.rs`, `web/scripts/dev-preview.mjs`. Details: [architecture/native.md](architecture/native.md) | |
 | Notifications | `web/src/core/notifications/{scheduler,service,push,pushPayload,nativeSchedule,triggers}.ts` | |
+| Browser extension, vault bridge | see [architecture/browser-extension.md](architecture/browser-extension.md) | |
 | Vault (passwords) | `web/src/modules/accounts/` (never AI-visible) | |
 
 ## Data flow

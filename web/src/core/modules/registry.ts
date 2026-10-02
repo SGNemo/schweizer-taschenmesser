@@ -1,5 +1,5 @@
 import type { PlatformKind } from '@/core/platform/types';
-import { ALL_WIDGET_SIZES, PAGE_LAYOUTS, type ModuleManifest } from './types';
+import { ALL_WIDGET_SIZES, AREAS, PAGE_LAYOUTS, type ModuleManifest } from './types';
 
 // Manifests are eager (small); heavy parts (routes, widgets) are lazy inside each manifest.
 const found = import.meta.glob<{ default: ModuleManifest }>('../../modules/*/manifest.ts', {
@@ -53,6 +53,7 @@ export function validateManifest(m: ModuleManifest): string[] {
   for (const p of m.platforms ?? [])
     if (!PLATFORM_KINDS.includes(p)) errors.push(`platform "${p}" is unknown`);
   if (m.platforms?.length === 0) errors.push('platforms must not be empty (omit it for all)');
+  if (!AREAS.includes(m.area)) errors.push(`area "${String(m.area)}" is unknown`);
   if (m.layout && !PAGE_LAYOUTS.includes(m.layout)) errors.push(`layout "${m.layout}" is unknown`);
   for (const r of m.routes) {
     if (r.layout && !PAGE_LAYOUTS.includes(r.layout))

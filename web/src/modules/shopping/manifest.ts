@@ -37,6 +37,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   order: 90,
+  area: 'household',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'item', label: 'Einkaufsartikel', to: '/shopping?new=1' }],

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, calendarEntry } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -72,9 +72,7 @@ test.describe('Invoices', () => {
     await expect(page.getByTestId('widget-invoices:due')).toContainText('1 offene Rechnung');
 
     await ready(page, '/calendar?view=week&date=2026-10-05');
-    await expect(
-      page.getByRole('button', { name: /Rechnung.*Stadtwerke · 89,90\s€/ }),
-    ).toBeVisible();
+    await expect(calendarEntry(page, /Rechnung.*Stadtwerke · 89,90\s€/)).toBeVisible();
   });
 
   test('rejects an invalid amount', async ({ page }) => {
@@ -179,11 +177,9 @@ test.describe('Subscriptions', () => {
 
     // Charge on 15 Oct, cancellation deadline 10 days earlier (5 Oct)
     await ready(page, '/calendar?view=week&date=2026-10-15');
-    await expect(page.getByRole('button', { name: /Abo.*Fitnessstudio · 29,90\s€/ })).toBeVisible();
+    await expect(calendarEntry(page, /Abo.*Fitnessstudio · 29,90\s€/)).toBeVisible();
     await ready(page, '/calendar?view=week&date=2026-10-05');
-    await expect(
-      page.getByRole('button', { name: /Kündigung.*Kündigungsfrist: Fitnessstudio/ }),
-    ).toBeVisible();
+    await expect(calendarEntry(page, /Kündigung.*Kündigungsfrist: Fitnessstudio/)).toBeVisible();
   });
 });
 
