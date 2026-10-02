@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 import { areaOfPath } from '@/core/modules/areas';
 import { t } from '@/strings';
+import { Tabs } from '@/ui';
 import { useNavTree } from './useNavItems';
 import styles from './AreaFrame.module.css';
 
@@ -19,21 +20,15 @@ export function AreaFrame({ children }: { children: ReactNode }) {
       <div className={styles.frame}>
         <p className={styles.eyebrow}>{area.label}</p>
         {area.items.length > 1 ? (
-          <nav aria-label={t.nav.areaTabs(area.label)} className={styles.tabs}>
-            {area.items.map((i) => {
-              const active = pathname === i.to || pathname.startsWith(`${i.to}/`);
-              return (
-                <Link
-                  key={i.to}
-                  to={i.to}
-                  className={styles.tab}
-                  aria-current={active ? 'page' : undefined}
-                >
-                  {i.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <Tabs
+            label={t.nav.areaTabs(area.label)}
+            items={area.items.map((i) => ({
+              id: i.to,
+              label: i.label,
+              to: i.to,
+              active: pathname === i.to || pathname.startsWith(`${i.to}/`),
+            }))}
+          />
         ) : null}
       </div>
       {children}

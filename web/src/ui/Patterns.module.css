@@ -21,29 +21,29 @@
   max-width: 100%;
   overflow-x: auto;
   gap: var(--space-hair);
-  padding: 4px;
+  padding: 3px;
   border-radius: var(--radius-full);
   background: var(--surface-2);
 }
 .segment button {
-  min-height: 36px;
+  min-height: 2rem;
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-full);
   background: none;
-  color: var(--text);
+  color: var(--text-muted);
   font-weight: var(--weight-medium);
   white-space: nowrap;
   cursor: pointer;
 }
-/* Touch devices get the full 44 px target. */
+/* Touch devices get the full 44 px target (track 38 px for the mouse). */
 @media (pointer: coarse) {
   .segment button {
-    min-height: calc(var(--touch) - 8px);
+    min-height: calc(var(--touch) - 6px);
   }
 }
 .segment button:hover:not([aria-pressed='true']) {
-  color: var(--accent);
+  color: var(--text);
 }
 .segment button[aria-pressed='true'] {
   background: var(--surface);
@@ -130,24 +130,32 @@
   gap: var(--space-2);
 }
 .chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: 2rem;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text-muted);
   font: inherit;
   font-size: var(--text-sm);
 }
 button.chip {
-  min-height: var(--touch);
   cursor: pointer;
+}
+/* 32 px to look at, 44 px to hit. */
+button.chip::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+}
+button.chip:hover:not([aria-pressed='true']) {
+  color: var(--text);
 }
 button.chip[aria-pressed='true'] {
   background: var(--accent-soft);
-  border-color: var(--accent);
   color: var(--accent);
   font-weight: var(--weight-semibold);
 }
