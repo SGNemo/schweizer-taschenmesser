@@ -4,6 +4,7 @@ import type { ExternalEvent } from '@/core/connectors/types';
 import type { PlatformKind } from '@/core/platform/types';
 import type { OnboardingDef } from '@/core/importer/types';
 import type { SeedMeta } from '@/core/seed/types';
+import type { SettingsCategoryId } from '@/core/settings/registry/types';
 import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
@@ -140,6 +141,12 @@ export interface ModuleSettings {
   schema: z.ZodObject;
   defaults: Record<string, unknown>;
   fields: SettingField[];
+  /** Settings category of this module's section; default `module` (own sub-section under "Module"). */
+  category?: SettingsCategoryId;
+  /** Sort order inside the category; default 100. */
+  order?: number;
+  /** Extra search terms (German). */
+  keywords?: string[];
 }
 
 /* ---- Contributions (registry-mediated, so modules never import each other) ---- */

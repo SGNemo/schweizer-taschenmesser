@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
+import { normalize } from '@/core/text/normalize';
 import type { ResultRow } from '@/core/ai/query/types';
 import { useSetupHost } from '@/core/setup/host';
 import { useTools } from '@/core/tools/state';
@@ -22,10 +23,7 @@ export interface Command {
   run: () => void;
 }
 
-/** Lowercase, strip diacritics – "Übersicht" matches "ubersicht". */
-export function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-}
+export { normalize };
 
 export function filterCommands(commands: Command[], query: string): Command[] {
   const q = normalize(query);

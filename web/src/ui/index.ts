@@ -4,6 +4,7 @@ export { Dialog } from './Dialog';
 export { TextField, TextArea, SelectField, Checkbox, Switch } from './Fields';
 export { Badge, EmptyState, Fab, Skeleton, Toaster } from './Misc';
 export { HelpHint } from './HelpHint';
+export { DangerZone, SettingRow, SettingsGroup, TypedConfirmDialog } from './SettingsParts';
 export { Icon } from './icons';
 export { Logo } from './Logo';
 export { Wordmark } from './Wordmark';

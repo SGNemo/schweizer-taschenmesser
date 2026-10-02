@@ -76,13 +76,14 @@ export function TextArea({
 export function SelectField({
   label,
   hint,
+  labelHidden,
   children,
   ...rest
 }: Omit<BaseProps, 'error'> & SelectHTMLAttributes<HTMLSelectElement> & { children: ReactNode }) {
   const id = useId();
   return (
     <div className={styles.field}>
-      <label htmlFor={id} className={styles.label}>
+      <label htmlFor={id} className={labelHidden ? 'sr-only' : styles.label}>
         {label}
       </label>
       <select id={id} className={styles.control} {...rest}>
@@ -111,22 +112,31 @@ export function Switch({
   onChange,
   disabled,
   hint,
+  labelHidden,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
   hint?: string;
+  /** Label for screen readers only (the surrounding `SettingRow` shows the text). */
+  labelHidden?: boolean;
 }) {
   const id = useId();
   return (
     <div className={styles.switch}>
-      <span>
-        <span id={id} className={styles.label}>
+      {labelHidden ? (
+        <span id={id} className="sr-only">
           {label}
         </span>
-        {hint ? <span className={styles.hint}> · {hint}</span> : null}
-      </span>
+      ) : (
+        <span>
+          <span id={id} className={styles.label}>
+            {label}
+          </span>
+          {hint ? <span className={styles.hint}> · {hint}</span> : null}
+        </span>
+      )}
       <button
         type="button"
         role="switch"

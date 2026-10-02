@@ -79,6 +79,85 @@ export const t = {
   },
   settings: {
     title: 'Einstellungen',
+    categoriesNav: 'Einstellungs-Kategorien',
+    back: 'Einstellungen',
+    search: 'Einstellungen durchsuchen',
+    searchPlaceholder: 'Einstellung suchen …',
+    searchResults: 'Suchergebnisse',
+    noResults: 'Nichts gefunden. Probiere ein anderes Wort.',
+    paletteCommand: (title: string) => `Einstellung: ${title}`,
+    notFoundTitle: 'Diese Kategorie gibt es nicht.',
+    danger: {
+      title: 'Gefahrenzone',
+      typePhrase: (phrase: string) => `Tippe „${phrase}“ zum Bestätigen`,
+    },
+    cat: {
+      allgemein: {
+        title: 'Allgemein',
+        description: 'Name, Wochenstart, Sprache und Formate',
+        keywords: ['Sprache', 'Währung', 'Zeitzone', 'Datum', 'Name'],
+      },
+      darstellung: {
+        title: 'Darstellung',
+        description: 'Farbschema, Akzent, Textgröße, Dichte, Favoriten',
+        keywords: ['Theme', 'Dunkel', 'Hell', 'Schrift', 'Animation', 'Bewegung'],
+      },
+      module: {
+        title: 'Module',
+        description: 'Einstellungen der Module und Startdaten',
+        keywords: ['Erinnerung', 'Startdaten', 'Import'],
+      },
+      werkzeuge: {
+        title: 'Werkzeugkasten',
+        description: 'Werkzeuge ein- und ausschalten, Reihenfolge',
+        keywords: ['Tools'],
+      },
+      benachrichtigungen: {
+        title: 'Benachrichtigungen',
+        description: 'Erinnerungen und Push bei geschlossener App',
+        keywords: ['Push', 'Mitteilung'],
+      },
+      sicherheit: {
+        title: 'Sicherheit',
+        description: 'Tresor, automatische Sperre, Browser-Erweiterung',
+        keywords: ['Passwort', 'Sperre', 'Biometrie', 'Auto-Lock'],
+      },
+      sync: {
+        title: 'Sync & Backup',
+        description: 'Server, Geräte, Backups, Export und Import',
+        keywords: ['Synchronisation', 'Sicherung', 'Server', 'Verschlüsselung'],
+      },
+      ki: {
+        title: 'KI',
+        description: 'Anbieter, Reihenfolge, Limits und Statistik',
+        keywords: ['Assistent', 'Claude', 'OpenAI', 'Ollama', 'API-Schlüssel', 'Modell'],
+      },
+      verbindungen: {
+        title: 'Verbindungen',
+        description: 'Google, Kalender-Abos und lokale Schnittstelle',
+        keywords: ['Connector', 'Kalender', 'Google', 'ICS', 'API', 'MCP'],
+      },
+      schnellerfassung: {
+        title: 'Schnellerfassung',
+        description: 'Tastenkürzel, Tray und Autostart',
+        keywords: ['Hotkey', 'Tastenkürzel', 'Tray', 'Autostart'],
+      },
+      updates: {
+        title: 'Updates',
+        description: 'Kanal und automatische Prüfung',
+        keywords: ['Aktualisierung', 'Beta', 'Version'],
+      },
+      entwickler: {
+        title: 'Entwickler',
+        description: 'Testdaten, Seed-Sync und Zurücksetzen',
+        keywords: ['Dev', 'Seed', 'Diagnose'],
+      },
+      ueber: {
+        title: 'Über Nemo',
+        description: 'Version, Lizenzen, Links und Diagnose',
+        keywords: ['Version', 'Lizenz', 'Changelog', 'Einrichtung', 'Fehler melden'],
+      },
+    },
     appearance: 'Darstellung',
     sidebar: 'Seitenleiste',
     sidebarOptions: { wide: 'Breit', narrow: 'Schmal' },
