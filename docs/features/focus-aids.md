@@ -1,6 +1,6 @@
 # Focus and attention aids – plan (2026-10-02)
 
-Result of the evaluation chat (phases 1–2, branch `feat/adhd-friendly`). Mockups: [`../design/mockups/adhd/`](../design/mockups/adhd/) (standalone HTML + PNG, dark, desktop + phone). Principles and text rules: [`../design/FOCUS-GUIDELINES.md`](../design/FOCUS-GUIDELINES.md) (written in package 1). Every aid has a switch in Settings → "Fokus & Aufmerksamkeit" (new core section, category `darstellung` or own category, decided in package 1); nothing is forced, no streak loss, no guilt wording, no daily counters in red.
+Result of the evaluation chat (phases 1–2, branch `feat/adhd-friendly`). Mockups: [`../design/mockups/adhd/`](../design/mockups/adhd/) (standalone HTML + PNG, dark, desktop + phone). Principles and text rules: `docs/design/FOCUS-GUIDELINES.md` (written in package 1). Every aid has a switch in Settings → "Fokus & Aufmerksamkeit" (new core section, category `darstellung` or own category, decided in package 1); nothing is forced, no streak loss, no guilt wording, no daily counters in red.
 
 ## Diagnosis (short)
 - Home starts with up to 6 attention chips, 4–5 of them red; no greeting/date, no single next step; phone home = 16 widgets (≈ 5300 px).
