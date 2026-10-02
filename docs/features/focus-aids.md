@@ -32,3 +32,11 @@ Verification: unit tests for next-one-thing, focus state, overdue wording; e2e `
 - **2 Erinnerungen:** staggered lead (1 d · 1 h · 10 min), snooze options (10 min, 1 h, heute Abend, morgen früh, "wenn ich am PC bin" = device flag), quiet hours, max per hour, one gentle follow-up, ToDos with date notify at a set time; "Woran war ich" card. Touches `core/notifications/*`, `nativeSchedule`, push payload, calendar settings. Mockup `reminder-c1-snooze.html`.
 - **3 Erfassen/Ruhe/Wiederfinden:** no type question (default inbox, sort later), Ctrl+Enter to full form, time on ToDos becomes a reminder, quick-add dialog without the second link list; search history + recently used in Ctrl+K; focus theme (home preset with 3 widgets), text size 3 steps, in-app motion switch.
 - **4 Fortschritt:** gentle streaks with rest days for recurring ToDos, positive week review, routine templates (Morgen, Abend, Wochenplanung) as checklists.
+
+## Implementation notes for package 1 (from the code reading, 2026-10-02)
+- Home is core, modules never import each other: "Jetzt dran" + "Heute" plan = a **new widget of the todos module** (`todos:next`, size l), "Als Nächstes" = new calendar widget (`calendar:next`, size s); `home/layout.ts` `orderWidgets` gets a default-first list for these keys.
+- Focus mode = a **todos route** `/todos/focus/:id` (`modules/todos/routes/FocusPage.tsx`, layout `narrow`); timer state device-local via a small core helper (`core/focus/state.ts`, `_meta` key `focus.state`), reused by a TopBar indicator; reuse `tools/timer/logic.ts` countdown arithmetic. Esc → back to `/todos`.
+- ToDo fields `plannedFor`, `estimateMin` are optional → `manifest.version` 2 + no-op migration entry, seed update, `inventory.test.ts` untouched (module settings unchanged).
+- Settings: new synced scope `focus` (`core/settings/focus.ts`), section `focus` in `pages/settings/sections.tsx` (category `darstellung`, order 15), add to `inventory.core.json`.
+- Calm overdue: todos `attention.ts` reads the focus settings (`getSettings`) and switches tone to `warning` + wording "n ToDos warten"; ToDo row and widget drop the day counter when the setting is on.
+- "Neu planen": pure function `replan(tasks, today, perDay)` in `modules/todos/logic.ts`, applied through `undoableWithToast`.
