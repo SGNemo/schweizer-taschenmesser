@@ -3,7 +3,7 @@ export { DueList, type DueEntry } from './DueList';
 export { ProgressList, type ProgressEntry } from './ProgressList';
 export { ChecklistWidget, type ChecklistEntry } from './Checklist';
 export { TimelineWidget, type TimelineItem } from './Timeline';
-export { buildTimeline } from './timeline';
+export { buildTimeline } from './timelineModel';
 export { TileGrid, type TileEntry } from './Tiles';
 export { StatusWidget } from './Status';
 export { GaugeList, type GaugeEntry } from './Gauge';

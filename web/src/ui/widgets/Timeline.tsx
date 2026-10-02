@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { t } from '@/strings';
 import { Badge } from '../Misc';
-import { buildTimeline, type TimelineItem } from './timeline';
+import { buildTimeline, type TimelineItem } from './timelineModel';
 import { useWidgetSize, rowsFor } from './size';
 import { WidgetBody, type WidgetEmpty } from './WidgetBody';
 import styles from './Widgets.module.css';
