@@ -28,16 +28,13 @@ const MODULES = [
   'notes',
   'shopping',
   'birthdays',
-  'habits',
   'contracts',
   'budgets',
   'packing',
   'vault',
   'accounts',
-  'news',
   'launcher',
   'pantry',
-  'timetrack',
   'gifts',
 ];
 const PAGES = ['/', ...MODULES.map((m) => `/${m}`), '/library', '/tools', '/settings'];

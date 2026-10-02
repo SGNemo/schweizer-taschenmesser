@@ -1,7 +1,9 @@
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
-import { checkId } from './logic';
 import { checkSchema, habitSchema } from './schema';
+
+/** One tick = one record per habit and day (deterministic id, so two devices never duplicate it). */
+export const checkId = (habitId: string, date: string): string => `${habitId}:${date}`;
 
 export const habitRepo = createRepo(tableName('habits', 'habit'), habitSchema);
 export const checkRepo = createRepo(tableName('habits', 'check'), checkSchema);

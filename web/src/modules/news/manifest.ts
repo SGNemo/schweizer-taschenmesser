@@ -1,27 +1,21 @@
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
-import { onboarding } from './onboarding';
 import { articleSchema, feedSchema, feedStateSchema } from './schema';
-import { settings } from './settings';
-
-// No `aiSchema` on purpose: articles are public third-party text and change all the time; the
-// assistant neither queries nor creates them. The optional "Tagesüberblick" is a separate, explicit
-// button that sends only headline titles (core/ai/newsBrief.ts).
+/**
+ * RETIRED (0.4.0): Nachrichten are no longer part of Nemo; stored feeds stay in the database.
+ * The collections stay in the schema so sync, backup and older devices keep working; the pages,
+ * widgets and import code are gone. Tables follow in package 6 of the module plan.
+ */
 const manifest: ModuleManifest = {
   id: 'news',
   name: 'Nachrichten',
   icon: 'note',
   version: 1,
   description:
-    'Schlagzeilen aus RSS-/Atom-Feeds nach Themen, ungelesen/gelesen, mit Suche, „Für später“ in der Merkliste und einem optionalen KI-Tagesüberblick auf Knopfdruck.',
-  routes: [
-    {
-      path: '/news',
-      label: 'Nachrichten',
-      nav: true,
-      component: () => import('./routes/NewsPage'),
-    },
-  ],
+    'Stillgelegt: Nachrichten gibt es nicht mehr. Die gespeicherten Daten bleiben erhalten.',
+  retired: true,
+  routes: [],
   dataSchema: {
     collections: {
       feed: { schema: feedSchema, indexes: ['category'] },
@@ -31,25 +25,10 @@ const manifest: ModuleManifest = {
     },
   },
   migrations,
-  widgets: [
-    {
-      id: 'headlines',
-      title: 'Schlagzeilen',
-      defaultSize: 'm',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/HeadlinesWidget'),
-    },
-  ],
-  settings,
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
   defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'wide',
-  order: 95,
-  area: 'knowledge',
-  contributions: {
-    onboarding,
-    services: () => import('./services'),
-  },
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

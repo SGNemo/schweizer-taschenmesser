@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
 import { formatMoney } from '@/core/money';
 import { addMonthsToMonth, formatDay, formatMonth, monthOf, today } from '@/core/time/dates';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
   Button,
@@ -120,7 +121,9 @@ export default function BudgetsPage() {
                 </IconButton>
               </div>
               {data && budgets.length === 0 ? (
-                <EmptyState icon="piggy" title={t.budgets.emptyBudgets} />
+                <EmptyState icon="piggy" title={t.budgets.emptyBudgets}>
+                  <StartDataButton moduleId="budgets" />
+                </EmptyState>
               ) : null}
               <ItemList layout="grid" label={t.budgets.tabBudgets}>
                 {budgets.map((b) => {

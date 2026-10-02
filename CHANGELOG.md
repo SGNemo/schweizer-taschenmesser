@@ -4,6 +4,18 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 
 ## Unreleased
 
+### Breaking
+- **Nachrichten, Habit-Tracker und Zeiterfassung sind nicht mehr sichtbar** (stillgelegt). Ihre Daten bleiben gespeichert, synchronisieren weiter und sind in jedem Backup enthalten; eine Wiederherstellung der Oberfläche gibt es nicht. Wer die Daten braucht, exportiert sie vorher über ein Backup (Einstellungen → Backup).
+- **Werkzeuge:** Prozent & MwSt und Kosten teilen sind jetzt Modi des Rechners, Base64, JSON, UUID und Hash stecken im Werkzeug „Entwickler“, der Notizzettel ist der feste „Zettel“ oben in den Notizen. Gespeicherte Werkzeug-Auswahl wird übernommen.
+- **Systeminfo** ist ein Tab von „Dieser PC“ (früher Datenträger); der Pfad `/system` entfällt.
+
+### Neu
+- Werkzeug-Rahmen: `/tools/<id>`, Befehlspalette „Werkzeug: …“, Strg+. öffnet die Werkzeuge; breiterer Dialog, „Zurück“ in der Kopfzeile.
+- Uhrzeit der Abo-Erinnerung einstellbar; „Startdaten“-Knopf auch bei Verträgen, Packlisten, Vorräten, Dokumenten, Geschenken, Budgets und Notizen.
+
+### Behoben
+- Abo-Namen brechen nicht mehr buchstabenweise um; „Auf die Einkaufsliste“ meldet, wenn die Einkaufsliste aus ist; veraltete Texte (Kalender, Backup-Hinweis im Assistenten, Profil „Produktiv“) korrigiert.
+
 ## 0.3.1 (2026-10-01) – "Nemo 0.3.1"
 Kleines Update: neue Wortmarke. Installationen von 0.3.0 bekommen es per In-App-Update angeboten, die Daten bleiben erhalten.
 

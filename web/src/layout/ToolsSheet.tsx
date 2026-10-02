@@ -5,7 +5,7 @@ import { useTools } from '@/core/tools/state';
 import type { ToolManifest } from '@/core/tools/types';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog, Icon } from '@/ui';
+import { Dialog, Icon, IconButton } from '@/ui';
 import styles from './ToolsSheet.module.css';
 
 /** Tool components are code-split and created once, outside of render. */
@@ -26,11 +26,18 @@ export function ToolsSheet() {
       onClose={closeTools}
       title={tool ? tool.name : t.tools.title}
       variant="sheet"
+      size="wide"
+      headerStart={
+        tool ? (
+          <IconButton label={t.tools.back} onClick={() => openTools(null)}>
+            <Icon name="chevronLeft" />
+          </IconButton>
+        ) : undefined
+      }
     >
       {toolsOpen ? (
         tool ? (
           <div className={styles.tool}>
-            <Button onClick={() => openTools(null)}>{t.tools.back}</Button>
             <Suspense fallback={<p role="status">…</p>}>
               <ToolBody tool={tool} />
             </Suspense>

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import {
@@ -59,7 +60,11 @@ export default function PackingPage() {
         </Button>
       </PageHeader>
 
-      {lists && lists.length === 0 ? <EmptyState icon="luggage" title={t.packing.empty} /> : null}
+      {lists && lists.length === 0 ? (
+        <EmptyState icon="luggage" title={t.packing.empty}>
+          <StartDataButton moduleId="packing" />
+        </EmptyState>
+      ) : null}
       {lists && lists.length > 0 ? (
         <div className={patternStyles.gapBottom}>
           <Chips label={t.packing.lists}>

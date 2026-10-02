@@ -12,15 +12,12 @@ const MODULES = [
   'notes',
   'shopping',
   'birthdays',
-  'habits',
   'contracts',
   'budgets',
   'packing',
   'vault',
-  'news',
   'launcher',
   'pantry',
-  'timetrack',
   'gifts',
 ];
 

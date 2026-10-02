@@ -15,10 +15,19 @@ export function excerpt(n: Pick<Note, 'title' | 'body'>, max = 140): string {
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
-/** Pinned first, then most recently changed. */
-export function sortNotes<T extends Note & { updatedAt: number }>(notes: readonly T[]): T[] {
+/** The fixed scratch pad ("Zettel"): one note with this id, always on top, never deleted. */
+export const SCRATCH_ID = 'scratch';
+export const isScratch = (n: { id: string }): boolean => n.id === SCRATCH_ID;
+
+/** Scratch pad first, then pinned, then most recently changed. */
+export function sortNotes<T extends Note & { id: string; updatedAt: number }>(
+  notes: readonly T[],
+): T[] {
   return [...notes].sort(
-    (a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt - a.updatedAt,
+    (a, b) =>
+      Number(isScratch(b)) - Number(isScratch(a)) ||
+      Number(b.pinned) - Number(a.pinned) ||
+      b.updatedAt - a.updatedAt,
   );
 }
 

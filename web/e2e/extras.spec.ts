@@ -30,7 +30,6 @@ test('the extra modules are off until enabled', async ({ page }) => {
     'notes',
     'shopping',
     'birthdays',
-    'habits',
     'contracts',
     'budgets',
     'packing',
@@ -105,7 +104,20 @@ test('Notizen: create, pin, search', async ({ page }) => {
   await add('Einkaufsideen', 'Käse und Brot');
   await add('WLAN', 'Passwort steht im Router', true);
   const items = page.getByRole('list', { name: 'Notizen' }).getByRole('listitem');
-  await expect(items.first()).toContainText('WLAN'); // pinned first
+  await expect(items.first()).toContainText('Zettel'); // the scratch pad is always on top
+  await expect(items.nth(1)).toContainText('WLAN'); // then pinned notes
+  await items.first().click();
+  const pad = page.getByRole('dialog', { name: 'Zettel' });
+  await expect(pad.getByLabel('Titel')).toHaveCount(0);
+  await expect(pad.getByRole('button', { name: 'Löschen' })).toHaveCount(0);
+  await pad.getByLabel('Text').fill('Paket abholen');
+  await save(page);
+  await expect(items.first()).toContainText('Paket abholen');
+  await items.first().click();
+  await pad.getByRole('button', { name: 'Zettel leeren' }).click();
+  await save(page);
+  await expect(items.first()).toContainText('Zettel');
+  await expect(items.first()).not.toContainText('Paket abholen');
   await page.getByLabel('Notizen durchsuchen').fill('kase');
   await expect(items).toHaveCount(1);
   await expect(items.first()).toContainText('Einkaufsideen');
@@ -146,21 +158,6 @@ test('Geburtstage: next date, age, calendar and dashboard widget', async ({ page
 
   await open(page, '/');
   await expect(page.getByTestId('widget-birthdays:next')).toContainText('Anna');
-});
-
-test('Habit-Tracker: tick today, streak', async ({ page }) => {
-  await enable(page, 'habits');
-  await open(page, '/habits?new=1');
-  await page.getByRole('dialog').getByLabel('Name').fill('Lesen');
-  await save(page);
-  await expect(page.getByTestId('streak-Lesen')).toContainText('0 Tage in Folge');
-  await tick(page.getByRole('checkbox', { name: 'Lesen' }));
-  await expect(page.getByTestId('streak-Lesen')).toContainText('1 Tag in Folge');
-  // Yesterday via the week strip → 2 days in a row.
-  await page.getByRole('button', { name: /Lesen, Montag, 28. September/ }).click();
-  await expect(page.getByTestId('streak-Lesen')).toContainText('2 Tage in Folge');
-  await page.reload();
-  await expect(page.getByTestId('streak-Lesen')).toContainText('2 Tage in Folge');
 });
 
 test('Verträge: cancellation deadline is flagged and on the calendar', async ({ page }) => {

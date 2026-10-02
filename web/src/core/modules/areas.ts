@@ -51,12 +51,12 @@ export interface NavTree {
 /** Navigation entries of the enabled modules (routes flagged `nav`), in manifest order. */
 export function moduleNavItems(manifests: readonly ModuleManifest[], states: ModuleStates) {
   return manifests
-    .filter((m) => states[m.id])
+    .filter((m) => states[m.id] && m.area)
     .flatMap((m) =>
       m.routes
         .filter((r) => r.nav)
         .map((r) => ({
-          area: m.area,
+          area: m.area!,
           item: {
             to: r.path.replace(/\/\*$/, ''),
             label: r.label,

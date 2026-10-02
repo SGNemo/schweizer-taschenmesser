@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { formatMoney } from '@/core/money';
 import { formatDay } from '@/core/time/dates';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
   Badge,
@@ -53,7 +54,11 @@ export default function GiftsPage() {
           {t.gifts.add}
         </Button>
       </PageHeader>
-      {ideas && ideas.length === 0 ? <EmptyState icon="gift" title={t.gifts.empty} /> : null}
+      {ideas && ideas.length === 0 ? (
+        <EmptyState icon="gift" title={t.gifts.empty}>
+          <StartDataButton moduleId="gifts" />
+        </EmptyState>
+      ) : null}
       {ideas && ideas.length > 0 ? (
         <>
           <Segmented

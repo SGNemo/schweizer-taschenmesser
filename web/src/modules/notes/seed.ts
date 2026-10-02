@@ -23,14 +23,25 @@ const BODIES = [
 function seed(ctx: SeedContext): SeedRows {
   const n = ctx.count({ small: 4, medium: 10, large: 200 });
   return {
-    note: Array.from({ length: n }, (_, i) => ({
-      id: ctx.id('notes', 'note', i),
-      data: {
-        title: i < TITLES.length ? TITLES[i]! : `${ctx.rng.pick(TITLES)} (${i})`,
-        body: ctx.rng.pick(BODIES),
-        pinned: i < 2,
+    note: [
+      // The fixed scratch pad (see logic.ts SCRATCH_ID).
+      {
+        id: 'scratch',
+        data: {
+          title: 'Zettel',
+          body: 'Milch nicht vergessen\nPaket abholen bis Freitag',
+          pinned: true,
+        },
       },
-    })),
+      ...Array.from({ length: n }, (_, i) => ({
+        id: ctx.id('notes', 'note', i),
+        data: {
+          title: i < TITLES.length ? TITLES[i]! : `${ctx.rng.pick(TITLES)} (${i})`,
+          body: ctx.rng.pick(BODIES),
+          pinned: i < 2,
+        },
+      })),
+    ],
   };
 }
 

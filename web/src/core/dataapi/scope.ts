@@ -2,16 +2,17 @@
  * What the data API and the JSON import may touch. Like `core/ai/scope.ts` this is the single
  * filter: only manifest collections are ever addressed (system tables, settings and secrets are not
  * in any manifest), and modules that hold secrets are excluded twice – by the `dataApi: false`
- * opt-out and by a hard id block that no manifest can lift.
+ * opt-out and by a hard id block that no manifest can lift. Retired modules are blocked as well.
  */
 import type { ModuleManifest } from '@/core/modules/types';
 
 /** Modules that must never be reachable, whatever their manifest says. */
-export const BLOCKED_MODULES: readonly string[] = ['accounts', 'disk', 'system'];
+export const BLOCKED_MODULES: readonly string[] = ['accounts', 'disk'];
 
 /** Names of the collections of a module that the API exposes (synced, not opted out). */
 export function apiCollections(manifest: ModuleManifest): string[] {
-  if (manifest.dataApi === false || BLOCKED_MODULES.includes(manifest.id)) return [];
+  if (manifest.dataApi === false || manifest.retired || BLOCKED_MODULES.includes(manifest.id))
+    return [];
   return Object.entries(manifest.dataSchema.collections)
     .filter(([, def]) => !def.local && def.dataApi !== false)
     .map(([name]) => name);

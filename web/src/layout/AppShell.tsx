@@ -42,12 +42,18 @@ export function AppShell() {
   const navigate = useNavigate();
   useNativeShare();
 
-  // Global shortcuts: Ctrl/Cmd+K opens the command palette, Alt+Home goes to the home screen.
+  // Global shortcuts: Ctrl/Cmd+K opens the command palette, Ctrl/Cmd+. the tools, Alt+Home goes home.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPaletteOpen(!useUiStore.getState().paletteOpen);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === '.') {
+        // Ctrl/Cmd+. toggles the tools sheet.
+        e.preventDefault();
+        const ui = useUiStore.getState();
+        if (ui.toolsOpen) ui.closeTools();
+        else ui.openTools();
       } else if (e.altKey && e.key === 'Home') {
         e.preventDefault();
         void navigate('/');

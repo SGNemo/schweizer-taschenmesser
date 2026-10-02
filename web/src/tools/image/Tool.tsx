@@ -23,6 +23,7 @@ export default function ImageTool() {
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
   const bitmap = useRef<ImageBitmap | null>(null);
   const [type, setType] = useState<OutType>('image/webp');
+  const inputRef = useRef<HTMLInputElement>(null);
   const [quality, setQuality] = useState(85);
   const [maxSide, setMaxSide] = useState('1920');
   const [crop, setCrop] = useState<CropRatio>('none');
@@ -100,12 +101,13 @@ export default function ImageTool() {
   return (
     <div className={styles.stack}>
       <div>
-        <label htmlFor="image-input">{s.pick}</label>
-        <br />
+        <Button onClick={() => inputRef.current?.click()}>{s.pick}</Button>
         <input
+          ref={inputRef}
           id="image-input"
           type="file"
           accept="image/*"
+          hidden
           onChange={(e) => void pick(e.target.files?.[0])}
         />
       </div>

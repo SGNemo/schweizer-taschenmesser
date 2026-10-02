@@ -15,9 +15,9 @@ import { commitImport } from '@/core/importer/batches';
 import { buildPreview } from '@/core/importer/plan';
 import { widgetsOf } from '@/home/AutoWidget';
 import { setNow } from '@/core/time/now';
-import { allManifests } from './registry';
+import { allManifests, visibleManifests } from './registry';
 
-const cases = allManifests.flatMap((m) =>
+const cases = visibleManifests.flatMap((m) =>
   widgetsOf(m).map((w) => [`${m.id}:${w.id}`, m, w] as const),
 );
 
@@ -45,7 +45,7 @@ async function renderWidget(w: (typeof cases)[number][2]) {
 }
 
 describe('every module offers a valid widget', () => {
-  it.each(allManifests.map((m) => [m.id, m] as const))('%s declares at least one', (_id, m) => {
+  it.each(visibleManifests.map((m) => [m.id, m] as const))('%s declares at least one', (_id, m) => {
     expect(m.widgets.length).toBeGreaterThan(0);
     for (const w of m.widgets) {
       expect(w.id).toBeTruthy();

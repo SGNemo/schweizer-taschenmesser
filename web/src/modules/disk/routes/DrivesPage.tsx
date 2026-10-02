@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import type { DriveInfo, Place } from '@/core/platform/disk';
 import { t } from '@/strings';
-import { Badge, Button, Card, EmptyState, PageHeader } from '@/ui';
+import { Badge, Button, Card, EmptyState, PageHeader, patternStyles, Segmented } from '@/ui';
+import SystemTab from '../components/SystemTab';
 import { UsageRing } from '../components/UsageRing';
 import { driveLevel, formatBytes, percent } from '../format';
 import { useDiskStore } from '../store';
@@ -12,7 +13,31 @@ import styles from './DrivesPage.module.css';
 const kindLabel = (d: DriveInfo): string =>
   d.kind === 'fixed' && d.media !== 'unknown' ? t.disk.kind[d.media] : t.disk.kind[d.kind];
 
-export default function DrivesPage() {
+const TABS = ['drives', 'system'] as const;
+type Tab = (typeof TABS)[number];
+
+/** "Dieser PC": tab Laufwerke (scan entry) and tab System (live facts), selected via `?tab=`. */
+export default function ThisPcPage() {
+  const [params, setParams] = useSearchParams();
+  const raw = params.get('tab');
+  const tab: Tab = TABS.find((k) => k === raw) ?? 'drives';
+  return (
+    <>
+      <PageHeader title={t.disk.title} />
+      <div className={patternStyles.gapBottom}>
+        <Segmented
+          label={t.disk.tabsLabel}
+          value={tab}
+          options={TABS.map((k) => ({ value: k, label: t.disk.tabs[k] }))}
+          onChange={(k) => setParams(k === 'drives' ? {} : { tab: k }, { replace: true })}
+        />
+      </div>
+      {tab === 'system' ? <SystemTab /> : <DrivesTab />}
+    </>
+  );
+}
+
+function DrivesTab() {
   const [drives, setDrives] = useState<DriveInfo[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [places, setPlaces] = useState<Place[]>([]);
@@ -42,13 +67,12 @@ export default function DrivesPage() {
 
   return (
     <>
-      <PageHeader title={t.disk.title} />
       <p className={styles.lead}>{t.disk.lead}</p>
       {failed ? <p role="alert">{t.disk.failedDrives}</p> : null}
       {!drives && !failed ? <p aria-live="polite">{t.disk.loading}</p> : null}
       {drives && drives.length === 0 ? <EmptyState icon="disk" title={t.disk.empty} /> : null}
       {drives && drives.length > 0 ? (
-        <ul className={styles.grid} aria-label={t.disk.title}>
+        <ul className={styles.grid} aria-label={t.disk.tabs.drives}>
           {drives.map((d) => {
             const used = Math.max(0, d.totalBytes - d.freeBytes);
             const pct = percent(used, d.totalBytes);

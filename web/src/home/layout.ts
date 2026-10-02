@@ -36,6 +36,19 @@ export function migrateLegacyLayout(legacy: Record<string, unknown> | undefined)
   return parsed.success ? { ...parsed.data, sizes: {} } : DEFAULT_LAYOUT;
 }
 
+/** Widget keys of modules that were merged into another one (Systeminfo → "Dieser PC"). */
+export const LEGACY_WIDGET_KEYS: Readonly<Record<string, string>> = {
+  'system:status': 'disk:system',
+};
+
+function mapLegacyKeys(layout: HomeLayout): HomeLayout {
+  const map = (keys: string[]) => [...new Set(keys.map((k) => LEGACY_WIDGET_KEYS[k] ?? k))];
+  const sizes = Object.fromEntries(
+    Object.entries(layout.sizes).map(([k, v]) => [LEGACY_WIDGET_KEYS[k] ?? k, v]),
+  );
+  return { order: map(layout.order), hidden: map(layout.hidden), sizes };
+}
+
 /** The stored home layout; falls back to the legacy dashboard record until the first edit. */
 export function resolveLayout(
   home: Record<string, unknown> | undefined,
@@ -43,9 +56,9 @@ export function resolveLayout(
 ): HomeLayout {
   if (home) {
     const parsed = homeLayoutSchema.safeParse({ ...DEFAULT_LAYOUT, ...home });
-    return parsed.success ? parsed.data : DEFAULT_LAYOUT;
+    return parsed.success ? mapLegacyKeys(parsed.data) : DEFAULT_LAYOUT;
   }
-  return migrateLegacyLayout(legacy);
+  return mapLegacyKeys(migrateLegacyLayout(legacy));
 }
 
 export async function loadLayout(): Promise<HomeLayout> {

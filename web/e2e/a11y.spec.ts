@@ -17,16 +17,13 @@ const MODULES = [
   'notes',
   'shopping',
   'birthdays',
-  'habits',
   'contracts',
   'budgets',
   'packing',
   'vault',
   'accounts',
-  'news',
   'launcher',
   'pantry',
-  'timetrack',
   'gifts',
 ];
 
@@ -95,17 +92,14 @@ const PAGES = [
   ['notes', '/notes'],
   ['shopping', '/shopping'],
   ['birthdays', '/birthdays'],
-  ['habits', '/habits'],
   ['contracts', '/contracts'],
   ['budgets', '/budgets'],
   ['budgets goals', '/budgets?tab=goals'],
   ['packing', '/packing'],
   ['vault', '/vault'],
   ['accounts (set up)', '/accounts'],
-  ['news', '/news'],
   ['launcher', '/launcher'],
   ['pantry', '/pantry'],
-  ['timetrack', '/timetrack'],
   ['gifts', '/gifts'],
   ['share', '/share?title=Beispiel&text=Schau%20mal%20https%3A%2F%2Fbeispiel.example%2Fx'],
 ] as const;
@@ -126,7 +120,7 @@ for (const scheme of ['light', 'dark'] as const) {
     }
 
     test('tools: toolbar sheet and every tool', async ({ page }) => {
-      test.setTimeout(120_000); // audits 14 tools one after the other
+      test.setTimeout(120_000); // audits 12 tools one after the other
       await page.goto('/tools');
       await expect(page.getByTestId('tool-calc')).toBeVisible();
       const names: string[] = [];
@@ -137,7 +131,7 @@ for (const scheme of ['light', 'dark'] as const) {
         await expect(toggle).toBeChecked();
         names.push(name);
       }
-      expect(names.length).toBeGreaterThanOrEqual(14);
+      expect(names.length).toBeGreaterThanOrEqual(12);
       await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
       await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
       await audit(page, `tools sheet (${scheme})`);
@@ -239,13 +233,6 @@ for (const scheme of ['light', 'dark'] as const) {
       await audit(page, `wizard result (${scheme})`);
     });
 
-    test('news: feed manager dialog', async ({ page }) => {
-      await page.goto('/news');
-      await page.getByRole('button', { name: 'Feeds verwalten' }).click();
-      await expect(page.getByRole('dialog', { name: 'Feeds verwalten' })).toBeVisible();
-      await audit(page, `news feed manager (${scheme})`);
-    });
-
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {
       await page.goto('/');
       await page.locator('header button', { hasText: 'Suchen' }).click();
@@ -263,7 +250,6 @@ for (const scheme of ['light', 'dark'] as const) {
         '/notes?new=1',
         '/contracts?new=1',
         '/vault?new=1',
-        '/habits?new=1',
         '/birthdays?new=1',
         '/budgets?tab=goals&new=1',
         '/reminders?new=1',

@@ -13,6 +13,31 @@ describe('module registry', () => {
     expect(validateManifest(m)).toEqual([]);
   });
 
+  it('retired modules: stripped manifest is valid, leftovers are rejected, never listed', () => {
+    const base = allManifests.find((m) => m.id === 'todos')!;
+    const retired = {
+      ...base,
+      id: 'gone',
+      retired: true as const,
+      routes: [],
+      widgets: [],
+      aiSchema: undefined,
+      area: undefined,
+      contributions: undefined,
+      defaultEnabled: false,
+      seed: { version: 1, dependsOn: [], none: 'retired' as const },
+    };
+    expect(validateManifest(retired)).toEqual([]);
+    expect(validateManifest({ ...retired, area: 'plan' })).toHaveLength(1);
+    expect(validateManifest({ ...retired, seed: base.seed })).toHaveLength(1);
+    expect(validateManifest({ ...retired, routes: base.routes }).length).toBeGreaterThan(0);
+    // A normal module still needs an area.
+    expect(validateManifest({ ...base, area: undefined })).toHaveLength(1);
+    // Retired ids stay in allManifests (schema, sync, backup) but never reach runtime lists.
+    for (const m of allManifests.filter((x) => x.retired))
+      expect(availableManifestsFor('desktop').map((x) => x.id)).not.toContain(m.id);
+  });
+
   it('rejects bad manifests', () => {
     const bad = { ...allManifests[0]!, id: 'Bad-Id', version: 0 };
     expect(validateManifest(bad).length).toBeGreaterThanOrEqual(2);
@@ -45,7 +70,7 @@ describe('module registry', () => {
 
   it('availableManifests keeps every all-platform module', () => {
     const web = availableManifestsFor('web');
-    for (const m of allManifests.filter((x) => !x.platforms && !x.devOnly))
+    for (const m of allManifests.filter((x) => !x.platforms && !x.devOnly && !x.retired))
       expect(web).toContain(m);
   });
 });

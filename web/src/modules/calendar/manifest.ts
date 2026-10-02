@@ -11,7 +11,7 @@ const manifest: ModuleManifest = {
   icon: 'calendar',
   version: 1,
   description:
-    'Termine in Monats-, Wochen- und Tagesansicht – zeigt auch Fälligkeiten anderer Module (ToDos, Erinnerungen, später Rechnungen und Abos).',
+    'Termine in Monats-, Wochen- und Tagesansicht – zeigt auch Fälligkeiten und Fristen anderer Module (ToDos, Erinnerungen, Rechnungen, Abos, Verträge, Geburtstage, Vorräte).',
   routes: [
     {
       path: '/calendar',

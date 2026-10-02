@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
@@ -87,6 +87,7 @@ interface StepProps {
 
 function Merge({ run, save, busy }: StepProps) {
   const [files, setFiles] = useState<Loaded[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [tooFew, setTooFew] = useState(false);
 
   async function pick(list: FileList | null) {
@@ -107,13 +108,14 @@ function Merge({ run, save, busy }: StepProps) {
   return (
     <>
       <div>
-        <label htmlFor="pdf-merge-input">{s.pickMany}</label>
-        <br />
+        <Button onClick={() => inputRef.current?.click()}>{s.pickMany}</Button>
         <input
+          ref={inputRef}
           id="pdf-merge-input"
           type="file"
           accept="application/pdf,.pdf"
           multiple
+          hidden
           onChange={(e) => {
             void pick(e.target.files);
             e.target.value = '';
@@ -177,6 +179,7 @@ function Merge({ run, save, busy }: StepProps) {
 
 function Single({ mode, run, save, busy }: StepProps & { mode: 'pages' | 'rotate' }) {
   const [file, setFile] = useState<(Loaded & { count: number }) | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [range, setRange] = useState('');
   const [keep, setKeep] = useState<'keep' | 'drop'>('keep');
   const [angle, setAngle] = useState<Rotation>(90);
@@ -214,12 +217,13 @@ function Single({ mode, run, save, busy }: StepProps & { mode: 'pages' | 'rotate
   return (
     <>
       <div>
-        <label htmlFor="pdf-single-input">{s.pickOne}</label>
-        <br />
+        <Button onClick={() => inputRef.current?.click()}>{s.pickOne}</Button>
         <input
+          ref={inputRef}
           id="pdf-single-input"
           type="file"
           accept="application/pdf,.pdf"
+          hidden
           onChange={(e) => void pick(e.target.files?.[0])}
         />
       </div>

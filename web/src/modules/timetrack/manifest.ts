@@ -1,60 +1,32 @@
-import { noOnboarding } from '@/core/importer/types';
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
-import { aiSchema } from './ai';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { entrySchema, projectSchema } from './schema';
-import { settings } from './settings';
-
+/**
+ * RETIRED (0.4.0): Zeiterfassung is no longer part of Nemo; stored entries stay in the database.
+ * The collections stay in the schema so sync, backup and older devices keep working; the pages,
+ * widgets and import code are gone. Tables follow in package 6 of the module plan.
+ */
 const manifest: ModuleManifest = {
   id: 'timetrack',
   name: 'Zeiterfassung',
   icon: 'clock',
   version: 1,
   description:
-    'Arbeitszeit je Projekt mit Timer oder zum Nachtragen, Wochenübersicht und Stundenzettel als CSV zum Speichern.',
-  routes: [
-    {
-      path: '/timetrack',
-      label: 'Zeiterfassung',
-      nav: true,
-      component: () => import('./routes/TimetrackPage'),
-    },
-  ],
+    'Stillgelegt: Zeiterfassung gibt es nicht mehr. Die gespeicherten Daten bleiben erhalten.',
+  retired: true,
+  routes: [],
   dataSchema: {
     collections: {
-      project: {
-        schema: projectSchema,
-        indexes: ['archived'],
-        example: { name: 'Beispielprojekt' },
-      },
-      entry: {
-        schema: entrySchema,
-        indexes: ['date', 'projectId'],
-        example: { projectId: 'Beispielprojekt', date: '2026-01-05', minutes: 90 },
-      },
+      project: { schema: projectSchema, indexes: ['archived'] },
+      entry: { schema: entrySchema, indexes: ['date', 'projectId'] },
     },
   },
   migrations,
-  widgets: [
-    {
-      id: 'today',
-      title: 'Zeiterfassung',
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/TodayWidget'),
-    },
-  ],
-  aiSchema,
-  settings,
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
   defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'content',
-  order: 105,
-  area: 'plan',
-  contributions: {
-    onboarding: noOnboarding,
-    quickAdd: [{ id: 'entry', label: 'Zeit erfassen', to: '/timetrack?new=1' }],
-  },
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

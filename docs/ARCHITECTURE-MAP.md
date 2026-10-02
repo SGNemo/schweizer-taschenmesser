@@ -19,8 +19,8 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
-- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, birthdays, bookmarks, budgets, calendar, contracts, **disk** (desktop only), example (dev only), finance, gifts, habits, invoices, launcher, news, notes, packing, pantry, reminders, shopping, subscriptions, **system** (desktop only), timetrack, todos, vault.
-- `src/tools/<id>/` – small stateless helpers (base64, calc, currency, dates, dice, hash, image, json, pdf, percent, qr, scratch, split, text, timer, timezones, units, uuid).
+- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, birthdays, bookmarks, budgets, calendar, contracts, **disk** (desktop only), example (dev only), finance, gifts, invoices, launcher, notes, packing, pantry, reminders, shopping, subscriptions, todos, vault; retired (schema only): habits, news, timetrack; **disk** = Dieser PC.
+- `src/tools/<id>/` – small stateless helpers (12: calc, currency, dates, dev, dice, image, pdf, qr, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `ToolsSheet`, `assistant/`.
 - `src/pages/` – `Settings.tsx` + `settings/*Section.tsx`, `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
@@ -29,7 +29,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 - `src/router.tsx`, `src/App.tsx`, `src/main.tsx` (startup order), `src/sw.ts` (service worker), `src/stores/ui.ts` (zustand UI state), `src/strings.ts` (**all German UI text**).
 - `templates/module/` – scaffold used by `scripts/gen-module.mjs`.
 - `scripts/` – `db-bump`, `gen-module`, `gen-icons`, `version`, `changelog`, `keys`, `android-sign`, `audit-release`, `latest-json` (`UPDATER_PORTABLE_ASSET`), `release-assets` (asset list for the workflow), `check-links` (+ tested `scripts/lib/*.ts`).
-- `e2e/` – Playwright specs (`a11y, accounts, assistant, backup, connectors, core, extras, layout, links, localapi, modules, money, news, notifications, onboarding, quick-capture, setup, tools`), shared `helpers.ts` (`ready`, `enable`, `mainNav`); `e2e/sync/` multi-device; `e2e/screenshots/capture.spec.ts` (manual tool, not CI; `SCREENS_*` env filters). Config: `playwright.config.ts`, `playwright.sync.config.ts`, `playwright.screens.config.ts`, env `.env.e2e`.
+- `e2e/` – Playwright specs (`a11y, accounts, assistant, backup, connectors, core, extras, layout, links, localapi, modules, money, notifications, onboarding, quick-capture, setup, tools`), shared `helpers.ts` (`ready`, `enable`, `mainNav`); `e2e/sync/` multi-device; `e2e/screenshots/capture.spec.ts` (manual tool, not CI; `SCREENS_*` env filters). Config: `playwright.config.ts`, `playwright.sync.config.ts`, `playwright.screens.config.ts`, env `.env.e2e`.
 
 ## Where things live
 | Area | Location | Key names |
@@ -39,7 +39,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Manifest types | `web/src/core/modules/types.ts` | `ModuleManifest`, `ModuleContributions`, `CollectionDef`, `PageLayout`, `CalendarItem`, `ExternalCalendarSink` |
 | Contributions (calendar, notifications) | `web/src/core/modules/contributions.ts` | `collectCalendarItems`, `collectNotifications`, `useCalendarItems` |
 | Module services / activation / migrations | `core/modules/services.ts`, `activation.ts`, `migrate.ts`, `lazy.ts` | `startModuleServices`, `enableModule`, `disableModule` |
-| **Tool registry** | `web/src/core/tools/{registry,types,state,layout}.ts` (glob `tools/*/manifest.ts`) | `ToolManifest`, `allTools`; UI `layout/ToolsSheet.tsx`, `pages/ToolLibrary.tsx` |
+| **Tool registry** | `web/src/core/tools/{registry,types,state,layout}.ts` (glob `tools/*/manifest.ts`) | `ToolManifest`, `allTools`; UI `layout/ToolsSheet.tsx`, `/tools/:id` |
 | Event bus | `web/src/core/events/{bus,events,index}.ts` | typed `EventMap` |
 | **DB / data** | `web/src/core/db/` | `repo.ts` (`createRepo`, `createMany`, `purge`), `hlc.ts`, `schema.ts`, `schema.snapshot.json`, `schema-history.json`, `db.ts` (modules must not import) |
 | Settings | `web/src/core/settings/settings.ts` | `useSettings`, scopes in synced `_settings` |
@@ -52,7 +52,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Backup | `web/src/core/backup/backup.ts` | JSON `taschenmesser-backup`, merge/replace |
 | **AI providers** | `web/src/core/ai/providers/{types,claude,openai,ollama,presets}.ts` | `AiProvider` |
 | **AI router / config** | `web/src/core/ai/router.ts` (`createRouter`), `config.ts` (`ProviderEntry`, `createRouterProvider`), `usage.ts`, `testConnection.ts`; UI `pages/settings/AiSection.tsx` | |
-| Assistant pipeline | `web/src/core/ai/assistant.ts` (`ask`), `intent/parser.ts` (tier 1), `search/fulltext.ts`, `cache.ts` (tier 2), `prompt.ts`, `scope.ts` (`aiModules` filter), `query/{schema,executor,validate,create}.ts`, `newsBrief.ts` | |
+| Assistant pipeline | `web/src/core/ai/assistant.ts` (`ask`), `intent/parser.ts` (tier 1), `search/fulltext.ts`, `cache.ts` (tier 2), `prompt.ts`, `scope.ts` (`aiModules` filter), `query/{schema,executor,validate,create}.ts` | |
 | **Connectors** | framework `web/src/core/connectors/{types,registry,context,oauth,redact,service,state}.ts` (glob `connectors/*/index.ts`); impls `web/src/connectors/google/*`, `web/src/connectors/ics/*`; UI `pages/settings/ConnectorsSection.tsx`; isolation `connectors/isolation.test.ts` | `ConnectorDef` |
 | **Home screen (not a module)** | `web/src/home/` (`Home.tsx`, `layout.ts` scope `home`, `AutoWidget.tsx`); widget contract `ModuleManifest.widgets` (`WidgetDef`) checked by `validateManifest`, `scripts/check-modules.mjs`, `core/modules/widgets.test.tsx`; route `/` in `router.tsx`. Details: [architecture/setup-home.md](architecture/setup-home.md) | |
 | **Navigation areas** | `manifest.area`, `core/modules/areas.ts`, `core/settings/nav.ts`, [decisions/ui-shell.md](decisions/ui-shell.md) | `NavTree` |
@@ -65,7 +65,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Setup assistant** | logic `web/src/core/setup/`, UI `web/src/layout/setup/`, module step `modules/accounts/setup.ts`, e2e `e2e/setup.spec.ts`. Details: [architecture/setup-home.md](architecture/setup-home.md) | |
 | Platform layer | `web/src/core/platform/{index,types,web}.ts`, `tauri/{index,localApi,disk,system,secureStore,updater}.ts` | `getPlatform()`, `PlatformService` |
 | **Disk module (desktop)** | UI `web/src/modules/disk/`, seam `core/platform/disk.ts`, Rust `web/src-tauri/crates/disk-scan/`, wrapper `src-tauri/src/disk.rs`; no collections, no `aiSchema`. Details: [architecture/desktop.md](architecture/desktop.md) | |
-| **System module (desktop)** | `web/src/modules/system/`, `core/platform/system.ts`, Rust `crates/system-info` + `src/system.rs`. Details: [architecture/desktop.md](architecture/desktop.md) | |
+| **System tab (desktop)** | `web/src/modules/disk/components/SystemTab.tsx`, `core/platform/system.ts`, Rust `crates/system-info` + `src/system.rs`. Details: [architecture/desktop.md](architecture/desktop.md) | |
 | **Tauri command permissions** | `web/src-tauri/build.rs` `COMMANDS` + `capabilities/{default,desktop,capture}.json`; guard test `web/src-tauri/tests/commands.rs`. New desktop command = handler in `lib.rs` + `build.rs` + `desktop.json`. Details: [architecture/desktop.md](architecture/desktop.md) | |
 | **Tauri shell** | `web/src-tauri/`: `src/{lib,main,local_api,oauth,portable,update,webview2}.rs`, `tauri.conf.json`, `tauri.windows.conf.json`, `capabilities/default.json`, `Cargo.toml` | identifier `io.github.sgnemo.taschenmesser` |
 | Tauri plugins (local) | `web/src-tauri/plugins/apk-installer/` (Android APK update), `plugins/secure-store/` (OS keystore, biometrics, screen protection; Kotlin in `android/`) | |

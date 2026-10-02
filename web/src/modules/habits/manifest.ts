@@ -1,25 +1,20 @@
-import { onboarding } from './onboarding';
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
-import { aiSchema } from './ai';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { checkSchema, habitSchema } from './schema';
-import { settings } from './settings';
-
+/**
+ * RETIRED (0.4.0): Habit-Tracker is no longer part of Nemo; stored habits stay in the database.
+ * The collections stay in the schema so sync, backup and older devices keep working; the pages,
+ * widgets and import code are gone. Tables follow in package 6 of the module plan.
+ */
 const manifest: ModuleManifest = {
   id: 'habits',
   name: 'Habit-Tracker',
   icon: 'flame',
   version: 1,
-  description:
-    'Gewohnheiten an bestimmten Wochentagen abhaken, Serien (Streaks) und die letzten Tage im Blick.',
-  routes: [
-    {
-      path: '/habits',
-      label: 'Habits',
-      nav: true,
-      component: () => import('./routes/HabitsPage'),
-    },
-  ],
+  description: 'Stillgelegt: Habits gibt es nicht mehr. Die gespeicherten Daten bleiben erhalten.',
+  retired: true,
+  routes: [],
   dataSchema: {
     collections: {
       habit: { schema: habitSchema, indexes: ['archived'] },
@@ -27,26 +22,10 @@ const manifest: ModuleManifest = {
     },
   },
   migrations,
-  widgets: [
-    {
-      id: 'today',
-      title: 'Habits heute',
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/TodayWidget'),
-    },
-  ],
-  aiSchema,
-  settings,
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
   defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'content',
-  order: 110,
-  area: 'plan',
-  contributions: {
-    onboarding: onboarding,
-    quickAdd: [{ id: 'habit', label: 'Gewohnheit', to: '/habits?new=1' }],
-  },
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

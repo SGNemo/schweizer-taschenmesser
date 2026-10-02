@@ -93,6 +93,23 @@ describe('home layout: migration of the old dashboard settings', () => {
     });
   });
 
+  it('maps the widget of the former system module to "Dieser PC"', () => {
+    expect(
+      resolveLayout(
+        {
+          order: ['system:status', 'a:x'],
+          hidden: ['system:status'],
+          sizes: { 'system:status': 'm' },
+        },
+        undefined,
+      ),
+    ).toEqual({
+      order: ['disk:system', 'a:x'],
+      hidden: ['disk:system'],
+      sizes: { 'disk:system': 'm' },
+    });
+  });
+
   it('falls back to the defaults on an invalid home record', () => {
     expect(resolveLayout({ sizes: { 'a:x': 'xl' } }, undefined)).toEqual(DEFAULT_LAYOUT);
   });

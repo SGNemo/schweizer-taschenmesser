@@ -7,6 +7,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - `v0.3.0-beta.1` (2026-09-30) / `v0.3.0` (2026-10-01): Nemo-Rebranding, Einrichtungsassistent, Schnell erfassen, Datenträger/Systeminfo (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge, flaches Design „Klar“, Übersicht + Widgets, Dev-Preview, MIT.
 - Auf `develop` (noch nicht released): Testdaten für alle Module (Seed-Vertrag, Dev-Preview füllt leere App, Einstellungen → Entwickler).
 - Design „Klar 2“: Phase 1 Tokens auf `develop` (#43); Phase 2 Bereiche + Shell im PR `feat/design-shell` (offen).
+- Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
 
 ## Nicht gebaut / bekannte Grenzen
@@ -16,7 +17,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Google-Login auf Android, zweiseitiger Kalender-Sync, FinTS/PSD2, Mail-Body-Parsing.
 - Spotify-Connector (bewusst nicht gebaut), natives Android-Share-Target für die APK.
 - Windows-Binaries ohne Authenticode-Zertifikat (SmartScreen-Warnung); Pre-Update-Backups liegen im `%APPDATA%`-Ordner, auch im portablen Modus.
-- Providerdaten (Modellnamen, Preise, Limits, CORS aus der PWA), Startpaket-Feed-Adressen, Bankdatei-Spaltennamen und Launcher-Adressen sind unverifiziert (siehe [MANUAL-TESTS.md](MANUAL-TESTS.md)).
+- Providerdaten (Modellnamen, Preise, Limits, CORS aus der PWA), Bankdatei-Spaltennamen und Launcher-Adressen sind unverifiziert (siehe [MANUAL-TESTS.md](MANUAL-TESTS.md)).
 - Geräteverhalten der nativen Shells (Windows Hello, Android-Keystore/Biometrie, Update-Austausch, Push) nur von Hand prüfbar.
 - Einrichtungsassistent: keine automatischen lokalen Backups, keine App-Sperre, kein Screenshot-Schutz-Schalter (gibt es in der App nicht; der Assistent zeigt nur Vorhandenes). Kein Ollama-CORS-Workaround im Browser (Erkennung ist Best-Effort). Hinweise zu genauen Alarmen/Akku-Optimierung sind nur Text (keine Plugin-API geprüft/gebaut). Wochenstart nur im Kalender (KI-Zeiträume rechnen weiter mit Montag).
 
@@ -28,7 +29,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Aus PR #3 offene Vorschläge: globaler „+“-FAB ab 900 px durch „+ Neu“ in der Top-Bar ersetzen; ToDo-Board mit Listen als Spalten.
 
 ## Modul-Review 2026-10-01 (entschieden, Doku-PR, noch nicht umgesetzt)
-Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung werden stillgelegt (Tabellen bleiben bis Paket 6); Werkzeuge 18 → 12. Pakete, Versionen (0.4 … 0.7, `feat!:`) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md). Funde aus der Review (Abo-Kachel-Umbruch, veraltete Texte, fehlende `StartDataButton`, `docs/product/` in `check-docs.mjs` ausnehmen) werden in Paket 1 behoben. Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
+Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung werden stillgelegt (Tabellen bleiben bis Paket 6); Werkzeuge 18 → 12. Pakete, Versionen (0.4 … 0.7, `feat!:`) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md). Funde der Review: in Paket 1 behoben (Rest: 9, 10). Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
 
 ## Nächste sinnvolle Schritte
 0. Paket 1 „Aufräumen“ aus [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md) starten (eigener Chat, Hotspots Router/Nav/Settings).

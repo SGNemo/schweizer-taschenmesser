@@ -2,9 +2,11 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
+import { useModuleStates } from '@/core/modules/activation';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, today } from '@/core/time/dates';
 import { useUiStore } from '@/stores/ui';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
   Badge,
@@ -33,6 +35,7 @@ export default function PantryPage() {
   const [target, setTarget] = useState<ItemTarget>(null);
   const [params, setParams] = useSearchParams();
   const toast = useUiStore((s) => s.toast);
+  const moduleStates = useModuleStates();
   const day = today();
 
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -73,7 +76,11 @@ export default function PantryPage() {
         ]}
         onChange={setFilter}
       />
-      {items && items.length === 0 ? <EmptyState icon="package" title={t.pantry.empty} /> : null}
+      {items && items.length === 0 ? (
+        <EmptyState icon="package" title={t.pantry.empty}>
+          <StartDataButton moduleId="pantry" />
+        </EmptyState>
+      ) : null}
       {items && items.length > 0 && shown.length === 0 ? (
         <p className={styles.lead}>{t.pantry.noMatch}</p>
       ) : null}
@@ -126,7 +133,9 @@ export default function PantryPage() {
                     {needsRestock(i) ? (
                       <Button
                         onClick={() => {
-                          bus.emit('shopping.requested', { name: i.name });
+                          // Without the shopping module nobody listens: say so instead of pretending.
+                          if (moduleStates?.shopping !== true) return toast(t.pantry.shoppingOff);
+                          void bus.emit('shopping.requested', { name: i.name });
                           toast(t.pantry.restocked(i.name));
                         }}
                       >
