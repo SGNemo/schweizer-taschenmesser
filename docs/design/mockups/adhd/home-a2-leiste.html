@@ -1,0 +1,29 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Übersicht A2 – Leiste statt Karte</title><link rel="stylesheet" href="_base.css"><script>addEventListener("DOMContentLoaded",()=>{if(innerWidth<900)document.body.classList.add("phone")})</script></head><body>
+<div class="shell"><aside class="side"><div class="brand">Nemo</div><div class="item on">Übersicht</div><div class="cap">Favoriten</div><div class="item">Kalender</div><div class="item">ToDos</div><div class="item">Finanzen</div><div class="cap">Bereiche</div><div class="item">Planen</div><div class="item">Geld</div><div class="item">Haushalt</div><div class="item">Wissen</div><div class="item">Tresor</div><div class="cap"></div><div class="item">Modul-Bibliothek</div><div class="item">Einstellungen</div></aside><div><div class="top"><div class="search"><span>Suchen oder fragen</span><kbd>Ctrl K</kbd></div><span class="btn primary desk">+ Neu</span><span class="btn quiet desk">Werkzeuge</span></div><main class="main">
+<div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:16px"><div><div class="eyebrow">Dienstag, 29. September</div><h1>Übersicht</h1></div><span class="btn secondary desk">Anpassen</span></div>
+
+<div class="card" style="display:flex;align-items:center;gap:16px;padding:14px 20px;margin-bottom:16px;flex-wrap:wrap">
+  <span class="pill accent">Jetzt dran</span>
+  <span style="flex:1;font-weight:600;font-size:18px">Formular ausfüllen <span class="meta" style="font-weight:400">· 10 Min</span></span>
+  <span class="btn primary" style="min-height:40px">▶ Anfangen</span><span class="btn quiet" style="min-height:40px">Später</span>
+</div>
+<div class="meta" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px"><span>Als Nächstes: <b class="num" style="color:var(--text)">Friseur in 1 Std 20</b></span><span>Erledigt heute: <b style="color:var(--text)">3</b></span><span>Wartet: <b style="color:var(--text)">5 Dinge</b> <span style="color:var(--accent)">ansehen</span></span></div>
+
+<div class="grid">
+<section class="card span2"><h2><span>Heute &amp; Morgen ›</span></h2>
+<div class="row"><span class="r num" style="width:64px">Ganztägig</span><span class="t">Anna Beispiel wird 29 <span class="meta">Geburtstag</span></span></div>
+<div class="row"><span class="r num" style="width:64px">10:00</span><span class="t">Teammeeting <span class="meta">Termin</span></span></div>
+<div class="row" style="border-bottom:1px solid var(--accent)"><span class="r num" style="width:64px;color:var(--accent)">Jetzt</span><span class="t"></span></div>
+<div class="row" style="background:var(--accent-soft);border-radius:10px;padding:0 8px"><span class="r num" style="width:64px">13:00</span><span class="t"><b>Friseur</b> <span class="pill accent">Als Nächstes</span></span></div>
+<div class="row"><span class="r num" style="width:64px">15:30</span><span class="t">Zahnarzt Dr. Beispiel <span class="meta">Termin</span></span></div>
+<div class="row"><span class="r num" style="width:64px">17:30</span><span class="t">Paket abholen <span class="meta">Erinnerung</span></span></div>
+<div class="row"><span class="r num" style="width:64px">20:00</span><span class="t">Müll rausbringen <span class="meta">Erinnerung</span></span></div>
+</section>
+<section class="card"><h2><span>Heute ›</span><span class="meta">3 Dinge</span></h2>
+  <div class="row"><span class="chk done"></span><span class="t done-t">Medikament nehmen</span></div>
+  <div class="row"><span class="chk"></span><span class="t"><b>Formular ausfüllen</b></span><span class="r">10 Min</span></div>
+  <div class="row"><span class="chk"></span><span class="t">Termin vereinbaren</span><span class="r">5 Min</span></div>
+</section>
+</div>
+<div class="meta" style="margin:20px 0 80px">Darunter die restlichen Widgets wie gehabt; im Fokus-Theme nur „Heute“ und „Heute &amp; Morgen“.</div>
+</main></div></div><nav class="bottomnav"><span><b>Heute</b></span><span>Planen</span><span>Geld</span><span>Haushalt</span><span>Mehr</span></nav><div class="note">Mockup A2 · docs/design/mockups/adhd</div></body></html>
