@@ -9,12 +9,11 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 |---|---|
 | Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
-| Plan Fokus- und Aufmerksamkeitshilfen | Paket 1 läuft (siehe unten); Pakete 2–4 starten, wenn Paket 1 gemergt ist ([focus-aids](features/focus-aids.md)) |
+| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokus- und Aufmerksamkeitshilfen, Paket 1 | ansehen, mergen; danach Paket 2 Erinnerungen starten ([focus-aids](features/focus-aids.md)) |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Focus and attention aids (app + repo workflow) | `feat/adhd-friendly` | home, quick capture, todos, calendar reminders, notifications, settings, docs (STATUS, CHATS, PROMPT-TEMPLATES) | plan approved; implementation not started (model switch) – next: phase 3 docs, then package 1 per focus-aids.md | d207ab3 | 2026-10-02 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
