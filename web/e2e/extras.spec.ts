@@ -209,13 +209,13 @@ test.describe('Budgets & Sparziele', () => {
   });
 });
 
-test('Dokumente: metadata, local file and expiry', async ({ page }) => {
+test('Unterlagen: metadata, local file and expiry', async ({ page }) => {
   await enable(page, 'vault');
   await open(page, '/vault?new=1');
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Reisepass');
   await dialog.getByLabel('Kategorie').selectOption({ label: 'Ausweise' });
-  await dialog.getByLabel('Läuft ab am').fill('2026-10-20');
+  await dialog.getByLabel('Ende / Ablauf').fill('2026-10-20');
   await dialog.getByLabel('Datei').setInputFiles({
     name: 'pass.txt',
     mimeType: 'text/plain',
@@ -225,7 +225,7 @@ test('Dokumente: metadata, local file and expiry', async ({ page }) => {
 
   const row = page.getByRole('button', { name: /^Reisepass/ });
   await expect(row).toContainText('pass.txt');
-  await expect(page.getByText('Läuft bald ab')).toBeVisible();
+  await expect(page.getByText('Bald', { exact: true })).toBeVisible();
 
   // The file survives a reload and can be downloaded with its content.
   await page.reload();

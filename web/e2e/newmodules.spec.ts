@@ -101,7 +101,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await person.getByLabel('Name', { exact: true }).fill('Anna');
   await person.getByRole('button', { name: 'Speichern' }).click();
   await expect(person).toBeHidden();
-  await page.getByRole('button', { name: /^Anna/ }).click();
+  await page.getByRole('button', { name: /^Anna(?! per WhatsApp)/ }).click();
   await expect(page.getByRole('heading', { name: 'Anna' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Geschenkidee hinzufügen' }).first().click();
