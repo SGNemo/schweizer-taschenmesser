@@ -64,7 +64,7 @@ export default function ShoppingPage() {
       </form>
 
       {items && items.length === 0 ? (
-        <EmptyState icon="cart" title={t.shopping.empty}>
+        <EmptyState title={t.shopping.empty}>
           <StartDataButton moduleId="shopping" />
         </EmptyState>
       ) : null}

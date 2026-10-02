@@ -213,7 +213,7 @@ export default function TodosPage() {
           </form>
 
           {tasks && top.length === 0 ? (
-            <EmptyState icon="checklist" title={t.todos.empty}>
+            <EmptyState title={t.todos.empty}>
               <StartDataButton moduleId="todos" />
             </EmptyState>
           ) : null}

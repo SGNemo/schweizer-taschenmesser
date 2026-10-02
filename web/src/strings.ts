@@ -43,6 +43,11 @@ export const t = {
     tools: 'Werkzeuge',
     favouritesFull: 'Es sind höchstens 5 Favoriten möglich. Entferne zuerst einen anderen.',
   },
+  ui: {
+    selectRow: 'Auswählen',
+    retry: 'Erneut versuchen',
+    loading: 'Wird geladen',
+  },
   actions: {
     add: 'Hinzufügen',
     quickAdd: 'Schnell hinzufügen',

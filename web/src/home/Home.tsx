@@ -157,7 +157,7 @@ export function Home() {
       <ChecklistCard />
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
-        <EmptyState icon="grid" title={t.home.emptyTitle}>
+        <EmptyState title={t.home.emptyTitle}>
           <p>{t.home.emptyText}</p>
           <Link to="/library">{t.home.toLibrary}</Link>
           <SetupLink />

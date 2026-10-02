@@ -31,7 +31,7 @@ export default function LauncherPage() {
         </Button>
       </PageHeader>
       {links && links.length === 0 ? (
-        <EmptyState icon="external" title={t.launcher.empty}>
+        <EmptyState title={t.launcher.empty}>
           <StartDataButton moduleId="launcher" />
         </EmptyState>
       ) : null}

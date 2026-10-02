@@ -147,12 +147,17 @@ export function SelectField({
 
 export function Checkbox({
   label,
+  labelHidden,
   ...rest
-}: { label: ReactNode } & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+}: {
+  label: ReactNode;
+  /** Label for screen readers only (a checkbox inside a row). */
+  labelHidden?: boolean;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
   return (
     <label className={styles.check}>
       <input type="checkbox" {...rest} />
-      <span>{label}</span>
+      <span className={labelHidden ? 'sr-only' : undefined}>{label}</span>
     </label>
   );
 }

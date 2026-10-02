@@ -30,7 +30,7 @@ export default function ContractsPage() {
         </Button>
       </PageHeader>
       {list && list.length === 0 ? (
-        <EmptyState icon="file" title={t.contracts.empty}>
+        <EmptyState title={t.contracts.empty}>
           <StartDataButton moduleId="contracts" />
         </EmptyState>
       ) : null}

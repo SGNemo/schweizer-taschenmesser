@@ -1,6 +1,7 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
 import type { ReactNode } from 'react';
-import { Card } from './Card';
+import { t } from '@/strings';
+import { Checkbox } from './Fields';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
 
@@ -84,7 +85,10 @@ export function FormActions({ start, children }: { start?: ReactNode; children: 
   );
 }
 
-/** `layout="grid"` turns the list into an auto-fill card grid once the page is wide enough. */
+/**
+ * The one list pattern. `layout="list"` (default) groups flat rows under hairlines in one surface;
+ * `layout="grid"` turns the same rows into card tiles once the page is wide enough (Links, tools).
+ */
 export function ItemList({
   children,
   label,
@@ -96,7 +100,9 @@ export function ItemList({
 }) {
   return (
     <ul
-      className={layout === 'grid' ? `${styles.list} ${styles.grid}` : styles.list}
+      className={
+        layout === 'grid' ? `${styles.list} ${styles.grid}` : `${styles.list} ${styles.rows}`
+      }
       aria-label={label}
     >
       {children}
@@ -104,13 +110,24 @@ export function ItemList({
   );
 }
 
-/** A card row: a main button (title + meta lines, opens the editor) and optional trailing content. */
+/**
+ * A row: optional selection box and `lead`, a main button (title + meta lines, opens the editor),
+ * trailing `end` content and `actions` that appear on hover/focus. `data-row` marks the main
+ * element for keyboard navigation; put `data-row-edit` / `data-row-tick` on an element inside
+ * the row to give the E and Space shortcuts something to press.
+ */
 export function ItemRow({
   title,
   meta,
   onOpen,
   lead,
   end,
+  actions,
+  selectable,
+  selected,
+  onSelectChange,
+  done,
+  className,
   children,
 }: {
   title: ReactNode;
@@ -118,6 +135,15 @@ export function ItemRow({
   onOpen?: () => void;
   lead?: ReactNode;
   end?: ReactNode;
+  /** Row actions (icon buttons); shown on hover/focus, always on devices without hover. */
+  actions?: ReactNode;
+  /** Shows a checkbox on the left; `onSelectChange` also reports a Shift-click for ranges. */
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectChange?: (selected: boolean, extend: boolean) => void;
+  /** Done entries are struck through and quiet. */
+  done?: boolean;
+  className?: string;
   children?: ReactNode;
 }) {
   const body = (
@@ -127,22 +153,41 @@ export function ItemRow({
     </>
   );
   return (
-    <Card as="li">
+    <li
+      className={[
+        styles.item,
+        selected ? styles.selected : '',
+        done ? styles.done : '',
+        className ?? '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className={styles.row}>
+        {selectable ? (
+          <Checkbox
+            label={t.ui.selectRow}
+            labelHidden
+            checked={!!selected}
+            onChange={() => undefined}
+            onClick={(e) => onSelectChange?.(!selected, e.shiftKey)}
+          />
+        ) : null}
         {lead}
         {onOpen ? (
-          <button type="button" className={styles.main} onClick={onOpen}>
+          <button type="button" className={styles.main} data-row onClick={onOpen}>
             {body}
           </button>
         ) : (
-          <div className={styles.main} style={{ cursor: 'default' }}>
+          <div className={`${styles.main} ${styles.static}`} data-row tabIndex={-1}>
             {body}
           </div>
         )}
         {end}
+        {actions ? <div className={styles.actions}>{actions}</div> : null}
       </div>
       {children}
-    </Card>
+    </li>
   );
 }
 
