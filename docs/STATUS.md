@@ -8,7 +8,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Auf `develop` (noch nicht released): Testdaten für alle Module (Seed-Vertrag, Dev-Preview füllt leere App, Einstellungen → Entwickler).
 - Design „Klar 2“: Tokens (#43), Bereiche + Shell (#45), Basis-Komponenten (#48) auf `develop`. Einstellungen: Kategorien + Registry (`feat/settings-overhaul`).
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
-- Pakete 3 (0.5.0) und 4 (0.6.0, `feat/people-package-4`): Listen, Lesezeichen, Unterlagen, Personen.
+- Pakete 3–5 (0.5.0–0.7.0): Listen, Unterlagen, Personen, Erinnerungen im Kalender, ToDo-Wiederholung.
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
 
 ## Nicht gebaut / bekannte Grenzen

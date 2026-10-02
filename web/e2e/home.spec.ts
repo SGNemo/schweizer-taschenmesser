@@ -5,7 +5,6 @@ import { enable, mainNav, ready } from './helpers';
 const CORE = [
   'calendar:today',
   'todos:open',
-  'reminders:next',
   'finance:balance',
   'invoices:due',
   'subscriptions:next',
@@ -55,7 +54,7 @@ test.describe('Home screen', () => {
     await ready(page, '/');
     await page.getByRole('button', { name: 'Anpassen' }).click();
 
-    const size = page.getByRole('group', { name: 'Größe von Nächste Erinnerungen' });
+    const size = page.getByRole('group', { name: 'Größe von Fällige Rechnungen' });
     await size.getByRole('button', { name: 'L', exact: true }).click();
     await expect(size.getByRole('button', { name: 'L', exact: true })).toHaveAttribute(
       'aria-pressed',
@@ -86,7 +85,7 @@ test.describe('Home screen', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(
       page
-        .getByRole('group', { name: 'Größe von Nächste Erinnerungen' })
+        .getByRole('group', { name: 'Größe von Fällige Rechnungen' })
         .getByRole('button', { name: 'S', exact: true }),
     ).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('widget-todos:open')).toBeVisible();

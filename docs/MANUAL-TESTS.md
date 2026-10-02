@@ -156,7 +156,7 @@ T5. *Stabile App* (`Nemo-Portable.exe`/`Nemo.apk`) hat keinen Bereich „Entwick
 ### Einstellungen neu (Kategorien, Über Nemo) – nur auf echter Hardware prüfbar
 E1. *Windows-Portable:* Einstellungen durchklicken – Kategorien-Leiste links, Auswahl markiert, Zurück/Vor des Fensters, Suche („Hotkey“ springt zu Schnellerfassung und hebt die Zeile hervor). ☐
 E2. *Android:* Einstellungen öffnet die Kategorien-Liste, eine Kategorie öffnet den Inhalt, die Zurück-Geste führt zur Liste; große Touch-Ziele. ☐
-E3. *Deep-Links:* „Benachrichtigungen aktivieren“ in den Erinnerungen, das Sync-Symbol oben und der Dev-Hinweis springen in die richtige Kategorie und zum Abschnitt. ☐
+E3. *Deep-Links:* „Benachrichtigungen aktivieren“ im Tab Erinnerungen des Kalenders, das Sync-Symbol oben und der Dev-Hinweis springen in die richtige Kategorie und zum Abschnitt. ☐
 E4. *Über Nemo:* Version, Build/Commit (Dev-Preview), Plattform und Installationsart stimmen; „Ordner öffnen“ öffnet den Datenordner (Portable: `data/` neben der exe, sonst lokaler App-Ordner); Changelog und Lizenzen klappen auf; Diagnose-Export speichert eine Datei ohne Daten und Schlüssel. ☐
 E5. *Gerät zurücksetzen (Testgerät!):* ohne exakt `LÖSCHEN` bleibt der Knopf aus; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
 E6. *Entwickler:* die Kategorie erscheint nur im Dev-Preview-Build. ☐

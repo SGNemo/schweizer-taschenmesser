@@ -20,7 +20,6 @@ const VIEWPORTS = [
 const MODULES = [
   'calendar',
   'todos',
-  'reminders',
   'finance',
   'invoices',
   'subscriptions',

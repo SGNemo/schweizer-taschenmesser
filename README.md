@@ -42,7 +42,7 @@ Module schaltest du in der **Modul-Bibliothek** einzeln ein. Alles funktioniert 
 
 | Bereich | Module |
 |---|---|
-| Planen | **Kalender** (Monat, Woche, Tag, Termine anderer Module), **ToDos** (Listen, Prioritäten, Unteraufgaben), **Erinnerungen** (auch bei geschlossener App), **Personen** (Geburtstage und Geschenke) |
+| Planen | **Kalender** (Monat, Woche, Tag, Termine anderer Module, Benachrichtigung vor Terminen, Erinnerungen auch bei geschlossener App), **ToDos** (Listen, Prioritäten, Unteraufgaben, Wiederholung, „Irgendwann“), **Personen** (Geburtstage und Geschenke) |
 | Geld | **Finanzen** (Konten, Buchungen, Kategorien, Kontoauszug-Import), **Rechnungen**, **Abos**, **Budgets & Sparziele** |
 | Merken | **Notizen**, **Merkliste** und **Lesezeichen** (Links, Lesen, Ansehen, Orte), **Listen** (Einkauf, Packlisten, Checklisten), **Unterlagen** (Ausweise, Verträge, Garantien mit Fristen) |
 | Sicher | **Accounts**: Passwort-Tresor mit Argon2id/AES-256, TOTP, Generator, Biometrie. Für KI, Suche und Import unsichtbar |

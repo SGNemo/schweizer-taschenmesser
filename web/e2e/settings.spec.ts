@@ -74,8 +74,7 @@ test('a deep link scrolls to its section; old #anchors still arrive', async ({ p
 });
 
 test('a link from another page lands in the right category', async ({ page }) => {
-  await enable(page, 'reminders');
-  await ready(page, '/reminders');
+  await ready(page, '/calendar?tab=reminders');
   await page.getByRole('link', { name: 'Benachrichtigungen aktivieren' }).click();
   await expect(page).toHaveURL(/\/settings\/benachrichtigungen#notifications$/);
   await expect(page.getByTestId('notification-status')).toBeVisible();

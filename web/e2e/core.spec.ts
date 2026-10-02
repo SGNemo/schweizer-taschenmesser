@@ -65,12 +65,12 @@ test.describe('ToDos', () => {
 
 test.describe('Reminders', () => {
   test('creates a monthly "every 1st" reminder and shows the next occurrence', async ({ page }) => {
-    await ready(page, '/reminders?new=1');
+    await ready(page, '/calendar?tab=reminders&new=1');
     const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
     await expect(dialog).toBeVisible();
     await dialog.getByLabel('Titel').fill('Miete überweisen');
-    await dialog.getByLabel('Erster Termin').fill('2026-10-01');
-    await dialog.getByLabel('Uhrzeit').fill('08:00');
+    await dialog.getByLabel('Datum').fill('2026-10-01');
+    await dialog.getByLabel('Beginn').fill('08:00');
     await dialog.getByLabel('Wiederholung').selectOption('monthly');
     await dialog.getByLabel('Tag des Monats').selectOption('1');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
@@ -79,23 +79,20 @@ test.describe('Reminders', () => {
     const card = page.getByRole('listitem').filter({ hasText: 'Miete überweisen' });
     await expect(card).toContainText('Jeden 1. des Monats');
     await expect(card).toContainText('Do., 1. Okt. 2026 · 08:00');
-    // Dashboard widget shows it too
-    await ready(page, '/');
-    await expect(page.getByTestId('widget-reminders:next')).toContainText('Miete überweisen');
   });
 
   test('pausing keeps the reminder but removes it from the calendar', async ({ page }) => {
-    await ready(page, '/reminders?new=1');
+    await ready(page, '/calendar?tab=reminders&new=1');
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Wasser trinken');
-    await dialog.getByLabel('Erster Termin').fill('2026-09-30');
+    await dialog.getByLabel('Datum').fill('2026-09-30');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     await ready(page, '/calendar?view=week&date=2026-09-30');
     await expect(calendarEntry(page, /Wasser trinken/)).toBeVisible();
 
-    await ready(page, '/reminders');
+    await ready(page, '/calendar?tab=reminders');
     await page.getByRole('switch', { name: /Wasser trinken/ }).click();
     await expect(page.getByText('Pausiert')).toBeVisible();
     await ready(page, '/calendar?view=week&date=2026-09-30');
@@ -115,10 +112,10 @@ test.describe('Calendar', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await expect(page.getByRole('button', { name: /Paket abholen/ })).toContainText('Heute');
 
-    await ready(page, '/reminders?new=1');
+    await ready(page, '/calendar?tab=reminders&new=1');
     await page.getByLabel('Titel').fill('Blumen gießen');
-    await page.getByLabel('Erster Termin').fill('2026-09-29');
-    await page.getByLabel('Uhrzeit').fill('18:00');
+    await page.getByLabel('Datum').fill('2026-09-29');
+    await page.getByLabel('Beginn').fill('18:00');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await expect(calendarEntry(page, /Blumen gießen/)).toBeVisible();
@@ -247,19 +244,18 @@ test.describe('Dashboard', () => {
         .locator('[data-testid^="widget-"]')
         .evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.testid));
     await ready(page, '/');
-    await expect(page.getByTestId('widget-reminders:next')).toBeVisible();
+    await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     const before = await order();
     expect(before).toEqual([
       'widget-calendar:today',
       'widget-todos:open',
-      'widget-reminders:next',
       'widget-finance:balance',
       'widget-invoices:due',
       'widget-subscriptions:next',
     ]);
 
     await page.getByRole('button', { name: 'Anpassen' }).click();
-    const handle = page.getByRole('button', { name: 'Nächste Erinnerungen verschieben' });
+    const handle = page.getByRole('button', { name: 'Kontostand verschieben' });
     await handle.focus();
     // dnd-kit announces every step in a live region; waiting for it keeps the keyboard steps reliable.
     const live = page.locator('[id^="DndLiveRegion"]');
@@ -275,13 +271,13 @@ test.describe('Dashboard', () => {
 
     await expect.poll(order).not.toEqual(before);
     const after = await order();
-    expect(after.indexOf('widget-reminders:next')).toBeLessThan(
-      before.indexOf('widget-reminders:next'),
+    expect(after.indexOf('widget-finance:balance')).toBeLessThan(
+      before.indexOf('widget-finance:balance'),
     );
 
     await page.getByRole('button', { name: 'Fertig' }).click();
     await page.reload();
-    await expect(page.getByTestId('widget-reminders:next')).toBeVisible();
+    await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     expect(await order()).toEqual(after);
   });
 });

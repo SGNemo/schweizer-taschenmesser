@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { mainNav, ready } from './helpers';
+import { enable, mainNav, ready } from './helpers';
 
 test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test.skip(({ isMobile }) => isMobile, 'sidebar is a desktop feature');
@@ -7,6 +7,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test('favourites above the areas; the star adds one, keeps it after a reload, and stops at five', async ({
     page,
   }) => {
+    await enable(page, 'notes');
     await ready(page, '/');
     const nav = mainNav(page);
     await expect(nav.getByRole('heading', { name: 'Favoriten' })).toBeVisible();
@@ -29,19 +30,19 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
       nav.getByRole('button', { name: 'Abos aus den Favoriten entfernen' }).first(),
     ).toBeVisible();
     // Kalender, ToDos, Finanzen, Rechnungen, Abos = five
-    await add('Erinnerungen').click();
+    await add('Notizen').click();
     await expect(page.getByText('Es sind höchstens 5 Favoriten möglich.')).toBeVisible();
-    await expect(add('Erinnerungen')).toBeVisible();
+    await expect(add('Notizen')).toBeVisible();
   });
 
   test('an area can be folded and the choice survives a reload', async ({ page }) => {
     await ready(page, '/');
     const nav = mainNav(page);
-    await expect(nav.getByRole('link', { name: 'Erinnerungen' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'ToDos' })).toBeVisible();
     await nav.getByRole('button', { name: 'Planen auf- oder zuklappen' }).click();
-    await expect(nav.getByRole('link', { name: 'Erinnerungen' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'ToDos' })).toHaveCount(0);
     await page.reload();
-    await expect(nav.getByRole('link', { name: 'Erinnerungen' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'ToDos' })).toHaveCount(0);
   });
 
   test('an area page opens the module last used there', async ({ page }) => {

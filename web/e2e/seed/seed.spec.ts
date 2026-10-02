@@ -4,7 +4,6 @@ import { bootDev, SEED_TODAY, seedApp } from './helpers';
 const MODULES = [
   'calendar',
   'todos',
-  'reminders',
   'finance',
   'invoices',
   'subscriptions',
