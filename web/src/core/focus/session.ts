@@ -7,6 +7,8 @@ import { z } from 'zod';
 export const focusSessionSchema = z.object({
   taskId: z.string().min(1),
   title: z.string(),
+  /** Route of the focus screen, so the shell can lead back to it (set by the module). */
+  path: z.string().optional(),
   startedAt: z.number(),
   /** Total length including extensions. */
   durationMs: z.number().positive(),
@@ -27,11 +29,13 @@ export function startSession(
   task: { id: string; title: string },
   minutes: number,
   now: number,
+  path?: string,
 ): FocusSession {
   const durationMs = Math.min(Math.max(1, minutes) * MINUTE, MAX_SESSION_MS);
   return {
     taskId: task.id,
     title: task.title,
+    ...(path ? { path } : {}),
     startedAt: now,
     durationMs,
     endAt: now + durationMs,

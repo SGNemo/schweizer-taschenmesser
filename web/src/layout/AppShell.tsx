@@ -3,11 +3,13 @@ import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import { isFocusPath } from '@/core/focus/path';
 import { OnboardingHost } from '@/core/importer/host';
 import { isDevBuild } from '@/core/update/buildInfo';
 import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
 import { Fab, Toaster, useMediaQuery } from '@/ui';
 import { CommandPalette } from './CommandPalette';
+import { FocusWatcher } from './FocusWatcher';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
 import { PendingImports } from './PendingImports';
@@ -95,41 +97,53 @@ export function AppShell() {
   }, [location.pathname]);
 
   const overflowAreas = tree.areas.slice(BOTTOM_AREA_SLOTS);
+  // A focus screen (`/<module>/focus/…`) shows one thing: no menus, no quick add, no banners.
+  const focusing = isFocusPath(location.pathname);
 
   return (
-    <div className={styles.shell} data-rail={rail}>
+    <div className={styles.shell} data-rail={rail} data-focus={focusing ? 'true' : undefined}>
       <a href="#main" className={styles.skip}>
         {t.nav.skipToContent}
       </a>
 
-      <aside className={styles.sidebar}>
-        <Sidebar tree={tree} rail={rail} canExpand={wide} />
-      </aside>
+      {focusing ? null : (
+        <aside className={styles.sidebar}>
+          <Sidebar tree={tree} rail={rail} canExpand={wide} />
+        </aside>
+      )}
 
       <div className={styles.col}>
-        <TopBar />
-        <UpdateBanner />
-        <PendingImports />
-        {SeedBanner ? (
-          <Suspense fallback={null}>
-            <SeedBanner />
-          </Suspense>
-        ) : null}
+        {focusing ? null : (
+          <>
+            <TopBar />
+            <UpdateBanner />
+            <PendingImports />
+            {SeedBanner ? (
+              <Suspense fallback={null}>
+                <SeedBanner />
+              </Suspense>
+            ) : null}
+          </>
+        )}
         <main id="main" tabIndex={-1} className={styles.main}>
           <Outlet />
         </main>
       </div>
 
-      <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />
-
-      <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
-      <QuickAdd />
-      <ShortcutSheet />
-      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />
-      <CommandPalette />
-      <ToolsSheet />
-      <OnboardingHost />
-      <SetupHost />
+      {focusing ? null : (
+        <>
+          <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />
+          <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
+          <QuickAdd />
+          <ShortcutSheet />
+          <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />
+          <CommandPalette />
+          <ToolsSheet />
+          <OnboardingHost />
+          <SetupHost />
+        </>
+      )}
+      <FocusWatcher />
       <Toaster />
     </div>
   );

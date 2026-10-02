@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
+import { useFocusSettings } from '@/core/settings/focus';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
@@ -19,6 +21,7 @@ import {
 import { t } from '@/strings';
 import { now, today } from '@/core/time/now';
 import { undoableWithToast } from '@/core/undo/withToast';
+import { beginFocus, focusPath } from '../focus';
 import { deleteTask, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import styles from '../routes/todos.module.css';
@@ -68,6 +71,8 @@ function EditorForm({
   const [note, setNote] = useState(task.note ?? '');
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
+  const navigate = useNavigate();
+  const [focus] = useFocusSettings();
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -248,6 +253,18 @@ function EditorForm({
           {t.actions.delete}
         </Button>
         <span className={patternStyles.hstack}>
+          {isSub || task.done ? null : (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                await beginFocus(task, focus.focusMinutes);
+                onClose();
+                void navigate(focusPath(task.id));
+              }}
+            >
+              {t.focus.mode.title}
+            </Button>
+          )}
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

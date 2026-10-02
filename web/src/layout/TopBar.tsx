@@ -3,6 +3,7 @@ import { isDevBuild } from '@/core/update/buildInfo';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Icon, Wordmark } from '@/ui';
+import { FocusIndicator } from './FocusIndicator';
 import { SyncBadge } from './SyncBadge';
 import styles from './TopBar.module.css';
 
@@ -21,6 +22,7 @@ export function TopBar() {
         <span>{t.actions.search}</span>
         <kbd className={`${styles.kbd} ${styles.desktopOnly}`}>{t.palette.hint}</kbd>
       </button>
+      <FocusIndicator />
       {isDevBuild() ? (
         <span title={t.devPreview.badgeTitle} data-testid="dev-badge">
           <Badge tone="warning">{t.devPreview.badge}</Badge>

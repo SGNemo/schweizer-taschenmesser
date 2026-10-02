@@ -16,5 +16,7 @@ export async function beginFocus(
   task: { id: string; title: string } & Pick<Task, 'estimateMin'>,
   defaultMinutes: number,
 ): Promise<void> {
-  await saveFocusSession(startSession(task, focusMinutesFor(task, defaultMinutes), now()));
+  await saveFocusSession(
+    startSession(task, focusMinutesFor(task, defaultMinutes), now(), focusPath(task.id)),
+  );
 }

@@ -46,6 +46,10 @@
   .shell[data-rail='true'] {
     grid-template-columns: var(--rail-w) minmax(0, 1fr);
   }
+  /* Focus screen: no sidebar, one column. */
+  .shell[data-focus='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .col {
     display: flex;
     flex-direction: column;

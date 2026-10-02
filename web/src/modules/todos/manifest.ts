@@ -19,6 +19,13 @@ const manifest: ModuleManifest = {
       nav: true,
       component: () => import('./routes/TodosPage'),
     },
+    {
+      // Focus screen: the shell shows it without menus (`isFocusPath`).
+      path: '/todos/focus/:taskId',
+      label: t.focus.mode.title,
+      layout: 'narrow',
+      component: () => import('./routes/FocusPage'),
+    },
   ],
   dataSchema: {
     collections: {
