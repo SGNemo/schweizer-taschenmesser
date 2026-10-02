@@ -5,7 +5,7 @@ Several Claude chats work in parallel and only see each other through GitHub. Ke
 ## Running work
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Focus and attention aids (ADHD-friendly app + repo) | `feat/adhd-friendly` | home, quick capture, todos, calendar reminders, notifications, settings, docs (STATUS, CHATS, PROMPT-TEMPLATES) | phase 1 – diagnosis | – | 2026-10-02 |
+| Focus and attention aids (app + repo workflow) | `feat/adhd-friendly` | home, quick capture, todos, calendar reminders, notifications, settings, docs (STATUS, CHATS, PROMPT-TEMPLATES) | phase 1 – diagnosis | – | 2026-10-02 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
