@@ -9,3 +9,4 @@ src-tauri/icons
 src-tauri/tauri.conf.json
 src-tauri/plugins/*/permissions
 dist-e2e-seed
+src/pages/settings/inventory.*.json
