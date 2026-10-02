@@ -10,7 +10,7 @@ const manifest: ModuleManifest = {
   id: 'todos',
   name: t.todos.meta.name,
   icon: 'checklist',
-  version: 1,
+  version: 2,
   description: t.todos.meta.description,
   routes: [
     {
@@ -39,7 +39,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'wide',
   order: 20,
   area: 'plan',

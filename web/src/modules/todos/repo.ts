@@ -65,6 +65,7 @@ export async function setDone(task: Stored<Task>, done: boolean): Promise<void> 
           priority: task.priority,
           dueDate: nextDue,
           recurrence: task.recurrence,
+          estimateMin: task.estimateMin,
           note: task.note,
           order: task.order,
         },

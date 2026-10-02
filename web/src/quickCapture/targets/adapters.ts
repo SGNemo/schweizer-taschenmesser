@@ -28,6 +28,7 @@ const todos: CaptureTarget = {
   build: (f) => ({
     title: title(f),
     ...(f.date ? { dueDate: date(f.date) } : {}),
+    ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
     ...(f.time ? { note: t.quickCapture.todoTimeNote(f.time) } : {}),
   }),
 };

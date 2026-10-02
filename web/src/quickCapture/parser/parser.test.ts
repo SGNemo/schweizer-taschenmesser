@@ -237,3 +237,33 @@ describe('robustness', () => {
     }
   });
 });
+
+describe('effort estimate', () => {
+  const cases: [string, number | undefined, string][] = [
+    ['Formular ausfüllen 15 min', 15, 'Formular ausfüllen'],
+    ['Mail beantworten 5min', 5, 'Mail beantworten'],
+    ['Keller aufräumen 1 Std', 60, 'Keller aufräumen'],
+    ['Bericht schreiben 1,5 h', 90, 'Bericht schreiben'],
+    ['ca. 30 Minuten Wohnung saugen', 30, 'Wohnung saugen'],
+    ['Aufgabe: Steuer 45min morgen', 45, 'Steuer'],
+  ];
+  it.each(cases)('%s', (text, minutes, title) => {
+    const r = parse(`t ${text}`);
+    expect(r.fields.estimateMin).toBe(minutes);
+    expect(r.fields.title).toBe(title);
+  });
+
+  it('keeps relative times as times, not as an estimate', () => {
+    const r = parse('in 45 Minuten Anruf');
+    expect(r.fields.time).toBe('10:45');
+    expect(r.fields.estimateMin).toBeUndefined();
+  });
+
+  it('ignores implausible values and non-todo texts', () => {
+    expect(parse('t Sauna 0 min').fields.estimateMin).toBeUndefined();
+    expect(parse('t Sauna 999 min').fields.estimateMin).toBeUndefined();
+    const ev = parse('morgen 15 Uhr Zahnarzt 20 min');
+    expect(ev.fields.estimateMin).toBeUndefined();
+    expect(ev.fields.title).toContain('20 min');
+  });
+});

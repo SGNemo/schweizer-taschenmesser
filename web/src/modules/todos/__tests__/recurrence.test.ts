@@ -12,6 +12,21 @@ const weekly = { freq: 'weekly', interval: 1 } as const;
 const base = { listId: 'inbox', done: false, priority: 1, order: 0 };
 
 describe('recurring tasks', () => {
+  it('carries the effort estimate to the next instance but not the day plan', async () => {
+    const t = await taskRepo.create({
+      ...base,
+      title: 'Wäsche',
+      dueDate: '2026-10-05',
+      recurrence: weekly,
+      estimateMin: 15,
+      plannedFor: '2026-10-05',
+    });
+    await setDone(t, true);
+    const next = await taskRepo.get(`${t.id}:2026-10-12`);
+    expect(next?.estimateMin).toBe(15);
+    expect(next?.plannedFor).toBeUndefined();
+  });
+
   it('ticking off keeps the task and creates the next instance once', async () => {
     const t = await taskRepo.create({
       ...base,
