@@ -2,8 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
+import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
-import { relativeDayLabel, today } from '@/core/time/dates';
+import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, IconButton, TextField } from '@/ui';
@@ -11,6 +12,7 @@ import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { dueTone, groupTasks, isActionable } from '../logic';
+import { replan, waitingTasks, type PickTask } from '../next';
 import { ensureInbox, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
@@ -30,12 +32,15 @@ interface RowProps {
   /** Name of the task's list, shown in the "all" view. */
   showList?: string;
   sub?: boolean;
+  /** Calm wording: an old date is a plain date, not "Überfällig" in red. */
+  calm?: boolean;
   onToggle: (task: StoredTask, done: boolean) => void;
   onOpen: (task: StoredTask) => void;
 }
 
-function TaskRow({ task, subs, allSubs, day, showList, sub, onToggle, onOpen }: RowProps) {
+function TaskRow({ task, subs, allSubs, day, showList, sub, calm, onToggle, onOpen }: RowProps) {
   const tone = dueTone(task.dueDate, task.done, day);
+  const waiting = calm && tone === 'overdue';
   return (
     <li>
       <div className={`${styles.row} ${sub ? styles.sub : ''} ${task.done ? styles.done : ''}`}>
@@ -58,11 +63,19 @@ function TaskRow({ task, subs, allSubs, day, showList, sub, onToggle, onOpen }: 
             {task.dueDate ? (
               <span
                 className={
-                  tone === 'overdue' ? styles.overdue : tone === 'today' ? styles.today : ''
+                  waiting
+                    ? styles.waitingDate
+                    : tone === 'overdue'
+                      ? styles.overdue
+                      : tone === 'today'
+                        ? styles.today
+                        : ''
                 }
               >
-                {tone === 'overdue' ? `${t.todos.overdue}: ` : ''}
-                {relativeDayLabel(task.dueDate, day)}
+                {tone === 'overdue' && !waiting ? `${t.todos.overdue}: ` : ''}
+                {waiting
+                  ? formatDay(task.dueDate, 'EEE, d. MMM')
+                  : relativeDayLabel(task.dueDate, day)}
               </span>
             ) : null}
             {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
@@ -82,6 +95,7 @@ function TaskRow({ task, subs, allSubs, day, showList, sub, onToggle, onOpen }: 
               allSubs={[]}
               day={day}
               sub
+              calm={calm}
               onToggle={onToggle}
               onOpen={onOpen}
             />
@@ -101,6 +115,7 @@ export default function TodosPage() {
   const lists = useLiveQuery(() => listRepo.active().sortBy('order'), []);
   const tasks = useLiveQuery(() => taskRepo.active().toArray(), []);
   const [prefs] = useSettings('module.todos', settings.schema, settings.defaults);
+  const [focus] = useFocusSettings();
   const [params, setParams] = useSearchParams();
   // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
   const [title, setTitle] = useState(() => params.get('title') ?? '');
@@ -170,6 +185,17 @@ export default function TodosPage() {
   }
 
   const day = today();
+  const waiting = useMemo(
+    () => (focus.calmAttention ? waitingTasks((tasks ?? []) as unknown as PickTask[], day) : []),
+    [focus.calmAttention, tasks, day],
+  );
+
+  function replanNow() {
+    const moves = replan((tasks ?? []) as unknown as PickTask[], day, focus.planLimit);
+    void undoableWithToast(t.focus.waiting.replanned, t.focus.waiting.replanned, async () => {
+      for (const m of moves) await taskRepo.update(m.id, { dueDate: m.dueDate });
+    });
+  }
 
   return (
     <>
@@ -232,6 +258,16 @@ export default function TodosPage() {
             </Button>
           </form>
 
+          {waiting.length > 0 && selected === ALL ? (
+            <div className={styles.waiting} data-testid="todos-waiting">
+              <span className={styles.waitingText}>
+                <strong>{t.focus.waiting.text(waiting.length)}</strong>
+                <span>{t.focus.waiting.replanHint}</span>
+              </span>
+              <Button onClick={replanNow}>{t.focus.waiting.replan}</Button>
+            </div>
+          ) : null}
+
           {tasks && top.length === 0 ? (
             <EmptyState title={t.todos.empty}>
               <StartDataButton moduleId="todos" />
@@ -248,6 +284,7 @@ export default function TodosPage() {
                 showList={
                   selected === ALL || selected === SOMEDAY ? listName(task.listId) : undefined
                 }
+                calm={focus.calmAttention}
                 onToggle={toggle}
                 onOpen={setEditing}
               />

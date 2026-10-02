@@ -172,3 +172,29 @@
     align-items: start;
   }
 }
+
+/* "Wartet noch": one quiet line with the "Neu planen" action. */
+.waiting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.waitingText {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.waitingText strong {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+.waitingDate {
+  color: var(--text-muted);
+}

@@ -63,3 +63,46 @@
   font-size: var(--text-xs);
   font-variant-numeric: var(--font-num);
 }
+
+/* "Wartet noch": one calm line, unfolded on demand (native details, no motion). */
+.waiting {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  cursor: pointer;
+  list-style: none;
+}
+.summary::-webkit-details-marker {
+  display: none;
+}
+.chevron {
+  flex: none;
+  color: var(--text-3);
+}
+.waiting[open] .chevron {
+  transform: rotate(90deg);
+}
+.summaryTitle {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+}
+.summaryHint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.reassure {
+  margin: var(--space-2) 0 var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

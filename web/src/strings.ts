@@ -749,6 +749,12 @@ export const t = {
       off: 'Die Vorschläge sind ausgeschaltet.',
       offAction: 'Einstellungen öffnen',
     },
+    waiting: {
+      text: (n: number) => (n === 1 ? '1 ToDo wartet noch.' : `${n} ToDos warten noch.`),
+      replan: 'Neu planen',
+      replanHint: 'Verteilt sie auf die nächsten Tage.',
+      replanned: 'Auf die nächsten Tage verteilt.',
+    },
     plan: {
       title: 'Heute',
       count: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
@@ -1307,6 +1313,10 @@ export const t = {
       n === 1 ? '1 Kündigungsfrist läuft bald ab' : `${n} Kündigungsfristen laufen bald ab`,
     driveFull: (name: string) => `Laufwerk ${name} fast voll`,
     updateAvailable: 'Update verfügbar',
+    waiting: (n: number) => `Wartet noch · ${n}`,
+    nothingNow: 'Nichts davon muss jetzt sein.',
+    todosWaiting: (n: number) => (n === 1 ? '1 ToDo wartet' : `${n} ToDos warten`),
+    todosWaitingDetail: 'Neu planen möglich',
   },
   widgets: {
     done: 'Erledigt',
@@ -1321,6 +1331,8 @@ export const t = {
       overdue > 0 ? `${sum} offen · ${overdue} überfällig` : `${sum} offen`,
     subsSummary: (monthly: string, next?: string) =>
       next ? `${monthly} pro Monat · nächste ${next}` : `${monthly} pro Monat`,
+    todosSummaryCalm: (open: number, waiting: number) =>
+      (open === 1 ? '1 offen' : `${open} offen`) + (waiting > 0 ? ` · ${waiting} warten` : ''),
     todosSummary: (open: number, overdue: number) =>
       (open === 1 ? '1 offen' : `${open} offen`) + (overdue > 0 ? ` · ${overdue} überfällig` : ''),
     shoppingSummary: (open: number) => (open === 1 ? '1 Artikel offen' : `${open} Artikel offen`),
