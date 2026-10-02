@@ -96,6 +96,12 @@ test.describe('Home screen', () => {
     page,
   }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+    // This test is about the classic strip: switch the calm mode ("Ruhiges Jetzt wichtig") off first.
+    await ready(page, '/settings/darstellung');
+    const calm = page.getByRole('switch', { name: /Ruhiges/ });
+    await expect(calm).toHaveAttribute('aria-checked', 'true');
+    await calm.click();
+    await expect(calm).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/');
     // Nothing urgent yet: the strip is not rendered at all (no placeholder text).
     await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toHaveCount(0);
