@@ -132,11 +132,8 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
 }
-.progressRow[data-level='tight'] .hintLine {
-  color: var(--warning);
-}
 .progressRow[data-level='full'] .hintLine {
-  color: var(--danger);
+  color: var(--warning);
 }
 
 /* Checklist */
@@ -282,11 +279,9 @@
   width: 3rem;
   height: 3rem;
 }
-.ring[data-level='tight'] {
-  --ring: var(--warning);
-}
+/* Only "full" changes colour (warning, never red): tight is said in words. */
 .ring[data-level='full'] {
-  --ring: var(--danger);
+  --ring: var(--warning);
 }
 .ring svg {
   position: absolute;

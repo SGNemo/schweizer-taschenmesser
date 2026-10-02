@@ -2,10 +2,14 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useLiveAttention } from '@/core/modules/liveAttention';
 import { useUpdateStore } from '@/core/update/controller';
 
 const items = vi.hoisted(() => ({ value: [] as unknown[] | undefined }));
-vi.mock('@/core/modules/contributions', () => ({ useAttentionItems: () => items.value }));
+vi.mock('@/core/modules/contributions', async (original) => ({
+  ...(await original<typeof import('@/core/modules/contributions')>()),
+  useAttentionItems: () => items.value,
+}));
 
 import { AttentionStrip } from './AttentionStrip';
 
@@ -19,6 +23,7 @@ const draw = () =>
 describe('AttentionStrip', () => {
   beforeEach(() => {
     items.value = [];
+    useLiveAttention.setState({ bySource: {} });
     useUpdateStore.setState({ state: { phase: 'idle' } });
   });
   it('renders nothing when nothing is urgent', () => {
@@ -41,6 +46,17 @@ describe('AttentionStrip', () => {
     expect(link.getAttribute('href')).toBe('/invoices');
     expect(link.getAttribute('data-tone')).toBe('danger');
     expect(screen.getByText('897,89 €')).toBeTruthy();
+  });
+  it('merges items that widgets publish live (e.g. a full drive)', () => {
+    useLiveAttention
+      .getState()
+      .publish('disk:drives', [
+        { id: 'd', tone: 'warning', icon: 'disk', title: 'Laufwerk C:\\ fast voll', to: '/disk' },
+      ]);
+    draw();
+    expect(screen.getByRole('link', { name: /fast voll/ }).getAttribute('data-tone')).toBe(
+      'warning',
+    );
   });
   it('adds the update notice', () => {
     useUpdateStore.setState({

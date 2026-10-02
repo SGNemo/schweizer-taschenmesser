@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
-import { useAttentionItems } from '@/core/modules/contributions';
+import { rankAttention, useAttentionItems } from '@/core/modules/contributions';
+import { useLiveAttention } from '@/core/modules/liveAttention';
 import type { AttentionItem } from '@/core/modules/types';
 import { useUpdateStore } from '@/core/update/controller';
 import { t } from '@/strings';
@@ -31,7 +32,8 @@ function useCoreItems(): AttentionItem[] {
 export function AttentionStrip() {
   const items = useAttentionItems();
   const core = useCoreItems();
-  const all = [...core, ...(items ?? [])];
+  const live = useLiveAttention((s) => s.bySource);
+  const all = [...core, ...rankAttention([...(items ?? []), ...Object.values(live).flat()])];
   if (all.length === 0) return null;
   return (
     <section className={styles.strip} aria-label={t.attention.title}>

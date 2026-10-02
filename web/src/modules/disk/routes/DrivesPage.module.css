@@ -66,3 +66,16 @@
   color: var(--text-muted);
   overflow-wrap: anywhere;
 }
+.size {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+}
+.biggest {
+  margin-top: var(--space-4);
+}
+.biggestRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}

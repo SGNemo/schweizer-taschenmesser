@@ -166,51 +166,55 @@ export function createWebPlatform(): PlatformService {
     // No listening sockets in a browser: OAuth logins that need a loopback redirect are desktop-only.
     oauth: { supported: false, start: unsupported },
     // E2E builds only: a stand-in for the native server (the branch is removed from other builds).
-    localApi:
-      isE2eBuild()
-        ? createFakeLocalApi()
-        : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    localApi: isE2eBuild()
+      ? createFakeLocalApi()
+      : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
     // E2E builds only: a stand-in for the native pipe server (the extension tests call into it).
-    vaultBridge:
-      isE2eBuild()
-        ? createFakeVaultBridge()
-        : {
-            supported: false,
-            start: unsupported,
-            stop: async () => undefined,
-            register: unsupported,
-            unregister: unsupported,
-            status: unsupported,
-          },
+    vaultBridge: isE2eBuild()
+      ? createFakeVaultBridge()
+      : {
+          supported: false,
+          start: unsupported,
+          stop: async () => undefined,
+          register: unsupported,
+          unregister: unsupported,
+          status: unsupported,
+        },
     // E2E builds only: an invented folder tree instead of the native scan.
-    disk:
-      isE2eBuild()
-        ? createFakeDisk()
-        : {
-            supported: false,
-            listDrives: unsupported,
-            startScan: unsupported,
-            cancelScan: unsupported,
-            pauseScan: unsupported,
-            dropScan: unsupported,
-            children: unsupported,
-            node: unsupported,
-            query: unsupported,
-            knownPlaces: unsupported,
-            nodePath: unsupported,
-            reveal: unsupported,
-            canDelete: unsupported,
-            planDelete: unsupported,
-            runDelete: unsupported,
-            cancelDelete: unsupported,
-            findDuplicates: unsupported,
-            cancelDuplicates: unsupported,
-          },
+    disk: isE2eBuild()
+      ? createFakeDisk()
+      : {
+          supported: false,
+          listDrives: unsupported,
+          startScan: unsupported,
+          cancelScan: unsupported,
+          pauseScan: unsupported,
+          dropScan: unsupported,
+          children: unsupported,
+          node: unsupported,
+          query: unsupported,
+          knownPlaces: unsupported,
+          placeSizes: unsupported,
+          recycleSize: unsupported,
+          nodePath: unsupported,
+          reveal: unsupported,
+          canDelete: unsupported,
+          planDelete: unsupported,
+          runDelete: unsupported,
+          cancelDelete: unsupported,
+          findDuplicates: unsupported,
+          cancelDuplicates: unsupported,
+        },
     // E2E builds only: invented facts instead of the native reading.
-    system:
-      isE2eBuild()
-        ? createFakeSystem()
-        : { supported: false, info: unsupported, processes: unsupported },
+    system: isE2eBuild()
+      ? createFakeSystem()
+      : {
+          supported: false,
+          info: unsupported,
+          processes: unsupported,
+          diskIo: unsupported,
+          openTaskManager: unsupported,
+        },
     desktop: webDesktop,
     share: webShare,
     lifecycle: { onBackground: onPageHidden },

@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import type { SystemInfo } from '@/core/platform/system';
 import { t } from '@/strings';
-import { EmptyState, Progress, Skeleton } from '@/ui';
+import { EmptyState, Ring, Skeleton, StatusWidget } from '@/ui';
 import { percent } from '../format';
+import styles from './SystemWidget.module.css';
 
 const REFRESH_MS = 5000;
 
-/** CPU, memory and battery in one glance; reads every few seconds while the page is visible. */
+/** CPU and memory as small rings plus the battery; reads every few seconds while the page is visible. */
 export default function SystemWidget() {
   const [info, setInfo] = useState<SystemInfo | null>(null);
   const [failed, setFailed] = useState(false);
@@ -36,14 +36,22 @@ export default function SystemWidget() {
   const bat = info.battery?.percent;
   return (
     <div>
-      <Progress value={cpu} max={100} label={`${w.cpu} ${cpu} %`} />
-      <p>{`${w.cpu} ${cpu} %`}</p>
-      <Progress value={ram} max={100} label={`${w.ram} ${ram} %`} />
-      <p>{`${w.ram} ${ram} %`}</p>
+      <div className={styles.rings}>
+        <div className={styles.ring}>
+          <Ring percent={cpu} level={cpu >= 90 ? 'full' : 'ok'} label={w.cpu} />
+          <span>{w.cpu}</span>
+        </div>
+        <div className={styles.ring}>
+          <Ring percent={ram} level={ram >= 90 ? 'full' : 'ok'} label={w.ram} />
+          <span>{w.ram}</span>
+        </div>
+      </div>
       {bat != null ? (
-        <p>{`${w.battery} ${Math.round(bat)} %${info.battery?.charging ? ` · ${w.charging}` : ''}`}</p>
+        <StatusWidget
+          icon="battery"
+          state={`${w.battery} ${Math.round(bat)} %${info.battery?.charging ? ` · ${w.charging}` : ''}`}
+        />
       ) : null}
-      <Link to="/disk?tab=system">{w.open}</Link>
     </div>
   );
 }

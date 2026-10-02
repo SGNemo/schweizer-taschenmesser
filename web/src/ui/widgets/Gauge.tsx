@@ -41,7 +41,7 @@ export function GaugeList({
                 value={e.percent}
                 max={100}
                 label={e.name}
-                tone={e.level === 'ok' ? undefined : e.level === 'tight' ? 'warning' : 'danger'}
+                tone={e.level === 'full' ? 'warning' : undefined}
               />
               <p className={styles.sub}>{e.detail}</p>
               {size === 'l' && e.hint ? <p className={styles.hintLine}>{e.hint}</p> : null}

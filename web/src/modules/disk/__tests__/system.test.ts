@@ -27,14 +27,18 @@ describe('the e2e stand-in', () => {
     const info = await s.info();
     expect(Object.keys(info).sort()).toEqual([
       'battery',
+      'bootTimeSecs',
       'cpu',
       'gpus',
+      'hardware',
       'memory',
       'network',
       'os',
       'uptimeSecs',
     ]);
     expect(JSON.stringify(info)).not.toMatch(/mac|serial|hostname/i);
+    expect(JSON.stringify(info.gpus)).not.toMatch(/basic render/i);
+    expect(info.gpus.filter((g) => g.active)).toHaveLength(1);
     expect((await s.processes()).map((p) => p.memoryBytes)).toEqual(
       [...(await s.processes()).map((p) => p.memoryBytes)].sort((a, b) => b - a),
     );
