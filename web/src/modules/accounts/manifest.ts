@@ -48,6 +48,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 160,
+  area: 'vault',
   setupSteps,
   contributions: { onboarding: noOnboarding, services: () => import('./service') },
 };

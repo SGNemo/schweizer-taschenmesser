@@ -9,7 +9,7 @@ import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, type IconName } from '@/ui';
 import { AnswerView } from './assistant/AnswerView';
 import { useAssistant, useSearchHits } from './assistant/useAssistant';
-import { useModuleNavItems } from './useNavItems';
+import { useModuleNavItems, useNavTree } from './useNavItems';
 import styles from './CommandPalette.module.css';
 import { loadDevCommands } from './devTools';
 import answerStyles from './assistant/assistant.module.css';
@@ -52,6 +52,7 @@ type Option =
 function PaletteBody({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate();
   const moduleItems = useModuleNavItems();
+  const tree = useNavTree();
   const config = useAiConfig();
   const { state, submit, reset } = useAssistant();
   const [query, setQuery] = useState('');
@@ -69,13 +70,19 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     const go = (to: string) => () => void navigate(to);
     return [
       { id: 'dashboard', label: t.nav.home, icon: 'home', run: go('/') },
+      ...tree.areas.map((a) => ({
+        id: `area-${a.id}`,
+        label: a.label,
+        icon: a.icon,
+        run: go(a.to),
+      })),
       ...moduleItems.map((i) => ({ id: i.to, label: i.label, icon: i.icon, run: go(i.to) })),
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
       ...devCommands,
     ];
-  }, [navigate, moduleItems, openSetup, devCommands]);
+  }, [navigate, moduleItems, tree, openSetup, devCommands]);
 
   const hits = useSearchHits(query);
   const hasModel = config ? isAiConfigured(config) : false;

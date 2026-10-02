@@ -42,6 +42,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   order: 140,
+  area: 'household',
   contributions: {
     onboarding: noOnboarding,
     quickAdd: [{ id: 'list', label: 'Packliste', to: '/packing?new=1' }],

@@ -23,7 +23,7 @@ test.describe('Home screen', () => {
   test('navigation separates the home entry from the module list', async ({ page }, info) => {
     test.skip(info.project.name === 'pixel-7', 'the labelled module list is the desktop sidebar');
     await ready(page, '/todos');
-    await expect(page.getByRole('heading', { name: 'Module', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Bereiche', exact: true })).toBeVisible();
     await expect(mainNav(page).getByRole('link', { name: 'Übersicht' })).toBeVisible();
   });
 

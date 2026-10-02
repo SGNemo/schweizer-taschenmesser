@@ -133,8 +133,8 @@ for (const vp of VIEWPORTS) {
         }
       }
       if (vp.width >= 1920) {
-        // `full` layout: not limited to a centred column.
-        expect(box!.width).toBeGreaterThan(1100);
+        // `full` layout: not limited to a centred column (the agenda panel takes ~30 rem of it).
+        expect(box!.width).toBeGreaterThan(1000);
       }
     });
   });

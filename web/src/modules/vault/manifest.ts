@@ -39,6 +39,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 150,
+  area: 'vault',
   contributions: {
     onboarding: noOnboarding,
     quickAdd: [{ id: 'document', label: 'Dokument', to: '/vault?new=1' }],

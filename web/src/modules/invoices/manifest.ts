@@ -42,6 +42,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: ['finance'] },
   layout: 'wide',
   order: 50,
+  area: 'money',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'invoice', label: 'Rechnung', to: '/invoices?new=1' }],

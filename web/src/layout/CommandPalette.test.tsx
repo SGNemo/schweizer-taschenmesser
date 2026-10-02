@@ -49,6 +49,20 @@ describe('command palette', () => {
     expect(useUiStore.getState().paletteOpen).toBe(false);
   });
 
+  it('offers the navigation areas next to the modules', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'geld');
+    await waitFor(() => expect(screen.getAllByRole('option')[0]).toHaveTextContent('Geld'));
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('where')).toHaveTextContent('/geld');
+  });
+
   it('offers the assistant when nothing matches', async () => {
     const user = userEvent.setup();
     render(

@@ -135,9 +135,9 @@ Decided per module in [`ROUND-7-MODULES.md`](ROUND-7-MODULES.md) § 1–2 (table
 Internal identifiers (`io.github.sgnemo.taschenmesser`, storage keys `tm-*`, DB name, backup ids, package names), security and signing, vault crypto, AI privacy (no user data to models, `accounts` without `aiSchema`/widget entries), local API rules, data envelope and `createRepo`, module isolation (areas are navigation only). The Disk block list, typed confirmation and recycle-bin-first stay as they are.
 
 ## 13. Open items (not decided, implementation may propose)
-- ~~Merging Erinnerungen into Kalender and Merkliste into Notizen~~ – answered by the module review: Erinnerungen → Kalender in package 5; Merkliste stays (see § 3).
-- Exact favourites UI (star in sidebar hover vs. settings list only); default favourites on a fresh install.
+- ~~Merging Erinnerungen into Kalender and Merkliste into Notizen~~ – **decided:** Erinnerungen → Kalender in package 5, Merkliste stays its own module (see § 3).
+- ~~Favourites UI~~ – **decided (PR 2):** star on sidebar items (hover/focus) plus a switch list in Einstellungen; default on a fresh install: Kalender, ToDos, Finanzen.
 - Papierkorb page scope (which collections, 30-day purge vs. manual).
 - Werkzeuge: whether the sheet becomes an area page on the phone.
 - Phone week view = 3 days vs. 1 day with horizontal swipe.
-- `docs/design/` is not exempt in `web/scripts/check-docs.mjs` (this file exceeds the 3 000-token budget, warning only); `docs/CHATS.md` has no row for this branch – both deliberately untouched (brief: only `docs/design/**`); decide at merge time.
+- ~~`docs/design/` budget warning~~ – **done:** `docs/design/` and `docs/product/` are exempt in `web/scripts/check-docs.mjs`.

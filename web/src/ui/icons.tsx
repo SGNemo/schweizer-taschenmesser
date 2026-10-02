@@ -69,6 +69,10 @@ import {
   Clock,
   Package,
   Gift,
+  Star,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 
 const ICONS = {
@@ -141,6 +145,10 @@ const ICONS = {
   play: Play,
   pause: Pause,
   reset: RotateCcw,
+  star: Star,
+  chevronRight: ChevronRight,
+  panelClose: PanelLeftClose,
+  panelOpen: PanelLeftOpen,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
