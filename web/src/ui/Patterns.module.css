@@ -507,3 +507,36 @@ button.chip[aria-pressed='true'] {
   max-height: 16rem;
   object-fit: contain;
 }
+
+/* Swipe rows (touch): the row slides over a coloured action layer. */
+.swipeable {
+  position: relative;
+  overflow: hidden;
+}
+.swipeable > .row {
+  position: relative;
+  background: var(--surface);
+  touch-action: pan-y;
+}
+.rows > .swipeable:hover > .row,
+.rows > .swipeable:focus-within > .row {
+  background: var(--surface-2);
+}
+.reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  font-weight: var(--weight-semibold);
+}
+.revealRight {
+  justify-content: flex-start;
+  background: var(--success-soft);
+  color: var(--success);
+}
+.revealLeft {
+  justify-content: flex-end;
+  background: var(--accent-soft);
+  color: var(--accent);
+}

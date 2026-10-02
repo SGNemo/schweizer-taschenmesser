@@ -121,7 +121,7 @@ export function createShortcutHandler(ctx: ShortcutContext): (e: Key) => void {
         moveRow(key === 'ArrowDown' ? 1 : -1);
         return;
       }
-      case 'e':
+      case 'e': {
         // The row's own edit hook, else its main button (which opens the editor).
         const item = focusedRowItem();
         (
@@ -129,6 +129,7 @@ export function createShortcutHandler(ctx: ShortcutContext): (e: Key) => void {
           item?.querySelector<HTMLElement>('button[data-row]')
         )?.click();
         return;
+      }
       case ' ': {
         const tick = focusedRowItem()?.querySelector<HTMLElement>('[data-row-tick]');
         if (!tick) return;

@@ -27,5 +27,8 @@ export {
   Toolbar,
   patternStyles,
 } from './Patterns';
+export { SelectionBar } from './SelectionBar';
 export { useMediaQuery } from './useMediaQuery';
+export { useSelection } from './useSelection';
+export { SWIPE_PX, useSwipeRow } from './useSwipeRow';
 export { WidgetList, type WidgetEntry } from './WidgetList';

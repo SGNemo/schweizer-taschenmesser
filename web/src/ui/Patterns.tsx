@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import { t } from '@/strings';
 import { Checkbox } from './Fields';
+import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
 
@@ -127,6 +128,10 @@ export function ItemRow({
   selected,
   onSelectChange,
   done,
+  onSwipeRight,
+  swipeRightLabel,
+  onSwipeLeft,
+  swipeLeftLabel,
   className,
   children,
 }: {
@@ -143,6 +148,11 @@ export function ItemRow({
   onSelectChange?: (selected: boolean, extend: boolean) => void;
   /** Done entries are struck through and quiet. */
   done?: boolean;
+  /** Touch swipes (phone): right = done/paid, left = move/snooze; the labels name the revealed action. */
+  onSwipeRight?: () => void;
+  swipeRightLabel?: string;
+  onSwipeLeft?: () => void;
+  swipeLeftLabel?: string;
   className?: string;
   children?: ReactNode;
 }) {
@@ -152,10 +162,12 @@ export function ItemRow({
       {meta ? <span className={styles.muted}>{meta}</span> : null}
     </>
   );
+  const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
   return (
     <li
       className={[
         styles.item,
+        swipe.enabled ? styles.swipeable : '',
         selected ? styles.selected : '',
         done ? styles.done : '',
         className ?? '',
@@ -163,7 +175,15 @@ export function ItemRow({
         .filter(Boolean)
         .join(' ')}
     >
-      <div className={styles.row}>
+      {swipe.enabled && swipe.dx !== 0 ? (
+        <div
+          className={`${styles.reveal} ${swipe.dx > 0 ? styles.revealRight : styles.revealLeft}`}
+          aria-hidden="true"
+        >
+          {swipe.dx > 0 ? swipeRightLabel : swipeLeftLabel}
+        </div>
+      ) : null}
+      <div className={styles.row} style={swipe.style} {...swipe.bind}>
         {selectable ? (
           <Checkbox
             label={t.ui.selectRow}

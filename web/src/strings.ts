@@ -56,6 +56,8 @@ export const t = {
     undone: 'Rückgängig gemacht.',
     undoFailed: 'Das ließ sich nicht mehr rückgängig machen.',
     nothingToUndo: 'Nichts zum Rückgängigmachen.',
+    selection: 'Auswahl',
+    selected: (n: number) => (n === 1 ? '1 ausgewählt' : `${n} ausgewählt`),
   },
   shortcuts: {
     title: 'Tastenkürzel',
