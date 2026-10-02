@@ -11,4 +11,4 @@ export { Ring, type RingLevel } from './Ring';
 export { Sparkline } from './Sparkline';
 export { StateBadge } from './StateBadge';
 export { WidgetBody, type WidgetEmpty } from './WidgetBody';
-export { WidgetSizeContext, useWidgetSize, rowsFor } from './size';
+export { WidgetSizeContext, useWidgetSize, rowsFor, type WidgetSizeName } from './size';

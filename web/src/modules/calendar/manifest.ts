@@ -44,6 +44,7 @@ const manifest: ModuleManifest = {
   order: 10,
   area: 'plan',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: onboarding,
     quickAdd: [{ id: 'event', label: 'Termin', to: '/calendar?new=1' }],
     calendarItems: () => import('./calendar'),

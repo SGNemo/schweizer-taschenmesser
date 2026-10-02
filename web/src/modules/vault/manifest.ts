@@ -41,6 +41,7 @@ const manifest: ModuleManifest = {
   order: 150,
   area: 'vault',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: noOnboarding,
     quickAdd: [{ id: 'document', label: 'Dokument', to: '/vault?new=1' }],
     calendarItems: () => import('./calendar'),

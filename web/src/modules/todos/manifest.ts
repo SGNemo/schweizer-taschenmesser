@@ -38,6 +38,7 @@ const manifest: ModuleManifest = {
   order: 20,
   area: 'plan',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: onboarding,
     quickAdd: [{ id: 'task', label: 'ToDo', to: '/todos?new=1' }],
     calendarItems: () => import('./calendar'),
