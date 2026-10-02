@@ -1185,18 +1185,6 @@ export const t = {
       },
     },
   },
-  reminders: {
-    title: 'Erinnerungen',
-    add: 'Erinnerung hinzufügen',
-    edit: 'Erinnerung bearbeiten',
-    empty: 'Noch keine Erinnerungen.',
-    firstDate: 'Erster Termin',
-    next: 'Nächste',
-    ended: 'Beendet',
-    paused: 'Pausiert',
-    active: 'Aktiv',
-    widgetEmpty: 'Keine anstehenden Erinnerungen.',
-  },
   notifications: {
     title: 'Benachrichtigungen',
     intro:
@@ -1326,7 +1314,6 @@ export const t = {
     invoices: 'Rechnung anlegen',
     notes: 'Notiz schreiben',
     pantry: 'Vorrat hinzufügen',
-    reminders: 'Erinnerung anlegen',
     subscriptions: 'Abo anlegen',
     todos: 'Aufgabe anlegen',
     people: 'Person anlegen',

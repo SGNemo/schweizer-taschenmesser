@@ -14,8 +14,8 @@ describe('full text search', () => {
   it('finds entries across modules, ignoring case and diacritics', async () => {
     const hits = await searchEntries('MIETE ueberweisen', ctxFor());
     expect(hits.map((h) => h.title)).toEqual(['Miete überweisen']);
-    expect(hits[0]!.subtitle).toBe('Erinnerungen · Erinnerung');
-    expect(hits[0]!.to).toBe('/reminders');
+    expect(hits[0]!.subtitle).toBe('Kalender · Termin');
+    expect(hits[0]!.to).toBe('/calendar');
   });
 
   it('matches prefixes and small typos', async () => {

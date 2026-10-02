@@ -173,8 +173,8 @@ describe('assistant pipeline', () => {
   it('turns create_entry into a confirmation, saving nothing', async () => {
     const provider = fakeProvider([
       toolCall('create_entry', {
-        module: 'reminders',
-        collection: 'reminder',
+        module: 'calendar',
+        collection: 'event',
         data: {
           title: 'Miete',
           startDate: '2026-10-01',
@@ -182,14 +182,14 @@ describe('assistant pipeline', () => {
         },
       }),
     ]);
-    const before = await db.table('reminders_reminder').count();
+    const before = await db.table('calendar_event').count();
     const res = await ask('Erinnere mich jeden 1. an Miete', deps({ provider }));
     expect(res).toMatchObject({
       ok: true,
       tier: 'model',
-      result: { kind: 'create', prepared: { label: 'Erinnerung' } },
+      result: { kind: 'create', prepared: { label: 'Termin' } },
     });
-    expect(await db.table('reminders_reminder').count()).toBe(before);
+    expect(await db.table('calendar_event').count()).toBe(before);
   });
 
   it('falls back to a search (with a hint) when no model is configured', async () => {

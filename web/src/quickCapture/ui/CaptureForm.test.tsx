@@ -8,7 +8,7 @@ import { setNow } from '@/core/time/now';
 import { t } from '@/strings';
 import { CaptureForm } from './CaptureForm';
 
-// Wednesday, 2026-09-30, 10:00. Todos, calendar, reminders and finance are on by default.
+// Wednesday, 2026-09-30, 10:00. Todos, calendar and finance are on by default.
 beforeEach(async () => {
   setNow(() => new Date(2026, 8, 30, 10, 0).getTime());
   await clearAll();

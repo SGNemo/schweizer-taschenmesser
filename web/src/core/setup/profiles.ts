@@ -15,12 +15,12 @@ export interface Profile {
 export const PROFILES: readonly Profile[] = [
   {
     id: 'everyday',
-    modules: ['calendar', 'todos', 'reminders', 'lists', 'notes', 'people'],
+    modules: ['calendar', 'todos', 'lists', 'notes', 'people'],
     tools: ['calc', 'timer', 'units', 'dates', 'qr'],
   },
   {
     id: 'finance',
-    modules: ['finance', 'budgets', 'subscriptions', 'invoices', 'vault', 'calendar', 'reminders'],
+    modules: ['finance', 'budgets', 'subscriptions', 'invoices', 'vault', 'calendar'],
     tools: ['calc', 'currency'],
   },
   {

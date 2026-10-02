@@ -47,12 +47,16 @@ const calendar: CaptureTarget = {
 
 const reminders: CaptureTarget = {
   type: 'reminder',
-  moduleId: 'reminders',
-  collection: 'reminder',
+  // A reminder is a calendar event of the kind "reminder" that notifies at its time (since 0.7.0).
+  moduleId: 'calendar',
+  collection: 'event',
   build: (f, ctx) => ({
     title: title(f),
+    kind: 'reminder',
+    allDay: false,
     startDate: date(f.date ?? ctx.today),
-    ...(f.time ? { time: f.time } : {}),
+    startTime: f.time ?? '09:00',
+    notify: { minutesBefore: 0, enabled: true },
     ...(f.recurrence ? { recurrence: f.recurrence } : {}),
   }),
 };

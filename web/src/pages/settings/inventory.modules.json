@@ -41,6 +41,16 @@
         "type": "select",
         "label": "Standardansicht",
         "default": "month"
+      },
+      "defaultReminderTime": {
+        "type": "text",
+        "label": "Standard-Uhrzeit für neue Erinnerungen",
+        "default": "09:00"
+      },
+      "allDayNotifyTime": {
+        "type": "text",
+        "label": "Uhrzeit der Benachrichtigung bei ganztägigen Terminen",
+        "default": "09:00"
       }
     }
   },
@@ -115,16 +125,6 @@
       "remindTime": {
         "type": "text",
         "label": "Uhrzeit der Erinnerung",
-        "default": "09:00"
-      }
-    }
-  },
-  "reminders": {
-    "scope": "module.reminders",
-    "fields": {
-      "defaultTime": {
-        "type": "text",
-        "label": "Standard-Uhrzeit für neue Erinnerungen",
         "default": "09:00"
       }
     }

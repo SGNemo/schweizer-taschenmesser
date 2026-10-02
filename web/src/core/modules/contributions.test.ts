@@ -62,9 +62,7 @@ describe('collectCalendarItems', () => {
 /** Integration of the real core modules: events, task due dates and reminders share one calendar. */
 describe('calendar aggregation across the core modules', () => {
   beforeEach(async () => {
-    await Promise.all(
-      ['calendar_event', 'todos_task', 'reminders_reminder'].map((t) => db.table(t).clear()),
-    );
+    await Promise.all(['calendar_event', 'todos_task'].map((t) => db.table(t).clear()));
   });
 
   it('shows events, due tasks and reminders together', async () => {
@@ -85,17 +83,18 @@ describe('calendar aggregation across the core modules', () => {
       order: 0,
       dueDate: '2026-09-29',
     });
-    await table('reminders', 'reminder').create({
+    await table('calendar', 'event').create({
       title: 'Miete',
+      kind: 'reminder',
+      allDay: false,
       startDate: '2026-09-29',
-      time: '08:00',
-      active: true,
+      startTime: '08:00',
+      notify: { minutesBefore: 0, enabled: true },
     });
 
     const items = await collectCalendarItems({ from: '2026-09-29', to: '2026-09-29' }, [
       by('calendar'),
       by('todos'),
-      by('reminders'),
     ]);
     expect(items.map((i) => [i.kind, i.title, i.time ?? 'ganztägig'])).toEqual([
       ['task', 'Steuer', 'ganztägig'],
