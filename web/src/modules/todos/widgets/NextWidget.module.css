@@ -5,10 +5,6 @@
   padding-inline-start: var(--space-4);
   border-inline-start: 3px solid var(--accent);
 }
-.label {
-  font-size: var(--text-meta);
-  color: var(--text-3);
-}
 .title {
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);

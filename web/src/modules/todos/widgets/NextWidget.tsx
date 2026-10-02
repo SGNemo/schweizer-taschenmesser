@@ -76,7 +76,6 @@ export default function NextWidget() {
       {settings.nextOne ? (
         next ? (
           <div className={styles.card} data-testid="next-card">
-            <span className={styles.label}>{t.focus.next.title}</span>
             <span className={styles.title}>{next.title}</span>
             <span className={styles.meta}>
               {[
