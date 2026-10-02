@@ -42,6 +42,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   order: 110,
+  area: 'plan',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'habit', label: 'Gewohnheit', to: '/habits?new=1' }],

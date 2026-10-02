@@ -41,6 +41,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: ['finance'] },
   layout: 'wide',
   order: 60,
+  area: 'money',
   contributions: {
     onboarding: onboarding,
     quickAdd: [{ id: 'subscription', label: 'Abo', to: '/subscriptions?new=1' }],

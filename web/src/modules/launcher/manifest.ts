@@ -47,6 +47,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 170,
+  area: 'knowledge',
   contributions: {
     onboarding,
     quickAdd: [{ id: 'link', label: 'Link hinzufügen', to: '/launcher?new=1' }],

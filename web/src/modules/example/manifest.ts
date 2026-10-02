@@ -40,6 +40,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   seed: { version: 1, dependsOn: [] },
   order: 5,
+  area: 'knowledge',
   // Reference module: visible in dev builds and E2E (VITE_INCLUDE_EXAMPLE=true) only.
   devOnly: true,
   contributions: {

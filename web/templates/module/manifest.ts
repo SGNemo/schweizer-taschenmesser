@@ -39,6 +39,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   seed: { version: 1, dependsOn: [] },
   // layout: 'content', // page width: 'narrow' | 'content' | 'wide' | 'full' (default 'content')
+  area: 'knowledge', // navigation area: plan | money | household | knowledge | vault | system
   // order: 50, // lower = earlier in navigation and library (default 100)
   contributions: {
     // Start-data importers (see modules/todos/importer.ts); `noOnboarding` = nothing to import.

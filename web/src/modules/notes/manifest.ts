@@ -39,6 +39,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 80,
+  area: 'knowledge',
   contributions: {
     onboarding: noOnboarding,
     quickAdd: [{ id: 'note', label: 'Notiz', to: '/notes?new=1' }],
