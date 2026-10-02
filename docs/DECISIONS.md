@@ -60,7 +60,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 2026-10-01 **Design "Klar 2" tokens (Phase 1):** cool palette, dark first, shadows level 1/2, radii 8/12/16/20, 2 px focus outline; `--*-soft` names kept as `color-mix`; text size/density device-local. [Detail](decisions/ui-brand.md).
 - 2026-10-01 **Navigation areas (Klar 2, Phase 2):** `manifest.area` is navigation only (module paths unchanged, area routes redirect to the last used module); favourites ≤ 5 in `_settings` scope `nav`; sidebar 248 px / rail 76 px; one "+ Neu", FAB phone-only. [Detail](decisions/ui-shell.md).
 - 2026-10-02 **Widget types, red only for overdue.** [Detail](decisions/ui-brand.md)
-- 2026-10-02 **0.4/0.5:** retired modules; LWW-faithful **app migrations**; `lists`, links = bookmarks → [modules](decisions/modules.md)
+- 2026-10-02 **0.4–0.6:** retired modules; LWW-faithful **app migrations**; `lists`, `people`, Unterlagen → [modules](decisions/modules.md)
 - 2026-10-02 **Shared components (Klar 2, Phase 3):** compatible APIs, new look everywhere; flat `ItemRow`, sheets on phones, undo journal in core (`undoable`, modules opt in), keyboard shortcuts. [Detail](decisions/ui-components.md).
 - 2026-09-30 **Licence MIT.**
 - 2026-09-30 **App is called Nemo; every internal identifier keeps its old value** (bundle id, packages, keystore alias, updater key, IndexedDB `taschenmesser`, `tm-*` keys, backup format ids, crypto AAD, package names, MCP name/env) – a changed id detaches Android updates/data and breaks decryption; `brand-ids.test.ts` pins them; new exports are `nemo-backup-…`, old files still import.
