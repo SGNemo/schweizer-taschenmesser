@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
 import { useSettings } from '@/core/settings/settings';
 import { relativeDayLabel, today } from '@/core/time/dates';
+import { undoableWithToast } from '@/core/undo/withToast';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, IconButton, TextField } from '@/ui';
@@ -90,7 +91,10 @@ function TaskRow({ task, subs, allSubs, day, showList, sub, onToggle, onOpen }: 
 }
 
 function toggle(task: StoredTask, done: boolean) {
-  void taskRepo.update(task.id, { done, completedAt: done ? now() : undefined });
+  const message = done ? t.todos.markedDone : t.todos.markedOpen;
+  void undoableWithToast(message, message, () =>
+    taskRepo.update(task.id, { done, completedAt: done ? now() : undefined }),
+  );
 }
 
 export default function TodosPage() {

@@ -124,7 +124,10 @@
   background: var(--text);
   color: var(--bg);
   box-shadow: var(--shadow-2);
-  animation: rise var(--dur) var(--ease-out);
+  animation: rise var(--dur-slow) var(--ease-out);
+}
+.toastText {
+  flex: 1;
 }
 .toastAction {
   background: none;
@@ -139,7 +142,7 @@
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(24px);
   }
 }
 

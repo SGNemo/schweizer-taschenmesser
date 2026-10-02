@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button } from './Button';
@@ -99,22 +99,44 @@ export function Fab({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-const TOAST_MS = 5000;
+const TOAST_MS = 6000;
 
 export function Toaster() {
   const toasts = useUiStore((s) => s.toasts);
   const dismiss = useUiStore((s) => s.dismissToast);
+  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 
+  // One timer per toast: a new toast never restarts the countdown of an older one.
   useEffect(() => {
-    const timers = toasts.map((x) => setTimeout(() => dismiss(x.id), TOAST_MS));
-    return () => timers.forEach(clearTimeout);
+    const running = timers.current;
+    for (const x of toasts) {
+      if (!running.has(x.id))
+        running.set(
+          x.id,
+          setTimeout(() => dismiss(x.id), TOAST_MS),
+        );
+    }
+    for (const [id, handle] of running) {
+      if (!toasts.some((x) => x.id === id)) {
+        clearTimeout(handle);
+        running.delete(id);
+      }
+    }
   }, [toasts, dismiss]);
+  useEffect(() => {
+    const running = timers.current;
+    return () => {
+      running.forEach(clearTimeout);
+      running.clear();
+    };
+  }, []);
 
   return (
     <div className={styles.toasts} role="status" aria-live="polite">
       {toasts.map((x) => (
         <div key={x.id} className={styles.toast}>
-          <span>{x.message}</span>
+          {x.icon ? <Icon name={x.icon} size={18} /> : null}
+          <span className={styles.toastText}>{x.message}</span>
           {x.action ? (
             <button
               type="button"
