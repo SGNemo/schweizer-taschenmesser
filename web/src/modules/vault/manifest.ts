@@ -1,7 +1,7 @@
-import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
+import { onboarding } from './onboarding';
 import { documentSchema } from './schema';
 import { settings } from './settings';
 import { t } from '@/strings';
@@ -10,7 +10,7 @@ const manifest: ModuleManifest = {
   id: 'vault',
   name: t.vault.meta.name,
   icon: 'files',
-  version: 1,
+  version: 2,
   description: t.vault.meta.description,
   routes: [
     {
@@ -42,10 +42,11 @@ const manifest: ModuleManifest = {
   area: 'vault',
   contributions: {
     attention: () => import('./attention'),
-    onboarding: noOnboarding,
+    onboarding,
     quickAdd: [{ id: 'document', label: t.vault.meta.quickAdd, to: '/vault?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    services: () => import('./services'),
   },
 };
 

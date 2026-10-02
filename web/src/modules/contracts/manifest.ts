@@ -1,50 +1,31 @@
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
-import { aiSchema } from './ai';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
-import { onboarding } from './onboarding';
 import { contractSchema } from './schema';
-import { settings } from './settings';
-
+/**
+ * RETIRED (0.6.0): Verträge und Garantien sind jetzt Unterlagen (Modul Unterlagen).
+ * The collection stays in the schema so sync, backup and older devices keep working; an app
+ * migration copies its rows forward (`core/db/appMigrationSteps.ts`). Tables follow in package 6.
+ */
 const manifest: ModuleManifest = {
   id: 'contracts',
   name: 'Verträge & Garantien',
   icon: 'file',
   version: 1,
   description:
-    'Verträge, Versicherungen und Garantien mit Laufzeitende und Kündigungsfrist – im Kalender und mit Erinnerung, bevor eine Frist verstreicht.',
-  routes: [
-    {
-      path: '/contracts',
-      label: 'Verträge',
-      nav: true,
-      component: () => import('./routes/ContractsPage'),
+    'Stillgelegt: Verträge und Garantien sind jetzt Unterlagen – Modul Unterlagen. Die Daten wurden übernommen.',
+  retired: true,
+  routes: [],
+  dataSchema: {
+    collections: {
+      contract: { schema: contractSchema, indexes: ['endDate'] },
     },
-  ],
-  dataSchema: { collections: { contract: { schema: contractSchema, indexes: ['endDate'] } } },
-  migrations,
-  widgets: [
-    {
-      id: 'expiring',
-      title: 'Fristen & Ablauf',
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/ExpiringWidget'),
-    },
-  ],
-  aiSchema,
-  settings,
-  defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'wide',
-  order: 120,
-  area: 'money',
-  contributions: {
-    attention: () => import('./attention'),
-    onboarding,
-    quickAdd: [{ id: 'contract', label: 'Vertrag', to: '/contracts?new=1' }],
-    calendarItems: () => import('./calendar'),
-    notifications: () => import('./notifications'),
   },
+  migrations,
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
+  defaultEnabled: false,
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

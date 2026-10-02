@@ -11,12 +11,18 @@ export async function saveDocument(
   data: VaultDocument,
   file?: File | 'remove',
 ): Promise<string> {
+  // `expiresOn` is read-only legacy: an edit moves the value to `endDate`.
+  const base: VaultDocument = {
+    ...data,
+    endDate: data.endDate ?? data.expiresOn,
+    expiresOn: undefined,
+  };
   const meta: VaultDocument =
     file instanceof File
-      ? { ...data, fileName: file.name, fileType: file.type || undefined, fileSize: file.size }
+      ? { ...base, fileName: file.name, fileType: file.type || undefined, fileSize: file.size }
       : file === 'remove'
-        ? { ...data, fileName: undefined, fileType: undefined, fileSize: undefined }
-        : data;
+        ? { ...base, fileName: undefined, fileType: undefined, fileSize: undefined }
+        : base;
   const saved = id ? await documentRepo.update(id, meta) : await documentRepo.create(meta);
   if (file instanceof File) await putBlob(saved.id, file);
   else if (file === 'remove') await deleteBlob(saved.id);

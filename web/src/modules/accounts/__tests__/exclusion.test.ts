@@ -72,15 +72,14 @@ describe('module definition', () => {
     expect(manifest.aiSchema).toBeUndefined();
   });
 
-  it('is registered, off by default, and one of only three active manifests without aiSchema', () => {
+  it('is registered, off by default, and one of only two active manifests without aiSchema', () => {
     expect(allManifests.map((m) => m.id)).toContain('accounts');
     expect(visibleManifests.find((m) => m.id === 'accounts')?.defaultEnabled).toBe(false);
-    // `disk` (scan results and live system facts, never stored) and `gifts` (surprises) have none by design; retired modules have none by definition. A new
+    // `disk` (scan results and live system facts, never stored) has none by design; retired modules have none by definition. A new
     // module without one must be a decision.
     expect(allManifests.filter((m) => !m.aiSchema && !m.retired).map((m) => m.id)).toEqual([
       'accounts',
       'disk',
-      'gifts',
     ]);
     expect(allManifests.filter((m) => m.retired).every((m) => !m.aiSchema)).toBe(true);
   });

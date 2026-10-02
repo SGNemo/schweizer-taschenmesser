@@ -11,12 +11,10 @@ const MODULES = [
   'bookmarks',
   'notes',
   'lists',
-  'birthdays',
-  'contracts',
   'budgets',
   'vault',
   'pantry',
-  'gifts',
+  'people',
 ];
 
 /** Row counts of all tables whose name starts with a module prefix (raw IndexedDB). */

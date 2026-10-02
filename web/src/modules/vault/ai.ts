@@ -2,19 +2,22 @@ import type { ModuleAiSchema } from '@/core/modules/types';
 
 export const aiSchema: ModuleAiSchema = {
   description:
-    'Dokumente (Ausweis, Versicherung, Steuer …) mit Ablaufdatum; Dateien sind nicht abfragbar',
+    'Unterlagen (Ausweis, Versicherung, Vertrag, Garantie …) mit Ende/Ablauf und Kündigungsfrist; Dateien sind nicht abfragbar',
   collections: {
     document: {
-      label: 'Dokument',
+      label: 'Unterlage',
       fields: {
         title: 'text',
-        category: 'enum:identity|insurance|contract|tax|health|other',
+        category: 'enum:identity|insurance|contract|warranty|tax|health|other',
+        provider: 'text',
+        startDate: 'date',
+        endDate: 'date',
+        noticeDays: 'num',
         note: 'text',
-        expiresOn: 'date',
       },
-      dateField: 'expiresOn',
+      dateField: 'endDate',
       titleField: 'title',
-      searchable: ['title', 'note', 'fileName'],
+      searchable: ['title', 'provider', 'note', 'fileName'],
     },
   },
 };

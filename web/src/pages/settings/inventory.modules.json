@@ -34,21 +34,6 @@
       }
     }
   },
-  "birthdays": {
-    "scope": "module.birthdays",
-    "fields": {
-      "remindDaysBefore": {
-        "type": "number",
-        "label": "Erinnerung vor dem Geburtstag (Tage)",
-        "default": 0
-      },
-      "remindTime": {
-        "type": "text",
-        "label": "Uhrzeit der Erinnerung",
-        "default": "09:00"
-      }
-    }
-  },
   "calendar": {
     "scope": "module.calendar",
     "fields": {
@@ -56,21 +41,6 @@
         "type": "select",
         "label": "Standardansicht",
         "default": "month"
-      }
-    }
-  },
-  "contracts": {
-    "scope": "module.contracts",
-    "fields": {
-      "remindDaysBefore": {
-        "type": "number",
-        "label": "Erinnerung vor Kündigungsfrist bzw. Ablauf (Tage)",
-        "default": 14
-      },
-      "remindTime": {
-        "type": "text",
-        "label": "Uhrzeit der Erinnerung",
-        "default": "09:00"
       }
     }
   },
@@ -134,6 +104,21 @@
       }
     }
   },
+  "people": {
+    "scope": "module.people",
+    "fields": {
+      "remindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor dem Geburtstag (Tage)",
+        "default": 0
+      },
+      "remindTime": {
+        "type": "text",
+        "label": "Uhrzeit der Erinnerung",
+        "default": "09:00"
+      }
+    }
+  },
   "reminders": {
     "scope": "module.reminders",
     "fields": {
@@ -174,8 +159,13 @@
     "fields": {
       "remindDaysBefore": {
         "type": "number",
-        "label": "Erinnerung vor Ablauf eines Dokuments (Tage)",
+        "label": "Erinnerung vor Ablauf (Tage)",
         "default": 30
+      },
+      "remindDaysBeforeDeadline": {
+        "type": "number",
+        "label": "Erinnerung vor Kündigungsfrist (Tage)",
+        "default": 14
       },
       "remindTime": {
         "type": "text",

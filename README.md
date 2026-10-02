@@ -42,11 +42,11 @@ Module schaltest du in der **Modul-Bibliothek** einzeln ein. Alles funktioniert 
 
 | Bereich | Module |
 |---|---|
-| Planen | **Kalender** (Monat, Woche, Tag, Termine anderer Module), **ToDos** (Listen, Prioritäten, Unteraufgaben), **Erinnerungen** (auch bei geschlossener App), **Geburtstage** |
-| Geld | **Finanzen** (Konten, Buchungen, Kategorien, Kontoauszug-Import), **Rechnungen**, **Abos**, **Budgets & Sparziele**, **Verträge & Garantien** (Kündigungsfristen) |
-| Merken | **Notizen**, **Merkliste** und **Lesezeichen** (Links, Lesen, Ansehen, Orte), **Listen** (Einkauf, Packlisten, Checklisten), **Dokumente** (Ablaufdaten) |
+| Planen | **Kalender** (Monat, Woche, Tag, Termine anderer Module), **ToDos** (Listen, Prioritäten, Unteraufgaben), **Erinnerungen** (auch bei geschlossener App), **Personen** (Geburtstage und Geschenke) |
+| Geld | **Finanzen** (Konten, Buchungen, Kategorien, Kontoauszug-Import), **Rechnungen**, **Abos**, **Budgets & Sparziele** |
+| Merken | **Notizen**, **Merkliste** und **Lesezeichen** (Links, Lesen, Ansehen, Orte), **Listen** (Einkauf, Packlisten, Checklisten), **Unterlagen** (Ausweise, Verträge, Garantien mit Fristen) |
 | Sicher | **Accounts**: Passwort-Tresor mit Argon2id/AES-256, TOTP, Generator, Biometrie. Für KI, Suche und Import unsichtbar |
-| Haushalt & PC | **Vorräte** (Ablaufdaten, Nachkaufen), **Geschenke**, **Dieser PC** (nur Windows-App: Platz analysieren, sicher aufräumen, Systeminfo) |
+| Haushalt & PC | **Vorräte** (Ablaufdaten, Nachkaufen), **Dieser PC** (nur Windows-App: Platz analysieren, sicher aufräumen, Systeminfo) |
 | Dazu | **Werkzeuge** (Rechner, Prozent, Währung, Timer, QR, Einheiten, JSON, Hash …), **Schnell erfassen** (Tastenkürzel, Tray, Teilen-Menü) |
 
 Dazu eine **Befehlspalette** (Strg+K) mit Suche über alle Module und einem **KI-Assistenten**, der einfache Fragen selbst beantwortet („Was steht heute an?“) und komplexere optional an einen Anbieter deiner Wahl gibt, ohne deine Daten zu senden. Details: [Module und Werkzeuge](docs/user/module.md), [Suche und KI](docs/user/ki-assistent.md).

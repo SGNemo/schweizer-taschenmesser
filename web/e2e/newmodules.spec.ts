@@ -92,40 +92,44 @@ test('pantry: without the lists module the hand-over says so and sends nothing',
   await expect(page.getByText('an die Einkaufsliste gesendet')).toHaveCount(0);
 });
 
-test('gift ideas: per person, status filter and what was spent', async ({ page }) => {
-  await enable(page, ['gifts']);
-  await page.goto('/gifts');
-  await expect(page.getByText('Noch keine Ideen')).toBeVisible();
-  await page.getByRole('button', { name: 'Idee hinzufügen' }).first().click();
-  const dialog = page.getByRole('dialog', { name: 'Idee hinzufügen' });
+test('gift ideas: per person, status and what was spent', async ({ page }) => {
+  await enable(page, ['people']);
+  await page.goto('/people');
+  await expect(page.getByText('Noch keine Personen')).toBeVisible();
+  await page.getByRole('button', { name: 'Person hinzufügen' }).first().click();
+  const person = page.getByRole('dialog', { name: 'Person hinzufügen' });
+  await person.getByLabel('Name', { exact: true }).fill('Anna');
+  await person.getByRole('button', { name: 'Speichern' }).click();
+  await expect(person).toBeHidden();
+  await page.getByRole('button', { name: /^Anna(?! per WhatsApp)/ }).click();
+  await expect(page.getByRole('heading', { name: 'Anna' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Geschenkidee hinzufügen' }).first().click();
+  const dialog = page.getByRole('dialog', { name: 'Geschenkidee hinzufügen' });
   await dialog.getByLabel('Idee', { exact: true }).fill('Kochbuch');
-  await dialog.getByLabel('Für wen').fill('Anna');
   await dialog.getByLabel('Anlass (optional)').fill('Geburtstag');
   await dialog.getByLabel('Preis in € (optional)').fill('19,90');
   await dialog.getByLabel('Link (optional)').fill('javascript:alert(1)');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toBeHidden();
 
-  const anna = page.getByRole('region', { name: 'Anna' });
-  await expect(anna).toContainText('Kochbuch');
-  await expect(anna).toContainText('Geburtstag · 19,90');
+  const gifts = page.getByRole('list', { name: 'Geschenke' });
+  await expect(gifts).toContainText('Kochbuch');
+  await expect(gifts).toContainText('Geburtstag · 19,90');
   // A script link is dropped, not stored as a clickable link.
-  await expect(anna.getByRole('button', { name: /Link öffnen/ })).toHaveCount(0);
-  await expect(page.getByTestId('gifts-total')).toContainText('gekauft für 0,00');
+  await expect(gifts.getByRole('button', { name: /Link öffnen/ })).toHaveCount(0);
+  await expect(page.getByTestId('gifts-total')).toHaveCount(0);
 
-  await anna.getByRole('button', { name: /Kochbuch/ }).click();
+  await gifts.getByRole('button', { name: /Kochbuch/ }).click();
   await page
-    .getByRole('dialog', { name: 'Idee bearbeiten' })
+    .getByRole('dialog', { name: 'Geschenkidee bearbeiten' })
     .getByLabel('Stand')
     .selectOption('bought');
   await page
-    .getByRole('dialog', { name: 'Idee bearbeiten' })
+    .getByRole('dialog', { name: 'Geschenkidee bearbeiten' })
     .getByRole('button', { name: 'Speichern' })
     .click();
-  await expect(page.getByTestId('gifts-total')).toContainText('1 Ideen, davon gekauft für 19,90');
-
-  await page.getByRole('button', { name: 'Verschenkt', exact: true }).click();
-  await expect(page.getByText('Nichts in dieser Ansicht.')).toBeVisible();
-  await page.getByRole('button', { name: 'Gekauft', exact: true }).click();
-  await expect(anna).toContainText('Kochbuch');
+  await expect(page.getByTestId('gifts-total')).toContainText(
+    '1 Geschenke gekauft oder verschenkt für 19,90',
+  );
 });

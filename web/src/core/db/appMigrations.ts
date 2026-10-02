@@ -49,10 +49,21 @@ export interface AppMigration {
   source: string;
   /** Target table; a step is skipped silently when it is not part of the schema. */
   target: string;
+  /**
+   * Reads what the mapping needs from other tables once per run (e.g. gift → person by name);
+   * the result is handed to `map` and `ensure` as `ctx`.
+   */
+  prepare?(database: TaschenmesserDB, rows: readonly SyncRow[]): Promise<unknown>;
   /** Maps one source row; `undefined` skips it. */
-  map(row: SyncRow): MappedRow | undefined;
-  /** Rows the step needs first, e.g. a default list in another table (made up, stamped with `BASE_HLC`). */
-  ensure?: () => { table: string; id: string; fields: Record<string, unknown> }[];
+  map(row: SyncRow, ctx?: unknown): MappedRow | undefined;
+  /**
+   * Rows the step needs first, e.g. a default list or a person in another table (made up, stamped
+   * with `BASE_HLC`). Must depend on the source rows only, so every device makes up the same rows.
+   */
+  ensure?: (
+    rows: readonly SyncRow[],
+    ctx?: unknown,
+  ) => { table: string; id: string; fields: Record<string, unknown> }[];
 }
 
 export interface MigrationReport {
@@ -76,8 +87,13 @@ function targetSchema(target: string) {
 }
 
 /** The field ops that a step produces for one source row. */
-export function opsFor(step: AppMigration, source: SyncRow, stamp?: string): FieldOp[] | undefined {
-  const mapped = step.map(source);
+export function opsFor(
+  step: AppMigration,
+  source: SyncRow,
+  stamp?: string,
+  ctx?: unknown,
+): FieldOp[] | undefined {
+  const mapped = step.map(source, ctx);
   const schema = targetSchema(step.target);
   if (!mapped || !schema) return undefined;
   const parsed = schema.safeParse(mapped.fields);
@@ -103,9 +119,15 @@ export function opsFor(step: AppMigration, source: SyncRow, stamp?: string): Fie
   return ops;
 }
 
-function ensureOps(step: AppMigration, known: ReadonlySet<string>, stamp?: string): FieldOp[] {
+function ensureOps(
+  step: AppMigration,
+  rows: readonly SyncRow[],
+  ctx: unknown,
+  known: ReadonlySet<string>,
+  stamp?: string,
+): FieldOp[] {
   if (!step.ensure) return [];
-  return step.ensure().flatMap((row) => {
+  return step.ensure(rows, ctx).flatMap((row) => {
     const schema = known.has(row.table) ? targetSchema(row.table) : undefined;
     const parsed = schema?.safeParse(row.fields);
     if (!parsed?.success) return [];
@@ -145,9 +167,10 @@ export async function runStep(
   const rows = await database.table<SyncRow, string>(step.source).toArray();
   report.scanned = rows.length;
   if (rows.length === 0) return report;
-  const ops: FieldOp[] = ensureOps(step, known, fresh?.());
+  const ctx = await step.prepare?.(database, rows);
+  const ops: FieldOp[] = ensureOps(step, rows, ctx, known, fresh?.());
   for (const row of rows) {
-    const rowOps = opsFor(step, row, fresh?.());
+    const rowOps = opsFor(step, row, fresh?.(), ctx);
     if (rowOps) ops.push(...rowOps);
     else report.skipped++;
   }
