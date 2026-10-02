@@ -1117,7 +1117,7 @@ export const t = {
     reminders: 'Erinnerung anlegen',
     subscriptions: 'Abo anlegen',
     todos: 'Aufgabe anlegen',
-    vault: 'Dokument hinzufügen',
+    vault: 'Unterlage hinzufügen',
     calendar: 'Termin anlegen',
     finance: 'Buchung anlegen',
   },
@@ -2435,34 +2435,49 @@ export const t = {
 
   vault: {
     meta: {
-      name: 'Dokumente',
+      name: 'Unterlagen',
       description:
-        'Wichtige Dokumente mit Kategorie, Notiz und Ablaufdatum (z. B. Ausweis) und angehängter Datei. Dateien bleiben nur auf diesem Gerät.',
-      route: 'Dokumente',
-      widget: 'Dokumente: Ablauf',
-      quickAdd: 'Dokument',
+        'Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei – im Kalender und mit Erinnerung, bevor eine Frist verstreicht. Dateien bleiben nur auf diesem Gerät.',
+      route: 'Unterlagen',
+      widget: 'Fristen & Ablauf',
+      quickAdd: 'Unterlage',
       settings: {
-        remindDaysBefore: 'Erinnerung vor Ablauf eines Dokuments (Tage)',
+        remindDaysBefore: 'Erinnerung vor Ablauf (Tage)',
+        remindDaysBeforeDeadline: 'Erinnerung vor Kündigungsfrist (Tage)',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
       },
     },
-    title: 'Dokumente',
-    add: 'Dokument hinzufügen',
-    edit: 'Dokument bearbeiten',
+    title: 'Unterlagen',
+    add: 'Unterlage hinzufügen',
+    edit: 'Unterlage bearbeiten',
     category: 'Kategorie',
     allCategories: 'Alle',
     categories: {
       identity: 'Ausweise',
       insurance: 'Versicherung',
       contract: 'Verträge',
+      warranty: 'Garantien',
       tax: 'Steuer',
       health: 'Gesundheit',
       other: 'Sonstiges',
     } as Record<string, string>,
-    expiresOn: 'Läuft ab am',
-    expiresTitle: (title: string) => `Läuft ab: ${title}`,
-    remindBody: (date: string) => `Gültig bis ${date.split('-').reverse().join('.')}`,
+    provider: 'Anbieter',
+    startDate: 'Beginn',
+    endDate: 'Ende / Ablauf',
+    noticeDays: 'Kündigungsfrist (Tage vor Ende)',
+    noticeHint: 'Leer lassen, wenn es keine Frist gibt (z. B. bei Ausweisen oder Garantien).',
+    invalid: 'Bitte die Angaben prüfen (das Ende darf nicht vor dem Beginn liegen).',
+    endLabel: 'Ende',
+    deadlineLabel: 'Kündigen bis',
+    endsOn: (title: string, category: string) =>
+      category === 'warranty'
+        ? `Garantie endet: ${title}`
+        : category === 'contract' || category === 'insurance'
+          ? `Vertragsende: ${title}`
+          : `Läuft ab: ${title}`,
+    cancelBy: (title: string) => `Kündigungsfrist: ${title}`,
+    remindBody: (date: string) => `Am ${date.split('-').reverse().join('.')}`,
     file: 'Datei',
     localOnly:
       'Dateien bleiben nur auf diesem Gerät: Sie werden weder synchronisiert noch ins Backup geschrieben. Titel, Ablaufdatum und Notizen werden wie üblich synchronisiert.',
@@ -2470,12 +2485,17 @@ export const t = {
     removeFile: 'Datei entfernen',
     tooLarge: (max: string) => `Die Datei ist zu groß (höchstens ${max}).`,
     download: 'Herunterladen',
-    search: 'Dokumente durchsuchen',
-    expired: 'Abgelaufen',
-    soon: 'Läuft bald ab',
-    empty: 'Noch keine Dokumente.',
+    search: 'Unterlagen durchsuchen',
+    status: {
+      expired: 'Abgelaufen',
+      'act-now': 'Jetzt kündigen',
+      soon: 'Bald',
+      ok: '',
+      'open-ended': '',
+    } as Record<string, string>,
+    empty: 'Noch keine Unterlagen.',
     emptyFiltered: 'Nichts gefunden.',
-    widgetEmpty: 'Nichts läuft bald ab.',
+    widgetEmpty: 'Keine Fristen in Sicht.',
   },
   accounts: {
     meta: {

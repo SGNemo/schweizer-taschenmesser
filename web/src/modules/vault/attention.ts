@@ -1,14 +1,30 @@
 import type { AttentionSource } from '@/core/modules/types';
 import { t } from '@/strings';
-import { expiryState } from './logic';
+import { statusOf } from './logic';
 import { documentRepo } from './repo';
 
-/** Expired documents (danger) and documents that expire soon (warning). Titles are never shown here. */
+/**
+ * Cancellation deadlines within a week (accent), expired documents (danger) and documents that
+ * expire soon (warning). Titles are never shown here.
+ */
 const source: AttentionSource = async ({ today }) => {
-  const states = (await documentRepo.active().toArray()).map((d) => expiryState(d, today));
+  const states = (await documentRepo.active().toArray()).map((d) => statusOf(d, today));
+  const act = states.filter((s) => s === 'act-now').length;
   const expired = states.filter((s) => s === 'expired').length;
   const soon = states.filter((s) => s === 'soon').length;
   return [
+    ...(act
+      ? [
+          {
+            id: 'vault:act',
+            tone: 'accent' as const,
+            icon: 'file' as const,
+            title: t.attention.contractsAct(act),
+            to: '/vault',
+            rank: 7,
+          },
+        ]
+      : []),
     ...(expired
       ? [
           {

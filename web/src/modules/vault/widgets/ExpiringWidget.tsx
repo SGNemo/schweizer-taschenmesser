@@ -3,27 +3,33 @@ import { today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
 import { DueList } from '@/ui';
-import { expiryState, sortDocuments } from '../logic';
+import { nextRelevantDate, sortDocuments, statusOf } from '../logic';
 import { documentRepo } from '../repo';
 
+/** Deadlines and expiries that need attention: act now, soon and already expired. */
 export default function ExpiringWidget() {
   const docs = useLiveQuery(() => documentRepo.active().toArray(), []);
   const day = today();
-  const list = sortDocuments(docs ?? []).filter((d) => {
-    const s = expiryState(d, day);
-    return s === 'soon' || s === 'expired';
+  const urgent = sortDocuments(docs ?? [], day).filter((d) => {
+    const s = statusOf(d, day);
+    return s === 'act-now' || s === 'soon' || s === 'expired';
   });
-  const expired = list.filter((d) => expiryState(d, day) === 'expired').length;
+  const act = urgent.filter((d) => statusOf(d, day) === 'act-now').length;
+  const expired = urgent.filter((d) => statusOf(d, day) === 'expired').length;
   return (
     <DueList
       loading={!docs}
       empty={t.vault.widgetEmpty}
       emptyAction={{ label: t.homeEmpty.vault, to: '/vault?new=1' }}
       summary={
-        list.length > 0 ? t.widgets.expirySummary(expired, list.length - expired) : undefined
+        act > 0
+          ? t.widgets.contractsSummary(act)
+          : urgent.length > 0
+            ? t.widgets.expirySummary(expired, urgent.length - expired)
+            : undefined
       }
-      entries={list.map((d) => {
-        const s = dueState(d.expiresOn!, day, { soonDays: 60 });
+      entries={urgent.map((d) => {
+        const s = dueState(nextRelevantDate(d, day)!, day, { soonDays: 60 });
         return { key: d.id, title: d.title, tone: s.tone, label: s.label };
       })}
       moreLabel={t.widgets.more}
