@@ -93,10 +93,10 @@
 .fab:active {
   transform: scale(0.94);
 }
+/* Desktop captures through "+ Neu" in the top bar; the FAB is a phone control. */
 @media (min-width: 900px) {
   .fab {
-    bottom: var(--space-5);
-    right: var(--space-5);
+    display: none;
   }
 }
 .toasts {

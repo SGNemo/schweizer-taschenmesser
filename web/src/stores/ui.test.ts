@@ -23,3 +23,28 @@ describe('reading comfort settings', () => {
     expect(localStorage.getItem('tm-text-size')).toBeNull();
   });
 });
+
+describe('sidebar state', () => {
+  afterEach(() => {
+    useUiStore.getState().setSidebar('wide');
+    useUiStore.setState({ closedAreas: [] });
+    localStorage.clear();
+  });
+
+  it('the rail choice persists and the default removes the key', () => {
+    useUiStore.getState().setSidebar('narrow');
+    expect(useUiStore.getState().sidebar).toBe('narrow');
+    expect(localStorage.getItem('tm-sidebar')).toBe('narrow');
+    useUiStore.getState().setSidebar('wide');
+    expect(localStorage.getItem('tm-sidebar')).toBeNull();
+  });
+
+  it('folded areas toggle and persist', () => {
+    useUiStore.getState().toggleAreaOpen('money');
+    expect(useUiStore.getState().closedAreas).toEqual(['money']);
+    expect(JSON.parse(localStorage.getItem('tm-nav-closed')!)).toEqual(['money']);
+    useUiStore.getState().toggleAreaOpen('money');
+    expect(useUiStore.getState().closedAreas).toEqual([]);
+    expect(localStorage.getItem('tm-nav-closed')).toBeNull();
+  });
+});

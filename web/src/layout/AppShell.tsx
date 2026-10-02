@@ -1,11 +1,12 @@
 import { Suspense, useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { OnboardingHost } from '@/core/importer/host';
 import { isDevBuild } from '@/core/update/buildInfo';
-import { Badge, Fab, Icon, IconButton, Toaster, Wordmark } from '@/ui';
+import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
+import { Fab, Toaster, useMediaQuery } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
@@ -13,35 +14,22 @@ import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
 import { SeedBanner } from './devTools';
 import { QuickAdd } from './QuickAdd';
-import { SyncBadge } from './SyncBadge';
+import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
+import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
-import { useModuleNavItems, type NavItem } from './useNavItems';
+import { useNavTree } from './useNavItems';
 import styles from './AppShell.module.css';
-
-const BOTTOM_MODULE_SLOTS = 3;
-
-function SideLink({ item, home }: { item: NavItem; home?: boolean }) {
-  return (
-    <li>
-      <NavLink
-        to={item.to}
-        className={home ? `${styles.navLink} ${styles.homeLink}` : styles.navLink}
-        end={item.to === '/'}
-      >
-        <Icon name={item.icon} />
-        {item.label}
-      </NavLink>
-    </li>
-  );
-}
 
 let devNoticeShown = false;
 
 export function AppShell() {
-  const moduleItems = useModuleNavItems();
+  const tree = useNavTree();
+  const sidebar = useUiStore((s) => s.sidebar);
+  const wide = useMediaQuery('(min-width: 1200px)');
+  const rail = sidebar === 'narrow' || !wide;
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
-  const openTools = useUiStore((s) => s.openTools);
 
   // Dev-Preview builds say so once per start (a module flag survives StrictMode's double effect).
   useEffect(() => {
@@ -83,76 +71,34 @@ export function AppShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the first render of the shell
   }, []);
 
+  // The module visited last in an area is where the area page leads next time.
+  useEffect(() => {
+    const area = areaOfPath(tree, location.pathname);
+    const item = area?.items.find(
+      (i) => location.pathname === i.to || location.pathname.startsWith(`${i.to}/`),
+    );
+    if (area && item) rememberAreaModule(area.id, item.to);
+  }, [tree, location.pathname]);
+
   // Move focus to the main region on navigation (screen readers / keyboard users).
   useEffect(() => {
     document.getElementById('main')?.focus({ preventScroll: true });
   }, [location.pathname]);
 
-  const top: NavItem = { to: '/', label: t.nav.home, icon: 'home' };
-  const library: NavItem = { to: '/library', label: t.nav.library, icon: 'grid' };
-  const settings: NavItem = { to: '/settings', label: t.nav.settings, icon: 'settings' };
-  const bottomItems = [top, ...moduleItems.slice(0, BOTTOM_MODULE_SLOTS)];
-  const overflow = [...moduleItems.slice(BOTTOM_MODULE_SLOTS), library, settings];
+  const overflowAreas = tree.areas.slice(BOTTOM_AREA_SLOTS);
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-rail={rail}>
       <a href="#main" className={styles.skip}>
         {t.nav.skipToContent}
       </a>
 
       <aside className={styles.sidebar}>
-        <a
-          className={`${styles.brand} ${styles.brandLink}`}
-          href="/"
-          aria-label={t.nav.homeAria}
-          onClick={(e) => {
-            e.preventDefault();
-            void navigate('/');
-          }}
-        >
-          <Wordmark height={44} title={t.appName} />
-        </a>
-        <nav aria-label={t.nav.main} className={styles.sidebarNav}>
-          <ul className={styles.navList}>
-            <SideLink item={top} home />
-          </ul>
-          <h2 className={styles.navHeading}>{t.nav.modules}</h2>
-          <ul className={styles.navList}>
-            {moduleItems.map((i) => (
-              <SideLink key={i.to} item={i} />
-            ))}
-          </ul>
-        </nav>
-        <ul className={styles.navList}>
-          <SideLink item={library} />
-          <SideLink item={settings} />
-        </ul>
+        <Sidebar tree={tree} rail={rail} canExpand={wide} />
       </aside>
 
       <div className={styles.col}>
-        <header className={styles.topbar}>
-          <Link
-            to="/"
-            className={`${styles.brand} ${styles.brandLink} ${styles.hideDesktop}`}
-            aria-label={t.nav.homeAria}
-          >
-            <Wordmark height={32} title={t.appName} />
-          </Link>
-          <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
-            <Icon name="search" size={18} />
-            <span>{t.actions.search}</span>
-            <kbd className={`${styles.kbd} ${styles.hideMobile}`}>{t.palette.hint}</kbd>
-          </button>
-          {isDevBuild() ? (
-            <span title={t.devPreview.badgeTitle} data-testid="dev-badge">
-              <Badge tone="warning">{t.devPreview.badge}</Badge>
-            </span>
-          ) : null}
-          <IconButton label={t.tools.open} onClick={() => openTools()}>
-            <Icon name="wrench" />
-          </IconButton>
-          <SyncBadge />
-        </header>
+        <TopBar />
         <UpdateBanner />
         <PendingImports />
         {SeedBanner ? (
@@ -165,22 +111,11 @@ export function AppShell() {
         </main>
       </div>
 
-      <nav aria-label={t.nav.main} className={styles.bottom}>
-        {bottomItems.map((i) => (
-          <NavLink key={i.to} to={i.to} end={i.to === '/'} className={styles.bottomLink}>
-            <Icon name={i.icon} />
-            {i.label}
-          </NavLink>
-        ))}
-        <button type="button" className={styles.bottomLink} onClick={() => setMoreOpen(true)}>
-          <Icon name="more" />
-          {t.nav.more}
-        </button>
-      </nav>
+      <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />
 
       <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
       <QuickAdd />
-      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} items={overflow} />
+      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />
       <CommandPalette />
       <ToolsSheet />
       <OnboardingHost />

@@ -28,6 +28,10 @@ export const TEXT_SIZES = ['normal', 'large'] as const;
 export type TextSizeChoice = (typeof TEXT_SIZES)[number];
 export const DENSITIES = ['normal', 'compact'] as const;
 export type DensityChoice = (typeof DENSITIES)[number];
+export const SIDEBARS = ['wide', 'narrow'] as const;
+export type SidebarChoice = (typeof SIDEBARS)[number];
+const SIDEBAR_KEY = 'tm-sidebar';
+const AREAS_CLOSED_KEY = 'tm-nav-closed';
 const TEXT_SIZE_KEY = 'tm-text-size';
 const DENSITY_KEY = 'tm-density';
 
@@ -46,6 +50,15 @@ function storeChoice(key: string, value: string, isDefault: boolean): void {
     else localStorage.setItem(key, value);
   } catch {
     // Storage may be blocked; the choice still applies for this session.
+  }
+}
+
+function readClosedAreas(): string[] {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(AREAS_CLOSED_KEY) ?? '[]');
+    return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
   }
 }
 
@@ -107,6 +120,12 @@ interface UiState {
   setTextSize(size: TextSizeChoice): void;
   density: DensityChoice;
   setDensity(density: DensityChoice): void;
+  /** Desktop sidebar: wide (248 px) or rail (76 px); below 1200 px the rail is automatic. */
+  sidebar: SidebarChoice;
+  setSidebar(sidebar: SidebarChoice): void;
+  /** Sidebar areas the user folded (device-local). */
+  closedAreas: string[];
+  toggleAreaOpen(area: string): void;
   paletteOpen: boolean;
   setPaletteOpen(open: boolean): void;
   quickAddOpen: boolean;
@@ -160,6 +179,21 @@ export const useUiStore = create<UiState>((set) => ({
     storeChoice(DENSITY_KEY, density, density === 'normal');
     applyDensity(density);
     set({ density });
+  },
+  sidebar: readChoice(SIDEBAR_KEY, SIDEBARS),
+  setSidebar(sidebar) {
+    storeChoice(SIDEBAR_KEY, sidebar, sidebar === 'wide');
+    set({ sidebar });
+  },
+  closedAreas: readClosedAreas(),
+  toggleAreaOpen(area) {
+    set((s) => {
+      const closedAreas = s.closedAreas.includes(area)
+        ? s.closedAreas.filter((a) => a !== area)
+        : [...s.closedAreas, area];
+      storeChoice(AREAS_CLOSED_KEY, JSON.stringify(closedAreas), closedAreas.length === 0);
+      return { closedAreas };
+    });
   },
   paletteOpen: false,
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),

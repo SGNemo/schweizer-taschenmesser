@@ -10,7 +10,8 @@ export const AREA_PATHS: Record<AreaId, string> = {
   household: '/haushalt',
   knowledge: '/wissen',
   vault: '/tresor',
-  system: '/system',
+  // Not `/system`: the System module owns that path.
+  system: '/geraet',
 };
 
 const AREA_ICONS: Record<AreaId, IconName> = {

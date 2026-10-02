@@ -233,11 +233,16 @@ button.chip[aria-pressed='true'] {
 }
 .splitView {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(20rem, 24vw, 30rem);
+  grid-template-columns: minmax(0, 1fr) clamp(22rem, 30%, 30rem);
   gap: var(--space-5);
   align-items: stretch;
   flex: 1 0 auto;
   min-height: 0;
+}
+@media (min-width: 2200px) {
+  .splitView {
+    grid-template-columns: minmax(0, 1fr) 32rem;
+  }
 }
 .splitMain {
   min-width: 0;
