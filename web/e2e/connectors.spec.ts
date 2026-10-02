@@ -68,7 +68,7 @@ test.describe('connectors', () => {
   test('settings list the connectors; Google needs the desktop app, ICS explains the missing proxy', async ({
     page,
   }) => {
-    await ready(page, '/settings');
+    await ready(page, '/settings/verbindungen');
     const google = page.getByTestId('connector-google');
     await expect(google).toBeVisible();
     await expect(google.getByText('Nicht verbunden')).toBeVisible();
@@ -88,7 +88,7 @@ test.describe('connectors', () => {
     page,
   }) => {
     await useMockSyncServer(page);
-    await ready(page, '/settings');
+    await ready(page, '/settings/verbindungen');
     const ics = page.getByTestId('connector-ics');
     await ics.getByLabel('Name (optional)').fill('Verein');
     await ics.getByLabel('Adresse des Kalenders').fill('webcal://cal.example.test/verein.ics');
@@ -118,7 +118,7 @@ test.describe('connectors', () => {
     await expect(page.getByTestId('ai-answer')).toContainText('Vereinssitzung');
 
     // Removing the subscription removes its events again.
-    await page.goto('/settings');
+    await page.goto('/settings/verbindungen');
     await page
       .getByTestId('connector-ics')
       .getByRole('button', { name: /entfernen/ })
@@ -181,10 +181,9 @@ test.describe('bank statement', () => {
     // The finance page creates its default account after the title is shown; the statement import
     // needs one ("Lege zuerst ein Konto an."), so do not leave before it exists.
     await waitForRows(page, 'finance_account');
-    await page.goto('/settings');
+    await page.goto('/settings/module');
     await page
-      .getByRole('listitem')
-      .filter({ hasText: 'Finanzen' })
+      .locator('section[aria-labelledby="module-finance"]')
       .getByRole('button', { name: 'Startdaten einrichten' })
       .click();
     const dialog = page.getByRole('dialog', { name: /Startdaten/ });
@@ -200,10 +199,9 @@ test.describe('bank statement', () => {
     await expect(page.getByText('Filmfreund GmbH').first()).toBeVisible();
     await expect(page.getByText('Beispiel AG').first()).toBeVisible();
 
-    await page.goto('/settings');
+    await page.goto('/settings/module');
     await page
-      .getByRole('listitem')
-      .filter({ hasText: 'Finanzen' })
+      .locator('section[aria-labelledby="module-finance"]')
       .getByRole('button', { name: 'Startdaten einrichten' })
       .click();
     const again = page.getByRole('dialog', { name: /Startdaten/ });

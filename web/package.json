@@ -20,6 +20,7 @@
     "gen:module": "node scripts/gen-module.mjs",
     "new:module": "node scripts/gen-module.mjs",
     "check:modules": "node scripts/check-modules.mjs",
+    "gen:licenses": "node scripts/gen-licenses.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "db:bump": "node scripts/db-bump.mjs",
     "build:e2e": "vite build --mode e2e",

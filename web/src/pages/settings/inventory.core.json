@@ -1,0 +1,64 @@
+{
+  "localStorage (device-local, stores/ui.ts)": {
+    "tm-theme": "system",
+    "tm-accent": "orange",
+    "tm-text-size": "normal",
+    "tm-density": "normal",
+    "tm-sidebar": "wide",
+    "tm-nav-closed": "[]",
+    "tm-quick-capture": "hotkey, vaultHotkey, closeToTray, autostart, clipboard"
+  },
+  "_settings scope core": {
+    "displayName": "",
+    "weekStart": "mon"
+  },
+  "_settings scope nav": {
+    "favourites": [
+      "calendar",
+      "todos",
+      "finance"
+    ]
+  },
+  "_settings scope tools": {
+    "enabled": "per tool",
+    "order": "per tool"
+  },
+  "_settings scope quickCapture": {
+    "defaultType": "todo"
+  },
+  "_meta": {
+    "update.prefs": {
+      "channel": "stable",
+      "auto": true
+    },
+    "update.lastCheckAt": "timestamp",
+    "update.dismissedVersion": "version",
+    "setup.state": "checklistHidden false, status, steps",
+    "backup.auto.config": {
+      "enabled": false,
+      "interval": "daily",
+      "keep": 7
+    },
+    "backup.auto.last": "timestamp",
+    "localApi.config": {
+      "enabled": false,
+      "port": 47631,
+      "tokens": []
+    },
+    "sync.lastSyncAt": "timestamp",
+    "seed.sync": false,
+    "connector.<id>": "status"
+  },
+  "_secrets / platform secrets": {
+    "syncConfig": "server, token, deviceName, encryption",
+    "aiConfig": {
+      "v": 2,
+      "providers": []
+    },
+    "ai-key:<providerId>": "api key",
+    "pushConfig": "push subscription",
+    "backup.autoPassphrase": "password",
+    "oauth:<id>:client-id|client-secret|refresh": "oauth",
+    "connector:<id>:<name>": "connector secret"
+  }
+}

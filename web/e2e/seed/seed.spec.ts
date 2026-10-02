@@ -66,7 +66,7 @@ test.describe('Dev-Preview test data', () => {
     }
     expect(total(await countRows(page))).toBeGreaterThan(100);
 
-    await page.goto('/settings');
+    await page.goto('/settings/entwickler');
     const section = page.locator('section[aria-labelledby="developer"]');
     await section.getByTestId('seed-remove').click();
     await expect(section.getByTestId('seed-status')).toHaveCount(0);
@@ -109,7 +109,7 @@ test.describe('Dev-Preview test data', () => {
     await section.getByLabel('Bestätigung').fill('ZURÜCKSETZEN');
     await reset.click();
     await expect(page.locator('main h1')).toBeVisible();
-    await page.goto('/settings');
+    await page.goto('/settings/entwickler');
     await expect(page.locator('section[aria-labelledby="developer"]')).toBeVisible();
     await expect(page.getByTestId('seed-status')).toHaveCount(0);
     expect(total(await countRows(page))).toBe(0);
@@ -120,7 +120,7 @@ test.describe('Dev-Preview test data', () => {
   }) => {
     test.setTimeout(180_000);
     await bootDev(page);
-    await page.goto('/settings');
+    await page.goto('/settings/entwickler');
     const section = page.locator('section[aria-labelledby="developer"]');
     await section.getByLabel('Umfang').selectOption('large');
     const started = Date.now();

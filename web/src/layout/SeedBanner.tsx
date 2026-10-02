@@ -5,6 +5,7 @@ import { SEED_BANNER_KEY } from '@/core/seed/dev';
 import { tDev } from '@/strings.dev';
 import { Button } from '@/ui';
 import styles from './UpdateBanner.module.css';
+import { settingsPath } from '@/core/settings/registry/paths';
 
 const meta = () => db.table<{ key: string; value: unknown }, string>('_meta');
 
@@ -23,7 +24,7 @@ export default function SeedBanner() {
             variant="primary"
             onClick={() => {
               dismiss();
-              void navigate('/settings#developer');
+              void navigate(settingsPath('entwickler', 'developer'));
             }}
           >
             {tDev.banner.open}

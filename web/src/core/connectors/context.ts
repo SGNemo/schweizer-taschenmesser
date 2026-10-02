@@ -6,7 +6,7 @@ import { redactWith } from './redact';
 import { ConnectorError, type ConnectorContext, type ConnectorDef } from './types';
 
 export const secretName = (id: string, name: string) => `oauth:${id}:${name}`;
-const connectorSecret = (id: string, name: string) => `connector:${id}:${name}`;
+export const connectorSecret = (id: string, name: string) => `connector:${id}:${name}`;
 
 /** Access tokens live in memory only (they expire within an hour anyway). */
 const tokenCache = new Map<string, { token: string; expiresAt: number }>();

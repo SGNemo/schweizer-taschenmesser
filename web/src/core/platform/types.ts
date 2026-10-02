@@ -174,6 +174,10 @@ export interface DesktopService {
   autostart(): Promise<boolean>;
   /** `portable`: the app runs from a folder with a `data/` directory (e.g. a USB stick). */
   info(): Promise<{ portable: boolean }>;
+  /** Path of the app's data folder ("Über Nemo"); undefined where there is none to show. */
+  dataDir(): Promise<string | undefined>;
+  /** Opens the data folder in the file manager (no argument: the app decides which folder). */
+  openDataDir(): Promise<void>;
   showMain(): Promise<void>;
   /** Capture window only. */
   hideCapture(): Promise<void>;

@@ -362,6 +362,34 @@ pub fn desktop_info(app: AppHandle) -> DesktopInfo {
     }
 }
 
+/// The folder that holds the app's data: `data/` next to a portable executable, otherwise the
+/// user's local app data folder (WebView profile and the app's private files).
+fn app_data_folder(app: &AppHandle) -> Option<std::path::PathBuf> {
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe| crate::portable::data_dir(&exe, &app.config().identifier))
+        .or_else(|| app.path().app_local_data_dir().ok())
+}
+
+/// Path of the data folder, shown in "Über Nemo". Takes no argument.
+#[tauri::command]
+pub fn desktop_data_dir(app: AppHandle) -> Option<String> {
+    app_data_folder(&app).map(|dir| dir.display().to_string())
+}
+
+/// Opens exactly that folder in the file manager. Takes no path, so the webview cannot make the
+/// app open anything else.
+#[tauri::command]
+pub fn desktop_open_data_dir(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt as _;
+    let dir = app_data_folder(&app)
+        .filter(|dir| dir.is_dir())
+        .ok_or_else(|| "no-data-dir".to_owned())?;
+    app.opener()
+        .open_path(dir.to_string_lossy(), None::<&str>)
+        .map_err(|_| "failed".to_owned())
+}
+
 #[tauri::command]
 pub fn desktop_show_main(app: AppHandle) {
     show_main(&app);

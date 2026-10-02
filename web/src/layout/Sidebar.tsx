@@ -162,7 +162,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
             to="/settings"
             icon="settings"
             label={t.nav.settings}
-            active={pathname === '/settings'}
+            active={pathname.startsWith('/settings')}
           />
           {canExpand ? (
             <li>
