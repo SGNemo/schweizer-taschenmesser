@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
-import type { DriveInfo, Place } from '@/core/platform/disk';
+import type { DriveInfo } from '@/core/platform/disk';
+import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
-import { Badge, Button, Card, EmptyState, PageHeader, patternStyles, Segmented } from '@/ui';
+import { EmptyState, PageHeader, patternStyles, Segmented, Skeleton } from '@/ui';
 import SystemTab from '../components/SystemTab';
-import { UsageRing } from '../components/UsageRing';
-import { driveLevel, formatBytes, percent } from '../format';
+import { DriveCard } from '../components/DriveCard';
+import { QuickOverview } from '../components/QuickOverview';
+import { useDriveHistory } from '../history';
 import { useDiskStore } from '../store';
 import styles from './DrivesPage.module.css';
 
-const kindLabel = (d: DriveInfo): string =>
-  d.kind === 'fixed' && d.media !== 'unknown' ? t.disk.kind[d.media] : t.disk.kind[d.kind];
+/** Drives are re-read while the tab is open: the history and the live speed need fresh numbers. */
+const REFRESH_MS = 5000;
 
 const TABS = ['drives', 'system'] as const;
 type Tab = (typeof TABS)[number];
@@ -40,97 +42,67 @@ export default function ThisPcPage() {
 function DrivesTab() {
   const [drives, setDrives] = useState<DriveInfo[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [places, setPlaces] = useState<Place[]>([]);
+  const [io, setIo] = useState<DiskIo[]>([]);
   const navigate = useNavigate();
   const start = useDiskStore((s) => s.start);
+  const record = useDriveHistory((s) => s.record);
 
   useEffect(() => {
     let alive = true;
-    getPlatform()
-      .disk.listDrives()
-      .then((d) => alive && setDrives(d))
-      .catch(() => alive && setFailed(true));
-    getPlatform()
-      .disk.knownPlaces()
-      .then((p) => alive && setPlaces(p))
-      .catch(() => undefined);
+    const disk = getPlatform().disk;
+    const system = getPlatform().system;
+    const load = () => {
+      if (document.hidden) return;
+      disk
+        .listDrives()
+        .then((d) => {
+          if (!alive) return;
+          setDrives(d);
+          record(d);
+        })
+        .catch(() => alive && setFailed(true));
+      system
+        .diskIo()
+        .then((r) => alive && setIo(r))
+        .catch(() => undefined);
+    };
+    load();
+    const id = setInterval(load, REFRESH_MS);
     return () => {
       alive = false;
+      clearInterval(id);
     };
-  }, []);
+  }, [record]);
 
   const scanRoot = (root: string) => {
     void start(root);
     void navigate('/disk/scan');
   };
-  const open = (d: DriveInfo) => scanRoot(d.root);
 
   return (
     <>
       <p className={styles.lead}>{t.disk.lead}</p>
       {failed ? <p role="alert">{t.disk.failedDrives}</p> : null}
-      {!drives && !failed ? <p aria-live="polite">{t.disk.loading}</p> : null}
+      {!drives && !failed ? (
+        <div role="status" aria-label={t.disk.loading}>
+          <Skeleton width="60%" height="1.25rem" />
+        </div>
+      ) : null}
       {drives && drives.length === 0 ? <EmptyState title={t.disk.empty} /> : null}
       {drives && drives.length > 0 ? (
         <ul className={styles.grid} aria-label={t.disk.tabs.drives}>
-          {drives.map((d) => {
-            const used = Math.max(0, d.totalBytes - d.freeBytes);
-            const pct = percent(used, d.totalBytes);
-            const level = driveLevel(pct);
-            const name = t.disk.driveName(d.root, d.label);
-            return (
-              <li key={d.root}>
-                <Card className={styles.card}>
-                  <button
-                    type="button"
-                    className={styles.open}
-                    aria-label={t.disk.open(name)}
-                    onClick={() => open(d)}
-                  >
-                    <UsageRing percent={pct} />
-                    <span className={styles.text}>
-                      <span className={styles.name}>{name}</span>
-                      <span className={styles.meta}>
-                        {kindLabel(d)}
-                        {d.fileSystem ? ` · ${d.fileSystem}` : ''}
-                      </span>
-                      <span>{t.disk.usedOf(formatBytes(used), formatBytes(d.totalBytes))}</span>
-                      <span className={styles.meta}>{t.disk.free(formatBytes(d.freeBytes))}</span>
-                      {level !== 'ok' ? (
-                        <span>
-                          <Badge tone={level === 'full' ? 'accent' : 'neutral'}>
-                            {level === 'full' ? t.disk.almostFull : t.disk.getting}
-                          </Badge>
-                        </span>
-                      ) : null}
-                    </span>
-                  </button>
-                </Card>
-              </li>
-            );
-          })}
+          {drives.map((d) => (
+            <li key={d.root}>
+              <DriveCard
+                drive={d}
+                io={io.find((x) => x.root === d.root)}
+                onScan={() => scanRoot(d.root)}
+              />
+            </li>
+          ))}
         </ul>
       ) : null}
-      {places.length > 0 ? (
-        <section className={styles.places} aria-label={t.disk.places.title}>
-          <h2>{t.disk.places.title}</h2>
-          <p className={styles.lead}>{t.disk.places.lead}</p>
-          <ul className={styles.grid}>
-            {places.map((p) => (
-              <li key={p.path}>
-                <Card className={styles.placeCard}>
-                  <span className={styles.name}>{t.disk.places.name[p.id]}</span>
-                  <span className={styles.path}>{p.path}</span>
-                  <span className={styles.meta}>{t.disk.places.hint[p.id]}</span>
-                  <Button onClick={() => scanRoot(p.path)}>
-                    {t.disk.places.scan(t.disk.places.name[p.id]!)}
-                  </Button>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <QuickOverview onScan={scanRoot} />
     </>
   );
 }

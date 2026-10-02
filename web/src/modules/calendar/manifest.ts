@@ -31,7 +31,7 @@ const manifest: ModuleManifest = {
     {
       id: 'today',
       title: t.calendar.meta.widget,
-      defaultSize: 'm',
+      defaultSize: 'l',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/TodayWidget'),
     },
@@ -44,6 +44,7 @@ const manifest: ModuleManifest = {
   order: 10,
   area: 'plan',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: onboarding,
     quickAdd: [{ id: 'event', label: t.calendar.meta.quickAdd, to: '/calendar?new=1' }],
     calendarItems: () => import('./calendar'),

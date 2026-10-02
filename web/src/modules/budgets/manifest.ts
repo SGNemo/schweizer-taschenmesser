@@ -46,6 +46,7 @@ const manifest: ModuleManifest = {
   order: 130,
   area: 'money',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: noOnboarding,
     quickAdd: [{ id: 'goal', label: t.budgets.meta.quickAdd, to: '/budgets?tab=goals&new=1' }],
   },

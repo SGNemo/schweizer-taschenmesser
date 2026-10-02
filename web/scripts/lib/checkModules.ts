@@ -85,7 +85,7 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
 
 /** Widget source must offer a next step when empty (an action link or an empty state). */
 export function checkWidgetSource(id: string, file: string, src: string): string[] {
-  return /emptyAction|EmptyState|<Link\b/.test(src)
+  return /emptyAction|EmptyState|<Link\b|\bempty=|<Status(Widget|Card)\b/.test(src)
     ? []
     : [`${id}: widget "${file}" shows no empty state / link to the module`];
 }

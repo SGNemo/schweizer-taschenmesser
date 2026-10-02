@@ -31,7 +31,7 @@ const manifest: ModuleManifest = {
     {
       id: 'open',
       title: t.todos.meta.widget,
-      defaultSize: 's',
+      defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OpenTasksWidget'),
     },
@@ -44,6 +44,7 @@ const manifest: ModuleManifest = {
   order: 20,
   area: 'plan',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: onboarding,
     quickAdd: [{ id: 'task', label: t.todos.meta.quickAdd, to: '/todos?new=1' }],
     calendarItems: () => import('./calendar'),

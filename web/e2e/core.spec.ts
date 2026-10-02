@@ -215,9 +215,11 @@ test.describe('Dashboard', () => {
 
     await ready(page, '/');
     const widget = page.getByTestId('widget-calendar:today');
-    await expect(widget.getByRole('region', { name: 'Heute' })).toContainText('Teammeeting');
-    await expect(widget.getByRole('region', { name: 'Morgen' })).toContainText('Bericht senden');
-    await expect(page.getByTestId('widget-todos:open')).toContainText('1 offene Aufgabe');
+    // "Heute" is a timeline now (the widget is large by default, so tomorrow follows below it).
+    await expect(widget).toContainText('Teammeeting');
+    await expect(widget.getByRole('heading', { name: 'Morgen', exact: true })).toBeVisible();
+    await expect(widget).toContainText('Bericht senden');
+    await expect(page.getByTestId('widget-todos:open')).toContainText('1 offen');
   });
 
   test('widgets can be hidden and the choice persists', async ({ page }) => {

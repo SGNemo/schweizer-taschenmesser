@@ -1,8 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { formatDay } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { DueList } from '@/ui';
 import { nextOccurrenceAt, sortReminders } from '../logic';
 import { reminderRepo } from '../repo';
 
@@ -14,21 +15,19 @@ export default function NextRemindersWidget() {
       .flatMap((r) => {
         const o = nextOccurrenceAt(r, now());
         return o ? [{ id: r.id, title: r.title, ...o }] : [];
-      })
-      .slice(0, 3);
+      });
   }, []);
+  const day = today();
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.reminders, to: '/reminders?new=1' }}
+    <DueList
       loading={!next}
       empty={t.reminders.widgetEmpty}
-      entries={(next ?? []).map((o) => ({
-        key: o.id,
-        title: o.title,
-        meta: `${formatDay(o.date, 'EEE, d. MMM')} · ${o.time}`,
-      }))}
-      to="/reminders"
-      linkLabel={t.reminders.title}
+      emptyAction={{ label: t.homeEmpty.reminders, to: '/reminders?new=1' }}
+      entries={(next ?? []).map((o) => {
+        const s = dueState(o.date, day);
+        return { key: o.id, title: o.title, tone: s.tone, label: `${s.label} · ${o.time}` };
+      })}
+      moreLabel={t.widgets.more}
     />
   );
 }

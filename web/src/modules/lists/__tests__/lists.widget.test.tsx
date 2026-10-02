@@ -5,13 +5,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { itemRepo, listRepo } from '../repo';
 import OpenListsWidget from '../widgets/OpenListsWidget';
+import PackingWidget from '../widgets/PackingWidget';
 
-const view = () =>
-  render(
-    <MemoryRouter>
-      <OpenListsWidget />
-    </MemoryRouter>,
-  );
+const view = (widget = <OpenListsWidget />) => render(<MemoryRouter>{widget}</MemoryRouter>);
 
 describe('lists widget', () => {
   beforeEach(async () => {
@@ -27,7 +23,7 @@ describe('lists widget', () => {
     );
   });
 
-  it('lists open shopping entries and the progress of packing lists under way', async () => {
+  it('shows the open shopping entries, ticked off in place', async () => {
     await listRepo.create(
       { name: 'Einkauf', kind: 'shopping', order: 0 },
       { id: 'shopping-default' },
@@ -40,14 +36,19 @@ describe('lists widget', () => {
       order: 0,
     });
     await itemRepo.create({ listId: 'shopping-default', name: 'Brot', done: true, order: 1 });
+    view();
+    expect(await screen.findByText('Milch (2)')).toBeInTheDocument();
+    expect(screen.queryByText('Brot')).toBeNull();
+    expect(screen.getByText('1 Artikel offen')).toBeInTheDocument();
+  });
+
+  it('shows the progress of packing lists under way', async () => {
     await listRepo.create({ name: 'Camping', kind: 'packing', order: 1 }, { id: 'camp' });
     await itemRepo.create({ listId: 'camp', name: 'Zelt', done: true, order: 0 });
     await itemRepo.create({ listId: 'camp', name: 'Kocher', done: false, order: 1 });
-    view();
-    expect(await screen.findByText('Milch')).toBeInTheDocument();
-    expect(screen.queryByText('Brot')).toBeNull();
-    expect(screen.getByText('1 Artikel offen')).toBeInTheDocument();
-    expect(screen.getByText('Camping')).toBeInTheDocument();
+    view(<PackingWidget />);
+    expect(await screen.findByText('Camping')).toBeInTheDocument();
+    expect(screen.getByText('1 von 2 gepackt')).toBeInTheDocument();
     expect(screen.getByText('1/2')).toBeInTheDocument();
   });
 });

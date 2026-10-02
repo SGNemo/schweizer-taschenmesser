@@ -35,6 +35,13 @@ const manifest: ModuleManifest = {
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OpenListsWidget'),
     },
+    {
+      id: 'packing',
+      title: t.lists.meta.widgetPacking,
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/PackingWidget'),
+    },
   ],
   aiSchema,
   settings,

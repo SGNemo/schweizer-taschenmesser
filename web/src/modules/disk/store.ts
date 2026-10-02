@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getPlatform } from '@/core/platform';
 import type { DiskNode, ScanProgress, ScanSummary } from '@/core/platform/disk';
+import { useDriveHistory } from './history';
 
 /** What the basket needs to show an entry; the entry itself stays in the native scan tree. */
 export interface BasketItem {
@@ -82,7 +83,13 @@ export const useDiskStore = create<DiskState>((set, get) => ({
       });
       set({ scanId: handle.scanId });
       const summary = await handle.result;
-      if (get().scanId === handle.scanId) set({ phase: 'done', summary, paused: false });
+      if (get().scanId === handle.scanId) {
+        set({ phase: 'done', summary, paused: false });
+        // Baseline for "Belegt seit letztem Scan": the drive's used space at this moment.
+        const history = useDriveHistory.getState();
+        const used = history.points[root]?.at(-1)?.usedBytes;
+        if (used !== undefined && !summary.cancelled) history.recordScan(root, used);
+      }
     } catch (e) {
       set({ phase: 'failed', error: e instanceof Error ? e.message : 'error' });
     }

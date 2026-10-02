@@ -47,6 +47,7 @@ const manifest: ModuleManifest = {
   order: 95,
   area: 'household',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: noOnboarding,
     quickAdd: [{ id: 'item', label: t.pantry.meta.quickAdd, to: '/pantry?new=1' }],
     calendarItems: () => import('./calendar'),

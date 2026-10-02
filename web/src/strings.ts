@@ -1022,6 +1022,62 @@ export const t = {
       } as Record<string, string>,
     },
   },
+  attention: {
+    title: 'Jetzt wichtig',
+    hint: 'Überfälliges, heute Fälliges und Ablaufendes ganz oben.',
+    invoicesOverdue: (n: number) =>
+      n === 1 ? '1 Rechnung überfällig' : `${n} Rechnungen überfällig`,
+    invoicesToday: (n: number) =>
+      n === 1 ? '1 Rechnung heute fällig' : `${n} Rechnungen heute fällig`,
+    todosOverdue: (n: number) => (n === 1 ? '1 ToDo überfällig' : `${n} ToDos überfällig`),
+    todosToday: (n: number) => (n === 1 ? '1 ToDo heute fällig' : `${n} ToDos heute fällig`),
+    eventNext: (title: string) => title,
+    eventAt: (time: string) => `heute um ${time}`,
+    budgetOver: (name: string) => `Budget „${name}“ überschritten`,
+    pantryExpired: (n: number) => (n === 1 ? '1 Vorrat abgelaufen' : `${n} Vorräte abgelaufen`),
+    pantrySoon: (n: number) => (n === 1 ? '1 Vorrat läuft bald ab' : `${n} Vorräte laufen bald ab`),
+    docsExpired: (n: number) => (n === 1 ? '1 Dokument abgelaufen' : `${n} Dokumente abgelaufen`),
+    docsSoon: (n: number) =>
+      n === 1 ? '1 Dokument läuft bald ab' : `${n} Dokumente laufen bald ab`,
+    contractsAct: (n: number) =>
+      n === 1 ? '1 Kündigungsfrist läuft bald ab' : `${n} Kündigungsfristen laufen bald ab`,
+    driveFull: (name: string) => `Laufwerk ${name} fast voll`,
+    updateAvailable: 'Update verfügbar',
+  },
+  widgets: {
+    done: 'Erledigt',
+    undo: 'Rückgängig',
+    now: 'Jetzt',
+    next: 'Als Nächstes',
+    allDay: 'Ganztägig',
+    tomorrow: 'Morgen',
+    more: (n: number) => `+ ${n} weitere`,
+    openModule: (name: string) => `${name} öffnen`,
+    invoicesSummary: (sum: string, overdue: number) =>
+      overdue > 0 ? `${sum} offen · ${overdue} überfällig` : `${sum} offen`,
+    subsSummary: (monthly: string, next?: string) =>
+      next ? `${monthly} pro Monat · nächste ${next}` : `${monthly} pro Monat`,
+    todosSummary: (open: number, overdue: number) =>
+      (open === 1 ? '1 offen' : `${open} offen`) + (overdue > 0 ? ` · ${overdue} überfällig` : ''),
+    shoppingSummary: (open: number) => (open === 1 ? '1 Artikel offen' : `${open} Artikel offen`),
+    budgetsSummary: (over: number) =>
+      over === 0
+        ? 'Alle Budgets im Rahmen'
+        : over === 1
+          ? '1 Budget überschritten'
+          : `${over} Budgets überschritten`,
+    packingSummary: (packed: number, total: number) => `${packed} von ${total} gepackt`,
+    contractsSummary: (n: number) =>
+      n === 1 ? '1 Kündigungsfrist in Sicht' : `${n} Kündigungsfristen in Sicht`,
+    expirySummary: (expired: number, soon: number) =>
+      [expired ? `${expired} abgelaufen` : '', soon ? `${soon} bald` : '']
+        .filter(Boolean)
+        .join(' · '),
+    kpiAvailable: (amount: string) => `${amount} verfügbar`,
+    kpiMonthNet: (amount: string) => `${amount} in diesem Monat`,
+    kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
+    birthdaysSummary: (name: string, label: string) => `${name} · ${label}`,
+  },
   homeEdit: {
     customize: 'Anpassen',
     done: 'Fertig',
@@ -1655,6 +1711,7 @@ export const t = {
         'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status; oft gebrauchte Links als Lesezeichen-Kacheln. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
       route: 'Merkliste',
       widget: 'Merkliste',
+      widgetLinks: 'Lesezeichen',
       quickAdd: 'Merkzettel',
     },
     title: 'Merkliste',
@@ -1682,6 +1739,7 @@ export const t = {
     tabList: 'Merkliste',
     tabLinks: 'Lesezeichen',
     addLink: 'Lesezeichen anlegen',
+    linksWidgetEmpty: 'Noch keine Lesezeichen.',
     noGroup: 'Ohne Gruppe',
     linksEmpty:
       'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
@@ -1830,6 +1888,63 @@ export const t = {
     processesHint: 'Nur zur Ansicht. Beenden kannst du Programme im Task-Manager von Windows.',
     program: 'Programm',
     instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
+    cpuShort: 'CPU',
+    live: 'Live',
+    last5: 'Letzte 5 Minuten',
+    clock: (mhz: number) =>
+      `${(mhz / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
+    download: 'Empfangen',
+    upload: 'Senden',
+    tileNetwork: 'Netzwerk',
+    gpuOwn: (size: string) => `${size} Grafikspeicher`,
+    gpuShared: (size: string) => `bis zu ${size} geteilter Speicher`,
+    gpuActive: 'aktiv',
+    gpuDriver: (v: string) => `Treiber ${v}`,
+    gpuNote:
+      'Auslastung und Temperatur der Grafikkarte zeigt Windows ohne Zusatzprogramm nicht zuverlässig an.',
+    thisPc: 'Dieser Computer',
+    board: 'Mainboard',
+    bios: 'BIOS',
+    ram: 'Arbeitsspeicher-Riegel',
+    windowsBuild: 'Windows-Version',
+    lastBoot: 'Letzter Neustart',
+    displays: 'Bildschirme',
+    display: (w: number, h: number, hz: number, primary: boolean) =>
+      `${w} × ${h}, ${hz} Hz${primary ? ' (Hauptbildschirm)' : ''}`,
+    audio: 'Audio',
+    audioOut: (n: string) => `Ausgabe: ${n}`,
+    audioIn: (n: string) => `Eingabe: ${n}`,
+    cpuTemp: 'CPU-Temperatur',
+    cpuTempGap:
+      'nicht verfügbar – Windows gibt sie nur mit Administratorrechten oder Zusatztreibern heraus',
+    adapters: 'Netzwerk',
+    adapterKind: {
+      ethernet: 'Kabel',
+      wifi: 'WLAN',
+      virtual: 'virtuell',
+      other: 'Sonstiges',
+    } as Record<string, string>,
+    connected: 'verbunden',
+    disconnected: 'nicht verbunden',
+    ipv4: 'IPv4',
+    ipv6: 'IPv6',
+    showAll: 'Alle Adressen anzeigen',
+    hideAll: 'Weniger anzeigen',
+    ssid: 'Netz',
+    signal: (word: string, p: number) => `Signal ${word} (${p} %)`,
+    signalWords: { strong: 'stark', ok: 'mittel', weak: 'schwach' } as Record<string, string>,
+    virtualNote: 'Virtuelle Adapter (z. B. für WSL, Hyper-V oder VPN) sind gedämpft dargestellt.',
+    publicIp: 'Öffentliche IP-Adresse',
+    publicIpButton: 'Öffentliche IP abfragen',
+    publicIpNote:
+      'Fragt den Dienst api.ipify.org. Nur auf Knopfdruck; das Ergebnis wird nur angezeigt, nicht gespeichert.',
+    publicIpFailed: 'Die Abfrage hat nicht geklappt.',
+    cpuColumn: 'CPU',
+    openTaskManager: 'Im Task-Manager öffnen',
+    sparkCpu: 'Prozessorauslastung der letzten 5 Minuten',
+    sparkRam: 'Speicherbelegung der letzten 5 Minuten',
+    sparkNet: 'Empfangsrate der letzten 5 Minuten',
+    batteryTile: 'Akku',
   },
   disk: {
     meta: {
@@ -1864,6 +1979,54 @@ export const t = {
     percentUsed: (p: number) => `${p} % belegt`,
     almostFull: 'Fast voll',
     getting: 'Wird knapp',
+    card: {
+      scan: 'Scannen',
+      systemDrive: 'Systemlaufwerk',
+      type: {
+        nvme: 'NVMe-SSD',
+        ssd: 'SSD',
+        hdd: 'Festplatte (HDD)',
+        usb: 'USB-Laufwerk',
+        network: 'Netzlaufwerk',
+        removable: 'Wechseldatenträger',
+        ram: 'RAM-Disk',
+        drive: 'Laufwerk',
+      } as Record<string, string>,
+      advice: {
+        ok: 'Genug Platz.',
+        tight: 'Wird knapp – bald aufräumen.',
+        full: 'Fast voll – Aufräumen empfohlen.',
+      } as Record<string, string>,
+      healthLabel: 'Zustand',
+      health: {
+        ok: 'In Ordnung',
+        warning: 'Das Laufwerk meldet Probleme – sichere deine Daten.',
+        needsAdmin: 'nicht verfügbar – Windows gibt den Wert nur mit Administratorrechten heraus',
+        unsupported: 'nicht verfügbar – dieses Laufwerk meldet ihn nicht',
+      } as Record<string, string>,
+      temperature: (c: number) => `${c} °C`,
+      helpSmart:
+        'SMART ist der Selbsttest, den moderne Laufwerke von sich aus melden. Nemo liest nur, was Windows ohne Administratorrechte herausgibt – oft ist das nur die Temperatur.',
+      helpCluster:
+        'Belegt ist der Platz, den Windows tatsächlich vergibt: in Blöcken (Clustern). Darum ist er etwas größer als die reine Dateigröße.',
+      lastScan: (when: string) => `Zuletzt gescannt: ${when}`,
+      neverScanned: 'Noch nicht gescannt',
+      growth: (delta: string) => `Belegt seit letztem Scan: ${delta}`,
+      history: 'Belegter Platz seit dem App-Start',
+      historyHint: 'Verlauf seit App-Start – er wird nicht gespeichert.',
+      io: (read: string, write: string) => `Lesen ${read} · Schreiben ${write}`,
+      model: 'Modell',
+    },
+    quick: {
+      title: 'Schnellübersicht',
+      lead: 'Das lässt sich oft schnell aufräumen – ohne neuen Scan. Die Größen sind ungefähr.',
+      recycle: 'Papierkorb',
+      recycleHint: 'Leere ihn im Explorer; Nemo löscht nichts endgültig von selbst.',
+      atLeast: (size: string) => `mindestens ${size}`,
+      biggest: 'Größte Ordner im letzten Scan',
+      biggestHint: 'Aus dem Scan dieser Sitzung.',
+      sizeUnknown: 'Größe unbekannt',
+    },
     actions: {
       reveal: 'Im Explorer zeigen',
       copyPath: 'Pfad kopieren',
@@ -2215,7 +2378,8 @@ export const t = {
       description:
         'Einkauf, Packlisten und Checklisten: Dinge abhaken, Gekauftes entfernen, Packlisten zurücksetzen oder als Vorlage kopieren.',
       route: 'Listen',
-      widget: 'Listen',
+      widget: 'Einkauf',
+      widgetPacking: 'Packlisten',
       quickAdd: 'Einkauf',
     },
     title: 'Listen',
@@ -2261,6 +2425,8 @@ export const t = {
     swipeDone: 'Abhaken',
     widgetEmpty: 'Nichts einzukaufen.',
     widgetAction: 'Eintrag anlegen',
+    packingEmpty: 'Keine Packliste unterwegs.',
+    packingAction: 'Packliste anlegen',
     widgetOpen: 'Listen öffnen',
     openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
     packingProgress: (done: number, total: number, name: string) =>

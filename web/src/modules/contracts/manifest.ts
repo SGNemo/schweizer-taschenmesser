@@ -39,6 +39,7 @@ const manifest: ModuleManifest = {
   order: 120,
   area: 'money',
   contributions: {
+    attention: () => import('./attention'),
     onboarding,
     quickAdd: [{ id: 'contract', label: 'Vertrag', to: '/contracts?new=1' }],
     calendarItems: () => import('./calendar'),

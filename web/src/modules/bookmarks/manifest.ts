@@ -34,6 +34,13 @@ const manifest: ModuleManifest = {
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/RecentWidget'),
     },
+    {
+      id: 'links',
+      title: t.bookmarks.meta.widgetLinks,
+      defaultSize: 'm',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/LinksWidget'),
+    },
   ],
   aiSchema,
   settings,

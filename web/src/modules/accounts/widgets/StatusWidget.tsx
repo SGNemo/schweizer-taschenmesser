@@ -1,11 +1,10 @@
-import { Link } from 'react-router';
 import { t } from '@/strings';
-import { Badge, Skeleton } from '@/ui';
+import { Skeleton, StatusWidget as StatusCard } from '@/ui';
 import { useHeaderState } from '../hooks';
 import { useSession } from '../session';
 
 /**
- * Home-screen status of the vault: locked / unlocked and a link. **Never shows entries**
+ * Home-screen status of the vault: locked / unlocked and one action. **Never shows entries**
  * (no entry data is read here; `__tests__/exclusion.test.ts` checks the source).
  */
 export default function StatusWidget() {
@@ -15,18 +14,20 @@ export default function StatusWidget() {
   if (!header) return <Skeleton width="60%" height="1.25rem" />;
   if (header.state === 'none')
     return (
-      <div>
-        <p>{w.notSetUp}</p>
-        <Link to="/accounts">{w.setUp}</Link>
-      </div>
+      <StatusCard
+        icon="lock"
+        state={w.notSetUp}
+        hint={w.hint}
+        action={{ label: w.setUp, to: '/accounts' }}
+      />
     );
   return (
-    <div>
-      <p>
-        <Badge>{unlocked ? w.unlocked : w.locked}</Badge>
-      </p>
-      <p>{w.hint}</p>
-      <Link to="/accounts">{unlocked ? w.open : w.unlock}</Link>
-    </div>
+    <StatusCard
+      icon={unlocked ? 'unlock' : 'lock'}
+      state={unlocked ? w.unlocked : w.locked}
+      tone={unlocked ? 'success' : 'neutral'}
+      hint={w.hint}
+      action={{ label: unlocked ? w.open : w.unlock, to: '/accounts' }}
+    />
   );
 }
