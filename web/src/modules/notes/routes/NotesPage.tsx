@@ -59,7 +59,7 @@ export default function NotesPage() {
         />
       </div>
       {notes && shown.length === 0 ? (
-        <EmptyState icon="note" title={notes.length === 0 ? t.notes.empty : t.notes.emptyFiltered}>
+        <EmptyState title={notes.length === 0 ? t.notes.empty : t.notes.emptyFiltered}>
           {notes.length === 0 ? <StartDataButton moduleId="notes" /> : null}
         </EmptyState>
       ) : null}

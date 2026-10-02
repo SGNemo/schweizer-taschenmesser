@@ -124,6 +124,12 @@
   --success-soft: color-mix(in srgb, var(--success) 15%, transparent);
   --warning-soft: color-mix(in srgb, var(--warning) 15%, transparent);
   --info-soft: color-mix(in srgb, var(--info) 15%, transparent);
+  /* Status text on those soft backgrounds (badges): 15 % of the body text colour mixed in keeps
+     AA (4.5:1) on page, card and chip surfaces; the plain status colours do not on the page. */
+  --danger-ink: color-mix(in srgb, var(--danger) 85%, var(--text));
+  --success-ink: color-mix(in srgb, var(--success) 85%, var(--text));
+  --warning-ink: color-mix(in srgb, var(--warning) 85%, var(--text));
+  --info-ink: color-mix(in srgb, var(--info) 85%, var(--text));
   /* Ocean gradient, kept for the places that say "Nemo": splash, empty states, brand images. */
   --ocean-from: #1d6b7a;
   --ocean-to: #0e2f45;

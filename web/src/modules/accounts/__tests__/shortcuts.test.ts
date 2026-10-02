@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { entryAction, isTypingTarget } from '../shortcuts';
+import { isTypingTarget } from '@/core/keyboard/typing';
+import { entryAction } from '../shortcuts';
 
 const key = (k: string, mods: Partial<Record<'ctrlKey' | 'metaKey' | 'altKey', boolean>> = {}) => ({
   key: k,

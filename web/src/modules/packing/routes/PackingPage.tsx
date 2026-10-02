@@ -61,7 +61,7 @@ export default function PackingPage() {
       </PageHeader>
 
       {lists && lists.length === 0 ? (
-        <EmptyState icon="luggage" title={t.packing.empty}>
+        <EmptyState title={t.packing.empty}>
           <StartDataButton moduleId="packing" />
         </EmptyState>
       ) : null}

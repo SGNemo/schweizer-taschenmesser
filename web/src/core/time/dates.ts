@@ -66,6 +66,19 @@ export function relativeDayLabel(s: string, ref: string = today()): string {
   return formatDay(s, 'EEE, d. MMM');
 }
 
+/**
+ * What a date means in words, for form hints: "Heute", or weekday plus distance
+ * ("Montag, in 6 Tagen", "Mittwoch, morgen", "Sonntag, vor 2 Tagen").
+ */
+export function humanDateHint(s: string, ref: string = today()): string {
+  const diff = daysBetween(ref, s);
+  if (diff === 0) return 'Heute';
+  const weekday = formatDay(s, 'EEEE');
+  if (diff === 1) return `${weekday}, morgen`;
+  if (diff === -1) return `${weekday}, gestern`;
+  return diff > 0 ? `${weekday}, in ${diff} Tagen` : `${weekday}, vor ${-diff} Tagen`;
+}
+
 /** Epoch ms of a local date + 'HH:mm'. */
 export function toEpoch(date: string, time: string): number {
   const [h, m] = time.split(':').map(Number);

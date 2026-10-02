@@ -14,15 +14,19 @@
 }
 .badge.success {
   background: var(--success-soft);
-  color: var(--success);
+  color: var(--success-ink);
 }
 .badge.warning {
   background: var(--warning-soft);
-  color: var(--warning);
+  color: var(--warning-ink);
+}
+.badge.info {
+  background: var(--info-soft);
+  color: var(--info-ink);
 }
 .badge.danger {
   background: var(--danger-soft);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 .empty {
   display: flex;
@@ -39,11 +43,9 @@
 .emptyMark {
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
-  border-radius: var(--radius-full);
-  background: var(--accent-soft);
-  color: var(--accent);
+  /* The faded fish: 35 % of the quiet text colour, no module illustrations. */
+  color: var(--text-3);
+  opacity: 0.35;
 }
 .emptyTitle {
   color: var(--text);
@@ -59,10 +61,7 @@
   padding: var(--space-2) 0;
   gap: var(--space-3);
 }
-.emptyCompact .emptyMark {
-  width: 40px;
-  height: 40px;
-}
+
 .emptyCompact .emptyTitle {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -125,7 +124,10 @@
   background: var(--text);
   color: var(--bg);
   box-shadow: var(--shadow-2);
-  animation: rise var(--dur) var(--ease-out);
+  animation: rise var(--dur-slow) var(--ease-out);
+}
+.toastText {
+  flex: 1;
 }
 .toastAction {
   background: none;
@@ -140,7 +142,7 @@
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(24px);
   }
 }
 
@@ -175,4 +177,24 @@
     animation: none;
     display: none;
   }
+}
+
+.skeletonRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.errorText {
+  flex: 1;
+  margin: 0;
+  color: var(--text);
 }

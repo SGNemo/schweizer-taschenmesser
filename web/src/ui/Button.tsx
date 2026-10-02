@@ -1,15 +1,22 @@
 import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import styles from './Button.module.css';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+/**
+ * `primary` once per view (page head or dialog foot) · `secondary` · `ghost` = quiet text button ·
+ * `danger` = confirm-level destructive action · `quietDanger` = red text (row-level delete).
+ */
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'quietDanger';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
+  /** `sm`: 32 px row button, still a 44 px hit area. */
+  size?: 'md' | 'sm';
   children: ReactNode;
 }
 
 export function Button({
   variant = 'secondary',
+  size = 'md',
   className,
   type = 'button',
   ...rest
@@ -17,7 +24,9 @@ export function Button({
   return (
     <button
       type={type}
-      className={[styles.btn, styles[variant], className].filter(Boolean).join(' ')}
+      className={[styles.btn, styles[variant], size === 'sm' ? styles.sm : '', className]
+        .filter(Boolean)
+        .join(' ')}
       {...rest}
     />
   );

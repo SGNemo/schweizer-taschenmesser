@@ -51,6 +51,7 @@ const PAGES: { name: string; path: string }[] = [
         { name: 'disk', path: '/disk' },
       ]
     : []),
+  { name: 'components', path: '/dev/components' },
   { name: 'library', path: '/library' },
   { name: 'settings', path: '/settings' },
 ];

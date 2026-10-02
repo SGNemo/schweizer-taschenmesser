@@ -139,13 +139,12 @@ function Unlocked() {
               onEdit={(entry) => setForm(entry)}
             />
           ) : (
-            <EmptyState icon="lock" title={t.accounts.pickEntry} />
+            <EmptyState title={t.accounts.pickEntry} />
           )
         }
       >
         {shown.length === 0 ? (
           <EmptyState
-            icon="lock"
             title={data.entries.length === 0 ? t.accounts.empty : t.accounts.emptyFiltered}
           />
         ) : null}

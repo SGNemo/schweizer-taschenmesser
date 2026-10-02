@@ -29,7 +29,7 @@ export default function SystemWidget() {
     };
   }, []);
   const w = t.systemWidget;
-  if (failed && !info) return <EmptyState compact icon="cpu" title={w.unavailable} />;
+  if (failed && !info) return <EmptyState compact title={w.unavailable} />;
   if (!info) return <Skeleton width="60%" height="1.25rem" />;
   const ram = percent(info.memory.usedBytes, info.memory.totalBytes);
   const cpu = Math.round(info.cpu.usagePercent);

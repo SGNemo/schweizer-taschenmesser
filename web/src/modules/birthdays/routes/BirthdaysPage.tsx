@@ -32,7 +32,7 @@ export default function BirthdaysPage() {
         </Button>
       </PageHeader>
       {list && list.length === 0 ? (
-        <EmptyState icon="cake" title={t.birthdays.empty}>
+        <EmptyState title={t.birthdays.empty}>
           <StartDataButton moduleId="birthdays" />
         </EmptyState>
       ) : null}

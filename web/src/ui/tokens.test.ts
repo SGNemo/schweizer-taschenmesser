@@ -78,12 +78,17 @@ describe('design tokens', () => {
         text('--accent', '--accent-soft');
         text('--text', '--accent-soft');
       });
-      it('status colours on surfaces and on their own 15 % background', () => {
+      it('status colours on surfaces; their badge ink on the 15 % background over page, card and chip', () => {
         for (const s of ['--danger', '--success', '--warning', '--info']) {
           text(s, '--surface');
           text(s, '--bg');
-          const mixed = mix(t[s]!, t['--surface']!, 0.15);
-          expect(ratio(t[s]!, mixed), `${s} on ${s}-soft`).toBeGreaterThanOrEqual(4.5);
+          const ink = mix(t['--text']!, t[s]!, 0.15);
+          for (const bg of ['--bg', '--surface', '--surface-2']) {
+            const soft = mix(t[s]!, t[bg]!, 0.15);
+            expect(ratio(ink, soft), `${s}-ink on ${s}-soft over ${bg}`).toBeGreaterThanOrEqual(
+              4.5,
+            );
+          }
         }
       });
       it('page background and text on the filled accent', () => {
@@ -105,8 +110,10 @@ describe('design tokens', () => {
   it('removed tokens stay removed; status backgrounds are mixes, not hex', () => {
     for (const key of ['--accent-2', '--accent-2-soft', '--surface-glass', '--focus-ring'])
       expect(light, key).not.toHaveProperty(key);
-    for (const s of ['danger', 'success', 'warning', 'info'])
+    for (const s of ['danger', 'success', 'warning', 'info']) {
       expect(light[`--${s}-soft`], `--${s}-soft`).toMatch(/^color-mix\(/);
+      expect(light[`--${s}-ink`], `--${s}-ink`).toMatch(/^color-mix\(/);
+    }
     expect(css).not.toMatch(/--accent-2/);
   });
 

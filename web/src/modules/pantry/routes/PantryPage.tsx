@@ -77,7 +77,7 @@ export default function PantryPage() {
         onChange={setFilter}
       />
       {items && items.length === 0 ? (
-        <EmptyState icon="package" title={t.pantry.empty}>
+        <EmptyState title={t.pantry.empty}>
           <StartDataButton moduleId="pantry" />
         </EmptyState>
       ) : null}
