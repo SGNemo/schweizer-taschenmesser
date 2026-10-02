@@ -69,4 +69,29 @@ describe('recurring tasks', () => {
       ['2026-10-19', 'Müll'],
     ]);
   });
+
+  it('copies the subtasks into the next instance (open again) and removes them on reopen', async () => {
+    const t = await taskRepo.create({
+      ...base,
+      title: 'Putzen',
+      dueDate: '2026-10-05',
+      recurrence: weekly,
+    });
+    const bad = await taskRepo.create({ ...base, title: 'Bad', parentId: t.id, done: true });
+    await taskRepo.create({ ...base, title: 'Küche', parentId: t.id, dueDate: '2026-10-06' });
+    await setDone(t, true);
+    await setDone((await taskRepo.get(t.id))!, true); // a second run adds nothing
+    const nextId = `${t.id}:2026-10-12`;
+    const subs = (await taskRepo.active().toArray()).filter((x) => x.parentId === nextId);
+    expect(subs.map((x) => [x.title, x.done, x.dueDate]).sort()).toEqual([
+      ['Bad', false, undefined],
+      ['Küche', false, '2026-10-13'],
+    ]);
+    expect(subs.find((x) => x.title === 'Bad')!.id).toBe(`${bad.id}:2026-10-12`);
+    // The originals stay as they were.
+    expect((await taskRepo.get(bad.id))?.done).toBe(true);
+
+    await setDone((await taskRepo.get(t.id))!, false);
+    expect((await taskRepo.active().toArray()).filter((x) => x.id.includes(':'))).toEqual([]);
+  });
 });
