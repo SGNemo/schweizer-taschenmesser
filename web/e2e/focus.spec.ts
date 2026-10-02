@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 async function addTodo(page: Page, title: string) {
   await ready(page, '/todos');
   await page.getByLabel('ToDo hinzufügen').fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen' }).click();
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
 }
 
@@ -73,6 +73,7 @@ test.describe('Focus and attention aids', () => {
       .getByTestId('next-card')
       .getByRole('button', { name: /Anfangen/ })
       .click();
+    await expect(page.getByRole('timer')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByTestId('focus-indicator')).toBeVisible();
@@ -101,13 +102,14 @@ test.describe('Focus and attention aids', () => {
     await page.getByRole('button', { name: 'Für heute einplanen' }).click();
     await page.getByRole('button', { name: '15 Min' }).click();
     await page.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await ready(page, '/');
     const plan = page.getByTestId('day-plan');
     await expect(plan).toContainText('Zahnbürsten kaufen');
     await expect(plan).toContainText('15 Min');
     await expect(plan).toContainText('Noch Platz für 2.');
-    await plan.getByRole('checkbox', { name: 'Zahnbürsten kaufen' }).check();
+    await plan.getByRole('checkbox', { name: 'Zahnbürsten kaufen' }).click();
     await expect(plan).toContainText('Erledigt heute: 1');
   });
 
@@ -133,14 +135,20 @@ test.describe('Focus and attention aids', () => {
     const section = page.locator('section[aria-labelledby="focus"]');
     await expect(section).toBeVisible();
     for (const name of ['Nächste eine Sache', 'Tagesplan']) {
-      await section.getByRole('checkbox', { name }).uncheck();
+      const toggle = section.getByRole('switch', { name });
+      await expect(toggle).toHaveAttribute('aria-checked', 'true');
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-checked', 'false');
     }
     await ready(page, '/');
     await expect(page.getByText('Die Vorschläge sind ausgeschaltet.')).toBeVisible();
     await expect(page.getByTestId('next-card')).toHaveCount(0);
 
     await ready(page, '/settings/darstellung');
-    await section.getByRole('checkbox', { name: 'Zeit bis zum nächsten Termin' }).uncheck();
+    const timeToNext = section.getByRole('switch', { name: 'Zeit bis zum nächsten Termin' });
+    await expect(timeToNext).toHaveAttribute('aria-checked', 'true');
+    await timeToNext.click();
+    await expect(timeToNext).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/');
     await expect(
       page.getByText('Die Zeit bis zum nächsten Termin ist ausgeschaltet.'),
