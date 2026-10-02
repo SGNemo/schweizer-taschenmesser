@@ -12,8 +12,11 @@ import { startNotificationScheduler } from '@/core/notifications/scheduler';
 import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
 import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
+import { installErrorLog } from '@/core/diagnostics/errorLog';
 import { App } from './App';
 import './ui/global.css';
+
+installErrorLog();
 
 // The platform (browser or native shell) is chosen first: everything below asks `getPlatform()`.
 void initPlatform().then(() => {

@@ -148,3 +148,9 @@
   padding: var(--space-2) var(--space-3);
   color: var(--text-muted);
 }
+.status {
+  flex: none;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: normal;
+}

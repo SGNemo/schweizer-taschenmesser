@@ -44,6 +44,8 @@ const COMMANDS: &[&str] = &[
     "desktop_set_autostart",
     "desktop_autostart_enabled",
     "desktop_info",
+    "desktop_data_dir",
+    "desktop_open_data_dir",
     "desktop_show_main",
 ];
 

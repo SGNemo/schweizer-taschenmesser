@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkModule, checkWidgetSource } from './checkModules';
+import { checkModule, checkSettingsSource, checkWidgetSource } from './checkModules';
 
 const good = `
 const manifest = {
@@ -106,5 +106,20 @@ describe('checkWidgetSource', () => {
   it('wants an empty state or a link', () => {
     expect(checkWidgetSource('x', 'w', 'return <p>hi</p>')).toHaveLength(1);
     expect(checkWidgetSource('x', 'w', 'emptyAction={{}}')).toEqual([]);
+  });
+});
+
+describe('checkSettingsSource', () => {
+  const categories = ['module', 'sicherheit'];
+  it('accepts a known category and a missing one', () => {
+    expect(
+      checkSettingsSource('x', "export const settings = { category: 'sicherheit' }", categories),
+    ).toEqual([]);
+    expect(checkSettingsSource('x', 'export const settings = { fields: [] }', categories)).toEqual(
+      [],
+    );
+  });
+  it('rejects an unknown category', () => {
+    expect(checkSettingsSource('x', "{ category: 'misc' }", categories)).toHaveLength(1);
   });
 });

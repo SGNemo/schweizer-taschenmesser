@@ -154,6 +154,8 @@ pub fn run() {
             capture::desktop_set_autostart,
             capture::desktop_autostart_enabled,
             capture::desktop_info,
+            capture::desktop_data_dir,
+            capture::desktop_open_data_dir,
             capture::desktop_show_main
         ]);
 

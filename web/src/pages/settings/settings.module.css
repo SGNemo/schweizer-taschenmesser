@@ -106,3 +106,27 @@
   display: grid;
   gap: var(--space-4);
 }
+.value {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+  text-align: right;
+}
+.details {
+  border-top: 1px solid var(--border);
+  padding: var(--space-2) 0;
+}
+.details summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch);
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+}
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

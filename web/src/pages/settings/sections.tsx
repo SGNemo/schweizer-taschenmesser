@@ -8,7 +8,14 @@ import { t } from '@/strings';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
 import { Suspense } from 'react';
-import { AboutSection } from './AboutSection';
+import {
+  AboutSection,
+  AboutUpdatesSection,
+  DeviceResetSection,
+  DiagnosticsSection,
+  LicensesSection,
+  LinksSection,
+} from './AboutSections';
 import { AiSection } from './AiSection';
 import { AppearanceSection } from './AppearanceSection';
 import { BackupSection } from './BackupSection';
@@ -245,21 +252,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       ) : null,
   },
   {
-    id: 'about',
-    category: 'ueber',
-    order: 10,
-    title: t.about.title,
-    keywords: ['Version', 'Lizenz', 'Logo'],
-    render: () => (
-      <SettingsGroup id="about" title={t.about.title} bare>
-        <AboutSection />
-      </SettingsGroup>
-    ),
-  },
-  {
     id: 'setup',
     category: 'ueber',
-    order: 20,
+    order: 30,
     title: t.setup.title,
     keywords: ['Einrichtung', 'Assistent', 'Checkliste', 'erneut starten'],
     render: () => (
@@ -267,5 +262,65 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <SetupSection />
       </SettingsGroup>
     ),
+  },
+  {
+    id: 'about',
+    category: 'ueber',
+    order: 10,
+    title: t.about.title,
+    keywords: ['Version', 'Build', 'Commit', 'Plattform', 'Installation', 'Datenordner', 'Lizenz'],
+    fields: [
+      { key: 'version', label: t.about.version },
+      { key: 'build', label: t.about.build },
+      { key: 'channel', label: t.about.channel },
+      { key: 'platform', label: t.about.platform },
+      { key: 'install', label: t.about.install },
+      { key: 'dataDir', label: t.about.dataDir },
+      { key: 'license', label: t.about.license },
+    ],
+    render: () => <AboutSection />,
+  },
+  {
+    id: 'about-updates',
+    category: 'ueber',
+    order: 20,
+    title: t.about.updates.title,
+    keywords: ['Changelog', 'Änderungen', 'Neuerungen', 'Release Notes'],
+    fields: [{ key: 'check', label: t.about.updates.lastCheck }],
+    render: () => <AboutUpdatesSection />,
+  },
+  {
+    id: 'links',
+    category: 'ueber',
+    order: 40,
+    title: t.about.links.title,
+    keywords: ['GitHub', 'Quellcode', 'Downloads', 'Hilfe', 'Dokumentation', 'Fehler melden'],
+    render: () => <LinksSection />,
+  },
+  {
+    id: 'licenses',
+    category: 'ueber',
+    order: 50,
+    title: t.about.licenses,
+    keywords: ['Bibliotheken', 'Schrift', 'Icons', 'Open Source'],
+    render: () => <LicensesSection />,
+  },
+  {
+    id: 'diagnostics',
+    category: 'ueber',
+    order: 60,
+    title: t.about.diagnostics.title,
+    description: t.about.diagnostics.description,
+    keywords: ['Fehlerprotokoll', 'Export', 'Support'],
+    render: () => <DiagnosticsSection />,
+  },
+  {
+    id: 'device-reset',
+    category: 'ueber',
+    order: 70,
+    title: t.about.reset.title,
+    description: t.about.reset.description,
+    keywords: ['Löschen', 'Zurücksetzen', 'Gefahrenzone', 'Alle Daten'],
+    render: () => <DeviceResetSection />,
   },
 ];

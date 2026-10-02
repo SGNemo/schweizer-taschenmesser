@@ -19,6 +19,7 @@ const connector: ConnectorDef = {
   features: [],
   isConfigured: async (ctx) => (await loadSubscriptions(ctx)).length > 0,
   settings: IcsSettings,
+  secretNames: ['subscriptions'],
   calendar: {
     async listCalendars(ctx) {
       return (await loadSubscriptions(ctx)).map((s) => ({ id: s.id, name: s.name, primary: true }));

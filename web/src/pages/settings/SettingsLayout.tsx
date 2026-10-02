@@ -16,6 +16,7 @@ import { searchSettings } from '@/core/settings/registry/search';
 import { isCategoryId, type SettingsCategoryId } from '@/core/settings/registry/types';
 import { t } from '@/strings';
 import { EmptyState, Icon, Skeleton, TextField, useMediaQuery, type IconName } from '@/ui';
+import { CategoryStatus } from './CategoryStatus';
 import { useSettingsSections } from './useSections';
 import styles from './SettingsLayout.module.css';
 
@@ -88,6 +89,7 @@ function CategoryLink({ id, list }: { id: SettingsCategoryId; list?: boolean }) 
         <span className={styles.linkTitle}>{c.title}</span>
         {list ? <span className={styles.linkDesc}>{c.description}</span> : null}
       </span>
+      <CategoryStatus id={id} />
       {list ? <Icon name="chevronRight" /> : null}
     </NavLink>
   );
