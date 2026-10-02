@@ -89,6 +89,39 @@ export interface LocalApiServerToken {
 }
 
 /** Loopback-only HTTP server of the desktop shell (`src-tauri/crates/local-api`); elsewhere unsupported. */
+/** One request the native host relayed from the browser extension (already stamped with its origin). */
+export interface VaultBridgeRequest {
+  id: number;
+  /** JSON text; validated by the app (`modules/accounts/bridge`), never trusted here. */
+  body: string;
+}
+
+export interface VaultBridgeRegistration {
+  browsers: { browser: string; registered: boolean }[];
+  /** The manifest file names the executable that is running now. */
+  upToDate: boolean;
+  manifest: string;
+}
+
+export type VaultBridgeStartError = 'channel-taken' | 'failed';
+
+/**
+ * Desktop only: the channel to the browser extension's native messaging host. Nothing listens until
+ * `start` is called; every request is answered with the JSON text the handler returns.
+ */
+export interface VaultBridgeService {
+  supported: boolean;
+  /** Resolves to an error code, or `null` once the server listens. */
+  start(
+    onRequest: (req: VaultBridgeRequest) => Promise<string>,
+  ): Promise<VaultBridgeStartError | null>;
+  stop(): Promise<void>;
+  /** Writes the host manifest and the browser registry entries (rejects when that fails). */
+  register(): Promise<VaultBridgeRegistration>;
+  unregister(): Promise<void>;
+  status(): Promise<VaultBridgeRegistration>;
+}
+
 export interface LocalApiService {
   supported: boolean;
   /** Starts (or restarts) on `127.0.0.1:<port>`; resolves with the bound port. Errors: `port-in-use`, `port-denied`, `listen-failed`. */
@@ -132,6 +165,8 @@ export interface DesktopService {
   supported: boolean;
   /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
   setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
+  /** Same for the vault search key (`null` removes it; unset by default). */
+  setVaultHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** True = the window's close button hides the app in the tray instead of quitting. */
   setCloseToTray(enabled: boolean): Promise<void>;
   setTrayLabels(labels: TrayLabels): Promise<void>;
@@ -146,6 +181,8 @@ export interface DesktopService {
   readClipboard(): Promise<string | undefined>;
   /** Capture window only: fires every time the window is opened. Returns an unsubscribe function. */
   onCaptureOpen(callback: () => void): () => void;
+  /** Main window: fires when the vault search key was pressed (the listener checks the vault state). */
+  onVaultSearch(callback: () => void): () => void;
 }
 
 export interface PlatformService {
@@ -164,6 +201,7 @@ export interface PlatformService {
   screen: ScreenService;
   oauth: OAuthLoopback;
   localApi: LocalApiService;
+  vaultBridge: VaultBridgeService;
   /** Drive overview and read-only scans for the disk module (desktop only). */
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */

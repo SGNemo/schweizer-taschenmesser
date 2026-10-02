@@ -26,6 +26,9 @@ export function hotkeyLabel(accelerator: string): string {
 export const applyHotkey = (accelerator: string): Promise<HotkeyError | null> =>
   getPlatform().desktop.setHotkey(accelerator || null);
 
+export const applyVaultHotkey = (accelerator: string): Promise<HotkeyError | null> =>
+  getPlatform().desktop.setVaultHotkey(accelerator || null);
+
 /**
  * Applies the stored per-device switches to the native shell at startup: tray labels, "close to
  * tray", the hotkey, and a refresh of the autostart entry (the executable may have moved). A
@@ -48,6 +51,14 @@ export async function startQuickCaptureDesktop(): Promise<void> {
       useUiStore
         .getState()
         .toast(t.quickCapture.settings.hotkeyStartupError(hotkeyLabel(prefs.hotkey)));
+    }
+  }
+  if (prefs.vaultHotkey) {
+    const error = await applyVaultHotkey(prefs.vaultHotkey);
+    if (error) {
+      useUiStore
+        .getState()
+        .toast(t.quickCapture.settings.hotkeyStartupError(hotkeyLabel(prefs.vaultHotkey)));
     }
   }
 }

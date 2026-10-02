@@ -1,5 +1,6 @@
 import { createFakeDisk } from './fakeDisk';
 import { createFakeLocalApi } from './fakeLocalApi';
+import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeSystem } from './fakeSystem';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
@@ -83,10 +84,19 @@ export const onCaptureOpenEvent = (callback: () => void): (() => void) => {
   return () => window.removeEventListener(CAPTURE_OPEN_EVENT, callback);
 };
 
+/** The DOM event the native shell dispatches into the main window for the vault search key. */
+export const VAULT_SEARCH_EVENT = 'tm-vault-search';
+
+export const onVaultSearchEvent = (callback: () => void): (() => void) => {
+  window.addEventListener(VAULT_SEARCH_EVENT, callback);
+  return () => window.removeEventListener(VAULT_SEARCH_EVENT, callback);
+};
+
 /** No tray, hotkey or autostart in a browser; the capture page itself still works there. */
 export const webDesktop: DesktopService = {
   supported: false,
   setHotkey: async () => 'failed',
+  setVaultHotkey: async () => 'failed',
   setCloseToTray: async () => undefined,
   setTrayLabels: async () => undefined,
   setAutostart: async () => undefined,
@@ -96,6 +106,7 @@ export const webDesktop: DesktopService = {
   hideCapture: async () => undefined,
   readClipboard: () => navigator.clipboard.readText().catch(() => undefined),
   onCaptureOpen: onCaptureOpenEvent,
+  onVaultSearch: onVaultSearchEvent,
 };
 
 /** The PWA receives shares through its web manifest (`share_target`), not through this service. */
@@ -154,6 +165,18 @@ export function createWebPlatform(): PlatformService {
       import.meta.env.MODE === 'e2e'
         ? createFakeLocalApi()
         : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    // E2E builds only: a stand-in for the native pipe server (the extension tests call into it).
+    vaultBridge:
+      import.meta.env.MODE === 'e2e'
+        ? createFakeVaultBridge()
+        : {
+            supported: false,
+            start: unsupported,
+            stop: async () => undefined,
+            register: unsupported,
+            unregister: unsupported,
+            status: unsupported,
+          },
     // E2E builds only: an invented folder tree instead of the native scan.
     disk:
       import.meta.env.MODE === 'e2e'

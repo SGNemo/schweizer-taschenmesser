@@ -12,6 +12,7 @@ Long design notes, split by topic (text moved unchanged from the former single f
 | [native](architecture/native.md) | Native distribution (Phases 7–10): shell, PlatformService, versioning, Android, closed-app reminders, portable Windows build |
 | [releases](architecture/releases.md) | Releases & CI (Phase 9), release security, Self-update (Phase 10) |
 | [vault](architecture/vault.md) | Password vault "Accounts" (Phase 11), step 11b keystore/biometrics |
+| [browser-extension](architecture/browser-extension.md) | Brave extension, native messaging host, vault bridge (files, data flow) |
 | [importer](architecture/importer.md) | Start data & importers (Phase 13 step 2), HelpHint |
 | [local-api](architecture/local-api.md) | Data contract & JSON import, **Local AI import API** (Rust transport, app side, batches, MCP wrapper) |
 | [connectors](architecture/connectors.md) | Connectors, calendar sync, Gmail scan, proxy, bank import (Phase 13 step 3) |

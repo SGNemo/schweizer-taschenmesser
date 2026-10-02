@@ -10,10 +10,11 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | [howto/new-extension.md](howto/new-extension.md) | tool, connector, setup step, AI provider, importer |
 | [howto/design-brand.md](howto/design-brand.md) | logo/icons pipeline (`design/icon/`), wordmark, banner, design tokens, accents |
 | [howto/ci.md](howto/ci.md) | CI layout, caches, sharding, doc-only gate, Dev-Preview |
+| [howto/browser-extension.md](howto/browser-extension.md) | Brave extension: build, load, connect, flows, troubleshooting, vault bridge (native messaging host), release zip proposal |
 | [howto/release-deps.md](howto/release-deps.md) | release procedure (maintainer), Dependabot, CodeQL |
 
 ## Set up & run locally
-- `cd web && npm ci`, `cd ../server && npm ci` (and `cd ../mcp && npm ci` if you touch `mcp/`).
+- `cd web && npm ci`, `cd ../server && npm ci` (and `cd ../mcp && npm ci` if you touch `mcp/`, `cd ../packages/vault-core && npm ci` for the shared package, `cd ../extension && npm ci` for the extension).
 - Dev server: `npm run dev`. Production build: `npm run build`; serve: `npm run preview` (:4173).
 - Native shell: `npm run tauri -- dev` (needs Rust; Linux: `libwebkit2gtk-4.1-dev libgtk-3-dev …`). Compile with embedded frontend: `npm run tauri -- build --debug --no-bundle`.
 - Sync server: `cd server && cp .env.example .env` (set `SYNC_TOKEN`, ≥ 16 chars), `npm run dev`. Docker: `server/docker-compose.yml` (serves PWA + API).
