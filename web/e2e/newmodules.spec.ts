@@ -77,6 +77,22 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
   );
 });
 
+test('pantry: without the shopping module the hand-over says so and sends nothing', async ({
+  page,
+}) => {
+  await enable(page, ['pantry']);
+  await page.goto('/pantry');
+  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  await dialog.getByLabel('Name', { exact: true }).fill('Butter');
+  await dialog.getByLabel('Vorrat (Anzahl)').fill('0');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toBeHidden();
+  await page.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
+  await expect(page.getByText('Die Einkaufsliste ist ausgeschaltet')).toBeVisible();
+  await expect(page.getByText('an die Einkaufsliste gesendet')).toHaveCount(0);
+});
+
 test('time tracking: project, timer, manual entry, week sums and a time sheet', async ({
   page,
 }) => {

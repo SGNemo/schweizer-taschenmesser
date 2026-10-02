@@ -84,7 +84,7 @@ function Unlocked() {
   if (!data) return null;
   return (
     <>
-      <div className={styles.inline} style={{ marginBottom: 'var(--space-4)' }}>
+      <div className={styles.toolbar}>
         <TextField
           label={t.accounts.search}
           type="search"

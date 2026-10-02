@@ -246,7 +246,7 @@ export const t = {
         description: 'Sicherung deiner Daten und der Update-Kanal.',
         backupNow: 'Backup jetzt speichern',
         autoNote:
-          'Automatische Backups gibt es noch nicht; vor jedem Update legt die App aber eine Sicherungskopie an.',
+          'Automatische Backups richtest du später unter Einstellungen → Backup ein (in der Windows- und Android-App). Vor jedem Update legt die App außerdem eine Sicherungskopie an.',
         channel: 'Update-Kanal',
         stable: 'Stabil',
         beta: 'Beta',
@@ -276,8 +276,7 @@ export const t = {
       },
       productive: {
         name: 'Produktiv',
-        description:
-          'Aufgaben, Notizen, Kalender, Gewohnheiten, Lesezeichen, Starter, Nachrichten.',
+        description: 'Aufgaben, Notizen, Kalender, Merkliste, Apps & Links.',
       },
       minimal: { name: 'Minimal', description: 'Nur Kalender und Aufgaben.' },
     } as Record<string, { name: string; description: string }>,
@@ -1662,8 +1661,8 @@ export const t = {
     inDays: (d: number) => (d === 1 ? 'Läuft morgen ab' : `Noch ${d} Tage`),
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
-    restocked: (n: string) =>
-      `„${n}“ an die Einkaufsliste gesendet (sofern das Modul eingeschaltet ist).`,
+    restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
+    shoppingOff: 'Die Einkaufsliste ist ausgeschaltet. Schalte sie in der Modul-Bibliothek ein.',
     lowStock: 'Wird knapp',
     usedUp: 'Aufgebraucht',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,

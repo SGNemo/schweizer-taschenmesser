@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import { Badge, Button, EmptyState, Icon, ItemList, ItemRow, PageHeader } from '@/ui';
 import { ContractEditor, type ContractTarget } from '../components/ContractEditor';
@@ -28,7 +29,11 @@ export default function ContractsPage() {
           {t.contracts.add}
         </Button>
       </PageHeader>
-      {list && list.length === 0 ? <EmptyState icon="file" title={t.contracts.empty} /> : null}
+      {list && list.length === 0 ? (
+        <EmptyState icon="file" title={t.contracts.empty}>
+          <StartDataButton moduleId="contracts" />
+        </EmptyState>
+      ) : null}
       <ItemList layout="grid" label={t.contracts.title}>
         {sortContracts(list ?? [], day).map((c) => {
           const status = statusOf(c, day);

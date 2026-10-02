@@ -8,7 +8,7 @@ import { settings } from './settings';
 const manifest: ModuleManifest = {
   id: 'vault',
   name: 'Dokumente',
-  icon: 'lock',
+  icon: 'files',
   version: 1,
   description:
     'Wichtige Dokumente mit Kategorie, Notiz und Ablaufdatum (z. B. Ausweis) und angehängter Datei. Dateien bleiben nur auf diesem Gerät.',

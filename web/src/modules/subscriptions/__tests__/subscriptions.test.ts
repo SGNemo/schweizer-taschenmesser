@@ -1,3 +1,4 @@
+import { setSettings } from '@/core/settings/settings';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
@@ -88,6 +89,14 @@ describe('subscriptions module', () => {
     expect(await collectNotifications({ from: at + 1000, to: at + 3_600_000 }, [manifest])).toEqual(
       [],
     );
+  });
+
+  it('uses the reminder time from the settings', async () => {
+    await setSettings('module.subscriptions', { remindTime: '18:30' });
+    await subscriptionRepo.create(sub({ cancelNoticeDays: 10 }));
+    const at = toEpoch('2026-10-02', '18:30');
+    const due = await collectNotifications({ from: at - 1000, to: at + 1000 }, [manifest]);
+    expect(due).toHaveLength(1);
   });
 
   it('no notifications for subscriptions without a notice period', async () => {

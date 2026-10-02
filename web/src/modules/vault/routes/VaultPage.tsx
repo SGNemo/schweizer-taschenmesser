@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
 import { formatDay, today } from '@/core/time/dates';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
   Badge,
@@ -90,7 +91,9 @@ export default function VaultPage() {
         </Chips>
       </div>
       {docs && shown.length === 0 ? (
-        <EmptyState icon="lock" title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered} />
+        <EmptyState icon="files" title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>
+          {docs.length === 0 ? <StartDataButton moduleId="vault" /> : null}
+        </EmptyState>
       ) : null}
       <ItemList layout="grid" label={t.vault.title}>
         {shown.map((d) => {
