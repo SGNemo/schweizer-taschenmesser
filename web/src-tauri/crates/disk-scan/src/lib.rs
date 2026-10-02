@@ -5,6 +5,7 @@
 
 mod delete;
 mod drives;
+mod sizes;
 mod duplicates;
 mod guard;
 mod kinds;
@@ -19,7 +20,10 @@ pub use delete::{
     Flag, ItemReport, Mode, NoTrash, Outcome, Plan, PlanItem, Report, TrashError, Trasher,
     LARGE_BYTES, LARGE_FILES,
 };
-pub use drives::{list_drives, DriveInfo, DriveKind, Media};
+pub use sizes::{folder_size, place_sizes, recycle_bin_size, PlaceSize};
+pub use drives::{
+    list_drives, Bus, DriveInfo, DriveKind, Health, HealthGap, HealthStatus, Media,
+};
 pub use duplicates::{find_duplicates, DupGroup};
 pub use guard::{Denied, Guard, Norm};
 pub use kinds::{classify, FileKind, KIND_COUNT};

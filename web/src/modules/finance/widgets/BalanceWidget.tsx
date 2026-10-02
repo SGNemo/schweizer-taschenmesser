@@ -26,7 +26,6 @@ export default function BalanceWidget() {
     <KpiWidget
       loading={loading && !noAccounts}
       value={noAccounts || balance === undefined ? undefined : formatMoney(balance)}
-      label={t.finance.balance}
       empty={t.finance.noAccounts}
       emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
       context={a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available)) : undefined}
