@@ -4,7 +4,7 @@ import { mainNav, ready } from './helpers';
 const phoneOnly = (name: string) => name === 'pixel-7';
 
 test.describe('shell: sidebar, areas, favourites (desktop)', () => {
-  test.beforeEach(({}, info) => {
+  test.beforeEach((_fixtures, info) => {
     test.skip(phoneOnly(info.project.name), 'sidebar is a desktop feature');
   });
 
@@ -117,7 +117,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
 });
 
 test.describe('shell: phone', () => {
-  test.beforeEach(({}, info) => {
+  test.beforeEach((_fixtures, info) => {
     test.skip(!phoneOnly(info.project.name), 'bottom navigation is a phone feature');
   });
 
