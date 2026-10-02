@@ -86,9 +86,11 @@ test.describe('Focus and attention aids', () => {
     await addTodo(page, 'Zweite Aufgabe');
     await ready(page, '/');
     const card = page.getByTestId('next-card');
-    const first = (await card.locator('span').nth(1).textContent()) ?? '';
+    // Whichever of the two is suggested first, "Etwas anderes" must show the other one.
+    const shown = (await card.textContent()) ?? '';
+    const other = shown.includes('Erste Aufgabe') ? 'Zweite Aufgabe' : 'Erste Aufgabe';
     await card.getByRole('button', { name: 'Etwas anderes' }).click();
-    await expect(page.getByTestId('next-card')).not.toContainText(first);
+    await expect(page.getByTestId('next-card')).toContainText(other);
     await page.getByTestId('next-card').getByRole('button', { name: 'Später' }).click();
     await expect(page.getByText('Auf morgen verschoben.')).toBeVisible();
   });
