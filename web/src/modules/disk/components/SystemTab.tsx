@@ -107,7 +107,7 @@ const CpuTile = memo(function CpuTile() {
       title={t.system.cpu}
       percent={usage}
       level={usage >= 90 ? 'full' : 'ok'}
-      value={t.system.load(Math.round(usage))}
+      value={`${Math.round(usage)} %`}
       sub={
         <>
           {brand}

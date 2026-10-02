@@ -8,7 +8,7 @@ import { useUpdateStore } from '@/core/update/controller';
 
 const items = vi.hoisted(() => ({ value: [] as unknown[] | undefined }));
 vi.mock('@/core/modules/contributions', async (original) => ({
-  ...(await original<ContributionsModule>()),
+  ...(await original<typeof ContributionsModule>()),
   useAttentionItems: () => items.value,
 }));
 
