@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import {
   clock,
   extend,
+  type FocusSession,
   isOver,
   isRunning,
   pause,
@@ -11,7 +12,12 @@ import {
   resume,
   timeLeft,
 } from '@/core/focus/session';
-import { clearFocusSession, saveFocusSession, useFocusSession } from '@/core/focus/state';
+import {
+  clearFocusSession,
+  getFocusSession,
+  saveFocusSession,
+  useFocusSession,
+} from '@/core/focus/state';
 import { useNow } from '@/core/focus/useNow';
 import { useFocusSettings } from '@/core/settings/focus';
 import { now, pad2 } from '@/core/time/now';
@@ -113,6 +119,11 @@ export default function FocusPage() {
         })),
       );
     });
+  /** Applies a change to the stored round (not to the last render), so quick taps never use stale data. */
+  async function change(fn: (s: FocusSession) => FocusSession) {
+    const current = await getFocusSession();
+    if (current && current.taskId === taskId) await saveFocusSession(fn(current));
+  }
   const toggleStep = (id: string, done: boolean) =>
     void taskRepo.update(id, { done, completedAt: done ? now() : undefined });
 
@@ -255,13 +266,13 @@ export default function FocusPage() {
         {!over ? (
           <Button
             onClick={() =>
-              void saveFocusSession(isRunning(mine) ? pause(mine, now()) : resume(mine, now()))
+              void change((cur) => (isRunning(cur) ? pause(cur, now()) : resume(cur, now())))
             }
           >
             {isRunning(mine) ? t.focus.mode.pause : t.focus.mode.resume}
           </Button>
         ) : null}
-        <Button onClick={() => void saveFocusSession(extend(mine, 5, now()))}>
+        <Button onClick={() => void change((cur) => extend(cur, 5, now()))}>
           {t.focus.mode.plusFive}
         </Button>
         <Button variant="ghost" onClick={() => void endRound()}>
