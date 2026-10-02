@@ -1,8 +1,17 @@
 # Chats – running work and hand-over
 
-Several Claude chats work in parallel and only see each other through GitHub. Keep this file short; delete finished rows. Last full review: 2026-10-01.
+Several Claude chats work in parallel and only see each other through GitHub. Keep this file short; delete finished rows. Last full review: 2026-10-02.
 
-## Running work
+## Wartet auf Sven
+Everything that needs a decision or a merge from the maintainer, in one place. A chat adds a row when it stops for him and removes it when done. Source of truth for PRs: GitHub (`list_pull_requests`).
+
+| Was | Was zu tun ist |
+|---|---|
+| Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
+| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
+| Plan Fokus- und Aufmerksamkeitshilfen | Paket 1 läuft (siehe unten); Pakete 2–4 starten, wenn Paket 1 gemergt ist ([focus-aids](features/focus-aids.md)) |
+
+## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 | Focus and attention aids (app + repo workflow) | `feat/adhd-friendly` | home, quick capture, todos, calendar reminders, notifications, settings, docs (STATUS, CHATS, PROMPT-TEMPLATES) | plan approved; implementation not started (model switch) – next: phase 3 docs, then package 1 per focus-aids.md | d207ab3 | 2026-10-02 |

@@ -2968,7 +2968,7 @@ export const t = {
     client: {
       title: 'Eigene Google-Anwendung',
       intro:
-        'Für die Anmeldung brauchst du eine eigene „OAuth-Client-ID“ (Typ Desktop-App) aus der Google Cloud Console. Die Anleitung steht in der docs/STATUS.md unter „Offen – macht Sven“.',
+        'Für die Anmeldung brauchst du eine eigene „OAuth-Client-ID“ (Typ Desktop-App) aus der Google Cloud Console. Die Anleitung steht in der docs/MANUAL-TESTS.md unter „Anleitungen für Sven“.',
       id: 'Client-ID',
       secret: 'Client-Secret',
       secretHint: 'Google verlangt es auch bei Desktop-Apps; es gilt dort nicht als vertraulich.',

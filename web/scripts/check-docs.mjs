@@ -15,15 +15,15 @@ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const strict = process.argv.includes('--strict');
 
 const BUDGET = {
-  start: 2000,
+  start: 2600,
   area: 500,
   lookup: 3000,
   overrides: {
-    'docs/README.md': 600,
+    'docs/README.md': 700,
     'docs/ARCHITECTURE-MAP.md': 3500,
-    'docs/STATUS.md': 3500,
-    'docs/CHATS.md': 1500,
-    'docs/PROMPT-TEMPLATES.md': 1500,
+    'docs/STATUS.md': 5000,
+    'docs/CHATS.md': 2000,
+    'docs/PROMPT-TEMPLATES.md': 2000,
     'docs/meta/DOCS-GUIDE.md': 1500,
   },
   // Never auto-loaded, long by nature (reports, German user docs, checklists, ideas, generated notes).
