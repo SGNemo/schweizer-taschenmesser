@@ -48,6 +48,7 @@ const manifest: ModuleManifest = {
     onboarding: onboarding,
     quickAdd: [{ id: 'event', label: t.calendar.meta.quickAdd, to: '/calendar?new=1' }],
     calendarItems: () => import('./calendar'),
+    notifications: () => import('./notifications'),
     externalCalendar: () => import('./external'),
   },
 };

@@ -70,7 +70,11 @@ export function groupByDate(items: CalendarItem[]): Map<string, CalendarItem[]> 
  * Expands stored events into per-day calendar items within `range`. Handles recurrence and
  * multi-day events (each covered day becomes one item; only the first day shows the start time).
  */
-export function expandEvent(id: string, e: CalendarEvent, range: DateRange): CalendarItem[] {
+export function expandEvent(
+  id: string,
+  e: Omit<CalendarEvent, 'kind' | 'notify'> & { kind?: string },
+  range: DateRange,
+): CalendarItem[] {
   const span = e.endDate ? daysBetween(e.startDate, e.endDate) : 0;
   // An occurrence starting up to `span` days before the range can still reach into it.
   const starts = datesInRange(e.startDate, e.recurrence, addDaysStr(range.from, -span), range.to);
@@ -85,7 +89,7 @@ export function expandEvent(id: string, e: CalendarEvent, range: DateRange): Cal
       items.push({
         id: `${id}:${date}`,
         source: 'calendar',
-        kind: 'event',
+        kind: e.kind === 'reminder' ? 'reminder' : 'event',
         title: e.title,
         date,
         time: timed ? e.startTime : undefined,
