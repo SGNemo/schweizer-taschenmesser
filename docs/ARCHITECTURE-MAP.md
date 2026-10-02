@@ -19,7 +19,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
-- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, birthdays, bookmarks, budgets, calendar, contracts, **disk** (desktop only), example (dev only), finance, gifts, invoices, launcher, notes, packing, pantry, reminders, shopping, subscriptions, todos, vault; retired (schema only): habits, news, timetrack; **disk** = Dieser PC.
+- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, birthdays, bookmarks, budgets, calendar, contracts, **disk** (desktop only), example (dev only), finance, gifts, invoices, **lists**, notes, pantry, reminders, subscriptions, todos, vault; retired: habits, launcher, news, packing, shopping, timetrack; **disk** = Dieser PC.
 - `src/tools/<id>/` – small stateless helpers (12: calc, currency, dates, dev, dice, image, pdf, qr, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `ToolsSheet`, `assistant/`.
@@ -41,7 +41,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Module services / activation / migrations | `core/modules/services.ts`, `activation.ts`, `migrate.ts`, `lazy.ts` | `startModuleServices`, `enableModule`, `disableModule` |
 | **Tool registry** | `web/src/core/tools/{registry,types,state,layout}.ts` (glob `tools/*/manifest.ts`) | `ToolManifest`, `allTools`; UI `layout/ToolsSheet.tsx`, `/tools/:id` |
 | Event bus | `web/src/core/events/{bus,events,index}.ts` | typed `EventMap` |
-| **DB / data** | `web/src/core/db/` | `repo.ts` (`createRepo`, `createMany`, `purge`), `hlc.ts`, `schema.ts`, `schema.snapshot.json`, `schema-history.json`, `db.ts` (modules must not import) |
+| **DB / data** | `web/src/core/db/` | `repo.ts` (`createRepo`, `createMany`, `purge`), `hlc.ts`, `schema*.json`, `appMigrations.ts` (+`Steps`), `db.ts` (modules: no import) |
 | Settings | `web/src/core/settings/settings.ts` | `useSettings`, scopes in synced `_settings` |
 | Time | `web/src/core/time/{now,dates,due}.ts` | `now()`, `today()` |
 | **Sync client** | `web/src/core/sync/`: `engine.ts` (`runSync`), `ops.ts` (`mergeOps` – the LWW rule), `service.ts` (`syncNow`, `startSync`, `connect`), `types.ts` (`SyncAdapter`, `FieldOp`), `crypto.ts` (sync E2E), `adapters/selfHosted.ts`, `adapters/googleDrive.stub.ts` (unbuilt), `testing.ts` (`MemoryServer`) | |

@@ -63,24 +63,49 @@ const BASE: { title: string; kind: Kind; tags: string[]; note?: string; slug: st
   },
 ];
 
+/** "Lesezeichen": links as tiles, the first tag is the group. */
+const LINKS: { title: string; tags: string[]; slug: string }[] = [
+  { title: 'DHL Sendungsverfolgung', tags: ['Pakete'], slug: 'dhl' },
+  { title: 'Hermes Paketstatus', tags: ['Pakete'], slug: 'hermes' },
+  { title: 'Bahn Fahrplanauskunft', tags: ['Reisen'], slug: 'bahn' },
+  { title: 'Karten und Routen', tags: ['Reisen'], slug: 'karten' },
+  { title: 'Wetter für die Woche', tags: [], slug: 'wetter' },
+  { title: 'Messenger im Browser', tags: ['Kommunikation'], slug: 'messenger' },
+  { title: 'Streaming-Mediathek', tags: ['Freizeit'], slug: 'mediathek' },
+  { title: 'Stadtplan und Ämter', tags: ['Freizeit'], slug: 'stadt' },
+];
+
 function seed(ctx: SeedContext): SeedRows {
   const n = ctx.count({ small: 6, medium: 30, large: 250 });
+  const links = ctx.count({ small: 4, medium: 8, large: 8 });
   return {
-    item: Array.from({ length: n }, (_, i) => {
-      const b = BASE[i % BASE.length]!;
-      const round = Math.floor(i / BASE.length);
-      return {
-        id: ctx.id('bookmarks', 'item', i),
+    item: [
+      ...LINKS.slice(0, links).map((l, i) => ({
+        id: ctx.id('bookmarks', 'item', `link-${i}`),
         data: {
-          title: round === 0 ? b.title : `${b.title} (${round + 1})`,
-          url: `https://www.example.org/${b.slug}${round === 0 ? '' : `-${round + 1}`}`,
-          kind: b.kind,
-          tags: b.tags,
-          ...(b.note ? { note: b.note } : {}),
-          done: i % 4 === 3,
+          title: l.title,
+          url: `https://www.example.org/${l.slug}`,
+          kind: 'link' as const,
+          tags: l.tags,
+          done: false,
         },
-      };
-    }),
+      })),
+      ...Array.from({ length: n }, (_, i) => {
+        const b = BASE[i % BASE.length]!;
+        const round = Math.floor(i / BASE.length);
+        return {
+          id: ctx.id('bookmarks', 'item', i),
+          data: {
+            title: round === 0 ? b.title : `${b.title} (${round + 1})`,
+            url: `https://www.example.org/${b.slug}${round === 0 ? '' : `-${round + 1}`}`,
+            kind: b.kind,
+            tags: b.tags,
+            ...(b.note ? { note: b.note } : {}),
+            done: i % 4 === 3,
+          },
+        };
+      }),
+    ],
   };
 }
 

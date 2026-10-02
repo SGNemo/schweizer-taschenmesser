@@ -66,6 +66,8 @@ test.describe('keyboard (desktop)', () => {
 
   test('G then a letter jumps to an area, J/K walk the rows', async ({ page }) => {
     await ready(page, '/');
+    // The chord reads the areas of the navigation, which fill once the module states are loaded.
+    await expect(page.getByRole('button', { name: 'Planen auf- oder zuklappen' })).toBeVisible();
     await page.keyboard.press('g');
     await page.keyboard.press('p');
     await expect(page).toHaveURL(/\/calendar$/);

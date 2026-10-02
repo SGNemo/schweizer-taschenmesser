@@ -1,0 +1,225 @@
+{
+  "format": "taschenmesser-backup",
+  "version": 1,
+  "exportedAt": "2026-10-01T09:00:00.000Z",
+  "tables": {
+    "shopping_item": [
+      {
+        "id": "fx-shop-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000001000-0000-fixdev01",
+          "quantity": "1790000001000-0000-fixdev01",
+          "done": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "name": "Milch",
+        "quantity": "2",
+        "done": false
+      },
+      {
+        "id": "fx-shop-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000009000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000002000-0000-fixdev01",
+          "done": "1790000009000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "name": "Brot",
+        "done": true
+      },
+      {
+        "id": "fx-shop-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000010000,
+        "deviceId": "fixdev01",
+        "deletedAt": 1790000010000,
+        "_f": {
+          "name": "1790000003000-0000-fixdev01",
+          "quantity": "1790000003000-0000-fixdev01",
+          "done": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000010000-0000-fixdev01"
+        },
+        "name": "Mehl",
+        "quantity": "500 g",
+        "done": false
+      }
+    ],
+    "packing_list": [
+      {
+        "id": "fx-pack-1",
+        "createdAt": 1790000004000,
+        "updatedAt": 1790000004000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000004000-0000-fixdev01",
+          "note": "1790000004000-0000-fixdev01",
+          "deletedAt": "1790000004000-0000-fixdev01"
+        },
+        "name": "Wochenendtrip",
+        "note": "Zwei Nächte"
+      },
+      {
+        "id": "fx-pack-2",
+        "createdAt": 1790000005000,
+        "updatedAt": 1790000005000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000005000-0000-fixdev01",
+          "deletedAt": "1790000005000-0000-fixdev01"
+        },
+        "name": "Strandurlaub"
+      }
+    ],
+    "packing_item": [
+      {
+        "id": "fx-pitem-1",
+        "createdAt": 1790000006000,
+        "updatedAt": 1790000006000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "listId": "1790000006000-0000-fixdev01",
+          "name": "1790000006000-0000-fixdev01",
+          "packed": "1790000006000-0000-fixdev01",
+          "order": "1790000006000-0000-fixdev01",
+          "deletedAt": "1790000006000-0000-fixdev01"
+        },
+        "listId": "fx-pack-1",
+        "name": "Zahnbürste",
+        "packed": true,
+        "order": 0
+      },
+      {
+        "id": "fx-pitem-2",
+        "createdAt": 1790000007000,
+        "updatedAt": 1790000007000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "listId": "1790000007000-0000-fixdev01",
+          "name": "1790000007000-0000-fixdev01",
+          "packed": "1790000007000-0000-fixdev01",
+          "order": "1790000007000-0000-fixdev01",
+          "deletedAt": "1790000007000-0000-fixdev01"
+        },
+        "listId": "fx-pack-1",
+        "name": "Ladekabel",
+        "packed": false,
+        "order": 1
+      },
+      {
+        "id": "fx-pitem-3",
+        "createdAt": 1790000008000,
+        "updatedAt": 1790000008000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "listId": "1790000008000-0000-fixdev01",
+          "name": "1790000008000-0000-fixdev01",
+          "packed": "1790000008000-0000-fixdev01",
+          "order": "1790000008000-0000-fixdev01",
+          "deletedAt": "1790000008000-0000-fixdev01"
+        },
+        "listId": "fx-pack-2",
+        "name": "Badesachen",
+        "packed": false,
+        "order": 0
+      }
+    ],
+    "launcher_link": [
+      {
+        "id": "fx-link-1",
+        "createdAt": 1790000011000,
+        "updatedAt": 1790000011000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000011000-0000-fixdev01",
+          "url": "1790000011000-0000-fixdev01",
+          "group": "1790000011000-0000-fixdev01",
+          "deletedAt": "1790000011000-0000-fixdev01"
+        },
+        "title": "DHL",
+        "url": "https://www.dhl.example.org/",
+        "group": "Pakete"
+      },
+      {
+        "id": "fx-link-2",
+        "createdAt": 1790000012000,
+        "updatedAt": 1790000012000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000012000-0000-fixdev01",
+          "url": "1790000012000-0000-fixdev01",
+          "deletedAt": "1790000012000-0000-fixdev01"
+        },
+        "title": "Wetter",
+        "url": "https://wetter.example.org/"
+      },
+      {
+        "id": "fx-link-3",
+        "createdAt": 1790000013000,
+        "updatedAt": 1790000013000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000013000-0000-fixdev01",
+          "url": "1790000013000-0000-fixdev01",
+          "group": "1790000013000-0000-fixdev01",
+          "deletedAt": "1790000013000-0000-fixdev01"
+        },
+        "title": "Bahn",
+        "url": "https://bahn.example.org/",
+        "group": "Reisen"
+      },
+      {
+        "id": "fx-link-4",
+        "createdAt": 1790000014000,
+        "updatedAt": 1790000014000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000014000-0000-fixdev01",
+          "url": "1790000014000-0000-fixdev01",
+          "group": "1790000014000-0000-fixdev01",
+          "deletedAt": "1790000014000-0000-fixdev01"
+        },
+        "title": "Karte",
+        "url": "https://karte.example.org/",
+        "group": "Reisen"
+      }
+    ],
+    "bookmarks_item": [
+      {
+        "id": "fx-bm-1",
+        "createdAt": 1790000015000,
+        "updatedAt": 1790000015000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000015000-0000-fixdev01",
+          "url": "1790000015000-0000-fixdev01",
+          "kind": "1790000015000-0000-fixdev01",
+          "tags": "1790000015000-0000-fixdev01",
+          "done": "1790000015000-0000-fixdev01",
+          "deletedAt": "1790000015000-0000-fixdev01"
+        },
+        "title": "Rezept Linsensuppe",
+        "url": "https://rezepte.example.org/linsen",
+        "kind": "read",
+        "tags": [],
+        "done": false
+      }
+    ]
+  }
+}

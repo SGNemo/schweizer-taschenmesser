@@ -7,6 +7,7 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 ### Breaking
 - **Nachrichten, Habit-Tracker und Zeiterfassung sind nicht mehr sichtbar** (stillgelegt). Ihre Daten bleiben gespeichert, synchronisieren weiter und sind in jedem Backup enthalten; eine Wiederherstellung der Oberfläche gibt es nicht. Wer die Daten braucht, exportiert sie vorher über ein Backup (Einstellungen → Backup).
 - **Werkzeuge:** Prozent & MwSt und Kosten teilen sind jetzt Modi des Rechners, Base64, JSON, UUID und Hash stecken im Werkzeug „Entwickler“, der Notizzettel ist der feste „Zettel“ oben in den Notizen. Gespeicherte Werkzeug-Auswahl wird übernommen.
+- **Einkaufsliste und Packlisten sind das neue Modul „Listen“** (Einkauf, Packliste, Checkliste), **Apps & Links sind die Ansicht „Lesezeichen“ der Merkliste** (Kacheln nach erstem Tag). Bestehende Daten werden beim Start, nach Sync und nach Backup-Import kopiert; die alten Module sind stillgelegt. **Alle Geräte müssen aktualisiert werden**: ein altes Gerät schreibt weiter in die alten Tabellen. Die acht Startseiten-Vorlagen von Apps & Links entfallen; `mailto:`/`tel:`-Links lassen sich im Lesezeichen-Editor nur als http(s) neu speichern.
 - **Systeminfo** ist ein Tab von „Dieser PC“ (früher Datenträger); der Pfad `/system` entfällt.
 
 ### Neu
