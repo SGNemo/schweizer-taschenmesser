@@ -30,6 +30,15 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
   const errors: string[] = [];
   const fail = (msg: string) => errors.push(`${id}: ${msg}`);
 
+  // Retired modules keep only schema/repo/manifest: no widgets, layout or seed data.
+  if (/\bretired:\s*true/.test(manifest)) {
+    if (!/\bnone:\s*['"]retired['"]/.test(manifest))
+      fail("retired needs `seed: { none: 'retired' }`");
+    if (fileExists('seed.ts')) fail('retired modules must not ship seed.ts');
+    if (/\bwidgets:\s*\[\s*\{/.test(manifest)) fail('retired modules must not have widgets');
+    return errors;
+  }
+
   const block = widgetsBlock(manifest);
   if (block === undefined) fail('manifest has no `widgets` array');
   else {

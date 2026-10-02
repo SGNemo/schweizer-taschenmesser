@@ -285,8 +285,17 @@ export interface ModuleManifest {
   defaultEnabled: boolean;
   /** Sort key for navigation and library (lower first, default 100). */
   order?: number;
-  /** Navigation area the module belongs to (`AREAS`); an area without an enabled module is hidden. */
-  area: AreaId;
+  /**
+   * Navigation area the module belongs to (`AREAS`); an area without an enabled module is hidden.
+   * Required, except for `retired` modules, which must not have one.
+   */
+  area?: AreaId;
+  /**
+   * Retired module: no routes, navigation, widgets, quick capture, `aiSchema`, contributions or
+   * import-API access, and not in the library, but its collections stay in the schema so sync,
+   * backup and older devices keep working (tables go in a later package). Needs `seed.none: 'retired'`.
+   */
+  retired?: true;
   /**
    * Ids of modules this one builds on (e.g. budgets read finance). Only informs the setup
    * assistant and the library; it never blocks enabling or disabling.

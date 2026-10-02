@@ -13,8 +13,11 @@ export interface SeedMeta {
   version: number;
   /** Modules whose seed data this module needs (they are seeded first and enabled with it). */
   dependsOn: readonly string[];
-  /** Set for modules with no stored data (desktop live data); `seed.ts` then returns nothing. */
-  none?: 'live-data';
+  /**
+   * Set for modules without seed data, so there is no `seed.ts`: `live-data` = nothing stored
+   * (desktop live readings), `retired` = the module is retired (`ModuleManifest.retired`).
+   */
+  none?: 'live-data' | 'retired';
 }
 
 /** Deterministic random numbers (mulberry32); one instance per module and run. */

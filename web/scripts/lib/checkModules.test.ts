@@ -86,6 +86,22 @@ describe('checkModule: seed contract', () => {
   });
 });
 
+describe('checkModule: retired modules', () => {
+  const retired = `const manifest = { id: 'x', retired: true, widgets: [], seed: { version: 1, dependsOn: [], none: 'retired' } };`;
+
+  it('need no widget, layout or seed.ts', () => {
+    expect(checkModule({ id: 'x', manifest: retired, fileExists: has() })).toEqual([]);
+  });
+
+  it('must say so in the seed and must not ship seed.ts or widgets', () => {
+    const plain = retired.replace(", none: 'retired'", '');
+    expect(checkModule({ id: 'x', manifest: plain, fileExists: has() }).join()).toContain('none');
+    expect(
+      checkModule({ id: 'x', manifest: retired, fileExists: has('seed.ts') }).join(),
+    ).toContain('seed.ts');
+  });
+});
+
 describe('checkWidgetSource', () => {
   it('wants an empty state or a link', () => {
     expect(checkWidgetSource('x', 'w', 'return <p>hi</p>')).toHaveLength(1);

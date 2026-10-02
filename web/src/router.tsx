@@ -29,6 +29,14 @@ function AreaRedirect({ area }: { area: NavArea }) {
   return <Navigate to={areaTarget(area)} replace />;
 }
 
+/** Old paths: retired modules lead to the home screen, merged pages to their new place. */
+const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
+  news: '/',
+  habits: '/',
+  timetrack: '/',
+  system: '/disk?tab=system',
+};
+
 export function buildRoutes(states: ModuleStates): RouteObject[] {
   const moduleRoutes = availableManifests().flatMap((m) =>
     states[m.id]
@@ -101,6 +109,10 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         },
         ...areaRoutes,
         ...moduleRoutes,
+        ...Object.entries(LEGACY_REDIRECTS).flatMap(([from, to]) => [
+          { path: from, element: <Navigate to={to} replace /> },
+          { path: `${from}/*`, element: <Navigate to={to} replace /> },
+        ]),
         {
           path: '*',
           element: (
