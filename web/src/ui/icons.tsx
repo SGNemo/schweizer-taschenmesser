@@ -147,5 +147,7 @@ export type IconName = keyof typeof ICONS;
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const Cmp = ICONS[name] ?? Puzzle;
-  return <Cmp size={size} aria-hidden="true" focusable="false" strokeWidth={1.75} />;
+  return (
+    <Cmp size={size} aria-hidden="true" focusable="false" strokeWidth={size < 20 ? 1.75 : 1.5} />
+  );
 }

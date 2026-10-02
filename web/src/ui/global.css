@@ -54,11 +54,10 @@ h3 {
   font-weight: var(--weight-semibold);
 }
 h1 {
-  font-weight: var(--weight-bold);
   letter-spacing: -0.02em;
 }
 h1 {
-  font-size: var(--text-2xl);
+  font-size: var(--text-h1);
 }
 h2 {
   font-size: var(--text-xl);
@@ -87,7 +86,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 

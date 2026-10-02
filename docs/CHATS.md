@@ -5,7 +5,7 @@ Several Claude chats work in parallel and only see each other through GitHub. Ke
 ## Running work
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| – (none running) | | | | | |
+| Design „Klar 2“ Phase 1 Tokens, then Phase 2 Shell + Bereiche | `feat/design-tokens`, then `feat/design-shell` | Phase 1: `ui/tokens.css`, `ui/tokens.test.ts`, `ui/global.css`, `index.html`, `stores/ui.ts`. Phase 2 (hotspots): `layout/AppShell*`, `router.tsx`, `useNavItems.ts`, `MoreSheet.tsx`, `core/modules/types.ts`, `core/modules/registry.ts`, `strings.ts` block `nav`, `pages/Settings.tsx`, all `modules/*/manifest.ts` (`area` only). Others: stay out until PR 2 is merged | in progress | – | 2026-10-01 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
