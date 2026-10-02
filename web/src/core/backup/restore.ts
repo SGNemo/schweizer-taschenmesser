@@ -52,6 +52,6 @@ export async function restoreBackup(
   if (opts.signal?.aborted) throw new RestoreAborted();
   const summary = await applyBackup(backup, mode, database, tableNames, opts.hooks);
   // A backup from before a merge only has the old tables: copy them forward.
-  await runAppMigrations(database, { tableNames });
+  await runAppMigrations(database, { tableNames, restamp: mode === 'replace' });
   return { summary, safetyBackup };
 }

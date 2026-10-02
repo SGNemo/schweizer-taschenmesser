@@ -160,7 +160,9 @@ describe('runAppMigrations', () => {
     await d.source.create({ name: 'Milch', done: false });
     const withEnsure: AppMigration = {
       ...step,
-      ensure: () => [{ id: 'fixed-note', fields: { title: 'Einkauf', body: '', pinned: false } }],
+      ensure: () => [
+        { table: TARGET, id: 'fixed-note', fields: { title: 'Einkauf', body: '', pinned: false } },
+      ],
     };
     await run(d, [withEnsure]);
     expect((await d.target.table.get('fixed-note'))?._f.title).toBe(BASE_HLC);

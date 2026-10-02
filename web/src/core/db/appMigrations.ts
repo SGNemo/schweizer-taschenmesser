@@ -20,6 +20,7 @@ import { allManifests } from '@/core/modules/registry';
 import { DexieStorageAdapter } from '@/core/storage/dexie';
 import type { SyncRow } from '@/core/sync/ops';
 import type { FieldOp } from '@/core/sync/types';
+import { getDeviceContext } from '@/core/db/device';
 import { now } from '@/core/time/now';
 import { APP_MIGRATIONS } from './appMigrationSteps';
 import { db as defaultDb, type TaschenmesserDB } from './db';
@@ -50,8 +51,8 @@ export interface AppMigration {
   target: string;
   /** Maps one source row; `undefined` skips it. */
   map(row: SyncRow): MappedRow | undefined;
-  /** Rows the step needs in the target first (made up, stamped with `BASE_HLC`). */
-  ensure?: () => { id: string; fields: Record<string, unknown> }[];
+  /** Rows the step needs first, e.g. a default list in another table (made up, stamped with `BASE_HLC`). */
+  ensure?: () => { table: string; id: string; fields: Record<string, unknown> }[];
 }
 
 export interface MigrationReport {
@@ -75,7 +76,7 @@ function targetSchema(target: string) {
 }
 
 /** The field ops that a step produces for one source row. */
-export function opsFor(step: AppMigration, source: SyncRow): FieldOp[] | undefined {
+export function opsFor(step: AppMigration, source: SyncRow, stamp?: string): FieldOp[] | undefined {
   const mapped = step.map(source);
   const schema = targetSchema(step.target);
   if (!mapped || !schema) return undefined;
@@ -89,36 +90,42 @@ export function opsFor(step: AppMigration, source: SyncRow): FieldOp[] | undefin
       collection: step.target,
       id: mapped.id,
       field,
-      hlc: source._f[mapped.from?.[field] ?? field] ?? fallback,
+      hlc: stamp ?? source._f[mapped.from?.[field] ?? field] ?? fallback,
       value,
     }));
   ops.push({
     collection: step.target,
     id: mapped.id,
     field: 'deletedAt',
-    hlc: source._f.deletedAt ?? fallback,
+    hlc: stamp ?? source._f.deletedAt ?? fallback,
     value: source.deletedAt,
   });
   return ops;
 }
 
-function ensureOps(step: AppMigration): FieldOp[] {
-  const schema = targetSchema(step.target);
-  if (!schema || !step.ensure) return [];
+function ensureOps(step: AppMigration, known: ReadonlySet<string>, stamp?: string): FieldOp[] {
+  if (!step.ensure) return [];
   return step.ensure().flatMap((row) => {
-    const parsed = schema.safeParse(row.fields);
-    if (!parsed.success) return [];
+    const schema = known.has(row.table) ? targetSchema(row.table) : undefined;
+    const parsed = schema?.safeParse(row.fields);
+    if (!parsed?.success) return [];
     return [
       ...Object.entries(parsed.data as Record<string, unknown>)
         .filter(([, value]) => value !== undefined)
         .map(([field, value]) => ({
-          collection: step.target,
+          collection: row.table,
           id: row.id,
           field,
-          hlc: BASE_HLC,
+          hlc: stamp ?? BASE_HLC,
           value,
         })),
-      { collection: step.target, id: row.id, field: 'deletedAt', hlc: BASE_HLC, value: null },
+      {
+        collection: row.table,
+        id: row.id,
+        field: 'deletedAt',
+        hlc: stamp ?? BASE_HLC,
+        value: null,
+      },
     ];
   });
 }
@@ -129,6 +136,8 @@ export async function runStep(
   database: TaschenmesserDB,
   storage: DexieStorageAdapter,
   known: ReadonlySet<string>,
+  /** Hands out fresh stamps instead of the source stamps (after a "replace" restore, see `runAppMigrations`). */
+  fresh?: () => string,
 ): Promise<MigrationReport> {
   const report: MigrationReport = { id: step.id, scanned: 0, copied: 0, skipped: 0 };
   if (!known.has(step.target) || !database.tables.some((t) => t.name === step.source))
@@ -136,9 +145,9 @@ export async function runStep(
   const rows = await database.table<SyncRow, string>(step.source).toArray();
   report.scanned = rows.length;
   if (rows.length === 0) return report;
-  const ops: FieldOp[] = ensureOps(step);
+  const ops: FieldOp[] = ensureOps(step, known, fresh?.());
   for (const row of rows) {
-    const rowOps = opsFor(step, row);
+    const rowOps = opsFor(step, row, fresh?.());
     if (rowOps) ops.push(...rowOps);
     else report.skipped++;
   }
@@ -159,15 +168,18 @@ let queue: Promise<unknown> = Promise.resolve();
  */
 export function runAppMigrations(
   database: TaschenmesserDB = defaultDb,
-  opts: { tableNames?: string[]; steps?: readonly AppMigration[] } = {},
+  opts: { tableNames?: string[]; steps?: readonly AppMigration[]; restamp?: boolean } = {},
 ): Promise<MigrationReport[]> {
   const run = async (): Promise<MigrationReport[]> => {
     const known = new Set(opts.tableNames ?? syncedTableNames(allManifests));
     const storage = new DexieStorageAdapter(database, [...known]);
     const reports: MigrationReport[] = [];
+    // After a "replace" restore the backup is the truth again: the copies are written like the restored
+    // rows themselves (fresh stamps), so they beat the tombstones the restore left in the target.
+    const fresh = opts.restamp ? (await getDeviceContext(database)).clock : undefined;
     for (const step of opts.steps ?? APP_MIGRATIONS) {
       try {
-        reports.push(await runStep(step, database, storage, known));
+        reports.push(await runStep(step, database, storage, known, fresh && (() => fresh.tick())));
       } catch {
         // Retried on the next run.
       }
