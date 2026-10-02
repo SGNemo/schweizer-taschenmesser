@@ -14,6 +14,7 @@ import { reminderRepo } from '../repo';
 import { settings } from '../settings';
 import styles from './reminders.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
+import { settingsPath } from '@/core/settings/registry/paths';
 
 export default function RemindersPage() {
   const reminders = useLiveQuery(
@@ -49,7 +50,9 @@ export default function RemindersPage() {
       {permission !== 'granted' && permission !== 'unsupported' ? (
         <div className={styles.banner} role="note">
           <span>{t.notifications.default}.</span>
-          <Link to="/settings">{t.notifications.enable}</Link>
+          <Link to={settingsPath('benachrichtigungen', 'notifications')}>
+            {t.notifications.enable}
+          </Link>
         </div>
       ) : null}
 

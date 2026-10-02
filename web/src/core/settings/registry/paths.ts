@@ -33,5 +33,7 @@ export const LEGACY_HASHES: Readonly<Record<string, SettingsCategoryId>> = {
 export function legacyTarget(hash: string): string | undefined {
   const id = hash.replace(/^#/, '');
   const category = LEGACY_HASHES[id];
-  return category ? settingsPath(category, id) : undefined;
+  if (!category) return undefined;
+  // The old start-data block now lives inside the module overview.
+  return settingsPath(category, id === 'startdata' ? 'modules' : id);
 }

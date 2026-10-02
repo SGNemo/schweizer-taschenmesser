@@ -2,7 +2,9 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
+import { settingsPath } from '@/core/settings/registry/paths';
 import { normalize } from '@/core/text/normalize';
+import { useSettingsSections } from '@/pages/settings/useSections';
 import type { ResultRow } from '@/core/ai/query/types';
 import { useSetupHost } from '@/core/setup/host';
 import { useTools } from '@/core/tools/state';
@@ -62,6 +64,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const openSetup = useSetupHost((s) => s.openWizard);
   const openTools = useUiStore((s) => s.openTools);
   const tools = useTools();
+  const settingsSections = useSettingsSections();
 
   const [devCommands, setDevCommands] = useState<Command[]>([]);
   useEffect(() => {
@@ -87,6 +90,20 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       ...moduleItems.map((i) => ({ id: i.to, label: i.label, icon: i.icon, run: go(i.to) })),
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
+      ...settingsSections.flatMap((sec) => [
+        {
+          id: `settings-${sec.id}`,
+          label: t.settings.paletteCommand(sec.title),
+          icon: 'settings' as IconName,
+          run: go(settingsPath(sec.category, sec.id)),
+        },
+        ...(sec.fields ?? []).map((f) => ({
+          id: `settings-${sec.id}--${f.key}`,
+          label: t.settings.paletteCommand(f.label),
+          icon: 'settings' as IconName,
+          run: go(settingsPath(sec.category, sec.id, f.key)),
+        })),
+      ]),
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
       ...(tools?.active ?? []).map((tool) => ({
         id: `tool-${tool.id}`,
@@ -96,7 +113,17 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       })),
       ...devCommands,
     ];
-  }, [navigate, moduleItems, tree, quickActions, openSetup, openTools, tools, devCommands]);
+  }, [
+    navigate,
+    moduleItems,
+    tree,
+    quickActions,
+    openSetup,
+    openTools,
+    tools,
+    devCommands,
+    settingsSections,
+  ]);
 
   const hits = useSearchHits(query);
   const hasModel = config ? isAiConfigured(config) : false;

@@ -13,7 +13,7 @@ import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
-import { Settings } from '@/pages/Settings';
+import { CategoryPage, SettingsIndex, SettingsLayout } from '@/pages/settings/SettingsLayout';
 import { ShareTarget } from '@/pages/ShareTarget';
 import { ToolLibrary } from '@/pages/ToolLibrary';
 
@@ -114,10 +114,14 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           path: 'settings',
           element: (
-            <PageContainer key="Settings" variant="narrow">
-              <Settings />
+            <PageContainer key="Settings" variant="wide">
+              <SettingsLayout />
             </PageContainer>
           ),
+          children: [
+            { index: true, element: <SettingsIndex /> },
+            { path: ':category', element: <CategoryPage /> },
+          ],
         },
         ...(ComponentSheet
           ? [
