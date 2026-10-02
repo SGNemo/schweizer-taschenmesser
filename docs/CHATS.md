@@ -5,7 +5,7 @@ Several Claude chats work in parallel and only see each other through GitHub. Ke
 ## Running work
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Paket 1 Aufräumen (0.4.0) | `feat/cleanup-package-1` | tools, notes, disk/system, Funde; Teil A ohne Hotspots; Teil B nach Design-PR 2 | Teil A in Arbeit | – | 2026-10-01 |
+| – (none running) | | | | | |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
