@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { CHORD_LETTERS, createShortcutHandler } from '@/core/keyboard/shortcuts';
 import { undoLast } from '@/core/undo';
@@ -10,14 +10,20 @@ import { useNavTree } from './useNavItems';
 export function useShortcuts(): void {
   const navigate = useNavigate();
   const tree = useNavTree();
+  // The latest navigation state, read at key time: the handler itself is created once, so a
+  // re-render between "G" and the second key cannot lose the chord.
+  const latest = useRef({ navigate, tree });
+  useLayoutEffect(() => {
+    latest.current = { navigate, tree };
+  });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const handler = createShortcutHandler({
       destination: (letter) => {
         const target = CHORD_LETTERS[letter];
-        return target === 'home' ? '/' : tree.areas.find((a) => a.id === target)?.to;
+        return target === 'home' ? '/' : latest.current.tree.areas.find((a) => a.id === target)?.to;
       },
-      go: (to) => void navigate(to),
+      go: (to) => void latest.current.navigate(to),
       quickAdd: () => useUiStore.getState().setQuickAddOpen(true),
       showShortcuts: () => useUiStore.getState().setShortcutsOpen(true),
       undo: () => {
@@ -29,5 +35,5 @@ export function useShortcuts(): void {
     // Capture phase: a consumed chord letter must not reach module shortcuts (accounts: P, T).
     window.addEventListener('keydown', handler, true);
     return () => window.removeEventListener('keydown', handler, true);
-  }, [navigate, tree]);
+  }, []);
 }

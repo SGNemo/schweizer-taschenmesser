@@ -14,19 +14,19 @@
 }
 .badge.success {
   background: var(--success-soft);
-  color: var(--success);
+  color: var(--success-ink);
 }
 .badge.warning {
   background: var(--warning-soft);
-  color: var(--warning);
+  color: var(--warning-ink);
 }
 .badge.info {
   background: var(--info-soft);
-  color: var(--info);
+  color: var(--info-ink);
 }
 .badge.danger {
   background: var(--danger-soft);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 .empty {
   display: flex;

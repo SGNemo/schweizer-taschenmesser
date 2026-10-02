@@ -1,6 +1,5 @@
 /** Dev-Preview / E2E only: every shared component on one page (axe audit and screenshot target). */
 import { useState } from 'react';
-import { MemoryRouter } from 'react-router';
 import { t } from '@/strings';
 import { tDev } from '@/strings.dev';
 import { useUiStore } from '@/stores/ui';
@@ -115,17 +114,15 @@ export default function ComponentSheet() {
           </Chips>
         </div>
         <h3>{c.tabs}</h3>
-        <MemoryRouter>
-          <Tabs
-            label={c.tabsLabel}
-            onSelect={setTab}
-            items={[
-              { id: 'a', label: c.tabA, active: tab === 'a' },
-              { id: 'b', label: c.tabB, active: tab === 'b' },
-              { id: 'c', label: c.tabC, active: tab === 'c' },
-            ]}
-          />
-        </MemoryRouter>
+        <Tabs
+          label={c.tabsLabel}
+          onSelect={setTab}
+          items={[
+            { id: 'a', label: c.tabA, active: tab === 'a' },
+            { id: 'b', label: c.tabB, active: tab === 'b' },
+            { id: 'c', label: c.tabC, active: tab === 'c' },
+          ]}
+        />
       </section>
 
       <section className={styles.section} aria-labelledby="cs-cards">

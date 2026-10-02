@@ -11,6 +11,14 @@ describe('isTypingTarget', () => {
     Object.defineProperty(editable, 'isContentEditable', { value: true });
     expect(isTypingTarget(editable)).toBe(true);
     expect(isTypingTarget(document.createElement('button'))).toBe(false);
+    for (const type of ['checkbox', 'radio', 'range', 'file']) {
+      const input = document.createElement('input');
+      input.type = type;
+      expect(isTypingTarget(input), type).toBe(false);
+    }
+    const date = document.createElement('input');
+    date.type = 'date';
+    expect(isTypingTarget(date)).toBe(true);
     expect(isTypingTarget(null)).toBe(false);
   });
 });

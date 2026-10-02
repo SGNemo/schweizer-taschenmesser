@@ -12,7 +12,7 @@ test.describe('undo', () => {
     await ready(page, '/todos');
     await addTodo(page, 'Zeitung abbestellen');
     await page.getByRole('checkbox', { name: 'Zeitung abbestellen' }).click();
-    await expect(page.getByRole('checkbox', { name: 'Zeitung abbestellen' })).toBeChecked();
+    await expect(page.getByText('Als erledigt markiert.')).toBeVisible();
     await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
     await expect(page.getByText('Rückgängig gemacht.')).toBeVisible();
     await expect(page.getByRole('checkbox', { name: 'Zeitung abbestellen' })).not.toBeChecked();
@@ -73,16 +73,15 @@ test.describe('keyboard (desktop)', () => {
     await page.keyboard.press('g');
     await expect(page).toHaveURL(/\/finance$/);
 
-    await ready(page, '/todos');
-    await addTodo(page, 'Erste Zeile');
-    await addTodo(page, 'Zweite Zeile');
+    // J/K walk the rows of a list built from ItemRow (here the component sheet).
+    await ready(page, '/dev/components');
     await page.locator('main').click({ position: { x: 5, y: 5 } });
     await page.keyboard.press('j');
-    await expect(page.getByRole('button', { name: /Erste Zeile/ })).toBeFocused();
+    await expect(page.getByRole('button', { name: /Stadtwerke Musterstadt/ })).toBeFocused();
     await page.keyboard.press('j');
-    await expect(page.getByRole('button', { name: /Zweite Zeile/ })).toBeFocused();
+    await expect(page.getByRole('button', { name: /Zahnarztpraxis/ })).toBeFocused();
     await page.keyboard.press('k');
-    await expect(page.getByRole('button', { name: /Erste Zeile/ })).toBeFocused();
+    await expect(page.getByRole('button', { name: /Stadtwerke Musterstadt/ })).toBeFocused();
   });
 });
 
