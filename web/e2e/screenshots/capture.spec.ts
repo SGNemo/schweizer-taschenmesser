@@ -36,6 +36,7 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'invoices', path: '/invoices' },
   { name: 'subscriptions', path: '/subscriptions' },
   { name: 'bookmarks', path: '/bookmarks' },
+  { name: 'bookmarks-links', path: '/bookmarks?view=links' },
   { name: 'notes', path: '/notes' },
   { name: 'lists', path: '/lists' },
   { name: 'birthdays', path: '/birthdays' },
