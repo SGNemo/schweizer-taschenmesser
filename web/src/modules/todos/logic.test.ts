@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { compareTasks, dueTone, groupTasks } from './logic';
+import {
+  compareTasks,
+  dueTone,
+  groupTasks,
+  isActionable,
+  nextDueDate,
+  nextInstanceId,
+} from './logic';
 
 const t = (
   over: Partial<Parameters<typeof compareTasks>[0]> & { id?: string; parentId?: string },
@@ -52,5 +59,27 @@ describe('todo logic', () => {
     expect(dueTone('2026-05-10', false, '2026-05-10')).toBe('today');
     expect(dueTone('2026-05-12', false, '2026-05-10')).toBe('soon');
     expect(dueTone('2026-06-01', false, '2026-05-10')).toBe('later');
+  });
+});
+
+describe('recurring tasks', () => {
+  const weekly = { freq: 'weekly', interval: 1 } as const;
+
+  it('derives the next due date and a deterministic id', () => {
+    expect(nextDueDate({ dueDate: '2026-10-05', recurrence: weekly })).toBe('2026-10-12');
+    expect(nextDueDate({ dueDate: '2026-10-05' })).toBeUndefined();
+    expect(nextDueDate({ recurrence: weekly })).toBeUndefined();
+    expect(nextInstanceId({ id: 'abc', dueDate: '2026-10-05', recurrence: weekly })).toBe(
+      'abc:2026-10-12',
+    );
+    // The chain keeps the id of the first task instead of growing.
+    expect(
+      nextInstanceId({ id: 'abc:2026-10-12', dueDate: '2026-10-12', recurrence: weekly }),
+    ).toBe('abc:2026-10-19');
+  });
+
+  it('keeps "Irgendwann" tasks out of the open views', () => {
+    expect(isActionable({})).toBe(true);
+    expect(isActionable({ someday: true })).toBe(false);
   });
 });

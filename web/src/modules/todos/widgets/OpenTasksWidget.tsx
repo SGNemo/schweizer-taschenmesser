@@ -1,15 +1,17 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
-import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { ChecklistWidget } from '@/ui';
-import { compareTasks } from '../logic';
-import { taskRepo } from '../repo';
+import { compareTasks, isActionable } from '../logic';
+import { setDone, taskRepo } from '../repo';
 
 export default function OpenTasksWidget() {
   const open = useLiveQuery(
-    async () => (await taskRepo.active().toArray()).filter((x) => !x.done).sort(compareTasks),
+    async () =>
+      (await taskRepo.active().toArray())
+        .filter((x) => !x.done && isActionable(x))
+        .sort(compareTasks),
     [],
   );
   const day = today();
@@ -30,7 +32,10 @@ export default function OpenTasksWidget() {
           label: s?.label,
         };
       })}
-      onToggle={(id, done) => taskRepo.update(id, { done, completedAt: done ? now() : undefined })}
+      onToggle={async (id, done) => {
+        const task = await taskRepo.get(id);
+        if (task) await setDone(task, done);
+      }}
     />
   );
 }

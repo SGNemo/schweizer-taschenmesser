@@ -5,13 +5,13 @@ import type { Stored } from '@/core/db/types';
 import { useSettings } from '@/core/settings/settings';
 import { relativeDayLabel, today } from '@/core/time/dates';
 import { undoableWithToast } from '@/core/undo/withToast';
-import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, IconButton, TextField } from '@/ui';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
-import { dueTone, groupTasks } from '../logic';
-import { ensureInbox, listRepo, taskRepo } from '../repo';
+import { describeRecurrence } from '@/core/recurrence/describe';
+import { dueTone, groupTasks, isActionable } from '../logic';
+import { ensureInbox, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
 import styles from './todos.module.css';
@@ -20,6 +20,7 @@ import { StartDataButton } from '@/core/importer/StartDataButton';
 type StoredTask = Stored<Task>;
 
 const ALL = 'all';
+const SOMEDAY = 'someday';
 
 interface RowProps {
   task: StoredTask;
@@ -64,6 +65,7 @@ function TaskRow({ task, subs, allSubs, day, showList, sub, onToggle, onOpen }: 
                 {relativeDayLabel(task.dueDate, day)}
               </span>
             ) : null}
+            {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
             {allSubs.length > 0 ? (
               <span>{t.todos.progress(allSubs.filter((x) => x.done).length, allSubs.length)}</span>
             ) : null}
@@ -92,9 +94,7 @@ function TaskRow({ task, subs, allSubs, day, showList, sub, onToggle, onOpen }: 
 
 function toggle(task: StoredTask, done: boolean) {
   const message = done ? t.todos.markedDone : t.todos.markedOpen;
-  void undoableWithToast(message, message, () =>
-    taskRepo.update(task.id, { done, completedAt: done ? now() : undefined }),
-  );
+  void undoableWithToast(message, message, () => setDone(task, done));
 }
 
 export default function TodosPage() {
@@ -127,10 +127,17 @@ export default function TodosPage() {
   const currentList = lists?.find((l) => l.id === selected);
   const targetListId = currentList?.id ?? lists?.[0]?.id;
   const showDone =
-    ((prefs as { showDone?: boolean } | undefined)?.showDone ?? true) && selected !== ALL;
+    ((prefs as { showDone?: boolean } | undefined)?.showDone ?? true) &&
+    selected !== ALL &&
+    selected !== SOMEDAY;
 
   const visible = useMemo(() => {
-    const scoped = (tasks ?? []).filter((x) => selected === ALL || x.listId === selected);
+    const scoped =
+      selected === SOMEDAY
+        ? (tasks ?? []).filter((x) => x.someday)
+        : (tasks ?? []).filter(
+            (x) => isActionable(x) && (selected === ALL || x.listId === selected),
+          );
     return scoped.filter((x) => showDone || !x.done);
   }, [tasks, selected, showDone]);
   const { top, children } = useMemo(() => groupTasks(visible), [visible]);
@@ -150,6 +157,7 @@ export default function TodosPage() {
       done: false,
       priority: 0,
       order: 0,
+      ...(selected === SOMEDAY ? { someday: true } : {}),
     });
     setTitle('');
   }
@@ -182,6 +190,14 @@ export default function TodosPage() {
             onClick={() => select(ALL)}
           >
             {t.todos.allOpen}
+          </button>
+          <button
+            type="button"
+            className={styles.chip}
+            aria-current={selected === SOMEDAY}
+            onClick={() => select(SOMEDAY)}
+          >
+            {t.todos.someday}
           </button>
           {lists?.map((l) => (
             <button
@@ -229,7 +245,9 @@ export default function TodosPage() {
                 subs={children.get(task.id) ?? []}
                 allSubs={(tasks ?? []).filter((x) => x.parentId === task.id)}
                 day={day}
-                showList={selected === ALL ? listName(task.listId) : undefined}
+                showList={
+                  selected === ALL || selected === SOMEDAY ? listName(task.listId) : undefined
+                }
                 onToggle={toggle}
                 onOpen={setEditing}
               />

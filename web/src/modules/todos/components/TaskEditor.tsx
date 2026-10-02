@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
+import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
+import type { Recurrence } from '@/core/recurrence/types';
 import {
   Button,
   Dialog,
@@ -7,6 +9,7 @@ import {
   IconButton,
   patternStyles,
   SelectField,
+  Switch,
   TextArea,
   TextField,
 } from '@/ui';
@@ -52,6 +55,8 @@ function EditorForm({
   const [listId, setListId] = useState(task.listId);
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
+  const [recurrence, setRecurrence] = useState<Recurrence | undefined>(task.recurrence);
+  const [someday, setSomeday] = useState(task.someday ?? false);
   const [note, setNote] = useState(task.note ?? '');
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
@@ -65,6 +70,8 @@ function EditorForm({
       listId,
       priority,
       dueDate: dueDate || undefined,
+      recurrence: dueDate ? recurrence : undefined,
+      someday: someday || undefined,
       note: note.trim() || undefined,
     });
     // Subtasks always live in the list of their parent.
@@ -132,6 +139,12 @@ function EditorForm({
         value={dueDate}
         onChange={(e) => setDueDate(e.target.value)}
       />
+      {dueDate && !isSub ? (
+        <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
+      ) : null}
+      {isSub ? null : (
+        <Switch label={t.todos.somedayLabel} checked={someday} onChange={setSomeday} />
+      )}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
 
       {isSub ? null : (

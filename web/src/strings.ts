@@ -726,6 +726,8 @@ export const t = {
     markedOpen: 'Wieder geöffnet.',
     taskDeleted: 'ToDo gelöscht.',
     empty: 'Nichts zu tun – gut so.',
+    someday: 'Irgendwann',
+    somedayLabel: 'Irgendwann (nicht in den offenen Listen zeigen)',
     allOpen: 'Alle offenen',
     newList: 'Neue Liste',
     listName: 'Listenname',
