@@ -1,0 +1,88 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-inline-start: var(--space-4);
+  border-inline-start: 3px solid var(--accent);
+}
+.label {
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  overflow-wrap: anywhere;
+}
+.meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: var(--font-num);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.plan {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+.planHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+.planTitle {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+}
+.row:last-child {
+  border-bottom: 0;
+}
+.est {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.hint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+}
+.done {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: var(--font-num);
+  margin-top: var(--space-2);
+}
+
+.linkButton {
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

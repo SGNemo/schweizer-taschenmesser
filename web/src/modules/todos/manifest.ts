@@ -29,6 +29,13 @@ const manifest: ModuleManifest = {
   migrations,
   widgets: [
     {
+      id: 'next',
+      title: t.focus.next.title,
+      defaultSize: 'l',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/NextWidget'),
+    },
+    {
       id: 'open',
       title: t.todos.meta.widget,
       defaultSize: 'm',
