@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTimeline, type TimelineItem } from './timeline';
+import { buildTimeline, type TimelineItem } from './timelineModel';
 
 const item = (key: string, time?: string, endTime?: string): TimelineItem => ({
   key,
