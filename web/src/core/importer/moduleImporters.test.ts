@@ -5,13 +5,13 @@ import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
 import { accountRepo, transactionRepo } from '@/modules/finance/repo';
-import { birthdayRepo } from '@/modules/birthdays/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
 import { itemRepo as listItemRepo } from '@/modules/lists/repo';
+import { personRepo } from '@/modules/people/repo';
+import { documentRepo } from '@/modules/vault/repo';
 import { invoiceRepo } from '@/modules/invoices/repo';
 import { reminderRepo } from '@/modules/reminders/repo';
 import { subscriptionRepo } from '@/modules/subscriptions/repo';
-import { contractRepo } from '@/modules/contracts/repo';
 import { externalRepo } from '@/modules/calendar/repo';
 import type { MailFinding } from '@/core/connectors/types';
 import { INBOX_ID, listRepo, taskRepo } from '@/modules/todos/repo';
@@ -387,16 +387,17 @@ describe('suggestions from a mail scan', () => {
     expect(r.rows[1]!.candidate.warning).toBeDefined();
   });
 
-  it('builds contracts with end date and notice period', async () => {
-    const r = await run('contracts', 'mail', scan);
+  it('builds contracts as documents with end date and notice period', async () => {
+    const r = await run('vault', 'mail', scan);
     expect(r.rows).toHaveLength(1);
     expect(r.rows[0]!.candidate.data).toMatchObject({
-      name: 'Versicherung Muster',
+      title: 'Versicherung Muster',
+      category: 'contract',
       endDate: '2027-12-31',
       noticeDays: 90,
     });
-    await contractRepo.create({ name: 'versicherung muster', kind: 'contract' });
-    expect((await run('contracts', 'mail', scan)).rows[0]!.duplicate).toBe(true);
+    await documentRepo.create({ title: 'versicherung muster', category: 'contract' });
+    expect((await run('vault', 'mail', scan)).rows[0]!.duplicate).toBe(true);
   });
 
   it('suggests events and drops the ones a synced external calendar already has', async () => {
@@ -535,22 +536,22 @@ describe('bookmarks', () => {
   });
 });
 
-describe('birthdays, lists', () => {
+describe('people, lists', () => {
   it('parses name and date in either order, with or without a year', async () => {
     const { rows, notes, manifest } = await run(
-      'birthdays',
+      'people',
       'text',
       text('Anna Beispiel 15.03.1985\nOnkel Max 02.11.\n24.12. Oma\nOhne Datum\n31.02. Fehler'),
     );
     expect(rows.map((r) => r.candidate.data)).toEqual([
-      { name: 'Anna Beispiel', month: 3, day: 15, year: 1985 },
-      { name: 'Onkel Max', month: 11, day: 2 },
-      { name: 'Oma', month: 12, day: 24 },
+      { name: 'Anna Beispiel', birthday: { month: 3, day: 15, year: 1985 } },
+      { name: 'Onkel Max', birthday: { month: 11, day: 2 } },
+      { name: 'Oma', birthday: { month: 12, day: 24 } },
     ]);
     expect(notes[0]).toMatch(/2 Zeilen/);
     await commitImport(manifest, { batchId: 'tb', importerId: 'text', source: 't', rows });
-    expect(await birthdayRepo.active().count()).toBe(3);
-    expect((await run('birthdays', 'text', text('anna beispiel 15.03.'))).rows[0]!.duplicate).toBe(
+    expect(await personRepo.active().count()).toBe(3);
+    expect((await run('people', 'text', text('anna beispiel 15.03.'))).rows[0]!.duplicate).toBe(
       true,
     );
   });

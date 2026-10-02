@@ -87,9 +87,9 @@ test('a calendar place can be shown on the map', async ({ page }) => {
 });
 
 test('a birthday can be congratulated over WhatsApp', async ({ page }) => {
-  await enable(page, 'birthdays');
-  await page.goto('/birthdays');
-  await page.getByRole('button', { name: 'Geburtstag hinzufügen' }).first().click();
+  await enable(page, 'people');
+  await page.goto('/people');
+  await page.getByRole('button', { name: 'Person hinzufügen' }).first().click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Name').fill('Anna');
   await dialog.getByLabel('Geburtsdatum').fill('1985-10-02');

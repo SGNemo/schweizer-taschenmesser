@@ -1,5 +1,5 @@
 {
-  "version": 16,
+  "version": 17,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -40,6 +40,8 @@
     "packing_item": "id, updatedAt, listId",
     "packing_list": "id, updatedAt",
     "pantry_item": "id, updatedAt, expires",
+    "people_gift": "id, updatedAt, personId, status, date",
+    "people_person": "id, updatedAt, name",
     "reminders_reminder": "id, updatedAt, startDate",
     "shopping_item": "id, updatedAt, done",
     "subscriptions_subscription": "id, updatedAt, startDate",

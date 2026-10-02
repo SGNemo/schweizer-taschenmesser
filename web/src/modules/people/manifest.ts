@@ -22,11 +22,15 @@ const manifest: ModuleManifest = {
   ],
   dataSchema: {
     collections: {
-      person: { schema: personSchema, indexes: ['name'] },
+      person: {
+        schema: personSchema,
+        indexes: ['name'],
+        example: { name: 'Beispielperson', birthday: { month: 3, day: 15 } },
+      },
       gift: {
         schema: giftSchema,
         indexes: ['personId', 'status', 'date'],
-        example: { personId: 'beispielperson', title: 'Beispielbuch', priceCents: 1990 },
+        example: { personId: 'Beispielperson', title: 'Beispielbuch', priceCents: 1990 },
       },
     },
   },

@@ -19,7 +19,7 @@ async function save(page: Page) {
 
 test('the extra modules are off until enabled', async ({ page }) => {
   await open(page, '/library');
-  for (const id of ['bookmarks', 'notes', 'lists', 'birthdays', 'contracts', 'budgets', 'vault']) {
+  for (const id of ['bookmarks', 'notes', 'lists', 'people', 'budgets', 'vault']) {
     await expect(
       page.getByTestId(`module-${id}`).getByRole('button', { name: 'Aktivieren' }),
     ).toBeVisible();
@@ -108,9 +108,9 @@ test('Notizen: create, pin, search', async ({ page }) => {
   await expect(items.first()).toContainText('Einkaufsideen');
 });
 
-test('Geburtstage: next date, age, calendar and dashboard widget', async ({ page }) => {
-  await enable(page, 'birthdays');
-  await open(page, '/birthdays?new=1');
+test('Personen: next birthday, age, calendar and dashboard widget', async ({ page }) => {
+  await enable(page, 'people');
+  await open(page, '/people?new=1');
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Name').fill('Anna');
   await dialog.getByLabel('Geburtsdatum').fill('1990-10-03');
@@ -123,14 +123,14 @@ test('Geburtstage: next date, age, calendar and dashboard widget', async ({ page
   await expect(calendarEntry(page, /Anna wird 36/)).toBeVisible();
 
   await open(page, '/');
-  await expect(page.getByTestId('widget-birthdays:next')).toContainText('Anna');
+  await expect(page.getByTestId('widget-people:next')).toContainText('Anna');
 });
 
-test('Verträge: cancellation deadline is flagged and on the calendar', async ({ page }) => {
-  await enable(page, 'contracts');
-  await open(page, '/contracts?new=1');
+test('Unterlagen: cancellation deadline is flagged and on the calendar', async ({ page }) => {
+  await enable(page, 'vault');
+  await open(page, '/vault?new=1');
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Bezeichnung').fill('Handyvertrag');
+  await dialog.getByLabel('Titel').fill('Handyvertrag');
   await dialog.getByLabel('Ende / Ablauf').fill('2026-12-31');
   await dialog.getByLabel(/Kündigungsfrist/).fill('90');
   await save(page);

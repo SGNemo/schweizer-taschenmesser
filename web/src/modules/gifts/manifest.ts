@@ -1,12 +1,11 @@
-import { noOnboarding } from '@/core/importer/types';
-import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
+import { z } from 'zod';
+import type { ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
 import { ideaSchema } from './schema';
-import { settings } from './settings';
-
 /**
- * No `aiSchema` on purpose: gift ideas are a surprise. The assistant neither sees the module nor
- * searches it.
+ * RETIRED (0.6.0): Geschenkideen gehören jetzt zu den Personen (Modul Personen).
+ * The collection stays in the schema so sync, backup and older devices keep working; an app
+ * migration copies its rows forward (`core/db/appMigrationSteps.ts`). Tables follow in package 6.
  */
 const manifest: ModuleManifest = {
   id: 'gifts',
@@ -14,45 +13,19 @@ const manifest: ModuleManifest = {
   icon: 'gift',
   version: 1,
   description:
-    'Geschenkideen je Person und Anlass sammeln, Preis und Link festhalten und abhaken, was gekauft oder schon verschenkt ist.',
-  routes: [
-    {
-      path: '/gifts',
-      label: 'Geschenkideen',
-      nav: true,
-      component: () => import('./routes/GiftsPage'),
-    },
-  ],
+    'Stillgelegt: Geschenkideen gehören jetzt zu den Personen – Modul Personen. Die Daten wurden übernommen.',
+  retired: true,
+  routes: [],
   dataSchema: {
     collections: {
-      idea: {
-        schema: ideaSchema,
-        indexes: ['status', 'date'],
-        example: { title: 'Beispielbuch', forWhom: 'Beispielperson', priceCents: 1990 },
-      },
+      idea: { schema: ideaSchema, indexes: ['status', 'date'] },
     },
   },
   migrations,
-  widgets: [
-    {
-      id: 'open',
-      title: 'Geschenkideen',
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/SummaryWidget'),
-    },
-  ],
-  settings,
+  widgets: [],
+  settings: { schema: z.object({}), defaults: {}, fields: [] },
   defaultEnabled: false,
-  seed: { version: 1, dependsOn: [] },
-  layout: 'content',
-  order: 175,
-  area: 'household',
-  contributions: {
-    onboarding: noOnboarding,
-    quickAdd: [{ id: 'idea', label: 'Geschenkidee', to: '/gifts?new=1' }],
-    calendarItems: () => import('./calendar'),
-  },
+  seed: { version: 1, dependsOn: [], none: 'retired' },
 };
 
 export default manifest;

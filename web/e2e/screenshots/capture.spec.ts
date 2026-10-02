@@ -39,12 +39,10 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'bookmarks-links', path: '/bookmarks?view=links' },
   { name: 'notes', path: '/notes' },
   { name: 'lists', path: '/lists' },
-  { name: 'birthdays', path: '/birthdays' },
-  { name: 'contracts', path: '/contracts' },
   { name: 'budgets', path: '/budgets' },
   { name: 'vault', path: '/vault' },
   { name: 'pantry', path: '/pantry' },
-  { name: 'gifts', path: '/gifts' },
+  { name: 'people', path: '/people' },
   ...(process.env.SCREENS_DESKTOP
     ? [
         { name: 'system', path: '/disk?tab=system' },

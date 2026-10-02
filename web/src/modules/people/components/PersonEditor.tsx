@@ -92,14 +92,14 @@ function Fields({
         data-autofocus
       />
       <Checkbox
-        label={t.people.birthday}
+        label={t.people.hasBirthday}
         checked={hasBirthday}
         onChange={(e) => setHasBirthday(e.target.checked)}
       />
       {hasBirthday ? (
         <>
           <TextField
-            label={t.people.birthday}
+            label={t.people.birthdayDate}
             type="date"
             value={date}
             onChange={(e) => {
