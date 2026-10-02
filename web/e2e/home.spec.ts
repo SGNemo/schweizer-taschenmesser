@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { enable, mainNav, ready } from './helpers';
 
@@ -160,5 +161,33 @@ test.describe('Home screen', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Schließen' }).click();
     await page.getByRole('button', { name: 'Fertig' }).click();
     await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toHaveCount(0);
+  });
+
+  test('filled home screen (strip, due lists, checklist) passes axe in both themes and densities', async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+    await ready(page, '/todos');
+    await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Alt');
+    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page.getByRole('button', { name: /Alt/ }).click();
+    await page.getByLabel('Fällig am').fill('2026-09-20');
+    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    for (const scheme of ['light', 'dark'] as const) {
+      for (const density of ['normal', 'compact']) {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.addInitScript((d) => localStorage.setItem('tm-density', d), density);
+        await ready(page, '/');
+        await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toBeVisible();
+        const results = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+          .analyze();
+        expect(
+          results.violations.map((v) => `${v.id}: ${v.help}`),
+          `${scheme}/${density}`,
+        ).toEqual([]);
+      }
+    }
   });
 });

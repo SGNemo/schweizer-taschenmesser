@@ -14,7 +14,8 @@ export interface KpiTrend {
 
 /**
  * KPI widget: one big number with unit, a context line ("897,89 € · 2 überfällig"), an optional
- * trend and (size l) a sparkline. s shows only the number, m adds context and trend.
+ * trend and (size l) a sparkline. The context line is always there (a number without context says
+ * little); m adds the trend, l the sparkline.
  */
 export function KpiWidget({
   loading,
@@ -47,7 +48,7 @@ export function KpiWidget({
           {value}
           {unit ? <span className={styles.kpiUnit}> {unit}</span> : null}
         </p>
-        {size !== 's' && context ? <p className={styles.sub}>{context}</p> : null}
+        {context ? <p className={styles.sub}>{context}</p> : null}
         {size !== 's' && trend ? (
           <p className={styles.trend} data-tone={trend.tone ?? 'neutral'}>
             <Icon

@@ -505,6 +505,18 @@ test('tab System shows CPU, memory, battery, graphics, network and the biggest p
   expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
 });
 
+test('drive cards and system tiles pass axe in the dark theme too', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk');
+  await expect(page.getByRole('list', { name: 'Laufwerke' }).getByRole('listitem')).toHaveCount(3);
+  await audit(page, 'drives (dark)');
+  await page.goto('/disk?tab=system');
+  await expect(page.getByTestId('system-info')).toBeVisible();
+  await audit(page, 'system (dark)');
+});
+
 test('public IP is only asked for on a click and only shows the answer', async ({ page }) => {
   let asked = 0;
   await page.route('https://api.ipify.org/**', async (route) => {

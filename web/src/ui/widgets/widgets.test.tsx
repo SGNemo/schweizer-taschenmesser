@@ -62,7 +62,7 @@ describe('KpiWidget', () => {
       />,
     );
     expect(screen.getByText('897,89 €')).toBeTruthy();
-    expect(!!screen.queryByText('2 überfällig')).toBe(size !== 's');
+    expect(screen.getByText('2 überfällig')).toBeTruthy();
     expect(!!screen.queryByText('+120 € zum Vormonat')).toBe(size !== 's');
     expect(!!screen.queryByRole('img', { name: 'Verlauf' })).toBe(size === 'l');
   });
