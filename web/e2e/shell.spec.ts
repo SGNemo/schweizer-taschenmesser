@@ -1,12 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { mainNav, ready } from './helpers';
 
-const phoneOnly = (name: string) => name === 'pixel-7';
-
 test.describe('shell: sidebar, areas, favourites (desktop)', () => {
-  test.beforeEach((_fixtures, info) => {
-    test.skip(phoneOnly(info.project.name), 'sidebar is a desktop feature');
-  });
+  test.skip(({ isMobile }) => isMobile, 'sidebar is a desktop feature');
 
   test('favourites above the areas; the star adds one, keeps it after a reload, and stops at five', async ({
     page,
@@ -117,9 +113,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
 });
 
 test.describe('shell: phone', () => {
-  test.beforeEach((_fixtures, info) => {
-    test.skip(!phoneOnly(info.project.name), 'bottom navigation is a phone feature');
-  });
+  test.skip(({ isMobile }) => !isMobile, 'bottom navigation is a phone feature');
 
   test('bottom navigation by area, FAB for capture, no "+ Neu" in the top bar', async ({
     page,
