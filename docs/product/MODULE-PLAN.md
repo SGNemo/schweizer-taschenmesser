@@ -18,7 +18,7 @@ Herleitung und Begründung: [MODULE-REVIEW-2026-10-01.md](MODULE-REVIEW-2026-10-
 | – | `news` | Modul, `core/ai/newsBrief.ts`, Startpaket, `e2e/news.spec.ts` | stillgelegt (Code weg, Tabellen bleiben bis 6) | – | 1 |
 | – | `habits`, `timetrack` | ungenutzt; Daten bleiben exportierbar | stillgelegt | – | 1 |
 | – | `reminders`, `shopping`, `packing`, `launcher`, `birthdays`, `gifts`, `contracts` | nach Kopie | stillgelegt | – | 3–5 |
-| – | alle stillgelegten Tabellen | aus dem Schema, `schema-upgrade.test` anpassen | entfernt | – | 6 |
+| – | alle stillgelegten Tabellen | aus dem Schema, `schema-upgrade.test` anpassen | entfernt (0.9.0) | – | 6 |
 | – | `example` (Dev) | unverändert | – | – | – |
 
 Nav mobil: Übersicht · Kalender · ToDos · Geld · Mehr. Bibliothek: Gruppen mit eingerückten Teilmodulen, jedes einzeln abschaltbar.

@@ -5,6 +5,7 @@ Several Claude chats work in parallel and only see each other through GitHub. Ke
 ## Running work
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Paket 6 Tabellen entfernen (0.9.0) | `feat/cleanup-package-6` | retired modules, core/db schema + appMigrationSteps | Phase 1 | – | 2026-10-02 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
