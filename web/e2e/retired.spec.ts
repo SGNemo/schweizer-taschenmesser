@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { enable } from './helpers';
 
 /** Modules that were retired and later removed: old paths still lead somewhere useful. */
 
@@ -11,6 +12,8 @@ test('old paths of removed modules lead to the home screen', async ({ page }) =>
 });
 
 test('old paths of merged modules lead to their successors', async ({ page }) => {
+  // A route of a module that is switched off leads to the library, so switch the successors on.
+  for (const id of ['lists', 'bookmarks', 'vault', 'people']) await enable(page, id);
   const successors: [string, RegExp][] = [
     ['/shopping', /\/lists$/],
     ['/packing', /\/lists$/],
