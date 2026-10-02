@@ -35,7 +35,8 @@ const all = Object.fromEntries(manifests.map((m) => [m.id, true]));
 
 describe('areas', () => {
   it('every manifest declares a known area; unknown ones are rejected', () => {
-    for (const m of allManifests) expect(AREAS, m.id).toContain(m.area);
+    for (const m of allManifests.filter((x) => !x.retired)) expect(AREAS, m.id).toContain(m.area);
+    for (const m of allManifests.filter((x) => x.retired)) expect(m.area, m.id).toBeUndefined();
     expect(validateManifest({ ...allManifests[0]!, area: 'nope' as AreaId })).toHaveLength(1);
   });
 

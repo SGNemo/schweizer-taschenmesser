@@ -70,7 +70,7 @@ describe('module registry', () => {
 
   it('availableManifests keeps every all-platform module', () => {
     const web = availableManifestsFor('web');
-    for (const m of allManifests.filter((x) => !x.platforms && !x.devOnly))
+    for (const m of allManifests.filter((x) => !x.platforms && !x.devOnly && !x.retired))
       expect(web).toContain(m);
   });
 });

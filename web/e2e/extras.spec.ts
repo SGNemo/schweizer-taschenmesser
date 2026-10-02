@@ -30,7 +30,6 @@ test('the extra modules are off until enabled', async ({ page }) => {
     'notes',
     'shopping',
     'birthdays',
-    'habits',
     'contracts',
     'budgets',
     'packing',
@@ -159,21 +158,6 @@ test('Geburtstage: next date, age, calendar and dashboard widget', async ({ page
 
   await open(page, '/');
   await expect(page.getByTestId('widget-birthdays:next')).toContainText('Anna');
-});
-
-test('Habit-Tracker: tick today, streak', async ({ page }) => {
-  await enable(page, 'habits');
-  await open(page, '/habits?new=1');
-  await page.getByRole('dialog').getByLabel('Name').fill('Lesen');
-  await save(page);
-  await expect(page.getByTestId('streak-Lesen')).toContainText('0 Tage in Folge');
-  await tick(page.getByRole('checkbox', { name: 'Lesen' }));
-  await expect(page.getByTestId('streak-Lesen')).toContainText('1 Tag in Folge');
-  // Yesterday via the week strip → 2 days in a row.
-  await page.getByRole('button', { name: /Lesen, Montag, 28. September/ }).click();
-  await expect(page.getByTestId('streak-Lesen')).toContainText('2 Tage in Folge');
-  await page.reload();
-  await expect(page.getByTestId('streak-Lesen')).toContainText('2 Tage in Folge');
 });
 
 test('Verträge: cancellation deadline is flagged and on the calendar', async ({ page }) => {

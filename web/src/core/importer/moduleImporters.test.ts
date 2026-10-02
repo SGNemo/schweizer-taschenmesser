@@ -8,7 +8,6 @@ import { accountRepo, transactionRepo } from '@/modules/finance/repo';
 import { birthdayRepo } from '@/modules/birthdays/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
 import { itemRepo as shoppingRepo } from '@/modules/shopping/repo';
-import { habitRepo } from '@/modules/habits/repo';
 import { invoiceRepo } from '@/modules/invoices/repo';
 import { reminderRepo } from '@/modules/reminders/repo';
 import { subscriptionRepo } from '@/modules/subscriptions/repo';
@@ -536,7 +535,7 @@ describe('bookmarks', () => {
   });
 });
 
-describe('birthdays, shopping, habits', () => {
+describe('birthdays, shopping', () => {
   it('parses name and date in either order, with or without a year', async () => {
     const { rows, notes, manifest } = await run(
       'birthdays',
@@ -571,15 +570,5 @@ describe('birthdays, shopping, habits', () => {
     });
     expect(await shoppingRepo.active().count()).toBe(3);
     expect((await run('shopping', 'text', text('milch'))).rows[0]!.duplicate).toBe(true);
-  });
-
-  it('habits become daily habits', async () => {
-    const { rows, manifest } = await run('habits', 'text', text('Wasser trinken\nSpazieren gehen'));
-    expect(rows[0]!.candidate.data).toMatchObject({
-      name: 'Wasser trinken',
-      weekdays: [1, 2, 3, 4, 5, 6, 7],
-    });
-    await commitImport(manifest, { batchId: 'tb', importerId: 'text', source: 't', rows });
-    expect(await habitRepo.active().count()).toBe(2);
   });
 });

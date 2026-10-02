@@ -44,7 +44,9 @@ describe('scope', () => {
     expect(isDataApiModule(accounts)).toBe(false);
     expect(apiCollections(accounts)).toEqual([]);
     expect(importersOf(accounts)).toEqual([]);
-    expect(apiCollections(getManifest('news')!)).toEqual(['feed']);
+    // Retired modules are closed to the API, whatever their collections hold.
+    for (const m of allManifests.filter((x) => x.retired))
+      expect(apiCollections(m), m.id).toEqual([]);
     expect(apiCollections(getManifest('calendar')!)).toEqual(['event']);
   });
 

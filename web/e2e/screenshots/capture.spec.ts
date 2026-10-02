@@ -39,13 +39,11 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'notes', path: '/notes' },
   { name: 'shopping', path: '/shopping' },
   { name: 'birthdays', path: '/birthdays' },
-  { name: 'habits', path: '/habits' },
   { name: 'contracts', path: '/contracts' },
   { name: 'budgets', path: '/budgets' },
   { name: 'packing', path: '/packing' },
   { name: 'vault', path: '/vault' },
   { name: 'pantry', path: '/pantry' },
-  { name: 'timetrack', path: '/timetrack' },
   { name: 'gifts', path: '/gifts' },
   ...(process.env.SCREENS_DESKTOP
     ? [

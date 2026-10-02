@@ -72,19 +72,19 @@ describe('module definition', () => {
     expect(manifest.aiSchema).toBeUndefined();
   });
 
-  it('is registered, off by default, and one of only six manifests without aiSchema', () => {
+  it('is registered, off by default, and one of only four active manifests without aiSchema', () => {
     expect(allManifests.map((m) => m.id)).toContain('accounts');
     expect(visibleManifests.find((m) => m.id === 'accounts')?.defaultEnabled).toBe(false);
-    // `news` (public third-party text), `launcher` (a list of links), `disk` (scan results with
-    // file paths, never stored), `gifts` (surprises) and `system` (live facts, no data) have none by
-    // design; a new module without one must be a decision.
-    expect(allManifests.filter((m) => !m.aiSchema).map((m) => m.id)).toEqual([
+    // `launcher` (a list of links), `disk` (scan results and live system facts, never stored) and
+    // `gifts` (surprises) have none by design; retired modules have none by definition. A new
+    // module without one must be a decision.
+    expect(allManifests.filter((m) => !m.aiSchema && !m.retired).map((m) => m.id)).toEqual([
       'accounts',
       'disk',
       'gifts',
       'launcher',
-      'news',
     ]);
+    expect(allManifests.filter((m) => m.retired).every((m) => !m.aiSchema)).toBe(true);
   });
 });
 

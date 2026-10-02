@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -91,68 +90,6 @@ test('pantry: without the shopping module the hand-over says so and sends nothin
   await page.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
   await expect(page.getByText('Die Einkaufsliste ist ausgeschaltet')).toBeVisible();
   await expect(page.getByText('an die Einkaufsliste gesendet')).toHaveCount(0);
-});
-
-test('time tracking: project, timer, manual entry, week sums and a time sheet', async ({
-  page,
-}) => {
-  await enable(page, ['timetrack']);
-  await page.goto('/timetrack');
-  await expect(page.getByText('Erst ein Projekt anlegen')).toBeVisible();
-  await page.getByRole('button', { name: 'Neues Projekt' }).click();
-  const projects = page.getByRole('dialog', { name: 'Projekte' });
-  await projects.getByLabel('Projektname').fill('Website');
-  await projects.getByRole('button', { name: 'Projekt anlegen' }).click();
-  await expect(projects.getByText('Website')).toBeVisible();
-  await page.keyboard.press('Escape');
-
-  await page.getByRole('button', { name: 'Starten' }).click();
-  await expect(page.getByTestId('running')).toContainText('Website');
-  await expect(page.getByRole('button', { name: 'Starten' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Stoppen' }).click();
-  await expect(page.getByTestId('running')).toHaveCount(0);
-  // The frozen clock makes the stopped timer the minimum of one minute.
-  await expect(page.getByRole('region', { name: '29.09.2026' })).toContainText('Website · 0:01 h');
-
-  await page.getByRole('button', { name: 'Zeit nachtragen' }).click();
-  const entry = page.getByRole('dialog', { name: 'Zeit nachtragen' });
-  await entry.getByLabel('Dauer').fill('nichts');
-  await entry.getByRole('button', { name: 'Speichern' }).click();
-  await expect(entry.getByText('Bitte eine Dauer angeben')).toBeVisible();
-  await entry.getByLabel('Dauer').fill('1:30');
-  await entry.getByLabel('Notiz (optional)').fill('Sitzung; "wichtig"');
-  await entry.getByRole('button', { name: 'Speichern' }).click();
-  await expect(entry).toBeHidden();
-  await expect(page.getByTestId('week-total')).toHaveText('1:31 h');
-  await expect(page.getByTestId('today-total')).toHaveText('1:31 h');
-
-  await page.getByRole('button', { name: 'Stundenzettel exportieren' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Stundenzettel exportieren' });
-  await expect(dialog.getByLabel('Monat')).toHaveValue('2026-09');
-  const download = page.waitForEvent('download');
-  await dialog.getByRole('button', { name: 'CSV speichern' }).click();
-  const file = await download;
-  expect(file.suggestedFilename()).toBe('Stundenzettel-2026-09.csv');
-  const csv = readFileSync((await file.path())!, 'utf8');
-  expect(csv).toContain('29.09.2026;Website;1:30;1,50;"Sitzung; ""wichtig"""');
-  expect(csv).toContain('Summe;;1:31;1,52;');
-});
-
-test('time tracking: only one timer runs, it survives a reload', async ({ page }) => {
-  await enable(page, ['timetrack']);
-  await page.goto('/timetrack');
-  await page.getByRole('button', { name: 'Neues Projekt' }).click();
-  await page.getByRole('dialog', { name: 'Projekte' }).getByLabel('Projektname').fill('Büro');
-  await page
-    .getByRole('dialog', { name: 'Projekte' })
-    .getByRole('button', { name: 'Projekt anlegen' })
-    .click();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Starten' }).click();
-  await expect(page.getByTestId('running')).toBeVisible();
-  await page.reload();
-  await expect(page.getByTestId('running')).toContainText('Büro');
-  await expect(page.getByRole('button', { name: 'Starten' })).toHaveCount(0);
 });
 
 test('gift ideas: per person, status filter and what was spent', async ({ page }) => {
