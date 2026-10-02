@@ -1,118 +1,115 @@
 {
- "format": "taschenmesser-backup",
- "version": 1,
- "exportedAt": "2026-10-02T09:00:00.000Z",
- "tables": {
-  "reminders_reminder": [
-   {
-    "id": "fx-rem-1",
-    "createdAt": 1792000001000,
-    "updatedAt": 1792000001000,
-    "deviceId": "fixdev01",
-    "deletedAt": null,
-    "_f": {
-     "title": "1792000001000-0000-fixdev01",
-     "startDate": "1792000001000-0000-fixdev01",
-     "time": "1792000001000-0000-fixdev01",
-     "recurrence": "1792000001000-0000-fixdev01",
-     "active": "1792000001000-0000-fixdev01",
-     "deletedAt": "1792000001000-0000-fixdev01"
-    },
-    "title": "Miete überweisen",
-    "startDate": "2026-11-01",
-    "time": "08:00",
-    "recurrence": {
-     "freq": "monthly",
-     "interval": 1,
-     "byMonthDay": 1
-    },
-    "active": true
-   },
-   {
-    "id": "fx-rem-2",
-    "createdAt": 1792000002000,
-    "updatedAt": 1792000002000,
-    "deviceId": "fixdev01",
-    "deletedAt": null,
-    "_f": {
-     "title": "1792000002000-0000-fixdev01",
-     "note": "1792000002000-0000-fixdev01",
-     "startDate": "1792000002000-0000-fixdev01",
-     "time": "1792000002000-0000-fixdev01",
-     "active": "1792000002000-0000-fixdev01",
-     "deletedAt": "1792000002000-0000-fixdev01"
-    },
-    "title": "Paket abholen",
-    "note": "Abholschein im Flur",
-    "startDate": "2026-10-20",
-    "time": "17:30",
-    "active": true
-   },
-   {
-    "id": "fx-rem-3",
-    "createdAt": 1792000003000,
-    "updatedAt": 1792000003000,
-    "deviceId": "fixdev01",
-    "deletedAt": null,
-    "_f": {
-     "title": "1792000003000-0000-fixdev01",
-     "startDate": "1792000003000-0000-fixdev01",
-     "time": "1792000003000-0000-fixdev01",
-     "recurrence": "1792000003000-0000-fixdev01",
-     "active": "1792000003000-0000-fixdev01",
-     "deletedAt": "1792000003000-0000-fixdev01"
-    },
-    "title": "Pflanzen gießen",
-    "startDate": "2026-10-04",
-    "time": "19:00",
-    "recurrence": {
-     "freq": "weekly",
-     "interval": 1,
-     "byWeekday": [
-      3,
-      7
-     ]
-    },
-    "active": false
-   },
-   {
-    "id": "fx-rem-4",
-    "createdAt": 1792000004000,
-    "updatedAt": 1792000004000,
-    "deviceId": "fixdev01",
-    "deletedAt": 1792000004500,
-    "_f": {
-     "title": "1792000004000-0000-fixdev01",
-     "startDate": "1792000004000-0000-fixdev01",
-     "time": "1792000004000-0000-fixdev01",
-     "active": "1792000004000-0000-fixdev01",
-     "deletedAt": "1792000004000-0000-fixdev01"
-    },
-    "title": "Altes Abo kündigen",
-    "startDate": "2026-09-01",
-    "time": "09:00",
-    "active": true
-   }
-  ],
-  "calendar_event": [
-   {
-    "id": "fx-ev-1",
-    "createdAt": 1792000005000,
-    "updatedAt": 1792000005000,
-    "deviceId": "fixdev01",
-    "deletedAt": null,
-    "_f": {
-     "title": "1792000005000-0000-fixdev01",
-     "allDay": "1792000005000-0000-fixdev01",
-     "startDate": "1792000005000-0000-fixdev01",
-     "startTime": "1792000005000-0000-fixdev01",
-     "deletedAt": "1792000005000-0000-fixdev01"
-    },
-    "title": "Zahnarzt",
-    "allDay": false,
-    "startDate": "2026-10-22",
-    "startTime": "10:00"
-   }
-  ]
- }
+  "format": "taschenmesser-backup",
+  "version": 1,
+  "exportedAt": "2026-10-02T09:00:00.000Z",
+  "tables": {
+    "reminders_reminder": [
+      {
+        "id": "fx-rem-1",
+        "createdAt": 1792000001000,
+        "updatedAt": 1792000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1792000001000-0000-fixdev01",
+          "startDate": "1792000001000-0000-fixdev01",
+          "time": "1792000001000-0000-fixdev01",
+          "recurrence": "1792000001000-0000-fixdev01",
+          "active": "1792000001000-0000-fixdev01",
+          "deletedAt": "1792000001000-0000-fixdev01"
+        },
+        "title": "Miete überweisen",
+        "startDate": "2026-11-01",
+        "time": "08:00",
+        "recurrence": {
+          "freq": "monthly",
+          "interval": 1,
+          "byMonthDay": 1
+        },
+        "active": true
+      },
+      {
+        "id": "fx-rem-2",
+        "createdAt": 1792000002000,
+        "updatedAt": 1792000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1792000002000-0000-fixdev01",
+          "note": "1792000002000-0000-fixdev01",
+          "startDate": "1792000002000-0000-fixdev01",
+          "time": "1792000002000-0000-fixdev01",
+          "active": "1792000002000-0000-fixdev01",
+          "deletedAt": "1792000002000-0000-fixdev01"
+        },
+        "title": "Paket abholen",
+        "note": "Abholschein im Flur",
+        "startDate": "2026-10-20",
+        "time": "17:30",
+        "active": true
+      },
+      {
+        "id": "fx-rem-3",
+        "createdAt": 1792000003000,
+        "updatedAt": 1792000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1792000003000-0000-fixdev01",
+          "startDate": "1792000003000-0000-fixdev01",
+          "time": "1792000003000-0000-fixdev01",
+          "recurrence": "1792000003000-0000-fixdev01",
+          "active": "1792000003000-0000-fixdev01",
+          "deletedAt": "1792000003000-0000-fixdev01"
+        },
+        "title": "Pflanzen gießen",
+        "startDate": "2026-10-04",
+        "time": "19:00",
+        "recurrence": {
+          "freq": "weekly",
+          "interval": 1,
+          "byWeekday": [3, 7]
+        },
+        "active": false
+      },
+      {
+        "id": "fx-rem-4",
+        "createdAt": 1792000004000,
+        "updatedAt": 1792000004000,
+        "deviceId": "fixdev01",
+        "deletedAt": 1792000004500,
+        "_f": {
+          "title": "1792000004000-0000-fixdev01",
+          "startDate": "1792000004000-0000-fixdev01",
+          "time": "1792000004000-0000-fixdev01",
+          "active": "1792000004000-0000-fixdev01",
+          "deletedAt": "1792000004000-0000-fixdev01"
+        },
+        "title": "Altes Abo kündigen",
+        "startDate": "2026-09-01",
+        "time": "09:00",
+        "active": true
+      }
+    ],
+    "calendar_event": [
+      {
+        "id": "fx-ev-1",
+        "createdAt": 1792000005000,
+        "updatedAt": 1792000005000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1792000005000-0000-fixdev01",
+          "allDay": "1792000005000-0000-fixdev01",
+          "startDate": "1792000005000-0000-fixdev01",
+          "startTime": "1792000005000-0000-fixdev01",
+          "deletedAt": "1792000005000-0000-fixdev01"
+        },
+        "title": "Zahnarzt",
+        "allDay": false,
+        "startDate": "2026-10-22",
+        "startTime": "10:00"
+      }
+    ]
+  }
 }
