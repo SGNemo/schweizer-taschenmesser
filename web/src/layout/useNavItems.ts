@@ -26,3 +26,19 @@ export function useModuleNavItems(): NavItem[] {
   if (!states) return [];
   return moduleNavItems(availableManifests(), states).map((e) => e.item);
 }
+
+export interface QuickAddAction {
+  id: string;
+  label: string;
+  to: string;
+  icon: NavItem['icon'];
+}
+
+/** The "new …" entries of all enabled modules (quick-add sheet and command palette). */
+export function useQuickAddActions(): QuickAddAction[] {
+  const states = useModuleStates();
+  if (!states) return [];
+  return availableManifests()
+    .filter((m) => states[m.id])
+    .flatMap((m) => (m.contributions?.quickAdd ?? []).map((a) => ({ ...a, icon: m.icon })));
+}

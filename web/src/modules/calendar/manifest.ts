@@ -4,18 +4,18 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { eventSchema, externalEventSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'calendar',
-  name: 'Kalender',
+  name: t.calendar.meta.name,
   icon: 'calendar',
   version: 1,
-  description:
-    'Termine in Monats-, Wochen- und Tagesansicht – zeigt auch Fälligkeiten und Fristen anderer Module (ToDos, Erinnerungen, Rechnungen, Abos, Verträge, Geburtstage, Vorräte).',
+  description: t.calendar.meta.description,
   routes: [
     {
       path: '/calendar',
-      label: 'Kalender',
+      label: t.calendar.meta.route,
       nav: true,
       component: () => import('./routes/CalendarPage'),
     },
@@ -30,7 +30,7 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'today',
-      title: 'Heute & Morgen',
+      title: t.calendar.meta.widget,
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/TodayWidget'),
@@ -45,7 +45,7 @@ const manifest: ModuleManifest = {
   area: 'plan',
   contributions: {
     onboarding: onboarding,
-    quickAdd: [{ id: 'event', label: 'Termin', to: '/calendar?new=1' }],
+    quickAdd: [{ id: 'event', label: t.calendar.meta.quickAdd, to: '/calendar?new=1' }],
     calendarItems: () => import('./calendar'),
     externalCalendar: () => import('./external'),
   },

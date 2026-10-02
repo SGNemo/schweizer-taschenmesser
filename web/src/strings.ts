@@ -43,6 +43,41 @@ export const t = {
     tools: 'Werkzeuge',
     favouritesFull: 'Es sind höchstens 5 Favoriten möglich. Entferne zuerst einen anderen.',
   },
+  ui: {
+    selectRow: 'Auswählen',
+    retry: 'Erneut versuchen',
+    loading: 'Wird geladen',
+    discardTitle: 'Entwurf verwerfen?',
+    discardHint: 'Deine Eingaben gehen verloren.',
+    keepEditing: 'Weiter bearbeiten',
+    discard: 'Verwerfen',
+    grabHandle: 'Zum Schließen nach unten ziehen',
+    undo: 'Rückgängig',
+    undone: 'Rückgängig gemacht.',
+    undoFailed: 'Das ließ sich nicht mehr rückgängig machen.',
+    nothingToUndo: 'Nichts zum Rückgängigmachen.',
+    selection: 'Auswahl',
+    selected: (n: number) => (n === 1 ? '1 ausgewählt' : `${n} ausgewählt`),
+  },
+  shortcuts: {
+    title: 'Tastenkürzel',
+    hint: 'Einzelne Buchstaben wirken nur, wenn du nicht in einem Feld schreibst.',
+    items: [
+      { keys: ['Strg', 'K'], text: 'Suchen oder fragen' },
+      { keys: ['N'], text: 'Neu erfassen' },
+      { keys: ['G', 'dann H'], text: 'Zur Übersicht' },
+      { keys: ['G', 'dann P / G / A / W / T'], text: 'Zu Planen, Geld, Haushalt, Wissen, Tresor' },
+      { keys: ['J', 'K'], text: 'Nächste / vorherige Zeile (auch ↓ ↑)' },
+      { keys: ['Enter'], text: 'Zeile öffnen' },
+      { keys: ['E'], text: 'Zeile bearbeiten' },
+      { keys: ['Leertaste'], text: 'Zeile abhaken' },
+      { keys: ['/'], text: 'Liste durchsuchen' },
+      { keys: ['Strg', 'Z'], text: 'Letzte Aktion rückgängig machen' },
+      { keys: ['Esc'], text: 'Schließen / Auswahl aufheben' },
+      { keys: ['Alt', 'Pos1'], text: 'Zur Übersicht' },
+      { keys: ['?'], text: 'Diese Übersicht' },
+    ],
+  },
   actions: {
     add: 'Hinzufügen',
     quickAdd: 'Schnell hinzufügen',
@@ -394,6 +429,7 @@ export const t = {
     placeholder: 'Suchen, springen oder fragen …',
     empty: 'Keine Treffer',
     hint: 'Ctrl+K',
+    newEntry: (what: string) => `Neu: ${what}`,
   },
   share: {
     title: 'Teilen',
@@ -562,9 +598,22 @@ export const t = {
     count: 'Anzahl',
   },
   todos: {
+    meta: {
+      name: 'ToDos',
+      description: 'Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben.',
+      route: 'ToDos',
+      widget: 'Offene ToDos',
+      quickAdd: 'ToDo',
+      settings: {
+        showDone: 'Erledigte Aufgaben anzeigen',
+      },
+    },
     title: 'ToDos',
     add: 'ToDo hinzufügen',
     addPlaceholder: 'Neue Aufgabe …',
+    markedDone: 'Als erledigt markiert.',
+    markedOpen: 'Wieder geöffnet.',
+    taskDeleted: 'ToDo gelöscht.',
     empty: 'Nichts zu tun – gut so.',
     allOpen: 'Alle offenen',
     newList: 'Neue Liste',
@@ -587,6 +636,20 @@ export const t = {
     progress: (done: number, total: number) => `${done}/${total}`,
   },
   calendar: {
+    meta: {
+      name: 'Kalender',
+      description:
+        'Termine in Monats-, Wochen- und Tagesansicht – zeigt auch Fälligkeiten und Fristen anderer Module (ToDos, Erinnerungen, Rechnungen, Abos, Verträge, Geburtstage, Vorräte).',
+      route: 'Kalender',
+      widget: 'Heute & Morgen',
+      quickAdd: 'Termin',
+      settings: {
+        defaultView: 'Standardansicht',
+        defaultView_month: 'Monat',
+        defaultView_week: 'Woche',
+        defaultView_day: 'Tag',
+      },
+    },
     title: 'Kalender',
     today: 'Heute',
     month: 'Monat',
@@ -1117,6 +1180,22 @@ export const t = {
     invalidAmount: 'Bitte einen gültigen Betrag eingeben, z. B. 12,50',
   },
   invoices: {
+    dueTitle: (payee: string) => `Rechnung fällig: ${payee}`,
+    dueBody: (amount: string, date: string) => `${amount} · fällig am ${date}`,
+    meta: {
+      name: 'Rechnungen',
+      description:
+        'Offene Rechnungen mit Betrag, Empfänger und Fälligkeit. „Als bezahlt markieren“ bucht die Ausgabe automatisch in Finanzen.',
+      route: 'Rechnungen',
+      widget: 'Fällige Rechnungen',
+      quickAdd: 'Rechnung',
+      settings: {
+        remindDaysBefore: 'Erinnerung vor Fälligkeit (Tage)',
+        remindDaysBeforeHelp: '0 = am Fälligkeitstag',
+        remindTime: 'Uhrzeit der Erinnerung',
+        remindTimeHelp: 'Format HH:mm',
+      },
+    },
     title: 'Rechnungen',
     add: 'Rechnung hinzufügen',
     edit: 'Rechnung bearbeiten',
@@ -1139,6 +1218,24 @@ export const t = {
     view: 'Status',
   },
   subscriptions: {
+    cancelTitle: (name: string) => `Kündigungsfrist endet: ${name}`,
+    cancelBody: (last: string, amount: string, charge: string) =>
+      `Letzter Tag: ${last} – sonst ${amount} am ${charge}`,
+    cancelCalendar: (name: string) => `Kündigungsfrist: ${name}`,
+    meta: {
+      name: 'Abos',
+      description:
+        'Abos und wiederkehrende Zahlungen: nächste Abbuchung, Kündigungsfrist und die Summe pro Monat und Jahr.',
+      route: 'Abos',
+      widget: 'Nächste Abbuchungen',
+      quickAdd: 'Abo',
+      settings: {
+        cancelRemindDaysBefore: 'Erinnerung vor Ende der Kündigungsfrist (Tage)',
+        cancelRemindDaysBeforeHelp: '0 = am letzten Tag der Frist',
+        remindTime: 'Uhrzeit der Erinnerung',
+        remindTimeHelp: 'Format HH:mm',
+      },
+    },
     title: 'Abos',
     add: 'Abo hinzufügen',
     edit: 'Abo bearbeiten',
@@ -1160,6 +1257,19 @@ export const t = {
     monthlyCost: (v: string) => `≙ ${v} pro Monat`,
   },
   finance: {
+    meta: {
+      name: 'Finanzen',
+      description:
+        'Konten, Einnahmen und Ausgaben mit Kategorien, Monatsübersicht mit Diagrammen und dem wirklich verfügbaren Geld (nach offenen Rechnungen und Abos).',
+      route: 'Finanzen',
+      widget: 'Kontostand',
+      quickAdd: 'Buchung',
+      settings: {
+        includeOpenInvoices: 'Offene Rechnungen vom verfügbaren Betrag abziehen',
+        includeSubscriptions: 'Abo-Abbuchungen bis Monatsende abziehen',
+        includeSubscriptionsHelp: 'Abos werden nicht automatisch gebucht',
+      },
+    },
     title: 'Finanzen',
     balance: 'Kontostand',
     available: 'Verfügbar',
@@ -1619,6 +1729,14 @@ export const t = {
     },
   },
   bookmarks: {
+    meta: {
+      name: 'Merkliste',
+      description:
+        'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
+      route: 'Merkliste',
+      widget: 'Merkliste',
+      quickAdd: 'Merkzettel',
+    },
     title: 'Merkliste',
     add: 'Merken',
     edit: 'Merkzettel bearbeiten',
@@ -1648,6 +1766,14 @@ export const t = {
     openCount: (n: number) => (n === 1 ? '1 offener Merkzettel' : `${n} offene Merkzettel`),
   },
   notes: {
+    meta: {
+      name: 'Notizen',
+      description:
+        'Schnelle Notizen mit Titel und Text, ein fester Zettel immer oben, wichtige Notizen anheften, mit Suche.',
+      route: 'Notizen',
+      widget: 'Notizen',
+      quickAdd: 'Notiz',
+    },
     title: 'Notizen',
     add: 'Notiz hinzufügen',
     edit: 'Notiz bearbeiten',
@@ -1672,6 +1798,20 @@ export const t = {
     openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
   },
   pantry: {
+    meta: {
+      name: 'Vorräte',
+      description:
+        'Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? Mit Ablaufdaten, Erinnerung vor Ablauf und „Auf die Einkaufsliste“, wenn etwas zur Neige geht.',
+      route: 'Vorräte',
+      widget: 'Vorräte',
+      quickAdd: 'Vorrat',
+      settings: {
+        soonDays: 'Als „läuft bald ab“ zeigen ab (Tage vorher)',
+        remindDaysBefore: 'Erinnerung vor Ablauf (Tage)',
+        remindTime: 'Uhrzeit der Erinnerung',
+        remindTimeHelp: 'Format HH:mm',
+      },
+    },
     title: 'Vorräte',
     add: 'Vorrat hinzufügen',
     edit: 'Vorrat bearbeiten',
@@ -1773,6 +1913,15 @@ export const t = {
     instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
   },
   disk: {
+    meta: {
+      name: 'Dieser PC',
+      description:
+        'Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) – nur zum Ansehen, nur am PC; der Scan verändert nichts.',
+      route: 'Dieser PC',
+      route2: 'Datenträger-Scan',
+      widget: 'Laufwerke',
+      widget2: 'System',
+    },
     title: 'Dieser PC',
     tabsLabel: 'Bereich',
     tabs: { drives: 'Laufwerke', system: 'System' } as const,
@@ -2108,6 +2257,14 @@ export const t = {
     widgetEmpty: 'Keine Fristen in Sicht.',
   },
   budgets: {
+    meta: {
+      name: 'Budgets & Sparziele',
+      description:
+        'Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.',
+      route: 'Budgets',
+      widget: 'Budgets & Sparziele',
+      quickAdd: 'Sparziel',
+    },
     title: 'Budgets & Sparziele',
     tabs: 'Bereich',
     tabBudgets: 'Budgets',
@@ -2163,6 +2320,19 @@ export const t = {
     widgetEmpty: 'Nichts zu packen.',
   },
   vault: {
+    meta: {
+      name: 'Dokumente',
+      description:
+        'Wichtige Dokumente mit Kategorie, Notiz und Ablaufdatum (z. B. Ausweis) und angehängter Datei. Dateien bleiben nur auf diesem Gerät.',
+      route: 'Dokumente',
+      widget: 'Dokumente: Ablauf',
+      quickAdd: 'Dokument',
+      settings: {
+        remindDaysBefore: 'Erinnerung vor Ablauf eines Dokuments (Tage)',
+        remindTime: 'Uhrzeit der Erinnerung',
+        remindTimeHelp: 'Format HH:mm',
+      },
+    },
     title: 'Dokumente',
     add: 'Dokument hinzufügen',
     edit: 'Dokument bearbeiten',
@@ -2194,6 +2364,33 @@ export const t = {
     widgetEmpty: 'Nichts läuft bald ab.',
   },
   accounts: {
+    meta: {
+      name: 'Accounts',
+      description:
+        'Passwort-Tresor: Zugangsdaten mit Master-Passwort verschlüsselt (Argon2id, AES-256), Generator, Einmalcodes (TOTP), Import/Export. Komplett von der KI ausgeschlossen.',
+      route: 'Accounts',
+      widget: 'Passwort-Tresor',
+      settings: {
+        autoLockMinutes: 'Tresor sperren nach Inaktivität',
+        autoLockMinutes_1: '1 Minute',
+        autoLockMinutes_5: '5 Minuten',
+        autoLockMinutes_15: '15 Minuten',
+        autoLockMinutes_30: '30 Minuten',
+        backgroundLock: 'Tresor sperren, wenn die App im Hintergrund ist',
+        backgroundLock_now: 'Sofort',
+        backgroundLock_30s: 'Nach 30 Sekunden',
+        originMatch: 'Browser-Erweiterung: Zugangsdaten anbieten für',
+        originMatch_domain: 'Dieselbe Domain (login.beispiel.de passt zu beispiel.de)',
+        originMatch_host: 'Genau denselben Host',
+        genLength: 'Browser-Erweiterung: Länge neuer Passwörter',
+        genLength_16: '16 Zeichen',
+        genLength_20: '20 Zeichen',
+        genLength_24: '24 Zeichen',
+        genLength_32: '32 Zeichen',
+        genSymbols: 'Browser-Erweiterung: Sonderzeichen verwenden',
+        genAvoidAmbiguous: 'Browser-Erweiterung: Ähnliche Zeichen vermeiden (Il1O0)',
+      },
+    },
     pickEntry: 'Zugang auswählen',
     detail: 'Details',
     title: 'Accounts',

@@ -74,7 +74,7 @@ export function ShareTarget() {
         </div>
       </div>
       {!has ? (
-        <EmptyState icon="external" title={t.share.nothing} />
+        <EmptyState title={t.share.nothing} />
       ) : (
         <>
           <Card title={t.share.content}>

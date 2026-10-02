@@ -54,7 +54,7 @@ export default function RemindersPage() {
       ) : null}
 
       {reminders && reminders.length === 0 ? (
-        <EmptyState icon="bell" title={t.reminders.empty}>
+        <EmptyState title={t.reminders.empty}>
           <StartDataButton moduleId="reminders" />
         </EmptyState>
       ) : null}

@@ -1,4 +1,5 @@
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -10,19 +11,27 @@
   font-weight: var(--weight-medium);
   cursor: pointer;
   text-decoration: none;
+  /* Hover only changes the background; the press gives the tactile feedback. */
   transition: transform var(--dur-fast) var(--ease-out);
 }
-@media (hover: hover) {
-  .btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-  }
-}
 .btn:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+}
+/* Row button: 32 px to look at, a 44 px target to hit. */
+.sm {
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+.sm::after,
+.icon::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
 }
 .primary {
   background: var(--accent);
@@ -55,8 +64,26 @@
   background: var(--danger);
   color: var(--surface);
 }
+.quietDanger {
+  background: transparent;
+  color: var(--danger);
+}
+.quietDanger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+/* Icon button: 40 px square on a quiet chip, radius 12, hit area 44 px. */
 .icon {
-  width: var(--touch);
+  width: 2.5rem;
+  min-height: 2.5rem;
+  height: 2.5rem;
   padding: 0;
-  border-radius: var(--radius-full);
+}
+.icon.ghost {
+  background: var(--surface-2);
+}
+.icon.ghost:hover:not(:disabled) {
+  background: var(--border);
+}
+.icon::after {
+  inset: -2px;
 }

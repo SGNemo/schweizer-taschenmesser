@@ -1,8 +1,10 @@
 export { Button, IconButton } from './Button';
 export { Card } from './Card';
 export { Dialog } from './Dialog';
-export { TextField, TextArea, SelectField, Checkbox, Switch } from './Fields';
-export { Badge, EmptyState, Fab, Skeleton, Toaster } from './Misc';
+export { DRAFT_TTL_MS, useDraft } from './useDraft';
+export { TextField, TextArea, SelectField, DateField, Checkbox, Switch } from './Fields';
+export { Tabs, type TabItem } from './Tabs';
+export { Badge, EmptyState, ErrorState, Fab, Skeleton, SkeletonRows, Toaster } from './Misc';
 export { HelpHint } from './HelpHint';
 export { DangerZone, SettingRow, SettingsGroup, TypedConfirmDialog } from './SettingsParts';
 export { Icon } from './icons';
@@ -26,5 +28,8 @@ export {
   Toolbar,
   patternStyles,
 } from './Patterns';
+export { SelectionBar } from './SelectionBar';
 export { useMediaQuery } from './useMediaQuery';
+export { useSelection } from './useSelection';
+export { SWIPE_PX, useSwipeRow } from './useSwipeRow';
 export { WidgetList, type WidgetEntry } from './WidgetList';

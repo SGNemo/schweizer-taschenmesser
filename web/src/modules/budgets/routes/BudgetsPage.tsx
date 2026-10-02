@@ -100,7 +100,7 @@ export default function BudgetsPage() {
       {tab === 'budgets' ? (
         <>
           {!loading && !financeOn ? (
-            <EmptyState icon="wallet" title={t.budgets.needFinance}>
+            <EmptyState title={t.budgets.needFinance}>
               <p>{t.budgets.needFinanceHint}</p>
             </EmptyState>
           ) : (
@@ -121,7 +121,7 @@ export default function BudgetsPage() {
                 </IconButton>
               </div>
               {data && budgets.length === 0 ? (
-                <EmptyState icon="piggy" title={t.budgets.emptyBudgets}>
+                <EmptyState title={t.budgets.emptyBudgets}>
                   <StartDataButton moduleId="budgets" />
                 </EmptyState>
               ) : null}
@@ -166,9 +166,7 @@ export default function BudgetsPage() {
         </>
       ) : (
         <>
-          {goals && goals.length === 0 ? (
-            <EmptyState icon="target" title={t.budgets.emptyGoals} />
-          ) : null}
+          {goals && goals.length === 0 ? <EmptyState title={t.budgets.emptyGoals} /> : null}
           <ItemList layout="grid" label={t.budgets.tabGoals}>
             {(goals ?? []).map((g) => {
               const own = (deposits ?? []).filter((d) => d.goalId === g.id);

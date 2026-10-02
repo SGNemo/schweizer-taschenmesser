@@ -91,7 +91,7 @@ export default function VaultPage() {
         </Chips>
       </div>
       {docs && shown.length === 0 ? (
-        <EmptyState icon="files" title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>
+        <EmptyState title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>
           {docs.length === 0 ? <StartDataButton moduleId="vault" /> : null}
         </EmptyState>
       ) : null}

@@ -6,7 +6,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - `v0.2.0` (2026-09-30): Phasen 1–13 (Fundament bis Passwort-Tresor, Sync/Backup, KI-Assistent + Router, Tauri-Shell, Releases, Selbst-Update), KI-Import (JSON, lokale Import-API, `mcp/`).
 - `v0.3.0-beta.1` (2026-09-30) / `v0.3.0` (2026-10-01): Nemo-Rebranding, Einrichtungsassistent, Schnell erfassen, Datenträger/Systeminfo (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge, flaches Design „Klar“, Übersicht + Widgets, Dev-Preview, MIT.
 - Auf `develop` (noch nicht released): Testdaten für alle Module (Seed-Vertrag, Dev-Preview füllt leere App, Einstellungen → Entwickler).
-- Design „Klar 2“: Phase 1 Tokens auf `develop` (#43); Phase 2 Bereiche + Shell im PR `feat/design-shell` (offen).
+- Design „Klar 2“: Phase 1 Tokens (#43) und Phase 2 Bereiche + Shell (#45) auf `develop`; Phase 3 Basis-Komponenten im PR `feat/design-components` (offen).
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
 
@@ -29,7 +29,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 - Aus PR #3 offene Vorschläge: globaler „+“-FAB ab 900 px durch „+ Neu“ in der Top-Bar ersetzen; ToDo-Board mit Listen als Spalten.
 
 ## Modul-Review 2026-10-01 (entschieden, Doku-PR, noch nicht umgesetzt)
-Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung werden stillgelegt (Tabellen bleiben bis Paket 6); Werkzeuge 18 → 12. Pakete, Versionen (0.4 … 0.7, `feat!:`) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md). Funde der Review: in Paket 1 behoben (Rest: 9, 10). Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
+Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Geburtstage + Geschenke → Personen, Verträge → Unterlagen, Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung werden stillgelegt (Tabellen bleiben bis Paket 6); Werkzeuge 18 → 12. Pakete, Versionen (0.4 … 0.7, `feat!:`) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md). Funde der Review: alle behoben oder bewusst belassen (Fund 9 = gewollt, Fund 10 für bleibende Module erledigt; die Texte der zu ersetzenden Module ziehen mit ihren Paketen um). Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
 
 ## Nächste sinnvolle Schritte
 0. Paket 1 „Aufräumen“ aus [product/IMPLEMENTATION-PROMPT.md](product/IMPLEMENTATION-PROMPT.md) starten (eigener Chat, Hotspots Router/Nav/Settings).

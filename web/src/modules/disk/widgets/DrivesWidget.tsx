@@ -22,9 +22,9 @@ export default function DrivesWidget() {
   }, []);
   const w = t.disk;
   const dw = t.diskWidget;
-  if (failed) return <EmptyState compact icon="disk" title={dw.unavailable} />;
+  if (failed) return <EmptyState compact title={dw.unavailable} />;
   if (!drives) return <Skeleton width="60%" height="1.25rem" />;
-  if (drives.length === 0) return <EmptyState compact icon="disk" title={dw.empty} />;
+  if (drives.length === 0) return <EmptyState compact title={dw.empty} />;
   return (
     <div>
       <ul>

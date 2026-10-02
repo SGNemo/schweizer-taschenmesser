@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { IconName } from '@/ui/icons';
 
 export type ThemeChoice = 'system' | 'light' | 'dark';
 const THEME_KEY = 'tm-theme';
@@ -108,6 +109,8 @@ function syncThemeColor(theme: ThemeChoice): void {
 export interface Toast {
   id: number;
   message: string;
+  /** Optional leading icon (a check for confirmations). */
+  icon?: IconName;
   action?: { label: string; run: () => void };
 }
 
@@ -130,6 +133,8 @@ interface UiState {
   setPaletteOpen(open: boolean): void;
   quickAddOpen: boolean;
   setQuickAddOpen(open: boolean): void;
+  shortcutsOpen: boolean;
+  setShortcutsOpen(open: boolean): void;
   /** The toolbar sheet and the tool shown in it (`null` = the tile grid). */
   toolsOpen: boolean;
   activeTool: string | null;
@@ -138,11 +143,13 @@ interface UiState {
   homeEditing: boolean;
   setHomeEditing(editing: boolean): void;
   toasts: Toast[];
-  toast(message: string, action?: Toast['action']): number;
+  /** At most two toasts stack; a third pushes the oldest out. */
+  toast(message: string, action?: Toast['action'], icon?: IconName): number;
   dismissToast(id: number): void;
 }
 
 let toastId = 0;
+const MAX_TOASTS = 2;
 
 /** UI-only state. Persistent data lives in Dexie, never here. */
 export const useUiStore = create<UiState>((set) => ({
@@ -199,6 +206,8 @@ export const useUiStore = create<UiState>((set) => ({
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
   quickAddOpen: false,
   setQuickAddOpen: (quickAddOpen) => set({ quickAddOpen }),
+  shortcutsOpen: false,
+  setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
   toolsOpen: false,
   activeTool: null,
   openTools: (toolId = null) => set({ toolsOpen: true, activeTool: toolId }),
@@ -206,9 +215,9 @@ export const useUiStore = create<UiState>((set) => ({
   homeEditing: false,
   setHomeEditing: (homeEditing) => set({ homeEditing }),
   toasts: [],
-  toast(message, action) {
+  toast(message, action, icon) {
     const id = ++toastId;
-    set((s) => ({ toasts: [...s.toasts, { id, message, action }] }));
+    set((s) => ({ toasts: [...s.toasts, { id, message, action, icon }].slice(-MAX_TOASTS) }));
     return id;
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })),
