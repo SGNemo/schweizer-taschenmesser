@@ -161,6 +161,13 @@ E4. *Über Nemo:* Version, Build/Commit (Dev-Preview), Plattform und Installatio
 E5. *Gerät zurücksetzen (Testgerät!):* ohne exakt `LÖSCHEN` bleibt der Knopf aus; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
 E6. *Entwickler:* die Kategorie erscheint nur im Dev-Preview-Build. ☐
 
+### Fokus- und Aufmerksamkeitshilfen (Paket 1) – nur mit echtem Gerät und echtem Alltag prüfbar
+F1. *Fokusmodus am Handy (Android):* ToDo über „Jetzt dran“ starten. Ring, Schritte und Buttons gut erreichbar mit einer Hand? Display-Sperre/App-Wechsel während der Runde: nach Rückkehr stimmt die Restzeit, die Anzeige oben führt zurück. Ende: „Zeit ist um“ erscheint erst beim Öffnen der App (kein System-Hinweis im Hintergrund, bekannt). ☐
+F2. *Fokusmodus am PC (Windows):* Esc verlässt den Bildschirm, die Runde läuft weiter; „Fertig“ und „Runde beenden“; Ton am Ende (Einstellung „Sanfter Ton am Ende“) ist leise genug. ☐
+F3. *Schnellerfassung in echten Situationen:* unterwegs „Formular ausfüllen 15 min“ eintippen und per Teilen-Menü etwas erfassen; stimmt Dauer und Ziel, wirkt es schnell genug? ☐
+F4. *„Jetzt dran“ über einen Tag:* Passt der Vorschlag morgens? Sind „Später“ und „Etwas anderes“ verständlich? Tagesplan mit 3 Dingen: zu viel, zu wenig? ☐
+F5. *Ruhiges „Jetzt wichtig“:* Wirkt „Wartet noch“ beruhigend oder versteckt es zu viel? „Neu planen“ verteilt sinnvoll? Jede Hilfe lässt sich unter Einstellungen → Darstellung → „Fokus & Aufmerksamkeit“ einzeln ausschalten. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.

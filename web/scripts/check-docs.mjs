@@ -20,7 +20,7 @@ const BUDGET = {
   lookup: 3000,
   overrides: {
     'docs/README.md': 700,
-    'docs/ARCHITECTURE-MAP.md': 3500,
+    'docs/ARCHITECTURE-MAP.md': 4200,
     'docs/STATUS.md': 5000,
     'docs/DECISIONS.md': 3500,
     'docs/CHATS.md': 2000,

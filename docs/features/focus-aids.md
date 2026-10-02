@@ -15,7 +15,7 @@ Result of the evaluation chat (phases 1–2, branch `feat/adhd-friendly`). Mocku
 - Overdue: one collapsed chip "Wartet noch · n", calm rows ("offen seit letzter Woche", no day counter), red only for money deadlines; "Neu planen" spreads ToDos over the next days.
 - Package order: **1 Anfangen** (this branch) → **2 Erinnerungen** → **3 Erfassen/Ruhe/Wiederfinden** → **4 Fortschritt**. One branch and PR per package.
 
-## Package 1 "Anfangen" (this branch) – scope
+## Package 1 "Anfangen" (this branch) – scope (built; status below)
 | # | Item | Touches | Default |
 |---|---|---|---|
 | 1 | Next-one-thing selection (`modules/todos/next.ts`: due today/overdue first, then planned-for-today, shortest estimate, priority; skip list in `_meta` device-local) | home, todos logic + tests | on |
@@ -40,3 +40,20 @@ Verification: unit tests for next-one-thing, focus state, overdue wording; e2e `
 - Settings: new synced scope `focus` (`core/settings/focus.ts`), section `focus` in `pages/settings/sections.tsx` (category `darstellung`, order 15), add to `inventory.core.json`.
 - Calm overdue: todos `attention.ts` reads the focus settings (`getSettings`) and switches tone to `warning` + wording "n ToDos warten"; ToDo row and widget drop the day counter when the setting is on.
 - "Neu planen": pure function `replan(tasks, today, perDay)` in `modules/todos/logic.ts`, applied through `undoableWithToast`.
+
+## Package 1 – built (2026-10-02)
+All eight items are in `feat/adhd-friendly`. Deviations from the plan above, decided while building:
+- Focus screen route is `/todos/focus/:taskId` (module route); the shell hides its chrome for any `/<module>/focus/…` (`core/focus/path.ts`). Esc **leaves** the screen, the round keeps running; "Runde beenden" ends it.
+- "Heute" plan and "Jetzt dran" are one widget (`todos:next`, default size l, first on home by default via `FRONT_WIDGETS` in `home/layout.ts`); "Als Nächstes" is `calendar:next` (KPI type).
+- "Wartet noch": in the calm strip every non-"today" item folds into one `<details>` line; waiting ToDos use the warning tone, plain dates, no day counter; "Neu planen" lives on the ToDos page.
+- Focus timer end: toast once when the app is open (also after reopening); no OS notification while the app is closed (package 2 can add it with the reminder work).
+- Not built (later): the "Woran war ich" card (package 2), quick-capture Ctrl+Enter and inbox changes (package 3).
+
+## Where things live
+- Settings: `web/src/core/settings/focus.ts` (synced scope `focus`, defaults `DEFAULT_FOCUS`), section `web/src/pages/settings/FocusSection.tsx` (Darstellung, order 15), pinned in `pages/settings/inventory.test.ts`.
+- Device-local state: `web/src/core/focus/{session,state,path,useNow,announce}.ts` (`_meta` keys `focus.session`, `focus.skipped`; never synced or backed up).
+- ToDos: selection logic `modules/todos/next.ts` (`pickNext`, `dayPlan`, `waitingTasks`, `replan`), widget `widgets/NextWidget.tsx`, focus screen `routes/FocusPage.tsx`, start helper `focus.ts`, fields `plannedFor` and `estimateMin` (manifest version 2).
+- Calendar: widget `modules/calendar/widgets/NextWidget.tsx`, helpers `until.ts`.
+- Shell: `layout/AppShell.tsx` (no chrome on focus routes), `layout/FocusWatcher.tsx` (once-only "Zeit ist um"), `layout/FocusIndicator.tsx` (top bar), `home/AttentionStrip.tsx` (calm mode), `home/layout.ts` (`FRONT_WIDGETS`).
+- Quick capture: `quickCapture/parser/estimate.ts` ("15 min", "1 Std"; ToDos only).
+- Tests: `core/focus/*.test.ts`, `modules/todos/next.test.ts`, `modules/todos/__tests__/{focusPage,nextWidget,attention}.test.tsx`, `modules/calendar/__tests__/nextWidget.test.tsx`, `home/AttentionStrip.test.tsx`, `e2e/focus.spec.ts`.

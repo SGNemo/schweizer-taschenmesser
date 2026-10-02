@@ -3,7 +3,7 @@
 Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf; Nemo-*- und Taschenmesser-*-Assets, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
 
 ## Nächste eine Sache
-Fokus- und Aufmerksamkeitshilfen, Paket 1 „Anfangen“: Plan und Umsetzungsnotizen in [features/focus-aids.md](features/focus-aids.md), Branch `feat/adhd-friendly`.
+Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).
 
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).
@@ -42,7 +42,7 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 6. Entscheidungen: Spotify-Widget (L5), Precache der Wörterbücher, FAB-Änderung.
 
 ## Manuelle Tests offen
-Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4 …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F5 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 ## Offen – macht Sven
 0. **Repo-Auftritt setzen (kein API-Zugriff durch Sessions):** GitHub → Settings → *Social preview*: `docs/brand/social-preview.png` hochladen. Repository-Beschreibung: „Nemo – modulare, lokale Alltags-App: Kalender, ToDos, Finanzen, Passwörter und mehr. Windows portable, Android, PWA. Daten bleiben auf dem Gerät.“ Topics: `local-first`, `pwa`, `tauri`, `react`, `typescript`, `rust`, `android`, `windows`, `offline-first`, `personal-finance`, `todo`, `calendar`, `password-manager`, `self-hosted`, `privacy`. Website-Feld: `https://github.com/SGNemo/schweizer-taschenmesser/releases/latest`. Danach in den Repo-Settings *Private vulnerability reporting* einschalten (SECURITY.md verweist darauf).
@@ -64,4 +64,5 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4 …): vollständig in 
 - Design „Klar 2“: Tokens (#43), Bereiche + Shell (#45), Basis-Komponenten (#48) auf `develop`. Einstellungen: Kategorien + Registry (`feat/settings-overhaul`).
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - Pakete 3–6 (0.5.0–0.9.0): Listen, Unterlagen, Personen, Erinnerungen im Kalender, ToDo-Wiederholung; Paket 6: 15 alte Tabellen entfernt.
+- Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 1 (Jetzt dran, Tagesplan, Fokusmodus, ruhiges „Jetzt wichtig“, Dauer pro ToDo, Zeit bis zum Termin; Einstellungen „Fokus & Aufmerksamkeit“).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
