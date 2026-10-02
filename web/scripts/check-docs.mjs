@@ -22,6 +22,7 @@ const BUDGET = {
     'docs/README.md': 700,
     'docs/ARCHITECTURE-MAP.md': 3500,
     'docs/STATUS.md': 5000,
+    'docs/DECISIONS.md': 3500,
     'docs/CHATS.md': 2000,
     'docs/PROMPT-TEMPLATES.md': 2000,
     'docs/meta/DOCS-GUIDE.md': 1500,
