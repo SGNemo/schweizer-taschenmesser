@@ -133,6 +133,8 @@ interface UiState {
   setPaletteOpen(open: boolean): void;
   quickAddOpen: boolean;
   setQuickAddOpen(open: boolean): void;
+  shortcutsOpen: boolean;
+  setShortcutsOpen(open: boolean): void;
   /** The toolbar sheet and the tool shown in it (`null` = the tile grid). */
   toolsOpen: boolean;
   activeTool: string | null;
@@ -204,6 +206,8 @@ export const useUiStore = create<UiState>((set) => ({
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
   quickAddOpen: false,
   setQuickAddOpen: (quickAddOpen) => set({ quickAddOpen }),
+  shortcutsOpen: false,
+  setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
   toolsOpen: false,
   activeTool: null,
   openTools: (toolId = null) => set({ toolsOpen: true, activeTool: toolId }),
