@@ -46,6 +46,7 @@ const manifest: ModuleManifest = {
     quickAdd: [{ id: 'document', label: t.vault.meta.quickAdd, to: '/vault?new=1' }],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    services: () => import('./services'),
   },
 };
 

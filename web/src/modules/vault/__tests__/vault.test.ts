@@ -3,6 +3,7 @@ import { blobKeys, getBlob, pruneBlobs, putBlob } from '@/core/blobs';
 import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
 import { validateManifest } from '@/core/modules/registry';
+import { getSettings, setSettings } from '@/core/settings/settings';
 import { toEpoch } from '@/core/time/dates';
 import { runMigrations } from '@/core/modules/migrate';
 import {
@@ -16,6 +17,8 @@ import {
   statusOf,
 } from '../logic';
 import manifest from '../manifest';
+import { carryOverSettings } from '../services';
+import { settings, settingsSchema } from '../settings';
 import { deleteDocument, documentRepo, saveDocument } from '../repo';
 import { documentSchema } from '../schema';
 
@@ -204,5 +207,15 @@ describe('vault module', () => {
     const row = await documentRepo.get(created.id);
     expect(row).toMatchObject({ title: 'Neu', endDate: '2026-12-01' });
     expect(row?.expiresOn).toBeUndefined();
+  });
+
+  it('carries the contracts reminder lead over to the deadline setting once', async () => {
+    await setSettings('module.contracts', { remindDaysBefore: 21 });
+    await carryOverSettings();
+    const prefs = () => getSettings('module.vault', settingsSchema, settings.defaults as never);
+    expect(await prefs()).toMatchObject({ remindDaysBeforeDeadline: 21, remindDaysBefore: 30 });
+    await setSettings('module.vault', { remindDaysBeforeDeadline: 5 });
+    await carryOverSettings();
+    expect((await prefs()).remindDaysBeforeDeadline).toBe(5);
   });
 });

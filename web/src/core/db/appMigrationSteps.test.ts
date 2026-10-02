@@ -60,6 +60,9 @@ describe('0.3.1 backup → lists and bookmarks', () => {
       '0.5.0-packing-list',
       '0.5.0-packing-item',
       '0.5.0-launcher-link',
+      '0.6.0-contract',
+      '0.6.0-birthday',
+      '0.6.0-gift',
     ]);
   });
 
@@ -132,7 +135,7 @@ describe('0.3.1 backup → lists and bookmarks', () => {
       outbox: await db.table('_outbox').toArray(),
     };
     const reports = await runAppMigrations(db);
-    expect(reports.map((r) => r.copied)).toEqual([0, 0, 0, 0]);
+    expect(reports.map((r) => r.copied)).toEqual(APP_MIGRATIONS.map(() => 0));
     expect(await db.table('lists_item').toArray()).toEqual(before.lists);
     expect(await db.table('bookmarks_item').toArray()).toEqual(before.bookmarks);
     expect(await db.table('_outbox').toArray()).toEqual(before.outbox);

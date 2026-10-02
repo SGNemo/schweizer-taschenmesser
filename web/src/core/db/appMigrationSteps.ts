@@ -9,9 +9,35 @@ const LAUNCHER_LINK = tableName('launcher', 'link');
 const LISTS_LIST = tableName('lists', 'list');
 const LISTS_ITEM = tableName('lists', 'item');
 const BOOKMARKS_ITEM = tableName('bookmarks', 'item');
+const CONTRACTS_CONTRACT = tableName('contracts', 'contract');
+const VAULT_DOCUMENT = tableName('vault', 'document');
+const BIRTHDAYS_BIRTHDAY = tableName('birthdays', 'birthday');
+const GIFTS_IDEA = tableName('gifts', 'idea');
+const PEOPLE_PERSON = tableName('people', 'person');
+const PEOPLE_GIFT = tableName('people', 'gift');
 
 /** Id of the shopping list that exists from the start (`modules/lists/schema.ts`). */
 const SHOPPING_LIST_ID = 'shopping-default';
+
+/** Same person under different spellings: trimmed, lower case, one space ("Anna  Beispiel " = "anna beispiel"). */
+const nameKey = (v: unknown): string =>
+  typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').toLowerCase() : '';
+
+/** Id of a person that exists only because a gift names them (`person-<slug>`, same on every device). */
+export function personIdFor(key: string): string {
+  const slug = key
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `person-${slug || 'unbekannt'}`;
+}
+
+interface GiftContext {
+  /** name key → id of the birthday (= person) with that name; the smallest id when several. */
+  byName: Map<string, string>;
+}
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v : undefined);
 
@@ -92,5 +118,97 @@ export const APP_MIGRATIONS: readonly AppMigration[] = [
       },
       from: { title: 'title', url: 'url', tags: 'group' },
     }),
+  },
+  // 0.6.0 – Verträge & Garantien → Unterlagen
+  {
+    id: '0.6.0-contract',
+    source: CONTRACTS_CONTRACT,
+    target: VAULT_DOCUMENT,
+    map: (row) => ({
+      id: row.id,
+      fields: {
+        title: row.name,
+        category: row.kind,
+        provider: str(row.provider),
+        startDate: str(row.startDate),
+        endDate: str(row.endDate),
+        noticeDays: typeof row.noticeDays === 'number' ? row.noticeDays : undefined,
+        note: str(row.note),
+      },
+      from: { title: 'name', category: 'kind' },
+    }),
+  },
+  // 0.6.0 – Geburtstage, Geschenkideen → Personen
+  {
+    id: '0.6.0-birthday',
+    source: BIRTHDAYS_BIRTHDAY,
+    target: PEOPLE_PERSON,
+    map: (row) => ({
+      id: row.id,
+      fields: {
+        name: row.name,
+        birthday: {
+          month: row.month,
+          day: row.day,
+          ...(typeof row.year === 'number' ? { year: row.year } : {}),
+        },
+        note: str(row.note),
+        tags: [],
+      },
+      from: { name: 'name', note: 'note' },
+    }),
+  },
+  {
+    id: '0.6.0-gift',
+    source: GIFTS_IDEA,
+    target: PEOPLE_GIFT,
+    // A gift belongs to the person (former birthday) with the same name, otherwise to a person that
+    // is made up for the name. The match reads the birthday rows, so the birthday step comes first.
+    prepare: async (database) => {
+      const rows = (await database.table(BIRTHDAYS_BIRTHDAY).toArray()).filter(
+        (r) => r.deletedAt === null,
+      ) as { id: string; name: string }[];
+      const byName = new Map<string, string>();
+      for (const r of rows.sort((a, b) => a.id.localeCompare(b.id))) {
+        const key = nameKey(r.name);
+        if (key && !byName.has(key)) byName.set(key, r.id);
+      }
+      return { byName } satisfies GiftContext;
+    },
+    ensure: (rows, ctx) => {
+      const { byName } = ctx as GiftContext;
+      const wanted = new Map<string, string>();
+      const live = rows
+        .filter((r) => r.deletedAt === null)
+        .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+      for (const r of live) {
+        const key = nameKey(r.forWhom);
+        if (key && !byName.has(key) && !wanted.has(key)) wanted.set(key, String(r.forWhom).trim());
+      }
+      return [...wanted].map(([key, name]) => ({
+        table: PEOPLE_PERSON,
+        id: personIdFor(key),
+        fields: { name, tags: [] },
+      }));
+    },
+    map: (row, ctx) => {
+      const key = nameKey(row.forWhom);
+      if (!key) return undefined;
+      const personId = (ctx as GiftContext).byName.get(key) ?? personIdFor(key);
+      return {
+        id: row.id,
+        fields: {
+          personId,
+          title: row.title,
+          occasion: str(row.occasion),
+          date: str(row.date),
+          priceCents: typeof row.priceCents === 'number' ? row.priceCents : undefined,
+          url: str(row.url),
+          status: row.status,
+          note: str(row.note),
+        },
+        from: { personId: 'forWhom' },
+      };
+    },
   },
 ];
