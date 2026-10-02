@@ -10,7 +10,7 @@ import styles from './SettingsParts.module.css';
 /**
  * Label and short description on the left, the control on the right (stacked on narrow containers).
  * `id` is the deep-link anchor (`<section>--<field>`). The control keeps its own accessible name
- * (e.g. `labelHidden`); the row is a labelled group so the description is read as well.
+ * (`labelHidden`), so the visible label is not announced twice.
  */
 export function SettingRow({
   id,
@@ -25,26 +25,14 @@ export function SettingRow({
   hint?: string;
   children?: ReactNode;
 }) {
-  const labelId = useId();
-  const descId = useId();
   return (
-    <div
-      id={id}
-      className={styles.row}
-      role="group"
-      aria-labelledby={labelId}
-      aria-describedby={description ? descId : undefined}
-    >
+    <div id={id} className={styles.row}>
       <div className={styles.text}>
-        <span id={labelId} className={styles.label}>
+        <span className={styles.label}>
           {label}
           {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
         </span>
-        {description ? (
-          <span id={descId} className={styles.description}>
-            {description}
-          </span>
-        ) : null}
+        {description ? <span className={styles.description}>{description}</span> : null}
       </div>
       {children ? <div className={styles.control}>{children}</div> : null}
     </div>
@@ -71,9 +59,10 @@ export function SettingsGroup({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className={styles.group} aria-labelledby={`${id}-title`}>
+    <section className={styles.group} aria-labelledby={id}>
       <header className={styles.groupHead}>
-        <h2 id={`${id}-title`}>{title}</h2>
+        {/* The heading carries the deep-link anchor; the page highlights its section. */}
+        <h2 id={id}>{title}</h2>
         {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
       </header>
       {description ? <p className={styles.groupDescription}>{description}</p> : null}

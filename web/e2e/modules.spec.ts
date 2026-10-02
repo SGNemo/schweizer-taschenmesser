@@ -140,7 +140,7 @@ test.describe('shell', () => {
     await page.getByRole('button', { name: 'Suchen' }).click();
     await page.getByRole('combobox').fill('einst');
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings(\/allgemein)?$/);
   });
 
   test('Ctrl+K opens the palette on desktop', async ({ page }, info) => {
@@ -155,8 +155,11 @@ test.describe('shell', () => {
   });
 
   test('theme choice is applied and remembered', async ({ page }) => {
-    await page.goto('/settings');
-    await page.getByLabel('Farbschema').selectOption('dark');
+    await page.goto('/settings/darstellung');
+    await page
+      .getByRole('group', { name: 'Farbschema' })
+      .getByRole('button', { name: 'Dunkel' })
+      .click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
@@ -164,7 +167,7 @@ test.describe('shell', () => {
 
   test('module settings appear for active modules and persist', async ({ page }) => {
     await enableExample(page);
-    await page.goto('/settings');
+    await page.goto('/settings/module');
     const toggle = page.getByRole('switch', { name: 'Erledigte anzeigen' });
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await toggle.click();

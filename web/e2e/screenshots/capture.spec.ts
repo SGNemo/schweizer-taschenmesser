@@ -54,6 +54,14 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'components', path: '/dev/components' },
   { name: 'library', path: '/library' },
   { name: 'settings', path: '/settings' },
+  { name: 'settings-allgemein', path: '/settings/allgemein' },
+  { name: 'settings-darstellung', path: '/settings/darstellung' },
+  { name: 'settings-module', path: '/settings/module' },
+  { name: 'settings-sicherheit', path: '/settings/sicherheit' },
+  { name: 'settings-sync', path: '/settings/sync' },
+  { name: 'settings-ki', path: '/settings/ki' },
+  { name: 'settings-verbindungen', path: '/settings/verbindungen' },
+  { name: 'settings-ueber', path: '/settings/ueber' },
 ];
 
 test('capture layout screenshots', async ({ browser }) => {

@@ -136,7 +136,7 @@ test('the capture window page saves, confirms and is accessible', async ({ page 
 test('the settings page explains that hotkey and tray belong to the Windows app', async ({
   page,
 }) => {
-  await page.goto('/settings');
+  await page.goto('/settings/schnellerfassung');
   await expect(page.getByRole('heading', { name: 'Schnellerfassung' })).toBeVisible();
   await expect(
     page.getByText('Tastenkürzel, Tray und Autostart gibt es nur in der Windows-App.'),

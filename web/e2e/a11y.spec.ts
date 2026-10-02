@@ -81,6 +81,18 @@ const PAGES = [
   ['library', '/library'],
   ['tools', '/tools'],
   ['settings', '/settings'],
+  ['settings-allgemein', '/settings/allgemein'],
+  ['settings-darstellung', '/settings/darstellung'],
+  ['settings-module', '/settings/module'],
+  ['settings-werkzeuge', '/settings/werkzeuge'],
+  ['settings-benachrichtigungen', '/settings/benachrichtigungen'],
+  ['settings-sicherheit', '/settings/sicherheit'],
+  ['settings-sync', '/settings/sync'],
+  ['settings-ki', '/settings/ki'],
+  ['settings-verbindungen', '/settings/verbindungen'],
+  ['settings-schnellerfassung', '/settings/schnellerfassung'],
+  ['settings-updates', '/settings/updates'],
+  ['settings-ueber', '/settings/ueber'],
   ['calendar', '/calendar'],
   ['todos', '/todos'],
   ['reminders', '/reminders'],
@@ -145,7 +157,7 @@ for (const scheme of ['light', 'dark'] as const) {
     });
 
     test('settings: AI providers (list, expanded form)', async ({ page }) => {
-      await page.goto('/settings');
+      await page.goto('/settings/ki');
       const section = page.locator('section[aria-labelledby="ai"]');
       await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Groq' });
       await expect(section.getByTestId('provider-groq')).toBeVisible();

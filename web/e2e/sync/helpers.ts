@@ -63,7 +63,7 @@ export async function outboxCount(page: Page): Promise<number> {
 }
 
 export async function openSettings(page: Page): Promise<void> {
-  if (!page.url().endsWith('/settings')) await page.goto('/settings');
+  if (!page.url().endsWith('/settings/sync')) await page.goto('/settings/sync');
   await expect(page.getByRole('heading', { name: 'Synchronisation' })).toBeVisible();
 }
 

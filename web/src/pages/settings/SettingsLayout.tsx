@@ -129,11 +129,13 @@ function useDeepLink(ready: boolean) {
     const el = document.getElementById(id) ?? document.getElementById(id.split('--')[0] ?? id);
     if (!el) return;
     el.scrollIntoView({ block: 'start' });
-    el.dataset.highlight = 'true';
-    const timer = setTimeout(() => delete el.dataset.highlight, 1600);
+    // Section anchors sit on the heading: highlight the whole section.
+    const target = el.matches('h2') ? (el.closest('section') ?? el) : el;
+    target.dataset.highlight = 'true';
+    const timer = setTimeout(() => delete target.dataset.highlight, 1600);
     return () => {
       clearTimeout(timer);
-      delete el.dataset.highlight;
+      delete target.dataset.highlight;
     };
   }, [ready, hash, pathname]);
 }
@@ -160,7 +162,11 @@ export function CategoryPage() {
           {t.settings.back}
         </Link>
       )}
-      <h2 className={styles.categoryTitle}>{categoryDef(category).title}</h2>
+      {wide ? null : (
+        <p aria-hidden="true" className={styles.categoryTitle}>
+          {categoryDef(category).title}
+        </p>
+      )}
       {own.map((s) => (
         <Fragment key={s.id}>{s.render()}</Fragment>
       ))}

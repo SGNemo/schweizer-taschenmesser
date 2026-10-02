@@ -32,7 +32,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('KI-Zugriff: enable, create a token, use it, revoke it', async ({ page }) => {
-  await page.goto('/settings');
+  await page.goto('/settings/verbindungen');
   const section = page.locator('section[aria-labelledby="localapi"]');
   await expect(section.getByRole('status')).toHaveText('Aus');
   await section.getByRole('switch', { name: 'Lokale Schnittstelle aktivieren' }).click();
