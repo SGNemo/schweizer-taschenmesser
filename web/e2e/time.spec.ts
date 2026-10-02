@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
 
-async function addTask(page: import('@playwright/test').Page, title: string) {
+async function addTask(page: Page, title: string) {
   await ready(page, '/todos');
   await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
   await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
