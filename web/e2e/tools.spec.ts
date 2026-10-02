@@ -106,3 +106,27 @@ test('the palette calculates on the spot', async ({ page }, info) => {
   await page.getByRole('combobox').fill('12 * 3,5');
   await expect(page.getByRole('option').first()).toHaveText('12 * 3,5 = 42');
 });
+
+test('/tools/:id opens the sheet on that tool', async ({ page }) => {
+  await page.goto('/tools/calc');
+  await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await page.keyboard.press('Escape');
+  // A tool that is not switched on just shows the tile grid.
+  await page.goto('/tools/dice');
+  await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
+});
+
+test('the palette lists tools and Ctrl+. toggles the sheet', async ({ page }, info) => {
+  test.skip(info.project.name === 'pixel-7', 'keyboard shortcuts are a desktop feature');
+  await page.goto('/');
+  await expect(page.locator('main h1')).toBeVisible();
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox').fill('Werkzeug: Rechner');
+  await page.getByRole('option', { name: 'Werkzeug: Rechner', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
+  await page.keyboard.press('Control+.');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.keyboard.press('Control+.');
+  await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
+});

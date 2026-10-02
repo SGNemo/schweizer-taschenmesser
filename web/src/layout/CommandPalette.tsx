@@ -4,6 +4,7 @@ import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
 import type { ResultRow } from '@/core/ai/query/types';
 import { useSetupHost } from '@/core/setup/host';
+import { useTools } from '@/core/tools/state';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, type IconName } from '@/ui';
@@ -60,6 +61,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const listId = useId();
   const toast = useUiStore((s) => s.toast);
   const openSetup = useSetupHost((s) => s.openWizard);
+  const openTools = useUiStore((s) => s.openTools);
+  const tools = useTools();
 
   const [devCommands, setDevCommands] = useState<Command[]>([]);
   useEffect(() => {
@@ -80,9 +83,15 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
+      ...(tools?.active ?? []).map((tool) => ({
+        id: `tool-${tool.id}`,
+        label: t.tools.paletteCommand(tool.name),
+        icon: tool.icon,
+        run: () => openTools(tool.id),
+      })),
       ...devCommands,
     ];
-  }, [navigate, moduleItems, tree, openSetup, devCommands]);
+  }, [navigate, moduleItems, tree, openSetup, openTools, tools, devCommands]);
 
   const hits = useSearchHits(query);
   const hasModel = config ? isAiConfigured(config) : false;

@@ -14,7 +14,7 @@ const name = nameParts.join(' ').trim();
 
 if (!id || !name || !/^[a-z][a-z0-9]*$/.test(id)) {
   console.error('Usage: npm run gen:module -- <id> "<Display Name>"');
-  console.error('  <id> must be lowercase alphanumeric (e.g. "todos", "habits").');
+  console.error('  <id> must be lowercase alphanumeric (e.g. "todos", "notes").');
   process.exit(1);
 }
 

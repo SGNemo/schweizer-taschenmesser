@@ -470,6 +470,14 @@ test('tab System shows CPU, memory, battery, graphics, network and the biggest p
   expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
 });
 
+test('the old /system path leads to the System tab', async ({ page }) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/system');
+  await expect(page).toHaveURL(/\/disk\?tab=system/);
+  await expect(page.getByTestId('system-info')).toBeVisible();
+});
+
 test('browser and Android: Dieser PC does not exist', async ({ page }) => {
   await page.goto('/library');
   await expect(page.locator('main h1')).toBeVisible();

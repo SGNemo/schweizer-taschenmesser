@@ -557,6 +557,8 @@ export const t = {
     title: 'Werkzeuge',
     open: 'Werkzeuge',
     back: 'Zurück zu den Werkzeugen',
+    paletteCommand: (name: string) => `Werkzeug: ${name}`,
+    shortcut: 'Strg+.',
     none: 'Es sind keine Werkzeuge eingeschaltet.',
     manage: 'Werkzeuge verwalten',
     library: {

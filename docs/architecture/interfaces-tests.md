@@ -14,7 +14,7 @@ Part of the architecture notes ([index](../architecture.md)); map: [ARCHITECTURE
 
 ## Tests
 - Unit/component: co-located `*.test.ts(x)` (some in `__tests__/`); `web/vitest.config.ts`, `web/vitest.setup.ts`.
-- Disk/system: `modules/disk/__tests__/exclusion.test.ts`, `modules/system/__tests__/system.test.ts`, e2e `e2e/disk.spec.ts`, `e2e/system.spec.ts` (fake platform, invented data only).
+- Disk/system: `modules/disk/__tests__/exclusion.test.ts`, `modules/disk/__tests__/system.test.ts`, e2e `e2e/disk.spec.ts` (fake platform, invented data only).
 - Isolation/privacy guards: `core/modules/registry.test.ts`, `tools/isolation.test.ts`, `connectors/isolation.test.ts`, `core/ai/privacy.test.ts`, `modules/accounts/__tests__/exclusion.test.ts`, `core/sync/contract.test.ts`, `server/test/contract.test.ts`.
 - Server: `server/test/*.test.ts` (Vitest + `fastify.inject`). MCP: `mcp/test/mcp.test.ts`. Rust: `web/src-tauri/crates/local-api/tests/server.rs`, `crates/disk-scan/{src,tests}`, `crates/system-info/src`.
 - CI jobs (`.github/workflows/ci.yml`, on push to `develop`/`main` and PRs, all in parallel): `changes` (docs-only gate), secret scan (gitleaks, always), web-static, web-unit, web-e2e (4 shards), `web` (aggregates the three under the old check name), server, mcp, multi-device sync E2E, rust (fmt, clippy, tests). Details and cache rules: [howto/ci.md](../howto/ci.md).

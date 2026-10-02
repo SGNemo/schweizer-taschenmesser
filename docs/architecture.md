@@ -16,7 +16,6 @@ Long design notes, split by topic (text moved unchanged from the former single f
 | [importer](architecture/importer.md) | Start data & importers (Phase 13 step 2), HelpHint |
 | [local-api](architecture/local-api.md) | Data contract & JSON import, **Local AI import API** (Rust transport, app side, batches, MCP wrapper) |
 | [connectors](architecture/connectors.md) | Connectors, calendar sync, Gmail scan, proxy, bank import (Phase 13 step 3) |
-| [news](architecture/news.md) | News module (Phase 13 step 4) |
 | [tools-links](architecture/tools-links.md) | Toolbar & tools, maps/WhatsApp/share page/launcher, Spotify (not built) (Phase 13 steps 5–6) |
 | [phases](architecture/phases.md) | Phase plan & status (1–13) |
 

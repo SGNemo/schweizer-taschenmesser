@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useMemo } from 'react';
-import { Navigate, useRoutes, type RouteObject } from 'react-router';
+import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
@@ -22,6 +22,16 @@ function ModuleDisabled() {
     toast(t.errors.moduleDisabled);
   }, [toast]);
   return <Navigate to="/library" replace />;
+}
+
+/** `/tools/:id` opens the tools sheet on that tool, then leaves the URL behind on the home screen. */
+function ToolRoute() {
+  const { id } = useParams();
+  const openTools = useUiStore((s) => s.openTools);
+  useEffect(() => {
+    openTools(id ?? null);
+  }, [id, openTools]);
+  return <Navigate to="/" replace />;
 }
 
 /** Area page: no content of its own, it opens the module last used in the area. */
@@ -91,6 +101,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
             </PageContainer>
           ),
         },
+        { path: 'tools/:id', element: <ToolRoute /> },
         {
           path: 'share',
           element: (
