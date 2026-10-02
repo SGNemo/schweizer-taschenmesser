@@ -39,8 +39,8 @@ mod imp {
         CreateDXGIFactory1, IDXGIFactory1, DXGI_ADAPTER_FLAG_SOFTWARE,
     };
     use windows::Win32::Graphics::Gdi::{
-        EnumDisplayMonitors, EnumDisplaySettingsW, GetMonitorInfoW, DEVMODEW, ENUM_CURRENT_SETTINGS,
-        HDC, HMONITOR, MONITORINFO, MONITORINFOEXW,
+        EnumDisplayMonitors, EnumDisplaySettingsW, GetMonitorInfoW, DEVMODEW,
+        ENUM_CURRENT_SETTINGS, HDC, HMONITOR, MONITORINFO, MONITORINFOEXW,
     };
     use windows::Win32::NetworkManagement::IpHelper::{
         GetAdaptersAddresses, GAA_FLAG_SKIP_ANYCAST, GAA_FLAG_SKIP_DNS_SERVER,
@@ -127,7 +127,9 @@ mod imp {
             let mut ty = REG_VALUE_TYPE::default();
             let mut len = 0u32;
             // SAFETY: first call only asks for the size; `ty`/`len` are live locals.
-            let r = unsafe { RegQueryValueExW(self.0, name, None, Some(&mut ty), None, Some(&mut len)) };
+            let r = unsafe {
+                RegQueryValueExW(self.0, name, None, Some(&mut ty), None, Some(&mut len))
+            };
             if r != ERROR_SUCCESS || len == 0 {
                 return None;
             }
@@ -232,7 +234,7 @@ mod imp {
 
     fn smbios_table() -> Option<Vec<u8>> {
         const RSMB: u32 = 0x5253_4D42; // 'RSMB'
-        // SAFETY: the first call only asks for the size; the second fills a buffer of that size.
+                                       // SAFETY: the first call only asks for the size; the second fills a buffer of that size.
         unsafe {
             let size = GetSystemFirmwareTable(
                 windows::Win32::System::SystemInformation::FIRMWARE_TABLE_PROVIDER(RSMB),
@@ -297,7 +299,11 @@ mod imp {
             };
             // SAFETY: `szDevice` is NUL-terminated by the OS; `dm` is a live struct.
             if unsafe {
-                EnumDisplaySettingsW(PCWSTR(info.szDevice.as_ptr()), ENUM_CURRENT_SETTINGS, &mut dm)
+                EnumDisplaySettingsW(
+                    PCWSTR(info.szDevice.as_ptr()),
+                    ENUM_CURRENT_SETTINGS,
+                    &mut dm,
+                )
             }
             .as_bool()
             {
@@ -329,7 +335,9 @@ mod imp {
 
     pub fn hardware() -> Hardware {
         let audio = audio();
-        let sm = smbios_table().map(|t| smbios::parse(&t)).unwrap_or_default();
+        let sm = smbios_table()
+            .map(|t| smbios::parse(&t))
+            .unwrap_or_default();
         Hardware {
             board: sm.board,
             bios: sm.bios,
@@ -380,7 +388,8 @@ mod imp {
                         let family = (*sa).sa_family;
                         if family == AF_INET {
                             let sin = &*(sa.cast::<SOCKADDR_IN>());
-                            raw.v4.push(Ipv4Addr::from(sin.sin_addr.S_un.S_addr.to_ne_bytes()));
+                            raw.v4
+                                .push(Ipv4Addr::from(sin.sin_addr.S_un.S_addr.to_ne_bytes()));
                         } else if family == AF_INET6 {
                             let sin6 = &*(sa.cast::<SOCKADDR_IN6>());
                             raw.v6.push(RawV6 {
@@ -410,7 +419,8 @@ mod imp {
         use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL, STGM_READ};
         // SAFETY: COM calls on smart pointers; COM is initialised by the caller on this thread.
         unsafe {
-            let en: IMMDeviceEnumerator = CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL).ok()?;
+            let en: IMMDeviceEnumerator =
+                CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL).ok()?;
             let dev = en
                 .GetDefaultAudioEndpoint(if render { eRender } else { eCapture }, eConsole)
                 .ok()?;
@@ -437,7 +447,7 @@ mod imp {
     pub fn wifi() -> Option<WifiState> {
         use windows::Win32::Foundation::HANDLE;
         use windows::Win32::NetworkManagement::WiFi::{
-            wlan_intf_opcode_current_connection, wlan_interface_state_connected, WlanCloseHandle,
+            wlan_interface_state_connected, wlan_intf_opcode_current_connection, WlanCloseHandle,
             WlanEnumInterfaces, WlanFreeMemory, WlanOpenHandle, WlanQueryInterface,
             WLAN_CONNECTION_ATTRIBUTES, WLAN_INTERFACE_INFO_LIST,
         };

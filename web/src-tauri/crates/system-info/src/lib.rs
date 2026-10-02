@@ -218,11 +218,7 @@ impl Monitor {
                 physical_cores: System::physical_core_count(),
                 threads: cpus.len(),
                 usage_percent: self.sys.global_cpu_usage().clamp(0.0, 100.0),
-                frequency_mhz: cpus
-                    .iter()
-                    .map(|c| c.frequency())
-                    .max()
-                    .filter(|f| *f > 0),
+                frequency_mhz: cpus.iter().map(|c| c.frequency()).max().filter(|f| *f > 0),
             },
             memory: Memory {
                 total_bytes: self.sys.total_memory(),

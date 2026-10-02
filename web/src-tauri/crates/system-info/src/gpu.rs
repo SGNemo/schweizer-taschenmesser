@@ -181,7 +181,13 @@ mod tests {
     fn integrated_and_discrete_are_both_listed_and_the_one_with_a_screen_is_active() {
         let list = merge_gpus(
             &[
-                dxgi("AMD Radeon(TM) Graphics", 0x1002, 512 * 1024 * 1024, 3, false),
+                dxgi(
+                    "AMD Radeon(TM) Graphics",
+                    0x1002,
+                    512 * 1024 * 1024,
+                    3,
+                    false,
+                ),
                 dxgi("NVIDIA GeForce RTX 4070", 0x10de, 12 * GB, 2, true),
             ],
             &[],

@@ -112,7 +112,10 @@ fn c_string_at(buf: &[u8], off: usize) -> Option<String> {
     if off == 0 || off >= buf.len() {
         return None;
     }
-    let end = buf[off..].iter().position(|b| *b == 0).map_or(buf.len(), |p| off + p);
+    let end = buf[off..]
+        .iter()
+        .position(|b| *b == 0)
+        .map_or(buf.len(), |p| off + p);
     let s = String::from_utf8_lossy(&buf[off..end]).trim().to_string();
     (!s.is_empty()).then_some(s)
 }
@@ -150,7 +153,11 @@ pub fn parse_temperature(buf: &[u8]) -> Option<i16> {
 }
 
 /// Combines what the two queries returned. `predict` is `None` when it could not be read.
-pub fn health_from(temperature_c: Option<i16>, predict_failure: Option<bool>, gap: HealthGap) -> Health {
+pub fn health_from(
+    temperature_c: Option<i16>,
+    predict_failure: Option<bool>,
+    gap: HealthGap,
+) -> Health {
     match predict_failure {
         Some(true) => Health {
             status: HealthStatus::Warning,
@@ -575,13 +582,20 @@ mod tests {
     #[test]
     fn health_says_why_a_value_is_missing() {
         let h = health_from(Some(40), Some(false), HealthGap::NeedsAdmin);
-        assert_eq!((h.status, h.temperature_c, h.gap), (HealthStatus::Ok, Some(40), None));
+        assert_eq!(
+            (h.status, h.temperature_c, h.gap),
+            (HealthStatus::Ok, Some(40), None)
+        );
         let h = health_from(None, Some(true), HealthGap::NeedsAdmin);
         assert_eq!(h.status, HealthStatus::Warning);
         let h = health_from(Some(33), None, HealthGap::Unsupported);
         assert_eq!(
             (h.status, h.temperature_c, h.gap),
-            (HealthStatus::Unknown, Some(33), Some(HealthGap::Unsupported))
+            (
+                HealthStatus::Unknown,
+                Some(33),
+                Some(HealthGap::Unsupported)
+            )
         );
     }
 }

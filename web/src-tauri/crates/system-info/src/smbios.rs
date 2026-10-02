@@ -165,15 +165,34 @@ mod tests {
     #[test]
     fn reads_bios_board_and_memory_modules() {
         let mut t = Vec::new();
-        t.extend(structure(0, vec![1, 2, 0, 0, 0], &["American Megatrends", "F31"]));
-        t.extend(structure(2, vec![1, 2], &["ASUSTeK COMPUTER INC.", "ROG STRIX B650-F"]));
-        t.extend(structure(17, dimm(16384, 0x22, 6400, 6000, 1), &["Corsair"]));
-        t.extend(structure(17, dimm(16384, 0x22, 6400, 6000, 1), &["Corsair"]));
+        t.extend(structure(
+            0,
+            vec![1, 2, 0, 0, 0],
+            &["American Megatrends", "F31"],
+        ));
+        t.extend(structure(
+            2,
+            vec![1, 2],
+            &["ASUSTeK COMPUTER INC.", "ROG STRIX B650-F"],
+        ));
+        t.extend(structure(
+            17,
+            dimm(16384, 0x22, 6400, 6000, 1),
+            &["Corsair"],
+        ));
+        t.extend(structure(
+            17,
+            dimm(16384, 0x22, 6400, 6000, 1),
+            &["Corsair"],
+        ));
         t.extend(structure(17, dimm(0, 0, 0, 0, 0), &[])); // empty slot
         t.extend(structure(127, vec![], &[]));
         let s = parse(&t);
         assert_eq!(s.bios.as_deref(), Some("American Megatrends F31"));
-        assert_eq!(s.board.as_deref(), Some("ASUSTeK COMPUTER INC. ROG STRIX B650-F"));
+        assert_eq!(
+            s.board.as_deref(),
+            Some("ASUSTeK COMPUTER INC. ROG STRIX B650-F")
+        );
         assert_eq!(s.ram.len(), 2);
         assert_eq!(s.ram[0].size_bytes, 16 * 1024 * 1024 * 1024);
         assert_eq!(s.ram[0].speed_mhz, Some(6000));
@@ -184,7 +203,11 @@ mod tests {
     #[test]
     fn placeholders_and_garbage_are_ignored() {
         let mut t = Vec::new();
-        t.extend(structure(2, vec![1, 2], &["To Be Filled By O.E.M.", "Default string"]));
+        t.extend(structure(
+            2,
+            vec![1, 2],
+            &["To Be Filled By O.E.M.", "Default string"],
+        ));
         let s = parse(&t);
         assert_eq!(s.board, None);
         // truncated input must not panic

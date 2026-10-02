@@ -114,10 +114,7 @@ mod tests {
         let d = scratch("sum");
         std::fs::write(d.join("a.bin"), vec![0u8; 1000]).unwrap();
         std::fs::write(d.join("sub").join("b.bin"), vec![0u8; 234]).unwrap();
-        assert_eq!(
-            folder_size(&d, 100, Duration::from_secs(5)),
-            (1234, false)
-        );
+        assert_eq!(folder_size(&d, 100, Duration::from_secs(5)), (1234, false));
         let _ = std::fs::remove_dir_all(&d);
     }
 
@@ -148,7 +145,11 @@ mod tests {
     #[test]
     fn a_missing_folder_is_zero() {
         assert_eq!(
-            folder_size(Path::new("/definitely/not/here"), 10, Duration::from_secs(1)),
+            folder_size(
+                Path::new("/definitely/not/here"),
+                10,
+                Duration::from_secs(1)
+            ),
             (0, false)
         );
     }

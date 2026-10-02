@@ -124,9 +124,7 @@ pub fn classify(raw: &RawAdapter) -> Iface {
 pub fn visible(list: Vec<Iface>) -> Vec<Iface> {
     let mut out: Vec<Iface> = list
         .into_iter()
-        .filter(|i| {
-            i.kind != IfaceKind::Other || !i.ipv4.is_empty() || i.ipv6.is_some()
-        })
+        .filter(|i| i.kind != IfaceKind::Other || !i.ipv4.is_empty() || i.ipv6.is_some())
         .filter(|i| !i.ipv4.is_empty() || i.ipv6.is_some() || !i.ipv6_other.is_empty())
         .collect();
     // Real adapters first, virtual ones last; then by name.
@@ -153,11 +151,9 @@ pub fn apply_rates(
     rates: &HashMap<String, (u64, u64)>,
 ) {
     for i in list {
-        let r = rates.get(&i.name).or_else(|| {
-            descriptions
-                .get(&i.name)
-                .and_then(|d| rates.get(d))
-        });
+        let r = rates
+            .get(&i.name)
+            .or_else(|| descriptions.get(&i.name).and_then(|d| rates.get(d)));
         if let Some((down, up)) = r {
             i.down_bytes_per_sec = Some(*down);
             i.up_bytes_per_sec = Some(*up);
@@ -183,7 +179,10 @@ mod tests {
             description: "Realtek PCIe 2.5GbE Family Controller".into(),
             if_type: 6,
             up: true,
-            v4: vec!["192.168.1.20".parse().unwrap(), "169.254.9.9".parse().unwrap()],
+            v4: vec![
+                "192.168.1.20".parse().unwrap(),
+                "169.254.9.9".parse().unwrap(),
+            ],
             v6: vec![
                 v6("fe80::1", false, false),
                 v6("2001:db8::abcd", true, false),
@@ -207,13 +206,19 @@ mod tests {
     fn virtual_adapters_are_recognised_by_name_or_description() {
         for (name, desc) in [
             ("vEthernet (WSL)", "Hyper-V Virtual Ethernet Adapter"),
-            ("VirtualBox Host-Only Network", "VirtualBox Host-Only Ethernet Adapter"),
+            (
+                "VirtualBox Host-Only Network",
+                "VirtualBox Host-Only Ethernet Adapter",
+            ),
             ("docker0", ""),
             ("br-1a2b3c", ""),
         ] {
             assert_eq!(kind_of(name, desc, 6), IfaceKind::Virtual, "{name}");
         }
-        assert_eq!(kind_of("WLAN", "Intel(R) Wi-Fi 6E AX211", 71), IfaceKind::Wifi);
+        assert_eq!(
+            kind_of("WLAN", "Intel(R) Wi-Fi 6E AX211", 71),
+            IfaceKind::Wifi
+        );
         assert_eq!(kind_of("lo", "", 24), IfaceKind::Other);
     }
 
