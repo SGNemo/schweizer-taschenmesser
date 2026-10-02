@@ -63,6 +63,11 @@ export function sensitiveClipboard(io: {
   };
 }
 
+/** `--mode e2e` and the seeded Dev-Preview build `--mode e2e-seed` (screenshots) use the fakes. */
+function isE2eBuild(): boolean {
+  return import.meta.env.MODE === 'e2e' || import.meta.env.MODE === 'e2e-seed';
+}
+
 /** E2E builds only: lets a browser test pose as another platform (`localStorage.__tmPlatformKind`). */
 function e2eKind(): PlatformKind {
   try {
@@ -114,7 +119,7 @@ export const webShare: ShareService = { supported: false, takePending: async () 
 
 export function createWebPlatform(): PlatformService {
   return {
-    kind: import.meta.env.MODE === 'e2e' ? e2eKind() : 'web',
+    kind: isE2eBuild() ? e2eKind() : 'web',
     isNative: false,
     fetch: (input, init) => fetch(input, init),
     notifications: localNotificationService,
@@ -162,12 +167,12 @@ export function createWebPlatform(): PlatformService {
     oauth: { supported: false, start: unsupported },
     // E2E builds only: a stand-in for the native server (the branch is removed from other builds).
     localApi:
-      import.meta.env.MODE === 'e2e'
+      isE2eBuild()
         ? createFakeLocalApi()
         : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
     // E2E builds only: a stand-in for the native pipe server (the extension tests call into it).
     vaultBridge:
-      import.meta.env.MODE === 'e2e'
+      isE2eBuild()
         ? createFakeVaultBridge()
         : {
             supported: false,
@@ -179,7 +184,7 @@ export function createWebPlatform(): PlatformService {
           },
     // E2E builds only: an invented folder tree instead of the native scan.
     disk:
-      import.meta.env.MODE === 'e2e'
+      isE2eBuild()
         ? createFakeDisk()
         : {
             supported: false,
@@ -203,7 +208,7 @@ export function createWebPlatform(): PlatformService {
           },
     // E2E builds only: invented facts instead of the native reading.
     system:
-      import.meta.env.MODE === 'e2e'
+      isE2eBuild()
         ? createFakeSystem()
         : { supported: false, info: unsupported, processes: unsupported },
     desktop: webDesktop,
