@@ -166,10 +166,15 @@
   }
 }
 @container page (min-width: 84rem) {
+  /* Column flow: a task with its subtasks is one unbreakable block, so columns stay gap-free. */
   .main > .list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
+    display: block;
+    column-count: 2;
+    column-gap: var(--space-2);
+  }
+  .main > .list > li {
+    break-inside: avoid;
+    margin-bottom: var(--space-2);
   }
 }
 

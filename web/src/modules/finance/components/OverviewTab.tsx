@@ -21,6 +21,7 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
         <h2 className={styles.chartTitle}>{title}</h2>
         <Button
           variant="ghost"
+          size="sm"
           aria-label={asTable ? t.finance.showChart : t.finance.showTable}
           onClick={() => setAsTable(!asTable)}
         >

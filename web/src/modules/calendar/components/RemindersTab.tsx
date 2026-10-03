@@ -90,6 +90,7 @@ export function RemindersTab({
                 </button>
                 <Switch
                   label={`${r.title}: ${t.calendar.reminders.active}`}
+                  labelHidden
                   checked={status !== 'paused'}
                   onChange={(enabled) =>
                     void eventRepo.update(r.id, {

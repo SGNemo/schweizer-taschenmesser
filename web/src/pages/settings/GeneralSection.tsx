@@ -22,6 +22,7 @@ export function GeneralSection() {
           labelHidden
           defaultValue={values.displayName}
           maxLength={60}
+          placeholder={s.namePlaceholder}
           autoComplete="off"
           onBlur={(e) => {
             if (e.target.value !== values.displayName) void patch({ displayName: e.target.value });

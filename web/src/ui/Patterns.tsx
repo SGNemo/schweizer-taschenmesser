@@ -6,10 +6,20 @@ import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
 
-export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
+/** `views` = the segmented switch between the sub-views of the page (replaces a second row of tabs). */
+export function PageHeader({
+  title,
+  views,
+  children,
+}: {
+  title: string;
+  views?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
     <div className={styles.header}>
       <h1>{title}</h1>
+      {views ? <div className={styles.headerViews}>{views}</div> : null}
       {children}
     </div>
   );
@@ -158,8 +168,14 @@ export function ItemRow({
 }) {
   const body = (
     <>
-      <span className={styles.title}>{title}</span>
-      {meta ? <span className={styles.muted}>{meta}</span> : null}
+      <span className={styles.title} title={typeof title === 'string' ? title : undefined}>
+        {title}
+      </span>
+      {meta ? (
+        <span className={styles.muted} title={typeof meta === 'string' ? meta : undefined}>
+          {meta}
+        </span>
+      ) : null}
     </>
   );
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });

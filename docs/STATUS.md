@@ -5,6 +5,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).
 
+Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).
 2. Release `v0.3.1` kurz prüfen: Checkliste R1 in [MANUAL-TESTS.md](MANUAL-TESTS.md) (Download, Start, Version im Über-Dialog).

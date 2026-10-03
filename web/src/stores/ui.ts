@@ -179,7 +179,7 @@ interface UiState {
 }
 
 let toastId = 0;
-const MAX_TOASTS = 2;
+export const MAX_TOASTS = 2;
 
 /** UI-only state. Persistent data lives in Dexie, never here. */
 export const useUiStore = create<UiState>((set) => ({
