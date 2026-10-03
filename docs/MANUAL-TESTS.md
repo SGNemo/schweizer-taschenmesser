@@ -171,6 +171,8 @@ F6. *Erinnerungen über einen Tag (Handy und PC):* ein paar Erinnerungen und ToD
 F7. *Android, App geschlossen:* Erinnerungen und das Ende einer Fokus-Runde kommen vom System (ohne Knöpfe, bekannt); „Später“ gibt es nur in der Karte bei offener App. Gestaffelte Erinnerung testen (Einstellungen → Ruhige Erinnerungen). ☐
 F8. *„Wenn ich am PC bin“:* auf dem Handy „Später → Wenn ich am PC bin“ wählen, nach dem Sync erscheint die Erinnerung einmal in der Windows-App. ☐
 F9. *„Woran war ich?“:* App 30 Minuten verlassen, zurückkommen: erscheint die Karte auf der Übersicht, führt „Weiter dort“ an die richtige Stelle? ☐
+F10. *Schnellerfassung ohne Rückfrage in echten Situationen:* unterwegs ein paar vage Sätze tippen; landen sie im Eingang, geht „Eingang sortieren“ abends zügig? Ctrl+Enter am PC fürs ganze Formular. ☐
+F11. *Darstellung am Handy und PC:* „Sehr groß“, „Luftig“, „Bewegung: Weniger“ und „Nur das Wichtigste“ ausprobieren; bricht irgendwo das Layout, ist die ruhige Übersicht ruhig genug? ☐
 
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 

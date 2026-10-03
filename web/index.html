@@ -59,8 +59,12 @@
         var a = localStorage.getItem('tm-accent');
         if (a === 'teal' || a === 'coral' || a === 'lagoon')
           document.documentElement.dataset.accent = a;
-        if (localStorage.getItem('tm-text-size') === 'large')
-          document.documentElement.dataset.textSize = 'large';
+        var ts = localStorage.getItem('tm-text-size');
+        if (ts === 'large' || ts === 'xlarge') document.documentElement.dataset.textSize = ts;
+        if (localStorage.getItem('tm-leading') === 'airy')
+          document.documentElement.dataset.leading = 'airy';
+        if (localStorage.getItem('tm-motion') === 'reduce')
+          document.documentElement.dataset.motion = 'reduce';
         if (localStorage.getItem('tm-density') === 'compact')
           document.documentElement.dataset.density = 'compact';
       } catch (e) {}

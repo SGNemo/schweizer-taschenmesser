@@ -234,6 +234,14 @@
 :root[data-text-size='large'] {
   font-size: 112.5%;
 }
+:root[data-text-size='xlarge'] {
+  font-size: 125%; /* 20 px */
+}
+/* Line spacing for easier reading (Einstellungen → Darstellung). */
+:root[data-leading='airy'] {
+  --leading: 1.75;
+  --leading-tight: 1.4;
+}
 :root[data-density='compact'] {
   --row-h: 2.25rem; /* never below 36 px */
   --grid-gap: var(--space-4);
@@ -245,4 +253,10 @@
     --dur: 0ms;
     --dur-slow: 0ms;
   }
+}
+/* The same, chosen inside the app (Einstellungen → Darstellung → Bewegung). */
+:root[data-motion='reduce'] {
+  --dur-fast: 0ms;
+  --dur: 0ms;
+  --dur-slow: 0ms;
 }

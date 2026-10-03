@@ -2,6 +2,8 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
+import { addRecent, readRecent, type RecentEntry } from '@/core/search/recent';
+import { useFocusSettings } from '@/core/settings/focus';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { normalize } from '@/core/text/normalize';
 import { useSettingsSections } from '@/pages/settings/useSections';
@@ -53,11 +55,13 @@ export function CommandPalette() {
   );
 }
 
-type Option =
+type Option = { recent?: boolean } & (
   | { kind: 'command'; key: string; label: string; icon: IconName; command: Command }
   | { kind: 'hit'; key: string; label: string; icon: IconName; row: ResultRow }
   | { kind: 'calc'; key: string; label: string; icon: IconName; value: number }
-  | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean };
+  | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean }
+  | { kind: 'query'; key: string; label: string; icon: IconName }
+);
 
 function PaletteBody({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate();
@@ -74,6 +78,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const openTools = useUiStore((s) => s.openTools);
   const tools = useTools();
   const settingsSections = useSettingsSections();
+  const [focus] = useFocusSettings();
+  // Read once per opening of the palette: what was used before, newest first.
+  const [recent] = useState<RecentEntry[]>(() => readRecent());
 
   const [devCommands, setDevCommands] = useState<Command[]>([]);
   useEffect(() => {
@@ -147,6 +154,43 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       icon: c.icon,
       command: c,
     }));
+    // Nothing typed yet: what was used before comes first ("Zuletzt benutzt").
+    if (!query.trim() && focus.searchHistory) {
+      const recents: Option[] = [];
+      for (const r of recent) {
+        if (r.kind === 'command') {
+          const c = commands.find((x) => x.id === r.key);
+          if (c)
+            recents.push({
+              kind: 'command',
+              key: `r-${r.key}`,
+              label: c.label,
+              icon: c.icon,
+              command: c,
+              recent: true,
+            });
+        } else if (r.kind === 'hit' && r.to) {
+          recents.push({
+            kind: 'hit',
+            key: `r-${r.key}`,
+            label: r.label,
+            icon: 'search',
+            row: { id: r.key, title: r.label, subtitle: r.subtitle, fields: [], to: r.to },
+            recent: true,
+          });
+        } else if (r.kind === 'query') {
+          recents.push({
+            kind: 'query',
+            key: `r-${r.key}`,
+            label: r.label,
+            icon: 'search',
+            recent: true,
+          });
+        }
+      }
+      const used = new Set(recents.map((o) => o.key.replace(/^r-/, '')));
+      return [...recents, ...list.filter((o) => !(o.kind === 'command' && used.has(o.command.id)))];
+    }
     // Arithmetic is answered on the spot (0 tokens, nothing leaves the device); Enter copies it.
     const sum = calculate(query);
     if (sum) {
@@ -186,11 +230,24 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       });
     }
     return list;
-  }, [commands, hits, query, hasModel]);
+  }, [commands, hits, query, hasModel, focus.searchHistory, recent]);
+
+  const remember = (entry: RecentEntry) => {
+    if (focus.searchHistory) addRecent(entry);
+  };
 
   const run = (o: Option | undefined) => {
     if (!o) return;
-    if (o.kind === 'ask') return void submit(query.trim(), o.forceModel);
+    if (o.kind === 'query') {
+      // An earlier search is typed back into the field; Enter asks again.
+      setQuery(o.label);
+      setActive(0);
+      return;
+    }
+    if (o.kind === 'ask') {
+      remember({ kind: 'query', key: `q-${query.trim()}`, label: query.trim() });
+      return void submit(query.trim(), o.forceModel);
+    }
     if (o.kind === 'calc') {
       // Plain decimal without thousands separators so it pastes into any field.
       const text = String(o.value).replace('.', ',');
@@ -201,8 +258,19 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       return;
     }
     onDone();
-    if (o.kind === 'command') o.command.run();
-    else if (o.row.to) void navigate(o.row.to);
+    if (o.kind === 'command') {
+      remember({ kind: 'command', key: o.command.id, label: o.label });
+      o.command.run();
+    } else if (o.row.to) {
+      remember({
+        kind: 'hit',
+        key: `h-${o.row.subtitle ?? ''}-${o.row.id}`,
+        label: o.row.title,
+        to: o.row.to,
+        subtitle: o.row.subtitle,
+      });
+      void navigate(o.row.to);
+    }
   };
 
   if (state.phase !== 'idle') {
@@ -273,6 +341,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
                 {o.kind === 'hit' && o.row.subtitle ? (
                   <span className={styles.optionMeta}>{o.row.subtitle}</span>
                 ) : null}
+                {o.recent ? <span className={styles.optionMeta}>{t.palette.recent}</span> : null}
               </span>
             </li>
           ))}
