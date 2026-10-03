@@ -22,9 +22,16 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 
 ## phases
 - Phase 1 delivers measurement, report and plan, then **stop** until the maintainer writes "Plan freigegeben". Use an Explore subagent for broad inventory to keep your own context small.
+- One topic per PR; split big work into packages with a stop between them, so the maintainer can pause after any package and resume later (each package = own branch and PR, state in [CHATS.md](CHATS.md) and the feature note).
+
+## questions
+- **Fragen an Sven:** always bundled in one `AskUserQuestion` per stop, at most 3–4 questions, each with a recommended option first ("(Recommended)"), short German labels, no open essay questions. Everything that does not change the next step is decided by the chat and named in the report.
+
+## closing
+- Final message: **3 points + PR link**, nothing more. Point 1 what changed, point 2 how it was verified, point 3 what waits on the maintainer (also add it to "Wartet auf Sven" in [CHATS.md](CHATS.md)).
 
 ## pr-text
 English. Sections: **What and why** · **Structure/changes** (tree or list, moved/merged/deleted → target, new files → purpose) · **Numbers** (before/after) · **How verified** (commands + result) · **Open questions** · **Hand-over** (Done / Open / Next). Repo template: `.github/PULL_REQUEST_TEMPLATE.md`.
 
 ## Shorter prompts
-Replace long boilerplate by: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · PR: #pr-text`, then only the task-specific goal, scope and acceptance criteria.
+Replace long boilerplate by: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text`, then only the task-specific goal, scope and acceptance criteria.

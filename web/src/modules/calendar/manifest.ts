@@ -35,6 +35,13 @@ const manifest: ModuleManifest = {
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/TodayWidget'),
     },
+    {
+      id: 'next',
+      title: t.widgets.next,
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/NextWidget'),
+    },
   ],
   aiSchema,
   settings,

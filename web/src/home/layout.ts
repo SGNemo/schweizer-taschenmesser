@@ -85,12 +85,20 @@ export async function updateLayout(patch: Partial<HomeLayout>): Promise<void> {
 /** Back to the defaults: manifest order, everything visible, default sizes. */
 export const resetLayout = (): Promise<void> => saveLayout(DEFAULT_LAYOUT);
 
+/** Default first positions of widgets without a saved position: "Jetzt dran", then the time to the next appointment. */
+export const FRONT_WIDGETS: readonly string[] = ['todos:next', 'calendar:next'];
+
 /**
  * Applies the saved order to the currently available widgets. Widgets without a saved position
  * (new modules, new widgets) keep their manifest order and go to the end.
  */
 export function orderWidgets<T extends { key: string }>(entries: T[], saved: HomeLayout): T[] {
   const index = new Map(saved.order.map((k, i) => [k, i]));
+  // Widgets that start the day come first until the user moves them (no saved position yet).
+  const front = (k: string) => {
+    const f = FRONT_WIDGETS.indexOf(k);
+    return f < 0 ? FRONT_WIDGETS.length : f;
+  };
   return entries
     .map((e, i) => ({ e, i }))
     .sort((a, b) => {
@@ -99,7 +107,7 @@ export function orderWidgets<T extends { key: string }>(entries: T[], saved: Hom
       if (ia !== undefined && ib !== undefined) return ia - ib;
       if (ia !== undefined) return -1;
       if (ib !== undefined) return 1;
-      return a.i - b.i;
+      return front(a.e.key) - front(b.e.key) || a.i - b.i;
     })
     .map((x) => x.e);
 }

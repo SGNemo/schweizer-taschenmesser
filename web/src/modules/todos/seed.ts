@@ -14,6 +14,9 @@ interface Base {
   priority: number;
   done?: boolean;
   note?: string;
+  /** Day offset of the plan ('Heute' = 0) and estimate in minutes. */
+  plan?: number;
+  est?: number;
   subs?: { title: string; done?: boolean }[];
 }
 
@@ -23,13 +26,14 @@ const BASE: Base[] = [
     title: 'Steuererklärung vorbereiten',
     due: 0,
     priority: 3,
+    est: 30,
     subs: [
       { title: 'Belege sortieren', done: true },
       { title: 'Formular ausfüllen' },
       { title: 'Abgeben' },
     ],
   },
-  { list: 0, title: 'Fenster putzen', due: -2, priority: 1 },
+  { list: 0, title: 'Fenster putzen', due: -2, priority: 1, plan: 0, est: 30 },
   { list: 0, title: 'Glühbirne im Flur wechseln', due: 3, priority: 0 },
   { list: 0, title: 'Keller aufräumen', priority: 1, note: 'Altes Regal entsorgen' },
   { list: 0, title: 'Waschmaschine entkalken', priority: 0, done: true, due: -6 },
@@ -40,12 +44,12 @@ const BASE: Base[] = [
     priority: 3,
     subs: [{ title: 'Zahlen einholen', done: true }, { title: 'Entwurf an Team' }],
   },
-  { list: 1, title: 'Urlaubsantrag einreichen', due: 0, priority: 2 },
+  { list: 1, title: 'Urlaubsantrag einreichen', due: 0, priority: 2, plan: 0, est: 5 },
   { list: 1, title: 'Präsentation proben', due: 4, priority: 2 },
   { list: 1, title: 'Reisekosten abrechnen', due: -4, priority: 2 },
   { list: 1, title: 'Wochenplanung', priority: 0, done: true, due: -1 },
   { list: 2, title: 'Geschenk für Oma besorgen', due: 2, priority: 2 },
-  { list: 2, title: 'Zahnbürsten kaufen', priority: 0 },
+  { list: 2, title: 'Zahnbürsten kaufen', priority: 0, plan: 0, est: 15 },
   { list: 2, title: 'Paket zur Post bringen', due: 1, priority: 1, done: true },
   {
     list: 3,
@@ -111,6 +115,8 @@ function seed(ctx: SeedContext): SeedRows {
     };
     if (b.due !== undefined) data.dueDate = ctx.day(b.due);
     if (b.note) data.note = b.note;
+    if (b.plan !== undefined && !done) data.plannedFor = ctx.day(b.plan);
+    if (b.est !== undefined) data.estimateMin = b.est;
     if (done) data.completedAt = ctx.at(Math.min(b.due ?? -1, -1), '18:00');
     tasks.push({ id, data });
     (b.subs ?? []).forEach((s, j) => {

@@ -57,6 +57,8 @@ export function previewChips(
   if (fields.date && usesDate(type))
     chips.push({ id: 'date', label: describeDate(fields.date, today) });
   if (fields.time && usesTime(type)) chips.push({ id: 'time', label: `${fields.time} Uhr` });
+  if (type === 'todo' && fields.estimateMin)
+    chips.push({ id: 'estimate', label: t.todos.estimateAbout(fields.estimateMin) });
   if (type === 'event' && fields.date && !fields.time)
     chips.push({ id: 'allDay', label: t.quickCapture.chip.allDay });
   if (fields.recurrence && (type === 'event' || type === 'reminder')) {

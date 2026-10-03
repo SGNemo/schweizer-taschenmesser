@@ -51,7 +51,7 @@ Module schaltest du in der **Modul-Bibliothek** einzeln ein. Alles funktioniert 
 
 Dazu eine **Befehlspalette** (Strg+K) mit Suche über alle Module und einem **KI-Assistenten**, der einfache Fragen selbst beantwortet („Was steht heute an?“) und komplexere optional an einen Anbieter deiner Wahl gibt, ohne deine Daten zu senden. Details: [Module und Werkzeuge](docs/user/module.md), [Suche und KI](docs/user/ki-assistent.md).
 
-## Schnellstart
+## Wie fange ich an?
 
 1. **Herunterladen:** Windows-Portable (eine Datei, keine Installation) oder Android-APK, Buttons oben.
 2. **Starten:** Unter Windows die Datei doppelklicken (beim ersten Mal SmartScreen: „Weitere Informationen“ → „Trotzdem ausführen“). Unter Android die APK öffnen und die Installation aus dieser Quelle erlauben.
@@ -59,7 +59,7 @@ Dazu eine **Befehlspalette** (Strg+K) mit Suche über alle Module und einem **KI
 
 Genauer, inklusive Umstieg von einer alten Version und PWA-Installation: [Installation](docs/user/installation.md).
 
-## Datenschutz in Kürze
+## Was passiert mit meinen Daten?
 
 - **Lokal gespeichert.** Daten liegen in der Datenbank deines Geräts, kein Konto, kein Nemo-Cloud-Dienst.
 - **Sync optional.** Nur über einen Server, den du selbst betreibst (Docker oder Node), auf Wunsch Ende-zu-Ende verschlüsselt.
@@ -100,7 +100,7 @@ Mehrere Anbieter werden der Reihe nach gefragt (lokal → kostenlos → bezahlt)
 - **Ist Nemo kostenlos?** Ja, MIT-Lizenz. Kosten entstehen nur bei bezahlten KI-Anbietern, die du selbst einrichtest.
 </details>
 
-## Weiterlesen
+## Wo gibt es mehr?
 
 - [Dokumentation](docs/README.md) mit Nutzer- und Entwicklerdoku
 - [Roadmap](docs/ROADMAP.md) mit Ideen für spätere Versionen

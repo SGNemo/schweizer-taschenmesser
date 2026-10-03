@@ -1,8 +1,17 @@
 # Chats – running work and hand-over
 
-Several Claude chats work in parallel and only see each other through GitHub. Keep this file short; delete finished rows. Last full review: 2026-10-01.
+Several Claude chats work in parallel and only see each other through GitHub. Keep this file short; delete finished rows. Last full review: 2026-10-02.
 
-## Running work
+## Wartet auf Sven
+Everything that needs a decision or a merge from the maintainer, in one place. A chat adds a row when it stops for him and removes it when done. Source of truth for PRs: GitHub (`list_pull_requests`).
+
+| Was | Was zu tun ist |
+|---|---|
+| Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
+| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
+| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokus- und Aufmerksamkeitshilfen, Paket 1 | ansehen, mergen; danach Paket 2 Erinnerungen starten ([focus-aids](features/focus-aids.md)) |
+
+## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 

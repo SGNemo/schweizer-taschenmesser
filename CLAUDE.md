@@ -9,10 +9,11 @@ Code, comments, commits **English**; UI **German only** (`web/src/strings.ts`).
 2. Start: check [docs/CHATS.md](docs/CHATS.md) and open PRs, add your row (topic, branch, area); remove it in your PR's last commit. Hotspots listed there need a heads-up row first.
 3. Branch from fresh `develop` (`feat/…`, `fix/…`, `docs/…`); PR into `develop`; never merge your own PR unless told. Never `main`, tags, releases, force-push, history rewrite on shared branches, branch protection. Bring `develop` in with a merge (no rebase).
 4. End: touch only [STATUS](docs/STATUS.md) (one line), [DECISIONS](docs/DECISIONS.md) (new decision: one line + detail in `docs/decisions/`), [ARCHITECTURE-MAP](docs/ARCHITECTURE-MAP.md) / [HOW-TO](docs/HOW-TO.md) on real change. Edit this file only when a root rule changes. Reports go to `docs/security|perf|features|meta`. Keep docs short (`npm run check:docs`, budgets: [docs/meta/DOCS-GUIDE.md](docs/meta/DOCS-GUIDE.md)).
-5. Prompt blocks (git, rules, PR text): [docs/PROMPT-TEMPLATES.md](docs/PROMPT-TEMPLATES.md).
+5. **Small PRs:** one topic per PR; big work = packages with a stop between them (own branch + PR each), so the maintainer can pause and resume. Questions to him: bundled, ≤ 4, each with a recommendation; final message = 3 points + PR link.
+6. Prompt blocks (git, rules, PR text, questions, closing): [docs/PROMPT-TEMPLATES.md](docs/PROMPT-TEMPLATES.md).
 
 ## Commands (run in `web/`; also `server/`, `mcp/`: `npm test|typecheck|lint|format:check|build`)
-- `npm run dev` · `build` · `preview` (:4173; stop it before e2e) · `tauri -- dev|build` (Rust needed)
+- `npm run dev:all` (app with test data + local sync server, one command) · `dev` · `build` · `preview` (:4173; stop it before e2e) · `tauri -- dev|build` (Rust needed)
 - `npm run check` (format+lint+typecheck, parallel, cached = everyday gate) · `lint` · `typecheck` · `format:check|format` · `check:modules` · `check:docs`
 - `npm test` (`test:changed`) · `npm run e2e` (= `e2e:app` + `e2e:sync`); one spec: `npx playwright test e2e/<name>.spec.ts`
 - `npm run gen:module -- <id> "<Name>"` · `db:bump` · `gen:icons` · `version:check|sync|set -- <semver>` · `changelog -- --version <x.y.z>`
@@ -33,6 +34,7 @@ Code, comments, commits **English**; UI **German only** (`web/src/strings.ts`).
 - **Local API (desktop):** loopback, off by default; never a bind-address setting, CORS, or logging of tokens/bodies; tokens only as SHA-256; AI-import prompt = `buildApiPrompt` (tested). Collections with secrets/connector data: `dataApi: false`.
 - **Disk module:** never holds data; delete = node ids → Rust plan → block list (`guard.rs`, do not weaken) → typed confirmation in Rust; recycle bin by default. New Tauri command: `build.rs` `COMMANDS` + `capabilities/desktop.json`.
 - **Setup assistant:** progress device-local (`_meta` `setup.state`), step ids only, never secrets, never appears by itself on an installation with data.
+- **Focus and attention aids:** every new feature passes the checklist in [docs/design/FOCUS-GUIDELINES.md](docs/design/FOCUS-GUIDELINES.md) (stimulus load, off switch, clear next step, calm wording; no guilt text, no streak loss, no notification floods); wording examples in `docs/design/FOCUS-WORDING.md`.
 - **UI (Nemo, German only):** CSS Modules + tokens from `ui/tokens.css` (no hex, own radius/shadow/z-index/weight), shared `@/ui` components, `data-autofocus`, touch ≥ 44 px, `manifest.layout` (no module `max-width`), motion transform/opacity only, AA contrast. Details: [docs/howto/design-rules.md](docs/howto/design-rules.md).
 - **Browser extension (`extension/`):** no vault and no persistent storage of its own; the desktop app is the only source (native messaging, `crates/vault-bridge`); fill/copy/save only after a click, only for the matching origin; strict message schemas, no logging of messages. Rules: [docs/RULES.md](docs/RULES.md), threat model [docs/security/VAULT-EXTENSION.md](docs/security/VAULT-EXTENSION.md).
 - **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`). **Releases** only by the maintainer: tag or manual dispatch, never both ([docs/howto/release-deps.md](docs/howto/release-deps.md)).

@@ -1,5 +1,6 @@
 import { extractAmount } from './amount';
 import { extractDateTime } from './dates';
+import { extractEstimate } from './estimate';
 import { extractRecurrence } from './recurrence';
 import type {
   CaptureAlternative,
@@ -120,6 +121,9 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     fields.kind = money.kind;
   }
   dt.notes.forEach((n) => notes.add(n));
+  // The estimate is only taken for ToDos (decided below); everything else keeps the text as typed.
+  const estimateScan: Scan = { t: scan.t };
+  const estimate = extractEstimate(estimateScan);
 
   const hasDate = !!dt.date;
   const hasTime = dt.time !== undefined;
@@ -170,6 +174,11 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (date) fields.date = fmtDate(date);
   if (dt.time !== undefined) fields.time = dt.time;
   if (primaryType === 'event' && date && !hasTime) fields.allDay = true;
+
+  if (estimate !== undefined && primaryType === 'todo') {
+    fields.estimateMin = estimate;
+    scan.t = estimateScan.t;
+  }
 
   fields.title = cleanTitle(scan.t) || (fields.url ?? '') || cleanTitle(text);
 

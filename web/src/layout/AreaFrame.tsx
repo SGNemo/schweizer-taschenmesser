@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
+import { isFocusPath } from '@/core/focus/path';
 import { areaOfPath } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { Tabs } from '@/ui';
@@ -14,7 +15,7 @@ export function AreaFrame({ children }: { children: ReactNode }) {
   const tree = useNavTree();
   const { pathname } = useLocation();
   const area = areaOfPath(tree, pathname);
-  if (!area) return <>{children}</>;
+  if (!area || isFocusPath(pathname)) return <>{children}</>;
   return (
     <>
       <div className={styles.frame}>

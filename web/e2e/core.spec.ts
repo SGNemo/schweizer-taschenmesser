@@ -247,6 +247,8 @@ test.describe('Dashboard', () => {
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     const before = await order();
     expect(before).toEqual([
+      'widget-todos:next',
+      'widget-calendar:next',
       'widget-calendar:today',
       'widget-todos:open',
       'widget-finance:balance',
@@ -260,11 +262,11 @@ test.describe('Dashboard', () => {
     // dnd-kit announces every step in a live region; waiting for it keeps the keyboard steps reliable.
     const live = page.locator('[id^="DndLiveRegion"]');
     await page.keyboard.press('Space');
-    await expect(live).toContainText('Position 3 verschoben'); // picked up (starts at position 3)
+    await expect(live).toContainText('Position 5 verschoben'); // picked up (starts at position 5)
     // dnd-kit needs a moment to measure the drop targets; keep pressing until the item moved.
     await expect(async () => {
       await page.keyboard.press('ArrowUp');
-      await expect(live).not.toContainText('Position 3', { timeout: 500 });
+      await expect(live).not.toContainText('Position 5', { timeout: 500 });
     }).toPass();
     await page.keyboard.press('Space');
     await expect(live).toContainText('abgelegt');

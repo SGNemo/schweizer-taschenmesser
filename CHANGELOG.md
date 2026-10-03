@@ -14,6 +14,7 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 - **Systeminfo** ist ein Tab von „Dieser PC“ (früher Datenträger); der Pfad `/system` entfällt.
 
 ### Neu
+- **Fokus- und Aufmerksamkeitshilfen (Paket 1 „Anfangen“), alle einzeln abschaltbar unter Einstellungen → Darstellung → „Fokus & Aufmerksamkeit“:** „Jetzt dran“ schlägt oben auf der Übersicht eine einzige Aufgabe vor (Anfangen, Später, Etwas anderes); der Tagesplan zeigt höchstens drei Dinge für heute und was schon erledigt ist; der Fokusmodus zeigt eine Aufgabe mit Schritten und Ring-Timer ohne Menüs (Zustand bleibt beim Neuladen, Anzeige oben, sanftes Ende); „Als Nächstes“ zeigt die Zeit bis zum nächsten Termin; ToDos haben eine geschätzte Dauer (auch per Schnellerfassung: „… 15 min“) und lassen sich für heute einplanen; „Jetzt wichtig“ ist ruhiger („Wartet noch“ eingeklappt, kein roter Tageszähler für alte ToDos, „Neu planen“ verteilt sie auf die nächsten Tage).
 - **Kalender:** Termine können vorher benachrichtigen (zum Beginn bis 1 Tag vorher, auch bei Wiederholungen); ganztägige Termine zu einer einstellbaren Uhrzeit.
 - **ToDos:** Aufgaben wiederholen sich (Abhaken legt die nächste an), „Irgendwann“ hält Aufgaben aus den offenen Listen heraus; wiederkehrende Fälligkeiten erscheinen im Kalender.
 - Werkzeug-Rahmen: `/tools/<id>`, Befehlspalette „Werkzeug: …“, Strg+. öffnet die Werkzeuge; breiterer Dialog, „Zurück“ in der Kopfzeile.

@@ -31,6 +31,23 @@ describe('todos module', () => {
     expect(listSchema.parse({ name: 'A' }).order).toBe(0);
   });
 
+  it('validates the optional plan and estimate fields', () => {
+    const ok = taskSchema.safeParse({
+      listId: 'l',
+      title: 'x',
+      plannedFor: '2026-10-02',
+      estimateMin: 15,
+    });
+    expect(ok.success).toBe(true);
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x', estimateMin: 0 }).success).toBe(false);
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x', estimateMin: 1.5 }).success).toBe(false);
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x', plannedFor: 'heute' }).success).toBe(
+      false,
+    );
+    // Old records without the fields stay valid.
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x' }).success).toBe(true);
+  });
+
   it('contributes tasks with a due date inside the range to the calendar', async () => {
     await taskRepo.create({ ...base, listId: 'l', title: 'in', dueDate: '2026-05-10' });
     await taskRepo.create({ ...base, listId: 'l', title: 'out', dueDate: '2026-07-10' });

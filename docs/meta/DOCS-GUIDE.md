@@ -1,6 +1,6 @@
 # Docs guide – what goes where, budgets, style
 
-Goal: a new chat starts with ≈ 2 000 tokens and loads details only on purpose. Check: `cd web && npm run check:docs` (warnings; `--strict` exits 1). Tokens ≈ bytes / 4.
+Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is room to grow) and loads details only on purpose. Check: `cd web && npm run check:docs` (warnings; `--strict` exits 1). Tokens ≈ bytes / 4.
 
 ## Where things go
 | Kind | File |
@@ -19,9 +19,9 @@ Goal: a new chat starts with ≈ 2 000 tokens and loads details only on purpose.
 ## Budgets (tokens)
 | Class | Budget |
 |---|---|
-| Start context (root `CLAUDE.md`, no `@` imports) | ≤ 2 000 |
+| Start context (root `CLAUDE.md`, no `@` imports) | ≤ 2 600 (target ≈ 2 000; raised 2026-10-02 so small rule additions need no cuts elsewhere) |
 | Area `CLAUDE.md` | ≤ 500 |
-| Lookup doc (every `docs/**` file not exempt) | ≤ 3 000; overrides in `web/scripts/check-docs.mjs` (MAP, STATUS 3 500; `docs/README.md` 600; CHATS/PROMPT-TEMPLATES/DOCS-GUIDE 1 500) |
+| Lookup doc (every `docs/**` file not exempt) | ≤ 3 000; overrides in `web/scripts/check-docs.mjs` (MAP 4 200; DECISIONS 3 500; STATUS 5 000; CHATS/PROMPT-TEMPLATES 2 000; `docs/README.md` 700; DOCS-GUIDE 1 500) |
 | Exempt (never auto-loaded) | `docs/user/`, `archive/`, `security/`, `perf/`, `features/`, `meta/`, `AI-IMPORT.md`, `MANUAL-TESTS.md`, `ROADMAP.md`, `CHANGELOG.md` |
 A file over budget is split by topic (index + `<dir>/<topic>.md`), not trimmed by dropping content.
 

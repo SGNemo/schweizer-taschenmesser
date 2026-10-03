@@ -28,6 +28,8 @@ export interface CaptureFields {
   amountMinor?: number;
   kind?: 'expense' | 'income';
   url?: string;
+  /** Effort in minutes; only set for ToDos ("Formular ausfüllen 15 min"). */
+  estimateMin?: number;
   /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
   note?: string;
 }

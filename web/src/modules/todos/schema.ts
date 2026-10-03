@@ -25,6 +25,10 @@ export const taskSchema = z.object({
   recurrence: recurrenceSchema.optional(),
   /** "Irgendwann": kept out of the open views, the widget and the calendar. */
   someday: z.boolean().optional(),
+  /** The day the user plans to do it (the "Heute" plan); independent of the due date. */
+  plannedFor: z.string().regex(DATE_RE).optional(),
+  /** Estimated effort in minutes (5, 15, 30, 60 offered); shown as "etwa 10 Min". */
+  estimateMin: z.number().int().min(1).max(480).optional(),
   /** Set for subtasks (one level only). */
   parentId: z.string().optional(),
   note: z.string().optional(),

@@ -1,9 +1,14 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
+import { useFocusSettings } from '@/core/settings/focus';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import {
   Button,
+  Chip,
+  Chips,
+  DateField,
   Dialog,
   Icon,
   IconButton,
@@ -14,8 +19,9 @@ import {
   TextField,
 } from '@/ui';
 import { t } from '@/strings';
-import { now } from '@/core/time/now';
+import { now, today } from '@/core/time/now';
 import { undoableWithToast } from '@/core/undo/withToast';
+import { beginFocus, focusPath } from '../focus';
 import { deleteTask, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import styles from '../routes/todos.module.css';
@@ -24,6 +30,9 @@ import styles from '../routes/todos.module.css';
 function deleteTaskUndoable(id: string) {
   return undoableWithToast(t.todos.taskDeleted, t.todos.taskDeleted, () => deleteTask(id));
 }
+
+/** Offered effort estimates in minutes. */
+const ESTIMATES = [5, 15, 30, 60] as const;
 
 type StoredTask = Stored<Task>;
 type StoredList = Stored<TodoList>;
@@ -57,9 +66,13 @@ function EditorForm({
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
   const [recurrence, setRecurrence] = useState<Recurrence | undefined>(task.recurrence);
   const [someday, setSomeday] = useState(task.someday ?? false);
+  const [estimate, setEstimate] = useState<number | undefined>(task.estimateMin);
+  const [plannedFor, setPlannedFor] = useState(task.plannedFor ?? '');
   const [note, setNote] = useState(task.note ?? '');
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
+  const navigate = useNavigate();
+  const [focus] = useFocusSettings();
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -72,6 +85,8 @@ function EditorForm({
       dueDate: dueDate || undefined,
       recurrence: dueDate ? recurrence : undefined,
       someday: someday || undefined,
+      estimateMin: estimate,
+      plannedFor: plannedFor || undefined,
       note: note.trim() || undefined,
     });
     // Subtasks always live in the list of their parent.
@@ -143,6 +158,36 @@ function EditorForm({
         <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
       ) : null}
       {isSub ? null : (
+        <>
+          <Chips label={t.todos.estimate}>
+            <Chip
+              label={t.todos.estimateNone}
+              selected={estimate === undefined}
+              onClick={() => setEstimate(undefined)}
+            />
+            {ESTIMATES.map((n) => (
+              <Chip
+                key={n}
+                label={t.todos.estimateMin(n)}
+                selected={estimate === n}
+                onClick={() => setEstimate(n)}
+              />
+            ))}
+          </Chips>
+          <DateField
+            label={t.todos.planned}
+            value={plannedFor}
+            onChange={(e) => setPlannedFor(e.target.value)}
+          />
+          <Chips label={t.todos.planned}>
+            <Chip label={t.todos.planToday} onClick={() => setPlannedFor(today())} />
+            {plannedFor ? (
+              <Chip label={t.todos.planClear} onClick={() => setPlannedFor('')} />
+            ) : null}
+          </Chips>
+        </>
+      )}
+      {isSub ? null : (
         <Switch label={t.todos.somedayLabel} checked={someday} onChange={setSomeday} />
       )}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
@@ -208,6 +253,18 @@ function EditorForm({
           {t.actions.delete}
         </Button>
         <span className={patternStyles.hstack}>
+          {isSub || task.done ? null : (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                await beginFocus(task, focus.focusMinutes);
+                onClose();
+                void navigate(focusPath(task.id));
+              }}
+            >
+              {t.focus.mode.title}
+            </Button>
+          )}
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

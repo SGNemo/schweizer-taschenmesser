@@ -21,6 +21,7 @@ import { AppearanceSection } from './AppearanceSection';
 import { BackupSection } from './BackupSection';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
+import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
 import { NotificationsSection } from './NotificationsSection';
@@ -64,6 +65,33 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       { key: 'motion', label: s.rows.motion, description: s.rows.motionHint },
     ],
     render: () => <AppearanceSection />,
+  },
+  {
+    id: 'focus',
+    category: 'darstellung',
+    order: 15,
+    title: t.focus.settings.title,
+    description: t.focus.settings.description,
+    keywords: t.focus.settings.keywords,
+    fields: [
+      {
+        key: 'nextOne',
+        label: t.focus.settings.nextOne,
+        description: t.focus.settings.nextOneHint,
+      },
+      {
+        key: 'dayPlan',
+        label: t.focus.settings.dayPlan,
+        description: t.focus.settings.dayPlanHint,
+      },
+      { key: 'planLimit', label: t.focus.settings.planLimit },
+      { key: 'calmAttention', label: t.focus.settings.calmAttention },
+      { key: 'timeToNext', label: t.focus.settings.timeToNext },
+      { key: 'focusMinutes', label: t.focus.settings.focusMinutes },
+      { key: 'focusSound', label: t.focus.settings.focusSound },
+      { key: 'focusIndicator', label: t.focus.settings.focusIndicator },
+    ],
+    render: () => <FocusSection />,
   },
   {
     id: 'favourites',

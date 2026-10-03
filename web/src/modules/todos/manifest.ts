@@ -10,7 +10,7 @@ const manifest: ModuleManifest = {
   id: 'todos',
   name: t.todos.meta.name,
   icon: 'checklist',
-  version: 1,
+  version: 2,
   description: t.todos.meta.description,
   routes: [
     {
@@ -18,6 +18,13 @@ const manifest: ModuleManifest = {
       label: t.todos.meta.route,
       nav: true,
       component: () => import('./routes/TodosPage'),
+    },
+    {
+      // Focus screen: the shell shows it without menus (`isFocusPath`).
+      path: '/todos/focus/:taskId',
+      label: t.focus.mode.title,
+      layout: 'narrow',
+      component: () => import('./routes/FocusPage'),
     },
   ],
   dataSchema: {
@@ -29,6 +36,13 @@ const manifest: ModuleManifest = {
   migrations,
   widgets: [
     {
+      id: 'next',
+      title: t.focus.next.title,
+      defaultSize: 'l',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/NextWidget'),
+    },
+    {
       id: 'open',
       title: t.todos.meta.widget,
       defaultSize: 'm',
@@ -39,7 +53,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: true,
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'wide',
   order: 20,
   area: 'plan',
