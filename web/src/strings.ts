@@ -213,7 +213,10 @@ export const t = {
       densityHint: 'Kompakt: engere Zeilen und Abstände, nur auf diesem Gerät.',
       sidebarHint: 'Unter 1200 Pixel Breite ist die Seitenleiste automatisch schmal.',
       motion: 'Bewegung',
-      motionHint: 'Folgt der Systemeinstellung „Bewegung reduzieren“.',
+      motionHint: 'Folgt dem System oder zeigt in der App nur das Nötigste an Bewegung.',
+      leadingHint: 'Mehr Luft zwischen den Zeilen. Nur auf diesem Gerät.',
+      homeViewHint:
+        'Die ruhige Übersicht zeigt nur „Jetzt dran“, „Als Nächstes“ und „Heute & Morgen“. Alles andere ist ein Tipp entfernt.',
       motionValue: 'Systemeinstellung',
     },
     modulesOverview: {
@@ -322,7 +325,13 @@ export const t = {
       lagoon: 'Lagune',
     },
     textSize: 'Textgröße',
-    textSizeOptions: { normal: 'Normal', large: 'Groß' },
+    textSizeOptions: { normal: 'Normal', large: 'Groß', xlarge: 'Sehr groß' },
+    leading: 'Zeilenabstand',
+    leadingOptions: { normal: 'Normal', airy: 'Luftig' },
+    motion: 'Bewegung',
+    motionOptions: { system: 'Wie das System', reduce: 'Weniger' },
+    homeView: 'Übersicht',
+    homeViewOptions: { all: 'Alle Widgets', calm: 'Nur das Wichtigste' },
     density: 'Dichte',
     densityOptions: { normal: 'Normal', compact: 'Kompakt' },
     modules: 'Module',
@@ -534,6 +543,7 @@ export const t = {
     } as Record<string, { name: string; description: string }>,
   },
   palette: {
+    recent: 'Zuletzt benutzt',
     title: 'Befehlspalette',
     placeholder: 'Suchen, springen oder fragen …',
     empty: 'Keine Treffer',
@@ -555,6 +565,7 @@ export const t = {
   quickAdd: {
     title: 'Schnell hinzufügen',
     empty: 'Aktive Module bieten noch keine Schnellaktionen an.',
+    others: 'Oder mit dem ganzen Formular',
   },
   quickCapture: {
     title: 'Schnell erfassen',
@@ -607,6 +618,8 @@ export const t = {
       monthDay: (d: number) => (d === -1 ? 'am letzten Tag des Monats' : `jeden ${d}. des Monats`),
     },
     chooseType: 'Bitte wähle, wohin der Eintrag soll.',
+    inboxHint: (target: string) => `Landet in „${target}“. Sortieren geht später.`,
+    fullFormHint: 'Strg+Enter öffnet das ganze Formular.',
     financeConfirm: 'Finanzeinträge werden nur nach Bestätigung gebucht.',
     saved: (name: string) => `Gespeichert in ${name}`,
     undo: 'Rückgängig',
@@ -633,6 +646,9 @@ export const t = {
       intro:
         'Einträge in Sekunden anlegen: tippe z. B. „morgen 15 Uhr Zahnarzt“, die App erkennt Typ und Datum lokal, ohne Netzwerk.',
       defaultType: 'Standardziel für Text ohne Hinweis',
+      noQuestion: 'Ohne Rückfrage speichern',
+      noQuestionHint:
+        'Bei unklarem Text wird er so, wie du ihn getippt hast, im Standardziel (Eingang) gespeichert, statt nachzufragen. Sortieren geht später.',
       hotkey: 'Tastenkürzel',
       hotkeyHint: 'Öffnet das Eingabefenster von überall, solange die App läuft.',
       hotkeyRecord: 'Neue Tastenkombination aufnehmen',
@@ -732,6 +748,12 @@ export const t = {
       focusSoundHint: 'Der Hinweis erscheint immer. Der Ton ist zusätzlich und standardmäßig aus.',
       focusIndicator: 'Fokus-Anzeige oben',
       focusIndicatorHint: 'Zeigt oben in der Leiste, dass eine Fokus-Runde läuft.',
+      searchHistory: 'Verlauf in der Suche',
+      searchHistoryHint:
+        'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
+      clearHistory: 'Verlauf löschen',
+      clearHistoryHint: 'Leert die zuletzt benutzten Einträge der Suche.',
+      historyCleared: 'Verlauf gelöscht.',
       resumeCard: 'Woran war ich?',
       resumeCardHint:
         'Nach einer längeren Pause zeigt die Übersicht, wo du zuletzt warst. Mit einem Tipp geht es dort weiter.',
@@ -878,6 +900,25 @@ export const t = {
     priority: 'Priorität',
     prio: ['Keine', 'Niedrig', 'Mittel', 'Hoch'],
     due: 'Fällig am',
+    sort: {
+      title: 'Eingang sortieren',
+      open: (n: number) =>
+        n === 1 ? 'Eingang sortieren · 1 Ding' : `Eingang sortieren · ${n} Dinge`,
+      hint: (n: number) =>
+        n === 1 ? '1 Ding wartet auf einen Platz.' : `${n} Dinge warten auf einen Platz.`,
+      progress: (n: number, total: number) => `${n} von ${total}`,
+      today: 'Für heute',
+      skip: 'Überspringen',
+      toList: 'In eine Liste',
+      pickList: 'Liste wählen …',
+      done: 'Schon erledigt',
+      remove: 'Löschen',
+      empty: 'Der Eingang ist leer. Gut gemacht.',
+      skippedLeft: (n: number) =>
+        n === 1 ? '1 Ding hast du übersprungen.' : `${n} Dinge hast du übersprungen.`,
+      again: 'Nochmal ansehen',
+      close: 'Fertig',
+    },
     digestTitle: (n: number) => (n === 1 ? 'Heute: 1 ToDo' : `Heute: ${n} ToDos`),
     estimate: 'Dauer',
     estimateNone: 'Offen',
@@ -1473,6 +1514,11 @@ export const t = {
     birthdaysSummary: (name: string, label: string) => `${name} · ${label}`,
   },
   homeEdit: {
+    calmNote: (n: number) =>
+      n === 1
+        ? 'Ruhige Ansicht: 1 Widget ist ausgeblendet.'
+        : `Ruhige Ansicht: ${n} Widgets sind ausgeblendet.`,
+    showAll: 'Alle Widgets zeigen',
     customize: 'Anpassen',
     done: 'Fertig',
     hide: 'Ausblenden',

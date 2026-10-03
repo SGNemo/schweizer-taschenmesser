@@ -2,11 +2,17 @@ import { t } from '@/strings';
 import {
   ACCENTS,
   DENSITIES,
+  HOME_VIEWS,
+  LEADINGS,
+  MOTIONS,
   SIDEBARS,
   TEXT_SIZES,
   useUiStore,
   type AccentChoice,
   type DensityChoice,
+  type HomeViewChoice,
+  type LeadingChoice,
+  type MotionChoice,
   type SidebarChoice,
   type TextSizeChoice,
   type ThemeChoice,
@@ -29,6 +35,12 @@ export function AppearanceSection() {
   const setTextSize = useUiStore((s) => s.setTextSize);
   const density = useUiStore((s) => s.density);
   const setDensity = useUiStore((s) => s.setDensity);
+  const leading = useUiStore((s) => s.leading);
+  const setLeading = useUiStore((s) => s.setLeading);
+  const motion = useUiStore((s) => s.motion);
+  const setMotion = useUiStore((s) => s.setMotion);
+  const homeView = useUiStore((s) => s.homeView);
+  const setHomeView = useUiStore((s) => s.setHomeView);
   const sidebar = useUiStore((s) => s.sidebar);
   const setSidebar = useUiStore((s) => s.setSidebar);
   const r = t.settings.rows;
@@ -68,6 +80,14 @@ export function AppearanceSection() {
           onChange={setTextSize}
         />
       </SettingRow>
+      <SettingRow id="appearance--leading" label={t.settings.leading} description={r.leadingHint}>
+        <Segmented<LeadingChoice>
+          label={t.settings.leading}
+          value={leading}
+          options={LEADINGS.map((v) => ({ value: v, label: t.settings.leadingOptions[v] }))}
+          onChange={setLeading}
+        />
+      </SettingRow>
       <SettingRow id="appearance--density" label={t.settings.density} description={r.densityHint}>
         <Segmented<DensityChoice>
           label={t.settings.density}
@@ -85,7 +105,24 @@ export function AppearanceSection() {
         />
       </SettingRow>
       <SettingRow id="appearance--motion" label={r.motion} description={r.motionHint}>
-        <span>{r.motionValue}</span>
+        <Segmented<MotionChoice>
+          label={r.motion}
+          value={motion}
+          options={MOTIONS.map((v) => ({ value: v, label: t.settings.motionOptions[v] }))}
+          onChange={setMotion}
+        />
+      </SettingRow>
+      <SettingRow
+        id="appearance--homeView"
+        label={t.settings.homeView}
+        description={r.homeViewHint}
+      >
+        <Segmented<HomeViewChoice>
+          label={t.settings.homeView}
+          value={homeView}
+          options={HOME_VIEWS.map((v) => ({ value: v, label: t.settings.homeViewOptions[v] }))}
+          onChange={setHomeView}
+        />
       </SettingRow>
     </SettingsGroup>
   );

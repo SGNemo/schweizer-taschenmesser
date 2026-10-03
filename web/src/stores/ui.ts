@@ -25,8 +25,16 @@ export function applyAccent(accent: AccentChoice): void {
 }
 
 /** Device-local reading comfort (tokens.css `data-text-size`, `data-density`); defaults set no attribute. */
-export const TEXT_SIZES = ['normal', 'large'] as const;
+export const TEXT_SIZES = ['normal', 'large', 'xlarge'] as const;
 export type TextSizeChoice = (typeof TEXT_SIZES)[number];
+/** Line spacing and in-app motion (tokens.css `data-leading`, `data-motion`); defaults set no attribute. */
+export const LEADINGS = ['normal', 'airy'] as const;
+export type LeadingChoice = (typeof LEADINGS)[number];
+export const MOTIONS = ['system', 'reduce'] as const;
+export type MotionChoice = (typeof MOTIONS)[number];
+/** "Alle Widgets" or the calm home view with only what starts the day (device-local). */
+export const HOME_VIEWS = ['all', 'calm'] as const;
+export type HomeViewChoice = (typeof HOME_VIEWS)[number];
 export const DENSITIES = ['normal', 'compact'] as const;
 export type DensityChoice = (typeof DENSITIES)[number];
 export const SIDEBARS = ['wide', 'narrow'] as const;
@@ -35,6 +43,9 @@ const SIDEBAR_KEY = 'tm-sidebar';
 const AREAS_CLOSED_KEY = 'tm-nav-closed';
 const TEXT_SIZE_KEY = 'tm-text-size';
 const DENSITY_KEY = 'tm-density';
+const LEADING_KEY = 'tm-leading';
+const MOTION_KEY = 'tm-motion';
+const HOME_VIEW_KEY = 'tm-home-view';
 
 function readChoice<T extends string>(key: string, values: readonly T[]): T {
   try {
@@ -67,6 +78,18 @@ export function applyTextSize(size: TextSizeChoice): void {
   const el = document.documentElement;
   if (size === 'normal') delete el.dataset.textSize;
   else el.dataset.textSize = size;
+}
+
+export function applyLeading(leading: LeadingChoice): void {
+  const el = document.documentElement;
+  if (leading === 'normal') delete el.dataset.leading;
+  else el.dataset.leading = leading;
+}
+
+export function applyMotion(motion: MotionChoice): void {
+  const el = document.documentElement;
+  if (motion === 'system') delete el.dataset.motion;
+  else el.dataset.motion = motion;
 }
 
 export function applyDensity(density: DensityChoice): void {
@@ -123,6 +146,13 @@ interface UiState {
   setTextSize(size: TextSizeChoice): void;
   density: DensityChoice;
   setDensity(density: DensityChoice): void;
+  leading: LeadingChoice;
+  setLeading(leading: LeadingChoice): void;
+  /** In-app switch for "less motion"; "system" follows the operating system. */
+  motion: MotionChoice;
+  setMotion(motion: MotionChoice): void;
+  homeView: HomeViewChoice;
+  setHomeView(view: HomeViewChoice): void;
   /** Desktop sidebar: wide (248 px) or rail (76 px); below 1200 px the rail is automatic. */
   sidebar: SidebarChoice;
   setSidebar(sidebar: SidebarChoice): void;
@@ -186,6 +216,23 @@ export const useUiStore = create<UiState>((set) => ({
     storeChoice(DENSITY_KEY, density, density === 'normal');
     applyDensity(density);
     set({ density });
+  },
+  leading: readChoice(LEADING_KEY, LEADINGS),
+  setLeading(leading) {
+    storeChoice(LEADING_KEY, leading, leading === 'normal');
+    applyLeading(leading);
+    set({ leading });
+  },
+  motion: readChoice(MOTION_KEY, MOTIONS),
+  setMotion(motion) {
+    storeChoice(MOTION_KEY, motion, motion === 'system');
+    applyMotion(motion);
+    set({ motion });
+  },
+  homeView: readChoice(HOME_VIEW_KEY, HOME_VIEWS),
+  setHomeView(homeView) {
+    storeChoice(HOME_VIEW_KEY, homeView, homeView === 'all');
+    set({ homeView });
   },
   sidebar: readChoice(SIDEBAR_KEY, SIDEBARS),
   setSidebar(sidebar) {

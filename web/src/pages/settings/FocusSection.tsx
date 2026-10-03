@@ -4,8 +4,10 @@ import {
   useFocusSettings,
   type FocusSettings,
 } from '@/core/settings/focus';
+import { clearRecent } from '@/core/search/recent';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Segmented, SettingRow, SettingsGroup, Switch } from '@/ui';
+import { Button, Segmented, SettingRow, SettingsGroup, Switch } from '@/ui';
 
 type BoolKey = {
   [K in keyof FocusSettings]: FocusSettings[K] extends boolean ? K : never;
@@ -15,6 +17,7 @@ type BoolKey = {
 export function FocusSection() {
   const [values, patch] = useFocusSettings();
   const s = t.focus.settings;
+  const toast = useUiStore((x) => x.toast);
   const toggle = (id: string, key: BoolKey, label: string, hint: string) => (
     <SettingRow id={`focus--${key}`} label={label} description={hint} key={id}>
       <Switch
@@ -53,6 +56,17 @@ export function FocusSection() {
       {toggle('focusSound', 'focusSound', s.focusSound, s.focusSoundHint)}
       {toggle('focusIndicator', 'focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
       {toggle('resumeCard', 'resumeCard', s.resumeCard, s.resumeCardHint)}
+      {toggle('searchHistory', 'searchHistory', s.searchHistory, s.searchHistoryHint)}
+      <SettingRow id="focus--clearHistory" label={s.clearHistory} description={s.clearHistoryHint}>
+        <Button
+          onClick={() => {
+            clearRecent();
+            toast(s.historyCleared);
+          }}
+        >
+          {s.clearHistory}
+        </Button>
+      </SettingRow>
     </SettingsGroup>
   );
 }

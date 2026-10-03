@@ -25,3 +25,15 @@
 .link:hover {
   background: var(--surface-2);
 }
+
+/* The form types as a folded second way into the quick-add dialog (one way first, the rest on demand). */
+.others {
+  margin-top: var(--space-3);
+}
+.others > summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  cursor: pointer;
+}

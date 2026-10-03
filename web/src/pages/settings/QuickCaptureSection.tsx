@@ -1,5 +1,6 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { getPlatform, type HotkeyError } from '@/core/platform';
+import { useFocusSettings } from '@/core/settings/focus';
 import { applyHotkey, applyVaultHotkey, hotkeyLabel } from '@/quickCapture/desktop';
 import { DEFAULT_HOTKEY, useDevicePrefs, writePrefs } from '@/quickCapture/device';
 import { DEFAULT_TYPES, useCaptureSettings } from '@/quickCapture/settings';
@@ -119,6 +120,7 @@ export function QuickCaptureSection() {
   const desktop = getPlatform().desktop;
   const prefs = useDevicePrefs();
   const [settings, patch] = useCaptureSettings();
+  const [focus, patchFocus] = useFocusSettings();
   const [error, setError] = useState('');
   const [portable, setPortable] = useState(false);
 
@@ -156,6 +158,12 @@ export function QuickCaptureSection() {
           </option>
         ))}
       </SelectField>
+      <Switch
+        label={t.quickCapture.settings.noQuestion}
+        hint={t.quickCapture.settings.noQuestionHint}
+        checked={focus.captureNoQuestion}
+        onChange={(v) => void patchFocus({ captureNoQuestion: v })}
+      />
       {desktop.supported ? (
         <>
           <HotkeyField

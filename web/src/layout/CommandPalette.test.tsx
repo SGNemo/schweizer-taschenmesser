@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { prepareCreate } from '@/core/ai/query/create';
 import { clearAll, ctxFor } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
+import { addRecent, readRecent } from '@/core/search/recent';
+import { patchFocusSettings } from '@/core/settings/focus';
 import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
 import { eventSchema } from '@/modules/calendar/schema';
@@ -20,7 +22,11 @@ function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>;
 }
 
-beforeEach(() => useUiStore.setState({ paletteOpen: true }));
+beforeEach(async () => {
+  localStorage.clear();
+  await db.table('_settings').clear();
+  useUiStore.setState({ paletteOpen: true });
+});
 
 describe('command palette', () => {
   it('normalizes diacritics and case', () => {
@@ -199,5 +205,60 @@ describe('assistant in the palette', () => {
       </MemoryRouter>,
     );
     expect(screen.getByRole('alert')).toHaveTextContent(t.ai.errors.auth!);
+  });
+
+  it('remembers what was used and shows it first, labelled, the next time', async () => {
+    const user = userEvent.setup();
+    const first = render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'einst{Enter}');
+    expect(readRecent().map((e) => e.key)).toEqual(['settings']);
+    first.unmount();
+
+    useUiStore.setState({ paletteOpen: true });
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    const options = await screen.findAllByRole('option');
+    expect(options[0]).toHaveTextContent(t.nav.settings);
+    expect(options[0]).toHaveTextContent('Zuletzt benutzt');
+    // It is not listed twice.
+    expect(
+      screen.getAllByRole('option').filter((o) => o.textContent?.startsWith(t.nav.settings)),
+    ).toHaveLength(1);
+  });
+
+  it('an earlier search is typed back into the field', async () => {
+    addRecent({ kind: 'query', key: 'q-offene rechnungen', label: 'offene Rechnungen' });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.click(await screen.findByRole('option', { name: /offene Rechnungen/ }));
+    expect(await screen.findByRole('combobox')).toHaveValue('offene Rechnungen');
+  });
+
+  it('does not remember anything when the history is switched off', async () => {
+    await patchFocusSettings({ searchHistory: false });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'einst');
+    await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(0));
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('where')).toHaveTextContent('/settings');
+    expect(readRecent()).toEqual([]);
   });
 });

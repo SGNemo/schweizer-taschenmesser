@@ -50,6 +50,10 @@ export const focusSettingsSchema = z.object({
   inAppPrompt: z.boolean(),
   /** "Woran war ich?" card on the home screen after a longer break. */
   resumeCard: z.boolean(),
+  /** Quick capture: unclear text is saved as a ToDo in the inbox instead of asking where it goes. */
+  captureNoQuestion: z.boolean(),
+  /** The search remembers recent searches and opened results (device-local). */
+  searchHistory: z.boolean(),
 });
 export type FocusSettings = z.infer<typeof focusSettingsSchema>;
 
@@ -73,6 +77,8 @@ export const DEFAULT_FOCUS: FocusSettings = {
   todoDigestTime: '09:00',
   inAppPrompt: true,
   resumeCard: true,
+  captureNoQuestion: true,
+  searchHistory: true,
 };
 
 /** Live settings; the defaults while loading, so a widget never waits on them. */

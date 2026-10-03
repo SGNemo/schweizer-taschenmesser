@@ -93,6 +93,9 @@ const allEntries = (): Entry[] =>
 /** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
 const ATTENTION_KEY = 'core:attention';
 
+/** The calm home view shows only what starts the day. */
+const CALM_WIDGETS: readonly string[] = ['todos:next', 'calendar:next', 'calendar:today'];
+
 const SIZE_CLASS: Record<WidgetSize, string> = { s: '', m: styles.m!, l: styles.l! };
 
 export function Home() {
@@ -106,7 +109,16 @@ export function Home() {
   const entries = useMemo(() => allEntries().filter((e) => states?.[e.moduleId]), [states]);
   const layout = saved ?? DEFAULT_LAYOUT;
   const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
-  const shown = editing ? ordered : ordered.filter((e) => !layout.hidden.includes(e.key));
+  const homeView = useUiStore((s) => s.homeView);
+  const setHomeView = useUiStore((s) => s.setHomeView);
+  const calm = homeView === 'calm' && !editing;
+  const hiddenByUser = ordered.filter((e) => layout.hidden.includes(e.key));
+  const shown = editing
+    ? ordered
+    : ordered.filter(
+        (e) => !layout.hidden.includes(e.key) && (!calm || CALM_WIDGETS.includes(e.key)),
+      );
+  const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -207,6 +219,15 @@ export function Home() {
           </SortableContext>
         </DndContext>
       )}
+
+      {calm && folded > 0 ? (
+        <p className={styles.hint} data-testid="home-calm-note">
+          {t.homeEdit.calmNote(folded)}{' '}
+          <button type="button" className={styles.linkButton} onClick={() => setHomeView('all')}>
+            {t.homeEdit.showAll}
+          </button>
+        </p>
+      ) : null}
 
       <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title={t.homeEdit.widgetsTitle}>
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>

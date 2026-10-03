@@ -115,6 +115,8 @@ test.describe('entries (local-first data)', () => {
     await enableExample(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+    // The form types are folded below the one text field.
+    await page.getByText('Oder mit dem ganzen Formular').click();
     await page.getByRole('link', { name: 'Beispiel: neuer Eintrag' }).click();
     await expect(page).toHaveURL(/\/example/);
     await expect(page.getByRole('textbox', { name: 'Hinzufügen' })).toBeFocused();
