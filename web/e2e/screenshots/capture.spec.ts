@@ -117,7 +117,7 @@ test('capture layout screenshots', async ({ browser }) => {
       // The one-time Dev-Preview notice appears after every full load: close it for the shot.
       const notice = page.getByRole('button', { name: 'Schließen', exact: true });
       if (await notice.count()) await notice.first().click();
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(Number(process.env.SCREENS_WAIT ?? 600));
       await page.screenshot({
         path: `${OUT}/${vp.name}--${p.name}.png`,
         fullPage: p.name === 'dashboard',

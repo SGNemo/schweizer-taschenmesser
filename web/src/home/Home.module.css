@@ -1,9 +1,12 @@
 .grid {
+  /* Row quantum: card heights snap to multiples of it, so cards of one band are equally tall. */
+  --widget-unit: 5.5rem;
   display: grid;
   gap: var(--grid-gap);
   grid-template-columns: minmax(0, 1fr);
-  /* Cards keep their own height; a long list next to a short one leaves no empty box. */
-  align-items: start;
+  /* A card that needs more than its size class grows its rows; nothing is ever clipped. */
+  grid-auto-rows: minmax(var(--widget-unit), auto);
+  align-items: stretch;
   /* Fills gaps left by wider widgets so there are no empty holes. */
   grid-auto-flow: row dense;
 }
@@ -12,8 +15,16 @@
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* Size classes = fixed row spans; on one column (phone) cards just take their content height. */
+  .s {
+    grid-row: span 2;
+  }
   .m {
     grid-column: span 2;
+    grid-row: span 3;
+  }
+  .l {
+    grid-row: span 4;
   }
 }
 .l {
@@ -36,6 +47,10 @@
 .widget {
   position: relative;
   min-width: 0;
+}
+/* The card fills its grid cell. */
+.widget > section {
+  height: 100%;
 }
 .head {
   display: flex;
