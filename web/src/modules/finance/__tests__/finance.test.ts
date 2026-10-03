@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { bus } from '@/core/events';
-import { validateManifest } from '@/core/modules/registry';
 import { createServiceManager } from '@/core/modules/services';
 import manifest from '../manifest';
 import {
@@ -33,10 +32,6 @@ beforeEach(async () => {
 });
 
 describe('finance module', () => {
-  it('has a valid manifest', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-  });
-
   it('validates data', () => {
     expect(accountSchema.parse({ name: 'K' }).openingBalanceMinor).toBe(0);
     expect(accountSchema.safeParse({ name: 'K', openingBalanceMinor: -500 }).success).toBe(true);

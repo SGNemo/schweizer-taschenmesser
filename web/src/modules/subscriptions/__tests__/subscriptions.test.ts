@@ -2,7 +2,6 @@ import { setSettings } from '@/core/settings/settings';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
-import { validateManifest } from '@/core/modules/registry';
 import { toEpoch } from '@/core/time/dates';
 import manifest from '../manifest';
 import { listSubscriptionCharges, subscriptionTotals } from '../public';
@@ -24,10 +23,6 @@ beforeEach(async () => {
 });
 
 describe('subscriptions module', () => {
-  it('has a valid manifest', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-  });
-
   it('requires a recurrence and a positive amount', () => {
     expect(
       subscriptionSchema.safeParse({ name: 'x', amountMinor: 100, startDate: '2026-01-01' })

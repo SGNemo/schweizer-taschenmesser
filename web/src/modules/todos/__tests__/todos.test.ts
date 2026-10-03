@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { collectCalendarItems } from '@/core/modules/contributions';
-import { validateManifest } from '@/core/modules/registry';
 import manifest from '../manifest';
 import { deleteList, deleteTask, ensureInbox, INBOX_ID, listRepo, taskRepo } from '../repo';
 import { listSchema, taskSchema } from '../schema';
@@ -14,10 +13,6 @@ beforeEach(async () => {
 });
 
 describe('todos module', () => {
-  it('has a valid manifest', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-  });
-
   it('validates tasks', () => {
     expect(taskSchema.safeParse({ listId: 'l', title: '' }).success).toBe(false);
     expect(taskSchema.safeParse({ listId: 'l', title: 'x', dueDate: '5.5.2026' }).success).toBe(

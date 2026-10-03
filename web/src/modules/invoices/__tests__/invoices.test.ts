@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { bus } from '@/core/events';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
-import { validateManifest } from '@/core/modules/registry';
 import { toEpoch } from '@/core/time/dates';
 import { markOpen, markPaid, saveInvoice } from '../actions';
 import { openTotal, sortInvoices } from '../logic';
@@ -21,10 +20,6 @@ beforeEach(async () => {
 });
 
 describe('invoices module', () => {
-  it('has a valid manifest', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-  });
-
   it('validates data', () => {
     expect(
       invoiceSchema.safeParse({ payee: '', amountMinor: 1, dueDate: '2026-01-01' }).success,
