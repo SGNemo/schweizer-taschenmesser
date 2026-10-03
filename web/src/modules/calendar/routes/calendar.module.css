@@ -239,8 +239,20 @@ button.itemRow:hover {
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
-.timeCompact {
-  min-width: 3.2rem;
+/* Narrow panels (agenda): time and badge on the first line, the title on its own line below. */
+.itemRowCompact {
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  padding-block: var(--space-1);
+}
+.itemRowCompact .time {
+  min-width: 0;
+}
+.itemRowCompact .time:empty {
+  display: none;
+}
+.itemRowCompact .itemTitle {
+  flex-basis: 100%;
 }
 .kind {
   flex: none;
@@ -251,7 +263,12 @@ button.itemRow:hover {
 }
 .itemTitle {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
+  overflow: hidden;
 }
 
 /* Editor */

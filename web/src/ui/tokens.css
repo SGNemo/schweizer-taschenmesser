@@ -64,6 +64,8 @@
   --icon-stroke: 1.5;
 
   --touch: 44px;
+  /* Longest text block in a row or tile before it ends in an ellipsis (full text in the tooltip). */
+  --clamp-lines: 2;
   /* List row height and grid gap; changed by phone width and by the density setting below. */
   --row-h: 2.75rem;
   --grid-gap: var(--space-5);

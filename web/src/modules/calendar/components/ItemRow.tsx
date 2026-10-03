@@ -17,13 +17,11 @@ export function ItemRow({ item, onOpen, compact }: Props) {
   const time = item.allDay ? null : `${item.time ?? ''}${item.endTime ? `–${item.endTime}` : ''}`;
   const content = (
     <>
-      <span className={`${styles.time} ${compact ? styles.timeCompact : ''}`}>
-        {time ?? (compact ? '' : t.calendar.allDay)}
-      </span>
+      <span className={styles.time}>{time ?? (compact ? '' : t.calendar.allDay)}</span>
       <span className={`${styles.kind} ${styles[`kind_${item.kind}`] ?? ''}`}>
         {kindLabel(item.kind)}
       </span>
-      <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`}>
+      <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`} title={item.title}>
         {item.color ? (
           <span className={styles.colorDot} style={{ background: item.color }} aria-hidden="true" />
         ) : null}
@@ -31,14 +29,15 @@ export function ItemRow({ item, onOpen, compact }: Props) {
       </span>
     </>
   );
+  const rowClass = `${styles.itemRow} ${compact ? styles.itemRowCompact : ''}`;
   return (
     <li>
       {onOpen ? (
-        <button type="button" className={styles.itemRow} onClick={() => onOpen(item)}>
+        <button type="button" className={rowClass} onClick={() => onOpen(item)}>
           {content}
         </button>
       ) : (
-        <div className={styles.itemRow}>{content}</div>
+        <div className={rowClass}>{content}</div>
       )}
     </li>
   );

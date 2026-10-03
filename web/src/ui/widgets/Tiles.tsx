@@ -22,10 +22,10 @@ export function TileGrid({
     <WidgetBody loading={loading} isEmpty={entries.length === 0} {...emptyProps}>
       <ul className={styles.tiles}>
         {shown.map((e) => (
-          <li key={e.key}>
-            <button type="button" className={styles.tile} onClick={e.onOpen}>
+          <li key={e.key} className={styles.tileItem}>
+            <button type="button" className={styles.tile} onClick={e.onOpen} title={e.label}>
               {e.icon}
-              <span>{e.label}</span>
+              <span className={styles.tileLabel}>{e.label}</span>
             </button>
           </li>
         ))}
