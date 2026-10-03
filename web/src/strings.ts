@@ -551,6 +551,8 @@ export const t = {
     empty: 'Keine Treffer',
     hint: 'Ctrl+K',
     newEntry: (what: string) => `Neu: ${what}`,
+    nextReminder: 'Nächste Erinnerung',
+    randomReminder: 'Zufällige Erinnerung',
   },
   share: {
     title: 'Teilen',
@@ -774,9 +776,13 @@ export const t = {
       description:
         'Weniger Lärm, mehr Wirkung. Ausdrücklich gesetzte Erinnerungen bleiben immer so, wie du sie gesetzt hast.',
       keywords: ['Ruhezeit', 'Limit', 'Staffel', 'Später', 'Nachfrage', 'Morgens', 'Übersicht'],
-      inAppPrompt: 'Erinnerung in der App zeigen',
+      inAppPrompt: 'Erinnerungen in der App automatisch einblenden',
       inAppPromptHint:
-        'Ist die App offen, erscheint die Erinnerung als Karte mit „Erledigt“ und „Später“ statt als Popup.',
+        'Aus: Erinnerungen warten im Benachrichtigungs-Zentrum (Glocke oben) und du holst sie dir selbst. Ein: Ist die App offen, erscheint die Erinnerung zusätzlich als Karte mit „Erledigt“ und „Später“.',
+      inAppPosition: 'Position der Karte',
+      inAppPositions: { top: 'Oben rechts', bottom: 'Unten rechts' },
+      inAppSeconds: 'Anzeigedauer der Karte',
+      inAppSecondsOptions: { '0': 'Bis ich antworte', '10': '10 Sek.', '30': '30 Sek.' },
       quietHours: 'Ruhezeit',
       quietHoursHint:
         'In dieser Zeit kommen keine automatischen Zusätze (gestaffelte Hinweise, Nachfrage, Morgen-Übersicht). Sie warten bis zum Ende der Ruhezeit.',
@@ -1415,6 +1421,21 @@ export const t = {
     },
   },
   reminder: {
+    center: {
+      title: 'Erinnerungen',
+      bell: (n: number) => (n === 0 ? 'Erinnerungen' : `Erinnerungen, ${n} offen`),
+      next: 'Nächste Erinnerung',
+      random: 'Zufällige Erinnerung',
+      another: 'Noch eine',
+      allRead: 'Alle gelesen',
+      list: 'Offen',
+      none: 'Keine offenen Erinnerungen.',
+      upcoming: (when: string) => `Als Nächstes: ${when}`,
+      count: (n: number) => (n === 1 ? '1 offen' : `${n} offen`),
+      doneAria: (title: string) => `${title}: erledigt`,
+      doneToast: 'Erledigt.',
+      allDoneToast: 'Alle als gelesen markiert.',
+    },
     label: 'Erinnerung',
     done: 'Erledigt',
     later: 'Später',

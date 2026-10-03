@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ackNotification } from '@/core/notifications/ack';
 import { useReminderPrompts, type InAppPrompt } from '@/core/notifications/inapp';
 import { snoozeNotification, snoozeOptions, type SnoozeOption } from '@/core/notifications/snooze';
 import { getPlatform } from '@/core/platform';
+import { useFocusSettings } from '@/core/settings/focus';
 import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
@@ -22,7 +23,16 @@ export function ReminderPrompt() {
   const dismiss = useReminderPrompts((s) => s.dismiss);
   const toast = useUiStore((s) => s.toast);
   const [choosing, setChoosing] = useState(false);
+  const [settings] = useFocusSettings();
   const current: InAppPrompt | undefined = items[0];
+  const currentKey = current?.key;
+  const seconds = settings.inAppSeconds;
+  // The card hides itself after the chosen time; the reminder stays open in the notification centre.
+  useEffect(() => {
+    if (!currentKey || seconds === 0 || choosing) return;
+    const id = window.setTimeout(() => dismiss(currentKey), seconds * 1000);
+    return () => window.clearTimeout(id);
+  }, [currentKey, seconds, choosing, dismiss]);
   if (!current) return null;
 
   const options = snoozeOptions(now(), getPlatform().kind);
@@ -39,7 +49,11 @@ export function ReminderPrompt() {
   };
 
   return (
-    <section className={styles.card} aria-label={t.reminder.label} data-testid="reminder-prompt">
+    <section
+      className={`${styles.card} ${settings.inAppPosition === 'bottom' ? styles.bottom : ''}`}
+      aria-label={t.reminder.label}
+      data-testid="reminder-prompt"
+    >
       <span className={styles.label}>{t.reminder.label}</span>
       <span className={styles.title}>{current.title}</span>
       {current.body ? <span className={styles.body}>{current.body}</span> : null}

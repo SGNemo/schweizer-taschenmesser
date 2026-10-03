@@ -1,48 +1,39 @@
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
 .card {
-  position: fixed;
-  top: calc(var(--space-4) + env(safe-area-inset-top));
-  right: calc(var(--space-4) + env(safe-area-inset-right));
-  z-index: var(--z-toast);
-  width: min(24rem, calc(100vw - 2 * var(--space-4)));
-  max-height: calc(100dvh - 2 * var(--space-4));
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
+  margin-bottom: var(--space-4);
   border-radius: var(--radius-lg);
   border-inline-start: 3px solid var(--accent);
-  background: var(--surface);
-  box-shadow: var(--shadow-2);
-}
-.bottom {
-  top: auto;
-  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
-}
-/* On the phone the card sits above the bottom bar, never over it. */
-@media (max-width: 899px) {
-  .bottom {
-    bottom: calc(var(--bottom-nav-h) + var(--space-4) + env(safe-area-inset-bottom));
-  }
+  background: var(--surface-2);
 }
 .label {
   font-size: var(--text-meta);
   color: var(--text-3);
+  font-variant-numeric: var(--font-num);
 }
 .title {
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .body {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-1);
 }
@@ -66,9 +57,16 @@
   cursor: pointer;
 }
 .option:hover {
-  background: var(--surface-2);
+  background: var(--surface);
 }
-.more {
-  font-size: var(--text-sm);
-  color: var(--text-3);
+.listHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.listTitle {
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
 }

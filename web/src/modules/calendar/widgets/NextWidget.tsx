@@ -1,12 +1,14 @@
 import { Link } from 'react-router';
 import { useNow } from '@/core/focus/useNow';
 import { useCalendarItems } from '@/core/modules/contributions';
+import { openReminderCenter } from '@/core/notifications/centerStore';
 import { useFocusSettings } from '@/core/settings/focus';
 import { pad2, today } from '@/core/time/now';
 import { t } from '@/strings';
-import { KpiWidget, WidgetBody } from '@/ui';
+import { Button, KpiWidget, WidgetBody } from '@/ui';
 import { kindLabel } from '../components/ItemRow';
 import { minutesUntil, nextToday, untilLabel } from '../until';
+import styles from './widgets.module.css';
 
 /** "Als Nächstes": the time until the next appointment today as one big phrase (KPI type). */
 export default function NextWidget() {
@@ -27,13 +29,23 @@ export default function NextWidget() {
 
   const next = items ? nextToday(items, hhmm) : undefined;
   return (
-    <KpiWidget
-      loading={!items}
-      label={t.widgets.next}
-      value={next ? untilLabel(minutesUntil(hhmm, next.time!)) : undefined}
-      context={next ? `${next.time} ${next.title} · ${kindLabel(next.kind)}` : undefined}
-      empty={t.calendar.untilNext.empty}
-      emptyAction={{ label: t.homeEmpty.calendar, to: '/calendar?new=1' }}
-    />
+    <>
+      <KpiWidget
+        loading={!items}
+        label={t.widgets.next}
+        value={next ? untilLabel(minutesUntil(hhmm, next.time!)) : undefined}
+        context={next ? `${next.time} ${next.title} · ${kindLabel(next.kind)}` : undefined}
+        empty={t.calendar.untilNext.empty}
+        emptyAction={{ label: t.homeEmpty.calendar, to: '/calendar?new=1' }}
+      />
+      <div className={styles.reminderButtons}>
+        <Button size="sm" onClick={() => openReminderCenter('next')}>
+          {t.reminder.center.next}
+        </Button>
+        <Button size="sm" onClick={() => openReminderCenter('random')}>
+          {t.reminder.center.random}
+        </Button>
+      </div>
+    </>
   );
 }

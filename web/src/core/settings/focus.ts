@@ -14,6 +14,7 @@ export const FOCUS_MINUTES = [15, 25, 45, 60] as const;
 /** Lead times (minutes before) offered for staggered reminders. */
 export const STAGE_OPTIONS = [1440, 120, 60, 30, 10] as const;
 export const MAX_PER_HOUR = [0, 2, 3, 5] as const;
+export const PROMPT_SECONDS = [0, 10, 30] as const;
 
 export const focusSettingsSchema = z.object({
   /** "Jetzt dran": one suggested next task on the home screen. */
@@ -46,8 +47,12 @@ export const focusSettingsSchema = z.object({
   /** One notification in the morning that lists today's ToDos. */
   todoDigest: z.boolean(),
   todoDigestTime: z.string().regex(TIME_RE),
-  /** While the app is open a reminder appears in the app with "Erledigt" and "Später". */
+  /** Show reminders as a card on their own while the app is open (default off: the notification centre serves them on demand). */
   inAppPrompt: z.boolean(),
+  /** Where the automatic card appears. */
+  inAppPosition: z.enum(['top', 'bottom']),
+  /** Seconds until the card hides itself (the reminder stays open in the centre); 0 = until answered. */
+  inAppSeconds: z.number().int().min(0).max(120),
   /** "Woran war ich?" card on the home screen after a longer break. */
   resumeCard: z.boolean(),
   /** Quick capture: unclear text is saved as a ToDo in the inbox instead of asking where it goes. */
@@ -81,7 +86,9 @@ export const DEFAULT_FOCUS: FocusSettings = {
   followUp: false,
   todoDigest: true,
   todoDigestTime: '09:00',
-  inAppPrompt: true,
+  inAppPrompt: false,
+  inAppPosition: 'top',
+  inAppSeconds: 0,
   resumeCard: true,
   captureNoQuestion: true,
   searchHistory: true,

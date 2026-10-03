@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { calculate } from '@/core/calc/phrases';
+import { openReminderCenter } from '@/core/notifications/centerStore';
 import { addRecent, readRecent, type RecentEntry } from '@/core/search/recent';
 import { useFocusSettings } from '@/core/settings/focus';
 import { settingsPath } from '@/core/settings/registry/paths';
@@ -104,6 +105,18 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         run: go(a.to),
       })),
       ...moduleItems.map((i) => ({ id: i.to, label: i.label, icon: i.icon, run: go(i.to) })),
+      {
+        id: 'reminder-next',
+        label: t.palette.nextReminder,
+        icon: 'bell',
+        run: () => openReminderCenter('next'),
+      },
+      {
+        id: 'reminder-random',
+        label: t.palette.randomReminder,
+        icon: 'bell',
+        run: () => openReminderCenter('random'),
+      },
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },

@@ -155,6 +155,8 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     keywords: t.focus.reminders.keywords,
     fields: [
       { key: 'inAppPrompt', label: t.focus.reminders.inAppPrompt },
+      { key: 'inAppPosition', label: t.focus.reminders.inAppPosition },
+      { key: 'inAppSeconds', label: t.focus.reminders.inAppSeconds },
       { key: 'quietHours', label: t.focus.reminders.quietHours },
       { key: 'maxPerHour', label: t.focus.reminders.maxPerHour },
       { key: 'staggered', label: t.focus.reminders.staggered },
