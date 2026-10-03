@@ -25,8 +25,9 @@ export function offerEnableModule(
         await enableModule(manifest);
         toast(t.library.nowActive(manifest.name), undefined, 'check');
         if (then) {
-          // The services of a module that was just switched on start asynchronously.
-          await whenServicesSettled();
+          // The services of a module that was just switched on start asynchronously: make sure
+          // the new one is running before `then` hands it work.
+          await whenServicesSettled({ fresh: true });
           await then();
         }
       })();
