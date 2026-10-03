@@ -6,6 +6,7 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
+import { t } from '@/strings';
 import { humanDateHint } from '@/core/time/dates';
 import { Icon } from './icons';
 import styles from './Fields.module.css';
@@ -69,6 +70,9 @@ export function TextField({
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
         {...rest}
+        placeholder={
+          rest.placeholder ?? (rest.type === 'search' ? t.ui.searchPlaceholder : undefined)
+        }
       />
     </Field>
   );

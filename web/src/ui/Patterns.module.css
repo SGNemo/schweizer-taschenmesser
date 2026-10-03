@@ -6,6 +6,11 @@
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
+.headerViews {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
 .toolbar {
   display: flex;
   align-items: center;
@@ -127,6 +132,17 @@
 .grid > .selected {
   background: var(--accent-soft);
 }
+/* Tiles of one band are equally tall; the row fills the tile and centres checkbox, text and actions. */
+.grid > .item {
+  display: flex;
+}
+.grid .row {
+  flex: 1;
+  flex-wrap: nowrap;
+}
+.grid .main {
+  min-width: 0;
+}
 .row {
   display: flex;
   align-items: center;
@@ -163,7 +179,13 @@
   cursor: default;
 }
 .title {
-  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
+  overflow: hidden;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 .grid .title {
   font-weight: var(--weight-semibold);
@@ -171,7 +193,13 @@
 .muted {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
+  overflow: hidden;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 /* Row meta: 13 px, tertiary. */
 .rows .muted {
@@ -289,7 +317,14 @@ button.chip[aria-pressed='true'] {
 }
 .widgetItemTitle {
   font-weight: var(--weight-medium);
-  overflow-wrap: anywhere;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
+  overflow: hidden;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 .widgetMeta {
   color: var(--text-muted);

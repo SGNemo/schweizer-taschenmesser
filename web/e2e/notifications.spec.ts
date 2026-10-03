@@ -18,13 +18,7 @@ test('a due reminder fires a notification while the app is open', async ({ page 
   });
   await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
 
-  // The OS popup is what this test is about: switch the in-app reminder card off first.
-  await page.goto('/settings/benachrichtigungen');
-  const inApp = page.getByRole('switch', { name: 'Erinnerung in der App zeigen' });
-  await expect(inApp).toHaveAttribute('aria-checked', 'true');
-  await inApp.click();
-  await expect(inApp).toHaveAttribute('aria-checked', 'false');
-
+  // The OS popup is what this test is about: the in-app card is off by default, so it must still fire.
   await page.goto('/calendar?tab=reminders&new=1');
   const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
   await dialog.getByLabel('Titel').fill('Tabletten nehmen');

@@ -13,9 +13,58 @@ async function addReminder(page: Page, title: string) {
   await expect(page.getByRole('button', { name: new RegExp(title) })).toBeVisible();
 }
 
+/** The automatic in-app card is off by default; the tests of the card switch it on in the settings. */
+async function enableCard(page: Page) {
+  await page.goto('/settings/benachrichtigungen');
+  const card = page.getByRole('switch', { name: 'Erinnerungen in der App automatisch einblenden' });
+  await expect(card).toHaveAttribute('aria-checked', 'false');
+  await card.click();
+  await expect(card).toHaveAttribute('aria-checked', 'true');
+}
+
+test.describe('Notification centre (manual reminders)', () => {
+  test('no automatic banner; the bell counts, "Nächste Erinnerung" answers with Erledigt', async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await addReminder(page, 'Tabletten nehmen');
+    await page.clock.fastForward(90_000);
+    // Time has come, but nothing pops up by itself.
+    await page.clock.runFor(35_000);
+    await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    const bell = page.getByTestId('notification-bell');
+    await expect(bell).toHaveAccessibleName('Erinnerungen, 1 offen');
+    await bell.click();
+    const panel = page.getByRole('dialog', { name: 'Erinnerungen' });
+    await panel.getByRole('button', { name: 'Nächste Erinnerung' }).click();
+    const card = panel.getByTestId('center-card');
+    await expect(card).toContainText('Tabletten nehmen');
+    await card.getByRole('button', { name: 'Erledigt' }).click();
+    await expect(panel.getByText('Keine offenen Erinnerungen.')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(bell).toBeFocused();
+    await expect(bell).toHaveAccessibleName('Erinnerungen');
+  });
+
+  test('"Zufällige Erinnerung" is reachable from the command palette', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await addReminder(page, 'Wäsche aufhängen');
+    await page.clock.fastForward(120_000);
+    await page.getByRole('button', { name: 'Suchen' }).first().click();
+    await page.getByRole('combobox').fill('Zufällige');
+    await page.keyboard.press('Enter');
+    const card = page.getByRole('dialog', { name: 'Erinnerungen' }).getByTestId('center-card');
+    await expect(card).toContainText('Wäsche aufhängen');
+  });
+});
+
 test.describe('Calm reminders', () => {
   test('a due reminder appears as a card in the app; Erledigt closes it', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await enableCard(page);
     await addReminder(page, 'Tabletten nehmen');
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
 
@@ -31,6 +80,7 @@ test.describe('Calm reminders', () => {
 
   test('"Später" brings the reminder back at the chosen time', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await enableCard(page);
     await addReminder(page, 'Wäsche aufhängen');
     await page.clock.fastForward(90_000);
     const card = page.getByTestId('reminder-prompt');

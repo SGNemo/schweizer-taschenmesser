@@ -64,10 +64,12 @@
   --icon-stroke: 1.5;
 
   --touch: 44px;
+  /* Longest text block in a row or tile before it ends in an ellipsis (full text in the tooltip). */
+  --clamp-lines: 2;
   /* List row height and grid gap; changed by phone width and by the density setting below. */
   --row-h: 2.75rem;
   --grid-gap: var(--space-5);
-  --sidebar-w: 248px;
+  --sidebar-w: 15.5rem; /* 248 px at 16 px root */
   --bottom-nav-h: 64px;
   /* Page widths (see layout/PageContainer) and the fluid gutter around the page. */
   --page-narrow: 45rem;
@@ -228,6 +230,11 @@
     --text-h1: 1.75rem;
     --row-h: 3rem;
   }
+}
+
+/* Large monitors: the root grows from 16 px (≤ 1920 px wide) to 20 px (≥ 3440 px wide) so type, sidebar and pages keep their proportion to the screen. Everything is rem. The text-size setting below overrides it. */
+:root {
+  font-size: clamp(1rem, 1rem + (100vw - 1920px) * 0.0026, 1.25rem);
 }
 
 /* Device-local settings (Einstellungen → Darstellung): text size 16 → 18 px (everything is rem), density. */

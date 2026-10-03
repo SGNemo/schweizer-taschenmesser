@@ -96,7 +96,7 @@ const ATTENTION_KEY = 'core:attention';
 /** The calm home view shows only what starts the day. */
 const CALM_WIDGETS: readonly string[] = ['todos:next', 'calendar:next', 'calendar:today'];
 
-const SIZE_CLASS: Record<WidgetSize, string> = { s: '', m: styles.m!, l: styles.l! };
+const SIZE_CLASS: Record<WidgetSize, string> = { s: styles.s!, m: styles.m!, l: styles.l! };
 
 export function Home() {
   const states = useModuleStates();

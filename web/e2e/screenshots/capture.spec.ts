@@ -117,7 +117,7 @@ test('capture layout screenshots', async ({ browser }) => {
       // The one-time Dev-Preview notice appears after every full load: close it for the shot.
       const notice = page.getByRole('button', { name: 'Schließen', exact: true });
       if (await notice.count()) await notice.first().click();
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(Number(process.env.SCREENS_WAIT ?? 600));
       await page.screenshot({
         path: `${OUT}/${vp.name}--${p.name}.png`,
         fullPage: p.name === 'dashboard',
@@ -136,6 +136,34 @@ test('capture layout screenshots', async ({ browser }) => {
       timeout: 30_000,
     });
     await page.screenshot({ path: `${OUT}/${vp.name}--accounts.png` });
+    await context.close();
+  }
+});
+
+test('capture notification centre', async ({ browser }) => {
+  mkdirSync(OUT, { recursive: true });
+  for (const vp of VIEWPORTS.filter((v) => !ONLY_VIEWPORTS || ONLY_VIEWPORTS.includes(v.name))) {
+    const context = await browser.newContext({
+      viewport: { width: vp.width, height: vp.height },
+      isMobile: vp.mobile ?? false,
+      hasTouch: vp.mobile ?? false,
+      deviceScaleFactor: 1,
+      reducedMotion: 'reduce',
+      colorScheme: (process.env.SCREENS_SCHEME as 'light' | 'dark') ?? 'light',
+    });
+    const page = await context.newPage();
+    await bootDev(page);
+    await seedApp(page, SCALE);
+    await page.goto('/');
+    await expect(page.locator('main')).toBeVisible();
+    const notice = page.getByRole('button', { name: 'Schließen', exact: true });
+    if (await notice.count()) await notice.first().click();
+    await page.getByTestId('notification-bell').click();
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: `${OUT}/${vp.name}--notification-centre.png` });
+    await page.getByRole('dialog').getByRole('button', { name: 'Zufällige Erinnerung' }).click();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `${OUT}/${vp.name}--notification-centre-random.png` });
     await context.close();
   }
 });

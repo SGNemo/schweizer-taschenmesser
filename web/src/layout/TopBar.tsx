@@ -4,6 +4,7 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Icon, Wordmark } from '@/ui';
 import { FocusIndicator } from './FocusIndicator';
+import { NotificationBell } from './NotificationBell';
 import { SyncBadge } from './SyncBadge';
 import styles from './TopBar.module.css';
 
@@ -47,6 +48,7 @@ export function TopBar() {
         <Icon name="wrench" />
         <span className={styles.desktopOnly}>{t.nav.tools}</span>
       </button>
+      <NotificationBell />
       <SyncBadge />
     </header>
   );

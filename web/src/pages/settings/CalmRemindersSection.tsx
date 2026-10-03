@@ -1,5 +1,6 @@
 import {
   MAX_PER_HOUR,
+  PROMPT_SECONDS,
   STAGE_OPTIONS,
   useFocusSettings,
   type FocusSettings,
@@ -39,6 +40,32 @@ export function CalmRemindersSection() {
   return (
     <SettingsGroup id="calm-reminders" title={s.title} description={s.description}>
       {toggle('inAppPrompt', s.inAppPrompt, s.inAppPromptHint)}
+      {v.inAppPrompt ? (
+        <>
+          <SettingRow id="calm-reminders--inAppPosition" label={s.inAppPosition}>
+            <Segmented<'top' | 'bottom'>
+              label={s.inAppPosition}
+              value={v.inAppPosition}
+              options={(['top', 'bottom'] as const).map((p) => ({
+                value: p,
+                label: s.inAppPositions[p],
+              }))}
+              onChange={(inAppPosition) => void patch({ inAppPosition })}
+            />
+          </SettingRow>
+          <SettingRow id="calm-reminders--inAppSeconds" label={s.inAppSeconds}>
+            <Segmented<string>
+              label={s.inAppSeconds}
+              value={String(v.inAppSeconds)}
+              options={PROMPT_SECONDS.map((n) => ({
+                value: String(n),
+                label: s.inAppSecondsOptions[String(n) as keyof typeof s.inAppSecondsOptions],
+              }))}
+              onChange={(x) => void patch({ inAppSeconds: Number(x) })}
+            />
+          </SettingRow>
+        </>
+      ) : null}
       {toggle('quietHours', s.quietHours, s.quietHoursHint)}
       {v.quietHours ? (
         <SettingRow id="calm-reminders--quietTimes" label={s.quietTimes}>
