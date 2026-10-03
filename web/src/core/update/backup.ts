@@ -1,7 +1,7 @@
 /** Local safety copy taken right before an update is installed. */
 import { createBackup, serializeBackup } from '@/core/backup/backup';
 import { encryptBackup, serializeEncryptedBackup } from '@/core/backup/encrypted';
-import { AUTO_PASSPHRASE_SECRET, stampOf } from '@/core/backup/safety';
+import { AUTO_PASSPHRASE_SECRET } from '@/core/backup/safety';
 import { getPlatform } from '@/core/platform';
 
 export const BACKUP_DIR = 'backups';
@@ -9,10 +9,12 @@ export const KEEP_BACKUPS = 3;
 const PREFIX = 'pre-update-';
 const STAMP_RE = /-(\d{8}-\d{6})\.json$/;
 
+const pad = (n: number, w = 2) => String(n).padStart(w, '0');
 const safe = (v: string) => v.replace(/[^0-9A-Za-z.+-]/g, '_');
 
 export function preUpdateBackupName(from: string, to: string, at: Date): string {
-  return `${PREFIX}${safe(from)}-to-${safe(to)}-${stampOf(at)}.json`;
+  const stamp = `${at.getFullYear()}${pad(at.getMonth() + 1)}${pad(at.getDate())}-${pad(at.getHours())}${pad(at.getMinutes())}${pad(at.getSeconds())}`;
+  return `${PREFIX}${safe(from)}-to-${safe(to)}-${stamp}.json`;
 }
 
 /** Names to delete so that only the newest `keep` pre-update backups remain (other files are never touched). */

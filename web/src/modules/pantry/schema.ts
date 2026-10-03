@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { DATE_RE } from '@/core/time/dates';
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export const PLACES = ['fridge', 'freezer', 'pantry', 'other'] as const;
 export type Place = (typeof PLACES)[number];
@@ -13,7 +14,7 @@ export const itemSchema = z.object({
   /** At or below this many the item counts as "running low". */
   minCount: z.number().int().min(0).max(9999).optional(),
   /** Best-before date 'YYYY-MM-DD'. */
-  expires: z.string().regex(DATE_RE).optional(),
+  expires: z.string().regex(DATE).optional(),
   note: z.string().optional(),
 });
 
