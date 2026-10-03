@@ -217,7 +217,6 @@ export const t = {
       leadingHint: 'Mehr Luft zwischen den Zeilen. Nur auf diesem Gerät.',
       homeViewHint:
         'Die ruhige Übersicht zeigt nur „Jetzt dran“, „Als Nächstes“ und „Heute & Morgen“. Alles andere ist ein Tipp entfernt.',
-      motionValue: 'Systemeinstellung',
     },
     modulesOverview: {
       title: 'Module verwalten',
@@ -335,7 +334,6 @@ export const t = {
     density: 'Dichte',
     densityOptions: { normal: 'Normal', compact: 'Kompakt' },
     modules: 'Module',
-    noModuleSettings: 'Aktive Module haben keine eigenen Einstellungen.',
   },
   setup: {
     title: 'Einrichtung',
@@ -1511,7 +1509,6 @@ export const t = {
     allDay: 'Ganztägig',
     tomorrow: 'Morgen',
     more: (n: number) => `+ ${n} weitere`,
-    openModule: (name: string) => `${name} öffnen`,
     invoicesSummary: (sum: string, overdue: number) =>
       overdue > 0 ? `${sum} offen · ${overdue} überfällig` : `${sum} offen`,
     subsSummary: (monthly: string, next?: string) =>
@@ -1537,7 +1534,6 @@ export const t = {
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
     kpiMonthNet: (amount: string) => `${amount} in diesem Monat`,
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
-    birthdaysSummary: (name: string, label: string) => `${name} · ${label}`,
   },
   homeEdit: {
     calmNote: (n: number) =>
@@ -1687,7 +1683,6 @@ export const t = {
     empty: 'Noch keine Abos.',
     perMonth: 'Pro Monat',
     perYear: 'Pro Jahr',
-    perMonthShort: 'pro Monat',
     nextCharge: 'Nächste Abbuchung',
     cancelBy: 'Kündigen bis',
     ended: 'Beendet',
@@ -2287,12 +2282,9 @@ export const t = {
     shoppingOff:
       'Die Einkaufsliste ist ausgeschaltet: Schalte das Modul „Listen“ in der Modul-Bibliothek ein.',
     lowStock: 'Wird knapp',
-    usedUp: 'Aufgebraucht',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',
-    widgetHeadline: (n: number) =>
-      n === 1 ? '1 Vorrat läuft bald ab' : `${n} Vorräte laufen bald ab`,
   },
 
   people: {
@@ -2377,21 +2369,17 @@ export const t = {
     memory: 'Arbeitsspeicher',
     memoryUsed: (used: string, total: string, p: number) => `${used} von ${total} belegt (${p} %)`,
     battery: 'Akku',
-    noBattery: 'Kein Akku gefunden.',
     batteryValue: (p: number | null, charging: boolean, plugged: boolean) =>
       `${p === null ? 'Ladestand unbekannt' : `${p} %`}${charging ? ', wird geladen' : plugged ? ', am Netz' : ', im Akkubetrieb'}`,
     gpu: 'Grafik',
     noGpu: 'Keine Grafikkarte gefunden.',
-    gpuValue: (name: string, mem: string) => `${name} (${mem} Grafikspeicher)`,
     network: 'Netzwerk (lokale Adressen)',
     noNetwork: 'Keine Netzwerkverbindung gefunden.',
     processes: 'Programme mit dem größten Speicherverbrauch',
     processesHint: 'Nur zur Ansicht. Beenden kannst du Programme im Task-Manager von Windows.',
     program: 'Programm',
     instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
-    cpuShort: 'CPU',
     live: 'Live',
-    last5: 'Letzte 5 Minuten',
     clock: (mhz: number) =>
       `${(mhz / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
     download: 'Empfangen',
@@ -2478,8 +2466,6 @@ export const t = {
     usedOf: (used: string, total: string) => `${used} von ${total} belegt`,
     free: (free: string) => `${free} frei`,
     percentUsed: (p: number) => `${p} % belegt`,
-    almostFull: 'Fast voll',
-    getting: 'Wird knapp',
     card: {
       scan: 'Scannen',
       systemDrive: 'Systemlaufwerk',
@@ -2508,8 +2494,6 @@ export const t = {
       temperature: (c: number) => `${c} °C`,
       helpSmart:
         'SMART ist der Selbsttest, den moderne Laufwerke von sich aus melden. Nemo liest nur, was Windows ohne Administratorrechte herausgibt – oft ist das nur die Temperatur.',
-      helpCluster:
-        'Belegt ist der Platz, den Windows tatsächlich vergibt: in Blöcken (Clustern). Darum ist er etwas größer als die reine Dateigröße.',
       lastScan: (when: string) => `Zuletzt gescannt: ${when}`,
       neverScanned: 'Noch nicht gescannt',
       growth: (delta: string) => `Belegt seit letztem Scan: ${delta}`,
@@ -2526,7 +2510,6 @@ export const t = {
       atLeast: (size: string) => `mindestens ${size}`,
       biggest: 'Größte Ordner im letzten Scan',
       biggestHint: 'Aus dem Scan dieser Sitzung.',
-      sizeUnknown: 'Größe unbekannt',
     },
     actions: {
       reveal: 'Im Explorer zeigen',
@@ -2730,7 +2713,6 @@ export const t = {
       types: 'Dateitypen',
       biggest: 'Größte Einträge hier',
       open: 'Ordner öffnen',
-      noSelection: 'Wähle eine Fläche oder Zeile, um Details zu sehen.',
       percent: (p: number) => `${p} %`,
     },
     scan: {
@@ -2752,7 +2734,6 @@ export const t = {
           : reason === 'denied'
             ? 'Der Zugriff auf dieses Laufwerk wurde verweigert.'
             : 'Der Scan ist fehlgeschlagen.',
-      noSession: 'Es läuft kein Scan. Wähle zuerst ein Laufwerk.',
       done: 'Scan fertig',
       totalUsed: 'Belegt (auf Datenträger)',
       sizeHelp:
@@ -2774,7 +2755,6 @@ export const t = {
         'too-deep': 'zu tief verschachtelt',
         error: 'nicht lesbar',
       },
-      topFolders: 'Größte Einträge',
       smallFiles: (n: number) => `${n} kleinere Dateien`,
     },
   },
@@ -2920,10 +2900,7 @@ export const t = {
     widgetAction: 'Eintrag anlegen',
     packingEmpty: 'Keine Packliste unterwegs.',
     packingAction: 'Packliste anlegen',
-    widgetOpen: 'Listen öffnen',
     openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
-    packingProgress: (done: number, total: number, name: string) =>
-      `${name}: ${done} von ${total} gepackt`,
   },
 
   vault: {
