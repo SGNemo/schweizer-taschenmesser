@@ -34,7 +34,24 @@
     "timeToNext": true,
     "focusMinutes": 25,
     "focusSound": false,
-    "focusIndicator": true
+    "focusIndicator": true,
+    "quietHours": true,
+    "quietFrom": "22:00",
+    "quietTo": "07:00",
+    "maxPerHour": 3,
+    "staggered": false,
+    "stages": [
+      60,
+      10
+    ],
+    "followUp": false,
+    "todoDigest": true,
+    "todoDigestTime": "09:00",
+    "inAppPrompt": true,
+    "resumeCard": true
+  },
+  "_settings scope reminders": {
+    "snoozed": []
   },
   "_meta": {
     "update.prefs": {
@@ -45,6 +62,8 @@
     "update.dismissedVersion": "version",
     "setup.state": "checklistHidden false, status, steps",
     "focus.state": "running focus session (task, end time), skipped suggestions of the day",
+    "reminders.acked": "notification keys answered with Erledigt (device-local)",
+    "focus.context": "last visited route and title for the resume card (device-local)",
     "backup.auto.config": {
       "enabled": false,
       "interval": "daily",

@@ -224,6 +224,11 @@ export interface DueNotification {
   title: string;
   body?: string;
   url?: string;
+  /**
+   * An automatic extra (staged lead, follow-up, morning digest): the quiet hours move it to their
+   * end. Notifications the user set explicitly (an event's own lead, "Später") are never moved.
+   */
+  soft?: boolean;
 }
 
 export type NotificationSource = (range: {

@@ -167,6 +167,10 @@ F2. *Fokusmodus am PC (Windows):* Esc verlässt den Bildschirm, die Runde läuft
 F3. *Schnellerfassung in echten Situationen:* unterwegs „Formular ausfüllen 15 min“ eintippen und per Teilen-Menü etwas erfassen; stimmt Dauer und Ziel, wirkt es schnell genug? ☐
 F4. *„Jetzt dran“ über einen Tag:* Passt der Vorschlag morgens? Sind „Später“ und „Etwas anderes“ verständlich? Tagesplan mit 3 Dingen: zu viel, zu wenig? ☐
 F5. *Ruhiges „Jetzt wichtig“:* Wirkt „Wartet noch“ beruhigend oder versteckt es zu viel? „Neu planen“ verteilt sinnvoll? Jede Hilfe lässt sich unter Einstellungen → Darstellung → „Fokus & Aufmerksamkeit“ einzeln ausschalten. ☐
+F6. *Erinnerungen über einen Tag (Handy und PC):* ein paar Erinnerungen und ToDos mit Datum anlegen; kommt die Morgen-Übersicht um die eingestellte Zeit, wirkt die Karte bei offener App ruhig, ist „Später“ nützlich? Ruhezeit und „höchstens 3 pro Stunde“ in der Praxis spürbar, aber nicht störend? ☐
+F7. *Android, App geschlossen:* Erinnerungen und das Ende einer Fokus-Runde kommen vom System (ohne Knöpfe, bekannt); „Später“ gibt es nur in der Karte bei offener App. Gestaffelte Erinnerung testen (Einstellungen → Ruhige Erinnerungen). ☐
+F8. *„Wenn ich am PC bin“:* auf dem Handy „Später → Wenn ich am PC bin“ wählen, nach dem Sync erscheint die Erinnerung einmal in der Windows-App. ☐
+F9. *„Woran war ich?“:* App 30 Minuten verlassen, zurückkommen: erscheint die Karte auf der Übersicht, führt „Weiter dort“ an die richtige Stelle? ☐
 
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 

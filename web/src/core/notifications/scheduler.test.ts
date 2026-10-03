@@ -65,4 +65,32 @@ describe('notification scheduler', () => {
     expect(s.show).toHaveBeenCalledTimes(2);
     err.mockRestore();
   });
+
+  it('shows in the app instead of the OS when the app can present it, and reports what it consumed', async () => {
+    const s = setup({ cursor: 1000, now: 2000, due: [n('a', 1500), n('snooze:b@1', 1600)] });
+    const present = vi.fn().mockResolvedValue(true);
+    const consume = vi.fn().mockResolvedValue(undefined);
+    expect(await checkDue({ ...s.deps, present, consume })).toBe(2);
+    expect(s.show).not.toHaveBeenCalled();
+    expect(present.mock.calls.map((c) => c[0].key)).toEqual(['a', 'snooze:b@1']);
+    expect(consume.mock.calls.map((c) => c[0].key)).toEqual(['a', 'snooze:b@1']);
+  });
+
+  it('falls back to the OS notification when the app does not present it', async () => {
+    const s = setup({ cursor: 1000, now: 2000, due: [n('a', 1500)] });
+    await checkDue({ ...s.deps, present: async () => false });
+    expect(s.show).toHaveBeenCalledTimes(1);
+  });
+
+  it('the in-app card appears even without OS permission; the OS popup does not', async () => {
+    const s = setup({
+      cursor: 1000,
+      now: 2000,
+      permission: 'denied',
+      due: [n('a', 1500), n('b', 1600)],
+    });
+    const present = vi.fn(async (x: DueNotification) => x.key === 'a');
+    expect(await checkDue({ ...s.deps, present })).toBe(1);
+    expect(s.show).not.toHaveBeenCalled();
+  });
 });

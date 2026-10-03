@@ -19,6 +19,7 @@ import {
 import { AiSection } from './AiSection';
 import { AppearanceSection } from './AppearanceSection';
 import { BackupSection } from './BackupSection';
+import { CalmRemindersSection } from './CalmRemindersSection';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
 import { FocusSection } from './FocusSection';
@@ -90,6 +91,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       { key: 'focusMinutes', label: t.focus.settings.focusMinutes },
       { key: 'focusSound', label: t.focus.settings.focusSound },
       { key: 'focusIndicator', label: t.focus.settings.focusIndicator },
+      { key: 'resumeCard', label: t.focus.settings.resumeCard },
     ],
     render: () => <FocusSection />,
   },
@@ -136,6 +138,23 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     title: t.notifications.title,
     keywords: ['Push', 'Erlaubnis', 'Erinnerung'],
     render: () => <NotificationsSection />,
+  },
+  {
+    id: 'calm-reminders',
+    category: 'benachrichtigungen',
+    order: 20,
+    title: t.focus.reminders.title,
+    description: t.focus.reminders.description,
+    keywords: t.focus.reminders.keywords,
+    fields: [
+      { key: 'inAppPrompt', label: t.focus.reminders.inAppPrompt },
+      { key: 'quietHours', label: t.focus.reminders.quietHours },
+      { key: 'maxPerHour', label: t.focus.reminders.maxPerHour },
+      { key: 'staggered', label: t.focus.reminders.staggered },
+      { key: 'followUp', label: t.focus.reminders.followUp },
+      { key: 'todoDigest', label: t.focus.reminders.todoDigest },
+    ],
+    render: () => <CalmRemindersSection />,
   },
   {
     id: 'browser-extension',
