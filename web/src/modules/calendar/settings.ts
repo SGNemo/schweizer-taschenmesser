@@ -1,15 +1,14 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { TIME_RE } from '@/core/time/dates';
 import { t } from '@/strings';
-
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export const settingsSchema = z.object({
   defaultView: z.enum(['month', 'week', 'day']),
   /** Time of day a new reminder starts with. */
-  defaultReminderTime: z.string().regex(TIME),
+  defaultReminderTime: z.string().regex(TIME_RE),
   /** Time of day all-day events notify at. */
-  allDayNotifyTime: z.string().regex(TIME),
+  allDayNotifyTime: z.string().regex(TIME_RE),
 });
 
 export const settings: ModuleSettings = {
