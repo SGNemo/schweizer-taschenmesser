@@ -159,6 +159,7 @@ export const t = {
     title: 'Modul-Bibliothek',
     intro: 'Aktiviere nur, was du brauchst. Deaktivierte Module bleiben unsichtbar.',
     active: 'Aktiv',
+    nowActive: (name: string) => `Das Modul „${name}“ ist jetzt eingeschaltet.`,
     inactive: 'Inaktiv',
     disableTitle: (name: string) => `„${name}“ deaktivieren?`,
     disableText: 'Was soll mit den gespeicherten Daten dieses Moduls passieren?',
@@ -2302,8 +2303,7 @@ export const t = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
-    shoppingOff:
-      'Die Einkaufsliste ist ausgeschaltet: Schalte das Modul „Listen“ in der Modul-Bibliothek ein.',
+    shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
     expiresBody: (date: string) => `Haltbar bis ${date}`,

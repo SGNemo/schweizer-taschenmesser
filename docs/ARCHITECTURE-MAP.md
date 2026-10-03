@@ -38,7 +38,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Platform filter (`platforms`)** | `manifest.platforms?: PlatformKind[]` (missing = everywhere); runtime code uses `availableManifests()` in `core/modules/available.ts` (asks `getPlatform()`; separate file to avoid an import cycle through the DB). Router, nav, dashboard, library, services, settings all use it. E2E builds can pose as another platform via `localStorage.__tmPlatformKind` (`core/platform/web.ts`). | `availableManifests`, `isAvailableOn` |
 | Manifest types | `web/src/core/modules/types.ts` | `ModuleManifest`, `ModuleContributions`, `CollectionDef`, `PageLayout`, `CalendarItem`, `ExternalCalendarSink` |
 | Contributions (calendar, notifications) | `web/src/core/modules/contributions.ts` | `collectCalendarItems`, `collectNotifications`, `useCalendarItems` |
-| Module services / activation / migrations | `core/modules/services.ts`, `activation.ts`, `migrate.ts`, `lazy.ts` | `startModuleServices`, `enableModule`, `disableModule` |
+| Module services / activation / migrations | `core/modules/services.ts`, `activation.ts`, `migrate.ts`, `lazy.ts` | `startModuleServices`, `enableModule`, `disableModule`, `offerEnableModule` (toast with "Aktivieren") |
 | **Tool registry** | `web/src/core/tools/{registry,types,state,layout}.ts` (glob `tools/*/manifest.ts`) | `ToolManifest`, `allTools`; UI `layout/ToolsSheet.tsx`, `/tools/:id` |
 | Event bus | `web/src/core/events/{bus,events,index}.ts` | typed `EventMap` |
 | **DB / data** | `web/src/core/db/` | `repo.ts` (`createRepo`, `createMany`, `purge`), `hlc.ts`, `schema*.json`, `appMigrations.ts` (+`Steps`), `db.ts` (modules: no import) |
