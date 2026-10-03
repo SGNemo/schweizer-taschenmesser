@@ -13,7 +13,10 @@ const lazyTools = new Map(allTools.map((tool) => [tool.id, lazy(tool.component)]
 
 /** The toolbar: a grid of tiles; a tile opens the tool in the same sheet. */
 export function ToolsSheet() {
-  const { toolsOpen, activeTool, openTools, closeTools } = useUiStore();
+  const toolsOpen = useUiStore((s) => s.toolsOpen);
+  const activeTool = useUiStore((s) => s.activeTool);
+  const openTools = useUiStore((s) => s.openTools);
+  const closeTools = useUiStore((s) => s.closeTools);
   const tools = useTools();
   const tool = useMemo(
     () => tools?.all.find((x) => x.id === activeTool && tools.active.includes(x)),

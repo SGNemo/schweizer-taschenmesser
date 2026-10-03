@@ -27,7 +27,7 @@ export default function StartDataStep(_props: SetupStepProps) {
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `modules` is static; re-check only when the module states change
   }, [states]);
 
   if (!states) return null;

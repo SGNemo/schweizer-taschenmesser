@@ -89,7 +89,7 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
       }
     });
     return () => registerCommit(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the commit callback reads the other selections at commit time
   }, [touched, changed, tools]);
 
   if (!states) return null;

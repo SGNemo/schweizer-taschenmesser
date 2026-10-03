@@ -22,6 +22,8 @@ import styles from './SettingsLayout.module.css';
 
 /** Desktop two-column layout from this width; below it the categories are a list (first level). */
 const MASTER_DETAIL_QUERY = '(min-width: 900px)';
+/** How long a deep-linked settings section stays highlighted. */
+const HIGHLIGHT_MS = 1600;
 
 function SettingsSearch() {
   const [query, setQuery] = useState('');
@@ -134,7 +136,7 @@ function useDeepLink(ready: boolean) {
     // Section anchors sit on the heading: highlight the whole section.
     const target = el.matches('h2') ? (el.closest('section') ?? el) : el;
     target.dataset.highlight = 'true';
-    const timer = setTimeout(() => delete target.dataset.highlight, 1600);
+    const timer = setTimeout(() => delete target.dataset.highlight, HIGHLIGHT_MS);
     return () => {
       clearTimeout(timer);
       delete target.dataset.highlight;
