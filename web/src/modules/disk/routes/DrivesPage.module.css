@@ -11,10 +11,6 @@
   gap: var(--space-4);
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
 }
-.card {
-  padding: 0;
-  overflow: hidden;
-}
 .open {
   display: flex;
   align-items: center;
@@ -31,12 +27,6 @@
 }
 .open:hover {
   background: var(--surface-2);
-}
-.text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
 }
 .name {
   font-weight: 600;

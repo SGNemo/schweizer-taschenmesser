@@ -100,7 +100,7 @@ function EditorForm({
     onClose();
   }
 
-  async function addSub(e: FormEvent) {
+  async function addSub(e: { preventDefault: () => void }) {
     e.preventDefault();
     const value = subTitle.trim();
     if (!value) return;
@@ -230,7 +230,7 @@ function EditorForm({
                 }}
               />
             </div>
-            <Button onClick={(e) => void addSub(e as unknown as FormEvent)}>{t.actions.add}</Button>
+            <Button onClick={(e) => void addSub(e)}>{t.actions.add}</Button>
           </div>
         </div>
       )}

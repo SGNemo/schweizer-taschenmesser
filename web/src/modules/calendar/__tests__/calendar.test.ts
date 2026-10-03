@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
-import { validateManifest } from '@/core/modules/registry';
 import { toEpoch } from '@/core/time/dates';
 import manifest from '../manifest';
 import { eventRepo } from '../repo';
@@ -12,10 +11,6 @@ beforeEach(async () => {
 });
 
 describe('calendar module', () => {
-  it('has a valid manifest', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-  });
-
   it('contributes its own events, including recurrence and deleted ones excluded', async () => {
     await eventRepo.create({
       title: 'Zahnarzt',

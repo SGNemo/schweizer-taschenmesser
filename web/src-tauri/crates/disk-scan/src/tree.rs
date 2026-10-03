@@ -211,10 +211,6 @@ impl Tree {
         0
     }
 
-    pub fn root_path(&self) -> &std::path::Path {
-        &self.root
-    }
-
     pub fn len(&self) -> usize {
         self.nodes.len()
     }

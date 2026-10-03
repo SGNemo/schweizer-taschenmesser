@@ -17,7 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:changed": "vitest run --changed",
-    "e2e": "playwright test && playwright test -c playwright.sync.config.ts",
+    "e2e": "npm run e2e:app && npm run e2e:sync",
     "gen:module": "node scripts/gen-module.mjs",
     "new:module": "node scripts/gen-module.mjs",
     "check:modules": "node scripts/check-modules.mjs",

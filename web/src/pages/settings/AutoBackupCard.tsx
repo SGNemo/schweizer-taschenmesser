@@ -57,7 +57,7 @@ export function AutoBackupCard({ onOpen }: { onOpen: (text: string, passphrase: 
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load/apply are stable; run once the platform is known
   }, [platform.isNative]);
 
   if (!platform.isNative) {
