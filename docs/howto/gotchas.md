@@ -18,6 +18,9 @@ Moved unchanged from CLAUDE.md. Index: [HOW-TO](../HOW-TO.md).
 - The SDK's own retries slow error tests down: `createClaudeProvider({ maxRetries: 0 })` in unit tests.
 - No secrets in the repo. API keys go through `getPlatform().secrets` (encrypted, local only); other tokens to the local `_secrets` table at runtime only.
 
+## Events between modules
+The event bus has no memory and the app renders before the module services run (each service is a dynamic import, started one after the other). An event emitted before the subscriber exists reaches nobody. When a page hands work to another module, `await whenServicesSettled()` (`core/modules/servicesReady.ts`) before `bus.emit`, and confirm to the user only after `emit` resolved. Test it with delayed chunks (`page.route('**/assets/*.js', …)`), see `e2e/newmodules.spec.ts`.
+
 ## Sandbox
 A Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playwright.config.ts` and `gen-icons.mjs` pick it up automatically (override with `PW_CHROMIUM_PATH`). Never run `playwright install` there.
 
