@@ -248,6 +248,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     keywords: ['Hotkey', 'Tastenkürzel', 'Tray', 'Autostart', 'Zwischenablage'],
     fields: [
       { key: 'defaultType', label: t.quickCapture.settings.defaultType },
+      { key: 'noQuestion', label: t.quickCapture.settings.noQuestion },
       {
         key: 'hotkey',
         label: t.quickCapture.settings.hotkey,

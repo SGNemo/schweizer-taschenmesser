@@ -8,12 +8,13 @@ import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, IconButton, TextField } from '@/ui';
+import { InboxSorter } from '../components/InboxSorter';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { dueTone, groupTasks, isActionable } from '../logic';
 import { replan, waitingTasks, type PickTask } from '../next';
-import { ensureInbox, listRepo, setDone, taskRepo } from '../repo';
+import { ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
 import styles from './todos.module.css';
@@ -121,6 +122,7 @@ export default function TodosPage() {
   const [title, setTitle] = useState(() => params.get('title') ?? '');
   const [editing, setEditing] = useState<StoredTask | null>(null);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
+  const [sorting, setSorting] = useState(false);
   const addRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -188,6 +190,16 @@ export default function TodosPage() {
   const waiting = useMemo(
     () => (focus.calmAttention ? waitingTasks((tasks ?? []) as unknown as PickTask[], day) : []),
     [focus.calmAttention, tasks, day],
+  );
+
+  const inboxOpen = useMemo(
+    () =>
+      ((tasks ?? []) as StoredTask[])
+        .filter(
+          (x) => x.listId === INBOX_ID && !x.done && !x.someday && !x.parentId && !x.plannedFor,
+        )
+        .sort((a, b) => a.createdAt - b.createdAt),
+    [tasks],
   );
 
   function replanNow() {
@@ -258,6 +270,15 @@ export default function TodosPage() {
             </Button>
           </form>
 
+          {inboxOpen.length > 0 && (selected === ALL || selected === INBOX_ID) ? (
+            <div className={styles.waiting} data-testid="todos-inbox">
+              <span className={styles.waitingText}>
+                <strong>{t.todos.sort.hint(inboxOpen.length)}</strong>
+              </span>
+              <Button onClick={() => setSorting(true)}>{t.todos.sort.title}</Button>
+            </div>
+          ) : null}
+
           {waiting.length > 0 && selected === ALL ? (
             <div className={styles.waiting} data-testid="todos-waiting">
               <span className={styles.waitingText}>
@@ -293,6 +314,12 @@ export default function TodosPage() {
         </div>
       </div>
 
+      <InboxSorter
+        open={sorting}
+        tasks={inboxOpen}
+        lists={(lists ?? []) as Stored<TodoList>[]}
+        onClose={() => setSorting(false)}
+      />
       <TaskEditor
         task={editingLive}
         subtasks={editingSubs}

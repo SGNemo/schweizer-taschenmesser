@@ -42,6 +42,8 @@ const CORE_KEYS = {
     todoDigestTime: '09:00',
     inAppPrompt: true,
     resumeCard: true,
+    captureNoQuestion: true,
+    searchHistory: true,
   },
   '_settings scope reminders': { snoozed: [] },
   _meta: {

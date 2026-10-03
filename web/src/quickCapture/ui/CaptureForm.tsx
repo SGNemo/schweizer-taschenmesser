@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
+import { useFocusSettings } from '@/core/settings/focus';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button } from '@/ui';
@@ -12,6 +13,7 @@ import {
   targetFor,
   type SavedCapture,
 } from '../targets';
+import { fullFormPath } from '../targets/fullForm';
 import { previewChips } from './chips';
 import styles from './CaptureForm.module.css';
 
@@ -23,6 +25,8 @@ export interface CaptureFormProps {
   tabSwitchesType?: boolean;
   /** Select the initial text so that typing replaces it (clipboard prefill). */
   selectInitial?: boolean;
+  /** Ctrl+Enter: open the module's full form pre-filled (where it supports that). */
+  onOpenFull?: (path: string) => void;
   onSaved: (saved: SavedCapture) => void;
   onCancel?: () => void;
 }
@@ -44,11 +48,13 @@ export function CaptureForm({
   extra,
   tabSwitchesType,
   selectInitial,
+  onOpenFull,
   onSaved,
   onCancel,
 }: CaptureFormProps) {
   const states = useModuleStates();
   const [settings] = useCaptureSettings();
+  const [focus] = useFocusSettings();
   const [text, setText] = useState(initialText);
   const [override, setOverride] = useState<CaptureType | undefined>();
   const [confirming, setConfirming] = useState(false);
@@ -63,8 +69,18 @@ export function CaptureForm({
   );
   const available = availableTypes(states);
   const wanted = override ?? (result.needsChoice ? undefined : result.type);
-  const type = wanted && available.includes(wanted) ? wanted : undefined;
-  const fields: CaptureFields = { ...result.fields, ...extra };
+  const chosen = wanted && available.includes(wanted) ? wanted : undefined;
+  // No question: text the parser is unsure about goes to the default target (the ToDo inbox) as typed.
+  const fallbackType =
+    !chosen && focus.captureNoQuestion && text.trim() && available.length > 0
+      ? available.includes(settings?.defaultType ?? 'todo')
+        ? (settings?.defaultType ?? 'todo')
+        : available[0]
+      : undefined;
+  const type = chosen ?? fallbackType;
+  const fields: CaptureFields = fallbackType
+    ? { ...result.fields, title: text.trim(), ...extra }
+    : { ...result.fields, ...extra };
   const chips = previewChips(fields, type, result.notes, today());
 
   useEffect(() => {
@@ -99,6 +115,13 @@ export function CaptureForm({
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && type && onOpenFull) {
+      const path = fullFormPath(type, fields, text);
+      e.preventDefault();
+      if (path) onOpenFull(path);
+      else submit();
+      return;
+    }
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
@@ -175,6 +198,14 @@ export function CaptureForm({
         <p className={styles.hint} role="status">
           {t.quickCapture.chooseType}
         </p>
+      ) : null}
+      {fallbackType ? (
+        <p className={styles.hint} role="status" data-testid="capture-inbox-hint">
+          {t.quickCapture.inboxHint(t.quickCapture.target[fallbackType])}
+        </p>
+      ) : null}
+      {onOpenFull && type && fullFormPath(type, fields, text) && text.trim() ? (
+        <p className={styles.hint}>{t.quickCapture.fullFormHint}</p>
       ) : null}
 
       <div className={styles.types} role="radiogroup" aria-label={t.quickCapture.title}>

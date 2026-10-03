@@ -48,7 +48,9 @@
     "todoDigest": true,
     "todoDigestTime": "09:00",
     "inAppPrompt": true,
-    "resumeCard": true
+    "resumeCard": true,
+    "captureNoQuestion": true,
+    "searchHistory": true
   },
   "_settings scope reminders": {
     "snoozed": []

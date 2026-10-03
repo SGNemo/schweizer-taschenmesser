@@ -555,6 +555,7 @@ export const t = {
   quickAdd: {
     title: 'Schnell hinzufügen',
     empty: 'Aktive Module bieten noch keine Schnellaktionen an.',
+    others: 'Oder mit dem ganzen Formular',
   },
   quickCapture: {
     title: 'Schnell erfassen',
@@ -607,6 +608,8 @@ export const t = {
       monthDay: (d: number) => (d === -1 ? 'am letzten Tag des Monats' : `jeden ${d}. des Monats`),
     },
     chooseType: 'Bitte wähle, wohin der Eintrag soll.',
+    inboxHint: (target: string) => `Landet in „${target}“. Sortieren geht später.`,
+    fullFormHint: 'Strg+Enter öffnet das ganze Formular.',
     financeConfirm: 'Finanzeinträge werden nur nach Bestätigung gebucht.',
     saved: (name: string) => `Gespeichert in ${name}`,
     undo: 'Rückgängig',
@@ -633,6 +636,9 @@ export const t = {
       intro:
         'Einträge in Sekunden anlegen: tippe z. B. „morgen 15 Uhr Zahnarzt“, die App erkennt Typ und Datum lokal, ohne Netzwerk.',
       defaultType: 'Standardziel für Text ohne Hinweis',
+      noQuestion: 'Ohne Rückfrage speichern',
+      noQuestionHint:
+        'Bei unklarem Text wird er so, wie du ihn getippt hast, im Standardziel (Eingang) gespeichert, statt nachzufragen. Sortieren geht später.',
       hotkey: 'Tastenkürzel',
       hotkeyHint: 'Öffnet das Eingabefenster von überall, solange die App läuft.',
       hotkeyRecord: 'Neue Tastenkombination aufnehmen',
@@ -878,6 +884,25 @@ export const t = {
     priority: 'Priorität',
     prio: ['Keine', 'Niedrig', 'Mittel', 'Hoch'],
     due: 'Fällig am',
+    sort: {
+      title: 'Eingang sortieren',
+      open: (n: number) =>
+        n === 1 ? 'Eingang sortieren · 1 Ding' : `Eingang sortieren · ${n} Dinge`,
+      hint: (n: number) =>
+        n === 1 ? '1 Ding wartet auf einen Platz.' : `${n} Dinge warten auf einen Platz.`,
+      progress: (n: number, total: number) => `${n} von ${total}`,
+      today: 'Für heute',
+      skip: 'Überspringen',
+      toList: 'In eine Liste',
+      pickList: 'Liste wählen …',
+      done: 'Schon erledigt',
+      remove: 'Löschen',
+      empty: 'Der Eingang ist leer. Gut gemacht.',
+      skippedLeft: (n: number) =>
+        n === 1 ? '1 Ding hast du übersprungen.' : `${n} Dinge hast du übersprungen.`,
+      again: 'Nochmal ansehen',
+      close: 'Fertig',
+    },
     digestTitle: (n: number) => (n === 1 ? 'Heute: 1 ToDo' : `Heute: ${n} ToDos`),
     estimate: 'Dauer',
     estimateNone: 'Offen',
