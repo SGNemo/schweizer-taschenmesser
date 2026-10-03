@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
+import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, today } from '@/core/time/dates';
 import { useUiStore } from '@/stores/ui';
@@ -135,8 +136,11 @@ export default function PantryPage() {
                         onClick={() => {
                           // Without the shopping module nobody listens: say so instead of pretending.
                           if (moduleStates?.lists !== true) return toast(t.pantry.shoppingOff);
-                          void bus.emit('shopping.requested', { name: i.name });
-                          toast(t.pantry.restocked(i.name));
+                          // Confirm only after the shopping list has stored the item: wait for the
+                          // services (the app renders before they run), then for the handlers.
+                          void whenServicesSettled()
+                            .then(() => bus.emit('shopping.requested', { name: i.name }))
+                            .then(() => toast(t.pantry.restocked(i.name)));
                         }}
                       >
                         {t.pantry.restock}

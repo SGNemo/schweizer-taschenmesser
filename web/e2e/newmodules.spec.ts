@@ -76,6 +76,38 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
   );
 });
 
+test('pantry: the hand-over also arrives when the app loads slowly (services start late)', async ({
+  page,
+}) => {
+  await enable(page, ['pantry', 'lists']);
+  // Every script chunk arrives late, like on a busy CI runner: the services of the modules are
+  // dynamic imports that start one after the other, long after the page can be clicked.
+  await page.route('**/assets/*.js', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await page.goto('/pantry');
+  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  await dialog.getByLabel('Name', { exact: true }).fill('Milch');
+  await dialog.getByLabel('Ort').selectOption('fridge');
+  await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
+  await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toBeHidden();
+
+  const row = page
+    .getByRole('region', { name: 'Kühlschrank' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Milch' });
+  await row.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
+  // The confirmation comes only once the item is stored, so the list shows it right away.
+  await expect(page.getByText('an die Einkaufsliste gesendet')).toBeVisible();
+  await page.unroute('**/assets/*.js');
+  await page.goto('/lists');
+  await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
+});
+
 test('pantry: without the lists module the hand-over says so and sends nothing', async ({
   page,
 }) => {

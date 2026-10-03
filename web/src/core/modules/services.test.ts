@@ -64,4 +64,31 @@ describe('service manager', () => {
     expect(stop).toHaveBeenCalledTimes(1);
     err.mockRestore();
   });
+
+  it('settled() resolves only after slow services have started', async () => {
+    const started: string[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const slow = {
+      ...allManifests[0]!,
+      id: 'slow',
+      contributions: {
+        services: async () => {
+          await gate;
+          return { default: () => (started.push('slow'), () => undefined) };
+        },
+      },
+    } as ModuleManifest;
+    const m = createServiceManager([slow]);
+    void m.update({ slow: true });
+    let settled = false;
+    void m.settled().then(() => (settled = true));
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    expect(started).toEqual([]);
+    release();
+    await m.settled();
+    expect(started).toEqual(['slow']);
+    expect(m.running()).toEqual(['slow']);
+  });
 });

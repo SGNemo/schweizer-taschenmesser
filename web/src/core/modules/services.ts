@@ -1,6 +1,7 @@
 import { liveQuery } from 'dexie';
 import { loadModuleStates, type ModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
+import { setServicesWaiter } from './servicesReady';
 import type { ModuleManifest } from './types';
 
 export interface ServiceManager {
@@ -8,6 +9,8 @@ export interface ServiceManager {
   update(states: ModuleStates): Promise<void>;
   stopAll(): Promise<void>;
   running(): string[];
+  /** Resolves once every update queued so far has finished (services loaded and started). */
+  settled(): Promise<void>;
 }
 
 /**
@@ -48,18 +51,28 @@ export function createServiceManager(manifests: readonly ModuleManifest[]): Serv
         running.clear();
       }),
     running: () => [...running.keys()],
+    settled: () => chain,
   };
 }
 
 /** Runs the services of all enabled modules for the lifetime of the app; follows module toggles. */
 export function startModuleServices(): () => void {
   const manager = createServiceManager(availableManifests());
+  let firstDone!: () => void;
+  const firstUpdate = new Promise<void>((resolve) => (firstDone = resolve));
+  const mine = () => firstUpdate.then(() => manager.settled());
+  setServicesWaiter(mine);
   const sub = liveQuery(() => loadModuleStates()).subscribe({
-    next: (states) => void manager.update(states),
-    error: (e) => console.error('[services] module state stream failed', e),
+    next: (states) => void manager.update(states).then(firstDone),
+    error: (e) => {
+      console.error('[services] module state stream failed', e);
+      firstDone();
+    },
   });
   return () => {
     sub.unsubscribe();
     void manager.stopAll();
+    setServicesWaiter(null);
+    firstDone();
   };
 }
