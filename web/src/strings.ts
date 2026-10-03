@@ -559,8 +559,7 @@ export const t = {
     content: 'Geteilt',
     where: 'Ziele',
     nothing: 'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Nemo.',
-    noTargets:
-      'Schalte in der Modul-Bibliothek Merkliste, Notizen oder ToDos ein, um Inhalte zu empfangen.',
+    enable: 'Modul einschalten',
     toBookmarks: 'In die Merkliste',
     toNote: 'Als Notiz',
     toTodo: 'Als ToDo',
@@ -2067,6 +2066,8 @@ export const t = {
       nextDue: 'Nächste Fälligkeit',
     },
     palette: {
+      enableModule: (name: string) => `Modul „${name}“ einschalten`,
+      moduleEnabled: 'Eingeschaltet. Stelle deine Frage bitte noch einmal.',
       askModel: 'Mit KI fragen',
       thinking: 'Ich überlege …',
       back: 'Zurück',
@@ -2108,7 +2109,7 @@ export const t = {
         'Die eingestellten Limits aller KI-Anbieter sind erreicht (Einstellungen → KI-Assistent).',
       exhausted:
         'Kein KI-Anbieter konnte antworten (Limit, Fehler oder nicht erreichbar). Details in den Einstellungen → KI-Assistent.',
-      'inactive-module': 'Dafür muss das passende Modul aktiviert sein (Modul-Bibliothek).',
+      'inactive-module': 'Dafür muss das passende Modul eingeschaltet sein.',
       'invalid-entry':
         'Die Angaben reichen für einen Eintrag nicht aus. Nenne z. B. Titel und Datum genauer.',
       'invalid-answer': 'Die Antwort des Modells war nicht brauchbar. Bitte anders formulieren.',
