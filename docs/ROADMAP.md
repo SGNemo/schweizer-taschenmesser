@@ -97,6 +97,9 @@ Target picture B and packages 1–7 are in [`product/MODULE-PLAN.md`](product/MO
 - **Retired modules (data kept until package 6):** news, habits, timetrack; replaced by merges: reminders → calendar, shopping + packing → lists, launcher → bookmarks favourites, birthdays + gifts → people, contracts → vault ("Unterlagen"), system → disk ("Dieser PC").
 - **Stay ideas without date:** K3 attachments in sync/backup (receipts, photos – wanted, but after Unterlagen), M2 calendar drag/resize, M3 budget carry-over, M4 habit statistics (module retired), M9 recipes → list, M10 journal, news as an optional extension, Timer ↔ timetrack (module retired), vehicle log, medication/water, cleaning plan.
 
+## Cleanup proposals 2026-10-03 (not built)
+Prioritised refactors, test-tooling ideas and hygiene items from the repo cleanup: [meta/IMPROVEMENTS-2026-10-03.md](meta/IMPROVEMENTS-2026-10-03.md) (top 10, effort, risk, PR order). Analysis and numbers: [meta/CLEANUP-2026-10-03.md](meta/CLEANUP-2026-10-03.md).
+
 ## Explicitly not planned
 - Cloud accounts, telemetry, ads. Nemo stays local-first with an optional self-hosted server.
 - AI features that see user data (the assistant only sees schemas). A "summarise my notes" feature would break that rule; if ever, only with a local model and an explicit switch.
