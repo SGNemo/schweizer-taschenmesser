@@ -44,6 +44,7 @@ Result of the repo cleanup analysis ([CLEANUP-2026-10-03](CLEANUP-2026-10-03.md)
 - Move `playwright*.config.ts` into `web/e2e/` (CI and script paths change). S, low-medium. Five identical `.prettierrc.json`: optional single root file.
 - `.dockerignore` is minimal; check the build context in `server/Dockerfile`, then exclude `docs`, `web/src-tauri`, `extension`, `**/target`. S.
 - Remaining old-name strings: `strings.ts` (UI text `'Taschenmesser'`) and the proxy user agent `Taschenmesser-Proxy/1` (`server/src/proxy.ts:254`); rename the user agent if nothing depends on it. S.
+- `calendar/settings.ts` still has its own `TIME` regex: swapping it for `TIME_RE` from `core/time/dates` broke the pantry hand-over e2e in CI only. Find out why (import order / cycle through the eagerly loaded settings registry; try `madge --circular`) before touching it; a hidden load-order dependency is worth fixing on its own. S–M, medium.
 - `core/net` and `core/text` hold a single file each; merge into `core/` if nobody objects. S, cosmetic.
 - `googleDrive.stub.ts`: keep (documents the planned adapter) or delete it with the comment in `core/sync/types.ts:24`.
 - Dynamic string-key lookups (`backup.mergeHint`/`replaceHint`, probably `disk.del.errors.*`, `disk.filter.*`) defeat unused-key checks; a typed lookup helper would let a lint rule find dead strings safely. S–M.
