@@ -10,6 +10,7 @@ import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
 import { Fab, Toaster, useMediaQuery } from '@/ui';
 import { CommandPalette } from './CommandPalette';
 import { FocusWatcher } from './FocusWatcher';
+import { ReminderPrompt } from './ReminderPrompt';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
 import { PendingImports } from './PendingImports';
@@ -144,6 +145,7 @@ export function AppShell() {
         </>
       )}
       <FocusWatcher />
+      <ReminderPrompt />
       <Toaster />
     </div>
   );

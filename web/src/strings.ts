@@ -784,6 +784,7 @@ export const t = {
       ],
       missing: 'Diese Aufgabe gibt es nicht mehr.',
       missingAction: 'Zu den ToDos',
+      notifyTitle: 'Fokus: Zeit ist um',
       indicatorOver: 'Zeit ist um',
       indicatorAria: (title: string, time: string) => `Fokus: ${title}, ${time}. Zurück zum Fokus.`,
       otherRunning: (title: string) => `Gerade läuft eine Runde für „${title}“.`,
@@ -832,6 +833,7 @@ export const t = {
     priority: 'Priorität',
     prio: ['Keine', 'Niedrig', 'Mittel', 'Hoch'],
     due: 'Fällig am',
+    digestTitle: (n: number) => (n === 1 ? 'Heute: 1 ToDo' : `Heute: ${n} ToDos`),
     estimate: 'Dauer',
     estimateNone: 'Offen',
     estimateMin: (n: number) => `${n} Min`,
@@ -888,6 +890,15 @@ export const t = {
     allDayRow: 'Ganztägig und ohne Uhrzeit',
     timeGrid: 'Zeitraster',
     widgetEmpty: 'Nichts geplant.',
+    stageBody: (minutes: number, time: string) =>
+      (minutes >= 1440
+        ? minutes === 1440
+          ? 'Morgen'
+          : `In ${Math.round(minutes / 1440)} Tagen`
+        : minutes >= 60
+          ? `In ${Math.round(minutes / 60)} Std`
+          : `In ${minutes} Min`) + ` · ${time}`,
+    followUpTitle: (title: string) => `Noch aktuell? ${title}`,
     untilNext: {
       empty: 'Heute ist nichts mehr geplant.',
       off: 'Die Zeit bis zum nächsten Termin ist ausgeschaltet.',
@@ -1289,7 +1300,32 @@ export const t = {
       },
     },
   },
+  reminder: {
+    label: 'Erinnerung',
+    done: 'Erledigt',
+    later: 'Später',
+    open: 'Öffnen',
+    more: (n: number) => (n === 1 ? '+ 1 weitere' : `+ ${n} weitere`),
+    laterOptions: {
+      '10min': 'In 10 Min',
+      '1h': 'In 1 Std',
+      evening: 'Heute Abend',
+      tomorrow: 'Morgen früh',
+      pc: 'Wenn ich am PC bin',
+    },
+    snoozed: {
+      '10min': 'Okay, in 10 Minuten.',
+      '1h': 'Okay, in einer Stunde.',
+      evening: 'Okay, heute Abend.',
+      tomorrow: 'Okay, morgen früh.',
+      pc: 'Okay, wenn du am PC bist.',
+    },
+  },
   notifications: {
+    summary: (count: number, titles: string[]) => ({
+      title: `Weitere Erinnerungen · ${count}`,
+      body: titles.slice(0, 3).join(' · ') + (titles.length > 3 ? ' …' : ''),
+    }),
     title: 'Benachrichtigungen',
     intro:
       'Erinnerungen erscheinen als Benachrichtigung, solange die App geöffnet ist oder im Hintergrund läuft. Bei geschlossener App kommen sie nur mit Push (siehe unten).',

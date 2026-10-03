@@ -7,9 +7,10 @@
  * encrypted with the sync key (the service worker decrypts them, see `pushPayload.ts`).
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { activeManifests, collectNotifications } from '@/core/modules/contributions';
+import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
 import type { DueNotification } from '@/core/modules/types';
+import { collectDue } from './collect';
 import { getPlatform } from '@/core/platform';
 import { normalizeServerUrl } from '@/core/sync/adapters/selfHosted';
 import { encryptValue, fromBase64Url } from '@/core/sync/crypto';
@@ -136,7 +137,7 @@ export function defaultPushDeps(): PushDeps {
     registration: async () => (await navigator.serviceWorker.getRegistration()) ?? undefined,
     remote: (config) => createPushRemote(config),
     async loadDue(range) {
-      return collectNotifications(range, activeManifests(await loadModuleStates()));
+      return collectDue(range, activeManifests(await loadModuleStates()));
     },
   };
 }

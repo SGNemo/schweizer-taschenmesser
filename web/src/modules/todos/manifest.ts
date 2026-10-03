@@ -59,6 +59,7 @@ const manifest: ModuleManifest = {
   area: 'plan',
   contributions: {
     attention: () => import('./attention'),
+    notifications: () => import('./notifications'),
     onboarding: onboarding,
     quickAdd: [{ id: 'task', label: t.todos.meta.quickAdd, to: '/todos?new=1' }],
     calendarItems: () => import('./calendar'),

@@ -5,8 +5,9 @@
  */
 import type { TaschenmesserDB } from '@/core/db/db';
 import { loadModuleStates } from '@/core/modules/activation';
-import { activeManifests, collectNotifications } from '@/core/modules/contributions';
+import { activeManifests } from '@/core/modules/contributions';
 import type { DueNotification } from '@/core/modules/types';
+import { collectDue } from './collect';
 import { getPlatform } from '@/core/platform';
 import { now as clockNow } from '@/core/time/now';
 import type { NotificationService, ScheduledNotification } from './service';
@@ -49,7 +50,7 @@ function defaultDeps(): NativeScheduleDeps {
   return {
     service: getPlatform().notifications,
     async loadDue(range) {
-      return collectNotifications(range, activeManifests(await loadModuleStates()));
+      return collectDue(range, activeManifests(await loadModuleStates()));
     },
     now: clockNow,
   };
