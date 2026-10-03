@@ -12,6 +12,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokushilfen Paket 1 „Anfangen“ | ansehen, mergen (zuerst) ([focus-aids](features/focus-aids.md)) |
 | [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57) | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt |
 | [PR #59](https://github.com/SGNemo/schweizer-taschenmesser/pull/59): Fokushilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (gestapelt auf #58) | nach #58 mergen; Basis wird automatisch auf `develop` umgestellt |
+| [PR #60](https://github.com/SGNemo/schweizer-taschenmesser/pull/60): Fokushilfen Paket 4 „Fortschritt“ (gestapelt auf #59) | nach #59 mergen; Basis wird automatisch auf `develop` umgestellt |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |

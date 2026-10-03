@@ -757,6 +757,15 @@ export const t = {
       resumeCard: 'Woran war ich?',
       resumeCardHint:
         'Nach einer längeren Pause zeigt die Übersicht, wo du zuletzt warst. Mit einem Tipp geht es dort weiter.',
+      streaks: '„n in Folge“ bei Wiederholungen',
+      streaksHint:
+        'Zeigt bei wiederkehrenden ToDos, wie oft du sie nacheinander erledigt hast. Ein Pausentag bricht nichts ab, und es gibt nie einen Verlust.',
+      weekReview: 'Rückblick auf die Woche',
+      weekReviewHint:
+        'Ein freundlicher Blick darauf, was in den letzten sieben Tagen fertig wurde.',
+      eveningWrapUp: '„Tag abschließen“ am Abend',
+      eveningWrapUpHint:
+        'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben.',
     },
     reminders: {
       title: 'Ruhige Erinnerungen',
@@ -867,6 +876,23 @@ export const t = {
       chooseNone: 'Nichts Offenes. Das ist auch schön.',
       add: 'Einplanen',
       more: (n: number) => `+ ${n} weitere`,
+    },
+    progress: {
+      streak: (n: number) => `${n} in Folge`,
+      streakRest: (n: number) => `${n} in Folge (mit Pausentag)`,
+      weekTitle: 'Diese Woche',
+      weekDone: (n: number) => (n === 1 ? '1 Aufgabe erledigt' : `${n} Aufgaben erledigt`),
+      weekMore: (n: number) => `${n} mehr als in der Woche davor.`,
+      weekSame: 'So viel wie in der Woche davor.',
+      weekLess: 'Eine ruhigere Woche. Das darf sein.',
+      weekNone: 'Noch nichts erledigt. Eine kleine Sache reicht zum Anfangen.',
+      weekBest: (day: string, n: number) => `Bester Tag: ${day} mit ${n}.`,
+      wrapTitle: 'Tag abschließen',
+      wrapLeft: (n: number) =>
+        n === 1 ? 'Eine Sache ist noch offen.' : `${n} Sachen sind noch offen.`,
+      wrapAction: 'Auf morgen schieben',
+      wrapDone: 'Auf morgen geschoben. Schönen Abend!',
+      wrapClear: 'Alles für heute erledigt. Schönen Abend!',
     },
   },
   todos: {
@@ -2801,6 +2827,45 @@ export const t = {
     widgetEmpty: 'Nichts zu beachten.',
   },
   lists: {
+    routines: {
+      title: 'Aus Vorlage',
+      hint: 'Eine kleine Checkliste zum Abhaken. Nach dem Abhaken mit „Zurücksetzen“ ist sie wieder bereit.',
+      add: 'Liste anlegen',
+      created: 'Liste angelegt.',
+      morning: {
+        name: 'Morgenroutine',
+        items: [
+          'Aufstehen und ein Glas Wasser trinken',
+          'Frühstücken',
+          'Medikamente und Vitamine nehmen',
+          'Zähne putzen und anziehen',
+          'Kalender und „Jetzt dran“ ansehen',
+          'Schlüssel, Handy und Tasche prüfen',
+        ],
+      },
+      evening: {
+        name: 'Abendroutine',
+        items: [
+          'Geschirr wegräumen',
+          'Tasche für morgen packen',
+          'Kleidung rauslegen',
+          'Drei Dinge für morgen einplanen',
+          'Handy ans Ladegerät',
+          'Zähne putzen',
+        ],
+      },
+      week: {
+        name: 'Wochenplanung',
+        items: [
+          'Kalender der Woche ansehen',
+          'Offene ToDos durchgehen',
+          'Rechnungen und Fristen prüfen',
+          'Einkauf planen',
+          'Drei wichtige Dinge festlegen',
+          'Etwas Schönes einplanen',
+        ],
+      },
+    },
     meta: {
       name: 'Listen',
       description:

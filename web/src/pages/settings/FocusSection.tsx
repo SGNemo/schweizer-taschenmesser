@@ -56,6 +56,9 @@ export function FocusSection() {
       {toggle('focusSound', 'focusSound', s.focusSound, s.focusSoundHint)}
       {toggle('focusIndicator', 'focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
       {toggle('resumeCard', 'resumeCard', s.resumeCard, s.resumeCardHint)}
+      {toggle('streaks', 'streaks', s.streaks, s.streaksHint)}
+      {toggle('weekReview', 'weekReview', s.weekReview, s.weekReviewHint)}
+      {toggle('eveningWrapUp', 'eveningWrapUp', s.eveningWrapUp, s.eveningWrapUpHint)}
       {toggle('searchHistory', 'searchHistory', s.searchHistory, s.searchHistoryHint)}
       <SettingRow id="focus--clearHistory" label={s.clearHistory} description={s.clearHistoryHint}>
         <Button

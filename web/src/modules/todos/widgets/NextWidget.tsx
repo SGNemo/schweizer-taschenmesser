@@ -3,12 +3,14 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { resetSkipped, skipSuggestion, useSkippedToday } from '@/core/focus/state';
 import { useFocusSettings } from '@/core/settings/focus';
-import { addDaysStr, today } from '@/core/time/dates';
+import { addDaysStr, formatDay, today } from '@/core/time/dates';
+import { now } from '@/core/time/now';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog, useWidgetSize, WidgetBody } from '@/ui';
 import { beginFocus, focusMinutesFor, focusPath } from '../focus';
 import { dayPlan, nextTier, pickNext, type PickTask } from '../next';
+import { EVENING_HOUR, leftToday, weekReview, type ProgressTask } from '../progress';
 import { listRepo, setDone, taskRepo } from '../repo';
 import styles from './NextWidget.module.css';
 
@@ -35,6 +37,12 @@ export default function NextWidget() {
   const plan = dayPlan(all, day, settings.planLimit);
   const openCount = all.filter((x) => !x.done && !x.someday && !x.parentId).length;
   const showPlan = settings.dayPlan && size !== 's';
+  const review = useMemo(
+    () => (settings.weekReview ? weekReview(all as unknown as ProgressTask[], day) : undefined),
+    [settings.weekReview, all, day],
+  );
+  const evening = settings.eveningWrapUp && new Date(now()).getHours() >= EVENING_HOUR;
+  const left = evening ? leftToday(all as unknown as ProgressTask[], day) : [];
   const listName = (id: string) => lists?.find((l) => l.id === id)?.name;
 
   async function start() {
@@ -48,6 +56,10 @@ export default function NextWidget() {
           taskRepo.update(next.id, { plannedFor: addDaysStr(day, 1) }),
         )
       : undefined;
+  const wrapUp = () =>
+    undoableWithToast(t.focus.progress.wrapDone, t.focus.progress.wrapDone, async () => {
+      for (const x of left) await taskRepo.update(x.id, { plannedFor: addDaysStr(day, 1) });
+    });
   const toggle = (id: string, done: boolean) => {
     const task = all.find((x) => x.id === id);
     if (!task) return;
@@ -163,6 +175,45 @@ export default function NextWidget() {
           {plan.doneToday > 0 ? (
             <p className={styles.done}>{t.focus.plan.doneToday(plan.doneToday)}</p>
           ) : null}
+        </div>
+      ) : null}
+
+      {evening && size !== 's' ? (
+        <div className={styles.plan} data-testid="wrap-up">
+          <span className={styles.planTitle}>{t.focus.progress.wrapTitle}</span>
+          {left.length > 0 ? (
+            <>
+              <p className={styles.hint}>{t.focus.progress.wrapLeft(left.length)}</p>
+              <div className={styles.actions}>
+                <Button onClick={() => void wrapUp()}>{t.focus.progress.wrapAction}</Button>
+              </div>
+            </>
+          ) : (
+            <p className={styles.hint}>{t.focus.progress.wrapClear}</p>
+          )}
+        </div>
+      ) : null}
+
+      {review && size !== 's' ? (
+        <div className={styles.plan} data-testid="week-review">
+          <div className={styles.planHead}>
+            <span className={styles.planTitle}>{t.focus.progress.weekTitle}</span>
+            {review.doneThisWeek > 0 ? (
+              <span className={styles.est}>{t.focus.progress.weekDone(review.doneThisWeek)}</span>
+            ) : null}
+          </div>
+          <p className={styles.hint}>
+            {review.tone === 'more'
+              ? t.focus.progress.weekMore(review.doneThisWeek - review.donePrevWeek)
+              : review.tone === 'same'
+                ? t.focus.progress.weekSame
+                : review.tone === 'less'
+                  ? t.focus.progress.weekLess
+                  : t.focus.progress.weekNone}
+            {review.bestDay
+              ? ` ${t.focus.progress.weekBest(formatDay(review.bestDay.date, 'EEEE'), review.bestDay.count)}`
+              : ''}
+          </p>
         </div>
       ) : null}
 
