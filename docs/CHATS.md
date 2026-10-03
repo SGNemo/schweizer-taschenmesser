@@ -9,7 +9,8 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 |---|---|
 | Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
-| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokus- und Aufmerksamkeitshilfen, Paket 1 | ansehen, mergen; danach Paket 2 Erinnerungen starten ([focus-aids](features/focus-aids.md)) |
+| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokushilfen Paket 1 „Anfangen“ | ansehen, mergen (zuerst) ([focus-aids](features/focus-aids.md)) |
+| [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57) | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |

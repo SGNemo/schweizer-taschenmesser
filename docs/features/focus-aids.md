@@ -29,7 +29,7 @@ Result of the evaluation chat (phases 1–2, branch `feat/adhd-friendly`). Mocku
 Verification: unit tests for next-one-thing, focus state, overdue wording; e2e `focus.spec.ts` (start/finish focus, plan 3 things, everything switchable); a11y + reduced motion; screenshots before/after (dark/light, desktop/phone).
 
 ## Later packages (not in this branch)
-- **2 Erinnerungen:** staggered lead (1 d · 1 h · 10 min), snooze options (10 min, 1 h, heute Abend, morgen früh, "wenn ich am PC bin" = device flag), quiet hours, max per hour, one gentle follow-up, ToDos with date notify at a set time; "Woran war ich" card. Touches `core/notifications/*`, `nativeSchedule`, push payload, calendar settings. Mockup `reminder-c1-snooze.html`.
+- **2 Erinnerungen (built, PR 58):** staggered lead (1 d · 1 h · 10 min), snooze options (10 min, 1 h, heute Abend, morgen früh, "wenn ich am PC bin" = device flag), quiet hours, max per hour, one gentle follow-up, ToDos with date notify at a set time; "Woran war ich" card. Touches `core/notifications/*`, `nativeSchedule`, push payload, calendar settings. Mockup `reminder-c1-snooze.html`.
 - **3 Erfassen/Ruhe/Wiederfinden:** no type question (default inbox, sort later), Ctrl+Enter to full form, time on ToDos becomes a reminder, quick-add dialog without the second link list; search history + recently used in Ctrl+K; focus theme (home preset with 3 widgets), text size 3 steps, in-app motion switch.
 - **4 Fortschritt:** gentle streaks with rest days for recurring ToDos, positive week review, routine templates (Morgen, Abend, Wochenplanung) as checklists.
 
