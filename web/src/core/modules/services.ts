@@ -60,7 +60,12 @@ export function startModuleServices(): () => void {
   const manager = createServiceManager(availableManifests());
   let firstDone!: () => void;
   const firstUpdate = new Promise<void>((resolve) => (firstDone = resolve));
-  const mine = () => firstUpdate.then(() => manager.settled());
+  const mine: Parameters<typeof setServicesWaiter>[0] = (opts) =>
+    firstUpdate
+      .then(async () => {
+        if (opts?.fresh) await manager.update(await loadModuleStates());
+      })
+      .then(() => manager.settled());
   setServicesWaiter(mine);
   const sub = liveQuery(() => loadModuleStates()).subscribe({
     next: (states) => void manager.update(states).then(firstDone),

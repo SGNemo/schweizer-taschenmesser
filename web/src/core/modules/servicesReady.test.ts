@@ -22,6 +22,14 @@ describe('whenServicesSettled', () => {
     expect(done).toBe(true);
   });
 
+  it('passes the fresh flag on to the host', async () => {
+    const seen: unknown[] = [];
+    setServicesWaiter(async (opts) => void seen.push(opts));
+    await whenServicesSettled({ fresh: true });
+    await whenServicesSettled();
+    expect(seen).toEqual([{ fresh: true }, undefined]);
+  });
+
   it('stops waiting once the host is cleared', async () => {
     setServicesWaiter(() => new Promise<void>(() => undefined));
     setServicesWaiter(null);

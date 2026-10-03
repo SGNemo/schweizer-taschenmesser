@@ -108,7 +108,7 @@ test('pantry: the hand-over also arrives when the app loads slowly (services sta
   await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
 });
 
-test('pantry: without the lists module the hand-over says so and sends nothing', async ({
+test('pantry: without the lists module the hand-over says so and offers to switch it on', async ({
   page,
 }) => {
   await enable(page, ['pantry']);
@@ -120,8 +120,14 @@ test('pantry: without the lists module the hand-over says so and sends nothing',
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
-  await expect(page.getByText('Die Einkaufsliste ist ausgeschaltet')).toBeVisible();
+  await expect(page.getByText('braucht es das Modul „Listen“')).toBeVisible();
   await expect(page.getByText('an die Einkaufsliste gesendet')).toHaveCount(0);
+
+  // One tap switches the module on and sends the entry that had nowhere to go.
+  await page.getByRole('button', { name: 'Aktivieren' }).click();
+  await expect(page.getByText('an die Einkaufsliste gesendet')).toBeVisible();
+  await page.goto('/lists');
+  await expect(page.getByRole('checkbox', { name: 'Butter' })).toBeVisible();
 });
 
 test('gift ideas: per person, status and what was spent', async ({ page }) => {

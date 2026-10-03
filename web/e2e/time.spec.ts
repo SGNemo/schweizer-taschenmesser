@@ -25,6 +25,8 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
     await expect(page.getByRole('button', { name: /Müll rausbringen/ })).toContainText('↻');
 
     await page.getByRole('checkbox', { name: 'Müll rausbringen' }).click();
+    // Wait until the write is done (the toast comes after it), or the next page load aborts it.
+    await expect(page.getByText('Als erledigt markiert.')).toBeVisible();
     // The ticked one is history; one open task with the next date remains.
     const open = page.getByRole('checkbox', { name: 'Müll rausbringen' });
     await expect(open).toHaveCount(1);

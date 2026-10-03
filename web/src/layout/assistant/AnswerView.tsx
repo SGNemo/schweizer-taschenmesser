@@ -5,6 +5,8 @@ import { commitCreate } from '@/core/ai/query/create';
 import type { AiResult, PreparedCreate, ResultRow } from '@/core/ai/query/types';
 import { db } from '@/core/db/db';
 import { availableManifests } from '@/core/modules/available';
+import { enableModule } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -212,6 +214,31 @@ export function tierLabel(response: Extract<AskResponse, { ok: true }>): string 
   return t.ai.tier[response.tier === 'model' ? 'local' : response.tier];
 }
 
+/** The error text; for a module that is switched off it offers to switch it on. */
+function ErrorView({ response }: { response: Extract<AskResponse, { ok: false }> }) {
+  const [enabled, setEnabled] = useState(false);
+  const manifest =
+    response.error === 'inactive-module' ? getManifest(response.detail ?? '') : undefined;
+  return (
+    <>
+      <p role="alert" className={styles.error} data-testid="ai-error">
+        {enabled
+          ? t.ai.palette.moduleEnabled
+          : (t.ai.errors[response.error] ?? t.ai.errors.fallback)}
+      </p>
+      {manifest && !enabled ? (
+        <Button
+          onClick={() => {
+            void enableModule(manifest).then(() => setEnabled(true));
+          }}
+        >
+          {t.ai.palette.enableModule(manifest.name)}
+        </Button>
+      ) : null}
+    </>
+  );
+}
+
 /** Renders the assistant's answer (or a friendly error). `onDone` closes the palette. */
 export function AnswerView({ response, onDone }: { response: AskResponse; onDone: () => void }) {
   const navigate = useNavigate();
@@ -222,11 +249,7 @@ export function AnswerView({ response, onDone }: { response: AskResponse; onDone
   };
 
   if (!response.ok) {
-    return (
-      <p role="alert" className={styles.error} data-testid="ai-error">
-        {t.ai.errors[response.error] ?? t.ai.errors.fallback}
-      </p>
-    );
+    return <ErrorView response={response} />;
   }
   return (
     <>

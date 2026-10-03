@@ -159,6 +159,7 @@ export const t = {
     title: 'Modul-Bibliothek',
     intro: 'Aktiviere nur, was du brauchst. Deaktivierte Module bleiben unsichtbar.',
     active: 'Aktiv',
+    nowActive: (name: string) => `Das Modul „${name}“ ist jetzt eingeschaltet.`,
     inactive: 'Inaktiv',
     disableTitle: (name: string) => `„${name}“ deaktivieren?`,
     disableText: 'Was soll mit den gespeicherten Daten dieses Moduls passieren?',
@@ -558,8 +559,7 @@ export const t = {
     content: 'Geteilt',
     where: 'Ziele',
     nothing: 'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Nemo.',
-    noTargets:
-      'Schalte in der Modul-Bibliothek Merkliste, Notizen oder ToDos ein, um Inhalte zu empfangen.',
+    enable: 'Modul einschalten',
     toBookmarks: 'In die Merkliste',
     toNote: 'Als Notiz',
     toTodo: 'Als ToDo',
@@ -2066,6 +2066,8 @@ export const t = {
       nextDue: 'Nächste Fälligkeit',
     },
     palette: {
+      enableModule: (name: string) => `Modul „${name}“ einschalten`,
+      moduleEnabled: 'Eingeschaltet. Stelle deine Frage bitte noch einmal.',
       askModel: 'Mit KI fragen',
       thinking: 'Ich überlege …',
       back: 'Zurück',
@@ -2107,7 +2109,7 @@ export const t = {
         'Die eingestellten Limits aller KI-Anbieter sind erreicht (Einstellungen → KI-Assistent).',
       exhausted:
         'Kein KI-Anbieter konnte antworten (Limit, Fehler oder nicht erreichbar). Details in den Einstellungen → KI-Assistent.',
-      'inactive-module': 'Dafür muss das passende Modul aktiviert sein (Modul-Bibliothek).',
+      'inactive-module': 'Dafür muss das passende Modul eingeschaltet sein.',
       'invalid-entry':
         'Die Angaben reichen für einen Eintrag nicht aus. Nenne z. B. Titel und Datum genauer.',
       'invalid-answer': 'Die Antwort des Modells war nicht brauchbar. Bitte anders formulieren.',
@@ -2302,8 +2304,7 @@ export const t = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
-    shoppingOff:
-      'Die Einkaufsliste ist ausgeschaltet: Schalte das Modul „Listen“ in der Modul-Bibliothek ein.',
+    shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
     expiresBody: (date: string) => `Haltbar bis ${date}`,
