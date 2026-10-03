@@ -16,7 +16,6 @@ import {
   PageHeader,
   SelectField,
   Segmented,
-  Tabs,
   TextField,
   Toolbar,
 } from '@/ui';
@@ -75,7 +74,20 @@ export default function BookmarksPage() {
 
   return (
     <>
-      <PageHeader title={t.bookmarks.title}>
+      <PageHeader
+        title={t.bookmarks.title}
+        views={
+          <Segmented
+            label={t.bookmarks.tabsLabel}
+            value={linksView ? 'links' : 'list'}
+            options={[
+              { value: 'list', label: t.bookmarks.tabList },
+              { value: 'links', label: t.bookmarks.tabLinks },
+            ]}
+            onChange={(id) => setView(id === 'links' ? 'links' : 'list')}
+          />
+        }
+      >
         <Button
           variant="primary"
           onClick={() => setTarget(linksView ? { draft: true, kind: 'link' } : { draft: true })}
@@ -84,15 +96,6 @@ export default function BookmarksPage() {
           {linksView ? t.bookmarks.addLink : t.bookmarks.add}
         </Button>
       </PageHeader>
-      <Tabs
-        label={t.bookmarks.tabsLabel}
-        onSelect={(id) => setView(id === 'links' ? 'links' : 'list')}
-        items={[
-          { id: 'list', label: t.bookmarks.tabList, active: !linksView },
-          { id: 'links', label: t.bookmarks.tabLinks, active: linksView },
-        ]}
-      />
-
       {linksView ? null : (
         <Toolbar>
           <Segmented

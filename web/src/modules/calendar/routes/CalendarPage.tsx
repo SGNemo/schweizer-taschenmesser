@@ -6,7 +6,7 @@ import { useWeekStart } from '@/core/settings/core';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, Segmented, SplitView, Tabs, useSplitView } from '@/ui';
+import { Button, Icon, IconButton, PageHeader, Segmented, SplitView, useSplitView } from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
@@ -92,16 +92,19 @@ export default function CalendarPage() {
   if (tab === 'reminders') {
     return (
       <>
-        <div className={styles.header}>
-          <h1>{t.calendar.title}</h1>
-        </div>
-        <Tabs
-          label={t.calendar.tabsLabel}
-          items={[
-            { id: 'calendar', label: t.calendar.tabCalendar, active: false },
-            { id: 'reminders', label: t.calendar.tabReminders, active: true },
-          ]}
-          onSelect={pickTab}
+        <PageHeader
+          title={t.calendar.title}
+          views={
+            <Segmented
+              label={t.calendar.tabsLabel}
+              value={'reminders'}
+              options={[
+                { value: 'calendar', label: t.calendar.tabCalendar },
+                { value: 'reminders', label: t.calendar.tabReminders },
+              ]}
+              onChange={pickTab}
+            />
+          }
         />
         <RemindersTab
           newRequested={params.get('new') === '1'}
@@ -117,23 +120,26 @@ export default function CalendarPage() {
 
   return (
     <>
-      <div className={styles.header}>
-        <h1>{t.calendar.title}</h1>
+      <PageHeader
+        title={t.calendar.title}
+        views={
+          <Segmented
+            label={t.calendar.tabsLabel}
+            value={'calendar'}
+            options={[
+              { value: 'calendar', label: t.calendar.tabCalendar },
+              { value: 'reminders', label: t.calendar.tabReminders },
+            ]}
+            onChange={pickTab}
+          />
+        }
+      >
         {items && list.length === 0 ? <StartDataButton moduleId="calendar" /> : null}
         <Button variant="primary" onClick={() => setTarget({ draft: { startDate: date } })}>
           <Icon name="plus" size={18} />
           {t.calendar.newEvent}
         </Button>
-      </div>
-
-      <Tabs
-        label={t.calendar.tabsLabel}
-        items={[
-          { id: 'calendar', label: t.calendar.tabCalendar, active: true },
-          { id: 'reminders', label: t.calendar.tabReminders, active: false },
-        ]}
-        onSelect={pickTab}
-      />
+      </PageHeader>
 
       <div className={styles.toolbar}>
         <div className={styles.navBtns}>
@@ -143,7 +149,9 @@ export default function CalendarPage() {
           >
             <span aria-hidden="true">‹</span>
           </IconButton>
-          <Button onClick={() => go({ date: today() })}>{t.calendar.today}</Button>
+          <Button variant="ghost" onClick={() => go({ date: today() })}>
+            {t.calendar.today}
+          </Button>
           <IconButton
             label={t.calendar.next}
             onClick={() => go({ date: shiftDate(view, date, 1) })}

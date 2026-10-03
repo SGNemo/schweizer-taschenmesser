@@ -100,6 +100,7 @@ export const t = {
   },
   ui: {
     selectRow: 'Auswählen',
+    searchPlaceholder: 'Suchen …',
     retry: 'Erneut versuchen',
     loading: 'Wird geladen',
     discardTitle: 'Entwurf verwerfen?',
@@ -193,6 +194,7 @@ export const t = {
       title: 'Name und Region',
       name: 'Dein Name',
       nameHint: 'Wird in der Begrüßung auf der Übersicht gezeigt.',
+      namePlaceholder: 'Vorname',
       weekStart: 'Woche beginnt am',
       weekStartHint: 'Gilt für Kalender und Wochenansichten.',
       weekStartOptions: { mon: 'Montag', sun: 'Sonntag' },
