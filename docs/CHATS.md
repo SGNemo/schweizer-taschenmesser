@@ -17,7 +17,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Visual polish + manual reminders | `fix/visual-polish-notifications` | `ui/`, `home/`, `layout/`, `core/notifications`, settings | phase 2 (grid, text, head, controls, scale) | – | 2026-10-03 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
