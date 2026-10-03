@@ -3,11 +3,13 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import type { Stored } from '@/core/db/types';
+import { useUiStore } from '@/stores/ui';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
   Button,
   Checkbox,
+  Dialog,
   EmptyState,
   Icon,
   IconButton,
@@ -33,6 +35,7 @@ import {
   resetList,
 } from '../repo';
 import type { Item } from '../schema';
+import { createRoutine, ROUTINES } from '../templates';
 import styles from './lists.module.css';
 
 function toggle(item: Stored<Item>, done: boolean) {
@@ -47,6 +50,8 @@ export default function ListsPage() {
   const [text, setText] = useState('');
   const [editingItem, setEditingItem] = useState<Stored<Item> | null>(null);
   const [listTarget, setListTarget] = useState<ListTarget>(null);
+  const [templates, setTemplates] = useState(false);
+  const toast = useUiStore((x) => x.toast);
   const form = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -99,6 +104,7 @@ export default function ListsPage() {
   return (
     <>
       <PageHeader title={t.lists.title}>
+        <Button onClick={() => setTemplates(true)}>{t.lists.routines.title}</Button>
         <Button variant="primary" onClick={() => setListTarget('new')}>
           <Icon name="plus" size={18} />
           {t.lists.newList}
@@ -237,6 +243,26 @@ export default function ListsPage() {
           </ItemList>
         </>
       ) : null}
+      <Dialog open={templates} onClose={() => setTemplates(false)} title={t.lists.routines.title}>
+        <p>{t.lists.routines.hint}</p>
+        <ul className={styles.templates}>
+          {ROUTINES.map((id) => (
+            <li key={id}>
+              <Button
+                onClick={() => {
+                  void createRoutine(id).then((listId) => {
+                    setTemplates(false);
+                    setParams({ list: listId }, { replace: true });
+                    toast(t.lists.routines.created);
+                  });
+                }}
+              >
+                {t.lists.routines[id].name}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </Dialog>
       <ItemEditor item={editingItem} onClose={() => setEditingItem(null)} />
       <ListEditor
         target={listTarget}

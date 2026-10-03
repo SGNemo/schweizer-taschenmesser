@@ -54,6 +54,12 @@ export const focusSettingsSchema = z.object({
   captureNoQuestion: z.boolean(),
   /** The search remembers recent searches and opened results (device-local). */
   searchHistory: z.boolean(),
+  /** Recurring ToDos show "n in Folge" (with a rest day, never a loss). */
+  streaks: z.boolean(),
+  /** A positive look at the week in the "Jetzt dran" widget. */
+  weekReview: z.boolean(),
+  /** In the evening: "Tag abschließen" moves what is left to tomorrow. */
+  eveningWrapUp: z.boolean(),
 });
 export type FocusSettings = z.infer<typeof focusSettingsSchema>;
 
@@ -79,6 +85,9 @@ export const DEFAULT_FOCUS: FocusSettings = {
   resumeCard: true,
   captureNoQuestion: true,
   searchHistory: true,
+  streaks: true,
+  weekReview: true,
+  eveningWrapUp: true,
 };
 
 /** Live settings; the defaults while loading, so a widget never waits on them. */

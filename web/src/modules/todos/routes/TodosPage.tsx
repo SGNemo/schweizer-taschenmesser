@@ -14,6 +14,7 @@ import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { dueTone, groupTasks, isActionable } from '../logic';
 import { replan, waitingTasks, type PickTask } from '../next';
+import { seriesKey, streaksOf, type Streak } from '../progress';
 import { ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
@@ -35,13 +36,27 @@ interface RowProps {
   sub?: boolean;
   /** Calm wording: an old date is a plain date, not "Überfällig" in red. */
   calm?: boolean;
+  /** "n in Folge" of the task's series (shown on the open instance only). */
+  streaks?: Map<string, Streak>;
   onToggle: (task: StoredTask, done: boolean) => void;
   onOpen: (task: StoredTask) => void;
 }
 
-function TaskRow({ task, subs, allSubs, day, showList, sub, calm, onToggle, onOpen }: RowProps) {
+function TaskRow({
+  task,
+  subs,
+  allSubs,
+  day,
+  showList,
+  sub,
+  calm,
+  streaks,
+  onToggle,
+  onOpen,
+}: RowProps) {
   const tone = dueTone(task.dueDate, task.done, day);
   const waiting = calm && tone === 'overdue';
+  const streak = !task.done && task.recurrence ? streaks?.get(seriesKey(task.id)) : undefined;
   return (
     <li>
       <div className={`${styles.row} ${sub ? styles.sub : ''} ${task.done ? styles.done : ''}`}>
@@ -80,6 +95,13 @@ function TaskRow({ task, subs, allSubs, day, showList, sub, calm, onToggle, onOp
               </span>
             ) : null}
             {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
+            {streak ? (
+              <span data-testid="streak">
+                {streak.rest > 0
+                  ? t.focus.progress.streakRest(streak.streak)
+                  : t.focus.progress.streak(streak.streak)}
+              </span>
+            ) : null}
             {allSubs.length > 0 ? (
               <span>{t.todos.progress(allSubs.filter((x) => x.done).length, allSubs.length)}</span>
             ) : null}
@@ -97,6 +119,7 @@ function TaskRow({ task, subs, allSubs, day, showList, sub, calm, onToggle, onOp
               day={day}
               sub
               calm={calm}
+              streaks={streaks}
               onToggle={onToggle}
               onOpen={onOpen}
             />
@@ -187,6 +210,10 @@ export default function TodosPage() {
   }
 
   const day = today();
+  const streaks = useMemo(
+    () => (focus.streaks && tasks ? streaksOf(tasks, day) : undefined),
+    [focus.streaks, tasks, day],
+  );
   const waiting = useMemo(
     () => (focus.calmAttention ? waitingTasks((tasks ?? []) as unknown as PickTask[], day) : []),
     [focus.calmAttention, tasks, day],
@@ -306,6 +333,7 @@ export default function TodosPage() {
                   selected === ALL || selected === SOMEDAY ? listName(task.listId) : undefined
                 }
                 calm={focus.calmAttention}
+                streaks={streaks}
                 onToggle={toggle}
                 onOpen={setEditing}
               />

@@ -173,6 +173,7 @@ F8. *„Wenn ich am PC bin“:* auf dem Handy „Später → Wenn ich am PC bin�
 F9. *„Woran war ich?“:* App 30 Minuten verlassen, zurückkommen: erscheint die Karte auf der Übersicht, führt „Weiter dort“ an die richtige Stelle? ☐
 F10. *Schnellerfassung ohne Rückfrage in echten Situationen:* unterwegs ein paar vage Sätze tippen; landen sie im Eingang, geht „Eingang sortieren“ abends zügig? Ctrl+Enter am PC fürs ganze Formular. ☐
 F11. *Darstellung am Handy und PC:* „Sehr groß“, „Luftig“, „Bewegung: Weniger“ und „Nur das Wichtigste“ ausprobieren; bricht irgendwo das Layout, ist die ruhige Übersicht ruhig genug? ☐
+F12. *Fortschritt im Alltag:* eine tägliche Wiederholung anlegen und ein paar Tage abhaken: erscheint „n in Folge“, bleibt ein ausgelassener Tag ohne Drama („mit Pausentag“)? Abends „Tag abschließen“ und der Wochenrückblick: wirken sie motivierend statt drängend? Eine Vorlage („Aus Vorlage“ in Listen) einmal wirklich benutzen. ☐
 
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 

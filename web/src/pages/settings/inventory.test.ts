@@ -47,6 +47,9 @@ const CORE_KEYS = {
     resumeCard: true,
     captureNoQuestion: true,
     searchHistory: true,
+    streaks: true,
+    weekReview: true,
+    eveningWrapUp: true,
   },
   '_settings scope reminders': { snoozed: [] },
   _meta: {
