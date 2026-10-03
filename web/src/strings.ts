@@ -732,6 +732,51 @@ export const t = {
       focusSoundHint: 'Der Hinweis erscheint immer. Der Ton ist zusätzlich und standardmäßig aus.',
       focusIndicator: 'Fokus-Anzeige oben',
       focusIndicatorHint: 'Zeigt oben in der Leiste, dass eine Fokus-Runde läuft.',
+      resumeCard: 'Woran war ich?',
+      resumeCardHint:
+        'Nach einer längeren Pause zeigt die Übersicht, wo du zuletzt warst. Mit einem Tipp geht es dort weiter.',
+    },
+    reminders: {
+      title: 'Ruhige Erinnerungen',
+      description:
+        'Weniger Lärm, mehr Wirkung. Ausdrücklich gesetzte Erinnerungen bleiben immer so, wie du sie gesetzt hast.',
+      keywords: ['Ruhezeit', 'Limit', 'Staffel', 'Später', 'Nachfrage', 'Morgens', 'Übersicht'],
+      inAppPrompt: 'Erinnerung in der App zeigen',
+      inAppPromptHint:
+        'Ist die App offen, erscheint die Erinnerung als Karte mit „Erledigt“ und „Später“ statt als Popup.',
+      quietHours: 'Ruhezeit',
+      quietHoursHint:
+        'In dieser Zeit kommen keine automatischen Zusätze (gestaffelte Hinweise, Nachfrage, Morgen-Übersicht). Sie warten bis zum Ende der Ruhezeit.',
+      quietTimes: 'Ruhezeit von … bis …',
+      from: 'Von',
+      to: 'Bis',
+      maxPerHour: 'Höchstens pro Stunde',
+      maxPerHourHint: 'Alles darüber wird zu einem einzigen Hinweis zusammengefasst.',
+      noLimit: 'Aus',
+      staggered: 'Gestaffelte Erinnerung',
+      staggeredHint:
+        'Zusätzliche Hinweise vor einem Termin, zum Beispiel einen Tag und eine Stunde vorher.',
+      stages: 'Zusätzlich vorher',
+      stageLabel: (m: number) =>
+        m >= 1440
+          ? `${Math.round(m / 1440)} Tag`
+          : m >= 60
+            ? `${Math.round(m / 60)} Std`
+            : `${m} Min`,
+      followUp: 'Sanfte Nachfrage',
+      followUpHint:
+        'Eine einzige Nachfrage nach 30 Minuten, wenn eine Erinnerung nicht mit „Erledigt“ beantwortet wurde.',
+      todoDigest: 'ToDos am Morgen',
+      todoDigestHint:
+        'Ein Hinweis pro Tag, der die ToDos für heute nennt. Keine Einzelhinweise je Aufgabe.',
+      digestTime: 'Uhrzeit der Übersicht',
+    },
+    resume: {
+      title: 'Woran war ich?',
+      last: (where: string) => `Zuletzt: ${where}`,
+      focusRunning: (title: string) => `Fokus läuft: ${title}`,
+      back: 'Weiter dort',
+      dismiss: 'Nein, danke',
     },
     next: {
       title: 'Jetzt dran',

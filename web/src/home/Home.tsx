@@ -44,6 +44,7 @@ import {
 } from '@/ui';
 import { widgetsOf } from './AutoWidget';
 import { AttentionStrip } from './AttentionStrip';
+import { ResumeCard } from './ResumeCard';
 
 import styles from './Home.module.css';
 import {
@@ -166,6 +167,7 @@ export function Home() {
 
       <WelcomeCard />
       <ChecklistCard />
+      {!editing ? <ResumeCard /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (

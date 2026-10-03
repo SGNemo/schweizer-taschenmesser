@@ -27,10 +27,11 @@ Rules for every feature that helps with focus, starting, remembering or time. No
 - Empty states and completions are warm and brief ("Alles erledigt. Zeit für etwas Schönes.").
 - Texts live in `web/src/strings.ts`, are i18n-ready (functions for plurals), one sentence where possible.
 
-## Notification limits (for package 2, binding for any new reminder)
-- Default: at most 3 notifications per hour and no notifications in quiet hours (default 22:00–07:00, configurable).
-- Staggered leads are optional (default one lead); one gentle follow-up at most, never a chain.
-- Snooze always offers sensible options (10 min, 1 h, this evening, tomorrow morning).
+## Notification limits (binding for any new reminder)
+- Default: at most 3 notifications per hour (the rest is folded into one summary) and quiet hours 22:00–07:00 for automatic extras; both configurable, both in `core/notifications/policy.ts`. Anything the user set explicitly (an event's own lead, "Später") is never moved or dropped.
+- A new kind of automatic notification is `soft: true`, goes through `collectDue`, has a switch in "Ruhige Erinnerungen", and defaults to off unless it replaces something noisier (the morning digest replaces per-task notifications).
+- Staggered leads are optional (default one lead); one gentle follow-up at most, never a chain, stopped by "Erledigt".
+- Snooze always offers sensible options (10 min, 1 h, this evening, tomorrow morning, "wenn ich am PC bin").
 - No dark patterns: no fake urgency, no badges that cannot be cleared, no re-asking after "no".
 - Everything local: reminders use the existing local scheduling (OS scheduler / Web Push of the user's own server); no tracking.
 

@@ -52,6 +52,7 @@ export function FocusSection() {
       </SettingRow>
       {toggle('focusSound', 'focusSound', s.focusSound, s.focusSoundHint)}
       {toggle('focusIndicator', 'focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
+      {toggle('resumeCard', 'resumeCard', s.resumeCard, s.resumeCardHint)}
     </SettingsGroup>
   );
 }

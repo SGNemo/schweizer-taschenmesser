@@ -131,3 +131,8 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+
+.timePair {
+  display: flex;
+  gap: var(--space-3);
+}
