@@ -68,6 +68,8 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 2026-10-01 **Logo = clownfish C12 (replaces "Welle"), wordmark Q2, README banner with NEMO backronym** – single source `design/icon/final.params.mjs`; `npm run export` writes brand SVGs, `Logo.tsx`, splash; rasters via `tauri icon` + `gen:icons`. Logo orange `#E0550F`.
 - 2026-09-30 **Android icons copied into the generated project after `tauri android init`;** notifications use monochrome `ic_notification`.
 - 2026-10 **Focus aids: one switch per aid, calm wording, no pressure** – [design/FOCUS-GUIDELINES.md](design/FOCUS-GUIDELINES.md); also doc budgets raised: [decisions/focus.md](decisions/focus.md).
+- 2026-10-03 **Reminders are pulled from a notification centre, the in-app card is opt-in (default off)** – an unprompted banner interrupts; "open" is derived (fired in the last 24 h minus answered), so no reminder schema change. Detail: [decisions/focus.md](decisions/focus.md).
+- 2026-10-03 **Fluid root size 16 → 20 px on large monitors; grid heights, truncation and page-head sub-views are fixed in the base components** – spec § 7a. Detail: [decisions/ui-components.md](decisions/ui-components.md).
 
 ## Browser extension & vault bridge → [decisions/features.md](decisions/features.md)
 - 2026-10 **The desktop app is the only source of vault data; the Brave extension has no vault and persists nothing** – one place to lock, back up and sync; the extension only asks live.
