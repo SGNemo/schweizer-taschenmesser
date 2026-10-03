@@ -1,5 +1,5 @@
 .shell {
-  --rail-w: 76px;
+  --rail-w: 4.75rem; /* 76 px at 16 px root */
   min-height: 100dvh;
 }
 .skip {
