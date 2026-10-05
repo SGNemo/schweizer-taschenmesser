@@ -59,6 +59,8 @@ describe('notification centre', () => {
 
   it('"Nächste Erinnerung" shows the earliest open one, "Erledigt" answers it', async () => {
     draw();
+    // Both reminders must be loaded before "next" picks the earliest one.
+    await screen.findByRole('button', { name: 'Erinnerungen, 2 offen' });
     fireEvent.click(await screen.findByTestId('notification-bell'));
     fireEvent.click(await screen.findByRole('button', { name: 'Nächste Erinnerung' }));
     const card = await screen.findByTestId('center-card');
