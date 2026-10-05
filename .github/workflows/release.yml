@@ -192,10 +192,22 @@ jobs:
         with:
           workspaces: web/src-tauri
       - run: npm ci
+      # Built-in local model (llama.cpp, Vulkan + CPU in one exe). cmake and LLVM (bindgen) are on the
+      # runner image; the Vulkan SDK (headers, loader import library, glslc) comes from Chocolatey, whose
+      # package checks the installer's checksum. The weights are never part of the build (downloaded by
+      # the user after consent, checksum-verified). See docs/decisions/local-model.md.
+      - name: Vulkan SDK (for the local model's GPU backend)
+        shell: pwsh
+        run: |
+          choco install vulkan-sdk -y --no-progress
+          $sdk = (Get-ChildItem 'C:\VulkanSDK' -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          if (-not $sdk) { throw 'Vulkan SDK not found after install' }
+          "VULKAN_SDK=$sdk" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "$sdk\Bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       # One self-contained executable with the frontend embedded – no NSIS/MSI installer.
       - name: Build
-        run: npx tauri build --no-bundle
+        run: npx tauri build --no-bundle -- --features local-llm-vulkan
 
       - name: Sign with the updater key
         env:
