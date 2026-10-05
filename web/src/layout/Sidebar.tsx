@@ -4,6 +4,7 @@ import { areaOfPath, type NavArea, type NavItem, type NavTree } from '@/core/mod
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Icon, Wordmark } from '@/ui';
+import { SupporterBadge } from './SupporterBadge';
 import styles from './Sidebar.module.css';
 
 interface Props {
@@ -185,6 +186,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
   return (
     <>
       {brand}
+      <SupporterBadge placement="sidebar" />
       <nav aria-label={t.nav.main} className={styles.nav}>
         <ul className={styles.list}>
           <li className={styles.row}>
