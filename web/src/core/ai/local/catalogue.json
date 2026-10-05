@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "note": "Sizes from the Hugging Face file listing (2026-10-05). `sha256: null` = not pinned yet: the download stays locked until `node scripts/ai-model-catalogue.mjs` (needs network access to huggingface.co) has filled `sha256` and `revision`. Licences: those of the base models, read from their Hugging Face metadata.",
+  "models": [
+    {
+      "id": "qwen3.5-4b",
+      "label": "Qwen3.5 4B",
+      "profile": "standard",
+      "repo": "unsloth/Qwen3.5-4B-GGUF",
+      "file": "Qwen3.5-4B-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 2740937888,
+      "sha256": null,
+      "template": "chatml-nothink",
+      "baseModel": "Qwen/Qwen3.5-4B",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 4
+    },
+    {
+      "id": "qwen3-4b",
+      "label": "Qwen3 4B",
+      "profile": "standard",
+      "repo": "Qwen/Qwen3-4B-GGUF",
+      "file": "Qwen3-4B-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 2497280256,
+      "sha256": null,
+      "template": "chatml-nothink",
+      "baseModel": "Qwen/Qwen3-4B",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 4
+    },
+    {
+      "id": "phi-4-mini",
+      "label": "Phi-4 mini (3,8 B)",
+      "profile": "standard",
+      "repo": "bartowski/microsoft_Phi-4-mini-instruct-GGUF",
+      "file": "microsoft_Phi-4-mini-instruct-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 2491874688,
+      "sha256": null,
+      "template": "phi",
+      "baseModel": "microsoft/Phi-4-mini-instruct",
+      "license": {
+        "id": "mit",
+        "name": "MIT License",
+        "url": "https://opensource.org/license/mit"
+      },
+      "ramGb": 4
+    },
+    {
+      "id": "ministral-3-3b",
+      "label": "Ministral 3 3B",
+      "profile": "standard",
+      "repo": "unsloth/Ministral-3-3B-Instruct-2512-GGUF",
+      "file": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 2146497824,
+      "sha256": null,
+      "template": "mistral",
+      "baseModel": "mistralai/Ministral-3-3B-Instruct-2512",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 3
+    },
+    {
+      "id": "smollm3-3b",
+      "label": "SmolLM3 3B",
+      "profile": "standard",
+      "repo": "ggml-org/SmolLM3-3B-GGUF",
+      "file": "SmolLM3-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 1915305312,
+      "sha256": null,
+      "template": "chatml-nothink",
+      "baseModel": "HuggingFaceTB/SmolLM3-3B",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 3
+    },
+    {
+      "id": "gemma-4-e4b",
+      "label": "Gemma 4 E4B",
+      "profile": "standard",
+      "repo": "unsloth/gemma-4-E4B-it-GGUF",
+      "file": "gemma-4-E4B-it-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 4977171584,
+      "sha256": null,
+      "template": "gemma",
+      "baseModel": "google/gemma-4-E4B-it",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 6
+    },
+    {
+      "id": "qwen3.5-2b",
+      "label": "Qwen3.5 2B",
+      "profile": "light",
+      "repo": "unsloth/Qwen3.5-2B-GGUF",
+      "file": "Qwen3.5-2B-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 1280835840,
+      "sha256": null,
+      "template": "chatml-nothink",
+      "baseModel": "Qwen/Qwen3.5-2B",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 2
+    },
+    {
+      "id": "qwen3.5-0.8b",
+      "label": "Qwen3.5 0.8B",
+      "profile": "light",
+      "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+      "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+      "revision": null,
+      "bytes": 532517120,
+      "sha256": null,
+      "template": "chatml-nothink",
+      "baseModel": "Qwen/Qwen3.5-0.8B",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 1
+    },
+    {
+      "id": "qwen3-1.7b",
+      "label": "Qwen3 1.7B (Q8)",
+      "profile": "light",
+      "repo": "Qwen/Qwen3-1.7B-GGUF",
+      "file": "Qwen3-1.7B-Q8_0.gguf",
+      "revision": null,
+      "bytes": 1834426016,
+      "sha256": null,
+      "template": "chatml-nothink",
+      "baseModel": "Qwen/Qwen3-1.7B",
+      "license": {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "ramGb": 3
+    }
+  ]
+}

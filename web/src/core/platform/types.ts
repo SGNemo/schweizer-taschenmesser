@@ -2,6 +2,7 @@ import type { NotificationService } from '@/core/notifications/service';
 import type { SecretStore } from '@/core/secrets/types';
 import type { UpdateService } from '@/core/update/types';
 import type { DiskService } from './disk';
+import type { LocalModelService } from './localModel';
 import type { SystemService } from './system';
 
 /**
@@ -210,6 +211,8 @@ export interface PlatformService {
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */
   system: SystemService;
+  /** The built-in local language model (desktop only; stage 1 of the AI entry pipeline). */
+  localModel: LocalModelService;
   desktop: DesktopService;
   share: ShareService;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */

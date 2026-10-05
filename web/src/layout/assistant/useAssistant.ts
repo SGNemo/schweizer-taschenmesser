@@ -7,7 +7,9 @@ import { db } from '@/core/db/db';
 import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
-import { loadAiWriteSettings } from '@/core/ai/write/settings';
+import { createLocalStage } from '@/core/ai/local/stage';
+import { localModelActive, localStageReady, useLocalModel } from '@/core/ai/local/state';
+import { cloudAllowed, loadAiWriteSettings } from '@/core/ai/write/settings';
 import { today } from '@/core/time/dates';
 
 export type AnswerState =
@@ -32,6 +34,8 @@ export function useAssistant() {
         loadAiConfig(),
         loadModuleStates(),
         loadAiWriteSettings(),
+        // What the shell has decides whether stage 1 is asked at all.
+        useLocalModel.getState().refresh(),
       ]);
       const response = await ask(question, {
         manifests: activeManifests(states),
@@ -45,8 +49,9 @@ export function useAssistant() {
         write: {
           enabled: writeSettings.enabled,
           modulesOff: writeSettings.modulesOff,
-          cloud: writeSettings.cloud,
+          cloud: cloudAllowed(writeSettings, localModelActive()),
           askMissing: writeSettings.askMissing,
+          local: localStageReady() ? createLocalStage() : undefined,
         },
       });
       if (!ctl.signal.aborted) setState({ phase: 'done', question, response });

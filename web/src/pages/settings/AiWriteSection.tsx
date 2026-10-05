@@ -1,4 +1,6 @@
-import { useAiWriteSettings } from '@/core/ai/write/settings';
+import { useLocalPrefs } from '@/core/ai/local/prefs';
+import { localModelActive } from '@/core/ai/local/state';
+import { cloudAllowed, useAiWriteSettings } from '@/core/ai/write/settings';
 import { useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { t } from '@/strings';
@@ -7,6 +9,7 @@ import { SettingRow, SettingsGroup, Switch } from '@/ui';
 /** Settings → KI → "Eintragen per KI": global switch, cloud fallback, asking, per-module switches. */
 export function AiWriteSection() {
   const [v, patch] = useAiWriteSettings();
+  useLocalPrefs(); // the default of the cloud switch follows the local model choice
   const states = useModuleStates();
   const s = t.ai.writeSettings;
   if (!v) return null;
@@ -38,7 +41,7 @@ export function AiWriteSection() {
             <Switch
               label={s.cloud}
               labelHidden
-              checked={v.cloud}
+              checked={cloudAllowed(v, localModelActive())}
               onChange={(cloud) => void patch({ cloud })}
             />
           </SettingRow>
