@@ -30,6 +30,7 @@ export function cleanEnv(env: Env): Env {
     const value = out[key] as unknown;
     if (typeof value === 'string') out[key] = value.trim();
   }
+  if (typeof out.REPLY_TO === 'string') out.REPLY_TO = out.REPLY_TO.trim();
   return out;
 }
 

@@ -62,7 +62,12 @@ export async function processMailBatch(batch: BatchLike, env: Env, deps: Deps): 
   for (const msg of batch.messages) {
     const job = msg.body;
     const txp = job.txKey.slice(0, 8);
-    const result = await sendMail(env, deps, job.to, renderCodeMail(job.code, job.tier));
+    const result = await sendMail(
+      env,
+      deps,
+      job.to,
+      renderCodeMail(job.code, job.tier, !!env.REPLY_TO),
+    );
 
     if (result === 'ok') {
       await markStatus(env, job.txKey, 'sent');

@@ -17,7 +17,7 @@ const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** German first, English below. Friendly, never pushy; says plainly that everything stays free. */
-export function renderCodeMail(code: string, tier: SupporterTier): RenderedMail {
+export function renderCodeMail(code: string, tier: SupporterTier, canReply = false): RenderedMail {
   const de = [
     'Hallo und vielen Dank für deine Unterstützung von Nemo!',
     `Hier ist dein Supporter-Code (Stufe: ${TIER_DE[tier]}):`,
@@ -34,8 +34,10 @@ export function renderCodeMail(code: string, tier: SupporterTier): RenderedMail 
     'To enter it: open Nemo → Settings → About Nemo → Supporter → paste the code → "Code übernehmen". It is checked on your device only and spreads to your other devices through your sync.';
   const enFree =
     'Everything in Nemo stays free for everyone. The code only unlocks cosmetic extras (thank-you badge, colour themes). Your support is voluntary and there is nothing more to do.';
-  const foot =
-    'Fragen oder keine Mail erhalten? Antworte auf diese Mail oder schreib an den Kontakt auf der Spendenseite. / Questions? Reply to this mail or use the contact on the donation page.';
+  // Only promise "reply to this mail" when a reply address exists; otherwise point to the donation page.
+  const foot = canReply
+    ? 'Fragen oder keine Mail erhalten? Antworte einfach auf diese Mail. / Questions? Just reply to this mail.'
+    : 'Fragen oder keine Mail erhalten? Nutze den Kontakt auf der Spendenseite. / Questions? Use the contact on the donation page.';
 
   const text = [
     ...de,
@@ -90,6 +92,7 @@ export async function sendMail(
       body: JSON.stringify({
         from: env.MAIL_FROM,
         to: [to],
+        ...(env.REPLY_TO ? { reply_to: env.REPLY_TO } : {}),
         subject: mail.subject,
         text: mail.text,
         html: mail.html,
