@@ -14,6 +14,7 @@ import {
   TEST_SECRET_KEY,
 } from '../../../../packages/supporter-codes/test/fixtures/test-keypair';
 import { E2E_TEST_KEY_ID, E2E_TEST_PUBLIC_KEY } from './keys';
+import { E2E_CODE_KAFFEE, E2E_CODE_KUCHEN_ADA } from '../../../e2e/supporterCodes';
 
 const toHex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
 const signed = (tier: 'kaffee' | 'kuchen' | 'developer', name = '') =>
@@ -47,6 +48,22 @@ describe('embedded keys', () => {
       generateKeyPair().secretKey,
     );
     expect(acceptCode(foreign)).toBeNull();
+  });
+});
+
+describe('e2e fixtures', () => {
+  it('the fixed E2E codes still verify against the test key and say what the specs expect', async () => {
+    const m = await withTestKey();
+    expect(m.checkCode(E2E_CODE_KAFFEE)).toEqual({
+      tier: 'kaffee',
+      name: '',
+      issued: '2026-10-05',
+    });
+    expect(m.checkCode(E2E_CODE_KUCHEN_ADA)).toEqual({
+      tier: 'kuchen',
+      name: 'Ada',
+      issued: '2026-10-05',
+    });
   });
 });
 

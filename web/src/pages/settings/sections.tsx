@@ -18,6 +18,7 @@ import {
 } from './AboutSections';
 import { AiSection } from './AiSection';
 import { AppearanceSection } from './AppearanceSection';
+import { SupporterSection } from './SupporterSection';
 import { BackupSection } from './BackupSection';
 import { CalmRemindersSection } from './CalmRemindersSection';
 import { ConnectorsSection } from './ConnectorsSection';
@@ -342,6 +343,22 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       { key: 'license', label: t.about.license },
     ],
     render: () => <AboutSection />,
+  },
+  {
+    id: 'supporter',
+    category: 'ueber',
+    order: 35,
+    title: t.supporter.section.title,
+    keywords: t.supporter.section.keywords,
+    fields: [
+      {
+        key: 'code',
+        label: t.supporter.section.codeLabel,
+        description: t.supporter.section.codeHint,
+      },
+      { key: 'badge', label: t.supporter.section.sidebarBadge },
+    ],
+    render: () => <SupporterSection />,
   },
   {
     id: 'about-updates',
