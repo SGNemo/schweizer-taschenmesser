@@ -54,6 +54,7 @@ export function makeEnv(over: Partial<Env> = {}) {
 export interface FetchCall {
   url: string;
   to: string[];
+  replyTo?: string;
   subject: string;
   text: string;
 }
@@ -65,8 +66,19 @@ export function makeDeps(statuses: number[] = [200]) {
   const deps: Deps = {
     now: () => new Date('2026-10-05T10:00:00Z'),
     fetch: vi.fn(async (url: string, init: RequestInit) => {
-      const body = JSON.parse(String(init.body)) as { to: string[]; subject: string; text: string };
-      calls.push({ url, to: body.to, subject: body.subject, text: body.text });
+      const body = JSON.parse(String(init.body)) as {
+        to: string[];
+        reply_to?: string;
+        subject: string;
+        text: string;
+      };
+      calls.push({
+        url,
+        to: body.to,
+        replyTo: body.reply_to,
+        subject: body.subject,
+        text: body.text,
+      });
       const status = statuses[Math.min(i++, statuses.length - 1)]!;
       return new Response('{}', { status });
     }),

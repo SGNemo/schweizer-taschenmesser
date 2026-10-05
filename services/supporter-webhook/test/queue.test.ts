@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { issueForDonation } from '../src/issue.ts';
 import { parsePayload } from '../src/kofi.ts';
 import { backoffSeconds, handleQueue } from '../src/queue.ts';
@@ -28,6 +28,38 @@ describe('mail queue consumer', () => {
     expect(calls[0]!.text).toMatch(/thank you so much/);
     expect(calls[0]!.text).toMatch(/kostenlos/);
     expect(JSON.parse(kv.data.get(`tx:${txKey}`)!).mail).toBe('sent');
+  });
+
+  it('sets Reply-To and offers replying only when a reply address is configured', async () => {
+    const withReply = await issued();
+    withReply.env.REPLY_TO = 'support@example.invalid';
+    const a = makeDeps([200]);
+    await handleQueue(batchOf(QUEUE_NAME, makeMessage(withReply.job)), withReply.env, a.deps);
+    expect(a.calls[0]!.replyTo).toBe('support@example.invalid');
+    expect(a.calls[0]!.text).toContain('Antworte einfach auf diese Mail');
+
+    const without = await issued();
+    const b = makeDeps([200]);
+    await handleQueue(batchOf(QUEUE_NAME, makeMessage(without.job)), without.env, b.deps);
+    expect(b.calls[0]!.replyTo).toBeUndefined();
+    expect(b.calls[0]!.text).not.toContain('Antworte einfach');
+    expect(b.calls[0]!.text).toContain('Kontakt auf der Spendenseite');
+  });
+
+  it("logs Resend's HTTP status for a failed send, and nothing personal", async () => {
+    const { env, job } = await issued();
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, 'log').mockImplementation((...a: unknown[]) => {
+      lines.push(a.map(String).join(' '));
+    });
+    const msg = makeMessage(job, 1);
+    await handleQueue(batchOf(QUEUE_NAME, msg), env, makeDeps([403, 403]).deps);
+    spy.mockRestore();
+    const all = lines.join('\n');
+    expect(all).toContain('"status":403');
+    expect(all).toContain('failed-notify-error');
+    expect(all).not.toContain(job.to);
+    expect(all).not.toContain(job.code);
   });
 
   it('retries a temporary failure with growing backoff', async () => {

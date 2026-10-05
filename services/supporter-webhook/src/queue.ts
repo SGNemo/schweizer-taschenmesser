@@ -40,7 +40,7 @@ async function markStatus(env: Env, txKey: string, mail: 'sent' | 'failed'): Pro
  */
 async function notifyOwner(env: Env, deps: Deps, job: MailJob): Promise<boolean> {
   const prefix = job.txKey.slice(0, 12);
-  const result = await sendMail(env, deps, env.OWNER_EMAIL, {
+  const { result, status } = await sendMail(env, deps, env.OWNER_EMAIL, {
     subject: 'Nemo supporter mail could not be delivered',
     text: [
       'A supporter code mail failed after all retries.',
@@ -54,6 +54,7 @@ async function notifyOwner(env: Env, deps: Deps, job: MailJob): Promise<boolean>
     ].join('\n'),
     html: `<p>A supporter code mail failed after all retries.</p><p>Transaction hash prefix: <code>${prefix}</code><br>Tier: ${job.tier}</p><p>Find it: <code>wrangler kv key list --binding KV --prefix tx:${prefix}</code></p><p>The donor address is in your Ko-fi dashboard.</p>`,
   });
+  log('owner-notice', { result: result === 'ok' ? 'sent' : 'failed', status });
   return result === 'ok';
 }
 
@@ -62,17 +63,22 @@ export async function processMailBatch(batch: BatchLike, env: Env, deps: Deps): 
   for (const msg of batch.messages) {
     const job = msg.body;
     const txp = job.txKey.slice(0, 8);
-    const result = await sendMail(env, deps, job.to, renderCodeMail(job.code, job.tier));
+    const { result, status } = await sendMail(
+      env,
+      deps,
+      job.to,
+      renderCodeMail(job.code, job.tier, !!env.REPLY_TO),
+    );
 
     if (result === 'ok') {
       await markStatus(env, job.txKey, 'sent');
-      log('mail', { txp, kind: job.kind, result: 'sent', attempt: msg.attempts });
+      log('mail', { txp, kind: job.kind, result: 'sent', attempt: msg.attempts, status });
       msg.ack();
       continue;
     }
 
     if (result === 'retry' && msg.attempts < MAX_ATTEMPTS) {
-      log('mail', { txp, kind: job.kind, result: 'retry', attempt: msg.attempts });
+      log('mail', { txp, kind: job.kind, result: 'retry', attempt: msg.attempts, status });
       msg.retry({ delaySeconds: backoffSeconds(msg.attempts) });
       continue;
     }
@@ -84,6 +90,7 @@ export async function processMailBatch(batch: BatchLike, env: Env, deps: Deps): 
       txp,
       kind: job.kind,
       result: notified ? 'failed-notified' : 'failed-notify-error',
+      status, // Resend's answer for the donor mail (e.g. 401 key, 403 domain, 422 address)
     });
     // If even the notice failed, let the queue retry/dead-letter it once more rather than lose it.
     if (notified) msg.ack();

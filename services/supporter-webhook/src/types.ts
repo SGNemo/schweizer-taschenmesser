@@ -37,6 +37,8 @@ export interface Env {
   // Plain variables (wrangler.toml):
   SIGNING_KEY_ID: string;
   MAIL_FROM: string;
+  /** Optional public address that receives replies to the donor mail (e.g. a Cloudflare Email Routing address). */
+  REPLY_TO?: string;
 }
 
 export interface Deps {

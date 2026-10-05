@@ -33,15 +33,16 @@ Tier (display only): **kaffee** below 10 € (comparable thresholds for other cu
 
 Set secrets only with `wrangler secret put <NAME>` – never in a file, never in CI, never in the app.
 
-| Name                      | Kind     | What                                                                                                                                       |
-| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `KOFI_VERIFICATION_TOKEN` | secret   | Token shown on Ko-fi's webhook page                                                                                                        |
-| `SUPPORTER_SIGNING_KEY`   | secret   | 64 hex characters, the Ed25519 **private** key                                                                                             |
-| `RESEND_API_KEY`          | secret   | Resend API key (sending access only)                                                                                                       |
-| `HASH_PEPPER`             | secret   | Long random string for the keyed hashes. **Do not change it later**: old records could no longer be found (duplicates would get new codes) |
-| `OWNER_EMAIL`             | secret   | Where failure notices go                                                                                                                   |
-| `SIGNING_KEY_ID`          | variable | Key id of the matching public key in the app (`wrangler.toml`)                                                                             |
-| `MAIL_FROM`               | variable | e.g. `Nemo <support@your-domain>`; the domain must be verified at Resend                                                                   |
+| Name                      | Kind               | What                                                                                                                                                                                                                 |
+| ------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `KOFI_VERIFICATION_TOKEN` | secret             | Token shown on Ko-fi's webhook page                                                                                                                                                                                  |
+| `SUPPORTER_SIGNING_KEY`   | secret             | 64 hex characters, the Ed25519 **private** key                                                                                                                                                                       |
+| `RESEND_API_KEY`          | secret             | Resend API key (sending access only)                                                                                                                                                                                 |
+| `HASH_PEPPER`             | secret             | Long random string for the keyed hashes. **Do not change it later**: old records could no longer be found (duplicates would get new codes)                                                                           |
+| `OWNER_EMAIL`             | secret             | Where failure notices go                                                                                                                                                                                             |
+| `SIGNING_KEY_ID`          | variable           | Key id of the matching public key in the app (`wrangler.toml`)                                                                                                                                                       |
+| `MAIL_FROM`               | variable           | e.g. `Nemo <support@your-domain>`; the domain must be verified at Resend                                                                                                                                             |
+| `REPLY_TO`                | variable, optional | Public address that receives donor replies, e.g. a Cloudflare Email Routing address (`support@your-domain`) forwarding to your mailbox. Empty = no Reply-To header, and the mail points to the donation page instead |
 
 ## Run it locally
 
@@ -64,7 +65,7 @@ Locally the mail step fails (dummy Resend key) – that is the expected "owner i
 3. **Login:** `cd services/supporter-webhook && npx wrangler login`.
 4. **KV:** `npx wrangler kv namespace create KV` → copy the printed `id` into `wrangler.toml` (`REPLACE_WITH_KV_NAMESPACE_ID`). That id is not a secret.
 5. **Queues:** `npx wrangler queues create supporter-mail` and `npx wrangler queues create supporter-mail-dlq`.
-6. **Variables:** in `wrangler.toml` set `SIGNING_KEY_ID` (the key id from step 2) and `MAIL_FROM`.
+6. **Variables:** in `wrangler.toml` set `SIGNING_KEY_ID` (the key id from step 2), `MAIL_FROM` and, if you want replies, `REPLY_TO`.
 7. **Check the bundle:** `npm run build` (dry run, uploads nothing).
 8. **Deploy:** `npx wrangler deploy`. Note the URL (`https://nemo-supporter-webhook.<subdomain>.workers.dev`). Until the secrets exist every request answers 500 `misconfigured` – that is intended. `curl https://…/health` → `{"ok":true}`.
 9. **Secrets** (each prompts for the value; the signing key is piped so it never lands in your shell history):
