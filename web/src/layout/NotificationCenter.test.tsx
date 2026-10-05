@@ -8,10 +8,16 @@ import { isAcked } from '@/core/notifications/ack';
 import { useCenterStore } from '@/core/notifications/centerStore';
 import { setNow } from '@/core/time/now';
 
-const due = vi.hoisted(() => ({ list: [] as DueNotification[] }));
+const due = vi.hoisted(() => ({
+  list: [] as DueNotification[],
+  /** Lets a test hold the next load back; resolved by default. */
+  gate: Promise.resolve() as Promise<void>,
+}));
 vi.mock('@/core/notifications/collect', () => ({
-  collectDue: async ({ from, to }: { from: number; to: number }) =>
-    due.list.filter((n) => n.at > from && n.at <= to),
+  collectDue: async ({ from, to }: { from: number; to: number }) => {
+    await due.gate;
+    return due.list.filter((n) => n.at > from && n.at <= to);
+  },
 }));
 vi.mock('@/core/modules/activation', () => ({ loadModuleStates: async () => [] }));
 vi.mock('@/core/modules/contributions', () => ({ activeManifests: () => [] }));
@@ -32,6 +38,7 @@ const draw = () =>
 
 beforeEach(async () => {
   setNow(() => NOW);
+  due.gate = Promise.resolve();
   due.list = [n('a', 'Paket abholen', NOW - 3 * HOUR), n('b', 'Müll rausbringen', NOW - HOUR)];
   useCenterStore.setState({ isOpen: false, mode: 'list', open: [] });
   await db.table('_settings').clear();
@@ -59,8 +66,6 @@ describe('notification centre', () => {
 
   it('"Nächste Erinnerung" shows the earliest open one, "Erledigt" answers it', async () => {
     draw();
-    // Both reminders must be loaded before "next" picks the earliest one.
-    await screen.findByRole('button', { name: 'Erinnerungen, 2 offen' });
     fireEvent.click(await screen.findByTestId('notification-bell'));
     fireEvent.click(await screen.findByRole('button', { name: 'Nächste Erinnerung' }));
     const card = await screen.findByTestId('center-card');
@@ -69,6 +74,23 @@ describe('notification centre', () => {
     await waitFor(async () => expect(await isAcked('a')).toBe(true));
     await screen.findByRole('button', { name: 'Erinnerungen, 1 offen' });
     expect(screen.queryByTestId('center-card')).toBeNull();
+  });
+
+  it('a choice made while the centre is still loading is not undone when the load finishes', async () => {
+    draw();
+    await screen.findByRole('button', { name: 'Erinnerungen, 2 offen' });
+    let release!: () => void;
+    due.gate = new Promise<void>((resolve) => (release = resolve));
+    fireEvent.click(screen.getByTestId('notification-bell')); // starts a load that waits at the gate
+    fireEvent.click(await screen.findByRole('button', { name: 'Nächste Erinnerung' }));
+    const card = await screen.findByTestId('center-card');
+    expect(within(card).getByText('Paket abholen')).toBeInTheDocument();
+    release();
+    // Let the held-back load finish (it used to reset the view to the list).
+    await new Promise((r) => setTimeout(r, 50));
+    expect(
+      within(screen.getByTestId('center-card')).getByText('Paket abholen'),
+    ).toBeInTheDocument();
   });
 
   it('"Zufällige Erinnerung" offers "Noch eine" and a different one', async () => {

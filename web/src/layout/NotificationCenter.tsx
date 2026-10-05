@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useCenterStore } from '@/core/notifications/centerStore';
 import {
@@ -42,20 +42,25 @@ export function NotificationCenter() {
   const [asRandom, setAsRandom] = useState(false);
   const [choosing, setChoosing] = useState(false);
   const [upcoming, setUpcoming] = useState<DueNotification | undefined>();
+  // A choice made while an opening is still loading must survive the end of that load.
+  const pickedWhileLoading = useRef(false);
 
   // Every opening reads the current state and shows what was asked for.
   useEffect(() => {
     if (!isOpen) return;
     let alive = true;
+    pickedWhileLoading.current = false;
     void (async () => {
       const list = await loadOpen();
       useCenterStore.getState().setOpenList(list);
       if (!alive) return;
-      setChoosing(false);
-      setAsRandom(mode === 'random');
-      setFocused(
-        mode === 'next' ? nextOpen(list) : mode === 'random' ? randomOpen(list) : undefined,
-      );
+      if (!pickedWhileLoading.current) {
+        setChoosing(false);
+        setAsRandom(mode === 'random');
+        setFocused(
+          mode === 'next' ? nextOpen(list) : mode === 'random' ? randomOpen(list) : undefined,
+        );
+      }
       setUpcoming(list.length === 0 ? await loadUpcoming() : undefined);
     })();
     return () => {
@@ -79,6 +84,7 @@ export function NotificationCenter() {
     await after(t.reminder.snoozed[option]);
   };
   const pick = (random: boolean) => {
+    pickedWhileLoading.current = true;
     setChoosing(false);
     setAsRandom(random);
     setFocused(random ? randomOpen(open, focused?.key) : nextOpen(open));
