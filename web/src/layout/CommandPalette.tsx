@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { detectIntent } from '@/core/ai/write/rules/intent';
+import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { calculate } from '@/core/calc/phrases';
 import { activeManifests } from '@/core/modules/contributions';
 import { useModuleStates } from '@/core/modules/activation';
@@ -76,6 +77,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const config = useAiConfig();
   const { state, submit, reset } = useAssistant();
   const writeMode = useUiStore((s) => s.paletteWrite);
+  const [writeSettings] = useAiWriteSettings();
   const states = useModuleStates();
   const { pathname } = useLocation();
   // Inside a module its entries are the default target of a sentence without a module word.
@@ -228,6 +230,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     }
     const writeIntent =
       query.trim() !== '' &&
+      writeSettings?.enabled !== false &&
       (writeMode || detectIntent(query, states ? activeManifests(states) : []) === 'write');
     if (writeIntent) {
       // An entry first: Enter must not jump to a module that merely shares a word with the sentence.
@@ -269,7 +272,17 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       });
     }
     return list;
-  }, [commands, hits, query, hasModel, focus.searchHistory, recent, writeMode, states]);
+  }, [
+    commands,
+    hits,
+    query,
+    hasModel,
+    focus.searchHistory,
+    recent,
+    writeMode,
+    writeSettings?.enabled,
+    states,
+  ]);
 
   const remember = (entry: RecentEntry) => {
     if (focus.searchHistory) addRecent(entry);

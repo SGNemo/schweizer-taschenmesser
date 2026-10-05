@@ -129,6 +129,12 @@ N11. *Reduzierte Bewegung:* Systemeinstellung an → keine Seiten-/Listen-/Balke
 N12. *README auf GitHub im hellen und dunklen Modus:* Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
 N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐
 
+## KI-Eintragen per Leiste (PR A, nur von Hand prüfbar)
+- **K1 Echte Sätze (Windows und Android):** in der Leiste (Strg+K / Suchen) eigene Sätze eintippen: „Rechnung Stadtwerke 89,90 € fällig 15.10.“, „Abo Netflix 12,99 monatlich ab 1.11.“, „Lösche das Abo Spotify“, „Markiere die Stadtwerke-Rechnung als bezahlt“. Erwartung: Vorschau mit richtigen Feldern, Änderung/Löschen zeigen Vorher/Nachher, nichts wird vor „Eintragen“ gespeichert, „Rückgängig“ im Hinweis stellt den Stand wieder her. Auf dem Handy: Tastatur schiebt die Vorschau nicht aus dem Bild.
+- **K2 Statistik:** Einstellungen → KI → KI-Statistik: Regel-Antworten zählen mit 0 Token, Cloud-Antworten mit Token/Kosten; „x % ohne Cloud“ passt zu dem, was du getan hast.
+- **K3 Cloud-Fallback:** mit eingerichtetem Anbieter einen Satz schreiben, den die Regeln nicht kennen („Leg bitte etwas für die Steuerberaterin fest, sie meldet sich Freitag“): die Vorschau erscheint, Statistik zeigt eine Cloud-Antwort; mit „Cloud-Fallback erlauben“ aus erscheint stattdessen die normale Antwort.
+- **K4 Schalter:** „Einträge per KI vorschlagen“ aus: keine „Eintragen“-Option, kein „Mit KI eintragen“ im Modul; ein einzelnes Modul abgeschaltet: dafür kommt kein Vorschlag.
+
 ## Browser-Erweiterung (Brave) und Tresor-Brücke – nur von Hand prüfbar (Windows)
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt, `nemo-extension-….zip` entpacken, Tresor mit Beispieldaten. Hintergrund: [security/VAULT-EXTENSION.md](security/VAULT-EXTENSION.md).
 X1. *Laden:* `brave://extensions` → Entwicklermodus → „Entpackte Erweiterung laden“. Die ID lautet `olgcnfjmihlmpgjepkfbdjcpenckemaj`, keine Fehler im Service-Worker-Log. ☐
