@@ -39,11 +39,11 @@ beforeEach(async () => {
 });
 
 describe('SupporterSection', () => {
-  it('starts calm: no pay button without a configured page, nothing locked, no code needed', async () => {
+  it('starts calm: nothing locked, no code needed, a plain way to pay', async () => {
     renderSection();
     expect(await screen.findByTestId('supporter-status')).toHaveTextContent(s.notSupporter);
-    expect(SUPPORT_PAGE_URL).toBe(''); // set by the maintainer later
-    expect(screen.queryByRole('button', { name: s.donate })).toBeNull();
+    expect(SUPPORT_PAGE_URL).toMatch(/^https:\/\//);
+    expect(screen.getByRole('button', { name: s.donate })).toBeEnabled();
     expect(screen.getByRole('switch', { name: s.sidebarBadge })).toBeDisabled();
     expect(screen.getByRole('button', { name: s.contact })).toBeEnabled();
   });
