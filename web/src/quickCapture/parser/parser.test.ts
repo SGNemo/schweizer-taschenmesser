@@ -89,6 +89,12 @@ describe('recurrence', () => {
 });
 
 describe('amounts', () => {
+  it('does not read the end of a word as a currency ("Friseur 7.10." is a date, not eur 7.10)', () => {
+    const r = parse('Friseur 7.10. 10:00');
+    expect(r.fields.amountMinor).toBeUndefined();
+    expect(r.fields.title).toBe('Friseur');
+    expect(r.fields.date).toBe('2026-10-07');
+  });
   it.each([
     ['Kaffee 3,50 €', 350, 'expense'],
     ['Kaffee 12 EUR', 1200, 'expense'],

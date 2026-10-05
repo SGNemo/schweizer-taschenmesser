@@ -22,6 +22,15 @@ Strg+K (Handy: das Suchfeld oben) öffnet die Befehlspalette: springen, in allen
   bzw. den Einstellungen.
 - **Anlegen nur mit Bestätigung:** schlägt die KI einen neuen Eintrag vor, zeigt die App ihn erst an; gespeichert wird nach „Anlegen“.
 
+## Eintragen per KI
+
+Schreibe einfach in die Leiste, was du eintragen willst – zum Beispiel „Rechnung Stadtwerke 89,90 € fällig 15.10.“, „Abo Netflix 12,99 monatlich ab 1.11.“, „Lösche das Abo Spotify“ oder „Markiere die Stadtwerke-Rechnung als bezahlt“. Mehrere Einträge trennst du mit Zeilenumbruch oder Semikolon.
+
+- **Immer erst eine Vorschau:** Felder lassen sich ändern, bei Änderungen und Löschungen siehst du Vorher/Nachher, fehlende Angaben fragt die Vorschau ab. Gespeichert wird erst mit „Eintragen“ (Enter), „Rückgängig“ im Hinweis macht alles wieder rückgängig.
+- **Kostet fast nichts:** Zuerst versuchen feste Regeln den Satz zu verstehen (0 Token, nichts verlässt das Gerät). Nur wenn das nicht reicht und du es erlaubst, wird ein KI-Anbieter gefragt – mit dem Satz, dem Datum und den Feldnamen der Module, nie mit deinen Einträgen. Die Statistik unter *Einstellungen → KI* zeigt, woher jede Antwort kam.
+- **Steuerbar:** unter *Einstellungen → KI → Eintragen per KI* global und pro Modul ausschaltbar. Im Modul gibt es oben „Mit KI eintragen“. Der Passwort-Tresor ist nie dabei.
+- **Dein Claude-Abo:** Anthropic erlaubt Abo-Zugänge nur in Claude Code und claude.ai, nicht in anderen Apps. Wenn du dein Abo nutzen willst, lass Claude Code auf deinem PC Nemo befüllen (siehe unten).
+
 ## Daten per KI importieren
 
 Vorhandene Daten muss man nicht abtippen: Eine KI (Claude Code, ChatGPT …) liefert sie im Format der App, du bestätigst eine

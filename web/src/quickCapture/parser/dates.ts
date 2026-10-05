@@ -231,6 +231,14 @@ function extractDate(s: Scan, st: DateTimeState, today: Ymd): void {
       },
     },
     {
+      re: word('vorgestern'),
+      run: () => ((st.date = addDays(today, -2)), true),
+    },
+    {
+      re: word('gestern'),
+      run: () => ((st.date = addDays(today, -1)), true),
+    },
+    {
       re: word('übermorgen'),
       run: () => ((st.date = addDays(today, 2)), true),
     },

@@ -19,6 +19,8 @@ import {
 import { AiSection } from './AiSection';
 import { AppearanceSection } from './AppearanceSection';
 import { BackupSection } from './BackupSection';
+import { AiStatsSection } from './AiStatsSection';
+import { AiWriteSection } from './AiWriteSection';
 import { CalmRemindersSection } from './CalmRemindersSection';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
@@ -222,6 +224,31 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <BackupSection />
       </SettingsGroup>
     ),
+  },
+  {
+    id: 'ai-write',
+    category: 'ki',
+    order: 15,
+    title: t.ai.writeSettings.title,
+    description: t.ai.writeSettings.description,
+    hint: t.help.aiWrite,
+    keywords: ['Eintragen', 'Schreiben', 'Vorschau', 'Cloud', 'Fallback', 'Nachfragen'],
+    fields: [
+      { key: 'enabled', label: t.ai.writeSettings.enabled },
+      { key: 'cloud', label: t.ai.writeSettings.cloud },
+      { key: 'askMissing', label: t.ai.writeSettings.askMissing },
+      { key: 'modules', label: t.ai.writeSettings.modules },
+    ],
+    render: () => <AiWriteSection />,
+  },
+  {
+    id: 'ai-stats',
+    category: 'ki',
+    order: 17,
+    title: t.ai.stats.title,
+    description: t.ai.stats.description,
+    keywords: ['Statistik', 'Token', 'Kosten', 'Regeln', 'lokal', 'Cloud'],
+    render: () => <AiStatsSection />,
   },
   {
     id: 'ai',

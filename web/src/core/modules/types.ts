@@ -114,9 +114,87 @@ export interface AiCollectionSchema {
   searchable?: string[];
 }
 
+/** What an assistant action does to the collection it targets. */
+export type AiActionKind = 'create' | 'update' | 'delete' | 'transition';
+
+export interface AiActionExample {
+  /** An invented German sentence a user could type. */
+  input: string;
+  /** Field values (aiSchema field names, money in cents, dates YYYY-MM-DD) the action should produce. */
+  output: Record<string, unknown>;
+  /** update / transition / delete: the title of the entry the sentence talks about (the entry the
+   *  collection's `create` example produces). */
+  target?: string;
+}
+
+/**
+ * One thing the assistant may do in a module (`create`, `update`, `delete`, or a `transition` such as
+ * "mark paid"). Nothing runs without the user's confirmation in the preview; the module only
+ * describes the shape. Modules without `actions` stay read-only for the assistant.
+ */
+export interface AiActionDef {
+  kind: AiActionKind;
+  /** Key of `aiSchema.collections` (and `dataSchema.collections`). */
+  collection: string;
+  /** Short German label, e.g. "Rechnung anlegen". */
+  label: string;
+  /** One short German sentence (sent to the model, keep it tiny). */
+  description: string;
+  /** Fields the action may set (subset of the aiSchema collection's fields); `create`/`update` only. */
+  fields?: string[];
+  /** Fields that must be present before the preview can be confirmed (subset of `fields`). */
+  required?: string[];
+  /** `transition`: the patch applied to the target, e.g. `{ status: 'paid' }`. */
+  set?: Record<string, unknown>;
+  /** At least one; they are run through validation → preview → undo by the registry test. */
+  examples: AiActionExample[];
+  /** Hints for the free rule parser (stage 0, no tokens). Plain data; the parser lives in core. */
+  parse?: AiActionParseHints;
+}
+
+/** Which part of a sentence fills which field. Each role maps to a field of `AiActionDef.fields`. */
+export type AiRole =
+  'title' | 'amount' | 'date' | 'startDate' | 'recurrence' | 'time' | 'note' | 'url' | 'quantity';
+
+export interface AiActionParseHints {
+  /**
+   * Lowercase German words (or stems) that point at this action: for `create` the module's noun
+   * ("rechnung"), for a `transition` the state ("bezahlt"). Matched on word starts after folding
+   * umlauts, so "rechnungen" also matches "rechnung".
+   */
+  keywords: string[];
+  /** Field per role; defaults are derived from the field types when omitted. */
+  roles?: Partial<Record<AiRole, string>>;
+  /**
+   * Values applied when the sentence says nothing (aiSchema field names, e.g. `{ kind: 'expense' }`);
+   * the string `'@today'` means the current date.
+   */
+  defaults?: Record<string, unknown>;
+  /** Enum fields chosen by words in the sentence: field → value → words (e.g. `kind → income → ['gehalt']`). */
+  values?: Record<string, Record<string, string[]>>;
+  /** "Milch, Eier und Brot" becomes three entries. */
+  splitItems?: boolean;
+  /**
+   * This action is the default for a sentence without any module word that carries the signal:
+   * a clock time with a date (`dateTime`), an amount (`amount`), a link (`url`) or just a date (`date`).
+   */
+  fallback?: 'url' | 'dateTime' | 'amount' | 'date';
+  /** A date without a year means the most recent one ("am 28.9." in October is last month), e.g. bookings. */
+  pastDates?: boolean;
+}
+
+/** Runs a `transition`/`update` through module logic (e.g. "paid" also tells finance via the bus). */
+export interface AiActionHandler {
+  apply(id: string, patch: Record<string, unknown>): Promise<void>;
+  /** Undo counterpart; without it the previous values are written back directly. */
+  revert?(id: string, before: Record<string, unknown>): Promise<void>;
+}
+
 export interface ModuleAiSchema {
   description: string;
   collections: Record<string, AiCollectionSchema>;
+  /** Write actions, key = short English id (`create`, `markPaid`, …). Optional; see `AiActionDef`. */
+  actions?: Record<string, AiActionDef>;
   /**
    * Named read-only calculations the module answers locally (see `contributions.aiComputed`),
    * name → short German description, e.g. `balance: 'Kontostand'`.
@@ -278,6 +356,8 @@ export interface ModuleContributions {
   aiCreateDefaults?: () => Promise<{
     default: (collection: string) => Promise<Record<string, unknown>>;
   }>;
+  /** Module logic for actions with side effects, key = action id of `aiSchema.actions`. */
+  aiActionHandlers?: () => Promise<{ default: Record<string, AiActionHandler> }>;
   /** Implements the views declared in `aiSchema.computed`. */
   aiComputed?: () => Promise<{
     default: (name: string, ctx: { today: string }) => Promise<AiComputedResult | undefined>;

@@ -17,7 +17,14 @@ import {
   intentFromToolCall,
   InvalidModelAnswer,
   schemaHash,
+  writableModules,
+  type WriteMode,
 } from './prompt';
+import { now } from '@/core/time/now';
+import { prepareProposal } from './write/prepare';
+import { parseWrite } from './write/rules/parse';
+import { LOCAL_ACCEPT, RULE_ACCEPT, type WriteSettings } from './write/stages';
+import type { Stage, WriteProposal } from './write/types';
 import { AiError, type AiErrorCode, type AiProvider, type Attempt } from './providers/types';
 import { searchText } from './search/fulltext';
 import type { Intent } from './query/schema';
@@ -38,12 +45,19 @@ export interface AskDeps {
   signal?: AbortSignal;
   /** Skip the "short question → full text" shortcut and ask the model. */
   forceModel?: boolean;
+  /**
+   * Choices for writing (rules → local model → cloud). Absent = the older behaviour: the model may
+   * propose single entries with `create_entry`; the rule and local stages do not run.
+   */
+  write?: WriteSettings;
+  /** The module the user is in: default target for a sentence without a module word. */
+  preferModule?: string;
 }
 
 export type AskResponse =
   | {
       ok: true;
-      tier: 'local' | 'cache' | 'model';
+      tier: 'rule' | 'local' | 'cache' | 'model';
       result: AiResult;
       usage?: { inputTokens: number; outputTokens: number; model: string };
       /** The answer is a search because no model is set up for a more complex question. */
@@ -65,6 +79,13 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
   const manifests = aiModules(deps.manifests);
   const known = aiModules(deps.known);
   const ctx = { manifests, known, database, today: deps.today };
+  const writable = deps.write?.enabled ? writableModules(manifests, deps.write.modulesOff) : [];
+  // Without settings the older create_entry tool stays; with settings writes need cloud permission.
+  const mode: WriteMode = deps.write
+    ? deps.write.enabled && deps.write.cloud
+      ? { writable }
+      : { writable: [], off: true }
+    : { writable: [] };
   const q = question.trim();
   if (!q) return { ok: false, error: 'no-answer' };
 
@@ -74,6 +95,29 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
       const parsed = parseIntent(q, { today: deps.today });
       if (parsed.kind === 'intent') {
         return { ok: true, tier: 'local', result: await executeIntent(parsed.intent, ctx) };
+      }
+      // Stage 0 (rules, free) and stage 1 (local model, free): a sentence that adds, changes,
+      // deletes or marks something becomes a preview – nothing is written here.
+      const staged = await proposeLocally(q, deps, ctx, writable);
+      if (staged) {
+        const stage = staged.proposal.stage;
+        await recordUsage(
+          {
+            provider: stage === 'rule' ? 'rules' : 'local',
+            model: stage === 'rule' ? 'rules' : 'local-model',
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheHit: false,
+            outcome: 'ok',
+            stage,
+          },
+          database,
+        );
+        return {
+          ok: true,
+          tier: stage === 'rule' ? 'rule' : 'local',
+          result: staged.result,
+        };
       }
       // Short free text: a plain search is what people mean ("miete", "netflix").
       if (contentWordCount(q) <= 2) {
@@ -87,9 +131,9 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
 
     // Tier 2: cache.
     const key = await cacheKey({
-      question: q,
+      question: deps.preferModule && writable.length > 0 ? `${q}\n#${deps.preferModule}` : q,
       today: deps.today,
-      schemaHash: schemaHash(manifests),
+      schemaHash: schemaHash(manifests, mode),
     });
     const cached = await getCachedIntent(key, database);
     if (cached) {
@@ -101,17 +145,20 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
           inputTokens: 0,
           outputTokens: 0,
           cacheHit: true,
+          stage: 'cache',
         },
         database,
       );
-      return { ok: true, tier: 'cache', result };
+      return { ok: true, tier: 'cache', result: withStage(result, 'cache') };
     }
 
     // Tier 3: model. Only the question, today's date and the compact schemas leave the device.
     const response = await deps.provider.complete({
-      system: buildSystemPrompt(manifests),
-      user: buildUserMessage(q, deps.today),
-      tools: buildTools(manifests),
+      system: buildSystemPrompt(manifests, mode),
+      user:
+        buildUserMessage(q, deps.today) +
+        (deps.preferModule && writable.length > 0 ? `\nModul: ${deps.preferModule}` : ''),
+      tools: buildTools(manifests, mode),
       signal: deps.signal,
       // An answer that is not even a well-formed intent is a reason to try the next provider.
       check: (r) => {
@@ -129,6 +176,7 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
         outcome: 'ok',
         viaFallback: (response.attempts?.length ?? 0) > 0,
         costUsd: response.costUsd,
+        stage: 'cloud',
       },
       database,
     );
@@ -171,4 +219,98 @@ async function recordAttempts(
       database,
     );
   }
+}
+
+const withStage = (result: AiResult, stage: Stage): AiResult =>
+  result.kind === 'write' ? { ...result, stage } : result;
+
+/** The date of `today` at the current time of day (the extractors need a real clock for "in 2 Stunden"). */
+function clockOn(today: string): Date {
+  const d = new Date(now());
+  const [y, m, day] = today.split('-').map(Number);
+  d.setFullYear(y!, m! - 1, day!);
+  return d;
+}
+
+/**
+ * Stages 0 and 1. A proposal only counts when it survives the schema checks (`prepareProposal`);
+ * an invalid one is silently handed to the next stage instead of showing the user a broken preview.
+ */
+async function proposeLocally(
+  q: string,
+  deps: AskDeps,
+  ctx: {
+    manifests: readonly ModuleManifest[];
+    known: readonly ModuleManifest[];
+    database: TaschenmesserDB;
+    today: string;
+  },
+  writable: readonly ModuleManifest[],
+): Promise<{ proposal: WriteProposal; result: AiResult } | undefined> {
+  if (writable.length === 0 || !deps.write) return undefined;
+  const wctx = { ...ctx, manifests: writable };
+  const attempt = async (
+    proposal: WriteProposal | undefined,
+    accept: number,
+  ): Promise<{ proposal: WriteProposal; result: AiResult } | undefined> => {
+    if (!proposal || proposal.confidence < accept || proposal.ops.length === 0) return undefined;
+    try {
+      const ops = await prepareProposal(proposal.ops, wctx);
+      if (deps.write?.askMissing === false && ops.some((o) => o.missing.length > 0))
+        return undefined;
+      return {
+        proposal,
+        result: {
+          kind: 'write',
+          stage: proposal.stage,
+          ops,
+          confidence: proposal.confidence,
+          ...(proposal.question ? { question: proposal.question } : {}),
+        },
+      };
+    } catch (e) {
+      if (e instanceof AiQueryError) return undefined;
+      throw e;
+    }
+  };
+  const byRules = await attempt(
+    await parseWrite(q, {
+      manifests: writable,
+      database: ctx.database,
+      now: clockOn(ctx.today),
+      today: ctx.today,
+      preferModule: deps.preferModule,
+      blockWords: moduleWords(ctx.known, writable),
+    }),
+    RULE_ACCEPT,
+  );
+  if (byRules) return byRules;
+  const local = deps.write.local;
+  if (local?.available()) {
+    return attempt(
+      await local.propose(q, {
+        manifests: writable,
+        today: ctx.today,
+        database: ctx.database,
+        signal: deps.signal,
+      }),
+      LOCAL_ACCEPT,
+    );
+  }
+  return undefined;
+}
+
+/** Create-keywords of AI modules that are not writable right now (switched off, or without actions). */
+function moduleWords(
+  known: readonly ModuleManifest[],
+  writable: readonly ModuleManifest[],
+): string[] {
+  const on = new Set(writable.map((m) => m.id));
+  return aiModules(known)
+    .filter((m) => !on.has(m.id))
+    .flatMap((m) =>
+      Object.values(m.aiSchema.actions ?? {}).flatMap((a) =>
+        a.kind === 'create' ? (a.parse?.keywords ?? []) : [],
+      ),
+    );
 }

@@ -87,6 +87,21 @@ export const createSchema = z.object({
   data: z.record(z.string(), z.unknown()),
 });
 
+const proposedOpSchema = z.object({
+  module: z.string().min(1),
+  action: z.string().min(1),
+  data: z.record(z.string(), z.unknown()).optional(),
+  target: z
+    .object({ id: z.string().min(1).optional(), title: z.string().min(1).max(200).optional() })
+    .optional(),
+});
+
+/** Entries to add, change, delete or mark; always ends in the preview, never in a direct write. */
+export const writeSchema = z.object({
+  ops: z.array(proposedOpSchema).min(1).max(8),
+  question: z.string().max(200).optional(),
+});
+
 export const computedSchema = z.object({ module: z.string().min(1), name: z.string().min(1) });
 
 /** What an assistant question turns into. `create` always ends in a confirmation dialog. */
@@ -95,6 +110,7 @@ export const intentSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('agenda'), agenda: agendaSchema }),
   z.object({ type: z.literal('computed'), ...computedSchema.shape }),
   z.object({ type: z.literal('create'), ...createSchema.shape }),
+  z.object({ type: z.literal('write'), ...writeSchema.shape }),
   z.object({ type: z.literal('fulltext'), text: z.string().min(1).max(200) }),
   /** The model answered in plain words instead of calling a tool. */
   z.object({ type: z.literal('message'), text: z.string().min(1).max(600) }),

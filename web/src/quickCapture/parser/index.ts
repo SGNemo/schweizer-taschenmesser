@@ -59,7 +59,7 @@ function cleanTitle(raw: string): string {
 }
 
 /** First occurrence of a recurrence rule on or after `today`, used when no date was given. */
-function startForRecurrence(rec: CaptureRecurrence, today: Ymd): Ymd {
+export function startForRecurrence(rec: CaptureRecurrence, today: Ymd): Ymd {
   if (rec.byWeekday?.[0]) return nextWeekday(today, rec.byWeekday[0], true);
   const day = rec.byMonthDay;
   if (day !== undefined) {

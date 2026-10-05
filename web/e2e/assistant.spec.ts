@@ -346,41 +346,64 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
 
   test('creating an entry needs a confirmation', async ({ page }) => {
     await seed(page);
+    // The rules cannot place this sentence, so the (mocked) model proposes the entry.
     await mockClaude(page, () => ({
-      body: toolUse('create_entry', {
-        module: 'calendar',
-        collection: 'event',
-        data: {
-          title: 'Miete überweisen',
-          startDate: '2026-10-01',
-          startTime: '09:00',
-          recurrence: { freq: 'monthly', byMonthDay: 1 },
-        },
+      body: toolUse('propose_actions', {
+        ops: [
+          {
+            module: 'calendar',
+            action: 'create',
+            data: {
+              title: 'Miete überweisen',
+              startDate: '2026-10-01',
+              startTime: '09:00',
+              recurrence: { freq: 'monthly', byMonthDay: 1 },
+            },
+          },
+        ],
       }),
     }));
     await configureClaude(page);
     await page.goto('/');
 
+    const QUESTION = 'Leg bitte etwas für die Miete fest, immer zum Monatsersten';
     const before = await countRows(page, 'calendar_event');
-    await ask(page, 'Erinnere mich jeden 1. an Miete');
-    const preview = page.getByTestId('ai-create-preview');
+    await ask(page, QUESTION);
+    const preview = page.getByTestId('ai-write-preview');
     await expect(preview).toContainText('Miete überweisen');
     await expect(preview).toContainText('Jeden 1. des Monats');
     expect(await countRows(page, 'calendar_event')).toBe(before);
 
-    // Cancel: nothing is stored.
-    await page.getByRole('button', { name: 'Abbrechen' }).click();
+    // Discard: nothing is stored.
+    await page.getByRole('button', { name: 'Verwerfen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await countRows(page, 'calendar_event')).toBe(before);
 
     // Ask again (cached intent), confirm: now it is stored and shows up in the module.
-    await ask(page, 'Erinnere mich jeden 1. an Miete');
+    await ask(page, QUESTION);
     await expect(page.getByTestId('ai-tier')).toHaveText('Aus dem Cache · 0 Token');
-    await page.getByRole('button', { name: 'Anlegen' }).click();
+    await page.getByTestId('ai-write-confirm').click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect.poll(() => countRows(page, 'calendar_event')).toBe(before + 1);
     await page.goto('/calendar?view=day&date=2026-10-01');
     await expect(page.getByRole('main').getByText('Miete überweisen').first()).toBeVisible();
+  });
+
+  test('a sentence the rules understand never reaches the model', async ({ page }) => {
+    await seed(page);
+    let calls = 0;
+    await mockClaude(page, () => {
+      calls++;
+      return { body: toolUse('propose_actions', { ops: [] }) };
+    });
+    await configureClaude(page);
+    await page.goto('/');
+    await ask(page, 'Erinnere mich jeden 1. an Miete');
+    const preview = page.getByTestId('ai-write-preview');
+    await expect(preview).toContainText('Miete');
+    await expect(preview).toContainText('Jeden 1. des Monats');
+    await expect(page.getByTestId('ai-tier')).toHaveText('Regeln · 0 Token');
+    expect(calls).toBe(0);
   });
 
   test('shows a friendly message when the key is rejected', async ({ page }) => {

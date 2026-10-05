@@ -51,6 +51,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Secrets store | `web/src/core/secrets/{types,deviceKey,migrating}.ts` | `SecretStore`; keystore primary, WebCrypto device key legacy |
 | Backup | `web/src/core/backup/backup.ts` | JSON `taschenmesser-backup`, merge/replace |
 | **AI providers** | `web/src/core/ai/providers/{types,claude,openai,ollama,presets}.ts` | `AiProvider` |
+| **AI writes** | `web/src/core/ai/write/{types,prepare,commit,targets,stages,settings}.ts`, `rules/{parse,lexicon,intent}.ts`; contract `core/modules/aiActions.ts`; UI `layout/assistant/WritePreview.tsx`; eval `web/tests/ai/eval-set.json` + `core/ai/write/eval.test.ts` (`npm run ai:eval`) | `AiActionDef` |
 | **AI router / config** | `web/src/core/ai/router.ts` (`createRouter`), `config.ts` (`ProviderEntry`, `createRouterProvider`), `usage.ts`, `testConnection.ts`; UI `pages/settings/AiSection.tsx` | |
 | Assistant pipeline | `web/src/core/ai/assistant.ts` (`ask`), `intent/parser.ts` (tier 1), `search/fulltext.ts`, `cache.ts` (tier 2), `prompt.ts`, `scope.ts` (`aiModules` filter), `query/{schema,executor,validate,create}.ts` | |
 | **Connectors** | framework `web/src/core/connectors/{types,registry,context,oauth,redact,service,state}.ts` (glob `connectors/*/index.ts`); impls `web/src/connectors/google/*`, `web/src/connectors/ics/*`; UI `pages/settings/ConnectorsSection.tsx`; isolation `connectors/isolation.test.ts` | `ConnectorDef` |
