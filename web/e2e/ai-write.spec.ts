@@ -139,17 +139,16 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
       const preview = page.getByTestId('ai-write-preview');
       for (const text of c.shows) await expect(preview.getByText(text).first()).toBeVisible();
       await expect(page.getByTestId('ai-tier')).toHaveText('Regeln · 0 Token');
-      expect(await rows(page, c.table)).toHaveLength(before); // nothing yet
+      await expect.poll(() => rows(page, c.table).then((r) => r.length)).toBe(before); // nothing yet
 
       await page.getByTestId('ai-write-confirm').click();
       await expect(page.getByText('1 Änderung gespeichert.').first()).toBeVisible();
-      const after = await rows(page, c.table);
-      expect(after).toHaveLength(before + 1);
-      expect(after.some(c.check)).toBe(true);
+      await expect.poll(async () => (await rows(page, c.table)).length).toBe(before + 1);
+      expect((await rows(page, c.table)).some(c.check)).toBe(true);
 
       await page.getByRole('button', { name: 'Rückgängig' }).click();
       await expect(page.getByText('Rückgängig gemacht.').first()).toBeVisible();
-      expect(await rows(page, c.table)).toHaveLength(before);
+      await expect.poll(() => rows(page, c.table).then((r) => r.length)).toBe(before);
     }
     expect(external).toEqual([]);
   });
@@ -159,12 +158,14 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     await write(page, 'Aufgabe Fenster putzen');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    expect(await rows(page, 'todos_task')).toHaveLength(0);
+    await expect.poll(() => rows(page, 'todos_task').then((r) => r.length)).toBe(0);
 
     await write(page, 'Aufgabe Fenster putzen');
     await page.keyboard.press('Enter');
     await expect(page.getByText('1 Änderung gespeichert.').first()).toBeVisible();
-    expect((await rows(page, 'todos_task')).map((r) => r.title)).toEqual(['Fenster putzen']);
+    await expect
+      .poll(async () => (await rows(page, 'todos_task')).map((r) => r.title))
+      .toEqual(['Fenster putzen']);
   });
 
   test('shows before and after for a change and what a deletion removes, with undo', async ({
@@ -179,20 +180,24 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     await expect(preview.locator('ins')).toContainText('95,00 €');
     await page.getByTestId('ai-write-confirm').click();
     await expect(page.getByText('1 Änderung gespeichert.').first()).toBeVisible();
-    expect((await rows(page, 'invoices_invoice'))[0]!.amountMinor).toBe(9500);
+    await expect
+      .poll(async () => (await rows(page, 'invoices_invoice'))[0]?.amountMinor)
+      .toBe(9500);
     await page.getByRole('button', { name: 'Rückgängig' }).click();
     await expect(page.getByText('Rückgängig gemacht.').first()).toBeVisible();
-    expect((await rows(page, 'invoices_invoice'))[0]!.amountMinor).toBe(8990);
+    await expect
+      .poll(async () => (await rows(page, 'invoices_invoice'))[0]?.amountMinor)
+      .toBe(8990);
 
     await write(page, 'Lösche das Abo Netflix');
     await expect(page.getByTestId('ai-write-preview').getByText('Wird gelöscht')).toBeVisible();
     await expect(page.getByTestId('ai-write-preview').getByText('Netflix').first()).toBeVisible();
     await page.getByTestId('ai-write-confirm').click();
     await expect(page.getByText('1 Änderung gespeichert.').first()).toBeVisible();
-    expect(await rows(page, 'subscriptions_subscription')).toHaveLength(0);
+    await expect.poll(() => rows(page, 'subscriptions_subscription').then((r) => r.length)).toBe(0);
     await page.getByRole('button', { name: 'Rückgängig' }).click();
     await expect(page.getByText('Rückgängig gemacht.').first()).toBeVisible();
-    expect(await rows(page, 'subscriptions_subscription')).toHaveLength(1);
+    await expect.poll(() => rows(page, 'subscriptions_subscription').then((r) => r.length)).toBe(1);
   });
 
   test('marks an invoice as paid and books the expense; undo reverts both', async ({ page }) => {
@@ -208,10 +213,10 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     await expect
       .poll(async () => (await rows(page, 'finance_transaction')).length)
       .toBeGreaterThan(0);
-    expect((await rows(page, 'invoices_invoice'))[0]!.status).toBe('paid');
+    await expect.poll(async () => (await rows(page, 'invoices_invoice'))[0]?.status).toBe('paid');
     await page.getByRole('button', { name: 'Rückgängig' }).click();
     await expect(page.getByText('Rückgängig gemacht.').first()).toBeVisible();
-    expect((await rows(page, 'invoices_invoice'))[0]!.status).toBe('open');
+    await expect.poll(async () => (await rows(page, 'invoices_invoice'))[0]?.status).toBe('open');
     await expect.poll(async () => (await rows(page, 'finance_transaction')).length).toBe(0);
   });
 
@@ -226,7 +231,9 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     await expect(confirm).toBeEnabled();
     await confirm.click();
     await expect(page.getByText('1 Änderung gespeichert.').first()).toBeVisible();
-    expect((await rows(page, 'invoices_invoice'))[0]!.dueDate).toBe('2026-10-20');
+    await expect
+      .poll(async () => (await rows(page, 'invoices_invoice'))[0]?.dueDate)
+      .toBe('2026-10-20');
   });
 
   test('several entries in one input; unticking one leaves it out', async ({ page }) => {
@@ -239,7 +246,9 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
       .uncheck();
     await page.getByTestId('ai-write-confirm').click();
     await expect(page.getByText('1 Änderung gespeichert.').first()).toBeVisible();
-    expect((await rows(page, 'todos_task')).map((r) => r.title)).toEqual(['Zahnarzt anrufen']);
+    await expect
+      .poll(async () => (await rows(page, 'todos_task')).map((r) => r.title))
+      .toEqual(['Zahnarzt anrufen']);
   });
 
   test('"Mit KI eintragen" in a module opens the bar for entries', async ({ page }) => {
