@@ -298,18 +298,31 @@
   --dur-slow: 0ms;
 }
 
-/* Reading aid (core/text/readable.ts, ui/ReadableText): the start of a word gets a little more weight. `soft` keeps the width change tiny and adds a slight contrast step; `bold` is the classic look. Never animated. */
+/* Reading aid (core/text/readable.ts, core/text/ReadableText.tsx): the start of a word gets more weight; in primary-ink text (headings, paragraphs, titles) the rest is dimmed a step so the start is clearly brighter. `soft` = weight 560, `bold` = 700. Never animated. */
 :root {
   --read-weight-soft: 560;
   --read-weight-bold: 700;
+  --read-heavy-soft: 800;
+  --read-heavy-bold: 900;
+  --read-rest: 78%; /* ink left in the rest of the word: ≥ 8:1 on every surface */
+}
+:root[data-read-style='bold'] {
+  --read-rest: 86%;
 }
 [data-rs] {
   font-weight: var(--read-weight-soft);
-  /* A step towards the primary text colour, so muted contexts stay muted and AA contrast only improves. */
-  color: color-mix(in srgb, currentColor 45%, var(--text));
+}
+[data-rs='h'] {
+  font-weight: var(--read-heavy-soft);
 }
 :root[data-read-style='bold'] [data-rs] {
   font-weight: var(--read-weight-bold);
+}
+:root[data-read-style='bold'] [data-rs='h'] {
+  font-weight: var(--read-heavy-bold);
+}
+[data-rr] {
+  color: color-mix(in srgb, currentColor var(--read-rest), var(--bg));
 }
 
 /* "Ruhig" colour mode (Einstellungen → Darstellung → Farben): only overdue (red) and today (accent) keep colour. */

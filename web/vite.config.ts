@@ -41,7 +41,7 @@ export default defineConfig({
     __CHANGELOG__: JSON.stringify(changelog()),
   },
   plugins: [
-    react(),
+    react({ jsxImportSource: '@/core/text/readjsx' }),
     VitePWA({
       disable: native,
       strategies: 'injectManifest',
