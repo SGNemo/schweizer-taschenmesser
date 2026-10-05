@@ -9,7 +9,7 @@ Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`):
 
 KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); Regel-Trefferquote jetzt an drei Sätzen gemessen (Tuning, Held-out, Blind; erste Blind-Messung 97,4 %, 1 Fehlgriff bei Fragen); PR B lokales Modell und PR C Chat-Modul folgen. Handtests K1–K4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
-Lesbarkeit (`feat/readability`): Lesehilfe (Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), Entwurf [design/READABILITY-PLAN.md](design/READABILITY-PLAN.md).
+Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), Entwurf [design/READABILITY-PLAN.md](design/READABILITY-PLAN.md).
 
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).

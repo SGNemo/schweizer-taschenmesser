@@ -188,8 +188,8 @@ V3. *Glocke:* eine Erinnerung für „gleich“ anlegen, App offen lassen: es er
 V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch einblenden“ aus: Windows-/Android-Systembenachrichtigungen kommen unverändert; mit Einstellung an: Karte oben/unten rechts, verschwindet nach der gewählten Zeit, die Erinnerung bleibt in der Glocke. ☐
 
 ### Lesbarkeit (`feat/readability`) – nur im Alltag prüfbar
-- **L1 Lesehilfe eine Woche** auf PC und Handy: Einstellungen → Darstellung → Lesen einschalten; Anteil 30/40/50 und Stärke Weich/Fett ausprobieren; hilft es bei Notizen, Antworten, Hilfetexten? `Alt+L` zum Umschalten (PC).
-- **L2 Listen:** „Auch Listen“ wählen: werden Titel in Listen ruhiger oder unruhiger? Fokus-Lesen in einer langen Notiz öffnen.
+- **L1 Lesehilfe eine Woche** auf PC und Handy: Einstellungen → Darstellung → Lesen einschalten; Umfang 25/50/75/100 %, Anteil 30/40/50 und Stärke Weich/Fett ausprobieren (Überschriften: Wortanfang hell, Rest dunkler; bei 100 % auch Schaltflächen und Navigation); hilft es bei Notizen, Antworten, Hilfetexten? `Alt+L` zum Umschalten (PC).
+- **L2 Listen:** Umfang 50 % und mehr: werden Titel in Listen ruhiger oder unruhiger? Lange Listen (Rechnungen/ToDos mit vielen Einträgen) bei 100 %: bleibt es flüssig? Fokus-Lesen in einer langen Notiz öffnen.
 - **L3 Ruhig-Modus:** Farben → Ruhig: bleiben nur Überfälliges und Heutiges farbig; erkennt man Kategorien noch am Namen?
 - **L4 Gliederung:** Rechnungen/ToDos: Gruppen einklappen, nach Neustart bleibt der Zustand; Kalender-Woche: Stundenlinien, Wochenende, Jetzt-Linie; Bereichsfarben in Seitenleiste und Modul-Bibliothek (hell/dunkel, Rail, Handy).
 
