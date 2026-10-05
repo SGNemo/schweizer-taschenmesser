@@ -122,11 +122,18 @@ export interface ImportCandidate {
    * preview shows `lines` as a diff. `before`/`after` hold only the changed fields (stored names).
    */
   update?: CandidateUpdate;
+  /**
+   * Deletion of the existing record `id` (assistant batches only). `before` holds the stored values
+   * that were shown in the preview; the delete is skipped when the record changed meanwhile.
+   */
+  remove?: { before: Record<string, unknown> };
 }
 
 export interface CandidateUpdate {
   before: Record<string, unknown>;
   after: Record<string, unknown>;
+  /** Id of the module action that runs the change through module logic (`aiActionHandlers`). */
+  via?: string;
   /** Display text per changed field ("Titel: alt → neu"), already formatted. */
   lines: { field: string; from: string; to: string }[];
 }
@@ -168,6 +175,8 @@ export interface BatchUpdate {
   id: string;
   before: Record<string, unknown>;
   after: Record<string, unknown>;
+  /** Module action that applied it; its handler's `revert` runs on undo. */
+  via?: string;
 }
 
 /** Local record of one import (`_imports`), the basis of "Import rückgängig machen". */
@@ -186,9 +195,13 @@ export interface ImportBatch {
   /** Absent on rows written before the local API existed: then committed (or undone). */
   status?: BatchStatus;
   /** Where it came from: the wizard (default) or the local AI import API. */
-  origin?: 'wizard' | 'api';
+  origin?: 'wizard' | 'api' | 'assistant';
   /** Changes of existing records made by this batch. */
   updates?: BatchUpdate[];
+  /** Records the batch soft-deleted (assistant batches); undo restores them. */
+  deletes?: { collection: string; id: string }[];
+  /** Assistant batches of one confirmation (one per module) share this id; undo takes all. */
+  groupId?: string;
   /** Changes skipped on commit because the record had been edited meanwhile. */
   conflicts?: number;
   committedAt?: number;

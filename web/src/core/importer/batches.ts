@@ -2,7 +2,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
-import type { ModuleManifest } from '@/core/modules/types';
+import type { AiActionHandler, ModuleManifest } from '@/core/modules/types';
 import { now } from '@/core/time/now';
 import { ImportError } from './plan';
 import { deepEqual } from '@/core/db/util';
@@ -29,6 +29,8 @@ export async function commitImport(
     rows: PreviewRow[];
     /** Fields of an existing (pending) batch row to keep. */
     base?: Partial<ImportBatch>;
+    /** Module logic for updates that carry `update.via` (assistant transitions). */
+    handlers?: Record<string, AiActionHandler>;
   },
   database: TaschenmesserDB = defaultDb,
 ): Promise<ImportBatch> {
@@ -37,8 +39,9 @@ export async function commitImport(
 
   const byCollection = new Map<string, { data: Record<string, unknown>; id: string }[]>();
   const changes = chosen.filter((r) => r.candidate.update && r.candidate.id);
+  const removals = chosen.filter((r) => r.candidate.remove && r.candidate.id);
   chosen.forEach((row, n) => {
-    if (row.candidate.update) return;
+    if (row.candidate.update || row.candidate.remove) return;
     const list = byCollection.get(row.candidate.collection) ?? [];
     list.push({
       data: row.candidate.data,
@@ -70,8 +73,28 @@ export async function commitImport(
       conflicts++;
       continue;
     }
-    await repo.update(current.id, after);
-    updates.push({ collection, id: current.id, before, after });
+    const via = row.candidate.update!.via;
+    const handler = via ? args.handlers?.[via] : undefined;
+    if (handler) await handler.apply(current.id, after);
+    else await repo.update(current.id, after);
+    updates.push({ collection, id: current.id, before, after, ...(via ? { via } : {}) });
+  }
+
+  const deletes: NonNullable<ImportBatch['deletes']> = [];
+  for (const row of removals) {
+    const { collection } = row.candidate;
+    if (!manifest.dataSchema.collections[collection]) throw new ImportError('unknown-collection');
+    const repo = createCollectionRepo(manifest, collection, database);
+    const current = await repo.get(row.candidate.id!);
+    const before = row.candidate.remove!.before;
+    const unchanged =
+      current !== undefined && Object.keys(before).every((k) => deepEqual(current[k], before[k]));
+    if (!unchanged) {
+      conflicts++;
+      continue;
+    }
+    await repo.remove(current.id);
+    deletes.push({ collection, id: current.id });
   }
 
   const at = now();
@@ -87,6 +110,7 @@ export async function commitImport(
     status: 'committed',
     rows: undefined,
     ...(updates.length > 0 ? { updates } : {}),
+    ...(deletes.length > 0 ? { deletes } : {}),
     ...(conflicts > 0 ? { conflicts } : {}),
   };
   await table(database).put(batch);
@@ -94,7 +118,11 @@ export async function commitImport(
 }
 
 export function countRecords(batch: ImportBatch): number {
-  return batch.records.reduce((n, r) => n + r.ids.length, 0) + (batch.updates?.length ?? 0);
+  return (
+    batch.records.reduce((n, r) => n + r.ids.length, 0) +
+    (batch.updates?.length ?? 0) +
+    (batch.deletes?.length ?? 0)
+  );
 }
 
 export const batchStatus = (batch: ImportBatch): BatchStatus =>
@@ -109,6 +137,7 @@ export async function undoImport(
   manifest: ModuleManifest,
   batchId: string,
   database: TaschenmesserDB = defaultDb,
+  handlers?: Record<string, AiActionHandler>,
 ): Promise<{ removed: number; kept: number }> {
   const batch = await table(database).get(batchId);
   if (!batch || batchStatus(batch) !== 'committed') return { removed: 0, kept: 0 };
@@ -139,7 +168,15 @@ export async function undoImport(
       kept++;
       continue;
     }
-    await repo.update(change.id, change.before);
+    const handler = change.via ? handlers?.[change.via] : undefined;
+    if (handler?.revert) await handler.revert(change.id, change.before);
+    else await repo.update(change.id, change.before);
+    removed++;
+  }
+  for (const gone of batch.deletes ?? []) {
+    if (!manifest.dataSchema.collections[gone.collection]) continue;
+    const repo = createCollectionRepo(manifest, gone.collection, database);
+    await repo.restore(gone.id);
     removed++;
   }
   await table(database).update(batchId, { undoneAt: now(), keptOnUndo: kept, status: 'undone' });

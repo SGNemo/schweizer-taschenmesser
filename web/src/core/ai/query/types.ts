@@ -11,6 +11,7 @@ export type AiQueryErrorCode =
   | 'no-date-field'
   | 'bad-aggregate'
   | 'unknown-computed'
+  | 'unknown-action'
   | 'invalid-entry';
 
 /** A rejected intent: the model (or parser) asked for something the schemas do not allow. */

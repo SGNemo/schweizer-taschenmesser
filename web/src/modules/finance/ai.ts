@@ -33,4 +33,59 @@ export const aiSchema: ModuleAiSchema = {
       searchable: ['name'],
     },
   },
+  actions: {
+    create: {
+      kind: 'create',
+      collection: 'transaction',
+      label: 'Buchung anlegen',
+      description: 'Ausgabe oder Einnahme buchen (Betrag positiv, kind=expense|income)',
+      fields: ['kind', 'amountMinor', 'date', 'payee', 'note'],
+      required: ['amountMinor'],
+      parse: {
+        keywords: ['ausgabe', 'einnahme', 'buchung', 'zahlung', 'gehalt', 'lohn'],
+        values: {
+          kind: {
+            income: [
+              'einnahme',
+              'gehalt',
+              'lohn',
+              'erstattung',
+              'gutschrift',
+              'erhalten',
+              'eingang',
+            ],
+            expense: ['ausgabe', 'ausgegeben', 'gezahlt', 'zahlung'],
+          },
+        },
+        defaults: { kind: 'expense', date: '@today' },
+      },
+      examples: [
+        {
+          input: 'Ausgabe 23,50 € Supermarkt gestern',
+          output: { kind: 'expense', amountMinor: 2350, payee: 'Supermarkt', date: '2026-09-28' },
+        },
+      ],
+    },
+    update: {
+      kind: 'update',
+      collection: 'transaction',
+      label: 'Buchung ändern',
+      description: 'Betrag, Datum oder Empfänger einer Buchung ändern',
+      fields: ['amountMinor', 'date', 'payee', 'note', 'kind'],
+      examples: [
+        {
+          input: 'Ändere die Buchung Supermarkt auf 25 €',
+          target: 'Supermarkt',
+          output: { amountMinor: 2500 },
+        },
+      ],
+    },
+    delete: {
+      kind: 'delete',
+      collection: 'transaction',
+      label: 'Buchung löschen',
+      description: 'Buchung löschen',
+      examples: [{ input: 'Lösche die Buchung Supermarkt', target: 'Supermarkt', output: {} }],
+    },
+  },
 };
