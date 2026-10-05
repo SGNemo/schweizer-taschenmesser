@@ -10,6 +10,7 @@ Long design notes, split by topic (text moved unchanged from the former single f
 | [ai](architecture/ai.md) | AI assistant (Phase 5), Multi-provider AI (Phase 12) |
 | [extras](architecture/extras.md) | Extra modules & polish (Phase 6) |
 | [native](architecture/native.md) | Native distribution (Phases 7–10): shell, PlatformService, versioning, Android, closed-app reminders, portable Windows build |
+| [supporter](architecture/supporter.md) | Supporter mode: code format, offline check, status/sync, goodies, planned webhook service |
 | [releases](architecture/releases.md) | Releases & CI (Phase 9), release security, Self-update (Phase 10) |
 | [vault](architecture/vault.md) | Password vault "Accounts" (Phase 11), step 11b keystore/biometrics |
 | [browser-extension](architecture/browser-extension.md) | Brave extension, native messaging host, vault bridge (files, data flow) |

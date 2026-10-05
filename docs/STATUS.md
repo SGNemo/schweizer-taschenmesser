@@ -24,6 +24,8 @@ Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`):
 - Geräteverhalten der nativen Shells (Windows Hello, Android-Keystore/Biometrie, Update-Austausch, Push) nur von Hand prüfbar.
 - Einrichtungsassistent: keine automatischen lokalen Backups, keine App-Sperre, kein Screenshot-Schutz-Schalter (gibt es in der App nicht; der Assistent zeigt nur Vorhandenes). Kein Ollama-CORS-Workaround im Browser (Erkennung ist Best-Effort). Hinweise zu genauen Alarmen/Akku-Optimierung sind nur Text (keine Plugin-API geprüft/gebaut). Wochenstart nur im Kalender (KI-Zeiträume rechnen weiter mit Montag).
 
+- Supporter-Webhook-Dienst (`services/supporter-webhook/`, automatische Code-Mail): noch nicht gebaut, bis dahin Codes per CLI von Hand ([howto/supporter.md](howto/supporter.md)). Icon-Varianten (Android-Activity-Alias, Tray) bewusst nicht gebaut.
+
 ## Bekannte Probleme / Hinweise
 - README-Download-Badges zeigen auf das neueste *stabile* Release und funktionieren jetzt (seit `v0.2.0`).
 - TypeScript ist auf 6.0.x gepinnt (typescript-eslint unterstützt `<6.1`).
@@ -58,6 +60,12 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 11. **Download-Buttons der README:** erledigt – README und `docs/user/installation.md` verlinken seit dem Folge-PR `Nemo-Portable.exe` / `Nemo.apk` (das neueste stabile Release trägt beide Namen). Die `Taschenmesser-*`-Kopien entfallen ab dem nächsten Release (siehe 13); `v0.3.1` und älter behalten ihre Dateien.
 12. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
 13. **Erledigt (ab dem nächsten Release nach `v0.3.1`):** Releases tragen nur noch `Nemo-*`; `latest.json` zeigt auf `Nemo-Portable.exe`. Folge: Installationen ≤ 0.2.x können sich nicht mehr selbst aktualisieren (Neuinstallation nötig); Clients ab 0.3.0 akzeptieren beide Namen. Offen: Die Rust-/TS-Allowlists (`PORTABLE_ASSETS`, `APK_ASSET_PAIRS`) nennen den Altnamen noch, harmlos, später entfernbar. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
+
+**Neu (Supporter-Modus, [howto/supporter.md](howto/supporter.md), [legal/SUPPORTER-NOTES.md](legal/SUPPORTER-NOTES.md)):**
+- Konten bei Ko-fi (ggf. Buy Me a Coffee) anlegen; Zahlungsseite und „Code erneut senden“-Seite in `web/src/pages/settings/supporterLinks.ts` eintragen (bis dahin bleiben die Buttons in der App unsichtbar).
+- Schlüsselpaar erzeugen und sicher verwahren (`tools/supporter-cli`: `keygen`, dann `set-public-key`, `publicKeys.ts` committen; solange er leer ist, lehnt die App jeden Code ab). Eigenen Code: `create --tier developer --name "Sven"`.
+- Für den Webhook-Dienst (sobald gebaut): Cloudflare-Konto und Worker, Resend mit verifizierter Domain, Secrets setzen, Webhook-URL und Token bei Ko-fi eintragen, Test-Spende.
+- Steuerliche und rechtliche Klärung (Impressum, Datenschutzhinweis für den Mailversand): Checkliste in [legal/SUPPORTER-NOTES.md](legal/SUPPORTER-NOTES.md). README-Abschnitt „Unterstützen“ erst mit der Zahlungsseite veröffentlichen.
 
 ## Fertig (eine Zeile je Release; Details: [CHANGELOG](../CHANGELOG.md), Arbeitsprotokoll bis 0.3.1: [archive/2026-10/STATUS-done-until-0.3.1.md](archive/2026-10/STATUS-done-until-0.3.1.md))
 - `v0.2.0` (2026-09-30): Phasen 1–13 (Fundament bis Passwort-Tresor, Sync/Backup, KI-Assistent + Router, Tauri-Shell, Releases, Selbst-Update), KI-Import (JSON, lokale Import-API, `mcp/`).
