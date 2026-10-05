@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import { t } from '@/strings';
 import { Checkbox } from './Fields';
+import { ReadableText } from './ReadableText';
 import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
@@ -121,6 +122,11 @@ export function ItemList({
   );
 }
 
+/** Meta that reads like a sentence (a note excerpt, a description) gets the reading aid; short facts ("Fällig am …") do not. */
+function isTeaser(meta: string): boolean {
+  return meta.split(/\s+/).length >= 5;
+}
+
 /**
  * A row: optional selection box and `lead`, a main button (title + meta lines, opens the editor),
  * trailing `end` content and `actions` that appear on hover/focus. `data-row` marks the main
@@ -169,11 +175,15 @@ export function ItemRow({
   const body = (
     <>
       <span className={styles.title} title={typeof title === 'string' ? title : undefined}>
-        {title}
+        {typeof title === 'string' ? <ReadableText text={title} kind="list" /> : title}
       </span>
       {meta ? (
         <span className={styles.muted} title={typeof meta === 'string' ? meta : undefined}>
-          {meta}
+          {typeof meta === 'string' && isTeaser(meta) ? (
+            <ReadableText text={meta} kind="list" />
+          ) : (
+            meta
+          )}
         </span>
       ) : null}
     </>

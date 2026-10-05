@@ -60,9 +60,13 @@
         if (a === 'teal' || a === 'coral' || a === 'lagoon')
           document.documentElement.dataset.accent = a;
         var ts = localStorage.getItem('tm-text-size');
-        if (ts === 'large' || ts === 'xlarge') document.documentElement.dataset.textSize = ts;
-        if (localStorage.getItem('tm-leading') === 'airy')
-          document.documentElement.dataset.leading = 'airy';
+        if (ts === 'small' || ts === 'large' || ts === 'xlarge') document.documentElement.dataset.textSize = ts;
+        var ld = localStorage.getItem('tm-leading');
+        if (ld === 'airy' || ld === 'compact') document.documentElement.dataset.leading = ld;
+        if (localStorage.getItem('tm-read-style') === 'bold')
+          document.documentElement.dataset.readStyle = 'bold';
+        if (localStorage.getItem('tm-color') === 'calm')
+          document.documentElement.dataset.color = 'calm';
         if (localStorage.getItem('tm-motion') === 'reduce')
           document.documentElement.dataset.motion = 'reduce';
         if (localStorage.getItem('tm-density') === 'compact')
