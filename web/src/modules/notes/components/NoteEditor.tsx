@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, Switch, TextArea, TextField } from '@/ui';
+import { Button, Dialog, Form, FormActions, ReaderView, Switch, TextArea, TextField } from '@/ui';
 import { isScratch, SCRATCH_ID } from '../logic';
 import { noteRepo } from '../repo';
 import type { Note } from '../schema';
@@ -48,6 +48,7 @@ function Fields({
   const [title, setTitle] = useState(existing?.title ?? draft?.title ?? '');
   const [body, setBody] = useState(existing?.body ?? draft?.body ?? '');
   const [pinned, setPinned] = useState(existing?.pinned ?? false);
+  const [reading, setReading] = useState(false);
   const [error, setError] = useState('');
   const scratch = (existing && isScratch(existing)) || draft?.scratch === true;
 
@@ -90,6 +91,19 @@ function Fields({
         }}
         data-autofocus={scratch ? true : undefined}
       />
+      {existing && !scratch && body.trim() ? (
+        <div>
+          <Button variant="ghost" onClick={() => setReading(true)}>
+            {t.settings.reading.focusRead}
+          </Button>
+          <ReaderView
+            open={reading}
+            onClose={() => setReading(false)}
+            title={title.trim() || t.notes.edit}
+            text={body}
+          />
+        </div>
+      ) : null}
       {scratch ? null : <Switch label={t.notes.pin} checked={pinned} onChange={setPinned} />}
       <FormActions
         start={

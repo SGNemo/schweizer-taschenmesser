@@ -6,7 +6,7 @@ import { availableManifests } from '@/core/modules/available';
 import { AREAS, type AreaId, type ModuleManifest } from '@/core/modules/types';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
-import { Badge, Button, Card, Dialog, Icon } from '@/ui';
+import { Badge, Button, Card, Dialog, Icon, ReadableText } from '@/ui';
 import styles from './Page.module.css';
 
 interface LibraryGroup {
@@ -88,7 +88,9 @@ export function ModuleLibrary() {
                     {enabled ? <Badge tone="accent">{t.library.active}</Badge> : null}
                     {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
                   </div>
-                  <p className={styles.desc}>{m.description}</p>
+                  <p className={styles.desc}>
+                    <ReadableText text={m.description} />
+                  </p>
                   <div className={styles.moduleActions}>
                     {enabled ? (
                       <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>

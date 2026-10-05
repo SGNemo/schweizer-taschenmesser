@@ -7,6 +7,7 @@ export { Tabs, type TabItem } from './Tabs';
 export { Badge, EmptyState, ErrorState, Fab, Skeleton, SkeletonRows, Toaster } from './Misc';
 export { ReadableText, useReadShare } from './ReadableText';
 export { GroupedList, type GroupedListGroup } from './GroupedList';
+export { ReaderView } from './ReaderView';
 export { Prose } from './Prose';
 export { MEANINGS, categoryColor, categoryIndex, type Meaning } from './semantics';
 export { HelpHint } from './HelpHint';

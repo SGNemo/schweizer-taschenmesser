@@ -11,8 +11,19 @@ import { useUiStore } from '@/stores/ui';
  * Use for running text (`kind="prose"`: notes, answers, help) and list titles/teasers (`kind="list"`, only with
  * the "auch Listen" scope). Never for inputs, numbers, code, buttons, navigation or vault/account secrets.
  */
-export function ReadableText({ text, kind = 'prose' }: { text: string; kind?: 'prose' | 'list' }) {
-  const share = useReadShare(kind);
+export function ReadableText({
+  text,
+  kind = 'prose',
+  force = false,
+}: {
+  text: string;
+  kind?: 'prose' | 'list';
+  /** Fokus-Lesen: the aid is on for this text whatever the setting says (still with the chosen share and style). */
+  force?: boolean;
+}) {
+  const setting = useReadShare(kind);
+  const chosen = useUiStore((s) => s.readShare);
+  const share = force ? chosen : setting;
   const runs = useMemo(
     () => (share === null ? null : emphasize(text, { share: Number(share) / 100 })),
     [text, share],
