@@ -26,12 +26,12 @@ export const aiSchema: ModuleAiSchema = {
       fields: ['title', 'url', 'kind', 'tags', 'note'],
       required: ['title'],
       parse: {
-        keywords: ['lesezeichen', 'merkzettel', 'merken', 'merke'],
+        keywords: ['lesezeichen', 'merkzettel', 'merken', 'merke', 'ansehen', 'anschauen'],
         fallback: 'url',
         values: {
           kind: {
             read: ['lesen', 'artikel', 'buch'],
-            watch: ['film', 'serie', 'ansehen'],
+            watch: ['film', 'serie', 'ansehen', 'anschauen'],
             place: ['ort', 'restaurant'],
             idea: ['idee'],
           },

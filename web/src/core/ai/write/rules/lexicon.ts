@@ -13,6 +13,9 @@ const SEARCH_PREFIXES = [
   'welch',
   'liste',
   'ubersicht',
+  'vergleich',
+  'erklar',
+  'erklaer',
 ];
 /** … and whole words (a prefix "wo" would also catch "Wohnung", "was" would catch "waschen"). */
 const SEARCH_WORDS = ['wie', 'was', 'wo', 'wer', 'wann', 'wem', 'wen', 'warum', 'wieso', 'gibt'];
@@ -39,10 +42,12 @@ export const POLITE = [
   'gleich',
 ];
 
-export const DELETE_VERBS = ['losch', 'loesch', 'entfern', 'streich', 'wegwerf'];
+export const DELETE_VERBS = ['losch', 'loesch', 'entfern', 'streich', 'wegwerf', 'absag'];
 /** Prefixes of change verbs ("verschiebe", "verschieben", "verschiebt" …). */
 export const UPDATE_PREFIXES = [
   'verschieb',
+  'verleg',
+  'umbenenn',
   'korrigier',
   'aktualisier',
   'benenne',
@@ -83,6 +88,10 @@ export const CREATE_WORDS = [
   'add',
   'setz',
   'setze',
+  'mach',
+  'mache',
+  'pack',
+  'packe',
   'schreib',
   'schreibe',
 ];
@@ -91,6 +100,14 @@ export const MARK_VERBS = ['markier', 'hak', 'setz', 'stell', 'mach', 'kundig', 
 
 /** Words that may stay at the edges of what is left and are dropped there. */
 export const EDGE_FILLERS = new Set([
+  'hab',
+  'habe',
+  'hatte',
+  'ich',
+  'wir',
+  'muss',
+  'ausgegeben',
+  'gelassen',
   'der',
   'die',
   'das',
