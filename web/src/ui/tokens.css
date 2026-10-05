@@ -32,7 +32,9 @@
   --text-h1: 2rem;
   /* Hero numbers (finance balance, tool results) */
   --text-3xl: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
-  --leading: 1.5;
+  --leading: 1.6; /* default, airier than the former 1.5 (Einstellungen → Lesen) */
+  /* Longest comfortable line for running text (notes, answers, help). */
+  --measure: 68ch;
   --leading-tight: 1.25;
   /* Three weights only: body 400, labels/buttons 500, titles 600, hero 700. */
   --weight-medium: 500;
@@ -112,6 +114,13 @@
   /* Chart series (categorical slots 1 and 2) */
   --viz-1: #16847f;
   --viz-2: #c94f12;
+  /* Categories: six fixed hues for chips/stripes (always with the category name, never colour alone). */
+  --cat-1: #1f5fa8;
+  --cat-2: #12766f;
+  --cat-3: #7a4aa8;
+  --cat-4: #8a5a00;
+  --cat-5: #a0305f;
+  --cat-6: #3f6b1f;
   --overlay: rgb(0 0 0 / 0.45);
   /* Level 1: cards, widgets, panels (no border). Level 2: menus, dialogs, sheets, FAB, toast. */
   --shadow-1: 0 1px 2px rgb(23 31 36 / 0.06), 0 8px 24px rgb(23 31 36 / 0.07);
@@ -154,6 +163,13 @@
   --focus: #ffb07a;
   --viz-1: #4fb3ad;
   --viz-2: #ff9a57;
+  /* Categories: six fixed hues for chips/stripes (always with the category name, never colour alone). */
+  --cat-1: #7cc7e8;
+  --cat-2: #4fb3ad;
+  --cat-3: #c9a8ea;
+  --cat-4: #e8b85a;
+  --cat-5: #f0a0c0;
+  --cat-6: #a9d26f;
   --overlay: rgb(0 0 0 / 0.55);
   --shadow-1:
     0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3);
@@ -184,6 +200,13 @@
     --focus: #ffb07a;
     --viz-1: #4fb3ad;
     --viz-2: #ff9a57;
+    /* Categories: six fixed hues for chips/stripes (always with the category name, never colour alone). */
+    --cat-1: #7cc7e8;
+    --cat-2: #4fb3ad;
+    --cat-3: #c9a8ea;
+    --cat-4: #e8b85a;
+    --cat-5: #f0a0c0;
+    --cat-6: #a9d26f;
     --overlay: rgb(0 0 0 / 0.55);
     --shadow-1:
       0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35),
@@ -238,6 +261,9 @@
 }
 
 /* Device-local settings (Einstellungen → Darstellung): text size 16 → 18 px (everything is rem), density. */
+:root[data-text-size='small'] {
+  font-size: 90%; /* 14.4 px */
+}
 :root[data-text-size='large'] {
   font-size: 112.5%;
 }
@@ -245,6 +271,10 @@
   font-size: 125%; /* 20 px */
 }
 /* Line spacing for easier reading (Einstellungen → Darstellung). */
+:root[data-leading='compact'] {
+  --leading: 1.4;
+  --leading-tight: 1.2;
+}
 :root[data-leading='airy'] {
   --leading: 1.75;
   --leading-tight: 1.4;
@@ -266,4 +296,51 @@
   --dur-fast: 0ms;
   --dur: 0ms;
   --dur-slow: 0ms;
+}
+
+/* Reading aid (core/text/readable.ts, ui/ReadableText): the start of a word gets a little more weight. `soft` keeps the width change tiny and adds a slight contrast step; `bold` is the classic look. Never animated. */
+:root {
+  --read-weight-soft: 560;
+  --read-weight-bold: 700;
+}
+[data-rs] {
+  font-weight: var(--read-weight-soft);
+  /* A step towards the primary text colour, so muted contexts stay muted and AA contrast only improves. */
+  color: color-mix(in srgb, currentColor 45%, var(--text));
+}
+:root[data-read-style='bold'] [data-rs] {
+  font-weight: var(--read-weight-bold);
+}
+
+/* "Ruhig" colour mode (Einstellungen → Darstellung → Farben): only overdue (red) and today (accent) keep colour. */
+:root[data-color='calm'] {
+  --cat-1: var(--text-3);
+  --cat-2: var(--text-3);
+  --cat-3: var(--text-3);
+  --cat-4: var(--text-3);
+  --cat-5: var(--text-3);
+  --cat-6: var(--text-3);
+  --success: var(--text-muted);
+  --warning: var(--text-muted);
+  --info: var(--text-muted);
+}
+
+/* Navigation areas: one category hue per area for icons, the thin group stripe and the library tiles (always next to the area name; "Ruhig" turns them grey via --cat-*). */
+[data-area='plan'] {
+  --area-color: var(--cat-1);
+}
+[data-area='money'] {
+  --area-color: var(--cat-2);
+}
+[data-area='knowledge'] {
+  --area-color: var(--cat-3);
+}
+[data-area='household'] {
+  --area-color: var(--cat-4);
+}
+[data-area='vault'] {
+  --area-color: var(--cat-5);
+}
+[data-area='system'] {
+  --area-color: var(--cat-6);
 }

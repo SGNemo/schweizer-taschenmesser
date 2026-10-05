@@ -36,4 +36,17 @@ export function useShortcuts(): void {
     window.addEventListener('keydown', handler, true);
     return () => window.removeEventListener('keydown', handler, true);
   }, []);
+
+  // Alt+L switches the reading aid (Einstellungen → Darstellung → Lesen). Layout-independent via `code`.
+  useLayoutEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.code !== 'KeyL') return;
+      e.preventDefault();
+      const ui = useUiStore.getState();
+      ui.setReadAid(!ui.readAid);
+      ui.toast(ui.readAid ? t.settings.reading.toastOff : t.settings.reading.toastOn);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 }
