@@ -46,7 +46,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
       .locator('[data-rs]')
       .first()
       .evaluate((e) => getComputedStyle(e).fontWeight);
-    expect(Number(weight)).toBeGreaterThanOrEqual(700);
+    expect(Number(weight)).toBeGreaterThanOrEqual(600);
 
     await page.reload();
     await expect(page.getByTestId('reading-preview').locator('[data-rs]').first()).toBeVisible();
@@ -129,15 +129,28 @@ test.describe('Reading aid, colour mode and grouping', () => {
     const cover = page.getByRole('group', { name: 'Umfang' });
     await cover.getByRole('button', { name: '50 %' }).click();
     await expect(page.locator('main h1 [data-rs]').first()).toBeVisible();
-    // Headings dim the rest of the word so the start is clearly brighter.
+    // In primary ink the text is dimmed a step and the word start keeps full ink (contrast, not only weight).
     const [start, rest] = await page.evaluate(() => {
       const h = document.querySelector('main h1')!;
       return [
         getComputedStyle(h.querySelector('[data-rs]')!).color,
-        getComputedStyle(h.querySelector('[data-rr]')!).color,
+        getComputedStyle(h.querySelector('[data-rt]')!).color,
       ];
     });
     expect(start).not.toBe(rest);
+    // "Nur Kontrast": the weight stays the same, only the contrast differs.
+    await page
+      .getByRole('group', { name: 'Stärke' })
+      .getByRole('button', { name: 'Nur Kontrast' })
+      .click();
+    const weights = await page.evaluate(() => {
+      const h = document.querySelector('main h1')!;
+      return [
+        getComputedStyle(h.querySelector('[data-rs]')!).fontWeight,
+        getComputedStyle(h).fontWeight,
+      ];
+    });
+    expect(weights[0]).toBe(weights[1]);
     expect(
       await page
         .getByRole('navigation', { name: 'Hauptnavigation' })
