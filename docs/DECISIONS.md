@@ -80,3 +80,9 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 2026-10 **Origin rule is a global vault setting (same registrable domain / exact host), vault format unchanged.**
 - 2026-10 **Extension zip is a CI artifact only; release integration is a written proposal** – `release.yml` stays untouched.
 - 2026-10 **Readability: optional reading aid (off by default), colour only with meaning, grouped lists** – own engine, six category hues also for navigation areas, "Ruhig" mode; details in [decisions/readability.md](decisions/readability.md).
+
+## Supporter mode → [decisions/supporter.md](decisions/supporter.md)
+- 0.4 **Supporter extras are cosmetic only; no feature behind a paywall, no nag** – the app stays free, support is a thank-you.
+- 0.4 **Codes are Ed25519-signed and verified offline** (embedded public key, key id for rotation, no expiry/revocation) – no tracking, one shared `@nemo/supporter-codes`.
+- 0.4 **Status = verified code, derived on every read; synced setting holds only the code** – sync cannot inject a tier.
+- 0.4 **Code-issuing webhook is a separate Cloudflare Worker with live signing (variant A)** – no link to sync server or user data; key leak = cosmetic only, rotation by key id.

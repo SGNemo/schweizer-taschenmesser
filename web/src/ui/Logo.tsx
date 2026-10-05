@@ -34,7 +34,8 @@ export function Logo({
   mono?: boolean;
 }) {
   const cut = useId();
-  const ink = mono ? 'currentColor' : LOGO_COLOR;
+  // `--logo-ink` is only set by the supporter option "Logo in Themenfarbe" (ui/supporterThemes.css).
+  const ink = mono ? 'currentColor' : `var(--logo-ink, ${LOGO_COLOR})`;
   return (
     <svg
       viewBox={LOGO_VIEWBOX}

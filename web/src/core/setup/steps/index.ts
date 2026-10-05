@@ -116,6 +116,22 @@ export const CORE_STEPS: SetupStepDef[] = [
     component: () => import('@/layout/setup/steps/BackupUpdatesStep'),
   },
   {
+    id: 'core.support',
+    title: s.support.title,
+    description: s.support.description,
+    order: 130,
+    since: 1, // no SETUP_VERSION bump: an installation that finished the assistant is not nagged
+    when: async () => {
+      const { getSettings } = await import('@/core/settings/settings');
+      const { supporterSettingsSchema, SUPPORTER_SCOPE, DEFAULT_SUPPORTER } =
+        await import('@/core/supporter/settings');
+      return !(await getSettings(SUPPORTER_SCOPE, supporterSettingsSchema, DEFAULT_SUPPORTER))
+        .hideSetupHint;
+    },
+    hint: true, // never counted or listed in the dashboard checklist
+    component: () => import('@/layout/setup/steps/SupporterStep'),
+  },
+  {
     id: 'core.dashboard',
     title: s.dashboard.title,
     description: s.dashboard.description,

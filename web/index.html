@@ -59,6 +59,9 @@
         var a = localStorage.getItem('tm-accent');
         if (a === 'teal' || a === 'coral' || a === 'lagoon')
           document.documentElement.dataset.accent = a;
+        var pal = localStorage.getItem('tm-palette');
+        if (/^(korallenriff|tiefsee|sand|nordlicht|monochrom)$/.test(pal || ''))
+          document.documentElement.dataset.palette = pal;
         var ts = localStorage.getItem('tm-text-size');
         if (ts === 'small' || ts === 'large' || ts === 'xlarge')
           document.documentElement.dataset.textSize = ts;
