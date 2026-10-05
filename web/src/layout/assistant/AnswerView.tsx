@@ -12,6 +12,7 @@ import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button } from '@/ui';
+import { WritePreview } from './WritePreview';
 import styles from './assistant.module.css';
 
 const MAX_ROWS = 10;
@@ -205,8 +206,7 @@ function Result({
     case 'message':
       return <p>{result.text}</p>;
     case 'write':
-      // The preview card follows in the next commit.
-      return <p>{result.ops.map((o) => o.actionLabel).join(', ')}</p>;
+      return <WritePreview result={result} onDone={onDone} />;
   }
 }
 

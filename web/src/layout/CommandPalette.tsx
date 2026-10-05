@@ -1,7 +1,11 @@
 import { useEffect, useId, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
+import { detectIntent } from '@/core/ai/write/rules/intent';
 import { calculate } from '@/core/calc/phrases';
+import { activeManifests } from '@/core/modules/contributions';
+import { useModuleStates } from '@/core/modules/activation';
+import { availableManifests } from '@/core/modules/available';
 import { openReminderCenter } from '@/core/notifications/centerStore';
 import { addRecent, readRecent, type RecentEntry } from '@/core/search/recent';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -71,6 +75,13 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const quickActions = useQuickAddActions();
   const config = useAiConfig();
   const { state, submit, reset } = useAssistant();
+  const writeMode = useUiStore((s) => s.paletteWrite);
+  const states = useModuleStates();
+  const { pathname } = useLocation();
+  // Inside a module its entries are the default target of a sentence without a module word.
+  const preferModule = availableManifests().find(
+    (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
+  )?.id;
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const listId = useId();
@@ -215,14 +226,29 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         value: sum.value,
       });
     }
-    if (query.trim()) {
-      list.push({
+    const writeIntent =
+      query.trim() !== '' &&
+      (writeMode || detectIntent(query, states ? activeManifests(states) : []) === 'write');
+    if (writeIntent) {
+      // An entry first: Enter must not jump to a module that merely shares a word with the sentence.
+      list.unshift({
         kind: 'ask',
-        key: 'ask',
-        label: t.ai.palette.ask,
-        icon: 'sparkles',
+        key: 'ask-write',
+        label: t.ai.palette.write,
+        icon: 'plus',
         forceModel: false,
       });
+    }
+    if (query.trim()) {
+      if (!writeIntent) {
+        list.push({
+          kind: 'ask',
+          key: 'ask',
+          label: t.ai.palette.ask,
+          icon: 'sparkles',
+          forceModel: false,
+        });
+      }
       if (hasModel) {
         list.push({
           kind: 'ask',
@@ -243,7 +269,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       });
     }
     return list;
-  }, [commands, hits, query, hasModel, focus.searchHistory, recent]);
+  }, [commands, hits, query, hasModel, focus.searchHistory, recent, writeMode, states]);
 
   const remember = (entry: RecentEntry) => {
     if (focus.searchHistory) addRecent(entry);
@@ -259,7 +285,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     }
     if (o.kind === 'ask') {
       remember({ kind: 'query', key: `q-${query.trim()}`, label: query.trim() });
-      return void submit(query.trim(), o.forceModel);
+      return void submit(query.trim(), o.forceModel, preferModule);
     }
     if (o.kind === 'calc') {
       // Plain decimal without thousands separators so it pastes into any field.
@@ -314,7 +340,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         aria-controls={listId}
         aria-activedescendant={options[active] ? `${listId}-${active}` : undefined}
         aria-label={t.palette.placeholder}
-        placeholder={t.palette.placeholder}
+        placeholder={writeMode ? t.ai.palette.writePlaceholder : t.palette.placeholder}
         className={styles.input}
         value={query}
         onChange={(e) => {

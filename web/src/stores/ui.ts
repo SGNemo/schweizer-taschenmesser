@@ -161,6 +161,9 @@ interface UiState {
   toggleAreaOpen(area: string): void;
   paletteOpen: boolean;
   setPaletteOpen(open: boolean): void;
+  /** The palette was opened with "Mit KI eintragen": the typed text is meant as an entry. */
+  paletteWrite: boolean;
+  openWritePalette(): void;
   quickAddOpen: boolean;
   setQuickAddOpen(open: boolean): void;
   shortcutsOpen: boolean;
@@ -250,7 +253,9 @@ export const useUiStore = create<UiState>((set) => ({
     });
   },
   paletteOpen: false,
-  setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+  setPaletteOpen: (paletteOpen) => set({ paletteOpen, paletteWrite: false }),
+  paletteWrite: false,
+  openWritePalette: () => set({ paletteOpen: true, paletteWrite: true }),
   quickAddOpen: false,
   setQuickAddOpen: (quickAddOpen) => set({ quickAddOpen }),
   shortcutsOpen: false,
