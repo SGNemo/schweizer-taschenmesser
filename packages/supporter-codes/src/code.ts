@@ -135,6 +135,17 @@ function parse(input: string): { payload: Uint8Array; sig: Uint8Array } | null {
 }
 
 /**
+ * Canonical display form (`NEMO1-XXXXXX-…`) of a structurally valid code (right prefix, checksum
+ * and layout), or null. Does not check the signature – use it to store what `verifyCode` accepted.
+ */
+export function normalizeCode(input: string): string | null {
+  const parsed = parse(input);
+  if (!parsed) return null;
+  const body = concat(parsed.payload, parsed.sig);
+  return groupCode(toBase32(body) + checksum(body));
+}
+
+/**
  * Verifies a code offline against the embedded public keys (by key id). Any failure – typo,
  * unknown key, tampering, wrong version – returns the same `{ ok: false }` with no detail.
  */

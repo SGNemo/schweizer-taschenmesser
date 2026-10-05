@@ -3,6 +3,7 @@ export {
   CODE_VERSION,
   encodeCode,
   generateKeyPair,
+  normalizeCode,
   verifyCode,
   type CodeFields,
   type KeyPair,

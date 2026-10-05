@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { ed25519 } from '@noble/curves/ed25519.js';
-import { encodeCode, generateKeyPair, verifyCode, CODE_PREFIX } from '../src/index.ts';
+import {
+  encodeCode,
+  generateKeyPair,
+  normalizeCode,
+  verifyCode,
+  CODE_PREFIX,
+} from '../src/index.ts';
 import { TEST_KEY_ID, TEST_PUBLIC_KEY, TEST_SECRET_KEY } from './fixtures/test-keypair.ts';
 
 const keys = { [TEST_KEY_ID]: TEST_PUBLIC_KEY };
@@ -117,5 +123,12 @@ describe('supporter codes', () => {
     const code = encodeCode({ ...base, tier: 'kaffee', id }, TEST_SECRET_KEY);
     expect(ed25519.verify(new Uint8Array(64), new Uint8Array(1), TEST_PUBLIC_KEY)).toBe(false);
     expect(verifyCode(code, keys).ok).toBe(true);
+  });
+
+  it('normalizes messy input to the canonical form and refuses broken input', () => {
+    const code = encodeCode({ ...base, tier: 'kaffee', name: 'Ada', id }, TEST_SECRET_KEY);
+    expect(normalizeCode(' ' + code.toLowerCase().replace(/-/g, ' ') + '\n')).toBe(code);
+    expect(normalizeCode('NEMO1-ABC')).toBeNull();
+    expect(normalizeCode('')).toBeNull();
   });
 });

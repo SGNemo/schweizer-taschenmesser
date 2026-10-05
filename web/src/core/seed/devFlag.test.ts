@@ -15,6 +15,13 @@ const MARKERS = [
   'Seed-Sync erlauben', // dev settings text (strings.dev.ts)
   'Ideen für den Balkon', // content of a module seed.ts (notes)
   'Komponentenblatt', // component sheet (pages/ComponentSheet, strings.dev.ts)
+  'supporter.simulate', // dev supporter status key (core/supporter/devSupporter.ts)
+  'Supporter-Status simulieren', // dev settings text (strings.dev.ts)
+];
+
+// Must not ship in ANY of these builds: the public test key only exists in the E2E build.
+const NEVER_SHIPPED = [
+  '79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664', // E2E_TEST_PUBLIC_KEY
 ];
 
 function filesOf(dir: string): string[] {
@@ -51,6 +58,8 @@ describe('Dev-Preview flag', () => {
     for (const marker of MARKERS)
       expect(text, `stable build contains "${marker}"`).not.toContain(marker);
     expect(names.filter((n) => /seed/i.test(n))).toEqual([]);
+    for (const marker of NEVER_SHIPPED)
+      expect(text, `stable build contains the supporter test key`).not.toContain(marker);
   });
 
   it(
@@ -59,6 +68,8 @@ describe('Dev-Preview flag', () => {
     async () => {
       const { text } = await buildApp('dev');
       for (const marker of MARKERS) expect(text, `dev build lacks "${marker}"`).toContain(marker);
+      for (const marker of NEVER_SHIPPED)
+        expect(text, 'dev build contains the supporter test key').not.toContain(marker);
     },
   );
 });
