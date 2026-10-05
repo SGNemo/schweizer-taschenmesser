@@ -32,6 +32,12 @@ describe('supporter-cli', () => {
     expect(s.all()).not.toContain(secretOf(path));
   });
 
+  it('keygen refuses the key id reserved for the E2E test key', async () => {
+    const s = setup();
+    expect(await run(['keygen', '--key-id', '255'], s.io)).toBe(2);
+    expect(existsSync(join(s.home, '.nemo-supporter'))).toBe(false);
+  });
+
   it('keygen refuses to overwrite an existing key', async () => {
     const s = setup();
     await run(['keygen'], s.io);

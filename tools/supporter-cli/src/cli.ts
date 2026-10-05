@@ -110,8 +110,8 @@ export async function run(argv: string[], io: Io): Promise<number> {
     switch (cmd) {
       case 'keygen': {
         const keyId = opt['key-id'] === undefined ? 1 : Number(opt['key-id']);
-        if (!Number.isInteger(keyId) || keyId < 0 || keyId > 255) {
-          io.err('--key-id must be an integer 0..255');
+        if (!Number.isInteger(keyId) || keyId < 0 || keyId > 254) {
+          io.err('--key-id must be an integer 0..254 (255 is reserved for the E2E test key)');
           return 2;
         }
         const out = typeof opt.out === 'string' ? resolve(opt.out) : keyPath(io, {}, keyId);
