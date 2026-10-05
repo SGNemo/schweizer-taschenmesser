@@ -281,6 +281,33 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
+  # Supporter codes: shared package + maintainer CLI (the CLI imports the package source, so both are installed).
+  supporter:
+    name: Supporter codes + CLI (lint, types, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            packages/supporter-codes/package-lock.json
+            tools/supporter-cli/package-lock.json
+      - run: npm ci
+        working-directory: packages/supporter-codes
+      - run: npm ci
+        working-directory: tools/supporter-cli
+      - name: Package checks
+        working-directory: packages/supporter-codes
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: CLI checks
+        working-directory: tools/supporter-cli
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+
   extension:
     name: Browser extension (lint, types, tests, build, E2E)
     needs: changes
