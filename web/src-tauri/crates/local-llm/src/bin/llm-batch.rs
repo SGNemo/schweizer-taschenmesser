@@ -21,7 +21,10 @@ struct Case {
 }
 
 fn arg(args: &[String], name: &str) -> Option<String> {
-    args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).cloned()
+    args.iter()
+        .position(|a| a == name)
+        .and_then(|i| args.get(i + 1))
+        .cloned()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -30,8 +33,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = arg(&args, "--input").ok_or("--input is required")?;
     let output = arg(&args, "--output").ok_or("--output is required")?;
     let params = LoadParams {
-        gpu_layers: arg(&args, "--gpu-layers").and_then(|v| v.parse().ok()).unwrap_or(0),
-        context: arg(&args, "--context").and_then(|v| v.parse().ok()).unwrap_or(4096),
+        gpu_layers: arg(&args, "--gpu-layers")
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(0),
+        context: arg(&args, "--context")
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(4096),
         threads: arg(&args, "--threads").and_then(|v| v.parse().ok()),
     };
     let mut engine = Engine::load(&model, &params)?;

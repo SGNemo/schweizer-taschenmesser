@@ -364,7 +364,7 @@ pub fn desktop_info(app: AppHandle) -> DesktopInfo {
 
 /// The folder that holds the app's data: `data/` next to a portable executable, otherwise the
 /// user's local app data folder (WebView profile and the app's private files).
-fn app_data_folder(app: &AppHandle) -> Option<std::path::PathBuf> {
+pub(crate) fn app_data_folder(app: &AppHandle) -> Option<std::path::PathBuf> {
     std::env::current_exe()
         .ok()
         .and_then(|exe| crate::portable::data_dir(&exe, &app.config().identifier))

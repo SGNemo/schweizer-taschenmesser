@@ -9,6 +9,8 @@ mod disk;
 #[cfg(desktop)]
 mod local_api;
 #[cfg(desktop)]
+mod local_llm;
+#[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
 mod portable;
@@ -110,6 +112,7 @@ pub fn run() {
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(system::SystemMonitor::default())
+        .manage(local_llm::LocalLlm::new())
         .manage(vault_bridge::VaultBridge::default())
         .invoke_handler(tauri::generate_handler![
             update::check_update,
@@ -139,6 +142,14 @@ pub fn run() {
             disk::disk_delete_plan,
             disk::disk_delete,
             disk::disk_delete_cancel,
+            local_llm::llm_status,
+            local_llm::llm_download,
+            local_llm::llm_download_cancel,
+            local_llm::llm_remove,
+            local_llm::llm_load,
+            local_llm::llm_unload,
+            local_llm::llm_generate,
+            local_llm::llm_cancel,
             system::system_info,
             system::system_processes,
             system::system_disk_io,

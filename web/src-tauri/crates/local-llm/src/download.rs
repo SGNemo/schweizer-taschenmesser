@@ -18,8 +18,14 @@ pub enum DownloadError {
     Http(String),
     Io(String),
     /// The finished file does not have the announced size or SHA-256; it was deleted.
-    ChecksumMismatch { expected: String, actual: String },
-    SizeMismatch { expected: u64, actual: u64 },
+    ChecksumMismatch {
+        expected: String,
+        actual: String,
+    },
+    SizeMismatch {
+        expected: u64,
+        actual: u64,
+    },
     Cancelled,
 }
 
@@ -39,7 +45,10 @@ impl std::fmt::Display for DownloadError {
 impl std::error::Error for DownloadError {}
 
 fn part_path(dest: &Path) -> PathBuf {
-    let mut name = dest.file_name().map(|n| n.to_os_string()).unwrap_or_default();
+    let mut name = dest
+        .file_name()
+        .map(|n| n.to_os_string())
+        .unwrap_or_default();
     name.push(".part");
     dest.with_file_name(name)
 }
@@ -49,7 +58,9 @@ fn hash_file(path: &Path) -> Result<String, DownloadError> {
     let mut hasher = Sha256::new();
     let mut buf = vec![0u8; 1 << 20];
     loop {
-        let n = file.read(&mut buf).map_err(|e| DownloadError::Io(e.to_string()))?;
+        let n = file
+            .read(&mut buf)
+            .map_err(|e| DownloadError::Io(e.to_string()))?;
         if n == 0 {
             break;
         }
@@ -100,7 +111,9 @@ pub fn download_verified(
         if have > 0 {
             request = request.header("Range", format!("bytes={have}-"));
         }
-        let response = request.call().map_err(|e| DownloadError::Http(e.to_string()))?;
+        let response = request
+            .call()
+            .map_err(|e| DownloadError::Http(e.to_string()))?;
         // 200 = the server ignored the Range header: start over.
         let append = have > 0 && response.status().as_u16() == 206;
         let mut file = OpenOptions::new()
@@ -113,26 +126,40 @@ pub fn download_verified(
         let mut done = if append { have } else { 0 };
         let mut body = response.into_body().into_reader();
         let mut buf = vec![0u8; 256 * 1024];
-        on_progress(Progress { done, total: expected_size });
+        on_progress(Progress {
+            done,
+            total: expected_size,
+        });
         loop {
             if cancel.load(Ordering::Relaxed) {
                 return Err(DownloadError::Cancelled);
             }
-            let n = body.read(&mut buf).map_err(|e| DownloadError::Io(e.to_string()))?;
+            let n = body
+                .read(&mut buf)
+                .map_err(|e| DownloadError::Io(e.to_string()))?;
             if n == 0 {
                 break;
             }
-            file.write_all(&buf[..n]).map_err(|e| DownloadError::Io(e.to_string()))?;
+            file.write_all(&buf[..n])
+                .map_err(|e| DownloadError::Io(e.to_string()))?;
             done += n as u64;
-            on_progress(Progress { done, total: expected_size });
+            on_progress(Progress {
+                done,
+                total: expected_size,
+            });
         }
         file.flush().map_err(|e| DownloadError::Io(e.to_string()))?;
     }
 
-    let size = fs::metadata(&part).map(|m| m.len()).map_err(|e| DownloadError::Io(e.to_string()))?;
+    let size = fs::metadata(&part)
+        .map(|m| m.len())
+        .map_err(|e| DownloadError::Io(e.to_string()))?;
     if size != expected_size {
         let _ = fs::remove_file(&part);
-        return Err(DownloadError::SizeMismatch { expected: expected_size, actual: size });
+        return Err(DownloadError::SizeMismatch {
+            expected: expected_size,
+            actual: size,
+        });
     }
     let actual = hash_file(&part)?;
     if !actual.eq_ignore_ascii_case(expected_sha256) {
@@ -156,7 +183,10 @@ mod tests {
     /// A one-shot local HTTP server that honours `Range` and serves `body`.
     fn serve(body: Vec<u8>) -> (String, thread::JoinHandle<()>) {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let url = format!("http://127.0.0.1:{}/model.gguf", listener.local_addr().unwrap().port());
+        let url = format!(
+            "http://127.0.0.1:{}/model.gguf",
+            listener.local_addr().unwrap().port()
+        );
         let handle = thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
             let mut reader = BufReader::new(stream.try_clone().unwrap());
@@ -202,10 +232,24 @@ mod tests {
         let (url, server) = serve(body.clone());
         let dest = temp("ok").join("m.gguf");
         let mut last = Progress { done: 0, total: 0 };
-        download_verified(&url, &dest, &sha(&body), body.len() as u64, &AtomicBool::new(false), |p| last = p).unwrap();
+        download_verified(
+            &url,
+            &dest,
+            &sha(&body),
+            body.len() as u64,
+            &AtomicBool::new(false),
+            |p| last = p,
+        )
+        .unwrap();
         server.join().unwrap();
         assert_eq!(fs::read(&dest).unwrap(), body);
-        assert_eq!(last, Progress { done: body.len() as u64, total: body.len() as u64 });
+        assert_eq!(
+            last,
+            Progress {
+                done: body.len() as u64,
+                total: body.len() as u64
+            }
+        );
         assert!(!part_path(&dest).exists());
     }
 
@@ -214,7 +258,15 @@ mod tests {
         let body = vec![7u8; 10_000];
         let (url, server) = serve(body.clone());
         let dest = temp("bad").join("m.gguf");
-        let err = download_verified(&url, &dest, &sha(b"something else"), 10_000, &AtomicBool::new(false), |_| {}).unwrap_err();
+        let err = download_verified(
+            &url,
+            &dest,
+            &sha(b"something else"),
+            10_000,
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .unwrap_err();
         server.join().unwrap();
         assert!(matches!(err, DownloadError::ChecksumMismatch { .. }));
         assert!(!dest.exists() && !part_path(&dest).exists());
@@ -225,9 +277,23 @@ mod tests {
         let body = vec![1u8; 4_000];
         let (url, server) = serve(body.clone());
         let dest = temp("size").join("m.gguf");
-        let err = download_verified(&url, &dest, &sha(&body), 5_000, &AtomicBool::new(false), |_| {}).unwrap_err();
+        let err = download_verified(
+            &url,
+            &dest,
+            &sha(&body),
+            5_000,
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .unwrap_err();
         server.join().unwrap();
-        assert!(matches!(err, DownloadError::SizeMismatch { expected: 5_000, actual: 4_000 }));
+        assert!(matches!(
+            err,
+            DownloadError::SizeMismatch {
+                expected: 5_000,
+                actual: 4_000
+            }
+        ));
         assert!(!dest.exists() && !part_path(&dest).exists());
     }
 
@@ -238,7 +304,15 @@ mod tests {
         fs::create_dir_all(dest.parent().unwrap()).unwrap();
         fs::write(part_path(&dest), &body[..50_000]).unwrap();
         let (url, server) = serve(body.clone());
-        download_verified(&url, &dest, &sha(&body), body.len() as u64, &AtomicBool::new(false), |_| {}).unwrap();
+        download_verified(
+            &url,
+            &dest,
+            &sha(&body),
+            body.len() as u64,
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .unwrap();
         server.join().unwrap();
         assert_eq!(fs::read(&dest).unwrap(), body);
     }

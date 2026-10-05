@@ -9,7 +9,9 @@ pub fn peak_memory_bytes() -> Option<u64> {
     }
     #[cfg(windows)]
     {
-        use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
+        use windows::Win32::System::ProcessStatus::{
+            GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS,
+        };
         use windows::Win32::System::Threading::GetCurrentProcess;
         let mut counters = PROCESS_MEMORY_COUNTERS::default();
         let size = std::mem::size_of::<PROCESS_MEMORY_COUNTERS>() as u32;

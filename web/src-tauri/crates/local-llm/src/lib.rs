@@ -14,7 +14,7 @@ mod memory;
 
 pub use download::{download_verified, DownloadError, Progress};
 pub use engine::{
-    backend_devices, cpu_supported, Backend, BackendDevice, Engine, EngineError, GenerateRequest, GenerateResult,
-    LoadParams, ModelInfo, StopReason, Worker,
+    backend_devices, cpu_supported, Backend, BackendDevice, Engine, EngineError, GenerateRequest,
+    GenerateResult, LoadParams, ModelInfo, StopReason, Worker,
 };
 pub use memory::peak_memory_bytes;

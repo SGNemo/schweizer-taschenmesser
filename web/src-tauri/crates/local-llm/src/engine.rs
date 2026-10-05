@@ -63,7 +63,11 @@ pub struct LoadParams {
 
 impl Default for LoadParams {
     fn default() -> Self {
-        Self { gpu_layers: 0, context: 4096, threads: None }
+        Self {
+            gpu_layers: 0,
+            context: 4096,
+            threads: None,
+        }
     }
 }
 
@@ -179,8 +183,11 @@ impl Engine {
         let mut backend = LlamaBackend::init().map_err(|e| EngineError::Backend(e.to_string()))?;
         backend.void_logs(); // nothing from llama.cpp is printed or logged
         let wants_gpu = params.gpu_layers > 0 && backend.supports_gpu_offload();
-        let model_params = LlamaModelParams::default()
-            .with_n_gpu_layers(if wants_gpu { params.gpu_layers } else { 0 });
+        let model_params = LlamaModelParams::default().with_n_gpu_layers(if wants_gpu {
+            params.gpu_layers
+        } else {
+            0
+        });
         let model = Box::new(
             LlamaModel::load_from_file(&backend, path, &model_params)
                 .map_err(|e| EngineError::Load(e.to_string()))?,
@@ -205,10 +212,21 @@ impl Engine {
             train_context: model.n_ctx_train(),
             layers: model.n_layer(),
             recurrent: model.is_recurrent() || model.is_hybrid(),
-            backend: if wants_gpu { Backend::Gpu } else { Backend::Cpu },
+            backend: if wants_gpu {
+                Backend::Gpu
+            } else {
+                Backend::Cpu
+            },
             load_ms: started.elapsed().as_millis() as u64,
         };
-        Ok(Self { ctx, model, _backend: backend, cached: Vec::new(), info, n_batch: n_batch as usize })
+        Ok(Self {
+            ctx,
+            model,
+            _backend: backend,
+            cached: Vec::new(),
+            info,
+            n_batch: n_batch as usize,
+        })
     }
 
     /// Forgets the cached prompt (the next request evaluates everything again).
@@ -235,14 +253,22 @@ impl Engine {
         }
         let n_ctx = self.ctx.n_ctx() as usize;
         if tokens.len() + 1 >= n_ctx {
-            return Err(EngineError::Prompt(format!("prompt of {} tokens does not fit {n_ctx}", tokens.len())));
+            return Err(EngineError::Prompt(format!(
+                "prompt of {} tokens does not fit {n_ctx}",
+                tokens.len()
+            )));
         }
 
         // Reuse the common prefix. The last prompt token is always evaluated again (we need its logits).
-        let mut keep = tokens.iter().zip(&self.cached).take_while(|(a, b)| a == b).count();
+        let mut keep = tokens
+            .iter()
+            .zip(&self.cached)
+            .take_while(|(a, b)| a == b)
+            .count();
         keep = keep.min(tokens.len() - 1);
         if keep < self.cached.len() {
-            let trimmed = !self.info.recurrent && self.ctx.kv_cache_seq_rm(0, Some(keep as u32), None).is_ok();
+            let trimmed = !self.info.recurrent
+                && self.ctx.kv_cache_seq_rm(0, Some(keep as u32), None).is_ok();
             if !trimmed {
                 self.ctx.clear_kv_cache();
                 keep = 0;
@@ -258,9 +284,13 @@ impl Engine {
             let end = (pos + self.n_batch).min(tokens.len());
             for (i, token) in tokens[pos..end].iter().enumerate() {
                 let last = pos + i == tokens.len() - 1;
-                batch.add(*token, (pos + i) as i32, &[0], last).map_err(|e| EngineError::Decode(e.to_string()))?;
+                batch
+                    .add(*token, (pos + i) as i32, &[0], last)
+                    .map_err(|e| EngineError::Decode(e.to_string()))?;
             }
-            self.ctx.decode(&mut batch).map_err(|e| EngineError::Decode(e.to_string()))?;
+            self.ctx
+                .decode(&mut batch)
+                .map_err(|e| EngineError::Decode(e.to_string()))?;
             self.cached.extend_from_slice(&tokens[pos..end]);
             pos = end;
             if cancel.load(Ordering::Relaxed) {
@@ -279,7 +309,8 @@ impl Engine {
 
         let mut sampler = match &req.grammar {
             Some(grammar) => LlamaSampler::chain_simple([
-                LlamaSampler::grammar(&self.model, grammar, "root").map_err(|e| EngineError::Grammar(e.to_string()))?,
+                LlamaSampler::grammar(&self.model, grammar, "root")
+                    .map_err(|e| EngineError::Grammar(e.to_string()))?,
                 LlamaSampler::greedy(),
             ]),
             None => LlamaSampler::chain_simple([LlamaSampler::greedy()]),
@@ -323,8 +354,12 @@ impl Engine {
                 break;
             }
             batch.clear();
-            batch.add(token, at as i32, &[0], true).map_err(|e| EngineError::Decode(e.to_string()))?;
-            self.ctx.decode(&mut batch).map_err(|e| EngineError::Decode(e.to_string()))?;
+            batch
+                .add(token, at as i32, &[0], true)
+                .map_err(|e| EngineError::Decode(e.to_string()))?;
+            self.ctx
+                .decode(&mut batch)
+                .map_err(|e| EngineError::Decode(e.to_string()))?;
             self.cached.push(token);
             at += 1;
             last_index = 0;
@@ -372,7 +407,11 @@ impl Worker {
             })
             .map_err(|e| EngineError::Backend(e.to_string()))?;
         let info = ready_rx.recv().map_err(|_| EngineError::Closed)??;
-        Ok(Self { tx: Some(tx), thread: Some(thread), info })
+        Ok(Self {
+            tx: Some(tx),
+            thread: Some(thread),
+            info,
+        })
     }
 
     /// Runs one generation on the worker thread and waits for it. Requests are served one at a time.
@@ -387,7 +426,11 @@ impl Worker {
             let mut on_piece = on_piece;
             let _ = reply_tx.send(engine.generate(&req, &cancel, |p| on_piece(p)));
         });
-        self.tx.as_ref().ok_or(EngineError::Closed)?.send(job).map_err(|_| EngineError::Closed)?;
+        self.tx
+            .as_ref()
+            .ok_or(EngineError::Closed)?
+            .send(job)
+            .map_err(|_| EngineError::Closed)?;
         reply_rx.recv().map_err(|_| EngineError::Closed)?
     }
 
