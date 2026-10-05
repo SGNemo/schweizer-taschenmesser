@@ -1,0 +1,10 @@
+# llama.cpp (crates/local-llm) is built without `-march=native` so the binary runs on other machines,
+# but with the x86 instruction sets that make a 3B model usable (AVX2 class CPUs, 2013+/Zen). Only the
+# C++ build sees these (cargo `[env]` reaches build scripts); the Rust code stays baseline x86-64.
+# The crate checks the CPU at run time (`cpu_supported`) before it touches llama.cpp.
+[env]
+GGML_AVX = "ON"
+GGML_AVX2 = "ON"
+GGML_FMA = "ON"
+GGML_F16C = "ON"
+GGML_BMI2 = "ON"

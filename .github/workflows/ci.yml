@@ -399,6 +399,36 @@ jobs:
       # Windows-only code (named pipe, registry) of the bridge crate compiles without a Windows box.
       - run: rustup target add x86_64-pc-windows-msvc && cargo check --locked -p taschenmesser-vault-bridge --target x86_64-pc-windows-msvc
 
+  # The built-in local model: llama.cpp behind a Tauri-free crate. Compiled and tested on its own (the app
+  # only pulls it in with `--features local-llm`), including a tiny random-weights model for the plumbing
+  # (load, grammar, KV-cache reuse, cancel). No real model is downloaded in CI.
+  local-llm:
+    name: Local model runtime (fmt, clippy, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: web/src-tauri/crates/local-llm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: web/src-tauri/crates/local-llm
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Smoke model (random weights, ~0.5 MB)
+        run: |
+          pip install --quiet gguf==0.19.0 numpy==2.4.6
+          python3 tests/make_smoke_gguf.py "$RUNNER_TEMP/smoke.gguf"
+      - run: cargo test --locked -- --test-threads=1
+        env:
+          NEMO_SMOKE_GGUF: ${{ runner.temp }}/smoke.gguf
+
   # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
   # push to develop that changed more than documentation. Never on pull requests, never a stable release.
   # See dev-preview.yml and docs/howto/ci.md -> "Dev-Preview".
