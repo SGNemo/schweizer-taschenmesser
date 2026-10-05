@@ -187,6 +187,12 @@ V2. *Android:* Übersicht, Kalender, Einstellungen im Hoch- und Querformat; Gloc
 V3. *Glocke:* eine Erinnerung für „gleich“ anlegen, App offen lassen: es erscheint **kein** Banner; die Glocke zählt hoch; „Nächste Erinnerung“ / „Zufällige Erinnerung“, Erledigt, Später, „Alle gelesen“ ausprobieren; Tastatur (Tab, Esc) und Fokus zurück auf die Glocke. ☐
 V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch einblenden“ aus: Windows-/Android-Systembenachrichtigungen kommen unverändert; mit Einstellung an: Karte oben/unten rechts, verschwindet nach der gewählten Zeit, die Erinnerung bleibt in der Glocke. ☐
 
+### Lesbarkeit (`feat/readability`) – nur im Alltag prüfbar
+- **L1 Lesehilfe eine Woche** auf PC und Handy: Einstellungen → Darstellung → Lesen einschalten; Anteil 30/40/50 und Stärke Weich/Fett ausprobieren; hilft es bei Notizen, Antworten, Hilfetexten? `Alt+L` zum Umschalten (PC).
+- **L2 Listen:** „Auch Listen“ wählen: werden Titel in Listen ruhiger oder unruhiger? Fokus-Lesen in einer langen Notiz öffnen.
+- **L3 Ruhig-Modus:** Farben → Ruhig: bleiben nur Überfälliges und Heutiges farbig; erkennt man Kategorien noch am Namen?
+- **L4 Gliederung:** Rechnungen/ToDos: Gruppen einklappen, nach Neustart bleibt der Zustand; Kalender-Woche: Stundenlinien, Wochenende, Jetzt-Linie; Bereichsfarben in Seitenleiste und Modul-Bibliothek (hell/dunkel, Rail, Handy).
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.

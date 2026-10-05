@@ -45,3 +45,8 @@
     display: none;
   }
 }
+
+/* Area colour on the icon only; the active area keeps the accent. */
+.link[data-area]:not([aria-current='page']) > svg {
+  color: var(--area-color);
+}

@@ -385,16 +385,38 @@ button.itemRow:hover {
   position: relative;
   height: calc(var(--hour) * 24);
   border-left: 1px solid var(--border);
-  background-image: repeating-linear-gradient(
-    to bottom,
-    var(--border) 0,
-    var(--border) 1px,
-    transparent 1px,
-    transparent var(--hour)
-  );
+  /* Graded lines: the full hour is clearly visible, the half hour only a hint. */
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      var(--tg-hour-line) 0,
+      var(--tg-hour-line) 1px,
+      transparent 1px,
+      transparent var(--hour)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--hour) / 2),
+      var(--tg-half-line) calc(var(--hour) / 2),
+      var(--tg-half-line) calc(var(--hour) / 2 + 1px),
+      transparent calc(var(--hour) / 2 + 1px),
+      transparent var(--hour)
+    );
+}
+.tgBody {
+  --tg-hour-line: color-mix(in srgb, var(--text-3) 45%, var(--border));
+  --tg-half-line: color-mix(in srgb, var(--border) 55%, transparent);
+}
+.tgCol {
+  border-left-color: var(--tg-hour-line);
+}
+/* The weekend is set apart quietly; today is a soft accent wash (the head also names it). */
+.tgWeekend {
+  background-color: color-mix(in srgb, var(--surface-2) 70%, transparent);
 }
 .tgToday {
-  background-color: var(--accent-soft);
+  background-color: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 .tgItem {
   position: absolute;
@@ -405,7 +427,7 @@ button.itemRow:hover {
   overflow: hidden;
   padding: 2px var(--space-1);
   border: 0;
-  border-left: 3px solid currentColor;
+  border-left: 3px solid var(--kind, var(--text-3));
   border-radius: var(--radius-sm);
   text-align: left;
   font-size: var(--text-xs);
@@ -413,7 +435,7 @@ button.itemRow:hover {
 }
 .tgTime {
   font-variant-numeric: tabular-nums;
-  opacity: 0.8;
+  color: var(--text-muted);
 }
 .tgNow {
   position: absolute;
@@ -421,8 +443,18 @@ button.itemRow:hover {
   right: 0;
   top: calc(var(--start) / 60 * var(--hour));
   height: 2px;
-  background: var(--danger);
+  background: var(--accent);
   pointer-events: none;
+}
+.tgNow::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 /* Agenda side panel */
@@ -469,4 +501,59 @@ button.itemRow:hover {
   height: 0.6rem;
   margin-inline-end: var(--space-2);
   border-radius: 50%;
+}
+
+/* Blocks and chips are neutral; the kind shows as a stripe at the left (and in the label/tooltip), not as a coloured text. */
+.chip.kind_event,
+.tgItem.kind_event {
+  --kind: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.chip.kind_reminder,
+.tgItem.kind_reminder {
+  --kind: var(--text-3);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.chip.kind_task,
+.tgItem.kind_task {
+  --kind: var(--cat-1);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.chip.kind_invoice,
+.tgItem.kind_invoice,
+.chip.kind_subscription,
+.tgItem.kind_subscription {
+  --kind: var(--cat-2);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.chip.kind_birthday,
+.tgItem.kind_birthday {
+  --kind: var(--cat-3);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.chip.kind_cancel,
+.tgItem.kind_cancel,
+.chip.kind_end,
+.tgItem.kind_end,
+.chip.kind_expiry,
+.tgItem.kind_expiry {
+  --kind: var(--warning);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.chip.kind_external,
+.tgItem.kind_external {
+  --kind: var(--text-muted);
+}
+.chip {
+  border-left: 3px solid var(--kind, var(--text-3));
+}
+.tgItem.done,
+.chip.done {
+  color: var(--text-muted);
 }

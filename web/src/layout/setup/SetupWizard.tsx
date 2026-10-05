@@ -22,7 +22,7 @@ import {
 } from '@/core/setup/state';
 import type { SetupCtx, SetupStepDef, SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
-import { Badge, Button, Dialog } from '@/ui';
+import { Badge, Button, Dialog, ReadableText } from '@/ui';
 import { PageContainer, PageFallback } from '../PageContainer';
 import styles from './SetupWizard.module.css';
 
@@ -185,7 +185,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
     body = (
       <div className={styles.body}>
         <h3 className={styles.stepTitle}>{t.setup.startTitle}</h3>
-        <p className={styles.desc}>{t.setup.startIntro}</p>
+        <p className={styles.desc}>
+          <ReadableText text={t.setup.startIntro} />
+        </p>
         {fresh.length > 0 ? <Badge tone="accent">{t.setup.isNew}</Badge> : null}
         <div className={styles.actions}>
           {next ? (
@@ -210,7 +212,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
     body = (
       <div className={styles.body} data-testid="setup-summary">
         <h3 className={styles.stepTitle}>{t.setup.summaryTitle}</h3>
-        <p className={styles.desc}>{t.setup.summaryIntro}</p>
+        <p className={styles.desc}>
+          <ReadableText text={t.setup.summaryIntro} />
+        </p>
         <ul className={styles.list}>
           {list.map((s, i) => {
             const p = stepProgress(state, s.id, auto.has(s.id));
@@ -256,7 +260,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
         </div>
         <p className={styles.meta}>{t.setup.stepOf(index + 1, total)}</p>
         <h3 className={styles.stepTitle}>{step.title}</h3>
-        <p className={styles.desc}>{step.description}</p>
+        <p className={styles.desc}>
+          <ReadableText text={step.description} />
+        </p>
         <Suspense fallback={<PageFallback />}>
           <StepView
             step={step}
