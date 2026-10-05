@@ -4,6 +4,10 @@ import type { Turn } from '@/core/ai/local/prompts/chat';
 import { formatDay } from '@/core/time/dates';
 import type { Message, Thread } from './schema';
 
+/** Oldest first; a question comes before its answer when both carry the same millisecond. */
+export const byTime = (a: Stored<Message>, b: Stored<Message>): number =>
+  a.createdAt - b.createdAt || Number(b.role === 'user') - Number(a.role === 'user');
+
 /** What the user's text looks like to the model: attached data first, then the question. */
 export function userContent(message: Pick<Message, 'content' | 'context'>): string {
   return message.context
@@ -16,7 +20,7 @@ export function userContent(message: Pick<Message, 'content' | 'context'>): stri
  * reject anything else): neighbours of the same role are joined, a leading answer is dropped.
  */
 export function toTurns(messages: readonly Stored<Message>[]): Turn[] {
-  const sorted = [...messages].sort((a, b) => a.createdAt - b.createdAt);
+  const sorted = [...messages].sort(byTime);
   const turns: Turn[] = [];
   for (const m of sorted) {
     const content = m.role === 'user' ? userContent(m) : m.content;
@@ -66,7 +70,7 @@ export function exportMarkdown(
   messages: readonly Stored<Message>[],
   names = { user: 'Du', assistant: 'Assistent' },
 ): string {
-  const sorted = [...messages].sort((a, b) => a.createdAt - b.createdAt);
+  const sorted = [...messages].sort(byTime);
   const parts = sorted.map((m) => {
     const day = formatDay(new Date(m.createdAt).toISOString().slice(0, 10), 'dd.MM.yyyy');
     return `**${names[m.role]}** · ${day}\n\n${m.content}`;

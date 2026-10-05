@@ -54,6 +54,21 @@
       }
     }
   },
+  "chat": {
+    "scope": "module.chat",
+    "fields": {
+      "defaultEngine": {
+        "type": "select",
+        "label": "Neue Chats antworten mit",
+        "default": "router"
+      },
+      "keepDays": {
+        "type": "select",
+        "label": "Alte Chats löschen nach",
+        "default": "0"
+      }
+    }
+  },
   "example": {
     "scope": "module.example",
     "fields": {

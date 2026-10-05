@@ -60,3 +60,10 @@ describe('chat logic', () => {
     expect(expiredThreads([t('old', 0)], 0, now)).toEqual([]);
   });
 });
+
+describe('message order', () => {
+  it('puts a question before its answer when they share a millisecond', () => {
+    const turns = toTurns([msg('a', 'assistant', 'A', 5), msg('q', 'user', 'Q', 5)]);
+    expect(turns).toEqual([{ role: 'user', content: 'Q' }]);
+  });
+});

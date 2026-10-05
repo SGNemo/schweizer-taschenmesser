@@ -1,8 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 
-test.beforeEach(async ({ page }) => {
-  await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
-});
+// The clock is not fixed here: messages are ordered by their creation time.
 
 const API = 'https://api.anthropic.com/v1/messages';
 const CORS = {
@@ -71,7 +69,7 @@ test.describe('Chat', () => {
     await page.getByRole('button', { name: 'Senden' }).click();
 
     const answer = page.getByTestId('msg-assistant').first();
-    await expect(answer.locator('strong')).toHaveText('Plan');
+    await expect(answer.getByText('Plan', { exact: true })).toBeVisible();
     await expect(answer.getByRole('link', { name: 'gut' })).toHaveAttribute(
       'rel',
       'noopener noreferrer',

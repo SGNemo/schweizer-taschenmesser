@@ -14,7 +14,7 @@ import { AiError, type AiErrorCode, type AiProvider } from '@/core/ai/providers/
 import { recordUsage } from '@/core/ai/usage';
 import type { Stored } from '@/core/db/types';
 import { getPlatform } from '@/core/platform';
-import { autoTitle, toTurns } from './logic';
+import { autoTitle, byTime, toTurns } from './logic';
 import { messageRepo, threadRepo } from './repo';
 import type { Message } from './schema';
 
@@ -43,7 +43,7 @@ export async function messagesOf(threadId: string): Promise<Stored<Message>[]> {
     .active()
     .filter((m) => m.threadId === threadId)
     .toArray();
-  return rows.sort((a, b) => a.createdAt - b.createdAt);
+  return rows.sort(byTime);
 }
 
 /**
