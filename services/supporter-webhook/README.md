@@ -60,7 +60,7 @@ Locally the mail step fails (dummy Resend key) – that is the expected "owner i
 ## Deploy (you do this; nothing below puts a secret into the repository)
 
 1. **Accounts:** a Cloudflare account (free plan is enough), a [Resend](https://resend.com) account, and your Ko-fi page.
-2. **Key pair** (once, own machine): `cd tools/supporter-cli && node bin/supporter-cli.mjs keygen`, then `set-public-key`, commit `web/src/core/supporter/publicKeys.ts` and ship an app version that contains it. Back up the key file ([docs/howto/supporter.md](../../docs/howto/supporter.md)).
+2. **Key pair** (once, own machine, Node 22.18+): run `npm ci` in `packages/supporter-codes` and in `tools/supporter-cli` first, then `cd tools/supporter-cli && node bin/supporter-cli.mjs keygen`, then `set-public-key`, commit `web/src/core/supporter/publicKeys.ts` and ship an app version that contains it. Back up the key file ([docs/howto/supporter.md](../../docs/howto/supporter.md)).
 3. **Login:** `cd services/supporter-webhook && npx wrangler login`.
 4. **KV:** `npx wrangler kv namespace create KV` → copy the printed `id` into `wrangler.toml` (`REPLACE_WITH_KV_NAMESPACE_ID`). That id is not a secret.
 5. **Queues:** `npx wrangler queues create supporter-mail` and `npx wrangler queues create supporter-mail-dlq`.
@@ -72,9 +72,10 @@ Locally the mail step fails (dummy Resend key) – that is the expected "owner i
    npx wrangler secret put KOFI_VERIFICATION_TOKEN     # paste the token from Ko-fi (step 12)
    node ../../tools/supporter-cli/bin/supporter-cli.mjs print-worker-secret --yes | npx wrangler secret put SUPPORTER_SIGNING_KEY
    npx wrangler secret put RESEND_API_KEY
-   npx wrangler secret put HASH_PEPPER                  # e.g. output of: openssl rand -hex 32
+   npx wrangler secret put HASH_PEPPER                  # a long random string, e.g. the output of: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    npx wrangler secret put OWNER_EMAIL
    ```
+   On Windows PowerShell the same commands work (paths with `\` or `/`). A value piped in can carry a trailing line break; the Worker trims all secrets, so that is harmless. The key file lives in your user profile (`%USERPROFILE%\.nemo-supporter\`); Windows does not apply the Unix `600` mode, so keep that folder out of cloud-synced folders (OneDrive) and back it up deliberately.
 10. **Domain / route (optional):** in the Cloudflare dashboard add a custom domain to the Worker (Workers & Pages → the Worker → Settings → Domains & Routes), or add a `routes` entry to `wrangler.toml` for a zone you own and set `workers_dev = false`.
 11. **Mail provider:** in Resend add your sending domain and put the DNS records it shows (SPF, DKIM, plus a DMARC record) into your DNS; wait until the domain shows _Verified_. Create an API key with _Sending access_ only. `MAIL_FROM` must use that domain – otherwise Resend answers 422 and every mail ends in the owner notice.
 12. **Ko-fi webhook:** Ko-fi → Settings → API → Webhooks (`ko-fi.com/manage/webhooks`): enter `https://<your worker>/kofi`, copy the **verification token** from that page into `KOFI_VERIFICATION_TOKEN` (step 9).

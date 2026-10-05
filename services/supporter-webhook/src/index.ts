@@ -10,6 +10,29 @@ import { defaultDeps, type Deps, type Env } from './types.ts';
 
 const MAX_BODY = 16 * 1024;
 
+const TEXT_SETTINGS = [
+  'KOFI_VERIFICATION_TOKEN',
+  'SUPPORTER_SIGNING_KEY',
+  'RESEND_API_KEY',
+  'HASH_PEPPER',
+  'OWNER_EMAIL',
+  'SIGNING_KEY_ID',
+  'MAIL_FROM',
+] as const;
+
+/**
+ * Secrets piped in with `wrangler secret put` (PowerShell, Windows) can carry a trailing line
+ * break; stray whitespace must never make a valid token or key fail.
+ */
+export function cleanEnv(env: Env): Env {
+  const out: Env = { ...env };
+  for (const key of TEXT_SETTINGS) {
+    const value = out[key] as unknown;
+    if (typeof value === 'string') out[key] = value.trim();
+  }
+  return out;
+}
+
 function misconfigured(env: Env): string | null {
   const missing = (
     [
@@ -69,9 +92,10 @@ async function handleKofi(request: Request, env: Env, deps: Deps): Promise<Respo
 
 export async function handleFetch(
   request: Request,
-  env: Env,
+  rawEnv: Env,
   deps: Deps = defaultDeps,
 ): Promise<Response> {
+  const env = cleanEnv(rawEnv);
   const { pathname } = new URL(request.url);
 
   if (pathname === '/health') {
@@ -100,5 +124,5 @@ export async function handleFetch(
 
 export default {
   fetch: (request: Request, env: Env) => handleFetch(request, env),
-  queue: (batch: BatchLike, env: Env) => handleQueue(batch, env, defaultDeps),
+  queue: (batch: BatchLike, env: Env) => handleQueue(batch, cleanEnv(env), defaultDeps),
 };
