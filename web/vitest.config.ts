@@ -12,6 +12,10 @@ export default defineConfig({
       '@nemo/vault-core': fileURLToPath(
         new URL('../packages/vault-core/src/index.ts', import.meta.url),
       ),
+      '@noble/curves': fileURLToPath(new URL('./node_modules/@noble/curves', import.meta.url)),
+      '@nemo/supporter-codes': fileURLToPath(
+        new URL('../packages/supporter-codes/src/index.ts', import.meta.url),
+      ),
     },
   },
   test: {
