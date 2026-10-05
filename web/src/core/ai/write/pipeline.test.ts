@@ -2,7 +2,12 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { ask, type AskDeps } from '../assistant';
-import type { AiProvider, CompletionRequest, CompletionResult } from '../providers/types';
+import {
+  AiError,
+  type AiProvider,
+  type CompletionRequest,
+  type CompletionResult,
+} from '../providers/types';
 import { clearAll, ctxFor, seed, TODAY, useFixedClock } from '../testing';
 import { loadUsageRows, totalsByStage } from '../usage';
 import { commitOps, undoGroup } from './commit';
@@ -195,6 +200,22 @@ describe('stage 2: the cloud is the last resort', () => {
       from: expect.stringContaining('2026'),
       to: expect.stringContaining('2026'),
     });
+  });
+
+  it('reports a rate limit or an abort instead of writing anything', async () => {
+    for (const code of ['rate-limit', 'aborted'] as const) {
+      const p: AiProvider = {
+        id: 'claude',
+        model: 'claude-haiku-4-5',
+        complete: vi.fn(async () => {
+          throw new AiError(code, code);
+        }),
+      };
+      const before = await count('todos_task');
+      const res = await ask(SENTENCE, deps({ provider: p }));
+      expect(res).toMatchObject({ ok: false, error: code });
+      expect(await count('todos_task')).toBe(before);
+    }
   });
 
   it('rejects a malformed answer so the router can try the next provider', async () => {
