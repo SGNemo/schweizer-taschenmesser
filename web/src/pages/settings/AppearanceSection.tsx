@@ -1,3 +1,5 @@
+import { usePaletteStore } from '@/core/supporter/palette';
+import { useSupporter } from '@/core/supporter';
 import { t } from '@/strings';
 import {
   ACCENTS,
@@ -18,6 +20,7 @@ import {
   type ThemeChoice,
 } from '@/stores/ui';
 import { Segmented, SelectField, SettingRow, SettingsGroup } from '@/ui';
+import { PaletteRows } from './PaletteRows';
 
 const THEMES = [
   { value: 'system', label: t.settings.themeSystem },
@@ -44,6 +47,10 @@ export function AppearanceSection() {
   const sidebar = useUiStore((s) => s.sidebar);
   const setSidebar = useUiStore((s) => s.setSidebar);
   const r = t.settings.rows;
+  const { tier } = useSupporter();
+  const chosenPalette = usePaletteStore((p) => p.chosen);
+  const previewPalette = usePaletteStore((p) => p.preview);
+  const paletteOn = (previewPalette ?? (tier !== 'none' ? chosenPalette : null)) !== null;
   return (
     <SettingsGroup id="appearance" title={t.settings.appearance}>
       <SettingRow id="appearance--theme" label={t.settings.theme} description={r.themeHint}>
@@ -54,10 +61,15 @@ export function AppearanceSection() {
           onChange={setTheme}
         />
       </SettingRow>
-      <SettingRow id="appearance--accent" label={t.settings.accent} description={r.accentHint}>
+      <SettingRow
+        id="appearance--accent"
+        label={t.settings.accent}
+        description={paletteOn ? t.supporter.palette.accentFollows : r.accentHint}
+      >
         <SelectField
           label={t.settings.accent}
           labelHidden
+          disabled={paletteOn}
           value={accent}
           onChange={(e) => setAccent(e.target.value as AccentChoice)}
         >
@@ -68,6 +80,7 @@ export function AppearanceSection() {
           ))}
         </SelectField>
       </SettingRow>
+      <PaletteRows />
       <SettingRow
         id="appearance--textSize"
         label={t.settings.textSize}

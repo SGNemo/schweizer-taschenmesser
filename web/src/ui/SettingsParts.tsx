@@ -17,16 +17,19 @@ export function SettingRow({
   label,
   description,
   hint,
+  stacked,
   children,
 }: {
   id?: string;
   label: string;
   description?: string;
   hint?: string;
+  /** Control below the text instead of beside it (wide controls such as tile pickers). */
+  stacked?: boolean;
   children?: ReactNode;
 }) {
   return (
-    <div id={id} className={styles.row}>
+    <div id={id} className={[styles.row, stacked ? styles.stacked : ''].join(' ')}>
       <div className={styles.text}>
         <span className={styles.label}>
           {label}

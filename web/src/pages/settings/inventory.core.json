@@ -2,6 +2,8 @@
   "localStorage (device-local, stores/ui.ts)": {
     "tm-theme": "system",
     "tm-accent": "orange",
+    "tm-palette": "none (supporter colour theme; core/supporter/palette.ts)",
+    "tm-logo": "default (themed = fish in the accent colour, supporter)",
     "tm-text-size": "normal",
     "tm-density": "normal",
     "tm-leading": "normal",
@@ -14,6 +16,12 @@
   "_settings scope core": {
     "displayName": "",
     "weekStart": "mon"
+  },
+  "_settings scope supporter": {
+    "code": "",
+    "addedAt": "",
+    "showSidebarBadge": false,
+    "hideSetupHint": false
   },
   "_settings scope nav": {
     "favourites": [

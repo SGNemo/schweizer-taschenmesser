@@ -10,6 +10,7 @@ import { getLastCheckAt } from '@/core/update/prefs';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, DangerZone, Logo, SettingRow, SettingsGroup, TypedConfirmDialog } from '@/ui';
+import { SupporterBadge } from '@/layout/SupporterBadge';
 import styles from './settings.module.css';
 
 const a = t.about;
@@ -46,6 +47,7 @@ export function AboutSection() {
         <div>
           <p className={styles.aboutName}>{t.appName}</p>
           <p>{a.tagline}</p>
+          <SupporterBadge placement="about" />
         </div>
       </div>
       <SettingRow id="about--version" label={a.version}>

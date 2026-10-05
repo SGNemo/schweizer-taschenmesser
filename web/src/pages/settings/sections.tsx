@@ -60,6 +60,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     fields: [
       { key: 'theme', label: s.theme, description: s.rows.themeHint },
       { key: 'accent', label: s.accent, description: s.rows.accentHint },
+      {
+        key: 'palette',
+        label: t.supporter.palette.label,
+        description: t.supporter.palette.hintLocked,
+      },
+      { key: 'logo', label: t.supporter.logo.label, description: t.supporter.logo.hint },
       { key: 'textSize', label: s.textSize, description: s.rows.textSizeHint },
       { key: 'density', label: s.density, description: s.rows.densityHint },
       { key: 'sidebar', label: s.sidebar, description: s.rows.sidebarHint },

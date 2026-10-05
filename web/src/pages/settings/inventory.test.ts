@@ -12,6 +12,8 @@ const CORE_KEYS = {
   'localStorage (device-local, stores/ui.ts)': {
     'tm-theme': 'system',
     'tm-accent': 'orange',
+    'tm-palette': 'none (supporter colour theme; core/supporter/palette.ts)',
+    'tm-logo': 'default (themed = fish in the accent colour, supporter)',
     'tm-text-size': 'normal',
     'tm-density': 'normal',
     'tm-leading': 'normal',
@@ -22,6 +24,12 @@ const CORE_KEYS = {
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard',
   },
   '_settings scope core': { displayName: '', weekStart: 'mon' },
+  '_settings scope supporter': {
+    code: '',
+    addedAt: '',
+    showSidebarBadge: false,
+    hideSetupHint: false,
+  },
   '_settings scope nav': { favourites: ['calendar', 'todos', 'finance'] },
   '_settings scope tools': { enabled: 'per tool', order: 'per tool' },
   '_settings scope quickCapture': { defaultType: 'todo' },

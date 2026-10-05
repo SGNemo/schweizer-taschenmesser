@@ -3773,4 +3773,36 @@ export const t = {
     add: 'Eintrag anlegen',
     open: 'Beispiel öffnen',
   },
+  supporter: {
+    tier: { kaffee: 'Kaffee', kuchen: 'Kuchen', developer: 'Entwickler' },
+    badge: {
+      thanks: 'Danke',
+      thanksName: (name: string) => `Danke, ${name}`,
+    },
+    palette: {
+      label: 'Farbthema',
+      hintSupporter: 'Rein optisch, jederzeit zurück zum Standard.',
+      hintLocked:
+        'Zusätzliche Farbthemen sind ein kleines Dankeschön für Unterstützer. Ausprobieren geht trotzdem: Ein Klick zeigt das Thema 30 Sekunden lang.',
+      standard: 'Standard',
+      names: {
+        korallenriff: 'Korallenriff',
+        tiefsee: 'Tiefsee',
+        sand: 'Sand',
+        nordlicht: 'Nordlicht',
+        monochrom: 'Monochrom',
+      },
+      choose: (name: string) => `Farbthema ${name} wählen`,
+      tryOut: (name: string) => `Farbthema ${name} 30 Sekunden ansehen`,
+      locked: 'Für Unterstützer',
+      previewing: (name: string) => `Vorschau: ${name}`,
+      previewEnd: 'Vorschau beenden',
+      accentFollows: 'Das Farbthema legt die Akzentfarbe fest.',
+    },
+    logo: {
+      label: 'Logo in Themenfarbe',
+      hint: 'Der Fisch übernimmt die Akzentfarbe.',
+      hintLocked: 'Für Unterstützer.',
+    },
+  },
 } as const;
