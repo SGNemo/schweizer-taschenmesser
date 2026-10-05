@@ -1,0 +1,36 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Übersicht – Variante B „Mit Lesehilfe und Kategorien"</title><style>:root{--bg:#f3f4f4;--surface:#fff;--surface-2:#eaecee;--border:#e2e5e8;--text:#171f24;--text-muted:#55636b;--text-3:#5f6c75;--accent:#b5430c;--accent-soft:#fbe9de;--danger:#b3261e;--success:#1b7545;--warning:#8a5a00;--info:#1f5fa8;--cat-1:#1f5fa8;--cat-2:#16847f;--cat-3:#7a4aa8;--cat-4:#8a5a00}
+:root[data-theme=dark]{--bg:#0f1316;--surface:#171c20;--surface-2:#1f2529;--border:#262d32;--text:#eceff1;--text-muted:#aab4bb;--text-3:#88939b;--accent:#ff9a57;--accent-soft:#2e241c;--danger:#f4a39c;--success:#7fd3a3;--warning:#e8b85a;--info:#7cc7e8;--cat-1:#7cc7e8;--cat-2:#4fb3ad;--cat-3:#c9a8ea;--cat-4:#e8b85a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,sans-serif;padding:24px}
+h1{font-size:28px;margin:0 0 4px;font-weight:600}.sub{color:var(--text-3);font-size:13px;margin:0 0 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;max-width:1100px}
+.card{background:var(--surface);border-radius:16px;padding:20px 22px;box-shadow:0 1px 2px #0001}
+.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.head b{font-size:15px;font-weight:600}.head span{font-size:13px;color:var(--text-3)}
+.grp{font-size:13px;font-weight:500;color:var(--text-3);margin:16px 0 4px;display:flex;justify-content:space-between}
+.grp:first-of-type{margin-top:4px}.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
+.row{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 4px 0 12px;position:relative;border-radius:10px}
+.row::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:4px;border-radius:2px;background:transparent}
+.row.over::before{background:var(--danger)}.row.today::before{background:var(--accent)}.row.done{color:var(--text-3)}.row.done .t{text-decoration:line-through}
+.row .t{flex:1}.row .m{font-size:13px;color:var(--text-3)}.amt{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.row+.row{border-top:1px solid var(--border)}.unit{color:var(--text-3);font-weight:400}
+.badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:8px;display:inline-flex;gap:4px;align-items:center;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c)}
+.over .badge,.b-over{--c:var(--danger)}.b-today{--c:var(--accent)}.b-ok{--c:var(--success)}.b-soon{--c:var(--text-muted)}
+.chip{font-size:12px;padding:1px 8px;border-radius:8px;background:var(--surface-2);color:var(--text-muted);display:inline-flex;gap:6px;align-items:center}.chip i{width:8px;height:8px;border-radius:50%;background:var(--c);display:inline-block}
+.bold b{font-weight:700}.prose{max-width:68ch}.prose p{margin:0 0 .9em}
+.tag{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px}
+.kpi{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.ctx{font-size:13px;color:var(--text-muted)}
+.strip{background:var(--accent-soft);border-radius:12px;padding:10px 14px;margin-bottom:24px;display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+.calm .badge,.calm .row::before{--c:var(--text-3)}
+</style><script>if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.dataset.theme='dark';const q=new URLSearchParams(location.search).get('theme');if(q)document.documentElement.dataset.theme=q</script></head><body><h1>Übersicht – Variante B „Mit Lesehilfe und Kategorien"</h1><p class="sub">Wortanfänge hervorgehoben (40 %), Kategorien als Chip mit Punkt + Name, Beträge nur nach Einnahme/Ausgabe gefärbt · invented test data · ?theme=dark</p><div class="strip" role="status"><b>Jetzt wichtig</b><span>⚠ 2 Rechnungen überfällig</span></div>
+<div class="grid">
+<section class="card bold"><div class="head"><b>Notizen</b><span>Lesehilfe 40 %</span></div>
+<div class="row "><div class="t"><b>Urlaub</b>splanung <b>So</b>mmer mit <b>Fam</b>ilie <b>besp</b>rechen<div class="m"><b>Ent</b>wurf für die <b>Reis</b>eroute und <b>mög</b>liche <b>Unte</b>rkünfte</div></div><div class="amt"></div></div>
+<div class="row "><div class="t"><b>Einka</b>ufsliste <b>Woch</b>enende <b>übera</b>rbeiten<div class="m"><b>Vor</b>räte <b>pr</b>üfen und <b>feh</b>lende <b>Zut</b>aten <b>erg</b>änzen</div></div><div class="amt"></div></div>
+<div class="row "><div class="t"><b>Steuer</b>erklärung <b>Unte</b>rlagen <b>sam</b>meln<div class="m"><b>Be</b>lege 2025 <b>sort</b>ieren, <b>Spenden</b>quittungen <b>su</b>chen</div></div><div class="amt"></div></div></section>
+<section class="card"><div class="head"><b>Ausgaben</b><span>September</span></div>
+<table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums"><tbody>
+<tr><td><span class="chip" style="--c:var(--cat-1)"><i></i>Wohnen</span></td><td class="amt" style="color:var(--danger)">−820,00 <span class="unit">€</span></td></tr>
+<tr><td><span class="chip" style="--c:var(--cat-2)"><i></i>Lebensmittel</span></td><td class="amt" style="color:var(--danger)">−312,40 <span class="unit">€</span></td></tr>
+<tr><td><span class="chip" style="--c:var(--cat-3)"><i></i>Freizeit</span></td><td class="amt" style="color:var(--danger)">−127,50 <span class="unit">€</span></td></tr>
+<tr><td><span class="chip" style="--c:var(--cat-4)"><i></i>Gehalt</span></td><td class="amt" style="color:var(--success)">+2.850,00 <span class="unit">€</span></td></tr></tbody></table>
+<div class="ctx" style="margin-top:8px">Ausgaben ▼ rot, Einnahmen ▲ grün (Vorzeichen immer sichtbar)</div></section>
+</div></body></html>
