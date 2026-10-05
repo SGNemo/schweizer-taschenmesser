@@ -1,6 +1,6 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import type { CalendarItem } from '@/core/modules/types';
-import { formatDay, nowTime, today } from '@/core/time/dates';
+import { formatDay, isoWeekday, nowTime, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { groupByDate, splitDay } from '../views';
 import { kindLabel } from './ItemRow';
@@ -82,7 +82,10 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem }: Props) {
             ))}
           </div>
           {perDay.map(({ d, timed }) => (
-            <div key={d} className={`${styles.tgCol} ${d === now ? styles.tgToday : ''}`}>
+            <div
+              key={d}
+              className={`${styles.tgCol} ${isoWeekday(d) >= 6 ? styles.tgWeekend : ''} ${d === now ? styles.tgToday : ''}`}
+            >
               {timed.map(({ item, start, end, lane, lanes }) => (
                 <button
                   key={`${item.source}:${item.id}`}

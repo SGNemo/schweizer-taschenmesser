@@ -77,8 +77,9 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--text-muted);
   font: inherit;
   text-decoration: underline;
+  text-underline-offset: 0.2em;
   cursor: pointer;
 }

@@ -1,14 +1,14 @@
 import { t } from '@/strings';
 import {
   ACCENTS,
+  COLOR_MODES,
   DENSITIES,
   HOME_VIEWS,
-  LEADINGS,
   MOTIONS,
   SIDEBARS,
-  TEXT_SIZES,
   useUiStore,
   type AccentChoice,
+  type ColorMode,
   type DensityChoice,
   type HomeViewChoice,
   type LeadingChoice,
@@ -43,6 +43,8 @@ export function AppearanceSection() {
   const setHomeView = useUiStore((s) => s.setHomeView);
   const sidebar = useUiStore((s) => s.sidebar);
   const setSidebar = useUiStore((s) => s.setSidebar);
+  const colorMode = useUiStore((s) => s.colorMode);
+  const setColorMode = useUiStore((s) => s.setColorMode);
   const r = t.settings.rows;
   return (
     <SettingsGroup id="appearance" title={t.settings.appearance}>
@@ -69,6 +71,18 @@ export function AppearanceSection() {
         </SelectField>
       </SettingRow>
       <SettingRow
+        id="appearance--color"
+        label={t.settings.color}
+        description={t.settings.colorHint}
+      >
+        <Segmented<ColorMode>
+          label={t.settings.color}
+          value={colorMode}
+          options={COLOR_MODES.map((v) => ({ value: v, label: t.settings.colorOptions[v] }))}
+          onChange={setColorMode}
+        />
+      </SettingRow>
+      <SettingRow
         id="appearance--textSize"
         label={t.settings.textSize}
         description={r.textSizeHint}
@@ -76,7 +90,10 @@ export function AppearanceSection() {
         <Segmented<TextSizeChoice>
           label={t.settings.textSize}
           value={textSize}
-          options={TEXT_SIZES.map((v) => ({ value: v, label: t.settings.textSizeOptions[v] }))}
+          options={(['small', 'normal', 'large', 'xlarge'] as const).map((v) => ({
+            value: v,
+            label: t.settings.textSizeOptions[v],
+          }))}
           onChange={setTextSize}
         />
       </SettingRow>
@@ -84,7 +101,10 @@ export function AppearanceSection() {
         <Segmented<LeadingChoice>
           label={t.settings.leading}
           value={leading}
-          options={LEADINGS.map((v) => ({ value: v, label: t.settings.leadingOptions[v] }))}
+          options={(['compact', 'normal', 'airy'] as const).map((v) => ({
+            value: v,
+            label: t.settings.leadingOptions[v],
+          }))}
           onChange={setLeading}
         />
       </SettingRow>

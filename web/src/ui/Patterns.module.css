@@ -578,3 +578,25 @@ button.chip[aria-pressed='true'] {
   background: var(--accent-soft);
   color: var(--accent);
 }
+
+/* Urgency stripe at the left edge of a row (the colour never stands alone: the row carries a badge or text). */
+.item[data-tone] {
+  position: relative;
+}
+.item[data-tone]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--stripe, var(--danger));
+}
+.item[data-tone='today'] {
+  --stripe: var(--accent);
+}
+/* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
+.done [data-rs] {
+  color: inherit;
+}

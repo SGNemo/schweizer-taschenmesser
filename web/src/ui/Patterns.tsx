@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import { t } from '@/strings';
 import { Checkbox } from './Fields';
+import { ReadableText } from './ReadableText';
 import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
@@ -121,6 +122,11 @@ export function ItemList({
   );
 }
 
+/** Meta that reads like a sentence (a note excerpt, a description) gets the reading aid; short facts ("Fällig am …") do not. */
+function isTeaser(meta: string): boolean {
+  return meta.split(/\s+/).length >= 5;
+}
+
 /**
  * A row: optional selection box and `lead`, a main button (title + meta lines, opens the editor),
  * trailing `end` content and `actions` that appear on hover/focus. `data-row` marks the main
@@ -138,6 +144,7 @@ export function ItemRow({
   selected,
   onSelectChange,
   done,
+  tone,
   onSwipeRight,
   swipeRightLabel,
   onSwipeLeft,
@@ -158,6 +165,8 @@ export function ItemRow({
   onSelectChange?: (selected: boolean, extend: boolean) => void;
   /** Done entries are struck through and quiet. */
   done?: boolean;
+  /** Urgency stripe at the left edge (overdue = danger, today = accent). Always pair it with text or a badge in the row. */
+  tone?: 'overdue' | 'today';
   /** Touch swipes (phone): right = done/paid, left = move/snooze; the labels name the revealed action. */
   onSwipeRight?: () => void;
   swipeRightLabel?: string;
@@ -169,11 +178,15 @@ export function ItemRow({
   const body = (
     <>
       <span className={styles.title} title={typeof title === 'string' ? title : undefined}>
-        {title}
+        {typeof title === 'string' ? <ReadableText text={title} kind="list" /> : title}
       </span>
       {meta ? (
         <span className={styles.muted} title={typeof meta === 'string' ? meta : undefined}>
-          {meta}
+          {typeof meta === 'string' && isTeaser(meta) ? (
+            <ReadableText text={meta} kind="list" />
+          ) : (
+            meta
+          )}
         </span>
       ) : null}
     </>
@@ -181,6 +194,7 @@ export function ItemRow({
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
   return (
     <li
+      data-tone={tone}
       className={[
         styles.item,
         swipe.enabled ? styles.swipeable : '',
