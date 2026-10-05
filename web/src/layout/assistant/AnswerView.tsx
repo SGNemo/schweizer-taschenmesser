@@ -12,6 +12,7 @@ import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, ReadableText } from '@/ui';
+import { WritePreview } from './WritePreview';
 import styles from './assistant.module.css';
 
 const MAX_ROWS = 10;
@@ -214,6 +215,8 @@ function Result({
           <ReadableText text={result.text} />
         </p>
       );
+    case 'write':
+      return <WritePreview result={result} onDone={onDone} />;
   }
 }
 

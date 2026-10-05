@@ -21,4 +21,61 @@ export const aiSchema: ModuleAiSchema = {
       searchable: ['name', 'note'],
     },
   },
+  actions: {
+    create: {
+      kind: 'create',
+      collection: 'subscription',
+      label: 'Abo anlegen',
+      description: 'Abo mit Betrag, Intervall (recurrence) und Startdatum',
+      fields: ['name', 'amountMinor', 'recurrence', 'startDate', 'cancelNoticeDays', 'note'],
+      required: ['name', 'amountMinor', 'recurrence', 'startDate'],
+      parse: {
+        keywords: ['abo', 'abonnement', 'subscription'],
+        defaults: { startDate: '@today' },
+      },
+      examples: [
+        {
+          input: 'Abo Netflix 12,99 € monatlich ab 1.11.',
+          output: {
+            name: 'Netflix',
+            amountMinor: 1299,
+            recurrence: { freq: 'monthly', interval: 1 },
+            startDate: '2026-11-01',
+          },
+        },
+      ],
+    },
+    cancel: {
+      kind: 'transition',
+      collection: 'subscription',
+      label: 'Abo beenden',
+      description: 'Abo als gekündigt (inaktiv) markieren',
+      set: { active: false },
+      parse: { keywords: ['gekündigt', 'kündige', 'beendet', 'beende'] },
+      examples: [
+        { input: 'Kündige das Abo Netflix', target: 'Netflix', output: { active: false } },
+      ],
+    },
+    update: {
+      kind: 'update',
+      collection: 'subscription',
+      label: 'Abo ändern',
+      description: 'Betrag, Intervall, Name oder Kündigungsfrist ändern',
+      fields: ['name', 'amountMinor', 'recurrence', 'startDate', 'cancelNoticeDays', 'note'],
+      examples: [
+        {
+          input: 'Ändere das Abo Netflix auf 13,99 €',
+          target: 'Netflix',
+          output: { amountMinor: 1399 },
+        },
+      ],
+    },
+    delete: {
+      kind: 'delete',
+      collection: 'subscription',
+      label: 'Abo löschen',
+      description: 'Abo löschen',
+      examples: [{ input: 'Lösche das Abo Netflix', target: 'Netflix', output: {} }],
+    },
+  },
 };

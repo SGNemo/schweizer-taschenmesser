@@ -1,4 +1,5 @@
 import type { PlatformKind } from '@/core/platform/types';
+import { validateAiActions } from './aiActions';
 import { ALL_WIDGET_SIZES, AREAS, PAGE_LAYOUTS, type ModuleManifest } from './types';
 
 // Manifests are eager (small); heavy parts (routes, widgets) are lazy inside each manifest.
@@ -102,6 +103,7 @@ export function validateManifest(m: ModuleManifest): string[] {
       errors.push(`aiSchema collection "${name}" has no dataSchema`);
     if (!(c.titleField in c.fields)) errors.push(`aiSchema "${name}".titleField is not a field`);
   }
+  errors.push(...validateAiActions(m.aiSchema));
   const onboarding = m.contributions?.onboarding;
   if (m.retired) return errors;
   if (!onboarding) {

@@ -7,6 +7,8 @@ Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `d
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
+KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); PR B lokales Modell und PR C Chat-Modul folgen. Handtests K1–K4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 Lesbarkeit (`feat/readability`): Lesehilfe (Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), Entwurf [design/READABILITY-PLAN.md](design/READABILITY-PLAN.md).
 
 ## Heute möglich in 15 Minuten

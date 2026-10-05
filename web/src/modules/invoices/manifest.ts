@@ -50,6 +50,7 @@ const manifest: ModuleManifest = {
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
     aiComputed: () => import('./aiComputed'),
+    aiActionHandlers: () => import('./aiActionHandlers'),
   },
 };
 
