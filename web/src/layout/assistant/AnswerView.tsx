@@ -204,6 +204,9 @@ function Result({
       return <CreateCard prepared={result.prepared} onDone={onDone} />;
     case 'message':
       return <p>{result.text}</p>;
+    case 'write':
+      // The preview card follows in the next commit.
+      return <p>{result.ops.map((o) => o.actionLabel).join(', ')}</p>;
   }
 }
 

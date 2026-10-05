@@ -103,6 +103,7 @@ export async function prepareOp(
 
   const base = {
     index,
+    source: op,
     module: manifest.id,
     moduleName: manifest.name,
     moduleIcon: manifest.icon,

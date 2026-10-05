@@ -24,6 +24,8 @@ export interface UsageRow {
   viaFallback?: boolean;
   /** USD, computed with the provider's price at the time of the call. */
   costUsd?: number;
+  /** Which stage produced the answer; absent in older rows (model calls and cache hits). */
+  stage?: 'rule' | 'local' | 'cloud' | 'cache';
 }
 
 export interface UsageTotals {
@@ -73,7 +75,11 @@ const emptyTotals = (): UsageTotals => ({
   outputTokens: 0,
 });
 
+/** Rule and local-model answers cost nothing and are not model calls of a provider. */
+const isFree = (r: UsageRow): boolean => r.stage === 'rule' || r.stage === 'local';
+
 function add(totals: UsageTotals, r: UsageRow): void {
+  if (isFree(r)) return;
   if (r.cacheHit) {
     totals.cacheHits += 1;
     return;
@@ -100,12 +106,64 @@ export function totalsOf(rows: UsageRow[]): UsageTotals {
 export function totalsByProvider(rows: UsageRow[]): Map<string, UsageTotals> {
   const byProvider = new Map<string, UsageTotals>();
   for (const r of rows) {
-    if (r.cacheHit) continue;
+    if (r.cacheHit || isFree(r)) continue;
     const totals = byProvider.get(r.provider) ?? emptyTotals();
     add(totals, r);
     byProvider.set(r.provider, totals);
   }
   return byProvider;
+}
+
+export type StageName = 'rule' | 'local' | 'cloud' | 'cache';
+
+export interface StageTotals {
+  /** Answers produced by the stage. */
+  answers: number;
+  inputTokens: number;
+  outputTokens: number;
+  /** USD, only cloud answers with a known price. */
+  costUsd: number;
+}
+
+const emptyStage = (): StageTotals => ({ answers: 0, inputTokens: 0, outputTokens: 0, costUsd: 0 });
+
+/** Which stage answered: rows without `stage` are cache hits or cloud model calls. */
+const stageOf = (r: UsageRow): StageName => r.stage ?? (r.cacheHit ? 'cache' : 'cloud');
+
+/** Answers per stage (failed provider attempts are not answers). */
+export function totalsByStage(rows: UsageRow[]): Record<StageName, StageTotals> {
+  const out: Record<StageName, StageTotals> = {
+    rule: emptyStage(),
+    local: emptyStage(),
+    cloud: emptyStage(),
+    cache: emptyStage(),
+  };
+  for (const r of rows) {
+    if (r.outcome === 'error') continue;
+    const s = out[stageOf(r)];
+    s.answers += 1;
+    s.inputTokens += r.inputTokens;
+    s.outputTokens += r.outputTokens;
+    if (stageOf(r) === 'cloud') {
+      s.costUsd += r.costUsd ?? estimateCostUsd(r.model, r.inputTokens, r.outputTokens) ?? 0;
+    }
+  }
+  return out;
+}
+
+/** Per local calendar day (YYYY-MM-DD), newest first: answers per stage, tokens, cost. */
+export function dailyByStage(
+  rows: UsageRow[],
+): { day: string; stages: Record<StageName, StageTotals> }[] {
+  const byDay = new Map<string, UsageRow[]>();
+  for (const r of rows) {
+    const d = new Date(r.at);
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    byDay.set(day, [...(byDay.get(day) ?? []), r]);
+  }
+  return [...byDay.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([day, list]) => ({ day, stages: totalsByStage(list) }));
 }
 
 export async function loadUsageTotals(database: TaschenmesserDB = defaultDb): Promise<UsageTotals> {

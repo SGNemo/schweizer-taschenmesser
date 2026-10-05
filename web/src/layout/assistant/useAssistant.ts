@@ -7,6 +7,7 @@ import { db } from '@/core/db/db';
 import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
+import { loadAiWriteSettings } from '@/core/ai/write/settings';
 import { today } from '@/core/time/dates';
 
 export type AnswerState =
@@ -21,23 +22,37 @@ export function useAssistant() {
 
   useEffect(() => () => controller.current?.abort(), []);
 
-  const submit = useCallback(async (question: string, forceModel = false) => {
-    controller.current?.abort();
-    const ctl = new AbortController();
-    controller.current = ctl;
-    setState({ phase: 'loading', question });
-    const [config, states] = await Promise.all([loadAiConfig(), loadModuleStates()]);
-    const response = await ask(question, {
-      manifests: activeManifests(states),
-      known: availableManifests(),
-      today: today(),
-      provider: await createRouterProvider(config),
-      database: db,
-      forceModel,
-      signal: ctl.signal,
-    });
-    if (!ctl.signal.aborted) setState({ phase: 'done', question, response });
-  }, []);
+  const submit = useCallback(
+    async (question: string, forceModel = false, preferModule?: string) => {
+      controller.current?.abort();
+      const ctl = new AbortController();
+      controller.current = ctl;
+      setState({ phase: 'loading', question });
+      const [config, states, writeSettings] = await Promise.all([
+        loadAiConfig(),
+        loadModuleStates(),
+        loadAiWriteSettings(),
+      ]);
+      const response = await ask(question, {
+        manifests: activeManifests(states),
+        known: availableManifests(),
+        today: today(),
+        provider: await createRouterProvider(config),
+        database: db,
+        forceModel,
+        signal: ctl.signal,
+        preferModule,
+        write: {
+          enabled: writeSettings.enabled,
+          modulesOff: writeSettings.modulesOff,
+          cloud: writeSettings.cloud,
+          askMissing: writeSettings.askMissing,
+        },
+      });
+      if (!ctl.signal.aborted) setState({ phase: 'done', question, response });
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     controller.current?.abort();

@@ -28,6 +28,8 @@ export interface RuleContext {
   now: Date;
   /** 'YYYY-MM-DD' */
   today: string;
+  /** The module the user is in: default target for a sentence without a module word. */
+  preferModule?: string;
 }
 
 const MAX_SEGMENTS = 8;
@@ -213,7 +215,7 @@ async function segmentToOp(
   segment: string,
   ctx: RuleContext,
 ): Promise<{ ops: ProposedOp[]; confidence: number } | undefined> {
-  let words = toWords(segment);
+  const words = toWords(segment);
   while (words.length > 0 && POLITE.includes(words[0]!.n)) words.shift();
   if (words.length === 0) return undefined;
   if (startsWithAny(words[0]!, SEARCH_STARTS)) return undefined;
@@ -296,6 +298,9 @@ async function segmentToOp(
       tie = false;
     } else if (hit === best.hit && ref.manifest.id !== best.ref.manifest.id) tie = true;
   }
+  const preferred =
+    !best && ctx.preferModule ? creates.find((r) => r.manifest.id === ctx.preferModule) : undefined;
+  if (preferred) best = { ref: preferred, hit: 0 };
   if (!best || tie) return undefined;
   const ref = best.ref;
 
@@ -348,7 +353,8 @@ async function segmentToOp(
     facts.recurrence !== undefined ||
     facts.url !== undefined;
   const firstIsNoun = keywordHit(words[0]!, keys) > 0 || keywordHit(words[0]!, nounWords) > 0;
-  const signal = hasCreateVerb || hasFacts || firstIsNoun || ref.def.parse?.splitItems;
+  const signal =
+    hasCreateVerb || hasFacts || firstIsNoun || ref.def.parse?.splitItems || Boolean(preferred);
   if (!signal) return undefined;
   // "Rechnung Stadtwerke" is a search; "Notiz Idee für den Garten" or "Milch auf die Einkaufsliste"
   // is not: a leading noun needs more than one more word, a trailing noun is a clear target.

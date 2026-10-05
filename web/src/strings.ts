@@ -2080,6 +2080,7 @@ export const t = {
       ask: 'Assistent fragen',
     },
     tier: {
+      rule: 'Regeln · 0 Token',
       local: 'Lokal · 0 Token',
       cache: 'Aus dem Cache · 0 Token',
       model: (input: number, output: number) => `KI · ${input} + ${output} Token`,

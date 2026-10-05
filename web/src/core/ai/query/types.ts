@@ -1,5 +1,6 @@
 import type { TaschenmesserDB } from '@/core/db/db';
 import type { CalendarItem, ModuleManifest } from '@/core/modules/types';
+import type { PreparedOp, Stage } from '../write/types';
 
 export type AiQueryErrorCode =
   | 'unknown-module'
@@ -52,6 +53,7 @@ export type AiResult =
   | { kind: 'agenda'; from: string; to: string; items: CalendarItem[] }
   | { kind: 'computed'; title: string; lines: { label: string; value: string }[] }
   | { kind: 'create'; prepared: PreparedCreate }
+  | { kind: 'write'; stage: Stage; ops: PreparedOp[]; confidence: number; question?: string }
   | { kind: 'message'; text: string };
 
 export interface ExecContext {

@@ -8,6 +8,7 @@ import type { AiFieldType } from '@/core/modules/types';
 import { tableName } from '@/core/db/schema';
 import { daysBetween } from '@/core/time/dates';
 import { t } from '@/strings';
+import { prepareProposal } from '../write/prepare';
 import { prepareCreate } from './create';
 import { fieldLabel } from './format';
 import { toResultRow } from './rows';
@@ -173,6 +174,14 @@ export async function executeIntent(intent: Intent, ctx: ExecContext): Promise<A
       return runComputed(intent.module, intent.name, ctx);
     case 'create':
       return { kind: 'create', prepared: await prepareCreate(intent, ctx) };
+    case 'write':
+      return {
+        kind: 'write',
+        stage: 'cloud',
+        confidence: 1,
+        ops: await prepareProposal(intent.ops, ctx),
+        ...(intent.question ? { question: intent.question } : {}),
+      };
     case 'fulltext':
       return searchText(intent.text, ctx);
     case 'message':

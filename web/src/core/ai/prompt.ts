@@ -9,6 +9,7 @@ import {
   agendaSchema,
   computedSchema,
   createSchema,
+  writeSchema,
   OPERATORS,
   querySchema,
   RELATIVE_RANGES,
@@ -55,15 +56,69 @@ export function buildSchemaText(manifests: readonly ModuleManifest[]): string {
     .join('\n');
 }
 
-export function buildSystemPrompt(manifests: readonly ModuleManifest[]): string {
+/** Modules the assistant may write to: they declare actions and the user has not switched them off. */
+export function writableModules(
+  manifests: readonly ModuleManifest[],
+  off: readonly string[] = [],
+): ModuleManifest[] {
+  return aiModules(manifests).filter(
+    (m) => Object.keys(m.aiSchema.actions ?? {}).length > 0 && !off.includes(m.id),
+  );
+}
+
+/**
+ * Compact action list sent to the cloud: `module: id(field!,field) id[transition] delete`, plus one
+ * example taken from the first module's own `create` example. Field types are already in the schema text.
+ */
+export function buildActionText(writable: readonly ModuleManifest[]): string {
+  const lines = writable.map((m) => {
+    const actions = Object.entries(m.aiSchema!.actions!).map(([id, a]) => {
+      if (a.kind === 'delete') return `${id}[delete]`;
+      if (a.kind === 'transition')
+        return `${id}[sets ${Object.entries(a.set ?? {})
+          .map(([k, v]) => `${k}=${String(v)}`)
+          .join(',')}]`;
+      const required = new Set(a.required ?? []);
+      return `${id}(${(a.fields ?? []).map((f) => `${f}${required.has(f) ? '!' : ''}`).join(',')})`;
+    });
+    return `${m.id}: ${actions.join(' ')}`;
+  });
+  const sample = writable
+    .flatMap((m) => Object.entries(m.aiSchema!.actions!).map(([id, a]) => ({ m, id, a })))
+    .find((x) => x.a.kind === 'create' && x.a.examples[0]);
+  if (sample) {
+    const e = sample.a.examples[0]!;
+    lines.push(
+      `Example: "${e.input}" -> ${JSON.stringify({ ops: [{ module: sample.m.id, action: sample.id, data: e.output }] })}`,
+    );
+  }
+  return lines.join('\n');
+}
+
+/**
+ * What the model may do besides reading: `writable` modules get `propose_actions`; with none and no
+ * `off` flag the older `create_entry` tool stays (modules without actions); `off` removes all writes.
+ */
+export interface WriteMode {
+  writable: readonly ModuleManifest[];
+  off?: boolean;
+}
+
+export function buildSystemPrompt(
+  manifests: readonly ModuleManifest[],
+  mode: WriteMode = { writable: [] },
+): string {
+  const { writable } = mode;
+  const write = writable.length > 0;
   return [
     "You translate questions about a personal organiser app into ONE tool call. You cannot see the user's data; the app runs the call locally and shows the answer.",
     'Modules and collections (field:type, "@" = date field for ranges, "!" = required when creating):',
     buildSchemaText(manifests),
     'Rules:',
-    '- Call exactly one tool. run_query: list/filter/count/sum entries of one collection. show_agenda: what happens in a date range across modules (includes recurring items) – use it for "what is due/on today, this week, …". run_computed: a named computed view. create_entry: only when the user asks to add or be reminded of something.',
+    `- Call exactly one tool. run_query: list/filter/count/sum entries of one collection. show_agenda: what happens in a date range across modules (includes recurring items) – use it for "what is due/on today, this week, …". run_computed: a named computed view. ${write ? 'propose_actions: when the user asks to add, change, delete or mark entries (several entries = several ops).' : mode.off ? 'You cannot add or change entries.' : 'create_entry: only when the user asks to add or be reminded of something.'}`,
     '- Dates are YYYY-MM-DD; prefer range.relative when it fits. Times are HH:mm. Weeks run Monday-Sunday. Money is integer cents (12,50 EUR = 1250). Only use listed fields; values of enum fields must be listed ones.',
-    '- create_entry.data: only listed fields. recurrence = {freq: daily|weekly|monthly|yearly, interval?, byWeekday? (1=Mon..7=Sun), byMonthDay? (1-31, -1 = last day), monthOfYear? (1-12)}. Lists and accounts are filled in by the app.',
+    `- ${write ? "propose_actions: op = {module, action (listed below), data (only that action's fields; leave unknown ones out), target:{title} for update/delete/sets-actions = the words the user used for the entry, never invented}. The user confirms every op before anything is saved." : 'create_entry.data: only listed fields.'} recurrence = {freq: daily|weekly|monthly|yearly, interval?, byWeekday? (1=Mon..7=Sun), byMonthDay? (1-31, -1 = last day), monthOfYear? (1-12)}. Lists and accounts are filled in by the app.`,
+    ...(write ? ['Actions (! = required):', buildActionText(writable)] : []),
     '- If no tool fits, answer with one short German sentence and call no tool.',
   ].join('\n');
 }
@@ -74,7 +129,11 @@ export function buildUserMessage(question: string, today: string): string {
 
 const stringEnum = (values: readonly string[]) => ({ type: 'string', enum: [...values] });
 
-export function buildTools(manifests: readonly ModuleManifest[]): ToolDef[] {
+export function buildTools(
+  manifests: readonly ModuleManifest[],
+  mode: WriteMode = { writable: [] },
+): ToolDef[] {
+  const { writable } = mode;
   manifests = aiModules(manifests);
   const ids = manifests.map((m) => m.id);
   const range = {
@@ -140,6 +199,37 @@ export function buildTools(manifests: readonly ModuleManifest[]): ToolDef[] {
       },
     });
   }
+  if (writable.length > 0) {
+    tools.push({
+      name: 'propose_actions',
+      description: 'Propose entries to add, change, delete or mark; the user confirms first.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          ops: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                module: stringEnum(writable.map((m) => m.id)),
+                action: { type: 'string' },
+                data: { type: 'object' },
+                target: { type: 'object', properties: { title: { type: 'string' } } },
+              },
+              required: ['module', 'action'],
+            },
+          },
+          question: {
+            type: 'string',
+            description: 'Short German question if something is unclear',
+          },
+        },
+        required: ['ops'],
+      },
+    });
+    return tools;
+  }
+  if (mode.off) return tools;
   tools.push({
     name: 'create_entry',
     description: 'Propose a new entry; the user confirms it before anything is saved.',
@@ -157,8 +247,11 @@ export function buildTools(manifests: readonly ModuleManifest[]): ToolDef[] {
 }
 
 /** Stable short hash (FNV-1a) of what the model is told; part of the cache key. */
-export function schemaHash(manifests: readonly ModuleManifest[]): string {
-  const text = buildSystemPrompt(manifests) + JSON.stringify(buildTools(manifests));
+export function schemaHash(
+  manifests: readonly ModuleManifest[],
+  mode: WriteMode = { writable: [] },
+): string {
+  const text = buildSystemPrompt(manifests, mode) + JSON.stringify(buildTools(manifests, mode));
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i);
@@ -191,6 +284,8 @@ export function intentFromToolCall(call: { name: string; input: unknown }): Inte
       return { type: 'computed', ...parse(computedSchema.safeParse(call.input)) };
     case 'create_entry':
       return { type: 'create', ...parse(createSchema.safeParse(call.input)) };
+    case 'propose_actions':
+      return { type: 'write', ...parse(writeSchema.safeParse(call.input)) };
     default:
       throw new InvalidModelAnswer(`unknown tool ${call.name}`);
   }

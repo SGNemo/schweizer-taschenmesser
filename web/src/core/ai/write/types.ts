@@ -40,6 +40,8 @@ export interface TargetCandidate {
 /** An op after validation: what the preview card shows and what gets written on confirmation. */
 export interface PreparedOp {
   index: number;
+  /** The proposal this op was prepared from; the preview edits it and prepares it again. */
+  source: ProposedOp;
   module: string;
   moduleName: string;
   moduleIcon: IconName;
