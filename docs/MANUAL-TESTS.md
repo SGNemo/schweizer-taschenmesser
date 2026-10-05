@@ -215,7 +215,7 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
 
 ### Supporter-Modus (nur mit echter Zahlungsseite und Dienst prüfbar)
-Voraussetzung: Schlüsselpaar erzeugt, `publicKeys.ts` im Build, Webhook-Dienst deployt ([howto/supporter.md](howto/supporter.md)). Codes ohne Dienst gehen schon jetzt per CLI (`create`).
+Voraussetzung: Schlüsselpaar erzeugt, `publicKeys.ts` im Build, Webhook-Dienst deployt ([services/supporter-webhook/README.md](../services/supporter-webhook/README.md)). Ohne Dienst gehen Codes per CLI (`create`).
 S1. *Test-Spende mit kleinem Betrag* bei Ko-fi: Mail mit Code (Deutsch und Englisch) kommt an, nicht im Spam; Absender und Inhalt stimmen, Hinweis „freiwillig“ steht drin. ☐
 S2. *Code auf dem PC:* Einstellungen → Über Nemo → Supporter, Code einfügen: Stufe, Name, Datum stimmen; Danke-Abzeichen in Über Nemo; Farbthemen wählbar; Logo in Themenfarbe. ☐
 S3. *Code auf Android:* derselbe Code auf dem Handy eingeben (Einfügen-Knopf geht oder Direkteinfügen im Feld); Themes sehen auf dem Display gut aus (hell und dunkel). ☐

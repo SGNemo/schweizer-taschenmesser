@@ -2,7 +2,7 @@
 
 What it is: voluntary support → a signed code → cosmetic extras only (thank-you badge, colour themes, themed logo). Everything stays free. Design: [architecture/supporter.md](../architecture/supporter.md), why: [decisions/supporter.md](../decisions/supporter.md), checklist for the maintainer: [legal/SUPPORTER-NOTES.md](../legal/SUPPORTER-NOTES.md).
 
-**State:** package, CLI, app check, status/sync, themes, badge, settings are built. The **webhook service** (automatic code mail) is **not built yet** – until it exists, codes are created by hand (below). The "pay" and "re-send" buttons in the app stay hidden while `pages/settings/supporterLinks.ts` is empty.
+**State:** everything is built: package, CLI, app check, status/sync, themes, badge, settings, and the **webhook service** (`services/supporter-webhook/`, README = deployment guide for the maintainer). The service is **not deployed** until the maintainer does the steps in its README; until then codes can be created by hand (below). The "pay" and "re-send" buttons in the app stay hidden while `pages/settings/supporterLinks.ts` is empty.
 
 ## One-time key setup (maintainer, own machine)
 1. `cd tools/supporter-cli && npm ci`
@@ -26,6 +26,9 @@ Key ids 0–254 are for real keys; **255 is the public E2E test key** (only E2E 
 
 ## Tests
 `cd packages/supporter-codes && npm test`, `cd tools/supporter-cli && npm test`, in `web/`: `npx vitest run src/core/supporter src/ui/supporterThemes.test.ts src/pages/settings` and `npx playwright test e2e/supporter.spec.ts e2e/supporter-themes.spec.ts`. The E2E build trusts key id 255 only; `core/seed/devFlag.test.ts` proves the test key and the dev-simulation path are in no normal build.
+
+## Webhook service
+Code, tests (`cd services/supporter-webhook && npm test`), local run (`npx wrangler dev`), secrets, deployment, failure table and rotation: [services/supporter-webhook/README.md](../../services/supporter-webhook/README.md). CI job `supporter-webhook` (lint, types, tests, bundle dry run) never deploys.
 
 ## Variant B (pre-signed stock) is not used
 Decided against (see decisions). If it is ever needed: `batch` creates the stock, the service would only hand codes out.

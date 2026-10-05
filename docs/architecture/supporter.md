@@ -28,11 +28,18 @@ About 130 symbols without a name: paste is the main path, typing is a fallback (
 - Themed logo: `--logo-ink` (`data-logo='themed'`) read by `ui/Logo.tsx`. Badge: `layout/SupporterBadge.tsx` (About; sidebar head on request).
 - UI: `pages/settings/SupporterSection.tsx` (Über Nemo → Supporter), `PaletteRows.tsx` (Darstellung), optional setup hint (`core.support`, `hint: true` = never in the dashboard checklist, no `SETUP_VERSION` bump).
 
-## Service (planned, not built): `services/supporter-webhook/`
-Cloudflare Worker, no link to the sync server or app data. Ko-fi webhook → verification token check (else 401) → only paid donation → idempotency by HMAC of the transaction id (KV) → tier from amount → sign with the Worker secret → queue → Resend mail (de + en) with retry/backoff, dead-letter mail to the maintainer. Stores no plain mail address (KV: hashes, counter). Secrets only as Worker secrets: `KOFI_VERIFICATION_TOKEN`, `SUPPORTER_SIGNING_KEY`, `RESEND_API_KEY`, `HASH_PEPPER`, `OWNER_EMAIL`.
+## Service: `services/supporter-webhook/` (built, deployed by the maintainer)
+Cloudflare Worker in TypeScript, no link to the sync server or app data. Guide, secrets, failure table: its [README](../../services/supporter-webhook/README.md).
+
+- `POST /kofi`: body limit, per-IP rate limit (optional binding), **verification token first (else 401, nothing else)**, only a paid donation (or first membership payment), idempotency by `HMAC(pepper, "kofi:"+transaction id)` in KV, tier from amount, sign with the Worker secret via the shared package, enqueue the mail job, answer 200. A repeated webhook re-sends the same code. A failing queue answers 500 so Ko-fi retries (the stored record turns the retry into a duplicate).
+- Queue `supporter-mail` → Resend HTTP API (de + en). 429/5xx/network → retry with backoff (1–16 min, 5 attempts); other answers or the last attempt → mail to the maintainer (hash prefix + tier, no donor data) and status `failed`; dead-letter queue as backstop.
+- `GET/POST /resend`: neutral answer always; sends only to an address that matches the donation by keyed hash; one per donation and hour. `GET /health`: `{ok:true}`. No CORS headers.
+- Stores no clear-text address/name/transaction id (KV: keyed hashes, code, status, counter; the address lives in the queue job until sent). Logs are structured with a fixed field allowlist (`log.ts`, `test/logs.test.ts`).
+- Secrets only as Worker secrets: `KOFI_VERIFICATION_TOKEN`, `SUPPORTER_SIGNING_KEY`, `RESEND_API_KEY`, `HASH_PEPPER`, `OWNER_EMAIL`; variables `SIGNING_KEY_ID`, `MAIL_FROM`.
 
 ```
 Ko-fi ──POST──▶ Worker ──▶ KV (hash only) ┐
                   │ sign                  │ duplicate → same code again
                   └▶ Queue ──▶ Resend ──▶ supporter mail ──▶ user pastes code ──▶ app (offline check)
+                       └ 5 tries, then owner mail + dead-letter queue
 ```

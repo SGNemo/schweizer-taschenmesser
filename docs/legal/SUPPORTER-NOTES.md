@@ -20,7 +20,7 @@ Nur eine Gedächtnisstütze, keine Rechtsberatung. Bei Unsicherheit eine Steuer-
 - [ ] **Namen:** nur mit Zustimmung (öffentliche Spende bei Ko-fi), höchstens 20 Zeichen, im Code selbst gespeichert, daher nicht widerrufbar: im Hinweis sagen, dass ein Name einen neuen Code braucht.
 - [ ] **Löschkonzept:** Eintrag über die Transaktions-ID löschbar (Hash neu berechnen, KV-Eintrag entfernen); Betroffenenanfragen per Kontaktadresse beantworten. Auf Anfrage neuen Code ohne Namen ausstellen.
 - [ ] Datenschutzhinweis (Zweck, Speicherdauer, Anbieter, Rechte) auf der Zahlungsseite, in der Mail und im Repo (`SECURITY.md`/README-Link) verlinken.
-- [ ] In den Logs des Dienstes stehen keine Mail-Adressen, Namen oder Codes (Test im Dienst, sobald gebaut).
+- [ ] In den Logs des Dienstes stehen keine Mail-Adressen, Namen oder Codes (abgesichert durch `test/logs.test.ts` im Dienst; Cloudflare und Resend führen eigene Logs, siehe deren Datenschutzangaben).
 
 ## 4. Textbausteine (anpassen)
 - Zahlungsseite: „Nemo ist kostenlos. Wer mag, unterstützt die Entwicklung freiwillig und bekommt als Dankeschön einen Code für kosmetische Extras (Danke-Abzeichen, Farbthemen). Alle Funktionen bleiben für alle offen.“
