@@ -60,7 +60,8 @@
         if (a === 'teal' || a === 'coral' || a === 'lagoon')
           document.documentElement.dataset.accent = a;
         var ts = localStorage.getItem('tm-text-size');
-        if (ts === 'small' || ts === 'large' || ts === 'xlarge') document.documentElement.dataset.textSize = ts;
+        if (ts === 'small' || ts === 'large' || ts === 'xlarge')
+          document.documentElement.dataset.textSize = ts;
         var ld = localStorage.getItem('tm-leading');
         if (ld === 'airy' || ld === 'compact') document.documentElement.dataset.leading = ld;
         if (localStorage.getItem('tm-read-style') === 'bold')
