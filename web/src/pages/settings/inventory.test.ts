@@ -21,7 +21,7 @@ const CORE_KEYS = {
     'tm-read-aid': 'off',
     'tm-read-share': '40',
     'tm-read-style': 'soft',
-    'tm-read-scope': 'text',
+    'tm-read-cover': '25',
     'tm-read-hint': 'unset',
     'tm-color': 'full',
     'tm-home-view': 'all',

@@ -91,7 +91,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       { key: 'aid', label: s.reading.aid, description: s.reading.aidHint },
       { key: 'share', label: s.reading.share },
       { key: 'style', label: s.reading.style, description: s.reading.styleHint },
-      { key: 'scope', label: s.reading.scope, description: s.reading.scopeHint },
+      { key: 'cover', label: s.reading.cover, description: s.reading.coverHint },
     ],
     render: () => <ReadingSection />,
   },

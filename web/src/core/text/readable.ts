@@ -7,6 +7,8 @@
 export interface ReadSegment {
   text: string;
   strong: boolean;
+  /** The remainder of an emphasised word (after its strong start): the part that is dimmed in primary-ink text. */
+  rest?: boolean;
 }
 
 export interface ReadableOptions {
@@ -66,7 +68,7 @@ function emphasizeChunk(chunk: string, share: number, minLen: number, out: ReadS
     const head = g.slice(0, n).join('');
     if (at > last) out.push({ text: chunk.slice(last, at), strong: false });
     out.push({ text: head, strong: true });
-    out.push({ text: word.slice(head.length), strong: false });
+    out.push({ text: word.slice(head.length), strong: false, rest: true });
     last = at + word.length;
   }
   if (last < chunk.length) out.push({ text: chunk.slice(last), strong: false });
@@ -84,7 +86,7 @@ function compute(text: string, share: number, minLen: number): ReadSegment[] {
   for (const seg of raw) {
     if (seg.text === '') continue;
     const prev = merged[merged.length - 1];
-    if (prev && prev.strong === seg.strong) prev.text += seg.text;
+    if (prev && prev.strong === seg.strong && !prev.rest && !seg.rest) prev.text += seg.text;
     else merged.push({ ...seg });
   }
   return merged;

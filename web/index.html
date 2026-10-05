@@ -67,6 +67,11 @@
           document.documentElement.dataset.textSize = ts;
         var ld = localStorage.getItem('tm-leading');
         if (ld === 'airy' || ld === 'compact') document.documentElement.dataset.leading = ld;
+        if (localStorage.getItem('tm-read-aid') === '1') {
+          var rc = localStorage.getItem('tm-read-cover');
+          document.documentElement.dataset.readAid =
+            rc === '50' || rc === '75' || rc === '100' ? rc : '25';
+        }
         if (localStorage.getItem('tm-read-style') === 'bold')
           document.documentElement.dataset.readStyle = 'bold';
         if (localStorage.getItem('tm-color') === 'calm')

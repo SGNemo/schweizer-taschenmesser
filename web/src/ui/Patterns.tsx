@@ -178,7 +178,7 @@ export function ItemRow({
   const body = (
     <>
       <span className={styles.title} title={typeof title === 'string' ? title : undefined}>
-        {typeof title === 'string' ? <ReadableText text={title} kind="list" /> : title}
+        {typeof title === 'string' ? <ReadableText text={title} kind="list" tone="ink" /> : title}
       </span>
       {meta ? (
         <span className={styles.muted} title={typeof meta === 'string' ? meta : undefined}>

@@ -117,4 +117,68 @@ test.describe('Reading aid, colour mode and grouping', () => {
       }
     });
   }
+
+  test('the coverage levels reach headings, labels, buttons and navigation', async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.addInitScript(() => localStorage.setItem('tm-read-aid', '1'));
+    await ready(page, '/invoices');
+    // 25 % (default): only running text – headings and buttons are plain.
+    await expect(page.locator('main h1 [data-rs]')).toHaveCount(0);
+    await ready(page, '/settings/darstellung');
+    const cover = page.getByRole('group', { name: 'Umfang' });
+    await cover.getByRole('button', { name: '50 %' }).click();
+    await expect(page.locator('main h1 [data-rs]').first()).toBeVisible();
+    // Headings dim the rest of the word so the start is clearly brighter.
+    const [start, rest] = await page.evaluate(() => {
+      const h = document.querySelector('main h1')!;
+      return [
+        getComputedStyle(h.querySelector('[data-rs]')!).color,
+        getComputedStyle(h.querySelector('[data-rr]')!).color,
+      ];
+    });
+    expect(start).not.toBe(rest);
+    expect(
+      await page
+        .getByRole('navigation', { name: 'Hauptnavigation' })
+        .locator('a [data-rs]')
+        .count(),
+    ).toBe(0);
+    await cover.getByRole('button', { name: '100 %' }).click();
+    await expect(
+      page.getByRole('navigation', { name: 'Hauptnavigation' }).locator('a [data-rs]').first(),
+    ).toBeVisible();
+    expect(await html(page, 'data-read-aid')).toBe('100');
+  });
+
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`no axe violations at 100 % on the main pages (${scheme})`, async ({ page }) => {
+      test.setTimeout(240_000);
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.addInitScript(() => {
+        localStorage.setItem('tm-read-aid', '1');
+        localStorage.setItem('tm-read-cover', '100');
+      });
+      for (const url of [
+        '/',
+        '/invoices',
+        '/todos',
+        '/notes',
+        '/calendar',
+        '/finance',
+        '/budgets',
+        '/lists',
+        '/bookmarks',
+        '/subscriptions',
+        '/people',
+        '/pantry',
+        '/library',
+        '/settings/darstellung',
+        '/settings/allgemein',
+      ]) {
+        await ready(page, url);
+        const results = await new AxeBuilder({ page }).analyze();
+        expect(results.violations, url).toEqual([]);
+      }
+    });
+  }
 });

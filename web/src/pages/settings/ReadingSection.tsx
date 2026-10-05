@@ -1,10 +1,10 @@
 import { t } from '@/strings';
 import {
-  READ_SCOPES,
+  READ_COVERS,
   READ_SHARES,
   READ_STYLES,
   useUiStore,
-  type ReadScope,
+  type ReadCover,
   type ReadShare,
   type ReadStyle,
 } from '@/stores/ui';
@@ -19,8 +19,8 @@ export function ReadingSection() {
   const setShare = useUiStore((s) => s.setReadShare);
   const style = useUiStore((s) => s.readStyle);
   const setStyle = useUiStore((s) => s.setReadStyle);
-  const scope = useUiStore((s) => s.readScope);
-  const setScope = useUiStore((s) => s.setReadScope);
+  const cover = useUiStore((s) => s.readCover);
+  const setCover = useUiStore((s) => s.setReadCover);
   return (
     <SettingsGroup id="reading" title={r.title} hint={r.shortcut}>
       <SettingRow id="reading--aid" label={r.aid} description={r.aidHint}>
@@ -42,12 +42,12 @@ export function ReadingSection() {
           onChange={setStyle}
         />
       </SettingRow>
-      <SettingRow id="reading--scope" label={r.scope} description={r.scopeHint}>
-        <Segmented<ReadScope>
-          label={r.scope}
-          value={scope}
-          options={READ_SCOPES.map((v) => ({ value: v, label: r.scopeOptions[v] }))}
-          onChange={setScope}
+      <SettingRow id="reading--cover" label={r.cover} description={r.coverHint}>
+        <Segmented<ReadCover>
+          label={r.cover}
+          value={cover}
+          options={READ_COVERS.map((v) => ({ value: v, label: r.coverOptions[v] }))}
+          onChange={setCover}
         />
       </SettingRow>
       <SettingRow id="reading--preview" label={r.preview}>

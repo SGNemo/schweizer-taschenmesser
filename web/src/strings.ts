@@ -369,16 +369,16 @@ export const t = {
       keywords: ['Lesehilfe', 'Bionic', 'Wortanfang', 'fett', 'Lesbarkeit', 'Fokus-Lesen'],
       aid: 'Lesehilfe',
       aidHint:
-        'Hebt den Anfang jedes Wortes leicht hervor. Nur in Texten, nie in Zahlen, Eingabefeldern oder im Tresor. Nur auf diesem Gerät.',
+        'Hebt den Anfang jedes Wortes hervor und dunkelt den Rest leicht ab. Nie in Zahlen, Eingabefeldern oder im Tresor. Nur auf diesem Gerät.',
       share: 'Anteil des Wortes',
       shareOptions: { '30': '30 %', '40': '40 %', '50': '50 %' },
       style: 'Stärke',
       styleOptions: { soft: 'Weich', bold: 'Fett' },
       styleHint: 'Weich: etwas kräftiger und heller. Fett: deutlich fett.',
-      scope: 'Wo',
-      scopeOptions: { text: 'Nur Fließtext', lists: 'Auch Listen' },
-      scopeHint:
-        'Fließtext: Notizen, Antworten, Hilfetexte. Listen: zusätzlich Titel und Vorschauen.',
+      cover: 'Umfang',
+      coverOptions: { '25': '25 %', '50': '50 %', '75': '75 %', '100': '100 %' },
+      coverHint:
+        '25 %: nur Fließtext. 50 %: dazu Überschriften und Listen. 75 %: dazu Beschriftungen und Tabellen. 100 %: jeder Text, auch Schaltflächen und Navigation (nicht im Tresor und in Eingabefeldern).',
       shortcut: 'Tastenkürzel: Alt + L schaltet die Lesehilfe ein und aus.',
       preview: 'Vorschau',
       previewText: 'So sieht ein längerer Satz mit Lesehilfe aus: Wortanfänge tragen den Blick.',
