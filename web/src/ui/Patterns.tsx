@@ -144,6 +144,7 @@ export function ItemRow({
   selected,
   onSelectChange,
   done,
+  tone,
   onSwipeRight,
   swipeRightLabel,
   onSwipeLeft,
@@ -164,6 +165,8 @@ export function ItemRow({
   onSelectChange?: (selected: boolean, extend: boolean) => void;
   /** Done entries are struck through and quiet. */
   done?: boolean;
+  /** Urgency stripe at the left edge (overdue = danger, today = accent). Always pair it with text or a badge in the row. */
+  tone?: 'overdue' | 'today';
   /** Touch swipes (phone): right = done/paid, left = move/snooze; the labels name the revealed action. */
   onSwipeRight?: () => void;
   swipeRightLabel?: string;
@@ -191,6 +194,7 @@ export function ItemRow({
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
   return (
     <li
+      data-tone={tone}
       className={[
         styles.item,
         swipe.enabled ? styles.swipeable : '',

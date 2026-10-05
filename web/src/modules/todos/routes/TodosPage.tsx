@@ -5,9 +5,10 @@ import type { Stored } from '@/core/db/types';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
+import { groupByTime } from '@/core/time/groups';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, IconButton, TextField } from '@/ui';
+import { Button, EmptyState, GroupedList, Icon, IconButton, TextField } from '@/ui';
 import { InboxSorter } from '../components/InboxSorter';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
@@ -219,6 +220,47 @@ export default function TodosPage() {
     [focus.calmAttention, tasks, day],
   );
 
+  const groups = useMemo(() => {
+    const open = top.filter((x) => !x.done);
+    const row = (task: StoredTask) => (
+      <TaskRow
+        key={task.id}
+        task={task}
+        subs={children.get(task.id) ?? []}
+        allSubs={(tasks ?? []).filter((x) => x.parentId === task.id)}
+        day={day}
+        showList={selected === ALL || selected === SOMEDAY ? listName(task.listId) : undefined}
+        calm={focus.calmAttention}
+        streaks={streaks}
+        onToggle={toggle}
+        onOpen={setEditing}
+      />
+    );
+    const timed = groupByTime(open, (x) => x.dueDate, day).map((g) => ({
+      id: g.id,
+      label:
+        g.id === 'overdue' && focus.calmAttention
+          ? t.groups.waiting
+          : (t.groups[g.id as keyof typeof t.groups] as string),
+      count: g.items.length,
+      tone: g.id === 'overdue' && !focus.calmAttention ? ('overdue' as const) : undefined,
+      children: <ul className={styles.list}>{g.items.map(row)}</ul>,
+    }));
+    const done = top.filter((x) => x.done);
+    return done.length > 0
+      ? [
+          ...timed,
+          {
+            id: 'done',
+            label: t.groups.done,
+            count: done.length,
+            tone: undefined,
+            children: <ul className={styles.list}>{done.map(row)}</ul>,
+          },
+        ]
+      : timed;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [top, children, tasks, day, selected, focus.calmAttention, lists]);
   const inboxOpen = useMemo(
     () =>
       ((tasks ?? []) as StoredTask[])
@@ -321,24 +363,9 @@ export default function TodosPage() {
               <StartDataButton moduleId="todos" />
             </EmptyState>
           ) : null}
-          <ul className={styles.list}>
-            {top.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                subs={children.get(task.id) ?? []}
-                allSubs={(tasks ?? []).filter((x) => x.parentId === task.id)}
-                day={day}
-                showList={
-                  selected === ALL || selected === SOMEDAY ? listName(task.listId) : undefined
-                }
-                calm={focus.calmAttention}
-                streaks={streaks}
-                onToggle={toggle}
-                onOpen={setEditing}
-              />
-            ))}
-          </ul>
+          {top.length > 0 ? (
+            <GroupedList listId={`todos-${selected}`} groups={groups} label={t.todos.title} />
+          ) : null}
         </div>
       </div>
 

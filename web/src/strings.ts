@@ -117,6 +117,7 @@ export const t = {
   },
   groups: {
     overdue: 'Überfällig',
+    waiting: 'Wartet noch',
     today: 'Heute',
     tomorrow: 'Morgen',
     week: 'Diese Woche',
