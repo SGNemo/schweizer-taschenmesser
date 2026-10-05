@@ -163,3 +163,16 @@ describe('offline guarantee', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('embedded public keys', () => {
+  it('are well formed: 32-byte hex, ids 0–254 (255 is the E2E test key), no duplicates', () => {
+    const entries = Object.entries(SUPPORTER_PUBLIC_KEYS);
+    for (const [id, hex] of entries) {
+      expect(Number(id), id).toBeGreaterThanOrEqual(0);
+      expect(Number(id), id).toBeLessThanOrEqual(254);
+      expect(hex, `key ${id}`).toMatch(/^[0-9a-f]{64}$/);
+    }
+    const hexes = entries.map(([, hex]) => hex);
+    expect(new Set(hexes).size).toBe(hexes.length);
+  });
+});

@@ -12,12 +12,12 @@ workers_dev = true
 # Which embedded public key in the app verifies the codes this service signs (see supporter-cli).
 SIGNING_KEY_ID = "1"
 # Sender of the supporter mails; the domain must be verified at the mail provider.
-MAIL_FROM = "Nemo <support@YOUR-DOMAIN.example>"
+MAIL_FROM = "Nemo <support@mail.nemo-adhd-helper.online>"
 
-# KV: idempotency records (hashes only), resend index, counter. `wrangler kv namespace create KV`
+# KV `nemo-supporter-kv`: idempotency records (hashes only), resend index, counter. The id is not a secret.
 [[kv_namespaces]]
 binding = "KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "5a2ce2fcb69d4c258cf20714b5497e6a"
 
 # Mail queue with retry/backoff and a dead-letter queue as backstop (Queues work on the free plan).
 [[queues.producers]]
