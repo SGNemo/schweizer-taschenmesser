@@ -43,7 +43,7 @@ const USAGE = `supporter-cli – maintainer tool for Nemo supporter codes (run o
   verify CODE [--public-key HEX --key-id N]  check a code offline
   batch  --tier T --count N                  print N codes (one per line)
   set-public-key [--target FILE]             write the public key into the app config (one place)
-  print-worker-secret --yes                  print the private key for \`wrangler secret put\` (stdout only)
+  print-worker-secret --yes                  print the private key to paste into \`wrangler secret put\` (stdout only)
 
 Common: --key FILE (default: $NEMO_SUPPORTER_KEY_FILE or ~/.nemo-supporter/key-1.txt)
 `;
@@ -207,7 +207,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
         const key = loadKey(io, opt);
         if (!key) return 2;
         io.err(
-          `Pipe it straight into: wrangler secret put SUPPORTER_SIGNING_KEY  (key id ${key.keyId})`,
+          `Paste it at the prompt of: wrangler secret put SUPPORTER_SIGNING_KEY  (key id ${key.keyId}; do not pipe it, that can store an empty value on Windows)`,
         );
         io.out(toHex(key.secretKey));
         return 0;
