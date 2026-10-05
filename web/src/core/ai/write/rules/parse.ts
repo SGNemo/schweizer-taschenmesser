@@ -10,16 +10,16 @@ import type { AiActionDef, AiRole, ModuleManifest } from '@/core/modules/types';
 import { extractFacts, type ExtractedFacts } from '@/quickCapture/parser/extract';
 import { fold } from '../../text';
 import { aiModules, type AiModule } from '../../scope';
-import { findTarget } from '../targets';
+import { findTarget, withinOneEdit } from '../targets';
 import type { ProposedOp, WriteProposal } from '../types';
 import {
-  CREATE_VERBS,
   DELETE_VERBS,
   EDGE_FILLERS,
+  isCreateWord,
+  isUpdateWord,
   MARK_VERBS,
+  isSearchStart,
   POLITE,
-  SEARCH_STARTS,
-  UPDATE_VERBS,
 } from './lexicon';
 
 export interface RuleContext {
@@ -30,6 +30,11 @@ export interface RuleContext {
   today: string;
   /** The module the user is in: default target for a sentence without a module word. */
   preferModule?: string;
+  /**
+   * Module words of modules that are off or cannot be written: a sentence containing one is never
+   * turned into an entry of another module by a fallback ("Rechnung …" with invoices switched off).
+   */
+  blockWords?: readonly string[];
 }
 
 const MAX_SEGMENTS = 8;
@@ -77,10 +82,19 @@ function nounsOf(ref: ActionRef): string[] {
 }
 
 /** Longest keyword the word starts with (0 = no match). */
-const keywordHit = (w: Word, keywords: readonly string[]): number =>
-  w.n.length === 0
-    ? 0
-    : Math.max(0, ...keywords.filter((k) => w.n.startsWith(k)).map((k) => k.length));
+const keywordHit = (w: Word, keywords: readonly string[]): number => {
+  if (w.n.length === 0) return 0;
+  const exact = Math.max(0, ...keywords.filter((k) => w.n.startsWith(k)).map((k) => k.length));
+  if (exact > 0) return exact;
+  // One typo in a longer module word ("Rechnug", "Aufgbe") still counts, slightly weaker.
+  const fuzzy = keywords.filter(
+    (k) =>
+      k.length >= 5 &&
+      w.n.length >= 5 &&
+      (withinOneEdit(w.n.slice(0, k.length), k) || withinOneEdit(w.n.slice(0, k.length - 1), k)),
+  );
+  return Math.max(0, ...fuzzy.map((k) => k.length - 1));
+};
 
 /** "Stadtwerke-Rechnung" → ["Stadtwerke", "Rechnung"]; other words stay whole. */
 const splitCompound = (w: Word, nouns: readonly string[]): Word[] => {
@@ -161,7 +175,11 @@ function fillData(
   };
   put('title', extra.title);
   put('amount', facts.amountMinor);
-  put('date', facts.date, extra.startDateHint);
+  let date = facts.date;
+  if (date && ref.def.parse?.pastDates && facts.notes.includes('rolled-year')) {
+    date = `${Number(date.slice(0, 4)) - 1}${date.slice(4)}`;
+  }
+  put('date', date, extra.startDateHint);
   put('time', facts.time);
   put('recurrence', facts.recurrence);
   put('url', facts.url);
@@ -218,11 +236,11 @@ async function segmentToOp(
   const words = toWords(segment);
   while (words.length > 0 && POLITE.includes(words[0]!.n)) words.shift();
   if (words.length === 0) return undefined;
-  if (startsWithAny(words[0]!, SEARCH_STARTS)) return undefined;
+  if (isSearchStart(words[0]!.n)) return undefined;
 
   const isDelete = words.some((w) => startsWithAny(w, DELETE_VERBS));
-  const isUpdate = !isDelete && words.some((w) => startsWithAny(w, UPDATE_VERBS));
-  const hasCreateVerb = words.some((w) => startsWithAny(w, CREATE_VERBS));
+  const isUpdate = !isDelete && words.some((w) => isUpdateWord(w.n));
+  const hasCreateVerb = words.some((w) => isCreateWord(w.n));
   const now = ctx.now;
 
   const dropVerbs = (list: Word[], verbs: readonly string[]): Word[] =>
@@ -244,14 +262,15 @@ async function segmentToOp(
 
   /* ---------------- update ---------------- */
   if (isUpdate) {
-    const body = dropVerbs(words, UPDATE_VERBS);
+    const body = words.filter((w) => !isUpdateWord(w.n));
     const joined = body.map((w) => w.raw).join(' ');
     const m = /^(.*?)\s+(?:auf|zu|in|nach|um)\s+(.+)$/iu.exec(joined);
     if (!m) return undefined;
     const left = toWords(m[1]!);
-    const facts = extractFacts(m[2]!, { now, bareAmount: true });
-    const valueRest = joinWords(toWords(facts.rest));
     return forTarget(left, actionsOf(ctx.manifests, 'update'), ctx, (ref, target) => {
+      // A bare number is only an amount where the collection has one ("Gartenplan 2027" is a name).
+      const facts = extractFacts(m[2]!, { now, bareAmount: Boolean(fieldFor(ref, 'amount')) });
+      const valueRest = joinWords(toWords(facts.rest));
       const data = fillData(ref, facts, { title: valueRest || undefined, startDateHint: false });
       // Only a rename when no other fact was given.
       if (valueRest && Object.keys(data).length > 1) delete data[fieldFor(ref, 'title') ?? ''];
@@ -259,6 +278,32 @@ async function segmentToOp(
         ? undefined
         : { module: ref.manifest.id, action: ref.id, target: { title: target }, data };
     });
+  }
+
+  /* ---------------- update as a statement ("Das Abo Spotify kostet jetzt 11,99") ---------------- */
+  const statement =
+    /^(.*?)\s+(?:kostet|kosten|beträgt|betraegt|ist|sind)\s+(?:jetzt|nun|inzwischen|neuerdings)\s+(.+)$/iu.exec(
+      segment,
+    );
+  if (statement && !isDelete) {
+    const left = toWords(statement[1]!);
+    const found = await forTarget(
+      left,
+      actionsOf(ctx.manifests, 'update'),
+      ctx,
+      (ref, target) => {
+        const facts = extractFacts(statement[2]!, {
+          now,
+          bareAmount: Boolean(fieldFor(ref, 'amount')),
+        });
+        const data = fillData(ref, facts, { startDateHint: false });
+        return Object.keys(data).length === 0
+          ? undefined
+          : { module: ref.manifest.id, action: ref.id, target: { title: target }, data };
+      },
+      { requireMatch: true },
+    );
+    if (found) return found;
   }
 
   /* ---------------- transition ("… bezahlt", "… erledigt") ---------------- */
@@ -289,10 +334,15 @@ async function segmentToOp(
   const creates = actionsOf(ctx.manifests, 'create');
   let best: { ref: ActionRef; hit: number } | undefined;
   let tie = false;
+  const hasAmount = facts0.amountMinor !== undefined;
   for (const ref of creates) {
     const keys = fk(ref.def.parse?.keywords ?? []);
-    const hit = Math.max(0, ...words.map((w) => keywordHit(w, keys)));
+    let hit = Math.max(0, ...words.map((w) => keywordHit(w, keys)));
     if (hit === 0) continue;
+    // The module word usually opens the sentence ("Aufgabe Steuer-Unterlagen sortieren").
+    if (keywordHit(words[0]!, keys) > 0) hit += 5;
+    // "Versicherung 89 €" is a booking, not a document: an amount favours collections that have one.
+    if (hasAmount) hit += fieldFor(ref, 'amount') ? 4 : -4;
     if (!best || hit > best.hit) {
       best = { ref, hit };
       tie = false;
@@ -301,6 +351,27 @@ async function segmentToOp(
   const preferred =
     !best && ctx.preferModule ? creates.find((r) => r.manifest.id === ctx.preferModule) : undefined;
   if (preferred) best = { ref: preferred, hit: 0 };
+  // No module word: the signal in the sentence decides (a link, a clock time, an amount, a date).
+  let fallbackUsed = false;
+  const blocked = (ctx.blockWords ?? []).map(fold);
+  if (!best && !words.some((w) => keywordHit(w, blocked) > 0)) {
+    const has = {
+      url: facts0.url !== undefined,
+      dateTime:
+        facts0.time !== undefined && (facts0.date !== undefined || facts0.recurrence !== undefined),
+      amount: hasAmount,
+      date: facts0.date !== undefined && (hasCreateVerb || words.length >= 3),
+    };
+    for (const signal of ['url', 'dateTime', 'amount', 'date'] as const) {
+      if (!has[signal]) continue;
+      const candidates = creates.filter((r) => r.def.parse?.fallback === signal);
+      if (candidates.length === 1) {
+        best = { ref: candidates[0]!, hit: 0 };
+        fallbackUsed = true;
+        break;
+      }
+    }
+  }
   if (!best || tie) return undefined;
   const ref = best.ref;
 
@@ -309,10 +380,7 @@ async function segmentToOp(
   // "Stadtwerke-Rechnung" → two words, then the noun goes.
   let rest = words.flatMap((w) => splitCompound(w, nounWords));
   rest = rest.filter(
-    (w) =>
-      keywordHit(w, keys) === 0 &&
-      keywordHit(w, nounWords) === 0 &&
-      !startsWithAny(w, CREATE_VERBS),
+    (w) => keywordHit(w, keys) === 0 && keywordHit(w, nounWords) === 0 && !isCreateWord(w.n),
   );
   let text = rest.map((w) => w.raw).join(' ');
   let quantity: string | undefined;
@@ -353,15 +421,33 @@ async function segmentToOp(
     facts.recurrence !== undefined ||
     facts.url !== undefined;
   const firstIsNoun = keywordHit(words[0]!, keys) > 0 || keywordHit(words[0]!, nounWords) > 0;
+  const nounLast = keywordHit(words[words.length - 1]!, keys) > 0 && words.length >= 3;
+  // A sentence with a module word, a link, a clock time … around a long free text is not one entry.
+  if (fallbackUsed && titleWords.length > 5) return undefined;
   const signal =
-    hasCreateVerb || hasFacts || firstIsNoun || ref.def.parse?.splitItems || Boolean(preferred);
+    nounLast ||
+    hasCreateVerb ||
+    hasFacts ||
+    firstIsNoun ||
+    ref.def.parse?.splitItems ||
+    Boolean(preferred) ||
+    fallbackUsed;
   if (!signal) return undefined;
+  // "Rechnungen …", "Termine nächste Woche": a plural noun names a collection – that is a search.
+  const w0 = words[0]!;
+  if (
+    !hasCreateVerb &&
+    firstIsNoun &&
+    keys.some((k) => w0.n.startsWith(k) && /^(?:e|en|n|s)$/.test(w0.n.slice(k.length)))
+  )
+    return undefined;
   // "Rechnung Stadtwerke" is a search; "Notiz Idee für den Garten" or "Milch auf die Einkaufsliste"
   // is not: a leading noun needs more than one more word, a trailing noun is a clear target.
   const content = words.filter(
     (w) => !EDGE_FILLERS.has(w.n) && keywordHit(w, keys) === 0 && keywordHit(w, nounWords) === 0,
   ).length;
-  if (!hasCreateVerb && !hasFacts && firstIsNoun && content <= 1) return undefined;
+  const colon = w0.raw.endsWith(':'); // "Notiz: Wlan neu starten" is clearly an entry
+  if (!hasCreateVerb && !hasFacts && firstIsNoun && content <= 1 && !colon) return undefined;
 
   const ops = titles.map((title) => {
     const data = fillData(ref, facts, { title, quantity, startDateHint: startHint });
@@ -416,7 +502,8 @@ async function forTarget(
   }
   if (hits.length > 1) return undefined; // the same name in several modules: let a stronger stage look
   if (opts.requireMatch || narrowed.length !== 1) return undefined;
-  // Named collection but no such entry: the preview will say so – for free.
+  // Named collection but no such entry: the preview will say so – for free (for short names only).
+  if (target.split(/\s+/).length > 4) return undefined;
   const op = build(narrowed[0]!.ref, target);
   return op ? { ops: [op], confidence: 0.7 } : undefined;
 }

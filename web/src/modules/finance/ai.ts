@@ -54,10 +54,12 @@ export const aiSchema: ModuleAiSchema = {
               'erhalten',
               'eingang',
             ],
-            expense: ['ausgabe', 'ausgegeben', 'gezahlt', 'zahlung'],
+            expense: ['ausgabe', 'ausgegeben', 'gezahlt', 'bezahlt', 'zahlung'],
           },
         },
         defaults: { kind: 'expense', date: '@today' },
+        fallback: 'amount',
+        pastDates: true,
       },
       examples: [
         {

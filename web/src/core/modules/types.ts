@@ -174,6 +174,13 @@ export interface AiActionParseHints {
   values?: Record<string, Record<string, string[]>>;
   /** "Milch, Eier und Brot" becomes three entries. */
   splitItems?: boolean;
+  /**
+   * This action is the default for a sentence without any module word that carries the signal:
+   * a clock time with a date (`dateTime`), an amount (`amount`), a link (`url`) or just a date (`date`).
+   */
+  fallback?: 'url' | 'dateTime' | 'amount' | 'date';
+  /** A date without a year means the most recent one ("am 28.9." in October is last month), e.g. bookings. */
+  pastDates?: boolean;
 }
 
 /** Runs a `transition`/`update` through module logic (e.g. "paid" also tells finance via the bus). */

@@ -1,25 +1,23 @@
 /** German words the rule parser reacts to. All entries are folded (lowercase, no umlauts, ß → ss). */
 
-/** The sentence starts like a search or a question – never a write. */
-export const SEARCH_STARTS = [
+/** The sentence starts like a search or a question – never a write. Prefixes of longer verbs … */
+const SEARCH_PREFIXES = [
   'zeig',
   'such',
   'find',
-  'wie',
-  'was',
-  'welche',
-  'wann',
-  'wo',
-  'wer',
-  'gibt',
+  'anzeig',
   'offne',
   'oeffne',
-  'anzeig',
   'berechne',
   'wieviel',
+  'welch',
   'liste',
   'ubersicht',
 ];
+/** … and whole words (a prefix "wo" would also catch "Wohnung", "was" would catch "waschen"). */
+const SEARCH_WORDS = ['wie', 'was', 'wo', 'wer', 'wann', 'wem', 'wen', 'warum', 'wieso', 'gibt'];
+export const isSearchStart = (n: string): boolean =>
+  SEARCH_WORDS.includes(n) || SEARCH_PREFIXES.some((p) => n.startsWith(p));
 
 /** Polite padding in front of the real verb. */
 export const POLITE = [
@@ -42,40 +40,51 @@ export const POLITE = [
 ];
 
 export const DELETE_VERBS = ['losch', 'loesch', 'entfern', 'streich', 'wegwerf'];
-export const UPDATE_VERBS = [
-  'andere',
-  'aendere',
-  'ander',
+/** Prefixes of change verbs ("verschiebe", "verschieben", "verschiebt" …). */
+export const UPDATE_PREFIXES = [
   'verschieb',
-  'ersetze',
   'korrigier',
-  'benenne',
   'aktualisier',
-  'erhohe',
-  'erhoehe',
+  'benenne',
+  'ersetz',
+  'erhoh',
+  'erhoeh',
   'verlanger',
 ];
-export const CREATE_VERBS = [
+/** Whole words only: "anderen" is not "ändere". */
+export const UPDATE_WORDS = ['andere', 'aendere', 'andern', 'aendern'];
+/** Whole words only: "schreiben" in "Bericht schreiben" belongs to the title. */
+export const CREATE_WORDS = [
   'lege',
+  'leg',
+  'erstelle',
   'erstell',
   'trage',
+  'trag',
   'fuge',
   'fuege',
+  'notiere',
   'notier',
+  'speichere',
   'speicher',
   'buche',
+  'merke',
   'merk',
-  'vermerk',
-  'erfass',
+  'vermerke',
+  'erfasse',
   'neue',
   'neuer',
   'neues',
   'neuen',
   'anlegen',
   'eintragen',
-  'hinzufug',
-  'hinzufueg',
+  'hinzufugen',
+  'hinzufuegen',
   'add',
+  'setz',
+  'setze',
+  'schreib',
+  'schreibe',
 ];
 /** Verbs that introduce a state change ("markiere … als bezahlt"). They carry no information. */
 export const MARK_VERBS = ['markier', 'hak', 'setz', 'stell', 'mach', 'kundig', 'erledig'];
@@ -117,6 +126,7 @@ export const EDGE_FILLERS = new Set([
   'oder',
   'bitte',
   'mir',
+  'dir',
   'mich',
   'ist',
   'wird',
@@ -154,7 +164,13 @@ export const EDGE_FILLERS = new Set([
   'datum',
   'frist',
   'lauft',
+  'gultig',
+  'gueltig',
   'gilt',
   'endet',
   'laeuft',
 ]);
+
+export const isCreateWord = (n: string): boolean => CREATE_WORDS.includes(n);
+export const isUpdateWord = (n: string): boolean =>
+  UPDATE_WORDS.includes(n) || UPDATE_PREFIXES.some((p) => n.startsWith(p));

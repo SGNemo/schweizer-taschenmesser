@@ -26,7 +26,8 @@ export const aiSchema: ModuleAiSchema = {
       fields: ['title', 'url', 'kind', 'tags', 'note'],
       required: ['title'],
       parse: {
-        keywords: ['lesezeichen', 'merkzettel', 'merken'],
+        keywords: ['lesezeichen', 'merkzettel', 'merken', 'merke'],
+        fallback: 'url',
         values: {
           kind: {
             read: ['lesen', 'artikel', 'buch'],

@@ -34,7 +34,11 @@ export const aiSchema: ModuleAiSchema = {
       description: 'Neue Aufgabe, optional mit Fälligkeit, Priorität (0-3) oder Wiederholung',
       fields: ['title', 'dueDate', 'priority', 'recurrence', 'someday', 'note'],
       required: ['title'],
-      parse: { keywords: ['aufgabe', 'todo', 'to-do', 'task'], roles: { note: 'note' } },
+      parse: {
+        keywords: ['aufgabe', 'todo', 'to-do', 'task'],
+        roles: { note: 'note' },
+        fallback: 'date',
+      },
       examples: [
         {
           input: 'Aufgabe Steuererklärung abgeben bis 15.10.',
@@ -48,7 +52,9 @@ export const aiSchema: ModuleAiSchema = {
       label: 'Aufgabe erledigen',
       description: 'Aufgabe als erledigt abhaken',
       set: { done: true },
-      parse: { keywords: ['erledigt', 'erledige', 'fertig', 'abgehakt', 'abhaken'] },
+      parse: {
+        keywords: ['erledigt', 'erledige', 'erledigen', 'fertig', 'abgehakt', 'abhaken', 'hake'],
+      },
       examples: [
         {
           input: 'Aufgabe Steuererklärung abgeben erledigt',

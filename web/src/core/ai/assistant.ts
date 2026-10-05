@@ -280,6 +280,7 @@ async function proposeLocally(
       now: clockOn(ctx.today),
       today: ctx.today,
       preferModule: deps.preferModule,
+      blockWords: moduleWords(ctx.known, writable),
     }),
     RULE_ACCEPT,
   );
@@ -297,4 +298,19 @@ async function proposeLocally(
     );
   }
   return undefined;
+}
+
+/** Create-keywords of AI modules that are not writable right now (switched off, or without actions). */
+function moduleWords(
+  known: readonly ModuleManifest[],
+  writable: readonly ModuleManifest[],
+): string[] {
+  const on = new Set(writable.map((m) => m.id));
+  return aiModules(known)
+    .filter((m) => !on.has(m.id))
+    .flatMap((m) =>
+      Object.values(m.aiSchema.actions ?? {}).flatMap((a) =>
+        a.kind === 'create' ? (a.parse?.keywords ?? []) : [],
+      ),
+    );
 }

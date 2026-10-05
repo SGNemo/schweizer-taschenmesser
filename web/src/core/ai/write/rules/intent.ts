@@ -5,7 +5,7 @@
 import type { ModuleManifest } from '@/core/modules/types';
 import { fold } from '../../text';
 import { aiModules } from '../../scope';
-import { CREATE_VERBS, DELETE_VERBS, POLITE, SEARCH_STARTS, UPDATE_VERBS } from './lexicon';
+import { DELETE_VERBS, isCreateWord, isSearchStart, isUpdateWord, POLITE } from './lexicon';
 
 export type BarIntent = 'write' | 'question' | 'search';
 
@@ -19,10 +19,10 @@ export function detectIntent(text: string, manifests: readonly ModuleManifest[])
   while (words.length > 0 && POLITE.includes(words[0]!)) words.shift();
   if (words.length === 0) return 'search';
   const starts = (list: readonly string[]) => words.some((w) => list.some((v) => w.startsWith(v)));
-  if (SEARCH_STARTS.some((v) => words[0]!.startsWith(v))) {
+  if (isSearchStart(words[0]!)) {
     return /^(?:such|find|zeig|anzeig|offne|oeffne)/.test(words[0]!) ? 'search' : 'question';
   }
-  if (starts(DELETE_VERBS) || starts(UPDATE_VERBS) || starts(CREATE_VERBS)) return 'write';
+  if (starts(DELETE_VERBS) || words.some(isUpdateWord) || words.some(isCreateWord)) return 'write';
   const keywords = aiModules(manifests).flatMap((m) =>
     Object.values(m.aiSchema.actions ?? {}).flatMap((a) => (a.parse?.keywords ?? []).map(fold)),
   );

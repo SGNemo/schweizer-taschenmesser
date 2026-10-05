@@ -2,7 +2,8 @@ import { extractAmount } from './amount';
 import { extractDateTime } from './dates';
 import { extractRecurrence } from './recurrence';
 import type { CaptureNote, CaptureRecurrence } from './types';
-import { fmtDate, take, type Scan } from './util';
+import { startForRecurrence } from './index';
+import { fmtDate, fromDate, take, type Scan } from './util';
 
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 
@@ -45,7 +46,10 @@ export function extractFacts(
     out.amountMinor = money.amountMinor;
     out.kind = money.kind;
   }
-  if (dt.date) out.date = fmtDate(dt.date);
+  // "jeden Montag" without a date starts at the next such day.
+  const date =
+    dt.date ?? (recurrence ? startForRecurrence(recurrence, fromDate(opts.now)) : undefined);
+  if (date) out.date = fmtDate(date);
   if (dt.time !== undefined) out.time = dt.time;
   out.notes = [...dt.notes];
   out.rest = scan.t;

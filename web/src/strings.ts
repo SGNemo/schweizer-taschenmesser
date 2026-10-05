@@ -2132,6 +2132,35 @@ export const t = {
       done: (label: string) => `${label} angelegt.`,
       failed: 'Der Eintrag konnte nicht gespeichert werden.',
     },
+    writeSettings: {
+      title: 'Eintragen per KI',
+      description: 'Sätze wie „Rechnung Stadtwerke 89,90 € fällig 15.10.“ werden zum Eintrag.',
+      enabled: 'Einträge per KI vorschlagen',
+      enabledHint: 'Aus: Der Assistent kann nur lesen.',
+      cloud: 'Cloud-Fallback erlauben',
+      cloudHint: 'Letzte Stufe, nur mit Satz, Datum und Feldnamen – nie mit deinen Einträgen.',
+      askMissing: 'Bei fehlenden Angaben nachfragen',
+      modules: 'Module',
+      modulesHint: 'Nur diese Module darf der Assistent ändern.',
+      noModules: 'Kein aktives Modul bietet KI-Aktionen an.',
+    },
+    stats: {
+      title: 'KI-Statistik',
+      description: 'Woher kamen die Antworten: Regeln und lokales Modell sind kostenlos.',
+      stage: { rule: 'Regeln', local: 'Lokales Modell', cloud: 'Cloud', cache: 'Cache' } as Record<
+        string,
+        string
+      >,
+      answers: (n: number) => (n === 1 ? '1 Antwort' : `${n} Antworten`),
+      share: (pct: number) => `${pct} %`,
+      noCloud: (pct: number) => `${pct} % ohne Cloud`,
+      tokens: (n: number) => `${n} Token`,
+      cost: (usd: string) => `${usd} $`,
+      today: 'Heute',
+      perDay: 'Pro Tag',
+      empty: 'Noch keine Antworten.',
+      reset: 'Statistik zurücksetzen',
+    },
     write: {
       heading: (n: number) => (n === 1 ? 'Vorschlag' : `${n} Vorschläge`),
       intro: 'Es wird erst etwas gespeichert oder geändert, wenn du bestätigst.',
@@ -3299,6 +3328,12 @@ export const t = {
   help: {
     label: 'Hilfe',
     sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und die Passphrase kennen nur deine Geräte.',
+    aiWrite:
+      'Erkannte Einträge zeigt Nemo immer erst als Vorschau; gespeichert wird erst nach deiner Bestätigung. Hier legst du fest, ob und wo der Assistent Einträge vorschlagen darf.',
+    aiCloudWrite:
+      'Zuerst versucht Nemo es mit festen Regeln, dann (falls eingerichtet) mit dem lokalen Modell – beides kostet nichts und verlässt das Gerät nicht. Nur wenn beides nicht reicht und du das hier erlaubst, geht der Satz mit dem Datum und den Feldnamen der Module (nie deine Einträge) an einen KI-Anbieter.',
+    aiAskMissing:
+      'An: fehlt z. B. das Fälligkeitsdatum, fragt die Vorschau danach. Aus: solche Sätze werden nicht als Eintrag vorgeschlagen.',
     aiRouter:
       'Mehrere KI-Anbieter stehen in einer Reihenfolge. Die App fragt den ersten verfügbaren; ist er überlastet, nicht erreichbar oder sein Limit ist erreicht, springt sie zum nächsten. Es werden nur deine Frage und ein kurzes Schema gesendet, nie deine Daten.',
     updateChannel:
