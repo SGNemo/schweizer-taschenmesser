@@ -1,0 +1,2163 @@
+{
+  "version": 1,
+  "today": "2026-09-29",
+  "note": "Blind set: written after the held-out set was used for tuning; the parser has NOT been tuned against it. Measure once per change of the rules, then fix classes of errors and write a fresh blind set rather than reusing this one as tuning data.",
+  "fixtures": [
+    {
+      "module": "todos",
+      "collection": "list",
+      "id": "inbox",
+      "data": {
+        "name": "Privat"
+      }
+    },
+    {
+      "module": "todos",
+      "collection": "task",
+      "data": {
+        "listId": "inbox",
+        "title": "Steuererklärung abgeben",
+        "dueDate": "2026-10-05"
+      }
+    },
+    {
+      "module": "todos",
+      "collection": "task",
+      "data": {
+        "listId": "inbox",
+        "title": "Hausarzt anrufen"
+      }
+    },
+    {
+      "module": "todos",
+      "collection": "task",
+      "data": {
+        "listId": "inbox",
+        "title": "Wohnung putzen"
+      }
+    },
+    {
+      "module": "calendar",
+      "collection": "event",
+      "data": {
+        "title": "Zahnarzt Dr. Sonnenschein",
+        "startDate": "2026-09-30",
+        "startTime": "10:00"
+      }
+    },
+    {
+      "module": "calendar",
+      "collection": "event",
+      "data": {
+        "title": "Yoga",
+        "startDate": "2026-10-06",
+        "startTime": "18:00"
+      }
+    },
+    {
+      "module": "calendar",
+      "collection": "event",
+      "data": {
+        "title": "Elternabend",
+        "startDate": "2026-10-07",
+        "startTime": "19:00"
+      }
+    },
+    {
+      "module": "finance",
+      "collection": "account",
+      "id": "konto",
+      "data": {
+        "name": "Girokonto"
+      }
+    },
+    {
+      "module": "finance",
+      "collection": "transaction",
+      "data": {
+        "accountId": "konto",
+        "kind": "expense",
+        "amountMinor": 2350,
+        "date": "2026-09-28",
+        "payee": "Supermarkt"
+      }
+    },
+    {
+      "module": "finance",
+      "collection": "transaction",
+      "data": {
+        "accountId": "konto",
+        "kind": "expense",
+        "amountMinor": 480,
+        "date": "2026-09-27",
+        "payee": "Bäckerei"
+      }
+    },
+    {
+      "module": "invoices",
+      "collection": "invoice",
+      "data": {
+        "payee": "Stadtwerke Strom",
+        "amountMinor": 8990,
+        "dueDate": "2026-10-15"
+      }
+    },
+    {
+      "module": "invoices",
+      "collection": "invoice",
+      "data": {
+        "payee": "Telekom",
+        "amountMinor": 3999,
+        "dueDate": "2026-10-20"
+      }
+    },
+    {
+      "module": "subscriptions",
+      "collection": "subscription",
+      "data": {
+        "name": "Netflix",
+        "amountMinor": 1299,
+        "recurrence": {
+          "freq": "monthly",
+          "interval": 1
+        },
+        "startDate": "2026-01-01"
+      }
+    },
+    {
+      "module": "subscriptions",
+      "collection": "subscription",
+      "data": {
+        "name": "Spotify",
+        "amountMinor": 1099,
+        "recurrence": {
+          "freq": "monthly",
+          "interval": 1
+        },
+        "startDate": "2026-01-01"
+      }
+    },
+    {
+      "module": "subscriptions",
+      "collection": "subscription",
+      "data": {
+        "name": "Fitnessstudio",
+        "amountMinor": 2990,
+        "recurrence": {
+          "freq": "monthly",
+          "interval": 1
+        },
+        "startDate": "2026-01-01"
+      }
+    },
+    {
+      "module": "budgets",
+      "collection": "goal",
+      "data": {
+        "name": "Urlaub",
+        "targetMinor": 100000
+      }
+    },
+    {
+      "module": "lists",
+      "collection": "item",
+      "data": {
+        "listId": "shopping-default",
+        "name": "Milch"
+      }
+    },
+    {
+      "module": "lists",
+      "collection": "item",
+      "data": {
+        "listId": "shopping-default",
+        "name": "Brot"
+      }
+    },
+    {
+      "module": "lists",
+      "collection": "item",
+      "data": {
+        "listId": "shopping-default",
+        "name": "Eier"
+      }
+    },
+    {
+      "module": "pantry",
+      "collection": "item",
+      "data": {
+        "name": "Joghurt",
+        "place": "fridge"
+      }
+    },
+    {
+      "module": "pantry",
+      "collection": "item",
+      "data": {
+        "name": "Butter",
+        "place": "fridge"
+      }
+    },
+    {
+      "module": "notes",
+      "collection": "note",
+      "data": {
+        "title": "Gartenplan"
+      }
+    },
+    {
+      "module": "notes",
+      "collection": "note",
+      "data": {
+        "title": "Urlaubsideen"
+      }
+    },
+    {
+      "module": "bookmarks",
+      "collection": "item",
+      "data": {
+        "title": "Rezept Linsensuppe",
+        "url": "https://example.org/rezept"
+      }
+    },
+    {
+      "module": "vault",
+      "collection": "document",
+      "data": {
+        "title": "Handytarif",
+        "category": "contract"
+      }
+    },
+    {
+      "module": "people",
+      "collection": "person",
+      "data": {
+        "name": "Anna Muster"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "b-01",
+      "input": "Aufgabe Mietvertrag unterschreiben bis 7.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Mietvertrag unterschreiben",
+            "dueDate": "2026-10-07"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-02",
+      "input": "Aufgabe Zahnschiene abholen übermorgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Zahnschiene abholen",
+            "dueDate": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-03",
+      "input": "Erstelle Aufgabe Nebenkostenabrechnung prüfen bis 31.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Nebenkostenabrechnung prüfen",
+            "dueDate": "2026-10-31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-04",
+      "input": "Neue Aufgabe Auto zur Inspektion bringen am 14.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Auto zur Inspektion bringen",
+            "dueDate": "2026-10-14"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-05",
+      "input": "todo Bewerbung abschicken morgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Bewerbung abschicken",
+            "dueDate": "2026-09-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-06",
+      "input": "Aufgabe: Keller entrümpeln",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Keller entrümpeln"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-07",
+      "input": "Bitte eine Aufgabe anlegen: Wasserfilter wechseln",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Wasserfilter wechseln"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-08",
+      "input": "Aufgabe Kinderarzt Termin vereinbaren bis Donnerstag",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Kinderarzt Termin vereinbaren",
+            "dueDate": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-09",
+      "input": "Lege eine Aufgabe an Heizung entlüften",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Heizung entlüften"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-10",
+      "input": "Aufgabe Lebenslauf aktualisieren bis 16.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Lebenslauf aktualisieren",
+            "dueDate": "2026-10-16"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-11",
+      "input": "Merk dir die Aufgabe Handy aufladen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Handy aufladen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-12",
+      "input": "Task Server updaten bis Freitag",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Server updaten",
+            "dueDate": "2026-10-02"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-13",
+      "input": "Aufgabe Zahnarzt-Rechnung einreichen bis 23.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Zahnarzt-Rechnung einreichen",
+            "dueDate": "2026-10-23"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-14",
+      "input": "Aufgabe Paket zurückschicken heute",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Paket zurückschicken",
+            "dueDate": "2026-09-29"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-15",
+      "input": "Aufgabe Hausarzt anrufen als erledigt markieren",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "complete",
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "b-16",
+      "input": "Wohnung putzen abhaken",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "complete",
+          "target": "Wohnung putzen"
+        }
+      ]
+    },
+    {
+      "id": "b-17",
+      "input": "Die Aufgabe Steuererklärung abgeben ist erledigt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "complete",
+          "target": "Steuererklärung abgeben"
+        }
+      ]
+    },
+    {
+      "id": "b-18",
+      "input": "Verschiebe die Aufgabe Hausarzt anrufen auf den 12.10.",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "update",
+          "data": {
+            "dueDate": "2026-10-12"
+          },
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "b-19",
+      "input": "Aufgabe Wohnung putzen auf Sonntag verschieben",
+      "tags": ["update", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "update",
+          "data": {
+            "dueDate": "2026-10-04"
+          },
+          "target": "Wohnung putzen"
+        }
+      ]
+    },
+    {
+      "id": "b-20",
+      "input": "Aufgabe Steuererklärung abgeben löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "delete",
+          "target": "Steuererklärung abgeben"
+        }
+      ]
+    },
+    {
+      "id": "b-21",
+      "input": "Termin Dachdecker am 20.10. um 8 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Dachdecker",
+            "startDate": "2026-10-20",
+            "startTime": "08:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-22",
+      "input": "Termin Gespräch mit Chef morgen 14:30",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Gespräch mit Chef",
+            "startDate": "2026-09-30",
+            "startTime": "14:30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-23",
+      "input": "Erinnerung Schlüssel abholen am 6.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Schlüssel abholen",
+            "startDate": "2026-10-06",
+            "kind": "reminder"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-24",
+      "input": "Termin Blutabnahme übermorgen 7:30",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Blutabnahme",
+            "startDate": "2026-10-01",
+            "startTime": "07:30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-25",
+      "input": "Meeting Quartalsplanung 13.10. 10 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Quartalsplanung",
+            "startDate": "2026-10-13",
+            "startTime": "10:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-26",
+      "input": "Hundetraining jeden Samstag 10 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Hundetraining",
+            "startTime": "10:00",
+            "recurrence": {
+              "freq": "weekly",
+              "byWeekday": [6]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-27",
+      "input": "Termin Autowäsche am 3.10. um 12 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Autowäsche",
+            "startDate": "2026-10-03",
+            "startTime": "12:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-28",
+      "input": "Trage den Termin Steuerberater am 21.10. um 15:30 ein",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Steuerberater",
+            "startDate": "2026-10-21",
+            "startTime": "15:30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-29",
+      "input": "Erinner mich morgen an die Tabletten",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Tabletten",
+            "startDate": "2026-09-30",
+            "kind": "reminder"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-30",
+      "input": "Elternabend auf den 14.10. verschieben",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "update",
+          "data": {
+            "startDate": "2026-10-14"
+          },
+          "target": "Elternabend"
+        }
+      ]
+    },
+    {
+      "id": "b-31",
+      "input": "Verschiebe Zahnarzt Dr. Sonnenschein auf 1.10. 11 Uhr",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "update",
+          "data": {
+            "startDate": "2026-10-01",
+            "startTime": "11:00"
+          },
+          "target": "Zahnarzt Dr. Sonnenschein"
+        }
+      ]
+    },
+    {
+      "id": "b-32",
+      "input": "Termin Yoga streichen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "delete",
+          "target": "Yoga"
+        }
+      ]
+    },
+    {
+      "id": "b-33",
+      "input": "Den Termin Elternabend bitte absagen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "delete",
+          "target": "Elternabend"
+        }
+      ]
+    },
+    {
+      "id": "b-34",
+      "input": "Ausgabe 17,40 € Apotheke",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 1740,
+            "payee": "Apotheke"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-35",
+      "input": "Ausgabe 52,10 € Baumarkt am 26.9.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 5210,
+            "payee": "Baumarkt",
+            "date": "2026-09-26"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-36",
+      "input": "Einnahme 80 € Nachhilfe",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 8000,
+            "payee": "Nachhilfe"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-37",
+      "input": "Gehalt 3.100 € am 1.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 310000,
+            "date": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-38",
+      "input": "Buchung 29,99 € Online-Shop gestern",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 2999,
+            "payee": "Online-Shop",
+            "date": "2026-09-28"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-39",
+      "input": "Zahlung 14 € Friseur heute",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 1400,
+            "payee": "Friseur",
+            "date": "2026-09-29"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-40",
+      "input": "Hab 23 € für Bücher ausgegeben",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 2300,
+            "payee": "Bücher"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-41",
+      "input": "Ausgabe 120 € Autowerkstatt am 25.9.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 12000,
+            "payee": "Autowerkstatt",
+            "date": "2026-09-25"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-42",
+      "input": "Trage Einnahme 45 € Verkauf Fahrrad ein",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 4500,
+            "payee": "Verkauf Fahrrad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-43",
+      "input": "Ausgabe 6,50 € Döner",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 650,
+            "payee": "Döner"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-44",
+      "input": "Ausgabe 2.400 € Urlaub Buchung",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 240000,
+            "payee": "Urlaub Buchung"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-45",
+      "input": "Eis 3 €",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 300,
+            "payee": "Eis"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-46",
+      "input": "Erstattung 18 € Steuerberater",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 1800,
+            "payee": "Steuerberater"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-47",
+      "input": "Ändere die Buchung Supermarkt auf 26,40 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "update",
+          "data": {
+            "amountMinor": 2640
+          },
+          "target": "Supermarkt"
+        }
+      ]
+    },
+    {
+      "id": "b-48",
+      "input": "Buchung Bäckerei löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "delete",
+          "target": "Bäckerei"
+        }
+      ]
+    },
+    {
+      "id": "b-49",
+      "input": "Rechnung Zahnarzt 140 € fällig 18.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Zahnarzt",
+            "amountMinor": 14000,
+            "dueDate": "2026-10-18"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-50",
+      "input": "Rechnung Telefon 29 € fällig 5.11.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Telefon",
+            "amountMinor": 2900,
+            "dueDate": "2026-11-05"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-51",
+      "input": "Neue Rechnung Reparatur 310 € bis 30.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Reparatur",
+            "amountMinor": 31000,
+            "dueDate": "2026-10-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-52",
+      "input": "Rechnung von IKEA über 89,99 € fällig am 12.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "IKEA",
+            "amountMinor": 8999,
+            "dueDate": "2026-10-12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-53",
+      "input": "Rechnung Müllabfuhr 120 € zahlbar bis 15.11.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Müllabfuhr",
+            "amountMinor": 12000,
+            "dueDate": "2026-11-15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-54",
+      "input": "Rechnung Tierarzt 67,50 € fällig übermorgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Tierarzt",
+            "amountMinor": 6750,
+            "dueDate": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-55",
+      "input": "Erstelle eine Rechnung Anwalt 500 € fällig 1.12.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Anwalt",
+            "amountMinor": 50000,
+            "dueDate": "2026-12-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-56",
+      "input": "Rechnung Kindergarten 180 €",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Kindergarten",
+            "amountMinor": 18000
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-57",
+      "input": "Telekom Rechnung wurde bezahlt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Telekom"
+        }
+      ]
+    },
+    {
+      "id": "b-58",
+      "input": "Rechnung Stadtwerke Strom beglichen",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Stadtwerke Strom"
+        }
+      ]
+    },
+    {
+      "id": "b-59",
+      "input": "Die Rechnung von der Telekom ist bezahlt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Telekom"
+        }
+      ]
+    },
+    {
+      "id": "b-60",
+      "input": "Ändere die Rechnung Stadtwerke Strom auf 92 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "update",
+          "data": {
+            "amountMinor": 9200
+          },
+          "target": "Stadtwerke Strom"
+        }
+      ]
+    },
+    {
+      "id": "b-61",
+      "input": "Rechnung Stadtwerke Strom entfernen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "delete",
+          "target": "Stadtwerke Strom"
+        }
+      ]
+    },
+    {
+      "id": "b-62",
+      "input": "Abo Audible 9,95 € monatlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Audible",
+            "amountMinor": 995,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-63",
+      "input": "Abo ADAC 54 € jährlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "ADAC",
+            "amountMinor": 5400,
+            "recurrence": {
+              "freq": "yearly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-64",
+      "input": "Neues Abo Zeitung 39,90 € monatlich ab 1.11.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Zeitung",
+            "amountMinor": 3990,
+            "recurrence": {
+              "freq": "monthly"
+            },
+            "startDate": "2026-11-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-65",
+      "input": "Abonnement Magazin 6 € monatlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Magazin",
+            "amountMinor": 600,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-66",
+      "input": "Abo Cloud-Backup 3 € im Monat",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Cloud-Backup",
+            "amountMinor": 300,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-67",
+      "input": "Abo Rundfunkbeitrag 55,08 € vierteljährlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Rundfunkbeitrag",
+            "amountMinor": 5508,
+            "recurrence": {
+              "freq": "monthly",
+              "interval": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-68",
+      "input": "Abo Lieferdienst 4,99 € monatlich ab heute",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Lieferdienst",
+            "amountMinor": 499,
+            "recurrence": {
+              "freq": "monthly"
+            },
+            "startDate": "2026-09-29"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-69",
+      "input": "Abo Schwimmbad 120 € pro Jahr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Schwimmbad",
+            "amountMinor": 12000,
+            "recurrence": {
+              "freq": "yearly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-70",
+      "input": "Trage das Abo Notenblätter 7 € monatlich ein",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Notenblätter",
+            "amountMinor": 700,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-71",
+      "input": "Netflix kostet jetzt 15,99 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "update",
+          "data": {
+            "amountMinor": 1599
+          },
+          "target": "Netflix"
+        }
+      ]
+    },
+    {
+      "id": "b-72",
+      "input": "Ändere das Abo Fitnessstudio auf 34,90 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "update",
+          "data": {
+            "amountMinor": 3490
+          },
+          "target": "Fitnessstudio"
+        }
+      ]
+    },
+    {
+      "id": "b-73",
+      "input": "Abo Spotify löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "delete",
+          "target": "Spotify"
+        }
+      ]
+    },
+    {
+      "id": "b-74",
+      "input": "Das Abo Netflix habe ich gekündigt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "cancel",
+          "target": "Netflix"
+        }
+      ]
+    },
+    {
+      "id": "b-75",
+      "input": "Sparziel Wohnmobil 25.000 €",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "create",
+          "data": {
+            "name": "Wohnmobil",
+            "targetMinor": 2500000
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-76",
+      "input": "Lege ein Sparziel Weihnachten 400 € an",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "create",
+          "data": {
+            "name": "Weihnachten",
+            "targetMinor": 40000
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-77",
+      "input": "Ändere das Sparziel Urlaub auf 1.200 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "update",
+          "data": {
+            "targetMinor": 120000
+          },
+          "target": "Urlaub"
+        }
+      ]
+    },
+    {
+      "id": "b-78",
+      "input": "Butter auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Butter"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-79",
+      "input": "Äpfel, Birnen und Trauben auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Äpfel"
+          }
+        },
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Birnen"
+          }
+        },
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Trauben"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-80",
+      "input": "Kaffeefilter auf den Einkaufszettel",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Kaffeefilter"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-81",
+      "input": "Einkaufsliste: Olivenöl",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Olivenöl"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-82",
+      "input": "Füge Honig zur Einkaufsliste hinzu",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Honig"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-83",
+      "input": "4x Tomaten auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Tomaten",
+            "quantity": "4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-84",
+      "input": "Setz Waschmittel auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Waschmittel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-85",
+      "input": "Schreib Zahnbürste auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Zahnbürste"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-86",
+      "input": "Milch gekauft",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "check",
+          "target": "Milch"
+        }
+      ]
+    },
+    {
+      "id": "b-87",
+      "input": "Eier abgehakt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "check",
+          "target": "Eier"
+        }
+      ]
+    },
+    {
+      "id": "b-88",
+      "input": "Brot von der Einkaufsliste löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "delete",
+          "target": "Brot"
+        }
+      ]
+    },
+    {
+      "id": "b-89",
+      "input": "Streich Milch von der Einkaufsliste",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "delete",
+          "target": "Milch"
+        }
+      ]
+    },
+    {
+      "id": "b-90",
+      "input": "Vorrat Linsen 2 Stück Vorratsschrank",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Linsen",
+            "count": 2,
+            "place": "pantry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-91",
+      "input": "Hähnchen in den Tiefkühl",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Hähnchen",
+            "place": "freezer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-92",
+      "input": "Vorrat Sahne Kühlschrank bis 12.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Sahne",
+            "place": "fridge",
+            "expires": "2026-10-12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-93",
+      "input": "Vorrat Zucker 1 Stück",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Zucker",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-94",
+      "input": "Vorrat Joghurt entfernen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "delete",
+          "target": "Joghurt"
+        }
+      ]
+    },
+    {
+      "id": "b-95",
+      "input": "Notiz Ideen für den Geburtstag",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Ideen für den Geburtstag"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-96",
+      "input": "Notiz: WLAN Passwort Gäste ändern",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "WLAN Passwort Gäste ändern"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-97",
+      "input": "Neue Notiz Wanderrouten Harz",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Wanderrouten Harz"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-98",
+      "input": "Notiz Einkaufsideen Weihnachten",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Einkaufsideen Weihnachten"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-99",
+      "input": "Notiz Gartenplan löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "delete",
+          "target": "Gartenplan"
+        }
+      ]
+    },
+    {
+      "id": "b-100",
+      "input": "Benenne die Notiz Gartenplan in Gartenplan Herbst um",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "update",
+          "data": {
+            "title": "Gartenplan Herbst"
+          },
+          "target": "Gartenplan"
+        }
+      ]
+    },
+    {
+      "id": "b-101",
+      "input": "Lesezeichen https://example.org/guide Bergwanderführer",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Bergwanderführer",
+            "url": "https://example.org/guide"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-102",
+      "input": "Merke https://example.org/kurs Online Kurs Fotografie",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Online Kurs Fotografie",
+            "url": "https://example.org/kurs"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-103",
+      "input": "Serie Dark ansehen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Dark",
+            "kind": "watch"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-104",
+      "input": "Rezept Linsensuppe gesehen",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "done",
+          "target": "Rezept Linsensuppe"
+        }
+      ]
+    },
+    {
+      "id": "b-105",
+      "input": "Vertrag Internet läuft bis 31.03.2028",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Internet",
+            "category": "contract",
+            "endDate": "2028-03-31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-106",
+      "input": "Versicherung Rechtsschutz bis 31.12.2027",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Rechtsschutz",
+            "category": "insurance",
+            "endDate": "2027-12-31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-107",
+      "input": "Garantie Staubsauger bis 2.2.2029",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Staubsauger",
+            "category": "warranty",
+            "endDate": "2029-02-02"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-108",
+      "input": "Person Sabine Test",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "people",
+          "action": "create",
+          "data": {
+            "name": "Sabine Test"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-109",
+      "input": "Neuer Kontakt Klaus Demo",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "people",
+          "action": "create",
+          "data": {
+            "name": "Klaus Demo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-110",
+      "input": "Person Anna Muster löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "people",
+          "action": "delete",
+          "target": "Anna Muster"
+        }
+      ]
+    },
+    {
+      "id": "b-111",
+      "input": "Aufgabe Pakete abholen; Milch auf die Einkaufsliste",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Pakete abholen"
+          }
+        },
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Milch"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-112",
+      "input": "Ausgabe 12 € Kino\nAusgabe 4 € Popcorn",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 1200,
+            "payee": "Kino"
+          }
+        },
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 400,
+            "payee": "Popcorn"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-113",
+      "input": "Termin Zahnarzt 9.10. 10 Uhr; Aufgabe Zahnbürste kaufen",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Zahnarzt",
+            "startDate": "2026-10-09",
+            "startTime": "10:00"
+          }
+        },
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Zahnbürste kaufen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-114",
+      "input": "Lösche das Abo Spotify; Lösche die Aufgabe Hausarzt anrufen",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "delete",
+          "target": "Spotify"
+        },
+        {
+          "module": "todos",
+          "action": "delete",
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "b-neg-01",
+      "input": "Wie viel Geld habe ich noch?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-02",
+      "input": "Zeig mir meine Aufgaben für morgen",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-03",
+      "input": "Was kostet das Fitnessstudio im Jahr?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-04",
+      "input": "Welche Rechnungen sind überfällig?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-05",
+      "input": "Suche nach Rezept",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-06",
+      "input": "Guten Morgen",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-07",
+      "input": "Wann ist der nächste Zahnarzttermin?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-08",
+      "input": "Erkläre mir wie ein Budget funktioniert",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-09",
+      "input": "Zeige alle Abos",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-10",
+      "input": "Wie viele Notizen habe ich?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-11",
+      "input": "Was steht am Freitag im Kalender?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-12",
+      "input": "Wo steht die Telefonnummer von Anna?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-13",
+      "input": "Danke dir",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-14",
+      "input": "Wie hoch waren meine Ausgaben im Oktober?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-15",
+      "input": "Gibt es offene Rechnungen von Telekom?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-16",
+      "input": "Welche Termine habe ich heute?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-17",
+      "input": "Wie spät ist es?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-18",
+      "input": "Brauche ich einen Regenschirm?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-19",
+      "input": "Ist die Stadtwerke Rechnung schon bezahlt?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-20",
+      "input": "Sparziele",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-21",
+      "input": "Aufgaben",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-22",
+      "input": "Rechnung Telekom",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-23",
+      "input": "Zeig mir die Einkaufsliste",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-24",
+      "input": "Was kann ich mit dir machen?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-25",
+      "input": "Finde meine Notizen zum Garten",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-26",
+      "input": "Welche Verträge habe ich?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-27",
+      "input": "Wie viel kostet Spotify?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-28",
+      "input": "Liste alle Termine nächste Woche",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-29",
+      "input": "Wer ist Anna Muster?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-neg-30",
+      "input": "Vergleiche meine Ausgaben von August und September",
+      "tags": ["negative"],
+      "expect": []
+    }
+  ]
+}
