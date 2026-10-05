@@ -88,7 +88,7 @@ describe('the JSX runtime hands plain text children to the reading aid', () => {
         <button type="button">Speichern</button>
         <code>geheimerSchluessel</code>
         <textarea defaultValue="Notizentext" />
-        <span>1.234,56 €</span>
+        <span className="num">1.234,56 €</span>
       </div>,
     );
     const strong = (sel: string) =>
@@ -99,7 +99,7 @@ describe('the JSX runtime hands plain text children to the reading aid', () => {
     expect(strong('button')).toEqual(['Spei']);
     expect(container.querySelector('code [data-rs]')).toBeNull();
     expect(container.querySelector('textarea [data-rs]')).toBeNull();
-    expect(container.querySelector('span [data-rs]')).toBeNull();
+    expect(container.querySelector('.num [data-rs]')).toBeNull();
   });
 
   it('headings in the primary ink get a dimmed rest; body text only changes weight', () => {

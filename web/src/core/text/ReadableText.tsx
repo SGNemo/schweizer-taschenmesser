@@ -87,7 +87,8 @@ export function ReadableText({
   if (!runs) return <>{text}</>;
   const firstStrong = runs.findIndex((r) => r.strong);
   return (
-    <>
+    // One wrapper element: in a flex/grid container with a gap the words stay a single item, as the plain string was.
+    <span data-rt="">
       {runs.map((r, i) =>
         r.strong ? (
           <span key={i} data-rs={heavy ? 'h' : ''} ref={i === firstStrong ? probe : undefined}>
@@ -101,6 +102,6 @@ export function ReadableText({
           r.text
         ),
       )}
-    </>
+    </span>
   );
 }
