@@ -63,6 +63,39 @@ Not built yet: **Feed** (headlines with source and time) – its only module (ne
 - The widget title links to its module (small chevron, `WidgetDef.to`, default: the module's first route); no orange "Modul →" links inside widgets.
 - Density (normal/compact) is a device setting in Settings → Darstellung; widgets use `--row-h` and `--grid-gap`.
 
+### 4b. Colour semantics and structure (2026-10-05, `feat/readability`)
+Colour carries meaning and is **always paired with an icon or a text label**; titles, body text and ordinary icons stay neutral. Table (code: `ui/semantics.ts`, test `semantics.test.ts`):
+
+| Meaning | Token | Pair | Shown as |
+|---|---|---|---|
+| overdue / error / exceeded | `--danger` | alert icon + "seit 3 Tagen" | left stripe, `StateBadge`, group head |
+| today / urgent | `--accent` | clock icon + "Heute" | stripe, badge |
+| soon (≤ 3 days) | `--text-muted` | "in 2 Tagen" | text only |
+| done | `--text-3` + strike | check / strike | row |
+| inactive | `--text-3` | label ("pausiert") | row |
+| income / expense | `--success` / `--danger` | sign (+/−) | amount only |
+| connected / locked | `--success` / `--warning` | icon + word | `StateBadge` |
+| category 1…6 | `--cat-1…6` (≥ 3:1 on surface, light + dark) | dot **and** name | chips, calendar stripe; assigned per module with `categoryColor()` |
+| navigation area | `--area-color` (= a `--cat-*`) via `data-area` | area name next to it | icon colour + thin stripe on the group head (sidebar, rail, bottom bar), module library blocks |
+
+- No decoration colours: links in widgets are neutral (`--text-muted`, underlined); accent = primary action, active navigation, "today". The active nav item keeps the accent, the area colour only tints the icon.
+- Calendar blocks/chips are neutral (`--surface-2`, own events `--accent-soft`); the kind shows as a 3 px left stripe (`--kind`) and in the title/tooltip. Birthdays/invoices/subscriptions use category stripes, deadlines (`cancel`, `end`, `expiry`) `--warning`, never red.
+- **"Ruhig" colour mode** (Einstellungen → Darstellung → Farben, `data-color='calm'`): `--cat-*`, `--success`, `--warning`, `--info` become muted; only overdue and today keep colour.
+
+**Structure rules (implemented in `GroupedList`, `ItemRow`, `Prose`):**
+1. Groups by space first; one hairline only between *different* groups, never between every entry of a group (rows inside a surface keep their own hairlines).
+2. Group heads: 13 px, `--text-3`, collapsible, with a count; time groups "Überfällig / Heute / Morgen / Diese Woche / Später / Ohne Datum" (`core/time/groups.ts`), status groups "Offen / Bezahlt". Overdue/today heads are tinted but always carry their word. Fold state is device-local (`tm-groups-closed`).
+3. Card head = title left, key figure right (13 px muted); zebra only in dense tables.
+4. Running text: `max-width: var(--measure)` (68 ch), paragraph spacing instead of blank lines, hanging indent in lists (`ui/Prose`).
+5. Numbers right-aligned and tabular, units muted. Urgency stripe: `ItemRow tone="overdue|today"` (3 px, with a badge or text in the row).
+6. Calendar week/day: full hour line clearly visible, half hour a hint, weekend tinted, today a soft wash, "now" line in accent with a dot.
+7. Settings: sections via `SettingsGroup` (title + hint), rows with description; a section per topic ("Lesen", "Darstellung"), no endless rows.
+
+### 4c. Reading aid ("Lesehilfe", Bionic style)
+`ReadableText` (`ui/ReadableText.tsx`, engine `core/text/readable.ts`): word starts get `[data-rs]` (weight 560 `soft` with a step towards `--text`, or 700 `bold`); share 30/40/50 %, minimum word length 4, numbers/amounts/dates/codes/URLs/e-mails/ALL-CAPS skipped, graphemes via `Intl.Segmenter` (no cut inside an umlaut), hyphenated compounds word by word, start capped at 6 graphemes. Memoised (LRU 500). Off by default; settings Darstellung → Lesen (on/off, share, strength, scope "nur Fließtext"/"auch Listen"); `Alt+L` toggles; one-time offer on the welcome card.
+- **Use in:** prose (setup texts, help rows, answers, library descriptions, notes in reading view), list titles and sentence-like teasers (`ItemRow`, scope "auch Listen"). **Never in:** inputs, numbers, code, buttons, navigation, vault and accounts (test `ReadableText.test.tsx`).
+- No role, label or `<b>/<strong>`: screen readers read plain text. Nothing animates. "Fokus-Lesen" (`ReaderView`): note editor → wide dialog with `Prose` and the aid forced on.
+
 ## 5. Tokens
 Neutral base **cool**; every pair checked AA (`ROUND-4-TOKENS.md` has the ratios). Hex values are the implementation targets for `web/src/ui/tokens.css`.
 
@@ -97,10 +130,10 @@ Neutral base **cool**; every pair checked AA (`ROUND-4-TOKENS.md` has the ratios
 
 ## 6. Typography and icons
 - **Inter Variable**, local, OFL, the only family; `--font-mono` system stack for tokens/keys only.
-- Scale: hero `clamp(2rem, 1.6rem + 1.2vw, 2.75rem)`/700/1.1 · h1 32/600/1.1 (phone 28) · h2 20/600/1.25 · body 16/400/1.5 · label 15/500 · meta 13/400 `--text-3` · caps 11/600/+0.06 em uppercase · badge 12/600. Letter-spacing −0.02 em at ≥ 28 px. Weights 400/500/600/700 only.
+- Scale: hero `clamp(2rem, 1.6rem + 1.2vw, 2.75rem)`/700/1.1 · h1 32/600/1.1 (phone 28) · h2 20/600/1.25 · body 16/400/1.6 (default; compact 1.4, airy 1.75) · label 15/500 · meta 13/400 `--text-3` · caps 11/600/+0.06 em uppercase · badge 12/600. Letter-spacing −0.02 em at ≥ 28 px. Weights 400/500/600/700 only.
 - `font-variant-numeric: tabular-nums` on every amount, time, date, counter, table.
 - Hierarchy in a row: title 16/400 `--text`, meta 13 `--text-3`, amount 16/600 right. In a widget: title → hero → sub → rows.
-- Root size follows the setting "Textgröße": Normal 16 px / Groß 18 px; everything is rem-based.
+- Root size follows the setting "Textgröße": Klein 14.4 / Normal 16 / Groß 18 / Sehr groß 20 px; everything is rem-based. Line spacing: Kompakt / Normal (1.6) / Luftig. At most three text sizes per view, one title weight (600).
 - Icons: **Lucide** only, 20 px at **1.5 px stroke** (1.75 at 16 px; rail 22 px). No filled icons, no emoji. Empty state: fish mark 56–64 px at 35 % in `--text-3`, one sentence, one button; no module illustrations.
 
 ## 7. Components (`web/src/ui`)

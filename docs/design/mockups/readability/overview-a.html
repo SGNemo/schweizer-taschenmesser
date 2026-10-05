@@ -1,0 +1,36 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Übersicht – Variante A „Ruhig gruppiert"</title><style>:root{--bg:#f3f4f4;--surface:#fff;--surface-2:#eaecee;--border:#e2e5e8;--text:#171f24;--text-muted:#55636b;--text-3:#5f6c75;--accent:#b5430c;--accent-soft:#fbe9de;--danger:#b3261e;--success:#1b7545;--warning:#8a5a00;--info:#1f5fa8;--cat-1:#1f5fa8;--cat-2:#16847f;--cat-3:#7a4aa8;--cat-4:#8a5a00}
+:root[data-theme=dark]{--bg:#0f1316;--surface:#171c20;--surface-2:#1f2529;--border:#262d32;--text:#eceff1;--text-muted:#aab4bb;--text-3:#88939b;--accent:#ff9a57;--accent-soft:#2e241c;--danger:#f4a39c;--success:#7fd3a3;--warning:#e8b85a;--info:#7cc7e8;--cat-1:#7cc7e8;--cat-2:#4fb3ad;--cat-3:#c9a8ea;--cat-4:#e8b85a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,sans-serif;padding:24px}
+h1{font-size:28px;margin:0 0 4px;font-weight:600}.sub{color:var(--text-3);font-size:13px;margin:0 0 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;max-width:1100px}
+.card{background:var(--surface);border-radius:16px;padding:20px 22px;box-shadow:0 1px 2px #0001}
+.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.head b{font-size:15px;font-weight:600}.head span{font-size:13px;color:var(--text-3)}
+.grp{font-size:13px;font-weight:500;color:var(--text-3);margin:16px 0 4px;display:flex;justify-content:space-between}
+.grp:first-of-type{margin-top:4px}.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
+.row{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 4px 0 12px;position:relative;border-radius:10px}
+.row::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:4px;border-radius:2px;background:transparent}
+.row.over::before{background:var(--danger)}.row.today::before{background:var(--accent)}.row.done{color:var(--text-3)}.row.done .t{text-decoration:line-through}
+.row .t{flex:1}.row .m{font-size:13px;color:var(--text-3)}.amt{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.row+.row{border-top:1px solid var(--border)}.unit{color:var(--text-3);font-weight:400}
+.badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:8px;display:inline-flex;gap:4px;align-items:center;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c)}
+.over .badge,.b-over{--c:var(--danger)}.b-today{--c:var(--accent)}.b-ok{--c:var(--success)}.b-soon{--c:var(--text-muted)}
+.chip{font-size:12px;padding:1px 8px;border-radius:8px;background:var(--surface-2);color:var(--text-muted);display:inline-flex;gap:6px;align-items:center}.chip i{width:8px;height:8px;border-radius:50%;background:var(--c);display:inline-block}
+.bold b{font-weight:700}.prose{max-width:68ch}.prose p{margin:0 0 .9em}
+.tag{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px}
+.kpi{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.ctx{font-size:13px;color:var(--text-muted)}
+.strip{background:var(--accent-soft);border-radius:12px;padding:10px 14px;margin-bottom:24px;display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+.calm .badge,.calm .row::before{--c:var(--text-3)}
+</style><script>if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.dataset.theme='dark';const q=new URLSearchParams(location.search).get('theme');if(q)document.documentElement.dataset.theme=q</script></head><body><h1>Übersicht – Variante A „Ruhig gruppiert"</h1><p class="sub">Gruppen durch Abstand, Farbstreifen nur bei überfällig/heute, Badge immer mit Icon + Text · invented test data · ?theme=dark</p><div class="strip" role="status"><b>Jetzt wichtig</b><span>⚠ 2 Rechnungen überfällig</span><span>◷ Teammeeting heute 10:00</span></div>
+<div class="grid">
+<section class="card"><div class="head"><b>Rechnungen</b><span>1.067,84 € offen</span></div>
+<div class="grp"><span>Überfällig</span><span>2</span></div>
+<div class="row over"><div class="t">Stadtwerke Musterstadt<div class="m">SW-2026-1000</div></div><span class="badge">⚠ seit 18 Tagen</span><div class="amt">87,40 €</div></div>
+<div class="row over"><div class="t">Zahnarztpraxis Dr. Beispiel<div class="m">ZA-2026-1001</div></div><span class="badge">⚠ seit 9 Tagen</span><div class="amt">132,50 €</div></div>
+<div class="grp"><span>Fällig</span><span>3</span></div>
+<div class="row "><div class="t">Internet &amp; Telefon Küstennetz<div class="m">KN-2026-1002</div></div><span class="badge">in 3 Tagen</span><div class="amt">39,99 €</div></div>
+<div class="row "><div class="t">Kfz-Versicherung Nordstern<div class="m">KV-2026-1003</div></div><span class="badge">in 7 Tagen</span><div class="amt">418,00 €</div></div></section>
+<section class="card"><div class="head"><b>Heute</b><span>3 Termine</span></div>
+<div class="row today"><div class="t">Teammeeting<div class="m">10:00–11:00</div></div><span class="badge">◷ Heute</span><div class="amt"></div></div>
+<div class="row "><div class="t">Friseur<div class="m">13:00</div></div><div class="amt"></div></div><div class="row "><div class="t">Zahnarzt Dr. Beispiel<div class="m">15:30</div></div><div class="amt"></div></div>
+<hr class="sep"><div class="head"><b>Kontostand</b></div><div class="kpi">12.410,93 <span class="unit">€</span></div><div class="ctx">+1.204,00 € gegenüber letztem Monat</div></section>
+</div></body></html>

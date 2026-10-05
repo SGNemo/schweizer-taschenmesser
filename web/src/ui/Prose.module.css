@@ -1,0 +1,20 @@
+.prose {
+  max-width: var(--measure);
+  line-height: var(--leading);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.prose p {
+  margin: 0 0 var(--space-3);
+}
+.prose p:last-child {
+  margin-bottom: 0;
+}
+.prose ul,
+.prose ol {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.4em; /* wrapped lines align with the text, not the bullet */
+}
+.prose li + li {
+  margin-top: var(--space-1);
+}

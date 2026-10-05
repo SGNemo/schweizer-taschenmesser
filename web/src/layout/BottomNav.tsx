@@ -11,13 +11,21 @@ export function BottomNav({ tree, onMore }: { tree: NavTree; onMore: () => void 
   const { pathname } = useLocation();
   const activeArea = areaOfPath(tree, pathname)?.id;
   const items = [
-    { key: 'home', to: '/', label: t.nav.home, icon: 'home' as const, active: pathname === '/' },
+    {
+      key: 'home',
+      to: '/',
+      label: t.nav.home,
+      icon: 'home' as const,
+      active: pathname === '/',
+      area: undefined,
+    },
     ...tree.areas.slice(0, BOTTOM_AREA_SLOTS).map((a) => ({
       key: a.id,
       to: a.to,
       label: a.label,
       icon: a.icon,
       active: activeArea === a.id,
+      area: a.id,
     })),
   ];
   return (
@@ -27,6 +35,7 @@ export function BottomNav({ tree, onMore }: { tree: NavTree; onMore: () => void 
           key={i.key}
           to={i.to}
           className={styles.link}
+          data-area={i.area}
           aria-current={i.active ? 'page' : undefined}
         >
           <Icon name={i.icon} />

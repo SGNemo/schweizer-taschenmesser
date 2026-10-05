@@ -1,4 +1,5 @@
 /** Building blocks of the settings pages: one row layout for every setting, groups and the danger zone. */
+import { ReadableText } from './ReadableText';
 import { useId, useState, type ReactNode } from 'react';
 import { t } from '@/strings';
 import { Button } from './Button';
@@ -35,7 +36,11 @@ export function SettingRow({
           {label}
           {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
         </span>
-        {description ? <span className={styles.description}>{description}</span> : null}
+        {description ? (
+          <span className={styles.description}>
+            <ReadableText text={description} />
+          </span>
+        ) : null}
       </div>
       {children ? <div className={styles.control}>{children}</div> : null}
     </div>

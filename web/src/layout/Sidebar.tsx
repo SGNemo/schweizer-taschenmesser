@@ -28,7 +28,7 @@ function ItemRow({
   const toast = useUiStore((s) => s.toast);
   const id = item.moduleId;
   return (
-    <li className={styles.row}>
+    <li className={styles.row} data-area={item.area}>
       <NavLink to={item.to} className={styles.link}>
         <Icon name={item.icon} />
         <span>{item.label}</span>
@@ -60,7 +60,7 @@ function AreaGroup({ area, shown }: { area: NavArea; shown: string[] }) {
   const toggle = useUiStore((s) => s.toggleAreaOpen);
   const listId = `area-${area.id}`;
   return (
-    <section className={styles.group}>
+    <section className={styles.group} data-area={area.id}>
       <button
         type="button"
         className={styles.groupHead}
@@ -96,14 +96,16 @@ function RailLink({
   icon,
   label,
   active,
+  area,
 }: {
   to: string;
   icon: NavItem['icon'];
   label: string;
   active: boolean;
+  area?: NavItem['area'];
 }) {
   return (
-    <li>
+    <li data-area={area}>
       <Link to={to} className={styles.railLink} aria-current={active ? 'page' : undefined}>
         <Icon name={icon} size={22} />
         <span>{label}</span>
@@ -147,6 +149,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
                 to={a.to}
                 icon={a.icon}
                 label={a.label}
+                area={a.id}
                 active={activeArea === a.id}
               />
             ))}

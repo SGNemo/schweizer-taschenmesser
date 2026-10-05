@@ -78,6 +78,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 2026-10 **Trust = fixed extension id (manifest `key`) + one-time confirmation with a code shown on both sides; no pairing key in the extension.**
 - 2026-10 **Origin rule is a global vault setting (same registrable domain / exact host), vault format unchanged.**
 - 2026-10 **Extension zip is a CI artifact only; release integration is a written proposal** – `release.yml` stays untouched.
+- 2026-10 **Readability: optional reading aid (off by default), colour only with meaning, grouped lists** – own engine, six category hues also for navigation areas, "Ruhig" mode; details in [decisions/readability.md](decisions/readability.md).
 
 ## Supporter mode → [decisions/supporter.md](decisions/supporter.md)
 - 0.4 **Supporter extras are cosmetic only; no feature behind a paywall, no nag** – the app stays free, support is a thank-you.

@@ -27,6 +27,7 @@ import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
 import { NotificationsSection } from './NotificationsSection';
+import { ReadingSection } from './ReadingSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
@@ -72,9 +73,25 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       { key: 'sidebar', label: s.sidebar, description: s.rows.sidebarHint },
       { key: 'motion', label: s.rows.motion, description: s.rows.motionHint },
       { key: 'leading', label: s.leading, description: s.rows.leadingHint },
+      { key: 'color', label: s.color, description: s.colorHint },
       { key: 'homeView', label: s.homeView, description: s.rows.homeViewHint },
     ],
     render: () => <AppearanceSection />,
+  },
+  {
+    id: 'reading',
+    category: 'darstellung',
+    order: 12,
+    title: s.reading.title,
+    description: s.reading.description,
+    keywords: s.reading.keywords,
+    fields: [
+      { key: 'aid', label: s.reading.aid, description: s.reading.aidHint },
+      { key: 'share', label: s.reading.share },
+      { key: 'style', label: s.reading.style, description: s.reading.styleHint },
+      { key: 'scope', label: s.reading.scope, description: s.reading.scopeHint },
+    ],
+    render: () => <ReadingSection />,
   },
   {
     id: 'focus',

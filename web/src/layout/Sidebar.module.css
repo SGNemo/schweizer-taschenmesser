@@ -170,3 +170,23 @@
   background: var(--accent-soft);
   color: var(--accent);
 }
+
+/* Area colour: icon only (never the text) plus a thin stripe on the group head. The active item keeps the accent. */
+.row[data-area] .link:not([aria-current='page']) > svg,
+li[data-area] .railLink:not([aria-current='page']) > svg,
+.group[data-area] .groupHead > svg:first-child {
+  color: var(--area-color);
+}
+.group[data-area] .groupHead {
+  position: relative;
+}
+.group[data-area] .groupHead::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--area-color);
+}

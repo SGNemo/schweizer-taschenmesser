@@ -68,6 +68,12 @@ describe('design tokens', () => {
     describe(`${name}: WCAG AA`, () => {
       const text = (fg: string, bg: string, min = 4.5) =>
         expect(ratio(t[fg]!, t[bg]!), `${fg} on ${bg}`).toBeGreaterThanOrEqual(min);
+      it('category colours are visible on surface and surface-2 (UI contrast 3:1)', () => {
+        for (let i = 1; i <= 6; i++) {
+          text(`--cat-${i}`, '--surface', 3);
+          text(`--cat-${i}`, '--surface-2', 3);
+        }
+      });
       it('text on backgrounds and surfaces', () => {
         for (const bg of ['--bg', '--surface', '--surface-2']) {
           text('--text', bg);

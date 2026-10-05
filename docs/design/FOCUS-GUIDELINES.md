@@ -10,6 +10,8 @@ Rules for every feature that helps with focus, starting, remembering or time. No
 5. **Does it survive an interruption?** State is kept (reload, app switch); nothing is lost when the user leaves.
 6. **Is it tested?** Pure logic (selection, limits, state) with unit tests; the switch with an e2e case; reduced motion and AA contrast checked.
 
+7. **Readability:** Does the colour carry meaning (state, category, urgency) and is it paired with text or an icon? Is the group recognisable (space, small header, count)? Is the line too long (> 68 ch)? Is long text offered with the reading aid, and does it stay off for numbers, inputs and the vault?
+
 ## Principles
 - **One thing at a time.** Offer one next action, show the rest collapsed. Plans hold at most 3 main items per day.
 - **Start small.** Estimates in short steps (5/15/30/60 min), first step visible, "Anfangen" instead of "Planen".

@@ -11,7 +11,7 @@ import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Badge, Button } from '@/ui';
+import { Badge, Button, ReadableText } from '@/ui';
 import styles from './assistant.module.css';
 
 const MAX_ROWS = 10;
@@ -132,7 +132,9 @@ function CreateCard({ prepared, onDone }: { prepared: PreparedCreate; onDone: ()
   return (
     <>
       <h3 className={styles.heading}>{t.ai.create.title(prepared.label)}</h3>
-      <p className={styles.note}>{t.ai.create.intro}</p>
+      <p className={styles.note}>
+        <ReadableText text={t.ai.create.intro} />
+      </p>
       <dl className={styles.lines} data-testid="ai-create-preview">
         <dt>{prepared.moduleName}</dt>
         <dd>{prepared.label}</dd>
@@ -179,7 +181,11 @@ function Result({
           <p className={styles.big} data-testid="ai-aggregate">
             {result.value}
           </p>
-          {result.note ? <p className={styles.note}>{result.note}</p> : null}
+          {result.note ? (
+            <p className={styles.note}>
+              <ReadableText text={result.note} />
+            </p>
+          ) : null}
         </>
       );
     case 'agenda':
@@ -203,7 +209,11 @@ function Result({
     case 'create':
       return <CreateCard prepared={result.prepared} onDone={onDone} />;
     case 'message':
-      return <p>{result.text}</p>;
+      return (
+        <p>
+          <ReadableText text={result.text} />
+        </p>
+      );
   }
 }
 
