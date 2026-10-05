@@ -27,6 +27,8 @@ import { FavouritesSection } from './FavouritesSection';
 import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
+import { LocalModelSection } from './LocalModelSection';
+import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
 import { SetupSection } from './SetupSection';
@@ -225,6 +227,15 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => <AiWriteSection />,
   },
   {
+    id: 'ai-local',
+    category: 'ki',
+    order: 16,
+    title: t.ai.local.title,
+    hint: t.help.aiLocal,
+    keywords: ['Lokal', 'Modell', 'Offline', 'Download', 'GPU', 'Vulkan', 'Gewichte'],
+    render: () => <LocalModelSection />,
+  },
+  {
     id: 'ai-stats',
     category: 'ki',
     order: 17,
@@ -334,6 +345,14 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
           </Suspense>
         </SettingsGroup>
       ) : null,
+  },
+  {
+    id: 'model-licenses',
+    category: 'ueber',
+    order: 55,
+    title: t.ai.local.licensesTitle,
+    keywords: ['Lizenz', 'Modell', 'Apache', 'MIT', 'Gewichte'],
+    render: () => <ModelLicensesSection />,
   },
   {
     id: 'setup',

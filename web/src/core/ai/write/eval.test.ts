@@ -5,83 +5,35 @@
  * test run only guards the numbers. Later stages (local model) are measured with the same set.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import evalSet from '../../../../tests/ai/eval-set.json';
 import { db } from '@/core/db/db';
-import { createCollectionRepo } from '@/core/db/repo';
-import { visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
-import { clearAll } from '../testing';
-import { fold } from '../text';
-import { prepareProposal } from './prepare';
+import {
+  EVAL_NOW,
+  EVAL_TODAY,
+  evalCases as cases,
+  evalManifests as manifests,
+  scoreProposal,
+  seedEvalFixtures,
+  type EvalCase as Case,
+  type Outcome,
+} from './evalSupport';
 import { parseWrite } from './rules/parse';
 import type { ProposedOp } from './types';
 
-interface ExpectedOp {
-  module: string;
-  action: string;
-  data?: Record<string, unknown>;
-  target?: string;
-}
-interface Case {
-  id: string;
-  input: string;
-  tags: string[];
-  expect: ExpectedOp[];
-}
-
-const cases = evalSet.cases as Case[];
-const manifests = visibleManifests.filter((m) => m.id !== 'example');
-const NOW = new Date(2026, 8, 29, 10, 0);
-const TODAY = evalSet.today;
-
-type Outcome = 'exact' | 'partial' | 'wrong' | 'escalate' | 'negative-ok' | 'false-positive';
-
-const subset = (actual: unknown, expected: unknown): boolean => {
-  if (expected === null || typeof expected !== 'object') return actual === expected;
-  if (Array.isArray(expected)) return JSON.stringify(actual) === JSON.stringify(expected);
-  if (actual === null || typeof actual !== 'object') return false;
-  return Object.entries(expected).every(([k, v]) =>
-    subset((actual as Record<string, unknown>)[k], v),
-  );
-};
-
 beforeAll(async () => {
-  setNow(() => NOW.getTime());
-  await clearAll();
-  await db.table('_imports').clear();
-  for (const f of evalSet.fixtures) {
-    const manifest = manifests.find((m) => m.id === f.module)!;
-    await createCollectionRepo(manifest, f.collection, db).create(
-      f.data as Record<string, unknown>,
-      'id' in f ? { id: f.id as string } : undefined,
-    );
-  }
+  setNow(() => EVAL_NOW.getTime());
+  await seedEvalFixtures();
 });
 afterAll(() => setNow());
 
 async function run(c: Case): Promise<{ outcome: Outcome; got?: ProposedOp[] }> {
-  const proposal = await parseWrite(c.input, { manifests, database: db, now: NOW, today: TODAY });
-  if (c.expect.length === 0) {
-    return { outcome: proposal ? 'false-positive' : 'negative-ok', got: proposal?.ops };
-  }
-  if (!proposal) return { outcome: 'escalate' };
-  const got = proposal.ops;
-  if (
-    got.length !== c.expect.length ||
-    got.some((o, i) => o.module !== c.expect[i]!.module || o.action !== c.expect[i]!.action)
-  ) {
-    return { outcome: 'wrong', got };
-  }
-  const ctx = { manifests, known: manifests, database: db, today: TODAY };
-  const prepared = await prepareProposal(got, ctx).catch(() => undefined);
-  if (!prepared) return { outcome: 'partial', got };
-  const ok = c.expect.every((e, i) => {
-    const p = prepared[i]!;
-    const dataOk = subset(got[i]!.data ?? {}, e.data ?? {});
-    const targetOk = e.target === undefined || fold(p.targetTitle ?? '') === fold(e.target);
-    return dataOk && targetOk;
+  const proposal = await parseWrite(c.input, {
+    manifests,
+    database: db,
+    now: EVAL_NOW,
+    today: EVAL_TODAY,
   });
-  return { outcome: ok ? 'exact' : 'partial', got };
+  return { outcome: await scoreProposal(c, proposal), got: proposal?.ops };
 }
 
 describe('eval set', () => {

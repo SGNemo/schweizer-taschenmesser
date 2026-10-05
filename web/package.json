@@ -37,7 +37,7 @@
     "version:set": "node scripts/version.mjs set",
     "changelog": "node scripts/changelog.mjs",
     "screenshots": "playwright test -c playwright.screens.config.ts",
-    "ai:eval": "AI_EVAL=1 vitest run src/core/ai/write/eval.test.ts"
+    "ai:eval": "node scripts/ai-eval.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",
