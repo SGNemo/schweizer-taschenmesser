@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { issueForDonation } from '../src/issue.ts';
 import { parsePayload } from '../src/kofi.ts';
 import { backoffSeconds, handleQueue } from '../src/queue.ts';
@@ -44,6 +44,22 @@ describe('mail queue consumer', () => {
     expect(b.calls[0]!.replyTo).toBeUndefined();
     expect(b.calls[0]!.text).not.toContain('Antworte einfach');
     expect(b.calls[0]!.text).toContain('Kontakt auf der Spendenseite');
+  });
+
+  it("logs Resend's HTTP status for a failed send, and nothing personal", async () => {
+    const { env, job } = await issued();
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, 'log').mockImplementation((...a: unknown[]) => {
+      lines.push(a.map(String).join(' '));
+    });
+    const msg = makeMessage(job, 1);
+    await handleQueue(batchOf(QUEUE_NAME, msg), env, makeDeps([403, 403]).deps);
+    spy.mockRestore();
+    const all = lines.join('\n');
+    expect(all).toContain('"status":403');
+    expect(all).toContain('failed-notify-error');
+    expect(all).not.toContain(job.to);
+    expect(all).not.toContain(job.code);
   });
 
   it('retries a temporary failure with growing backoff', async () => {

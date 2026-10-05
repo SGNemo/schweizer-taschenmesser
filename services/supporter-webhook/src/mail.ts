@@ -72,6 +72,12 @@ export function renderCodeMail(code: string, tier: SupporterTier, canReply = fal
 
 export type SendResult = 'ok' | 'retry' | 'fail';
 
+/** `status` is Resend's HTTP status (a number, no personal data) so a failure can be diagnosed from the logs. */
+export interface SendOutcome {
+  result: SendResult;
+  status?: number;
+}
+
 /**
  * Resend HTTP API. Network errors, 429 (daily quota or rate) and 5xx are worth retrying; any other
  * answer (unverified domain, invalid address, bad key) will not get better by waiting.
@@ -81,7 +87,7 @@ export async function sendMail(
   deps: Deps,
   to: string,
   mail: RenderedMail,
-): Promise<SendResult> {
+): Promise<SendOutcome> {
   try {
     const res = await deps.fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -98,9 +104,12 @@ export async function sendMail(
         html: mail.html,
       }),
     });
-    if (res.ok) return 'ok';
-    return res.status === 429 || res.status >= 500 ? 'retry' : 'fail';
+    if (res.ok) return { result: 'ok', status: res.status };
+    return {
+      result: res.status === 429 || res.status >= 500 ? 'retry' : 'fail',
+      status: res.status,
+    };
   } catch {
-    return 'retry';
+    return { result: 'retry' };
   }
 }
