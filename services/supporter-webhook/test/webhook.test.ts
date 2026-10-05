@@ -6,6 +6,20 @@ import { donation, kofiRequest, makeDeps, makeEnv, PUBLIC_KEYS } from './helpers
 const call = (env: ReturnType<typeof makeEnv>['env'], req: Request) =>
   handleFetch(req, env, makeDeps().deps);
 
+describe('secrets with stray whitespace', () => {
+  it('a trailing line break (PowerShell pipe) does not break the token or the signing key', async () => {
+    const base = makeEnv();
+    const { env, jobs } = makeEnv({
+      KOFI_VERIFICATION_TOKEN: `${base.env.KOFI_VERIFICATION_TOKEN}\r\n`,
+      SUPPORTER_SIGNING_KEY: `${base.env.SUPPORTER_SIGNING_KEY}\r\n`,
+      HASH_PEPPER: ` ${base.env.HASH_PEPPER}\n`,
+    });
+    const res = await call(env, kofiRequest(donation()));
+    expect(res.status).toBe(200);
+    expect(verifyCode(jobs[0]!.code, PUBLIC_KEYS).ok).toBe(true);
+  });
+});
+
 describe('Ko-fi webhook', () => {
   it('a valid donation issues one signed code and queues the mail', async () => {
     const { env, kv, jobs } = makeEnv();
