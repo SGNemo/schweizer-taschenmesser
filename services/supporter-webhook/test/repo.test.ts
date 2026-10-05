@@ -12,7 +12,8 @@ describe('repository hygiene of the service', () => {
       expect(text, file).not.toMatch(/[0-9a-f]{64}/i); // a real hex key
       expect(text, file).not.toMatch(/BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY/);
     }
-    expect(read('wrangler.toml')).toContain('REPLACE_WITH_KV_NAMESPACE_ID');
+    // The KV namespace id is an identifier, not a secret: placeholder or the real 32-hex id.
+    expect(read('wrangler.toml')).toMatch(/id = "(REPLACE_WITH_KV_NAMESPACE_ID|[0-9a-f]{32})"/);
     expect(read('.env.example')).toContain('replace-with');
   });
 
