@@ -52,7 +52,7 @@ export function createClaudeProvider(opts: ClaudeOptions): AiProvider {
                   })),
                 }
               : {}),
-            messages: [{ role: 'user', content: req.user }],
+            messages: [...(req.history ?? []), { role: 'user' as const, content: req.user }],
           },
           { signal: req.signal },
         );

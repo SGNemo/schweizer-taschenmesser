@@ -3,38 +3,43 @@
 Several Claude chats work in parallel and only see each other through GitHub. Keep this file short; delete finished rows. Last full review: 2026-10-02.
 
 ## Wartet auf Sven
+
 Everything that needs a decision or a merge from the maintainer, in one place. A chat adds a row when it stops for him and removes it when done. Source of truth for PRs: GitHub (`list_pull_requests`).
 
-| Was | Was zu tun ist |
-|---|---|
-| Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
-| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
-| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokushilfen Paket 1 „Anfangen“ | ansehen, mergen (zuerst) ([focus-aids](features/focus-aids.md)) |
-| [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57) | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt |
-| [PR #59](https://github.com/SGNemo/schweizer-taschenmesser/pull/59): Fokushilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (gestapelt auf #58) | nach #58 mergen; Basis wird automatisch auf `develop` umgestellt |
-| [PR #60](https://github.com/SGNemo/schweizer-taschenmesser/pull/60): Fokushilfen Paket 4 „Fortschritt“ (gestapelt auf #59) | nach #59 mergen; Basis wird automatisch auf `develop` umgestellt |
+| Was                                                                                                                                         | Was zu tun ist                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge)                                                     | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
+| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6                                                                       | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB                  |
+| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokushilfen Paket 1 „Anfangen“                                         | ansehen, mergen (zuerst) ([focus-aids](features/focus-aids.md))               |
+| [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57)                 | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt              |
+| [PR #59](https://github.com/SGNemo/schweizer-taschenmesser/pull/59): Fokushilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (gestapelt auf #58) | nach #58 mergen; Basis wird automatisch auf `develop` umgestellt              |
+| [PR #60](https://github.com/SGNemo/schweizer-taschenmesser/pull/60): Fokushilfen Paket 4 „Fortschritt“ (gestapelt auf #59)                  | nach #59 mergen; Basis wird automatisch auf `develop` umgestellt              |
 
 ## Läuft gerade (Running work)
-| Topic | Branch | Area / files | State | Last commit | Updated |
-|---|---|---|---|---|---|
-| AI local model (PR B of 3, stacked on PR A #66): llama.cpp runtime, model download, stage 1 of the AI entry pipeline | `feat/ai-local-model` | `web/src-tauri/crates/local-llm`, `src-tauri/src/local_llm.rs` (+ `build.rs` COMMANDS, `capabilities/desktop.json`), `core/platform/{types,tauri/index,web}.ts` (platform seam), `core/ai/local/**`, `pages/settings/` (KI) | in progress | – | 2026-10-05 |
+
+| Topic                                                                                                                           | Branch                | Area / files                                                                                                                                                                                                                | State       | Last commit | Updated    |
+| ------------------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------- | ---------- |
+| AI local model (PR B of 3, stacked on PR A #66): llama.cpp runtime, model download, stage 1 of the AI entry pipeline            | `feat/ai-local-model` | `web/src-tauri/crates/local-llm`, `src-tauri/src/local_llm.rs` (+ `build.rs` COMMANDS, `capabilities/desktop.json`), `core/platform/{types,tauri/index,web}.ts` (platform seam), `core/ai/local/**`, `pages/settings/` (KI) | in progress | –           | 2026-10-05 |
+| AI chat module (PR C of 3, stacked on PR B): `modules/chat`, multi-turn history for providers, chat prompts for the local model | `feat/ai-chat-module` | `web/src/modules/chat`, `core/ai/providers/*` (optional `history`), `core/ai/local/prompts/chat.ts`, `core/dataapi/scope.ts`                                                                                                | draft       | –           | 2026-10-05 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
 ## Hotspots (many chats edit them – announce first)
-| File / area | Rule |
-|---|---|
-| root `CLAUDE.md` | only when a root rule changes; own PR, merge quickly |
-| `web/src/strings.ts` | append inside your module's block only; never reorder or reformat others |
-| `web/src/core/modules/types.ts`, `core/modules/registry.ts` | manifest contract: one chat at a time (add a row here saying so) |
-| `web/src/core/platform/types.ts`, `core/platform/tauri/index.ts`, `core/platform/web.ts` | platform seam: one chat at a time |
-| `web/src/ui/tokens.css` (+ `tokens.test.ts`) | token changes: one chat at a time |
-| `web/package.json`, lock files, `web/src-tauri/Cargo.toml`/`Cargo.lock` | add dependencies in a small separate commit; lock files regenerated by tools, never hand-merged |
-| `core/db/schema.snapshot.json`, Dexie version (`npm run db:bump`) | on conflict re-run `db:bump` after merging `develop`; never hand-edit |
-| `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx` | keep edits small and local to your section |
-| `docs/STATUS.md`, `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md` | touch only on real change; one line / one block, no reformatting |
+
+| File / area                                                                                      | Rule                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| root `CLAUDE.md`                                                                                 | only when a root rule changes; own PR, merge quickly                                            |
+| `web/src/strings.ts`                                                                             | append inside your module's block only; never reorder or reformat others                        |
+| `web/src/core/modules/types.ts`, `core/modules/registry.ts`                                      | manifest contract: one chat at a time (add a row here saying so)                                |
+| `web/src/core/platform/types.ts`, `core/platform/tauri/index.ts`, `core/platform/web.ts`         | platform seam: one chat at a time                                                               |
+| `web/src/ui/tokens.css` (+ `tokens.test.ts`)                                                     | token changes: one chat at a time                                                               |
+| `web/package.json`, lock files, `web/src-tauri/Cargo.toml`/`Cargo.lock`                          | add dependencies in a small separate commit; lock files regenerated by tools, never hand-merged |
+| `core/db/schema.snapshot.json`, Dexie version (`npm run db:bump`)                                | on conflict re-run `db:bump` after merging `develop`; never hand-edit                           |
+| `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx`                                | keep edits small and local to your section                                                      |
+| `docs/STATUS.md`, `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md` | touch only on real change; one line / one block, no reformatting                                |
 
 ## Hand-over conventions
+
 - PR description = hand-over: **Done / Open / Next / How to verify**, links to files, no history.
 - Unfinished work: push the branch, keep the row with State `paused – <what is missing>`, list open items in the PR.
 - A chat that finds a problem outside its scope: note it in the PR text (or open an issue), do not fix it silently; the next chat picks it up from there.

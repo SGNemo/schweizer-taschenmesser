@@ -3,6 +3,7 @@
 Full text (decision, reason, source). One-line summary table: [DECISIONS](../DECISIONS.md).
 
 ## Native & distribution
+
 - **Tauri 2 shell around the unchanged web app; thin by design.** PWA build stays the fallback; native builds drop the service worker (`TAURI_ENV_PLATFORM`). Source: commit fb1400b; architecture.md "Native distribution".
 - **`PlatformService` is the only browser/native seam** (`@tauri-apps/*` only in `core/platform/tauri/**`, enforced by ESLint). Source: commit fb1400b.
 - **Portable Windows exe instead of NSIS/MSI installers** (`tauri build --no-bundle`), with own signed self-update: `tauri-plugin-updater` can only launch installers, so it just checks/downloads; `portable.rs` re-verifies the minisign signature and swaps the running exe with rollback. `latest.json` has only `windows-x86_64-portable`. Breaking change: old installed 0.2.0-beta.1 cannot self-update. Source: commit 6a0f1aa.
@@ -13,6 +14,7 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **Secrets in OS keystore (Credential Manager / Android Keystore); Windows Hello is a consent gate, not cryptographic binding** – documented limit, master password stays the real protection. Source: architecture.md step 11b.
 
 ## Releases & security
+
 - **Conventional Commits; release notes generated from them** (`scripts/changelog.mjs`). Source: architecture.md; CLAUDE.md.
 - **Integration branch `develop`, PRs go there; `main` only for releases.** Source: PRs #2–#4 (base `develop`, PR #2 text: `main` would bury changes in the release diff); tag/merge history (`Merge develop into main (release 0.2.0)`).
 - **Tag `vX.Y.Z[-beta.N]` triggers a signed release; tag must equal `web/package.json`; run fails without signing secrets.** Second way: `workflow_dispatch` on `main` with input `version` (must equal `web/package.json`, tag must not exist) creates tag + release itself; never use both for one release. Pushes to `develop` touching native/scripts and dispatch without `version` are dry runs. Source: architecture.md "Releases & CI".

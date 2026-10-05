@@ -20,6 +20,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - ≤0.2 **Multi-provider router with fallback, cooldowns, local limits;** presets are editable defaults (unverified); keys in `PlatformService.secrets`.
 - 0.3 **AI writes: rules → local model → cloud, always via preview; actions are declared per module (`aiSchema.actions`); cloud sees schemas, never entries; targets resolved locally.**
 - 0.3 **Built-in local model is stage 1 (after rules, before cloud): llama.cpp in an optional Cargo feature, grammar-forced JSON, download only after consent and checksum, never bundled; model chosen by measurement on the eval set.** Detail: [decisions/local-model.md](decisions/local-model.md)
+- 0.3 **Chat module: own module, content invisible to assistant/search/data API/local API; per-chat engine (local model or providers); other modules' data only when allowed per chat and shown before sending.** Detail: [decisions/local-model.md](decisions/local-model.md)
 - ≤0.2 **`accounts` (vault) invisible to AI, search, dataapi, local API** (no `aiSchema`, `dataApi: false`, id block; `exclusion.test.ts`).
 - ≤0.2 **Connectors never import `core/ai`; news has no `aiSchema`** – feed/mail text reaches a model only via the explicit news-brief button (headlines).
 

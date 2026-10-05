@@ -34,14 +34,14 @@ SYNC_TOKEN=<dein-token> WEB_DIR=../web/dist npm start
 
 ## Konfiguration (Umgebungsvariablen)
 
-| Variable | Bedeutung | Standard |
-|---|---|---|
-| `SYNC_TOKEN` / `SYNC_TOKENS` | Zugangstoken(s), mind. 16 Zeichen, mehrere kommagetrennt. **Pflicht** | – |
-| `PORT`, `HOST` | Adresse des Servers | `8787`, `0.0.0.0` |
-| `DB_PATH` | SQLite-Datei | `./data/sync.db` (Docker: `/data/sync.db`) |
-| `WEB_DIR` | gebaute PWA (`web/dist`), wird mit SPA-Fallback ausgeliefert | aus |
-| `CORS_ORIGINS` | erlaubte Origins, kommagetrennt (`*` = alle) | `*` |
-| `RATE_LIMIT` | Anfragen pro Minute und Adresse | `600` |
+| Variable                     | Bedeutung                                                             | Standard                                   |
+| ---------------------------- | --------------------------------------------------------------------- | ------------------------------------------ |
+| `SYNC_TOKEN` / `SYNC_TOKENS` | Zugangstoken(s), mind. 16 Zeichen, mehrere kommagetrennt. **Pflicht** | –                                          |
+| `PORT`, `HOST`               | Adresse des Servers                                                   | `8787`, `0.0.0.0`                          |
+| `DB_PATH`                    | SQLite-Datei                                                          | `./data/sync.db` (Docker: `/data/sync.db`) |
+| `WEB_DIR`                    | gebaute PWA (`web/dist`), wird mit SPA-Fallback ausgeliefert          | aus                                        |
+| `CORS_ORIGINS`               | erlaubte Origins, kommagetrennt (`*` = alle)                          | `*`                                        |
+| `RATE_LIMIT`                 | Anfragen pro Minute und Adresse                                       | `600`                                      |
 
 ## Von unterwegs: Tailscale und HTTPS
 
@@ -62,7 +62,7 @@ wenn die App selbst per `http://` (oder `localhost`) geöffnet wurde.
 
 Ohne Push erscheinen Erinnerungen nur, solange die App geöffnet ist. Mit **Web Push** schickt dein Sync-Server sie auch bei geschlossener
 App (Windows/Android Chrome/Edge; braucht HTTPS, z. B. über Tailscale, und einen Browser mit Push-Dienst). Aktivieren:
-*Einstellungen → Benachrichtigungen → Push aktivieren* (die App muss mit dem Sync-Server verbunden sein).
+_Einstellungen → Benachrichtigungen → Push aktivieren_ (die App muss mit dem Sync-Server verbunden sein).
 
 - Die App lädt die anstehenden Benachrichtigungen der nächsten 14 Tage (Zeitpunkt, Titel, Text) zum Server hoch und hält sie aktuell;
   der Server sendet sie zum Zeitpunkt über den Push-Dienst des Browsers (Google/Mozilla/Microsoft sehen nur verschlüsselte Nachrichten).
@@ -73,7 +73,7 @@ App (Windows/Android Chrome/Edge; braucht HTTPS, z. B. über Tailscale, und eine
 
 ## In der App verbinden
 
-*Einstellungen → Synchronisation*: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
+_Einstellungen → Synchronisation_: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
 einer Passphrase (mind. 8 Zeichen) einschalten. Danach synchronisiert die App beim Start, jede Minute, nach lokalen
 Änderungen und wenn sie wieder online/sichtbar wird; der Status steht in den Einstellungen und als Symbol oben.
 
@@ -89,6 +89,6 @@ einer Passphrase (mind. 8 Zeichen) einschalten. Danach synchronisiert die App be
 
 ## Backup
 
-*Einstellungen → Backup* lädt alle Daten als JSON-Datei herunter (inkl. gelöschter Einträge für korrektes Mergen, aber
+_Einstellungen → Backup_ lädt alle Daten als JSON-Datei herunter (inkl. gelöschter Einträge für korrektes Mergen, aber
 ohne Zugangsdaten). Beim Import: **Zusammenführen** (Konflikte entscheidet die neuere Änderung, nichts geht verloren)
 oder **Ersetzen** (das Backup wird zum Stand; auch andere Geräte übernehmen ihn beim nächsten Sync).
