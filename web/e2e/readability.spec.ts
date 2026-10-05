@@ -108,7 +108,8 @@ test.describe('Reading aid, colour mode and grouping', () => {
 
   for (const scheme of ['light', 'dark'] as const) {
     test(`no axe violations with the reading aid on (${scheme})`, async ({ page }) => {
-      await page.emulateMedia({ colorScheme: scheme });
+      // No fade-ins: axe would read the half-blended colour of an element that is still appearing.
+      await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
       await page.addInitScript(() => localStorage.setItem('tm-read-aid', '1'));
       for (const url of ['/settings/darstellung', '/library']) {
         await ready(page, url);
@@ -153,7 +154,8 @@ test.describe('Reading aid, colour mode and grouping', () => {
   for (const scheme of ['light', 'dark'] as const) {
     test(`no axe violations at 100 % on the main pages (${scheme})`, async ({ page }) => {
       test.setTimeout(240_000);
-      await page.emulateMedia({ colorScheme: scheme });
+      // No fade-ins: axe would read the half-blended colour of an element that is still appearing.
+      await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
       await page.addInitScript(() => {
         localStorage.setItem('tm-read-aid', '1');
         localStorage.setItem('tm-read-cover', '100');
