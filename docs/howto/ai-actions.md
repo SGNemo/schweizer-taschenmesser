@@ -1,6 +1,6 @@
 # AI actions for a module, eval set
 
-The assistant can add, change, delete or mark entries of a module once the module declares **actions**. Every write ends in the preview; nothing is stored before the user confirms. Design: [architecture/ai.md](../architecture/ai.md) "AI writes".
+The assistant can add, change, delete or mark entries of a module once the module declares **actions**. Every write ends in the preview; nothing is stored before the user confirms. Design: [architecture/ai-write.md](../architecture/ai-write.md).
 
 ## Define actions (`web/src/modules/<id>/ai.ts`)
 1. Add `actions` next to `collections` (commented template: `web/templates/module/ai.ts`). Keys are short English ids (`create`, `update`, `delete`, `markPaid`, `cancel` …).
@@ -13,3 +13,8 @@ The assistant can add, change, delete or mark entries of a module once the modul
 ## Extend the eval set (`web/tests/ai/eval-set.json`)
 - Add **5 inputs per new module** to `cases` (create, change, delete or mark, a typo or slang variant, one negative). `expect` lists the ops (`module`, `action`, `data` subset, `target` = stored title); no ops = must not become an entry. New stored entries needed as targets go into `fixtures`.
 - `npm run ai:eval` prints exact / fields off / wrong / passed on, per kind, and every case that is not exact. CI (`npm test`) only guards the numbers (≥ 50 % exact, ≤ 3 % wrong, ≤ 5 % false positives).
+
+## Local model: measure candidates, pin the catalogue
+- Build the runner: `cd web/src-tauri/crates/local-llm && cargo build --release --bin llm-batch` (add `--features vulkan` for GPU).
+- `cd web && npm run ai:eval -- --bin <llm-batch> --models qwen3.5-4b=<file.gguf>[,…] [--gpu-layers 99] [--limit 40] [--out table.md]` prints one row per model: exact / module+action right / wrong / invalid JSON / load / latency (cold vs. cached prefix) / tokens/s / peak RAM / download size. Put the final table into `docs/features/`.
+- Add or change a model only in `web/src/core/ai/local/catalogue.json` (licence must be `apache-2.0` or `mit`); `revision` (commit) and `sha256` come from the Hub page of the exact file. Without them the download stays locked.

@@ -8,6 +8,7 @@ Long design notes, split by topic (text moved unchanged from the former single f
 | [finance](architecture/finance.md) | Money & finance (Phase 3) |
 | [sync-backup](architecture/sync-backup.md) | Sync & backup (Phase 4) |
 | [ai](architecture/ai.md) | AI assistant (Phase 5), Multi-provider AI (Phase 12) |
+| [ai-write](architecture/ai-write.md) | AI writes (rules → local model → cloud), built-in local model |
 | [extras](architecture/extras.md) | Extra modules & polish (Phase 6) |
 | [native](architecture/native.md) | Native distribution (Phases 7–10): shell, PlatformService, versioning, Android, closed-app reminders, portable Windows build |
 | [releases](architecture/releases.md) | Releases & CI (Phase 9), release security, Self-update (Phase 10) |

@@ -7,7 +7,7 @@ Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `d
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
-KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); PR B lokales Modell und PR C Chat-Modul folgen. Handtests K1–K4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); PR B (Branch `feat/ai-local-model`, gestapelt auf A): lokales Modell als Stufe 1 (Rust-Laufzeit hinter Cargo-Feature, Einstellungen, Download mit Zustimmung/Prüfsumme, Mess-Harness); Modellwahl und Release-Anbindung stehen aus; PR C Chat-Modul folgt. Handtests K1–K4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).
