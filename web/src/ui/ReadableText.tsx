@@ -11,13 +11,7 @@ import { useUiStore } from '@/stores/ui';
  * Use for running text (`kind="prose"`: notes, answers, help) and list titles/teasers (`kind="list"`, only with
  * the "auch Listen" scope). Never for inputs, numbers, code, buttons, navigation or vault/account secrets.
  */
-export function ReadableText({
-  text,
-  kind = 'prose',
-}: {
-  text: string;
-  kind?: 'prose' | 'list';
-}) {
+export function ReadableText({ text, kind = 'prose' }: { text: string; kind?: 'prose' | 'list' }) {
   const share = useReadShare(kind);
   const runs = useMemo(
     () => (share === null ? null : emphasize(text, { share: Number(share) / 100 })),
@@ -41,5 +35,7 @@ export function ReadableText({
 
 /** The share to use for this kind of text, or `null` while the aid is off (or the scope excludes it). */
 export function useReadShare(kind: 'prose' | 'list'): string | null {
-  return useUiStore((s) => (s.readAid && (kind === 'prose' || s.readScope === 'lists') ? s.readShare : null));
+  return useUiStore((s) =>
+    s.readAid && (kind === 'prose' || s.readScope === 'lists') ? s.readShare : null,
+  );
 }

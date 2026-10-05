@@ -185,6 +185,7 @@ export const t = {
   library: {
     title: 'Modul-Bibliothek',
     intro: 'Aktiviere nur, was du brauchst. Deaktivierte Module bleiben unsichtbar.',
+    other: 'Weitere Module',
     active: 'Aktiv',
     nowActive: (name: string) => `Das Modul „${name}“ ist jetzt eingeschaltet.`,
     inactive: 'Inaktiv',
@@ -375,12 +376,14 @@ export const t = {
       styleHint: 'Weich: etwas kräftiger und heller. Fett: deutlich fett.',
       scope: 'Wo',
       scopeOptions: { text: 'Nur Fließtext', lists: 'Auch Listen' },
-      scopeHint: 'Fließtext: Notizen, Antworten, Hilfetexte. Listen: zusätzlich Titel und Vorschauen.',
+      scopeHint:
+        'Fließtext: Notizen, Antworten, Hilfetexte. Listen: zusätzlich Titel und Vorschauen.',
       shortcut: 'Tastenkürzel: Alt + L schaltet die Lesehilfe ein und aus.',
       preview: 'Vorschau',
       previewText: 'So sieht ein längerer Satz mit Lesehilfe aus: Wortanfänge tragen den Blick.',
       hintTitle: 'Lesen fällt schwer?',
-      hintText: 'Die Lesehilfe hebt Wortanfänge hervor. Du kannst sie jederzeit in den Einstellungen abschalten.',
+      hintText:
+        'Die Lesehilfe hebt Wortanfänge hervor. Du kannst sie jederzeit in den Einstellungen abschalten.',
       hintOn: 'Einschalten',
       hintLater: 'Nicht jetzt',
       toastOn: 'Lesehilfe ist an',

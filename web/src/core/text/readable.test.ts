@@ -32,7 +32,8 @@ describe('emphasize', () => {
   });
 
   it('skips numbers, amounts, dates, times, codes, URLs and e-mails', () => {
-    const t = '1.234,56 € 2026-10-05 10:30 SW-2026-1000 https://example.org/pfad mail@example.org v1.2.3';
+    const t =
+      '1.234,56 € 2026-10-05 10:30 SW-2026-1000 https://example.org/pfad mail@example.org v1.2.3';
     expect(strongOf(t)).toEqual([]);
   });
 

@@ -324,3 +324,23 @@
   --warning: var(--text-muted);
   --info: var(--text-muted);
 }
+
+/* Navigation areas: one category hue per area for icons, the thin group stripe and the library tiles (always next to the area name; "Ruhig" turns them grey via --cat-*). */
+[data-area='plan'] {
+  --area-color: var(--cat-1);
+}
+[data-area='money'] {
+  --area-color: var(--cat-2);
+}
+[data-area='knowledge'] {
+  --area-color: var(--cat-3);
+}
+[data-area='household'] {
+  --area-color: var(--cat-4);
+}
+[data-area='vault'] {
+  --area-color: var(--cat-5);
+}
+[data-area='system'] {
+  --area-color: var(--cat-6);
+}

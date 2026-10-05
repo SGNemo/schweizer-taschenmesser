@@ -72,6 +72,8 @@ export function groupByStatus<T>(
     else buckets.set(id, [item]);
   }
   const known = order.flatMap((id) => (buckets.has(id) ? [{ id, items: buckets.get(id)! }] : []));
-  const rest = [...buckets].filter(([id]) => !order.includes(id)).map(([id, v]) => ({ id, items: v }));
+  const rest = [...buckets]
+    .filter(([id]) => !order.includes(id))
+    .map(([id, v]) => ({ id, items: v }));
   return [...known, ...rest];
 }

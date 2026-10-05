@@ -32,6 +32,8 @@ export interface NavItem {
   label: string;
   icon: IconName;
   moduleId?: string;
+  /** Area of the module; drives the icon colour (`data-area`). */
+  area?: AreaId;
 }
 
 export interface NavArea {
@@ -62,6 +64,7 @@ export function moduleNavItems(manifests: readonly ModuleManifest[], states: Mod
             label: r.label,
             icon: m.icon,
             moduleId: m.id,
+            area: m.area!,
           } satisfies NavItem,
         })),
     );
