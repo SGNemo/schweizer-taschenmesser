@@ -3,7 +3,6 @@
 Full text (decision, reason, source). One-line summary table: [DECISIONS](../DECISIONS.md).
 
 ## UI
-
 - **The home screen ("Übersicht") is not a module.** It lives in `web/src/home/`, is the start route, cannot be deactivated and is not in the library. The logo (sidebar and mobile top bar), Alt+Home and the palette lead there. Why: a module list entry that can be switched off made no sense for the page that shows all modules. Source: PR #26 (2026-10-01).
 - **Hiding a widget is not deactivating the module.** The home config (`_settings` scope `home`: `order`, `hidden`, `sizes`, keys `<moduleId>:<widgetId>`) is synced and one layout serves all devices (the grid is responsive, `l` spans the full row on narrow pages); keys of disabled modules stay so a re-enabled module returns to its place; new modules are visible and go last. The old scope `dashboard` is read until the first edit and never deleted. Source: PR #26 (2026-10-01).
 - **Every module must ship a widget.** `widgets` needs ≥ 1 entry (type, `validateManifest`, `npm run check:modules` in CI, `widgets.test.tsx` rendering empty + example data); the generated fallback widget only covers modules loaded without one. Why: future modules must appear on the home screen without anyone remembering it. Source: PR #26 (2026-10-01).
@@ -13,14 +12,12 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **Docs split:** `CLAUDE.md` is the short working guide; long design notes live in `docs/architecture.md`. Source: PR #2.
 
 ## Home variety (2026-10-02, PR `feat/dashboard-variety-system-module`)
-
 - **Variety through content types, not decoration:** widgets use base components (KPI, due list, progress, checklist, timeline, tiles, status, fill level) sized by context. Why: all widgets looked alike and nothing stood out; colour fields or animation would add noise.
 - **Red only for overdue/exceeded/expired**, accent = act today, warning = soon/almost full, always with icon or text (`dueState`).
 - **"Jetzt wichtig" is a contribution (`contributions.attention`)**; runtime-only facts go through `liveAttention.ts`. Empty = not rendered; hideable.
 - Numbers carry a context line; the header link replaces "Modul →". Feed type not built (news retired).
 
 ## Nemo rebrand & design system
-
 - **The app is called Nemo; every internal identifier keeps its old value.** Tauri `identifier` `io.github.sgnemo.taschenmesser`, Android packages/namespaces, keystore alias, updater endpoint/pubkey, repo name, IndexedDB `taschenmesser`, storage keys (`tm-theme`), backup format ids (`taschenmesser-backup`, `-vault-backup`, `-encrypted`), crypto AAD/check strings, Cargo/npm package names, MCP server name and `TASCHENMESSER_TOKEN/URL`. Why: a changed ID makes Android treat an update as a new app, detaches the app from its data and breaks decryption. Only what users see changed. `web/src/brand-ids.test.ts` pins them. New exports are named `nemo-backup-…`, old `taschenmesser-backup` files still import (fixture test).
 - **Release asset names: Nemo only (since the first release after v0.3.1; before: transition with both names).** Releases carry `Nemo-Portable.exe(.sig)` / `Nemo.apk(.sha256)` / `latest.json`; `latest.json` points at `Nemo-Portable.exe`. Transition history: `v0.3.0`/`v0.3.1` also carried identical `Taschenmesser-*` copies because installed apps ≤ 0.2.x only accept those names (`update.rs`). Maintainer decision 2026-10-01: stop shipping them; installations ≤ 0.2.x must reinstall. Clients ≥ 0.3.0 accept both names (`PORTABLE_ASSETS`, `APK_ASSET_PAIRS`, kept, harmless).
 - **Logo "Welle" (2026-09-30, replaced by the clownfish below on 2026-10-01; chosen by the maintainer from three own drawings, see `docs/DESIGN-CONCEPT-2026-09-30.md`).** One orange fill; the two curved stripes and the eye are cut out with a mask, so the mark works on any background and the monochrome variant is the same shape. Source `web/brand/logo-mark.svg`; `Logo.tsx` and the splash repeat the paths (`brand-sync.test.ts`). Rendered by `npm run gen:icons` (Playwright Chromium, Inter embedded as data URL); ICO (16–256) and `favicon.ico` are assembled by the script; `tauri icon` produces the remaining native icons and the script removes the unused iOS/appx sets. Wordmark: Nunito ExtraBold outlined (OFL); app font Inter Variable (OFL, local). Why a new mark: the first one used five fills and a separate fin, read poorly at 16 px and could not be inverted.
@@ -35,7 +32,6 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **Android icons are copied into the generated project after `tauri android init`** (`release.yml`): the CLI template ships its own launcher icons and copies nothing from `src-tauri/icons/android`. Notifications name the `ic_notification` drawable on Android (monochrome status-bar icon); web push uses `pwa-badge-96.png`.
 
 ## Design "Klar 2" – tokens (2026-10-01, PR `feat/design-tokens`)
-
 - **Source:** `docs/design/DESIGN-SPEC.md` § 5–6; values are in `web/src/ui/tokens.css`, guarded by `tokens.test.ts` (new: `--text-3` on bg/surface/surface-2, status colours on surface and on their 15 % mix, `--focus` on bg, removed tokens, radii).
 - **Removed:** `--accent-2*` (teal is no UI colour; charts use `--viz-1`), `--surface-glass`, `--focus-ring` (focus is `outline: 2px solid var(--focus)` + 2 px offset).
 - **Status backgrounds keep the names `--danger/--success/--warning/--info-soft`** but are defined once as `color-mix(in srgb, <status> 15%, transparent)`; no hex, identical in both themes. Why not removed as the spec words it: consumers (incl. `modules/disk`) keep working without touching module files; one definition instead of a `color-mix` in each CSS file.

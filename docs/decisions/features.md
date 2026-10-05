@@ -3,21 +3,18 @@
 Full text (decision, reason, source). One-line summary table: [DECISIONS](../DECISIONS.md).
 
 ## Imports & AI import API
-
 - **Preview-before-write for every import:** wizard shows per-row checkboxes, duplicates pre-deselected, invalid rows; nothing is written before confirmation; each import is one undoable batch (`_imports`, ids `imp-<batch>-<n>`). Source: architecture.md "Start data"; commit 14205c5.
 - **One import format per collection derived from its Zod schema** (no second hand-kept schema); `scope.ts` is the single filter. Source: commit 4d8b3f1; architecture.md "Data contract".
 - **Local AI import API: desktop only, off by default, loopback-only, transport in Rust, meaning in TypeScript.** No bind-address setting, no CORS, Host/Origin checks, hashed tokens with per-module rights, nothing logged. API imports wait as pending batches for user confirmation; changes to existing entries are never pre-ticked or auto-committed; no delete endpoint. Source: commits 4a0b230, 0944e68; architecture.md.
 - **MCP wrapper is a thin separate project with no data access, not shipped in release downloads.** Token only sent to 127.0.0.1/localhost, no redirects. Source: commit c4e9b30.
 
 ## Connectors & network
-
 - **User brings their own Google OAuth client (Desktop app type); nothing shipped in repo/binary.** OAuth via PKCE + loopback listener; Google login not on Android yet. Source: architecture.md "Connectors"; CLAUDE.md.
 - **Gmail scan reads only metadata + snippet, never the body; user confirms each suggestion.** Source: architecture.md.
 - **Sync-server proxy `/v1/proxy` is deliberately narrow (SSRF hardening)** – needed by the PWA for ICS/RSS; native app fetches directly. Source: commit 7e93948; architecture.md.
 - **Spotify connector not built** (docs unreachable, API constraints); launcher preset opens the web player. Source: architecture.md step 6.
 
 ## Disk module & platform-only modules
-
 - **Modules can declare `platforms`; the filter is `availableManifests()`, resolved lazily.** Module states are synced, so a desktop-only module must vanish from router, nav, dashboard and services on the other platforms, not only from the library. The platform is known only after `initPlatform()`; importing it in the registry would create a cycle through the DB, hence `core/modules/available.ts`. Source: PR #8 (2026-09-30).
 - **Own recursive scan with `read_dir` + `rayon`, not `jwalk`/`walkdir`.** Folder sums come straight from the recursion (jwalk yields flat entries and would need a rebuild), cancel is per folder, errors are collected per folder, no hidden-file skipping by default. `walkdir` is single-threaded. Source: PR #8 (2026-09-30).
 - **Size = space on the volume (rounded to clusters), file size shown next to it; cloud-only files count 0.** The tool answers "what eats my space". `GetCompressedFileSizeW` per file would be too slow. Source: PR #8 (2026-09-30).
@@ -31,7 +28,6 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **Pantry → shopping list through the event `shopping.requested`**; the shopping module subscribes while enabled (no module import). Source: PR #8 (2026-09-30).
 
 ## Setup assistant
-
 - **Manual start, never forced.** Fresh empty app: a discreet welcome card ("Später" = `dismissed` for good). Existing installations: the start migration sets `dismissed` + hidden checklist, the assistant stays available in the settings. Why: no surprise for users with data. Source: task brief; `core/setup/detect.ts`.
 - **Progress is device-local (`_meta` `setup.state`), holds step ids only.** Not synced, not in backups, no values/secrets (strict Zod schema, tested). Why: setup differs per device (notifications, keystore), and secrets must never leak through it.
 - **Each step saves on its own "Weiter"; cancelling drops only the current draft.** No end-of-run commit, so an abort never applies half a setup. Vault is created only with a confirmed password on "Weiter".
@@ -42,7 +38,6 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **First weekday is a synced setting (scope `core`, `useWeekStart`).** Currency/format/language/time zone are shown as info only (fixed: EUR, de-DE, local wall clock). AI week ranges still use Monday.
 
 ## Browser extension & vault bridge (2026-10)
-
 - **App as the only source.** Entries are read and written only through the app's vault (`decryptAll`, `saveEntry` → normal repo/outbox), so sync brings extension-created entries to the phone without a special path. The extension keeps in memory only the bridge session and per-tab pending saves (5 min, dropped on tab close); no `chrome.storage`, no web storage.
 - **Native messaging instead of loopback.** The local import API (`crates/local-api`) rejects every request with an `Origin` header and has no CORS; extension fetches carry one. Opening a vault endpoint there would mean weakening a security rule. Native messaging gives a fixed allowlist (`allowed_origins`), a per-user pipe and no open port.
 - **Host as a mode of the portable exe.** One signed file, no second artifact for audit/update; `main.rs` runs the relay before Tauri starts when the first argument is the extension origin. A moved portable folder only means re-registering the path (done at start when the bridge is on). A separate small binary was rejected (second signed artifact, easy to forget when moving the folder). Unverified on hardware: GUI-subsystem exe as host (stdio handles).

@@ -27,12 +27,11 @@ Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser.
 
 **Von der installierten Version (Setup/MSI, bis `0.2.0-beta.1`) umsteigen:** Die portable App nutzt dieselbe
 App-Kennung und findet deine Daten im Benutzerprofil deshalb sofort wieder.
-
 1. In der alten App: Einstellungen → Backup → exportieren (Sicherheitskopie).
 2. `Nemo-Portable.exe` starten und prüfen, dass alles da ist (nicht gleichzeitig mit der alten App laufen lassen).
 3. Die alte Version über „Apps & Features“ deinstallieren – im Deinstallationsfenster **„Anwendungsdaten löschen“ NICHT
    ankreuzen**. Falls doch etwas fehlt: Backup in der neuen App importieren.
-   Die alte installierte Version kann sich nicht selbst auf die portable Datei aktualisieren; der Umstieg ist einmalig manuell.
+Die alte installierte Version kann sich nicht selbst auf die portable Datei aktualisieren; der Umstieg ist einmalig manuell.
 
 ## Installation unter Android
 
@@ -43,13 +42,13 @@ App-Kennung und findet deine Daten im Benutzerprofil deshalb sofort wieder.
 3. Für spätere Updates fragt die App selbst nach der Erlaubnis („Update installieren“); die neue APK muss mit demselben
    Schlüssel signiert sein, sonst lehnt Android sie ab.
 
-> **Daten aus der PWA übernehmen:** Die installierte App hat einen eigenen Speicher. Umzug über _Einstellungen → Backup_
+> **Daten aus der PWA übernehmen:** Die installierte App hat einen eigenen Speicher. Umzug über *Einstellungen → Backup*
 > (Export in der PWA, Import in der App) oder einfach über den Sync-Server.
 
 ## Als PWA installieren
-
 Chrome/Edge (Windows) bzw. Chrome (Android) öffnen → „App installieren“. Service Worker und Installation brauchen
 HTTPS (oder `localhost`).
+
 
 ## Dev-Preview (ungetestete Zwischenstände)
 

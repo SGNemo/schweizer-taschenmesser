@@ -12,7 +12,7 @@
 ### Sync-Server absichern
 
 - Das Token schützt den Server; über reines HTTP im LAN läuft es unverschlüsselt – nutze HTTPS (Tailscale) oder ein
-  vertrauenswürdiges Netz. Die Ende-zu-Ende-Verschlüsselung schützt die _Inhalte_, nicht das Token.
+  vertrauenswürdiges Netz. Die Ende-zu-Ende-Verschlüsselung schützt die *Inhalte*, nicht das Token.
 - Keine Secrets im Repository: `.env` ist ignoriert, nur `.env.example` ist eingecheckt.
 - `CORS_ORIGINS` auf deine Adresse beschränken, wenn du die PWA nicht vom Server selbst auslieferst.
 - Der Server-Test-Stand: `cd server && npm test` (Auth, Rate-Limit, Konfliktregel, Persistenz, Auslieferung der PWA).

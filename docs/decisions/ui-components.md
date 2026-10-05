@@ -13,3 +13,4 @@ Index: [DECISIONS](../DECISIONS.md). Tokens/brand: [ui-brand.md](ui-brand.md). S
 - **Badge ink:** `--*-ink` tokens (status colour with 15 % body text) are the text colour on `--*-soft` backgrounds; plain status colours missed AA on the page background. Tested over page, card and chip.
 - **Component sheet** `/dev/components` exists in dev server, Dev-Preview and E2E builds only (`layout/devTools.ts`, marker test in `core/seed/devFlag.test.ts`).
 - **Visual polish round (2026-10-03):** causes were fixed in the base, not per module: home grid row units + row spans (cards stretch), one truncation rule (`--clamp-lines`), column flow for todos with subtasks, `PageHeader views` instead of a second tab row, search placeholder in `TextField`. **Fluid root size** 16 → 20 px between 1920 and 3440 px wide (replaces "type stays 16 px at ≥ 2200 px"); sidebar and rail widths are rem. Toasts stay bottom centre on every screen.
+
