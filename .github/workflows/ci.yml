@@ -97,6 +97,19 @@ jobs:
           node-version: 22
       - run: node web/scripts/check-docs.mjs
 
+  # English docs and their German translations (README.de.md, *.de.md) must stay in step. Blocking and cheap,
+  # so it also runs on doc-only changes.
+  docs-pairs:
+    name: Docs translations in step
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node web/scripts/check-readme.mjs
+
   # The former single `web` job (about 14 min, one after the other) is split so that the pieces run side by
   # side; `web` at the bottom of this group keeps the old check name for branch protection.
   web-static:
