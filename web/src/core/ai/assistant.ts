@@ -201,9 +201,9 @@ export async function ask(question: string, deps: AskDeps): Promise<AskResponse>
 }
 
 /** Failed provider calls (from the router) go into the statistics. */
-async function recordAttempts(
+export async function recordAttempts(
   attempts: readonly Attempt[] | undefined,
-  database: TaschenmesserDB,
+  database: TaschenmesserDB = defaultDb,
 ): Promise<void> {
   for (const a of attempts ?? []) {
     await recordUsage(

@@ -6,8 +6,16 @@ export interface ToolDef {
   input_schema: Record<string, unknown>;
 }
 
+/** An earlier turn of a conversation (chat module); the assistant pipeline does not use it. */
+export interface ChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface CompletionRequest {
   system: string;
+  /** Earlier turns, oldest first, strictly alternating and starting with `user`. */
+  history?: readonly ChatTurn[];
   user: string;
   tools: ToolDef[];
   signal?: AbortSignal;

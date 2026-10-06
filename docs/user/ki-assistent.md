@@ -37,3 +37,10 @@ Vorhandene Daten muss man nicht abtippen: Eine KI (Claude Code, ChatGPT …) lie
 Vorschau. In der Windows-App über eine lokale, abgesicherte Schnittstelle (*Einstellungen → KI-Zugriff*, standardmäßig aus),
 überall sonst per „JSON einfügen“ im Startdaten-Assistenten. Anleitung, Beispiele und fertiger Prompt:
 [`docs/AI-IMPORT.md`](../AI-IMPORT.md).
+
+## Chat
+Das Modul **Chat** (in der Modulbibliothek aktivieren) ist ein einfacher Chat mit mehreren Gesprächen. Jeder Chat antwortet entweder mit dem **eingebauten lokalen Modell** (nur Windows, offline, kostenlos) oder mit **deinen Anbietern** aus Einstellungen → KI.
+
+- Standardmäßig sieht der Chat **keine Daten aus der App**. Im Chat-Zahnrad kannst du Module auswählen, aus denen er Fragen beantworten darf. Beim Senden mit „Daten anhängen“ siehst du vorher genau den Text, der mitgeschickt wird. Der Tresor ist nie dabei.
+- Antworten kannst du kopieren, neu erzeugen lassen; eigene Fragen lassen sich ändern. Chats lassen sich umbenennen, anheften, archivieren, als Markdown exportieren und endgültig löschen.
+- Einstellungen → Module → Chat: Standard-Antwortweg und „Alte Chats löschen nach“.

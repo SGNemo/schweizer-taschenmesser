@@ -135,7 +135,8 @@ N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update p
 - **K3 Cloud-Fallback:** mit eingerichtetem Anbieter einen Satz schreiben, den die Regeln nicht kennen („Leg bitte etwas für die Steuerberaterin fest, sie meldet sich Freitag“): die Vorschau erscheint, Statistik zeigt eine Cloud-Antwort; mit „Cloud-Fallback erlauben“ aus erscheint stattdessen die normale Antwort.
 - **K4 Schalter:** „Einträge per KI vorschlagen“ aus: keine „Eintragen“-Option, kein „Mit KI eintragen“ im Modul; ein einzelnes Modul abgeschaltet: dafür kommt kein Vorschlag.
 - **K5 Lokales Modell (Windows, Build mit `local-llm`):** Einstellungen → KI → Lokales Modell: Modell wählen, „Herunterladen …“ zeigt Größe, Quelle, Prüfsumme; nach dem Download „Laden“, „Testen“ erkennt den Beispielsatz. GTX 1070: „Grafikkarte nutzen“ an, Vulkan wird erkannt, Zeit pro Satz notieren; aus: Ryzen 5 7600X (CPU). Kein Netz: Sätze gehen weiter lokal. ☐
-- **K6 Android „Leicht“ und Chat:** folgen mit PR C / Android-Entscheidung.
+- **K6 Chat:** Modul Chat aktivieren; mit lokalem Modell (Windows) und mit einem Anbieter je eine Frage und eine Rückfrage stellen (Verlauf wird berücksichtigt). Im Zahnrad Module für Daten wählen, „Daten anhängen“ ankreuzen: die Vorschau zeigt genau den mitgeschickten Text, ohne Auswahl geht nichts mit. Antwort kopieren, neu erzeugen, Frage ändern, Export als Markdown öffnen, Chat löschen. Android „Leicht“ (kleines Modell) folgt mit der Android-Entscheidung. ☐
+- **K7 Android „Leicht“:** folgt mit der Android-Entscheidung.
 
 ## Browser-Erweiterung (Brave) und Tresor-Brücke – nur von Hand prüfbar (Windows)
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt, `nemo-extension-….zip` entpacken, Tresor mit Beispieldaten. Hintergrund: [security/VAULT-EXTENSION.md](security/VAULT-EXTENSION.md).

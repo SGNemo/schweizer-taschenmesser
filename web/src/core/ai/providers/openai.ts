@@ -131,6 +131,7 @@ export function createOpenAiCompatibleProvider(opts: OpenAiCompatibleOptions): A
             role: 'system',
             content: useTools && toolMode === 'json' ? jsonModeSystem(req) : req.system,
           },
+          ...(req.history ?? []),
           { role: 'user', content: req.user },
         ],
       };

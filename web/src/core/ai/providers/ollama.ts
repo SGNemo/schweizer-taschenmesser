@@ -48,6 +48,7 @@ export function createOllamaProvider(opts: OllamaOptions = {}): AiProvider {
             stream: false,
             messages: [
               { role: 'system', content: req.system },
+              ...(req.history ?? []),
               { role: 'user', content: req.user },
             ],
             ...(req.tools.length > 0
