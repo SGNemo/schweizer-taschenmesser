@@ -38,6 +38,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 2026-10-01 **Dev-Preview: rolling pre-release `dev-preview` after every green `develop` push** (job in `ci.yml` calling reusable `dev-preview.yml`: `workflow_run`/dispatch only fire from the default branch); same signing/audit; tag not SemVer so stable updater/`releases/latest` ignore it.
 - 2026-10-01 **Dev-Preview is a separate app (the one sanctioned identifier exception):** id `….taschenmesser.dev`, name "Nemo Dev", dev flavor only – parallel install, own data, independent `versionCode`.
 - 2026-10-02 **Test data: deterministic seeds per module, Dev-Preview only, never synced.** `seed` in every manifest + `seed.ts`; the runner is removed from stable builds; seed rows are registered in `_seeds` and skipped by sync and backup (dev switch "Seed-Sync erlauben"); the demo vault is only created when none exists. Detail: [decisions/core.md](decisions/core.md).
+- 2026-10 **Website = static `site/` (Astro), own build/deploy, no tracking** – [decisions/website.md](decisions/website.md).
 - 2026-10-01 **Dev channel exists only in dev builds** (`VITE_RELEASE_CHANNEL=dev`); Rust accepts `dev-latest.json` only at the fixed `dev-preview` URL. Version `<next stable>-dev.<commit count>`, build-time only; `dev-latest.json` uploaded last.
 
 ## Imports, local API, connectors → [decisions/features.md](decisions/features.md)

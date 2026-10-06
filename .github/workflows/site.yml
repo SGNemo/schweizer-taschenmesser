@@ -1,0 +1,67 @@
+name: Website
+
+# The website in site/ is a separate static package (Astro). It is built and checked here only when
+# something under site/ changes; the app's CI (ci.yml) ignores site/. Deployment is done by
+# Cloudflare Pages from the repository (site/README.md), not by this workflow.
+
+on:
+  push:
+    branches: [develop, main]
+    paths: ['site/**', '.github/workflows/site.yml']
+  pull_request:
+    paths: ['site/**', '.github/workflows/site.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: Build, links, Lighthouse
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - name: Unit tests (tokens and links pinned to the app)
+        run: npm test
+      - name: Types and templates
+        run: npx astro check
+      - name: Build (release data from the GitHub API, falls back to the committed JSON)
+        run: npm run build
+      - name: Nothing external, nothing inline (no third-party origins in the built pages)
+        run: |
+          if grep -rEo '(src|href)="https?://[^"]+"' dist/*.html dist/en/*.html | grep -Ev 'github\.com|ko-fi\.com|cloudflare\.com|docs\.github\.com|nemo\.example|\$\{\{' ; then
+            echo "::error::External resource found"; exit 1
+          fi
+          if grep -rE '<script(?![^>]*src=)|<style|style="' --include='*.html' -P dist; then
+            echo "::error::Inline script or style found (breaks the CSP)"; exit 1
+          fi
+      - name: Link check (internal and external)
+        run: npm run check:links
+      - name: Download links answer 200
+        run: npm run check:downloads
+      - name: Lighthouse (thresholds 95, warnings only)
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_CHROMIUM: ''
+        run: npm run lighthouse
+      - name: Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: site/.lighthouseci
+          if-no-files-found: ignore
+          retention-days: 14
