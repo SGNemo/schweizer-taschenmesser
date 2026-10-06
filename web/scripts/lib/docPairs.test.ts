@@ -23,7 +23,7 @@ describe('doc pairs', () => {
         '```',
         '<details><summary>x</summary></details>',
         '[a](docs/a.de.md#part) [b](https://example.com) <a href="https://x.org">x</a>',
-        '![pic](docs/p.png) <img src="docs/q.png">',
+        '![pic](docs/p.png) <img src="docs/q.de.png">',
       ].join('\n'),
     );
     expect(shape.headings).toEqual([1, 2]);
@@ -35,9 +35,9 @@ describe('doc pairs', () => {
 
   it('reports a heading, a details block or a link that only one language has', () => {
     const en = '# T\n## A\n<details></details>\n[x](https://a.org) [d](b.md)';
-    expect(compareDocs(en, '# T\n## A\n<details></details>\n[x](https://a.org) [d](b.de.md)')).toEqual(
-      [],
-    );
+    expect(
+      compareDocs(en, '# T\n## A\n<details></details>\n[x](https://a.org) [d](b.de.md)'),
+    ).toEqual([]);
     const diffs = compareDocs(en, '# T\n[y](https://b.org)');
     expect(diffs.some((d) => d.startsWith('headings differ'))).toBe(true);
     expect(diffs.some((d) => d.startsWith('<details>'))).toBe(true);

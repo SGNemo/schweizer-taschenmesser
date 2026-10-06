@@ -40,7 +40,12 @@ const BUDGET = {
     'docs/design/',
     'docs/product/',
   ],
-  exemptFiles: ['docs/AI-IMPORT.md', 'docs/AI-IMPORT.de.md', 'docs/MANUAL-TESTS.md', 'docs/ROADMAP.md'],
+  exemptFiles: [
+    'docs/AI-IMPORT.md',
+    'docs/AI-IMPORT.de.md',
+    'docs/MANUAL-TESTS.md',
+    'docs/ROADMAP.md',
+  ],
 };
 const SKIP_DIRS = new Set(['node_modules', '.git', 'target', 'dist', 'gen', 'permissions']);
 

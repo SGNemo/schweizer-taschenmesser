@@ -11,7 +11,7 @@ export interface DocShape {
   details: number;
   /** External link targets (href / Markdown links, not image sources), sorted and unique. */
   external: string[];
-  /** Local image sources, sorted and unique. */
+  /** Local image sources, `.de.png`-style German variants folded to the English name, sorted and unique. */
   images: string[];
   /** Relative link targets without anchor, `.de.md` folded to `.md`, sorted and unique. */
   relative: string[];
@@ -43,13 +43,14 @@ export function docShape(text: string): DocShape {
 
   const images: string[] = [];
   for (const m of body.matchAll(/!\[[^\]]*\]\(([^)\s]+)\)/g)) images.push(m[1]);
-  for (const m of body.matchAll(/<(?:img|source)\s[^>]*(?:src|srcset)="([^"]+)"/g)) images.push(m[1]);
+  for (const m of body.matchAll(/<(?:img|source)\s[^>]*(?:src|srcset)="([^"]+)"/g))
+    images.push(m[1]);
 
   return {
     headings,
     details,
     external: uniq(links.filter(isExternal)),
-    images: uniq(images.filter((s) => !isExternal(s))),
+    images: uniq(images.filter((s) => !isExternal(s)).map((s) => s.replace(/\.de\.(\w+)$/, '.$1'))),
     relative: uniq(
       links
         .filter((l) => !isExternal(l) && !l.startsWith('#'))
@@ -66,7 +67,8 @@ export function compareDocs(en: string, de: string): string[] {
   const out: string[] = [];
   if (a.headings.join() !== b.headings.join())
     out.push(`headings differ: en [${a.headings.join(' ')}] vs de [${b.headings.join(' ')}]`);
-  if (a.details !== b.details) out.push(`<details> blocks differ: en ${a.details} vs de ${b.details}`);
+  if (a.details !== b.details)
+    out.push(`<details> blocks differ: en ${a.details} vs de ${b.details}`);
   for (const key of ['external', 'images', 'relative'] as const) {
     const onlyEn = a[key].filter((x) => !b[key].includes(x));
     const onlyDe = b[key].filter((x) => !a[key].includes(x));
