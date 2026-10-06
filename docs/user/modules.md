@@ -2,7 +2,7 @@
 
 # Modules and tools
 
-### Overview
+## Overview
 
 In the **module library** you turn modules on and off (when turning one off: keep or delete its data).
 
