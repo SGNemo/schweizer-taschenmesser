@@ -46,7 +46,8 @@ jobs:
           if [ -n "$range" ] && files="$(git diff --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
             # Documentation that no test reads. README.md, docs/AI-IMPORT.md and docs/user/installation.md
             # are read by unit tests (prompt and download-link checks), so they count as code.
-            ignorable='^(docs/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
+            # site/ has its own workflow (site.yml) and never touches the app.
+            ignorable='^(docs/|site/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
             pinned='^docs/(AI-IMPORT\.md|user/installation\.md)$'
             relevant="$( { printf '%s\n' "$files" | grep -E "$pinned"; printf '%s\n' "$files" | grep -Ev "$ignorable"; } )"
             if [ -z "$relevant" ]; then code=false; fi

@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import { routes, t } from '../i18n';
+const s = t('de');
+const e = t('en');
+---
+<Base locale="de" route="home" title={s.notFound.title} description={s.notFound.text}>
+  <div class="wrap nf">
+    <h1>{s.notFound.title}</h1>
+    <p class="muted">{s.notFound.text} <a href={routes.home.de}>{s.notFound.back}</a></p>
+    <p class="muted" lang="en">{e.notFound.text} <a href={routes.home.en}>{e.notFound.back}</a></p>
+  </div>
+</Base>
+
+<style>
+  .nf {
+    padding-block: clamp(3rem, 8vw, 6rem);
+    display: grid;
+    gap: var(--space-4);
+  }
+</style>

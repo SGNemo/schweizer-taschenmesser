@@ -1,0 +1,7 @@
+# RFC 9116. PLACEHOLDER: replace the contact and keep "Expires" at most one year ahead.
+# Vulnerability reports for the app: see https://github.com/SGNemo/schweizer-taschenmesser/blob/main/SECURITY.md
+Contact: mailto:security@example.com
+Contact: https://github.com/SGNemo/schweizer-taschenmesser/security/advisories/new
+Expires: 2027-10-01T00:00:00.000Z
+Preferred-Languages: de, en
+Canonical: https://nemo.example/.well-known/security.txt

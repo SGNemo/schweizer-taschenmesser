@@ -1,0 +1,62 @@
+---
+import { t, type Locale } from '../i18n';
+import Icon from './Icon.astro';
+
+interface Props { locale: Locale }
+const s = t(Astro.props.locale);
+---
+<section class="block" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <p class="eyebrow">{s.features.eyebrow}</p>
+    <h2 id="features-title">{s.features.title}</h2>
+    <ul class="tiles">
+      {s.features.items.map((f) => (
+        <li class="tile">
+          <Icon name={f.icon} size={22} />
+          <h3>{f.title}</h3>
+          <p>{f.text}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .tiles {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: 1fr;
+    margin-top: var(--space-5);
+  }
+  .tile {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    padding: 1.25rem;
+  }
+  .tile :global(svg) {
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+  .tile h3 {
+    margin-bottom: var(--space-1);
+  }
+  .tile p {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  @media (min-width: 30rem) {
+    .tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 48rem) {
+    .tiles {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+  }
+</style>

@@ -1,0 +1,42 @@
+---
+import { t, type Locale } from '../i18n';
+
+interface Props { locale: Locale }
+const s = t(Astro.props.locale);
+---
+<section class="block" id="why" aria-labelledby="why-title">
+  <div class="wrap">
+    <p class="eyebrow">{s.why.eyebrow}</p>
+    <h2 id="why-title">{s.why.title}</h2>
+    <div class="cols">
+      {s.why.items.map((w) => (
+        <div>
+          <h3>{w.title}</h3>
+          <p>{w.text}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .cols {
+    display: grid;
+    gap: var(--space-6);
+    margin-top: var(--space-5);
+  }
+  h3 {
+    font-size: 1.0625rem;
+    margin-bottom: var(--space-2);
+  }
+  p {
+    color: var(--text-muted);
+    font-size: var(--text-label);
+    max-width: 40ch;
+  }
+  @media (min-width: 48rem) {
+    .cols {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

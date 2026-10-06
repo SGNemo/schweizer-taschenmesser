@@ -1,0 +1,63 @@
+---
+import '../styles/tokens.css';
+import '../styles/global.css';
+import { SITE_URL } from '../config.js';
+import { routes, t, type Locale, type RouteKey } from '../i18n';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  locale: Locale;
+  route: RouteKey;
+  title?: string;
+  description?: string;
+  /** Set on the start page only: the social preview image. */
+  og?: boolean;
+}
+const { locale, route, title, description, og = false } = Astro.props;
+const s = t(locale);
+const pageTitle = title ? `${title} – ${s.siteName}` : s.meta.title;
+const desc = description ?? s.meta.description;
+const url = (path: string) => new URL(path, SITE_URL).toString();
+const canonical = url(routes[route][locale]);
+const ogImage = url('/og-image.png');
+---
+<!doctype html>
+<html lang={s.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    {Object.entries(routes[route]).map(([l, p]) => <link rel="alternate" hreflang={l} href={url(p)} />)}
+    <link rel="alternate" hreflang="x-default" href={url(routes[route].de)} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={s.siteName} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale === 'de' ? 'de_DE' : 'en_GB'} />
+    {og && <meta property="og:image" content={ogImage} />}
+    {og && <meta property="og:image:width" content="1280" />}
+    {og && <meta property="og:image:height" content="640" />}
+    <meta name="twitter:card" content={og ? 'summary_large_image' : 'summary'} />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1316" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f4f4" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script src="/theme.js" is:inline></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">{s.skip}</a>
+    <Header locale={locale} route={route} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer locale={locale} route={route} />
+  </body>
+</html>

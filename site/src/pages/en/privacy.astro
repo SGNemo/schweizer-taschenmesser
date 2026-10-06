@@ -1,0 +1,62 @@
+---
+import Legal from '../../layouts/Legal.astro';
+import { KOFI_URL, REPO_URL } from '../../config.js';
+---
+<Legal locale="en" route="privacy" title="Privacy policy" description="What is processed when you visit the Nemo website: no cookies, no tracking, hosting by Cloudflare.">
+  <p class="placeholder">Placeholder: the operator adds the controller details. The description of processing is a draft and not legal advice.</p>
+
+  <h2>Controller</h2>
+  <p>
+    [PLACEHOLDER: name]<br />
+    [PLACEHOLDER: address]<br />
+    E-mail: [PLACEHOLDER: e-mail address]
+  </p>
+
+  <h2>In short</h2>
+  <ul>
+    <li>This website sets no cookies, uses no analytics and loads no scripts, fonts or content from third-party servers.</li>
+    <li>Your light/dark theme choice is stored only in your browser (localStorage) and never transmitted.</li>
+    <li>When the page is requested, the hosting provider processes technically necessary connection data.</li>
+  </ul>
+
+  <h2>Hosting (Cloudflare Pages)</h2>
+  <p>
+    The website is served by Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA (in the EU: Cloudflare Germany GmbH, Rosental 7, 80331 Munich).
+    When you visit, Cloudflare processes connection data such as IP address, time, requested address, browser identifier and transferred data volume to deliver the page
+    and protect it against attacks. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in secure, fast operation). Cloudflare is certified under the EU-US Data
+    Privacy Framework; standard contractual clauses apply in addition. See <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare’s privacy policy</a>.
+    [PLACEHOLDER: if Cloudflare Web Analytics is enabled, add a note that the cookieless statistics store no IP addresses.]
+  </p>
+
+  <h2>Downloads and links to GitHub</h2>
+  <p>
+    The download buttons lead directly to GitHub (GitHub, Inc., 88 Colin P. Kelly Jr. St, San Francisco, CA 94107, USA), where the app files are hosted, and to the
+    source code at <a href={REPO_URL} rel="noopener">{REPO_URL}</a>. GitHub processes your data only once you click;
+    see <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub’s privacy statement</a>.
+  </p>
+
+  <h2>Support via Ko-fi</h2>
+  <p>
+    The “Support on Ko-fi” link leads to <a href={KOFI_URL} rel="noopener">Ko-fi</a> (Ko-fi Labs Ltd, United Kingdom), an external provider. This website itself
+    processes no payment or contact data. What Ko-fi processes is described in <a href="https://more.ko-fi.com/privacy" rel="noopener">Ko-fi’s privacy policy</a>.
+    [PLACEHOLDER: if supporter codes are sent by e-mail, describe that service: which data (e-mail address) is stored and for how long.]
+  </p>
+
+  <h2>The Nemo app</h2>
+  <p>
+    The app stores its data only on your device. It has no account and no service run by the operator; optional sync works only through a server you run yourself.
+    Updates are downloaded from GitHub. This policy covers the website only.
+  </p>
+
+  <h2>Your rights</h2>
+  <p>
+    You have the right of access, rectification, erasure, restriction of processing, data portability and objection (Art. 15–21 GDPR), and the right to lodge a complaint
+    with a supervisory authority. [PLACEHOLDER: name the competent German state data protection authority.]
+  </p>
+
+  <h2>What usually belongs here in Germany</h2>
+  <p class="muted">
+    For orientation, not legal advice: name and contact of the controller, processing by the hosting provider (server logs, legal basis, third-country transfer),
+    every external service (here only via links: GitHub, Ko-fi), whether cookies or tracking are used, data subject rights and the supervisory authority. Last updated: [PLACEHOLDER: date].
+  </p>
+</Legal>

@@ -1,0 +1,59 @@
+---
+import { REPO_URL, RELEASES_URL, CHANGELOG_URL, ROADMAP_URL } from '../config.js';
+import { routes, t, type Locale, type RouteKey } from '../i18n';
+
+interface Props { locale: Locale; route: RouteKey }
+const { locale, route } = Astro.props;
+const s = t(locale);
+const other: Locale = locale === 'de' ? 'en' : 'de';
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <nav aria-label={locale === 'de' ? 'Fußzeile' : 'Footer'}>
+      <a href={REPO_URL} rel="noopener">{s.footer.github}</a>
+      <a href={RELEASES_URL} rel="noopener">{s.footer.releases}</a>
+      <a href={CHANGELOG_URL} rel="noopener">{s.footer.changelog}</a>
+      <a href={ROADMAP_URL} rel="noopener">{s.footer.roadmap}</a>
+      <a href={routes.privacy[locale]}>{s.footer.privacy}</a>
+      <a href={routes.imprint[locale]}>{s.footer.imprint}</a>
+      <a href={`${REPO_URL}/blob/main/LICENSE`} rel="noopener">{s.footer.license}</a>
+    </nav>
+    <p class="lang">
+      <span lang={locale}>{s.langSwitch[locale]}</span> · <a href={routes[route][other]} lang={other} hreflang={other}>{s.langSwitch[other]}</a>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding-block: var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--text-3);
+  }
+  .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    align-items: center;
+  }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  a {
+    text-decoration: none;
+    color: var(--text-muted);
+    min-height: var(--touch);
+    display: inline-flex;
+    align-items: center;
+  }
+  a:hover {
+    color: var(--text);
+    text-decoration: underline;
+  }
+  .lang {
+    margin-left: auto;
+  }
+</style>

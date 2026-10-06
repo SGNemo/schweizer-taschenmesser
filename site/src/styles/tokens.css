@@ -1,0 +1,113 @@
+/*
+ * Design tokens for the website: a subset of the app's tokens (web/src/ui/tokens.css,
+ * docs/design/DESIGN-SPEC.md § 5–6). scripts/tokens.test.mjs checks that every colour here
+ * still matches the app, so the site cannot drift from Nemo's look.
+ *
+ * Theme: dark is the reference, light follows the system preference; public/theme.js lets the
+ * visitor override it (data-theme on <html>, stored locally, nothing is sent anywhere).
+ */
+:root {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  --font-num: tabular-nums;
+
+  --text-caps: 0.6875rem;
+  --text-meta: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-label: 0.9375rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-h1: 2rem;
+  --leading: 1.6;
+  --leading-tight: 1.25;
+  --measure: 68ch;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  --touch: 44px;
+  --content-w: 68.75rem; /* ≈ 1100 px */
+  --gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+
+  --dur-fast: 120ms;
+  --dur: 200ms;
+
+  /* Light theme (default; dark below) */
+  --bg: #f3f4f4;
+  --surface: #ffffff;
+  --surface-2: #eaecee;
+  --border: #e2e5e8;
+  --border-strong: #76838c;
+  --text: #171f24;
+  --text-muted: #55636b;
+  --text-3: #5f6c75;
+  --focus: #0b6f72;
+  --shadow-1: 0 1px 2px rgb(23 31 36 / 0.06), 0 8px 24px rgb(23 31 36 / 0.07);
+  --accent: #b5430c;
+  --accent-hover: #963709;
+  --accent-contrast: #ffffff;
+  --accent-soft: #fbe9de;
+  --warning: #8a5a00;
+  /* Brand-only wash behind the hero (never for UI surfaces). */
+  --hero-wash: linear-gradient(180deg, #ffffff 0%, var(--bg) 42rem);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0f1316;
+  --surface: #171c20;
+  --surface-2: #1f2529;
+  --border: #262d32;
+  --border-strong: #6b767e;
+  --text: #eceff1;
+  --text-muted: #aab4bb;
+  --text-3: #88939b;
+  --focus: #ffb07a;
+  --shadow-1:
+    0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3);
+  --accent: #ff9a57;
+  --accent-hover: #ffb07a;
+  --accent-contrast: #1b0f06;
+  --accent-soft: #2e241c;
+  --warning: #e8b85a;
+  --hero-wash: radial-gradient(60rem 28rem at 50% -8rem, rgb(255 154 87 / 0.1), transparent 70%);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0f1316;
+    --surface: #171c20;
+    --surface-2: #1f2529;
+    --border: #262d32;
+    --border-strong: #6b767e;
+    --text: #eceff1;
+    --text-muted: #aab4bb;
+    --text-3: #88939b;
+    --focus: #ffb07a;
+    --shadow-1:
+      0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3);
+    --accent: #ff9a57;
+    --accent-hover: #ffb07a;
+    --accent-contrast: #1b0f06;
+    --accent-soft: #2e241c;
+    --warning: #e8b85a;
+    --hero-wash: radial-gradient(60rem 28rem at 50% -8rem, rgb(255 154 87 / 0.1), transparent 70%);
+    color-scheme: dark;
+  }
+}
