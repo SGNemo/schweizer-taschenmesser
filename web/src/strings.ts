@@ -373,8 +373,9 @@ export const t = {
       share: 'Anteil des Wortes',
       shareOptions: { '30': '30 %', '40': '40 %', '50': '50 %' },
       style: 'Stärke',
-      styleOptions: { soft: 'Weich', bold: 'Fett' },
-      styleHint: 'Weich: etwas kräftiger und heller. Fett: deutlich fett.',
+      styleOptions: { soft: 'Weich', color: 'Nur Kontrast', bold: 'Fett' },
+      styleHint:
+        'Weich: etwas kräftiger, Wortanfang heller. Nur Kontrast: Schrift bleibt gleich, nur Hell und Dunkel unterscheiden sich (am ruhigsten). Fett: Wortanfang deutlich fett.',
       cover: 'Umfang',
       coverOptions: { '25': '25 %', '50': '50 %', '75': '75 %', '100': '100 %' },
       coverHint:

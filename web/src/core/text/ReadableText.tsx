@@ -1,14 +1,7 @@
 /** @jsxImportSource react */
 // This file is the target of the reading-aid JSX runtime (readjsx/): it must use the plain React runtime itself.
-import {
-  createContext,
-  useContext,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
+import { inkOf } from './ink';
 import { emphasize } from './readable';
 
 /** Coverage levels (percent): the aid is shown where the element's level is at most the chosen coverage. */
@@ -50,7 +43,6 @@ export function ReadableText({
   text,
   kind,
   level,
-  tone = 'plain',
   heavy = false,
   force = false,
 }: {
@@ -58,11 +50,6 @@ export function ReadableText({
   /** Shorthand: `prose` = level 25, `list` = level 50. */
   kind?: 'prose' | 'list';
   level?: ReadLevel;
-  /**
-   * `ink`: headings and titles – if the text is in the primary colour, the rest of each word is dimmed a step so the
-   * start stands out. `plain`: only the weight changes (AA stays safe).
-   */
-  tone?: 'ink' | 'plain';
   /** Headings and other already bold text: the emphasised start gets an extra heavy weight. */
   heavy?: boolean;
   /** Fokus-Lesen: the aid is on for this text whatever the setting says (still with the chosen share and style). */
@@ -75,27 +62,22 @@ export function ReadableText({
     () => (active ? emphasize(text, { share: cfg.share }) : null),
     [active, text, cfg.share],
   );
-  // `ink`: dim the rest of the word only when the surrounding text really is in the primary text colour (a muted
-  // heading keeps its colour, AA contrast stays safe). Headings are few, so measuring them is cheap.
-  const probe = useRef<HTMLSpanElement>(null);
-  const [primary, setPrimary] = useState(false);
+  // The ink around the text decides how contrast is added (tokens.css): primary ink → the word gets a dimmed rest,
+  // muted ink → the start is brightened, anything else (coloured text, filled buttons) → only the weight changes.
+  // Set on the DOM node after layout, so no extra render; measured again after every render (classes may change).
+  const wrapper = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
-    const host = probe.current?.parentElement;
-    if (tone !== 'ink' || !runs || !host) return setPrimary(false);
-    setPrimary(getComputedStyle(host).color === getComputedStyle(document.body).color);
-  }, [tone, runs]);
+    const el = wrapper.current;
+    // The parent's colour: the wrapper's own colour is the dimmed one.
+    if (el?.parentElement) el.dataset.ink = inkOf(getComputedStyle(el.parentElement).color);
+  });
   if (!runs) return <>{text}</>;
-  const firstStrong = runs.findIndex((r) => r.strong);
   return (
     // One wrapper element: in a flex/grid container with a gap the words stay a single item, as the plain string was.
-    <span data-rt="">
+    <span data-rt="" ref={wrapper}>
       {runs.map((r, i) =>
         r.strong ? (
-          <span key={i} data-rs={heavy ? 'h' : ''} ref={i === firstStrong ? probe : undefined}>
-            {r.text}
-          </span>
-        ) : primary && r.rest ? (
-          <span key={i} data-rr="">
+          <span key={i} data-rs={heavy ? 'h' : ''}>
             {r.text}
           </span>
         ) : (
