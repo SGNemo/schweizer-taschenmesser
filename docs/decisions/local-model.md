@@ -1,5 +1,6 @@
 # Local model for AI writes (PR B)
 
+- **AI writes (PR A, 0.3): rules → local model → cloud, always via a preview the user confirms; actions per module (`aiSchema.actions`); the cloud sees schemas, never entries; the local model is optional and never bundled.**
 - **Order:** rules (0 tokens) → local model (0 tokens, offline) → cloud only if allowed; every answer carries its stage.
 - **Runtime:** llama.cpp through `llama-cpp-2` (MIT/Apache) in `crates/local-llm`. GBNF grammar per action set forces valid JSON; the system prefix is cached between requests. Cargo feature `local-llm` is off by default so normal CI/release do not compile it; separate CI job covers it. Release builds need the feature, cmake/LLVM (Windows) and for GPU the Vulkan SDK – a `release.yml` change, to be made only after the maintainer agrees.
 - **GPU:** Vulkan + CPU (target GTX 1070 / Ryzen 5 7600X). CUDA is out: Pascal is dropped by current CUDA and it adds ~0.5 GB of DLLs.

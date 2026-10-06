@@ -16,7 +16,7 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 - No secrets, tokens, real data or private paths (public repo).
 
 ## knowledge
-- Write what the next chat needs into the repo, not into the chat: status → `docs/STATUS.md` (one line), decision → `docs/DECISIONS.md` (+ detail in `docs/decisions/`), structure → `docs/ARCHITECTURE-MAP.md`, recipe → `docs/HOW-TO.md` / `docs/howto/`, report → `docs/security|perf|features|meta`.
+- Write what the next chat needs into the repo, not into the chat: status → `docs/STATUS.md` (one line), decision → `docs/decisions/<area>.md` (index `docs/DECISIONS.md` only for a new area), structure → `docs/ARCHITECTURE-MAP.md`, recipe → `docs/HOW-TO.md` / `docs/howto/`, report → `docs/security|perf|features|meta`.
 - Keep it short: bullets, paths, tables; no history, no prose, no general knowledge. Budgets: [meta/DOCS-GUIDE.md](meta/DOCS-GUIDE.md); check with `npm run check:docs`.
 - Add/remove your row in [CHATS.md](CHATS.md).
 
