@@ -27,6 +27,50 @@ export const tDiag = defineBundle(
       paletteCommand: 'Fehler melden',
       keywords: ['Bug', 'Problem', 'Diagnose', 'Fehlerbericht'],
     },
+    recovery: {
+      title: 'Die Datenbank lässt sich nicht öffnen',
+      intro:
+        'Nemo konnte die lokalen Daten auf diesem Gerät nicht lesen. Es wurde nichts gelöscht. Bevor etwas verändert wird, sicherst du eine Kopie des defekten Stands.',
+      details: 'Technische Angabe',
+      repair: 'Datenbank reparieren',
+      repairHint: 'Öffnet die Datenbank neu und leert nur Tabellen, die nicht lesbar sind.',
+      repairDone: 'Repariert. Die App startet neu.',
+      repairFailed:
+        'Das ließ sich nicht reparieren. Spiele ein Backup ein oder starte neu mit leerer Datenbank.',
+      restore: 'Backup einspielen',
+      restoreHint:
+        'Wähle eine Backup-Datei. Der defekte Stand wird vorher gesichert und dann ersetzt.',
+      passphrase: 'Passwort der Backup-Datei',
+      errors: {
+        unreadable: 'Das ist keine Nemo-Backup-Datei.',
+        'passphrase-required': 'Diese Datei ist verschlüsselt. Gib das Passwort ein.',
+        'wrong-passphrase': 'Das Passwort passt nicht.',
+        cancelled: 'Abgebrochen. Es wurde nichts verändert.',
+        failed: 'Das Einspielen ist fehlgeschlagen.',
+      },
+      reset: 'Mit leerer Datenbank neu starten',
+      resetHint:
+        'Zuerst wird eine Kopie des defekten Stands gesichert. Danach beginnt Nemo ohne Daten.',
+      resetTitle: 'Mit leerer Datenbank neu starten',
+      resetWarning:
+        'Alle lokalen Daten auf diesem Gerät werden ersetzt (die Kopie bleibt erhalten). Tippe zur Bestätigung NEU STARTEN.',
+      resetPhrase: 'NEU STARTEN',
+      resetConfirm: 'Neu starten',
+      copyCancelled: 'Ohne gesicherte Kopie wird nichts verändert.',
+      report: 'Fehler melden',
+    },
+    fatal: {
+      title: 'Nemo ist auf ein Problem gestoßen',
+      body: 'Die App konnte nicht weiterlaufen. Deine Daten wurden nicht verändert.',
+      reload: 'Neu laden',
+      safeMode: 'Im Sicheren Modus starten',
+      safeHint: 'Startet mit allen Modulen aus. Beim nächsten normalen Start ist alles wieder da.',
+    },
+    safe: {
+      banner: 'Sicherer Modus: Alle Module sind aus. Es wurde nichts verändert.',
+      leave: 'Normal neu starten',
+      leaveForced: 'Beende Nemo und starte es ohne --safe-mode.',
+    },
     card: {
       title: (name: string) => `${name} hat ein Problem`,
       body: 'Dieser Bereich konnte nicht angezeigt werden. Der Rest der App läuft weiter, deine Daten sind nicht betroffen.',
@@ -60,6 +104,48 @@ export const tDiag = defineBundle(
         '1. …\n2. …\n(Please attach the diagnostics file: Settings → About Nemo → Export diagnostics)',
       paletteCommand: 'Report a bug',
       keywords: ['Bug', 'Problem', 'Diagnostics', 'Report'],
+    },
+    recovery: {
+      title: 'The database cannot be opened',
+      intro:
+        'Nemo could not read the local data on this device. Nothing has been deleted. Before anything is changed you keep a copy of the defective state.',
+      details: 'Technical detail',
+      repair: 'Repair database',
+      repairHint: 'Reopens the database and only empties tables that cannot be read.',
+      repairDone: 'Repaired. The app restarts.',
+      repairFailed:
+        'This could not be repaired. Restore a backup or start again with an empty database.',
+      restore: 'Restore a backup',
+      restoreHint: 'Choose a backup file. The defective state is saved first and then replaced.',
+      passphrase: 'Password of the backup file',
+      errors: {
+        unreadable: 'This is not a Nemo backup file.',
+        'passphrase-required': 'This file is encrypted. Enter the password.',
+        'wrong-passphrase': 'The password does not match.',
+        cancelled: 'Cancelled. Nothing was changed.',
+        failed: 'Restoring failed.',
+      },
+      reset: 'Start again with an empty database',
+      resetHint: 'A copy of the defective state is saved first. Then Nemo starts without data.',
+      resetTitle: 'Start again with an empty database',
+      resetWarning:
+        'All local data on this device is replaced (the copy is kept). Type RESTART to confirm.',
+      resetPhrase: 'RESTART',
+      resetConfirm: 'Start again',
+      copyCancelled: 'Nothing is changed without a saved copy.',
+      report: 'Report a bug',
+    },
+    fatal: {
+      title: 'Nemo ran into a problem',
+      body: 'The app could not continue. Your data has not been changed.',
+      reload: 'Reload',
+      safeMode: 'Start in safe mode',
+      safeHint: 'Starts with all modules off. The next normal start brings everything back.',
+    },
+    safe: {
+      banner: 'Safe mode: all modules are off. Nothing was changed.',
+      leave: 'Restart normally',
+      leaveForced: 'Quit Nemo and start it without --safe-mode.',
     },
     card: {
       title: (name: string) => `${name} ran into a problem`,

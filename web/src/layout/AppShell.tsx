@@ -1,3 +1,4 @@
+import { SafeModeBanner } from './SafeModeBanner';
 import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useNativeShare } from '@/quickCapture/nativeShare';
@@ -120,6 +121,7 @@ export function AppShell() {
         {focusing ? null : (
           <>
             <TopBar />
+            <SafeModeBanner />
             <UpdateBanner />
             <PendingImports />
             {SeedBanner ? (
