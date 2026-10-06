@@ -25,10 +25,11 @@ import {
   type Outcome,
 } from '../write/evalSupport';
 import { parseAnswer } from './answer';
+import type { WriteProposal } from '../write/types';
 import { findModel, TEMPLATES, type TemplateId } from './catalogue';
 import { buildGrammar } from './grammar';
 import { formatChat, PROMPT_VERSION, systemPrompt, userMessage } from './prompts/v1';
-import { buildTop2Grammar, parseTop2, top2SystemPrompt } from './top2';
+import { secondGrammar } from './top2';
 
 const bin = process.env.AI_EVAL_BIN;
 const models = (process.env.AI_EVAL_MODELS ?? '')
@@ -44,7 +45,7 @@ const gpuLayers = process.env.AI_EVAL_GPU_LAYERS ?? '0';
 const threads = process.env.AI_EVAL_THREADS;
 const context = process.env.AI_EVAL_CONTEXT ?? '4096';
 const out = process.env.AI_EVAL_OUT;
-/** `--top2`: the model gives its two most likely readings; both are scored (see `top2.ts`). */
+/** `--top2`: a second pass forbids the first answer's module/action; both readings are scored (see `top2.ts`). */
 const top2 = process.env.AI_EVAL_TOP2 === '1';
 
 interface Row {
@@ -88,8 +89,8 @@ describe.skipIf(!bin || models.length === 0)('local models on the eval set', () 
         'chatml-nothink') as TemplateId;
       if (!(template in TEMPLATES)) throw new Error(`unknown template ${template}`);
       const writable = writableModules(evalManifests);
-      const system = top2 ? top2SystemPrompt(writable) : systemPrompt(writable);
-      const grammar = top2 ? buildTop2Grammar(writable) : buildGrammar(writable);
+      const system = systemPrompt(writable);
+      const grammar = buildGrammar(writable);
       const cases = limit ? evalCases.slice(0, limit) : evalCases;
 
       const dir = mkdtempSync(join(tmpdir(), 'nemo-eval-'));
@@ -103,7 +104,7 @@ describe.skipIf(!bin || models.length === 0)('local models on the eval set', () 
               id: c.id,
               prompt: formatChat(template, system, userMessage(c.input, EVAL_TODAY)),
               grammar,
-              max_tokens: top2 ? 900 : 480,
+              max_tokens: 480,
             }),
           )
           .join('\n'),
@@ -135,6 +136,49 @@ describe.skipIf(!bin || models.length === 0)('local models on the eval set', () 
         lines.map((l) => JSON.parse(l) as Row).map((r) => [r.id, r]),
       );
 
+      /** Second reading per case (only with `--top2`): same prompt, the first answer's action is forbidden. */
+      const second = new Map<string, WriteProposal>();
+      let secondMs = 0;
+      if (top2) {
+        const again = cases.flatMap((c) => {
+          const row = rows.get(c.id);
+          const firstAnswer = row?.ok ? parseAnswer(row.result!.text) : undefined;
+          const g = firstAnswer ? secondGrammar(writable, firstAnswer) : undefined;
+          return g ? [{ c, grammar: g }] : [];
+        });
+        if (again.length > 0) {
+          const input2 = join(dir, 'cases2.jsonl');
+          const output2 = join(dir, 'out2.jsonl');
+          writeFileSync(
+            input2,
+            again
+              .map(({ c, grammar: g }) =>
+                JSON.stringify({
+                  id: c.id,
+                  prompt: formatChat(template, system, userMessage(c.input, EVAL_TODAY)),
+                  grammar: g,
+                  max_tokens: 480,
+                }),
+              )
+              .join('\n'),
+          );
+          const args2 = args.map((a, i) =>
+            args[i - 1] === '--input' ? input2 : args[i - 1] === '--output' ? output2 : a,
+          );
+          const run2 = spawnSync(bin!, args2, { stdio: ['ignore', 'inherit', 'inherit'] });
+          if (run2.status !== 0)
+            throw new Error(`llm-batch (second reading) failed (${run2.status})`);
+          const lines3 = readFileSync(output2, 'utf8').trim().split('\n');
+          lines3.pop();
+          for (const l of lines3) {
+            const r = JSON.parse(l) as Row;
+            const p = r.ok ? parseAnswer(r.result!.text) : undefined;
+            if (p) second.set(r.id, p);
+            if (r.ok) secondMs += r.result!.prompt_ms + r.result!.generate_ms;
+          }
+        }
+      }
+
       const outcomes: Outcome[] = [];
       /** Best outcome of the first two readings (only differs from `outcomes` with `--top2`). */
       const best: Outcome[] = [];
@@ -155,8 +199,8 @@ describe.skipIf(!bin || models.length === 0)('local models on the eval set', () 
       for (const c of cases) {
         const row = rows.get(c.id);
         const text = row?.ok ? row.result!.text : '';
-        const proposals = top2 ? parseTop2(text) : [parseAnswer(text)];
-        const proposal = proposals[0];
+        const proposal = parseAnswer(text);
+        const alt = second.get(c.id);
         let json = true;
         try {
           JSON.parse(text);
@@ -167,7 +211,7 @@ describe.skipIf(!bin || models.length === 0)('local models on the eval set', () 
         const first = await scoreProposal(c, proposal);
         outcomes.push(first);
         let top = first;
-        for (const alt of proposals.slice(1)) {
+        if (alt) {
           const o = await scoreProposal(c, alt);
           if (rank.indexOf(o) < rank.indexOf(top)) top = o;
         }
@@ -193,7 +237,7 @@ describe.skipIf(!bin || models.length === 0)('local models on the eval set', () 
         '',
         ...(top2
           ? [
-              `top-2 (right reading among the first two): exact ${pct(countBest('exact'), positives)} · module+action right ${pct(countBest('exact') + countBest('partial'), positives)} · wrong ${pct(countBest('wrong'), positives)} (top-1: exact ${pct(count('exact'), positives)})`,
+              `top-2 (second pass on ${second.size} inputs, ${(secondMs / Math.max(1, second.size) / 1000).toFixed(1)} s each; right reading among the first two): exact ${pct(countBest('exact'), positives)} · module+action right ${pct(countBest('exact') + countBest('partial'), positives)} · wrong ${pct(countBest('wrong'), positives)} (top-1: exact ${pct(count('exact'), positives)})`,
               '',
             ]
           : []),

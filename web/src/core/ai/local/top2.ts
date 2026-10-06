@@ -1,58 +1,35 @@
 /**
- * Variant of the local prompt/answer for "the two most likely readings" (measured by
- * `npm run ai:eval -- --top2`; not used by the app yet). The model answers
- * `{"alternatives":[{"ops":[…],"confidence":0.9},{"ops":[…],"confidence":0.4}]}`, best first, the
- * the second may have empty ops. Ops are the same as in version 1, so the checks after the model are shared.
+ * "Second reading" of a sentence for the two-suggestions idea (measured by
+ * `npm run ai:eval -- --top2`; not used by the app yet). Instead of asking the model for two answers
+ * in one go (small models leave the second one empty), the same prompt is run a second time with a
+ * grammar that no longer allows the module/action pair of the first answer. The model then has to
+ * choose another reading; with the prompt prefix cached this costs one short generation.
  */
 import type { ModuleManifest } from '@/core/modules/types';
 import type { WriteProposal } from '../write/types';
-import { parseAnswer } from './answer';
 import { buildGrammar } from './grammar';
-import { systemPrompt } from './prompts/v1';
 
-const quoted = (name: string) => `"\\"${name}\\":"`;
-
-/** The v1 grammar with another root: exactly two alternatives, each with ops and confidence. */
-export function buildTop2Grammar(writable: readonly ModuleManifest[]): string {
-  const lines = buildGrammar(writable)
-    .split('\n')
-    .filter((l) => !l.startsWith('root ::='));
-  return [
-    `root ::= "{" ${quoted('alternatives')} "[" alt "," alt "]}"`,
-    `alt ::= "{" ${quoted('ops')} "[" (op ("," op){0,7})? "]," ${quoted('confidence')} conf "}"`,
-    ...lines,
-  ].join('\n');
-}
-
-/** The v1 system prompt, with the answer format and the examples changed to alternatives. */
-export function top2SystemPrompt(writable: readonly ModuleManifest[]): string {
-  return systemPrompt(writable)
-    .split('\n')
-    .map((line) => {
-      if (line.startsWith('- "confidence"'))
-        return '- "alternatives": the two most likely readings of the sentence, best first. The second must be a different plausible reading (other module, action or fields); use empty ops only if no other reading is plausible. Each has "ops" and "confidence" (0 to 1, how sure you are).';
-      if (line.startsWith('- If the sentence is not a request'))
-        return '- If the sentence is not a request to add, change, delete or mark entries, answer {"alternatives":[{"ops":[],"confidence":0},{"ops":[],"confidence":0}]}.';
-      return line.replace(
-        /^(Ausgabe: )\{"ops":(.*),"confidence":([\d.]+),"question":""\}$/,
-        '$1{"alternatives":[{"ops":$2,"confidence":$3},{"ops":[],"confidence":0.05}]}',
+/** The writable modules without the actions used by `first` (modules left without any action vanish). */
+export function withoutActions(
+  writable: readonly ModuleManifest[],
+  first: Pick<WriteProposal, 'ops'>,
+): ModuleManifest[] {
+  const used = new Set(first.ops.map((o) => `${o.module}.${o.action}`));
+  return writable
+    .map((m) => {
+      const actions = Object.fromEntries(
+        Object.entries(m.aiSchema!.actions ?? {}).filter(([id]) => !used.has(`${m.id}.${id}`)),
       );
+      return { ...m, aiSchema: { ...m.aiSchema!, actions } } as ModuleManifest;
     })
-    .join('\n');
+    .filter((m) => Object.keys(m.aiSchema!.actions ?? {}).length > 0);
 }
 
-/** Valid alternatives in the order the model gave them (empty readings are dropped). */
-export function parseTop2(text: string): WriteProposal[] {
-  let json: unknown;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    return [];
-  }
-  const list = (json as { alternatives?: unknown })?.alternatives;
-  if (!Array.isArray(list)) return [];
-  return list
-    .slice(0, 2)
-    .map((alt) => parseAnswer(JSON.stringify({ ...(alt as object), question: '' })))
-    .filter((p): p is WriteProposal => p !== undefined);
+/** Grammar for the second reading, or `undefined` when nothing else is left to choose. */
+export function secondGrammar(
+  writable: readonly ModuleManifest[],
+  first: Pick<WriteProposal, 'ops'>,
+): string | undefined {
+  const rest = withoutActions(writable, first);
+  return rest.length > 0 ? buildGrammar(rest) : undefined;
 }
