@@ -42,7 +42,8 @@ export type SidebarChoice = (typeof SIDEBARS)[number];
 /** Reading aid (ui/ReadableText): off by default; share of each word that is emphasised, style, scope. */
 export const READ_SHARES = ['40', '30', '50'] as const;
 export type ReadShare = (typeof READ_SHARES)[number];
-export const READ_STYLES = ['soft', 'bold'] as const;
+/** `soft` = a little more weight + contrast, `color` = contrast only (no weight change), `bold` = clearly heavier. */
+export const READ_STYLES = ['soft', 'color', 'bold'] as const;
 export type ReadStyle = (typeof READ_STYLES)[number];
 /**
  * How much text gets the reading aid: 25 = running text only (paragraphs, answers, help), 50 = also headings and list

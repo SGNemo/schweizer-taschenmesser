@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
+import { useAiOn } from '@/core/ai/switch';
 import { detectIntent } from '@/core/ai/write/rules/intent';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { calculate } from '@/core/calc/phrases';
@@ -75,6 +76,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const tree = useNavTree();
   const quickActions = useQuickAddActions();
   const config = useAiConfig();
+  const aiOn = useAiOn();
   const { state, submit, reset } = useAssistant();
   const writeMode = useUiStore((s) => s.paletteWrite);
   const [writeSettings] = useAiWriteSettings();
@@ -170,7 +172,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   ]);
 
   const hits = useSearchHits(query);
-  const hasModel = config ? isAiConfigured(config) : false;
+  const hasModel = aiOn && config ? isAiConfigured(config) : false;
 
   const options = useMemo<Option[]>(() => {
     const list: Option[] = filterCommands(commands, query).map((c) => ({
@@ -229,6 +231,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       });
     }
     const writeIntent =
+      aiOn &&
       query.trim() !== '' &&
       writeSettings?.enabled !== false &&
       (writeMode || detectIntent(query, states ? activeManifests(states) : []) === 'write');
@@ -242,7 +245,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         forceModel: false,
       });
     }
-    if (query.trim()) {
+    if (aiOn && query.trim()) {
       if (!writeIntent) {
         list.push({
           kind: 'ask',
@@ -277,6 +280,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     hits,
     query,
     hasModel,
+    aiOn,
     focus.searchHistory,
     recent,
     writeMode,

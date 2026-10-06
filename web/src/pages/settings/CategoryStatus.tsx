@@ -1,3 +1,4 @@
+import { useAiOn } from '@/core/ai/switch';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { isEntryUsable, useAiConfig } from '@/core/ai/config';
 import { loadStatus } from '@/core/connectors/state';
@@ -22,6 +23,8 @@ function Updates() {
 
 function Ai() {
   const config = useAiConfig();
+  const aiOn = useAiOn();
+  if (!aiOn) return <>{t.ai.off.statusOff}</>;
   if (!config) return null;
   const n = config.providers.filter(isEntryUsable).length;
   return <>{n > 0 ? s.ai(n) : s.aiNone}</>;
