@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LOCAL_MODELS } from '@/core/ai/local/catalogue';
+import { switchAiOff, switchAiOn } from '@/core/ai/switch';
 import { writeLocalPrefs } from '@/core/ai/local/prefs';
 import { db } from '@/core/db/db';
 import { setPlatform } from '@/core/platform';
@@ -43,6 +44,28 @@ describe('ChatPage', () => {
     view();
     expect(await screen.findByText(c.empty)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: c.emptyAction })).toBeInTheDocument();
+  });
+
+  it('shows a calm notice instead of the chat while "KI abschalten" is on', async () => {
+    await threadRepo.create({
+      title: 'Alt',
+      autoTitle: false,
+      pinned: false,
+      archived: false,
+      engine: 'local',
+      contextModules: [],
+      tokensIn: 0,
+      tokensOut: 0,
+      costUsd: 0,
+    });
+    await switchAiOff('device');
+    try {
+      view();
+      expect(await screen.findByText(c.aiOff)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: c.newChat })).toBeNull();
+    } finally {
+      await switchAiOn();
+    }
   });
 
   it('creates a chat, asks the local model and shows the formatted answer', async () => {

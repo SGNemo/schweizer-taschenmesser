@@ -19,7 +19,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - ≤0.2 **Model output is never evaluated:** Zod-validated `Intent` against a field whitelist; creating entries needs a confirmation card.
 - ≤0.2 **Multi-provider router with fallback, cooldowns, local limits;** presets are editable defaults (unverified); keys in `PlatformService.secrets`.
 - 0.3 **AI writes: rules → local model → cloud, always via preview; actions per module (`aiSchema.actions`); cloud sees schemas, never entries; local model optional, never bundled** → [local-model.md](decisions/local-model.md)
-- 0.3 **Chat: content invisible to assistant/search/APIs; engine per chat; other modules' data opt-in per chat, shown before sending** → [local-model.md](decisions/local-model.md)
+- 0.3 **Chat: invisible to assistant/search/APIs; engine per chat; other modules' data opt-in, shown first** → [local-model.md](decisions/local-model.md)
 - ≤0.2 **`accounts` (vault) invisible to AI, search, dataapi, local API** (no `aiSchema`, `dataApi: false`, id block; `exclusion.test.ts`).
 - ≤0.2 **Connectors never import `core/ai`; news has no `aiSchema`** – feed/mail text reaches a model only via the explicit news-brief button (headlines).
 
@@ -37,7 +37,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - ≤0.2 **No Authenticode certificate** (SmartScreen warning documented); updater payload verified with the updater key.
 - 2026-10-01 **Dev-Preview: rolling pre-release `dev-preview` after every green `develop` push** (job in `ci.yml` calling reusable `dev-preview.yml`: `workflow_run`/dispatch only fire from the default branch); same signing/audit; tag not SemVer so stable updater/`releases/latest` ignore it.
 - 2026-10-01 **Dev-Preview is a separate app (the one sanctioned identifier exception):** id `….taschenmesser.dev`, name "Nemo Dev", dev flavor only – parallel install, own data, independent `versionCode`.
-- 2026-10-02 **Test data: deterministic seeds per module, Dev-Preview only, never synced.** `seed` in every manifest + `seed.ts` (fixed random seed 42, reference date, small/medium/large); the runner and its UI are removed from stable builds at build time; seed rows are registered in `_seeds` and skipped by sync and backup unless the dev switch "Seed-Sync erlauben" is on; the demo vault (`nemo-demo-tresor`) is only created when none exists. Detail: [decisions/core.md](decisions/core.md).
+- 2026-10-02 **Test data: deterministic seeds per module, Dev-Preview only, never synced.** `seed` in every manifest + `seed.ts`; the runner is removed from stable builds; seed rows are registered in `_seeds` and skipped by sync and backup (dev switch "Seed-Sync erlauben"); the demo vault is only created when none exists. Detail: [decisions/core.md](decisions/core.md).
 - 2026-10-01 **Dev channel exists only in dev builds** (`VITE_RELEASE_CHANNEL=dev`); Rust accepts `dev-latest.json` only at the fixed `dev-preview` URL. Version `<next stable>-dev.<commit count>`, build-time only; `dev-latest.json` uploaded last.
 
 ## Imports, local API, connectors → [decisions/features.md](decisions/features.md)
@@ -60,7 +60,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 0.3 **`PageContainer` layouts replace a global `max-width`; CSS Modules + tokens, touch ≥ 44 px, `data-autofocus`; docs split (CLAUDE.md short, details in docs/).**
 - 2026-09-30 **Design "Klar":** solid bg, bordered cards, no shadows/glass, one flat accent; ocean gradient brand-only; accents via `light-dark()`; CSS-only motion (transform/opacity, reduced motion); disk palette is the one hex-colour special case.
 - 2026-10-01 **Design "Klar 2" tokens (Phase 1):** cool palette, dark first, shadows level 1/2, radii 8/12/16/20, 2 px focus outline; `--*-soft` names kept as `color-mix`; text size/density device-local. [Detail](decisions/ui-brand.md).
-- 2026-10-01 **Navigation areas (Klar 2, Phase 2):** `manifest.area` is navigation only (module paths unchanged, area routes redirect to the last used module); favourites ≤ 5 in `_settings` scope `nav`; sidebar 248 px / rail 76 px; one "+ Neu", FAB phone-only. Settings: registry. [Detail](decisions/ui-shell.md).
+- 2026-10-01 **Navigation areas (Klar 2, Phase 2):** `manifest.area` is navigation only (module paths unchanged, area routes redirect to the last used module); favourites ≤ 5 in `_settings` scope `nav`; one "+ Neu", FAB phone-only. Settings: registry. [Detail](decisions/ui-shell.md).
 - 2026-10-02 **Widget types, red only for overdue.** [Detail](decisions/ui-brand.md)
 - 2026-10-02 **0.4–0.7:** merged and retired modules, LWW-faithful **app migrations** → [modules](decisions/modules.md)
 - 2026-10-02 **Shared components (Klar 2, Phase 3):** compatible APIs, new look everywhere; flat `ItemRow`, sheets on phones, undo journal in core (`undoable`, modules opt in), keyboard shortcuts. [Detail](decisions/ui-components.md).

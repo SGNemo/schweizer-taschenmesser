@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { useAiOn } from '@/core/ai/switch';
 import { useSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
@@ -16,6 +17,7 @@ const c = t.chat;
 export default function ChatPage() {
   const [params, setParams] = useSearchParams();
   const [prefs] = useSettings('module.chat', settings.schema, settings.defaults);
+  const aiOn = useAiOn();
   const threads = useLiveQuery(() => threadRepo.active().toArray(), []);
   const messages = useLiveQuery(() => messageRepo.active().toArray(), []);
   const [query, setQuery] = useState('');
@@ -73,6 +75,15 @@ export default function ChatPage() {
       ),
     [threads, messages, query, archived],
   );
+
+  if (!aiOn) {
+    return (
+      <>
+        <PageHeader title={c.title} />
+        <EmptyState title={c.aiOff} />
+      </>
+    );
+  }
 
   if (selected && threads?.some((x) => x.id === selected)) {
     return <ThreadView threadId={selected} onBack={() => setParams({}, { replace: true })} />;

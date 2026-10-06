@@ -4,6 +4,7 @@ import { db } from '@/core/db/db';
 import { writeLocalPrefs } from '@/core/ai/local/prefs';
 import { useLocalModel } from '@/core/ai/local/state';
 import { LOCAL_MODELS } from '@/core/ai/local/catalogue';
+import { switchAiOff, switchAiOn } from '@/core/ai/switch';
 import type { AiProvider, CompletionRequest } from '@/core/ai/providers/types';
 import { setPlatform } from '@/core/platform';
 import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
@@ -83,6 +84,26 @@ describe('chat engine', () => {
       'user',
       'assistant',
     ]);
+  });
+
+  it('does not answer while "KI abschalten" is on, whichever engine the chat has', async () => {
+    const thread = await threadRepo.create(base);
+    await addQuestion(thread.id, 'Frage');
+    const p = provider();
+    await switchAiOff('device');
+    try {
+      expect(await generateReply(thread.id, { provider: p })).toEqual({
+        ok: false,
+        error: 'ai-off',
+      });
+      expect(p.seen).toHaveLength(0);
+      const local = await threadRepo.create({ ...base, engine: 'local' });
+      await addQuestion(local.id, 'Frage');
+      expect(await generateReply(local.id, {})).toEqual({ ok: false, error: 'ai-off' });
+    } finally {
+      await switchAiOn();
+    }
+    expect((await generateReply(thread.id, { provider: p })).ok).toBe(true);
   });
 
   it('keeps a renamed title and reports a missing provider without storing anything', async () => {

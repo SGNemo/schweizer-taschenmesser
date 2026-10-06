@@ -4124,7 +4124,9 @@ export const t = {
       nothing: 'Zu dieser Frage wurden in den gewählten Modulen keine Daten gefunden.',
       attached: 'Mit Daten aus der App',
     },
+    aiOff: 'KI ist abgeschaltet. Unter Einstellungen → KI kannst du sie wieder einschalten.',
     errors: {
+      'ai-off': 'KI ist abgeschaltet. Unter Einstellungen → KI kannst du sie wieder einschalten.',
       'no-engine':
         'Es ist kein Anbieter eingerichtet. Richte einen unter Einstellungen → KI ein oder wähle das lokale Modell.',
       'local-unavailable':

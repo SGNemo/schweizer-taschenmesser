@@ -11,6 +11,7 @@ import { getLocalPrefs } from '@/core/ai/local/prefs';
 import { formatChatTurns } from '@/core/ai/local/prompts/chat';
 import { ensureLoaded } from '@/core/ai/local/state';
 import { AiError, type AiErrorCode, type AiProvider } from '@/core/ai/providers/types';
+import { isAiOn } from '@/core/ai/switch';
 import { recordUsage } from '@/core/ai/usage';
 import type { Stored } from '@/core/db/types';
 import { getPlatform } from '@/core/platform';
@@ -18,7 +19,8 @@ import { autoTitle, byTime, toTurns } from './logic';
 import { messageRepo, threadRepo } from './repo';
 import type { Message } from './schema';
 
-export type ChatErrorCode = AiErrorCode | 'no-engine' | 'local-unavailable' | 'no-thread';
+export type ChatErrorCode =
+  AiErrorCode | 'no-engine' | 'local-unavailable' | 'no-thread' | 'ai-off';
 
 export type ReplyResult =
   { ok: true; message: Stored<Message> } | { ok: false; error: ChatErrorCode; detail?: string };
@@ -51,6 +53,8 @@ export async function messagesOf(threadId: string): Promise<Stored<Message>[]> {
  * "try again" is the same call. The first user message gives an automatic title.
  */
 export async function generateReply(threadId: string, opts: ReplyOptions): Promise<ReplyResult> {
+  // "KI abschalten": no model, no provider, no matter which engine the chat has.
+  if (!(await isAiOn())) return { ok: false, error: 'ai-off' };
   const thread = await threadRepo.get(threadId);
   if (!thread) return { ok: false, error: 'no-thread' };
   const stored = await messagesOf(threadId);
