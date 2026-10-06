@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "jsxImportSource": "@/core/text/readjsx",
     "types": ["vite/client", "vite-plugin-pwa/client", "@testing-library/jest-dom", "node"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -21,6 +22,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@nemo/vault-core": ["../packages/vault-core/src/index.ts"],
+      "@nemo/supporter-codes": ["../packages/supporter-codes/src/index.ts"],
+      "@noble/curves/*": ["./node_modules/@noble/curves/*"],
       "tldts": ["./node_modules/tldts"],
       "zod": ["./node_modules/zod"]
     }

@@ -597,6 +597,6 @@ button.chip[aria-pressed='true'] {
   --stripe: var(--accent);
 }
 /* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
-.done [data-rs] {
+.done [data-rr] {
   color: inherit;
 }

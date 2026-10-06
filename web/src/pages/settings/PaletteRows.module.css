@@ -1,0 +1,83 @@
+/* Tiles and the preview note stack inside the (stacked) control column. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-2);
+  color: var(--text);
+  text-align: start;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.tile[aria-checked='true'] {
+  border-color: var(--accent);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The swatch carries a theme's tokens itself ([data-palette-preview]), so it shows that theme. */
+.swatch {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  height: 3rem;
+  padding: var(--space-2);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+
+.chip {
+  flex: 1;
+  height: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+.chip2 {
+  width: 1.25rem;
+  height: 1.25rem;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+}
+
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.preview {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+}
+
+.link {
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}

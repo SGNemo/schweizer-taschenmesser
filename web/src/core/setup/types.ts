@@ -38,6 +38,8 @@ export interface SetupStepDef {
   order: number;
   /** `SETUP_VERSION` at which the step was introduced. */
   since: number;
+  /** A pure hint: shown in the assistant, but never counted or listed in the dashboard checklist. */
+  hint?: boolean;
   /** Only shown when this returns true (e.g. module active, native only). */
   when?(ctx: SetupCtx): boolean | Promise<boolean>;
   /** Detects a step that was completed elsewhere (e.g. a provider added in the settings). */

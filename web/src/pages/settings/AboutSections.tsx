@@ -1,4 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router';
+import { settingsPath } from '@/core/settings/registry/paths';
 import licenses from '@/core/about/licenses.json';
 import { buildChangelog, getAboutInfo, versionLabel, type AboutInfo } from '@/core/about/info';
 import { exportDiagnostics } from '@/core/diagnostics/export';
@@ -10,6 +12,7 @@ import { getLastCheckAt } from '@/core/update/prefs';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, DangerZone, Logo, SettingRow, SettingsGroup, TypedConfirmDialog } from '@/ui';
+import { SupporterBadge } from '@/layout/SupporterBadge';
 import styles from './settings.module.css';
 
 const a = t.about;
@@ -38,6 +41,7 @@ function Value({ children, testId }: { children: ReactNode; testId?: string }) {
 /** Logo, name and the facts of this installation (version, build, platform, data folder, licence). */
 export function AboutSection() {
   const info = useAboutInfo();
+  const navigate = useNavigate();
   const toast = useUiStore((s) => s.toast);
   return (
     <SettingsGroup id="about" title={a.title}>
@@ -46,8 +50,18 @@ export function AboutSection() {
         <div>
           <p className={styles.aboutName}>{t.appName}</p>
           <p>{a.tagline}</p>
+          <SupporterBadge placement="about" />
         </div>
       </div>
+      <SettingRow
+        id="about--support"
+        label={t.supporter.aboutRow.label}
+        description={t.supporter.aboutRow.description}
+      >
+        <Button onClick={() => void navigate(settingsPath('ueber', 'supporter'))}>
+          {t.supporter.aboutRow.open}
+        </Button>
+      </SettingRow>
       <SettingRow id="about--version" label={a.version}>
         <Value testId="about-version">{info ? versionLabel(info) : '…'}</Value>
       </SettingRow>

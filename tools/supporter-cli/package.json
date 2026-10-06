@@ -1,0 +1,31 @@
+{
+  "name": "@nemo/supporter-cli",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Maintainer CLI for supporter codes: key pair, create, verify, batch, set-public-key. Run on your own machine only.",
+  "type": "module",
+  "bin": {
+    "supporter-cli": "./bin/supporter-cli.mjs"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.4",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.2"
+  }
+}

@@ -106,12 +106,12 @@ test('capture layout screenshots', async ({ browser }) => {
     const page = await context.newPage();
     if (process.env.SCREENS_DESKTOP)
       await page.addInitScript(() => localStorage.setItem('__tmPlatformKind', 'desktop'));
-    // SCREENS_READ=1 shows the reading aid (scope: lists too), as in the readability PR.
+    // SCREENS_READ=<25|50|75|100> shows the reading aid with that coverage.
     if (process.env.SCREENS_READ)
-      await page.addInitScript(() => {
+      await page.addInitScript((cover) => {
         localStorage.setItem('tm-read-aid', '1');
-        localStorage.setItem('tm-read-scope', 'lists');
-      });
+        localStorage.setItem('tm-read-cover', cover);
+      }, process.env.SCREENS_READ);
     await bootDev(page);
     await seedApp(page, SCALE);
     if (process.env.SCREENS_DESKTOP) await enableDisk(page);

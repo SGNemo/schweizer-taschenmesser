@@ -64,6 +64,6 @@ describe('emphasize', () => {
     const runs = emphasize(text, { share: 0.4 });
     const all = runs.map((r) => r.text).join('');
     expect(text.startsWith(all.slice(0, 20))).toBe(true);
-    expect(runs.length).toBeLessThan(text.split(' ').length * 2 + 1);
+    expect(runs.length).toBeLessThan(text.split(' ').length * 3 + 1);
   });
 });

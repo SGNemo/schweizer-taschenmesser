@@ -9,6 +9,7 @@ import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
 import { ComponentSheet } from '@/layout/devTools';
 import { AreaFrame } from '@/layout/AreaFrame';
+import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
@@ -55,6 +56,9 @@ const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   system: '/disk?tab=system',
 };
 
+/** Credential screens: the reading aid never touches them (DESIGN-SPEC §4c). */
+const NO_READ_AID_MODULES: ReadonlySet<string> = new Set(['vault', 'accounts']);
+
 export function buildRoutes(states: ModuleStates): RouteObject[] {
   const moduleRoutes = availableManifests().flatMap((m) =>
     states[m.id]
@@ -66,7 +70,13 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
               <PageContainer key={m.id} variant={r.layout ?? m.layout ?? 'content'}>
                 <AreaFrame>
                   <Suspense fallback={<PageFallback />}>
-                    <Cmp />
+                    {NO_READ_AID_MODULES.has(m.id) ? (
+                      <NoReadAid>
+                        <Cmp />
+                      </NoReadAid>
+                    ) : (
+                      <Cmp />
+                    )}
                   </Suspense>
                 </AreaFrame>
               </PageContainer>

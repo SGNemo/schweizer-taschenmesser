@@ -190,8 +190,8 @@ V3. *Glocke:* eine Erinnerung für „gleich“ anlegen, App offen lassen: es er
 V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch einblenden“ aus: Windows-/Android-Systembenachrichtigungen kommen unverändert; mit Einstellung an: Karte oben/unten rechts, verschwindet nach der gewählten Zeit, die Erinnerung bleibt in der Glocke. ☐
 
 ### Lesbarkeit (`feat/readability`) – nur im Alltag prüfbar
-- **L1 Lesehilfe eine Woche** auf PC und Handy: Einstellungen → Darstellung → Lesen einschalten; Anteil 30/40/50 und Stärke Weich/Fett ausprobieren; hilft es bei Notizen, Antworten, Hilfetexten? `Alt+L` zum Umschalten (PC).
-- **L2 Listen:** „Auch Listen“ wählen: werden Titel in Listen ruhiger oder unruhiger? Fokus-Lesen in einer langen Notiz öffnen.
+- **L1 Lesehilfe eine Woche** auf PC und Handy: Einstellungen → Darstellung → Lesen einschalten; Umfang 25/50/75/100 %, Anteil 30/40/50 und Stärke Weich/Fett ausprobieren (Überschriften: Wortanfang hell, Rest dunkler; bei 100 % auch Schaltflächen und Navigation); hilft es bei Notizen, Antworten, Hilfetexten? `Alt+L` zum Umschalten (PC).
+- **L2 Listen:** Umfang 50 % und mehr: werden Titel in Listen ruhiger oder unruhiger? Lange Listen (Rechnungen/ToDos mit vielen Einträgen) bei 100 %: bleibt es flüssig? Fokus-Lesen in einer langen Notiz öffnen.
 - **L3 Ruhig-Modus:** Farben → Ruhig: bleiben nur Überfälliges und Heutiges farbig; erkennt man Kategorien noch am Namen?
 - **L4 Gliederung:** Rechnungen/ToDos: Gruppen einklappen, nach Neustart bleibt der Zustand; Kalender-Woche: Stundenlinien, Wochenende, Jetzt-Linie; Bereichsfarben in Seitenleiste und Modul-Bibliothek (hell/dunkel, Rail, Handy).
 
@@ -221,3 +221,14 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 4. *Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID* → Typ **Desktop-App**. Client-ID und Client-Secret kopieren und in der Windows-App unter Einstellungen → Verbindungen → Google eintragen (landen im Windows-Anmeldeinformationsspeicher, nicht im Repo).
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
+
+### Supporter-Modus (nur mit echter Zahlungsseite und Dienst prüfbar)
+Voraussetzung: Schlüsselpaar erzeugt, `publicKeys.ts` im Build, Webhook-Dienst deployt ([services/supporter-webhook/README.md](../services/supporter-webhook/README.md)). Ohne Dienst gehen Codes per CLI (`create`).
+S1. *Test-Spende mit kleinem Betrag* bei Ko-fi: Mail mit Code (Deutsch und Englisch) kommt an, nicht im Spam; Absender und Inhalt stimmen, Hinweis „freiwillig“ steht drin. ☐
+S2. *Code auf dem PC:* Einstellungen → Über Nemo → Supporter, Code einfügen: Stufe, Name, Datum stimmen; Danke-Abzeichen in Über Nemo; Farbthemen wählbar; Logo in Themenfarbe. ☐
+S3. *Code auf Android:* derselbe Code auf dem Handy eingeben (Einfügen-Knopf geht oder Direkteinfügen im Feld); Themes sehen auf dem Display gut aus (hell und dunkel). ☐
+S4. *Sync:* Code nur auf einem Gerät eingeben; nach dem Sync zeigt das zweite Gerät denselben Status. Code entfernen: auch dort weg. ☐
+S5. *Themes:* alle fünf in Hell und Dunkel durchklicken (Lesbarkeit, Fokusring sichtbar, Formulare erkennbar); ohne Code: 30-Sekunden-Vorschau endet von selbst, nichts bleibt gespeichert. ☐
+S6. *Duplikat-Webhook:* in Ko-fi „Send test“ zweimal oder dieselbe Transaktion erneut senden: derselbe Code kommt wieder, kein neuer. ☐
+S7. *Mailfehler:* Resend-Schlüssel kurz falsch setzen, Spende auslösen: nach den Wiederholungen kommt die Benachrichtigung an die Entwickleradresse (mit Hash-Kürzel, ohne Spender-Mail). ☐
+S8. *Entwickler-Code:* `create --tier developer --name "Sven"` eingeben: Badge „Entwickler“, entfernbar, neu erzeugbar. ☐

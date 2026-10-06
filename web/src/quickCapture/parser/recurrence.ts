@@ -50,8 +50,19 @@ const RULES: { re: RegExp; make: (m: RegExpExecArray) => CaptureRecurrence }[] =
     make: () => ({ freq: 'daily', interval: 1 }),
   },
   { re: word(String.raw`jede\s+woche|wöchentlich`), make: () => ({ freq: 'weekly', interval: 1 }) },
-  { re: word(String.raw`jeden\s+monat|monatlich`), make: () => ({ freq: 'monthly', interval: 1 }) },
-  { re: word(String.raw`jedes\s+jahr|jährlich`), make: () => ({ freq: 'yearly', interval: 1 }) },
+  {
+    re: word(String.raw`vierteljährlich|quartalsweise`),
+    make: () => ({ freq: 'monthly', interval: 3 }),
+  },
+  { re: word(String.raw`halbjährlich`), make: () => ({ freq: 'monthly', interval: 6 }) },
+  {
+    re: word(String.raw`jeden\s+monat|monatlich|(?:im|pro)\s+monat`),
+    make: () => ({ freq: 'monthly', interval: 1 }),
+  },
+  {
+    re: word(String.raw`jedes\s+jahr|jährlich|(?:im|pro)\s+jahr`),
+    make: () => ({ freq: 'yearly', interval: 1 }),
+  },
 ];
 
 /** Extracts one recurrence phrase ("jede Woche", "jeden 1.", "alle 2 Wochen", "montags"). */
