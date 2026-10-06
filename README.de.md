@@ -2,8 +2,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/header.png">
-    <img src="docs/brand/header-light.png" alt="Nemo-Logo: der Schriftzug Nemo als Clownfisch mit Kopf, weißen Streifen und Schwanzflosse" width="640">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/header.de.png">
+    <img src="docs/brand/header-light.de.png" alt="Nemo-Logo: der Schriftzug Nemo als Clownfisch mit Kopf, weißen Streifen und Schwanzflosse, darunter Notizen · Erinnerungen · Module · Offline" width="640">
   </picture>
 </p>
 

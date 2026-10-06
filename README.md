@@ -3,7 +3,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/header.png">
-    <img src="docs/brand/header-light.png" alt="Nemo logo: the word Nemo drawn as a clownfish with head, white stripes and tail fin" width="640">
+    <img src="docs/brand/header-light.png" alt="Nemo logo: the word Nemo drawn as a clownfish with head, white stripes and tail fin, below it Notes · Events · Modules · Offline" width="640">
   </picture>
 </p>
 
