@@ -18,7 +18,7 @@ KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen �
 2. Release `v0.3.1` kurz prüfen: Checkliste R1 in [MANUAL-TESTS.md](MANUAL-TESTS.md) (Download, Start, Version im Über-Dialog).
 3. Offene PRs ansehen: Liste „Wartet auf Sven“ in [CHATS.md](CHATS.md).
 
-Launch-Auftritt (`docs/launch-polish`): README und Nutzerdoku auf Englisch mit deutscher Übersetzung (`*.de.md`, `check:readme`), Community-Dateien, englische Issue-Vorlagen; PR gegen `develop`, wartet auf Review. Danach: App-UI in 5 Sprachen (`feat/i18n-ui`).
+Launch-Auftritt (`docs/launch-polish`): README und Nutzerdoku auf Englisch mit deutscher Übersetzung (`*.de.md`, `check:readme`), Community-Dateien, englische Issue-Vorlagen; PR gegen `develop`, wartet auf Review. Danach: App-UI in 5 Sprachen (`feat/i18n-ui`); dort auch die deutsche Website auf `installation.de.md` verlinken (geht erst, wenn die Datei auf `develop` liegt, sonst schlägt `site.yml` → `check:links` fehl).
 
 Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressum/Datenschutz-Platzhaltern, DE/EN; PR gegen `develop`, wartet auf Review; danach Cloudflare-Pages-Projekt, Domain und Deploy-Hook einrichten ([site/README.md](../site/README.md) → „Offen – macht Sven“).
 
