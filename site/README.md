@@ -58,11 +58,12 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
 ## Deployment on Cloudflare Pages (recommended: build from the repository)
 1. Cloudflare dashboard → **Workers & Pages → Create → Pages → Connect to Git** → choose
    `SGNemo/schweizer-taschenmesser`.
-2. Build settings: **Production branch** `main` · **Framework preset** Astro ·
+2. Build settings: **Production branch** `develop` (the site lives there; release data comes from
+   the GitHub API, not from the branch) · **Framework preset** Astro ·
    **Root directory** `site` · **Build command** `npm ci && npm run build` ·
    **Build output directory** `dist`.
-3. Environment variables (Production and Preview): `NODE_VERSION` = `22`,
-   `SITE_URL` = `https://<your domain>` (production only; previews use Cloudflare's own URL).
+3. Environment variables (Production and Preview): `NODE_VERSION` = `22`. `SITE_URL` defaults to
+   `https://nemo-adhd-helper.online` (`src/config.js`); previews use Cloudflare's own URL.
 4. Save and deploy. Preview deployments for pull requests are on by default
    (Settings → Builds & deployments → Preview branches: all non-production branches, or only
    those that touch `site/` via the "Build watch paths" setting: include `site/*`).
@@ -70,17 +71,10 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
    DNS is at Cloudflare the CNAME is created for you; otherwise create `CNAME <host> →
    <project>.pages.dev` at your registrar. Certificates are automatic.
 6. **Rebuild after each release:** Settings → Builds & deployments → **Deploy hooks → Add deploy
-   hook** (name `release`, branch `main`). Store the URL as the GitHub secret
-   `CF_PAGES_DEPLOY_HOOK` (repository → Settings → Secrets and variables → Actions). Then add
-   the step proposed in the PR to the `release` job of `.github/workflows/release.yml`; the
-   step is a no-op while the secret is empty:
-   ```yaml
-         - name: Rebuild the website
-           if: env.CF_PAGES_DEPLOY_HOOK != ''
-           env:
-             CF_PAGES_DEPLOY_HOOK: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
-           run: curl -fsS -X POST "$CF_PAGES_DEPLOY_HOOK" > /dev/null
-   ```
+   hook** (name `release`, branch `develop`). Store the URL as the GitHub secret
+   `CF_PAGES_DEPLOY_HOOK` (repository → Settings → Secrets and variables → Actions). The
+   `release` job of `.github/workflows/release.yml` calls it as its last step ("Rebuild the
+   website"); the step is a no-op while the secret is empty.
 7. Optional, cookie-free statistics: Pages project → Metrics, or Cloudflare Web Analytics
    (no cookies, no IP storage). Both are off by default; if enabled, add the sentence marked
    `[PLATZHALTER]` in the privacy page.
@@ -102,10 +96,11 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
 - Social preview: `docs/brand/social-preview.png` (1280×640) is copied to `/og-image.png`.
 
 ## Offen – macht Sven
-- Impressum and privacy texts: fill every `[PLATZHALTER]` / `[PLACEHOLDER]` (name, address,
-  e-mail, supervisory authority, date); `public/.well-known/security.txt` contact and expiry.
-- Cloudflare Pages project, `SITE_URL`, custom domain and DNS (steps above).
-- Deploy hook secret and the release-workflow step (step 6).
+- Impressum: the remaining `[PLATZHALTER]` (full name, street) in `impressum.astro` /
+  `en/imprint.astro`, when wanted.
+- Cloudflare Pages project, custom domain `nemo-adhd-helper.online` (+ `www` redirect) and the
+  deploy-hook secret `CF_PAGES_DEPLOY_HOOK` (steps above).
+- `public/.well-known/security.txt`: renew `Expires` before 2027-10-01.
 - Ko-fi link stays `https://ko-fi.com/nemojr` (pinned to the app's `supporterLinks.ts`); change
   both if it moves.
 - Check the social preview after the first deployment (e.g. with a link preview in a chat app).

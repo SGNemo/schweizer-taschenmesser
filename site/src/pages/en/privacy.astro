@@ -3,13 +3,10 @@ import Legal from '../../layouts/Legal.astro';
 import { KOFI_URL, REPO_URL } from '../../config.js';
 ---
 <Legal locale="en" route="privacy" title="Privacy policy" description="What is processed when you visit the Nemo website: no cookies, no tracking, hosting by Cloudflare.">
-  <p class="placeholder">Placeholder: the operator adds the controller details. The description of processing is a draft and not legal advice.</p>
-
   <h2>Controller</h2>
   <p>
-    [PLACEHOLDER: name]<br />
-    [PLACEHOLDER: address]<br />
-    E-mail: [PLACEHOLDER: e-mail address]
+    Sven [PLACEHOLDER: last name], Erlangen, Germany (address see <a href="/en/imprint">imprint</a>)<br />
+    E-mail: <a href="mailto:sven.nemo0@gmail.com">sven.nemo0@gmail.com</a>
   </p>
 
   <h2>In short</h2>
@@ -25,7 +22,6 @@ import { KOFI_URL, REPO_URL } from '../../config.js';
     When you visit, Cloudflare processes connection data such as IP address, time, requested address, browser identifier and transferred data volume to deliver the page
     and protect it against attacks. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in secure, fast operation). Cloudflare is certified under the EU-US Data
     Privacy Framework; standard contractual clauses apply in addition. See <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare’s privacy policy</a>.
-    [PLACEHOLDER: if Cloudflare Web Analytics is enabled, add a note that the cookieless statistics store no IP addresses.]
   </p>
 
   <h2>Downloads and links to GitHub</h2>
@@ -39,7 +35,7 @@ import { KOFI_URL, REPO_URL } from '../../config.js';
   <p>
     The “Support on Ko-fi” link leads to <a href={KOFI_URL} rel="noopener">Ko-fi</a> (Ko-fi Labs Ltd, United Kingdom), an external provider. This website itself
     processes no payment or contact data. What Ko-fi processes is described in <a href="https://more.ko-fi.com/privacy" rel="noopener">Ko-fi’s privacy policy</a>.
-    [PLACEHOLDER: if supporter codes are sent by e-mail, describe that service: which data (e-mail address) is stored and for how long.]
+    After a contribution you receive the supporter code at the e-mail address given to Ko-fi; a small service run by the operator (a Cloudflare Worker) processes Ko-fi's notification, sends the e-mail and stores no payment data, names or addresses in clear text (hashed check values only, for 400 days).
   </p>
 
   <h2>The Nemo app</h2>
@@ -51,12 +47,13 @@ import { KOFI_URL, REPO_URL } from '../../config.js';
   <h2>Your rights</h2>
   <p>
     You have the right of access, rectification, erasure, restriction of processing, data portability and objection (Art. 15–21 GDPR), and the right to lodge a complaint
-    with a supervisory authority. [PLACEHOLDER: name the competent German state data protection authority.]
+    with a supervisory authority. The competent one is the Bavarian State Office for Data Protection Supervision (BayLDA), Promenade 18, 91522 Ansbach, Germany,
+    <a href="https://www.lda.bayern.de/" rel="noopener">www.lda.bayern.de</a>.
   </p>
 
   <h2>What usually belongs here in Germany</h2>
   <p class="muted">
     For orientation, not legal advice: name and contact of the controller, processing by the hosting provider (server logs, legal basis, third-country transfer),
-    every external service (here only via links: GitHub, Ko-fi), whether cookies or tracking are used, data subject rights and the supervisory authority. Last updated: [PLACEHOLDER: date].
+    every external service (here only via links: GitHub, Ko-fi), whether cookies or tracking are used, data subject rights and the supervisory authority. Last updated: 6 October 2026.
   </p>
 </Legal>

@@ -446,6 +446,13 @@ jobs:
           STABLE=""
           if [ "${{ needs.prepare.outputs.prerelease }}" != "true" ]; then STABLE="--stable"; fi
           node web/scripts/check-links.mjs --repo "$GITHUB_REPOSITORY" --tag "${{ needs.prepare.outputs.tag }}" $STABLE
+      # The website (site/) shows version, size and checksums of the latest release; the Cloudflare
+      # Pages deploy hook rebuilds it. No-op while the secret is empty (site/README.md, step 6).
+      - name: Rebuild the website
+        if: env.CF_PAGES_DEPLOY_HOOK != ''
+        env:
+          CF_PAGES_DEPLOY_HOOK: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$CF_PAGES_DEPLOY_HOOK" > /dev/null
 
   summary:
     name: Dry-run summary

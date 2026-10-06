@@ -42,7 +42,7 @@ jobs:
         run: npm run build
       - name: Nothing external, nothing inline (no third-party origins in the built pages)
         run: |
-          if grep -rEo '(src|href)="https?://[^"]+"' dist/*.html dist/en/*.html | grep -Ev 'github\.com|ko-fi\.com|cloudflare\.com|docs\.github\.com|nemo\.example|\$\{\{' ; then
+          if grep -rEo '(src|href)="https?://[^"]+"' dist/*.html dist/en/*.html | grep -Ev 'github\.com|ko-fi\.com|cloudflare\.com|docs\.github\.com|nemo-adhd-helper\.online|\$\{\{' ; then
             echo "::error::External resource found"; exit 1
           fi
           if grep -rP '<script(?![^>]*src=)|<style|style="' --include='*.html' dist; then

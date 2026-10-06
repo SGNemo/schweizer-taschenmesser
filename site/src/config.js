@@ -1,12 +1,11 @@
 /**
  * Site-wide constants. Plain JS (not TS) so astro.config.mjs can import it too.
  *
- * SITE_URL: the public origin. Set the environment variable SITE_URL in Cloudflare Pages
- * (Settings → Environment variables) or replace the placeholder below. Preview deployments
- * fall back to Cloudflare's CF_PAGES_URL so canonical links point at the preview itself.
+ * SITE_URL: the public origin (production). Cloudflare Pages may override it with the SITE_URL
+ * environment variable; preview deployments fall back to Cloudflare's CF_PAGES_URL so canonical
+ * links point at the preview itself.
  */
-export const SITE_URL =
-  process.env.SITE_URL || process.env.CF_PAGES_URL || 'https://nemo.example'; // PLACEHOLDER: own domain
+export const SITE_URL = process.env.SITE_URL || process.env.CF_PAGES_URL || 'https://nemo-adhd-helper.online';
 
 export const REPO = 'SGNemo/schweizer-taschenmesser';
 export const REPO_URL = `https://github.com/${REPO}`;
