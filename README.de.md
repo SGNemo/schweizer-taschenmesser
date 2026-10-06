@@ -28,7 +28,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readme/dashboard-dark.png">
-    <img src="docs/screenshots/readme/dashboard-light.png" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten: Seitenleiste mit Modulen, Karten für heutige Termine und Erinnerungen, offene Aufgaben, Kontostand und fällige Rechnungen" width="900">
+    <img src="docs/screenshots/readme/dashboard-light.png" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten: Seitenleiste mit Favoriten und Bereichen, die Leiste Jetzt wichtig, eine vorgeschlagene Aufgabe zum Anfangen und der kurze Plan für heute" width="900">
   </picture>
 </p>
 

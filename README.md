@@ -28,7 +28,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readme/dashboard-dark.png">
-    <img src="docs/screenshots/readme/dashboard-light.png" alt="Nemo overview on the desktop with made-up sample data: sidebar with modules, cards for today's events and reminders, open tasks, account balance and due invoices" width="900">
+    <img src="docs/screenshots/readme/dashboard-light.png" alt="Nemo overview on the desktop with made-up sample data: sidebar with favourites and areas, the strip Important now, one suggested task to start with, and the short plan for today" width="900">
   </picture>
 </p>
 
