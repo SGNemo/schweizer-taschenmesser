@@ -109,6 +109,17 @@ test('Über Nemo shows the version and the facts of this installation', async ({
   await expect(page.getByText(/^react \d/)).toBeVisible();
 });
 
+test('the diagnostics file is shown in full before anything is saved', async ({ page }) => {
+  await ready(page, '/settings/ueber');
+  await page.getByRole('button', { name: 'Diagnose exportieren' }).click();
+  const preview = page.getByTestId('diagnostics-preview');
+  await expect(preview).toContainText('## Migrations');
+  await expect(preview).toContainText('Record counts (numbers only, no contents)');
+  await expect(preview).not.toContainText('http');
+  await expect(page.getByRole('button', { name: 'Speichern' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Fehler melden' }).first()).toBeVisible();
+});
+
 test('the danger zone needs the typed phrase and then wipes this device', async ({ page }) => {
   await ready(page, '/todos?list=inbox');
   await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Erfundene Aufgabe');

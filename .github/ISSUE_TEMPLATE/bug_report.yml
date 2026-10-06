@@ -13,6 +13,11 @@ body:
       placeholder: 0.2.0
     validations:
       required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build
+      description: Wird von "Fehler melden" in der App vorausgefüllt (Commit und Kanal).
   - type: dropdown
     id: platform
     attributes:
@@ -43,3 +48,6 @@ body:
     id: extra
     attributes:
       label: Screenshot oder Fehlermeldung (optional)
+  - type: markdown
+    attributes:
+      value: 'Tipp: In der App unter Einstellungen → Über Nemo → "Diagnose exportieren" entsteht eine Textdatei, die du vor dem Speichern ansehen kannst. Sie enthält keine Einträge, Tresor-Daten, Schlüssel oder Server-Adressen. Hänge sie hier an.'
