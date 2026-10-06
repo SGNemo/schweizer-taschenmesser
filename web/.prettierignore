@@ -4,6 +4,7 @@ playwright-report
 test-results
 src/core/db/schema.snapshot.json
 src-tauri/target
+src-tauri/crates/*/target
 src-tauri/gen
 src-tauri/icons
 src-tauri/tauri.conf.json

@@ -16,6 +16,7 @@ export default tseslint.config(
       'test-results',
       'templates',
       'src-tauri/target',
+      'src-tauri/crates/*/target',
       'src-tauri/gen',
     ],
   },

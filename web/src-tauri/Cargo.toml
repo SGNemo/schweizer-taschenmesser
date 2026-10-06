@@ -13,6 +13,13 @@ publish = false
 name = "taschenmesser_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+# The built-in local model (llama.cpp, ~5 MB of code). Off by default: a normal `cargo build` and the CI
+# jobs do not compile llama.cpp. A release that should ship it builds with `--features local-llm`
+# (`local-llm-vulkan` adds the GPU backend; needs the Vulkan SDK at build time).
+local-llm = ["dep:taschenmesser-local-llm"]
+local-llm-vulkan = ["local-llm", "taschenmesser-local-llm/vulkan"]
+
 [build-dependencies]
 tauri-build = { version = "2.7", features = [] }
 
@@ -47,6 +54,8 @@ tauri-plugin-single-instance = "2"
 taschenmesser-local-api = { path = "crates/local-api" }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }
 taschenmesser-system-info = { path = "crates/system-info" }
+# Built-in local model (stage 1 of the AI entry pipeline); see the `local-llm` feature.
+taschenmesser-local-llm = { path = "crates/local-llm", optional = true }
 # Browser extension bridge (native messaging host + pipe server; src/vault_bridge.rs).
 taschenmesser-vault-bridge = { path = "crates/vault-bridge" }
 

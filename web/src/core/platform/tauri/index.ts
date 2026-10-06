@@ -36,6 +36,7 @@ import { createDisk } from './disk';
 import { createLocalApi } from './localApi';
 import { createVaultBridge } from './vaultBridge';
 import { createShare } from './share';
+import { createLocalModel } from './localModel';
 import { createSystem } from './system';
 import { createSecureParts } from './secureStore';
 import { createUpdater } from './updater';
@@ -179,6 +180,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     vaultBridge: createVaultBridge(kind === 'desktop'),
     disk: createDisk(kind === 'desktop'),
     system: createSystem(kind === 'desktop'),
+    localModel: createLocalModel(kind === 'desktop'),
     desktop: createDesktopService(kind === 'desktop'),
     share: createShare(kind === 'android'),
     ...(await createSecureParts(kind)), // secrets (OS keystore), biometrics, screen protection

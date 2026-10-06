@@ -70,7 +70,7 @@ export function writableModules(
  * Compact action list sent to the cloud: `module: id(field!,field) id[transition] delete`, plus one
  * example taken from the first module's own `create` example. Field types are already in the schema text.
  */
-export function buildActionText(writable: readonly ModuleManifest[]): string {
+export function buildActionText(writable: readonly ModuleManifest[], withExample = true): string {
   const lines = writable.map((m) => {
     const actions = Object.entries(m.aiSchema!.actions!).map(([id, a]) => {
       if (a.kind === 'delete') return `${id}[delete]`;
@@ -86,7 +86,7 @@ export function buildActionText(writable: readonly ModuleManifest[]): string {
   const sample = writable
     .flatMap((m) => Object.entries(m.aiSchema!.actions!).map(([id, a]) => ({ m, id, a })))
     .find((x) => x.a.kind === 'create' && x.a.examples[0]);
-  if (sample) {
+  if (sample && withExample) {
     const e = sample.a.examples[0]!;
     lines.push(
       `Example: "${e.input}" -> ${JSON.stringify({ ops: [{ module: sample.m.id, action: sample.id, data: e.output }] })}`,

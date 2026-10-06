@@ -2,6 +2,7 @@ import { createFakeDisk } from './fakeDisk';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeSystem } from './fakeSystem';
+import { noLocalModel } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
 import type {
@@ -217,6 +218,7 @@ export function createWebPlatform(): PlatformService {
           diskIo: unsupported,
           openTaskManager: unsupported,
         },
+    localModel: noLocalModel,
     desktop: webDesktop,
     share: webShare,
     lifecycle: { onBackground: onPageHidden },
