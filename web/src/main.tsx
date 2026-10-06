@@ -13,10 +13,12 @@ import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
 import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
 import { installErrorLog } from '@/core/diagnostics/errorLog';
+import { getLang, setLang } from '@/core/i18n/lang';
 import { App } from './App';
 import './ui/global.css';
 
 installErrorLog();
+setLang(getLang());
 
 // The platform (browser or native shell) is chosen first: everything below asks `getPlatform()`.
 void initPlatform().then(() => {
