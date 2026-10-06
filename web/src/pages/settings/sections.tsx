@@ -17,6 +17,7 @@ import {
   LinksSection,
 } from './AboutSections';
 import { AiSection } from './AiSection';
+import { AiSwitchSection } from './AiSwitchSection';
 import { AppearanceSection } from './AppearanceSection';
 import { SupporterSection } from './SupporterSection';
 import { BackupSection } from './BackupSection';
@@ -233,6 +234,16 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     ),
   },
   {
+    id: 'ai-switch',
+    category: 'ki',
+    order: 5,
+    title: t.ai.off.title,
+    description: t.ai.off.description,
+    keywords: ['KI aus', 'abschalten', 'deaktivieren', 'ohne KI', 'Nuke', 'löschen', 'Schlüssel'],
+    fields: [{ key: 'off', label: t.ai.off.switchLabel, description: t.ai.off.hint }],
+    render: () => <AiSwitchSection />,
+  },
+  {
     id: 'ai-write',
     category: 'ki',
     order: 15,
@@ -246,6 +257,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       { key: 'askMissing', label: t.ai.writeSettings.askMissing },
       { key: 'modules', label: t.ai.writeSettings.modules },
     ],
+    visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => <AiWriteSection />,
   },
   {
@@ -255,6 +267,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     title: t.ai.stats.title,
     description: t.ai.stats.description,
     keywords: ['Statistik', 'Token', 'Kosten', 'Regeln', 'lokal', 'Cloud'],
+    visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => <AiStatsSection />,
   },
   {
@@ -264,6 +277,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     title: t.ai.title,
     hint: t.help.aiRouter,
     keywords: ['Anbieter', 'Schlüssel', 'Limit', 'Cache', 'Zähler'],
+    visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => (
       <SettingsGroup id="ai" title={t.ai.title} hint={t.help.aiRouter} bare>
         <AiSection />
@@ -294,6 +308,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       { key: 'enable', label: t.localApi.enable },
       { key: 'port', label: t.localApi.port },
     ],
+    visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => (
       <SettingsGroup id="localapi" title={t.localApi.title} hint={t.help.localApi} bare>
         <LocalApiSection />

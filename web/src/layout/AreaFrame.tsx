@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { isFocusPath } from '@/core/focus/path';
+import { useAiOn } from '@/core/ai/switch';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { areaOfPath } from '@/core/modules/areas';
 import { availableManifests } from '@/core/modules/available';
@@ -18,11 +19,18 @@ import styles from './AreaFrame.module.css';
 function WriteButton({ pathname }: { pathname: string }) {
   const open = useUiStore((s) => s.openWritePalette);
   const [settings] = useAiWriteSettings();
+  const aiOn = useAiOn();
   const manifest = availableManifests().find(
     (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
   );
   const hasActions = Object.keys(manifest?.aiSchema?.actions ?? {}).length > 0;
-  if (!manifest || !hasActions || !settings?.enabled || settings.modulesOff.includes(manifest.id))
+  if (
+    !aiOn ||
+    !manifest ||
+    !hasActions ||
+    !settings?.enabled ||
+    settings.modulesOff.includes(manifest.id)
+  )
     return null;
   return (
     <Button variant="ghost" onClick={open} data-testid="ai-write-button">

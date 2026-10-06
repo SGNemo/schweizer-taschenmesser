@@ -1,4 +1,5 @@
 import { isAiConfigured, loadAiConfig } from '@/core/ai/config';
+import { isAiOn } from '@/core/ai/switch';
 import { connectors } from '@/core/connectors/registry';
 import { loadStatus } from '@/core/connectors/state';
 import { db } from '@/core/db/db';
@@ -55,6 +56,7 @@ export const CORE_STEPS: SetupStepDef[] = [
     description: s.ai.description,
     order: 60,
     since: 1,
+    when: () => isAiOn(),
     isDone: async () => {
       return isAiConfigured(await loadAiConfig());
     },
@@ -93,6 +95,7 @@ export const CORE_STEPS: SetupStepDef[] = [
     order: 90,
     since: 1,
     when: async (ctx) => {
+      if (!(await isAiOn())) return false;
       const { aiImportModules } = await import('@/layout/setup/steps/AiImportStep');
       return aiImportModules(ctx.modules).length > 0;
     },
