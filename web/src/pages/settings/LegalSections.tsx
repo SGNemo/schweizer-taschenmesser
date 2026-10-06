@@ -89,11 +89,7 @@ export function LegalLicensesSection() {
   };
   return (
     <SettingsGroup id="legal-licenses" title={l.licenses.title} description={l.licenses.app}>
-      <SettingRow
-        id="legal-licenses--app"
-        label={t.about.license}
-        description={t.about.licenseValue}
-      >
+      <SettingRow id="legal-licenses--app" label={t.about.license}>
         <Button onClick={() => void getPlatform().app.openUrl(LICENSE_URL)}>
           {l.licenses.appLicense}
         </Button>
