@@ -1,0 +1,87 @@
+---
+import { DEV_PREVIEW, INSTALL_DOCS_URL } from '../config.js';
+import { t, type Locale } from '../i18n';
+import Icon from './Icon.astro';
+
+interface Props { locale: Locale }
+const s = t(Astro.props.locale);
+const items = [s.install.windows, s.install.android, s.install.updates];
+---
+<section class="block" id="install" aria-labelledby="install-title">
+  <div class="wrap">
+    <p class="eyebrow">{s.install.eyebrow}</p>
+    <h2 id="install-title">{s.install.title}</h2>
+    <div class="list">
+      {items.map((it, i) => (
+        <details open={i === 0}>
+          <summary>{it.summary}</summary>
+          <p>{it.text}</p>
+        </details>
+      ))}
+      <details>
+        <summary>{s.install.dev.summary}</summary>
+        <p>{s.install.dev.text}</p>
+        <p class="dev-links">
+          <a href={DEV_PREVIEW.windows} rel="noopener">{s.install.dev.windows}</a>
+          <a href={DEV_PREVIEW.android} rel="noopener">{s.install.dev.android}</a>
+        </p>
+      </details>
+    </div>
+    <p class="more"><a href={INSTALL_DOCS_URL} rel="noopener">{s.install.more} <Icon name="external" size={14} /></a></p>
+  </div>
+</section>
+
+<style>
+  .list {
+    margin-top: var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+  details {
+    border-top: 1px solid var(--border);
+  }
+  summary {
+    cursor: pointer;
+    min-height: 3.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    font-weight: var(--weight-medium);
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::after {
+    content: '+';
+    color: var(--text-3);
+    font-size: var(--text-xl);
+    flex: none;
+  }
+  details[open] summary::after {
+    content: '–';
+  }
+  details p {
+    color: var(--text-muted);
+    font-size: var(--text-label);
+    padding-bottom: var(--space-4);
+    max-width: var(--measure);
+  }
+  .dev-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .dev-links a,
+  .more a {
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: var(--touch);
+  }
+  .more {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+  }
+</style>

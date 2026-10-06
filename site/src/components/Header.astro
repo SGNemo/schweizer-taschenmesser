@@ -1,0 +1,148 @@
+---
+import { REPO_URL } from '../config.js';
+import { routes, t, type Locale, type RouteKey } from '../i18n';
+import Icon from './Icon.astro';
+import logo from '../assets/brand/logo-mark.svg';
+
+interface Props { locale: Locale; route: RouteKey }
+const { locale, route } = Astro.props;
+const s = t(locale);
+const home = routes.home[locale];
+const other: Locale = locale === 'de' ? 'en' : 'de';
+---
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href={home}><img src={logo.src} width="26" height="26" alt="" />{s.siteName}</a>
+    <nav aria-label={locale === 'de' ? 'Hauptnavigation' : 'Main navigation'}>
+      <a href={`${home === '/' ? '' : home}#features`}>{s.nav.features}</a>
+      <a href={`${home === '/' ? '' : home}#install`}>{s.nav.install}</a>
+      <a href={`${home === '/' ? '' : home}#support`}>{s.nav.support}</a>
+    </nav>
+    <div class="end">
+      <a class="gh" href={REPO_URL} rel="noopener"><Icon name="github" size={18} />{s.nav.github}</a>
+      <button
+        type="button"
+        class="theme"
+        data-theme-toggle
+        data-label-dark={s.theme.toDark}
+        data-label-light={s.theme.toLight}
+        aria-label={s.theme.toDark}
+        aria-pressed="false"
+      >
+        <Icon name="sun" class="sun" size={18} /><Icon name="moon" class="moon" size={18} />
+      </button>
+      <nav class="lang" aria-label={s.langSwitch.label}>
+        <a href={routes[route][locale]} aria-current="page" lang={locale}>{s.langSwitch.short[locale]}</a>
+        <a href={routes[route][other]} lang={other} hreflang={other} title={s.langSwitch[other]}>{s.langSwitch.short[other]}</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    min-height: 3.5rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-weight: var(--weight-semibold);
+    text-decoration: none;
+    min-height: var(--touch);
+  }
+  nav:not(.lang) {
+    display: none;
+    gap: var(--space-5);
+    margin-left: var(--space-4);
+  }
+  nav:not(.lang) a,
+  .gh {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: var(--text-label);
+    font-weight: var(--weight-medium);
+    min-height: var(--touch);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  nav:not(.lang) a:hover,
+  .gh:hover {
+    color: var(--text);
+  }
+  .end {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .gh {
+    display: none;
+  }
+  .theme {
+    width: var(--touch);
+    height: var(--touch);
+    display: inline-grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+  .theme:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .theme :global(.moon) {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .theme :global(.sun) { display: none; }
+  :global(:root[data-theme='dark']) .theme :global(.moon) { display: block; }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .theme :global(.sun) { display: none; }
+    :global(:root:not([data-theme='light'])) .theme :global(.moon) { display: block; }
+  }
+  .lang {
+    display: inline-flex;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    font-size: var(--text-sm);
+  }
+  .lang a {
+    padding: 0 0.75rem;
+    min-height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-muted);
+  }
+  .lang a[aria-current] {
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: var(--weight-semibold);
+  }
+  .lang a:focus-visible {
+    outline-offset: -2px;
+    border-radius: 0;
+  }
+  @media (min-width: 64rem) {
+    nav:not(.lang),
+    .gh {
+      display: inline-flex;
+    }
+  }
+</style>

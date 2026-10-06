@@ -1,0 +1,39 @@
+---
+import Legal from '../layouts/Legal.astro';
+import { KOFI_URL, REPO_URL } from '../config.js';
+---
+<Legal locale="de" route="imprint" title="Impressum" description="Anbieterkennzeichnung und Kontakt für die Nemo-Website.">
+  <p class="placeholder">Platzhalter: Diese Seite ist noch nicht ausgefüllt. Die Angaben unten trägt der Betreiber ein; sie sind kein Rechtsrat.</p>
+
+  <h2>Angaben gemäß § 5 DDG</h2>
+  <p>
+    [PLATZHALTER: Vor- und Nachname]<br />
+    [PLATZHALTER: Straße und Hausnummer]<br />
+    [PLATZHALTER: PLZ und Ort]<br />
+    [PLATZHALTER: Land]
+  </p>
+
+  <h2>Kontakt</h2>
+  <p>
+    E-Mail: [PLATZHALTER: E-Mail-Adresse]<br />
+    [PLATZHALTER, optional: Telefonnummer]
+  </p>
+
+  <h2>Verantwortlich für den Inhalt</h2>
+  <p>[PLATZHALTER: Name und Anschrift wie oben, falls abweichend]</p>
+
+  <h2>Hinweise</h2>
+  <ul>
+    <li>Diese Website ist ein privates, nicht kommerzielles Projekt. Die App Nemo ist Open Source (MIT-Lizenz) und kostenlos; Quellcode auf <a href={REPO_URL} rel="noopener">GitHub</a>.</li>
+    <li>Freiwillige Unterstützung läuft über <a href={KOFI_URL} rel="noopener">Ko-fi</a>, einen externen Anbieter. Zahlungen werden ausschließlich dort abgewickelt.</li>
+    <li>Die Website setzt keine Cookies und bindet keine Inhalte Dritter ein. Sie wird über Cloudflare Pages ausgeliefert (siehe <a href="/datenschutz">Datenschutzerklärung</a>).</li>
+  </ul>
+
+  <h2>Was hier in Deutschland üblicherweise hineingehört</h2>
+  <p class="muted">
+    Zur Orientierung, kein Rechtsrat: Name und ladungsfähige Anschrift des Anbieters, eine E-Mail-Adresse für schnelle Kontaktaufnahme,
+    bei journalistisch-redaktionellen Inhalten die inhaltlich verantwortliche Person; bei Gewerbe zusätzlich Rechtsform, Vertretungsberechtigte,
+    Register und Umsatzsteuer-ID. Für eine private, kostenlose Website reichen in der Regel Name, Anschrift und E-Mail. Ob eine Impressumspflicht
+    besteht, hängt vom Einzelfall ab.
+  </p>
+</Legal>

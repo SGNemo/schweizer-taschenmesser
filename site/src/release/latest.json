@@ -1,0 +1,18 @@
+{
+  "version": "0.3.1",
+  "tag": "v0.3.1",
+  "publishedAt": "2026-10-01",
+  "fetchedAt": "2026-10-06T00:00:00.000Z",
+  "assets": {
+    "windows": {
+      "name": "Nemo-Portable.exe",
+      "size": 10331648,
+      "sha256": "f4e4c5297c7bfc4f36ea0ef38a606a0904c6bce4a2abf34b727bfa0c0efa700b"
+    },
+    "android": {
+      "name": "Nemo.apk",
+      "size": 20632348,
+      "sha256": "eb500fc68d0f8de035ba0626eaea1c53dbe6a970a684033b0ace67a6fee4e949"
+    }
+  }
+}
