@@ -86,3 +86,4 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 0.4 **Codes are Ed25519-signed and verified offline** (embedded public key, key id for rotation, no expiry/revocation) – no tracking, one shared `@nemo/supporter-codes`.
 - 0.4 **Status = verified code, derived on every read; synced setting holds only the code** – sync cannot inject a tier.
 - 0.4 **Code-issuing webhook is a separate Cloudflare Worker with live signing (variant A)** – no link to sync server or user data; key leak = cosmetic only, rotation by key id.
+- 2026-10 **"KI abschalten": one reversible master switch, deletes keys and caches** – [decisions/ai-off.md](decisions/ai-off.md).

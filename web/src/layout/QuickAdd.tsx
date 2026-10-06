@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router';
+import { useAiOn } from '@/core/ai/switch';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
@@ -15,6 +16,7 @@ export function QuickAdd() {
   const navigate = useNavigate();
   const openWritePalette = useUiStore((s) => s.openWritePalette);
   const [write] = useAiWriteSettings();
+  const aiOn = useAiOn();
 
   const onSaved: Parameters<typeof CaptureForm>[0]['onSaved'] = (saved) => {
     setOpen(false);
@@ -33,7 +35,7 @@ export function QuickAdd() {
           }}
         />
       ) : null}
-      {write?.enabled ? (
+      {aiOn && write?.enabled ? (
         // Free text for any module; on the phone the keyboard's own dictation works in the field.
         <Button
           variant="ghost"

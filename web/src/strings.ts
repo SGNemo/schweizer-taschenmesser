@@ -2092,6 +2092,32 @@ export const t = {
   },
   ai: {
     title: 'KI-Assistent',
+    off: {
+      title: 'KI abschalten',
+      description: 'Entfernt jede KI-Anbindung aus der App, jederzeit umkehrbar',
+      switchLabel: 'KI komplett abschalten',
+      hint: 'Löscht gespeicherte Schlüssel, Zwischenspeicher und Statistik, sperrt den KI-Zugriff (lokale Schnittstelle) und blendet alle KI-Funktionen aus. Die normale Suche und der Taschenrechner bleiben.',
+      scope: 'Gilt für',
+      scopeOptions: { device: 'Nur dieses Gerät', all: 'Alle Geräte dieses Kontos' },
+      scopeHint:
+        'Bei „Alle Geräte“ schalten sich auch die anderen Geräte beim nächsten Abgleich ab und löschen ihre Schlüssel selbst.',
+      confirmTitle: 'KI wirklich abschalten?',
+      confirmText:
+        'Schlüssel, Zwischenspeicher und Statistik werden jetzt gelöscht, der KI-Zugriff wird gesperrt. Wenn du die KI später wieder einschaltest, richtest du sie neu ein.',
+      confirm: 'KI abschalten',
+      isOff: 'KI ist abgeschaltet',
+      isOffDevice:
+        'Auf diesem Gerät ist keine KI aktiv: kein Assistent, kein „Mit KI eintragen“, keine Anbieter.',
+      isOffAll: 'Auf allen Geräten dieses Kontos ist keine KI aktiv.',
+      on: 'KI wieder einschalten',
+      onHint: 'Danach ist die KI eingeschaltet, aber noch nichts eingerichtet.',
+      toastOff: 'KI ist abgeschaltet.',
+      toastOn: 'KI ist wieder eingeschaltet.',
+      statusOff: 'Aus',
+      setupSkip: 'Ich möchte keine KI nutzen',
+      setupSkipHint:
+        'Blendet alle KI-Funktionen aus. Du kannst das jederzeit unter Einstellungen → KI umkehren.',
+    },
     yes: 'Ja',
     no: 'Nein',
     untitled: '(ohne Titel)',
