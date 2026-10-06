@@ -298,31 +298,34 @@
   --dur-slow: 0ms;
 }
 
-/* Reading aid (core/text/readable.ts, core/text/ReadableText.tsx): the start of a word gets more weight; in primary-ink text (headings, paragraphs, titles) the rest is dimmed a step so the start is clearly brighter. `soft` = weight 560, `bold` = 700. Never animated. */
+/* Reading aid (core/text/readable.ts, core/text/ReadableText.tsx): the start of a word is set apart by contrast first and by weight only a little (strong weight at small sizes was hard to read). The wrapper's `data-ink` says what ink surrounds the text (core/text/ink.ts): p = primary → the whole text is dimmed a step and the start keeps full ink; m = muted → the start is brightened to the primary ink; o = coloured → weight only. Styles: soft (default) weight +100, color no weight change, bold clearly heavier. Never animated. */
 :root {
-  --read-weight-soft: 560;
-  --read-weight-bold: 700;
-  --read-heavy-soft: 800;
-  --read-heavy-bold: 900;
-  --read-rest: 78%; /* ink left in the rest of the word: ≥ 8:1 on every surface */
+  --read-rest: 74%; /* ink left in the dimmed part of primary text: ≥ 8:1 on every surface */
+  --read-weight: 500; /* body text start (soft) */
+  --read-weight-heavy: 700; /* start in headings (already 600) */
+}
+:root[data-read-style='color'] {
+  --read-rest: 68%;
+  --read-weight: inherit;
+  --read-weight-heavy: inherit;
 }
 :root[data-read-style='bold'] {
-  --read-rest: 86%;
+  --read-rest: 82%;
+  --read-weight: 650;
+  --read-weight-heavy: 800;
 }
 [data-rs] {
-  font-weight: var(--read-weight-soft);
+  font-weight: var(--read-weight);
 }
 [data-rs='h'] {
-  font-weight: var(--read-heavy-soft);
+  font-weight: var(--read-weight-heavy);
 }
-:root[data-read-style='bold'] [data-rs] {
-  font-weight: var(--read-weight-bold);
-}
-:root[data-read-style='bold'] [data-rs='h'] {
-  font-weight: var(--read-heavy-bold);
-}
-[data-rr] {
+[data-rt][data-ink='p'] {
   color: color-mix(in srgb, currentColor var(--read-rest), var(--bg));
+}
+[data-rt][data-ink='p'] > [data-rs],
+[data-rt][data-ink='m'] > [data-rs] {
+  color: var(--text);
 }
 
 /* "Ruhig" colour mode (Einstellungen → Darstellung → Farben): only overdue (red) and today (accent) keep colour. */

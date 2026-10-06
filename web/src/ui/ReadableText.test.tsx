@@ -27,7 +27,7 @@ describe('ReadableText', () => {
     const { container } = wrap(
       on(25),
       <p>
-        <ReadableText text="Urlaubsplanung 1.234,56 € besprechen" tone="ink" />
+        <ReadableText text="Urlaubsplanung 1.234,56 € besprechen" />
       </p>,
     );
     expect(container.textContent).toBe('Urlaubsplanung 1.234,56 € besprechen');
@@ -36,17 +36,14 @@ describe('ReadableText', () => {
       'Urlaub',
       'besp',
     ]);
-    // In primary-ink text the rest of each word is dimmed (a word-less gap like "1.234,56 €" is not wrapped).
-    expect([...container.querySelectorAll('[data-rr]')].map((e) => e.textContent)).toEqual([
-      'splanung',
-      'rechen',
-    ]);
   });
 
-  it('plain tone changes only the weight (no dimmed rest)', () => {
-    const { container } = wrap(on(100), <ReadableText text="Urlaubsplanung" />);
-    expect(container.querySelector('[data-rs]')).not.toBeNull();
-    expect(container.querySelector('[data-rr]')).toBeNull();
+  it('tells the stylesheet what ink surrounds the text (primary / muted / other)', () => {
+    const { container } = wrap(on(100), <h2>Wochenplan</h2>);
+    // jsdom resolves no custom properties, so only the classification itself can be checked here (e2e covers the colours).
+    expect(['p', 'm', 'o']).toContain(
+      container.querySelector('[data-rt]')?.getAttribute('data-ink'),
+    );
   });
 
   it('follows the coverage level: 25 prose, 50 headings/lists, 75 labels, 100 controls', () => {
@@ -100,18 +97,6 @@ describe('the JSX runtime hands plain text children to the reading aid', () => {
     expect(container.querySelector('code [data-rs]')).toBeNull();
     expect(container.querySelector('textarea [data-rs]')).toBeNull();
     expect(container.querySelector('.num [data-rs]')).toBeNull();
-  });
-
-  it('headings in the primary ink get a dimmed rest; body text only changes weight', () => {
-    const { container } = wrap(
-      on(100),
-      <div>
-        <h2>Wochenplan</h2>
-        <p>Wochenplan</p>
-      </div>,
-    );
-    expect(container.querySelector('h2 [data-rr]')?.textContent).toBe('enplan');
-    expect(container.querySelector('p [data-rr]')).toBeNull();
   });
 
   it('does nothing at coverage 25 for headings and buttons', () => {
