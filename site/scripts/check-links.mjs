@@ -1,7 +1,7 @@
 /**
  * Link check of the built site: serves dist/ like Cloudflare Pages does (clean URLs, `/en` →
- * `en.html`) and follows every internal and external link. Placeholders (nemo.example,
- * example.com) are skipped; flaky hosts are retried. Exit 1 on any broken link.
+ * `en.html`) and follows every internal and external link. mailto: and example.com are
+ * skipped, as are the site's own canonical/hreflang self-references; flaky hosts are retried. Exit 1 on any broken link.
  */
 import { LinkChecker } from 'linkinator';
 import { createServer } from 'node:http';
@@ -57,7 +57,7 @@ const result = await checker.check({
   retryErrors: true,
   retryErrorsCount: 3,
   timeout: 20_000,
-  linksToSkip: ['^https?://nemo\\.example', '^mailto:', '^https?://[^/]*example\\.com'],
+  linksToSkip: ['^mailto:', '^https?://[^/]*example\\.com', '^https://nemo-adhd-helper\\.online(/|$)'],
 });
 server.close();
 console.log(`check-links: ${result.links.length} links, ${broken.length} broken`);
