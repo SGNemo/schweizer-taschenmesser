@@ -125,6 +125,8 @@ jobs:
       - run: npm run typecheck
       - name: Licence list is current and every licence is allowed
         run: npm run check:licenses
+      - name: Open legal placeholders (warning only)
+        run: npm run check:legal
 
   web-unit:
     name: Web unit tests

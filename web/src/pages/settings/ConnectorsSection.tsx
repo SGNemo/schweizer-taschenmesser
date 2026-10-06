@@ -16,6 +16,7 @@ import {
 } from '@/core/connectors/service';
 import { saveStatus, useConnectorStatus } from '@/core/connectors/state';
 import type { ConnectorContext, ConnectorDef, ExternalCalendar } from '@/core/connectors/types';
+import { requireNotice } from '@/core/legal/notices';
 import { getPlatform } from '@/core/platform';
 import { formatDay, pad2, toDateString } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -125,6 +126,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     const controller = new AbortController();
     loginAbort.current = controller;
     try {
+      if (def.id === 'google') await requireNotice('connector-google');
       const next = await connectOAuth(def, active, { signal: controller.signal });
       if (controller.signal.aborted) return;
       if (next.state === 'connected' && def.calendar && active.includes('calendar')) {
@@ -203,6 +205,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
               def={def}
               onSaved={() => setClientVersion((v) => v + 1)}
             />
+            <p className={styles.muted}>{s.testingHint}</p>
             <fieldset className={styles.fieldset}>
               <legend className={styles.legend}>{s.features}</legend>
               {def.features.map((f) => (

@@ -1,0 +1,7 @@
+# Decisions – legal notices (not legal advice)
+
+- 2026-10-06 **Maintainer details are `[[PLACEHOLDERS]]` in one file (`core/legal/identity.ts`)** – nothing invented; `npm run check:legal` lists open ones (warning in CI, `--strict` is a proposal for the release workflow, not wired in). Website uses its own `[PLATZHALTER: …]` markers; the check reads both.
+- 2026-10-06 **Data flows have one table (`docs/legal/DATA-FLOWS.md`) and one in-app source (`t.legal.flows`)** – ids pinned by a test, so website/README are compared against one list.
+- 2026-10-06 **One-time third-party notice at the place of use** (cloud AI, connector, supporter area) with a single "Verstanden", acknowledged ids device-local in `_meta` `legal.notices`; the cloud-AI notice sits in `createProviderFor` so assistant, write pipeline, chat and connection test all pass it; without a mounted `NoticeHost` nothing blocks. Rejected: a consent that can be declined (adds a failure path to features; the user already opted in by adding the provider).
+- 2026-10-06 **Licence list = npm (lock file, transitive) + Cargo (`cargo metadata`) + models (catalogue) + hand-kept Gradle/fonts/icons, with an SPDX allowlist** – unknown or copyleft licences fail `check:licenses` (in `build` and CI); the committed JSON is compared to `package-lock.json` and `Cargo.lock` in a unit test. Copyleft allowed only as one side of an `OR`.
+- 2026-10-06 **UI stays German-only (`strings.ts`)** per the root rule; no English/other-language copies of the legal texts in the app.

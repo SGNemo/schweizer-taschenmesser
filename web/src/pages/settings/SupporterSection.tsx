@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { requireNotice } from '@/core/legal/notices';
 import { enterCode, removeCode, updateSupporterPrefs, useSupporter } from '@/core/supporter';
 import { useSupporterSettings } from '@/core/supporter';
 import { getPlatform } from '@/core/platform';
@@ -22,6 +23,9 @@ export function SupporterSection() {
   const [input, setInput] = useState('');
   const [invalid, setInvalid] = useState(false);
   const open = (url: string) => void getPlatform().app.openUrl(url);
+  useEffect(() => {
+    void requireNotice('supporter');
+  }, []);
 
   async function save() {
     if (!input.trim()) return;

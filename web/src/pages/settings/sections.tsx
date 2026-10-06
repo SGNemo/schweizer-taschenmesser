@@ -13,7 +13,6 @@ import {
   AboutUpdatesSection,
   DeviceResetSection,
   DiagnosticsSection,
-  LicensesSection,
   LinksSection,
 } from './AboutSections';
 import { AiSection } from './AiSection';
@@ -30,6 +29,7 @@ import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
 import { LocalModelSection } from './LocalModelSection';
+import { LegalImprintSection, LegalLicensesSection, LegalPrivacySection } from './LegalSections';
 import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
@@ -456,12 +456,37 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => <LinksSection />,
   },
   {
+    id: 'legal-imprint',
+    category: 'ueber',
+    order: 42,
+    title: t.legal.imprint.title,
+    keywords: ['Impressum', 'Kontakt', 'Anbieter', 'Anschrift', 'E-Mail', 'Rechtliches'],
+    render: () => <LegalImprintSection />,
+  },
+  {
+    id: 'legal-privacy',
+    category: 'ueber',
+    order: 44,
+    title: t.legal.privacy.title,
+    keywords: [
+      'Datenschutz',
+      'Datenfluss',
+      'Drittanbieter',
+      'Google',
+      'GitHub',
+      'Ko-fi',
+      'KI-Anbieter',
+      'Rechtliches',
+    ],
+    render: () => <LegalPrivacySection />,
+  },
+  {
     id: 'licenses',
     category: 'ueber',
     order: 50,
-    title: t.about.licenses,
-    keywords: ['Bibliotheken', 'Schrift', 'Icons', 'Open Source'],
-    render: () => <LicensesSection />,
+    title: t.legal.licenses.title,
+    keywords: ['Lizenz', 'Bibliotheken', 'Schrift', 'Icons', 'Open Source', 'MIT', 'Rechtliches'],
+    render: () => <LegalLicensesSection />,
   },
   {
     id: 'diagnostics',

@@ -528,7 +528,7 @@ export const t = {
         noScopes: 'keine Anmeldung nötig',
         testingNote:
           'Ist dein Google-Projekt im Status „Testing“, läuft die Anmeldung nach 7 Tagen ab. Stelle es auf „In Produktion“.',
-        stepsNote: 'Schritte: docs/STATUS.md → „Google-Verbindung einrichten“.',
+        stepsNote: 'Schritte: docs/MANUAL-TESTS.md → „Google-Verbindung einrichten“.',
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
       startdata: {
@@ -3550,6 +3550,8 @@ export const t = {
     features: 'Was soll gelesen werden?',
     calendars: 'Kalender',
     calendarsHint: 'Nur die angehakten Kalender werden übernommen.',
+    testingHint:
+      'Ist dein Google-Projekt im Status „Testing“, läuft die Anmeldung nach 7 Tagen ab, und nur eingetragene Testnutzer (höchstens 100) dürfen sich anmelden. Dann steht hier „Abgelaufen“, und „Neu anmelden“ genügt. Auf Dauer hilft der Status „In Produktion“.',
     disconnectTitle: (name: string) => `${name} trennen?`,
     disconnectBody:
       'Der Zugriff wird beim Dienst widerrufen und die gespeicherten Anmeldedaten werden von diesem Gerät gelöscht.',
@@ -4231,6 +4233,152 @@ export const t = {
       label: 'Logo in Themenfarbe',
       hint: 'Der Fisch übernimmt die Akzentfarbe.',
       hintLocked: 'Für Unterstützer.',
+    },
+  },
+  legal: {
+    title: 'Rechtliches',
+    imprint: {
+      title: 'Rechtliches: Impressum und Kontakt',
+      intro: 'Anbieter dieser App und Kontakt für Fragen, auch zum Datenschutz.',
+      name: 'Anbieter',
+      address: 'Anschrift',
+      email: 'E-Mail',
+      vatId: 'Umsatzsteuer-ID',
+      open: 'Diese Angaben sind noch nicht ausgefüllt.',
+      note: 'Nemo ist ein privates, kostenloses Open-Source-Projekt. Unterstützung ist freiwillig und schaltet keine Funktion frei.',
+      website: 'Website mit Impressum und Datenschutzerklärung',
+    },
+    privacy: {
+      title: 'Rechtliches: Datenschutzhinweise',
+      intro:
+        'Nemo hat kein Konto und keinen Server des Betreibers, der Daten der App erhält. Alles liegt auf deinem Gerät. Hier steht, was es wann verlässt: nichts davon passiert ohne dein Einrichten oder deinen Klick, außer der Update-Abfrage und dem Währungsrechner (siehe dort).',
+      what: 'Was',
+      to: 'An wen',
+      when: 'Wann',
+      rights:
+        'Der Betreiber erhält über die App keine personenbezogenen Daten. Verarbeitet er Daten selbst (Supporter-Dienst, Website), gelten die Hinweise auf der Website. Für alle anderen Empfänger gelten deren eigene Datenschutzregeln. Fragen und Auskunftswünsche an die Kontaktadresse oben.',
+    },
+    flows: {
+      local: {
+        title: 'Lokale Speicherung',
+        what: 'Alle Einträge, Einstellungen und Zugangsdaten. Schlüssel (API-Schlüssel, Anmeldedaten) liegen im Schlüsselspeicher des Geräts, nicht in der Datenbank.',
+        to: 'Niemand. Die Daten bleiben auf diesem Gerät (Browser-Datenbank bzw. Datenordner der App).',
+        when: 'Immer. Es gibt kein Konto und keinen Dienst des Betreibers, der Daten der App erhält.',
+      },
+      sync: {
+        title: 'Sync mit deinem eigenen Server',
+        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passphrase werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen.',
+        to: 'Der Server, dessen Adresse du selbst einträgst und betreibst. Kein Dienst des Betreibers von Nemo.',
+        when: 'Nur nach dem Verbinden unter Sync & Backup: beim Start, etwa jede Minute, bei Änderungen.',
+      },
+      push: {
+        title: 'Web-Push-Erinnerungen (optional)',
+        what: 'Titel, Text und Link der Erinnerungen der nächsten zwei Wochen sowie die Push-Adresse deines Browsers. Mit Passphrase verschlüsselt.',
+        to: 'Dein Sync-Server und von dort der Push-Dienst deines Browser-Herstellers (z. B. Google, Mozilla, Apple, Microsoft).',
+        when: 'Nur wenn du Push-Erinnerungen einschaltest.',
+      },
+      ics: {
+        title: 'Kalender-Abo (iCal-Adresse)',
+        what: 'Eine Abfrage der geheimen iCal-Adresse, die du einträgst. Im Browser läuft sie über deinen Sync-Server, in der Windows- und Android-App direkt. Die geholten Termine werden als Einträge gespeichert (und synchronisiert, wenn du Sync nutzt).',
+        to: 'Der Anbieter deines Kalenders; im Browser zusätzlich dein eigener Sync-Server.',
+        when: 'Nur wenn du ein Abo einträgst; danach etwa alle 30 Minuten.',
+      },
+      update: {
+        title: 'Update-Abfrage bei GitHub',
+        what: 'Eine einfache Abfrage der Versionsdatei und, bei einem Update, der Download. Es werden keine Daten aus der App mitgeschickt; GitHub sieht deine IP-Adresse und die üblichen Verbindungsdaten.',
+        to: 'GitHub (github.com, api.github.com). Nur Windows- und Android-App; die Web-App aktualisiert sich selbst.',
+        when: 'Beim Start und beim Zurückkehren in die App, höchstens einmal pro Tag. Abschaltbar unter Updates → „Automatisch nach Updates suchen“. Updates sind signiert und werden geprüft.',
+      },
+      'ai-cloud': {
+        title: 'KI-Anbieter (Cloud)',
+        what: 'Deine Frage oder dein Satz, das heutige Datum und eine kurze Beschreibung der Felder der aktiven Module (Namen und Typen, keine Inhalte), dazu dein API-Schlüssel im Kopf der Anfrage. Nie deine Einträge. Im Chat geht der Chat-Text an den Anbieter, und Daten aus der App nur, wenn du sie dort nach Vorschau mit „Mit Daten senden“ freigibst. Was du in eine Frage schreibst, geht mit.',
+        to: 'Der Anbieter, den du selbst einrichtest (z. B. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral oder eine eigene Adresse). Kostenlose Tarife können Eingaben zum Training nutzen; das steht an der Karte des Anbieters.',
+        when: 'Nur wenn du einen Anbieter mit Schlüssel eingerichtet hast und die KI eine Anfrage nicht lokal beantworten kann. Alles aus: Einstellungen → KI → „KI abschalten“. Ollama und das eingebaute Modell laufen lokal.',
+      },
+      'ai-model': {
+        title: 'Download des eingebauten Modells (Windows)',
+        what: 'Eine Abfrage der Modelldatei, die du vorher bestätigst. Es werden keine Daten aus der App mitgeschickt. Das Modell läuft danach vollständig auf dem Gerät.',
+        to: 'Hugging Face (huggingface.co und dessen Download-Server).',
+        when: 'Nur nach deiner Bestätigung unter Einstellungen → KI.',
+      },
+      google: {
+        title: 'Google-Verbindung (Windows)',
+        what: 'Anmeldung bei Google mit deiner eigenen OAuth-Anwendung (nur Lesen). Kalender: Termine der gewählten Kalender, ab 60 Tage zurück bis 400 Tage voraus. E-Mail: nur auf deinen Klick Absender, Betreff, Datum und Abmelde-Kopfzeile passender Mails, nie der Inhalt. Berechtigungen: calendar.readonly und gmail.readonly, je nach Auswahl.',
+        to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). Der Betreiber von Nemo erhält nichts.',
+        when: 'Nur nach dem Verbinden. Kalender-Abgleich im Hintergrund etwa alle 30 Minuten. Trennen widerruft den Zugriff. Das Zugriffs-Token läuft ab, wenn dein Google-Projekt im Status „Testing“ ist (nach 7 Tagen): dann „Neu anmelden“.',
+      },
+      supporter: {
+        title: 'Supporter-Code und Ko-fi',
+        what: 'In der App nichts: der Code wird nur auf dem Gerät geprüft (ohne Netz). Wer über Ko-fi unterstützt, gibt Ko-fi seine Daten; ein kleiner Dienst des Betreibers erhält von Ko-fi die Benachrichtigung (u. a. Betrag und E-Mail-Adresse), verschickt den Code per E-Mail und speichert nur Prüfwerte statt Klartext.',
+        to: 'Ko-fi (Zahlung), der Dienst des Betreibers auf Cloudflare Workers und der Mailversand Resend. Die App selbst sendet nichts.',
+        when: 'Nur wenn du freiwillig über Ko-fi unterstützt oder auf „Code erneut senden“ klickst. Der Code wird mit deinen Einstellungen synchronisiert, wenn du Sync nutzt.',
+      },
+      currency: {
+        title: 'Währungsrechner',
+        what: 'Eine Abfrage der Euro-Wechselkurse ohne Daten aus der App. Die Kurse werden auf dem Gerät zwischengespeichert.',
+        to: 'frankfurter.dev (öffentliche Kurse der Europäischen Zentralbank).',
+        when: 'Beim Öffnen des Werkzeugs „Währung“.',
+      },
+      ip: {
+        title: 'Öffentliche IP anzeigen (Windows)',
+        what: 'Eine Abfrage deiner öffentlichen IP-Adresse. Das Ergebnis wird nur angezeigt.',
+        to: 'api.ipify.org.',
+        when: 'Nur auf Klick im Modul „Festplatte“.',
+      },
+      links: {
+        title: 'Links in den Browser',
+        what: 'Beim Öffnen eines Links (z. B. Kartensuche eines Ortes, WhatsApp-Text für einen Geburtstag, Lesezeichen) übergibt die App die Adresse an deinen Browser; die App selbst lädt nichts.',
+        to: 'Das Ziel des Links, z. B. Google Maps oder WhatsApp.',
+        when: 'Nur auf deinen Klick.',
+      },
+    },
+    licenses: {
+      title: 'Rechtliches: Lizenzen',
+      app: 'Nemo steht unter der MIT-Lizenz. Der Quellcode ist öffentlich auf GitHub.',
+      appLicense: 'Lizenztext lesen',
+      groups: {
+        npm: 'Web-Bibliotheken (npm)',
+        cargo: 'Bibliotheken der Windows- und Android-App (Cargo)',
+        gradle: 'Android-Bibliotheken (Gradle)',
+        assets: 'Schriften und Icons',
+        models: 'KI-Modelle (werden nur auf Wunsch geladen)',
+      },
+      count: (n: number) => `${n} Einträge`,
+      loading: 'Wird geladen …',
+      failed: 'Die Liste konnte nicht geladen werden.',
+      note: 'Die Liste wird beim Build aus den Sperrdateien erzeugt und geprüft; unbekannte oder nicht erlaubte Lizenzen brechen den Build ab.',
+    },
+    notices: {
+      ok: 'Verstanden',
+      more: 'Nachlesen: Einstellungen → Über Nemo → Rechtliches.',
+      'cloud-ai': {
+        title: 'Dein KI-Anbieter erhält gleich eine Anfrage',
+        body: [
+          'Nemo schickt jetzt eine Anfrage an den Anbieter, den du eingerichtet hast. Gesendet werden dein Satz, das heutige Datum und die Feldnamen der Module, nie deine Einträge. Im Chat geht der Chat-Text mit.',
+          'Der Anbieter ist ein Dritter mit eigenen Datenschutzregeln. Manche kostenlosen Tarife nutzen Eingaben zum Training. Schreibe deshalb keine Geheimnisse in eine Frage.',
+        ],
+      },
+      'connector-google': {
+        title: 'Du verbindest ein Google-Konto',
+        body: [
+          'Nemo liest mit deiner eigenen Google-Anwendung nur: Kalender (calendar.readonly) und/oder die Köpfe von E-Mails (gmail.readonly), je nach Auswahl. Die Daten gehen von Google direkt an dieses Gerät, nicht an den Betreiber von Nemo.',
+          'Google verarbeitet die Anmeldung nach eigenen Regeln. Steht dein Google-Projekt auf „Testing“, läuft die Anmeldung nach 7 Tagen ab; dann hilft „Neu anmelden“. Trennen widerruft den Zugriff.',
+        ],
+      },
+      'connector-ics': {
+        title: 'Dein Kalender-Abo wird regelmäßig abgefragt',
+        body: [
+          'Nemo ruft die iCal-Adresse etwa alle 30 Minuten ab. Solche Adressen sind oft geheime Links: trage sie nur ein, wenn du dem Anbieter vertraust.',
+          'Im Browser läuft die Abfrage über deinen eigenen Sync-Server. Die Termine werden als Einträge gespeichert und mit synchronisiert, wenn du Sync nutzt.',
+        ],
+      },
+      supporter: {
+        title: 'Unterstützer-Bereich',
+        body: [
+          'Unterstützung ist freiwillig, nichts in Nemo hängt an einer Zahlung. Der Code wird nur auf diesem Gerät geprüft.',
+          'Die Zahlung läuft bei Ko-fi, einem Drittanbieter mit eigenen Datenschutzregeln. Die E-Mail mit dem Code verschickt ein kleiner Dienst des Betreibers über Resend. Nutzt du Sync, wandert der Code mit deinen Einstellungen auf deinen Server.',
+        ],
+      },
     },
   },
 } as const;

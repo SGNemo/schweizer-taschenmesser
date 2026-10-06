@@ -61,6 +61,7 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 
 **Neu (Datenträger):** Die Checkliste D1–D16 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
 
+- **Rechtliches vor dem Launch ([PR feat/legal-in-app](legal/LAUNCH-LEGAL-CHECKLIST.md)):** Platzhalter füllen (`npm run check:legal`), Website/README nachziehen ([DATA-FLOWS](legal/DATA-FLOWS.md)), Markenname „Nemo“ prüfen. **Google-OAuth „Testing“ (7 Tage, ≤ 100 Testnutzer), Optionen:** (a) wie heute: jede Person bringt ihren eigenen Client mit, App erklärt Ablauf und „Neu anmelden“; (b) eigener Projekt-Client „In Produktion“ nur für Kalender (`calendar.readonly`, sensibler Scope, Google-Verifizierung); (c) Gmail zusätzlich (`gmail.readonly`, eingeschränkt: Sicherheitsprüfung durch Google nötig, wohl unverhältnismäßig). Empfehlung: (a) beibehalten.
 - Update-Test auf echten Geräten (Windows, Android), Einrichtungsassistent E1–E5, Google-Verbindung einrichten: Anleitungen in [MANUAL-TESTS.md](MANUAL-TESTS.md) → „Anleitungen für Sven“.
 
 ### Nemo-Rebranding

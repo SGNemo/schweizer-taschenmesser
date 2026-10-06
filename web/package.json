@@ -22,6 +22,7 @@
     "new:module": "node scripts/gen-module.mjs",
     "check:modules": "node scripts/check-modules.mjs",
     "gen:licenses": "node scripts/gen-licenses.mjs",
+    "check:legal": "node scripts/check-legal.mjs",
     "check:licenses": "node scripts/gen-licenses.mjs --check",
     "check:docs": "node scripts/check-docs.mjs",
     "db:bump": "node scripts/db-bump.mjs",
