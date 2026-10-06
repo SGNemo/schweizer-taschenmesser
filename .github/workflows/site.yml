@@ -54,8 +54,6 @@ jobs:
         run: npm run check:downloads
       - name: Lighthouse (thresholds 95, warnings only)
         continue-on-error: true
-        env:
-          PLAYWRIGHT_CHROMIUM: ''
         run: npm run lighthouse
       - name: Lighthouse reports
         if: always()
