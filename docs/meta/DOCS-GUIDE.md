@@ -8,7 +8,7 @@ Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is ro
 | Rule every chat needs (short) | root `CLAUDE.md`; unabridged → `docs/RULES.md` |
 | Area-only rule | `<area>/CLAUDE.md` (`web/src/modules`, `web/src-tauri`, `server`) – loaded only there |
 | Where is X / interfaces / data flow | `docs/ARCHITECTURE-MAP.md`; long design notes → `docs/architecture/<topic>.md` |
-| Why (decision) | one line in `docs/DECISIONS.md`, detail in `docs/decisions/<area>.md` |
+| Why (decision) | one bullet in `docs/decisions/<area>.md` (what – why, date, sources); `docs/DECISIONS.md` is the index of areas |
 | How (command, recipe, gotcha) | `docs/HOW-TO.md` index → `docs/howto/<topic>.md` |
 | Status, open, limits, next steps | `docs/STATUS.md` (German parts stay German); hardware checklists → `docs/MANUAL-TESTS.md`; ideas → `docs/ROADMAP.md` |
 | Running chats, hotspots | `docs/CHATS.md` |

@@ -8,7 +8,7 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [ARCHITECTURE-MAP.md](ARCHITECTURE-MAP.md) | where things live (paths, interfaces, data flow) | locating code |
 | [architecture.md](architecture.md) → [architecture/](architecture/) | design notes by topic (core, sync, ai, native, releases, vault, importer, local-api, connectors, …) | changing that area |
 | [RULES.md](RULES.md) | hard rules, unabridged (root has the short list) | touching data, security, modules, platform |
-| [DECISIONS.md](DECISIONS.md) → [decisions/](decisions/) | one line per decision, full text per area | asking "why" |
+| [DECISIONS.md](DECISIONS.md) → [decisions/](decisions/) | index of areas; one bullet per decision in the area file | asking "why" |
 | [HOW-TO.md](HOW-TO.md) → [howto/](howto/) | commands, tests, recipes (module, tool, connector, setup step, provider, icons, tokens, CI, release, gotchas) | doing a known task |
 | [STATUS.md](STATUS.md) | next one thing, 15-minute tasks, current release, open, known limits, "Offen – macht Sven" (German) | planning, hand-over |
 | [MANUAL-TESTS.md](MANUAL-TESTS.md) | hardware checklists (German) | device testing |
