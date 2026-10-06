@@ -36,7 +36,7 @@ export const aiSchema: ModuleAiSchema = {
       fields: ['title', 'kind', 'startDate', 'startTime', 'location', 'recurrence', 'note'],
       required: ['title', 'startDate'],
       parse: {
-        keywords: ['termin', 'meeting', 'erinnerung', 'erinnere', 'verabredung'],
+        keywords: ['termin', 'kalender', 'meeting', 'erinnerung', 'erinnere', 'verabredung'],
         fallback: 'dateTime',
         values: { kind: { reminder: ['erinnerung', 'erinnere'] } },
         defaults: { startDate: '@today' },

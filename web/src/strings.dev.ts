@@ -32,6 +32,17 @@ export const tDev = {
     label: 'Seed-Sync erlauben',
     hint: 'Standard aus: Testdaten gelangen nicht auf den Sync-Server. Wenn du das einschaltest, werden sie wie echte Daten übertragen. Beim Entfernen werden sie dann auch auf dem Server gelöscht.',
   },
+  supporter: {
+    label: 'Supporter-Status simulieren',
+    hint: 'Nur auf diesem Gerät. In der Dev-Preview gilt ohne Auswahl „Entwickler“, damit alle Extras sichtbar sind; „Keiner“ zeigt die Ansicht für Nicht-Supporter (Schloss, Vorschau).',
+    options: {
+      default: 'Standard (Entwickler)',
+      none: 'Keiner',
+      kaffee: 'Kaffee',
+      kuchen: 'Kuchen',
+      developer: 'Entwickler',
+    },
+  },
   status: {
     title: 'Stand',
     version: 'Seed-Version',

@@ -15,6 +15,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | [howto/design-brand.md](howto/design-brand.md) | logo/icons pipeline (`design/icon/`), wordmark, banner, design tokens, accents |
 | [howto/ci.md](howto/ci.md) | CI layout, caches, sharding, doc-only gate, Dev-Preview |
 | [howto/browser-extension.md](howto/browser-extension.md) | Brave extension: build, load, connect, flows, troubleshooting, vault bridge (native messaging host), release zip proposal |
+| [howto/supporter.md](howto/supporter.md) | supporter codes: key setup, create a code by hand, rotate, add a colour theme |
 | [howto/release-deps.md](howto/release-deps.md) | release procedure (maintainer), Dependabot, CodeQL |
 
 ## Set up & run locally

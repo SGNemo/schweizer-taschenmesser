@@ -100,6 +100,10 @@ Mehrere Anbieter werden der Reihe nach gefragt (lokal → kostenlos → bezahlt)
 - **Ist Nemo kostenlos?** Ja, MIT-Lizenz. Kosten entstehen nur bei bezahlten KI-Anbietern, die du selbst einrichtest.
 </details>
 
+## Unterstützen
+
+Nemo ist und bleibt kostenlos, alle Funktionen stehen allen offen. Wer das Projekt freiwillig unterstützen möchte (jeder Betrag, einmalig), bekommt als Dankeschön einen Supporter-Code per Mail und damit rein kosmetische Extras: ein „Danke“-Abzeichen und zusätzliche Farbthemen. Den Code gibst du unter Einstellungen → Über Nemo → Supporter ein; er wird nur auf deinem Gerät geprüft, ohne Konto und ohne Tracking. Bezahlt wird ausschließlich auf der Seite des Zahlungsanbieters, die App verarbeitet keine Zahlungsdaten.
+
 ## Wo gibt es mehr?
 
 - [Dokumentation](docs/README.md) mit Nutzer- und Entwicklerdoku

@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({ jsxImportSource: '@/core/text/readjsx' })],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -11,6 +11,10 @@ export default defineConfig({
       tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
       '@nemo/vault-core': fileURLToPath(
         new URL('../packages/vault-core/src/index.ts', import.meta.url),
+      ),
+      '@noble/curves': fileURLToPath(new URL('./node_modules/@noble/curves', import.meta.url)),
+      '@nemo/supporter-codes': fileURLToPath(
+        new URL('../packages/supporter-codes/src/index.ts', import.meta.url),
       ),
     },
   },

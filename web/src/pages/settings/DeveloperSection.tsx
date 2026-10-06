@@ -10,6 +10,13 @@ import {
   seedCounts,
   setSeedSync,
 } from '@/core/seed/dev';
+import {
+  SIMULATE_KEY,
+  SIMULATIONS,
+  setSimulation,
+  type Simulation,
+} from '@/core/supporter/devSupporter';
+import { db } from '@/core/db/db';
 import { SEED_SCALES, type SeedScale } from '@/core/seed/types';
 import { availableManifests } from '@/core/modules/available';
 import { tDev } from '@/strings.dev';
@@ -23,6 +30,10 @@ export default function DeveloperSection() {
   const state = useLiveQuery(() => readSeedState(), []);
   const counts = useLiveQuery(() => seedCounts(), []);
   const syncOn = useLiveQuery(() => isSeedSyncOn(), []);
+  const simulation = useLiveQuery(async () => {
+    const value = (await db.table('_meta').get(SIMULATE_KEY))?.value;
+    return (SIMULATIONS as readonly unknown[]).includes(value) ? (value as Simulation) : 'default';
+  }, []);
   const [scale, setScale] = useState<SeedScale>('medium');
   const [busy, setBusy] = useState<string | undefined>();
   const [progress, setProgress] = useState('');
@@ -97,6 +108,20 @@ export default function DeveloperSection() {
           checked={syncOn === true}
           onChange={(on) => void setSeedSync(on)}
         />
+
+        <SelectField
+          label={tDev.supporter.label}
+          hint={tDev.supporter.hint}
+          value={simulation ?? 'default'}
+          data-testid="supporter-simulate"
+          onChange={(e) => void setSimulation(e.target.value as Simulation)}
+        >
+          {SIMULATIONS.map((s) => (
+            <option key={s} value={s}>
+              {tDev.supporter.options[s]}
+            </option>
+          ))}
+        </SelectField>
 
         <h3>{tDev.status.title}</h3>
         {state ? (

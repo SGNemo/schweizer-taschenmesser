@@ -44,16 +44,19 @@ export const READ_SHARES = ['40', '30', '50'] as const;
 export type ReadShare = (typeof READ_SHARES)[number];
 export const READ_STYLES = ['soft', 'bold'] as const;
 export type ReadStyle = (typeof READ_STYLES)[number];
-/** `text` = running text only (notes, answers, help); `lists` = also list titles and teasers. */
-export const READ_SCOPES = ['text', 'lists'] as const;
-export type ReadScope = (typeof READ_SCOPES)[number];
+/**
+ * How much text gets the reading aid: 25 = running text only (paragraphs, answers, help), 50 = also headings and list
+ * titles, 75 = also labels, table cells and other text, 100 = every text including buttons, links and navigation.
+ */
+export const READ_COVERS = ['25', '50', '75', '100'] as const;
+export type ReadCover = (typeof READ_COVERS)[number];
 /** `calm` keeps colour only for overdue and today (tokens.css `data-color`). */
 export const COLOR_MODES = ['full', 'calm'] as const;
 export type ColorMode = (typeof COLOR_MODES)[number];
 const READ_AID_KEY = 'tm-read-aid';
 const READ_SHARE_KEY = 'tm-read-share';
 const READ_STYLE_KEY = 'tm-read-style';
-const READ_SCOPE_KEY = 'tm-read-scope';
+const READ_COVER_KEY = 'tm-read-cover';
 const READ_HINT_KEY = 'tm-read-hint';
 const COLOR_MODE_KEY = 'tm-color';
 const SIDEBAR_KEY = 'tm-sidebar';
@@ -71,6 +74,17 @@ function readChoice<T extends string>(key: string, values: readonly T[]): T {
     return values.find((x) => x === v) ?? values[0]!;
   } catch {
     return values[0]!;
+  }
+}
+
+/** `tm-read-cover`; the former scope "auch Listen" (`tm-read-scope`) maps to 50 %. */
+function readCover(): ReadCover {
+  const stored = readChoice(READ_COVER_KEY, READ_COVERS);
+  if (stored !== READ_COVERS[0]) return stored;
+  try {
+    return localStorage.getItem('tm-read-scope') === 'lists' ? '50' : stored;
+  } catch {
+    return stored;
   }
 }
 
@@ -128,6 +142,13 @@ export function applyReadStyle(style: ReadStyle): void {
   const el = document.documentElement;
   if (style === 'soft') delete el.dataset.readStyle;
   else el.dataset.readStyle = style;
+}
+
+/** `data-read-aid` on <html> = the coverage while the aid is on (tokens.css dims the rest of covered text). */
+export function applyReadAid(on: boolean, cover: ReadCover): void {
+  const el = document.documentElement;
+  if (on) el.dataset.readAid = cover;
+  else delete el.dataset.readAid;
 }
 
 export function applyColorMode(mode: ColorMode): void {
@@ -192,8 +213,8 @@ interface UiState {
   setReadShare(share: ReadShare): void;
   readStyle: ReadStyle;
   setReadStyle(style: ReadStyle): void;
-  readScope: ReadScope;
-  setReadScope(scope: ReadScope): void;
+  readCover: ReadCover;
+  setReadCover(cover: ReadCover): void;
   /** True once the one-time hint about the reading aid was shown or dismissed (device-local). */
   readHintSeen: boolean;
   markReadHintSeen(): void;
@@ -283,6 +304,7 @@ export const useUiStore = create<UiState>((set) => ({
   readAid: readFlag(READ_AID_KEY),
   setReadAid(readAid) {
     storeChoice(READ_AID_KEY, '1', !readAid);
+    applyReadAid(readAid, useUiStore.getState().readCover);
     set({ readAid });
   },
   readShare: readChoice(READ_SHARE_KEY, READ_SHARES),
@@ -296,10 +318,11 @@ export const useUiStore = create<UiState>((set) => ({
     applyReadStyle(readStyle);
     set({ readStyle });
   },
-  readScope: readChoice(READ_SCOPE_KEY, READ_SCOPES),
-  setReadScope(readScope) {
-    storeChoice(READ_SCOPE_KEY, readScope, readScope === 'text');
-    set({ readScope });
+  readCover: readCover(),
+  setReadCover(readCover) {
+    storeChoice(READ_COVER_KEY, readCover, readCover === READ_COVERS[0]);
+    applyReadAid(useUiStore.getState().readAid, readCover);
+    set({ readCover });
   },
   readHintSeen: readFlag(READ_HINT_KEY),
   markReadHintSeen() {

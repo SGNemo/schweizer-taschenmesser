@@ -13,6 +13,7 @@ import { FocusWatcher } from './FocusWatcher';
 import { NotificationCenter } from './NotificationCenter';
 import { ReminderPrompt } from './ReminderPrompt';
 import { ResumeTracker } from './ResumeTracker';
+import { SupporterEffects } from './SupporterEffects';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
 import { PendingImports } from './PendingImports';
@@ -150,6 +151,7 @@ export function AppShell() {
       <ReminderPrompt />
       <NotificationCenter />
       <ResumeTracker />
+      <SupporterEffects />
       <Toaster />
     </div>
   );

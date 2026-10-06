@@ -1,0 +1,34 @@
+{
+  "name": "@nemo/supporter-webhook",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Cloudflare Worker that turns a Ko-fi donation webhook into a signed Nemo supporter code and mails it. Separate from the sync server and from all app data.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.4",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.2",
+    "wrangler": "^4.36.0"
+  }
+}

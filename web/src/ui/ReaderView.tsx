@@ -34,7 +34,7 @@ export function ReaderView({
       <Prose>
         {paragraphs.map((p, i) => (
           <p key={i} style={{ whiteSpace: 'pre-line' }}>
-            <ReadableText text={p} force />
+            <ReadableText text={p} force tone="ink" />
           </p>
         ))}
       </Prose>

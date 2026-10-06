@@ -29,6 +29,12 @@
     "url": "https://fontsource.org/fonts/inter"
   },
   {
+    "name": "@noble/curves",
+    "version": "2.4.0",
+    "license": "MIT",
+    "url": "https://paulmillr.com/noble/"
+  },
+  {
     "name": "@tauri-apps/api",
     "version": "2.12.0",
     "license": "Apache-2.0 OR MIT",

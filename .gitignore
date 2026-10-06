@@ -16,6 +16,8 @@ node_modules
 *.jks.base64
 *.base64
 .taschenmesser-keys/
+.nemo-supporter/
+*.nemo-key
 keystore.properties
 local.properties
 google-services.json

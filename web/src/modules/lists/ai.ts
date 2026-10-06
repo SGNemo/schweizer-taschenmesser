@@ -37,7 +37,7 @@ export const aiSchema: ModuleAiSchema = {
       label: 'Eintrag abhaken',
       description: 'Eintrag als erledigt/gekauft abhaken',
       set: { done: true },
-      parse: { keywords: ['gekauft', 'abgehakt', 'abhaken'] },
+      parse: { keywords: ['gekauft', 'abgehakt', 'abhaken', 'hake'] },
       examples: [{ input: 'Milch ist gekauft', target: 'Milch', output: { done: true } }],
     },
     delete: {

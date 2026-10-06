@@ -281,6 +281,59 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
+  # Supporter codes: shared package + maintainer CLI (the CLI imports the package source, so both are installed).
+  supporter:
+    name: Supporter codes + CLI (lint, types, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            packages/supporter-codes/package-lock.json
+            tools/supporter-cli/package-lock.json
+      - run: npm ci
+        working-directory: packages/supporter-codes
+      - run: npm ci
+        working-directory: tools/supporter-cli
+      - name: Package checks
+        working-directory: packages/supporter-codes
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: CLI checks
+        working-directory: tools/supporter-cli
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+
+  # Supporter webhook service (Cloudflare Worker): own job, no deploy, no secrets. It imports the shared code package source.
+  supporter-webhook:
+    name: Supporter webhook (lint, types, tests, bundle)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            packages/supporter-codes/package-lock.json
+            services/supporter-webhook/package-lock.json
+      - run: npm ci
+        working-directory: packages/supporter-codes
+      - run: npm ci
+        working-directory: services/supporter-webhook
+      - name: Service checks
+        working-directory: services/supporter-webhook
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
+
   extension:
     name: Browser extension (lint, types, tests, build, E2E)
     needs: changes

@@ -41,7 +41,7 @@ export default defineConfig({
     __CHANGELOG__: JSON.stringify(changelog()),
   },
   plugins: [
-    react(),
+    react({ jsxImportSource: '@/core/text/readjsx' }),
     VitePWA({
       disable: native,
       strategies: 'injectManifest',
@@ -103,6 +103,10 @@ export default defineConfig({
       tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
       '@nemo/vault-core': fileURLToPath(
         new URL('../packages/vault-core/src/index.ts', import.meta.url),
+      ),
+      '@noble/curves': fileURLToPath(new URL('./node_modules/@noble/curves', import.meta.url)),
+      '@nemo/supporter-codes': fileURLToPath(
+        new URL('../packages/supporter-codes/src/index.ts', import.meta.url),
       ),
       ...(native
         ? {

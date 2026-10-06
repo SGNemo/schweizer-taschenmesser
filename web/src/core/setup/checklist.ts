@@ -22,10 +22,11 @@ export interface Checklist {
 
 /** Pure: what the dashboard card shows. Steps completed elsewhere (`autoDone`) count as done. */
 export function buildChecklist(
-  steps: readonly Pick<SetupStepDef, 'id' | 'title' | 'since'>[],
+  allSteps: readonly Pick<SetupStepDef, 'id' | 'title' | 'since' | 'hint'>[],
   state: SetupState,
   autoDone: ReadonlySet<string> = new Set(),
 ): Checklist {
+  const steps = allSteps.filter((s) => !s.hint);
   const fresh = new Set(newSteps(steps, state).map((s) => s.id));
   const items = steps.map((s) => ({
     id: s.id,

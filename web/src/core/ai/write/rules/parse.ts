@@ -82,10 +82,20 @@ function nounsOf(ref: ActionRef): string[] {
 }
 
 /** Longest keyword the word starts with (0 = no match). */
-const keywordHit = (w: Word, keywords: readonly string[]): number => {
+const keywordHit = (w: Word, keywords: readonly string[], compound = false): number => {
   if (w.n.length === 0) return 0;
   const exact = Math.max(0, ...keywords.filter((k) => w.n.startsWith(k)).map((k) => k.length));
   if (exact > 0) return exact;
+  // Compounds end in their head noun ("Mietvertrag", "Hausratversicherung").
+  const tail = !compound
+    ? 0
+    : Math.max(
+        0,
+        ...keywords
+          .filter((k) => k.length >= 6 && w.n.length > k.length && w.n.endsWith(k))
+          .map((k) => k.length - 2),
+      );
+  if (tail > 0) return tail;
   // One typo in a longer module word ("Rechnug", "Aufgbe") still counts, slightly weaker.
   const fuzzy = keywords.filter(
     (k) =>
@@ -213,7 +223,7 @@ function applyValueWords(
   for (const [field, byValue] of Object.entries(ref.def.parse?.values ?? {})) {
     for (const [value, list] of Object.entries(byValue)) {
       const keys = fk(list);
-      const hit = words.find((w) => keywordHit(w, keys) > 0);
+      const hit = words.find((w) => keywordHit(w, keys, true) > 0);
       if (hit) {
         data[field] = value;
         used.add(hit.n);
@@ -238,7 +248,12 @@ async function segmentToOp(
   if (words.length === 0) return undefined;
   if (isSearchStart(words[0]!.n)) return undefined;
 
-  const isDelete = words.some((w) => startsWithAny(w, DELETE_VERBS));
+  // "Sag den Zahnarzt ab", "Nimm Milch von der Einkaufsliste"
+  const isDelete =
+    words.some((w) => startsWithAny(w, DELETE_VERBS)) ||
+    (words.some((w) => /^sag/.test(w.n)) && words[words.length - 1]!.n === 'ab') ||
+    (words.some((w) => /^nimm|^nehm/.test(w.n)) &&
+      words.some((w) => /^(?:von|vom|aus)$/.test(w.n)));
   const isUpdate = !isDelete && words.some((w) => isUpdateWord(w.n));
   const hasCreateVerb = words.some((w) => isCreateWord(w.n));
   const now = ctx.now;
@@ -249,7 +264,9 @@ async function segmentToOp(
   /* ---------------- delete ---------------- */
   if (isDelete) {
     return forTarget(
-      dropVerbs(words, DELETE_VERBS),
+      dropVerbs(words, [...DELETE_VERBS, 'sag', 'nimm', 'nehm']).filter(
+        (w, i, all) => !(w.n === 'ab' && i === all.length - 1),
+      ),
       actionsOf(ctx.manifests, 'delete'),
       ctx,
       (ref, target) => ({
@@ -261,10 +278,17 @@ async function segmentToOp(
   }
 
   /* ---------------- update ---------------- */
-  if (isUpdate) {
+  // "Notiz: WLAN Passwort ändern": a colon after the module word makes the rest the title.
+  const colonEntry = words[0]!.raw.endsWith(':');
+  if (isUpdate && !colonEntry) {
     const body = words.filter((w) => !isUpdateWord(w.n));
     const joined = body.map((w) => w.raw).join(' ');
-    const m = /^(.*?)\s+(?:auf|zu|in|nach|um)\s+(.+)$/iu.exec(joined);
+    let m = /^(.*?)\s+(?:auf|zu|in|nach|um)\s+(.+)$/iu.exec(joined);
+    if (!m) {
+      // "Die Aufgabe Wohnung putzen bis 10.10. verschieben": the new value hangs behind bis/am/ab.
+      m = /^(.*?)\s+((?:bis|am|ab|zum)\s+.+)$/iu.exec(joined);
+      if (m && extractFacts(m[2]!, { now }).date === undefined) m = null;
+    }
     if (!m) return undefined;
     const left = toWords(m[1]!);
     return forTarget(left, actionsOf(ctx.manifests, 'update'), ctx, (ref, target) => {
@@ -282,7 +306,7 @@ async function segmentToOp(
 
   /* ---------------- update as a statement ("Das Abo Spotify kostet jetzt 11,99") ---------------- */
   const statement =
-    /^(.*?)\s+(?:kostet|kosten|beträgt|betraegt|ist|sind)\s+(?:jetzt|nun|inzwischen|neuerdings)\s+(.+)$/iu.exec(
+    /^(.*?)\s+(?:(?:kostet|kosten|beträgt|betraegt|ist|sind)\s+(?:jetzt|nun|inzwischen|neuerdings)|war|waren)\s+(.+)$/iu.exec(
       segment,
     );
   if (statement && !isDelete) {
@@ -337,7 +361,7 @@ async function segmentToOp(
   const hasAmount = facts0.amountMinor !== undefined;
   for (const ref of creates) {
     const keys = fk(ref.def.parse?.keywords ?? []);
-    let hit = Math.max(0, ...words.map((w) => keywordHit(w, keys)));
+    let hit = Math.max(0, ...words.map((w) => keywordHit(w, keys, true)));
     if (hit === 0) continue;
     // The module word usually opens the sentence ("Aufgabe Steuer-Unterlagen sortieren").
     if (keywordHit(words[0]!, keys) > 0) hit += 5;
@@ -415,6 +439,7 @@ async function segmentToOp(
 
   // A bare noun with nothing else is a search ("Rechnungen"), a noun with a title is not.
   const hasFacts =
+    Object.keys(data0).length > 0 ||
     facts.amountMinor !== undefined ||
     facts.date !== undefined ||
     facts.time !== undefined ||
@@ -424,6 +449,9 @@ async function segmentToOp(
   const nounLast = keywordHit(words[words.length - 1]!, keys) > 0 && words.length >= 3;
   // A sentence with a module word, a link, a clock time … around a long free text is not one entry.
   if (fallbackUsed && titleWords.length > 5) return undefined;
+  // "Der Strom kostet ab November 95 Euro" states a price; it is no booking.
+  if (fallbackUsed && words.some((w) => /^(?:kostet|kosten|betraegt|wird|wurde)$/.test(w.n)))
+    return undefined;
   const signal =
     nounLast ||
     hasCreateVerb ||

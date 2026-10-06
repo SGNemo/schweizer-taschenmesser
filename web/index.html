@@ -59,11 +59,19 @@
         var a = localStorage.getItem('tm-accent');
         if (a === 'teal' || a === 'coral' || a === 'lagoon')
           document.documentElement.dataset.accent = a;
+        var pal = localStorage.getItem('tm-palette');
+        if (/^(korallenriff|tiefsee|sand|nordlicht|monochrom)$/.test(pal || ''))
+          document.documentElement.dataset.palette = pal;
         var ts = localStorage.getItem('tm-text-size');
         if (ts === 'small' || ts === 'large' || ts === 'xlarge')
           document.documentElement.dataset.textSize = ts;
         var ld = localStorage.getItem('tm-leading');
         if (ld === 'airy' || ld === 'compact') document.documentElement.dataset.leading = ld;
+        if (localStorage.getItem('tm-read-aid') === '1') {
+          var rc = localStorage.getItem('tm-read-cover');
+          document.documentElement.dataset.readAid =
+            rc === '50' || rc === '75' || rc === '100' ? rc : '25';
+        }
         if (localStorage.getItem('tm-read-style') === 'bold')
           document.documentElement.dataset.readStyle = 'bold';
         if (localStorage.getItem('tm-color') === 'calm')

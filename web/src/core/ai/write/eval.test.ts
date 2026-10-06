@@ -5,40 +5,94 @@
  * test run only guards the numbers. Later stages (local model) are measured with the same set.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import evalSet from '../../../../tests/ai/eval-set.json';
+import heldOut from '../../../../tests/ai/eval-heldout.json';
+import blind from '../../../../tests/ai/eval-blind.json';
 import { db } from '@/core/db/db';
+import { createCollectionRepo } from '@/core/db/repo';
+import { visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
-import {
-  EVAL_NOW,
-  EVAL_TODAY,
-  evalCases as cases,
-  evalManifests as manifests,
-  scoreProposal,
-  seedEvalFixtures,
-  type EvalCase as Case,
-  type Outcome,
-} from './evalSupport';
+import { clearAll } from '../testing';
+import { fold } from '../text';
+import { prepareProposal } from './prepare';
 import { parseWrite } from './rules/parse';
 import type { ProposedOp } from './types';
 
+interface ExpectedOp {
+  module: string;
+  action: string;
+  data?: Record<string, unknown>;
+  target?: string;
+}
+interface Case {
+  id: string;
+  input: string;
+  tags: string[];
+  expect: ExpectedOp[];
+}
+
+const manifests = visibleManifests.filter((m) => m.id !== 'example');
+const NOW = new Date(2026, 8, 29, 10, 0);
+const TODAY = evalSet.today;
+
+type Outcome = 'exact' | 'partial' | 'wrong' | 'escalate' | 'negative-ok' | 'false-positive';
+
+const subset = (actual: unknown, expected: unknown): boolean => {
+  if (expected === null || typeof expected !== 'object') return actual === expected;
+  if (Array.isArray(expected)) return JSON.stringify(actual) === JSON.stringify(expected);
+  if (actual === null || typeof actual !== 'object') return false;
+  return Object.entries(expected).every(([k, v]) =>
+    subset((actual as Record<string, unknown>)[k], v),
+  );
+};
+
 beforeAll(async () => {
-  setNow(() => EVAL_NOW.getTime());
-  await seedEvalFixtures();
+  setNow(() => NOW.getTime());
+  await clearAll();
+  await db.table('_imports').clear();
+  for (const f of evalSet.fixtures) {
+    const manifest = manifests.find((m) => m.id === f.module)!;
+    await createCollectionRepo(manifest, f.collection, db).create(
+      f.data as Record<string, unknown>,
+      'id' in f ? { id: f.id as string } : undefined,
+    );
+  }
 });
 afterAll(() => setNow());
 
 async function run(c: Case): Promise<{ outcome: Outcome; got?: ProposedOp[] }> {
-  const proposal = await parseWrite(c.input, {
-    manifests,
-    database: db,
-    now: EVAL_NOW,
-    today: EVAL_TODAY,
+  const proposal = await parseWrite(c.input, { manifests, database: db, now: NOW, today: TODAY });
+  if (c.expect.length === 0) {
+    return { outcome: proposal ? 'false-positive' : 'negative-ok', got: proposal?.ops };
+  }
+  if (!proposal) return { outcome: 'escalate' };
+  const got = proposal.ops;
+  if (
+    got.length !== c.expect.length ||
+    got.some((o, i) => o.module !== c.expect[i]!.module || o.action !== c.expect[i]!.action)
+  ) {
+    return { outcome: 'wrong', got };
+  }
+  const ctx = { manifests, known: manifests, database: db, today: TODAY };
+  const prepared = await prepareProposal(got, ctx).catch(() => undefined);
+  if (!prepared) return { outcome: 'partial', got };
+  const ok = c.expect.every((e, i) => {
+    const p = prepared[i]!;
+    const dataOk = subset(got[i]!.data ?? {}, e.data ?? {});
+    const targetOk = e.target === undefined || fold(p.targetTitle ?? '') === fold(e.target);
+    return dataOk && targetOk;
   });
-  return { outcome: await scoreProposal(c, proposal), got: proposal?.ops };
+  return { outcome: ok ? 'exact' : 'partial', got };
 }
 
-describe('eval set', () => {
-  it('has at least 150 invented inputs with negatives', () => {
-    expect(cases.length).toBeGreaterThanOrEqual(150);
+describe.each([
+  ['tuning set', evalSet],
+  ['held-out set', heldOut],
+  ['blind set', blind],
+] as const)('%s', (name, set) => {
+  const cases = set.cases as Case[];
+  it('has at least 140 invented inputs with negatives', () => {
+    expect(cases.length).toBeGreaterThanOrEqual(140);
     expect(cases.filter((c) => c.expect.length === 0).length).toBeGreaterThanOrEqual(20);
     expect(new Set(cases.map((c) => c.id)).size).toBe(cases.length);
     const modules = new Set(cases.flatMap((c) => c.expect.map((e) => e.module)));
@@ -65,7 +119,7 @@ describe('eval set', () => {
     if (process.env.AI_EVAL) {
       const lines = [
         '',
-        `Stage 0 (rules, 0 tokens) on ${cases.length} inputs (${positives.length} entries, ${negatives.length} negatives)`,
+        `Stage 0 (rules, 0 tokens), ${name}, ${cases.length} inputs (${positives.length} entries, ${negatives.length} negatives)`,
         `  exact            ${exact}\t${pct(exact, positives.length)}`,
         `  module right, fields off  ${partial}\t${pct(partial, positives.length)}`,
         `  wrong module/action       ${wrong}\t${pct(wrong, positives.length)}`,
@@ -100,8 +154,53 @@ describe('eval set', () => {
     }
 
     // Guards (CI): the rules must stay useful and, above all, must not act wrongly.
-    expect(falsePositives / negatives.length).toBeLessThanOrEqual(0.05);
-    expect(wrong / positives.length).toBeLessThanOrEqual(0.03);
-    expect(exact / positives.length).toBeGreaterThanOrEqual(0.5);
+    expect(falsePositives / negatives.length).toBeLessThanOrEqual(0.02);
+    expect(wrong / positives.length).toBeLessThanOrEqual(0.01);
+    expect(exact / positives.length).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it('keeps module and action when the wording is only dressed up (case, politeness, punctuation)', async () => {
+    const dress: ((t: string) => string)[] = [
+      (t) => t.toLowerCase(),
+      (t) => `Bitte ${t}`,
+      (t) => `${t} bitte`,
+      (t) => `${t}!`,
+      (t) => `  ${t.replace(/ /g, '  ')} `,
+    ];
+    let total = 0;
+    let kept = 0;
+    let negKept = 0;
+    let negTotal = 0;
+    for (const c of cases) {
+      for (const f of dress) {
+        const proposal = await parseWrite(f(c.input), {
+          manifests,
+          database: db,
+          now: NOW,
+          today: TODAY,
+        });
+        if (c.expect.length === 0) {
+          negTotal++;
+          if (!proposal) negKept++;
+          continue;
+        }
+        total++;
+        // A proposal that differs is wrong; passing on to the next stage is allowed.
+        const same =
+          proposal !== undefined &&
+          proposal.ops.length === c.expect.length &&
+          proposal.ops.every(
+            (o, i) => o.module === c.expect[i]!.module && o.action === c.expect[i]!.action,
+          );
+        if (same || proposal === undefined) kept++;
+      }
+    }
+    if (process.env.AI_EVAL) {
+      process.stdout.write(
+        `  dressed up (${name}): ${kept}/${total} not wrong, negatives out ${negKept}/${negTotal}\n`,
+      );
+    }
+    expect(kept / total).toBeGreaterThanOrEqual(0.98);
+    expect(negKept / negTotal).toBeGreaterThanOrEqual(0.97);
   });
 });
