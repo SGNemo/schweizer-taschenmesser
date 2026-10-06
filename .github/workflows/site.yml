@@ -45,7 +45,7 @@ jobs:
           if grep -rEo '(src|href)="https?://[^"]+"' dist/*.html dist/en/*.html | grep -Ev 'github\.com|ko-fi\.com|cloudflare\.com|docs\.github\.com|nemo\.example|\$\{\{' ; then
             echo "::error::External resource found"; exit 1
           fi
-          if grep -rE '<script(?![^>]*src=)|<style|style="' --include='*.html' -P dist; then
+          if grep -rP '<script(?![^>]*src=)|<style|style="' --include='*.html' dist; then
             echo "::error::Inline script or style found (breaks the CSP)"; exit 1
           fi
       - name: Link check (internal and external)

@@ -32,9 +32,9 @@ src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
 src/release/latest.json  last known release (updated by the build, committed as fallback)
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
 src/components/        Hero, Features, Why, Install, Support, Header, Footer, Icon (inline Lucide)
-src/pages/             index, impressum, datenschutz, 404 · en/index, en/imprint, en/privacy
+src/pages/             index, impressum, datenschutz, 404, robots.txt.ts · en/index, en/imprint, en/privacy
 src/assets/screens/    overview-{dark,light}.png (app with seed "medium"; Astro makes AVIF/WebP)
-public/                robots.txt, .well-known/security.txt, _headers, theme.js
+public/                .well-known/security.txt, _headers, theme.js
 scripts/               fetch-release, copy-brand, check-links, check-downloads, lighthouse,
                        screenshots, *.test.mjs
 ```
