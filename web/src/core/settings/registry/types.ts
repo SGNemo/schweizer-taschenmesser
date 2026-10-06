@@ -34,6 +34,8 @@ export interface SettingsContext {
   /** Dev-Preview build (`isDevBuild()`). */
   isDev: boolean;
   isModuleEnabled(moduleId: string): boolean;
+  /** AI is allowed (master switch Settings → KI); sections about AI hide when this is `false`. */
+  aiOn?: boolean;
 }
 
 /** A single setting inside a section, listed so the search can find it and jump to its row. */

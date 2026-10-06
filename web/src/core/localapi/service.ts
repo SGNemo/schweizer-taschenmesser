@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
 import type { LocalApiRequest } from '@/core/platform/types';
+import { isAiOn } from '@/core/ai/switch';
 import { loadConfig, serverTokens, type LocalApiConfig } from './config';
 import { handleRequest } from './handler';
 import { appendLog } from './log';
@@ -65,7 +66,11 @@ export function startLocalApi(): () => void {
     }
   };
 
-  const sub = liveQuery(() => loadConfig()).subscribe({
+  // With AI switched off (here or synced) the server stays down whatever the stored setting says.
+  const sub = liveQuery(async () => {
+    const config = await loadConfig();
+    return (await isAiOn()) ? config : { ...config, enabled: false };
+  }).subscribe({
     next: (config) => {
       chain = chain.then(() => apply(config));
     },

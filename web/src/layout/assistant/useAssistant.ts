@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ask, type AskResponse } from '@/core/ai/assistant';
 import { createRouterProvider, loadAiConfig } from '@/core/ai/config';
+import { isAiOn } from '@/core/ai/switch';
 import { searchEntries } from '@/core/ai/search/fulltext';
 import type { ResultRow } from '@/core/ai/query/types';
 import { db } from '@/core/db/db';
@@ -29,6 +30,10 @@ export function useAssistant() {
       controller.current?.abort();
       const ctl = new AbortController();
       controller.current = ctl;
+      if (!(await isAiOn())) {
+        setState({ phase: 'idle' });
+        return;
+      }
       setState({ phase: 'loading', question });
       const [config, states, writeSettings] = await Promise.all([
         loadAiConfig(),

@@ -11,6 +11,8 @@ KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leis
 
 Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), Entwurf [design/READABILITY-PLAN.md](design/READABILITY-PLAN.md).
 
+KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen → KI, löscht Schlüssel, Cache, Statistik und API-Tokens; PR gegen `develop`, wartet auf Review; Handtests A1–A2 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).
 2. Release `v0.3.1` kurz prüfen: Checkliste R1 in [MANUAL-TESTS.md](MANUAL-TESTS.md) (Download, Start, Version im Über-Dialog).

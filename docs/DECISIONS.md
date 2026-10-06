@@ -18,7 +18,7 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - ≤0.2 **Three tiers, cheapest first:** local German parser → full text → intent cache → model; cache key excludes provider/model.
 - ≤0.2 **Model output is never evaluated:** Zod-validated `Intent` against a field whitelist; creating entries needs a confirmation card.
 - ≤0.2 **Multi-provider router with fallback, cooldowns, local limits;** presets are editable defaults (unverified); keys in `PlatformService.secrets`.
-- 0.3 **AI writes: rules → local model → cloud, via preview; actions per module; cloud sees schemas only; local model optional, never bundled** → [local-model.md](decisions/local-model.md)
+- 0.3 **AI writes: rules → local model → cloud, always via preview; actions per module (`aiSchema.actions`); cloud sees schemas, never entries; local model optional, never bundled** → [local-model.md](decisions/local-model.md)
 - 0.3 **Chat: content invisible to assistant/search/APIs; engine per chat; other modules' data opt-in per chat, shown before sending** → [local-model.md](decisions/local-model.md)
 - ≤0.2 **`accounts` (vault) invisible to AI, search, dataapi, local API** (no `aiSchema`, `dataApi: false`, id block; `exclusion.test.ts`).
 - ≤0.2 **Connectors never import `core/ai`; news has no `aiSchema`** – feed/mail text reaches a model only via the explicit news-brief button (headlines).
@@ -87,3 +87,4 @@ One line per decision: **what** – why. Full text with sources, alternatives an
 - 0.4 **Codes are Ed25519-signed and verified offline** (embedded public key, key id for rotation, no expiry/revocation) – no tracking, one shared `@nemo/supporter-codes`.
 - 0.4 **Status = verified code, derived on every read; synced setting holds only the code** – sync cannot inject a tier.
 - 0.4 **Code-issuing webhook is a separate Cloudflare Worker with live signing (variant A)** – no link to sync server or user data; key leak = cosmetic only, rotation by key id.
+- 2026-10 **"KI abschalten": one reversible master switch, deletes keys and caches** – [decisions/ai-off.md](decisions/ai-off.md).

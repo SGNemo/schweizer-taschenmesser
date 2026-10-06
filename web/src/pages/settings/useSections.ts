@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useAiOn } from '@/core/ai/switch';
 import { hasStartData } from '@/core/dataapi/onboarding';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -51,6 +52,7 @@ let lastStates: ModuleStates | undefined;
 
 /** Sections visible right now (platform, dev build, enabled modules), in navigation order. */
 export function useSettingsSections(): SettingsSectionDef[] {
+  const aiOn = useAiOn();
   const states = useLiveQuery(
     async () => {
       const read = await loadModuleStates();
@@ -66,7 +68,8 @@ export function useSettingsSections(): SettingsSectionDef[] {
       platform: getPlatform().kind,
       isDev: isDevBuild(),
       isModuleEnabled: (id) => Boolean(states[id]),
+      aiOn,
     };
     return visibleSections(allSettingsSections(), ctx);
-  }, [states]);
+  }, [states, aiOn]);
 }

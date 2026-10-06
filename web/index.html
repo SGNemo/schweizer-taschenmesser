@@ -72,8 +72,8 @@
           document.documentElement.dataset.readAid =
             rc === '50' || rc === '75' || rc === '100' ? rc : '25';
         }
-        if (localStorage.getItem('tm-read-style') === 'bold')
-          document.documentElement.dataset.readStyle = 'bold';
+        var rst = localStorage.getItem('tm-read-style');
+        if (rst === 'bold' || rst === 'color') document.documentElement.dataset.readStyle = rst;
         if (localStorage.getItem('tm-color') === 'calm')
           document.documentElement.dataset.color = 'calm';
         if (localStorage.getItem('tm-motion') === 'reduce')

@@ -48,7 +48,6 @@ const hasLetters = (s: string): boolean => /\p{L}/u.test(s);
 
 interface Plan {
   level: ReadLevel;
-  tone: 'ink' | 'plain';
   heavy: boolean;
 }
 
@@ -57,11 +56,11 @@ const LINK_COMPONENTS: ReadonlySet<unknown> = new Set([Link, NavLink]);
 
 function planOf(host: unknown): Plan | null {
   if (typeof host !== 'string')
-    return LINK_COMPONENTS.has(host) ? { level: 100, tone: 'plain', heavy: false } : null;
+    return LINK_COMPONENTS.has(host) ? { level: 100, heavy: false } : null;
   const level = levelOf(host);
   if (!level) return null;
   const bold = BOLD_HOSTS.has(host);
-  return { level, tone: bold ? 'ink' : 'plain', heavy: bold };
+  return { level, heavy: bold };
 }
 
 function wrapChild(child: unknown, plan: Plan, index: number): unknown {

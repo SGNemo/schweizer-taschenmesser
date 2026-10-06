@@ -136,6 +136,7 @@ N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update p
 - **K4 Schalter:** „Einträge per KI vorschlagen“ aus: keine „Eintragen“-Option, kein „Mit KI eintragen“ im Modul; ein einzelnes Modul abgeschaltet: dafür kommt kein Vorschlag.
 - **K5 Lokales Modell (Windows, Build mit `local-llm`):** Einstellungen → KI → Lokales Modell: Modell wählen, „Herunterladen …“ zeigt Größe, Quelle, Prüfsumme; nach dem Download „Laden“, „Testen“ erkennt den Beispielsatz. GTX 1070: „Grafikkarte nutzen“ an, Vulkan wird erkannt, Zeit pro Satz notieren; aus: Ryzen 5 7600X (CPU). Kein Netz: Sätze gehen weiter lokal. ☐
 - **K6 Chat:** Modul Chat aktivieren; mit lokalem Modell (Windows) und mit einem Anbieter je eine Frage und eine Rückfrage stellen (Verlauf wird berücksichtigt). Im Zahnrad Module für Daten wählen, „Daten anhängen“ ankreuzen: die Vorschau zeigt genau den mitgeschickten Text, ohne Auswahl geht nichts mit. Antwort kopieren, neu erzeugen, Frage ändern, Export als Markdown öffnen, Chat löschen. Android „Leicht“ (kleines Modell) folgt mit der Android-Entscheidung. ☐
+- **K7 Android „Leicht“:** folgt mit der Android-Entscheidung.
 
 ## Browser-Erweiterung (Brave) und Tresor-Brücke – nur von Hand prüfbar (Windows)
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt, `nemo-extension-….zip` entpacken, Tresor mit Beispieldaten. Hintergrund: [security/VAULT-EXTENSION.md](security/VAULT-EXTENSION.md).
@@ -194,6 +195,10 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **L2 Listen:** Umfang 50 % und mehr: werden Titel in Listen ruhiger oder unruhiger? Lange Listen (Rechnungen/ToDos mit vielen Einträgen) bei 100 %: bleibt es flüssig? Fokus-Lesen in einer langen Notiz öffnen.
 - **L3 Ruhig-Modus:** Farben → Ruhig: bleiben nur Überfälliges und Heutiges farbig; erkennt man Kategorien noch am Namen?
 - **L4 Gliederung:** Rechnungen/ToDos: Gruppen einklappen, nach Neustart bleibt der Zustand; Kalender-Woche: Stundenlinien, Wochenende, Jetzt-Linie; Bereichsfarben in Seitenleiste und Modul-Bibliothek (hell/dunkel, Rail, Handy).
+
+### KI abschalten – nur mit zwei Geräten prüfbar
+- **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
+- **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
