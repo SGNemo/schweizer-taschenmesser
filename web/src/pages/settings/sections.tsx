@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import { t } from '@/strings';
 import { tLang } from '@/strings.i18n';
+import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
 import { LanguageSection } from './LanguageSection';
 import { SettingRow, SettingsGroup } from '@/ui';
@@ -503,9 +504,15 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'diagnostics',
     category: 'ueber',
     order: 60,
-    title: t.about.diagnostics.title,
-    description: t.about.diagnostics.description,
-    keywords: ['Fehlerprotokoll', 'Export', 'Support'],
+    title: tDiag.de.title,
+    description: tDiag.de.export.description,
+    keywords: [
+      'Fehlerprotokoll',
+      'Export',
+      'Support',
+      ...tDiag.de.report.keywords,
+      ...tDiag.en.report.keywords,
+    ],
     render: () => <DiagnosticsSection />,
   },
   {

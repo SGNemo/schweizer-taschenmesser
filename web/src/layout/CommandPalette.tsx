@@ -23,6 +23,8 @@ import { Button, Dialog, Icon, type IconName } from '@/ui';
 import { AnswerView } from './assistant/AnswerView';
 import { useAssistant, useSearchHits } from './assistant/useAssistant';
 import { useModuleNavItems, useNavTree, useQuickAddActions } from './useNavItems';
+import { reportBug } from '@/core/diagnostics/report';
+import { tDiag } from '@/strings.diagnostics';
 import styles from './CommandPalette.module.css';
 import { loadDevCommands } from './devTools';
 import answerStyles from './assistant/assistant.module.css';
@@ -134,6 +136,12 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       },
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
+      {
+        id: 'report-bug',
+        label: tDiag.get().report.paletteCommand,
+        icon: 'alert' as IconName,
+        run: () => void reportBug(),
+      },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
       ...settingsSections.flatMap((sec) => [
         {

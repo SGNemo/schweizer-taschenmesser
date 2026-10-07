@@ -43,13 +43,6 @@ export const t = {
       docs: 'Dokumentation',
       bugs: 'Fehler melden',
     },
-    diagnostics: {
-      title: 'Diagnose',
-      label: 'Diagnose exportieren',
-      description:
-        'Speichert eine Datei mit Version, Plattform, aktiven Modulen und den letzten Fehlermeldungen (gekürzt). Ohne Einträge, Einstellungen und Schlüssel.',
-      saved: 'Diagnose gespeichert.',
-    },
     reset: {
       title: 'Gerät zurücksetzen',
       label: 'Alle Daten auf diesem Gerät löschen',
