@@ -512,7 +512,7 @@ export const de = {
     steps: {
       basics: {
         title: 'Grundlagen',
-        description: 'Name, Farbschema und Wochenstart. Alles lässt sich später ändern.',
+        description: 'Sprache, Name, Farbschema und Wochenstart. Alles lässt sich später ändern.',
         name: 'Dein Name (optional)',
         nameHint: 'Nur für Begrüßungen, bleibt in deinen Daten.',
         weekStart: 'Woche beginnt am',

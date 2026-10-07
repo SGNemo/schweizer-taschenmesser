@@ -54,7 +54,10 @@ export function findCaptures(fileName: string, source: string, roots = ['t']): C
         ts.isVariableDeclaration(parent) &&
         ts.isIdentifier(parent.name) &&
         aliases.has(parent.name.text);
-      if (isOuter && r && aliases.has(r) && !isAliasInit) {
+      // `Object.keys(t.x)` only reads keys, which do not depend on the language.
+      const isKeysOnly =
+        ts.isCallExpression(parent) && /^Object\.keys$/.test(parent.expression.getText());
+      if (isOuter && r && aliases.has(r) && !isAliasInit && !isKeysOnly) {
         const { line } = sf.getLineAndCharacterOfPosition(n.getStart());
         out.push({ line: line + 1, text: n.getText().slice(0, 80) });
         return;
