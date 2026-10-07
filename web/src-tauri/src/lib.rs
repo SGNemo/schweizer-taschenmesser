@@ -13,6 +13,8 @@ mod local_llm;
 #[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
+mod panic_log;
+#[cfg(desktop)]
 mod portable;
 #[cfg(desktop)]
 mod system;
@@ -171,6 +173,7 @@ pub fn run() {
             capture::desktop_info,
             capture::desktop_data_dir,
             capture::desktop_safe_mode,
+            capture::desktop_take_panic_log,
             capture::desktop_open_data_dir,
             capture::desktop_show_main
         ]);
@@ -181,6 +184,10 @@ pub fn run() {
     let builder = builder.setup(|app| {
         #[cfg(windows)]
         create_main_window(app)?;
+        // From here on a panic leaves a line in `<data folder>/logs/panic.log` (diagnostics export).
+        if let Some(dir) = capture::app_data_folder(app.handle()) {
+            panic_log::install(dir.join("logs"));
+        }
         capture::setup(app)
     });
 

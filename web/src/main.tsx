@@ -13,6 +13,7 @@ import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
 import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
 import { checkDb } from '@/core/db/health';
+import { importNativePanics } from '@/core/diagnostics/nativeLog';
 import { installErrorLog, recordError } from '@/core/diagnostics/errorLog';
 import { initSafeMode, isSafeMode } from '@/core/safemode/safeMode';
 import { FatalErrorScreen, RootErrorBoundary } from '@/layout/FatalErrorScreen';
@@ -27,6 +28,7 @@ setLang(getLang());
 // The platform (browser or native shell) is chosen first: everything below asks `getPlatform()`.
 void initPlatform().then(async () => {
   await initSafeMode();
+  await importNativePanics(); // panics of the last native run (desktop), reported once
   const root = createRoot(document.getElementById('root')!);
   // A database that cannot be opened or read gets the recovery screen instead of a blank crash.
   const problem = await checkDb();

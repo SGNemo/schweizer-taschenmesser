@@ -8,6 +8,12 @@ import { tDiag } from '@/strings.diagnostics';
 import { Button, Card, Logo, TextField, TypedConfirmDialog } from '@/ui';
 import styles from './RecoveryScreen.module.css';
 
+/** Dexie repeats the error name inside its message; show the text after the last "<name>:" only. */
+const shortMessage = (p: DbProblem): string => {
+  const at = p.message.lastIndexOf(`${p.name}:`);
+  return (at >= 0 ? p.message.slice(at + p.name.length + 1) : p.message).trim();
+};
+
 /**
  * Shown instead of the app when the local database cannot be opened or read. Every step that
  * changes something first asks for a copy of the defective state; nothing happens without it.
@@ -82,7 +88,7 @@ export function RecoveryScreen({ problem }: { problem: DbProblem }) {
           <p className={styles.detail} data-testid="recovery-detail">
             {r.details}: {problem.name}
             {problem.tables.length ? ` (${problem.tables.join(', ')})` : ''} –{' '}
-            {scrub(problem.message)}
+            {scrub(shortMessage(problem))}
           </p>
         </NoReadAid>
         {message && (

@@ -8,6 +8,8 @@ Users report through Settings → Über Nemo → Diagnose (or the command palett
 ## Recovery and safe mode
 - Boot (`main.tsx`): `checkDb()` opens the DB and reads one row per table. Failure → `RecoveryScreen` (repair / restore backup / empty start after typing `NEU STARTEN`); always a copy of the defective state first (`dumpDb`, no `_secrets`/`_blobs`).
 - Fatal render error → `RootErrorBoundary` → `FatalErrorScreen`. A module error → `ModuleErrorBoundary` (card; the rest keeps running).
+- Native panics: `panic_log.rs` writes `<data folder>/logs/panic.log` (64 KiB, one `.1`), the next start imports it once (`importNativePanics`, source `rust`).
+- A broken home widget shows a calm line inside its card (`WidgetErrorBoundary`).
 - **Safe mode** (all modules off for one run, nothing saved): desktop `Nemo.exe --safe-mode` or env `NEMO_SAFE_MODE=1`; Android/browser: triple tap on the logo in the fatal screen (or its button), or `/?safe=1`. Leave: restart normally.
 
 ## Fixtures and the update path
