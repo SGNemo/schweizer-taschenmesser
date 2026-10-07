@@ -1,5 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Nemo Dev",
-  "identifier": "io.github.sgnemo.taschenmesser.dev"
+  "identifier": "io.github.sgnemo.taschenmesser.dev",
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNDIzNzAyRTFEOEI5Q0UKUldUT3VkamhBamRDK210bVlOclMva3hmMC81Q1hJZEtaWVkyWEszb2YwbXN1ZkFsR3R3L2tzYWMK"
+    }
+  }
 }
