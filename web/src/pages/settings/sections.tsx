@@ -49,16 +49,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return s.general.title;
     },
-    keywords: [
-      'Name',
-      'Wochenstart',
-      'Sprache',
-      'Language',
-      'Währung',
-      'Zeitzone',
-      'Format',
-      'Datum',
-    ],
+    get keywords() {
+      return s.searchWords.general;
+    },
     fields: [
       {
         key: 'displayName',
@@ -115,7 +108,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return s.appearance;
     },
-    keywords: ['Theme', 'Dunkelmodus', 'Schrift', 'Animation'],
+    get keywords() {
+      return s.searchWords.appearance;
+    },
     fields: [
       {
         key: 'theme',
@@ -398,7 +393,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get description() {
       return s.modulesOverview.description;
     },
-    keywords: ['Bibliothek', 'Modul aktivieren', 'Startdaten'],
+    get keywords() {
+      return s.searchWords.modules;
+    },
     render: () => (
       <SettingsGroup
         id="modules"
@@ -421,7 +418,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get description() {
       return s.tools.description;
     },
-    keywords: ['Werkzeugleiste', 'Reihenfolge'],
+    get keywords() {
+      return s.searchWords.tools;
+    },
     render: () => <ToolsSection />,
   },
   {
@@ -431,7 +430,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.notifications.title;
     },
-    keywords: ['Push', 'Erlaubnis', 'Erinnerung'],
+    get keywords() {
+      return s.searchWords.notifications;
+    },
     render: () => <NotificationsSection />,
   },
   {
@@ -509,7 +510,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get description() {
       return s.linkRow.browserExtensionHint;
     },
-    keywords: ['Brave', 'Chrome', 'Autofill'],
+    get keywords() {
+      return s.searchWords['browser-extension'];
+    },
     visibleWhen: (ctx) => ctx.isModuleEnabled('accounts'),
     render: () => (
       <SettingsGroup id="browser-extension" title={s.linkRow.browserExtension}>
@@ -529,7 +532,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get hint() {
       return t.help.sync;
     },
-    keywords: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passphrase'],
+    get keywords() {
+      return s.searchWords.sync;
+    },
     render: () => (
       <SettingsGroup id="sync" title={t.sync.title} hint={t.help.sync} bare>
         <SyncSection />
@@ -543,7 +548,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.backup.title;
     },
-    keywords: ['Export', 'Import', 'Sicherung', 'Wiederherstellen', 'Automatisch'],
+    get keywords() {
+      return s.searchWords.backup;
+    },
     render: () => (
       <SettingsGroup id="backup" title={t.backup.title} bare>
         <BackupSection />
@@ -560,7 +567,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get description() {
       return t.ai.off.description;
     },
-    keywords: ['KI aus', 'abschalten', 'deaktivieren', 'ohne KI', 'Nuke', 'löschen', 'Schlüssel'],
+    get keywords() {
+      return s.searchWords['ai-switch'];
+    },
     fields: [
       {
         key: 'off',
@@ -587,7 +596,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get hint() {
       return t.help.aiWrite;
     },
-    keywords: ['Eintragen', 'Schreiben', 'Vorschau', 'Cloud', 'Fallback', 'Nachfragen'],
+    get keywords() {
+      return s.searchWords['ai-write'];
+    },
     fields: [
       {
         key: 'enabled',
@@ -627,7 +638,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get hint() {
       return t.help.aiLocal;
     },
-    keywords: ['Lokal', 'Modell', 'Offline', 'Download', 'GPU', 'Vulkan', 'Gewichte'],
+    get keywords() {
+      return s.searchWords['ai-local'];
+    },
     render: () => <LocalModelSection />,
   },
   {
@@ -640,7 +653,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get description() {
       return t.ai.stats.description;
     },
-    keywords: ['Statistik', 'Token', 'Kosten', 'Regeln', 'lokal', 'Cloud'],
+    get keywords() {
+      return s.searchWords['ai-stats'];
+    },
     visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => <AiStatsSection />,
   },
@@ -654,7 +669,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get hint() {
       return t.help.aiRouter;
     },
-    keywords: ['Anbieter', 'Schlüssel', 'Limit', 'Cache', 'Zähler'],
+    get keywords() {
+      return s.searchWords.ai;
+    },
     visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => (
       <SettingsGroup id="ai" title={t.ai.title} hint={t.help.aiRouter} bare>
@@ -672,7 +689,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get hint() {
       return t.help.connectors;
     },
-    keywords: ['Google', 'Kalender', 'ICS', 'Gmail'],
+    get keywords() {
+      return s.searchWords.connectors;
+    },
     render: () => (
       <SettingsGroup id="connectors" title={t.connectors.title} hint={t.help.connectors} bare>
         <ConnectorsSection />
@@ -689,7 +708,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get hint() {
       return t.help.localApi;
     },
-    keywords: ['API', 'MCP', 'Token', 'Schnittstelle', 'Port'],
+    get keywords() {
+      return s.searchWords.localapi;
+    },
     fields: [
       {
         key: 'enable',
@@ -718,7 +739,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.quickCapture.settings.title;
     },
-    keywords: ['Hotkey', 'Tastenkürzel', 'Tray', 'Autostart', 'Zwischenablage'],
+    get keywords() {
+      return s.searchWords.quickcapture;
+    },
     fields: [
       {
         key: 'defaultType',
@@ -782,7 +805,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get hint() {
       return t.help.updateChannel;
     },
-    keywords: ['Kanal', 'Beta', 'Stable', 'Prüfen'],
+    get keywords() {
+      return s.searchWords.updates;
+    },
     fields: [
       {
         key: 'channel',
@@ -816,7 +841,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.settings.cat.entwickler.title;
     },
-    keywords: ['Testdaten', 'Seed', 'Zurücksetzen'],
+    get keywords() {
+      return s.searchWords.developer;
+    },
     visibleWhen: (ctx) => ctx.isDev && DeveloperSection !== undefined,
     render: () =>
       DeveloperSection ? (
@@ -834,7 +861,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.ai.local.licensesTitle;
     },
-    keywords: ['Lizenz', 'Modell', 'Apache', 'MIT', 'Gewichte'],
+    get keywords() {
+      return s.searchWords['model-licenses'];
+    },
     render: () => <ModelLicensesSection />,
   },
   {
@@ -844,7 +873,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.setup.title;
     },
-    keywords: ['Einrichtung', 'Assistent', 'Checkliste', 'erneut starten'],
+    get keywords() {
+      return s.searchWords.setup;
+    },
     render: () => (
       <SettingsGroup id="setup" title={t.setup.title} bare>
         <SetupSection />
@@ -858,7 +889,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.about.title;
     },
-    keywords: ['Version', 'Build', 'Commit', 'Plattform', 'Installation', 'Datenordner', 'Lizenz'],
+    get keywords() {
+      return s.searchWords.about;
+    },
     fields: [
       {
         key: 'version',
@@ -941,7 +974,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.about.updates.title;
     },
-    keywords: ['Changelog', 'Änderungen', 'Neuerungen', 'Release Notes'],
+    get keywords() {
+      return s.searchWords['about-updates'];
+    },
     fields: [
       {
         key: 'check',
@@ -959,7 +994,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.about.links.title;
     },
-    keywords: ['GitHub', 'Quellcode', 'Downloads', 'Hilfe', 'Dokumentation', 'Fehler melden'],
+    get keywords() {
+      return s.searchWords.links;
+    },
     render: () => <LinksSection />,
   },
   {
@@ -969,7 +1006,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get title() {
       return t.about.licenses;
     },
-    keywords: ['Bibliotheken', 'Schrift', 'Icons', 'Open Source'],
+    get keywords() {
+      return s.searchWords.licenses;
+    },
     render: () => <LicensesSection />,
   },
   {
@@ -982,7 +1021,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get description() {
       return t.about.diagnostics.description;
     },
-    keywords: ['Fehlerprotokoll', 'Export', 'Support'],
+    get keywords() {
+      return s.searchWords.diagnostics;
+    },
     render: () => <DiagnosticsSection />,
   },
   {
@@ -995,7 +1036,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     get description() {
       return t.about.reset.description;
     },
-    keywords: ['Löschen', 'Zurücksetzen', 'Gefahrenzone', 'Alle Daten'],
+    get keywords() {
+      return s.searchWords['device-reset'];
+    },
     render: () => <DeviceResetSection />,
   },
 ];

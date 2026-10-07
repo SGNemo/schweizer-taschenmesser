@@ -89,6 +89,7 @@ export const onboarding: Strings['onboarding'] = {
     list: 'In diese Liste',
   },
   reminders: {
+    textDetail: 'heute, 09:00 Uhr',
     templates: 'Vorlagen für typische Erinnerungen',
     templatesHint:
       'Wähle aus, woran dich die App erinnern soll. Zeiten und Tage kannst du danach ändern.',

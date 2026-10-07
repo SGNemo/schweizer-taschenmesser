@@ -5,7 +5,20 @@
  * (hard-coded, or read once at import) is easy to spot because it has no brackets.
  */
 const ACCENTS: Record<string, string> = {
-  a: 'á', e: 'é', i: 'í', o: 'ö', u: 'ü', A: 'Å', E: 'É', I: 'Î', O: 'Ø', U: 'Û', c: 'ç', n: 'ñ', s: 'š', y: 'ý',
+  a: 'á',
+  e: 'é',
+  i: 'í',
+  o: 'ö',
+  u: 'ü',
+  A: 'Å',
+  E: 'É',
+  I: 'Î',
+  O: 'Ø',
+  U: 'Û',
+  c: 'ç',
+  n: 'ñ',
+  s: 'š',
+  y: 'ý',
 };
 
 /** Pseudo text for one string; placeholders like `{name}` and `#` stay untouched. */

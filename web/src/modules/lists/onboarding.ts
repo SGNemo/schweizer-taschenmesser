@@ -30,8 +30,12 @@ export const onboarding: OnboardingDef = {
       },
       templates: PACKING_TEMPLATES.map((id) => ({
         id,
-        label: s[id].name,
-        detail: `${s.packingKind}, ${s[id].items.length}`,
+        get label() {
+          return s[id].name;
+        },
+        get detail() {
+          return t.lists.templateDetail(s.packingKind, s[id].items.length);
+        },
       })),
     },
   ],

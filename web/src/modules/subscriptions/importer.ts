@@ -122,7 +122,11 @@ const runtime: ImporterRuntime = {
             ...(notice !== undefined ? { cancelNoticeDays: notice } : {}),
           },
           label: name,
-          detail: `${formatMoney(amount)} · ${describeRecurrence(recurrence)} · nächste Abbuchung ${formatDay(next, 'd. MMM yyyy')}`,
+          detail: t.subscriptions.importDetail(
+            formatMoney(amount),
+            describeRecurrence(recurrence),
+            formatDay(next, 'd. MMM yyyy'),
+          ),
           dedupeKey: nameKey(name),
         },
       ],

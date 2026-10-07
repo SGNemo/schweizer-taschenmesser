@@ -1,6 +1,8 @@
 import type { Strings } from '@/strings';
 
 export const palette: Strings['palette'] = {
+  /** Typing the start of the word for settings shows settings entries (first letters, lower case). */
+  settingsPrefix: 'einst',
   recent: 'Zuletzt benutzt',
   title: 'Befehlspalette',
   placeholder: 'Suchen, springen oder fragen …',

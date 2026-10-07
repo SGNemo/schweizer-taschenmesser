@@ -1,6 +1,8 @@
 import type { Strings } from '@/strings';
 
 export const subscriptions: Strings['subscriptions'] = {
+  importDetail: (amount: string, rhythm: string, next: string) =>
+    `${amount} · ${rhythm} · nächste Abbuchung ${next}`,
   cancelTitle: (name: string) => `Kündigungsfrist endet: ${name}`,
   cancelBody: (last: string, amount: string, charge: string) =>
     `Letzter Tag: ${last} – sonst ${amount} am ${charge}`,

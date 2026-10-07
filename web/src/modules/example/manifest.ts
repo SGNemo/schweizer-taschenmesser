@@ -4,18 +4,24 @@ import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { entrySchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'example',
-  name: 'Beispiel',
+  get name() {
+    return t.example.name;
+  },
   icon: 'puzzle',
   version: 1,
-  description:
-    'Referenzmodul aus dem Generator: einfache Einträge mit Erledigt-Status. Dient als Vorlage und Testträger.',
+  get description() {
+    return t.example.description;
+  },
   routes: [
     {
       path: '/example',
-      label: 'Beispiel',
+      get label() {
+        return t.example.name;
+      },
       nav: true,
       component: () => import('./routes/MainPage'),
     },
@@ -29,7 +35,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'summary',
-      title: 'Beispiel',
+      get title() {
+        return t.example.name;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/SummaryWidget'),
@@ -45,7 +53,15 @@ const manifest: ModuleManifest = {
   devOnly: true,
   contributions: {
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'new', label: 'Beispiel: neuer Eintrag', to: '/example?new=1' }],
+    quickAdd: [
+      {
+        id: 'new',
+        get label() {
+          return t.example.quickAdd;
+        },
+        to: '/example?new=1',
+      },
+    ],
   },
 };
 

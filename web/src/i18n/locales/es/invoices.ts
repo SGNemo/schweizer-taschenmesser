@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const invoices: Strings['invoices'] = {
+  importDetail: (amount: string, due: string) => `${amount} · fällig ${due}`,
   dueTitle: (payee: string) => `Rechnung fällig: ${payee}`,
   dueBody: (amount: string, date: string) => `${amount} · fällig am ${date}`,
   meta: {

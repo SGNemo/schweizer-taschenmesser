@@ -61,6 +61,7 @@ import { devPreview } from './devPreview';
 import { chat } from './chat';
 import { example } from './example';
 import { supporter } from './supporter';
+import { aiLabels } from './aiLabels';
 
 export const ptBR: Strings = {
   appName: 'Nemo',
@@ -125,4 +126,5 @@ export const ptBR: Strings = {
   chat,
   example,
   supporter,
+  aiLabels,
 };

@@ -1,6 +1,8 @@
 import type { Strings } from '@/strings';
 
 export const calendar: Strings['calendar'] = {
+  dayLabel: (day: string, n: number) =>
+    n === 0 ? day : n === 1 ? `${day}, 1 Eintrag` : `${day}, ${n} Einträge`,
   meta: {
     name: 'Kalender',
     description:

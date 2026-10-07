@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const finance: Strings['finance'] = {
+  chartLegend: 'Legende',
   meta: {
     name: 'Finanzen',
     description:

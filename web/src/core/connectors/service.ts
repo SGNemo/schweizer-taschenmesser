@@ -3,6 +3,7 @@
  * Everything a connector returns is plain data; it goes into the modules through their manifest
  * contributions (`externalCalendar`), never through connector code.
  */
+import { t } from '@/strings';
 import { loadModuleStates } from '@/core/modules/activation';
 import { activeManifests } from '@/core/modules/contributions';
 import type { ExternalCalendarSink } from '@/core/modules/types';
@@ -57,20 +58,10 @@ export async function getCalendarSink(): Promise<ExternalCalendarSink | undefine
 
 /* ------------------------------------ error text ----------------------------------- */
 
-/** German text of a failure for the settings card; never contains a secret. */
+/** Text of a failure for the settings card (current language); never contains a secret. */
 export function describeError(e: unknown): string {
   const code = e instanceof ConnectorError ? e.code : 'network';
-  const texts: Record<string, string> = {
-    expired: 'Die Verbindung ist abgelaufen. Bitte melde dich neu an.',
-    'rate-limited': 'Der Dienst hat zu viele Anfragen gemeldet. Es wird später erneut versucht.',
-    'not-configured': 'Es fehlen noch Zugangsdaten.',
-    'no-proxy':
-      'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Synchronisierung).',
-    network: 'Der Dienst ist gerade nicht erreichbar.',
-    denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
-    'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
-    unsupported: 'Das geht auf diesem Gerät nicht.',
-  };
+  const texts = t.connectors.errors;
   return texts[code] ?? redact(String(e));
 }
 

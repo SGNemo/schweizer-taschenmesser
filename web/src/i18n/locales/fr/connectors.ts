@@ -2,6 +2,20 @@ import type { Strings } from '@/strings';
 
 export const connectors: Strings['connectors'] = {
   title: 'Verbindungen',
+  errors: {
+    expired: 'Die Verbindung ist abgelaufen. Bitte melde dich neu an.',
+    'rate-limited': 'Der Dienst hat zu viele Anfragen gemeldet. Es wird später erneut versucht.',
+    'not-configured': 'Es fehlen noch Zugangsdaten.',
+    'no-proxy':
+      'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Synchronisierung).',
+    network: 'Der Dienst ist gerade nicht erreichbar.',
+    denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
+    'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
+    unsupported: 'Das geht auf diesem Gerät nicht.',
+  } as Record<string, string>,
+  icsName: 'Kalender-Abo (ICS)',
+  icsDescription:
+    'Termine aus einer Kalender-Adresse übernehmen (nur lesen). Funktioniert mit Google Kalender, Outlook, Nextcloud und vielen anderen.',
   intro:
     'Hole Termine und Vorschläge aus Diensten ein, die du schon nutzt. Alles wird nur gelesen.',
   statusLabel: 'Status',

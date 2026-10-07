@@ -18,7 +18,9 @@ const keyOf = (e: { startDate: string; startTime?: string; title: string }) =>
 
 function detail(e: IcsEvent): string {
   const day = formatDay(e.startDate, 'EEE, d. MMM yyyy');
-  const time = e.allDay ? 'ganztägig' : `${e.startTime}${e.endTime ? `–${e.endTime}` : ''}`;
+  const time = e.allDay
+    ? t.quickCapture.chip.allDay
+    : `${e.startTime}${e.endTime ? `–${e.endTime}` : ''}`;
   const parts = [day, time];
   if (e.endDate) parts[0] = `${day} – ${formatDay(e.endDate, 'EEE, d. MMM yyyy')}`;
   if (e.recurrence) parts.push(describeRecurrence(e.recurrence));
@@ -60,7 +62,7 @@ function fromMail(input: ImportInput): ImportParseResult {
         note: f.url ? t.onboarding.mail.source(f.url) : undefined,
       },
       label: f.title,
-      detail: [formatDay(f.date, 'EEE, d. MMM yyyy'), f.time ?? 'ganztägig', f.place]
+      detail: [formatDay(f.date, 'EEE, d. MMM yyyy'), f.time ?? t.quickCapture.chip.allDay, f.place]
         .filter(Boolean)
         .join(' · '),
       dedupeKey: eventKey({ startDate: f.date, startTime: f.time, title: f.title }),

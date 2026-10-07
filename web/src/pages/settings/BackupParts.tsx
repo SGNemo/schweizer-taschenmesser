@@ -34,7 +34,7 @@ export function VerifyReportView({ report }: { report: VerifyReport }) {
             {report.modules.map((m) => (
               <li key={m.module}>
                 {moduleLabel(m.module)}: {m.records}
-                {m.tombstones > 0 ? ` (+${m.tombstones} gelöscht)` : ''}
+                {m.tombstones > 0 ? t.backup.deletedCount(m.tombstones) : ''}
               </li>
             ))}
           </ul>

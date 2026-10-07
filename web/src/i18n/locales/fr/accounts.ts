@@ -8,6 +8,7 @@ export const accounts: Strings['accounts'] = {
     route: 'Accounts',
     widget: 'Passwort-Tresor',
     settings: {
+      keywords: ['Tresor', 'Passwort', 'Sperre', 'Auto-Lock', 'Browser-Erweiterung'],
       autoLockMinutes: 'Tresor sperren nach Inaktivität',
       autoLockMinutes_1: '1 Minute',
       autoLockMinutes_5: '5 Minuten',

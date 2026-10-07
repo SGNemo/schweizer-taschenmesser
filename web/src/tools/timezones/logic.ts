@@ -1,41 +1,191 @@
 /** Time zone conversion on top of `Intl` (no tables, DST comes from the platform's tz database). */
 
+import { t } from '@/strings';
+
 export interface Zone {
   id: string;
   label: string;
 }
 
-/** Zones offered in the picker (IANA ids, German names). */
+/** Zones offered in the picker (IANA ids; names from the catalog, in the current language). */
 export const ZONES: readonly Zone[] = [
-  { id: 'UTC', label: 'UTC (Weltzeit)' },
-  { id: 'Europe/Berlin', label: 'Berlin, Wien, Zürich' },
-  { id: 'Europe/London', label: 'London' },
-  { id: 'Europe/Lisbon', label: 'Lissabon' },
-  { id: 'Europe/Athens', label: 'Athen, Helsinki' },
-  { id: 'Europe/Istanbul', label: 'Istanbul' },
-  { id: 'Europe/Moscow', label: 'Moskau' },
-  { id: 'Africa/Lagos', label: 'Lagos' },
-  { id: 'Africa/Cairo', label: 'Kairo' },
-  { id: 'Africa/Nairobi', label: 'Nairobi' },
-  { id: 'Africa/Johannesburg', label: 'Johannesburg' },
-  { id: 'Asia/Dubai', label: 'Dubai' },
-  { id: 'Asia/Kolkata', label: 'Mumbai, Neu-Delhi' },
-  { id: 'Asia/Bangkok', label: 'Bangkok' },
-  { id: 'Asia/Singapore', label: 'Singapur' },
-  { id: 'Asia/Shanghai', label: 'Peking, Shanghai' },
-  { id: 'Asia/Tokyo', label: 'Tokio' },
-  { id: 'Asia/Seoul', label: 'Seoul' },
-  { id: 'Australia/Sydney', label: 'Sydney' },
-  { id: 'Pacific/Auckland', label: 'Auckland' },
-  { id: 'Pacific/Honolulu', label: 'Honolulu' },
-  { id: 'America/Anchorage', label: 'Anchorage' },
-  { id: 'America/Los_Angeles', label: 'Los Angeles, Vancouver' },
-  { id: 'America/Denver', label: 'Denver' },
-  { id: 'America/Chicago', label: 'Chicago' },
-  { id: 'America/Mexico_City', label: 'Mexiko-Stadt' },
-  { id: 'America/New_York', label: 'New York, Toronto' },
-  { id: 'America/Sao_Paulo', label: 'São Paulo' },
-  { id: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires' },
+  {
+    id: 'UTC',
+    get label() {
+      return t.tools.timezones.zones['UTC'] ?? 'UTC';
+    },
+  },
+  {
+    id: 'Europe/Berlin',
+    get label() {
+      return t.tools.timezones.zones['Europe/Berlin'] ?? 'Europe/Berlin';
+    },
+  },
+  {
+    id: 'Europe/London',
+    get label() {
+      return t.tools.timezones.zones['Europe/London'] ?? 'Europe/London';
+    },
+  },
+  {
+    id: 'Europe/Lisbon',
+    get label() {
+      return t.tools.timezones.zones['Europe/Lisbon'] ?? 'Europe/Lisbon';
+    },
+  },
+  {
+    id: 'Europe/Athens',
+    get label() {
+      return t.tools.timezones.zones['Europe/Athens'] ?? 'Europe/Athens';
+    },
+  },
+  {
+    id: 'Europe/Istanbul',
+    get label() {
+      return t.tools.timezones.zones['Europe/Istanbul'] ?? 'Europe/Istanbul';
+    },
+  },
+  {
+    id: 'Europe/Moscow',
+    get label() {
+      return t.tools.timezones.zones['Europe/Moscow'] ?? 'Europe/Moscow';
+    },
+  },
+  {
+    id: 'Africa/Lagos',
+    get label() {
+      return t.tools.timezones.zones['Africa/Lagos'] ?? 'Africa/Lagos';
+    },
+  },
+  {
+    id: 'Africa/Cairo',
+    get label() {
+      return t.tools.timezones.zones['Africa/Cairo'] ?? 'Africa/Cairo';
+    },
+  },
+  {
+    id: 'Africa/Nairobi',
+    get label() {
+      return t.tools.timezones.zones['Africa/Nairobi'] ?? 'Africa/Nairobi';
+    },
+  },
+  {
+    id: 'Africa/Johannesburg',
+    get label() {
+      return t.tools.timezones.zones['Africa/Johannesburg'] ?? 'Africa/Johannesburg';
+    },
+  },
+  {
+    id: 'Asia/Dubai',
+    get label() {
+      return t.tools.timezones.zones['Asia/Dubai'] ?? 'Asia/Dubai';
+    },
+  },
+  {
+    id: 'Asia/Kolkata',
+    get label() {
+      return t.tools.timezones.zones['Asia/Kolkata'] ?? 'Asia/Kolkata';
+    },
+  },
+  {
+    id: 'Asia/Bangkok',
+    get label() {
+      return t.tools.timezones.zones['Asia/Bangkok'] ?? 'Asia/Bangkok';
+    },
+  },
+  {
+    id: 'Asia/Singapore',
+    get label() {
+      return t.tools.timezones.zones['Asia/Singapore'] ?? 'Asia/Singapore';
+    },
+  },
+  {
+    id: 'Asia/Shanghai',
+    get label() {
+      return t.tools.timezones.zones['Asia/Shanghai'] ?? 'Asia/Shanghai';
+    },
+  },
+  {
+    id: 'Asia/Tokyo',
+    get label() {
+      return t.tools.timezones.zones['Asia/Tokyo'] ?? 'Asia/Tokyo';
+    },
+  },
+  {
+    id: 'Asia/Seoul',
+    get label() {
+      return t.tools.timezones.zones['Asia/Seoul'] ?? 'Asia/Seoul';
+    },
+  },
+  {
+    id: 'Australia/Sydney',
+    get label() {
+      return t.tools.timezones.zones['Australia/Sydney'] ?? 'Australia/Sydney';
+    },
+  },
+  {
+    id: 'Pacific/Auckland',
+    get label() {
+      return t.tools.timezones.zones['Pacific/Auckland'] ?? 'Pacific/Auckland';
+    },
+  },
+  {
+    id: 'Pacific/Honolulu',
+    get label() {
+      return t.tools.timezones.zones['Pacific/Honolulu'] ?? 'Pacific/Honolulu';
+    },
+  },
+  {
+    id: 'America/Anchorage',
+    get label() {
+      return t.tools.timezones.zones['America/Anchorage'] ?? 'America/Anchorage';
+    },
+  },
+  {
+    id: 'America/Los_Angeles',
+    get label() {
+      return t.tools.timezones.zones['America/Los_Angeles'] ?? 'America/Los_Angeles';
+    },
+  },
+  {
+    id: 'America/Denver',
+    get label() {
+      return t.tools.timezones.zones['America/Denver'] ?? 'America/Denver';
+    },
+  },
+  {
+    id: 'America/Chicago',
+    get label() {
+      return t.tools.timezones.zones['America/Chicago'] ?? 'America/Chicago';
+    },
+  },
+  {
+    id: 'America/Mexico_City',
+    get label() {
+      return t.tools.timezones.zones['America/Mexico_City'] ?? 'America/Mexico_City';
+    },
+  },
+  {
+    id: 'America/New_York',
+    get label() {
+      return t.tools.timezones.zones['America/New_York'] ?? 'America/New_York';
+    },
+  },
+  {
+    id: 'America/Sao_Paulo',
+    get label() {
+      return t.tools.timezones.zones['America/Sao_Paulo'] ?? 'America/Sao_Paulo';
+    },
+  },
+  {
+    id: 'America/Argentina/Buenos_Aires',
+    get label() {
+      return (
+        t.tools.timezones.zones['America/Argentina/Buenos_Aires'] ??
+        'America/Argentina/Buenos_Aires'
+      );
+    },
+  },
 ];
 
 export const zoneLabel = (id: string): string => ZONES.find((z) => z.id === id)?.label ?? id;

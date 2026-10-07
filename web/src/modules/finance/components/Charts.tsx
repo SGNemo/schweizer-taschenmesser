@@ -126,7 +126,7 @@ export function TrendColumns({ points }: { points: MonthPoint[] }) {
   const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
   return (
     <div data-testid="chart-trend">
-      <ul className={styles.legend} aria-label="Legende">
+      <ul className={styles.legend} aria-label={t.finance.chartLegend}>
         {SERIES.map((s) => (
           <li key={s.key}>
             <span className={styles.swatch} style={{ background: s.color }} />

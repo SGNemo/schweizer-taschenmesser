@@ -141,7 +141,7 @@ export function parseReminders(input: ImportInput, ctx: { today: string }): Impo
         collection: 'event',
         data: eventData(title, ctx.today, '09:00'),
         label: title,
-        detail: `heute, 09:00 Uhr`,
+        detail: t.onboarding.reminders.textDetail,
         dedupeKey: reminderKey(title),
       });
     }

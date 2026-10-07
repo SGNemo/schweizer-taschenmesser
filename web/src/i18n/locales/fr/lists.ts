@@ -1,6 +1,8 @@
 import type { Strings } from '@/strings';
 
 export const lists: Strings['lists'] = {
+  copyOf: (name: string) => `Kopie von ${name}`,
+  templateDetail: (kind: string, n: number) => `${kind}, ${n}`,
   routines: {
     title: 'Aus Vorlage',
     hint: 'Eine kleine Checkliste zum Abhaken. Nach dem Abhaken mit „Zurücksetzen“ ist sie wieder bereit.',

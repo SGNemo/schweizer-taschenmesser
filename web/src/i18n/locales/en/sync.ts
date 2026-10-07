@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const sync: Strings['sync'] = {
+  defaultDeviceName: 'Gerät',
   title: 'Synchronisation',
   intro:
     'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im LAN oder über Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',

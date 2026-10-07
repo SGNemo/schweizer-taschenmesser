@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const backup: Strings['backup'] = {
+  deletedCount: (n: number) => ` (+${n} gelöscht)`,
   title: 'Backup',
   intro:
     'Sichere alle Daten als Datei oder spiele ein Backup wieder ein. Zugangsdaten (Sync-Token, Schlüssel) sind nie im Backup enthalten.',
