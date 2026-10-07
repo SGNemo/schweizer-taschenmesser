@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { loadAiConfig, createRouterProvider } from '@/core/ai/config';
 import { useLocalModel } from '@/core/ai/local/state';
 import { downloadTextFile } from '@/core/backup/download';
@@ -9,7 +10,9 @@ import { loadModuleStates } from '@/core/modules/activation';
 import type { Stored } from '@/core/db/types';
 import { now } from '@/core/time/now';
 import { today } from '@/core/time/dates';
+import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 import { Button, Checkbox, Dialog, Icon, IconButton, SelectField, TextArea, TextField } from '@/ui';
 import { buildContext, contextModules } from '../context';
 import {
@@ -31,6 +34,8 @@ const c = t.chat;
 
 export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () => void }) {
   const thread = useLiveQuery(() => threadRepo.get(threadId), [threadId]);
+  const legal = tLegal.use();
+  const navigate = useNavigate();
   const messages = useLiveQuery(() => messagesOf(threadId), [threadId]);
   const [text, setText] = useState('');
   const [attach, setAttach] = useState(false);
@@ -220,6 +225,19 @@ export function ThreadView({ threadId, onBack }: { threadId: string; onBack: () 
             checked={attach}
             onChange={(e) => setAttach(e.target.checked)}
           />
+        ) : null}
+        {thread.engine === 'router' ? (
+          <div className={styles.usage} data-testid="chat-cloud-hint">
+            <span>
+              {legal.chat.cloudHint} {legal.chat.offHint}
+            </span>{' '}
+            <Button
+              data-testid="chat-ai-off"
+              onClick={() => void navigate(settingsPath('ki', 'ai-switch'))}
+            >
+              {legal.chat.offAction}
+            </Button>
+          </div>
         ) : null}
         <span className={styles.usage}>
           {c.usage(thread.tokensIn, thread.tokensOut, thread.costUsd)}

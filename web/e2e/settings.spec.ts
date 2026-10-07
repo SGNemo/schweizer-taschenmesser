@@ -104,8 +104,8 @@ test('Über Nemo shows the version and the facts of this installation', async ({
   await ready(page, '/settings/ueber');
   await expect(page.getByTestId('about-version')).toHaveText(/\d+\.\d+\.\d+/);
   await expect(page.getByText('Plattform', { exact: true })).toBeVisible();
-  await expect(page.getByText('MIT-Lizenz')).toBeVisible();
-  await page.getByText('Verwendete Bibliotheken').click();
+  await expect(page.getByText('MIT-Lizenz', { exact: true })).toBeVisible();
+  await page.getByText(/Web-Bibliotheken/).click();
   await expect(page.getByText(/^react \d/)).toBeVisible();
 });
 

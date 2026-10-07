@@ -1,3 +1,5 @@
+[English](development.md) | **Deutsch**
+
 # Entwicklung: App lokal starten
 
 ## App (`web/`)
