@@ -1,0 +1,40 @@
+import type { Strings } from '@/strings';
+
+export const invoices: Strings['invoices'] = {
+  dueTitle: (payee: string) => `Rechnung fällig: ${payee}`,
+  dueBody: (amount: string, date: string) => `${amount} · fällig am ${date}`,
+  meta: {
+    name: 'Rechnungen',
+    description:
+      'Offene Rechnungen mit Betrag, Empfänger und Fälligkeit. „Als bezahlt markieren“ bucht die Ausgabe automatisch in Finanzen.',
+    route: 'Rechnungen',
+    widget: 'Fällige Rechnungen',
+    quickAdd: 'Rechnung',
+    settings: {
+      remindDaysBefore: 'Erinnerung vor Fälligkeit (Tage)',
+      remindDaysBeforeHelp: '0 = am Fälligkeitstag',
+      remindTime: 'Uhrzeit der Erinnerung',
+      remindTimeHelp: 'Format HH:mm',
+    },
+  },
+  title: 'Rechnungen',
+  add: 'Rechnung hinzufügen',
+  edit: 'Rechnung bearbeiten',
+  payee: 'Empfänger',
+  reference: 'Verwendungszweck / Rechnungsnummer',
+  dueDate: 'Fällig am',
+  paidAt: 'Bezahlt am',
+  open: 'Offen',
+  paid: 'Bezahlt',
+  markPaid: 'Als bezahlt markieren',
+  markedPaid: 'Als bezahlt markiert.',
+  reopen: 'Wieder öffnen',
+  undo: 'Rückgängig',
+  empty: 'Keine offenen Rechnungen.',
+  emptyPaid: 'Noch keine bezahlten Rechnungen.',
+  openTotal: 'Offen gesamt',
+  overdue: 'Überfällig',
+  widgetEmpty: 'Keine offenen Rechnungen.',
+  openCount: (n: number) => (n === 1 ? '1 offene Rechnung' : `${n} offene Rechnungen`),
+  view: 'Status',
+};

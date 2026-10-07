@@ -5,8 +5,6 @@
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import { t } from '@/strings';
-import { tLang } from '@/strings.i18n';
-import { LanguageSection } from './LanguageSection';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
 import { Suspense } from 'react';
@@ -49,11 +47,11 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     category: 'allgemein',
     order: 10,
     title: s.general.title,
-    keywords: ['Name', 'Wochenstart', 'Sprache', 'Währung', 'Zeitzone', 'Format', 'Datum'],
+    keywords: ['Name', 'Wochenstart', 'Sprache', 'Language', 'Währung', 'Zeitzone', 'Format', 'Datum'],
     fields: [
       { key: 'displayName', label: s.general.name, description: s.general.nameHint },
       { key: 'weekStart', label: s.general.weekStart, description: s.general.weekStartHint },
-      { key: 'language', label: s.general.language },
+      { key: 'language', label: s.general.language, description: s.general.languageHint },
       { key: 'currency', label: s.general.currency },
       { key: 'timeZone', label: s.general.timeZone },
       { key: 'formats', label: s.general.formats },
@@ -406,14 +404,6 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <SetupSection />
       </SettingsGroup>
     ),
-  },
-  {
-    id: 'language',
-    category: 'ueber',
-    order: 15,
-    title: tLang.de.title,
-    keywords: tLang.de.keywords,
-    render: () => <LanguageSection />,
   },
   {
     id: 'about',

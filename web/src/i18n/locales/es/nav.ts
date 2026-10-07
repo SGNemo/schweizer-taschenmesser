@@ -1,0 +1,32 @@
+import type { Strings } from '@/strings';
+
+export const nav: Strings['nav'] = {
+  home: 'Übersicht',
+  homeAria: 'Zur Übersicht',
+  modules: 'Module',
+  library: 'Modul-Bibliothek',
+  settings: 'Einstellungen',
+  more: 'Mehr',
+  main: 'Hauptnavigation',
+  skipToContent: 'Zum Inhalt springen',
+  areas: {
+    plan: 'Planen',
+    money: 'Geld',
+    household: 'Haushalt',
+    knowledge: 'Wissen',
+    vault: 'Tresor',
+    system: 'System',
+  },
+  areasHeading: 'Bereiche',
+  favourites: 'Favoriten',
+  areaTabs: (area: string) => `${area}: Module`,
+  addFavourite: (name: string) => `${name} zu den Favoriten hinzufügen`,
+  removeFavourite: (name: string) => `${name} aus den Favoriten entfernen`,
+  collapseSidebar: 'Einklappen',
+  expandSidebar: 'Seitenleiste ausklappen',
+  toggleArea: (area: string) => `${area} auf- oder zuklappen`,
+  create: 'Neu',
+  createAria: 'Neu: schnell hinzufügen',
+  tools: 'Werkzeuge',
+  favouritesFull: 'Es sind höchstens 5 Favoriten möglich. Entferne zuerst einen anderen.',
+};

@@ -1,5 +1,13 @@
-/** All user-facing German UI text lives here (i18n-ready later). */
-export const t = {
+import { catalogChain } from '@/core/i18n/catalogs';
+import { localize } from '@/core/i18n/localize';
+import type { Shape } from '@/core/i18n/shape';
+
+/**
+ * All user-facing UI text. This object is the German source; the other languages live in
+ * `src/i18n/locales/<lang>/` with exactly the same shape (`Strings`, checked by the compiler).
+ * Add new texts here (inside your module's block) and in every locale, then run `npm run check:i18n`.
+ */
+export const de = {
   appName: 'Nemo',
   about: {
     title: 'Über Nemo',
@@ -229,13 +237,18 @@ export const t = {
       weekStartHint: 'Gilt für Kalender und Wochenansichten.',
       weekStartOptions: { mon: 'Montag', sun: 'Sonntag' },
       language: 'Sprache',
-      languageValue: 'Deutsch',
+      languageHint:
+        'Sprache der Oberfläche, nur auf diesem Gerät. Deine Einträge bleiben, wie du sie geschrieben hast.',
+      languageSystem: (name: string) => `Wie das Gerät (${name})`,
       currency: 'Währung',
       currencyValue: 'Euro (€)',
       timeZone: 'Zeitzone',
       timeZoneHint: 'Folgt der Uhr dieses Geräts.',
       formats: 'Zahlen und Datum',
-      formatsValue: 'Deutsch (31.12.2026, 1.234,56 €)',
+      formatsHint: 'Schreibweise von Datum, Uhrzeit und Zahlen, nur auf diesem Gerät.',
+      formatsAuto: (example: string) => `Wie die Sprache (${example})`,
+      formatsExample: (date: string, amount: string) => `${date}, ${amount}`,
+      formatsRegion: (region: string, example: string) => `${region}: ${example}`,
       fixedHint: 'Fest eingestellt',
     },
     rows: {
@@ -4234,3 +4247,9 @@ export const t = {
     },
   },
 } as const;
+
+/** Shape every translation must have: same keys, strings for strings, same function signatures. */
+export type Strings = Shape<typeof de>;
+
+/** UI text in the current language (missing entries fall back to English, then German). */
+export const t: typeof de = localize(de, catalogChain);

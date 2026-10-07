@@ -1,0 +1,105 @@
+import type { Strings } from '@/strings';
+
+export const chat: Strings['chat'] = {
+  meta: {
+    name: 'Chat',
+    description:
+      'Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern; auf Wunsch mit Daten aus ausgewählten Modulen.',
+    route: 'Chat',
+    widget: 'Chat',
+    quickAdd: 'Neuer Chat',
+  },
+  title: 'Chat',
+  newChat: 'Neuer Chat',
+  chats: 'Chats',
+  search: 'Chats durchsuchen',
+  empty: 'Noch kein Chat. Stell eine Frage – nichts wird gespeichert, bevor du sendest.',
+  emptyAction: 'Chat starten',
+  noThread: 'Wähle links einen Chat oder starte einen neuen.',
+  back: 'Zur Chat-Liste',
+  placeholder: 'Nachricht schreiben …',
+  send: 'Senden',
+  stop: 'Stoppen',
+  you: 'Du',
+  assistant: 'Assistent',
+  stageLocal: 'Lokal · 0 €',
+  stageCloud: 'Cloud',
+  engine: 'Antwortet mit',
+  engineLocal: 'Lokales Modell',
+  engineRouter: 'Meine Anbieter',
+  engineHintLocal: 'Läuft nur auf diesem Gerät, offline, ohne Kosten.',
+  engineHintRouter: 'Der Text dieses Chats geht an deinen eingestellten Anbieter.',
+  systemPrompt: 'Eigene Anweisung für diesen Chat',
+  systemPromptHint: 'Zum Beispiel: „Antworte kurz und in einfachen Sätzen.“',
+  rename: 'Umbenennen',
+  pin: 'Anheften',
+  unpin: 'Lösen',
+  archive: 'Archivieren',
+  unarchive: 'Wiederherstellen',
+  showArchived: 'Archivierte anzeigen',
+  delete: 'Chat löschen',
+  deleteTitle: 'Chat endgültig löschen?',
+  deleteBody: 'Alle Nachrichten dieses Chats werden gelöscht.',
+  deleteConfirm: 'Löschen',
+  cancel: 'Abbrechen',
+  export: 'Als Markdown exportieren',
+  copy: 'Kopieren',
+  copied: 'Kopiert.',
+  regenerate: 'Neu generieren',
+  edit: 'Bearbeiten',
+  editSave: 'Speichern und neu fragen',
+  retry: 'Erneut versuchen',
+  usage: (inTokens: number, outTokens: number, usd: number) =>
+    `${inTokens} Token gesendet · ${outTokens} empfangen${
+      usd > 0 ? ` · ca. ${usd.toFixed(4).replace('.', ',')} $` : ''
+    }`,
+  pinned: 'Angeheftet',
+  context: {
+    title: 'Daten aus Modulen',
+    hint: 'Standardmäßig sieht der Chat keine Daten aus der App. Wähle Module, aus denen er Fragen beantworten darf; du siehst vorher genau, was mitgeschickt wird.',
+    none: 'Keine',
+    attach: 'Daten anhängen',
+    attachHint: 'Sucht in den gewählten Modulen nach Daten zu deiner Frage.',
+    previewTitle: 'Das wird mitgeschickt',
+    previewIntro: (cloud: boolean) =>
+      cloud
+        ? 'Dieser Text geht zusammen mit deiner Frage an deinen Anbieter.'
+        : 'Dieser Text bleibt auf diesem Gerät.',
+    previewSend: 'Mit Daten senden',
+    previewWithout: 'Ohne Daten senden',
+    nothing: 'Zu dieser Frage wurden in den gewählten Modulen keine Daten gefunden.',
+    attached: 'Mit Daten aus der App',
+  },
+  aiOff: 'KI ist abgeschaltet. Unter Einstellungen → KI kannst du sie wieder einschalten.',
+  errors: {
+    'ai-off': 'KI ist abgeschaltet. Unter Einstellungen → KI kannst du sie wieder einschalten.',
+    'no-engine':
+      'Es ist kein Anbieter eingerichtet. Richte einen unter Einstellungen → KI ein oder wähle das lokale Modell.',
+    'local-unavailable':
+      'Das lokale Modell ist nicht bereit. Lade es unter Einstellungen → KI → Lokales Modell.',
+    auth: 'Der Anbieter hat den Schlüssel abgelehnt.',
+    'rate-limit': 'Der Anbieter bremst gerade. Versuche es gleich noch einmal.',
+    network: 'Keine Verbindung zum Anbieter.',
+    'limit-reached': 'Deine Limits für heute oder diesen Monat sind erreicht.',
+    aborted: 'Abgebrochen.',
+    fallback: 'Das hat nicht geklappt.',
+  } as Record<string, string>,
+  settings: {
+    defaultEngine: 'Neue Chats antworten mit',
+    keepDays: 'Alte Chats löschen nach',
+    keepForever: 'Nie',
+    keepDaysOption: (n: number) => `${n} Tagen`,
+    keepHint: 'Angeheftete Chats bleiben. Gelöscht wird beim Öffnen des Chat-Moduls.',
+  },
+  widget: {
+    empty: 'Noch kein Chat.',
+    link: 'Chat öffnen',
+    line: (n: number) => (n === 1 ? '1 Chat' : `${n} Chats`),
+  },
+  seed: {
+    title: 'Beispiel: Tipps für den Wochenplan',
+    question: 'Wie plane ich eine Woche mit drei Terminen und einem Einkauf?',
+    answer:
+      'Ein einfacher Ablauf:\n\n1. Trage zuerst die festen **Termine** ein.\n2. Lege den **Einkauf** auf einen Tag ohne Termine.\n3. Plane einen freien Abend ein.\n\nSo bleibt Platz für Unvorhergesehenes.',
+  },
+};

@@ -1,0 +1,48 @@
+import type { Strings } from '@/strings';
+
+export const bookmarks: Strings['bookmarks'] = {
+  meta: {
+    name: 'Merkliste',
+    description:
+      'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status; oft gebrauchte Links als Lesezeichen-Kacheln. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
+    route: 'Merkliste',
+    widget: 'Merkliste',
+    widgetLinks: 'Lesezeichen',
+    quickAdd: 'Merkzettel',
+  },
+  title: 'Merkliste',
+  add: 'Merken',
+  edit: 'Merkzettel bearbeiten',
+  url: 'Adresse (Link)',
+  urlInvalid: 'Bitte eine gültige http(s)-Adresse eingeben.',
+  kind: 'Art',
+  kinds: {
+    link: 'Link',
+    read: 'Lesen',
+    watch: 'Ansehen',
+    place: 'Ort',
+    idea: 'Idee',
+    other: 'Sonstiges',
+  } as Record<string, string>,
+  allKinds: 'Alle Arten',
+  tags: 'Tags',
+  tagsHint: 'Mit Komma trennen, z. B. Rezept, Urlaub',
+  filterTags: 'Nach Tag filtern',
+  search: 'Merkliste durchsuchen',
+  view: 'Status',
+  views: { open: 'Offen', done: 'Erledigt', all: 'Alle' },
+  tabsLabel: 'Ansicht',
+  tabList: 'Merkliste',
+  tabLinks: 'Lesezeichen',
+  addLink: 'Lesezeichen anlegen',
+  linksWidgetEmpty: 'Noch keine Lesezeichen.',
+  noGroup: 'Ohne Gruppe',
+  linksEmpty:
+    'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
+  empty: 'Noch nichts gemerkt.',
+  emptyFiltered: 'Nichts gefunden.',
+  open: 'Link öffnen',
+  done: 'Erledigt',
+  widgetEmpty: 'Nichts gemerkt.',
+  openCount: (n: number) => (n === 1 ? '1 offener Merkzettel' : `${n} offene Merkzettel`),
+};

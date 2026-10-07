@@ -13,6 +13,8 @@ export default defineConfig({
   timeout: 180_000,
   reporter: 'list',
   use: {
+    // The app follows the device language; the specs assert German texts.
+    locale: 'de-DE',
     serviceWorkers: 'block',
     launchOptions: { executablePath },
   },

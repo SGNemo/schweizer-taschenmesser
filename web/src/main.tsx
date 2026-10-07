@@ -13,15 +13,23 @@ import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
 import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
 import { installErrorLog } from '@/core/diagnostics/errorLog';
-import { getLang, setLang } from '@/core/i18n/lang';
+import { initLang } from '@/core/i18n/lang';
+import { DB_NAME } from '@/core/db/db';
 import { App } from './App';
 import './ui/global.css';
 
 installErrorLog();
-setLang(getLang());
+
+/** An installation from before the language choice already has its database. */
+async function hasExistingData(): Promise<boolean> {
+  if (typeof indexedDB === 'undefined' || !('databases' in indexedDB)) return false;
+  const dbs = await indexedDB.databases();
+  return dbs.some((d) => d.name === DB_NAME);
+}
 
 // The platform (browser or native shell) is chosen first: everything below asks `getPlatform()`.
-void initPlatform().then(() => {
+// The UI language (and its texts) is ready before the first render.
+void Promise.all([initPlatform(), initLang(hasExistingData)]).then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />

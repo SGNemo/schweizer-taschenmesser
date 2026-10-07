@@ -1,0 +1,41 @@
+import type { Strings } from '@/strings';
+
+export const dataApi: Strings['dataApi'] = {
+  importerLabel: 'JSON einfügen',
+  importerDescription:
+    'Daten, die dir eine KI (oder ein anderes Programm) im Nemo-Format geliefert hat. Nichts wird gespeichert, bevor du die Vorschau bestätigst.',
+  jsonLabel: 'JSON',
+  copySchema: 'Schema für KI kopieren',
+  schemaCopied: 'Schema kopiert. Füge es in dein KI-Werkzeug ein.',
+  copyFailed: 'Das Kopieren hat nicht geklappt.',
+  copyHint:
+    'Kopiert eine kurze Beschreibung des Formats samt Beispiel. Sie enthält keine deiner Daten.',
+  notJson: 'Das ist kein gültiges JSON.',
+  notList: 'Erwartet wird eine Liste oder {"items": [ … ]}.',
+  empty: 'Die Liste ist leer.',
+  tooMany: (n: number) => `Zu viele Einträge (höchstens ${n}).`,
+  item: (n: number) => `Eintrag ${n}`,
+  itemNotObject: 'Ein Eintrag muss ein Objekt sein.',
+  collectionMissing: 'collection fehlt.',
+  unknownCollection: (names: string[]) => `Unbekannte Sammlung (erlaubt: ${names.join(', ')}).`,
+  badKey: 'key muss ein nicht leerer Text sein.',
+  duplicateKey: 'key kommt mehrfach vor.',
+  badId: 'id muss ein Text sein (die id eines vorhandenen Eintrags).',
+  idUnknown: 'Kein vorhandener Eintrag mit dieser id. Für neue Einträge die id weglassen.',
+  yes: 'Ja',
+  no: 'Nein',
+  unknownField: (name: string) => `Unbekanntes Feld „${name}“.`,
+  badMoney: 'Betrag als Zahl in Euro mit höchstens zwei Nachkommastellen.',
+  badCurrency: 'Nur EUR wird unterstützt.',
+  keyNotFound: 'Kein Eintrag mit diesem key in der Sendung.',
+  refSelf: 'Ein Eintrag kann nicht auf sich selbst verweisen.',
+  refWrongCollection: (c: string) => `Der key gehört nicht zu „${c}“.`,
+  refNotFound: (c: string) => `Kein Eintrag „${c}“ mit diesem Titel gefunden.`,
+  refAmbiguous: (c: string) =>
+    `Mehrere Einträge „${c}“ passen – bitte die ID oder einen key nehmen.`,
+  missing: 'fehlt',
+  expected: (type: string) => `erwartet ${type}`,
+  oneOf: (values: string) => `erlaubt: ${values}`,
+  badFormat: 'falsches Format (Datum JJJJ-MM-TT, Uhrzeit HH:mm)',
+  outOfRange: 'außerhalb des erlaubten Bereichs',
+};
