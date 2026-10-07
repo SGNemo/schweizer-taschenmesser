@@ -250,7 +250,7 @@ test.describe('end-to-end encryption', () => {
   test('a passphrase must be long enough', async ({ browser }) => {
     const { page, context } = await newDevice(browser);
     await submitConnect(page, { encrypt: true, passphrase: 'kurz' });
-    await expect(page.getByTestId('sync-failure')).toContainText('mindestens 8 Zeichen');
+    await expect(page.getByTestId('sync-failure')).toContainText('mindestens 12 Zeichen');
     await context.close();
   });
 
@@ -358,7 +358,9 @@ test.describe('password vault', () => {
 
 test.describe('web push API of the real server', () => {
   const headers = { authorization: `Bearer ${TOKEN}` };
-  const endpoint = 'https://push.example.test/send/e2e';
+  // A public address literal: the server checks push endpoints against its block list and would
+  // refuse a name that does not resolve (`.test` never does). Nothing is ever sent to it here.
+  const endpoint = 'https://93.184.216.34/send/e2e';
 
   test('key, subscription and schedule endpoints work and are protected', async ({ request }) => {
     expect((await request.get(`${SERVER}/v1/push/key`)).status()).toBe(401);

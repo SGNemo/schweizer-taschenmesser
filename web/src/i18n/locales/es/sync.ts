@@ -21,7 +21,7 @@ export const sync: Strings['sync'] = {
     'Sin cifrado de extremo a extremo, tus datos quedan en el servidor sin cifrar. Úsalo si el servidor no es solo tuyo o no guarda los datos cifrados.',
   passphrase: 'Frase de contraseña',
   passphraseHint:
-    'Mínimo 8 caracteres. Sin la frase de contraseña, los datos no se pueden recuperar.',
+    'Mínimo 12 caracteres, mejor varias palabras. Sin la frase de contraseña, los datos no se pueden recuperar.',
   passphraseJoinHint: 'Solo hace falta si el servidor está cifrado.',
   connect: 'Conectar',
   connecting: 'Conectando …',
@@ -101,6 +101,7 @@ export const sync: Strings['sync'] = {
       'Demasiadas solicitudes o intentos fallidos; se volverá a intentar automáticamente.',
     unauthorized: 'El servidor rechazó el token.',
     server: 'El servidor informó de un error.',
+    clock: 'El reloj de este dispositivo va más de una hora adelantado. Revisa la fecha y la hora.',
     decrypt: 'No se pudo descifrar. ¿Es correcta la frase de contraseña?',
     'no-key':
       'Los datos del servidor están cifrados. Desconecta y vuelve a conectar con la frase de contraseña.',
@@ -113,7 +114,7 @@ export const sync: Strings['sync'] = {
       'No se puede acceder al servidor. Si abres la app por HTTPS, el servidor también debe ser accesible por HTTPS (p. ej. con «tailscale serve»).',
     unauthorized: 'El token fue rechazado.',
     'passphrase-required': 'Este servidor está cifrado. Introduce la frase de contraseña.',
-    'passphrase-too-short': 'La frase de contraseña necesita al menos 8 caracteres.',
+    'passphrase-too-short': 'La frase de contraseña necesita al menos 12 caracteres.',
     'wrong-passphrase': 'Frase de contraseña incorrecta.',
     'server-has-plain-data':
       'El servidor ya tiene datos sin cifrar. El cifrado solo es posible en un servidor vacío.',

@@ -42,7 +42,8 @@
     "version:set": "node scripts/version.mjs set",
     "changelog": "node scripts/changelog.mjs",
     "screenshots": "playwright test -c playwright.screens.config.ts",
-    "ai:eval": "node scripts/ai-eval.mjs"
+    "ai:eval": "node scripts/ai-eval.mjs",
+    "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

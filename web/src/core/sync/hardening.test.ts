@@ -3,6 +3,7 @@ import type { TaschenmesserDB } from '@/core/db/db';
 import { createRepo, type Repo } from '@/core/db/repo';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
+import { MAX_HLC_DRIFT_MS, formatHlc, parseHlc } from '@/core/db/hlc';
 import { DexieStorageAdapter } from '@/core/storage/dexie';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
@@ -334,6 +335,40 @@ describe('large data and interruptions', () => {
     expect(cursor).toBeGreaterThan(0); // page 1 was applied and remembered
     await runSync({ storage: b.storage, adapter: server.adapter(), pullLimit: 200 });
     expect((await b.repo.active().toArray()).length).toBe(300);
+  });
+});
+
+describe('clock drift', () => {
+  it('drops ops stamped far in the future, counts them as rejected and still advances the cursor', async () => {
+    const a = dev();
+    const b = dev();
+    const r = await a.repo.create({ title: 'echt', done: false });
+    await sync(a);
+    // A hostile or badly skewed device stamps a field one year ahead.
+    const farFuture = formatHlc(clock + 365 * DAY, 0, 'evil0001');
+    const nearFuture = formatHlc(clock + MAX_HLC_DRIFT_MS - 60_000, 0, 'fast0001');
+    await server.adapter().push([
+      { collection: 'example_entry', id: r.id, field: 'note', hlc: farFuture, value: 'kaputt' },
+      { collection: 'example_entry', id: r.id, field: 'title', hlc: nearFuture, value: 'schnell' },
+    ]);
+
+    const result = await sync(b);
+    expect(result.rejected).toBe(1);
+    expect(result.pulled).toBe(server.dump().length); // the whole page, incl. the dropped op
+    const got = await b.repo.get(r.id);
+    expect(got?.title).toBe('schnell'); // within the tolerance: applied
+    expect(got?.note).toBeUndefined(); // beyond it: dropped
+    // The page was consumed: the next pull does not fetch it again.
+    const cursor = await b.storage.getCursor();
+    expect(cursor).toBeGreaterThan(0);
+    expect(await sync(b)).toMatchObject({ pulled: 0, rejected: 0 });
+    expect(await b.storage.getCursor()).toBe(cursor);
+    // B's clock did not adopt the far-future stamp: its next edit is stamped near local time.
+    await b.repo.update(r.id, { done: true });
+    const stamp = (await b.repo.get(r.id))!._f.done!;
+    expect(parseHlc(stamp).wall).toBeLessThan(clock + MAX_HLC_DRIFT_MS);
+    // Within the tolerance a remote stamp is still adopted (ordinary skew).
+    expect(parseHlc(stamp).wall).toBeGreaterThanOrEqual(parseHlc(nearFuture).wall);
   });
 });
 

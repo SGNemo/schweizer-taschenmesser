@@ -42,13 +42,6 @@ export const about: Strings['about'] = {
     docs: 'Documentação',
     bugs: 'Relatar erro',
   },
-  diagnostics: {
-    title: 'Diagnóstico',
-    label: 'Exportar diagnóstico',
-    description:
-      'Salva um arquivo com versão, plataforma, módulos ativos e as últimas mensagens de erro (resumidas). Sem entradas, configurações nem chaves.',
-    saved: 'Diagnóstico salvo.',
-  },
   reset: {
     title: 'Redefinir dispositivo',
     label: 'Excluir todos os dados deste dispositivo',

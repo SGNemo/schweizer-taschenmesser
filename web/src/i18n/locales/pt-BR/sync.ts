@@ -21,7 +21,8 @@ export const sync: Strings['sync'] = {
   plainWarning:
     'Sem criptografia de ponta a ponta, seus dados ficam no servidor em texto puro. Use-a se o servidor não for só seu ou não guardar os dados criptografados.',
   passphrase: 'Frase secreta',
-  passphraseHint: 'Pelo menos 8 caracteres. Sem a frase secreta, não dá para recuperar os dados.',
+  passphraseHint:
+    'Pelo menos 12 caracteres, de preferência várias palavras. Sem a frase secreta, não dá para recuperar os dados.',
   passphraseJoinHint: 'Só é necessária se o servidor for criptografado.',
   connect: 'Conectar',
   connecting: 'Conectando…',
@@ -101,6 +102,7 @@ export const sync: Strings['sync'] = {
       'Muitas solicitações ou tentativas falhas – uma nova tentativa será feita automaticamente.',
     unauthorized: 'O servidor recusou o token.',
     server: 'O servidor informou um erro.',
+    clock: 'O relógio deste dispositivo está adiantado mais de uma hora. Confira a data e a hora.',
     decrypt: 'Falha ao descriptografar – a frase secreta está certa?',
     'no-key':
       'Os dados no servidor são criptografados. Desconecte e conecte de novo com a frase secreta.',
@@ -113,7 +115,7 @@ export const sync: Strings['sync'] = {
       'Servidor inacessível. Se o app for aberto via HTTPS, o servidor também precisa estar acessível via HTTPS (ex.: com “tailscale serve”).',
     unauthorized: 'O token foi recusado.',
     'passphrase-required': 'Este servidor é criptografado. Digite a frase secreta.',
-    'passphrase-too-short': 'A frase secreta precisa de pelo menos 8 caracteres.',
+    'passphrase-too-short': 'A frase secreta precisa de pelo menos 12 caracteres.',
     'wrong-passphrase': 'Frase secreta incorreta.',
     'server-has-plain-data':
       'Já existem dados sem criptografia no servidor. A criptografia só é possível em um servidor vazio.',

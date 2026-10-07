@@ -375,5 +375,7 @@ export const ai: Strings['ai'] = {
       'not-configured': 'Configuración incompleta',
       'invalid-response': 'Respuesta inservible',
     } as Record<string, string>,
+    baseUrlInsecure:
+      'La dirección debe empezar por https://. http:// solo funciona con servidores en este dispositivo o en tu propia red (p. ej., localhost, 192.168.…).',
   },
 };

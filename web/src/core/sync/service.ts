@@ -73,7 +73,7 @@ export function defaultDeps(): SyncServiceDeps {
 
 const CONFIG_KEY = 'syncConfig';
 const LAST_SYNC_KEY = 'sync.lastSyncAt';
-export const MIN_PASSPHRASE_LENGTH = 8;
+export const MIN_PASSPHRASE_LENGTH = 12;
 
 /* ------------------------------ config persistence ------------------------------ */
 

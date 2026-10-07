@@ -1,5 +1,5 @@
 import { encodeCode, fromHex, sanitizeName } from '../../../packages/supporter-codes/src/index.ts';
-import { hmacHex, normaliseEmail } from './hash.ts';
+import { hmacHex, normaliseEmail, safeEqual } from './hash.ts';
 import type { KofiPayload } from './kofi.ts';
 import { log } from './log.ts';
 import { tierOf } from './tier.ts';
@@ -33,6 +33,13 @@ export async function issueForDonation(env: Env, deps: Deps, p: KofiPayload): Pr
   const existing = parseRecord(await env.KV.get(`tx:${txKey}`));
 
   if (existing) {
+    // A replayed transaction id with a different address must not redirect the stored code:
+    // only the address the code was issued to gets it again (constant-time compare of the MACs).
+    const emailMac = await hmacHex(env.HASH_PEPPER, `mail:${email}`);
+    if (!(await safeEqual(existing.emailMac, emailMac))) {
+      log('duplicate', { txp: txKey.slice(0, 8), result: 'address-mismatch' });
+      return { ok: true, duplicate: true, txKey };
+    }
     await env.MAIL_QUEUE.send({
       kind: 'code',
       txKey,

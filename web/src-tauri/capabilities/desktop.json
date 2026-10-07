@@ -6,6 +6,7 @@
   "platforms": ["windows", "linux", "macOS"],
   "permissions": [
     "allow-desktop-data-dir",
+    "allow-desktop-safe-mode",
     "allow-desktop-open-data-dir",
     "allow-check-update",
     "allow-install-update",

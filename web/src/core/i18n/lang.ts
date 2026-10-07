@@ -125,8 +125,14 @@ export async function initLang(hasExistingData: () => Promise<boolean>): Promise
     }
   }
   const lang = resolveLang(pref);
-  await prepare(lang);
-  apply(lang);
+  try {
+    await prepare(lang);
+    apply(lang);
+  } catch {
+    // Texts that cannot load (offline after an update, a missing chunk) must never block the start:
+    // German is built in. The stored choice stays and applies on the next start.
+    apply(SOURCE_LANG);
+  }
 }
 
 const subscribe = (l: () => void) => {

@@ -20,11 +20,14 @@ import styles from './settings.module.css';
 
 const formatTime = (at: number | undefined): string => (at ? formatDateTime(at) : t.sync.never);
 
+/** A first connect proposes end-to-end encryption; the switch stays an explicit opt-out. */
+export const ENCRYPT_BY_DEFAULT = true;
+
 export function SyncSection() {
   const status = useSyncStatus();
   const [url, setUrl] = useState('');
   const [token, setToken] = useState('');
-  const [encrypt, setEncrypt] = useState(false);
+  const [encrypt, setEncrypt] = useState(ENCRYPT_BY_DEFAULT);
   const [passphrase, setPassphrase] = useState('');
   const [deviceName, setDeviceName] = useState(
     () => t.sync.deviceNames[getPlatform().kind] ?? t.sync.deviceNames.web!,

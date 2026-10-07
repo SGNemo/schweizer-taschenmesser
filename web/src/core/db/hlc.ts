@@ -12,6 +12,20 @@ export interface ParsedHlc {
 }
 
 const MAX_COUNTER = 9999;
+/**
+ * Stamps further than this ahead of the local clock are refused at the sync boundary (pull in
+ * `core/sync/engine.ts`, push on the server). Without a bound, one far-future stamp from any device
+ * or the server would be adopted by every device for good and its field could never be overwritten
+ * again. The clock itself still adopts anything already stored locally, so a restore or a repair
+ * can always beat a stamp that slipped in earlier.
+ */
+export const MAX_HLC_DRIFT_MS = 60 * 60 * 1000;
+
+/** True when the stamp's wall time lies beyond the drift bound relative to `at` (default: now). */
+export function isHlcTooFarAhead(hlc: string, at: number = now()): boolean {
+  const m = /^(\d{13})-/.exec(hlc);
+  return m !== null && Number(m[1]) > at + MAX_HLC_DRIFT_MS;
+}
 
 export function formatHlc(wall: number, counter: number, deviceId: string): string {
   return `${String(wall).padStart(13, '0')}-${String(counter).padStart(4, '0')}-${deviceId}`;

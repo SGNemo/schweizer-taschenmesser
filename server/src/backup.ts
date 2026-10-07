@@ -5,7 +5,7 @@
  * The copy holds exactly what the server holds: with end-to-end encryption on, values are
  * ciphertext; without it they are plain. Protect the backup folder like the live volume.
  */
-import { mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { chmodSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 
@@ -37,6 +37,8 @@ export async function backupDatabase(
   } finally {
     db.close();
   }
+  // The copy may hold plaintext values: owner-only, whatever the umask says.
+  chmodSync(file, 0o600);
   // Prove that the copy opens and is intact before older copies are rotated away.
   // Also switch the copy to a rollback journal so it stays one self-contained file.
   const check = new Database(file);

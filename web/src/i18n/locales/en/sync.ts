@@ -20,7 +20,8 @@ export const sync: Strings['sync'] = {
   plainWarning:
     'Without end-to-end encryption, your data is stored on the server in plain text. Use it if the server isn’t yours alone or isn’t stored encrypted.',
   passphrase: 'Passphrase',
-  passphraseHint: 'At least 8 characters. Without the passphrase, the data can’t be recovered.',
+  passphraseHint:
+    'At least 12 characters, ideally several words. Without the passphrase, the data can’t be recovered.',
   passphraseJoinHint: 'Only needed if the server is encrypted.',
   connect: 'Connect',
   connecting: 'Connecting …',
@@ -98,6 +99,7 @@ export const sync: Strings['sync'] = {
     'rate-limited': 'Too many requests or failed attempts – it will retry automatically.',
     unauthorized: 'The server rejected the token.',
     server: 'The server reported an error.',
+    clock: 'This device’s clock is more than an hour fast. Please check the date and time.',
     decrypt: 'Decryption failed – is the passphrase right?',
     'no-key':
       'The data on the server is encrypted. Please disconnect and connect again with the passphrase.',
@@ -110,7 +112,7 @@ export const sync: Strings['sync'] = {
       'Server not reachable. If the app is opened via HTTPS, the server must be reachable via HTTPS too (e.g. with “tailscale serve”).',
     unauthorized: 'The token was rejected.',
     'passphrase-required': 'This server is encrypted. Please enter the passphrase.',
-    'passphrase-too-short': 'The passphrase needs at least 8 characters.',
+    'passphrase-too-short': 'The passphrase needs at least 12 characters.',
     'wrong-passphrase': 'Wrong passphrase.',
     'server-has-plain-data':
       'The server already holds unencrypted data. Encryption is only possible on an empty server.',

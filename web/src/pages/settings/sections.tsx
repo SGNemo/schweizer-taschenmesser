@@ -5,6 +5,7 @@
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import { t } from '@/strings';
+import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
@@ -1041,13 +1042,18 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     category: 'ueber',
     order: 60,
     get title() {
-      return t.about.diagnostics.title;
+      return tDiag.get().title;
     },
     get description() {
-      return t.about.diagnostics.description;
+      return tDiag.get().export.description;
     },
     get keywords() {
-      return s.searchWords.diagnostics;
+      // The report words also in English: people often search for "bug" whatever their language.
+      return [
+        ...s.searchWords.diagnostics,
+        ...tDiag.get().report.keywords,
+        ...tDiag.en.report.keywords,
+      ];
     },
     render: () => <DiagnosticsSection />,
   },

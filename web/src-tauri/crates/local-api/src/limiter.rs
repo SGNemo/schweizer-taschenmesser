@@ -30,14 +30,6 @@ impl RateLimiter {
         bucket.1 += 1;
         true
     }
-
-    /// True while the key has no budget left (does not count).
-    pub fn exhausted(&mut self, key: &str, now: Instant) -> bool {
-        let window = self.window;
-        self.buckets
-            .retain(|_, (start, _)| now.duration_since(*start) < window);
-        self.buckets.get(key).is_some_and(|(_, n)| *n >= self.max)
-    }
 }
 
 #[cfg(test)]
@@ -51,10 +43,12 @@ mod tests {
         assert!(limiter.hit("a", t0));
         assert!(limiter.hit("a", t0));
         assert!(!limiter.hit("a", t0));
-        assert!(limiter.exhausted("a", t0));
+        // Refusals do not count: the window still holds exactly `max` hits.
+        assert!(!limiter.hit("a", t0));
         assert!(limiter.hit("b", t0));
         let later = t0 + Duration::from_secs(61);
-        assert!(!limiter.exhausted("a", later));
         assert!(limiter.hit("a", later));
+        assert!(limiter.hit("a", later));
+        assert!(!limiter.hit("a", later));
     }
 }

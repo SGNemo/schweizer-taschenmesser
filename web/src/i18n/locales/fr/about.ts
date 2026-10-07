@@ -42,13 +42,6 @@ export const about: Strings['about'] = {
     docs: 'Documentation',
     bugs: 'Signaler un bug',
   },
-  diagnostics: {
-    title: 'Diagnostic',
-    label: 'Exporter le diagnostic',
-    description:
-      'Enregistre un fichier avec la version, la plateforme, les modules actifs et les derniers messages d’erreur (abrégés). Sans entrées, paramètres ni clés.',
-    saved: 'Diagnostic enregistré.',
-  },
   reset: {
     title: 'Réinitialiser l’appareil',
     label: 'Supprimer toutes les données de cet appareil',

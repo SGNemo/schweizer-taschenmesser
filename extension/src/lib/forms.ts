@@ -276,7 +276,7 @@ export function findOtpField(doc: Document): HTMLInputElement | undefined {
     ...doc.querySelectorAll<HTMLInputElement>(
       'input:not([type="password" i]):not([type="hidden" i])',
     ),
-  ].filter(isVisible);
+  ].filter((i) => isVisible(i) && !ignored(i));
   const byAutocomplete = inputs.find((i) => autocompleteOf(i).includes('one-time-code'));
   if (byAutocomplete) return byAutocomplete;
   return inputs.find((i) => {

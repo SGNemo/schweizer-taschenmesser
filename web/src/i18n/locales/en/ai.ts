@@ -366,5 +366,7 @@ export const ai: Strings['ai'] = {
       'not-configured': 'Not fully set up',
       'invalid-response': 'Unusable answer',
     } as Record<string, string>,
+    baseUrlInsecure:
+      'The address must start with https://. http:// only works for servers on this device or in your own network (e.g. localhost, 192.168.…).',
   },
 };

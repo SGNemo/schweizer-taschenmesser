@@ -58,3 +58,25 @@ describe('vault search key', () => {
     expect(handler).toBeUndefined();
   });
 });
+
+describe('lock', () => {
+  it('wipes a copied secret from the clipboard when the vault locks', async () => {
+    const base = createWebPlatform();
+    const clearSensitive = vi.fn(async () => {});
+    setPlatform({ ...base, clipboard: { ...base.clipboard, clearSensitive } });
+    const stop = startAccountsService();
+    try {
+      setSession({
+        status: 'unlocked',
+        vaultId: 'v',
+        header: {} as KeychainHeader,
+        dek: {} as CryptoKey,
+      });
+      expect(clearSensitive).not.toHaveBeenCalled();
+      setSession({ status: 'locked' });
+      expect(clearSensitive).toHaveBeenCalledTimes(1);
+    } finally {
+      stop();
+    }
+  });
+});

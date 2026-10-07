@@ -22,7 +22,7 @@ export const sync: Strings['sync'] = {
     'Sans chiffrement de bout en bout, vos données sont stockées en clair sur le serveur. Activez-le si le serveur n’est pas qu’à vous ou si son stockage n’est pas chiffré.',
   passphrase: 'Phrase secrète',
   passphraseHint:
-    'Au moins 8 caractères. Sans la phrase secrète, les données ne peuvent pas être récupérées.',
+    'Au moins 12 caractères, idéalement plusieurs mots. Sans la phrase secrète, les données ne peuvent pas être récupérées.',
   passphraseJoinHint: 'Nécessaire uniquement si le serveur est chiffré.',
   connect: 'Connecter',
   connecting: 'Connexion…',
@@ -105,6 +105,8 @@ export const sync: Strings['sync'] = {
     'rate-limited': 'Trop de requêtes ou d’échecs – nouvel essai automatique.',
     unauthorized: 'Le serveur a refusé le token.',
     server: 'Le serveur a signalé une erreur.',
+    clock:
+      'L’horloge de cet appareil avance de plus d’une heure. Veuillez vérifier la date et l’heure.',
     decrypt: 'Échec du déchiffrement – la phrase secrète est-elle correcte ?',
     'no-key':
       'Les données du serveur sont chiffrées. Veuillez vous déconnecter et vous reconnecter avec la phrase secrète.',
@@ -117,7 +119,7 @@ export const sync: Strings['sync'] = {
       'Serveur injoignable. Si l’app est ouverte en HTTPS, le serveur doit aussi être joignable en HTTPS (p. ex. avec « tailscale serve »).',
     unauthorized: 'Le token a été refusé.',
     'passphrase-required': 'Ce serveur est chiffré. Veuillez saisir la phrase secrète.',
-    'passphrase-too-short': 'La phrase secrète doit contenir au moins 8 caractères.',
+    'passphrase-too-short': 'La phrase secrète doit contenir au moins 12 caractères.',
     'wrong-passphrase': 'Phrase secrète incorrecte.',
     'server-has-plain-data':
       'Le serveur contient déjà des données non chiffrées. Le chiffrement n’est possible que sur un serveur vide.',

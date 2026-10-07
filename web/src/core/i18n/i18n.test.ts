@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineBundle } from './bundle';
-import { catalogChain, provideCatalog } from './catalogs';
+import { catalogChain, loadCatalog, provideCatalog } from './catalogs';
 import {
   getLang,
   getLangPref,
@@ -10,6 +10,7 @@ import {
   readLangPref,
   resolveLang,
   setLang,
+  setLangLoader,
   setLangPref,
 } from './lang';
 import { localize } from './localize';
@@ -90,6 +91,18 @@ describe('language preference', () => {
     // A later start keeps the decision, even though the database exists by then.
     await initLang(async () => true);
     expect(getLangPref()).toBe('system');
+  });
+
+  it('starts in German when the texts of the chosen language cannot load', async () => {
+    setLang('fr');
+    setLangLoader(() => Promise.reject(new Error('chunk missing')));
+    try {
+      await initLang(async () => true);
+      expect(getLang()).toBe('de');
+      expect(getLangPref()).toBe('fr'); // the choice stays for the next start
+    } finally {
+      setLangLoader(loadCatalog);
+    }
   });
 });
 

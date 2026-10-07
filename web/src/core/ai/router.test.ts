@@ -139,6 +139,33 @@ describe('router: fallback chain', () => {
     });
   });
 
+  it('never hands a conversation (history) to a second provider: the first eligible one answers or fails', async () => {
+    const chat: CompletionRequest = { ...REQ, history: [{ role: 'user', content: 'Hallo' }] };
+    const a = fake('a', [err('server'), ok('a-model')]);
+    const b = fake('b', [ok('b-model')]);
+    const r = route([member(a), member(b)]);
+    await expect(r.complete(chat)).rejects.toMatchObject({
+      code: 'server',
+      attempts: [{ providerId: 'a', error: 'server' }],
+    });
+    expect(b.complete).not.toHaveBeenCalled();
+    // While "a" cools down nothing was sent to it, so the next eligible provider may be asked …
+    expect((await r.complete(chat)).providerId).toBe('b');
+    // … and an empty history still counts as a conversation.
+    clearCooldown();
+    const c = fake('c', [err('rate-limit')]);
+    const d = fake('d', [ok()]);
+    expect(await codeOf(route([member(c), member(d)]).complete({ ...REQ, history: [] }))).toBe(
+      'rate-limit',
+    );
+    expect(d.complete).not.toHaveBeenCalled();
+    // Requests without history (the assistant: no user data) keep the full fallback chain.
+    clearCooldown();
+    const e = fake('e', [err('server')]);
+    const f = fake('f', [ok('f-model')]);
+    expect((await route([member(e), member(f)]).complete(REQ)).providerId).toBe('f');
+  });
+
   it('is "not-configured" without providers', async () => {
     expect(await codeOf(route([]).complete(REQ))).toBe('not-configured');
   });

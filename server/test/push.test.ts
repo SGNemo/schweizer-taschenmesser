@@ -20,6 +20,12 @@ const subscription = {
   keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) },
 };
 
+/** DNS double: the push service resolves to a public address (the default would hit real DNS). */
+const publicDns = {
+  resolve: async (host: string) => (host === 'push.example.test' ? ['93.184.216.34'] : []),
+  fetch: () => Promise.reject(new Error('not used')),
+};
+
 let app: FastifyInstance;
 let store: Store;
 let sent: { endpoint: string; body: string }[];
@@ -35,7 +41,7 @@ beforeEach(async () => {
       sent.push({ endpoint: target.endpoint, body });
     },
   };
-  ({ app, store } = await setup({ pushSender: sender }));
+  ({ app, store } = await setup({ pushSender: sender, proxy: publicDns }));
 });
 afterEach(async () => {
   await app.close();
@@ -61,6 +67,50 @@ describe('push API', () => {
     ] as const) {
       const res = await app.inject({ method, url, payload: {} });
       expect(res.statusCode, `${method} ${url}`).toBe(401);
+    }
+  });
+
+  it('refuses endpoints that resolve to the local network, loopback or nothing at all', async () => {
+    const localDns = {
+      resolve: async (host: string) =>
+        host === 'metadata.example.test'
+          ? ['169.254.169.254']
+          : host === 'mixed.test'
+            ? ['93.184.216.34', '10.0.0.5']
+            : [],
+      fetch: () => Promise.reject(new Error('not used')),
+    };
+    const local = await setup({ pushSender: sender, proxy: localDns });
+    try {
+      for (const endpoint of [
+        'https://metadata.example.test/send/1',
+        'https://mixed.test/send/1',
+        'https://unresolvable.test/send/1',
+        'https://127.0.0.1/send/1',
+        'https://[::1]/send/1',
+        'https://192.168.1.20:8443/send/1',
+      ]) {
+        const res = await local.app.inject({
+          method: 'PUT',
+          url: '/v1/push/subscription',
+          headers: auth,
+          payload: { ...subscription, endpoint },
+        });
+        expect(res.statusCode, endpoint).toBe(400);
+        expect(res.json()).toEqual({ error: 'blocked-endpoint' });
+        expect(local.store.getSubscription(endpoint)).toBeUndefined();
+      }
+      // A literal public address needs no lookup.
+      const ok = await local.app.inject({
+        method: 'PUT',
+        url: '/v1/push/subscription',
+        headers: auth,
+        payload: { ...subscription, endpoint: 'https://93.184.216.34/send/1' },
+      });
+      expect(ok.statusCode).toBe(200);
+    } finally {
+      await local.app.close();
+      local.store.close();
     }
   });
 
@@ -157,7 +207,7 @@ describe('push API', () => {
   });
 
   it('reports that push is unavailable without a sender', async () => {
-    const plain = await setup();
+    const plain = await setup({ proxy: publicDns });
     await plain.app.inject({
       method: 'PUT',
       url: '/v1/push/subscription',

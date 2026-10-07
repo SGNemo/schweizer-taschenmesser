@@ -164,6 +164,8 @@ export interface TrayLabels {
  */
 export interface DesktopService {
   supported: boolean;
+  /** True when this launch asked for safe mode (`--safe-mode` or `NEMO_SAFE_MODE=1`); optional so fakes keep compiling. */
+  safeMode?(): Promise<boolean>;
   /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
   setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** Same for the vault search key (`null` removes it; unset by default). */
@@ -222,6 +224,11 @@ export interface PlatformService {
     writeText(text: string): Promise<void>;
     /** Copies `text` and clears the clipboard after `clearAfterMs` – unless something else was copied meanwhile. */
     writeSensitive(text: string, clearAfterMs: number): Promise<void>;
+    /**
+     * Clears the clipboard now if the last sensitive value is still on it (e.g. when the vault locks)
+     * and cancels the pending timer. A no-op when nothing sensitive was copied or it was replaced.
+     */
+    clearSensitive(): Promise<void>;
   };
   app: {
     version(): Promise<string>;

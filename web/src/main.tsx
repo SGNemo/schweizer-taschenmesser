@@ -12,7 +12,11 @@ import { startNotificationScheduler } from '@/core/notifications/scheduler';
 import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
 import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
-import { installErrorLog } from '@/core/diagnostics/errorLog';
+import { checkDb } from '@/core/db/health';
+import { installErrorLog, recordError } from '@/core/diagnostics/errorLog';
+import { initSafeMode, isSafeMode } from '@/core/safemode/safeMode';
+import { FatalErrorScreen, RootErrorBoundary } from '@/layout/FatalErrorScreen';
+import { RecoveryScreen } from '@/layout/RecoveryScreen';
 import { initLang } from '@/core/i18n/lang';
 import { DB_NAME } from '@/core/db/db';
 import { App } from './App';
@@ -28,23 +32,55 @@ async function hasExistingData(): Promise<boolean> {
 }
 
 // The platform (browser or native shell) is chosen first: everything below asks `getPlatform()`.
-// The UI language (and its texts) is ready before the first render.
-void Promise.all([initPlatform(), initLang(hasExistingData)]).then(() => {
-  createRoot(document.getElementById('root')!).render(
+// The UI language (and its texts) is ready before the first render, the recovery screen included.
+void Promise.all([initPlatform(), initLang(hasExistingData)]).then(async () => {
+  await initSafeMode();
+  const root = createRoot(document.getElementById('root')!);
+  // A database that cannot be opened or read gets the recovery screen instead of a blank crash.
+  const problem = await checkDb();
+  if (problem) {
+    recordError('database', `${problem.name}: ${problem.message}`);
+    root.render(
+      <StrictMode>
+        <RecoveryScreen problem={problem} />
+      </StrictMode>,
+    );
+    return;
+  }
+  root.render(
     <StrictMode>
-      <App />
+      <RootErrorBoundary>
+        <App />
+      </RootErrorBoundary>
     </StrictMode>,
   );
-  void initCore().then(() => {
-    startNotificationScheduler();
-    startModuleServices();
-    startSync();
-    startPushSync();
-    startNativeSchedule();
-    startUpdateChecks();
-    startConnectorSync();
-    startLocalApi();
-    void startQuickCaptureDesktop();
-    startAutoBackup();
-  });
+  void initCore()
+    .then(() => {
+      startNotificationScheduler();
+      // Safe mode: no module background work, no connectors, no local API.
+      if (!isSafeMode()) {
+        startModuleServices();
+        startNativeSchedule();
+        startConnectorSync();
+        startLocalApi();
+        void startQuickCaptureDesktop();
+      }
+      startSync();
+      startPushSync();
+      startUpdateChecks();
+      startAutoBackup();
+    })
+    .catch(async (e: unknown) => {
+      recordError('startup', e);
+      const late = await checkDb();
+      root.render(
+        <StrictMode>
+          {late ? (
+            <RecoveryScreen problem={late} />
+          ) : (
+            <FatalErrorScreen error={e instanceof Error ? e : new Error(String(e))} />
+          )}
+        </StrictMode>,
+      );
+    });
 });
