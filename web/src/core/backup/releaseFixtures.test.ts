@@ -13,7 +13,7 @@ import { createTestDb } from '@/test-utils';
  * (named, no error), and a second restore changes nothing.
  */
 const DIR = resolve(process.cwd(), 'tests/fixtures/backups');
-const FILES = readdirSync(DIR).filter((f) => f.endsWith('.json'));
+const FILES = readdirSync(DIR).filter((f) => /^v\d.*\.json$/.test(f));
 
 const load = (file: string): Backup => {
   const parsed = parseBackup(readFileSync(resolve(DIR, file), 'utf8'));

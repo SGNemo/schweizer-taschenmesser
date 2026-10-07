@@ -50,7 +50,10 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Sync server** | `server/src/`: `app.ts` (routes), `store.ts` (SQL upsert = LWW rule), `auth.ts` (bearer tokens), `push.ts` (Web Push), `proxy.ts` (SSRF-hardened fetch), `index.ts` (env/bootstrap) | env names in `server/.env.example`; compose service `sync`, port `${PORT:-8787}` |
 | **Crypto service** | `web/src/core/crypto/`: `aead.ts` (AES-GCM), `kdf.ts` (Argon2id), `keychain.ts` (KEK/DEK), `passwordBlob.ts`, `random.ts` | used by vault (`modules/accounts`) |
 | Secrets store | `web/src/core/secrets/{types,deviceKey,migrating}.ts` | `SecretStore`; keystore primary, WebCrypto device key legacy |
-| Backup | `web/src/core/backup/backup.ts` | JSON `taschenmesser-backup`, merge/replace |
+| Backup | `web/src/core/backup/backup.ts` | JSON `taschenmesser-backup`, merge/replace; per-release fixtures `web/tests/fixtures/backups/` |
+| **Diagnostics / bug report** | `web/src/core/diagnostics/{errorLog,export,report,config}.ts` (ring buffers, scrub, text report, issue/mailto links); UI `pages/settings/AboutSections.tsx`, `layout/ModuleErrorBoundary.tsx` | `buildDiagnostics`, `renderDiagnostics`, `reportBug` |
+| **Recovery / safe mode** | `core/db/{health,recovery}.ts`, `core/safemode/safeMode.ts`, UI `layout/{RecoveryScreen,FatalErrorScreen,SafeModeBanner}.tsx`, boot in `main.tsx`; desktop flag `capture::desktop_safe_mode` | `checkDb`, `dumpDb`, `isSafeMode` |
+| **Language (DE/EN for new texts)** | `web/src/core/i18n/{lang,bundle}.ts`, bundles `strings.i18n.ts`, `strings.diagnostics.ts` | `defineBundle`, `useLang` |
 | **AI providers** | `web/src/core/ai/providers/{types,claude,openai,ollama,presets}.ts` | `AiProvider` |
 | **AI writes** | `web/src/core/ai/write/{types,prepare,commit,targets,stages,settings}.ts`, `rules/{parse,lexicon,intent}.ts`; contract `core/modules/aiActions.ts`; UI `layout/assistant/WritePreview.tsx`; eval `web/tests/ai/eval-set.json` + `core/ai/write/eval.test.ts` (`npm run ai:eval`) | `AiActionDef` |
 | **AI router / config** | `web/src/core/ai/router.ts` (`createRouter`), `config.ts` (`ProviderEntry`, `createRouterProvider`), `usage.ts`, `testConnection.ts`; UI `pages/settings/AiSection.tsx` | |

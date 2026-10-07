@@ -100,10 +100,22 @@ function build(tag) {
   };
 }
 
+/** Per release: the Dexie schema it shipped (used by the update-path test to create the old database). */
+function schemaOf(tag) {
+  const snapshot = JSON.parse(git('show', `${tag}:web/src/core/db/schema.snapshot.json`));
+  return { schemaVersion: snapshot.version, stores: snapshot.stores };
+}
+
 const wanted = process.argv.slice(2);
 mkdirSync(out, { recursive: true });
-for (const tag of wanted.length ? wanted : Object.keys(RELEASES)) {
+const tags = wanted.length ? wanted : Object.keys(RELEASES);
+for (const tag of tags) {
   const file = resolve(out, `${tag}.json`);
   writeFileSync(file, JSON.stringify(build(tag), null, 2) + '\n');
   console.log(`wrote ${file}`);
+}
+if (!wanted.length) {
+  const index = Object.fromEntries(Object.keys(RELEASES).map((tag) => [tag, schemaOf(tag)]));
+  writeFileSync(resolve(out, 'index.json'), JSON.stringify(index, null, 2) + '\n');
+  console.log('wrote index.json');
 }
