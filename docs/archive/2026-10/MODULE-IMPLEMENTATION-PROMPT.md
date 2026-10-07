@@ -1,6 +1,8 @@
 # Umsetzungs-Prompts – Modulplan (ein Prompt je Paket)
 
-Grundlage: [MODULE-PLAN.md](MODULE-PLAN.md), Begründungen und geprüfte Core-Fakten in [MODULE-REVIEW-2026-10-01.md](MODULE-REVIEW-2026-10-01.md) (Abschnitte 18–23). Reihenfolge ist verbindlich und mit den Design-PRs aus `docs/design/IMPLEMENTATION-PROMPT.md` Teil B verzahnt: **Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Paket 3 → Paket 4 → Paket 5 → Paket 6**; Design-PR 5a–5d nur für bleibende Module, Design-PR 6/7 am Ende; Paket 7 unabhängig ab Paket 4. Paket 2 (Übersicht-Aktionen) ist im Design-PR 4 enthalten und entfällt hier (Abgleich: Review Abschnitt 25). Jeder Prompt beginnt mit dem Block **„Gemeinsam für alle Pakete“** (kopieren oder verlinken) und dem Paket-Abschnitt.
+> **Archived 2026-10-06 – finished package prompts (German).** Packages 1–6 are released (see [CHANGELOG](../../../CHANGELOG.md)); package 7 is listed in [product/MODULE-PLAN.md](../../product/MODULE-PLAN.md). Kept unchanged below.
+
+Grundlage: [MODULE-PLAN.md](../../product/MODULE-PLAN.md), Begründungen und geprüfte Core-Fakten in [MODULE-REVIEW-2026-10-01.md](MODULE-REVIEW-2026-10-01.md) (Abschnitte 18–23). Reihenfolge ist verbindlich und mit den Design-PRs aus `docs/design/IMPLEMENTATION-PROMPT.md` Teil B verzahnt: **Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Paket 3 → Paket 4 → Paket 5 → Paket 6**; Design-PR 5a–5d nur für bleibende Module, Design-PR 6/7 am Ende; Paket 7 unabhängig ab Paket 4. Paket 2 (Übersicht-Aktionen) ist im Design-PR 4 enthalten und entfällt hier (Abgleich: Review Abschnitt 25). Jeder Prompt beginnt mit dem Block **„Gemeinsam für alle Pakete“** (kopieren oder verlinken) und dem Paket-Abschnitt.
 
 ---
 

@@ -44,11 +44,11 @@ jobs:
             range="$PUSH_BEFORE..$PUSH_AFTER"
           fi
           if [ -n "$range" ] && files="$(git diff --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
-            # Documentation that no test reads. README.md, docs/AI-IMPORT.md and docs/user/installation.md
+            # Documentation that no test reads. README*.md, docs/AI-IMPORT*.md and docs/user/installation*.md
             # are read by unit tests (prompt and download-link checks), so they count as code.
             # site/ has its own workflow (site.yml) and never touches the app.
             ignorable='^(docs/|site/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
-            pinned='^docs/(AI-IMPORT\.md|user/installation\.md)$'
+            pinned='^docs/(AI-IMPORT(\.de)?\.md|user/installation(\.de)?\.md)$'
             relevant="$( { printf '%s\n' "$files" | grep -E "$pinned"; printf '%s\n' "$files" | grep -Ev "$ignorable"; } )"
             if [ -z "$relevant" ]; then code=false; fi
             echo "Changed files:"; printf '%s\n' "$files"
@@ -96,6 +96,19 @@ jobs:
         with:
           node-version: 22
       - run: node web/scripts/check-docs.mjs
+
+  # English docs and their German translations (README.de.md, *.de.md) must stay in step. Blocking and cheap,
+  # so it also runs on doc-only changes.
+  docs-pairs:
+    name: Docs translations in step
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node web/scripts/check-readme.mjs
 
   # The former single `web` job (about 14 min, one after the other) is split so that the pieces run side by
   # side; `web` at the bottom of this group keeps the old check name for branch protection.
