@@ -17,9 +17,28 @@ const LOADERS: Record<Exclude<Lang, 'de'>, Loader> = {
 
 const loaded = new Map<Lang, Catalog>();
 
+/**
+ * E2E builds only: `localStorage.__tmPseudo = '1'` serves English as pseudo text (longer, accented,
+ * bracketed; `src/i18n/pseudo.ts`) for the layout check in `e2e/i18n-layout.spec.ts`. Never part of
+ * a release build (the mode check removes it).
+ */
+function pseudoEnglish(): Loader | undefined {
+  if (import.meta.env.MODE !== 'e2e') return undefined;
+  try {
+    if (localStorage.getItem('__tmPseudo') !== '1') return undefined;
+  } catch {
+    return undefined;
+  }
+  return () =>
+    Promise.all([import('@/i18n/pseudo'), import('@/strings')]).then(([p, s]) =>
+      p.pseudoCatalog(s.de),
+    );
+}
+
 async function load(lang: Lang): Promise<void> {
   if (lang === 'de' || loaded.has(lang)) return;
-  loaded.set(lang, await LOADERS[lang]());
+  const loader = (lang === 'en' && pseudoEnglish()) || LOADERS[lang];
+  loaded.set(lang, await loader());
 }
 
 /** Loads a language and the English fallback. */

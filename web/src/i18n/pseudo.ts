@@ -31,7 +31,11 @@ export function pseudoText(s: string): string {
     if (ch === '}') depth = Math.max(0, depth - 1);
     out += depth > 0 ? ch : (ACCENTS[ch] ?? ch);
   }
-  const pad = '·'.repeat(Math.max(1, Math.round(s.length * 0.4)));
+  // Padding gets a break point every few dots, like the spaces of a real sentence (one long
+  // unbreakable run would report overflow no translation causes).
+  const pad = ('·'.repeat(Math.max(1, Math.round(s.length * 0.4))).match(/.{1,6}/g) ?? []).join(
+    '\u200b',
+  );
   return `⟦${out}${pad}⟧`;
 }
 
