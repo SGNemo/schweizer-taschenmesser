@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -23,6 +23,9 @@ describe('database backup', () => {
         backupName(new Date('2026-01-03T03:00:00Z')),
         backupName(new Date('2026-01-04T03:00:00Z')),
       ]);
+
+      if (process.platform !== 'win32')
+        for (const n of names) expect(statSync(join(dest, n)).mode & 0o777).toBe(0o600);
 
       const restored = openStore(join(dest, names[1]!));
       expect(restored.epoch()).toBe(store.epoch());

@@ -15,6 +15,8 @@
   vertrauenswürdiges Netz. Die Ende-zu-Ende-Verschlüsselung schützt die *Inhalte*, nicht das Token.
 - Keine Secrets im Repository: `.env` ist ignoriert, nur `.env.example` ist eingecheckt.
 - `CORS_ORIGINS` auf deine Adresse beschränken, wenn du die PWA nicht vom Server selbst auslieferst.
+- Jedes verbundene Gerät kann mit seinem eigenen Token andere Geräte abmelden; zum Zurücksetzen des Servers ist das
+  gemeinsame Admin-Token nötig.
 - Der Server-Test-Stand: `cd server && npm test` (Auth, Rate-Limit, Konfliktregel, Persistenz, Auslieferung der PWA).
 
 Sicherheitslücken bitte vertraulich melden, siehe [`SECURITY.md`](../../SECURITY.md). Interne Prüfungen: [`docs/security/`](../security/).

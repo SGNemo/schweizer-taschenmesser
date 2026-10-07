@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { isIP } from 'node:net';
 import { join } from 'node:path';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
@@ -14,6 +15,7 @@ import {
 import { ensureVapidKeys, messageFor, type PushSender } from './push.js';
 import {
   defaultDeps as defaultProxyDeps,
+  isBlockedAddress,
   proxyFetch,
   ProxyError,
   type ProxyDeps,
@@ -68,6 +70,12 @@ export const MAX_SCHEDULE_ITEMS = 500;
 const MAX_VALUE_BYTES = 1_000_000;
 
 const HLC_PATTERN = '^\\d{13}-\\d{4}-[a-z0-9]{1,32}$';
+/**
+ * Ops stamped further ahead of the server clock than this are refused: one far-future stamp would
+ * otherwise be adopted by every device for good (same bound as `web/src/core/db/hlc.ts`).
+ */
+export const MAX_HLC_DRIFT_MS = 60 * 60 * 1000;
+const hlcWall = (hlc: string): number => Number(hlc.slice(0, 13));
 
 const opSchema = {
   type: 'object',
@@ -205,6 +213,10 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
       const { ops } = req.body as { ops: FieldOp[] };
       if (ops.some((op) => JSON.stringify(op.value ?? null).length > MAX_VALUE_BYTES)) {
         return reply.code(413).send({ error: 'value-too-large' });
+      }
+      const latest = clock() + MAX_HLC_DRIFT_MS;
+      if (ops.some((op) => hlcWall(op.hlc) > latest)) {
+        return reply.code(400).send({ error: 'hlc-drift' });
       }
       const { accepted, cursor } = store.push(ops);
       if (req.auth?.role === 'device') store.touchDevice(req.auth.deviceId, clock(), 'push');
@@ -356,11 +368,25 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
 
   app.get('/v1/push/key', async () => ({ publicKey: vapid.publicKey }));
 
-  app.put('/v1/push/subscription', { schema: { body: subscriptionBody } }, async (req) => {
+  /** The server later connects to the endpoint: it must not point into the local network. */
+  async function endpointBlocked(endpoint: string): Promise<boolean> {
+    let host: string;
+    try {
+      host = new URL(endpoint).hostname.replace(/^\[|\]$/g, '');
+    } catch {
+      return true;
+    }
+    const resolve = (opts.proxy ?? defaultProxyDeps).resolve;
+    const addresses = isIP(host) ? [host] : await resolve(host).catch(() => []);
+    return addresses.length === 0 || addresses.some(isBlockedAddress);
+  }
+
+  app.put('/v1/push/subscription', { schema: { body: subscriptionBody } }, async (req, reply) => {
     const { endpoint, keys } = req.body as {
       endpoint: string;
       keys: { p256dh: string; auth: string };
     };
+    if (await endpointBlocked(endpoint)) return reply.code(400).send({ error: 'blocked-endpoint' });
     store.upsertSubscription({ endpoint, p256dh: keys.p256dh, auth: keys.auth });
     return { ok: true };
   });

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { auth, hlc, op, pull, push, setup, TOKEN } from './helpers.js';
+import { MAX_HLC_DRIFT_MS } from '../src/app.js';
 import type { Store } from '../src/store.js';
 
 let app: FastifyInstance;
@@ -146,6 +147,23 @@ describe('push and pull', () => {
     ).toBe(400);
     const huge = op('blob', hlc(1), 'x'.repeat(1_100_000));
     expect((await push(app, [huge])).status).toBe(413);
+  });
+
+  it('refuses ops stamped further ahead of the server clock than the drift bound', async () => {
+    const t = 1_800_000_000_000;
+    const fixed = await setup({ clock: () => t });
+    try {
+      const farFuture = op('title', hlc(t + MAX_HLC_DRIFT_MS + 1), 'x');
+      const res = await push(fixed.app, [op('title', hlc(t), 'ok'), farFuture]);
+      expect(res.status).toBe(400);
+      expect(res.body).toMatchObject({ error: 'hlc-drift' });
+      expect((await pull(fixed.app)).body.ops).toEqual([]); // nothing of the batch was stored
+      const withinBound = op('title', hlc(t + MAX_HLC_DRIFT_MS), 'skewed');
+      expect((await push(fixed.app, [withinBound])).status).toBe(200);
+    } finally {
+      await fixed.app.close();
+      fixed.store.close();
+    }
   });
 
   it('validates pull parameters', async () => {

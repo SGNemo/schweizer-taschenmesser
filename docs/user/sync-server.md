@@ -74,11 +74,12 @@ App (Windows/Android Chrome/Edge; braucht HTTPS, z. B. über Tailscale, und eine
 ## In der App verbinden
 
 *Einstellungen → Synchronisation*: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
-einer Passphrase (mind. 8 Zeichen) einschalten. Danach synchronisiert die App beim Start, jede Minute, nach lokalen
+einer Passphrase (mind. 12 Zeichen, am besten mehrere Wörter) einschalten; die Verschlüsselung ist beim ersten Verbinden
+vorausgewählt. Danach synchronisiert die App beim Start, jede Minute, nach lokalen
 Änderungen und wenn sie wieder online/sichtbar wird; der Status steht in den Einstellungen und als Symbol oben.
 
-- **Verschlüsselung:** Werte werden auf dem Gerät mit AES-GCM verschlüsselt (Schlüssel aus der Passphrase, PBKDF2-
-  SHA-256, 600 000 Runden). Der Server sieht Sammlung, Datensatz-ID, Feldname und Zeitstempel – **nicht** die Inhalte.
+- **Verschlüsselung:** Werte werden auf dem Gerät mit AES-256-GCM verschlüsselt (Schlüssel aus der Passphrase mit
+  Argon2id, 64 MiB Speicher, 3 Durchgänge; die Parameter stehen mit dem Salt auf dem Server). Der Server sieht Sammlung, Datensatz-ID, Feldname und Zeitstempel – **nicht** die Inhalte.
   Weitere Geräte treten mit derselben Passphrase bei. Ohne Passphrase sind die Daten **nicht** wiederherstellbar.
   Verschlüsselung lässt sich nur auf einem leeren Server einschalten; enthält der Server schon Klartext-Daten, bietet
   die App an, ihn zurückzusetzen (das löscht alle Serverdaten; die Geräte laden ihre Daten danach erneut hoch).
