@@ -182,7 +182,10 @@ jobs:
   windows:
     name: Windows (portable)
     needs: prepare
-    runs-on: windows-latest
+    # Pinned to the image with Visual Studio 2022: on windows-latest (Visual Studio 2026, cmake generator
+    # "Visual Studio 18 2026") llama.cpp's Vulkan shader generator fails with "cannot find the batch
+    # label specified - VCEnd". Move on once llama-cpp-sys-2 builds with the newer generator.
+    runs-on: windows-2022
     timeout-minutes: 45
     defaults:
       run:
