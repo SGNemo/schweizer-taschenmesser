@@ -32,6 +32,12 @@ const headerSchema = z.object({
 
 export type KeychainHeader = z.output<typeof headerSchema>;
 
+/**
+ * Name under which a vault's data key is sealed by the platform's biometric gate (`biometrics.seal`).
+ * Lives here (not in the module) so that the device reset can drop the seal without importing modules.
+ */
+export const vaultSealName = (vaultId: string): string => `vault-dek:${vaultId}`;
+
 const dekAad = (vaultId: string) => `${vaultId}/dek`;
 const checkAad = (vaultId: string) => `${vaultId}/check`;
 const CHECK_TEXT = new TextEncoder().encode('taschenmesser-vault-key-check');

@@ -152,6 +152,19 @@ export const defaultDeps: ProxyDeps = {
     return new Promise((resolve, reject) => {
       const client = url.protocol === 'https:' ? https : http;
       const family = isIP(address);
+      // `timeout` below is an inactivity timeout: a server that trickles one byte per second
+      // would hold the request forever. This deadline bounds the whole request.
+      const deadline = setTimeout(() => {
+        req.destroy(new ProxyError('timeout'));
+      }, timeoutMs);
+      const settle =
+        <T>(fn: (v: T) => void) =>
+        (v: T) => {
+          clearTimeout(deadline);
+          fn(v);
+        };
+      resolve = settle(resolve);
+      reject = settle(reject);
       const req = client.request(
         url,
         {

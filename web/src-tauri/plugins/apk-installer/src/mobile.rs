@@ -4,7 +4,7 @@ use tauri::{
     AppHandle, Runtime,
 };
 
-use crate::{models::*, Result};
+use crate::{models::*, validate, Error, Result};
 
 const ANDROID_PACKAGE: &str = "io.github.sgnemo.taschenmesser.apkinstaller";
 
@@ -26,6 +26,9 @@ impl<R: Runtime> ApkInstaller<R> {
             .map_err(Into::into)
     }
     pub fn download(&self, request: DownloadRequest) -> Result<DownloadResponse> {
+        // Same check as the command, for callers that reach the plugin through `ApkInstallerExt`.
+        validate::check_download(&request.url, request.sha256.as_deref())
+            .map_err(Error::InvalidRequest)?;
         self.0
             .run_mobile_plugin("download", request)
             .map_err(Into::into)

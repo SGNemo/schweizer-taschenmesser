@@ -85,6 +85,26 @@ describe('syncIcs', () => {
     });
   });
 
+  it('caps a feed at 5000 events and long titles at 500 characters', async () => {
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0'];
+    for (let i = 0; i < 5010; i++) {
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:m-${i}@example.test`,
+        `SUMMARY:${'T'.repeat(700)}`,
+        'DTSTART;VALUE=DATE:20261003',
+        'END:VEVENT',
+      );
+    }
+    lines.push('END:VCALENDAR');
+    const feed = lines.join('\r\n');
+    const ctx = ctxWith(async () => new Response(feed, { status: 200 }));
+    await saveSubscriptions(ctx, [{ id: 'c1', name: 'V', url: 'https://cal.example.test/x.ics' }]);
+    const r = await syncIcs(ctx, window);
+    expect(r.events).toHaveLength(5000);
+    expect(r.events[0]!.title).toHaveLength(500);
+  });
+
   it('gives the same tag to unchanged events and another one when something changed', async () => {
     const base = { title: 'A', allDay: false, startDate: '2026-09-30', startTime: '18:00' };
     expect(contentTag(base)).toBe(contentTag({ ...base }));

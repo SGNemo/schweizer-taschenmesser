@@ -196,6 +196,10 @@ function onFocusIn(event: FocusEvent): void {
 }
 
 function onSubmit(event: Event): void {
+  // Only a submit the user caused: a page script can dispatch `submit` or call `requestSubmit()`
+  // with values of its choosing and would otherwise learn through the save card whether they
+  // match a stored entry.
+  if (!event.isTrusted) return;
   const form = event.target instanceof HTMLFormElement ? event.target : null;
   if (!form) return;
   const analysis = findForms(document).find((f) => f.root === form || form.contains(f.root));

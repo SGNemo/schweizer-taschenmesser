@@ -12,7 +12,7 @@ Please include: affected version (Settings → App updates shows it), platform (
 Out of scope: third-party services users connect on their own (AI providers, Google, feed hosts), and problems that require a compromised device.
 
 ## What we do
-- Releases are built in CI from tags; the updater payload is signed with the project's updater key and verified before installation, the APK is signed with the project keystore. Secrets never live in the repository (gitleaks over the history, artifact audit before publishing).
+- Releases are built in CI from tags or a manual run on `main`; the updater payload is signed with the project's updater key and verified before installation, the APK is signed with the project keystore. Secrets never live in the repository (gitleaks over the history, artifact audit before publishing).
 - Sync end-to-end encryption, the password vault (Argon2id + AES-256-GCM) and the local import API are described in [`docs/architecture.md`](docs/architecture.md) and reviewed in [`docs/security/`](docs/security/).
 
 Supported: the latest stable release. Fixes are released as a new version, not backported.

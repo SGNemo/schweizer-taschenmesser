@@ -3,6 +3,8 @@ import { fromBase64, toBase64 } from '@/core/sync/crypto';
 import {
   CryptoError,
   DEFAULT_KDF,
+  KDF_CEILING,
+  assertKdfParams,
   createKeychain,
   decryptWithPassword,
   deriveKey,
@@ -118,6 +120,55 @@ describe('Argon2id key derivation', () => {
   it('defaults to 64 MiB / 3 passes, above the OWASP floor', () => {
     expect(DEFAULT_KDF).toMatchObject({ alg: 'argon2id', m: 65536, t: 3, p: 1 });
   });
+
+  it('caps a synced or imported header at 256 MiB / t = 10 / p = 4, keeping the default accepted', () => {
+    expect(KDF_CEILING).toEqual({ m: 256 * 1024, t: 10, p: 4 });
+    const good = newKdfParams(); // the current default: must stay valid
+    expect(() => assertKdfParams(good)).not.toThrow();
+    expect(() => assertKdfParams({ ...good, m: KDF_CEILING.m })).not.toThrow();
+    for (const bad of [
+      { ...good, m: 512 * 1024 },
+      { ...good, m: KDF_CEILING.m + 1 },
+      { ...good, t: 11 },
+      { ...good, p: 5 },
+    ]) {
+      expect(() => assertKdfParams(bad)).toThrow(
+        expect.objectContaining({ name: 'CryptoError', code: 'unsafe-params' }),
+      );
+    }
+  });
+
+  it('reports a salt that is not base64 as malformed (CryptoError, never a DOMException)', async () => {
+    const bad = { ...newKdfParams(FAST), salt: '%%not-base64%%' };
+    expect(() => assertKdfParams(bad)).toThrow(CryptoError);
+    await expect(deriveKey('x', bad)).rejects.toMatchObject({
+      name: 'CryptoError',
+      code: 'malformed',
+    });
+    const { header } = await createKeychain('Master-Passwort 1', FAST);
+    const crafted = parseHeader(
+      serializeHeader({ ...header, kdf: { ...header.kdf, salt: '%%not-base64%%' } }),
+    );
+    await expect(unlockKeychain('Master-Passwort 1', crafted)).rejects.toMatchObject({
+      name: 'CryptoError',
+      code: 'malformed',
+    });
+  });
+
+  it('allows the tiny test parameters only in a dev test run (never in a production bundle)', async () => {
+    vi.stubEnv('DEV', false);
+    vi.resetModules();
+    try {
+      const fresh = await import('./kdf');
+      expect(() => fresh.assertKdfParams(newKdfParams(FAST))).toThrow(
+        expect.objectContaining({ name: 'CryptoError', code: 'unsafe-params' }),
+      );
+      expect(() => fresh.assertKdfParams(newKdfParams())).not.toThrow();
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
 });
 
 describe('keychain (KEK/DEK)', () => {
@@ -222,6 +273,9 @@ describe('password blob (backup file)', () => {
     await expect(decryptWithPassword('test-format', 'pw', { nonsense: 1 })).rejects.toMatchObject({
       code: 'malformed',
     });
+    await expect(
+      decryptWithPassword('test-format', 'pw', { ...blob, kdf: { ...blob.kdf, salt: '%%%%' } }),
+    ).rejects.toMatchObject({ name: 'CryptoError', code: 'malformed' });
   });
 });
 

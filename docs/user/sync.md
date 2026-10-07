@@ -76,11 +76,12 @@ is closed (Windows/Android Chrome/Edge; needs HTTPS, for example via Tailscale, 
 ## Connecting in the app
 
 *Settings → Sync*: enter server address and token, optionally turn on **end-to-end encryption** with
-a passphrase (at least 8 characters). The app then syncs on start, every minute, after local
+a passphrase (at least 12 characters, ideally several words); encryption is preselected on the first
+connection. The app then syncs on start, every minute, after local
 changes and when it comes back online/visible; the status is shown in the settings and as an icon at the top.
 
-- **Encryption:** values are encrypted on the device with AES-GCM (key derived from the passphrase, PBKDF2-
-  SHA-256, 600,000 rounds). The server sees collection, record ID, field name and timestamp, **not** the content.
+- **Encryption:** values are encrypted on the device with AES-256-GCM (key derived from the passphrase with
+  Argon2id, 64 MiB memory, 3 passes; the parameters are stored with the salt on the server). The server sees collection, record ID, field name and timestamp, **not** the content.
   Further devices join with the same passphrase. Without the passphrase the data **cannot** be recovered.
   Encryption can only be turned on for an empty server; if the server already holds plain-text data,
   the app offers to reset it (this deletes all server data; the devices then upload their data again).

@@ -60,7 +60,7 @@ More detail, including moving from an old version and installing the PWA: [Insta
 - **Stored locally.** Data lives in your device's database. No account, no Nemo cloud service.
 - **Sync is optional.** Only through a server you run yourself (Docker or Node), end-to-end encrypted if you want.
 - **Only what you set up leaves the device.** Update check (GitHub, can be switched off), AI provider, Google connection, calendar subscription, model download, currency rates: each with what is sent and when, in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
-- **Never your data to AI.** The assistant only sends your question, the date and field names, never entries. The vault is completely invisible to AI.
+- **Never your data to AI.** The assistant only sends your question, the date and field names, never entries. The only exceptions are ones you trigger yourself: attaching a module's data in the chat (with a preview) or granting an AI read access through the local import API. The vault is completely invisible to AI.
 - **Signed updates.** Every update is checked against the project's key before it is applied. Details: [Security](docs/user/security.md).
 
 <details>

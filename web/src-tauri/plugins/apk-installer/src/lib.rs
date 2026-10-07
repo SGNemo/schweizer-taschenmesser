@@ -15,6 +15,7 @@ mod mobile;
 mod commands;
 mod error;
 mod models;
+mod validate;
 
 pub use error::{Error, Result};
 pub use models::*;

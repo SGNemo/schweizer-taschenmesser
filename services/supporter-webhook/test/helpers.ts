@@ -38,6 +38,8 @@ export function makeEnv(over: Partial<Env> = {}) {
         jobs.push(m);
       },
     },
+    // Production requires the binding; the default here never limits.
+    RATE_LIMITER: { limit: async () => ({ success: true }) },
     KOFI_VERIFICATION_TOKEN: TOKEN,
     // Throw-away key of the public test pair (the app never accepts it).
     SUPPORTER_SIGNING_KEY: toHex(TEST_SECRET_KEY),
