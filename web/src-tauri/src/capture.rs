@@ -377,6 +377,13 @@ pub fn desktop_data_dir(app: AppHandle) -> Option<String> {
     app_data_folder(&app).map(|dir| dir.display().to_string())
 }
 
+/// The panic lines of earlier runs (`logs/panic.log`), handed over once and then removed so they are
+/// reported a single time. Takes no argument.
+#[tauri::command]
+pub fn desktop_take_panic_log(app: AppHandle) -> Option<String> {
+    app_data_folder(&app).and_then(|dir| crate::panic_log::take(&dir.join("logs")))
+}
+
 pub const SAFE_MODE_FLAG: &str = "--safe-mode";
 pub const SAFE_MODE_ENV: &str = "NEMO_SAFE_MODE";
 

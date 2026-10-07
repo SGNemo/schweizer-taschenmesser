@@ -119,6 +119,18 @@ export function recordError(source: string, error: unknown): void {
   persist();
 }
 
+/** An entry that happened elsewhere (the native side), with its own time. */
+export function recordEntry(entry: { at: number; source: string; message: string }): void {
+  entries.push({
+    at: entry.at,
+    source: sanitize(entry.source).slice(0, 40),
+    message: sanitize(entry.message),
+  });
+  entries.sort((a, b) => a.at - b.at);
+  if (entries.length > MAX_ENTRIES) entries.splice(0, entries.length - MAX_ENTRIES);
+  persist();
+}
+
 export function logLine(level: LogLine['level'], source: string, message: string): void {
   lines.push({
     at: now(),
