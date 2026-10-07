@@ -21,8 +21,9 @@ Static site for downloading Nemo and supporting the project. Own package, own bu
 - **Security headers and caching:** `public/_headers` (Cloudflare Pages): strict CSP
   (`script-src 'self'`, `style-src 'self'`), `_astro/*` and fonts immutable for a year, HTML
   5 minutes.
-- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): no animation, reduced motion
-  respected, one accent colour, calm wording.
+- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): no animation (hover/focus change colour
+  only, 150 ms), reduced motion respected, one accent colour, calm wording, no countdowns or pop-ups.
+- **Design rounds** (diagnosis, directions, layout, details, mockups): `docs/design/site/`.
 
 ## Layout
 ```
@@ -31,12 +32,13 @@ src/config.js          SITE_URL placeholder, repository links, Ko-fi URL, asset 
 src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
 src/release/latest.json  last known release (updated by the build, committed as fallback)
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
-src/components/        Hero, Features, Why, Install, Support, Header, Footer, Icon (inline Lucide)
+src/components/        Hero, Features, Data, Focus, Compare, Support, Install, Header, Footer,
+                       Shot (one screenshot in both themes), Icon (inline Lucide)
 src/pages/             index, impressum, datenschutz, 404, robots.txt.ts · en/index, en/imprint, en/privacy
-src/assets/screens/    overview-{dark,light}.png (app with seed "medium"; Astro makes AVIF/WebP)
+src/assets/screens/    <page>-{dark,light}.png from the seeded app (npm run app:screenshots; Astro makes AVIF/WebP)
 public/                .well-known/security.txt, _headers, theme.js
 scripts/               fetch-release, copy-brand, check-links, check-downloads, lighthouse,
-                       screenshots, *.test.mjs
+                       screenshots (site), app-screenshots (app), *.test.mjs
 ```
 
 ## Commands (in `site/`)
@@ -51,6 +53,7 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
 | `npm run check:downloads` | the download URLs answer 200 against the real latest release |
 | `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, `/`, `/en`, `/impressum`), reports in `.lighthouseci/` |
 | `npm run screenshots` | renders the preview at 360/768/1280/1920, light and dark → `out/` |
+| `npm run app:screenshots` | app screenshots for the page from the seeded app build → `src/assets/screens/` |
 
 `NO_RELEASE_FETCH=1 npm run build` skips the API call. Chromium for Lighthouse/screenshots:
 `PLAYWRIGHT_CHROMIUM=<path>` (default: the pinned path used in the cloud sessions).
@@ -89,10 +92,18 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
   `PLACEHOLDER`.
 - Release data refreshes itself on every build; to update the committed fallback run
   `npm run build` and commit `src/release/latest.json`.
-- Screenshots: in `web/` run `npm run dev:all` (dev build, seed "medium"), then
-  `SCREENS_PAGES=home SCREENS_SCALE=medium npm run screenshots` for light and dark
-  (`SCREENS_SCHEME`), copy the 1280×720 PNGs to `src/assets/screens/overview-{light,dark}.png`.
-  Only test data, never real data.
+- Screenshots (after UI changes): `npm run app:screenshots` (needs `web/node_modules`). It builds
+  `web/dist-e2e-seed` if missing, serves it, loads the seed "medium" via Settings → Entwickler,
+  fixes the clock to the seed date, hides the Dev badge and writes `home`, `phone`, `calendar`,
+  `todos`, `finance`, `vault` (unlocked with the seed's demo passphrase) and `reminders`, light and
+  dark, to `src/assets/screens/`. `APP_URL=http://localhost:4174` reuses a running preview,
+  `SCREENS_PAGES=<regex>` filters. The app UI is German only, so one set serves both languages;
+  tile focal points live in `Features.astro` (`focus`). Only test data, never real data.
+- Product video (not on the page yet): record the quick capture (Ctrl+K or "+ Neu", type
+  "Zahnarzt Di 10 Uhr", Enter, entry appears) in the seeded app at 1280×720, ≤ 20 s, no sound,
+  export MP4 (H.264, ≤ 1.5 MB) + WebM and a poster PNG; add a `<video>` with `preload="none"`,
+  `controls`, `poster`, no autoplay, a `prefers-reduced-motion` fallback to the poster, in a new
+  section between "Gemacht für volle Köpfe" and "Vergleich".
 - Social preview: `docs/brand/social-preview.png` (1280×640) is copied to `/og-image.png`.
 
 ## Offen – macht Sven

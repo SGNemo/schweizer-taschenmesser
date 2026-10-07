@@ -15,6 +15,7 @@ const other: Locale = locale === 'de' ? 'en' : 'de';
     <a class="brand" href={home}><img src={logo.src} width="26" height="26" alt="" />{s.siteName}</a>
     <nav aria-label={locale === 'de' ? 'Hauptnavigation' : 'Main navigation'}>
       <a href={`${home === '/' ? '' : home}#features`}>{s.nav.features}</a>
+      <a href={`${home === '/' ? '' : home}#daten`}>{s.nav.privacy}</a>
       <a href={`${home === '/' ? '' : home}#install`}>{s.nav.install}</a>
       <a href={`${home === '/' ? '' : home}#support`}>{s.nav.support}</a>
     </nav>

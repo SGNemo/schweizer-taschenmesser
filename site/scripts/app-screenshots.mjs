@@ -5,7 +5,8 @@
  *   npm run app:screenshots            (in site/; builds ../web dist-e2e-seed if missing, serves it)
  *   APP_URL=http://localhost:4174 …    use a preview that is already running (web: npm run preview:e2e-seed)
  *
- * Pages: home (1280×720, hero), phone (412×915), and one 1280×720 shot per feature tile. The app's
+ * Pages: home (1280×720, hero), phone (412×915), and one 1280×720 shot per feature tile (the vault
+ * unlocked with the seed's demo passphrase, notifications granted so no permission banner shows). The app's
  * UI is German only, so one set serves both site languages. The only cosmetic change is the hidden
  * "Dev" badge of the preview flavour; everything else is the real UI.
  */
@@ -29,7 +30,7 @@ const PAGES = [
   { name: 'calendar', path: `/calendar?view=week&date=${SEED_TODAY}` },
   { name: 'todos', path: '/todos' },
   { name: 'finance', path: '/finance?tab=overview' },
-  { name: 'vault', path: '/vault' },
+  { name: 'vault', path: '/accounts', unlock: true },
   { name: 'reminders', path: '/calendar?tab=reminders' },
 ];
 const only = process.env.SCREENS_PAGES ? new RegExp(process.env.SCREENS_PAGES) : null;
@@ -68,6 +69,7 @@ try {
         reducedMotion: 'reduce',
         colorScheme: scheme,
         serviceWorkers: 'block',
+        permissions: ['notifications'],
       });
       const page = await context.newPage();
       await page.clock.setFixedTime(new Date(`${SEED_TODAY}T10:00:00`));
@@ -80,6 +82,12 @@ try {
       await section.getByTestId('seed-status').filter({ hasText: SEED_TODAY }).waitFor({ timeout: 60_000 });
       await page.goto(p.path);
       await page.locator('main').waitFor();
+      if (p.unlock) {
+        // The vault list: unlock with the demo passphrase of the seed (modules/accounts/seed.ts).
+        await page.getByLabel('Master-Passwort').fill('nemo-demo-tresor'); // gitleaks:allow (invented demo value)
+        await page.getByRole('button', { name: 'Entsperren' }).click();
+        await page.getByRole('button', { name: 'Zugang hinzufügen' }).waitFor({ timeout: 30_000 });
+      }
       await page.addStyleTag({ content: '[data-testid="dev-badge"]{display:none !important}' });
       const notice = page.getByRole('button', { name: 'Schließen', exact: true });
       if (await notice.count()) await notice.first().click();

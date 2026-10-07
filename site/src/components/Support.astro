@@ -5,6 +5,14 @@ import Icon from './Icon.astro';
 
 interface Props { locale: Locale }
 const s = t(Astro.props.locale);
+/** The five supporter palettes of the app (web/src/ui/supporterThemes.css): name, dark accent, light accent. */
+const themes = [
+  ['Korallenriff', '#ff8f80', '#b3374a'],
+  ['Tiefsee', '#5cc4f0', '#0a6b9a'],
+  ['Sand', '#e8b95e', '#8a5a12'],
+  ['Nordlicht', '#6be3b0', '#2f6f4f'],
+  ['Monochrom', '#e8e8e8', '#262626'],
+] as const;
 ---
 <section class="block" id="support" aria-labelledby="support-title">
   <div class="wrap">
@@ -14,6 +22,11 @@ const s = t(Astro.props.locale);
         <h2 id="support-title">{s.support.title}</h2>
         <p class="text">{s.support.text}</p>
         <p class="meta">{s.support.note}</p>
+        <ul class="themes" aria-label={s.support.themes}>
+          {themes.map(([name, dark, light]) => (
+            <li style={`--d: ${dark}; --l: ${light}`}><span class="sw" aria-hidden="true"><i></i><i></i><i></i></span>{name}</li>
+          ))}
+        </ul>
       </div>
       <a class="btn btn-secondary" href={KOFI_URL} rel="noopener"><Icon name="coffee" size={22} />{s.support.button}</a>
     </div>
@@ -23,6 +36,7 @@ const s = t(Astro.props.locale);
 <style>
   .card {
     background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-1);
     padding: clamp(1.5rem, 4vw, 2.5rem);
@@ -37,6 +51,47 @@ const s = t(Astro.props.locale);
   }
   .meta {
     margin-top: var(--space-2);
+  }
+  .themes {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    font-size: var(--text-meta);
+    color: var(--text-muted);
+  }
+  .themes li {
+    display: grid;
+    gap: 0.35rem;
+    justify-items: center;
+  }
+  .sw {
+    display: inline-flex;
+    gap: 0.2rem;
+    padding: 0.35rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  .sw i {
+    width: 0.9rem;
+    height: 1.5rem;
+    border-radius: 3px;
+    background: var(--border);
+  }
+  /* The first swatch carries the palette's accent (light / dark variant). */
+  .sw i:first-child {
+    background: var(--l);
+  }
+  :global(:root[data-theme='dark']) .sw i:first-child {
+    background: var(--d);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .sw i:first-child {
+      background: var(--d);
+    }
   }
   @media (min-width: 48rem) {
     .card {
