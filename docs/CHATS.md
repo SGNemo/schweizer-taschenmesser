@@ -9,6 +9,10 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 |---|---|
 | Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
+| Fehlerberichte/Absturzfestigkeit: PRs #85 → #87 → #88 → #92 (gestapelt, Reihenfolge einhalten; #84 ist gemergt) | nacheinander mergen; Basis springt jeweils automatisch auf `develop` |
+| Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
+| Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
+| Fehlerberichte: Rust im CI prüfen | nach Merge von #87/#92 `Native shell (fmt, clippy, tests)` grün? (`desktop_safe_mode`, `desktop_take_panic_log` wurden lokal nicht gebaut); Handtest: `Nemo-Portable.exe --safe-mode` |
 | [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokushilfen Paket 1 „Anfangen“ | ansehen, mergen (zuerst) ([focus-aids](features/focus-aids.md)) |
 | [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57) | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt |
 | [PR #59](https://github.com/SGNemo/schweizer-taschenmesser/pull/59): Fokushilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (gestapelt auf #58) | nach #58 mergen; Basis wird automatisch auf `develop` umgestellt |

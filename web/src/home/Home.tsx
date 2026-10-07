@@ -1,3 +1,4 @@
+import { WidgetErrorBoundary } from '@/layout/WidgetErrorBoundary';
 import {
   closestCenter,
   DndContext,
@@ -369,11 +370,13 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
         {hidden && editing ? (
           <p className={styles.hint}>{t.homeEdit.hidden}</p>
         ) : (
-          <Suspense fallback={<WidgetFallback />}>
-            <WidgetSizeContext.Provider value={size}>
-              <Widget />
-            </WidgetSizeContext.Provider>
-          </Suspense>
+          <WidgetErrorBoundary id={entry.key}>
+            <Suspense fallback={<WidgetFallback />}>
+              <WidgetSizeContext.Provider value={size}>
+                <Widget />
+              </WidgetSizeContext.Provider>
+            </Suspense>
+          </WidgetErrorBoundary>
         )}
       </Card>
     </div>

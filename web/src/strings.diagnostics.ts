@@ -71,6 +71,10 @@ export const tDiag = defineBundle(
       leave: 'Normal neu starten',
       leaveForced: 'Beende Nemo und starte es ohne --safe-mode.',
     },
+    widget: {
+      message: 'Dieses Widget konnte nicht angezeigt werden. Der Rest der Startseite läuft weiter.',
+      retry: 'Erneut versuchen',
+    },
     card: {
       title: (name: string) => `${name} hat ein Problem`,
       body: 'Dieser Bereich konnte nicht angezeigt werden. Der Rest der App läuft weiter, deine Daten sind nicht betroffen.',
@@ -147,6 +151,10 @@ export const tDiag = defineBundle(
         banner: 'Safe mode: all modules are off. Nothing was changed.',
         leave: 'Restart normally',
         leaveForced: 'Quit Nemo and start it without --safe-mode.',
+      },
+      widget: {
+        message: 'This widget could not be shown. The rest of the home screen keeps running.',
+        retry: 'Try again',
       },
       card: {
         title: (name: string) => `${name} ran into a problem`,
@@ -227,6 +235,10 @@ export const tDiag = defineBundle(
         leave: 'Reiniciar con normalidad',
         leaveForced: 'Cierra Nemo y vuelve a iniciarlo sin --safe-mode.',
       },
+      widget: {
+        message: 'No se pudo mostrar este widget. El resto de la pantalla de inicio sigue funcionando.',
+        retry: 'Reintentar',
+      },
       card: {
         title: (name: string) => `${name} ha tenido un problema`,
         body: 'Esta sección no se ha podido mostrar. El resto de la app sigue funcionando y tus datos no se ven afectados.',
@@ -305,6 +317,10 @@ export const tDiag = defineBundle(
         banner: 'Mode sans échec : tous les modules sont désactivés. Rien n’a été modifié.',
         leave: 'Redémarrer normalement',
         leaveForced: 'Quittez Nemo et relancez-le sans --safe-mode.',
+      },
+      widget: {
+        message: 'Ce widget n’a pas pu s’afficher. Le reste de l’écran d’accueil continue de fonctionner.',
+        retry: 'Réessayer',
       },
       card: {
         title: (name: string) => `${name} a rencontré un problème`,
@@ -385,6 +401,10 @@ export const tDiag = defineBundle(
         banner: 'Modo de segurança: todos os módulos estão desligados. Nada foi alterado.',
         leave: 'Reiniciar normalmente',
         leaveForced: 'Feche o Nemo e inicie-o de novo sem --safe-mode.',
+      },
+      widget: {
+        message: 'Não foi possível exibir este widget. O resto da tela inicial continua funcionando.',
+        retry: 'Tentar de novo',
       },
       card: {
         title: (name: string) => `${name} teve um problema`,

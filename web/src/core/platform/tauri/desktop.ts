@@ -23,6 +23,7 @@ export function createDesktopService(supported: boolean): DesktopService {
   return {
     supported,
     safeMode: () => invoke<boolean>('desktop_safe_mode'),
+    takePanicLog: () => invoke<string | null>('desktop_take_panic_log'),
     setHotkey: (accelerator) => register('capture_set_hotkey', accelerator),
     setVaultHotkey: (accelerator) => register('desktop_set_vault_hotkey', accelerator),
     setCloseToTray: (enabled) => invoke('desktop_set_close_to_tray', { enabled }),
