@@ -12,8 +12,9 @@ export const REPO_URL = `https://github.com/${REPO}`;
 export const RELEASES_URL = `${REPO_URL}/releases`;
 export const CHANGELOG_URL = `${REPO_URL}/blob/main/CHANGELOG.md`;
 export const ROADMAP_URL = `${REPO_URL}/blob/develop/docs/ROADMAP.md`;
+// User docs: English source `<name>.md`; the German translation `<name>.de.md` is linked from there.
 export const INSTALL_DOCS_URL = `${REPO_URL}/blob/develop/docs/user/installation.md`;
-export const SECURITY_DOCS_URL = `${REPO_URL}/blob/develop/docs/user/sicherheit.md`;
+export const SECURITY_DOCS_URL = `${REPO_URL}/blob/develop/docs/user/security.md`;
 export const SUPPORTER_DOCS_URL = `${REPO_URL}/blob/develop/docs/howto/supporter.md`;
 
 /** Same value as web/src/pages/settings/supporterLinks.ts (SUPPORT_PAGE_URL); kept in step by scripts/links.test.mjs. */

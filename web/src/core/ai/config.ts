@@ -13,6 +13,7 @@ import { createOllamaProvider } from './providers/ollama';
 import { createOpenAiCompatibleProvider } from './providers/openai';
 import { getPreset, PRESETS, TIER_RANK, type PresetId, type Preset } from './providers/presets';
 import type { AiProvider } from './providers/types';
+import { requireNotice } from '@/core/legal/notices';
 import { createRouter, type RouterMember } from './router';
 
 const CONFIG_KEY = 'aiConfig';
@@ -222,6 +223,18 @@ export function isAiConfigured(c: AiConfig): boolean {
   return c.providers.some(isEntryUsable);
 }
 
+/** A cloud provider shows the one-time third-party notice before its first request (never for Ollama). */
+function withCloudNotice(provider: AiProvider): AiProvider {
+  return {
+    id: provider.id,
+    model: provider.model,
+    complete: async (req) => {
+      await requireNotice('cloud-ai');
+      return provider.complete(req);
+    },
+  };
+}
+
 /** One adapter for one configured provider. */
 export function createProviderFor(
   entry: ProviderEntry,
@@ -230,7 +243,9 @@ export function createProviderFor(
 ): AiProvider {
   const model = entry.model.trim();
   if (entry.kind === 'anthropic') {
-    return createClaudeProvider({ id: entry.id, apiKey, model, fetch: fetchFn, maxRetries: 0 });
+    return withCloudNotice(
+      createClaudeProvider({ id: entry.id, apiKey, model, fetch: fetchFn, maxRetries: 0 }),
+    );
   }
   if (entry.kind === 'ollama') {
     return createOllamaProvider({
@@ -240,15 +255,17 @@ export function createProviderFor(
       fetch: fetchFn,
     });
   }
-  return createOpenAiCompatibleProvider({
-    id: entry.id,
-    baseUrl: entry.baseUrl.trim(),
-    model,
-    apiKey,
-    toolMode: entry.toolMode,
-    maxTokensParam: entry.maxTokensParam,
-    fetch: fetchFn,
-  });
+  return withCloudNotice(
+    createOpenAiCompatibleProvider({
+      id: entry.id,
+      baseUrl: entry.baseUrl.trim(),
+      model,
+      apiKey,
+      toolMode: entry.toolMode,
+      maxTokensParam: entry.maxTokensParam,
+      fetch: fetchFn,
+    }),
+  );
 }
 
 /**

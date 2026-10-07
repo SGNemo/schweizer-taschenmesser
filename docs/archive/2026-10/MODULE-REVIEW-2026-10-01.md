@@ -1,7 +1,9 @@
 # Modul- und Werkzeug-Review – Nemo (Stand 2026-10-01, `develop` @ 41b7e06)
 
-Zweck: gemeinsam entscheiden, was Nemo im Alltag braucht. Keine Code-Änderung; Ergebnis sind [MODULE-PLAN.md](MODULE-PLAN.md) und [IMPLEMENTATION-PROMPT.md](IMPLEMENTATION-PROMPT.md) (entstehen in Runde 3/4).
-Quellen: alle `manifest.ts`, `schema.ts`, Registries, `home/`, `layout/`, `core/setup`, Build-Log (`npm run build`), Screenshots mit erfundenen Daten (Desktop 1920×1080, Mobil 412×915; Rezept unten). Laufende Arbeiten laut [CHATS.md](../CHATS.md): keine.
+> **Archived 2026-10-06 – historical review (German).** Its findings are fixed or decided; the outcome is [product/MODULE-PLAN.md](../../product/MODULE-PLAN.md), decisions in [decisions/modules.md](../../decisions/modules.md). Kept unchanged below.
+
+Zweck: gemeinsam entscheiden, was Nemo im Alltag braucht. Keine Code-Änderung; Ergebnis sind [MODULE-PLAN.md](../../product/MODULE-PLAN.md) und [IMPLEMENTATION-PROMPT.md](MODULE-IMPLEMENTATION-PROMPT.md) (entstehen in Runde 3/4).
+Quellen: alle `manifest.ts`, `schema.ts`, Registries, `home/`, `layout/`, `core/setup`, Build-Log (`npm run build`), Screenshots mit erfundenen Daten (Desktop 1920×1080, Mobil 412×915; Rezept unten). Laufende Arbeiten laut [CHATS.md](../../CHATS.md): keine.
 
 Legende Reife: **fertig** = alltagstauglich · **schmal** = funktioniert, Kernfunktionen fehlen für den Zweck · **ungeprüft** = nur per Fake/Linux getestet. Code = Zeilen ts/tsx/css (inkl. Tests) · Chunk = eigener Lazy-Chunk der Seite (kB roh).
 
@@ -370,14 +372,14 @@ Konflikt-Hotspots mit anderen Chats (CHATS.md: aktuell keine laufenden): Paket 1
 | Tests mit festen Listen | Abschnitt 21, letzte Zeile | Checkliste je Paket im Prompt; `exclusion.test` Liste pflegen (`retired` Module ohne aiSchema) |
 
 ## 24 · Fragen Runde 3
-Beantwortet, siehe Abschnitt 10. Ergebnis: [MODULE-PLAN.md](MODULE-PLAN.md), [IMPLEMENTATION-PROMPT.md](IMPLEMENTATION-PROMPT.md).
+Beantwortet, siehe Abschnitt 10. Ergebnis: [MODULE-PLAN.md](../../product/MODULE-PLAN.md), [IMPLEMENTATION-PROMPT.md](MODULE-IMPLEMENTATION-PROMPT.md).
 
 ---
 
 # Abgleich mit `develop` (Stand c89c691, nach PR #37 Seeds und PR #39 Design-Evaluation)
 
 ## 25 · Überschneidungen mit der Design-Spezifikation und den Seeds
-Parallel zu dieser Review wurde die Design-Evaluation beschlossen ([`docs/design/DESIGN-SPEC.md`](../design/DESIGN-SPEC.md), Prompt mit PR-Aufteilung in [`docs/design/IMPLEMENTATION-PROMPT.md`](../design/IMPLEMENTATION-PROMPT.md)) und das Seed-System gemergt ([`docs/howto/seed-data.md`](../howto/seed-data.md)). Beides berührt diesen Plan:
+Parallel zu dieser Review wurde die Design-Evaluation beschlossen ([`docs/design/DESIGN-SPEC.md`](../../design/DESIGN-SPEC.md), Prompt mit PR-Aufteilung in [`docs/design/IMPLEMENTATION-PROMPT.md`](../../design/IMPLEMENTATION-PROMPT.md)) und das Seed-System gemergt ([`docs/howto/seed-data.md`](../../howto/seed-data.md)). Beides berührt diesen Plan:
 
 | Thema | Design-Spezifikation | Dieser Plan | Abgleich (Vorschlag) |
 |---|---|---|---|

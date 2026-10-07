@@ -14,9 +14,9 @@ describe('AI prompt for the local API', () => {
   });
 });
 
-describe('docs/AI-IMPORT.md', () => {
+describe.each(['docs/AI-IMPORT.md', 'docs/AI-IMPORT.de.md'])('%s', (file) => {
   it('shows exactly the prompt the app copies', () => {
-    const doc = readFileSync(resolve(process.cwd(), '../docs/AI-IMPORT.md'), 'utf8');
+    const doc = readFileSync(resolve(process.cwd(), '..', file), 'utf8');
     expect(doc).toContain(buildApiPrompt(47631));
     expect(doc).not.toMatch(/tm_[A-Za-z0-9_-]{10,}/);
   });
