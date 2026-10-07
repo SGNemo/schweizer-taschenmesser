@@ -3,6 +3,8 @@
 Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf; Nemo-*- und Taschenmesser-*-Assets, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
 
 ## Nächste eine Sache
+Fehlerberichte und Absturzfestigkeit (PRs #84, #85, #87 und dieser): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); offen: Rust-Panic-Hook und Logdatei im Datenordner, Cargo-Build in CI prüfen.
+
 Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md), kleine Fixes mit Tests umgesetzt, offen bleiben u. a. Pipe-Erstinstanz (X2), Windows-Hello-Wrapping (V2), Backup-Zeilenvalidierung (V5), Android-Manifest-Prüfung in CI (T2).
 
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).

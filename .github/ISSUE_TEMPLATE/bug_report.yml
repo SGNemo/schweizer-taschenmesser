@@ -13,6 +13,11 @@ body:
       placeholder: 0.3.1
     validations:
       required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build
+      description: Prefilled by "Report a bug" in the app (commit and channel).
   - type: dropdown
     id: platform
     attributes:
@@ -43,3 +48,6 @@ body:
     id: extra
     attributes:
       label: Screenshot or error message (optional)
+  - type: markdown
+    attributes:
+      value: 'Tip: in the app, Settings → About Nemo → "Export diagnostics" creates a text file you can read before saving it. It contains no entries, vault data, keys or server addresses. Attach it here.'

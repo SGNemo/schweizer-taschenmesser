@@ -164,6 +164,8 @@ export interface TrayLabels {
  */
 export interface DesktopService {
   supported: boolean;
+  /** True when this launch asked for safe mode (`--safe-mode` or `NEMO_SAFE_MODE=1`); optional so fakes keep compiling. */
+  safeMode?(): Promise<boolean>;
   /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
   setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** Same for the vault search key (`null` removes it; unset by default). */

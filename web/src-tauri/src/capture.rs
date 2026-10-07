@@ -377,6 +377,47 @@ pub fn desktop_data_dir(app: AppHandle) -> Option<String> {
     app_data_folder(&app).map(|dir| dir.display().to_string())
 }
 
+pub const SAFE_MODE_FLAG: &str = "--safe-mode";
+pub const SAFE_MODE_ENV: &str = "NEMO_SAFE_MODE";
+
+/// Safe mode: start with every module switched off (nothing is changed on disk). Asked by the
+/// command line flag `--safe-mode` or the environment variable `NEMO_SAFE_MODE=1`.
+pub fn safe_mode_requested<I: IntoIterator<Item = String>>(args: I, env: Option<&str>) -> bool {
+    args.into_iter().any(|a| a == SAFE_MODE_FLAG) || matches!(env, Some("1") | Some("true"))
+}
+
+/// Whether this launch asked for safe mode. Takes no argument and changes nothing.
+#[tauri::command]
+pub fn desktop_safe_mode() -> bool {
+    safe_mode_requested(
+        std::env::args(),
+        std::env::var(SAFE_MODE_ENV).ok().as_deref(),
+    )
+}
+
+#[cfg(test)]
+mod safe_mode_tests {
+    use super::*;
+
+    fn args(list: &[&str]) -> Vec<String> {
+        list.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn flag_or_env_turns_it_on() {
+        assert!(safe_mode_requested(args(&["nemo", "--safe-mode"]), None));
+        assert!(safe_mode_requested(args(&["nemo"]), Some("1")));
+        assert!(safe_mode_requested(args(&["nemo"]), Some("true")));
+    }
+
+    #[test]
+    fn default_is_off() {
+        assert!(!safe_mode_requested(args(&["nemo", "--autostart"]), None));
+        assert!(!safe_mode_requested(args(&["nemo"]), Some("0")));
+        assert!(!safe_mode_requested(args(&["nemo"]), Some("")));
+    }
+}
+
 /// Opens exactly that folder in the file manager. Takes no path, so the webview cannot make the
 /// app open anything else.
 #[tauri::command]

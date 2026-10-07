@@ -2,7 +2,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { buildChangelog, getAboutInfo, versionLabel, type AboutInfo } from '@/core/about/info';
-import { exportDiagnostics } from '@/core/diagnostics/export';
+import { diagnosticsText, saveDiagnostics } from '@/core/diagnostics/export';
+import { hasReportMail } from '@/core/diagnostics/config';
+import { reportBug, reportByMail } from '@/core/diagnostics/report';
+import { NoReadAid } from '@/core/text/ReadableText';
+import { tDiag } from '@/strings.diagnostics';
 import { getPlatform } from '@/core/platform';
 import { RESET_PHRASE, resetDevice } from '@/core/reset/device';
 import { checkForUpdate, useUpdateStore } from '@/core/update/controller';
@@ -10,7 +14,15 @@ import { notesPreview } from '@/core/update/notes';
 import { getLastCheckAt } from '@/core/update/prefs';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, DangerZone, Logo, SettingRow, SettingsGroup, TypedConfirmDialog } from '@/ui';
+import {
+  Button,
+  DangerZone,
+  Dialog,
+  Logo,
+  SettingRow,
+  SettingsGroup,
+  TypedConfirmDialog,
+} from '@/ui';
 import { SupporterBadge } from '@/layout/SupporterBadge';
 import styles from './settings.module.css';
 
@@ -181,21 +193,66 @@ export function LinksSection() {
 
 export function DiagnosticsSection() {
   const toast = useUiStore((s) => s.toast);
+  const d = tDiag.use();
+  const [text, setText] = useState<string | undefined>();
+  const [open, setOpen] = useState(false);
   return (
-    <SettingsGroup id="diagnostics" title={a.diagnostics.title}>
+    <SettingsGroup id="diagnostics" title={d.title}>
       <SettingRow
         id="diagnostics--export"
-        label={a.diagnostics.label}
-        description={a.diagnostics.description}
+        label={d.export.label}
+        description={d.export.description}
       >
         <Button
-          onClick={() =>
-            void exportDiagnostics().then((r) => r === 'saved' && toast(a.diagnostics.saved))
-          }
+          onClick={() => {
+            setText(undefined);
+            setOpen(true);
+            void diagnosticsText().then(setText);
+          }}
         >
-          {a.diagnostics.label}
+          {d.export.label}
         </Button>
       </SettingRow>
+      <SettingRow
+        id="diagnostics--report"
+        label={d.report.label}
+        description={d.report.description}
+      >
+        <Button onClick={() => void reportBug()}>{d.report.label}</Button>
+        {hasReportMail() && <Button onClick={() => void reportByMail()}>{d.report.mail}</Button>}
+      </SettingRow>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title={d.export.previewTitle}
+        size="wide"
+        footer={
+          <>
+            <Button onClick={() => setOpen(false)}>{d.export.cancel}</Button>
+            <Button
+              variant="primary"
+              disabled={text === undefined}
+              onClick={() =>
+                void saveDiagnostics(text ?? '').then((r) => {
+                  if (r === 'saved') {
+                    toast(d.export.saved);
+                    setOpen(false);
+                  }
+                })
+              }
+            >
+              {d.export.save}
+            </Button>
+          </>
+        }
+      >
+        <p>{d.export.previewHint}</p>
+        <NoReadAid>
+          <pre className={styles.diagPreview} data-testid="diagnostics-preview" tabIndex={0}>
+            {text ?? d.export.loading}
+          </pre>
+        </NoReadAid>
+      </Dialog>
     </SettingsGroup>
   );
 }
