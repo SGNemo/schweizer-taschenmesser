@@ -7,7 +7,8 @@ variants. Rules: [DESIGN-SPEC](../DESIGN-SPEC.md), [FOCUS-GUIDELINES](../FOCUS-G
 
 | Round | File | Result |
 |---|---|---|
-| 1 Diagnosis and direction | [ROUND-1-DIAGNOSIS.md](ROUND-1-DIAGNOSIS.md), `direction-{a,b,c}.html` | open |
+| 1 Diagnosis and direction | [ROUND-1-DIAGNOSIS.md](ROUND-1-DIAGNOSIS.md), `direction-{a,b,c}.html` | C + tiles from B, claim C, both buttons filled |
+| 2 Full page layout | [ROUND-2-LAYOUT.md](ROUND-2-LAYOUT.md), `layout-{1,2}.html` | open |
 
 Render the sheets (desktop 1280 + phone 360, dark and light) from `site/`:
-`node ../docs/design/site/render.mjs` → `out/*.png` (git-ignored).
+`node ../docs/design/site/render.mjs` → `out/*.png` (git-ignored); `SHEET_ROW=1` for long pages.
