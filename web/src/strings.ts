@@ -276,7 +276,7 @@ export const de = {
       about: ['Version', 'Build', 'Commit', 'Plattform', 'Installation', 'Datenordner', 'Lizenz'],
       'about-updates': ['Changelog', 'Änderungen', 'Neuerungen', 'Release Notes'],
       links: ['GitHub', 'Quellcode', 'Downloads', 'Hilfe', 'Dokumentation', 'Fehler melden'],
-      licenses: ['Bibliotheken', 'Schrift', 'Icons', 'Open Source'],
+      licenses: ['Lizenz', 'Bibliotheken', 'Schrift', 'Icons', 'Open Source', 'MIT', 'Rechtliches'],
       diagnostics: ['Fehlerprotokoll', 'Export', 'Support'],
       'device-reset': ['Löschen', 'Zurücksetzen', 'Gefahrenzone', 'Alle Daten'],
     },
@@ -593,7 +593,7 @@ export const de = {
         noScopes: 'keine Anmeldung nötig',
         testingNote:
           'Ist dein Google-Projekt im Status „Testing“, läuft die Anmeldung nach 7 Tagen ab. Stelle es auf „In Produktion“.',
-        stepsNote: 'Schritte: docs/STATUS.md → „Google-Verbindung einrichten“.',
+        stepsNote: 'Schritte: docs/MANUAL-TESTS.md → „Google-Verbindung einrichten“.',
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
       startdata: {

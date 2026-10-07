@@ -2,7 +2,6 @@ import { formatTimestamp, DATE_TIME_NUMERIC } from '@/core/i18n/format';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
-import licenses from '@/core/about/licenses.json';
 import { buildChangelog, getAboutInfo, versionLabel, type AboutInfo } from '@/core/about/info';
 import { exportDiagnostics } from '@/core/diagnostics/export';
 import { getPlatform } from '@/core/platform';
@@ -156,29 +155,6 @@ export function AboutUpdatesSection() {
       <details className={styles.details}>
         <summary>{a.updates.current}</summary>
         <Notes markdown={changelog} />
-      </details>
-    </SettingsGroup>
-  );
-}
-
-/** Licences of the libraries (generated list) and of fonts and icons, collapsed. */
-export function LicensesSection() {
-  return (
-    <SettingsGroup id="licenses" title={a.licenses}>
-      <ul className={styles.aboutList}>
-        {a.licenseList.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ul>
-      <details className={styles.details}>
-        <summary>{a.packages}</summary>
-        <ul className={styles.aboutList}>
-          {licenses.map((l) => (
-            <li key={l.name}>
-              {l.name} {l.version} – {l.license}
-            </li>
-          ))}
-        </ul>
       </details>
     </SettingsGroup>
   );

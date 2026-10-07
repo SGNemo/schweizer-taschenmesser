@@ -72,6 +72,7 @@ const CORE_KEYS = {
     'update.prefs': { channel: 'stable', auto: true },
     'update.lastCheckAt': 'timestamp',
     'update.dismissedVersion': 'version',
+    'legal.notices': 'ids of acknowledged one-time notices (device-local)',
     'setup.state': 'checklistHidden false, status, steps',
     'focus.state': 'running focus session (task, end time), skipped suggestions of the day',
     'reminders.acked': 'notification keys answered with Erledigt (device-local)',

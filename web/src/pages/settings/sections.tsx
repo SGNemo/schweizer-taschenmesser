@@ -5,6 +5,7 @@
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
 import { Suspense } from 'react';
@@ -13,7 +14,6 @@ import {
   AboutUpdatesSection,
   DeviceResetSection,
   DiagnosticsSection,
-  LicensesSection,
   LinksSection,
 } from './AboutSections';
 import { AiSection } from './AiSection';
@@ -30,6 +30,7 @@ import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
 import { LocalModelSection } from './LocalModelSection';
+import { LegalImprintSection, LegalLicensesSection, LegalPrivacySection } from './LegalSections';
 import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
@@ -1000,16 +1001,40 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => <LinksSection />,
   },
   {
+    id: 'legal-imprint',
+    category: 'ueber',
+    order: 42,
+    get title() {
+      return tLegal.get().imprint.title;
+    },
+    get keywords() {
+      return tLegal.get().keywords.imprint;
+    },
+    render: () => <LegalImprintSection />,
+  },
+  {
+    id: 'legal-privacy',
+    category: 'ueber',
+    order: 44,
+    get title() {
+      return tLegal.get().privacy.title;
+    },
+    get keywords() {
+      return tLegal.get().keywords.privacy;
+    },
+    render: () => <LegalPrivacySection />,
+  },
+  {
     id: 'licenses',
     category: 'ueber',
     order: 50,
     get title() {
-      return t.about.licenses;
+      return tLegal.get().licenses.title;
     },
     get keywords() {
       return s.searchWords.licenses;
     },
-    render: () => <LicensesSection />,
+    render: () => <LegalLicensesSection />,
   },
   {
     id: 'diagnostics',

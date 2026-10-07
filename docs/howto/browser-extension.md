@@ -8,7 +8,7 @@ Threat model: [../security/VAULT-EXTENSION.md](../security/VAULT-EXTENSION.md). 
 - E2E: `npm run e2e` loads `dist-e2e` into Chromium (`/opt/pw-browsers/chromium`), serves the real web app (e2e build, :4173, started by the config) as "the desktop app" and relays the native host over HTTP into `window.__tmVaultBridge`. Stop any own `vite preview` first.
 - Shared code: `packages/vault-core` (generator, origin matching, protocol); web and extension alias it (`@nemo/vault-core`) and resolve `zod` / `tldts` from their own `node_modules`.
 
-## Load in Brave and connect (users: [../user/browser-erweiterung.md](../user/browser-erweiterung.md))
+## Load in Brave and connect (users: [../user/browser-extension.md](../user/browser-extension.md))
 1. Download `nemo-extension-<version>.zip` (CI artifact `nemo-extension`), unpack. `brave://extensions` → developer mode → "Load unpacked" → the unpacked folder. The id must read `olgcnfjmihlmpgjepkfbdjcpenckemaj` (fixed by `key` in `extension/manifest.json`).
 2. In the desktop app: Tresor → "Browser-Erweiterung" → switch on. This writes the host manifest (`<data>/native-messaging/io.github.sgnemo.taschenmesser.vault.json`) and HKCU entries for Brave, Chrome, Edge, Chromium (Brave does not read Chrome's key) and starts the pipe.
 3. Click the extension icon: it shows a 6-digit code; confirm it in the app dialog "Erweiterung verbinden?" (same code). Done once per id.

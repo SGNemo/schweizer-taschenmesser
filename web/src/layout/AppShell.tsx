@@ -8,6 +8,7 @@ import { OnboardingHost } from '@/core/importer/host';
 import { isDevBuild } from '@/core/update/buildInfo';
 import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
 import { Fab, Toaster, useMediaQuery } from '@/ui';
+import { NoticeHost } from './NoticeHost';
 import { CommandPalette } from './CommandPalette';
 import { FocusWatcher } from './FocusWatcher';
 import { NotificationCenter } from './NotificationCenter';
@@ -152,6 +153,7 @@ export function AppShell() {
       <NotificationCenter />
       <ResumeTracker />
       <SupporterEffects />
+      <NoticeHost />
       <Toaster />
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requireNotice } from '@/core/legal/notices';
 import { enterCode, removeCode, updateSupporterPrefs, useSupporter } from '@/core/supporter';
 import { useSupporterSettings } from '@/core/supporter';
 import { getPlatform } from '@/core/platform';
@@ -21,10 +22,13 @@ export function SupporterSection() {
   const [settings] = useSupporterSettings();
   const [input, setInput] = useState('');
   const [invalid, setInvalid] = useState(false);
-  const open = (url: string) => void getPlatform().app.openUrl(url);
+  // The one-time notice comes with the first action here (donate, resend, enter a code), not with the page.
+  const open = (url: string) =>
+    void requireNotice('supporter').then(() => getPlatform().app.openUrl(url));
 
   async function save() {
     if (!input.trim()) return;
+    await requireNotice('supporter');
     if (await enterCode(input)) {
       setInput('');
       setInvalid(false);

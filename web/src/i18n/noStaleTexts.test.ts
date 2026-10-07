@@ -8,6 +8,7 @@ import { allSetupSteps } from '@/core/setup/registry';
 import { allTools } from '@/core/tools/registry';
 import { CORE_SECTIONS } from '@/pages/settings/sections';
 import { de } from '@/strings';
+import { en } from './locales/en';
 import { pseudoCatalog } from './pseudo';
 
 /**
@@ -47,10 +48,12 @@ function collectStrings(root: unknown): [string, string][] {
   return out;
 }
 
+/** Texts the English catalog keeps as they are (brand names such as "Google") are not German. */
+const sameInEnglish = new Set(collectStrings(en).map(([, s]) => s));
 const sourceTexts = new Set(
   collectStrings(de)
     .map(([, s]) => s)
-    .filter((s) => s.length >= 4 && /[a-zäöüß]/i.test(s) && s !== de.appName),
+    .filter((s) => s.length >= 4 && /[a-zäöüß]/i.test(s) && !sameInEnglish.has(s)),
 );
 
 describe('registries follow a language switch', () => {

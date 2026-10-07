@@ -1,3 +1,5 @@
+[English](ai-assistant.md) | **Deutsch**
+
 # Suche, KI-Assistent und KI-Import
 
 ## Suche und KI-Assistent
@@ -36,7 +38,7 @@ Schreibe einfach in die Leiste, was du eintragen willst – zum Beispiel „Rech
 Vorhandene Daten muss man nicht abtippen: Eine KI (Claude Code, ChatGPT …) liefert sie im Format der App, du bestätigst eine
 Vorschau. In der Windows-App über eine lokale, abgesicherte Schnittstelle (*Einstellungen → KI-Zugriff*, standardmäßig aus),
 überall sonst per „JSON einfügen“ im Startdaten-Assistenten. Anleitung, Beispiele und fertiger Prompt:
-[`docs/AI-IMPORT.md`](../AI-IMPORT.md).
+[`docs/AI-IMPORT.de.md`](../AI-IMPORT.de.md).
 
 ## Chat
 Das Modul **Chat** (in der Modulbibliothek aktivieren) ist ein einfacher Chat mit mehreren Gesprächen. Jeder Chat antwortet entweder mit dem **eingebauten lokalen Modell** (nur Windows, offline, kostenlos) oder mit **deinen Anbietern** aus Einstellungen → KI.
