@@ -5,6 +5,7 @@ import { dataFlows } from '@/core/legal/dataFlows';
 import { findPlaceholders, LEGAL_IDENTITY } from '@/core/legal/identity';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 import { Button, SettingRow, SettingsGroup } from '@/ui';
 import styles from './settings.module.css';
 
@@ -12,10 +13,9 @@ const REPO = 'https://github.com/SGNemo/schweizer-taschenmesser';
 const LICENSE_URL = `${REPO}/blob/main/LICENSE`;
 const SITE_URL = 'https://nemo-adhd-helper.online';
 
-const l = t.legal;
-
 /** Provider, address and contact; open `[[PLACEHOLDERS]]` are shown as such and marked, never hidden. */
 export function LegalImprintSection() {
+  const l = tLegal.use();
   const id = LEGAL_IDENTITY;
   const open = findPlaceholders(Object.values(id).join(' ')).length > 0;
   return (
@@ -53,9 +53,10 @@ export function LegalImprintSection() {
 
 /** What is stored locally and what leaves the device, when and to whom (one entry per data flow). */
 export function LegalPrivacySection() {
+  const l = tLegal.use();
   return (
     <SettingsGroup id="legal-privacy" title={l.privacy.title} description={l.privacy.intro}>
-      {dataFlows().map((f) => (
+      {dataFlows(l).map((f) => (
         <details key={f.id} className={styles.details} data-testid={`flow-${f.id}`}>
           <summary>{f.title}</summary>
           <dl className={styles.status}>
@@ -78,6 +79,7 @@ const GROUPS = ['npm', 'cargo', 'gradle', 'assets', 'models'] as const;
 
 /** App licence plus the generated list; the (large) list is loaded when the section is opened. */
 export function LegalLicensesSection() {
+  const l = tLegal.use();
   const [data, setData] = useState<Licenses | 'loading' | 'failed' | undefined>();
   const load = () => {
     if (data) return;

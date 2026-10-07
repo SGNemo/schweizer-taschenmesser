@@ -1,6 +1,6 @@
 # Datenflüsse – was wohin geht (kein Rechtsrat)
 
-Eine Tabelle für App, Website und README. Quelle der In-App-Texte: `web/src/strings.ts` → `legal.flows` (Anzeige: Einstellungen → Über Nemo → Rechtliches → Datenschutzhinweise); die ids unten prüft `core/legal/legal.test.ts`. Wird eine Zeile geändert, die App-Texte, [website](../../site/src/pages/datenschutz.astro) und [README](../../README.md) nachziehen. Stand: 2026-10-06, aus dem Code gelesen (Dateiverweise = Beleg).
+Eine Tabelle für App, Website und README. Quelle der In-App-Texte: `web/src/strings.legal.ts` → `tLegal.flows` (Deutsch und Englisch) (Anzeige: Einstellungen → Über Nemo → Rechtliches → Datenschutzhinweise); die ids unten prüft `core/legal/legal.test.ts`. Wird eine Zeile geändert, die App-Texte, [website](../../site/src/pages/datenschutz.astro) und [README](../../README.md) nachziehen. Stand: 2026-10-06, aus dem Code gelesen (Dateiverweise = Beleg).
 
 **Rechtsgrundlage:** `[[RECHTSGRUNDLAGE]]` = von dir zu füllen (Vorschlag zur Prüfung, nicht verbindlich). Bei Flüssen ohne Beteiligung des Betreibers (Gerät → Dienst, den die Person selbst einrichtet) verarbeitet der Betreiber nichts: dort ist meist nur die Information der Person nötig, die Einwilligung gibt die Person durch das Einrichten selbst.
 
@@ -21,16 +21,18 @@ Eine Tabelle für App, Website und README. Quelle der In-App-Texte: `web/src/str
 
 **Nur lokal, kein Datenfluss:** lokale API (Loopback), MCP-Wrapper, Browser-Erweiterung (Native Messaging), Diagnose-Export (Datei, nichts gesendet), Backup (Datei), eingebautes Modell und Ollama (lokal), Supporter-Prüfung. **Keine** Webhooks, Analytics, Telemetrie, CDN-Schriften oder Feeds in der App (`parseFeed` hat keinen Aufrufer). Website: [datenschutz.astro](../../site/src/pages/datenschutz.astro) (Cloudflare Pages, GitHub-/Ko-fi-Links).
 
-## Wo Website und README nachgezogen werden müssen
+## Website und README (nachgezogen)
 
-- **Website Datenschutz** („Die App speichert ihre Daten ausschließlich auf deinem Gerät … Updates von GitHub“): ergänzen um die optionalen Flüsse KI-Anbieter, Google-Verbindung, Kalender-Abo, Hugging-Face-Download, Währungskurse; auf die In-App-Seite verweisen. EN-Seite gleich. Der Satz „speichert keine Namen“ beim Supporter-Dienst stimmt nur mit Einschränkung: ein öffentlicher Name steckt (≤ 20 Zeichen) im Code selbst ([SUPPORTER-NOTES](SUPPORTER-NOTES.md) §3).
+Erledigt in diesem PR (DE + EN): [datenschutz.astro](../../site/src/pages/datenschutz.astro), [en/privacy.astro](../../site/src/pages/en/privacy.astro), [README](../../README.md) / [README.de](../../README.de.md) (ein Aufzählungspunkt). Bei jeder Änderung an der Tabelle erneut abgleichen:
+
+- **Website Datenschutz:** Abschnitt „Die App Nemo“ nennt jetzt die optionalen Flüsse (Sync, Update, KI, Google, Kalender-Abo, Modell-Download, Währung, Supporter) und verweist auf die In-App-Seite. Offen bleibt der Satz „speichert keine Namen“ beim Supporter-Dienst stimmt nur mit Einschränkung: ein öffentlicher Name steckt (≤ 20 Zeichen) im Code selbst ([SUPPORTER-NOTES](SUPPORTER-NOTES.md) §3).
 - **Website Impressum/Datenschutz:** Platzhalter `[PLATZHALTER: …]` und die In-App-`[[…]]` müssen dieselben Angaben tragen (Name, Anschrift, E-Mail). Die E-Mail der Website steht schon im Repo; in der App bewusst Platzhalter, bis du sie freigibst.
-- **README** (Abschnitt Supporter, „ohne Konto und ohne Tracking“): richtig, aber nennt Update-Abfrage, KI-Anbieter und Google nirgends; ein Satz mit Link auf diese Seite genügt (README bleibt kurz, kein neuer Abschnitt).
-- **docs/user/sicherheit.md, ki-assistent.md:** gegen die Zeilen `ai-cloud` und `google` prüfen.
+- **README:** neuer Punkt „Nur, was du einrichtest, verlässt das Gerät“ unter „Datenschutz in Kürze“.
+- **docs/user/security.md, ai-assistant.md** (+ `.de.md`): gegen die Zeilen `ai-cloud` und `google` prüfen.
 
 ## Lücken, die beim Lesen auffielen (nicht geändert, keine Funktionsänderung)
 
 - Schreib-Pipeline: Cloud-Fallback ist standardmäßig an, solange kein lokales Modell aktiv ist (`cloudAllowed`); wirksam erst mit eingerichtetem Anbieter.
-- Chat-Modul sendet mehr als der Assistent und ist nicht von `privacy.test.ts` abgedeckt.
+- Chat-Modul sendet mehr als der Assistent und ist nicht von `privacy.test.ts` abgedeckt. Der Chat zeigt jetzt bei „Meine Anbieter“ einen Hinweis, dass der Text das Gerät verlässt, mit der Schaltfläche „KI abschalten …“ (führt zu Einstellungen → KI).
 - Währungsrechner holt Kurse ohne Rückfrage.
 - Google-Status „Testing“: die App erkennt ihn nicht, nur die Folge (`invalid_grant`/401 → „Abgelaufen“, kein Vorab-Ablaufdatum).

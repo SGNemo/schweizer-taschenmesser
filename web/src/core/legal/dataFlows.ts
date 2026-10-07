@@ -1,10 +1,10 @@
 /**
  * Every case where data leaves the device, as the app states it in Settings → Über Nemo → Rechtliches → Datenschutz.
- * The texts live in `strings.ts` (`t.legal.flows`, German). `docs/legal/DATA-FLOWS.md` carries the same ids (pinned by
+ * The texts live in `strings.legal.ts` (`tLegal.flows`, German + English). `docs/legal/DATA-FLOWS.md` carries the same ids (pinned by
  * `dataFlows.test.ts`) and adds recipients, code references and legal-basis placeholders. Change one → change the
  * other, then the website and the README.
  */
-import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 
 export const DATA_FLOW_IDS = [
   'local',
@@ -33,5 +33,5 @@ export interface DataFlow {
   when: string;
 }
 
-export const dataFlows = (): DataFlow[] =>
-  DATA_FLOW_IDS.map((id) => ({ id, ...t.legal.flows[id] }));
+export const dataFlows = (l: typeof tLegal.de = tLegal.get()): DataFlow[] =>
+  DATA_FLOW_IDS.map((id) => ({ id, ...l.flows[id] }));

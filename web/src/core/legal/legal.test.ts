@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 import { DATA_FLOW_IDS, dataFlows } from './dataFlows';
 import { findPlaceholders, LEGAL_IDENTITY } from './identity';
 import { NOTICE_IDS } from './notices';
@@ -52,9 +52,18 @@ describe('data flows', () => {
 describe('one-time notices', () => {
   it('have a short text for every id', () => {
     for (const id of NOTICE_IDS) {
-      const n = t.legal.notices[id];
+      const n = tLegal.de.notices[id];
       expect(n.title, id).not.toBe('');
       expect(n.body.length, id).toBeLessThanOrEqual(2);
     }
+  });
+});
+
+describe('English bundle', () => {
+  it('has the same data flows and notices and no leftover German headings', () => {
+    expect(Object.keys(tLegal.en.flows)).toEqual(Object.keys(tLegal.de.flows));
+    for (const id of NOTICE_IDS)
+      expect(tLegal.en.notices[id].title, id).not.toBe(tLegal.de.notices[id].title);
+    expect(dataFlows(tLegal.en).map((f) => f.id)).toEqual([...DATA_FLOW_IDS]);
   });
 });

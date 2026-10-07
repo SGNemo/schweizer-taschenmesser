@@ -7,7 +7,7 @@ Gedächtnisstütze vor dem Launch, keine Rechtsberatung. Bei Unsicherheit Rechts
 - [ ] `web/src/core/legal/identity.ts`: `[[NAME]]`, `[[ADRESSE]]`, `[[PLZ_ORT]]`, `[[LAND]]`, `[[KONTAKT_EMAIL]]` (USt-ID nur falls vorhanden). Erscheint in der App unter Einstellungen → Über Nemo → Rechtliches → Impressum.
 - [ ] Website: `[PLATZHALTER: …]` / `[PLACEHOLDER: …]` in `site/src/pages/{impressum,datenschutz}.astro` und `en/{imprint,privacy}.astro`. Gleiche Angaben wie in der App.
 - [ ] `[[RECHTSGRUNDLAGE]]`-Spalte in [DATA-FLOWS.md](DATA-FLOWS.md) prüfen/füllen.
-- [ ] **Vorschlag (nicht eingebaut):** im Release-Workflow vor dem Bauen `cd web && node scripts/check-legal.mjs --strict` laufen lassen, damit ein Release mit offenen Platzhaltern abbricht. In CI (`ci.yml`) gibt es nur die Warnung.
+- [x] Im Release-Workflow (`prepare`) bricht `check-legal.mjs --strict` das **Veröffentlichen** ab (Tag oder Dispatch mit Version) solange Platzhalter offen sind; Probeläufe warnen nur. In CI (`ci.yml`) gibt es nur die Warnung.
 
 ## 2. Impressum
 
@@ -16,7 +16,7 @@ Gedächtnisstütze vor dem Launch, keine Rechtsberatung. Bei Unsicherheit Rechts
 
 ## 3. Datenschutz
 
-- [ ] Website-Datenschutzerklärung um die optionalen App-Flüsse ergänzen (Liste: „Wo Website und README nachgezogen werden müssen“ in DATA-FLOWS).
+- [x] Website-Datenschutzerklärung (DE/EN) und README nennen die optionalen App-Flüsse; prüfen und freigeben.
 - [ ] Verarbeitungen, die du selbst betreibst: Website (Cloudflare Pages) und Supporter-Dienst (Cloudflare Worker/KV/Queue, Resend). Auftragsverarbeitung, Drittlandübermittlung, Löschkonzept: siehe SUPPORTER-NOTES §3.
 - [ ] In-App-Texte lesen (`legal` in `web/src/strings.ts`) und freigeben oder anpassen.
 
@@ -27,7 +27,7 @@ Gedächtnisstütze vor dem Launch, keine Rechtsberatung. Bei Unsicherheit Rechts
 
 ## 5. Google-OAuth-Status
 
-- [ ] Entscheiden (siehe [STATUS](../STATUS.md) → „Offen – macht Sven“): Eigener Client je Person (heute) vs. ein App-Client. Mit eigenem Client gilt „Testing“ für das Projekt der Person: Anmeldung läuft nach 7 Tagen ab, höchstens 100 Testnutzer. Die App zeigt „Abgelaufen“ + „Neu anmelden“ und erklärt es an der Karte und beim ersten Verbinden.
+- [x] Entschieden: jede Person bringt ihren eigenen Client mit (Variante a, [STATUS](../STATUS.md)). Dann gilt „Testing“ für das Projekt der Person: Anmeldung läuft nach 7 Tagen ab, höchstens 100 Testnutzer. Die App zeigt „Abgelaufen“ + „Neu anmelden“ und erklärt es an der Karte und beim ersten Verbinden.
 - [ ] Wer „In Produktion“ ohne Verifizierung nutzt, bekommt Warnungen („nicht verifizierte App“); Gmail ist ein eingeschränkter Scope (Prüfung durch Google nötig, wenn du einen eigenen App-Client ausliefern willst). Nichts davon ausliefern, ohne es mit Google geprüft zu haben.
 
 ## 6. Lizenzen

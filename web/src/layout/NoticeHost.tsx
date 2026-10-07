@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { confirmNotice, registerNoticeHost, useNoticeStore } from '@/core/legal/notices';
-import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 import { Button, Dialog } from '@/ui';
 
 /** Shows the first pending one-time notice; only the button closes it (see `core/legal/notices.ts`). */
 export function NoticeHost() {
+  const l = tLegal.use();
   const id = useNoticeStore((s) => s.queue[0]);
   useEffect(() => registerNoticeHost(), []);
-  const n = id ? t.legal.notices[id] : undefined;
+  const n = id ? l.notices[id] : undefined;
   return (
     <Dialog
       open={Boolean(id && n)}
@@ -15,7 +16,7 @@ export function NoticeHost() {
       title={n?.title ?? ''}
       footer={
         <Button variant="primary" data-autofocus onClick={() => id && void confirmNotice(id)}>
-          {t.legal.notices.ok}
+          {l.notices.ok}
         </Button>
       }
     >
@@ -23,7 +24,7 @@ export function NoticeHost() {
         {n?.body.map((p) => (
           <p key={p}>{p}</p>
         ))}
-        <p>{t.legal.notices.more}</p>
+        <p>{l.notices.more}</p>
       </div>
     </Dialog>
   );

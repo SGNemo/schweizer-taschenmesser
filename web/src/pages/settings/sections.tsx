@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import { t } from '@/strings';
 import { tLang } from '@/strings.i18n';
+import { tLegal } from '@/strings.legal';
 import { LanguageSection } from './LanguageSection';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
@@ -469,7 +470,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'legal-imprint',
     category: 'ueber',
     order: 42,
-    title: t.legal.imprint.title,
+    title: tLegal.de.imprint.title,
     keywords: ['Impressum', 'Kontakt', 'Anbieter', 'Anschrift', 'E-Mail', 'Rechtliches'],
     render: () => <LegalImprintSection />,
   },
@@ -477,7 +478,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'legal-privacy',
     category: 'ueber',
     order: 44,
-    title: t.legal.privacy.title,
+    title: tLegal.de.privacy.title,
     keywords: [
       'Datenschutz',
       'Datenfluss',
@@ -494,7 +495,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'licenses',
     category: 'ueber',
     order: 50,
-    title: t.legal.licenses.title,
+    title: tLegal.de.licenses.title,
     keywords: ['Lizenz', 'Bibliotheken', 'Schrift', 'Icons', 'Open Source', 'MIT', 'Rechtliches'],
     render: () => <LegalLicensesSection />,
   },
