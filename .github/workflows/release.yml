@@ -182,10 +182,7 @@ jobs:
   windows:
     name: Windows (portable)
     needs: prepare
-    # Pinned to the image with Visual Studio 2022: on windows-latest (Visual Studio 2026, cmake generator
-    # "Visual Studio 18 2026") llama.cpp's Vulkan shader generator fails with "cannot find the batch
-    # label specified - VCEnd". Move on once llama-cpp-sys-2 builds with the newer generator.
-    runs-on: windows-2022
+    runs-on: windows-latest
     timeout-minutes: 45
     defaults:
       run:
@@ -219,8 +216,20 @@ jobs:
           "$sdk\Bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       # One self-contained executable with the frontend embedded – no NSIS/MSI installer.
+      # llama.cpp builds its Vulkan shader generator as a nested CMake project; under the default
+      # target directory its paths pass the Windows limit of 260 characters and the build fails
+      # ("Not a file ... cmake_install.cmake", "cannot find the batch label specified - VCEnd"). So build
+      # into a short directory and put the executable back where the following steps expect it.
       - name: Build
+        env:
+          CARGO_TARGET_DIR: C:/t
         run: npx tauri build --no-bundle -- --features local-llm-vulkan --locked
+
+      - name: Put the executable where the next steps expect it
+        run: |
+          set -euo pipefail
+          mkdir -p src-tauri/target/release
+          cp C:/t/release/taschenmesser.exe src-tauri/target/release/taschenmesser.exe
 
       - name: Sign with the updater key
         env:
