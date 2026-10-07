@@ -134,6 +134,9 @@ const subscribe = (l: () => void) => {
   return () => void listeners.delete(l);
 };
 
+/** Runs after every language switch (for things outside React, e.g. native tray labels). */
+export const onLangChange = (listener: () => void): (() => void) => subscribe(listener);
+
 /** Current language; re-renders on a switch. */
 export const useLang = (): Lang => useSyncExternalStore(subscribe, getLang, getLang);
 /** Current preference ("system" or a language); re-renders on a switch. */

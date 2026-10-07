@@ -5,6 +5,7 @@
 //! Two commands because the redirect URI (with the port) must be known before the browser opens:
 //! `oauth_listen_start` binds and returns the port, `oauth_listen_wait` waits for the callback.
 
+use crate::texts::{accept_language_of, oauth_page, Lang};
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
 use std::sync::Mutex;
@@ -93,14 +94,10 @@ fn classify(request: &str, expected_state: &str) -> Callback {
     }
 }
 
-const PAGE_OK: &str =
-    "Die Anmeldung ist abgeschlossen. Du kannst dieses Fenster schließen und zu Nemo zurückkehren.";
-const PAGE_FAIL: &str =
-    "Die Anmeldung wurde nicht abgeschlossen. Du kannst dieses Fenster schließen und es in Nemo erneut versuchen.";
-
-fn respond(stream: &mut TcpStream, status: &str, message: &str) {
+fn respond(stream: &mut TcpStream, status: &str, lang: Lang, message: &str) {
+    let html_lang = lang.tag();
     let body = format!(
-        "<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\"><title>Nemo</title></head><body style=\"font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem\"><h1>Nemo</h1><p>{message}</p></body></html>"
+        "<!doctype html><html lang=\"{html_lang}\"><head><meta charset=\"utf-8\"><title>Nemo</title></head><body style=\"font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem\"><h1>Nemo</h1><p>{message}</p></body></html>"
     );
     let _ = write!(
         stream,
@@ -155,17 +152,20 @@ fn wait_for_callback(
             Ok((mut stream, _)) => {
                 let _ = stream.set_nonblocking(false);
                 let request = read_request(&mut stream);
+                // The page is shown in the browser: its Accept-Language picks the text.
+                let lang = accept_language_of(&request);
+                let (page_ok, page_fail) = oauth_page(lang);
                 match classify(&request, expected_state) {
                     Callback::Code(code) => {
-                        respond(&mut stream, "200 OK", PAGE_OK);
+                        respond(&mut stream, "200 OK", lang, page_ok);
                         return Ok(code);
                     }
                     Callback::Denied(error) => {
-                        respond(&mut stream, "200 OK", PAGE_FAIL);
+                        respond(&mut stream, "200 OK", lang, page_fail);
                         return Err(format!("denied: {error}"));
                     }
                     Callback::WrongState | Callback::Other => {
-                        respond(&mut stream, "404 Not Found", PAGE_FAIL);
+                        respond(&mut stream, "404 Not Found", lang, page_fail);
                     }
                 }
             }

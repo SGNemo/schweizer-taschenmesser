@@ -17,6 +17,8 @@ mod portable;
 #[cfg(desktop)]
 mod system;
 #[cfg(desktop)]
+mod texts;
+#[cfg(desktop)]
 mod update;
 #[cfg(desktop)]
 pub mod vault_bridge;
