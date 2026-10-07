@@ -1,7 +1,7 @@
 # CLAUDE.md – Nemo
 
 Local-first modular everyday app (formerly "Schweizer Taschenmesser" – internal identifiers keep that name): PWA + portable Windows exe + Android APK (Tauri 2 shell, same web app). Data in IndexedDB, optional sync, the AI assistant never sees user data.
-Code, comments, commits **English**; UI **German only** (`web/src/strings.ts`).
+Code, comments, commits **English**; UI **German** (`web/src/strings.ts`); new feature texts additionally **English** via `defineBundle` (`core/i18n`, `strings.i18n.ts`), old strings stay German-only.
 **Stack:** Vite, React 19, TypeScript strict (pinned 6.0.x), Dexie, Zod, zustand, CSS Modules; Tauri 2 (Rust); server Fastify 5 + better-sqlite3; Vitest, Playwright.
 
 ## How chats work here
@@ -49,4 +49,4 @@ Code, comments, commits **English**; UI **German only** (`web/src/strings.ts`).
 | Status, open items, hardware checklists | [STATUS](docs/STATUS.md), [MANUAL-TESTS](docs/MANUAL-TESTS.md); ideas: [ROADMAP](docs/ROADMAP.md) |
 | Local AI import API / MCP (German) | [AI-IMPORT](docs/AI-IMPORT.md) |
 | Area rules | `web/src/modules/CLAUDE.md`, `web/src-tauri/CLAUDE.md`, `server/CLAUDE.md` (loaded when working there) |
-README stays short and German (no new sections); user docs in `docs/user/`. Latest release: see [STATUS](docs/STATUS.md).
+Docs are English; README and user docs (`docs/user/`) also German as `*.de.md`, change both (`npm run check:readme`). Latest release: see [STATUS](docs/STATUS.md).

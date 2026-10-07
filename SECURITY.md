@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 Please **do not** open a public issue for security problems. Use GitHub's private vulnerability reporting on this repository ("Security" → "Report a vulnerability"). If that is unavailable, contact the maintainer through the e-mail address on the [GitHub profile](https://github.com/SGNemo). You should get a first answer within a week.
 
-Please include: affected version (Einstellungen → App-Updates shows it), platform (Windows portable, Android APK, PWA, sync server), steps to reproduce, and what an attacker could gain.
+Please include: affected version (Settings → App updates shows it), platform (Windows portable, Android APK, PWA, sync server), steps to reproduce, and what an attacker could gain.
 
 ## Scope
 - The app (`web/`), the native shells (`web/src-tauri/`), the sync server (`server/`) and the MCP wrapper (`mcp/`).
@@ -17,5 +17,3 @@ Out of scope: third-party services users connect on their own (AI providers, Goo
 
 Supported: the latest stable release. Fixes are released as a new version, not backported.
 
----
-*Deutsch:* Sicherheitslücken bitte nicht als öffentliches Issue melden, sondern über GitHubs private Meldung („Security“ → „Report a vulnerability“) oder per E-Mail an den Maintainer. Antwort in der Regel innerhalb einer Woche.

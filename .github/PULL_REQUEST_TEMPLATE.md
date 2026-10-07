@@ -9,3 +9,4 @@
 - [ ] New module? → `seed.ts` + `seed` in the manifest present, `core/seed/registry.test.ts` green, Dev-Preview checked with test data (Settings → Entwickler)
 - [ ] Docs updated where a decision or recipe changed (`docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/STATUS.md`; one line each)
 - [ ] Docs changed? `npm run check:docs` (in `web/`) has no new warnings; my row in `docs/CHATS.md` is removed
+- [ ] README or user docs changed? German copy (`README.de.md`, `*.de.md`) updated too, `npm run check:readme` (in `web/`) green

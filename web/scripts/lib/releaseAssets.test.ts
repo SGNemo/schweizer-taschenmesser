@@ -33,15 +33,24 @@ describe('release assets', () => {
     expect(unknownAssetLinks(`${base}/download/dev-preview/Nemo.apk`)).toEqual([]);
   });
 
-  it('README only links to assets a release really has – no leftover installer names', () => {
-    const readme = read('README.md');
-    expect(unknownAssetLinks(readme)).toEqual([]);
-    expect(unknownAssetLinks(read('docs/user/installation.md'))).toEqual([]);
-    expect(readme).toContain('releases/latest/download/Nemo-Portable.exe');
-    expect(readme).toContain('releases/latest/download/Nemo.apk');
-    expect(readme).not.toContain('download/Taschenmesser');
-    expect(readme).not.toMatch(/Setup\.exe|\.msi\b/);
-  });
+  it.each(['README.md', 'README.de.md'])(
+    '%s only links to assets a release really has – no leftover installer names',
+    (file) => {
+      const readme = read(file);
+      expect(unknownAssetLinks(readme)).toEqual([]);
+      expect(readme).toContain('releases/latest/download/Nemo-Portable.exe');
+      expect(readme).toContain('releases/latest/download/Nemo.apk');
+      expect(readme).not.toContain('download/Taschenmesser');
+      expect(readme).not.toMatch(/Setup\.exe|\.msi\b/);
+    },
+  );
+
+  it.each(['docs/user/installation.md', 'docs/user/installation.de.md'])(
+    '%s only links to assets a release really has',
+    (file) => {
+      expect(unknownAssetLinks(read(file))).toEqual([]);
+    },
+  );
 
   it('the release workflow publishes exactly these files', () => {
     const workflow = read('.github/workflows/release.yml');

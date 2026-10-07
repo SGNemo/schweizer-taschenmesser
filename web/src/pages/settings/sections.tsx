@@ -5,6 +5,8 @@
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import { t } from '@/strings';
+import { tLang } from '@/strings.i18n';
+import { LanguageSection } from './LanguageSection';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
 import { Suspense } from 'react';
@@ -404,6 +406,14 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <SetupSection />
       </SettingsGroup>
     ),
+  },
+  {
+    id: 'language',
+    category: 'ueber',
+    order: 15,
+    title: tLang.de.title,
+    keywords: tLang.de.keywords,
+    render: () => <LanguageSection />,
   },
   {
     id: 'about',
