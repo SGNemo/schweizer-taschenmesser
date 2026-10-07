@@ -17,6 +17,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| App UI in 5 languages (DE source, EN, ES, FR, PT-BR) on top of the `core/i18n` seam | `feat/i18n-ui` | **hotspots:** `web/src/strings.ts` (becomes the German source of typed catalogs; keep appending as before), `core/i18n/*`, `pages/settings/*` (language + formats), `core/time/dates.ts`, `core/money.ts`, `main.tsx`, manifests (name getters), root `CLAUDE.md`. After merge: new texts need all 5 languages (`src/i18n/locales/*`), `npm run check:i18n` | in progress | – | 2026-10-07 |
 | Bug report, diagnostics export, crash resilience, launch tests (P0 i18n seam, P1 diagnostics, P2 recovery, P3 launch aids) | `feat/bug-report-diagnostics` | `core/i18n`, `core/diagnostics`, `router.tsx`, `main.tsx`, `core/platform` (hotspot), `pages/settings/sections.tsx` | P0 in progress | – | 2026-10-06 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
