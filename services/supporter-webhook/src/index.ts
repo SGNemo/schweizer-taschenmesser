@@ -9,6 +9,8 @@ import { handleResend, resendForm } from './resend.ts';
 import { defaultDeps, type Deps, type Env } from './types.ts';
 
 const MAX_BODY = 16 * 1024;
+/** Key ids 0..254 are for real keys; 255 is reserved for the E2E test key (`web/src/core/supporter/keys.ts`). */
+const MAX_KEY_ID = 254;
 
 const TEXT_SETTINGS = [
   'KOFI_VERIFICATION_TOKEN',
@@ -48,6 +50,11 @@ function misconfigured(env: Env): string | null {
   ).filter((k) => !env[k]);
   if (missing.length) return missing.join(',');
   if (fromHex(env.SUPPORTER_SIGNING_KEY)?.length !== 32) return 'SUPPORTER_SIGNING_KEY';
+  // One byte in the code layout; 255 is the E2E test key the app only trusts in test builds.
+  if (!/^\d+$/.test(env.SIGNING_KEY_ID) || Number(env.SIGNING_KEY_ID) > MAX_KEY_ID)
+    return 'SIGNING_KEY_ID';
+  // Without the rate limiter the service is unprotected; only local development may run without it.
+  if (!env.RATE_LIMITER && !env.DEV) return 'RATE_LIMITER';
   return null;
 }
 

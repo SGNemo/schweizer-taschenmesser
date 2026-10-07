@@ -20,7 +20,7 @@ export function toBase32(bytes: Uint8Array): string {
   return out;
 }
 
-/** Returns null on any character outside the alphabet or on non-zero padding bits. */
+/** Returns null on any character outside the alphabet, on non-zero padding bits or on a surplus symbol. */
 export function fromBase32(text: string): Uint8Array | null {
   const out: number[] = [];
   let acc = 0;
@@ -36,7 +36,8 @@ export function fromBase32(text: string): Uint8Array | null {
     }
     acc &= (1 << bits) - 1;
   }
-  if (acc !== 0) return null;
+  // Canonical form only: at most 4 leftover bits and all of them zero (one string per byte array).
+  if (bits >= 5 || acc !== 0) return null;
   return Uint8Array.from(out);
 }
 
