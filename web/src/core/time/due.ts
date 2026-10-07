@@ -1,3 +1,5 @@
+import { capitalize, relativeDays } from '@/core/i18n/format';
+import { t } from '@/strings';
 import { daysBetween, formatDay } from './dates';
 
 export type DueTone = 'overdue' | 'today' | 'soon' | 'later' | 'none';
@@ -38,8 +40,9 @@ export function dueState(
 }
 
 function dueLabel(tone: DueTone, days: number, date: string): string {
-  if (tone === 'overdue') return days === -1 ? 'seit gestern' : `seit ${-days} Tagen`;
-  if (tone === 'today') return 'Heute';
-  if (tone === 'soon') return days === 1 ? 'Morgen' : `in ${days} Tagen`;
+  if (tone === 'overdue') return t.time.overdueSince(-days);
+  // "Heute", "Morgen", "in 3 Tagen" (Intl, UI language).
+  if (tone === 'today' || tone === 'soon')
+    return days <= 1 ? capitalize(relativeDays(days)) : relativeDays(days);
   return formatDay(date, 'EEE, d. MMM');
 }

@@ -16,6 +16,8 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
+    // The app follows the device language; the specs assert German texts.
+    locale: 'de-DE',
     baseURL: 'http://localhost:4173',
     trace: 'retain-on-failure',
     // Deterministic tests: no service worker caching between navigations.

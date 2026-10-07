@@ -1,3 +1,4 @@
+import { t } from '@/strings';
 import { Component, useMemo, type ReactNode } from 'react';
 import { recordError, scrub } from '@/core/diagnostics/errorLog';
 import { reportBug } from '@/core/diagnostics/report';
@@ -24,7 +25,7 @@ export function FatalErrorScreen({ error }: { error: Error }) {
             aria-hidden
             tabIndex={-1}
           >
-            <Logo size={48} title="Nemo" />
+            <Logo size={48} title={t.appName} />
           </button>
           <h1>{d.title}</h1>
         </div>

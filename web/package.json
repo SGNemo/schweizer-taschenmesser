@@ -25,6 +25,8 @@
     "check:legal": "node scripts/check-legal.mjs",
     "check:licenses": "node scripts/gen-licenses.mjs --check",
     "check:docs": "node scripts/check-docs.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "i18n:scaffold": "node scripts/i18n-scaffold.mjs",
     "check:readme": "node scripts/check-readme.mjs",
     "db:bump": "node scripts/db-bump.mjs",
     "build:e2e": "vite build --mode e2e",

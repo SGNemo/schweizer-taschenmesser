@@ -23,9 +23,24 @@ import { Segmented, SelectField, SettingRow, SettingsGroup } from '@/ui';
 import { PaletteRows } from './PaletteRows';
 
 const THEMES = [
-  { value: 'system', label: t.settings.themeSystem },
-  { value: 'light', label: t.settings.themeLight },
-  { value: 'dark', label: t.settings.themeDark },
+  {
+    value: 'system',
+    get label() {
+      return t.settings.themeSystem;
+    },
+  },
+  {
+    value: 'light',
+    get label() {
+      return t.settings.themeLight;
+    },
+  },
+  {
+    value: 'dark',
+    get label() {
+      return t.settings.themeDark;
+    },
+  },
 ] as const;
 
 /** Device-local look: theme, accent, text size, density, sidebar (stores/ui.ts, localStorage). */

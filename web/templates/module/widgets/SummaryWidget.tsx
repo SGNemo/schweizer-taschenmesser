@@ -1,9 +1,8 @@
+import { t } from '@/strings';
 import { WidgetList } from '@/ui';
 import { useSummary } from './useSummary';
 
 // TODO: move these texts to src/strings.ts (all UI text lives there, German only).
-const EMPTY = 'Noch keine Einträge.';
-const ACTION = 'Eintrag anlegen';
 const LINK = '__NAME__ öffnen';
 
 /**
@@ -15,8 +14,8 @@ export default function SummaryWidget() {
   return (
     <WidgetList
       loading={!open}
-      empty={EMPTY}
-      emptyAction={{ label: ACTION, to: '/__ID__?new=1' }}
+      empty={t.__ID__.empty}
+      emptyAction={{ label: t.__ID__.add, to: '/__ID__?new=1' }}
       entries={(open ?? []).map((e) => ({ key: e.id, title: e.title }))}
       to="/__ID__"
       linkLabel={LINK}

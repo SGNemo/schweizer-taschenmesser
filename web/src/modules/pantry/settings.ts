@@ -12,13 +12,29 @@ export const settings: ModuleSettings = {
   schema: settingsSchema,
   defaults: { soonDays: 3, remindDaysBefore: 1, remindTime: '18:00' },
   fields: [
-    { key: 'soonDays', label: t.pantry.meta.settings.soonDays, type: 'number' },
-    { key: 'remindDaysBefore', label: t.pantry.meta.settings.remindDaysBefore, type: 'number' },
+    {
+      key: 'soonDays',
+      get label() {
+        return t.pantry.meta.settings.soonDays;
+      },
+      type: 'number',
+    },
+    {
+      key: 'remindDaysBefore',
+      get label() {
+        return t.pantry.meta.settings.remindDaysBefore;
+      },
+      type: 'number',
+    },
     {
       key: 'remindTime',
-      label: t.pantry.meta.settings.remindTime,
+      get label() {
+        return t.pantry.meta.settings.remindTime;
+      },
       type: 'text',
-      help: t.pantry.meta.settings.remindTimeHelp,
+      get help() {
+        return t.pantry.meta.settings.remindTimeHelp;
+      },
     },
   ],
 };

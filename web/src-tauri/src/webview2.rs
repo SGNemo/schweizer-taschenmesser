@@ -26,16 +26,12 @@ pub fn is_usable_version(pv: Option<&str>) -> bool {
     }
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
-pub const MESSAGE_TITLE: &str = "Nemo – WebView2 fehlt";
-#[cfg_attr(not(windows), allow(dead_code))]
-pub const MESSAGE_TEXT: &str = "Nemo braucht die Microsoft-Komponente „WebView2“, die auf diesem Computer nicht gefunden wurde.\n\nKlicke auf „OK“, um die Download-Seite zu öffnen. Installiere dort die „Evergreen Bootstrapper“-Version und starte Nemo danach erneut.";
-
 #[cfg(windows)]
 mod imp {
     use super::*;
     use windows::core::{w, HSTRING};
     use windows::Win32::Foundation::ERROR_SUCCESS;
+    use windows::Win32::Globalization::GetUserDefaultUILanguage;
     use windows::Win32::System::Registry::{
         RegGetValueW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ,
     };
@@ -86,10 +82,13 @@ mod imp {
         }
         // SAFETY: plain Win32 calls with valid, NUL-terminated wide strings.
         unsafe {
+            // Shown before any web view exists: the Windows display language picks the text.
+            let lang = crate::texts::from_windows_langid(GetUserDefaultUILanguage());
+            let (title, text) = crate::texts::webview2_dialog(lang);
             let answer = MessageBoxW(
                 None,
-                &HSTRING::from(MESSAGE_TEXT),
-                &HSTRING::from(MESSAGE_TITLE),
+                &HSTRING::from(text),
+                &HSTRING::from(title),
                 MB_OKCANCEL | MB_ICONERROR,
             );
             if answer == IDOK {
@@ -128,6 +127,8 @@ mod tests {
     #[test]
     fn the_message_points_to_the_download_page() {
         assert!(DOWNLOAD_URL.starts_with("https://"));
-        assert!(MESSAGE_TEXT.contains("WebView2"));
+        assert!(crate::texts::webview2_dialog(crate::texts::Lang::En)
+            .1
+            .contains("WebView2"));
     }
 }

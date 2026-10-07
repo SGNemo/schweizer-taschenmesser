@@ -51,7 +51,8 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
     }
     const count = (re: RegExp) => [...block.matchAll(re)].length;
     for (const key of ['id', 'title', 'defaultSize', 'sizes'] as const) {
-      if (count(new RegExp(`\\b${key}:`, 'g')) < components.length)
+      // A text field may be a getter (`get title() { return t.… }`) so it follows the UI language.
+      if (count(new RegExp(`\\b${key}:|\\bget\\s+${key}\\s*\\(`, 'g')) < components.length)
         fail(`every widget needs \`${key}\``);
     }
   }

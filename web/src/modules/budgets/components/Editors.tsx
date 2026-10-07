@@ -76,7 +76,8 @@ function BudgetFields({
 
   async function save() {
     const monthlyLimitMinor = parseMoney(limit);
-    if (!monthlyLimitMinor || monthlyLimitMinor < 1) return setError(t.money.invalidAmount);
+    if (!monthlyLimitMinor || monthlyLimitMinor < 1)
+      return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     if (!categoryId) return;
     if (existing) await budgetRepo.update(existing.id, { categoryId, monthlyLimitMinor });
     else await budgetRepo.create({ categoryId, monthlyLimitMinor });
@@ -159,7 +160,8 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
 
   async function save() {
     const targetMinor = parseMoney(target);
-    if (!targetMinor || targetMinor < 1) return setError(t.money.invalidAmount);
+    if (!targetMinor || targetMinor < 1)
+      return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     const data = {
       name: name.trim(),
       targetMinor,
@@ -250,7 +252,7 @@ function DepositFields({ goal, onClose }: { goal: Stored<Goal>; onClose: () => v
 
   async function save() {
     const cents = parseMoney(amount);
-    if (!cents || cents < 1) return setError(t.money.invalidAmount);
+    if (!cents || cents < 1) return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     await depositRepo.create({
       goalId: goal.id,
       amountMinor: withdraw ? -cents : cents,

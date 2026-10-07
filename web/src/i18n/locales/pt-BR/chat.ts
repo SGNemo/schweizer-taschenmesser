@@ -1,0 +1,105 @@
+import type { Strings } from '@/strings';
+
+export const chat: Strings['chat'] = {
+  meta: {
+    name: 'Chat',
+    description:
+      'Conversas com o modelo local integrado ou com seus provedores; se quiser, com dados de módulos escolhidos.',
+    route: 'Chat',
+    widget: 'Chat',
+    quickAdd: 'Novo chat',
+  },
+  title: 'Chat',
+  newChat: 'Novo chat',
+  chats: 'Chats',
+  search: 'Buscar nos chats',
+  empty: 'Nenhum chat ainda. Faça uma pergunta – nada é salvo antes de você enviar.',
+  emptyAction: 'Iniciar chat',
+  noThread: 'Escolha um chat à esquerda ou inicie um novo.',
+  back: 'Voltar à lista de chats',
+  placeholder: 'Escreva uma mensagem…',
+  send: 'Enviar',
+  stop: 'Parar',
+  you: 'Você',
+  assistant: 'Assistente',
+  stageLocal: 'Local · 0 €',
+  stageCloud: 'Nuvem',
+  engine: 'Responde com',
+  engineLocal: 'Modelo local',
+  engineRouter: 'Meus provedores',
+  engineHintLocal: 'Roda só neste dispositivo, offline, sem custo.',
+  engineHintRouter: 'O texto deste chat vai para o provedor que você configurou.',
+  systemPrompt: 'Instrução própria para este chat',
+  systemPromptHint: 'Por exemplo: “Responda de forma curta e com frases simples.”',
+  rename: 'Renomear',
+  pin: 'Fixar',
+  unpin: 'Desafixar',
+  archive: 'Arquivar',
+  unarchive: 'Restaurar',
+  showArchived: 'Mostrar arquivados',
+  delete: 'Excluir chat',
+  deleteTitle: 'Excluir o chat de vez?',
+  deleteBody: 'Todas as mensagens deste chat serão excluídas.',
+  deleteConfirm: 'Excluir',
+  cancel: 'Cancelar',
+  export: 'Exportar como Markdown',
+  copy: 'Copiar',
+  copied: 'Copiado.',
+  regenerate: 'Gerar de novo',
+  edit: 'Editar',
+  editSave: 'Salvar e perguntar de novo',
+  retry: 'Tentar de novo',
+  usage: (inTokens: number, outTokens: number, usd: number) =>
+    `${inTokens} tokens enviados · ${outTokens} recebidos${
+      usd > 0 ? ` · aprox. US$ ${usd.toFixed(4).replace('.', ',')}` : ''
+    }`,
+  pinned: 'Fixados',
+  context: {
+    title: 'Dados dos módulos',
+    hint: 'Por padrão, o chat não vê nenhum dado do app. Escolha módulos com os quais ele pode responder perguntas; antes, você vê exatamente o que será enviado.',
+    none: 'Nenhum',
+    attach: 'Anexar dados',
+    attachHint: 'Procura nos módulos escolhidos dados sobre a sua pergunta.',
+    previewTitle: 'Isto será enviado',
+    previewIntro: (cloud: boolean) =>
+      cloud
+        ? 'Este texto vai junto com a sua pergunta para o seu provedor.'
+        : 'Este texto fica neste dispositivo.',
+    previewSend: 'Enviar com dados',
+    previewWithout: 'Enviar sem dados',
+    nothing: 'Nenhum dado sobre esta pergunta foi encontrado nos módulos escolhidos.',
+    attached: 'Com dados do app',
+  },
+  aiOff: 'A IA está desligada. Você pode ligá-la de novo em Configurações → IA.',
+  errors: {
+    'ai-off': 'A IA está desligada. Você pode ligá-la de novo em Configurações → IA.',
+    'no-engine':
+      'Nenhum provedor configurado. Configure um em Configurações → IA ou escolha o modelo local.',
+    'local-unavailable':
+      'O modelo local não está pronto. Baixe-o em Configurações → IA → Modelo local.',
+    auth: 'O provedor recusou a chave.',
+    'rate-limit': 'O provedor está limitando as solicitações. Tente de novo daqui a pouco.',
+    network: 'Sem conexão com o provedor.',
+    'limit-reached': 'Seus limites de hoje ou deste mês foram atingidos.',
+    aborted: 'Cancelado.',
+    fallback: 'Não deu certo.',
+  } as Record<string, string>,
+  settings: {
+    defaultEngine: 'Novos chats respondem com',
+    keepDays: 'Excluir chats antigos após',
+    keepForever: 'Nunca',
+    keepDaysOption: (n: number) => (n <= 1 ? `${n} dia` : `${n} dias`),
+    keepHint: 'Chats fixados ficam. A exclusão acontece ao abrir o módulo Chat.',
+  },
+  widget: {
+    empty: 'Nenhum chat ainda.',
+    link: 'Abrir chat',
+    line: (n: number) => (n <= 1 ? `${n} chat` : `${n} chats`),
+  },
+  seed: {
+    title: 'Exemplo: dicas para o plano da semana',
+    question: 'Como planejo uma semana com três compromissos e uma ida ao mercado?',
+    answer:
+      'Um roteiro simples:\n\n1. Primeiro anote os **eventos** fixos.\n2. Coloque as **compras** num dia sem eventos.\n3. Reserve uma noite livre.\n\nAssim sobra espaço para imprevistos.',
+  },
+};

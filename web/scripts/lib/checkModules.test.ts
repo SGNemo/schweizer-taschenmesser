@@ -28,6 +28,21 @@ describe('checkModule', () => {
     expect(checkModule({ id: 'x', manifest: m, fileExists: has() }).join()).toContain('no widget');
   });
 
+  it('accepts a widget title given as a getter (read in the current language)', () => {
+    const m = good.replace("title: 'A',", 'get title() { return t.x.title; },');
+    expect(
+      checkModule({ id: 'x', manifest: m, fileExists: has('widgets/AWidget.tsx', 'seed.ts') }),
+    ).toEqual([]);
+    const without = good.replace("title: 'A', ", '');
+    expect(
+      checkModule({
+        id: 'x',
+        manifest: without,
+        fileExists: has('widgets/AWidget.tsx', 'seed.ts'),
+      }).join(),
+    ).toContain('`title`');
+  });
+
   it('fails when the widget file is missing or the sizes are not declared', () => {
     expect(checkModule({ id: 'x', manifest: good, fileExists: has() }).join()).toContain('missing');
     const m = good.replace('sizes: ALL_WIDGET_SIZES, ', '');

@@ -52,7 +52,8 @@ export const baseUrlSchema = z
       }
       return url.protocol === 'https:' || (url.protocol === 'http:' && isLocalHost(url.hostname));
     },
-    { message: t.ai.settings.baseUrlInsecure },
+    // A function, so the message is read in the current language when the check fails.
+    { error: () => t.ai.settings.baseUrlInsecure },
   );
 
 export const providerEntrySchema = z.object({

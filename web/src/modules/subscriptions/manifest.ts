@@ -8,14 +8,20 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'subscriptions',
-  name: t.subscriptions.meta.name,
+  get name() {
+    return t.subscriptions.meta.name;
+  },
   icon: 'repeat',
   version: 1,
-  description: t.subscriptions.meta.description,
+  get description() {
+    return t.subscriptions.meta.description;
+  },
   routes: [
     {
       path: '/subscriptions',
-      label: t.subscriptions.meta.route,
+      get label() {
+        return t.subscriptions.meta.route;
+      },
       nav: true,
       component: () => import('./routes/SubscriptionsPage'),
     },
@@ -29,7 +35,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'next',
-      title: t.subscriptions.meta.widget,
+      get title() {
+        return t.subscriptions.meta.widget;
+      },
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/NextChargesWidget'),
@@ -45,7 +53,13 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: onboarding,
     quickAdd: [
-      { id: 'subscription', label: t.subscriptions.meta.quickAdd, to: '/subscriptions?new=1' },
+      {
+        id: 'subscription',
+        get label() {
+          return t.subscriptions.meta.quickAdd;
+        },
+        to: '/subscriptions?new=1',
+      },
     ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),

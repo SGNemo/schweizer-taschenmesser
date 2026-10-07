@@ -8,14 +8,20 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'calendar',
-  name: t.calendar.meta.name,
+  get name() {
+    return t.calendar.meta.name;
+  },
   icon: 'calendar',
   version: 1,
-  description: t.calendar.meta.description,
+  get description() {
+    return t.calendar.meta.description;
+  },
   routes: [
     {
       path: '/calendar',
-      label: t.calendar.meta.route,
+      get label() {
+        return t.calendar.meta.route;
+      },
       nav: true,
       component: () => import('./routes/CalendarPage'),
     },
@@ -30,14 +36,18 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'today',
-      title: t.calendar.meta.widget,
+      get title() {
+        return t.calendar.meta.widget;
+      },
       defaultSize: 'l',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/TodayWidget'),
     },
     {
       id: 'next',
-      title: t.widgets.next,
+      get title() {
+        return t.widgets.next;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/NextWidget'),
@@ -53,7 +63,15 @@ const manifest: ModuleManifest = {
   contributions: {
     attention: () => import('./attention'),
     onboarding: onboarding,
-    quickAdd: [{ id: 'event', label: t.calendar.meta.quickAdd, to: '/calendar?new=1' }],
+    quickAdd: [
+      {
+        id: 'event',
+        get label() {
+          return t.calendar.meta.quickAdd;
+        },
+        to: '/calendar?new=1',
+      },
+    ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
     services: () => import('./services'),

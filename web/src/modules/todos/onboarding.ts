@@ -6,11 +6,24 @@ export const onboarding: OnboardingDef = {
     {
       id: 'text',
       kind: 'text',
-      label: t.onboarding.todos.text,
-      description: t.onboarding.todos.textHint,
-      placeholder: t.onboarding.todos.placeholder,
+      get label() {
+        return t.onboarding.todos.text;
+      },
+      get description() {
+        return t.onboarding.todos.textHint;
+      },
+      get placeholder() {
+        return t.onboarding.todos.placeholder;
+      },
       options: [
-        { key: 'listId', label: t.onboarding.todos.list, type: 'select', dynamicChoices: true },
+        {
+          key: 'listId',
+          get label() {
+            return t.onboarding.todos.list;
+          },
+          type: 'select',
+          dynamicChoices: true,
+        },
       ],
     },
   ],

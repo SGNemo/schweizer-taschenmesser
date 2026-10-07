@@ -18,8 +18,21 @@ const ICONS: Record<SettingsCategoryId, string> = {
   ueber: 'help',
 };
 
+/** Texts are getters: they are read when shown, so they follow a language switch. */
 export const SETTINGS_CATEGORIES: readonly SettingsCategoryDef[] = SETTINGS_CATEGORY_IDS.map(
-  (id) => ({ id, icon: ICONS[id], ...t.settings.cat[id] }),
+  (id) => ({
+    id,
+    icon: ICONS[id],
+    get title() {
+      return t.settings.cat[id].title;
+    },
+    get description() {
+      return t.settings.cat[id].description;
+    },
+    get keywords() {
+      return t.settings.cat[id].keywords;
+    },
+  }),
 );
 
 export function categoryDef(id: SettingsCategoryId): SettingsCategoryDef {

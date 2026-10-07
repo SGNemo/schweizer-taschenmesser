@@ -1,3 +1,4 @@
+import { formatMoneyInput } from '@/core/money';
 import type { OnboardingDef } from '@/core/importer/types';
 import { t } from '@/strings';
 
@@ -8,16 +9,31 @@ export const onboarding: OnboardingDef = {
     {
       id: 'account',
       kind: 'form',
-      label: s.account,
-      description: s.accountHint,
+      get label() {
+        return s.account;
+      },
+      get description() {
+        return s.accountHint;
+      },
       fields: [
-        { key: 'name', label: s.name, type: 'text', required: true },
         {
-          key: 'balance',
-          label: s.balance,
+          key: 'name',
+          get label() {
+            return s.name;
+          },
           type: 'text',
           required: true,
-          hint: s.balanceHint,
+        },
+        {
+          key: 'balance',
+          get label() {
+            return s.balance;
+          },
+          type: 'text',
+          required: true,
+          get hint() {
+            return s.balanceHint(formatMoneyInput(123456));
+          },
           defaultValue: '0,00',
         },
       ],
@@ -25,13 +41,19 @@ export const onboarding: OnboardingDef = {
     {
       id: 'bank',
       kind: 'file',
-      label: s.bank,
-      description: s.bankHint,
+      get label() {
+        return s.bank;
+      },
+      get description() {
+        return s.bankHint;
+      },
       accept: '.csv,.xml,text/csv,text/xml',
       options: [
         {
           key: 'accountId',
-          label: s.bankAccount,
+          get label() {
+            return s.bankAccount;
+          },
           type: 'select',
           required: true,
           dynamicChoices: true,

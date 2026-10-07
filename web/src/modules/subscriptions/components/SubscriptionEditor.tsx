@@ -60,7 +60,7 @@ function Form({
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!amountMinor || amountMinor < 1) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     const days =

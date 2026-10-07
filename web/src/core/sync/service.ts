@@ -1,3 +1,4 @@
+import { t } from '@/strings';
 import { liveQuery } from 'dexie';
 import { runAppMigrations } from '@/core/db/appMigrations';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
@@ -327,8 +328,6 @@ function mapError(e: unknown): ConnectResult {
   return failure('server-error');
 }
 
-const DEFAULT_DEVICE_NAME = 'Gerät';
-
 /**
  * Validates the server, sets up or joins the encryption vault (Argon2id, protocol 2), registers this
  * device, stores the configuration and runs the first sync. The server decides whether it is
@@ -378,7 +377,7 @@ export async function connect(
     const server = await remote.info?.();
     if (server?.features.includes('devices') && server.role === 'admin' && remote.registerDevice) {
       const id = (await getDeviceContext(deps.database)).deviceId;
-      const name = (params.deviceName ?? '').trim().slice(0, 64) || DEFAULT_DEVICE_NAME;
+      const name = (params.deviceName ?? '').trim().slice(0, 64) || t.sync.defaultDeviceName;
       let issued = await remote.registerDevice({ id, name });
       // Same device connecting again (e.g. after disconnecting): rotate instead of failing.
       if (issued === 'exists' && remote.rotateDevice)

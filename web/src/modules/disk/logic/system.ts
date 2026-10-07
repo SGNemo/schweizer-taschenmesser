@@ -1,3 +1,4 @@
+import { formatNumber, formatTimestamp } from '@/core/i18n/format';
 import type { GpuInfo, NetIface, RamModule, SystemInfo } from '@/core/platform/system';
 import { formatCapacity } from './drives';
 
@@ -8,8 +9,8 @@ const MB = KB ** 2;
 export function formatRate(bytesPerSec: number | null | undefined): string {
   if (bytesPerSec == null || !Number.isFinite(bytesPerSec) || bytesPerSec < 0) return '–';
   if (bytesPerSec >= MB)
-    return `${(bytesPerSec / MB).toLocaleString('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} MB/s`;
-  if (bytesPerSec >= KB) return `${Math.round(bytesPerSec / KB).toLocaleString('de-DE')} KB/s`;
+    return `${formatNumber(bytesPerSec / MB, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} MB/s`;
+  if (bytesPerSec >= KB) return `${formatNumber(Math.round(bytesPerSec / KB))} KB/s`;
   return `${Math.round(bytesPerSec)} B/s`;
 }
 
@@ -66,7 +67,7 @@ export function splitAdapters(network: readonly NetIface[]) {
 
 /** Last restart as a date-time in local time (seconds since 1970 in, "12.06.2025, 08:15" out). */
 export function formatBoot(bootTimeSecs: number): string {
-  return new Date(bootTimeSecs * 1000).toLocaleString('de-DE', {
+  return formatTimestamp(bootTimeSecs * 1000, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

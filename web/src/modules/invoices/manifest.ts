@@ -9,14 +9,20 @@ import { t } from '@/strings';
 const manifest: ModuleManifest = {
   id: 'invoices',
   requires: ['finance'],
-  name: t.invoices.meta.name,
+  get name() {
+    return t.invoices.meta.name;
+  },
   icon: 'receipt',
   version: 1,
-  description: t.invoices.meta.description,
+  get description() {
+    return t.invoices.meta.description;
+  },
   routes: [
     {
       path: '/invoices',
-      label: t.invoices.meta.route,
+      get label() {
+        return t.invoices.meta.route;
+      },
       nav: true,
       component: () => import('./routes/InvoicesPage'),
     },
@@ -30,7 +36,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'due',
-      title: t.invoices.meta.widget,
+      get title() {
+        return t.invoices.meta.widget;
+      },
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/DueInvoicesWidget'),
@@ -46,7 +54,15 @@ const manifest: ModuleManifest = {
   contributions: {
     attention: () => import('./attention'),
     onboarding: onboarding,
-    quickAdd: [{ id: 'invoice', label: t.invoices.meta.quickAdd, to: '/invoices?new=1' }],
+    quickAdd: [
+      {
+        id: 'invoice',
+        get label() {
+          return t.invoices.meta.quickAdd;
+        },
+        to: '/invoices?new=1',
+      },
+    ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
     aiComputed: () => import('./aiComputed'),

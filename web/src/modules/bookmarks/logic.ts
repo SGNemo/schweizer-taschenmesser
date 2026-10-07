@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import type { BookmarkItem, Kind } from './schema';
 
 /** "example.com/x" → "https://example.com/x"; anything that is not a http(s) address → undefined. */
@@ -51,10 +52,9 @@ export function groupLinks<T extends Pick<BookmarkItem, 'tags' | 'title'>>(
   }
   return [...groups.values()]
     .sort(
-      (a, b) =>
-        Number(a.label === '') - Number(b.label === '') || a.label.localeCompare(b.label, 'de'),
+      (a, b) => Number(a.label === '') - Number(b.label === '') || compareText(a.label, b.label),
     )
-    .map((g) => [g.label, g.items.sort((a, b) => a.title.localeCompare(b.title, 'de'))]);
+    .map((g) => [g.label, g.items.sort((a, b) => compareText(a.title, b.title))]);
 }
 
 export const formatTags = (tags: readonly string[]): string => tags.join(', ');
@@ -71,7 +71,7 @@ export function tagCounts(items: readonly Pick<BookmarkItem, 'tags'>[]): [string
     }
   }
   return [...counts.values()]
-    .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, 'de'))
+    .sort((a, b) => b.n - a.n || compareText(a.label, b.label))
     .map((e) => [e.label, e.n]);
 }
 
