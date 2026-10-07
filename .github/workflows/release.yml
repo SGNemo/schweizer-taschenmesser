@@ -121,6 +121,18 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Version $VERSION, versionCode $(node scripts/version.mjs code), publish=$PUBLISH"
 
+      - name: Legal placeholders are filled (blocks publishing only)
+        working-directory: web
+        env:
+          PUBLISH: ${{ steps.meta.outputs.publish }}
+        run: |
+          set -euo pipefail
+          if [[ "$PUBLISH" == "true" ]]; then
+            node scripts/check-legal.mjs --strict
+          else
+            node scripts/check-legal.mjs
+          fi
+
       - name: Which signing keys are configured
         id: keys
         env:

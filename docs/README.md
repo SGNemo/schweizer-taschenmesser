@@ -22,5 +22,5 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [product/](product/), [design/](design/) | module plan (German), design spec, mockups, prompts; [FOCUS-GUIDELINES](design/FOCUS-GUIDELINES.md) = checklist for every new feature | module/design work, new features |
 | design-proposals/, brand/, screenshots/ | images and token experiments | design work |
 
-## For users (German)
-[user/installation.md](user/installation.md) · [user/module.md](user/module.md) · [user/ki-assistent.md](user/ki-assistent.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync-server.md](user/sync-server.md) · [user/sicherheit.md](user/sicherheit.md) · [user/browser-erweiterung.md](user/browser-erweiterung.md) · [user/entwicklung.md](user/entwicklung.md)
+## For users (English; German copies `*.de.md` next to each file)
+[user/installation.md](user/installation.md) · [user/modules.md](user/modules.md) · [user/ai-assistant.md](user/ai-assistant.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync.md](user/sync.md) · [user/backup.md](user/backup.md) · [user/security.md](user/security.md) · [user/faq.md](user/faq.md) · [user/browser-extension.md](user/browser-extension.md) · [user/development.md](user/development.md)
