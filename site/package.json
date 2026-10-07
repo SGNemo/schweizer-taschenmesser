@@ -17,7 +17,8 @@
     "check:links": "node scripts/check-links.mjs",
     "check:downloads": "node scripts/check-downloads.mjs",
     "lighthouse": "node scripts/lighthouse.mjs",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "app:screenshots": "node scripts/app-screenshots.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
