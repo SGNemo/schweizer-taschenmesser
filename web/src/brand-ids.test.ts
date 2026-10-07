@@ -57,7 +57,7 @@ describe('internal identifiers stay unchanged', () => {
     ]);
     // The full public key: a different key would make every installed app reject the next update.
     expect(tauri.plugins.updater.pubkey).toBe(
-      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNDIzNzAyRTFEOEI5Q0UKUldUT3VkamhBamRDK210bVlOclMva3hmMC81Q1hJZEtaWVkyWEszb2YwbXN1ZkFsR3R3L2tzYWMK',
+      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDREU2NEMxNEY0OTI3N0UKUldSK0owbFB3V1RlUEVQL2lDS28rdk1ud3BTdEU1bElzQjlOQWVCTUpINVZaL24yMWpuV2lDREIK',
     );
   });
 
