@@ -1,66 +1,70 @@
-# Daten per KI importieren
+**English** | [Deutsch](AI-IMPORT.de.md)
 
-Du musst vorhandene Daten nicht abtippen: Eine KI deiner Wahl (Claude Code, Claude Desktop, ChatGPT o. ä.) kann sie
-für dich in die Module von Nemo schreiben. Dafür gibt es zwei Wege:
+# Importing data with AI
 
-| Weg | Wo | Wie |
+You do not have to type in existing data: an AI of your choice (Claude Code, Claude Desktop, ChatGPT or similar) can
+write it into Nemo's modules for you. There are three ways:
+
+| Way | Where | How |
 |---|---|---|
-| **A. Lokale Schnittstelle** | nur Windows-App | Die KI spricht direkt mit der App auf deinem PC (`http://127.0.0.1:47631`). |
-| **B. JSON einfügen** | überall (Windows, Browser/PWA, Android) | Die KI erzeugt JSON-Text, du fügst ihn im Startdaten-Assistenten ein. |
-| **C. MCP-Werkzeug** | Windows-App + Claude Desktop / Claude Code | wie A, aber Claude bekommt fertige Werkzeuge (`list_modules`, `import_items` …). |
+| **A. Local interface** | Windows app only | The AI talks directly to the app on your PC (`http://127.0.0.1:47631`). |
+| **B. Paste JSON** | everywhere (Windows, browser/PWA, Android) | The AI produces JSON text, you paste it into the starter-data assistant. |
+| **C. MCP tool** | Windows app + Claude Desktop / Claude Code | like A, but Claude gets ready-made tools (`list_modules`, `import_items` …). |
 
-In beiden Fällen gilt:
+In every case:
 
-- **Nichts wird ohne dich gespeichert.** Jeder Import erscheint zuerst als Vorschau mit Häkchen, erkannten Duplikaten
-  und Fehlern je Eintrag. Erst „Übernehmen“ speichert.
-- **Jeder Import lässt sich rückgängig machen.** Einträge, die du inzwischen bearbeitet hast, bleiben stehen.
-- **Gleiche Daten zweimal senden erzeugt keine Doppelten.**
-- **Vorhandene Einträge werden nie still überschrieben oder gelöscht.** Änderungen erscheinen als „alt → neu“ und
-  müssen einzeln angehakt werden. Löschen über die Schnittstelle gibt es nicht.
-- Übernommene Daten laufen durch die normale Speicherung und den **Sync** – sie kommen also auch aufs Handy.
-- **Der Passwort-Tresor („Accounts“), Einstellungen, Verbindungen und API-Schlüssel sind ausgeschlossen** – weder lesbar
-  noch beschreibbar, auch nicht im Schema.
+- **Nothing is saved without you.** Every import first appears as a preview with checkboxes, detected duplicates
+  and errors per entry. Only "Apply" saves.
+- **Every import can be undone.** Entries you have edited in the meantime stay.
+- **Sending the same data twice creates no duplicates.**
+- **Existing entries are never silently overwritten or deleted.** Changes appear as "old → new" and
+  must be ticked one by one. There is no deleting through the interface.
+- Imported data goes through normal storage and **sync**, so it also reaches your phone.
+- **The password vault ("Accounts"), settings, connections and API keys are excluded**: neither readable
+  nor writable, not even in the schema.
 
-> **Datenschutz:** Was du deiner KI zeigst oder von ihr lesen lässt, verarbeitet der jeweilige KI-Anbieter.
-> Gib Lese-Rechte nur für Module, die die KI wirklich braucht. Für einen reinen Import genügt „Schreiben“.
+> **Privacy:** whatever you show your AI or let it read is processed by that AI provider.
+> Only grant read access for modules the AI really needs. For a pure import, "write" is enough.
 
 ---
 
-## A. Lokale Schnittstelle (Windows-App)
+## A. Local interface (Windows app)
 
-### 1. Einschalten
+### 1. Turn it on
 
-1. Windows-App öffnen → **Einstellungen → KI-Zugriff**.
-2. **„Lokale Schnittstelle aktivieren“** einschalten. Der Status zeigt dann „Läuft auf http://127.0.0.1:47631“.
-   - Die Schnittstelle ist nur von diesem PC aus erreichbar (127.0.0.1), nicht aus dem WLAN oder Internet.
-   - Sie läuft nur, solange die App geöffnet ist. Standardmäßig ist sie aus.
-   - Ist der Port belegt, trage einen anderen ein (1024–65535) und tippe auf „Port übernehmen“.
+1. Open the Windows app → **Settings → AI access**.
+2. Turn on **"Enable local interface"**. The status then shows "Running on http://127.0.0.1:47631".
+   - The interface is only reachable from this PC (127.0.0.1), not from the Wi-Fi or the internet.
+   - It only runs while the app is open. It is off by default.
+   - If the port is taken, enter another one (1024–65535) and tap "Apply port".
 
-### 2. Zugang anlegen
+### 2. Create an access
 
-1. **„Zugang anlegen“** → Name (z. B. „Claude Code“), Gültigkeit (Standard 90 Tage).
-2. **Rechte pro Modul** ankreuzen – standardmäßig ist nichts erlaubt:
-   - *Schreiben*: die KI darf Einträge **vorschlagen** (du bestätigst sie in der App).
-   - *Lesen*: die KI darf vorhandene Einträge sehen (z. B. um Duplikate zu vermeiden oder etwas zu ändern).
-3. *Automatisch übernehmen* nur, wenn du der Quelle voll vertraust: neue Einträge werden dann ohne Vorschau gespeichert
-   (Rückgängig machen geht trotzdem; Änderungen vorhandener Einträge brauchen immer deine Bestätigung).
-4. **„Anlegen“** → der Schlüssel (`tm_…`) wird **nur jetzt** angezeigt. „Kopieren“ legt ihn für eine Minute in die
-   Zwischenablage. Die App speichert nur eine Prüfsumme – geht er verloren, lege einen neuen an („Neu erzeugen“).
+1. **"Create access"** → name (for example "Claude Code"), validity (default 90 days).
+2. Tick **permissions per module**; by default nothing is allowed:
+   - *Write*: the AI may **suggest** entries (you confirm them in the app).
+   - *Read*: the AI may see existing entries (for example to avoid duplicates or to change something).
+3. Use *Apply automatically* only if you fully trust the source: new entries are then saved without a preview
+   (undo still works; changes to existing entries always need your confirmation).
+4. **"Create"** → the key (`tm_…`) is shown **only now**. "Copy" puts it on the clipboard for one minute.
+   The app only stores a hash; if you lose the key, create a new one ("Regenerate").
 
-Widerrufen wirkt sofort. Unter „Letzte Zugriffe“ siehst du, wann welcher Zugang was aufgerufen hat (ohne Inhalte).
+Revoking takes effect immediately. Under "Recent access" you see when which access called what (without content).
 
-### 3. In der KI eintragen
+### 3. Hand it to the AI
 
-Tippe in „KI-Zugriff“ auf **„Anleitung für KI kopieren“** und füge den Text in dein KI-Werkzeug ein. Den Schlüssel gibst du
-getrennt dazu, am besten als Umgebungsvariable statt im Chat:
+In "AI access", tap **"Copy instructions for AI"** and paste the text into your AI tool. Give the key
+separately, ideally as an environment variable rather than in the chat:
 
-- **Claude Code / Terminal (PowerShell):** `$env:TASCHENMESSER_TOKEN = "tm_…"` und im Prompt sagen, dass der Schlüssel in
-  `TASCHENMESSER_TOKEN` steht.
-- **Claude Desktop / Claude Code als Werkzeug:** mit dem kleinen MCP-Server aus diesem Repo (siehe
-  [„C. Als Werkzeug in Claude (MCP)“](#c-als-werkzeug-in-claude-mcp)) – die KI ruft die Schnittstelle dann selbst auf.
-- **ChatGPT & Co.:** Diese Programme können `127.0.0.1` meist nicht aufrufen. Nutze dort Weg B (JSON einfügen).
+- **Claude Code / terminal (PowerShell):** `$env:TASCHENMESSER_TOKEN = "tm_…"` and say in the prompt that the key is in
+  `TASCHENMESSER_TOKEN`.
+- **Claude Desktop / Claude Code as a tool:** with the small MCP server from this repo (see
+  ["C. As a tool in Claude (MCP)"](#c-as-a-tool-in-claude-mcp)); the AI then calls the interface itself.
+- **ChatGPT & co.:** these programs usually cannot call `127.0.0.1`. Use way B (paste JSON) there.
 
-#### Der fertige Prompt
+#### The ready-made prompt
+
+The app copies this text in German today (it matches the app's interface language):
 
 ```text
 Du hilfst mir, Daten in meine App „Nemo“ zu übertragen. Sie hat eine lokale Schnittstelle:
@@ -84,7 +88,11 @@ Regeln:
 - Texte sind reiner Text. Zeig mir am Ende eine kurze Zusammenfassung (wie viele Einträge, welche Fehler übrig blieben).
 ```
 
-### 4. Beispiele (erfundene Daten)
+In short: read `GET /v1/modules`, check with `dryRun=true`, fix only the invalid entries, send with an
+`Idempotency-Key`, then you confirm the preview in the app. Amounts in euros as numbers, dates `YYYY-MM-DD`, times `HH:mm`,
+at most 500 entries per request, no deleting.
+
+### 4. Examples (made-up data)
 
 **PowerShell**
 
@@ -92,24 +100,24 @@ Regeln:
 $base = "http://127.0.0.1:47631"
 $h = @{ Authorization = "Bearer $env:TASCHENMESSER_TOKEN" }
 
-# Was darf ich? Welche Felder gibt es?
+# What am I allowed to do? Which fields exist?
 Invoke-RestMethod "$base/v1/modules" -Headers $h
 
-# Probelauf: speichert nichts, meldet je Eintrag ok / duplicate / invalid
+# Dry run: saves nothing, reports ok / duplicate / invalid per entry
 $body = @{ items = @(
-  @{ collection = "task"; title = "Winterreifen wechseln"; dueDate = "2026-10-20"; priority = 2 },
-  @{ collection = "task"; title = "Stromzähler ablesen" }
+  @{ collection = "task"; title = "Change winter tyres"; dueDate = "2026-10-20"; priority = 2 },
+  @{ collection = "task"; title = "Read the electricity meter" }
 ) } | ConvertTo-Json -Depth 5
 Invoke-RestMethod "$base/v1/todos/import?dryRun=true" -Method Post -Headers $h `
   -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes($body))
 
-# Wirklich senden (wartet auf Bestätigung in der App)
+# Really send (waits for confirmation in the app)
 $h2 = $h + @{ "Idempotency-Key" = [guid]::NewGuid().ToString() }
 $r = Invoke-RestMethod "$base/v1/todos/import" -Method Post -Headers $h2 `
   -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes($body))
 $r.status   # pending
 
-# Stand abfragen / rückgängig machen
+# Query status / undo
 Invoke-RestMethod "$base/v1/batches/$($r.batchId)" -Headers $h
 Invoke-RestMethod "$base/v1/batches/$($r.batchId)" -Method Delete -Headers $h
 ```
@@ -125,93 +133,93 @@ curl -s -H "$AUTH" "$BASE/v1/modules"
 curl -s -H "$AUTH" -H "Content-Type: application/json" \
   "$BASE/v1/finance/import?dryRun=true" -d '{
   "items": [
-    {"collection": "account", "key": "giro", "name": "Girokonto Beispielbank"},
-    {"collection": "category", "name": "Lebensmittel", "kind": "expense"},
-    {"collection": "transaction", "accountId": "@giro", "categoryId": "Lebensmittel",
-     "kind": "expense", "amount": 23.45, "date": "2026-09-12", "payee": "Bäckerei Muster"}
+    {"collection": "account", "key": "giro", "name": "Checking account Example Bank"},
+    {"collection": "category", "name": "Groceries", "kind": "expense"},
+    {"collection": "transaction", "accountId": "@giro", "categoryId": "Groceries",
+     "kind": "expense", "amount": 23.45, "date": "2026-09-12", "payee": "Sample Bakery"}
   ]}'
 
 curl -s -H "$AUTH" "$BASE/v1/todos/items?collection=task&limit=50"
 ```
 
-### 5. Endpunkte
+### 5. Endpoints
 
-Alle Anfragen brauchen `Authorization: Bearer <Schlüssel>` und antworten mit JSON.
+All requests need `Authorization: Bearer <key>` and answer with JSON.
 
-| Methode und Pfad | Recht | Zweck |
+| Method and path | Permission | Purpose |
 |---|---|---|
-| `GET /v1/modules` | – | erlaubte Module, Sammlungen, Felder, Beispiele, Hinweise |
-| `GET /v1/openapi.json` | – | OpenAPI-3.1-Schema (nur erlaubte, eingeschaltete Module) |
-| `GET /v1/{modul}/items?collection=&limit=&cursor=&q=` | Lesen | Einträge seitenweise (höchstens 200, `nextCursor` für die nächste Seite) |
-| `POST /v1/{modul}/import[?dryRun=true]` | Schreiben | Einträge senden; Header `Idempotency-Key` empfohlen |
-| `GET /v1/batches` · `GET /v1/batches/{id}` | – | eigene Importe und ihr Stand |
-| `POST /v1/batches/{id}/commit` | Schreiben | übernehmen – nur Zugänge mit „Automatisch übernehmen“ |
-| `DELETE /v1/batches/{id}` | Schreiben | wartenden Import ablehnen bzw. übernommenen rückgängig machen |
+| `GET /v1/modules` | – | allowed modules, collections, fields, examples, hints |
+| `GET /v1/openapi.json` | – | OpenAPI 3.1 schema (only allowed, enabled modules) |
+| `GET /v1/{module}/items?collection=&limit=&cursor=&q=` | Read | entries page by page (at most 200, `nextCursor` for the next page) |
+| `POST /v1/{module}/import[?dryRun=true]` | Write | send entries; header `Idempotency-Key` recommended |
+| `GET /v1/batches` · `GET /v1/batches/{id}` | – | your own imports and their status |
+| `POST /v1/batches/{id}/commit` | Write | apply; only for accesses with "Apply automatically" |
+| `DELETE /v1/batches/{id}` | Write | reject a waiting import or undo an applied one |
 
-Antworten auf einen Import:
+Answers to an import:
 
-| Status | Bedeutung |
+| Status | Meaning |
 |---|---|
-| `200` + `dryRun: true` | Probelauf, nichts gespeichert |
-| `200` + `status: "nothing"` | nichts Neues (alles schon vorhanden oder fehlerhaft) |
-| `202` + `status: "pending"` | wartet auf deine Bestätigung in der App |
-| `201` + `status: "committed"` | automatisch übernommen |
-| `200` (gleicher `Idempotency-Key`) | Wiederholung: derselbe Import wie beim ersten Mal |
+| `200` + `dryRun: true` | dry run, nothing saved |
+| `200` + `status: "nothing"` | nothing new (everything already there or invalid) |
+| `202` + `status: "pending"` | waiting for your confirmation in the app |
+| `201` + `status: "committed"` | applied automatically |
+| `200` (same `Idempotency-Key`) | repetition: the same import as the first time |
 
-Je Eintrag steht in `items[]` ein `status`: `ok`, `duplicate` (schon vorhanden), `invalid` (mit `errors`), `update`
-(Änderung eines vorhandenen Eintrags, mit `changes`) oder `unchanged`.
+Per entry, `items[]` has a `status`: `ok`, `duplicate` (already there), `invalid` (with `errors`), `update`
+(change of an existing entry, with `changes`) or `unchanged`.
 
-### 6. Format der Einträge
+### 6. Entry format
 
-- Jeder Eintrag nennt seine Sammlung: `"collection": "task"`. Die Felder stehen in `/v1/modules`.
-- Beträge als Zahl in Euro (`12.5`), optional `"currency": "EUR"`; andere Währungen werden abgelehnt.
-- Datum `JJJJ-MM-TT`, Uhrzeit `HH:mm`.
-- Neue Einträge **ohne** `id` und ohne Zeitstempel – die App vergibt sie.
-- Verweise (z. B. `listId`, `accountId`): Titel eines vorhandenen Eintrags, dessen `id`, oder `"@name"`, wenn ein Eintrag
-  derselben Sendung `"key": "name"` trägt.
-- Fehlt die Liste bzw. das Konto, nimmt die App die Standardliste bzw. das Hauptkonto.
-- **Ändern:** `"id"` eines vorhandenen Eintrags plus nur die geänderten Felder; `null` leert ein Feld.
-- Höchstens 500 Einträge und 1 MB pro Sendung.
+- Every entry names its collection: `"collection": "task"`. The fields are listed in `/v1/modules`.
+- Amounts as numbers in euros (`12.5`), optionally `"currency": "EUR"`; other currencies are rejected.
+- Dates `YYYY-MM-DD`, times `HH:mm`.
+- New entries **without** `id` and without timestamps; the app assigns them.
+- References (for example `listId`, `accountId`): title of an existing entry, its `id`, or `"@name"` if an entry
+  of the same request carries `"key": "name"`.
+- If the list or account is missing, the app uses the default list or the main account.
+- **Changing:** `"id"` of an existing entry plus only the changed fields; `null` clears a field.
+- At most 500 entries and 1 MB per request.
 
-### 7. Fehler
+### 7. Errors
 
-| Code | Bedeutung | Was tun |
+| Code | Meaning | What to do |
 |---|---|---|
-| `401 token-missing / token-invalid / token-expired` | Schlüssel fehlt, falsch, widerrufen oder abgelaufen | neuen Zugang anlegen |
-| `403 forbidden` | Recht fehlt (z. B. Lesen) | Rechte ergänzen oder anderen Zugang nutzen |
-| `403 origin-not-allowed` | Anfrage kam aus einem Browser | aus einem Programm/Terminal aufrufen |
-| `403 confirmation-required` | Übernehmen geht nur in der App | in der App bestätigen |
-| `404 unknown-module` | Modul aus, nicht freigegeben oder gibt es nicht | Modul einschalten / Recht vergeben |
-| `409 idempotency-conflict` | gleicher Key, anderer Inhalt | neuen Key verwenden |
-| `413 body-too-large` | mehr als 1 MB | in mehrere Sendungen teilen |
-| `421 bad-host` | falsche Adresse | genau `127.0.0.1:<Port>` oder `localhost:<Port>` verwenden |
-| `429 too-many-requests` | zu viele Anfragen oder Fehlversuche | eine Minute warten |
-| `429 too-many-pending` | 20 Importe warten schon auf Bestätigung | in der App bestätigen oder ablehnen |
-| `503 app-not-ready` / `504 timeout` | App beschäftigt oder geschlossen | App öffnen, erneut versuchen |
+| `401 token-missing / token-invalid / token-expired` | key missing, wrong, revoked or expired | create a new access |
+| `403 forbidden` | permission missing (for example read) | add permissions or use another access |
+| `403 origin-not-allowed` | request came from a browser | call it from a program/terminal |
+| `403 confirmation-required` | applying only works in the app | confirm in the app |
+| `404 unknown-module` | module off, not granted or does not exist | enable the module / grant permission |
+| `409 idempotency-conflict` | same key, different content | use a new key |
+| `413 body-too-large` | more than 1 MB | split into several requests |
+| `421 bad-host` | wrong address | use exactly `127.0.0.1:<port>` or `localhost:<port>` |
+| `429 too-many-requests` | too many requests or failed attempts | wait a minute |
+| `429 too-many-pending` | 20 imports are already waiting for confirmation | confirm or reject them in the app |
+| `503 app-not-ready` / `504 timeout` | app busy or closed | open the app, try again |
 
 ---
 
-## B. JSON einfügen (ohne Schnittstelle, überall)
+## B. Paste JSON (no interface, everywhere)
 
-1. Modul öffnen → **„Startdaten einrichten“** (oder *Einstellungen → Startdaten*) → **„JSON einfügen“**.
-2. **„Schema für KI kopieren“** → in die KI einfügen, dazu z. B.: *„Erzeuge daraus JSON mit meinen Aufgaben aus der
-   angehängten Liste.“* Der kopierte Text beschreibt nur das Format und ein erfundenes Beispiel – keine deiner Daten.
-3. Die Antwort der KI (`{"items": [ … ]}`) ins Feld einfügen oder als `.json`-Datei wählen → **„Vorschau anzeigen“**.
-4. Fehlerhafte Einträge stehen mit Grund in der Vorschau („Nicht importierbar“); gib sie der KI zur Korrektur zurück.
-5. Häkchen prüfen → importieren. „Import rückgängig machen“ findest du im selben Assistenten unter „Zuletzt importiert“.
+1. Open a module → **"Set up starter data"** (or *Settings → Starter data*) → **"Paste JSON"**.
+2. **"Copy schema for AI"** → paste it into the AI, together with something like: *"Turn my tasks from the
+   attached list into JSON in this format."* The copied text only describes the format and a made-up example, none of your data.
+3. Paste the AI's answer (`{"items": [ … ]}`) into the field or pick it as a `.json` file → **"Show preview"**.
+4. Invalid entries are listed with a reason in the preview ("Cannot be imported"); hand them back to the AI for correction.
+5. Check the ticks → import. "Undo import" is in the same assistant under "Recently imported".
 
 ---
 
-## C. Als Werkzeug in Claude (MCP)
+## C. As a tool in Claude (MCP)
 
-Der Ordner [`mcp/`](../mcp) enthält einen kleinen MCP-Server (stdio) – eine dünne Hülle um dieselbe Schnittstelle wie in A.
-Er hat keinen eigenen Datenzugriff: Rechte, Prüfung, Vorschau und Rückgängig macht weiterhin die App. Den Schlüssel sendet er
-nur an `127.0.0.1`/`localhost`; jede andere Adresse lehnt er ab.
+The folder [`mcp/`](../mcp) contains a small MCP server (stdio), a thin wrapper around the same interface as in A.
+It has no data access of its own: permissions, checks, preview and undo are still handled by the app. It only sends the key
+to `127.0.0.1`/`localhost`; it refuses any other address.
 
-**Voraussetzungen:** Windows-App mit eingeschalteter Schnittstelle und einem Zugang (siehe A), [Node.js](https://nodejs.org) ab
-Version 22 und eine Kopie dieses Repos.
+**Requirements:** Windows app with the interface turned on and an access (see A), [Node.js](https://nodejs.org)
+version 22 or later, and a copy of this repo.
 
-1. Bauen (einmalig, in PowerShell im Repo-Ordner):
+1. Build (once, in PowerShell in the repo folder):
 
    ```powershell
    cd mcp
@@ -222,55 +230,55 @@ Version 22 und eine Kopie dieses Repos.
 2. **Claude Code:**
 
    ```powershell
-   claude mcp add --env TASCHENMESSER_TOKEN=tm_… --transport stdio taschenmesser -- node C:\Pfad\zum\Repo\mcp\dist\index.js
+   claude mcp add --env TASCHENMESSER_TOKEN=tm_… --transport stdio taschenmesser -- node C:\path\to\repo\mcp\dist\index.js
    ```
 
-   **Claude Desktop:** *Einstellungen → Entwickler → Konfiguration bearbeiten* (`claude_desktop_config.json`), dann Claude
-   Desktop neu starten:
+   **Claude Desktop:** *Settings → Developer → Edit config* (`claude_desktop_config.json`), then restart Claude
+   Desktop:
 
    ```json
    {
      "mcpServers": {
        "taschenmesser": {
          "command": "node",
-         "args": ["C:\\Pfad\\zum\\Repo\\mcp\\dist\\index.js"],
+         "args": ["C:\\path\\to\\repo\\mcp\\dist\\index.js"],
          "env": { "TASCHENMESSER_TOKEN": "tm_…" }
        }
      }
    }
    ```
 
-   Anderer Port: zusätzlich `TASCHENMESSER_URL` setzen, z. B. `http://127.0.0.1:50000`.
+   Different port: also set `TASCHENMESSER_URL`, for example `http://127.0.0.1:50000`.
 
-3. In Claude z. B. schreiben: *„Nutze das Werkzeug taschenmesser. Lies mit list_modules, was erlaubt ist, und übertrage die
-   Aufgaben aus der angehängten Liste nach ToDos – erst mit dryRun prüfen, dann senden.“* Danach in der App bestätigen.
+3. In Claude, write for example: *"Use the taschenmesser tool. Read with list_modules what is allowed, and transfer the
+   tasks from the attached list to To-dos. Check with dryRun first, then send."* Then confirm in the app.
 
-| Werkzeug | Aufruf der Schnittstelle |
+| Tool | Interface call |
 |---|---|
 | `list_modules` | `GET /v1/modules` |
 | `get_schema` | `GET /v1/openapi.json` |
-| `read_items` | `GET /v1/{modul}/items` |
-| `import_items` (`dryRun` ist Pflicht) | `POST /v1/{modul}/import` – ohne dryRun mit automatischem `Idempotency-Key` |
+| `read_items` | `GET /v1/{module}/items` |
+| `import_items` (`dryRun` is required) | `POST /v1/{module}/import`; without dryRun with an automatic `Idempotency-Key` |
 | `list_batches` · `get_batch` | `GET /v1/batches[/{id}]` |
-| `commit_batch` | `POST /v1/batches/{id}/commit` (nur mit „Automatisch übernehmen“) |
+| `commit_batch` | `POST /v1/batches/{id}/commit` (only with "Apply automatically") |
 | `undo_batch` | `DELETE /v1/batches/{id}` |
 
-Der Schlüssel steht in der Konfigurationsdatei deines KI-Programms im Klartext – gib dem Zugang deshalb nur die nötigen
-Rechte und eine begrenzte Gültigkeit. Der MCP-Server ist (noch) nicht Teil der Release-Downloads.
+The key sits in plain text in your AI program's config file, so give the access only the permissions it needs and a
+limited validity. The MCP server is not (yet) part of the release downloads.
 
 ---
 
-## Sicherheit
+## Security
 
-| Bedrohung | Schutz |
+| Threat | Protection |
 |---|---|
-| Zugriff aus dem Netz | Die Schnittstelle hört nur auf `127.0.0.1`; es gibt keine Einstellung, das zu ändern. |
-| Webseiten im Browser, die den Port ansprechen | Anfragen mit `Origin`/`Sec-Fetch-Site` werden abgelehnt, es gibt kein CORS, der `Host` muss stimmen (Schutz vor DNS-Rebinding). |
-| Erraten des Schlüssels | 256-Bit-Zufallsschlüssel, Vergleich in konstanter Zeit, höchstens 20 Fehlversuche pro Minute. |
-| Gestohlener Schlüssel | nur die angekreuzten Module und Rechte, Ablaufdatum, sofortiger Widerruf, Vorschau vor jedem Speichern. |
-| Überlastung | 120 Anfragen pro Minute und Zugang, höchstens 1 MB pro Anfrage, 20 wartende Importe pro Zugang, 8 gleichzeitige Verbindungen, Zeitlimits. |
-| Datenlecks | Schlüssel, Inhalte und Personendaten werden nicht protokolliert; Fehlermeldungen wiederholen keine Werte. |
-| Tresor und Geheimnisse | „Accounts“, Einstellungen, Verbindungen und API-Schlüssel sind für die Schnittstelle nicht vorhanden. |
-| Schadsoftware auf demselben PC | nicht abwehrbar – sie könnte auch die Datenbank der App direkt lesen. Halte Windows aktuell. |
+| Access from the network | The interface only listens on `127.0.0.1`; there is no setting to change that. |
+| Web pages in the browser that call the port | Requests with `Origin`/`Sec-Fetch-Site` are rejected, there is no CORS, the `Host` must match (protection against DNS rebinding). |
+| Guessing the key | 256-bit random key, constant-time comparison, at most 20 failed attempts per minute. |
+| Stolen key | only the ticked modules and permissions, expiry date, immediate revocation, preview before every save. |
+| Overload | 120 requests per minute and access, at most 1 MB per request, 20 waiting imports per access, 8 concurrent connections, time limits. |
+| Data leaks | Keys, content and personal data are not logged; error messages repeat no values. |
+| Vault and secrets | "Accounts", settings, connections and API keys do not exist for the interface. |
+| Malware on the same PC | cannot be prevented; it could also read the app's database directly. Keep Windows up to date. |
 
-Mehr zur Technik: [`docs/architecture.md`](architecture.md) → „Local AI import API“.
+More on the technology: [`docs/architecture.md`](architecture.md) → "Local AI import API".

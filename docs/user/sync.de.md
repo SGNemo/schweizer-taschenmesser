@@ -1,3 +1,5 @@
+[English](sync.md) | **Deutsch**
+
 # Sync-Server
 
 Ein kleiner Node-Server (Fastify + SQLite) mit Token-Authentifizierung. Er speichert pro Feld nur den Wert mit dem
@@ -88,8 +90,4 @@ vorausgewählt. Danach synchronisiert die App beim Start, jede Minute, nach loka
 - **Neuer oder zurückgesetzter Server:** die App erkennt das und lädt alle lokalen Daten hoch.
 - **Trennen** beendet nur den Sync auf diesem Gerät, lokale Daten bleiben.
 
-## Backup
-
-*Einstellungen → Backup* lädt alle Daten als JSON-Datei herunter (inkl. gelöschter Einträge für korrektes Mergen, aber
-ohne Zugangsdaten). Beim Import: **Zusammenführen** (Konflikte entscheidet die neuere Änderung, nichts geht verloren)
-oder **Ersetzen** (das Backup wird zum Stand; auch andere Geräte übernehmen ihn beim nächsten Sync).
+Backups (Datei, verschlüsselt, automatisch): [Backup](backup.de.md).

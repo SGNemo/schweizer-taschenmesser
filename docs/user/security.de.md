@@ -1,3 +1,5 @@
+[English](security.md) | **Deutsch**
+
 # Sicherheit und Datenschutz
 
 ## In Kürze
