@@ -16,9 +16,11 @@ import {
 } from '@/core/connectors/service';
 import { saveStatus, useConnectorStatus } from '@/core/connectors/state';
 import type { ConnectorContext, ConnectorDef, ExternalCalendar } from '@/core/connectors/types';
+import { requireNotice } from '@/core/legal/notices';
 import { getPlatform } from '@/core/platform';
 import { formatDay, pad2, toDateString } from '@/core/time/dates';
 import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Card, Checkbox, Dialog, Icon, TextField } from '@/ui';
 import styles from './settings.module.css';
@@ -97,6 +99,7 @@ function ExtraSettings({
 }
 
 export function ConnectorCard({ def }: { def: ConnectorDef }) {
+  const legal = tLegal.use();
   const platform = getPlatform();
   const toast = useUiStore((st) => st.toast);
   const status = useConnectorStatus(def.id);
@@ -125,6 +128,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     const controller = new AbortController();
     loginAbort.current = controller;
     try {
+      if (def.id === 'google') await requireNotice('connector-google');
       const next = await connectOAuth(def, active, { signal: controller.signal });
       if (controller.signal.aborted) return;
       if (next.state === 'connected' && def.calendar && active.includes('calendar')) {
@@ -203,6 +207,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
               def={def}
               onSaved={() => setClientVersion((v) => v + 1)}
             />
+            <p className={styles.muted}>{legal.googleTesting}</p>
             <fieldset className={styles.fieldset}>
               <legend className={styles.legend}>{s.features}</legend>
               {def.features.map((f) => (

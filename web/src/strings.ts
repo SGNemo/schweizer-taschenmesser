@@ -528,7 +528,7 @@ export const t = {
         noScopes: 'keine Anmeldung nötig',
         testingNote:
           'Ist dein Google-Projekt im Status „Testing“, läuft die Anmeldung nach 7 Tagen ab. Stelle es auf „In Produktion“.',
-        stepsNote: 'Schritte: docs/STATUS.md → „Google-Verbindung einrichten“.',
+        stepsNote: 'Schritte: docs/MANUAL-TESTS.md → „Google-Verbindung einrichten“.',
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
       startdata: {
