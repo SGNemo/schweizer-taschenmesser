@@ -1,6 +1,8 @@
 import type { Strings } from '@/strings';
 
 export const people: Strings['people'] = {
+  turnsAge: (name: string, age: number) => `${name} wird ${age}`,
+  birthdayOf: (name: string) => `Geburtstag: ${name}`,
   meta: {
     name: 'Personen',
     description:

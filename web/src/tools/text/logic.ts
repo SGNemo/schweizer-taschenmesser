@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 export interface TextStats {
   chars: number;
   charsNoSpaces: number;
@@ -83,7 +84,7 @@ export function tidy(text: string, o: TidyOptions): string {
 export function sortLines(text: string, descending: boolean): string {
   const sorted = text
     .split(/\r\n|\r|\n/)
-    .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
+    .sort((a, b) => compareText(a, b, { sensitivity: 'base' }));
   return (descending ? sorted.reverse() : sorted).join('\n');
 }
 

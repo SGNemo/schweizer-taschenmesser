@@ -1,4 +1,5 @@
 import { catalogChain } from '@/core/i18n/catalogs';
+import { formatNumber } from '@/core/i18n/format';
 import { localize } from '@/core/i18n/localize';
 import type { Shape } from '@/core/i18n/shape';
 
@@ -9,6 +10,11 @@ import type { Shape } from '@/core/i18n/shape';
  */
 export const de = {
   appName: 'Nemo',
+  /** Building blocks for dates and durations (most wording comes from Intl). */
+  time: {
+    weekdayAndDistance: (weekday: string, distance: string) => `${weekday}, ${distance}`,
+    overdueSince: (days: number) => (days === 1 ? 'seit gestern' : `seit ${days} Tagen`),
+  },
   about: {
     title: 'Über Nemo',
     tagline: 'Modulare, lokale Alltags-App',
@@ -857,6 +863,38 @@ export const de = {
     endsAfter: 'Nach Anzahl',
     endDate: 'Enddatum',
     count: 'Anzahl',
+    /** Short weekday names, Monday first (used in rule descriptions). */
+    weekdaysShort: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+    months: [
+      'Januar',
+      'Februar',
+      'März',
+      'April',
+      'Mai',
+      'Juni',
+      'Juli',
+      'August',
+      'September',
+      'Oktober',
+      'November',
+      'Dezember',
+    ],
+    describe: {
+      once: 'Einmalig',
+      daily: (n: number) => (n === 1 ? 'Täglich' : `Alle ${n} Tage`),
+      weekly: (n: number) => (n === 1 ? 'Wöchentlich' : `Alle ${n} Wochen`),
+      onWeekdays: (days: string) => ` (${days})`,
+      monthly: (n: number) => (n === 1 ? 'Monatlich' : `Alle ${n} Monate`),
+      monthlyOnDay: (day: number, n: number) =>
+        n === 1 ? `Jeden ${day}. des Monats` : `Jeden ${day}. alle ${n} Monate`,
+      monthlyOnLastDay: (n: number) =>
+        n === 1 ? 'Jeden letzten des Monats' : `Jeden letzten alle ${n} Monate`,
+      yearly: (n: number) => (n === 1 ? 'Jährlich' : `Alle ${n} Jahre`),
+      yearlyOnDay: (day: number, month: string) => ` am ${day}. ${month}`,
+      yearlyOnMonthEnd: (month: string) => ` am Monatsende ${month}`,
+      times: (count: number) => `, ${count}×`,
+      until: (date: string) => `, bis ${date}`,
+    },
   },
   focus: {
     settings: {
@@ -2725,6 +2763,8 @@ export const de = {
   },
 
   people: {
+    turnsAge: (name: string, age: number) => `${name} wird ${age}`,
+    birthdayOf: (name: string) => `Geburtstag: ${name}`,
     meta: {
       name: 'Personen',
       description:
@@ -2818,7 +2858,7 @@ export const de = {
     instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
     live: 'Live',
     clock: (mhz: number) =>
-      `${(mhz / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
+      `${formatNumber(mhz / 1000, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
     download: 'Empfangen',
     upload: 'Senden',
     tileNetwork: 'Netzwerk',

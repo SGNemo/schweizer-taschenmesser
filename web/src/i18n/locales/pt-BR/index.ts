@@ -1,5 +1,6 @@
 /* Assembled by `npm run i18n:scaffold -- pt-BR`; the texts live in the part files. */
 import type { Strings } from '@/strings';
+import { time } from './time';
 import { about } from './about';
 import { nav } from './nav';
 import { ui } from './ui';
@@ -65,6 +66,7 @@ import { aiLabels } from './aiLabels';
 
 export const ptBR: Strings = {
   appName: 'Nemo',
+  time,
   about,
   nav,
   ui,

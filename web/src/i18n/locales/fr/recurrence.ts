@@ -21,4 +21,36 @@ export const recurrence: Strings['recurrence'] = {
   endsAfter: 'Nach Anzahl',
   endDate: 'Enddatum',
   count: 'Anzahl',
+  /** Short weekday names, Monday first (used in rule descriptions). */
+  weekdaysShort: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+  months: [
+    'Januar',
+    'Februar',
+    'März',
+    'April',
+    'Mai',
+    'Juni',
+    'Juli',
+    'August',
+    'September',
+    'Oktober',
+    'November',
+    'Dezember',
+  ],
+  describe: {
+    once: 'Einmalig',
+    daily: (n: number) => (n === 1 ? 'Täglich' : `Alle ${n} Tage`),
+    weekly: (n: number) => (n === 1 ? 'Wöchentlich' : `Alle ${n} Wochen`),
+    onWeekdays: (days: string) => ` (${days})`,
+    monthly: (n: number) => (n === 1 ? 'Monatlich' : `Alle ${n} Monate`),
+    monthlyOnDay: (day: number, n: number) =>
+      n === 1 ? `Jeden ${day}. des Monats` : `Jeden ${day}. alle ${n} Monate`,
+    monthlyOnLastDay: (n: number) =>
+      n === 1 ? 'Jeden letzten des Monats' : `Jeden letzten alle ${n} Monate`,
+    yearly: (n: number) => (n === 1 ? 'Jährlich' : `Alle ${n} Jahre`),
+    yearlyOnDay: (day: number, month: string) => ` am ${day}. ${month}`,
+    yearlyOnMonthEnd: (month: string) => ` am Monatsende ${month}`,
+    times: (count: number) => `, ${count}×`,
+    until: (date: string) => `, bis ${date}`,
+  },
 };

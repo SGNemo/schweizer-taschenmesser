@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
 import type { Account, Transaction } from './schema';
 
@@ -74,7 +75,7 @@ export function expensesByCategory(
     name: categoryId ? names.get(categoryId)! : UNCATEGORISED,
     amountMinor,
   }));
-  rows.sort((a, b) => b.amountMinor - a.amountMinor || a.name.localeCompare(b.name, 'de'));
+  rows.sort((a, b) => b.amountMinor - a.amountMinor || compareText(a.name, b.name));
   if (rows.length <= limit) return rows;
   const head = rows.slice(0, limit - 1);
   const tail = rows.slice(limit - 1);
@@ -117,5 +118,5 @@ export function availability(
 }
 
 export function sortAccounts<T extends { order: number; name: string }>(list: T[]): T[] {
-  return [...list].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'de'));
+  return [...list].sort((a, b) => a.order - b.order || compareText(a.name, b.name));
 }

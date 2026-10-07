@@ -13,6 +13,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+/** Helpers from core/i18n/format that catalog functions may call. */
+const HELPERS = ['formatNumber', 'plural'];
 const LANGS = { en: 'en', es: 'es', fr: 'fr', 'pt-BR': 'ptBR', 'en-XA': 'enXA' };
 
 const lang = process.argv[2];
@@ -30,6 +32,8 @@ export function splitSource(src) {
     throw new Error('src/strings.ts: `export const de = {` … `} as const;` not found');
   const entries = [];
   for (let i = start + 1; i < end; i++) {
+    // Doc comments between top-level areas belong to the source only.
+    if (/^ {2}(\/\*\*.*\*\/|\/\/.*)$/.test(lines[i])) continue;
     const m = /^ {2}(['"]?[\w-]+['"]?): (.*)$/.exec(lines[i]);
     if (!m) {
       if (entries.length) entries.at(-1).lines.push(lines[i]);
@@ -72,9 +76,14 @@ for (const [key, text] of entries) {
   fields.push(`  ${name},`);
   const file = join(dir, `${name}.ts`);
   if (existsSync(file)) continue;
+  // Formatting helpers the source uses inside text functions come along.
+  const helpers = HELPERS.filter((h) => new RegExp(`\\b${h}\\(`).test(text));
+  const helperImport = helpers.length
+    ? `import { ${helpers.join(', ')} } from '@/core/i18n/format';\n`
+    : '';
   writeFileSync(
     file,
-    `import type { Strings } from '@/strings';\n\nexport const ${name}: Strings['${key}'] = ${text};\n`,
+    `${helperImport}import type { Strings } from '@/strings';\n\nexport const ${name}: Strings['${key}'] = ${text};\n`,
   );
   created++;
 }

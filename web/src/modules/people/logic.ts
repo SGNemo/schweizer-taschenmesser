@@ -1,3 +1,6 @@
+import { compareText } from '@/core/i18n/format';
+import { capitalize, relativeDays } from '@/core/i18n/format';
+import { t } from '@/strings';
 import { addDaysStr, daysBetween, pad2 } from '@/core/time/dates';
 import type { Birthday, Gift, GiftStatus, Person } from './schema';
 
@@ -43,20 +46,19 @@ export function sortByNext<T extends Pick<Person, 'name' | 'birthday'>>(
   return [...list].sort((a, b) => {
     const da = days(a);
     const db = days(b);
-    return da === db ? a.name.localeCompare(b.name, 'de') : da < db ? -1 : 1;
+    return da === db ? compareText(a.name, b.name) : da < db ? -1 : 1;
   });
 }
 
 /** "Anna wird 30" or "Geburtstag: Anna". */
 export function birthdayTitle(name: string, b: Birthday, date: string): string {
   const age = ageOn(b, date);
-  return age !== undefined && age > 0 ? `${name} wird ${age}` : `Geburtstag: ${name}`;
+  return age !== undefined && age > 0 ? t.people.turnsAge(name, age) : t.people.birthdayOf(name);
 }
 
+/** "Heute", "Morgen", "in 5 Tagen" (UI language). */
 export function whenLabel(days: number): string {
-  if (days === 0) return 'Heute';
-  if (days === 1) return 'Morgen';
-  return `in ${days} Tagen`;
+  return Math.abs(days) <= 1 ? capitalize(relativeDays(days)) : relativeDays(days);
 }
 
 export const dayBefore = (date: string, n: number): string => addDaysStr(date, -n);
@@ -82,7 +84,7 @@ export function sortGifts<T extends Gift>(gifts: readonly T[]): T[] {
     (a, b) =>
       RANK[a.status] - RANK[b.status] ||
       (a.date ?? '9999').localeCompare(b.date ?? '9999') ||
-      a.title.localeCompare(b.title, 'de'),
+      compareText(a.title, b.title),
   );
 }
 

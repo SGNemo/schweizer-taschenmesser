@@ -1,3 +1,4 @@
+import { formatNumber } from '@/core/i18n/format';
 import type { Strings } from '@/strings';
 
 export const system: Strings['system'] = {
@@ -35,7 +36,7 @@ export const system: Strings['system'] = {
   instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
   live: 'Live',
   clock: (mhz: number) =>
-    `${(mhz / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
+    `${formatNumber(mhz / 1000, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
   download: 'Empfangen',
   upload: 'Senden',
   tileNetwork: 'Netzwerk',

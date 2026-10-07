@@ -1,3 +1,4 @@
+import { formatTimestamp } from '@/core/i18n/format';
 import { useEffect, useState } from 'react';
 import { fetchDevices, lockDevice, rotateThisDeviceToken } from '@/core/sync/service';
 import { useSyncStatus } from '@/core/sync/status';
@@ -9,8 +10,7 @@ import { t } from '@/strings';
 import { Badge, Button, Dialog } from '@/ui';
 import styles from './settings.module.css';
 
-const formatWhen = (at: number) =>
-  new Date(at).toLocaleString('de-CH', { dateStyle: 'medium', timeStyle: 'short' });
+const formatWhen = (at: number) => formatTimestamp(new Date(at).getTime());
 
 /** Devices registered on the sync server, with lock-out. Only shown while connected. */
 export function SyncDevices() {

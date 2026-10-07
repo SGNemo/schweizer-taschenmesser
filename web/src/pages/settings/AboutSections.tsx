@@ -1,3 +1,4 @@
+import { formatTimestamp, DATE_TIME_NUMERIC } from '@/core/i18n/format';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
@@ -134,7 +135,7 @@ export function AboutUpdatesSection() {
         <SettingRow
           id="about-updates--check"
           label={a.updates.lastCheck}
-          description={last ? new Date(last).toLocaleString('de-DE') : a.updates.never}
+          description={last ? formatTimestamp(last, DATE_TIME_NUMERIC) : a.updates.never}
         >
           <Button
             onClick={() => void checkForUpdate({ manual: true })}

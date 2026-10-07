@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import {
   isCategoryId,
   SETTINGS_CATEGORY_IDS,
@@ -22,7 +23,7 @@ export function validateSections(sections: readonly SettingsSectionDef[]): strin
 }
 
 const bySort = (a: SettingsSectionDef, b: SettingsSectionDef) =>
-  a.order - b.order || a.title.localeCompare(b.title, 'de');
+  a.order - b.order || compareText(a.title, b.title);
 
 /** Visible sections in navigation order (category order, then `order`, then title). */
 export function visibleSections(

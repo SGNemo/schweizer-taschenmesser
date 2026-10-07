@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { useState } from 'react';
 import { formatMoney } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
@@ -117,7 +118,7 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
           <ul className={styles.list}>
             {data.categories
               .filter((c) => c.kind === g.kind)
-              .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+              .sort((a, b) => compareText(a.name, b.name))
               .map((c) => (
                 <li key={c.id}>
                   <button type="button" className={styles.row} onClick={() => setTarget(c)}>

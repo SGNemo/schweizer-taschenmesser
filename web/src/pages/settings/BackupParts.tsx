@@ -1,3 +1,4 @@
+import { formatTimestamp, DATE_TIME_NUMERIC } from '@/core/i18n/format';
 import type { RestorePlan } from '@/core/backup/restore';
 import type { VerifyReport } from '@/core/backup/verify';
 import { allManifests } from '@/core/modules/registry';
@@ -27,7 +28,7 @@ export function VerifyReportView({ report }: { report: VerifyReport }) {
           <p className={styles.muted}>
             {t.backup.verifyTotals(report.totals.records, report.totals.tombstones)}
             {report.exportedAt
-              ? ` · ${t.backup.verifyExported(new Date(report.exportedAt).toLocaleString('de-CH'))}`
+              ? ` · ${t.backup.verifyExported(formatTimestamp(new Date(report.exportedAt).getTime(), DATE_TIME_NUMERIC))}`
               : ''}
           </p>
           <ul className={styles.muted}>

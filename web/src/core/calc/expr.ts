@@ -1,3 +1,5 @@
+import { formatNumber as formatLocaleNumber } from '@/core/i18n/format';
+
 /**
  * A small, safe calculator: numbers, + − × ÷ ^, parentheses, percent, sqrt/pi. It is a hand-written
  * parser – nothing is ever passed to `eval` or `Function`. German input: the comma is the decimal
@@ -200,6 +202,6 @@ export function evaluate(input: string): number {
   return clean(result);
 }
 
-const de = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 });
 /** "1234.5" → "1.234,5" */
-export const formatNumber = (n: number): string => de.format(n);
+export const formatNumber = (n: number): string =>
+  formatLocaleNumber(n, { maximumFractionDigits: 6 });

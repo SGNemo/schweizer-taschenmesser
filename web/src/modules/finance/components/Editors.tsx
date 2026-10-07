@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
@@ -90,7 +91,7 @@ function TransactionForm({
   const [error, setError] = useState('');
   const categories = data.categories
     .filter((c) => c.kind === kind)
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    .sort((a, b) => compareText(a.name, b.name));
 
   async function save(e: FormEvent) {
     e.preventDefault();

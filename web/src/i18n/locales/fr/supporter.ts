@@ -70,4 +70,3 @@ export const supporter: Strings['supporter'] = {
     hintLocked: 'Für Unterstützer.',
   },
 };
-/** Labels of AI actions and collections as the write preview shows them (the schema sent to the model stays German). */

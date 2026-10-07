@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
@@ -16,7 +17,7 @@ export function compareCalendarItems(a: CalendarItem, b: CalendarItem): number {
   const ta = a.time ?? '';
   const tb = b.time ?? '';
   if (ta !== tb) return ta < tb ? -1 : 1;
-  return a.title.localeCompare(b.title, 'de');
+  return compareText(a.title, b.title);
 }
 
 /** Calendar items from all given (active) modules. A failing module never breaks the others. */
@@ -85,7 +86,7 @@ export function rankAttention(items: readonly AttentionItem[], limit = ATTENTION
       (a, b) =>
         TONE_ORDER[a.tone] - TONE_ORDER[b.tone] ||
         (a.rank ?? 100) - (b.rank ?? 100) ||
-        a.title.localeCompare(b.title, 'de'),
+        compareText(a.title, b.title),
     )
     .slice(0, limit);
 }
