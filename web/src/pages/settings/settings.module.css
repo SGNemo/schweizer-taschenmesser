@@ -30,6 +30,8 @@
 }
 .file {
   min-height: var(--touch);
+  /* The browser's file picker has a fixed intrinsic width; never wider than its row. */
+  max-width: 100%;
 }
 .choice {
   display: flex;

@@ -61,7 +61,7 @@ function Fields({
     const cents = price.trim() === '' ? null : parseMoney(price);
     const next = {
       title: title.trim() ? undefined : t.form.required,
-      price: cents === undefined ? t.people.gift.badPrice : undefined,
+      price: cents === undefined ? t.people.gift.badPrice(formatMoneyInput(1990)) : undefined,
     };
     setErrors(next);
     if (next.title || next.price || cents === undefined) return;

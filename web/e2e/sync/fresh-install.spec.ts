@@ -132,12 +132,18 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
   await expect(preview).not.toContainText('127.0.0.1');
   await page.getByRole('button', { name: 'Schließen' }).first().click();
 
-  // 6. language switch: new texts follow, the choice survives a reload, and back
-  await page.getByRole('button', { name: 'English' }).click();
+  // 6. language switch (Settings → Allgemein): new texts follow, the choice survives a reload, and back
+  const language = (name: string) =>
+    page.getByRole('main').getByRole('combobox', { name, exact: true });
+  await page.goto('/settings/allgemein');
+  await language('Sprache').selectOption('en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page.goto('/settings/ueber');
   await expect(page.getByRole('heading', { name: 'Diagnostics and bug reports' })).toBeVisible();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await page.getByRole('button', { name: 'Deutsch' }).click();
+  await page.goto('/settings/allgemein');
+  await language('Language').selectOption('de');
+  await page.goto('/settings/ueber');
   await expect(page.getByRole('heading', { name: 'Diagnose und Fehler melden' })).toBeVisible();
 });

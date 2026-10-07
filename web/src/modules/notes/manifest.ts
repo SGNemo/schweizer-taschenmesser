@@ -8,14 +8,20 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'notes',
-  name: t.notes.meta.name,
+  get name() {
+    return t.notes.meta.name;
+  },
   icon: 'note',
   version: 1,
-  description: t.notes.meta.description,
+  get description() {
+    return t.notes.meta.description;
+  },
   routes: [
     {
       path: '/notes',
-      label: t.notes.meta.route,
+      get label() {
+        return t.notes.meta.route;
+      },
       nav: true,
       component: () => import('./routes/NotesPage'),
     },
@@ -33,7 +39,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'recent',
-      title: t.notes.meta.widget,
+      get title() {
+        return t.notes.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/RecentNotesWidget'),
@@ -49,7 +57,15 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: noOnboarding,
     services: () => import('./services'),
-    quickAdd: [{ id: 'note', label: t.notes.meta.quickAdd, to: '/notes?new=1' }],
+    quickAdd: [
+      {
+        id: 'note',
+        get label() {
+          return t.notes.meta.quickAdd;
+        },
+        to: '/notes?new=1',
+      },
+    ],
   },
 };
 

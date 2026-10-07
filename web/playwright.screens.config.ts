@@ -13,6 +13,8 @@ export default defineConfig({
   timeout: 180_000,
   reporter: 'list',
   use: {
+    // The app follows the device language; the specs assert German texts.
+    locale: 'de-DE',
     serviceWorkers: 'block',
     launchOptions: { executablePath },
   },
@@ -20,13 +22,13 @@ export default defineConfig({
     {
       // The layout tour runs on the Dev-Preview flavour with the shared, seeded test data.
       name: 'seeded',
-      testMatch: 'capture.spec.ts',
+      testMatch: ['capture.spec.ts', 'languages.spec.ts'],
       use: { baseURL: 'http://localhost:4174' },
     },
     {
       // Specs that start from an empty app (setup assistant, disk) need the stable e2e build.
       name: 'plain',
-      testIgnore: 'capture.spec.ts',
+      testIgnore: ['capture.spec.ts', 'languages.spec.ts'],
       use: { baseURL: 'http://localhost:4173' },
     },
   ],

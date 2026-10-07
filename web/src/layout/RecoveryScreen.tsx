@@ -1,3 +1,4 @@
+import { t } from '@/strings';
 import { useRef, useState } from 'react';
 import { scrub } from '@/core/diagnostics/errorLog';
 import { reportBug } from '@/core/diagnostics/report';
@@ -74,7 +75,7 @@ export function RecoveryScreen({ problem }: { problem: DbProblem }) {
     <main className={styles.page}>
       <div className={styles.panel}>
         <div className={styles.head}>
-          <Logo size={48} title="Nemo" />
+          <Logo size={48} title={t.appName} />
           <h1>{r.title}</h1>
         </div>
         <p>{r.intro}</p>

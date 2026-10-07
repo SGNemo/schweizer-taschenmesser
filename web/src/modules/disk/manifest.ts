@@ -11,21 +11,29 @@ import { t } from '@/strings';
  */
 const manifest: ModuleManifest = {
   id: 'disk',
-  name: t.disk.meta.name,
+  get name() {
+    return t.disk.meta.name;
+  },
   icon: 'disk',
   version: 1,
-  description: t.disk.meta.description,
+  get description() {
+    return t.disk.meta.description;
+  },
   platforms: ['desktop'],
   routes: [
     {
       path: '/disk',
-      label: t.disk.meta.route,
+      get label() {
+        return t.disk.meta.route;
+      },
       nav: true,
       component: () => import('./routes/DrivesPage'),
     },
     {
       path: '/disk/scan',
-      label: t.disk.meta.route2,
+      get label() {
+        return t.disk.meta.route2;
+      },
       component: () => import('./routes/ScanPage'),
     },
   ],
@@ -34,14 +42,18 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'status',
-      title: t.disk.meta.widget,
+      get title() {
+        return t.disk.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/DrivesWidget'),
     },
     {
       id: 'system',
-      title: t.disk.meta.widget2,
+      get title() {
+        return t.disk.meta.widget2;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/SystemWidget'),

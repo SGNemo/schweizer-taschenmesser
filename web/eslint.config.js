@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
+import i18n from './eslint-rules/i18n.js';
 
 // Module isolation: feature modules must not import each other.
 // Exception (see CLAUDE.md): finance may read subscriptions/invoices via their public.ts.
@@ -36,7 +37,19 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**/*.mjs', '*.config.{js,ts}'],
+    // UI text comes from the catalog (src/strings.ts + src/i18n/locales); see eslint-rules/i18n.js.
+    files: ['src/**/*.tsx'],
+    ignores: ['src/**/*.test.tsx', 'src/**/__tests__/**', 'src/dev/**'],
+    plugins: { i18n },
+    rules: { 'i18n/no-ui-literal': 'error' },
+  },
+  {
+    // French typography puts (narrow) no-break spaces before : ; ! ? and inside « » on purpose.
+    files: ['src/i18n/locales/**/*.ts'],
+    rules: { 'no-irregular-whitespace': ['error', { skipStrings: true, skipTemplates: true }] },
+  },
+  {
+    files: ['scripts/**/*.mjs', 'eslint-rules/*.js', '*.config.{js,ts}'],
     languageOptions: { globals: { ...globals.node } },
   },
   {

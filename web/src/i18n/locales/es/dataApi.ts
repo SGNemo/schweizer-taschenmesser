@@ -1,0 +1,41 @@
+import type { Strings } from '@/strings';
+
+export const dataApi: Strings['dataApi'] = {
+  importerLabel: 'Pegar JSON',
+  importerDescription:
+    'Datos que te ha dado una IA (u otro programa) en formato Nemo. No se guarda nada hasta que confirmes la vista previa.',
+  jsonLabel: 'JSON',
+  copySchema: 'Copiar esquema para la IA',
+  schemaCopied: 'Esquema copiado. Pégalo en tu herramienta de IA.',
+  copyFailed: 'No se pudo copiar.',
+  copyHint:
+    'Copia una breve descripción del formato con un ejemplo. No contiene ninguno de tus datos.',
+  notJson: 'Esto no es un JSON válido.',
+  notList: 'Se espera una lista o {"items": [ … ]}.',
+  empty: 'La lista está vacía.',
+  tooMany: (n: number) => `Demasiadas entradas (como máximo ${n}).`,
+  item: (n: number) => `Entrada ${n}`,
+  itemNotObject: 'Una entrada debe ser un objeto.',
+  collectionMissing: 'Falta collection.',
+  unknownCollection: (names: string[]) =>
+    `Colección desconocida (permitidas: ${names.join(', ')}).`,
+  badKey: 'key debe ser un texto no vacío.',
+  duplicateKey: 'key aparece varias veces.',
+  badId: 'id debe ser un texto (el id de una entrada existente).',
+  idUnknown: 'No hay ninguna entrada con este id. Para entradas nuevas, omite el id.',
+  yes: 'Sí',
+  no: 'No',
+  unknownField: (name: string) => `Campo desconocido «${name}».`,
+  badMoney: 'Importe como número en euros con dos decimales como máximo.',
+  badCurrency: 'Solo se admite EUR.',
+  keyNotFound: 'No hay ninguna entrada con este key en el envío.',
+  refSelf: 'Una entrada no puede hacer referencia a sí misma.',
+  refWrongCollection: (c: string) => `El key no pertenece a «${c}».`,
+  refNotFound: (c: string) => `No se encontró ninguna entrada «${c}» con este título.`,
+  refAmbiguous: (c: string) => `Coinciden varias entradas «${c}»; usa el ID o un key.`,
+  missing: 'falta',
+  expected: (type: string) => `se espera ${type}`,
+  oneOf: (values: string) => `permitido: ${values}`,
+  badFormat: 'formato incorrecto (fecha AAAA-MM-DD, hora HH:mm)',
+  outOfRange: 'fuera del rango permitido',
+};

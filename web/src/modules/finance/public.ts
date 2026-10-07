@@ -2,6 +2,7 @@
  * Read-only API for modules that are allowed to look at finance data (budgets).
  * Everything else must use the event bus or manifest contributions.
  */
+import { compareText } from '@/core/i18n/format';
 import { monthOf } from '@/core/time/dates';
 import { categoryRepo, transactionRepo } from './repo';
 
@@ -14,7 +15,7 @@ export async function listExpenseCategories(): Promise<ExpenseCategory[]> {
   return (await categoryRepo.active().toArray())
     .filter((c) => c.kind === 'expense')
     .map(({ id, name }) => ({ id, name }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    .sort((a, b) => compareText(a.name, b.name));
 }
 
 /** Expenses (cents) of a month ('YYYY-MM') per category id; uncategorised bookings use the key ''. */

@@ -1,0 +1,37 @@
+{
+  "en": [
+    "ai.local.testSentence",
+    "connectors.ics.name",
+    "invoices.meta.settings.remindTimeHelp",
+    "pantry.meta.settings.remindTimeHelp",
+    "people.gift.url",
+    "people.meta.settings.remindTimeHelp",
+    "subscriptions.meta.settings.remindTimeHelp",
+    "tools.dev.tabs.base64",
+    "tools.timezones.zones.America/Argentina/Buenos_Aires",
+    "tools.timezones.zones.America/Los_Angeles",
+    "tools.timezones.zones.America/New_York",
+    "tools.timezones.zones.America/Sao_Paulo",
+    "tools.units.names.yd",
+    "vault.meta.settings.remindTimeHelp"
+  ],
+  "es": [
+    "ai.local.testSentence",
+    "tools.timezones.zones.America/Argentina/Buenos_Aires",
+    "tools.timezones.zones.America/Sao_Paulo"
+  ],
+  "fr": [
+    "ai.local.testSentence",
+    "tools.timezones.zones.America/Argentina/Buenos_Aires",
+    "tools.timezones.zones.America/Los_Angeles",
+    "tools.timezones.zones.America/New_York",
+    "tools.timezones.zones.America/Sao_Paulo",
+    "tools.units.names.yd"
+  ],
+  "pt-BR": [
+    "ai.local.testSentence",
+    "tools.timezones.zones.America/Argentina/Buenos_Aires",
+    "tools.timezones.zones.America/Los_Angeles",
+    "tools.timezones.zones.America/Sao_Paulo"
+  ]
+}

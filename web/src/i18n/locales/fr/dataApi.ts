@@ -1,0 +1,41 @@
+import type { Strings } from '@/strings';
+
+export const dataApi: Strings['dataApi'] = {
+  importerLabel: 'Coller du JSON',
+  importerDescription:
+    'Des données qu’une IA (ou un autre programme) vous a fournies au format Nemo. Rien n’est enregistré avant que vous confirmiez l’aperçu.',
+  jsonLabel: 'JSON',
+  copySchema: 'Copier le schéma pour l’IA',
+  schemaCopied: 'Schéma copié. Collez-le dans votre outil d’IA.',
+  copyFailed: 'La copie n’a pas fonctionné.',
+  copyHint:
+    'Copie une courte description du format avec un exemple. Elle ne contient aucune de vos données.',
+  notJson: 'Ce n’est pas du JSON valide.',
+  notList: 'Une liste ou {"items": [ … ]} est attendue.',
+  empty: 'La liste est vide.',
+  tooMany: (n: number) => `Trop d’entrées (${n} au maximum).`,
+  item: (n: number) => `Entrée ${n}`,
+  itemNotObject: 'Une entrée doit être un objet.',
+  collectionMissing: 'collection manquante.',
+  unknownCollection: (names: string[]) => `Collection inconnue (autorisées : ${names.join(', ')}).`,
+  badKey: 'key doit être un texte non vide.',
+  duplicateKey: 'key apparaît plusieurs fois.',
+  badId: 'id doit être un texte (l’id d’une entrée existante).',
+  idUnknown: 'Aucune entrée existante avec cet id. Pour les nouvelles entrées, omettez l’id.',
+  yes: 'Oui',
+  no: 'Non',
+  unknownField: (name: string) => `Champ inconnu « ${name} ».`,
+  badMoney: 'Montant sous forme de nombre en euros avec au plus deux décimales.',
+  badCurrency: 'Seul EUR est pris en charge.',
+  keyNotFound: 'Aucune entrée avec ce key dans l’envoi.',
+  refSelf: 'Une entrée ne peut pas se référencer elle-même.',
+  refWrongCollection: (c: string) => `Ce key n’appartient pas à « ${c} ».`,
+  refNotFound: (c: string) => `Aucune entrée « ${c} » trouvée avec ce titre.`,
+  refAmbiguous: (c: string) =>
+    `Plusieurs entrées « ${c} » correspondent – veuillez utiliser l’ID ou un key.`,
+  missing: 'manquant',
+  expected: (type: string) => `${type} attendu`,
+  oneOf: (values: string) => `autorisé : ${values}`,
+  badFormat: 'format incorrect (date AAAA-MM-JJ, heure HH:mm)',
+  outOfRange: 'hors de la plage autorisée',
+};

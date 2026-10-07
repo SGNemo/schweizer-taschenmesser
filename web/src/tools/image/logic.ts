@@ -1,3 +1,5 @@
+import { numberFormat } from '@/core/i18n/format';
+
 export type OutType = 'image/png' | 'image/jpeg' | 'image/webp';
 
 export const FORMATS: readonly { type: OutType; label: string; ext: string; lossy: boolean }[] = [
@@ -60,9 +62,9 @@ export function outName(name: string, type: OutType): string {
   return `${base}-klein.${formatOf(type).ext}`;
 }
 
-const nf = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
+const nf = () => numberFormat({ maximumFractionDigits: 1 });
 export function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${nf.format(bytes / 1024)} KB`;
-  return `${nf.format(bytes / 1024 / 1024)} MB`;
+  if (bytes < 1024 * 1024) return `${nf().format(bytes / 1024)} KB`;
+  return `${nf().format(bytes / 1024 / 1024)} MB`;
 }

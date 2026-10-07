@@ -29,54 +29,132 @@ export const defaultSettings: FullAccountsSettings = {
 
 export const settings: ModuleSettings = {
   category: 'sicherheit',
-  keywords: ['Tresor', 'Passwort', 'Sperre', 'Auto-Lock', 'Browser-Erweiterung'],
+  get keywords() {
+    return [...t.accounts.meta.settings.keywords];
+  },
   schema: settingsSchema,
   defaults: defaultSettings,
   fields: [
     {
       key: 'autoLockMinutes',
-      label: t.accounts.meta.settings.autoLockMinutes,
+      get label() {
+        return t.accounts.meta.settings.autoLockMinutes;
+      },
       type: 'select',
       options: [
-        { value: '1', label: t.accounts.meta.settings.autoLockMinutes_1 },
-        { value: '5', label: t.accounts.meta.settings.autoLockMinutes_5 },
-        { value: '15', label: t.accounts.meta.settings.autoLockMinutes_15 },
-        { value: '30', label: t.accounts.meta.settings.autoLockMinutes_30 },
+        {
+          value: '1',
+          get label() {
+            return t.accounts.meta.settings.autoLockMinutes_1;
+          },
+        },
+        {
+          value: '5',
+          get label() {
+            return t.accounts.meta.settings.autoLockMinutes_5;
+          },
+        },
+        {
+          value: '15',
+          get label() {
+            return t.accounts.meta.settings.autoLockMinutes_15;
+          },
+        },
+        {
+          value: '30',
+          get label() {
+            return t.accounts.meta.settings.autoLockMinutes_30;
+          },
+        },
       ],
     },
     {
       key: 'backgroundLock',
-      label: t.accounts.meta.settings.backgroundLock,
+      get label() {
+        return t.accounts.meta.settings.backgroundLock;
+      },
       type: 'select',
       options: [
-        { value: 'now', label: t.accounts.meta.settings.backgroundLock_now },
-        { value: '30s', label: t.accounts.meta.settings.backgroundLock_30s },
+        {
+          value: 'now',
+          get label() {
+            return t.accounts.meta.settings.backgroundLock_now;
+          },
+        },
+        {
+          value: '30s',
+          get label() {
+            return t.accounts.meta.settings.backgroundLock_30s;
+          },
+        },
       ],
     },
     {
       key: 'originMatch',
-      label: t.accounts.meta.settings.originMatch,
+      get label() {
+        return t.accounts.meta.settings.originMatch;
+      },
       type: 'select',
       options: [
-        { value: 'domain', label: t.accounts.meta.settings.originMatch_domain },
-        { value: 'host', label: t.accounts.meta.settings.originMatch_host },
+        {
+          value: 'domain',
+          get label() {
+            return t.accounts.meta.settings.originMatch_domain;
+          },
+        },
+        {
+          value: 'host',
+          get label() {
+            return t.accounts.meta.settings.originMatch_host;
+          },
+        },
       ],
     },
     {
       key: 'genLength',
-      label: t.accounts.meta.settings.genLength,
+      get label() {
+        return t.accounts.meta.settings.genLength;
+      },
       type: 'select',
       options: [
-        { value: '16', label: t.accounts.meta.settings.genLength_16 },
-        { value: '20', label: t.accounts.meta.settings.genLength_20 },
-        { value: '24', label: t.accounts.meta.settings.genLength_24 },
-        { value: '32', label: t.accounts.meta.settings.genLength_32 },
+        {
+          value: '16',
+          get label() {
+            return t.accounts.meta.settings.genLength_16;
+          },
+        },
+        {
+          value: '20',
+          get label() {
+            return t.accounts.meta.settings.genLength_20;
+          },
+        },
+        {
+          value: '24',
+          get label() {
+            return t.accounts.meta.settings.genLength_24;
+          },
+        },
+        {
+          value: '32',
+          get label() {
+            return t.accounts.meta.settings.genLength_32;
+          },
+        },
       ],
     },
-    { key: 'genSymbols', label: t.accounts.meta.settings.genSymbols, type: 'boolean' },
+    {
+      key: 'genSymbols',
+      get label() {
+        return t.accounts.meta.settings.genSymbols;
+      },
+      type: 'boolean',
+    },
     {
       key: 'genAvoidAmbiguous',
-      label: t.accounts.meta.settings.genAvoidAmbiguous,
+      get label() {
+        return t.accounts.meta.settings.genAvoidAmbiguous;
+      },
       type: 'boolean',
     },
   ],

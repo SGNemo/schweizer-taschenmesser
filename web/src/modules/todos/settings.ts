@@ -9,5 +9,13 @@ const schema = z.object({
 export const settings: ModuleSettings = {
   schema,
   defaults: { showDone: true },
-  fields: [{ key: 'showDone', label: t.todos.meta.settings.showDone, type: 'boolean' }],
+  fields: [
+    {
+      key: 'showDone',
+      get label() {
+        return t.todos.meta.settings.showDone;
+      },
+      type: 'boolean',
+    },
+  ],
 };

@@ -1,0 +1,62 @@
+import type { Strings } from '@/strings';
+
+export const about: Strings['about'] = {
+  title: 'À propos de Nemo',
+  tagline: 'App du quotidien modulaire et locale',
+  version: 'Version',
+  build: 'Build',
+  commit: 'Commit',
+  channel: 'Canal',
+  channelStable: 'Stable',
+  channelDev: 'Dev preview',
+  platform: 'Plateforme',
+  platforms: { web: 'Navigateur', desktop: 'App Windows', android: 'App Android' },
+  install: 'Type d’installation',
+  installKinds: {
+    portable: 'Portable (dossier avec données)',
+    installed: 'Installée',
+    apk: 'App Android (APK)',
+    pwa: 'App web installée (PWA)',
+    browser: 'Onglet du navigateur',
+  },
+  dataDir: 'Dossier des données',
+  openDataDir: 'Ouvrir le dossier',
+  openDataDirFailed: 'Le dossier n’a pas pu être ouvert.',
+  license: 'Licence',
+  licenseValue: 'Licence MIT',
+  updates: {
+    title: 'Mises à jour et changements',
+    lastCheck: 'Dernière vérification',
+    never: 'Jamais',
+    browser: 'Dans le navigateur, l’app se met à jour d’elle-même.',
+    current: 'Changements de cette version',
+    available: (version: string) => `Changements de la version ${version}`,
+    none: 'Aucune information pour cette version.',
+  },
+  packages: 'Bibliothèques utilisées',
+  links: {
+    title: 'Liens',
+    open: 'Ouvrir',
+    repo: 'Code source sur GitHub',
+    releases: 'Versions et téléchargements',
+    docs: 'Documentation',
+    bugs: 'Signaler un bug',
+  },
+  reset: {
+    title: 'Réinitialiser l’appareil',
+    label: 'Supprimer toutes les données de cet appareil',
+    description:
+      'Supprime les entrées, paramètres et clés de cet appareil. Les données sur le serveur de synchronisation et les fichiers de sauvegarde sont conservés.',
+    dialogTitle: 'Supprimer toutes les données de cet appareil ?',
+    warning:
+      'Cette action est irréversible. Créez d’abord une sauvegarde (Synchronisation et sauvegarde) si vous avez encore besoin des données.',
+    confirm: 'Supprimer définitivement',
+  },
+  licenses: 'Mentions de licence',
+  licenseList: [
+    'Police « Inter » – SIL Open Font License 1.1, © The Inter Project Authors.',
+    'Logotype « Nemo » en « Nunito » – SIL Open Font License 1.1, © The Nunito Project Authors.',
+    'Icônes « Lucide » – licence ISC, © Lucide Contributors.',
+    'Le logo Nemo (poisson-clown) est un dessin original de ce projet.',
+  ],
+};

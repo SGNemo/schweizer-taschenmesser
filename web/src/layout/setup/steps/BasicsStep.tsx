@@ -10,10 +10,14 @@ import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
 import { useUiStore, type ThemeChoice } from '@/stores/ui';
 import { SelectField, TextField } from '@/ui';
+import { LanguageSelect } from '@/pages/settings/LanguageSelect';
 
 const s = t.setup.steps.basics;
 
-/** Name, theme and week start. Drafts stay local until "Weiter"; the current values are shown. */
+/**
+ * Language, name, theme and week start. The language switches at once (the rest of the assistant
+ * then speaks it); the other drafts stay local until "Weiter"; the current values are shown.
+ */
 export default function BasicsStep({ registerCommit }: SetupStepProps) {
   const [saved] = useSettings(CORE_SCOPE, coreSettingsSchema, DEFAULT_CORE);
   const theme = useUiStore((st) => st.theme);
@@ -35,6 +39,7 @@ export default function BasicsStep({ registerCommit }: SetupStepProps) {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return (
     <>
+      <LanguageSelect labelHidden={false} />
       <TextField
         label={s.name}
         hint={s.nameHint}
@@ -66,7 +71,6 @@ export default function BasicsStep({ registerCommit }: SetupStepProps) {
       <div>
         <strong>{s.fixedTitle}</strong>
         <ul>
-          <li>{s.language}</li>
           <li>{s.timezone(zone)}</li>
           <li>{s.currency}</li>
         </ul>

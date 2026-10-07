@@ -200,6 +200,12 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
+## Sprachen (App in fünf Sprachen)
+- **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English, Español, Français, Português (Brasil) und Deutsch. Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
+- **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.
+- **S3 – Bestandsinstallation:** ein Gerät mit vorhandenen Daten aktualisieren → bleibt Deutsch, bis die Sprache geändert wird.
+- **S4 – native Texte (Windows):** Google-Anmeldung abschließen → die Ergebnisseite im Browser erscheint in der Browsersprache; ohne WebView2 erscheint der Hinweis in der Windows-Sprache.
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.

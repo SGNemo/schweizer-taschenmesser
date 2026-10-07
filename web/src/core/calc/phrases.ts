@@ -2,6 +2,7 @@
  * The calculator of the command palette: recognises arithmetic ("12*3,5", "240 + 19%") and the few
  * German phrases people type ("19% von 240", "30 von 200 in prozent"). Strictly local, no network.
  */
+import { t } from '@/strings';
 import { CalcError, evaluate, formatNumber } from './expr';
 
 export interface CalcAnswer {
@@ -42,7 +43,11 @@ export function calculate(input: string): CalcAnswer | undefined {
       const value = evaluate(`${of[2]}*${of[1]}%`);
       return {
         value,
-        text: `${formatNumber(num(of[1]!))}% von ${formatNumber(num(of[2]!))} = ${formatNumber(value)}`,
+        text: t.tools.calc.percentOf(
+          formatNumber(num(of[1]!)),
+          formatNumber(num(of[2]!)),
+          formatNumber(value),
+        ),
       };
     }
     const share = SHARE.exec(s);
@@ -53,7 +58,7 @@ export function calculate(input: string): CalcAnswer | undefined {
       const value = evaluate(`${share[1]}/${share[2]}*100`);
       return {
         value,
-        text: `${formatNumber(part)} von ${formatNumber(whole)} = ${formatNumber(value)}%`,
+        text: t.tools.calc.shareOf(formatNumber(part), formatNumber(whole), formatNumber(value)),
       };
     }
     const value = evaluate(s);

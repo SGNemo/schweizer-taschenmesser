@@ -13,14 +13,20 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'includeOpenInvoices',
-      label: t.finance.meta.settings.includeOpenInvoices,
+      get label() {
+        return t.finance.meta.settings.includeOpenInvoices;
+      },
       type: 'boolean',
     },
     {
       key: 'includeSubscriptions',
-      label: t.finance.meta.settings.includeSubscriptions,
+      get label() {
+        return t.finance.meta.settings.includeSubscriptions;
+      },
       type: 'boolean',
-      help: t.finance.meta.settings.includeSubscriptionsHelp,
+      get help() {
+        return t.finance.meta.settings.includeSubscriptionsHelp;
+      },
     },
   ],
 };
