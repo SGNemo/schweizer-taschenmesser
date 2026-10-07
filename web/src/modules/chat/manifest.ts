@@ -13,15 +13,21 @@ import { settings } from './settings';
  */
 const manifest: ModuleManifest = {
   id: 'chat',
-  name: t.chat.meta.name,
+  get name() {
+    return t.chat.meta.name;
+  },
   icon: 'sparkles',
   version: 1,
   dataApi: false,
-  description: t.chat.meta.description,
+  get description() {
+    return t.chat.meta.description;
+  },
   routes: [
     {
       path: '/chat',
-      label: t.chat.meta.route,
+      get label() {
+        return t.chat.meta.route;
+      },
       nav: true,
       component: () => import('./routes/ChatPage'),
     },
@@ -36,7 +42,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'recent',
-      title: t.chat.meta.widget,
+      get title() {
+        return t.chat.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/RecentChatsWidget'),
@@ -50,7 +58,15 @@ const manifest: ModuleManifest = {
   order: 90,
   contributions: {
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'chat', label: t.chat.meta.quickAdd, to: '/chat?new=1' }],
+    quickAdd: [
+      {
+        id: 'chat',
+        get label() {
+          return t.chat.meta.quickAdd;
+        },
+        to: '/chat?new=1',
+      },
+    ],
   },
 };
 

@@ -3,9 +3,13 @@ import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
   id: 'dev',
-  name: t.tools.dev.name,
+  get name() {
+    return t.tools.dev.name;
+  },
   icon: 'braces',
-  description: t.tools.dev.description,
+  get description() {
+    return t.tools.dev.description;
+  },
   group: 'dev',
   offline: true,
   defaultEnabled: false,

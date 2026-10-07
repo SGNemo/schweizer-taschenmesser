@@ -9,15 +9,25 @@ export const onboarding: OnboardingDef = {
     {
       id: 'text',
       kind: 'text',
-      label: s.text,
-      description: s.textHint,
-      placeholder: s.placeholder,
+      get label() {
+        return s.text;
+      },
+      get description() {
+        return s.textHint;
+      },
+      get placeholder() {
+        return s.placeholder;
+      },
     },
     {
       id: 'templates',
       kind: 'template',
-      label: s.templates,
-      description: s.templatesHint,
+      get label() {
+        return s.templates;
+      },
+      get description() {
+        return s.templatesHint;
+      },
       templates: PACKING_TEMPLATES.map((id) => ({
         id,
         label: s[id].name,

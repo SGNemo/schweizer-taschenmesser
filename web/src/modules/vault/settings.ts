@@ -14,19 +14,27 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'remindDaysBefore',
-      label: t.vault.meta.settings.remindDaysBefore,
+      get label() {
+        return t.vault.meta.settings.remindDaysBefore;
+      },
       type: 'number',
     },
     {
       key: 'remindDaysBeforeDeadline',
-      label: t.vault.meta.settings.remindDaysBeforeDeadline,
+      get label() {
+        return t.vault.meta.settings.remindDaysBeforeDeadline;
+      },
       type: 'number',
     },
     {
       key: 'remindTime',
-      label: t.vault.meta.settings.remindTime,
+      get label() {
+        return t.vault.meta.settings.remindTime;
+      },
       type: 'text',
-      help: t.vault.meta.settings.remindTimeHelp,
+      get help() {
+        return t.vault.meta.settings.remindTimeHelp;
+      },
     },
   ],
 };

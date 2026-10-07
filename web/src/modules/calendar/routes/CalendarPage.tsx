@@ -27,9 +27,15 @@ import styles from './calendar.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 
 const VIEW_LABEL: Record<CalendarView, string> = {
-  month: t.calendar.month,
-  week: t.calendar.week,
-  day: t.calendar.day,
+  get month() {
+    return t.calendar.month;
+  },
+  get week() {
+    return t.calendar.week;
+  },
+  get day() {
+    return t.calendar.day;
+  },
 };
 
 export default function CalendarPage() {

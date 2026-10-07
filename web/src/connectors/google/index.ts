@@ -12,12 +12,18 @@ const s = t.connectors.google;
  */
 const connector: ConnectorDef = {
   id: 'google',
-  name: s.name,
-  description: s.description,
+  get name() {
+    return s.name;
+  },
+  get description() {
+    return s.description;
+  },
   icon: 'calendar',
   authType: 'oauth-pkce',
   platforms: ['desktop'],
-  unavailableHint: t.connectors.desktopOnly,
+  get unavailableHint() {
+    return t.connectors.desktopOnly;
+  },
   oauth: {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
@@ -28,14 +34,22 @@ const connector: ConnectorDef = {
   features: [
     {
       id: 'calendar',
-      label: s.calendarFeature,
-      description: s.calendarFeatureHint,
+      get label() {
+        return s.calendarFeature;
+      },
+      get description() {
+        return s.calendarFeatureHint;
+      },
       scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
     },
     {
       id: 'mail',
-      label: s.mailFeature,
-      description: s.mailFeatureHint,
+      get label() {
+        return s.mailFeature;
+      },
+      get description() {
+        return s.mailFeatureHint;
+      },
       scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
     },
   ],

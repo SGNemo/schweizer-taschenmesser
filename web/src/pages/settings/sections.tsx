@@ -46,15 +46,65 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'general',
     category: 'allgemein',
     order: 10,
-    title: s.general.title,
-    keywords: ['Name', 'Wochenstart', 'Sprache', 'Language', 'Währung', 'Zeitzone', 'Format', 'Datum'],
+    get title() {
+      return s.general.title;
+    },
+    keywords: [
+      'Name',
+      'Wochenstart',
+      'Sprache',
+      'Language',
+      'Währung',
+      'Zeitzone',
+      'Format',
+      'Datum',
+    ],
     fields: [
-      { key: 'displayName', label: s.general.name, description: s.general.nameHint },
-      { key: 'weekStart', label: s.general.weekStart, description: s.general.weekStartHint },
-      { key: 'language', label: s.general.language, description: s.general.languageHint },
-      { key: 'currency', label: s.general.currency },
-      { key: 'timeZone', label: s.general.timeZone },
-      { key: 'formats', label: s.general.formats },
+      {
+        key: 'displayName',
+        get label() {
+          return s.general.name;
+        },
+        get description() {
+          return s.general.nameHint;
+        },
+      },
+      {
+        key: 'weekStart',
+        get label() {
+          return s.general.weekStart;
+        },
+        get description() {
+          return s.general.weekStartHint;
+        },
+      },
+      {
+        key: 'language',
+        get label() {
+          return s.general.language;
+        },
+        get description() {
+          return s.general.languageHint;
+        },
+      },
+      {
+        key: 'currency',
+        get label() {
+          return s.general.currency;
+        },
+      },
+      {
+        key: 'timeZone',
+        get label() {
+          return s.general.timeZone;
+        },
+      },
+      {
+        key: 'formats',
+        get label() {
+          return s.general.formats;
+        },
+      },
     ],
     render: () => <GeneralSection />,
   },
@@ -62,24 +112,110 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'appearance',
     category: 'darstellung',
     order: 10,
-    title: s.appearance,
+    get title() {
+      return s.appearance;
+    },
     keywords: ['Theme', 'Dunkelmodus', 'Schrift', 'Animation'],
     fields: [
-      { key: 'theme', label: s.theme, description: s.rows.themeHint },
-      { key: 'accent', label: s.accent, description: s.rows.accentHint },
+      {
+        key: 'theme',
+        get label() {
+          return s.theme;
+        },
+        get description() {
+          return s.rows.themeHint;
+        },
+      },
+      {
+        key: 'accent',
+        get label() {
+          return s.accent;
+        },
+        get description() {
+          return s.rows.accentHint;
+        },
+      },
       {
         key: 'palette',
-        label: t.supporter.palette.label,
-        description: t.supporter.palette.hintLocked,
+        get label() {
+          return t.supporter.palette.label;
+        },
+        get description() {
+          return t.supporter.palette.hintLocked;
+        },
       },
-      { key: 'logo', label: t.supporter.logo.label, description: t.supporter.logo.hint },
-      { key: 'textSize', label: s.textSize, description: s.rows.textSizeHint },
-      { key: 'density', label: s.density, description: s.rows.densityHint },
-      { key: 'sidebar', label: s.sidebar, description: s.rows.sidebarHint },
-      { key: 'motion', label: s.rows.motion, description: s.rows.motionHint },
-      { key: 'leading', label: s.leading, description: s.rows.leadingHint },
-      { key: 'color', label: s.color, description: s.colorHint },
-      { key: 'homeView', label: s.homeView, description: s.rows.homeViewHint },
+      {
+        key: 'logo',
+        get label() {
+          return t.supporter.logo.label;
+        },
+        get description() {
+          return t.supporter.logo.hint;
+        },
+      },
+      {
+        key: 'textSize',
+        get label() {
+          return s.textSize;
+        },
+        get description() {
+          return s.rows.textSizeHint;
+        },
+      },
+      {
+        key: 'density',
+        get label() {
+          return s.density;
+        },
+        get description() {
+          return s.rows.densityHint;
+        },
+      },
+      {
+        key: 'sidebar',
+        get label() {
+          return s.sidebar;
+        },
+        get description() {
+          return s.rows.sidebarHint;
+        },
+      },
+      {
+        key: 'motion',
+        get label() {
+          return s.rows.motion;
+        },
+        get description() {
+          return s.rows.motionHint;
+        },
+      },
+      {
+        key: 'leading',
+        get label() {
+          return s.leading;
+        },
+        get description() {
+          return s.rows.leadingHint;
+        },
+      },
+      {
+        key: 'color',
+        get label() {
+          return s.color;
+        },
+        get description() {
+          return s.colorHint;
+        },
+      },
+      {
+        key: 'homeView',
+        get label() {
+          return s.homeView;
+        },
+        get description() {
+          return s.rows.homeViewHint;
+        },
+      },
     ],
     render: () => <AppearanceSection />,
   },
@@ -87,14 +223,49 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'reading',
     category: 'darstellung',
     order: 12,
-    title: s.reading.title,
-    description: s.reading.description,
-    keywords: s.reading.keywords,
+    get title() {
+      return s.reading.title;
+    },
+    get description() {
+      return s.reading.description;
+    },
+    get keywords() {
+      return s.reading.keywords;
+    },
     fields: [
-      { key: 'aid', label: s.reading.aid, description: s.reading.aidHint },
-      { key: 'share', label: s.reading.share },
-      { key: 'style', label: s.reading.style, description: s.reading.styleHint },
-      { key: 'cover', label: s.reading.cover, description: s.reading.coverHint },
+      {
+        key: 'aid',
+        get label() {
+          return s.reading.aid;
+        },
+        get description() {
+          return s.reading.aidHint;
+        },
+      },
+      {
+        key: 'share',
+        get label() {
+          return s.reading.share;
+        },
+      },
+      {
+        key: 'style',
+        get label() {
+          return s.reading.style;
+        },
+        get description() {
+          return s.reading.styleHint;
+        },
+      },
+      {
+        key: 'cover',
+        get label() {
+          return s.reading.cover;
+        },
+        get description() {
+          return s.reading.coverHint;
+        },
+      },
     ],
     render: () => <ReadingSection />,
   },
@@ -102,32 +273,106 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'focus',
     category: 'darstellung',
     order: 15,
-    title: t.focus.settings.title,
-    description: t.focus.settings.description,
-    keywords: t.focus.settings.keywords,
+    get title() {
+      return t.focus.settings.title;
+    },
+    get description() {
+      return t.focus.settings.description;
+    },
+    get keywords() {
+      return t.focus.settings.keywords;
+    },
     fields: [
       {
         key: 'nextOne',
-        label: t.focus.settings.nextOne,
-        description: t.focus.settings.nextOneHint,
+        get label() {
+          return t.focus.settings.nextOne;
+        },
+        get description() {
+          return t.focus.settings.nextOneHint;
+        },
       },
       {
         key: 'dayPlan',
-        label: t.focus.settings.dayPlan,
-        description: t.focus.settings.dayPlanHint,
+        get label() {
+          return t.focus.settings.dayPlan;
+        },
+        get description() {
+          return t.focus.settings.dayPlanHint;
+        },
       },
-      { key: 'planLimit', label: t.focus.settings.planLimit },
-      { key: 'calmAttention', label: t.focus.settings.calmAttention },
-      { key: 'timeToNext', label: t.focus.settings.timeToNext },
-      { key: 'focusMinutes', label: t.focus.settings.focusMinutes },
-      { key: 'focusSound', label: t.focus.settings.focusSound },
-      { key: 'focusIndicator', label: t.focus.settings.focusIndicator },
-      { key: 'resumeCard', label: t.focus.settings.resumeCard },
-      { key: 'streaks', label: t.focus.settings.streaks },
-      { key: 'weekReview', label: t.focus.settings.weekReview },
-      { key: 'eveningWrapUp', label: t.focus.settings.eveningWrapUp },
-      { key: 'searchHistory', label: t.focus.settings.searchHistory },
-      { key: 'clearHistory', label: t.focus.settings.clearHistory },
+      {
+        key: 'planLimit',
+        get label() {
+          return t.focus.settings.planLimit;
+        },
+      },
+      {
+        key: 'calmAttention',
+        get label() {
+          return t.focus.settings.calmAttention;
+        },
+      },
+      {
+        key: 'timeToNext',
+        get label() {
+          return t.focus.settings.timeToNext;
+        },
+      },
+      {
+        key: 'focusMinutes',
+        get label() {
+          return t.focus.settings.focusMinutes;
+        },
+      },
+      {
+        key: 'focusSound',
+        get label() {
+          return t.focus.settings.focusSound;
+        },
+      },
+      {
+        key: 'focusIndicator',
+        get label() {
+          return t.focus.settings.focusIndicator;
+        },
+      },
+      {
+        key: 'resumeCard',
+        get label() {
+          return t.focus.settings.resumeCard;
+        },
+      },
+      {
+        key: 'streaks',
+        get label() {
+          return t.focus.settings.streaks;
+        },
+      },
+      {
+        key: 'weekReview',
+        get label() {
+          return t.focus.settings.weekReview;
+        },
+      },
+      {
+        key: 'eveningWrapUp',
+        get label() {
+          return t.focus.settings.eveningWrapUp;
+        },
+      },
+      {
+        key: 'searchHistory',
+        get label() {
+          return t.focus.settings.searchHistory;
+        },
+      },
+      {
+        key: 'clearHistory',
+        get label() {
+          return t.focus.settings.clearHistory;
+        },
+      },
     ],
     render: () => <FocusSection />,
   },
@@ -135,16 +380,24 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'favourites',
     category: 'darstellung',
     order: 20,
-    title: s.favourites,
-    description: s.favouritesHint,
+    get title() {
+      return s.favourites;
+    },
+    get description() {
+      return s.favouritesHint;
+    },
     render: () => <FavouritesSection />,
   },
   {
     id: 'modules',
     category: 'module',
     order: 0,
-    title: s.modulesOverview.title,
-    description: s.modulesOverview.description,
+    get title() {
+      return s.modulesOverview.title;
+    },
+    get description() {
+      return s.modulesOverview.description;
+    },
     keywords: ['Bibliothek', 'Modul aktivieren', 'Startdaten'],
     render: () => (
       <SettingsGroup
@@ -162,8 +415,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'tools',
     category: 'werkzeuge',
     order: 10,
-    title: s.tools.title,
-    description: s.tools.description,
+    get title() {
+      return s.tools.title;
+    },
+    get description() {
+      return s.tools.description;
+    },
     keywords: ['Werkzeugleiste', 'Reihenfolge'],
     render: () => <ToolsSection />,
   },
@@ -171,7 +428,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'notifications',
     category: 'benachrichtigungen',
     order: 10,
-    title: t.notifications.title,
+    get title() {
+      return t.notifications.title;
+    },
     keywords: ['Push', 'Erlaubnis', 'Erinnerung'],
     render: () => <NotificationsSection />,
   },
@@ -179,18 +438,64 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'calm-reminders',
     category: 'benachrichtigungen',
     order: 20,
-    title: t.focus.reminders.title,
-    description: t.focus.reminders.description,
-    keywords: t.focus.reminders.keywords,
+    get title() {
+      return t.focus.reminders.title;
+    },
+    get description() {
+      return t.focus.reminders.description;
+    },
+    get keywords() {
+      return t.focus.reminders.keywords;
+    },
     fields: [
-      { key: 'inAppPrompt', label: t.focus.reminders.inAppPrompt },
-      { key: 'inAppPosition', label: t.focus.reminders.inAppPosition },
-      { key: 'inAppSeconds', label: t.focus.reminders.inAppSeconds },
-      { key: 'quietHours', label: t.focus.reminders.quietHours },
-      { key: 'maxPerHour', label: t.focus.reminders.maxPerHour },
-      { key: 'staggered', label: t.focus.reminders.staggered },
-      { key: 'followUp', label: t.focus.reminders.followUp },
-      { key: 'todoDigest', label: t.focus.reminders.todoDigest },
+      {
+        key: 'inAppPrompt',
+        get label() {
+          return t.focus.reminders.inAppPrompt;
+        },
+      },
+      {
+        key: 'inAppPosition',
+        get label() {
+          return t.focus.reminders.inAppPosition;
+        },
+      },
+      {
+        key: 'inAppSeconds',
+        get label() {
+          return t.focus.reminders.inAppSeconds;
+        },
+      },
+      {
+        key: 'quietHours',
+        get label() {
+          return t.focus.reminders.quietHours;
+        },
+      },
+      {
+        key: 'maxPerHour',
+        get label() {
+          return t.focus.reminders.maxPerHour;
+        },
+      },
+      {
+        key: 'staggered',
+        get label() {
+          return t.focus.reminders.staggered;
+        },
+      },
+      {
+        key: 'followUp',
+        get label() {
+          return t.focus.reminders.followUp;
+        },
+      },
+      {
+        key: 'todoDigest',
+        get label() {
+          return t.focus.reminders.todoDigest;
+        },
+      },
     ],
     render: () => <CalmRemindersSection />,
   },
@@ -198,8 +503,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'browser-extension',
     category: 'verbindungen',
     order: 30,
-    title: s.linkRow.browserExtension,
-    description: s.linkRow.browserExtensionHint,
+    get title() {
+      return s.linkRow.browserExtension;
+    },
+    get description() {
+      return s.linkRow.browserExtensionHint;
+    },
     keywords: ['Brave', 'Chrome', 'Autofill'],
     visibleWhen: (ctx) => ctx.isModuleEnabled('accounts'),
     render: () => (
@@ -214,8 +523,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'sync',
     category: 'sync',
     order: 10,
-    title: t.sync.title,
-    hint: t.help.sync,
+    get title() {
+      return t.sync.title;
+    },
+    get hint() {
+      return t.help.sync;
+    },
     keywords: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passphrase'],
     render: () => (
       <SettingsGroup id="sync" title={t.sync.title} hint={t.help.sync} bare>
@@ -227,7 +540,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'backup',
     category: 'sync',
     order: 20,
-    title: t.backup.title,
+    get title() {
+      return t.backup.title;
+    },
     keywords: ['Export', 'Import', 'Sicherung', 'Wiederherstellen', 'Automatisch'],
     render: () => (
       <SettingsGroup id="backup" title={t.backup.title} bare>
@@ -239,25 +554,65 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'ai-switch',
     category: 'ki',
     order: 5,
-    title: t.ai.off.title,
-    description: t.ai.off.description,
+    get title() {
+      return t.ai.off.title;
+    },
+    get description() {
+      return t.ai.off.description;
+    },
     keywords: ['KI aus', 'abschalten', 'deaktivieren', 'ohne KI', 'Nuke', 'löschen', 'Schlüssel'],
-    fields: [{ key: 'off', label: t.ai.off.switchLabel, description: t.ai.off.hint }],
+    fields: [
+      {
+        key: 'off',
+        get label() {
+          return t.ai.off.switchLabel;
+        },
+        get description() {
+          return t.ai.off.hint;
+        },
+      },
+    ],
     render: () => <AiSwitchSection />,
   },
   {
     id: 'ai-write',
     category: 'ki',
     order: 15,
-    title: t.ai.writeSettings.title,
-    description: t.ai.writeSettings.description,
-    hint: t.help.aiWrite,
+    get title() {
+      return t.ai.writeSettings.title;
+    },
+    get description() {
+      return t.ai.writeSettings.description;
+    },
+    get hint() {
+      return t.help.aiWrite;
+    },
     keywords: ['Eintragen', 'Schreiben', 'Vorschau', 'Cloud', 'Fallback', 'Nachfragen'],
     fields: [
-      { key: 'enabled', label: t.ai.writeSettings.enabled },
-      { key: 'cloud', label: t.ai.writeSettings.cloud },
-      { key: 'askMissing', label: t.ai.writeSettings.askMissing },
-      { key: 'modules', label: t.ai.writeSettings.modules },
+      {
+        key: 'enabled',
+        get label() {
+          return t.ai.writeSettings.enabled;
+        },
+      },
+      {
+        key: 'cloud',
+        get label() {
+          return t.ai.writeSettings.cloud;
+        },
+      },
+      {
+        key: 'askMissing',
+        get label() {
+          return t.ai.writeSettings.askMissing;
+        },
+      },
+      {
+        key: 'modules',
+        get label() {
+          return t.ai.writeSettings.modules;
+        },
+      },
     ],
     visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => <AiWriteSection />,
@@ -266,8 +621,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'ai-local',
     category: 'ki',
     order: 16,
-    title: t.ai.local.title,
-    hint: t.help.aiLocal,
+    get title() {
+      return t.ai.local.title;
+    },
+    get hint() {
+      return t.help.aiLocal;
+    },
     keywords: ['Lokal', 'Modell', 'Offline', 'Download', 'GPU', 'Vulkan', 'Gewichte'],
     render: () => <LocalModelSection />,
   },
@@ -275,8 +634,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'ai-stats',
     category: 'ki',
     order: 17,
-    title: t.ai.stats.title,
-    description: t.ai.stats.description,
+    get title() {
+      return t.ai.stats.title;
+    },
+    get description() {
+      return t.ai.stats.description;
+    },
     keywords: ['Statistik', 'Token', 'Kosten', 'Regeln', 'lokal', 'Cloud'],
     visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => <AiStatsSection />,
@@ -285,8 +648,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'ai',
     category: 'ki',
     order: 10,
-    title: t.ai.title,
-    hint: t.help.aiRouter,
+    get title() {
+      return t.ai.title;
+    },
+    get hint() {
+      return t.help.aiRouter;
+    },
     keywords: ['Anbieter', 'Schlüssel', 'Limit', 'Cache', 'Zähler'],
     visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => (
@@ -299,8 +666,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'connectors',
     category: 'verbindungen',
     order: 10,
-    title: t.connectors.title,
-    hint: t.help.connectors,
+    get title() {
+      return t.connectors.title;
+    },
+    get hint() {
+      return t.help.connectors;
+    },
     keywords: ['Google', 'Kalender', 'ICS', 'Gmail'],
     render: () => (
       <SettingsGroup id="connectors" title={t.connectors.title} hint={t.help.connectors} bare>
@@ -312,12 +683,26 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'localapi',
     category: 'verbindungen',
     order: 20,
-    title: t.localApi.title,
-    hint: t.help.localApi,
+    get title() {
+      return t.localApi.title;
+    },
+    get hint() {
+      return t.help.localApi;
+    },
     keywords: ['API', 'MCP', 'Token', 'Schnittstelle', 'Port'],
     fields: [
-      { key: 'enable', label: t.localApi.enable },
-      { key: 'port', label: t.localApi.port },
+      {
+        key: 'enable',
+        get label() {
+          return t.localApi.enable;
+        },
+      },
+      {
+        key: 'port',
+        get label() {
+          return t.localApi.port;
+        },
+      },
     ],
     visibleWhen: (ctx) => ctx.aiOn !== false,
     render: () => (
@@ -330,20 +715,56 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'quickcapture',
     category: 'schnellerfassung',
     order: 10,
-    title: t.quickCapture.settings.title,
+    get title() {
+      return t.quickCapture.settings.title;
+    },
     keywords: ['Hotkey', 'Tastenkürzel', 'Tray', 'Autostart', 'Zwischenablage'],
     fields: [
-      { key: 'defaultType', label: t.quickCapture.settings.defaultType },
-      { key: 'noQuestion', label: t.quickCapture.settings.noQuestion },
+      {
+        key: 'defaultType',
+        get label() {
+          return t.quickCapture.settings.defaultType;
+        },
+      },
+      {
+        key: 'noQuestion',
+        get label() {
+          return t.quickCapture.settings.noQuestion;
+        },
+      },
       {
         key: 'hotkey',
-        label: t.quickCapture.settings.hotkey,
-        description: t.quickCapture.settings.hotkeyHint,
+        get label() {
+          return t.quickCapture.settings.hotkey;
+        },
+        get description() {
+          return t.quickCapture.settings.hotkeyHint;
+        },
       },
-      { key: 'vaultHotkey', label: t.quickCapture.settings.vaultHotkey },
-      { key: 'closeToTray', label: t.quickCapture.settings.closeToTray },
-      { key: 'autostart', label: t.quickCapture.settings.autostart },
-      { key: 'clipboard', label: t.quickCapture.settings.clipboard },
+      {
+        key: 'vaultHotkey',
+        get label() {
+          return t.quickCapture.settings.vaultHotkey;
+        },
+      },
+      {
+        key: 'closeToTray',
+        get label() {
+          return t.quickCapture.settings.closeToTray;
+        },
+      },
+      {
+        key: 'autostart',
+        get label() {
+          return t.quickCapture.settings.autostart;
+        },
+      },
+      {
+        key: 'clipboard',
+        get label() {
+          return t.quickCapture.settings.clipboard;
+        },
+      },
     ],
     render: () => (
       <SettingsGroup id="quickcapture" title={t.quickCapture.settings.title} bare>
@@ -355,13 +776,32 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'updates',
     category: 'updates',
     order: 10,
-    title: t.update.title,
-    hint: t.help.updateChannel,
+    get title() {
+      return t.update.title;
+    },
+    get hint() {
+      return t.help.updateChannel;
+    },
     keywords: ['Kanal', 'Beta', 'Stable', 'Prüfen'],
     fields: [
-      { key: 'channel', label: t.update.settings.channel },
-      { key: 'auto', label: t.update.settings.auto },
-      { key: 'checkNow', label: t.update.settings.checkNow },
+      {
+        key: 'channel',
+        get label() {
+          return t.update.settings.channel;
+        },
+      },
+      {
+        key: 'auto',
+        get label() {
+          return t.update.settings.auto;
+        },
+      },
+      {
+        key: 'checkNow',
+        get label() {
+          return t.update.settings.checkNow;
+        },
+      },
     ],
     render: () => (
       <SettingsGroup id="updates" title={t.update.title} hint={t.help.updateChannel} bare>
@@ -373,7 +813,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'developer',
     category: 'entwickler',
     order: 10,
-    title: t.settings.cat.entwickler.title,
+    get title() {
+      return t.settings.cat.entwickler.title;
+    },
     keywords: ['Testdaten', 'Seed', 'Zurücksetzen'],
     visibleWhen: (ctx) => ctx.isDev && DeveloperSection !== undefined,
     render: () =>
@@ -389,7 +831,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'model-licenses',
     category: 'ueber',
     order: 55,
-    title: t.ai.local.licensesTitle,
+    get title() {
+      return t.ai.local.licensesTitle;
+    },
     keywords: ['Lizenz', 'Modell', 'Apache', 'MIT', 'Gewichte'],
     render: () => <ModelLicensesSection />,
   },
@@ -397,7 +841,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'setup',
     category: 'ueber',
     order: 30,
-    title: t.setup.title,
+    get title() {
+      return t.setup.title;
+    },
     keywords: ['Einrichtung', 'Assistent', 'Checkliste', 'erneut starten'],
     render: () => (
       <SettingsGroup id="setup" title={t.setup.title} bare>
@@ -409,16 +855,53 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'about',
     category: 'ueber',
     order: 10,
-    title: t.about.title,
+    get title() {
+      return t.about.title;
+    },
     keywords: ['Version', 'Build', 'Commit', 'Plattform', 'Installation', 'Datenordner', 'Lizenz'],
     fields: [
-      { key: 'version', label: t.about.version },
-      { key: 'build', label: t.about.build },
-      { key: 'channel', label: t.about.channel },
-      { key: 'platform', label: t.about.platform },
-      { key: 'install', label: t.about.install },
-      { key: 'dataDir', label: t.about.dataDir },
-      { key: 'license', label: t.about.license },
+      {
+        key: 'version',
+        get label() {
+          return t.about.version;
+        },
+      },
+      {
+        key: 'build',
+        get label() {
+          return t.about.build;
+        },
+      },
+      {
+        key: 'channel',
+        get label() {
+          return t.about.channel;
+        },
+      },
+      {
+        key: 'platform',
+        get label() {
+          return t.about.platform;
+        },
+      },
+      {
+        key: 'install',
+        get label() {
+          return t.about.install;
+        },
+      },
+      {
+        key: 'dataDir',
+        get label() {
+          return t.about.dataDir;
+        },
+      },
+      {
+        key: 'license',
+        get label() {
+          return t.about.license;
+        },
+      },
     ],
     render: () => <AboutSection />,
   },
@@ -426,15 +909,28 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'supporter',
     category: 'ueber',
     order: 35,
-    title: t.supporter.section.title,
-    keywords: t.supporter.section.keywords,
+    get title() {
+      return t.supporter.section.title;
+    },
+    get keywords() {
+      return t.supporter.section.keywords;
+    },
     fields: [
       {
         key: 'code',
-        label: t.supporter.section.codeLabel,
-        description: t.supporter.section.codeHint,
+        get label() {
+          return t.supporter.section.codeLabel;
+        },
+        get description() {
+          return t.supporter.section.codeHint;
+        },
       },
-      { key: 'badge', label: t.supporter.section.sidebarBadge },
+      {
+        key: 'badge',
+        get label() {
+          return t.supporter.section.sidebarBadge;
+        },
+      },
     ],
     render: () => <SupporterSection />,
   },
@@ -442,16 +938,27 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'about-updates',
     category: 'ueber',
     order: 20,
-    title: t.about.updates.title,
+    get title() {
+      return t.about.updates.title;
+    },
     keywords: ['Changelog', 'Änderungen', 'Neuerungen', 'Release Notes'],
-    fields: [{ key: 'check', label: t.about.updates.lastCheck }],
+    fields: [
+      {
+        key: 'check',
+        get label() {
+          return t.about.updates.lastCheck;
+        },
+      },
+    ],
     render: () => <AboutUpdatesSection />,
   },
   {
     id: 'links',
     category: 'ueber',
     order: 40,
-    title: t.about.links.title,
+    get title() {
+      return t.about.links.title;
+    },
     keywords: ['GitHub', 'Quellcode', 'Downloads', 'Hilfe', 'Dokumentation', 'Fehler melden'],
     render: () => <LinksSection />,
   },
@@ -459,7 +966,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'licenses',
     category: 'ueber',
     order: 50,
-    title: t.about.licenses,
+    get title() {
+      return t.about.licenses;
+    },
     keywords: ['Bibliotheken', 'Schrift', 'Icons', 'Open Source'],
     render: () => <LicensesSection />,
   },
@@ -467,8 +976,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'diagnostics',
     category: 'ueber',
     order: 60,
-    title: t.about.diagnostics.title,
-    description: t.about.diagnostics.description,
+    get title() {
+      return t.about.diagnostics.title;
+    },
+    get description() {
+      return t.about.diagnostics.description;
+    },
     keywords: ['Fehlerprotokoll', 'Export', 'Support'],
     render: () => <DiagnosticsSection />,
   },
@@ -476,8 +989,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     id: 'device-reset',
     category: 'ueber',
     order: 70,
-    title: t.about.reset.title,
-    description: t.about.reset.description,
+    get title() {
+      return t.about.reset.title;
+    },
+    get description() {
+      return t.about.reset.description;
+    },
     keywords: ['Löschen', 'Zurücksetzen', 'Gefahrenzone', 'Alle Daten'],
     render: () => <DeviceResetSection />,
   },

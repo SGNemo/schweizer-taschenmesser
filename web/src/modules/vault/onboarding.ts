@@ -8,8 +8,12 @@ export const onboarding: OnboardingDef = {
       kind: 'connector',
       connectorId: 'google',
       connectorFeature: 'mail',
-      label: t.onboarding.mail.contracts,
-      description: t.onboarding.mail.hint,
+      get label() {
+        return t.onboarding.mail.contracts;
+      },
+      get description() {
+        return t.onboarding.mail.hint;
+      },
     },
   ],
   load: () => import('./importer'),

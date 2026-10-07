@@ -88,8 +88,20 @@ export function CategoryBars({ rows }: { rows: CategoryTotal[] }) {
 }
 
 const SERIES = [
-  { key: 'income', name: t.finance.income, color: 'var(--viz-1)' },
-  { key: 'expense', name: t.finance.expense, color: 'var(--viz-2)' },
+  {
+    key: 'income',
+    get name() {
+      return t.finance.income;
+    },
+    color: 'var(--viz-1)',
+  },
+  {
+    key: 'expense',
+    get name() {
+      return t.finance.expense;
+    },
+    color: 'var(--viz-2)',
+  },
 ] as const;
 
 function TrendTooltip({ active, payload }: TooltipContentProps) {

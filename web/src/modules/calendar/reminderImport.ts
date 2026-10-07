@@ -44,49 +44,65 @@ const yearly = (monthOfYear: number): Recurrence => ({ freq: 'yearly', interval:
 
 const TEMPLATES: Record<string, Template> = {
   rent: {
-    title: t.onboarding.reminders.rent[0],
+    get title() {
+      return t.onboarding.reminders.rent[0];
+    },
     time: '08:00',
     recurrence: monthly(),
     start: (today) => nextDayOfMonth(today, 1),
   },
   statements: {
-    title: t.onboarding.reminders.statements[0],
+    get title() {
+      return t.onboarding.reminders.statements[0];
+    },
     time: '09:00',
     recurrence: monthly(),
     start: (today) => nextDayOfMonth(today, 1),
   },
   trash: {
-    title: t.onboarding.reminders.trash[0],
+    get title() {
+      return t.onboarding.reminders.trash[0];
+    },
     time: '19:00',
     recurrence: { freq: 'weekly', interval: 1, byWeekday: [7] },
     start: (today) => nextWeekday(today, 7),
   },
   insurance: {
-    title: t.onboarding.reminders.insurance[0],
+    get title() {
+      return t.onboarding.reminders.insurance[0];
+    },
     time: '09:00',
     recurrence: yearly(11),
     start: (today) => nextDayOfMonth(today, 1, 11),
   },
   energy: {
-    title: t.onboarding.reminders.energy[0],
+    get title() {
+      return t.onboarding.reminders.energy[0];
+    },
     time: '09:00',
     recurrence: yearly(9),
     start: (today) => nextDayOfMonth(today, 1, 9),
   },
   tax: {
-    title: t.onboarding.reminders.tax[0],
+    get title() {
+      return t.onboarding.reminders.tax[0];
+    },
     time: '09:00',
     recurrence: yearly(6),
     start: (today) => nextDayOfMonth(today, 1, 6),
   },
   dentist: {
-    title: t.onboarding.reminders.dentist[0],
+    get title() {
+      return t.onboarding.reminders.dentist[0];
+    },
     time: '09:00',
     recurrence: { freq: 'monthly', interval: 6, byMonthDay: 1 },
     start: (today) => nextDayOfMonth(today, 1),
   },
   smoke: {
-    title: t.onboarding.reminders.smoke[0],
+    get title() {
+      return t.onboarding.reminders.smoke[0];
+    },
     time: '10:00',
     recurrence: yearly(1),
     start: (today) => nextDayOfMonth(today, 1, 1),

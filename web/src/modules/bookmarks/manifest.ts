@@ -8,14 +8,20 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'bookmarks',
-  name: t.bookmarks.meta.name,
+  get name() {
+    return t.bookmarks.meta.name;
+  },
   icon: 'bookmark',
   version: 1,
-  description: t.bookmarks.meta.description,
+  get description() {
+    return t.bookmarks.meta.description;
+  },
   routes: [
     {
       path: '/bookmarks',
-      label: t.bookmarks.meta.route,
+      get label() {
+        return t.bookmarks.meta.route;
+      },
       nav: true,
       component: () => import('./routes/BookmarksPage'),
     },
@@ -29,14 +35,18 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'recent',
-      title: t.bookmarks.meta.widget,
+      get title() {
+        return t.bookmarks.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/RecentWidget'),
     },
     {
       id: 'links',
-      title: t.bookmarks.meta.widgetLinks,
+      get title() {
+        return t.bookmarks.meta.widgetLinks;
+      },
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/LinksWidget'),
@@ -51,7 +61,15 @@ const manifest: ModuleManifest = {
   area: 'knowledge',
   contributions: {
     onboarding: onboarding,
-    quickAdd: [{ id: 'item', label: t.bookmarks.meta.quickAdd, to: '/bookmarks?new=1' }],
+    quickAdd: [
+      {
+        id: 'item',
+        get label() {
+          return t.bookmarks.meta.quickAdd;
+        },
+        to: '/bookmarks?new=1',
+      },
+    ],
     services: () => import('./services'),
   },
 };

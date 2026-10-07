@@ -3,9 +3,13 @@ import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
   id: 'timezones',
-  name: t.tools.timezones.name,
+  get name() {
+    return t.tools.timezones.name;
+  },
   icon: 'globe',
-  description: t.tools.timezones.description,
+  get description() {
+    return t.tools.timezones.description;
+  },
   group: 'extra',
   offline: true,
   defaultEnabled: false,

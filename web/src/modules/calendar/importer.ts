@@ -27,11 +27,21 @@ function detail(e: IcsEvent): string {
 }
 
 const ISSUE_TEXT: Record<IcsIssueCode, (n: number) => string> = {
-  exdate: t.onboarding.ics.exdate,
-  'rrule-unsupported': t.onboarding.ics.rruleUnsupported,
-  override: t.onboarding.ics.override,
-  cancelled: t.onboarding.ics.cancelled,
-  invalid: t.onboarding.ics.invalid,
+  get exdate() {
+    return t.onboarding.ics.exdate;
+  },
+  get 'rrule-unsupported'() {
+    return t.onboarding.ics.rruleUnsupported;
+  },
+  get override() {
+    return t.onboarding.ics.override;
+  },
+  get cancelled() {
+    return t.onboarding.ics.cancelled;
+  },
+  get invalid() {
+    return t.onboarding.ics.invalid;
+  },
 };
 
 function fromMail(input: ImportInput): ImportParseResult {
