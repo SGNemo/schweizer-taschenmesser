@@ -45,19 +45,18 @@ describe('hlc', () => {
     expect(compareHlc(c.tick(), remote)).toBe(1);
   });
 
-  it('ignores a remote stamp that is further ahead than the drift bound', () => {
+  it('detects stamps beyond the drift bound, while the clock still beats stored ones', () => {
     const t = 1_000_000_000_000;
     setNow(() => t);
-    const c = createClock('me');
     const farFuture = formatHlc(t + MAX_HLC_DRIFT_MS + 1, 0, 'other');
-    c.receive(farFuture);
-    expect(compareHlc(c.tick(), farFuture)).toBe(-1); // not adopted: local time still rules
     const withinBound = formatHlc(t + MAX_HLC_DRIFT_MS, 0, 'other');
-    c.receive(withinBound);
-    expect(compareHlc(c.tick(), withinBound)).toBe(1);
     expect(isHlcTooFarAhead(farFuture, t)).toBe(true);
     expect(isHlcTooFarAhead(withinBound, t)).toBe(false);
     expect(isHlcTooFarAhead('garbage', t)).toBe(false);
+    // A stamp that is already in the local database (restore, repair) must stay beatable.
+    const c = createClock('me');
+    c.receive(farFuture);
+    expect(compareHlc(c.tick(), farFuture)).toBe(1);
   });
 
   it('uses the device id as deterministic tie-break', () => {

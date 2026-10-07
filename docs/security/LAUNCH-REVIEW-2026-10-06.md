@@ -186,7 +186,24 @@ Verified OK: PKCE S256, 24-byte state, one-shot loopback listener, constant resp
 | "Releases are built in CI from tags" | `SECURITY.md:15` | also manual dispatch on `main` | partial | **D5** "from tags or a manual run on main" |
 | Dev-Preview "own app with own data" | README, site | own identifier and data | yes (same keys: P2) | – |
 
-## Plan for phase 2 (needs approval)
+## Status after phase 2 (this branch)
+
+| Finding | Status |
+|---|---|
+| X1, X3, X5, X6, X7, X8 | Fixed (`ipc.rs` SQOS flag; shared rate bucket for `secret`/`compare`/`create`/`update`, one session per extension, untrusted submits ignored; opaque origins; lint; OTP ignore). X1 needs the Windows hand test. |
+| X2, X4, X9 | Open: X2 and X4 need a larger change (documented in VAULT-EXTENSION.md), X9 documented. |
+| N1–N8, N10 | Fixed (encryption preselected, passphrase ≥ 12, drift bound client + server with the `clock` error, Zod-validated responses, push endpoint block list, proxy deadline, docs, backup mode 0600). N9, N11, N12 open (docs/server ops). |
+| V1, V3, V6, V7, V8, V11 | Fixed. V2 (Hello wrapping), V4 (Android clipboard flag), V5 (backup row validation), V9, V10 open. |
+| T1, T3, T4 | Fixed. T2 (Android manifest assertion) still needs the CI step on a real `tauri android init` run; T5–T8 open. |
+| L1, L2 | Fixed. L3–L7 info only. |
+| A1, A2, A3, A4, A6 | Fixed. A5 (re-hash model at load) open. |
+| W1, W2, W3, W5 | Fixed. W4, W6–W8 info only. |
+| P1, P3, P4 (partly), P6 | Fixed: all Actions SHA-pinned (`scripts/lib/actionsPinned.test.ts`), signed previews only from `develop`, dry runs unsigned, `cargo --locked` for desktop builds, gitleaks built per run. `choco install vulkan-sdk` stays unpinned (version list not reachable from here). |
+| P2 | Wired: `dev-preview.yml` signs with `TAURI_DEV_SIGNING_PRIVATE_KEY` and verifies against `tauri.dev.conf.json`; the maintainer creates the pair (`keys.mjs updater --dev`) and sets pubkey + secrets, otherwise the dev-preview job stops with a clear error. |
+| P5, P7–P13 | Open / info. P13 (site deploy hook `if`) to be checked in a run log. |
+| D1–D5 | Fixed in README, `docs/user/sicherheit.md`, website privacy pages, SECURITY.md. The controller name on the website is still the placeholder. |
+
+## Plan for phase 2 (approved 2026-10-07)
 
 **A. Small fixes with a test each (proposed, one commit per area):**
 extension/bridge X1, X3, X5, X6, X7, X8 · sync N1, N3, N4, N5, N6 (+ N7 docs) · N2 drift bound (client + server, additive) · vault/crypto V1, V3, V6, V7, V8 · tauri T1 (+ config test), T3, T4 · AI/connectors A2, A3, A4, A6 (A1 if the router test stays small) · webhook W1, W2, W3 · local API L1, L2 · pipeline P3, P4, P6 · docs D1–D5, N8, L4, X9.

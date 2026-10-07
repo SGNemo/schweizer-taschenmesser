@@ -13,9 +13,11 @@ export interface ParsedHlc {
 
 const MAX_COUNTER = 9999;
 /**
- * Stamps further than this ahead of the local clock are ignored (clock skew tolerance). Without a
- * bound, one far-future stamp from any device or the server would be adopted by every device for
- * good and its field could never be overwritten again.
+ * Stamps further than this ahead of the local clock are refused at the sync boundary (pull in
+ * `core/sync/engine.ts`, push on the server). Without a bound, one far-future stamp from any device
+ * or the server would be adopted by every device for good and its field could never be overwritten
+ * again. The clock itself still adopts anything already stored locally, so a restore or a repair
+ * can always beat a stamp that slipped in earlier.
  */
 export const MAX_HLC_DRIFT_MS = 60 * 60 * 1000;
 
@@ -73,8 +75,6 @@ export function createClock(deviceId: string): HlcClock {
     },
     receive(remote) {
       const p = parseHlc(remote);
-      // A stamp far ahead of the local clock is skew or a hostile value: never adopt it.
-      if (p.wall > now() + MAX_HLC_DRIFT_MS) return;
       // Only move forward; the next tick() then sorts strictly after `remote`.
       if (p.wall > wall || (p.wall === wall && p.counter > counter)) {
         wall = p.wall;
