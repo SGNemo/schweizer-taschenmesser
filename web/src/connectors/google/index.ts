@@ -22,8 +22,9 @@ const connector: ConnectorDef = {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     revokeUrl: 'https://oauth2.googleapis.com/revoke',
-    // offline + consent: Google only returns a refresh token on an explicit consent screen.
-    authParams: { access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true' },
+    // offline + consent: Google only returns a refresh token on an explicit consent screen. No
+    // `include_granted_scopes`: the token carries exactly the scopes of the chosen features.
+    authParams: { access_type: 'offline', prompt: 'consent' },
   },
   features: [
     {

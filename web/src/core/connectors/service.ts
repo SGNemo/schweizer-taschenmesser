@@ -145,8 +145,12 @@ export async function connectOAuth(
       { code, verifier, redirectUri },
     );
     if (!tokens.refreshToken) throw new ConnectorError('bad-response', 'no refresh token');
-    // Tokens are stored only for a login that was carried through to the end.
-    if (signal?.aborted) return await loadStatus(def.id);
+    // Tokens are stored only for a login that was carried through to the end. A token that was
+    // issued meanwhile must not stay valid at the provider: revoke it (best effort, errors ignored).
+    if (signal?.aborted) {
+      await revokeToken(platform.fetch, def.oauth, tokens.refreshToken).catch(() => undefined);
+      return await loadStatus(def.id);
+    }
     await platform.secrets.set(secretName(def.id, 'refresh'), tokens.refreshToken);
     forgetAccessToken(def.id);
     return await saveStatus(def.id, {

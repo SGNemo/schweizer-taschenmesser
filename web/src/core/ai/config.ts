@@ -14,9 +14,45 @@ import { createOpenAiCompatibleProvider } from './providers/openai';
 import { getPreset, PRESETS, TIER_RANK, type PresetId, type Preset } from './providers/presets';
 import type { AiProvider } from './providers/types';
 import { createRouter, type RouterMember } from './router';
+import { t } from '@/strings';
 
 const CONFIG_KEY = 'aiConfig';
 export const keyName = (providerId: string) => `ai-key:${providerId}`;
+
+/** Loopback, RFC 1918 and ULA hosts: plain http stays on the machine or in the LAN. */
+export function isLocalHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.localhost')) return true;
+  const v4 = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(host);
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])];
+    return a === 127 || a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+  }
+  if (host === '::1') return true;
+  return /^f[cd][0-9a-f]{2}:/.test(host); // fc00::/7 unique local
+}
+
+/**
+ * The API key travels as a bearer header, so a provider address must be https – except for a
+ * server on this machine or in the local network (Ollama, LM Studio …). Empty = not set.
+ */
+export const baseUrlSchema = z
+  .string()
+  .default('')
+  .refine(
+    (value) => {
+      const text = value.trim();
+      if (!text) return true;
+      let url: URL;
+      try {
+        url = new URL(text);
+      } catch {
+        return false;
+      }
+      return url.protocol === 'https:' || (url.protocol === 'http:' && isLocalHost(url.hostname));
+    },
+    { message: t.ai.settings.baseUrlInsecure },
+  );
 
 export const providerEntrySchema = z.object({
   id: z.string().min(1),
@@ -33,7 +69,7 @@ export const providerEntrySchema = z.object({
   kind: z.enum(['anthropic', 'ollama', 'openai-compatible']),
   label: z.string().default(''),
   enabled: z.boolean().default(true),
-  baseUrl: z.string().default(''),
+  baseUrl: baseUrlSchema,
   model: z.string().default(''),
   toolMode: z.enum(['native', 'json']).default('native'),
   maxTokensParam: z.enum(['max_tokens', 'max_completion_tokens']).default('max_tokens'),
@@ -57,6 +93,25 @@ export const aiConfigSchema = z.object({
   providers: z.array(providerEntrySchema).default([]),
 });
 export type AiConfig = z.output<typeof aiConfigSchema>;
+
+/**
+ * A stored config whose only fault is an address that no longer passes `baseUrlSchema` (saved
+ * before the https rule existed) must not be thrown away: the entry is switched off and its
+ * address cleared, everything else stays. Returns undefined when the row is not a v2 config.
+ */
+function salvageConfig(value: unknown): AiConfig | undefined {
+  const lenient = aiConfigSchema.extend({
+    providers: z.array(providerEntrySchema.extend({ baseUrl: z.string().default('') })).default([]),
+  });
+  const parsed = lenient.safeParse(value);
+  if (!parsed.success) return undefined;
+  return {
+    ...parsed.data,
+    providers: parsed.data.providers.map((p) =>
+      baseUrlSchema.safeParse(p.baseUrl).success ? p : { ...p, baseUrl: '', enabled: false },
+    ),
+  };
+}
 
 export const defaultAiConfig = (): AiConfig => aiConfigSchema.parse({});
 
@@ -158,7 +213,11 @@ export async function loadAiConfig(
   const row = await rowsOf(database).get(CONFIG_KEY);
   if (!row) return defaultAiConfig();
   const parsed = aiConfigSchema.safeParse(row.value);
-  if (parsed.success && typeof (row.value as { v?: unknown })?.v === 'number') return parsed.data;
+  if (typeof (row.value as { v?: unknown })?.v === 'number') {
+    if (parsed.success) return parsed.data;
+    const salvaged = salvageConfig(row.value);
+    if (salvaged) return salvaged;
+  }
   return migrateLegacy(row.value, database, secrets);
 }
 
