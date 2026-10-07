@@ -3,9 +3,8 @@ import { afterAll, describe, it } from 'vitest';
 import tseslint from 'typescript-eslint';
 import plugin from '../../eslint-rules/i18n.js';
 
-RuleTester.afterAll = afterAll;
-RuleTester.describe = describe;
-RuleTester.it = it;
+// RuleTester runs its cases through these hooks (typed only partly in @types/eslint).
+Object.assign(RuleTester, { afterAll, describe, it });
 
 const tester = new RuleTester({
   languageOptions: {

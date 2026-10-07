@@ -45,10 +45,12 @@ export function looksGerman(s: string): boolean {
 function isIgnoredContext(n: ts.Node): boolean {
   const p = n.parent;
   if (!p) return false;
-  if (ts.isImportDeclaration(p) || ts.isExportDeclaration(p) || ts.isExternalModuleReference(p)) return true;
+  if (ts.isImportDeclaration(p) || ts.isExportDeclaration(p) || ts.isExternalModuleReference(p))
+    return true;
   if (ts.isLiteralTypeNode(p)) return true;
   if (ts.isPropertyAssignment(p) && p.name === n) return true;
-  if (ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && DATA_KEYS.has(p.name.text)) return true;
+  if (ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && DATA_KEYS.has(p.name.text))
+    return true;
   if (ts.isJsxAttribute(p) && DATA_KEYS.has(p.name.getText())) return true;
   if (ts.isElementAccessExpression(p) && p.argumentExpression === n) return true;
   // console.* and thrown developer errors are logs, not UI.
@@ -66,7 +68,8 @@ export function findLiterals(fileName: string, source: string): Literal[] {
     out.push({ line: line + 1, text: text.trim().slice(0, 80) });
   };
   const visit = (n: ts.Node) => {
-    if ((ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) && !isIgnoredContext(n)) add(n, n.text);
+    if ((ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) && !isIgnoredContext(n))
+      add(n, n.text);
     else if (ts.isTemplateExpression(n) && !isIgnoredContext(n)) {
       add(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join(' '));
       n.templateSpans.forEach((s) => visit(s.expression));

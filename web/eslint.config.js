@@ -44,6 +44,11 @@ export default tseslint.config(
     rules: { 'i18n/no-ui-literal': 'error' },
   },
   {
+    // French typography puts (narrow) no-break spaces before : ; ! ? and inside « » on purpose.
+    files: ['src/i18n/locales/**/*.ts'],
+    rules: { 'no-irregular-whitespace': ['error', { skipStrings: true, skipTemplates: true }] },
+  },
+  {
     files: ['scripts/**/*.mjs', 'eslint-rules/*.js', '*.config.{js,ts}'],
     languageOptions: { globals: { ...globals.node } },
   },
