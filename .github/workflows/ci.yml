@@ -133,6 +133,8 @@ jobs:
         run: npm run version:check
       - name: Every module has a complete manifest and a home-screen widget
         run: npm run check:modules
+      - name: UI texts complete in every language, none hard-coded or read at import
+        run: npm run check:i18n
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck

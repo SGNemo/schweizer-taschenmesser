@@ -6,6 +6,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | File | Covers |
 |---|---|
 | [howto/new-module.md](howto/new-module.md) | `npm run gen:module`, mandatory widget, platform-only (desktop) modules |
+| [howto/i18n.md](howto/i18n.md) | UI languages: add texts ("Neue Texte hinzufügen"), add a language ("Neue Sprache hinzufügen"), `check:i18n`, formats |
 | [howto/merge-retire-module.md](howto/merge-retire-module.md) | merge modules: app migration step, retire the source, redirects |
 | [howto/seed-data.md](howto/seed-data.md) | seed data per module, Dev-Preview test data, seeds in E2E and screenshots |
 | [howto/new-setting.md](howto/new-setting.md) | settings registry: add a module setting or a section, categories, deep links |

@@ -16,6 +16,7 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [CHATS.md](CHATS.md) | running work, hotspots, hand-over rules | first and last step of every chat |
 | [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md) | reusable prompt blocks | writing a prompt |
 | [meta/](meta/) | docs guide, audit reports | changing docs |
+| [i18n/](i18n/README.md) | app languages: status of the translations, glossary, how to help | changing UI text |
 | [legal/](legal/) | checklists for the maintainer (not legal advice), e.g. supporter mode | donations, privacy notices |
 | [security/](security/), [perf/](perf/), [features/](features/) | reports and feature notes (each has an index) | that topic |
 | [archive/](archive/) | historical reports (hidden from scans) | history only |

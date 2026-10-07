@@ -10,7 +10,7 @@ Thanks for helping with Nemo. This is the short version of the rules; the long o
 ## Conventions
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat(scope):`, `fix:`, `docs:`); release notes are generated from them.
 - **Language:** code, comments, commits and docs in English. User docs and the README also have a German translation (`*.de.md`, `README.de.md`); change both together, `npm run check:readme` (in `web/`) compares them.
-- **UI texts:** never hard-code them in components; they live in `web/src/strings.ts` today.
+- **UI texts:** never hard-code them in components. German source in `web/src/strings.ts`, translations in `web/src/i18n/locales/<lang>/` (English, Spanish, French, Brazilian Portuguese) with the terms of [docs/i18n/GLOSSARY.md](docs/i18n/GLOSSARY.md); `npm run check:i18n` (in `web/`) checks them. Recipe: [docs/howto/i18n.md](docs/howto/i18n.md). Translation fixes are welcome, see [docs/i18n/README.md](docs/i18n/README.md).
 - **Design:** tokens and shared components only (`web/src/ui`), see [`docs/howto/design-rules.md`](docs/howto/design-rules.md). No hex colours or one-off radii in module CSS.
 - **Never change** internal identifiers (bundle id, package names, storage keys, backup format ids), weaken the release security steps, or commit secrets. `web/src/brand-ids.test.ts` pins the identifiers.
 - **New module or tool:** `docs/HOW-TO.md` has step-by-step recipes; `npm run gen:module -- <id> "<Name>"` scaffolds a module.
