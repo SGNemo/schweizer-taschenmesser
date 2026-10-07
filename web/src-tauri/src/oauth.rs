@@ -262,8 +262,11 @@ mod tests {
         let mut sink = String::new();
         let _ = stray.read_to_string(&mut sink);
         let mut real = TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap();
-        real.write_all(b"GET /callback?code=abc&state=st9 HTTP/1.1\r\n\r\n")
-            .unwrap();
+        // The page follows the browser's language (`texts.rs`); this browser asks for German.
+        real.write_all(
+            b"GET /callback?code=abc&state=st9 HTTP/1.1\r\nAccept-Language: de-DE,de;q=0.9\r\n\r\n",
+        )
+        .unwrap();
         let mut page = String::new();
         let _ = real.read_to_string(&mut page);
         assert!(page.contains("200 OK") && page.contains("Anmeldung ist abgeschlossen"));
