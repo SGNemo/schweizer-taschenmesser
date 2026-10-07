@@ -16,4 +16,5 @@ Index. Each area file holds one bullet per decision (**what** – why, with date
 | Focus and attention aids | [decisions/focus.md](decisions/focus.md) | one switch per aid, calm wording, notification centre instead of banners, doc budgets |
 | Readability | [decisions/readability.md](decisions/readability.md) | reading aid off by default, colour only with meaning, grouped lists, "Ruhig" mode |
 | Supporter mode | [decisions/supporter.md](decisions/supporter.md) | cosmetic only, Ed25519 codes verified offline, status derived from the code, Cloudflare Worker issuer |
+| Languages | [decisions/language.md](decisions/language.md) | English docs source with German `*.de.md` copies, brand claim per language |
 | Website | [decisions/website.md](decisions/website.md) | static `site/` (Astro), Cloudflare Pages from the repo, no tracking, release data at build time, tokens pinned to the app |

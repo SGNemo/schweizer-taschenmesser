@@ -1,3 +1,5 @@
+[English](browser-extension.md) | **Deutsch**
+
 # Browser-Erweiterung (Brave)
 
 Die Erweiterung hilft dir beim Anlegen und Anmelden auf Websites. Sie hat **keinen eigenen Tresor**: Alles kommt live aus dem Tresor der Nemo-Desktop-App und wird dort gespeichert (und von dort per Sync aufs Handy gebracht). Ist Nemo nicht gestartet oder der Tresor gesperrt, zeigt sie das an und tut nichts.
