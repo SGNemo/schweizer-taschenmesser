@@ -7,7 +7,6 @@ import { CaptureError, TARGETS, availableTypes, saveCapture } from './index';
 const ON = {
   todos: true,
   calendar: true,
-  reminders: true,
   bookmarks: true,
   notes: true,
   finance: true,
@@ -56,9 +55,11 @@ describe('saveCapture', () => {
 
   it('defaults a missing event/reminder date to today', async () => {
     await saveCapture('reminder', { title: 'Tabletten' }, { states: ON });
-    expect((await rows('reminders_reminder'))[0]).toMatchObject({
+    expect((await rows('calendar_event'))[0]).toMatchObject({
+      kind: 'reminder',
       startDate: '2026-09-30',
-      time: '09:00',
+      startTime: '09:00',
+      notify: { minutesBefore: 0, enabled: true },
     });
   });
 
@@ -72,7 +73,7 @@ describe('saveCapture', () => {
       },
       { states: ON },
     );
-    expect((await rows('reminders_reminder'))[0]!.recurrence).toMatchObject({
+    expect((await rows('calendar_event'))[0]!.recurrence).toMatchObject({
       freq: 'monthly',
       byMonthDay: 1,
     });
@@ -88,6 +89,16 @@ describe('saveCapture', () => {
     const items = await rows('bookmarks_item');
     expect(items.find((i) => i.title === 'Artikel')!.url).toBe('https://example.org/a');
     expect(items.find((i) => i.title === 'Skript')!.url).toBeUndefined();
+  });
+
+  it('writes an entry onto the shopping list of the lists module', async () => {
+    await saveCapture('list', { title: '2 Milch' }, { states: { ...ON, lists: true } });
+    const items = await rows('lists_item');
+    expect(items[0]).toMatchObject({ name: '2 Milch', done: false, listId: 'shopping-default' });
+    expect((await rows('lists_list'))[0]).toMatchObject({
+      id: 'shopping-default',
+      kind: 'shopping',
+    });
   });
 
   it('writes a note from shared text', async () => {
@@ -156,6 +167,7 @@ describe('targets', () => {
     expect(availableTypes({ todos: true, bookmarks: false, calendar: true })).toEqual([
       'todo',
       'event',
+      'reminder',
     ]);
     expect(availableTypes(undefined)).toEqual([]);
   });

@@ -5,7 +5,7 @@ import { useTools } from '@/core/tools/state';
 import type { ToolManifest } from '@/core/tools/types';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog, Icon } from '@/ui';
+import { Dialog, Icon, IconButton } from '@/ui';
 import styles from './ToolsSheet.module.css';
 
 /** Tool components are code-split and created once, outside of render. */
@@ -13,7 +13,10 @@ const lazyTools = new Map(allTools.map((tool) => [tool.id, lazy(tool.component)]
 
 /** The toolbar: a grid of tiles; a tile opens the tool in the same sheet. */
 export function ToolsSheet() {
-  const { toolsOpen, activeTool, openTools, closeTools } = useUiStore();
+  const toolsOpen = useUiStore((s) => s.toolsOpen);
+  const activeTool = useUiStore((s) => s.activeTool);
+  const openTools = useUiStore((s) => s.openTools);
+  const closeTools = useUiStore((s) => s.closeTools);
   const tools = useTools();
   const tool = useMemo(
     () => tools?.all.find((x) => x.id === activeTool && tools.active.includes(x)),
@@ -25,12 +28,18 @@ export function ToolsSheet() {
       open={toolsOpen}
       onClose={closeTools}
       title={tool ? tool.name : t.tools.title}
-      variant="sheet"
+      size="wide"
+      headerStart={
+        tool ? (
+          <IconButton label={t.tools.back} onClick={() => openTools(null)}>
+            <Icon name="chevronLeft" />
+          </IconButton>
+        ) : undefined
+      }
     >
       {toolsOpen ? (
         tool ? (
           <div className={styles.tool}>
-            <Button onClick={() => openTools(null)}>{t.tools.back}</Button>
             <Suspense fallback={<p role="status">…</p>}>
               <ToolBody tool={tool} />
             </Suspense>

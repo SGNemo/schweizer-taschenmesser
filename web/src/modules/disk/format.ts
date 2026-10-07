@@ -1,6 +1,8 @@
+import { formatNumber, numberFormat } from '@/core/i18n/format';
+
 const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 const nf = (digits: number) =>
-  new Intl.NumberFormat('de-DE', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+  numberFormat({ maximumFractionDigits: digits, minimumFractionDigits: 0 });
 
 /** Windows-style sizes: powers of 1024, labelled KB/MB/GB. */
 export function formatBytes(bytes: number): string {
@@ -14,7 +16,7 @@ export function formatBytes(bytes: number): string {
   return `${nf(i === 0 || v >= 100 ? 0 : 1).format(v)} ${units[i]}`;
 }
 
-export const formatCount = (n: number): string => new Intl.NumberFormat('de-DE').format(n);
+export const formatCount = (n: number): string => formatNumber(n);
 
 /** Whole percent 0–100 (clamped); 0 when `total` is 0. */
 export function percent(part: number, total: number): number {
@@ -32,4 +34,14 @@ export function formatDuration(ms: number): string {
   if (s < 1) return '< 1 s';
   if (s < 60) return `${s} s`;
   return `${Math.floor(s / 60)} min ${s % 60} s`;
+}
+
+/** 273420 → "3 Tage 4 Std." (whole units, the two biggest that are not zero). */
+export function formatUptime(secs: number): { days: number; hours: number; minutes: number } {
+  const s = Math.max(0, Math.floor(secs));
+  return {
+    days: Math.floor(s / 86_400),
+    hours: Math.floor((s % 86_400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+  };
 }

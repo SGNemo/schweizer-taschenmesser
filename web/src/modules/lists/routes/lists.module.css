@@ -1,0 +1,39 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+  margin: var(--space-4) 0;
+}
+.add {
+  display: flex;
+  flex: 1 1 18rem;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+.add > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.progress {
+  margin-bottom: var(--space-4);
+}
+.quantity {
+  color: var(--text-3);
+  font-variant-numeric: var(--font-num);
+}
+
+.templates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

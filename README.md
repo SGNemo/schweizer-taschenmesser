@@ -1,103 +1,113 @@
+<p align="center"><strong>English</strong> | <a href="README.de.md">Deutsch</a></p>
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/header.png">
-    <img src="docs/brand/header-light.png" alt="Nemo: der Schriftzug Nemo als Clownfisch mit Kopf, weißen Streifen und Schwanzflosse, darunter „Notizen · Erinnerungen · Module · Offline“" width="640">
+    <img src="docs/brand/header-light.png" alt="Nemo logo: the word Nemo drawn as a clownfish with head, white stripes and tail fin, below it Notes · Events · Modules · Offline" width="640">
   </picture>
 </p>
 
 <h1 align="center">Nemo</h1>
 
-<p align="center">Kalender, ToDos, Finanzen, Passwörter und mehr in einer App. Deine Daten bleiben auf deinem Gerät.</p>
+<p align="center">Calendar, to-dos, finances, passwords and more in one app. Your data stays on your device.</p>
 
 <p align="center">
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases"><img src="https://img.shields.io/github/v/release/SGNemo/schweizer-taschenmesser?label=Version" alt="Neueste stabile Version"></a>
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml"><img src="https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI-Status des develop-Branches"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/Lizenz-MIT-3b82f6" alt="Lizenz: MIT"></a>
-  <img src="https://img.shields.io/badge/Plattformen-Windows%20%C2%B7%20Android%20%C2%B7%20PWA-555" alt="Plattformen: Windows, Android und PWA">
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases"><img src="https://img.shields.io/github/v/release/SGNemo/schweizer-taschenmesser?label=release" alt="Latest stable release"></a>
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml"><img src="https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI status of the develop branch"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3b82f6" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/platforms-Windows%20%C2%B7%20Android%20%C2%B7%20PWA-555" alt="Platforms: Windows, Android and PWA">
 </p>
 
 <p align="center">
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser-Portable.exe"><img src="https://img.shields.io/badge/Windows-portabel_herunterladen-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows: portable Version herunterladen"></a>
-  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Taschenmesser.apk"><img src="https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: APK herunterladen"></a>
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo-Portable.exe"><img src="https://img.shields.io/badge/Windows-download_portable-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows: download the portable version"></a>
+  <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk"><img src="https://img.shields.io/badge/Android-download_APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: download the APK"></a>
 </p>
 
-<p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Die Dateien heißen vorerst noch <code>Taschenmesser-…</code> (alter Projektname), der Inhalt ist Nemo. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>.</p>
+<p align="center">The buttons download the latest <strong>stable</strong> version. Pre-releases (beta) and all changes: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>. The app interface is German today; more languages are on the way.</p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readme/dashboard-dark.png">
-    <img src="docs/screenshots/readme/dashboard-light.png" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten: Seitenleiste mit Modulen, Karten für heutige Termine und Erinnerungen, offene Aufgaben, Kontostand und fällige Rechnungen" width="900">
+    <img src="docs/screenshots/readme/dashboard-light.png" alt="Nemo overview on the desktop with made-up sample data: sidebar with favourites and areas, the strip Important now, one suggested task to start with, and the short plan for today" width="900">
   </picture>
 </p>
 
-## Was kann Nemo?
+## What Nemo does
 
-Module schaltest du in der **Modul-Bibliothek** einzeln ein. Alles funktioniert offline.
+You turn modules on one by one in the **module library**. Everything works offline.
 
-| Bereich | Module |
+| Area | Modules |
 |---|---|
-| Planen | **Kalender** (Monat, Woche, Tag, Termine anderer Module), **ToDos** (Listen, Prioritäten, Unteraufgaben), **Erinnerungen** (auch bei geschlossener App), **Geburtstage**, **Habit-Tracker** |
-| Geld | **Finanzen** (Konten, Buchungen, Kategorien, Kontoauszug-Import), **Rechnungen**, **Abos**, **Budgets & Sparziele**, **Verträge & Garantien** (Kündigungsfristen) |
-| Merken | **Notizen**, **Merkliste** (Links, Lesen, Ansehen, Orte), **Einkaufsliste**, **Packlisten**, **Dokumente** (Ablaufdaten) |
-| Sicher | **Accounts**: Passwort-Tresor mit Argon2id/AES-256, TOTP, Generator, Biometrie. Für KI, Suche und Import unsichtbar |
-| Haushalt & PC | **Vorräte** (Ablaufdaten, Nachkaufen), **Geschenke**, **Zeiterfassung** (Timer, Stundenzettel), **Datenträger** und **System** (nur Windows-App: Platz analysieren, sicher aufräumen, Systeminfo) |
-| Dazu | **Nachrichten** (RSS/Atom), **Apps & Links**, **Werkzeuge** (Rechner, Prozent, Währung, Timer, QR, Einheiten, JSON, Hash …), **Schnell erfassen** (Tastenkürzel, Tray, Teilen-Menü) |
+| Plan | **Calendar** (month, week, day, events from other modules, reminders even when the app is closed), **To-dos** (lists, priorities, subtasks, recurrence, "Someday"), **People** (birthdays and gifts) |
+| Money | **Finances** (accounts, transactions, categories, bank statement import), **Invoices**, **Subscriptions**, **Budgets & savings goals** |
+| Remember | **Notes**, **Saved** and **Bookmarks** (links, reading, watching, places), **Lists** (shopping, packing, checklists), **Documents** (IDs, contracts, warranties with deadlines) |
+| Secure | **Accounts**: password vault with Argon2id/AES-256, TOTP, generator, biometrics. Invisible to AI, search and import |
+| Home & PC | **Pantry** (expiry dates, restocking), **This PC** (Windows app only: analyse space, clean up safely, system info) |
+| Extras | **Tools** (calculator, percent, currency, timer, QR, units, JSON, hash …), **Quick capture** (shortcut, tray, share menu) |
 
-Dazu eine **Befehlspalette** (Strg+K) mit Suche über alle Module und einem **KI-Assistenten**, der einfache Fragen selbst beantwortet („Was steht heute an?“) und komplexere optional an einen Anbieter deiner Wahl gibt, ohne deine Daten zu senden. Details: [Module und Werkzeuge](docs/user/module.md), [Suche und KI](docs/user/ki-assistent.md).
+Plus a **command palette** (Ctrl+K) that searches all modules, and an **AI assistant** that answers simple questions itself ("What's on today?") and can pass harder ones to a provider of your choice, without sending your data. Details: [Modules and tools](docs/user/modules.md), [Search and AI](docs/user/ai-assistant.md).
 
-## Schnellstart
+## Quick start
 
-1. **Herunterladen:** Windows-Portable (eine Datei, keine Installation) oder Android-APK, Buttons oben.
-2. **Starten:** Unter Windows die Datei doppelklicken (beim ersten Mal SmartScreen: „Weitere Informationen“ → „Trotzdem ausführen“). Unter Android die APK öffnen und die Installation aus dieser Quelle erlauben.
-3. **Einrichten:** Der Einrichtungsassistent führt durch Module, Tresor, optionalen Sync und KI. Alles ist optional und später in den Einstellungen änderbar.
+1. **Download:** Windows portable (one file, no installation) or Android APK, buttons above.
+2. **Start:** on Windows, double-click the file (the first time SmartScreen asks: "More info" → "Run anyway"). On Android, open the APK and allow installing from this source.
+3. **Set up:** the setup assistant walks you through modules, vault, optional sync and AI. Everything is optional and can be changed later in the settings.
 
-Genauer, inklusive Umstieg von einer alten Version und PWA-Installation: [Installation](docs/user/installation.md).
+More detail, including moving from an old version and installing the PWA: [Installation](docs/user/installation.md).
 
-## Datenschutz in Kürze
+## Privacy in short
 
-- **Lokal gespeichert.** Daten liegen in der Datenbank deines Geräts, kein Konto, kein Nemo-Cloud-Dienst.
-- **Sync optional.** Nur über einen Server, den du selbst betreibst (Docker oder Node), auf Wunsch Ende-zu-Ende verschlüsselt.
-- **Nie Nutzerdaten an KI.** Der Assistent schickt nur deine Frage, das Datum und Feldnamen, niemals Einträge. Der Tresor ist für KI komplett unsichtbar.
-- **Signierte Updates.** Jede Aktualisierung wird vor dem Einspielen mit dem Schlüssel des Projekts geprüft. Details: [Sicherheit](docs/user/sicherheit.md).
+- **Stored locally.** Data lives in your device's database. No account, no Nemo cloud service.
+- **Sync is optional.** Only through a server you run yourself (Docker or Node), end-to-end encrypted if you want.
+- **Only what you set up leaves the device.** Update check (GitHub, can be switched off), AI provider, Google connection, calendar subscription, model download, currency rates: each with what is sent and when, in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
+- **Never your data to AI.** The assistant only sends your question, the date and field names, never entries. The only exceptions are ones you trigger yourself: attaching a module's data in the chat (with a preview) or granting an AI read access through the local import API. The vault is completely invisible to AI.
+- **Signed updates.** Every update is checked against the project's key before it is applied. Details: [Security](docs/user/security.md).
 
 <details>
-<summary><strong>Windows: Portable, SmartScreen, Daten, Updates</strong></summary>
+<summary><strong>Installation: Windows portable, Android, PWA</strong></summary>
 
-Die exe braucht keine Installation und keine Adminrechte. Voraussetzung ist Microsoft WebView2 (auf Windows 10/11 meist vorhanden). Daten liegen im Benutzerprofil unter `%LOCALAPPDATA%\io.github.sgnemo.taschenmesser`; ein leerer Ordner `data` neben der exe macht sie portabel (USB-Stick). Updates: Einstellungen → App-Updates, mit automatischer Sicherungskopie und Signaturprüfung. Vollständige Anleitung: [Installation](docs/user/installation.md#windows-eine-einzelne-datei-keine-installation).
+**Windows:** the exe needs no installation and no admin rights. It requires Microsoft WebView2 (usually present on Windows 10/11). Data lives in your user profile under `%LOCALAPPDATA%\io.github.sgnemo.taschenmesser`; an empty folder `data` next to the exe makes it portable (USB stick). Updates: Settings → App updates, with an automatic backup copy and signature check.
+
+**Android:** open the APK, allow "Install from this source" for your browser or file manager, install. The app downloads later updates itself and checks the checksum; Android only accepts APKs signed with the same key.
+
+**Dev preview:** after every change on `develop` an untested preview is built: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe">Windows</a> · <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk">Android</a>. It is a **separate app "Nemo Dev" with its own data** and does not replace the stable app.
+
+Full guide: [Installation](docs/user/installation.md).
 </details>
 
 <details>
-<summary><strong>Android: APK installieren und aktualisieren</strong></summary>
+<summary><strong>Sync and backup: your own server, Docker, Tailscale, push</strong></summary>
 
-APK öffnen, „Aus dieser Quelle zulassen“ für den Browser oder Dateimanager erlauben, installieren. Spätere Updates lädt die App selbst und prüft die Prüfsumme; Android akzeptiert nur APKs mit demselben Signaturschlüssel. Daten aus der PWA übernimmst du per Backup oder Sync. Anleitung: [Installation](docs/user/installation.md#installation-unter-android).
+A small Node server (Fastify + SQLite) with token login, as a Docker image that also serves the PWA, or directly via Node. On the go, Tailscale with HTTPS is easiest; optional Web Push delivers reminders while the app is closed. Backups work as encrypted files, automatically in the installed app. Guides: [Sync server](docs/user/sync.md), [Backup](docs/user/backup.md).
 </details>
 
 <details>
-<summary><strong>Sync-Server: Docker, Tailscale, Push</strong></summary>
+<summary><strong>AI providers: Claude, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama</strong></summary>
 
-Ein kleiner Node-Server (Fastify + SQLite) mit Token-Login, als Docker-Image mit ausgelieferter PWA oder direkt per Node. Von unterwegs am einfachsten über Tailscale mit HTTPS; optional Web-Push für Erinnerungen bei geschlossener App. Anleitung und Umgebungsvariablen: [Sync-Server](docs/user/sync-server.md).
-</details>
-
-<details>
-<summary><strong>KI-Anbieter: Claude, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama</strong></summary>
-
-Mehrere Anbieter werden der Reihe nach gefragt (lokal → kostenlos → bezahlt), mit Limits pro Anbieter und Kostenübersicht. API-Schlüssel bleiben verschlüsselt auf dem Gerät. Vorhandene Daten kann eine KI im Format der App liefern, du bestätigst eine Vorschau. Anleitung: [Suche und KI](docs/user/ki-assistent.md), [KI-Import](docs/AI-IMPORT.md).
+Several providers are asked in order (local → free → paid), with limits per provider and a cost overview. API keys stay encrypted on the device. An AI can deliver existing data in the app's format, and you confirm a preview. Guides: [Search and AI](docs/user/ai-assistant.md), [AI import](docs/AI-IMPORT.md).
 </details>
 
 <details>
 <summary><strong>FAQ</strong></summary>
 
-- **Warum warnt Windows beim ersten Start?** Die exe hat kein gekauftes Code-Signing-Zertifikat. Der Update-Inhalt ist trotzdem signiert und wird von der App geprüft.
-- **Wo ist die iOS-Version?** Es gibt keine. Auf dem iPhone lässt sich die PWA im Browser nutzen (ohne Push).
-- **Kann ich meine Daten exportieren?** Ja, Einstellungen → Backup erzeugt eine JSON-Datei mit allem außer Zugangsdaten; der Tresor hat einen eigenen verschlüsselten Export.
-- **Heißt das Projekt nicht „Schweizer Taschenmesser“?** Das war der alte Name. Technische Kennungen (Paketname, Dateipfade) behalten ihn, damit Updates und Daten erhalten bleiben.
-- **Ist Nemo kostenlos?** Ja, MIT-Lizenz. Kosten entstehen nur bei bezahlten KI-Anbietern, die du selbst einrichtest.
+- **Why does Windows warn me on first start?** The exe has no purchased code-signing certificate. The update payload is still signed and checked by the app.
+- **Is there an iOS version?** No. On the iPhone you can use the PWA in the browser (without push).
+- **Can I export my data?** Yes, Settings → Backup creates a file with everything except credentials; the vault has its own encrypted export.
+- **Isn't the project called "Schweizer Taschenmesser"?** That was the old name. Technical identifiers (package name, file paths) keep it so updates and data stay intact.
+- **Is Nemo free?** Yes, MIT licence. Costs only arise with paid AI providers you set up yourself.
+
+More: [FAQ](docs/user/faq.md).
 </details>
 
-## Weiterlesen
+## Support
 
-- [Dokumentation](docs/README.md) mit Nutzer- und Entwicklerdoku
-- [Roadmap](docs/ROADMAP.md) mit Ideen für spätere Versionen
-- [Änderungen](CHANGELOG.md)
-- [Mitmachen](CONTRIBUTING.md), [Sicherheitslücken melden](SECURITY.md)
-- [Lizenz: MIT](LICENSE). Logo und Name „Nemo“ sind für dieses Projekt gezeichnet und gedacht; bitte für Forks eigene verwenden.
+Nemo is and stays free, and every feature is open to everyone. If you want to support the project voluntarily (any amount, one-off) via [Ko-fi](https://ko-fi.com/nemojr), you get a supporter code by e-mail as a thank-you. It unlocks purely cosmetic extras: a "thank you" badge and additional colour themes. You enter the code under Settings → About Nemo → Supporter; it is checked only on your device, without an account and without tracking. Payment happens solely on the payment provider's page; the app never handles payment data. More: [SUPPORT.md](SUPPORT.md).
+
+## More
+
+- [Website](https://nemo-adhd-helper.online)
+- [Documentation](docs/README.md) for users and developers
+- [Roadmap](docs/ROADMAP.md) with ideas for later versions
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md), [report a security issue](SECURITY.md), [Code of conduct](CODE_OF_CONDUCT.md)
+- [License: MIT](LICENSE). The Nemo logo and name are drawn for and meant for this project; please use your own for forks.

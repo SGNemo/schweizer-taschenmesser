@@ -187,6 +187,8 @@ export interface ConnectorDef {
    * page on purpose: a separate chunk cannot be fetched while the device is offline.
    */
   settings?: ComponentType<{ ctx: ConnectorContext; onChanged: () => void }>;
+  /** Names of the private secrets of `ctx.secrets`, so "reset this device" can remove them too. */
+  secretNames?: readonly string[];
 }
 
 export type ConnectorErrorCode =

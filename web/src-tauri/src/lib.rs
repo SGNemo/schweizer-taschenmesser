@@ -9,13 +9,23 @@ mod disk;
 #[cfg(desktop)]
 mod local_api;
 #[cfg(desktop)]
+mod local_llm;
+#[cfg(desktop)]
 mod oauth;
+#[cfg(desktop)]
+mod panic_log;
 #[cfg(desktop)]
 mod portable;
 #[cfg(desktop)]
 mod system;
 #[cfg(desktop)]
+mod texts;
+#[cfg(desktop)]
 mod update;
+#[cfg(desktop)]
+pub mod vault_bridge;
+#[cfg(desktop)]
+pub mod vault_host;
 #[cfg(desktop)]
 mod webview2;
 
@@ -33,9 +43,13 @@ fn create_main_window(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Er
     let mut builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
     if let Some(dir) = std::env::current_exe()
         .ok()
-        .and_then(|exe| portable::data_dir(&exe))
+        .and_then(|exe| portable::data_dir(&exe, &app.config().identifier))
     {
         builder = builder.data_directory(dir);
+    }
+    // Dev-Preview: say so in the title bar (the stable build keeps the configured title).
+    if portable::is_dev_identifier(&app.config().identifier) {
+        builder = builder.title("Nemo Dev");
     }
     // Started by "start with Windows" (see capture.rs): stay in the tray.
     if std::env::args().any(|a| a == capture::AUTOSTART_FLAG) {
@@ -102,6 +116,8 @@ pub fn run() {
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(system::SystemMonitor::default())
+        .manage(local_llm::LocalLlm::new())
+        .manage(vault_bridge::VaultBridge::default())
         .invoke_handler(tauri::generate_handler![
             update::check_update,
             update::install_update,
@@ -120,6 +136,8 @@ pub fn run() {
             disk::disk_node,
             disk::disk_query,
             disk::disk_known_places,
+            disk::disk_place_sizes,
+            disk::disk_recycle_size,
             disk::disk_node_path,
             disk::disk_reveal,
             disk::disk_find_duplicates,
@@ -128,9 +146,26 @@ pub fn run() {
             disk::disk_delete_plan,
             disk::disk_delete,
             disk::disk_delete_cancel,
+            local_llm::llm_status,
+            local_llm::llm_download,
+            local_llm::llm_download_cancel,
+            local_llm::llm_remove,
+            local_llm::llm_load,
+            local_llm::llm_unload,
+            local_llm::llm_generate,
+            local_llm::llm_cancel,
             system::system_info,
             system::system_processes,
+            system::system_disk_io,
+            system::system_open_task_manager,
             capture::capture_set_hotkey,
+            capture::desktop_set_vault_hotkey,
+            vault_bridge::vault_bridge_start,
+            vault_bridge::vault_bridge_respond,
+            vault_bridge::vault_bridge_stop,
+            vault_bridge::vault_bridge_register,
+            vault_bridge::vault_bridge_status,
+            vault_bridge::vault_bridge_unregister,
             capture::capture_hide,
             capture::capture_read_clipboard,
             capture::desktop_set_close_to_tray,
@@ -138,6 +173,10 @@ pub fn run() {
             capture::desktop_set_autostart,
             capture::desktop_autostart_enabled,
             capture::desktop_info,
+            capture::desktop_data_dir,
+            capture::desktop_safe_mode,
+            capture::desktop_take_panic_log,
+            capture::desktop_open_data_dir,
             capture::desktop_show_main
         ]);
 
@@ -147,6 +186,10 @@ pub fn run() {
     let builder = builder.setup(|app| {
         #[cfg(windows)]
         create_main_window(app)?;
+        // From here on a panic leaves a line in `<data folder>/logs/panic.log` (diagnostics export).
+        if let Some(dir) = capture::app_data_folder(app.handle()) {
+            panic_log::install(dir.join("logs"));
+        }
         capture::setup(app)
     });
 

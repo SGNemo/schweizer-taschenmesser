@@ -28,11 +28,26 @@ export const DEFAULT_KDF = { alg: 'argon2id', m: 64 * 1024, t: 3, p: 1 } as cons
 
 /** Headers weaker than this are refused (protects against a downgrade through a tampered header). */
 export const KDF_FLOOR = { m: 19 * 1024, t: 2, p: 1 } as const;
-/** Upper bounds so that a malicious header cannot make the device allocate gigabytes or spin forever. */
-export const KDF_CEILING = { m: 1024 * 1024, t: 32, p: 16 } as const;
+/**
+ * Upper bounds so that a header that arrived through sync or an import file cannot make the device
+ * allocate gigabytes or spin for minutes (256 MiB keeps a phone's WASM heap intact).
+ */
+export const KDF_CEILING = { m: 256 * 1024, t: 10, p: 4 } as const;
 
-/** Unit tests run with tiny parameters (Argon2 at 64 MiB would take seconds per call). */
-const weakAllowed = import.meta.env.MODE === 'test';
+/**
+ * Unit tests run with tiny parameters (Argon2 at 64 MiB would take seconds per call). Both flags are
+ * required so that no production bundle can ever carry the bypass (`DEV` is false in every build).
+ */
+const weakAllowed = import.meta.env.MODE === 'test' && import.meta.env.DEV === true;
+
+/** `atob` throws a `DOMException` on bad input; callers only expect `CryptoError`. */
+export function decodeSalt(salt: string): Uint8Array<ArrayBuffer> {
+  try {
+    return fromBase64(salt);
+  } catch {
+    throw new CryptoError('malformed', 'salt is not base64');
+  }
+}
 
 export function newKdfParams(overrides: Partial<Pick<KdfParams, 'm' | 't' | 'p'>> = {}): KdfParams {
   const params: KdfParams = {
@@ -60,7 +75,7 @@ export function assertKdfParams(p: KdfParams): void {
   if (!weakAllowed && (p.m < KDF_FLOOR.m || p.t < KDF_FLOOR.t)) {
     throw new CryptoError('unsafe-params', 'KDF parameters too weak');
   }
-  if (fromBase64(p.salt).length < 16) throw new CryptoError('malformed', 'salt too short');
+  if (decodeSalt(p.salt).length < 16) throw new CryptoError('malformed', 'salt too short');
 }
 
 /** NFKC so that the same password typed on different keyboards/OSes derives the same key. */
@@ -74,7 +89,7 @@ export async function deriveKey(
   assertKdfParams(params);
   const raw = await argon2id({
     password: passwordBytes(password),
-    salt: fromBase64(params.salt),
+    salt: decodeSalt(params.salt),
     parallelism: params.p,
     iterations: params.t,
     memorySize: params.m,

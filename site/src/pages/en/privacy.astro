@@ -1,0 +1,70 @@
+---
+import Legal from '../../layouts/Legal.astro';
+import { KOFI_URL, REPO_URL } from '../../config.js';
+---
+<Legal locale="en" route="privacy" title="Privacy policy" description="What is processed when you visit the Nemo website: no cookies, no tracking, hosting by Cloudflare.">
+  <h2>Controller</h2>
+  <p>
+    Sven [PLACEHOLDER: last name], Erlangen, Germany (address see <a href="/en/imprint">imprint</a>)<br />
+    E-mail: <a href="mailto:sven.nemo0@gmail.com">sven.nemo0@gmail.com</a>
+  </p>
+
+  <h2>In short</h2>
+  <ul>
+    <li>This website sets no cookies, uses no analytics and loads no scripts, fonts or content from third-party servers.</li>
+    <li>Your light/dark theme choice is stored only in your browser (localStorage) and never transmitted.</li>
+    <li>When the page is requested, the hosting provider processes technically necessary connection data.</li>
+  </ul>
+
+  <h2>Hosting (Cloudflare Pages)</h2>
+  <p>
+    The website is served by Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA (in the EU: Cloudflare Germany GmbH, Rosental 7, 80331 Munich).
+    When you visit, Cloudflare processes connection data such as IP address, time, requested address, browser identifier and transferred data volume to deliver the page
+    and protect it against attacks. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in secure, fast operation). Cloudflare is certified under the EU-US Data
+    Privacy Framework; standard contractual clauses apply in addition. See <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare’s privacy policy</a>.
+  </p>
+
+  <h2>Downloads and links to GitHub</h2>
+  <p>
+    The download buttons lead directly to GitHub (GitHub, Inc., 88 Colin P. Kelly Jr. St, San Francisco, CA 94107, USA), where the app files are hosted, and to the
+    source code at <a href={REPO_URL} rel="noopener">{REPO_URL}</a>. GitHub processes your data only once you click;
+    see <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub’s privacy statement</a>.
+  </p>
+
+  <h2>Support via Ko-fi</h2>
+  <p>
+    The “Support on Ko-fi” link leads to <a href={KOFI_URL} rel="noopener">Ko-fi</a> (Ko-fi Labs Ltd, United Kingdom), an external provider. This website itself
+    processes no payment or contact data. What Ko-fi processes is described in <a href="https://more.ko-fi.com/privacy" rel="noopener">Ko-fi’s privacy policy</a>.
+    After a contribution you receive the supporter code at the e-mail address given to Ko-fi; a small service run by the operator (a Cloudflare Worker) processes Ko-fi's notification, sends the e-mail through the mail service Resend (Resend, Inc., USA) and stores no payment data, names or addresses in clear text (hashed check values only, for 400 days). Resend processes your e-mail address and the code for delivery.
+  </p>
+
+  <h2>The Nemo app</h2>
+  <p>
+    The app stores its data on your device. It has no account and no service run by the operator that receives app data. Anything it sends beyond that happens only
+    when you set it up or click it (exceptions: update check and currency tool, see below). The full list is in the app under “Settings → About Nemo → Legal → Privacy
+    notices” (shown in the app language). Otherwise this policy covers the website only; the recipients below process data under their own privacy rules.
+  </p>
+  <ul>
+    <li><strong>Sync (optional):</strong> only to a server you run yourself; end-to-end encrypted with a passphrase.</li>
+    <li><strong>Update check:</strong> the Windows and Android apps ask GitHub for the version file (at most once a day, can be switched off); no app data, GitHub sees your IP address.</li>
+    <li><strong>AI provider (optional):</strong> only with a provider you set up (e.g. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral): your question, the date and the field names of the modules, never your entries. In chat, the chat text goes to the provider. With a local model or Ollama nothing leaves the device. Everything can be switched off with “KI abschalten”.</li>
+    <li><strong>Google connection (optional, Windows):</strong> sign-in with your own Google application, read only (calendar: <code>calendar.readonly</code>, email headers: <code>gmail.readonly</code>); the data goes from Google straight to your device. If your Google project is in “Testing” status, the sign-in expires after 7 days.</li>
+    <li><strong>Calendar subscription (optional):</strong> fetching the iCal address you enter.</li>
+    <li><strong>Model download (optional):</strong> the built-in language model is downloaded from Hugging Face after you confirm.</li>
+    <li><strong>Currency tool:</strong> when opened, euro rates are requested from frankfurter.dev, without any app data.</li>
+    <li><strong>Supporter code:</strong> only checked on the device; the service that emails it is described above under Ko-fi.</li>
+  </ul>
+
+  <h2>Your rights</h2>
+  <p>
+    You have the right of access, rectification, erasure, restriction of processing, data portability and objection (Art. 15–21 GDPR), and the right to lodge a complaint
+    with a supervisory authority. The competent one is the Bavarian State Office for Data Protection Supervision (BayLDA), Promenade 18, 91522 Ansbach, Germany,
+    <a href="https://www.lda.bayern.de/" rel="noopener">www.lda.bayern.de</a>.
+  </p>
+
+  <h2>What usually belongs here in Germany</h2>
+  <p class="muted">
+    For orientation, not legal advice: name and contact of the controller, processing by the hosting provider (server logs, legal basis, third-country transfer),
+    every external service (here only via links: GitHub, Ko-fi), whether cookies or tracking are used, data subject rights and the supervisory authority. Last updated: 6 October 2026.
+  </p>
+</Legal>

@@ -1,43 +1,69 @@
-import { NavLink } from 'react-router';
-import { useModuleStates } from '@/core/modules/activation';
-import { availableManifests } from '@/core/modules/available';
+import { NavLink, useNavigate } from 'react-router';
+import { useAiOn } from '@/core/ai/switch';
+import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Dialog, Icon } from '@/ui';
-import styles from './AppShell.module.css';
+import { Button, Dialog, Icon } from '@/ui';
+import { useQuickAddActions } from './useNavItems';
+import styles from './SheetList.module.css';
 
 export function QuickAdd() {
   const open = useUiStore((s) => s.quickAddOpen);
   const setOpen = useUiStore((s) => s.setQuickAddOpen);
-  const states = useModuleStates();
+  const actions = useQuickAddActions();
+  const navigate = useNavigate();
+  const openWritePalette = useUiStore((s) => s.openWritePalette);
+  const [write] = useAiWriteSettings();
+  const aiOn = useAiOn();
 
   const onSaved: Parameters<typeof CaptureForm>[0]['onSaved'] = (saved) => {
     setOpen(false);
     announceSaved(saved);
   };
 
-  const actions = availableManifests()
-    .filter((m) => states?.[m.id])
-    .flatMap((m) => (m.contributions?.quickAdd ?? []).map((a) => ({ ...a, icon: m.icon })));
-
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} title={t.quickAdd.title} variant="sheet">
-      {open ? <CaptureForm onSaved={onSaved} onCancel={() => setOpen(false)} /> : null}
+    <Dialog open={open} onClose={() => setOpen(false)} title={t.quickAdd.title} size="roomy">
+      {open ? (
+        <CaptureForm
+          onSaved={onSaved}
+          onCancel={() => setOpen(false)}
+          onOpenFull={(path) => {
+            setOpen(false);
+            void navigate(path);
+          }}
+        />
+      ) : null}
+      {aiOn && write?.enabled ? (
+        // Free text for any module; on the phone the keyboard's own dictation works in the field.
+        <Button
+          variant="ghost"
+          data-testid="quick-add-ai"
+          onClick={() => {
+            setOpen(false);
+            openWritePalette();
+          }}
+        >
+          <Icon name="sparkles" size={16} /> {t.ai.palette.writeButton}
+        </Button>
+      ) : null}
       {actions.length === 0 ? (
         <p>{t.quickAdd.empty}</p>
       ) : (
-        <ul className={styles.navList}>
-          {actions.map((a) => (
-            <li key={`${a.icon}-${a.id}`}>
-              <NavLink to={a.to} className={styles.navLink} onClick={() => setOpen(false)}>
-                <Icon name={a.icon} />
-                {a.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+        <details className={styles.others}>
+          <summary>{t.quickAdd.others}</summary>
+          <ul className={styles.list}>
+            {actions.map((a) => (
+              <li key={`${a.icon}-${a.id}`}>
+                <NavLink to={a.to} className={styles.link} onClick={() => setOpen(false)}>
+                  <Icon name={a.icon} />
+                  {a.label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </Dialog>
   );

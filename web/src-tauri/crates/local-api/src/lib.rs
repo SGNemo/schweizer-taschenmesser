@@ -1,4 +1,4 @@
-//! Transport of the local AI import API (see `docs/architecture.md`, "Local API").
+//! Transport of the local AI import API (see `docs/architecture/local-api.md`).
 //!
 //! The server binds to `127.0.0.1` only, speaks a deliberately small subset of HTTP/1.1 (one request
 //! per connection, `Content-Length` bodies only) and checks everything that must hold before a

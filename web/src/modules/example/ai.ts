@@ -11,4 +11,23 @@ export const aiSchema: ModuleAiSchema = {
       searchable: ['title', 'note'],
     },
   },
+  actions: {
+    create: {
+      kind: 'create',
+      collection: 'entry',
+      label: 'Eintrag anlegen',
+      description: 'Beispieleintrag mit Titel',
+      fields: ['title', 'note'],
+      required: ['title'],
+      parse: { keywords: ['eintrag'] },
+      examples: [{ input: 'Lege den Eintrag Testeintrag an', output: { title: 'Testeintrag' } }],
+    },
+    delete: {
+      kind: 'delete',
+      collection: 'entry',
+      label: 'Eintrag löschen',
+      description: 'Beispieleintrag löschen',
+      examples: [{ input: 'Lösche den Eintrag Testeintrag', target: 'Testeintrag', output: {} }],
+    },
+  },
 };

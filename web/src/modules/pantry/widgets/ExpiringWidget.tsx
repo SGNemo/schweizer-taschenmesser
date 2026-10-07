@@ -1,8 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useSettings } from '@/core/settings/settings';
-import { formatDay, today } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { DueList } from '@/ui';
 import { expiryState, sortItems } from '../logic';
 import { itemRepo } from '../repo';
 import { settings as moduleSettings, settingsSchema } from '../settings';
@@ -17,18 +18,18 @@ export default function ExpiringWidget() {
     day,
     soonDays,
   );
+  const expired = due.filter((i) => expiryState(i, day, soonDays) === 'expired').length;
   return (
-    <WidgetList
+    <DueList
       loading={!items}
       empty={items && due.length === 0 ? t.pantry.widgetEmpty : undefined}
-      headline={due.length > 0 ? t.pantry.widgetHeadline(due.length) : undefined}
-      entries={due.slice(0, 4).map((i) => ({
-        key: i.id,
-        title: i.name,
-        meta: i.expires ? formatDay(i.expires, 'dd.MM.') : undefined,
-      }))}
-      to="/pantry"
-      linkLabel={t.pantry.title}
+      emptyAction={{ label: t.homeEmpty.pantry, to: '/pantry?new=1' }}
+      summary={due.length > 0 ? t.widgets.expirySummary(expired, due.length - expired) : undefined}
+      entries={due.map((i) => {
+        const s = dueState(i.expires!, day, { soonDays });
+        return { key: i.id, title: i.name, tone: s.tone, label: s.label };
+      })}
+      moreLabel={t.widgets.more}
     />
   );
 }

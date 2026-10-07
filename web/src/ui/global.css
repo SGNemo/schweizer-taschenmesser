@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import './supporterThemes.css';
 
 /* Inter (variable, SIL OFL 1.1) shipped locally: Latin + Latin Extended only, no CDN. */
 @font-face {
@@ -54,11 +55,10 @@ h3 {
   font-weight: var(--weight-semibold);
 }
 h1 {
-  font-weight: var(--weight-bold);
   letter-spacing: -0.02em;
 }
 h1 {
-  font-size: var(--text-2xl);
+  font-size: var(--text-h1);
 }
 h2 {
   font-size: var(--text-xl);
@@ -87,7 +87,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -112,4 +112,12 @@ textarea {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

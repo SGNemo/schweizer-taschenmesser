@@ -4,6 +4,7 @@ package-lock.json
 Cargo.lock
 # Build output and reports
 dist/
+dist-e2e-seed/
 dev-dist/
 target/
 playwright-report/
@@ -13,9 +14,10 @@ web/src-tauri/gen/
 web/src/core/db/schema.snapshot.json
 web/src-tauri/plugins/*/permissions/
 # Data blobs, icons, images, screenshots
-web/src/modules/accounts/wordlist-eff-large.json
+packages/vault-core/src/wordlist-eff-large.json
 web/src-tauri/icons/
 docs/screenshots/
+docs/archive/
 *.png
 *.icns
 *.ico

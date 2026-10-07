@@ -75,7 +75,10 @@ test('set up the vault, add an entry, lock, wrong password, unlock', async ({ pa
   await addEntry(page, { totp: 'JBSWY3DPEHPK3PXP' });
 
   // the detail view opens after saving: password hidden until "Anzeigen", TOTP code visible
-  const detail = page.getByRole('dialog', { name: SECRET_TITLE });
+  // a dialog on phones, the side panel ("Details") from 1200 px
+  const detail = page
+    .getByRole('dialog', { name: SECRET_TITLE })
+    .or(page.getByRole('complementary', { name: 'Details' }));
   await expect(detail.getByTestId('password-value')).not.toContainText(SECRET_PASSWORD);
   await detail.getByRole('button', { name: 'Anzeigen' }).click();
   await expect(detail.getByTestId('password-value')).toContainText(SECRET_PASSWORD);
@@ -183,4 +186,42 @@ test('the vault locks itself after the configured inactivity', async ({ page }) 
   await page.clock.fastForward(2 * 60_000);
   await expect(page.getByLabel('Master-Passwort')).toBeVisible();
   await expect(page.locator('body')).not.toContainText(SECRET_TITLE);
+});
+
+test('generate a password and save it as an account in one go', async ({ page }) => {
+  await setUp(page);
+  await page.getByRole('button', { name: 'Neues Passwort' }).click();
+  const generator = page.getByRole('dialog', { name: 'Neues Passwort' });
+  const generated = (await generator.getByTestId('generated').textContent()) ?? '';
+  expect(generated).toHaveLength(20);
+  await generator.getByRole('button', { name: 'Als Account speichern' }).click();
+
+  const form = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+  await expect(form.getByLabel('Passwort', { exact: true })).toHaveValue(generated);
+  await form.getByLabel('Name', { exact: true }).fill('Beispiel-Shop');
+  await form.getByLabel('Benutzername').fill('alice@example.org');
+  await form.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('dialog', { name: 'Zugang hinzufügen' })).toHaveCount(0);
+
+  // Listed in the vault, and only ciphertext reached storage / the outbox.
+  await expect(page.getByRole('button', { name: /Beispiel-Shop/ }).first()).toBeVisible();
+  const stored = await storedText(page);
+  expect(stored).not.toContain(generated);
+  expect(stored).not.toContain('Beispiel-Shop');
+});
+
+test('the vault search key focuses the search, but only while unlocked', async ({ page }) => {
+  await setUp(page);
+  const search = page.getByLabel('Suchen', { exact: false }).first();
+  await page.getByRole('button', { name: 'Neues Passwort' }).focus(); // somewhere else
+  await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
+  await expect(page).toHaveURL(/\/accounts\?find=\d+/);
+  await expect(search).toBeFocused();
+
+  await page.getByRole('button', { name: 'Sperren' }).click();
+  await expect(page.getByRole('button', { name: 'Entsperren' })).toBeVisible();
+  const before = page.url();
+  await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
+  expect(page.url()).toBe(before);
+  await expect(page.getByRole('button', { name: 'Neues Passwort' })).toHaveCount(0);
 });

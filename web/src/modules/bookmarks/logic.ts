@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import type { BookmarkItem, Kind } from './schema';
 
 /** "example.com/x" → "https://example.com/x"; anything that is not a http(s) address → undefined. */
@@ -35,6 +36,27 @@ export function parseTags(text: string): string[] {
   return out;
 }
 
+/**
+ * Links (kind "link", the former "Apps & Links") grouped for the tile view: the first tag is the
+ * group, groups alphabetical, links without a tag last under the empty group.
+ */
+export function groupLinks<T extends Pick<BookmarkItem, 'tags' | 'title'>>(
+  items: readonly T[],
+): [string, T[]][] {
+  const groups = new Map<string, { label: string; items: T[] }>();
+  for (const item of items) {
+    const label = item.tags[0] ?? '';
+    const entry = groups.get(label.toLowerCase()) ?? { label, items: [] };
+    entry.items.push(item);
+    groups.set(label.toLowerCase(), entry);
+  }
+  return [...groups.values()]
+    .sort(
+      (a, b) => Number(a.label === '') - Number(b.label === '') || compareText(a.label, b.label),
+    )
+    .map((g) => [g.label, g.items.sort((a, b) => compareText(a.title, b.title))]);
+}
+
 export const formatTags = (tags: readonly string[]): string => tags.join(', ');
 
 /** Every tag with its number of items, most used first (ties alphabetical). */
@@ -49,7 +71,7 @@ export function tagCounts(items: readonly Pick<BookmarkItem, 'tags'>[]): [string
     }
   }
   return [...counts.values()]
-    .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, 'de'))
+    .sort((a, b) => b.n - a.n || compareText(a.label, b.label))
     .map((e) => [e.label, e.n]);
 }
 

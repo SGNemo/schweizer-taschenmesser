@@ -5,6 +5,7 @@ import { getSettings } from '@/core/settings/settings';
 import { addDaysStr, toDateString, toEpoch } from '@/core/time/dates';
 import { invoiceRepo } from './repo';
 import { settings, settingsSchema } from './settings';
+import { t } from '@/strings';
 
 const DAY_MS = 86_400_000;
 
@@ -23,8 +24,11 @@ const source: NotificationSource = async ({ from, to }) => {
     .map((i) => ({
       key: `invoice:${i.id}:${i.dueDate}`,
       at: toEpoch(addDaysStr(i.dueDate, -prefs.remindDaysBefore), prefs.remindTime),
-      title: `Rechnung fällig: ${i.payee}`,
-      body: `${formatMoney(i.amountMinor)} · fällig am ${i.dueDate.split('-').reverse().join('.')}`,
+      title: t.invoices.dueTitle(i.payee),
+      body: t.invoices.dueBody(
+        formatMoney(i.amountMinor),
+        i.dueDate.split('-').reverse().join('.'),
+      ),
       url: '/invoices',
     }))
     .filter((n) => n.at > from && n.at <= to);

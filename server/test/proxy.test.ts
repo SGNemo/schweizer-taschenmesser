@@ -285,6 +285,19 @@ describe('the real fetcher (against a local server, address given directly)', ()
     await expect(call(port, { timeoutMs: 150 })).rejects.toMatchObject({ code: 'timeout' });
   });
 
+  it('gives up on a server that keeps trickling bytes (total deadline, not only inactivity)', async () => {
+    let timer: NodeJS.Timeout | undefined;
+    const port = await serve((_req, res) => {
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      timer = setInterval(() => res.write('x'), 20);
+      res.on('close', () => clearInterval(timer));
+    });
+    const started = Date.now();
+    await expect(call(port, { timeoutMs: 200 })).rejects.toMatchObject({ code: 'timeout' });
+    expect(Date.now() - started).toBeLessThan(2000);
+    clearInterval(timer);
+  });
+
   it('reports a refused connection as an upstream error', async () => {
     const port = await serve((_q, res) => res.end());
     await new Promise<void>((r) => server!.close(() => r()));

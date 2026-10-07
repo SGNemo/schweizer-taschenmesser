@@ -16,7 +16,7 @@ const FAST = { m: 64, t: 1, p: 1 };
 const MASTER = 'Master-Passwort-Nr-1';
 const b = t.accounts.biometric;
 
-function fake(answer: 'ok' | 'cancelled' = 'ok', available = true) {
+function fake(answer: 'ok' | 'cancelled' | 'throw' = 'ok', available = true) {
   const sealed = new Map<string, Uint8Array>();
   const state = { answer, available, sealed };
   const service: BiometricService = {
@@ -27,6 +27,7 @@ function fake(answer: 'ok' | 'cancelled' = 'ok', available = true) {
     },
     async unseal(name): Promise<UnsealResult> {
       if (!sealed.has(name)) return { status: 'missing' };
+      if (state.answer === 'throw') throw new Error('KeyStoreException: alias gone');
       if (state.answer === 'cancelled') return { status: 'cancelled' };
       return { status: 'ok', secret: new Uint8Array(sealed.get(name)!) as Uint8Array<ArrayBuffer> };
     },
@@ -94,6 +95,20 @@ describe('lock screen with biometrics', () => {
     expect(await screen.findByText(b.invalid)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: b.unlock })).toBeNull(); // seal was removed
     expect(getSession().status).toBe('locked');
+  });
+
+  it('falls back to the password prompt when the OS rejects the unseal outright', async () => {
+    await createVault(MASTER, FAST);
+    await enableBiometricUnlock(MASTER);
+    lockVault();
+    bio.state.answer = 'throw';
+    render(<LockScreen />);
+    expect(await screen.findByText(b.invalid)).toBeInTheDocument();
+    expect(getSession().status).toBe('locked');
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(t.accounts.lock.password), MASTER);
+    await user.click(screen.getByRole('button', { name: t.accounts.lock.unlock }));
+    await waitFor(() => expect(getSession().status).toBe('unlocked'));
   });
 });
 

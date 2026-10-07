@@ -9,12 +9,24 @@ export interface PushPayload {
 /** Binds an encrypted payload to its notification key so payloads cannot be swapped. */
 export const pushAad = (key: string): string => `push/${key}`;
 
-/** Shown when a payload cannot be read (e.g. no key on this device). */
-export const FALLBACK_PAYLOAD: PushPayload = {
-  title: 'Nemo',
-  body: 'Erinnerung',
-  url: '/',
+/**
+ * Body shown when a payload cannot be read (e.g. no key on this device). The service worker has no
+ * access to the catalogs or the language setting, so it picks by device language from this map.
+ */
+const FALLBACK_BODY: Record<string, string> = {
+  de: 'Erinnerung',
+  en: 'Reminder',
+  es: 'Recordatorio',
+  fr: 'Rappel',
+  pt: 'Lembrete',
 };
+
+export function fallbackPayload(languages: readonly string[] = []): PushPayload {
+  const base = languages
+    .map((l) => l.toLowerCase().split('-')[0])
+    .find((l) => l && l in FALLBACK_BODY);
+  return { title: 'Nemo', body: FALLBACK_BODY[base ?? 'en']!, url: '/' };
+}
 
 export interface PushMessage {
   v: 1;

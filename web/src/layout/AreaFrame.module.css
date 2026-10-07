@@ -1,0 +1,18 @@
+.frame {
+  margin-bottom: var(--space-3);
+}
+.eyebrow {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.eyebrowRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}

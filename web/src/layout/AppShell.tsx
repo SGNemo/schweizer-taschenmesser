@@ -1,55 +1,78 @@
-import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { SafeModeBanner } from './SafeModeBanner';
+import { Suspense, useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import { isFocusPath } from '@/core/focus/path';
 import { OnboardingHost } from '@/core/importer/host';
-import { Fab, Icon, IconButton, Toaster, Wordmark } from '@/ui';
+import { isDevBuild } from '@/core/update/buildInfo';
+import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
+import { Fab, Toaster, useMediaQuery } from '@/ui';
+import { NoticeHost } from './NoticeHost';
 import { CommandPalette } from './CommandPalette';
+import { FocusWatcher } from './FocusWatcher';
+import { NotificationCenter } from './NotificationCenter';
+import { ReminderPrompt } from './ReminderPrompt';
+import { ResumeTracker } from './ResumeTracker';
+import { SupporterEffects } from './SupporterEffects';
 import { SetupHost } from './setup/SetupHost';
 import { ToolsSheet } from './ToolsSheet';
 import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
+import { SeedBanner } from './devTools';
 import { QuickAdd } from './QuickAdd';
-import { SyncBadge } from './SyncBadge';
+import { ShortcutSheet } from './ShortcutSheet';
+import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
+import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
-import { useModuleNavItems, type NavItem } from './useNavItems';
+import { useNavTree } from './useNavItems';
+import { useShortcuts } from './useShortcuts';
 import styles from './AppShell.module.css';
 
-const BOTTOM_MODULE_SLOTS = 3;
-
-function SideLink({ item }: { item: NavItem }) {
-  return (
-    <li>
-      <NavLink to={item.to} className={styles.navLink} end={item.to === '/'}>
-        <Icon name={item.icon} />
-        {item.label}
-      </NavLink>
-    </li>
-  );
-}
+let devNoticeShown = false;
 
 export function AppShell() {
-  const moduleItems = useModuleNavItems();
+  const tree = useNavTree();
+  const sidebar = useUiStore((s) => s.sidebar);
+  const wide = useMediaQuery('(min-width: 1200px)');
+  const rail = sidebar === 'narrow' || !wide;
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
-  const openTools = useUiStore((s) => s.openTools);
+
+  // Dev-Preview builds say so once per start (a module flag survives StrictMode's double effect).
+  useEffect(() => {
+    if (!isDevBuild() || devNoticeShown) return;
+    devNoticeShown = true;
+    useUiStore.getState().toast(t.devPreview.notice);
+  }, []);
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   useNativeShare();
+  useShortcuts();
 
-  // Global shortcut: Ctrl/Cmd+K opens the command palette.
+  // Global shortcuts: Ctrl/Cmd+K opens the command palette, Ctrl/Cmd+. the tools, Alt+Home goes home.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPaletteOpen(!useUiStore.getState().paletteOpen);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === '.') {
+        // Ctrl/Cmd+. toggles the tools sheet.
+        e.preventDefault();
+        const ui = useUiStore.getState();
+        if (ui.toolsOpen) ui.closeTools();
+        else ui.openTools();
+      } else if (e.altKey && e.key === 'Home') {
+        e.preventDefault();
+        void navigate('/');
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [setPaletteOpen]);
+  }, [setPaletteOpen, navigate]);
 
   // PWA shortcuts: "Suchen" (`/?search=1`) opens the palette, "Schnell erfassen" the capture sheet.
   useEffect(() => {
@@ -65,90 +88,74 @@ export function AppShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the first render of the shell
   }, []);
 
+  // The module visited last in an area is where the area page leads next time.
+  useEffect(() => {
+    const area = areaOfPath(tree, location.pathname);
+    const item = area?.items.find(
+      (i) => location.pathname === i.to || location.pathname.startsWith(`${i.to}/`),
+    );
+    if (area && item) rememberAreaModule(area.id, item.to);
+  }, [tree, location.pathname]);
+
   // Move focus to the main region on navigation (screen readers / keyboard users).
   useEffect(() => {
     document.getElementById('main')?.focus({ preventScroll: true });
   }, [location.pathname]);
 
-  const top: NavItem = { to: '/', label: t.nav.dashboard, icon: 'home' };
-  const library: NavItem = { to: '/library', label: t.nav.library, icon: 'grid' };
-  const settings: NavItem = { to: '/settings', label: t.nav.settings, icon: 'settings' };
-  const bottomItems = [top, ...moduleItems.slice(0, BOTTOM_MODULE_SLOTS)];
-  const overflow = [...moduleItems.slice(BOTTOM_MODULE_SLOTS), library, settings];
+  const overflowAreas = tree.areas.slice(BOTTOM_AREA_SLOTS);
+  // A focus screen (`/<module>/focus/…`) shows one thing: no menus, no quick add, no banners.
+  const focusing = isFocusPath(location.pathname);
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-rail={rail} data-focus={focusing ? 'true' : undefined}>
       <a href="#main" className={styles.skip}>
         {t.nav.skipToContent}
       </a>
 
-      <aside className={styles.sidebar}>
-        <a
-          className={styles.brand}
-          href="/"
-          onClick={(e) => {
-            e.preventDefault();
-            void navigate('/');
-          }}
-        >
-          <Wordmark height={44} title={t.appName} />
-        </a>
-        <nav aria-label={t.nav.main} className={styles.sidebarNav}>
-          <ul className={styles.navList}>
-            <SideLink item={top} />
-            {moduleItems.map((i) => (
-              <SideLink key={i.to} item={i} />
-            ))}
-          </ul>
-        </nav>
-        <ul className={styles.navList}>
-          <SideLink item={library} />
-          <SideLink item={settings} />
-        </ul>
-      </aside>
+      {focusing ? null : (
+        <aside className={styles.sidebar}>
+          <Sidebar tree={tree} rail={rail} canExpand={wide} />
+        </aside>
+      )}
 
       <div className={styles.col}>
-        <header className={styles.topbar}>
-          <span className={`${styles.brand} ${styles.hideDesktop}`}>
-            <Wordmark height={32} title={t.appName} />
-          </span>
-          <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
-            <Icon name="search" size={18} />
-            <span>{t.actions.search}</span>
-            <kbd className={`${styles.kbd} ${styles.hideMobile}`}>{t.palette.hint}</kbd>
-          </button>
-          <IconButton label={t.tools.open} onClick={() => openTools()}>
-            <Icon name="wrench" />
-          </IconButton>
-          <SyncBadge />
-        </header>
-        <UpdateBanner />
-        <PendingImports />
+        {focusing ? null : (
+          <>
+            <TopBar />
+            <SafeModeBanner />
+            <UpdateBanner />
+            <PendingImports />
+            {SeedBanner ? (
+              <Suspense fallback={null}>
+                <SeedBanner />
+              </Suspense>
+            ) : null}
+          </>
+        )}
         <main id="main" tabIndex={-1} className={styles.main}>
           <Outlet />
         </main>
       </div>
 
-      <nav aria-label={t.nav.main} className={styles.bottom}>
-        {bottomItems.map((i) => (
-          <NavLink key={i.to} to={i.to} end={i.to === '/'} className={styles.bottomLink}>
-            <Icon name={i.icon} />
-            {i.label}
-          </NavLink>
-        ))}
-        <button type="button" className={styles.bottomLink} onClick={() => setMoreOpen(true)}>
-          <Icon name="more" />
-          {t.nav.more}
-        </button>
-      </nav>
-
-      <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
-      <QuickAdd />
-      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} items={overflow} />
-      <CommandPalette />
-      <ToolsSheet />
-      <OnboardingHost />
-      <SetupHost />
+      {focusing ? null : (
+        <>
+          <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />
+          <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
+          <QuickAdd />
+          <ShortcutSheet />
+          <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />
+          <CommandPalette />
+          <ToolsSheet />
+          <OnboardingHost />
+          <SetupHost />
+        </>
+      )}
+      <FocusWatcher />
+      <ReminderPrompt />
+      <NotificationCenter />
+      <ResumeTracker />
+      <SupporterEffects />
+      <NoticeHost />
       <Toaster />
     </div>
   );

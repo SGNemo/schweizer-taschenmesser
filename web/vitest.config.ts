@@ -3,8 +3,21 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
-  plugins: [react()],
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  plugins: [react({ jsxImportSource: '@/core/text/readjsx' })],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      zod: fileURLToPath(new URL('./node_modules/zod', import.meta.url)),
+      tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
+      '@nemo/vault-core': fileURLToPath(
+        new URL('../packages/vault-core/src/index.ts', import.meta.url),
+      ),
+      '@noble/curves': fileURLToPath(new URL('./node_modules/@noble/curves', import.meta.url)),
+      '@nemo/supporter-codes': fileURLToPath(
+        new URL('../packages/supporter-codes/src/index.ts', import.meta.url),
+      ),
+    },
+  },
   test: {
     // Node by default: building a jsdom per file cost more than all test bodies together. A file that
     // needs a DOM starts with `// @vitest-environment jsdom`; a forgotten marker fails with

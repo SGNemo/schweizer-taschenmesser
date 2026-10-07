@@ -1,3 +1,4 @@
+import { t } from '@/strings';
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
 
@@ -8,5 +9,13 @@ const schema = z.object({
 export const settings: ModuleSettings = {
   schema,
   defaults: { showDone: true },
-  fields: [{ key: 'showDone', label: 'Erledigte anzeigen', type: 'boolean' }],
+  fields: [
+    {
+      key: 'showDone',
+      get label() {
+        return t.example.showDone;
+      },
+      type: 'boolean',
+    },
+  ],
 };

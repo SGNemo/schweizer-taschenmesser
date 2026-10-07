@@ -1,0 +1,106 @@
+---
+import { KOFI_URL } from '../config.js';
+import { t, type Locale } from '../i18n';
+import Icon from './Icon.astro';
+
+interface Props { locale: Locale }
+const s = t(Astro.props.locale);
+/** The five supporter palettes of the app (web/src/ui/supporterThemes.css); colours in the CSS below. */
+const themes = [
+  ['korallenriff', 'Korallenriff'],
+  ['tiefsee', 'Tiefsee'],
+  ['sand', 'Sand'],
+  ['nordlicht', 'Nordlicht'],
+  ['monochrom', 'Monochrom'],
+] as const;
+---
+<section class="block" id="support" aria-labelledby="support-title">
+  <div class="wrap">
+    <div class="card">
+      <div>
+        <p class="eyebrow">{s.support.eyebrow}</p>
+        <h2 id="support-title">{s.support.title}</h2>
+        <p class="text">{s.support.text}</p>
+        <p class="meta">{s.support.note}</p>
+        <ul class="themes" aria-label={s.support.themes}>
+          {themes.map(([id, name]) => (
+            <li data-palette={id}><span class="sw" aria-hidden="true"><i></i><i></i><i></i></span>{name}</li>
+          ))}
+        </ul>
+      </div>
+      <a class="btn btn-secondary" href={KOFI_URL} rel="noopener"><Icon name="coffee" size={22} />{s.support.button}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-1);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    display: grid;
+    gap: var(--space-5);
+    align-items: center;
+  }
+  .text {
+    color: var(--text-muted);
+    max-width: 52ch;
+    margin-top: var(--space-2);
+  }
+  .meta {
+    margin-top: var(--space-2);
+  }
+  .themes {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    font-size: var(--text-meta);
+    color: var(--text-muted);
+  }
+  .themes li {
+    display: grid;
+    gap: 0.35rem;
+    justify-items: center;
+  }
+  .sw {
+    display: inline-flex;
+    gap: 0.2rem;
+    padding: 0.35rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  .sw i {
+    width: 0.9rem;
+    height: 1.5rem;
+    border-radius: 3px;
+    background: var(--border);
+  }
+  /* The first swatch carries the palette's accent (light / dark variant), values from supporterThemes.css. */
+  [data-palette='korallenriff'] { --l: #b3374a; --d: #ff8f80; }
+  [data-palette='tiefsee'] { --l: #0a6b9a; --d: #5cc4f0; }
+  [data-palette='sand'] { --l: #8a5a12; --d: #e8b95e; }
+  [data-palette='nordlicht'] { --l: #2f6f4f; --d: #6be3b0; }
+  [data-palette='monochrom'] { --l: #262626; --d: #e8e8e8; }
+  .sw i:first-child {
+    background: var(--l);
+  }
+  :global(:root[data-theme='dark']) .sw i:first-child {
+    background: var(--d);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .sw i:first-child {
+      background: var(--d);
+    }
+  }
+  @media (min-width: 48rem) {
+    .card {
+      grid-template-columns: 1fr auto;
+    }
+  }
+</style>

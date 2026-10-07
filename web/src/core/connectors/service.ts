@@ -3,6 +3,7 @@
  * Everything a connector returns is plain data; it goes into the modules through their manifest
  * contributions (`externalCalendar`), never through connector code.
  */
+import { t } from '@/strings';
 import { loadModuleStates } from '@/core/modules/activation';
 import { activeManifests } from '@/core/modules/contributions';
 import type { ExternalCalendarSink } from '@/core/modules/types';
@@ -57,20 +58,10 @@ export async function getCalendarSink(): Promise<ExternalCalendarSink | undefine
 
 /* ------------------------------------ error text ----------------------------------- */
 
-/** German text of a failure for the settings card; never contains a secret. */
+/** Text of a failure for the settings card (current language); never contains a secret. */
 export function describeError(e: unknown): string {
   const code = e instanceof ConnectorError ? e.code : 'network';
-  const texts: Record<string, string> = {
-    expired: 'Die Verbindung ist abgelaufen. Bitte melde dich neu an.',
-    'rate-limited': 'Der Dienst hat zu viele Anfragen gemeldet. Es wird später erneut versucht.',
-    'not-configured': 'Es fehlen noch Zugangsdaten.',
-    'no-proxy':
-      'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Synchronisierung).',
-    network: 'Der Dienst ist gerade nicht erreichbar.',
-    denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
-    'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
-    unsupported: 'Das geht auf diesem Gerät nicht.',
-  };
+  const texts = t.connectors.errors;
   return texts[code] ?? redact(String(e));
 }
 
@@ -145,8 +136,12 @@ export async function connectOAuth(
       { code, verifier, redirectUri },
     );
     if (!tokens.refreshToken) throw new ConnectorError('bad-response', 'no refresh token');
-    // Tokens are stored only for a login that was carried through to the end.
-    if (signal?.aborted) return await loadStatus(def.id);
+    // Tokens are stored only for a login that was carried through to the end. A token that was
+    // issued meanwhile must not stay valid at the provider: revoke it (best effort, errors ignored).
+    if (signal?.aborted) {
+      await revokeToken(platform.fetch, def.oauth, tokens.refreshToken).catch(() => undefined);
+      return await loadStatus(def.id);
+    }
     await platform.secrets.set(secretName(def.id, 'refresh'), tokens.refreshToken);
     forgetAccessToken(def.id);
     return await saveStatus(def.id, {

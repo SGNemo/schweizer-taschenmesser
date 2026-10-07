@@ -8,4 +8,4 @@ Fastify 5 + better-sqlite3; own `package.json`, no shared package with `web/`. C
 - `proxy.ts` is an SSRF hazard by nature: keep it narrow (http(s), ports 80/443/8080/8443, private/loopback/link-local blocked per hop, socket pinned to the checked address, feed content types only). Do not loosen; tests in `test/proxy.test.ts`.
 - Push and proxy take injectable deps for tests (`web-push` always speaks HTTPS: use `generateRequestDetails`).
 - No secrets, tokens or real data in the repo. Docker/compose: `Dockerfile`, `docker-compose.yml` (serves the PWA via `WEB_DIR`).
-- Wire-format changes must be reflected in `web/src/core/sync/adapters/selfHosted.ts` and `docs/architecture.md` ("Sync & backup").
+- Wire-format changes must be reflected in `web/src/core/sync/adapters/selfHosted.ts` and `docs/architecture/sync-backup.md`.

@@ -58,12 +58,23 @@ test('desktop: drive cards, scan with progress, result and unreadable folders', 
   await asDesktop(page);
   await enableDisk(page);
   await page.goto('/disk');
-  await expect(page.locator('main h1')).toHaveText('Datenträger');
-  const cards = page.getByRole('list', { name: 'Datenträger' }).getByRole('listitem');
+  await expect(page.locator('main h1')).toHaveText('Dieser PC');
+  const cards = page.getByRole('list', { name: 'Laufwerke' }).getByRole('listitem');
   await expect(cards).toHaveCount(3);
   // The nearly full system drive says so in words, not only in colour.
-  await expect(cards.first()).toContainText('Fast voll');
+  await expect(cards.first()).toContainText('Fast voll – Aufräumen empfohlen');
   await expect(cards.first()).toContainText('92 %');
+  await expect(cards.first()).toContainText('NVMe-SSD');
+  await expect(cards.first()).toContainText('Systemlaufwerk');
+  await expect(cards.first()).toContainText('Beispiel NVMe 512');
+  await expect(cards.first()).toContainText('476,8 GB');
+  await expect(cards.first()).toContainText('41 °C');
+  // Health that Windows does not hand out says why, in words.
+  await expect(cards.nth(1)).toContainText(
+    'nicht verfügbar – Windows gibt den Wert nur mit Administratorrechten heraus',
+  );
+  await expect(cards.nth(1)).toContainText('Festplatte (HDD)');
+  await expect(cards.first()).toContainText('Noch nicht gescannt');
   await audit(page, 'drives page');
 
   await page.getByRole('button', { name: 'C:\\ (System) scannen' }).click();
@@ -105,10 +116,10 @@ test('browser and Android: the module does not exist', async ({ page }) => {
   await expect(page.locator('main h1')).toBeVisible();
   await page.goto('/library');
   await expect(page.locator('main h1')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Datenträger' })).toHaveCount(0);
-  await expect(page.getByText('Datenträger', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Dieser PC' })).toHaveCount(0);
+  await expect(page.getByText('Dieser PC', { exact: true })).toHaveCount(0);
   await page.goto('/disk');
-  await expect(page.getByRole('heading', { name: 'Datenträger' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Dieser PC' })).toHaveCount(0);
 });
 
 /** The fake data is dated relative to 2025-06-15 (see FAKE_NOW in fakeDisk.ts). */
@@ -436,10 +447,123 @@ test('clean-up places on the drives page start a scan of that folder', async ({ 
   await asDesktop(page);
   await enableDisk(page);
   await page.goto('/disk');
-  await expect(page.getByRole('heading', { name: 'Aufräumen' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Schnellübersicht' })).toBeVisible();
   await page.getByRole('button', { name: 'Downloads scannen' }).click();
   await expect(
     page.getByRole('heading', { name: /Scan von C:\\Nutzer\\Beispiel\\Downloads/ }),
   ).toBeVisible();
   await expect(page.getByTestId('treemap')).toBeVisible();
+});
+
+test('tab System shows CPU, memory, battery, graphics, network and the biggest programs', async ({
+  page,
+}) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk');
+  await page.getByRole('button', { name: 'System', exact: true }).click();
+  await expect(page).toHaveURL(/tab=system/);
+  const info = page.getByTestId('system-info');
+  await expect(info).toContainText('Beispiel-Prozessor 3000');
+  await expect(info).toContainText('8 Kerne, 16 Threads');
+  await expect(page.getByTestId('tile-ram')).toContainText('9,5 GB von 16,0 GB belegt (59 %)');
+  await expect(page.getByTestId('tile-battery')).toContainText('64 %, wird geladen');
+  await expect(page.getByTestId('tile-cpu')).toBeVisible();
+  await expect(page.getByTestId('tile-net')).toContainText('↓');
+  // The graphics card is listed with memory and driver; the basic render driver never is.
+  await expect(info).toContainText('Beispiel-Grafik 4000');
+  await expect(info).toContainText('12,0 GB Grafikspeicher');
+  await expect(info).toContainText('Treiber 31.0.15.5123');
+  await expect(info).not.toContainText('Basic Render');
+  // Network: Wi-Fi with name and signal, one main IPv6, the rest behind a button, virtual muted.
+  await expect(info).toContainText('Beispiel-WLAN');
+  await expect(info).toContainText('Signal stark (78 %)');
+  await expect(info).toContainText('192.168.1.20');
+  await expect(info).toContainText('2001:db8::20');
+  await expect(info).not.toContainText('2001:db8::abcd');
+  await page.getByRole('button', { name: 'Alle Adressen anzeigen' }).click();
+  await expect(info).toContainText('2001:db8::abcd');
+  await expect(info.locator('[data-kind="virtual"]')).toContainText('vEthernet (WSL)');
+  await expect(info).toContainText('Beispiel Mainboard B650');
+  await expect(info).toContainText('2 × 8,0 GB DDR5 · 6000 MHz');
+  await expect(info).toContainText('2560 × 1440, 144 Hz (Hauptbildschirm)');
+  await expect(info).toContainText('3 Tage, 5 Std.');
+  const procs = page.getByTestId('system-processes');
+  await expect(procs.getByRole('row').nth(1)).toContainText('browser.exe');
+  await expect(procs.getByRole('row').nth(1)).toContainText('14 Prozesse');
+  await expect(procs.getByRole('row').nth(1)).toContainText('4,2 %');
+  await expect(page.getByText('Nur zur Ansicht')).toBeVisible();
+  await page.getByRole('button', { name: 'Im Task-Manager öffnen' }).click();
+  expect(
+    await page.evaluate(
+      () => (globalThis as { __tmTaskManagerOpened?: number }).__tmTaskManagerOpened,
+    ),
+  ).toBeGreaterThan(0);
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+});
+
+test('drive cards and system tiles pass axe in the dark theme too', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk');
+  await expect(page.getByRole('list', { name: 'Laufwerke' }).getByRole('listitem')).toHaveCount(3);
+  await audit(page, 'drives (dark)');
+  await page.goto('/disk?tab=system');
+  await expect(page.getByTestId('system-info')).toBeVisible();
+  await audit(page, 'system (dark)');
+});
+
+test('public IP is only asked for on a click and only shows the answer', async ({ page }) => {
+  let asked = 0;
+  await page.route('https://api.ipify.org/**', async (route) => {
+    asked++;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ ip: '203.0.113.7' }),
+    });
+  });
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk?tab=system');
+  await expect(page.getByTestId('system-info')).toBeVisible();
+  await expect(page.getByText('Fragt den Dienst api.ipify.org')).toBeVisible();
+  expect(asked).toBe(0);
+  await page.getByRole('button', { name: 'Öffentliche IP abfragen' }).click();
+  await expect(page.getByTestId('public-ip')).toHaveText('203.0.113.7');
+  expect(asked).toBe(1);
+});
+
+test('quick overview lists sizes of clean-up places and the recycle bin without a scan', async ({
+  page,
+}) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk');
+  await expect(page.getByRole('heading', { name: 'Schnellübersicht' })).toBeVisible();
+  const quick = page.getByRole('region', { name: 'Aufräumen' });
+  await expect(quick).toContainText('Downloads');
+  await expect(quick).toContainText('mindestens 11,5 GB');
+  await expect(quick).toContainText('3,2 GB');
+  await expect(quick.getByText('Papierkorb')).toBeVisible();
+  await expect(quick).toContainText('1,1 GB');
+});
+
+test('the old /system path leads to the System tab', async ({ page }) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/system');
+  await expect(page).toHaveURL(/\/disk\?tab=system/);
+  await expect(page.getByTestId('system-info')).toBeVisible();
+});
+
+test('browser and Android: Dieser PC does not exist', async ({ page }) => {
+  await page.goto('/library');
+  await expect(page.locator('main h1')).toBeVisible();
+  await expect(page.getByText('Dieser PC', { exact: true })).toHaveCount(0);
 });

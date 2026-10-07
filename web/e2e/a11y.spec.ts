@@ -9,25 +9,18 @@ test.beforeEach(async ({ page }) => {
 const MODULES = [
   'calendar',
   'todos',
-  'reminders',
   'finance',
   'invoices',
   'subscriptions',
   'bookmarks',
   'notes',
-  'shopping',
-  'birthdays',
-  'habits',
-  'contracts',
+  'chat',
   'budgets',
-  'packing',
   'vault',
   'accounts',
-  'news',
-  'launcher',
   'pantry',
-  'timetrack',
-  'gifts',
+  'people',
+  'lists',
 ];
 
 /** Enables every module (raw write into the module table, like the library would do). */
@@ -84,29 +77,37 @@ const PAGES = [
   ['library', '/library'],
   ['tools', '/tools'],
   ['settings', '/settings'],
+  ['settings-allgemein', '/settings/allgemein'],
+  ['settings-darstellung', '/settings/darstellung'],
+  ['settings-module', '/settings/module'],
+  ['settings-werkzeuge', '/settings/werkzeuge'],
+  ['settings-benachrichtigungen', '/settings/benachrichtigungen'],
+  ['settings-sicherheit', '/settings/sicherheit'],
+  ['settings-sync', '/settings/sync'],
+  ['settings-ki', '/settings/ki'],
+  ['settings-verbindungen', '/settings/verbindungen'],
+  ['settings-schnellerfassung', '/settings/schnellerfassung'],
+  ['settings-updates', '/settings/updates'],
+  ['settings-ueber', '/settings/ueber'],
   ['calendar', '/calendar'],
   ['todos', '/todos'],
-  ['reminders', '/reminders'],
+  ['calendar reminders', '/calendar?tab=reminders'],
   ['finance', '/finance'],
   ['finance transactions', '/finance?tab=transactions'],
   ['invoices', '/invoices'],
   ['subscriptions', '/subscriptions'],
   ['bookmarks', '/bookmarks'],
   ['notes', '/notes'],
-  ['shopping', '/shopping'],
-  ['birthdays', '/birthdays'],
-  ['habits', '/habits'],
-  ['contracts', '/contracts'],
+  ['chat', '/chat'],
   ['budgets', '/budgets'],
   ['budgets goals', '/budgets?tab=goals'],
-  ['packing', '/packing'],
   ['vault', '/vault'],
   ['accounts (set up)', '/accounts'],
-  ['news', '/news'],
-  ['launcher', '/launcher'],
   ['pantry', '/pantry'],
-  ['timetrack', '/timetrack'],
-  ['gifts', '/gifts'],
+  ['people', '/people'],
+  ['lists', '/lists'],
+  ['bookmarks links', '/bookmarks?view=links'],
+  ['components sheet', '/dev/components'],
   ['share', '/share?title=Beispiel&text=Schau%20mal%20https%3A%2F%2Fbeispiel.example%2Fx'],
 ] as const;
 
@@ -126,7 +127,7 @@ for (const scheme of ['light', 'dark'] as const) {
     }
 
     test('tools: toolbar sheet and every tool', async ({ page }) => {
-      test.setTimeout(120_000); // audits 14 tools one after the other
+      test.setTimeout(120_000); // audits 12 tools one after the other
       await page.goto('/tools');
       await expect(page.getByTestId('tool-calc')).toBeVisible();
       const names: string[] = [];
@@ -137,7 +138,7 @@ for (const scheme of ['light', 'dark'] as const) {
         await expect(toggle).toBeChecked();
         names.push(name);
       }
-      expect(names.length).toBeGreaterThanOrEqual(14);
+      expect(names.length).toBeGreaterThanOrEqual(12);
       await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
       await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
       await audit(page, `tools sheet (${scheme})`);
@@ -150,7 +151,7 @@ for (const scheme of ['light', 'dark'] as const) {
     });
 
     test('settings: AI providers (list, expanded form)', async ({ page }) => {
-      await page.goto('/settings');
+      await page.goto('/settings/ki');
       const section = page.locator('section[aria-labelledby="ai"]');
       await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Groq' });
       await expect(section.getByTestId('provider-groq')).toBeVisible();
@@ -181,7 +182,10 @@ for (const scheme of ['light', 'dark'] as const) {
       await audit(page, `accounts form + generator (${scheme})`);
       await form.getByRole('button', { name: 'Speichern' }).click();
 
-      const detail = page.getByRole('dialog', { name: 'Beispiel' });
+      // a dialog on phones, the side panel ("Details") from 1200 px
+      const detail = page
+        .getByRole('dialog', { name: 'Beispiel' })
+        .or(page.getByRole('complementary', { name: 'Details' }));
       await expect(detail.getByTestId('totp-code')).toBeVisible();
       await audit(page, `accounts detail (${scheme})`);
       await page.keyboard.press('Escape');
@@ -195,6 +199,22 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Sperren' }).click();
       await expect(page.getByLabel('Master-Passwort')).toBeVisible();
       await audit(page, `accounts locked (${scheme})`);
+    });
+
+    test('shell: sidebar, rail and the "Mehr" sheet', async ({ page }, info) => {
+      await page.goto('/');
+      await expect(page.locator('main h1')).toBeVisible();
+      const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+      if (info.project.name === 'pixel-7') {
+        await nav.getByRole('button', { name: 'Mehr' }).click();
+        await expect(page.getByRole('dialog', { name: 'Mehr' })).toBeVisible();
+        await audit(page, `more sheet (${scheme})`);
+        return;
+      }
+      await audit(page, `sidebar (${scheme})`);
+      await page.setViewportSize({ width: 1100, height: 800 });
+      await expect(nav.getByRole('link', { name: 'Planen' })).toBeVisible();
+      await audit(page, `rail (${scheme})`);
     });
 
     test('start-data wizard: choose, input, preview, result, help hint', async ({ page }) => {
@@ -220,13 +240,6 @@ for (const scheme of ['light', 'dark'] as const) {
       await audit(page, `wizard result (${scheme})`);
     });
 
-    test('news: feed manager dialog', async ({ page }) => {
-      await page.goto('/news');
-      await page.getByRole('button', { name: 'Feeds verwalten' }).click();
-      await expect(page.getByRole('dialog', { name: 'Feeds verwalten' })).toBeVisible();
-      await audit(page, `news feed manager (${scheme})`);
-    });
-
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {
       await page.goto('/');
       await page.locator('header button', { hasText: 'Suchen' }).click();
@@ -242,12 +255,10 @@ for (const scheme of ['light', 'dark'] as const) {
         '/invoices?new=1',
         '/bookmarks?new=1',
         '/notes?new=1',
-        '/contracts?new=1',
         '/vault?new=1',
-        '/habits?new=1',
-        '/birthdays?new=1',
+        '/people?new=1',
         '/budgets?tab=goals&new=1',
-        '/reminders?new=1',
+        '/calendar?tab=reminders&new=1',
       ]) {
         await page.goto(url);
         await expect(page.getByRole('dialog'), url).toBeVisible();

@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
-import { formatDay, today } from '@/core/time/dates';
+import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
   Badge,
@@ -18,7 +19,15 @@ import {
   TextField,
 } from '@/ui';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
-import { expiryState, filterDocuments, formatSize, safeFileName, sortDocuments } from '../logic';
+import {
+  cancelDeadline,
+  endOf,
+  filterDocuments,
+  formatSize,
+  safeFileName,
+  sortDocuments,
+  statusOf,
+} from '../logic';
 import { documentRepo } from '../repo';
 import { CATEGORIES, type DocCategory } from '../schema';
 
@@ -53,8 +62,8 @@ export default function VaultPage() {
   }, [docs]);
 
   const shown = useMemo(
-    () => sortDocuments(filterDocuments(docs ?? [], { category, query })),
-    [docs, category, query],
+    () => sortDocuments(filterDocuments(docs ?? [], { category, query }), day),
+    [docs, category, query, day],
   );
 
   return (
@@ -90,11 +99,15 @@ export default function VaultPage() {
         </Chips>
       </div>
       {docs && shown.length === 0 ? (
-        <EmptyState icon="lock" title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered} />
+        <EmptyState title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>
+          {docs.length === 0 ? <StartDataButton moduleId="vault" /> : null}
+        </EmptyState>
       ) : null}
       <ItemList layout="grid" label={t.vault.title}>
         {shown.map((d) => {
-          const state = expiryState(d, day);
+          const state = statusOf(d, day);
+          const end = endOf(d);
+          const deadline = cancelDeadline(d);
           const hasFile = files?.has(d.id) ?? false;
           return (
             <ItemRow
@@ -103,8 +116,10 @@ export default function VaultPage() {
               onOpen={() => setTarget(d)}
               meta={[
                 t.vault.categories[d.category],
-                d.expiresOn
-                  ? `${t.vault.expiresOn}: ${formatDay(d.expiresOn, 'd. MMM yyyy')}`
+                d.provider,
+                end ? `${t.vault.endLabel}: ${formatDay(end, 'd. MMM yyyy')}` : undefined,
+                deadline && state !== 'expired'
+                  ? `${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`
                   : undefined,
                 d.fileName
                   ? `${d.fileName}${d.fileSize !== undefined ? ` (${formatSize(d.fileSize)})` : ''}${hasFile ? '' : ` · ${t.vault.fileElsewhere}`}`
@@ -114,11 +129,11 @@ export default function VaultPage() {
                 .join(' · ')}
               end={
                 <>
-                  {state === 'expired' || state === 'soon' ? (
-                    <Badge tone={state === 'expired' ? 'accent' : 'neutral'}>
-                      {state === 'expired' ? t.vault.expired : t.vault.soon}
+                  {state === 'ok' || state === 'open-ended' ? null : (
+                    <Badge tone={state === 'act-now' || state === 'expired' ? 'accent' : 'neutral'}>
+                      {t.vault.status[state]}
                     </Badge>
-                  ) : null}
+                  )}
                   {hasFile && d.fileName ? (
                     <Button
                       variant="ghost"

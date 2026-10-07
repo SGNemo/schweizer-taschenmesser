@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ask, type AskResponse } from '@/core/ai/assistant';
 import { createRouterProvider, loadAiConfig } from '@/core/ai/config';
+import { isAiOn } from '@/core/ai/switch';
 import { searchEntries } from '@/core/ai/search/fulltext';
 import type { ResultRow } from '@/core/ai/query/types';
 import { db } from '@/core/db/db';
 import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
+import { createLocalStage } from '@/core/ai/local/stage';
+import { localModelActive, localStageReady, useLocalModel } from '@/core/ai/local/state';
+import { cloudAllowed, loadAiWriteSettings } from '@/core/ai/write/settings';
 import { today } from '@/core/time/dates';
 
 export type AnswerState =
@@ -21,23 +25,44 @@ export function useAssistant() {
 
   useEffect(() => () => controller.current?.abort(), []);
 
-  const submit = useCallback(async (question: string, forceModel = false) => {
-    controller.current?.abort();
-    const ctl = new AbortController();
-    controller.current = ctl;
-    setState({ phase: 'loading', question });
-    const [config, states] = await Promise.all([loadAiConfig(), loadModuleStates()]);
-    const response = await ask(question, {
-      manifests: activeManifests(states),
-      known: availableManifests(),
-      today: today(),
-      provider: await createRouterProvider(config),
-      database: db,
-      forceModel,
-      signal: ctl.signal,
-    });
-    if (!ctl.signal.aborted) setState({ phase: 'done', question, response });
-  }, []);
+  const submit = useCallback(
+    async (question: string, forceModel = false, preferModule?: string) => {
+      controller.current?.abort();
+      const ctl = new AbortController();
+      controller.current = ctl;
+      if (!(await isAiOn())) {
+        setState({ phase: 'idle' });
+        return;
+      }
+      setState({ phase: 'loading', question });
+      const [config, states, writeSettings] = await Promise.all([
+        loadAiConfig(),
+        loadModuleStates(),
+        loadAiWriteSettings(),
+        // What the shell has decides whether stage 1 is asked at all.
+        useLocalModel.getState().refresh(),
+      ]);
+      const response = await ask(question, {
+        manifests: activeManifests(states),
+        known: availableManifests(),
+        today: today(),
+        provider: await createRouterProvider(config),
+        database: db,
+        forceModel,
+        signal: ctl.signal,
+        preferModule,
+        write: {
+          enabled: writeSettings.enabled,
+          modulesOff: writeSettings.modulesOff,
+          cloud: cloudAllowed(writeSettings, localModelActive()),
+          askMissing: writeSettings.askMissing,
+          local: localStageReady() ? createLocalStage() : undefined,
+        },
+      });
+      if (!ctl.signal.aborted) setState({ phase: 'done', question, response });
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     controller.current?.abort();

@@ -2,6 +2,7 @@ import { formatMoney } from '@/core/money';
 import type { CalendarItem, CalendarSource } from '@/core/modules/types';
 import { cancelDeadlinesInRange, chargesInRange } from './logic';
 import { subscriptionRepo } from './repo';
+import { t } from '@/strings';
 
 /** Charges and cancellation deadlines of active subscriptions. */
 const source: CalendarSource = async (range) => {
@@ -24,7 +25,7 @@ const source: CalendarSource = async (range) => {
         id: `${s.id}:cancel:${d.deadline}`,
         source: 'subscriptions',
         kind: 'cancel',
-        title: `Kündigungsfrist: ${s.name}`,
+        title: t.subscriptions.cancelCalendar(s.name),
         date: d.deadline,
         allDay: true,
         to: '/subscriptions',

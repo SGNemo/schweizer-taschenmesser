@@ -1,14 +1,16 @@
 /*
  * Design tokens – the single place where Nemo's look is defined. Components and modules use only
  * these variables (no hex colours, no fixed radii/shadows), so a change here restyles everything.
- * Guide: CLAUDE.md → "Design-Richtlinien". Contrast values (WCAG AA) are noted next to the palette.
+ * Guide: docs/howto/design-rules.md. Spec: docs/design/DESIGN-SPEC.md § 5–6 (values, contrast ratios).
  *
- * Look ("Klar", decided 2026-09-30, docs/DECISIONS.md): flat surfaces on a solid page background,
- * borders instead of shadows, one accent colour reserved for the primary action, calm controls.
+ * Look ("Klar 2", decided 2026-10-01): cool neutral base, dark is the reference theme, one orange
+ * accent. Depth in three levels: page (solid `--bg`), cards/widgets (`--shadow-1`, no border),
+ * floating layers (`--shadow-2`). Gradients only for brand surfaces (`--ocean-*`).
  *
  * Structure: (1) scale tokens, (2) light theme = default, (3) dark theme – the block exists twice
  * (explicit `data-theme='dark'` and the system preference); `tokens.test.ts` keeps both identical,
- * (4) accent variants set through `data-accent` on <html> (orange is the default).
+ * (4) accent variants set through `data-accent` on <html> (orange is the default),
+ * (5) device-local text size and density (`data-text-size`, `data-density` on <html>).
  */
 :root {
   --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -17,15 +19,22 @@
   --font-num: tabular-nums;
 
   /* Type scale */
-  --text-xs: 0.75rem;
+  --text-xs: 0.75rem; /* badges only */
+  --text-caps: 0.6875rem; /* uppercase eyebrows, 600 weight, +0.06em */
+  --text-meta: 0.8125rem; /* secondary lines, captions: colour --text-3 */
   --text-sm: 0.875rem;
+  --text-label: 0.9375rem; /* labels, card titles */
   --text-md: 1rem;
   --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
+  --text-xl: 1.25rem; /* h2 */
   --text-2xl: clamp(1.5rem, 1.3rem + 0.6vw, 2rem);
+  /* Page title: 32 px, 28 px on the phone (override below). */
+  --text-h1: 2rem;
   /* Hero numbers (finance balance, tool results) */
   --text-3xl: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
-  --leading: 1.5;
+  --leading: 1.6; /* default, airier than the former 1.5 (Einstellungen → Lesen) */
+  /* Longest comfortable line for running text (notes, answers, help). */
+  --measure: 68ch;
   --leading-tight: 1.25;
   /* Three weights only: body 400, labels/buttons 500, titles 600, hero 700. */
   --weight-medium: 500;
@@ -42,19 +51,27 @@
   --space-6: 2rem;
   --space-7: 3rem;
 
+  /* sm: chips in rows, kbd · md: buttons, inputs, nav items · lg: cards, widgets, panels · xl: dialogs, sheets */
   --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
   --radius-full: 999px;
 
   /* Icon sizes (lucide) */
   --icon-sm: 16px;
   --icon-md: 20px;
   --icon-lg: 28px;
+  /* Lucide stroke: 1.5 at 20 px and above, 1.75 at 16 px (see ui/icons.tsx). */
+  --icon-stroke: 1.5;
 
   --touch: 44px;
-  --sidebar-w: 248px;
+  /* Longest text block in a row or tile before it ends in an ellipsis (full text in the tooltip). */
+  --clamp-lines: 2;
+  /* List row height and grid gap; changed by phone width and by the density setting below. */
+  --row-h: 2.75rem;
+  --grid-gap: var(--space-5);
+  --sidebar-w: 15.5rem; /* 248 px at 16 px root */
   --bottom-nav-h: 64px;
   /* Page widths (see layout/PageContainer) and the fluid gutter around the page. */
   --page-narrow: 45rem;
@@ -81,37 +98,49 @@
 
   /* ---- Light theme (default) ---- */
   color-scheme: light;
-  --bg: #fbf8f3;
+  --bg: #f3f4f4;
   --surface: #ffffff;
-  --surface-2: #f3efe8;
-  /* Translucent surface for the skeleton shimmer and overlays on images. */
-  --surface-glass: rgb(255 255 255 / 0.78);
-  --border: #e6e1d8; /* decorative dividers */
-  --border-strong: #788489; /* form controls: 3.9:1 on surface, 3.4:1 on surface-2 (WCAG 1.4.11) */
-  --text: #13262f; /* 15.6:1 on surface */
-  --text-muted: #51616a; /* 6.1:1 on bg, 5.6:1 on surface-2 */
-  --accent-2: #0b6f72; /* turquoise, secondary accent (5.95:1 on surface) */
-  --accent-2-soft: #ddf1f0;
+  --surface-2: #eaecee;
+  --border: #e2e5e8; /* hairline row dividers, top/bottom bar line */
+  --border-strong: #76838c; /* form controls: 3.9:1 on surface, 3.3:1 on surface-2 (WCAG 1.4.11) */
+  --text: #171f24;
+  --text-muted: #55636b;
+  --text-3: #5f6c75; /* meta, captions, eyebrows: 4.5:1 on surface-2 */
   --danger: #b3261e;
-  --danger-soft: #fbe9e7;
   --success: #1b7545;
-  --success-soft: #e3f3ea;
   --warning: #8a5a00;
-  --warning-soft: #fbf0da;
+  --info: #1f5fa8;
   --focus: #0b6f72;
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent);
   /* Chart series (categorical slots 1 and 2) */
   --viz-1: #16847f;
-  --viz-2: #e0601c;
-  --overlay: rgb(11 29 43 / 0.5);
-  /* Shadows only for floating layers (menus, dialogs, FAB); cards use borders. */
-  --shadow-1: 0 1px 2px rgb(19 38 47 / 0.06), 0 2px 8px rgb(19 38 47 / 0.05);
-  --shadow-2: 0 12px 32px rgb(19 38 47 / 0.14), 0 2px 6px rgb(19 38 47 / 0.06);
+  --viz-2: #c94f12;
+  /* Categories: six fixed hues for chips/stripes (always with the category name, never colour alone). */
+  --cat-1: #1f5fa8;
+  --cat-2: #12766f;
+  --cat-3: #7a4aa8;
+  --cat-4: #8a5a00;
+  --cat-5: #a0305f;
+  --cat-6: #3f6b1f;
+  --overlay: rgb(0 0 0 / 0.45);
+  /* Level 1: cards, widgets, panels (no border). Level 2: menus, dialogs, sheets, FAB, toast. */
+  --shadow-1: 0 1px 2px rgb(23 31 36 / 0.06), 0 8px 24px rgb(23 31 36 / 0.07);
+  --shadow-2: 0 16px 48px rgb(23 31 36 / 0.18), 0 2px 6px rgb(23 31 36 / 0.08);
   /* Accent (orange): filled primary action + FAB, text/link/icon colour. */
   --accent: #b5430c; /* 5.6:1 on surface */
   --accent-hover: #963709;
   --accent-contrast: #ffffff; /* text on the filled accent, 5.6:1 */
-  --accent-soft: #fdebdd;
+  --accent-soft: #fbe9de;
+  /* Status backgrounds: the status colour at 15 % over whatever is behind (no hex, both themes). */
+  --danger-soft: color-mix(in srgb, var(--danger) 15%, transparent);
+  --success-soft: color-mix(in srgb, var(--success) 15%, transparent);
+  --warning-soft: color-mix(in srgb, var(--warning) 15%, transparent);
+  --info-soft: color-mix(in srgb, var(--info) 15%, transparent);
+  /* Status text on those soft backgrounds (badges): 15 % of the body text colour mixed in keeps
+     AA (4.5:1) on page, card and chip surfaces; the plain status colours do not on the page. */
+  --danger-ink: color-mix(in srgb, var(--danger) 85%, var(--text));
+  --success-ink: color-mix(in srgb, var(--success) 85%, var(--text));
+  --warning-ink: color-mix(in srgb, var(--warning) 85%, var(--text));
+  --info-ink: color-mix(in srgb, var(--info) 85%, var(--text));
   /* Ocean gradient, kept for the places that say "Nemo": splash, empty states, brand images. */
   --ocean-from: #1d6b7a;
   --ocean-to: #0e2f45;
@@ -119,33 +148,36 @@
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0b1d2b;
-  --surface: #132b3a;
-  --surface-2: #1a3747;
-  --surface-glass: rgb(19 43 58 / 0.78);
-  --border: #26485b;
-  --border-strong: #71919e; /* 4.4:1 on surface, 3.7:1 on surface-2 */
-  --text: #e7f1f2;
-  --text-muted: #9fb6bc;
-  --accent-2: #4fd1c5;
-  --accent-2-soft: #16403f;
+  --bg: #0f1316;
+  --surface: #171c20;
+  --surface-2: #1f2529;
+  --border: #262d32;
+  --border-strong: #6b767e; /* 3.6:1 on surface, 3.1:1 on surface-2 */
+  --text: #eceff1;
+  --text-muted: #aab4bb;
+  --text-3: #88939b;
   --danger: #f4a39c;
-  --danger-soft: #3a2426;
-  --success: #74d39c;
-  --success-soft: #163a2b;
+  --success: #7fd3a3;
   --warning: #e8b85a;
-  --warning-soft: #3a3020;
-  --focus: #4fd1c5;
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
-  --viz-1: #34b3ac;
-  --viz-2: #f27a38;
-  --overlay: rgb(3 12 20 / 0.65);
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.18);
-  --shadow-2: 0 12px 32px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.25);
+  --info: #7cc7e8;
+  --focus: #ffb07a;
+  --viz-1: #4fb3ad;
+  --viz-2: #ff9a57;
+  /* Categories: six fixed hues for chips/stripes (always with the category name, never colour alone). */
+  --cat-1: #7cc7e8;
+  --cat-2: #4fb3ad;
+  --cat-3: #c9a8ea;
+  --cat-4: #e8b85a;
+  --cat-5: #f0a0c0;
+  --cat-6: #a9d26f;
+  --overlay: rgb(0 0 0 / 0.55);
+  --shadow-1:
+    0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 16px 48px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
   --accent: #ff9a57;
   --accent-hover: #ffb07a;
   --accent-contrast: #1b0f06;
-  --accent-soft: #3a2a22;
+  --accent-soft: #2e241c;
   --ocean-from: #1d6b7a;
   --ocean-to: #0e2f45;
 }
@@ -153,33 +185,37 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bg: #0b1d2b;
-    --surface: #132b3a;
-    --surface-2: #1a3747;
-    --surface-glass: rgb(19 43 58 / 0.78);
-    --border: #26485b;
-    --border-strong: #71919e; /* 4.4:1 on surface, 3.7:1 on surface-2 */
-    --text: #e7f1f2;
-    --text-muted: #9fb6bc;
-    --accent-2: #4fd1c5;
-    --accent-2-soft: #16403f;
+    --bg: #0f1316;
+    --surface: #171c20;
+    --surface-2: #1f2529;
+    --border: #262d32;
+    --border-strong: #6b767e; /* 3.6:1 on surface, 3.1:1 on surface-2 */
+    --text: #eceff1;
+    --text-muted: #aab4bb;
+    --text-3: #88939b;
     --danger: #f4a39c;
-    --danger-soft: #3a2426;
-    --success: #74d39c;
-    --success-soft: #163a2b;
+    --success: #7fd3a3;
     --warning: #e8b85a;
-    --warning-soft: #3a3020;
-    --focus: #4fd1c5;
-    --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
-    --viz-1: #34b3ac;
-    --viz-2: #f27a38;
-    --overlay: rgb(3 12 20 / 0.65);
-    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.18);
-    --shadow-2: 0 12px 32px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.25);
+    --info: #7cc7e8;
+    --focus: #ffb07a;
+    --viz-1: #4fb3ad;
+    --viz-2: #ff9a57;
+    /* Categories: six fixed hues for chips/stripes (always with the category name, never colour alone). */
+    --cat-1: #7cc7e8;
+    --cat-2: #4fb3ad;
+    --cat-3: #c9a8ea;
+    --cat-4: #e8b85a;
+    --cat-5: #f0a0c0;
+    --cat-6: #a9d26f;
+    --overlay: rgb(0 0 0 / 0.55);
+    --shadow-1:
+      0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35),
+      0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-2: 0 16px 48px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
     --accent: #ff9a57;
     --accent-hover: #ffb07a;
     --accent-contrast: #1b0f06;
-    --accent-soft: #3a2a22;
+    --accent-soft: #2e241c;
     --ocean-from: #1d6b7a;
     --ocean-to: #0e2f45;
   }
@@ -196,8 +232,6 @@
     --accent-hover: light-dark(#095c5f, #7fe3da);
     --accent-contrast: light-dark(#ffffff, #06201f);
     --accent-soft: light-dark(#ddf1f0, #16403f);
-    --accent-2: light-dark(#b5430c, #ff9a57);
-    --accent-2-soft: light-dark(#fdebdd, #3a2a22);
   }
   :root[data-accent='coral'] {
     --accent: light-dark(#b3374a, #ff93a5);
@@ -213,10 +247,116 @@
   }
 }
 
+/* Phone: page title 28 px, list rows 48 px. */
+@media (max-width: 899px) {
+  :root {
+    --text-h1: 1.75rem;
+    --row-h: 3rem;
+  }
+}
+
+/* Large monitors: the root grows from 16 px (≤ 1920 px wide) to 20 px (≥ 3440 px wide) so type, sidebar and pages keep their proportion to the screen. Everything is rem. The text-size setting below overrides it. */
+:root {
+  font-size: clamp(1rem, 1rem + (100vw - 1920px) * 0.0026, 1.25rem);
+}
+
+/* Device-local settings (Einstellungen → Darstellung): text size 16 → 18 px (everything is rem), density. */
+:root[data-text-size='small'] {
+  font-size: 90%; /* 14.4 px */
+}
+:root[data-text-size='large'] {
+  font-size: 112.5%;
+}
+:root[data-text-size='xlarge'] {
+  font-size: 125%; /* 20 px */
+}
+/* Line spacing for easier reading (Einstellungen → Darstellung). */
+:root[data-leading='compact'] {
+  --leading: 1.4;
+  --leading-tight: 1.2;
+}
+:root[data-leading='airy'] {
+  --leading: 1.75;
+  --leading-tight: 1.4;
+}
+:root[data-density='compact'] {
+  --row-h: 2.25rem; /* never below 36 px */
+  --grid-gap: var(--space-4);
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-fast: 0ms;
     --dur: 0ms;
     --dur-slow: 0ms;
   }
+}
+/* The same, chosen inside the app (Einstellungen → Darstellung → Bewegung). */
+:root[data-motion='reduce'] {
+  --dur-fast: 0ms;
+  --dur: 0ms;
+  --dur-slow: 0ms;
+}
+
+/* Reading aid (core/text/readable.ts, core/text/ReadableText.tsx): the start of a word is set apart by contrast first and by weight only a little (strong weight at small sizes was hard to read). The wrapper's `data-ink` says what ink surrounds the text (core/text/ink.ts): p = primary → the whole text is dimmed a step and the start keeps full ink; m = muted → the start is brightened to the primary ink; o = coloured → weight only. Styles: soft (default) weight +100, color no weight change, bold clearly heavier. Never animated. */
+:root {
+  --read-rest: 74%; /* ink left in the dimmed part of primary text: ≥ 8:1 on every surface */
+  --read-weight: 500; /* body text start (soft) */
+  --read-weight-heavy: 700; /* start in headings (already 600) */
+}
+:root[data-read-style='color'] {
+  --read-rest: 68%;
+  --read-weight: inherit;
+  --read-weight-heavy: inherit;
+}
+:root[data-read-style='bold'] {
+  --read-rest: 82%;
+  --read-weight: 650;
+  --read-weight-heavy: 800;
+}
+[data-rs] {
+  font-weight: var(--read-weight);
+}
+[data-rs='h'] {
+  font-weight: var(--read-weight-heavy);
+}
+[data-rt][data-ink='p'] {
+  color: color-mix(in srgb, currentColor var(--read-rest), var(--bg));
+}
+[data-rt][data-ink='p'] > [data-rs],
+[data-rt][data-ink='m'] > [data-rs] {
+  color: var(--text);
+}
+
+/* "Ruhig" colour mode (Einstellungen → Darstellung → Farben): only overdue (red) and today (accent) keep colour. */
+:root[data-color='calm'] {
+  --cat-1: var(--text-3);
+  --cat-2: var(--text-3);
+  --cat-3: var(--text-3);
+  --cat-4: var(--text-3);
+  --cat-5: var(--text-3);
+  --cat-6: var(--text-3);
+  --success: var(--text-muted);
+  --warning: var(--text-muted);
+  --info: var(--text-muted);
+}
+
+/* Navigation areas: one category hue per area for icons, the thin group stripe and the library tiles (always next to the area name; "Ruhig" turns them grey via --cat-*). */
+[data-area='plan'] {
+  --area-color: var(--cat-1);
+}
+[data-area='money'] {
+  --area-color: var(--cat-2);
+}
+[data-area='knowledge'] {
+  --area-color: var(--cat-3);
+}
+[data-area='household'] {
+  --area-color: var(--cat-4);
+}
+[data-area='vault'] {
+  --area-color: var(--cat-5);
+}
+[data-area='system'] {
+  --area-color: var(--cat-6);
 }

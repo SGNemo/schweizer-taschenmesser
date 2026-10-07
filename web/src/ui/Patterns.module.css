@@ -6,6 +6,11 @@
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
+.headerViews {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
 .toolbar {
   display: flex;
   align-items: center;
@@ -21,29 +26,29 @@
   max-width: 100%;
   overflow-x: auto;
   gap: var(--space-hair);
-  padding: 4px;
+  padding: 3px;
   border-radius: var(--radius-full);
   background: var(--surface-2);
 }
 .segment button {
-  min-height: 36px;
+  min-height: 2rem;
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-full);
   background: none;
-  color: var(--text);
+  color: var(--text-muted);
   font-weight: var(--weight-medium);
   white-space: nowrap;
   cursor: pointer;
 }
-/* Touch devices get the full 44 px target. */
+/* Touch devices get the full 44 px target (track 38 px for the mouse). */
 @media (pointer: coarse) {
   .segment button {
-    min-height: calc(var(--touch) - 8px);
+    min-height: calc(var(--touch) - 6px);
   }
 }
 .segment button:hover:not([aria-pressed='true']) {
-  color: var(--accent);
+  color: var(--text);
 }
 .segment button[aria-pressed='true'] {
   background: var(--surface);
@@ -92,11 +97,62 @@
   flex-direction: column;
   gap: var(--space-3);
 }
+.item {
+  min-width: 0;
+}
+/* List layout: one grouped surface, rows divided by hairlines. */
+.rows {
+  gap: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.rows > .item + .item {
+  border-top: 1px solid var(--border);
+}
+.rows > .item {
+  border-radius: var(--radius-sm);
+}
+.rows > .item:hover,
+.rows > .item:focus-within {
+  background: var(--surface-2);
+}
+.rows > .selected,
+.rows > .selected:hover {
+  background: var(--accent-soft);
+}
+/* Grid layout: the same rows as card tiles. */
+.grid > .item {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.grid > .selected {
+  background: var(--accent-soft);
+}
+/* Tiles of one band are equally tall; the row fills the tile and centres checkbox, text and actions. */
+.grid > .item {
+  display: flex;
+}
+.grid .row {
+  flex: 1;
+  flex-wrap: nowrap;
+}
+.grid .main {
+  min-width: 0;
+}
 .row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+.rows .row {
+  min-height: var(--row-h);
+  padding: 0 var(--space-2);
+  flex-wrap: nowrap;
 }
 .main {
   flex: 1;
@@ -115,14 +171,60 @@
   min-height: var(--touch);
   justify-content: center;
 }
+.rows .main {
+  min-width: 0;
+  min-height: var(--row-h);
+}
+.static {
+  cursor: default;
+}
 .title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
+  overflow: hidden;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+.grid .title {
   font-weight: var(--weight-semibold);
-  overflow-wrap: anywhere;
 }
 .muted {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
+  overflow: hidden;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+/* Row meta: 13 px, tertiary. */
+.rows .muted {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.done .title {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+/* Row actions appear on hover and focus; without hover (touch) they stay visible. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  opacity: 0;
+}
+.item:hover .actions,
+.item:focus-within .actions {
+  opacity: 1;
+}
+@media (hover: none) {
+  .actions {
+    opacity: 1;
+  }
 }
 .chips {
   display: flex;
@@ -130,24 +232,32 @@
   gap: var(--space-2);
 }
 .chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: 2rem;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text-muted);
   font: inherit;
   font-size: var(--text-sm);
 }
 button.chip {
-  min-height: var(--touch);
   cursor: pointer;
+}
+/* 32 px to look at, 44 px to hit. */
+button.chip::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+}
+button.chip:hover:not([aria-pressed='true']) {
+  color: var(--text);
 }
 button.chip[aria-pressed='true'] {
   background: var(--accent-soft);
-  border-color: var(--accent);
   color: var(--accent);
   font-weight: var(--weight-semibold);
 }
@@ -183,6 +293,9 @@ button.chip[aria-pressed='true'] {
 .progressOver {
   background: var(--danger);
 }
+.progressWarn {
+  background: var(--warning);
+}
 .overdue {
   color: var(--danger);
   font-weight: var(--weight-semibold);
@@ -204,7 +317,14 @@ button.chip[aria-pressed='true'] {
 }
 .widgetItemTitle {
   font-weight: var(--weight-medium);
-  overflow-wrap: anywhere;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
+  overflow: hidden;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 .widgetMeta {
   color: var(--text-muted);
@@ -233,11 +353,16 @@ button.chip[aria-pressed='true'] {
 }
 .splitView {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(20rem, 24vw, 30rem);
+  grid-template-columns: minmax(0, 1fr) clamp(22rem, 30%, 30rem);
   gap: var(--space-5);
   align-items: stretch;
   flex: 1 0 auto;
   min-height: 0;
+}
+@media (min-width: 2200px) {
+  .splitView {
+    grid-template-columns: minmax(0, 1fr) 32rem;
+  }
 }
 .splitMain {
   min-width: 0;
@@ -419,4 +544,59 @@ button.chip[aria-pressed='true'] {
   max-width: 100%;
   max-height: 16rem;
   object-fit: contain;
+}
+
+/* Swipe rows (touch): the row slides over a coloured action layer. */
+.swipeable {
+  position: relative;
+  overflow: hidden;
+}
+.swipeable > .row {
+  position: relative;
+  background: var(--surface);
+  touch-action: pan-y;
+}
+.rows > .swipeable:hover > .row,
+.rows > .swipeable:focus-within > .row {
+  background: var(--surface-2);
+}
+.reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  font-weight: var(--weight-semibold);
+}
+.revealRight {
+  justify-content: flex-start;
+  background: var(--success-soft);
+  color: var(--success);
+}
+.revealLeft {
+  justify-content: flex-end;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Urgency stripe at the left edge of a row (the colour never stands alone: the row carries a badge or text). */
+.item[data-tone] {
+  position: relative;
+}
+.item[data-tone]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--stripe, var(--danger));
+}
+.item[data-tone='today'] {
+  --stripe: var(--accent);
+}
+/* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
+.done [data-rr] {
+  color: inherit;
 }

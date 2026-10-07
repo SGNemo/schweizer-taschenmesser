@@ -216,6 +216,22 @@ describe('connectOAuth', () => {
     expect(await loadStatus('testco')).toEqual(before);
   });
 
+  it('a login aborted while the code is exchanged revokes the token it received', async () => {
+    await saveClient('testco', { clientId: 'client-abc-123' });
+    const controller = new AbortController();
+    const before = await loadStatus('testco');
+    tokenResponse = () => {
+      // The user closes the dialog in the moment the token endpoint answers.
+      controller.abort();
+      return jsonResponse(200, { access_token: 'AT-1', refresh_token: 'RT-1', expires_in: 3600 });
+    };
+    expect(await connectOAuth(def, ['calendar'], { signal: controller.signal })).toEqual(before);
+    expect(tokenBodies).toHaveLength(1);
+    expect(revoked).toBe(1);
+    expect(secrets.has('oauth:testco:refresh')).toBe(false);
+    expect(await loadStatus('testco')).toEqual(before);
+  });
+
   it('a login aborted before the browser opens does nothing at all', async () => {
     await saveClient('testco', { clientId: 'client-abc-123' });
     const controller = new AbortController();

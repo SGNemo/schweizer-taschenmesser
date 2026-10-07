@@ -3,9 +3,12 @@ import { take, word, type Scan } from './util';
 const NUM = String.raw`\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?`;
 const CUR = String.raw`€|eur(?:o)?(?![\p{L}\d])`;
 
-const AFTER = new RegExp(String.raw`(?<![\d.,])([+-])?\s?(${NUM})\s?(?:${CUR})`, 'iu');
-const BEFORE = new RegExp(String.raw`(?:${CUR})\s?(${NUM})(?![\d])`, 'iu');
-const BARE = new RegExp(String.raw`(?<![\d.,:])([+-])?(${NUM})(?![\d.,:])`, 'u');
+const AFTER = new RegExp(
+  String.raw`(?<![\d.,])((?<![\p{L}\d])[+-])?\s?(${NUM})\s?(?:${CUR})`,
+  'iu',
+);
+const BEFORE = new RegExp(String.raw`(?<![\p{L}\d])(?:${CUR})\s?(${NUM})(?![\d])`, 'iu');
+const BARE = new RegExp(String.raw`(?<![\d.,:])((?<![\p{L}\d])[+-])?(${NUM})(?![\d.,:])`, 'u');
 const INCOME = word(
   'einnahmen?|gehalt|lohn|erhalten|bekommen|rückerstattung|erstattung|eingang|gutschrift',
 );

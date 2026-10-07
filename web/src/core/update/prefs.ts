@@ -12,7 +12,7 @@ export const prefsSchema = z.object({
   auto: z.boolean().default(true),
 });
 export interface UpdatePrefs {
-  channel: UpdateChannel;
+  channel: Exclude<UpdateChannel, 'dev'>;
   auto: boolean;
 }
 

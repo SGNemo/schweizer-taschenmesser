@@ -5,9 +5,9 @@ import { addDaysStr, formatDay, toDateString, toEpoch } from '@/core/time/dates'
 import { cancelDeadlinesInRange } from './logic';
 import { subscriptionRepo } from './repo';
 import { settings, settingsSchema } from './settings';
+import { t } from '@/strings';
 
 const DAY_MS = 86_400_000;
-const REMIND_TIME = '09:00';
 
 /** Reminds shortly before the cancellation deadline of a subscription runs out. */
 const source: NotificationSource = async ({ from, to }) => {
@@ -25,9 +25,13 @@ const source: NotificationSource = async ({ from, to }) => {
     .flatMap((s) =>
       cancelDeadlinesInRange(s, fromDate, toDate).map((d) => ({
         key: `subscription-cancel:${s.id}:${d.deadline}`,
-        at: toEpoch(addDaysStr(d.deadline, -before), REMIND_TIME),
-        title: `Kündigungsfrist endet: ${s.name}`,
-        body: `Letzter Tag: ${formatDay(d.deadline, 'd. MMM yyyy')} – sonst ${formatMoney(s.amountMinor)} am ${formatDay(d.charge, 'd. MMM yyyy')}`,
+        at: toEpoch(addDaysStr(d.deadline, -before), prefs.remindTime),
+        title: t.subscriptions.cancelTitle(s.name),
+        body: t.subscriptions.cancelBody(
+          formatDay(d.deadline, 'd. MMM yyyy'),
+          formatMoney(s.amountMinor),
+          formatDay(d.charge, 'd. MMM yyyy'),
+        ),
         url: '/subscriptions',
       })),
     )

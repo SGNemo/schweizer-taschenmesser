@@ -20,25 +20,17 @@ const VIEWPORTS = [
 const MODULES = [
   'calendar',
   'todos',
-  'reminders',
   'finance',
   'invoices',
   'subscriptions',
   'bookmarks',
   'notes',
-  'shopping',
-  'birthdays',
-  'habits',
-  'contracts',
+  'lists',
   'budgets',
-  'packing',
   'vault',
   'accounts',
-  'news',
-  'launcher',
   'pantry',
-  'timetrack',
-  'gifts',
+  'people',
 ];
 const PAGES = ['/', ...MODULES.map((m) => `/${m}`), '/library', '/tools', '/settings'];
 
@@ -86,6 +78,8 @@ async function metrics(page: Page) {
       overflowX: doc.scrollWidth - doc.clientWidth,
       mainOverflowX: main.scrollWidth - main.clientWidth,
       pageWidth: pageBox.width,
+      /** 1 rem in px: the root grows on big monitors (DESIGN-SPEC § 2). */
+      rem: parseFloat(getComputedStyle(doc).fontSize),
     };
   });
 }
@@ -107,13 +101,43 @@ for (const vp of VIEWPORTS) {
 
     test('the page container honours its variant', async ({ page }) => {
       await prepare(page);
-      // todos = wide (100rem = 1600 px), settings = narrow (45rem = 720 px).
+      // todos = wide (100 rem), settings = content (70 rem: category list + 44 rem column).
       await page.goto('/todos');
       await expect(page.locator('main h1')).toBeVisible();
-      expect((await metrics(page)).pageWidth).toBeLessThanOrEqual(1601);
+      const wide = await metrics(page);
+      expect(wide.pageWidth).toBeLessThanOrEqual(100 * wide.rem + 1);
       await page.goto('/settings');
       await expect(page.locator('main h1')).toBeVisible();
-      expect((await metrics(page)).pageWidth).toBeLessThanOrEqual(721);
+      const narrow = await metrics(page);
+      expect(narrow.pageWidth).toBeLessThanOrEqual(70 * narrow.rem + 1);
+    });
+
+    test('the root size grows with the screen (16 px up to 1920 px, 20 px at 3440 px)', async ({
+      page,
+    }) => {
+      await prepare(page);
+      const { rem } = await metrics(page);
+      expect(rem).toBeCloseTo(Math.min(20, Math.max(16, 16 + (vp.width - 1920) * 0.0026)), 0);
+    });
+
+    test('home: widgets of one size class in one row band are equally tall', async ({ page }) => {
+      await prepare(page);
+      await page.goto('/');
+      await expect(page.locator('main h1')).toBeVisible();
+      await expect(page.getByTestId(/^widget-/).first()).toBeVisible();
+      const boxes = await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[data-testid^="widget-"]')].map((el) => ({
+          top: Math.round(el.getBoundingClientRect().top + window.scrollY),
+          height: Math.round(el.getBoundingClientRect().height),
+          span: getComputedStyle(el).gridRowStart,
+        })),
+      );
+      const seen = new Map<string, number>();
+      for (const b of boxes) {
+        const key = `${b.top}/${b.span}`;
+        if (seen.has(key)) expect(b.height, `band ${key}`).toBe(seen.get(key));
+        else seen.set(key, b.height);
+      }
     });
 
     test('the calendar month grid uses the available height and width', async ({ page }) => {
@@ -133,8 +157,8 @@ for (const vp of VIEWPORTS) {
         }
       }
       if (vp.width >= 1920) {
-        // `full` layout: not limited to a centred column.
-        expect(box!.width).toBeGreaterThan(1100);
+        // `full` layout: not limited to a centred column (the agenda panel takes ~30 rem of it).
+        expect(box!.width).toBeGreaterThan(1000);
       }
     });
   });

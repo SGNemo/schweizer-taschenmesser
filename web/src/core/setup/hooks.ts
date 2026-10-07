@@ -12,7 +12,13 @@ export function useSetupState(): SetupState | null | undefined {
  * one history entry is pushed while `active`, and popping it calls `onBack`. Closing the overlay
  * by other means removes the entry again. The router's own history state is copied so its
  * bookkeeping stays intact.
+ *
+ * An overlay that unmounts hands its entry to one that mounts in the same render (the app remounts
+ * on a language switch with the dialog still open); only an entry nobody took over is removed. An
+ * immediate `history.back()` would arrive after the new overlay pushed its own entry and close it.
  */
+let handedOver = 0;
+
 export function useBackClose(active: boolean, onBack: () => void): void {
   const onBackRef = useRef(onBack);
   useEffect(() => {
@@ -20,7 +26,8 @@ export function useBackClose(active: boolean, onBack: () => void): void {
   });
   useEffect(() => {
     if (!active) return;
-    window.history.pushState({ ...(window.history.state as object), tmOverlay: true }, '');
+    if (handedOver > 0) handedOver--;
+    else window.history.pushState({ ...(window.history.state as object), tmOverlay: true }, '');
     const onPop = () => {
       // Re-arm so a cancelled close ("Weiter einrichten") keeps back working.
       window.history.pushState({ ...(window.history.state as object), tmOverlay: true }, '');
@@ -29,9 +36,14 @@ export function useBackClose(active: boolean, onBack: () => void): void {
     window.addEventListener('popstate', onPop);
     return () => {
       window.removeEventListener('popstate', onPop);
-      if ((window.history.state as { tmOverlay?: boolean } | null)?.tmOverlay) {
-        window.history.back();
-      }
+      handedOver++;
+      setTimeout(() => {
+        if (handedOver === 0) return; // taken over by the overlay mounted in the same render
+        handedOver--;
+        if ((window.history.state as { tmOverlay?: boolean } | null)?.tmOverlay) {
+          window.history.back();
+        }
+      }, 0);
     };
   }, [active]);
 }

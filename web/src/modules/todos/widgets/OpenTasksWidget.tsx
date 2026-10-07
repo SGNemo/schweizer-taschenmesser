@@ -1,29 +1,51 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { relativeDayLabel, today } from '@/core/time/dates';
+import { useFocusSettings } from '@/core/settings/focus';
+import { formatDay, today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
-import { compareTasks, dueTone } from '../logic';
-import { taskRepo } from '../repo';
+import { ChecklistWidget } from '@/ui';
+import { compareTasks, isActionable } from '../logic';
+import { setDone, taskRepo } from '../repo';
 
 export default function OpenTasksWidget() {
+  const [{ calmAttention: calm }] = useFocusSettings();
   const open = useLiveQuery(
-    async () => (await taskRepo.active().toArray()).filter((x) => !x.done).sort(compareTasks),
+    async () =>
+      (await taskRepo.active().toArray())
+        .filter((x) => !x.done && isActionable(x))
+        .sort(compareTasks),
     [],
   );
-  const now = today();
+  const day = today();
+  const overdue = (open ?? []).filter((x) => x.dueDate && x.dueDate < day).length;
   return (
-    <WidgetList
+    <ChecklistWidget
       loading={!open}
       empty={t.todos.widgetEmpty}
-      headline={open && open.length > 0 ? t.todos.openCount(open.length) : undefined}
-      entries={(open ?? []).slice(0, 5).map((task) => ({
-        key: task.id,
-        title: task.title,
-        meta: task.dueDate ? relativeDayLabel(task.dueDate, now) : undefined,
-        overdue: dueTone(task.dueDate, task.done, now) === 'overdue',
-      }))}
-      to="/todos"
-      linkLabel={t.todos.title}
+      emptyAction={{ label: t.homeEmpty.todos, to: '/todos?new=1' }}
+      summary={
+        open && open.length > 0
+          ? calm
+            ? t.widgets.todosSummaryCalm(open.length, overdue)
+            : t.widgets.todosSummary(open.length, overdue)
+          : undefined
+      }
+      entries={(open ?? []).map((task) => {
+        const s = task.dueDate ? dueState(task.dueDate, day) : undefined;
+        // Calm: an old date is shown as a plain date, not as a red "seit 12 Tagen".
+        const waiting = calm && s?.tone === 'overdue' && task.dueDate;
+        return {
+          key: task.id,
+          title: task.title,
+          checked: task.done,
+          tone: waiting ? ('later' as const) : s?.tone,
+          label: waiting ? formatDay(task.dueDate!, 'EEE, d. MMM') : s?.label,
+        };
+      })}
+      onToggle={async (id, done) => {
+        const task = await taskRepo.get(id);
+        if (task) await setDone(task, done);
+      }}
     />
   );
 }

@@ -1,29 +1,38 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { relativeDayLabel, today } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
-import { expiryState, sortDocuments } from '../logic';
+import { DueList } from '@/ui';
+import { nextRelevantDate, sortDocuments, statusOf } from '../logic';
 import { documentRepo } from '../repo';
 
+/** Deadlines and expiries that need attention: act now, soon and already expired. */
 export default function ExpiringWidget() {
   const docs = useLiveQuery(() => documentRepo.active().toArray(), []);
   const day = today();
-  const list = sortDocuments(docs ?? []).filter((d) => {
-    const s = expiryState(d, day);
-    return s === 'soon' || s === 'expired';
+  const urgent = sortDocuments(docs ?? [], day).filter((d) => {
+    const s = statusOf(d, day);
+    return s === 'act-now' || s === 'soon' || s === 'expired';
   });
+  const act = urgent.filter((d) => statusOf(d, day) === 'act-now').length;
+  const expired = urgent.filter((d) => statusOf(d, day) === 'expired').length;
   return (
-    <WidgetList
+    <DueList
       loading={!docs}
-      empty={list.length === 0 ? t.vault.widgetEmpty : undefined}
-      entries={list.slice(0, 4).map((d) => ({
-        key: d.id,
-        title: d.title,
-        meta: relativeDayLabel(d.expiresOn!, day),
-        overdue: expiryState(d, day) === 'expired',
-      }))}
-      to="/vault"
-      linkLabel={t.vault.title}
+      empty={t.vault.widgetEmpty}
+      emptyAction={{ label: t.homeEmpty.vault, to: '/vault?new=1' }}
+      summary={
+        act > 0
+          ? t.widgets.contractsSummary(act)
+          : urgent.length > 0
+            ? t.widgets.expirySummary(expired, urgent.length - expired)
+            : undefined
+      }
+      entries={urgent.map((d) => {
+        const s = dueState(nextRelevantDate(d, day)!, day, { soonDays: 60 });
+        return { key: d.id, title: d.title, tone: s.tone, label: s.label };
+      })}
+      moreLabel={t.widgets.more}
     />
   );
 }

@@ -44,6 +44,8 @@ struct TrayItems {
 pub struct CaptureState {
     close_to_tray: AtomicBool,
     hotkey: Mutex<Option<Shortcut>>,
+    /// Second global key: opens the vault search (the web app decides whether the vault is unlocked).
+    vault_hotkey: Mutex<Option<Shortcut>>,
     shown_at: Mutex<Option<Instant>>,
     tray: Mutex<Option<TrayItems>>,
 }
@@ -93,7 +95,7 @@ fn create_capture_window(app: &AppHandle) -> tauri::Result<()> {
     #[cfg(windows)]
     let builder = match std::env::current_exe()
         .ok()
-        .and_then(|exe| crate::portable::data_dir(&exe))
+        .and_then(|exe| crate::portable::data_dir(&exe, &app.config().identifier))
     {
         Some(dir) => builder.data_directory(dir),
         None => builder,
@@ -173,6 +175,15 @@ fn hide_capture(app: &AppHandle) {
     }
 }
 
+/// Brings the main window forward and tells the page to open the vault search. A constant script,
+/// no data crosses here; the page only acts on it while the vault is unlocked.
+fn open_vault_search(app: &AppHandle) {
+    show_main(app);
+    if let Some(window) = app.get_webview_window(MAIN) {
+        let _ = window.eval("window.dispatchEvent(new Event('tm-vault-search'))");
+    }
+}
+
 fn toggle_capture(app: &AppHandle) {
     let open = app
         .get_webview_window(CAPTURE)
@@ -235,21 +246,22 @@ fn hotkey_error_code(message: &str) -> &'static str {
 /// `failed`.
 fn set_hotkey(
     app: &AppHandle,
-    state: &CaptureState,
+    slot: &Mutex<Option<Shortcut>>,
     accelerator: Option<&str>,
+    action: fn(&AppHandle),
 ) -> Result<(), &'static str> {
     let next = match accelerator.map(str::trim).filter(|a| !a.is_empty()) {
         Some(a) => Some(a.parse::<Shortcut>().map_err(|_| "invalid")?),
         None => None,
     };
-    let mut current = state.hotkey.lock().map_err(|_| "failed")?;
+    let mut current = slot.lock().map_err(|_| "failed")?;
     let shortcuts = app.global_shortcut();
     if let Some(n) = next {
         if *current != Some(n) {
             shortcuts
-                .on_shortcut(n, |app, _shortcut, event| {
+                .on_shortcut(n, move |app, _shortcut, event| {
                     if event.state == ShortcutState::Pressed {
-                        toggle_capture(app);
+                        action(app);
                     }
                 })
                 .map_err(|e| match e {
@@ -273,7 +285,23 @@ pub fn capture_set_hotkey(
     state: State<'_, CaptureState>,
     accelerator: Option<String>,
 ) -> Result<(), String> {
-    set_hotkey(&app, &state, accelerator.as_deref()).map_err(str::to_owned)
+    set_hotkey(&app, &state.hotkey, accelerator.as_deref(), toggle_capture).map_err(str::to_owned)
+}
+
+/// Same contract as `capture_set_hotkey`, for the vault search key (off until the user sets one).
+#[tauri::command]
+pub fn desktop_set_vault_hotkey(
+    app: AppHandle,
+    state: State<'_, CaptureState>,
+    accelerator: Option<String>,
+) -> Result<(), String> {
+    set_hotkey(
+        &app,
+        &state.vault_hotkey,
+        accelerator.as_deref(),
+        open_vault_search,
+    )
+    .map_err(str::to_owned)
 }
 
 #[tauri::command]
@@ -325,13 +353,89 @@ pub fn desktop_autostart_enabled(app: AppHandle) -> bool {
 }
 
 #[tauri::command]
-pub fn desktop_info() -> DesktopInfo {
+pub fn desktop_info(app: AppHandle) -> DesktopInfo {
     DesktopInfo {
         portable: std::env::current_exe()
             .ok()
-            .and_then(|exe| crate::portable::data_dir(&exe))
+            .and_then(|exe| crate::portable::data_dir(&exe, &app.config().identifier))
             .is_some(),
     }
+}
+
+/// The folder that holds the app's data: `data/` next to a portable executable, otherwise the
+/// user's local app data folder (WebView profile and the app's private files).
+pub(crate) fn app_data_folder(app: &AppHandle) -> Option<std::path::PathBuf> {
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe| crate::portable::data_dir(&exe, &app.config().identifier))
+        .or_else(|| app.path().app_local_data_dir().ok())
+}
+
+/// Path of the data folder, shown in "Über Nemo". Takes no argument.
+#[tauri::command]
+pub fn desktop_data_dir(app: AppHandle) -> Option<String> {
+    app_data_folder(&app).map(|dir| dir.display().to_string())
+}
+
+/// The panic lines of earlier runs (`logs/panic.log`), handed over once and then removed so they are
+/// reported a single time. Takes no argument.
+#[tauri::command]
+pub fn desktop_take_panic_log(app: AppHandle) -> Option<String> {
+    app_data_folder(&app).and_then(|dir| crate::panic_log::take(&dir.join("logs")))
+}
+
+pub const SAFE_MODE_FLAG: &str = "--safe-mode";
+pub const SAFE_MODE_ENV: &str = "NEMO_SAFE_MODE";
+
+/// Safe mode: start with every module switched off (nothing is changed on disk). Asked by the
+/// command line flag `--safe-mode` or the environment variable `NEMO_SAFE_MODE=1`.
+pub fn safe_mode_requested<I: IntoIterator<Item = String>>(args: I, env: Option<&str>) -> bool {
+    args.into_iter().any(|a| a == SAFE_MODE_FLAG) || matches!(env, Some("1") | Some("true"))
+}
+
+/// Whether this launch asked for safe mode. Takes no argument and changes nothing.
+#[tauri::command]
+pub fn desktop_safe_mode() -> bool {
+    safe_mode_requested(
+        std::env::args(),
+        std::env::var(SAFE_MODE_ENV).ok().as_deref(),
+    )
+}
+
+#[cfg(test)]
+mod safe_mode_tests {
+    use super::*;
+
+    fn args(list: &[&str]) -> Vec<String> {
+        list.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn flag_or_env_turns_it_on() {
+        assert!(safe_mode_requested(args(&["nemo", "--safe-mode"]), None));
+        assert!(safe_mode_requested(args(&["nemo"]), Some("1")));
+        assert!(safe_mode_requested(args(&["nemo"]), Some("true")));
+    }
+
+    #[test]
+    fn default_is_off() {
+        assert!(!safe_mode_requested(args(&["nemo", "--autostart"]), None));
+        assert!(!safe_mode_requested(args(&["nemo"]), Some("0")));
+        assert!(!safe_mode_requested(args(&["nemo"]), Some("")));
+    }
+}
+
+/// Opens exactly that folder in the file manager. Takes no path, so the webview cannot make the
+/// app open anything else.
+#[tauri::command]
+pub fn desktop_open_data_dir(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt as _;
+    let dir = app_data_folder(&app)
+        .filter(|dir| dir.is_dir())
+        .ok_or_else(|| "no-data-dir".to_owned())?;
+    app.opener()
+        .open_path(dir.to_string_lossy(), None::<&str>)
+        .map_err(|_| "failed".to_owned())
 }
 
 #[tauri::command]

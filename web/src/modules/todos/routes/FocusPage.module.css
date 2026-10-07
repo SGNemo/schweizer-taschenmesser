@@ -1,0 +1,114 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: calc(100dvh - var(--space-7));
+  justify-content: center;
+}
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+.eyebrow {
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.head {
+  text-align: center;
+}
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+}
+.ringWrap {
+  position: relative;
+  width: 11.5rem;
+  height: 11.5rem;
+  margin: 0 auto;
+}
+.ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.track {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 9;
+}
+.arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.clock {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+}
+.clockSub {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+.caption {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
+.ask {
+  text-align: center;
+  font-weight: var(--weight-semibold);
+}
+.steps {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  width: min(100%, 28rem);
+}
+.step {
+  display: flex;
+  align-items: center;
+  min-height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+}
+.stepsTitle {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  width: min(100%, 28rem);
+  margin: 0 auto;
+}
+.addStep {
+  width: min(100%, 28rem);
+  margin: 0 auto;
+  display: flex;
+  gap: var(--space-2);
+  align-items: end;
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+.hint {
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}

@@ -9,11 +9,11 @@ import { allManifests, availableManifestsFor } from '@/core/modules/registry';
 import manifest from '../manifest';
 
 describe('disk module is closed to every outside reader', () => {
-  it('has no data, no aiSchema, no widget and no contributions besides onboarding', () => {
+  it('has no data, no aiSchema, only the two live widgets and no contributions besides onboarding', () => {
     expect(manifest.dataSchema.collections).toEqual({});
     expect(manifest.aiSchema).toBeUndefined();
     expect(hasAiSchema(manifest)).toBe(false);
-    expect(manifest.widgets).toEqual([]);
+    expect(manifest.widgets.map((w) => w.id)).toEqual(['status', 'system']);
     expect(Object.keys(manifest.contributions ?? {})).toEqual(['onboarding']);
   });
 

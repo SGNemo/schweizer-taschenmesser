@@ -17,11 +17,11 @@ const code = async (p: Promise<unknown>) =>
   ((await p.catch((e: unknown) => e)) as AiQueryError).code;
 
 describe('prepareCreate', () => {
-  it('turns "remind me on the 1st for rent" into a validated reminder without saving it', async () => {
+  it('turns "remind me on the 1st for rent" into a validated calendar entry without saving it', async () => {
     const prepared = await prepareCreate(
       {
-        module: 'reminders',
-        collection: 'reminder',
+        module: 'calendar',
+        collection: 'event',
         data: {
           title: 'Miete überweisen',
           startDate: '2026-10-01',
@@ -30,22 +30,17 @@ describe('prepareCreate', () => {
       },
       ctx(),
     );
-    expect(prepared.label).toBe('Erinnerung');
+    expect(prepared.label).toBe('Termin');
     expect(prepared.data).toMatchObject({
       title: 'Miete überweisen',
-      time: '09:00',
-      active: true,
+      allDay: false,
       recurrence: { freq: 'monthly', interval: 1, byMonthDay: 1 },
     });
-    expect(prepared.preview.map((p) => p.label)).toEqual([
-      'Titel',
-      'Datum',
-      'Uhrzeit',
-      'Aktiv',
-      'Wiederholung',
-    ]);
+    expect(prepared.preview.map((p) => p.label)).toEqual(
+      expect.arrayContaining(['Titel', 'Datum', 'Wiederholung']),
+    );
     expect(prepared.preview.find((p) => p.label === 'Wiederholung')!.value).toContain('Monat');
-    expect(await db.table('reminders_reminder').count()).toBe(0);
+    expect(await db.table('calendar_event').count()).toBe(0);
   });
 
   it('fills defaults the model cannot know (inbox list, primary account)', async () => {
@@ -68,7 +63,7 @@ describe('prepareCreate', () => {
   it('rejects incomplete or invalid entries', async () => {
     expect(
       await code(
-        prepareCreate({ module: 'reminders', collection: 'reminder', data: { title: 'x' } }, ctx()),
+        prepareCreate({ module: 'calendar', collection: 'event', data: { title: 'x' } }, ctx()),
       ),
     ).toBe('invalid-entry'); // no startDate
     expect(
@@ -110,8 +105,8 @@ describe('prepareCreate', () => {
       await code(
         prepareCreate(
           {
-            module: 'reminders',
-            collection: 'reminder',
+            module: 'calendar',
+            collection: 'event',
             data: { title: 'x', startDate: '2026-10-01', recurrence: { freq: 'sometimes' } },
           },
           ctx(),
@@ -141,16 +136,16 @@ describe('commitCreate', () => {
   it('writes through the module repo (envelope, HLC stamps, outbox)', async () => {
     const prepared = await prepareCreate(
       {
-        module: 'reminders',
-        collection: 'reminder',
+        module: 'calendar',
+        collection: 'event',
         data: { title: 'Miete', startDate: '2026-10-01' },
       },
       ctx(),
     );
     const id = await commitCreate(prepared, ctx());
-    const row = (await db.table('reminders_reminder').get(id)) as Record<string, unknown>;
+    const row = (await db.table('calendar_event').get(id)) as Record<string, unknown>;
     expect(row).toMatchObject({ title: 'Miete', deletedAt: null });
     expect(Object.keys(row._f as object)).toContain('title');
-    expect(await db.table('_outbox').get(['reminders_reminder', id])).toBeDefined();
+    expect(await db.table('_outbox').get(['calendar_event', id])).toBeDefined();
   });
 });

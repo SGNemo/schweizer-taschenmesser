@@ -45,9 +45,9 @@ const withAccounts = () => {
 };
 
 describe('module definition', () => {
-  it('has no aiSchema, widgets, contributions for other modules, or quick add', () => {
+  it('has no aiSchema, contributions for other modules, or quick add; one status-only widget', () => {
     expect(manifest.aiSchema).toBeUndefined();
-    expect(manifest.widgets).toEqual([]);
+    expect(manifest.widgets.map((w) => w.id)).toEqual(['status']);
     const c = manifest.contributions ?? {};
     // only its own auto-lock service plus the (empty) onboarding declaration every module carries
     expect(Object.keys(c).sort()).toEqual(['onboarding', 'services']);
@@ -59,25 +59,30 @@ describe('module definition', () => {
     expect(c).not.toHaveProperty('aiCreateDefaults');
   });
 
+  it('status widget reads no entry data (source check) and never shows contents', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(new URL('../widgets/StatusWidget.tsx', import.meta.url), 'utf8');
+    for (const forbidden of ['entryRepo', 'useEntries', 'decryptRow', 'saveEntry', 'password']) {
+      expect(src).not.toContain(forbidden);
+    }
+  });
+
   it('only offers its own setup step (no data, no AI, no widget)', () => {
     expect(manifest.setupSteps?.map((s) => s.id)).toEqual(['accounts.vault']);
     expect(manifest.aiSchema).toBeUndefined();
   });
 
-  it('is registered, off by default, and one of only six manifests without aiSchema', () => {
+  it('is registered, off by default, and one of only three active manifests without aiSchema', () => {
     expect(allManifests.map((m) => m.id)).toContain('accounts');
     expect(visibleManifests.find((m) => m.id === 'accounts')?.defaultEnabled).toBe(false);
-    // `news` (public third-party text), `launcher` (a list of links), `disk` (scan results with
-    // file paths, never stored), `gifts` (surprises) and `system` (live facts, no data) have none by
-    // design; a new module without one must be a decision.
-    expect(allManifests.filter((m) => !m.aiSchema).map((m) => m.id)).toEqual([
+    // `disk` (scan results and live system facts, never stored) and `chat` (conversations never reach the assistant) have none by design; retired modules have none by definition. A new
+    // module without one must be a decision.
+    expect(allManifests.filter((m) => !m.aiSchema && !m.retired).map((m) => m.id)).toEqual([
       'accounts',
+      'chat',
       'disk',
-      'gifts',
-      'launcher',
-      'news',
-      'system',
     ]);
+    expect(allManifests.filter((m) => m.retired).every((m) => !m.aiSchema)).toBe(true);
   });
 });
 

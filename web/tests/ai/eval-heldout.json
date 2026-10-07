@@ -1,0 +1,3181 @@
+{
+  "version": 1,
+  "today": "2026-09-29",
+  "note": "Held-out set: written after the first eval set, independently of the parser's tuning. Dates are for 'today' (Tuesday 2026-09-29). Same fixtures as eval-set.json. The parser is NOT tuned against this file case by case: fix classes of errors, never single sentences.",
+  "fixtures": [
+    {
+      "module": "todos",
+      "collection": "list",
+      "id": "inbox",
+      "data": {
+        "name": "Privat"
+      }
+    },
+    {
+      "module": "todos",
+      "collection": "task",
+      "data": {
+        "listId": "inbox",
+        "title": "Steuererklärung abgeben",
+        "dueDate": "2026-10-05"
+      }
+    },
+    {
+      "module": "todos",
+      "collection": "task",
+      "data": {
+        "listId": "inbox",
+        "title": "Hausarzt anrufen"
+      }
+    },
+    {
+      "module": "todos",
+      "collection": "task",
+      "data": {
+        "listId": "inbox",
+        "title": "Wohnung putzen"
+      }
+    },
+    {
+      "module": "calendar",
+      "collection": "event",
+      "data": {
+        "title": "Zahnarzt Dr. Sonnenschein",
+        "startDate": "2026-09-30",
+        "startTime": "10:00"
+      }
+    },
+    {
+      "module": "calendar",
+      "collection": "event",
+      "data": {
+        "title": "Yoga",
+        "startDate": "2026-10-06",
+        "startTime": "18:00"
+      }
+    },
+    {
+      "module": "calendar",
+      "collection": "event",
+      "data": {
+        "title": "Elternabend",
+        "startDate": "2026-10-07",
+        "startTime": "19:00"
+      }
+    },
+    {
+      "module": "finance",
+      "collection": "account",
+      "id": "konto",
+      "data": {
+        "name": "Girokonto"
+      }
+    },
+    {
+      "module": "finance",
+      "collection": "transaction",
+      "data": {
+        "accountId": "konto",
+        "kind": "expense",
+        "amountMinor": 2350,
+        "date": "2026-09-28",
+        "payee": "Supermarkt"
+      }
+    },
+    {
+      "module": "finance",
+      "collection": "transaction",
+      "data": {
+        "accountId": "konto",
+        "kind": "expense",
+        "amountMinor": 480,
+        "date": "2026-09-27",
+        "payee": "Bäckerei"
+      }
+    },
+    {
+      "module": "invoices",
+      "collection": "invoice",
+      "data": {
+        "payee": "Stadtwerke Strom",
+        "amountMinor": 8990,
+        "dueDate": "2026-10-15"
+      }
+    },
+    {
+      "module": "invoices",
+      "collection": "invoice",
+      "data": {
+        "payee": "Telekom",
+        "amountMinor": 3999,
+        "dueDate": "2026-10-20"
+      }
+    },
+    {
+      "module": "subscriptions",
+      "collection": "subscription",
+      "data": {
+        "name": "Netflix",
+        "amountMinor": 1299,
+        "recurrence": {
+          "freq": "monthly",
+          "interval": 1
+        },
+        "startDate": "2026-01-01"
+      }
+    },
+    {
+      "module": "subscriptions",
+      "collection": "subscription",
+      "data": {
+        "name": "Spotify",
+        "amountMinor": 1099,
+        "recurrence": {
+          "freq": "monthly",
+          "interval": 1
+        },
+        "startDate": "2026-01-01"
+      }
+    },
+    {
+      "module": "subscriptions",
+      "collection": "subscription",
+      "data": {
+        "name": "Fitnessstudio",
+        "amountMinor": 2990,
+        "recurrence": {
+          "freq": "monthly",
+          "interval": 1
+        },
+        "startDate": "2026-01-01"
+      }
+    },
+    {
+      "module": "budgets",
+      "collection": "goal",
+      "data": {
+        "name": "Urlaub",
+        "targetMinor": 100000
+      }
+    },
+    {
+      "module": "lists",
+      "collection": "item",
+      "data": {
+        "listId": "shopping-default",
+        "name": "Milch"
+      }
+    },
+    {
+      "module": "lists",
+      "collection": "item",
+      "data": {
+        "listId": "shopping-default",
+        "name": "Brot"
+      }
+    },
+    {
+      "module": "lists",
+      "collection": "item",
+      "data": {
+        "listId": "shopping-default",
+        "name": "Eier"
+      }
+    },
+    {
+      "module": "pantry",
+      "collection": "item",
+      "data": {
+        "name": "Joghurt",
+        "place": "fridge"
+      }
+    },
+    {
+      "module": "pantry",
+      "collection": "item",
+      "data": {
+        "name": "Butter",
+        "place": "fridge"
+      }
+    },
+    {
+      "module": "notes",
+      "collection": "note",
+      "data": {
+        "title": "Gartenplan"
+      }
+    },
+    {
+      "module": "notes",
+      "collection": "note",
+      "data": {
+        "title": "Urlaubsideen"
+      }
+    },
+    {
+      "module": "bookmarks",
+      "collection": "item",
+      "data": {
+        "title": "Rezept Linsensuppe",
+        "url": "https://example.org/rezept"
+      }
+    },
+    {
+      "module": "vault",
+      "collection": "document",
+      "data": {
+        "title": "Handytarif",
+        "category": "contract"
+      }
+    },
+    {
+      "module": "people",
+      "collection": "person",
+      "data": {
+        "name": "Anna Muster"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "h-todo-c01",
+      "input": "Aufgabe Zeugnis kopieren bis 9.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Zeugnis kopieren",
+            "dueDate": "2026-10-09"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c02",
+      "input": "todo: Fahrrad aufpumpen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Fahrrad aufpumpen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c03",
+      "input": "Neue Aufgabe Mama zurückrufen heute",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Mama zurückrufen",
+            "dueDate": "2026-09-29"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c04",
+      "input": "Erstelle eine Aufgabe Altglas wegbringen für übermorgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Altglas wegbringen",
+            "dueDate": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c05",
+      "input": "Aufgabe: Formular ausfüllen bis Freitag",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Formular ausfüllen",
+            "dueDate": "2026-10-02"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c06",
+      "input": "Ich muss noch die Steuer-Unterlagen sortieren, Aufgabe bis 20.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Steuer-Unterlagen sortieren",
+            "dueDate": "2026-10-20"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c07",
+      "input": "Aufgabe Geschenk für Oma besorgen bis 12.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Geschenk für Oma besorgen",
+            "dueDate": "2026-10-12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c08",
+      "input": "Füge eine Aufgabe hinzu: Rasen mähen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Rasen mähen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c09",
+      "input": "Aufgabe Kfz-Versicherung vergleichen am 3.11.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Kfz-Versicherung vergleichen",
+            "dueDate": "2026-11-03"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c10",
+      "input": "to-do Blumen gießen morgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Blumen gießen",
+            "dueDate": "2026-09-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c11",
+      "input": "Task Backup prüfen",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Backup prüfen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c12",
+      "input": "Trag mir eine Aufgabe ein: Reifendruck prüfen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Reifendruck prüfen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c13",
+      "input": "Aufgabe Arzttermin ausmachen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Arzttermin ausmachen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c14",
+      "input": "Aufgabe Wäsche aufhängen bis morgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Wäsche aufhängen",
+            "dueDate": "2026-09-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c15",
+      "input": "Aufgabe Pass beantragen bis 31.12.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Pass beantragen",
+            "dueDate": "2026-12-31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c16",
+      "input": "Aufgbe Küche aufräumen",
+      "tags": ["create", "typo"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Küche aufräumen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c17",
+      "input": "Bitte Aufgabe Schlüssel nachmachen anlegen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Schlüssel nachmachen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-c18",
+      "input": "Aufgabe Paket zur Post bringen am Montag",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Paket zur Post bringen",
+            "dueDate": "2026-10-05"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-todo-t01",
+      "input": "Hausarzt anrufen ist erledigt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "complete",
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-t03",
+      "input": "Aufgabe Steuererklärung abgeben fertig",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "complete",
+          "target": "Steuererklärung abgeben"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-t04",
+      "input": "Setze die Aufgabe Hausarzt anrufen auf erledigt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "complete",
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-t05",
+      "input": "Erledige Wohnung putzen",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "complete",
+          "target": "Wohnung putzen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-u01",
+      "input": "Verschiebe Hausarzt anrufen auf übermorgen",
+      "tags": ["update", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "update",
+          "data": {
+            "dueDate": "2026-10-01"
+          },
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-u02",
+      "input": "Die Aufgabe Wohnung putzen bis 10.10. verschieben",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "update",
+          "data": {
+            "dueDate": "2026-10-10"
+          },
+          "target": "Wohnung putzen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-u03",
+      "input": "Ändere die Frist der Aufgabe Steuererklärung abgeben auf 31.10.",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "update",
+          "data": {
+            "dueDate": "2026-10-31"
+          },
+          "target": "Steuererklärung abgeben"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-u04",
+      "input": "Aufgabe Hausarzt anrufen umbenennen in Kardiologen anrufen",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "update",
+          "data": {
+            "title": "Kardiologen anrufen"
+          },
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-d01",
+      "input": "Aufgabe Wohnung putzen löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "delete",
+          "target": "Wohnung putzen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-d02",
+      "input": "Entferne die Aufgabe Hausarzt anrufen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "delete",
+          "target": "Hausarzt anrufen"
+        }
+      ]
+    },
+    {
+      "id": "h-todo-d03",
+      "input": "Streich Steuererklärung abgeben",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "delete",
+          "target": "Steuererklärung abgeben"
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c01",
+      "input": "Termin Zahnarzt morgen um 8:30",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Zahnarzt",
+            "startDate": "2026-09-30",
+            "startTime": "08:30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c02",
+      "input": "Termin Notar am 15.10. um 16 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Notar",
+            "startDate": "2026-10-15",
+            "startTime": "16:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c03",
+      "input": "Elternsprechtag am 22.10. 17:45",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Elternsprechtag",
+            "startDate": "2026-10-22",
+            "startTime": "17:45"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c04",
+      "input": "Meeting Projektstart Donnerstag 10 Uhr",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Projektstart",
+            "startDate": "2026-10-01",
+            "startTime": "10:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c05",
+      "input": "Trag einen Termin ein: Augenarzt 6.10. 15:15",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Augenarzt",
+            "startDate": "2026-10-06",
+            "startTime": "15:15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c06",
+      "input": "Termin Handwerker heute 17 Uhr",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Handwerker",
+            "startDate": "2026-09-29",
+            "startTime": "17:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c07",
+      "input": "Erinnere mich übermorgen an die Müllabfuhr",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Müllabfuhr",
+            "startDate": "2026-10-01",
+            "kind": "reminder"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c08",
+      "input": "Kinoabend mit Tom am 10.10. um 20 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Kinoabend mit Tom",
+            "startDate": "2026-10-10",
+            "startTime": "20:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c09",
+      "input": "Termin Reifenwechsel 14.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Reifenwechsel",
+            "startDate": "2026-10-14"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c10",
+      "input": "Verabredung Lisa Samstag 15 Uhr",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Lisa",
+            "startDate": "2026-10-03",
+            "startTime": "15:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c11",
+      "input": "Termin Impfung am 3.11. um 9 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Impfung",
+            "startDate": "2026-11-03",
+            "startTime": "09:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c12",
+      "input": "Erinnerung Zeitumstellung am 25.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Zeitumstellung",
+            "startDate": "2026-10-25",
+            "kind": "reminder"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c13",
+      "input": "Zahnarzt am 12.10. um 7:45",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Zahnarzt",
+            "startDate": "2026-10-12",
+            "startTime": "07:45"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c14",
+      "input": "Termin Teammeeting jeden Dienstag 9:30",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Teammeeting",
+            "startTime": "09:30",
+            "recurrence": {
+              "freq": "weekly",
+              "byWeekday": [2]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c15",
+      "input": "Mach einen Termin Physiotherapie am 9.10. 11:30",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Physiotherapie",
+            "startDate": "2026-10-09",
+            "startTime": "11:30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-c16",
+      "input": "Termin Vorstellungsgespräch 19.10. 13 Uhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Vorstellungsgespräch",
+            "startDate": "2026-10-19",
+            "startTime": "13:00"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-cal-u01",
+      "input": "Verschiebe Yoga auf den 8.10.",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "update",
+          "data": {
+            "startDate": "2026-10-08"
+          },
+          "target": "Yoga"
+        }
+      ]
+    },
+    {
+      "id": "h-cal-u02",
+      "input": "Der Termin Elternabend ist jetzt um 20 Uhr",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "update",
+          "data": {
+            "startTime": "20:00"
+          },
+          "target": "Elternabend"
+        }
+      ]
+    },
+    {
+      "id": "h-cal-u03",
+      "input": "Ändere den Termin Zahnarzt Dr. Sonnenschein auf übermorgen",
+      "tags": ["update", "relative-date"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "update",
+          "data": {
+            "startDate": "2026-10-01"
+          },
+          "target": "Zahnarzt Dr. Sonnenschein"
+        }
+      ]
+    },
+    {
+      "id": "h-cal-u04",
+      "input": "Verlege den Termin Yoga auf 19 Uhr",
+      "tags": ["update", "slang"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "update",
+          "data": {
+            "startTime": "19:00"
+          },
+          "target": "Yoga"
+        }
+      ]
+    },
+    {
+      "id": "h-cal-d01",
+      "input": "Termin Yoga absagen",
+      "tags": ["delete", "slang"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "delete",
+          "target": "Yoga"
+        }
+      ]
+    },
+    {
+      "id": "h-cal-d02",
+      "input": "Streiche den Termin Elternabend",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "delete",
+          "target": "Elternabend"
+        }
+      ]
+    },
+    {
+      "id": "h-cal-d03",
+      "input": "Lösche Yoga aus dem Kalender",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "delete",
+          "target": "Yoga"
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c01",
+      "input": "Ausgabe 5,20 € Kaffee",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 520,
+            "payee": "Kaffee"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c02",
+      "input": "Ausgabe 64,30 € Tankstelle am 27.9.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 6430,
+            "payee": "Tankstelle",
+            "date": "2026-09-27"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c03",
+      "input": "Einnahme 200 € Verkauf Kamera",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 20000,
+            "payee": "Verkauf Kamera"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c04",
+      "input": "Gehalt 2.850 € am 30.9.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 285000,
+            "date": "2026-09-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c05",
+      "input": "Buchung 18,90 € Pizza gestern",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 1890,
+            "payee": "Pizza",
+            "date": "2026-09-28"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c06",
+      "input": "Zahlung 45 € Tierarzt",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 4500,
+            "payee": "Tierarzt"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c07",
+      "input": "Hab 12,50 € für Kino ausgegeben",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 1250,
+            "payee": "Kino"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c08",
+      "input": "Trage Ausgabe 33,10 € Drogerie ein",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 3310,
+            "payee": "Drogerie"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c09",
+      "input": "Lohn 1.200 € heute",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 120000,
+            "date": "2026-09-29"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c10",
+      "input": "Ausgabe 9 € Parkgebühr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 900,
+            "payee": "Parkgebühr"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c11",
+      "input": "Ausgabe 7,80 Euro Eis gestern",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 780,
+            "payee": "Eis",
+            "date": "2026-09-28"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c12",
+      "input": "Einnahme 15 € Pfand",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "income",
+            "amountMinor": 1500,
+            "payee": "Pfand"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c13",
+      "input": "Zahlung 250 € Reparatur Waschmaschine am 28.9.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 25000,
+            "payee": "Reparatur Waschmaschine",
+            "date": "2026-09-28"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c14",
+      "input": "Ausgabe 3,99 € Zeitschrift",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 399,
+            "payee": "Zeitschrift"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c15",
+      "input": "Ausgabe 89,99 € Schuhe am 26.9.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 8999,
+            "payee": "Schuhe",
+            "date": "2026-09-26"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c16",
+      "input": "Mittagessen 8,50 €",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 850,
+            "payee": "Mittagessen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c17",
+      "input": "Bei Rewe 41,17 € gelassen",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 4117,
+            "payee": "Rewe"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-c18",
+      "input": "Ausgabe 1.299 € Laptop",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 129900,
+            "payee": "Laptop"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-fin-u01",
+      "input": "Ändere die Buchung Bäckerei auf 5,10 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "update",
+          "data": {
+            "amountMinor": 510
+          },
+          "target": "Bäckerei"
+        }
+      ]
+    },
+    {
+      "id": "h-fin-u02",
+      "input": "Korrigiere Supermarkt auf 24,80 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "update",
+          "data": {
+            "amountMinor": 2480
+          },
+          "target": "Supermarkt"
+        }
+      ]
+    },
+    {
+      "id": "h-fin-u03",
+      "input": "Die Buchung Supermarkt war vorgestern",
+      "tags": ["update", "relative-date"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "update",
+          "data": {
+            "date": "2026-09-27"
+          },
+          "target": "Supermarkt"
+        }
+      ]
+    },
+    {
+      "id": "h-fin-d01",
+      "input": "Buchung Supermarkt entfernen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "delete",
+          "target": "Supermarkt"
+        }
+      ]
+    },
+    {
+      "id": "h-fin-d02",
+      "input": "Lösche die Ausgabe Bäckerei",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "delete",
+          "target": "Bäckerei"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c01",
+      "input": "Rechnung Zahnarzt 85 € fällig 25.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Zahnarzt",
+            "amountMinor": 8500,
+            "dueDate": "2026-10-25"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c02",
+      "input": "Neue Rechnung Stadtbibliothek 12 € bis 8.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Stadtbibliothek",
+            "amountMinor": 1200,
+            "dueDate": "2026-10-08"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c03",
+      "input": "Rechnung Handwerker 430,50 € zahlbar bis 30.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Handwerker",
+            "amountMinor": 43050,
+            "dueDate": "2026-10-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c04",
+      "input": "Rechnung Kfz-Steuer 156 € fällig 1.11.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Kfz-Steuer",
+            "amountMinor": 15600,
+            "dueDate": "2026-11-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c05",
+      "input": "Rechnung Optiker 199 € fällig übermorgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Optiker",
+            "amountMinor": 19900,
+            "dueDate": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c06",
+      "input": "Rechnung von der Hausverwaltung über 76,40 € fällig am 15.11.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Hausverwaltung",
+            "amountMinor": 7640,
+            "dueDate": "2026-11-15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c07",
+      "input": "Erstelle eine Rechnung Gartenbau 920 € fällig 31.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Gartenbau",
+            "amountMinor": 92000,
+            "dueDate": "2026-10-31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c08",
+      "input": "Rechnung Strom 55 € fällig 20.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Strom",
+            "amountMinor": 5500,
+            "dueDate": "2026-10-20"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c09",
+      "input": "Rechnung Schornsteinfeger 48,90 € bis 12.11.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Schornsteinfeger",
+            "amountMinor": 4890,
+            "dueDate": "2026-11-12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c10",
+      "input": "Rechnung Physiotherapie 60 €",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Physiotherapie",
+            "amountMinor": 6000
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c11",
+      "input": "Rechnung Buchhandlung 23,99 € fällig morgen",
+      "tags": ["create", "relative-date"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Buchhandlung",
+            "amountMinor": 2399,
+            "dueDate": "2026-09-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-c12",
+      "input": "Rechnung Fahrschule 350 € fällig 5.12.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Fahrschule",
+            "amountMinor": 35000,
+            "dueDate": "2026-12-05"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-inv-t01",
+      "input": "Rechnung Stadtwerke Strom bezahlt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Stadtwerke Strom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-t02",
+      "input": "Die Telekom Rechnung ist bezahlt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Telekom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-t03",
+      "input": "Telekom beglichen",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Telekom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-t04",
+      "input": "Hab die Stadtwerke Rechnung bezahlt",
+      "tags": ["transition", "slang"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Stadtwerke Strom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-t05",
+      "input": "Markiere Telekom als bezahlt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "markPaid",
+          "target": "Telekom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-u01",
+      "input": "Ändere die Rechnung Telekom auf 41,99 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "update",
+          "data": {
+            "amountMinor": 4199
+          },
+          "target": "Telekom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-u02",
+      "input": "Verschiebe die Rechnung Stadtwerke Strom auf den 31.10.",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "update",
+          "data": {
+            "dueDate": "2026-10-31"
+          },
+          "target": "Stadtwerke Strom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-d01",
+      "input": "Rechnung Telekom löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "delete",
+          "target": "Telekom"
+        }
+      ]
+    },
+    {
+      "id": "h-inv-d02",
+      "input": "Lösche die Stadtwerke Rechnung",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "delete",
+          "target": "Stadtwerke Strom"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c01",
+      "input": "Abo Disney+ 8,99 € monatlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Disney+",
+            "amountMinor": 899,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c02",
+      "input": "Abo Zeitschrift 59 € jährlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Zeitschrift",
+            "amountMinor": 5900,
+            "recurrence": {
+              "freq": "yearly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c03",
+      "input": "Neues Abo Amazon Prime 8,99 € monatlich ab 1.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Amazon Prime",
+            "amountMinor": 899,
+            "recurrence": {
+              "freq": "monthly"
+            },
+            "startDate": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c04",
+      "input": "Abo Dropbox 11,99 € monatlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Dropbox",
+            "amountMinor": 1199,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c05",
+      "input": "Abonnement Online-Zeitung 14,99 € monatlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Online-Zeitung",
+            "amountMinor": 1499,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c06",
+      "input": "Abo Vereinsbeitrag 60 € jährlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Vereinsbeitrag",
+            "amountMinor": 6000,
+            "recurrence": {
+              "freq": "yearly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c07",
+      "input": "Abo Hörbücher 9,99 monatlich ab 15.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Hörbücher",
+            "amountMinor": 999,
+            "recurrence": {
+              "freq": "monthly"
+            },
+            "startDate": "2026-10-15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c08",
+      "input": "Trage das Abo YouTube Premium 12,99 € monatlich ein",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "YouTube Premium",
+            "amountMinor": 1299,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c09",
+      "input": "Abo Domain 14 € jährlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Domain",
+            "amountMinor": 1400,
+            "recurrence": {
+              "freq": "yearly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c10",
+      "input": "Abo Fitness-App 4,99 € im Monat",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Fitness-App",
+            "amountMinor": 499,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c11",
+      "input": "Abo Kreditkarte 29 € pro Jahr",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Kreditkarte",
+            "amountMinor": 2900,
+            "recurrence": {
+              "freq": "yearly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c12",
+      "input": "Abo Sprachkurs 19,90 € monatlich ab heute",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Sprachkurs",
+            "amountMinor": 1990,
+            "recurrence": {
+              "freq": "monthly"
+            },
+            "startDate": "2026-09-29"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c13",
+      "input": "Abo Strom-Flat 35 € monatlich",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Strom-Flat",
+            "amountMinor": 3500,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-c14",
+      "input": "Abo Zeitung 9 € vierteljährlich",
+      "tags": ["create", "hard"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Zeitung",
+            "amountMinor": 900,
+            "recurrence": {
+              "freq": "monthly",
+              "interval": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-sub-u01",
+      "input": "Das Abo Netflix kostet jetzt 13,99 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "update",
+          "data": {
+            "amountMinor": 1399
+          },
+          "target": "Netflix"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-u02",
+      "input": "Ändere das Abo Spotify auf 11,99 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "update",
+          "data": {
+            "amountMinor": 1199
+          },
+          "target": "Spotify"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-u03",
+      "input": "Erhöhe das Abo Fitnessstudio auf 32 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "update",
+          "data": {
+            "amountMinor": 3200
+          },
+          "target": "Fitnessstudio"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-u04",
+      "input": "Netflix kostet jetzt 14,99",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "update",
+          "data": {
+            "amountMinor": 1499
+          },
+          "target": "Netflix"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-d01",
+      "input": "Abo Fitnessstudio löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "delete",
+          "target": "Fitnessstudio"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-d02",
+      "input": "Streiche das Abo Netflix",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "delete",
+          "target": "Netflix"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-d03",
+      "input": "Entferne Spotify",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "delete",
+          "target": "Spotify"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-t01",
+      "input": "Das Abo Spotify ist gekündigt",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "cancel",
+          "target": "Spotify"
+        }
+      ]
+    },
+    {
+      "id": "h-sub-t02",
+      "input": "Kündige das Abo Netflix",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "cancel",
+          "target": "Netflix"
+        }
+      ]
+    },
+    {
+      "id": "h-bud-c01",
+      "input": "Sparziel Auto 8000 €",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "create",
+          "data": {
+            "name": "Auto",
+            "targetMinor": 800000
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-bud-c02",
+      "input": "Neues Sparziel Laptop 1.500 €",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "create",
+          "data": {
+            "name": "Laptop",
+            "targetMinor": 150000
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-bud-c03",
+      "input": "Ich möchte auf ein Fahrrad sparen, Sparziel 900 €",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "create",
+          "data": {
+            "name": "Fahrrad",
+            "targetMinor": 90000
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-bud-u01",
+      "input": "Erhöhe das Sparziel Urlaub auf 1.500 €",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "update",
+          "data": {
+            "targetMinor": 150000
+          },
+          "target": "Urlaub"
+        }
+      ]
+    },
+    {
+      "id": "h-bud-d01",
+      "input": "Sparziel Urlaub entfernen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "budgets",
+          "action": "delete",
+          "target": "Urlaub"
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c01",
+      "input": "Kaffee auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Kaffee"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c02",
+      "input": "Bananen, Joghurt und Käse auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Bananen"
+          }
+        },
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Joghurt"
+          }
+        },
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Käse"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c03",
+      "input": "Packe Spüli auf den Einkaufszettel",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Spüli"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c04",
+      "input": "Einkaufsliste Tomaten, Gurke",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Tomaten"
+          }
+        },
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Gurke"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c05",
+      "input": "3x Joghurt auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Joghurt",
+            "quantity": "3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c06",
+      "input": "Setze Zwiebeln auf die Einkaufsliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Zwiebeln"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c07",
+      "input": "Wir brauchen Klopapier",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Klopapier"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c08",
+      "input": "Füge Haferflocken zum Einkauf hinzu",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Haferflocken"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c09",
+      "input": "Reis auf die Einkaufsliste bitte",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Reis"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-c10",
+      "input": "Auf die Einkaufsliste: Mehl",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Mehl"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-lst-t01",
+      "input": "Brot gekauft",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "check",
+          "target": "Brot"
+        }
+      ]
+    },
+    {
+      "id": "h-lst-t02",
+      "input": "Hake Milch ab",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "check",
+          "target": "Milch"
+        }
+      ]
+    },
+    {
+      "id": "h-lst-t03",
+      "input": "Die Eier sind gekauft",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "check",
+          "target": "Eier"
+        }
+      ]
+    },
+    {
+      "id": "h-lst-d01",
+      "input": "Nimm Milch von der Einkaufsliste",
+      "tags": ["delete", "hard"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "delete",
+          "target": "Milch"
+        }
+      ]
+    },
+    {
+      "id": "h-lst-d02",
+      "input": "Lösche Brot von der Einkaufsliste",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "delete",
+          "target": "Brot"
+        }
+      ]
+    },
+    {
+      "id": "h-lst-d03",
+      "input": "Eier von der Einkaufsliste entfernen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "lists",
+          "action": "delete",
+          "target": "Eier"
+        }
+      ]
+    },
+    {
+      "id": "h-pan-c01",
+      "input": "Vorrat Milch 6 Stück Vorratsschrank",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Milch",
+            "count": 6,
+            "place": "pantry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-pan-c02",
+      "input": "Käse in den Kühlschrank",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Käse",
+            "place": "fridge"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-pan-c03",
+      "input": "Vorrat Pizza 2x Tiefkühl",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Pizza",
+            "count": 2,
+            "place": "freezer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-pan-c04",
+      "input": "Vorrat Quark Kühlschrank bis 8.10.",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Quark",
+            "place": "fridge",
+            "expires": "2026-10-08"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-pan-c05",
+      "input": "Vorrat Mehl 1 Stück",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Mehl",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-pan-c06",
+      "input": "Vorrat Spinat Tiefkühl",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "create",
+          "data": {
+            "name": "Spinat",
+            "place": "freezer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-pan-u01",
+      "input": "Ändere den Vorrat Butter auf 15.10.",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "update",
+          "data": {
+            "expires": "2026-10-15"
+          },
+          "target": "Butter"
+        }
+      ]
+    },
+    {
+      "id": "h-pan-d01",
+      "input": "Vorrat Joghurt löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "pantry",
+          "action": "delete",
+          "target": "Joghurt"
+        }
+      ]
+    },
+    {
+      "id": "h-not-c01",
+      "input": "Notiz Ideen für Weihnachten",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Ideen für Weihnachten"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-not-c02",
+      "input": "Notiz: Passwort-Manager einrichten",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Passwort-Manager einrichten"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-not-c03",
+      "input": "Neue Notiz Fahrplan Bahn",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Fahrplan Bahn"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-not-c04",
+      "input": "Notiz Reiseapotheke Liste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Reiseapotheke Liste"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-not-c06",
+      "input": "Erstelle eine Notiz Umzug Checkliste",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Umzug Checkliste"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-not-c07",
+      "input": "Notiz Gedanken zum Wochenende",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "create",
+          "data": {
+            "title": "Gedanken zum Wochenende"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-not-u01",
+      "input": "Benenne die Notiz Urlaubsideen in Urlaub 2027 um",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "update",
+          "data": {
+            "title": "Urlaub 2027"
+          },
+          "target": "Urlaubsideen"
+        }
+      ]
+    },
+    {
+      "id": "h-not-d01",
+      "input": "Notiz Gartenplan löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "delete",
+          "target": "Gartenplan"
+        }
+      ]
+    },
+    {
+      "id": "h-not-d02",
+      "input": "Entferne die Notiz Urlaubsideen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "delete",
+          "target": "Urlaubsideen"
+        }
+      ]
+    },
+    {
+      "id": "h-bkm-c01",
+      "input": "Lesezeichen https://example.org/wetter Wetterdienst",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Wetterdienst",
+            "url": "https://example.org/wetter"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-bkm-c02",
+      "input": "https://example.org/artikel Artikel über Schlaf",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Artikel über Schlaf",
+            "url": "https://example.org/artikel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-bkm-c03",
+      "input": "Merke https://example.org/tools Nützliche Tools",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Nützliche Tools",
+            "url": "https://example.org/tools"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-bkm-c04",
+      "input": "Film Matrix ansehen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Matrix",
+            "kind": "watch"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-bkm-t01",
+      "input": "Rezept Linsensuppe ist gelesen",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "done",
+          "target": "Rezept Linsensuppe"
+        }
+      ]
+    },
+    {
+      "id": "h-bkm-d01",
+      "input": "Lesezeichen Rezept Linsensuppe entfernen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "delete",
+          "target": "Rezept Linsensuppe"
+        }
+      ]
+    },
+    {
+      "id": "h-vlt-c01",
+      "input": "Vertrag Strom läuft bis 31.12.2027",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Strom",
+            "category": "contract",
+            "endDate": "2027-12-31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-vlt-c02",
+      "input": "Versicherung Hausrat bis 30.11.2027",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Hausrat",
+            "category": "insurance",
+            "endDate": "2027-11-30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-vlt-c03",
+      "input": "Garantie Fernseher bis 10.05.2028",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Fernseher",
+            "category": "warranty",
+            "endDate": "2028-05-10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-vlt-c04",
+      "input": "Dokument Mietvertrag gültig bis 28.02.2030",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Mietvertrag",
+            "category": "contract",
+            "endDate": "2030-02-28"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-vlt-c05",
+      "input": "Garantie Kaffeemaschine bis 1.9.2028",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "create",
+          "data": {
+            "title": "Kaffeemaschine",
+            "category": "warranty",
+            "endDate": "2028-09-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-vlt-u01",
+      "input": "Ändere die Unterlage Handytarif auf 30.09.2028",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "vault",
+          "action": "update",
+          "data": {
+            "endDate": "2028-09-30"
+          },
+          "target": "Handytarif"
+        }
+      ]
+    },
+    {
+      "id": "h-ppl-c01",
+      "input": "Person Jonas Beispiel",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "people",
+          "action": "create",
+          "data": {
+            "name": "Jonas Beispiel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-ppl-c02",
+      "input": "Kontakt Mia Muster",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "people",
+          "action": "create",
+          "data": {
+            "name": "Mia Muster"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-ppl-c03",
+      "input": "Neuer Kontakt Peter Probe",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "people",
+          "action": "create",
+          "data": {
+            "name": "Peter Probe"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-ppl-d01",
+      "input": "Kontakt Anna Muster löschen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "people",
+          "action": "delete",
+          "target": "Anna Muster"
+        }
+      ]
+    },
+    {
+      "id": "h-mul-01",
+      "input": "Aufgabe Fenster putzen morgen; Milch auf die Einkaufsliste",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Fenster putzen",
+            "dueDate": "2026-09-30"
+          }
+        },
+        {
+          "module": "lists",
+          "action": "create",
+          "data": {
+            "name": "Milch"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-mul-02",
+      "input": "Termin Zahnarzt 6.10. 9 Uhr\nAufgabe Rezept abholen",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "calendar",
+          "action": "create",
+          "data": {
+            "title": "Zahnarzt",
+            "startDate": "2026-10-06",
+            "startTime": "09:00"
+          }
+        },
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Rezept abholen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-mul-03",
+      "input": "Rechnung Strom 55 € fällig 20.10.; Abo Dropbox 11,99 € monatlich",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "invoices",
+          "action": "create",
+          "data": {
+            "payee": "Strom",
+            "amountMinor": 5500,
+            "dueDate": "2026-10-20"
+          }
+        },
+        {
+          "module": "subscriptions",
+          "action": "create",
+          "data": {
+            "name": "Dropbox",
+            "amountMinor": 1199,
+            "recurrence": {
+              "freq": "monthly"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-mul-04",
+      "input": "Lösche das Abo Netflix; Lösche die Aufgabe Wohnung putzen",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "subscriptions",
+          "action": "delete",
+          "target": "Netflix"
+        },
+        {
+          "module": "todos",
+          "action": "delete",
+          "target": "Wohnung putzen"
+        }
+      ]
+    },
+    {
+      "id": "h-mul-05",
+      "input": "Ausgabe 5 € Kaffee; Ausgabe 3 € Brötchen",
+      "tags": ["multi"],
+      "expect": [
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 500,
+            "payee": "Kaffee"
+          }
+        },
+        {
+          "module": "finance",
+          "action": "create",
+          "data": {
+            "kind": "expense",
+            "amountMinor": 300,
+            "payee": "Brötchen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-neg-01",
+      "input": "Wie viel habe ich im September ausgegeben?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-02",
+      "input": "Zeig mir alle offenen Rechnungen",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-03",
+      "input": "Welche Termine habe ich morgen?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-04",
+      "input": "Suche Notiz Garten",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-05",
+      "input": "Wann ist die Telekom Rechnung fällig?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-06",
+      "input": "Was kostet Netflix?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-07",
+      "input": "Hallo",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-08",
+      "input": "Danke",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-09",
+      "input": "Wie wird das Wetter morgen?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-10",
+      "input": "Erzähl mir einen Witz",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-11",
+      "input": "Wo ist mein Reisepass?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-12",
+      "input": "Finde die Rechnung vom Zahnarzt",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-13",
+      "input": "Wie viele Abos habe ich?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-14",
+      "input": "Was steht heute an?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-15",
+      "input": "Zeige meine Sparziele",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-16",
+      "input": "Was ist die Hauptstadt von Frankreich?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-17",
+      "input": "Gibt es offene Aufgaben?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-18",
+      "input": "Rechnungen",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-19",
+      "input": "Termine nächste Woche",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-20",
+      "input": "Notizen",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-21",
+      "input": "Wann habe ich Yoga?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-22",
+      "input": "Wie hoch ist mein Kontostand?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-23",
+      "input": "Wer hat nächste Woche Geburtstag?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-24",
+      "input": "Öffne die Einkaufsliste",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-25",
+      "input": "Was muss ich diese Woche bezahlen?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-26",
+      "input": "Zeig Vorräte im Kühlschrank",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-27",
+      "input": "Welche Verträge laufen bald aus?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-28",
+      "input": "Kannst du mir helfen?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-29",
+      "input": "Wie funktioniert die App?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-30",
+      "input": "Was habe ich gestern gekauft?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-31",
+      "input": "Rechnung Stadtwerke",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-32",
+      "input": "Aufgaben heute",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-33",
+      "input": "Berechne 15 Prozent von 89 Euro",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-34",
+      "input": "Liste meine Notizen auf",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-35",
+      "input": "Ist Netflix teurer geworden?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-36",
+      "input": "Wo finde ich die Einstellungen?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-37",
+      "input": "Was war mein größter Ausgabenposten?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-38",
+      "input": "Brauche ich noch Milch?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-39",
+      "input": "Zeig die Termine für Freitag",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-neg-40",
+      "input": "Wie lange läuft mein Handytarif?",
+      "tags": ["negative"],
+      "expect": []
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 // Master parameters of the final Nemo icon (round 6, variant C12) and wordmark (round 2, W2).
 // Everything the brand assets need comes from here; change a value, then run `npm run export`
-// (see docs/HOW-TO.md -> Icons / branding).
+// (see docs/howto/design-brand.md).
 export const DEEP = '#E0550F'; // logo orange: 3.5:1 on a light taskbar, 3.8:1 with white (AA for UI)
 
 export const ICON = {

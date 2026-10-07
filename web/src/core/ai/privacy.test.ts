@@ -7,8 +7,6 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { ask } from './assistant';
-import { buildBriefMessage, MAX_HEADLINES, newsBrief } from './newsBrief';
-import { AiError } from './providers/types';
 import { createProviderFor, entryFromPreset, type ProviderEntry } from './config';
 import { getPreset, PRESETS, type PresetId } from './providers/presets';
 import { clearCooldown, createRouter } from './router';
@@ -200,118 +198,5 @@ describe('presets', () => {
       expect(getPreset(id).limits.costUsdPerMonth).toBeGreaterThan(0); // a cost cap by default
     }
     expect(getPreset('ollama')).toMatchObject({ tier: 'local', keyRequired: false });
-  });
-});
-
-describe.each(CASES)('news brief through $name', ({ preset, patch, keyHeader }) => {
-  const entry = (): ProviderEntry => ({ ...entryFromPreset(preset), ...patch, keySet: true });
-  const HEADLINES = [
-    { source: 'tagesschau', title: 'Neue Brücke eröffnet' },
-    { source: 'heise online', title: 'Prozessor mit mehr Kernen vorgestellt' },
-  ];
-  /** Every adapter's plain-text answer shape. */
-  const textAnswer = () => ({
-    content: [{ type: 'text', text: '• Verkehr: Brücke eröffnet' }],
-    stop_reason: 'end_turn',
-    id: 'msg_1',
-    type: 'message',
-    role: 'assistant',
-    model: 'm',
-    message: { content: '• Verkehr: Brücke eröffnet' },
-    choices: [{ message: { content: '• Verkehr: Brücke eröffnet' } }],
-    usage: { input_tokens: 90, output_tokens: 20, prompt_tokens: 90, completion_tokens: 20 },
-    prompt_eval_count: 90,
-    eval_count: 20,
-  });
-
-  it('sends only headlines: no schema, no user data, key only in its header', async () => {
-    const { sent, fetchFn } = recording(textAnswer);
-    const e = entry();
-    const provider = createRouter({
-      members: [{ entry: e, provider: createProviderFor(e, KEY, fetchFn) }],
-      database: db,
-    });
-    const result = await newsBrief(HEADLINES, { provider, database: db });
-    expect(result).toMatchObject({ ok: true, text: '• Verkehr: Brücke eröffnet' });
-
-    const body = sent[0]!.body;
-    expect(body).toContain('[tagesschau] Neue Brücke eröffnet');
-    expect(body).toContain('[heise online] Prozessor mit mehr Kernen vorgestellt');
-    for (const secret of DATA) expect(body, secret).not.toContain(secret);
-    expect(body).not.toContain('invoice[Rechnung]'); // no module schemas either
-    expect(body).not.toContain('2026-09-29'); // not even the date
-    expect(body).not.toContain(KEY);
-    if (keyHeader) expect(Object.values(sent[0]!.headers).join(' ')).toContain(KEY);
-    expect(body).not.toMatch(/"tools"|tool_choice|"functions"/); // no tool definitions
-  });
-});
-
-describe('newsBrief', () => {
-  it('caps the number and length of headlines and needs a provider and headlines', async () => {
-    const many = Array.from({ length: 60 }, (_, i) => ({
-      source: 'Quelle',
-      title: `T${i} ${'x'.repeat(400)}`,
-    }));
-    const lines = buildBriefMessage(many).split('\n');
-    expect(lines).toHaveLength(1 + MAX_HEADLINES);
-    expect(Math.max(...lines.map((l) => l.length))).toBeLessThan(220);
-    expect(await newsBrief([], { provider: undefined })).toEqual({
-      ok: false,
-      error: 'no-headlines',
-    });
-    expect(await newsBrief(many, { provider: undefined })).toEqual({
-      ok: false,
-      error: 'not-configured',
-    });
-  });
-
-  it('records the call in the usage statistics and maps provider errors', async () => {
-    await db.table('_aiUsage').clear();
-    const ok = {
-      id: 'p',
-      model: 'm',
-      complete: async () => ({
-        toolCalls: [],
-        text: '• Alles ruhig',
-        usage: { inputTokens: 40, outputTokens: 5 },
-        model: 'm',
-      }),
-    };
-    expect(
-      (await newsBrief([{ source: 'a', title: 'b' }], { provider: ok, database: db })).ok,
-    ).toBe(true);
-    const rows = await db.table('_aiUsage').toArray();
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({
-      provider: 'p',
-      inputTokens: 40,
-      outputTokens: 5,
-      outcome: 'ok',
-      cacheHit: false,
-    });
-
-    const failing = {
-      id: 'p',
-      model: 'm',
-      complete: async () => {
-        throw new AiError('rate-limit');
-      },
-    };
-    expect(
-      await newsBrief([{ source: 'a', title: 'b' }], { provider: failing, database: db }),
-    ).toEqual({ ok: false, error: 'rate-limit' });
-    const empty = {
-      id: 'p',
-      model: 'm',
-      complete: async () => ({
-        toolCalls: [],
-        text: '  ',
-        usage: { inputTokens: 1, outputTokens: 0 },
-        model: 'm',
-      }),
-    };
-    expect(
-      await newsBrief([{ source: 'a', title: 'b' }], { provider: empty, database: db }),
-    ).toEqual({ ok: false, error: 'no-answer' });
   });
 });

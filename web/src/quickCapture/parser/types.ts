@@ -3,7 +3,7 @@
  * anything from outside `quickCapture/parser/` (guarded by `isolation.test.ts`).
  */
 
-export type CaptureType = 'todo' | 'event' | 'reminder' | 'bookmark' | 'finance' | 'note';
+export type CaptureType = 'todo' | 'event' | 'reminder' | 'bookmark' | 'list' | 'finance' | 'note';
 
 /** Same shape as the app's recurrence schema, declared locally to keep the parser dependency-free. */
 export interface CaptureRecurrence {
@@ -28,6 +28,8 @@ export interface CaptureFields {
   amountMinor?: number;
   kind?: 'expense' | 'income';
   url?: string;
+  /** Effort in minutes; only set for ToDos ("Formular ausfüllen 15 min"). */
+  estimateMin?: number;
   /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
   note?: string;
 }

@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
@@ -90,13 +91,13 @@ function TransactionForm({
   const [error, setError] = useState('');
   const categories = data.categories
     .filter((c) => c.kind === kind)
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    .sort((a, b) => compareText(a.name, b.name));
 
   async function save(e: FormEvent) {
     e.preventDefault();
     const amountMinor = parseMoney(amount);
     if (!amountMinor || amountMinor < 1) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     if (!accountId) return;
@@ -221,7 +222,7 @@ function AccountForm({
     const openingBalanceMinor =
       opening.trim() === '' ? 0 : parseMoney(opening, { allowNegative: true });
     if (openingBalanceMinor === undefined) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     if (existing) await accountRepo.update(existing.id, { name: name.trim(), openingBalanceMinor });

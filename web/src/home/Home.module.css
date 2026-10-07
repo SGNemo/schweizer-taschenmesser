@@ -1,0 +1,118 @@
+.grid {
+  /* Row quantum: card heights snap to multiples of it, so cards of one band are equally tall. */
+  --widget-unit: 5.5rem;
+  display: grid;
+  gap: var(--grid-gap);
+  grid-template-columns: minmax(0, 1fr);
+  /* A card that needs more than its size class grows its rows; nothing is ever clipped. */
+  grid-auto-rows: minmax(var(--widget-unit), auto);
+  align-items: stretch;
+  /* Fills gaps left by wider widgets so there are no empty holes. */
+  grid-auto-flow: row dense;
+}
+/* The column count follows the width of the page container (also in a narrow window). */
+@container page (min-width: 44rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* Size classes = fixed row spans; on one column (phone) cards just take their content height. */
+  .s {
+    grid-row: span 2;
+  }
+  .m {
+    grid-column: span 2;
+    grid-row: span 3;
+  }
+  .l {
+    grid-row: span 4;
+  }
+}
+.l {
+  grid-column: 1 / -1;
+}
+/* Large widgets (agenda) take two columns from three columns on, never the whole row. */
+@container page (min-width: 70rem) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .l {
+    grid-column: span 2;
+  }
+}
+@container page (min-width: 95rem) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.widget {
+  position: relative;
+  min-width: 0;
+}
+/* The card fills its grid cell. */
+.widget > section {
+  height: 100%;
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.title {
+  flex: 1;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.titleLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: inherit;
+  text-decoration: none;
+}
+.titleLink svg {
+  color: var(--text-muted);
+}
+.titleLink:hover svg {
+  color: var(--accent);
+}
+.editing .widget > section {
+  outline: 2px dashed var(--border);
+  outline-offset: 2px;
+}
+.hidden {
+  opacity: 0.55;
+}
+.dragging {
+  z-index: var(--z-raised);
+  opacity: 0.9;
+}
+.dragging > section {
+  box-shadow: var(--shadow-2);
+}
+.handle {
+  touch-action: none;
+  cursor: grab;
+}
+.hint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+}
+
+.auto {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.linkButton {
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}

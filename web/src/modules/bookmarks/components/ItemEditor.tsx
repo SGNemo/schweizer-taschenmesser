@@ -7,7 +7,7 @@ import { itemRepo } from '../repo';
 import { KINDS, type BookmarkItem, type Kind } from '../schema';
 
 export type ItemTarget =
-  Stored<BookmarkItem> | { draft: true; title?: string; url?: string } | null;
+  Stored<BookmarkItem> | { draft: true; title?: string; url?: string; kind?: Kind } | null;
 
 export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: () => void }) {
   const existing = target && 'id' in target ? target : null;
@@ -24,10 +24,10 @@ export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: (
 
 function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose: () => void }) {
   const existing = 'id' in target ? target : null;
-  const draft = !existing ? (target as { title?: string; url?: string }) : {};
+  const draft = !existing ? (target as { title?: string; url?: string; kind?: Kind }) : {};
   const [title, setTitle] = useState(existing?.title ?? draft.title ?? '');
   const [url, setUrl] = useState(existing?.url ?? draft.url ?? '');
-  const [kind, setKind] = useState<Kind>(existing?.kind ?? 'link');
+  const [kind, setKind] = useState<Kind>(existing?.kind ?? draft.kind ?? 'link');
   const [tags, setTags] = useState(formatTags(existing?.tags ?? []));
   const [note, setNote] = useState(existing?.note ?? '');
   const [error, setError] = useState('');

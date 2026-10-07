@@ -3,11 +3,36 @@ import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/bat
 import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
-import type { ModuleManifest } from '@/core/modules/types';
+import { AREAS, type AreaId, type ModuleManifest } from '@/core/modules/types';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
-import { Badge, Button, Card, Dialog, Icon } from '@/ui';
+import { Badge, Button, Card, Dialog, Icon, ReadableText } from '@/ui';
 import styles from './Page.module.css';
+
+interface LibraryGroup {
+  id: string;
+  area: AreaId | undefined;
+  label: string;
+  manifests: ModuleManifest[];
+}
+
+/** The available modules grouped by navigation area (same order and names as the sidebar); modules without an area come last. */
+function libraryGroups(): LibraryGroup[] {
+  const all = availableManifests();
+  const groups: LibraryGroup[] = AREAS.map((id) => ({
+    id,
+    area: id,
+    label: t.nav.areas[id],
+    manifests: all.filter((m) => m.area === id),
+  }));
+  groups.push({
+    id: 'other',
+    area: undefined,
+    label: t.library.other,
+    manifests: all.filter((m) => !m.area),
+  });
+  return groups.filter((g) => g.manifests.length > 0);
+}
 
 export function ModuleLibrary() {
   const states = useModuleStates();
@@ -24,7 +49,7 @@ export function ModuleLibrary() {
     if (!pending) return;
     const m = pending;
     // Close the dialog only after the write: "the dialog has closed" must mean "the write is
-    // finished" (E2E rule in CLAUDE.md), otherwise a reload right after can lose the change.
+    // finished" (E2E rule in docs/howto/gotchas.md), otherwise a reload right after can lose the change.
     await disableModule(m, policy);
     setPending(null);
   }
@@ -38,35 +63,51 @@ export function ModuleLibrary() {
           <SetupLink />
         </div>
       </div>
-      <ul className={`${styles.list} ${styles.grid}`}>
-        {availableManifests().map((m) => {
-          const enabled = states?.[m.id] ?? false;
-          return (
-            <Card as="li" key={m.id} className={styles.moduleCard} data-testid={`module-${m.id}`}>
-              <div className={styles.moduleHead}>
-                <span className={styles.moduleIcon}>
-                  <Icon name={m.icon} />
-                </span>
-                <span className={styles.moduleName}>{m.name}</span>
-                {enabled ? <Badge tone="accent">{t.library.active}</Badge> : null}
-                {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
-              </div>
-              <p className={styles.desc}>{m.description}</p>
-              <div className={styles.moduleActions}>
-                {enabled ? (
-                  <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>
-                    {t.actions.disable}
-                  </Button>
-                ) : (
-                  <Button onClick={() => void enable(m)} disabled={!states}>
-                    {t.actions.enable}
-                  </Button>
-                )}
-              </div>
-            </Card>
-          );
-        })}
-      </ul>
+      {libraryGroups().map((g) => (
+        <section key={g.id} className={styles.libGroup} data-area={g.area}>
+          <h2 className={styles.libHead}>
+            <span className={styles.libStripe} aria-hidden="true" />
+            {g.label}
+            <span className={styles.libCount}>{g.manifests.length}</span>
+          </h2>
+          <ul className={`${styles.list} ${styles.grid}`}>
+            {g.manifests.map((m) => {
+              const enabled = states?.[m.id] ?? false;
+              return (
+                <Card
+                  as="li"
+                  key={m.id}
+                  className={styles.moduleCard}
+                  data-testid={`module-${m.id}`}
+                >
+                  <div className={styles.moduleHead}>
+                    <span className={styles.moduleIcon}>
+                      <Icon name={m.icon} />
+                    </span>
+                    <span className={styles.moduleName}>{m.name}</span>
+                    {enabled ? <Badge tone="accent">{t.library.active}</Badge> : null}
+                    {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
+                  </div>
+                  <p className={styles.desc}>
+                    <ReadableText text={m.description} />
+                  </p>
+                  <div className={styles.moduleActions}>
+                    {enabled ? (
+                      <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>
+                        {t.actions.disable}
+                      </Button>
+                    ) : (
+                      <Button onClick={() => void enable(m)} disabled={!states}>
+                        {t.actions.enable}
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
 
       {offer ? (
         <OnboardingWizard

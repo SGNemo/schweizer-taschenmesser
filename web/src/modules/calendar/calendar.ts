@@ -9,7 +9,10 @@ const source: CalendarSource = async (range) => {
     eventRepo.table.filter(notDeleted).toArray(),
     externalRepo.table.filter(notDeleted).toArray(),
   ]);
-  const own = events.flatMap((e) => expandEvent(e.id, e, range));
+  // A paused reminder (notification off) stays out of the calendar, like the old module did.
+  const own = events
+    .filter((e) => e.kind !== 'reminder' || e.notify?.enabled !== false)
+    .flatMap((e) => expandEvent(e.id, e, range));
   const outside = external.flatMap((e) =>
     expandEvent(e.id, e, range).map((item) => ({
       ...item,

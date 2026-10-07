@@ -11,11 +11,21 @@ export interface PreviewChip {
 }
 
 const NOTE_LABEL: Record<CaptureNote, string> = {
-  'assumed-date': t.quickCapture.chip.assumedDate,
-  'rolled-year': t.quickCapture.chip.rolledYear,
-  'past-date': t.quickCapture.chip.pastDate,
-  'approx-time': t.quickCapture.chip.approxTime,
-  'ambiguous-time': t.quickCapture.chip.ambiguousTime,
+  get 'assumed-date'() {
+    return t.quickCapture.chip.assumedDate;
+  },
+  get 'rolled-year'() {
+    return t.quickCapture.chip.rolledYear;
+  },
+  get 'past-date'() {
+    return t.quickCapture.chip.pastDate;
+  },
+  get 'approx-time'() {
+    return t.quickCapture.chip.approxTime;
+  },
+  get 'ambiguous-time'() {
+    return t.quickCapture.chip.ambiguousTime;
+  },
 };
 
 export function describeRecurrence(r: CaptureRecurrence): string {
@@ -57,6 +67,8 @@ export function previewChips(
   if (fields.date && usesDate(type))
     chips.push({ id: 'date', label: describeDate(fields.date, today) });
   if (fields.time && usesTime(type)) chips.push({ id: 'time', label: `${fields.time} Uhr` });
+  if (type === 'todo' && fields.estimateMin)
+    chips.push({ id: 'estimate', label: t.todos.estimateAbout(fields.estimateMin) });
   if (type === 'event' && fields.date && !fields.time)
     chips.push({ id: 'allDay', label: t.quickCapture.chip.allDay });
   if (fields.recurrence && (type === 'event' || type === 'reminder')) {

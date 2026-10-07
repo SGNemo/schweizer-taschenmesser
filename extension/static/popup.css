@@ -1,0 +1,137 @@
+/* Mirrors the Nemo tokens (web/src/ui/tokens.css): flat surfaces, borders, one accent. */
+:root {
+  --bg: #fbf8f3;
+  --surface: #ffffff;
+  --surface-2: #f3efe8;
+  --border: #e6e1d8;
+  --border-strong: #788489;
+  --text: #13262f;
+  --muted: #51616a;
+  --accent: #b5430c;
+  --accent-contrast: #ffffff;
+  --danger: #b3261e;
+  --success: #1b7545;
+  --focus: #0b6f72;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1d2b;
+    --surface: #132b3a;
+    --surface-2: #1a3747;
+    --border: #26485b;
+    --border-strong: #71919e;
+    --text: #e7f1f2;
+    --muted: #9fb6bc;
+    --accent: #ff9a57;
+    --accent-contrast: #1b0f06;
+    --danger: #f4a39c;
+    --success: #74d39c;
+    --focus: #4fd1c5;
+  }
+}
+body {
+  margin: 0;
+  width: 340px;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.5 system-ui,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+main {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+h1 {
+  font-size: 16px;
+  margin: 0;
+}
+h2 {
+  font-size: 14px;
+  margin: 0;
+}
+p {
+  margin: 0;
+}
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+.status {
+  border-left: 3px solid var(--border-strong);
+  padding-left: 8px;
+}
+.status.ok {
+  border-color: var(--success);
+}
+.status.warn {
+  border-color: var(--danger);
+}
+input[type='search'],
+input[type='text'] {
+  min-height: 40px;
+  padding: 0 10px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  font: inherit;
+}
+button {
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.value {
+  font:
+    13px ui-monospace,
+    Consolas,
+    monospace;
+  word-break: break-all;
+  padding: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}

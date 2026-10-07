@@ -1,5 +1,6 @@
 import { extractAmount } from './amount';
 import { extractDateTime } from './dates';
+import { extractEstimate } from './estimate';
 import { extractRecurrence } from './recurrence';
 import type {
   CaptureAlternative,
@@ -33,15 +34,17 @@ const PREFIXES: Record<string, CaptureType> = {
   k: 'event',
   e: 'reminder',
   m: 'bookmark',
+  l: 'list',
   $: 'finance',
 };
-const PREFIX_RE = /^\s*(t|k|e|m|\$)(?:\s+|(?<=\$))/i;
+const PREFIX_RE = /^\s*(t|k|e|m|l|\$)(?:\s+|(?<=\$))/i;
 
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 const KEYWORDS = {
   reminder: word(String.raw`erinnere?\s+mich(?:\s+(?:bitte\s+)?(?:daran|an|zu|dass))?`),
   todo: word(String.raw`to-?do|aufgabe|task`),
   bookmark: word(String.raw`merke(?:\s+dir)?`),
+  list: word(String.raw`(?:auf\s+die\s+)?einkaufs?liste`),
 };
 const DANGLING =
   /^(?:um|am|an|den|dem|bis|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|ab|für|und|zu|,|;|:|-|–)+$/iu;
@@ -56,7 +59,7 @@ function cleanTitle(raw: string): string {
 }
 
 /** First occurrence of a recurrence rule on or after `today`, used when no date was given. */
-function startForRecurrence(rec: CaptureRecurrence, today: Ymd): Ymd {
+export function startForRecurrence(rec: CaptureRecurrence, today: Ymd): Ymd {
   if (rec.byWeekday?.[0]) return nextWeekday(today, rec.byWeekday[0], true);
   const day = rec.byMonthDay;
   if (day !== undefined) {
@@ -103,6 +106,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     reminder: !!take(scan, KEYWORDS.reminder),
     todo: !!take(scan, KEYWORDS.todo),
     bookmark: !!take(scan, KEYWORDS.bookmark),
+    list: !!take(scan, KEYWORDS.list),
   };
 
   const recurrence = extractRecurrence(scan);
@@ -117,6 +121,9 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     fields.kind = money.kind;
   }
   dt.notes.forEach((n) => notes.add(n));
+  // The estimate is only taken for ToDos (decided below); everything else keeps the text as typed.
+  const estimateScan: Scan = { t: scan.t };
+  const estimate = extractEstimate(estimateScan);
 
   const hasDate = !!dt.date;
   const hasTime = dt.time !== undefined;
@@ -125,6 +132,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   const scores = new Map<CaptureType, number>();
   if (fields.url) score(scores, 'bookmark', 90);
   if (kw.bookmark) score(scores, 'bookmark', fields.url ? 95 : 90);
+  if (kw.list) score(scores, 'list', 95);
   if (kw.reminder) score(scores, 'reminder', 95);
   if (kw.todo) score(scores, 'todo', 95);
   if (recurrence && !kw.reminder) {
@@ -166,6 +174,11 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (date) fields.date = fmtDate(date);
   if (dt.time !== undefined) fields.time = dt.time;
   if (primaryType === 'event' && date && !hasTime) fields.allDay = true;
+
+  if (estimate !== undefined && primaryType === 'todo') {
+    fields.estimateMin = estimate;
+    scan.t = estimateScan.t;
+  }
 
   fields.title = cleanTitle(scan.t) || (fields.url ?? '') || cleanTitle(text);
 

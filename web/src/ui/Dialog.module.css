@@ -1,12 +1,20 @@
 .dialog {
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-xl);
   background: var(--surface);
   color: var(--text);
   padding: 0;
-  width: min(92vw, 30rem);
+  width: min(92vw, 34rem);
   max-height: 88vh;
+  max-height: 88dvh;
   box-shadow: var(--shadow-2);
+  overflow-y: auto;
+}
+.roomy {
+  width: min(92vw, 40rem);
+}
+.wide {
+  width: min(92vw, 56.25rem);
 }
 .dialog::backdrop {
   background: var(--overlay);
@@ -14,21 +22,40 @@
 .dialog[open] {
   animation: pop var(--dur) var(--ease-out);
 }
-.sheet {
-  margin: auto auto 0;
-  width: 100%;
-  max-width: none;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  padding-bottom: env(safe-area-inset-bottom);
+.dialog[open]::backdrop {
+  animation: fade var(--dur) linear;
 }
-.sheet[open] {
-  animation: slide var(--dur-slow) var(--ease-out);
+/* Phones: every dialog is a bottom sheet with a grab handle, keyboard-safe and 88 vh at most. */
+@media (max-width: 899px) {
+  .dialog:not(.full) {
+    margin: auto auto 0;
+    width: 100%;
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .dialog:not(.full)[open] {
+    animation: slide var(--dur-slow) var(--ease-out);
+  }
 }
-@media (min-width: 900px) {
-  .sheet {
-    margin: auto;
-    width: min(92vw, 30rem);
-    border-radius: var(--radius-xl);
+.handle {
+  display: none;
+}
+@media (max-width: 899px) {
+  .handle {
+    display: block;
+    align-self: center;
+    width: 2.5rem;
+    height: 0.25rem;
+    margin: calc(var(--space-2) * -1) 0 var(--space-1);
+    border-radius: var(--radius-full);
+    background: var(--border-strong);
+    /* A generous, touch-friendly strip to pull on. */
+    box-sizing: content-box;
+    padding: var(--space-3) var(--space-5);
+    background-clip: content-box;
+    touch-action: none;
+    cursor: grab;
   }
 }
 .inner {
@@ -46,16 +73,40 @@
 .title {
   font-size: var(--text-lg);
 }
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.body[hidden] {
+  display: none;
+}
 .footer {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.confirmTitle {
+  font-size: var(--text-md);
+}
+.confirmHint {
+  color: var(--text-muted);
+}
 @keyframes pop {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.98);
+    transform: scale(0.96);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
   }
 }
 @keyframes slide {
@@ -70,7 +121,6 @@
   height: 100dvh;
   max-height: none;
   margin: 0;
-  border: 0;
   border-radius: 0;
 }
 .full .inner {

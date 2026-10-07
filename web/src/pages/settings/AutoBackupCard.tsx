@@ -1,3 +1,4 @@
+import { formatTimestamp, DATE_TIME_NUMERIC } from '@/core/i18n/format';
 import { useEffect, useState } from 'react';
 import {
   MAX_KEEP,
@@ -57,7 +58,7 @@ export function AutoBackupCard({ onOpen }: { onOpen: (text: string, passphrase: 
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load/apply are stable; run once the platform is known
   }, [platform.isNative]);
 
   if (!platform.isNative) {
@@ -170,7 +171,9 @@ export function AutoBackupCard({ onOpen }: { onOpen: (text: string, passphrase: 
         ) : null}
         <p className={styles.muted} data-testid="auto-backup-last">
           {t.backup.autoLast}:{' '}
-          {last ? new Date(last.at).toLocaleString('de-CH') : t.backup.autoNever}
+          {last
+            ? formatTimestamp(new Date(last.at).getTime(), DATE_TIME_NUMERIC)
+            : t.backup.autoNever}
           {last && !last.ok ? ` – ${t.backup.autoLastFailed}` : ''}
         </p>
         <p className={styles.legend}>{t.backup.autoFiles}</p>

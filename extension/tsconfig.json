@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "types": ["chrome", "node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "@nemo/vault-core": ["../packages/vault-core/src/index.ts"],
+      "tldts": ["./node_modules/tldts"],
+      "zod": ["./node_modules/zod"]
+    }
+  },
+  "include": ["src", "test", "e2e", "scripts", "*.config.ts", "eslint.config.js"]
+}

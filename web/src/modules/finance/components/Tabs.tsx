@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { useState } from 'react';
 import { formatMoney } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
@@ -27,7 +28,7 @@ export function TransactionsTab({
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   if (inMonth.length === 0)
     return (
-      <EmptyState icon="wallet" title={t.finance.noTransactions}>
+      <EmptyState title={t.finance.noTransactions}>
         <StartDataButton moduleId="finance" />
       </EmptyState>
     );
@@ -83,9 +84,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
           {t.finance.addAccount}
         </Button>
       </div>
-      {data.accounts.length === 0 ? (
-        <EmptyState icon="wallet" title={t.finance.noAccounts} />
-      ) : null}
+      {data.accounts.length === 0 ? <EmptyState title={t.finance.noAccounts} /> : null}
       <ul className={styles.list}>
         {data.accounts.map((a) => (
           <li key={a.id}>
@@ -119,7 +118,7 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
           <ul className={styles.list}>
             {data.categories
               .filter((c) => c.kind === g.kind)
-              .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+              .sort((a, b) => compareText(a.name, b.name))
               .map((c) => (
                 <li key={c.id}>
                   <button type="button" className={styles.row} onClick={() => setTarget(c)}>

@@ -23,7 +23,7 @@ jobs:
     outputs:
       code: ${{ steps.diff.outputs.code }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Does the change touch more than documentation?
@@ -44,10 +44,11 @@ jobs:
             range="$PUSH_BEFORE..$PUSH_AFTER"
           fi
           if [ -n "$range" ] && files="$(git diff --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
-            # Documentation that no test reads. README.md, docs/AI-IMPORT.md and docs/user/installation.md
+            # Documentation that no test reads. README*.md, docs/AI-IMPORT*.md and docs/user/installation*.md
             # are read by unit tests (prompt and download-link checks), so they count as code.
-            ignorable='^(docs/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
-            pinned='^docs/(AI-IMPORT\.md|user/installation\.md)$'
+            # site/ has its own workflow (site.yml) and never touches the app.
+            ignorable='^(docs/|site/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
+            pinned='^docs/(AI-IMPORT(\.de)?\.md|user/installation(\.de)?\.md)$'
             relevant="$( { printf '%s\n' "$files" | grep -E "$pinned"; printf '%s\n' "$files" | grep -Ev "$ignorable"; } )"
             if [ -z "$relevant" ]; then code=false; fi
             echo "Changed files:"; printf '%s\n' "$files"
@@ -60,27 +61,50 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: stable
       # Built from source through the Go module proxy (checksum-verified): no binary download to trust.
       # The compiled binary is cached per version so later runs skip the build (a miss rebuilds it).
       # Reviewed false positives live in .gitleaksignore; new test fixtures use a `gitleaks:allow` comment.
-      - uses: actions/cache@v4
-        id: gitleaks-cache
-        with:
-          path: ~/go/bin/gitleaks
-          key: gitleaks-v8.21.2-${{ runner.os }}
+      # Built fresh on every run (Go module proxy + checksum database); a cached binary could be
+      # replaced from any branch that shares the cache.
       - name: Build gitleaks from source
-        if: steps.gitleaks-cache.outputs.cache-hit != 'true'
         run: go install github.com/zricethezav/gitleaks/v8@v8.21.2
       - name: Scan the history for secrets
         run: |
           set -euo pipefail
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
+
+  # Non-blocking docs budget check (start context, file sizes, dead links; needs only Node, no install).
+  # Warnings never fail the run; budgets: docs/meta/DOCS-GUIDE.md.
+  docs-budget:
+    name: Docs budget (warnings only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - run: node web/scripts/check-docs.mjs
+
+  # English docs and their German translations (README.de.md, *.de.md) must stay in step. Blocking and cheap,
+  # so it also runs on doc-only changes.
+  docs-pairs:
+    name: Docs translations in step
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - run: node web/scripts/check-readme.mjs
 
   # The former single `web` job (about 14 min, one after the other) is split so that the pieces run side by
   # side; `web` at the bottom of this group keeps the old check name for branch protection.
@@ -94,8 +118,8 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -103,9 +127,17 @@ jobs:
       - run: npm ci
       - name: Version files agree (package.json, Cargo, Tauri)
         run: npm run version:check
+      - name: Every module has a complete manifest and a home-screen widget
+        run: npm run check:modules
+      - name: UI texts complete in every language, none hard-coded or read at import
+        run: npm run check:i18n
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
+      - name: Licence list is current and every licence is allowed
+        run: npm run check:licenses
+      - name: Open legal placeholders (warning only)
+        run: npm run check:legal
 
   web-unit:
     name: Web unit tests
@@ -117,8 +149,8 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -143,15 +175,15 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - name: Playwright browser cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: pw-cache
         with:
           path: ~/.cache/ms-playwright
@@ -165,7 +197,7 @@ jobs:
         run: npx playwright test --shard=${{ matrix.shard }}/4
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report-${{ matrix.shard }}
           path: web/playwright-report
@@ -207,8 +239,8 @@ jobs:
       run:
         working-directory: server
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -230,8 +262,8 @@ jobs:
       run:
         working-directory: mcp
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -243,6 +275,134 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  vault-core:
+    name: Shared vault package (lint, types, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: packages/vault-core
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vault-core/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  # Supporter codes: shared package + maintainer CLI (the CLI imports the package source, so both are installed).
+  supporter:
+    name: Supporter codes + CLI (lint, types, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            packages/supporter-codes/package-lock.json
+            tools/supporter-cli/package-lock.json
+      - run: npm ci
+        working-directory: packages/supporter-codes
+      - run: npm ci
+        working-directory: tools/supporter-cli
+      - name: Package checks
+        working-directory: packages/supporter-codes
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: CLI checks
+        working-directory: tools/supporter-cli
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+
+  # Supporter webhook service (Cloudflare Worker): own job, no deploy, no secrets. It imports the shared code package source.
+  supporter-webhook:
+    name: Supporter webhook (lint, types, tests, bundle)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            packages/supporter-codes/package-lock.json
+            services/supporter-webhook/package-lock.json
+      - run: npm ci
+        working-directory: packages/supporter-codes
+      - run: npm ci
+        working-directory: services/supporter-webhook
+      - name: Service checks
+        working-directory: services/supporter-webhook
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
+
+  extension:
+    name: Browser extension (lint, types, tests, build, E2E)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            extension/package-lock.json
+      # The E2E suite loads the extension into Chromium and talks to the real web app (e2e build).
+      - run: npm ci
+        working-directory: web
+      - run: npm ci
+        working-directory: extension
+      - run: npm run format:check
+        working-directory: extension
+      - run: npm run lint
+        working-directory: extension
+      - run: npm run typecheck
+        working-directory: extension
+      - run: npm test
+        working-directory: extension
+      - run: npm run build
+        working-directory: extension
+      - run: npm run build:e2e
+        working-directory: extension
+      - run: npx playwright install --with-deps chromium
+        working-directory: extension
+      - name: E2E (extension in Chromium against the web app)
+        run: npx playwright test
+        working-directory: extension
+      - name: Pack the unpacked extension
+        run: npm run zip
+        working-directory: extension
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: nemo-extension
+          path: extension/nemo-extension-*.zip
+          retention-days: 14
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: extension-test-results
+          path: extension/test-results
+          retention-days: 7
+
   e2e-sync:
     name: Multi-device sync E2E
     needs: changes
@@ -250,8 +410,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -263,7 +423,7 @@ jobs:
       - run: npm ci
         working-directory: web
       - name: Playwright browser cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: pw-cache
         with:
           path: ~/.cache/ms-playwright
@@ -287,21 +447,69 @@ jobs:
       run:
         working-directory: web/src-tauri
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: System libraries for Tauri on Linux
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
+          toolchain: stable
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: web/src-tauri
       # tauri::generate_context! needs the frontend directory to exist; its content does not matter here.
       - name: Placeholder frontend
         run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
       - run: cargo fmt --all --check
-      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -- -D warnings
-      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info
+      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-vault-bridge -- -D warnings
+      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-vault-bridge
+      # Windows-only code (named pipe, registry) of the bridge crate compiles without a Windows box.
+      - run: rustup target add x86_64-pc-windows-msvc && cargo check --locked -p taschenmesser-vault-bridge --target x86_64-pc-windows-msvc
+
+  # The built-in local model: llama.cpp behind a Tauri-free crate. Compiled and tested on its own (the app
+  # only pulls it in with `--features local-llm`), including a tiny random-weights model for the plumbing
+  # (load, grammar, KV-cache reuse, cancel). No real model is downloaded in CI.
+  local-llm:
+    name: Local model runtime (fmt, clippy, tests)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: web/src-tauri/crates/local-llm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: web/src-tauri/crates/local-llm
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Smoke model (random weights, ~0.5 MB)
+        run: |
+          pip install --quiet gguf==0.19.0 numpy==2.4.6
+          python3 tests/make_smoke_gguf.py "$RUNNER_TEMP/smoke.gguf"
+      - run: cargo test --locked -- --test-threads=1
+        env:
+          NEMO_SMOKE_GGUF: ${{ runner.temp }}/smoke.gguf
+
+  # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
+  # push to develop that changed more than documentation. Never on pull requests, never a stable release.
+  # See dev-preview.yml and docs/howto/ci.md -> "Dev-Preview".
+  dev-preview:
+    name: Dev-Preview build
+    needs: [changes, secret-scan, web, server, mcp, vault-core, extension, e2e-sync, rust]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/dev-preview.yml
+    with:
+      target: dev-preview
+    secrets: inherit

@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -41,7 +40,7 @@ async function enable(page: Page, ids: string[]) {
 }
 
 test('pantry: expiry, low stock and the hand-over to the shopping list', async ({ page }) => {
-  await enable(page, ['pantry', 'shopping']);
+  await enable(page, ['pantry', 'lists']);
   await page.goto('/pantry');
   await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
@@ -66,8 +65,8 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
 
   await row.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
   await expect(page.getByText('an die Einkaufsliste gesendet')).toBeVisible();
-  await page.goto('/shopping');
-  await expect(page.getByText('Milch')).toBeVisible();
+  await page.goto('/lists');
+  await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
 
   await page.goto('/pantry');
   await page.getByRole('button', { name: 'Milch: einer mehr' }).click();
@@ -77,102 +76,98 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
   );
 });
 
-test('time tracking: project, timer, manual entry, week sums and a time sheet', async ({
+test('pantry: the hand-over also arrives when the app loads slowly (services start late)', async ({
   page,
 }) => {
-  await enable(page, ['timetrack']);
-  await page.goto('/timetrack');
-  await expect(page.getByText('Erst ein Projekt anlegen')).toBeVisible();
-  await page.getByRole('button', { name: 'Neues Projekt' }).click();
-  const projects = page.getByRole('dialog', { name: 'Projekte' });
-  await projects.getByLabel('Projektname').fill('Website');
-  await projects.getByRole('button', { name: 'Projekt anlegen' }).click();
-  await expect(projects.getByText('Website')).toBeVisible();
-  await page.keyboard.press('Escape');
+  await enable(page, ['pantry', 'lists']);
+  // Every script chunk arrives late, like on a busy CI runner: the services of the modules are
+  // dynamic imports that start one after the other, long after the page can be clicked.
+  await page.route('**/assets/*.js', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await page.goto('/pantry');
+  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  await dialog.getByLabel('Name', { exact: true }).fill('Milch');
+  await dialog.getByLabel('Ort').selectOption('fridge');
+  await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
+  await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toBeHidden();
 
-  await page.getByRole('button', { name: 'Starten' }).click();
-  await expect(page.getByTestId('running')).toContainText('Website');
-  await expect(page.getByRole('button', { name: 'Starten' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Stoppen' }).click();
-  await expect(page.getByTestId('running')).toHaveCount(0);
-  // The frozen clock makes the stopped timer the minimum of one minute.
-  await expect(page.getByRole('region', { name: '29.09.2026' })).toContainText('Website · 0:01 h');
-
-  await page.getByRole('button', { name: 'Zeit nachtragen' }).click();
-  const entry = page.getByRole('dialog', { name: 'Zeit nachtragen' });
-  await entry.getByLabel('Dauer').fill('nichts');
-  await entry.getByRole('button', { name: 'Speichern' }).click();
-  await expect(entry.getByText('Bitte eine Dauer angeben')).toBeVisible();
-  await entry.getByLabel('Dauer').fill('1:30');
-  await entry.getByLabel('Notiz (optional)').fill('Sitzung; "wichtig"');
-  await entry.getByRole('button', { name: 'Speichern' }).click();
-  await expect(entry).toBeHidden();
-  await expect(page.getByTestId('week-total')).toHaveText('1:31 h');
-  await expect(page.getByTestId('today-total')).toHaveText('1:31 h');
-
-  await page.getByRole('button', { name: 'Stundenzettel exportieren' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Stundenzettel exportieren' });
-  await expect(dialog.getByLabel('Monat')).toHaveValue('2026-09');
-  const download = page.waitForEvent('download');
-  await dialog.getByRole('button', { name: 'CSV speichern' }).click();
-  const file = await download;
-  expect(file.suggestedFilename()).toBe('Stundenzettel-2026-09.csv');
-  const csv = readFileSync((await file.path())!, 'utf8');
-  expect(csv).toContain('29.09.2026;Website;1:30;1,50;"Sitzung; ""wichtig"""');
-  expect(csv).toContain('Summe;;1:31;1,52;');
+  const row = page
+    .getByRole('region', { name: 'Kühlschrank' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Milch' });
+  await row.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
+  // The confirmation comes only once the item is stored, so the list shows it right away.
+  await expect(page.getByText('an die Einkaufsliste gesendet')).toBeVisible();
+  await page.unroute('**/assets/*.js');
+  await page.goto('/lists');
+  await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
 });
 
-test('time tracking: only one timer runs, it survives a reload', async ({ page }) => {
-  await enable(page, ['timetrack']);
-  await page.goto('/timetrack');
-  await page.getByRole('button', { name: 'Neues Projekt' }).click();
-  await page.getByRole('dialog', { name: 'Projekte' }).getByLabel('Projektname').fill('Büro');
-  await page
-    .getByRole('dialog', { name: 'Projekte' })
-    .getByRole('button', { name: 'Projekt anlegen' })
-    .click();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Starten' }).click();
-  await expect(page.getByTestId('running')).toBeVisible();
-  await page.reload();
-  await expect(page.getByTestId('running')).toContainText('Büro');
-  await expect(page.getByRole('button', { name: 'Starten' })).toHaveCount(0);
+test('pantry: without the lists module the hand-over says so and offers to switch it on', async ({
+  page,
+}) => {
+  await enable(page, ['pantry']);
+  await page.goto('/pantry');
+  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  await dialog.getByLabel('Name', { exact: true }).fill('Butter');
+  await dialog.getByLabel('Vorrat (Anzahl)').fill('0');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toBeHidden();
+  await page.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
+  await expect(page.getByText('braucht es das Modul „Listen“')).toBeVisible();
+  await expect(page.getByText('an die Einkaufsliste gesendet')).toHaveCount(0);
+
+  // One tap switches the module on and sends the entry that had nowhere to go.
+  await page.getByRole('button', { name: 'Aktivieren' }).click();
+  await expect(page.getByText('an die Einkaufsliste gesendet')).toBeVisible();
+  await page.goto('/lists');
+  await expect(page.getByRole('checkbox', { name: 'Butter' })).toBeVisible();
 });
 
-test('gift ideas: per person, status filter and what was spent', async ({ page }) => {
-  await enable(page, ['gifts']);
-  await page.goto('/gifts');
-  await expect(page.getByText('Noch keine Ideen')).toBeVisible();
-  await page.getByRole('button', { name: 'Idee hinzufügen' }).first().click();
-  const dialog = page.getByRole('dialog', { name: 'Idee hinzufügen' });
+test('gift ideas: per person, status and what was spent', async ({ page }) => {
+  await enable(page, ['people']);
+  await page.goto('/people');
+  await expect(page.getByText('Noch keine Personen')).toBeVisible();
+  await page.getByRole('button', { name: 'Person hinzufügen' }).first().click();
+  const person = page.getByRole('dialog', { name: 'Person hinzufügen' });
+  await person.getByLabel('Name', { exact: true }).fill('Anna');
+  await person.getByRole('button', { name: 'Speichern' }).click();
+  await expect(person).toBeHidden();
+  await page.getByRole('button', { name: /^Anna(?! per WhatsApp)/ }).click();
+  await expect(page.getByRole('heading', { name: 'Anna' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Geschenkidee hinzufügen' }).first().click();
+  const dialog = page.getByRole('dialog', { name: 'Geschenkidee hinzufügen' });
   await dialog.getByLabel('Idee', { exact: true }).fill('Kochbuch');
-  await dialog.getByLabel('Für wen').fill('Anna');
   await dialog.getByLabel('Anlass (optional)').fill('Geburtstag');
   await dialog.getByLabel('Preis in € (optional)').fill('19,90');
   await dialog.getByLabel('Link (optional)').fill('javascript:alert(1)');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toBeHidden();
 
-  const anna = page.getByRole('region', { name: 'Anna' });
-  await expect(anna).toContainText('Kochbuch');
-  await expect(anna).toContainText('Geburtstag · 19,90');
+  const gifts = page.getByRole('list', { name: 'Geschenke' });
+  await expect(gifts).toContainText('Kochbuch');
+  await expect(gifts).toContainText('Geburtstag · 19,90');
   // A script link is dropped, not stored as a clickable link.
-  await expect(anna.getByRole('button', { name: /Link öffnen/ })).toHaveCount(0);
-  await expect(page.getByTestId('gifts-total')).toContainText('gekauft für 0,00');
+  await expect(gifts.getByRole('button', { name: /Link öffnen/ })).toHaveCount(0);
+  await expect(page.getByTestId('gifts-total')).toHaveCount(0);
 
-  await anna.getByRole('button', { name: /Kochbuch/ }).click();
+  await gifts.getByRole('button', { name: /Kochbuch/ }).click();
   await page
-    .getByRole('dialog', { name: 'Idee bearbeiten' })
+    .getByRole('dialog', { name: 'Geschenkidee bearbeiten' })
     .getByLabel('Stand')
     .selectOption('bought');
   await page
-    .getByRole('dialog', { name: 'Idee bearbeiten' })
+    .getByRole('dialog', { name: 'Geschenkidee bearbeiten' })
     .getByRole('button', { name: 'Speichern' })
     .click();
-  await expect(page.getByTestId('gifts-total')).toContainText('1 Ideen, davon gekauft für 19,90');
-
-  await page.getByRole('button', { name: 'Verschenkt', exact: true }).click();
-  await expect(page.getByText('Nichts in dieser Ansicht.')).toBeVisible();
-  await page.getByRole('button', { name: 'Gekauft', exact: true }).click();
-  await expect(anna).toContainText('Kochbuch');
+  await expect(page.getByTestId('gifts-total')).toContainText(
+    '1 Geschenke gekauft oder verschenkt für 19,90',
+  );
 });

@@ -59,7 +59,7 @@ export default function SubscriptionsPage() {
       </div>
 
       {subs && subs.length === 0 ? (
-        <EmptyState icon="repeat" title={t.subscriptions.empty}>
+        <EmptyState title={t.subscriptions.empty}>
           <StartDataButton moduleId="subscriptions" />
         </EmptyState>
       ) : null}

@@ -2,9 +2,13 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
+import { useModuleStates } from '@/core/modules/activation';
+import { offerEnableModule } from '@/core/modules/offerEnable';
+import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, today } from '@/core/time/dates';
 import { useUiStore } from '@/stores/ui';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
   Badge,
@@ -33,6 +37,7 @@ export default function PantryPage() {
   const [target, setTarget] = useState<ItemTarget>(null);
   const [params, setParams] = useSearchParams();
   const toast = useUiStore((s) => s.toast);
+  const moduleStates = useModuleStates();
   const day = today();
 
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -73,7 +78,11 @@ export default function PantryPage() {
         ]}
         onChange={setFilter}
       />
-      {items && items.length === 0 ? <EmptyState icon="package" title={t.pantry.empty} /> : null}
+      {items && items.length === 0 ? (
+        <EmptyState title={t.pantry.empty}>
+          <StartDataButton moduleId="pantry" />
+        </EmptyState>
+      ) : null}
       {items && items.length > 0 && shown.length === 0 ? (
         <p className={styles.lead}>{t.pantry.noMatch}</p>
       ) : null}
@@ -126,8 +135,17 @@ export default function PantryPage() {
                     {needsRestock(i) ? (
                       <Button
                         onClick={() => {
-                          bus.emit('shopping.requested', { name: i.name });
-                          toast(t.pantry.restocked(i.name));
+                          const send = () =>
+                            bus
+                              .emit('shopping.requested', { name: i.name })
+                              .then(() => void toast(t.pantry.restocked(i.name)));
+                          // Without the lists module nobody listens: say so and offer to switch it
+                          // on (then the entry is sent right away) instead of pretending.
+                          if (moduleStates?.lists !== true)
+                            return offerEnableModule('lists', t.pantry.shoppingOff, send);
+                          // Confirm only after the shopping list has stored the item: wait for the
+                          // services (the app renders before they run), then for the handlers.
+                          void whenServicesSettled().then(send);
                         }}
                       >
                         {t.pantry.restock}

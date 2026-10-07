@@ -1,6 +1,6 @@
 # Roadmap – ideas, not commitments (2026-09-30)
 
-Collected in the review round (`REVIEW-2026-09-30.md`): what comparable everyday apps offer, what users ask for, and what the code already prepares. Nothing here is implemented; each idea lists benefit, effort (S = hours, M = days, L = a week or more), risk, dependencies and where it could collide with areas other sessions are working on.
+Collected in the review round ([`archive/2026-10/REVIEW-2026-09-30.md`](archive/2026-10/REVIEW-2026-09-30.md)): what comparable everyday apps offer, what users ask for, and what the code already prepares. Nothing here is implemented; each idea lists benefit, effort (S = hours, M = days, L = a week or more), risk, dependencies and where it could collide with areas other sessions are working on.
 
 **Merged while this roadmap was written (do not duplicate):** PR #8 (`feat/disk-cleaner-and-modules`, now on `develop`) added the modules *Datenträger* (desktop disk cleaner), *Zeiterfassung* (timetrack), *Vorräte* (pantry), *Geschenke* (gifts), *System* (desktop), the tools *text*, *timezones*, *image*, *pdf*, a `manifest.platforms` filter and `PlatformService.disk/system`. Its own idea list (vehicle log, colour and contrast, checksum and text diff, journal, warranty and receipts, clipboard history, snippets, autostart overview, WLAN QR, regex tester, grade and BMI calculators, bulk rename, medication and water, watchlist, cleaning plan, savings goals, travel, Android storage overview, sunburst view, scan cache, MFT quick scan) lives in `docs/STATUS.md`; it is referenced below, not repeated. The backup/sync hardening (PR #7) and quick capture (PR #6) are merged as well. Other sessions may still be working on follow-ups of these areas.
 
@@ -88,10 +88,48 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 | P2 | Linux/macOS builds of the shell (Tauri already cross-platform) | Reach | M | low | release workflow matrix |
 | P3 | Android: share target for text already exists → add `nemo://` deep links (decide the scheme, see `docs/features/quick-capture.md`) | Automation | S | low | identifiers policy |
 | P4 | PWA: periodic background sync, badging API for due counts | Web parity | S | low | service worker |
-| P5 | Point `latest.json` at `Nemo-Portable.exe`, drop legacy asset copies (after every install is ≥ the transition version) | Cleanup | S | **high if too early** | updater – Sven decides |
+| P5 | ~~Point `latest.json` at `Nemo-Portable.exe`, drop legacy asset copies~~ – done (next release after v0.3.1); optional: drop the legacy names from `PORTABLE_ASSETS` / `APK_ASSET_PAIRS` | Cleanup | S | low | updater |
 | P6 | `windows` crate 0.61 → 0.62 (removes a duplicate crate family), Tauri plugin bumps in step | Build size/time | S | medium (Windows API changes) | verify in CI only |
+
+## Module review 2026-10-01 (decided, see `docs/product/`)
+Target picture B and packages 1–7 are in [`product/MODULE-PLAN.md`](product/MODULE-PLAN.md); prompts (archived) in [`archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md`](archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md). Consequences for this list:
+- **Scheduled as packages (no longer open ideas):** K1 (package 2), M1 recurring tasks + someday (5), M7 notes checklists + pinned scratch note (1), D1 tool routes/palette/shortcuts (1), S1 password health (7), T1/T3 settled (tools 18 → 12, timer stays separate).
+- **Retired modules (data kept until package 6):** news, habits, timetrack; replaced by merges: reminders → calendar, shopping + packing → lists, launcher → bookmarks favourites, birthdays + gifts → people, contracts → vault ("Unterlagen"), system → disk ("Dieser PC").
+- **Stay ideas without date:** K3 attachments in sync/backup (receipts, photos – wanted, but after Unterlagen), M2 calendar drag/resize, M3 budget carry-over, M4 habit statistics (module retired), M9 recipes → list, M10 journal, news as an optional extension, Timer ↔ timetrack (module retired), vehicle log, medication/water, cleaning plan.
+
+## Cleanup proposals 2026-10-03 (not built)
+Prioritised refactors, test-tooling ideas and hygiene items from the repo cleanup: [meta/IMPROVEMENTS-2026-10-03.md](meta/IMPROVEMENTS-2026-10-03.md) (top 10, effort, risk, PR order). Analysis and numbers: [meta/CLEANUP-2026-10-03.md](meta/CLEANUP-2026-10-03.md).
 
 ## Explicitly not planned
 - Cloud accounts, telemetry, ads. Nemo stays local-first with an optional self-hosted server.
 - AI features that see user data (the assistant only sees schemas). A "summarise my notes" feature would break that rule; if ever, only with a local model and an explicit switch.
 - FinTS/PSD2 bank connections: regulatory and maintenance burden, see `docs/STATUS.md`.
+
+## Ideas from the home/Dieser-PC round (2026-10-02, not built)
+- Android: "Dieser Akku/Speicher" (battery, storage, RAM, network) as a mobile counterpart of Dieser PC (new Kotlin plugin command).
+- Feed widget type once a feed module returns (headline with source and time, first entry highlighted).
+- Disk history across restarts (device-local `_meta`, tiny, off by default), GPU load via PDH counters, battery health/cycles via the battery IOCTLs, program icons for the top processes.
+
+## Ideas moved from STATUS (2026-10-01, not built)
+- Datenträger: Sunburst-Ansicht, „Letzten Scan zwischenspeichern“ (lokal, standardmäßig aus), MFT-Schnellscan mit Adminrechten, Ordner frei wählen (Dialog), Android-Speicherübersicht (belegt/frei, ohne Scan/Löschen), eigene Aufräum-Regeln.
+- Module: Fahrzeug (Tanken, Verbrauch, TÜV/Service), Journal/Tagebuch, Garantie-/Belegverwaltung mit Foto, Zwischenablage-Verlauf (Passwörter ausschließen), Text-Snippets, Autostart-Übersicht (nur Anzeige), Medikamenten-/Wasser-Erinnerung, Watchlist/Leseliste, Putzplan, Sparziele (Haushaltsbuch), Reise (Packlisten, Reisedokumente, Zeitzonen), Speedtest/WLAN-Name (Systeminfo).
+- Werkzeuge: Farbwähler/Kontrast-Check, Datei-Prüfsumme + Text-Diff, WLAN-QR, Regex-Tester, Notenrechner, BMI/Kalorien (ohne Speicherung), Massen-Umbenennen, Bild-Farben extrahieren, PDF komprimieren.
+- Zeiterfassung: Stundensätze/Beträge, Projektfarben.
+- **Build-/CI-Tempo (Runde `chore/build-performance`, nicht umgesetzt; Zahlen in [`perf/BUILD-BASELINE-2026-10-01.md`](perf/BUILD-BASELINE-2026-10-01.md)):**
+  - Vitest ohne Testisolation (`--no-isolate`): lokal 222 s → 27 s, aber 5 Tests brauchen eine leere, gemeinsame Dexie-Datenbank je Datei. Möglich für die reinen Logik-Tests oder mit einem DB-Reset je Datei; gibt die Isolation je Datei auf – Entscheidung nötig.
+  - Der größte Rest der Unit-Testzeit ist Import: `core/db/db.ts` zieht alle Manifeste, jede Testdatei wertet ~1200 Module neu aus (73 % der Zeit). Leichtere Test-Einstiege wären eine Architekturänderung.
+  - `retries: 1` in beiden Playwright-Konfigurationen (CI) kann instabile Tests verdecken. In den ausgewerteten Läufen wurde kein Test wiederholt; Empfehlung: auf 0 setzen und Auffälligkeiten beheben (Entscheidung).
+  - E2E nur auf `develop`/nächtlich mit kleiner PR-Auswahl: seit dem Sharding nicht nötig (PR-Lauf ~ 5 Minuten) und würde die PR-Abdeckung senken.
+  - Android: die aarch64-Rust-Bibliothek wird zweimal gebaut (erst von `tauri android build`, dann von Gradle, je ~1 Minute). Ursache klären, z. B. mit `cargo build -vv` die Fingerprints vergleichen.
+  - `beforeBuildCommand: npm run build` führt im Windows- und Android-Job den Typecheck erneut aus (25–40 s). Bewusst belassen, damit Tag-Builds nie ohne Typprüfung entstehen.
+  - Release-Profil (fat LTO, `opt-level = "s"`) macht den Windows-Build zu 7 Minuten. Eine Änderung würde das Artefakt verändern; ein schnelleres Profil nur für Trockenläufe würde nicht mehr das echte Artefakt prüfen.
+  - Läufe von Feature-Branches starten ohne Rust-/Gradle-Cache (Cache-Scope je Branch): Trockenlauf des Release-Workflows besser von `develop` aus starten.
+  - Rust `[profile.dev] debug = "line-tables-only"`: ~ 20 % kleineres `target`, aber keine Zeitersparnis bei den kleinen Crates und Debugger ohne Variablen – nicht gesetzt. Außerdem: apt-Cache-Action für die Tauri-Bibliotheken (~ 30 s, neue Abhängigkeit) und eine kürzere Paketliste, jeweils erst messen.
+
+## Android Autofill service for the vault (planned follow-up PR, not built)
+Feasibility note (2026-10). Until it exists: copy with the sensitive clipboard; entries saved through the browser extension arrive by the normal sync.
+- **Approach:** a native `AutofillService` (Kotlin) in the existing `secure-store` plugin context (`web/src-tauri/plugins/`), declared in the generated Android manifest (the release workflow copies native files after `tauri android init`). It answers `onFillRequest` with datasets only while the vault is unlocked and asks for biometrics through the existing `BiometricPrompt` path; the user picks the system's autofill service in Android settings.
+- **Data access:** the service must not hold a copy of the vault. Options: (a) the WebView app is the only decryptor and the service asks it through a bound service/IPC (fragile when the app is not running), (b) the DEK stays sealed in the Android keystore (already used for biometric unlock) and the service decrypts entries read from the same IndexedDB/SQLite store – needs a native reader for the encrypted entry format (`modules/accounts` AES-GCM, AAD `vaultId/entryId/1`) and for the Dexie storage. (b) is the realistic one; it needs a small Kotlin port of `core/crypto/aead.ts` plus test vectors shared with TypeScript.
+- **Matching:** reuse the origin rules of `packages/vault-core/src/origin.ts` (domain vs host); Android gives `webDomain` or the app's package, so app-to-site links (Digital Asset Links) are out of scope for the first version (web fields only).
+- **Risks:** Play/OEM autofill quirks, `FLAG_SECURE`/screenshot protection interplay, a second implementation of the vault format that must stay in step (contract tests), time-to-first-fill when the process was killed, saving new logins (`onSaveRequest`) would add a write path that must go through the same sync rules.
+- **Effort:** roughly two PRs – (1) native decrypt + unlock + fill for web fields, (2) save/update and polish. Not started; needs a decision on option (b) first.

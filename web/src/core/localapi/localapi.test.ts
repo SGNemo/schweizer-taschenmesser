@@ -95,7 +95,7 @@ describe('handler: access', () => {
       todos: { read: true, write: false },
       accounts: { read: true, write: true },
       finance: { read: false, write: true },
-      shopping: { read: true, write: true }, // not switched on
+      lists: { read: true, write: true }, // not switched on
     });
     const res = await call(entry.id, 'GET', '/v1/modules');
     expect(res.status).toBe(200);

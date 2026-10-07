@@ -13,7 +13,8 @@ import {
   TextField,
 } from '@/ui';
 import { NoteEditor, type NoteTarget } from '../components/NoteEditor';
-import { displayTitle, excerpt, searchNotes, sortNotes } from '../logic';
+import { StartDataButton } from '@/core/importer/StartDataButton';
+import { displayTitle, excerpt, isScratch, searchNotes, sortNotes } from '../logic';
 import { noteRepo } from '../repo';
 
 export default function NotesPage() {
@@ -58,18 +59,29 @@ export default function NotesPage() {
         />
       </div>
       {notes && shown.length === 0 ? (
-        <EmptyState
-          icon="note"
-          title={notes.length === 0 ? t.notes.empty : t.notes.emptyFiltered}
-        />
+        <EmptyState title={notes.length === 0 ? t.notes.empty : t.notes.emptyFiltered}>
+          {notes.length === 0 ? <StartDataButton moduleId="notes" /> : null}
+        </EmptyState>
       ) : null}
       <ItemList layout="grid" label={t.notes.title}>
+        {notes && !query.trim() && !notes.some(isScratch) ? (
+          <ItemRow
+            key="scratch-new"
+            title={
+              <>
+                <Icon name="pin" size={16} /> {t.notes.scratch}
+              </>
+            }
+            meta={t.notes.scratchHint}
+            onOpen={() => setTarget({ draft: true, scratch: true })}
+          />
+        ) : null}
         {shown.map((n) => (
           <ItemRow
             key={n.id}
             title={
               <>
-                {n.pinned ? <Icon name="pin" size={16} /> : null} {displayTitle(n)}
+                {n.pinned || isScratch(n) ? <Icon name="pin" size={16} /> : null} {displayTitle(n)}
               </>
             }
             meta={excerpt(n)}

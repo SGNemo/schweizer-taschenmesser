@@ -28,6 +28,15 @@ async function rows(page: Page, table: string): Promise<Record<string, unknown>[
   );
 }
 
+/** Switches "Ohne Rückfrage speichern" off, so a doubtful text asks where it should go (the old behaviour). */
+async function askBeforeGuessing(page: Page) {
+  await page.goto('/settings/schnellerfassung');
+  const sw = page.getByRole('switch', { name: 'Ohne Rückfrage speichern' });
+  await expect(sw).toHaveAttribute('aria-checked', 'true');
+  await sw.click();
+  await expect(sw).toHaveAttribute('aria-checked', 'false');
+}
+
 const input = (page: Page) => page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
 
 test('the quick-add button captures an appointment from free text and can undo it', async ({
@@ -69,7 +78,8 @@ test('plain text becomes a ToDo; ArrowDown switches the type before saving', asy
   expect(task).toMatchObject({ title: 'Blumen gießen', listId: 'inbox' });
 });
 
-test('a doubtful input is not saved until the user chooses', async ({ page }) => {
+test('a doubtful input is not saved until the user chooses (question on)', async ({ page }) => {
+  await askBeforeGuessing(page);
   await page.goto('/?capture=1');
   await input(page).fill('Zahnarzt morgen 15 Uhr 80 €');
   // The type buttons appear once the module states are loaded; only then does Enter mean something.
@@ -96,6 +106,7 @@ test('finance stays a draft until it is confirmed', async ({ page }) => {
 });
 
 test('a disabled module is never written to', async ({ page }) => {
+  await askBeforeGuessing(page);
   await page.goto('/?capture=1');
   await input(page).fill('https://beispiel.example/artikel lesen');
   // Merkliste is off by default: the type is not offered, so the user has to choose another.
@@ -136,9 +147,33 @@ test('the capture window page saves, confirms and is accessible', async ({ page 
 test('the settings page explains that hotkey and tray belong to the Windows app', async ({
   page,
 }) => {
-  await page.goto('/settings');
+  await page.goto('/settings/schnellerfassung');
   await expect(page.getByRole('heading', { name: 'Schnellerfassung' })).toBeVisible();
   await expect(
     page.getByText('Tastenkürzel, Tray und Autostart gibt es nur in der Windows-App.'),
   ).toBeVisible();
+});
+
+test('without the question a doubtful text lands in the ToDo inbox as typed, and can be sorted later', async ({
+  page,
+}) => {
+  await page.goto('/?capture=1');
+  await input(page).fill('Zahnarzt morgen 15 Uhr 80 €');
+  await expect(page.getByTestId('capture-inbox-hint')).toContainText('Landet in „ToDos“');
+  await input(page).press('Enter');
+  await expect(page.getByText('Gespeichert in ToDos')).toBeVisible();
+  const [task] = await rows(page, 'todos_task');
+  expect(task).toMatchObject({ title: 'Zahnarzt morgen 15 Uhr 80 €', listId: 'inbox' });
+  expect(await rows(page, 'calendar_event')).toHaveLength(0);
+});
+
+test('Ctrl+Enter opens the full ToDo form with the typed text', async ({ page }, info) => {
+  test.skip(info.project.name === 'pixel-7', 'keyboard shortcut is a desktop feature');
+  await page.goto('/?capture=1');
+  await input(page).fill('Blumen gießen');
+  await expect(page.getByText('Strg+Enter öffnet das ganze Formular.')).toBeVisible();
+  await input(page).press('Control+Enter');
+  await expect(page).toHaveURL(/\/todos/);
+  await expect(page.getByLabel('ToDo hinzufügen')).toHaveValue('Blumen gießen');
+  expect(await rows(page, 'todos_task')).toHaveLength(0);
 });

@@ -1,0 +1,16 @@
+# Home screen and setup assistant
+
+Part of the architecture notes ([index](../architecture.md)); map: [ARCHITECTURE-MAP](../ARCHITECTURE-MAP.md). Moved unchanged from the map.
+
+| Area | Location | Key names |
+|---|---|---|
+| **Home screen** (not a module) | `web/src/home/`: `Home.tsx` (page, edit mode: dnd-kit with mouse/touch(long press)/keyboard sensors, size `Segmented`, widget sheet, reset), `layout.ts` (scope `home` in `_settings`: `{order, hidden, sizes}`, `loadLayout`, `updateLayout`, `resetLayout`, `migrateLegacyLayout` from the old scope `dashboard`), `AutoWidget.tsx` (`widgetsOf`: generated fallback widget for a module without widgets). Route `/` in `router.tsx`; logo link + Alt+Home + palette in `layout/AppShell.tsx`. **Widget contract:** `ModuleManifest.widgets` (`WidgetDef`: `id, title, sizes, defaultSize, component`), checked by `validateManifest`, `scripts/check-modules.mjs` (+ `scripts/lib/checkModules.ts`, CI `web-static`) and `core/modules/widgets.test.tsx` (renders every widget empty and with example data). Tests `home/*.test.ts(x)`, `e2e/home.spec.ts` | `WidgetDef`, `useHomeLayout` |
+| **Setup assistant** ("Einrichtungsassistent") | logic `web/src/core/setup/`: `types.ts` (`SetupStepDef`, `SetupStepProps`, `SETUP_VERSION`), `state.ts` (local progress in `_meta` `setup.state`), `detect.ts` (`appHasData`, `ensureSetupState` = start migration), `registry.ts` (`allSetupSteps`, `applicableSteps`, `detectDone`), `profiles.ts` (presets, `requires`), `checklist.ts`, `hooks.ts` (`useBackClose`), `host.ts`, `steps/index.ts` (`CORE_STEPS`); UI `web/src/layout/setup/` (`SetupWizard`, `SetupHost`, `WelcomeCard`, `ChecklistCard`, `SetupLink`, `steps/*Step.tsx`); module step `modules/accounts/setup.ts`; settings `pages/settings/SetupSection.tsx`; app-wide prefs `core/settings/core.ts` (scope `core`); e2e `e2e/setup.spec.ts` | `SetupStepDef`, `useSetupHost` |
+
+## Setup assistant (data flow)
+1. **Start:** `initCore` → `ensureSetupState()` (first thing). Missing row: app has data → `dismissed` + `checklistHidden`; empty app → `notStarted`. Never runs the wizard by itself.
+2. **Open:** `useSetupHost.openWizard(stepId?)` from Settings, palette command "Einrichtung", dashboard cards, empty dashboard, module library. `SetupHost` (in `AppShell`) mounts `SetupWizard`.
+3. **Steps:** `allSetupSteps` = `CORE_STEPS` + `setupSteps` of manifests (sorted by `order`; core: basics 10, sync 20, profiles 30, tools 40, vault 50 (module), ai 60, connectors 70, startdata 80, aiimport 90, notifications 100, backupupdates 110, dashboard 120). `when` filters, `isDone` auto-detects.
+4. **Save:** a step keeps a local draft, registers `registerCommit(fn)`; "Weiter" runs it, then `markStepDone` (or `markStepSkipped` if `fn` returns `'skipped'`). Cancel drops the draft. Actions that are explicit in the reused settings UI (sync connect, backup restore, OAuth login, import wizard) write on their own button.
+5. **Leave:** X / Esc / back gesture (`useBackClose`) → confirm view: later (`inProgress`), end (`dismissed`), keep going.
+6. **Checklist:** `useChecklist` → `ChecklistCard` on the dashboard while status is `inProgress|dismissed` (or steps newer than `state.version`), not hidden, and something is open.

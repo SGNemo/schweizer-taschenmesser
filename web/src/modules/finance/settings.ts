@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { t } from '@/strings';
 
 export const settingsSchema = z.object({
   includeOpenInvoices: z.boolean(),
@@ -12,14 +13,20 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'includeOpenInvoices',
-      label: 'Offene Rechnungen vom verfügbaren Betrag abziehen',
+      get label() {
+        return t.finance.meta.settings.includeOpenInvoices;
+      },
       type: 'boolean',
     },
     {
       key: 'includeSubscriptions',
-      label: 'Abo-Abbuchungen bis Monatsende abziehen',
+      get label() {
+        return t.finance.meta.settings.includeSubscriptions;
+      },
       type: 'boolean',
-      help: 'Abos werden nicht automatisch gebucht',
+      get help() {
+        return t.finance.meta.settings.includeSubscriptionsHelp;
+      },
     },
   ],
 };

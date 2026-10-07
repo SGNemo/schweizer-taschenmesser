@@ -5,14 +5,12 @@ import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
 import { accountRepo, transactionRepo } from '@/modules/finance/repo';
-import { birthdayRepo } from '@/modules/birthdays/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
-import { itemRepo as shoppingRepo } from '@/modules/shopping/repo';
-import { habitRepo } from '@/modules/habits/repo';
+import { itemRepo as listItemRepo } from '@/modules/lists/repo';
+import { personRepo } from '@/modules/people/repo';
+import { documentRepo } from '@/modules/vault/repo';
 import { invoiceRepo } from '@/modules/invoices/repo';
-import { reminderRepo } from '@/modules/reminders/repo';
 import { subscriptionRepo } from '@/modules/subscriptions/repo';
-import { contractRepo } from '@/modules/contracts/repo';
 import { externalRepo } from '@/modules/calendar/repo';
 import type { MailFinding } from '@/core/connectors/types';
 import { INBOX_ID, listRepo, taskRepo } from '@/modules/todos/repo';
@@ -149,9 +147,9 @@ describe('calendar', () => {
   });
 });
 
-describe('reminders', () => {
+describe('reminders (calendar events of the kind reminder)', () => {
   it('computes the next start date of each template from today', async () => {
-    const { rows } = await run('reminders', 'templates', {
+    const { rows } = await run('calendar', 'templates', {
       kind: 'template',
       ids: ['rent', 'trash', 'insurance', 'energy', 'tax', 'smoke', 'dentist', 'statements'],
     });
@@ -168,28 +166,32 @@ describe('reminders', () => {
   });
 
   it('accepts pasted reminders for today and skips unknown template ids', async () => {
-    const { rows } = await run('reminders', 'text', text('Reifen wechseln'));
+    const { rows } = await run('calendar', 'text', text('Reifen wechseln'));
     expect(rows[0]!.candidate.data).toMatchObject({
       title: 'Reifen wechseln',
+      kind: 'reminder',
       startDate: TODAY,
-      time: '09:00',
+      startTime: '09:00',
+      notify: { minutesBefore: 0, enabled: true },
     });
-    expect((await run('reminders', 'templates', { kind: 'template', ids: ['nope'] })).rows).toEqual(
+    expect((await run('calendar', 'templates', { kind: 'template', ids: ['nope'] })).rows).toEqual(
       [],
     );
   });
 
   it('recognises templates that were imported before', async () => {
-    const first = await run('reminders', 'templates', { kind: 'template', ids: ['rent'] });
+    const first = await run('calendar', 'templates', { kind: 'template', ids: ['rent'] });
     await commitImport(first.manifest, {
       batchId: 'tb',
       importerId: 'templates',
       source: 't',
       rows: first.rows,
     });
-    expect(await reminderRepo.active().count()).toBe(1);
+    expect((await eventRepo.active().toArray()).filter((e) => e.kind === 'reminder')).toHaveLength(
+      1,
+    );
     expect(
-      (await run('reminders', 'templates', { kind: 'template', ids: ['rent'] })).rows[0]!.duplicate,
+      (await run('calendar', 'templates', { kind: 'template', ids: ['rent'] })).rows[0]!.duplicate,
     ).toBe(true);
   });
 });
@@ -388,16 +390,17 @@ describe('suggestions from a mail scan', () => {
     expect(r.rows[1]!.candidate.warning).toBeDefined();
   });
 
-  it('builds contracts with end date and notice period', async () => {
-    const r = await run('contracts', 'mail', scan);
+  it('builds contracts as documents with end date and notice period', async () => {
+    const r = await run('vault', 'mail', scan);
     expect(r.rows).toHaveLength(1);
     expect(r.rows[0]!.candidate.data).toMatchObject({
-      name: 'Versicherung Muster',
+      title: 'Versicherung Muster',
+      category: 'contract',
       endDate: '2027-12-31',
       noticeDays: 90,
     });
-    await contractRepo.create({ name: 'versicherung muster', kind: 'contract' });
-    expect((await run('contracts', 'mail', scan)).rows[0]!.duplicate).toBe(true);
+    await documentRepo.create({ title: 'versicherung muster', category: 'contract' });
+    expect((await run('vault', 'mail', scan)).rows[0]!.duplicate).toBe(true);
   });
 
   it('suggests events and drops the ones a synced external calendar already has', async () => {
@@ -536,32 +539,32 @@ describe('bookmarks', () => {
   });
 });
 
-describe('birthdays, shopping, habits', () => {
+describe('people, lists', () => {
   it('parses name and date in either order, with or without a year', async () => {
     const { rows, notes, manifest } = await run(
-      'birthdays',
+      'people',
       'text',
       text('Anna Beispiel 15.03.1985\nOnkel Max 02.11.\n24.12. Oma\nOhne Datum\n31.02. Fehler'),
     );
     expect(rows.map((r) => r.candidate.data)).toEqual([
-      { name: 'Anna Beispiel', month: 3, day: 15, year: 1985 },
-      { name: 'Onkel Max', month: 11, day: 2 },
-      { name: 'Oma', month: 12, day: 24 },
+      { name: 'Anna Beispiel', birthday: { month: 3, day: 15, year: 1985 } },
+      { name: 'Onkel Max', birthday: { month: 11, day: 2 } },
+      { name: 'Oma', birthday: { month: 12, day: 24 } },
     ]);
     expect(notes[0]).toMatch(/2 Zeilen/);
     await commitImport(manifest, { batchId: 'tb', importerId: 'text', source: 't', rows });
-    expect(await birthdayRepo.active().count()).toBe(3);
-    expect((await run('birthdays', 'text', text('anna beispiel 15.03.'))).rows[0]!.duplicate).toBe(
+    expect(await personRepo.active().count()).toBe(3);
+    expect((await run('people', 'text', text('anna beispiel 15.03.'))).rows[0]!.duplicate).toBe(
       true,
     );
   });
 
-  it('shopping keeps quantities and ignores items already on the open list', async () => {
-    const first = await run('shopping', 'text', text('2 Milch\nBrot\n500 g Mehl'));
+  it('the shopping list keeps quantities and ignores items already on the open list', async () => {
+    const first = await run('lists', 'text', text('2 Milch\nBrot\n500 g Mehl'));
     expect(first.rows.map((r) => r.candidate.data)).toEqual([
-      { name: 'Milch', done: false, quantity: '2' },
-      { name: 'Brot', done: false },
-      { name: 'Mehl', done: false, quantity: '500 g' },
+      { listId: 'shopping-default', name: 'Milch', done: false, order: 0, quantity: '2' },
+      { listId: 'shopping-default', name: 'Brot', done: false, order: 1 },
+      { listId: 'shopping-default', name: 'Mehl', done: false, order: 2, quantity: '500 g' },
     ]);
     await commitImport(first.manifest, {
       batchId: 'tb',
@@ -569,17 +572,7 @@ describe('birthdays, shopping, habits', () => {
       source: 't',
       rows: first.rows,
     });
-    expect(await shoppingRepo.active().count()).toBe(3);
-    expect((await run('shopping', 'text', text('milch'))).rows[0]!.duplicate).toBe(true);
-  });
-
-  it('habits become daily habits', async () => {
-    const { rows, manifest } = await run('habits', 'text', text('Wasser trinken\nSpazieren gehen'));
-    expect(rows[0]!.candidate.data).toMatchObject({
-      name: 'Wasser trinken',
-      weekdays: [1, 2, 3, 4, 5, 6, 7],
-    });
-    await commitImport(manifest, { batchId: 'tb', importerId: 'text', source: 't', rows });
-    expect(await habitRepo.active().count()).toBe(2);
+    expect(await listItemRepo.active().count()).toBe(3);
+    expect((await run('lists', 'text', text('milch'))).rows[0]!.duplicate).toBe(true);
   });
 });

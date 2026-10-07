@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, calendarEntry } from './helpers';
+import { dismissNotices } from './helpers';
+
+test.beforeEach(({ page }) => dismissNotices(page));
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -68,7 +71,7 @@ test.describe('connectors', () => {
   test('settings list the connectors; Google needs the desktop app, ICS explains the missing proxy', async ({
     page,
   }) => {
-    await ready(page, '/settings');
+    await ready(page, '/settings/verbindungen');
     const google = page.getByTestId('connector-google');
     await expect(google).toBeVisible();
     await expect(google.getByText('Nicht verbunden')).toBeVisible();
@@ -88,7 +91,7 @@ test.describe('connectors', () => {
     page,
   }) => {
     await useMockSyncServer(page);
-    await ready(page, '/settings');
+    await ready(page, '/settings/verbindungen');
     const ics = page.getByTestId('connector-ics');
     await ics.getByLabel('Name (optional)').fill('Verein');
     await ics.getByLabel('Adresse des Kalenders').fill('webcal://cal.example.test/verein.ics');
@@ -98,7 +101,7 @@ test.describe('connectors', () => {
     await expect(ics.getByText(/Zuletzt abgeglichen/)).toBeVisible(); // the copy is written by then
 
     await page.goto('/calendar?view=day&date=2026-09-30');
-    const entry = page.getByRole('button', { name: /Vereinssitzung/ });
+    const entry = calendarEntry(page, /Vereinssitzung/);
     await expect(entry).toBeVisible();
     await expect(entry).toContainText('Extern');
     await entry.click();
@@ -118,13 +121,13 @@ test.describe('connectors', () => {
     await expect(page.getByTestId('ai-answer')).toContainText('Vereinssitzung');
 
     // Removing the subscription removes its events again.
-    await page.goto('/settings');
+    await page.goto('/settings/verbindungen');
     await page
       .getByTestId('connector-ics')
       .getByRole('button', { name: /entfernen/ })
       .click();
     await page.goto('/calendar?view=day&date=2026-09-30');
-    await expect(page.getByRole('button', { name: /Vereinssitzung/ })).toHaveCount(0);
+    await expect(calendarEntry(page, /Vereinssitzung/)).toHaveCount(0);
   });
 });
 
@@ -136,10 +139,37 @@ const STATEMENT = [
   '01.09.26;Gehalt;Beispiel AG;2.345,67;EUR',
 ].join('\n');
 
+/** Waits until a table of the app database has at least one row (async writes finish after the UI). */
+async function waitForRows(page: Page, table: string) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (name) =>
+          new Promise<number>((resolve, reject) => {
+            const open = indexedDB.open('taschenmesser');
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const db = open.result;
+              const req = db.transaction(name, 'readonly').objectStore(name).count();
+              req.onsuccess = () => {
+                db.close();
+                resolve(req.result);
+              };
+              req.onerror = () => reject(req.error);
+            };
+          }),
+        table,
+      ),
+    )
+    .toBeGreaterThan(0);
+}
+
 async function uploadStatement(page: Page, dialog: ReturnType<Page['getByRole']>) {
   const chooser = page.waitForEvent('filechooser');
   await dialog.getByRole('button', { name: 'Datei wählen …' }).click();
-  (await chooser).setFiles({
+  await (
+    await chooser
+  ).setFiles({
     name: 'umsaetze.csv',
     mimeType: 'text/csv',
     buffer: Buffer.from(STATEMENT),
@@ -151,10 +181,12 @@ test.describe('bank statement', () => {
     page,
   }) => {
     await ready(page, '/finance?tab=transactions');
-    await page.goto('/settings');
+    // The finance page creates its default account after the title is shown; the statement import
+    // needs one ("Lege zuerst ein Konto an."), so do not leave before it exists.
+    await waitForRows(page, 'finance_account');
+    await page.goto('/settings/module');
     await page
-      .getByRole('listitem')
-      .filter({ hasText: 'Finanzen' })
+      .locator('section[aria-labelledby="module-finance"]')
       .getByRole('button', { name: 'Startdaten einrichten' })
       .click();
     const dialog = page.getByRole('dialog', { name: /Startdaten/ });
@@ -170,10 +202,9 @@ test.describe('bank statement', () => {
     await expect(page.getByText('Filmfreund GmbH').first()).toBeVisible();
     await expect(page.getByText('Beispiel AG').first()).toBeVisible();
 
-    await page.goto('/settings');
+    await page.goto('/settings/module');
     await page
-      .getByRole('listitem')
-      .filter({ hasText: 'Finanzen' })
+      .locator('section[aria-labelledby="module-finance"]')
       .getByRole('button', { name: 'Startdaten einrichten' })
       .click();
     const again = page.getByRole('dialog', { name: /Startdaten/ });

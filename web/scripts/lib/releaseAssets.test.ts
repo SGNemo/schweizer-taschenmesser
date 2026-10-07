@@ -24,17 +24,33 @@ describe('release assets', () => {
     ).toEqual(['Taschenmesser-Setup.exe']);
   });
 
-  it('README only links to assets a release really has – no leftover installer names', () => {
-    const readme = read('README.md');
-    expect(unknownAssetLinks(readme)).toEqual([]);
-    expect(unknownAssetLinks(read('docs/user/installation.md'))).toEqual([]);
-    // The latest *stable* release (v0.2.0) predates the rename and only carries the legacy names, so
-    // the download buttons use them. Switch to `Nemo-*` with the first stable release that has both
-    // (docs/STATUS.md, "Offen – macht Sven", item 11).
-    expect(readme).toContain('releases/latest/download/Taschenmesser-Portable.exe');
-    expect(readme).toContain('releases/latest/download/Taschenmesser.apk');
-    expect(readme).not.toMatch(/Setup\.exe|\.msi\b/);
+  it('knows the Dev-Preview files only under the dev-preview tag', () => {
+    const base = 'https://github.com/o/r/releases';
+    expect(unknownAssetLinks(`${base}/download/dev-preview/Nemo-Portable-dev.exe`)).toEqual([]);
+    expect(unknownAssetLinks(`${base}/download/dev-preview/Nemo-dev.apk`)).toEqual([]);
+    expect(unknownAssetLinks(`${base}/latest/download/Nemo-dev.apk`)).toEqual(['Nemo-dev.apk']);
+    expect(unknownAssetLinks(`${base}/download/v1.0.0/Nemo-dev.apk`)).toEqual(['Nemo-dev.apk']);
+    expect(unknownAssetLinks(`${base}/download/dev-preview/Nemo.apk`)).toEqual([]);
   });
+
+  it.each(['README.md', 'README.de.md'])(
+    '%s only links to assets a release really has – no leftover installer names',
+    (file) => {
+      const readme = read(file);
+      expect(unknownAssetLinks(readme)).toEqual([]);
+      expect(readme).toContain('releases/latest/download/Nemo-Portable.exe');
+      expect(readme).toContain('releases/latest/download/Nemo.apk');
+      expect(readme).not.toContain('download/Taschenmesser');
+      expect(readme).not.toMatch(/Setup\.exe|\.msi\b/);
+    },
+  );
+
+  it.each(['docs/user/installation.md', 'docs/user/installation.de.md'])(
+    '%s only links to assets a release really has',
+    (file) => {
+      expect(unknownAssetLinks(read(file))).toEqual([]);
+    },
+  );
 
   it('the release workflow publishes exactly these files', () => {
     const workflow = read('.github/workflows/release.yml');
@@ -42,9 +58,9 @@ describe('release assets', () => {
     expect(workflow).not.toMatch(/Setup\.exe|Taschenmesser\.msi/);
   });
 
-  it('keeps the legacy names installed apps look for (updater transition)', () => {
-    expect(RELEASE_ASSETS).toContain('Taschenmesser-Portable.exe');
-    expect(RELEASE_ASSETS).toContain('Taschenmesser.apk');
+  it('no longer publishes the legacy Taschenmesser-* names', () => {
+    expect(RELEASE_ASSETS.join(' ')).not.toContain('Taschenmesser');
+    expect(read('.github/workflows/release.yml')).not.toMatch(/Taschenmesser[-.]/);
   });
 
   it('builds the URLs the post-release check requests', () => {

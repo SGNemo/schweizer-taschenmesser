@@ -1,0 +1,62 @@
+import type { Strings } from '@/strings';
+
+export const about: Strings['about'] = {
+  title: 'Sobre o Nemo',
+  tagline: 'App modular e local para o dia a dia',
+  version: 'Versão',
+  build: 'Build',
+  commit: 'Commit',
+  channel: 'Canal',
+  channelStable: 'Estável',
+  channelDev: 'Dev preview',
+  platform: 'Plataforma',
+  platforms: { web: 'Navegador', desktop: 'App para Windows', android: 'App para Android' },
+  install: 'Tipo de instalação',
+  installKinds: {
+    portable: 'Portátil (pasta com dados)',
+    installed: 'Instalado',
+    apk: 'App para Android (APK)',
+    pwa: 'App web instalado (PWA)',
+    browser: 'Aba do navegador',
+  },
+  dataDir: 'Pasta de dados',
+  openDataDir: 'Abrir pasta',
+  openDataDirFailed: 'Não foi possível abrir a pasta.',
+  license: 'Licença',
+  licenseValue: 'Licença MIT',
+  updates: {
+    title: 'Atualizações e mudanças',
+    lastCheck: 'Última verificação',
+    never: 'Nunca',
+    browser: 'No navegador o app se atualiza sozinho.',
+    current: 'Mudanças desta versão',
+    available: (version: string) => `Mudanças na versão ${version}`,
+    none: 'Não há informações sobre esta versão.',
+  },
+  packages: 'Bibliotecas usadas',
+  links: {
+    title: 'Links',
+    open: 'Abrir',
+    repo: 'Código-fonte no GitHub',
+    releases: 'Versões e downloads',
+    docs: 'Documentação',
+    bugs: 'Relatar erro',
+  },
+  reset: {
+    title: 'Redefinir dispositivo',
+    label: 'Excluir todos os dados deste dispositivo',
+    description:
+      'Exclui entradas, configurações e chaves deste dispositivo. Os dados no servidor de sincronização e os arquivos de backup continuam.',
+    dialogTitle: 'Excluir todos os dados deste dispositivo?',
+    warning:
+      'Isso não pode ser desfeito. Faça antes um backup (Sincronização e backup), se ainda precisar dos dados.',
+    confirm: 'Excluir definitivamente',
+  },
+  licenses: 'Avisos de licença',
+  licenseList: [
+    'Fonte “Inter” – SIL Open Font License 1.1, © The Inter Project Authors.',
+    'Logotipo “Nemo” em “Nunito” – SIL Open Font License 1.1, © The Nunito Project Authors.',
+    'Ícones “Lucide” – licença ISC, © Lucide Contributors.',
+    'O logo do Nemo (peixe-palhaço) é um desenho próprio deste projeto.',
+  ],
+};

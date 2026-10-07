@@ -1,0 +1,35 @@
+---
+import Legal from '../../layouts/Legal.astro';
+import { KOFI_URL, REPO_URL } from '../../config.js';
+---
+<Legal locale="en" route="imprint" title="Imprint" description="Provider identification and contact for the Nemo website.">
+  <h2>Information according to § 5 DDG (German Digital Services Act)</h2>
+  <p>
+    Sven [PLACEHOLDER: last name]<br />
+    [PLACEHOLDER: street and number]<br />
+    Erlangen<br />
+    Germany
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    E-mail: <a href="mailto:sven.nemo0@gmail.com">sven.nemo0@gmail.com</a>
+  </p>
+
+  <h2>Responsible for the content</h2>
+  <p>As above.</p>
+
+  <h2>Notes</h2>
+  <ul>
+    <li>This website is a private, non-commercial project. The Nemo app is open source (MIT licence) and free; source code on <a href={REPO_URL} rel="noopener">GitHub</a>.</li>
+    <li>Voluntary support goes through <a href={KOFI_URL} rel="noopener">Ko-fi</a>, an external provider. Payments are handled only there.</li>
+    <li>The website sets no cookies and embeds no third-party content. It is served by Cloudflare Pages (see the <a href="/en/privacy">privacy policy</a>).</li>
+  </ul>
+
+  <h2>What usually belongs here in Germany</h2>
+  <p class="muted">
+    For orientation, not legal advice: the provider’s name and a postal address, an e-mail address for quick contact, for editorial content the person responsible;
+    for businesses additionally the legal form, representatives, register and VAT ID. For a private, free website, name, address and e-mail are usually enough.
+    Whether an imprint is required depends on the individual case.
+  </p>
+</Legal>

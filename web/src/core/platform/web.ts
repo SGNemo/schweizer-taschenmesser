@@ -1,6 +1,8 @@
 import { createFakeDisk } from './fakeDisk';
 import { createFakeLocalApi } from './fakeLocalApi';
+import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeSystem } from './fakeSystem';
+import { noLocalModel } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
 import type {
@@ -38,28 +40,49 @@ export function onPageHidden(callback: () => void): () => void {
   return () => document.removeEventListener('visibilitychange', handler);
 }
 
+export interface SensitiveClipboard {
+  writeSensitive(text: string, clearAfterMs: number): Promise<void>;
+  clearSensitive(): Promise<void>;
+}
+
 /** Clipboard helper on top of any pair of read/write/clear primitives. */
 export function sensitiveClipboard(io: {
   write(text: string): Promise<void>;
   read(): Promise<string | undefined>;
   clear(): Promise<void>;
-}): (text: string, clearAfterMs: number) => Promise<void> {
+}): SensitiveClipboard {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  return async (text, clearAfterMs) => {
+  let pending: string | undefined;
+
+  /** Wipes only our own value: never something the user copied in the meantime; if we cannot tell, wipe. */
+  async function clearIfUnchanged(): Promise<void> {
+    const text = pending;
     clearTimeout(timer);
-    await io.write(text);
-    timer = setTimeout(() => {
-      void (async () => {
-        try {
-          // Do not wipe something the user copied in the meantime; if we cannot tell, wipe.
-          const current = await io.read().catch(() => text);
-          if (current === undefined || current === text) await io.clear();
-        } catch {
-          // Clipboard access can be denied (page not focused); nothing more we can do.
-        }
-      })();
-    }, clearAfterMs);
+    timer = undefined;
+    pending = undefined;
+    if (text === undefined) return;
+    try {
+      const current = await io.read().catch(() => text);
+      if (current === undefined || current === text) await io.clear();
+    } catch {
+      // Clipboard access can be denied (page not focused); nothing more we can do.
+    }
+  }
+
+  return {
+    async writeSensitive(text, clearAfterMs) {
+      clearTimeout(timer);
+      await io.write(text);
+      pending = text;
+      timer = setTimeout(() => void clearIfUnchanged(), clearAfterMs);
+    },
+    clearSensitive: clearIfUnchanged,
   };
+}
+
+/** `--mode e2e` and the seeded Dev-Preview build `--mode e2e-seed` (screenshots) use the fakes. */
+function isE2eBuild(): boolean {
+  return import.meta.env.MODE === 'e2e' || import.meta.env.MODE === 'e2e-seed';
 }
 
 /** E2E builds only: lets a browser test pose as another platform (`localStorage.__tmPlatformKind`). */
@@ -83,19 +106,31 @@ export const onCaptureOpenEvent = (callback: () => void): (() => void) => {
   return () => window.removeEventListener(CAPTURE_OPEN_EVENT, callback);
 };
 
+/** The DOM event the native shell dispatches into the main window for the vault search key. */
+export const VAULT_SEARCH_EVENT = 'tm-vault-search';
+
+export const onVaultSearchEvent = (callback: () => void): (() => void) => {
+  window.addEventListener(VAULT_SEARCH_EVENT, callback);
+  return () => window.removeEventListener(VAULT_SEARCH_EVENT, callback);
+};
+
 /** No tray, hotkey or autostart in a browser; the capture page itself still works there. */
 export const webDesktop: DesktopService = {
   supported: false,
   setHotkey: async () => 'failed',
+  setVaultHotkey: async () => 'failed',
   setCloseToTray: async () => undefined,
   setTrayLabels: async () => undefined,
   setAutostart: async () => undefined,
   autostart: async () => false,
   info: async () => ({ portable: false }),
+  dataDir: async () => undefined,
+  openDataDir: async () => undefined,
   showMain: async () => undefined,
   hideCapture: async () => undefined,
   readClipboard: () => navigator.clipboard.readText().catch(() => undefined),
   onCaptureOpen: onCaptureOpenEvent,
+  onVaultSearch: onVaultSearchEvent,
 };
 
 /** The PWA receives shares through its web manifest (`share_target`), not through this service. */
@@ -103,7 +138,7 @@ export const webShare: ShareService = { supported: false, takePending: async () 
 
 export function createWebPlatform(): PlatformService {
   return {
-    kind: import.meta.env.MODE === 'e2e' ? e2eKind() : 'web',
+    kind: isE2eBuild() ? e2eKind() : 'web',
     isNative: false,
     fetch: (input, init) => fetch(input, init),
     notifications: localNotificationService,
@@ -113,7 +148,7 @@ export function createWebPlatform(): PlatformService {
     },
     clipboard: {
       writeText: (text) => navigator.clipboard.writeText(text),
-      writeSensitive: sensitiveClipboard({
+      ...sensitiveClipboard({
         write: (text) => navigator.clipboard.writeText(text),
         read: () => navigator.clipboard.readText(),
         clear: () => navigator.clipboard.writeText(''),
@@ -150,39 +185,56 @@ export function createWebPlatform(): PlatformService {
     // No listening sockets in a browser: OAuth logins that need a loopback redirect are desktop-only.
     oauth: { supported: false, start: unsupported },
     // E2E builds only: a stand-in for the native server (the branch is removed from other builds).
-    localApi:
-      import.meta.env.MODE === 'e2e'
-        ? createFakeLocalApi()
-        : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    localApi: isE2eBuild()
+      ? createFakeLocalApi()
+      : { supported: false, start: unsupported, setTokens: unsupported, stop: async () => {} },
+    // E2E builds only: a stand-in for the native pipe server (the extension tests call into it).
+    vaultBridge: isE2eBuild()
+      ? createFakeVaultBridge()
+      : {
+          supported: false,
+          start: unsupported,
+          stop: async () => undefined,
+          register: unsupported,
+          unregister: unsupported,
+          status: unsupported,
+        },
     // E2E builds only: an invented folder tree instead of the native scan.
-    disk:
-      import.meta.env.MODE === 'e2e'
-        ? createFakeDisk()
-        : {
-            supported: false,
-            listDrives: unsupported,
-            startScan: unsupported,
-            cancelScan: unsupported,
-            pauseScan: unsupported,
-            dropScan: unsupported,
-            children: unsupported,
-            node: unsupported,
-            query: unsupported,
-            knownPlaces: unsupported,
-            nodePath: unsupported,
-            reveal: unsupported,
-            canDelete: unsupported,
-            planDelete: unsupported,
-            runDelete: unsupported,
-            cancelDelete: unsupported,
-            findDuplicates: unsupported,
-            cancelDuplicates: unsupported,
-          },
+    disk: isE2eBuild()
+      ? createFakeDisk()
+      : {
+          supported: false,
+          listDrives: unsupported,
+          startScan: unsupported,
+          cancelScan: unsupported,
+          pauseScan: unsupported,
+          dropScan: unsupported,
+          children: unsupported,
+          node: unsupported,
+          query: unsupported,
+          knownPlaces: unsupported,
+          placeSizes: unsupported,
+          recycleSize: unsupported,
+          nodePath: unsupported,
+          reveal: unsupported,
+          canDelete: unsupported,
+          planDelete: unsupported,
+          runDelete: unsupported,
+          cancelDelete: unsupported,
+          findDuplicates: unsupported,
+          cancelDuplicates: unsupported,
+        },
     // E2E builds only: invented facts instead of the native reading.
-    system:
-      import.meta.env.MODE === 'e2e'
-        ? createFakeSystem()
-        : { supported: false, info: unsupported, processes: unsupported },
+    system: isE2eBuild()
+      ? createFakeSystem()
+      : {
+          supported: false,
+          info: unsupported,
+          processes: unsupported,
+          diskIo: unsupported,
+          openTaskManager: unsupported,
+        },
+    localModel: noLocalModel,
     desktop: webDesktop,
     share: webShare,
     lifecycle: { onBackground: onPageHidden },

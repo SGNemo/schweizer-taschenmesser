@@ -38,7 +38,7 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
     e.preventDefault();
     const amountMinor = parseMoney(amount);
     if (!amountMinor || amountMinor < 1) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     await saveInvoice(existing?.id ?? null, {

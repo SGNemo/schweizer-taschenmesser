@@ -1,0 +1,32 @@
+import type { Strings } from '@/strings';
+
+export const nav: Strings['nav'] = {
+  home: 'Overview',
+  homeAria: 'Go to Overview',
+  modules: 'Modules',
+  library: 'Module library',
+  settings: 'Settings',
+  more: 'More',
+  main: 'Main navigation',
+  skipToContent: 'Skip to content',
+  areas: {
+    plan: 'Plan',
+    money: 'Money',
+    household: 'Household',
+    knowledge: 'Knowledge',
+    vault: 'Vault',
+    system: 'System',
+  },
+  areasHeading: 'Areas',
+  favourites: 'Favourites',
+  areaTabs: (area: string) => `${area}: modules`,
+  addFavourite: (name: string) => `Add ${name} to favourites`,
+  removeFavourite: (name: string) => `Remove ${name} from favourites`,
+  collapseSidebar: 'Collapse',
+  expandSidebar: 'Expand sidebar',
+  toggleArea: (area: string) => `Expand or collapse ${area}`,
+  create: 'New',
+  createAria: 'New: quick add',
+  tools: 'Tools',
+  favouritesFull: 'You can have at most 5 favourites. Remove another one first.',
+};

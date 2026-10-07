@@ -1,20 +1,40 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
+import { t } from '@/strings';
 
 export const settingsSchema = z.object({
   remindDaysBefore: z.number().int().min(0).max(365),
+  remindDaysBeforeDeadline: z.number().int().min(0).max(365),
   remindTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
 });
 
 export const settings: ModuleSettings = {
   schema: settingsSchema,
-  defaults: { remindDaysBefore: 30, remindTime: '09:00' },
+  defaults: { remindDaysBefore: 30, remindDaysBeforeDeadline: 14, remindTime: '09:00' },
   fields: [
     {
       key: 'remindDaysBefore',
-      label: 'Erinnerung vor Ablauf eines Dokuments (Tage)',
+      get label() {
+        return t.vault.meta.settings.remindDaysBefore;
+      },
       type: 'number',
     },
-    { key: 'remindTime', label: 'Uhrzeit der Erinnerung', type: 'text', help: 'Format HH:mm' },
+    {
+      key: 'remindDaysBeforeDeadline',
+      get label() {
+        return t.vault.meta.settings.remindDaysBeforeDeadline;
+      },
+      type: 'number',
+    },
+    {
+      key: 'remindTime',
+      get label() {
+        return t.vault.meta.settings.remindTime;
+      },
+      type: 'text',
+      get help() {
+        return t.vault.meta.settings.remindTimeHelp;
+      },
+    },
   ],
 };

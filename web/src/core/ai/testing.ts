@@ -5,7 +5,6 @@ import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
 import { accountRepo, transactionRepo } from '@/modules/finance/repo';
 import { invoiceRepo } from '@/modules/invoices/repo';
-import { reminderRepo } from '@/modules/reminders/repo';
 import { subscriptionRepo } from '@/modules/subscriptions/repo';
 import { listRepo, taskRepo } from '@/modules/todos/repo';
 import { taskSchema } from '@/modules/todos/schema';
@@ -14,7 +13,7 @@ import type { ExecContext } from './query/types';
 /** Tuesday. */
 export const TODAY = '2026-09-29';
 
-export const CORE_IDS = ['calendar', 'todos', 'reminders', 'finance', 'invoices', 'subscriptions'];
+export const CORE_IDS = ['calendar', 'todos', 'finance', 'invoices', 'subscriptions'];
 
 export function ctxFor(enabled: string[] = CORE_IDS, today = TODAY): ExecContext {
   return {
@@ -74,11 +73,13 @@ export async function seed(): Promise<void> {
     allDay: false,
     recurrence: { freq: 'weekly', interval: 1, byWeekday: [2] },
   });
-  await reminderRepo.create({
+  await eventRepo.create({
     title: 'Miete überweisen',
+    kind: 'reminder',
+    allDay: false,
     startDate: '2026-10-01',
-    time: '09:00',
-    active: true,
+    startTime: '09:00',
+    notify: { minutesBefore: 0, enabled: true },
     recurrence: { freq: 'monthly', interval: 1, byMonthDay: 1 },
   });
   await invoiceRepo.create({

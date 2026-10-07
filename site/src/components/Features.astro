@@ -1,0 +1,104 @@
+---
+import { t, type Locale } from '../i18n';
+import Icon from './Icon.astro';
+import Shot from './Shot.astro';
+
+interface Props { locale: Locale }
+const s = t(Astro.props.locale);
+---
+<section class="block" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <p class="eyebrow">{s.features.eyebrow}</p>
+    <h2 id="features-title">{s.features.title}</h2>
+    <ul class="tiles">
+      {s.features.items.map((f) => (
+        <li class="tile">
+          <div class="mini" data-shot={f.shot}>
+            <Shot name={f.shot} alt={f.alt} sizes="(min-width: 64rem) 22rem, (min-width: 30rem) 50vw, 100vw" widths={[480, 720, 960]} />
+          </div>
+          <h3><Icon name={f.icon} size={18} />{f.title}</h3>
+          <p>{f.text}</p>
+        </li>
+      ))}
+    </ul>
+    <p class="more">{s.features.more}</p>
+  </div>
+</section>
+
+<style>
+  .tiles {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: 1fr;
+    margin-top: var(--space-6);
+  }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-1);
+    transition: border-color var(--dur-fast);
+  }
+  .tile:hover {
+    border-color: var(--border-strong);
+  }
+  /* Focal point of each 1280×720 shot inside the 16:9 tile (object-position + zoom origin).
+     Attributes instead of inline styles: the CSP allows no style="" (site.yml checks it). */
+  .mini {
+    --pos: 50% 50%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .mini[data-shot='home'] { --pos: 50% 55%; }
+  .mini[data-shot='calendar'] { --pos: 58% 62%; }
+  .mini[data-shot='todos'] { --pos: 62% 72%; }
+  .mini[data-shot='finance'] { --pos: 45% 66%; }
+  .mini[data-shot='vault'] { --pos: 56% 70%; }
+  .mini[data-shot='reminders'] { --pos: 56% 82%; }
+  .mini :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--pos);
+    transform: scale(1.6);
+    transform-origin: var(--pos);
+  }
+  .tile h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-md);
+    padding: var(--space-4) var(--space-4) 0;
+  }
+  .tile h3 :global(svg) {
+    color: var(--accent);
+  }
+  .tile p {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding: var(--space-1) var(--space-4) var(--space-4);
+  }
+  .more {
+    margin-top: var(--space-5);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    max-width: var(--measure);
+  }
+  @media (min-width: 30rem) {
+    .tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .tiles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+  }
+</style>

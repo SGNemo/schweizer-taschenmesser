@@ -83,7 +83,10 @@ test('an existing installation never shows the assistant by itself, but it start
 }) => {
   await ready(page, '/todos');
   // Give the app some data, then let the start migration run again as if this were an update.
-  await page.getByRole('textbox').first().fill('Erfundene Aufgabe');
+  // On a fresh database the inbox list is created right after the page shows; until then the
+  // add button is disabled and Enter is a silent no-op, so wait for it before typing.
+  await expect(page.getByRole('button', { name: 'Hinzufügen', exact: true })).toBeEnabled();
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Erfundene Aufgabe');
   await page.keyboard.press('Enter');
   await expect(page.getByText('Erfundene Aufgabe')).toBeVisible();
   const name = await dbName(page);
@@ -112,7 +115,7 @@ test('an existing installation never shows the assistant by itself, but it start
   await expect(page.getByTestId('setup-checklist')).toHaveCount(0);
   await expect(wizard(page)).toHaveCount(0);
 
-  await page.goto('/settings');
+  await page.goto('/settings/ueber');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   await expect(wizard(page)).toBeVisible();
   // The existing data is untouched by merely looking.
@@ -126,7 +129,7 @@ test('an existing installation never shows the assistant by itself, but it start
 test('full run: every step can be skipped, the summary lists them, "Fertig" completes', async ({
   page,
 }) => {
-  await ready(page, '/settings');
+  await ready(page, '/settings/ueber');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   const dialog = wizard(page);
   await expect(dialog.getByRole('progressbar')).toBeVisible();
@@ -141,7 +144,7 @@ test('full run: every step can be skipped, the summary lists them, "Fertig" comp
 test('cancelling keeps finished steps, drops the current one and resumes after a reload', async ({
   page,
 }) => {
-  await ready(page, '/settings');
+  await ready(page, '/settings/ueber');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   const dialog = wizard(page);
   await dialog.getByLabel('Dein Name (optional)').fill('Erika Erfunden');
@@ -173,7 +176,7 @@ test('cancelling keeps finished steps, drops the current one and resumes after a
 });
 
 test('the Android back gesture asks before leaving the assistant', async ({ page }) => {
-  await ready(page, '/settings');
+  await ready(page, '/settings/ueber');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   await expect(wizard(page)).toBeVisible();
   await page.goBack();
@@ -214,7 +217,7 @@ test('starts from the command palette; ending leaves a checklist on the dashboar
   // Hide, and bring it back from the settings.
   await checklist.getByRole('button', { name: 'Ausblenden' }).click();
   await expect(checklist).toHaveCount(0);
-  await page.goto('/settings');
+  await page.goto('/settings/ueber');
   const show = page.getByRole('switch', { name: 'Checkliste auf der Übersicht anzeigen' });
   await show.click();
   await expect(show).toBeChecked(); // the write is done once the switch reflects it
@@ -225,7 +228,7 @@ test('starts from the command palette; ending leaves a checklist on the dashboar
 test('a profile shows its diff and needs a confirmation before it switches modules off', async ({
   page,
 }) => {
-  await ready(page, '/settings');
+  await ready(page, '/settings/ueber');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   const dialog = wizard(page);
   await dialog.getByRole('button', { name: 'Überspringen' }).click(); // basics

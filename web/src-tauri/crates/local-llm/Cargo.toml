@@ -1,0 +1,31 @@
+[package]
+name = "taschenmesser-local-llm"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Built-in local language model for Nemo: llama.cpp behind a small, Tauri-free API (load, grammar-constrained generation with KV-cache reuse, cancel) plus a verified model download. No network except the download the user confirmed, no telemetry."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "local_llm"
+
+[[bin]]
+name = "llm-batch"
+path = "src/bin/llm-batch.rs"
+
+[features]
+default = []
+# GPU backend for Windows/Linux (needs the Vulkan SDK at build time and a Vulkan driver at run time).
+vulkan = ["llama-cpp-2/vulkan"]
+
+[dependencies]
+# CPU build by default: no OpenMP (no extra runtime DLL), static llama.cpp. `common` is needed for grammars.
+llama-cpp-2 = { version = "=0.1.158", default-features = false, features = ["common"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+ureq = { version = "3", default-features = false, features = ["rustls", "gzip"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_ProcessStatus", "Win32_System_Threading"] }

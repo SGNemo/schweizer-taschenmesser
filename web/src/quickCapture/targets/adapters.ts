@@ -28,6 +28,7 @@ const todos: CaptureTarget = {
   build: (f) => ({
     title: title(f),
     ...(f.date ? { dueDate: date(f.date) } : {}),
+    ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
     ...(f.time ? { note: t.quickCapture.todoTimeNote(f.time) } : {}),
   }),
 };
@@ -47,12 +48,16 @@ const calendar: CaptureTarget = {
 
 const reminders: CaptureTarget = {
   type: 'reminder',
-  moduleId: 'reminders',
-  collection: 'reminder',
+  // A reminder is a calendar event of the kind "reminder" that notifies at its time (since 0.7.0).
+  moduleId: 'calendar',
+  collection: 'event',
   build: (f, ctx) => ({
     title: title(f),
+    kind: 'reminder',
+    allDay: false,
     startDate: date(f.date ?? ctx.today),
-    ...(f.time ? { time: f.time } : {}),
+    startTime: f.time ?? '09:00',
+    notify: { minutesBefore: 0, enabled: true },
     ...(f.recurrence ? { recurrence: f.recurrence } : {}),
   }),
 };
@@ -83,6 +88,14 @@ const bookmarks: CaptureTarget = {
       ...(url ? { url } : {}),
     };
   },
+};
+
+/** The text becomes an entry of the shopping list as typed ("2 Milch"); `listId` comes from the module's `aiCreateDefaults`. */
+const lists: CaptureTarget = {
+  type: 'list',
+  moduleId: 'lists',
+  collection: 'item',
+  build: (f) => ({ name: title(f), done: false }),
 };
 
 const finance: CaptureTarget = {
@@ -122,6 +135,7 @@ export const TARGETS = {
   event: calendar,
   reminder: reminders,
   bookmark: bookmarks,
+  list: lists,
   finance,
   note: notes,
 };

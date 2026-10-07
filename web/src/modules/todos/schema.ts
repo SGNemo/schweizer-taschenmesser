@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { recurrenceSchema } from '@/core/recurrence/types';
 import { DATE_RE } from '@/core/time/dates';
 
 export const listSchema = z.object({
@@ -20,6 +21,14 @@ export const taskSchema = z.object({
     .default(0)
     .meta({ description: '0 = keine, 1 = niedrig, 2 = mittel, 3 = hoch' }),
   dueDate: z.string().regex(DATE_RE).optional(),
+  /** Repeats from `dueDate`: ticking it off creates the next one (see `completeTask`). */
+  recurrence: recurrenceSchema.optional(),
+  /** "Irgendwann": kept out of the open views, the widget and the calendar. */
+  someday: z.boolean().optional(),
+  /** The day the user plans to do it (the "Heute" plan); independent of the due date. */
+  plannedFor: z.string().regex(DATE_RE).optional(),
+  /** Estimated effort in minutes (5, 15, 30, 60 offered); shown as "etwa 10 Min". */
+  estimateMin: z.number().int().min(1).max(480).optional(),
   /** Set for subtasks (one level only). */
   parentId: z.string().optional(),
   note: z.string().optional(),

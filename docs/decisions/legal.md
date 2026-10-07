@@ -1,0 +1,10 @@
+# Decisions – legal notices (not legal advice)
+
+- 2026-10-06 **Maintainer details are `[[PLACEHOLDERS]]` in one file (`core/legal/identity.ts`)** – nothing invented; `npm run check:legal` lists open ones (warning in CI, `--strict` is a proposal for the release workflow, not wired in). Website uses its own `[PLATZHALTER: …]` markers; the check reads both.
+- 2026-10-06 **Data flows have one table (`docs/legal/DATA-FLOWS.md`) and one in-app source (`t.legal.flows`)** – ids pinned by a test, so website/README are compared against one list.
+- 2026-10-06 **One-time third-party notice at the place of use** (cloud AI, connector, supporter area) with a single "Verstanden", acknowledged ids device-local in `_meta` `legal.notices`; the cloud-AI notice sits in `createProviderFor` so assistant, write pipeline, chat and connection test all pass it; without a mounted `NoticeHost` nothing blocks. Rejected: a consent that can be declined (adds a failure path to features; the user already opted in by adding the provider).
+- 2026-10-06 **Licence list = npm (lock file, transitive) + Cargo (`cargo metadata`) + models (catalogue) + hand-kept Gradle/fonts/icons, with an SPDX allowlist** – unknown or copyleft licences fail `check:licenses` (in `build` and CI); the committed JSON is compared to `package-lock.json` and `Cargo.lock` in a unit test. Copyleft allowed only as one side of an `OR`.
+- 2026-10-07 **Legal texts are a DE+EN `defineBundle` (`strings.legal.ts`)** per the new-feature rule; the old `about` licence lines stay German-only.
+- 2026-10-07 **Release workflow blocks publishing (not dry runs) on open placeholders** (`check-legal.mjs --strict` in `prepare`, only when `publish=true`); CI only warns.
+- 2026-10-07 **Google OAuth stays bring-your-own-client** (each person's project; "Testing" = 7-day expiry, ≤ 100 test users, explained on the card); a shipped app client would need Google verification (Gmail restricted scope). Revisit only with a verified client.
+- 2026-10-07 **Chat with providers says the text leaves the device and offers "KI abschalten …"** (link to the existing master switch, no second kill path).

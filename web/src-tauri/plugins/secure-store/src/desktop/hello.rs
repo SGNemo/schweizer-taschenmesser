@@ -3,7 +3,7 @@
 //!
 //! This is a *consent gate*, not a cryptographic binding: code running as the same Windows user could
 //! read the credential without the prompt. It keeps other people at an unlocked PC out of the vault;
-//! the master password remains the real protection (documented in CLAUDE.md).
+//! the master password remains the real protection (documented in docs/decisions/distribution.md).
 
 use windows::{
     core::{factory, HSTRING},

@@ -6,9 +6,21 @@ import { DATE_RE, TIME_RE } from '@/core/time/dates';
  * Events use local wall-clock date + time strings (not epoch ms): they stay put when the device
  * timezone changes and recurrence works on plain dates.
  */
+/** Notify `minutesBefore` the start (0 = at the start); all-day events use the module's notify time. */
+export const notifySchema = z.object({
+  minutesBefore: z.number().int().min(0).max(10080),
+  enabled: z.boolean(),
+});
+export type Notify = z.output<typeof notifySchema>;
+
+export const EVENT_KINDS = ['event', 'reminder'] as const;
+export type EventKind = (typeof EVENT_KINDS)[number];
+
 export const eventSchema = z
   .object({
     title: z.string().min(1),
+    /** A reminder is an event the app notifies about (since 0.7.0, replaces the module "reminders"). Missing = event. */
+    kind: z.enum(EVENT_KINDS).optional(),
     allDay: z.boolean().default(false),
     startDate: z.string().regex(DATE_RE),
     startTime: z.string().regex(TIME_RE).optional(),
@@ -18,6 +30,7 @@ export const eventSchema = z
     location: z.string().optional(),
     note: z.string().optional(),
     recurrence: recurrenceSchema.optional(),
+    notify: notifySchema.optional(),
   })
   .refine((e) => !e.endDate || e.endDate >= e.startDate, {
     message: 'endDate must not be before startDate',

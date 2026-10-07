@@ -7,6 +7,7 @@ import {
   Calendar,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronUp,
   CircleHelp,
   Download,
@@ -69,6 +70,25 @@ import {
   Clock,
   Package,
   Gift,
+  Star,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+  TriangleAlert,
+  TrendingUp,
+  TrendingDown,
+  ArrowRight,
+  Wifi,
+  Network,
+  Monitor,
+  MemoryStick,
+  Battery,
+  Thermometer,
+  Gauge,
+  CircleCheck,
+  Activity,
+  Unlock,
+  Undo2,
 } from 'lucide-react';
 
 const ICONS = {
@@ -121,6 +141,7 @@ const ICONS = {
   copy: Copy,
   chevronUp: ChevronUp,
   chevronDown: ChevronDown,
+  chevronLeft: ChevronLeft,
   upload: Upload,
   flame: Flame,
   sync: RefreshCw,
@@ -141,11 +162,32 @@ const ICONS = {
   play: Play,
   pause: Pause,
   reset: RotateCcw,
+  star: Star,
+  chevronRight: ChevronRight,
+  panelClose: PanelLeftClose,
+  panelOpen: PanelLeftOpen,
+  alert: TriangleAlert,
+  trendUp: TrendingUp,
+  trendDown: TrendingDown,
+  arrowRight: ArrowRight,
+  wifi: Wifi,
+  network: Network,
+  monitor: Monitor,
+  memory: MemoryStick,
+  battery: Battery,
+  thermometer: Thermometer,
+  gauge: Gauge,
+  ok: CircleCheck,
+  activity: Activity,
+  unlock: Unlock,
+  undo: Undo2,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const Cmp = ICONS[name] ?? Puzzle;
-  return <Cmp size={size} aria-hidden="true" focusable="false" strokeWidth={1.75} />;
+  return (
+    <Cmp size={size} aria-hidden="true" focusable="false" strokeWidth={size < 20 ? 1.75 : 1.5} />
+  );
 }

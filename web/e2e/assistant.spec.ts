@@ -1,4 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import { dismissNotices } from './helpers';
+
+test.beforeEach(({ page }) => dismissNotices(page));
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -267,7 +270,7 @@ const toolUse = (
 
 /** Adds a provider from its preset in the settings; returns its card. */
 async function addProvider(page: Page, presetLabel: string, id: string, key: string) {
-  await page.goto('/settings');
+  await page.goto('/settings/ki');
   const section = page.locator('section[aria-labelledby="ai"]');
   await section.getByLabel('Anbieter hinzufügen').selectOption({ label: presetLabel });
   const card = section.getByTestId(`provider-${id}`);
@@ -335,7 +338,7 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
     expect(mock.requests).toHaveLength(1);
 
     // Usage is accounted in the settings.
-    await page.goto('/settings');
+    await page.goto('/settings/ki');
     const usage = page.getByTestId('ai-usage');
     await expect(usage).toContainText('1 KI-Anfrage');
     await expect(usage).toContainText('1 Antwort aus dem Cache');
@@ -346,40 +349,64 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
 
   test('creating an entry needs a confirmation', async ({ page }) => {
     await seed(page);
+    // The rules cannot place this sentence, so the (mocked) model proposes the entry.
     await mockClaude(page, () => ({
-      body: toolUse('create_entry', {
-        module: 'reminders',
-        collection: 'reminder',
-        data: {
-          title: 'Miete überweisen',
-          startDate: '2026-10-01',
-          time: '09:00',
-          recurrence: { freq: 'monthly', byMonthDay: 1 },
-        },
+      body: toolUse('propose_actions', {
+        ops: [
+          {
+            module: 'calendar',
+            action: 'create',
+            data: {
+              title: 'Miete überweisen',
+              startDate: '2026-10-01',
+              startTime: '09:00',
+              recurrence: { freq: 'monthly', byMonthDay: 1 },
+            },
+          },
+        ],
       }),
     }));
     await configureClaude(page);
     await page.goto('/');
 
-    await ask(page, 'Erinnere mich jeden 1. an Miete');
-    const preview = page.getByTestId('ai-create-preview');
+    const QUESTION = 'Leg bitte etwas für die Miete fest, immer zum Monatsersten';
+    const before = await countRows(page, 'calendar_event');
+    await ask(page, QUESTION);
+    const preview = page.getByTestId('ai-write-preview');
     await expect(preview).toContainText('Miete überweisen');
     await expect(preview).toContainText('Jeden 1. des Monats');
-    expect(await countRows(page, 'reminders_reminder')).toBe(0);
+    expect(await countRows(page, 'calendar_event')).toBe(before);
 
-    // Cancel: nothing is stored.
-    await page.getByRole('button', { name: 'Abbrechen' }).click();
+    // Discard: nothing is stored.
+    await page.getByRole('button', { name: 'Verwerfen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    expect(await countRows(page, 'reminders_reminder')).toBe(0);
+    expect(await countRows(page, 'calendar_event')).toBe(before);
 
     // Ask again (cached intent), confirm: now it is stored and shows up in the module.
-    await ask(page, 'Erinnere mich jeden 1. an Miete');
+    await ask(page, QUESTION);
     await expect(page.getByTestId('ai-tier')).toHaveText('Aus dem Cache · 0 Token');
-    await page.getByRole('button', { name: 'Anlegen' }).click();
+    await page.getByTestId('ai-write-confirm').click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect.poll(() => countRows(page, 'reminders_reminder')).toBe(1);
-    await page.goto('/reminders');
+    await expect.poll(() => countRows(page, 'calendar_event')).toBe(before + 1);
+    await page.goto('/calendar?view=day&date=2026-10-01');
     await expect(page.getByRole('main').getByText('Miete überweisen').first()).toBeVisible();
+  });
+
+  test('a sentence the rules understand never reaches the model', async ({ page }) => {
+    await seed(page);
+    let calls = 0;
+    await mockClaude(page, () => {
+      calls++;
+      return { body: toolUse('propose_actions', { ops: [] }) };
+    });
+    await configureClaude(page);
+    await page.goto('/');
+    await ask(page, 'Erinnere mich jeden 1. an Miete');
+    const preview = page.getByTestId('ai-write-preview');
+    await expect(preview).toContainText('Miete');
+    await expect(preview).toContainText('Jeden 1. des Monats');
+    await expect(page.getByTestId('ai-tier')).toHaveText('Regeln · 0 Token');
+    expect(calls).toBe(0);
   });
 
   test('shows a friendly message when the key is rejected', async ({ page }) => {
@@ -520,9 +547,9 @@ test.describe('KI-Anbieter mit Fallback (gemockt)', () => {
     // client-side navigation: the pause of a rate-limited provider lives in memory, a reload ends it
     await page.keyboard.press('Escape');
     const box = await openPalette(page);
-    await box.fill('Einstellungen');
+    await box.fill('Einstellung: KI-Assistent');
     await box.press('Enter');
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings\/ki/);
     const section = page.locator('section[aria-labelledby="ai"]');
     await expect(section.getByTestId('stats-groq')).toContainText('0 Anfragen · 1 Fehler');
     await expect(section.getByTestId('stats-openrouter')).toContainText(

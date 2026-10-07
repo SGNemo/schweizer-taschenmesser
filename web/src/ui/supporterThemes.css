@@ -1,0 +1,99 @@
+/*
+ * Supporter colour themes (Einstellungen → Darstellung → Farbthema). Purely cosmetic: they only
+ * restyle surfaces, text, focus ring and accent – no layout, no data, no feature. Each value pair is
+ * (light, dark) and works with the explicit theme and the system preference alike, because
+ * light-dark() follows the active `color-scheme` from tokens.css. Loaded after tokens.css.
+ *
+ * Every pair was checked against WCAG AA with the unchanged status colours and chart series
+ * (`supporterThemes.test.ts`): text 4.5:1, status badges 4.5:1, form borders and focus ring 3:1.
+ * Theme tiles in the settings preview a theme through [data-palette-preview], same values.
+ * The theme also sets the accent, so the accent picker is disabled while a theme is active.
+ * Browsers without light-dark() keep the normal look. Add a theme: docs/howto/supporter.md.
+ */
+@supports (color: light-dark(#000, #fff)) {
+  :root[data-palette='korallenriff'],
+  [data-palette-preview='korallenriff'] {
+    --bg: light-dark(#f8f1ee, #17110f);
+    --surface: light-dark(#ffffff, #211916);
+    --surface-2: light-dark(#f0e5e0, #2b201c);
+    --border: light-dark(#e9dcd6, #352925);
+    --border-strong: light-dark(#85706a, #8a766f);
+    --text: light-dark(#2a1a16, #f6ece8);
+    --text-muted: light-dark(#68524b, #c4aea6);
+    --text-3: light-dark(#715a53, #ab958d);
+    --focus: light-dark(#a3324a, #ffb3a3);
+    --accent: light-dark(#b3374a, #ff8f80);
+    --accent-hover: light-dark(#962d3e, #ffaa9e);
+    --accent-contrast: light-dark(#ffffff, #2a0a07);
+    --accent-soft: light-dark(#fbe3de, #43251f);
+  }
+  :root[data-palette='tiefsee'],
+  [data-palette-preview='tiefsee'] {
+    --bg: light-dark(#eef3f7, #0a1520);
+    --surface: light-dark(#ffffff, #101f2d);
+    --surface-2: light-dark(#e5edf3, #18293a);
+    --border: light-dark(#d5e0e9, #223548);
+    --border-strong: light-dark(#667f93, #6f8aa0);
+    --text: light-dark(#0f2230, #e6f0f7);
+    --text-muted: light-dark(#46606f, #a7bccb);
+    --text-3: light-dark(#4f6877, #8aa1b2);
+    --focus: light-dark(#0a5f8a, #7fd0f5);
+    --accent: light-dark(#0a6b9a, #5cc4f0);
+    --accent-hover: light-dark(#08587f, #8bd6f6);
+    --accent-contrast: light-dark(#ffffff, #04202e);
+    --accent-soft: light-dark(#d9ecf7, #173a4f);
+  }
+  :root[data-palette='sand'],
+  [data-palette-preview='sand'] {
+    --bg: light-dark(#f5f0e6, #16130e);
+    --surface: light-dark(#fffdf8, #1f1b14);
+    --surface-2: light-dark(#f0e9db, #29241b);
+    --border: light-dark(#e2d8c4, #342e22);
+    --border-strong: light-dark(#7d7258, #867a5e);
+    --text: light-dark(#2a2316, #f3ede1);
+    --text-muted: light-dark(#5e5440, #c2b79f);
+    --text-3: light-dark(#675c45, #a79c83);
+    --focus: light-dark(#7a5a10, #f0cf80);
+    --accent: light-dark(#8a5a12, #e8b95e);
+    --accent-hover: light-dark(#704a0e, #f2cd85);
+    --accent-contrast: light-dark(#ffffff, #241904);
+    --accent-soft: light-dark(#f3e6c8, #3a2f17);
+  }
+  :root[data-palette='nordlicht'],
+  [data-palette-preview='nordlicht'] {
+    --bg: light-dark(#eef5f2, #0d1117);
+    --surface: light-dark(#ffffff, #141b24);
+    --surface-2: light-dark(#e0ece8, #1c2531);
+    --border: light-dark(#d3e3dd, #273341);
+    --border-strong: light-dark(#667f77, #6f8294);
+    --text: light-dark(#14231f, #e8f1ee);
+    --text-muted: light-dark(#46605a, #a9bdb8);
+    --text-3: light-dark(#4f6963, #8ba19b);
+    --focus: light-dark(#2f6f4f, #7ff0c0);
+    --accent: light-dark(#2f6f4f, #6be3b0);
+    --accent-hover: light-dark(#255a40, #93ecc7);
+    --accent-contrast: light-dark(#ffffff, #04201a);
+    --accent-soft: light-dark(#d8efe4, #173a31);
+  }
+  :root[data-palette='monochrom'],
+  [data-palette-preview='monochrom'] {
+    --bg: light-dark(#f2f2f2, #101010);
+    --surface: light-dark(#ffffff, #181818);
+    --surface-2: light-dark(#e6e6e6, #212121);
+    --border: light-dark(#dcdcdc, #2c2c2c);
+    --border-strong: light-dark(#757575, #7a7a7a);
+    --text: light-dark(#161616, #efefef);
+    --text-muted: light-dark(#555555, #b3b3b3);
+    --text-3: light-dark(#5e5e5e, #939393);
+    --focus: light-dark(#1a1a1a, #f0f0f0);
+    --accent: light-dark(#262626, #e8e8e8);
+    --accent-hover: light-dark(#000000, #ffffff);
+    --accent-contrast: light-dark(#ffffff, #111111);
+    --accent-soft: light-dark(#e4e4e4, #2e2e2e);
+  }
+}
+
+/* Fish in the accent colour (supporter option; Logo.tsx reads --logo-ink). */
+:root[data-logo='themed'] {
+  --logo-ink: var(--accent);
+}

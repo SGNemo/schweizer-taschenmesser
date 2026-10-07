@@ -1,22 +1,28 @@
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { budgetSchema, depositSchema, goalSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'budgets',
   requires: ['finance'],
-  name: 'Budgets & Sparziele',
+  get name() {
+    return t.budgets.meta.name;
+  },
   icon: 'piggy',
   version: 1,
-  description:
-    'Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.',
+  get description() {
+    return t.budgets.meta.description;
+  },
   routes: [
     {
       path: '/budgets',
-      label: 'Budgets',
+      get label() {
+        return t.budgets.meta.route;
+      },
       nav: true,
       component: () => import('./routes/BudgetsPage'),
     },
@@ -32,19 +38,33 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'overview',
-      title: 'Budgets & Sparziele',
-      size: 'm',
+      get title() {
+        return t.budgets.meta.widget;
+      },
+      defaultSize: 'm',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OverviewWidget'),
     },
   ],
   aiSchema,
   settings,
   defaultEnabled: false,
+  seed: { version: 1, dependsOn: ['finance'] },
   layout: 'wide',
   order: 130,
+  area: 'money',
   contributions: {
+    attention: () => import('./attention'),
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'goal', label: 'Sparziel', to: '/budgets?tab=goals&new=1' }],
+    quickAdd: [
+      {
+        id: 'goal',
+        get label() {
+          return t.budgets.meta.quickAdd;
+        },
+        to: '/budgets?tab=goals&new=1',
+      },
+    ],
   },
 };
 

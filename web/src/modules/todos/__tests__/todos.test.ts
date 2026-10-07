@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { collectCalendarItems } from '@/core/modules/contributions';
-import { validateManifest } from '@/core/modules/registry';
 import manifest from '../manifest';
 import { deleteList, deleteTask, ensureInbox, INBOX_ID, listRepo, taskRepo } from '../repo';
 import { listSchema, taskSchema } from '../schema';
@@ -14,10 +13,6 @@ beforeEach(async () => {
 });
 
 describe('todos module', () => {
-  it('has a valid manifest', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-  });
-
   it('validates tasks', () => {
     expect(taskSchema.safeParse({ listId: 'l', title: '' }).success).toBe(false);
     expect(taskSchema.safeParse({ listId: 'l', title: 'x', dueDate: '5.5.2026' }).success).toBe(
@@ -29,6 +24,23 @@ describe('todos module', () => {
       priority: 0,
     });
     expect(listSchema.parse({ name: 'A' }).order).toBe(0);
+  });
+
+  it('validates the optional plan and estimate fields', () => {
+    const ok = taskSchema.safeParse({
+      listId: 'l',
+      title: 'x',
+      plannedFor: '2026-10-02',
+      estimateMin: 15,
+    });
+    expect(ok.success).toBe(true);
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x', estimateMin: 0 }).success).toBe(false);
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x', estimateMin: 1.5 }).success).toBe(false);
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x', plannedFor: 'heute' }).success).toBe(
+      false,
+    );
+    // Old records without the fields stay valid.
+    expect(taskSchema.safeParse({ listId: 'l', title: 'x' }).success).toBe(true);
   });
 
   it('contributes tasks with a due date inside the range to the calendar', async () => {

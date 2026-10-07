@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from './Hero.astro';
+import Features from './Features.astro';
+import Data from './Data.astro';
+import Focus from './Focus.astro';
+import Compare from './Compare.astro';
+import Install from './Install.astro';
+import Support from './Support.astro';
+import type { Locale } from '../i18n';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Base locale={locale} route="home" og>
+  <Hero locale={locale} />
+  <Features locale={locale} />
+  <Data locale={locale} />
+  <Focus locale={locale} />
+  <Compare locale={locale} />
+  <Support locale={locale} />
+  <Install locale={locale} />
+</Base>

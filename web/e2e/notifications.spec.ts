@@ -18,11 +18,12 @@ test('a due reminder fires a notification while the app is open', async ({ page 
   });
   await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
 
-  await page.goto('/reminders?new=1');
+  // The OS popup is what this test is about: the in-app card is off by default, so it must still fire.
+  await page.goto('/calendar?tab=reminders&new=1');
   const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
   await dialog.getByLabel('Titel').fill('Tabletten nehmen');
-  await dialog.getByLabel('Erster Termin').fill('2026-09-29');
-  await dialog.getByLabel('Uhrzeit').fill('20:00');
+  await dialog.getByLabel('Datum').fill('2026-09-29');
+  await dialog.getByLabel('Beginn').fill('20:00');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
   await expect(page.getByRole('button', { name: /Tabletten nehmen/ })).toBeVisible();
@@ -36,8 +37,8 @@ test('a due reminder fires a notification while the app is open', async ({ page 
     [
       'Tabletten nehmen',
       expect.objectContaining({
-        tag: expect.stringContaining('reminder:'),
-        data: { url: '/reminders' },
+        tag: expect.stringContaining('event:'),
+        data: { url: '/calendar?view=day&date=2026-09-29' },
       }),
     ],
   ]);
@@ -55,13 +56,13 @@ test('settings show the notification permission', async ({ page }) => {
       static requestPermission = () => Promise.resolve('granted');
     };
   });
-  await page.goto('/settings');
+  await page.goto('/settings/benachrichtigungen');
   await expect(page.getByTestId('notification-status')).toHaveText('Aktiviert');
   await expect(page.getByRole('button', { name: 'Testbenachrichtigung senden' })).toBeVisible();
 });
 
 test('push explains that it needs the sync server', async ({ page }) => {
-  await page.goto('/settings');
+  await page.goto('/settings/benachrichtigungen');
   await expect(page.getByTestId('push-status')).toContainText('Sync-Server');
   await expect(page.getByRole('button', { name: 'Push aktivieren' })).toHaveCount(0);
 });

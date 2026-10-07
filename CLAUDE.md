@@ -1,109 +1,53 @@
 # CLAUDE.md – Nemo
 
-Modular, local-first everyday app (formerly "Schweizer Taschenmesser" – internal identifiers keep that name): PWA, plus a portable Windows exe and an Android APK (Tauri 2 shell around the same web app).
-Data lives in IndexedDB; sync is a separate optional layer; an AI assistant answers questions with as few tokens as possible and never sees user data.
-Code, comments and commits are **English**; the UI is **German only** (all texts in `web/src/strings.ts`).
+Local-first modular everyday app (formerly "Schweizer Taschenmesser" – internal identifiers keep that name): PWA + portable Windows exe + Android APK (Tauri 2 shell, same web app). Data in IndexedDB, optional sync, the AI assistant never sees user data.
+Code, comments, commits **English**; UI in **5 languages**: German source `web/src/strings.ts`, catalogs `web/src/i18n/locales/{en,es,fr,pt-BR}/` (same keys, [glossary](docs/i18n/GLOSSARY.md)); every new text in all five, `npm run check:i18n` ([howto/i18n.md](docs/howto/i18n.md)).
+**Stack:** Vite, React 19, TypeScript strict (pinned 6.0.x), Dexie, Zod, zustand, CSS Modules; Tauri 2 (Rust); server Fastify 5 + better-sqlite3; Vitest, Playwright.
 
-**Stack:** Vite, React 19, TypeScript strict (pinned 6.0.x), Dexie, Zod, zustand, CSS Modules; Tauri 2 (Rust); sync server Fastify 5 + better-sqlite3; Vitest, Playwright.
+## How chats work here
+1. Read this file + [docs/README.md](docs/README.md) (index), then load only the doc for your area; do not scan `docs/`. Broad searches: Explore subagent.
+2. Start: check [docs/CHATS.md](docs/CHATS.md) and open PRs, add your row (topic, branch, area); remove it in your PR's last commit. Hotspots listed there need a heads-up row first.
+3. Branch from fresh `develop` (`feat/…`, `fix/…`, `docs/…`); PR into `develop`; never merge your own PR unless told. Never `main`, tags, releases, force-push, history rewrite on shared branches, branch protection. Bring `develop` in with a merge (no rebase).
+4. End: touch only [STATUS](docs/STATUS.md) (one line), [DECISIONS](docs/DECISIONS.md) (new decision: one bullet in `docs/decisions/<area>.md`; the index only for a new area), [ARCHITECTURE-MAP](docs/ARCHITECTURE-MAP.md) / [HOW-TO](docs/HOW-TO.md) on real change. Edit this file only when a root rule changes. Reports go to `docs/security|perf|features|meta`. Keep docs short (`npm run check:docs`, budgets: [docs/meta/DOCS-GUIDE.md](docs/meta/DOCS-GUIDE.md)).
+5. **Small PRs:** one topic per PR; big work = packages with a stop between them (own branch + PR each), so the maintainer can pause and resume. Questions to him: bundled, ≤ 4, each with a recommendation; final message = 3 points + PR link.
+6. Prompt blocks (git, rules, PR text, questions, closing): [docs/PROMPT-TEMPLATES.md](docs/PROMPT-TEMPLATES.md).
 
-## Docs (read the one for the area you touch; keep it current when a decision changes)
-@docs/ARCHITECTURE-MAP.md
-@docs/HOW-TO.md
-@docs/DECISIONS.md
-- [`docs/README.md`](docs/README.md) – index: German user docs (`docs/user/`), developer docs, reviews.
-- [`docs/architecture.md`](docs/architecture.md) – long design notes per phase (not imported; read the section you need).
-- [`docs/STATUS.md`](docs/STATUS.md) – done / open / known problems / next steps, plus the German hardware checklists "Manuelle Tests offen" and "Offen – macht Sven" (not imported).
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) – ideas for later (not implemented); [`docs/AI-IMPORT.md`](docs/AI-IMPORT.md) – German guide of the local AI import API + MCP.
-- The README is short and German for users; details live in `docs/user/`. Keep it that way (no new sections in the README).
+## Commands (run in `web/`; also `server/`, `mcp/`: `npm test|typecheck|lint|format:check|build`)
+- `npm run dev:all` (app with test data + local sync server, one command) · `dev` · `build` · `preview` (:4173; stop it before e2e) · `tauri -- dev|build` (Rust needed)
+- `npm run check` (format+lint+typecheck, parallel, cached = everyday gate) · `lint` · `typecheck` · `format:check|format` · `check:modules` · `check:docs`
+- `npm test` (`test:changed`) · `npm run e2e` (= `e2e:app` + `e2e:sync`); one spec: `npx playwright test e2e/<name>.spec.ts`
+- `npm run gen:module -- <id> "<Name>"` · `db:bump` · `gen:icons` · `version:check|sync|set -- <semver>` · `changelog -- --version <x.y.z>`
+- Rust, CI layout, release: [docs/HOW-TO.md](docs/HOW-TO.md). Chromium is at `/opt/pw-browsers/chromium`; never `playwright install`.
+- **Done =** `check` (or lint + typecheck), `test`, `e2e` green; app starts; docs per step 4; commit + push the branch.
 
-## Repo layout
-- `web/src-tauri/` – native shell (Tauri 2, Rust) around the web app: portable Windows exe, Android APK. Thin by design.
-- `web/` – the PWA (Vite, React 19, TypeScript strict). Own `package.json`.
-- `server/` – sync server (Fastify 5 + better-sqlite3, own `package.json`, Dockerfile, compose). Separate project, no shared package.
-- `mcp/` – MCP server (stdio, `@modelcontextprotocol/sdk`) wrapping the local import API; own `package.json`, no data access of its own.
-- `contract/` – JSON fixtures of the sync merge rule, read by the tests of both projects.
+## Layout (map: [docs/ARCHITECTURE-MAP.md](docs/ARCHITECTURE-MAP.md))
+`web/` PWA (`src/core` framework, `src/modules/<id>`, `src/tools`, `src/connectors`, `src/ui`, `src/layout`, `src/home`) · `web/src-tauri/` shell (crates `local-api`, `disk-scan`, `system-info`, `vault-bridge`) · `server/` sync server · `mcp/` MCP wrapper · `extension/` Brave extension · `packages/vault-core/` shared generator/origin/protocol · `contract/` LWW fixtures · `design/icon/` logo workshop.
 
+## Hard rules (unabridged, with file refs: [docs/RULES.md](docs/RULES.md); rationale: [docs/DECISIONS.md](docs/DECISIONS.md))
+- **Secrets/security – never weaken:** no secrets, tokens or real data in the repo (public); API keys only via `getPlatform().secrets`; bundle id `io.github.sgnemo.taschenmesser` never changes (only the sanctioned `.dev` Dev-Preview app); Android keystore and updater private key never lost or committed; release signing, artifact audit, gitleaks untouched.
+- **AI privacy:** assistant sends only instructions, compact `aiSchema`, date, question – never user data (`privacy.test.ts`). `accounts` (vault) never gets `aiSchema`, `searchable`, a widget with entries, calendar item, data API or local API access (`exclusion.test.ts`).
+- **Data:** one Dexie table per collection `<moduleId>_<collection>`; envelope `id, createdAt, updatedAt, deviceId, deletedAt, _f`; write only via `createRepo`; modules never import `@/core/db/db`; no non-Dexie await in Dexie transactions. Collection/index change → `npm run db:bump` + previous stores into `core/db/schema-history.json`; shape change → `manifest.version` + `migrations`.
+- **Formats:** money integer cents; dates `YYYY-MM-DD`, times `HH:mm` (local); `now()`/`today()` from `core/time/now.ts`, never `Date.now()` in logic.
+- **Modules** never import each other (event bus + manifest contributions); only `finance` → `subscriptions/public.ts`, `invoices/public.ts`, `budgets` → `finance/public.ts`. Every module ships a widget built from a base type of the widget catalogue (`@/ui`: KPI, due list, progress, checklist, timeline, tiles, status, gauge; red only for overdue/exceeded, a context line for every number; urgent things via `contributions.attention` → "Jetzt wichtig"; spec `docs/design/DESIGN-SPEC.md` §4a), `contributions.onboarding`, an `area` (navigation only), a `layout` if not default, and seed data (`seed` in the manifest + `seed.ts`; never merge a module without one). Recipe: [docs/howto/new-module.md](docs/howto/new-module.md).
+- **Supporter mode:** cosmetic only, nothing behind a paywall, no nag; codes Ed25519-signed and checked offline (`packages/supporter-codes`, no network in `core/supporter`); status is derived from the code; the code-issuing service is separate and knows no user data. [docs/howto/supporter.md](docs/howto/supporter.md)
+- **Diagnostics / bug reports:** only on user action, previewed first, never sent by the app; never entries, vault, tokens, keys, server URLs, mails, IPs, user paths (negative-list test in `core/diagnostics`). [docs/howto/bug-reports.md](docs/howto/bug-reports.md)
+- **Sync:** field LWW by greatest HLC exists twice (`core/sync/ops.ts`, `server/src/store.ts`), pinned by `contract/lww-cases.json` – change both or neither.
+- **Platform:** only `core/platform/**` knows Tauri (`getPlatform()` elsewhere); platform-only modules via `manifest.platforms` + `availableManifests()`.
+- **Local API (desktop):** loopback, off by default; never a bind-address setting, CORS, or logging of tokens/bodies; tokens only as SHA-256; AI-import prompt = `buildApiPrompt` (tested). Collections with secrets/connector data: `dataApi: false`.
+- **Disk module:** never holds data; delete = node ids → Rust plan → block list (`guard.rs`, do not weaken) → typed confirmation in Rust; recycle bin by default. New Tauri command: `build.rs` `COMMANDS` + `capabilities/desktop.json`.
+- **Setup assistant:** progress device-local (`_meta` `setup.state`), step ids only, never secrets, never appears by itself on an installation with data.
+- **Focus and attention aids:** every new feature passes the checklist in [docs/design/FOCUS-GUIDELINES.md](docs/design/FOCUS-GUIDELINES.md) (stimulus load, off switch, clear next step, calm wording; no guilt text, no streak loss, no notification floods); wording examples in `docs/design/FOCUS-WORDING.md`.
+- **UI (Nemo):** texts via `t.…` read at render time (registries: getters), dates/numbers via `core/i18n/format`, never a fixed `'de-DE'`; CSS Modules + tokens from `ui/tokens.css` (no hex, own radius/shadow/z-index/weight), shared `@/ui` components, `data-autofocus`, touch ≥ 44 px, `manifest.layout` (no module `max-width`), motion transform/opacity only, AA contrast; colour only with meaning and always with text/icon (`ui/semantics.ts`), reading aid is automatic via the JSX runtime `core/text/readjsx` (secrets: wrap in `NoReadAid`; never inputs/numbers/code), lists grouped via `GroupedList`. Details: [docs/howto/design-rules.md](docs/howto/design-rules.md).
+- **Browser extension (`extension/`):** no vault and no persistent storage of its own; the desktop app is the only source (native messaging, `crates/vault-bridge`); fill/copy/save only after a click, only for the matching origin; strict message schemas, no logging of messages. Rules: [docs/RULES.md](docs/RULES.md), threat model [docs/security/VAULT-EXTENSION.md](docs/security/VAULT-EXTENSION.md).
+- **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`). **Releases** only by the maintainer: tag or manual dispatch, never both ([docs/howto/release-deps.md](docs/howto/release-deps.md)).
 
-## Commands (run in `web/`)
-| Command | Purpose |
+## Where to look
+| Need | File |
 |---|---|
-| `npm run dev` | Dev server |
-| `npm run build` / `npm run preview` | Production build / serve on :4173 |
-| `npm run typecheck` | tsc for app, service worker, node configs |
-| `npm run lint` | ESLint (incl. module isolation rules) |
-| `npm run check` | format + lint + typecheck in parallel with caches (fast everyday gate; CI runs the plain commands) |
-| `npm run format:check` / `format` | Prettier check / write (also in `server/`) |
-| `npm test` | Vitest unit + component tests (`test:changed` = only files touched since the last commit) |
-| `npm run e2e` | `e2e:app` (Playwright, projects `desktop-chrome` + `pixel-7`, builds with `--mode e2e`) followed by `e2e:sync` (`playwright.sync.config.ts`: serial multi-device tests against the real server started from `../server`, in-memory DB) |
-| `npm run gen:module -- <id> "<Name>"` | Generate a new module from `templates/module` |
-| `npm run db:bump` | Regenerate `src/core/db/schema.snapshot.json` + bump Dexie version |
-| `npm run gen:icons` | Re-render all brand rasters (PWA, favicon, ICO, Android layers, README/social images) from `web/brand/*.svg` (native base set first: `npx tauri icon brand/app-icon.svg`) |
-| `npm run tauri -- dev` / `build` | Native app (needs Rust; on Linux `libwebkit2gtk-4.1-dev libgtk-3-dev …`). `tauri build --debug --no-bundle` compiles the binary with the embedded frontend |
-| `npm run version:check` / `version:sync` / `version:set -- <semver>` | Version consistency, Cargo mirror, release bump (see *Versioning*) |
-| `npm run changelog -- --version <x.y.z>` | Release notes from Conventional Commits |
-
-MCP wrapper (run in `mcp/`): `npm test`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build` (→ `dist/index.js`).
-
-Server (run in `server/`): `npm test` (Vitest + `fastify.inject`, in-memory SQLite), `npm run typecheck`, `npm run lint`, `npm run build` (→ `dist/`), `npm start`, `npm run dev`.
-
-Definition of done for every phase: `lint`, `typecheck`, `test`, `e2e` green; app starts; CLAUDE.md updated; commit + push to `develop`.
-
-Sandbox note: a Chromium is pre-installed at `/opt/pw-browsers/chromium`; `playwright.config.ts` and `gen-icons.mjs` pick it up automatically (override with `PW_CHROMIUM_PATH`). Never run `playwright install` there.
-
-## Git workflow
-- **`develop`** is the integration branch: feature branches and PRs go there. **`main`** only receives release merges (`Merge develop into main (release X.Y.Z)`); never commit or push to `main` directly.
-- Tags `vX.Y.Z[-beta.N]` trigger `release.yml` (alternative: manual run on `main` with input `version`, which creates the tag itself – never both) – only the maintainer cuts releases (recipe in `docs/HOW-TO.md`). No force-push, no history rewriting on shared branches; bring `develop` in with a merge.
-- Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them. Do not change branch protection.
-
-
-## Rules that must hold (details: `docs/architecture.md`, rationale: `docs/DECISIONS.md`)
-- **Module isolation:** modules never import each other; they use the event bus (`core/events`) and manifest contributions. Only sanctioned exceptions: `finance` → `subscriptions/public.ts`, `invoices/public.ts`; `budgets` → `finance/public.ts`. ESLint + `registry.test.ts` enforce this.
-- **AI import:** `core/dataapi` derives the import format from `dataSchema` (no second schema); `scope.ts` is the single filter, `accounts` must stay unreachable (`dataApi: false` + id block). New collections holding secrets/connector data need `dataApi: false`.
-- **Local API (desktop):** loopback only, off by default; transport/security in `src-tauri/crates/local-api` (never add a bind-address setting, CORS, or logging of tokens/bodies), meaning in `core/localapi/handler.ts`. Tokens only as SHA-256 in `_meta`; blocked/unknown modules must answer identically. User guide: `docs/AI-IMPORT.md` (its prompt must equal `buildApiPrompt`, tested).
-- **Data:** one Dexie table per collection (`<moduleId>_<collection>`); every synced record has the envelope `id, createdAt, updatedAt, deviceId, deletedAt, _f`. **Write only via `createRepo`** (`core/db/repo.ts`); modules must not import `@/core/db/db`. Never await non-Dexie promises inside Dexie transactions.
-- **Schema:** collection/index change → `npm run db:bump` **and** add the previous stores to `core/db/schema-history.json`; stored data-shape change → bump `manifest.version` + `manifest.migrations`.
-- **Formats:** money = integer cents; dates `'YYYY-MM-DD'`, times `'HH:mm'` (local wall clock); epoch ms only for technical timestamps. Use `now()` / `today()` from `core/time/now.ts`, never `Date.now()` in logic.
-- **Sync:** field-level last-write-wins by greatest HLC; the rule exists twice (`core/sync/ops.ts`, `server/src/store.ts`) and is pinned by `contract/lww-cases.json` – change both or neither.
-- **Disk module:** desktop only (`manifest.platforms`), never holds data; deleting goes through node ids → Rust plan → block list (`crates/disk-scan/src/guard.rs`, unit-tested, do not weaken) → typed confirmation checked in Rust; recycle bin by default, never a silent permanent delete. New Tauri commands need `build.rs` `COMMANDS` + `capabilities/desktop.json`.
-- **Platform:** only `core/platform/**` knows about Tauri (`@tauri-apps/*` only in `core/platform/tauri/**`); everything else uses `getPlatform()`. Platform-only modules: `manifest.platforms` + `availableManifests()`.
-- **AI privacy:** the assistant sends only instructions, the compact `aiSchema` of enabled modules, the date and the question – never user data (`privacy.test.ts`). The `accounts` module must never get an `aiSchema`, `searchable`, widget or calendar item (`exclusion.test.ts`).
-- **Setup assistant:** progress lives device-local in `_meta` `setup.state` (step ids only – never values or secrets, never synced); each step saves on its own "Weiter", cancelling drops only the draft; it never appears by itself on an installation with data. Steps come from `setupSteps` (recipe in `docs/HOW-TO.md`).
-- **Secrets:** no secrets in the repo; API keys via `getPlatform().secrets`. The bundle identifier `io.github.sgnemo.taschenmesser` must never change. The Android keystore and updater private key must never be lost or committed.
-- **UI:** the app is called **Nemo** (identifiers keep the old names, see `docs/DECISIONS.md`); German only (`web/src/strings.ts`), CSS Modules + tokens, `data-autofocus` instead of `autoFocus` in dialogs, touch targets ≥ 44 px, page width via `manifest.layout` (`PageContainer`), never a module-level `max-width`.
-- **Commits:** Conventional Commits (`feat(scope):`, `fix:`, `feat!:`); release notes are generated from them.
-- **Releases/CI:** tag `vX.Y.Z[-beta.N]` triggers `release.yml`, or a manual run on `main` with input `version` (creates the tag; use one way, never tag push AND dispatch) (signed portable Windows exe + APK, gitleaks, artifact audit). Key handling, secrets and the audit steps are security-critical – do not weaken them. Release procedure and key creation: `docs/architecture.md` → "Releases & CI".
-
-## Design-Richtlinien (for every new module, tool and component) – look "Klar" (flat, calm)
-- **Tokens, never hard-coded values.** Colours, radii, shadows, spacing, type sizes, weights, z-index, durations come from `web/src/ui/tokens.css` (`var(--…)`). No hex/rgb in module CSS, no own `border-radius`/`box-shadow`/`z-index`/`font-weight` numbers (use `--weight-medium/semibold/bold`, `--z-*`, `--text-3xl` for hero numbers). Modules inherit the look through `@/ui`: Button, Card, Fields (`TextField` with `labelHidden` for inline add rows), Dialog, Patterns (`Segmented`, `ItemRow`, `Progress`, `Chip`, layout utilities `patternStyles.hstack/plainList/gapBottom/inlineForm`), Misc (`Badge`, `EmptyState` incl. `compact`, `Skeleton`), `WidgetList` for dashboard widgets. Never re-implement a segmented control, progress bar or input in a module; no inline `style={{}}` for layout or colour.
-- **Surfaces:** solid `--bg` page, `--surface` cards with a `--border` (no shadows, no glass), `--surface-2` for quiet areas and control tracks. Shadows (`--shadow-1/2`) only on floating layers (menus, dialogs, FAB). Form controls use `--border-strong`.
-- **One accent, one job:** filled `--accent` only for the page's primary action and the FAB; everything else (tabs, chips, nav, links, active states) uses `--accent` as text/icon colour or `--accent-soft`. Status colours `--danger/--success/--warning` (+ `-soft`), charts `--viz-1/--viz-2`. Amounts and dates: `font-variant-numeric: var(--font-num)`. The ocean gradient (`--ocean-from/to`) is brand only (splash, empty states, images), never a page background.
-- **Contrast:** WCAG AA (4.5:1 text, 3:1 UI). `ui/tokens.test.ts` checks the palette incl. `--border-strong` on `--surface-2`; a new colour token needs a light and a dark value and an entry in that test. Touch targets ≥ 44 px (`--touch`), inline checkboxes 24 px.
-- **Motion:** CSS only, `transform`/`opacity` only (progress bars scale, nothing animates width, colour or shadow), 120–250 ms (`--dur-fast/--dur/--dur-slow`, `--ease-out`), no endless animation except the `Skeleton` shimmer. Everything must be fine with `prefers-reduced-motion`. Loading: `Skeleton`, not spinners or "…".
-- **Empty states:** `EmptyState` (page) or `EmptyState compact` / `WidgetList empty` (widgets); the faded Nemo fish, no illustrations per module.
-- **Brand:** the fish is defined once in `design/icon/final.params.mjs`; `npm run export` (in `design/icon/`) writes `web/brand/*.svg` and the generated blocks in `Logo.tsx` and the splash, `brand-sync.test.ts` enforces they agree. Icons: `docs/HOW-TO.md` → Icons. Special styles (QR black/white) need a comment and an entry in `docs/DECISIONS.md`.
-- **Checking a design change:** `SCREENS_SCHEME=dark SCREENS_VIEWPORTS=1280x720,412x915 SCREENS_PAGES='^(dashboard|finance-overview)$' npm run screenshots` renders invented data; `SCREENS_CSS=<file>` injects token overrides for experiments; `npx playwright test e2e/a11y.spec.ts` runs axe in both themes.
-
-## Create a new module / tool / connector / provider
-Step-by-step recipes: `docs/HOW-TO.md`. Short form for a module: `npm run gen:module -- <id> "<Name>"`, then edit `src/modules/<id>/`, `contributions.onboarding` is required, strings in `strings.ts`, `db:bump` on collection changes, `npm run lint && npm run typecheck && npm test`.
-
-## Status
-Stable release `v0.3.0` is out (2026-10-01; phases 1–13, the AI import round: JSON import, local import API, `mcp/`, and since `v0.2.0`: setup assistant, backup/sync hardening, quick capture, the Nemo rebrand (flat design, clownfish icon C12, MIT licence, review in `docs/REVIEW-2026-09-30.md`)). Details, open items and next steps: `docs/STATUS.md`; ideas: `docs/ROADMAP.md`. Device behaviour of the native shells is only verified by hand – see the German checklists there.
-
-## Gotchas
-- `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.
-- Multi-device E2E lives in `e2e/sync/` (own config, `workers: 1`, shared server) and is ignored by `playwright.config.ts`. Helpers wait on IndexedDB (`_outbox` count) instead of UI state; use client-side navigation while a context is offline (a `goto` would fail).
-- Tests that need "another device" create a second `TaschenmesserDB` (unit) or a second browser context (E2E); `MemoryServer` (`core/sync/testing.ts`, tests only) mirrors the server rule.
-- Do not leave your own `vite preview` running on :4173 – Playwright reuses that port (`reuseExistingServer`) and would test a stale build. Stop it (`pkill -f "[v]ite preview"`) before `npm run e2e`.
-- Async bus handlers (finance booking) finish *after* the UI action; E2E waits for their effect (e.g. poll IndexedDB) before navigating.
-- E2E: a write is finished when the dialog that saved it has closed – wait for that (and for the UI to reflect it) before `goto`/`reload`. Fix the date with `page.clock.setFixedTime(...)`; `page.clock.install` + `fastForward` drives the notification scheduler. dnd-kit keyboard steps: wait for the live region (`[id^="DndLiveRegion"]`) between key presses.
-- Unit tests run in the `node` environment; a test that needs a DOM starts with `// @vitest-environment jsdom` (docs/HOW-TO.md → Tests & checks).
-- Vitest inlines `dexie` + `dexie-react-hooks` (`vitest.config.ts`); otherwise two Dexie copies break `useLiveQuery`.
-- TypeScript is pinned to 6.0.x (typescript-eslint supports `<6.1`); `baseUrl` is not used (paths are relative).
-- Controlled checkboxes update after an async DB write: in E2E use `click()` + `expect(...).toBeChecked()` instead of `check()` (Playwright's `check()` fails with "did not change its state").
-- `web-push` always speaks HTTPS (even for tests); test the request with `generateRequestDetails` instead of a local HTTP server.
-- E2E for the assistant: the Anthropic API is mocked with `page.route('https://api.anthropic.com/v1/messages')` (answer the CORS preflight `OPTIONS` yourself and add `access-control-allow-*` headers); test data is written straight into IndexedDB with envelope fields, so the app must have opened the DB once (`page.goto('/')`) first.
-- The SDK's own retries slow error tests down: `createClaudeProvider({ maxRetries: 0 })` in unit tests.
-- No secrets in the repo. API keys go through `getPlatform().secrets` (encrypted, local only); other tokens to the local `_secrets` table at runtime only.
-
-## Ignore rules
-`.ignore` (repo root) keeps lockfiles, generated files, build output, icons and screenshots out of ripgrep/fd scans; `.gitignore` files cover build folders and secrets. Read excluded files explicitly when you need them.
+| Where is X, interfaces, data flow | [ARCHITECTURE-MAP](docs/ARCHITECTURE-MAP.md) → topic notes [architecture.md](docs/architecture.md) |
+| Recipe (module, tool, connector, setup step, AI provider, icons, tokens, CI, release) | [HOW-TO](docs/HOW-TO.md) → `docs/howto/` (incl. [gotchas](docs/howto/gotchas.md)) |
+| Why was it decided | [DECISIONS](docs/DECISIONS.md) → `docs/decisions/` |
+| Status, open items, hardware checklists | [STATUS](docs/STATUS.md), [MANUAL-TESTS](docs/MANUAL-TESTS.md); ideas: [ROADMAP](docs/ROADMAP.md) |
+| Local AI import API / MCP (German) | [AI-IMPORT](docs/AI-IMPORT.md) |
+| Area rules | `web/src/modules/CLAUDE.md`, `web/src-tauri/CLAUDE.md`, `server/CLAUDE.md` (loaded when working there) |
+Docs are English; README and user docs (`docs/user/`) also German as `*.de.md`, change both (`npm run check:readme`). Latest release: see [STATUS](docs/STATUS.md).

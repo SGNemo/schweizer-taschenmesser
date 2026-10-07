@@ -1,10 +1,14 @@
 import { db } from '@/core/db/db';
-import { activeManifests, collectNotifications } from '@/core/modules/contributions';
+import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
 import type { DueNotification } from '@/core/modules/types';
 import { now as clockNow } from '@/core/time/now';
 import { getPlatform } from '@/core/platform';
+import { getFocusSettings } from '@/core/settings/focus';
+import { collectDue } from './collect';
+import { useReminderPrompts } from './inapp';
 import type { NotificationService } from './service';
+import { removeSnoozed } from './snooze';
 
 /** Never replay more than a day of missed notifications after the app was closed for a long time. */
 export const MAX_CATCH_UP_MS = 24 * 60 * 60 * 1000;
@@ -16,6 +20,10 @@ export interface SchedulerDeps {
   getCursor(): Promise<number | undefined>;
   setCursor(at: number): Promise<void>;
   now(): number;
+  /** Shows the notification inside the app instead of the OS; returns true when it did. */
+  present?(n: DueNotification): Promise<boolean>;
+  /** Called after a notification was shown (used to remove "Später" entries). */
+  consume?(n: DueNotification): Promise<void>;
 }
 
 /**
@@ -28,7 +36,9 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
   const stored = await deps.getCursor();
   await deps.setCursor(now);
   if (stored === undefined) return 0;
-  if (deps.service.permission() !== 'granted') return 0;
+  // The in-app card needs no OS permission; only the OS popup does.
+  const canPopup = deps.service.permission() === 'granted';
+  if (!canPopup && !deps.present) return 0;
   // The OS fires scheduled notifications itself (see nativeSchedule.ts); firing here would duplicate them.
   if (deps.service.scheduleUpcoming) return 0;
 
@@ -40,8 +50,13 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
     if (seen.has(n.key)) continue;
     seen.add(n.key);
     try {
-      await deps.service.show({ title: n.title, body: n.body, tag: n.key, url: n.url });
+      const inApp = deps.present ? await deps.present(n) : false;
+      if (!inApp) {
+        if (!canPopup) continue;
+        await deps.service.show({ title: n.title, body: n.body, tag: n.key, url: n.url });
+      }
       shown++;
+      await deps.consume?.(n);
     } catch (e) {
       console.error('[notifications] show failed', e);
     }
@@ -54,11 +69,21 @@ function defaultDeps(): SchedulerDeps {
   return {
     service: getPlatform().notifications,
     async loadDue(range) {
-      return collectNotifications(range, activeManifests(await loadModuleStates()));
+      return collectDue(range, activeManifests(await loadModuleStates()));
     },
     getCursor: async () => (await meta.get(CURSOR_KEY))?.value,
     setCursor: async (at) => void (await meta.put({ key: CURSOR_KEY, value: at })),
     now: clockNow,
+    // While the app is open the reminder appears in the app (Erledigt / Später), not as an OS popup.
+    async present(n) {
+      if (document.visibilityState !== 'visible') return false;
+      if (!(await getFocusSettings()).inAppPrompt) return false;
+      useReminderPrompts.getState().push({ key: n.key, title: n.title, body: n.body, url: n.url });
+      return true;
+    },
+    async consume(n) {
+      if (n.key.startsWith('snooze:')) await removeSnoozed(n.key);
+    },
   };
 }
 
@@ -66,7 +91,7 @@ const INTERVAL_MS = 30_000;
 
 /**
  * Local scheduler: checks on start, every 30 s and whenever the app becomes visible again.
- * Works only while the app is open – see CLAUDE.md for the Web Push option (phase 6).
+ * Works only while the app is open – see docs/architecture/extras.md for the Web Push option (phase 6).
  */
 export function startNotificationScheduler(deps: SchedulerDeps = defaultDeps()): () => void {
   let running = false;

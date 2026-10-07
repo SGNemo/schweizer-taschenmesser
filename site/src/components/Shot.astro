@@ -1,0 +1,20 @@
+---
+/**
+ * One app screenshot in both themes: the visible one follows the theme (global.css .shot-*), the
+ * hidden one is lazy and never requested. `name` = file stem in src/assets/screens (see
+ * scripts/app-screenshots.mjs). `priority` marks the hero image (eager, high fetch priority).
+ */
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props { name: string; alt: string; sizes: string; widths: number[]; priority?: boolean; class?: string }
+const { name, alt, sizes, widths, priority = false, class: cls } = Astro.props;
+const all = import.meta.glob<{ default: ImageMetadata }>('../assets/screens/*.png', { eager: true });
+const pick = (scheme: 'dark' | 'light') => {
+  const hit = all[`../assets/screens/${name}-${scheme}.png`];
+  if (!hit) throw new Error(`screenshot missing: ${name}-${scheme}.png (run npm run app:screenshots)`);
+  return hit.default;
+};
+---
+<Picture class:list={['shot-dark', cls]} src={pick('dark')} formats={['avif', 'webp']} widths={widths} sizes={sizes} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" />
+<Picture class:list={['shot-light', cls]} src={pick('light')} formats={['avif', 'webp']} widths={widths} sizes={sizes} alt={alt} loading="lazy" decoding="async" />

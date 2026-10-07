@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, Card, Dialog, Icon, IconButton } from '@/ui';
 import type { DecryptedEntry } from '../vault';
 import { deleteEntry } from '../vault';
 import { copySecret } from '../copy';
+import { isTypingTarget } from '@/core/keyboard/typing';
+import { entryAction } from '../shortcuts';
+import { totpNow } from '../totp';
 import styles from '../accounts.module.css';
 import { TotpCode } from './TotpCode';
 
@@ -63,9 +66,32 @@ function Body({
   const [reveal, setReveal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const link = data.url ? safeUrl(data.url) : undefined;
+  const root = useRef<HTMLDivElement>(null);
+
+  // U / P / T / O act on the shown entry – but not while typing, and not for events from another dialog.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const action = entryAction(e);
+      if (!action || isTypingTarget(e.target)) return;
+      const dialog = e.target instanceof Element ? e.target.closest('dialog') : null;
+      if (dialog && !dialog.contains(root.current)) return;
+      if (action === 'username' && data.username) {
+        void copySecret(t.accounts.fields.username, data.username);
+      } else if (action === 'password' && data.password) {
+        void copySecret(t.accounts.fields.password, data.password);
+      } else if (action === 'totp' && data.totp) {
+        void copySecret(t.accounts.fields.totp, totpNow(data.totp).code);
+      } else if (action === 'open' && link) {
+        void getPlatform().app.openUrl(link);
+      } else return;
+      e.preventDefault();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [data, link]);
 
   return (
-    <div className={styles.detail}>
+    <div className={styles.detail} ref={root}>
       {data.username ? (
         <div className={styles.detailRow}>
           <span>
@@ -133,6 +159,7 @@ function Body({
           </span>
         </div>
       ) : null}
+      <p className={styles.notice}>{t.accounts.shortcutsHint}</p>
       {data.tags.length > 0 ? <p className={styles.notice}>{data.tags.join(' · ')}</p> : null}
       <div className={styles.inline}>
         <Button onClick={() => onEdit(entry)}>

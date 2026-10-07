@@ -1,20 +1,38 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
+import { useFocusSettings } from '@/core/settings/focus';
 import type { Stored } from '@/core/db/types';
+import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
+import type { Recurrence } from '@/core/recurrence/types';
 import {
   Button,
+  Chip,
+  Chips,
+  DateField,
   Dialog,
   Icon,
   IconButton,
   patternStyles,
   SelectField,
+  Switch,
   TextArea,
   TextField,
 } from '@/ui';
 import { t } from '@/strings';
-import { now } from '@/core/time/now';
+import { now, today } from '@/core/time/now';
+import { undoableWithToast } from '@/core/undo/withToast';
+import { beginFocus, focusPath } from '../focus';
 import { deleteTask, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import styles from '../routes/todos.module.css';
+
+/** Deleting a task (with its subtasks) is one action: the toast and Ctrl+Z bring it back. */
+function deleteTaskUndoable(id: string) {
+  return undoableWithToast(t.todos.taskDeleted, t.todos.taskDeleted, () => deleteTask(id));
+}
+
+/** Offered effort estimates in minutes. */
+const ESTIMATES = [5, 15, 30, 60] as const;
 
 type StoredTask = Stored<Task>;
 type StoredList = Stored<TodoList>;
@@ -46,9 +64,15 @@ function EditorForm({
   const [listId, setListId] = useState(task.listId);
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
+  const [recurrence, setRecurrence] = useState<Recurrence | undefined>(task.recurrence);
+  const [someday, setSomeday] = useState(task.someday ?? false);
+  const [estimate, setEstimate] = useState<number | undefined>(task.estimateMin);
+  const [plannedFor, setPlannedFor] = useState(task.plannedFor ?? '');
   const [note, setNote] = useState(task.note ?? '');
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
+  const navigate = useNavigate();
+  const [focus] = useFocusSettings();
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -59,6 +83,10 @@ function EditorForm({
       listId,
       priority,
       dueDate: dueDate || undefined,
+      recurrence: dueDate ? recurrence : undefined,
+      someday: someday || undefined,
+      estimateMin: estimate,
+      plannedFor: plannedFor || undefined,
       note: note.trim() || undefined,
     });
     // Subtasks always live in the list of their parent.
@@ -72,7 +100,7 @@ function EditorForm({
     onClose();
   }
 
-  async function addSub(e: FormEvent) {
+  async function addSub(e: { preventDefault: () => void }) {
     e.preventDefault();
     const value = subTitle.trim();
     if (!value) return;
@@ -126,6 +154,42 @@ function EditorForm({
         value={dueDate}
         onChange={(e) => setDueDate(e.target.value)}
       />
+      {dueDate && !isSub ? (
+        <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
+      ) : null}
+      {isSub ? null : (
+        <>
+          <Chips label={t.todos.estimate}>
+            <Chip
+              label={t.todos.estimateNone}
+              selected={estimate === undefined}
+              onClick={() => setEstimate(undefined)}
+            />
+            {ESTIMATES.map((n) => (
+              <Chip
+                key={n}
+                label={t.todos.estimateMin(n)}
+                selected={estimate === n}
+                onClick={() => setEstimate(n)}
+              />
+            ))}
+          </Chips>
+          <DateField
+            label={t.todos.planned}
+            value={plannedFor}
+            onChange={(e) => setPlannedFor(e.target.value)}
+          />
+          <Chips label={t.todos.planned}>
+            <Chip label={t.todos.planToday} onClick={() => setPlannedFor(today())} />
+            {plannedFor ? (
+              <Chip label={t.todos.planClear} onClick={() => setPlannedFor('')} />
+            ) : null}
+          </Chips>
+        </>
+      )}
+      {isSub ? null : (
+        <Switch label={t.todos.somedayLabel} checked={someday} onChange={setSomeday} />
+      )}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
 
       {isSub ? null : (
@@ -149,7 +213,7 @@ function EditorForm({
                 <span className={styles.grow} style={{ flex: 1 }}>
                   {s.title}
                 </span>
-                <IconButton label={t.actions.delete} onClick={() => void deleteTask(s.id)}>
+                <IconButton label={t.actions.delete} onClick={() => void deleteTaskUndoable(s.id)}>
                   <Icon name="trash" />
                 </IconButton>
               </li>
@@ -166,7 +230,7 @@ function EditorForm({
                 }}
               />
             </div>
-            <Button onClick={(e) => void addSub(e as unknown as FormEvent)}>{t.actions.add}</Button>
+            <Button onClick={(e) => void addSub(e)}>{t.actions.add}</Button>
           </div>
         </div>
       )}
@@ -182,13 +246,25 @@ function EditorForm({
         <Button
           variant="danger"
           onClick={async () => {
-            await deleteTask(task.id);
             onClose();
+            await deleteTaskUndoable(task.id);
           }}
         >
           {t.actions.delete}
         </Button>
         <span className={patternStyles.hstack}>
+          {isSub || task.done ? null : (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                await beginFocus(task, focus.focusMinutes);
+                onClose();
+                void navigate(focusPath(task.id));
+              }}
+            >
+              {t.focus.mode.title}
+            </Button>
+          )}
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

@@ -2,15 +2,29 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatMoney } from '@/core/money';
-import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
-import { dueTone } from '@/core/time/due';
+import type { Stored } from '@/core/db/types';
+import { formatDay, today } from '@/core/time/dates';
+import { dueState } from '@/core/time/due';
+import { groupByTime } from '@/core/time/groups';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, EmptyState, Icon, Segmented } from '@/ui';
+import {
+  Button,
+  EmptyState,
+  GroupedList,
+  Icon,
+  IconButton,
+  ItemList,
+  ItemRow,
+  Segmented,
+  StateBadge,
+  useMediaQuery,
+} from '@/ui';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { markOpen, markPaid } from '../actions';
 import { openTotal, sortInvoices } from '../logic';
 import { invoiceRepo } from '../repo';
+import type { Invoice } from '../schema';
 import styles from './invoices.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 
@@ -23,6 +37,7 @@ export default function InvoicesPage() {
   const [params, setParams] = useSearchParams();
   const toast = useUiStore((s) => s.toast);
   const day = today();
+  const narrow = useMediaQuery('(max-width: 899px)');
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -32,6 +47,55 @@ export default function InvoicesPage() {
   };
 
   const shown = (invoices ?? []).filter((i) => i.status === view);
+
+  function renderRow(i: Stored<Invoice>) {
+    const state = dueState(i.dueDate, day, { done: i.status === 'paid' });
+    const urgent = i.status === 'open' && (state.tone === 'overdue' || state.tone === 'today');
+    return (
+      <ItemRow
+        key={i.id}
+        title={i.payee}
+        tone={urgent ? (state.tone as 'overdue' | 'today') : undefined}
+        meta={
+          i.status === 'paid'
+            ? `${t.invoices.paidAt}: ${formatDay(i.paidAt ?? i.dueDate, 'd. MMM yyyy')}${i.reference ? ` · ${i.reference}` : ''}`
+            : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}`
+        }
+        onOpen={() => setTarget(i)}
+        end={
+          <>
+            {i.status === 'open' && state.tone !== 'later' ? (
+              <StateBadge tone={state.tone} label={state.label} />
+            ) : null}
+            <span className={styles.amount}>{formatMoney(i.amountMinor)}</span>
+            {i.status === 'open' ? (
+              narrow ? (
+                <IconButton label={t.invoices.markPaid} onClick={() => void pay(i.id)}>
+                  <Icon name="check" />
+                </IconButton>
+              ) : (
+                <Button size="sm" onClick={() => void pay(i.id)}>
+                  {t.invoices.markPaid}
+                </Button>
+              )
+            ) : (
+              <Button size="sm" variant="ghost" onClick={() => void markOpen(i.id)}>
+                {t.invoices.reopen}
+              </Button>
+            )}
+          </>
+        }
+      />
+    );
+  }
+
+  const openGroups = groupByTime(shown, (i) => i.dueDate, day).map((g) => ({
+    id: g.id,
+    label: t.groups[g.id as keyof typeof t.groups] as string,
+    count: g.items.length,
+    tone: g.id === 'overdue' || g.id === 'today' ? (g.id as 'overdue' | 'today') : undefined,
+    children: <ItemList>{g.items.map((i) => renderRow(i))}</ItemList>,
+  }));
 
   async function pay(id: string) {
     await markPaid(id);
@@ -67,50 +131,15 @@ export default function InvoicesPage() {
       </div>
 
       {invoices && shown.length === 0 ? (
-        <EmptyState
-          icon="receipt"
-          title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
-        >
+        <EmptyState title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}>
           {view === 'open' ? <StartDataButton moduleId="invoices" /> : null}
         </EmptyState>
       ) : null}
-      <ul className={styles.list}>
-        {shown.map((i) => {
-          const tone = dueTone(i.dueDate, i.status === 'paid', day);
-          return (
-            <Card as="li" key={i.id}>
-              <div className={styles.row}>
-                <button type="button" className={styles.main} onClick={() => setTarget(i)}>
-                  <span className={styles.payee}>{i.payee}</span>
-                  <span className={styles.muted}>
-                    {i.status === 'paid' ? (
-                      `${t.invoices.paidAt}: ${formatDay(i.paidAt ?? i.dueDate, 'd. MMM yyyy')}`
-                    ) : (
-                      <span
-                        className={
-                          tone === 'overdue' ? styles.overdue : tone === 'today' ? styles.today : ''
-                        }
-                      >
-                        {tone === 'overdue' ? `${t.invoices.overdue}: ` : `${t.invoices.dueDate}: `}
-                        {relativeDayLabel(i.dueDate, day)}
-                      </span>
-                    )}
-                    {i.reference ? ` · ${i.reference}` : ''}
-                  </span>
-                </button>
-                <span className={styles.amount}>{formatMoney(i.amountMinor)}</span>
-                {i.status === 'open' ? (
-                  <Button onClick={() => void pay(i.id)}>{t.invoices.markPaid}</Button>
-                ) : (
-                  <Button variant="ghost" onClick={() => void markOpen(i.id)}>
-                    {t.invoices.reopen}
-                  </Button>
-                )}
-              </div>
-            </Card>
-          );
-        })}
-      </ul>
+      {view === 'open' ? (
+        <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />
+      ) : (
+        <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
+      )}
 
       <InvoiceEditor target={openTarget} onClose={closeEditor} />
     </>

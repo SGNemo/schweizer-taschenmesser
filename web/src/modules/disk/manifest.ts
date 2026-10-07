@@ -1,42 +1,72 @@
 import { z } from 'zod';
 import { noOnboarding } from '@/core/importer/types';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
+import { t } from '@/strings';
 
 /**
  * Disk overview and cleaner (desktop only). Holds no data of its own: scan results live in memory
  * (Rust side) for the session and are never synced, stored, backed up or offered to the assistant –
- * hence no collections, no `aiSchema`, no widget, and `dataApi: false` (also blocked by id in
+ * hence no collections, no `aiSchema`, two live widgets (drive fill levels, CPU/memory), and `dataApi: false` (also blocked by id in
  * `core/dataapi/scope.ts`).
  */
 const manifest: ModuleManifest = {
   id: 'disk',
-  name: 'Datenträger',
+  get name() {
+    return t.disk.meta.name;
+  },
   icon: 'disk',
   version: 1,
-  description:
-    'Zeigt deine Laufwerke und findet mit einem Scan die größten Ordner – grafisch als Kartenansicht. Nur am PC; der Scan verändert nichts.',
+  get description() {
+    return t.disk.meta.description;
+  },
   platforms: ['desktop'],
   routes: [
     {
       path: '/disk',
-      label: 'Datenträger',
+      get label() {
+        return t.disk.meta.route;
+      },
       nav: true,
       component: () => import('./routes/DrivesPage'),
     },
     {
       path: '/disk/scan',
-      label: 'Datenträger-Scan',
+      get label() {
+        return t.disk.meta.route2;
+      },
       component: () => import('./routes/ScanPage'),
     },
   ],
   dataSchema: { collections: {} },
   migrations: {},
-  widgets: [],
+  widgets: [
+    {
+      id: 'status',
+      get title() {
+        return t.disk.meta.widget;
+      },
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/DrivesWidget'),
+    },
+    {
+      id: 'system',
+      get title() {
+        return t.disk.meta.widget2;
+      },
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/SystemWidget'),
+      to: '/disk?tab=system',
+    },
+  ],
   settings: { schema: z.object({}), defaults: {}, fields: [] },
   dataApi: false,
   defaultEnabled: false,
+  seed: { version: 1, dependsOn: [], none: 'live-data' },
   layout: 'full',
   order: 190,
+  area: 'system',
   contributions: { onboarding: noOnboarding },
 };
 

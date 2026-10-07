@@ -1,5 +1,6 @@
 import type { PlatformKind } from '@/core/platform/types';
-import { PAGE_LAYOUTS, type ModuleManifest } from './types';
+import { validateAiActions } from './aiActions';
+import { ALL_WIDGET_SIZES, AREAS, PAGE_LAYOUTS, type ModuleManifest } from './types';
 
 // Manifests are eager (small); heavy parts (routes, widgets) are lazy inside each manifest.
 const found = import.meta.glob<{ default: ModuleManifest }>('../../modules/*/manifest.ts', {
@@ -18,9 +19,13 @@ const byOrder = (a: ModuleManifest, b: ModuleManifest) =>
 
 const includeDevOnly = import.meta.env.DEV || import.meta.env.VITE_INCLUDE_EXAMPLE === 'true';
 
-/** Manifests shown in the library (dev-only modules are hidden in normal production builds). */
+/**
+ * Manifests shown in the library and used by every runtime path (dev-only modules are hidden in
+ * normal production builds, retired modules always). `allManifests` still has the retired ones:
+ * their collections stay in the database schema, sync and backup.
+ */
 export const visibleManifests: readonly ModuleManifest[] = allManifests
-  .filter((m) => !m.devOnly || includeDevOnly)
+  .filter((m) => !m.retired && (!m.devOnly || includeDevOnly))
   .sort(byOrder);
 
 export const isAvailableOn = (m: ModuleManifest, kind: PlatformKind): boolean =>
@@ -44,6 +49,19 @@ export function getManifest(id: string): ModuleManifest | undefined {
   return allManifests.find((m) => m.id === id);
 }
 
+/** What a retired module must not have any more (see `ModuleManifest.retired`). */
+function validateRetired(m: ModuleManifest): string[] {
+  const errors: string[] = [];
+  if (m.routes.length > 0) errors.push('retired: routes must be empty');
+  if (m.widgets.length > 0) errors.push('retired: widgets must be empty');
+  if (m.aiSchema) errors.push('retired: no aiSchema');
+  if (m.area) errors.push('retired: no area');
+  if (m.contributions) errors.push('retired: no contributions');
+  if (m.seed.none !== 'retired') errors.push("retired: seed must be { none: 'retired' }");
+  if (m.defaultEnabled) errors.push('retired: defaultEnabled must be false');
+  return errors;
+}
+
 /** Structural checks shared by the registry unit test and the generator docs. */
 export function validateManifest(m: ModuleManifest): string[] {
   const errors: string[] = [];
@@ -53,6 +71,9 @@ export function validateManifest(m: ModuleManifest): string[] {
   for (const p of m.platforms ?? [])
     if (!PLATFORM_KINDS.includes(p)) errors.push(`platform "${p}" is unknown`);
   if (m.platforms?.length === 0) errors.push('platforms must not be empty (omit it for all)');
+  if (m.retired) errors.push(...validateRetired(m));
+  else if (!m.area || !AREAS.includes(m.area))
+    errors.push(`area "${String(m.area)}" is unknown (every module needs one)`);
   if (m.layout && !PAGE_LAYOUTS.includes(m.layout)) errors.push(`layout "${m.layout}" is unknown`);
   for (const r of m.routes) {
     if (r.layout && !PAGE_LAYOUTS.includes(r.layout))
@@ -60,6 +81,19 @@ export function validateManifest(m: ModuleManifest): string[] {
     if (r.path !== `/${m.id}` && !r.path.startsWith(`/${m.id}/`)) {
       errors.push(`route "${r.path}" must start with "/${m.id}"`);
     }
+  }
+  if (m.widgets.length === 0 && !m.retired)
+    errors.push('widgets: every module needs at least one home-screen widget');
+  const widgetIds = new Set<string>();
+  for (const w of m.widgets) {
+    if (!/^[a-z][a-zA-Z0-9-]*$/.test(w.id)) errors.push(`widget id "${w.id}" is invalid`);
+    if (widgetIds.has(w.id)) errors.push(`widget id "${w.id}" is used twice`);
+    widgetIds.add(w.id);
+    if (!w.title.trim()) errors.push(`widget "${w.id}" needs a title`);
+    if (w.sizes.length === 0 || w.sizes.some((z) => !ALL_WIDGET_SIZES.includes(z)))
+      errors.push(`widget "${w.id}" has invalid sizes`);
+    if (!w.sizes.includes(w.defaultSize))
+      errors.push(`widget "${w.id}": defaultSize must be one of sizes`);
   }
   for (const v of Object.keys(m.migrations).map(Number)) {
     if (v > m.version) errors.push(`migration ${v} is newer than manifest version ${m.version}`);
@@ -69,7 +103,9 @@ export function validateManifest(m: ModuleManifest): string[] {
       errors.push(`aiSchema collection "${name}" has no dataSchema`);
     if (!(c.titleField in c.fields)) errors.push(`aiSchema "${name}".titleField is not a field`);
   }
+  errors.push(...validateAiActions(m.aiSchema));
   const onboarding = m.contributions?.onboarding;
+  if (m.retired) return errors;
   if (!onboarding) {
     errors.push(
       'contributions.onboarding is required (use noOnboarding when there is nothing to import)',

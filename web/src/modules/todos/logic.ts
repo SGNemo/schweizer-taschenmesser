@@ -1,3 +1,4 @@
+import { nextOccurrence } from '@/core/recurrence/expand';
 import type { Task } from './schema';
 
 type T = Pick<Task, 'done' | 'dueDate' | 'priority' | 'order'> & { createdAt: number };
@@ -40,3 +41,24 @@ export function groupTasks<X extends T & { id: string; parentId?: string }>(
 }
 
 export { dueTone, type DueTone } from '@/core/time/due';
+
+/** The due date of the next instance of a recurring task (after its current due date). */
+export function nextDueDate(task: Pick<Task, 'dueDate' | 'recurrence'>): string | undefined {
+  return task.dueDate && task.recurrence
+    ? nextOccurrence(task.recurrence, task.dueDate, task.dueDate)
+    : undefined;
+}
+
+/**
+ * Id of the next instance: `<first id>:<due date>`. Deterministic, so completing the same
+ * task twice (or on two devices) never creates a second copy.
+ */
+export function nextInstanceId(
+  task: Pick<Task, 'dueDate' | 'recurrence'> & { id: string },
+): string | undefined {
+  const next = nextDueDate(task);
+  return next ? `${task.id.split(':')[0]}:${next}` : undefined;
+}
+
+/** Tasks that belong in the open views (not "Irgendwann"). */
+export const isActionable = (t: Pick<Task, 'someday'>): boolean => !t.someday;

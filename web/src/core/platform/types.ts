@@ -2,12 +2,13 @@ import type { NotificationService } from '@/core/notifications/service';
 import type { SecretStore } from '@/core/secrets/types';
 import type { UpdateService } from '@/core/update/types';
 import type { DiskService } from './disk';
+import type { LocalModelService } from './localModel';
 import type { SystemService } from './system';
 
 /**
  * Everything that differs between running in a browser (PWA) and inside the native Tauri shell.
  * The rest of the app only talks to this interface (`getPlatform()`); there are no scattered
- * "am I in Tauri?" checks (enforced by ESLint, see `core/platform` in CLAUDE.md).
+ * "am I in Tauri?" checks (enforced by ESLint, see `core/platform` in docs/RULES.md).
  */
 export type PlatformKind = 'web' | 'desktop' | 'android';
 
@@ -89,6 +90,39 @@ export interface LocalApiServerToken {
 }
 
 /** Loopback-only HTTP server of the desktop shell (`src-tauri/crates/local-api`); elsewhere unsupported. */
+/** One request the native host relayed from the browser extension (already stamped with its origin). */
+export interface VaultBridgeRequest {
+  id: number;
+  /** JSON text; validated by the app (`modules/accounts/bridge`), never trusted here. */
+  body: string;
+}
+
+export interface VaultBridgeRegistration {
+  browsers: { browser: string; registered: boolean }[];
+  /** The manifest file names the executable that is running now. */
+  upToDate: boolean;
+  manifest: string;
+}
+
+export type VaultBridgeStartError = 'channel-taken' | 'failed';
+
+/**
+ * Desktop only: the channel to the browser extension's native messaging host. Nothing listens until
+ * `start` is called; every request is answered with the JSON text the handler returns.
+ */
+export interface VaultBridgeService {
+  supported: boolean;
+  /** Resolves to an error code, or `null` once the server listens. */
+  start(
+    onRequest: (req: VaultBridgeRequest) => Promise<string>,
+  ): Promise<VaultBridgeStartError | null>;
+  stop(): Promise<void>;
+  /** Writes the host manifest and the browser registry entries (rejects when that fails). */
+  register(): Promise<VaultBridgeRegistration>;
+  unregister(): Promise<void>;
+  status(): Promise<VaultBridgeRegistration>;
+}
+
 export interface LocalApiService {
   supported: boolean;
   /** Starts (or restarts) on `127.0.0.1:<port>`; resolves with the bound port. Errors: `port-in-use`, `port-denied`, `listen-failed`. */
@@ -130,8 +164,14 @@ export interface TrayLabels {
  */
 export interface DesktopService {
   supported: boolean;
+  /** True when this launch asked for safe mode (`--safe-mode` or `NEMO_SAFE_MODE=1`); optional so fakes keep compiling. */
+  safeMode?(): Promise<boolean>;
+  /** Panic lines of earlier runs from the data folder (handed over once, then removed); optional so fakes keep compiling. */
+  takePanicLog?(): Promise<string | null>;
   /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
   setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
+  /** Same for the vault search key (`null` removes it; unset by default). */
+  setVaultHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** True = the window's close button hides the app in the tray instead of quitting. */
   setCloseToTray(enabled: boolean): Promise<void>;
   setTrayLabels(labels: TrayLabels): Promise<void>;
@@ -139,6 +179,10 @@ export interface DesktopService {
   autostart(): Promise<boolean>;
   /** `portable`: the app runs from a folder with a `data/` directory (e.g. a USB stick). */
   info(): Promise<{ portable: boolean }>;
+  /** Path of the app's data folder ("Über Nemo"); undefined where there is none to show. */
+  dataDir(): Promise<string | undefined>;
+  /** Opens the data folder in the file manager (no argument: the app decides which folder). */
+  openDataDir(): Promise<void>;
   showMain(): Promise<void>;
   /** Capture window only. */
   hideCapture(): Promise<void>;
@@ -146,6 +190,8 @@ export interface DesktopService {
   readClipboard(): Promise<string | undefined>;
   /** Capture window only: fires every time the window is opened. Returns an unsubscribe function. */
   onCaptureOpen(callback: () => void): () => void;
+  /** Main window: fires when the vault search key was pressed (the listener checks the vault state). */
+  onVaultSearch(callback: () => void): () => void;
 }
 
 export interface PlatformService {
@@ -164,10 +210,13 @@ export interface PlatformService {
   screen: ScreenService;
   oauth: OAuthLoopback;
   localApi: LocalApiService;
+  vaultBridge: VaultBridgeService;
   /** Drive overview and read-only scans for the disk module (desktop only). */
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */
   system: SystemService;
+  /** The built-in local language model (desktop only; stage 1 of the AI entry pipeline). */
+  localModel: LocalModelService;
   desktop: DesktopService;
   share: ShareService;
   /** Offers a file to the user: browser download, or a "save as" dialog in the native shell. */
@@ -177,6 +226,11 @@ export interface PlatformService {
     writeText(text: string): Promise<void>;
     /** Copies `text` and clears the clipboard after `clearAfterMs` – unless something else was copied meanwhile. */
     writeSensitive(text: string, clearAfterMs: number): Promise<void>;
+    /**
+     * Clears the clipboard now if the last sensitive value is still on it (e.g. when the vault locks)
+     * and cancels the pending timer. A no-op when nothing sensitive was copied or it was replaced.
+     */
+    clearSensitive(): Promise<void>;
   };
   app: {
     version(): Promise<string>;

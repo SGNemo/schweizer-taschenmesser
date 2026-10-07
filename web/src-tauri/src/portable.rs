@@ -153,10 +153,24 @@ pub fn cleanup(fs: &dyn Fs, exe: &Path) {
 /// Argument the previous version passes when it starts the new executable.
 pub const UPDATED_FLAG: &str = "--updated";
 
-/// Portable mode: a folder `data/` next to the executable holds the WebView2 profile (USB stick).
-/// Without it the profile lives in the user's local app data, shared with a formerly installed version.
-pub fn data_dir(exe: &Path) -> Option<PathBuf> {
-    let dir = exe.parent()?.join("data");
+/// Dev-Preview builds carry the stable identifier plus this suffix (see `tauri.dev.conf.json`).
+pub const DEV_IDENTIFIER_SUFFIX: &str = ".dev";
+
+/// True for the Dev-Preview flavor (its own identifier, data and update channel).
+pub fn is_dev_identifier(identifier: &str) -> bool {
+    identifier.ends_with(DEV_IDENTIFIER_SUFFIX)
+}
+
+/// Portable mode: a folder `data/` (`data-dev/` for the Dev-Preview) next to the executable holds the
+/// WebView2 profile (USB stick). Without it the profile lives in the user's local app data, shared
+/// with a formerly installed version.
+pub fn data_dir(exe: &Path, identifier: &str) -> Option<PathBuf> {
+    let name = if is_dev_identifier(identifier) {
+        "data-dev"
+    } else {
+        "data"
+    };
+    let dir = exe.parent()?.join(name);
     dir.is_dir().then_some(dir)
 }
 
@@ -334,13 +348,31 @@ mod tests {
     fn portable_mode_needs_an_existing_data_folder() {
         let d = dir("data");
         let exe = d.join("app.exe");
-        assert_eq!(data_dir(&exe), None);
+        let id = "io.github.sgnemo.taschenmesser";
+        assert_eq!(data_dir(&exe, id), None);
         std::fs::create_dir(d.join("data")).unwrap();
-        assert_eq!(data_dir(&exe), Some(d.join("data")));
+        assert_eq!(data_dir(&exe, id), Some(d.join("data")));
         // A file called `data` does not switch the mode on.
         std::fs::remove_dir(d.join("data")).unwrap();
         std::fs::write(d.join("data"), b"x").unwrap();
-        assert_eq!(data_dir(&exe), None);
+        assert_eq!(data_dir(&exe, id), None);
+        std::fs::remove_dir_all(d).unwrap();
+    }
+
+    #[test]
+    fn dev_preview_uses_its_own_portable_folder() {
+        let d = dir("data-dev");
+        let exe = d.join("app.exe");
+        let stable = "io.github.sgnemo.taschenmesser";
+        let dev = "io.github.sgnemo.taschenmesser.dev";
+        assert!(!is_dev_identifier(stable));
+        assert!(is_dev_identifier(dev));
+        // A `data` folder (stable) never switches the dev build to portable mode, and vice versa.
+        std::fs::create_dir(d.join("data")).unwrap();
+        assert_eq!(data_dir(&exe, dev), None);
+        std::fs::create_dir(d.join("data-dev")).unwrap();
+        assert_eq!(data_dir(&exe, dev), Some(d.join("data-dev")));
+        assert_eq!(data_dir(&exe, stable), Some(d.join("data")));
         std::fs::remove_dir_all(d).unwrap();
     }
 

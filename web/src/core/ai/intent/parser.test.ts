@@ -103,7 +103,13 @@ describe('stage 1 parser: lists', () => {
     expect(intentOf('überfällige Aufgaben')).toMatchObject({
       query: { module: 'todos', range: { relative: 'overdue' } },
     });
-    expect(intentOf('Erinnerungen')).toMatchObject({ query: { module: 'reminders' } });
+    expect(intentOf('Erinnerungen')).toMatchObject({
+      query: {
+        module: 'calendar',
+        collection: 'event',
+        filters: [{ field: 'kind', value: 'reminder' }],
+      },
+    });
     expect(intentOf('Termine')).toEqual({
       type: 'agenda',
       agenda: { sources: ['calendar'], relative: 'next_7_days' },

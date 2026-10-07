@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { compareText } from '@/core/i18n/format';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import {
@@ -12,8 +14,10 @@ import {
   TextField,
   useSplitView,
 } from '@/ui';
+import { BridgeDialog, PairingDialog } from '../components/BridgeDialog';
 import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
+import { GeneratorDialog } from '../components/GeneratorDialog';
 import { LockScreen } from '../components/LockScreen';
 import { SetupScreen } from '../components/SetupScreen';
 import { ToolsDialog } from '../components/ToolsDialog';
@@ -34,8 +38,7 @@ export function searchEntries(entries: readonly DecryptedEntry[], query: string)
     : [...entries];
   return shown.sort(
     (a, b) =>
-      Number(b.data.favorite) - Number(a.data.favorite) ||
-      a.data.title.localeCompare(b.data.title, 'de'),
+      Number(b.data.favorite) - Number(a.data.favorite) || compareText(a.data.title, b.data.title),
   );
 }
 
@@ -75,6 +78,15 @@ function Unlocked() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [form, setForm] = useState<EntryTarget>(null);
   const [tools, setTools] = useState(false);
+  const [generator, setGenerator] = useState(false);
+  const [bridge, setBridge] = useState(false);
+  const searchBox = useRef<HTMLInputElement>(null);
+  // `?find=n` (vault search key): focus the search field.
+  const [params] = useSearchParams();
+  const find = params.get('find');
+  useEffect(() => {
+    if (find) searchBox.current?.focus();
+  }, [find]);
   // Wide screens: list and detail side by side (same detail content, just not in a dialog).
   const panel = useSplitView();
 
@@ -84,10 +96,14 @@ function Unlocked() {
   if (!data) return null;
   return (
     <>
-      <div className={styles.inline} style={{ marginBottom: 'var(--space-4)' }}>
+      <div
+        className={`${styles.inline} ${styles.toolbar}`}
+        style={{ marginBottom: 'var(--space-4)' }}
+      >
         <TextField
           label={t.accounts.search}
           type="search"
+          ref={searchBox}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -95,7 +111,11 @@ function Unlocked() {
           <Icon name="plus" size={18} />
           {t.accounts.add}
         </Button>
+        <Button onClick={() => setGenerator(true)}>{t.accounts.generator.newPassword}</Button>
         <Button onClick={() => setTools(true)}>{t.accounts.tools.open}</Button>
+        {getPlatform().vaultBridge.supported ? (
+          <Button onClick={() => setBridge(true)}>{t.accounts.bridge.open}</Button>
+        ) : null}
       </div>
       {data.broken.length > 0 ? (
         <div className={styles.banner} role="status">
@@ -119,13 +139,12 @@ function Unlocked() {
               onEdit={(entry) => setForm(entry)}
             />
           ) : (
-            <EmptyState icon="lock" title={t.accounts.pickEntry} />
+            <EmptyState title={t.accounts.pickEntry} />
           )
         }
       >
         {shown.length === 0 ? (
           <EmptyState
-            icon="lock"
             title={data.entries.length === 0 ? t.accounts.empty : t.accounts.emptyFiltered}
           />
         ) : null}
@@ -149,6 +168,16 @@ function Unlocked() {
         }}
       />
       <EntryForm target={form} onClose={() => setForm(null)} onSaved={(id) => setDetailId(id)} />
+      <GeneratorDialog
+        open={generator}
+        onClose={() => setGenerator(false)}
+        onSaveAs={(password) => {
+          setGenerator(false);
+          setForm({ draft: true, password });
+        }}
+      />
+      <BridgeDialog open={bridge} onClose={() => setBridge(false)} />
+      <PairingDialog />
       <ToolsDialog open={tools} onClose={() => setTools(false)} entries={data.entries} />
     </>
   );

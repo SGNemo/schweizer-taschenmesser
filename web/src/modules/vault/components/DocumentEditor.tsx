@@ -2,9 +2,9 @@ import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
 import { Button, Dialog, Form, FormActions, SelectField, Split, TextArea, TextField } from '@/ui';
-import { formatSize, MAX_FILE_BYTES } from '../logic';
+import { endOf, formatSize, MAX_FILE_BYTES } from '../logic';
 import { deleteDocument, saveDocument } from '../repo';
-import { CATEGORIES, type DocCategory, type VaultDocument } from '../schema';
+import { CATEGORIES, documentSchema, type DocCategory, type VaultDocument } from '../schema';
 
 export type DocumentTarget = Stored<VaultDocument> | { draft: true } | null;
 
@@ -32,25 +32,30 @@ function Fields({
 }) {
   const [title, setTitle] = useState(existing?.title ?? '');
   const [category, setCategory] = useState<DocCategory>(existing?.category ?? 'other');
-  const [expiresOn, setExpiresOn] = useState(existing?.expiresOn ?? '');
+  const [provider, setProvider] = useState(existing?.provider ?? '');
+  const [startDate, setStartDate] = useState(existing?.startDate ?? '');
+  const [endDate, setEndDate] = useState((existing && endOf(existing)) ?? '');
+  const [notice, setNotice] = useState(existing?.noticeDays?.toString() ?? '');
+  const [dateError, setDateError] = useState('');
   const [note, setNote] = useState(existing?.note ?? '');
   const [file, setFile] = useState<File | 'remove' | undefined>();
   const [error, setError] = useState('');
 
   async function save() {
-    await saveDocument(
-      existing?.id ?? null,
-      {
-        title: title.trim(),
-        category,
-        expiresOn: expiresOn || undefined,
-        note: note.trim() || undefined,
-        fileName: existing?.fileName,
-        fileType: existing?.fileType,
-        fileSize: existing?.fileSize,
-      },
-      file,
-    );
+    const parsed = documentSchema.safeParse({
+      title: title.trim(),
+      category,
+      provider: provider.trim() || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      noticeDays: notice.trim() === '' ? undefined : Number(notice),
+      note: note.trim() || undefined,
+      fileName: existing?.fileName,
+      fileType: existing?.fileType,
+      fileSize: existing?.fileSize,
+    });
+    if (!parsed.success) return setDateError(t.vault.invalid);
+    await saveDocument(existing?.id ?? null, parsed.data, file);
     onClose();
   }
 
@@ -83,12 +88,38 @@ function Fields({
           ))}
         </SelectField>
         <TextField
-          label={t.vault.expiresOn}
-          type="date"
-          value={expiresOn}
-          onChange={(e) => setExpiresOn(e.target.value)}
+          label={t.vault.provider}
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
         />
       </Split>
+      <Split>
+        <TextField
+          label={t.vault.startDate}
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+        <TextField
+          label={t.vault.endDate}
+          type="date"
+          value={endDate}
+          onChange={(e) => {
+            setEndDate(e.target.value);
+            setDateError('');
+          }}
+          error={dateError}
+        />
+      </Split>
+      <TextField
+        label={t.vault.noticeDays}
+        hint={t.vault.noticeHint}
+        type="number"
+        inputMode="numeric"
+        min={0}
+        value={notice}
+        onChange={(e) => setNotice(e.target.value)}
+      />
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       <div>
         <TextField

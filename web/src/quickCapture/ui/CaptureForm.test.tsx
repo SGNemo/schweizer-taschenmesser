@@ -4,11 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAll } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
+import { patchFocusSettings } from '@/core/settings/focus';
 import { setNow } from '@/core/time/now';
 import { t } from '@/strings';
 import { CaptureForm } from './CaptureForm';
 
-// Wednesday, 2026-09-30, 10:00. Todos, calendar, reminders and finance are on by default.
+// Wednesday, 2026-09-30, 10:00. Todos, calendar and finance are on by default.
 beforeEach(async () => {
   setNow(() => new Date(2026, 8, 30, 10, 0).getTime());
   await clearAll();
@@ -45,7 +46,8 @@ describe('CaptureForm', () => {
     expect(await db.table('todos_task').count()).toBe(0);
   });
 
-  it('asks instead of guessing on a low-confidence input and does not save', async () => {
+  it('asks instead of guessing on a low-confidence input when "Ohne Rückfrage" is off, and does not save', async () => {
+    await patchFocusSettings({ captureNoQuestion: false });
     const user = userEvent.setup();
     const onSaved = vi.fn();
     render(<CaptureForm onSaved={onSaved} />);
@@ -95,5 +97,42 @@ describe('CaptureForm', () => {
     render(<CaptureForm onSaved={() => undefined} />);
     await user.type(await box(), '15 Uhr Zahnarzt');
     await waitFor(() => expect(chips()).toHaveTextContent(t.quickCapture.chip.assumedDate));
+  });
+
+  it('without the question: unclear text is saved as typed in the ToDo inbox', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Zahnarzt morgen 15 Uhr 80 €');
+    expect(await screen.findByTestId('capture-inbox-hint')).toHaveTextContent('Landet in „ToDos“');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const [task] = await db.table('todos_task').toArray();
+    expect(task).toMatchObject({ title: 'Zahnarzt morgen 15 Uhr 80 €', listId: 'inbox' });
+    expect(await db.table('calendar_event').count()).toBe(0);
+    expect(await db.table('finance_transaction').count()).toBe(0);
+  });
+
+  it('Ctrl+Enter opens the full form pre-filled instead of saving', async () => {
+    const user = userEvent.setup();
+    const onOpenFull = vi.fn();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} onOpenFull={onOpenFull} />);
+    await user.type(await box(), 'Blumen gießen');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel: ToDos'));
+    await user.keyboard('{Control>}{Enter}{/Control}');
+    expect(onOpenFull).toHaveBeenCalledWith('/todos?new=1&title=Blumen%20gie%C3%9Fen');
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(await db.table('todos_task').count()).toBe(0);
+  });
+
+  it('Ctrl+Enter just saves where no full form can be pre-filled', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} onOpenFull={() => undefined} />);
+    await user.type(await box(), 'morgen 15 Uhr Zahnarzt');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel: Kalender'));
+    await user.keyboard('{Control>}{Enter}{/Control}');
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
   });
 });

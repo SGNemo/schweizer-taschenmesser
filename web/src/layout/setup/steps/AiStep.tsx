@@ -11,6 +11,7 @@ import {
   type AiConfig,
   type ProviderEntry,
 } from '@/core/ai/config';
+import { switchAiOff, switchAiOn, useAiOn } from '@/core/ai/switch';
 import { detectOllama } from '@/core/ai/detectOllama';
 import type { PresetId } from '@/core/ai/providers/presets';
 import { testConnection, type ConnectionTest } from '@/core/ai/testConnection';
@@ -30,6 +31,7 @@ interface Added {
 
 /** Adds providers as drafts; keys go to the secret store on "Weiter" and nowhere else. */
 export default function AiStep({ registerCommit }: SetupStepProps) {
+  const aiOn = useAiOn();
   const [stored, setStored] = useState<AiConfig | undefined>();
   const [order, setOrder] = useState<string[]>([]);
   const [added, setAdded] = useState<Added[]>([]);
@@ -87,6 +89,16 @@ export default function AiStep({ registerCommit }: SetupStepProps) {
     return () => registerCommit(null);
   }, [dirty, registerCommit]);
 
+  if (!aiOn) {
+    return (
+      <p className={patternStyles.muted} data-testid="setup-ai-off">
+        {t.ai.off.isOffDevice}{' '}
+        <Button variant="ghost" onClick={() => void switchAiOn()}>
+          {t.ai.off.on}
+        </Button>
+      </p>
+    );
+  }
   if (!stored) return null;
 
   const existing = order
@@ -122,6 +134,16 @@ export default function AiStep({ registerCommit }: SetupStepProps) {
   const ollamaAdded = added.some((a) => a.entry.preset === 'ollama');
   return (
     <>
+      <p className={patternStyles.muted}>
+        {t.ai.off.setupSkipHint}{' '}
+        <Button
+          variant="ghost"
+          data-testid="setup-ai-skip"
+          onClick={() => void switchAiOff('device')}
+        >
+          {t.ai.off.setupSkip}
+        </Button>
+      </p>
       <p className={patternStyles.muted}>
         {t.ai.settings.privacy} <HelpHint text={t.help.aiRouter} label={t.help.label} />
       </p>

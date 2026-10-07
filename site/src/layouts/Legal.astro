@@ -1,0 +1,35 @@
+---
+import Base from './Base.astro';
+import { routes, t, type Locale, type RouteKey } from '../i18n';
+
+interface Props { locale: Locale; route: RouteKey; title: string; description: string }
+const { locale, route, title, description } = Astro.props;
+const s = t(locale);
+---
+<Base locale={locale} route={route} title={title} description={description}>
+  <article class="wrap legal">
+    <h1>{title}</h1>
+    <div class="prose">
+      <slot />
+    </div>
+    <p class="back"><a href={routes.home[locale]}>{s.legal.back}</a></p>
+  </article>
+</Base>
+
+<style>
+  .legal {
+    padding-block: clamp(2.5rem, 5vw, 4rem);
+  }
+  h1 {
+    margin-bottom: var(--space-5);
+  }
+  .back {
+    margin-top: var(--space-7);
+  }
+  .back a {
+    color: var(--text-muted);
+    min-height: var(--touch);
+    display: inline-flex;
+    align-items: center;
+  }
+</style>

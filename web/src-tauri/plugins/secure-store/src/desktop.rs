@@ -4,6 +4,7 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
 use keyring::{Entry, Error as KeyringError};
 use serde::de::DeserializeOwned;
+use std::sync::OnceLock;
 #[cfg(windows)]
 use tauri::Manager;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
@@ -16,10 +17,20 @@ mod hello;
 /// Sealed vault keys are filed apart from ordinary secrets.
 const BIO_PREFIX: &str = "bio:";
 
+/// Credential Manager service name: the app identifier, so the Dev-Preview (identifier + `.dev`)
+/// never reads or overwrites the secrets of the stable app. For the stable app the identifier is
+/// exactly `SERVICE`, i.e. nothing changes for existing entries.
+static SERVICE_NAME: OnceLock<String> = OnceLock::new();
+
+fn service() -> &'static str {
+    SERVICE_NAME.get().map(String::as_str).unwrap_or(SERVICE)
+}
+
 pub fn init<R: Runtime, C: DeserializeOwned>(
     app: &AppHandle<R>,
     _api: PluginApi<R, C>,
 ) -> Result<SecureStore<R>> {
+    let _ = SERVICE_NAME.set(app.config().identifier.clone());
     Ok(SecureStore(app.clone()))
 }
 
@@ -27,7 +38,7 @@ pub struct SecureStore<R: Runtime>(AppHandle<R>);
 
 fn entry(name: &str) -> Result<Entry> {
     validate_name(name).map_err(Error::Invalid)?;
-    Entry::new(SERVICE, name).map_err(|e| Error::Keystore(e.to_string()))
+    Entry::new(service(), name).map_err(|e| Error::Keystore(e.to_string()))
 }
 
 fn read(name: &str) -> Result<Option<String>> {

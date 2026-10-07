@@ -5,11 +5,14 @@ import { commitCreate } from '@/core/ai/query/create';
 import type { AiResult, PreparedCreate, ResultRow } from '@/core/ai/query/types';
 import { db } from '@/core/db/db';
 import { availableManifests } from '@/core/modules/available';
+import { enableModule } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Badge, Button } from '@/ui';
+import { Badge, Button, ReadableText } from '@/ui';
+import { WritePreview } from './WritePreview';
 import styles from './assistant.module.css';
 
 const MAX_ROWS = 10;
@@ -130,7 +133,9 @@ function CreateCard({ prepared, onDone }: { prepared: PreparedCreate; onDone: ()
   return (
     <>
       <h3 className={styles.heading}>{t.ai.create.title(prepared.label)}</h3>
-      <p className={styles.note}>{t.ai.create.intro}</p>
+      <p className={styles.note}>
+        <ReadableText text={t.ai.create.intro} />
+      </p>
       <dl className={styles.lines} data-testid="ai-create-preview">
         <dt>{prepared.moduleName}</dt>
         <dd>{prepared.label}</dd>
@@ -177,7 +182,11 @@ function Result({
           <p className={styles.big} data-testid="ai-aggregate">
             {result.value}
           </p>
-          {result.note ? <p className={styles.note}>{result.note}</p> : null}
+          {result.note ? (
+            <p className={styles.note}>
+              <ReadableText text={result.note} />
+            </p>
+          ) : null}
         </>
       );
     case 'agenda':
@@ -201,7 +210,13 @@ function Result({
     case 'create':
       return <CreateCard prepared={result.prepared} onDone={onDone} />;
     case 'message':
-      return <p>{result.text}</p>;
+      return (
+        <p>
+          <ReadableText text={result.text} />
+        </p>
+      );
+    case 'write':
+      return <WritePreview result={result} onDone={onDone} />;
   }
 }
 
@@ -210,6 +225,31 @@ export function tierLabel(response: Extract<AskResponse, { ok: true }>): string 
     return t.ai.tier.model(response.usage.inputTokens, response.usage.outputTokens);
   }
   return t.ai.tier[response.tier === 'model' ? 'local' : response.tier];
+}
+
+/** The error text; for a module that is switched off it offers to switch it on. */
+function ErrorView({ response }: { response: Extract<AskResponse, { ok: false }> }) {
+  const [enabled, setEnabled] = useState(false);
+  const manifest =
+    response.error === 'inactive-module' ? getManifest(response.detail ?? '') : undefined;
+  return (
+    <>
+      <p role="alert" className={styles.error} data-testid="ai-error">
+        {enabled
+          ? t.ai.palette.moduleEnabled
+          : (t.ai.errors[response.error] ?? t.ai.errors.fallback)}
+      </p>
+      {manifest && !enabled ? (
+        <Button
+          onClick={() => {
+            void enableModule(manifest).then(() => setEnabled(true));
+          }}
+        >
+          {t.ai.palette.enableModule(manifest.name)}
+        </Button>
+      ) : null}
+    </>
+  );
 }
 
 /** Renders the assistant's answer (or a friendly error). `onDone` closes the palette. */
@@ -222,11 +262,7 @@ export function AnswerView({ response, onDone }: { response: AskResponse; onDone
   };
 
   if (!response.ok) {
-    return (
-      <p role="alert" className={styles.error} data-testid="ai-error">
-        {t.ai.errors[response.error] ?? t.ai.errors.fallback}
-      </p>
-    );
+    return <ErrorView response={response} />;
   }
   return (
     <>

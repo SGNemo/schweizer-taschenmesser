@@ -19,6 +19,34 @@ interface TauriConfig {
 }
 const json = (path: string) => JSON.parse(read(path)) as TauriConfig;
 
+describe('Dev-Preview flavor', () => {
+  const stable = json('src-tauri/tauri.conf.json');
+  const dev = json('src-tauri/tauri.dev.conf.json');
+
+  it('only overrides name, identifier and the updater key; the identifier is the stable one plus ".dev"', () => {
+    expect(
+      Object.keys(dev)
+        .filter((k) => k !== '$schema')
+        .sort(),
+    ).toEqual(['identifier', 'plugins', 'productName']);
+    expect(dev.identifier).toBe(`${stable.identifier}.dev`);
+    expect(dev.productName).toBe('Nemo Dev');
+  });
+
+  it('signs with its own updater key and cannot touch the endpoint of the stable app', () => {
+    // The dev channel has its own minisign pair (docs/decisions/distribution.md): a preview binary
+    // never carries a valid stable signature. A different dev key would make every installed
+    // preview reject the next update, so the full key is pinned like the stable one.
+    expect(Object.keys(dev.plugins)).toEqual(['updater']);
+    expect(Object.keys(dev.plugins.updater)).toEqual(['pubkey']);
+    expect(dev.plugins.updater.pubkey).toBe(
+      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNDIzNzAyRTFEOEI5Q0UKUldUT3VkamhBamRDK210bVlOclMva3hmMC81Q1hJZEtaWVkyWEszb2YwbXN1ZkFsR3R3L2tzYWMK',
+    );
+    expect(dev.plugins.updater.pubkey).not.toBe(stable.plugins.updater.pubkey);
+    expect(JSON.stringify(dev)).not.toMatch(/endpoints/);
+  });
+});
+
 describe('internal identifiers stay unchanged', () => {
   const tauri = json('src-tauri/tauri.conf.json');
 
@@ -50,7 +78,7 @@ describe('internal identifiers stay unchanged', () => {
       expect(read(html), html).toContain("localStorage.getItem('tm-theme')");
     }
     expect(read('index.html')).toContain("localStorage.getItem('tm-accent')");
-    expect(read('src/tools/calc/Tool.tsx')).toContain("KEY = 'tm-calc-history'");
+    expect(read('src/tools/calc/ExprMode.tsx')).toContain("KEY = 'tm-calc-history'");
     expect(read('src/tools/currency/Tool.tsx')).toContain("CACHE = 'tm-currency-rates'");
     expect(read('src/quickCapture/device.ts')).toContain("KEY = 'tm-quick-capture'");
     expect(read('src/core/backup/backup.ts')).toContain("BACKUP_FORMAT = 'taschenmesser-backup'");
@@ -103,9 +131,14 @@ describe('internal identifiers stay unchanged', () => {
         `ANDROID_PACKAGE: &str = "${pkg}"`,
       );
     }
-    // The share intent filter is merged into the app's launcher activity by its full class name.
+    // The share intent filter is merged into the app's launcher activity by its full class name. The
+    // activity lives in the app's package (= identifier = application id), so `${applicationId}` is
+    // io.github.sgnemo.taschenmesser for the stable app and the same with `.dev` for the Dev-Preview.
     expect(read('src-tauri/plugins/share-intent/android/src/main/AndroidManifest.xml')).toContain(
-      'android:name="io.github.sgnemo.taschenmesser.MainActivity"',
+      'android:name="${applicationId}.MainActivity"',
+    );
+    expect(read('src-tauri/tauri.conf.json')).toContain(
+      '"identifier": "io.github.sgnemo.taschenmesser"',
     );
   });
 
@@ -120,10 +153,12 @@ describe('internal identifiers stay unchanged', () => {
     expect(read('src/core/update/github.ts')).toContain("REPO = 'SGNemo/schweizer-taschenmesser'");
   });
 
-  it('updater transition: latest.json keeps pointing at the legacy asset name', () => {
-    // Installed apps (≤ 0.2.0) only accept this file name; new clients accept both (update.rs).
-    expect(UPDATER_PORTABLE_ASSET).toBe('Taschenmesser-Portable.exe');
+  it('updater: latest.json points at the Nemo asset; clients still accept the legacy name', () => {
+    // Releases no longer carry the Taschenmesser-* copies. Clients ≥ 0.3.0 accept both names
+    // (update.rs, kept on purpose); installations ≤ 0.2.x cannot self-update any more.
+    expect(UPDATER_PORTABLE_ASSET).toBe('Nemo-Portable.exe');
     expect(RELEASE_ASSETS).toContain(UPDATER_PORTABLE_ASSET);
+    expect(RELEASE_ASSETS.join(' ')).not.toContain('Taschenmesser');
     expect(read('src-tauri/src/update.rs')).toContain(
       'PORTABLE_ASSETS: [&str; 2] = ["Nemo-Portable.exe", "Taschenmesser-Portable.exe"]',
     );

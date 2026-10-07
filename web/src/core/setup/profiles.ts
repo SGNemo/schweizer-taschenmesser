@@ -15,26 +15,18 @@ export interface Profile {
 export const PROFILES: readonly Profile[] = [
   {
     id: 'everyday',
-    modules: ['calendar', 'todos', 'reminders', 'shopping', 'notes', 'birthdays', 'habits'],
-    tools: ['calc', 'timer', 'units', 'dates', 'qr', 'scratch'],
+    modules: ['calendar', 'todos', 'lists', 'notes', 'people'],
+    tools: ['calc', 'timer', 'units', 'dates', 'qr'],
   },
   {
     id: 'finance',
-    modules: [
-      'finance',
-      'budgets',
-      'subscriptions',
-      'invoices',
-      'contracts',
-      'calendar',
-      'reminders',
-    ],
-    tools: ['calc', 'percent', 'currency', 'split'],
+    modules: ['finance', 'budgets', 'subscriptions', 'invoices', 'vault', 'calendar'],
+    tools: ['calc', 'currency'],
   },
   {
     id: 'productive',
-    modules: ['todos', 'notes', 'calendar', 'habits', 'bookmarks', 'launcher', 'news'],
-    tools: ['scratch', 'timer', 'calc', 'dates'],
+    modules: ['todos', 'notes', 'calendar', 'bookmarks'],
+    tools: ['timer', 'calc', 'dates'],
   },
   {
     id: 'minimal',

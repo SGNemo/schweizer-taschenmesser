@@ -1,0 +1,11 @@
+# Decisions – readability (feat/readability, 2026-10-05)
+
+Index: [DECISIONS](../DECISIONS.md). Spec: [DESIGN-SPEC §4b/§4c](../design/DESIGN-SPEC.md).
+
+- **The reading aid is an own small text engine, off by default, device-local.** No library, no service; `Intl.Segmenter` for graphemes. Soft weight (560 + a step of contrast) is the default because it changes widths less than bold; bold is selectable. Verified: the settings preview keeps its height when toggled (e2e).
+- **Never in the vault/accounts, inputs, numbers, buttons, navigation** – consistency and secrecy matter more there; a test pins the imports.
+- **Colour only with meaning, always with a word or icon.** Six fixed category hues (`--cat-1…6`, ≥ 3:1), reused for the six navigation areas (icon + thin stripe, never text). Calendar blocks are neutral with a kind stripe; deadlines are `--warning`, red stays overdue/exceeded/expense. "Ruhig" mode greys everything but overdue and today.
+- **Groups by space + small collapsible heads with counts** (`GroupedList`), time groups default in Rechnungen and ToDos; fold state device-local. Default line spacing 1.5 → 1.6.
+- **Fokus-Lesen** is a dialog (`ReaderView`) opened by the user, not a global mode; first user: notes.
+- **The reading aid reaches all text through the JSX runtime (2026-10-05, follow-up):** instead of opting in per component, `jsxImportSource` points at a runtime that wraps string children of ordinary elements; coverage 25/50/75/100 % decides which element classes show it (replaces the scope switch). Rest-of-word dimming only where the ink is measured to be primary (headings), so AA never depends on a class-name guess. Vault routes are wrapped in `NoReadAid`; inputs, code and numbers are never touched. The earlier rule "not in buttons/navigation" now holds only below 100 %.
+- **Contrast before weight (2026-10-05, feedback):** heavy weights (700–900) at small sizes made text harder to read, not easier. Word starts are now separated mainly by ink (dimmed text in primary ink, brightened starts in muted ink; measured per text, so AA never depends on class names) and only slightly by weight (500/700); a third style "Nur Kontrast" changes no weight at all.

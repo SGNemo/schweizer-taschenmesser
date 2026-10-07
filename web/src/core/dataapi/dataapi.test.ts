@@ -44,7 +44,9 @@ describe('scope', () => {
     expect(isDataApiModule(accounts)).toBe(false);
     expect(apiCollections(accounts)).toEqual([]);
     expect(importersOf(accounts)).toEqual([]);
-    expect(apiCollections(getManifest('news')!)).toEqual(['feed']);
+    // Retired modules are closed to the API, whatever their collections hold.
+    for (const m of allManifests.filter((x) => x.retired))
+      expect(apiCollections(m), m.id).toEqual([]);
     expect(apiCollections(getManifest('calendar')!)).toEqual(['event']);
   });
 
@@ -203,7 +205,7 @@ describe('duplicates, commit and undo', () => {
   });
 
   it('a repeated entry inside one sending is flagged', async () => {
-    const { rows } = await run('shopping', [{ name: 'Brot' }, { name: ' brot ' }]);
+    const { rows } = await run('bookmarks', [{ title: 'Brot' }, { title: ' brot ' }]);
     expect(rows.map((r) => r.duplicate)).toEqual([false, true]);
   });
 });

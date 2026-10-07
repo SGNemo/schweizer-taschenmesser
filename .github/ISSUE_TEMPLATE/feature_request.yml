@@ -1,24 +1,24 @@
-name: Idee oder Wunsch
-description: Ein Modul, Werkzeug oder eine Verbesserung vorschlagen
+name: Feature request
+description: Suggest a module, a tool or an improvement
 labels: [enhancement]
 body:
   - type: markdown
     attributes:
-      value: Schau kurz in [docs/ROADMAP.md](../blob/develop/docs/ROADMAP.md), vielleicht steht die Idee schon dort.
+      value: Have a quick look at [docs/ROADMAP.md](../blob/develop/docs/ROADMAP.md); the idea may already be there. German is fine too (Deutsch geht auch).
   - type: textarea
     id: problem
     attributes:
-      label: Welches Problem löst das?
+      label: Which problem does it solve?
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: Vorschlag
+      label: Proposal
     validations:
       required: true
   - type: dropdown
     id: area
     attributes:
-      label: Bereich
-      options: [Modul, Werkzeug, Kern (Sync, Backup, Suche), Design, Sicherheit, Plattform (Windows, Android, PWA), Sonstiges]
+      label: Area
+      options: [Module, Tool, Core (sync, backup, search), Design, Security, Platform (Windows, Android, PWA), Other]

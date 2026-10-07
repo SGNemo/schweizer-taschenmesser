@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { firstOnOrAfter, occurrencesBetween } from '@/core/recurrence/expand';
 import { addDaysStr } from '@/core/time/dates';
 import type { Subscription } from './schema';
@@ -85,7 +86,5 @@ export function cancelDeadlinesInRange(
 /** Active first (by next charge), inactive last. */
 export function sortSubscriptions<T extends Sub & { name: string }>(list: T[], today: string): T[] {
   const next = (s: T) => (s.active ? (nextCharge(s, today) ?? '9999-12-31') : '9999-99-99');
-  return [...list].sort(
-    (a, b) => next(a).localeCompare(next(b)) || a.name.localeCompare(b.name, 'de'),
-  );
+  return [...list].sort((a, b) => next(a).localeCompare(next(b)) || compareText(a.name, b.name));
 }

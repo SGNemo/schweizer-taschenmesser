@@ -1,21 +1,27 @@
 import { onboarding } from './onboarding';
-import type { ModuleManifest } from '@/core/modules/types';
+import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { accountSchema, categorySchema, transactionSchema } from './schema';
 import { settings } from './settings';
+import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'finance',
-  name: 'Finanzen',
+  get name() {
+    return t.finance.meta.name;
+  },
   icon: 'wallet',
   version: 1,
-  description:
-    'Konten, Einnahmen und Ausgaben mit Kategorien, Monatsübersicht mit Diagrammen und dem wirklich verfügbaren Geld (nach offenen Rechnungen und Abos).',
+  get description() {
+    return t.finance.meta.description;
+  },
   routes: [
     {
       path: '/finance',
-      label: 'Finanzen',
+      get label() {
+        return t.finance.meta.route;
+      },
       nav: true,
       component: () => import('./routes/FinancePage'),
     },
@@ -31,19 +37,32 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'balance',
-      title: 'Kontostand',
-      size: 's',
+      get title() {
+        return t.finance.meta.widget;
+      },
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/BalanceWidget'),
     },
   ],
   aiSchema,
   settings,
   defaultEnabled: true,
+  seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   order: 40,
+  area: 'money',
   contributions: {
     onboarding: onboarding,
-    quickAdd: [{ id: 'transaction', label: 'Buchung', to: '/finance?tab=transactions&new=1' }],
+    quickAdd: [
+      {
+        id: 'transaction',
+        get label() {
+          return t.finance.meta.quickAdd;
+        },
+        to: '/finance?tab=transactions&new=1',
+      },
+    ],
     services: () => import('./services'),
     aiCreateDefaults: () => import('./aiDefaults'),
     aiComputed: () => import('./aiComputed'),

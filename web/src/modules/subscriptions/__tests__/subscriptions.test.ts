@@ -1,7 +1,7 @@
+import { setSettings } from '@/core/settings/settings';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
-import { validateManifest } from '@/core/modules/registry';
 import { toEpoch } from '@/core/time/dates';
 import manifest from '../manifest';
 import { listSubscriptionCharges, subscriptionTotals } from '../public';
@@ -23,10 +23,6 @@ beforeEach(async () => {
 });
 
 describe('subscriptions module', () => {
-  it('has a valid manifest', () => {
-    expect(validateManifest(manifest)).toEqual([]);
-  });
-
   it('requires a recurrence and a positive amount', () => {
     expect(
       subscriptionSchema.safeParse({ name: 'x', amountMinor: 100, startDate: '2026-01-01' })
@@ -88,6 +84,14 @@ describe('subscriptions module', () => {
     expect(await collectNotifications({ from: at + 1000, to: at + 3_600_000 }, [manifest])).toEqual(
       [],
     );
+  });
+
+  it('uses the reminder time from the settings', async () => {
+    await setSettings('module.subscriptions', { remindTime: '18:30' });
+    await subscriptionRepo.create(sub({ cancelNoticeDays: 10 }));
+    const at = toEpoch('2026-10-02', '18:30');
+    const due = await collectNotifications({ from: at - 1000, to: at + 1000 }, [manifest]);
+    expect(due).toHaveLength(1);
   });
 
   it('no notifications for subscriptions without a notice period', async () => {

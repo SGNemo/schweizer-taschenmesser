@@ -3,6 +3,7 @@ import { useSyncStatus } from '@/core/sync/status';
 import { t } from '@/strings';
 import { Icon } from '@/ui';
 import styles from './AppShell.module.css';
+import { settingsPath } from '@/core/settings/registry/paths';
 
 /** Shows sync activity in the top bar; only visible when sync is configured. */
 export function SyncBadge() {
@@ -11,7 +12,7 @@ export function SyncBadge() {
   const label = t.sync.badge(t.sync.state[phase]);
   return (
     <Link
-      to="/settings"
+      to={settingsPath('sync', 'sync')}
       className={`${styles.syncBadge} ${phase === 'error' ? styles.syncError : ''}`}
       aria-label={label}
       title={`${label}${pending ? ` · ${t.sync.pending(pending)}` : ''}`}

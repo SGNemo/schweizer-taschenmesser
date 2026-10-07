@@ -6,6 +6,9 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
+import { t } from '@/strings';
+import { humanDateHint } from '@/core/time/dates';
+import { Icon } from './icons';
 import styles from './Fields.module.css';
 
 interface BaseProps {
@@ -16,32 +19,21 @@ interface BaseProps {
   labelHidden?: boolean;
 }
 
-export function TextField({
+/** Label above, control, then hint and error sentence; wires `aria-describedby` for the control. */
+function Field({
+  id,
   label,
+  labelHidden,
   hint,
   error,
-  labelHidden,
-  className,
-  ref,
-  ...rest
-}: BaseProps & InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
-  const id = useId();
-  const describedBy = [hint ? `${id}-hint` : '', error ? `${id}-err` : '']
-    .filter(Boolean)
-    .join(' ');
+  children,
+}: BaseProps & { id: string; children: ReactNode }) {
   return (
     <div className={styles.field}>
       <label htmlFor={id} className={labelHidden ? 'sr-only' : styles.label}>
         {label}
       </label>
-      <input
-        id={id}
-        ref={ref}
-        className={[styles.control, className].filter(Boolean).join(' ')}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy || undefined}
-        {...rest}
-      />
+      {children}
       {hint ? (
         <span id={`${id}-hint`} className={styles.hint}>
           {hint}
@@ -56,51 +48,120 @@ export function TextField({
   );
 }
 
-export function TextArea({
+const describedBy = (id: string, hint?: string, error?: string) =>
+  [hint ? `${id}-hint` : '', error ? `${id}-err` : ''].filter(Boolean).join(' ') || undefined;
+
+export function TextField({
   label,
   hint,
+  error,
+  labelHidden,
+  className,
+  ref,
   ...rest
-}: Omit<BaseProps, 'error'> & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: BaseProps & InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
   const id = useId();
   return (
-    <div className={styles.field}>
-      <label htmlFor={id} className={styles.label}>
-        {label}
-      </label>
-      <textarea id={id} className={`${styles.control} ${styles.area}`} rows={3} {...rest} />
-      {hint ? <span className={styles.hint}>{hint}</span> : null}
-    </div>
+    <Field id={id} label={label} labelHidden={labelHidden} hint={hint} error={error}>
+      <input
+        id={id}
+        ref={ref}
+        className={[styles.control, className].filter(Boolean).join(' ')}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        {...rest}
+        placeholder={
+          rest.placeholder ?? (rest.type === 'search' ? t.ui.searchPlaceholder : undefined)
+        }
+      />
+    </Field>
   );
 }
 
+/** A date input that says what the date means ("Montag, in 6 Tagen") unless a `hint` is given. */
+export function DateField({
+  hint,
+  value,
+  ...rest
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> &
+  BaseProps & { ref?: Ref<HTMLInputElement> }) {
+  const text = typeof value === 'string' ? value : '';
+  return (
+    <TextField
+      {...rest}
+      type="date"
+      value={value}
+      hint={hint ?? (/^\d{4}-\d{2}-\d{2}$/.test(text) ? humanDateHint(text) : undefined)}
+    />
+  );
+}
+
+export function TextArea({
+  label,
+  hint,
+  error,
+  className,
+  ...rest
+}: BaseProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const id = useId();
+  return (
+    <Field id={id} label={label} hint={hint} error={error}>
+      <textarea
+        id={id}
+        className={[styles.control, styles.area, className].filter(Boolean).join(' ')}
+        rows={3}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        {...rest}
+      />
+    </Field>
+  );
+}
+
+/** Native select (best keyboard and mobile behaviour) with the shared look and a chevron. */
 export function SelectField({
   label,
   hint,
+  error,
+  labelHidden,
   children,
+  className,
   ...rest
-}: Omit<BaseProps, 'error'> & SelectHTMLAttributes<HTMLSelectElement> & { children: ReactNode }) {
+}: BaseProps & SelectHTMLAttributes<HTMLSelectElement> & { children: ReactNode }) {
   const id = useId();
   return (
-    <div className={styles.field}>
-      <label htmlFor={id} className={styles.label}>
-        {label}
-      </label>
-      <select id={id} className={styles.control} {...rest}>
-        {children}
-      </select>
-      {hint ? <span className={styles.hint}>{hint}</span> : null}
-    </div>
+    <Field id={id} label={label} labelHidden={labelHidden} hint={hint} error={error}>
+      <span className={styles.selectWrap}>
+        <select
+          id={id}
+          className={[styles.control, styles.select, className].filter(Boolean).join(' ')}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy(id, hint, error)}
+          {...rest}
+        >
+          {children}
+        </select>
+        <span className={styles.chevron} aria-hidden="true">
+          <Icon name="chevronDown" size={18} />
+        </span>
+      </span>
+    </Field>
   );
 }
 
 export function Checkbox({
   label,
+  labelHidden,
   ...rest
-}: { label: ReactNode } & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+}: {
+  label: ReactNode;
+  /** Label for screen readers only (a checkbox inside a row). */
+  labelHidden?: boolean;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
   return (
     <label className={styles.check}>
       <input type="checkbox" {...rest} />
-      <span>{label}</span>
+      <span className={labelHidden ? 'sr-only' : undefined}>{label}</span>
     </label>
   );
 }
@@ -111,22 +172,31 @@ export function Switch({
   onChange,
   disabled,
   hint,
+  labelHidden,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
   hint?: string;
+  /** Label for screen readers only (the surrounding `SettingRow` shows the text). */
+  labelHidden?: boolean;
 }) {
   const id = useId();
   return (
     <div className={styles.switch}>
-      <span>
-        <span id={id} className={styles.label}>
+      {labelHidden ? (
+        <span id={id} className="sr-only">
           {label}
         </span>
-        {hint ? <span className={styles.hint}> · {hint}</span> : null}
-      </span>
+      ) : (
+        <span>
+          <span id={id} className={styles.label}>
+            {label}
+          </span>
+          {hint ? <span className={styles.hint}> · {hint}</span> : null}
+        </span>
+      )}
       <button
         type="button"
         role="switch"
