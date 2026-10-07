@@ -22,7 +22,7 @@ const hasSha = buttons.some((b) => r.assets[b.key].sha256);
   <svg class="reef r1" aria-hidden="true"><use href="#nemo-mark" /></svg>
   <svg class="reef r2" aria-hidden="true"><use href="#nemo-mark" /></svg>
   <svg class="reef r3" aria-hidden="true"><use href="#nemo-mark" /></svg>
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <svg class="defs" width="0" height="0" aria-hidden="true">
     <symbol id="nemo-mark" viewBox="51 93 393 344">
       <mask id="nemo-mark-cut" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#fff" /><g fill="none" stroke="#000"><path d="M262.4 66Q323.3 208.9 436.7 315" stroke-width="40" /><path d="M173.3 128.4Q244.1 264.3 347.7 377.4" stroke-width="40" /></g><circle cx="370" cy="146.1" r="23" fill="#000" /></mask>
       <g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round" mask="url(#nemo-mark-cut)"><path d="M142.7 274.3C165.3 224.4 177.9 173.9 235.8 133.4C307.1 83.5 380.3 87 418.8 142C457.4 197 435.6 267 364.3 316.9C306.4 357.4 254.7 352 200.1 356.2Z" /><path d="M162.4 260.5C122.6 288.4 66.1 286.4 56.1 293.4C67.8 341.6 111.2 403.5 152.4 431.1C162.5 424 180 370.3 219.8 342.4Z" /></g>
@@ -86,6 +86,9 @@ const hasSha = buttons.some((b) => r.assets[b.key].sha256);
     overflow: hidden;
     background: var(--hero-wash);
     padding-block: clamp(3rem, 7vw, 6rem) clamp(3rem, 6vw, 5rem);
+  }
+  .defs {
+    position: absolute;
   }
   .reef {
     position: absolute;

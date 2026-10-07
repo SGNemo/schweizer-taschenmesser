@@ -5,8 +5,6 @@ import Shot from './Shot.astro';
 
 interface Props { locale: Locale }
 const s = t(Astro.props.locale);
-/** Focal point of each 1280×720 shot inside the 16:9 tile (object-position + zoom origin). */
-const focus: Record<string, string> = { home: '50% 55%', calendar: '58% 62%', todos: '62% 72%', finance: '45% 66%', vault: '56% 70%', reminders: '56% 82%' };
 ---
 <section class="block" id="features" aria-labelledby="features-title">
   <div class="wrap">
@@ -15,7 +13,7 @@ const focus: Record<string, string> = { home: '50% 55%', calendar: '58% 62%', to
     <ul class="tiles">
       {s.features.items.map((f) => (
         <li class="tile">
-          <div class="mini" style={`--pos: ${focus[f.shot] ?? '50% 50%'}`}>
+          <div class="mini" data-shot={f.shot}>
             <Shot name={f.shot} alt={f.alt} sizes="(min-width: 64rem) 22rem, (min-width: 30rem) 50vw, 100vw" widths={[480, 720, 960]} />
           </div>
           <h3><Icon name={f.icon} size={18} />{f.title}</h3>
@@ -47,12 +45,21 @@ const focus: Record<string, string> = { home: '50% 55%', calendar: '58% 62%', to
   .tile:hover {
     border-color: var(--border-strong);
   }
+  /* Focal point of each 1280×720 shot inside the 16:9 tile (object-position + zoom origin).
+     Attributes instead of inline styles: the CSP allows no style="" (site.yml checks it). */
   .mini {
+    --pos: 50% 50%;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     border-bottom: 1px solid var(--border);
     background: var(--surface-2);
   }
+  .mini[data-shot='home'] { --pos: 50% 55%; }
+  .mini[data-shot='calendar'] { --pos: 58% 62%; }
+  .mini[data-shot='todos'] { --pos: 62% 72%; }
+  .mini[data-shot='finance'] { --pos: 45% 66%; }
+  .mini[data-shot='vault'] { --pos: 56% 70%; }
+  .mini[data-shot='reminders'] { --pos: 56% 82%; }
   .mini :global(img) {
     width: 100%;
     height: 100%;

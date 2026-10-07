@@ -5,13 +5,13 @@ import Icon from './Icon.astro';
 
 interface Props { locale: Locale }
 const s = t(Astro.props.locale);
-/** The five supporter palettes of the app (web/src/ui/supporterThemes.css): name, dark accent, light accent. */
+/** The five supporter palettes of the app (web/src/ui/supporterThemes.css); colours in the CSS below. */
 const themes = [
-  ['Korallenriff', '#ff8f80', '#b3374a'],
-  ['Tiefsee', '#5cc4f0', '#0a6b9a'],
-  ['Sand', '#e8b95e', '#8a5a12'],
-  ['Nordlicht', '#6be3b0', '#2f6f4f'],
-  ['Monochrom', '#e8e8e8', '#262626'],
+  ['korallenriff', 'Korallenriff'],
+  ['tiefsee', 'Tiefsee'],
+  ['sand', 'Sand'],
+  ['nordlicht', 'Nordlicht'],
+  ['monochrom', 'Monochrom'],
 ] as const;
 ---
 <section class="block" id="support" aria-labelledby="support-title">
@@ -23,8 +23,8 @@ const themes = [
         <p class="text">{s.support.text}</p>
         <p class="meta">{s.support.note}</p>
         <ul class="themes" aria-label={s.support.themes}>
-          {themes.map(([name, dark, light]) => (
-            <li style={`--d: ${dark}; --l: ${light}`}><span class="sw" aria-hidden="true"><i></i><i></i><i></i></span>{name}</li>
+          {themes.map(([id, name]) => (
+            <li data-palette={id}><span class="sw" aria-hidden="true"><i></i><i></i><i></i></span>{name}</li>
           ))}
         </ul>
       </div>
@@ -81,7 +81,12 @@ const themes = [
     border-radius: 3px;
     background: var(--border);
   }
-  /* The first swatch carries the palette's accent (light / dark variant). */
+  /* The first swatch carries the palette's accent (light / dark variant), values from supporterThemes.css. */
+  [data-palette='korallenriff'] { --l: #b3374a; --d: #ff8f80; }
+  [data-palette='tiefsee'] { --l: #0a6b9a; --d: #5cc4f0; }
+  [data-palette='sand'] { --l: #8a5a12; --d: #e8b95e; }
+  [data-palette='nordlicht'] { --l: #2f6f4f; --d: #6be3b0; }
+  [data-palette='monochrom'] { --l: #262626; --d: #e8e8e8; }
   .sw i:first-child {
     background: var(--l);
   }
