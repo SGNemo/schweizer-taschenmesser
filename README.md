@@ -63,8 +63,8 @@ Genauer, inklusive Umstieg von einer alten Version und PWA-Installation: [Instal
 
 - **Lokal gespeichert.** Daten liegen in der Datenbank deines Geräts, kein Konto, kein Nemo-Cloud-Dienst.
 - **Sync optional.** Nur über einen Server, den du selbst betreibst (Docker oder Node), auf Wunsch Ende-zu-Ende verschlüsselt.
-- **Nie Nutzerdaten an KI.** Der Assistent schickt nur deine Frage, das Datum und Feldnamen, niemals Einträge. Der Tresor ist für KI komplett unsichtbar.
-- **Signierte Updates.** Jede Aktualisierung wird vor dem Einspielen mit dem Schlüssel des Projekts geprüft. Details: [Sicherheit](docs/user/sicherheit.md).
+- **Nie Nutzerdaten an KI.** Der Assistent schickt nur deine Frage, das Datum und Feldnamen, niemals Einträge. Ausnahmen gibt es nur, wenn du sie selbst auslöst: im Chat Daten eines Moduls anhängen (mit Vorschau) oder einer KI über die lokale Schnittstelle Leserechte geben. Der Tresor ist für KI komplett unsichtbar.
+- **Signierte Updates.** Jede Aktualisierung wird vor dem Einspielen mit dem Schlüssel des Projekts geprüft. Die App fragt dafür einmal täglich bei GitHub nach (abschaltbar unter Einstellungen → App-Updates). Details: [Sicherheit](docs/user/sicherheit.md).
 
 <details>
 <summary><strong>Windows: Portable, SmartScreen, Daten, Updates</strong></summary>
