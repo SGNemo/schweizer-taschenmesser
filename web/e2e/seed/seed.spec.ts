@@ -106,7 +106,11 @@ test.describe('Dev-Preview test data', () => {
     const reset = section.getByRole('button', { name: 'Alles zurücksetzen' });
     await expect(reset).toBeDisabled();
     await section.getByLabel('Bestätigung').fill('ZURÜCKSETZEN');
+    // The reset deletes the database and then reloads the page; navigating before that reload
+    // lands would be interrupted by it, so wait for the reload first.
+    const reloaded = page.waitForEvent('load');
     await reset.click();
+    await reloaded;
     await expect(page.locator('main h1')).toBeVisible();
     await page.goto('/settings/entwickler');
     await expect(page.locator('section[aria-labelledby="developer"]')).toBeVisible();
