@@ -236,7 +236,8 @@ export const tDiag = defineBundle(
         leaveForced: 'Cierra Nemo y vuelve a iniciarlo sin --safe-mode.',
       },
       widget: {
-        message: 'No se pudo mostrar este widget. El resto de la pantalla de inicio sigue funcionando.',
+        message:
+          'No se pudo mostrar este widget. El resto de la pantalla de inicio sigue funcionando.',
         retry: 'Reintentar',
       },
       card: {
@@ -319,7 +320,8 @@ export const tDiag = defineBundle(
         leaveForced: 'Quittez Nemo et relancez-le sans --safe-mode.',
       },
       widget: {
-        message: 'Ce widget n’a pas pu s’afficher. Le reste de l’écran d’accueil continue de fonctionner.',
+        message:
+          'Ce widget n’a pas pu s’afficher. Le reste de l’écran d’accueil continue de fonctionner.',
         retry: 'Réessayer',
       },
       card: {
@@ -403,7 +405,8 @@ export const tDiag = defineBundle(
         leaveForced: 'Feche o Nemo e inicie-o de novo sem --safe-mode.',
       },
       widget: {
-        message: 'Não foi possível exibir este widget. O resto da tela inicial continua funcionando.',
+        message:
+          'Não foi possível exibir este widget. O resto da tela inicial continua funcionando.',
         retry: 'Tentar de novo',
       },
       card: {
