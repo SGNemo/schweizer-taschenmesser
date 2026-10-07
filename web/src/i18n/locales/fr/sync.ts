@@ -1,128 +1,135 @@
 import type { Strings } from '@/strings';
 
 export const sync: Strings['sync'] = {
-  defaultDeviceName: 'Gerät',
+  defaultDeviceName: 'Appareil',
   title: 'Synchronisation',
   intro:
-    'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im LAN oder über Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
-  serverUrl: 'Server-Adresse',
-  serverUrlHint: 'z. B. https://mein-pc.tailnet.ts.net',
-  token: 'Zugangstoken',
-  deviceName: 'Gerätename',
-  deviceNameHint: 'So erscheint dieses Gerät in der Geräteliste.',
-  deviceNames: { desktop: 'Windows-App', android: 'Android-Handy', web: 'Browser' } as Record<
-    string,
-    string
-  >,
-  encrypt: 'Ende-zu-Ende-Verschlüsselung',
-  encryptHint:
-    'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur Chiffretext. Nur auf einem leeren Server möglich.',
-  plainWarning:
-    'Ohne Ende-zu-Ende-Verschlüsselung liegen deine Daten auf dem Server im Klartext. Nutze sie, wenn der Server nicht nur dir gehört oder nicht verschlüsselt gespeichert wird.',
-  passphrase: 'Passphrase',
-  passphraseHint:
-    'Mindestens 8 Zeichen. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
-  passphraseJoinHint: 'Nur nötig, wenn der Server verschlüsselt ist.',
-  connect: 'Verbinden',
-  connecting: 'Verbinde …',
-  connected: (host: string) => `Verbunden mit ${host}`,
-  encryptedBadge: 'Verschlüsselt',
-  plainBadge: 'Unverschlüsselt',
-  lastSync: 'Zuletzt synchronisiert',
-  never: 'noch nicht',
-  pending: (n: number) =>
-    n === 0 ? 'Alles gesendet' : n === 1 ? '1 Änderung wartet' : `${n} Änderungen warten`,
-  syncNow: 'Jetzt synchronisieren',
-  disconnect: 'Trennen',
-  signOut: 'Dieses Gerät abmelden',
-  signOutHint:
-    'Sperrt das Token dieses Geräts auf dem Server und trennt es. Deine lokalen Daten bleiben erhalten.',
-  disconnectHint: 'Deine lokalen Daten bleiben erhalten; der Server wird nicht verändert.',
-  state: { off: 'Aus', idle: 'Synchronisiert', syncing: 'Synchronisiere …', error: 'Fehler' },
-  badge: (state: string) => `Synchronisation: ${state}`,
-  detailsTitle: 'Status',
-  lastResult: (pulled: number, pushed: number) =>
-    `Zuletzt: ${pulled} empfangen, ${pushed} gesendet`,
-  rejected: (n: number) =>
-    `${n} empfangene Änderungen konnten nicht entschlüsselt werden und wurden übersprungen.`,
-  failuresInRow: (n: number) => (n === 1 ? '1 Fehlversuch' : `${n} Fehlversuche in Folge`),
-  serverSize: 'Daten auf dem Server',
-  serverSizeValue: (records: number, kb: number) =>
-    `${records} Einträge, ${kb < 1024 ? `${kb} KB` : `${(kb / 1024).toFixed(1)} MB`}`,
-  devicesTitle: 'Geräte',
-  devicesIntro:
-    'Alle Geräte, die mit diesem Server synchronisieren. Ein gesperrtes Gerät kann nicht mehr synchronisieren; seine bereits gesendeten Daten bleiben erhalten.',
-  devicesUnsupported:
-    'Dieser Server kennt keine Geräteverwaltung (ältere Version). Aktualisiere den Server, um Geräte zu sperren.',
-  deviceThis: 'dieses Gerät',
-  deviceLastSeen: (when: string) => `Zuletzt aktiv: ${when}`,
-  deviceNever: 'noch nie',
-  deviceRevoked: (when: string) => `Gesperrt am ${when}`,
-  deviceStale: (days: number) =>
-    `Seit ${days} Tagen nicht aktiv. Sperre es, wenn du es nicht mehr nutzt: Sehr alte Geräte können gelöschte Einträge zurückbringen.`,
-  deviceLock: 'Sperren',
-  deviceLockTitle: (name: string) => `„${name}“ sperren?`,
-  deviceLockText:
-    'Das Gerät kann danach nicht mehr synchronisieren. Bereits gesendete Daten bleiben auf dem Server. Zum erneuten Verbinden braucht das Gerät das Server-Token.',
-  deviceLocked: 'Gerät gesperrt.',
-  deviceLockFailed: 'Das Gerät konnte nicht gesperrt werden.',
-  deviceId: (id: string) => `Geräte-ID: ${id}`,
-  rotateToken: 'Token dieses Geräts erneuern',
-  rotated: 'Token erneuert.',
-  conflictsTitle: 'Konflikte',
-  conflictsIntro:
-    'Wenn zwei Geräte dasselbe Feld gleichzeitig geändert haben, gewinnt die neuere Änderung. Der überschriebene Wert steht hier und lässt sich wiederherstellen.',
-  conflictsNone: 'Keine offenen Konflikte.',
-  conflictKept: {
-    remote: 'Die Änderung eines anderen Geräts hat deine überschrieben.',
-    local: 'Deine Änderung hat die eines anderen Geräts überschrieben.',
+    'Facultatif : synchronisez vos données via votre propre serveur de synchronisation (en réseau local ou via Tailscale). Sans serveur, tout reste sur cet appareil.',
+  serverUrl: 'Adresse du serveur',
+  serverUrlHint: 'p. ex. https://mon-pc.tailnet.ts.net',
+  token: 'Token d’accès',
+  deviceName: 'Nom de l’appareil',
+  deviceNameHint: 'C’est ainsi que cet appareil apparaît dans la liste des appareils.',
+  deviceNames: {
+    desktop: 'App Windows',
+    android: 'Téléphone Android',
+    web: 'Navigateur',
   } as Record<string, string>,
-  conflictLost: 'Überschrieben',
-  conflictNow: 'Jetzt gilt',
-  conflictEmpty: '(leer)',
-  conflictDeleted: '(gelöscht)',
-  conflictTooLarge: 'Wert zu groß zum Aufbewahren',
-  conflictRestore: 'Wiederherstellen',
-  conflictDismiss: 'Verwerfen',
-  conflictDismissAll: 'Alle verwerfen',
-  conflictRestored: 'Wert wiederhergestellt.',
+  encrypt: 'Chiffrement de bout en bout',
+  encryptHint:
+    'Les valeurs sont chiffrées sur l’appareil, le serveur ne voit que du texte chiffré. Possible uniquement sur un serveur vide.',
+  plainWarning:
+    'Sans chiffrement de bout en bout, vos données sont stockées en clair sur le serveur. Activez-le si le serveur n’est pas qu’à vous ou si son stockage n’est pas chiffré.',
+  passphrase: 'Phrase secrète',
+  passphraseHint:
+    'Au moins 8 caractères. Sans la phrase secrète, les données ne peuvent pas être récupérées.',
+  passphraseJoinHint: 'Nécessaire uniquement si le serveur est chiffré.',
+  connect: 'Connecter',
+  connecting: 'Connexion…',
+  connected: (host: string) => `Connecté à ${host}`,
+  encryptedBadge: 'Chiffré',
+  plainBadge: 'Non chiffré',
+  lastSync: 'Dernière synchronisation',
+  never: 'pas encore',
+  pending: (n: number) =>
+    n === 0
+      ? 'Tout est envoyé'
+      : n === 1
+        ? '1 modification en attente'
+        : `${n} modifications en attente`,
+  syncNow: 'Synchroniser maintenant',
+  disconnect: 'Déconnecter',
+  signOut: 'Déconnecter cet appareil',
+  signOutHint:
+    'Bloque le token de cet appareil sur le serveur et le déconnecte. Vos données locales sont conservées.',
+  disconnectHint: 'Vos données locales sont conservées ; le serveur n’est pas modifié.',
+  state: { off: 'Désactivée', idle: 'Synchronisé', syncing: 'Synchronisation…', error: 'Erreur' },
+  badge: (state: string) => `Synchronisation : ${state}`,
+  detailsTitle: 'État',
+  lastResult: (pulled: number, pushed: number) =>
+    `Dernière fois : ${pulled} reçu(s), ${pushed} envoyé(s)`,
+  rejected: (n: number) =>
+    n <= 1
+      ? `${n} modification reçue n’a pas pu être déchiffrée et a été ignorée.`
+      : `${n} modifications reçues n’ont pas pu être déchiffrées et ont été ignorées.`,
+  failuresInRow: (n: number) => (n <= 1 ? `${n} échec` : `${n} échecs d’affilée`),
+  serverSize: 'Données sur le serveur',
+  serverSizeValue: (records: number, kb: number) =>
+    `${records} ${records <= 1 ? 'entrée' : 'entrées'}, ${kb < 1024 ? `${kb} Ko` : `${(kb / 1024).toFixed(1)} Mo`}`,
+  devicesTitle: 'Appareils',
+  devicesIntro:
+    'Tous les appareils qui se synchronisent avec ce serveur. Un appareil bloqué ne peut plus se synchroniser ; les données qu’il a déjà envoyées sont conservées.',
+  devicesUnsupported:
+    'Ce serveur ne gère pas les appareils (ancienne version). Mettez le serveur à jour pour pouvoir bloquer des appareils.',
+  deviceThis: 'cet appareil',
+  deviceLastSeen: (when: string) => `Dernière activité : ${when}`,
+  deviceNever: 'jamais',
+  deviceRevoked: (when: string) => `Bloqué le ${when}`,
+  deviceStale: (days: number) =>
+    `Inactif depuis ${days} jours. Bloquez-le si vous ne l’utilisez plus : les très anciens appareils peuvent faire revenir des entrées supprimées.`,
+  deviceLock: 'Bloquer',
+  deviceLockTitle: (name: string) => `Bloquer « ${name} » ?`,
+  deviceLockText:
+    'L’appareil ne pourra plus se synchroniser. Les données déjà envoyées restent sur le serveur. Pour se reconnecter, l’appareil aura besoin du token du serveur.',
+  deviceLocked: 'Appareil bloqué.',
+  deviceLockFailed: 'L’appareil n’a pas pu être bloqué.',
+  deviceId: (id: string) => `ID de l’appareil : ${id}`,
+  rotateToken: 'Renouveler le token de cet appareil',
+  rotated: 'Token renouvelé.',
+  conflictsTitle: 'Conflits',
+  conflictsIntro:
+    'Si deux appareils ont modifié le même champ en même temps, la modification la plus récente l’emporte. La valeur écrasée apparaît ici et peut être restaurée.',
+  conflictsNone: 'Aucun conflit en attente.',
+  conflictKept: {
+    remote: 'La modification d’un autre appareil a écrasé la vôtre.',
+    local: 'Votre modification a écrasé celle d’un autre appareil.',
+  } as Record<string, string>,
+  conflictLost: 'Écrasé',
+  conflictNow: 'Valeur actuelle',
+  conflictEmpty: '(vide)',
+  conflictDeleted: '(supprimé)',
+  conflictTooLarge: 'Valeur trop grande pour être conservée',
+  conflictRestore: 'Restaurer',
+  conflictDismiss: 'Ignorer',
+  conflictDismissAll: 'Tout ignorer',
+  conflictRestored: 'Valeur restaurée.',
   conflictOutcome: {
-    'already-current': 'Der Wert gilt bereits.',
-    'record-gone': 'Der Eintrag existiert nicht mehr.',
-    'not-restorable': 'Dieser Wert lässt sich nicht wiederherstellen.',
+    'already-current': 'Cette valeur est déjà en vigueur.',
+    'record-gone': 'L’entrée n’existe plus.',
+    'not-restorable': 'Cette valeur ne peut pas être restaurée.',
   } as Record<string, string>,
   errors: {
-    network: 'Server nicht erreichbar.',
+    network: 'Serveur injoignable.',
     revoked:
-      'Dieses Gerät wurde gesperrt. Trenne es und verbinde es neu, wenn du es wieder zulassen willst.',
-    'rate-limited': 'Zu viele Anfragen oder Fehlversuche – es wird automatisch erneut versucht.',
-    unauthorized: 'Der Server hat das Token abgelehnt.',
-    server: 'Der Server hat einen Fehler gemeldet.',
-    decrypt: 'Entschlüsselung fehlgeschlagen – stimmt die Passphrase?',
+      'Cet appareil a été bloqué. Déconnectez-le puis reconnectez-le si vous souhaitez l’autoriser à nouveau.',
+    'rate-limited': 'Trop de requêtes ou d’échecs – nouvel essai automatique.',
+    unauthorized: 'Le serveur a refusé le token.',
+    server: 'Le serveur a signalé une erreur.',
+    decrypt: 'Échec du déchiffrement – la phrase secrète est-elle correcte ?',
     'no-key':
-      'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit Passphrase verbinden.',
-    unsupported: 'Nicht unterstützt.',
-    unknown: 'Unbekannter Fehler.',
+      'Les données du serveur sont chiffrées. Veuillez vous déconnecter et vous reconnecter avec la phrase secrète.',
+    unsupported: 'Non pris en charge.',
+    unknown: 'Erreur inconnue.',
   } as Record<string, string>,
   failures: {
-    'invalid-url': 'Bitte eine gültige Adresse mit http:// oder https:// eingeben.',
+    'invalid-url': 'Veuillez saisir une adresse valide avec http:// ou https://.',
     unreachable:
-      'Server nicht erreichbar. Wird die App per HTTPS geöffnet, muss auch der Server per HTTPS erreichbar sein (z. B. mit „tailscale serve“).',
-    unauthorized: 'Das Token wurde abgelehnt.',
-    'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte die Passphrase eingeben.',
-    'passphrase-too-short': 'Die Passphrase braucht mindestens 8 Zeichen.',
-    'wrong-passphrase': 'Falsche Passphrase.',
+      'Serveur injoignable. Si l’app est ouverte en HTTPS, le serveur doit aussi être joignable en HTTPS (p. ex. avec « tailscale serve »).',
+    unauthorized: 'Le token a été refusé.',
+    'passphrase-required': 'Ce serveur est chiffré. Veuillez saisir la phrase secrète.',
+    'passphrase-too-short': 'La phrase secrète doit contenir au moins 8 caractères.',
+    'wrong-passphrase': 'Phrase secrète incorrecte.',
     'server-has-plain-data':
-      'Auf dem Server liegen bereits unverschlüsselte Daten. Verschlüsselung ist nur auf einem leeren Server möglich.',
-    revoked: 'Dieses Gerät ist auf dem Server gesperrt.',
-    'rate-limited': 'Zu viele Fehlversuche. Bitte in einer Minute erneut versuchen.',
+      'Le serveur contient déjà des données non chiffrées. Le chiffrement n’est possible que sur un serveur vide.',
+    revoked: 'Cet appareil est bloqué sur le serveur.',
+    'rate-limited': 'Trop d’échecs. Veuillez réessayer dans une minute.',
     'vault-outdated':
-      'Der Server nutzt noch das alte Verschlüsselungsformat. Setze den Server zurück, um es neu aufzubauen.',
-    'server-error': 'Der Server hat einen Fehler gemeldet.',
+      'Le serveur utilise encore l’ancien format de chiffrement. Réinitialisez le serveur pour le reconstruire.',
+    'server-error': 'Le serveur a signalé une erreur.',
   } as Record<string, string>,
-  resetServer: 'Server zurücksetzen und verschlüsselt neu aufbauen',
-  resetTitle: 'Server zurücksetzen?',
+  resetServer: 'Réinitialiser le serveur et le reconstruire chiffré',
+  resetTitle: 'Réinitialiser le serveur ?',
   resetText:
-    'Alle Daten auf dem Server werden gelöscht. Deine lokalen Daten bleiben erhalten und werden erneut hochgeladen; andere Geräte laden ihre Daten beim nächsten Sync ebenfalls wieder hoch.',
-  resetConfirm: 'Zurücksetzen',
+    'Toutes les données du serveur seront supprimées. Vos données locales sont conservées et renvoyées ; les autres appareils renverront aussi leurs données à la prochaine synchronisation.',
+  resetConfirm: 'Réinitialiser',
 };

@@ -1,13 +1,13 @@
 import type { Strings } from '@/strings';
 
 export const meanings: Strings['meanings'] = {
-  overdue: 'Überfällig',
-  today: 'Heute',
-  soon: 'Bald',
-  done: 'Erledigt',
-  inactive: 'Pausiert',
-  income: 'Einnahme',
-  expense: 'Ausgabe',
-  connected: 'Verbunden',
-  locked: 'Gesperrt',
+  overdue: 'Atrasado',
+  today: 'Hoje',
+  soon: 'Em breve',
+  done: 'Concluído',
+  inactive: 'Pausado',
+  income: 'Receita',
+  expense: 'Despesa',
+  connected: 'Conectado',
+  locked: 'Bloqueado',
 };

@@ -1,13 +1,13 @@
 import type { Strings } from '@/strings';
 
 export const example: Strings['example'] = {
-  name: 'Beispiel',
+  name: 'Exemple',
   description:
-    'Referenzmodul aus dem Generator: einfache Einträge mit Erledigt-Status. Dient als Vorlage und Testträger.',
-  quickAdd: 'Beispiel: neuer Eintrag',
-  showDone: 'Erledigte anzeigen',
-  addPlaceholder: 'Neuer Eintrag …',
-  empty: 'Noch keine Einträge.',
-  add: 'Eintrag anlegen',
-  open: 'Beispiel öffnen',
+    'Module de référence issu du générateur : entrées simples avec statut terminé. Sert de modèle et de support de test.',
+  quickAdd: 'Exemple : nouvelle entrée',
+  showDone: 'Afficher les terminées',
+  addPlaceholder: 'Nouvelle entrée…',
+  empty: 'Aucune entrée pour l’instant.',
+  add: 'Ajouter une entrée',
+  open: 'Ouvrir l’exemple',
 };

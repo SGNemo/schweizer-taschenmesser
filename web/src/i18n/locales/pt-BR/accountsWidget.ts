@@ -1,12 +1,12 @@
 import type { Strings } from '@/strings';
 
 export const accountsWidget: Strings['accountsWidget'] = {
-  title: 'Passwort-Tresor',
-  locked: 'Gesperrt',
-  unlocked: 'Entsperrt',
-  notSetUp: 'Noch nicht eingerichtet',
-  unlock: 'Entsperren',
-  open: 'Tresor öffnen',
-  setUp: 'Tresor einrichten',
-  hint: 'Aus Sicherheitsgründen zeigt die Übersicht keine Einträge.',
+  title: 'Cofre de senhas',
+  locked: 'Bloqueado',
+  unlocked: 'Desbloqueado',
+  notSetUp: 'Ainda não configurado',
+  unlock: 'Desbloquear',
+  open: 'Abrir cofre',
+  setUp: 'Configurar cofre',
+  hint: 'Por segurança, a visão geral não mostra entradas.',
 };

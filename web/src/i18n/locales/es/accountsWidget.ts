@@ -1,12 +1,12 @@
 import type { Strings } from '@/strings';
 
 export const accountsWidget: Strings['accountsWidget'] = {
-  title: 'Passwort-Tresor',
-  locked: 'Gesperrt',
-  unlocked: 'Entsperrt',
-  notSetUp: 'Noch nicht eingerichtet',
-  unlock: 'Entsperren',
-  open: 'Tresor öffnen',
-  setUp: 'Tresor einrichten',
-  hint: 'Aus Sicherheitsgründen zeigt die Übersicht keine Einträge.',
+  title: 'Bóveda de contraseñas',
+  locked: 'Bloqueada',
+  unlocked: 'Desbloqueada',
+  notSetUp: 'Aún sin configurar',
+  unlock: 'Desbloquear',
+  open: 'Abrir bóveda',
+  setUp: 'Configurar bóveda',
+  hint: 'Por seguridad, el resumen no muestra entradas.',
 };

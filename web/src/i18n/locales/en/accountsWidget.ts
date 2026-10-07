@@ -1,12 +1,12 @@
 import type { Strings } from '@/strings';
 
 export const accountsWidget: Strings['accountsWidget'] = {
-  title: 'Passwort-Tresor',
-  locked: 'Gesperrt',
-  unlocked: 'Entsperrt',
-  notSetUp: 'Noch nicht eingerichtet',
-  unlock: 'Entsperren',
-  open: 'Tresor öffnen',
-  setUp: 'Tresor einrichten',
-  hint: 'Aus Sicherheitsgründen zeigt die Übersicht keine Einträge.',
+  title: 'Password vault',
+  locked: 'Locked',
+  unlocked: 'Unlocked',
+  notSetUp: 'Not set up yet',
+  unlock: 'Unlock',
+  open: 'Open vault',
+  setUp: 'Set up vault',
+  hint: 'For security reasons the Overview shows no entries.',
 };

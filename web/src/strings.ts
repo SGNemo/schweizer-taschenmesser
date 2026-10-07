@@ -519,9 +519,8 @@ export const de = {
         monday: 'Montag',
         sunday: 'Sonntag',
         fixedTitle: 'Feste Vorgaben',
-        language: 'Sprache: Deutsch',
         timezone: (zone: string) => `Zeitzone: ${zone} (Uhrzeiten bleiben lokale Wanduhrzeit)`,
-        currency: 'Währung: Euro (EUR), Beträge im deutschen Format',
+        currency: 'Währung: Euro (EUR)',
       },
       sync: {
         title: 'Sync und Wiederherstellung',
@@ -1873,7 +1872,7 @@ export const de = {
   },
   money: {
     amount: 'Betrag',
-    invalidAmount: 'Bitte einen gültigen Betrag eingeben, z. B. 12,50',
+    invalidAmount: (sample: string) => `Bitte einen gültigen Betrag eingeben, z. B. ${sample}`,
   },
   invoices: {
     importDetail: (amount: string, due: string) => `${amount} · fällig ${due}`,
@@ -2810,7 +2809,7 @@ export const de = {
       occasion: 'Anlass (optional)',
       date: 'Datum des Anlasses (optional)',
       price: 'Preis in € (optional)',
-      badPrice: 'Bitte einen Betrag wie 19,90 eingeben.',
+      badPrice: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       url: 'Link (optional)',
       note: 'Notiz (optional)',
       status: 'Stand',
@@ -4073,8 +4072,8 @@ export const de = {
         'Für ein weiteres Konto. Das vorhandene Konto änderst du unter Finanzen → Konten.',
       name: 'Kontoname',
       balance: 'Kontostand heute',
-      balanceHint: 'z. B. 1.234,56 – bei einem Minus mit „-“.',
-      badBalance: 'Bitte einen Betrag wie 1.234,56 eingeben.',
+      balanceHint: (sample: string) => `z. B. ${sample} – bei einem Minus mit „-“.`,
+      badBalance: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       bank: 'Kontoauszug importieren (CSV oder CAMT)',
       bankHint:
         'Im Online-Banking unter Umsätze exportieren (z. B. „CSV-CAMT“ oder „CAMT“) und die Datei hier auswählen. Die Datei wird nur auf diesem Gerät gelesen.',
@@ -4094,7 +4093,7 @@ export const de = {
       amount: 'Betrag',
       due: 'Fällig am',
       reference: 'Referenz (optional)',
-      badAmount: 'Bitte einen Betrag wie 49,90 eingeben.',
+      badAmount: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
     },
     subscriptions: {
@@ -4107,7 +4106,7 @@ export const de = {
       yearly: 'jährlich',
       next: 'Nächste Abbuchung am',
       notice: 'Kündigungsfrist in Tagen (optional)',
-      badAmount: 'Bitte einen Betrag wie 9,99 eingeben.',
+      badAmount: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
       badNotice: 'Bitte eine ganze Zahl eingeben.',
       bank: 'Abos im Kontoauszug erkennen',

@@ -1,11 +1,11 @@
 import type { Strings } from '@/strings';
 
 export const systemWidget: Strings['systemWidget'] = {
-  title: 'System',
-  cpu: 'Prozessor',
-  ram: 'Arbeitsspeicher',
-  battery: 'Akku',
-  charging: 'lädt',
-  open: 'Systeminfo öffnen',
-  unavailable: 'Systemdaten sind hier nicht verfügbar.',
+  title: 'Système',
+  cpu: 'Processeur',
+  ram: 'Mémoire vive',
+  battery: 'Batterie',
+  charging: 'en charge',
+  open: 'Ouvrir les infos système',
+  unavailable: 'Les données système ne sont pas disponibles ici.',
 };

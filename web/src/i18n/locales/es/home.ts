@@ -1,9 +1,9 @@
 import type { Strings } from '@/strings';
 
 export const home: Strings['home'] = {
-  title: 'Übersicht',
-  emptyTitle: 'Noch keine Module aktiv',
-  emptyText: 'Aktiviere Module in der Bibliothek, um hier Widgets zu sehen.',
-  toLibrary: 'Zur Bibliothek',
-  noWidgets: 'Die aktiven Module bieten keine Widgets an.',
+  title: 'Resumen',
+  emptyTitle: 'Aún no hay módulos activos',
+  emptyText: 'Activa módulos en la biblioteca para ver widgets aquí.',
+  toLibrary: 'Ir a la biblioteca',
+  noWidgets: 'Los módulos activos no ofrecen widgets.',
 };

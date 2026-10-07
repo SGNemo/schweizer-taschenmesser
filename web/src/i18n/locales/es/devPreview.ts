@@ -2,7 +2,7 @@ import type { Strings } from '@/strings';
 
 export const devPreview: Strings['devPreview'] = {
   badge: 'Dev',
-  badgeTitle: 'Dev-Preview: ungetestete Zwischenversion',
+  badgeTitle: 'Dev preview: versión intermedia sin probar',
   notice:
-    'Dev-Preview: ungetestete Zwischenversion mit eigenen Daten, getrennt von der stabilen App.',
+    'Dev preview: versión intermedia sin probar, con sus propios datos, separada de la app estable.',
 };

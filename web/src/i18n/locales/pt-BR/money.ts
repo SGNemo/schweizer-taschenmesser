@@ -1,6 +1,6 @@
 import type { Strings } from '@/strings';
 
 export const money: Strings['money'] = {
-  amount: 'Betrag',
-  invalidAmount: 'Bitte einen gültigen Betrag eingeben, z. B. 12,50',
+  amount: 'Valor',
+  invalidAmount: (sample: string) => `Informe um valor válido, por exemplo ${sample}`,
 };

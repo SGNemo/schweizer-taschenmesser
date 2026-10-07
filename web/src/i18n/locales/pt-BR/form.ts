@@ -1,10 +1,10 @@
 import type { Strings } from '@/strings';
 
 export const form: Strings['form'] = {
-  title: 'Titel',
-  note: 'Notiz',
-  date: 'Datum',
-  time: 'Uhrzeit',
-  required: 'Bitte ausfüllen',
-  confirmDelete: 'Wirklich löschen?',
+  title: 'Título',
+  note: 'Nota',
+  date: 'Data',
+  time: 'Horário',
+  required: 'Preencha este campo',
+  confirmDelete: 'Excluir mesmo?',
 };

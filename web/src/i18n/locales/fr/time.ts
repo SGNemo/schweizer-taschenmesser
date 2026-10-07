@@ -2,5 +2,5 @@ import type { Strings } from '@/strings';
 
 export const time: Strings['time'] = {
   weekdayAndDistance: (weekday: string, distance: string) => `${weekday}, ${distance}`,
-  overdueSince: (days: number) => (days === 1 ? 'seit gestern' : `seit ${days} Tagen`),
+  overdueSince: (days: number) => (days === 1 ? 'depuis hier' : `depuis ${days} jours`),
 };

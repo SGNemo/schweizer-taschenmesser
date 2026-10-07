@@ -1,7 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const quickAdd: Strings['quickAdd'] = {
-  title: 'Schnell hinzufügen',
-  empty: 'Aktive Module bieten noch keine Schnellaktionen an.',
-  others: 'Oder mit dem ganzen Formular',
+  title: 'Adicionar rápido',
+  empty: 'Os módulos ativos ainda não oferecem ações rápidas.',
+  others: 'Ou com o formulário completo',
 };

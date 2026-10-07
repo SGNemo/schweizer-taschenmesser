@@ -1,9 +1,9 @@
 import type { Strings } from '@/strings';
 
 export const diskWidget: Strings['diskWidget'] = {
-  title: 'Laufwerke',
-  free: (free: string, total: string) => `${free} frei von ${total}`,
-  empty: 'Keine Laufwerke gefunden.',
-  open: 'Datenträger öffnen',
-  unavailable: 'Laufwerke sind hier nicht verfügbar.',
+  title: 'Lecteurs',
+  free: (free: string, total: string) => `${free} libres sur ${total}`,
+  empty: 'Aucun lecteur trouvé.',
+  open: 'Ouvrir les disques',
+  unavailable: 'Les lecteurs ne sont pas disponibles ici.',
 };

@@ -97,7 +97,7 @@ function TransactionForm({
     e.preventDefault();
     const amountMinor = parseMoney(amount);
     if (!amountMinor || amountMinor < 1) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     if (!accountId) return;
@@ -222,7 +222,7 @@ function AccountForm({
     const openingBalanceMinor =
       opening.trim() === '' ? 0 : parseMoney(opening, { allowNegative: true });
     if (openingBalanceMinor === undefined) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     if (existing) await accountRepo.update(existing.id, { name: name.trim(), openingBalanceMinor });

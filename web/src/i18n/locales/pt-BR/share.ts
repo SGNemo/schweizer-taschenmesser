@@ -1,13 +1,13 @@
 import type { Strings } from '@/strings';
 
 export const share: Strings['share'] = {
-  title: 'Teilen',
-  intro: 'Wohin soll der geteilte Inhalt?',
-  content: 'Geteilt',
-  where: 'Ziele',
-  nothing: 'Es wurde nichts geteilt. Nutze „Teilen“ in einer anderen App und wähle Nemo.',
-  enable: 'Modul einschalten',
-  toBookmarks: 'In die Merkliste',
-  toNote: 'Als Notiz',
-  toTodo: 'Als ToDo',
+  title: 'Compartilhar',
+  intro: 'Para onde vai o conteúdo compartilhado?',
+  content: 'Compartilhado',
+  where: 'Destinos',
+  nothing: 'Nada foi compartilhado. Use “Compartilhar” em outro app e escolha o Nemo.',
+  enable: 'Ligar módulo',
+  toBookmarks: 'Para os Salvos',
+  toNote: 'Como nota',
+  toTodo: 'Como tarefa',
 };

@@ -71,7 +71,6 @@ export default function BasicsStep({ registerCommit }: SetupStepProps) {
       <div>
         <strong>{s.fixedTitle}</strong>
         <ul>
-          <li>{s.language}</li>
           <li>{s.timezone(zone)}</li>
           <li>{s.currency}</li>
         </ul>

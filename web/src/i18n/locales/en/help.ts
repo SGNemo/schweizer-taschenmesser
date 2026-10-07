@@ -1,26 +1,26 @@
 import type { Strings } from '@/strings';
 
 export const help: Strings['help'] = {
-  label: 'Hilfe',
-  sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und die Passphrase kennen nur deine Geräte.',
+  label: 'Help',
+  sync: 'The sync server is your own small server that keeps the data of several devices in step. If you like, the data is end-to-end encrypted: the server then only sees unreadable values, and only your devices know the passphrase.',
   aiLocal:
-    'Ein kleines Sprachmodell läuft nur auf diesem Gerät und versteht Sätze, die die festen Regeln nicht kennen – ohne Token, ohne Internet. Es wird erst nach deiner Zustimmung heruntergeladen (Größe, Quelle und Prüfsumme siehst du vorher) und prüft den Download selbst.',
+    'A small language model runs only on this device and understands sentences the fixed rules don’t know – no token, no internet. It is only downloaded after you agree (you see size, source and checksum first) and checks the download itself.',
   aiWrite:
-    'Erkannte Einträge zeigt Nemo immer erst als Vorschau; gespeichert wird erst nach deiner Bestätigung. Hier legst du fest, ob und wo der Assistent Einträge vorschlagen darf.',
+    'Nemo always shows recognised entries as a preview first; nothing is saved until you confirm. Here you decide whether and where the assistant may suggest entries.',
   aiCloudWrite:
-    'Zuerst versucht Nemo es mit festen Regeln, dann (falls eingerichtet) mit dem lokalen Modell – beides kostet nichts und verlässt das Gerät nicht. Nur wenn beides nicht reicht und du das hier erlaubst, geht der Satz mit dem Datum und den Feldnamen der Module (nie deine Einträge) an einen KI-Anbieter.',
+    'Nemo first tries fixed rules, then (if set up) the local model – both are free and stay on the device. Only if neither is enough and you allow it here does the sentence go to an AI provider, together with the date and the modules’ field names (never your entries).',
   aiAskMissing:
-    'An: fehlt z. B. das Fälligkeitsdatum, fragt die Vorschau danach. Aus: solche Sätze werden nicht als Eintrag vorgeschlagen.',
+    'On: if the due date is missing, for example, the preview asks for it. Off: such sentences are not suggested as entries.',
   aiRouter:
-    'Mehrere KI-Anbieter stehen in einer Reihenfolge. Die App fragt den ersten verfügbaren; ist er überlastet, nicht erreichbar oder sein Limit ist erreicht, springt sie zum nächsten. Es werden nur deine Frage und ein kurzes Schema gesendet, nie deine Daten.',
+    'Several AI providers are listed in order. The app asks the first available one; if it is overloaded, unreachable or has hit its limit, the app moves on to the next. Only your question and a short schema are sent, never your data.',
   updateChannel:
-    '„Stabil“ bietet nur fertige Versionen an. „Beta“ zeigt auch Vorabversionen, die neue Funktionen früher, aber weniger erprobt enthalten. Vor jedem Update legt die App eine Sicherungskopie an.',
+    '“Stable” only offers finished versions. “Beta” also shows pre-releases, which bring new features earlier but are less tested. The app makes a backup before every update.',
   vault:
-    'Der Tresor ist mit deinem Master-Passwort verschlüsselt, das nirgends gespeichert wird. Vergisst du es, kann niemand die Einträge wiederherstellen – auch nicht wir. Lege es deshalb an einem sicheren Ort ab.',
+    'The vault is encrypted with your master password, which is stored nowhere. If you forget it, nobody can recover the entries – not even us. So keep it somewhere safe.',
   startData:
-    'Der Assistent liest Text oder Dateien ein und zeigt zuerst eine Vorschau. Erst nach deiner Bestätigung wird gespeichert, und jeder Import lässt sich als Ganzes wieder rückgängig machen.',
+    'The assistant reads text or files and shows a preview first. Nothing is saved until you confirm, and every import can be undone as a whole.',
   localApi:
-    'Die Schnittstelle hört nur auf diesem Computer (127.0.0.1) und ist ohne Zugangsschlüssel nutzlos. Jeder Zugang bekommt nur die Rechte, die du ankreuzt. Importe landen zuerst als Vorschau in der App. Den Tresor (Accounts), Einstellungen und Schlüssel kann sie nie erreichen.',
+    'The interface only listens on this computer (127.0.0.1) and is useless without an access key. Each access only gets the rights you tick. Imports land in the app as a preview first. It can never reach the vault (Passwords), settings or keys.',
   connectors:
-    'Verbindungen lesen nur, sie ändern nichts bei dem Dienst. Zugangsdaten liegen im Schlüsselspeicher dieses Geräts und werden nie synchronisiert oder gesichert. E-Mails werden ausschließlich auf deinem Gerät ausgewertet und nie an eine KI geschickt.',
+    'Connections only read; they change nothing at the service. Login details are kept in this device’s key store and are never synced or backed up. Emails are only analysed on your device and never sent to an AI.',
 };

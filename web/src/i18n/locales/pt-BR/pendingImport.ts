@@ -1,20 +1,21 @@
 import type { Strings } from '@/strings';
 
 export const pendingImport: Strings['pendingImport'] = {
-  title: 'Wartender Import',
+  title: 'Importação pendente',
   banner: (source: string, n: number, module: string) =>
-    `${source || 'Eine KI'} möchte ${n === 1 ? '1 Eintrag' : `${n} Einträge`} in „${module}“ übernehmen.`,
-  review: 'Ansehen',
-  dialogTitle: (module: string) => `Import prüfen: ${module}`,
+    `${source || 'Uma IA'} quer adicionar ${n === 0 || n === 1 ? `${n} entrada` : `${n} entradas`} em “${module}”.`,
+  review: 'Ver',
+  dialogTitle: (module: string) => `Revisar importação: ${module}`,
   intro: (source: string) =>
-    `Gesendet über den Zugang „${source}“. Nur angehakte Einträge werden gespeichert; Änderungen an vorhandenen Einträgen musst du einzeln anhaken.`,
-  accept: (n: number) => (n === 1 ? '1 Eintrag übernehmen' : `${n} Einträge übernehmen`),
-  reject: 'Ablehnen',
+    `Enviado pelo acesso “${source}”. Só as entradas marcadas são salvas; alterações em entradas existentes precisam ser marcadas uma a uma.`,
+  accept: (n: number) =>
+    n === 0 || n === 1 ? `Adicionar ${n} entrada` : `Adicionar ${n} entradas`,
+  reject: 'Recusar',
   accepted: (n: number, conflicts: number) =>
-    `${n === 1 ? '1 Eintrag' : `${n} Einträge`} übernommen.` +
+    `${n === 0 || n === 1 ? `${n} entrada adicionada` : `${n} entradas adicionadas`}.` +
     (conflicts > 0
-      ? ` ${conflicts} Änderung(en) übersprungen, weil der Eintrag inzwischen bearbeitet wurde.`
+      ? ` ${conflicts} ${conflicts === 1 ? 'alteração ignorada' : 'alterações ignoradas'} porque a entrada foi editada nesse meio-tempo.`
       : ''),
-  rejected: 'Import abgelehnt.',
-  failed: 'Das hat nicht geklappt. Bitte erneut versuchen.',
+  rejected: 'Importação recusada.',
+  failed: 'Não deu certo. Tente de novo.',
 };

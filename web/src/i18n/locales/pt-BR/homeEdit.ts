@@ -2,33 +2,32 @@ import type { Strings } from '@/strings';
 
 export const homeEdit: Strings['homeEdit'] = {
   calmNote: (n: number) =>
-    n === 1
-      ? 'Ruhige Ansicht: 1 Widget ist ausgeblendet.'
-      : `Ruhige Ansicht: ${n} Widgets sind ausgeblendet.`,
-  showAll: 'Alle Widgets zeigen',
-  customize: 'Anpassen',
-  done: 'Fertig',
-  hide: 'Ausblenden',
-  show: 'Einblenden',
-  handle: (title: string) => `${title} verschieben`,
-  hidden: 'Ausgeblendet',
+    n === 0 || n === 1
+      ? `Visualização calma: ${n} widget está oculto.`
+      : `Visualização calma: ${n} widgets estão ocultos.`,
+  showAll: 'Mostrar todos os widgets',
+  customize: 'Personalizar',
+  done: 'Pronto',
+  hide: 'Ocultar',
+  show: 'Mostrar',
+  handle: (title: string) => `Mover ${title}`,
+  hidden: 'Oculto',
   instructions:
-    'Zum Verschieben Leertaste drücken, mit den Pfeiltasten bewegen und mit der Leertaste ablegen. Esc bricht ab.',
-  picked: (title: string) => `${title} aufgenommen.`,
-  moved: (title: string, pos: number) => `${title} auf Position ${pos} verschoben.`,
-  dropped: (title: string, pos: number) => `${title} auf Position ${pos} abgelegt.`,
-  cancelled: 'Verschieben abgebrochen.',
+    'Para mover, pressione Espaço, use as setas e pressione Espaço de novo para soltar. Esc cancela.',
+  picked: (title: string) => `${title} selecionado.`,
+  moved: (title: string, pos: number) => `${title} movido para a posição ${pos}.`,
+  dropped: (title: string, pos: number) => `${title} solto na posição ${pos}.`,
+  cancelled: 'Movimento cancelado.',
   widgets: 'Widgets',
-  widgetsTitle: 'Widgets der Übersicht',
+  widgetsTitle: 'Widgets da visão geral',
   widgetsNote:
-    'Ausblenden betrifft nur die Übersicht, das Modul bleibt aktiv. Deaktivieren kannst du Module in der Bibliothek.',
-  widgetsNone: 'Keine aktiven Module mit Widgets.',
-  reset: 'Zurücksetzen',
-  resetTitle: 'Übersicht zurücksetzen?',
-  resetText:
-    'Reihenfolge, Größen und ausgeblendete Widgets gehen auf den Standard zurück. Deine Module und Daten bleiben unverändert.',
-  resetConfirm: 'Auf Standard zurücksetzen',
-  cancel: 'Abbrechen',
-  size: (title: string) => `Größe von ${title}`,
-  sizeOptions: { s: 'S', m: 'M', l: 'L' } as Record<string, string>,
+    'Ocultar afeta só a visão geral, o módulo continua ativo. Você pode desativar módulos na biblioteca.',
+  widgetsNone: 'Nenhum módulo ativo com widgets.',
+  reset: 'Redefinir',
+  resetTitle: 'Redefinir a visão geral?',
+  resetText: 'Ordem, tamanhos e widgets ocultos voltam ao padrão. Seus módulos e dados não mudam.',
+  resetConfirm: 'Voltar ao padrão',
+  cancel: 'Cancelar',
+  size: (title: string) => `Tamanho de ${title}`,
+  sizeOptions: { s: 'P', m: 'M', l: 'G' } as Record<string, string>,
 };

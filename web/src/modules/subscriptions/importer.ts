@@ -1,7 +1,7 @@
 import { BankFormatError, parseBankFile } from '@/core/io/bank';
 import { parseDateInput } from '@/core/io/dates';
 import { detectSubscriptions, type DetectedSubscription } from '@/core/io/subscriptionDetect';
-import { formatMoney, parseMoney } from '@/core/money';
+import { formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import type { Recurrence } from '@/core/recurrence/types';
 import type {
@@ -105,7 +105,8 @@ const runtime: ImporterRuntime = {
     const notice = noticeText === '' ? undefined : Number(noticeText);
     const s = t.onboarding.subscriptions;
     if (!name) return { candidates: [], notes: [t.onboarding.required] };
-    if (amount === undefined || amount < 1) return { candidates: [], notes: [s.badAmount] };
+    if (amount === undefined || amount < 1)
+      return { candidates: [], notes: [s.badAmount(formatMoneyInput(999))] };
     if (!next || !recurrence) return { candidates: [], notes: [s.badDate] };
     if (notice !== undefined && (!Number.isInteger(notice) || notice < 0 || notice > 365))
       return { candidates: [], notes: [s.badNotice] };

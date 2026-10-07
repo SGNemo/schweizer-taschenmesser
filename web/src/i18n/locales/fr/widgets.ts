@@ -1,36 +1,39 @@
 import type { Strings } from '@/strings';
 
 export const widgets: Strings['widgets'] = {
-  done: 'Erledigt',
-  undo: 'Rückgängig',
-  now: 'Jetzt',
-  next: 'Als Nächstes',
-  allDay: 'Ganztägig',
-  tomorrow: 'Morgen',
-  more: (n: number) => `+ ${n} weitere`,
+  done: 'Terminé',
+  undo: 'Annuler',
+  now: 'Maintenant',
+  next: 'Ensuite',
+  allDay: 'Toute la journée',
+  tomorrow: 'Demain',
+  more: (n: number) => `+ ${n} de plus`,
   invoicesSummary: (sum: string, overdue: number) =>
-    overdue > 0 ? `${sum} offen · ${overdue} überfällig` : `${sum} offen`,
+    overdue > 0 ? `${sum} ouvert · ${overdue} en retard` : `${sum} ouvert`,
   subsSummary: (monthly: string, next?: string) =>
-    next ? `${monthly} pro Monat · nächste ${next}` : `${monthly} pro Monat`,
+    next ? `${monthly} par mois · prochain ${next}` : `${monthly} par mois`,
   todosSummaryCalm: (open: number, waiting: number) =>
-    (open === 1 ? '1 offen' : `${open} offen`) + (waiting > 0 ? ` · ${waiting} warten` : ''),
+    (open <= 1 ? `${open} ouverte` : `${open} ouvertes`) +
+    (waiting > 0 ? ` · ${waiting} en attente` : ''),
   todosSummary: (open: number, overdue: number) =>
-    (open === 1 ? '1 offen' : `${open} offen`) + (overdue > 0 ? ` · ${overdue} überfällig` : ''),
-  shoppingSummary: (open: number) => (open === 1 ? '1 Artikel offen' : `${open} Artikel offen`),
+    (open <= 1 ? `${open} ouverte` : `${open} ouvertes`) +
+    (overdue > 0 ? ` · ${overdue} en retard` : ''),
+  shoppingSummary: (open: number) =>
+    open <= 1 ? `${open} article restant` : `${open} articles restants`,
   budgetsSummary: (over: number) =>
     over === 0
-      ? 'Alle Budgets im Rahmen'
+      ? 'Tous les budgets sont respectés'
       : over === 1
-        ? '1 Budget überschritten'
-        : `${over} Budgets überschritten`,
-  packingSummary: (packed: number, total: number) => `${packed} von ${total} gepackt`,
+        ? '1 budget dépassé'
+        : `${over} budgets dépassés`,
+  packingSummary: (packed: number, total: number) => `${packed} sur ${total} emballés`,
   contractsSummary: (n: number) =>
-    n === 1 ? '1 Kündigungsfrist in Sicht' : `${n} Kündigungsfristen in Sicht`,
+    n <= 1 ? `${n} délai de résiliation en vue` : `${n} délais de résiliation en vue`,
   expirySummary: (expired: number, soon: number) =>
-    [expired ? `${expired} abgelaufen` : '', soon ? `${soon} bald` : '']
+    [expired ? `${expired} expiré${expired > 1 ? 's' : ''}` : '', soon ? `${soon} bientôt` : '']
       .filter(Boolean)
       .join(' · '),
-  kpiAvailable: (amount: string) => `${amount} verfügbar`,
-  kpiMonthNet: (amount: string) => `${amount} in diesem Monat`,
-  kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
+  kpiAvailable: (amount: string) => `${amount} disponible`,
+  kpiMonthNet: (amount: string) => `${amount} ce mois-ci`,
+  kpiSeries: 'Solde en fin de mois, 6 derniers mois',
 };

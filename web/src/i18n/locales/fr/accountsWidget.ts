@@ -1,12 +1,12 @@
 import type { Strings } from '@/strings';
 
 export const accountsWidget: Strings['accountsWidget'] = {
-  title: 'Passwort-Tresor',
-  locked: 'Gesperrt',
-  unlocked: 'Entsperrt',
-  notSetUp: 'Noch nicht eingerichtet',
-  unlock: 'Entsperren',
-  open: 'Tresor öffnen',
-  setUp: 'Tresor einrichten',
-  hint: 'Aus Sicherheitsgründen zeigt die Übersicht keine Einträge.',
+  title: 'Coffre-fort de mots de passe',
+  locked: 'Verrouillé',
+  unlocked: 'Déverrouillé',
+  notSetUp: 'Pas encore configuré',
+  unlock: 'Déverrouiller',
+  open: 'Ouvrir le coffre-fort',
+  setUp: 'Configurer le coffre-fort',
+  hint: 'Pour des raisons de sécurité, la vue d’ensemble n’affiche aucune entrée.',
 };

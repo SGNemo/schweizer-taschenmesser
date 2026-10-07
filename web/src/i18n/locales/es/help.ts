@@ -1,26 +1,26 @@
 import type { Strings } from '@/strings';
 
 export const help: Strings['help'] = {
-  label: 'Hilfe',
-  sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und die Passphrase kennen nur deine Geräte.',
+  label: 'Ayuda',
+  sync: 'El servidor de sincronización es tu propio servidor pequeño que sincroniza los datos de varios dispositivos. Si quieres, los datos se cifran de extremo a extremo: el servidor solo ve valores ilegibles y la frase de contraseña solo la conocen tus dispositivos.',
   aiLocal:
-    'Ein kleines Sprachmodell läuft nur auf diesem Gerät und versteht Sätze, die die festen Regeln nicht kennen – ohne Token, ohne Internet. Es wird erst nach deiner Zustimmung heruntergeladen (Größe, Quelle und Prüfsumme siehst du vorher) und prüft den Download selbst.',
+    'Un modelo de lenguaje pequeño funciona solo en este dispositivo y entiende frases que las reglas fijas no conocen, sin token y sin internet. Solo se descarga con tu permiso (antes ves el tamaño, la fuente y la suma de comprobación) y comprueba la descarga por sí mismo.',
   aiWrite:
-    'Erkannte Einträge zeigt Nemo immer erst als Vorschau; gespeichert wird erst nach deiner Bestätigung. Hier legst du fest, ob und wo der Assistent Einträge vorschlagen darf.',
+    'Nemo siempre muestra primero las entradas detectadas como vista previa; solo se guardan cuando las confirmas. Aquí decides si el asistente puede proponer entradas y dónde.',
   aiCloudWrite:
-    'Zuerst versucht Nemo es mit festen Regeln, dann (falls eingerichtet) mit dem lokalen Modell – beides kostet nichts und verlässt das Gerät nicht. Nur wenn beides nicht reicht und du das hier erlaubst, geht der Satz mit dem Datum und den Feldnamen der Module (nie deine Einträge) an einen KI-Anbieter.',
+    'Primero Nemo lo intenta con reglas fijas y luego (si está configurado) con el modelo local: ninguna de las dos cosas cuesta nada ni sale del dispositivo. Solo si no basta y lo permites aquí, la frase se envía a un proveedor de IA junto con la fecha y los nombres de campo de los módulos (nunca tus entradas).',
   aiAskMissing:
-    'An: fehlt z. B. das Fälligkeitsdatum, fragt die Vorschau danach. Aus: solche Sätze werden nicht als Eintrag vorgeschlagen.',
+    'Activado: si falta, p. ej., la fecha de vencimiento, la vista previa la pide. Desactivado: esas frases no se proponen como entrada.',
   aiRouter:
-    'Mehrere KI-Anbieter stehen in einer Reihenfolge. Die App fragt den ersten verfügbaren; ist er überlastet, nicht erreichbar oder sein Limit ist erreicht, springt sie zum nächsten. Es werden nur deine Frage und ein kurzes Schema gesendet, nie deine Daten.',
+    'Varios proveedores de IA están en un orden. La app pregunta al primero disponible; si está saturado, no responde o ha llegado a su límite, pasa al siguiente. Solo se envían tu pregunta y un esquema breve, nunca tus datos.',
   updateChannel:
-    '„Stabil“ bietet nur fertige Versionen an. „Beta“ zeigt auch Vorabversionen, die neue Funktionen früher, aber weniger erprobt enthalten. Vor jedem Update legt die App eine Sicherungskopie an.',
+    '«Estable» solo ofrece versiones terminadas. «Beta» también muestra versiones previas, con funciones nuevas antes, pero menos probadas. Antes de cada actualización, la app crea una copia de seguridad.',
   vault:
-    'Der Tresor ist mit deinem Master-Passwort verschlüsselt, das nirgends gespeichert wird. Vergisst du es, kann niemand die Einträge wiederherstellen – auch nicht wir. Lege es deshalb an einem sicheren Ort ab.',
+    'La bóveda está cifrada con tu contraseña maestra, que no se guarda en ningún sitio. Si la olvidas, nadie puede recuperar las entradas, ni siquiera nosotros. Por eso guárdala en un lugar seguro.',
   startData:
-    'Der Assistent liest Text oder Dateien ein und zeigt zuerst eine Vorschau. Erst nach deiner Bestätigung wird gespeichert, und jeder Import lässt sich als Ganzes wieder rückgängig machen.',
+    'El asistente lee texto o archivos y primero muestra una vista previa. Solo se guarda cuando lo confirmas, y cada importación se puede deshacer por completo.',
   localApi:
-    'Die Schnittstelle hört nur auf diesem Computer (127.0.0.1) und ist ohne Zugangsschlüssel nutzlos. Jeder Zugang bekommt nur die Rechte, die du ankreuzt. Importe landen zuerst als Vorschau in der App. Den Tresor (Accounts), Einstellungen und Schlüssel kann sie nie erreichen.',
+    'La interfaz solo escucha en este ordenador (127.0.0.1) y no sirve de nada sin clave de acceso. Cada acceso recibe solo los permisos que marques. Las importaciones llegan primero a la app como vista previa. Nunca puede acceder a la bóveda (contraseñas), los ajustes ni las claves.',
   connectors:
-    'Verbindungen lesen nur, sie ändern nichts bei dem Dienst. Zugangsdaten liegen im Schlüsselspeicher dieses Geräts und werden nie synchronisiert oder gesichert. E-Mails werden ausschließlich auf deinem Gerät ausgewertet und nie an eine KI geschickt.',
+    'Las conexiones solo leen; no cambian nada en el servicio. Los datos de acceso están en el almacén de claves de este dispositivo y nunca se sincronizan ni se copian. Los correos se analizan solo en tu dispositivo y nunca se envían a una IA.',
 };

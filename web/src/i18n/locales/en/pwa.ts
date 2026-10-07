@@ -1,6 +1,6 @@
 import type { Strings } from '@/strings';
 
 export const pwa: Strings['pwa'] = {
-  updateAvailable: 'Eine neue Version ist verfügbar.',
-  offlineReady: 'Bereit für die Offline-Nutzung.',
+  updateAvailable: 'A new version is available.',
+  offlineReady: 'Ready to use offline.',
 };

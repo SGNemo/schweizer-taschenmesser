@@ -1,16 +1,16 @@
 import type { Strings } from '@/strings';
 
 export const actions: Strings['actions'] = {
-  add: 'Hinzufügen',
-  quickAdd: 'Schnell hinzufügen',
-  search: 'Suchen',
-  cancel: 'Abbrechen',
-  save: 'Speichern',
-  delete: 'Löschen',
-  edit: 'Bearbeiten',
-  close: 'Schließen',
-  enable: 'Aktivieren',
-  disable: 'Deaktivieren',
-  reload: 'Neu laden',
-  update: 'Aktualisieren',
+  add: 'Add',
+  quickAdd: 'Quick add',
+  search: 'Search',
+  cancel: 'Cancel',
+  save: 'Save',
+  delete: 'Delete',
+  edit: 'Edit',
+  close: 'Close',
+  enable: 'Turn on',
+  disable: 'Turn off',
+  reload: 'Reload',
+  update: 'Update',
 };

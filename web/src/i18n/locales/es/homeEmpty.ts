@@ -1,16 +1,16 @@
 import type { Strings } from '@/strings';
 
 export const homeEmpty: Strings['homeEmpty'] = {
-  bookmarks: 'Link merken',
-  budgets: 'Sparziel anlegen',
-  invoices: 'Rechnung anlegen',
-  notes: 'Notiz schreiben',
-  chat: 'Chat starten',
-  pantry: 'Vorrat hinzufügen',
-  subscriptions: 'Abo anlegen',
-  todos: 'Aufgabe anlegen',
-  people: 'Person anlegen',
-  vault: 'Unterlage hinzufügen',
-  calendar: 'Termin anlegen',
-  finance: 'Buchung anlegen',
+  bookmarks: 'Guardar enlace',
+  budgets: 'Crear meta de ahorro',
+  invoices: 'Añadir factura',
+  notes: 'Escribir nota',
+  chat: 'Iniciar chat',
+  pantry: 'Añadir a la despensa',
+  subscriptions: 'Añadir suscripción',
+  todos: 'Añadir tarea',
+  people: 'Añadir persona',
+  vault: 'Añadir documento',
+  calendar: 'Añadir evento',
+  finance: 'Añadir movimiento',
 };

@@ -1,3 +1,4 @@
+import { formatMoneyInput } from '@/core/money';
 import type { OnboardingDef } from '@/core/importer/types';
 import { t } from '@/strings';
 
@@ -31,7 +32,7 @@ export const onboarding: OnboardingDef = {
           type: 'text',
           required: true,
           get hint() {
-            return s.balanceHint;
+            return s.balanceHint(formatMoneyInput(123456));
           },
           defaultValue: '0,00',
         },
