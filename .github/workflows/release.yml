@@ -216,14 +216,24 @@ jobs:
           "$sdk\Bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       # One self-contained executable with the frontend embedded – no NSIS/MSI installer.
-      # llama.cpp builds its Vulkan shader generator (`vulkan-shaders-gen`) as a nested CMake project.
-      # With the Visual Studio generator its ExternalProject steps run out of order under a parallel
-      # build ("Not a file ... cmake_install.cmake", "cannot find the batch label specified - VCEnd"), so
-      # CMake builds with Ninja, which orders them correctly.
+      # llama.cpp builds its Vulkan shader generator (`vulkan-shaders-gen`) as a nested CMake project, and
+      # two things break it on Windows: (1) the Visual Studio generator runs its ExternalProject steps out
+      # of order in a parallel build ("Not a file ... cmake_install.cmake", "cannot find the batch label
+      # specified - VCEnd"), so CMake builds with Ninja; (2) under the default target directory the nested
+      # paths pass the Windows limit ("object file directory has 277 characters", "Cannot open source
+      # file"), so Cargo builds into a short directory and the executable is put back where the following
+      # steps expect it.
       - name: Build
         env:
           CMAKE_GENERATOR: Ninja
+          CARGO_TARGET_DIR: C:/t
         run: npx tauri build --no-bundle -- --features local-llm-vulkan --locked
+
+      - name: Put the executable where the next steps expect it
+        run: |
+          set -euo pipefail
+          mkdir -p src-tauri/target/release
+          cp C:/t/release/taschenmesser.exe src-tauri/target/release/taschenmesser.exe
 
       - name: Sign with the updater key
         env:
