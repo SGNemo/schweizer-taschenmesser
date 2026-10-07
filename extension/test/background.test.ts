@@ -110,9 +110,23 @@ describe('page origin comes from the browser, never from a message', () => {
     expect(pageOriginOf({ origin: 'https://Shop.Example.test:443' })).toBe(
       'https://shop.example.test',
     );
-    expect(pageOriginOf({ origin: 'null', url: 'https://a.test/x' })).toBe('https://a.test');
     expect(pageOriginOf({ url: 'chrome://settings' })).toBeUndefined();
     expect(pageOriginOf({})).toBeUndefined();
+  });
+  it('an opaque-origin frame (sandboxed iframe) gets no origin, never the URL as fallback', async () => {
+    expect(pageOriginOf({ origin: 'null', url: 'https://a.test/x' })).toBeUndefined();
+    const sandboxed = { tabId: 7, frameId: 3, origin: 'null', url: 'https://shop.example.test/' };
+    expect(await ctx.bg.handle({ type: 'match' }, sandboxed)).toEqual({
+      ok: false,
+      error: 'bad-request',
+    });
+    expect(
+      await ctx.bg.handle({ type: 'submitted', username: 'x', password: 'pw' }, sandboxed),
+    ).toEqual({ ok: false, error: 'no-tab' });
+    expect(ctx.fake.calls).toEqual([]);
+  });
+  it('the popup path still resolves the active tab by URL (no origin field)', () => {
+    expect(pageOriginOf({ url: 'https://a.test/x' })).toBe('https://a.test');
   });
   it('match and secret use the sender origin; messages cannot carry another one', async () => {
     await ctx.bg.handle({ type: 'match' }, tab('https://shop.example.test/login'));

@@ -17,6 +17,17 @@ export default tseslint.config(
         'error',
         { name: 'localStorage', message: 'No persistent storage for anything in the extension.' },
         { name: 'sessionStorage', message: 'No web storage in the extension.' },
+        { name: 'indexedDB', message: 'No IndexedDB in the extension.' },
+        { name: 'caches', message: 'No Cache Storage in the extension.' },
+      ],
+      // The same stores reached through any object (window.localStorage, self.indexedDB, ...).
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'MemberExpression[property.name=/^(localStorage|sessionStorage|indexedDB|caches)$/]',
+          message: 'No persistent storage in the extension, through any object.',
+        },
       ],
       'no-restricted-properties': [
         'error',
@@ -28,5 +39,10 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // The E2E spec reads the stores on purpose to assert they are empty; it is not shipped.
+    files: ['e2e/**/*.ts'],
+    rules: { 'no-restricted-globals': 'off', 'no-restricted-syntax': 'off' },
   },
 );
