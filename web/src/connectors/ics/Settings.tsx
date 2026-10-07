@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { requireNotice } from '@/core/legal/notices';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import { t } from '@/strings';
 import { Button, TextField } from '@/ui';
@@ -41,6 +42,7 @@ export default function IcsSettings({
     if (!address) return setError(s.badUrl);
     setBusy(true);
     try {
+      await requireNotice('connector-ics');
       const entry: IcsSubscription = {
         id: crypto.randomUUID().slice(0, 8),
         name: name.trim() || s.defaultName(list.length + 1),
