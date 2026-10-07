@@ -4,7 +4,7 @@
   "identifier": "io.github.sgnemo.taschenmesser.dev",
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUzM0RBRkM2ODIwREJEN0UKUldSK3ZRMkN4cTg5VTRqaHdrbFJCN3NqbmlYekttdFZmdWtPRHFYWGdBWFdZcVY0V1pzVlR5dDcK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNDIzNzAyRTFEOEI5Q0UKUldUT3VkamhBamRDK210bVlOclMva3hmMC81Q1hJZEtaWVkyWEszb2YwbXN1ZkFsR3R3L2tzYWMK"
     }
   }
 }

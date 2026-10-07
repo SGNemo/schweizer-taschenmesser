@@ -40,7 +40,7 @@ describe('Dev-Preview flavor', () => {
     expect(Object.keys(dev.plugins)).toEqual(['updater']);
     expect(Object.keys(dev.plugins.updater)).toEqual(['pubkey']);
     expect(dev.plugins.updater.pubkey).toBe(
-      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUzM0RBRkM2ODIwREJEN0UKUldSK3ZRMkN4cTg5VTRqaHdrbFJCN3NqbmlYekttdFZmdWtPRHFYWGdBWFdZcVY0V1pzVlR5dDcK',
+      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNDIzNzAyRTFEOEI5Q0UKUldUT3VkamhBamRDK210bVlOclMva3hmMC81Q1hJZEtaWVkyWEszb2YwbXN1ZkFsR3R3L2tzYWMK',
     );
     expect(dev.plugins.updater.pubkey).not.toBe(stable.plugins.updater.pubkey);
     expect(JSON.stringify(dev)).not.toMatch(/endpoints/);
@@ -57,7 +57,7 @@ describe('internal identifiers stay unchanged', () => {
     ]);
     // The full public key: a different key would make every installed app reject the next update.
     expect(tauri.plugins.updater.pubkey).toBe(
-      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDREU2NEMxNEY0OTI3N0UKUldSK0owbFB3V1RlUEVQL2lDS28rdk1ud3BTdEU1bElzQjlOQWVCTUpINVZaL24yMWpuV2lDREIK',
+      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNDIzNzAyRTFEOEI5Q0UKUldUT3VkamhBamRDK210bVlOclMva3hmMC81Q1hJZEtaWVkyWEszb2YwbXN1ZkFsR3R3L2tzYWMK',
     );
   });
 
