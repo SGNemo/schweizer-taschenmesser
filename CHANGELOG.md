@@ -4,28 +4,30 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 
 ## Unreleased
 
-### Breaking
-- **Messages, habit tracker and time tracking are no longer visible** (retired). Their data stays stored, keeps syncing and is part of every backup; the interface does not come back. If you need the data, export it beforehand with a backup (Settings → Backup).
-- **Tools:** percent & VAT and split costs are now modes of the calculator, Base64, JSON, UUID and hash live in the "Developer" tool, and the scratch note is the pinned "scratchpad" at the top of Notes. Your saved tool selection is carried over.
-- **Shopping list and packing lists are the new "Lists" module** (shopping, packing list, checklist), **Apps & links are the "Bookmarks" view of Saved** (tiles by first tag). Existing data is copied on start, after sync and after a backup import; the old modules are retired. **All devices must be updated**: an old device keeps writing into the old tables. The eight start-page templates of Apps & links are gone; `mailto:`/`tel:` links can only be saved again as http(s) in the bookmark editor.
-- **Contracts & warranties merge into "Documents", birthdays and gift ideas into the new "People" module.** Existing data is copied on start, after sync and after a backup import; the old modules are retired. Gift ideas are assigned to the person with the same name, otherwise a new person is created. **All devices must be updated**: an old device keeps writing into the old tables. Reminder settings are carried over (Documents: its own lead time for notice periods).
-- **Reminders are now calendar events of the type "Reminder"** (tab "Reminders"; `/reminders` redirects there). Existing reminders are copied on start, after sync and after a backup import, paused ones stay paused; the module is retired, and so is its dashboard widget (the entries appear in "Today & tomorrow"). **All devices must be updated**: an old device keeps writing into the old tables. The default time is carried over.
-- **The old tables are removed** (messages, habits, time tracking, reminders, shopping, packing lists, apps & links, birthdays, gifts, contracts: 15 tables, database version 18). Their data has been copied into the new modules since 0.5–0.7; **anyone who still has data in one of these tables (devices < 0.7 that were never updated) loses it.** Backups from versions before 0.5 can still be read, the old tables in them are skipped (the preview shows how many); shopping, packing lists, contracts, birthdays, gifts and reminders from them do not come back.
-- **System info** is a tab of "This PC" (formerly Disk); the path `/system` is gone.
+## 1.0.0 (2026-10-07) – "Nemo 1.0.0"
+Erste stabile Hauptversion: neue Oberfläche („Klar 2“), neu geordnete Module, KI-Einträge, Fokus-Hilfen und fünf Sprachen. Bundle-ID, Updater-Endpunkt und Backup-Formate bleiben gleich; Installationen ab 0.3.0 aktualisieren sich in der App.
 
-### New
-- **Turn on disabled modules right away:** when a notice names a disabled module (for example "Add to shopping list" in Pantry without Lists), there is an "Enable" button and the action runs right after. The same applies to the share page and to answers of the AI assistant.
-- **Focus and attention aids (package 1 "Getting started"), each one can be turned off under Settings → Appearance → "Focus & attention":** "Up next" suggests a single task at the top of the overview (Start, Later, Something else); the day plan shows at most three things for today and what is already done; focus mode shows one task with steps and a ring timer without menus (state survives a reload, shown at the top, gentle ending); "Next" shows the time until the next event; to-dos have an estimated duration (also via quick capture: "… 15 min") and can be planned for today; "Important now" is calmer ("Still waiting" collapsed, no red day counter for old to-dos, "Replan" spreads them over the next days).
-- **Calm reminders (package 2), all can be turned off under Settings → Notifications → "Calm reminders":** while the app is open, a due reminder appears as a card with "Done" and "Later" (10 min, 1 h, tonight, tomorrow morning, when I am at the PC). Quiet hours (22–7) for automatic extras, at most 3 notices per hour (the rest is combined into one notice), optional staggered reminders before events and a gentle follow-up. Instead of single to-do notices there is one notice in the morning that names today's to-dos. The end of a focus round can also be announced while the app is closed. "Where was I?" shows the way back on the overview after a longer break.
-- **Capture, calm, find again (package 3):** quick capture no longer asks back on unclear text but puts it into the to-do inbox exactly as you typed it (can be turned off under Quick capture). Ctrl+Enter opens the full form with the typed text. "Sort inbox" goes through the inbox items one by one. Search (Ctrl+K) first shows what you used last (history on the device, can be deleted). Appearance: text size "Extra large", line spacing "Airy", "Motion: Less" inside the app and the calm overview "Only the essentials".
-- **Visible progress without pressure (package 4), can be turned off under Settings → Appearance → "Focus & attention":** recurring to-dos show "n in a row" (a day off breaks nothing, you never lose anything), a friendly weekly review in "Up next", "Wrap up the day" in the evening (move what is left to tomorrow with one tap), and "From template" in Lists with morning routine, evening routine and weekly planning.
-- **Calendar:** events can notify beforehand (from the start up to 1 day before, also for recurring ones); all-day events at an adjustable time.
-- **To-dos:** tasks recur (ticking one off creates the next), "Someday" keeps tasks out of the open lists; recurring due dates appear in the calendar.
-- Tool frame: `/tools/<id>`, command palette "Tool: …", Ctrl+. opens the tools; wider dialog, "Back" in the header.
-- Time of the subscription reminder is adjustable; "Starter data" button also for contracts, packing lists, pantry, documents, gifts, budgets and notes.
+### Wichtig vor dem Update
+- **Daten alter Module werden nicht übernommen, wenn du direkt von 0.3.x kommst.** Entfernt sind die Tabellen von Einkauf, Packlisten, Apps & Links, Geburtstagen, Geschenken, Verträgen, Erinnerungen, Gewohnheiten, Zeiterfassung und Nachrichten (News). Sie wandern nicht in die neuen Module Listen, Merkliste, Personen, Unterlagen und Kalender. Wer solche Daten braucht, sichert sie vorher (Einstellungen → Backup) oder bleibt bei 0.3.1. Todos, Notizen, Kalender, Finanzen und Tresor sind nicht betroffen.
+- Die Datenbank wird auf Version 19 migriert; danach läuft keine ältere App mehr mit diesen Daten. Vor dem Update legt die App ein Sicherungs-Backup an.
+- Installationen bis 0.2.x können sich nicht mehr selbst aktualisieren (Dateinamen jetzt `Nemo-*`) und müssen neu installiert werden.
+- Alle Geräte, die per Sync verbunden sind, auf dieselbe Version bringen.
 
-### Fixed
-- Subscription names no longer wrap letter by letter; "Add to shopping list" says when the shopping list is off; outdated texts (calendar, backup hint in the assistant, "Productive" profile) corrected.
+### Neu
+- **Oberfläche „Klar 2“:** neue Farben und Radien, Übersicht als Startseite mit Widgets, Bereiche und Seitenleiste, Einstellungen mit Suche und „Über Nemo“, Rückgängig-Verlauf, Tastenkürzel.
+- **Module neu geordnet:** Listen (Einkauf, Packliste, Checkliste), Personen (Geburtstage, Geschenke), Unterlagen (Verträge), Erinnerungen als Kalender-Termine, Werkzeuge von 18 auf 12, „Dieser PC“ mit System-Info.
+- **KI-Einträge** in jedem Modul (Regeln zuerst, Cloud nur als Rückfall, Vorschau mit Rückgängig), lokales Modell, Chat-Modul und Hauptschalter „KI abschalten“.
+- **Fokus- und Aufmerksamkeitshilfen:** „Als Nächstes“, Tagesplan, Fokusmodus, ruhige Erinnerungen mit „Später“, Morgen-Übersicht, Erfassen ohne Rückfrage, Fortschritt ohne Druck. Alles abschaltbar.
+- **Lesbarkeit:** Lesehilfe, Textgröße „Extra groß“, Zeilenabstand „Luftig“, weniger Bewegung.
+- **Fünf Sprachen:** Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien).
+- **Absturzfestigkeit:** Diagnose mit Vorschau und „Fehler melden“, Wiederherstellungsbildschirm, sicherer Modus, Fehlerkarten pro Modul.
+- **Supporter-Modus**, Kalender-Benachrichtigungen vorab, wiederkehrende Todos, Passwort-Generator und Brave-Erweiterung, Rechtliches in „Über Nemo“.
+
+### Behoben, Sicherheit
+- Sicherheits-Review vor dem Start mit kleinen Korrekturen; CodeQL-Befunde bearbeitet. Viele kleine UI- und Testkorrekturen.
+
+### Hinweise
+- **Bekannt:** Gerätefunktionen (Windows Hello, Android-Keystore, Disk-Modul, Update-Austausch) sind nur von Hand prüfbar. Bitte Fehler melden.
 
 ## 0.3.1 (2026-10-01) – "Nemo 0.3.1"
 Small update: new wordmark. Installations of 0.3.0 are offered it via in-app update; data stays intact.
