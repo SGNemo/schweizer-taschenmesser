@@ -21,20 +21,29 @@ const json = (path: string) => JSON.parse(read(path)) as TauriConfig;
 
 describe('Dev-Preview flavor', () => {
   const stable = json('src-tauri/tauri.conf.json');
-  const dev = JSON.parse(read('src-tauri/tauri.dev.conf.json')) as Record<string, unknown>;
+  const dev = json('src-tauri/tauri.dev.conf.json');
 
-  it('only overrides name and identifier; the identifier is the stable one plus ".dev"', () => {
+  it('only overrides name, identifier and the updater key; the identifier is the stable one plus ".dev"', () => {
     expect(
       Object.keys(dev)
         .filter((k) => k !== '$schema')
         .sort(),
-    ).toEqual(['identifier', 'productName']);
+    ).toEqual(['identifier', 'plugins', 'productName']);
     expect(dev.identifier).toBe(`${stable.identifier}.dev`);
     expect(dev.productName).toBe('Nemo Dev');
   });
 
-  it('cannot touch the updater key or endpoint of the stable app', () => {
-    expect(JSON.stringify(dev)).not.toMatch(/updater|pubkey|endpoints/);
+  it('signs with its own updater key and cannot touch the endpoint of the stable app', () => {
+    // The dev channel has its own minisign pair (docs/decisions/distribution.md): a preview binary
+    // never carries a valid stable signature. A different dev key would make every installed
+    // preview reject the next update, so the full key is pinned like the stable one.
+    expect(Object.keys(dev.plugins)).toEqual(['updater']);
+    expect(Object.keys(dev.plugins.updater)).toEqual(['pubkey']);
+    expect(dev.plugins.updater.pubkey).toBe(
+      'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUzM0RBRkM2ODIwREJEN0UKUldSK3ZRMkN4cTg5VTRqaHdrbFJCN3NqbmlYekttdFZmdWtPRHFYWGdBWFdZcVY0V1pzVlR5dDcK',
+    );
+    expect(dev.plugins.updater.pubkey).not.toBe(stable.plugins.updater.pubkey);
+    expect(JSON.stringify(dev)).not.toMatch(/endpoints/);
   });
 });
 
