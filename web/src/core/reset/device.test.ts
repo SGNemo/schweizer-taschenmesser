@@ -1,8 +1,11 @@
 import Dexie from 'dexie';
 import { describe, expect, it, vi } from 'vitest';
+import { createKeychain, serializeHeader, vaultSealName } from '@/core/crypto';
 import { TaschenmesserDB } from '@/core/db/db';
 import type { SecretStore } from '@/core/secrets/types';
-import { deviceSecretNames, resetDevice, RESET_PHRASE } from './device';
+import { deviceSecretNames, resetDevice, RESET_PHRASE, vaultSealNames } from './device';
+
+const FAST = { m: 64, t: 1, p: 1 };
 
 function memorySecrets(
   initial: Record<string, string>,
@@ -49,10 +52,56 @@ describe('device reset', () => {
       removeItem: (k: string) => void store.delete(k),
     };
     const reload = vi.fn();
-    await resetDevice({ database, secrets, storage, reload });
+    await resetDevice({
+      database,
+      secrets,
+      storage,
+      reload,
+      biometrics: { remove: async () => {} },
+    });
     expect([...secrets.map.keys()]).toEqual(['other']);
     expect([...store.keys()]).toEqual(['unrelated']);
     expect(reload).toHaveBeenCalledOnce();
     expect(await Dexie.exists(database.name)).toBe(false);
+  });
+
+  it('drops the biometric seal of the vault before the database goes (even when the OS call fails)', async () => {
+    const database = new TaschenmesserDB(`reset-seal-${Math.random()}`);
+    await database.open();
+    const { header } = await createKeychain('Master-Passwort 1', FAST);
+    await database.table('accounts_vault').put({
+      id: 'vault',
+      header: serializeHeader(header),
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'd',
+      deletedAt: null,
+      _f: {},
+    });
+    expect(await vaultSealNames(database)).toEqual([vaultSealName(header.vaultId)]);
+
+    const remove = vi.fn(async () => {
+      throw new Error('keystore unavailable');
+    });
+    const reload = vi.fn();
+    await resetDevice({
+      database,
+      secrets: memorySecrets({}),
+      storage: undefined,
+      reload,
+      biometrics: { remove },
+    });
+    expect(remove).toHaveBeenCalledWith(vaultSealName(header.vaultId));
+    expect(reload).toHaveBeenCalledOnce();
+    expect(await Dexie.exists(database.name)).toBe(false);
+  });
+
+  it('names no seal without a vault or with an unreadable header', async () => {
+    const database = new TaschenmesserDB(`reset-noseal-${Math.random()}`);
+    await database.open();
+    expect(await vaultSealNames(database)).toEqual([]);
+    await database.table('accounts_vault').put({ id: 'vault', header: '{not json' });
+    expect(await vaultSealNames(database)).toEqual([]);
+    database.close();
   });
 });
