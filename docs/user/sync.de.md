@@ -1,3 +1,5 @@
+[English](sync.md) | **Deutsch**
+
 # Sync-Server
 
 Ein kleiner Node-Server (Fastify + SQLite) mit Token-Authentifizierung. Er speichert pro Feld nur den Wert mit dem
@@ -74,11 +76,12 @@ App (Windows/Android Chrome/Edge; braucht HTTPS, z. B. über Tailscale, und eine
 ## In der App verbinden
 
 *Einstellungen → Synchronisation*: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
-einer Passphrase (mind. 8 Zeichen) einschalten. Danach synchronisiert die App beim Start, jede Minute, nach lokalen
+einer Passphrase (mind. 12 Zeichen, am besten mehrere Wörter) einschalten; die Verschlüsselung ist beim ersten Verbinden
+vorausgewählt. Danach synchronisiert die App beim Start, jede Minute, nach lokalen
 Änderungen und wenn sie wieder online/sichtbar wird; der Status steht in den Einstellungen und als Symbol oben.
 
-- **Verschlüsselung:** Werte werden auf dem Gerät mit AES-GCM verschlüsselt (Schlüssel aus der Passphrase, PBKDF2-
-  SHA-256, 600 000 Runden). Der Server sieht Sammlung, Datensatz-ID, Feldname und Zeitstempel – **nicht** die Inhalte.
+- **Verschlüsselung:** Werte werden auf dem Gerät mit AES-256-GCM verschlüsselt (Schlüssel aus der Passphrase mit
+  Argon2id, 64 MiB Speicher, 3 Durchgänge; die Parameter stehen mit dem Salt auf dem Server). Der Server sieht Sammlung, Datensatz-ID, Feldname und Zeitstempel – **nicht** die Inhalte.
   Weitere Geräte treten mit derselben Passphrase bei. Ohne Passphrase sind die Daten **nicht** wiederherstellbar.
   Verschlüsselung lässt sich nur auf einem leeren Server einschalten; enthält der Server schon Klartext-Daten, bietet
   die App an, ihn zurückzusetzen (das löscht alle Serverdaten; die Geräte laden ihre Daten danach erneut hoch).
@@ -87,8 +90,4 @@ einer Passphrase (mind. 8 Zeichen) einschalten. Danach synchronisiert die App be
 - **Neuer oder zurückgesetzter Server:** die App erkennt das und lädt alle lokalen Daten hoch.
 - **Trennen** beendet nur den Sync auf diesem Gerät, lokale Daten bleiben.
 
-## Backup
-
-*Einstellungen → Backup* lädt alle Daten als JSON-Datei herunter (inkl. gelöschter Einträge für korrektes Mergen, aber
-ohne Zugangsdaten). Beim Import: **Zusammenführen** (Konflikte entscheidet die neuere Änderung, nichts geht verloren)
-oder **Ersetzen** (das Backup wird zum Stand; auch andere Geräte übernehmen ihn beim nächsten Sync).
+Backups (Datei, verschlüsselt, automatisch): [Backup](backup.de.md).

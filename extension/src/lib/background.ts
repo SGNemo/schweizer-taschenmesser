@@ -66,8 +66,15 @@ function mapError(error: CallError): Failure {
   }
 }
 
+/**
+ * The page origin of a sender. A content script in an opaque-origin frame (sandboxed iframe,
+ * `data:` document) reports `origin: 'null'` and gets nothing: the frame's URL would name the
+ * site, but the frame is not that site. The URL fallback serves only the popup path, which looks
+ * up the active tab by URL and never has an `origin` field.
+ */
 export function pageOriginOf(sender: { origin?: string; url?: string }): string | undefined {
-  const candidate = sender.origin && sender.origin !== 'null' ? sender.origin : sender.url;
+  if (sender.origin === 'null') return undefined;
+  const candidate = sender.origin ?? sender.url;
   const normalized = candidate ? normalizeOrigin(candidate) : null;
   return normalized ? originString(normalized) : undefined;
 }

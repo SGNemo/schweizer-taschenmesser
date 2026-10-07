@@ -43,13 +43,6 @@ export const t = {
       docs: 'Dokumentation',
       bugs: 'Fehler melden',
     },
-    diagnostics: {
-      title: 'Diagnose',
-      label: 'Diagnose exportieren',
-      description:
-        'Speichert eine Datei mit Version, Plattform, aktiven Modulen und den letzten Fehlermeldungen (gekürzt). Ohne Einträge, Einstellungen und Schlüssel.',
-      saved: 'Diagnose gespeichert.',
-    },
     reset: {
       title: 'Gerät zurücksetzen',
       label: 'Alle Daten auf diesem Gerät löschen',
@@ -528,7 +521,7 @@ export const t = {
         noScopes: 'keine Anmeldung nötig',
         testingNote:
           'Ist dein Google-Projekt im Status „Testing“, läuft die Anmeldung nach 7 Tagen ab. Stelle es auf „In Produktion“.',
-        stepsNote: 'Schritte: docs/STATUS.md → „Google-Verbindung einrichten“.',
+        stepsNote: 'Schritte: docs/MANUAL-TESTS.md → „Google-Verbindung einrichten“.',
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
       startdata: {
@@ -1878,7 +1871,7 @@ export const t = {
       'Ohne Ende-zu-Ende-Verschlüsselung liegen deine Daten auf dem Server im Klartext. Nutze sie, wenn der Server nicht nur dir gehört oder nicht verschlüsselt gespeichert wird.',
     passphrase: 'Passphrase',
     passphraseHint:
-      'Mindestens 8 Zeichen. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
+      'Mindestens 12 Zeichen, am besten mehrere Wörter. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
     passphraseJoinHint: 'Nur nötig, wenn der Server verschlüsselt ist.',
     connect: 'Verbinden',
     connecting: 'Verbinde …',
@@ -1955,6 +1948,7 @@ export const t = {
       'rate-limited': 'Zu viele Anfragen oder Fehlversuche – es wird automatisch erneut versucht.',
       unauthorized: 'Der Server hat das Token abgelehnt.',
       server: 'Der Server hat einen Fehler gemeldet.',
+      clock: 'Die Uhr dieses Geräts geht mehr als eine Stunde vor. Bitte Datum und Uhrzeit prüfen.',
       decrypt: 'Entschlüsselung fehlgeschlagen – stimmt die Passphrase?',
       'no-key':
         'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit Passphrase verbinden.',
@@ -1967,7 +1961,7 @@ export const t = {
         'Server nicht erreichbar. Wird die App per HTTPS geöffnet, muss auch der Server per HTTPS erreichbar sein (z. B. mit „tailscale serve“).',
       unauthorized: 'Das Token wurde abgelehnt.',
       'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte die Passphrase eingeben.',
-      'passphrase-too-short': 'Die Passphrase braucht mindestens 8 Zeichen.',
+      'passphrase-too-short': 'Die Passphrase braucht mindestens 12 Zeichen.',
       'wrong-passphrase': 'Falsche Passphrase.',
       'server-has-plain-data':
         'Auf dem Server liegen bereits unverschlüsselte Daten. Verschlüsselung ist nur auf einem leeren Server möglich.',
@@ -2468,6 +2462,8 @@ export const t = {
         'not-configured': 'Unvollständig eingerichtet',
         'invalid-response': 'Unbrauchbare Antwort',
       } as Record<string, string>,
+      baseUrlInsecure:
+        'Die Adresse muss mit https:// beginnen. http:// geht nur für Server auf diesem Gerät oder im eigenen Netz (z. B. localhost, 192.168.…).',
     },
   },
   bookmarks: {

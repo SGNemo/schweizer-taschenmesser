@@ -23,6 +23,9 @@ pub struct Limits {
     pub max_header_bytes: usize,
     pub max_body_bytes: usize,
     pub read_timeout: Duration,
+    /// Time a client gets to deliver the request head (up to the first CRLFCRLF); the body is
+    /// read before authentication, so the head must arrive quickly.
+    pub head_deadline: Duration,
     /// Total time a client gets to deliver its whole request (a slow trickle cannot hold a slot).
     pub request_deadline: Duration,
     /// How long the app may take to answer.
@@ -38,6 +41,7 @@ impl Default for Limits {
             max_header_bytes: 16 * 1024,
             max_body_bytes: 1024 * 1024,
             read_timeout: Duration::from_secs(5),
+            head_deadline: Duration::from_secs(2),
             request_deadline: Duration::from_secs(15),
             response_timeout: Duration::from_secs(30),
             max_connections: 8,
@@ -225,9 +229,13 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>) {
 }
 
 fn handle_connection(stream: &mut TcpStream, shared: &Shared) {
+    let now = Instant::now();
     let mut timed = Deadline {
         stream: &mut *stream,
-        until: Instant::now() + shared.limits.request_deadline,
+        until: now + shared.limits.request_deadline,
+        head_until: now + shared.limits.head_deadline,
+        head_done: false,
+        head_matched: 0,
         per_read: shared.limits.read_timeout,
     };
     let request = match read_request(
@@ -247,22 +255,57 @@ fn handle_connection(stream: &mut TcpStream, shared: &Shared) {
     let _ = write_response(stream, &reply);
 }
 
-/// Reads with a per-read timeout that never extends past the request's overall deadline.
+/// Reads with a per-read timeout that never extends past the request's deadlines: the short one
+/// until the head is complete (first CRLFCRLF), the overall one for the whole request.
 struct Deadline<'a> {
     stream: &'a mut TcpStream,
     until: Instant,
+    head_until: Instant,
+    head_done: bool,
+    /// How many bytes of `\r\n\r\n` the stream has matched so far.
+    head_matched: usize,
     per_read: Duration,
+}
+
+const HEAD_END: &[u8; 4] = b"\r\n\r\n";
+
+impl Deadline<'_> {
+    /// Tracks the end of the request head across read boundaries.
+    fn note(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            if self.head_done {
+                return;
+            }
+            self.head_matched = if b == HEAD_END[self.head_matched] {
+                self.head_matched + 1
+            } else if b == HEAD_END[0] {
+                1
+            } else {
+                0
+            };
+            if self.head_matched == HEAD_END.len() {
+                self.head_done = true;
+            }
+        }
+    }
 }
 
 impl io::Read for Deadline<'_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let left = self.until.saturating_duration_since(Instant::now());
+        let deadline = if self.head_done {
+            self.until
+        } else {
+            self.until.min(self.head_until)
+        };
+        let left = deadline.saturating_duration_since(Instant::now());
         if left.is_zero() {
             return Err(io::Error::new(ErrorKind::TimedOut, "request deadline"));
         }
         self.stream
             .set_read_timeout(Some(left.min(self.per_read)))?;
-        self.stream.read(buf)
+        let n = self.stream.read(buf)?;
+        self.note(&buf[..n]);
+        Ok(n)
     }
 }
 
@@ -312,14 +355,6 @@ fn process(req: &Request, shared: &Shared) -> Reply {
     }
 
     let now = Instant::now();
-    if shared
-        .failures
-        .lock()
-        .map(|mut f| f.exhausted(FAILURES_KEY, now))
-        .unwrap_or(true)
-    {
-        return error(429, "too-many-requests");
-    }
     let authorization = match req.header("authorization") {
         Ok(v) => v,
         Err(()) => return error(400, "bad-request"),
@@ -332,8 +367,15 @@ fn process(req: &Request, shared: &Shared) -> Reply {
     let token_id = match auth {
         Auth::Ok(id) => id,
         other => {
-            if let Ok(mut f) = shared.failures.lock() {
-                f.hit(FAILURES_KEY, now);
+            // The guessing budget is charged only on failures: a correct token is never throttled
+            // by someone else's guesses (loopback has no meaningful "peer").
+            let budget_left = shared
+                .failures
+                .lock()
+                .map(|mut f| f.hit(FAILURES_KEY, now))
+                .unwrap_or(false);
+            if !budget_left {
+                return error(429, "too-many-requests");
             }
             let code = match other {
                 Auth::Missing => "token-missing",

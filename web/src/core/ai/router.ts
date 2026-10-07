@@ -8,6 +8,10 @@
  * caching (the cache stores validated intents, see `cache.ts`).
  *
  * Privacy is unchanged: the router forwards the request it gets – question, date, compact schemas.
+ * A request that carries a conversation (`history`, the chat module) is the exception to the
+ * fallback: the user was promised *one* provider for what they typed, so only the first provider
+ * that is not paused or over its limit gets it. If that one fails, its error is reported instead of
+ * handing the conversation to the next provider (which may be one that trains on inputs).
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { now } from '@/core/time/now';
@@ -98,6 +102,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
       const attempts: Attempt[] = [];
       let skippedForLimit = 0;
       let skippedCooling = 0;
+      const singleProvider = req.history !== undefined;
 
       for (const { entry, provider } of members) {
         const at = clock();
@@ -140,6 +145,7 @@ export function createRouter(opts: RouterOptions): AiProvider {
           });
           const wait = cooldownFor(error);
           if (wait > 0) cooldowns.set(entry.id, { until: clock() + wait, code: error.code });
+          if (singleProvider) throw new AiError(error.code, error.message, { attempts });
         }
       }
 

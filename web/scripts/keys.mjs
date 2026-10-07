@@ -3,6 +3,7 @@
  * Helper to create the two signing identities of a release. Run it on YOUR machine (never in CI).
  *
  *   node scripts/keys.mjs updater    Tauri updater key pair (signs Windows updates)
+ *   node scripts/keys.mjs updater --dev   second pair for the Dev-Preview channel (never the stable key)
  *   node scripts/keys.mjs android    Android release keystore (signs the APK)
  *   node scripts/keys.mjs secrets    which GitHub secrets to create and how
  *
@@ -49,21 +50,28 @@ function run(command, args) {
 
 function updater() {
   prepareDir();
-  const key = join(dir, 'taschenmesser-updater.key');
+  // The Dev-Preview channel signs with its own pair, so a preview binary never carries a valid
+  // stable signature (and a stable one never a valid dev signature).
+  const dev = process.argv.includes('--dev');
+  const key = join(dir, dev ? 'taschenmesser-updater-dev.key' : 'taschenmesser-updater.key');
+  const secret = dev ? 'TAURI_DEV_SIGNING_PRIVATE_KEY' : 'TAURI_SIGNING_PRIVATE_KEY';
+  const conf = dev ? 'tauri.dev.conf.json' : 'tauri.conf.json';
   if (existsSync(key)) {
     console.error(
       `${key} exists already – not overwriting. Move it away first if you really want a new key.`,
     );
     process.exit(1);
   }
-  console.log('Creating the updater key pair. Choose a password and remember it.\n');
+  console.log(
+    `Creating the ${dev ? 'Dev-Preview ' : ''}updater key pair. Choose a password and remember it.\n`,
+  );
   run('npx', ['tauri', 'signer', 'generate', '-w', key]);
   console.log(`
 Done.
-  private key : ${key}   → GitHub secret TAURI_SIGNING_PRIVATE_KEY (file content)
-  password    : the one you just chose → GitHub secret TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+  private key : ${key}   → GitHub secret ${secret} (file content)
+  password    : the one you just chose → GitHub secret ${secret}_PASSWORD
   public key  : ${key}.pub → paste its content into "plugins.updater.pubkey" in
-                ${join(webRoot, 'src-tauri', 'tauri.conf.json')} and commit that change.
+                ${join(webRoot, 'src-tauri', conf)} and commit that change.
 Back the private key and the password up (password manager + offline copy).`);
 }
 
@@ -108,6 +116,8 @@ function secrets() {
 
   TAURI_SIGNING_PRIVATE_KEY            content of taschenmesser-updater.key
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD   its password
+  TAURI_DEV_SIGNING_PRIVATE_KEY        content of taschenmesser-updater-dev.key (Dev-Preview channel)
+  TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD  its password
   ANDROID_KEYSTORE_BASE64              content of taschenmesser-release.jks.base64
   ANDROID_KEYSTORE_PASSWORD            keystore password
   ANDROID_KEY_ALIAS                    taschenmesser
@@ -117,6 +127,8 @@ With the GitHub CLI (from the repository, keys in ${dir}):
 
   gh secret set TAURI_SIGNING_PRIVATE_KEY < "${join(dir, 'taschenmesser-updater.key')}"
   gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+  gh secret set TAURI_DEV_SIGNING_PRIVATE_KEY < "${join(dir, 'taschenmesser-updater-dev.key')}"
+  gh secret set TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD
   gh secret set ANDROID_KEYSTORE_BASE64 < "${join(dir, 'taschenmesser-release.jks.base64')}"
   gh secret set ANDROID_KEYSTORE_PASSWORD
   gh secret set ANDROID_KEY_ALIAS --body taschenmesser
@@ -126,7 +138,7 @@ With the GitHub CLI (from the repository, keys in ${dir}):
 const commands = { updater, android, secrets };
 const command = commands[process.argv[2]];
 if (!command) {
-  console.error('Usage: keys.mjs updater | android | secrets');
+  console.error('Usage: keys.mjs updater [--dev] | android | secrets');
   process.exit(2);
 }
 command();

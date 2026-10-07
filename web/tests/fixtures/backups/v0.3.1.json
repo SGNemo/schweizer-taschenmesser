@@ -1,0 +1,543 @@
+{
+  "format": "taschenmesser-backup",
+  "version": 1,
+  "exportedAt": "2026-10-01T09:00:00.000Z",
+  "tables": {
+    "accounts_entry": [],
+    "accounts_vault": [],
+    "birthdays_birthday": [],
+    "bookmarks_item": [],
+    "budgets_budget": [],
+    "budgets_deposit": [],
+    "budgets_goal": [],
+    "calendar_event": [],
+    "calendar_external": [],
+    "contracts_contract": [],
+    "example_entry": [],
+    "finance_account": [
+      {
+        "id": "v0.3.1-finance_account-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000001000-0000-fixdev01",
+          "openingBalanceMinor": "1790000001000-0000-fixdev01",
+          "order": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "name": "Konto 1",
+        "openingBalanceMinor": 10000,
+        "order": 1
+      },
+      {
+        "id": "v0.3.1-finance_account-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000002000-0000-fixdev01",
+          "openingBalanceMinor": "1790000002000-0000-fixdev01",
+          "order": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "name": "Konto 2",
+        "openingBalanceMinor": 20000,
+        "order": 2
+      },
+      {
+        "id": "v0.3.1-finance_account-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000003000-0000-fixdev01",
+          "openingBalanceMinor": "1790000003000-0000-fixdev01",
+          "order": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "name": "Konto 3",
+        "openingBalanceMinor": 30000,
+        "order": 3
+      }
+    ],
+    "finance_category": [
+      {
+        "id": "v0.3.1-finance_category-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000001000-0000-fixdev01",
+          "kind": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "name": "Kategorie 1",
+        "kind": "expense"
+      },
+      {
+        "id": "v0.3.1-finance_category-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000002000-0000-fixdev01",
+          "kind": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "name": "Kategorie 2",
+        "kind": "income"
+      },
+      {
+        "id": "v0.3.1-finance_category-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000003000-0000-fixdev01",
+          "kind": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "name": "Kategorie 3",
+        "kind": "expense"
+      }
+    ],
+    "finance_transaction": [
+      {
+        "id": "v0.3.1-finance_transaction-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "accountId": "1790000001000-0000-fixdev01",
+          "kind": "1790000001000-0000-fixdev01",
+          "amountMinor": "1790000001000-0000-fixdev01",
+          "date": "1790000001000-0000-fixdev01",
+          "payee": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "accountId": "v0.3.1-finance_account-1",
+        "kind": "expense",
+        "amountMinor": 1250,
+        "date": "2026-09-11",
+        "payee": "Laden 1"
+      },
+      {
+        "id": "v0.3.1-finance_transaction-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "accountId": "1790000002000-0000-fixdev01",
+          "kind": "1790000002000-0000-fixdev01",
+          "amountMinor": "1790000002000-0000-fixdev01",
+          "date": "1790000002000-0000-fixdev01",
+          "payee": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "accountId": "v0.3.1-finance_account-2",
+        "kind": "expense",
+        "amountMinor": 2500,
+        "date": "2026-09-12",
+        "payee": "Laden 2"
+      },
+      {
+        "id": "v0.3.1-finance_transaction-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "accountId": "1790000003000-0000-fixdev01",
+          "kind": "1790000003000-0000-fixdev01",
+          "amountMinor": "1790000003000-0000-fixdev01",
+          "date": "1790000003000-0000-fixdev01",
+          "payee": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "accountId": "v0.3.1-finance_account-3",
+        "kind": "expense",
+        "amountMinor": 3750,
+        "date": "2026-09-13",
+        "payee": "Laden 3"
+      }
+    ],
+    "gifts_idea": [],
+    "habits_check": [
+      {
+        "id": "v0.3.1-habits_check-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "habitId": "1790000001000-0000-fixdev01",
+          "date": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "habitId": "v0.3.1-habits_habit-1",
+        "date": "2026-09-11"
+      },
+      {
+        "id": "v0.3.1-habits_check-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "habitId": "1790000002000-0000-fixdev01",
+          "date": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "habitId": "v0.3.1-habits_habit-2",
+        "date": "2026-09-12"
+      },
+      {
+        "id": "v0.3.1-habits_check-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "habitId": "1790000003000-0000-fixdev01",
+          "date": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "habitId": "v0.3.1-habits_habit-3",
+        "date": "2026-09-13"
+      }
+    ],
+    "habits_habit": [
+      {
+        "id": "v0.3.1-habits_habit-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000001000-0000-fixdev01",
+          "weekdays": "1790000001000-0000-fixdev01",
+          "archived": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "name": "Gewohnheit 1",
+        "weekdays": [1, 2, 3, 4, 5],
+        "archived": false
+      },
+      {
+        "id": "v0.3.1-habits_habit-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000002000-0000-fixdev01",
+          "weekdays": "1790000002000-0000-fixdev01",
+          "archived": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "name": "Gewohnheit 2",
+        "weekdays": [1, 2, 3, 4, 5],
+        "archived": false
+      },
+      {
+        "id": "v0.3.1-habits_habit-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000003000-0000-fixdev01",
+          "weekdays": "1790000003000-0000-fixdev01",
+          "archived": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "name": "Gewohnheit 3",
+        "weekdays": [1, 2, 3, 4, 5],
+        "archived": false
+      }
+    ],
+    "invoices_invoice": [],
+    "launcher_link": [],
+    "news_article": [],
+    "news_feed": [],
+    "news_feedstate": [],
+    "notes_note": [
+      {
+        "id": "v0.3.1-notes_note-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000001000-0000-fixdev01",
+          "body": "1790000001000-0000-fixdev01",
+          "pinned": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "title": "Notiz 1",
+        "body": "Erfundener Text",
+        "pinned": true
+      },
+      {
+        "id": "v0.3.1-notes_note-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000002000-0000-fixdev01",
+          "body": "1790000002000-0000-fixdev01",
+          "pinned": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "title": "Notiz 2",
+        "body": "Erfundener Text",
+        "pinned": false
+      },
+      {
+        "id": "v0.3.1-notes_note-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000003000-0000-fixdev01",
+          "body": "1790000003000-0000-fixdev01",
+          "pinned": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "title": "Notiz 3",
+        "body": "Erfundener Text",
+        "pinned": false
+      }
+    ],
+    "packing_item": [],
+    "packing_list": [],
+    "pantry_item": [],
+    "reminders_reminder": [
+      {
+        "id": "v0.3.1-reminders_reminder-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000001000-0000-fixdev01",
+          "startDate": "1790000001000-0000-fixdev01",
+          "time": "1790000001000-0000-fixdev01",
+          "active": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "title": "Erinnerung 1",
+        "startDate": "2026-10-11",
+        "time": "08:00",
+        "active": true
+      },
+      {
+        "id": "v0.3.1-reminders_reminder-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000002000-0000-fixdev01",
+          "startDate": "1790000002000-0000-fixdev01",
+          "time": "1790000002000-0000-fixdev01",
+          "active": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "title": "Erinnerung 2",
+        "startDate": "2026-10-12",
+        "time": "08:00",
+        "active": true
+      },
+      {
+        "id": "v0.3.1-reminders_reminder-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "title": "1790000003000-0000-fixdev01",
+          "startDate": "1790000003000-0000-fixdev01",
+          "time": "1790000003000-0000-fixdev01",
+          "active": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "title": "Erinnerung 3",
+        "startDate": "2026-10-13",
+        "time": "08:00",
+        "active": true
+      }
+    ],
+    "shopping_item": [
+      {
+        "id": "v0.3.1-shopping_item-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000001000-0000-fixdev01",
+          "quantity": "1790000001000-0000-fixdev01",
+          "done": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "name": "Artikel 1",
+        "quantity": "1",
+        "done": false
+      },
+      {
+        "id": "v0.3.1-shopping_item-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000002000-0000-fixdev01",
+          "quantity": "1790000002000-0000-fixdev01",
+          "done": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "name": "Artikel 2",
+        "quantity": "2",
+        "done": false
+      },
+      {
+        "id": "v0.3.1-shopping_item-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000003000-0000-fixdev01",
+          "quantity": "1790000003000-0000-fixdev01",
+          "done": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "name": "Artikel 3",
+        "quantity": "3",
+        "done": false
+      }
+    ],
+    "subscriptions_subscription": [],
+    "timetrack_entry": [],
+    "timetrack_project": [],
+    "todos_list": [
+      {
+        "id": "v0.3.1-todos_list-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000001000-0000-fixdev01",
+          "order": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "name": "Liste 1",
+        "order": 1
+      },
+      {
+        "id": "v0.3.1-todos_list-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000002000-0000-fixdev01",
+          "order": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "name": "Liste 2",
+        "order": 2
+      },
+      {
+        "id": "v0.3.1-todos_list-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "name": "1790000003000-0000-fixdev01",
+          "order": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "name": "Liste 3",
+        "order": 3
+      }
+    ],
+    "todos_task": [
+      {
+        "id": "v0.3.1-todos_task-1",
+        "createdAt": 1790000001000,
+        "updatedAt": 1790000001000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "listId": "1790000001000-0000-fixdev01",
+          "title": "1790000001000-0000-fixdev01",
+          "done": "1790000001000-0000-fixdev01",
+          "priority": "1790000001000-0000-fixdev01",
+          "order": "1790000001000-0000-fixdev01",
+          "deletedAt": "1790000001000-0000-fixdev01"
+        },
+        "listId": "v0.3.1-todos_list-1",
+        "title": "Aufgabe 1",
+        "done": false,
+        "priority": 1,
+        "order": 1
+      },
+      {
+        "id": "v0.3.1-todos_task-2",
+        "createdAt": 1790000002000,
+        "updatedAt": 1790000002000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "listId": "1790000002000-0000-fixdev01",
+          "title": "1790000002000-0000-fixdev01",
+          "done": "1790000002000-0000-fixdev01",
+          "priority": "1790000002000-0000-fixdev01",
+          "order": "1790000002000-0000-fixdev01",
+          "deletedAt": "1790000002000-0000-fixdev01"
+        },
+        "listId": "v0.3.1-todos_list-2",
+        "title": "Aufgabe 2",
+        "done": true,
+        "priority": 2,
+        "order": 2
+      },
+      {
+        "id": "v0.3.1-todos_task-3",
+        "createdAt": 1790000003000,
+        "updatedAt": 1790000003000,
+        "deviceId": "fixdev01",
+        "deletedAt": null,
+        "_f": {
+          "listId": "1790000003000-0000-fixdev01",
+          "title": "1790000003000-0000-fixdev01",
+          "done": "1790000003000-0000-fixdev01",
+          "priority": "1790000003000-0000-fixdev01",
+          "order": "1790000003000-0000-fixdev01",
+          "deletedAt": "1790000003000-0000-fixdev01"
+        },
+        "listId": "v0.3.1-todos_list-3",
+        "title": "Aufgabe 3",
+        "done": false,
+        "priority": 3,
+        "order": 3
+      }
+    ],
+    "vault_document": []
+  }
+}

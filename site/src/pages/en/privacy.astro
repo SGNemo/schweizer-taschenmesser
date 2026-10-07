@@ -35,14 +35,25 @@ import { KOFI_URL, REPO_URL } from '../../config.js';
   <p>
     The “Support on Ko-fi” link leads to <a href={KOFI_URL} rel="noopener">Ko-fi</a> (Ko-fi Labs Ltd, United Kingdom), an external provider. This website itself
     processes no payment or contact data. What Ko-fi processes is described in <a href="https://more.ko-fi.com/privacy" rel="noopener">Ko-fi’s privacy policy</a>.
-    After a contribution you receive the supporter code at the e-mail address given to Ko-fi; a small service run by the operator (a Cloudflare Worker) processes Ko-fi's notification, sends the e-mail and stores no payment data, names or addresses in clear text (hashed check values only, for 400 days).
+    After a contribution you receive the supporter code at the e-mail address given to Ko-fi; a small service run by the operator (a Cloudflare Worker) processes Ko-fi's notification, sends the e-mail through the mail service Resend (Resend, Inc., USA) and stores no payment data, names or addresses in clear text (hashed check values only, for 400 days). Resend processes your e-mail address and the code for delivery.
   </p>
 
   <h2>The Nemo app</h2>
   <p>
-    The app stores its data only on your device. It has no account and no service run by the operator; optional sync works only through a server you run yourself.
-    Updates are downloaded from GitHub. This policy covers the website only.
+    The app stores its data on your device. It has no account and no service run by the operator that receives app data. Anything it sends beyond that happens only
+    when you set it up or click it (exceptions: update check and currency tool, see below). The full list is in the app under “Settings → About Nemo → Legal → Privacy
+    notices” (shown in the app language). Otherwise this policy covers the website only; the recipients below process data under their own privacy rules.
   </p>
+  <ul>
+    <li><strong>Sync (optional):</strong> only to a server you run yourself; end-to-end encrypted with a passphrase.</li>
+    <li><strong>Update check:</strong> the Windows and Android apps ask GitHub for the version file (at most once a day, can be switched off); no app data, GitHub sees your IP address.</li>
+    <li><strong>AI provider (optional):</strong> only with a provider you set up (e.g. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral): your question, the date and the field names of the modules, never your entries. In chat, the chat text goes to the provider. With a local model or Ollama nothing leaves the device. Everything can be switched off with “KI abschalten”.</li>
+    <li><strong>Google connection (optional, Windows):</strong> sign-in with your own Google application, read only (calendar: <code>calendar.readonly</code>, email headers: <code>gmail.readonly</code>); the data goes from Google straight to your device. If your Google project is in “Testing” status, the sign-in expires after 7 days.</li>
+    <li><strong>Calendar subscription (optional):</strong> fetching the iCal address you enter.</li>
+    <li><strong>Model download (optional):</strong> the built-in language model is downloaded from Hugging Face after you confirm.</li>
+    <li><strong>Currency tool:</strong> when opened, euro rates are requested from frankfurter.dev, without any app data.</li>
+    <li><strong>Supporter code:</strong> only checked on the device; the service that emails it is described above under Ko-fi.</li>
+  </ul>
 
   <h2>Your rights</h2>
   <p>

@@ -6,6 +6,8 @@ import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import { t } from '@/strings';
 import { tLang } from '@/strings.i18n';
+import { tDiag } from '@/strings.diagnostics';
+import { tLegal } from '@/strings.legal';
 import { LanguageSection } from './LanguageSection';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
@@ -15,7 +17,6 @@ import {
   AboutUpdatesSection,
   DeviceResetSection,
   DiagnosticsSection,
-  LicensesSection,
   LinksSection,
 } from './AboutSections';
 import { AiSection } from './AiSection';
@@ -32,6 +33,7 @@ import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
 import { LocalModelSection } from './LocalModelSection';
+import { LegalImprintSection, LegalLicensesSection, LegalPrivacySection } from './LegalSections';
 import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
@@ -466,20 +468,51 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => <LinksSection />,
   },
   {
+    id: 'legal-imprint',
+    category: 'ueber',
+    order: 42,
+    title: tLegal.de.imprint.title,
+    keywords: ['Impressum', 'Kontakt', 'Anbieter', 'Anschrift', 'E-Mail', 'Rechtliches'],
+    render: () => <LegalImprintSection />,
+  },
+  {
+    id: 'legal-privacy',
+    category: 'ueber',
+    order: 44,
+    title: tLegal.de.privacy.title,
+    keywords: [
+      'Datenschutz',
+      'Datenfluss',
+      'Drittanbieter',
+      'Google',
+      'GitHub',
+      'Ko-fi',
+      'KI-Anbieter',
+      'Rechtliches',
+    ],
+    render: () => <LegalPrivacySection />,
+  },
+  {
     id: 'licenses',
     category: 'ueber',
     order: 50,
-    title: t.about.licenses,
-    keywords: ['Bibliotheken', 'Schrift', 'Icons', 'Open Source'],
-    render: () => <LicensesSection />,
+    title: tLegal.de.licenses.title,
+    keywords: ['Lizenz', 'Bibliotheken', 'Schrift', 'Icons', 'Open Source', 'MIT', 'Rechtliches'],
+    render: () => <LegalLicensesSection />,
   },
   {
     id: 'diagnostics',
     category: 'ueber',
     order: 60,
-    title: t.about.diagnostics.title,
-    description: t.about.diagnostics.description,
-    keywords: ['Fehlerprotokoll', 'Export', 'Support'],
+    title: tDiag.de.title,
+    description: tDiag.de.export.description,
+    keywords: [
+      'Fehlerprotokoll',
+      'Export',
+      'Support',
+      ...tDiag.de.report.keywords,
+      ...tDiag.en.report.keywords,
+    ],
     render: () => <DiagnosticsSection />,
   },
   {

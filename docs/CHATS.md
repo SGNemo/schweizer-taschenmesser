@@ -13,11 +13,11 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57) | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt |
 | [PR #59](https://github.com/SGNemo/schweizer-taschenmesser/pull/59): Fokushilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (gestapelt auf #58) | nach #58 mergen; Basis wird automatisch auf `develop` umgestellt |
 | [PR #60](https://github.com/SGNemo/schweizer-taschenmesser/pull/60): Fokushilfen Paket 4 „Fortschritt“ (gestapelt auf #59) | nach #59 mergen; Basis wird automatisch auf `develop` umgestellt |
+| [PR #86](https://github.com/SGNemo/schweizer-taschenmesser/pull/86): Launch-Auftritt Englisch + Deutsch (PR 1/2) | ansehen, mergen; danach startet PR 2 „App-UI in 5 Sprachen“ (`feat/i18n-ui`); Repo-Felder aus [meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md) setzen |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Bug report, diagnostics export, crash resilience, launch tests (P0 i18n seam, P1 diagnostics, P2 recovery, P3 launch aids) | `feat/bug-report-diagnostics` | `core/i18n`, `core/diagnostics`, `router.tsx`, `main.tsx`, `core/platform` (hotspot), `pages/settings/sections.tsx` | P0 in progress | – | 2026-10-06 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

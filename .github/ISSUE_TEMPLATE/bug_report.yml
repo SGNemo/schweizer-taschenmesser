@@ -1,33 +1,38 @@
-name: Fehler melden
-description: Etwas funktioniert nicht wie erwartet
+name: Bug report
+description: Something does not work as expected
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: Danke! Bitte keine echten Daten (Namen, Beträge, Tokens) in Screenshots oder Logs. Sicherheitslücken bitte über SECURITY.md melden.
+      value: Thanks! Please do not put real data (names, amounts, tokens) in screenshots or logs. Report security problems via SECURITY.md, not here. German is fine too (Deutsch geht auch).
   - type: input
     id: version
     attributes:
       label: Version
-      description: Einstellungen → App-Updates
-      placeholder: 0.2.0
+      description: Settings → App updates
+      placeholder: 0.3.1
     validations:
       required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build
+      description: Prefilled by "Report a bug" in the app (commit and channel).
   - type: dropdown
     id: platform
     attributes:
-      label: Plattform
+      label: Platform
       options:
         - Windows (Nemo-Portable.exe)
         - Android (Nemo.apk)
-        - PWA im Browser
-        - Sync-Server
+        - PWA in the browser
+        - Sync server
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Schritte zum Nachstellen
+      label: Steps to reproduce
       placeholder: |
         1. …
         2. …
@@ -36,10 +41,13 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: Erwartet und tatsächlich passiert
+      label: What you expected and what happened
     validations:
       required: true
   - type: textarea
     id: extra
     attributes:
-      label: Screenshot oder Fehlermeldung (optional)
+      label: Screenshot or error message (optional)
+  - type: markdown
+    attributes:
+      value: 'Tip: in the app, Settings → About Nemo → "Export diagnostics" creates a text file you can read before saving it. It contains no entries, vault data, keys or server addresses. Attach it here.'

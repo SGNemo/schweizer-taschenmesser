@@ -117,9 +117,9 @@ class ApkInstallerPlugin(private val activity: Activity) : Plugin(activity) {
             }
             val actual = digest.digest().joinToString("") { "%02x".format(it) }
             val expected = args.sha256?.trim()?.lowercase()
-            if (expected != null && expected.isNotEmpty() && expected != actual) {
+            if (expected.isNullOrEmpty() || expected != actual) {
                 partial.delete()
-                throw IllegalStateException("sha256-mismatch")
+                throw IllegalStateException(if (expected.isNullOrEmpty()) "sha256-missing" else "sha256-mismatch")
             }
             if (!partial.renameTo(target)) throw IllegalStateException("could not store the download")
             val ret = JSObject()

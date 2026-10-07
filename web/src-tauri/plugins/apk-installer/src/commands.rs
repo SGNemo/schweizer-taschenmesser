@@ -1,6 +1,6 @@
 use tauri::{command, AppHandle, Runtime};
 
-use crate::{models::*, ApkInstallerExt, Result};
+use crate::{models::*, validate, ApkInstallerExt, Error, Result};
 
 #[command]
 pub(crate) async fn can_install<R: Runtime>(app: AppHandle<R>) -> Result<CanInstallResponse> {
@@ -12,6 +12,9 @@ pub(crate) async fn download<R: Runtime>(
     app: AppHandle<R>,
     request: DownloadRequest,
 ) -> Result<DownloadResponse> {
+    // Checked here, before any platform code: only release APKs of this repository, digest required.
+    validate::check_download(&request.url, request.sha256.as_deref())
+        .map_err(Error::InvalidRequest)?;
     app.apk_installer().download(request)
 }
 

@@ -37,14 +37,25 @@ import { KOFI_URL, REPO_URL } from '../config.js';
     Der Link „Auf Ko-fi unterstützen“ führt zu <a href={KOFI_URL} rel="noopener">Ko-fi</a> (Ko-fi Labs Ltd, Vereinigtes Königreich), einem externen Anbieter.
     Diese Website selbst verarbeitet keine Zahlungs- oder Kontaktdaten. Was Ko-fi verarbeitet, steht in der
     <a href="https://more.ko-fi.com/privacy" rel="noopener">Datenschutzerklärung von Ko-fi</a>.
-    Nach einer Unterstützung erhältst du den Supporter-Code an die bei Ko-fi angegebene E-Mail-Adresse; dafür verarbeitet ein kleiner Dienst des Betreibers (Cloudflare Worker) die Benachrichtigung von Ko-fi, versendet die E-Mail und speichert keine Zahlungsdaten, keine Namen und keine Adressen im Klartext (nur Prüfwerte, 400 Tage).
+    Nach einer Unterstützung erhältst du den Supporter-Code an die bei Ko-fi angegebene E-Mail-Adresse; dafür verarbeitet ein kleiner Dienst des Betreibers (Cloudflare Worker) die Benachrichtigung von Ko-fi, versendet die E-Mail über den Mail-Dienst Resend (Resend, Inc., USA) und speichert keine Zahlungsdaten, keine Namen und keine Adressen im Klartext (nur Prüfwerte, 400 Tage). Resend verarbeitet dabei deine E-Mail-Adresse und den Code zum Versand.
   </p>
 
   <h2>Die App Nemo</h2>
   <p>
-    Die App speichert ihre Daten ausschließlich auf deinem Gerät. Sie hat kein Konto und keinen Dienst des Betreibers; ein optionaler Sync läuft nur über einen Server,
-    den du selbst betreibst. Updates werden von GitHub geladen. Diese Erklärung betrifft nur die Website.
+    Die App speichert ihre Daten auf deinem Gerät. Sie hat kein Konto und keinen Dienst des Betreibers, der Daten der App erhält. Was sie darüber hinaus
+    sendet, geschieht nur, wenn du es einrichtest oder anklickst (Ausnahmen: Update-Abfrage und Währungsrechner, siehe unten). Die vollständige Liste steht in der
+    App unter „Einstellungen → Über Nemo → Rechtliches → Datenschutzhinweise“. Diese Erklärung betrifft ansonsten nur die Website; die Empfänger unten verarbeiten Daten nach ihren eigenen Datenschutzregeln.
   </p>
+  <ul>
+    <li><strong>Sync (optional):</strong> nur zu einem Server, den du selbst betreibst; mit Passphrase Ende-zu-Ende verschlüsselt.</li>
+    <li><strong>Update-Abfrage:</strong> Windows- und Android-App fragen bei GitHub die Versionsdatei ab (höchstens einmal am Tag, abschaltbar); keine Daten aus der App, GitHub sieht deine IP-Adresse.</li>
+    <li><strong>KI-Anbieter (optional):</strong> nur mit einem von dir eingerichteten Anbieter (z. B. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral): deine Frage, das Datum und die Feldnamen der Module, nie deine Einträge. Im Chat geht der Chat-Text an den Anbieter. Mit lokalem Modell oder Ollama verlässt nichts das Gerät. Alles abschaltbar mit „KI abschalten“.</li>
+    <li><strong>Google-Verbindung (optional, Windows):</strong> Anmeldung mit deiner eigenen Google-Anwendung, nur Lesen (Kalender: <code>calendar.readonly</code>, E-Mail-Köpfe: <code>gmail.readonly</code>); die Daten gehen von Google direkt an dein Gerät. Steht dein Google-Projekt auf „Testing“, läuft die Anmeldung nach 7 Tagen ab.</li>
+    <li><strong>Kalender-Abo (optional):</strong> Abruf der iCal-Adresse, die du einträgst.</li>
+    <li><strong>Modell-Download (optional):</strong> das eingebaute Sprachmodell wird nach deiner Bestätigung von Hugging Face geladen.</li>
+    <li><strong>Währungsrechner:</strong> beim Öffnen werden Euro-Kurse von frankfurter.dev abgefragt, ohne Daten aus der App.</li>
+    <li><strong>Supporter-Code:</strong> wird nur auf dem Gerät geprüft; der Dienst, der ihn per E-Mail verschickt, ist oben unter Ko-fi beschrieben.</li>
+  </ul>
 
   <h2>Deine Rechte</h2>
   <p>

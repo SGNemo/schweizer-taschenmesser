@@ -4,7 +4,10 @@
  *  - only the allowlisted extension ID is served, and only after the user confirmed it (pairing)
  *  - a locked vault answers with its state and nothing else
  *  - secrets and writes need a session (from `hello`) with a strictly increasing `seq`; a reused
- *    request id is a replay; locking ends every session at once
+ *    request id is a replay; locking ends every session at once; one session per extension
+ *    (a new `hello` replaces the old one), so the rate bucket below is effectively per extension
+ *  - `secret`, `compare`, `create` and `update` share one rate bucket per session, counted before
+ *    answering, so a page cannot test password guesses through the save flow
  *  - an entry is only offered, revealed or changed for a page whose origin matches its stored URL
  *  - each answer carries only what was asked for, and only codes on error – never URLs or values
  * Nothing is logged.
@@ -30,8 +33,10 @@ import { totpNow } from '../totp';
 import type { DecryptedEntry } from '../vault';
 
 export const PAIRING_TTL_MS = 2 * 60_000;
+/** Shared budget per session and minute for `secret`, `compare`, `create` and `update`. */
 export const SECRETS_PER_MINUTE = 30;
-const MAX_SESSIONS = 5;
+/** One session per extension: a new `hello` replaces the previous session of that extension. */
+const MAX_SESSIONS = 1;
 const SESSION_MAX_AGE_MS = 12 * 60 * 60_000;
 const SEEN_IDS = 500;
 
@@ -62,7 +67,8 @@ interface Session {
   extensionId: string;
   createdAt: number;
   lastSeq: number;
-  secretTimes: number[];
+  /** Times of the guarded operations in the last minute (secret, compare, create, update). */
+  guardedTimes: number[];
 }
 
 export interface BridgeHandler {
@@ -131,7 +137,7 @@ export function createBridgeHandler(deps: BridgeDeps): BridgeHandler {
       extensionId,
       createdAt: deps.now(),
       lastSeq: 0,
-      secretTimes: [],
+      guardedTimes: [],
     });
     return okReply(req.id, { state: 'unlocked', session });
   }
@@ -153,11 +159,26 @@ export function createBridgeHandler(deps: BridgeDeps): BridgeHandler {
     return session;
   }
 
+  /** Counts one guarded operation; false when the session used up its minute budget. */
+  function withinBudget(session: Session): boolean {
+    const at = deps.now();
+    session.guardedTimes = session.guardedTimes.filter((t) => at - t < 60_000);
+    if (session.guardedTimes.length >= SECRETS_PER_MINUTE) return false;
+    session.guardedTimes.push(at);
+    return true;
+  }
+
   async function authorized(
     req: BridgeRequest,
     session: Session,
     mode: OriginMatchMode,
   ): Promise<BridgeReply> {
+    if (
+      (req.op === 'secret' || req.op === 'compare' || req.op === 'create' || req.op === 'update') &&
+      !withinBudget(session)
+    ) {
+      return fail(req.id, 'rate-limited');
+    }
     switch (req.op) {
       case 'genParams':
         return okReply(req.id, await deps.generatorOptions());
@@ -179,9 +200,6 @@ export function createBridgeHandler(deps: BridgeDeps): BridgeHandler {
         const found = await matching(req.body.entryId, req.body.pageOrigin, mode);
         if (typeof found === 'string') return fail(req.id, found);
         const at = deps.now();
-        session.secretTimes = session.secretTimes.filter((t) => at - t < 60_000);
-        if (session.secretTimes.length >= SECRETS_PER_MINUTE) return fail(req.id, 'rate-limited');
-        session.secretTimes.push(at);
         const { data } = found;
         if (req.body.field === 'password') return okReply(req.id, { value: data.password });
         if (!data.totp) return fail(req.id, 'unknown-entry');

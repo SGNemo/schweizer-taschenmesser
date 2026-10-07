@@ -1,3 +1,4 @@
+import { SafeModeBanner } from './SafeModeBanner';
 import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useNativeShare } from '@/quickCapture/nativeShare';
@@ -8,6 +9,7 @@ import { OnboardingHost } from '@/core/importer/host';
 import { isDevBuild } from '@/core/update/buildInfo';
 import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
 import { Fab, Toaster, useMediaQuery } from '@/ui';
+import { NoticeHost } from './NoticeHost';
 import { CommandPalette } from './CommandPalette';
 import { FocusWatcher } from './FocusWatcher';
 import { NotificationCenter } from './NotificationCenter';
@@ -120,6 +122,7 @@ export function AppShell() {
         {focusing ? null : (
           <>
             <TopBar />
+            <SafeModeBanner />
             <UpdateBanner />
             <PendingImports />
             {SeedBanner ? (
@@ -152,6 +155,7 @@ export function AppShell() {
       <NotificationCenter />
       <ResumeTracker />
       <SupporterEffects />
+      <NoticeHost />
       <Toaster />
     </div>
   );

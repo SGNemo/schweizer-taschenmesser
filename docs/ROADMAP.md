@@ -92,7 +92,7 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 | P6 | `windows` crate 0.61 → 0.62 (removes a duplicate crate family), Tauri plugin bumps in step | Build size/time | S | medium (Windows API changes) | verify in CI only |
 
 ## Module review 2026-10-01 (decided, see `docs/product/`)
-Target picture B and packages 1–7 are in [`product/MODULE-PLAN.md`](product/MODULE-PLAN.md); prompts in [`product/IMPLEMENTATION-PROMPT.md`](product/IMPLEMENTATION-PROMPT.md). Consequences for this list:
+Target picture B and packages 1–7 are in [`product/MODULE-PLAN.md`](product/MODULE-PLAN.md); prompts (archived) in [`archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md`](archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md). Consequences for this list:
 - **Scheduled as packages (no longer open ideas):** K1 (package 2), M1 recurring tasks + someday (5), M7 notes checklists + pinned scratch note (1), D1 tool routes/palette/shortcuts (1), S1 password health (7), T1/T3 settled (tools 18 → 12, timer stays separate).
 - **Retired modules (data kept until package 6):** news, habits, timetrack; replaced by merges: reminders → calendar, shopping + packing → lists, launcher → bookmarks favourites, birthdays + gifts → people, contracts → vault ("Unterlagen"), system → disk ("Dieser PC").
 - **Stay ideas without date:** K3 attachments in sync/backup (receipts, photos – wanted, but after Unterlagen), M2 calendar drag/resize, M3 budget carry-over, M4 habit statistics (module retired), M9 recipes → list, M10 journal, news as an optional extension, Timer ↔ timetrack (module retired), vehicle log, medication/water, cleaning plan.

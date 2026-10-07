@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "node scripts/dev-all.mjs",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run check:licenses && npm run typecheck && vite build",
     "preview": "vite preview --port 4173 --strictPort",
     "typecheck": "tsc -p tsconfig.app.json && tsc -p tsconfig.sw.json && tsc -p tsconfig.node.json",
     "check": "node scripts/check.mjs",
@@ -22,7 +22,10 @@
     "new:module": "node scripts/gen-module.mjs",
     "check:modules": "node scripts/check-modules.mjs",
     "gen:licenses": "node scripts/gen-licenses.mjs",
+    "check:legal": "node scripts/check-legal.mjs",
+    "check:licenses": "node scripts/gen-licenses.mjs --check",
     "check:docs": "node scripts/check-docs.mjs",
+    "check:readme": "node scripts/check-readme.mjs",
     "db:bump": "node scripts/db-bump.mjs",
     "build:e2e": "vite build --mode e2e",
     "build:e2e-seed": "vite build --mode e2e-seed --outDir dist-e2e-seed",
@@ -37,7 +40,8 @@
     "version:set": "node scripts/version.mjs set",
     "changelog": "node scripts/changelog.mjs",
     "screenshots": "playwright test -c playwright.screens.config.ts",
-    "ai:eval": "node scripts/ai-eval.mjs"
+    "ai:eval": "node scripts/ai-eval.mjs",
+    "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

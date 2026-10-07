@@ -51,7 +51,7 @@ cd services/supporter-webhook && npm ci
 cd ../../packages/supporter-codes && npm ci && cd ../../services/supporter-webhook   # shared code package
 cp .env.example .dev.vars        # git-ignored; fill in INVENTED values and a throw-away key
 npm test                         # unit tests with invented Ko-fi payloads
-npx wrangler dev                 # http://localhost:8787 with local KV and queue
+npx wrangler dev --var DEV:1     # http://localhost:8787 with local KV and queue; DEV allows a missing rate limiter
 curl -i localhost:8787/health
 curl -i -X POST localhost:8787/kofi --data-urlencode 'data={"verification_token":"<token from .dev.vars>","type":"Donation","is_public":false,"from_name":"","amount":"5.00","currency":"EUR","email":"me@example.invalid","kofi_transaction_id":"local-1"}'
 ```
