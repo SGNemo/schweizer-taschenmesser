@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo, createRepo } from '@/core/db/repo';
 import { bus, type DataPolicy } from '@/core/events';
+import { isSafeMode } from '@/core/safemode/safeMode';
 import { runMigrations } from './migrate';
 import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from './types';
@@ -24,6 +25,10 @@ export async function loadModuleStates(
   manifests: readonly ModuleManifest[] = availableManifests(),
   database: TaschenmesserDB = defaultDb,
 ): Promise<ModuleStates> {
+  // Safe mode: everything off for this run, nothing written (the saved choices stay as they were).
+  if (database === defaultDb && isSafeMode()) {
+    return Object.fromEntries(manifests.map((m) => [m.id, false]));
+  }
   const rows = await stateRepo(database).active().toArray();
   return resolveStates(manifests, rows);
 }

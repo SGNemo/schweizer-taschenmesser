@@ -57,6 +57,7 @@ const COMMANDS: &[&str] = &[
     "desktop_autostart_enabled",
     "desktop_info",
     "desktop_data_dir",
+    "desktop_safe_mode",
     "desktop_open_data_dir",
     "desktop_show_main",
 ];
