@@ -67,6 +67,10 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
    **Build output directory** `dist`.
 3. Environment variables (Production and Preview): `NODE_VERSION` = `22`. `SITE_URL` defaults to
    `https://nemo-adhd-helper.online` (`src/config.js`); previews use Cloudflare's own URL.
+   **Imprint details (Production, optionally Preview):** `IMPRESSUM_NAME`, `IMPRESSUM_STREET`,
+   `IMPRESSUM_POSTCODE_CITY` (optional `IMPRESSUM_COUNTRY`). They are read by `src/legal.js` and are
+   deliberately not in the repository; a production build (`develop` or `main`) fails without them.
+   A new postal address = edit the variables, then redeploy (no commit).
 4. Save and deploy. Preview deployments for pull requests are on by default
    (Settings → Builds & deployments → Preview branches: all non-production branches, or only
    those that touch `site/` via the "Build watch paths" setting: include `site/*`).
@@ -107,8 +111,8 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
 - Social preview: `docs/brand/social-preview.png` (1280×640) is copied to `/og-image.png`.
 
 ## Offen – macht Sven
-- Impressum: the remaining `[PLATZHALTER]` (full name, street) in `impressum.astro` /
-  `en/imprint.astro`, when wanted.
+- Imprint: set `IMPRESSUM_NAME`, `IMPRESSUM_STREET`, `IMPRESSUM_POSTCODE_CITY` in the Cloudflare Pages
+  environment variables (step 3), then redeploy.
 - Cloudflare Pages project, custom domain `nemo-adhd-helper.online` (+ `www` redirect) and the
   deploy-hook secret `CF_PAGES_DEPLOY_HOOK` (steps above).
 - `public/.well-known/security.txt`: renew `Expires` before 2027-10-01.
