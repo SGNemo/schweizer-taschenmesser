@@ -1,20 +1,16 @@
 /**
- * Who is behind Nemo, for the "Rechtliches" settings sections. Every value that must come from the maintainer is a
- * `[[PLACEHOLDER]]`: nothing is invented. Fill them in here (one place) and check with `npm run check:legal`;
- * `docs/legal/LAUNCH-LEGAL-CHECKLIST.md` lists them. Not legal advice.
+ * Who is behind Nemo, for the "Rechtliches" settings sections. The postal address is deliberately NOT in this
+ * repository: the full imprint (name, address) lives on the website, where the build reads it from environment
+ * variables (`site/src/legal.js`). The app only knows the contact e-mail and where the imprint is.
+ * Not legal advice; see `docs/legal/LAUNCH-LEGAL-CHECKLIST.md`.
  */
+export const SITE_URL = 'https://nemo-adhd-helper.online';
+
 export const LEGAL_IDENTITY = {
-  /** Full name of the provider (Anbieter). */
-  name: '[[NAME]]',
-  /** Street and number. */
-  street: '[[ADRESSE]]',
-  /** Postcode and city. */
-  city: '[[PLZ_ORT]]',
-  country: '[[LAND]]',
-  /** Address for quick contact (also shown for privacy requests). */
-  email: '[[KONTAKT_EMAIL]]',
-  /** Only if applicable (trade, VAT id); leave `''` when none. */
-  vatId: '',
+  /** Address for quick contact (also shown for privacy requests); the same one the website shows. */
+  email: 'sven.nemo0@gmail.com',
+  /** The full imprint with the provider's name and address. */
+  imprintUrl: `${SITE_URL}/impressum`,
 } as const;
 
 /** Open placeholders look like `[[NAME]]` (capital letters, digits, underscore). */
