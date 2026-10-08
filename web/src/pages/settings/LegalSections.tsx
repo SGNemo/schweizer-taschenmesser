@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type licensesJson from '@/core/about/licenses.json';
 import { dataFlows } from '@/core/legal/dataFlows';
-import { findPlaceholders, LEGAL_IDENTITY } from '@/core/legal/identity';
+import { LEGAL_IDENTITY } from '@/core/legal/identity';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { tLegal } from '@/strings.legal';
@@ -11,39 +11,19 @@ import styles from './settings.module.css';
 
 const REPO = 'https://github.com/SGNemo/schweizer-taschenmesser';
 const LICENSE_URL = `${REPO}/blob/main/LICENSE`;
-const SITE_URL = 'https://nemo-adhd-helper.online';
 
-/** Provider, address and contact; open `[[PLACEHOLDERS]]` are shown as such and marked, never hidden. */
+/** Contact and a link to the full imprint on the website (the postal address is not kept in the app or the repository). */
 export function LegalImprintSection() {
   const l = tLegal.use();
   const id = LEGAL_IDENTITY;
-  const open = findPlaceholders(Object.values(id).join(' ')).length > 0;
   return (
     <SettingsGroup id="legal-imprint" title={l.imprint.title} description={l.imprint.intro}>
-      <SettingRow id="legal-imprint--name" label={l.imprint.name}>
-        <strong className={styles.value}>{id.name}</strong>
-      </SettingRow>
-      <SettingRow id="legal-imprint--address" label={l.imprint.address}>
-        <strong className={styles.value}>
-          {id.street}, {id.city}, {id.country}
-        </strong>
-      </SettingRow>
       <SettingRow id="legal-imprint--email" label={l.imprint.email}>
         <strong className={styles.value}>{id.email}</strong>
       </SettingRow>
-      {id.vatId ? (
-        <SettingRow id="legal-imprint--vat" label={l.imprint.vatId}>
-          <strong className={styles.value}>{id.vatId}</strong>
-        </SettingRow>
-      ) : null}
-      {open ? (
-        <p className={styles.error} role="status" data-testid="legal-open">
-          {l.imprint.open}
-        </p>
-      ) : null}
       <p className={styles.muted}>{l.imprint.note}</p>
       <SettingRow id="legal-imprint--site" label={l.imprint.website}>
-        <Button onClick={() => void getPlatform().app.openUrl(SITE_URL)}>
+        <Button onClick={() => void getPlatform().app.openUrl(id.imprintUrl)}>
           {t.about.links.open}
         </Button>
       </SettingRow>
