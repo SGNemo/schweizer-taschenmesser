@@ -5,7 +5,7 @@
   "description": "Static website for Nemo: download, what it is, support. Built with Astro, no client JavaScript except the theme switch.",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "scripts": {
     "dev": "astro dev",
