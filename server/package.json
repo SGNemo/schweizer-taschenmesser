@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -29,7 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/better-sqlite3": "^9.6.0",
-    "@types/node": "^22.20.4",
+    "@types/node": "^26.6.4",
     "@types/web-push": "^3.6.4",
     "eslint": "^10.12.0",
     "globals": "^17.13.0",

@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: 22
+  NODE_VERSION: 26
   NDK_VERSION: '27.2.12479018'
 
 jobs:

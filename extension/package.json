@@ -6,7 +6,7 @@
   "description": "Nemo browser extension (Brave/Chromium, Manifest V3): suggests passwords on sign-up forms, saves into and fills from the desktop app's vault. No vault of its own, no stored secrets.",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -27,7 +27,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
     "@types/chrome": "^0.3.4",
-    "@types/node": "^22.20.4",
+    "@types/node": "^26.6.4",
     "eslint": "^10.12.0",
     "globals": "^17.12.0",
     "jsdom": "^30.1.2",
