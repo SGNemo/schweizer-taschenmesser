@@ -3,9 +3,9 @@
   "npm": [
     {
       "name": "@anthropic-ai/sdk",
-      "version": "0.129.0",
+      "version": "0.131.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.129.0"
+      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.131.0"
     },
     {
       "name": "@babel/runtime",
@@ -99,21 +99,21 @@
     },
     {
       "name": "@tauri-apps/api",
-      "version": "2.12.0",
+      "version": "2.12.1",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.1"
     },
     {
       "name": "@tauri-apps/plugin-clipboard-manager",
-      "version": "2.4.0",
+      "version": "2.4.1",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-clipboard-manager/v/2.4.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-clipboard-manager/v/2.4.1"
     },
     {
       "name": "@tauri-apps/plugin-dialog",
-      "version": "2.8.0",
+      "version": "2.8.1",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.1"
     },
     {
       "name": "@tauri-apps/plugin-fs",
@@ -129,9 +129,9 @@
     },
     {
       "name": "@tauri-apps/plugin-notification",
-      "version": "2.5.0",
+      "version": "2.5.1",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-notification/v/2.5.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-notification/v/2.5.1"
     },
     {
       "name": "@tauri-apps/plugin-opener",
@@ -393,9 +393,9 @@
     },
     {
       "name": "lucide-react",
-      "version": "1.49.0",
+      "version": "1.52.0",
       "license": "ISC",
-      "url": "https://www.npmjs.com/package/lucide-react/v/1.49.0"
+      "url": "https://www.npmjs.com/package/lucide-react/v/1.52.0"
     },
     {
       "name": "minisearch",
