@@ -11,11 +11,10 @@ const flowsDoc = readFileSync(
 );
 
 describe('legal identity', () => {
-  it('has no invented details: every personal value is an open [[PLACEHOLDER]] or empty', () => {
-    for (const [key, value] of Object.entries(LEGAL_IDENTITY)) {
-      if (value === '') continue;
-      expect(findPlaceholders(value), key).toHaveLength(1);
-    }
+  it('keeps no postal address in the repository: only the contact e-mail and the imprint URL', () => {
+    expect(Object.keys(LEGAL_IDENTITY).sort()).toEqual(['email', 'imprintUrl']);
+    expect(LEGAL_IDENTITY.email).toMatch(/^[^@\s]+@[^@\s]+$/);
+    expect(LEGAL_IDENTITY.imprintUrl).toMatch(/^https:\/\/.+\/impressum$/);
   });
 
   it('finds distinct placeholders', () => {

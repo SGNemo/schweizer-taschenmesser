@@ -10,14 +10,11 @@ export const tLegal = defineBundle(
     title: 'Rechtliches',
     imprint: {
       title: 'Rechtliches: Impressum und Kontakt',
-      intro: 'Anbieter dieser App und Kontakt für Fragen, auch zum Datenschutz.',
-      name: 'Anbieter',
-      address: 'Anschrift',
+      intro:
+        'Kontakt für Fragen, auch zum Datenschutz. Anbieter und Anschrift stehen im Impressum auf der Website.',
       email: 'E-Mail',
-      vatId: 'Umsatzsteuer-ID',
-      open: 'Diese Angaben sind noch nicht ausgefüllt.',
       note: 'Nemo ist ein privates, kostenloses Open-Source-Projekt. Unterstützung ist freiwillig und schaltet keine Funktion frei.',
-      website: 'Website mit Impressum und Datenschutzerklärung',
+      website: 'Impressum und Datenschutzerklärung auf der Website',
     },
     privacy: {
       title: 'Rechtliches: Datenschutzhinweise',
@@ -180,14 +177,10 @@ export const tLegal = defineBundle(
       imprint: {
         title: 'Legal: imprint and contact',
         intro:
-          'Who provides this app, and whom to contact with questions, including about privacy.',
-        name: 'Provider',
-        address: 'Address',
+          'Whom to contact with questions, including about privacy. Provider and address are in the imprint on the website.',
         email: 'Email',
-        vatId: 'VAT ID',
-        open: 'These details have not been filled in yet.',
         note: 'Nemo is a private, free, open-source project. Support is voluntary and unlocks no feature.',
-        website: 'Website with imprint and privacy policy',
+        website: 'Imprint and privacy policy on the website',
       },
       privacy: {
         title: 'Legal: privacy notices',
