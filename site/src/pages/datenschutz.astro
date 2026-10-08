@@ -1,11 +1,13 @@
 ---
 import Legal from '../layouts/Legal.astro';
 import { KOFI_URL, REPO_URL } from '../config.js';
+import { provider } from '../legal.js';
+const p = provider();
 ---
 <Legal locale="de" route="privacy" title="Datenschutzerklärung" description="Was beim Besuch der Nemo-Website verarbeitet wird: keine Cookies, kein Tracking, Hosting bei Cloudflare.">
   <h2>Verantwortlicher</h2>
   <p>
-    Sven [PLATZHALTER: Nachname], Erlangen, Deutschland (Anschrift siehe <a href="/impressum">Impressum</a>)<br />
+    {p.name} (Anschrift siehe <a href="/impressum">Impressum</a>)<br />
     E-Mail: <a href="mailto:sven.nemo0@gmail.com">sven.nemo0@gmail.com</a>
   </p>
 
