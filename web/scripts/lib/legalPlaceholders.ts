@@ -4,6 +4,14 @@ export const OPEN_PATTERNS: readonly RegExp[] = [
   /\[(?:PLATZHALTER|PLACEHOLDER):[^\]]*\]/g,
 ];
 
+/**
+ * The website's imprint and privacy pages take the provider's name and address from the build environment
+ * (`site/src/legal.js`), never from the repository. A page that does not call `provider()` has them hard-coded.
+ */
+export function readsBuildDetails(content: string): boolean {
+  return /from\s+'(?:\.\.\/)+legal\.js'/.test(content) && /\bprovider\(\)/.test(content);
+}
+
 export interface PlaceholderHit {
   file: string;
   line: number;
