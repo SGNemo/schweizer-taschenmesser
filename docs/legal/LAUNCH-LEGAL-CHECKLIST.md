@@ -4,10 +4,9 @@ Gedächtnisstütze vor dem Launch, keine Rechtsberatung. Bei Unsicherheit Rechts
 
 ## 1. Platzhalter füllen
 
-- [ ] `web/src/core/legal/identity.ts`: `[[NAME]]`, `[[ADRESSE]]`, `[[PLZ_ORT]]`, `[[LAND]]`, `[[KONTAKT_EMAIL]]` (USt-ID nur falls vorhanden). Erscheint in der App unter Einstellungen → Über Nemo → Rechtliches → Impressum.
-- [ ] Website: `[PLATZHALTER: …]` / `[PLACEHOLDER: …]` in `site/src/pages/{impressum,datenschutz}.astro` und `en/{imprint,privacy}.astro`. Gleiche Angaben wie in der App.
+- [ ] Name und Anschrift stehen **nicht im Repo**: Cloudflare Pages → Settings → Environment variables: `IMPRESSUM_NAME`, `IMPRESSUM_STREET`, `IMPRESSUM_POSTCODE_CITY` (Production; optional `IMPRESSUM_COUNTRY`), danach neu deployen. Der Production-Build der Website bricht ohne sie ab. Neue Postanschrift = Variablen ändern + redeploy, kein Commit. Die App zeigt unter Einstellungen → Über Nemo → Rechtliches nur Kontakt-E-Mail und einen Link zum Website-Impressum (`web/src/core/legal/identity.ts`).
 - [ ] `[[RECHTSGRUNDLAGE]]`-Spalte in [DATA-FLOWS.md](DATA-FLOWS.md) prüfen/füllen.
-- [x] Im Release-Workflow (`prepare`) bricht `check-legal.mjs --strict` das **Veröffentlichen** ab (Tag oder Dispatch mit Version) solange Platzhalter offen sind; Probeläufe warnen nur. In CI (`ci.yml`) gibt es nur die Warnung.
+- [x] Im Release-Workflow (`prepare`) bricht `check-legal.mjs --strict` das **Veröffentlichen** ab (Tag oder Dispatch mit Version), solange Platzhalter offen sind oder eine Rechtsseite die Angaben nicht aus dem Build (`site/src/legal.js`) liest; Probeläufe warnen nur. Ob die Variablen in Cloudflare gesetzt sind, prüft der Production-Build der Website, nicht dieser Schritt.
 
 ## 2. Impressum
 
