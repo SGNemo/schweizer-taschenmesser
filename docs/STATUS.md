@@ -9,6 +9,8 @@ Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diag
 
 Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md), kleine Fixes mit Tests umgesetzt, offen bleiben u. a. Pipe-Erstinstanz (X2), Windows-Hello-Wrapping (V2), Backup-Zeilenvalidierung (V5), Android-Manifest-Prüfung in CI (T2).
 
+Dieser PC – Aufräumen (`feat/disk-cleanup-ux`): Karte standardmäßig nach Alter gefärbt, Liste „Lange nicht geändert“ (jeder alte Ordner einmal, Summe, Mehrfachauswahl → Korb/Löschen), „Alter der Daten“ in den Details, Dateityp „Spieldaten“; PR gegen `develop`, wartet auf Review; Handtest D17 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
