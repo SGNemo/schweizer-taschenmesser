@@ -168,10 +168,10 @@ export interface DeletePlan {
   totalBytes: number;
   totalFiles: number;
   large: boolean;
-  /** Exact text to type before a move to the recycle bin (null = plain confirmation). */
-  trashConfirmation: string | null;
-  /** Exact text to type before a permanent delete (null only when nothing can be deleted). */
-  permanentConfirmation: string | null;
+  /** A move to the recycle bin needs a second confirmation (large deletions). */
+  trashDoubleConfirm: boolean;
+  /** A permanent delete needs a second confirmation (always true). */
+  permanentDoubleConfirm: boolean;
   /** False when an item is on a network/removable drive, where the recycle bin often cannot be used. */
   trashLikely: boolean;
 }
@@ -249,13 +249,13 @@ export interface DiskService {
   canDelete(scanId: number, node: number): Promise<DenyReason | null>;
   planDelete(scanId: number, nodes: number[]): Promise<DeletePlan>;
   /**
-   * Runs a plan. `confirm` must be the phrase the plan asks for (checked natively, too).
-   * Rejects with `Error(code)`, e.g. `confirmation-mismatch`, `plan-expired`.
+   * Runs a plan. `confirmedTwice` must be true when the plan needs a second confirmation
+   * (checked natively, too). Rejects with `Error(code)`, e.g. `confirmation-missing`, `plan-expired`.
    */
   runDelete(
     planId: number,
     mode: DeleteMode,
-    confirm: string | null,
+    confirmedTwice: boolean,
     onProgress: (p: DeleteProgress) => void,
   ): Promise<DeleteReport>;
   cancelDelete(planId: number): Promise<void>;

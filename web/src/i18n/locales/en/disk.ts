@@ -122,8 +122,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Delete permanently – without recycle bin',
     trashBtn: 'Move to recycle bin',
     permBtn: 'Delete permanently',
-    typeLabel: (phrase: string) => `Type “${phrase}” to confirm`,
-    typeHint: 'So nothing disappears by accident.',
+    twiceHint: 'Because this is a lot or permanent, Nemo asks once more.',
+    againTitle: 'Really delete?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 entry' : `${n} entries`} with ${size} (${files} files) will go to the recycle bin.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 entry' : `${n} entries`} with ${size} (${files} files) will be deleted permanently. This can’t be undone.`,
+    againYesTrash: 'Yes, move to recycle bin',
+    againYesPermanent: 'Yes, delete permanently',
+    back: 'Back',
     warnUser:
       'This is in your personal folders (Documents, Pictures, Desktop, Videos, Music). Check carefully that you really don’t need it any more.',
     warnProgram: 'This looks like a program (executable files). The program won’t work afterwards.',
@@ -139,7 +146,7 @@ export const disk: Strings['disk'] = {
     stop: 'Stop',
     close: 'Close',
     errors: {
-      'confirmation-mismatch': 'The confirmation doesn’t match.',
+      'confirmation-missing': 'The second confirmation is missing. Please delete again.',
       'plan-expired': 'The check has expired. Please start deleting again.',
       'unknown-plan': 'The check has expired. Please start deleting again.',
       'already-running': 'A deletion is already running.',

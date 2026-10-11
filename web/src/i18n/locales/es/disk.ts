@@ -123,8 +123,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Eliminar definitivamente, sin papelera',
     trashBtn: 'A la papelera',
     permBtn: 'Eliminar definitivamente',
-    typeLabel: (phrase: string) => `Para confirmar, escribe «${phrase}»`,
-    typeHint: 'Para que nada desaparezca por error.',
+    twiceHint: 'Como es mucho o definitivo, Nemo vuelve a preguntar.',
+    againTitle: '¿Eliminar de verdad?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 elemento' : `${n} elementos`} con ${size} (${files} archivos) irán a la papelera.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 elemento' : `${n} elementos`} con ${size} (${files} archivos) se eliminarán definitivamente. No se puede deshacer.`,
+    againYesTrash: 'Sí, a la papelera',
+    againYesPermanent: 'Sí, eliminar definitivamente',
+    back: 'Atrás',
     warnUser:
       'Esto está en tus carpetas personales (Documentos, Imágenes, Escritorio, Vídeos, Música). Comprueba bien que de verdad ya no lo necesitas.',
     warnProgram:
@@ -142,7 +149,7 @@ export const disk: Strings['disk'] = {
     stop: 'Detener',
     close: 'Cerrar',
     errors: {
-      'confirmation-mismatch': 'La confirmación no coincide.',
+      'confirmation-missing': 'Falta la segunda confirmación. Vuelve a eliminar.',
       'plan-expired': 'La comprobación ha caducado. Vuelve a iniciar la eliminación.',
       'unknown-plan': 'La comprobación ha caducado. Vuelve a iniciar la eliminación.',
       'already-running': 'Ya hay una eliminación en curso.',

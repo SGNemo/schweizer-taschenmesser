@@ -93,7 +93,7 @@ export function createDisk(supported: boolean): DiskService {
     reveal: (scanId, node) => call('disk_reveal', { scanId, node }),
     canDelete: (scanId, node) => call<DenyReason | null>('disk_can_delete', { scanId, node }),
     planDelete: (scanId, nodes) => call<DeletePlan>('disk_delete_plan', { scanId, nodes }),
-    async runDelete(planId, mode: DeleteMode, confirm, onProgress) {
+    async runDelete(planId, mode: DeleteMode, confirmedTwice, onProgress) {
       const channel = new Channel<DeleteEvent>();
       const result = new Promise<DeleteReport>((resolve) => {
         channel.onmessage = (msg) => {
@@ -101,7 +101,7 @@ export function createDisk(supported: boolean): DiskService {
           else resolve(msg);
         };
       });
-      await call('disk_delete', { planId, mode, confirm, onEvent: channel });
+      await call('disk_delete', { planId, mode, confirmedTwice, onEvent: channel });
       return result;
     },
     cancelDelete: (planId) => call('disk_delete_cancel', { planId }),
