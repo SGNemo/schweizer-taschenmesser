@@ -12,6 +12,9 @@ import { openReminderCenter } from '@/core/notifications/centerStore';
 import { addRecent, readRecent, type RecentEntry } from '@/core/search/recent';
 import { useFocusSettings } from '@/core/settings/focus';
 import { settingsPath } from '@/core/settings/registry/paths';
+import { SETTINGS_CATEGORIES } from '@/core/settings/registry/categories';
+import { searchSettings, type SettingsSearchResult } from '@/core/settings/registry/search';
+import { applyQuick, QUICK_SETTINGS } from '@/core/settings/quick';
 import { normalize } from '@/core/text/normalize';
 import { useSettingsSections } from '@/pages/settings/useSections';
 import type { ResultRow } from '@/core/ai/query/types';
@@ -25,6 +28,7 @@ import { useAssistant, useSearchHits } from './assistant/useAssistant';
 import { useModuleNavItems, useNavTree, useQuickAddActions } from './useNavItems';
 import { reportBug } from '@/core/diagnostics/report';
 import { tDiag } from '@/strings.diagnostics';
+import { tComfort } from '@/strings.comfort';
 import styles from './CommandPalette.module.css';
 import { loadDevCommands } from './devTools';
 import answerStyles from './assistant/assistant.module.css';
@@ -39,6 +43,8 @@ export interface Command {
    * (every setting) that would otherwise hijack Enter for natural-language questions.
    */
   onlyWhenQueryStartsWith?: string;
+  /** Extra words that find the command (everyday names, descriptions) besides its label. */
+  keywords?: readonly string[];
 }
 
 export { normalize };
@@ -49,7 +55,7 @@ export function filterCommands(commands: Command[], query: string): Command[] {
   return commands.filter(
     (c) =>
       (!c.onlyWhenQueryStartsWith || q.startsWith(c.onlyWhenQueryStartsWith)) &&
-      normalize(c.label).includes(q),
+      normalize([c.label, ...(c.keywords ?? [])].join(' ')).includes(q),
   );
 }
 
@@ -67,6 +73,7 @@ export function CommandPalette() {
 type Option = { recent?: boolean } & (
   | { kind: 'command'; key: string; label: string; icon: IconName; command: Command }
   | { kind: 'hit'; key: string; label: string; icon: IconName; row: ResultRow }
+  | { kind: 'setting'; key: string; label: string; icon: IconName; hit: SettingsSearchResult }
   | { kind: 'calc'; key: string; label: string; icon: IconName; value: number }
   | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean }
   | { kind: 'query'; key: string; label: string; icon: IconName }
@@ -143,22 +150,26 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         run: () => void reportBug(),
       },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
-      ...settingsSections.flatMap((sec) => [
-        {
-          id: `settings-${sec.id}`,
-          label: t.settings.paletteCommand(sec.title),
+      // One command per value of a quick switch: "Farbschema: Dunkel" changes it on the spot.
+      ...QUICK_SETTINGS.flatMap((q) =>
+        q.options().map((o) => ({
+          id: `quick-${q.id}-${o.value}`,
+          label: `${q.label()}: ${o.label}`,
           icon: 'settings' as IconName,
-          onlyWhenQueryStartsWith: t.palette.settingsPrefix,
-          run: go(settingsPath(sec.category, sec.id)),
-        },
-        ...(sec.fields ?? []).map((f) => ({
-          id: `settings-${sec.id}--${f.key}`,
-          label: t.settings.paletteCommand(f.label),
-          icon: 'settings' as IconName,
-          onlyWhenQueryStartsWith: t.palette.settingsPrefix,
-          run: go(settingsPath(sec.category, sec.id, f.key)),
+          keywords: q.keywords(),
+          run: () => applyQuick(q, o.value),
         })),
-      ]),
+      ),
+      // Modules that are off are still found by name or purpose and lead to their library card.
+      ...availableManifests()
+        .filter((m) => states !== undefined && !states[m.id])
+        .map((m) => ({
+          id: `library-${m.id}`,
+          label: tComfort.get().library.enable(m.name),
+          icon: m.icon,
+          keywords: [m.description],
+          run: go(`/library#module-${m.id}`),
+        })),
       ...(tools?.active ?? []).map((tool) => ({
         id: `tool-${tool.id}`,
         label: t.tools.paletteCommand(tool.name),
@@ -167,19 +178,17 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       })),
       ...devCommands,
     ];
-  }, [
-    navigate,
-    moduleItems,
-    tree,
-    quickActions,
-    openSetup,
-    openTools,
-    tools,
-    devCommands,
-    settingsSections,
-  ]);
+  }, [navigate, moduleItems, tree, quickActions, openSetup, openTools, tools, devCommands, states]);
 
   const hits = useSearchHits(query);
+  const settingHits = useMemo(() => {
+    const prefix = t.palette.settingsPrefix;
+    const q = normalize(query);
+    const rest = q.startsWith(prefix) ? q.replace(/^\S+\s*/, '') : q;
+    return rest.length >= 2
+      ? searchSettings(settingsSections, SETTINGS_CATEGORIES, rest).slice(0, 5)
+      : [];
+  }, [query, settingsSections]);
   const hasModel = aiOn && config ? isAiConfigured(config) : false;
 
   const options = useMemo<Option[]>(() => {
@@ -226,6 +235,16 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       }
       const used = new Set(recents.map((o) => o.key.replace(/^r-/, '')));
       return [...recents, ...list.filter((o) => !(o.kind === 'command' && used.has(o.command.id)))];
+    }
+    // Settings are found without any prefix; "Einstellung …" still works as a lead-in word.
+    for (const hit of settingHits) {
+      list.push({
+        kind: 'setting',
+        key: `s-${hit.sectionId}-${hit.fieldKey ?? ''}`,
+        label: hit.label,
+        icon: 'settings',
+        hit,
+      });
     }
     // Arithmetic is answered on the spot (0 tokens, nothing leaves the device); Enter copies it.
     const sum = calculate(query);
@@ -286,6 +305,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   }, [
     commands,
     hits,
+    settingHits,
     query,
     hasModel,
     aiOn,
@@ -322,7 +342,11 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       return;
     }
     onDone();
-    if (o.kind === 'command') {
+    if (o.kind === 'setting') {
+      const to = settingsPath(o.hit.category, o.hit.sectionId, o.hit.fieldKey);
+      remember({ kind: 'hit', key: o.key, label: o.label, to, subtitle: o.hit.path });
+      void navigate(to);
+    } else if (o.kind === 'command') {
       remember({ kind: 'command', key: o.command.id, label: o.label });
       o.command.run();
     } else if (o.row.to) {
@@ -402,6 +426,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
               <Icon name={o.icon} />
               <span className={styles.optionText}>
                 {o.kind === 'ask' ? `${o.label}: „${query.trim()}“` : o.label}
+                {o.kind === 'setting' ? (
+                  <span className={styles.optionMeta}>{o.hit.path}</span>
+                ) : null}
                 {o.kind === 'hit' && o.row.subtitle ? (
                   <span className={styles.optionMeta}>{o.row.subtitle}</span>
                 ) : null}
