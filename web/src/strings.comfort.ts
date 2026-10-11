@@ -26,6 +26,10 @@ export const tComfort = defineBundle(
     gear: {
       module: (name: string) => `Einstellungen: ${name}`,
     },
+    status: {
+      modulesActive: (n: number) => `${n} aktiv`,
+      notificationsOff: 'Nicht erlaubt',
+    },
     reset: {
       button: 'Auf Standard zurücksetzen',
       done: (title: string) => `„${title}“ zurückgesetzt`,
@@ -72,6 +76,10 @@ export const tComfort = defineBundle(
       gear: {
         module: (name: string) => `Settings: ${name}`,
       },
+      status: {
+        modulesActive: (n: number) => `${n} on`,
+        notificationsOff: 'Not allowed',
+      },
       reset: {
         button: 'Reset to default',
         done: (title: string) => `“${title}” reset`,
@@ -116,6 +124,10 @@ export const tComfort = defineBundle(
       },
       gear: {
         module: (name: string) => `Ajustes: ${name}`,
+      },
+      status: {
+        modulesActive: (n: number) => `${n} activos`,
+        notificationsOff: 'No permitidas',
       },
       reset: {
         button: 'Restablecer valores',
@@ -169,6 +181,10 @@ export const tComfort = defineBundle(
       gear: {
         module: (name: string) => `Réglages : ${name}`,
       },
+      status: {
+        modulesActive: (n: number) => `${n} actifs`,
+        notificationsOff: 'Non autorisées',
+      },
       reset: {
         button: 'Rétablir les valeurs par défaut',
         done: (title: string) => `« ${title} » rétabli`,
@@ -213,6 +229,10 @@ export const tComfort = defineBundle(
       },
       gear: {
         module: (name: string) => `Configurações: ${name}`,
+      },
+      status: {
+        modulesActive: (n: number) => `${n} ativos`,
+        notificationsOff: 'Não permitidas',
       },
       reset: {
         button: 'Restaurar o padrão',
