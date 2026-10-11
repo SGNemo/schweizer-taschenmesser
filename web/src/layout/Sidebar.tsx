@@ -97,16 +97,25 @@ function RailLink({
   label,
   active,
   area,
+  fullLabel,
 }: {
   to: string;
   icon: NavItem['icon'];
   label: string;
   active: boolean;
   area?: NavItem['area'];
+  /** Full name when `label` is shortened to fit the rail. */
+  fullLabel?: string;
 }) {
   return (
     <li data-area={area}>
-      <Link to={to} className={styles.railLink} aria-current={active ? 'page' : undefined}>
+      <Link
+        to={to}
+        className={styles.railLink}
+        aria-current={active ? 'page' : undefined}
+        aria-label={fullLabel}
+        title={fullLabel}
+      >
         <Icon name={icon} size={22} />
         <span>{label}</span>
       </Link>
@@ -118,7 +127,6 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const setSidebar = useUiStore((s) => s.setSidebar);
-  const openTools = useUiStore((s) => s.openTools);
   const shown = tree.favourites.flatMap((i) => (i.moduleId ? [i.moduleId] : []));
   const activeArea = areaOfPath(tree, pathname)?.id;
 
@@ -156,12 +164,13 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
           </ul>
         </nav>
         <ul className={styles.list}>
-          <li>
-            <button type="button" className={styles.railLink} onClick={() => openTools()}>
-              <Icon name="wrench" size={22} />
-              <span>{t.nav.tools}</span>
-            </button>
-          </li>
+          <RailLink
+            to="/library"
+            icon="grid"
+            label={t.nav.libraryShort}
+            fullLabel={t.nav.library}
+            active={pathname.startsWith('/library')}
+          />
           <RailLink
             to="/settings"
             icon="settings"
