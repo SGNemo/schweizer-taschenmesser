@@ -9,7 +9,7 @@ R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release
 R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
 R3. *In-App-Update:* eine 0.3.x-Installation (Windows-Portable und Android) prüft Updates und aktualisiert auf das erste Release ohne `Taschenmesser-*`-Dateien (`latest.json` verweist auf `Nemo-Portable.exe`, Android nimmt `Nemo.apk`). Daten bleiben erhalten. Von 0.2.x aus ist kein Selbst-Update mehr möglich (nur Neuinstallation). ☐
 R4. *Sync-Tresor v2 (Argon2id) mit einem 0.2.0-Gerät:* zweites, altes Gerät am selben Server; prüfen, ob ein älterer Tresor weiter entschlüsselt. ☐
-R5. Datenträger-Modul D1–D16 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
+R5. Datenträger-Modul D1–D17 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
 
 ### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
@@ -23,12 +23,13 @@ D7. *Papierkorb nicht möglich:* Einen Testordner auf einem USB-Stick/Netzlaufwe
 D8. *Sperrliste:* Diese Pfade zeigen **keine** Löschen-Schaltfläche, sondern „Geschützt“: Laufwerkswurzel, `C:\Windows` (und darin), `C:\Program Files`, `C:\ProgramData`, `C:\Users`, dein Profilordner, `AppData`, `System Volume Information`, `$Recycle.Bin`, `pagefile.sys`/`hiberfil.sys`, Ordner der Taschenmesser-App und ihrer Daten, Ordner eines laufenden Programms. Mit 8.3-Namen (`dir /x`) und über eine Junction auf `C:\Windows` ebenfalls nicht löschbar. ☐
 D9. *Abbruch:* Scan während der Laufzeit abbrechen (Teilergebnis bleibt nutzbar); Löschen einer großen Testordner-Auswahl mit „Stoppen“ unterbrechen (Rest bleibt unberührt). ☐
 D10. *Datei in Benutzung:* Eine geöffnete Testdatei in einem Testordner: Bericht „Teilweise gelöscht“ mit Grund „Datei in Benutzung“. ☐
-D11. *Bestätigungen:* Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ verlangen das Eintippen des Namens; Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
+D11. *Bestätigungen:* Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ fragen ein zweites Mal („Wirklich löschen?“, kein Eintippen mehr; ein schneller Doppelklick bestätigt nicht beide Male); Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
 D12. *Aufräum-Helfer:* „Aufräumen“ auf der Startseite listet Temp/Downloads/Browser-Caches (nur vorhandene); „Doppelte Dateien“ findet zwei gleiche Testdateien, ein Exemplar bleibt immer. ☐
 D13. *Im Explorer zeigen / Pfad kopieren* funktionieren (auch bei langen Pfaden). ☐
 D14. *Berechtigungen:* App startet, Updater, Google-Login und lokale API funktionieren weiterhin (alle App-Befehle sind jetzt einzeln freigegeben; `capabilities/desktop.json`). ☐
 D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, RAM, Akku am Laptop, Grafikkarte, lokale IP). ☐
 D16. *Android/PWA:* „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
+D17. *Alt & ungenutzt:* Spiele-/Steam-Laufwerk scannen: Karte „Alter“ zeigt lange nicht aktualisierte Spiele warm (orange/rot) mit Alter auf der Kachel; „Dateityp“ zeigt Spieldaten statt fast nur „Sonstiges“; „Lange nicht geändert“ (1 Jahr, ab 10 MB) listet jeden alten Ordner einmal mit plausibler Summe; zwei Treffer ankreuzen → „In den Korb“ bzw. „Auswahl löschen …“ öffnet die normale Bestätigung (Papierkorb). ☐
 
 ### Übersicht und Dieser PC (Runde `feat/dashboard-variety-system-module`) – nur auf echtem Windows/Android prüfbar
 V1. *GPU-Erkennung:* Dieser PC → System → Grafik: die **RTX 4070** erscheint (mit Speicher ≈ 12 GB und Treiberversion, „aktiv“), **nicht** „Microsoft Basic Render Driver“. Bei mehreren Grafikkarten (z. B. Prozessorgrafik) sind alle gelistet. ☐

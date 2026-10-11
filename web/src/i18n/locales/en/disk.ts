@@ -107,6 +107,7 @@ export const disk: Strings['disk'] = {
     clear: 'Empty basket',
     deleteAll: 'Delete all …',
     remove: (name: string) => `Remove ${name} from basket`,
+    added: (n: number) => `${n} ${n === 1 ? 'entry' : 'entries'} in the basket`,
   },
   del: {
     title: 'Confirm deletion',
@@ -122,8 +123,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Delete permanently – without recycle bin',
     trashBtn: 'Move to recycle bin',
     permBtn: 'Delete permanently',
-    typeLabel: (phrase: string) => `Type “${phrase}” to confirm`,
-    typeHint: 'So nothing disappears by accident.',
+    twiceHint: 'Because this is a lot or permanent, Nemo asks once more.',
+    againTitle: 'Really delete?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 entry' : `${n} entries`} with ${size} (${files} files) will go to the recycle bin.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 entry' : `${n} entries`} with ${size} (${files} files) will be deleted permanently. This can’t be undone.`,
+    againYesTrash: 'Yes, move to recycle bin',
+    againYesPermanent: 'Yes, delete permanently',
+    back: 'Back',
     warnUser:
       'This is in your personal folders (Documents, Pictures, Desktop, Videos, Music). Check carefully that you really don’t need it any more.',
     warnProgram: 'This looks like a program (executable files). The program won’t work afterwards.',
@@ -139,7 +147,7 @@ export const disk: Strings['disk'] = {
     stop: 'Stop',
     close: 'Close',
     errors: {
-      'confirmation-mismatch': 'The confirmation doesn’t match.',
+      'confirmation-missing': 'The second confirmation is missing. Please delete again.',
       'plan-expired': 'The check has expired. Please start deleting again.',
       'unknown-plan': 'The check has expired. Please start deleting again.',
       'already-running': 'A deletion is already running.',
@@ -213,6 +221,9 @@ export const disk: Strings['disk'] = {
     byType: 'File type',
     byDepth: 'Depth',
     depthLegend: 'The darker the area, the deeper the folder.',
+    byAge: 'Age',
+    ageLegend:
+      'Colour = last change. For folders the newest file inside counts: a red folder hasn’t been touched for years.',
     colorBy: 'Colour by',
     kind: {
       video: 'Videos',
@@ -221,8 +232,44 @@ export const disk: Strings['disk'] = {
       archive: 'Archives',
       program: 'Programs',
       document: 'Documents',
+      game: 'Game data',
       other: 'Other',
     },
+  },
+  age: {
+    buckets: [
+      'under 1 month',
+      '1–6 months',
+      '6–12 months',
+      '1–2 years',
+      '2–3 years',
+      'over 3 years',
+    ] as readonly string[],
+    ago: (days: number) => {
+      if (days < 1) return 'today';
+      if (days < 2) return 'yesterday';
+      if (days < 14) return `${Math.floor(days)} days ago`;
+      if (days < 61) return `${Math.floor(days / 7)} weeks ago`;
+      if (days < 730) return `${Math.floor(days / 30.44)} months ago`;
+      return `${Math.floor(days / 365.25)} years ago`;
+    },
+    short: (days: number) => {
+      if (days < 1) return 'today';
+      if (days < 14) return `${Math.floor(days)} d`;
+      if (days < 61) return `${Math.floor(days / 7)} wk`;
+      if (days < 730) return `${Math.floor(days / 30.44)} mo`;
+      return `${Math.floor(days / 365.25)} yr`;
+    },
+  },
+  select: {
+    label: 'Selected results',
+    row: (name: string) => `Select ${name}`,
+    all: 'Select all results',
+    summary: (n: number, size: string) =>
+      `${n} ${n === 1 ? 'entry' : 'entries'} selected · ${size}`,
+    toBasket: 'Add to basket',
+    delete: 'Delete selection …',
+    clear: 'Clear selection',
   },
   views: { label: 'View', map: 'Map', list: 'List' },
   nav: {
@@ -236,8 +283,20 @@ export const disk: Strings['disk'] = {
     none: 'All',
     topDirs: 'Biggest folders',
     topFiles: 'Biggest files',
-    old: 'Older than',
-    months: (n: number) => (n === 12 ? '1 year' : n === 24 ? '2 years' : `${n} months`),
+    old: 'Not changed for a long time',
+    oldSince: 'Not changed for',
+    months: (n: number) =>
+      n % 12 === 0 ? (n === 12 ? '1 year' : `${n / 12} years`) : `${n} months`,
+    all: 'Everything',
+    topmost: 'Show old folders only once (without their contents)',
+    minSize: 'Minimum size',
+    anySize: 'any size',
+    fromSize: (size: string) => `from ${size}`,
+    oldSummary: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'entry' : 'entries'} with ${size} in total, not changed for over ${since}`,
+    capped: (n: number) => `Showing the ${n} biggest.`,
+    oldHelp:
+      'This counts the last change, not the last time something was opened: Windows usually doesn’t keep track of opening files reliably. For folders the newest file inside counts. For games an update resets the date, playing alone doesn’t.',
     type: 'File type',
     scope: 'Show',
     dirs: 'Folders',
@@ -272,6 +331,10 @@ export const disk: Strings['disk'] = {
     modified: 'Last modified',
     modifiedFolder: 'Last modified (newest file inside)',
     types: 'File types',
+    ages: 'Age of the data',
+    ageBar: 'Shares by age',
+    oldShare: (size: string, pct: number) => `${size} (${pct}%) not changed for over a year`,
+    showOld: 'Show old entries here',
     biggest: 'Biggest entries here',
     open: 'Open folder',
     percent: (p: number) => `${p}%`,

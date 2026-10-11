@@ -109,6 +109,7 @@ export const disk: Strings['disk'] = {
     clear: 'Esvaziar cesta',
     deleteAll: 'Excluir todos …',
     remove: (name: string) => `Tirar ${name} da cesta`,
+    added: (n: number) => `${n} ${n === 1 ? 'item' : 'itens'} na cesta`,
   },
   del: {
     title: 'Confirmar exclusão',
@@ -124,8 +125,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Excluir definitivamente – sem lixeira',
     trashBtn: 'Para a lixeira',
     permBtn: 'Excluir definitivamente',
-    typeLabel: (phrase: string) => `Para confirmar, digite “${phrase}”`,
-    typeHint: 'Para que nada suma por engano.',
+    twiceHint: 'Como é muita coisa ou definitivo, o Nemo pergunta mais uma vez.',
+    againTitle: 'Excluir mesmo?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 item' : `${n} itens`} com ${size} (${files} arquivos) vão para a lixeira.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 item' : `${n} itens`} com ${size} (${files} arquivos) serão excluídos definitivamente. Isso não pode ser desfeito.`,
+    againYesTrash: 'Sim, para a lixeira',
+    againYesPermanent: 'Sim, excluir definitivamente',
+    back: 'Voltar',
     warnUser:
       'Isto está nas suas pastas pessoais (Documentos, Imagens, Área de Trabalho, Vídeos, Músicas). Confira bem se você realmente não precisa mais disso.',
     warnProgram:
@@ -143,7 +151,7 @@ export const disk: Strings['disk'] = {
     stop: 'Parar',
     close: 'Fechar',
     errors: {
-      'confirmation-mismatch': 'A confirmação não confere.',
+      'confirmation-missing': 'Falta a segunda confirmação. Exclua de novo.',
       'plan-expired': 'A verificação expirou. Inicie a exclusão de novo.',
       'unknown-plan': 'A verificação expirou. Inicie a exclusão de novo.',
       'already-running': 'Já há uma exclusão em andamento.',
@@ -218,6 +226,9 @@ export const disk: Strings['disk'] = {
     byType: 'Tipo de arquivo',
     byDepth: 'Profundidade',
     depthLegend: 'Quanto mais escura a área, mais funda está a pasta.',
+    byAge: 'Idade',
+    ageLegend:
+      'Cor = última alteração. Em pastas conta o arquivo mais recente: uma pasta vermelha não é mexida há anos.',
     colorBy: 'Cor por',
     kind: {
       video: 'Vídeos',
@@ -226,8 +237,44 @@ export const disk: Strings['disk'] = {
       archive: 'Arquivos compactados',
       program: 'Programas',
       document: 'Documentos',
+      game: 'Dados de jogos',
       other: 'Outros',
     },
+  },
+  age: {
+    buckets: [
+      'menos de 1 mês',
+      '1–6 meses',
+      '6–12 meses',
+      '1–2 anos',
+      '2–3 anos',
+      'mais de 3 anos',
+    ] as readonly string[],
+    ago: (days: number) => {
+      if (days < 1) return 'hoje';
+      if (days < 2) return 'ontem';
+      if (days < 14) return `há ${Math.floor(days)} dias`;
+      if (days < 61) return `há ${Math.floor(days / 7)} semanas`;
+      if (days < 730) return `há ${Math.floor(days / 30.44)} meses`;
+      return `há ${Math.floor(days / 365.25)} anos`;
+    },
+    short: (days: number) => {
+      if (days < 1) return 'hoje';
+      if (days < 14) return `${Math.floor(days)} d`;
+      if (days < 61) return `${Math.floor(days / 7)} sem.`;
+      if (days < 730) return `${Math.floor(days / 30.44)} m.`;
+      return `${Math.floor(days / 365.25)} a.`;
+    },
+  },
+  select: {
+    label: 'Resultados selecionados',
+    row: (name: string) => `Selecionar ${name}`,
+    all: 'Selecionar todos os resultados',
+    summary: (n: number, size: string) =>
+      `${n} ${n === 1 ? 'item selecionado' : 'itens selecionados'} · ${size}`,
+    toBasket: 'Para a cesta',
+    delete: 'Excluir seleção …',
+    clear: 'Limpar seleção',
   },
   views: { label: 'Visualização', map: 'Mapa', list: 'Lista' },
   nav: {
@@ -241,8 +288,19 @@ export const disk: Strings['disk'] = {
     none: 'Todos',
     topDirs: 'Maiores pastas',
     topFiles: 'Maiores arquivos',
-    old: 'Mais antigo que',
-    months: (n: number) => (n === 12 ? '1 ano' : n === 24 ? '2 anos' : `${n} meses`),
+    old: 'Sem alterações há muito tempo',
+    oldSince: 'Sem alterações há',
+    months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 ano' : `${n / 12} anos`) : `${n} meses`),
+    all: 'Tudo',
+    topmost: 'Mostrar pastas antigas só uma vez (sem o conteúdo)',
+    minSize: 'Tamanho mínimo',
+    anySize: 'qualquer tamanho',
+    fromSize: (size: string) => `a partir de ${size}`,
+    oldSummary: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'item' : 'itens'} com ${size} no total, sem alterações há mais de ${since}`,
+    capped: (n: number) => `Mostrando os ${n} maiores.`,
+    oldHelp:
+      'Conta a última alteração, não a última vez que algo foi aberto: o Windows normalmente não registra de forma confiável quando os arquivos são abertos. Em pastas conta o arquivo mais recente. Em jogos, uma atualização muda a data; só jogar não.',
     type: 'Tipo de arquivo',
     scope: 'Mostrar',
     dirs: 'Pastas',
@@ -277,6 +335,10 @@ export const disk: Strings['disk'] = {
     modified: 'Última alteração',
     modifiedFolder: 'Última alteração (arquivo mais recente dentro)',
     types: 'Tipos de arquivo',
+    ages: 'Idade dos dados',
+    ageBar: 'Proporções por idade',
+    oldShare: (size: string, pct: number) => `${size} (${pct} %) sem alterações há mais de um ano`,
+    showOld: 'Mostrar aqui os itens antigos',
     biggest: 'Maiores itens aqui',
     open: 'Abrir pasta',
     percent: (p: number) => `${p} %`,

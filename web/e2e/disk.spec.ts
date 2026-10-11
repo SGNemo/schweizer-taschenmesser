@@ -169,9 +169,19 @@ test('treemap: keyboard selects, opens and goes up', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Pfad' }).getByRole('button')).toHaveCount(1);
 });
 
-test('legend names every file type (text, not only colour)', async ({ page }) => {
+test('legend names every age bucket and file type (text, not only colour)', async ({ page }) => {
   await openScan(page);
   const legend = page.getByRole('group', { name: 'Legende' });
+  const colorBy = page.getByRole('group', { name: 'Farbe nach' });
+  // The map starts coloured by age: what has not been changed for long stands out.
+  await expect(colorBy.getByRole('button', { name: 'Alter' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  for (const bucket of ['unter 1 Monat', '1–2 Jahre', 'über 3 Jahre'])
+    await expect(legend).toContainText(bucket);
+  await expect(legend).toContainText('letzte Änderung');
+  await colorBy.getByRole('button', { name: 'Dateityp' }).click();
   for (const kind of [
     'Videos',
     'Bilder',
@@ -179,10 +189,11 @@ test('legend names every file type (text, not only colour)', async ({ page }) =>
     'Archive',
     'Programme',
     'Dokumente',
+    'Spieldaten',
     'Sonstiges',
   ])
     await expect(legend).toContainText(kind);
-  await page.getByRole('button', { name: 'Tiefe', exact: true }).click();
+  await colorBy.getByRole('button', { name: 'Tiefe', exact: true }).click();
   await expect(legend).toContainText('Je dunkler');
 });
 
@@ -217,8 +228,8 @@ test('quick filters: biggest files, older than, by type', async ({ page }) => {
   await page.getByRole('button', { name: 'Größte Ordner' }).click();
   expect(await first()).toBe('Programme');
 
-  await page.getByRole('button', { name: 'Älter als' }).click();
-  await page.getByLabel('Älter als', { exact: true }).selectOption('24');
+  await page.getByRole('button', { name: 'Lange nicht geändert' }).click();
+  await page.getByLabel('Nicht geändert seit', { exact: true }).selectOption('24');
   await expect(table).toContainText('alt.iso');
   await expect(table).not.toContainText('Steuer.pdf');
 
@@ -228,6 +239,51 @@ test('quick filters: biggest files, older than, by type', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Alle', exact: true }).click();
   await expect(page.getByTestId('treemap')).toBeVisible();
+});
+
+test('long unchanged: each old folder once, with the total, ticked entries go to the basket', async ({
+  page,
+}) => {
+  await openScan(page);
+  // The drive's details say how much has not been changed for a year.
+  await expect(page.getByTestId('details-old')).toContainText(
+    'seit über einem Jahr nicht geändert',
+  );
+  await page
+    .getByTestId('details')
+    .getByRole('button', { name: 'Alte Einträge hier zeigen' })
+    .click();
+  const table = page.getByRole('table', { name: 'Schnellfilter' });
+  // Older than a year and at least 10 MB: the old video, the old disk image and the old scans
+  // folder (listed once, not file by file); the small old PDF stays out.
+  await expect(page.getByTestId('old-summary')).toContainText('3 Einträge');
+  await expect(page.getByTestId('old-summary')).toContainText(
+    'seit über einem Jahr nicht geändert',
+  );
+  for (const name of ['Urlaub-2024.mp4', 'alt.iso', 'Scans'])
+    await expect(table).toContainText(name);
+  await expect(table).not.toContainText('Steuer.pdf');
+  await expect(table.getByRole('row').nth(1)).toContainText('vor 13 Monaten');
+
+  await page.getByLabel('Mindestgröße').selectOption({ label: 'jede Größe' });
+  await expect(table).toContainText('Steuer.pdf');
+
+  await audit(page, 'long unchanged list');
+  await table.getByRole('checkbox', { name: 'alt.iso auswählen' }).click();
+  await table.getByRole('checkbox', { name: 'Scans auswählen' }).click();
+  const picked = page.getByRole('group', { name: 'Ausgewählte Treffer' });
+  await expect(picked).toContainText('2 Einträge ausgewählt');
+  await picked.getByRole('button', { name: 'In den Korb' }).click();
+  await expect(picked).toHaveCount(0);
+  const basket = page.getByTestId('basket');
+  await expect(basket).toContainText('alt.iso');
+  await expect(basket).toContainText('Scans');
+
+  // "Alle auswählen" ticks every hit; deleting goes through the usual confirmation.
+  await table.getByRole('checkbox', { name: 'Alle Treffer auswählen' }).click();
+  await expect(picked).toContainText('4 Einträge ausgewählt');
+  await picked.getByRole('button', { name: 'Auswahl löschen …' }).click();
+  await expect(page.getByRole('dialog')).toContainText('Löschen bestätigen');
 });
 
 test('a result row opens the folder of the file in the map', async ({ page }) => {
@@ -291,8 +347,9 @@ test('basket: collect two files, one confirmation with the sum, then the bin', a
   await expect(dialog.getByTestId('delete-total')).toContainText('2 Einträge');
   await expect(dialog.getByRole('radio', { name: /In den Papierkorb verschieben/ })).toBeChecked();
   await audit(page, 'delete dialog');
-  // Small, not permanent: no typing needed.
+  // Small, not permanent: one confirmation is enough.
   await dialog.getByRole('button', { name: 'In den Papierkorb' }).click();
+  await expect(page.getByTestId('delete-again')).toHaveCount(0);
   const report = page.getByTestId('delete-report');
   await expect(report).toContainText('Gelöscht');
   await expect(report).toContainText('Papierkorb');
@@ -307,7 +364,7 @@ test('basket: collect two files, one confirmation with the sum, then the bin', a
   await expect(table).toContainText('daten.pak');
 });
 
-test('large deletions need the name typed in; a wrong text keeps the button off', async ({
+test('large deletions ask a second time; "Zurück" deletes nothing, a double click is not two yeses', async ({
   page,
 }) => {
   await openScan(page);
@@ -315,14 +372,21 @@ test('large deletions need the name typed in; a wrong text keeps the button off'
   await deleteButton(page).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText('Sehr große Löschung');
-  const confirm = dialog.getByRole('button', { name: 'In den Papierkorb' });
-  await expect(confirm).toBeDisabled();
-  const field = dialog.getByLabel('Tippe zur Bestätigung „daten.pak“ ein');
-  await field.fill('daten');
-  await expect(confirm).toBeDisabled();
-  await field.fill('daten.pak');
-  await expect(confirm).toBeEnabled();
-  await confirm.click();
+  // Nothing to type: the hint says a second question follows.
+  await expect(dialog.getByRole('textbox')).toHaveCount(0);
+  await expect(dialog.getByTestId('delete-twice-hint')).toBeVisible();
+  await dialog.getByRole('button', { name: 'In den Papierkorb' }).click();
+  const again = dialog.getByTestId('delete-again');
+  await expect(again).toContainText('Wirklich löschen?');
+  await expect(again).toContainText('1 Eintrag');
+  // The second "yes" is off for a moment, so a hasty double click cannot confirm twice.
+  const yes = dialog.getByRole('button', { name: 'Ja, in den Papierkorb' });
+  await expect(yes).toBeDisabled();
+  await dialog.getByRole('button', { name: 'Zurück' }).click();
+  await expect(again).toHaveCount(0);
+  await expect(dialog.getByTestId('delete-items')).toContainText('daten.pak');
+  await dialog.getByRole('button', { name: 'In den Papierkorb' }).click();
+  await yes.click();
   await expect(page.getByTestId('delete-report')).toContainText('Gelöscht');
 });
 
@@ -333,14 +397,17 @@ test('permanent delete is a deliberate second choice with its own confirmation',
   await pick(page, 'Größte Dateien', 'Steuer.pdf');
   await deleteButton(page).click();
   const dialog = page.getByRole('dialog');
-  // Bin is the default and needs no typing for this small file.
+  // Bin is the default and needs a single confirmation for this small file.
   await expect(dialog.getByRole('button', { name: 'In den Papierkorb' })).toBeEnabled();
+  await expect(dialog.getByTestId('delete-twice-hint')).toHaveCount(0);
   await dialog.getByRole('radio', { name: /Endgültig löschen/ }).check();
   await expect(dialog).toContainText('nicht rückgängig');
-  const confirm = dialog.getByRole('button', { name: 'Endgültig löschen' });
-  await expect(confirm).toBeDisabled();
-  await dialog.getByLabel('Tippe zur Bestätigung „Steuer.pdf“ ein').fill('Steuer.pdf');
-  await confirm.click();
+  await expect(dialog.getByTestId('delete-twice-hint')).toBeVisible();
+  // The first click only asks again; nothing is deleted yet.
+  await dialog.getByRole('button', { name: 'Endgültig löschen' }).click();
+  await expect(dialog.getByTestId('delete-again')).toContainText('endgültig gelöscht');
+  await expect(page.getByTestId('delete-report')).toHaveCount(0);
+  await dialog.getByRole('button', { name: 'Ja, endgültig löschen' }).click();
   await expect(page.getByTestId('delete-report')).toContainText('endgültig gelöscht');
 });
 
@@ -361,8 +428,8 @@ test('files in use: the report lists what stayed, with the reason', async ({ pag
   await deleteButton(page).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('radio', { name: /Endgültig löschen/ }).check();
-  await dialog.getByLabel('Tippe zur Bestätigung „Editor“ ein').fill('Editor');
   await dialog.getByRole('button', { name: 'Endgültig löschen' }).click();
+  await dialog.getByRole('button', { name: 'Ja, endgültig löschen' }).click();
   const report = page.getByTestId('delete-report');
   await expect(report).toContainText('Teilweise gelöscht');
   await expect(report).toContainText('C:\\Programme\\Editor\\Editor.exe');
@@ -382,8 +449,8 @@ test('a bin that cannot take the item never deletes it silently', async ({ page 
   await report.getByRole('button', { name: /Diese endgültig löschen/ }).click();
   const next = page.getByRole('dialog');
   await expect(next.getByRole('radio', { name: /Endgültig löschen/ })).toBeChecked();
-  await next.getByLabel('Tippe zur Bestätigung „Urlaub-2024.mp4“ ein').fill('Urlaub-2024.mp4');
   await next.getByRole('button', { name: 'Endgültig löschen' }).click();
+  await next.getByRole('button', { name: 'Ja, endgültig löschen' }).click();
   await expect(page.getByTestId('delete-report')).toContainText('endgültig gelöscht');
 });
 

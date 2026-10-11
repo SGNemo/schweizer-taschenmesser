@@ -9,13 +9,15 @@ import type {
   DiskNode,
 } from '@/core/platform/disk';
 import { t } from '@/strings';
-import { Button, Dialog, TextField } from '@/ui';
+import { Button, Dialog } from '@/ui';
 import { formatBytes, formatCount } from '../format';
 import styles from './DeleteDialog.module.css';
 
 type Step =
   | { kind: 'planning' }
   | { kind: 'confirm'; plan: DeletePlan }
+  /** The second confirmation of a permanent or large deletion. */
+  | { kind: 'again'; plan: DeletePlan }
   | { kind: 'running'; plan: DeletePlan; progress: DeleteProgress | null }
   | { kind: 'report'; report: DeleteReport }
   | { kind: 'error'; message: string };
@@ -31,17 +33,21 @@ interface Props {
 
 const denyText = (r: DenyReason): string => t.disk.deny[r];
 
+/** A click this soon after the second question appears is ignored (a double click is not two yeses). */
+const ARM_MS = 600;
+
 /**
  * The only way to delete: check (block list, sizes, warnings) → confirm (path, size, bin vs.
- * permanent, name typed in for large or permanent deletions) → run with progress and cancel →
- * report. The native side re-checks everything, including the typed phrase.
+ * permanent) → for large or permanent deletions a second, separate confirmation → run with
+ * progress and cancel → report. The native side re-checks everything, including that the second
+ * confirmation was given.
  */
 export function DeleteDialog({ scanId, nodeIds, presetMode = 'trash', onClose }: Props) {
   const disk = getPlatform().disk;
   const [ids, setIds] = useState(nodeIds);
   const [mode, setMode] = useState<DeleteMode>(presetMode);
-  const [typed, setTyped] = useState('');
   const [step, setStep] = useState<Step>({ kind: 'planning' });
+  const [armed, setArmed] = useState(false);
   const changed = useRef(false);
   const root = useRef<DiskNode | null>(null);
 
@@ -56,20 +62,31 @@ export function DeleteDialog({ scanId, nodeIds, presetMode = 'trash', onClose }:
     };
   }, [disk, scanId, ids]);
 
+  // The "yes" of the second question only works after a short moment, so one hasty double click
+  // can never give both confirmations.
+  const asking = step.kind === 'again';
+  useEffect(() => {
+    if (!asking) return;
+    const timer = setTimeout(() => setArmed(true), ARM_MS);
+    return () => {
+      clearTimeout(timer);
+      setArmed(false);
+    };
+  }, [asking]);
+
   const running = step.kind === 'running';
   const close = () => {
     if (!running) onClose(changed.current, root.current);
   };
 
-  const start = async (plan: DeletePlan) => {
-    const confirm = mode === 'trash' ? plan.trashConfirmation : plan.permanentConfirmation;
+  const needsTwice = (plan: DeletePlan) =>
+    mode === 'trash' ? plan.trashDoubleConfirm : plan.permanentDoubleConfirm;
+
+  const start = async (plan: DeletePlan, confirmedTwice: boolean) => {
     setStep({ kind: 'running', plan, progress: null });
     try {
-      const report = await disk.runDelete(
-        plan.planId,
-        mode,
-        confirm === null ? null : typed,
-        (progress) => setStep((s) => (s.kind === 'running' ? { ...s, progress } : s)),
+      const report = await disk.runDelete(plan.planId, mode, confirmedTwice, (progress) =>
+        setStep((s) => (s.kind === 'running' ? { ...s, progress } : s)),
       );
       if (report.items.some((i) => i.outcome === 'deleted' || i.outcome === 'partial'))
         changed.current = true;
@@ -88,8 +105,25 @@ export function DeleteDialog({ scanId, nodeIds, presetMode = 'trash', onClose }:
       case 'error':
         return <p role="alert">{step.message}</p>;
       case 'confirm':
+        return <Confirm plan={step.plan} mode={mode} onMode={setMode} />;
+      case 'again':
         return (
-          <Confirm plan={step.plan} mode={mode} typed={typed} onMode={setMode} onTyped={setTyped} />
+          <div className={styles.again} role="alert" data-testid="delete-again">
+            <p className={styles.strong}>{t.disk.del.againTitle}</p>
+            <p>
+              {mode === 'trash'
+                ? t.disk.del.againTrash(
+                    step.plan.items.length,
+                    formatBytes(step.plan.totalBytes),
+                    formatCount(step.plan.totalFiles),
+                  )
+                : t.disk.del.againPermanent(
+                    step.plan.items.length,
+                    formatBytes(step.plan.totalBytes),
+                    formatCount(step.plan.totalFiles),
+                  )}
+            </p>
+          </div>
         );
       case 'running': {
         const p = step.progress;
@@ -119,7 +153,6 @@ export function DeleteDialog({ scanId, nodeIds, presetMode = 'trash', onClose }:
             report={step.report}
             onPermanentInstead={(nodes) => {
               setMode('permanent');
-              setTyped('');
               setStep({ kind: 'planning' });
               setIds(nodes);
             }}
@@ -131,16 +164,31 @@ export function DeleteDialog({ scanId, nodeIds, presetMode = 'trash', onClose }:
   let footer;
   if (step.kind === 'confirm') {
     const plan = step.plan;
-    const required = mode === 'trash' ? plan.trashConfirmation : plan.permanentConfirmation;
-    const ok = plan.items.length > 0 && (required === null || typed.trim() === required);
     footer = (
       <>
         <Button onClick={close}>{t.disk.del.cancel}</Button>
         {plan.items.length > 0 ? (
-          <Button variant="danger" disabled={!ok} onClick={() => void start(plan)}>
+          <Button
+            variant="danger"
+            onClick={() =>
+              needsTwice(plan) ? setStep({ kind: 'again', plan }) : void start(plan, false)
+            }
+          >
             {mode === 'trash' ? t.disk.del.trashBtn : t.disk.del.permBtn}
           </Button>
         ) : null}
+      </>
+    );
+  } else if (step.kind === 'again') {
+    const plan = step.plan;
+    footer = (
+      <>
+        <Button onClick={() => setStep({ kind: 'confirm', plan })} data-autofocus>
+          {t.disk.del.back}
+        </Button>
+        <Button variant="danger" disabled={!armed} onClick={() => void start(plan, true)}>
+          {mode === 'trash' ? t.disk.del.againYesTrash : t.disk.del.againYesPermanent}
+        </Button>
       </>
     );
   } else if (step.kind === 'running') {
@@ -168,17 +216,13 @@ export function DeleteDialog({ scanId, nodeIds, presetMode = 'trash', onClose }:
 function Confirm({
   plan,
   mode,
-  typed,
   onMode,
-  onTyped,
 }: {
   plan: DeletePlan;
   mode: DeleteMode;
-  typed: string;
   onMode: (m: DeleteMode) => void;
-  onTyped: (v: string) => void;
 }) {
-  const required = mode === 'trash' ? plan.trashConfirmation : plan.permanentConfirmation;
+  const twice = mode === 'trash' ? plan.trashDoubleConfirm : plan.permanentDoubleConfirm;
   const has = (flag: 'userData' | 'program') => plan.items.some((i) => i.flags.includes(flag));
   return (
     <>
@@ -252,16 +296,10 @@ function Confirm({
               {t.disk.del.warnPermanent}
             </p>
           ) : null}
-          {required !== null ? (
-            <TextField
-              label={t.disk.del.typeLabel(required)}
-              hint={t.disk.del.typeHint}
-              value={typed}
-              onChange={(e) => onTyped(e.target.value)}
-              autoComplete="off"
-              spellCheck={false}
-              data-autofocus
-            />
+          {twice ? (
+            <p className={styles.muted} data-testid="delete-twice-hint">
+              {t.disk.del.twiceHint}
+            </p>
           ) : null}
         </>
       )}

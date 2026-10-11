@@ -1,10 +1,12 @@
 import type { DenyReason, DiskNode } from '@/core/platform/disk';
+import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { formatBytes, formatCount, percent } from '../format';
+import { AGE_VAR, ageDays, ageShares, oldBytes } from '../logic/age';
 import { kindShares } from '../logic/tree';
 import { formatDate } from './NodeList';
-import { Swatch } from './Legend';
+import { AgeSwatch, Swatch } from './Legend';
 import styles from './Details.module.css';
 
 interface Props {
@@ -16,6 +18,8 @@ interface Props {
   biggest: readonly DiskNode[];
   onOpen: (node: DiskNode) => void;
   onSelect: (node: DiskNode) => void;
+  /** Lists what has not been changed for a long time inside this folder. */
+  onShowOld?: (node: DiskNode) => void;
   /** Actions on the entry; `undefined` hides them (scan root, aggregates). */
   actions?: {
     /** The block list's verdict: `undefined` while loading, `null` = may be deleted. */
@@ -28,9 +32,20 @@ interface Props {
   };
 }
 
-export function Details({ node, current, path, biggest, onOpen, onSelect, actions }: Props) {
+export function Details({
+  node,
+  current,
+  path,
+  biggest,
+  onOpen,
+  onSelect,
+  onShowOld,
+  actions,
+}: Props) {
   const isDir = node.kind === 'dir';
   const kinds = kindShares(node);
+  const ages = ageShares(node);
+  const old = oldBytes(node);
   const showBiggest = node.id === current.id && biggest.length > 0;
   return (
     <section className={styles.details} aria-label={t.disk.details.title} data-testid="details">
@@ -62,8 +77,46 @@ export function Details({ node, current, path, biggest, onOpen, onSelect, action
         <dt>{t.disk.details.files}</dt>
         <dd>{formatCount(node.files)}</dd>
         <dt>{isDir ? t.disk.details.modifiedFolder : t.disk.details.modified}</dt>
-        <dd>{formatDate(node.modified)}</dd>
+        <dd>
+          {formatDate(node.modified)}
+          {node.modified > 0 ? (
+            <span className={styles.ago}> · {t.disk.age.ago(ageDays(node.modified, now()))}</span>
+          ) : null}
+        </dd>
       </dl>
+      {ages.length > 0 && node.kind !== 'file' ? (
+        <>
+          <h3 className={styles.label}>{t.disk.details.ages}</h3>
+          <div className={styles.ageBar} role="img" aria-label={t.disk.details.ageBar}>
+            {[...ages].reverse().map((a) => (
+              <span
+                key={a.index}
+                style={{ flexGrow: a.bytes, background: `var(${AGE_VAR[a.index]})` }}
+              />
+            ))}
+          </div>
+          {old > 0 ? (
+            <p className={styles.oldNote} data-testid="details-old">
+              {t.disk.details.oldShare(formatBytes(old), percent(old, node.bytes))}
+            </p>
+          ) : null}
+          <ul className={styles.types}>
+            {ages.map((a) => (
+              <li key={a.index}>
+                <AgeSwatch index={a.index} />
+                <span className={styles.typeName}>{t.disk.age.buckets[a.index]}</span>
+                <span>{formatBytes(a.bytes)}</span>
+                <span className={styles.muted}>{Math.round(a.fraction * 100)} %</span>
+              </li>
+            ))}
+          </ul>
+          {isDir && onShowOld && old > 0 ? (
+            <div className={styles.actions}>
+              <Button onClick={() => onShowOld(node)}>{t.disk.details.showOld}</Button>
+            </div>
+          ) : null}
+        </>
+      ) : null}
       {kinds.length > 0 && node.kind !== 'file' ? (
         <>
           <h3 className={styles.label}>{t.disk.details.types}</h3>

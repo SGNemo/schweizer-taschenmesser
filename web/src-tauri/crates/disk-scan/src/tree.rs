@@ -1,4 +1,4 @@
-use crate::kinds::{FileKind, KIND_COUNT};
+use crate::kinds::{age_bucket, FileKind, AGE_COUNT, KIND_COUNT};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -28,6 +28,8 @@ struct Node {
     /// Newest modification (Unix seconds) in the subtree.
     modified: i64,
     kind_bytes: [u64; KIND_COUNT],
+    /// Bytes per age bucket (`kinds::AGE_LIMITS_DAYS`) by each file's own change time.
+    age_bytes: [u64; AGE_COUNT],
     children: Vec<u32>,
     /// Deleted (or inside a deleted folder) after the scan; hidden from every query.
     removed: bool,
@@ -57,6 +59,7 @@ pub(crate) struct SmallAgg {
     pub logical: u64,
     pub modified: i64,
     pub kind_bytes: [u64; KIND_COUNT],
+    pub age_bytes: [u64; AGE_COUNT],
 }
 
 /// A node as the webview sees it. `id` is only meaningful for the scan it came from.
@@ -74,6 +77,8 @@ pub struct NodeView {
     /// Dominant file type by bytes.
     pub file_kind: FileKind,
     pub kind_bytes: [u64; KIND_COUNT],
+    /// Bytes per age bucket of the files below (relative to the scan start).
+    pub age_bytes: [u64; AGE_COUNT],
     pub child_count: u32,
     /// Path relative to the scan root (OS separator; empty for the root). Only filled in
     /// query results, where the caller needs to show where an entry lives.
@@ -86,6 +91,8 @@ pub struct NodeView {
 pub enum QueryScope {
     Dirs,
     Files,
+    /// Folders and files (never the "small files" aggregates).
+    All,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -103,6 +110,10 @@ pub struct Query {
     /// Folders without any file (own or nested); ranked by name. Folders only.
     #[serde(default)]
     pub only_empty: bool,
+    /// With `older_than`: leave out entries whose folder is old as well, so a list of clean-up
+    /// candidates shows each untouched folder once instead of everything inside it, too.
+    #[serde(default)]
+    pub topmost: bool,
 }
 
 pub struct Tree {
@@ -123,16 +134,17 @@ fn dominant(kind_bytes: &[u64; KIND_COUNT]) -> FileKind {
 }
 
 impl Tree {
-    pub(crate) fn from_temp(root: PathBuf, temp: DirTemp) -> Tree {
+    /// Builds the arena; `now` (Unix seconds, the scan start) anchors the age buckets.
+    pub(crate) fn from_temp(root: PathBuf, temp: DirTemp, now: i64) -> Tree {
         let mut tree = Tree {
             nodes: Vec::new(),
             root,
         };
-        tree.add_dir(NO_PARENT, temp);
+        tree.add_dir(NO_PARENT, temp, now);
         tree
     }
 
-    fn add_dir(&mut self, parent: u32, dir: DirTemp) -> u32 {
+    fn add_dir(&mut self, parent: u32, dir: DirTemp, now: i64) -> u32 {
         let id = self.nodes.len() as u32;
         self.nodes.push(Node {
             parent,
@@ -143,17 +155,20 @@ impl Tree {
             files: 0,
             modified: dir.modified,
             kind_bytes: [0; KIND_COUNT],
+            age_bytes: [0; AGE_COUNT],
             children: Vec::new(),
             removed: false,
         });
         let mut children = Vec::new();
         for child in dir.dirs {
-            children.push(self.add_dir(id, child));
+            children.push(self.add_dir(id, child, now));
         }
         for f in dir.files {
             let fid = self.nodes.len() as u32;
             let mut kind_bytes = [0; KIND_COUNT];
             kind_bytes[crate::kinds::classify(&f.name).index()] = f.bytes;
+            let mut age_bytes = [0; AGE_COUNT];
+            age_bytes[age_bucket(f.modified, now)] = f.bytes;
             self.nodes.push(Node {
                 parent: id,
                 name: f.name,
@@ -163,6 +178,7 @@ impl Tree {
                 files: 1,
                 modified: f.modified,
                 kind_bytes,
+                age_bytes,
                 children: Vec::new(),
                 removed: false,
             });
@@ -179,6 +195,7 @@ impl Tree {
                 files: dir.small.count,
                 modified: dir.small.modified,
                 kind_bytes: dir.small.kind_bytes,
+                age_bytes: dir.small.age_bytes,
                 children: Vec::new(),
                 removed: false,
             });
@@ -187,6 +204,7 @@ impl Tree {
         let (mut bytes, mut logical, mut files, mut modified) =
             (0, 0, 0, self.nodes[id as usize].modified);
         let mut kind_bytes = [0; KIND_COUNT];
+        let mut age_bytes = [0; AGE_COUNT];
         for &c in &children {
             let n = &self.nodes[c as usize];
             bytes += n.bytes;
@@ -196,6 +214,9 @@ impl Tree {
             for i in 0..KIND_COUNT {
                 kind_bytes[i] += n.kind_bytes[i];
             }
+            for i in 0..AGE_COUNT {
+                age_bytes[i] += n.age_bytes[i];
+            }
         }
         let n = &mut self.nodes[id as usize];
         n.bytes = bytes;
@@ -203,6 +224,7 @@ impl Tree {
         n.files = files;
         n.modified = modified;
         n.kind_bytes = kind_bytes;
+        n.age_bytes = age_bytes;
         n.children = children;
         id
     }
@@ -236,6 +258,7 @@ impl Tree {
             modified: n.modified,
             file_kind: dominant(&n.kind_bytes),
             kind_bytes: n.kind_bytes,
+            age_bytes: n.age_bytes,
             child_count: n.children.len() as u32,
             rel_path: String::new(),
         }
@@ -300,16 +323,17 @@ impl Tree {
 
     /// Ranked lists behind the quick filters (biggest folders/files, older than, by type).
     pub fn query(&self, q: &Query) -> Vec<NodeView> {
-        let want = match q.scope {
-            QueryScope::Dirs => NodeKind::Dir,
-            QueryScope::Files => NodeKind::File,
+        let wanted = |k: NodeKind| match q.scope {
+            QueryScope::Dirs => k == NodeKind::Dir,
+            QueryScope::Files => k == NodeKind::File,
+            QueryScope::All => k != NodeKind::Small,
         };
         let under = q.under.unwrap_or(0);
         let min = q.min_bytes.unwrap_or(0);
         let mut hits: Vec<(u64, u32)> = Vec::new();
         for (i, n) in self.nodes.iter().enumerate() {
             let id = i as u32;
-            if n.removed || n.kind != want || (want == NodeKind::Dir && id == under) {
+            if n.removed || !wanted(n.kind) || id == under {
                 continue;
             }
             if under != 0 && !self.is_under_inner(id, under) {
@@ -318,8 +342,17 @@ impl Tree {
             if q.older_than.is_some_and(|t| n.modified >= t) {
                 continue;
             }
+            if q.topmost
+                && q.older_than.is_some_and(|t| {
+                    n.parent != NO_PARENT
+                        && n.parent != under
+                        && self.nodes[n.parent as usize].modified < t
+                })
+            {
+                continue;
+            }
             if q.only_empty {
-                if want == NodeKind::Dir && n.files == 0 && n.bytes == 0 {
+                if n.kind == NodeKind::Dir && n.files == 0 && n.bytes == 0 {
                     hits.push((0, id));
                 }
                 continue;
@@ -390,9 +423,16 @@ impl Tree {
         if id == 0 || self.nodes.get(id as usize).is_none_or(|n| n.removed) {
             return false;
         }
-        let (bytes, logical, files, kind_bytes, parent) = {
+        let (bytes, logical, files, kind_bytes, age_bytes, parent) = {
             let n = &self.nodes[id as usize];
-            (n.bytes, n.logical, n.files, n.kind_bytes, n.parent)
+            (
+                n.bytes,
+                n.logical,
+                n.files,
+                n.kind_bytes,
+                n.age_bytes,
+                n.parent,
+            )
         };
         let mut cur = parent;
         while cur != NO_PARENT {
@@ -402,6 +442,9 @@ impl Tree {
             a.files = a.files.saturating_sub(files);
             for (i, b) in kind_bytes.iter().enumerate() {
                 a.kind_bytes[i] = a.kind_bytes[i].saturating_sub(*b);
+            }
+            for (i, b) in age_bytes.iter().enumerate() {
+                a.age_bytes[i] = a.age_bytes[i].saturating_sub(*b);
             }
             cur = a.parent;
         }
@@ -475,6 +518,7 @@ mod tests {
                             k[FileKind::Document.index()] = 50;
                             k
                         },
+                        age_bytes: [50, 0, 0, 0, 0, 0],
                     },
                     ..Default::default()
                 },
@@ -482,7 +526,7 @@ mod tests {
             files: vec![file("readme.txt", 10, 3)],
             small: SmallAgg::default(),
         };
-        Tree::from_temp(PathBuf::from("/data"), root)
+        Tree::from_temp(PathBuf::from("/data"), root, 100)
     }
 
     #[test]
@@ -538,6 +582,7 @@ mod tests {
             min_bytes: None,
             limit: None,
             only_empty: false,
+            topmost: false,
         });
         assert_eq!(
             dirs.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
@@ -551,6 +596,7 @@ mod tests {
             min_bytes: None,
             limit: Some(2),
             only_empty: false,
+            topmost: false,
         });
         assert_eq!(
             files.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
@@ -564,6 +610,7 @@ mod tests {
             min_bytes: None,
             limit: None,
             only_empty: false,
+            topmost: false,
         });
         assert_eq!(
             old.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
@@ -577,6 +624,7 @@ mod tests {
             min_bytes: None,
             limit: None,
             only_empty: false,
+            topmost: false,
         });
         assert_eq!(docs_only.len(), 1);
         assert_eq!(docs_only[0].name, "docs");
@@ -589,6 +637,7 @@ mod tests {
             min_bytes: None,
             limit: Some(1),
             only_empty: false,
+            topmost: false,
         });
         assert_eq!(deep[0].rel_path, "videos");
         let under = t.query(&Query {
@@ -599,7 +648,103 @@ mod tests {
             min_bytes: None,
             limit: None,
             only_empty: false,
+            topmost: false,
         });
         assert_eq!(under.len(), 2);
+    }
+
+    /// Folders `games/old/deep` and `games/new` changed long ago / just now (days before `NOW`).
+    fn aged() -> Tree {
+        const NOW: i64 = 2_000_000_000;
+        let ago = |d: i64| NOW - d * 86_400;
+        let root = DirTemp {
+            name: String::new(),
+            modified: ago(1),
+            dirs: vec![DirTemp {
+                name: "games".into(),
+                modified: ago(1),
+                dirs: vec![
+                    DirTemp {
+                        name: "old".into(),
+                        modified: ago(900),
+                        files: vec![file("old.pak", 500, ago(900))],
+                        dirs: vec![DirTemp {
+                            name: "deep".into(),
+                            modified: ago(800),
+                            files: vec![file("deep.pak", 300, ago(800))],
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    },
+                    DirTemp {
+                        name: "new".into(),
+                        modified: ago(2),
+                        files: vec![
+                            file("fresh.pak", 200, ago(2)),
+                            file("stale.mp4", 400, ago(400)),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        Tree::from_temp(PathBuf::from("/data"), root, NOW)
+    }
+
+    #[test]
+    fn age_buckets_add_up_per_folder() {
+        let t = aged();
+        let root = t.view(0).unwrap();
+        // 200 new, 400 between one and two years, 500 + 300 between two and three years.
+        assert_eq!(root.age_bytes, [200, 0, 0, 400, 800, 0]);
+        assert_eq!(root.age_bytes.iter().sum::<u64>(), root.bytes);
+        assert_eq!(root.file_kind, FileKind::Game);
+    }
+
+    #[test]
+    fn topmost_lists_each_untouched_folder_once() {
+        let t = aged();
+        let year_ago = 2_000_000_000 - 365 * 86_400;
+        let q = |topmost: bool, under: Option<u32>| Query {
+            scope: QueryScope::All,
+            under,
+            older_than: Some(year_ago),
+            file_kind: None,
+            min_bytes: None,
+            limit: None,
+            only_empty: false,
+            topmost,
+        };
+        let names = |v: Vec<NodeView>| v.into_iter().map(|n| n.name).collect::<Vec<_>>();
+        // Without `topmost` the old folder and everything inside it show up.
+        assert_eq!(
+            names(t.query(&q(false, None))),
+            ["old", "old.pak", "stale.mp4", "deep", "deep.pak"]
+        );
+        // With it: the old folder once, plus the old file in a folder that is still in use.
+        assert_eq!(names(t.query(&q(true, None))), ["old", "stale.mp4"]);
+        // Looking inside the old folder itself lists its direct entries.
+        let old = t.query(&q(true, None))[0].id;
+        assert_eq!(names(t.query(&q(true, Some(old)))), ["old.pak", "deep"]);
+    }
+
+    #[test]
+    fn removing_an_entry_takes_its_ages_along() {
+        let mut t = aged();
+        let old = t.query(&Query {
+            scope: QueryScope::Dirs,
+            under: None,
+            older_than: Some(2_000_000_000 - 365 * 86_400),
+            file_kind: None,
+            min_bytes: None,
+            limit: None,
+            only_empty: false,
+            topmost: true,
+        })[0]
+            .id;
+        assert!(t.remove(old));
+        assert_eq!(t.view(0).unwrap().age_bytes, [200, 0, 0, 400, 0, 0]);
     }
 }

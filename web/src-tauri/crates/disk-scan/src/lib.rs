@@ -23,7 +23,7 @@ pub use delete::{
 pub use drives::{list_drives, Bus, DriveInfo, DriveKind, Health, HealthGap, HealthStatus, Media};
 pub use duplicates::{find_duplicates, DupGroup};
 pub use guard::{Denied, Guard, Norm};
-pub use kinds::{classify, FileKind, KIND_COUNT};
+pub use kinds::{age_bucket, classify, FileKind, AGE_COUNT, AGE_LIMITS_DAYS, KIND_COUNT};
 pub use scan::{scan, NotRead, Progress, ScanControl, ScanOptions, ScanResult};
 pub use sizes::{folder_size, place_sizes, recycle_bin_size, PlaceSize};
 pub use system::{

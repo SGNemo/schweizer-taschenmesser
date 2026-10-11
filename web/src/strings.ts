@@ -3018,6 +3018,7 @@ export const de = {
       clear: 'Korb leeren',
       deleteAll: 'Alle löschen …',
       remove: (name: string) => `${name} aus dem Korb nehmen`,
+      added: (n: number) => (n === 1 ? '1 Eintrag im Korb' : `${n} Einträge im Korb`),
     },
     del: {
       title: 'Löschen bestätigen',
@@ -3033,8 +3034,15 @@ export const de = {
       modePermanent: 'Endgültig löschen – ohne Papierkorb',
       trashBtn: 'In den Papierkorb',
       permBtn: 'Endgültig löschen',
-      typeLabel: (phrase: string) => `Tippe zur Bestätigung „${phrase}“ ein`,
-      typeHint: 'Damit nichts aus Versehen verschwindet.',
+      twiceHint: 'Weil das viel ist oder endgültig, fragt Nemo gleich noch einmal nach.',
+      againTitle: 'Wirklich löschen?',
+      againTrash: (n: number, size: string, files: string) =>
+        `${n === 1 ? '1 Eintrag' : `${n} Einträge`} mit ${size} (${files} Dateien) kommen in den Papierkorb.`,
+      againPermanent: (n: number, size: string, files: string) =>
+        `${n === 1 ? '1 Eintrag' : `${n} Einträge`} mit ${size} (${files} Dateien) werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.`,
+      againYesTrash: 'Ja, in den Papierkorb',
+      againYesPermanent: 'Ja, endgültig löschen',
+      back: 'Zurück',
       warnUser:
         'Das liegt in deinen persönlichen Ordnern (Dokumente, Bilder, Desktop, Videos, Musik). Prüfe genau, ob du es wirklich nicht mehr brauchst.',
       warnProgram:
@@ -3052,7 +3060,7 @@ export const de = {
       stop: 'Stoppen',
       close: 'Schließen',
       errors: {
-        'confirmation-mismatch': 'Die Bestätigung stimmt nicht überein.',
+        'confirmation-missing': 'Die zweite Bestätigung fehlt. Bitte noch einmal löschen.',
         'plan-expired': 'Die Prüfung ist abgelaufen. Bitte starte das Löschen noch einmal.',
         'unknown-plan': 'Die Prüfung ist abgelaufen. Bitte starte das Löschen noch einmal.',
         'already-running': 'Es läuft schon ein Löschvorgang.',
@@ -3125,7 +3133,10 @@ export const de = {
       legend: 'Legende',
       byType: 'Dateityp',
       byDepth: 'Tiefe',
+      byAge: 'Alter',
       depthLegend: 'Je dunkler die Fläche, desto tiefer liegt der Ordner.',
+      ageLegend:
+        'Farbe = letzte Änderung. Bei Ordnern zählt die neueste Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr angefasst.',
       colorBy: 'Farbe nach',
       kind: {
         video: 'Videos',
@@ -3134,8 +3145,46 @@ export const de = {
         archive: 'Archive',
         program: 'Programme',
         document: 'Dokumente',
+        game: 'Spieldaten',
         other: 'Sonstiges',
       },
+    },
+    age: {
+      buckets: [
+        'unter 1 Monat',
+        '1–6 Monate',
+        '6–12 Monate',
+        '1–2 Jahre',
+        '2–3 Jahre',
+        'über 3 Jahre',
+      ] as readonly string[],
+      /** "vor 3 Wochen" for an age in days. */
+      ago: (days: number) => {
+        if (days < 1) return 'heute';
+        if (days < 2) return 'gestern';
+        if (days < 14) return `vor ${Math.floor(days)} Tagen`;
+        if (days < 61) return `vor ${Math.floor(days / 7)} Wochen`;
+        if (days < 730) return `vor ${Math.floor(days / 30.44)} Monaten`;
+        return `vor ${Math.floor(days / 365.25)} Jahren`;
+      },
+      /** Compact form for the map tiles. */
+      short: (days: number) => {
+        if (days < 1) return 'heute';
+        if (days < 14) return `${Math.floor(days)} T.`;
+        if (days < 61) return `${Math.floor(days / 7)} Wo.`;
+        if (days < 730) return `${Math.floor(days / 30.44)} Mon.`;
+        return `${Math.floor(days / 365.25)} J.`;
+      },
+    },
+    select: {
+      label: 'Ausgewählte Treffer',
+      row: (name: string) => `${name} auswählen`,
+      all: 'Alle Treffer auswählen',
+      summary: (n: number, size: string) =>
+        `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} ausgewählt · ${size}`,
+      toBasket: 'In den Korb',
+      delete: 'Auswahl löschen …',
+      clear: 'Auswahl aufheben',
     },
     views: { label: 'Ansicht', map: 'Karte', list: 'Liste' },
     nav: {
@@ -3149,8 +3198,20 @@ export const de = {
       none: 'Alle',
       topDirs: 'Größte Ordner',
       topFiles: 'Größte Dateien',
-      old: 'Älter als',
-      months: (n: number) => (n === 12 ? '1 Jahr' : n === 24 ? '2 Jahre' : `${n} Monate`),
+      old: 'Lange nicht geändert',
+      oldSince: 'Nicht geändert seit',
+      months: (n: number) =>
+        n % 12 === 0 ? (n === 12 ? 'einem Jahr' : `${n / 12} Jahren`) : `${n} Monaten`,
+      all: 'Alles',
+      topmost: 'Alte Ordner nur einmal zeigen (ohne ihren Inhalt)',
+      minSize: 'Mindestgröße',
+      anySize: 'jede Größe',
+      fromSize: (size: string) => `ab ${size}`,
+      oldSummary: (n: number, size: string, since: string) =>
+        `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} mit zusammen ${size}, seit über ${since} nicht geändert`,
+      capped: (n: number) => `Gezeigt werden die ${n} größten.`,
+      oldHelp:
+        'Gezählt wird die letzte Änderung, nicht das letzte Öffnen: Windows merkt sich das Öffnen von Dateien meist nicht zuverlässig. Bei Ordnern zählt die neueste Datei darin. Bei Spielen setzt ein Update das Datum neu, reines Spielen nicht.',
       type: 'Dateityp',
       scope: 'Zeige',
       dirs: 'Ordner',
@@ -3185,6 +3246,11 @@ export const de = {
       modified: 'Zuletzt geändert',
       modifiedFolder: 'Zuletzt geändert (neueste Datei darin)',
       types: 'Dateitypen',
+      ages: 'Alter der Daten',
+      ageBar: 'Anteile nach Alter',
+      oldShare: (size: string, pct: number) =>
+        `${size} (${pct} %) seit über einem Jahr nicht geändert`,
+      showOld: 'Alte Einträge hier zeigen',
       biggest: 'Größte Einträge hier',
       open: 'Ordner öffnen',
       percent: (p: number) => `${p} %`,

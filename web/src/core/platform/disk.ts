@@ -44,9 +44,17 @@ export const FILE_KINDS = [
   'archive',
   'program',
   'document',
+  'game',
   'other',
 ] as const;
 export type FileKind = (typeof FILE_KINDS)[number];
+
+/**
+ * Age buckets of the data (`kinds::AGE_LIMITS_DAYS` in Rust): upper limits in days, the last
+ * bucket is "older than the last limit". Index into `ageBytes`.
+ */
+export const AGE_LIMITS_DAYS = [30, 182, 365, 730, 1095] as const;
+export const AGE_COUNT = AGE_LIMITS_DAYS.length + 1;
 
 export type DiskNodeKind = 'dir' | 'file' | 'small';
 
@@ -65,6 +73,8 @@ export interface DiskNode {
   modified: number;
   fileKind: FileKind;
   kindBytes: number[];
+  /** Bytes per age bucket (`AGE_LIMITS_DAYS`) by each file's own change time, as of the scan. */
+  ageBytes: number[];
   childCount: number;
   /** Parent folder relative to the scan root; only present in `query` results. */
   relPath?: string;
@@ -103,7 +113,8 @@ export interface ScanSummary {
 }
 
 export interface DiskQuery {
-  scope: 'dirs' | 'files';
+  /** `all`: folders and files (never the "small files" aggregates). */
+  scope: 'dirs' | 'files' | 'all';
   under?: number;
   /** Only entries whose newest change is older than this Unix time (seconds). */
   olderThan?: number;
@@ -112,6 +123,8 @@ export interface DiskQuery {
   limit?: number;
   /** Folders without any file (own or nested); folders only. */
   onlyEmpty?: boolean;
+  /** With `olderThan`: leave out entries whose folder is old as well (each old folder once). */
+  topmost?: boolean;
 }
 
 /** Well-known cache/temp folders offered as scan roots (only ones that exist). */
@@ -168,10 +181,10 @@ export interface DeletePlan {
   totalBytes: number;
   totalFiles: number;
   large: boolean;
-  /** Exact text to type before a move to the recycle bin (null = plain confirmation). */
-  trashConfirmation: string | null;
-  /** Exact text to type before a permanent delete (null only when nothing can be deleted). */
-  permanentConfirmation: string | null;
+  /** A move to the recycle bin needs a second confirmation (large deletions). */
+  trashDoubleConfirm: boolean;
+  /** A permanent delete needs a second confirmation (always true). */
+  permanentDoubleConfirm: boolean;
   /** False when an item is on a network/removable drive, where the recycle bin often cannot be used. */
   trashLikely: boolean;
 }
@@ -249,13 +262,13 @@ export interface DiskService {
   canDelete(scanId: number, node: number): Promise<DenyReason | null>;
   planDelete(scanId: number, nodes: number[]): Promise<DeletePlan>;
   /**
-   * Runs a plan. `confirm` must be the phrase the plan asks for (checked natively, too).
-   * Rejects with `Error(code)`, e.g. `confirmation-mismatch`, `plan-expired`.
+   * Runs a plan. `confirmedTwice` must be true when the plan needs a second confirmation
+   * (checked natively, too). Rejects with `Error(code)`, e.g. `confirmation-missing`, `plan-expired`.
    */
   runDelete(
     planId: number,
     mode: DeleteMode,
-    confirm: string | null,
+    confirmedTwice: boolean,
     onProgress: (p: DeleteProgress) => void,
   ): Promise<DeleteReport>;
   cancelDelete(planId: number): Promise<void>;

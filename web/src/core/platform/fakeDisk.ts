@@ -4,6 +4,8 @@
  * queries). Names and sizes are made up; nothing here touches a real file system.
  */
 import {
+  AGE_COUNT,
+  AGE_LIMITS_DAYS,
   FILE_KINDS,
   type DeleteItemReport,
   type DeleteMode,
@@ -121,6 +123,17 @@ const SPEC: FakeDir = {
 
 const kindIndex = (k: FileKind) => FILE_KINDS.indexOf(k);
 
+/** Same rule as `kinds::age_bucket` in Rust (age in days at the scan). */
+const ageIndex = (days: number): number => {
+  const i = AGE_LIMITS_DAYS.findIndex((limit) => days < limit);
+  return i === -1 ? AGE_LIMITS_DAYS.length : i;
+};
+const agesOf = (bytes: number, days: number): number[] => {
+  const a: number[] = Array.from({ length: AGE_COUNT }, () => 0);
+  a[ageIndex(days)] = bytes;
+  return a;
+};
+
 function fileKindOf(name: string): FileKind {
   const ext = name.split('.').pop()?.toLowerCase() ?? '';
   if (['mp4', 'mkv', 'avi', 'mov'].includes(ext)) return 'video';
@@ -129,6 +142,7 @@ function fileKindOf(name: string): FileKind {
   if (['zip', 'iso', '7z'].includes(ext)) return 'archive';
   if (['exe', 'dll', 'sys'].includes(ext)) return 'program';
   if (['pdf', 'docx', 'txt'].includes(ext)) return 'document';
+  if (['pak', 'vpk', 'assets'].includes(ext)) return 'game';
   return 'other';
 }
 
@@ -155,6 +169,7 @@ class FakeTree {
       files: 0,
       modified: FAKE_NOW - d.ageDays * DAY,
       kindBytes: FILE_KINDS.map(() => 0),
+      ageBytes: agesOf(0, 0),
       childCount: 0,
     });
     const kids: number[] = [];
@@ -174,6 +189,7 @@ class FakeTree {
           modified: FAKE_NOW - f.ageDays * DAY,
           fileKind: fk,
           kindBytes: kb,
+          ageBytes: agesOf(f.bytes, f.ageDays),
           childCount: 0,
         }),
       );
@@ -193,6 +209,7 @@ class FakeTree {
           modified: FAKE_NOW - d.ageDays * DAY,
           fileKind: fk,
           kindBytes: kb,
+          ageBytes: agesOf(d.small.bytes, d.ageDays),
           childCount: 0,
         }),
       );
@@ -205,6 +222,7 @@ class FakeTree {
       node.files += c.files;
       node.modified = Math.max(node.modified, c.modified);
       c.kindBytes.forEach((b, i) => (node.kindBytes[i]! += b));
+      c.ageBytes.forEach((b, i) => (node.ageBytes[i]! += b));
     }
     node.childCount = kids.length;
     let best = 0;
@@ -245,6 +263,7 @@ class FakeTree {
       a.logicalBytes -= n.logicalBytes;
       a.files -= n.files;
       n.kindBytes.forEach((b, i) => (a.kindBytes[i]! -= b));
+      n.ageBytes.forEach((b, i) => (a.ageBytes[i]! -= b));
     }
     const parent = this.kids.get(n.parentId!)!;
     parent.splice(parent.indexOf(id), 1);
@@ -267,7 +286,7 @@ class FakeTree {
           .filter((c) => this.nodes[c]!.bytes >= minBytes)
           .sort((a, b) => this.nodes[b]!.bytes - this.nodes[a]!.bytes);
         for (const c of sorted) {
-          out.push({ ...this.nodes[c]! });
+          out.push(this.copy(c));
           next.push(c);
         }
       }
@@ -283,14 +302,24 @@ class FakeTree {
     return false;
   }
 
+  /** A copy that cannot alter the tree (the arrays are shared otherwise). */
+  copy(id: number): DiskNode {
+    const n = this.nodes[id]!;
+    return { ...n, kindBytes: [...n.kindBytes], ageBytes: [...n.ageBytes] };
+  }
+
   query(q: DiskQuery): DiskNode[] {
-    const want = q.scope === 'dirs' ? 'dir' : 'file';
+    const wanted = (k: DiskNode['kind']) =>
+      q.scope === 'dirs' ? k === 'dir' : q.scope === 'files' ? k === 'file' : k !== 'small';
     const under = q.under ?? 0;
     const hits: { key: number; n: DiskNode }[] = [];
     for (const n of this.nodes) {
-      if (this.removed.has(n.id) || n.kind !== want || (want === 'dir' && n.id === under)) continue;
+      if (this.removed.has(n.id) || !wanted(n.kind) || n.id === under) continue;
       if (under !== 0 && !this.isUnder(n.id, under)) continue;
       if (q.olderThan !== undefined && n.modified >= q.olderThan) continue;
+      if (q.topmost && q.olderThan !== undefined && n.parentId !== null && n.parentId !== under) {
+        if (this.nodes[n.parentId]!.modified < q.olderThan) continue;
+      }
       if (q.onlyEmpty) {
         if (n.kind === 'dir' && n.files === 0 && n.bytes === 0) hits.push({ key: 0, n });
         continue;
@@ -302,7 +331,7 @@ class FakeTree {
     hits.sort((a, b) => b.key - a.key || a.n.id - b.n.id);
     return hits
       .slice(0, Math.min(q.limit ?? 100, 500))
-      .map((h) => ({ ...h.n, relPath: this.parentPath(h.n.id) }));
+      .map((h) => ({ ...this.copy(h.n.id), relPath: this.parentPath(h.n.id) }));
   }
 
   private parentPath(id: number): string {
@@ -386,13 +415,13 @@ function flagsOf(tree: FakeTree, id: number): PlanFlag[] {
   return flags;
 }
 
-function requiredPhrase(plan: DeletePlan, mode: DeleteMode): string | null {
+/** Same rule as `Plan::needs_double_confirmation` in Rust. */
+function needsDoubleConfirm(plan: DeletePlan, mode: DeleteMode): boolean {
   const large =
     plan.totalBytes > TRASH_LIMIT ||
     plan.totalFiles > LARGE_FILES ||
     plan.items.some((i) => i.flags.includes('large'));
-  if (mode !== 'permanent' && !large) return null;
-  return plan.items.length === 1 ? plan.items[0]!.name : 'LÖSCHEN';
+  return mode === 'permanent' || large;
 }
 
 /** A scan takes ~0.3 s so tests can see the progress state and press "Abbrechen". */
@@ -563,21 +592,21 @@ export function createFakeDisk(): DiskService {
         totalBytes: kept.reduce((s, i) => s + i.bytes, 0),
         totalFiles: kept.reduce((s, i) => s + i.files, 0),
         large: false,
-        trashConfirmation: null,
-        permanentConfirmation: null,
+        trashDoubleConfirm: false,
+        permanentDoubleConfirm: true,
         trashLikely: kept.every((i) => i.drive === 'fixed'),
       };
       plan.large = plan.totalBytes > TRASH_LIMIT || plan.totalFiles > LARGE_FILES;
-      plan.trashConfirmation = requiredPhrase(plan, 'trash');
-      plan.permanentConfirmation = requiredPhrase(plan, 'permanent');
+      plan.trashDoubleConfirm = needsDoubleConfirm(plan, 'trash');
+      plan.permanentDoubleConfirm = needsDoubleConfirm(plan, 'permanent');
       plans.set(plan.planId, { scanId: id, plan, cancelled: false });
       return plan;
     },
-    async runDelete(planId, mode, confirm, onProgress) {
+    async runDelete(planId, mode, confirmedTwice, onProgress) {
       const stored = plans.get(planId);
       if (!stored) throw new Error('unknown-plan');
-      const need = requiredPhrase(stored.plan, mode);
-      if (need !== null && confirm?.trim() !== need) throw new Error('confirmation-mismatch');
+      if (needsDoubleConfirm(stored.plan, mode) && !confirmedTwice)
+        throw new Error('confirmation-missing');
       const tree = get(stored.scanId).tree;
       const items: DeleteItemReport[] = [];
       let freed = 0;

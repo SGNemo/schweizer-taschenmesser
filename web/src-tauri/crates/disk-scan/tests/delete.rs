@@ -187,7 +187,7 @@ fn nested_selections_collapse_into_the_parent() {
 }
 
 #[test]
-fn flags_and_the_confirmation_phrase() {
+fn flags_and_when_a_second_confirmation_is_needed() {
     let t = fixture();
     write(&t.path().join("tool/app.exe"), 100);
     let tree = scan_tree(t.path());
@@ -204,17 +204,13 @@ fn flags_and_the_confirmation_phrase() {
     assert!(by("tool").flags.contains(&Flag::Program));
     assert!(by("junk").flags.is_empty());
 
+    // A small move to the recycle bin needs one confirmation; anything permanent needs two.
     let one = plan(&tree, &g, &[], &[junk]);
-    assert_eq!(one.required_confirmation(Mode::Trash), None);
-    assert_eq!(
-        one.required_confirmation(Mode::Permanent).as_deref(),
-        Some("junk")
-    );
+    assert!(!one.needs_double_confirmation(Mode::Trash));
+    assert!(one.needs_double_confirmation(Mode::Permanent));
     let many = plan(&tree, &g, &[], &[junk, keep]);
-    assert_eq!(
-        many.required_confirmation(Mode::Permanent).as_deref(),
-        Some("LÖSCHEN")
-    );
+    assert!(!many.needs_double_confirmation(Mode::Trash));
+    assert!(many.needs_double_confirmation(Mode::Permanent));
 }
 
 #[test]
@@ -252,6 +248,7 @@ fn trash_moves_entries_and_the_tree_is_corrected_without_a_rescan() {
         min_bytes: None,
         limit: Some(50),
         only_empty: false,
+        topmost: false,
     });
     assert!(files.iter().all(|f| f.name != "a.bin" && f.name != "b.bin"));
     assert!(!tree.remove(junk), "removing twice is a no-op");
@@ -502,6 +499,7 @@ fn empty_folders_are_found_by_query() {
         min_bytes: None,
         limit: None,
         only_empty: true,
+        topmost: false,
     });
     let names: Vec<_> = hits.iter().map(|h| h.name.as_str()).collect();
     assert!(names.contains(&"empty") && names.contains(&"hollow") && names.contains(&"deeper"));
