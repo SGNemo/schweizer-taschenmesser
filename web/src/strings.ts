@@ -3033,8 +3033,15 @@ export const de = {
       modePermanent: 'Endgültig löschen – ohne Papierkorb',
       trashBtn: 'In den Papierkorb',
       permBtn: 'Endgültig löschen',
-      typeLabel: (phrase: string) => `Tippe zur Bestätigung „${phrase}“ ein`,
-      typeHint: 'Damit nichts aus Versehen verschwindet.',
+      twiceHint: 'Weil das viel ist oder endgültig, fragt Nemo gleich noch einmal nach.',
+      againTitle: 'Wirklich löschen?',
+      againTrash: (n: number, size: string, files: string) =>
+        `${n === 1 ? '1 Eintrag' : `${n} Einträge`} mit ${size} (${files} Dateien) kommen in den Papierkorb.`,
+      againPermanent: (n: number, size: string, files: string) =>
+        `${n === 1 ? '1 Eintrag' : `${n} Einträge`} mit ${size} (${files} Dateien) werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.`,
+      againYesTrash: 'Ja, in den Papierkorb',
+      againYesPermanent: 'Ja, endgültig löschen',
+      back: 'Zurück',
       warnUser:
         'Das liegt in deinen persönlichen Ordnern (Dokumente, Bilder, Desktop, Videos, Musik). Prüfe genau, ob du es wirklich nicht mehr brauchst.',
       warnProgram:
@@ -3052,7 +3059,7 @@ export const de = {
       stop: 'Stoppen',
       close: 'Schließen',
       errors: {
-        'confirmation-mismatch': 'Die Bestätigung stimmt nicht überein.',
+        'confirmation-missing': 'Die zweite Bestätigung fehlt. Bitte noch einmal löschen.',
         'plan-expired': 'Die Prüfung ist abgelaufen. Bitte starte das Löschen noch einmal.',
         'unknown-plan': 'Die Prüfung ist abgelaufen. Bitte starte das Löschen noch einmal.',
         'already-running': 'Es läuft schon ein Löschvorgang.',

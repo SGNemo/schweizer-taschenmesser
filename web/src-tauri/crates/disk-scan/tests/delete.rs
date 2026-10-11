@@ -187,7 +187,7 @@ fn nested_selections_collapse_into_the_parent() {
 }
 
 #[test]
-fn flags_and_the_confirmation_phrase() {
+fn flags_and_when_a_second_confirmation_is_needed() {
     let t = fixture();
     write(&t.path().join("tool/app.exe"), 100);
     let tree = scan_tree(t.path());
@@ -204,17 +204,13 @@ fn flags_and_the_confirmation_phrase() {
     assert!(by("tool").flags.contains(&Flag::Program));
     assert!(by("junk").flags.is_empty());
 
+    // A small move to the recycle bin needs one confirmation; anything permanent needs two.
     let one = plan(&tree, &g, &[], &[junk]);
-    assert_eq!(one.required_confirmation(Mode::Trash), None);
-    assert_eq!(
-        one.required_confirmation(Mode::Permanent).as_deref(),
-        Some("junk")
-    );
+    assert!(!one.needs_double_confirmation(Mode::Trash));
+    assert!(one.needs_double_confirmation(Mode::Permanent));
     let many = plan(&tree, &g, &[], &[junk, keep]);
-    assert_eq!(
-        many.required_confirmation(Mode::Permanent).as_deref(),
-        Some("LÖSCHEN")
-    );
+    assert!(!many.needs_double_confirmation(Mode::Trash));
+    assert!(many.needs_double_confirmation(Mode::Permanent));
 }
 
 #[test]
