@@ -29,6 +29,6 @@ describe('settings search synonyms', () => {
   it('has the same keys in every language', () => {
     const keys = Object.keys(tComfort.de.synonyms).sort();
     for (const lang of ['en', 'es', 'fr', 'pt-BR'] as const)
-      expect(Object.keys(tComfort[lang].synonyms).sort(), lang).toEqual(keys);
+      expect(Object.keys(tComfort[lang]!.synonyms).sort(), lang).toEqual(keys);
   });
 });
