@@ -83,6 +83,11 @@ test('frequently used: a section opened twice is offered at the top of the list'
 }) => {
   for (let i = 0; i < 2; i++) {
     await ready(page, '/settings/sync#backup');
+    // The visit counts once the section is on screen and marked.
+    await expect(page.locator('section[aria-labelledby="backup"]')).toHaveAttribute(
+      'data-highlight',
+      'true',
+    );
     await ready(page, '/settings/ki');
   }
   await ready(page, '/settings');

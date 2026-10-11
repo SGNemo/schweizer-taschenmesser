@@ -235,16 +235,15 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       const used = new Set(recents.map((o) => o.key.replace(/^r-/, '')));
       return [...recents, ...list.filter((o) => !(o.kind === 'command' && used.has(o.command.id)))];
     }
-    // Settings are found without any prefix; "Einstellung …" still works as a lead-in word.
-    for (const hit of settingHits) {
-      list.push({
-        kind: 'setting',
-        key: `s-${hit.sectionId}-${hit.fieldKey ?? ''}`,
-        label: hit.label,
-        icon: 'settings',
-        hit,
-      });
-    }
+    // Settings are found without any prefix, listed after the assistant's entries so that Enter on
+    // a question still asks it ("offene Rechnungen" must not open a settings page).
+    const settingOptions: Option[] = settingHits.map((hit) => ({
+      kind: 'setting',
+      key: `s-${hit.sectionId}-${hit.fieldKey ?? ''}`,
+      label: hit.label,
+      icon: 'settings',
+      hit,
+    }));
     // Arithmetic is answered on the spot (0 tokens, nothing leaves the device); Enter copies it.
     const sum = calculate(query);
     if (sum) {
@@ -291,6 +290,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         });
       }
     }
+    // "Einstellung: …" says what is meant: then the settings come first.
+    if (normalize(query).startsWith(t.palette.settingsPrefix)) list.unshift(...settingOptions);
+    else list.push(...settingOptions);
     for (const row of hits) {
       list.push({
         kind: 'hit',
