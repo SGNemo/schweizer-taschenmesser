@@ -5,7 +5,7 @@
 //! points are never entered, unreadable folders are collected instead of failing the scan, and
 //! cloud placeholders ("files on demand") are neither opened nor counted as local size.
 
-use crate::kinds::{classify, KIND_COUNT};
+use crate::kinds::{age_bucket, classify, KIND_COUNT};
 use crate::tree::{DirTemp, FileTemp, SmallAgg, Tree};
 use rayon::prelude::*;
 use serde::Serialize;
@@ -14,7 +14,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
 use std::sync::Mutex;
-use std::time::{Duration, Instant, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug)]
 pub struct ScanOptions {
@@ -95,6 +95,8 @@ struct Ctx<'a> {
     opts: &'a ScanOptions,
     control: &'a ScanControl,
     cluster: u64,
+    /// Scan start (Unix seconds): the reference point of the age buckets.
+    now: i64,
     files: AtomicU64,
     dirs: AtomicU64,
     bytes: AtomicU64,
@@ -320,7 +322,14 @@ fn scan_dir(path: &Path, name: String, depth: usize, ctx: &Ctx) -> DirTemp {
                     modified,
                 });
             } else {
-                add_small(&mut out.small, &file_name, bytes, logical_local, modified);
+                add_small(
+                    &mut out.small,
+                    &file_name,
+                    bytes,
+                    logical_local,
+                    modified,
+                    ctx.now,
+                );
             }
         }
     }
@@ -332,13 +341,14 @@ fn scan_dir(path: &Path, name: String, depth: usize, ctx: &Ctx) -> DirTemp {
     out
 }
 
-fn add_small(agg: &mut SmallAgg, name: &str, bytes: u64, logical: u64, modified: i64) {
+fn add_small(agg: &mut SmallAgg, name: &str, bytes: u64, logical: u64, modified: i64, now: i64) {
     agg.count += 1;
     agg.bytes += bytes;
     agg.logical += logical;
     agg.modified = agg.modified.max(modified);
     debug_assert_eq!(agg.kind_bytes.len(), KIND_COUNT);
     agg.kind_bytes[classify(name).index()] += bytes;
+    agg.age_bytes[age_bucket(modified, now)] += bytes;
 }
 
 /// Scans `root` (a folder) in parallel. `on_progress` is called about every 100 ms from a helper
@@ -375,6 +385,9 @@ where
         opts,
         control,
         cluster: plat::cluster_size(root),
+        now: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs() as i64),
         files: AtomicU64::new(0),
         dirs: AtomicU64::new(0),
         bytes: AtomicU64::new(0),
@@ -402,7 +415,7 @@ where
         t
     });
     on_progress(ctx.progress());
-    let tree = pool.install(|| Tree::from_temp(root.to_path_buf(), temp));
+    let tree = pool.install(|| Tree::from_temp(root.to_path_buf(), temp, ctx.now));
     let not_read = ctx.not_read.into_inner().unwrap_or_else(|e| e.into_inner());
     Ok(ScanResult {
         tree,
