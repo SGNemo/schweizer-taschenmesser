@@ -2,7 +2,7 @@
 
 Phase 1 of the comfort review (branch `docs/comfort-review`, docs only). Scope: every module except `disk` and the system info (being reworked elsewhere), plus the tools, global search/palette and Quick Capture.
 
-**Method and limits.** Counts are traced from the code (routes, dialogs, widgets), not measured in a browser: a "click/tap" is one pointer action, typing is 0, native date/time/select pickers are assumed +1 each (+2–3 for a date). Android = 412 px layout. Screenshots (1920×1080 and 412×915, seed `medium`) are not part of this file yet; they follow before Phase 2 is closed if wanted. Items marked *unclear* were not verifiable from code.
+**Method and limits.** Counts are traced from the code (routes, dialogs, widgets), not measured in a browser: a "click/tap" is one pointer action, typing is 0, native date/time/select pickers are assumed +1 each (+2–3 for a date). Android = 412 px layout. Screenshots (main view, first detail, create; Desktop 1920×1080 and Android 412×915; seed `medium`, Dev-Preview build) are in [screens/](screens/) as `<viewport>/<module>-<main|detail|create>.jpg` (no detail shot where the module has no row to open; accounts has no create dialog; `finance`/`todos` detail may show the list instead). Items marked *unclear* were not verifiable from code.
 
 ## Findings that shape everything else
 1. **The comfort infrastructure exists but only `lists` uses it.** `useSwipeRow` (touch only, right = done, left unused), `useSelection`/`SelectionBar`, `data-row-tick` (Space), `data-list-search` (`/`), duplicate and the undo toast are used by `lists` only. `todos` has undo but its own `TaskRow` without `data-row`, so J/K/E/Space do nothing there.
@@ -52,5 +52,6 @@ Also checked (not in the 25): **Timer** 3 to start (Werkzeuge → tile → Start
 - Worst ratio to target: 2, 4, 6, 8, 12, 21, 22 (all "change one thing in a row") – this is the case for the row-action/inline pattern, not for new screens.
 - "Not possible": 4 (snooze from list), duplicate (everywhere but lists), split/recurring bookings, partial payment, price history, drag, mark-paid from home, checklist in notes.
 
-## Questions for you (Stopp 1)
-See the bundled questions in the chat (daily actions, missing ones, biggest annoyance, screenshots).
+## Answers (Stopp 1, maintainer)
+- Daily: to-dos (5–8), calendar/reminders (1–4), money (9–12). Nothing is missing from the list.
+- Biggest annoyance: all four – changing one field needs a dialog, deletes without undo, widgets without action, creating takes too long. Plus: a **typed confirmation** is annoying. In code that exists only for "Alle Daten auf diesem Gerät löschen" (phrase `LÖSCHEN`, `core/reset/device.ts`), the recovery-screen reset and the disk delete (Rust-side, out of scope). Per-record deletes have no confirmation at all. Open question in 02-plan.
