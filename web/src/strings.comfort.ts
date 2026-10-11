@@ -17,7 +17,7 @@ export const tComfort = defineBundle(
       title: 'Häufig genutzt',
     },
     gear: {
-      module: 'Einstellungen dieses Moduls',
+      module: 'Dieses Modul anpassen',
     },
     status: {
       modulesActive: (n: number) => `${n} aktiv`,
@@ -60,7 +60,7 @@ export const tComfort = defineBundle(
         title: 'Frequently used',
       },
       gear: {
-        module: 'Settings of this module',
+        module: 'Adjust this module',
       },
       status: {
         modulesActive: (n: number) => `${n} on`,
@@ -102,7 +102,7 @@ export const tComfort = defineBundle(
         title: 'Más usados',
       },
       gear: {
-        module: 'Ajustes de este módulo',
+        module: 'Ajustar este módulo',
       },
       status: {
         modulesActive: (n: number) => `${n} activos`,
@@ -151,7 +151,7 @@ export const tComfort = defineBundle(
         title: 'Souvent utilisés',
       },
       gear: {
-        module: 'Réglages de ce module',
+        module: 'Régler ce module',
       },
       status: {
         modulesActive: (n: number) => `${n} actifs`,
@@ -193,7 +193,7 @@ export const tComfort = defineBundle(
         title: 'Mais usadas',
       },
       gear: {
-        module: 'Configurações deste módulo',
+        module: 'Ajustar este módulo',
       },
       status: {
         modulesActive: (n: number) => `${n} ativos`,
