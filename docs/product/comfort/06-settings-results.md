@@ -1,6 +1,6 @@
 # 06 – Ergebnis Paket A (Einstellungen + Übergreifend)
 
-Stand 2026-10-11, Branch `feat/comfort-settings`. Messung: Klicks/Taps ab „App offen“, abgeleitet aus den Schritten der E2E-Tests (`web/e2e/comfort-settings.spec.ts`, Desktop und Pixel 7 = 412×915), nicht mit Stoppuhr. Vorher-Werte aus [04](../../../docs/product/comfort/04-settings-friction.md) (Branch `docs/comfort-settings-review`). Screenshots: [screens-settings/](screens-settings/).
+Stand 2026-10-11, Branch `feat/comfort-settings`. Messung: Klicks/Taps ab „App offen“, abgeleitet aus den Schritten der E2E-Tests (`web/e2e/comfort-settings.spec.ts`, Desktop und Pixel 7 = 412×915), nicht mit Stoppuhr. Vorher-Werte aus `04-settings-friction.md` (Branch `docs/comfort-settings-review`). Screenshots: [screens-settings/](screens-settings/).
 
 | Handlung | vorher D / A | jetzt D / A | Ziel | Weg jetzt |
 |---|---|---|---|---|
