@@ -1,4 +1,7 @@
-/* Fill colours per file type; read by the treemap canvas and the legend swatches. */
+/*
+ * Fill colours per file type and age bucket; read by the treemap canvas and the legend swatches.
+ * Data colours of a chart, not UI colours: listed in docs/DECISIONS.md as a special style.
+ */
 .palette {
   --k-video: #2a78d6;
   --k-image: #1f9d63;
@@ -6,6 +9,14 @@
   --k-archive: #c78a0a;
   --k-program: #d24a5a;
   --k-document: #1d94a3;
+  --k-game: #b0388f;
+  /* Age of the data: fresh (cool) to untouched for years (warm). */
+  --age-0: #2b8a83;
+  --age-1: #4f9a5f;
+  --age-2: #8f9a2f;
+  --age-3: #c98a1c;
+  --age-4: #d4602a;
+  --age-5: #b93b3b;
   --k-other: #7a7f87;
 }
 :global([data-theme='dark']) .palette {
@@ -15,6 +26,13 @@
   --k-archive: #e6b13a;
   --k-program: #f07c88;
   --k-document: #4fc0cf;
+  --k-game: #e07cc4;
+  --age-0: #4fb3ad;
+  --age-1: #77c08a;
+  --age-2: #bcc25a;
+  --age-3: #eeb04e;
+  --age-4: #f5874f;
+  --age-5: #ee6b6b;
   --k-other: #9aa0a8;
 }
 @media (prefers-color-scheme: dark) {
@@ -25,6 +43,13 @@
     --k-archive: #e6b13a;
     --k-program: #f07c88;
     --k-document: #4fc0cf;
+    --k-game: #e07cc4;
+    --age-0: #4fb3ad;
+    --age-1: #77c08a;
+    --age-2: #bcc25a;
+    --age-3: #eeb04e;
+    --age-4: #f5874f;
+    --age-5: #ee6b6b;
     --k-other: #9aa0a8;
   }
 }

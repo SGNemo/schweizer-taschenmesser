@@ -48,6 +48,24 @@ test('disk module screenshots', async ({ page }) => {
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${OUT}/2-treemap.png` });
 
+  // The same map coloured by file type, and the clean-up list of long unchanged entries.
+  await page
+    .getByRole('group', { name: 'Farbe nach' })
+    .getByRole('button', { name: 'Dateityp' })
+    .click();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: `${OUT}/2b-treemap-dateityp.png` });
+  await page
+    .getByTestId('details')
+    .getByRole('button', { name: 'Alte Einträge hier zeigen' })
+    .click();
+  await page
+    .getByRole('table', { name: 'Schnellfilter' })
+    .getByRole('checkbox', { name: 'alt.iso auswählen' })
+    .click();
+  await page.screenshot({ path: `${OUT}/2c-lange-nicht-geaendert.png` });
+  await page.getByRole('button', { name: 'Alle', exact: true }).click();
+
   await page.getByRole('button', { name: 'Liste', exact: true }).click();
   await expect(page.getByRole('table', { name: 'Einträge des Ordners' })).toBeVisible();
   await page.screenshot({ path: `${OUT}/3-liste.png` });

@@ -169,9 +169,19 @@ test('treemap: keyboard selects, opens and goes up', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Pfad' }).getByRole('button')).toHaveCount(1);
 });
 
-test('legend names every file type (text, not only colour)', async ({ page }) => {
+test('legend names every age bucket and file type (text, not only colour)', async ({ page }) => {
   await openScan(page);
   const legend = page.getByRole('group', { name: 'Legende' });
+  const colorBy = page.getByRole('group', { name: 'Farbe nach' });
+  // The map starts coloured by age: what has not been changed for long stands out.
+  await expect(colorBy.getByRole('button', { name: 'Alter' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  for (const bucket of ['unter 1 Monat', '1–2 Jahre', 'über 3 Jahre'])
+    await expect(legend).toContainText(bucket);
+  await expect(legend).toContainText('letzte Änderung');
+  await colorBy.getByRole('button', { name: 'Dateityp' }).click();
   for (const kind of [
     'Videos',
     'Bilder',
@@ -179,10 +189,11 @@ test('legend names every file type (text, not only colour)', async ({ page }) =>
     'Archive',
     'Programme',
     'Dokumente',
+    'Spieldaten',
     'Sonstiges',
   ])
     await expect(legend).toContainText(kind);
-  await page.getByRole('button', { name: 'Tiefe', exact: true }).click();
+  await colorBy.getByRole('button', { name: 'Tiefe', exact: true }).click();
   await expect(legend).toContainText('Je dunkler');
 });
 
@@ -217,8 +228,8 @@ test('quick filters: biggest files, older than, by type', async ({ page }) => {
   await page.getByRole('button', { name: 'Größte Ordner' }).click();
   expect(await first()).toBe('Programme');
 
-  await page.getByRole('button', { name: 'Älter als' }).click();
-  await page.getByLabel('Älter als', { exact: true }).selectOption('24');
+  await page.getByRole('button', { name: 'Lange nicht geändert' }).click();
+  await page.getByLabel('Nicht geändert seit', { exact: true }).selectOption('24');
   await expect(table).toContainText('alt.iso');
   await expect(table).not.toContainText('Steuer.pdf');
 
@@ -228,6 +239,51 @@ test('quick filters: biggest files, older than, by type', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Alle', exact: true }).click();
   await expect(page.getByTestId('treemap')).toBeVisible();
+});
+
+test('long unchanged: each old folder once, with the total, ticked entries go to the basket', async ({
+  page,
+}) => {
+  await openScan(page);
+  // The drive's details say how much has not been changed for a year.
+  await expect(page.getByTestId('details-old')).toContainText(
+    'seit über einem Jahr nicht geändert',
+  );
+  await page
+    .getByTestId('details')
+    .getByRole('button', { name: 'Alte Einträge hier zeigen' })
+    .click();
+  const table = page.getByRole('table', { name: 'Schnellfilter' });
+  // Older than a year and at least 10 MB: the old video, the old disk image and the old scans
+  // folder (listed once, not file by file); the small old PDF stays out.
+  await expect(page.getByTestId('old-summary')).toContainText('3 Einträge');
+  await expect(page.getByTestId('old-summary')).toContainText(
+    'seit über einem Jahr nicht geändert',
+  );
+  for (const name of ['Urlaub-2024.mp4', 'alt.iso', 'Scans'])
+    await expect(table).toContainText(name);
+  await expect(table).not.toContainText('Steuer.pdf');
+  await expect(table.getByRole('row').nth(1)).toContainText('vor 13 Monaten');
+
+  await page.getByLabel('Mindestgröße').selectOption({ label: 'jede Größe' });
+  await expect(table).toContainText('Steuer.pdf');
+
+  await audit(page, 'long unchanged list');
+  await table.getByRole('checkbox', { name: 'alt.iso auswählen' }).click();
+  await table.getByRole('checkbox', { name: 'Scans auswählen' }).click();
+  const picked = page.getByRole('group', { name: 'Ausgewählte Treffer' });
+  await expect(picked).toContainText('2 Einträge ausgewählt');
+  await picked.getByRole('button', { name: 'In den Korb' }).click();
+  await expect(picked).toHaveCount(0);
+  const basket = page.getByTestId('basket');
+  await expect(basket).toContainText('alt.iso');
+  await expect(basket).toContainText('Scans');
+
+  // "Alle auswählen" ticks every hit; deleting goes through the usual confirmation.
+  await table.getByRole('checkbox', { name: 'Alle Treffer auswählen' }).click();
+  await expect(picked).toContainText('4 Einträge ausgewählt');
+  await picked.getByRole('button', { name: 'Auswahl löschen …' }).click();
+  await expect(page.getByRole('dialog')).toContainText('Löschen bestätigen');
 });
 
 test('a result row opens the folder of the file in the map', async ({ page }) => {

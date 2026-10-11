@@ -112,6 +112,7 @@ export const disk: Strings['disk'] = {
     clear: 'Vider le panier',
     deleteAll: 'Tout supprimer…',
     remove: (name: string) => `Retirer ${name} du panier`,
+    added: (n: number) => `${n} ${n === 1 ? 'élément' : 'éléments'} dans le panier`,
   },
   del: {
     title: 'Confirmer la suppression',
@@ -231,6 +232,9 @@ export const disk: Strings['disk'] = {
     byType: 'Type de fichier',
     byDepth: 'Profondeur',
     depthLegend: 'Plus la surface est foncée, plus le dossier est profond.',
+    byAge: 'Ancienneté',
+    ageLegend:
+      'Couleur = dernière modification. Pour un dossier, c’est le fichier le plus récent qui compte : un dossier rouge n’a pas été touché depuis des années.',
     colorBy: 'Couleur selon',
     kind: {
       video: 'Vidéos',
@@ -239,8 +243,44 @@ export const disk: Strings['disk'] = {
       archive: 'Archives',
       program: 'Programmes',
       document: 'Documents',
+      game: 'Données de jeux',
       other: 'Autre',
     },
+  },
+  age: {
+    buckets: [
+      'moins de 1 mois',
+      '1–6 mois',
+      '6–12 mois',
+      '1–2 ans',
+      '2–3 ans',
+      'plus de 3 ans',
+    ] as readonly string[],
+    ago: (days: number) => {
+      if (days < 1) return 'aujourd’hui';
+      if (days < 2) return 'hier';
+      if (days < 14) return `il y a ${Math.floor(days)} jours`;
+      if (days < 61) return `il y a ${Math.floor(days / 7)} semaines`;
+      if (days < 730) return `il y a ${Math.floor(days / 30.44)} mois`;
+      return `il y a ${Math.floor(days / 365.25)} ans`;
+    },
+    short: (days: number) => {
+      if (days < 1) return 'auj.';
+      if (days < 14) return `${Math.floor(days)} j`;
+      if (days < 61) return `${Math.floor(days / 7)} sem.`;
+      if (days < 730) return `${Math.floor(days / 30.44)} mois`;
+      return `${Math.floor(days / 365.25)} ans`;
+    },
+  },
+  select: {
+    label: 'Résultats sélectionnés',
+    row: (name: string) => `Sélectionner ${name}`,
+    all: 'Sélectionner tous les résultats',
+    summary: (n: number, size: string) =>
+      `${n} ${n === 1 ? 'élément sélectionné' : 'éléments sélectionnés'} · ${size}`,
+    toBasket: 'Mettre au panier',
+    delete: 'Supprimer la sélection …',
+    clear: 'Annuler la sélection',
   },
   views: { label: 'Affichage', map: 'Carte', list: 'Liste' },
   nav: {
@@ -254,8 +294,19 @@ export const disk: Strings['disk'] = {
     none: 'Tous',
     topDirs: 'Plus gros dossiers',
     topFiles: 'Plus gros fichiers',
-    old: 'Plus ancien que',
-    months: (n: number) => (n === 12 ? '1 an' : n === 24 ? '2 ans' : `${n} mois`),
+    old: 'Pas modifié depuis longtemps',
+    oldSince: 'Pas modifié depuis',
+    months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 an' : `${n / 12} ans`) : `${n} mois`),
+    all: 'Tout',
+    topmost: 'N’afficher qu’une fois les anciens dossiers (sans leur contenu)',
+    minSize: 'Taille minimale',
+    anySize: 'toutes tailles',
+    fromSize: (size: string) => `à partir de ${size}`,
+    oldSummary: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'élément' : 'éléments'} pour ${size} au total, pas modifiés depuis plus de ${since}`,
+    capped: (n: number) => `Seuls les ${n} plus grands sont affichés.`,
+    oldHelp:
+      'C’est la dernière modification qui compte, pas la dernière ouverture : Windows n’enregistre généralement pas l’ouverture des fichiers de façon fiable. Pour un dossier, c’est le fichier le plus récent qui compte. Pour un jeu, une mise à jour change la date, y jouer non.',
     type: 'Type de fichier',
     scope: 'Afficher',
     dirs: 'Dossiers',
@@ -290,6 +341,10 @@ export const disk: Strings['disk'] = {
     modified: 'Dernière modification',
     modifiedFolder: 'Dernière modification (fichier le plus récent)',
     types: 'Types de fichiers',
+    ages: 'Ancienneté des données',
+    ageBar: 'Parts par ancienneté',
+    oldShare: (size: string, pct: number) => `${size} (${pct} %) pas modifiés depuis plus d’un an`,
+    showOld: 'Afficher les anciens éléments ici',
     biggest: 'Plus gros éléments ici',
     open: 'Ouvrir le dossier',
     percent: (p: number) => `${p} %`,
