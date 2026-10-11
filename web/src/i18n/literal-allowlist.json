@@ -19,7 +19,6 @@
   "src/modules/chat/engine.ts": "system prompt sent to the model",
   "src/modules/todos/schema.ts": "schema description for AI tools",
   "src/modules/finance/repo.ts": "default category names become user data on first start",
-  "src/core/platform/fakeDisk.ts": "typed confirmation word LÖSCHEN, checked in Rust (security path)",
   "src/core/reset/device.ts": "typed confirmation word LÖSCHEN for the device reset",
   "src/core/notifications/pushPayload.ts": "service worker fallback in five languages (no catalogs there)",
   "src/core/time/dates.ts": "date-fns pattern table per language",

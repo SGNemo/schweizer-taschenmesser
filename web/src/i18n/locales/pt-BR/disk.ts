@@ -124,8 +124,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Excluir definitivamente – sem lixeira',
     trashBtn: 'Para a lixeira',
     permBtn: 'Excluir definitivamente',
-    typeLabel: (phrase: string) => `Para confirmar, digite “${phrase}”`,
-    typeHint: 'Para que nada suma por engano.',
+    twiceHint: 'Como é muita coisa ou definitivo, o Nemo pergunta mais uma vez.',
+    againTitle: 'Excluir mesmo?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 item' : `${n} itens`} com ${size} (${files} arquivos) vão para a lixeira.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 item' : `${n} itens`} com ${size} (${files} arquivos) serão excluídos definitivamente. Isso não pode ser desfeito.`,
+    againYesTrash: 'Sim, para a lixeira',
+    againYesPermanent: 'Sim, excluir definitivamente',
+    back: 'Voltar',
     warnUser:
       'Isto está nas suas pastas pessoais (Documentos, Imagens, Área de Trabalho, Vídeos, Músicas). Confira bem se você realmente não precisa mais disso.',
     warnProgram:
@@ -143,7 +150,7 @@ export const disk: Strings['disk'] = {
     stop: 'Parar',
     close: 'Fechar',
     errors: {
-      'confirmation-mismatch': 'A confirmação não confere.',
+      'confirmation-missing': 'Falta a segunda confirmação. Exclua de novo.',
       'plan-expired': 'A verificação expirou. Inicie a exclusão de novo.',
       'unknown-plan': 'A verificação expirou. Inicie a exclusão de novo.',
       'already-running': 'Já há uma exclusão em andamento.',

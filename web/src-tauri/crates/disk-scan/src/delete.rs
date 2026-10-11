@@ -21,7 +21,7 @@ const MAX_ERRORS: usize = 50;
 pub enum Mode {
     /// Recycle bin (the default).
     Trash,
-    /// Gone for good; only ever chosen deliberately, with an extra confirmation.
+    /// Gone for good; only ever chosen deliberately, with a second confirmation.
     Permanent,
 }
 
@@ -95,20 +95,12 @@ impl Plan {
         self.total_bytes() > LARGE_BYTES || self.total_files() > LARGE_FILES
     }
 
-    /// What has to be typed before this plan may run in `mode`: the entry's name (one entry) or
-    /// `LÖSCHEN` (several). `None` when a plain confirmation is enough.
-    pub fn required_confirmation(&self, mode: Mode) -> Option<String> {
-        if mode == Mode::Permanent
+    /// True when this plan may only run in `mode` after a second, separate confirmation (permanent
+    /// or large deletions). The flag is checked again where the plan runs, not only in the UI.
+    pub fn needs_double_confirmation(&self, mode: Mode) -> bool {
+        mode == Mode::Permanent
             || self.is_large()
             || self.items.iter().any(|i| i.flags.contains(&Flag::Large))
-        {
-            Some(match self.items.as_slice() {
-                [only] => only.name.clone(),
-                _ => "LÖSCHEN".to_string(),
-            })
-        } else {
-            None
-        }
     }
 }
 

@@ -424,10 +424,10 @@ pub struct PlanView {
     total_bytes: u64,
     total_files: u64,
     large: bool,
-    /// What has to be typed for a move to the recycle bin (`None` = a plain confirmation is enough).
-    trash_confirmation: Option<String>,
-    /// What has to be typed for a permanent delete (always required).
-    permanent_confirmation: Option<String>,
+    /// A move to the recycle bin needs a second confirmation (large deletions).
+    trash_double_confirm: bool,
+    /// A permanent delete needs a second confirmation (always true).
+    permanent_double_confirm: bool,
     /// False when an item is on a network/removable drive, where the recycle bin often cannot be used.
     trash_likely: bool,
 }
@@ -476,8 +476,8 @@ pub fn disk_delete_plan(
         p.total_bytes(),
         p.total_files(),
         p.is_large(),
-        p.required_confirmation(Mode::Trash),
-        p.required_confirmation(Mode::Permanent),
+        p.needs_double_confirmation(Mode::Trash),
+        p.needs_double_confirmation(Mode::Permanent),
     );
     let trash_likely = items.iter().all(|i| i.drive == DriveKind::Fixed);
     let mut inner = state.0.lock().map_err(|_| "internal")?;
@@ -510,8 +510,8 @@ pub fn disk_delete_plan(
         total_bytes: view_base.0,
         total_files: view_base.1,
         large: view_base.2,
-        trash_confirmation: view_base.3,
-        permanent_confirmation: view_base.4,
+        trash_double_confirm: view_base.3,
+        permanent_double_confirm: view_base.4,
         trash_likely,
     })
 }
@@ -532,15 +532,16 @@ pub enum DeleteEvent {
     Done(Box<DoneView>),
 }
 
-/// Runs a confirmed plan. `mode` is `trash` or `permanent`; `confirm` must be the exact phrase the
-/// plan asks for (checked here, not only in the UI). Progress and the report arrive on the channel.
+/// Runs a confirmed plan. `mode` is `trash` or `permanent`; `confirmed_twice` must be set when the
+/// plan needs a second confirmation (checked here, not only in the UI). Progress and the report
+/// arrive on the channel.
 #[tauri::command]
 pub fn disk_delete(
     app: AppHandle,
     state: State<'_, DiskScans>,
     plan_id: u64,
     mode: String,
-    confirm: Option<String>,
+    confirmed_twice: bool,
     on_event: Channel<DeleteEvent>,
 ) -> Result<(), String> {
     let mode = match mode.as_str() {
@@ -555,10 +556,8 @@ pub fn disk_delete(
     if Instant::now().duration_since(stored.created) >= PLAN_TTL {
         return Err("plan-expired".into());
     }
-    if let Some(expected) = stored.plan.required_confirmation(mode) {
-        if confirm.as_deref().map(str::trim) != Some(expected.as_str()) {
-            return Err("confirmation-mismatch".into());
-        }
+    if stored.plan.needs_double_confirmation(mode) && !confirmed_twice {
+        return Err("confirmation-missing".into());
     }
     if stored
         .running

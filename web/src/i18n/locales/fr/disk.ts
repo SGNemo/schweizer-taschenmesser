@@ -127,8 +127,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Supprimer définitivement – sans corbeille',
     trashBtn: 'Mettre à la corbeille',
     permBtn: 'Supprimer définitivement',
-    typeLabel: (phrase: string) => `Saisissez « ${phrase} » pour confirmer`,
-    typeHint: 'Pour que rien ne disparaisse par erreur.',
+    twiceHint: 'Comme c’est beaucoup ou définitif, Nemo vous redemande une fois.',
+    againTitle: 'Vraiment supprimer ?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 élément' : `${n} éléments`} de ${size} (${files} fichiers) iront à la corbeille.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 élément' : `${n} éléments`} de ${size} (${files} fichiers) seront supprimés définitivement. Impossible d’annuler.`,
+    againYesTrash: 'Oui, mettre à la corbeille',
+    againYesPermanent: 'Oui, supprimer définitivement',
+    back: 'Retour',
     warnUser:
       'Ceci se trouve dans vos dossiers personnels (Documents, Images, Bureau, Vidéos, Musique). Vérifiez bien que vous n’en avez vraiment plus besoin.',
     warnProgram:
@@ -147,7 +154,7 @@ export const disk: Strings['disk'] = {
     stop: 'Arrêter',
     close: 'Fermer',
     errors: {
-      'confirmation-mismatch': 'La confirmation ne correspond pas.',
+      'confirmation-missing': 'La deuxième confirmation manque. Veuillez supprimer à nouveau.',
       'plan-expired': 'La vérification a expiré. Veuillez relancer la suppression.',
       'unknown-plan': 'La vérification a expiré. Veuillez relancer la suppression.',
       'already-running': 'Une suppression est déjà en cours.',

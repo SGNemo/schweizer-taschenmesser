@@ -386,13 +386,13 @@ function flagsOf(tree: FakeTree, id: number): PlanFlag[] {
   return flags;
 }
 
-function requiredPhrase(plan: DeletePlan, mode: DeleteMode): string | null {
+/** Same rule as `Plan::needs_double_confirmation` in Rust. */
+function needsDoubleConfirm(plan: DeletePlan, mode: DeleteMode): boolean {
   const large =
     plan.totalBytes > TRASH_LIMIT ||
     plan.totalFiles > LARGE_FILES ||
     plan.items.some((i) => i.flags.includes('large'));
-  if (mode !== 'permanent' && !large) return null;
-  return plan.items.length === 1 ? plan.items[0]!.name : 'LÖSCHEN';
+  return mode === 'permanent' || large;
 }
 
 /** A scan takes ~0.3 s so tests can see the progress state and press "Abbrechen". */
@@ -563,21 +563,21 @@ export function createFakeDisk(): DiskService {
         totalBytes: kept.reduce((s, i) => s + i.bytes, 0),
         totalFiles: kept.reduce((s, i) => s + i.files, 0),
         large: false,
-        trashConfirmation: null,
-        permanentConfirmation: null,
+        trashDoubleConfirm: false,
+        permanentDoubleConfirm: true,
         trashLikely: kept.every((i) => i.drive === 'fixed'),
       };
       plan.large = plan.totalBytes > TRASH_LIMIT || plan.totalFiles > LARGE_FILES;
-      plan.trashConfirmation = requiredPhrase(plan, 'trash');
-      plan.permanentConfirmation = requiredPhrase(plan, 'permanent');
+      plan.trashDoubleConfirm = needsDoubleConfirm(plan, 'trash');
+      plan.permanentDoubleConfirm = needsDoubleConfirm(plan, 'permanent');
       plans.set(plan.planId, { scanId: id, plan, cancelled: false });
       return plan;
     },
-    async runDelete(planId, mode, confirm, onProgress) {
+    async runDelete(planId, mode, confirmedTwice, onProgress) {
       const stored = plans.get(planId);
       if (!stored) throw new Error('unknown-plan');
-      const need = requiredPhrase(stored.plan, mode);
-      if (need !== null && confirm?.trim() !== need) throw new Error('confirmation-mismatch');
+      if (needsDoubleConfirm(stored.plan, mode) && !confirmedTwice)
+        throw new Error('confirmation-missing');
       const tree = get(stored.scanId).tree;
       const items: DeleteItemReport[] = [];
       let freed = 0;
