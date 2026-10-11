@@ -8,14 +8,20 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'vault',
-  name: t.vault.meta.name,
+  get name() {
+    return t.vault.meta.name;
+  },
   icon: 'files',
   version: 2,
-  description: t.vault.meta.description,
+  get description() {
+    return t.vault.meta.description;
+  },
   routes: [
     {
       path: '/vault',
-      label: t.vault.meta.route,
+      get label() {
+        return t.vault.meta.route;
+      },
       nav: true,
       component: () => import('./routes/VaultPage'),
     },
@@ -27,7 +33,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'expiring',
-      title: t.vault.meta.widget,
+      get title() {
+        return t.vault.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/ExpiringWidget'),
@@ -43,7 +51,15 @@ const manifest: ModuleManifest = {
   contributions: {
     attention: () => import('./attention'),
     onboarding,
-    quickAdd: [{ id: 'document', label: t.vault.meta.quickAdd, to: '/vault?new=1' }],
+    quickAdd: [
+      {
+        id: 'document',
+        get label() {
+          return t.vault.meta.quickAdd;
+        },
+        to: '/vault?new=1',
+      },
+    ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
     services: () => import('./services'),

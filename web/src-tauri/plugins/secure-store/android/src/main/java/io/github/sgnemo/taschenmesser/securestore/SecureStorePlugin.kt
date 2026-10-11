@@ -18,6 +18,7 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.security.KeyStore
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -238,9 +239,21 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
             if (secret != null) ret.put("secret", b64(secret))
             invoke.resolve(ret)
         }
+        /** The sealed value can no longer be opened: drop it so the app asks for the master password. */
+        fun invalidated() {
+            prefs.edit().remove("b:${args.name}").apply()
+            deleteKey(BIOMETRIC_ALIAS)
+            answer("invalidated")
+        }
         val stored = prefs.getString("b:${args.name}", null)
         if (stored == null) {
             answer("missing")
+            return
+        }
+        // The pref survived but the key did not (keystore wiped, restored app data, factory reset of
+        // the credential storage): a fresh key could never open it, so do not create one.
+        if (!keyStore.containsAlias(BIOMETRIC_ALIAS)) {
+            invalidated()
             return
         }
         try {
@@ -253,6 +266,9 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
                     try {
                         authed.updateAAD(args.name.toByteArray())
                         answer("ok", authed.doFinal(ct))
+                    } catch (e: AEADBadTagException) {
+                        // Sealed under another key (or tampered with): stale, never reusable.
+                        invalidated()
                     } catch (e: Exception) {
                         invoke.reject(e.message ?: e.javaClass.simpleName)
                     }
@@ -262,9 +278,7 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
             )
         } catch (e: KeyPermanentlyInvalidatedException) {
             // A fingerprint/face was added or removed: the key is gone, so is the sealed value.
-            prefs.edit().remove("b:${args.name}").apply()
-            deleteKey(BIOMETRIC_ALIAS)
-            answer("invalidated")
+            invalidated()
         } catch (e: Exception) {
             invoke.reject(e.message ?: e.javaClass.simpleName)
         }

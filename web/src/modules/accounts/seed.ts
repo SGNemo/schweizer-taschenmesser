@@ -4,6 +4,7 @@
  * vault exists yet, so a real one is never touched.
  */
 import type { SeedModule } from '@/core/seed/types';
+import { disableBiometricUnlock } from './biometric';
 import { VAULT_RECORD_ID, type EntryDraft } from './schema';
 import { createVault, lockVault, readHeader, saveEntry } from './vault';
 
@@ -73,5 +74,7 @@ export default {
   },
   async beforeRemove() {
     lockVault(); // the key of the vault about to be deleted must not stay in memory
+    // Neither must its data key stay sealed in the OS keystore (it would still open the old ciphertext).
+    await disableBiometricUnlock().catch(() => undefined);
   },
 } satisfies SeedModule;

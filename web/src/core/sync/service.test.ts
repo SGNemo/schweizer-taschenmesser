@@ -131,7 +131,8 @@ describe('connect', () => {
   });
 
   it('validates the passphrase length and refuses encryption on a server that already has plain data', async () => {
-    expect(await connect({ ...params, encrypt: true, passphrase: 'short' }, deps)).toEqual({
+    // 11 characters: one short of MIN_PASSPHRASE_LENGTH
+    expect(await connect({ ...params, encrypt: true, passphrase: 'elf zeichen' }, deps)).toEqual({
       ok: false,
       reason: 'passphrase-too-short',
     });

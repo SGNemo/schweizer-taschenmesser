@@ -1,0 +1,105 @@
+import type { Strings } from '@/strings';
+
+export const localApi: Strings['localApi'] = {
+  title: 'Accès IA',
+  intro:
+    'Une interface locale par laquelle une IA sur cet ordinateur (p. ex. Claude Code, Claude Desktop) peut écrire des données dans vos modules et – si vous l’autorisez – les lire. Elle n’est joignable que depuis cet ordinateur.',
+  unsupported:
+    'Cette interface n’existe que dans l’app Windows. Dans le navigateur et sur Android, utilisez « Coller du JSON » dans Données de départ.',
+  enable: 'Activer l’interface locale',
+  enableHint: 'Désactivée par défaut',
+  port: 'Port',
+  portHint: 'Entre 1024 et 65535. Par défaut : 47631.',
+  portInvalid: 'Veuillez indiquer un port entre 1024 et 65535.',
+  applyPort: 'Appliquer le port',
+  statusLabel: 'État',
+  status: {
+    off: 'Désactivée',
+    starting: 'Démarrage…',
+    running: (port: number) => `Active sur http://127.0.0.1:${port}`,
+    unsupported: 'Non disponible',
+  } as Record<string, string | ((port: number) => string)>,
+  startErrors: {
+    'port-in-use': 'Ce port est déjà utilisé. Choisissez-en un autre.',
+    'port-denied': 'Ce port ne peut pas être utilisé. Choisissez-en un autre.',
+    'listen-failed': 'L’interface n’a pas pu être démarrée.',
+  } as Record<string, string>,
+  copyPrompt: 'Copier les instructions pour l’IA',
+  copyPromptHint:
+    'Texte prêt à l’emploi pour votre outil d’IA (adresse, déroulement, règles) – sans clé et sans vos données. Plus d’infos dans docs/AI-IMPORT.md.',
+  promptCopied: 'Instructions copiées. Donnez la clé à l’IA séparément.',
+  tokens: 'Accès',
+  noTokens: 'Aucun accès créé. Sans accès, rien n’est joignable.',
+  newToken: 'Créer un accès',
+  tokenName: 'Nom',
+  tokenNameHint: 'Pour quoi ? Par exemple « Claude Code ».',
+  expiry: 'Validité',
+  expiryDays: (n: number) => (n === 365 ? '1 an' : `${n} jours`),
+  expiryNever: 'Illimitée',
+  rights: 'Droits par module',
+  rightsHint:
+    'Par défaut : aucun. « Lire » montre vos entrées à l’IA – ce qu’elle lit est traité par son fournisseur.',
+  read: 'Lire',
+  write: 'Écrire',
+  noModules: 'Aucun module compatible activé.',
+  autoCommit: 'Appliquer automatiquement',
+  autoCommitWarning:
+    'Attention : les imports de cet accès sont enregistrés sans votre confirmation. Il reste possible de les annuler.',
+  create: 'Créer',
+  nameMissing: 'Veuillez indiquer un nom.',
+  rightsMissing: 'Veuillez accorder au moins un droit.',
+  shownOnce: 'Votre nouvelle clé d’accès – elle n’est affichée que maintenant :',
+  shownOnceHint:
+    'Saisissez-la dans votre outil d’IA (comme Bearer token). L’app ne stocke qu’une somme de contrôle ; si vous la perdez, créez-en une nouvelle.',
+  copy: 'Copier',
+  copied: 'Copié. Le presse-papiers sera vidé dans une minute.',
+  done: 'Terminé',
+  revoke: 'Révoquer',
+  revokeConfirm: (name: string) =>
+    `Révoquer l’accès « ${name} » ? L’IA ne pourra plus s’en servir pour se connecter, immédiatement.`,
+  revoked: 'Accès révoqué.',
+  renew: 'Régénérer',
+  renewConfirm: (name: string) =>
+    `Générer une nouvelle clé pour « ${name} » ? L’ancienne cesse aussitôt d’être valable.`,
+  created: (date: string) => `Créé le ${date}`,
+  expires: (date: string) => `valable jusqu’au ${date}`,
+  expired: 'Expiré',
+  never: 'validité illimitée',
+  lastUsed: (date: string) => `dernière utilisation le ${date}`,
+  unused: 'jamais utilisé',
+  rightsSummary: (read: boolean, write: boolean) =>
+    [read ? 'lecture' : '', write ? 'écriture' : ''].filter(Boolean).join(' + '),
+  imports: 'Imports via l’interface',
+  noImports: 'Aucun pour l’instant.',
+  importState: {
+    pending: 'en attente de confirmation',
+    committed: (n: number) => (n <= 1 ? `${n} entrée appliquée` : `${n} entrées appliquées`),
+    rejected: 'refusé',
+    undone: 'annulé',
+  },
+  log: 'Derniers accès',
+  noLog: 'Aucun accès pour l’instant.',
+  clearLog: 'Vider la liste',
+  errors: {
+    disabled: 'L’interface est désactivée.',
+    'token-invalid': 'L’accès est invalide, expiré ou révoqué.',
+    'not-found': 'Cette adresse n’existe pas.',
+    'unknown-module': 'Ce module n’existe pas ou l’accès n’a pas de droits sur lui.',
+    forbidden: 'L’accès n’a pas le droit d’effectuer cette action.',
+    'bad-collection': 'Veuillez indiquer une collection valide (collection).',
+    'bad-limit': 'limit doit être un nombre entier de 1 à 200.',
+    'bad-cursor': 'cursor invalide.',
+    'bad-query': 'Texte de recherche trop long.',
+    'bad-body': 'Le contenu n’est pas un import valide.',
+    'unknown-batch': 'Cet import n’existe pas (ou il appartient à un autre accès).',
+    'not-pending': 'Cet import n’attend plus de confirmation.',
+    'confirmation-required':
+      'Cet import doit être confirmé dans l’app (accès sans « Appliquer automatiquement » ou import qui modifie des entrées existantes).',
+    'too-many-pending':
+      'Trop d’imports attendent une confirmation. Veuillez d’abord les confirmer ou les refuser dans l’app.',
+    'idempotency-conflict': 'Cette Idempotency-Key a déjà servi pour un autre contenu.',
+    internal: 'Erreur interne.',
+  } as Record<string, string>,
+  pendingText:
+    'L’import attend une confirmation dans l’app. L’utilisateur voit un aperçu et décide pour chaque entrée.',
+};

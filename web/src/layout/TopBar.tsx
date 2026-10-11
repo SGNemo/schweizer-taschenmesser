@@ -20,7 +20,7 @@ export function TopBar() {
       </Link>
       <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
         <Icon name="search" size={18} />
-        <span>{t.actions.search}</span>
+        <span className={styles.searchLabel}>{t.actions.search}</span>
         <kbd className={`${styles.kbd} ${styles.desktopOnly}`}>{t.palette.hint}</kbd>
       </button>
       <FocusIndicator />

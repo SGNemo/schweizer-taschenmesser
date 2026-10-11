@@ -36,6 +36,8 @@ export type SyncErrorCode =
   | 'revoked'
   | 'rate-limited'
   | 'server'
+  /** The server refused our stamps: this device's clock is more than an hour ahead. */
+  | 'clock'
   | 'decrypt'
   | 'no-key'
   | 'unsupported';

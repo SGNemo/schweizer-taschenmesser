@@ -1,3 +1,4 @@
+import { t } from '@/strings';
 import type { Item, List } from './schema';
 
 /** "2x Milch" / "500 g Mehl" / "Brot" → quantity + name. Only a leading number (with optional unit or "x") counts. */
@@ -43,9 +44,9 @@ export function progress(items: readonly Pick<Item, 'done'>[]): {
 export const nextOrder = (items: readonly Pick<Item, 'order'>[]): number =>
   items.reduce((max, i) => Math.max(max, i.order), -1) + 1;
 
-/** "Kopie von X", "Kopie von X (2)" … avoiding names that already exist. */
+/** "Copy of X", "Copy of X (2)" … (current language) avoiding names that already exist. */
 export function copyName(name: string, existing: readonly string[]): string {
-  const base = `Kopie von ${name}`;
+  const base = t.lists.copyOf(name);
   if (!existing.includes(base)) return base;
   for (let n = 2; ; n++) if (!existing.includes(`${base} (${n})`)) return `${base} (${n})`;
 }

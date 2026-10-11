@@ -6,10 +6,18 @@ import styles from './RecurrenceEditor.module.css';
 
 type Freq = Recurrence['freq'];
 const UNIT: Record<Freq, string> = {
-  daily: t.recurrence.daysUnit,
-  weekly: t.recurrence.weeksUnit,
-  monthly: t.recurrence.monthsUnit,
-  yearly: t.recurrence.yearsUnit,
+  get daily() {
+    return t.recurrence.daysUnit;
+  },
+  get weekly() {
+    return t.recurrence.weeksUnit;
+  },
+  get monthly() {
+    return t.recurrence.monthsUnit;
+  },
+  get yearly() {
+    return t.recurrence.yearsUnit;
+  },
 };
 
 interface Props {

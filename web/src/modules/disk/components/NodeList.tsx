@@ -1,3 +1,4 @@
+import { formatTimestamp } from '@/core/i18n/format';
 import { useRef, useState } from 'react';
 import type { DiskNode } from '@/core/platform/disk';
 import { t } from '@/strings';
@@ -9,7 +10,9 @@ const ROW = 48;
 const VIEWPORT = 448;
 
 export const formatDate = (sec: number): string =>
-  sec > 0 ? new Date(sec * 1000).toLocaleDateString('de-DE') : '–';
+  sec > 0
+    ? formatTimestamp(sec * 1000, { day: 'numeric', month: 'numeric', year: 'numeric' })
+    : '–';
 
 interface Props {
   nodes: readonly DiskNode[];

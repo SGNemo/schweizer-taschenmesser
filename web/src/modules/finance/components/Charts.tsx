@@ -88,8 +88,20 @@ export function CategoryBars({ rows }: { rows: CategoryTotal[] }) {
 }
 
 const SERIES = [
-  { key: 'income', name: t.finance.income, color: 'var(--viz-1)' },
-  { key: 'expense', name: t.finance.expense, color: 'var(--viz-2)' },
+  {
+    key: 'income',
+    get name() {
+      return t.finance.income;
+    },
+    color: 'var(--viz-1)',
+  },
+  {
+    key: 'expense',
+    get name() {
+      return t.finance.expense;
+    },
+    color: 'var(--viz-2)',
+  },
 ] as const;
 
 function TrendTooltip({ active, payload }: TooltipContentProps) {
@@ -114,7 +126,7 @@ export function TrendColumns({ points }: { points: MonthPoint[] }) {
   const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
   return (
     <div data-testid="chart-trend">
-      <ul className={styles.legend} aria-label="Legende">
+      <ul className={styles.legend} aria-label={t.finance.chartLegend}>
         {SERIES.map((s) => (
           <li key={s.key}>
             <span className={styles.swatch} style={{ background: s.color }} />

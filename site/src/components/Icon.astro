@@ -5,7 +5,8 @@
  */
 export type IconName =
   | 'calendar' | 'tasks' | 'wallet' | 'bell' | 'key' | 'chat' | 'drive' | 'sparkles'
-  | 'windows' | 'android' | 'github' | 'coffee' | 'sun' | 'moon' | 'external' | 'arrow';
+  | 'windows' | 'android' | 'github' | 'coffee' | 'sun' | 'moon' | 'external' | 'arrow'
+  | 'check' | 'pc' | 'phone' | 'server' | 'cloud' | 'target' | 'timer' | 'leaf';
 interface Props { name: IconName; size?: number; label?: string; class?: string }
 const { name, size = 20, label, class: cls } = Astro.props;
 
@@ -26,6 +27,14 @@ const paths: Record<IconName, string> = {
   moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
   external: '<path d="M15 3h6v6M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
   arrow: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  pc: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+  server: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  cloud: '<path d="M17.5 19a4.5 4.5 0 0 0 .4-9A7 7 0 0 0 4.3 12.5 3.5 3.5 0 0 0 6.5 19Z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>',
+  timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>',
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.5 5-6.5"/>',
 };
 ---
 <svg

@@ -8,14 +8,20 @@ import { settings } from './settings';
 
 const manifest: ModuleManifest = {
   id: 'lists',
-  name: t.lists.meta.name,
+  get name() {
+    return t.lists.meta.name;
+  },
   icon: 'cart',
   version: 1,
-  description: t.lists.meta.description,
+  get description() {
+    return t.lists.meta.description;
+  },
   routes: [
     {
       path: '/lists',
-      label: t.lists.meta.route,
+      get label() {
+        return t.lists.meta.route;
+      },
       nav: true,
       component: () => import('./routes/ListsPage'),
     },
@@ -30,14 +36,18 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'open',
-      title: t.lists.meta.widget,
+      get title() {
+        return t.lists.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OpenListsWidget'),
     },
     {
       id: 'packing',
-      title: t.lists.meta.widgetPacking,
+      get title() {
+        return t.lists.meta.widgetPacking;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/PackingWidget'),
@@ -52,7 +62,15 @@ const manifest: ModuleManifest = {
   area: 'household',
   contributions: {
     onboarding,
-    quickAdd: [{ id: 'item', label: t.lists.meta.quickAdd, to: '/lists?new=1' }],
+    quickAdd: [
+      {
+        id: 'item',
+        get label() {
+          return t.lists.meta.quickAdd;
+        },
+        to: '/lists?new=1',
+      },
+    ],
     services: () => import('./services'),
     aiCreateDefaults: () => import('./aiDefaults'),
   },

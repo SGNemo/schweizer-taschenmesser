@@ -17,7 +17,7 @@ const copies = [
   ['web/public/favicon.ico', 'public/favicon.ico'],
   ['web/public/favicon.svg', 'public/favicon.svg'],
   ['web/public/apple-touch-icon.png', 'public/apple-touch-icon.png'],
-  ['docs/brand/social-preview.png', 'public/og-image.png'],
+  ['docs/brand/social-preview.de.png', 'public/og-image.png'],
   [path.join(inter, 'inter-latin-wght-normal.woff2'), 'public/fonts/inter-latin-wght-normal.woff2'],
   [path.join(inter, 'inter-latin-ext-wght-normal.woff2'), 'public/fonts/inter-latin-ext-wght-normal.woff2'],
   ['web/brand/LICENSE-Inter.txt', 'public/fonts/LICENSE-Inter.txt'],

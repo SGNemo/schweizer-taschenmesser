@@ -3,9 +3,13 @@ import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
   id: 'timer',
-  name: t.tools.timer.name,
+  get name() {
+    return t.tools.timer.name;
+  },
   icon: 'timer',
-  description: t.tools.timer.description,
+  get description() {
+    return t.tools.timer.description;
+  },
   group: 'basis',
   offline: true,
   defaultEnabled: true,

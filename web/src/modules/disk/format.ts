@@ -1,6 +1,8 @@
+import { formatNumber, numberFormat } from '@/core/i18n/format';
+
 const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 const nf = (digits: number) =>
-  new Intl.NumberFormat('de-DE', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+  numberFormat({ maximumFractionDigits: digits, minimumFractionDigits: 0 });
 
 /** Windows-style sizes: powers of 1024, labelled KB/MB/GB. */
 export function formatBytes(bytes: number): string {
@@ -14,7 +16,7 @@ export function formatBytes(bytes: number): string {
   return `${nf(i === 0 || v >= 100 ? 0 : 1).format(v)} ${units[i]}`;
 }
 
-export const formatCount = (n: number): string => new Intl.NumberFormat('de-DE').format(n);
+export const formatCount = (n: number): string => formatNumber(n);
 
 /** Whole percent 0–100 (clamped); 0 when `total` is 0. */
 export function percent(part: number, total: number): number {

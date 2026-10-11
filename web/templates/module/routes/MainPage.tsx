@@ -35,7 +35,7 @@ export default function MainPage() {
 
   return (
     <>
-      <h1>__NAME__</h1>
+      <h1>{t.__ID__.meta.name}</h1>
       <form
         ref={form}
         onSubmit={add}
@@ -49,7 +49,7 @@ export default function MainPage() {
         <div style={{ flex: 1 }}>
           <TextField
             label={t.actions.add}
-            placeholder={t.example.addPlaceholder}
+            placeholder={t.__ID__.addPlaceholder}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />

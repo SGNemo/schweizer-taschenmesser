@@ -8,9 +8,15 @@ export const onboarding: OnboardingDef = {
     {
       id: 'text',
       kind: 'text',
-      label: s.text,
-      description: s.textHint,
-      placeholder: s.placeholder,
+      get label() {
+        return s.text;
+      },
+      get description() {
+        return s.textHint;
+      },
+      get placeholder() {
+        return s.placeholder;
+      },
     },
   ],
   load: () => import('./importer'),

@@ -19,6 +19,8 @@
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-h1: 2rem;
+  --text-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  --block: clamp(3.5rem, 7vw, 6rem);
   --leading: 1.6;
   --leading-tight: 1.25;
   --measure: 68ch;
@@ -44,8 +46,8 @@
   --content-w: 68.75rem; /* ≈ 1100 px */
   --gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
 
-  --dur-fast: 120ms;
   --dur: 200ms;
+  --dur-fast: 150ms;
 
   /* Light theme (default; dark below) */
   --bg: #f3f4f4;
@@ -63,8 +65,10 @@
   --accent-contrast: #ffffff;
   --accent-soft: #fbe9de;
   --warning: #8a5a00;
-  /* Brand-only wash behind the hero (never for UI surfaces). */
-  --hero-wash: linear-gradient(180deg, #ffffff 0%, var(--bg) 42rem);
+  --success: #1b7545;
+  /* Brand-only wash and silhouettes behind the hero (never for UI surfaces). */
+  --hero-wash: linear-gradient(180deg, #fbf3ec 0%, var(--bg) 100%);
+  --hero-reef: rgb(224 85 15 / 0.07);
   color-scheme: light;
 }
 
@@ -85,7 +89,9 @@
   --accent-contrast: #1b0f06;
   --accent-soft: #2e241c;
   --warning: #e8b85a;
-  --hero-wash: radial-gradient(60rem 28rem at 50% -8rem, rgb(255 154 87 / 0.1), transparent 70%);
+  --success: #7fd3a3;
+  --hero-wash: linear-gradient(180deg, #14202b 0%, var(--bg) 100%);
+  --hero-reef: rgb(255 154 87 / 0.06);
   color-scheme: dark;
 }
 
@@ -107,7 +113,9 @@
     --accent-contrast: #1b0f06;
     --accent-soft: #2e241c;
     --warning: #e8b85a;
-    --hero-wash: radial-gradient(60rem 28rem at 50% -8rem, rgb(255 154 87 / 0.1), transparent 70%);
+    --success: #7fd3a3;
+    --hero-wash: linear-gradient(180deg, #14202b 0%, var(--bg) 100%);
+    --hero-reef: rgb(255 154 87 / 0.06);
     color-scheme: dark;
   }
 }

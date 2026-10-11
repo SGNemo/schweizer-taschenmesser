@@ -10,7 +10,10 @@ import {
   getISODay,
   startOfISOWeek,
 } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { de, enGB, enIE, enUS, es, fr, ptBR, pt, deAT, type Locale } from 'date-fns/locale';
+import { capitalize, dateLocale, relativeDays } from '@/core/i18n/format';
+import { getLang, type Lang } from '@/core/i18n/lang';
+import { t } from '@/strings';
 import { now, pad2, toDateString, today } from './now';
 
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -53,16 +56,112 @@ export function eachDay(from: string, to: string): string[] {
   return out;
 }
 
-/** Locale-formatted date, e.g. formatDay('2026-09-29', 'EEEE, d. MMMM') → "Dienstag, 29. September". */
-export const formatDay = (s: string, pattern: string): string =>
-  format(parseDate(s), pattern, { locale: de });
+const DATE_FNS: Record<string, Locale> = {
+  'de-DE': de,
+  'de-AT': deAT,
+  'de-CH': de,
+  'en-GB': enGB,
+  'en-IE': enIE,
+  'en-US': enUS,
+  'es-ES': es,
+  'fr-FR': fr,
+  'pt-BR': ptBR,
+  'pt-PT': pt,
+};
+
+/**
+ * The code writes date patterns in German style; each language has its own equivalent (word order,
+ * "de", no period after the day). Numeric dates follow the format region. Unknown patterns are used
+ * as they are, with the language's month and weekday names.
+ */
+const PATTERNS: Record<string, Partial<Record<Lang | 'en-US', string>>> = {
+  'd. MMM yyyy': {
+    en: 'd MMM yyyy',
+    'en-US': 'MMM d, yyyy',
+    es: 'd MMM yyyy',
+    fr: 'd MMM yyyy',
+    'pt-BR': "d 'de' MMM 'de' yyyy",
+  },
+  'd. MMMM yyyy': {
+    en: 'd MMMM yyyy',
+    'en-US': 'MMMM d, yyyy',
+    es: "d 'de' MMMM 'de' yyyy",
+    fr: 'd MMMM yyyy',
+    'pt-BR': "d 'de' MMMM 'de' yyyy",
+  },
+  'EEEE, d. MMMM': {
+    en: 'EEEE d MMMM',
+    'en-US': 'EEEE, MMMM d',
+    es: "EEEE, d 'de' MMMM",
+    fr: 'EEEE d MMMM',
+    'pt-BR': "EEEE, d 'de' MMMM",
+  },
+  'EEEE, d. MMMM yyyy': {
+    en: 'EEEE d MMMM yyyy',
+    'en-US': 'EEEE, MMMM d, yyyy',
+    es: "EEEE, d 'de' MMMM 'de' yyyy",
+    fr: 'EEEE d MMMM yyyy',
+    'pt-BR': "EEEE, d 'de' MMMM 'de' yyyy",
+  },
+  'EEE, d. MMM yyyy': {
+    en: 'EEE d MMM yyyy',
+    'en-US': 'EEE, MMM d, yyyy',
+    es: 'EEE, d MMM yyyy',
+    fr: 'EEE d MMM yyyy',
+    'pt-BR': "EEE, d 'de' MMM 'de' yyyy",
+  },
+  'EEE, d. MMMM': {
+    en: 'EEE d MMMM',
+    'en-US': 'EEE, MMMM d',
+    es: "EEE, d 'de' MMMM",
+    fr: 'EEE d MMMM',
+    'pt-BR': "EEE, d 'de' MMMM",
+  },
+  'EEE, d. MMM': {
+    en: 'EEE d MMM',
+    'en-US': 'EEE, MMM d',
+    es: 'EEE, d MMM',
+    fr: 'EEE d MMM',
+    'pt-BR': "EEE, d 'de' MMM",
+  },
+  'd. MMM': { en: 'd MMM', 'en-US': 'MMM d', es: 'd MMM', fr: 'd MMM', 'pt-BR': "d 'de' MMM" },
+  'LLLL yyyy': { es: "LLLL 'de' yyyy", 'pt-BR': "LLLL 'de' yyyy" },
+};
+
+/** Numeric day.month.year in the format region's order and separators. */
+const NUMERIC: Record<string, string> = {
+  de: 'dd.MM.yyyy',
+  'en-US': 'MM/dd/yyyy',
+  default: 'dd/MM/yyyy',
+};
+
+function localPattern(pattern: string, locale: string, lang: Lang): string {
+  if (pattern === 'dd.MM.yyyy') {
+    if (locale.startsWith('de')) return NUMERIC.de!;
+    return NUMERIC[locale] ?? NUMERIC.default!;
+  }
+  if (lang === 'de') return pattern;
+  const variants = PATTERNS[pattern];
+  if (!variants) return pattern;
+  return (locale === 'en-US' ? variants['en-US'] : undefined) ?? variants[lang] ?? pattern;
+}
+
+/**
+ * Locale-formatted date in the UI language, e.g. formatDay('2026-09-29', 'EEEE, d. MMMM') →
+ * "Dienstag, 29. September" / "Tuesday 29 September". Patterns are written in German style.
+ */
+export function formatDay(s: string, pattern: string): string {
+  const lang = getLang();
+  const locale = dateLocale(lang);
+  return format(parseDate(s), localPattern(pattern, locale, lang), {
+    locale: DATE_FNS[locale] ?? de,
+  });
+}
 
 /** "Heute" / "Morgen" / "Gestern" or a short weekday date. */
 export function relativeDayLabel(s: string, ref: string = today()): string {
   const diff = daysBetween(ref, s);
-  if (diff === 0) return 'Heute';
-  if (diff === 1) return 'Morgen';
-  if (diff === -1) return 'Gestern';
+  if (Math.abs(diff) <= 1) return capitalize(relativeDays(diff));
   return formatDay(s, 'EEE, d. MMM');
 }
 
@@ -72,11 +171,8 @@ export function relativeDayLabel(s: string, ref: string = today()): string {
  */
 export function humanDateHint(s: string, ref: string = today()): string {
   const diff = daysBetween(ref, s);
-  if (diff === 0) return 'Heute';
-  const weekday = formatDay(s, 'EEEE');
-  if (diff === 1) return `${weekday}, morgen`;
-  if (diff === -1) return `${weekday}, gestern`;
-  return diff > 0 ? `${weekday}, in ${diff} Tagen` : `${weekday}, vor ${-diff} Tagen`;
+  if (diff === 0) return capitalize(relativeDays(0));
+  return t.time.weekdayAndDistance(formatDay(s, 'EEEE'), relativeDays(diff));
 }
 
 /** Epoch ms of a local date + 'HH:mm'. */

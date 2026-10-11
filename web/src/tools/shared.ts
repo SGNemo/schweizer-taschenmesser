@@ -1,14 +1,14 @@
 /** Small helpers the tools share. */
+import { formatNumber } from '@/core/i18n/format';
 import { evaluate, CalcError } from '@/core/calc/expr';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 
-const two = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 /** 1234.5 → "1.234,50" */
-export const fmt2 = (n: number): string => two.format(n);
+export const fmt2 = (n: number): string =>
+  formatNumber(n, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const many = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 });
-export const fmt = (n: number): string => many.format(n);
+export const fmt = (n: number): string => formatNumber(n, { maximumFractionDigits: 6 });
 
 /** "12,5" / "1.234,56" / "12.5" → number, undefined when it is not a number (expressions are fine). */
 export function num(text: string): number | undefined {

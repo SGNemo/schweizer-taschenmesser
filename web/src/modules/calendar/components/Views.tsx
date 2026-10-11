@@ -58,7 +58,7 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
                     <button
                       type="button"
                       className={styles.dayNum}
-                      aria-label={`${formatDay(d, 'EEEE, d. MMMM')}${list.length ? `, ${list.length} Einträge` : ''}`}
+                      aria-label={t.calendar.dayLabel(formatDay(d, 'EEEE, d. MMMM'), list.length)}
                       onClick={() => onPickDay(d)}
                     >
                       {Number(d.slice(8, 10))}

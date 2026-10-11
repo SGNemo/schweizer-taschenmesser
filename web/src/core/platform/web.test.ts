@@ -131,7 +131,7 @@ describe('sensitive clipboard', () => {
   it('clears the clipboard after the delay', async () => {
     vi.useFakeTimers();
     const { state, io } = fakeClipboard();
-    await sensitiveClipboard(io)('hunter2', 30_000);
+    await sensitiveClipboard(io).writeSensitive('hunter2', 30_000);
     expect(state.text).toBe('hunter2');
     await vi.advanceTimersByTimeAsync(29_999);
     expect(state.text).toBe('hunter2');
@@ -142,7 +142,7 @@ describe('sensitive clipboard', () => {
   it('leaves alone what the user copied in the meantime', async () => {
     vi.useFakeTimers();
     const { state, io } = fakeClipboard();
-    await sensitiveClipboard(io)('secret', 30_000);
+    await sensitiveClipboard(io).writeSensitive('secret', 30_000);
     state.text = 'something else';
     await vi.advanceTimersByTimeAsync(31_000);
     expect(state.text).toBe('something else');
@@ -152,7 +152,7 @@ describe('sensitive clipboard', () => {
   it('restarts the timer on a second copy and wipes when reading is impossible', async () => {
     vi.useFakeTimers();
     const { state, io } = fakeClipboard();
-    const copy = sensitiveClipboard({
+    const { writeSensitive: copy } = sensitiveClipboard({
       ...io,
       read: async () => Promise.reject(new Error('denied')),
     });
@@ -163,5 +163,26 @@ describe('sensitive clipboard', () => {
     expect(state.text).toBe('two');
     await vi.advanceTimersByTimeAsync(11_000);
     expect(state.text).toBe('');
+  });
+
+  it('clearSensitive wipes our value at once, cancels the timer and spares foreign content', async () => {
+    vi.useFakeTimers();
+    const { state, io } = fakeClipboard();
+    const clip = sensitiveClipboard(io);
+    await clip.clearSensitive(); // nothing copied yet: no-op
+    expect(state.cleared).toBe(0);
+
+    await clip.writeSensitive('secret', 30_000);
+    await clip.clearSensitive();
+    expect(state.text).toBe('');
+    expect(state.cleared).toBe(1);
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(state.cleared).toBe(1); // the timer was cancelled, no second wipe
+
+    await clip.writeSensitive('secret2', 30_000);
+    state.text = 'user copied this';
+    await clip.clearSensitive();
+    expect(state.text).toBe('user copied this');
+    expect(state.cleared).toBe(1);
   });
 });

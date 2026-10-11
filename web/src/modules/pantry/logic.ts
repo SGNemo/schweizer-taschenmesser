@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { daysBetween } from '@/core/time/dates';
 import type { PantryItem } from './schema';
 
@@ -31,7 +32,7 @@ export function sortItems<T extends PantryItem>(
     (a, b) =>
       RANK[expiryState(a, today, soonDays)] - RANK[expiryState(b, today, soonDays)] ||
       (a.expires ?? '9999').localeCompare(b.expires ?? '9999') ||
-      a.name.localeCompare(b.name, 'de'),
+      compareText(a.name, b.name),
   );
 }
 

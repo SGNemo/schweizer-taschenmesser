@@ -7,6 +7,9 @@ pub enum Error {
     /// Only Android has a package installer; the desktop builds use the Tauri updater.
     #[error("unsupported on this platform")]
     Unsupported,
+    /// The request failed the checks in `validate.rs` (not a release asset, bad digest).
+    #[error("invalid download request: {0}")]
+    InvalidRequest(&'static str),
     #[cfg(target_os = "android")]
     #[error(transparent)]
     PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),

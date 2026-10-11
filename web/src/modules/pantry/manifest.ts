@@ -8,14 +8,20 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'pantry',
-  name: t.pantry.meta.name,
+  get name() {
+    return t.pantry.meta.name;
+  },
   icon: 'package',
   version: 1,
-  description: t.pantry.meta.description,
+  get description() {
+    return t.pantry.meta.description;
+  },
   routes: [
     {
       path: '/pantry',
-      label: t.pantry.meta.route,
+      get label() {
+        return t.pantry.meta.route;
+      },
       nav: true,
       component: () => import('./routes/PantryPage'),
     },
@@ -33,7 +39,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'expiring',
-      title: t.pantry.meta.widget,
+      get title() {
+        return t.pantry.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/ExpiringWidget'),
@@ -49,7 +57,15 @@ const manifest: ModuleManifest = {
   contributions: {
     attention: () => import('./attention'),
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'item', label: t.pantry.meta.quickAdd, to: '/pantry?new=1' }],
+    quickAdd: [
+      {
+        id: 'item',
+        get label() {
+          return t.pantry.meta.quickAdd;
+        },
+        to: '/pantry?new=1',
+      },
+    ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
   },

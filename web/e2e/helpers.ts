@@ -7,8 +7,23 @@ export function mainNav(page: Page) {
   return page.getByRole('navigation', { name: NAV });
 }
 
+const handled = new WeakSet<Page>();
+
+/**
+ * The one-time third-party notices ("Verstanden", core/legal/notices.ts) would block the flow they belong to;
+ * the handler clicks them away whenever one shows up. Specs about the notices themselves use `page.goto` directly.
+ */
+export async function dismissNotices(page: Page) {
+  if (handled.has(page)) return;
+  handled.add(page);
+  await page.addLocatorHandler(page.getByTestId('notice-dialog'), async () => {
+    await page.getByRole('button', { name: 'Verstanden' }).click();
+  });
+}
+
 /** Opens `url` and waits for the page title, i.e. the app has booted and the route rendered. */
 export async function ready(page: Page, url: string) {
+  await dismissNotices(page);
   await page.goto(url);
   await expect(page.locator('main h1')).toBeVisible();
 }

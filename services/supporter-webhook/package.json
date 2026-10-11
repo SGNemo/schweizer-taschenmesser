@@ -6,7 +6,7 @@
   "description": "Cloudflare Worker that turns a Ko-fi donation webhook into a signed Nemo supporter code and mails it. Separate from the sync server and from all app data.",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "scripts": {
     "dev": "wrangler dev",
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^22.20.4",
+    "@types/node": "^26.6.4",
     "eslint": "^10.11.0",
     "globals": "^17.12.0",
     "prettier": "^3.9.9",

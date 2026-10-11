@@ -1,4 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import { dismissNotices } from './helpers';
+
+test.beforeEach(({ page }) => dismissNotices(page));
 
 // The clock is not fixed here: messages are ordered by their creation time.
 

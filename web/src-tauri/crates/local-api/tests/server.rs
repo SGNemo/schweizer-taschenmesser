@@ -239,10 +239,6 @@ fn limits_requests_per_token_and_failed_logins() {
         ..Limits::default()
     };
     let (_slot, port, _) = start(limits);
-    assert_eq!(get(port, "/v1/modules", &auth()).0, 200);
-    assert_eq!(get(port, "/v1/modules", &auth()).0, 200);
-    assert_eq!(get(port, "/v1/modules", &auth()).0, 429);
-
     assert_eq!(
         get(port, "/v1/modules", "Authorization: Bearer tm_x\r\n").0,
         401
@@ -251,9 +247,19 @@ fn limits_requests_per_token_and_failed_logins() {
         get(port, "/v1/modules", "Authorization: Bearer tm_y\r\n").0,
         401
     );
-    // Guessing is over for this minute – even the right token is refused now.
+    // Guessing is over for this minute: every further bad token is throttled …
     assert_eq!(
         get(port, "/v1/modules", "Authorization: Bearer tm_z\r\n").0,
+        429
+    );
+    assert_eq!(get(port, "/v1/modules", "").0, 429);
+    // … while the right token keeps working and is limited on its own budget only.
+    assert_eq!(get(port, "/v1/modules", &auth()).0, 200);
+    assert_eq!(get(port, "/v1/modules", &auth()).0, 200);
+    assert_eq!(get(port, "/v1/modules", &auth()).0, 429);
+    // Still throttled for guesses.
+    assert_eq!(
+        get(port, "/v1/modules", "Authorization: Bearer tm_x\r\n").0,
         429
     );
 }
@@ -348,4 +354,60 @@ fn a_slow_trickle_cannot_hold_a_connection() {
     let _ = stream.read_to_string(&mut out);
     assert!(out.starts_with("HTTP/1.1 408"), "{out}");
     assert!(started.elapsed() < Duration::from_secs(2));
+}
+
+#[test]
+fn a_slow_head_is_cut_off_before_the_overall_deadline() {
+    let limits = Limits {
+        head_deadline: Duration::from_millis(300),
+        request_deadline: Duration::from_secs(15),
+        ..Limits::default()
+    };
+    let (_slot, port, _) = start(limits);
+    let mut stream = TcpStream::connect(bind_addr(port)).unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(3)))
+        .unwrap();
+    let started = std::time::Instant::now();
+    let head = format!("GET /v1/modules HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n");
+    for byte in head.bytes() {
+        if stream.write_all(&[byte]).is_err() {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+        if started.elapsed() > Duration::from_secs(2) {
+            break;
+        }
+    }
+    let mut out = String::new();
+    let _ = stream.read_to_string(&mut out);
+    assert!(out.starts_with("HTTP/1.1 408"), "{out}");
+    assert!(started.elapsed() < Duration::from_secs(2));
+}
+
+#[test]
+fn a_body_arriving_after_the_head_deadline_is_still_read() {
+    let limits = Limits {
+        head_deadline: Duration::from_millis(200),
+        ..Limits::default()
+    };
+    let (_slot, port, seen) = start(limits);
+    let mut stream = TcpStream::connect(bind_addr(port)).unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(5)))
+        .unwrap();
+    let body = "{\"a\":1}";
+    let head = format!(
+        "POST /v1/todos/import HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{}Content-Type: application/json\r\nContent-Length: {}\r\n\r\n",
+        auth(),
+        body.len()
+    );
+    stream.write_all(head.as_bytes()).unwrap();
+    // Longer than the head deadline, shorter than the overall one.
+    std::thread::sleep(Duration::from_millis(500));
+    stream.write_all(body.as_bytes()).unwrap();
+    let mut out = String::new();
+    let _ = stream.read_to_string(&mut out);
+    assert!(out.starts_with("HTTP/1.1 200"), "{out}");
+    assert_eq!(seen.lock().unwrap().len(), 1);
 }

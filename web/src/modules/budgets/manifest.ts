@@ -9,14 +9,20 @@ import { t } from '@/strings';
 const manifest: ModuleManifest = {
   id: 'budgets',
   requires: ['finance'],
-  name: t.budgets.meta.name,
+  get name() {
+    return t.budgets.meta.name;
+  },
   icon: 'piggy',
   version: 1,
-  description: t.budgets.meta.description,
+  get description() {
+    return t.budgets.meta.description;
+  },
   routes: [
     {
       path: '/budgets',
-      label: t.budgets.meta.route,
+      get label() {
+        return t.budgets.meta.route;
+      },
       nav: true,
       component: () => import('./routes/BudgetsPage'),
     },
@@ -32,7 +38,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'overview',
-      title: t.budgets.meta.widget,
+      get title() {
+        return t.budgets.meta.widget;
+      },
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OverviewWidget'),
@@ -48,7 +56,15 @@ const manifest: ModuleManifest = {
   contributions: {
     attention: () => import('./attention'),
     onboarding: noOnboarding,
-    quickAdd: [{ id: 'goal', label: t.budgets.meta.quickAdd, to: '/budgets?tab=goals&new=1' }],
+    quickAdd: [
+      {
+        id: 'goal',
+        get label() {
+          return t.budgets.meta.quickAdd;
+        },
+        to: '/budgets?tab=goals&new=1',
+      },
+    ],
   },
 };
 

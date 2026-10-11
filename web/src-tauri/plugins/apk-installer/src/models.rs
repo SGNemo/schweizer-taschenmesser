@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadRequest {
-    /// https URL of the APK (a GitHub release asset).
+    /// https URL of the APK: must be a release asset of this repository (`validate.rs`).
     pub url: String,
-    /// Expected SHA-256 (hex). The download is rejected and deleted when it does not match.
+    /// Expected SHA-256, 64 lowercase hex characters (required, `validate.rs`). The download is
+    /// rejected and deleted when it does not match.
     pub sha256: Option<String>,
 }
 

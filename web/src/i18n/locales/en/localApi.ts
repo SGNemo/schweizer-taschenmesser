@@ -1,0 +1,105 @@
+import type { Strings } from '@/strings';
+
+export const localApi: Strings['localApi'] = {
+  title: 'AI access',
+  intro:
+    'A local interface that lets an AI on this computer (e.g. Claude Code, Claude Desktop) write data into your modules and – if you allow it – read it. It can only be reached from this computer.',
+  unsupported:
+    'The interface is only available in the Windows app. In the browser and on Android, use “Paste JSON” under Starter data.',
+  enable: 'Turn on local interface',
+  enableHint: 'Off by default',
+  port: 'Port',
+  portHint: 'Between 1024 and 65535. Default: 47631.',
+  portInvalid: 'Please enter a port between 1024 and 65535.',
+  applyPort: 'Apply port',
+  statusLabel: 'Status',
+  status: {
+    off: 'Off',
+    starting: 'Starting …',
+    running: (port: number) => `Running on http://127.0.0.1:${port}`,
+    unsupported: 'Not available',
+  } as Record<string, string | ((port: number) => string)>,
+  startErrors: {
+    'port-in-use': 'The port is already in use. Choose another one.',
+    'port-denied': 'This port can’t be used. Choose another one.',
+    'listen-failed': 'The interface couldn’t be started.',
+  } as Record<string, string>,
+  copyPrompt: 'Copy instructions for AI',
+  copyPromptHint:
+    'Ready-made text for your AI tool (address, steps, rules) – without the key and without your data. More in docs/AI-IMPORT.md.',
+  promptCopied: 'Instructions copied. Give the key to the AI separately.',
+  tokens: 'Access',
+  noTokens: 'No access created yet. Without access, nothing can be reached.',
+  newToken: 'Create access',
+  tokenName: 'Name',
+  tokenNameHint: 'What for? For example “Claude Code”.',
+  expiry: 'Valid for',
+  expiryDays: (n: number) => (n === 365 ? '1 year' : n === 1 ? '1 day' : `${n} days`),
+  expiryNever: 'Unlimited',
+  rights: 'Rights per module',
+  rightsHint:
+    'The default is: nothing. “Read” shows the AI your entries – whatever it reads is processed by its provider.',
+  read: 'Read',
+  write: 'Write',
+  noModules: 'No matching module turned on.',
+  autoCommit: 'Apply automatically',
+  autoCommitWarning:
+    'Note: imports from this access are saved without your confirmation. You can still undo them.',
+  create: 'Create',
+  nameMissing: 'Please enter a name.',
+  rightsMissing: 'Please grant at least one right.',
+  shownOnce: 'Your new access key – it is only shown now:',
+  shownOnceHint:
+    'Enter it in your AI tool (as a Bearer token). The app only stores a checksum; if you lose it, create a new one.',
+  copy: 'Copy',
+  copied: 'Copied. The clipboard is cleared after one minute.',
+  done: 'Done',
+  revoke: 'Revoke',
+  revokeConfirm: (name: string) =>
+    `Revoke access “${name}”? The AI can no longer sign in with it, starting now.`,
+  revoked: 'Access revoked.',
+  renew: 'Generate new key',
+  renewConfirm: (name: string) =>
+    `Generate a new key for “${name}”? The old one stops working right away.`,
+  created: (date: string) => `Created ${date}`,
+  expires: (date: string) => `valid until ${date}`,
+  expired: 'Expired',
+  never: 'valid indefinitely',
+  lastUsed: (date: string) => `last used ${date}`,
+  unused: 'never used',
+  rightsSummary: (read: boolean, write: boolean) =>
+    [read ? 'read' : '', write ? 'write' : ''].filter(Boolean).join(' + '),
+  imports: 'Imports via the interface',
+  noImports: 'None yet.',
+  importState: {
+    pending: 'waiting for confirmation',
+    committed: (n: number) => (n === 1 ? '1 entry applied' : `${n} entries applied`),
+    rejected: 'rejected',
+    undone: 'undone',
+  },
+  log: 'Recent requests',
+  noLog: 'No requests yet.',
+  clearLog: 'Clear list',
+  errors: {
+    disabled: 'The interface is turned off.',
+    'token-invalid': 'The access is invalid, expired or revoked.',
+    'not-found': 'This address doesn’t exist.',
+    'unknown-module': 'This module doesn’t exist or the access has no rights for it.',
+    forbidden: 'The access lacks the right for this action.',
+    'bad-collection': 'Please give a valid collection.',
+    'bad-limit': 'limit must be a whole number from 1 to 200.',
+    'bad-cursor': 'Invalid cursor.',
+    'bad-query': 'Search text too long.',
+    'bad-body': 'The content isn’t a valid import.',
+    'unknown-batch': 'This import doesn’t exist (or belongs to a different access).',
+    'not-pending': 'The import is no longer waiting for confirmation.',
+    'confirmation-required':
+      'This import must be confirmed in the app (access without “Apply automatically”, or it changes existing entries).',
+    'too-many-pending':
+      'Too many imports are waiting for confirmation. Please confirm or reject them in the app first.',
+    'idempotency-conflict': 'This Idempotency-Key was already used for different content.',
+    internal: 'Internal error.',
+  } as Record<string, string>,
+  pendingText:
+    'The import is waiting for confirmation in the app. The user sees a preview and decides per entry.',
+};

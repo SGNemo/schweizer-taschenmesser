@@ -1,8 +1,9 @@
+import { numberFormat } from '@/core/i18n/format';
 import type { DriveInfo, DriveHealth } from '@/core/platform/disk';
 import { driveLevel, type DriveLevel } from '../format';
 
-const nf1 = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const nf0 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+const nf1 = () => numberFormat({ minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const nf0 = () => numberFormat({ maximumFractionDigits: 0 });
 const GB = 1024 ** 3;
 const TB = 1024 ** 4;
 
@@ -12,10 +13,10 @@ const TB = 1024 ** 4;
  */
 export function formatCapacity(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return '–';
-  if (bytes >= TB) return `${nf1.format(bytes / TB)} TB`;
-  if (bytes >= GB) return `${nf1.format(bytes / GB)} GB`;
-  if (bytes >= 1024 ** 2) return `${nf0.format(bytes / 1024 ** 2)} MB`;
-  return `${nf0.format(bytes / 1024)} KB`;
+  if (bytes >= TB) return `${nf1().format(bytes / TB)} TB`;
+  if (bytes >= GB) return `${nf1().format(bytes / GB)} GB`;
+  if (bytes >= 1024 ** 2) return `${nf0().format(bytes / 1024 ** 2)} MB`;
+  return `${nf0().format(bytes / 1024)} KB`;
 }
 
 /** Signed change for "+3,2 GB" / "−1,1 GB"; below 100 MB it counts as unchanged. */

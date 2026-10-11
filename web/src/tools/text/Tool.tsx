@@ -1,3 +1,4 @@
+import { formatNumber } from '@/core/i18n/format';
 import { useMemo, useState } from 'react';
 import { t } from '@/strings';
 import { Button, Checkbox, TextArea, TextField } from '@/ui';
@@ -6,7 +7,6 @@ import styles from '../tools.module.css';
 import { convertCase, countText, lorem, sortLines, tidy, type CaseMode } from './logic';
 
 const s = t.tools.text;
-const nf = new Intl.NumberFormat('de-DE');
 
 export default function TextTool() {
   const [text, setText] = useState('');
@@ -37,27 +37,27 @@ export default function TextTool() {
         <ul className={styles.list} data-testid="text-stats">
           <li className={styles.item}>
             <span>{s.chars}</span>
-            <strong>{nf.format(stats.chars)}</strong>
+            <strong>{formatNumber(stats.chars)}</strong>
           </li>
           <li className={styles.item}>
             <span>{s.charsNoSpaces}</span>
-            <strong>{nf.format(stats.charsNoSpaces)}</strong>
+            <strong>{formatNumber(stats.charsNoSpaces)}</strong>
           </li>
           <li className={styles.item}>
             <span>{s.words}</span>
-            <strong>{nf.format(stats.words)}</strong>
+            <strong>{formatNumber(stats.words)}</strong>
           </li>
           <li className={styles.item}>
             <span>{s.lines}</span>
-            <strong>{nf.format(stats.lines)}</strong>
+            <strong>{formatNumber(stats.lines)}</strong>
           </li>
           <li className={styles.item}>
             <span>{s.sentences}</span>
-            <strong>{nf.format(stats.sentences)}</strong>
+            <strong>{formatNumber(stats.sentences)}</strong>
           </li>
           <li className={styles.item}>
             <span>{s.paragraphs}</span>
-            <strong>{nf.format(stats.paragraphs)}</strong>
+            <strong>{formatNumber(stats.paragraphs)}</strong>
           </li>
           <li className={styles.item}>
             <span>{s.reading}</span>

@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { t } from '@/strings';
 import { Button, Form, Icon, TextField } from '@/ui';
-import { biometricStatus, unlockWithBiometrics, type BiometricStatus } from '../biometric';
+import {
+  biometricStatus,
+  unlockWithBiometrics,
+  type BiometricStatus,
+  type BiometricUnlockResult,
+} from '../biometric';
 import { unlockVault, VaultError } from '../vault';
 import styles from '../accounts.module.css';
 
@@ -14,9 +19,17 @@ export function LockScreen() {
 
   async function unlockWithBiometric() {
     setError('');
-    const result = await unlockWithBiometrics();
+    let result: BiometricUnlockResult;
+    try {
+      result = await unlockWithBiometrics();
+    } catch {
+      // The OS refused (keystore gone, stale seal, prompt failure): the master password always works.
+      result = 'invalid';
+    }
     if (result === 'invalid') setError(t.accounts.biometric.invalid);
-    if (result === 'invalid' || result === 'unavailable') setBio(await biometricStatus());
+    if (result === 'invalid' || result === 'unavailable') {
+      setBio(await biometricStatus().catch(() => ({ available: false, enrolled: false })));
+    }
   }
 
   useEffect(() => {

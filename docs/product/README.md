@@ -1,9 +1,9 @@
-# Produkt – Modul- und Werkzeug-Review
+# Product – module and tool plan
 
-Entscheidungsgrundlage für den Zuschnitt von Nemo (keine Code-Änderungen in diesem Ordner). Deutsch, weil der Maintainer hier entscheidet.
+Basis for deciding Nemo's scope (no code changes in this folder).
 
-| Datei | Inhalt |
+| File | Content |
 |---|---|
-| [MODULE-REVIEW-2026-10-01.md](MODULE-REVIEW-2026-10-01.md) | Inventar aller Module, Werkzeuge, Connectors; Überschneidungen, Lücken, Funde; offene Fragen und Entscheidungen je Runde |
-| MODULE-PLAN.md | Zielliste (Umfang, Status, Priorität, Paket) – entsteht in Runde 3/4 |
-| IMPLEMENTATION-PROMPT.md | Umsetzungs-Prompt(e) je Paket – entsteht in Runde 4 |
+| [MODULE-PLAN.md](MODULE-PLAN.md) | target list (scope, status, priority, package); packages 1–6 are released, package 7 is open |
+| [archive: MODULE-REVIEW-2026-10-01.md](../archive/2026-10/MODULE-REVIEW-2026-10-01.md) | historical review (German): inventory of all modules, tools, connectors; overlaps, gaps, findings |
+| [archive: MODULE-IMPLEMENTATION-PROMPT.md](../archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md) | finished implementation prompts per package (German) |

@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: 22
+  NODE_VERSION: 26
   NDK_VERSION: '27.2.12479018'
 
 jobs:
@@ -40,21 +40,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0 # the whole history is scanned, not just the last commit
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: stable
       # Built from source through the Go module proxy (checksum-verified by go.sum / sumdb): no binary download to trust.
       # The compiled binary is cached per version so later runs skip the build (a miss rebuilds it).
-      - uses: actions/cache@v4
-        id: gitleaks-cache
-        with:
-          path: ~/go/bin/gitleaks
-          key: gitleaks-v8.21.2-${{ runner.os }}
+      # Built fresh on every run (Go module proxy + checksum database); a cached binary could be
+      # replaced from any branch that shares the cache.
       - name: Build gitleaks from source
-        if: steps.gitleaks-cache.outputs.cache-hit != 'true'
         run: go install github.com/zricethezav/gitleaks/v8@v8.21.2
       - name: Scan the history for secrets
         run: |
@@ -75,10 +71,10 @@ jobs:
       android_key: ${{ steps.keys.outputs.android }}
       missing_secrets: ${{ steps.keys.outputs.missing }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0 # tags and history for the changelog
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -120,6 +116,18 @@ jobs:
             echo "publish=$PUBLISH"
           } >> "$GITHUB_OUTPUT"
           echo "Version $VERSION, versionCode $(node scripts/version.mjs code), publish=$PUBLISH"
+
+      - name: Legal placeholders are filled (blocks publishing only)
+        working-directory: web
+        env:
+          PUBLISH: ${{ steps.meta.outputs.publish }}
+        run: |
+          set -euo pipefail
+          if [[ "$PUBLISH" == "true" ]]; then
+            node scripts/check-legal.mjs --strict
+          else
+            node scripts/check-legal.mjs
+          fi
 
       - name: Which signing keys are configured
         id: keys
@@ -166,7 +174,7 @@ jobs:
         working-directory: web
         run: node scripts/changelog.mjs --version "${{ steps.meta.outputs.version }}" --repo "https://github.com/${{ github.repository }}" --out "$RUNNER_TEMP/RELEASE_NOTES.md"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-notes
           path: ${{ runner.temp }}/RELEASE_NOTES.md
@@ -181,14 +189,16 @@ jobs:
         working-directory: web
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: web/src-tauri
       - run: npm ci
@@ -206,19 +216,39 @@ jobs:
           "$sdk\Bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       # One self-contained executable with the frontend embedded – no NSIS/MSI installer.
+      # llama.cpp builds its Vulkan shader generator (`vulkan-shaders-gen`) as a nested CMake project, and
+      # two things break it on Windows: (1) the Visual Studio generator runs its ExternalProject steps out
+      # of order in a parallel build ("Not a file ... cmake_install.cmake", "cannot find the batch label
+      # specified - VCEnd"), so CMake builds with Ninja; (2) under the default target directory the nested
+      # paths pass the Windows limit ("object file directory has 277 characters", "Cannot open source
+      # file"), so Cargo builds into a short directory and the executable is put back where the following
+      # steps expect it.
       - name: Build
-        run: npx tauri build --no-bundle -- --features local-llm-vulkan
+        env:
+          CMAKE_GENERATOR: Ninja
+          CARGO_TARGET_DIR: C:/t
+        run: npx tauri build --no-bundle -- --features local-llm-vulkan --locked
+
+      - name: Put the executable where the next steps expect it
+        run: |
+          set -euo pipefail
+          mkdir -p src-tauri/target/release
+          cp C:/t/release/taschenmesser.exe src-tauri/target/release/taschenmesser.exe
 
       - name: Sign with the updater key
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          PUBLISH: ${{ needs.prepare.outputs.publish }}
+          UPDATER_KEY: ${{ needs.prepare.outputs.updater_key }}
         run: |
           set -euo pipefail
-          if [ "${{ needs.prepare.outputs.updater_key }}" = "true" ]; then
+          # Only a published release is signed: dry-run artifacts (every develop push touching the
+          # shell) must not carry a valid release signature.
+          if [ "$PUBLISH" = "true" ] && [ "$UPDATER_KEY" = "true" ]; then
             npx tauri signer sign src-tauri/target/release/taschenmesser.exe
           else
-            echo "::warning::No updater signing key: the portable executable is UNSIGNED (dry run only)."
+            echo "::warning::Dry run or no updater signing key: the portable executable is UNSIGNED."
           fi
 
       - name: Collect assets under their stable names
@@ -260,7 +290,7 @@ jobs:
           EXE=src-tauri/target/release/taschenmesser.exe
           node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.conf.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows
           path: assets/*
@@ -275,21 +305,22 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: 17
           cache: gradle
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
+          toolchain: stable
           targets: aarch64-linux-android,armv7-linux-androideabi
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: web/src-tauri
       - run: npm ci
@@ -364,7 +395,7 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: android
           path: assets/*
@@ -379,11 +410,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: dl
           merge-multiple: true
@@ -461,7 +492,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: dl
           merge-multiple: true

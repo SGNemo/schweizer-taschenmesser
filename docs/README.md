@@ -16,11 +16,12 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [CHATS.md](CHATS.md) | running work, hotspots, hand-over rules | first and last step of every chat |
 | [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md) | reusable prompt blocks | writing a prompt |
 | [meta/](meta/) | docs guide, audit reports | changing docs |
+| [i18n/](i18n/README.md) | app languages: status of the translations, glossary, how to help | changing UI text |
 | [legal/](legal/) | checklists for the maintainer (not legal advice), e.g. supporter mode | donations, privacy notices |
 | [security/](security/), [perf/](perf/), [features/](features/) | reports and feature notes (each has an index) | that topic |
 | [archive/](archive/) | historical reports (hidden from scans) | history only |
 | [product/](product/), [design/](design/) | module plan (German), design spec, mockups, prompts; [FOCUS-GUIDELINES](design/FOCUS-GUIDELINES.md) = checklist for every new feature | module/design work, new features |
 | design-proposals/, brand/, screenshots/ | images and token experiments | design work |
 
-## For users (German)
-[user/installation.md](user/installation.md) · [user/module.md](user/module.md) · [user/ki-assistent.md](user/ki-assistent.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync-server.md](user/sync-server.md) · [user/sicherheit.md](user/sicherheit.md) · [user/browser-erweiterung.md](user/browser-erweiterung.md) · [user/entwicklung.md](user/entwicklung.md)
+## For users (English; German copies `*.de.md` next to each file)
+[user/installation.md](user/installation.md) · [user/modules.md](user/modules.md) · [user/ai-assistant.md](user/ai-assistant.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync.md](user/sync.md) · [user/backup.md](user/backup.md) · [user/security.md](user/security.md) · [user/faq.md](user/faq.md) · [user/browser-extension.md](user/browser-extension.md) · [user/development.md](user/development.md)

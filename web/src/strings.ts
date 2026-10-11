@@ -1,6 +1,20 @@
-/** All user-facing German UI text lives here (i18n-ready later). */
-export const t = {
+import { catalogChain } from '@/core/i18n/catalogs';
+import { formatNumber } from '@/core/i18n/format';
+import { localize } from '@/core/i18n/localize';
+import type { Shape } from '@/core/i18n/shape';
+
+/**
+ * All user-facing UI text. This object is the German source; the other languages live in
+ * `src/i18n/locales/<lang>/` with exactly the same shape (`Strings`, checked by the compiler).
+ * Add new texts here (inside your module's block) and in every locale, then run `npm run check:i18n`.
+ */
+export const de = {
   appName: 'Nemo',
+  /** Building blocks for dates and durations (most wording comes from Intl). */
+  time: {
+    weekdayAndDistance: (weekday: string, distance: string) => `${weekday}, ${distance}`,
+    overdueSince: (days: number) => (days === 1 ? 'seit gestern' : `seit ${days} Tagen`),
+  },
   about: {
     title: 'Über Nemo',
     tagline: 'Modulare, lokale Alltags-App',
@@ -42,13 +56,6 @@ export const t = {
       releases: 'Versionen und Downloads',
       docs: 'Dokumentation',
       bugs: 'Fehler melden',
-    },
-    diagnostics: {
-      title: 'Diagnose',
-      label: 'Diagnose exportieren',
-      description:
-        'Speichert eine Datei mit Version, Plattform, aktiven Modulen und den letzten Fehlermeldungen (gekürzt). Ohne Einträge, Einstellungen und Schlüssel.',
-      saved: 'Diagnose gespeichert.',
     },
     reset: {
       title: 'Gerät zurücksetzen',
@@ -221,6 +228,52 @@ export const t = {
       title: 'Gefahrenzone',
       typePhrase: (phrase: string) => `Tippe „${phrase}“ zum Bestätigen`,
     },
+    /** Extra search words per settings section (synonyms people type). */
+    searchWords: {
+      general: [
+        'Name',
+        'Wochenstart',
+        'Sprache',
+        'Language',
+        'Währung',
+        'Zeitzone',
+        'Format',
+        'Datum',
+      ],
+      appearance: ['Theme', 'Dunkelmodus', 'Schrift', 'Animation'],
+      modules: ['Bibliothek', 'Modul aktivieren', 'Startdaten'],
+      tools: ['Werkzeugleiste', 'Reihenfolge'],
+      notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
+      'browser-extension': ['Brave', 'Chrome', 'Autofill'],
+      sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passphrase'],
+      backup: ['Export', 'Import', 'Sicherung', 'Wiederherstellen', 'Automatisch'],
+      'ai-switch': [
+        'KI aus',
+        'abschalten',
+        'deaktivieren',
+        'ohne KI',
+        'Nuke',
+        'löschen',
+        'Schlüssel',
+      ],
+      'ai-write': ['Eintragen', 'Schreiben', 'Vorschau', 'Cloud', 'Fallback', 'Nachfragen'],
+      'ai-local': ['Lokal', 'Modell', 'Offline', 'Download', 'GPU', 'Vulkan', 'Gewichte'],
+      'ai-stats': ['Statistik', 'Token', 'Kosten', 'Regeln', 'lokal', 'Cloud'],
+      ai: ['Anbieter', 'Schlüssel', 'Limit', 'Cache', 'Zähler'],
+      connectors: ['Google', 'Kalender', 'ICS', 'Gmail'],
+      localapi: ['API', 'MCP', 'Token', 'Schnittstelle', 'Port'],
+      quickcapture: ['Hotkey', 'Tastenkürzel', 'Tray', 'Autostart', 'Zwischenablage'],
+      updates: ['Kanal', 'Beta', 'Stable', 'Prüfen'],
+      developer: ['Testdaten', 'Seed', 'Zurücksetzen'],
+      'model-licenses': ['Lizenz', 'Modell', 'Apache', 'MIT', 'Gewichte'],
+      setup: ['Einrichtung', 'Assistent', 'Checkliste', 'erneut starten'],
+      about: ['Version', 'Build', 'Commit', 'Plattform', 'Installation', 'Datenordner', 'Lizenz'],
+      'about-updates': ['Changelog', 'Änderungen', 'Neuerungen', 'Release Notes'],
+      links: ['GitHub', 'Quellcode', 'Downloads', 'Hilfe', 'Dokumentation', 'Fehler melden'],
+      licenses: ['Lizenz', 'Bibliotheken', 'Schrift', 'Icons', 'Open Source', 'MIT', 'Rechtliches'],
+      diagnostics: ['Fehlerprotokoll', 'Export', 'Support'],
+      'device-reset': ['Löschen', 'Zurücksetzen', 'Gefahrenzone', 'Alle Daten'],
+    },
     general: {
       title: 'Name und Region',
       name: 'Dein Name',
@@ -230,13 +283,18 @@ export const t = {
       weekStartHint: 'Gilt für Kalender und Wochenansichten.',
       weekStartOptions: { mon: 'Montag', sun: 'Sonntag' },
       language: 'Sprache',
-      languageValue: 'Deutsch',
+      languageHint:
+        'Sprache der Oberfläche, nur auf diesem Gerät. Deine Einträge bleiben, wie du sie geschrieben hast.',
+      languageSystem: (name: string) => `Wie das Gerät (${name})`,
       currency: 'Währung',
       currencyValue: 'Euro (€)',
       timeZone: 'Zeitzone',
       timeZoneHint: 'Folgt der Uhr dieses Geräts.',
       formats: 'Zahlen und Datum',
-      formatsValue: 'Deutsch (31.12.2026, 1.234,56 €)',
+      formatsHint: 'Schreibweise von Datum, Uhrzeit und Zahlen, nur auf diesem Gerät.',
+      formatsAuto: (example: string) => `Wie die Sprache (${example})`,
+      formatsExample: (date: string, amount: string) => `${date}, ${amount}`,
+      formatsRegion: (region: string, example: string) => `${region}: ${example}`,
       fixedHint: 'Fest eingestellt',
     },
     rows: {
@@ -448,16 +506,15 @@ export const t = {
     steps: {
       basics: {
         title: 'Grundlagen',
-        description: 'Name, Farbschema und Wochenstart. Alles lässt sich später ändern.',
+        description: 'Sprache, Name, Farbschema und Wochenstart. Alles lässt sich später ändern.',
         name: 'Dein Name (optional)',
         nameHint: 'Nur für Begrüßungen, bleibt in deinen Daten.',
         weekStart: 'Woche beginnt am',
         monday: 'Montag',
         sunday: 'Sonntag',
         fixedTitle: 'Feste Vorgaben',
-        language: 'Sprache: Deutsch',
         timezone: (zone: string) => `Zeitzone: ${zone} (Uhrzeiten bleiben lokale Wanduhrzeit)`,
-        currency: 'Währung: Euro (EUR), Beträge im deutschen Format',
+        currency: 'Währung: Euro (EUR)',
       },
       sync: {
         title: 'Sync und Wiederherstellung',
@@ -529,7 +586,7 @@ export const t = {
         noScopes: 'keine Anmeldung nötig',
         testingNote:
           'Ist dein Google-Projekt im Status „Testing“, läuft die Anmeldung nach 7 Tagen ab. Stelle es auf „In Produktion“.',
-        stepsNote: 'Schritte: docs/STATUS.md → „Google-Verbindung einrichten“.',
+        stepsNote: 'Schritte: docs/MANUAL-TESTS.md → „Google-Verbindung einrichten“.',
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
       startdata: {
@@ -616,6 +673,8 @@ export const t = {
     } as Record<string, { name: string; description: string }>,
   },
   palette: {
+    /** Typing the start of the word for settings shows settings entries (first letters, lower case). */
+    settingsPrefix: 'einst',
     recent: 'Zuletzt benutzt',
     title: 'Befehlspalette',
     placeholder: 'Suchen, springen oder fragen …',
@@ -797,6 +856,38 @@ export const t = {
     endsAfter: 'Nach Anzahl',
     endDate: 'Enddatum',
     count: 'Anzahl',
+    /** Short weekday names, Monday first (used in rule descriptions). */
+    weekdaysShort: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+    months: [
+      'Januar',
+      'Februar',
+      'März',
+      'April',
+      'Mai',
+      'Juni',
+      'Juli',
+      'August',
+      'September',
+      'Oktober',
+      'November',
+      'Dezember',
+    ],
+    describe: {
+      once: 'Einmalig',
+      daily: (n: number) => (n === 1 ? 'Täglich' : `Alle ${n} Tage`),
+      weekly: (n: number) => (n === 1 ? 'Wöchentlich' : `Alle ${n} Wochen`),
+      onWeekdays: (days: string) => ` (${days})`,
+      monthly: (n: number) => (n === 1 ? 'Monatlich' : `Alle ${n} Monate`),
+      monthlyOnDay: (day: number, n: number) =>
+        n === 1 ? `Jeden ${day}. des Monats` : `Jeden ${day}. alle ${n} Monate`,
+      monthlyOnLastDay: (n: number) =>
+        n === 1 ? 'Jeden letzten des Monats' : `Jeden letzten alle ${n} Monate`,
+      yearly: (n: number) => (n === 1 ? 'Jährlich' : `Alle ${n} Jahre`),
+      yearlyOnDay: (day: number, month: string) => ` am ${day}. ${month}`,
+      yearlyOnMonthEnd: (month: string) => ` am Monatsende ${month}`,
+      times: (count: number) => `, ${count}×`,
+      until: (date: string) => `, bis ${date}`,
+    },
   },
   focus: {
     settings: {
@@ -1041,6 +1132,8 @@ export const t = {
     progress: (done: number, total: number) => `${done}/${total}`,
   },
   calendar: {
+    dayLabel: (day: string, n: number) =>
+      n === 0 ? day : n === 1 ? `${day}, 1 Eintrag` : `${day}, ${n} Einträge`,
     meta: {
       name: 'Kalender',
       description:
@@ -1163,6 +1256,9 @@ export const t = {
       open: (name: string) => `${name} öffnen`,
     },
     calc: {
+      percentOf: (percent: string, base: string, value: string) =>
+        `${percent}% von ${base} = ${value}`,
+      shareOf: (part: string, whole: string, value: string) => `${part} von ${whole} = ${value}%`,
       name: 'Rechner',
       description:
         'Rechnen mit Klammern und Prozent, mit Verlauf, dazu Prozent/MwSt und Kosten teilen. „240 + 19 %“ rechnet 19 % dazu.',
@@ -1280,6 +1376,37 @@ export const t = {
       denied: 'Die Kamera ist nicht erlaubt oder nicht verfügbar.',
     },
     units: {
+      names: {
+        mm: 'Millimeter (mm)',
+        cm: 'Zentimeter (cm)',
+        m: 'Meter (m)',
+        km: 'Kilometer (km)',
+        in: 'Zoll (in)',
+        ft: 'Fuß (ft)',
+        yd: 'Yard (yd)',
+        mi: 'Meile (mi)',
+        mg: 'Milligramm (mg)',
+        g: 'Gramm (g)',
+        kg: 'Kilogramm (kg)',
+        t: 'Tonne (t)',
+        oz: 'Unze (oz)',
+        lb: 'Pfund (lb)',
+        c: 'Celsius (°C)',
+        f: 'Fahrenheit (°F)',
+        k: 'Kelvin (K)',
+        ml: 'Milliliter (ml)',
+        l: 'Liter (l)',
+        m3: 'Kubikmeter (m³)',
+        tsp: 'Teelöffel (5 ml)',
+        tbsp: 'Esslöffel (15 ml)',
+        cup: 'US-Cup (cup)',
+        floz: 'US-Flüssigunze (fl oz)',
+        gal: 'US-Gallone (gal)',
+        ms: 'Meter pro Sekunde (m/s)',
+        kmh: 'Kilometer pro Stunde (km/h)',
+        mph: 'Meilen pro Stunde (mph)',
+        kn: 'Knoten (kn)',
+      } as Record<string, string>,
       name: 'Einheiten',
       description: 'Länge, Gewicht, Temperatur, Volumen und Geschwindigkeit umrechnen.',
       kind: 'Größe',
@@ -1368,6 +1495,37 @@ export const t = {
       clear: 'Leeren',
     },
     timezones: {
+      zones: {
+        UTC: 'UTC (Weltzeit)',
+        'Europe/Berlin': 'Berlin, Wien, Zürich',
+        'Europe/London': 'London',
+        'Europe/Lisbon': 'Lissabon',
+        'Europe/Athens': 'Athen, Helsinki',
+        'Europe/Istanbul': 'Istanbul',
+        'Europe/Moscow': 'Moskau',
+        'Africa/Lagos': 'Lagos',
+        'Africa/Cairo': 'Kairo',
+        'Africa/Nairobi': 'Nairobi',
+        'Africa/Johannesburg': 'Johannesburg',
+        'Asia/Dubai': 'Dubai',
+        'Asia/Kolkata': 'Mumbai, Neu-Delhi',
+        'Asia/Bangkok': 'Bangkok',
+        'Asia/Singapore': 'Singapur',
+        'Asia/Shanghai': 'Peking, Shanghai',
+        'Asia/Tokyo': 'Tokio',
+        'Asia/Seoul': 'Seoul',
+        'Australia/Sydney': 'Sydney',
+        'Pacific/Auckland': 'Auckland',
+        'Pacific/Honolulu': 'Honolulu',
+        'America/Anchorage': 'Anchorage',
+        'America/Los_Angeles': 'Los Angeles, Vancouver',
+        'America/Denver': 'Denver',
+        'America/Chicago': 'Chicago',
+        'America/Mexico_City': 'Mexiko-Stadt',
+        'America/New_York': 'New York, Toronto',
+        'America/Sao_Paulo': 'São Paulo',
+        'America/Argentina/Buenos_Aires': 'Buenos Aires',
+      } as Record<string, string>,
       name: 'Zeitzonen',
       description: 'Eine Uhrzeit in andere Zeitzonen umrechnen, inklusive Sommerzeit.',
       date: 'Datum',
@@ -1708,9 +1866,10 @@ export const t = {
   },
   money: {
     amount: 'Betrag',
-    invalidAmount: 'Bitte einen gültigen Betrag eingeben, z. B. 12,50',
+    invalidAmount: (sample: string) => `Bitte einen gültigen Betrag eingeben, z. B. ${sample}`,
   },
   invoices: {
+    importDetail: (amount: string, due: string) => `${amount} · fällig ${due}`,
     dueTitle: (payee: string) => `Rechnung fällig: ${payee}`,
     dueBody: (amount: string, date: string) => `${amount} · fällig am ${date}`,
     meta: {
@@ -1749,6 +1908,8 @@ export const t = {
     view: 'Status',
   },
   subscriptions: {
+    importDetail: (amount: string, rhythm: string, next: string) =>
+      `${amount} · ${rhythm} · nächste Abbuchung ${next}`,
     cancelTitle: (name: string) => `Kündigungsfrist endet: ${name}`,
     cancelBody: (last: string, amount: string, charge: string) =>
       `Letzter Tag: ${last} – sonst ${amount} am ${charge}`,
@@ -1787,6 +1948,7 @@ export const t = {
     monthlyCost: (v: string) => `≙ ${v} pro Monat`,
   },
   finance: {
+    chartLegend: 'Legende',
     meta: {
       name: 'Finanzen',
       description:
@@ -1860,6 +2022,7 @@ export const t = {
     deleteCategoryHint: 'Buchungen bleiben erhalten und zeigen „Ohne Kategorie“.',
   },
   sync: {
+    defaultDeviceName: 'Gerät',
     title: 'Synchronisation',
     intro:
       'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im LAN oder über Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
@@ -1879,7 +2042,7 @@ export const t = {
       'Ohne Ende-zu-Ende-Verschlüsselung liegen deine Daten auf dem Server im Klartext. Nutze sie, wenn der Server nicht nur dir gehört oder nicht verschlüsselt gespeichert wird.',
     passphrase: 'Passphrase',
     passphraseHint:
-      'Mindestens 8 Zeichen. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
+      'Mindestens 12 Zeichen, am besten mehrere Wörter. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
     passphraseJoinHint: 'Nur nötig, wenn der Server verschlüsselt ist.',
     connect: 'Verbinden',
     connecting: 'Verbinde …',
@@ -1956,6 +2119,7 @@ export const t = {
       'rate-limited': 'Zu viele Anfragen oder Fehlversuche – es wird automatisch erneut versucht.',
       unauthorized: 'Der Server hat das Token abgelehnt.',
       server: 'Der Server hat einen Fehler gemeldet.',
+      clock: 'Die Uhr dieses Geräts geht mehr als eine Stunde vor. Bitte Datum und Uhrzeit prüfen.',
       decrypt: 'Entschlüsselung fehlgeschlagen – stimmt die Passphrase?',
       'no-key':
         'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit Passphrase verbinden.',
@@ -1968,7 +2132,7 @@ export const t = {
         'Server nicht erreichbar. Wird die App per HTTPS geöffnet, muss auch der Server per HTTPS erreichbar sein (z. B. mit „tailscale serve“).',
       unauthorized: 'Das Token wurde abgelehnt.',
       'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte die Passphrase eingeben.',
-      'passphrase-too-short': 'Die Passphrase braucht mindestens 8 Zeichen.',
+      'passphrase-too-short': 'Die Passphrase braucht mindestens 12 Zeichen.',
       'wrong-passphrase': 'Falsche Passphrase.',
       'server-has-plain-data':
         'Auf dem Server liegen bereits unverschlüsselte Daten. Verschlüsselung ist nur auf einem leeren Server möglich.',
@@ -1985,6 +2149,7 @@ export const t = {
     resetConfirm: 'Zurücksetzen',
   },
   backup: {
+    deletedCount: (n: number) => ` (+${n} gelöscht)`,
     title: 'Backup',
     intro:
       'Sichere alle Daten als Datei oder spiele ein Backup wieder ein. Zugangsdaten (Sync-Token, Schlüssel) sind nie im Backup enthalten.',
@@ -2469,6 +2634,8 @@ export const t = {
         'not-configured': 'Unvollständig eingerichtet',
         'invalid-response': 'Unbrauchbare Antwort',
       } as Record<string, string>,
+      baseUrlInsecure:
+        'Die Adresse muss mit https:// beginnen. http:// geht nur für Server auf diesem Gerät oder im eigenen Netz (z. B. localhost, 192.168.…).',
     },
   },
   bookmarks: {
@@ -2592,6 +2759,8 @@ export const t = {
   },
 
   people: {
+    turnsAge: (name: string, age: number) => `${name} wird ${age}`,
+    birthdayOf: (name: string) => `Geburtstag: ${name}`,
     meta: {
       name: 'Personen',
       description:
@@ -2637,7 +2806,7 @@ export const t = {
       occasion: 'Anlass (optional)',
       date: 'Datum des Anlasses (optional)',
       price: 'Preis in € (optional)',
-      badPrice: 'Bitte einen Betrag wie 19,90 eingeben.',
+      badPrice: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       url: 'Link (optional)',
       note: 'Notiz (optional)',
       status: 'Stand',
@@ -2685,7 +2854,7 @@ export const t = {
     instances: (n: number) => (n === 1 ? '1 Prozess' : `${n} Prozesse`),
     live: 'Live',
     clock: (mhz: number) =>
-      `${(mhz / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
+      `${formatNumber(mhz / 1000, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
     download: 'Empfangen',
     upload: 'Senden',
     tileNetwork: 'Netzwerk',
@@ -3111,6 +3280,8 @@ export const t = {
     widgetEmpty: 'Nichts zu beachten.',
   },
   lists: {
+    copyOf: (name: string) => `Kopie von ${name}`,
+    templateDetail: (kind: string, n: number) => `${kind}, ${n}`,
     routines: {
       title: 'Aus Vorlage',
       hint: 'Eine kleine Checkliste zum Abhaken. Nach dem Abhaken mit „Zurücksetzen“ ist sie wieder bereit.',
@@ -3279,6 +3450,7 @@ export const t = {
       route: 'Accounts',
       widget: 'Passwort-Tresor',
       settings: {
+        keywords: ['Tresor', 'Passwort', 'Sperre', 'Auto-Lock', 'Browser-Erweiterung'],
         autoLockMinutes: 'Tresor sperren nach Inaktivität',
         autoLockMinutes_1: '1 Minute',
         autoLockMinutes_5: '5 Minuten',
@@ -3525,6 +3697,20 @@ export const t = {
   },
   connectors: {
     title: 'Verbindungen',
+    errors: {
+      expired: 'Die Verbindung ist abgelaufen. Bitte melde dich neu an.',
+      'rate-limited': 'Der Dienst hat zu viele Anfragen gemeldet. Es wird später erneut versucht.',
+      'not-configured': 'Es fehlen noch Zugangsdaten.',
+      'no-proxy':
+        'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Synchronisierung).',
+      network: 'Der Dienst ist gerade nicht erreichbar.',
+      denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
+      'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
+      unsupported: 'Das geht auf diesem Gerät nicht.',
+    } as Record<string, string>,
+    icsName: 'Kalender-Abo (ICS)',
+    icsDescription:
+      'Termine aus einer Kalender-Adresse übernehmen (nur lesen). Funktioniert mit Google Kalender, Outlook, Nextcloud und vielen anderen.',
     intro:
       'Hole Termine und Vorschläge aus Diensten ein, die du schon nutzt. Alles wird nur gelesen.',
     statusLabel: 'Status',
@@ -3857,6 +4043,7 @@ export const t = {
       list: 'In diese Liste',
     },
     reminders: {
+      textDetail: 'heute, 09:00 Uhr',
       templates: 'Vorlagen für typische Erinnerungen',
       templatesHint:
         'Wähle aus, woran dich die App erinnern soll. Zeiten und Tage kannst du danach ändern.',
@@ -3882,8 +4069,8 @@ export const t = {
         'Für ein weiteres Konto. Das vorhandene Konto änderst du unter Finanzen → Konten.',
       name: 'Kontoname',
       balance: 'Kontostand heute',
-      balanceHint: 'z. B. 1.234,56 – bei einem Minus mit „-“.',
-      badBalance: 'Bitte einen Betrag wie 1.234,56 eingeben.',
+      balanceHint: (sample: string) => `z. B. ${sample} – bei einem Minus mit „-“.`,
+      badBalance: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       bank: 'Kontoauszug importieren (CSV oder CAMT)',
       bankHint:
         'Im Online-Banking unter Umsätze exportieren (z. B. „CSV-CAMT“ oder „CAMT“) und die Datei hier auswählen. Die Datei wird nur auf diesem Gerät gelesen.',
@@ -3903,7 +4090,7 @@ export const t = {
       amount: 'Betrag',
       due: 'Fällig am',
       reference: 'Referenz (optional)',
-      badAmount: 'Bitte einen Betrag wie 49,90 eingeben.',
+      badAmount: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
     },
     subscriptions: {
@@ -3916,7 +4103,7 @@ export const t = {
       yearly: 'jährlich',
       next: 'Nächste Abbuchung am',
       notice: 'Kündigungsfrist in Tagen (optional)',
-      badAmount: 'Bitte einen Betrag wie 9,99 eingeben.',
+      badAmount: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
       badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
       badNotice: 'Bitte eine ganze Zahl eingeben.',
       bank: 'Abos im Kontoauszug erkennen',
@@ -4159,6 +4346,11 @@ export const t = {
     },
   },
   example: {
+    name: 'Beispiel',
+    description:
+      'Referenzmodul aus dem Generator: einfache Einträge mit Erledigt-Status. Dient als Vorlage und Testträger.',
+    quickAdd: 'Beispiel: neuer Eintrag',
+    showDone: 'Erledigte anzeigen',
     addPlaceholder: 'Neuer Eintrag …',
     empty: 'Noch keine Einträge.',
     add: 'Eintrag anlegen',
@@ -4234,4 +4426,75 @@ export const t = {
       hintLocked: 'Für Unterstützer.',
     },
   },
+  /** Labels of AI actions and collections as the write preview shows them (the schema sent to the model stays German). */
+  aiLabels: {
+    actions: {
+      'bookmarks.create': 'Merkzettel anlegen',
+      'bookmarks.done': 'Merkzettel erledigt',
+      'bookmarks.delete': 'Merkzettel löschen',
+      'budgets.create': 'Sparziel anlegen',
+      'budgets.update': 'Sparziel ändern',
+      'budgets.delete': 'Sparziel löschen',
+      'calendar.create': 'Termin anlegen',
+      'calendar.update': 'Termin ändern',
+      'calendar.delete': 'Termin löschen',
+      'example.create': 'Eintrag anlegen',
+      'example.delete': 'Eintrag löschen',
+      'finance.create': 'Buchung anlegen',
+      'finance.update': 'Buchung ändern',
+      'finance.delete': 'Buchung löschen',
+      'invoices.create': 'Rechnung anlegen',
+      'invoices.markPaid': 'Rechnung bezahlt',
+      'invoices.update': 'Rechnung ändern',
+      'invoices.delete': 'Rechnung löschen',
+      'lists.create': 'Eintrag hinzufügen',
+      'lists.check': 'Eintrag abhaken',
+      'lists.delete': 'Eintrag löschen',
+      'notes.create': 'Notiz anlegen',
+      'notes.update': 'Notiz ändern',
+      'notes.delete': 'Notiz löschen',
+      'pantry.create': 'Vorrat anlegen',
+      'pantry.update': 'Vorrat ändern',
+      'pantry.delete': 'Vorrat löschen',
+      'people.create': 'Person anlegen',
+      'people.update': 'Person ändern',
+      'people.delete': 'Person löschen',
+      'subscriptions.create': 'Abo anlegen',
+      'subscriptions.cancel': 'Abo beenden',
+      'subscriptions.update': 'Abo ändern',
+      'subscriptions.delete': 'Abo löschen',
+      'todos.create': 'Aufgabe anlegen',
+      'todos.complete': 'Aufgabe erledigen',
+      'todos.update': 'Aufgabe ändern',
+      'todos.delete': 'Aufgabe löschen',
+      'vault.create': 'Unterlage anlegen',
+      'vault.update': 'Unterlage ändern',
+    } as Record<string, string>,
+    collections: {
+      'bookmarks.item': 'Merkzettel',
+      'budgets.goal': 'Sparziel',
+      'calendar.event': 'Termin',
+      'calendar.external': 'Externer Termin',
+      'example.entry': 'Eintrag',
+      'finance.transaction': 'Buchung',
+      'finance.account': 'Konto',
+      'finance.category': 'Kategorie',
+      'invoices.invoice': 'Rechnung',
+      'lists.list': 'Liste',
+      'lists.item': 'Eintrag',
+      'notes.note': 'Notiz',
+      'pantry.item': 'Vorrat',
+      'people.person': 'Person',
+      'subscriptions.subscription': 'Abo',
+      'todos.task': 'Aufgabe',
+      'todos.list': 'Liste',
+      'vault.document': 'Unterlage',
+    } as Record<string, string>,
+  },
 } as const;
+
+/** Shape every translation must have: same keys, strings for strings, same function signatures. */
+export type Strings = Shape<typeof de>;
+
+/** UI text in the current language (missing entries fall back to English, then German). */
+export const t: typeof de = localize(de, catalogChain);

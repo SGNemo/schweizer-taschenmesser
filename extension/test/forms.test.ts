@@ -185,6 +185,17 @@ describe('submit button and one-time code', () => {
     page(`<input name="otp_label_but_long" maxlength="200">`);
     expect(findOtpField(document)).toBeUndefined();
   });
+  it('skips one-time code fields marked data-nemo-ignore (field, form or page)', () => {
+    page(`<input name="code" autocomplete="one-time-code" data-nemo-ignore>`);
+    expect(findOtpField(document)).toBeUndefined();
+    page(`<form data-nemo-ignore><input name="otp" maxlength="6"></form>`);
+    expect(findOtpField(document)).toBeUndefined();
+    document.body.setAttribute('data-nemo-ignore', '');
+    page(`<input name="code" autocomplete="one-time-code">`);
+    expect(findOtpField(document)).toBeUndefined();
+    document.body.removeAttribute('data-nemo-ignore');
+    expect(findOtpField(document)?.name).toBe('code');
+  });
 });
 
 describe('opt-out', () => {

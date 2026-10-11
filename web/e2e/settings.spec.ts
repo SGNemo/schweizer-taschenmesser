@@ -104,9 +104,20 @@ test('Über Nemo shows the version and the facts of this installation', async ({
   await ready(page, '/settings/ueber');
   await expect(page.getByTestId('about-version')).toHaveText(/\d+\.\d+\.\d+/);
   await expect(page.getByText('Plattform', { exact: true })).toBeVisible();
-  await expect(page.getByText('MIT-Lizenz')).toBeVisible();
-  await page.getByText('Verwendete Bibliotheken').click();
+  await expect(page.getByText('MIT-Lizenz', { exact: true })).toBeVisible();
+  await page.getByText(/Web-Bibliotheken/).click();
   await expect(page.getByText(/^react \d/)).toBeVisible();
+});
+
+test('the diagnostics file is shown in full before anything is saved', async ({ page }) => {
+  await ready(page, '/settings/ueber');
+  await page.getByRole('button', { name: 'Diagnose exportieren' }).click();
+  const preview = page.getByTestId('diagnostics-preview');
+  await expect(preview).toContainText('## Migrations');
+  await expect(preview).toContainText('Record counts (numbers only, no contents)');
+  await expect(preview).not.toContainText('http');
+  await expect(page.getByRole('button', { name: 'Speichern' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Fehler melden' }).first()).toBeVisible();
 });
 
 test('the danger zone needs the typed phrase and then wipes this device', async ({ page }) => {

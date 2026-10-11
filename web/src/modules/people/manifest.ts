@@ -8,14 +8,20 @@ import { settings } from './settings';
 
 const manifest: ModuleManifest = {
   id: 'people',
-  name: t.people.meta.name,
+  get name() {
+    return t.people.meta.name;
+  },
   icon: 'users',
   version: 1,
-  description: t.people.meta.description,
+  get description() {
+    return t.people.meta.description;
+  },
   routes: [
     {
       path: '/people',
-      label: t.people.meta.route,
+      get label() {
+        return t.people.meta.route;
+      },
       nav: true,
       component: () => import('./routes/PeoplePage'),
     },
@@ -38,7 +44,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'next',
-      title: t.people.meta.widget,
+      get title() {
+        return t.people.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/NextBirthdaysWidget'),
@@ -53,7 +61,15 @@ const manifest: ModuleManifest = {
   area: 'plan',
   contributions: {
     onboarding,
-    quickAdd: [{ id: 'person', label: t.people.meta.quickAdd, to: '/people?new=1' }],
+    quickAdd: [
+      {
+        id: 'person',
+        get label() {
+          return t.people.meta.quickAdd;
+        },
+        to: '/people?new=1',
+      },
+    ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
     services: () => import('./services'),

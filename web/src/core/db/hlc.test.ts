@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { setNow } from '@/core/time/now';
-import { compareHlc, createClock, formatHlc, maxHlc, parseHlc } from './hlc';
+import {
+  compareHlc,
+  createClock,
+  formatHlc,
+  isHlcTooFarAhead,
+  MAX_HLC_DRIFT_MS,
+  maxHlc,
+  parseHlc,
+} from './hlc';
 
 afterEach(() => setNow());
 
@@ -35,6 +43,20 @@ describe('hlc', () => {
     const c = createClock('me');
     c.receive(remote);
     expect(compareHlc(c.tick(), remote)).toBe(1);
+  });
+
+  it('detects stamps beyond the drift bound, while the clock still beats stored ones', () => {
+    const t = 1_000_000_000_000;
+    setNow(() => t);
+    const farFuture = formatHlc(t + MAX_HLC_DRIFT_MS + 1, 0, 'other');
+    const withinBound = formatHlc(t + MAX_HLC_DRIFT_MS, 0, 'other');
+    expect(isHlcTooFarAhead(farFuture, t)).toBe(true);
+    expect(isHlcTooFarAhead(withinBound, t)).toBe(false);
+    expect(isHlcTooFarAhead('garbage', t)).toBe(false);
+    // A stamp that is already in the local database (restore, repair) must stay beatable.
+    const c = createClock('me');
+    c.receive(farFuture);
+    expect(compareHlc(c.tick(), farFuture)).toBe(1);
   });
 
   it('uses the device id as deterministic tie-break', () => {

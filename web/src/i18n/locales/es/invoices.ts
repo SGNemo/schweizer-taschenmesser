@@ -1,0 +1,41 @@
+import type { Strings } from '@/strings';
+
+export const invoices: Strings['invoices'] = {
+  importDetail: (amount: string, due: string) => `${amount} · vence ${due}`,
+  dueTitle: (payee: string) => `Factura por pagar: ${payee}`,
+  dueBody: (amount: string, date: string) => `${amount} · vence el ${date}`,
+  meta: {
+    name: 'Facturas',
+    description:
+      'Facturas pendientes con importe, destinatario y vencimiento. «Marcar como pagada» registra el gasto automáticamente en Finanzas.',
+    route: 'Facturas',
+    widget: 'Facturas por pagar',
+    quickAdd: 'Factura',
+    settings: {
+      remindDaysBefore: 'Recordatorio antes del vencimiento (días)',
+      remindDaysBeforeHelp: '0 = el día del vencimiento',
+      remindTime: 'Hora del recordatorio',
+      remindTimeHelp: 'Formato HH:mm',
+    },
+  },
+  title: 'Facturas',
+  add: 'Añadir factura',
+  edit: 'Editar factura',
+  payee: 'Destinatario',
+  reference: 'Concepto / número de factura',
+  dueDate: 'Vence el',
+  paidAt: 'Pagada el',
+  open: 'Pendiente',
+  paid: 'Pagada',
+  markPaid: 'Marcar como pagada',
+  markedPaid: 'Marcada como pagada.',
+  reopen: 'Reabrir',
+  undo: 'Deshacer',
+  empty: 'No hay facturas pendientes.',
+  emptyPaid: 'Aún no hay facturas pagadas.',
+  openTotal: 'Total pendiente',
+  overdue: 'Vencida',
+  widgetEmpty: 'No hay facturas pendientes.',
+  openCount: (n: number) => (n === 1 ? '1 factura pendiente' : `${n} facturas pendientes`),
+  view: 'Estado',
+};

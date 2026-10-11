@@ -1,0 +1,41 @@
+import type { Strings } from '@/strings';
+
+export const invoices: Strings['invoices'] = {
+  importDetail: (amount: string, due: string) => `${amount} · échéance ${due}`,
+  dueTitle: (payee: string) => `Facture à échéance : ${payee}`,
+  dueBody: (amount: string, date: string) => `${amount} · à échéance le ${date}`,
+  meta: {
+    name: 'Factures',
+    description:
+      'Factures ouvertes avec montant, bénéficiaire et échéance. « Marquer comme payée » enregistre automatiquement la dépense dans Finances.',
+    route: 'Factures',
+    widget: 'Factures à échéance',
+    quickAdd: 'Facture',
+    settings: {
+      remindDaysBefore: 'Rappel avant l’échéance (jours)',
+      remindDaysBeforeHelp: '0 = le jour de l’échéance',
+      remindTime: 'Heure du rappel',
+      remindTimeHelp: 'Au format HH:mm',
+    },
+  },
+  title: 'Factures',
+  add: 'Ajouter une facture',
+  edit: 'Modifier la facture',
+  payee: 'Bénéficiaire',
+  reference: 'Référence / numéro de facture',
+  dueDate: 'À échéance le',
+  paidAt: 'Payée le',
+  open: 'Ouvertes',
+  paid: 'Payées',
+  markPaid: 'Marquer comme payée',
+  markedPaid: 'Marquée comme payée.',
+  reopen: 'Rouvrir',
+  undo: 'Annuler',
+  empty: 'Aucune facture ouverte.',
+  emptyPaid: 'Aucune facture payée pour l’instant.',
+  openTotal: 'Total ouvert',
+  overdue: 'En retard',
+  widgetEmpty: 'Aucune facture ouverte.',
+  openCount: (n: number) => (n <= 1 ? `${n} facture ouverte` : `${n} factures ouvertes`),
+  view: 'Statut',
+};

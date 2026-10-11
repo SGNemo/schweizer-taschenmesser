@@ -1,3 +1,4 @@
+import { onLangChange } from '@/core/i18n/lang';
 import { getPlatform, type HotkeyError } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -38,8 +39,10 @@ export async function startQuickCaptureDesktop(): Promise<void> {
   const desktop = getPlatform().desktop;
   if (!desktop.supported) return;
   const prefs = readPrefs();
+  // The tray menu is native: send its labels again whenever the UI language changes.
+  onLangChange(() => void desktop.setTrayLabels({ ...t.quickCapture.tray }).catch(() => {}));
   try {
-    await desktop.setTrayLabels(t.quickCapture.tray);
+    await desktop.setTrayLabels({ ...t.quickCapture.tray });
     await desktop.setCloseToTray(prefs.closeToTray);
     if (prefs.autostart) await desktop.setAutostart(true);
   } catch {

@@ -1,3 +1,4 @@
+import { formatTimestamp } from '@/core/i18n/format';
 import { formatMoney } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { recurrenceSchema } from '@/core/recurrence/types';
@@ -15,8 +16,7 @@ export function formatFieldValue(type: AiFieldType, value: unknown): string | un
   if (type === 'money' && typeof value === 'number') return formatMoney(value);
   if (type === 'date' && typeof value === 'string') return formatDay(value, 'EEE, d. MMM yyyy');
   if (type === 'bool') return value ? t.ai.yes : t.ai.no;
-  if (type === 'ts' && typeof value === 'number')
-    return new Date(value).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+  if (type === 'ts' && typeof value === 'number') return formatTimestamp(new Date(value).getTime());
   if (type === 'recurrence') {
     const parsed = recurrenceSchema.safeParse(value);
     return parsed.success ? describeRecurrence(parsed.data) : undefined;

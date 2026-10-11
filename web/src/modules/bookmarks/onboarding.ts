@@ -8,16 +8,26 @@ export const onboarding: OnboardingDef = {
     {
       id: 'html',
       kind: 'file',
-      label: s.html,
-      description: s.htmlHint,
+      get label() {
+        return s.html;
+      },
+      get description() {
+        return s.htmlHint;
+      },
       accept: '.html,.htm,text/html',
     },
     {
       id: 'text',
       kind: 'text',
-      label: s.text,
-      description: s.textHint,
-      placeholder: s.placeholder,
+      get label() {
+        return s.text;
+      },
+      get description() {
+        return s.textHint;
+      },
+      get placeholder() {
+        return s.placeholder;
+      },
     },
   ],
   load: () => import('./importer'),

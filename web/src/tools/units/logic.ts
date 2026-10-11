@@ -1,4 +1,6 @@
 /** Unit conversion tables. Linear kinds go through a base unit; temperature is special. */
+import { t } from '@/strings';
+
 export type UnitKind = 'length' | 'mass' | 'temperature' | 'volume' | 'speed';
 
 export interface UnitDef {
@@ -11,46 +13,217 @@ export interface UnitDef {
 export const UNITS: Record<UnitKind, UnitDef[]> = {
   // base: metre
   length: [
-    { id: 'mm', label: 'Millimeter (mm)', factor: 0.001 },
-    { id: 'cm', label: 'Zentimeter (cm)', factor: 0.01 },
-    { id: 'm', label: 'Meter (m)', factor: 1 },
-    { id: 'km', label: 'Kilometer (km)', factor: 1000 },
-    { id: 'in', label: 'Zoll (in)', factor: 0.0254 },
-    { id: 'ft', label: 'Fuß (ft)', factor: 0.3048 },
-    { id: 'yd', label: 'Yard (yd)', factor: 0.9144 },
-    { id: 'mi', label: 'Meile (mi)', factor: 1609.344 },
+    {
+      id: 'mm',
+      get label() {
+        return t.tools.units.names['mm']!;
+      },
+      factor: 0.001,
+    },
+    {
+      id: 'cm',
+      get label() {
+        return t.tools.units.names['cm']!;
+      },
+      factor: 0.01,
+    },
+    {
+      id: 'm',
+      get label() {
+        return t.tools.units.names['m']!;
+      },
+      factor: 1,
+    },
+    {
+      id: 'km',
+      get label() {
+        return t.tools.units.names['km']!;
+      },
+      factor: 1000,
+    },
+    {
+      id: 'in',
+      get label() {
+        return t.tools.units.names['in']!;
+      },
+      factor: 0.0254,
+    },
+    {
+      id: 'ft',
+      get label() {
+        return t.tools.units.names['ft']!;
+      },
+      factor: 0.3048,
+    },
+    {
+      id: 'yd',
+      get label() {
+        return t.tools.units.names['yd']!;
+      },
+      factor: 0.9144,
+    },
+    {
+      id: 'mi',
+      get label() {
+        return t.tools.units.names['mi']!;
+      },
+      factor: 1609.344,
+    },
   ],
   // base: gram
   mass: [
-    { id: 'mg', label: 'Milligramm (mg)', factor: 0.001 },
-    { id: 'g', label: 'Gramm (g)', factor: 1 },
-    { id: 'kg', label: 'Kilogramm (kg)', factor: 1000 },
-    { id: 't', label: 'Tonne (t)', factor: 1_000_000 },
-    { id: 'oz', label: 'Unze (oz)', factor: 28.349523125 },
-    { id: 'lb', label: 'Pfund (lb)', factor: 453.59237 },
+    {
+      id: 'mg',
+      get label() {
+        return t.tools.units.names['mg']!;
+      },
+      factor: 0.001,
+    },
+    {
+      id: 'g',
+      get label() {
+        return t.tools.units.names['g']!;
+      },
+      factor: 1,
+    },
+    {
+      id: 'kg',
+      get label() {
+        return t.tools.units.names['kg']!;
+      },
+      factor: 1000,
+    },
+    {
+      id: 't',
+      get label() {
+        return t.tools.units.names['t']!;
+      },
+      factor: 1_000_000,
+    },
+    {
+      id: 'oz',
+      get label() {
+        return t.tools.units.names['oz']!;
+      },
+      factor: 28.349523125,
+    },
+    {
+      id: 'lb',
+      get label() {
+        return t.tools.units.names['lb']!;
+      },
+      factor: 453.59237,
+    },
   ],
   temperature: [
-    { id: 'c', label: 'Celsius (°C)' },
-    { id: 'f', label: 'Fahrenheit (°F)' },
-    { id: 'k', label: 'Kelvin (K)' },
+    {
+      id: 'c',
+      get label() {
+        return t.tools.units.names['c']!;
+      },
+    },
+    {
+      id: 'f',
+      get label() {
+        return t.tools.units.names['f']!;
+      },
+    },
+    {
+      id: 'k',
+      get label() {
+        return t.tools.units.names['k']!;
+      },
+    },
   ],
   // base: litre
   volume: [
-    { id: 'ml', label: 'Milliliter (ml)', factor: 0.001 },
-    { id: 'l', label: 'Liter (l)', factor: 1 },
-    { id: 'm3', label: 'Kubikmeter (m³)', factor: 1000 },
-    { id: 'tsp', label: 'Teelöffel (5 ml)', factor: 0.005 },
-    { id: 'tbsp', label: 'Esslöffel (15 ml)', factor: 0.015 },
-    { id: 'cup', label: 'US-Cup (cup)', factor: 0.2365882365 },
-    { id: 'floz', label: 'US-Flüssigunze (fl oz)', factor: 0.0295735295625 },
-    { id: 'gal', label: 'US-Gallone (gal)', factor: 3.785411784 },
+    {
+      id: 'ml',
+      get label() {
+        return t.tools.units.names['ml']!;
+      },
+      factor: 0.001,
+    },
+    {
+      id: 'l',
+      get label() {
+        return t.tools.units.names['l']!;
+      },
+      factor: 1,
+    },
+    {
+      id: 'm3',
+      get label() {
+        return t.tools.units.names['m3']!;
+      },
+      factor: 1000,
+    },
+    {
+      id: 'tsp',
+      get label() {
+        return t.tools.units.names['tsp']!;
+      },
+      factor: 0.005,
+    },
+    {
+      id: 'tbsp',
+      get label() {
+        return t.tools.units.names['tbsp']!;
+      },
+      factor: 0.015,
+    },
+    {
+      id: 'cup',
+      get label() {
+        return t.tools.units.names['cup']!;
+      },
+      factor: 0.2365882365,
+    },
+    {
+      id: 'floz',
+      get label() {
+        return t.tools.units.names['floz']!;
+      },
+      factor: 0.0295735295625,
+    },
+    {
+      id: 'gal',
+      get label() {
+        return t.tools.units.names['gal']!;
+      },
+      factor: 3.785411784,
+    },
   ],
   // base: metres per second
   speed: [
-    { id: 'ms', label: 'Meter pro Sekunde (m/s)', factor: 1 },
-    { id: 'kmh', label: 'Kilometer pro Stunde (km/h)', factor: 1 / 3.6 },
-    { id: 'mph', label: 'Meilen pro Stunde (mph)', factor: 0.44704 },
-    { id: 'kn', label: 'Knoten (kn)', factor: 1852 / 3600 },
+    {
+      id: 'ms',
+      get label() {
+        return t.tools.units.names['ms']!;
+      },
+      factor: 1,
+    },
+    {
+      id: 'kmh',
+      get label() {
+        return t.tools.units.names['kmh']!;
+      },
+      factor: 1 / 3.6,
+    },
+    {
+      id: 'mph',
+      get label() {
+        return t.tools.units.names['mph']!;
+      },
+      factor: 0.44704,
+    },
+    {
+      id: 'kn',
+      get label() {
+        return t.tools.units.names['kn']!;
+      },
+      factor: 1852 / 3600,
+    },
   ],
 };
 

@@ -3,9 +3,13 @@ import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
   id: 'calc',
-  name: t.tools.calc.name,
+  get name() {
+    return t.tools.calc.name;
+  },
   icon: 'calculator',
-  description: t.tools.calc.description,
+  get description() {
+    return t.tools.calc.description;
+  },
   group: 'basis',
   offline: true,
   defaultEnabled: true,

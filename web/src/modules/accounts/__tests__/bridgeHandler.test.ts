@@ -250,6 +250,17 @@ describe('sessions, replay and locking', () => {
     expect(await ctx.call('genParams')).toMatchObject({ ok: false, error: 'no-session' });
   });
 
+  it('a new hello replaces the old session of the same extension', async () => {
+    const old = ctx.session!;
+    expect((await ctx.call('genParams')).ok).toBe(true);
+    await connect(ctx);
+    expect(ctx.session).not.toBe(old);
+    expect((await ctx.call('genParams')).ok).toBe(true);
+    ctx.session = old;
+    ctx.seq = 0;
+    expect(await ctx.call('genParams')).toMatchObject({ ok: false, error: 'no-session' });
+  });
+
   it('locking ends every session at once', async () => {
     expect((await ctx.call('genParams')).ok).toBe(true);
     ctx.state.unlocked = false;
@@ -444,6 +455,38 @@ describe('writes', () => {
     expect(same.data).toEqual({ same: true });
     expect(different.data).toEqual({ same: false });
     expect(JSON.stringify(different)).not.toContain('geheim');
+  });
+
+  it('rate-limits compare, so a page cannot test password guesses through the save flow', async () => {
+    const guess = (password: string) =>
+      ctx.call('compare', { entryId: '1', password, pageOrigin: 'https://example.com' });
+    for (let i = 0; i < SECRETS_PER_MINUTE; i++) expect((await guess(`guess-${i}`)).ok).toBe(true);
+    const blocked = await guess('pw-1-geheim');
+    expect(blocked).toMatchObject({ ok: false, error: 'rate-limited' });
+    expect(blocked.data).toBeUndefined();
+    ctx.state.time += 61_000;
+    expect((await guess('x')).ok).toBe(true);
+  });
+
+  it('secret, compare, create and update share one bucket per session', async () => {
+    const ops = [
+      () =>
+        ctx.call('secret', { entryId: '1', pageOrigin: 'https://example.com', field: 'password' }),
+      () => ctx.call('compare', { entryId: '1', password: 'x', pageOrigin: 'https://example.com' }),
+      () =>
+        ctx.call('create', {
+          title: 't',
+          username: 'u',
+          password: 'p',
+          url: '',
+          pageOrigin: 'https://example.com',
+        }),
+      () => ctx.call('update', { entryId: '1', password: 'y', pageOrigin: 'https://example.com' }),
+    ];
+    for (let i = 0; i < SECRETS_PER_MINUTE; i++) expect((await ops[i % 4]!()).ok).toBe(true);
+    for (const op of ops) expect(await op()).toMatchObject({ ok: false, error: 'rate-limited' });
+    // Unlimited operations stay unaffected.
+    expect((await ctx.call('match', { pageOrigin: 'https://example.com' })).ok).toBe(true);
   });
 });
 

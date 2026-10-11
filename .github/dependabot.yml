@@ -1,4 +1,6 @@
 # Dependabot version updates. Only effective on the default branch (main); PRs target develop.
+# Security updates are not configured here: they target the default branch (main) and are
+# brought into develop by a main -> develop sync PR.
 # Policy: patch + minor updates are grouped per ecosystem, majors arrive as separate PRs for review.
 version: 2
 updates:

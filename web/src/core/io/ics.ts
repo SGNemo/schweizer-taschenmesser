@@ -37,6 +37,13 @@ export interface IcsResult {
   issues: IcsIssue[];
 }
 
+/** Events per file or feed; anything beyond is dropped (a feed is not a bulk-import channel). */
+export const MAX_ICS_EVENTS = 5000;
+/** Longest title, location or uid that is kept. */
+export const ICS_TEXT_LIMIT = 500;
+/** Longest description (note) that is kept. */
+export const ICS_NOTE_LIMIT = 2000;
+
 interface Prop {
   name: string;
   params: Record<string, string>;
@@ -270,7 +277,7 @@ export function parseIcs(text: string): IcsResult {
       current = [];
       depth = 0;
     } else if (current && upper === 'END:VEVENT') {
-      convert(current, events, issues);
+      if (events.length < MAX_ICS_EVENTS) convert(current, events, issues);
       current = undefined;
     } else if (current && upper.startsWith('BEGIN:')) depth++;
     else if (current && upper.startsWith('END:')) depth--;
@@ -284,7 +291,9 @@ export function parseIcs(text: string): IcsResult {
 
 function convert(props: Prop[], events: IcsEvent[], issues: IcsIssue[]): void {
   const first = (name: string) => props.find((p) => p.name === name);
-  const summary = unescapeText(first('SUMMARY')?.value ?? '').trim();
+  const summary = unescapeText(first('SUMMARY')?.value ?? '')
+    .trim()
+    .slice(0, ICS_TEXT_LIMIT);
   const title = summary || '(ohne Titel)';
 
   if (first('STATUS')?.value.toUpperCase() === 'CANCELLED') {
@@ -332,11 +341,15 @@ function convert(props: Prop[], events: IcsEvent[], issues: IcsIssue[]): void {
     }
   }
 
-  const location = unescapeText(first('LOCATION')?.value ?? '').trim();
+  const location = unescapeText(first('LOCATION')?.value ?? '')
+    .trim()
+    .slice(0, ICS_TEXT_LIMIT);
   if (location) event.location = location;
-  const note = unescapeText(first('DESCRIPTION')?.value ?? '').trim();
+  const note = unescapeText(first('DESCRIPTION')?.value ?? '')
+    .trim()
+    .slice(0, ICS_NOTE_LIMIT);
   if (note) event.note = note;
-  const uid = first('UID')?.value.trim();
+  const uid = first('UID')?.value.trim().slice(0, ICS_TEXT_LIMIT);
   if (uid) event.uid = uid;
 
   const rrule = first('RRULE');

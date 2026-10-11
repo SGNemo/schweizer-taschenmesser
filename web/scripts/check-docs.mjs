@@ -27,7 +27,7 @@ const BUDGET = {
     'docs/PROMPT-TEMPLATES.md': 2000,
     'docs/meta/DOCS-GUIDE.md': 1500,
   },
-  // Never auto-loaded, long by nature (reports, German user docs, checklists, ideas, generated notes).
+  // Never auto-loaded, long by nature (reports, user docs and their German copies, checklists, ideas, generated notes).
   exemptDirs: [
     'docs/user/',
     'docs/archive/',
@@ -40,7 +40,12 @@ const BUDGET = {
     'docs/design/',
     'docs/product/',
   ],
-  exemptFiles: ['docs/AI-IMPORT.md', 'docs/MANUAL-TESTS.md', 'docs/ROADMAP.md'],
+  exemptFiles: [
+    'docs/AI-IMPORT.md',
+    'docs/AI-IMPORT.de.md',
+    'docs/MANUAL-TESTS.md',
+    'docs/ROADMAP.md',
+  ],
 };
 const SKIP_DIRS = new Set(['node_modules', '.git', 'target', 'dist', 'gen', 'permissions']);
 

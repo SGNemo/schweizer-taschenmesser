@@ -100,6 +100,8 @@ export const test = base.extend<{ env: Env }>({
     const context = await chromium.launchPersistentContext(profile, {
       ...(executablePath ? { executablePath } : { channel: 'chromium' as const }),
       headless: true,
+      // The app follows the device language; these specs assert its German texts.
+      locale: 'de-DE',
       args: [
         `--disable-extensions-except=${extension}`,
         `--load-extension=${extension}`,

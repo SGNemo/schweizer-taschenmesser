@@ -135,7 +135,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     },
     clipboard: {
       writeText: (text) => writeText(text),
-      writeSensitive: sensitiveClipboard({
+      ...sensitiveClipboard({
         write: (text) => writeText(text),
         read: () => readText().catch(() => undefined),
         clear: () => clear(),

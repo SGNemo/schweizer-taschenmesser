@@ -1,5 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { durationMinutes, parseIcs, parseRrule, unfold } from './ics';
+import {
+  durationMinutes,
+  ICS_NOTE_LIMIT,
+  ICS_TEXT_LIMIT,
+  MAX_ICS_EVENTS,
+  parseIcs,
+  parseRrule,
+  unfold,
+} from './ics';
 
 // Times with Z / TZID are converted to the device's wall clock; pin it so the expectations are stable.
 let previousTz: string | undefined;
@@ -202,6 +210,39 @@ describe('parseIcs', () => {
     expect(parseIcs(wrap(ev('DTSTART;VALUE=DATE:20261012'))).events[0]!.title).toBe('(ohne Titel)');
     expect(parseIcs('not a calendar')).toEqual({ events: [], issues: [] });
     expect(parseIcs('')).toEqual({ events: [], issues: [] });
+  });
+});
+
+describe('parseIcs: limits', () => {
+  it('keeps at most 5000 events of a feed', () => {
+    const many = Array.from({ length: MAX_ICS_EVENTS + 25 }, (_, i) =>
+      ev(`UID:e-${i}`, `SUMMARY:Termin ${i}`, 'DTSTART;VALUE=DATE:20261003'),
+    );
+    const { events, issues } = parseIcs(wrap(...many));
+    expect(events).toHaveLength(MAX_ICS_EVENTS);
+    expect(events[0]!.uid).toBe('e-0');
+    expect(events[MAX_ICS_EVENTS - 1]!.uid).toBe(`e-${MAX_ICS_EVENTS - 1}`);
+    expect(issues).toEqual([]);
+  });
+
+  it('caps title, location and uid at 500 characters and the note at 2000', () => {
+    const long = (n: number) => 'x'.repeat(n);
+    const { events } = parseIcs(
+      wrap(
+        ev(
+          `UID:${long(900)}`,
+          `SUMMARY:${long(900)}`,
+          `LOCATION:${long(900)}`,
+          `DESCRIPTION:${long(3000)}`,
+          'DTSTART;VALUE=DATE:20261003',
+        ),
+      ),
+    );
+    const e = events[0]!;
+    expect(e.title).toHaveLength(ICS_TEXT_LIMIT);
+    expect(e.location).toHaveLength(ICS_TEXT_LIMIT);
+    expect(e.uid).toHaveLength(ICS_TEXT_LIMIT);
+    expect(e.note).toHaveLength(ICS_NOTE_LIMIT);
   });
 });
 

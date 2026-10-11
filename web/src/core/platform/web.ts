@@ -40,27 +40,43 @@ export function onPageHidden(callback: () => void): () => void {
   return () => document.removeEventListener('visibilitychange', handler);
 }
 
+export interface SensitiveClipboard {
+  writeSensitive(text: string, clearAfterMs: number): Promise<void>;
+  clearSensitive(): Promise<void>;
+}
+
 /** Clipboard helper on top of any pair of read/write/clear primitives. */
 export function sensitiveClipboard(io: {
   write(text: string): Promise<void>;
   read(): Promise<string | undefined>;
   clear(): Promise<void>;
-}): (text: string, clearAfterMs: number) => Promise<void> {
+}): SensitiveClipboard {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  return async (text, clearAfterMs) => {
+  let pending: string | undefined;
+
+  /** Wipes only our own value: never something the user copied in the meantime; if we cannot tell, wipe. */
+  async function clearIfUnchanged(): Promise<void> {
+    const text = pending;
     clearTimeout(timer);
-    await io.write(text);
-    timer = setTimeout(() => {
-      void (async () => {
-        try {
-          // Do not wipe something the user copied in the meantime; if we cannot tell, wipe.
-          const current = await io.read().catch(() => text);
-          if (current === undefined || current === text) await io.clear();
-        } catch {
-          // Clipboard access can be denied (page not focused); nothing more we can do.
-        }
-      })();
-    }, clearAfterMs);
+    timer = undefined;
+    pending = undefined;
+    if (text === undefined) return;
+    try {
+      const current = await io.read().catch(() => text);
+      if (current === undefined || current === text) await io.clear();
+    } catch {
+      // Clipboard access can be denied (page not focused); nothing more we can do.
+    }
+  }
+
+  return {
+    async writeSensitive(text, clearAfterMs) {
+      clearTimeout(timer);
+      await io.write(text);
+      pending = text;
+      timer = setTimeout(() => void clearIfUnchanged(), clearAfterMs);
+    },
+    clearSensitive: clearIfUnchanged,
   };
 }
 
@@ -132,7 +148,7 @@ export function createWebPlatform(): PlatformService {
     },
     clipboard: {
       writeText: (text) => navigator.clipboard.writeText(text),
-      writeSensitive: sensitiveClipboard({
+      ...sensitiveClipboard({
         write: (text) => navigator.clipboard.writeText(text),
         read: () => navigator.clipboard.readText(),
         clear: () => navigator.clipboard.writeText(''),

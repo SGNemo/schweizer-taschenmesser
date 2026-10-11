@@ -7,8 +7,8 @@ interface Props { locale: Locale }
 const s = t(Astro.props.locale);
 const items = [s.install.windows, s.install.android, s.install.updates];
 ---
-<section class="block" id="install" aria-labelledby="install-title">
-  <div class="wrap">
+<section class="block band" id="install" aria-labelledby="install-title">
+  <div class="wrap narrow">
     <p class="eyebrow">{s.install.eyebrow}</p>
     <h2 id="install-title">{s.install.title}</h2>
     <div class="list">
@@ -60,6 +60,9 @@ const items = [s.install.windows, s.install.android, s.install.updates];
   }
   details[open] summary::after {
     content: '–';
+  }
+  summary:hover {
+    color: var(--accent);
   }
   details p {
     color: var(--text-muted);

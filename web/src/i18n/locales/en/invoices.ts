@@ -1,0 +1,41 @@
+import type { Strings } from '@/strings';
+
+export const invoices: Strings['invoices'] = {
+  importDetail: (amount: string, due: string) => `${amount} · due ${due}`,
+  dueTitle: (payee: string) => `Invoice due: ${payee}`,
+  dueBody: (amount: string, date: string) => `${amount} · due on ${date}`,
+  meta: {
+    name: 'Invoices',
+    description:
+      'Open invoices with amount, payee and due date. “Mark as paid” books the expense in Finances automatically.',
+    route: 'Invoices',
+    widget: 'Due invoices',
+    quickAdd: 'Invoice',
+    settings: {
+      remindDaysBefore: 'Reminder before the due date (days)',
+      remindDaysBeforeHelp: '0 = on the due date',
+      remindTime: 'Reminder time',
+      remindTimeHelp: 'Format HH:mm',
+    },
+  },
+  title: 'Invoices',
+  add: 'Add invoice',
+  edit: 'Edit invoice',
+  payee: 'Payee',
+  reference: 'Reference / invoice number',
+  dueDate: 'Due on',
+  paidAt: 'Paid on',
+  open: 'Open',
+  paid: 'Paid',
+  markPaid: 'Mark as paid',
+  markedPaid: 'Marked as paid.',
+  reopen: 'Reopen',
+  undo: 'Undo',
+  empty: 'No open invoices.',
+  emptyPaid: 'No paid invoices yet.',
+  openTotal: 'Total open',
+  overdue: 'Overdue',
+  widgetEmpty: 'No open invoices.',
+  openCount: (n: number) => (n === 1 ? '1 open invoice' : `${n} open invoices`),
+  view: 'Status',
+};

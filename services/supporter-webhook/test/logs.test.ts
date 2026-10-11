@@ -28,6 +28,8 @@ describe('logs', () => {
 
     await handleFetch(kofiRequest(payload), env, deps); // issued
     await handleFetch(kofiRequest(payload), env, deps); // duplicate
+    await handleFetch(kofiRequest(donation({ email: 'other@example.invalid' })), env, deps); // address-mismatch
+    await handleFetch(kofiRequest(payload), { ...env, RATE_LIMITER: undefined }, deps); // misconfigured
     await handleFetch(kofiRequest(donation({ verification_token: 'bad-token-xyz' })), env, deps);
     await handleFetch(kofiRequest(donation({ type: 'Shop Order' })), env, deps);
     await handleFetch(
@@ -48,6 +50,7 @@ describe('logs', () => {
     const all = lines.join('\n');
     for (const secret of [
       'ada.donor',
+      'other@',
       'example.invalid',
       'Ada Beispiel',
       job.code,

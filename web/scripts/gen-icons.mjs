@@ -7,7 +7,7 @@
  *                      pwa-*.png, pwa-badge-96.png (monochrome web-push badge)
  *   src-tauri/icons/   icon.png + icon.ico (16–256, incl. 128) and the Android launcher layers
  *                      (foreground, monochrome, notification icon, background colour)
- *   docs/brand/        README header (light + dark) and social preview image
+ *   docs/brand/        README header (light + dark) and social preview image, English + German `*.de.png`
  *
  * The other native icons (icon.icns, Android legacy mipmaps) come from the Tauri CLI:
  *   npx tauri icon brand/app-icon.svg      (then re-run this script: it restores icon.ico + Android
@@ -172,12 +172,21 @@ try {
   // ---- README header + social preview -----------------------------------------------------
   // Composition "H1" (design/icon/rounds/13): wordmark centred, a faint school of small marks in
   // the free thirds, the claim (backronym of NEMO) with orange initials. README/social only.
-  const CLAIM = [
-    ['N', 'otizen'],
-    ['E', 'rinnerungen'],
-    ['M', 'odule'],
-    ['O', 'ffline'],
-  ];
+  // English for the repo (README.md, social preview); German copies `*.de.png` for README.de.md.
+  const CLAIMS = {
+    en: [
+      ['N', 'otes'],
+      ['E', 'vents'],
+      ['M', 'odules'],
+      ['O', 'ffline'],
+    ],
+    de: [
+      ['N', 'otizen'],
+      ['E', 'rinnerungen'],
+      ['M', 'odule'],
+      ['O', 'ffline'],
+    ],
+  };
   const markSymbol = `<svg width="0" height="0" style="position:absolute"><symbol id="fish" viewBox="51 93 393 344">${mark
     .replace(/^[\s\S]*?<defs>/, '<defs>')
     .replace(/<\/svg>\s*$/, '')
@@ -203,6 +212,7 @@ try {
     w,
     h,
     wm,
+    claim,
     { bg = OCEAN, fg = '#E7F1F2', muted = '#9FB6BC', deco = '#7FC4CC', alpha = 0.09 } = {},
   ) => `<style>
     @font-face{font-family:Inter;src:url(${interData});font-weight:100 900}
@@ -211,32 +221,35 @@ try {
     .bg>svg.wm{position:relative;height:${Math.round(h * 0.56)}px;width:auto}
     .tag{position:relative;font-size:${Math.round(h * 0.066)}px;font-weight:500;letter-spacing:.01em;color:${muted}}
     .tag b{color:#E0550F;font-weight:700}
-  </style><div class="bg">${markSymbol}${school(w, h, deco, alpha)}${wm.replace('<svg ', '<svg class="wm" ')}<div class="tag">${CLAIM.map(
-    ([a, b]) => `<b>${a}</b>${b}`,
-  ).join(' · ')}</div></div>`;
+  </style><div class="bg">${markSymbol}${school(w, h, deco, alpha)}${wm.replace('<svg ', '<svg class="wm" ')}<div class="tag">${claim
+    .map(([a, b]) => `<b>${a}</b>${b}`)
+    .join(' · ')}</div></div>`;
   // README header: a dark and a light version, picked by GitHub through <picture>.
-  write(
-    out(repo, 'docs', 'brand', 'header.png'),
-    await pageShot(page(1280, 320, wordmarkLight), 1280, 320),
-  );
-  write(
-    out(repo, 'docs', 'brand', 'header-light.png'),
-    await pageShot(
-      page(1280, 320, wordmark, {
-        bg: LIGHT,
-        fg: '#13262F',
-        muted: '#51616A',
-        deco: '#E0550F',
-        alpha: 0.1,
-      }),
-      1280,
-      320,
-    ),
-  );
-  write(
-    out(repo, 'docs', 'brand', 'social-preview.png'),
-    await pageShot(page(1280, 640, wordmarkLight), 1280, 640),
-  );
+  for (const [lang, claim] of Object.entries(CLAIMS)) {
+    const suffix = lang === 'en' ? '' : `.${lang}`;
+    write(
+      out(repo, 'docs', 'brand', `header${suffix}.png`),
+      await pageShot(page(1280, 320, wordmarkLight, claim), 1280, 320),
+    );
+    write(
+      out(repo, 'docs', 'brand', `header-light${suffix}.png`),
+      await pageShot(
+        page(1280, 320, wordmark, claim, {
+          bg: LIGHT,
+          fg: '#13262F',
+          muted: '#51616A',
+          deco: '#E0550F',
+          alpha: 0.1,
+        }),
+        1280,
+        320,
+      ),
+    );
+    write(
+      out(repo, 'docs', 'brand', `social-preview${suffix}.png`),
+      await pageShot(page(1280, 640, wordmarkLight, claim), 1280, 640),
+    );
+  }
 } finally {
   await browser.close();
 }

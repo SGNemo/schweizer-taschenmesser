@@ -1,0 +1,105 @@
+import type { Strings } from '@/strings';
+
+export const localApi: Strings['localApi'] = {
+  title: 'Acesso da IA',
+  intro:
+    'Uma interface local pela qual uma IA neste computador (ex.: Claude Code, Claude Desktop) pode gravar dados nos seus módulos e – se você permitir – lê-los. Ela só pode ser acessada a partir deste computador.',
+  unsupported:
+    'A interface só existe no app para Windows. No navegador e no Android, use “Colar JSON” em Dados iniciais.',
+  enable: 'Ativar interface local',
+  enableHint: 'Desligada por padrão',
+  port: 'Porta',
+  portHint: 'Entre 1024 e 65535. Padrão: 47631.',
+  portInvalid: 'Informe uma porta entre 1024 e 65535.',
+  applyPort: 'Aplicar porta',
+  statusLabel: 'Status',
+  status: {
+    off: 'Desligada',
+    starting: 'Iniciando…',
+    running: (port: number) => `Rodando em http://127.0.0.1:${port}`,
+    unsupported: 'Indisponível',
+  } as Record<string, string | ((port: number) => string)>,
+  startErrors: {
+    'port-in-use': 'A porta já está em uso. Escolha outra.',
+    'port-denied': 'Esta porta não pode ser usada. Escolha outra.',
+    'listen-failed': 'Não foi possível iniciar a interface.',
+  } as Record<string, string>,
+  copyPrompt: 'Copiar instruções para a IA',
+  copyPromptHint:
+    'Texto pronto para sua ferramenta de IA (endereço, fluxo, regras) – sem chave e sem seus dados. Mais em docs/AI-IMPORT.md.',
+  promptCopied: 'Instruções copiadas. A chave você passa para a IA separadamente.',
+  tokens: 'Acessos',
+  noTokens: 'Nenhum acesso criado ainda. Sem acesso, nada fica acessível.',
+  newToken: 'Criar acesso',
+  tokenName: 'Nome',
+  tokenNameHint: 'Para quê? Por exemplo, “Claude Code”.',
+  expiry: 'Validade',
+  expiryDays: (n: number) => (n === 365 ? '1 ano' : n <= 1 ? `${n} dia` : `${n} dias`),
+  expiryNever: 'Ilimitada',
+  rights: 'Permissões por módulo',
+  rightsHint:
+    'O padrão é: nada. “Ler” mostra seus registros à IA – o que ela lê é processado pelo provedor dela.',
+  read: 'Ler',
+  write: 'Gravar',
+  noModules: 'Nenhum módulo compatível ativado.',
+  autoCommit: 'Aplicar automaticamente',
+  autoCommitWarning:
+    'Atenção: importações deste acesso são salvas sem sua confirmação. Ainda dá para desfazer.',
+  create: 'Criar',
+  nameMissing: 'Informe um nome.',
+  rightsMissing: 'Conceda pelo menos uma permissão.',
+  shownOnce: 'Sua nova chave de acesso – ela só aparece agora:',
+  shownOnceHint:
+    'Insira-a na sua ferramenta de IA (como Bearer Token). O app guarda só uma soma de verificação; se você a perder, crie uma nova.',
+  copy: 'Copiar',
+  copied: 'Copiado. A área de transferência será limpa em um minuto.',
+  done: 'Concluído',
+  revoke: 'Revogar',
+  revokeConfirm: (name: string) =>
+    `Revogar o acesso “${name}”? A IA deixa de conseguir entrar com ele na hora.`,
+  revoked: 'Acesso revogado.',
+  renew: 'Gerar de novo',
+  renewConfirm: (name: string) =>
+    `Gerar uma nova chave para “${name}”? A antiga deixa de valer na hora.`,
+  created: (date: string) => `Criado em ${date}`,
+  expires: (date: string) => `válido até ${date}`,
+  expired: 'Expirado',
+  never: 'validade ilimitada',
+  lastUsed: (date: string) => `usado pela última vez em ${date}`,
+  unused: 'nunca usado',
+  rightsSummary: (read: boolean, write: boolean) =>
+    [read ? 'ler' : '', write ? 'gravar' : ''].filter(Boolean).join(' + '),
+  imports: 'Importações pela interface',
+  noImports: 'Nenhuma ainda.',
+  importState: {
+    pending: 'aguardando confirmação',
+    committed: (n: number) => (n <= 1 ? `${n} registro aplicado` : `${n} registros aplicados`),
+    rejected: 'recusada',
+    undone: 'desfeita',
+  },
+  log: 'Últimos acessos',
+  noLog: 'Nenhum acesso ainda.',
+  clearLog: 'Limpar lista',
+  errors: {
+    disabled: 'A interface está desligada.',
+    'token-invalid': 'O acesso é inválido, expirou ou foi revogado.',
+    'not-found': 'Este endereço não existe.',
+    'unknown-module': 'Este módulo não existe ou o acesso não tem permissão para ele.',
+    forbidden: 'O acesso não tem permissão para esta ação.',
+    'bad-collection': 'Informe uma coleção (collection) válida.',
+    'bad-limit': 'limit precisa ser um número inteiro de 1 a 200.',
+    'bad-cursor': 'cursor inválido.',
+    'bad-query': 'Texto de busca longo demais.',
+    'bad-body': 'O conteúdo não é uma importação válida.',
+    'unknown-batch': 'Esta importação não existe (ou pertence a outro acesso).',
+    'not-pending': 'A importação não está mais aguardando confirmação.',
+    'confirmation-required':
+      'Esta importação precisa ser confirmada no app (acesso sem “Aplicar automaticamente” ou ela altera registros existentes).',
+    'too-many-pending':
+      'Muitas importações aguardando confirmação. Primeiro confirme ou recuse no app.',
+    'idempotency-conflict': 'Esta Idempotency-Key já foi usada para outro conteúdo.',
+    internal: 'Erro interno.',
+  } as Record<string, string>,
+  pendingText:
+    'A importação aguarda confirmação no app. O usuário vê uma prévia e decide registro por registro.',
+};

@@ -5,8 +5,12 @@ import { t } from '@/strings';
 export const setupSteps: SetupStepDef[] = [
   {
     id: 'accounts.vault',
-    title: t.accounts.setupStep.title,
-    description: t.accounts.setupStep.description,
+    get title() {
+      return t.accounts.setupStep.title;
+    },
+    get description() {
+      return t.accounts.setupStep.description;
+    },
     order: 50,
     since: 1,
     when: (ctx) => ctx.modules.accounts === true,

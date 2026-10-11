@@ -3,9 +3,13 @@ import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
   id: 'dice',
-  name: t.tools.dice.name,
+  get name() {
+    return t.tools.dice.name;
+  },
   icon: 'dice',
-  description: t.tools.dice.description,
+  get description() {
+    return t.tools.dice.description;
+  },
   group: 'extra',
   offline: true,
   defaultEnabled: false,

@@ -60,9 +60,12 @@ h1 {
   letter-spacing: -0.02em;
 }
 h2 {
-  font-size: var(--text-xl);
+  font-size: var(--text-h2);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  max-width: 28ch;
+  text-wrap: balance;
 }
 h3 {
   font-size: var(--text-label);
@@ -170,9 +173,6 @@ button {
   line-height: 1.2;
   border: 1px solid transparent;
 }
-.btn:active {
-  transform: scale(0.97);
-}
 .btn-primary {
   background: var(--accent);
   color: var(--accent-contrast);
@@ -201,10 +201,92 @@ button {
 }
 
 section.block {
-  padding-block: clamp(3rem, 6vw, 5rem);
+  padding-block: var(--block);
 }
-section.block + section.block {
+/* Every second section is a tinted band; the hairline separates the rest. */
+section.band {
+  background: var(--surface);
+  border-block: 1px solid var(--border);
+}
+:root[data-theme='dark'] section.band {
+  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) section.band {
+    background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+  }
+}
+section.block + section.block:not(.band) {
   border-top: 1px solid var(--border);
+}
+section.band + section.band {
+  border-top: 0;
+}
+.wrap.narrow {
+  max-width: 46rem;
+}
+.note {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  max-width: var(--measure);
+  border-left: 3px solid var(--border-strong);
+  padding-left: var(--space-4);
+}
+/* Screenshot frames: a thin window bar for the desktop, a bezel for the phone. No perspective. */
+.frame {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.frame .bar {
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-inline: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.frame .bar i {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--border-strong);
+  opacity: 0.5;
+}
+.frame img {
+  width: 100%;
+  height: auto;
+}
+/* One image per theme; the hidden one is lazy and never requested. */
+.shot-light {
+  display: none;
+}
+:root[data-theme='light'] .shot-dark {
+  display: none;
+}
+:root[data-theme='light'] .shot-light {
+  display: block;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .shot-dark {
+    display: none;
+  }
+  :root:not([data-theme='dark']) .shot-light {
+    display: block;
+  }
+}
+/* Hover and focus only change colour, 150 ms; nothing moves (FOCUS-GUIDELINES). */
+a,
+.btn,
+button,
+summary {
+  transition:
+    color var(--dur-fast),
+    background-color var(--dur-fast),
+    border-color var(--dur-fast);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -216,8 +298,5 @@ section.block + section.block {
   *::after {
     transition-duration: 0s !important;
     animation-duration: 0s !important;
-  }
-  .btn:active {
-    transform: none;
   }
 }

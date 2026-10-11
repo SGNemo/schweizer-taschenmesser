@@ -1,6 +1,7 @@
 /**
  * Read-only API for modules that are allowed to look at subscriptions (finance).
  */
+import { compareText } from '@/core/i18n/format';
 import { subscriptionRepo } from './repo';
 import { chargesInRange, totals } from './logic';
 
@@ -27,7 +28,7 @@ export async function listSubscriptionCharges(
         date,
       })),
     )
-    .sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name, 'de'));
+    .sort((a, b) => a.date.localeCompare(b.date) || compareText(a.name, b.name));
 }
 
 /** Monthly and yearly cost of all active subscriptions (cents). */

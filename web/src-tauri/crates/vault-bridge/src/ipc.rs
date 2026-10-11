@@ -113,6 +113,7 @@ mod imp {
 mod imp {
     use super::*;
     use std::fs::{File, OpenOptions};
+    use std::os::windows::fs::OpenOptionsExt;
     use std::os::windows::io::FromRawHandle;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::time::Duration;
@@ -140,6 +141,10 @@ mod imp {
     const BUFFER: u32 = 64 * 1024;
     /// ERROR_PIPE_BUSY: every instance is in use right now (the next one is being created).
     const PIPE_BUSY: i32 = 231;
+    /// `SECURITY_SQOS_PRESENT` and `SECURITY_IDENTIFICATION` (winbase.h). Defined locally so the
+    /// flag does not depend on which `windows` crate feature exports them.
+    const SECURITY_SQOS_PRESENT: u32 = 0x0010_0000;
+    const SECURITY_IDENTIFICATION: u32 = 0x0001_0000;
 
     pub struct Listener {
         name: Vec<u16>,
@@ -189,7 +194,15 @@ mod imp {
         // fail fast when the app is not running at all (NotFound).
         let mut last = io::Error::from(io::ErrorKind::NotFound);
         for _ in 0..6 {
-            match OpenOptions::new().read(true).write(true).open(&ep.0) {
+            // Without an explicit quality of service the pipe server may impersonate this client
+            // at impersonation level. The name is predictable and machine-global, so a process of
+            // another user that squatted it must get the client's identity at most.
+            match OpenOptions::new()
+                .read(true)
+                .write(true)
+                .security_qos_flags(SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION)
+                .open(&ep.0)
+            {
                 Ok(inner) => return Ok(Stream { inner }),
                 Err(e) if e.raw_os_error() == Some(PIPE_BUSY) => {
                     last = e;

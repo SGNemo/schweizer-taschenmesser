@@ -20,6 +20,8 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   timeout: 60_000,
   use: {
+    // The app follows the device language; the specs assert German texts.
+    locale: 'de-DE',
     baseURL: 'http://localhost:4173',
     trace: 'retain-on-failure',
     serviceWorkers: 'block',

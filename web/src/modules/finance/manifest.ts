@@ -8,14 +8,20 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'finance',
-  name: t.finance.meta.name,
+  get name() {
+    return t.finance.meta.name;
+  },
   icon: 'wallet',
   version: 1,
-  description: t.finance.meta.description,
+  get description() {
+    return t.finance.meta.description;
+  },
   routes: [
     {
       path: '/finance',
-      label: t.finance.meta.route,
+      get label() {
+        return t.finance.meta.route;
+      },
       nav: true,
       component: () => import('./routes/FinancePage'),
     },
@@ -31,7 +37,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'balance',
-      title: t.finance.meta.widget,
+      get title() {
+        return t.finance.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/BalanceWidget'),
@@ -47,7 +55,13 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: onboarding,
     quickAdd: [
-      { id: 'transaction', label: t.finance.meta.quickAdd, to: '/finance?tab=transactions&new=1' },
+      {
+        id: 'transaction',
+        get label() {
+          return t.finance.meta.quickAdd;
+        },
+        to: '/finance?tab=transactions&new=1',
+      },
     ],
     services: () => import('./services'),
     aiCreateDefaults: () => import('./aiDefaults'),
