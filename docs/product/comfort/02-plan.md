@@ -112,10 +112,10 @@ Targets as in 01 (tick 1, create with defaults 2, one field 2–3). Not reaching
 | Transfers between accounts | M | 11 | maybe |
 | Search/filter in bookings | M | 12, 13 | yes |
 
-## 7. Questions for you (Stopp 2, bundled in the chat)
-1. Order of packages (recommended 1 → 3 → 2 → 4 → 5) and whether to wait for Fokushilfen #57–#60 before touching to-dos.
-2. Typed confirmation: which dialog do you mean (device reset "LÖSCHEN" in Settings → Über, the recovery screen, or the disk module)? Recommendation: keep it for the device reset only, replace by a two-step confirm (button + "Wirklich löschen") elsewhere; disk stays untouched (Rust rule).
-3. Erweitert default for you: global default "Basis" with a global "Erweitert für alle Module" shortcut in settings?
-4. Package 5 picks from §6.
+## 7. Decisions (maintainer, 2026-10-11)
+1. **Order: 1 → 3 → 2 → 4 → 5**; in package 1 the to-do part comes last (after Fokushilfen #57–#60 are merged or at least rebased onto `develop`).
+2. Typed confirmation: concerned the disk module only; handled by the chat that owns it. Nothing to do here.
+3. **Erweitert:** per module, default Basis, plus one global switch "Alle Module Erweitert" in the settings (a module's own switch overrides it).
+4. **Package 5 picks:** recurring invoice/booking, subscription price history + "gekündigt zum", search/filter in bookings, cross-person gift overview.
 
-**Model hint: evaluation finished – implementation with Sonnet after your release.**
+Implementation runs with Sonnet, one branch/PR per package (`feat/comfort-<package>`), stop after each; screenshots and click counts per package go to `03-results.md`.
