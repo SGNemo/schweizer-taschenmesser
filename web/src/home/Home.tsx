@@ -343,7 +343,7 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
           </h2>
           {!editing && settingsTo ? (
             <span className={styles.gear}>
-              <SettingsLink to={settingsTo} label={tComfort.use().gear.module(entry.title)} />
+              <SettingsLink to={settingsTo} label={tComfort.get().gear.module(entry.title)} />
             </span>
           ) : null}
           {editing ? (

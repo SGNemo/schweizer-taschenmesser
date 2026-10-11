@@ -12,13 +12,6 @@ export const tComfort = defineBundle(
       on: 'An',
       off: 'Aus',
       readAid: 'Lesehilfe',
-      keywords: {
-        theme: ['dunkel', 'hell', 'Nachtmodus', 'Dunkelmodus'],
-        density: ['kompakt', 'enger', 'Abstand'],
-        readAid: ['Lesen', 'Bionic', 'Fokus beim Lesen'],
-        color: ['ruhig', 'bunt', 'Farben'],
-        homeView: ['Startseite', 'Widgets', 'Ruhe'],
-      },
     },
     frequent: {
       title: 'Häufig genutzt',
@@ -62,13 +55,6 @@ export const tComfort = defineBundle(
         on: 'On',
         off: 'Off',
         readAid: 'Reading aid',
-        keywords: {
-          theme: ['dark', 'light', 'night mode', 'dark mode'],
-          density: ['compact', 'tighter', 'spacing'],
-          readAid: ['reading', 'bionic', 'focus while reading'],
-          color: ['calm', 'colourful', 'colors'],
-          homeView: ['home', 'widgets', 'calm'],
-        },
       },
       frequent: {
         title: 'Frequently used',
@@ -111,13 +97,6 @@ export const tComfort = defineBundle(
         on: 'Activado',
         off: 'Desactivado',
         readAid: 'Ayuda de lectura',
-        keywords: {
-          theme: ['oscuro', 'claro', 'modo noche', 'modo oscuro'],
-          density: ['compacto', 'más junto', 'espaciado'],
-          readAid: ['lectura', 'bionic', 'leer mejor'],
-          color: ['tranquilo', 'colorido', 'colores'],
-          homeView: ['inicio', 'widgets', 'calma'],
-        },
       },
       frequent: {
         title: 'Más usados',
@@ -167,13 +146,6 @@ export const tComfort = defineBundle(
         on: 'Activé',
         off: 'Désactivé',
         readAid: 'Aide à la lecture',
-        keywords: {
-          theme: ['sombre', 'clair', 'mode nuit', 'mode sombre'],
-          density: ['compact', 'plus serré', 'espacement'],
-          readAid: ['lecture', 'bionic', 'mieux lire'],
-          color: ['calme', 'coloré', 'couleurs'],
-          homeView: ['accueil', 'widgets', 'calme'],
-        },
       },
       frequent: {
         title: 'Souvent utilisés',
@@ -216,13 +188,6 @@ export const tComfort = defineBundle(
         on: 'Ligado',
         off: 'Desligado',
         readAid: 'Auxílio de leitura',
-        keywords: {
-          theme: ['escuro', 'claro', 'modo noturno', 'modo escuro'],
-          density: ['compacto', 'mais junto', 'espaçamento'],
-          readAid: ['leitura', 'bionic', 'ler melhor'],
-          color: ['calmo', 'colorido', 'cores'],
-          homeView: ['início', 'widgets', 'calma'],
-        },
       },
       frequent: {
         title: 'Mais usadas',

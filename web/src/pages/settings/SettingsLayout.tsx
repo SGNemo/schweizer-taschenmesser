@@ -99,7 +99,7 @@ function FrequentNav({ list }: { list?: boolean }) {
   const [focus] = useFocusSettings();
   const ids = focus.searchHistory ? frequentSections(sections.map((x) => x.id)) : [];
   if (ids.length === 0) return null;
-  const title = tComfort.use().frequent.title;
+  const title = tComfort.get().frequent.title;
   return (
     <nav aria-label={title} className={`${list ? styles.list : styles.nav} ${styles.frequent}`}>
       <p className={styles.frequentTitle}>{title}</p>
@@ -170,18 +170,35 @@ function useDeepLink(ready: boolean) {
   useEffect(() => {
     if (!ready || !hash) return;
     const id = decodeURIComponent(hash.slice(1));
-    // A setting without its own anchor (older sections) falls back to its section.
-    const el = document.getElementById(id) ?? document.getElementById(id.split('--')[0] ?? id);
-    if (!el) return;
-    el.scrollIntoView({ block: 'start' });
-    if (historyOn) recordSectionVisit(id.split('--')[0] ?? id);
-    // Section anchors sit on the heading: highlight the whole section.
-    const target = el.matches('h2') ? (el.closest('section') ?? el) : el;
-    target.dataset.highlight = 'true';
-    const timer = setTimeout(() => delete target.dataset.highlight, HIGHLIGHT_MS);
+    const sectionId = id.split('--')[0] ?? id;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let marked: HTMLElement | undefined;
+    const apply = (): boolean => {
+      // A setting without its own anchor (older sections) falls back to its section.
+      const el = document.getElementById(id) ?? document.getElementById(sectionId);
+      if (!el) return false;
+      el.scrollIntoView({ block: 'start' });
+      if (historyOn) recordSectionVisit(sectionId);
+      // Section anchors sit on the heading: highlight the whole section.
+      marked = el.matches('h2') ? (el.closest('section') ?? el) : el;
+      marked.dataset.highlight = 'true';
+      timer = setTimeout(() => marked && delete marked.dataset.highlight, HIGHLIGHT_MS);
+      return true;
+    };
+    // Some sections render only after their values are loaded (module settings): wait for them.
+    let observer: MutationObserver | undefined;
+    if (!document.getElementById(sectionId)) {
+      observer = new MutationObserver(() => {
+        if (document.getElementById(sectionId) && apply()) observer?.disconnect();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    } else {
+      apply();
+    }
     return () => {
+      observer?.disconnect();
       clearTimeout(timer);
-      delete target.dataset.highlight;
+      if (marked) delete marked.dataset.highlight;
     };
   }, [ready, hash, pathname, historyOn]);
 }
@@ -233,7 +250,7 @@ export function CategoryPage() {
               onClick={() => void resetSection(s.reset!, s.title)}
               data-testid={`reset-${s.id}`}
             >
-              {tComfort.use().reset.button}: {s.title}
+              {tComfort.get().reset.button}: {s.title}
             </Button>
           ) : null}
         </Fragment>

@@ -10,7 +10,7 @@ test('quick bar: theme in one click from the settings start, no category needed'
   const bar = page.getByTestId('quick-bar');
   await expect(bar).toBeVisible();
   // Click 1 of 1 (after opening Settings): the theme switches and a toast offers to undo it.
-  await bar.getByRole('radio', { name: 'Dunkel' }).click();
+  await bar.getByRole('button', { name: 'Dunkel' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
   await page.getByRole('button', { name: 'Rückgängig' }).click();
@@ -22,7 +22,7 @@ test('palette: "dunkel" switches the theme without leaving the page', async ({ p
   test.skip(isPhone(info), 'keyboard shortcut');
   await ready(page, '/settings/darstellung');
   await page.keyboard.press('Control+k');
-  await page.getByRole('combobox').fill('dunkel');
+  await page.getByRole('combobox', { name: /Suchen, springen/ }).fill('dunkel');
   await page.keyboard.press('Enter');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page).toHaveURL(/\/settings\/darstellung$/);
@@ -32,8 +32,11 @@ test('palette finds a setting by an everyday word and opens its row', async ({ p
   test.skip(isPhone(info), 'keyboard shortcut');
   await ready(page, '/');
   await page.keyboard.press('Control+k');
-  await page.getByRole('combobox').fill('nicht stören');
-  await page.getByRole('option', { name: /Ruhige Erinnerungen/ }).first().click();
+  await page.getByRole('combobox', { name: /Suchen, springen/ }).fill('nicht stören');
+  await page
+    .getByRole('option', { name: /Ruhige Erinnerungen/ })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/settings\/benachrichtigungen#calm-reminders/);
 });
 
@@ -54,7 +57,11 @@ test('context gear: from a widget straight to the module settings, section highl
 
 test('reset a section: back to the default, undo brings the value back', async ({ page }) => {
   await ready(page, '/settings/darstellung');
-  await page.getByRole('radio', { name: 'Kompakt' }).first().click();
+  await page
+    .locator('section[aria-labelledby="appearance"]')
+    .getByRole('group', { name: 'Dichte' })
+    .getByRole('button', { name: 'Kompakt' })
+    .click();
   await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
   await page.getByTestId('reset-appearance').click();
   await expect(page.locator('html')).not.toHaveAttribute('data-density', 'compact');
@@ -74,7 +81,10 @@ test('phone: the search stays within reach inside a category', async ({ page }, 
 test('frequently used: a section opened twice is offered at the top of the list', async ({
   page,
 }) => {
-  for (let i = 0; i < 2; i++) await ready(page, '/settings/sync#backup');
+  for (let i = 0; i < 2; i++) {
+    await ready(page, '/settings/sync#backup');
+    await ready(page, '/settings/ki');
+  }
   await ready(page, '/settings');
   await expect(page.getByRole('navigation', { name: 'Häufig genutzt' })).toBeVisible();
 });

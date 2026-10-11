@@ -28,7 +28,6 @@ export interface QuickSetting {
   path: string;
   label(): string;
   options(): QuickOption[];
-  keywords(): readonly string[];
   read(): string;
   write(value: string): void;
 }
@@ -45,7 +44,6 @@ export const QUICK_SETTINGS: readonly QuickSetting[] = [
       { value: 'light', label: t.settings.themeLight },
       { value: 'dark', label: t.settings.themeDark },
     ],
-    keywords: () => tComfort.get().quick.keywords.theme,
     read: () => ui().theme,
     write: (v) => ui().setTheme(v as ThemeChoice),
   },
@@ -54,7 +52,6 @@ export const QUICK_SETTINGS: readonly QuickSetting[] = [
     path: settingsPath('darstellung', 'appearance', 'density'),
     label: () => t.settings.density,
     options: () => DENSITIES.map((v) => ({ value: v, label: t.settings.densityOptions[v] })),
-    keywords: () => tComfort.get().quick.keywords.density,
     read: () => ui().density,
     write: (v) => ui().setDensity(v as DensityChoice),
   },
@@ -66,7 +63,6 @@ export const QUICK_SETTINGS: readonly QuickSetting[] = [
       { value: 'on', label: tComfort.get().quick.on },
       { value: 'off', label: tComfort.get().quick.off },
     ],
-    keywords: () => tComfort.get().quick.keywords.readAid,
     read: () => (ui().readAid ? 'on' : 'off'),
     write: (v) => ui().setReadAid(v === 'on'),
   },
@@ -75,7 +71,6 @@ export const QUICK_SETTINGS: readonly QuickSetting[] = [
     path: settingsPath('darstellung', 'appearance', 'color'),
     label: () => t.settings.color,
     options: () => COLOR_MODES.map((v) => ({ value: v, label: t.settings.colorOptions[v] })),
-    keywords: () => tComfort.get().quick.keywords.color,
     read: () => ui().colorMode,
     write: (v) => ui().setColorMode(v as ColorMode),
   },
@@ -84,7 +79,6 @@ export const QUICK_SETTINGS: readonly QuickSetting[] = [
     path: settingsPath('darstellung', 'appearance', 'homeView'),
     label: () => t.settings.homeView,
     options: () => HOME_VIEWS.map((v) => ({ value: v, label: t.settings.homeViewOptions[v] })),
-    keywords: () => tComfort.get().quick.keywords.homeView,
     read: () => ui().homeView,
     write: (v) => ui().setHomeView(v as HomeViewChoice),
   },

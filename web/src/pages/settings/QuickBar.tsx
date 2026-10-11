@@ -28,7 +28,7 @@ export function QuickBar() {
   return (
     <section
       className={styles.quick}
-      aria-label={tComfort.use().quick.title}
+      aria-label={tComfort.get().quick.title}
       data-testid="quick-bar"
     >
       {QUICK_SETTINGS.filter((q) => IN_BAR.includes(q.id)).map((q) => (

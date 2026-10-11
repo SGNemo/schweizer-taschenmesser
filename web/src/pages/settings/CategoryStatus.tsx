@@ -47,12 +47,12 @@ function Connections() {
 function Modules() {
   const states = useModuleStates();
   const n = states ? Object.values(states).filter(Boolean).length : 0;
-  return <>{n > 0 ? tComfort.use().status.modulesActive(n) : null}</>;
+  return <>{n > 0 ? tComfort.get().status.modulesActive(n) : null}</>;
 }
 
 function Notifications() {
   const permission = getPlatform().notifications.permission();
-  return <>{permission === 'granted' ? null : tComfort.use().status.notificationsOff}</>;
+  return <>{permission === 'granted' ? null : tComfort.get().status.notificationsOff}</>;
 }
 
 /** Short state next to a category ("Verbunden", "1 verfügbar") where it helps; nothing for the rest. */

@@ -48,7 +48,7 @@ function ModuleSettingsLink({ pathname }: { pathname: string }) {
   );
   const to = manifest ? moduleSettingsPath(manifest) : undefined;
   if (!manifest || !to) return null;
-  return <SettingsLink to={to} label={tComfort.use().gear.module(manifest.name)} />;
+  return <SettingsLink to={to} label={tComfort.get().gear.module(manifest.name)} />;
 }
 
 export function AreaFrame({ children }: { children: ReactNode }) {

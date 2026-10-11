@@ -156,7 +156,6 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           id: `quick-${q.id}-${o.value}`,
           label: `${q.label()}: ${o.label}`,
           icon: 'settings' as IconName,
-          keywords: q.keywords(),
           run: () => applyQuick(q, o.value),
         })),
       ),
