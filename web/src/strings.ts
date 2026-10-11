@@ -80,6 +80,7 @@ export const de = {
     homeAria: 'Zur Übersicht',
     modules: 'Module',
     library: 'Modul-Bibliothek',
+    libraryShort: 'Bibliothek',
     settings: 'Einstellungen',
     more: 'Mehr',
     main: 'Hauptnavigation',
