@@ -22,13 +22,9 @@ export const tComfort = defineBundle(
     },
     frequent: {
       title: 'Häufig genutzt',
-      switchLabel: 'Häufig genutzte Einstellungen merken',
-      switchHint:
-        'Nemo merkt sich auf diesem Gerät, welche Einstellungen du öffnest, und zeigt die letzten oben an. Nichts wird übertragen. „Verlauf löschen“ leert die Liste.',
     },
     gear: {
       module: (name: string) => `Einstellungen: ${name}`,
-      generic: 'Einstellungen dazu',
     },
     reset: {
       button: 'Auf Standard zurücksetzen',
@@ -72,13 +68,9 @@ export const tComfort = defineBundle(
       },
       frequent: {
         title: 'Frequently used',
-        switchLabel: 'Remember frequently used settings',
-        switchHint:
-          'Nemo remembers on this device which settings you open and shows the latest ones at the top. Nothing is transferred. “Clear history” empties the list.',
       },
       gear: {
         module: (name: string) => `Settings: ${name}`,
-        generic: 'Related settings',
       },
       reset: {
         button: 'Reset to default',
@@ -121,13 +113,9 @@ export const tComfort = defineBundle(
       },
       frequent: {
         title: 'Más usados',
-        switchLabel: 'Recordar los ajustes más usados',
-        switchHint:
-          'Nemo recuerda en este dispositivo qué ajustes abres y muestra los últimos arriba. No se transfiere nada. «Borrar historial» vacía la lista.',
       },
       gear: {
         module: (name: string) => `Ajustes: ${name}`,
-        generic: 'Ajustes relacionados',
       },
       reset: {
         button: 'Restablecer valores',
@@ -141,7 +129,14 @@ export const tComfort = defineBundle(
         'appearance--density': ['compacto', 'más junto', 'espaciado', 'espacio'],
         'appearance--textSize': ['letra más grande', 'tamaño de letra', 'zoom', 'leer mejor'],
         reading: ['ayuda de lectura', 'bionic', 'leer más fácil'],
-        'calm-reminders': ['silencio', 'silenciar', 'no molestar', 'tranquilo', 'pitido', 'sonidos'],
+        'calm-reminders': [
+          'silencio',
+          'silenciar',
+          'no molestar',
+          'tranquilo',
+          'pitido',
+          'sonidos',
+        ],
         notifications: ['silenciar', 'sonidos', 'avisos', 'pitido'],
         backup: ['copia de seguridad', 'copia', 'restaurar', 'exportar'],
         updates: ['actualización', 'nueva versión', 'buscar actualizaciones'],
@@ -170,13 +165,9 @@ export const tComfort = defineBundle(
       },
       frequent: {
         title: 'Souvent utilisés',
-        switchLabel: 'Mémoriser les réglages souvent utilisés',
-        switchHint:
-          'Nemo retient sur cet appareil les réglages que vous ouvrez et affiche les derniers en haut. Rien n’est transmis. « Effacer l’historique » vide la liste.',
       },
       gear: {
         module: (name: string) => `Réglages : ${name}`,
-        generic: 'Réglages associés',
       },
       reset: {
         button: 'Rétablir les valeurs par défaut',
@@ -219,13 +210,9 @@ export const tComfort = defineBundle(
       },
       frequent: {
         title: 'Mais usadas',
-        switchLabel: 'Lembrar as configurações mais usadas',
-        switchHint:
-          'O Nemo lembra neste dispositivo quais configurações você abre e mostra as últimas no topo. Nada é transferido. “Limpar histórico” esvazia a lista.',
       },
       gear: {
         module: (name: string) => `Configurações: ${name}`,
-        generic: 'Configurações relacionadas',
       },
       reset: {
         button: 'Restaurar o padrão',
