@@ -2,6 +2,7 @@ import { applyQuick, QUICK_SETTINGS, type QuickSetting } from '@/core/settings/q
 import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
 import { Segmented } from '@/ui';
+import { MuteSwitch } from './MuteSwitch';
 import styles from './SettingsLayout.module.css';
 
 /** The three switches people reach for most; the rest is still one command away in the palette. */
@@ -34,6 +35,7 @@ export function QuickBar() {
       {QUICK_SETTINGS.filter((q) => IN_BAR.includes(q.id)).map((q) => (
         <QuickSwitch key={q.id} setting={q} />
       ))}
+      <MuteSwitch />
     </section>
   );
 }

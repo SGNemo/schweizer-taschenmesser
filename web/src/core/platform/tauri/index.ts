@@ -17,6 +17,8 @@ import {
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http';
 import {
   cancel,
+  createChannel,
+  Importance,
   isPermissionGranted,
   pending,
   requestPermission,
@@ -24,6 +26,7 @@ import {
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { tComfort } from '@/strings.comfort';
 import type {
   NotificationPermissionState,
   NotificationService,
@@ -79,10 +82,16 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
       state = result === 'granted' ? 'granted' : result === 'denied' ? 'denied' : 'default';
       return state;
     },
-    async show({ title, body }) {
+    async show({ title, body, quiet }) {
       // Android needs a monochrome status-bar icon (`res/drawable/ic_notification`, rendered by
       // gen-icons); the launcher icon would appear as a white square. Desktop uses the app icon.
-      sendNotification(kind === 'android' ? { title, body, ...ANDROID_ICON } : { title, body });
+      // "Stumm" on Android: the low-importance channel shows it without sound.
+      if (kind === 'android' && quiet) await ensureQuietChannel();
+      sendNotification(
+        kind === 'android'
+          ? { title, body, ...ANDROID_ICON, ...(quiet ? { channelId: QUIET_CHANNEL } : {}) }
+          : { title, body },
+      );
     },
     // Only the Android app hands reminders to the OS alarm manager; on desktop the app itself
     // fires them while it is running.
@@ -93,9 +102,23 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
 /** Small icon + accent tint for Android notifications (drawable name, see `scripts/gen-icons.mjs`). */
 const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#E0550F' } as const;
 
+/** Android channel without sound for "Stumm" (created once; the plugin ignores a repeat). */
+const QUIET_CHANNEL = 'nemo-quiet';
+let quietChannel: Promise<void> | undefined;
+function ensureQuietChannel(): Promise<void> {
+  quietChannel ??= createChannel({
+    id: QUIET_CHANNEL,
+    name: tComfort.get().mute.channel,
+    importance: Importance.Low,
+    vibration: false,
+  }).catch(() => undefined);
+  return quietChannel;
+}
+
 /** Replaces the pending OS notifications with `items`. */
 async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
   const wanted = new Map(items.map((n) => [notificationId(n.key), n]));
+  if (items.some((n) => n.quiet)) await ensureQuietChannel();
   const stale = (await pending()).map((p) => p.id).filter((id) => !wanted.has(id));
   if (stale.length > 0) await cancel(stale);
   for (const [id, n] of wanted) {
@@ -107,6 +130,7 @@ async function scheduleUpcoming(items: ScheduledNotification[]): Promise<void> {
       schedule: Schedule.at(new Date(n.at), false, true),
       extra: { url: n.url ?? '/' },
       ...ANDROID_ICON,
+      ...(n.quiet ? { channelId: QUIET_CHANNEL } : {}),
     });
   }
 }
