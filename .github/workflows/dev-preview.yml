@@ -175,7 +175,7 @@ jobs:
             cat "$RUNNER_TEMP/NOTES.md"
           } > "$RUNNER_TEMP/DEV_NOTES.md"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dev-notes
           path: ${{ runner.temp }}/DEV_NOTES.md
@@ -259,7 +259,7 @@ jobs:
           EXE=src-tauri/target/release/taschenmesser.exe
           node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.dev.conf.json
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dev-windows
           path: assets/*
@@ -365,7 +365,7 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dev-android
           path: assets/*
