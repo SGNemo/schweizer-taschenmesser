@@ -5,6 +5,7 @@
  */
 import type { ReactNode } from 'react';
 import type { PlatformKind } from '@/core/platform/types';
+import type { ResetPlan } from '../reset';
 
 /** Route slug of a category: `/settings/<id>`. Order here is the order in the navigation. */
 export const SETTINGS_CATEGORY_IDS = [
@@ -60,6 +61,11 @@ export interface SettingsSectionDef {
   fields?: readonly SettingsFieldRef[];
   /** Hidden when this returns false (dev build only, desktop only, module enabled, …). */
   visibleWhen?: (ctx: SettingsContext) => boolean;
+  /**
+   * Offers "Auf Standard zurücksetzen" under the section. Opt-in and never for anything security
+   * related (tested in `reset.test.ts`).
+   */
+  reset?: ResetPlan;
   render: () => ReactNode;
 }
 

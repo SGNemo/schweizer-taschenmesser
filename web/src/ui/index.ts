@@ -1,4 +1,6 @@
-export { Button, IconButton } from './Button';
+export { Button, IconButton, IconLink } from './Button';
+export { SettingsLink } from './SettingsLink';
+export { useHashTarget } from './useHashTarget';
 export { Card } from './Card';
 export { Dialog } from './Dialog';
 export { useDraft } from './useDraft';

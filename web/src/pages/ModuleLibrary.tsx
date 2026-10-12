@@ -6,7 +6,7 @@ import { availableManifests } from '@/core/modules/available';
 import { AREAS, type AreaId, type ModuleManifest } from '@/core/modules/types';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
-import { Badge, Button, Card, Dialog, Icon, ReadableText } from '@/ui';
+import { Badge, Button, Card, Dialog, Icon, ReadableText, useHashTarget } from '@/ui';
 import styles from './Page.module.css';
 
 interface LibraryGroup {
@@ -38,6 +38,8 @@ export function ModuleLibrary() {
   const states = useModuleStates();
   const [pending, setPending] = useState<ModuleManifest | null>(null);
   const [offer, setOffer] = useState<ModuleManifest | null>(null);
+  // `/library#module-<id>` (from the palette or a link) scrolls to that card and marks it.
+  useHashTarget(states !== undefined);
 
   async function enable(m: ModuleManifest) {
     await enableModule(m);
@@ -77,6 +79,7 @@ export function ModuleLibrary() {
                 <Card
                   as="li"
                   key={m.id}
+                  id={`module-${m.id}`}
                   className={styles.moduleCard}
                   data-testid={`module-${m.id}`}
                 >

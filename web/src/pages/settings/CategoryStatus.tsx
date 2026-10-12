@@ -1,12 +1,15 @@
 import { useAiOn } from '@/core/ai/switch';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { isEntryUsable, useAiConfig } from '@/core/ai/config';
+import { useModuleStates } from '@/core/modules/activation';
+import { getPlatform } from '@/core/platform';
 import { loadStatus } from '@/core/connectors/state';
 import { connectors } from '@/core/connectors/registry';
 import type { SettingsCategoryId } from '@/core/settings/registry/types';
 import { useSyncStatus } from '@/core/sync/status';
 import { useUpdateStore } from '@/core/update/controller';
 import { t } from '@/strings';
+import { tComfort } from '@/strings.comfort';
 import styles from './SettingsLayout.module.css';
 
 const s = t.settings.status;
@@ -41,6 +44,17 @@ function Connections() {
   return <>{active ? s.connections(active) : null}</>;
 }
 
+function Modules() {
+  const states = useModuleStates();
+  const n = states ? Object.values(states).filter(Boolean).length : 0;
+  return <>{n > 0 ? tComfort.get().status.modulesActive(n) : null}</>;
+}
+
+function Notifications() {
+  const permission = getPlatform().notifications.permission();
+  return <>{permission === 'granted' ? null : tComfort.get().status.notificationsOff}</>;
+}
+
 /** Short state next to a category ("Verbunden", "1 verfügbar") where it helps; nothing for the rest. */
 export function CategoryStatus({ id }: { id: SettingsCategoryId }) {
   const content =
@@ -52,6 +66,10 @@ export function CategoryStatus({ id }: { id: SettingsCategoryId }) {
       <Ai />
     ) : id === 'verbindungen' ? (
       <Connections />
+    ) : id === 'module' ? (
+      <Modules />
+    ) : id === 'benachrichtigungen' ? (
+      <Notifications />
     ) : null;
   return content ? <span className={styles.status}>{content}</span> : null;
 }
