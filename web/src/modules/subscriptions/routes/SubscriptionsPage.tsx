@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router';
 import { formatMoney } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { daysBetween, formatDay, today } from '@/core/time/dates';
+import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Badge, Button, Card, EmptyState, Icon, Switch } from '@/ui';
 import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
@@ -91,7 +92,9 @@ export default function SubscriptionsPage() {
                 <Switch
                   label={`${s.name}: ${t.subscriptions.active}`}
                   checked={s.active}
-                  onChange={(active) => void subscriptionRepo.update(s.id, { active })}
+                  onChange={(active) =>
+                    void changeWithUndo(() => subscriptionRepo.update(s.id, { active }))
+                  }
                 />
                 {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
               </div>

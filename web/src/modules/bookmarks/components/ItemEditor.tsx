@@ -5,6 +5,7 @@ import { Button, Dialog, Form, FormActions, SelectField, TextArea, TextField } f
 import { formatTags, normalizeUrl, parseTags } from '../logic';
 import { itemRepo } from '../repo';
 import { KINDS, type BookmarkItem, type Kind } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type ItemTarget =
   Stored<BookmarkItem> | { draft: true; title?: string; url?: string; kind?: Kind } | null;
@@ -93,7 +94,7 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
             <Button
               variant="danger"
               onClick={async () => {
-                await itemRepo.remove(existing.id);
+                await deleteWithUndo(() => itemRepo.remove(existing.id));
                 onClose();
               }}
             >
