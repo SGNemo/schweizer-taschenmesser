@@ -27,7 +27,7 @@ kotlin {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.19.1")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation(project(":tauri-android"))
 }
