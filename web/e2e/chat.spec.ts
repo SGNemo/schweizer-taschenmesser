@@ -113,7 +113,7 @@ test.describe('Chat', () => {
 
     await page.goto('/library');
     const card = page.getByTestId('module-notes');
-    await card.getByRole('button', { name: 'Aktivieren' }).click();
+    await moduleSwitch(card).click();
     await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
     await page.goto('/chat');
     await page

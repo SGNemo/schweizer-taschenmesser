@@ -35,7 +35,9 @@ export const moduleSwitch = (card: Locator) => card.getByRole('switch', { name: 
 export async function enable(page: Page, id: string) {
   await page.goto('/library');
   const card = page.getByTestId(`module-${id}`);
-  await moduleSwitch(card).click();
+  const toggle = moduleSwitch(card);
+  await expect(toggle).toBeEnabled(); // disabled until the module states have loaded
+  if (!(await toggle.isChecked())) await toggle.click(); // core modules are on already
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
 }
 
