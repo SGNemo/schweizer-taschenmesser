@@ -3,6 +3,7 @@
 //! No Tauri in here: the shell wraps these functions in commands (`src/disk_scan.rs`), so the
 //! logic is testable on any machine. Nothing in this crate modifies the file system.
 
+mod access;
 mod delete;
 mod drives;
 mod duplicates;
@@ -16,6 +17,7 @@ mod system;
 mod trash_win;
 mod tree;
 
+pub use access::access_time_tracked;
 pub use delete::{
     apply_to_tree, execute, plan, platform_trasher, DeleteControl, DeleteProgress, EntryError,
     Flag, ItemReport, Mode, NoTrash, Outcome, Plan, PlanItem, Report, TrashError, Trasher,

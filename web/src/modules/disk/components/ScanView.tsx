@@ -56,6 +56,8 @@ interface Filter {
   /** Scope of the "not changed for a long time" list. */
   oldScope: 'all' | 'dirs' | 'files';
   topmost: boolean;
+  /** "Long unused" by last opening instead of last change (only where the scan trusts it). */
+  byAccess: boolean;
   minBytes: number;
 }
 const MONTHS = [3, 6, 12, 24, 36, 60];
@@ -76,6 +78,7 @@ function toQuery(f: Filter, under: number | undefined): DiskQuery | null {
         scope: f.oldScope,
         olderThan: monthsAgoSeconds(now(), f.months),
         topmost: f.topmost,
+        byAccess: f.byAccess || undefined,
         minBytes: f.minBytes || undefined,
       };
     case 'type':
@@ -90,7 +93,7 @@ function toQuery(f: Filter, under: number | undefined): DiskQuery | null {
 /** Explore a finished scan: treemap or list, breadcrumb, quick filters and a details panel. */
 export function ScanView({ summary }: { summary: ScanSummary }) {
   const disk = getPlatform().disk;
-  const { scanId, root, rootNode } = summary;
+  const { scanId, root, rootNode, accessTracked } = summary;
   const [trail, setTrail] = useState<DiskNode[]>([rootNode]);
   const current = trail[trail.length - 1]!;
   const [selected, setSelected] = useState<DiskNode | null>(null);
@@ -103,6 +106,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
     scope: 'files',
     oldScope: 'all',
     topmost: true,
+    byAccess: false,
     minBytes: 10 * MB,
   });
   // Entries ticked in a filter list (ids of the native tree), for basket or delete in one go.
@@ -381,6 +385,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
         node={detailNode}
         current={current}
         path={pathOf(detailNode)}
+        accessTracked={accessTracked}
         biggest={entries}
         onOpen={(n) => void open(n)}
         onSelect={setSelected}
@@ -474,8 +479,19 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
       </Chips>
       {filter.kind === 'old' ? (
         <Toolbar>
+          {accessTracked ? (
+            <Segmented
+              label={t.disk.filter.basis}
+              value={filter.byAccess ? 'accessed' : 'modified'}
+              options={[
+                { value: 'modified', label: t.disk.filter.byChange },
+                { value: 'accessed', label: t.disk.filter.byOpen },
+              ]}
+              onChange={(v) => setFilter((f) => ({ ...f, byAccess: v === 'accessed' }))}
+            />
+          ) : null}
           <SelectField
-            label={t.disk.filter.oldSince}
+            label={filter.byAccess ? t.disk.filter.notOpenedSince : t.disk.filter.oldSince}
             value={filter.months}
             onChange={(e) => setFilter((f) => ({ ...f, months: Number(e.target.value) }))}
           >
@@ -573,14 +589,16 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
               {filter.kind === 'old' ? (
                 <p className={styles.summary} aria-live="polite" data-testid="old-summary">
                   <span>
-                    {t.disk.filter.oldSummary(
+                    {(filter.byAccess ? t.disk.filter.oldSummaryOpened : t.disk.filter.oldSummary)(
                       results.length,
                       formatBytes(disjointBytes(results)),
                       t.disk.filter.months(filter.months),
                     )}
                     {results.length >= LIMIT ? ` ${t.disk.filter.capped(LIMIT)}` : ''}
                   </span>
-                  <HelpHint text={t.disk.filter.oldHelp} />
+                  <HelpHint
+                    text={filter.byAccess ? t.disk.filter.accessHelp : t.disk.filter.oldHelp}
+                  />
                 </p>
               ) : null}
               <p className={styles.help} aria-live="polite">
@@ -614,6 +632,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
                 onSelect={setSelected}
                 onOpen={(n) => void open(n)}
                 where={(n) => n.relPath}
+                dateField={filter.kind === 'old' && filter.byAccess ? 'accessed' : 'modified'}
                 select={{ ids: picked, toggle: togglePick, toggleAll }}
                 label={t.disk.filter.label}
               />

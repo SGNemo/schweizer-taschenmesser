@@ -315,6 +315,30 @@ test('long unchanged: each old folder once, with the total, ticked entries go to
   await expect(page.getByRole('dialog')).toContainText('Löschen bestätigen');
 });
 
+test('long unused by last opening where Windows tracks it: a played game is not unused', async ({
+  page,
+}) => {
+  await openScan(page);
+  await page.getByRole('button', { name: 'Lange nicht geändert' }).click();
+  await page.getByLabel('Nicht geändert seit', { exact: true }).selectOption('6');
+  const table = page.getByRole('table', { name: 'Schnellfilter' });
+  // Unchanged for 200 days, so it looks unused by its change date …
+  await expect(table).toContainText('Spiel');
+  await page
+    .getByRole('group', { name: 'Gemessen an' })
+    .getByRole('button', { name: 'letztem Öffnen' })
+    .click();
+  await expect(page.getByTestId('old-summary')).toContainText('nicht geöffnet');
+  // … but it was opened three days ago.
+  await expect(table).not.toContainText('Spiel');
+  await expect(table).toContainText('alt.iso');
+  await expect(table.getByRole('columnheader', { name: 'Geöffnet' })).toBeVisible();
+  await page.getByLabel('Nicht geöffnet seit', { exact: true }).selectOption('3');
+  await table.getByRole('button', { name: 'alt.iso' }).click();
+  await expect(page.getByTestId('details-accessed')).toContainText('vor 2 Jahren');
+  await audit(page, 'long unused by opening');
+});
+
 test('a result row opens the folder of the file in the map', async ({ page }) => {
   await openScan(page);
   await page.getByRole('button', { name: 'Größte Dateien' }).click();

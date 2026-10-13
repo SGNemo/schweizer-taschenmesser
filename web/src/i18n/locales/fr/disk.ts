@@ -305,6 +305,14 @@ export const disk: Strings['disk'] = {
     oldSummary: (n: number, size: string, since: string) =>
       `${n} ${n === 1 ? 'élément' : 'éléments'} pour ${size} au total, pas modifiés depuis plus de ${since}`,
     capped: (n: number) => `Seuls les ${n} plus grands sont affichés.`,
+    basis: 'Selon',
+    byChange: 'dernière modification',
+    byOpen: 'dernière ouverture',
+    notOpenedSince: 'Pas ouvert depuis',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'élément' : 'éléments'} pour ${size} au total, pas ouverts depuis plus de ${since}`,
+    accessHelp:
+      'Sur ce lecteur, Windows note quand les fichiers ont été ouverts pour la dernière fois (à une heure près environ). Les antivirus, les miniatures ou les sauvegardes peuvent aussi changer la date ; un fichier paraît alors plus récent qu’il ne l’est, jamais plus ancien.',
     oldHelp:
       'C’est la dernière modification qui compte, pas la dernière ouverture : Windows n’enregistre généralement pas l’ouverture des fichiers de façon fiable. Pour un dossier, c’est le fichier le plus récent qui compte. Pour un jeu, une mise à jour change la date, y jouer non.',
     type: 'Type de fichier',
@@ -323,6 +331,7 @@ export const disk: Strings['disk'] = {
     share: 'Part',
     files: 'Fichiers',
     modified: 'Modifié',
+    accessed: 'Ouvert',
     sortBy: (col: string) => `Trier par ${col}`,
     in: 'Dans',
     empty: 'Aucun élément.',
@@ -340,6 +349,8 @@ export const disk: Strings['disk'] = {
     files: 'Fichiers',
     modified: 'Dernière modification',
     modifiedFolder: 'Dernière modification (fichier le plus récent)',
+    accessed: 'Dernière ouverture',
+    accessedFolder: 'Dernière ouverture (fichier le plus récent)',
     types: 'Types de fichiers',
     ages: 'Ancienneté des données',
     ageBar: 'Parts par ancienneté',

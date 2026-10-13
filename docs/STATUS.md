@@ -13,6 +13,8 @@ Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/
 
 Dieser PC – Aufräumen (`feat/disk-cleanup-ux`): Karte standardmäßig nach Alter gefärbt, Liste „Lange nicht geändert“ (jeder alte Ordner einmal, Summe, Mehrfachauswahl → Korb/Löschen), „Alter der Daten“ in den Details, Dateityp „Spieldaten“; PR gegen `develop`, wartet auf Review; Handtest D17 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
+Dieser PC – „Zuletzt geöffnet“ (`feat/disk-last-opened`): „Lange nicht geändert“ kann nach dem letzten Öffnen messen, nur wo Windows es führt (NTFS, Zugriffszeit an); PR gegen `develop`, wartet auf Review; Handtest D20.
+
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).

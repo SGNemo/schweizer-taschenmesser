@@ -299,6 +299,14 @@ export const disk: Strings['disk'] = {
     oldSummary: (n: number, size: string, since: string) =>
       `${n} ${n === 1 ? 'item' : 'itens'} com ${size} no total, sem alterações há mais de ${since}`,
     capped: (n: number) => `Mostrando os ${n} maiores.`,
+    basis: 'Com base na',
+    byChange: 'última alteração',
+    byOpen: 'última abertura',
+    notOpenedSince: 'Não aberto há',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'item' : 'itens'} com ${size} no total, não abertos há mais de ${since}`,
+    accessHelp:
+      'Nesta unidade o Windows registra quando os arquivos foram abertos pela última vez (com precisão de cerca de uma hora). Antivírus, miniaturas ou backups também podem mudar a data; então um arquivo parece mais novo do que é, nunca mais antigo.',
     oldHelp:
       'Conta a última alteração, não a última vez que algo foi aberto: o Windows normalmente não registra de forma confiável quando os arquivos são abertos. Em pastas conta o arquivo mais recente. Em jogos, uma atualização muda a data; só jogar não.',
     type: 'Tipo de arquivo',
@@ -317,6 +325,7 @@ export const disk: Strings['disk'] = {
     share: 'Parcela',
     files: 'Arquivos',
     modified: 'Alterado',
+    accessed: 'Aberto',
     sortBy: (col: string) => `Ordenar por ${col}`,
     in: 'Em',
     empty: 'Nenhum item.',
@@ -334,6 +343,8 @@ export const disk: Strings['disk'] = {
     files: 'Arquivos',
     modified: 'Última alteração',
     modifiedFolder: 'Última alteração (arquivo mais recente dentro)',
+    accessed: 'Última abertura',
+    accessedFolder: 'Última abertura (arquivo mais recente dentro)',
     types: 'Tipos de arquivo',
     ages: 'Idade dos dados',
     ageBar: 'Proporções por idade',
