@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready, calendarEntry } from './helpers';
+import { calendarEntry, moreFields, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 const NOW = new Date('2026-09-29T10:00:00');
@@ -161,6 +161,7 @@ test.describe('Calendar', () => {
     await ready(page, '/calendar?new=1&view=week&date=2026-09-29');
     const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
     await dialog.getByLabel('Titel').fill('Sport');
+    await moreFields(page);
     await dialog.getByLabel('Wiederholung').selectOption('weekly');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
@@ -187,6 +188,7 @@ test.describe('Calendar', () => {
     await ready(page, '/calendar?new=1');
     const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
     await dialog.getByLabel('Titel').fill('Reise');
+    await moreFields(page);
     await dialog.getByLabel('Ende (Datum)').fill('2026-09-01');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(dialog.getByRole('alert')).toHaveText(

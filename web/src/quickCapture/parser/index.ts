@@ -35,9 +35,11 @@ const PREFIXES: Record<string, CaptureType> = {
   e: 'reminder',
   m: 'bookmark',
   l: 'list',
+  n: 'note',
+  r: 'invoice',
   $: 'finance',
 };
-const PREFIX_RE = /^\s*(t|k|e|m|l|\$)(?:\s+|(?<=\$))/i;
+const PREFIX_RE = /^\s*(t|k|e|m|l|n|r|\$)(?:\s+|(?<=\$))/i;
 
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 const KEYWORDS = {
@@ -45,6 +47,7 @@ const KEYWORDS = {
   todo: word(String.raw`to-?do|aufgabe|task`),
   bookmark: word(String.raw`merke(?:\s+dir)?`),
   list: word(String.raw`(?:auf\s+die\s+)?einkaufs?liste`),
+  invoice: word(String.raw`rechnung`),
 };
 const DANGLING =
   /^(?:um|am|an|den|dem|bis|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|ab|für|und|zu|,|;|:|-|–)+$/iu;
@@ -107,6 +110,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     todo: !!take(scan, KEYWORDS.todo),
     bookmark: !!take(scan, KEYWORDS.bookmark),
     list: !!take(scan, KEYWORDS.list),
+    invoice: !!take(scan, KEYWORDS.invoice),
   };
 
   const recurrence = extractRecurrence(scan);
@@ -114,7 +118,10 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
 
   const amount = extractAmount(scan, false);
   const dt = extractDateTime(scan, opts.now);
-  const bare = !amount && forced === 'finance' ? extractAmount(scan, true) : undefined;
+  const bare =
+    !amount && (forced === 'finance' || forced === 'invoice')
+      ? extractAmount(scan, true)
+      : undefined;
   const money = amount ?? bare;
   if (money) {
     fields.amountMinor = money.amountMinor;
@@ -140,6 +147,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     if (hasTime) score(scores, 'event', 40);
   }
   if (money) score(scores, 'finance', 80);
+  if (money && kw.invoice) score(scores, 'invoice', 92);
   if (hasDate && hasTime && !recurrence) score(scores, 'event', 85);
   else if (!hasDate && hasTime && !recurrence) score(scores, 'event', 70);
   else if (hasDate && !hasTime && !recurrence && !money) {
@@ -170,6 +178,10 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     date = startForRecurrence(recurrence, today);
   }
   if (primaryType === 'finance' && !date) date = today;
+  if (primaryType === 'invoice' && !date) {
+    date = addDays(today, 14); // a usual payment term; reported as an assumption, never silent
+    notes.add('assumed-date');
+  }
 
   if (date) fields.date = fmtDate(date);
   if (dt.time !== undefined) fields.time = dt.time;

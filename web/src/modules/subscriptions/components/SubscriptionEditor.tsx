@@ -7,7 +7,7 @@ import type { Recurrence } from '@/core/recurrence/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { changePercent, recordPriceChange } from '../logic';
-import { Button, Dialog, patternStyles, Switch, TextArea, TextField } from '@/ui';
+import { AdvancedFields, Button, Dialog, patternStyles, Switch, TextArea, TextField } from '@/ui';
 import { annualCost } from '../logic';
 import { subscriptionRepo } from '../repo';
 import type { Subscription } from '../schema';
@@ -151,16 +151,18 @@ function Form({
           </ul>
         </div>
       ) : null}
-      <TextField
-        label={t.subscriptions.noticeDays}
-        type="number"
-        min={0}
-        max={365}
-        value={notice}
-        onChange={(e) => setNotice(e.target.value)}
-        hint={t.subscriptions.noticeHint}
-      />
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields moduleId="subscriptions" hasData={!!notice || !!note}>
+        <TextField
+          label={t.subscriptions.noticeDays}
+          type="number"
+          min={0}
+          max={365}
+          value={notice}
+          onChange={(e) => setNotice(e.target.value)}
+          hint={t.subscriptions.noticeHint}
+        />
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       {existing ? (
         <Switch label={t.subscriptions.active} checked={active} onChange={setActive} />
       ) : null}

@@ -218,7 +218,8 @@
   opacity: 0;
 }
 .item:hover .actions,
-.item:focus-within .actions {
+.item:focus-within .actions,
+.actionsOpen {
   opacity: 1;
 }
 @media (hover: none) {
