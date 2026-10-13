@@ -31,3 +31,9 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Start data on the card** of an enabled module (same button as in Settings); the "disable" dialog stays also for empty modules – E2E and parallel specs depend on it and it saves one click only.
 - **Not done:** switch instead of button (the "Aktivieren" button is already one click and `e2e/helpers.ts` `enable()` depends on it), preview widget in the card (stimulus load), navigation order by drag and drop (favourites keep their buttons).
 
+## Toolbox comfort (2026-10-13, `feat/comfort-toolbox`)
+- **Tools answer in the search bar** – optional `ToolManifest.expression` (pure, cheap parse): "timer 10m" starts a countdown, "umrechnen 5 km" lists conversions and Enter copies; only while the tool is on; local, nothing sent. The calculator keeps its own path (`core/calc/phrases.ts`).
+- **"Zuletzt benutzt" row above the tiles, the tiles never move** – up to three tools used last (`tm-tools-recent`, device-local, off with "Verlauf in der Suche", emptied by "Verlauf löschen"), shown once more than four tools are on. A grid that reorders itself costs more than it saves.
+- **Tool library on the shared `LibraryCard`** with search; "copy result" in the unit converter.
+- **Not done:** drag-and-drop order (up/down buttons stay as the keyboard way; revisit with a sortable list shared with the home widgets), pinning the popover open (the toolbox is a dialog; a second window needs platform work), detachable/always-on-top tool windows and a background timer on Android (platform; see ROADMAP).
+
