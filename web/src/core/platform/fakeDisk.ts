@@ -502,6 +502,8 @@ export function createFakeDisk(): DiskService {
     },
     async dropScan(id) {
       scans.delete(id);
+      // Like the native IPC round trip: the caller must not depend on this being instant.
+      await new Promise((r) => setTimeout(r, 120));
     },
     async children(id, node, depth, minBytes) {
       return get(id).tree.children(node, depth, minBytes);

@@ -6,6 +6,7 @@ import { Button, Dialog, Form, FormActions, SelectField, Split, TextArea, TextFi
 import { safeUrl } from '../logic';
 import { giftRepo } from '../repo';
 import { GIFT_STATUSES, type Gift, type GiftStatus } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type GiftTarget = Stored<Gift> | { draft: true } | null;
 
@@ -137,7 +138,7 @@ function Fields({
             <Button
               variant="danger"
               onClick={async () => {
-                await giftRepo.remove(existing.id);
+                await deleteWithUndo(() => giftRepo.remove(existing.id));
                 onClose();
               }}
             >
