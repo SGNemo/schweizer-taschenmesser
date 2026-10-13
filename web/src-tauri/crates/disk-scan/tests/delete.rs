@@ -249,6 +249,7 @@ fn trash_moves_entries_and_the_tree_is_corrected_without_a_rescan() {
         limit: Some(50),
         only_empty: false,
         topmost: false,
+        by_access: false,
     });
     assert!(files.iter().all(|f| f.name != "a.bin" && f.name != "b.bin"));
     assert!(!tree.remove(junk), "removing twice is a no-op");
@@ -500,6 +501,7 @@ fn empty_folders_are_found_by_query() {
         limit: None,
         only_empty: true,
         topmost: false,
+        by_access: false,
     });
     let names: Vec<_> = hits.iter().map(|h| h.name.as_str()).collect();
     assert!(names.contains(&"empty") && names.contains(&"hollow") && names.contains(&"deeper"));

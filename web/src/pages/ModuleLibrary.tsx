@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/batches';
 import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
-import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
+import {
+  disableModule,
+  enableModule,
+  moduleHasData,
+  useModuleStates,
+} from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { libraryBadges, markLibrarySeen } from '@/core/modules/librarySeen';
 import { normalize } from '@/core/text/normalize';
@@ -11,7 +16,8 @@ import { AREAS, type AreaId, type ModuleManifest } from '@/core/modules/types';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
-import { Badge, Button, Dialog, LibraryCard, TextField, useHashTarget } from '@/ui';
+import { useUiStore } from '@/stores/ui';
+import { Badge, Button, Dialog, LibraryCard, Switch, TextField, useHashTarget } from '@/ui';
 import styles from './Page.module.css';
 
 interface LibraryGroup {
@@ -52,6 +58,7 @@ export function ModuleLibrary() {
   const [pending, setPending] = useState<ModuleManifest | null>(null);
   const [offer, setOffer] = useState<ModuleManifest | null>(null);
   const [query, setQuery] = useState('');
+  const toast = useUiStore((st) => st.toast);
   const text = tComfort.get().library;
   // The marks shown now; the library counts as looked at when it is left.
   const badges = useMemo(() => libraryBadges(availableManifests()), []);
@@ -65,6 +72,19 @@ export function ModuleLibrary() {
     await enableModule(m);
     // Offer the start-data wizard once per device; "Überspringen" and every import count as handled.
     if (hasImporters(m) && !(await wasOnboardingHandled(m.id))) setOffer(m);
+  }
+
+  /**
+   * The switch was turned off. A module with entries asks what to do with them (as before); an empty
+   * one is simply switched off, with "Rückgängig" in the toast.
+   */
+  async function switchOff(m: ModuleManifest) {
+    if (await moduleHasData(m)) {
+      setPending(m);
+      return;
+    }
+    await disableModule(m, 'keep');
+    toast(text.turnedOff(m.name), { label: t.ui.undo, run: () => void enableModule(m) });
   }
 
   async function disable(policy: 'keep' | 'delete') {
@@ -130,15 +150,12 @@ export function ModuleLibrary() {
                   }
                 >
                   {enabled && hasStartData(m) ? <StartDataButton moduleId={m.id} /> : null}
-                  {enabled ? (
-                    <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>
-                      {t.actions.disable}
-                    </Button>
-                  ) : (
-                    <Button onClick={() => void enable(m)} disabled={!states}>
-                      {t.actions.enable}
-                    </Button>
-                  )}
+                  <Switch
+                    label={text.toggle(m.name)}
+                    checked={enabled}
+                    disabled={!states}
+                    onChange={(on) => void (on ? enable(m) : switchOff(m))}
+                  />
                 </LibraryCard>
               );
             })}

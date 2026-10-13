@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { moduleSwitch } from './helpers';
 
 // App side of the browser extension bridge. The native pipe is replaced by the e2e fake
 // (`window.__tmVaultBridge`), everything behind it – validation, pairing, sessions, origin matching,
@@ -14,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 async function setUp(page: Page) {
   await page.goto('/library');
   const card = page.getByTestId('module-accounts');
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
+  await moduleSwitch(card).click();
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
   await page.goto('/accounts');
   await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);

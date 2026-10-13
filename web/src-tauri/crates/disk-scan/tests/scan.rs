@@ -82,6 +82,8 @@ fn sums_match_the_files_on_disk() {
     assert_eq!(root.logical_bytes, r.logical_bytes);
     assert_eq!(root.bytes, r.bytes);
     assert_eq!(r.not_read_total, 0);
+    // Access times are collected, too (whether they can be trusted is decided per volume).
+    assert!(root.accessed > 0);
 }
 
 #[test]
@@ -121,6 +123,7 @@ fn queries_find_the_biggest_folder_and_file() {
         limit: Some(1),
         only_empty: false,
         topmost: false,
+        by_access: false,
     });
     assert_eq!(files[0].name, "d.mp4");
     let dirs = r.tree.query(&Query {
@@ -132,6 +135,7 @@ fn queries_find_the_biggest_folder_and_file() {
         limit: Some(1),
         only_empty: false,
         topmost: false,
+        by_access: false,
     });
     assert_eq!(dirs[0].name, "media");
     let path = r.tree.path(files[0].id).unwrap();

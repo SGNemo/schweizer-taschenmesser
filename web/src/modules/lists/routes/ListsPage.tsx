@@ -20,6 +20,7 @@ import {
   SelectionBar,
   Tabs,
   TextField,
+  useOpenParam,
   useSelection,
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
@@ -68,6 +69,11 @@ export default function ListsPage() {
     }
   }, [params, setParams]);
 
+  // A search hit links here with ?open=<id> of a list or an item: show that list.
+  useOpenParam(
+    async (id) => (await listRepo.get(id)) ?? (await itemRepo.get(id)),
+    (r) => ({ list: 'listId' in r ? r.listId : r.id }),
+  );
   const sorted = useMemo(() => sortLists(lists ?? []), [lists]);
   const current = sorted.find((l) => l.id === params.get('list')) ?? sorted[0];
   const shown = useMemo(

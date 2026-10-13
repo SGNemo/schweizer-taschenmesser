@@ -10,6 +10,7 @@ const ON = {
   bookmarks: true,
   notes: true,
   finance: true,
+  invoices: true,
 };
 
 beforeEach(async () => {
@@ -127,6 +128,30 @@ describe('saveCapture', () => {
       date: '2026-09-30',
       accountId: 'acc-main',
     });
+  });
+
+  it('writes an open invoice with the due date, without a confirmation step', async () => {
+    await saveCapture(
+      'invoice',
+      { title: 'Swisscom', amountMinor: 8990, date: '2026-10-31' },
+      { states: ON },
+    );
+    expect(TARGETS.invoice.requiresConfirm).toBeFalsy();
+    expect((await rows('invoices_invoice'))[0]).toMatchObject({
+      payee: 'Swisscom',
+      amountMinor: 8990,
+      dueDate: '2026-10-31',
+      status: 'open',
+    });
+  });
+
+  it('rejects an invoice without an amount or payee', async () => {
+    await expect(
+      saveCapture('invoice', { title: 'Swisscom' }, { states: ON }),
+    ).rejects.toBeInstanceOf(CaptureError);
+    await expect(
+      saveCapture('invoice', { title: '', amountMinor: 100 }, { states: ON }),
+    ).rejects.toBeInstanceOf(CaptureError);
   });
 
   it('refuses a disabled module and writes nothing', async () => {

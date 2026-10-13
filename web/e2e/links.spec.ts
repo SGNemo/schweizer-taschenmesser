@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable } from './helpers';
+import { enable, moreFields } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -65,6 +65,7 @@ test('Lesezeichen: add a link, open it, reject unsafe addresses', async ({ page 
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog.getByText('gültige http(s)-Adresse')).toBeVisible();
   await dialog.getByLabel('Adresse (Link)').fill('dhl.example');
+  await moreFields(page);
   await dialog.getByLabel('Tags').fill('Pakete');
   await save(page);
 

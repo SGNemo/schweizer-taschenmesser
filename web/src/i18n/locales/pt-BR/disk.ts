@@ -299,6 +299,14 @@ export const disk: Strings['disk'] = {
     oldSummary: (n: number, size: string, since: string) =>
       `${n} ${n === 1 ? 'item' : 'itens'} com ${size} no total, sem alterações há mais de ${since}`,
     capped: (n: number) => `Mostrando os ${n} maiores.`,
+    basis: 'Com base na',
+    byChange: 'última alteração',
+    byOpen: 'última abertura',
+    notOpenedSince: 'Não aberto há',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'item' : 'itens'} com ${size} no total, não abertos há mais de ${since}`,
+    accessHelp:
+      'Nesta unidade o Windows registra quando os arquivos foram abertos pela última vez (com precisão de cerca de uma hora). Antivírus, miniaturas ou backups também podem mudar a data; então um arquivo parece mais novo do que é, nunca mais antigo.',
     oldHelp:
       'Conta a última alteração, não a última vez que algo foi aberto: o Windows normalmente não registra de forma confiável quando os arquivos são abertos. Em pastas conta o arquivo mais recente. Em jogos, uma atualização muda a data; só jogar não.',
     type: 'Tipo de arquivo',
@@ -311,12 +319,23 @@ export const disk: Strings['disk'] = {
     none_found: 'Nenhum resultado.',
     results: (n: number) => (n <= 1 ? `${n} resultado` : `${n} resultados`),
   },
+  games: {
+    filter: 'Jogos (Steam)',
+    label: 'Jogos da Steam',
+    lastPlayed: 'Jogado por último',
+    played: (date: string, ago: string) => `Jogado por último em ${date} · ${ago}`,
+    unknown: 'A Steam não tem data de jogo',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'jogo' : 'jogos'} com ${size} no total, ${idle} sem ser jogados há mais de um ano`,
+    help: 'A data vem dos próprios arquivos da Steam e conta a última vez que você jogou, não a última atualização. Se faltar, o jogo nunca foi iniciado ou a Steam não a registrou. O jeito mais limpo de desinstalar um jogo é pela própria Steam: se só a pasta for apagada, a Steam continua mostrando o jogo como instalado.',
+  },
   list: {
     name: 'Nome',
     size: 'Ocupado',
     share: 'Parcela',
     files: 'Arquivos',
     modified: 'Alterado',
+    accessed: 'Aberto',
     sortBy: (col: string) => `Ordenar por ${col}`,
     in: 'Em',
     empty: 'Nenhum item.',
@@ -334,6 +353,8 @@ export const disk: Strings['disk'] = {
     files: 'Arquivos',
     modified: 'Última alteração',
     modifiedFolder: 'Última alteração (arquivo mais recente dentro)',
+    accessed: 'Última abertura',
+    accessedFolder: 'Última abertura (arquivo mais recente dentro)',
     types: 'Tipos de arquivo',
     ages: 'Idade dos dados',
     ageBar: 'Proporções por idade',

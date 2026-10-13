@@ -234,7 +234,15 @@ mod plat {
 }
 
 fn unix_secs(md: &Metadata) -> i64 {
-    match md.modified().map(|t| t.duration_since(UNIX_EPOCH)) {
+    secs(md.modified())
+}
+
+fn access_secs(md: &Metadata) -> i64 {
+    secs(md.accessed())
+}
+
+fn secs(t: std::io::Result<std::time::SystemTime>) -> i64 {
+    match t.map(|t| t.duration_since(UNIX_EPOCH)) {
         Ok(Ok(d)) => d.as_secs() as i64,
         Ok(Err(e)) => -(e.duration().as_secs() as i64),
         Err(_) => 0,
@@ -307,6 +315,7 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
             subdirs.push((entry.path(), file_name));
         } else if file_type.is_file() {
             let modified = unix_secs(&md);
+            let accessed = access_secs(&md);
             let logical = md.len();
             let (bytes, logical_local) = if plat::is_cloud(&md) {
                 ctx.cloud.fetch_add(logical, Relaxed);
@@ -323,6 +332,7 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
                     bytes,
                     logical: logical_local,
                     modified,
+                    accessed,
                 });
             } else {
                 add_small(
@@ -330,7 +340,7 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
                     &file_name,
                     bytes,
                     logical_local,
-                    modified,
+                    (modified, accessed),
                     ctx.now,
                 );
             }
@@ -370,11 +380,20 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
     out
 }
 
-fn add_small(agg: &mut SmallAgg, name: &str, bytes: u64, logical: u64, modified: i64, now: i64) {
+/// `times`: (modified, accessed) in Unix seconds.
+fn add_small(
+    agg: &mut SmallAgg,
+    name: &str,
+    bytes: u64,
+    logical: u64,
+    (modified, accessed): (i64, i64),
+    now: i64,
+) {
     agg.count += 1;
     agg.bytes += bytes;
     agg.logical += logical;
     agg.modified = agg.modified.max(modified);
+    agg.accessed = agg.accessed.max(accessed);
     debug_assert_eq!(agg.kind_bytes.len(), KIND_COUNT);
     agg.kind_bytes[classify(name).index()] += bytes;
     agg.age_bytes[age_bucket(modified, now)] += bytes;
