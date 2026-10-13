@@ -136,6 +136,7 @@ export default function SubscriptionsPage() {
                   <span className={styles.amount}>{formatMoney(s.amountMinor)}</span>
                   <Switch
                     label={`${s.name}: ${t.subscriptions.active}`}
+                    labelHidden
                     checked={s.active}
                     onChange={toggle}
                   />
