@@ -35,5 +35,6 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Tools answer in the search bar** – optional `ToolManifest.expression` (pure, cheap parse): "timer 10m" starts a countdown, "umrechnen 5 km" lists conversions and Enter copies; only while the tool is on; local, nothing sent. The calculator keeps its own path (`core/calc/phrases.ts`).
 - **"Zuletzt benutzt" row above the tiles, the tiles never move** – up to three tools used last (`tm-tools-recent`, device-local, off with "Verlauf in der Suche", emptied by "Verlauf löschen"), shown once more than four tools are on. A grid that reorders itself costs more than it saves.
 - **Tool library on the shared `LibraryCard`** with search; "copy result" in the unit converter.
-- **Not done:** drag-and-drop order (up/down buttons stay as the keyboard way; revisit with a sortable list shared with the home widgets), pinning the popover open (the toolbox is a dialog; a second window needs platform work), detachable/always-on-top tool windows and a background timer on Android (platform; see ROADMAP).
+- **Tool order by drag and drop** in Einstellungen → Werkzeuge via the shared `@/ui` `SortableList` (dnd-kit, same sensors and screen-reader texts as the home widgets); the up/down buttons stay as the plain alternative. Keyboard: Space, arrows, Space.
+- **Not done:** pinning the popover open (the toolbox is a dialog; a second window needs platform work), detachable/always-on-top tool windows and a background timer on Android (platform; see ROADMAP).
 

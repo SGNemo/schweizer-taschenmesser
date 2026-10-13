@@ -1,0 +1,11 @@
+.handle {
+  touch-action: none;
+  cursor: grab;
+}
+.dragging {
+  position: relative;
+  z-index: var(--z-raised);
+  opacity: 0.9;
+  box-shadow: var(--shadow-2);
+  background: var(--surface);
+}
