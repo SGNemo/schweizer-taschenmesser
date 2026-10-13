@@ -56,14 +56,7 @@ mod imp {
         let mut fs = [0u16; 32];
         // SAFETY: NUL-terminated root; the buffer length is taken from the slice.
         let ok = unsafe {
-            GetVolumeInformationW(
-                PCWSTR(root.as_ptr()),
-                None,
-                None,
-                None,
-                None,
-                Some(&mut fs),
-            )
+            GetVolumeInformationW(PCWSTR(root.as_ptr()), None, None, None, None, Some(&mut fs))
         };
         if ok.is_err() {
             return String::new();
