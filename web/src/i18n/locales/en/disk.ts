@@ -307,6 +307,16 @@ export const disk: Strings['disk'] = {
     none_found: 'No results.',
     results: (n: number) => (n === 1 ? '1 result' : `${n} results`),
   },
+  games: {
+    filter: 'Games (Steam)',
+    label: 'Steam games',
+    lastPlayed: 'Last played',
+    played: (date: string, ago: string) => `Last played on ${date} · ${ago}`,
+    unknown: 'No play date from Steam',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'game' : 'games'} with ${size} in total, ${idle} of them not played for over a year`,
+    help: 'The date comes from Steam’s own files and counts the last time you played, not the last update. If it is missing, the game was never started or Steam did not record it. The cleanest way to uninstall a game is in Steam itself: if only the folder is deleted, Steam still shows it as installed.',
+  },
   list: {
     name: 'Name',
     size: 'Used',

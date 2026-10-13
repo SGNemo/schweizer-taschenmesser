@@ -317,6 +317,16 @@ export const disk: Strings['disk'] = {
     none_found: 'Aucun résultat.',
     results: (n: number) => (n <= 1 ? `${n} résultat` : `${n} résultats`),
   },
+  games: {
+    filter: 'Jeux (Steam)',
+    label: 'Jeux Steam',
+    lastPlayed: 'Dernière partie',
+    played: (date: string, ago: string) => `Dernière partie le ${date} · ${ago}`,
+    unknown: 'Pas de date de partie dans Steam',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'jeu' : 'jeux'} pour ${size} au total, dont ${idle} sans partie depuis plus d’un an`,
+    help: 'La date vient des fichiers de Steam et compte la dernière partie, pas la dernière mise à jour. Si elle manque, le jeu n’a jamais été lancé ou Steam ne l’a pas notée. Le plus propre est de désinstaller un jeu dans Steam : si seul le dossier est supprimé, Steam l’affiche toujours comme installé.',
+  },
   list: {
     name: 'Nom',
     size: 'Occupé',

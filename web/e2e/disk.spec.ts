@@ -328,6 +328,20 @@ test('a result row opens the folder of the file in the map', async ({ page }) =>
   ).toHaveAttribute('aria-current', 'location');
 });
 
+test('Steam games list when they were last played, oldest first', async ({ page }) => {
+  await openScan(page);
+  await page.getByRole('button', { name: 'Spiele (Steam)' }).click();
+  await expect(page.getByTestId('games-summary')).toContainText(
+    '1 Spiel mit zusammen 39,1 GB, davon 1 seit über einem Jahr nicht gespielt',
+  );
+  const table = page.getByRole('table', { name: 'Steam-Spiele' });
+  await expect(table.getByRole('row')).toHaveCount(2);
+  await expect(table).toContainText('Zuletzt gespielt am 16.7.2023');
+  await table.getByRole('button', { name: /Spiel/ }).click();
+  await expect(page.getByTestId('details-played')).toContainText('16.7.2023');
+  await audit(page, 'steam games list');
+});
+
 // --- deleting (against the in-memory fake only; never a real path) -----------------------------
 
 const rowButton = (page: Page, table: string, name: string) =>
