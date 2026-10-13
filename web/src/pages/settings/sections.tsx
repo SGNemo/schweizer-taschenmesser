@@ -4,6 +4,13 @@
  */
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
+import {
+  appearanceReset,
+  focusReset,
+  FOCUS_RESET_KEYS,
+  readingReset,
+  REMINDER_RESET_KEYS,
+} from '@/core/settings/reset';
 import { t } from '@/strings';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
@@ -214,6 +221,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: appearanceReset,
     render: () => <AppearanceSection />,
   },
   {
@@ -264,6 +272,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: readingReset,
     render: () => <ReadingSection />,
   },
   {
@@ -371,6 +380,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: focusReset(FOCUS_RESET_KEYS),
     render: () => <FocusSection />,
   },
   {
@@ -500,6 +510,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: focusReset(REMINDER_RESET_KEYS),
     render: () => <CalmRemindersSection />,
   },
   {
