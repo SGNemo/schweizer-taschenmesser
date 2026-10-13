@@ -6,7 +6,16 @@ import { useWeekStart } from '@/core/settings/core';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, PageHeader, Segmented, SplitView, useSplitView } from '@/ui';
+import {
+  Button,
+  Icon,
+  IconButton,
+  PageHeader,
+  Segmented,
+  SplitView,
+  useOpenParam,
+  useSplitView,
+} from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
@@ -43,6 +52,7 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const [prefs] = useSettings('module.calendar', settings.schema, settings.defaults);
   const [target, setTarget] = useState<EventTarget>(null);
+  useOpenParam((id) => eventRepo.get(id), setTarget);
   const [externalId, setExternalId] = useState<string | null>(null);
   const split = useSplitView();
   const weekStart = useWeekStart();

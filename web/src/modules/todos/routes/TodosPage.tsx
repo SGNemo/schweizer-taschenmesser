@@ -8,7 +8,7 @@ import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { groupByTime } from '@/core/time/groups';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, EmptyState, GroupedList, Icon, IconButton, TextField } from '@/ui';
+import { Button, EmptyState, GroupedList, Icon, IconButton, TextField, useOpenParam } from '@/ui';
 import { InboxSorter } from '../components/InboxSorter';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
@@ -145,6 +145,7 @@ export default function TodosPage() {
   // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
   const [title, setTitle] = useState(() => params.get('title') ?? '');
   const [editing, setEditing] = useState<StoredTask | null>(null);
+  useOpenParam((id) => taskRepo.get(id), setEditing);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
   const [sorting, setSorting] = useState(false);
   const addRef = useRef<HTMLFormElement>(null);

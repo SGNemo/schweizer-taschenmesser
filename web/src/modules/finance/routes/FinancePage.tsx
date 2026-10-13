@@ -2,11 +2,20 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Card, Icon, IconButton, Segmented, SplitView, useSplitView } from '@/ui';
+import {
+  Button,
+  Card,
+  Icon,
+  IconButton,
+  Segmented,
+  SplitView,
+  useOpenParam,
+  useSplitView,
+} from '@/ui';
 import { TransactionEditor, type TransactionTarget } from '../components/Editors';
 import { OverviewTab } from '../components/OverviewTab';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
-import { ensureDefaults } from '../repo';
+import { ensureDefaults, transactionRepo } from '../repo';
 import { useFinanceData } from '../summary';
 import styles from './finance.module.css';
 
@@ -18,6 +27,7 @@ export default function FinancePage() {
   const data = useFinanceData();
   const [params, setParams] = useSearchParams();
   const [target, setTarget] = useState<TransactionTarget>(null);
+  useOpenParam((id) => transactionRepo.get(id), setTarget);
   const wideScreen = useSplitView();
 
   useEffect(() => {

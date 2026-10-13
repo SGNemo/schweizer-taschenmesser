@@ -19,6 +19,7 @@ import {
   PageHeader,
   patternStyles,
   TextField,
+  useOpenParam,
 } from '@/ui';
 import { GiftEditor, type GiftTarget } from '../components/GiftEditor';
 import { PersonEditor, type PersonTarget } from '../components/PersonEditor';
@@ -36,6 +37,11 @@ export default function PeoplePage() {
   const people = useLiveQuery(() => personRepo.active().toArray(), []);
   const gifts = useLiveQuery(() => giftRepo.active().toArray(), []);
   const [params, setParams] = useSearchParams();
+  // A search hit links here with ?open=<id>: show that person (or the person a gift belongs to).
+  useOpenParam(
+    async (id) => (await personRepo.get(id)) ?? (await giftRepo.get(id)),
+    (r) => ({ person: 'personId' in r ? r.personId : r.id }),
+  );
   const selected = params.get('person');
   const person = people?.find((p) => p.id === selected);
   if (selected && people && !person) {

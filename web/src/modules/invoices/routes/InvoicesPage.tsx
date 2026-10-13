@@ -19,6 +19,7 @@ import {
   Segmented,
   StateBadge,
   useMediaQuery,
+  useOpenParam,
 } from '@/ui';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { markOpen, markPaid } from '../actions';
@@ -34,6 +35,7 @@ export default function InvoicesPage() {
   const invoices = useLiveQuery(async () => sortInvoices(await invoiceRepo.active().toArray()), []);
   const [view, setView] = useState<View>('open');
   const [target, setTarget] = useState<InvoiceTarget>(null);
+  useOpenParam((id) => invoiceRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
   const toast = useUiStore((s) => s.toast);
   const day = today();

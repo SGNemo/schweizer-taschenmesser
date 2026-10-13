@@ -51,3 +51,4 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **`data-nemo-ignore`** opts a field/form/page out; the web app sets it on `<body>` so the extension never sees the vault's master password.
 - **Strength in the extension = generator entropy** (the value is random, not user-chosen); the app keeps zxcvbn for user-chosen passwords.
 - **Clipboard:** copy in an offscreen document, clear after 30 s only if unchanged (needs `clipboardRead`).
+- Comfort package 4 (2026-10-13): hits link to `<module>?open=<id>` (`core/ai/query/rows.ts`); a page that shows records through dialogs uses `useOpenParam`, one that shows them through its URL (people, lists) returns its own parameters. An unknown id is dropped silently. "Als Notiz speichern" in the chat writes through the capture adapter (`saveCapture('note')`), so the notes module stays optional and the chat never imports it.

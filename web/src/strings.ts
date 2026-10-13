@@ -1783,8 +1783,12 @@ export const de = {
     packingSummary: (packed: number, total: number) => `${packed} von ${total} gepackt`,
     contractsSummary: (n: number) =>
       n === 1 ? '1 Kündigungsfrist in Sicht' : `${n} Kündigungsfristen in Sicht`,
-    expirySummary: (expired: number, soon: number) =>
-      [expired ? `${expired} abgelaufen` : '', soon ? `${soon} bald` : '']
+    expirySummary: (expired: number, soon: number, low = 0) =>
+      [
+        expired ? `${expired} abgelaufen` : '',
+        soon ? `${soon} bald` : '',
+        low ? `${low} wenig` : '',
+      ]
         .filter(Boolean)
         .join(' · '),
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
@@ -2754,6 +2758,8 @@ export const de = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
+    restockAll: (n: number) => `Alle ${n} nachkaufen`,
+    restockedMany: (n: number) => `${n} Dinge an die Einkaufsliste gesendet.`,
     shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
@@ -4360,6 +4366,9 @@ export const de = {
     export: 'Als Markdown exportieren',
     copy: 'Kopieren',
     copied: 'Kopiert.',
+    saveAsNote: 'Als Notiz speichern',
+    noteOff: 'Das Notizen-Modul ist aus. Schalte es in der Bibliothek ein.',
+    noteFailed: 'Das ließ sich nicht als Notiz speichern.',
     regenerate: 'Neu generieren',
     edit: 'Bearbeiten',
     editSave: 'Speichern und neu fragen',

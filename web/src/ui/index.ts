@@ -40,5 +40,6 @@ export {
 export { SelectionBar } from './SelectionBar';
 export { useMediaQuery } from './useMediaQuery';
 export { useSelection } from './useSelection';
+export { useOpenParam } from './useOpenParam';
 export { WidgetList, type WidgetEntry } from './WidgetList';
 export * from './widgets';
