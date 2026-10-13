@@ -5,6 +5,7 @@ export const shortcuts: Strings['shortcuts'] = {
   hint: 'Les lettres seules ne fonctionnent que si vous n’écrivez pas dans un champ.',
   items: [
     { keys: ['Ctrl', 'K'], text: 'Rechercher ou demander' },
+    { keys: ['Ctrl', '.'], text: 'Ouvrir les outils' },
     { keys: ['N'], text: 'Nouvelle saisie' },
     { keys: ['G', 'puis H'], text: 'Vers la vue d’ensemble' },
     {
