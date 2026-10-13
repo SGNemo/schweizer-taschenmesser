@@ -11,6 +11,17 @@ Counts follow the method of [01-friction.md](01-friction.md) (code-traced, Deskt
 Not changed on purpose: vault documents (file bytes cannot be restored), chat thread delete (keeps its confirm dialog), automatic chat retention clean-up, invoice "bezahlt" (its undo also removes the booking, which the journal cannot do).
 Tests: `checkModules.test.ts` (rule), `core/undo/deleteWithUndo.test.ts`, e2e `money.spec.ts` "comes back with Rückgängig".
 
+## Package 5a – missing functions, no data change (`feat/comfort-more`)
+Built: search and kind filter in the bookings list (text over payee, note, category and amount, all months while searching; kind chips stay in the month), and an overview "Offene Geschenke" across all people with a one-click "Verschenkt" (also in the person's own gift list, swipe right on touch).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 12/13 | Find a booking ("where was that") | not possible (month stepper only) | **type 1 word**, all months | `more.spec.ts`, `filter.test.ts` |
+| 22 | Gift given | 4–5 / 5–6 | **1 / 1** | `more.spec.ts` |
+| – | What do I still have to give? | open every person | **1 list** | `more.spec.ts`, `people.test.ts` |
+
+Next (5b/5c, with data changes): subscription price history and "gekündigt zum", recurring invoice/booking.
+
 ## Package 4 – links and search to the record (`feat/comfort-links`)
 Built: a search hit or assistant answer links to `<module>?open=<id>` and the module opens the record itself (`ui/useOpenParam`; to-dos, calendar, bookings, invoices, subscriptions, budgets/goals, notes, pantry, bookmarks, documents open their dialog, people and lists show the person/list). Pantry: "Alle n nachkaufen" (one click for everything that runs low) and low stock on the home widget. Chat: "Als Notiz speichern" per answer (notes module must be on, undo in the toast).
 

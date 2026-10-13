@@ -57,6 +57,12 @@ export const finance: Strings['finance'] = {
   addTransaction: 'Añadir movimiento',
   editTransaction: 'Editar movimiento',
   noTransactions: 'No hay movimientos este mes.',
+  searchBookings: 'Buscar movimientos',
+  filterKind: 'Tipo',
+  filterAll: 'Todos',
+  searchAllMonths: (n: number) =>
+    n === 1 ? '1 resultado en todos los meses' : `${n} resultados en todos los meses`,
+  noMatches: 'No hay movimientos que coincidan.',
   payee: 'Destinatario / título',
   account: 'Cuenta',
   noCategory: 'Sin categoría',

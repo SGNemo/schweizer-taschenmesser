@@ -22,6 +22,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Comfort package 5a (booking search, gift overview) | `feat/comfort-more` | `finance` transactions tab, `people` page | PR open | – | 2026-10-13 |
 | Comfort package 4 (links, search to record) | `feat/comfort-links` | `ui/useOpenParam`, module pages (one hook line each), `core/ai/query/rows.ts`, pantry, chat message | PR open | – | 2026-10-13 |
 | Comfort package 1b (row menu, date chips, quick actions) | `feat/comfort-row-actions` | `ui/Patterns.tsx`, `ui/RowMenu`, todos/calendar/finance/invoices lists (not disk) | 1b built, PR open (1a merged) | – | 2026-10-13 |
 | Comfort package 2 (create with fewer steps, duplicate) | `feat/comfort-create` | `quickCapture/**`, finance/invoices/calendar editors, people editor | PR open | – | 2026-10-13 |
