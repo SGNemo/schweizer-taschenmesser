@@ -3,9 +3,12 @@ import {
   annualCost,
   cancelDeadlinesInRange,
   chargesInRange,
+  changePercent,
   chargesPerYear,
   nextCancelDeadline,
   nextCharge,
+  recentIncrease,
+  recordPriceChange,
   sortSubscriptions,
   totals,
 } from './logic';
@@ -100,5 +103,50 @@ describe('charges and cancellation', () => {
       '2026-09-29',
     );
     expect(list.map((s) => s.name)).toEqual(['Soon', 'Later', 'Off']);
+  });
+});
+
+describe('price history', () => {
+  it('records a change with its date and ignores an unchanged price', () => {
+    expect(recordPriceChange([], '2026-09-15', 999, 1299)).toEqual([
+      { date: '2026-09-15', fromMinor: 999, toMinor: 1299 },
+    ]);
+    expect(recordPriceChange([], '2026-09-15', 999, 999)).toEqual([]);
+  });
+  it('keeps the last 20 changes', () => {
+    let h: ReturnType<typeof recordPriceChange> = [];
+    for (let i = 1; i <= 25; i++) h = recordPriceChange(h, '2026-01-01', 100 + i, 101 + i);
+    expect(h).toHaveLength(20);
+    expect(h[0]!.fromMinor).toBe(106);
+  });
+  it('computes the percent change, negative for a cut', () => {
+    expect(changePercent({ fromMinor: 999, toMinor: 1299 })).toBe(30);
+    expect(changePercent({ fromMinor: 1000, toMinor: 800 })).toBe(-20);
+  });
+  it('flags only a recent increase', () => {
+    const h = [
+      { date: '2026-02-01', fromMinor: 500, toMinor: 600 },
+      { date: '2026-09-01', fromMinor: 600, toMinor: 550 },
+    ];
+    expect(recentIncrease(h, '2026-09-29')).toBeUndefined(); // the recent change was a cut
+    expect(recentIncrease(h, '2026-03-01')?.toMinor).toBe(600);
+    expect(recentIncrease(h, '2027-03-01')).toBeUndefined(); // too old
+  });
+});
+
+describe('cancelled for a date (recurrence end)', () => {
+  const cancelled = sub({ recurrence: { freq: 'monthly', until: '2026-10-15' } });
+  it('has charges until the date and none after it', () => {
+    expect(nextCharge(cancelled, '2026-10-01')).toBe('2026-10-15');
+    expect(nextCharge(cancelled, '2026-10-16')).toBeUndefined();
+  });
+  it('counts in the totals until the last charge, then no more (with today)', () => {
+    const plain = sub({ amountMinor: 1000 });
+    expect(totals([cancelled, plain], '2026-10-01').yearly).toBe(
+      annualCost(cancelled) + annualCost(plain),
+    );
+    expect(totals([cancelled, plain], '2026-10-16').yearly).toBe(annualCost(plain));
+    // without `today` the old behaviour stays (callers that do not pass it)
+    expect(totals([cancelled, plain]).yearly).toBe(annualCost(cancelled) + annualCost(plain));
   });
 });

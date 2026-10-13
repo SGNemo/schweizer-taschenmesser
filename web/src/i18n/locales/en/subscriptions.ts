@@ -36,6 +36,13 @@ export const subscriptions: Strings['subscriptions'] = {
   nextCharge: 'Next charge',
   cancelBy: 'Cancel by',
   ended: 'Ended',
+  cancelledTo: 'Cancelled for (optional)',
+  cancelledToHint: 'After that there are no more charges or deadlines.',
+  cancelledBadge: (date: string) => `Cancelled for ${date}`,
+  priceHistory: 'Price history',
+  priceChange: (date: string, from: string, to: string, pct: number) =>
+    `${date}: ${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+  priceUp: (pct: number) => `Price raised (+${pct} %)`,
   every: 'Interval',
   widgetEmpty: 'No active subscriptions.',
   monthlyCost: (v: string) => `≙ ${v} per month`,

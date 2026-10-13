@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoney, formatMoneyInput, parseMoney } from '@/core/money';
+import { formatDay } from '@/core/time/dates';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
+import { changePercent, recordPriceChange } from '../logic';
 import { AdvancedFields, Button, Dialog, patternStyles, Switch, TextArea, TextField } from '@/ui';
 import { annualCost } from '../logic';
 import { subscriptionRepo } from '../repo';
@@ -74,6 +76,9 @@ function Form({
       cancelNoticeDays: Number.isFinite(days) ? days : undefined,
       active,
       note: note.trim() || undefined,
+      priceHistory: existing
+        ? recordPriceChange(existing.priceHistory ?? [], today(), existing.amountMinor, amountMinor)
+        : [],
     };
     if (existing) await subscriptionRepo.update(existing.id, data);
     else await subscriptionRepo.create(data);
@@ -117,6 +122,35 @@ function Form({
         startDate={startDate}
         required
       />
+      {existing ? (
+        <TextField
+          label={t.subscriptions.cancelledTo}
+          type="date"
+          value={recurrence.until ?? ''}
+          onChange={(e) => {
+            setRecurrence({ ...recurrence, until: e.target.value || undefined, count: undefined });
+          }}
+          hint={t.subscriptions.cancelledToHint}
+          min={startDate}
+        />
+      ) : null}
+      {existing && existing.priceHistory?.length ? (
+        <div data-testid="price-history">
+          <h3>{t.subscriptions.priceHistory}</h3>
+          <ul>
+            {[...existing.priceHistory].reverse().map((c) => (
+              <li key={`${c.date}-${c.toMinor}`}>
+                {t.subscriptions.priceChange(
+                  formatDay(c.date, 'd. MMM yyyy'),
+                  formatMoney(c.fromMinor),
+                  formatMoney(c.toMinor),
+                  changePercent(c),
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <AdvancedFields moduleId="subscriptions" hasData={!!notice || !!note}>
         <TextField
           label={t.subscriptions.noticeDays}
