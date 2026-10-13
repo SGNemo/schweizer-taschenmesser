@@ -5,6 +5,7 @@ import { Button, Dialog, Form, FormActions, ReaderView, Switch, TextArea, TextFi
 import { isScratch, SCRATCH_ID } from '../logic';
 import { noteRepo } from '../repo';
 import type { Note } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 /** `scratch: true` is the not yet created scratch pad (saved with the fixed id). */
 export type NoteTarget =
@@ -115,7 +116,7 @@ function Fields({
             <Button
               variant="danger"
               onClick={async () => {
-                await noteRepo.remove(existing.id);
+                await deleteWithUndo(() => noteRepo.remove(existing.id));
                 onClose();
               }}
             >

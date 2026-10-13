@@ -175,6 +175,15 @@ test('treemap: click zooms into a folder, the breadcrumb goes back, details foll
   await expect(crumbs.getByRole('button', { name: 'Programme' })).toHaveCount(0);
 });
 
+test('after one scan another drive can be scanned right away', async ({ page }) => {
+  await openScan(page);
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await page.getByRole('button', { name: 'E:\\ (USB-Stick) scannen' }).click();
+  await expect(page.getByRole('heading', { name: 'Scan von E:\\' })).toBeVisible();
+  await expect(page.getByTestId('scan-total')).toBeVisible();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
+});
+
 test('treemap: keyboard selects, opens and goes up', async ({ page }) => {
   await openScan(page);
   const canvas = page.getByRole('img', { name: /Kartenansicht/ });
