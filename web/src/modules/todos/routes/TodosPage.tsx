@@ -19,6 +19,7 @@ import {
   ItemList,
   ItemRow,
   TextField,
+  useOpenParam,
   type RowMenuItem,
 } from '@/ui';
 import { InboxSorter } from '../components/InboxSorter';
@@ -204,6 +205,7 @@ export default function TodosPage() {
   // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
   const [title, setTitle] = useState(() => params.get('title') ?? '');
   const [editing, setEditing] = useState<StoredTask | null>(null);
+  useOpenParam((id) => taskRepo.get(id), setEditing);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
   const [sorting, setSorting] = useState(false);
   const addRef = useRef<HTMLFormElement>(null);
