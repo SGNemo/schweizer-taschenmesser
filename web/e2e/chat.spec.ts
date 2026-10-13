@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { dismissNotices } from './helpers';
+import { dismissNotices, moduleSwitch } from './helpers';
 
 test.beforeEach(({ page }) => dismissNotices(page));
 
@@ -44,7 +44,7 @@ async function mockClaude(page: Page, answers: string[]): Promise<Sent[]> {
 async function setUp(page: Page) {
   await page.goto('/library');
   const card = page.getByTestId('module-chat');
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
+  await moduleSwitch(card).click();
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
   await page.goto('/settings/ki');
   const section = page.locator('section[aria-labelledby="ai"]');
@@ -113,7 +113,7 @@ test.describe('Chat', () => {
 
     await page.goto('/library');
     const card = page.getByTestId('module-notes');
-    await card.getByRole('button', { name: 'Aktivieren' }).click();
+    await moduleSwitch(card).click();
     await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
     await page.goto('/chat');
     await page

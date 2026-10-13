@@ -89,7 +89,7 @@ export function TransactionsTab({
                   <ItemRow
                     key={x.id}
                     title={title}
-                    meta={`${(x.categoryId && category.get(x.categoryId)) || t.finance.noCategory} · ${account.get(x.accountId) ?? '–'}`}
+                    meta={`${(x.categoryId && category.get(x.categoryId)) || t.finance.noCategory} · ${account.get(x.accountId) ?? '–'}${x.repeat ? ` · ${t.finance.repeatMeta(t.finance.repeatOptions[x.repeat])}` : ''}`}
                     onOpen={() => onOpen(x)}
                     onSwipeLeft={remove}
                     swipeLeftLabel={t.actions.delete}

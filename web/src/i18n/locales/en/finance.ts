@@ -68,6 +68,12 @@ export const finance: Strings['finance'] = {
   noCategory: 'No category',
   changeCategory: 'Change category',
   fromInvoice: 'Booked automatically from a paid invoice.',
+  repeat: 'Repeat',
+  repeatHint: 'The next booking is created automatically when its date comes.',
+  repeatMeta: (every: string) => `↻ ${every}`,
+  repeatOptions: { none: 'Never', monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' },
+  repeatBooked: (n: number) =>
+    n === 1 ? '1 repeating booking added.' : `${n} repeating bookings added.`,
   addAccount: 'Add account',
   editAccount: 'Edit account',
   accountName: 'Account name',
