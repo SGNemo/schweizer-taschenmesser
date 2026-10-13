@@ -3,7 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, patternStyles, TextArea, TextField } from '@/ui';
+import { Button, DateChips, Dialog, TextArea, TextField, patternStyles } from '@/ui';
 import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
@@ -84,6 +84,7 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
           required
         />
       </div>
+      <DateChips value={dueDate} onChange={setDueDate} />
       {isPaid ? (
         <TextField
           label={t.invoices.paidAt}

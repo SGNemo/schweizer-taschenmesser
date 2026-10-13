@@ -1,8 +1,9 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { t } from '@/strings';
 import { Checkbox } from './Fields';
 import { ReadableText } from './ReadableText';
+import { RowMenu, type RowMenuItem } from './RowMenu';
 import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
@@ -140,6 +141,8 @@ export function ItemRow({
   lead,
   end,
   actions,
+  menu,
+  menuLabel,
   selectable,
   selected,
   onSelectChange,
@@ -159,6 +162,9 @@ export function ItemRow({
   end?: ReactNode;
   /** Row actions (icon buttons); shown on hover/focus, always on devices without hover. */
   actions?: ReactNode;
+  /** Overflow menu ("⋯"); also opens on right-click and long press. Entries are shortcuts: each one stays reachable in the edit dialog. */
+  menu?: RowMenuItem[];
+  menuLabel?: string;
   /** Shows a checkbox on the left; `onSelectChange` also reports a Shift-click for ranges. */
   selectable?: boolean;
   selected?: boolean;
@@ -192,8 +198,17 @@ export function ItemRow({
     </>
   );
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <li
+      onContextMenu={
+        menu?.length
+          ? (e) => {
+              e.preventDefault();
+              setMenuOpen(true);
+            }
+          : undefined
+      }
       data-tone={tone}
       className={[
         styles.item,
@@ -234,7 +249,19 @@ export function ItemRow({
           </div>
         )}
         {end}
-        {actions ? <div className={styles.actions}>{actions}</div> : null}
+        {actions || menu?.length ? (
+          <div className={`${styles.actions} ${menuOpen ? styles.actionsOpen : ''}`}>
+            {actions}
+            {menu?.length ? (
+              <RowMenu
+                label={menuLabel ?? t.ui.rowMenu}
+                items={menu}
+                open={menuOpen}
+                onOpenChange={setMenuOpen}
+              />
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {children}
     </li>
