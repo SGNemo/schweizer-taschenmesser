@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
+import { Link, type LinkProps } from 'react-router';
 import styles from './Button.module.css';
 
 /**
@@ -53,6 +54,24 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={[styles.btn, styles.icon, styles[variant], className].filter(Boolean).join(' ')}
+      {...rest}
+    />
+  );
+}
+
+/** An icon button that navigates (a real link, so it opens in a new tab and works with the keyboard). */
+export function IconLink({
+  label,
+  className,
+  ...rest
+}: Omit<LinkProps, 'aria-label' | 'title'> & { label: string }) {
+  return (
+    <Link
+      aria-label={label}
+      title={label}
+      className={[styles.btn, styles.icon, styles.ghost, styles.link, className]
+        .filter(Boolean)
+        .join(' ')}
       {...rest}
     />
   );

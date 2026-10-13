@@ -96,6 +96,19 @@ export function checkWidgetSource(id: string, file: string, src: string): string
  * given, must be a known settings category (`core/settings/registry/types.ts`); without one the
  * module's section lands in "Module". `categories` are the valid route ids.
  */
+/**
+ * Comfort contract: a delete in a module screen (`components/`, `routes/`) must go through
+ * `deleteWithUndo` / `undoableWithToast` / `undoable`, so it can be undone from the toast or Ctrl+Z.
+ * Only direct repo removals are detected; helpers in `repo.ts`/`services.ts` are the caller's job.
+ */
+export function checkDeleteSource(id: string, file: string, src: string): string[] {
+  const direct = /\b\w+Repo\.remove(Many)?\(/.test(src);
+  if (!direct || /comfort-allow-delete/.test(src)) return []; // marker: automatic clean-up, not a user delete
+  return /\b(deleteWithUndo|undoableWithToast|undoable)\b/.test(src)
+    ? []
+    : [`${id}: "${file}" deletes without undo (use deleteWithUndo from @/core/undo/withToast)`];
+}
+
 export function checkSettingsSource(
   id: string,
   source: string,

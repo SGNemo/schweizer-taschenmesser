@@ -9,6 +9,7 @@ import { accountRepo, categoryRepo, deleteAccount, transactionRepo } from '../re
 import type { Account, Category, Transaction } from '../schema';
 import type { FinanceData } from '../types';
 import styles from '../routes/finance.module.css';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 type Kind = 'expense' | 'income';
 
@@ -178,7 +179,9 @@ function TransactionForm({
       {existing?.sourceRef ? <p className={styles.muted}>{t.finance.fromInvoice}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => transactionRepo.remove(existing.id) : undefined}
+        onDelete={
+          existing ? () => deleteWithUndo(() => transactionRepo.remove(existing.id)) : undefined
+        }
       />
     </form>
   );
@@ -257,7 +260,7 @@ function AccountForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteAccountHint}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => deleteAccount(existing.id) : undefined}
+        onDelete={existing ? () => deleteWithUndo(() => deleteAccount(existing.id)) : undefined}
       />
     </form>
   );
@@ -328,7 +331,9 @@ function CategoryForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteCategoryHint}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => categoryRepo.remove(existing.id) : undefined}
+        onDelete={
+          existing ? () => deleteWithUndo(() => categoryRepo.remove(existing.id)) : undefined
+        }
       />
     </form>
   );

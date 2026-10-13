@@ -118,6 +118,8 @@ export const de = {
     grabHandle: 'Zum Schließen nach unten ziehen',
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
+    deleted: 'Gelöscht.',
+    changed: 'Geändert.',
     undoFailed: 'Das ließ sich nicht mehr rückgängig machen.',
     nothingToUndo: 'Nichts zum Rückgängigmachen.',
     selection: 'Auswahl',
@@ -155,6 +157,7 @@ export const de = {
     hint: 'Einzelne Buchstaben wirken nur, wenn du nicht in einem Feld schreibst.',
     items: [
       { keys: ['Strg', 'K'], text: 'Suchen oder fragen' },
+      { keys: ['Strg', '.'], text: 'Werkzeuge öffnen' },
       { keys: ['N'], text: 'Neu erfassen' },
       { keys: ['G', 'dann H'], text: 'Zur Übersicht' },
       { keys: ['G', 'dann P / G / A / W / T'], text: 'Zu Planen, Geld, Haushalt, Wissen, Tresor' },

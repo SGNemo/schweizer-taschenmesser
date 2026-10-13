@@ -307,6 +307,11 @@ export interface DueNotification {
    * end. Notifications the user set explicitly (an event's own lead, "Später") are never moved.
    */
   soft?: boolean;
+  /**
+   * Set by the calm policy while "Stumm" is on: shown without sound or vibration. Modules never set
+   * it themselves.
+   */
+  quiet?: boolean;
 }
 
 export type NotificationSource = (range: {

@@ -13,7 +13,9 @@ import { eventRepo } from '@/modules/calendar/repo';
 import { eventSchema } from '@/modules/calendar/schema';
 import { taskRepo } from '@/modules/todos/repo';
 import { taskSchema } from '@/modules/todos/schema';
+import { availableManifests } from '@/core/modules/available';
 import { t } from '@/strings';
+import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
 import { AnswerView } from './assistant/AnswerView';
 import { CommandPalette, filterCommands, normalize } from './CommandPalette';
@@ -260,5 +262,53 @@ describe('assistant in the palette', () => {
     await user.keyboard('{Enter}');
     expect(screen.getByTestId('where')).toHaveTextContent('/settings');
     expect(readRecent()).toEqual([]);
+  });
+  it('switches a quick setting straight from the palette without leaving the page', async () => {
+    useUiStore.getState().setTheme('system');
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'dunkel');
+    await user.click(await screen.findByRole('option', { name: new RegExp(t.settings.themeDark) }));
+    expect(useUiStore.getState().theme).toBe('dark');
+    expect(screen.getByTestId('where')).toHaveTextContent('/');
+    expect(screen.getByTestId('where')).not.toHaveTextContent('/settings');
+    expect(useUiStore.getState().toasts.at(-1)?.action).toBeDefined();
+    useUiStore.getState().setTheme('system');
+  });
+
+  it('finds settings without the "Einstellung" prefix, by everyday words, and opens the row', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'sicherung');
+    const hits = await screen.findAllByRole('option', { name: /Sicherung|Backup/ });
+    await user.click(hits[0]!);
+    expect(screen.getByTestId('where')).toHaveTextContent('/settings/');
+  });
+
+  it('offers modules that are switched off by name and leads to their library card', async () => {
+    const off = availableManifests().find((m) => !m.defaultEnabled)!;
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), off.name);
+    const entry = await screen.findByRole('option', {
+      name: tComfort.get().library.enable(off.name),
+    });
+    await user.click(entry);
+    expect(screen.getByTestId('where')).toHaveTextContent('/library');
   });
 });
