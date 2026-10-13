@@ -1969,6 +1969,8 @@ export const de = {
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
     active: 'Aktiv',
     paused: 'Pausiert',
+    pause: 'Pausieren',
+    resume: 'Fortsetzen',
     empty: 'Noch keine Abos.',
     perMonth: 'Pro Monat',
     perYear: 'Pro Jahr',

@@ -4,9 +4,19 @@ import { useSearchParams } from 'react-router';
 import { formatMoney } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { daysBetween, formatDay, today } from '@/core/time/dates';
-import { changeWithUndo } from '@/core/undo/withToast';
+import { changeWithUndo, deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { AdvancedToggle, Badge, Button, Card, EmptyState, Icon, Switch, useOpenParam } from '@/ui';
+import {
+  AdvancedToggle,
+  Badge,
+  Button,
+  EmptyState,
+  Icon,
+  ItemList,
+  ItemRow,
+  Switch,
+  useOpenParam,
+} from '@/ui';
 import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
 import {
   changePercent,
@@ -73,56 +83,69 @@ export default function SubscriptionsPage() {
           <StartDataButton moduleId="subscriptions" />
         </EmptyState>
       ) : null}
-      <ul className={styles.list}>
+      <ItemList label={t.subscriptions.title}>
         {subs?.map((s) => {
           const charge = s.active ? nextCharge(s, day) : undefined;
           const cancel = s.active ? nextCancelDeadline(s, day) : undefined;
           const urgent = cancel ? daysBetween(day, cancel.deadline) <= WARN_DAYS : false;
+          const increase = recentIncrease(s.priceHistory ?? [], day);
+          const facts = [
+            describeRecurrence(s.recurrence),
+            charge
+              ? `${t.subscriptions.nextCharge}: ${formatDay(charge, 'd. MMM yyyy')}`
+              : s.active
+                ? t.subscriptions.ended
+                : t.subscriptions.paused,
+            s.recurrence.until
+              ? t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM yyyy'))
+              : '',
+            increase ? t.subscriptions.priceUp(changePercent(increase)) : '',
+          ].filter(Boolean);
+          const toggle = (active: boolean) =>
+            void changeWithUndo(() => subscriptionRepo.update(s.id, { active }));
+          const remove = () => void deleteWithUndo(() => subscriptionRepo.remove(s.id));
           return (
-            <Card as="li" key={s.id} className={s.active ? '' : styles.inactive}>
-              <div className={styles.row}>
-                <button type="button" className={styles.main} onClick={() => setTarget(s)}>
-                  <span className={styles.name}>{s.name}</span>
-                  <span className={styles.muted}>{describeRecurrence(s.recurrence)}</span>
-                  <span className={styles.muted}>
-                    {charge
-                      ? `${t.subscriptions.nextCharge}: ${formatDay(charge, 'd. MMM yyyy')}`
-                      : s.active
-                        ? t.subscriptions.ended
-                        : t.subscriptions.paused}
-                  </span>
-                  {s.recurrence.until ? (
-                    <span className={styles.muted}>
-                      {t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM yyyy'))}
-                    </span>
-                  ) : null}
-                  {recentIncrease(s.priceHistory ?? [], day) ? (
-                    <span className={styles.muted}>
-                      {t.subscriptions.priceUp(
-                        changePercent(recentIncrease(s.priceHistory ?? [], day)!),
-                      )}
-                    </span>
-                  ) : null}
+            <ItemRow
+              key={s.id}
+              title={s.name}
+              className={s.active ? undefined : styles.inactive}
+              meta={
+                <>
+                  {facts.join(' · ')}
                   {cancel ? (
-                    <span className={urgent ? styles.warn : styles.muted}>
+                    <span className={urgent ? styles.warn : undefined}>
+                      {' · '}
                       {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}
                     </span>
                   ) : null}
-                </button>
-                <span className={styles.amount}>{formatMoney(s.amountMinor)}</span>
-                <Switch
-                  label={`${s.name}: ${t.subscriptions.active}`}
-                  checked={s.active}
-                  onChange={(active) =>
-                    void changeWithUndo(() => subscriptionRepo.update(s.id, { active }))
-                  }
-                />
-                {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
-              </div>
-            </Card>
+                </>
+              }
+              onOpen={() => setTarget(s)}
+              onSwipeLeft={remove}
+              swipeLeftLabel={t.actions.delete}
+              menu={[
+                {
+                  id: 'active',
+                  label: s.active ? t.subscriptions.pause : t.subscriptions.resume,
+                  onSelect: () => toggle(!s.active),
+                },
+                { id: 'delete', label: t.actions.delete, danger: true, onSelect: remove },
+              ]}
+              end={
+                <>
+                  <span className={styles.amount}>{formatMoney(s.amountMinor)}</span>
+                  <Switch
+                    label={`${s.name}: ${t.subscriptions.active}`}
+                    checked={s.active}
+                    onChange={toggle}
+                  />
+                  {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                </>
+              }
+            />
           );
         })}
-      </ul>
+      </ItemList>
 
       <SubscriptionEditor target={openTarget} onClose={closeEditor} />
     </>
