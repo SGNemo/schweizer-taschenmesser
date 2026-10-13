@@ -11,5 +11,5 @@ Closing note for [01-friction](01-friction.md) → [02-plan](02-plan.md) → [03
 | 4 | #158 | `?open=<id>` deep links, restock all, chat answer → note |
 | 5a–c | #159–#161 | booking search/filter, gift overview, subscription price history + "gekündigt zum", recurring invoices |
 
-Rules that came out of it: `howto/list-actions.md`, [advanced-fields](../../howto/advanced-fields.md); focus checklist item 8.
+Rules that came out of it: [list-actions](../../howto/list-actions.md), [advanced-fields](../../howto/advanced-fields.md); focus checklist item 8.
 Left on purpose: system modules (other chat), vault documents (bytes cannot be undone), typed confirmation in the disk module (other chat).
