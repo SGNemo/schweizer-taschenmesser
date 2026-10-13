@@ -116,3 +116,6 @@ Built: field "Wiederholen" (Erweitert) on a booking. At the next app start the m
 | 11 | Rent / salary booking every month | enter again each month (4 / 5) | **0, books itself** | `repeat-bookings.spec.ts`, `logic.test.ts` |
 
 Deliberately calm: nothing is booked in the future, at most 12 missed periods per start, deleting the newest booking ends the series.
+
+## Package 8b – finance: accounts and categories in Erweitert (`feat/comfort-finance-advanced`)
+The finance page shows Übersicht and Buchungen in Basis. The tabs Konten and Kategorien appear in the Erweitert view (switch in the page header), as soon as the user has more than one account or an own category (nothing in use is ever hidden), or when a link points at them (balance widget "Konto anlegen"). The tab row loses two of four entries for everyone who never touches them.

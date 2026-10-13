@@ -23,6 +23,9 @@ const SEED_CATEGORIES = [
   ['cat-income-other', 'Sonstige Einnahmen', 'income'],
 ] as const;
 
+/** Ids of the categories every installation starts with; anything else was added by the user. */
+export const DEFAULT_CATEGORY_IDS: ReadonlySet<string> = new Set(SEED_CATEGORIES.map((c) => c[0]));
+
 const SETTINGS_SCOPE = 'module.finance';
 
 /**

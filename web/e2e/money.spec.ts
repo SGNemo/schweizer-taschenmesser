@@ -100,6 +100,7 @@ test.describe('Invoices', () => {
 
     // Finance shows the booking and the reduced balance
     await ready(page, '/finance?tab=transactions');
+    await page.getByRole('switch', { name: 'Erweitert' }).click(); // Konten/Kategorien live in Erweitert
     const row = page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ });
     await expect(row).toContainText('Rechnungen');
     await expect(row).toContainText(/−89,90\s€/);
@@ -299,6 +300,7 @@ test.describe('Finance', () => {
   }) => {
     await addTransaction(page, { kind: 'Einnahme', amount: '100,00', category: 'Gehalt' });
     await ready(page, '/finance?tab=accounts');
+    await page.getByRole('switch', { name: 'Erweitert' }).click(); // Konten/Kategorien live in Erweitert
     await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
     await page.getByLabel('Kontoname').fill('Sparkonto');
     await page.getByLabel('Anfangssaldo').fill('1.000,00');
