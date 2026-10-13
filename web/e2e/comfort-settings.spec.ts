@@ -98,3 +98,25 @@ test('library card and deep link: /library#module-… marks the card', async ({ 
   await ready(page, '/library#module-todos');
   await expect(page.locator('#module-todos')).toHaveAttribute('data-hash-target', 'true');
 });
+
+test('mute: one tap starts a pause, it shows when it ends, one tap ends it', async ({ page }) => {
+  await ready(page, '/settings');
+  const bar = page.getByTestId('quick-bar');
+  await bar.getByRole('group', { name: 'Stumm' }).getByRole('button', { name: '1 Stunde' }).click();
+  await expect(bar.getByText(/^Stumm bis /)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('tm-mute'))).toContain('"1h"');
+  await bar.getByRole('group', { name: 'Stumm' }).getByRole('button', { name: 'Aus' }).click();
+  await expect(bar.getByText(/^Stumm bis /)).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('tm-mute'))).toBeNull();
+});
+
+test('mute: reachable from the palette', async ({ page }, info) => {
+  test.skip(isPhone(info), 'keyboard shortcut');
+  await ready(page, '/');
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox', { name: /Suchen, springen/ }).fill('Stumm: bis morgen');
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('tm-mute')))
+    .toContain('tomorrow');
+});

@@ -15,6 +15,8 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { SETTINGS_CATEGORIES } from '@/core/settings/registry/categories';
 import { searchSettings, type SettingsSearchResult } from '@/core/settings/registry/search';
 import { applyQuick, QUICK_SETTINGS } from '@/core/settings/quick';
+import { formatMuteEnd, MUTE_PRESETS, muteUntil, setMute } from '@/core/notifications/mute';
+import { now } from '@/core/time/now';
 import { normalize } from '@/core/text/normalize';
 import { useSettingsSections } from '@/pages/settings/useSections';
 import type { ResultRow } from '@/core/ai/query/types';
@@ -161,6 +163,26 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           run: () => applyQuick(q, o.value),
         })),
       ),
+      // "Stumm: 1 Stunde", "Stumm: bis morgen", "Stumm: aus" (core/notifications/mute.ts).
+      ...(['off', ...MUTE_PRESETS] as const).map((v) => ({
+        id: `mute-${v}`,
+        label: `${tComfort.get().mute.title}: ${
+          v === 'off'
+            ? tComfort.get().mute.off
+            : v === '1h'
+              ? tComfort.get().mute.hour
+              : tComfort.get().mute.tomorrow
+        }`,
+        icon: 'bell' as IconName,
+        run: () => {
+          setMute(v === 'off' ? undefined : v);
+          toast(
+            v === 'off'
+              ? `${tComfort.get().mute.title}: ${tComfort.get().mute.off}`
+              : tComfort.get().mute.until(formatMuteEnd(muteUntil(v, now()))),
+          );
+        },
+      })),
       // Modules that are off are still found by name or purpose and lead to their library card.
       ...availableManifests()
         .filter((m) => states !== undefined && !states[m.id])

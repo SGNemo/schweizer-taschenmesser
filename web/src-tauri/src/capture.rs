@@ -20,6 +20,7 @@ use tauri::{
 };
 use tauri_plugin_autostart::ManagerExt as _;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
+use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt as _, Shortcut, ShortcutState};
 
 pub const AUTOSTART_FLAG: &str = "--autostart";
@@ -43,6 +44,8 @@ struct TrayItems {
 #[derive(Default)]
 pub struct CaptureState {
     close_to_tray: AtomicBool,
+    /// The quit question is open; a second close click must not stack another one.
+    quit_prompt_open: AtomicBool,
     hotkey: Mutex<Option<Shortcut>>,
     /// Second global key: opens the vault search (the web app decides whether the vault is unlocked).
     vault_hotkey: Mutex<Option<Shortcut>>,
@@ -209,6 +212,11 @@ pub fn on_window_event(window: &Window, event: &WindowEvent) {
             {
                 api.prevent_close();
                 let _ = window.hide();
+            } else {
+                // The hidden capture window and the tray icon would keep the process alive with
+                // no main window to show again, so closing the main window has to end the app.
+                api.prevent_close();
+                ask_quit(app);
             }
         }
         (CAPTURE, WindowEvent::CloseRequested { api, .. }) => {
@@ -229,6 +237,33 @@ pub fn on_window_event(window: &Window, event: &WindowEvent) {
         }
         _ => {}
     }
+}
+
+/// Asks whether to quit and, on yes, ends the whole process (not just the main window).
+fn ask_quit(app: &AppHandle) {
+    let state = app.state::<CaptureState>();
+    if state.quit_prompt_open.swap(true, Ordering::AcqRel) {
+        return;
+    }
+    let (title, text, quit, cancel) = crate::texts::quit_dialog(crate::webview2::system_lang());
+    let handle = app.clone();
+    app.dialog()
+        .message(text)
+        .title(title)
+        .kind(MessageDialogKind::Warning)
+        .buttons(MessageDialogButtons::OkCancelCustom(
+            quit.into(),
+            cancel.into(),
+        ))
+        .show(move |confirmed| {
+            handle
+                .state::<CaptureState>()
+                .quit_prompt_open
+                .store(false, Ordering::Release);
+            if confirmed {
+                handle.exit(0);
+            }
+        });
 }
 
 /// Maps the message of a failed registration to a code the UI turns into German text.
