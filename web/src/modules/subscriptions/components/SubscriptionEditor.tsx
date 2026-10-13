@@ -10,6 +10,7 @@ import { annualCost } from '../logic';
 import { subscriptionRepo } from '../repo';
 import type { Subscription } from '../schema';
 import styles from '../routes/subscriptions.module.css';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type SubscriptionTarget = Stored<Subscription> | { draft: true } | null;
 
@@ -134,7 +135,7 @@ function Form({
           <Button
             variant="danger"
             onClick={async () => {
-              await subscriptionRepo.remove(existing.id);
+              await deleteWithUndo(() => subscriptionRepo.remove(existing.id));
               onClose();
             }}
           >

@@ -5,6 +5,7 @@ export const shortcuts: Strings['shortcuts'] = {
   hint: 'Las letras sueltas solo funcionan cuando no estás escribiendo en un campo.',
   items: [
     { keys: ['Ctrl', 'K'], text: 'Buscar o preguntar' },
+    { keys: ['Ctrl', '.'], text: 'Abrir las herramientas' },
     { keys: ['N'], text: 'Añadir nuevo' },
     { keys: ['G', 'luego H'], text: 'Ir al resumen' },
     {

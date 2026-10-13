@@ -244,3 +244,10 @@ S5. *Themes:* alle fünf in Hell und Dunkel durchklicken (Lesbarkeit, Fokusring 
 S6. *Duplikat-Webhook:* in Ko-fi „Send test“ zweimal oder dieselbe Transaktion erneut senden: derselbe Code kommt wieder, kein neuer. ☐
 S7. *Mailfehler:* Resend-Schlüssel kurz falsch setzen, Spende auslösen: nach den Wiederholungen kommt die Benachrichtigung an die Entwickleradresse (mit Hash-Kürzel, ohne Spender-Mail). ☐
 S8. *Entwickler-Code:* `create --tier developer --name "Sven"` eingeben: Badge „Entwickler“, entfernbar, neu erzeugbar. ☐
+
+### Stumm (Pause für Erinnerungen)
+M1. *Android:* Erinnerung in 2 Minuten anlegen, Einstellungen → „Stumm“ → 1 Stunde: die Erinnerung kommt, aber ohne Ton und Vibration (Kanal „Stumm“ in den App-Benachrichtigungseinstellungen sichtbar). Danach „Aus“: nächste Erinnerung mit Ton. ☐
+M2. *Web Push:* gleiche Prüfung mit geschlossener App und eingerichtetem Push: Benachrichtigung erscheint ohne Ton. ☐
+M3. *Extras:* gestaffelte Erinnerung oder Tagesübersicht fällt in die Pause: kommt erst nach deren Ende. ☐
+M4. *Desktop:* Karte in der App erscheint wie sonst; der Ton der Windows-Benachrichtigung bleibt (bekannte Grenze). ☐
+

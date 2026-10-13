@@ -273,6 +273,23 @@ test.describe('Finance', () => {
     await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
   });
 
+  test('a deleted booking comes back with "Rückgängig" (comfort: delete = row, Löschen, undo)', async ({
+    page,
+  }) => {
+    await addTransaction(page, {
+      kind: 'Ausgabe',
+      amount: '9,00',
+      category: 'Mobilität',
+      payee: 'Tram',
+    });
+    await ready(page, '/finance?tab=transactions');
+    await page.getByRole('button', { name: /Tram/ }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+    await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
+    await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
+    await expect(page.getByRole('button', { name: /Tram/ })).toBeVisible();
+  });
+
   test('accounts and categories can be managed; the balance sums all accounts', async ({
     page,
   }) => {
