@@ -10,10 +10,10 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | [howto/i18n.md](howto/i18n.md) | UI languages: add texts ("Neue Texte hinzufügen"), add a language ("Neue Sprache hinzufügen"), `check:i18n`, formats |
 | [howto/merge-retire-module.md](howto/merge-retire-module.md) | merge modules: app migration step, retire the source, redirects |
 | [howto/seed-data.md](howto/seed-data.md) | seed data per module, Dev-Preview test data, seeds in E2E and screenshots |
-| [howto/new-setting.md](howto/new-setting.md) | settings registry: add a module setting or a section, categories, deep links |
+| [howto/new-setting.md](howto/new-setting.md) | settings registry: add a module setting or a section, categories, deep links; "Offer a setting with a context link (gear)", quick switch, reset, search words |
 | [howto/ai-actions.md](howto/ai-actions.md) | define AI actions for a module (`aiSchema.actions`), parse hints, handlers, extend the eval set (`npm run ai:eval`) |
 | [howto/readable-text.md](howto/readable-text.md) | reading aid, groups, colour meaning: show text readably |
-| [howto/new-extension.md](howto/new-extension.md) | tool, connector, setup step, AI provider, importer |
+| [howto/new-extension.md](howto/new-extension.md) | tool (incl. "Register a search-bar expression for a tool"), connector, setup step, AI provider, importer |
 | [howto/design-brand.md](howto/design-brand.md) | logo/icons pipeline (`design/icon/`), wordmark, banner, design tokens, accents |
 | [howto/ci.md](howto/ci.md) | CI layout, caches, sharding, doc-only gate, Dev-Preview |
 | [howto/browser-extension.md](howto/browser-extension.md) | Brave extension: build, load, connect, flows, troubleshooting, vault bridge (native messaging host), release zip proposal |
