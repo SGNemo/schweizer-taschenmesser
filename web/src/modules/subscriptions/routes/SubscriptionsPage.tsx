@@ -6,7 +6,7 @@ import { describeRecurrence } from '@/core/recurrence/describe';
 import { daysBetween, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { AdvancedToggle, Badge, Button, Card, EmptyState, Icon, Switch } from '@/ui';
+import { AdvancedToggle, Badge, Button, Card, EmptyState, Icon, Switch, useOpenParam } from '@/ui';
 import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
 import { nextCancelDeadline, nextCharge, sortSubscriptions, totals } from '../logic';
 import { subscriptionRepo } from '../repo';
@@ -23,6 +23,7 @@ export default function SubscriptionsPage() {
     [],
   );
   const [target, setTarget] = useState<SubscriptionTarget>(null);
+  useOpenParam((id) => subscriptionRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.

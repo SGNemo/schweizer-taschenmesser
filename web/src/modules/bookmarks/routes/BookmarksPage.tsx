@@ -19,6 +19,7 @@ import {
   SelectField,
   TextField,
   Toolbar,
+  useOpenParam,
 } from '@/ui';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import { filterItems, groupLinks, hostOf, normalizeUrl, tagCounts, type Filter } from '../logic';
@@ -42,6 +43,7 @@ export default function BookmarksPage() {
   const items = useLiveQuery(() => itemRepo.active().toArray(), []);
   const [filter, setFilter] = useState<Filter>({ view: 'open', kind: 'all', query: '' });
   const [target, setTarget] = useState<ItemTarget>(null);
+  useOpenParam((id) => itemRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
 
   // `?new=1` (Quick-Add) or shared content (Web Share Target: title/text/url) opens the create dialog.
