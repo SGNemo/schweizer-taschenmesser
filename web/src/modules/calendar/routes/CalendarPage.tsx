@@ -207,7 +207,7 @@ export default function CalendarPage() {
         </SplitView>
       </div>
 
-      <EventEditor target={openTarget} onClose={closeEditor} />
+      <EventEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
       <ExternalDetail id={externalId} onClose={() => setExternalId(null)} />
     </>
   );

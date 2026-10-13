@@ -4,6 +4,7 @@ import { getPlatform } from '@/core/platform';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
+import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
 import {
   Button,
@@ -18,7 +19,7 @@ import {
 import { eventRepo } from '../repo';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
-import { deleteWithUndo } from '@/core/undo/withToast';
+import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
 export type EventTarget =
   | Stored<CalendarEvent>
@@ -36,7 +37,16 @@ const leadLabel = (m: number): string =>
         ? t.calendar.notify.day
         : t.calendar.notify.minutes(m);
 
-export function EventEditor({ target, onClose }: { target: EventTarget; onClose: () => void }) {
+export function EventEditor({
+  target,
+  onClose,
+  onDuplicated,
+}: {
+  target: EventTarget;
+  onClose: () => void;
+  /** The copy made by "Duplizieren"; the page opens it for editing. */
+  onDuplicated?: (copy: Stored<CalendarEvent>) => void;
+}) {
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
@@ -52,7 +62,14 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
             : t.calendar.newEvent
       }
     >
-      {target ? <Form key={existing?.id ?? 'new'} target={target} onClose={onClose} /> : null}
+      {target ? (
+        <Form
+          key={existing?.id ?? 'new'}
+          target={target}
+          onClose={onClose}
+          onDuplicated={onDuplicated}
+        />
+      ) : null}
     </Dialog>
   );
 }
@@ -60,7 +77,15 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
 const isReminder = (target: EventTarget): boolean =>
   !!target && ('id' in target ? target.kind === 'reminder' : target.draft.kind === 'reminder');
 
-function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: () => void }) {
+function Form({
+  target,
+  onClose,
+  onDuplicated,
+}: {
+  target: NonNullable<EventTarget>;
+  onClose: () => void;
+  onDuplicated?: (copy: Stored<CalendarEvent>) => void;
+}) {
   const existing = 'id' in target ? target : null;
   const kind: EventKind = isReminder(target) ? 'reminder' : 'event';
   const reminder = kind === 'reminder';
@@ -219,6 +244,22 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           <span />
         )}
         <span className={patternStyles.hstack}>
+          {existing ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                const copy = await undoableWithToast(
+                  t.actions.duplicated,
+                  t.actions.duplicated,
+                  () => eventRepo.create(copyData(existing)),
+                );
+                onClose();
+                onDuplicated?.(copy);
+              }}
+            >
+              {t.actions.duplicate}
+            </Button>
+          ) : null}
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}
