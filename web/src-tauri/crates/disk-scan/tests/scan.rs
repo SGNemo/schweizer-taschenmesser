@@ -334,3 +334,30 @@ fn perf_synthetic_tree() {
         assert_eq!(r.files as usize, dirs * per_dir);
     }
 }
+
+#[test]
+fn the_live_picture_ends_with_the_same_sums_as_the_tree() {
+    let t = fixture();
+    let control = ScanControl::default();
+    assert!(control.live.snapshot(0).is_empty());
+    let r = scan(t.path(), &opts(1000), &control, |_| {}).unwrap();
+    let live = control.live.snapshot(0);
+    let tree_root = r.tree.view(0).unwrap();
+    // Root and every top-level folder add up to what the finished tree says.
+    assert_eq!(live[0].bytes, tree_root.bytes);
+    assert_eq!(live[0].files, tree_root.files);
+    for top in r.tree.children(0, 1, 0) {
+        if top.kind != NodeKind::Dir {
+            continue;
+        }
+        let l = live
+            .iter()
+            .find(|v| v.kind == NodeKind::Dir && v.name == top.name && v.parent_id == Some(0))
+            .unwrap();
+        assert_eq!(l.bytes, top.bytes, "{}", top.name);
+    }
+    // The root's own file (top.txt) shows as "files here" next to the folders.
+    assert!(live
+        .iter()
+        .any(|v| v.kind == NodeKind::Small && v.parent_id == Some(0)));
+}
