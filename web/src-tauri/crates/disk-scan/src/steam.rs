@@ -232,13 +232,9 @@ fn local_last_played(steam_root: &Path, into: &mut HashMap<u32, i64>) {
             continue;
         };
         let vdf = parse_vdf(&text);
-        let Some(Vdf::Obj(apps)) = vdf.at(&[
-            "UserLocalConfigStore",
-            "Software",
-            "Valve",
-            "Steam",
-            "apps",
-        ]) else {
+        let Some(Vdf::Obj(apps)) =
+            vdf.at(&["UserLocalConfigStore", "Software", "Valve", "Steam", "apps"])
+        else {
             continue;
         };
         for (id, app) in apps {
@@ -323,7 +319,11 @@ pub fn steam_games(tree: &Tree, steam_roots: &[PathBuf]) -> Vec<SteamGame> {
 
     let mut last: HashMap<u32, i64> = HashMap::new();
     let mut roots: Vec<PathBuf> = steam_roots.to_vec();
-    roots.extend(libraries.iter().filter_map(|(p, _)| p.parent().map(Path::to_path_buf)));
+    roots.extend(
+        libraries
+            .iter()
+            .filter_map(|(p, _)| p.parent().map(Path::to_path_buf)),
+    );
     roots.sort();
     roots.dedup();
     for r in &roots {
@@ -370,10 +370,17 @@ mod tests {
         );
         let app = v.get("appstate").unwrap();
         assert_eq!(app.get("APPID").and_then(Vdf::int), Some(4242));
-        assert_eq!(app.get("name").and_then(Vdf::str), Some("Sky \"Ferry\" Tales"));
-        assert_eq!(app.get("LastPlayed").and_then(Vdf::int), Some(1_700_000_000));
         assert_eq!(
-            v.at(&["AppState", "UserConfig", "language"]).and_then(Vdf::str),
+            app.get("name").and_then(Vdf::str),
+            Some("Sky \"Ferry\" Tales")
+        );
+        assert_eq!(
+            app.get("LastPlayed").and_then(Vdf::int),
+            Some(1_700_000_000)
+        );
+        assert_eq!(
+            v.at(&["AppState", "UserConfig", "language"])
+                .and_then(Vdf::str),
             Some("german")
         );
     }

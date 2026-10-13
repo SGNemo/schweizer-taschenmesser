@@ -56,7 +56,13 @@ fn steam_folder() -> TempDir {
     game(&apps, "Old Ferry", 3000);
     game(&apps, "New Harbor", 2000);
     game(&apps, "Fresh Install", 1000);
-    manifest(&apps, 100, "Old Ferry Deluxe", "Old Ferry", Some(1_500_000_000));
+    manifest(
+        &apps,
+        100,
+        "Old Ferry Deluxe",
+        "Old Ferry",
+        Some(1_500_000_000),
+    );
     manifest(&apps, 200, "New Harbor", "New Harbor", None);
     manifest(&apps, 300, "Fresh Install", "Fresh Install", None);
     // Installed elsewhere / not in this library: no folder, so not listed.
@@ -88,7 +94,14 @@ fn games_get_the_newest_last_played_from_manifest_or_local_config() {
     let games = steam_games(&r.tree, &[]);
     let got: Vec<_> = games
         .iter()
-        .map(|g| (g.app_id, g.title.as_str(), g.node.name.as_str(), g.last_played))
+        .map(|g| {
+            (
+                g.app_id,
+                g.title.as_str(),
+                g.node.name.as_str(),
+                g.last_played,
+            )
+        })
         .collect();
     assert_eq!(
         got,
@@ -119,7 +132,13 @@ fn scanning_the_library_or_its_common_folder_finds_the_games_too() {
     assert_eq!(games.len(), 3);
     assert_eq!(games[1].last_played, Some(1_650_000_000));
 
-    let r = scan(&apps.join("common"), &opts(), &ScanControl::default(), |_| {}).unwrap();
+    let r = scan(
+        &apps.join("common"),
+        &opts(),
+        &ScanControl::default(),
+        |_| {},
+    )
+    .unwrap();
     assert_eq!(steam_games(&r.tree, &[]).len(), 3);
 }
 
