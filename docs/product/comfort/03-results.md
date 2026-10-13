@@ -25,6 +25,7 @@ Built: `RowMenu` + `ItemRow.menu` ("⋯", right-click, long press), `DateChips` 
 | 5 / 6 / 8 | Tick, to tomorrow, due/priority (to-dos) | 1 / 5 / 4–5 (D), 1 / 6–7 / 4–6 (A) | **1 / 2 / 2** (swipe right = tick, swipe left or ⋯ → "Morgen"/"Nächste Woche"/Hoch) | `comfort.spec.ts` |
 
 To-do rows are now `ItemRow`s (checkbox as lead, subtasks nested), so `J/K/E/Space` work there too. Still open for later packages: subscription price inline (action 14), gift "geschenkt" (22), pantry quick actions (19/20).
+
 ## Package 2 – create with fewer steps (`feat/comfort-create`)
 Built: Quick Capture `n ` (note) and `r ` / "Rechnung …" (invoice, no confirm step), repeat bookings take category and account of the payee's last booking, "Duplizieren" for bookings, invoices and events/reminders (the copy opens for editing, undo toast), a new person has no birthday date preset.
 
