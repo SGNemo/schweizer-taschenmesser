@@ -13,6 +13,8 @@ export const attention: Strings['attention'] = {
   eventAt: (time: string) => `aujourd’hui à ${time}`,
   budgetOver: (name: string) => `Budget « ${name} » dépassé`,
   pantryExpired: (n: number) => (n <= 1 ? `${n} provision périmée` : `${n} provisions périmées`),
+  pantryLow: (n: number) =>
+    n <= 1 ? `${n} provision bientôt épuisée` : `${n} provisions bientôt épuisées`,
   pantrySoon: (n: number) =>
     n <= 1 ? `${n} provision bientôt périmée` : `${n} provisions bientôt périmées`,
   docsExpired: (n: number) => (n <= 1 ? `${n} document expiré` : `${n} documents expirés`),

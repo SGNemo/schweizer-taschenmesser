@@ -1,3 +1,4 @@
+import { NowStrip } from '@/core/modules/NowStrip';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates';
@@ -75,6 +76,7 @@ export default function FinancePage() {
         </Button>
       </div>
 
+      <NowStrip modules={['finance', 'invoices', 'budgets']} />
       <div className={styles.tabs}>
         <Segmented
           label={t.finance.tabsLabel}

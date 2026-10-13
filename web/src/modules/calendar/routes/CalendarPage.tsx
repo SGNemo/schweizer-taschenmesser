@@ -1,3 +1,4 @@
+import { NowStrip } from '@/core/modules/NowStrip';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
@@ -125,6 +126,7 @@ export default function CalendarPage() {
         >
           <AdvancedToggle moduleId="calendar" />
         </PageHeader>
+
         <RemindersTab
           newRequested={params.get('new') === '1'}
           onNewHandled={() => {
@@ -160,6 +162,7 @@ export default function CalendarPage() {
           {t.calendar.newEvent}
         </Button>
       </PageHeader>
+      <NowStrip modules={['calendar']} />
 
       <div className={styles.toolbar}>
         <div className={styles.navBtns}>

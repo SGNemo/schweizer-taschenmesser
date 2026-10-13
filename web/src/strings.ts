@@ -916,6 +916,9 @@ export const de = {
       calmAttention: 'Ruhiges „Jetzt wichtig“',
       calmAttentionHint:
         'Fasst Wartendes in einem Hinweis zusammen und lässt Rot nur bei Geldfristen. Ohne Tageszähler.',
+      moduleNow: '„Jetzt“ auf Modulseiten',
+      moduleNowHint:
+        'Zeigt oben im Kalender, bei Geld und im Vorrat in einer schmalen Zeile, was gerade ansteht.',
       timeToNext: 'Zeit bis zum nächsten Termin',
       timeToNextHint: 'Zeigt groß, wie lange es bis zum nächsten Termin ist.',
       focusMinutes: 'Länge des Fokus-Timers',
@@ -1755,6 +1758,8 @@ export const de = {
     eventAt: (time: string) => `heute um ${time}`,
     budgetOver: (name: string) => `Budget „${name}“ überschritten`,
     pantryExpired: (n: number) => (n === 1 ? '1 Vorrat abgelaufen' : `${n} Vorräte abgelaufen`),
+    pantryLow: (n: number) =>
+      n === 1 ? '1 Vorrat geht zur Neige' : `${n} Vorräte gehen zur Neige`,
     pantrySoon: (n: number) => (n === 1 ? '1 Vorrat läuft bald ab' : `${n} Vorräte laufen bald ab`),
     docsExpired: (n: number) => (n === 1 ? '1 Dokument abgelaufen' : `${n} Dokumente abgelaufen`),
     docsSoon: (n: number) =>

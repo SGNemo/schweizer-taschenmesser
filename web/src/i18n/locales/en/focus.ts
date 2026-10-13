@@ -15,6 +15,9 @@ export const focus: Strings['focus'] = {
     calmAttention: 'Calm “Important now”',
     calmAttentionHint:
       'Gathers waiting items into one note and keeps red only for money deadlines. No day counters.',
+    moduleNow: '“Now” on module pages',
+    moduleNowHint:
+      'Shows what is up right now in one slim row at the top of the calendar, money and pantry pages.',
     timeToNext: 'Time to the next event',
     timeToNextHint: 'Shows in large type how long it is until the next event.',
     focusMinutes: 'Focus timer length',
