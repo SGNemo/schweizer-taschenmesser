@@ -60,6 +60,7 @@ export const finance: Strings['finance'] = {
   payee: 'Payee / title',
   account: 'Account',
   noCategory: 'No category',
+  changeCategory: 'Change category',
   fromInvoice: 'Booked automatically from a paid invoice.',
   addAccount: 'Add account',
   editAccount: 'Edit account',

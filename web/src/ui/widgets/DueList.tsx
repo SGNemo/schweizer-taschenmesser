@@ -1,4 +1,6 @@
 import type { DueTone } from '@/core/time/due';
+import { IconButton } from '../Button';
+import { Icon } from '../icons';
 import { useWidgetSize, rowsFor } from './size';
 import { StateBadge } from './StateBadge';
 import { WidgetBody, type WidgetEmpty } from './WidgetBody';
@@ -12,6 +14,8 @@ export interface DueEntry {
   label: string;
   /** Optional amount shown before the state ("12,99 €"). */
   amount?: string;
+  /** One-tap action on the row ("bezahlt", "erledigt"); the label names the entry for screen readers. */
+  action?: { label: string; run: () => void };
 }
 
 /**
@@ -44,6 +48,11 @@ export function DueList({
             <span className={styles.rowTitle}>{e.title}</span>
             {e.amount ? <span className={styles.rowAmount}>{e.amount}</span> : null}
             <StateBadge tone={e.tone} label={e.label} />
+            {e.action ? (
+              <IconButton label={e.action.label} onClick={e.action.run}>
+                <Icon name="check" size={18} />
+              </IconButton>
+            ) : null}
           </li>
         ))}
       </ul>

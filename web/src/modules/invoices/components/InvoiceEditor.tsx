@@ -4,7 +4,15 @@ import { formatMoneyInput, parseMoney } from '@/core/money';
 import { addMonthsStr, today } from '@/core/time/dates';
 import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
-import { AdvancedFields, Button, Dialog, patternStyles, TextArea, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  DateChips,
+  Dialog,
+  TextArea,
+  TextField,
+  patternStyles,
+} from '@/ui';
 import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
@@ -109,6 +117,7 @@ function Form({
           required
         />
       </div>
+      <DateChips value={dueDate} onChange={setDueDate} />
       {isPaid ? (
         <TextField
           label={t.invoices.paidAt}
