@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, enable, moreFields } from './helpers';
+import { calendarEntry, enable, moduleSwitch, moreFields } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -20,9 +20,7 @@ async function save(page: Page) {
 test('the extra modules are off until enabled', async ({ page }) => {
   await open(page, '/library');
   for (const id of ['bookmarks', 'notes', 'lists', 'people', 'budgets', 'vault']) {
-    await expect(
-      page.getByTestId(`module-${id}`).getByRole('button', { name: 'Aktivieren' }),
-    ).toBeVisible();
+    await expect(moduleSwitch(page.getByTestId(`module-${id}`))).not.toBeChecked();
   }
   await page.goto('/bookmarks');
   await expect(page).toHaveURL(/\/library|\/$/); // disabled module: redirected away
@@ -149,13 +147,8 @@ test.describe('Budgets & Sparziele', () => {
     // finance is enabled by default; disable it
     await page.goto('/library');
     const card = page.getByTestId('module-finance');
-    await card.getByRole('button', { name: 'Deaktivieren' }).click();
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: /behalten/i })
-      .click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-    await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
+    await moduleSwitch(card).click(); // no data: switched off directly, no dialog
+    await expect(moduleSwitch(card)).not.toBeChecked();
     await open(page, '/budgets');
     await expect(page.getByText('Budgets brauchen das Modul „Finanzen“.')).toBeVisible();
   });

@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
-import { enableModule } from '@/core/modules/activation';
+import { enableModule, moduleHasData } from '@/core/modules/activation';
 import example from '@/modules/example/manifest';
 import { markLibrarySeen } from '@/core/modules/librarySeen';
 import { t } from '@/strings';
@@ -29,11 +29,11 @@ async function renderLibrary() {
   return within(await screen.findByTestId('module-example'));
 }
 
-/** Buttons are disabled until the module states have loaded; wait for that before clicking. */
-async function button(card: ReturnType<typeof within>, name: string) {
-  const b = await card.findByRole('button', { name });
-  await waitFor(() => expect(b).toBeEnabled());
-  return b;
+/** The switch is disabled until the module states have loaded; wait for that before clicking. */
+async function toggle(card: ReturnType<typeof within>) {
+  const sw = await card.findByRole('switch', { name: /einschalten/ });
+  await waitFor(() => expect(sw).toBeEnabled());
+  return sw;
 }
 
 describe('ModuleLibrary', () => {
@@ -43,20 +43,36 @@ describe('ModuleLibrary', () => {
     expect(card.getByText(example.description)).toBeInTheDocument();
     expect(card.queryByText(t.library.active)).not.toBeInTheDocument();
 
-    await user.click(await button(card, t.actions.enable));
+    await user.click(await toggle(card));
     expect(await card.findByText(t.library.active)).toBeInTheDocument();
     expect((await db.table('_modules').get('example'))?.enabled).toBe(true);
+  });
+
+  it('switches off without a dialog when the module has no data, with undo', async () => {
+    const user = userEvent.setup();
+    await enableModule(example);
+    const card = await renderLibrary();
+
+    await user.click(await toggle(card));
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('example'))?.enabled).toBe(false),
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(await moduleHasData(example)).toBe(false);
   });
 
   it('asks what to do with data and keeps it on "keep"', async () => {
     const user = userEvent.setup();
     await enableModule(example);
     await entries().create({ title: 'stay', done: false });
+    expect(await moduleHasData(example)).toBe(true);
     const card = await renderLibrary();
 
-    await user.click(await button(card, t.actions.disable));
+    await user.click(await toggle(card));
     await user.click(await screen.findByRole('button', { name: t.library.keepData }));
-    expect(await card.findByRole('button', { name: t.actions.enable })).toBeInTheDocument();
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('example'))?.enabled).toBe(false),
+    );
     expect(await entries().active().count()).toBe(1);
   });
 
@@ -66,9 +82,11 @@ describe('ModuleLibrary', () => {
     await entries().create({ title: 'gone', done: false });
     const card = await renderLibrary();
 
-    await user.click(await button(card, t.actions.disable));
+    await user.click(await toggle(card));
     await user.click(await screen.findByRole('button', { name: t.library.deleteData }));
-    await card.findByRole('button', { name: t.actions.enable });
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('example'))?.enabled).toBe(false),
+    );
     expect(await entries().active().count()).toBe(0);
   });
 
