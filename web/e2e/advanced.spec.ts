@@ -26,7 +26,10 @@ test('the module switch "Erweitert" is remembered and shows the fields right awa
   page,
 }) => {
   await ready(page, '/calendar');
-  await page.getByRole('switch', { name: 'Erweitert' }).click();
+  const toggle = page.getByRole('switch', { name: 'Erweitert' });
+  await toggle.click();
+  // the choice is written asynchronously: wait for it before leaving the page
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
   await ready(page, '/calendar?new=1');
   await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toBeVisible();
   // another module is unaffected
