@@ -5,6 +5,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Komfort-Review (`docs/product/comfort/`): Evaluierung gemergt; Paket 1a „Löschen ist überall rückgängig“ (`feat/comfort-row-actions`, PR gegen `develop`), danach Zeilenaktionen, Erweitert, Anlegen, Verknüpfungen.
+
 Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); Rust-Panic-Log im Datenordner und Widget-Fehlergrenze in PR #92; offen: nur die Handtests der Checkliste.
 
 Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md), kleine Fixes mit Tests umgesetzt, offen bleiben u. a. Pipe-Erstinstanz (X2), Windows-Hello-Wrapping (V2), Backup-Zeilenvalidierung (V5), Android-Manifest-Prüfung in CI (T2).
@@ -22,6 +24,8 @@ Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, E
 KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen → KI, löscht Schlüssel, Cache, Statistik und API-Tokens; PR gegen `develop`, wartet auf Review; Handtests A1–A2 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien), Wahl unter Einstellungen → Allgemein und im ersten Einrichtungsschritt, Standard Systemsprache sonst Englisch; Übersetzungen maschinell, noch nicht muttersprachlich geprüft ([i18n/README.md](i18n/README.md)); PR gegen `develop`, wartet auf Review; Handtests S1–S4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Komfort Einstellungen, Paket A (`feat/comfort-settings`): Schnellleiste und Palette-Direktumschaltung (Farbschema, Dichte, Lesehilfe), Suche ohne Präfix mit Alltagswörtern, „Häufig genutzt“, Kontext-Zahnrad in Widgets und Modul-Kopf, Zurücksetzen pro Abschnitt, `nemo://`-Schema (intern); PR gegen `develop`, wartet auf Review. Plan: `docs/product/comfort/05-settings-plan.md`. Offen: Paket B (Bibliothek, Werkzeugkasten). „Stumm“ (1 Stunde / bis morgen, ausdrückliche Erinnerungen ohne Ton): `feat/comfort-mute`, gestapelt auf Paket A; Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).

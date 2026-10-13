@@ -103,6 +103,8 @@ self.addEventListener('push', (event) => {
         icon: '/pwa-192.png',
         badge: '/pwa-badge-96.png',
         data: { url: payload.url ?? '/' },
+        // "Stumm" (core/notifications/mute.ts): shown, but without sound or vibration.
+        ...(payload.quiet ? { silent: true } : {}),
       });
     })(),
   );

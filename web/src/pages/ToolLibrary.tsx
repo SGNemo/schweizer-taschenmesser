@@ -1,7 +1,19 @@
+import { useState } from 'react';
+import { normalize } from '@/core/text/normalize';
 import { useTools } from '@/core/tools/state';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Badge, Button, Card, Icon, IconButton, Switch } from '@/ui';
+import { tComfort } from '@/strings.comfort';
+import {
+  Badge,
+  Button,
+  Icon,
+  IconButton,
+  LibraryCard,
+  Switch,
+  TextField,
+  useHashTarget,
+} from '@/ui';
 import styles from './Page.module.css';
 
 const s = t.tools.library;
@@ -12,6 +24,16 @@ export function ToolLibrary() {
   const tools = useTools();
   const openTools = useUiStore((st) => st.openTools);
   const activeIds = tools?.active.map((x) => x.id) ?? [];
+  const [query, setQuery] = useState('');
+  const text = tComfort.get().tools;
+  const tokens = normalize(query).split(/\s+/).filter(Boolean);
+  const matches = (x: { name: string; description: string }) => {
+    const hay = normalize(`${x.name} ${x.description}`);
+    return tokens.every((tok) => hay.includes(tok));
+  };
+  const anyMatch = (tools?.all ?? []).some(matches);
+  // `/tools#tool-<id>` scrolls to that tool and marks it.
+  useHashTarget(tools !== undefined);
 
   return (
     <>
@@ -21,8 +43,24 @@ export function ToolLibrary() {
           <p className={styles.lead}>{s.intro}</p>
         </div>
       </div>
+      <div role="search" className={styles.librarySearch}>
+        <TextField
+          label={text.search}
+          labelHidden
+          type="search"
+          placeholder={text.searchPlaceholder}
+          value={query}
+          autoComplete="off"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+      {tools && !anyMatch ? (
+        <p role="status" className={styles.lead}>
+          {text.noResults}
+        </p>
+      ) : null}
       {GROUPS.map((group) => {
-        const inGroup = (tools?.all ?? []).filter((x) => x.group === group);
+        const inGroup = (tools?.all ?? []).filter((x) => x.group === group && matches(x));
         if (inGroup.length === 0) return null;
         return (
           <section key={group} aria-labelledby={`tools-${group}`} className={styles.section}>
@@ -32,20 +70,15 @@ export function ToolLibrary() {
                 const on = activeIds.includes(tool.id);
                 const index = activeIds.indexOf(tool.id);
                 return (
-                  <Card
-                    as="li"
+                  <LibraryCard
                     key={tool.id}
-                    className={styles.moduleCard}
-                    data-testid={`tool-${tool.id}`}
+                    id={`tool-${tool.id}`}
+                    testId={`tool-${tool.id}`}
+                    icon={tool.icon}
+                    name={tool.name}
+                    description={tool.description}
+                    badges={<Badge>{tool.offline ? s.offline : s.online}</Badge>}
                   >
-                    <div className={styles.moduleHead}>
-                      <span className={styles.moduleIcon}>
-                        <Icon name={tool.icon} />
-                      </span>
-                      <span className={styles.moduleName}>{tool.name}</span>
-                      <Badge>{tool.offline ? s.offline : s.online}</Badge>
-                    </div>
-                    <p className={styles.desc}>{tool.description}</p>
                     <Switch
                       label={s.enable(tool.name)}
                       checked={on}
@@ -53,7 +86,7 @@ export function ToolLibrary() {
                       onChange={(checked) => void tools?.setEnabled(tool.id, checked)}
                     />
                     {on ? (
-                      <div className={styles.toolActions}>
+                      <>
                         <Button onClick={() => openTools(tool.id)}>{s.open(tool.name)}</Button>
                         <IconButton
                           label={s.up(tool.name)}
@@ -69,9 +102,9 @@ export function ToolLibrary() {
                         >
                           <Icon name="chevronDown" />
                         </IconButton>
-                      </div>
+                      </>
                     ) : null}
-                  </Card>
+                  </LibraryCard>
                 );
               })}
             </ul>

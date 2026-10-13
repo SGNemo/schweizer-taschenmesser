@@ -109,6 +109,20 @@ mod imp {
 #[cfg(windows)]
 pub use imp::ensure_runtime;
 
+/// Windows display language for the few native texts; German elsewhere (the maintainer's default).
+pub fn system_lang() -> crate::texts::Lang {
+    #[cfg(windows)]
+    {
+        // SAFETY: plain Win32 call without arguments.
+        let id = unsafe { windows::Win32::Globalization::GetUserDefaultUILanguage() };
+        crate::texts::from_windows_langid(id)
+    }
+    #[cfg(not(windows))]
+    {
+        crate::texts::Lang::De
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

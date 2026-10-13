@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/batches';
 import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
+import { libraryBadges, markLibrarySeen } from '@/core/modules/librarySeen';
+import { normalize } from '@/core/text/normalize';
+import { hasStartData } from '@/core/dataapi/onboarding';
+import { StartDataButton } from '@/core/importer/StartDataButton';
 import { AREAS, type AreaId, type ModuleManifest } from '@/core/modules/types';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
-import { Badge, Button, Card, Dialog, Icon, ReadableText } from '@/ui';
+import { tComfort } from '@/strings.comfort';
+import { Badge, Button, Dialog, LibraryCard, TextField, useHashTarget } from '@/ui';
 import styles from './Page.module.css';
 
 interface LibraryGroup {
@@ -17,8 +22,16 @@ interface LibraryGroup {
 }
 
 /** The available modules grouped by navigation area (same order and names as the sidebar); modules without an area come last. */
-function libraryGroups(): LibraryGroup[] {
-  const all = availableManifests();
+/** What a search matches: name, description and the settings words of the module. */
+const haystack = (m: ModuleManifest) =>
+  normalize([m.name, m.description, ...(m.settings.keywords ?? [])].join(' '));
+
+function libraryGroups(query: string): LibraryGroup[] {
+  const tokens = normalize(query).split(/\s+/).filter(Boolean);
+  const all = availableManifests().filter((m) => {
+    const text = haystack(m);
+    return tokens.every((tok) => text.includes(tok));
+  });
   const groups: LibraryGroup[] = AREAS.map((id) => ({
     id,
     area: id,
@@ -38,6 +51,15 @@ export function ModuleLibrary() {
   const states = useModuleStates();
   const [pending, setPending] = useState<ModuleManifest | null>(null);
   const [offer, setOffer] = useState<ModuleManifest | null>(null);
+  const [query, setQuery] = useState('');
+  const text = tComfort.get().library;
+  // The marks shown now; the library counts as looked at when it is left.
+  const badges = useMemo(() => libraryBadges(availableManifests()), []);
+  useEffect(() => () => markLibrarySeen(availableManifests()), []);
+  // `/library#module-<id>` (from the palette or a link) scrolls to that card and marks it.
+  useHashTarget(states !== undefined);
+
+  const groups = libraryGroups(query);
 
   async function enable(m: ModuleManifest) {
     await enableModule(m);
@@ -63,7 +85,23 @@ export function ModuleLibrary() {
           <SetupLink />
         </div>
       </div>
-      {libraryGroups().map((g) => (
+      <div role="search" className={styles.librarySearch}>
+        <TextField
+          label={text.search}
+          labelHidden
+          type="search"
+          placeholder={text.searchPlaceholder}
+          value={query}
+          autoComplete="off"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+      {groups.length === 0 ? (
+        <p role="status" className={styles.lead}>
+          {text.noResults}
+        </p>
+      ) : null}
+      {groups.map((g) => (
         <section key={g.id} className={styles.libGroup} data-area={g.area}>
           <h2 className={styles.libHead}>
             <span className={styles.libStripe} aria-hidden="true" />
@@ -74,35 +112,34 @@ export function ModuleLibrary() {
             {g.manifests.map((m) => {
               const enabled = states?.[m.id] ?? false;
               return (
-                <Card
-                  as="li"
+                <LibraryCard
                   key={m.id}
-                  className={styles.moduleCard}
-                  data-testid={`module-${m.id}`}
+                  id={`module-${m.id}`}
+                  testId={`module-${m.id}`}
+                  icon={m.icon}
+                  name={m.name}
+                  description={m.description}
+                  badges={
+                    <>
+                      {enabled ? <Badge tone="accent">{t.library.active}</Badge> : null}
+                      {badges[m.id] ? (
+                        <Badge>{badges[m.id] === 'new' ? text.badgeNew : text.badgeUpdated}</Badge>
+                      ) : null}
+                      {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
+                    </>
+                  }
                 >
-                  <div className={styles.moduleHead}>
-                    <span className={styles.moduleIcon}>
-                      <Icon name={m.icon} />
-                    </span>
-                    <span className={styles.moduleName}>{m.name}</span>
-                    {enabled ? <Badge tone="accent">{t.library.active}</Badge> : null}
-                    {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
-                  </div>
-                  <p className={styles.desc}>
-                    <ReadableText text={m.description} />
-                  </p>
-                  <div className={styles.moduleActions}>
-                    {enabled ? (
-                      <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>
-                        {t.actions.disable}
-                      </Button>
-                    ) : (
-                      <Button onClick={() => void enable(m)} disabled={!states}>
-                        {t.actions.enable}
-                      </Button>
-                    )}
-                  </div>
-                </Card>
+                  {enabled && hasStartData(m) ? <StartDataButton moduleId={m.id} /> : null}
+                  {enabled ? (
+                    <Button variant="ghost" onClick={() => setPending(m)} disabled={!states}>
+                      {t.actions.disable}
+                    </Button>
+                  ) : (
+                    <Button onClick={() => void enable(m)} disabled={!states}>
+                      {t.actions.enable}
+                    </Button>
+                  )}
+                </LibraryCard>
               );
             })}
           </ul>

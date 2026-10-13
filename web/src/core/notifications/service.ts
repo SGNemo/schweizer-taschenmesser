@@ -6,6 +6,8 @@ export interface ShowNotification {
   /** Same tag replaces an existing notification – protects against duplicates (e.g. two tabs). */
   tag: string;
   url?: string;
+  /** "Stumm": show without sound or vibration. */
+  quiet?: boolean;
 }
 
 /** A notification the operating system should show at `at` (epoch ms), even while the app is closed. */
@@ -16,6 +18,8 @@ export interface ScheduledNotification {
   title: string;
   body?: string;
   url?: string;
+  /** "Stumm": show without sound or vibration. */
+  quiet?: boolean;
 }
 
 /** Abstraction over the platform's notifications (browser API, native plugin). */
@@ -39,13 +43,14 @@ export const localNotificationService: NotificationService = {
     if (typeof Notification === 'undefined') return 'unsupported';
     return Notification.requestPermission();
   },
-  async show({ title, body, tag, url }) {
+  async show({ title, body, tag, url, quiet }) {
     const options: NotificationOptions = {
       body,
       tag,
       icon: '/pwa-192.png',
       badge: '/pwa-badge-96.png',
       data: { url: url ?? '/' },
+      ...(quiet ? { silent: true } : {}),
     };
     // Android Chrome only supports notifications through the service worker registration.
     const reg = await navigator.serviceWorker?.getRegistration();

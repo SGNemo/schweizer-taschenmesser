@@ -132,7 +132,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.getByTestId('tool-calc')).toBeVisible();
       const names: string[] = [];
       for (const card of await page.locator('[data-testid^="tool-"]').all()) {
-        const name = (await card.locator('span[class*="moduleName"]').innerText()).trim();
+        const name = (await card.locator('[data-card-name]').innerText()).trim();
         const toggle = card.getByLabel(`${name} einschalten`);
         if (!(await toggle.isChecked())) await toggle.click();
         await expect(toggle).toBeChecked();

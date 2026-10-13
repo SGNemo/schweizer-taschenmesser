@@ -9,6 +9,19 @@ import type { IconName } from '@/ui/icons';
 
 export type ToolGroup = 'basis' | 'extra' | 'dev';
 
+/**
+ * What a tool answers to a line typed into the search bar ("timer 10m", "umrechnen 5 km"): one line
+ * for the result list, and what Enter does with it. Computed locally, nothing is sent anywhere.
+ */
+export interface ToolAnswer {
+  /** The line shown in the list, e.g. "5 km = 5.000 m · 3,11 mi". */
+  text: string;
+  /** Enter copies this (plain text) … */
+  copy?: string;
+  /** … or runs this (e.g. starts the timer). */
+  run?: () => void | Promise<void>;
+}
+
 export interface ToolManifest {
   /** Lowercase alphanumeric; also the folder name under `src/tools`. */
   id: string;
@@ -23,6 +36,12 @@ export interface ToolManifest {
   /** Lower = earlier. */
   order: number;
   component: () => Promise<{ default: ComponentType }>;
+  /**
+   * Optional: answers a line typed into the search bar. Must be a cheap pure parse (it runs on every
+   * keystroke), returns `undefined` for everything it does not recognise, and starts heavy things
+   * lazily inside `run`. Only offered while the tool is switched on.
+   */
+  expression?: (query: string) => ToolAnswer | undefined;
   /** Optional steps for the setup assistant; ids must start with `<tool id>.`. */
   setupSteps?: SetupStepDef[];
 }

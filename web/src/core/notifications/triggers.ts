@@ -1,5 +1,6 @@
 import { liveQuery } from 'dexie';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
+import { onMuteChange } from './mute';
 
 const INTERVAL_MS = 10 * 60 * 1000;
 const DEBOUNCE_MS = 5_000;
@@ -20,6 +21,8 @@ export function startScheduleTriggers(
   run();
   const interval = setInterval(run, INTERVAL_MS);
   document.addEventListener('visibilitychange', onVisible);
+  // A pause starting or ending changes what is due when: rebuild the schedules now.
+  const stopMute = onMuteChange(run);
 
   let first = true;
   const subscription = liveQuery(() => database.table('_outbox').count()).subscribe({
@@ -37,6 +40,7 @@ export function startScheduleTriggers(
     clearInterval(interval);
     clearTimeout(debounce);
     document.removeEventListener('visibilitychange', onVisible);
+    stopMute();
     subscription.unsubscribe();
   };
 }

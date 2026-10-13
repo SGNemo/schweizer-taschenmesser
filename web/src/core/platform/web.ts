@@ -209,6 +209,7 @@ export function createWebPlatform(): PlatformService {
           cancelScan: unsupported,
           pauseScan: unsupported,
           dropScan: unsupported,
+          liveScan: unsupported,
           children: unsupported,
           node: unsupported,
           query: unsupported,

@@ -102,6 +102,26 @@ test('desktop: drive cards, scan with progress, result and unreadable folders', 
   await expect(page).toHaveURL(/\/disk$/);
 });
 
+test('the map fills up while the scan runs and stays usable as it grows', async ({ page }) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk');
+  await page.getByRole('button', { name: 'C:\\ (System) scannen' }).click();
+  // Pause half-way: the live map already shows the folders counted so far.
+  await page.getByRole('button', { name: 'Pause' }).click();
+  const live = page.getByRole('region', { name: 'Live-Ansicht des Scans' });
+  await expect(live).toBeVisible();
+  await expect(live.getByTestId('live-map')).toBeVisible();
+  await expect(live.getByRole('img', { name: /Kartenansicht/ })).toBeVisible();
+  await expect(live.getByRole('group', { name: 'Legende' })).toContainText('unter 1 Monat');
+  await audit(page, 'live map');
+  await page.getByRole('button', { name: 'Fortsetzen' }).click();
+  // When the scan is done the full, clickable map takes over.
+  await expect(page.getByTestId('scan-total')).toBeVisible();
+  await expect(live).toHaveCount(0);
+  await expect(page.getByTestId('treemap')).toBeVisible();
+});
+
 test('desktop: a running scan can be cancelled', async ({ page }) => {
   await asDesktop(page);
   await enableDisk(page);
@@ -153,6 +173,15 @@ test('treemap: click zooms into a folder, the breadcrumb goes back, details foll
   await expect(page.getByTestId('details-path')).toHaveText('C:\\Programme');
   await crumbs.getByRole('button', { name: 'C:\\' }).click();
   await expect(crumbs.getByRole('button', { name: 'Programme' })).toHaveCount(0);
+});
+
+test('after one scan another drive can be scanned right away', async ({ page }) => {
+  await openScan(page);
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await page.getByRole('button', { name: 'E:\\ (USB-Stick) scannen' }).click();
+  await expect(page.getByRole('heading', { name: 'Scan von E:\\' })).toBeVisible();
+  await expect(page.getByTestId('scan-total')).toBeVisible();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
 });
 
 test('treemap: keyboard selects, opens and goes up', async ({ page }) => {

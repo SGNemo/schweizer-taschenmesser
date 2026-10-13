@@ -9,6 +9,9 @@ Tools are not modules (no own data, no cross-imports; see `tools/isolation.test.
 3. Persist anything through `useSettings` (scope `tools.<id>`); do not import modules, connectors, `core/db`, `core/ai`.
 4. No generator exists (`gen:module` is modules only).
 
+### Register a search-bar expression for a tool
+A tool can answer a line typed into the search bar ("timer 10m", "umrechnen 5 km"). Add `expression(query)` to its `manifest.ts` (`ToolManifest.expression`, type `ToolAnswer` in `core/tools/types.ts`): a cheap pure parse (put it in `tools/<id>/expression.ts` with a test; it runs on every keystroke) that returns `{ text, copy? , run? }` or `undefined` for everything it does not recognise. `text` is the result line; Enter copies `copy` (plain number with a dot) or calls `run` (start heavy things with a dynamic `import()` inside `run`, like `tools/timer/manifest.ts`). It is offered only while the tool is switched on. Keywords people type stay in the German source (like the calculator phrases); the answer text goes through `strings.comfort.ts` in all five languages.
+
 ## New connector
 1. `web/src/connectors/<id>/index.ts` default-exporting a `ConnectorDef` (`core/connectors/types.ts`; model: `connectors/ics/index.ts`, OAuth model: `connectors/google/`). Auto-discovered via glob `connectors/*/index.ts`.
 2. Fill `id, name, authType, platforms, features[] (own scopes), calendar? / mail?, isConfigured, settings?`. Use only the `ConnectorContext` (`fetch`, `accessToken()`, `fetchPublic`, scoped `secrets`, `redact()`).

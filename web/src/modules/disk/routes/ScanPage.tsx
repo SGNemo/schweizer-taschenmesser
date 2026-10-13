@@ -1,44 +1,48 @@
 import { Link, Navigate } from 'react-router';
 import { t } from '@/strings';
 import { Button, Card, HelpHint, Icon, PageHeader, Stat } from '@/ui';
+import { LiveMap } from '../components/LiveMap';
 import { ScanView } from '../components/ScanView';
 import { formatBytes, formatCount, formatDuration } from '../format';
 import { useDiskStore } from '../store';
 import styles from './ScanPage.module.css';
 
 function Running() {
-  const { progress, paused, cancel, togglePause } = useDiskStore();
+  const { progress, paused, cancel, togglePause, scanId } = useDiskStore();
   return (
-    <Card>
-      <p aria-live="polite" className={styles.status}>
-        {paused ? t.disk.scan.paused : t.disk.scan.scanning}
-      </p>
-      <progress className={styles.bar} aria-label={t.disk.scan.scanning} />
-      <div className={styles.stats}>
-        <Stat
-          label={t.disk.scan.files}
-          value={formatCount(progress?.files ?? 0)}
-          testId="scan-files"
-        />
-        <Stat label={t.disk.scan.folders} value={formatCount(progress?.dirs ?? 0)} />
-        <Stat label={t.disk.scan.used} value={formatBytes(progress?.bytes ?? 0)} />
-      </div>
-      {progress?.current ? (
-        <p className={styles.current} title={progress.current}>
-          <span className={styles.muted}>{t.disk.scan.current}: </span>
-          {progress.current}
+    <>
+      <Card>
+        <p aria-live="polite" className={styles.status}>
+          {paused ? t.disk.scan.paused : t.disk.scan.scanning}
         </p>
-      ) : null}
-      <div className={styles.actions}>
-        <Button onClick={() => void togglePause()}>
-          <Icon name={paused ? 'play' : 'pause'} size={18} />
-          {paused ? t.disk.scan.resume : t.disk.scan.pause}
-        </Button>
-        <Button variant="danger" onClick={() => void cancel()}>
-          {t.disk.scan.cancel}
-        </Button>
-      </div>
-    </Card>
+        <progress className={styles.bar} aria-label={t.disk.scan.scanning} />
+        <div className={styles.stats}>
+          <Stat
+            label={t.disk.scan.files}
+            value={formatCount(progress?.files ?? 0)}
+            testId="scan-files"
+          />
+          <Stat label={t.disk.scan.folders} value={formatCount(progress?.dirs ?? 0)} />
+          <Stat label={t.disk.scan.used} value={formatBytes(progress?.bytes ?? 0)} />
+        </div>
+        {progress?.current ? (
+          <p className={styles.current} title={progress.current}>
+            <span className={styles.muted}>{t.disk.scan.current}: </span>
+            {progress.current}
+          </p>
+        ) : null}
+        <div className={styles.actions}>
+          <Button onClick={() => void togglePause()}>
+            <Icon name={paused ? 'play' : 'pause'} size={18} />
+            {paused ? t.disk.scan.resume : t.disk.scan.pause}
+          </Button>
+          <Button variant="danger" onClick={() => void cancel()}>
+            {t.disk.scan.cancel}
+          </Button>
+        </div>
+      </Card>
+      {scanId !== null ? <LiveMap scanId={scanId} /> : null}
+    </>
   );
 }
 

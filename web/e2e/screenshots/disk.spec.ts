@@ -44,6 +44,12 @@ test('disk module screenshots', async ({ page }) => {
   await page.screenshot({ path: `${OUT}/1-laufwerke.png` });
 
   await page.getByRole('button', { name: 'C:\\ (System) scannen' }).click();
+  // The live map while the scan runs (paused half-way so the picture holds still).
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect(page.getByTestId('live-map')).toBeVisible();
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: `${OUT}/1b-scan-live.png` });
+  await page.getByRole('button', { name: 'Fortsetzen' }).click();
   await expect(page.getByTestId('treemap')).toBeVisible();
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${OUT}/2-treemap.png` });
