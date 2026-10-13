@@ -38,6 +38,7 @@ export {
   patternStyles,
 } from './Patterns';
 export { SelectionBar } from './SelectionBar';
+export { SortableList, moveId } from './SortableList';
 export { RowMenu, type RowMenuItem } from './RowMenu';
 export { DateChips } from './DateChips';
 export { useMediaQuery } from './useMediaQuery';

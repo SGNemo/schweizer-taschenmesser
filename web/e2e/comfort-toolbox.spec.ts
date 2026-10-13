@@ -57,3 +57,30 @@ test('toolbox: the tool used last is one tap away above the tiles', async ({ pag
   const recent = page.getByRole('region', { name: 'Zuletzt benutzt' });
   await expect(recent.getByRole('button', { name: /Timer/ })).toBeVisible();
 });
+
+test('settings: tool order by keyboard drag and by the arrow buttons', async ({ page }) => {
+  await ready(page, '/settings/werkzeuge');
+  const rows = page.locator('[id^="tools--"]');
+  await expect(rows.first()).toBeVisible();
+  const first = await rows.first().getAttribute('id');
+  const second = await rows.nth(1).getAttribute('id');
+  // dnd-kit keyboard: space picks up, arrow moves, space drops
+  const handle = rows.first().getByRole('button', { name: /verschieben/ });
+  await handle.focus();
+  await page.keyboard.press('Space');
+  await expect(page.locator('[id^="DndLiveRegion"]')).toContainText('Position 1');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('[id^="DndLiveRegion"]')).toContainText('Position 2');
+  await page.keyboard.press('Space');
+  await expect(rows.first()).toHaveAttribute('id', second!);
+  await expect(rows.nth(1)).toHaveAttribute('id', first!);
+  // the arrow buttons still work and persist
+  await rows
+    .nth(1)
+    .getByRole('button', { name: /weiter nach oben/ })
+    .click();
+  await expect(rows.first()).toHaveAttribute('id', first!);
+  await page.waitForTimeout(500); // let the write reach IndexedDB before reloading
+  await page.reload();
+  await expect(page.locator('[id^="tools--"]').first()).toHaveAttribute('id', first!);
+});
