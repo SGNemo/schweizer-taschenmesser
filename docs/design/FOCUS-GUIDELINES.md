@@ -12,6 +12,8 @@ Rules for every feature that helps with focus, starting, remembering or time. No
 
 7. **Readability:** Does the colour carry meaning (state, category, urgency) and is it paired with text or an icon? Is the group recognisable (space, small header, count)? Is the line too long (> 68 ch)? Is long text offered with the reading aid, and does it stay off for numbers, inputs and the vault?
 
+8. **Clicks:** Is the everyday action on a list one tap/swipe (row action or ⋯ menu, with undo), and is anything rare moved into the module's "Erweitert" layer (never anything important only there)? Count taps before/after in the PR (`howto/list-actions.md`, [howto/advanced-fields.md](../howto/advanced-fields.md)).
+
 ## Principles
 - **One thing at a time.** Offer one next action, show the rest collapsed. Plans hold at most 3 main items per day.
 - **Start small.** Estimates in short steps (5/15/30/60 min), first step visible, "Anfangen" instead of "Planen".

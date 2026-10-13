@@ -186,6 +186,12 @@ F10. *Schnellerfassung ohne Rückfrage in echten Situationen:* unterwegs ein paa
 F11. *Darstellung am Handy und PC:* „Sehr groß“, „Luftig“, „Bewegung: Weniger“ und „Nur das Wichtigste“ ausprobieren; bricht irgendwo das Layout, ist die ruhige Übersicht ruhig genug? ☐
 F12. *Fortschritt im Alltag:* eine tägliche Wiederholung anlegen und ein paar Tage abhaken: erscheint „n in Folge“, bleibt ein ausgelassener Tag ohne Drama („mit Pausentag“)? Abends „Tag abschließen“ und der Wochenrückblick: wirken sie motivierend statt drängend? Eine Vorlage („Aus Vorlage“ in Listen) einmal wirklich benutzen. ☐
 
+### Komfort-Review (`docs/product/comfort/`) – nur im Alltag und am Handy prüfbar
+K1. *Eine Woche echte Nutzung:* ToDos, Termine und Geld nur über Zeilenaktionen (Wischen, ⋯-Menü) bedienen. Fehlt eine Aktion, die du ständig suchst? Löst ein Wisch versehentlich etwas aus? ☐
+K2. *Wischen am Handy:* ToDo erledigen, Rechnung bezahlen, Buchung umkategorisieren, Termin „+1 Tag / +1 Woche“. Fühlt sich die Trefferfläche (≥ 44 px) und der Rückgängig-Hinweis gut an, auch einhändig? ☐
+K3. *Erweitert:* pro Modul Basis lassen, einige Tage nutzen; fehlt im Basis-Formular etwas Wichtiges? „Alle Module Erweitert“ (Einstellungen) einmal an- und ausschalten. ☐
+K4. *Wiederkehrende Rechnung:* Miete mit „Monatlich“ anlegen, bezahlen, Rückgängig; kommt genau eine neue? ☐
+
 ### Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`) – nur auf echter Hardware prüfbar
 V1. *Windows-Portable in verschiedenen Fenstergrößen:* Fenster ziehen, Halbbild-Snapping links/rechts, maximiert auf 1440p/Ultrawide. Übersicht, ToDos, Merkliste, Finanzen, Kalender: gleich hohe Karten, keine abgeschnittenen Wörter, kein waagerechter Scrollbalken; Schrift auf großem Monitor spürbar größer als auf dem Laptop. ☐
 V2. *Android:* Übersicht, Kalender, Einstellungen im Hoch- und Querformat; Glocke in der Top-Bar, Panel als Sheet, Toasts über der Navigationsleiste, nichts unter Kamera-/Gestenleiste. ☐
