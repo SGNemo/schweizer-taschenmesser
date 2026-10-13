@@ -11,6 +11,19 @@ Counts follow the method of [01-friction.md](01-friction.md) (code-traced, Deskt
 Not changed on purpose: vault documents (file bytes cannot be restored), chat thread delete (keeps its confirm dialog), automatic chat retention clean-up, invoice "bezahlt" (its undo also removes the booking, which the journal cannot do).
 Tests: `checkModules.test.ts` (rule), `core/undo/deleteWithUndo.test.ts`, e2e `money.spec.ts` "comes back with Rückgängig".
 
+## Package 2 – create with fewer steps (`feat/comfort-create`)
+Built: Quick Capture `n ` (note) and `r ` / "Rechnung …" (invoice, no confirm step), repeat bookings take category and account of the payee's last booking, "Duplizieren" for bookings, invoices and events/reminders (the copy opens for editing, undo toast), a new person has no birthday date preset.
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 10 | Create an invoice | 3 / 4 (dialog) | **1 / 2** (capture line + Enter) | `create.spec.ts` |
+| 16 | Quick note | 3–4 / 3 | **1 / 2** (`n text` + Enter) | `create.spec.ts` |
+| 11 | Repeat booking (same payee) | 2–3 / 3–4 | **2 / 3** (amount + payee, category/account set) | `create.spec.ts` |
+| – | Same invoice next month | 3 / 4 | **2 / 2** (open, "Duplizieren", save) | `create.spec.ts` |
+| 21 | Add a birthday | wrong date silently possible | date required, no preset | `create.spec.ts` |
+
+Not done: "Mehr Felder" fold (package 3, `AdvancedFields`), capture targets for pantry and person (the parser has no signal for them), no confirm step for finance captures (kept on purpose: finance captures are only booked after confirmation, see the quick-capture doc), duplicate for to-dos (to-do editor is in package 3's branch).
+
 ## Package 3 – Basis / Erweitert (`feat/comfort-advanced`)
 Built: synced setting (`comfort`), header switch per module, global switch "Alle Module in der Erweitert-Ansicht", `AdvancedFields` with "Mehr Felder" and never-hide-data rule. Applied to to-dos (recurrence, "Irgendwann"), calendar (end, recurrence of events, note), invoices (reference, note), subscriptions (notice days, note), pantry (minimum, note), bookmarks (kind, tags, note), people (tags, note).
 

@@ -143,7 +143,7 @@ export default function InvoicesPage() {
         <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
       )}
 
-      <InvoiceEditor target={openTarget} onClose={closeEditor} />
+      <InvoiceEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
     </>
   );
 }

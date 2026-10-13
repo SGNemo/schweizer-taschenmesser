@@ -104,7 +104,7 @@ export function RemindersTab({
         })}
       </ul>
 
-      <EventEditor target={openTarget} onClose={close} />
+      <EventEditor target={openTarget} onClose={close} onDuplicated={setTarget} />
     </>
   );
 }

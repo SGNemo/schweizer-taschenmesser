@@ -115,6 +115,22 @@ const finance: CaptureTarget = {
   },
 };
 
+const invoices: CaptureTarget = {
+  type: 'invoice',
+  moduleId: 'invoices',
+  collection: 'invoice',
+  // The payee is the text left over after the amount, the due date and the word "Rechnung".
+  build: (f, ctx) => {
+    if (!f.amountMinor || f.amountMinor < 1 || !f.title.trim()) throw new CaptureError('invalid');
+    return {
+      payee: f.title.trim(),
+      amountMinor: f.amountMinor,
+      dueDate: date(f.date ?? ctx.today),
+      status: 'open',
+    };
+  },
+};
+
 const notes: CaptureTarget = {
   type: 'note',
   moduleId: 'notes',
@@ -137,5 +153,6 @@ export const TARGETS = {
   bookmark: bookmarks,
   list: lists,
   finance,
+  invoice: invoices,
   note: notes,
 };
