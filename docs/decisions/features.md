@@ -51,3 +51,4 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **`data-nemo-ignore`** opts a field/form/page out; the web app sets it on `<body>` so the extension never sees the vault's master password.
 - **Strength in the extension = generator entropy** (the value is random, not user-chosen); the app keeps zxcvbn for user-chosen passwords.
 - **Clipboard:** copy in an offscreen document, clear after 30 s only if unchanged (needs `clipboardRead`).
+- Comfort package 2 (2026-10-13): Quick Capture gets `n` (note) and `r` / "Rechnung" (invoice, no confirmation: an open invoice is not a booking and undo exists); finance captures keep the confirm step. Duplicating copies the user data (`core/db/copy.ts`) and opens the copy; a copied invoice is open and due one month later.

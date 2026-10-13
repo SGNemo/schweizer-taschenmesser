@@ -9,6 +9,7 @@ import { groupByTime } from '@/core/time/groups';
 import { t } from '@/strings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import {
+  AdvancedToggle,
   Button,
   EmptyState,
   GroupedList,
@@ -126,6 +127,7 @@ export default function InvoicesPage() {
     <>
       <div className={styles.header}>
         <h1>{t.invoices.title}</h1>
+        <AdvancedToggle moduleId="invoices" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.invoices.add}
@@ -161,7 +163,7 @@ export default function InvoicesPage() {
         <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
       )}
 
-      <InvoiceEditor target={openTarget} onClose={closeEditor} />
+      <InvoiceEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
     </>
   );
 }

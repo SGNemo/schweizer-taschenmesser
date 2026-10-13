@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, SelectField, TextArea, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { formatTags, normalizeUrl, parseTags } from '../logic';
 import { itemRepo } from '../repo';
 import { KINDS, type BookmarkItem, type Kind } from '../schema';
@@ -70,24 +79,26 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
         }}
         error={error}
       />
-      <SelectField
-        label={t.bookmarks.kind}
-        value={kind}
-        onChange={(e) => setKind(e.target.value as Kind)}
-      >
-        {KINDS.map((k) => (
-          <option key={k} value={k}>
-            {t.bookmarks.kinds[k]}
-          </option>
-        ))}
-      </SelectField>
-      <TextField
-        label={t.bookmarks.tags}
-        hint={t.bookmarks.tagsHint}
-        value={tags}
-        onChange={(e) => setTags(e.target.value)}
-      />
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields moduleId="bookmarks" hasData={kind !== 'link' || !!tags || !!note}>
+        <SelectField
+          label={t.bookmarks.kind}
+          value={kind}
+          onChange={(e) => setKind(e.target.value as Kind)}
+        >
+          {KINDS.map((k) => (
+            <option key={k} value={k}>
+              {t.bookmarks.kinds[k]}
+            </option>
+          ))}
+        </SelectField>
+        <TextField
+          label={t.bookmarks.tags}
+          hint={t.bookmarks.tagsHint}
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+        />
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       <FormActions
         start={
           existing ? (

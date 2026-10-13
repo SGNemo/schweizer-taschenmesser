@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { t } from '@/strings';
-import { SelectField, TextField } from '@/ui';
-import { fmt, num } from '../shared';
+import { useUiStore } from '@/stores/ui';
+import { Button, SelectField, TextField } from '@/ui';
+import { copyText, fmt, num } from '../shared';
 import styles from '../tools.module.css';
 import { convert, UNITS, type UnitKind } from './logic';
 
@@ -9,6 +10,7 @@ const s = t.tools.units;
 const KINDS = Object.keys(UNITS) as UnitKind[];
 
 export default function UnitsTool() {
+  const toast = useUiStore((st) => st.toast);
   const [kind, setKind] = useState<UnitKind>('length');
   const [value, setValue] = useState('1');
   const [from, setFrom] = useState<string | undefined>();
@@ -67,6 +69,17 @@ export default function UnitsTool() {
       <p className={styles.result} role="status" aria-label={s.result}>
         {result !== undefined ? fmt(result) : s.invalid}
       </p>
+      {result !== undefined ? (
+        <Button
+          onClick={() =>
+            void copyText(String(Math.round(result * 1e6) / 1e6)).then(
+              (ok) => ok && toast(t.tools.calc.copied),
+            )
+          }
+        >
+          {t.tools.calc.copy}
+        </Button>
+      ) : null}
     </div>
   );
 }

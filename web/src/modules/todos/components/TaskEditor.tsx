@@ -5,6 +5,7 @@ import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import {
+  AdvancedFields,
   Button,
   Chip,
   Chips,
@@ -154,9 +155,6 @@ function EditorForm({
         value={dueDate}
         onChange={(e) => setDueDate(e.target.value)}
       />
-      {dueDate && !isSub ? (
-        <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
-      ) : null}
       {isSub ? null : (
         <>
           <Chips label={t.todos.estimate}>
@@ -185,10 +183,13 @@ function EditorForm({
               <Chip label={t.todos.planClear} onClick={() => setPlannedFor('')} />
             ) : null}
           </Chips>
+          <AdvancedFields moduleId="todos" hasData={someday || !!recurrence}>
+            {dueDate ? (
+              <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
+            ) : null}
+            <Switch label={t.todos.somedayLabel} checked={someday} onChange={setSomeday} />
+          </AdvancedFields>
         </>
-      )}
-      {isSub ? null : (
-        <Switch label={t.todos.somedayLabel} checked={someday} onChange={setSomeday} />
       )}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
 

@@ -44,3 +44,5 @@ export { useMediaQuery } from './useMediaQuery';
 export { useSelection } from './useSelection';
 export { WidgetList, type WidgetEntry } from './WidgetList';
 export * from './widgets';
+
+export { AdvancedFields, AdvancedToggle } from './AdvancedFields';

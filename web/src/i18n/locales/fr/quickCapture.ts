@@ -13,6 +13,7 @@ export const quickCapture: Strings['quickCapture'] = {
     bookmark: 'Enregistrés',
     list: 'Courses',
     finance: 'Dépense',
+    invoice: 'Facture',
     income: 'Revenu',
     note: 'Note',
   },
@@ -23,6 +24,7 @@ export const quickCapture: Strings['quickCapture'] = {
     bookmark: 'Enregistrés',
     list: 'Listes',
     finance: 'Finances',
+    invoice: 'Factures',
     note: 'Notes',
   },
   chip: {
