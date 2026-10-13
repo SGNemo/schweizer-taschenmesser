@@ -57,6 +57,12 @@ export const finance: Strings['finance'] = {
   addTransaction: 'Adicionar lançamento',
   editTransaction: 'Editar lançamento',
   noTransactions: 'Nenhum lançamento neste mês.',
+  searchBookings: 'Buscar lançamentos',
+  filterKind: 'Tipo',
+  filterAll: 'Todos',
+  searchAllMonths: (n: number) =>
+    n === 1 ? '1 resultado em todos os meses' : `${n} resultados em todos os meses`,
+  noMatches: 'Nenhum lançamento correspondente.',
   payee: 'Destinatário / título',
   account: 'Conta',
   noCategory: 'Sem categoria',

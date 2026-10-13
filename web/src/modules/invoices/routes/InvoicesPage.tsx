@@ -20,6 +20,7 @@ import {
   Segmented,
   StateBadge,
   useMediaQuery,
+  useOpenParam,
 } from '@/ui';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { markOpen } from '../actions';
@@ -36,6 +37,7 @@ export default function InvoicesPage() {
   const invoices = useLiveQuery(async () => sortInvoices(await invoiceRepo.active().toArray()), []);
   const [view, setView] = useState<View>('open');
   const [target, setTarget] = useState<InvoiceTarget>(null);
+  useOpenParam((id) => invoiceRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
   const day = today();
   const narrow = useMediaQuery('(max-width: 899px)');
@@ -60,7 +62,7 @@ export default function InvoicesPage() {
         meta={
           i.status === 'paid'
             ? `${t.invoices.paidAt}: ${formatDay(i.paidAt ?? i.dueDate, 'd. MMM yyyy')}${i.reference ? ` · ${i.reference}` : ''}`
-            : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}`
+            : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}${i.repeat ? ` · ${t.invoices.repeatMeta(t.invoices.repeatOptions[i.repeat])}` : ''}`
         }
         onOpen={() => setTarget(i)}
         onSwipeRight={i.status === 'open' ? () => void pay(i.id) : undefined}

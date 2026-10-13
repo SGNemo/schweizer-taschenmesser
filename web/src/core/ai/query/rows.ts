@@ -27,6 +27,9 @@ export function toResultRow(
     title: String(row[schema.titleField] ?? '') || t.ai.untitled,
     subtitle: opts.withSubtitle ? `${manifest.name} · ${schema.label}` : undefined,
     fields,
-    to: manifest.routes[0]?.path,
+    // `?open=<id>`: the module page opens the record itself (`useOpenParam`), not just the list.
+    to: manifest.routes[0]
+      ? `${manifest.routes[0].path}?open=${encodeURIComponent(row.id)}`
+      : undefined,
   };
 }

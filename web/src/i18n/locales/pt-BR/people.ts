@@ -41,6 +41,13 @@ export const people: Strings['people'] = {
   giftsOpen: (n: number) =>
     n === 0 || n === 1 ? `${n} presente pendente` : `${n} presentes pendentes`,
   giftsHeading: 'Presentes',
+  viewLabel: 'Visualização',
+  viewPeople: 'Pessoas',
+  viewGifts: 'Presentes pendentes',
+  giftsNoneOpen: 'Nenhuma ideia de presente pendente. Tudo entregue.',
+  giftGivenAction: 'Entregue',
+  giftGivenAria: (what: string) => `Marcar "${what}" como entregue`,
+  giftGiven: 'Marcado como entregue.',
   giftsEmpty: 'Ainda não há ideias de presente para esta pessoa.',
   addGift: 'Adicionar ideia de presente',
   editGift: 'Editar ideia de presente',
