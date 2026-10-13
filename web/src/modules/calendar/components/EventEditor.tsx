@@ -18,6 +18,7 @@ import {
 import { eventRepo } from '../repo';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type EventTarget =
   | Stored<CalendarEvent>
@@ -208,7 +209,7 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           <Button
             variant="danger"
             onClick={async () => {
-              await eventRepo.remove(existing.id);
+              await deleteWithUndo(() => eventRepo.remove(existing.id));
               onClose();
             }}
           >

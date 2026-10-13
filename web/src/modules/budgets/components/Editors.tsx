@@ -17,6 +17,7 @@ import {
 } from '@/ui';
 import { budgetRepo, deleteGoal, depositRepo, goalRepo } from '../repo';
 import type { Budget, Deposit, Goal } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 function DeleteButton({ onDelete }: { onDelete: () => Promise<void> }) {
   return (
@@ -116,7 +117,7 @@ function BudgetFields({
           existing ? (
             <DeleteButton
               onDelete={async () => {
-                await budgetRepo.remove(existing.id);
+                await deleteWithUndo(() => budgetRepo.remove(existing.id));
                 onClose();
               }}
             />
@@ -208,7 +209,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
           existing ? (
             <DeleteButton
               onDelete={async () => {
-                await deleteGoal(existing.id);
+                await deleteWithUndo(() => deleteGoal(existing.id));
                 onClose();
               }}
             />
@@ -335,7 +336,7 @@ export function HistoryDialog({
                 </span>
                 <IconButton
                   label={`${t.actions.delete}: ${d.date}`}
-                  onClick={() => void depositRepo.remove(d.id)}
+                  onClick={() => void deleteWithUndo(() => depositRepo.remove(d.id))}
                 >
                   <Icon name="trash" />
                 </IconButton>
