@@ -7,6 +7,7 @@ import { offerEnableModule } from '@/core/modules/offerEnable';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, today } from '@/core/time/dates';
+import { changeWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
@@ -116,7 +117,9 @@ export default function PantryPage() {
                         <IconButton
                           label={t.pantry.minus(i.name)}
                           onClick={() =>
-                            void itemRepo.update(i.id, { count: Math.max(0, i.count - 1) })
+                            void changeWithUndo(() =>
+                              itemRepo.update(i.id, { count: Math.max(0, i.count - 1) }),
+                            )
                           }
                         >
                           <span aria-hidden="true">−</span>
@@ -124,7 +127,9 @@ export default function PantryPage() {
                         <IconButton
                           label={t.pantry.plus(i.name)}
                           onClick={() =>
-                            void itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) })
+                            void changeWithUndo(() =>
+                              itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) }),
+                            )
                           }
                         >
                           <Icon name="plus" size={16} />

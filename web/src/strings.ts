@@ -118,6 +118,8 @@ export const de = {
     grabHandle: 'Zum Schließen nach unten ziehen',
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
+    deleted: 'Gelöscht.',
+    changed: 'Geändert.',
     undoFailed: 'Das ließ sich nicht mehr rückgängig machen.',
     nothingToUndo: 'Nichts zum Rückgängigmachen.',
     selection: 'Auswahl',
