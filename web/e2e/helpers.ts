@@ -45,3 +45,9 @@ export const enableExample = (page: Page) => enable(page, 'example');
 export function calendarEntry(page: Page, name: RegExp) {
   return page.getByRole('button', { name }).and(page.locator('xpath=//*[not(ancestor::aside)]'));
 }
+
+/** Opens the rarely used fields of the open dialog ("Mehr Felder"); a no-op in the Erweitert view or when they hold data. */
+export async function moreFields(page: Page) {
+  const button = page.getByRole('dialog').getByRole('button', { name: 'Weitere Felder anzeigen' });
+  if (await button.count()) await button.click();
+}

@@ -156,47 +156,40 @@ function EditorForm({
         onChange={(e) => setDueDate(e.target.value)}
       />
       {isSub ? null : (
-        <AdvancedFields
-          moduleId="todos"
-          hasData={estimate !== undefined || !!plannedFor || someday || !!recurrence}
-        >
-          {dueDate && !isSub ? (
-            <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
-          ) : null}
-          {isSub ? null : (
-            <>
-              <Chips label={t.todos.estimate}>
-                <Chip
-                  label={t.todos.estimateNone}
-                  selected={estimate === undefined}
-                  onClick={() => setEstimate(undefined)}
-                />
-                {ESTIMATES.map((n) => (
-                  <Chip
-                    key={n}
-                    label={t.todos.estimateMin(n)}
-                    selected={estimate === n}
-                    onClick={() => setEstimate(n)}
-                  />
-                ))}
-              </Chips>
-              <DateField
-                label={t.todos.planned}
-                value={plannedFor}
-                onChange={(e) => setPlannedFor(e.target.value)}
+        <>
+          <Chips label={t.todos.estimate}>
+            <Chip
+              label={t.todos.estimateNone}
+              selected={estimate === undefined}
+              onClick={() => setEstimate(undefined)}
+            />
+            {ESTIMATES.map((n) => (
+              <Chip
+                key={n}
+                label={t.todos.estimateMin(n)}
+                selected={estimate === n}
+                onClick={() => setEstimate(n)}
               />
-              <Chips label={t.todos.planned}>
-                <Chip label={t.todos.planToday} onClick={() => setPlannedFor(today())} />
-                {plannedFor ? (
-                  <Chip label={t.todos.planClear} onClick={() => setPlannedFor('')} />
-                ) : null}
-              </Chips>
-            </>
-          )}
-          {isSub ? null : (
+            ))}
+          </Chips>
+          <DateField
+            label={t.todos.planned}
+            value={plannedFor}
+            onChange={(e) => setPlannedFor(e.target.value)}
+          />
+          <Chips label={t.todos.planned}>
+            <Chip label={t.todos.planToday} onClick={() => setPlannedFor(today())} />
+            {plannedFor ? (
+              <Chip label={t.todos.planClear} onClick={() => setPlannedFor('')} />
+            ) : null}
+          </Chips>
+          <AdvancedFields moduleId="todos" hasData={someday || !!recurrence}>
+            {dueDate ? (
+              <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
+            ) : null}
             <Switch label={t.todos.somedayLabel} checked={someday} onChange={setSomeday} />
-          )}
-        </AdvancedFields>
+          </AdvancedFields>
+        </>
       )}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
 
