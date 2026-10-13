@@ -7,7 +7,9 @@ import { areaOfPath } from '@/core/modules/areas';
 import { availableManifests } from '@/core/modules/available';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Icon, Tabs } from '@/ui';
+import { moduleSettingsPath } from '@/pages/settings/useSections';
+import { tComfort } from '@/strings.comfort';
+import { Button, Icon, SettingsLink, Tabs } from '@/ui';
 import { useNavTree } from './useNavItems';
 import styles from './AreaFrame.module.css';
 
@@ -39,6 +41,16 @@ function WriteButton({ pathname }: { pathname: string }) {
   );
 }
 
+/** The gear of the module whose page this is: straight to its settings section. */
+function ModuleSettingsLink({ pathname }: { pathname: string }) {
+  const manifest = availableManifests().find(
+    (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
+  );
+  const to = manifest ? moduleSettingsPath(manifest) : undefined;
+  if (!manifest || !to) return null;
+  return <SettingsLink to={to} label={tComfort.get().gear.module} />;
+}
+
 export function AreaFrame({ children }: { children: ReactNode }) {
   const tree = useNavTree();
   const { pathname } = useLocation();
@@ -50,6 +62,7 @@ export function AreaFrame({ children }: { children: ReactNode }) {
         <div className={styles.eyebrowRow}>
           <p className={styles.eyebrow}>{area.label}</p>
           <WriteButton pathname={pathname} />
+          <ModuleSettingsLink pathname={pathname} />
         </div>
         {area.items.length > 1 ? (
           <Tabs

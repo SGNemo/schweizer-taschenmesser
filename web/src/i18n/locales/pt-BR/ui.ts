@@ -12,6 +12,8 @@ export const ui: Strings['ui'] = {
   grabHandle: 'Arraste para baixo para fechar',
   undo: 'Desfazer',
   undone: 'Desfeito.',
+  deleted: 'Excluído.',
+  changed: 'Alterado.',
   undoFailed: 'Não foi mais possível desfazer.',
   nothingToUndo: 'Nada para desfazer.',
   selection: 'Seleção',

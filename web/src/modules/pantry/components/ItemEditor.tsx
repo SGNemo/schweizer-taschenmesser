@@ -5,6 +5,7 @@ import { Button, Dialog, Form, FormActions, SelectField, Split, TextArea, TextFi
 import { parseCount } from '../logic';
 import { itemRepo } from '../repo';
 import { PLACES, type PantryItem, type Place } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type ItemTarget = Stored<PantryItem> | { draft: true } | null;
 
@@ -111,7 +112,7 @@ function Fields({
             <Button
               variant="danger"
               onClick={async () => {
-                await itemRepo.remove(existing.id);
+                await deleteWithUndo(() => itemRepo.remove(existing.id));
                 onClose();
               }}
             >

@@ -121,3 +121,9 @@ textarea {
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* Deep-link target outside the settings page (library card, tool tile); see ui/useHashTarget.ts. */
+[data-hash-target='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
