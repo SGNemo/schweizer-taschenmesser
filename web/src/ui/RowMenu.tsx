@@ -1,0 +1,109 @@
+import { useEffect, useRef, type ReactNode } from 'react';
+import { t } from '@/strings';
+import { IconButton } from './Button';
+import { Icon } from './icons';
+import styles from './RowMenu.module.css';
+
+export interface RowMenuItem {
+  id: string;
+  label: string;
+  onSelect: () => void;
+  /** Destructive entries are marked with the danger colour and a text hint in the label. */
+  danger?: boolean;
+  /** Entries with a heading start a new group (`Später`, `Bewegen` …). */
+  group?: string;
+}
+
+/**
+ * Overflow menu of a row ("⋯"): opens from the button, from a right-click or a long press on the
+ * row (the browser sends `contextmenu`). Arrow keys move, Enter picks, Esc closes and returns the
+ * focus. Every entry is also reachable without this menu (swipe, edit dialog); it is a shortcut.
+ */
+export function RowMenu({
+  label,
+  items,
+  open,
+  onOpenChange,
+}: {
+  label: string;
+  items: RowMenuItem[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const root = useRef<HTMLSpanElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const first = root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]');
+    first?.focus();
+    const away = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) onOpenChange(false);
+    };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [open, onOpenChange]);
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (!open) return;
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      onOpenChange(false);
+      button.current?.focus();
+      return;
+    }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const all = [...(root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])];
+    const at = all.indexOf(document.activeElement as HTMLButtonElement);
+    const next = (at + (e.key === 'ArrowDown' ? 1 : -1) + all.length) % all.length;
+    all[next]?.focus();
+  }
+
+  let lastGroup: string | undefined;
+  const entries: ReactNode[] = [];
+  for (const item of items) {
+    if (item.group && item.group !== lastGroup) {
+      entries.push(
+        <li key={`g-${item.group}`} role="presentation" className={styles.group}>
+          {item.group}
+        </li>,
+      );
+    }
+    lastGroup = item.group ?? lastGroup;
+    entries.push(
+      <li key={item.id} role="none">
+        <button
+          type="button"
+          role="menuitem"
+          className={`${styles.item} ${item.danger ? styles.danger : ''}`}
+          onClick={() => {
+            onOpenChange(false);
+            item.onSelect();
+          }}
+        >
+          {item.label}
+        </button>
+      </li>,
+    );
+  }
+
+  return (
+    <span className={styles.root} ref={root} onKeyDown={onKeyDown}>
+      <IconButton
+        ref={button}
+        label={label || t.ui.rowMenu}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+      >
+        <Icon name="more" size={18} />
+      </IconButton>
+      {open ? (
+        <ul role="menu" aria-label={label} className={styles.menu}>
+          {entries}
+        </ul>
+      ) : null}
+    </span>
+  );
+}

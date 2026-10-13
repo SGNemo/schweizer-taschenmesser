@@ -5,6 +5,7 @@ import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
 import { DueList } from '@/ui';
 import { openTotal, sortInvoices } from '../logic';
+import { payWithUndo } from '../quickActions';
 import { invoiceRepo } from '../repo';
 
 export default function DueInvoicesWidget() {
@@ -32,6 +33,7 @@ export default function DueInvoicesWidget() {
         amount: formatMoney(i.amountMinor),
         tone: s.tone,
         label: s.label,
+        action: { label: `${t.invoices.markPaid}: ${i.payee}`, run: () => void payWithUndo(i.id) },
       }))}
       moreLabel={t.widgets.more}
     />
