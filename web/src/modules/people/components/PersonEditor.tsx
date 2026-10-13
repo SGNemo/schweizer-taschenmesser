@@ -5,6 +5,7 @@ import { t } from '@/strings';
 import { Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
 import { deletePerson, personRepo } from '../repo';
 import { personSchema, type Person } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type PersonTarget = Stored<Person> | { draft: true } | null;
 
@@ -124,7 +125,7 @@ function Fields({
             <Button
               variant="danger"
               onClick={async () => {
-                await deletePerson(existing.id);
+                await deleteWithUndo(() => deletePerson(existing.id));
                 onClose();
                 onDeleted?.();
               }}
