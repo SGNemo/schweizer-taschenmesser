@@ -35,15 +35,6 @@ const CLIPBOARD_MAX_CHARS: usize = 1000;
 /// Menu texts; the web app replaces them from `strings.ts` right after start (German only).
 const DEFAULT_LABELS: (&str, &str, &str, &str) = ("Erfassen", "App öffnen", "Beenden", "Nemo");
 
-/// Text of the "really quit?" question shown when the main window is closed without "close to
-/// tray": (title, text, quit button, cancel button). German only, like the tray defaults.
-const QUIT_PROMPT: (&str, &str, &str, &str) = (
-    "Nemo beenden?",
-    "Nemo wird komplett beendet; das Tastenkürzel zum schnellen Erfassen ist dann nicht mehr aktiv.",
-    "Beenden",
-    "Abbrechen",
-);
-
 struct TrayItems {
     capture: MenuItem<Wry>,
     open: MenuItem<Wry>,
@@ -254,7 +245,7 @@ fn ask_quit(app: &AppHandle) {
     if state.quit_prompt_open.swap(true, Ordering::AcqRel) {
         return;
     }
-    let (title, text, quit, cancel) = QUIT_PROMPT;
+    let (title, text, quit, cancel) = crate::texts::quit_dialog(crate::webview2::system_lang());
     let handle = app.clone();
     app.dialog()
         .message(text)
