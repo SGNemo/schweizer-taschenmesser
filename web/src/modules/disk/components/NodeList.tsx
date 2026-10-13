@@ -25,6 +25,10 @@ interface Props {
   onOpen: (node: DiskNode) => void;
   /** Parent folder line under the name (query results). */
   where?: (node: DiskNode) => string | undefined;
+  /** Which date the last column shows (`accessed` only where the scan trusts it). */
+  dateField?: 'modified' | 'accessed';
+  /** Extra line under the name (e.g. when a game was last played). */
+  note?: (node: DiskNode) => string | undefined;
   sort?: { key: SortKey; dir: SortDir; onChange: (key: SortKey) => void };
   /** Checkboxes for picking several entries at once (query results). */
   select?: {
@@ -45,6 +49,8 @@ export function NodeList({
   onSelect,
   onOpen,
   where,
+  dateField = 'modified',
+  note,
   sort,
   select,
   label,
@@ -96,7 +102,11 @@ export function NodeList({
         {head('bytes', t.disk.list.size)}
         <div role="columnheader">{t.disk.list.share}</div>
         {head('files', t.disk.list.files)}
-        {head('modified', t.disk.list.modified)}
+        {dateField === 'accessed' ? (
+          <div role="columnheader">{t.disk.list.accessed}</div>
+        ) : (
+          head('modified', t.disk.list.modified)
+        )}
       </div>
       {nodes.length === 0 ? <p className={styles.empty}>{t.disk.list.empty}</p> : null}
       <div
@@ -109,6 +119,8 @@ export function NodeList({
           {nodes.slice(start, end).map((n, k) => {
             const pct = Math.round(share(n.bytes, total) * 100);
             const at = where?.(n);
+            const date = n[dateField];
+            const extra = note?.(n);
             return (
               <div
                 key={n.id}
@@ -146,6 +158,7 @@ export function NodeList({
                           {t.disk.list.in} {at || '/'}
                         </span>
                       ) : null}
+                      {extra ? <span className={styles.where}>{extra}</span> : null}
                     </span>
                   </button>
                 </div>
@@ -162,9 +175,9 @@ export function NodeList({
                   {formatCount(n.files)}
                 </div>
                 <div role="cell" className={`${styles.num} ${styles.date}`}>
-                  <span>{formatDate(n.modified)}</span>
-                  {n.modified > 0 ? (
-                    <span className={styles.ago}>{t.disk.age.ago(ageDays(n.modified, nowMs))}</span>
+                  <span>{formatDate(date)}</span>
+                  {date > 0 ? (
+                    <span className={styles.ago}>{t.disk.age.ago(ageDays(date, nowMs))}</span>
                   ) : null}
                 </div>
               </div>

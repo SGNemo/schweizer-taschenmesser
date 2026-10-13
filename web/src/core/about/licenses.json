@@ -3,9 +3,9 @@
   "npm": [
     {
       "name": "@anthropic-ai/sdk",
-      "version": "0.131.0",
+      "version": "0.132.1",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.131.0"
+      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.132.1"
     },
     {
       "name": "@babel/runtime",
@@ -99,9 +99,9 @@
     },
     {
       "name": "@tauri-apps/api",
-      "version": "2.12.1",
+      "version": "2.12.2",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.1"
+      "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.2"
     },
     {
       "name": "@tauri-apps/plugin-clipboard-manager",
@@ -123,9 +123,9 @@
     },
     {
       "name": "@tauri-apps/plugin-http",
-      "version": "2.8.0",
+      "version": "2.8.1",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-http/v/2.8.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-http/v/2.8.1"
     },
     {
       "name": "@tauri-apps/plugin-notification",
@@ -393,9 +393,9 @@
     },
     {
       "name": "lucide-react",
-      "version": "1.52.0",
+      "version": "1.54.0",
       "license": "ISC",
-      "url": "https://www.npmjs.com/package/lucide-react/v/1.52.0"
+      "url": "https://www.npmjs.com/package/lucide-react/v/1.54.0"
     },
     {
       "name": "minisearch",
@@ -501,15 +501,15 @@
     },
     {
       "name": "tldts",
-      "version": "7.4.16",
+      "version": "7.4.18",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/tldts/v/7.4.16"
+      "url": "https://www.npmjs.com/package/tldts/v/7.4.18"
     },
     {
       "name": "tldts-core",
-      "version": "7.4.16",
+      "version": "7.4.18",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/tldts-core/v/7.4.16"
+      "url": "https://www.npmjs.com/package/tldts-core/v/7.4.18"
     },
     {
       "name": "ts-algebra",

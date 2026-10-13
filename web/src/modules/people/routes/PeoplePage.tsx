@@ -7,8 +7,10 @@ import { whatsappUrl } from '@/core/links';
 import { formatMoney } from '@/core/money';
 import { getPlatform } from '@/core/platform';
 import { formatDay, today } from '@/core/time/dates';
+import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
+  AdvancedToggle,
   Badge,
   Button,
   EmptyState,
@@ -18,11 +20,22 @@ import {
   ItemRow,
   PageHeader,
   patternStyles,
+  Segmented,
   TextField,
+  useOpenParam,
 } from '@/ui';
 import { GiftEditor, type GiftTarget } from '../components/GiftEditor';
 import { PersonEditor, type PersonTarget } from '../components/PersonEditor';
-import { ageOn, daysUntil, nextBirthday, sortByNext, sortGifts, totals, whenLabel } from '../logic';
+import {
+  ageOn,
+  daysUntil,
+  nextBirthday,
+  openGiftsWithPerson,
+  sortByNext,
+  sortGifts,
+  totals,
+  whenLabel,
+} from '../logic';
 import { giftRepo, personRepo } from '../repo';
 import type { Gift, Person } from '../schema';
 
@@ -36,6 +49,11 @@ export default function PeoplePage() {
   const people = useLiveQuery(() => personRepo.active().toArray(), []);
   const gifts = useLiveQuery(() => giftRepo.active().toArray(), []);
   const [params, setParams] = useSearchParams();
+  // A search hit links here with ?open=<id>: show that person (or the person a gift belongs to).
+  useOpenParam(
+    async (id) => (await personRepo.get(id)) ?? (await giftRepo.get(id)),
+    (r) => ({ person: 'personId' in r ? r.personId : r.id }),
+  );
   const selected = params.get('person');
   const person = people?.find((p) => p.id === selected);
   if (selected && people && !person) {
@@ -53,6 +71,39 @@ export default function PeoplePage() {
   );
 }
 
+/** One tap: "Verschenkt", undoable. */
+function markGiven(id: string) {
+  void changeWithUndo(() => giftRepo.update(id, { status: 'given' }), t.people.giftGiven);
+}
+
+/** Right side of a gift row: status badge, the one-tap "Verschenkt" and the link. */
+function GiftEnd({ gift: g }: { gift: Stored<Gift> }) {
+  return (
+    <span className={patternStyles.hstackTight}>
+      <Badge tone={g.status === 'idea' ? 'accent' : 'neutral'}>
+        {t.people.gift.statuses[g.status]}
+      </Badge>
+      {g.status !== 'given' ? (
+        <Button
+          size="sm"
+          aria-label={t.people.giftGivenAria(g.title)}
+          onClick={() => markGiven(g.id)}
+        >
+          {t.people.giftGivenAction}
+        </Button>
+      ) : null}
+      {g.url ? (
+        <IconButton
+          label={`${t.people.gift.openLink}: ${g.title}`}
+          onClick={() => void getPlatform().app.openUrl(g.url!)}
+        >
+          <Icon name="external" size={16} />
+        </IconButton>
+      ) : null}
+    </span>
+  );
+}
+
 function PeopleList({
   people,
   gifts,
@@ -63,6 +114,7 @@ function PeopleList({
   onOpen: (id: string) => void;
 }) {
   const [query, setQuery] = useState('');
+  const [view, setView] = useState<'people' | 'gifts'>('people');
   const [target, setTarget] = useState<PersonTarget>(null);
   const [params, setParams] = useSearchParams();
   const day = today();
@@ -79,6 +131,7 @@ function PeopleList({
       if (g.status !== 'given') map.set(g.personId, (map.get(g.personId) ?? 0) + 1);
     return map;
   }, [gifts]);
+  const pending = useMemo(() => openGiftsWithPerson(gifts ?? [], people ?? []), [gifts, people]);
   const q = fold(query.trim());
   const shown = useMemo(
     () =>
@@ -91,17 +144,54 @@ function PeopleList({
   return (
     <>
       <PageHeader title={t.people.title}>
+        <AdvancedToggle moduleId="people" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.people.add}
         </Button>
       </PageHeader>
-      {people && people.length === 0 ? (
+      {pending.length > 0 || view === 'gifts' ? (
+        <Segmented
+          label={t.people.viewLabel}
+          value={view}
+          options={[
+            { value: 'people' as const, label: t.people.viewPeople },
+            { value: 'gifts' as const, label: t.people.viewGifts },
+          ]}
+          onChange={setView}
+        />
+      ) : null}
+      {view === 'gifts' ? (
+        <>
+          {pending.length === 0 ? <p>{t.people.giftsNoneOpen}</p> : null}
+          <ItemList label={t.people.viewGifts}>
+            {pending.map(({ gift: g, person: p }) => (
+              <ItemRow
+                key={g.id}
+                title={g.title}
+                meta={[
+                  p.name,
+                  g.occasion,
+                  g.date ? formatDay(g.date, 'dd.MM.yyyy') : undefined,
+                  g.priceCents !== undefined ? formatMoney(g.priceCents) : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                onOpen={() => onOpen(p.id)}
+                onSwipeRight={() => markGiven(g.id)}
+                swipeRightLabel={t.people.giftGivenAction}
+                end={<GiftEnd gift={g} />}
+              />
+            ))}
+          </ItemList>
+        </>
+      ) : null}
+      {view === 'people' && people && people.length === 0 ? (
         <EmptyState title={t.people.empty}>
           <StartDataButton moduleId="people" />
         </EmptyState>
       ) : null}
-      {people && people.length > 0 ? (
+      {view === 'people' && people && people.length > 0 ? (
         <TextField
           label={t.people.search}
           type="search"
@@ -109,40 +199,44 @@ function PeopleList({
           onChange={(e) => setQuery(e.target.value)}
         />
       ) : null}
-      {people && people.length > 0 && shown.length === 0 ? <p>{t.people.emptyFiltered}</p> : null}
-      <ItemList layout="grid" label={t.people.title}>
-        {shown.map((p) => {
-          const b = p.birthday;
-          const next = b ? nextBirthday(b, day) : undefined;
-          const age = b && next ? ageOn(b, next) : undefined;
-          const gifting = open.get(p.id) ?? 0;
-          return (
-            <ItemRow
-              key={p.id}
-              title={p.name}
-              meta={[
-                next ? formatDay(next, 'EEE, d. MMMM') : undefined,
-                age !== undefined ? t.people.turns(age) : undefined,
-                b ? whenLabel(daysUntil(b, day)) : undefined,
-                gifting ? t.people.giftsOpen(gifting) : undefined,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-              onOpen={() => onOpen(p.id)}
-              end={
-                b ? (
-                  <IconButton
-                    label={t.people.congratulate(p.name)}
-                    onClick={() => congratulate(p.name)}
-                  >
-                    <Icon name="external" size={18} />
-                  </IconButton>
-                ) : undefined
-              }
-            />
-          );
-        })}
-      </ItemList>
+      {view === 'people' && people && people.length > 0 && shown.length === 0 ? (
+        <p>{t.people.emptyFiltered}</p>
+      ) : null}
+      {view === 'people' ? (
+        <ItemList layout="grid" label={t.people.title}>
+          {shown.map((p) => {
+            const b = p.birthday;
+            const next = b ? nextBirthday(b, day) : undefined;
+            const age = b && next ? ageOn(b, next) : undefined;
+            const gifting = open.get(p.id) ?? 0;
+            return (
+              <ItemRow
+                key={p.id}
+                title={p.name}
+                meta={[
+                  next ? formatDay(next, 'EEE, d. MMMM') : undefined,
+                  age !== undefined ? t.people.turns(age) : undefined,
+                  b ? whenLabel(daysUntil(b, day)) : undefined,
+                  gifting ? t.people.giftsOpen(gifting) : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                onOpen={() => onOpen(p.id)}
+                end={
+                  b ? (
+                    <IconButton
+                      label={t.people.congratulate(p.name)}
+                      onClick={() => congratulate(p.name)}
+                    >
+                      <Icon name="external" size={18} />
+                    </IconButton>
+                  ) : undefined
+                }
+              />
+            );
+          })}
+        </ItemList>
+      ) : null}
       <PersonEditor target={openTarget} onClose={closeEditor} />
     </>
   );
@@ -224,21 +318,9 @@ function PersonDetail({
               .filter(Boolean)
               .join(' · ')}
             onOpen={() => setGift(g)}
-            end={
-              <span className={patternStyles.hstackTight}>
-                <Badge tone={g.status === 'idea' ? 'accent' : 'neutral'}>
-                  {t.people.gift.statuses[g.status]}
-                </Badge>
-                {g.url ? (
-                  <IconButton
-                    label={`${t.people.gift.openLink}: ${g.title}`}
-                    onClick={() => void getPlatform().app.openUrl(g.url!)}
-                  >
-                    <Icon name="external" size={16} />
-                  </IconButton>
-                ) : null}
-              </span>
-            }
+            end={<GiftEnd gift={g} />}
+            onSwipeRight={g.status !== 'given' ? () => markGiven(g.id) : undefined}
+            swipeRightLabel={t.people.giftGivenAction}
           />
         ))}
       </ItemList>

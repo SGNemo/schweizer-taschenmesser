@@ -3,7 +3,8 @@
  * anything from outside `quickCapture/parser/` (guarded by `isolation.test.ts`).
  */
 
-export type CaptureType = 'todo' | 'event' | 'reminder' | 'bookmark' | 'list' | 'finance' | 'note';
+export type CaptureType =
+  'todo' | 'event' | 'reminder' | 'bookmark' | 'list' | 'finance' | 'invoice' | 'note';
 
 /** Same shape as the app's recurrence schema, declared locally to keep the parser dependency-free. */
 export interface CaptureRecurrence {

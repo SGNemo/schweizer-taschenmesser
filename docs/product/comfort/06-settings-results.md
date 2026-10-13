@@ -20,3 +20,19 @@ Nicht erreicht/nicht umgesetzt (Ziel offen): **Stumm** (1–2 Klicks) – brauch
 Tests: Unit 2507 grün (Suche/Synonyme, Quick-Allow-Liste, Häufig-genutzt lokal und löschbar, Deep-Links, Reset inkl. Undo und Sicherheits-Ausschluss, Palette), E2E Desktop + Pixel 7 für die genannten Wege; gesamte Suite Desktop + Pixel 7 vor den letzten Korrekturen: 758 grün, 10 rot (alle durch dieses Paket verursacht und behoben, danach die betroffenen Specs 443 grün).
 
 Manuelle Tests offen: eine Woche Nutzung (Reizlast des Zahnrads/der Schnellleiste, „Häufig genutzt“), Gear-Sichtbarkeit auf echtem Touchgerät, Android-Zurückgeste (E2E prüft Browser-Zurück).
+
+## Nachtrag: Stumm, Bibliothek, Werkzeugkasten (2026-10-13)
+Gleiche Methode (aus den E2E-Schritten abgeleitet, keine Stoppuhr), Specs `comfort-settings`, `comfort-library`, `comfort-toolbox`.
+
+| Handlung | vorher D / A | jetzt D / A | Weg jetzt |
+|---|---|---|---|
+| Erinnerungen stumm (1 Stunde / bis morgen) | 4+ / 5+ (nur Ruhezeit umstellen) | 2 / 3 (Palette „Stumm: 1 Stunde“: 0 Klicks) | Einstellungen → Schnellleiste „Stumm“ (#150) |
+| Modul über Zweck finden („Abo“) | Seite durchblättern | Suchfeld in der Bibliothek, 0 Klicks | #151 |
+| Startdaten eines aktivierten Moduls | 3+scroll / 4+scroll | 2 / 3 | Knopf auf der Karte (#151) |
+| Timer starten | 2 / 3 | 0 Klicks (`Strg+K`, „timer 10m“, Enter) / 3 | Palette-Ausdruck (#153) |
+| Einheit umrechnen und kopieren | 3 / 4 | 0 Klicks („umrechnen 5 km“, Enter kopiert) | Palette-Ausdruck (#153) |
+| Zuletzt genutztes Werkzeug | 2 / 3 | 2 / 3 (Zeile oberhalb der Kacheln, ab 5 aktiven Werkzeugen) | #153 |
+| Werkzeug in der Bibliothek finden | scrollen | Suchfeld, 0 Klicks | #153 |
+
+Nicht erreicht: Modul an/aus als Schalter, Drag-and-drop-Reihenfolge, Vorschau-Widget, lösbare Tool-Fenster, Timer als Android-Benachrichtigung (Gründe: `docs/decisions/ui-shell.md`). Zusätzlich offen sind die Handtests M1–M4 (Stumm) in [MANUAL-TESTS.md](../../MANUAL-TESTS.md).
+

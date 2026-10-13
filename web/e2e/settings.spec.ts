@@ -120,7 +120,7 @@ test('the diagnostics file is shown in full before anything is saved', async ({ 
   await expect(page.getByRole('button', { name: 'Fehler melden' }).first()).toBeVisible();
 });
 
-test('the danger zone needs the typed phrase and then wipes this device', async ({ page }) => {
+test('the danger zone asks twice, then wipes this device', async ({ page }) => {
   await ready(page, '/todos?list=inbox');
   await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Erfundene Aufgabe');
   await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
@@ -130,10 +130,15 @@ test('the danger zone needs the typed phrase and then wipes this device', async 
   await page.getByRole('button', { name: 'Alle Daten auf diesem Gerät löschen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Alle Daten auf diesem Gerät löschen?' });
   const confirm = dialog.getByRole('button', { name: 'Endgültig löschen' });
+  // Nothing to type; the first click only asks once more.
+  await expect(dialog.getByRole('textbox')).toHaveCount(0);
+  await confirm.click();
+  await expect(dialog.getByTestId('confirm-again')).toContainText('Bist du sicher?');
+  // "Zurück" changes nothing; the second "yes" is off for a moment (no double-click wipe).
+  await dialog.getByRole('button', { name: 'Zurück' }).click();
+  await expect(dialog.getByTestId('confirm-again')).toHaveCount(0);
+  await confirm.click();
   await expect(confirm).toBeDisabled();
-  await dialog.getByLabel(/Tippe „LÖSCHEN“/).fill('löschen bitte');
-  await expect(confirm).toBeDisabled();
-  await dialog.getByLabel(/Tippe „LÖSCHEN“/).fill('LÖSCHEN');
   await expect(confirm).toBeEnabled();
   // The page reloads once the database is gone.
   await Promise.all([page.waitForEvent('load'), confirm.click()]);

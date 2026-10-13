@@ -213,6 +213,7 @@ export function createWebPlatform(): PlatformService {
           children: unsupported,
           node: unsupported,
           query: unsupported,
+          steamGames: unsupported,
           knownPlaces: unsupported,
           placeSizes: unsupported,
           recycleSize: unsupported,

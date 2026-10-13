@@ -1,18 +1,37 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
-import { today } from '@/core/time/dates';
+import { addMonthsStr, today } from '@/core/time/dates';
+import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
-import { Button, Dialog, patternStyles, TextArea, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  DateChips,
+  Dialog,
+  SelectField,
+  TextArea,
+  TextField,
+  patternStyles,
+} from '@/ui';
 import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
-import type { Invoice } from '../schema';
+import { INVOICE_REPEATS, type Invoice, type InvoiceRepeat } from '../schema';
 import styles from '../routes/invoices.module.css';
-import { deleteWithUndo } from '@/core/undo/withToast';
+import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
 export type InvoiceTarget = Stored<Invoice> | { draft: true } | null;
 
-export function InvoiceEditor({ target, onClose }: { target: InvoiceTarget; onClose: () => void }) {
+export function InvoiceEditor({
+  target,
+  onClose,
+  onDuplicated,
+}: {
+  target: InvoiceTarget;
+  onClose: () => void;
+  /** The copy made by "Duplizieren"; the page opens it for editing. */
+  onDuplicated?: (copy: Stored<Invoice>) => void;
+}) {
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
@@ -20,18 +39,34 @@ export function InvoiceEditor({ target, onClose }: { target: InvoiceTarget; onCl
       onClose={onClose}
       title={existing ? t.invoices.edit : t.invoices.add}
     >
-      {target ? <Form key={existing?.id ?? 'new'} existing={existing} onClose={onClose} /> : null}
+      {target ? (
+        <Form
+          key={existing?.id ?? 'new'}
+          existing={existing}
+          onClose={onClose}
+          onDuplicated={onDuplicated}
+        />
+      ) : null}
     </Dialog>
   );
 }
 
-function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose: () => void }) {
+function Form({
+  existing,
+  onClose,
+  onDuplicated,
+}: {
+  existing: Stored<Invoice> | null;
+  onClose: () => void;
+  onDuplicated?: (copy: Stored<Invoice>) => void;
+}) {
   const [payee, setPayee] = useState(existing?.payee ?? '');
   const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.amountMinor) : '');
   const [dueDate, setDueDate] = useState(existing?.dueDate ?? today());
   const [paidAt, setPaidAt] = useState(existing?.paidAt ?? '');
   const [reference, setReference] = useState(existing?.reference ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
+  const [repeat, setRepeat] = useState<InvoiceRepeat | ''>(existing?.repeat ?? '');
   const [error, setError] = useState('');
   const isPaid = existing?.status === 'paid';
 
@@ -50,6 +85,8 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
       paidAt: isPaid ? paidAt || today() : undefined,
       reference: reference.trim() || undefined,
       note: note.trim() || undefined,
+      repeat: repeat || undefined,
+      repeatOf: existing?.repeatOf,
     });
     onClose();
   }
@@ -84,6 +121,7 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
           required
         />
       </div>
+      <DateChips value={dueDate} onChange={setDueDate} />
       {isPaid ? (
         <TextField
           label={t.invoices.paidAt}
@@ -92,12 +130,27 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
           onChange={(e) => setPaidAt(e.target.value)}
         />
       ) : null}
-      <TextField
-        label={t.invoices.reference}
-        value={reference}
-        onChange={(e) => setReference(e.target.value)}
-      />
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <SelectField
+        label={t.invoices.repeat}
+        value={repeat}
+        onChange={(e) => setRepeat(e.target.value as InvoiceRepeat | '')}
+        hint={t.invoices.repeatHint}
+      >
+        <option value="">{t.invoices.repeatOptions.none}</option>
+        {INVOICE_REPEATS.map((r) => (
+          <option key={r} value={r}>
+            {t.invoices.repeatOptions[r]}
+          </option>
+        ))}
+      </SelectField>
+      <AdvancedFields moduleId="invoices" hasData={!!reference || !!note}>
+        <TextField
+          label={t.invoices.reference}
+          value={reference}
+          onChange={(e) => setReference(e.target.value)}
+        />
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       <div className={styles.actions}>
         {existing ? (
           <Button
@@ -113,6 +166,29 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
           <span />
         )}
         <span className={patternStyles.hstack}>
+          {existing ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                // The same invoice next month (rent, insurance): open again, one month later.
+                const copy = await undoableWithToast(
+                  t.actions.duplicated,
+                  t.actions.duplicated,
+                  () =>
+                    invoiceRepo.create({
+                      ...copyData(existing),
+                      status: 'open',
+                      paidAt: undefined,
+                      dueDate: addMonthsStr(existing.dueDate, 1),
+                    }),
+                );
+                onClose();
+                onDuplicated?.(copy);
+              }}
+            >
+              {t.actions.duplicate}
+            </Button>
+          ) : null}
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

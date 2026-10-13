@@ -45,6 +45,8 @@ export const tComfort = defineBundle(
       noResults: 'Kein Werkzeug passt. Probiere ein anderes Wort.',
     },
     library: {
+      toggle: (name: string) => `${name} einschalten`,
+      turnedOff: (name: string) => `„${name}“ ist aus; die Daten sind noch da.`,
       enable: (name: string) => `${name} in der Bibliothek einschalten`,
       search: 'Module durchsuchen',
       searchPlaceholder: 'Name oder Aufgabe, z. B. „Abo“ oder „Rechnung“',
@@ -110,6 +112,8 @@ export const tComfort = defineBundle(
         noResults: 'No tool matches. Try another word.',
       },
       library: {
+        toggle: (name: string) => `Turn on ${name}`,
+        turnedOff: (name: string) => `“${name}” is off; your data is still there.`,
         enable: (name: string) => `Turn on ${name} in the library`,
         search: 'Search modules',
         searchPlaceholder: 'Name or purpose, e.g. “subscription” or “invoice”',
@@ -174,6 +178,8 @@ export const tComfort = defineBundle(
         noResults: 'Ninguna herramienta coincide. Prueba otra palabra.',
       },
       library: {
+        toggle: (name: string) => `Activar ${name}`,
+        turnedOff: (name: string) => `«${name}» está desactivado; tus datos siguen ahí.`,
         enable: (name: string) => `Activar ${name} en la biblioteca`,
         search: 'Buscar módulos',
         searchPlaceholder: 'Nombre o función, p. ej. «suscripción» o «factura»',
@@ -245,6 +251,8 @@ export const tComfort = defineBundle(
         noResults: 'Aucun outil ne correspond. Essayez un autre mot.',
       },
       library: {
+        toggle: (name: string) => `Activer ${name}`,
+        turnedOff: (name: string) => `« ${name} » est désactivé ; vos données sont toujours là.`,
         enable: (name: string) => `Activer ${name} dans la bibliothèque`,
         search: 'Rechercher des modules',
         searchPlaceholder: 'Nom ou usage, p. ex. « abonnement » ou « facture »',
@@ -309,6 +317,8 @@ export const tComfort = defineBundle(
         noResults: 'Nenhuma ferramenta corresponde. Tente outra palavra.',
       },
       library: {
+        toggle: (name: string) => `Ligar ${name}`,
+        turnedOff: (name: string) => `“${name}” foi desligado; seus dados continuam aqui.`,
         enable: (name: string) => `Ligar ${name} na biblioteca`,
         search: 'Buscar módulos',
         searchPlaceholder: 'Nome ou função, p. ex. “assinatura” ou “fatura”',

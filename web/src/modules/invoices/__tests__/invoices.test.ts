@@ -4,7 +4,7 @@ import { bus } from '@/core/events';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
 import { toEpoch } from '@/core/time/dates';
 import { markOpen, markPaid, saveInvoice } from '../actions';
-import { openTotal, sortInvoices } from '../logic';
+import { nextDueDate, openTotal, sortInvoices } from '../logic';
 import manifest from '../manifest';
 import { listOpenInvoices, sumOpenInvoices } from '../public';
 import { invoiceRepo } from '../repo';
@@ -111,5 +111,72 @@ describe('invoices module', () => {
     expect(due).toHaveLength(1);
     expect(due[0]).toMatchObject({ at, title: 'Rechnung fällig: Stadtwerke', url: '/invoices' });
     expect(await collectNotifications({ from: at, to: at + 3_600_000 }, [manifest])).toEqual([]);
+  });
+});
+
+describe('repeating invoices', () => {
+  const rent = (over: Record<string, unknown> = {}) =>
+    invoiceRepo.create(
+      inv({ payee: 'Vermieter', amountMinor: 120000, repeat: 'monthly', ...over }),
+    );
+
+  it('adds the period to the due date, clamped at the end of a short month', () => {
+    expect(nextDueDate('2026-10-05', 'monthly')).toBe('2026-11-05');
+    expect(nextDueDate('2026-10-05', 'quarterly')).toBe('2027-01-05');
+    expect(nextDueDate('2026-10-05', 'yearly')).toBe('2027-10-05');
+    expect(nextDueDate('2026-01-31', 'monthly')).toBe('2026-02-28');
+  });
+
+  it('paying brings the next open invoice with the same data, due one period later', async () => {
+    const first = await rent({ reference: 'MIETE', note: 'Wohnung' });
+    await markPaid(first.id, '2026-10-04');
+    const all = await invoiceRepo.active().toArray();
+    const next = all.find((i) => i.repeatOf === first.id)!;
+    expect(next).toMatchObject({
+      payee: 'Vermieter',
+      amountMinor: 120000,
+      dueDate: '2026-11-05',
+      status: 'open',
+      reference: 'MIETE',
+      note: 'Wohnung',
+      repeat: 'monthly',
+    });
+  });
+
+  it('never creates a second successor when the same invoice is paid again', async () => {
+    const first = await rent();
+    await markPaid(first.id);
+    await markPaid(first.id);
+    expect(
+      (await invoiceRepo.active().toArray()).filter((i) => i.repeatOf === first.id),
+    ).toHaveLength(1);
+  });
+
+  it('reopening takes the untouched next invoice away; paying again brings a fresh one', async () => {
+    const first = await rent();
+    await markPaid(first.id);
+    await markOpen(first.id);
+    expect(
+      (await invoiceRepo.active().toArray()).filter((i) => i.repeatOf === first.id),
+    ).toHaveLength(0);
+    await markPaid(first.id);
+    expect(
+      (await invoiceRepo.active().toArray()).filter((i) => i.repeatOf === first.id),
+    ).toHaveLength(1);
+  });
+
+  it('keeps a successor that was already paid when the first one is reopened', async () => {
+    const first = await rent();
+    await markPaid(first.id);
+    const next = (await invoiceRepo.active().toArray()).find((i) => i.repeatOf === first.id)!;
+    await markPaid(next.id);
+    await markOpen(first.id);
+    expect((await invoiceRepo.get(next.id))?.status).toBe('paid');
+  });
+
+  it('a normal invoice brings nothing', async () => {
+    const one = await invoiceRepo.create(inv());
+    await markPaid(one.id);
+    expect(await invoiceRepo.active().toArray()).toHaveLength(1);
   });
 });
