@@ -477,6 +477,30 @@ impl Tree {
         true
     }
 
+    /// The folder that was scanned.
+    pub fn root_path(&self) -> &std::path::Path {
+        &self.root
+    }
+
+    /// Folders (not the root) whose name matches `name`, ignoring ASCII case.
+    pub fn dirs_named(&self, name: &str) -> Vec<u32> {
+        (1..self.nodes.len() as u32)
+            .filter(|&i| {
+                let n = &self.nodes[i as usize];
+                n.kind == NodeKind::Dir && !n.removed && n.name.eq_ignore_ascii_case(name)
+            })
+            .collect()
+    }
+
+    /// The sub-folder of `id` called `name` (ASCII case ignored).
+    pub fn child_dir_named(&self, id: u32, name: &str) -> Option<u32> {
+        let n = self.nodes.get(id as usize).filter(|n| !n.removed)?;
+        n.children.iter().copied().find(|&c| {
+            let c = &self.nodes[c as usize];
+            c.kind == NodeKind::Dir && c.name.eq_ignore_ascii_case(name)
+        })
+    }
+
     /// Full path of a folder or file. `None` for aggregates ("small files") and unknown ids.
     pub fn path(&self, id: u32) -> Option<PathBuf> {
         let n = self.nodes.get(id as usize)?;

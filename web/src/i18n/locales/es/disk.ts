@@ -318,6 +318,16 @@ export const disk: Strings['disk'] = {
     none_found: 'Sin resultados.',
     results: (n: number) => (n === 1 ? '1 resultado' : `${n} resultados`),
   },
+  games: {
+    filter: 'Juegos (Steam)',
+    label: 'Juegos de Steam',
+    lastPlayed: 'Jugado por última vez',
+    played: (date: string, ago: string) => `Jugado por última vez el ${date} · ${ago}`,
+    unknown: 'Steam no tiene fecha de juego',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'juego' : 'juegos'} con ${size} en total, ${idle} sin jugar desde hace más de un año`,
+    help: 'La fecha viene de los propios archivos de Steam y cuenta la última partida, no la última actualización. Si falta, el juego nunca se inició o Steam no la guardó. Lo más limpio es desinstalar un juego en Steam: si solo se borra la carpeta, Steam lo sigue mostrando como instalado.',
+  },
   list: {
     name: 'Nombre',
     size: 'Ocupado',

@@ -163,7 +163,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await expect(gifts.getByRole('button', { name: /Link öffnen/ })).toHaveCount(0);
   await expect(page.getByTestId('gifts-total')).toHaveCount(0);
 
-  await gifts.getByRole('button', { name: /Kochbuch/ }).click();
+  await gifts.getByRole('button', { name: /Kochbuch Geburtstag/ }).click();
   await page
     .getByRole('dialog', { name: 'Geschenkidee bearbeiten' })
     .getByLabel('Stand')

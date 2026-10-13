@@ -57,6 +57,12 @@ export const finance: Strings['finance'] = {
   addTransaction: 'Add transaction',
   editTransaction: 'Edit transaction',
   noTransactions: 'No transactions this month.',
+  searchBookings: 'Search bookings',
+  filterKind: 'Type',
+  filterAll: 'All',
+  searchAllMonths: (n: number) =>
+    n === 1 ? '1 match in all months' : `${n} matches in all months`,
+  noMatches: 'No matching bookings.',
   payee: 'Payee / title',
   account: 'Account',
   noCategory: 'No category',

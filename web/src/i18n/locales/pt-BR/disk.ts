@@ -319,6 +319,16 @@ export const disk: Strings['disk'] = {
     none_found: 'Nenhum resultado.',
     results: (n: number) => (n <= 1 ? `${n} resultado` : `${n} resultados`),
   },
+  games: {
+    filter: 'Jogos (Steam)',
+    label: 'Jogos da Steam',
+    lastPlayed: 'Jogado por último',
+    played: (date: string, ago: string) => `Jogado por último em ${date} · ${ago}`,
+    unknown: 'A Steam não tem data de jogo',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'jogo' : 'jogos'} com ${size} no total, ${idle} sem ser jogados há mais de um ano`,
+    help: 'A data vem dos próprios arquivos da Steam e conta a última vez que você jogou, não a última atualização. Se faltar, o jogo nunca foi iniciado ou a Steam não a registrou. O jeito mais limpo de desinstalar um jogo é pela própria Steam: se só a pasta for apagada, a Steam continua mostrando o jogo como instalado.',
+  },
   list: {
     name: 'Nome',
     size: 'Ocupado',

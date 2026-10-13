@@ -31,6 +31,7 @@ D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, R
 D16. *Android/PWA:* „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
 D17. *Alt & ungenutzt:* Spiele-/Steam-Laufwerk scannen: Karte „Alter“ zeigt lange nicht aktualisierte Spiele warm (orange/rot) mit Alter auf der Kachel; „Dateityp“ zeigt Spieldaten statt fast nur „Sonstiges“; „Lange nicht geändert“ (1 Jahr, ab 10 MB) listet jeden alten Ordner einmal mit plausibler Summe; zwei Treffer ankreuzen → „In den Korb“ bzw. „Auswahl löschen …“ öffnet die normale Bestätigung (Papierkorb). ☐
 D18. *Live-Karte:* großes Laufwerk scannen: die Karte erscheint sofort unter dem Fortschritt und wächst Ordner für Ordner; Pause friert sie ein; nach dem Ende übernimmt die normale, anklickbare Karte. Der Scan ist nicht spürbar langsamer als vorher. ☐
+D19. *Steam zuletzt gespielt:* Laufwerk mit Steam-Spielen (auch eine zweite Bibliothek, z. B. `D:\SteamLibrary`) scannen: Filter „Spiele (Steam)“ erscheint, listet die installierten Spiele, am längsten nicht gespielte zuerst, mit Datum wie in Steam (Bibliothek → Spiel → „Zuletzt gespielt“); ein nie gestartetes Spiel zeigt „Kein Spieldatum von Steam“; die Details eines Spielordners zeigen „Zuletzt gespielt“. ☐
 D20. *Zuletzt geöffnet:* `fsutil behavior query disableLastAccess` zeigt den Zustand. Ist er „aktiviert“ (0 oder 2): Scan → „Lange nicht geändert“ bietet „Gemessen an: letztem Öffnen“; eine Testdatei öffnen, nach ~1 Std. neu scannen → sie fällt aus der Liste, Details zeigen „Zuletzt geöffnet“. Ist er „deaktiviert“ (1 oder 3) oder das Laufwerk FAT/exFAT (USB-Stick): die Auswahl und die Zeile fehlen. ☐
 
 ### Übersicht und Dieser PC (Runde `feat/dashboard-variety-system-module`) – nur auf echtem Windows/Android prüfbar
@@ -170,7 +171,7 @@ E1. *Windows-Portable:* Einstellungen durchklicken – Kategorien-Leiste links, 
 E2. *Android:* Einstellungen öffnet die Kategorien-Liste, eine Kategorie öffnet den Inhalt, die Zurück-Geste führt zur Liste; große Touch-Ziele. ☐
 E3. *Deep-Links:* „Benachrichtigungen aktivieren“ im Tab Erinnerungen des Kalenders, das Sync-Symbol oben und der Dev-Hinweis springen in die richtige Kategorie und zum Abschnitt. ☐
 E4. *Über Nemo:* Version, Build/Commit (Dev-Preview), Plattform und Installationsart stimmen; „Ordner öffnen“ öffnet den Datenordner (Portable: `data/` neben der exe, sonst lokaler App-Ordner); Changelog und Lizenzen klappen auf; Diagnose-Export speichert eine Datei ohne Daten und Schlüssel. ☐
-E5. *Gerät zurücksetzen (Testgerät!):* ohne exakt `LÖSCHEN` bleibt der Knopf aus; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
+E5. *Gerät zurücksetzen (Testgerät!):* der erste Klick fragt „Bist du sicher?“, ein schneller Doppelklick löscht nicht, „Zurück“ ändert nichts; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
 E6. *Entwickler:* die Kategorie erscheint nur im Dev-Preview-Build. ☐
 
 ### Fokus- und Aufmerksamkeitshilfen (Paket 1) – nur mit echtem Gerät und echtem Alltag prüfbar

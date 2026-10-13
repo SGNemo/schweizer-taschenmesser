@@ -53,8 +53,7 @@ export const tDiag = defineBundle(
         'Zuerst wird eine Kopie des defekten Stands gesichert. Danach beginnt Nemo ohne Daten.',
       resetTitle: 'Mit leerer Datenbank neu starten',
       resetWarning:
-        'Alle lokalen Daten auf diesem Gerät werden ersetzt (die Kopie bleibt erhalten). Tippe zur Bestätigung NEU STARTEN.',
-      resetPhrase: 'NEU STARTEN',
+        'Alle lokalen Daten auf diesem Gerät werden ersetzt (die Kopie bleibt erhalten).',
       resetConfirm: 'Neu starten',
       copyCancelled: 'Ohne gesicherte Kopie wird nichts verändert.',
       report: 'Fehler melden',
@@ -133,9 +132,7 @@ export const tDiag = defineBundle(
         reset: 'Start again with an empty database',
         resetHint: 'A copy of the defective state is saved first. Then Nemo starts without data.',
         resetTitle: 'Start again with an empty database',
-        resetWarning:
-          'All local data on this device is replaced (the copy is kept). Type RESTART to confirm.',
-        resetPhrase: 'RESTART',
+        resetWarning: 'All local data on this device is replaced (the copy is kept).',
         resetConfirm: 'Start again',
         copyCancelled: 'Nothing is changed without a saved copy.',
         report: 'Report a bug',
@@ -216,8 +213,7 @@ export const tDiag = defineBundle(
         resetHint: 'Primero se guarda una copia del estado dañado. Luego Nemo se inicia sin datos.',
         resetTitle: 'Empezar de nuevo con una base de datos vacía',
         resetWarning:
-          'Se sustituyen todos los datos locales de este dispositivo (la copia se conserva). Escribe REINICIAR para confirmar.',
-        resetPhrase: 'REINICIAR',
+          'Se sustituyen todos los datos locales de este dispositivo (la copia se conserva).',
         resetConfirm: 'Empezar de nuevo',
         copyCancelled: 'No se cambia nada sin una copia guardada.',
         report: 'Informar de un error',
@@ -300,8 +296,7 @@ export const tDiag = defineBundle(
           'Une copie de l’état défectueux est d’abord enregistrée. Nemo démarre ensuite sans données.',
         resetTitle: 'Recommencer avec une base de données vide',
         resetWarning:
-          'Toutes les données locales de cet appareil sont remplacées (la copie est conservée). Saisissez RECOMMENCER pour confirmer.',
-        resetPhrase: 'RECOMMENCER',
+          'Toutes les données locales de cet appareil sont remplacées (la copie est conservée).',
         resetConfirm: 'Recommencer',
         copyCancelled: 'Rien n’est modifié sans copie enregistrée.',
         report: 'Signaler une erreur',
@@ -385,8 +380,7 @@ export const tDiag = defineBundle(
           'Primeiro é salva uma cópia do estado com defeito. Depois o Nemo inicia sem dados.',
         resetTitle: 'Começar de novo com um banco de dados vazio',
         resetWarning:
-          'Todos os dados locais deste dispositivo são substituídos (a cópia é mantida). Digite RECOMEÇAR para confirmar.',
-        resetPhrase: 'RECOMEÇAR',
+          'Todos os dados locais deste dispositivo são substituídos (a cópia é mantida).',
         resetConfirm: 'Começar de novo',
         copyCancelled: 'Nada é alterado sem uma cópia salva.',
         report: 'Relatar um erro',

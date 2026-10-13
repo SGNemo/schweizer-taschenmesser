@@ -234,7 +234,9 @@ export const de = {
     notFoundTitle: 'Diese Kategorie gibt es nicht.',
     danger: {
       title: 'Gefahrenzone',
-      typePhrase: (phrase: string) => `Tippe „${phrase}“ zum Bestätigen`,
+      againTitle: 'Bist du sicher?',
+      againText: 'Das lässt sich nicht rückgängig machen. Bitte bestätige noch einmal.',
+      back: 'Zurück',
     },
     /** Extra search words per settings section (synonyms people type). */
     searchWords: {
@@ -1792,8 +1794,12 @@ export const de = {
     packingSummary: (packed: number, total: number) => `${packed} von ${total} gepackt`,
     contractsSummary: (n: number) =>
       n === 1 ? '1 Kündigungsfrist in Sicht' : `${n} Kündigungsfristen in Sicht`,
-    expirySummary: (expired: number, soon: number) =>
-      [expired ? `${expired} abgelaufen` : '', soon ? `${soon} bald` : '']
+    expirySummary: (expired: number, soon: number, low = 0) =>
+      [
+        expired ? `${expired} abgelaufen` : '',
+        soon ? `${soon} bald` : '',
+        low ? `${low} wenig` : '',
+      ]
         .filter(Boolean)
         .join(' · '),
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
@@ -1910,6 +1916,15 @@ export const de = {
     markPaid: 'Als bezahlt markieren',
     markedPaid: 'Als bezahlt markiert.',
     reopen: 'Wieder öffnen',
+    repeat: 'Wiederholen',
+    repeatHint: 'Wird die Rechnung bezahlt, entsteht die nächste automatisch.',
+    repeatMeta: (every: string) => `↻ ${every}`,
+    repeatOptions: {
+      none: 'Nie',
+      monthly: 'Monatlich',
+      quarterly: 'Vierteljährlich',
+      yearly: 'Jährlich',
+    },
     undo: 'Rückgängig',
     empty: 'Keine offenen Rechnungen.',
     emptyPaid: 'Noch keine bezahlten Rechnungen.',
@@ -1955,6 +1970,13 @@ export const de = {
     nextCharge: 'Nächste Abbuchung',
     cancelBy: 'Kündigen bis',
     ended: 'Beendet',
+    cancelledTo: 'Gekündigt zum (optional)',
+    cancelledToHint: 'Danach gibt es keine Abbuchungen und Fristen mehr.',
+    cancelledBadge: (date: string) => `Gekündigt zum ${date}`,
+    priceHistory: 'Preisverlauf',
+    priceChange: (date: string, from: string, to: string, pct: number) =>
+      `${date}: ${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+    priceUp: (pct: number) => `Preis erhöht (+${pct} %)`,
     every: 'Intervall',
     widgetEmpty: 'Keine aktiven Abos.',
     monthlyCost: (v: string) => `≙ ${v} pro Monat`,
@@ -2016,6 +2038,12 @@ export const de = {
     addTransaction: 'Buchung hinzufügen',
     editTransaction: 'Buchung bearbeiten',
     noTransactions: 'Keine Buchungen in diesem Monat.',
+    searchBookings: 'Buchungen durchsuchen',
+    filterKind: 'Art',
+    filterAll: 'Alle',
+    searchAllMonths: (n: number) =>
+      n === 1 ? '1 Treffer in allen Monaten' : `${n} Treffer in allen Monaten`,
+    noMatches: 'Keine passenden Buchungen.',
     payee: 'Empfänger / Titel',
     account: 'Konto',
     noCategory: 'Ohne Kategorie',
@@ -2764,6 +2792,8 @@ export const de = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
+    restockAll: (n: number) => `Alle ${n} nachkaufen`,
+    restockedMany: (n: number) => `${n} Dinge an die Einkaufsliste gesendet.`,
     shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
@@ -2811,6 +2841,13 @@ export const de = {
     deleted: 'Person gelöscht.',
     giftsOpen: (n: number) => (n === 1 ? '1 Geschenk offen' : `${n} Geschenke offen`),
     giftsHeading: 'Geschenke',
+    viewLabel: 'Ansicht',
+    viewPeople: 'Personen',
+    viewGifts: 'Offene Geschenke',
+    giftsNoneOpen: 'Keine offenen Geschenkideen. Alles verschenkt.',
+    giftGivenAction: 'Verschenkt',
+    giftGivenAria: (what: string) => `„${what}“ als verschenkt markieren`,
+    giftGiven: 'Als verschenkt markiert.',
     giftsEmpty: 'Noch keine Geschenkideen für diese Person.',
     addGift: 'Geschenkidee hinzufügen',
     editGift: 'Geschenkidee bearbeiten',
@@ -3241,6 +3278,16 @@ export const de = {
       inFolder: (name: string) => `Innerhalb von ${name}`,
       none_found: 'Keine Treffer.',
       results: (n: number) => `${n} Treffer`,
+    },
+    games: {
+      filter: 'Spiele (Steam)',
+      label: 'Steam-Spiele',
+      lastPlayed: 'Zuletzt gespielt',
+      played: (date: string, ago: string) => `Zuletzt gespielt am ${date} · ${ago}`,
+      unknown: 'Kein Spieldatum von Steam',
+      summary: (n: number, size: string, idle: number) =>
+        `${n} ${n === 1 ? 'Spiel' : 'Spiele'} mit zusammen ${size}, davon ${idle} seit über einem Jahr nicht gespielt`,
+      help: 'Das Datum stammt aus Steams eigenen Dateien und zählt das letzte Spielen, nicht das letzte Update. Fehlt es, wurde das Spiel nie gestartet oder Steam hat es nicht vermerkt. Am saubersten deinstallierst du ein Spiel in Steam selbst: Wird nur der Ordner gelöscht, zeigt Steam es weiter als installiert.',
     },
     list: {
       name: 'Name',
@@ -4381,6 +4428,9 @@ export const de = {
     export: 'Als Markdown exportieren',
     copy: 'Kopieren',
     copied: 'Kopiert.',
+    saveAsNote: 'Als Notiz speichern',
+    noteOff: 'Das Notizen-Modul ist aus. Schalte es in der Bibliothek ein.',
+    noteFailed: 'Das ließ sich nicht als Notiz speichern.',
     regenerate: 'Neu generieren',
     edit: 'Bearbeiten',
     editSave: 'Speichern und neu fragen',

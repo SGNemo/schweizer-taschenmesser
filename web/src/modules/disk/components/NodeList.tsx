@@ -27,6 +27,8 @@ interface Props {
   where?: (node: DiskNode) => string | undefined;
   /** Which date the last column shows (`accessed` only where the scan trusts it). */
   dateField?: 'modified' | 'accessed';
+  /** Extra line under the name (e.g. when a game was last played). */
+  note?: (node: DiskNode) => string | undefined;
   sort?: { key: SortKey; dir: SortDir; onChange: (key: SortKey) => void };
   /** Checkboxes for picking several entries at once (query results). */
   select?: {
@@ -48,6 +50,7 @@ export function NodeList({
   onOpen,
   where,
   dateField = 'modified',
+  note,
   sort,
   select,
   label,
@@ -117,6 +120,7 @@ export function NodeList({
             const pct = Math.round(share(n.bytes, total) * 100);
             const at = where?.(n);
             const date = n[dateField];
+            const extra = note?.(n);
             return (
               <div
                 key={n.id}
@@ -154,6 +158,7 @@ export function NodeList({
                           {t.disk.list.in} {at || '/'}
                         </span>
                       ) : null}
+                      {extra ? <span className={styles.where}>{extra}</span> : null}
                     </span>
                   </button>
                 </div>

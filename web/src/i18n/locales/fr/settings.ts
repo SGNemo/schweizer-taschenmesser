@@ -20,7 +20,9 @@ export const settings: Strings['settings'] = {
   notFoundTitle: 'Cette catégorie n’existe pas.',
   danger: {
     title: 'Zone de danger',
-    typePhrase: (phrase: string) => `Saisissez « ${phrase} » pour confirmer`,
+    againTitle: 'Vous êtes sûr ?',
+    againText: 'Impossible d’annuler. Veuillez confirmer une nouvelle fois.',
+    back: 'Retour',
   },
   /** Extra search words per settings section (synonyms people type). */
   searchWords: {

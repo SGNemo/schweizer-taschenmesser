@@ -44,6 +44,8 @@ export const pantry: Strings['pantry'] = {
   until: (date: string) => `Consumir antes del ${date}`,
   restock: 'A la lista de la compra',
   restocked: (n: string) => `«${n}» enviado a la lista de la compra.`,
+  restockAll: (n: number) => `Reponer los ${n}`,
+  restockedMany: (n: number) => `${n} cosas enviadas a la lista de la compra.`,
   shoppingOff: 'Para esto hace falta el módulo «Listas», que ahora está desactivado.',
   lowStock: 'Se acaba',
   expiresNotice: (n: string) => `Caduca pronto: ${n}`,

@@ -238,6 +238,17 @@ export interface DupGroup {
   files: DiskNode[];
 }
 
+/** A Steam game installed inside the scan (from Steam's own files, read only). */
+export interface SteamGame {
+  appId: number;
+  /** Name from Steam (the folder name can differ). */
+  title: string;
+  /** Unix seconds; null when Steam has no date (never started, or not recorded). */
+  lastPlayed: number | null;
+  /** The game's install folder in the scan tree, with `relPath`. */
+  node: DiskNode;
+}
+
 export interface ScanHandle {
   scanId: number;
   /** Resolves with the summary (also when cancelled); rejects with `Error(code)` on failure. */
@@ -262,6 +273,8 @@ export interface DiskService {
   children(scanId: number, node: number, depth: number, minBytes: number): Promise<DiskNode[]>;
   node(scanId: number, node: number): Promise<DiskNode | null>;
   query(scanId: number, query: DiskQuery): Promise<DiskNode[]>;
+  /** Steam games inside the scan, longest unplayed first, unknown dates last. */
+  steamGames(scanId: number): Promise<SteamGame[]>;
   knownPlaces(): Promise<Place[]>;
   /** Quick sizes of the known places; nothing is scanned or changed. */
   placeSizes(): Promise<PlaceSize[]>;

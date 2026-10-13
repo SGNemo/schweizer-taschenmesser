@@ -11,6 +11,48 @@ Counts follow the method of [01-friction.md](01-friction.md) (code-traced, Deskt
 Not changed on purpose: vault documents (file bytes cannot be restored), chat thread delete (keeps its confirm dialog), automatic chat retention clean-up, invoice "bezahlt" (its undo also removes the booking, which the journal cannot do).
 Tests: `checkModules.test.ts` (rule), `core/undo/deleteWithUndo.test.ts`, e2e `money.spec.ts` "comes back with Rückgängig".
 
+## Package 5c – recurring invoices (`feat/comfort-repeat`)
+Built: a field "Wiederholen" (Nie / Monatlich / Vierteljährlich / Jährlich) in the invoice dialog. Paying a repeating invoice creates the next one (same payee, amount, reference, note, due one period later, open); paying again never makes a second one; "Rückgängig"/"Wieder öffnen" takes an untouched next invoice away again. The row shows "↻ Monatlich". Data version 2 (optional `repeat`, internal `repeatOf`).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 10 | Rent / insurance / subscription invoice every period | create again every time (3 / 4) | **paid = 1, the next one is there** | `repeat.spec.ts`, `invoices.test.ts` |
+
+Not done: recurring **bookings** (salary, rent as a booking): they need a time trigger at app start and are a separate step; automatic creation of invoices that were never paid.
+
+## Package 5b – subscriptions: price history and "gekündigt zum" (`feat/comfort-subs`)
+Built: every price change is kept (`priceHistory`, last 20, shown in the dialog as "9,99 € → 12,99 € (+30 %)") and a recent increase is flagged on the row ("Preis erhöht (+30 %)", 180 days); a field "Gekündigt zum" (stored as the recurrence end, so charges, deadlines, calendar and notifications stop by themselves; a "Gekündigt zum …" line on the row; ended subscriptions drop out of the totals). Data version 2 (migration sets an empty history).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 14 | Change the price | 3 / 3, old price lost | 3 / 3, **history kept, increase flagged** | `subscriptions-plus.spec.ts` |
+| – | Cancel a subscription for a date | pause or delete only | **1 field**, charges stop on that date | `subscriptions-plus.spec.ts`, `logic.test.ts` |
+
+Not done: "price increased" notification, linking bookings to the subscription, an end date per price (a change counts from the day it is saved).
+
+## Package 5a – missing functions, no data change (`feat/comfort-more`)
+Built: search and kind filter in the bookings list (text over payee, note, category and amount, all months while searching; kind chips stay in the month), and an overview "Offene Geschenke" across all people with a one-click "Verschenkt" (also in the person's own gift list, swipe right on touch).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 12/13 | Find a booking ("where was that") | not possible (month stepper only) | **type 1 word**, all months | `more.spec.ts`, `filter.test.ts` |
+| 22 | Gift given | 4–5 / 5–6 | **1 / 1** | `more.spec.ts` |
+| – | What do I still have to give? | open every person | **1 list** | `more.spec.ts`, `people.test.ts` |
+
+Next (5b/5c, with data changes): subscription price history and "gekündigt zum", recurring invoice/booking.
+
+## Package 4 – links and search to the record (`feat/comfort-links`)
+Built: a search hit or assistant answer links to `<module>?open=<id>` and the module opens the record itself (`ui/useOpenParam`; to-dos, calendar, bookings, invoices, subscriptions, budgets/goals, notes, pantry, bookmarks, documents open their dialog, people and lists show the person/list). Pantry: "Alle n nachkaufen" (one click for everything that runs low) and low stock on the home widget. Chat: "Als Notiz speichern" per answer (notes module must be on, undo in the toast).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 25 | "Where was that" (search) | 5–8 keystrokes + find the row / tap, type, tap + find the row | **Ctrl+K, text, 1 click, the record is open** / 3 taps, the record is open | `open-record.spec.ts` |
+| 20 | Low pantry items → shopping | 1 per item | **1 for all** | `pantry-restock.spec.ts` |
+| – | Keep a chat answer | copy + new note ≈ 4 | **1 click** | `chat.spec.ts` |
+| 24 | Document expiry from the home widget | widget rows not tappable | (unchanged: needs the `DueList` row link, see open items) | – |
+
+Not done: invoice → to-do/reminder (the due date already reaches the calendar and the notifications, a second reminder would add noise), subscription → its bookings (no link in the data model, would need a `subscriptionId` or payee matching), palette verbs, location "Route" in rows, tappable widget rows for vault/pantry.
+
 ## Package 1b – row actions, quick-shift (`feat/comfort-row-actions`, same PR as 1a)
 Built: `RowMenu` + `ItemRow.menu` ("⋯", right-click, long press), `DateChips` + `core/time/quickShift`, reminder snooze from the list, invoice swipe/menu/home-widget action, finance bookings on `ItemRow` with category change in the menu.
 

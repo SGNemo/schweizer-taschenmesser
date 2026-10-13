@@ -12,6 +12,7 @@ mod kinds;
 mod live;
 mod scan;
 mod sizes;
+mod steam;
 mod system;
 #[cfg(windows)]
 mod trash_win;
@@ -30,6 +31,7 @@ pub use kinds::{age_bucket, classify, FileKind, AGE_COUNT, AGE_LIMITS_DAYS, KIND
 pub use live::{LiveTree, LIVE_DEPTH, OWN_FILES_ID};
 pub use scan::{scan, NotRead, Progress, ScanControl, ScanOptions, ScanResult};
 pub use sizes::{folder_size, place_sizes, recycle_bin_size, PlaceSize};
+pub use steam::{steam_games, steam_install_dirs, SteamGame};
 pub use system::{
     drive_kind_of, known_places, reveal_in_file_manager, running_programs, system_guard,
     user_data_dirs, Place,
