@@ -5,7 +5,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
-Komfort-Review (`docs/product/comfort/`, Zusammenfassung [07-summary](product/comfort/07-summary.md)): Pakete 1–5 als PRs; offen: wiederkehrende Buchungen, „Jetzt“-Streifen, ToDo-Duplizieren; Handtests K1–K4.
+Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): Pakete 1–6 in `develop`; offen: „Jetzt“-Streifen (Kalender, Geld, Vorrat); Handtests K1–K4.
 
 Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); Rust-Panic-Log im Datenordner und Widget-Fehlergrenze in PR #92; offen: nur die Handtests der Checkliste.
 

@@ -7,6 +7,7 @@ import {
   monthSummary,
   monthlyTrend,
   OTHERS,
+  planRepeats,
   UNCATEGORISED,
 } from './logic';
 
@@ -111,5 +112,53 @@ describe('availability', () => {
 
   it('can be negative', () => {
     expect(availability(1000, 5000, 0).available).toBe(-4000);
+  });
+});
+
+describe('planRepeats', () => {
+  const head = (over: Partial<Parameters<typeof planRepeats>[0][number]> = {}) => ({
+    id: 'a1',
+    accountId: 'acc',
+    kind: 'expense' as const,
+    amountMinor: 85000,
+    date: '2026-07-15',
+    payee: 'Miete',
+    repeat: 'monthly' as const,
+    ...over,
+  });
+
+  it('books every missed period up to today and hands the series on to the newest', () => {
+    const { create, clear } = planRepeats([head()], '2026-09-29');
+    expect(create.map((c) => c.data.date)).toEqual(['2026-08-15', '2026-09-15']);
+    expect(create.map((c) => c.id)).toEqual(['rep-a1-2026-08-15', 'rep-a1-2026-09-15']);
+    expect(create.map((c) => c.data.repeat)).toEqual([undefined, 'monthly']);
+    expect(create.every((c) => c.data.repeatOf === 'a1')).toBe(true);
+    expect(clear).toEqual(['a1']);
+  });
+
+  it('does nothing before the next date, and for bookings without repeat', () => {
+    expect(planRepeats([head({ date: '2026-09-15' })], '2026-09-29').create).toEqual([]);
+    expect(planRepeats([head({ repeat: undefined })], '2026-09-29').create).toEqual([]);
+  });
+
+  it('keeps ids stable from the series root and caps a long break', () => {
+    const { create } = planRepeats(
+      [head({ id: 'rep-a1-2026-08-15', repeatOf: 'a1', date: '2026-08-15' })],
+      '2026-09-29',
+    );
+    expect(create[0]!.id).toBe('rep-a1-2026-09-15');
+    const long = planRepeats([head({ date: '2020-01-01' })], '2026-09-29');
+    expect(long.create).toHaveLength(12);
+  });
+
+  it('steps quarterly and yearly', () => {
+    expect(
+      planRepeats([head({ repeat: 'quarterly' })], '2026-12-31').create.map((c) => c.data.date),
+    ).toEqual(['2026-10-15']);
+    expect(
+      planRepeats([head({ repeat: 'yearly', date: '2025-03-01' })], '2026-09-29').create.map(
+        (c) => c.data.date,
+      ),
+    ).toEqual(['2026-03-01']);
   });
 });

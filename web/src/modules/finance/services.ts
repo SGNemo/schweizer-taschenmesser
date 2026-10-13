@@ -1,4 +1,8 @@
 import { bus } from '@/core/events';
+import { today } from '@/core/time/dates';
+import { undoableWithToast } from '@/core/undo/withToast';
+import { t } from '@/strings';
+import { planRepeats } from './logic';
 import {
   categoryRepo,
   ensureDefaults,
@@ -56,8 +60,29 @@ export async function removeInvoiceExpense(invoiceId: string): Promise<void> {
   if (await transactionRepo.get(id)) await transactionRepo.remove(id);
 }
 
+/**
+ * Books the next entries of repeating bookings (rent, salary) whose date has come. Runs when the
+ * module starts; a toast says how many were added and offers "Rückgängig".
+ */
+export async function bookDueRepeats(): Promise<number> {
+  const heads = (await transactionRepo.active().toArray()).filter((x) => x.repeat);
+  const { create, clear } = planRepeats(heads, today());
+  const fresh: typeof create = [];
+  for (const p of create) if (!(await transactionRepo.table.get(p.id))) fresh.push(p);
+  if (fresh.length === 0 && clear.length === 0) return 0;
+  const message = t.finance.repeatBooked(fresh.length);
+  const apply = async () => {
+    for (const id of clear) await transactionRepo.update(id, { repeat: undefined });
+    for (const p of fresh) await transactionRepo.create(p.data, { id: p.id });
+  };
+  if (fresh.length > 0) await undoableWithToast(message, message, apply);
+  else await apply();
+  return fresh.length;
+}
+
 /** Runs while the finance module is enabled: reacts to invoice events from the bus. */
 export default function start(): () => void {
+  void bookDueRepeats();
   const offPaid = bus.on('invoice.paid', (p) => bookInvoiceExpense(p));
   const offUnpaid = bus.on('invoice.unpaid', ({ invoiceId }) => removeInvoiceExpense(invoiceId));
   return () => {

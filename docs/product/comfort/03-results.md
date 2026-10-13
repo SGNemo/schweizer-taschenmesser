@@ -98,3 +98,12 @@ Deliberately kept visible although the plan listed them: estimate and "Für heut
 
 ## Package 6 – duplicate a to-do
 Row menu "Duplizieren" on a to-do: copy is open, undo in the toast (2 clicks; before: add again by hand, 3+). `comfort.spec.ts`.
+
+## Package 6b – repeating bookings (`feat/comfort-recurring-bookings`)
+Built: field "Wiederholen" (Erweitert) on a booking. At the next app start the missed follow-ups (rent on the 15th, salary) are booked, a toast says how many and offers "Rückgängig"; the row shows "↻ Monatlich". Data version 2 (optional internal `repeat`, `repeatOf`).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 11 | Rent / salary booking every month | enter again each month (4 / 5) | **0, books itself** | `repeat-bookings.spec.ts`, `logic.test.ts` |
+
+Deliberately calm: nothing is booked in the future, at most 12 missed periods per start, deleting the newest booking ends the series.

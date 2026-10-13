@@ -2049,6 +2049,17 @@ export const de = {
     noCategory: 'Ohne Kategorie',
     changeCategory: 'Kategorie ändern',
     fromInvoice: 'Automatisch aus einer bezahlten Rechnung gebucht.',
+    repeat: 'Wiederholen',
+    repeatHint: 'Die nächste Buchung entsteht automatisch, sobald ihr Datum erreicht ist.',
+    repeatMeta: (every: string) => `↻ ${every}`,
+    repeatOptions: {
+      none: 'Nie',
+      monthly: 'Monatlich',
+      quarterly: 'Vierteljährlich',
+      yearly: 'Jährlich',
+    },
+    repeatBooked: (n: number) =>
+      n === 1 ? '1 wiederkehrende Buchung angelegt.' : `${n} wiederkehrende Buchungen angelegt.`,
     addAccount: 'Konto hinzufügen',
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
