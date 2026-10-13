@@ -63,7 +63,11 @@ test('snoozing a reminder from the list: "⋯" then "In 1 Std" = 2 clicks', asyn
   await dialog.getByLabel('Beginn').fill('10:30');
   await save(page);
 
-  await page.getByRole('button', { name: 'Müll rausstellen: Weitere Aktionen' }).click(); // click 1
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: 'Müll rausstellen' })
+    .getByRole('button', { name: 'Weitere Aktionen' })
+    .click(); // click 1
   await page.getByRole('menuitem', { name: 'In 1 Std' }).click(); // click 2
   await expect(page.getByText(/Okay, in einer Stunde/)).toBeVisible();
   await expect(page.getByRole('button', { name: /^Müll rausstellen [^:]/ })).toContainText('11:00');
@@ -95,7 +99,11 @@ test('changing the category of a booking: "⋯" then the category = 2 clicks, un
 
   await ready(page, '/finance?tab=transactions');
   await expect(page.getByRole('button', { name: /^Bahn / })).toContainText('Mobilität');
-  await page.getByRole('button', { name: 'Bahn: Weitere Aktionen' }).click(); // click 1
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: /^Bahn/ })
+    .getByRole('button', { name: 'Weitere Aktionen' })
+    .click(); // click 1
   await page.getByRole('menuitem', { name: 'Freizeit' }).click(); // click 2
   await expect(page.getByRole('button', { name: /^Bahn / })).toContainText('Freizeit');
   await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
@@ -106,12 +114,16 @@ test('a to-do goes to tomorrow from the row menu (2 clicks) and ticking off stay
   page,
 }) => {
   await ready(page, '/todos');
-  await page.getByPlaceholder('Neue Aufgabe …').fill('Brot kaufen');
-  await page.getByRole('button', { name: 'Hinzufügen' }).click();
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Brot kaufen');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   const row = page.getByRole('listitem').filter({ hasText: 'Brot kaufen' });
   await expect(row).toBeVisible();
 
-  await page.getByRole('button', { name: 'Brot kaufen: Weitere Aktionen' }).click(); // click 1
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: 'Brot kaufen' })
+    .getByRole('button', { name: 'Weitere Aktionen' })
+    .click(); // click 1
   await page.getByRole('menuitem', { name: 'Morgen', exact: true }).click(); // click 2
   await expect(page.getByRole('listitem').filter({ hasText: 'Brot kaufen' })).toContainText(
     'Morgen',
@@ -121,6 +133,6 @@ test('a to-do goes to tomorrow from the row menu (2 clicks) and ticking off stay
     'Morgen',
   );
 
-  await page.getByRole('checkbox', { name: 'Brot kaufen' }).check(); // 1 click
+  await page.getByRole('checkbox', { name: 'Brot kaufen' }).click(); // 1 click
   await expect(page.getByText('Als erledigt markiert.')).toBeVisible();
 });

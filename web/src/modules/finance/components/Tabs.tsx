@@ -56,7 +56,6 @@ export function TransactionsTab({
                     onOpen={() => onOpen(x)}
                     onSwipeLeft={remove}
                     swipeLeftLabel={t.actions.delete}
-                    menuLabel={`${title}: ${t.ui.rowMenu}`}
                     menu={[
                       ...data.categories
                         .filter((c) => c.kind === x.kind && c.id !== x.categoryId)

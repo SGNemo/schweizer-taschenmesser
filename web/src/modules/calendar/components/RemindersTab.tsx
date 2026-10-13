@@ -61,14 +61,7 @@ function ReminderMenu({
     danger: true,
     onSelect: () => void deleteWithUndo(() => eventRepo.remove(r.id)),
   });
-  return (
-    <RowMenu
-      label={`${r.title}: ${t.ui.rowMenu}`}
-      items={items}
-      open={open}
-      onOpenChange={setOpen}
-    />
-  );
+  return <RowMenu label={t.ui.rowMenu} items={items} open={open} onOpenChange={setOpen} />;
 }
 
 /** One reminder: card with the main button, the on/off switch and the "⋯" menu (also on right-click). */

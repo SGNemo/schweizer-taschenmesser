@@ -22,4 +22,6 @@ Built: `RowMenu` + `ItemRow.menu` ("⋯", right-click, long press), `DateChips` 
 | 12 | Change a booking's category | 3 / 3–4 | **2 / 2** (⋯, category) | `comfort.spec.ts` |
 | – | Delete a booking | 3 / 3, permanent | 3 / 3 or swipe-left 1 (touch), undo 1 | `money.spec.ts` |
 
-Still open in package 1: to-dos (after Fokushilfen #57–#60), subscription price inline (action 14), pantry/people gift quick actions (19, 22).
+| 5 / 6 / 8 | Tick, to tomorrow, due/priority (to-dos) | 1 / 5 / 4–5 (D), 1 / 6–7 / 4–6 (A) | **1 / 2 / 2** (swipe right = tick, swipe left or ⋯ → "Morgen"/"Nächste Woche"/Hoch) | `comfort.spec.ts` |
+
+To-do rows are now `ItemRow`s (checkbox as lead, subtasks nested), so `J/K/E/Space` work there too. Still open for later packages: subscription price inline (action 14), gift "geschenkt" (22), pantry quick actions (19/20).

@@ -102,7 +102,6 @@ function TaskRow({
       swipeRightLabel={task.done ? t.todos.markedOpen : t.todos.markedDone}
       onSwipeLeft={task.done ? undefined : () => moveDue(task, presetDate('tomorrow', day))}
       swipeLeftLabel={t.ui.datePresets.tomorrow}
-      menuLabel={`${task.title}: ${t.ui.rowMenu}`}
       menu={[
         ...(task.done ? [] : dueMenu),
         ...(task.done ? [] : prioMenu),
