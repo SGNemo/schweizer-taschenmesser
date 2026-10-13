@@ -3268,6 +3268,10 @@ export const de = {
       title: (root: string) => `Scan von ${root}`,
       scanning: 'Scan läuft …',
       paused: 'Scan pausiert',
+      liveLabel: 'Live-Ansicht des Scans',
+      liveHint:
+        'Die Karte füllt sich, während gezählt wird. Öffnen, Auswählen und Löschen gehen, sobald der Scan fertig ist.',
+      liveEmpty: 'Die ersten Ordner werden gezählt …',
       files: 'Dateien',
       folders: 'Ordner',
       used: 'Belegt',
