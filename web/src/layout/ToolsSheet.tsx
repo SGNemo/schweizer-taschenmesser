@@ -1,10 +1,13 @@
-import { createElement, lazy, Suspense, useMemo } from 'react';
+import { createElement, lazy, Suspense, useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
+import { useFocusSettings } from '@/core/settings/focus';
+import { readRecentTools, recordToolUse } from '@/core/tools/recent';
 import { allTools } from '@/core/tools/registry';
 import { useTools } from '@/core/tools/state';
 import type { ToolManifest } from '@/core/tools/types';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
+import { tComfort } from '@/strings.comfort';
 import { Dialog, Icon, IconButton } from '@/ui';
 import styles from './ToolsSheet.module.css';
 
@@ -22,6 +25,19 @@ export function ToolsSheet() {
     () => tools?.all.find((x) => x.id === activeTool && tools.active.includes(x)),
     [tools, activeTool],
   );
+
+  const [focus] = useFocusSettings();
+  const toolId = tool?.id;
+  // Opening a tool counts as using it (device-local, off with "Verlauf in der Suche").
+  useEffect(() => {
+    if (toolId && focus.searchHistory) recordToolUse(toolId);
+  }, [toolId, focus.searchHistory]);
+  // Up to three tools used last, shown above the tiles once there are more than a handful.
+  const recent = useMemo(() => {
+    if (!toolsOpen || tool || !focus.searchHistory || (tools?.active.length ?? 0) <= 4) return [];
+    const active = tools?.active ?? [];
+    return readRecentTools().flatMap((id) => active.filter((x) => x.id === id));
+  }, [toolsOpen, tool, tools, focus.searchHistory]);
 
   return (
     <Dialog
@@ -46,6 +62,21 @@ export function ToolsSheet() {
           </div>
         ) : (
           <div className={styles.grid}>
+            {recent.length > 0 ? (
+              <section aria-label={tComfort.get().tools.recent}>
+                <h3 className={styles.recentTitle}>{tComfort.get().tools.recent}</h3>
+                <ul className={styles.tiles}>
+                  {recent.map((x) => (
+                    <li key={x.id}>
+                      <button type="button" className={styles.tile} onClick={() => openTools(x.id)}>
+                        <Icon name={x.icon} size={26} />
+                        <span>{x.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
             <ul className={styles.tiles} aria-label={t.tools.title}>
               {(tools?.active ?? []).map((x) => (
                 <li key={x.id}>

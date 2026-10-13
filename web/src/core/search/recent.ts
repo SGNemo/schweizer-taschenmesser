@@ -1,4 +1,5 @@
 import { clearFrequent } from '@/core/settings/frequent';
+import { clearRecentTools } from '@/core/tools/recent';
 
 /**
  * Recent searches and opened results of the command palette. Device-local (localStorage), never
@@ -49,6 +50,7 @@ export function addRecent(entry: RecentEntry): void {
 
 export function clearRecent(): void {
   clearFrequent();
+  clearRecentTools();
   try {
     localStorage.removeItem(KEY);
   } catch {

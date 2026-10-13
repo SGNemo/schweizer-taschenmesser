@@ -33,7 +33,9 @@ export function LibraryCard({
         <span className={styles.icon}>
           <Icon name={icon} />
         </span>
-        <span className={styles.name}>{name}</span>
+        <span className={styles.name} data-card-name>
+          {name}
+        </span>
         {badges}
       </div>
       <p className={styles.desc}>
