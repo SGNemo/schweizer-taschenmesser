@@ -1,7 +1,7 @@
 import { compareText } from '@/core/i18n/format';
-import { addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
+import { addMonthsStr, addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
 import { formatMoneyInput } from '@/core/money';
-import type { Account, Transaction } from './schema';
+import type { Account, BookingRepeat, Transaction } from './schema';
 
 type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'>;
 
@@ -165,4 +165,49 @@ export function lastUsedFor(
     .filter((x) => x.kind === kind && x.payee?.trim().toLocaleLowerCase() === key)
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)[0];
   return hit ? { categoryId: hit.categoryId, accountId: hit.accountId } : undefined;
+}
+
+const REPEAT_MONTHS: Record<BookingRepeat, number> = { monthly: 1, quarterly: 3, yearly: 12 };
+
+/** At most this many missed periods are booked per series and start (a long break never floods the list). */
+const MAX_CATCH_UP = 12;
+
+export type PlannedRepeat = { id: string; data: Transaction };
+
+/**
+ * The follow-up bookings of repeating series whose date has come (<= `day`). Ids derive from the
+ * series root and the date, so two devices create the same booking and sync converges. Only the
+ * newest booking of a series keeps `repeat`; `clear` lists the heads that hand it on.
+ */
+export function planRepeats(
+  heads: (Transaction & { id: string })[],
+  day: string,
+): { create: PlannedRepeat[]; clear: string[] } {
+  const create: PlannedRepeat[] = [];
+  const clear: string[] = [];
+  for (const head of heads) {
+    if (!head.repeat) continue;
+    const root = head.repeatOf ?? head.id;
+    const months = REPEAT_MONTHS[head.repeat];
+    let { date } = head;
+    let made = 0;
+    while (made < MAX_CATCH_UP) {
+      const next = addMonthsStr(date, months);
+      if (next > day) break;
+      const { id: _id, ...base } = head;
+      create.push({
+        id: `rep-${root}-${next}`,
+        data: { ...base, date: next, repeat: head.repeat, repeatOf: root, sourceRef: undefined },
+      });
+      date = next;
+      made++;
+    }
+    if (made > 0) {
+      clear.push(head.id);
+      // Only the newest keeps the series alive.
+      for (let i = create.length - made; i < create.length - 1; i++)
+        create[i]!.data.repeat = undefined;
+    }
+  }
+  return { create, clear };
 }

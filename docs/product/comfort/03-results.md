@@ -107,3 +107,12 @@ Built: a slim row at the top of the calendar, money (finance, with invoice and b
 | 12 | See what is up when opening calendar / money / pantry | go to the overview first (2 / 3) | **0, it is at the top of the page** | `now-strip.spec.ts` |
 
 Calm by rule: nothing shown when nothing is up, no counters, red only where the overview already uses it (overdue invoice, exceeded budget); an item that points at the page you are on is text, not a link.
+
+## Package 6b – repeating bookings (`feat/comfort-recurring-bookings`)
+Built: field "Wiederholen" (Erweitert) on a booking. At the next app start the missed follow-ups (rent on the 15th, salary) are booked, a toast says how many and offers "Rückgängig"; the row shows "↻ Monatlich". Data version 2 (optional internal `repeat`, `repeatOf`).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 11 | Rent / salary booking every month | enter again each month (4 / 5) | **0, books itself** | `repeat-bookings.spec.ts`, `logic.test.ts` |
+
+Deliberately calm: nothing is booked in the future, at most 12 missed periods per start, deleting the newest booking ends the series.

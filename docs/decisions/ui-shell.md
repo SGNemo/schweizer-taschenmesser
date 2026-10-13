@@ -28,8 +28,8 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 ## Library comfort (2026-10-13, `feat/comfort-library`)
 - **One card for both libraries** – `@/ui` `LibraryCard` (icon, name, badges, description, actions, deep-link anchor) is used by the module and the tool library; search matches name, description and the module's settings words (so "Abo" or "Rechnung" find the module by purpose).
 - **"Neu" / "Aktualisiert"** is device-local (`tm-library-seen`, `core/modules/librarySeen.ts`): nothing on the very first look, later a new module or a higher `version`; the mark goes once the library was looked at. No counter, no nag.
-- **Start data on the card** of an enabled module (same button as in Settings); the "disable" dialog stays also for empty modules – E2E and parallel specs depend on it and it saves one click only.
-- **Not done:** switch instead of button (the "Aktivieren" button is already one click and `e2e/helpers.ts` `enable()` depends on it), preview widget in the card (stimulus load), navigation order by drag and drop (favourites keep their buttons).
+- **Start data on the card** of an enabled module (same button as in Settings); the card has a switch (`role=switch`, "<Name> einschalten") instead of enable/disable buttons. Switching off a module **without data** (`moduleHasData`) needs no dialog – a toast offers undo; with data the keep/delete dialog stays. E2E uses `moduleSwitch(card)` from `e2e/helpers.ts`.
+- **Not done:** preview widget in the card (stimulus load), navigation order by drag and drop (favourites keep their buttons).
 
 ## Toolbox comfort (2026-10-13, `feat/comfort-toolbox`)
 - **Tools answer in the search bar** – optional `ToolManifest.expression` (pure, cheap parse): "timer 10m" starts a countdown, "umrechnen 5 km" lists conversions and Enter copies; only while the tool is on; local, nothing sent. The calculator keeps its own path (`core/calc/phrases.ts`).

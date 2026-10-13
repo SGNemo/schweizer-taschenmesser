@@ -68,6 +68,12 @@ export const finance: Strings['finance'] = {
   noCategory: 'Sem categoria',
   changeCategory: 'Alterar categoria',
   fromInvoice: 'Lançado automaticamente a partir de uma fatura paga.',
+  repeat: 'Repetir',
+  repeatHint: 'O próximo lançamento é criado automaticamente quando chega a data.',
+  repeatMeta: (every: string) => `↻ ${every}`,
+  repeatOptions: { none: 'Nunca', monthly: 'Mensal', quarterly: 'Trimestral', yearly: 'Anual' },
+  repeatBooked: (n: number) =>
+    n === 1 ? '1 lançamento recorrente adicionado.' : `${n} lançamentos recorrentes adicionados.`,
   addAccount: 'Adicionar conta',
   editAccount: 'Editar conta',
   accountName: 'Nome da conta',
