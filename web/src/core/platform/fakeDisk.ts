@@ -149,10 +149,18 @@ function fileKindOf(name: string): FileKind {
   return 'other';
 }
 
+/** Like Rust: only NTFS keeps access times here; the invented exFAT stick (E:) does not. */
+const accessTracked = (root: string): boolean => !root.startsWith('E:');
+
 class FakeTree {
   readonly nodes: DiskNode[] = [];
 
-  constructor(root: string, spec: FakeDir = SPEC) {
+  /** `byUse`: ages count from the last use (like Rust where access times are trusted). */
+  constructor(
+    root: string,
+    spec: FakeDir = SPEC,
+    private readonly byUse = false,
+  ) {
     this.add(null, { ...spec, name: root });
   }
 
@@ -195,7 +203,10 @@ class FakeTree {
           accessed: FAKE_NOW - (f.openedDays ?? f.ageDays) * DAY,
           fileKind: fk,
           kindBytes: kb,
-          ageBytes: agesOf(f.bytes, f.ageDays),
+          ageBytes: agesOf(
+            f.bytes,
+            this.byUse ? Math.min(f.ageDays, f.openedDays ?? f.ageDays) : f.ageDays,
+          ),
           childCount: 0,
         }),
       );
@@ -324,7 +335,7 @@ class FakeTree {
     for (const n of this.nodes) {
       if (this.removed.has(n.id) || !wanted(n.kind) || n.id === under) continue;
       if (under !== 0 && !this.isUnder(n.id, under)) continue;
-      const stamp = (x: DiskNode) => (q.byAccess ? x.accessed : x.modified);
+      const stamp = (x: DiskNode) => (q.byAccess ? Math.max(x.accessed, x.modified) : x.modified);
       if (q.olderThan !== undefined && stamp(n) >= q.olderThan) continue;
       if (q.topmost && q.olderThan !== undefined && n.parentId !== null && n.parentId !== under) {
         if (stamp(this.nodes[n.parentId]!) < q.olderThan) continue;
@@ -462,7 +473,7 @@ export function createFakeDisk(): DiskService {
     async startScan(root, onProgress) {
       const scanId = ++nextId;
       const state: State = {
-        tree: new FakeTree(root),
+        tree: new FakeTree(root, SPEC, accessTracked(root)),
         cancelled: false,
         paused: false,
         dupCancelled: false,
@@ -497,7 +508,7 @@ export function createFakeDisk(): DiskService {
               logicalBytes: total.logicalBytes,
               cloudBytes: 0,
               skippedLinks: 1,
-              accessTracked: true,
+              accessTracked: accessTracked(root),
               notRead: [{ path: `${root}System\\Geschützt`, reason: 'denied' }],
               notReadTotal: 1,
               elapsedMs: 300,

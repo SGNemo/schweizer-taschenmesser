@@ -11,7 +11,7 @@ import {
 import type { DiskNode } from '@/core/platform/disk';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { AGE_VAR, ageDays, ageIndex } from '../logic/age';
+import { AGE_VAR, ageDays, ageIndex, lastUse } from '../logic/age';
 import { KIND_PATTERN, KIND_VAR, drawPattern, textOn } from '../logic/colors';
 import { formatBytes } from '../format';
 import { groupByParent, toLayoutNodes } from '../logic/tree';
@@ -26,6 +26,8 @@ interface Props {
   root: DiskNode;
   nodes: readonly DiskNode[];
   colorBy: ColorMode;
+  /** Age colours count from the last use (opened or changed) instead of the last change. */
+  byUse?: boolean;
   selectedId: number | null;
   /** Called with the canvas size whenever it changes (the parent fetches what fits). */
   onSize: (w: number, h: number) => void;
@@ -82,6 +84,7 @@ export function TreemapView({
   root,
   nodes,
   colorBy,
+  byUse = false,
   selectedId,
   onSize,
   onZoom,
@@ -155,7 +158,7 @@ export function TreemapView({
       colorBy === 'type'
         ? (p.kinds[n.fileKind] ?? p.kinds.other!)
         : colorBy === 'age'
-          ? p.ages[ageIndex(ageDays(n.modified, nowMs))]!
+          ? p.ages[ageIndex(ageDays(lastUse(n, byUse), nowMs))]!
           : p.accent;
 
     for (const tile of tiles) {
@@ -245,7 +248,7 @@ export function TreemapView({
           ctx.globalAlpha = 0.9;
           const info =
             colorBy === 'age'
-              ? `${formatBytes(n.bytes)} · ${t.disk.age.short(ageDays(n.modified, nowMs))}`
+              ? `${formatBytes(n.bytes)} · ${t.disk.age.short(ageDays(lastUse(n, byUse), nowMs))}`
               : formatBytes(n.bytes);
           const line = fit(ctx, info, rw - 10);
           if (line) ctx.fillText(line, rx + 5, ry + 20);
@@ -265,7 +268,7 @@ export function TreemapView({
     };
     outline(hoverId, p.text, 2);
     outline(selectedId, p.focus, 3);
-  }, [tiles, byId, colorBy, hoverId, selectedId, size, themeKey]);
+  }, [tiles, byId, colorBy, byUse, hoverId, selectedId, size, themeKey]);
 
   const pointer = (e: PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect();

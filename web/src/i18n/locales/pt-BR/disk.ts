@@ -225,6 +225,8 @@ export const disk: Strings['disk'] = {
     legend: 'Legenda',
     byType: 'Tipo de arquivo',
     byDepth: 'Profundidade',
+    ageLegendUse:
+      'Cor = último uso (aberto ou alterado, o que for mais recente). Em pastas conta o arquivo usado mais recentemente: uma pasta vermelha não é aberta há anos.',
     depthLegend: 'Quanto mais escura a área, mais funda está a pasta.',
     byAge: 'Idade',
     ageLegend:
@@ -289,6 +291,7 @@ export const disk: Strings['disk'] = {
     topDirs: 'Maiores pastas',
     topFiles: 'Maiores arquivos',
     old: 'Sem alterações há muito tempo',
+    unused: 'Sem uso há muito tempo',
     oldSince: 'Sem alterações há',
     months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 ano' : `${n / 12} anos`) : `${n} meses`),
     all: 'Tudo',
@@ -359,6 +362,7 @@ export const disk: Strings['disk'] = {
     ages: 'Idade dos dados',
     ageBar: 'Proporções por idade',
     oldShare: (size: string, pct: number) => `${size} (${pct} %) sem alterações há mais de um ano`,
+    unusedShare: (size: string, pct: number) => `${size} (${pct} %) sem uso há mais de um ano`,
     showOld: 'Mostrar aqui os itens antigos',
     biggest: 'Maiores itens aqui',
     open: 'Abrir pasta',

@@ -231,6 +231,8 @@ export const disk: Strings['disk'] = {
     legend: 'Légende',
     byType: 'Type de fichier',
     byDepth: 'Profondeur',
+    ageLegendUse:
+      'Couleur = dernière utilisation (ouverture ou modification, la plus récente). Pour un dossier, c’est le fichier utilisé le plus récemment qui compte : un dossier rouge n’a pas été ouvert depuis des années.',
     depthLegend: 'Plus la surface est foncée, plus le dossier est profond.',
     byAge: 'Ancienneté',
     ageLegend:
@@ -295,6 +297,7 @@ export const disk: Strings['disk'] = {
     topDirs: 'Plus gros dossiers',
     topFiles: 'Plus gros fichiers',
     old: 'Pas modifié depuis longtemps',
+    unused: 'Pas utilisé depuis longtemps',
     oldSince: 'Pas modifié depuis',
     months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 an' : `${n / 12} ans`) : `${n} mois`),
     all: 'Tout',
@@ -365,6 +368,8 @@ export const disk: Strings['disk'] = {
     ages: 'Ancienneté des données',
     ageBar: 'Parts par ancienneté',
     oldShare: (size: string, pct: number) => `${size} (${pct} %) pas modifiés depuis plus d’un an`,
+    unusedShare: (size: string, pct: number) =>
+      `${size} (${pct} %) pas utilisés depuis plus d’un an`,
     showOld: 'Afficher les anciens éléments ici',
     biggest: 'Plus gros éléments ici',
     open: 'Ouvrir le dossier',

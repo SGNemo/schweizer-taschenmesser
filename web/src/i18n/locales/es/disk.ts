@@ -224,6 +224,8 @@ export const disk: Strings['disk'] = {
     legend: 'Leyenda',
     byType: 'Tipo de archivo',
     byDepth: 'Profundidad',
+    ageLegendUse:
+      'Color = último uso (abierto o modificado, lo más reciente). En las carpetas cuenta el archivo usado más recientemente: una carpeta roja no se abre desde hace años.',
     depthLegend: 'Cuanto más oscura es el área, más profunda está la carpeta.',
     byAge: 'Antigüedad',
     ageLegend:
@@ -288,6 +290,7 @@ export const disk: Strings['disk'] = {
     topDirs: 'Carpetas más grandes',
     topFiles: 'Archivos más grandes',
     old: 'Sin cambios desde hace tiempo',
+    unused: 'Sin usar desde hace tiempo',
     oldSince: 'Sin cambios desde hace',
     months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 año' : `${n / 12} años`) : `${n} meses`),
     all: 'Todo',
@@ -359,6 +362,8 @@ export const disk: Strings['disk'] = {
     ageBar: 'Proporciones por antigüedad',
     oldShare: (size: string, pct: number) =>
       `${size} (${pct} %) sin cambios desde hace más de un año`,
+    unusedShare: (size: string, pct: number) =>
+      `${size} (${pct} %) sin usar desde hace más de un año`,
     showOld: 'Mostrar aquí los elementos antiguos',
     biggest: 'Elementos más grandes aquí',
     open: 'Abrir carpeta',

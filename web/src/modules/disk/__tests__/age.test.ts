@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { t } from '@/strings';
-import { ageDays, ageIndex, ageShares, disjointBytes, oldBytes, sumBytes } from '../logic/age';
+import {
+  ageDays,
+  ageIndex,
+  ageShares,
+  disjointBytes,
+  lastUse,
+  oldBytes,
+  sumBytes,
+} from '../logic/age';
 
 const NOW_MS = 1_749_945_600_000;
 const NOW = NOW_MS / 1000;
@@ -59,5 +67,15 @@ describe('age of entries', () => {
         n('alt.iso', 'Downloads', 5, 'file'),
       ]),
     ).toBe(100 + 7 + 5);
+  });
+});
+
+describe('lastUse', () => {
+  it('takes the newer of opened and changed only where access times are trusted', () => {
+    const n = { modified: 100, accessed: 900 };
+    expect(lastUse(n, true)).toBe(900);
+    expect(lastUse(n, false)).toBe(100);
+    // A copy can carry an old change and a fresh access; never older than the change.
+    expect(lastUse({ modified: 500, accessed: 0 }, true)).toBe(500);
   });
 });
