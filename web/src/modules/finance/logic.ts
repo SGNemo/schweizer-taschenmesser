@@ -1,5 +1,6 @@
 import { compareText } from '@/core/i18n/format';
 import { addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
+import { formatMoneyInput } from '@/core/money';
 import type { Account, Transaction } from './schema';
 
 type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'>;
@@ -119,4 +120,35 @@ export function availability(
 
 export function sortAccounts<T extends { order: number; name: string }>(list: T[]): T[] {
   return [...list].sort((a, b) => a.order - b.order || compareText(a.name, b.name));
+}
+
+export interface TxFilter {
+  /** Free text: payee, note, category name or the amount ("45", "12,50"). */
+  query: string;
+  kind: 'all' | 'expense' | 'income';
+}
+
+const fold = (s: string): string =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+/** Bookings that match the text (all words must appear) and the kind. Pure; the caller decides which months to pass in. */
+export function filterTransactions<T extends Tx & { payee?: string; note?: string }>(
+  txs: readonly T[],
+  filter: TxFilter,
+  categoryName: (id: string | undefined) => string | undefined,
+): T[] {
+  const words = fold(filter.query).split(/\s+/).filter(Boolean);
+  return txs.filter((x) => {
+    if (filter.kind !== 'all' && x.kind !== filter.kind) return false;
+    if (words.length === 0) return true;
+    const hay = fold(
+      [x.payee, x.note, categoryName(x.categoryId), formatMoneyInput(x.amountMinor)]
+        .filter(Boolean)
+        .join(' '),
+    );
+    return words.every((w) => hay.includes(w));
+  });
 }

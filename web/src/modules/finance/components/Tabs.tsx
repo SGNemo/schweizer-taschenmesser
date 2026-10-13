@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { formatMoney } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, patternStyles } from '@/ui';
+import { Button, EmptyState, Icon, patternStyles, Segmented, TextField } from '@/ui';
 import { AccountEditor, CategoryEditor, type AccountTarget, type CategoryTarget } from './Editors';
-import { balances, signed } from '../logic';
+import { balances, filterTransactions, signed, type TxFilter } from '../logic';
 import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
 import type { Transaction } from '../schema';
@@ -21,12 +21,19 @@ export function TransactionsTab({
   month: string;
   onOpen: (tx: Stored<Transaction>) => void;
 }) {
+  const [query, setQuery] = useState('');
+  const [kind, setKind] = useState<TxFilter['kind']>('all');
   const category = new Map(data.categories.map((c) => [c.id, c.name]));
   const account = new Map(data.accounts.map((a) => [a.id, a.name]));
-  const inMonth = data.txs
-    .filter((x) => x.date.slice(0, 7) === month)
-    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
-  if (inMonth.length === 0)
+  // A text search looks through all months ("where was that booking"); the kind chips stay in the month.
+  const searching = query.trim() !== '';
+  const inMonth = filterTransactions(
+    searching ? data.txs : data.txs.filter((x) => x.date.slice(0, 7) === month),
+    { query, kind },
+    (id) => (id ? category.get(id) : undefined),
+  ).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+  const filtering = searching || kind !== 'all';
+  if (data.txs.length === 0 || (inMonth.length === 0 && !filtering))
     return (
       <EmptyState title={t.finance.noTransactions}>
         <StartDataButton moduleId="finance" />
@@ -34,11 +41,32 @@ export function TransactionsTab({
     );
 
   const days = [...new Set(inMonth.map((x) => x.date))];
+  const dayFormat = searching ? 'EEEE, d. MMMM yyyy' : 'EEEE, d. MMMM';
   return (
     <div>
+      <TextField
+        label={t.finance.searchBookings}
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      <Segmented
+        label={t.finance.filterKind}
+        value={kind}
+        options={[
+          { value: 'all' as const, label: t.finance.filterAll },
+          { value: 'expense' as const, label: t.finance.expenseOne },
+          { value: 'income' as const, label: t.finance.incomeOne },
+        ]}
+        onChange={setKind}
+      />
+      {searching ? (
+        <p className={styles.muted}>{t.finance.searchAllMonths(inMonth.length)}</p>
+      ) : null}
+      {filtering && inMonth.length === 0 ? <p>{t.finance.noMatches}</p> : null}
       {days.map((d) => (
-        <section key={d} aria-label={formatDay(d, 'EEEE, d. MMMM')}>
-          <h3 className={styles.dayHead}>{formatDay(d, 'EEEE, d. MMMM')}</h3>
+        <section key={d} aria-label={formatDay(d, dayFormat)}>
+          <h3 className={styles.dayHead}>{formatDay(d, dayFormat)}</h3>
           <ul className={styles.list}>
             {inMonth
               .filter((x) => x.date === d)
