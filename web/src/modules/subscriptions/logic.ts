@@ -1,7 +1,7 @@
 import { compareText } from '@/core/i18n/format';
 import { firstOnOrAfter, occurrencesBetween } from '@/core/recurrence/expand';
 import { addDaysStr } from '@/core/time/dates';
-import type { Subscription } from './schema';
+import type { PriceChange, Subscription } from './schema';
 
 type Sub = Pick<
   Subscription,
@@ -32,9 +32,14 @@ export interface CostTotals {
   yearly: number;
 }
 
-/** Totals of all active subscriptions, rounded once at the end. */
-export function totals(subs: Sub[]): CostTotals {
-  const yearly = subs.filter((s) => s.active).reduce((sum, s) => sum + annualCost(s), 0);
+/**
+ * Totals of all active subscriptions, rounded once at the end. With `today`, subscriptions whose
+ * last charge is behind them (cancelled "zum" a date, or an ended rule) no longer count.
+ */
+export function totals(subs: Sub[], today?: string): CostTotals {
+  const yearly = subs
+    .filter((s) => s.active && (today === undefined || nextCharge(s, today) !== undefined))
+    .reduce((sum, s) => sum + annualCost(s), 0);
   return { monthly: Math.round(yearly / 12), yearly: Math.round(yearly) };
 }
 
@@ -87,4 +92,29 @@ export function cancelDeadlinesInRange(
 export function sortSubscriptions<T extends Sub & { name: string }>(list: T[], today: string): T[] {
   const next = (s: T) => (s.active ? (nextCharge(s, today) ?? '9999-12-31') : '9999-99-99');
   return [...list].sort((a, b) => next(a).localeCompare(next(b)) || compareText(a.name, b.name));
+}
+
+/** Appends a price change to the history (nothing when the price is the same); keeps the last 20. */
+export function recordPriceChange(
+  history: readonly PriceChange[],
+  date: string,
+  fromMinor: number,
+  toMinor: number,
+): PriceChange[] {
+  if (fromMinor === toMinor) return [...history];
+  return [...history, { date, fromMinor, toMinor }].slice(-20);
+}
+
+/** Percent change of one entry, rounded ("+30"), positive for an increase. */
+export const changePercent = (c: Pick<PriceChange, 'fromMinor' | 'toMinor'>): number =>
+  Math.round(((c.toMinor - c.fromMinor) / c.fromMinor) * 100);
+
+/** The newest price increase within the last `days` days, for the "Preis erhöht" hint. */
+export function recentIncrease(
+  history: readonly PriceChange[],
+  today: string,
+  days = 180,
+): PriceChange | undefined {
+  const since = addDaysStr(today, -days);
+  return [...history].reverse().find((c) => c.date >= since && c.toMinor > c.fromMinor);
 }

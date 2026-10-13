@@ -1946,6 +1946,13 @@ export const de = {
     nextCharge: 'Nächste Abbuchung',
     cancelBy: 'Kündigen bis',
     ended: 'Beendet',
+    cancelledTo: 'Gekündigt zum (optional)',
+    cancelledToHint: 'Danach gibt es keine Abbuchungen und Fristen mehr.',
+    cancelledBadge: (date: string) => `Gekündigt zum ${date}`,
+    priceHistory: 'Preisverlauf',
+    priceChange: (date: string, from: string, to: string, pct: number) =>
+      `${date}: ${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+    priceUp: (pct: number) => `Preis erhöht (+${pct} %)`,
     every: 'Intervall',
     widgetEmpty: 'Keine aktiven Abos.',
     monthlyCost: (v: string) => `≙ ${v} pro Monat`,
