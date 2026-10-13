@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
-import { pad2, today } from '@/core/time/dates';
+import { pad2 } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
+import { AdvancedFields, Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
 import { deletePerson, personRepo } from '../repo';
 import { personSchema, type Person } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -62,7 +62,8 @@ function Fields({
   const [name, setName] = useState(existing?.name ?? '');
   const [hasBirthday, setHasBirthday] = useState(existing ? !!b : true);
   const [date, setDate] = useState(
-    b ? `${b.year ?? PLACEHOLDER_YEAR}-${pad2(b.month)}-${pad2(b.day)}` : today(),
+    // A new person starts without a date: today's date would be saved silently as a wrong birthday.
+    b ? `${b.year ?? PLACEHOLDER_YEAR}-${pad2(b.month)}-${pad2(b.day)}` : '',
   );
   const [yearUnknown, setYearUnknown] = useState(b ? b.year === undefined : false);
   const [tags, setTags] = useState(existing?.tags.join(', ') ?? '');
@@ -117,8 +118,10 @@ function Fields({
           />
         </>
       ) : null}
-      <TextField label={t.people.tags} value={tags} onChange={(e) => setTags(e.target.value)} />
-      <TextField label={t.people.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields moduleId="people" hasData={!!tags || !!note}>
+        <TextField label={t.people.tags} value={tags} onChange={(e) => setTags(e.target.value)} />
+        <TextField label={t.people.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       <FormActions
         start={
           existing ? (

@@ -29,10 +29,11 @@ export const widgets: Strings['widgets'] = {
   packingSummary: (packed: number, total: number) => `${packed} de ${total} en la maleta`,
   contractsSummary: (n: number) =>
     n === 1 ? '1 plazo de cancelación a la vista' : `${n} plazos de cancelación a la vista`,
-  expirySummary: (expired: number, soon: number) =>
+  expirySummary: (expired: number, soon: number, low = 0) =>
     [
       expired ? `${expired} ${expired === 1 ? 'caducado' : 'caducados'}` : '',
       soon ? `${soon} pronto` : '',
+      low ? `${low} ${low === 1 ? 'escaso' : 'escasos'}` : '',
     ]
       .filter(Boolean)
       .join(' · '),

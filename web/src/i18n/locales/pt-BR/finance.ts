@@ -66,6 +66,7 @@ export const finance: Strings['finance'] = {
   payee: 'Destinatário / título',
   account: 'Conta',
   noCategory: 'Sem categoria',
+  changeCategory: 'Alterar categoria',
   fromInvoice: 'Lançado automaticamente a partir de uma fatura paga.',
   addAccount: 'Adicionar conta',
   editAccount: 'Editar conta',

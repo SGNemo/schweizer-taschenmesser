@@ -152,3 +152,17 @@ export function filterTransactions<T extends Tx & { payee?: string; note?: strin
     return words.every((w) => hay.includes(w));
   });
 }
+
+/** What the same payee was booked with last (same kind, case-insensitive, newest booking wins); fills the dialog so a repeat booking needs only the amount. */
+export function lastUsedFor(
+  txs: readonly (Tx & { payee?: string; createdAt: number })[],
+  payee: string,
+  kind: Tx['kind'],
+): { categoryId?: string; accountId: string } | undefined {
+  const key = payee.trim().toLocaleLowerCase();
+  if (!key) return undefined;
+  const hit = txs
+    .filter((x) => x.kind === kind && x.payee?.trim().toLocaleLowerCase() === key)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)[0];
+  return hit ? { categoryId: hit.categoryId, accountId: hit.accountId } : undefined;
+}

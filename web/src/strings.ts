@@ -118,6 +118,9 @@ export const de = {
     grabHandle: 'Zum Schließen nach unten ziehen',
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
+    rowMenu: 'Weitere Aktionen',
+    datePresetsLabel: 'Schnell wählen',
+    datePresets: { today: 'Heute', tomorrow: 'Morgen', nextWeek: 'Nächste Woche' },
     deleted: 'Gelöscht.',
     changed: 'Geändert.',
     undoFailed: 'Das ließ sich nicht mehr rückgängig machen.',
@@ -180,6 +183,8 @@ export const de = {
     cancel: 'Abbrechen',
     save: 'Speichern',
     delete: 'Löschen',
+    duplicate: 'Duplizieren',
+    duplicated: 'Dupliziert. Die Kopie ist offen.',
     edit: 'Bearbeiten',
     close: 'Schließen',
     enable: 'Aktivieren',
@@ -716,6 +721,7 @@ export const de = {
       bookmark: 'Merkliste',
       list: 'Einkauf',
       finance: 'Ausgabe',
+      invoice: 'Rechnung',
       income: 'Einnahme',
       note: 'Notiz',
     },
@@ -726,6 +732,7 @@ export const de = {
       bookmark: 'Merkliste',
       list: 'Listen',
       finance: 'Finanzen',
+      invoice: 'Rechnungen',
       note: 'Notizen',
     },
     chip: {
@@ -1084,6 +1091,8 @@ export const de = {
     markedDone: 'Als erledigt markiert.',
     markedOpen: 'Wieder geöffnet.',
     taskDeleted: 'ToDo gelöscht.',
+    changed: 'ToDo geändert.',
+    noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
     someday: 'Irgendwann',
     somedayLabel: 'Irgendwann (nicht in den offenen Listen zeigen)',
@@ -1783,8 +1792,12 @@ export const de = {
     packingSummary: (packed: number, total: number) => `${packed} von ${total} gepackt`,
     contractsSummary: (n: number) =>
       n === 1 ? '1 Kündigungsfrist in Sicht' : `${n} Kündigungsfristen in Sicht`,
-    expirySummary: (expired: number, soon: number) =>
-      [expired ? `${expired} abgelaufen` : '', soon ? `${soon} bald` : '']
+    expirySummary: (expired: number, soon: number, low = 0) =>
+      [
+        expired ? `${expired} abgelaufen` : '',
+        soon ? `${soon} bald` : '',
+        low ? `${low} wenig` : '',
+      ]
         .filter(Boolean)
         .join(' · '),
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
@@ -2016,6 +2029,7 @@ export const de = {
     payee: 'Empfänger / Titel',
     account: 'Konto',
     noCategory: 'Ohne Kategorie',
+    changeCategory: 'Kategorie ändern',
     fromInvoice: 'Automatisch aus einer bezahlten Rechnung gebucht.',
     addAccount: 'Konto hinzufügen',
     editAccount: 'Konto bearbeiten',
@@ -2760,6 +2774,8 @@ export const de = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
+    restockAll: (n: number) => `Alle ${n} nachkaufen`,
+    restockedMany: (n: number) => `${n} Dinge an die Einkaufsliste gesendet.`,
     shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
@@ -4373,6 +4389,9 @@ export const de = {
     export: 'Als Markdown exportieren',
     copy: 'Kopieren',
     copied: 'Kopiert.',
+    saveAsNote: 'Als Notiz speichern',
+    noteOff: 'Das Notizen-Modul ist aus. Schalte es in der Bibliothek ein.',
+    noteFailed: 'Das ließ sich nicht als Notiz speichern.',
     regenerate: 'Neu generieren',
     edit: 'Bearbeiten',
     editSave: 'Speichern und neu fragen',

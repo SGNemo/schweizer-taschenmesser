@@ -33,10 +33,11 @@ export const widgets: Strings['widgets'] = {
     n === 0 || n === 1
       ? `${n} prazo de cancelamento à vista`
       : `${n} prazos de cancelamento à vista`,
-  expirySummary: (expired: number, soon: number) =>
+  expirySummary: (expired: number, soon: number, low = 0) =>
     [
       expired ? `${expired} ${expired === 1 ? 'vencido' : 'vencidos'}` : '',
       soon ? `${soon} em breve` : '',
+      low ? `${low} ${low === 1 ? 'baixo' : 'baixos'}` : '',
     ]
       .filter(Boolean)
       .join(' · '),

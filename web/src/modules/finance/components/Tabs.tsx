@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { formatMoney } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, patternStyles, Segmented, TextField } from '@/ui';
+import { changeWithUndo, deleteWithUndo } from '@/core/undo/withToast';
+import { Button, EmptyState, Icon, ItemList, ItemRow, patternStyles, Segmented, TextField } from '@/ui';
+import { transactionRepo } from '../repo';
 import { AccountEditor, CategoryEditor, type AccountTarget, type CategoryTarget } from './Editors';
 import { balances, filterTransactions, signed, type TxFilter } from '../logic';
 import type { FinanceData } from '../types';
@@ -67,31 +69,48 @@ export function TransactionsTab({
       {days.map((d) => (
         <section key={d} aria-label={formatDay(d, dayFormat)}>
           <h3 className={styles.dayHead}>{formatDay(d, dayFormat)}</h3>
-          <ul className={styles.list}>
+          <ItemList label={formatDay(d, dayFormat)}>
             {inMonth
               .filter((x) => x.date === d)
-              .map((x) => (
-                <li key={x.id}>
-                  <button type="button" className={styles.row} onClick={() => onOpen(x)}>
-                    <span className={styles.rowMain}>
-                      <span className={styles.rowTitle}>
-                        {x.payee || x.note || (x.categoryId && category.get(x.categoryId)) || '–'}
+              .map((x) => {
+                const title =
+                  x.payee || x.note || (x.categoryId && category.get(x.categoryId)) || '–';
+                const remove = () => void deleteWithUndo(() => transactionRepo.remove(x.id));
+                return (
+                  <ItemRow
+                    key={x.id}
+                    title={title}
+                    meta={`${(x.categoryId && category.get(x.categoryId)) || t.finance.noCategory} · ${account.get(x.accountId) ?? '–'}`}
+                    onOpen={() => onOpen(x)}
+                    onSwipeLeft={remove}
+                    swipeLeftLabel={t.actions.delete}
+                    menu={[
+                      ...data.categories
+                        .filter((c) => c.kind === x.kind && c.id !== x.categoryId)
+                        .sort((a, b) => compareText(a.name, b.name))
+                        .map((c) => ({
+                          id: `cat-${c.id}`,
+                          group: t.finance.changeCategory,
+                          label: c.name,
+                          onSelect: () =>
+                            void changeWithUndo(() =>
+                              transactionRepo.update(x.id, { categoryId: c.id }),
+                            ),
+                        })),
+                      { id: 'delete', label: t.actions.delete, danger: true, onSelect: remove },
+                    ]}
+                    end={
+                      <span
+                        className={`${styles.amount} ${x.kind === 'income' ? styles.income : ''}`}
+                      >
+                        {x.kind === 'income' ? '+' : '−'}
+                        {formatMoney(Math.abs(signed(x)))}
                       </span>
-                      <span className={styles.rowMeta}>
-                        {(x.categoryId && category.get(x.categoryId)) || t.finance.noCategory} ·{' '}
-                        {account.get(x.accountId) ?? '–'}
-                      </span>
-                    </span>
-                    <span
-                      className={`${styles.amount} ${x.kind === 'income' ? styles.income : ''}`}
-                    >
-                      {x.kind === 'income' ? '+' : '−'}
-                      {formatMoney(Math.abs(signed(x)))}
-                    </span>
-                  </button>
-                </li>
-              ))}
-          </ul>
+                    }
+                  />
+                );
+              })}
+          </ItemList>
         </section>
       ))}
     </div>

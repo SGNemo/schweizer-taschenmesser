@@ -17,6 +17,8 @@ export const todos: Strings['todos'] = {
   markedDone: 'Marquée comme terminée.',
   markedOpen: 'Rouverte.',
   taskDeleted: 'Tâche supprimée.',
+  changed: 'Tâche modifiée.',
+  noDue: 'Sans date',
   empty: 'Rien à faire – très bien.',
   someday: 'Un jour',
   somedayLabel: 'Un jour (ne pas afficher dans les listes ouvertes)',
