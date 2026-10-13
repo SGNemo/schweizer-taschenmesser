@@ -120,3 +120,17 @@ export function availability(
 export function sortAccounts<T extends { order: number; name: string }>(list: T[]): T[] {
   return [...list].sort((a, b) => a.order - b.order || compareText(a.name, b.name));
 }
+
+/** What the same payee was booked with last (same kind, case-insensitive, newest booking wins); fills the dialog so a repeat booking needs only the amount. */
+export function lastUsedFor(
+  txs: readonly (Tx & { payee?: string; createdAt: number })[],
+  payee: string,
+  kind: Tx['kind'],
+): { categoryId?: string; accountId: string } | undefined {
+  const key = payee.trim().toLocaleLowerCase();
+  if (!key) return undefined;
+  const hit = txs
+    .filter((x) => x.kind === kind && x.payee?.trim().toLocaleLowerCase() === key)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)[0];
+  return hit ? { categoryId: hit.categoryId, accountId: hit.accountId } : undefined;
+}

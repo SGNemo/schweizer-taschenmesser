@@ -12,6 +12,7 @@ import { useUiStore } from '@/stores/ui';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
+  AdvancedToggle,
   Badge,
   Button,
   EmptyState,
@@ -83,6 +84,7 @@ export default function PantryPage() {
   return (
     <>
       <PageHeader title={t.pantry.title}>
+        <AdvancedToggle moduleId="pantry" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.pantry.add}

@@ -50,7 +50,11 @@ export function describeDate(date: string, today: string): string {
 }
 
 const usesDate = (type: CaptureType) =>
-  type === 'todo' || type === 'event' || type === 'reminder' || type === 'finance';
+  type === 'todo' ||
+  type === 'event' ||
+  type === 'reminder' ||
+  type === 'finance' ||
+  type === 'invoice';
 const usesTime = (type: CaptureType) => type === 'todo' || type === 'event' || type === 'reminder';
 
 /** The live preview: what will be saved where, derived from the parse result and the chosen type. */
@@ -79,6 +83,8 @@ export function previewChips(
       fields.kind === 'income' ? t.quickCapture.chip.income : t.quickCapture.chip.expense;
     chips.push({ id: 'amount', label: `${kind} ${formatMoney(fields.amountMinor)}` });
   }
+  if (type === 'invoice' && fields.amountMinor)
+    chips.push({ id: 'amount', label: formatMoney(fields.amountMinor) });
   if (fields.url && type !== 'note') {
     try {
       chips.push({ id: 'url', label: new URL(fields.url).hostname });

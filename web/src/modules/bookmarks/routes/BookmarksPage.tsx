@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import {
+  AdvancedToggle,
   Button,
   Checkbox,
   Chip,
@@ -90,6 +91,7 @@ export default function BookmarksPage() {
           />
         }
       >
+        <AdvancedToggle moduleId="bookmarks" />
         <Button
           variant="primary"
           onClick={() => setTarget(linksView ? { draft: true, kind: 'link' } : { draft: true })}

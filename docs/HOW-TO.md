@@ -6,6 +6,8 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | File | Covers |
 |---|---|
 | [howto/new-module.md](howto/new-module.md) | `npm run gen:module`, mandatory widget, platform-only (desktop) modules |
+| [howto/list-actions.md](howto/list-actions.md) | list rows: swipe, "⋯" menu, date chips, undo, widget actions (comfort contract) |
+| [howto/advanced-fields.md](howto/advanced-fields.md) | Basis/Erweitert: header switch, rare form fields, "Mehr Felder" |
 | [howto/i18n.md](howto/i18n.md) | UI languages: add texts ("Neue Texte hinzufügen"), add a language ("Neue Sprache hinzufügen"), `check:i18n`, formats |
 | [howto/merge-retire-module.md](howto/merge-retire-module.md) | merge modules: app migration step, retire the source, redirects |
 | [howto/seed-data.md](howto/seed-data.md) | seed data per module, Dev-Preview test data, seeds in E2E and screenshots |

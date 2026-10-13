@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, SelectField, Split, TextArea, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  Split,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { parseCount } from '../logic';
 import { itemRepo } from '../repo';
 import { PLACES, type PantryItem, type Place } from '../schema';
@@ -90,6 +100,14 @@ function Fields({
           error={errors.count}
           inputMode="numeric"
         />
+      </Split>
+      <TextField
+        label={t.pantry.expires}
+        type="date"
+        value={expires}
+        onChange={(e) => setExpires(e.target.value)}
+      />
+      <AdvancedFields moduleId="pantry" hasData={!!minCount || !!note}>
         <TextField
           label={t.pantry.minCount}
           hint={t.pantry.minCountHint}
@@ -98,14 +116,8 @@ function Fields({
           error={errors.minCount}
           inputMode="numeric"
         />
-      </Split>
-      <TextField
-        label={t.pantry.expires}
-        type="date"
-        value={expires}
-        onChange={(e) => setExpires(e.target.value)}
-      />
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       <FormActions
         start={
           existing ? (

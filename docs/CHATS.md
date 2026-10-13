@@ -23,6 +23,9 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 | Comfort package 4 (links, search to record) | `feat/comfort-links` | `ui/useOpenParam`, module pages (one hook line each), `core/ai/query/rows.ts`, pantry, chat message | PR open | – | 2026-10-13 |
+| Comfort package 1b (row menu, date chips, quick actions) | `feat/comfort-row-actions` | `ui/Patterns.tsx`, `ui/RowMenu`, todos/calendar/finance/invoices lists (not disk) | 1b built, PR open (1a merged) | – | 2026-10-13 |
+| Comfort package 2 (create with fewer steps, duplicate) | `feat/comfort-create` | `quickCapture/**`, finance/invoices/calendar editors, people editor | PR open | – | 2026-10-13 |
+| Comfort package 3 (Basis/Erweitert) | `feat/comfort-advanced` | `ui/AdvancedFields`, `core/settings/comfort`, editors of todos/calendar/invoices/subscriptions/pantry/bookmarks/people, `pages/settings/sections.tsx` (one section) | PR open | – | 2026-10-13 |
 | Comfort package 1 (undo, row actions, quick-shift) | `feat/comfort-row-actions` | `ui/Patterns.tsx`, `core/undo`, module list screens (not disk) | 1a built, PR open | – | 2026-10-12 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.

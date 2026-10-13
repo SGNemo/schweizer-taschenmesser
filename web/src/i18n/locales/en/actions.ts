@@ -7,6 +7,8 @@ export const actions: Strings['actions'] = {
   cancel: 'Cancel',
   save: 'Save',
   delete: 'Delete',
+  duplicate: 'Duplicate',
+  duplicated: 'Duplicated. The copy is open.',
   edit: 'Edit',
   close: 'Close',
   enable: 'Turn on',

@@ -9,6 +9,7 @@ import { getPlatform } from '@/core/platform';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
+  AdvancedToggle,
   Badge,
   Button,
   EmptyState,
@@ -97,6 +98,7 @@ function PeopleList({
   return (
     <>
       <PageHeader title={t.people.title}>
+        <AdvancedToggle moduleId="people" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.people.add}

@@ -7,8 +7,9 @@ import { formatDay, today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { groupByTime } from '@/core/time/groups';
 import { t } from '@/strings';
-import { useUiStore } from '@/stores/ui';
+import { deleteWithUndo } from '@/core/undo/withToast';
 import {
+  AdvancedToggle,
   Button,
   EmptyState,
   GroupedList,
@@ -22,7 +23,8 @@ import {
   useOpenParam,
 } from '@/ui';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
-import { markOpen, markPaid } from '../actions';
+import { markOpen } from '../actions';
+import { payWithUndo } from '../quickActions';
 import { openTotal, sortInvoices } from '../logic';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
@@ -37,7 +39,6 @@ export default function InvoicesPage() {
   const [target, setTarget] = useState<InvoiceTarget>(null);
   useOpenParam((id) => invoiceRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
-  const toast = useUiStore((s) => s.toast);
   const day = today();
   const narrow = useMediaQuery('(max-width: 899px)');
 
@@ -64,6 +65,29 @@ export default function InvoicesPage() {
             : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}`
         }
         onOpen={() => setTarget(i)}
+        onSwipeRight={i.status === 'open' ? () => void pay(i.id) : undefined}
+        swipeRightLabel={t.invoices.markPaid}
+        menu={
+          i.status === 'open'
+            ? [
+                { id: 'pay', label: t.invoices.markPaid, onSelect: () => void pay(i.id) },
+                {
+                  id: 'delete',
+                  label: t.actions.delete,
+                  danger: true,
+                  onSelect: () => void deleteWithUndo(() => invoiceRepo.remove(i.id)),
+                },
+              ]
+            : [
+                { id: 'open', label: t.invoices.reopen, onSelect: () => void markOpen(i.id) },
+                {
+                  id: 'delete',
+                  label: t.actions.delete,
+                  danger: true,
+                  onSelect: () => void deleteWithUndo(() => invoiceRepo.remove(i.id)),
+                },
+              ]
+        }
         end={
           <>
             {i.status === 'open' && state.tone !== 'later' ? (
@@ -99,15 +123,13 @@ export default function InvoicesPage() {
     children: <ItemList>{g.items.map((i) => renderRow(i))}</ItemList>,
   }));
 
-  async function pay(id: string) {
-    await markPaid(id);
-    toast(t.invoices.markedPaid, { label: t.invoices.undo, run: () => void markOpen(id) });
-  }
+  const pay = payWithUndo;
 
   return (
     <>
       <div className={styles.header}>
         <h1>{t.invoices.title}</h1>
+        <AdvancedToggle moduleId="invoices" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.invoices.add}
@@ -143,7 +165,7 @@ export default function InvoicesPage() {
         <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
       )}
 
-      <InvoiceEditor target={openTarget} onClose={closeEditor} />
+      <InvoiceEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
     </>
   );
 }
