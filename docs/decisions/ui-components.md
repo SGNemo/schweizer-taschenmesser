@@ -16,3 +16,4 @@ Index: [DECISIONS](../DECISIONS.md). Tokens/brand: [ui-brand.md](ui-brand.md). S
 
 
 - Comfort package 1a (2026-10-12): every user delete in a module screen is undoable (`deleteWithUndo`, toast + Ctrl+Z), enforced by `check:modules`. Vault documents are the exception: their file bytes are deleted from the blob store and cannot be restored, so they keep the explicit delete button until blobs are tombstoned. Plan: `docs/product/comfort/02-plan.md`.
+- Comfort package 3 (2026-10-13): Basis is the default, Erweitert is a per-module switch (synced scope `comfort`) plus one global switch; the module's own choice wins. Rare fields sit in `AdvancedFields` and are never hidden while they hold data. Anything that feeds a widget, reminder or the day plan stays in Basis.

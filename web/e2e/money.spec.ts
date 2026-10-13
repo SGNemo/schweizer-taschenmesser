@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready, calendarEntry } from './helpers';
+import { calendarEntry, moreFields, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -138,6 +138,7 @@ test.describe('Subscriptions', () => {
     await dialog.getByLabel('Name').fill('Streaming');
     await dialog.getByLabel('Betrag').fill('12,99');
     await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
+    await moreFields(page);
     await dialog.getByLabel('Kündigungsfrist (Tage vor Abbuchung)').fill('30');
     await expect(dialog.getByText('≙ 12,99')).toBeVisible();
     await save(page);
@@ -172,6 +173,7 @@ test.describe('Subscriptions', () => {
     await dialog.getByLabel('Name').fill('Fitnessstudio');
     await dialog.getByLabel('Betrag').fill('29,90');
     await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
+    await moreFields(page);
     await dialog.getByLabel('Kündigungsfrist (Tage vor Abbuchung)').fill('10');
     await save(page);
 

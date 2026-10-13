@@ -9,6 +9,7 @@ import { groupByTime } from '@/core/time/groups';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import {
+  AdvancedToggle,
   Button,
   EmptyState,
   GroupedList,
@@ -106,6 +107,7 @@ export default function InvoicesPage() {
     <>
       <div className={styles.header}>
         <h1>{t.invoices.title}</h1>
+        <AdvancedToggle moduleId="invoices" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.invoices.add}

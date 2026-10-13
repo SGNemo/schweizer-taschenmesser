@@ -3,7 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, patternStyles, TextArea, TextField } from '@/ui';
+import { AdvancedFields, Button, Dialog, patternStyles, TextArea, TextField } from '@/ui';
 import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
@@ -92,12 +92,14 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
           onChange={(e) => setPaidAt(e.target.value)}
         />
       ) : null}
-      <TextField
-        label={t.invoices.reference}
-        value={reference}
-        onChange={(e) => setReference(e.target.value)}
-      />
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields moduleId="invoices" hasData={!!reference || !!note}>
+        <TextField
+          label={t.invoices.reference}
+          value={reference}
+          onChange={(e) => setReference(e.target.value)}
+        />
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       <div className={styles.actions}>
         {existing ? (
           <Button
