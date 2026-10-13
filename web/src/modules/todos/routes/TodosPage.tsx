@@ -8,7 +8,7 @@ import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { groupByTime } from '@/core/time/groups';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, EmptyState, GroupedList, Icon, IconButton, TextField } from '@/ui';
+import { AdvancedToggle, Button, EmptyState, GroupedList, Icon, IconButton, TextField } from '@/ui';
 import { InboxSorter } from '../components/InboxSorter';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
@@ -282,6 +282,7 @@ export default function TodosPage() {
     <>
       <div className={styles.header}>
         <h1>{t.todos.title}</h1>
+        <AdvancedToggle moduleId="todos" />
         <Button onClick={() => setListTarget('new')}>
           <Icon name="plus" size={18} />
           {t.todos.newList}
