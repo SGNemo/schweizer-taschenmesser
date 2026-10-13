@@ -124,6 +124,7 @@ export const FOCUS_RESET_KEYS = [
   'dayPlan',
   'planLimit',
   'calmAttention',
+  'moduleNow',
   'timeToNext',
   'focusMinutes',
   'focusSound',

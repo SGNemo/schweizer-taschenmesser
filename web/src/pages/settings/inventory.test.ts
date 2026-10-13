@@ -44,6 +44,7 @@ const CORE_KEYS = {
     dayPlan: true,
     planLimit: 3,
     calmAttention: true,
+    moduleNow: true,
     timeToNext: true,
     focusMinutes: 25,
     focusSound: false,
