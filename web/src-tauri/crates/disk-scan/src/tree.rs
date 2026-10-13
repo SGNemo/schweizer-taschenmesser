@@ -121,7 +121,7 @@ pub struct Tree {
     root: PathBuf,
 }
 
-fn dominant(kind_bytes: &[u64; KIND_COUNT]) -> FileKind {
+pub(crate) fn dominant(kind_bytes: &[u64; KIND_COUNT]) -> FileKind {
     let mut best = FileKind::Other;
     let mut max = 0;
     for k in FileKind::ALL {

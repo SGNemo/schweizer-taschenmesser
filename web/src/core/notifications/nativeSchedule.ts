@@ -33,7 +33,14 @@ export function pickUpcoming(
   return [...unique.values()]
     .sort((a, b) => a.at - b.at)
     .slice(0, MAX_SCHEDULED)
-    .map(({ key, at, title, body, url }) => ({ key, at, title, body, url }));
+    .map(({ key, at, title, body, url, quiet }) => ({
+      key,
+      at,
+      title,
+      body,
+      url,
+      ...(quiet ? { quiet: true } : {}),
+    }));
 }
 
 /** Returns the number of notifications scheduled, or undefined when the platform cannot do it. */

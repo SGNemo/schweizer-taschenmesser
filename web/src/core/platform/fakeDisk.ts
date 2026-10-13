@@ -431,6 +431,8 @@ export function createFakeDisk(): DiskService {
     cancelled: boolean;
     paused: boolean;
     dupCancelled: boolean;
+    /** Share of the fake scan that has "run" (0–1); drives `liveScan`. */
+    done: number;
   }
   const scans = new Map<number, State>();
   const plans = new Map<number, { scanId: number; plan: DeletePlan; cancelled: boolean }>();
@@ -455,6 +457,7 @@ export function createFakeDisk(): DiskService {
         cancelled: false,
         paused: false,
         dupCancelled: false,
+        done: 0,
       };
       scans.set(scanId, state);
       const total = state.tree.nodes[0]!;
@@ -464,6 +467,7 @@ export function createFakeDisk(): DiskService {
         const tick = () => {
           if (state.paused && !state.cancelled) return void setTimeout(tick, 50);
           step++;
+          state.done = step / steps;
           const f = state.cancelled ? step / steps : Math.min(step / steps, 1);
           const p: ScanProgress = {
             files: Math.round(total.files * f),
@@ -500,8 +504,24 @@ export function createFakeDisk(): DiskService {
     async pauseScan(id, paused) {
       get(id).paused = paused;
     },
+    async liveScan(id, minBytes) {
+      const state = scans.get(id);
+      if (!state) return [];
+      // The fake reveals its top folders one after the other while the scan "runs".
+      const t = state.tree;
+      const top = t.children(0, 1, 0).filter((n) => n.kind === 'dir');
+      const shown = top.slice(0, Math.ceil(top.length * state.done));
+      const ids = new Set(shown.map((n) => n.id));
+      const nodes = t
+        .children(0, 2, minBytes)
+        .filter((n) => n.kind === 'dir' && (ids.has(n.id) || ids.has(n.parentId ?? -1)));
+      const bytes = shown.reduce((s, n) => s + n.bytes, 0);
+      return [{ ...t.copy(0), bytes, childCount: shown.length }, ...nodes];
+    },
     async dropScan(id) {
       scans.delete(id);
+      // Like the native IPC round trip: the caller must not depend on this being instant.
+      await new Promise((r) => setTimeout(r, 120));
     },
     async children(id, node, depth, minBytes) {
       return get(id).tree.children(node, depth, minBytes);

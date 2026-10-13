@@ -7,12 +7,15 @@ import { db } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
 import { enableModule } from '@/core/modules/activation';
 import example from '@/modules/example/manifest';
+import { markLibrarySeen } from '@/core/modules/librarySeen';
 import { t } from '@/strings';
+import { tComfort } from '@/strings.comfort';
 import { ModuleLibrary } from './ModuleLibrary';
 
 const entries = () => createRepo('example_entry', example.dataSchema.collections.entry!.schema);
 
 beforeEach(async () => {
+  localStorage.clear();
   await db.table('_modules').clear();
   await db.table('example_entry').clear();
 });
@@ -67,5 +70,33 @@ describe('ModuleLibrary', () => {
     await user.click(await screen.findByRole('button', { name: t.library.deleteData }));
     await card.findByRole('button', { name: t.actions.enable });
     expect(await entries().active().count()).toBe(0);
+  });
+
+  it('searches by name, description and purpose words and says when nothing matches', async () => {
+    const user = userEvent.setup();
+    await renderLibrary();
+    const box = screen.getByRole('searchbox', { name: tComfort.get().library.search });
+    await user.type(box, 'qqqunbekanntqqq');
+    expect(await screen.findByText(tComfort.get().library.noResults)).toBeInTheDocument();
+    expect(screen.queryByTestId('module-example')).not.toBeInTheDocument();
+    await user.clear(box);
+    await user.type(box, example.name.slice(0, 4).toUpperCase());
+    expect(await screen.findByTestId('module-example')).toBeInTheDocument();
+  });
+
+  it('marks a module that is new since the library was last looked at, once', async () => {
+    markLibrarySeen([{ id: 'something-else', version: 1 }]);
+    const first = render(
+      <MemoryRouter>
+        <ModuleLibrary />
+      </MemoryRouter>,
+    );
+    const card = within(await screen.findByTestId('module-example'));
+    expect(card.getByText(tComfort.get().library.badgeNew)).toBeInTheDocument();
+    first.unmount();
+    // Leaving the library counts as having looked at it.
+    await renderLibrary().then((c) =>
+      expect(c.queryByText(tComfort.get().library.badgeNew)).not.toBeInTheDocument(),
+    );
   });
 });

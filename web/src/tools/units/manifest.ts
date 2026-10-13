@@ -1,5 +1,6 @@
 import { t } from '@/strings';
 import type { ToolManifest } from '@/core/tools/types';
+import { convertQuery } from './expression';
 
 const tool: ToolManifest = {
   id: 'units',
@@ -15,5 +16,8 @@ const tool: ToolManifest = {
   defaultEnabled: false,
   order: 100,
   component: () => import('./Tool'),
+  expression(query) {
+    return convertQuery(query);
+  },
 };
 export default tool;

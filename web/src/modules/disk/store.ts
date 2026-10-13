@@ -74,13 +74,30 @@ export const useDiskStore = create<DiskState>((set, get) => ({
   },
 
   async start(root) {
-    await get().reset();
-    set({ phase: 'scanning', root, progress: null, error: null, summary: null, paused: false });
+    // Switch to the new scan at once: the scan page reads `phase` on its first render, and a
+    // slow drop of the previous scan must never make it look idle (it would send the user back).
+    const previous = get().scanId;
+    set({
+      phase: 'scanning',
+      root,
+      scanId: null,
+      progress: null,
+      error: null,
+      summary: null,
+      paused: false,
+      basket: [],
+    });
     const disk = getPlatform().disk;
+    if (previous !== null) void disk.dropScan(previous).catch(() => undefined);
     try {
       const handle = await disk.startScan(root, (progress) => {
-        if (get().root === root) set({ progress });
+        if (get().root === root && get().phase === 'scanning') set({ progress });
       });
+      // Another scan was started meanwhile: this one is not wanted any more.
+      if (get().root !== root || get().scanId !== null) {
+        void disk.dropScan(handle.scanId).catch(() => undefined);
+        return;
+      }
       set({ scanId: handle.scanId });
       const summary = await handle.result;
       if (get().scanId === handle.scanId) {
