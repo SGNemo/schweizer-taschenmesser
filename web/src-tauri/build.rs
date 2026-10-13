@@ -15,6 +15,7 @@ const COMMANDS: &[&str] = &[
     "disk_scan_cancel",
     "disk_scan_pause",
     "disk_scan_drop",
+    "disk_scan_live",
     "disk_children",
     "disk_node",
     "disk_query",

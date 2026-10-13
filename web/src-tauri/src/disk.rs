@@ -235,6 +235,24 @@ pub fn disk_scan_drop(state: State<'_, DiskScans>, scan_id: u64) -> Result<(), S
     Ok(())
 }
 
+/// The live picture of a running scan (top folder levels with what was counted so far), so the
+/// map can fill up while the scan runs. Empty when the scan is unknown or has not started yet.
+#[tauri::command]
+pub fn disk_scan_live(
+    state: State<'_, DiskScans>,
+    scan_id: u64,
+    min_bytes: u64,
+) -> Result<Vec<NodeView>, String> {
+    let session = state
+        .0
+        .lock()
+        .map_err(|_| "internal")?
+        .scans
+        .get(&scan_id)
+        .cloned();
+    Ok(session.map_or_else(Vec::new, |s| s.control.live.snapshot(min_bytes)))
+}
+
 #[tauri::command]
 pub fn disk_children(
     state: State<'_, DiskScans>,

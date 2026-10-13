@@ -37,6 +37,7 @@ export function createDisk(supported: boolean): DiskService {
       cancelScan: unsupported,
       pauseScan: unsupported,
       dropScan: unsupported,
+      liveScan: unsupported,
       children: unsupported,
       node: unsupported,
       query: unsupported,
@@ -82,6 +83,7 @@ export function createDisk(supported: boolean): DiskService {
     cancelScan: (scanId) => call('disk_scan_cancel', { scanId }),
     pauseScan: (scanId, paused) => call('disk_scan_pause', { scanId, paused }),
     dropScan: (scanId) => call('disk_scan_drop', { scanId }),
+    liveScan: (scanId, minBytes) => call<DiskNode[]>('disk_scan_live', { scanId, minBytes }),
     children: (scanId, node, depth, minBytes) =>
       call<DiskNode[]>('disk_children', { scanId, node, depth, minBytes }),
     node: (scanId, node) => call<DiskNode | null>('disk_node', { scanId, node }),
