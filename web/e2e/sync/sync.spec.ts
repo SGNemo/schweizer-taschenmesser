@@ -150,9 +150,10 @@ test.describe('two devices', () => {
     await b.page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
     await expect(b.page.getByRole('button', { name: /Stadtwerke/ })).toBeVisible();
     await b.page.goto('/finance?tab=transactions');
-    await expect(b.page.getByRole('button', { name: /Stadtwerke/ })).toContainText(/−89,90\s€/);
+    const booking = b.page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ });
+    await expect(booking).toContainText(/−89,90\s€/);
     // Only one booking, even though both devices ran the finance service for the event.
-    await expect(b.page.getByRole('button', { name: /Stadtwerke/ })).toHaveCount(1);
+    await expect(booking).toHaveCount(1);
     await a.context.close();
     await b.context.close();
   });

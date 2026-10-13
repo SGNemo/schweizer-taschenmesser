@@ -12,6 +12,7 @@ import {
   dateInYear,
   daysUntil,
   nextBirthday,
+  openGiftsWithPerson,
   safeUrl,
   sortByNext,
   sortGifts,
@@ -130,6 +131,26 @@ describe('gift logic', () => {
   it('counts and sums what was bought or given', () => {
     expect(totals(list)).toEqual({ open: 3, bought: 1, given: 1, spentCents: 3550 });
     expect(totals([])).toEqual({ open: 0, bought: 0, given: 0, spentCents: 0 });
+  });
+});
+
+describe('open gifts across people', () => {
+  it('lists what is not given yet with its person, in gift order, and skips gifts of missing people', () => {
+    const anna = { id: 'a', name: 'Anna' };
+    const ben = { id: 'b', name: 'Ben' };
+    const gifts = [
+      gift({ personId: 'b', title: 'Schal', date: '2026-12-01' }),
+      gift({ personId: 'a', title: 'Buch', status: 'given' }),
+      gift({ personId: 'a', title: 'Tee', status: 'bought' }),
+      gift({ personId: 'x', title: 'Verwaist' }),
+      gift({ personId: 'a', title: 'Kerze', date: '2026-11-15' }),
+    ];
+    const rows = openGiftsWithPerson(gifts, [anna, ben]);
+    expect(rows.map((r) => `${r.person.name}:${r.gift.title}`)).toEqual([
+      'Anna:Kerze',
+      'Ben:Schal',
+      'Anna:Tee',
+    ]);
   });
 });
 

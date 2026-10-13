@@ -94,13 +94,13 @@ test.describe('Invoices', () => {
 
     // Paid invoices move to the "Bezahlt" view
     await page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
-    await expect(page.getByRole('button', { name: /Stadtwerke/ })).toContainText(
+    await expect(page.getByRole('button', { name: /^Stadtwerke(?!:)/ })).toContainText(
       'Bezahlt am: 29. Sep. 2026',
     );
 
     // Finance shows the booking and the reduced balance
     await ready(page, '/finance?tab=transactions');
-    const row = page.getByRole('button', { name: /Stadtwerke/ });
+    const row = page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ });
     await expect(row).toContainText('Rechnungen');
     await expect(row).toContainText(/−89,90\s€/);
     await page.getByRole('button', { name: 'Konten', exact: true }).click();
@@ -259,17 +259,19 @@ test.describe('Finance', () => {
       payee: 'Bahn',
     });
     await ready(page, '/finance?tab=transactions');
-    const row = page.getByRole('button', { name: /Bahn/ });
+    const row = page.getByRole('listitem').filter({ hasText: /^Bahn/ });
     await expect(row).toContainText(/−12,00\s€/);
     await expect(row).toContainText('Mobilität');
 
-    await row.click();
+    await row.getByRole('button', { name: /^Bahn(?!:)/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Buchung bearbeiten' });
     await dialog.getByLabel('Betrag').fill('15,50');
     await save(page);
-    await expect(page.getByRole('button', { name: /Bahn/ })).toContainText(/−15,50\s€/);
+    await expect(page.getByRole('listitem').filter({ hasText: /^Bahn/ })).toContainText(
+      /−15,50\s€/,
+    );
 
-    await page.getByRole('button', { name: /Bahn/ }).click();
+    await page.getByRole('button', { name: /^Bahn(?!:)/ }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
@@ -285,11 +287,11 @@ test.describe('Finance', () => {
       payee: 'Tram',
     });
     await ready(page, '/finance?tab=transactions');
-    await page.getByRole('button', { name: /Tram/ }).click();
+    await page.getByRole('button', { name: /^Tram(?!:)/ }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
     await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
-    await expect(page.getByRole('button', { name: /Tram/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Tram(?!:)/ })).toBeVisible();
   });
 
   test('accounts and categories can be managed; the balance sums all accounts', async ({

@@ -2,6 +2,7 @@
  * Read-only API for modules that are allowed to look at subscriptions (finance).
  */
 import { compareText } from '@/core/i18n/format';
+import { today } from '@/core/time/dates';
 import { subscriptionRepo } from './repo';
 import { chargesInRange, totals } from './logic';
 
@@ -33,5 +34,5 @@ export async function listSubscriptionCharges(
 
 /** Monthly and yearly cost of all active subscriptions (cents). */
 export async function subscriptionTotals(): Promise<{ monthly: number; yearly: number }> {
-  return totals(await subscriptionRepo.active().toArray());
+  return totals(await subscriptionRepo.active().toArray(), today());
 }
