@@ -5,6 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
+import { settingsPath } from '@/core/settings/registry/paths';
 import { validateSections, visibleSections } from '@/core/settings/registry/registry';
 import type { SettingsContext, SettingsSectionDef } from '@/core/settings/registry/types';
 import { isDevBuild } from '@/core/update/buildInfo';
@@ -14,23 +15,34 @@ import { CORE_SECTIONS } from './sections';
 
 const MODULE_ORDER = 100;
 
+/** Does the module have a settings section (settings fields or start data)? */
+const hasSection = (m: ReturnType<typeof availableManifests>[number]) =>
+  m.settings.fields.length > 0 || hasStartData(m);
+
+/** `/settings/<category>#module-<id>` for a module that has settings, else undefined. */
+export function moduleSettingsPath(
+  m: ReturnType<typeof availableManifests>[number],
+): string | undefined {
+  return hasSection(m)
+    ? settingsPath(m.settings.category ?? 'module', `module-${m.id}`)
+    : undefined;
+}
+
 /** Sections contributed by module manifests: one per module with settings or start data. */
 export function moduleSections(
   manifests: ReturnType<typeof availableManifests>,
 ): SettingsSectionDef[] {
-  return manifests
-    .filter((m) => m.settings.fields.length > 0 || hasStartData(m))
-    .map((m) => ({
-      id: `module-${m.id}`,
-      category: m.settings.category ?? 'module',
-      order: m.settings.order ?? MODULE_ORDER,
-      title: m.name,
-      description: m.description,
-      keywords: m.settings.keywords,
-      fields: m.settings.fields.map((f) => ({ key: f.key, label: f.label, description: f.help })),
-      visibleWhen: (ctx: SettingsContext) => ctx.isModuleEnabled(m.id),
-      render: () => createElement(ModuleSection, { manifest: m }),
-    }));
+  return manifests.filter(hasSection).map((m) => ({
+    id: `module-${m.id}`,
+    category: m.settings.category ?? 'module',
+    order: m.settings.order ?? MODULE_ORDER,
+    title: m.name,
+    description: m.description,
+    keywords: m.settings.keywords,
+    fields: m.settings.fields.map((f) => ({ key: f.key, label: f.label, description: f.help })),
+    visibleWhen: (ctx: SettingsContext) => ctx.isModuleEnabled(m.id),
+    render: () => createElement(ModuleSection, { manifest: m }),
+  }));
 }
 
 /** All registered sections (core + modules); throws on an invalid registration (tested). */

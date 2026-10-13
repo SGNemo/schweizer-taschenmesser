@@ -1,7 +1,7 @@
 import { useTools } from '@/core/tools/state';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Badge, Button, Card, Icon, IconButton, Switch } from '@/ui';
+import { Badge, Button, Card, Icon, IconButton, Switch, useHashTarget } from '@/ui';
 import styles from './Page.module.css';
 
 const s = t.tools.library;
@@ -12,6 +12,8 @@ export function ToolLibrary() {
   const tools = useTools();
   const openTools = useUiStore((st) => st.openTools);
   const activeIds = tools?.active.map((x) => x.id) ?? [];
+  // `/tools#tool-<id>` scrolls to that tool and marks it.
+  useHashTarget(tools !== undefined);
 
   return (
     <>
@@ -35,6 +37,7 @@ export function ToolLibrary() {
                   <Card
                     as="li"
                     key={tool.id}
+                    id={`tool-${tool.id}`}
                     className={styles.moduleCard}
                     data-testid={`tool-${tool.id}`}
                   >
