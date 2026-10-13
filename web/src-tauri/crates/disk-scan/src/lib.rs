@@ -8,6 +8,7 @@ mod drives;
 mod duplicates;
 mod guard;
 mod kinds;
+mod live;
 mod scan;
 mod sizes;
 mod system;
@@ -24,6 +25,7 @@ pub use drives::{list_drives, Bus, DriveInfo, DriveKind, Health, HealthGap, Heal
 pub use duplicates::{find_duplicates, DupGroup};
 pub use guard::{Denied, Guard, Norm};
 pub use kinds::{age_bucket, classify, FileKind, AGE_COUNT, AGE_LIMITS_DAYS, KIND_COUNT};
+pub use live::{LiveTree, LIVE_DEPTH, OWN_FILES_ID};
 pub use scan::{scan, NotRead, Progress, ScanControl, ScanOptions, ScanResult};
 pub use sizes::{folder_size, place_sizes, recycle_bin_size, PlaceSize};
 pub use system::{
