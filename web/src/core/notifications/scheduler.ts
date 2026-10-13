@@ -53,7 +53,13 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
       const inApp = deps.present ? await deps.present(n) : false;
       if (!inApp) {
         if (!canPopup) continue;
-        await deps.service.show({ title: n.title, body: n.body, tag: n.key, url: n.url });
+        await deps.service.show({
+          title: n.title,
+          body: n.body,
+          tag: n.key,
+          url: n.url,
+          ...(n.quiet ? { quiet: true } : {}),
+        });
       }
       shown++;
       await deps.consume?.(n);

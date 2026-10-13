@@ -4,6 +4,8 @@ export interface PushPayload {
   title: string;
   body?: string;
   url?: string;
+  /** "Stumm": the service worker shows it without sound. */
+  quiet?: true;
 }
 
 /** Binds an encrypted payload to its notification key so payloads cannot be swapped. */
@@ -53,5 +55,6 @@ export function asPayload(value: unknown): PushPayload | undefined {
     title: v.title,
     body: typeof v.body === 'string' ? v.body : undefined,
     url: typeof v.url === 'string' && v.url.startsWith('/') ? v.url : undefined,
+    ...(v.quiet === true ? { quiet: true as const } : {}),
   };
 }

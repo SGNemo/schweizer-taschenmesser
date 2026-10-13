@@ -12,6 +12,8 @@ export const ui: Strings['ui'] = {
   grabHandle: 'Glisser vers le bas pour fermer',
   undo: 'Annuler',
   undone: 'Annulé.',
+  deleted: 'Supprimé.',
+  changed: 'Modifié.',
   undoFailed: 'Cela ne pouvait plus être annulé.',
   nothingToUndo: 'Rien à annuler.',
   selection: 'Sélection',

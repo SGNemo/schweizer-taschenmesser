@@ -14,3 +14,5 @@ Index: [DECISIONS](../DECISIONS.md). Tokens/brand: [ui-brand.md](ui-brand.md). S
 - **Component sheet** `/dev/components` exists in dev server, Dev-Preview and E2E builds only (`layout/devTools.ts`, marker test in `core/seed/devFlag.test.ts`).
 - **Visual polish round (2026-10-03):** causes were fixed in the base, not per module: home grid row units + row spans (cards stretch), one truncation rule (`--clamp-lines`), column flow for todos with subtasks, `PageHeader views` instead of a second tab row, search placeholder in `TextField`. **Fluid root size** 16 → 20 px between 1920 and 3440 px wide (replaces "type stays 16 px at ≥ 2200 px"); sidebar and rail widths are rem. Toasts stay bottom centre on every screen.
 
+
+- Comfort package 1a (2026-10-12): every user delete in a module screen is undoable (`deleteWithUndo`, toast + Ctrl+Z), enforced by `check:modules`. Vault documents are the exception: their file bytes are deleted from the blob store and cannot be restored, so they keep the explicit delete button until blobs are tombstoned. Plan: `docs/product/comfort/02-plan.md`.
