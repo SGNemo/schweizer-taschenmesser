@@ -1,4 +1,4 @@
-import type { DenyReason, DiskNode } from '@/core/platform/disk';
+import type { DenyReason, DiskNode, SteamGame } from '@/core/platform/disk';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button } from '@/ui';
@@ -18,6 +18,8 @@ interface Props {
   biggest: readonly DiskNode[];
   onOpen: (node: DiskNode) => void;
   onSelect: (node: DiskNode) => void;
+  /** Set when the entry is a Steam game's install folder. */
+  game?: SteamGame;
   /** Lists what has not been changed for a long time inside this folder. */
   onShowOld?: (node: DiskNode) => void;
   /** Actions on the entry; `undefined` hides them (scan root, aggregates). */
@@ -39,6 +41,7 @@ export function Details({
   biggest,
   onOpen,
   onSelect,
+  game,
   onShowOld,
   actions,
 }: Props) {
@@ -83,6 +86,24 @@ export function Details({
             <span className={styles.ago}> · {t.disk.age.ago(ageDays(node.modified, now()))}</span>
           ) : null}
         </dd>
+        {game ? (
+          <>
+            <dt>{t.disk.games.lastPlayed}</dt>
+            <dd data-testid="details-played">
+              {game.lastPlayed ? (
+                <>
+                  {formatDate(game.lastPlayed)}
+                  <span className={styles.ago}>
+                    {' '}
+                    · {t.disk.age.ago(ageDays(game.lastPlayed, now()))}
+                  </span>
+                </>
+              ) : (
+                t.disk.games.unknown
+              )}
+            </dd>
+          </>
+        ) : null}
       </dl>
       {ages.length > 0 && node.kind !== 'file' ? (
         <>

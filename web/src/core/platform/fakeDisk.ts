@@ -20,6 +20,7 @@ import {
   type PlanFlag,
   type ScanProgress,
   type ScanSummary,
+  type SteamGame,
 } from './disk';
 
 const GB = 1e9;
@@ -534,6 +535,21 @@ export function createFakeDisk(): DiskService {
     },
     async query(id, q) {
       return get(id).tree.query(q);
+    },
+    async steamGames(id) {
+      // The invented "Programme\Spiel" plays the part of an installed Steam game.
+      const t = get(id).tree;
+      const games: SteamGame[] = [];
+      for (const hit of t.query({ scope: 'dirs', limit: 500 })) {
+        if (hit.name !== 'Spiel') continue;
+        games.push({
+          appId: 4242,
+          title: 'Beispielspiel',
+          lastPlayed: FAKE_NOW - 700 * DAY,
+          node: hit,
+        });
+      }
+      return games;
     },
 
     async knownPlaces() {

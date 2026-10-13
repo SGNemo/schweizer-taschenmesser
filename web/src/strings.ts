@@ -3228,6 +3228,16 @@ export const de = {
       none_found: 'Keine Treffer.',
       results: (n: number) => `${n} Treffer`,
     },
+    games: {
+      filter: 'Spiele (Steam)',
+      label: 'Steam-Spiele',
+      lastPlayed: 'Zuletzt gespielt',
+      played: (date: string, ago: string) => `Zuletzt gespielt am ${date} · ${ago}`,
+      unknown: 'Kein Spieldatum von Steam',
+      summary: (n: number, size: string, idle: number) =>
+        `${n} ${n === 1 ? 'Spiel' : 'Spiele'} mit zusammen ${size}, davon ${idle} seit über einem Jahr nicht gespielt`,
+      help: 'Das Datum stammt aus Steams eigenen Dateien und zählt das letzte Spielen, nicht das letzte Update. Fehlt es, wurde das Spiel nie gestartet oder Steam hat es nicht vermerkt. Am saubersten deinstallierst du ein Spiel in Steam selbst: Wird nur der Ordner gelöscht, zeigt Steam es weiter als installiert.',
+    },
     list: {
       name: 'Name',
       size: 'Belegt',

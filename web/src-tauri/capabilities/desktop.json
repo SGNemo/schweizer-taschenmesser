@@ -26,6 +26,7 @@
     "allow-disk-children",
     "allow-disk-node",
     "allow-disk-query",
+    "allow-disk-steam-games",
     "allow-disk-known-places",
     "allow-disk-place-sizes",
     "allow-disk-recycle-size",

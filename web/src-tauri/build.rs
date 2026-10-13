@@ -19,6 +19,7 @@ const COMMANDS: &[&str] = &[
     "disk_children",
     "disk_node",
     "disk_query",
+    "disk_steam_games",
     "disk_known_places",
     "disk_place_sizes",
     "disk_recycle_size",
