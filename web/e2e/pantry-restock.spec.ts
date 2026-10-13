@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable } from './helpers';
+import { enable, moreFields } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
@@ -10,6 +10,7 @@ async function addItem(page: Page, name: string, count: string, min: string) {
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
   await dialog.getByLabel('Name', { exact: true }).fill(name);
   await dialog.getByLabel('Vorrat (Anzahl)').fill(count);
+  await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill(min);
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
