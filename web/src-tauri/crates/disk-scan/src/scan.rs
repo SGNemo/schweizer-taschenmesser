@@ -7,7 +7,7 @@
 
 use crate::kinds::{age_bucket, classify, KIND_COUNT};
 use crate::live::{Counted, LiveTree, LIVE_DEPTH};
-use crate::tree::{DirTemp, FileTemp, SmallAgg, Tree};
+use crate::tree::{last_use, DirTemp, FileTemp, SmallAgg, Tree};
 use rayon::prelude::*;
 use serde::Serialize;
 use std::fs::{self, Metadata};
@@ -27,6 +27,10 @@ pub struct ScanOptions {
     pub max_depth: usize,
     /// Cap of the "not read" list (the counter keeps counting).
     pub max_not_read: usize,
+    /// Whether file access times can be trusted on this volume; `None` = ask the system
+    /// ([`crate::access_time_tracked`]). When they can, ages count from the last use (opened or
+    /// changed, whichever is newer) instead of the last change.
+    pub access_tracked: Option<bool>,
 }
 
 impl Default for ScanOptions {
@@ -36,6 +40,7 @@ impl Default for ScanOptions {
             threads: 0,
             max_depth: 512,
             max_not_read: 1000,
+            access_tracked: None,
         }
     }
 }
@@ -81,6 +86,8 @@ pub struct NotRead {
 
 pub struct ScanResult {
     pub tree: Tree,
+    /// Access times can be trusted on this volume, so ages count from the last use.
+    pub access_tracked: bool,
     pub files: u64,
     pub dirs: u64,
     pub bytes: u64,
@@ -100,6 +107,8 @@ struct Ctx<'a> {
     cluster: u64,
     /// Scan start (Unix seconds): the reference point of the age buckets.
     now: i64,
+    /// Ages count from the last use (access or change) instead of the last change.
+    by_use: bool,
     files: AtomicU64,
     dirs: AtomicU64,
     bytes: AtomicU64,
@@ -342,6 +351,7 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
                     logical_local,
                     (modified, accessed),
                     ctx.now,
+                    ctx.by_use,
                 );
             }
         }
@@ -380,7 +390,7 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
     out
 }
 
-/// `times`: (modified, accessed) in Unix seconds.
+/// `times`: (modified, accessed) in Unix seconds; `by_use`: age from the newer of the two.
 fn add_small(
     agg: &mut SmallAgg,
     name: &str,
@@ -388,6 +398,7 @@ fn add_small(
     logical: u64,
     (modified, accessed): (i64, i64),
     now: i64,
+    by_use: bool,
 ) {
     agg.count += 1;
     agg.bytes += bytes;
@@ -396,7 +407,7 @@ fn add_small(
     agg.accessed = agg.accessed.max(accessed);
     debug_assert_eq!(agg.kind_bytes.len(), KIND_COUNT);
     agg.kind_bytes[classify(name).index()] += bytes;
-    agg.age_bytes[age_bucket(modified, now)] += bytes;
+    agg.age_bytes[age_bucket(last_use(modified, accessed, by_use), now)] += bytes;
 }
 
 /// Scans `root` (a folder) in parallel. `on_progress` is called about every 100 ms from a helper
@@ -430,9 +441,13 @@ where
         .thread_name(|i| format!("disk-scan-{i}"))
         .build()
         .map_err(|e| io::Error::other(e.to_string()))?;
+    let by_use = opts
+        .access_tracked
+        .unwrap_or_else(|| crate::access_time_tracked(root));
     let ctx = Ctx {
         opts,
         control,
+        by_use,
         cluster: plat::cluster_size(root),
         now: SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -464,10 +479,11 @@ where
         t
     });
     on_progress(ctx.progress());
-    let tree = pool.install(|| Tree::from_temp(root.to_path_buf(), temp, ctx.now));
+    let tree = pool.install(|| Tree::from_temp(root.to_path_buf(), temp, ctx.now, by_use));
     let not_read = ctx.not_read.into_inner().unwrap_or_else(|e| e.into_inner());
     Ok(ScanResult {
         tree,
+        access_tracked: by_use,
         files: ctx.files.into_inner(),
         dirs: ctx.dirs.into_inner(),
         bytes: ctx.bytes.into_inner(),

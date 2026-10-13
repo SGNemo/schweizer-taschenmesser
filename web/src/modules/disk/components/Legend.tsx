@@ -37,7 +37,8 @@ export const AgeSwatch = ({ index }: { index: number }) => (
   <ColorSwatch cssVar={AGE_VAR[index]!} pattern="none" />
 );
 
-export function Legend({ colorBy }: { colorBy: ColorMode }) {
+/** `byUse`: the age colours count from the last use (opened or changed), not the last change. */
+export function Legend({ colorBy, byUse = false }: { colorBy: ColorMode; byUse?: boolean }) {
   return (
     <div className={styles.legend} aria-label={t.disk.map.legend} role="group">
       {colorBy === 'type' ? (
@@ -59,7 +60,7 @@ export function Legend({ colorBy }: { colorBy: ColorMode }) {
               </li>
             ))}
           </ul>
-          <p className={styles.text}>{t.disk.map.ageLegend}</p>
+          <p className={styles.text}>{byUse ? t.disk.map.ageLegendUse : t.disk.map.ageLegend}</p>
         </>
       ) : (
         <p className={styles.text}>{t.disk.map.depthLegend}</p>

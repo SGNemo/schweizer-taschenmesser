@@ -132,6 +132,16 @@ pub struct Tree {
     root: PathBuf,
 }
 
+/// The time a file or folder was last used: the newer of change and access when access times are
+/// trusted, else the change alone.
+pub(crate) fn last_use(modified: i64, accessed: i64, by_use: bool) -> i64 {
+    if by_use {
+        modified.max(accessed)
+    } else {
+        modified
+    }
+}
+
 pub(crate) fn dominant(kind_bytes: &[u64; KIND_COUNT]) -> FileKind {
     let mut best = FileKind::Other;
     let mut max = 0;
@@ -146,16 +156,17 @@ pub(crate) fn dominant(kind_bytes: &[u64; KIND_COUNT]) -> FileKind {
 
 impl Tree {
     /// Builds the arena; `now` (Unix seconds, the scan start) anchors the age buckets.
-    pub(crate) fn from_temp(root: PathBuf, temp: DirTemp, now: i64) -> Tree {
+    /// `by_use`: age buckets count from the last use (access or change) instead of the change.
+    pub(crate) fn from_temp(root: PathBuf, temp: DirTemp, now: i64, by_use: bool) -> Tree {
         let mut tree = Tree {
             nodes: Vec::new(),
             root,
         };
-        tree.add_dir(NO_PARENT, temp, now);
+        tree.add_dir(NO_PARENT, temp, now, by_use);
         tree
     }
 
-    fn add_dir(&mut self, parent: u32, dir: DirTemp, now: i64) -> u32 {
+    fn add_dir(&mut self, parent: u32, dir: DirTemp, now: i64, by_use: bool) -> u32 {
         let id = self.nodes.len() as u32;
         self.nodes.push(Node {
             parent,
@@ -173,14 +184,14 @@ impl Tree {
         });
         let mut children = Vec::new();
         for child in dir.dirs {
-            children.push(self.add_dir(id, child, now));
+            children.push(self.add_dir(id, child, now, by_use));
         }
         for f in dir.files {
             let fid = self.nodes.len() as u32;
             let mut kind_bytes = [0; KIND_COUNT];
             kind_bytes[crate::kinds::classify(&f.name).index()] = f.bytes;
             let mut age_bytes = [0; AGE_COUNT];
-            age_bytes[age_bucket(f.modified, now)] = f.bytes;
+            age_bytes[age_bucket(last_use(f.modified, f.accessed, by_use), now)] = f.bytes;
             self.nodes.push(Node {
                 parent: id,
                 name: f.name,
@@ -347,7 +358,7 @@ impl Tree {
         };
         let under = q.under.unwrap_or(0);
         let min = q.min_bytes.unwrap_or(0);
-        let stamp = |n: &Node| if q.by_access { n.accessed } else { n.modified };
+        let stamp = |n: &Node| last_use(n.modified, n.accessed, q.by_access);
         let mut hits: Vec<(u64, u32)> = Vec::new();
         for (i, n) in self.nodes.iter().enumerate() {
             let id = i as u32;
@@ -570,7 +581,7 @@ mod tests {
             files: vec![file("readme.txt", 10, 3)],
             small: SmallAgg::default(),
         };
-        Tree::from_temp(PathBuf::from("/data"), root, 100)
+        Tree::from_temp(PathBuf::from("/data"), root, 100, false)
     }
 
     #[test]
@@ -740,7 +751,7 @@ mod tests {
             }],
             ..Default::default()
         };
-        Tree::from_temp(PathBuf::from("/data"), root, NOW)
+        Tree::from_temp(PathBuf::from("/data"), root, NOW, false)
     }
 
     #[test]
@@ -811,6 +822,7 @@ mod tests {
                 ..Default::default()
             },
             1000,
+            true,
         );
         assert_eq!(t.view(0).unwrap().accessed, 950);
         let q = |by_access: bool| Query {
@@ -835,6 +847,36 @@ mod tests {
         };
         assert_eq!(names(t.query(&files(false))), ["save.dat", "old.dat"]);
         assert_eq!(names(t.query(&files(true))), ["old.dat"]);
+    }
+
+    #[test]
+    fn ages_count_from_the_last_use_when_access_times_are_trusted() {
+        const DAY: i64 = 86_400;
+        let now = 4000 * DAY;
+        // Changed three years ago, opened last week.
+        let temp = || DirTemp {
+            name: String::new(),
+            modified: now - 1200 * DAY,
+            files: vec![FileTemp {
+                accessed: now - 7 * DAY,
+                ..file("save.dat", 100, now - 1200 * DAY)
+            }],
+            small: SmallAgg {
+                count: 1,
+                bytes: 10,
+                logical: 10,
+                modified: now - 1200 * DAY,
+                accessed: now - 7 * DAY,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let by_change = Tree::from_temp(PathBuf::from("/data"), temp(), now, false);
+        let by_use = Tree::from_temp(PathBuf::from("/data"), temp(), now, true);
+        assert_eq!(by_change.view(0).unwrap().age_bytes[5], 100);
+        assert_eq!(by_use.view(0).unwrap().age_bytes[0], 100);
+        // The small-files aggregate keeps what the scanner counted.
+        assert_eq!(by_use.view(0).unwrap().files, 2);
     }
 
     #[test]

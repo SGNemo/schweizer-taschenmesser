@@ -220,6 +220,8 @@ export const disk: Strings['disk'] = {
     legend: 'Legend',
     byType: 'File type',
     byDepth: 'Depth',
+    ageLegendUse:
+      'Colour = last use (opened or changed, whichever is newer). For folders the most recently used file inside counts: a red folder has not been opened for years.',
     depthLegend: 'The darker the area, the deeper the folder.',
     byAge: 'Age',
     ageLegend:
@@ -284,6 +286,7 @@ export const disk: Strings['disk'] = {
     topDirs: 'Biggest folders',
     topFiles: 'Biggest files',
     old: 'Not changed for a long time',
+    unused: 'Not used for a long time',
     oldSince: 'Not changed for',
     months: (n: number) =>
       n % 12 === 0 ? (n === 12 ? '1 year' : `${n / 12} years`) : `${n} months`,
@@ -355,6 +358,7 @@ export const disk: Strings['disk'] = {
     ages: 'Age of the data',
     ageBar: 'Shares by age',
     oldShare: (size: string, pct: number) => `${size} (${pct}%) not changed for over a year`,
+    unusedShare: (size: string, pct: number) => `${size} (${pct} %) not used for over a year`,
     showOld: 'Show old entries here',
     biggest: 'Biggest entries here',
     open: 'Open folder',

@@ -3199,6 +3199,8 @@ export const de = {
       byType: 'Dateityp',
       byDepth: 'Tiefe',
       byAge: 'Alter',
+      ageLegendUse:
+        'Farbe = letzte Benutzung (geöffnet oder geändert, was jünger ist). Bei Ordnern zählt die zuletzt benutzte Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr geöffnet.',
       depthLegend: 'Je dunkler die Fläche, desto tiefer liegt der Ordner.',
       ageLegend:
         'Farbe = letzte Änderung. Bei Ordnern zählt die neueste Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr angefasst.',
@@ -3264,6 +3266,7 @@ export const de = {
       topDirs: 'Größte Ordner',
       topFiles: 'Größte Dateien',
       old: 'Lange nicht geändert',
+      unused: 'Lange nicht benutzt',
       oldSince: 'Nicht geändert seit',
       months: (n: number) =>
         n % 12 === 0 ? (n === 12 ? 'einem Jahr' : `${n / 12} Jahren`) : `${n} Monaten`,
@@ -3336,6 +3339,8 @@ export const de = {
       ageBar: 'Anteile nach Alter',
       oldShare: (size: string, pct: number) =>
         `${size} (${pct} %) seit über einem Jahr nicht geändert`,
+      unusedShare: (size: string, pct: number) =>
+        `${size} (${pct} %) seit über einem Jahr nicht benutzt`,
       showOld: 'Alte Einträge hier zeigen',
       biggest: 'Größte Einträge hier',
       open: 'Ordner öffnen',

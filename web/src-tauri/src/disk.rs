@@ -10,11 +10,11 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use ::disk_scan::{
-    access_time_tracked, apply_to_tree, drive_kind_of, execute, find_duplicates, known_places,
-    list_drives, plan, platform_trasher, reveal_in_file_manager, scan, steam_games,
-    steam_install_dirs, system_guard, user_data_dirs, DeleteControl, DeleteProgress, Denied,
-    DriveInfo, DriveKind, DupGroup, Flag, Mode, NodeView, NotRead, Place, Plan, Progress, Query,
-    Report, ScanControl, ScanOptions, SteamGame, Tree,
+    apply_to_tree, drive_kind_of, execute, find_duplicates, known_places, list_drives, plan,
+    platform_trasher, reveal_in_file_manager, scan, steam_games, steam_install_dirs, system_guard,
+    user_data_dirs, DeleteControl, DeleteProgress, Denied, DriveInfo, DriveKind, DupGroup, Flag,
+    Mode, NodeView, NotRead, Place, Plan, Progress, Query, Report, ScanControl, ScanOptions,
+    SteamGame, Tree,
 };
 use serde::Serialize;
 use tauri::{ipc::Channel, AppHandle, Manager, State};
@@ -174,7 +174,7 @@ pub fn disk_scan_start(
                         logical_bytes: r.logical_bytes,
                         cloud_bytes: r.cloud_bytes,
                         skipped_links: r.skipped_links,
-                        access_tracked: access_time_tracked(&root),
+                        access_tracked: r.access_tracked,
                         not_read: r.not_read,
                         not_read_total: r.not_read_total,
                         elapsed_ms: r.elapsed_ms,
