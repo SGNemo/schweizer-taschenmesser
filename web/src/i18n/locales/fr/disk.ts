@@ -354,6 +354,10 @@ export const disk: Strings['disk'] = {
     title: (root: string) => `Analyse de ${root}`,
     scanning: 'Analyse en cours…',
     paused: 'Analyse en pause',
+    liveLabel: 'Vue en direct de l’analyse',
+    liveHint:
+      'La carte se remplit pendant le comptage. Ouvrir, sélectionner et supprimer fonctionnent une fois l’analyse terminée.',
+    liveEmpty: 'Comptage des premiers dossiers…',
     files: 'Fichiers',
     folders: 'Dossiers',
     used: 'Occupé',

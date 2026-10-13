@@ -6,6 +6,7 @@
 //! cloud placeholders ("files on demand") are neither opened nor counted as local size.
 
 use crate::kinds::{age_bucket, classify, KIND_COUNT};
+use crate::live::{Counted, LiveTree, LIVE_DEPTH};
 use crate::tree::{DirTemp, FileTemp, SmallAgg, Tree};
 use rayon::prelude::*;
 use serde::Serialize;
@@ -39,11 +40,13 @@ impl Default for ScanOptions {
     }
 }
 
-/// Cancel / pause flags shared with the caller.
+/// Cancel / pause flags shared with the caller, plus the live picture of the running scan.
 #[derive(Default)]
 pub struct ScanControl {
     cancel: AtomicBool,
     paused: AtomicBool,
+    /// The top folder levels with what was counted so far (see [`LiveTree`]).
+    pub live: LiveTree,
 }
 
 impl ScanControl {
@@ -240,7 +243,7 @@ fn unix_secs(md: &Metadata) -> i64 {
 
 // --- the walk ------------------------------------------------------------------------------
 
-fn scan_dir(path: &Path, name: String, depth: usize, ctx: &Ctx) -> DirTemp {
+fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) -> DirTemp {
     let mut out = DirTemp {
         name,
         ..Default::default()
@@ -333,9 +336,35 @@ fn scan_dir(path: &Path, name: String, depth: usize, ctx: &Ctx) -> DirTemp {
             }
         }
     }
+    // Live picture: what this folder holds directly counts towards its live node right away; the
+    // top levels get their own nodes before the walk goes deeper.
+    let mut counted = Counted {
+        bytes: out.small.bytes,
+        files: out.small.count,
+        modified: out.small.modified,
+        kind_bytes: out.small.kind_bytes,
+    };
+    for f in &out.files {
+        counted.bytes += f.bytes;
+        counted.files += 1;
+        counted.modified = counted.modified.max(f.modified);
+        counted.kind_bytes[classify(&f.name).index()] += f.bytes;
+    }
+    ctx.control.live.add(live_id, &counted);
+    let subdirs: Vec<(PathBuf, String, u32)> = subdirs
+        .into_iter()
+        .map(|(p, n)| {
+            let id = if depth < LIVE_DEPTH {
+                ctx.control.live.add_folder(live_id, &n)
+            } else {
+                live_id
+            };
+            (p, n, id)
+        })
+        .collect();
     let children: Vec<DirTemp> = subdirs
         .into_par_iter()
-        .map(|(p, n)| scan_dir(&p, n, depth + 1, ctx))
+        .map(|(p, n, id)| scan_dir(&p, n, depth + 1, id, ctx))
         .collect();
     out.dirs = children;
     out
@@ -369,6 +398,7 @@ where
             "not a directory",
         ));
     }
+    control.live.reset(root.to_string_lossy().into_owned());
     let started = Instant::now();
     let threads = if opts.threads > 0 {
         opts.threads
@@ -410,7 +440,7 @@ where
                 }
             }
         });
-        let t = pool.install(|| scan_dir(root, String::new(), 0, &ctx));
+        let t = pool.install(|| scan_dir(root, String::new(), 0, 0, &ctx));
         done.store(true, Relaxed);
         t
     });

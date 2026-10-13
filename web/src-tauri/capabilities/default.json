@@ -18,6 +18,7 @@
     "allow-disk-scan-cancel",
     "allow-disk-scan-pause",
     "allow-disk-scan-drop",
+    "allow-disk-scan-live",
     "allow-disk-children",
     "allow-disk-node",
     "allow-disk-query",
