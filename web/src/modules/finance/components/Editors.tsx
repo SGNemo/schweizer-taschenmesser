@@ -6,9 +6,24 @@ import { today } from '@/core/time/dates';
 import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
 import { lastUsedFor } from '../logic';
-import { Button, Dialog, patternStyles, Segmented, SelectField, TextArea, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  Dialog,
+  patternStyles,
+  Segmented,
+  SelectField,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { accountRepo, categoryRepo, deleteAccount, transactionRepo } from '../repo';
-import type { Account, Category, Transaction } from '../schema';
+import {
+  BOOKING_REPEATS,
+  type Account,
+  type BookingRepeat,
+  type Category,
+  type Transaction,
+} from '../schema';
 import type { FinanceData } from '../types';
 import styles from '../routes/finance.module.css';
 import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
@@ -112,6 +127,7 @@ function TransactionForm({
   const [autoFilled, setAutoFilled] = useState(false);
   const [payee, setPayee] = useState(existing?.payee ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
+  const [repeat, setRepeat] = useState<BookingRepeat | ''>(existing?.repeat ?? '');
   const [error, setError] = useState('');
   const categories = data.categories
     .filter((c) => c.kind === kind)
@@ -133,6 +149,7 @@ function TransactionForm({
       date,
       payee: payee.trim() || undefined,
       note: note.trim() || undefined,
+      repeat: repeat || undefined,
     };
     if (existing) await transactionRepo.update(existing.id, values);
     else await transactionRepo.create(values);
@@ -216,6 +233,21 @@ function TransactionForm({
         </SelectField>
       </div>
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields moduleId="finance" hasData={!!repeat}>
+        <SelectField
+          label={t.finance.repeat}
+          value={repeat}
+          onChange={(e) => setRepeat(e.target.value as BookingRepeat | '')}
+          hint={t.finance.repeatHint}
+        >
+          <option value="">{t.finance.repeatOptions.none}</option>
+          {BOOKING_REPEATS.map((r) => (
+            <option key={r} value={r}>
+              {t.finance.repeatOptions[r]}
+            </option>
+          ))}
+        </SelectField>
+      </AdvancedFields>
       {existing?.sourceRef ? <p className={styles.muted}>{t.finance.fromInvoice}</p> : null}
       <Actions
         onClose={onClose}
@@ -234,6 +266,8 @@ function TransactionForm({
                       ...copyData(existing),
                       date: today(),
                       sourceRef: undefined,
+                      repeat: undefined,
+                      repeatOf: undefined,
                     }),
                 );
                 onClose();
