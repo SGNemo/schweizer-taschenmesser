@@ -43,7 +43,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Tool registry** | `web/src/core/tools/{registry,types,state,layout}.ts` (glob `tools/*/manifest.ts`) | `ToolManifest`, `allTools`; UI `layout/ToolsSheet.tsx`, `/tools/:id` |
 | Event bus | `web/src/core/events/{bus,events,index}.ts` | typed `EventMap` |
 | **DB / data** | `web/src/core/db/` | `repo.ts` (`createRepo`, `createMany`, `purge`), `hlc.ts`, `schema*.json`, `appMigrations.ts` (+`Steps`), `db.ts` (modules: no import) |
-| Settings | `core/settings/settings.ts` (`useSettings`), `core/settings/registry/`, `pages/settings/sections.tsx`; [howto/new-setting.md](howto/new-setting.md) | `SettingsSectionDef` |
+| Settings | `core/settings/settings.ts` (`useSettings`), `core/settings/registry/`, `pages/settings/sections.tsx`; comfort: `core/settings/{quick,frequent,reset}.ts`, `core/deeplink.ts`; [howto/new-setting.md](howto/new-setting.md) | `SettingsSectionDef` |
 | Time | `web/src/core/time/{now,dates,due}.ts` | `now()`, `today()` |
 | **Sync client** | `web/src/core/sync/`: `engine.ts` (`runSync`), `ops.ts` (`mergeOps` – the LWW rule), `service.ts` (`syncNow`, `startSync`, `connect`), `types.ts` (`SyncAdapter`, `FieldOp`), `crypto.ts` (sync E2E), `adapters/selfHosted.ts`, `adapters/googleDrive.stub.ts` (unbuilt), `testing.ts` (`MemoryServer`) | |
 | Storage adapter | `web/src/core/storage/{types,dexie}.ts` | `StorageAdapter`, outbox |

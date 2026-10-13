@@ -87,3 +87,11 @@
 .icon::after {
   inset: -2px;
 }
+
+/* Icon button that is a link. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}

@@ -116,3 +116,16 @@
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
+/* Context gear of a widget: with a mouse it appears on hover or keyboard focus, on touch it is always there. */
+.gear {
+  display: inline-flex;
+}
+@media (hover: hover) {
+  .gear {
+    opacity: 0;
+  }
+  .widget:hover .gear,
+  .widget:focus-within .gear {
+    opacity: 1;
+  }
+}

@@ -1,3 +1,5 @@
+import { clearFrequent } from '@/core/settings/frequent';
+
 /**
  * Recent searches and opened results of the command palette. Device-local (localStorage), never
  * synced, never sent anywhere; the setting "Verlauf in der Suche" switches it off and "Verlauf
@@ -46,6 +48,7 @@ export function addRecent(entry: RecentEntry): void {
 }
 
 export function clearRecent(): void {
+  clearFrequent();
   try {
     localStorage.removeItem(KEY);
   } catch {
