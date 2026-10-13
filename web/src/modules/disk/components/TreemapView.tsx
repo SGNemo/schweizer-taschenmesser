@@ -33,6 +33,9 @@ interface Props {
   onSelect: (node: DiskNode) => void;
   onUp: () => void;
   tooltip: (node: DiskNode) => ReactNode;
+  /** Shown over an empty map (default: "nothing uses space here"). */
+  emptyText?: string;
+  testId?: string;
 }
 
 interface Palette {
@@ -85,6 +88,8 @@ export function TreemapView({
   onSelect,
   onUp,
   tooltip,
+  emptyText,
+  testId = 'treemap',
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -320,7 +325,7 @@ export function TreemapView({
   const hovered = hoverId !== null ? byId.get(hoverId) : undefined;
 
   return (
-    <div className={styles.wrap} ref={wrap} data-testid="treemap">
+    <div className={styles.wrap} ref={wrap} data-testid={testId}>
       <canvas
         ref={canvas}
         className={styles.canvas}
@@ -333,7 +338,9 @@ export function TreemapView({
         onClick={onClick}
         onKeyDown={onKey}
       />
-      {nodes.length === 0 ? <div className={styles.empty}>{t.disk.map.empty}</div> : null}
+      {nodes.length === 0 ? (
+        <div className={styles.empty}>{emptyText ?? t.disk.map.empty}</div>
+      ) : null}
       {hovered ? (
         <div
           className={styles.tip}

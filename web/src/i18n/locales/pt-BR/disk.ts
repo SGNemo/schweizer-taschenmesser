@@ -348,6 +348,10 @@ export const disk: Strings['disk'] = {
     title: (root: string) => `Análise de ${root}`,
     scanning: 'Analisando …',
     paused: 'Análise pausada',
+    liveLabel: 'Visão ao vivo da análise',
+    liveHint:
+      'O mapa vai se preenchendo durante a contagem. Abrir, selecionar e excluir funcionam quando a análise terminar.',
+    liveEmpty: 'Contando as primeiras pastas …',
     files: 'Arquivos',
     folders: 'Pastas',
     used: 'Ocupado',

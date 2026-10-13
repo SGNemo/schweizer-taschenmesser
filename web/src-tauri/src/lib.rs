@@ -132,6 +132,7 @@ pub fn run() {
             disk::disk_scan_cancel,
             disk::disk_scan_pause,
             disk::disk_scan_drop,
+            disk::disk_scan_live,
             disk::disk_children,
             disk::disk_node,
             disk::disk_query,
