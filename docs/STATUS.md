@@ -25,7 +25,7 @@ KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen �
 
 App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien), Wahl unter Einstellungen → Allgemein und im ersten Einrichtungsschritt, Standard Systemsprache sonst Englisch; Übersetzungen maschinell, noch nicht muttersprachlich geprüft ([i18n/README.md](i18n/README.md)); PR gegen `develop`, wartet auf Review; Handtests S1–S4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
-Komfort Einstellungen, Paket A (`feat/comfort-settings`): Schnellleiste und Palette-Direktumschaltung (Farbschema, Dichte, Lesehilfe), Suche ohne Präfix mit Alltagswörtern, „Häufig genutzt“, Kontext-Zahnrad in Widgets und Modul-Kopf, Zurücksetzen pro Abschnitt, `nemo://`-Schema (intern); PR gegen `develop`, wartet auf Review. Plan: `docs/product/comfort/05-settings-plan.md`. Offen: Paket B (Bibliothek, Werkzeugkasten), „Stumm“ (eigene Entscheidung).
+Komfort Einstellungen, Paket A (`feat/comfort-settings`): Schnellleiste und Palette-Direktumschaltung (Farbschema, Dichte, Lesehilfe), Suche ohne Präfix mit Alltagswörtern, „Häufig genutzt“, Kontext-Zahnrad in Widgets und Modul-Kopf, Zurücksetzen pro Abschnitt, `nemo://`-Schema (intern); PR gegen `develop`, wartet auf Review. Plan: `docs/product/comfort/05-settings-plan.md`. Offen: Paket B (Bibliothek, Werkzeugkasten). „Stumm“ (1 Stunde / bis morgen, ausdrückliche Erinnerungen ohne Ton): `feat/comfort-mute`, gestapelt auf Paket A; Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).

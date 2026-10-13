@@ -184,7 +184,12 @@ export async function buildSchedule(
   const items = [...unique.values()].sort((a, b) => a.at - b.at).slice(0, MAX_ITEMS);
   return Promise.all(
     items.map(async (n) => {
-      const payload: PushPayload = { title: n.title, body: n.body, url: n.url };
+      const payload: PushPayload = {
+        title: n.title,
+        body: n.body,
+        url: n.url,
+        ...(n.quiet ? { quiet: true as const } : {}),
+      };
       return {
         key: n.key,
         at: n.at,

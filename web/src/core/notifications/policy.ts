@@ -7,11 +7,19 @@ import type { DueNotification } from '@/core/modules/types';
 
 const HOUR_MS = 3_600_000;
 
+/** "Stumm": a pause that began at `from` and ends at `until` (epoch ms). */
+export interface Mute {
+  from: number;
+  until: number;
+}
+
 export interface Policy {
   /** Quiet hours as 'HH:mm'; absent = none. They may wrap midnight (22:00 → 07:00). */
   quiet?: { from: string; to: string };
   /** At most this many per hour; 0 = unlimited. */
   maxPerHour: number;
+  /** A running "Stumm" pause; absent = none. */
+  mute?: Mute;
 }
 
 const minutes = (hhmm: string): number => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
@@ -88,7 +96,23 @@ export function applyLimit(
   return out.sort((a, b) => a.at - b.at);
 }
 
-/** De-duplicates by key (first wins), then quiet hours, then the hourly limit. */
+/**
+ * While muted nothing is lost and nothing the user set explicitly is held back: explicit
+ * notifications in the pause still arrive, without sound (`quiet`); automatic extras (`soft`) wait
+ * until the pause is over.
+ */
+export function applyMute(
+  items: readonly DueNotification[],
+  mute: Mute | undefined,
+): DueNotification[] {
+  if (!mute) return [...items];
+  return items.map((n) => {
+    if (n.at < mute.from || n.at >= mute.until) return n;
+    return n.soft ? { ...n, at: mute.until } : { ...n, quiet: true };
+  });
+}
+
+/** De-duplicates by key (first wins), then quiet hours, the hourly limit, and last a running mute. */
 export function applyPolicy(
   items: readonly DueNotification[],
   policy: Policy,
@@ -96,5 +120,11 @@ export function applyPolicy(
 ): DueNotification[] {
   const unique = new Map<string, DueNotification>();
   for (const n of items) if (!unique.has(n.key)) unique.set(n.key, n);
-  return applyLimit(applyQuiet([...unique.values()], policy.quiet), policy.maxPerHour, summary);
+  const limited = applyLimit(
+    applyQuiet([...unique.values()], policy.quiet),
+    policy.maxPerHour,
+    summary,
+  );
+  // Last, so the summary notification of a limited hour is silenced too.
+  return applyMute(limited, policy.mute).sort((a, b) => a.at - b.at);
 }
