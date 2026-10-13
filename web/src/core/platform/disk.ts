@@ -247,6 +247,12 @@ export interface DiskService {
   pauseScan(scanId: number, paused: boolean): Promise<void>;
   /** Frees the scan's memory in the native side. */
   dropScan(scanId: number): Promise<void>;
+  /**
+   * While a scan runs: the top folder levels with what was counted so far (root first, then
+   * folders biggest first; a `small` entry per folder for the files directly in it). Grows until
+   * the scan ends; empty for an unknown scan.
+   */
+  liveScan(scanId: number, minBytes: number): Promise<DiskNode[]>;
   children(scanId: number, node: number, depth: number, minBytes: number): Promise<DiskNode[]>;
   node(scanId: number, node: number): Promise<DiskNode | null>;
   query(scanId: number, query: DiskQuery): Promise<DiskNode[]>;

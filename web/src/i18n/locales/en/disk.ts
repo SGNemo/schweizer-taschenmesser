@@ -344,6 +344,10 @@ export const disk: Strings['disk'] = {
     title: (root: string) => `Scan of ${root}`,
     scanning: 'Scanning …',
     paused: 'Scan paused',
+    liveLabel: 'Live view of the scan',
+    liveHint:
+      'The map fills up while counting. Opening, selecting and deleting work once the scan is done.',
+    liveEmpty: 'Counting the first folders …',
     files: 'Files',
     folders: 'Folders',
     used: 'Used',
