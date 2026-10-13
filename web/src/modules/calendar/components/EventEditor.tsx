@@ -9,13 +9,14 @@ import { t } from '@/strings';
 import {
   AdvancedFields,
   Button,
+  DateChips,
   Dialog,
   Icon,
-  patternStyles,
   SelectField,
   Switch,
   TextArea,
   TextField,
+  patternStyles,
 } from '@/ui';
 import { eventRepo } from '../repo';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
@@ -175,6 +176,13 @@ function Form({
           />
         )}
       </div>
+      <DateChips
+        value={startDate}
+        onChange={(d) => {
+          setStartDate(d);
+          if (endDate && endDate < d) setEndDate(d);
+        }}
+      />
       {reminder ? null : (
         <TextField
           label={t.calendar.location}
