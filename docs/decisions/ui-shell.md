@@ -24,7 +24,6 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Reset per section is opt-in** (`SettingsSectionDef.reset`): look, reading aid, focus aids, calm reminders. Undo toast instead of a dialog. Keys and defaults stay untouched.
 - **Context gear** (`SettingsLink`) in the module header and widget head: with a mouse it shows on hover/focus (stimulus load), on touch it is always visible. Deep-link schema `nemo://…` is internal only; no OS handler (attack surface, platform work).
 - **Not done:** a global "Stumm" switch – notification delivery has several channels (in-app, Android schedule, Web Push); a mute that must hold in all of them is a change of the notification pipeline and needs its own decision.
-<<<<<<< HEAD
 
 ## Library comfort (2026-10-13, `feat/comfort-library`)
 - **One card for both libraries** – `@/ui` `LibraryCard` (icon, name, badges, description, actions, deep-link anchor) is used by the module and the tool library; search matches name, description and the module's settings words (so "Abo" or "Rechnung" find the module by purpose).
@@ -32,5 +31,3 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Start data on the card** of an enabled module (same button as in Settings); the "disable" dialog stays also for empty modules – E2E and parallel specs depend on it and it saves one click only.
 - **Not done:** switch instead of button (the "Aktivieren" button is already one click and `e2e/helpers.ts` `enable()` depends on it), preview widget in the card (stimulus load), navigation order by drag and drop (favourites keep their buttons).
 
-=======
->>>>>>> origin/develop
