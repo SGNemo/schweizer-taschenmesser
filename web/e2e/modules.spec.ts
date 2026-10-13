@@ -157,10 +157,8 @@ test.describe('shell', () => {
 
   test('theme choice is applied and remembered', async ({ page }) => {
     await page.goto('/settings/darstellung');
-    await page
-      .getByRole('group', { name: 'Farbschema' })
-      .getByRole('button', { name: 'Dunkel' })
-      .click();
+    // The category's own field: on wide screens the quick bar above it has a "Farbschema" group, too.
+    await page.locator('#appearance--theme').getByRole('button', { name: 'Dunkel' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
