@@ -120,7 +120,12 @@ export default function FinancePage() {
             {tab === 'accounts' ? <AccountsTab data={data} /> : null}
             {tab === 'categories' ? <CategoriesTab data={data} /> : null}
           </SplitView>
-          <TransactionEditor target={openTarget} data={data} onClose={closeEditor} />
+          <TransactionEditor
+            target={openTarget}
+            data={data}
+            onClose={closeEditor}
+            onDuplicated={setTarget}
+          />
         </>
       ) : null}
     </>

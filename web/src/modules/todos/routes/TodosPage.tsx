@@ -10,6 +10,7 @@ import { DATE_PRESETS, presetDate } from '@/core/time/quickShift';
 import { changeWithUndo, deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
+  AdvancedToggle,
   Button,
   EmptyState,
   GroupedList,
@@ -340,6 +341,7 @@ export default function TodosPage() {
     <>
       <div className={styles.header}>
         <h1>{t.todos.title}</h1>
+        <AdvancedToggle moduleId="todos" />
         <Button onClick={() => setListTarget('new')}>
           <Icon name="plus" size={18} />
           {t.todos.newList}

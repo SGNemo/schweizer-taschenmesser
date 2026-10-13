@@ -8,6 +8,8 @@ import { clearAll, ctxFor } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
 import { addRecent, readRecent } from '@/core/search/recent';
 import { patchFocusSettings } from '@/core/settings/focus';
+import { setSettings } from '@/core/settings/settings';
+import { TOOLS_SCOPE } from '@/core/tools/layout';
 import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
 import { eventSchema } from '@/modules/calendar/schema';
@@ -19,6 +21,10 @@ import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
 import { AnswerView } from './assistant/AnswerView';
 import { CommandPalette, filterCommands, normalize } from './CommandPalette';
+
+async function patchToolsEnabled(enabled: Record<string, boolean>) {
+  await setSettings(TOOLS_SCOPE, { enabled, order: [] });
+}
 
 function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>;
@@ -310,5 +316,31 @@ describe('assistant in the palette', () => {
     });
     await user.click(entry);
     expect(screen.getByTestId('where')).toHaveTextContent('/library');
+  });
+
+  it('answers a unit conversion on the spot and Enter copies it', async () => {
+    await patchToolsEnabled({ units: true });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'umrechnen 5 km');
+    await screen.findByRole('option', { name: /^5 km = / });
+    await user.keyboard('{Enter}');
+    await waitFor(async () => expect(await navigator.clipboard.readText()).toBe('5000'));
+  });
+
+  it('does not offer a tool answer while the tool is switched off', async () => {
+    await patchToolsEnabled({ units: false });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'umrechnen 5 km');
+    expect(screen.queryByRole('option', { name: /5 km = / })).not.toBeInTheDocument();
   });
 });

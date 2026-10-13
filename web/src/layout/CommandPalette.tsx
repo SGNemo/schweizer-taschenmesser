@@ -22,6 +22,7 @@ import { useSettingsSections } from '@/pages/settings/useSections';
 import type { ResultRow } from '@/core/ai/query/types';
 import { useSetupHost } from '@/core/setup/host';
 import { useTools } from '@/core/tools/state';
+import type { ToolAnswer } from '@/core/tools/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, type IconName } from '@/ui';
@@ -76,6 +77,7 @@ type Option = { recent?: boolean } & (
   | { kind: 'command'; key: string; label: string; icon: IconName; command: Command }
   | { kind: 'hit'; key: string; label: string; icon: IconName; row: ResultRow }
   | { kind: 'setting'; key: string; label: string; icon: IconName; hit: SettingsSearchResult }
+  | { kind: 'tool'; key: string; label: string; icon: IconName; answer: ToolAnswer }
   | { kind: 'calc'; key: string; label: string; icon: IconName; value: number }
   | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean }
   | { kind: 'query'; key: string; label: string; icon: IconName }
@@ -257,6 +259,18 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       const used = new Set(recents.map((o) => o.key.replace(/^r-/, '')));
       return [...recents, ...list.filter((o) => !(o.kind === 'command' && used.has(o.command.id)))];
     }
+    // A line a tool understands ("timer 10m", "umrechnen 5 km") is answered on the spot, first.
+    for (const tool of tools?.active ?? []) {
+      const answer = tool.expression?.(query);
+      if (answer)
+        list.unshift({
+          kind: 'tool',
+          key: `tool-${tool.id}`,
+          label: answer.text,
+          icon: tool.icon,
+          answer,
+        });
+    }
     // Settings are found without any prefix, listed after the assistant's entries so that Enter on
     // a question still asks it ("offene Rechnungen" must not open a settings page).
     const settingOptions: Option[] = settingHits.map((hit) => ({
@@ -329,6 +343,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     commands,
     hits,
     settingHits,
+    tools,
     query,
     hasModel,
     aiOn,
@@ -354,6 +369,20 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     if (o.kind === 'ask') {
       remember({ kind: 'query', key: `q-${query.trim()}`, label: query.trim() });
       return void submit(query.trim(), o.forceModel, preferModule);
+    }
+    if (o.kind === 'tool') {
+      const { run: act, copy } = o.answer;
+      if (act) {
+        onDone();
+        void Promise.resolve(act());
+      } else if (copy !== undefined) {
+        // Stays open like the calculator: copy, then carry on typing.
+        void navigator.clipboard.writeText(copy).then(
+          () => toast(t.tools.calc.copied),
+          () => undefined,
+        );
+      }
+      return;
     }
     if (o.kind === 'calc') {
       // Plain decimal without thousands separators so it pastes into any field.

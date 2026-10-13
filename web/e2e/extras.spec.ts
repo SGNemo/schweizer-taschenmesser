@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, calendarEntry } from './helpers';
+import { calendarEntry, enable, moreFields } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -36,6 +36,7 @@ test.describe('Merkliste', () => {
       const dialog = page.getByRole('dialog');
       await dialog.getByLabel('Titel').fill(title);
       if (url) await dialog.getByLabel('Adresse (Link)').fill(url);
+      await moreFields(page);
       await dialog.getByLabel('Art').selectOption({ label: kind });
       await dialog.getByLabel('Tags').fill(tags);
       await save(page);

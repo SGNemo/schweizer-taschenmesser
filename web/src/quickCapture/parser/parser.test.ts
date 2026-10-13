@@ -205,6 +205,8 @@ describe('prefixes', () => {
     ['l Milch', 'list', 'Milch'],
     ['$ 12,50 Mittagessen', 'finance', 'Mittagessen'],
     ['$12 Kaffee', 'finance', 'Kaffee'],
+    ['n Idee für den Garten', 'note', 'Idee für den Garten'],
+    ['r 89,90 Swisscom 31.10.', 'invoice', 'Swisscom'],
   ])('%s', (text, type, title) => {
     const r = parse(text);
     expect(r.type).toBe(type);
@@ -221,6 +223,25 @@ describe('prefixes', () => {
 
   it('forced finance takes a bare number', () => {
     expect(parse('$ 12,50 Mittagessen').fields.amountMinor).toBe(1250);
+  });
+});
+
+describe('invoices', () => {
+  it('"Rechnung" with an amount picks the invoice type; the date is the due date', () => {
+    const r = parse('Rechnung Swisscom 89,90 € bis 31.10.');
+    expect(r.type).toBe('invoice');
+    expect(r.fields.amountMinor).toBe(8990);
+    expect(r.fields.date).toBe('2026-10-31');
+    expect(r.fields.title).toBe('Swisscom');
+    expect(r.needsChoice).toBe(false);
+  });
+  it('without a date the usual 14 days are assumed and reported', () => {
+    const r = parse('r 120 Stadtwerke');
+    expect(r.fields.date).toBe('2026-10-14');
+    expect(r.notes).toContain('assumed-date');
+  });
+  it('"Rechnung" without an amount stays a normal entry', () => {
+    expect(parse('Rechnung prüfen').type).not.toBe('invoice');
   });
 });
 
