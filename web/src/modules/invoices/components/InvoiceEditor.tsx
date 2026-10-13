@@ -3,10 +3,10 @@ import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, patternStyles, TextArea, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, SelectField, TextArea, TextField } from '@/ui';
 import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
-import type { Invoice } from '../schema';
+import { INVOICE_REPEATS, type Invoice, type InvoiceRepeat } from '../schema';
 import styles from '../routes/invoices.module.css';
 import { deleteWithUndo } from '@/core/undo/withToast';
 
@@ -32,6 +32,7 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
   const [paidAt, setPaidAt] = useState(existing?.paidAt ?? '');
   const [reference, setReference] = useState(existing?.reference ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
+  const [repeat, setRepeat] = useState<InvoiceRepeat | ''>(existing?.repeat ?? '');
   const [error, setError] = useState('');
   const isPaid = existing?.status === 'paid';
 
@@ -50,6 +51,8 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
       paidAt: isPaid ? paidAt || today() : undefined,
       reference: reference.trim() || undefined,
       note: note.trim() || undefined,
+      repeat: repeat || undefined,
+      repeatOf: existing?.repeatOf,
     });
     onClose();
   }
@@ -92,6 +95,19 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
           onChange={(e) => setPaidAt(e.target.value)}
         />
       ) : null}
+      <SelectField
+        label={t.invoices.repeat}
+        value={repeat}
+        onChange={(e) => setRepeat(e.target.value as InvoiceRepeat | '')}
+        hint={t.invoices.repeatHint}
+      >
+        <option value="">{t.invoices.repeatOptions.none}</option>
+        {INVOICE_REPEATS.map((r) => (
+          <option key={r} value={r}>
+            {t.invoices.repeatOptions[r]}
+          </option>
+        ))}
+      </SelectField>
       <TextField
         label={t.invoices.reference}
         value={reference}
