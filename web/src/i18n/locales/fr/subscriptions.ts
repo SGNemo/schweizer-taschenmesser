@@ -36,6 +36,13 @@ export const subscriptions: Strings['subscriptions'] = {
   nextCharge: 'Prochain prélèvement',
   cancelBy: 'Résilier avant le',
   ended: 'Terminé',
+  cancelledTo: 'Résilié pour le (facultatif)',
+  cancelledToHint: 'Ensuite, plus aucun prélèvement ni délai.',
+  cancelledBadge: (date: string) => `Résilié pour le ${date}`,
+  priceHistory: 'Historique des prix',
+  priceChange: (date: string, from: string, to: string, pct: number) =>
+    `${date}: ${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+  priceUp: (pct: number) => `Prix augmenté (+${pct} %)`,
   every: 'Intervalle',
   widgetEmpty: 'Aucun abonnement actif.',
   monthlyCost: (v: string) => `≙ ${v} par mois`,

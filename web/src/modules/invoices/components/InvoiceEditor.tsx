@@ -9,13 +9,14 @@ import {
   Button,
   DateChips,
   Dialog,
+  SelectField,
   TextArea,
   TextField,
   patternStyles,
 } from '@/ui';
 import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
-import type { Invoice } from '../schema';
+import { INVOICE_REPEATS, type Invoice, type InvoiceRepeat } from '../schema';
 import styles from '../routes/invoices.module.css';
 import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
@@ -65,6 +66,7 @@ function Form({
   const [paidAt, setPaidAt] = useState(existing?.paidAt ?? '');
   const [reference, setReference] = useState(existing?.reference ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
+  const [repeat, setRepeat] = useState<InvoiceRepeat | ''>(existing?.repeat ?? '');
   const [error, setError] = useState('');
   const isPaid = existing?.status === 'paid';
 
@@ -83,6 +85,8 @@ function Form({
       paidAt: isPaid ? paidAt || today() : undefined,
       reference: reference.trim() || undefined,
       note: note.trim() || undefined,
+      repeat: repeat || undefined,
+      repeatOf: existing?.repeatOf,
     });
     onClose();
   }
@@ -126,6 +130,19 @@ function Form({
           onChange={(e) => setPaidAt(e.target.value)}
         />
       ) : null}
+      <SelectField
+        label={t.invoices.repeat}
+        value={repeat}
+        onChange={(e) => setRepeat(e.target.value as InvoiceRepeat | '')}
+        hint={t.invoices.repeatHint}
+      >
+        <option value="">{t.invoices.repeatOptions.none}</option>
+        {INVOICE_REPEATS.map((r) => (
+          <option key={r} value={r}>
+            {t.invoices.repeatOptions[r]}
+          </option>
+        ))}
+      </SelectField>
       <AdvancedFields moduleId="invoices" hasData={!!reference || !!note}>
         <TextField
           label={t.invoices.reference}

@@ -57,6 +57,12 @@ export const finance: Strings['finance'] = {
   addTransaction: 'Ajouter une opération',
   editTransaction: 'Modifier l’opération',
   noTransactions: 'Aucune opération ce mois-ci.',
+  searchBookings: 'Rechercher des écritures',
+  filterKind: 'Type',
+  filterAll: 'Toutes',
+  searchAllMonths: (n: number) =>
+    n === 1 ? '1 résultat sur tous les mois' : `${n} résultats sur tous les mois`,
+  noMatches: 'Aucune écriture correspondante.',
   payee: 'Bénéficiaire / titre',
   account: 'Compte',
   noCategory: 'Sans catégorie',

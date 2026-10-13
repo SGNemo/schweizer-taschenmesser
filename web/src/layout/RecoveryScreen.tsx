@@ -6,7 +6,7 @@ import { dumpDb, repairDb, replaceWithEmptyDb, type DbProblem } from '@/core/db/
 import { keepBrokenCopy, restoreIntoFreshDb } from '@/core/db/recovery';
 import { NoReadAid } from '@/core/text/ReadableText';
 import { tDiag } from '@/strings.diagnostics';
-import { Button, Card, Logo, TextField, TypedConfirmDialog } from '@/ui';
+import { Button, Card, Logo, TextField, DoubleConfirmDialog } from '@/ui';
 import styles from './RecoveryScreen.module.css';
 
 /** Dexie repeats the error name inside its message; show the text after the last "<name>:" only. */
@@ -143,16 +143,15 @@ export function RecoveryScreen({ problem }: { problem: DbProblem }) {
             </Button>
           </div>
         </Card>
-        <TypedConfirmDialog
+        <DoubleConfirmDialog
           open={confirm}
           onClose={() => setConfirm(false)}
           title={r.resetTitle}
-          phrase={r.resetPhrase}
           confirmLabel={r.resetConfirm}
           onConfirm={resetEmpty}
         >
           <p>{r.resetWarning}</p>
-        </TypedConfirmDialog>
+        </DoubleConfirmDialog>
       </div>
     </main>
   );

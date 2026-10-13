@@ -13,6 +13,8 @@ Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/
 
 Dieser PC – Aufräumen (`feat/disk-cleanup-ux`): Karte standardmäßig nach Alter gefärbt, Liste „Lange nicht geändert“ (jeder alte Ordner einmal, Summe, Mehrfachauswahl → Korb/Löschen), „Alter der Daten“ in den Details, Dateityp „Spieldaten“; PR gegen `develop`, wartet auf Review; Handtest D17 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
+Dieser PC – „Zuletzt gespielt“ (`feat/disk-steam-last-played`): Filter „Spiele (Steam)“ mit Datum aus Steams eigenen Dateien, auch in den Details; PR gegen `develop`, wartet auf Review; Handtest D19.
+
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
@@ -25,7 +27,7 @@ KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen �
 
 App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien), Wahl unter Einstellungen → Allgemein und im ersten Einrichtungsschritt, Standard Systemsprache sonst Englisch; Übersetzungen maschinell, noch nicht muttersprachlich geprüft ([i18n/README.md](i18n/README.md)); PR gegen `develop`, wartet auf Review; Handtests S1–S4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
-Komfort Einstellungen, Paket A (`feat/comfort-settings`): Schnellleiste und Palette-Direktumschaltung (Farbschema, Dichte, Lesehilfe), Suche ohne Präfix mit Alltagswörtern, „Häufig genutzt“, Kontext-Zahnrad in Widgets und Modul-Kopf, Zurücksetzen pro Abschnitt, `nemo://`-Schema (intern); PR gegen `develop`, wartet auf Review. Plan: `docs/product/comfort/05-settings-plan.md`. Offen: Paket B (Bibliothek, Werkzeugkasten). „Stumm“ (1 Stunde / bis morgen, ausdrückliche Erinnerungen ohne Ton): `feat/comfort-mute`, gestapelt auf Paket A; Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+Komfort Einstellungen, Bibliothek, Werkzeugkasten (gemergt: #132 Einstellungen, #150 Stumm, #151 Bibliothek, #153 Werkzeugkasten): Schnellleiste, Palette-Direktumschaltung und Suche ohne Präfix, „Häufig genutzt“, Kontext-Zahnrad, Zurücksetzen, Stumm, Bibliothek- und Werkzeugsuche, „timer 10m“/„umrechnen 5 km“ in der Leiste. Ergebnis: [product/comfort/06-settings-results.md](product/comfort/06-settings-results.md). Offen (Sven): Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Woche Nutzung (Reizlast Zahnrad/Schnellleiste).
 
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).

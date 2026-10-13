@@ -136,6 +136,7 @@ pub fn run() {
             disk::disk_children,
             disk::disk_node,
             disk::disk_query,
+            disk::disk_steam_games,
             disk::disk_known_places,
             disk::disk_place_sizes,
             disk::disk_recycle_size,
