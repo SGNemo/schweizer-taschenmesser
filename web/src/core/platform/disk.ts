@@ -71,6 +71,8 @@ export interface DiskNode {
   files: number;
   /** Newest change in the subtree, Unix seconds. */
   modified: number;
+  /** Newest file access in the subtree, Unix seconds (0 = unknown); see `ScanSummary.accessTracked`. */
+  accessed: number;
   fileKind: FileKind;
   kindBytes: number[];
   /** Bytes per age bucket (`AGE_LIMITS_DAYS`) by each file's own change time, as of the scan. */
@@ -107,6 +109,8 @@ export interface ScanSummary {
   cloudBytes: number;
   /** Links, junctions and online-only folders that were not entered. */
   skippedLinks: number;
+  /** "Last opened" dates can be trusted on this volume (Windows, NTFS, updates on). */
+  accessTracked: boolean;
   notRead: NotRead[];
   notReadTotal: number;
   elapsedMs: number;
@@ -125,6 +129,8 @@ export interface DiskQuery {
   onlyEmpty?: boolean;
   /** With `olderThan`: leave out entries whose folder is old as well (each old folder once). */
   topmost?: boolean;
+  /** Compare `olderThan` (and `topmost`) with the last access instead of the last change. */
+  byAccess?: boolean;
 }
 
 /** Well-known cache/temp folders offered as scan roots (only ones that exist). */

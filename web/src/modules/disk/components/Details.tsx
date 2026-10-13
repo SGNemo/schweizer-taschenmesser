@@ -14,6 +14,8 @@ interface Props {
   /** The folder currently shown (denominator of the share). */
   current: DiskNode;
   path: string;
+  /** The scan trusts access times: show "Zuletzt geöffnet". */
+  accessTracked?: boolean;
   /** Biggest entries of the current folder, offered while the folder itself is shown. */
   biggest: readonly DiskNode[];
   onOpen: (node: DiskNode) => void;
@@ -38,6 +40,7 @@ export function Details({
   node,
   current,
   path,
+  accessTracked = false,
   biggest,
   onOpen,
   onSelect,
@@ -86,6 +89,15 @@ export function Details({
             <span className={styles.ago}> · {t.disk.age.ago(ageDays(node.modified, now()))}</span>
           ) : null}
         </dd>
+        {accessTracked && node.accessed > 0 ? (
+          <>
+            <dt>{isDir ? t.disk.details.accessedFolder : t.disk.details.accessed}</dt>
+            <dd data-testid="details-accessed">
+              {formatDate(node.accessed)}
+              <span className={styles.ago}> · {t.disk.age.ago(ageDays(node.accessed, now()))}</span>
+            </dd>
+          </>
+        ) : null}
         {game ? (
           <>
             <dt>{t.disk.games.lastPlayed}</dt>

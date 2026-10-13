@@ -33,6 +33,8 @@ interface FakeFile {
   name: string;
   bytes: number;
   ageDays: number;
+  /** Days since the file was last opened (default: when it was changed). */
+  openedDays?: number;
 }
 interface FakeDir {
   name: string;
@@ -113,7 +115,7 @@ const SPEC: FakeDir = {
         {
           name: 'Spiel',
           ageDays: 200,
-          files: [{ name: 'daten.pak', bytes: 42 * GB, ageDays: 200 }],
+          files: [{ name: 'daten.pak', bytes: 42 * GB, ageDays: 200, openedDays: 3 }],
         },
       ],
     },
@@ -169,6 +171,8 @@ class FakeTree {
       logicalBytes: 0,
       files: 0,
       modified: FAKE_NOW - d.ageDays * DAY,
+      // Like Rust: a folder's own access time never counts (the scan itself touches it).
+      accessed: 0,
       kindBytes: FILE_KINDS.map(() => 0),
       ageBytes: agesOf(0, 0),
       childCount: 0,
@@ -188,6 +192,7 @@ class FakeTree {
           logicalBytes: f.bytes,
           files: 1,
           modified: FAKE_NOW - f.ageDays * DAY,
+          accessed: FAKE_NOW - (f.openedDays ?? f.ageDays) * DAY,
           fileKind: fk,
           kindBytes: kb,
           ageBytes: agesOf(f.bytes, f.ageDays),
@@ -208,6 +213,7 @@ class FakeTree {
           logicalBytes: d.small.bytes,
           files: d.small.count,
           modified: FAKE_NOW - d.ageDays * DAY,
+          accessed: FAKE_NOW - d.ageDays * DAY,
           fileKind: fk,
           kindBytes: kb,
           ageBytes: agesOf(d.small.bytes, d.ageDays),
@@ -222,6 +228,7 @@ class FakeTree {
       node.logicalBytes += c.logicalBytes;
       node.files += c.files;
       node.modified = Math.max(node.modified, c.modified);
+      node.accessed = Math.max(node.accessed, c.accessed);
       c.kindBytes.forEach((b, i) => (node.kindBytes[i]! += b));
       c.ageBytes.forEach((b, i) => (node.ageBytes[i]! += b));
     }
@@ -317,9 +324,10 @@ class FakeTree {
     for (const n of this.nodes) {
       if (this.removed.has(n.id) || !wanted(n.kind) || n.id === under) continue;
       if (under !== 0 && !this.isUnder(n.id, under)) continue;
-      if (q.olderThan !== undefined && n.modified >= q.olderThan) continue;
+      const stamp = (x: DiskNode) => (q.byAccess ? x.accessed : x.modified);
+      if (q.olderThan !== undefined && stamp(n) >= q.olderThan) continue;
       if (q.topmost && q.olderThan !== undefined && n.parentId !== null && n.parentId !== under) {
-        if (this.nodes[n.parentId]!.modified < q.olderThan) continue;
+        if (stamp(this.nodes[n.parentId]!) < q.olderThan) continue;
       }
       if (q.onlyEmpty) {
         if (n.kind === 'dir' && n.files === 0 && n.bytes === 0) hits.push({ key: 0, n });
@@ -489,6 +497,7 @@ export function createFakeDisk(): DiskService {
               logicalBytes: total.logicalBytes,
               cloudBytes: 0,
               skippedLinks: 1,
+              accessTracked: true,
               notRead: [{ path: `${root}System\\Geschützt`, reason: 'denied' }],
               notReadTotal: 1,
               elapsedMs: 300,

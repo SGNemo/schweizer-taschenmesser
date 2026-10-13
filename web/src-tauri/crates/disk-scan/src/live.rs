@@ -127,6 +127,7 @@ impl LiveTree {
             logical_bytes: c.bytes,
             files: c.files,
             modified: c.modified,
+            accessed: 0,
             file_kind: if c.bytes == 0 {
                 FileKind::Other
             } else {

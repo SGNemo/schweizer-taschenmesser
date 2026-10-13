@@ -3259,6 +3259,14 @@ export const de = {
       oldSummary: (n: number, size: string, since: string) =>
         `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} mit zusammen ${size}, seit über ${since} nicht geändert`,
       capped: (n: number) => `Gezeigt werden die ${n} größten.`,
+      basis: 'Gemessen an',
+      byChange: 'letzter Änderung',
+      byOpen: 'letztem Öffnen',
+      notOpenedSince: 'Nicht geöffnet seit',
+      oldSummaryOpened: (n: number, size: string, since: string) =>
+        `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} mit zusammen ${size}, seit über ${since} nicht geöffnet`,
+      accessHelp:
+        'Windows führt auf diesem Laufwerk mit, wann Dateien zuletzt geöffnet wurden (auf etwa eine Stunde genau). Virenscanner, Vorschaubilder oder Sicherungen können das Datum auch setzen; dann wirkt eine Datei jünger, als sie ist, aber nie älter.',
       oldHelp:
         'Gezählt wird die letzte Änderung, nicht das letzte Öffnen: Windows merkt sich das Öffnen von Dateien meist nicht zuverlässig. Bei Ordnern zählt die neueste Datei darin. Bei Spielen setzt ein Update das Datum neu, reines Spielen nicht.',
       type: 'Dateityp',
@@ -3287,6 +3295,7 @@ export const de = {
       share: 'Anteil',
       files: 'Dateien',
       modified: 'Geändert',
+      accessed: 'Geöffnet',
       sortBy: (col: string) => `Nach ${col} sortieren`,
       in: 'In',
       empty: 'Keine Einträge.',
@@ -3304,6 +3313,8 @@ export const de = {
       files: 'Dateien',
       modified: 'Zuletzt geändert',
       modifiedFolder: 'Zuletzt geändert (neueste Datei darin)',
+      accessed: 'Zuletzt geöffnet',
+      accessedFolder: 'Zuletzt geöffnet (neueste Datei darin)',
       types: 'Dateitypen',
       ages: 'Alter der Daten',
       ageBar: 'Anteile nach Alter',
