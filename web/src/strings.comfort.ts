@@ -38,6 +38,11 @@ export const tComfort = defineBundle(
     },
     library: {
       enable: (name: string) => `${name} in der Bibliothek einschalten`,
+      search: 'Module durchsuchen',
+      searchPlaceholder: 'Name oder Aufgabe, z. B. „Abo“ oder „Rechnung“',
+      noResults: 'Kein Modul passt. Probiere ein anderes Wort.',
+      badgeNew: 'Neu',
+      badgeUpdated: 'Aktualisiert',
     },
     synonyms: {
       'appearance--theme': ['dunkel', 'hell', 'Nachtmodus', 'Dark Mode'],
@@ -90,6 +95,11 @@ export const tComfort = defineBundle(
       },
       library: {
         enable: (name: string) => `Turn on ${name} in the library`,
+        search: 'Search modules',
+        searchPlaceholder: 'Name or purpose, e.g. “subscription” or “invoice”',
+        noResults: 'No module matches. Try another word.',
+        badgeNew: 'New',
+        badgeUpdated: 'Updated',
       },
       synonyms: {
         'appearance--theme': ['dark', 'light', 'night mode', 'dark mode'],
@@ -141,6 +151,11 @@ export const tComfort = defineBundle(
       },
       library: {
         enable: (name: string) => `Activar ${name} en la biblioteca`,
+        search: 'Buscar módulos',
+        searchPlaceholder: 'Nombre o función, p. ej. «suscripción» o «factura»',
+        noResults: 'Ningún módulo coincide. Prueba otra palabra.',
+        badgeNew: 'Nuevo',
+        badgeUpdated: 'Actualizado',
       },
       synonyms: {
         'appearance--theme': ['oscuro', 'claro', 'modo noche', 'modo oscuro'],
@@ -199,6 +214,11 @@ export const tComfort = defineBundle(
       },
       library: {
         enable: (name: string) => `Activer ${name} dans la bibliothèque`,
+        search: 'Rechercher des modules',
+        searchPlaceholder: 'Nom ou usage, p. ex. « abonnement » ou « facture »',
+        noResults: 'Aucun module ne correspond. Essayez un autre mot.',
+        badgeNew: 'Nouveau',
+        badgeUpdated: 'Mis à jour',
       },
       synonyms: {
         'appearance--theme': ['sombre', 'clair', 'mode nuit', 'mode sombre'],
@@ -250,6 +270,11 @@ export const tComfort = defineBundle(
       },
       library: {
         enable: (name: string) => `Ligar ${name} na biblioteca`,
+        search: 'Buscar módulos',
+        searchPlaceholder: 'Nome ou função, p. ex. “assinatura” ou “fatura”',
+        noResults: 'Nenhum módulo corresponde. Tente outra palavra.',
+        badgeNew: 'Novo',
+        badgeUpdated: 'Atualizado',
       },
       synonyms: {
         'appearance--theme': ['escuro', 'claro', 'modo noturno', 'modo escuro'],

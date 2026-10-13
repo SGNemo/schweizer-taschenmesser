@@ -119,3 +119,7 @@
   background: color-mix(in srgb, var(--area-color) 15%, transparent);
   color: var(--area-color);
 }
+.librarySearch {
+  max-width: 24rem;
+  margin-bottom: var(--space-4);
+}
