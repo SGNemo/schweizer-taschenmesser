@@ -234,7 +234,9 @@ export const de = {
     notFoundTitle: 'Diese Kategorie gibt es nicht.',
     danger: {
       title: 'Gefahrenzone',
-      typePhrase: (phrase: string) => `Tippe „${phrase}“ zum Bestätigen`,
+      againTitle: 'Bist du sicher?',
+      againText: 'Das lässt sich nicht rückgängig machen. Bitte bestätige noch einmal.',
+      back: 'Zurück',
     },
     /** Extra search words per settings section (synonyms people type). */
     searchWords: {

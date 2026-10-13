@@ -6,7 +6,7 @@ Users report through Settings → Über Nemo → Diagnose (or the command palett
 - Everything passes `scrub()` (`core/diagnostics/errorLog.ts`); `diagnostics.test.ts` holds the negative list. New field in the report? Add a canary to that test.
 
 ## Recovery and safe mode
-- Boot (`main.tsx`): `checkDb()` opens the DB and reads one row per table. Failure → `RecoveryScreen` (repair / restore backup / empty start after typing `NEU STARTEN`); always a copy of the defective state first (`dumpDb`, no `_secrets`/`_blobs`).
+- Boot (`main.tsx`): `checkDb()` opens the DB and reads one row per table. Failure → `RecoveryScreen` (repair / restore backup / empty start after a second confirmation); always a copy of the defective state first (`dumpDb`, no `_secrets`/`_blobs`).
 - Fatal render error → `RootErrorBoundary` → `FatalErrorScreen`. A module error → `ModuleErrorBoundary` (card; the rest keeps running).
 - Native panics: `panic_log.rs` writes `<data folder>/logs/panic.log` (64 KiB, one `.1`), the next start imports it once (`importNativePanics`, source `rust`).
 - A broken home widget shows a calm line inside its card (`WidgetErrorBoundary`).
