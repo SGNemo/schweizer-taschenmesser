@@ -27,6 +27,14 @@ export const tComfort = defineBundle(
       button: 'Auf Standard zurücksetzen',
       done: (title: string) => `„${title}“ zurückgesetzt`,
     },
+    tools: {
+      timerStart: (min: string) => `Timer ${min} Min. starten`,
+      timerStarted: (min: string) => `Timer läuft: ${min} Min.`,
+      recent: 'Zuletzt benutzt',
+      search: 'Werkzeuge durchsuchen',
+      searchPlaceholder: 'Name oder Aufgabe …',
+      noResults: 'Kein Werkzeug passt. Probiere ein anderes Wort.',
+    },
     library: {
       enable: (name: string) => `${name} in der Bibliothek einschalten`,
       search: 'Module durchsuchen',
@@ -75,6 +83,14 @@ export const tComfort = defineBundle(
         button: 'Reset to default',
         done: (title: string) => `“${title}” reset`,
       },
+      tools: {
+        timerStart: (min: string) => `Start timer ${min} min`,
+        timerStarted: (min: string) => `Timer running: ${min} min`,
+        recent: 'Recently used',
+        search: 'Search tools',
+        searchPlaceholder: 'Name or purpose …',
+        noResults: 'No tool matches. Try another word.',
+      },
       library: {
         enable: (name: string) => `Turn on ${name} in the library`,
         search: 'Search modules',
@@ -121,6 +137,14 @@ export const tComfort = defineBundle(
       reset: {
         button: 'Restablecer valores',
         done: (title: string) => `«${title}» restablecido`,
+      },
+      tools: {
+        timerStart: (min: string) => `Iniciar temporizador ${min} min`,
+        timerStarted: (min: string) => `Temporizador en marcha: ${min} min`,
+        recent: 'Usadas hace poco',
+        search: 'Buscar herramientas',
+        searchPlaceholder: 'Nombre o función …',
+        noResults: 'Ninguna herramienta coincide. Prueba otra palabra.',
       },
       library: {
         enable: (name: string) => `Activar ${name} en la biblioteca`,
@@ -176,6 +200,14 @@ export const tComfort = defineBundle(
         button: 'Rétablir les valeurs par défaut',
         done: (title: string) => `« ${title} » rétabli`,
       },
+      tools: {
+        timerStart: (min: string) => `Lancer le minuteur ${min} min`,
+        timerStarted: (min: string) => `Minuteur en cours : ${min} min`,
+        recent: 'Utilisés récemment',
+        search: 'Rechercher des outils',
+        searchPlaceholder: 'Nom ou usage …',
+        noResults: 'Aucun outil ne correspond. Essayez un autre mot.',
+      },
       library: {
         enable: (name: string) => `Activer ${name} dans la bibliothèque`,
         search: 'Rechercher des modules',
@@ -222,6 +254,14 @@ export const tComfort = defineBundle(
       reset: {
         button: 'Restaurar o padrão',
         done: (title: string) => `“${title}” restaurado`,
+      },
+      tools: {
+        timerStart: (min: string) => `Iniciar timer ${min} min`,
+        timerStarted: (min: string) => `Timer em andamento: ${min} min`,
+        recent: 'Usadas recentemente',
+        search: 'Buscar ferramentas',
+        searchPlaceholder: 'Nome ou função …',
+        noResults: 'Nenhuma ferramenta corresponde. Tente outra palavra.',
       },
       library: {
         enable: (name: string) => `Ligar ${name} na biblioteca`,
