@@ -14,7 +14,7 @@ async function save(page: Page) {
 }
 
 test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', async ({ page }) => {
-  await enable(page, ['invoices']);
+  await enable(page, 'invoices');
   await page.goto('/');
   await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
   await input(page).fill('r 89,90 Swisscom 31.10.');
@@ -28,7 +28,7 @@ test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', as
 });
 
 test('a note with the "n " prefix lands in the notes without choosing a type', async ({ page }) => {
-  await enable(page, ['notes']);
+  await enable(page, 'notes');
   await page.goto('/');
   await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
   await input(page).fill('n Idee für den Garten');
@@ -93,7 +93,7 @@ test('"Duplizieren" on a booking opens a copy dated today; undo removes it', asy
 });
 
 test('a new person has no birthday date preset', async ({ page }) => {
-  await enable(page, ['people']);
+  await enable(page, 'people');
   await ready(page, '/people?new=1');
   await expect(page.getByRole('dialog').getByLabel('Geburtsdatum')).toHaveValue('');
 });
