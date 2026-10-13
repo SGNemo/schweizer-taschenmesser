@@ -6,9 +6,16 @@ import { describeRecurrence } from '@/core/recurrence/describe';
 import { daysBetween, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Badge, Button, Card, EmptyState, Icon, Switch } from '@/ui';
+import { AdvancedToggle, Badge, Button, Card, EmptyState, Icon, Switch, useOpenParam } from '@/ui';
 import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
-import { nextCancelDeadline, nextCharge, sortSubscriptions, totals } from '../logic';
+import {
+  changePercent,
+  nextCancelDeadline,
+  nextCharge,
+  recentIncrease,
+  sortSubscriptions,
+  totals,
+} from '../logic';
 import { subscriptionRepo } from '../repo';
 import styles from './subscriptions.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
@@ -23,6 +30,7 @@ export default function SubscriptionsPage() {
     [],
   );
   const [target, setTarget] = useState<SubscriptionTarget>(null);
+  useOpenParam((id) => subscriptionRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
@@ -32,12 +40,13 @@ export default function SubscriptionsPage() {
     if (params.get('new')) setParams({}, { replace: true });
   };
 
-  const sums = totals(subs ?? []);
+  const sums = totals(subs ?? [], day);
 
   return (
     <>
       <div className={styles.header}>
         <h1>{t.subscriptions.title}</h1>
+        <AdvancedToggle moduleId="subscriptions" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.subscriptions.add}
@@ -82,6 +91,18 @@ export default function SubscriptionsPage() {
                         ? t.subscriptions.ended
                         : t.subscriptions.paused}
                   </span>
+                  {s.recurrence.until ? (
+                    <span className={styles.muted}>
+                      {t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM yyyy'))}
+                    </span>
+                  ) : null}
+                  {recentIncrease(s.priceHistory ?? [], day) ? (
+                    <span className={styles.muted}>
+                      {t.subscriptions.priceUp(
+                        changePercent(recentIncrease(s.priceHistory ?? [], day)!),
+                      )}
+                    </span>
+                  ) : null}
                   {cancel ? (
                     <span className={urgent ? styles.warn : styles.muted}>
                       {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}

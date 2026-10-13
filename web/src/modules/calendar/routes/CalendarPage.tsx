@@ -6,7 +6,17 @@ import { useWeekStart } from '@/core/settings/core';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, PageHeader, Segmented, SplitView, useSplitView } from '@/ui';
+import {
+  AdvancedToggle,
+  Button,
+  Icon,
+  IconButton,
+  PageHeader,
+  Segmented,
+  SplitView,
+  useOpenParam,
+  useSplitView,
+} from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
@@ -43,6 +53,7 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const [prefs] = useSettings('module.calendar', settings.schema, settings.defaults);
   const [target, setTarget] = useState<EventTarget>(null);
+  useOpenParam((id) => eventRepo.get(id), setTarget);
   const [externalId, setExternalId] = useState<string | null>(null);
   const split = useSplitView();
   const weekStart = useWeekStart();
@@ -111,7 +122,9 @@ export default function CalendarPage() {
               onChange={pickTab}
             />
           }
-        />
+        >
+          <AdvancedToggle moduleId="calendar" />
+        </PageHeader>
         <RemindersTab
           newRequested={params.get('new') === '1'}
           onNewHandled={() => {
@@ -140,6 +153,7 @@ export default function CalendarPage() {
           />
         }
       >
+        <AdvancedToggle moduleId="calendar" />
         {items && list.length === 0 ? <StartDataButton moduleId="calendar" /> : null}
         <Button variant="primary" onClick={() => setTarget({ draft: { startDate: date } })}>
           <Icon name="plus" size={18} />
@@ -207,7 +221,7 @@ export default function CalendarPage() {
         </SplitView>
       </div>
 
-      <EventEditor target={openTarget} onClose={closeEditor} />
+      <EventEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
       <ExternalDetail id={externalId} onClose={() => setExternalId(null)} />
     </>
   );

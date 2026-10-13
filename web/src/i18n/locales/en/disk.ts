@@ -295,6 +295,14 @@ export const disk: Strings['disk'] = {
     oldSummary: (n: number, size: string, since: string) =>
       `${n} ${n === 1 ? 'entry' : 'entries'} with ${size} in total, not changed for over ${since}`,
     capped: (n: number) => `Showing the ${n} biggest.`,
+    basis: 'Based on',
+    byChange: 'last change',
+    byOpen: 'last opened',
+    notOpenedSince: 'Not opened for',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'entry' : 'entries'} with ${size} in total, not opened for over ${since}`,
+    accessHelp:
+      'On this drive Windows keeps track of when files were last opened (to within about an hour). Virus scanners, thumbnails or backups can set the date too; then a file looks newer than it is, never older.',
     oldHelp:
       'This counts the last change, not the last time something was opened: Windows usually doesn’t keep track of opening files reliably. For folders the newest file inside counts. For games an update resets the date, playing alone doesn’t.',
     type: 'File type',
@@ -307,12 +315,23 @@ export const disk: Strings['disk'] = {
     none_found: 'No results.',
     results: (n: number) => (n === 1 ? '1 result' : `${n} results`),
   },
+  games: {
+    filter: 'Games (Steam)',
+    label: 'Steam games',
+    lastPlayed: 'Last played',
+    played: (date: string, ago: string) => `Last played on ${date} · ${ago}`,
+    unknown: 'No play date from Steam',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'game' : 'games'} with ${size} in total, ${idle} of them not played for over a year`,
+    help: 'The date comes from Steam’s own files and counts the last time you played, not the last update. If it is missing, the game was never started or Steam did not record it. The cleanest way to uninstall a game is in Steam itself: if only the folder is deleted, Steam still shows it as installed.',
+  },
   list: {
     name: 'Name',
     size: 'Used',
     share: 'Share',
     files: 'Files',
     modified: 'Modified',
+    accessed: 'Opened',
     sortBy: (col: string) => `Sort by ${col}`,
     in: 'In',
     empty: 'No entries.',
@@ -330,6 +349,8 @@ export const disk: Strings['disk'] = {
     files: 'Files',
     modified: 'Last modified',
     modifiedFolder: 'Last modified (newest file inside)',
+    accessed: 'Last opened',
+    accessedFolder: 'Last opened (newest file inside)',
     types: 'File types',
     ages: 'Age of the data',
     ageBar: 'Shares by age',

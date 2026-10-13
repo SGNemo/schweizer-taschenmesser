@@ -15,7 +15,8 @@ describe('full text search', () => {
     const hits = await searchEntries('MIETE ueberweisen', ctxFor());
     expect(hits.map((h) => h.title)).toEqual(['Miete überweisen']);
     expect(hits[0]!.subtitle).toBe('Kalender · Termin');
-    expect(hits[0]!.to).toBe('/calendar');
+    // A hit opens the record itself: the module page reads ?open=<id> (useOpenParam).
+    expect(hits[0]!.to).toBe(`/calendar?open=${hits[0]!.id}`);
   });
 
   it('matches prefixes and small typos', async () => {

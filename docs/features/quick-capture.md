@@ -19,7 +19,8 @@ Im Eingabefenster: **Enter** speichert, **Tab / Umschalt+Tab** oder **↑/↓** 
 - **Wiederholung:** „jede Woche“, „täglich“, „jeden Monat“, „jeden 1.“, „jeden Montag“, „alle 2 Wochen“, „jedes Jahr“.
 - **Beträge:** „12,50 €“, „12 EUR“, „€ 5“, „1.234,56 €“ (Einnahme bei „Gehalt“, „erhalten“, „+“).
 - **Typ:** Datum + Uhrzeit → Termin (Kalender); „erinnere mich …“ oder Wiederholung → Erinnerung; „todo“/„aufgabe“ oder Text ohne Signal → ToDo (Standardziel einstellbar); URL oder „merke …“ → Merkliste; Betrag → Finanzen (nur als Entwurf, wird erst nach „Buchen“ angelegt).
-- **Kurzbefehle** (erzwingen den Typ): `t ` ToDo, `k ` Kalender, `e ` Erinnerung, `m ` Merkliste, `$ ` Finanzen.
+- **Kurzbefehle** (erzwingen den Typ): `t ` ToDo, `k ` Kalender, `e ` Erinnerung, `m ` Merkliste, `l ` Einkauf, `n ` Notiz, `r ` Rechnung, `$ ` Finanzen.
+- **Rechnung:** „Rechnung Swisscom 89,90 € bis 31.10.“ oder `r 89,90 Swisscom 31.10.` legt eine offene Rechnung an (Empfänger = übrig bleibender Text, Datum = Fälligkeit, ohne Datum 14 Tage mit Hinweis „Datum angenommen“). Ohne Betrag bleibt „Rechnung“ ein normales Wort. Keine Bestätigung nötig, „Rückgängig“ entfernt sie wieder.
 
 Ist die Erkennung unsicher (z. B. Link + Termin, oder Betrag + Termin), wird nichts still angenommen: die Vorschau verlangt eine Auswahl. Angenommene Werte (z. B. „Datum angenommen“, „Uhrzeit ungefähr“) erscheinen als gelbe Hinweis-Chips.
 

@@ -13,7 +13,7 @@ const manifest: ModuleManifest = {
     return t.invoices.meta.name;
   },
   icon: 'receipt',
-  version: 1,
+  version: 2,
   get description() {
     return t.invoices.meta.description;
   },

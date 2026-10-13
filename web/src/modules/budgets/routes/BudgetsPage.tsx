@@ -14,10 +14,11 @@ import {
   IconButton,
   ItemList,
   PageHeader,
+  patternStyles,
   Progress,
   Segmented,
   Stat,
-  patternStyles,
+  useOpenParam,
 } from '@/ui';
 import { useBudgetData } from '../data';
 import {
@@ -29,7 +30,7 @@ import {
   type GoalTarget,
 } from '../components/Editors';
 import { budgetStatus, goalProgress } from '../logic';
-import { depositRepo, goalRepo } from '../repo';
+import { budgetRepo, depositRepo, goalRepo } from '../repo';
 import type { Goal } from '../schema';
 
 type Tab = 'budgets' | 'goals';
@@ -45,7 +46,9 @@ export default function BudgetsPage() {
   );
   const deposits = useLiveQuery(() => depositRepo.active().toArray(), []);
   const [budgetTarget, setBudgetTarget] = useState<BudgetTarget>(null);
+  useOpenParam((id) => budgetRepo.get(id), setBudgetTarget);
   const [goalTarget, setGoalTarget] = useState<GoalTarget>(null);
+  useOpenParam((id) => goalRepo.get(id), setGoalTarget);
   const [depositFor, setDepositFor] = useState<Stored<Goal> | null>(null);
   const [historyFor, setHistoryFor] = useState<Stored<Goal> | null>(null);
   const day = today();

@@ -66,6 +66,18 @@ export async function wipeModuleData(
   }
 }
 
+/** Does the module hold any entries (not counting deleted ones)? Decides whether switching it off has to ask. */
+export async function moduleHasData(
+  manifest: ModuleManifest,
+  database: TaschenmesserDB = defaultDb,
+): Promise<boolean> {
+  for (const collection of Object.keys(manifest.dataSchema.collections)) {
+    if ((await createCollectionRepo(manifest, collection, database).active().count()) > 0)
+      return true;
+  }
+  return false;
+}
+
 export async function disableModule(
   manifest: ModuleManifest,
   policy: DataPolicy,

@@ -11,9 +11,6 @@ import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { getPlatform, type BiometricService } from '@/core/platform';
 import type { SecretStore } from '@/core/secrets/types';
 
-/** The user must type this to confirm. */
-export const RESET_PHRASE = 'LÖSCHEN';
-
 /** Secrets kept outside the database (OS keystore or device key) that belong to this device's data. */
 export async function deviceSecretNames(database: TaschenmesserDB = defaultDb): Promise<string[]> {
   const ai = await loadAiConfig(database).catch(() => ({ providers: [] as { id: string }[] }));

@@ -305,6 +305,14 @@ export const disk: Strings['disk'] = {
     oldSummary: (n: number, size: string, since: string) =>
       `${n} ${n === 1 ? 'élément' : 'éléments'} pour ${size} au total, pas modifiés depuis plus de ${since}`,
     capped: (n: number) => `Seuls les ${n} plus grands sont affichés.`,
+    basis: 'Selon',
+    byChange: 'dernière modification',
+    byOpen: 'dernière ouverture',
+    notOpenedSince: 'Pas ouvert depuis',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'élément' : 'éléments'} pour ${size} au total, pas ouverts depuis plus de ${since}`,
+    accessHelp:
+      'Sur ce lecteur, Windows note quand les fichiers ont été ouverts pour la dernière fois (à une heure près environ). Les antivirus, les miniatures ou les sauvegardes peuvent aussi changer la date ; un fichier paraît alors plus récent qu’il ne l’est, jamais plus ancien.',
     oldHelp:
       'C’est la dernière modification qui compte, pas la dernière ouverture : Windows n’enregistre généralement pas l’ouverture des fichiers de façon fiable. Pour un dossier, c’est le fichier le plus récent qui compte. Pour un jeu, une mise à jour change la date, y jouer non.',
     type: 'Type de fichier',
@@ -317,12 +325,23 @@ export const disk: Strings['disk'] = {
     none_found: 'Aucun résultat.',
     results: (n: number) => (n <= 1 ? `${n} résultat` : `${n} résultats`),
   },
+  games: {
+    filter: 'Jeux (Steam)',
+    label: 'Jeux Steam',
+    lastPlayed: 'Dernière partie',
+    played: (date: string, ago: string) => `Dernière partie le ${date} · ${ago}`,
+    unknown: 'Pas de date de partie dans Steam',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'jeu' : 'jeux'} pour ${size} au total, dont ${idle} sans partie depuis plus d’un an`,
+    help: 'La date vient des fichiers de Steam et compte la dernière partie, pas la dernière mise à jour. Si elle manque, le jeu n’a jamais été lancé ou Steam ne l’a pas notée. Le plus propre est de désinstaller un jeu dans Steam : si seul le dossier est supprimé, Steam l’affiche toujours comme installé.',
+  },
   list: {
     name: 'Nom',
     size: 'Occupé',
     share: 'Part',
     files: 'Fichiers',
     modified: 'Modifié',
+    accessed: 'Ouvert',
     sortBy: (col: string) => `Trier par ${col}`,
     in: 'Dans',
     empty: 'Aucun élément.',
@@ -340,6 +359,8 @@ export const disk: Strings['disk'] = {
     files: 'Fichiers',
     modified: 'Dernière modification',
     modifiedFolder: 'Dernière modification (fichier le plus récent)',
+    accessed: 'Dernière ouverture',
+    accessedFolder: 'Dernière ouverture (fichier le plus récent)',
     types: 'Types de fichiers',
     ages: 'Ancienneté des données',
     ageBar: 'Parts par ancienneté',
