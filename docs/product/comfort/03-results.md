@@ -95,3 +95,6 @@ Built: synced setting (`comfort`), header switch per module, global switch "Alle
 | Person | 5 → 3 |
 
 Deliberately kept visible although the plan listed them: estimate and "Für heute einplanen" (feed the day plan), expiry (feeds the "Läuft ab" widget), recurrence of reminders. Not done yet in this package: "Jetzt" strips for calendar/finance/pantry, filter chips, finance tabs Konten/Kategorien into advanced.
+
+## Package 6 – duplicate a to-do
+Row menu "Duplizieren" on a to-do: copy is open, undo in the toast (2 clicks; before: add again by hand, 3+). `comfort.spec.ts`.

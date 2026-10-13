@@ -136,3 +136,19 @@ test('a to-do goes to tomorrow from the row menu (2 clicks) and ticking off stay
   await page.getByRole('checkbox', { name: 'Brot kaufen' }).click(); // 1 click
   await expect(page.getByText('Als erledigt markiert.')).toBeVisible();
 });
+
+test('a to-do is duplicated from the row menu (2 clicks) and the copy is open', async ({
+  page,
+}) => {
+  await ready(page, '/todos');
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Steuer ordnen');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  const rows = page.getByRole('listitem').filter({ hasText: 'Steuer ordnen' });
+  await expect(rows).toHaveCount(1);
+
+  await rows.getByRole('button', { name: 'Weitere Aktionen' }).click(); // click 1
+  await page.getByRole('menuitem', { name: 'Duplizieren' }).click(); // click 2
+  await expect(rows).toHaveCount(2);
+  await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
+  await expect(rows).toHaveCount(1);
+});

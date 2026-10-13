@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
+import { copyData } from '@/core/db/copy';
 import type { Stored } from '@/core/db/types';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
@@ -107,6 +108,14 @@ function TaskRow({
       menu={[
         ...(task.done ? [] : dueMenu),
         ...(task.done ? [] : prioMenu),
+        {
+          id: 'duplicate',
+          label: t.actions.duplicate,
+          onSelect: () =>
+            void undoableWithToast(t.actions.duplicated, t.actions.duplicated, () =>
+              taskRepo.create({ ...copyData(task), done: false, completedAt: undefined }),
+            ),
+        },
         {
           id: 'delete',
           label: t.actions.delete,
