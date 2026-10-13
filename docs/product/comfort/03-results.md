@@ -23,3 +23,18 @@ Built: Quick Capture `n ` (note) and `r ` / "Rechnung …" (invoice, no confirm 
 | 21 | Add a birthday | wrong date silently possible | date required, no preset | `create.spec.ts` |
 
 Not done: "Mehr Felder" fold (package 3, `AdvancedFields`), capture targets for pantry and person (the parser has no signal for them), no confirm step for finance captures (kept on purpose: finance captures are only booked after confirmation, see the quick-capture doc), duplicate for to-dos (to-do editor is in package 3's branch).
+
+## Package 3 – Basis / Erweitert (`feat/comfort-advanced`)
+Built: synced setting (`comfort`), header switch per module, global switch "Alle Module in der Erweitert-Ansicht", `AdvancedFields` with "Mehr Felder" and never-hide-data rule. Applied to to-dos (recurrence, "Irgendwann"), calendar (end, recurrence of events, note), invoices (reference, note), subscriptions (notice days, note), pantry (minimum, note), bookmarks (kind, tags, note), people (tags, note).
+
+| Dialog | Visible fields before → after (Basis) |
+|---|---|
+| Event | 9 → 6 (title, all-day, date, time, location, notify) |
+| To-do | 9 → 7 (title, list, priority, due, estimate, planned, note, subtasks; recurrence and "Irgendwann" behind "Mehr Felder") |
+| Invoice | 6 → 4 |
+| Subscription | 8 → 6 |
+| Pantry item | 6 → 4 |
+| Bookmark | 5 → 2 |
+| Person | 5 → 3 |
+
+Deliberately kept visible although the plan listed them: estimate and "Für heute einplanen" (feed the day plan), expiry (feeds the "Läuft ab" widget), recurrence of reminders. Not done yet in this package: "Jetzt" strips for calendar/finance/pantry, filter chips, finance tabs Konten/Kategorien into advanced.

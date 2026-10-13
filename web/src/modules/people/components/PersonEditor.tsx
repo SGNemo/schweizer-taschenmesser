@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { pad2 } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
+import { AdvancedFields, Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
 import { deletePerson, personRepo } from '../repo';
 import { personSchema, type Person } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -118,8 +118,10 @@ function Fields({
           />
         </>
       ) : null}
-      <TextField label={t.people.tags} value={tags} onChange={(e) => setTags(e.target.value)} />
-      <TextField label={t.people.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields moduleId="people" hasData={!!tags || !!note}>
+        <TextField label={t.people.tags} value={tags} onChange={(e) => setTags(e.target.value)} />
+        <TextField label={t.people.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       <FormActions
         start={
           existing ? (

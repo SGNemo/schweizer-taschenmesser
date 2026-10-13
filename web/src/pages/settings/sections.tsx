@@ -34,6 +34,8 @@ import { AiWriteSection } from './AiWriteSection';
 import { CalmRemindersSection } from './CalmRemindersSection';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
+import { tAdvanced } from '@/strings.advanced';
+import { AdvancedSection } from './AdvancedSection';
 import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
@@ -382,6 +384,32 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     ],
     reset: focusReset(FOCUS_RESET_KEYS),
     render: () => <FocusSection />,
+  },
+  {
+    id: 'advanced',
+    category: 'darstellung',
+    order: 16,
+    get title() {
+      return tAdvanced.get().settings.title;
+    },
+    get description() {
+      return tAdvanced.get().settings.description;
+    },
+    get keywords() {
+      return tAdvanced.get().settings.keywords;
+    },
+    fields: [
+      {
+        key: 'advancedAll',
+        get label() {
+          return tAdvanced.get().settings.all;
+        },
+        get description() {
+          return tAdvanced.get().settings.allHint;
+        },
+      },
+    ],
+    render: () => <AdvancedSection />,
   },
   {
     id: 'favourites',

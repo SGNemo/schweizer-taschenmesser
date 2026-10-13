@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { moreFields } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -47,6 +48,7 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
+  await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
   await dialog.getByLabel('Haltbar bis (optional)').fill('2026-09-30');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
@@ -92,6 +94,7 @@ test('pantry: the hand-over also arrives when the app loads slowly (services sta
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
+  await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toBeHidden();

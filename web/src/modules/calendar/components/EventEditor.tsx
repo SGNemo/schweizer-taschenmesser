@@ -7,6 +7,7 @@ import type { Recurrence } from '@/core/recurrence/types';
 import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
 import {
+  AdvancedFields,
   Button,
   Dialog,
   Icon,
@@ -175,24 +176,6 @@ function Form({
         )}
       </div>
       {reminder ? null : (
-        <div className={styles.split}>
-          <TextField
-            label={`${t.calendar.end} (${t.form.date})`}
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-          {allDay ? null : (
-            <TextField
-              label={`${t.calendar.end} (${t.form.time})`}
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
-          )}
-        </div>
-      )}
-      {reminder ? null : (
         <TextField
           label={t.calendar.location}
           value={location}
@@ -207,7 +190,9 @@ function Form({
           </Button>
         </div>
       ) : null}
-      <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+      {reminder ? (
+        <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+      ) : null}
       <SelectField
         label={t.calendar.notify.label}
         value={notifyChoice}
@@ -223,7 +208,33 @@ function Form({
       {reminder ? (
         <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
       ) : null}
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields
+        moduleId="calendar"
+        hasData={!!endDate || !!endTime || !!recurrence || !!note}
+      >
+        {reminder ? null : (
+          <div className={styles.split}>
+            <TextField
+              label={`${t.calendar.end} (${t.form.date})`}
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            {allDay ? null : (
+              <TextField
+                label={`${t.calendar.end} (${t.form.time})`}
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            )}
+          </div>
+        )}
+        {reminder ? null : (
+          <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+        )}
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       {error ? (
         <p role="alert" className={styles.error}>
           {error}
