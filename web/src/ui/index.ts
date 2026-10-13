@@ -15,7 +15,7 @@ export { ReaderView } from './ReaderView';
 export { Prose } from './Prose';
 export { MEANINGS, categoryColor, categoryIndex, type Meaning } from './semantics';
 export { HelpHint } from './HelpHint';
-export { DangerZone, SettingRow, SettingsGroup, TypedConfirmDialog } from './SettingsParts';
+export { DangerZone, SettingRow, SettingsGroup, DoubleConfirmDialog } from './SettingsParts';
 export { Icon } from './icons';
 export { Logo } from './Logo';
 export { Wordmark } from './Wordmark';

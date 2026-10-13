@@ -169,7 +169,7 @@ E1. *Windows-Portable:* Einstellungen durchklicken – Kategorien-Leiste links, 
 E2. *Android:* Einstellungen öffnet die Kategorien-Liste, eine Kategorie öffnet den Inhalt, die Zurück-Geste führt zur Liste; große Touch-Ziele. ☐
 E3. *Deep-Links:* „Benachrichtigungen aktivieren“ im Tab Erinnerungen des Kalenders, das Sync-Symbol oben und der Dev-Hinweis springen in die richtige Kategorie und zum Abschnitt. ☐
 E4. *Über Nemo:* Version, Build/Commit (Dev-Preview), Plattform und Installationsart stimmen; „Ordner öffnen“ öffnet den Datenordner (Portable: `data/` neben der exe, sonst lokaler App-Ordner); Changelog und Lizenzen klappen auf; Diagnose-Export speichert eine Datei ohne Daten und Schlüssel. ☐
-E5. *Gerät zurücksetzen (Testgerät!):* ohne exakt `LÖSCHEN` bleibt der Knopf aus; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
+E5. *Gerät zurücksetzen (Testgerät!):* der erste Klick fragt „Bist du sicher?“, ein schneller Doppelklick löscht nicht, „Zurück“ ändert nichts; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
 E6. *Entwickler:* die Kategorie erscheint nur im Dev-Preview-Build. ☐
 
 ### Fokus- und Aufmerksamkeitshilfen (Paket 1) – nur mit echtem Gerät und echtem Alltag prüfbar

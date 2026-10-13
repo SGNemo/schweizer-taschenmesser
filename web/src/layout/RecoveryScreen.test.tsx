@@ -66,16 +66,20 @@ describe('RecoveryScreen', () => {
     expect(h.repairDb).not.toHaveBeenCalled();
   });
 
-  it('start with an empty database needs the typed phrase', async () => {
+  it('start with an empty database asks twice and keeps a copy first', async () => {
     render(<RecoveryScreen problem={problem} />);
     fireEvent.click(
       screen.getAllByRole('button', { name: 'Mit leerer Datenbank neu starten' })[0]!,
     );
     const confirm = await screen.findByRole('button', { name: 'Neu starten' });
-    expect(confirm).toBeDisabled();
+    // The first click only asks once more; nothing to type.
+    expect(screen.queryByRole('textbox')).toBeNull();
+    fireEvent.click(confirm);
     expect(h.replaceWithEmptyDb).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'NEU STARTEN' } });
-    expect(confirm).toBeEnabled();
+    expect(await screen.findByTestId('confirm-again')).toBeTruthy();
+    // The second "yes" works after a short moment only (a double click is not two yeses).
+    expect(confirm).toBeDisabled();
+    await waitFor(() => expect(confirm).toBeEnabled());
     fireEvent.click(confirm);
     await waitFor(() => expect(h.replaceWithEmptyDb).toHaveBeenCalled());
     expect(h.keepBrokenCopy).toHaveBeenCalledBefore(h.replaceWithEmptyDb);
