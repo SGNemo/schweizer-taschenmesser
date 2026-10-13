@@ -17,6 +17,7 @@ import {
 } from '@/ui';
 import { budgetRepo, deleteGoal, depositRepo, goalRepo } from '../repo';
 import type { Budget, Deposit, Goal } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 function DeleteButton({ onDelete }: { onDelete: () => Promise<void> }) {
   return (
@@ -76,7 +77,8 @@ function BudgetFields({
 
   async function save() {
     const monthlyLimitMinor = parseMoney(limit);
-    if (!monthlyLimitMinor || monthlyLimitMinor < 1) return setError(t.money.invalidAmount);
+    if (!monthlyLimitMinor || monthlyLimitMinor < 1)
+      return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     if (!categoryId) return;
     if (existing) await budgetRepo.update(existing.id, { categoryId, monthlyLimitMinor });
     else await budgetRepo.create({ categoryId, monthlyLimitMinor });
@@ -115,7 +117,7 @@ function BudgetFields({
           existing ? (
             <DeleteButton
               onDelete={async () => {
-                await budgetRepo.remove(existing.id);
+                await deleteWithUndo(() => budgetRepo.remove(existing.id));
                 onClose();
               }}
             />
@@ -159,7 +161,8 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
 
   async function save() {
     const targetMinor = parseMoney(target);
-    if (!targetMinor || targetMinor < 1) return setError(t.money.invalidAmount);
+    if (!targetMinor || targetMinor < 1)
+      return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     const data = {
       name: name.trim(),
       targetMinor,
@@ -206,7 +209,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
           existing ? (
             <DeleteButton
               onDelete={async () => {
-                await deleteGoal(existing.id);
+                await deleteWithUndo(() => deleteGoal(existing.id));
                 onClose();
               }}
             />
@@ -250,7 +253,7 @@ function DepositFields({ goal, onClose }: { goal: Stored<Goal>; onClose: () => v
 
   async function save() {
     const cents = parseMoney(amount);
-    if (!cents || cents < 1) return setError(t.money.invalidAmount);
+    if (!cents || cents < 1) return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     await depositRepo.create({
       goalId: goal.id,
       amountMinor: withdraw ? -cents : cents,
@@ -333,7 +336,7 @@ export function HistoryDialog({
                 </span>
                 <IconButton
                   label={`${t.actions.delete}: ${d.date}`}
-                  onClick={() => void depositRepo.remove(d.id)}
+                  onClick={() => void deleteWithUndo(() => depositRepo.remove(d.id))}
                 >
                   <Icon name="trash" />
                 </IconButton>

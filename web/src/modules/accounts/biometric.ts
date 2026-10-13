@@ -5,12 +5,20 @@
  * to the vault id; if the device's biometrics change, the OS destroys it and the master password is
  * needed again. Without biometrics on the device the whole feature is simply unavailable.
  */
-import { CryptoError, dekFromBytes, unwrapDekBytes, verifyDek, wipe } from '@/core/crypto';
+import {
+  CryptoError,
+  dekFromBytes,
+  unwrapDekBytes,
+  vaultSealName,
+  verifyDek,
+  wipe,
+} from '@/core/crypto';
 import { getPlatform, type BiometricPromptText } from '@/core/platform';
 import { t } from '@/strings';
 import { readHeader, unlockWithDek, VaultError } from './vault';
 
-export const sealName = (vaultId: string): string => `vault-dek:${vaultId}`;
+/** Shared with the device reset (`core/reset`), which must drop the seal without importing this module. */
+export const sealName = vaultSealName;
 
 const prompt = (): BiometricPromptText => ({
   title: t.accounts.biometric.promptTitle,

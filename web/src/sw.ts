@@ -7,7 +7,7 @@ import {
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import {
   asPayload,
-  FALLBACK_PAYLOAD,
+  fallbackPayload,
   parsePushMessage,
   pushAad,
   type PushPayload,
@@ -70,20 +70,24 @@ function readSyncKey(): Promise<CryptoKey | undefined> {
 
 async function payloadOf(text: string): Promise<{ key?: string; payload: PushPayload }> {
   const message = parsePushMessage(text);
-  if (!message) return { payload: FALLBACK_PAYLOAD };
+  if (!message) return { payload: fallbackPayload(self.navigator.languages) };
   try {
     if (!isEncrypted(message.payload)) {
       return {
         key: message.key,
-        payload: asPayload(JSON.parse(message.payload)) ?? FALLBACK_PAYLOAD,
+        payload:
+          asPayload(JSON.parse(message.payload)) ?? fallbackPayload(self.navigator.languages),
       };
     }
     const key = await readSyncKey();
-    if (!key) return { key: message.key, payload: FALLBACK_PAYLOAD };
+    if (!key) return { key: message.key, payload: fallbackPayload(self.navigator.languages) };
     const plain = await decryptValue(key, pushAad(message.key), message.payload);
-    return { key: message.key, payload: asPayload(plain) ?? FALLBACK_PAYLOAD };
+    return {
+      key: message.key,
+      payload: asPayload(plain) ?? fallbackPayload(self.navigator.languages),
+    };
   } catch {
-    return { key: message.key, payload: FALLBACK_PAYLOAD };
+    return { key: message.key, payload: fallbackPayload(self.navigator.languages) };
   }
 }
 

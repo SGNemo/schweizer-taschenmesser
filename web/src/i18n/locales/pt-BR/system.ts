@@ -1,0 +1,91 @@
+import { formatNumber } from '@/core/i18n/format';
+import type { Strings } from '@/strings';
+
+export const system: Strings['system'] = {
+  title: 'Informações do sistema',
+  lead: 'O que tem neste computador e quanto ele está sendo usado? Os valores só são exibidos: nada é salvo nem enviado.',
+  loading: 'Lendo os valores…',
+  failed: 'Não foi possível ler os valores.',
+  refresh: 'Atualizado a cada 3 segundos.',
+  refreshNow: 'Atualizar agora',
+  system: 'Sistema',
+  os: 'Sistema operacional',
+  uptime: 'Ligado há',
+  uptimeValue: (d: number, h: number, m: number) =>
+    d > 0 ? `${d} ${d === 1 ? 'dia' : 'dias'}, ${h} h` : h > 0 ? `${h} h, ${m} min` : `${m} min`,
+  cpu: 'Processador',
+  cores: (physical: number | null, threads: number) =>
+    physical
+      ? `${physical} ${physical <= 1 ? 'núcleo' : 'núcleos'}, ${threads} threads`
+      : `${threads} threads`,
+  load: (p: number) => `Uso ${p} %`,
+  memory: 'Memória RAM',
+  memoryUsed: (used: string, total: string, p: number) => `${used} de ${total} em uso (${p} %)`,
+  battery: 'Bateria',
+  batteryValue: (p: number | null, charging: boolean, plugged: boolean) =>
+    `${p === null ? 'Carga desconhecida' : `${p} %`}${charging ? ', carregando' : plugged ? ', na tomada' : ', na bateria'}`,
+  gpu: 'Gráficos',
+  noGpu: 'Nenhuma placa de vídeo encontrada.',
+  network: 'Rede (endereços locais)',
+  noNetwork: 'Nenhuma conexão de rede encontrada.',
+  processes: 'Programas que mais usam memória',
+  processesHint:
+    'Só para visualização. Você pode encerrar programas no Gerenciador de Tarefas do Windows.',
+  program: 'Programa',
+  instances: (n: number) => (n <= 1 ? `${n} processo` : `${n} processos`),
+  live: 'Ao vivo',
+  clock: (mhz: number) =>
+    `${formatNumber(mhz / 1000, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} GHz`,
+  download: 'Recebendo',
+  upload: 'Enviando',
+  tileNetwork: 'Rede',
+  gpuOwn: (size: string) => `${size} de memória de vídeo`,
+  gpuShared: (size: string) => `até ${size} de memória compartilhada`,
+  gpuActive: 'ativa',
+  gpuDriver: (v: string) => `Driver ${v}`,
+  gpuNote:
+    'O Windows não mostra de forma confiável o uso e a temperatura da placa de vídeo sem um programa extra.',
+  thisPc: 'Este computador',
+  board: 'Placa-mãe',
+  bios: 'BIOS',
+  ram: 'Pentes de memória',
+  windowsBuild: 'Versão do Windows',
+  lastBoot: 'Última reinicialização',
+  displays: 'Telas',
+  display: (w: number, h: number, hz: number, primary: boolean) =>
+    `${w} × ${h}, ${hz} Hz${primary ? ' (tela principal)' : ''}`,
+  audio: 'Áudio',
+  audioOut: (n: string) => `Saída: ${n}`,
+  audioIn: (n: string) => `Entrada: ${n}`,
+  cpuTemp: 'Temperatura da CPU',
+  cpuTempGap:
+    'indisponível – o Windows só a informa com direitos de administrador ou drivers extras',
+  adapters: 'Rede',
+  adapterKind: {
+    ethernet: 'Cabo',
+    wifi: 'Wi-Fi',
+    virtual: 'virtual',
+    other: 'Outros',
+  } as Record<string, string>,
+  connected: 'conectado',
+  disconnected: 'desconectado',
+  ipv4: 'IPv4',
+  ipv6: 'IPv6',
+  showAll: 'Mostrar todos os endereços',
+  hideAll: 'Mostrar menos',
+  ssid: 'Rede',
+  signal: (word: string, p: number) => `Sinal ${word} (${p} %)`,
+  signalWords: { strong: 'forte', ok: 'médio', weak: 'fraco' } as Record<string, string>,
+  virtualNote: 'Adaptadores virtuais (ex.: para WSL, Hyper-V ou VPN) aparecem esmaecidos.',
+  publicIp: 'Endereço IP público',
+  publicIpButton: 'Consultar IP público',
+  publicIpNote:
+    'Consulta o serviço api.ipify.org. Só com um clique; o resultado só é exibido, não é salvo.',
+  publicIpFailed: 'A consulta não deu certo.',
+  cpuColumn: 'CPU',
+  openTaskManager: 'Abrir no Gerenciador de Tarefas',
+  sparkCpu: 'Uso do processador nos últimos 5 minutos',
+  sparkRam: 'Uso da memória nos últimos 5 minutos',
+  sparkNet: 'Taxa de recebimento nos últimos 5 minutos',
+  batteryTile: 'Bateria',
+};

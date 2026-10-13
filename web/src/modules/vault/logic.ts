@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { addDaysStr, daysBetween } from '@/core/time/dates';
 import type { DocCategory, VaultDocument } from './schema';
 
@@ -80,7 +81,7 @@ export function sortDocuments<T extends VaultDocument>(docs: readonly T[], today
     if (RANK[sa] !== RANK[sb]) return RANK[sa] - RANK[sb];
     const da = nextRelevantDate(a, today) ?? '9999-12-31';
     const db = nextRelevantDate(b, today) ?? '9999-12-31';
-    return da.localeCompare(db) || a.title.localeCompare(b.title, 'de');
+    return da.localeCompare(db) || compareText(a.title, b.title);
   });
 }
 

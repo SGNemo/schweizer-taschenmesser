@@ -18,25 +18,50 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'defaultView',
-      label: t.calendar.meta.settings.defaultView,
+      get label() {
+        return t.calendar.meta.settings.defaultView;
+      },
       type: 'select',
       options: [
-        { value: 'month', label: t.calendar.meta.settings.defaultView_month },
-        { value: 'week', label: t.calendar.meta.settings.defaultView_week },
-        { value: 'day', label: t.calendar.meta.settings.defaultView_day },
+        {
+          value: 'month',
+          get label() {
+            return t.calendar.meta.settings.defaultView_month;
+          },
+        },
+        {
+          value: 'week',
+          get label() {
+            return t.calendar.meta.settings.defaultView_week;
+          },
+        },
+        {
+          value: 'day',
+          get label() {
+            return t.calendar.meta.settings.defaultView_day;
+          },
+        },
       ],
     },
     {
       key: 'defaultReminderTime',
-      label: t.calendar.meta.settings.defaultReminderTime,
+      get label() {
+        return t.calendar.meta.settings.defaultReminderTime;
+      },
       type: 'text',
-      help: t.calendar.meta.settings.timeHelp,
+      get help() {
+        return t.calendar.meta.settings.timeHelp;
+      },
     },
     {
       key: 'allDayNotifyTime',
-      label: t.calendar.meta.settings.allDayNotifyTime,
+      get label() {
+        return t.calendar.meta.settings.allDayNotifyTime;
+      },
       type: 'text',
-      help: t.calendar.meta.settings.timeHelp,
+      get help() {
+        return t.calendar.meta.settings.timeHelp;
+      },
     },
   ],
 };

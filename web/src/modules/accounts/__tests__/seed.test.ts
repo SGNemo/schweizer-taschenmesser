@@ -1,8 +1,11 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
+import { setPlatform, type BiometricService, type UnsealResult } from '@/core/platform';
+import { createWebPlatform } from '@/core/platform/web';
 import { createSeedContext } from '@/core/seed/context';
 import { DEMO_PASSPHRASE as CORE_PASSPHRASE } from '@/core/seed/dev';
 import type { SeedModule } from '@/core/seed/types';
+import { enableBiometricUnlock, sealName } from '../biometric';
 import rawSeedModule, { DEMO_ENTRIES, DEMO_PASSPHRASE } from '../seed';
 import { entryRepo, vaultRepo } from '../repo';
 import { getSession } from '../session';
@@ -11,6 +14,7 @@ import {
   decryptAll,
   isReadable,
   lockVault,
+  readHeader,
   resetAttempts,
   unlockVault,
 } from '../vault';
@@ -69,5 +73,33 @@ describe('accounts seed', () => {
     await createVault('Eigenes-Master-Passwort', { m: 64, t: 1, p: 1 });
     await seedModule.beforeRemove!();
     expect(getSession().status).toBe('locked');
+  });
+
+  it('beforeRemove drops the biometric seal of the vault about to be deleted', async () => {
+    const sealed = new Map<string, Uint8Array>();
+    const biometrics: BiometricService = {
+      available: async () => true,
+      async seal(name, secret) {
+        sealed.set(name, new Uint8Array(secret));
+        return 'sealed';
+      },
+      unseal: async (): Promise<UnsealResult> => ({ status: 'missing' }),
+      has: async (n) => sealed.has(n),
+      remove: async (n) => void sealed.delete(n),
+    };
+    setPlatform({ ...createWebPlatform(), biometrics });
+    try {
+      await createVault('Eigenes-Master-Passwort', { m: 64, t: 1, p: 1 });
+      await enableBiometricUnlock('Eigenes-Master-Passwort');
+      const found = await readHeader();
+      expect(found.state).toBe('ready');
+      if (found.state !== 'ready') return;
+      expect(sealed.has(sealName(found.header.vaultId))).toBe(true);
+      await seedModule.beforeRemove!();
+      expect(sealed.size).toBe(0);
+      expect(getSession().status).toBe('locked');
+    } finally {
+      setPlatform(undefined);
+    }
   });
 });

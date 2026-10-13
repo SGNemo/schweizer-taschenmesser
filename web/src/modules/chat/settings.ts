@@ -18,22 +18,38 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'defaultEngine',
-      label: s.defaultEngine,
+      get label() {
+        return s.defaultEngine;
+      },
       type: 'select',
       options: [
-        { value: 'router', label: t.chat.engineRouter },
-        { value: 'local', label: t.chat.engineLocal },
+        {
+          value: 'router',
+          get label() {
+            return t.chat.engineRouter;
+          },
+        },
+        {
+          value: 'local',
+          get label() {
+            return t.chat.engineLocal;
+          },
+        },
       ],
     },
     {
       key: 'keepDays',
-      label: s.keepDays,
+      get label() {
+        return s.keepDays;
+      },
       type: 'select',
       options: KEEP_OPTIONS.map((v) => ({
         value: v,
         label: v === '0' ? s.keepForever : s.keepDaysOption(Number(v)),
       })),
-      help: s.keepHint,
+      get help() {
+        return s.keepHint;
+      },
     },
   ],
 };

@@ -1,3 +1,4 @@
+import { formatTimestamp } from '@/core/i18n/format';
 import { useState } from 'react';
 import { useApiBatches } from '@/core/dataapi/pending';
 import { apiModules } from '@/core/dataapi/scope';
@@ -27,8 +28,10 @@ import { Badge, Button, Card, Checkbox, Dialog, SelectField, Switch, TextField }
 import styles from './settings.module.css';
 
 const EXPIRY_CHOICES = ['30', '90', '365', 'never'];
-const dateTime = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
-const date = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' });
+const dateTime = { format: (at: number | Date) => formatTimestamp(new Date(at).getTime()) };
+const date = {
+  format: (at: number | Date) => formatTimestamp(new Date(at).getTime(), { dateStyle: 'medium' }),
+};
 
 type Draft = { name: string; expiry: string; grants: Record<string, Grant>; autoCommit: boolean };
 const emptyDraft = (): Draft => ({ name: '', expiry: '90', grants: {}, autoCommit: false });

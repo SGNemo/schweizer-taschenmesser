@@ -14,15 +14,21 @@ import { t } from '@/strings';
  */
 const manifest: ModuleManifest = {
   id: 'accounts',
-  name: t.accounts.meta.name,
+  get name() {
+    return t.accounts.meta.name;
+  },
   icon: 'lock',
   version: 1,
   dataApi: false,
-  description: t.accounts.meta.description,
+  get description() {
+    return t.accounts.meta.description;
+  },
   routes: [
     {
       path: '/accounts',
-      label: t.accounts.meta.route,
+      get label() {
+        return t.accounts.meta.route;
+      },
       nav: true,
       component: () => import('./routes/AccountsPage'),
     },
@@ -37,7 +43,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'status',
-      title: t.accounts.meta.widget,
+      get title() {
+        return t.accounts.meta.widget;
+      },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/StatusWidget'),

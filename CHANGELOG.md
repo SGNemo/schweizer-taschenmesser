@@ -4,94 +4,96 @@ Release notes are generated from Conventional Commits (`npm run changelog -- --v
 
 ## Unreleased
 
-### Breaking
-- **Nachrichten, Habit-Tracker und Zeiterfassung sind nicht mehr sichtbar** (stillgelegt). Ihre Daten bleiben gespeichert, synchronisieren weiter und sind in jedem Backup enthalten; eine Wiederherstellung der Oberfläche gibt es nicht. Wer die Daten braucht, exportiert sie vorher über ein Backup (Einstellungen → Backup).
-- **Werkzeuge:** Prozent & MwSt und Kosten teilen sind jetzt Modi des Rechners, Base64, JSON, UUID und Hash stecken im Werkzeug „Entwickler“, der Notizzettel ist der feste „Zettel“ oben in den Notizen. Gespeicherte Werkzeug-Auswahl wird übernommen.
-- **Einkaufsliste und Packlisten sind das neue Modul „Listen“** (Einkauf, Packliste, Checkliste), **Apps & Links sind die Ansicht „Lesezeichen“ der Merkliste** (Kacheln nach erstem Tag). Bestehende Daten werden beim Start, nach Sync und nach Backup-Import kopiert; die alten Module sind stillgelegt. **Alle Geräte müssen aktualisiert werden**: ein altes Gerät schreibt weiter in die alten Tabellen. Die acht Startseiten-Vorlagen von Apps & Links entfallen; `mailto:`/`tel:`-Links lassen sich im Lesezeichen-Editor nur als http(s) neu speichern.
-- **Verträge & Garantien gehen in „Unterlagen“ (früher Dokumente) auf, Geburtstage und Geschenkideen im neuen Modul „Personen“.** Bestehende Daten werden beim Start, nach Sync und nach Backup-Import kopiert; die alten Module sind stillgelegt. Geschenkideen werden der Person mit demselben Namen zugeordnet, sonst wird eine neue Person angelegt. **Alle Geräte müssen aktualisiert werden**: ein altes Gerät schreibt weiter in die alten Tabellen. Erinnerungs-Einstellungen werden übernommen (Unterlagen: eigene Vorlaufzeit für Kündigungsfristen).
-- **Erinnerungen sind jetzt Termine der Art „Erinnerung“ im Kalender** (Tab „Erinnerungen“; `/reminders` leitet dorthin). Bestehende Erinnerungen werden beim Start, nach Sync und nach Backup-Import kopiert, pausierte bleiben pausiert; das Modul ist stillgelegt, ebenso sein Dashboard-Widget (die Einträge erscheinen in „Heute & Morgen“). **Alle Geräte müssen aktualisiert werden**: ein altes Gerät schreibt weiter in die alten Tabellen. Die Standard-Uhrzeit wird übernommen.
-- **Die alten Tabellen sind entfernt** (Nachrichten, Habits, Zeiterfassung, Erinnerungen, Einkauf, Packlisten, Apps & Links, Geburtstage, Geschenke, Verträge: 15 Tabellen, Datenbank-Version 18). Ihre Daten waren seit 0.5–0.7 in die neuen Module kopiert; **wer noch Daten in einer dieser Tabellen hat (Geräte < 0.7, die nie aktualisiert wurden), verliert sie.** Backups aus Versionen vor 0.5 lassen sich weiter einlesen, die alten Tabellen darin werden übersprungen (die Vorschau nennt die Zahl) – Einkauf, Packlisten, Verträge, Geburtstage, Geschenke und Erinnerungen daraus kommen nicht mehr zurück.
-- **Systeminfo** ist ein Tab von „Dieser PC“ (früher Datenträger); der Pfad `/system` entfällt.
+## 1.0.0 (2026-10-07) – "Nemo 1.0.0"
+Erste stabile Hauptversion: neue Oberfläche („Klar 2“), neu geordnete Module, KI-Einträge, Fokus-Hilfen und fünf Sprachen. Bundle-ID, Updater-Endpunkt und Backup-Formate bleiben gleich; Installationen ab 0.3.0 aktualisieren sich in der App.
+
+### Wichtig vor dem Update
+- **Daten alter Module werden nicht übernommen, wenn du direkt von 0.3.x kommst.** Entfernt sind die Tabellen von Einkauf, Packlisten, Apps & Links, Geburtstagen, Geschenken, Verträgen, Erinnerungen, Gewohnheiten, Zeiterfassung und Nachrichten (News). Sie wandern nicht in die neuen Module Listen, Merkliste, Personen, Unterlagen und Kalender. Wer solche Daten braucht, sichert sie vorher (Einstellungen → Backup) oder bleibt bei 0.3.1. Todos, Notizen, Kalender, Finanzen und Tresor sind nicht betroffen.
+- Die Datenbank wird auf Version 19 migriert; danach läuft keine ältere App mehr mit diesen Daten. Vor dem Update legt die App ein Sicherungs-Backup an.
+- Installationen bis 0.2.x können sich nicht mehr selbst aktualisieren (Dateinamen jetzt `Nemo-*`) und müssen neu installiert werden.
+- Alle Geräte, die per Sync verbunden sind, auf dieselbe Version bringen.
 
 ### Neu
-- **Ausgeschaltete Module direkt einschalten:** Wenn ein Hinweis ein ausgeschaltetes Modul nennt (z. B. „Auf die Einkaufsliste“ im Vorrat ohne Listen), gibt es einen Knopf „Aktivieren“ und die Aktion wird danach gleich ausgeführt. Dasselbe gilt für die Teilen-Seite und für Antworten des KI-Assistenten.
-- **Fokus- und Aufmerksamkeitshilfen (Paket 1 „Anfangen“), alle einzeln abschaltbar unter Einstellungen → Darstellung → „Fokus & Aufmerksamkeit“:** „Jetzt dran“ schlägt oben auf der Übersicht eine einzige Aufgabe vor (Anfangen, Später, Etwas anderes); der Tagesplan zeigt höchstens drei Dinge für heute und was schon erledigt ist; der Fokusmodus zeigt eine Aufgabe mit Schritten und Ring-Timer ohne Menüs (Zustand bleibt beim Neuladen, Anzeige oben, sanftes Ende); „Als Nächstes“ zeigt die Zeit bis zum nächsten Termin; ToDos haben eine geschätzte Dauer (auch per Schnellerfassung: „… 15 min“) und lassen sich für heute einplanen; „Jetzt wichtig“ ist ruhiger („Wartet noch“ eingeklappt, kein roter Tageszähler für alte ToDos, „Neu planen“ verteilt sie auf die nächsten Tage).
-- **Ruhige Erinnerungen (Paket 2), alle abschaltbar unter Einstellungen → Benachrichtigungen → „Ruhige Erinnerungen“:** Ist die App offen, erscheint eine fällige Erinnerung als Karte mit „Erledigt“ und „Später“ (10 Min, 1 Std, heute Abend, morgen früh, wenn ich am PC bin). Ruhezeit (22–7 Uhr) für automatische Zusätze, höchstens 3 Hinweise pro Stunde (der Rest wird zu einem Hinweis zusammengefasst), optional gestaffelte Erinnerungen vor Terminen und eine sanfte Nachfrage. Statt einzelner ToDo-Hinweise gibt es morgens einen Hinweis, der die ToDos für heute nennt. Das Ende einer Fokus-Runde kann auch bei geschlossener App melden. „Woran war ich?“ zeigt auf der Übersicht nach einer längeren Pause den Weg zurück.
-- **Erfassen, Ruhe, Wiederfinden (Paket 3):** Die Schnellerfassung fragt bei unklarem Text nicht mehr nach, sondern legt ihn so, wie du ihn getippt hast, im ToDo-Eingang ab (abschaltbar unter Schnellerfassung). Strg+Enter öffnet das ganze Formular mit dem getippten Text. „Eingang sortieren“ geht die Dinge im Eingang eins nach dem anderen durch. Die Suche (Strg+K) zeigt zuerst, was du zuletzt benutzt hast (Verlauf auf dem Gerät, löschbar). Darstellung: Textgröße „Sehr groß“, Zeilenabstand „Luftig“, „Bewegung: Weniger“ in der App und die ruhige Übersicht „Nur das Wichtigste“.
-- **Sichtbarer Fortschritt ohne Druck (Paket 4), abschaltbar unter Einstellungen → Darstellung → „Fokus & Aufmerksamkeit“:** wiederkehrende ToDos zeigen „n in Folge“ (ein Pausentag bricht nichts ab, es gibt nie einen Verlust), ein freundlicher Wochenrückblick in „Jetzt dran“, abends „Tag abschließen“ (Übriges mit einem Tipp auf morgen schieben) und in den Listen „Aus Vorlage“ mit Morgenroutine, Abendroutine und Wochenplanung.
-- **Kalender:** Termine können vorher benachrichtigen (zum Beginn bis 1 Tag vorher, auch bei Wiederholungen); ganztägige Termine zu einer einstellbaren Uhrzeit.
-- **ToDos:** Aufgaben wiederholen sich (Abhaken legt die nächste an), „Irgendwann“ hält Aufgaben aus den offenen Listen heraus; wiederkehrende Fälligkeiten erscheinen im Kalender.
-- Werkzeug-Rahmen: `/tools/<id>`, Befehlspalette „Werkzeug: …“, Strg+. öffnet die Werkzeuge; breiterer Dialog, „Zurück“ in der Kopfzeile.
-- Uhrzeit der Abo-Erinnerung einstellbar; „Startdaten“-Knopf auch bei Verträgen, Packlisten, Vorräten, Dokumenten, Geschenken, Budgets und Notizen.
-
-### Behoben
-- Abo-Namen brechen nicht mehr buchstabenweise um; „Auf die Einkaufsliste“ meldet, wenn die Einkaufsliste aus ist; veraltete Texte (Kalender, Backup-Hinweis im Assistenten, Profil „Produktiv“) korrigiert.
-
-## 0.3.1 (2026-10-01) – "Nemo 0.3.1"
-Kleines Update: neue Wortmarke. Installationen von 0.3.0 bekommen es per In-App-Update angeboten, die Daten bleiben erhalten.
-
-### Geändert
-- Neue Wortmarke „Nemo“ im Clownfisch-Stil: In der Seitenleiste und der Kopfzeile erscheint der Schriftzug statt nur des Fisch-Symbols.
-- README-Kopfbild und Vorschaubild für soziale Netzwerke mit der neuen Wortmarke und dem Claim.
+- **Oberfläche „Klar 2“:** neue Farben und Radien, Übersicht als Startseite mit Widgets, Bereiche und Seitenleiste, Einstellungen mit Suche und „Über Nemo“, Rückgängig-Verlauf, Tastenkürzel.
+- **Module neu geordnet:** Listen (Einkauf, Packliste, Checkliste), Personen (Geburtstage, Geschenke), Unterlagen (Verträge), Erinnerungen als Kalender-Termine, Werkzeuge von 18 auf 12, „Dieser PC“ mit System-Info.
+- **KI-Einträge** in jedem Modul (Regeln zuerst, Cloud nur als Rückfall, Vorschau mit Rückgängig), lokales Modell, Chat-Modul und Hauptschalter „KI abschalten“.
+- **Fokus- und Aufmerksamkeitshilfen:** „Als Nächstes“, Tagesplan, Fokusmodus, ruhige Erinnerungen mit „Später“, Morgen-Übersicht, Erfassen ohne Rückfrage, Fortschritt ohne Druck. Alles abschaltbar.
+- **Lesbarkeit:** Lesehilfe, Textgröße „Extra groß“, Zeilenabstand „Luftig“, weniger Bewegung.
+- **Fünf Sprachen:** Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien).
+- **Absturzfestigkeit:** Diagnose mit Vorschau und „Fehler melden“, Wiederherstellungsbildschirm, sicherer Modus, Fehlerkarten pro Modul.
+- **Supporter-Modus**, Kalender-Benachrichtigungen vorab, wiederkehrende Todos, Passwort-Generator und Brave-Erweiterung, Rechtliches in „Über Nemo“.
 
 ### Behoben, Sicherheit
-- Keine Änderungen.
+- Sicherheits-Review vor dem Start mit kleinen Korrekturen; CodeQL-Befunde bearbeitet. Viele kleine UI- und Testkorrekturen.
 
 ### Hinweise
-- **Keine Breaking Changes:** interne IDs, Backup-Formate, Datenbank und Updater-Endpunkt sind unverändert.
-- **Bekanntes:** Die Geräte-Funktionen (Datenträger, Windows Hello, Android-Biometrie, Sync mit älteren Geräten) sind weiter nur von Hand geprüft. Bitte Fehler melden.
+- **Bekannt:** Gerätefunktionen (Windows Hello, Android-Keystore, Disk-Modul, Update-Austausch) sind nur von Hand prüfbar. Bitte Fehler melden.
+
+## 0.3.1 (2026-10-01) – "Nemo 0.3.1"
+Small update: new wordmark. Installations of 0.3.0 are offered it via in-app update; data stays intact.
+
+### Changed
+- New "Nemo" wordmark in clownfish style: the sidebar and the header show the lettering instead of just the fish icon.
+- README header image and social-media preview image with the new wordmark and the claim.
+
+### Fixed, security
+- No changes.
+
+### Notes
+- **No breaking changes:** internal IDs, backup formats, database and updater endpoint are unchanged.
+- **Known:** the device features (disk, Windows Hello, Android biometrics, sync with older devices) are still only checked by hand. Please report bugs.
 
 ## 0.3.0 (2026-10-01) – "Nemo 0.3.0"
-Erste stabile Version unter dem Namen Nemo. Sie ist die „neueste Version“: Installationen von 0.2.0 bekommen sie per In-App-Update angeboten, die Daten bleiben erhalten. Sie enthält alles aus 0.3.0-beta.1 (siehe unten) plus die Änderungen hier.
+First stable version under the name Nemo. It is the "latest version": installations of 0.2.0 are offered it via in-app update; data stays intact. It contains everything from 0.3.0-beta.1 (see below) plus the changes here.
 
-### Neu
-- Neues App-Icon (Clownfisch) und neue Wortmarke „Nemo“.
-- Dazu alles aus der Vorabversion: Einrichtungsassistent, Schnell erfassen, Datenträger- und Systeminfo-Modul (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge Text/Zeitzonen/Bild/PDF, flaches Design „Klar“, MIT-Lizenz.
+### New
+- New app icon (clownfish) and new "Nemo" wordmark.
+- Plus everything from the pre-release: setup assistant, quick capture, disk and system info module (Windows), pantry, time tracking, gift ideas, tools text/time zones/image/PDF, flat design "Klar", MIT licence.
 
-### Geändert
-- Interne Verbesserungen an Build und Tests (schnellere Prüfungen). Keine Änderung am Verhalten der App.
+### Changed
+- Internal improvements to build and tests (faster checks). No change in the app's behaviour.
 
-### Behoben
-- Release-Prüfung der Download-Links las ihre Parameter falsch (nur Build-Werkzeug, betrifft die App nicht).
+### Fixed
+- The release check of the download links read its parameters wrongly (build tool only, does not affect the app).
 
-### Sicherheit
-- Keine neuen Änderungen gegenüber 0.3.0-beta.1 (verschlüsselte Backups, Geräte-Tokens, Sync-Tresor v2, verschlüsselte Sicherungskopien vor Updates).
+### Security
+- No new changes compared to 0.3.0-beta.1 (encrypted backups, device tokens, sync vault v2, encrypted backup copies before updates).
 
-### Hinweise
-- **Keine Breaking Changes:** interne IDs, Backup-Formate und Updater-Endpunkt sind unverändert; alte Backups lassen sich weiter importieren. Die lokale Datenbank wird beim ersten Start automatisch auf Version 13 migriert.
-- **Download-Namen:** Dateien heißen jetzt `Nemo-Portable.exe` und `Nemo.apk`; die bisherigen `Taschenmesser-*`-Dateien liegen als Kopie dabei, damit installierte Apps weiter aktualisieren können.
-- **Bekanntes:** Geräte-Funktionen (Datenträger, Windows Hello, Android-Biometrie, Sync mit älteren Geräten) sind nur von Hand geprüft. Bitte Fehler melden.
+### Notes
+- **No breaking changes:** internal IDs, backup formats and updater endpoint are unchanged; old backups can still be imported. The local database is migrated to version 13 automatically on first start.
+- **Download names:** files are now called `Nemo-Portable.exe` and `Nemo.apk`; the previous `Taschenmesser-*` files are included as copies so installed apps can keep updating.
+- **Known:** device features (disk, Windows Hello, Android biometrics, sync with older devices) are only checked by hand. Please report bugs.
 
-## 0.3.0-beta.1 (2026-09-30) – "Nemo 0.3.0-beta.1" (Vorabversion)
-Vorabversion zum Ausprobieren: Sie erscheint nicht als „neueste Version“ und wird nicht automatisch per App-Update angeboten. Die Installation über eine bestehende Installation behält alle Daten.
+## 0.3.0-beta.1 (2026-09-30) – "Nemo 0.3.0-beta.1" (pre-release)
+Pre-release for trying out: it does not appear as the "latest version" and is not offered automatically via app update. Installing over an existing installation keeps all data.
 
-### Neu
-- **Nemo:** neuer Name, neues Logo („Welle“) und ein ruhiges, flaches Design mit Akzentfarben (Hell/Dunkel).
-- **Einrichtungsassistent** für den Start (manuell, nie erzwungen).
-- **Schnell erfassen:** Tastenkürzel, Tray-Symbol und Autostart (Windows), Teilen-Ziel (Android), Eingabe in Alltagssprache.
-- **Datenträger (Windows):** Laufwerke scannen, Treemap, Aufräum-Helfer, doppelte Dateien; Löschen nur mit Sperrliste, Papierkorb als Standard und Bestätigung per Namenseingabe.
-- **Systeminfo (Windows):** CPU, Speicher, Akku, Grafik, Netzwerk.
-- **Neue Module:** Vorrat, Zeiterfassung, Geschenkideen.
-- **Neue Werkzeuge:** Text, Zeitzonen, Bild, PDF.
-- Lizenz: MIT.
+### New
+- **Nemo:** new name, new logo ("Wave") and a calm, flat design with accent colours (light/dark).
+- **Setup assistant** for getting started (manual, never forced).
+- **Quick capture:** keyboard shortcut, tray icon and autostart (Windows), share target (Android), input in everyday language.
+- **Disk (Windows):** scan drives, treemap, clean-up helpers, duplicate files; deleting only with a block list, recycle bin by default and confirmation by typing the name.
+- **System info (Windows):** CPU, memory, battery, graphics, network.
+- **New modules:** pantry, time tracking, gift ideas.
+- **New tools:** text, time zones, image, PDF.
+- Licence: MIT.
 
-### Geändert
-- Kurze README mit Nutzer-Dokumentation unter `docs/user/`.
-- Alle Dateien heißen jetzt Nemo-*; die bisherigen Taschenmesser-*-Dateien liegen als Kopie dabei, damit installierte Apps weiter aktualisieren können.
+### Changed
+- Short README with user documentation under `docs/user/`.
+- All files are now called Nemo-*; the previous Taschenmesser-* files are included as copies so installed apps can keep updating.
 
-### Behoben
-- Android: Teilen-Ziel baute nicht (Android 12+), Statusleisten-Symbol für Benachrichtigungen.
-- Falscher Tag im Zeitstempel der letzten Synchronisierung.
+### Fixed
+- Android: share target did not build (Android 12+), status bar icon for notifications.
+- Wrong day in the timestamp of the last sync.
 
-### Sicherheit
-- Verschlüsselte Backups mit Prüfung vor dem Wiederherstellen; automatische Sicherungen (Windows).
-- Sync: Geräte-Tokens, Sperre bei Fehlversuchen, neuer Tresor (Argon2id), Konfliktprotokoll.
-- Sicherungskopien vor Updates sind verschlüsselt.
+### Security
+- Encrypted backups with a check before restoring; automatic backups (Windows).
+- Sync: device tokens, lockout after failed attempts, new vault (Argon2id), conflict log.
+- Backup copies before updates are encrypted.
 
-### Hinweise
-- **Keine Breaking Changes:** interne IDs, Backup-Formate und Updater-Endpunkt sind unverändert; alte Backups lassen sich weiter importieren. Die lokale Datenbank wird beim ersten Start automatisch auf Version 13 migriert.
-- **Bekanntes:** Die Geräte-Funktionen (Datenträger, Windows Hello, Android-Biometrie, Update auf bestehender Installation) sind nur von Hand geprüft. Bitte Fehler melden.
-- **Vorabversion:** Windows-Portable und APK von Hand von der Releases-Seite laden (SmartScreen-Hinweis bei der EXE ist zu erwarten).
+### Notes
+- **No breaking changes:** internal IDs, backup formats and updater endpoint are unchanged; old backups can still be imported. The local database is migrated to version 13 automatically on first start.
+- **Known:** the device features (disk, Windows Hello, Android biometrics, update over an existing installation) are only checked by hand. Please report bugs.
+- **Pre-release:** download the Windows portable and the APK by hand from the releases page (a SmartScreen notice for the EXE is expected).
 
 ## 0.2.0 (2026-09-30) – "Taschenmesser 0.2.0"
 ### Breaking changes

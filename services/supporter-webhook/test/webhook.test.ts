@@ -84,6 +84,25 @@ describe('Ko-fi webhook', () => {
     expect(kv.data.get('stats:issued')).toBe('1');
   });
 
+  it('a duplicate with another address is acknowledged but sends nothing (address-mismatch)', async () => {
+    const { env, kv, jobs } = makeEnv();
+    await call(env, kofiRequest(donation()));
+    const writesAfterFirst = kv.writes.length;
+    const again = await call(
+      env,
+      kofiRequest(donation({ message_id: 'replayed', email: 'someone.else@example.invalid' })),
+    );
+    expect(again.status).toBe(200);
+    expect(await again.json()).toEqual({ ok: true });
+    expect(jobs).toHaveLength(1); // the stored code never goes to the other address
+    expect(kv.writes).toHaveLength(writesAfterFirst);
+    expect(kv.data.get('stats:issued')).toBe('1');
+    // The same address in other casing or with stray whitespace is still the donor.
+    await call(env, kofiRequest(donation({ email: ' Ada.Donor@Example.invalid ' })));
+    expect(jobs).toHaveLength(2);
+    expect(jobs[1]!.code).toBe(jobs[0]!.code);
+  });
+
   it('another transaction gets another code', async () => {
     const { env, jobs } = makeEnv();
     await call(env, kofiRequest(donation()));
@@ -223,5 +242,33 @@ describe('Ko-fi webhook', () => {
     expect(retry.status).toBe(200);
     expect(sent).toHaveLength(1);
     expect(kv.data.get('stats:issued')).toBe('1');
+  });
+});
+
+describe('configuration checks', () => {
+  it('a missing rate limiter is a misconfiguration (500) unless DEV is set', async () => {
+    const { env, kv, jobs } = makeEnv({ RATE_LIMITER: undefined });
+    expect((await call(env, kofiRequest(donation()))).status).toBe(500);
+    expect((await call(env, new Request('https://h.example.invalid/resend'))).status).toBe(500);
+    expect(kv.writes).toEqual([]);
+    expect(jobs).toEqual([]);
+    const dev = makeEnv({ RATE_LIMITER: undefined, DEV: '1' });
+    expect((await call(dev.env, kofiRequest(donation()))).status).toBe(200);
+    expect(dev.jobs).toHaveLength(1);
+  });
+
+  it('refuses a key id that is not a number in 0..254 (255 is the E2E test key)', async () => {
+    for (const id of ['255', '256', '-1', '1.5', 'abc', '1e2', '0x1', ' ', '']) {
+      const { env, kv, jobs } = makeEnv({ SIGNING_KEY_ID: id });
+      const res = await call(env, kofiRequest(donation()));
+      expect(res.status, JSON.stringify(id)).toBe(500);
+      expect(kv.writes).toEqual([]);
+      expect(jobs).toEqual([]);
+    }
+    for (const id of ['0', '7', '254']) {
+      const { env, jobs } = makeEnv({ SIGNING_KEY_ID: id });
+      expect((await call(env, kofiRequest(donation()))).status, id).toBe(200);
+      expect(jobs).toHaveLength(1);
+    }
   });
 });

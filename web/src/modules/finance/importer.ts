@@ -1,5 +1,5 @@
 import { BankFormatError, bankDedupeKey, parseBankFile } from '@/core/io/bank';
-import { formatMoney, parseMoney } from '@/core/money';
+import { formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
 import type { ImportInput, ImporterRuntime, ImportParseResult } from '@/core/importer/types';
 import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
@@ -62,7 +62,8 @@ const runtime: ImporterRuntime = {
     const name = (input.values.name ?? '').trim();
     const balance = parseMoney(input.values.balance ?? '', { allowNegative: true });
     if (!name) return { candidates: [], notes: [t.onboarding.required] };
-    if (balance === undefined) return { candidates: [], notes: [t.onboarding.finance.badBalance] };
+    if (balance === undefined)
+      return { candidates: [], notes: [t.onboarding.finance.badBalance(formatMoneyInput(123456))] };
     const order = await accountRepo.active().count();
     return {
       candidates: [

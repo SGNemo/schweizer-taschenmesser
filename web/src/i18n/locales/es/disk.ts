@@ -1,0 +1,388 @@
+import type { Strings } from '@/strings';
+
+export const disk: Strings['disk'] = {
+  meta: {
+    name: 'Este PC',
+    description:
+      'Unidades con análisis de las carpetas más grandes e información del sistema (procesador, memoria, batería, red): solo para ver, solo en el PC; el análisis no cambia nada.',
+    route: 'Este PC',
+    route2: 'Análisis de disco',
+    widget: 'Unidades',
+    widget2: 'Sistema',
+  },
+  title: 'Este PC',
+  tabsLabel: 'Sección',
+  tabs: { drives: 'Unidades', system: 'Sistema' } as const,
+  lead: '¿Qué ocupa el espacio? Analiza una unidad y explora las carpetas más grandes. No se cambia ni se sube nada.',
+  loading: 'Leyendo unidades …',
+  empty: 'No se encontraron unidades.',
+  failedDrives: 'No se pudieron leer las unidades.',
+  kind: {
+    ssd: 'SSD',
+    hdd: 'Disco duro (HDD)',
+    fixed: 'Disco duro',
+    removable: 'Unidad extraíble / USB',
+    network: 'Unidad de red',
+    ram: 'Disco RAM',
+    unknown: 'Unidad',
+  },
+  driveName: (root: string, label: string) => (label ? `${root} (${label})` : root),
+  open: (name: string) => `Analizar ${name}`,
+  usedOf: (used: string, total: string) => `${used} de ${total} ocupado`,
+  free: (free: string) => `${free} libre`,
+  percentUsed: (p: number) => `${p} % ocupado`,
+  card: {
+    scan: 'Analizar',
+    systemDrive: 'Unidad del sistema',
+    type: {
+      nvme: 'SSD NVMe',
+      ssd: 'SSD',
+      hdd: 'Disco duro (HDD)',
+      usb: 'Unidad USB',
+      network: 'Unidad de red',
+      removable: 'Unidad extraíble',
+      ram: 'Disco RAM',
+      drive: 'Unidad',
+    } as Record<string, string>,
+    advice: {
+      ok: 'Hay espacio de sobra.',
+      tight: 'Empieza a faltar espacio: conviene limpiar pronto.',
+      full: 'Casi llena: se recomienda limpiar.',
+    } as Record<string, string>,
+    healthLabel: 'Estado',
+    health: {
+      ok: 'Correcto',
+      warning: 'La unidad informa de problemas: haz una copia de tus datos.',
+      needsAdmin: 'no disponible: Windows solo da este valor con permisos de administrador',
+      unsupported: 'no disponible: esta unidad no lo informa',
+    } as Record<string, string>,
+    temperature: (c: number) => `${c} °C`,
+    helpSmart:
+      'SMART es el autodiagnóstico que las unidades modernas informan por sí mismas. Nemo solo lee lo que Windows da sin permisos de administrador; a menudo, solo la temperatura.',
+    lastScan: (when: string) => `Último análisis: ${when}`,
+    neverScanned: 'Aún sin analizar',
+    growth: (delta: string) => `Ocupado desde el último análisis: ${delta}`,
+    history: 'Espacio ocupado desde que se abrió la app',
+    historyHint: 'Historial desde que se abrió la app; no se guarda.',
+    io: (read: string, write: string) => `Lectura ${read} · Escritura ${write}`,
+    model: 'Modelo',
+  },
+  quick: {
+    title: 'Vista rápida',
+    lead: 'Esto suele poder limpiarse rápido, sin un nuevo análisis. Los tamaños son aproximados.',
+    recycle: 'Papelera',
+    recycleHint: 'Vacíala en el Explorador; Nemo nunca borra nada definitivamente por su cuenta.',
+    atLeast: (size: string) => `al menos ${size}`,
+    biggest: 'Carpetas más grandes del último análisis',
+    biggestHint: 'Del análisis de esta sesión.',
+  },
+  actions: {
+    reveal: 'Mostrar en el Explorador',
+    copyPath: 'Copiar ruta',
+    copied: 'Ruta copiada.',
+    addBasket: 'A la cesta',
+    inBasket: 'En la cesta',
+    remove: 'Sacar de la cesta',
+    delete: 'Eliminar …',
+    protectedTitle: 'Protegido',
+    protectedText: (reason: string) => `Este elemento no se puede eliminar aquí: ${reason}`,
+    heading: 'Acciones',
+  },
+  deny: {
+    missing: 'Ya no existe o ya no se puede leer.',
+    'drive-root': 'La raíz de una unidad nunca se elimina.',
+    'system-folder': 'Pertenece a Windows o a programas instalados.',
+    'user-profile': 'Es una carpeta de usuario (perfil). Ábrela y elige dentro carpetas concretas.',
+    'app-data': 'La carpeta «AppData» y sus carpetas principales pertenecen a los programas.',
+    'system-file': 'Es un archivo del sistema (paginación, hibernación).',
+    'own-app': 'Pertenece a esta app (programa o datos) o la contiene.',
+    'running-program': 'Contiene un programa que se está ejecutando.',
+    'scan-root': 'La propia carpeta analizada no se puede eliminar.',
+    'not-an-entry': 'Los archivos pequeños agrupados no son un elemento individual.',
+  },
+  basket: {
+    title: 'Cesta de selección',
+    empty: 'Aún no hay nada. Añade elementos con «A la cesta» y elimínalos juntos.',
+    total: (n: number, size: string) =>
+      n === 1 ? `1 elemento, en total ${size}` : `${n} elementos, en total ${size}`,
+    clear: 'Vaciar cesta',
+    deleteAll: 'Eliminar todo …',
+    remove: (name: string) => `Sacar ${name} de la cesta`,
+    added: (n: number) => `${n} ${n === 1 ? 'elemento' : 'elementos'} en la cesta`,
+  },
+  del: {
+    title: 'Confirmar eliminación',
+    titleDone: 'Resultado',
+    planning: 'Comprobando la selección …',
+    planFailed: 'No se pudo comprobar la selección.',
+    nothing: 'No se puede eliminar nada de esto.',
+    items: 'Se eliminará',
+    total: (n: number, size: string, files: string) =>
+      `${n} ${n === 1 ? 'elemento' : 'elementos'} · ${size} · ${files} archivos`,
+    modeLabel: '¿Qué hacer con ello?',
+    modeTrash: 'Mover a la papelera (recomendado)',
+    modePermanent: 'Eliminar definitivamente, sin papelera',
+    trashBtn: 'A la papelera',
+    permBtn: 'Eliminar definitivamente',
+    twiceHint: 'Como es mucho o definitivo, Nemo vuelve a preguntar.',
+    againTitle: '¿Eliminar de verdad?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 elemento' : `${n} elementos`} con ${size} (${files} archivos) irán a la papelera.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 elemento' : `${n} elementos`} con ${size} (${files} archivos) se eliminarán definitivamente. No se puede deshacer.`,
+    againYesTrash: 'Sí, a la papelera',
+    againYesPermanent: 'Sí, eliminar definitivamente',
+    back: 'Atrás',
+    warnUser:
+      'Esto está en tus carpetas personales (Documentos, Imágenes, Escritorio, Vídeos, Música). Comprueba bien que de verdad ya no lo necesitas.',
+    warnProgram:
+      'Parece un programa (archivos ejecutables). Después, el programa dejará de funcionar.',
+    warnLarge: (files: string, size: string) =>
+      `Eliminación muy grande: ${files} archivos, ${size}.`,
+    warnNoBin:
+      'Las unidades de red y extraíbles a menudo no tienen papelera. En ese caso no se elimina nada, y después puedes elegir conscientemente «definitivamente».',
+    warnPermanent: 'Definitivamente significa: desaparece, sin papelera. No se puede deshacer.',
+    notDeletable: 'No se puede eliminar (no se toca)',
+    running: 'Eliminando …',
+    progress: (done: number, total: number, files: string) =>
+      `Elemento ${Math.min(done + 1, total)} de ${total} · ${files} archivos eliminados`,
+    cancel: 'Cancelar',
+    stop: 'Detener',
+    close: 'Cerrar',
+    errors: {
+      'confirmation-missing': 'Falta la segunda confirmación. Vuelve a eliminar.',
+      'plan-expired': 'La comprobación ha caducado. Vuelve a iniciar la eliminación.',
+      'unknown-plan': 'La comprobación ha caducado. Vuelve a iniciar la eliminación.',
+      'already-running': 'Ya hay una eliminación en curso.',
+      generic: 'No se pudo iniciar la eliminación.',
+    } as Record<string, string>,
+    report: {
+      freed: (size: string) => `${size} de espacio liberado`,
+      files: (n: string) => `${n} archivos eliminados`,
+      cancelled: 'Se canceló la eliminación. Lo que aún no se había procesado no se toca.',
+      toBin: 'Los elementos están ahora en la papelera y se pueden restaurar desde allí.',
+      permanent: 'Los elementos se han eliminado definitivamente.',
+      outcome: {
+        deleted: 'Eliminado',
+        partial: 'Eliminado en parte',
+        failed: 'No eliminado',
+        skipped: 'Omitido',
+        trashUnavailable: 'Papelera no disponible: no se eliminó nada',
+        cancelled: 'Cancelado',
+      },
+      reason: {
+        'in-use': 'Archivo en uso',
+        denied: 'Acceso denegado',
+        other: 'Error desconocido',
+        changed: 'Ha cambiado desde el análisis',
+      } as Record<string, string>,
+      moreErrors: (n: number) => (n === 1 ? '… y 1 error más' : `… y ${n} errores más`),
+      permanentInstead: 'Eliminar estos definitivamente …',
+      partialHint:
+        'Las cifras de esta carpeta pueden no coincidir ahora. Vuelve a analizarla si hace falta.',
+    },
+  },
+  places: {
+    title: 'Limpiar',
+    lead: 'Carpetas conocidas donde suele acumularse lastre. Analízalas y elige tú qué sobra: nada se elimina automáticamente.',
+    name: {
+      temp: 'Archivos temporales',
+      chrome: 'Caché de Chrome',
+      edge: 'Caché de Edge',
+      firefox: 'Caché de Firefox',
+      downloads: 'Descargas',
+      cache: 'Caché (.cache)',
+    } as Record<string, string>,
+    hint: {
+      downloads: 'Consejo: con el filtro «Más antiguo que» encuentras descargas antiguas.',
+      temp: 'Los programas pueden necesitar aún estos archivos; los que están en uso se quedan.',
+      chrome: 'El navegador vuelve a crear la caché cuando la necesita.',
+      edge: 'El navegador vuelve a crear la caché cuando la necesita.',
+      firefox: 'El navegador vuelve a crear la caché cuando la necesita.',
+      cache: 'Los programas vuelven a crear su caché cuando la necesitan.',
+    } as Record<string, string>,
+    scan: (name: string) => `Analizar ${name}`,
+  },
+  dupes: {
+    title: 'Archivos duplicados',
+    search: 'Buscar archivos duplicados',
+    searching: 'Buscando …',
+    stop: 'Cancelar búsqueda',
+    hint: 'Se comparan los archivos de 1 MB o más de esta carpeta: primero el tamaño, luego una parte y luego todo el contenido. Nunca se elimina nada automáticamente.',
+    none: 'No se encontraron archivos duplicados.',
+    failed: 'La búsqueda se canceló o ha fallado.',
+    group: (n: number, size: string, wasted: string) =>
+      `${n} archivos iguales de ${size}: ${wasted} recuperables`,
+    keepOne: 'Se conserva al menos un archivo.',
+    select: (name: string) => `Añadir ${name} a la cesta`,
+  },
+  map: {
+    label: (name: string, n: number) =>
+      `Vista de mapa de la carpeta ${name || 'unidad'} con ${n} ${n === 1 ? 'elemento' : 'elementos'}. Las flechas seleccionan, Intro abre una carpeta y Retroceso sube un nivel.`,
+    help: 'Cada área es una carpeta o un archivo; su tamaño muestra el espacio ocupado. Un clic en una carpeta la abre; Mayús+clic solo la selecciona. La lista contiene los mismos datos en texto.',
+    empty: 'En esta carpeta no hay nada que ocupe espacio.',
+    legend: 'Leyenda',
+    byType: 'Tipo de archivo',
+    byDepth: 'Profundidad',
+    depthLegend: 'Cuanto más oscura es el área, más profunda está la carpeta.',
+    byAge: 'Antigüedad',
+    ageLegend:
+      'Color = último cambio. En las carpetas cuenta el archivo más reciente: una carpeta roja no se ha tocado desde hace años.',
+    colorBy: 'Color según',
+    kind: {
+      video: 'Vídeos',
+      image: 'Imágenes',
+      audio: 'Música',
+      archive: 'Archivos comprimidos',
+      program: 'Programas',
+      document: 'Documentos',
+      game: 'Datos de juegos',
+      other: 'Otros',
+    },
+  },
+  age: {
+    buckets: [
+      'menos de 1 mes',
+      '1–6 meses',
+      '6–12 meses',
+      '1–2 años',
+      '2–3 años',
+      'más de 3 años',
+    ] as readonly string[],
+    ago: (days: number) => {
+      if (days < 1) return 'hoy';
+      if (days < 2) return 'ayer';
+      if (days < 14) return `hace ${Math.floor(days)} días`;
+      if (days < 61) return `hace ${Math.floor(days / 7)} semanas`;
+      if (days < 730) return `hace ${Math.floor(days / 30.44)} meses`;
+      return `hace ${Math.floor(days / 365.25)} años`;
+    },
+    short: (days: number) => {
+      if (days < 1) return 'hoy';
+      if (days < 14) return `${Math.floor(days)} d`;
+      if (days < 61) return `${Math.floor(days / 7)} sem.`;
+      if (days < 730) return `${Math.floor(days / 30.44)} m.`;
+      return `${Math.floor(days / 365.25)} a.`;
+    },
+  },
+  select: {
+    label: 'Resultados seleccionados',
+    row: (name: string) => `Seleccionar ${name}`,
+    all: 'Seleccionar todos los resultados',
+    summary: (n: number, size: string) =>
+      `${n} ${n === 1 ? 'elemento seleccionado' : 'elementos seleccionados'} · ${size}`,
+    toBasket: 'A la cesta',
+    delete: 'Eliminar selección …',
+    clear: 'Quitar selección',
+  },
+  views: { label: 'Vista', map: 'Mapa', list: 'Lista' },
+  nav: {
+    path: 'Ruta',
+    up: 'Subir un nivel',
+    open: 'Abrir',
+    root: (root: string) => root,
+  },
+  filter: {
+    label: 'Filtro rápido',
+    none: 'Todo',
+    topDirs: 'Carpetas más grandes',
+    topFiles: 'Archivos más grandes',
+    old: 'Sin cambios desde hace tiempo',
+    oldSince: 'Sin cambios desde hace',
+    months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 año' : `${n / 12} años`) : `${n} meses`),
+    all: 'Todo',
+    topmost: 'Mostrar las carpetas antiguas solo una vez (sin su contenido)',
+    minSize: 'Tamaño mínimo',
+    anySize: 'cualquier tamaño',
+    fromSize: (size: string) => `desde ${size}`,
+    oldSummary: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'elemento' : 'elementos'} con ${size} en total, sin cambios desde hace más de ${since}`,
+    capped: (n: number) => `Se muestran los ${n} más grandes.`,
+    oldHelp:
+      'Cuenta el último cambio, no la última vez que se abrió algo: Windows no suele registrar de forma fiable cuándo se abren los archivos. En las carpetas cuenta el archivo más reciente. En los juegos, una actualización cambia la fecha; jugar no.',
+    type: 'Tipo de archivo',
+    scope: 'Mostrar',
+    dirs: 'Carpetas',
+    files: 'Archivos',
+    empty: 'Carpetas vacías',
+    dupes: 'Archivos duplicados',
+    inFolder: (name: string) => `Dentro de ${name}`,
+    none_found: 'Sin resultados.',
+    results: (n: number) => (n === 1 ? '1 resultado' : `${n} resultados`),
+  },
+  list: {
+    name: 'Nombre',
+    size: 'Ocupado',
+    share: 'Proporción',
+    files: 'Archivos',
+    modified: 'Modificado',
+    sortBy: (col: string) => `Ordenar por ${col}`,
+    in: 'En',
+    empty: 'No hay elementos.',
+    label: 'Elementos de la carpeta',
+  },
+  details: {
+    title: 'Detalles',
+    folder: 'Carpeta',
+    file: 'Archivo',
+    aggregate: 'Archivos más pequeños (agrupados)',
+    path: 'Ruta',
+    used: 'Ocupado (en disco)',
+    fileSize: 'Tamaño del archivo',
+    shareOfFolder: (name: string) => `Proporción de ${name || 'la unidad'}`,
+    files: 'Archivos',
+    modified: 'Última modificación',
+    modifiedFolder: 'Última modificación (archivo más reciente)',
+    types: 'Tipos de archivo',
+    ages: 'Antigüedad de los datos',
+    ageBar: 'Proporciones por antigüedad',
+    oldShare: (size: string, pct: number) =>
+      `${size} (${pct} %) sin cambios desde hace más de un año`,
+    showOld: 'Mostrar aquí los elementos antiguos',
+    biggest: 'Elementos más grandes aquí',
+    open: 'Abrir carpeta',
+    percent: (p: number) => `${p} %`,
+  },
+  scan: {
+    back: 'Volver a las unidades',
+    title: (root: string) => `Análisis de ${root}`,
+    scanning: 'Analizando …',
+    paused: 'Análisis en pausa',
+    files: 'Archivos',
+    folders: 'Carpetas',
+    used: 'Ocupado',
+    current: 'Carpeta actual',
+    cancel: 'Cancelar',
+    pause: 'Pausa',
+    resume: 'Continuar',
+    cancelled: 'Se canceló el análisis. El resultado está incompleto.',
+    failed: (reason: string) =>
+      reason === 'not-found'
+        ? 'No se encontró la unidad o la carpeta.'
+        : reason === 'denied'
+          ? 'Se denegó el acceso a esta unidad.'
+          : 'El análisis ha fallado.',
+    done: 'Análisis terminado',
+    totalUsed: 'Ocupado (en disco)',
+    sizeHelp:
+      'Espacio ocupado en el disco: cada archivo cuenta en unidades de asignación completas (clústeres), por eso el valor queda algo por encima del tamaño real de los archivos. Los archivos en la nube que solo están en línea no cuentan.',
+    fileSize: 'Tamaño total de archivos',
+    cloud: (size: string) => `${size} están solo en línea (nube) y aquí no ocupan espacio.`,
+    links: (n: number) =>
+      n === 1
+        ? 'No se entró en 1 acceso directo o carpeta en línea (para no contar dos veces).'
+        : `No se entró en ${n} accesos directos o carpetas en línea (para no contar dos veces).`,
+    duration: (s: string) => `Duración: ${s}`,
+    notRead: 'No leído (acceso denegado)',
+    notReadHint:
+      'Estas carpetas no se pudieron leer sin permisos de administrador. Faltan en el total.',
+    notReadMore: (n: number) => `… y ${n} más`,
+    reason: {
+      denied: 'acceso denegado',
+      vanished: 'eliminado entretanto',
+      'too-deep': 'demasiado anidado',
+      error: 'no legible',
+    },
+    smallFiles: (n: number) => (n === 1 ? '1 archivo más pequeño' : `${n} archivos más pequeños`),
+  },
+};

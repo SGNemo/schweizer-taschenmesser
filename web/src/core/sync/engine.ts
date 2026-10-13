@@ -1,3 +1,4 @@
+import { isHlcTooFarAhead } from '@/core/db/hlc';
 import type { StorageAdapter } from '@/core/storage/types';
 import { decryptOps, encryptOps, isEncrypted } from './crypto';
 import { SyncError, type FieldOp, type SyncAdapter } from './types';
@@ -20,7 +21,7 @@ export interface SyncResult {
   applied: number;
   /** Records sent. */
   pushed: number;
-  /** Ops dropped because they were not valid ciphertext. */
+  /** Ops dropped because they were not valid ciphertext or stamped too far in the future. */
   rejected: number;
   /** The remote was new, reset or replaced: everything local was queued for upload. */
   fullUpload: boolean;
@@ -103,7 +104,10 @@ async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
       if (cursor !== 0) continue;
     }
 
-    let ops = page.ops;
+    // A stamp far beyond the local clock would be adopted for good (see MAX_HLC_DRIFT_MS): drop it
+    // before merging. The cursor still advances, so the page is not fetched again and again.
+    let ops = page.ops.filter((op) => !isHlcTooFarAhead(op.hlc));
+    result.rejected += page.ops.length - ops.length;
     if (key) {
       const decrypted = await decryptOps(key, ops);
       result.rejected += decrypted.rejected;

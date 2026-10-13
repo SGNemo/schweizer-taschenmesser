@@ -35,7 +35,7 @@ export default function MainPage() {
 
   return (
     <>
-      <h1>Beispiel</h1>
+      <h1>{t.example.name}</h1>
       <form
         ref={form}
         onSubmit={add}

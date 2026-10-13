@@ -81,8 +81,10 @@ export async function submitConnect(page: Page, o: ConnectOptions = {}): Promise
   await page.getByLabel('Server-Adresse').fill(o.url ?? SERVER);
   await page.getByLabel('Zugangstoken').fill(o.token ?? TOKEN);
   if (o.deviceName) await page.getByLabel('Gerätename').fill(o.deviceName);
+  // Encryption is on by default; tests that want a plain server switch it off explicitly.
   const encrypt = page.getByRole('switch', { name: /Ende-zu-Ende/ });
-  if (o.encrypt && (await encrypt.getAttribute('aria-checked')) !== 'true') await encrypt.click();
+  const wanted = o.encrypt ? 'true' : 'false';
+  if ((await encrypt.getAttribute('aria-checked')) !== wanted) await encrypt.click();
   if (o.passphrase !== undefined) {
     // The field appears with the switch or after the server asked for a passphrase.
     await page.getByLabel('Passphrase').fill(o.passphrase);

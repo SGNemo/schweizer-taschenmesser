@@ -13,15 +13,23 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'cancelRemindDaysBefore',
-      label: t.subscriptions.meta.settings.cancelRemindDaysBefore,
+      get label() {
+        return t.subscriptions.meta.settings.cancelRemindDaysBefore;
+      },
       type: 'number',
-      help: t.subscriptions.meta.settings.cancelRemindDaysBeforeHelp,
+      get help() {
+        return t.subscriptions.meta.settings.cancelRemindDaysBeforeHelp;
+      },
     },
     {
       key: 'remindTime',
-      label: t.subscriptions.meta.settings.remindTime,
+      get label() {
+        return t.subscriptions.meta.settings.remindTime;
+      },
       type: 'text',
-      help: t.subscriptions.meta.settings.remindTimeHelp,
+      get help() {
+        return t.subscriptions.meta.settings.remindTimeHelp;
+      },
     },
   ],
 };

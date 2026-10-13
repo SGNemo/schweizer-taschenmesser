@@ -14,6 +14,7 @@ import { coerceValue, findField, findModule } from '../query/validate';
 import { aiModules } from '../scope';
 import { findTarget } from './targets';
 import type { DiffLine, PreparedOp, ProposedOp } from './types';
+import { t } from '@/strings';
 
 export function findAction(
   manifest: ModuleManifest,
@@ -108,10 +109,10 @@ export async function prepareOp(
     moduleName: manifest.name,
     moduleIcon: manifest.icon,
     action: actionId,
-    actionLabel: def.label,
+    actionLabel: t.aiLabels.actions[`${manifest.id}.${actionId}`] ?? def.label,
     kind: def.kind,
     collection: def.collection,
-    collectionLabel: schema.label,
+    collectionLabel: t.aiLabels.collections[`${manifest.id}.${def.collection}`] ?? schema.label,
     candidates: [],
     missing: [] as string[],
     needsTarget: false,

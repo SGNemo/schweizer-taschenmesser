@@ -8,30 +8,81 @@ export const onboarding: OnboardingDef = {
     {
       id: 'form',
       kind: 'form',
-      label: s.form,
+      get label() {
+        return s.form;
+      },
       fields: [
-        { key: 'name', label: s.name, type: 'text', required: true },
-        { key: 'amount', label: s.amount, type: 'text', required: true, placeholder: '9,99' },
+        {
+          key: 'name',
+          get label() {
+            return s.name;
+          },
+          type: 'text',
+          required: true,
+        },
+        {
+          key: 'amount',
+          get label() {
+            return s.amount;
+          },
+          type: 'text',
+          required: true,
+          placeholder: '9,99',
+        },
         {
           key: 'rhythm',
-          label: s.rhythm,
+          get label() {
+            return s.rhythm;
+          },
           type: 'select',
           defaultValue: 'monthly',
           choices: [
-            { value: 'monthly', label: s.monthly },
-            { value: 'quarterly', label: s.quarterly },
-            { value: 'yearly', label: s.yearly },
+            {
+              value: 'monthly',
+              get label() {
+                return s.monthly;
+              },
+            },
+            {
+              value: 'quarterly',
+              get label() {
+                return s.quarterly;
+              },
+            },
+            {
+              value: 'yearly',
+              get label() {
+                return s.yearly;
+              },
+            },
           ],
         },
-        { key: 'next', label: s.next, type: 'date', required: true },
-        { key: 'notice', label: s.notice, type: 'number' },
+        {
+          key: 'next',
+          get label() {
+            return s.next;
+          },
+          type: 'date',
+          required: true,
+        },
+        {
+          key: 'notice',
+          get label() {
+            return s.notice;
+          },
+          type: 'number',
+        },
       ],
     },
     {
       id: 'bank',
       kind: 'file',
-      label: s.bank,
-      description: s.bankHint,
+      get label() {
+        return s.bank;
+      },
+      get description() {
+        return s.bankHint;
+      },
       accept: '.csv,.xml,text/csv,text/xml',
     },
     {
@@ -39,8 +90,12 @@ export const onboarding: OnboardingDef = {
       kind: 'connector',
       connectorId: 'google',
       connectorFeature: 'mail',
-      label: t.onboarding.mail.subscriptions,
-      description: t.onboarding.mail.hint,
+      get label() {
+        return t.onboarding.mail.subscriptions;
+      },
+      get description() {
+        return t.onboarding.mail.hint;
+      },
     },
   ],
   load: () => import('./importer'),

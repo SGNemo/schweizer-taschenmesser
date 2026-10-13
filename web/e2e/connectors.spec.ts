@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready, calendarEntry } from './helpers';
+import { dismissNotices } from './helpers';
+
+test.beforeEach(({ page }) => dismissNotices(page));
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {

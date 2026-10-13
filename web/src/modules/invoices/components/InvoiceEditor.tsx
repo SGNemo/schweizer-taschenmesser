@@ -8,6 +8,7 @@ import { saveInvoice } from '../actions';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
 import styles from '../routes/invoices.module.css';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type InvoiceTarget = Stored<Invoice> | { draft: true } | null;
 
@@ -38,7 +39,7 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
     e.preventDefault();
     const amountMinor = parseMoney(amount);
     if (!amountMinor || amountMinor < 1) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     await saveInvoice(existing?.id ?? null, {
@@ -102,7 +103,7 @@ function Form({ existing, onClose }: { existing: Stored<Invoice> | null; onClose
           <Button
             variant="danger"
             onClick={async () => {
-              await invoiceRepo.remove(existing.id);
+              await deleteWithUndo(() => invoiceRepo.remove(existing.id));
               onClose();
             }}
           >

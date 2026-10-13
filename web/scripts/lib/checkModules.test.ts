@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { checkModule, checkSettingsSource, checkWidgetSource } from './checkModules';
+import {
+  checkDeleteSource,
+  checkModule,
+  checkSettingsSource,
+  checkWidgetSource,
+} from './checkModules';
 
 const good = `
 const manifest = {
@@ -26,6 +31,21 @@ describe('checkModule', () => {
   it('fails without a widget (error, not a warning)', () => {
     const m = good.replace(/widgets: \[[\s\S]*?\],\n {2}layout/, 'widgets: [],\n  layout');
     expect(checkModule({ id: 'x', manifest: m, fileExists: has() }).join()).toContain('no widget');
+  });
+
+  it('accepts a widget title given as a getter (read in the current language)', () => {
+    const m = good.replace("title: 'A',", 'get title() { return t.x.title; },');
+    expect(
+      checkModule({ id: 'x', manifest: m, fileExists: has('widgets/AWidget.tsx', 'seed.ts') }),
+    ).toEqual([]);
+    const without = good.replace("title: 'A', ", '');
+    expect(
+      checkModule({
+        id: 'x',
+        manifest: without,
+        fileExists: has('widgets/AWidget.tsx', 'seed.ts'),
+      }).join(),
+    ).toContain('`title`');
   });
 
   it('fails when the widget file is missing or the sizes are not declared', () => {
@@ -124,5 +144,35 @@ describe('checkSettingsSource', () => {
   });
   it('rejects an unknown category', () => {
     expect(checkSettingsSource('x', "{ category: 'misc' }", categories)).toHaveLength(1);
+  });
+});
+
+describe('checkDeleteSource', () => {
+  it('flags a direct repo removal without undo', () => {
+    expect(checkDeleteSource('x', 'components/E.tsx', 'await itemRepo.remove(id);')).toHaveLength(
+      1,
+    );
+    expect(checkDeleteSource('x', 'routes/P.tsx', 'void itemRepo.removeMany(ids);')).toHaveLength(
+      1,
+    );
+  });
+  it('accepts removals wrapped in the undo helpers', () => {
+    expect(
+      checkDeleteSource(
+        'x',
+        'components/E.tsx',
+        'await deleteWithUndo(() => itemRepo.remove(id));',
+      ),
+    ).toEqual([]);
+    expect(
+      checkDeleteSource(
+        'x',
+        'routes/P.tsx',
+        'undoableWithToast(a, b, () => itemRepo.removeMany(ids));',
+      ),
+    ).toEqual([]);
+  });
+  it('ignores files without a repo removal', () => {
+    expect(checkDeleteSource('x', 'routes/P.tsx', 'await deletePerson(id);')).toEqual([]);
   });
 });

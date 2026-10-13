@@ -5,7 +5,7 @@ What it is: voluntary support → a signed code → cosmetic extras only (thank-
 **State:** everything is built: package, CLI, app check, status/sync, themes, badge, settings, and the **webhook service** (`services/supporter-webhook/`, README = deployment guide for the maintainer). The service is **not deployed** until the maintainer does the steps in its README; until then codes can be created by hand (below). The "pay" and "re-send" buttons in the app stay hidden while `pages/settings/supporterLinks.ts` is empty.
 
 ## One-time key setup (maintainer, own machine)
-1. Needs Node 22.18 or newer. Install both parts (the CLI imports the shared package source): `cd packages/supporter-codes && npm ci`, then `cd ../../tools/supporter-cli && npm ci`.
+1. Needs Node 26 or newer. Install both parts (the CLI imports the shared package source): `cd packages/supporter-codes && npm ci`, then `cd ../../tools/supporter-cli && npm ci`.
 2. `node bin/supporter-cli.mjs keygen` → writes `~/.nemo-supporter/key-1.txt` (mode 600, refuses paths inside a git checkout and any overwrite) and prints the **public** key. Back the file up (password manager + offline copy). Lost = no new codes with this key id; old codes keep working.
 3. `node bin/supporter-cli.mjs set-public-key` → writes the public key into `web/src/core/supporter/publicKeys.ts` (the one place). Commit that file. Until then the app rejects every code.
 

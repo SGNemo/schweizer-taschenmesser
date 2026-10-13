@@ -3,9 +3,13 @@ import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
   id: 'pdf',
-  name: t.tools.pdf.name,
+  get name() {
+    return t.tools.pdf.name;
+  },
   icon: 'files',
-  description: t.tools.pdf.description,
+  get description() {
+    return t.tools.pdf.description;
+  },
   group: 'extra',
   offline: true,
   defaultEnabled: false,

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -11,6 +11,7 @@ import { setPlatform } from '@/core/platform';
 import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
 import { createWebPlatform } from '@/core/platform/web';
 import { t } from '@/strings';
+import { tLegal } from '@/strings.legal';
 import { messageRepo, threadRepo } from '../repo';
 import ChatPage from '../routes/ChatPage';
 
@@ -109,6 +110,30 @@ describe('ChatPage', () => {
     await user.click(screen.getByRole('button', { name: c.send }));
     expect(await screen.findByTestId('chat-error')).toHaveTextContent(c.errors['no-engine']!);
     expect(await screen.findByText('Frage ohne Anbieter')).toBeInTheDocument();
+  });
+
+  it('tells that text leaves the device with a provider, and offers "KI abschalten" (not with the local model)', async () => {
+    const base = {
+      autoTitle: true,
+      pinned: false,
+      archived: false,
+      contextModules: [],
+      tokensIn: 0,
+      tokensOut: 0,
+      costUsd: 0,
+    };
+    const cloud = await threadRepo.create({ ...base, title: 'Cloud', engine: 'router' });
+    const local = await threadRepo.create({ ...base, title: 'Lokal', engine: 'local' });
+    view(`/chat?t=${cloud.id}`);
+    const hint = await screen.findByTestId('chat-cloud-hint');
+    expect(hint).toHaveTextContent(tLegal.de.chat.cloudHint);
+    expect(
+      within(hint).getByRole('button', { name: tLegal.de.chat.offAction }),
+    ).toBeInTheDocument();
+    cleanup();
+    view(`/chat?t=${local.id}`);
+    await screen.findByPlaceholderText(c.placeholder);
+    expect(screen.queryByTestId('chat-cloud-hint')).toBeNull();
   });
 
   it('deletes a chat only after confirmation', async () => {

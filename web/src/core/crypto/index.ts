@@ -17,6 +17,7 @@ export {
   rewrapKeychain,
   serializeHeader,
   unlockKeychain,
+  vaultSealName,
   unwrapDekBytes,
   verifyDek,
   type KeychainHeader,

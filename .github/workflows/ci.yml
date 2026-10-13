@@ -23,7 +23,7 @@ jobs:
     outputs:
       code: ${{ steps.diff.outputs.code }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Does the change touch more than documentation?
@@ -44,11 +44,11 @@ jobs:
             range="$PUSH_BEFORE..$PUSH_AFTER"
           fi
           if [ -n "$range" ] && files="$(git diff --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
-            # Documentation that no test reads. README.md, docs/AI-IMPORT.md and docs/user/installation.md
+            # Documentation that no test reads. README*.md, docs/AI-IMPORT*.md and docs/user/installation*.md
             # are read by unit tests (prompt and download-link checks), so they count as code.
             # site/ has its own workflow (site.yml) and never touches the app.
             ignorable='^(docs/|site/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
-            pinned='^docs/(AI-IMPORT\.md|user/installation\.md)$'
+            pinned='^docs/(AI-IMPORT(\.de)?\.md|user/installation(\.de)?\.md)$'
             relevant="$( { printf '%s\n' "$files" | grep -E "$pinned"; printf '%s\n' "$files" | grep -Ev "$ignorable"; } )"
             if [ -z "$relevant" ]; then code=false; fi
             echo "Changed files:"; printf '%s\n' "$files"
@@ -61,22 +61,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: stable
       # Built from source through the Go module proxy (checksum-verified): no binary download to trust.
       # The compiled binary is cached per version so later runs skip the build (a miss rebuilds it).
       # Reviewed false positives live in .gitleaksignore; new test fixtures use a `gitleaks:allow` comment.
-      - uses: actions/cache@v4
-        id: gitleaks-cache
-        with:
-          path: ~/go/bin/gitleaks
-          key: gitleaks-v8.21.2-${{ runner.os }}
+      # Built fresh on every run (Go module proxy + checksum database); a cached binary could be
+      # replaced from any branch that shares the cache.
       - name: Build gitleaks from source
-        if: steps.gitleaks-cache.outputs.cache-hit != 'true'
         run: go install github.com/zricethezav/gitleaks/v8@v8.21.2
       - name: Scan the history for secrets
         run: |
@@ -91,11 +87,24 @@ jobs:
     timeout-minutes: 5
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
       - run: node web/scripts/check-docs.mjs
+
+  # English docs and their German translations (README.de.md, *.de.md) must stay in step. Blocking and cheap,
+  # so it also runs on doc-only changes.
+  docs-pairs:
+    name: Docs translations in step
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26
+      - run: node web/scripts/check-readme.mjs
 
   # The former single `web` job (about 14 min, one after the other) is split so that the pieces run side by
   # side; `web` at the bottom of this group keeps the old check name for branch protection.
@@ -109,10 +118,10 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
@@ -120,9 +129,15 @@ jobs:
         run: npm run version:check
       - name: Every module has a complete manifest and a home-screen widget
         run: npm run check:modules
+      - name: UI texts complete in every language, none hard-coded or read at import
+        run: npm run check:i18n
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
+      - name: Licence list is current and every licence is allowed
+        run: npm run check:licenses
+      - name: Open legal placeholders (warning only)
+        run: npm run check:legal
 
   web-unit:
     name: Web unit tests
@@ -134,10 +149,10 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
@@ -160,15 +175,15 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - name: Playwright browser cache
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: pw-cache
         with:
           path: ~/.cache/ms-playwright
@@ -182,7 +197,7 @@ jobs:
         run: npx playwright test --shard=${{ matrix.shard }}/4
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report-${{ matrix.shard }}
           path: web/playwright-report
@@ -224,10 +239,10 @@ jobs:
       run:
         working-directory: server
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: server/package-lock.json
       - run: npm ci
@@ -247,10 +262,10 @@ jobs:
       run:
         working-directory: mcp
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: mcp/package-lock.json
       - run: npm ci
@@ -270,10 +285,10 @@ jobs:
       run:
         working-directory: packages/vault-core
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: packages/vault-core/package-lock.json
       - run: npm ci
@@ -290,10 +305,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: |
             packages/supporter-codes/package-lock.json
@@ -317,10 +332,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: |
             packages/supporter-codes/package-lock.json
@@ -342,10 +357,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: |
             web/package-lock.json
@@ -375,14 +390,14 @@ jobs:
       - name: Pack the unpacked extension
         run: npm run zip
         working-directory: extension
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: nemo-extension
           path: extension/nemo-extension-*.zip
           retention-days: 14
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: extension-test-results
           path: extension/test-results
@@ -395,10 +410,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
           cache-dependency-path: |
             web/package-lock.json
@@ -408,7 +423,7 @@ jobs:
       - run: npm ci
         working-directory: web
       - name: Playwright browser cache
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: pw-cache
         with:
           path: ~/.cache/ms-playwright
@@ -432,16 +447,17 @@ jobs:
       run:
         working-directory: web/src-tauri
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: System libraries for Tauri on Linux
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
+          toolchain: stable
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: web/src-tauri
       # tauri::generate_context! needs the frontend directory to exist; its content does not matter here.
@@ -466,11 +482,12 @@ jobs:
       run:
         working-directory: web/src-tauri/crates/local-llm
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
+          toolchain: stable
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: web/src-tauri/crates/local-llm
       - run: cargo fmt --check

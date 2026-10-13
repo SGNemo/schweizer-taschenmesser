@@ -3,7 +3,7 @@
 Phase 2, Stand 2026-10-11. Grundlage: [04-settings-friction.md](04-settings-friction.md). Entscheidungen von Sven (Phase 1): **keine Plattformarbeit** (Tool-Fenster, Always-on-top, Timer-Dienst, OS-Protokoll → ROADMAP), `nemo://` nur als **internes** Schema; Palette **immer** durchsuchbar mit Direktumschaltung; **kein** „Erweitert“, **kein** „Empfohlen für dich“; Pakete A und B, dazwischen STOPP.
 
 ## Leitplanken
-- Nur Registry/Kategorien/Tool-Registry erweitern, keine zweite Struktur. Texte in `strings.ts` (nur Deutsch, wie CLAUDE.md; kein `check:i18n` im Repo).
+- Nur Registry/Kategorien/Tool-Registry erweitern, keine zweite Struktur. Texte in allen fünf Sprachen (`check:i18n`; in der Umsetzung als Bundle `strings.comfort.ts`). *Nachtrag:* Die erste Fassung nannte hier „nur Deutsch“, das war ein veralteter Stand.
 - **Ausgenommen von Schnellschaltern, Häufig-genutzt-Direktumschaltung und „Zurücksetzen“:** Tresor/accounts, Auto-Lock, Biometrie, Keys/Tokens, Updater-Kanal, Datenträger, Local API, Sync-Verschlüsselung. Sie bleiben nur als Link zur Sektion erreichbar; Bestätigungen unverändert. Markierung per `quick: false`/`resettable: false` ist Standard, Freigabe ist ausdrücklich (Allow-Liste, nicht Deny-Liste).
 - Keine neue Abhängigkeit; Drag-and-drop mit Pointer-Events, Pfeil-Buttons bleiben als Tastatur-Weg.
 - Fokus-Richtlinien: keine Zähler-/Schuldtexte, alles abschaltbar, Bewegung nur transform/opacity.

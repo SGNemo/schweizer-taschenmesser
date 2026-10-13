@@ -1,5 +1,5 @@
 import { parseDateInput } from '@/core/io/dates';
-import { formatMoney, parseMoney } from '@/core/money';
+import { formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
 import type {
   ImportCandidate,
   ImporterRuntime,
@@ -35,7 +35,7 @@ function fromMail(input: ImportInput): ImportParseResult {
         note: f.url ? m.source(f.url) : undefined,
       },
       label: f.title,
-      detail: `${formatMoney(f.amountMinor)} · fällig ${formatDay(due, 'd. MMM yyyy')}`,
+      detail: t.invoices.importDetail(formatMoney(f.amountMinor), formatDay(due, 'd. MMM yyyy')),
       dedupeKey: keyOf(f.title, f.amountMinor, due),
       ref: f.ref,
       ...(f.date ? {} : { warning: m.dueUnclear }),
@@ -54,7 +54,7 @@ const runtime: ImporterRuntime = {
     const due = parseDateInput(v.due ?? '');
     if (!payee) return { candidates: [], notes: [t.onboarding.required] };
     if (amount === undefined || amount < 1)
-      return { candidates: [], notes: [t.onboarding.invoices.badAmount] };
+      return { candidates: [], notes: [t.onboarding.invoices.badAmount(formatMoneyInput(4990))] };
     if (!due) return { candidates: [], notes: [t.onboarding.invoices.badDate] };
     const reference = (v.reference ?? '').trim();
     return {
@@ -69,7 +69,7 @@ const runtime: ImporterRuntime = {
             ...(reference ? { reference } : {}),
           },
           label: payee,
-          detail: `${formatMoney(amount)} · fällig ${formatDay(due, 'd. MMM yyyy')}`,
+          detail: t.invoices.importDetail(formatMoney(amount), formatDay(due, 'd. MMM yyyy')),
           dedupeKey: keyOf(payee, amount, due),
         },
       ],

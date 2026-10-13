@@ -51,7 +51,7 @@ cd services/supporter-webhook && npm ci
 cd ../../packages/supporter-codes && npm ci && cd ../../services/supporter-webhook   # shared code package
 cp .env.example .dev.vars        # git-ignored; fill in INVENTED values and a throw-away key
 npm test                         # unit tests with invented Ko-fi payloads
-npx wrangler dev                 # http://localhost:8787 with local KV and queue
+npx wrangler dev --var DEV:1     # http://localhost:8787 with local KV and queue; DEV allows a missing rate limiter
 curl -i localhost:8787/health
 curl -i -X POST localhost:8787/kofi --data-urlencode 'data={"verification_token":"<token from .dev.vars>","type":"Donation","is_public":false,"from_name":"","amount":"5.00","currency":"EUR","email":"me@example.invalid","kofi_transaction_id":"local-1"}'
 ```
@@ -61,7 +61,7 @@ Locally the mail step fails (dummy Resend key) – that is the expected "owner i
 ## Deploy (you do this; nothing below puts a secret into the repository)
 
 1. **Accounts:** a Cloudflare account (free plan is enough), a [Resend](https://resend.com) account, and your Ko-fi page.
-2. **Key pair** (once, own machine, Node 22.18+): run `npm ci` in `packages/supporter-codes` and in `tools/supporter-cli` first, then `cd tools/supporter-cli && node bin/supporter-cli.mjs keygen`, then `set-public-key`, commit `web/src/core/supporter/publicKeys.ts` and ship an app version that contains it. Back up the key file ([docs/howto/supporter.md](../../docs/howto/supporter.md)).
+2. **Key pair** (once, own machine, Node 26+): run `npm ci` in `packages/supporter-codes` and in `tools/supporter-cli` first, then `cd tools/supporter-cli && node bin/supporter-cli.mjs keygen`, then `set-public-key`, commit `web/src/core/supporter/publicKeys.ts` and ship an app version that contains it. Back up the key file ([docs/howto/supporter.md](../../docs/howto/supporter.md)).
 3. **Login:** `cd services/supporter-webhook && npx wrangler login`.
 4. **KV:** `npx wrangler kv namespace create KV` → copy the printed `id` into `wrangler.toml` (`REPLACE_WITH_KV_NAMESPACE_ID`). That id is not a secret.
 5. **Queues:** `npx wrangler queues create supporter-mail` and `npx wrangler queues create supporter-mail-dlq`.

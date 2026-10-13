@@ -26,8 +26,10 @@ export interface MailJob {
 export interface Env {
   KV: KvLike;
   MAIL_QUEUE: QueueLike<MailJob>;
-  /** Optional: without the binding there is simply no rate limit (local `wrangler dev`). */
+  /** Required in production; may be absent only with `DEV` set (local `wrangler dev`). */
   RATE_LIMITER?: RateLimitLike;
+  /** Set to a non-empty value for local development only (`wrangler dev --var DEV:1`). */
+  DEV?: string;
   // Secrets (`wrangler secret put`), never in the repo:
   KOFI_VERIFICATION_TOKEN: string;
   SUPPORTER_SIGNING_KEY: string;

@@ -1,0 +1,105 @@
+import type { Strings } from '@/strings';
+
+export const chat: Strings['chat'] = {
+  meta: {
+    name: 'Chat',
+    description:
+      'Conversaciones con el modelo local integrado o con tus proveedores; si quieres, con datos de módulos elegidos.',
+    route: 'Chat',
+    widget: 'Chat',
+    quickAdd: 'Nuevo chat',
+  },
+  title: 'Chat',
+  newChat: 'Nuevo chat',
+  chats: 'Chats',
+  search: 'Buscar en chats',
+  empty: 'Aún no hay chats. Haz una pregunta; no se guarda nada hasta que envías.',
+  emptyAction: 'Iniciar chat',
+  noThread: 'Elige un chat a la izquierda o inicia uno nuevo.',
+  back: 'Volver a la lista de chats',
+  placeholder: 'Escribe un mensaje …',
+  send: 'Enviar',
+  stop: 'Detener',
+  you: 'Tú',
+  assistant: 'Asistente',
+  stageLocal: 'Local · 0 €',
+  stageCloud: 'Nube',
+  engine: 'Responde con',
+  engineLocal: 'Modelo local',
+  engineRouter: 'Mis proveedores',
+  engineHintLocal: 'Funciona solo en este dispositivo, sin conexión y sin coste.',
+  engineHintRouter: 'El texto de este chat se envía al proveedor que configuraste.',
+  systemPrompt: 'Instrucción propia para este chat',
+  systemPromptHint: 'Por ejemplo: «Responde breve y con frases sencillas.»',
+  rename: 'Renombrar',
+  pin: 'Fijar',
+  unpin: 'Desfijar',
+  archive: 'Archivar',
+  unarchive: 'Restaurar',
+  showArchived: 'Mostrar archivados',
+  delete: 'Eliminar chat',
+  deleteTitle: '¿Eliminar el chat definitivamente?',
+  deleteBody: 'Se eliminarán todos los mensajes de este chat.',
+  deleteConfirm: 'Eliminar',
+  cancel: 'Cancelar',
+  export: 'Exportar como Markdown',
+  copy: 'Copiar',
+  copied: 'Copiado.',
+  regenerate: 'Generar de nuevo',
+  edit: 'Editar',
+  editSave: 'Guardar y preguntar de nuevo',
+  retry: 'Reintentar',
+  usage: (inTokens: number, outTokens: number, usd: number) =>
+    `${inTokens} tokens enviados · ${outTokens} recibidos${
+      usd > 0 ? ` · aprox. ${usd.toFixed(4).replace('.', ',')} $` : ''
+    }`,
+  pinned: 'Fijados',
+  context: {
+    title: 'Datos de módulos',
+    hint: 'Por defecto, el chat no ve datos de la app. Elige módulos con los que puede responder preguntas; antes verás exactamente qué se envía.',
+    none: 'Ninguno',
+    attach: 'Adjuntar datos',
+    attachHint: 'Busca en los módulos elegidos datos sobre tu pregunta.',
+    previewTitle: 'Esto se enviará',
+    previewIntro: (cloud: boolean) =>
+      cloud
+        ? 'Este texto se envía junto con tu pregunta a tu proveedor.'
+        : 'Este texto se queda en este dispositivo.',
+    previewSend: 'Enviar con datos',
+    previewWithout: 'Enviar sin datos',
+    nothing: 'No se encontraron datos sobre esta pregunta en los módulos elegidos.',
+    attached: 'Con datos de la app',
+  },
+  aiOff: 'La IA está desactivada. Puedes volver a activarla en Ajustes → IA.',
+  errors: {
+    'ai-off': 'La IA está desactivada. Puedes volver a activarla en Ajustes → IA.',
+    'no-engine':
+      'No hay ningún proveedor configurado. Configura uno en Ajustes → IA o elige el modelo local.',
+    'local-unavailable':
+      'El modelo local no está listo. Descárgalo en Ajustes → IA → Modelo local.',
+    auth: 'El proveedor rechazó la clave.',
+    'rate-limit': 'El proveedor está limitando las solicitudes. Inténtalo de nuevo en un momento.',
+    network: 'Sin conexión con el proveedor.',
+    'limit-reached': 'Has alcanzado tus límites de hoy o de este mes.',
+    aborted: 'Cancelado.',
+    fallback: 'No ha funcionado.',
+  } as Record<string, string>,
+  settings: {
+    defaultEngine: 'Los chats nuevos responden con',
+    keepDays: 'Eliminar chats antiguos tras',
+    keepForever: 'Nunca',
+    keepDaysOption: (n: number) => (n === 1 ? '1 día' : `${n} días`),
+    keepHint: 'Los chats fijados se conservan. Se eliminan al abrir el módulo Chat.',
+  },
+  widget: {
+    empty: 'Aún no hay chats.',
+    link: 'Abrir chat',
+    line: (n: number) => (n === 1 ? '1 chat' : `${n} chats`),
+  },
+  seed: {
+    title: 'Ejemplo: consejos para el plan semanal',
+    question: '¿Cómo planifico una semana con tres eventos y una compra?',
+    answer:
+      'Un proceso sencillo:\n\n1. Anota primero los **eventos** fijos.\n2. Pon la **compra** en un día sin eventos.\n3. Reserva una tarde libre.\n\nAsí queda espacio para imprevistos.',
+  },
+};

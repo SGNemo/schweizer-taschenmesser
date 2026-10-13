@@ -20,9 +20,14 @@ export function openVaultSearch(): void {
 export default function startAccountsService(): () => void {
   const stop = startAutoLock();
   const stopSearchKey = getPlatform().desktop.onVaultSearch(openVaultSearch);
-  // The extension bridge (desktop, off unless the user switched it on); a lock ends its sessions.
+  // A lock ends the extension bridge sessions (desktop, off unless the user switched it on) and
+  // wipes a copied secret that is still on the clipboard.
   const stopLockWatch = useSession.subscribe((s) => {
-    if (s.session.status === 'locked') getBridge().endSessions();
+    if (s.session.status !== 'locked') return;
+    getBridge().endSessions();
+    void getPlatform()
+      .clipboard.clearSensitive()
+      .catch(() => undefined);
   });
   void resumeBridge();
   return () => {

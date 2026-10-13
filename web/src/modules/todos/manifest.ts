@@ -8,21 +8,29 @@ import { t } from '@/strings';
 
 const manifest: ModuleManifest = {
   id: 'todos',
-  name: t.todos.meta.name,
+  get name() {
+    return t.todos.meta.name;
+  },
   icon: 'checklist',
   version: 2,
-  description: t.todos.meta.description,
+  get description() {
+    return t.todos.meta.description;
+  },
   routes: [
     {
       path: '/todos',
-      label: t.todos.meta.route,
+      get label() {
+        return t.todos.meta.route;
+      },
       nav: true,
       component: () => import('./routes/TodosPage'),
     },
     {
       // Focus screen: the shell shows it without menus (`isFocusPath`).
       path: '/todos/focus/:taskId',
-      label: t.focus.mode.title,
+      get label() {
+        return t.focus.mode.title;
+      },
       layout: 'narrow',
       component: () => import('./routes/FocusPage'),
     },
@@ -37,14 +45,18 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'next',
-      title: t.focus.next.title,
+      get title() {
+        return t.focus.next.title;
+      },
       defaultSize: 'l',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/NextWidget'),
     },
     {
       id: 'open',
-      title: t.todos.meta.widget,
+      get title() {
+        return t.todos.meta.widget;
+      },
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/OpenTasksWidget'),
@@ -61,7 +73,15 @@ const manifest: ModuleManifest = {
     attention: () => import('./attention'),
     notifications: () => import('./notifications'),
     onboarding: onboarding,
-    quickAdd: [{ id: 'task', label: t.todos.meta.quickAdd, to: '/todos?new=1' }],
+    quickAdd: [
+      {
+        id: 'task',
+        get label() {
+          return t.todos.meta.quickAdd;
+        },
+        to: '/todos?new=1',
+      },
+    ],
     calendarItems: () => import('./calendar'),
     aiCreateDefaults: () => import('./aiDefaults'),
   },

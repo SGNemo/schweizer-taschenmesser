@@ -8,12 +8,42 @@ export const onboarding: OnboardingDef = {
     {
       id: 'form',
       kind: 'form',
-      label: s.form,
+      get label() {
+        return s.form;
+      },
       fields: [
-        { key: 'payee', label: s.payee, type: 'text', required: true },
-        { key: 'amount', label: s.amount, type: 'text', required: true, placeholder: '49,90' },
-        { key: 'due', label: s.due, type: 'date', required: true },
-        { key: 'reference', label: s.reference, type: 'text' },
+        {
+          key: 'payee',
+          get label() {
+            return s.payee;
+          },
+          type: 'text',
+          required: true,
+        },
+        {
+          key: 'amount',
+          get label() {
+            return s.amount;
+          },
+          type: 'text',
+          required: true,
+          placeholder: '49,90',
+        },
+        {
+          key: 'due',
+          get label() {
+            return s.due;
+          },
+          type: 'date',
+          required: true,
+        },
+        {
+          key: 'reference',
+          get label() {
+            return s.reference;
+          },
+          type: 'text',
+        },
       ],
     },
     {
@@ -21,8 +51,12 @@ export const onboarding: OnboardingDef = {
       kind: 'connector',
       connectorId: 'google',
       connectorFeature: 'mail',
-      label: t.onboarding.mail.invoices,
-      description: t.onboarding.mail.hint,
+      get label() {
+        return t.onboarding.mail.invoices;
+      },
+      get description() {
+        return t.onboarding.mail.hint;
+      },
     },
   ],
   load: () => import('./importer'),

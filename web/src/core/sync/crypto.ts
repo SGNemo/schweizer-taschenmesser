@@ -1,7 +1,9 @@
 /**
- * Optional end-to-end encryption of synced field values: PBKDF2-SHA-256 (passphrase → AES-GCM key)
- * and AES-GCM per value. Collection, record id, field name and HLC stay readable for the server
- * (it needs them to apply "greatest HLC wins"); the values do not.
+ * Optional end-to-end encryption of synced field values: AES-256-GCM per value with a key derived
+ * from the passphrase by Argon2id (64 MiB, t = 3, p = 1; see `vaultKey.ts` and `core/crypto/kdf.ts`).
+ * Collection, record id, field name and HLC stay readable for the server (it needs them to apply
+ * "greatest HLC wins"); the values do not. `deriveKey` below is the legacy PBKDF2 derivation, kept
+ * only to recognise and refuse old vaults.
  */
 import type { FieldOp } from './types';
 import { SyncError } from './types';

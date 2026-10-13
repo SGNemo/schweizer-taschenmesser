@@ -1,0 +1,70 @@
+---
+import { t, type Locale } from '../i18n';
+
+interface Props { locale: Locale }
+const s = t(Astro.props.locale);
+const [feature, nemo, others] = s.compare.head;
+---
+<section class="block band" id="vergleich" aria-labelledby="compare-title">
+  <div class="wrap narrow">
+    <p class="eyebrow">{s.compare.eyebrow}</p>
+    <h2 id="compare-title">{s.compare.title}</h2>
+    <table class="cmp">
+      <thead>
+        <tr><th scope="col"><span class="sr-only">{feature}</span></th><th scope="col">{nemo}</th><th scope="col">{others}</th></tr>
+      </thead>
+      <tbody>
+        {s.compare.rows.map(([k, a, b]) => (
+          <tr><th scope="row">{k}</th><td>{a}</td><td>{b}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<style>
+  .cmp {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-5);
+    font-size: var(--text-label);
+  }
+  .cmp th,
+  .cmp td {
+    text-align: left;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cmp thead th {
+    font-size: var(--text-caps);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .cmp tbody th {
+    font-weight: var(--weight-medium);
+    color: var(--text-muted);
+    width: 34%;
+  }
+  .cmp td:nth-child(2) {
+    font-weight: var(--weight-semibold);
+  }
+  .cmp td:nth-child(3) {
+    color: var(--text-muted);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  @media (max-width: 30rem) {
+    .cmp th,
+    .cmp td {
+      padding-inline: var(--space-2);
+      font-size: var(--text-sm);
+    }
+  }
+</style>

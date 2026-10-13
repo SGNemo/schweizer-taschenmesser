@@ -19,7 +19,7 @@ Klicks heute D = Desktop (Sidebar sichtbar), A = Android (Mehr → …). Ziel = 
 |---|---|---|---|---|---|---|
 | 1 | Theme wechseln | Einstellungen → Darstellung → Segment | 3 | 4 | 1 | kein Schnellschalter, nirgends sonst erreichbar |
 | 2 | Dichte wechseln | wie 1 (Zeile weiter unten, scrollen) | 3+ | 4+ | 2 | Darstellung hat 11 Felder auf einer Seite |
-| 3 | Sprache wechseln | Feld `general--language` zeigt nur „Deutsch“ | – | – | – | **entfällt** (UI nur Deutsch, CLAUDE.md); Zeile ist reine Info, Suche findet sie trotzdem |
+| 3 | Sprache wechseln | Einstellungen → Allgemein → Sprache (seit `feat/i18n-ui` echt wählbar, 5 Sprachen) | 3 | 4 | 2 | *Nachtrag 2026-10-11:* zum Zeitpunkt der Messung stand `develop` noch auf „nur Deutsch“; der Stand wurde erst danach neu geladen. Weg und Ziel wie Theme (Palette „Sprache“ wäre möglich, nicht umgesetzt) |
 | 4 | Lesehilfe an/aus | `Alt+L` oder Darstellung → Lesen → Schalter | 0–3 | 4 | 1 | Taste ok, aber unauffindbar; Android hat keinen Weg unter 4 |
 | 5 | Benachrichtigungen stummschalten | nur Ruhezeit konfigurieren (Benachrichtigungen → Ruhige Erinnerungen) | 4+ | 5+ | 1–2 | **Sackgasse:** kein „Stumm für 1 Stunde/bis morgen“ |
 | 6 | Sync-Status prüfen | `SyncBadge` in der Leiste (nur wenn Sync an) | 0 sehen, 1 Details | 0/1 | 1 | gut; ist aber ein Link, kein Status-Popover (Sync jetzt auslösen fehlt dort) |
@@ -76,7 +76,7 @@ Zusammenfassung: häufige Umschalter (1, 2, 4) kosten 3–4 Klicks statt 1–2; 
 ## 5. Grenzen, die ich einhalte
 - Sicherheitsrelevante Sektionen (Tresor/accounts, Auto-Lock, Biometrie, Keys/Tokens, Updater-Kanal, Datenträger) bleiben unverändert; Schnellschalter, Häufig-genutzt, Zurücksetzen und Erweitert erfassen sie nicht.
 - Keine Einstellung verliert Schlüssel/Standardwert; `fields`-Keys sind Teil der Deep-Links und bleiben stabil.
-- Texte nur über `strings.ts`. Die Aufgabe nennt „alle Sprachen/Glossar/`check:i18n`“: das Projekt ist **nur Deutsch** (CLAUDE.md) und hat kein `check:i18n`; ich halte mich an CLAUDE.md und `check:modules`/`check:docs`.
+- Texte über `t.…` in allen fünf Sprachen (`check:i18n`). *Nachtrag:* In Phase 1 stand hier fälschlich „nur Deutsch“; `develop` hatte die Sprachen inzwischen eingeführt, ich hatte einen alten Stand gelesen. Umsetzung hielt sich an die fünf Sprachen.
 - Hotspots laut `CHATS.md`: `pages/settings/*` und `layout/AppShell.tsx`, `router.tsx` klein halten; `core/modules/types.ts`/`registry.ts` und `core/platform/**` nur mit Zeile in CHATS.md. Die Bibliothek-Änderung berührt Modul-Komfort-Chat (parallel) – `ModuleLibrary.tsx` ist laut Aufgabe gemeinsame Zone: vor Paket B abstimmen.
 
 ## 6. Offene Fragen an Sven → Phase 2

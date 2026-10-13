@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collectLicenses, extractChangelogSection } from './aboutData';
+import { extractChangelogSection } from './aboutData';
 
 const MD = `# Changelog
 
@@ -37,24 +37,5 @@ describe('extractChangelogSection', () => {
     const s = extractChangelogSection(long, '1.0.0', 10);
     expect(s.split('\n')).toHaveLength(11);
     expect(s.endsWith('…')).toBe(true);
-  });
-});
-
-describe('collectLicenses', () => {
-  const packages: Record<string, object> = {
-    b: { version: '2.0.0', license: 'ISC', repository: { url: 'git+https://github.com/x/b.git' } },
-    a: { version: '1.0.0', license: 'MIT', homepage: 'https://a.example' },
-    c: { version: '3.0.0', licenses: [{ type: 'MIT' }, { type: 'Apache-2.0' }] },
-  };
-  const read = (n: string) => packages[n];
-  it('sorts by name and normalises repository links', () => {
-    expect(collectLicenses(['b', 'a'], read)).toEqual([
-      { name: 'a', version: '1.0.0', license: 'MIT', url: 'https://a.example' },
-      { name: 'b', version: '2.0.0', license: 'ISC', url: 'https://github.com/x/b' },
-    ]);
-  });
-  it('reads the legacy licenses array and rejects missing packages', () => {
-    expect(collectLicenses(['c'], read)[0]?.license).toBe('MIT OR Apache-2.0');
-    expect(() => collectLicenses(['zzz'], read)).toThrow(/not installed/);
   });
 });

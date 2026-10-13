@@ -1,14 +1,16 @@
 ---
 import Legal from '../layouts/Legal.astro';
 import { KOFI_URL, REPO_URL } from '../config.js';
+import { provider } from '../legal.js';
+const p = provider();
 ---
 <Legal locale="de" route="imprint" title="Impressum" description="Anbieterkennzeichnung und Kontakt für die Nemo-Website.">
   <h2>Angaben gemäß § 5 DDG</h2>
   <p>
-    Sven [PLATZHALTER: Nachname]<br />
-    [PLATZHALTER: Straße und Hausnummer]<br />
-    Erlangen<br />
-    Deutschland
+    {p.name}<br />
+    {p.street}<br />
+    {p.postcodeCity}<br />
+    {p.country.de}
   </p>
 
   <h2>Kontakt</h2>

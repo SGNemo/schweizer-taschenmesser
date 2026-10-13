@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
@@ -37,8 +38,7 @@ export function searchEntries(entries: readonly DecryptedEntry[], query: string)
     : [...entries];
   return shown.sort(
     (a, b) =>
-      Number(b.data.favorite) - Number(a.data.favorite) ||
-      a.data.title.localeCompare(b.data.title, 'de'),
+      Number(b.data.favorite) - Number(a.data.favorite) || compareText(a.data.title, b.data.title),
   );
 }
 

@@ -6,6 +6,7 @@ import { Button, Dialog, Form, FormActions, SelectField, Split, TextArea, TextFi
 import { safeUrl } from '../logic';
 import { giftRepo } from '../repo';
 import { GIFT_STATUSES, type Gift, type GiftStatus } from '../schema';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 export type GiftTarget = Stored<Gift> | { draft: true } | null;
 
@@ -61,7 +62,7 @@ function Fields({
     const cents = price.trim() === '' ? null : parseMoney(price);
     const next = {
       title: title.trim() ? undefined : t.form.required,
-      price: cents === undefined ? t.people.gift.badPrice : undefined,
+      price: cents === undefined ? t.people.gift.badPrice(formatMoneyInput(1990)) : undefined,
     };
     setErrors(next);
     if (next.title || next.price || cents === undefined) return;
@@ -137,7 +138,7 @@ function Fields({
             <Button
               variant="danger"
               onClick={async () => {
-                await giftRepo.remove(existing.id);
+                await deleteWithUndo(() => giftRepo.remove(existing.id));
                 onClose();
               }}
             >

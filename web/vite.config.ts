@@ -52,8 +52,10 @@ export default defineConfig({
       manifest: {
         name: 'Nemo',
         short_name: 'Nemo',
-        description: 'Modulare, lokale Alltags-App',
-        lang: 'de',
+        // One manifest per build: English as the international default (the app itself follows the
+        // device language); the shortcuts below are the only other texts the OS shows.
+        description: 'Modular, local-first everyday app',
+        lang: 'en',
         id: '/',
         start_url: '/',
         scope: '/',
@@ -69,9 +71,9 @@ export default defineConfig({
           params: { title: 'title', text: 'text', url: 'url' },
         },
         shortcuts: [
-          { name: 'Schnell erfassen', url: '/?capture=1' },
-          { name: 'Merkzettel anlegen', url: '/bookmarks?new=1' },
-          { name: 'Suchen', url: '/?search=1' },
+          { name: 'Quick capture', url: '/?capture=1' },
+          { name: 'Add to Saved', url: '/bookmarks?new=1' },
+          { name: 'Search', url: '/?search=1' },
         ],
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },

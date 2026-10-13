@@ -1,3 +1,4 @@
+import { WidgetErrorBoundary } from '@/layout/WidgetErrorBoundary';
 import {
   closestCenter,
   DndContext,
@@ -23,7 +24,9 @@ import { lazyComponent } from '@/core/modules/lazy';
 import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
 import type { WidgetDef, WidgetSize } from '@/core/modules/types';
+import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { t } from '@/strings';
+import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
@@ -38,6 +41,7 @@ import {
   PageHeader,
   patternStyles,
   Segmented,
+  SettingsLink,
   Skeleton,
   Switch,
   WidgetSizeContext,
@@ -311,6 +315,8 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
     disabled: !editing,
   });
   const Widget = entry.Component;
+  const manifest = availableManifests().find((m) => m.id === entry.moduleId);
+  const settingsTo = manifest ? moduleSettingsPath(manifest) : undefined;
   return (
     <div
       ref={setNodeRef}
@@ -335,6 +341,11 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
               entry.title
             )}
           </h2>
+          {!editing && settingsTo ? (
+            <span className={styles.gear}>
+              <SettingsLink to={settingsTo} label={tComfort.get().gear.module} />
+            </span>
+          ) : null}
           {editing ? (
             <>
               {entry.sizes.length > 1 ? (
@@ -369,11 +380,13 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
         {hidden && editing ? (
           <p className={styles.hint}>{t.homeEdit.hidden}</p>
         ) : (
-          <Suspense fallback={<WidgetFallback />}>
-            <WidgetSizeContext.Provider value={size}>
-              <Widget />
-            </WidgetSizeContext.Provider>
-          </Suspense>
+          <WidgetErrorBoundary id={entry.key}>
+            <Suspense fallback={<WidgetFallback />}>
+              <WidgetSizeContext.Provider value={size}>
+                <Widget />
+              </WidgetSizeContext.Provider>
+            </Suspense>
+          </WidgetErrorBoundary>
         )}
       </Card>
     </div>

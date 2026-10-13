@@ -18,6 +18,8 @@ import { CategoryPage, SettingsIndex, SettingsLayout } from '@/pages/settings/Se
 import { ShareTarget } from '@/pages/ShareTarget';
 import { ToolLibrary } from '@/pages/ToolLibrary';
 
+import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
+
 function ModuleDisabled() {
   const toast = useUiStore((s) => s.toast);
   useEffect(() => {
@@ -69,15 +71,17 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
             element: (
               <PageContainer key={m.id} variant={r.layout ?? m.layout ?? 'content'}>
                 <AreaFrame>
-                  <Suspense fallback={<PageFallback />}>
-                    {NO_READ_AID_MODULES.has(m.id) ? (
-                      <NoReadAid>
+                  <ModuleErrorBoundary manifest={m}>
+                    <Suspense fallback={<PageFallback />}>
+                      {NO_READ_AID_MODULES.has(m.id) ? (
+                        <NoReadAid>
+                          <Cmp />
+                        </NoReadAid>
+                      ) : (
                         <Cmp />
-                      </NoReadAid>
-                    ) : (
-                      <Cmp />
-                    )}
-                  </Suspense>
+                      )}
+                    </Suspense>
+                  </ModuleErrorBoundary>
                 </AreaFrame>
               </PageContainer>
             ),

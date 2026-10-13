@@ -1,4 +1,4 @@
-import { parseIcs, type IcsEvent } from '@/core/io/ics';
+import { ICS_NOTE_LIMIT, parseIcs, type IcsEvent } from '@/core/io/ics';
 import {
   ConnectorError,
   type CalendarSyncRequest,
@@ -26,8 +26,6 @@ export function contentTag(e: Omit<ExternalEvent, 'etag' | 'extId' | 'kind'>): s
   return (h >>> 0).toString(36);
 }
 
-const NOTE_LIMIT = 2000;
-
 export function toExternal(e: IcsEvent, index: number): ExternalEvent {
   const base = {
     title: e.title,
@@ -37,7 +35,7 @@ export function toExternal(e: IcsEvent, index: number): ExternalEvent {
     endDate: e.endDate && e.endDate !== e.startDate ? e.endDate : undefined,
     endTime: e.endTime,
     location: e.location,
-    note: e.note ? e.note.slice(0, NOTE_LIMIT) : undefined,
+    note: e.note ? e.note.slice(0, ICS_NOTE_LIMIT) : undefined,
     recurrence: e.recurrence,
   };
   return {

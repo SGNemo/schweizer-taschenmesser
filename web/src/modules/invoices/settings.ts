@@ -13,15 +13,23 @@ export const settings: ModuleSettings = {
   fields: [
     {
       key: 'remindDaysBefore',
-      label: t.invoices.meta.settings.remindDaysBefore,
+      get label() {
+        return t.invoices.meta.settings.remindDaysBefore;
+      },
       type: 'number',
-      help: t.invoices.meta.settings.remindDaysBeforeHelp,
+      get help() {
+        return t.invoices.meta.settings.remindDaysBeforeHelp;
+      },
     },
     {
       key: 'remindTime',
-      label: t.invoices.meta.settings.remindTime,
+      get label() {
+        return t.invoices.meta.settings.remindTime;
+      },
       type: 'text',
-      help: t.invoices.meta.settings.remindTimeHelp,
+      get help() {
+        return t.invoices.meta.settings.remindTimeHelp;
+      },
     },
   ],
 };

@@ -32,19 +32,25 @@ const q = (values: Record<string, string>): string =>
 const TARGETS: Target[] = [
   {
     module: 'bookmarks',
-    label: t.share.toBookmarks,
+    get label() {
+      return t.share.toBookmarks;
+    },
     icon: 'bookmark',
     to: (c) => `/bookmarks?${q({ title: c.title, text: c.text, url: c.url })}`,
   },
   {
     module: 'notes',
-    label: t.share.toNote,
+    get label() {
+      return t.share.toNote;
+    },
     icon: 'note',
     to: (c) => `/notes?${q({ new: '1', title: c.title, text: c.text || c.url })}`,
   },
   {
     module: 'todos',
-    label: t.share.toTodo,
+    get label() {
+      return t.share.toTodo;
+    },
     icon: 'checklist',
     to: (c) => `/todos?${q({ new: '1', title: c.title || c.text || c.url })}`,
   },

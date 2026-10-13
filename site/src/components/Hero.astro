@@ -1,12 +1,10 @@
 ---
-import { Picture } from 'astro:assets';
 import { RELEASES_URL } from '../config.js';
 import { t, type Locale } from '../i18n';
 import { release, formatSize, formatDate, assetUrl } from '../lib/release';
 import Icon from './Icon.astro';
+import Shot from './Shot.astro';
 import logo from '../assets/brand/logo-mark.svg';
-import shotDark from '../assets/screens/overview-dark.png';
-import shotLight from '../assets/screens/overview-light.png';
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
@@ -18,108 +16,193 @@ const buttons = [
   { key: 'android' as const, icon: 'android' as const, label: s.hero.android, sub: s.hero.androidSub },
 ];
 const hasSha = buttons.some((b) => r.assets[b.key].sha256);
-const sizes = '(min-width: 64rem) 52vw, 100vw';
-const widths = [480, 720, 960, 1280];
 ---
-<div class="hero">
+<section class="hero" aria-labelledby="hero-title">
+  <!-- Brand silhouettes: the logo mark, three times, at 6–7 % opacity. Decorative, no motion. -->
+  <svg class="reef r1" aria-hidden="true"><use href="#nemo-mark" /></svg>
+  <svg class="reef r2" aria-hidden="true"><use href="#nemo-mark" /></svg>
+  <svg class="reef r3" aria-hidden="true"><use href="#nemo-mark" /></svg>
+  <svg class="defs" width="0" height="0" aria-hidden="true">
+    <symbol id="nemo-mark" viewBox="51 93 393 344">
+      <mask id="nemo-mark-cut" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#fff" /><g fill="none" stroke="#000"><path d="M262.4 66Q323.3 208.9 436.7 315" stroke-width="40" /><path d="M173.3 128.4Q244.1 264.3 347.7 377.4" stroke-width="40" /></g><circle cx="370" cy="146.1" r="23" fill="#000" /></mask>
+      <g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round" mask="url(#nemo-mark-cut)"><path d="M142.7 274.3C165.3 224.4 177.9 173.9 235.8 133.4C307.1 83.5 380.3 87 418.8 142C457.4 197 435.6 267 364.3 316.9C306.4 357.4 254.7 352 200.1 356.2Z" /><path d="M162.4 260.5C122.6 288.4 66.1 286.4 56.1 293.4C67.8 341.6 111.2 403.5 152.4 431.1C162.5 424 180 370.3 219.8 342.4Z" /></g>
+    </symbol>
+  </svg>
   <div class="wrap grid">
     <div class="copy">
-      <img class="mark" src={logo.src} width="56" height="56" alt="" />
-      <h1>{s.hero.title}</h1>
+      <img class="mark" src={logo.src} width="48" height="48" alt="" />
+      <h1 id="hero-title">{s.hero.title} <em>{s.hero.titleAccent}</em></h1>
       <p class="lead">{s.hero.lead}</p>
-      <div class="dl">
-        {buttons.map((b) => (
-          <a class="btn btn-primary" href={assetUrl(b.key)} rel="noopener" download>
-            <Icon name={b.icon} size={22} />
-            <span>
-              {b.label}
-              <span class="sub">{b.sub} · {r.version} · {formatSize(r.assets[b.key].size, locale)}</span>
-            </span>
-          </a>
-        ))}
+      <div class="dlcard">
+        <div class="dl">
+          {buttons.map((b) => (
+            <a class="btn btn-primary" href={assetUrl(b.key)} rel="noopener" download>
+              <Icon name={b.icon} size={22} />
+              <span>
+                {b.label}
+                <span class="sub">{b.sub} · {formatSize(r.assets[b.key].size, locale)}</span>
+              </span>
+            </a>
+          ))}
+        </div>
+        <p class="meta version">
+          {versionLine} · <a href={RELEASES_URL} rel="noopener">{s.hero.allReleases}</a>{hasSha && <> · <a href="#checksums">{s.hero.checksums}</a></>}
+        </p>
+        <ul class="trust" aria-label={locale === 'de' ? 'Auf einen Blick' : 'At a glance'}>
+          {s.hero.trust.map((f) => <li><Icon name="check" size={16} />{f}</li>)}
+        </ul>
       </div>
-      <p class="facts">{s.hero.facts.map((f) => <span>{f}</span>)}</p>
-      <p class="meta version">
-        {versionLine} · <a href={RELEASES_URL} rel="noopener">{s.hero.allReleases}</a>
-      </p>
-      {hasSha && (
-        <details class="sha">
-          <summary>{s.hero.checksums}</summary>
-          <dl>
-            {buttons.map((b) => r.assets[b.key].sha256 && (
-              <>
-                <dt>{r.assets[b.key].name}</dt>
-                <dd><code>{r.assets[b.key].sha256}</code></dd>
-              </>
-            ))}
-          </dl>
-          <p class="meta">{s.hero.checksumsHint}</p>
-        </details>
-      )}
     </div>
-    <div class="shot">
-      <div class="shot-dark">
-        <Picture src={shotDark} formats={['avif', 'webp']} widths={widths} sizes={sizes} alt={s.hero.screenshotAlt} loading="eager" fetchpriority="high" />
+    <div class="devices">
+      <div class="frame"><div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+        <Shot name="home" alt={s.hero.screenshotAlt} sizes="(min-width: 64rem) 44vw, 100vw" widths={[480, 720, 960, 1280]} priority />
       </div>
-      <div class="shot-light">
-        <Picture src={shotLight} formats={['avif', 'webp']} widths={widths} sizes={sizes} alt={s.hero.screenshotAlt} loading="lazy" />
-      </div>
+      <div class="phone"><div class="screen">
+        <Shot name="phone" alt={s.hero.phoneAlt} sizes="7rem" widths={[220, 440]} />
+      </div></div>
     </div>
   </div>
-</div>
+  {hasSha && (
+    <div class="wrap">
+      <details class="sha" id="checksums">
+        <summary>{s.hero.checksumsTitle}</summary>
+        <dl>
+          {buttons.map((b) => r.assets[b.key].sha256 && (
+            <>
+              <dt>{r.assets[b.key].name}</dt>
+              <dd><code>{r.assets[b.key].sha256}</code></dd>
+            </>
+          ))}
+        </dl>
+        <p class="meta">{s.hero.checksumsHint}</p>
+      </details>
+    </div>
+  )}
+</section>
 
 <style>
   .hero {
+    position: relative;
+    overflow: hidden;
     background: var(--hero-wash);
-    padding-block: clamp(3rem, 6vw, 5.5rem) clamp(3rem, 6vw, 5rem);
+    padding-block: clamp(3rem, 7vw, 6rem) clamp(3rem, 6vw, 5rem);
   }
+  .defs {
+    position: absolute;
+  }
+  .reef {
+    position: absolute;
+    color: var(--hero-reef);
+    pointer-events: none;
+  }
+  .r1 { width: 22rem; height: 19rem; left: -6rem; top: -4rem; transform: rotate(-12deg); }
+  .r2 { width: 12rem; height: 10.5rem; right: 8%; top: -2rem; transform: scaleX(-1) rotate(8deg); }
+  .r3 { width: 16rem; height: 14rem; right: -4rem; bottom: -5rem; transform: rotate(14deg); }
   .grid {
+    position: relative;
     display: grid;
     gap: var(--space-7);
     align-items: center;
   }
   .mark {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     margin-bottom: var(--space-5);
   }
   h1 {
-    font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.25rem);
+    font-size: clamp(2.125rem, 1.4rem + 2.8vw, 3.25rem);
     font-weight: var(--weight-bold);
-    max-width: 20ch;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+    text-wrap: balance;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
   }
   .lead {
-    font-size: var(--text-lg);
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
     color: var(--text-muted);
-    max-width: 44ch;
+    max-width: 42ch;
     margin-top: var(--space-4);
+    text-wrap: pretty;
+  }
+  .dlcard {
+    margin-top: var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-1);
+    max-width: 34rem;
   }
   .dl {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-top: var(--space-6);
   }
-  .facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) 0;
-    margin-top: var(--space-4);
-    font-size: var(--text-sm);
-    color: var(--text-3);
-  }
-  .facts span + span::before {
-    content: '·';
-    margin-inline: var(--space-3);
+  .dl .btn {
+    flex: 1 1 12rem;
   }
   .version {
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
   }
   .version a {
     color: var(--text-muted);
   }
-  .sha {
+  .trust {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
     margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+  .trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .trust :global(svg) {
+    color: var(--success);
+  }
+  .devices {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-4);
+    align-items: end;
+  }
+  .phone {
+    width: clamp(4.5rem, 18vw, 6.75rem);
+    border-radius: 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-1);
+    padding: 0.3rem;
+  }
+  .phone .screen {
+    border-radius: 0.85rem;
+    overflow: hidden;
+    background: var(--bg);
+    aspect-ratio: 412 / 915;
+  }
+  .phone :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .sha {
+    position: relative;
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
     font-size: var(--text-meta);
     color: var(--text-3);
     max-width: 44rem;
@@ -130,6 +213,9 @@ const widths = [480, 720, 960, 1280];
     display: inline-flex;
     align-items: center;
     color: var(--text-muted);
+  }
+  .sha summary:hover {
+    color: var(--text);
   }
   .sha dl {
     display: grid;
@@ -151,28 +237,9 @@ const widths = [480, 720, 960, 1280];
     padding: 0.2em 0.4em;
     border-radius: var(--radius-sm);
   }
-  .shot {
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-1);
-    background: var(--surface);
-    border: 1px solid var(--border);
-  }
-  .shot :global(img) {
-    width: 100%;
-    height: auto;
-  }
-  /* One screenshot per theme; the hidden one is lazy and never requested. */
-  .shot-light { display: none; }
-  :global(:root[data-theme='light']) .shot-dark { display: none; }
-  :global(:root[data-theme='light']) .shot-light { display: block; }
-  @media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme='dark'])) .shot-dark { display: none; }
-    :global(:root:not([data-theme='dark'])) .shot-light { display: block; }
-  }
   @media (min-width: 64rem) {
     .grid {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 8fr);
+      grid-template-columns: minmax(0, 6fr) minmax(0, 7fr);
     }
   }
 </style>

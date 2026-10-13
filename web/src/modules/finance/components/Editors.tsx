@@ -1,3 +1,4 @@
+import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
@@ -8,6 +9,7 @@ import { accountRepo, categoryRepo, deleteAccount, transactionRepo } from '../re
 import type { Account, Category, Transaction } from '../schema';
 import type { FinanceData } from '../types';
 import styles from '../routes/finance.module.css';
+import { deleteWithUndo } from '@/core/undo/withToast';
 
 type Kind = 'expense' | 'income';
 
@@ -90,13 +92,13 @@ function TransactionForm({
   const [error, setError] = useState('');
   const categories = data.categories
     .filter((c) => c.kind === kind)
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    .sort((a, b) => compareText(a.name, b.name));
 
   async function save(e: FormEvent) {
     e.preventDefault();
     const amountMinor = parseMoney(amount);
     if (!amountMinor || amountMinor < 1) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     if (!accountId) return;
@@ -177,7 +179,9 @@ function TransactionForm({
       {existing?.sourceRef ? <p className={styles.muted}>{t.finance.fromInvoice}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => transactionRepo.remove(existing.id) : undefined}
+        onDelete={
+          existing ? () => deleteWithUndo(() => transactionRepo.remove(existing.id)) : undefined
+        }
       />
     </form>
   );
@@ -221,7 +225,7 @@ function AccountForm({
     const openingBalanceMinor =
       opening.trim() === '' ? 0 : parseMoney(opening, { allowNegative: true });
     if (openingBalanceMinor === undefined) {
-      setError(t.money.invalidAmount);
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     if (existing) await accountRepo.update(existing.id, { name: name.trim(), openingBalanceMinor });
@@ -256,7 +260,7 @@ function AccountForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteAccountHint}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => deleteAccount(existing.id) : undefined}
+        onDelete={existing ? () => deleteWithUndo(() => deleteAccount(existing.id)) : undefined}
       />
     </form>
   );
@@ -327,7 +331,9 @@ function CategoryForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteCategoryHint}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => categoryRepo.remove(existing.id) : undefined}
+        onDelete={
+          existing ? () => deleteWithUndo(() => categoryRepo.remove(existing.id)) : undefined
+        }
       />
     </form>
   );
