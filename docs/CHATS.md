@@ -22,6 +22,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Comfort package 5c (recurring invoices) | `feat/comfort-repeat` | `modules/invoices` (schema version 2) | PR open | – | 2026-10-13 |
 | Comfort package 5b (subscriptions: price history, cancelled for) | `feat/comfort-subs` | `modules/subscriptions` (schema version 2) | PR open | – | 2026-10-13 |
 | Comfort package 5a (booking search, gift overview) | `feat/comfort-more` | `finance` transactions tab, `people` page | PR open | – | 2026-10-13 |
 | Comfort package 4 (links, search to record) | `feat/comfort-links` | `ui/useOpenParam`, module pages (one hook line each), `core/ai/query/rows.ts`, pantry, chat message | PR open | – | 2026-10-13 |

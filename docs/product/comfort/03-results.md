@@ -11,6 +11,15 @@ Counts follow the method of [01-friction.md](01-friction.md) (code-traced, Deskt
 Not changed on purpose: vault documents (file bytes cannot be restored), chat thread delete (keeps its confirm dialog), automatic chat retention clean-up, invoice "bezahlt" (its undo also removes the booking, which the journal cannot do).
 Tests: `checkModules.test.ts` (rule), `core/undo/deleteWithUndo.test.ts`, e2e `money.spec.ts` "comes back with Rückgängig".
 
+## Package 5c – recurring invoices (`feat/comfort-repeat`)
+Built: a field "Wiederholen" (Nie / Monatlich / Vierteljährlich / Jährlich) in the invoice dialog. Paying a repeating invoice creates the next one (same payee, amount, reference, note, due one period later, open); paying again never makes a second one; "Rückgängig"/"Wieder öffnen" takes an untouched next invoice away again. The row shows "↻ Monatlich". Data version 2 (optional `repeat`, internal `repeatOf`).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 10 | Rent / insurance / subscription invoice every period | create again every time (3 / 4) | **paid = 1, the next one is there** | `repeat.spec.ts`, `invoices.test.ts` |
+
+Not done: recurring **bookings** (salary, rent as a booking): they need a time trigger at app start and are a separate step; automatic creation of invoices that were never paid.
+
 ## Package 5b – subscriptions: price history and "gekündigt zum" (`feat/comfort-subs`)
 Built: every price change is kept (`priceHistory`, last 20, shown in the dialog as "9,99 € → 12,99 € (+30 %)") and a recent increase is flagged on the row ("Preis erhöht (+30 %)", 180 days); a field "Gekündigt zum" (stored as the recurrence end, so charges, deadlines, calendar and notifications stop by themselves; a "Gekündigt zum …" line on the row; ended subscriptions drop out of the totals). Data version 2 (migration sets an empty history).
 

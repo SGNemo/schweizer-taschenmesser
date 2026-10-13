@@ -1,5 +1,6 @@
 import { sumMinor } from '@/core/money';
-import type { Invoice } from './schema';
+import { addMonthsStr } from '@/core/time/dates';
+import type { Invoice, InvoiceRepeat } from './schema';
 
 /** Open invoices by due date (oldest first), paid ones by payment date (newest first). */
 export function sortInvoices<
@@ -16,3 +17,9 @@ export function sortInvoices<
 
 export const openTotal = (list: Pick<Invoice, 'status' | 'amountMinor'>[]): number =>
   sumMinor(list.filter((i) => i.status === 'open').map((i) => i.amountMinor));
+
+const REPEAT_MONTHS: Record<InvoiceRepeat, number> = { monthly: 1, quarterly: 3, yearly: 12 };
+
+/** Due date of the invoice that follows one due on `dueDate` (a 31st becomes the last day of a shorter month). */
+export const nextDueDate = (dueDate: string, repeat: InvoiceRepeat): string =>
+  addMonthsStr(dueDate, REPEAT_MONTHS[repeat]);
