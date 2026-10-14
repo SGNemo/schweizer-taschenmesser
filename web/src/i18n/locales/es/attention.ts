@@ -12,6 +12,10 @@ export const attention: Strings['attention'] = {
   budgetOver: (name: string) => `Presupuesto «${name}» superado`,
   pantryExpired: (n: number) =>
     n === 1 ? '1 producto de la despensa caducado' : `${n} productos de la despensa caducados`,
+  pantryLow: (n: number) =>
+    n === 1
+      ? '1 producto de la despensa se está acabando'
+      : `${n} productos de la despensa se están acabando`,
   pantrySoon: (n: number) =>
     n === 1
       ? '1 producto de la despensa caduca pronto'

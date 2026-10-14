@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready, calendarEntry } from './helpers';
+import { calendarEntry, moreFields, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -94,13 +94,14 @@ test.describe('Invoices', () => {
 
     // Paid invoices move to the "Bezahlt" view
     await page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
-    await expect(page.getByRole('button', { name: /Stadtwerke/ })).toContainText(
+    await expect(page.getByRole('button', { name: /^Stadtwerke(?!:)/ })).toContainText(
       'Bezahlt am: 29. Sep. 2026',
     );
 
     // Finance shows the booking and the reduced balance
     await ready(page, '/finance?tab=transactions');
-    const row = page.getByRole('button', { name: /Stadtwerke/ });
+    await page.getByRole('switch', { name: 'Erweitert' }).click(); // Konten/Kategorien live in Erweitert
+    const row = page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ });
     await expect(row).toContainText('Rechnungen');
     await expect(row).toContainText(/−89,90\s€/);
     await page.getByRole('button', { name: 'Konten', exact: true }).click();
@@ -138,6 +139,7 @@ test.describe('Subscriptions', () => {
     await dialog.getByLabel('Name').fill('Streaming');
     await dialog.getByLabel('Betrag').fill('12,99');
     await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
+    await moreFields(page);
     await dialog.getByLabel('Kündigungsfrist (Tage vor Abbuchung)').fill('30');
     await expect(dialog.getByText('≙ 12,99')).toBeVisible();
     await save(page);
@@ -172,6 +174,7 @@ test.describe('Subscriptions', () => {
     await dialog.getByLabel('Name').fill('Fitnessstudio');
     await dialog.getByLabel('Betrag').fill('29,90');
     await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
+    await moreFields(page);
     await dialog.getByLabel('Kündigungsfrist (Tage vor Abbuchung)').fill('10');
     await save(page);
 
@@ -257,20 +260,39 @@ test.describe('Finance', () => {
       payee: 'Bahn',
     });
     await ready(page, '/finance?tab=transactions');
-    const row = page.getByRole('button', { name: /Bahn/ });
+    const row = page.getByRole('listitem').filter({ hasText: /^Bahn/ });
     await expect(row).toContainText(/−12,00\s€/);
     await expect(row).toContainText('Mobilität');
 
-    await row.click();
+    await row.getByRole('button', { name: /^Bahn(?!:)/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Buchung bearbeiten' });
     await dialog.getByLabel('Betrag').fill('15,50');
     await save(page);
-    await expect(page.getByRole('button', { name: /Bahn/ })).toContainText(/−15,50\s€/);
+    await expect(page.getByRole('listitem').filter({ hasText: /^Bahn/ })).toContainText(
+      /−15,50\s€/,
+    );
 
-    await page.getByRole('button', { name: /Bahn/ }).click();
+    await page.getByRole('button', { name: /^Bahn(?!:)/ }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
+  });
+
+  test('a deleted booking comes back with "Rückgängig" (comfort: delete = row, Löschen, undo)', async ({
+    page,
+  }) => {
+    await addTransaction(page, {
+      kind: 'Ausgabe',
+      amount: '9,00',
+      category: 'Mobilität',
+      payee: 'Tram',
+    });
+    await ready(page, '/finance?tab=transactions');
+    await page.getByRole('button', { name: /^Tram(?!:)/ }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+    await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
+    await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
+    await expect(page.getByRole('button', { name: /^Tram(?!:)/ })).toBeVisible();
   });
 
   test('accounts and categories can be managed; the balance sums all accounts', async ({
@@ -278,6 +300,7 @@ test.describe('Finance', () => {
   }) => {
     await addTransaction(page, { kind: 'Einnahme', amount: '100,00', category: 'Gehalt' });
     await ready(page, '/finance?tab=accounts');
+    await page.getByRole('switch', { name: 'Erweitert' }).click(); // Konten/Kategorien live in Erweitert
     await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
     await page.getByLabel('Kontoname').fill('Sparkonto');
     await page.getByLabel('Anfangssaldo').fill('1.000,00');

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createKeychain, serializeHeader, vaultSealName } from '@/core/crypto';
 import { TaschenmesserDB } from '@/core/db/db';
 import type { SecretStore } from '@/core/secrets/types';
-import { deviceSecretNames, resetDevice, RESET_PHRASE, vaultSealNames } from './device';
+import { deviceSecretNames, resetDevice, vaultSealNames } from './device';
 
 const FAST = { m: 64, t: 1, p: 1 };
 
@@ -21,8 +21,6 @@ function memorySecrets(
 }
 
 describe('device reset', () => {
-  it('asks for the phrase LÖSCHEN', () => expect(RESET_PHRASE).toBe('LÖSCHEN'));
-
   it('names the AI keys, the backup password and the connector secrets', async () => {
     const database = new TaschenmesserDB(`reset-names-${Math.random()}`);
     const names = await deviceSecretNames(database);

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { addTask, connect, newDevice, resetServer, serverDump, syncNow } from './helpers';
+import { moduleSwitch } from '../helpers';
 
 /**
  * "Fresh install" run for the launch: empty database, setup assistant to the end, sync against the
@@ -62,7 +63,7 @@ async function addTransaction(page: Page) {
 async function addNote(page: Page) {
   await page.goto('/library');
   const card = page.getByTestId('module-notes');
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
+  await moduleSwitch(card).click();
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
   await ready(page, '/notes?new=1');
   const dialog = page.getByRole('dialog');

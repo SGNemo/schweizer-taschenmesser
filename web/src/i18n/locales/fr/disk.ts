@@ -112,6 +112,7 @@ export const disk: Strings['disk'] = {
     clear: 'Vider le panier',
     deleteAll: 'Tout supprimer…',
     remove: (name: string) => `Retirer ${name} du panier`,
+    added: (n: number) => `${n} ${n === 1 ? 'élément' : 'éléments'} dans le panier`,
   },
   del: {
     title: 'Confirmer la suppression',
@@ -127,8 +128,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Supprimer définitivement – sans corbeille',
     trashBtn: 'Mettre à la corbeille',
     permBtn: 'Supprimer définitivement',
-    typeLabel: (phrase: string) => `Saisissez « ${phrase} » pour confirmer`,
-    typeHint: 'Pour que rien ne disparaisse par erreur.',
+    twiceHint: 'Comme c’est beaucoup ou définitif, Nemo vous redemande une fois.',
+    againTitle: 'Vraiment supprimer ?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 élément' : `${n} éléments`} de ${size} (${files} fichiers) iront à la corbeille.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 élément' : `${n} éléments`} de ${size} (${files} fichiers) seront supprimés définitivement. Impossible d’annuler.`,
+    againYesTrash: 'Oui, mettre à la corbeille',
+    againYesPermanent: 'Oui, supprimer définitivement',
+    back: 'Retour',
     warnUser:
       'Ceci se trouve dans vos dossiers personnels (Documents, Images, Bureau, Vidéos, Musique). Vérifiez bien que vous n’en avez vraiment plus besoin.',
     warnProgram:
@@ -147,7 +155,7 @@ export const disk: Strings['disk'] = {
     stop: 'Arrêter',
     close: 'Fermer',
     errors: {
-      'confirmation-mismatch': 'La confirmation ne correspond pas.',
+      'confirmation-missing': 'La deuxième confirmation manque. Veuillez supprimer à nouveau.',
       'plan-expired': 'La vérification a expiré. Veuillez relancer la suppression.',
       'unknown-plan': 'La vérification a expiré. Veuillez relancer la suppression.',
       'already-running': 'Une suppression est déjà en cours.',
@@ -223,7 +231,12 @@ export const disk: Strings['disk'] = {
     legend: 'Légende',
     byType: 'Type de fichier',
     byDepth: 'Profondeur',
+    ageLegendUse:
+      'Couleur = dernière utilisation (ouverture ou modification, la plus récente). Pour un dossier, c’est le fichier utilisé le plus récemment qui compte : un dossier rouge n’a pas été ouvert depuis des années.',
     depthLegend: 'Plus la surface est foncée, plus le dossier est profond.',
+    byAge: 'Ancienneté',
+    ageLegend:
+      'Couleur = dernière modification. Pour un dossier, c’est le fichier le plus récent qui compte : un dossier rouge n’a pas été touché depuis des années.',
     colorBy: 'Couleur selon',
     kind: {
       video: 'Vidéos',
@@ -232,8 +245,44 @@ export const disk: Strings['disk'] = {
       archive: 'Archives',
       program: 'Programmes',
       document: 'Documents',
+      game: 'Données de jeux',
       other: 'Autre',
     },
+  },
+  age: {
+    buckets: [
+      'moins de 1 mois',
+      '1–6 mois',
+      '6–12 mois',
+      '1–2 ans',
+      '2–3 ans',
+      'plus de 3 ans',
+    ] as readonly string[],
+    ago: (days: number) => {
+      if (days < 1) return 'aujourd’hui';
+      if (days < 2) return 'hier';
+      if (days < 14) return `il y a ${Math.floor(days)} jours`;
+      if (days < 61) return `il y a ${Math.floor(days / 7)} semaines`;
+      if (days < 730) return `il y a ${Math.floor(days / 30.44)} mois`;
+      return `il y a ${Math.floor(days / 365.25)} ans`;
+    },
+    short: (days: number) => {
+      if (days < 1) return 'auj.';
+      if (days < 14) return `${Math.floor(days)} j`;
+      if (days < 61) return `${Math.floor(days / 7)} sem.`;
+      if (days < 730) return `${Math.floor(days / 30.44)} mois`;
+      return `${Math.floor(days / 365.25)} ans`;
+    },
+  },
+  select: {
+    label: 'Résultats sélectionnés',
+    row: (name: string) => `Sélectionner ${name}`,
+    all: 'Sélectionner tous les résultats',
+    summary: (n: number, size: string) =>
+      `${n} ${n === 1 ? 'élément sélectionné' : 'éléments sélectionnés'} · ${size}`,
+    toBasket: 'Mettre au panier',
+    delete: 'Supprimer la sélection …',
+    clear: 'Annuler la sélection',
   },
   views: { label: 'Affichage', map: 'Carte', list: 'Liste' },
   nav: {
@@ -247,8 +296,28 @@ export const disk: Strings['disk'] = {
     none: 'Tous',
     topDirs: 'Plus gros dossiers',
     topFiles: 'Plus gros fichiers',
-    old: 'Plus ancien que',
-    months: (n: number) => (n === 12 ? '1 an' : n === 24 ? '2 ans' : `${n} mois`),
+    old: 'Pas modifié depuis longtemps',
+    unused: 'Pas utilisé depuis longtemps',
+    oldSince: 'Pas modifié depuis',
+    months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 an' : `${n / 12} ans`) : `${n} mois`),
+    all: 'Tout',
+    topmost: 'N’afficher qu’une fois les anciens dossiers (sans leur contenu)',
+    minSize: 'Taille minimale',
+    anySize: 'toutes tailles',
+    fromSize: (size: string) => `à partir de ${size}`,
+    oldSummary: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'élément' : 'éléments'} pour ${size} au total, pas modifiés depuis plus de ${since}`,
+    capped: (n: number) => `Seuls les ${n} plus grands sont affichés.`,
+    basis: 'Selon',
+    byChange: 'dernière modification',
+    byOpen: 'dernière ouverture',
+    notOpenedSince: 'Pas ouvert depuis',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'élément' : 'éléments'} pour ${size} au total, pas ouverts depuis plus de ${since}`,
+    accessHelp:
+      'Sur ce lecteur, Windows note quand les fichiers ont été ouverts pour la dernière fois (à une heure près environ). Les antivirus, les miniatures ou les sauvegardes peuvent aussi changer la date ; un fichier paraît alors plus récent qu’il ne l’est, jamais plus ancien.',
+    oldHelp:
+      'C’est la dernière modification qui compte, pas la dernière ouverture : Windows n’enregistre généralement pas l’ouverture des fichiers de façon fiable. Pour un dossier, c’est le fichier le plus récent qui compte. Pour un jeu, une mise à jour change la date, y jouer non.',
     type: 'Type de fichier',
     scope: 'Afficher',
     dirs: 'Dossiers',
@@ -259,12 +328,23 @@ export const disk: Strings['disk'] = {
     none_found: 'Aucun résultat.',
     results: (n: number) => (n <= 1 ? `${n} résultat` : `${n} résultats`),
   },
+  games: {
+    filter: 'Jeux (Steam)',
+    label: 'Jeux Steam',
+    lastPlayed: 'Dernière partie',
+    played: (date: string, ago: string) => `Dernière partie le ${date} · ${ago}`,
+    unknown: 'Pas de date de partie dans Steam',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'jeu' : 'jeux'} pour ${size} au total, dont ${idle} sans partie depuis plus d’un an`,
+    help: 'La date vient des fichiers de Steam et compte la dernière partie, pas la dernière mise à jour. Si elle manque, le jeu n’a jamais été lancé ou Steam ne l’a pas notée. Le plus propre est de désinstaller un jeu dans Steam : si seul le dossier est supprimé, Steam l’affiche toujours comme installé.',
+  },
   list: {
     name: 'Nom',
     size: 'Occupé',
     share: 'Part',
     files: 'Fichiers',
     modified: 'Modifié',
+    accessed: 'Ouvert',
     sortBy: (col: string) => `Trier par ${col}`,
     in: 'Dans',
     empty: 'Aucun élément.',
@@ -282,7 +362,15 @@ export const disk: Strings['disk'] = {
     files: 'Fichiers',
     modified: 'Dernière modification',
     modifiedFolder: 'Dernière modification (fichier le plus récent)',
+    accessed: 'Dernière ouverture',
+    accessedFolder: 'Dernière ouverture (fichier le plus récent)',
     types: 'Types de fichiers',
+    ages: 'Ancienneté des données',
+    ageBar: 'Parts par ancienneté',
+    oldShare: (size: string, pct: number) => `${size} (${pct} %) pas modifiés depuis plus d’un an`,
+    unusedShare: (size: string, pct: number) =>
+      `${size} (${pct} %) pas utilisés depuis plus d’un an`,
+    showOld: 'Afficher les anciens éléments ici',
     biggest: 'Plus gros éléments ici',
     open: 'Ouvrir le dossier',
     percent: (p: number) => `${p} %`,
@@ -292,6 +380,10 @@ export const disk: Strings['disk'] = {
     title: (root: string) => `Analyse de ${root}`,
     scanning: 'Analyse en cours…',
     paused: 'Analyse en pause',
+    liveLabel: 'Vue en direct de l’analyse',
+    liveHint:
+      'La carte se remplit pendant le comptage. Ouvrir, sélectionner et supprimer fonctionnent une fois l’analyse terminée.',
+    liveEmpty: 'Comptage des premiers dossiers…',
     files: 'Fichiers',
     folders: 'Dossiers',
     used: 'Occupé',

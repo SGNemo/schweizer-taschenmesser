@@ -3,16 +3,42 @@ import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
+import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
-import { Button, Dialog, patternStyles, Segmented, SelectField, TextArea, TextField } from '@/ui';
+import { lastUsedFor } from '../logic';
+import {
+  AdvancedFields,
+  Button,
+  Dialog,
+  patternStyles,
+  Segmented,
+  SelectField,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { accountRepo, categoryRepo, deleteAccount, transactionRepo } from '../repo';
-import type { Account, Category, Transaction } from '../schema';
+import {
+  BOOKING_REPEATS,
+  type Account,
+  type BookingRepeat,
+  type Category,
+  type Transaction,
+} from '../schema';
 import type { FinanceData } from '../types';
 import styles from '../routes/finance.module.css';
+import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
 type Kind = 'expense' | 'income';
 
-function Actions({ onDelete, onClose }: { onDelete?: () => Promise<void>; onClose: () => void }) {
+function Actions({
+  onDelete,
+  onDuplicate,
+  onClose,
+}: {
+  onDelete?: () => Promise<void>;
+  onDuplicate?: () => Promise<void>;
+  onClose: () => void;
+}) {
   return (
     <div className={styles.actions}>
       {onDelete ? (
@@ -29,6 +55,11 @@ function Actions({ onDelete, onClose }: { onDelete?: () => Promise<void>; onClos
         <span />
       )}
       <span className={patternStyles.hstack}>
+        {onDuplicate ? (
+          <Button variant="ghost" onClick={() => void onDuplicate()}>
+            {t.actions.duplicate}
+          </Button>
+        ) : null}
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
           {t.actions.save}
@@ -46,10 +77,13 @@ export function TransactionEditor({
   target,
   data,
   onClose,
+  onDuplicated,
 }: {
   target: TransactionTarget;
   data: FinanceData;
   onClose: () => void;
+  /** The copy made by "Duplizieren"; the page opens it for editing. */
+  onDuplicated?: (copy: Stored<Transaction>) => void;
 }) {
   const existing = target && 'id' in target ? target : null;
   return (
@@ -64,6 +98,7 @@ export function TransactionEditor({
           existing={existing}
           data={data}
           onClose={onClose}
+          onDuplicated={onDuplicated}
         />
       ) : null}
     </Dialog>
@@ -74,10 +109,12 @@ function TransactionForm({
   existing,
   data,
   onClose,
+  onDuplicated,
 }: {
   existing: Stored<Transaction> | null;
   data: FinanceData;
   onClose: () => void;
+  onDuplicated?: (copy: Stored<Transaction>) => void;
 }) {
   const [kind, setKind] = useState<Kind>(existing?.kind ?? 'expense');
   const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.amountMinor) : '');
@@ -86,8 +123,11 @@ function TransactionForm({
   // Falls back to the first account, which may only appear after the defaults were created.
   const accountId = chosenAccountId || data.accounts[0]?.id || '';
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? '');
+  // The category (and account) came from the payee's last booking, not from the user.
+  const [autoFilled, setAutoFilled] = useState(false);
   const [payee, setPayee] = useState(existing?.payee ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
+  const [repeat, setRepeat] = useState<BookingRepeat | ''>(existing?.repeat ?? '');
   const [error, setError] = useState('');
   const categories = data.categories
     .filter((c) => c.kind === kind)
@@ -109,6 +149,7 @@ function TransactionForm({
       date,
       payee: payee.trim() || undefined,
       note: note.trim() || undefined,
+      repeat: repeat || undefined,
     };
     if (existing) await transactionRepo.update(existing.id, values);
     else await transactionRepo.create(values);
@@ -148,7 +189,21 @@ function TransactionForm({
           required
         />
       </div>
-      <TextField label={t.finance.payee} value={payee} onChange={(e) => setPayee(e.target.value)} />
+      <TextField
+        label={t.finance.payee}
+        value={payee}
+        onChange={(e) => {
+          const value = e.target.value;
+          setPayee(value);
+          // A repeat booking only needs the amount: take category and account of the last one.
+          if (!existing && (categoryId === '' || autoFilled)) {
+            const last = lastUsedFor(data.txs, value, kind);
+            setCategoryId(last?.categoryId ?? '');
+            setAutoFilled(!!last?.categoryId);
+            if (last && !chosenAccountId) setChosenAccountId(last.accountId);
+          }
+        }}
+      />
       <div className={styles.split}>
         <SelectField
           label={t.finance.account}
@@ -164,7 +219,10 @@ function TransactionForm({
         <SelectField
           label={t.finance.category}
           value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
+          onChange={(e) => {
+            setCategoryId(e.target.value);
+            setAutoFilled(false);
+          }}
         >
           <option value="">{t.finance.noCategory}</option>
           {categories.map((c) => (
@@ -175,10 +233,48 @@ function TransactionForm({
         </SelectField>
       </div>
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields moduleId="finance" hasData={!!repeat}>
+        <SelectField
+          label={t.finance.repeat}
+          value={repeat}
+          onChange={(e) => setRepeat(e.target.value as BookingRepeat | '')}
+          hint={t.finance.repeatHint}
+        >
+          <option value="">{t.finance.repeatOptions.none}</option>
+          {BOOKING_REPEATS.map((r) => (
+            <option key={r} value={r}>
+              {t.finance.repeatOptions[r]}
+            </option>
+          ))}
+        </SelectField>
+      </AdvancedFields>
       {existing?.sourceRef ? <p className={styles.muted}>{t.finance.fromInvoice}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => transactionRepo.remove(existing.id) : undefined}
+        onDelete={
+          existing ? () => deleteWithUndo(() => transactionRepo.remove(existing.id)) : undefined
+        }
+        onDuplicate={
+          existing
+            ? async () => {
+                // A repeat booking (rent, subscription) lands on today with the same payee and amount.
+                const copy = await undoableWithToast(
+                  t.actions.duplicated,
+                  t.actions.duplicated,
+                  () =>
+                    transactionRepo.create({
+                      ...copyData(existing),
+                      date: today(),
+                      sourceRef: undefined,
+                      repeat: undefined,
+                      repeatOf: undefined,
+                    }),
+                );
+                onClose();
+                onDuplicated?.(copy);
+              }
+            : undefined
+        }
       />
     </form>
   );
@@ -257,7 +353,7 @@ function AccountForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteAccountHint}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => deleteAccount(existing.id) : undefined}
+        onDelete={existing ? () => deleteWithUndo(() => deleteAccount(existing.id)) : undefined}
       />
     </form>
   );
@@ -328,7 +424,9 @@ function CategoryForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteCategoryHint}</p> : null}
       <Actions
         onClose={onClose}
-        onDelete={existing ? () => categoryRepo.remove(existing.id) : undefined}
+        onDelete={
+          existing ? () => deleteWithUndo(() => categoryRepo.remove(existing.id)) : undefined
+        }
       />
     </form>
   );

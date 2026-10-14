@@ -3,9 +3,19 @@
 Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf; Nemo-*- und Taschenmesser-*-Assets, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
 
 ## Nächste eine Sache
+Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
+
+Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): alle Pakete in `develop` bis auf die Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`); Handtests K1–K4.
+
 Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); Rust-Panic-Log im Datenordner und Widget-Fehlergrenze in PR #92; offen: nur die Handtests der Checkliste.
 
 Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md), kleine Fixes mit Tests umgesetzt, offen bleiben u. a. Pipe-Erstinstanz (X2), Windows-Hello-Wrapping (V2), Backup-Zeilenvalidierung (V5), Android-Manifest-Prüfung in CI (T2).
+
+Dieser PC – Aufräumen (`feat/disk-cleanup-ux`): Karte standardmäßig nach Alter gefärbt, Liste „Lange nicht geändert“ (jeder alte Ordner einmal, Summe, Mehrfachauswahl → Korb/Löschen), „Alter der Daten“ in den Details, Dateityp „Spieldaten“; PR gegen `develop`, wartet auf Review; Handtest D17 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Dieser PC – „Zuletzt gespielt“ (`feat/disk-steam-last-played`): Filter „Spiele (Steam)“ mit Datum aus Steams eigenen Dateien, auch in den Details; PR gegen `develop`, wartet auf Review; Handtest D19.
+
+Dieser PC – „Lange nicht benutzt“ (`feat/disk-age-by-last-use`): wo Windows das Öffnen-Datum führt (NTFS, Zugriffszeit an), zählen Alter, Kartenfarben und die Liste standardmäßig ab der letzten Benutzung (geöffnet oder geändert); PR gegen `develop`, wartet auf Review; Handtest D20.
 
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).
 
@@ -18,6 +28,8 @@ Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, E
 KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen → KI, löscht Schlüssel, Cache, Statistik und API-Tokens; PR gegen `develop`, wartet auf Review; Handtests A1–A2 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien), Wahl unter Einstellungen → Allgemein und im ersten Einrichtungsschritt, Standard Systemsprache sonst Englisch; Übersetzungen maschinell, noch nicht muttersprachlich geprüft ([i18n/README.md](i18n/README.md)); PR gegen `develop`, wartet auf Review; Handtests S1–S4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Komfort Einstellungen, Bibliothek, Werkzeugkasten (gemergt: #132 Einstellungen, #150 Stumm, #151 Bibliothek, #153 Werkzeugkasten): Schnellleiste, Palette-Direktumschaltung und Suche ohne Präfix, „Häufig genutzt“, Kontext-Zahnrad, Zurücksetzen, Stumm, Bibliothek- und Werkzeugsuche, „timer 10m“/„umrechnen 5 km“ in der Leiste. Ergebnis: [product/comfort/06-settings-results.md](product/comfort/06-settings-results.md). Offen (Sven): Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Woche Nutzung (Reizlast Zahnrad/Schnellleiste).
 
 ## Heute möglich in 15 Minuten
 1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).

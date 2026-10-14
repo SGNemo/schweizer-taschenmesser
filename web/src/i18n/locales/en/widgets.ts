@@ -26,8 +26,10 @@ export const widgets: Strings['widgets'] = {
   packingSummary: (packed: number, total: number) => `${packed} of ${total} packed`,
   contractsSummary: (n: number) =>
     n === 1 ? '1 notice period coming up' : `${n} notice periods coming up`,
-  expirySummary: (expired: number, soon: number) =>
-    [expired ? `${expired} expired` : '', soon ? `${soon} soon` : ''].filter(Boolean).join(' · '),
+  expirySummary: (expired: number, soon: number, low = 0) =>
+    [expired ? `${expired} expired` : '', soon ? `${soon} soon` : '', low ? `${low} low` : '']
+      .filter(Boolean)
+      .join(' · '),
   kpiAvailable: (amount: string) => `${amount} available`,
   kpiMonthNet: (amount: string) => `${amount} this month`,
   kpiSeries: 'Balance at month end, last 6 months',

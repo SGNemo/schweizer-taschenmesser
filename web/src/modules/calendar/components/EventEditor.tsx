@@ -4,20 +4,24 @@ import { getPlatform } from '@/core/platform';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
+import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
 import {
+  AdvancedFields,
   Button,
+  DateChips,
   Dialog,
   Icon,
-  patternStyles,
   SelectField,
   Switch,
   TextArea,
   TextField,
+  patternStyles,
 } from '@/ui';
 import { eventRepo } from '../repo';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
+import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
 export type EventTarget =
   | Stored<CalendarEvent>
@@ -35,7 +39,16 @@ const leadLabel = (m: number): string =>
         ? t.calendar.notify.day
         : t.calendar.notify.minutes(m);
 
-export function EventEditor({ target, onClose }: { target: EventTarget; onClose: () => void }) {
+export function EventEditor({
+  target,
+  onClose,
+  onDuplicated,
+}: {
+  target: EventTarget;
+  onClose: () => void;
+  /** The copy made by "Duplizieren"; the page opens it for editing. */
+  onDuplicated?: (copy: Stored<CalendarEvent>) => void;
+}) {
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
@@ -51,7 +64,14 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
             : t.calendar.newEvent
       }
     >
-      {target ? <Form key={existing?.id ?? 'new'} target={target} onClose={onClose} /> : null}
+      {target ? (
+        <Form
+          key={existing?.id ?? 'new'}
+          target={target}
+          onClose={onClose}
+          onDuplicated={onDuplicated}
+        />
+      ) : null}
     </Dialog>
   );
 }
@@ -59,7 +79,15 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
 const isReminder = (target: EventTarget): boolean =>
   !!target && ('id' in target ? target.kind === 'reminder' : target.draft.kind === 'reminder');
 
-function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: () => void }) {
+function Form({
+  target,
+  onClose,
+  onDuplicated,
+}: {
+  target: NonNullable<EventTarget>;
+  onClose: () => void;
+  onDuplicated?: (copy: Stored<CalendarEvent>) => void;
+}) {
   const existing = 'id' in target ? target : null;
   const kind: EventKind = isReminder(target) ? 'reminder' : 'event';
   const reminder = kind === 'reminder';
@@ -148,24 +176,13 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           />
         )}
       </div>
-      {reminder ? null : (
-        <div className={styles.split}>
-          <TextField
-            label={`${t.calendar.end} (${t.form.date})`}
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-          {allDay ? null : (
-            <TextField
-              label={`${t.calendar.end} (${t.form.time})`}
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
-          )}
-        </div>
-      )}
+      <DateChips
+        value={startDate}
+        onChange={(d) => {
+          setStartDate(d);
+          if (endDate && endDate < d) setEndDate(d);
+        }}
+      />
       {reminder ? null : (
         <TextField
           label={t.calendar.location}
@@ -181,7 +198,9 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           </Button>
         </div>
       ) : null}
-      <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+      {reminder ? (
+        <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+      ) : null}
       <SelectField
         label={t.calendar.notify.label}
         value={notifyChoice}
@@ -197,7 +216,33 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
       {reminder ? (
         <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
       ) : null}
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      <AdvancedFields
+        moduleId="calendar"
+        hasData={!!endDate || !!endTime || !!recurrence || !!note}
+      >
+        {reminder ? null : (
+          <div className={styles.split}>
+            <TextField
+              label={`${t.calendar.end} (${t.form.date})`}
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            {allDay ? null : (
+              <TextField
+                label={`${t.calendar.end} (${t.form.time})`}
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            )}
+          </div>
+        )}
+        {reminder ? null : (
+          <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+        )}
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       {error ? (
         <p role="alert" className={styles.error}>
           {error}
@@ -208,7 +253,7 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           <Button
             variant="danger"
             onClick={async () => {
-              await eventRepo.remove(existing.id);
+              await deleteWithUndo(() => eventRepo.remove(existing.id));
               onClose();
             }}
           >
@@ -218,6 +263,22 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           <span />
         )}
         <span className={patternStyles.hstack}>
+          {existing ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                const copy = await undoableWithToast(
+                  t.actions.duplicated,
+                  t.actions.duplicated,
+                  () => eventRepo.create(copyData(existing)),
+                );
+                onClose();
+                onDuplicated?.(copy);
+              }}
+            >
+              {t.actions.duplicate}
+            </Button>
+          ) : null}
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

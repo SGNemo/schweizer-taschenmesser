@@ -9,7 +9,7 @@ R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release
 R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
 R3. *In-App-Update:* eine 0.3.x-Installation (Windows-Portable und Android) prüft Updates und aktualisiert auf das erste Release ohne `Taschenmesser-*`-Dateien (`latest.json` verweist auf `Nemo-Portable.exe`, Android nimmt `Nemo.apk`). Daten bleiben erhalten. Von 0.2.x aus ist kein Selbst-Update mehr möglich (nur Neuinstallation). ☐
 R4. *Sync-Tresor v2 (Argon2id) mit einem 0.2.0-Gerät:* zweites, altes Gerät am selben Server; prüfen, ob ein älterer Tresor weiter entschlüsselt. ☐
-R5. Datenträger-Modul D1–D16 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
+R5. Datenträger-Modul D1–D18 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
 
 ### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
@@ -23,12 +23,16 @@ D7. *Papierkorb nicht möglich:* Einen Testordner auf einem USB-Stick/Netzlaufwe
 D8. *Sperrliste:* Diese Pfade zeigen **keine** Löschen-Schaltfläche, sondern „Geschützt“: Laufwerkswurzel, `C:\Windows` (und darin), `C:\Program Files`, `C:\ProgramData`, `C:\Users`, dein Profilordner, `AppData`, `System Volume Information`, `$Recycle.Bin`, `pagefile.sys`/`hiberfil.sys`, Ordner der Taschenmesser-App und ihrer Daten, Ordner eines laufenden Programms. Mit 8.3-Namen (`dir /x`) und über eine Junction auf `C:\Windows` ebenfalls nicht löschbar. ☐
 D9. *Abbruch:* Scan während der Laufzeit abbrechen (Teilergebnis bleibt nutzbar); Löschen einer großen Testordner-Auswahl mit „Stoppen“ unterbrechen (Rest bleibt unberührt). ☐
 D10. *Datei in Benutzung:* Eine geöffnete Testdatei in einem Testordner: Bericht „Teilweise gelöscht“ mit Grund „Datei in Benutzung“. ☐
-D11. *Bestätigungen:* Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ verlangen das Eintippen des Namens; Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
+D11. *Bestätigungen:* Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ fragen ein zweites Mal („Wirklich löschen?“, kein Eintippen mehr; ein schneller Doppelklick bestätigt nicht beide Male); Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
 D12. *Aufräum-Helfer:* „Aufräumen“ auf der Startseite listet Temp/Downloads/Browser-Caches (nur vorhandene); „Doppelte Dateien“ findet zwei gleiche Testdateien, ein Exemplar bleibt immer. ☐
 D13. *Im Explorer zeigen / Pfad kopieren* funktionieren (auch bei langen Pfaden). ☐
 D14. *Berechtigungen:* App startet, Updater, Google-Login und lokale API funktionieren weiterhin (alle App-Befehle sind jetzt einzeln freigegeben; `capabilities/desktop.json`). ☐
 D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, RAM, Akku am Laptop, Grafikkarte, lokale IP). ☐
 D16. *Android/PWA:* „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
+D17. *Alt & ungenutzt:* Spiele-/Steam-Laufwerk scannen: Karte „Alter“ zeigt lange nicht aktualisierte Spiele warm (orange/rot) mit Alter auf der Kachel; „Dateityp“ zeigt Spieldaten statt fast nur „Sonstiges“; „Lange nicht geändert“ (1 Jahr, ab 10 MB) listet jeden alten Ordner einmal mit plausibler Summe; zwei Treffer ankreuzen → „In den Korb“ bzw. „Auswahl löschen …“ öffnet die normale Bestätigung (Papierkorb). ☐
+D18. *Live-Karte:* großes Laufwerk scannen: die Karte erscheint sofort unter dem Fortschritt und wächst Ordner für Ordner; Pause friert sie ein; nach dem Ende übernimmt die normale, anklickbare Karte. Der Scan ist nicht spürbar langsamer als vorher. ☐
+D19. *Steam zuletzt gespielt:* Laufwerk mit Steam-Spielen (auch eine zweite Bibliothek, z. B. `D:\SteamLibrary`) scannen: Filter „Spiele (Steam)“ erscheint, listet die installierten Spiele, am längsten nicht gespielte zuerst, mit Datum wie in Steam (Bibliothek → Spiel → „Zuletzt gespielt“); ein nie gestartetes Spiel zeigt „Kein Spieldatum von Steam“; die Details eines Spielordners zeigen „Zuletzt gespielt“. ☐
+D20. *Zuletzt benutzt:* `fsutil behavior query disableLastAccess` zeigt den Zustand. Ist er „aktiviert“ (0 oder 2): Scan von C: → Legende sagt „letzte Benutzung“, Filter heißt „Lange nicht benutzt“ und misst standardmäßig nach „letztem Öffnen“ (Umschalten auf „letzter Änderung“ geht); eine alte Testdatei öffnen, nach ~1 Std. neu scannen → ihre Kachel wird „jung“ gefärbt und sie fällt aus der Liste. Ist er „deaktiviert“ (1 oder 3) oder das Laufwerk FAT/exFAT (USB-Stick): alles bleibt bei „letzte Änderung“ / „Lange nicht geändert“, ohne Umschalter. ☐
 
 ### Übersicht und Dieser PC (Runde `feat/dashboard-variety-system-module`) – nur auf echtem Windows/Android prüfbar
 V1. *GPU-Erkennung:* Dieser PC → System → Grafik: die **RTX 4070** erscheint (mit Speicher ≈ 12 GB und Treiberversion, „aktiv“), **nicht** „Microsoft Basic Render Driver“. Bei mehreren Grafikkarten (z. B. Prozessorgrafik) sind alle gelistet. ☐
@@ -167,7 +171,7 @@ E1. *Windows-Portable:* Einstellungen durchklicken – Kategorien-Leiste links, 
 E2. *Android:* Einstellungen öffnet die Kategorien-Liste, eine Kategorie öffnet den Inhalt, die Zurück-Geste führt zur Liste; große Touch-Ziele. ☐
 E3. *Deep-Links:* „Benachrichtigungen aktivieren“ im Tab Erinnerungen des Kalenders, das Sync-Symbol oben und der Dev-Hinweis springen in die richtige Kategorie und zum Abschnitt. ☐
 E4. *Über Nemo:* Version, Build/Commit (Dev-Preview), Plattform und Installationsart stimmen; „Ordner öffnen“ öffnet den Datenordner (Portable: `data/` neben der exe, sonst lokaler App-Ordner); Changelog und Lizenzen klappen auf; Diagnose-Export speichert eine Datei ohne Daten und Schlüssel. ☐
-E5. *Gerät zurücksetzen (Testgerät!):* ohne exakt `LÖSCHEN` bleibt der Knopf aus; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
+E5. *Gerät zurücksetzen (Testgerät!):* der erste Klick fragt „Bist du sicher?“, ein schneller Doppelklick löscht nicht, „Zurück“ ändert nichts; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
 E6. *Entwickler:* die Kategorie erscheint nur im Dev-Preview-Build. ☐
 
 ### Fokus- und Aufmerksamkeitshilfen (Paket 1) – nur mit echtem Gerät und echtem Alltag prüfbar
@@ -183,6 +187,12 @@ F9. *„Woran war ich?“:* App 30 Minuten verlassen, zurückkommen: erscheint d
 F10. *Schnellerfassung ohne Rückfrage in echten Situationen:* unterwegs ein paar vage Sätze tippen; landen sie im Eingang, geht „Eingang sortieren“ abends zügig? Ctrl+Enter am PC fürs ganze Formular. ☐
 F11. *Darstellung am Handy und PC:* „Sehr groß“, „Luftig“, „Bewegung: Weniger“ und „Nur das Wichtigste“ ausprobieren; bricht irgendwo das Layout, ist die ruhige Übersicht ruhig genug? ☐
 F12. *Fortschritt im Alltag:* eine tägliche Wiederholung anlegen und ein paar Tage abhaken: erscheint „n in Folge“, bleibt ein ausgelassener Tag ohne Drama („mit Pausentag“)? Abends „Tag abschließen“ und der Wochenrückblick: wirken sie motivierend statt drängend? Eine Vorlage („Aus Vorlage“ in Listen) einmal wirklich benutzen. ☐
+
+### Komfort-Review (`docs/product/comfort/`) – nur im Alltag und am Handy prüfbar
+K1. *Eine Woche echte Nutzung:* ToDos, Termine und Geld nur über Zeilenaktionen (Wischen, ⋯-Menü) bedienen. Fehlt eine Aktion, die du ständig suchst? Löst ein Wisch versehentlich etwas aus? ☐
+K2. *Wischen am Handy:* ToDo erledigen, Rechnung bezahlen, Buchung umkategorisieren, Termin „+1 Tag / +1 Woche“. Fühlt sich die Trefferfläche (≥ 44 px) und der Rückgängig-Hinweis gut an, auch einhändig? ☐
+K3. *Erweitert:* pro Modul Basis lassen, einige Tage nutzen; fehlt im Basis-Formular etwas Wichtiges? „Alle Module Erweitert“ (Einstellungen) einmal an- und ausschalten. ☐
+K4. *Wiederkehrende Rechnung:* Miete mit „Monatlich“ anlegen, bezahlen, Rückgängig; kommt genau eine neue? ☐
 
 ### Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`) – nur auf echter Hardware prüfbar
 V1. *Windows-Portable in verschiedenen Fenstergrößen:* Fenster ziehen, Halbbild-Snapping links/rechts, maximiert auf 1440p/Ultrawide. Übersicht, ToDos, Merkliste, Finanzen, Kalender: gleich hohe Karten, keine abgeschnittenen Wörter, kein waagerechter Scrollbalken; Schrift auf großem Monitor spürbar größer als auf dem Laptop. ☐
@@ -243,3 +253,10 @@ S5. *Themes:* alle fünf in Hell und Dunkel durchklicken (Lesbarkeit, Fokusring 
 S6. *Duplikat-Webhook:* in Ko-fi „Send test“ zweimal oder dieselbe Transaktion erneut senden: derselbe Code kommt wieder, kein neuer. ☐
 S7. *Mailfehler:* Resend-Schlüssel kurz falsch setzen, Spende auslösen: nach den Wiederholungen kommt die Benachrichtigung an die Entwickleradresse (mit Hash-Kürzel, ohne Spender-Mail). ☐
 S8. *Entwickler-Code:* `create --tier developer --name "Sven"` eingeben: Badge „Entwickler“, entfernbar, neu erzeugbar. ☐
+
+### Stumm (Pause für Erinnerungen)
+M1. *Android:* Erinnerung in 2 Minuten anlegen, Einstellungen → „Stumm“ → 1 Stunde: die Erinnerung kommt, aber ohne Ton und Vibration (Kanal „Stumm“ in den App-Benachrichtigungseinstellungen sichtbar). Danach „Aus“: nächste Erinnerung mit Ton. ☐
+M2. *Web Push:* gleiche Prüfung mit geschlossener App und eingerichtetem Push: Benachrichtigung erscheint ohne Ton. ☐
+M3. *Extras:* gestaffelte Erinnerung oder Tagesübersicht fällt in die Pause: kommt erst nach deren Ende. ☐
+M4. *Desktop:* Karte in der App erscheint wie sonst; der Ton der Windows-Benachrichtigung bleibt (bekannte Grenze). ☐
+

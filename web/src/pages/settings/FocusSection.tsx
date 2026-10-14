@@ -41,6 +41,7 @@ export function FocusSection() {
         />
       </SettingRow>
       {toggle('calmAttention', 'calmAttention', s.calmAttention, s.calmAttentionHint)}
+      {toggle('moduleNow', 'moduleNow', s.moduleNow, s.moduleNowHint)}
       {toggle('timeToNext', 'timeToNext', s.timeToNext, s.timeToNextHint)}
       <SettingRow id="focus--focusMinutes" label={s.focusMinutes} description={s.focusMinutesHint}>
         <Segmented<string>

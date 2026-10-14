@@ -13,7 +13,6 @@ The English, Spanish, French and Brazilian Portuguese texts were **machine-trans
 ## What stays German (known limits)
 - Things a person **types** and the app parses: quick capture ("morgen 15 Uhr Zahnarzt"), the AI bar's rules and the calculator's phrases understand German only. The help texts around them are translated.
 - **Starter data** (seed entries) and the AI's instructions to the model.
-- The typed confirmation word **LÖSCHEN** for deleting files in "Dieser PC".
 - **Legal texts** (imprint, privacy notices) exist in German and English; the other languages show English.
 - Developer-only screens (Dev-Preview tools).
 

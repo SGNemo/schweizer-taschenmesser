@@ -144,6 +144,42 @@ pub fn webview2_dialog(lang: Lang) -> (&'static str, &'static str) {
     }
 }
 
+/// "Really quit?" question shown when the main window is closed: (title, text, quit, cancel).
+pub fn quit_dialog(lang: Lang) -> (&'static str, &'static str, &'static str, &'static str) {
+    match lang {
+        Lang::De => (
+            "Nemo beenden?",
+            "Nemo wird komplett beendet; das Tastenkürzel zum schnellen Erfassen ist dann nicht mehr aktiv.",
+            "Beenden",
+            "Abbrechen",
+        ),
+        Lang::En => (
+            "Quit Nemo?",
+            "Nemo will close completely; the quick capture hotkey will no longer be active.",
+            "Quit",
+            "Cancel",
+        ),
+        Lang::Es => (
+            "¿Cerrar Nemo?",
+            "Nemo se cerrará por completo; el atajo de captura rápida dejará de estar activo.",
+            "Cerrar",
+            "Cancelar",
+        ),
+        Lang::Fr => (
+            "Quitter Nemo ?",
+            "Nemo sera complètement fermé ; le raccourci de saisie rapide ne sera plus actif.",
+            "Quitter",
+            "Annuler",
+        ),
+        Lang::Pt => (
+            "Sair do Nemo?",
+            "O Nemo será fechado por completo; o atalho de captura rápida deixará de funcionar.",
+            "Sair",
+            "Cancelar",
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,6 +215,9 @@ mod tests {
             let (title, text) = webview2_dialog(lang);
             assert!(ok.contains("Nemo") && fail.contains("Nemo"));
             assert!(title.contains("WebView2") && text.contains("WebView2"));
+            let (qt, qx, qq, qc) = quit_dialog(lang);
+            assert!(qt.contains("Nemo") && qx.contains("Nemo"));
+            assert!(!qq.is_empty() && !qc.is_empty());
         }
     }
 }

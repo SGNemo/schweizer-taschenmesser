@@ -28,6 +28,7 @@ export default function ChatPage() {
   const defaultEngine =
     (prefs as { defaultEngine?: 'local' | 'router' } | undefined)?.defaultEngine ?? 'router';
 
+  // comfort-allow-delete: retention clean-up, not a user delete.
   // Old, unpinned chats go when the module is opened (setting "Alte Chats löschen nach").
   useEffect(() => {
     if (!threads || !messages || keepDays <= 0) return;

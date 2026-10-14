@@ -44,9 +44,17 @@ export const FILE_KINDS = [
   'archive',
   'program',
   'document',
+  'game',
   'other',
 ] as const;
 export type FileKind = (typeof FILE_KINDS)[number];
+
+/**
+ * Age buckets of the data (`kinds::AGE_LIMITS_DAYS` in Rust): upper limits in days, the last
+ * bucket is "older than the last limit". Index into `ageBytes`.
+ */
+export const AGE_LIMITS_DAYS = [30, 182, 365, 730, 1095] as const;
+export const AGE_COUNT = AGE_LIMITS_DAYS.length + 1;
 
 export type DiskNodeKind = 'dir' | 'file' | 'small';
 
@@ -63,8 +71,12 @@ export interface DiskNode {
   files: number;
   /** Newest change in the subtree, Unix seconds. */
   modified: number;
+  /** Newest file access in the subtree, Unix seconds (0 = unknown); see `ScanSummary.accessTracked`. */
+  accessed: number;
   fileKind: FileKind;
   kindBytes: number[];
+  /** Bytes per age bucket (`AGE_LIMITS_DAYS`) by each file's own change time, as of the scan. */
+  ageBytes: number[];
   childCount: number;
   /** Parent folder relative to the scan root; only present in `query` results. */
   relPath?: string;
@@ -97,13 +109,16 @@ export interface ScanSummary {
   cloudBytes: number;
   /** Links, junctions and online-only folders that were not entered. */
   skippedLinks: number;
+  /** "Last opened" dates can be trusted on this volume (Windows, NTFS, updates on). */
+  accessTracked: boolean;
   notRead: NotRead[];
   notReadTotal: number;
   elapsedMs: number;
 }
 
 export interface DiskQuery {
-  scope: 'dirs' | 'files';
+  /** `all`: folders and files (never the "small files" aggregates). */
+  scope: 'dirs' | 'files' | 'all';
   under?: number;
   /** Only entries whose newest change is older than this Unix time (seconds). */
   olderThan?: number;
@@ -112,6 +127,10 @@ export interface DiskQuery {
   limit?: number;
   /** Folders without any file (own or nested); folders only. */
   onlyEmpty?: boolean;
+  /** With `olderThan`: leave out entries whose folder is old as well (each old folder once). */
+  topmost?: boolean;
+  /** Compare `olderThan` (and `topmost`) with the last access instead of the last change. */
+  byAccess?: boolean;
 }
 
 /** Well-known cache/temp folders offered as scan roots (only ones that exist). */
@@ -168,10 +187,10 @@ export interface DeletePlan {
   totalBytes: number;
   totalFiles: number;
   large: boolean;
-  /** Exact text to type before a move to the recycle bin (null = plain confirmation). */
-  trashConfirmation: string | null;
-  /** Exact text to type before a permanent delete (null only when nothing can be deleted). */
-  permanentConfirmation: string | null;
+  /** A move to the recycle bin needs a second confirmation (large deletions). */
+  trashDoubleConfirm: boolean;
+  /** A permanent delete needs a second confirmation (always true). */
+  permanentDoubleConfirm: boolean;
   /** False when an item is on a network/removable drive, where the recycle bin often cannot be used. */
   trashLikely: boolean;
 }
@@ -219,6 +238,17 @@ export interface DupGroup {
   files: DiskNode[];
 }
 
+/** A Steam game installed inside the scan (from Steam's own files, read only). */
+export interface SteamGame {
+  appId: number;
+  /** Name from Steam (the folder name can differ). */
+  title: string;
+  /** Unix seconds; null when Steam has no date (never started, or not recorded). */
+  lastPlayed: number | null;
+  /** The game's install folder in the scan tree, with `relPath`. */
+  node: DiskNode;
+}
+
 export interface ScanHandle {
   scanId: number;
   /** Resolves with the summary (also when cancelled); rejects with `Error(code)` on failure. */
@@ -234,9 +264,17 @@ export interface DiskService {
   pauseScan(scanId: number, paused: boolean): Promise<void>;
   /** Frees the scan's memory in the native side. */
   dropScan(scanId: number): Promise<void>;
+  /**
+   * While a scan runs: the top folder levels with what was counted so far (root first, then
+   * folders biggest first; a `small` entry per folder for the files directly in it). Grows until
+   * the scan ends; empty for an unknown scan.
+   */
+  liveScan(scanId: number, minBytes: number): Promise<DiskNode[]>;
   children(scanId: number, node: number, depth: number, minBytes: number): Promise<DiskNode[]>;
   node(scanId: number, node: number): Promise<DiskNode | null>;
   query(scanId: number, query: DiskQuery): Promise<DiskNode[]>;
+  /** Steam games inside the scan, longest unplayed first, unknown dates last. */
+  steamGames(scanId: number): Promise<SteamGame[]>;
   knownPlaces(): Promise<Place[]>;
   /** Quick sizes of the known places; nothing is scanned or changed. */
   placeSizes(): Promise<PlaceSize[]>;
@@ -249,13 +287,13 @@ export interface DiskService {
   canDelete(scanId: number, node: number): Promise<DenyReason | null>;
   planDelete(scanId: number, nodes: number[]): Promise<DeletePlan>;
   /**
-   * Runs a plan. `confirm` must be the phrase the plan asks for (checked natively, too).
-   * Rejects with `Error(code)`, e.g. `confirmation-mismatch`, `plan-expired`.
+   * Runs a plan. `confirmedTwice` must be true when the plan needs a second confirmation
+   * (checked natively, too). Rejects with `Error(code)`, e.g. `confirmation-missing`, `plan-expired`.
    */
   runDelete(
     planId: number,
     mode: DeleteMode,
-    confirm: string | null,
+    confirmedTwice: boolean,
     onProgress: (p: DeleteProgress) => void,
   ): Promise<DeleteReport>;
   cancelDelete(planId: number): Promise<void>;

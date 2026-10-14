@@ -1,10 +1,9 @@
 /** Building blocks of the settings pages: one row layout for every setting, groups and the danger zone. */
 import { ReadableText } from './ReadableText';
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { t } from '@/strings';
 import { Button } from './Button';
 import { Dialog } from './Dialog';
-import { TextField } from './Fields';
 import { HelpHint } from './HelpHint';
 import styles from './SettingsParts.module.css';
 
@@ -92,15 +91,19 @@ export function DangerZone({ id, children }: { id?: string; children: ReactNode 
   );
 }
 
+/** A click this soon after the second question appears is ignored (a double click is not two yeses). */
+const ARM_MS = 600;
+
 /**
- * Confirmation that needs the exact phrase to be typed (irreversible actions). The confirm button
- * stays disabled until the phrase matches; `onConfirm` runs once.
+ * Confirmation for irreversible actions: the first click on `confirmLabel` only asks once more
+ * ("Bist du sicher?"); the action runs on the second, separate click. That second button works
+ * only after a short moment, so one hasty double click can never confirm twice. `onConfirm` runs
+ * once.
  */
-export function TypedConfirmDialog({
+export function DoubleConfirmDialog({
   open,
   onClose,
   title,
-  phrase,
   confirmLabel,
   onConfirm,
   children,
@@ -108,15 +111,23 @@ export function TypedConfirmDialog({
   open: boolean;
   onClose: () => void;
   title: string;
-  phrase: string;
   confirmLabel: string;
   onConfirm: () => void | Promise<void>;
   children?: ReactNode;
 }) {
-  const [typed, setTyped] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [armed, setArmed] = useState(false);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!asking) return;
+    const timer = setTimeout(() => setArmed(true), ARM_MS);
+    return () => {
+      clearTimeout(timer);
+      setArmed(false);
+    };
+  }, [asking]);
   const close = () => {
-    setTyped('');
+    setAsking(false);
     onClose();
   };
   return (
@@ -125,33 +136,45 @@ export function TypedConfirmDialog({
       onClose={close}
       title={title}
       footer={
-        <>
-          <Button onClick={close}>{t.actions.cancel}</Button>
-          <Button
-            variant="danger"
-            disabled={typed.trim() !== phrase || busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await onConfirm();
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            {confirmLabel}
-          </Button>
-        </>
+        asking ? (
+          <>
+            <Button onClick={() => setAsking(false)} data-autofocus>
+              {t.settings.danger.back}
+            </Button>
+            <Button
+              variant="danger"
+              disabled={!armed || busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await onConfirm();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {confirmLabel}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button onClick={close}>{t.actions.cancel}</Button>
+            <Button variant="danger" onClick={() => setAsking(true)}>
+              {confirmLabel}
+            </Button>
+          </>
+        )
       }
     >
       {children}
-      <TextField
-        label={t.settings.danger.typePhrase(phrase)}
-        value={typed}
-        autoComplete="off"
-        data-autofocus
-        onChange={(e) => setTyped(e.target.value)}
-      />
+      {asking ? (
+        <div role="alert" data-testid="confirm-again">
+          <p>
+            <strong>{t.settings.danger.againTitle}</strong>
+          </p>
+          <p>{t.settings.danger.againText}</p>
+        </div>
+      ) : null}
     </Dialog>
   );
 }

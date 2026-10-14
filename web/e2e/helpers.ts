@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export const NAV = 'Hauptnavigation';
 
@@ -28,11 +28,16 @@ export async function ready(page: Page, url: string) {
   await expect(page.locator('main h1')).toBeVisible();
 }
 
+/** The on/off switch of a module card in the library (`/library`). */
+export const moduleSwitch = (card: Locator) => card.getByRole('switch', { name: /einschalten/ });
+
 /** Switches a module on in the library and waits for its "Aktiv" badge. */
 export async function enable(page: Page, id: string) {
   await page.goto('/library');
   const card = page.getByTestId(`module-${id}`);
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
+  const toggle = moduleSwitch(card);
+  await expect(toggle).toBeEnabled(); // disabled until the module states have loaded
+  if (!(await toggle.isChecked())) await toggle.click(); // core modules are on already
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
 }
 
@@ -44,4 +49,10 @@ export const enableExample = (page: Page) => enable(page, 'example');
  */
 export function calendarEntry(page: Page, name: RegExp) {
   return page.getByRole('button', { name }).and(page.locator('xpath=//*[not(ancestor::aside)]'));
+}
+
+/** Opens the rarely used fields of the open dialog ("Mehr Felder"); a no-op in the Erweitert view or when they hold data. */
+export async function moreFields(page: Page) {
+  const button = page.getByRole('dialog').getByRole('button', { name: 'Weitere Felder anzeigen' });
+  if (await button.count()) await button.click();
 }

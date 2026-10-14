@@ -1,3 +1,4 @@
+import { NowStrip } from '@/core/modules/NowStrip';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -7,10 +8,12 @@ import { offerEnableModule } from '@/core/modules/offerEnable';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, today } from '@/core/time/dates';
+import { changeWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
 import {
+  AdvancedToggle,
   Badge,
   Button,
   EmptyState,
@@ -21,6 +24,7 @@ import {
   PageHeader,
   patternStyles,
   Segmented,
+  useOpenParam,
 } from '@/ui';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import { applyFilter, daysLeft, expiryState, needsRestock, sortItems, type Filter } from '../logic';
@@ -35,6 +39,7 @@ export default function PantryPage() {
   const soonDays = (prefs as { soonDays?: number } | undefined)?.soonDays ?? 3;
   const [filter, setFilter] = useState<Filter>('all');
   const [target, setTarget] = useState<ItemTarget>(null);
+  useOpenParam((id) => itemRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
   const toast = useUiStore((s) => s.toast);
   const moduleStates = useModuleStates();
@@ -45,6 +50,23 @@ export default function PantryPage() {
     setTarget(null);
     if (params.get('new')) setParams({}, { replace: true });
   };
+
+  /** Sends names to the shopping list and confirms once the list has stored them. */
+  const requestRestock = (names: string[]) => {
+    const send = async () => {
+      for (const name of names) await bus.emit('shopping.requested', { name });
+      void toast(
+        names.length === 1 ? t.pantry.restocked(names[0]!) : t.pantry.restockedMany(names.length),
+      );
+    };
+    // Without the lists module nobody listens: say so and offer to switch it on (then the entries
+    // are sent right away) instead of pretending.
+    if (moduleStates?.lists !== true) return offerEnableModule('lists', t.pantry.shoppingOff, send);
+    // Confirm only after the shopping list has stored the items: wait for the services (the app
+    // renders before they run), then for the handlers.
+    void whenServicesSettled().then(send);
+  };
+  const low = (items ?? []).filter(needsRestock);
 
   const shown = useMemo(
     () => sortItems(applyFilter(items ?? [], filter, day, soonDays), day, soonDays),
@@ -63,11 +85,13 @@ export default function PantryPage() {
   return (
     <>
       <PageHeader title={t.pantry.title}>
+        <AdvancedToggle moduleId="pantry" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.pantry.add}
         </Button>
       </PageHeader>
+      <NowStrip modules={['pantry']} />{' '}
       <Segmented
         label={t.pantry.filter}
         value={filter}
@@ -78,6 +102,13 @@ export default function PantryPage() {
         ]}
         onChange={setFilter}
       />
+      {low.length >= 2 ? (
+        <p>
+          <Button onClick={() => requestRestock(low.map((i) => i.name))}>
+            {t.pantry.restockAll(low.length)}
+          </Button>
+        </p>
+      ) : null}
       {items && items.length === 0 ? (
         <EmptyState title={t.pantry.empty}>
           <StartDataButton moduleId="pantry" />
@@ -116,7 +147,9 @@ export default function PantryPage() {
                         <IconButton
                           label={t.pantry.minus(i.name)}
                           onClick={() =>
-                            void itemRepo.update(i.id, { count: Math.max(0, i.count - 1) })
+                            void changeWithUndo(() =>
+                              itemRepo.update(i.id, { count: Math.max(0, i.count - 1) }),
+                            )
                           }
                         >
                           <span aria-hidden="true">−</span>
@@ -124,7 +157,9 @@ export default function PantryPage() {
                         <IconButton
                           label={t.pantry.plus(i.name)}
                           onClick={() =>
-                            void itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) })
+                            void changeWithUndo(() =>
+                              itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) }),
+                            )
                           }
                         >
                           <Icon name="plus" size={16} />
@@ -133,23 +168,7 @@ export default function PantryPage() {
                     }
                   >
                     {needsRestock(i) ? (
-                      <Button
-                        onClick={() => {
-                          const send = () =>
-                            bus
-                              .emit('shopping.requested', { name: i.name })
-                              .then(() => void toast(t.pantry.restocked(i.name)));
-                          // Without the lists module nobody listens: say so and offer to switch it
-                          // on (then the entry is sent right away) instead of pretending.
-                          if (moduleStates?.lists !== true)
-                            return offerEnableModule('lists', t.pantry.shoppingOff, send);
-                          // Confirm only after the shopping list has stored the item: wait for the
-                          // services (the app renders before they run), then for the handlers.
-                          void whenServicesSettled().then(send);
-                        }}
-                      >
-                        {t.pantry.restock}
-                      </Button>
+                      <Button onClick={() => requestRestock([i.name])}>{t.pantry.restock}</Button>
                     ) : null}
                   </ItemRow>
                 );

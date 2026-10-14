@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { CaptureError, saveCapture } from '@/quickCapture/targets';
+import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Badge, Button, Icon, IconButton, Prose, TextArea } from '@/ui';
@@ -8,6 +10,21 @@ import type { Message } from '../schema';
 import styles from '../chat.module.css';
 
 const c = t.chat;
+
+/** Keeps an answer: first line as title, the whole text as body, in the notes (undo in the toast). */
+async function saveAsNote(text: string): Promise<void> {
+  const { toast } = useUiStore.getState();
+  const first = text
+    .split('\n')
+    .map((l) => l.replace(/^[#>*\-\s]+/, '').trim())
+    .find(Boolean);
+  const title = (first ?? '').length > 60 ? `${(first ?? '').slice(0, 57)}…` : (first ?? '');
+  try {
+    announceSaved(await saveCapture('note', { title, note: text }));
+  } catch (e) {
+    toast(e instanceof CaptureError && e.code === 'module-off' ? c.noteOff : c.noteFailed);
+  }
+}
 
 async function copy(text: string): Promise<void> {
   try {
@@ -61,9 +78,14 @@ export function MessageView({
         {user && message.context ? <Badge tone="neutral">{c.context.attached}</Badge> : null}
         <span className={styles.msgActions}>
           {!user ? (
-            <IconButton label={c.copy} onClick={() => void copy(message.content)}>
-              <Icon name="copy" size={16} />
-            </IconButton>
+            <>
+              <IconButton label={c.copy} onClick={() => void copy(message.content)}>
+                <Icon name="copy" size={16} />
+              </IconButton>
+              <IconButton label={c.saveAsNote} onClick={() => void saveAsNote(message.content)}>
+                <Icon name="note" size={16} />
+              </IconButton>
+            </>
           ) : null}
           {user && !busy ? (
             <IconButton

@@ -20,6 +20,8 @@ export interface ToolsState {
   saved: ToolsSettings;
   setEnabled(id: string, on: boolean): Promise<void>;
   move(id: string, dir: -1 | 1): Promise<void>;
+  /** Saves a complete new order (drag and drop). */
+  reorder(order: string[]): Promise<void>;
 }
 
 export function useTools(): ToolsState | undefined {
@@ -32,6 +34,7 @@ export function useTools(): ToolsState | undefined {
     active: activeTools(allTools, values),
     saved: values,
     setEnabled: (id, on) => patch({ enabled: { ...values.enabled, [id]: on } }),
+    reorder: (order) => patch({ order }),
     move: (id, dir) =>
       patch({
         order: moveTool(

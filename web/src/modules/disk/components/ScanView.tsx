@@ -8,12 +8,26 @@ import {
   type DiskQuery,
   type FileKind,
   type ScanSummary,
+  type SteamGame,
 } from '@/core/platform/disk';
 import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Card, Chip, Chips, SelectField, Segmented, SplitView, Toolbar, useSplitView } from '@/ui';
+import {
+  Button,
+  Card,
+  Checkbox,
+  Chip,
+  Chips,
+  HelpHint,
+  SelectField,
+  Segmented,
+  SplitView,
+  Toolbar,
+  useSplitView,
+} from '@/ui';
 import { formatBytes, formatCount, percent } from '../format';
+import { ageDays, disjointBytes } from '../logic/age';
 import {
   joinPath,
   minBytesFor,
@@ -34,24 +48,42 @@ import { TreemapView, type ColorMode } from './TreemapView';
 import palette from './Palette.module.css';
 import styles from './ScanView.module.css';
 
-type FilterKind = 'none' | 'topDirs' | 'topFiles' | 'old' | 'type' | 'empty' | 'dupes';
+type FilterKind = 'none' | 'topDirs' | 'topFiles' | 'old' | 'type' | 'empty' | 'dupes' | 'games';
 interface Filter {
   kind: FilterKind;
   months: number;
   fileKind: FileKind;
   scope: 'dirs' | 'files';
+  /** Scope of the "not changed for a long time" list. */
+  oldScope: 'all' | 'dirs' | 'files';
+  topmost: boolean;
+  /** "Long unused" by last opening instead of last change (only where the scan trusts it). */
+  byAccess: boolean;
+  minBytes: number;
 }
-const MONTHS = [3, 6, 12, 24, 36];
+const MONTHS = [3, 6, 12, 24, 36, 60];
+const MB = 1024 * 1024;
+const MIN_SIZES = [0, 10 * MB, 100 * MB, 1024 * MB];
+const LIMIT = 200;
+/** A game counts as idle in the games summary after a year without playing. */
+const IDLE_DAYS = 365;
 
 function toQuery(f: Filter, under: number | undefined): DiskQuery | null {
-  const base = { under, limit: 200 };
+  const base = { under, limit: LIMIT };
   switch (f.kind) {
     case 'topDirs':
       return { ...base, scope: 'dirs' };
     case 'topFiles':
       return { ...base, scope: 'files' };
     case 'old':
-      return { ...base, scope: f.scope, olderThan: monthsAgoSeconds(now(), f.months) };
+      return {
+        ...base,
+        scope: f.oldScope,
+        olderThan: monthsAgoSeconds(now(), f.months),
+        topmost: f.topmost,
+        byAccess: f.byAccess || undefined,
+        minBytes: f.minBytes || undefined,
+      };
     case 'type':
       return { ...base, scope: f.scope, fileKind: f.fileKind };
     case 'empty':
@@ -64,23 +96,31 @@ function toQuery(f: Filter, under: number | undefined): DiskQuery | null {
 /** Explore a finished scan: treemap or list, breadcrumb, quick filters and a details panel. */
 export function ScanView({ summary }: { summary: ScanSummary }) {
   const disk = getPlatform().disk;
-  const { scanId, root, rootNode } = summary;
+  const { scanId, root, rootNode, accessTracked } = summary;
   const [trail, setTrail] = useState<DiskNode[]>([rootNode]);
   const current = trail[trail.length - 1]!;
   const [selected, setSelected] = useState<DiskNode | null>(null);
   const [view, setView] = useState<'map' | 'list'>('map');
-  const [colorBy, setColorBy] = useState<ColorMode>('type');
+  const [colorBy, setColorBy] = useState<ColorMode>('age');
   const [filter, setFilter] = useState<Filter>({
     kind: 'none',
     months: 12,
     fileKind: 'video',
     scope: 'files',
+    oldScope: 'all',
+    topmost: true,
+    // Where Windows keeps the access time, "long unused" means not opened (or changed) for long.
+    byAccess: accessTracked,
+    minBytes: 10 * MB,
   });
+  // Entries ticked in a filter list (ids of the native tree), for basket or delete in one go.
+  const [picked, setPicked] = useState<ReadonlySet<number>>(new Set());
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'bytes', dir: 'desc' });
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [mapNodes, setMapNodes] = useState<DiskNode[]>([]);
   const [listNodes, setListNodes] = useState<DiskNode[]>([]);
   const [results, setResults] = useState<DiskNode[]>([]);
+  const [games, setGames] = useState<SteamGame[]>([]);
   const split = useSplitView();
   const cache = useRef(new Map<number, DiskNode>());
   // Bumped after a delete run: every list and the trail are fetched again (no rescan).
@@ -126,18 +166,44 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
     };
   }, [disk, scanId, current.id, shown, filtering, version]);
 
+  // Steam games of the whole scan (Steam's own files, read natively); fetched again after a delete.
   useEffect(() => {
-    const q = toQuery(filter, current.id === rootNode.id ? undefined : current.id);
-    if (!q) return;
     let alive = true;
     disk
-      .query(scanId, q)
-      .then((n) => alive && setResults(n))
-      .catch(() => alive && setResults([]));
+      .steamGames(scanId)
+      .then((g) => alive && setGames(g))
+      .catch(() => alive && setGames([]));
     return () => {
       alive = false;
     };
-  }, [disk, scanId, filter, current.id, rootNode.id, version]);
+  }, [disk, scanId, version]);
+  const gameOf = useMemo(() => new Map(games.map((g) => [g.node.id, g])), [games]);
+
+  useEffect(() => {
+    const q = toQuery(filter, current.id === rootNode.id ? undefined : current.id);
+    const listGames = filter.kind === 'games';
+    if (!q && !listGames) return;
+    let alive = true;
+    const take = (n: DiskNode[]) => {
+      if (!alive) return;
+      setResults(n);
+      // Keep only ticks that are still in the list (a filter change or a delete run).
+      setPicked((p) => {
+        const ids = new Set(n.map((x) => x.id));
+        const kept = [...p].filter((id) => ids.has(id));
+        return kept.length === p.size ? p : new Set(kept);
+      });
+    };
+    if (listGames) take(games.map((g) => g.node));
+    else if (q)
+      disk
+        .query(scanId, q)
+        .then(take)
+        .catch(() => take([]));
+    return () => {
+      alive = false;
+    };
+  }, [disk, scanId, filter, current.id, rootNode.id, version, games]);
 
   const lookup = useMemo(
     () => new Map([...trail, ...mapNodes, ...listNodes, ...results].map((n) => [n.id, n])),
@@ -236,14 +302,76 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
           <dt>{t.disk.details.files}</dt>
           <dd>{formatCount(n.files)}</dd>
           <dt>{t.disk.list.modified}</dt>
-          <dd>{formatDate(n.modified)}</dd>
+          <dd>
+            {formatDate(n.modified)}
+            {n.modified > 0 ? ` · ${t.disk.age.ago(ageDays(n.modified, now()))}` : ''}
+          </dd>
+          {accessTracked && n.accessed > 0 ? (
+            <>
+              <dt>{t.disk.list.accessed}</dt>
+              <dd>
+                {formatDate(n.accessed)} · {t.disk.age.ago(ageDays(n.accessed, now()))}
+              </dd>
+            </>
+          ) : null}
         </dl>
       </>
     ),
-    [pathOf, current.bytes],
+    [pathOf, current.bytes, accessTracked],
   );
 
   const setKind = (kind: FilterKind) => setFilter((f) => ({ ...f, kind }));
+
+  const playedNote = useCallback(
+    (n: DiskNode) => {
+      const g = gameOf.get(n.id);
+      if (!g) return undefined;
+      return g.lastPlayed
+        ? t.disk.games.played(
+            formatDate(g.lastPlayed),
+            t.disk.age.ago(ageDays(g.lastPlayed, now())),
+          )
+        : t.disk.games.unknown;
+    },
+    [gameOf],
+  );
+
+  const showOld = useCallback(
+    async (n: DiskNode) => {
+      if (n.id !== current.id) await open(n);
+      setFilter((f) => ({ ...f, kind: 'old' }));
+    },
+    [current.id, open],
+  );
+
+  const pickedNodes = useMemo(() => results.filter((n) => picked.has(n.id)), [results, picked]);
+  const togglePick = useCallback((n: DiskNode) => {
+    setPicked((p) => {
+      const next = new Set(p);
+      if (next.has(n.id)) next.delete(n.id);
+      else next.add(n.id);
+      return next;
+    });
+  }, []);
+  const toggleAll = useCallback(() => {
+    setPicked((p) =>
+      results.length > 0 && results.every((n) => p.has(n.id))
+        ? new Set()
+        : new Set(results.filter((n) => n.kind !== 'small').map((n) => n.id)),
+    );
+  }, [results]);
+  const pickedToBasket = () => {
+    for (const n of pickedNodes)
+      addToBasket({
+        id: n.id,
+        name: n.name,
+        bytes: n.bytes,
+        files: n.files,
+        isDir: n.kind === 'dir',
+      });
+    toast(t.disk.basket.added(pickedNodes.length));
+    setPicked(new Set());
+  };
   const detailNode = selected ?? current;
   const actionable = detailNode.id !== rootNode.id && detailNode.kind !== 'small';
 
@@ -300,9 +428,12 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
         node={detailNode}
         current={current}
         path={pathOf(detailNode)}
+        accessTracked={accessTracked}
         biggest={entries}
         onOpen={(n) => void open(n)}
         onSelect={setSelected}
+        game={gameOf.get(detailNode.id)}
+        onShowOld={(n) => void showOld(n)}
         actions={
           actionable
             ? {
@@ -345,6 +476,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
             label={t.disk.map.colorBy}
             value={colorBy}
             options={[
+              { value: 'age', label: t.disk.map.byAge },
               { value: 'type', label: t.disk.map.byType },
               { value: 'depth', label: t.disk.map.byDepth },
             ]}
@@ -369,7 +501,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
           onClick={() => setKind('topFiles')}
         />
         <Chip
-          label={t.disk.filter.old}
+          label={accessTracked ? t.disk.filter.unused : t.disk.filter.old}
           selected={filter.kind === 'old'}
           onClick={() => setKind('old')}
         />
@@ -388,34 +520,78 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
           selected={filter.kind === 'dupes'}
           onClick={() => setKind('dupes')}
         />
+        {games.length > 0 || filter.kind === 'games' ? (
+          <Chip
+            label={t.disk.games.filter}
+            selected={filter.kind === 'games'}
+            onClick={() => setKind('games')}
+          />
+        ) : null}
       </Chips>
-      {filter.kind === 'old' || filter.kind === 'type' ? (
+      {filter.kind === 'old' ? (
         <Toolbar>
-          {filter.kind === 'old' ? (
-            <SelectField
-              label={t.disk.filter.old}
-              value={filter.months}
-              onChange={(e) => setFilter((f) => ({ ...f, months: Number(e.target.value) }))}
-            >
-              {MONTHS.map((m) => (
-                <option key={m} value={m}>
-                  {t.disk.filter.months(m)}
-                </option>
-              ))}
-            </SelectField>
-          ) : (
-            <SelectField
-              label={t.disk.filter.type}
-              value={filter.fileKind}
-              onChange={(e) => setFilter((f) => ({ ...f, fileKind: e.target.value as FileKind }))}
-            >
-              {FILE_KINDS.map((k) => (
-                <option key={k} value={k}>
-                  {t.disk.map.kind[k]}
-                </option>
-              ))}
-            </SelectField>
-          )}
+          {accessTracked ? (
+            <Segmented
+              label={t.disk.filter.basis}
+              value={filter.byAccess ? 'accessed' : 'modified'}
+              options={[
+                { value: 'modified', label: t.disk.filter.byChange },
+                { value: 'accessed', label: t.disk.filter.byOpen },
+              ]}
+              onChange={(v) => setFilter((f) => ({ ...f, byAccess: v === 'accessed' }))}
+            />
+          ) : null}
+          <SelectField
+            label={filter.byAccess ? t.disk.filter.notOpenedSince : t.disk.filter.oldSince}
+            value={filter.months}
+            onChange={(e) => setFilter((f) => ({ ...f, months: Number(e.target.value) }))}
+          >
+            {MONTHS.map((m) => (
+              <option key={m} value={m}>
+                {t.disk.filter.months(m)}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField
+            label={t.disk.filter.minSize}
+            value={filter.minBytes}
+            onChange={(e) => setFilter((f) => ({ ...f, minBytes: Number(e.target.value) }))}
+          >
+            {MIN_SIZES.map((b) => (
+              <option key={b} value={b}>
+                {b === 0 ? t.disk.filter.anySize : t.disk.filter.fromSize(formatBytes(b))}
+              </option>
+            ))}
+          </SelectField>
+          <Segmented
+            label={t.disk.filter.scope}
+            value={filter.oldScope}
+            options={[
+              { value: 'all', label: t.disk.filter.all },
+              { value: 'dirs', label: t.disk.filter.dirs },
+              { value: 'files', label: t.disk.filter.files },
+            ]}
+            onChange={(oldScope) => setFilter((f) => ({ ...f, oldScope }))}
+          />
+          <Checkbox
+            label={t.disk.filter.topmost}
+            checked={filter.topmost}
+            onChange={(e) => setFilter((f) => ({ ...f, topmost: e.target.checked }))}
+          />
+        </Toolbar>
+      ) : filter.kind === 'type' ? (
+        <Toolbar>
+          <SelectField
+            label={t.disk.filter.type}
+            value={filter.fileKind}
+            onChange={(e) => setFilter((f) => ({ ...f, fileKind: e.target.value as FileKind }))}
+          >
+            {FILE_KINDS.map((k) => (
+              <option key={k} value={k}>
+                {t.disk.map.kind[k]}
+              </option>
+            ))}
+          </SelectField>
           <Segmented
             label={t.disk.filter.scope}
             value={filter.scope}
@@ -445,6 +621,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
                 root={current}
                 nodes={mapNodes}
                 colorBy={colorBy}
+                byUse={accessTracked}
                 selectedId={selected?.id ?? null}
                 onSize={onSize}
                 onZoom={zoom}
@@ -452,7 +629,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
                 onUp={up}
                 tooltip={tooltip}
               />
-              <Legend colorBy={colorBy} />
+              <Legend colorBy={colorBy} byUse={accessTracked} />
               <p id="disk-map-help" className={styles.help}>
                 {t.disk.map.help}
               </p>
@@ -461,10 +638,61 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
             <Duplicates scanId={scanId} under={current.id} root={root} />
           ) : filtering ? (
             <>
-              <p className={styles.help} aria-live="polite">
-                {t.disk.filter.results(results.length)} ·{' '}
-                {t.disk.filter.inFolder(current.id === rootNode.id ? root : current.name)}
-              </p>
+              {filter.kind === 'old' ? (
+                <p className={styles.summary} aria-live="polite" data-testid="old-summary">
+                  <span>
+                    {(filter.byAccess ? t.disk.filter.oldSummaryOpened : t.disk.filter.oldSummary)(
+                      results.length,
+                      formatBytes(disjointBytes(results)),
+                      t.disk.filter.months(filter.months),
+                    )}
+                    {results.length >= LIMIT ? ` ${t.disk.filter.capped(LIMIT)}` : ''}
+                  </span>
+                  <HelpHint
+                    text={filter.byAccess ? t.disk.filter.accessHelp : t.disk.filter.oldHelp}
+                  />
+                </p>
+              ) : filter.kind === 'games' ? (
+                <p className={styles.summary} aria-live="polite" data-testid="games-summary">
+                  <span>
+                    {t.disk.games.summary(
+                      games.length,
+                      formatBytes(disjointBytes(results)),
+                      games.filter(
+                        // Only known dates count; a missing one says nothing.
+                        (g) => g.lastPlayed !== null && ageDays(g.lastPlayed, now()) >= IDLE_DAYS,
+                      ).length,
+                    )}
+                  </span>
+                  <HelpHint text={t.disk.games.help} />
+                </p>
+              ) : null}
+              {filter.kind === 'games' ? null : (
+                <p className={styles.help} aria-live="polite">
+                  {t.disk.filter.results(results.length)} ·{' '}
+                  {t.disk.filter.inFolder(current.id === rootNode.id ? root : current.name)}
+                </p>
+              )}
+              {pickedNodes.length > 0 ? (
+                <div className={styles.selection} role="group" aria-label={t.disk.select.label}>
+                  <span className={styles.selectionText} aria-live="polite">
+                    {t.disk.select.summary(
+                      pickedNodes.length,
+                      formatBytes(disjointBytes(pickedNodes)),
+                    )}
+                  </span>
+                  <Button onClick={pickedToBasket}>{t.disk.select.toBasket}</Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => setDeleting({ ids: pickedNodes.map((n) => n.id) })}
+                  >
+                    {t.disk.select.delete}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setPicked(new Set())}>
+                    {t.disk.select.clear}
+                  </Button>
+                </div>
+              ) : null}
               <NodeList
                 nodes={results}
                 total={current.bytes}
@@ -472,7 +700,10 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
                 onSelect={setSelected}
                 onOpen={(n) => void open(n)}
                 where={(n) => n.relPath}
-                label={t.disk.filter.label}
+                dateField={filter.kind === 'old' && filter.byAccess ? 'accessed' : 'modified'}
+                note={filter.kind === 'games' ? playedNote : undefined}
+                select={{ ids: picked, toggle: togglePick, toggleAll }}
+                label={filter.kind === 'games' ? t.disk.games.label : t.disk.filter.label}
               />
             </>
           ) : (
