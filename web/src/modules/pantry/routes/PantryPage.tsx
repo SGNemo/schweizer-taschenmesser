@@ -1,3 +1,4 @@
+import { NowStrip } from '@/core/modules/NowStrip';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -90,6 +91,7 @@ export default function PantryPage() {
           {t.pantry.add}
         </Button>
       </PageHeader>
+      <NowStrip modules={['pantry']} />{' '}
       <Segmented
         label={t.pantry.filter}
         value={filter}

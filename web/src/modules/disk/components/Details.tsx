@@ -130,7 +130,10 @@ export function Details({
           </div>
           {old > 0 ? (
             <p className={styles.oldNote} data-testid="details-old">
-              {t.disk.details.oldShare(formatBytes(old), percent(old, node.bytes))}
+              {(accessTracked ? t.disk.details.unusedShare : t.disk.details.oldShare)(
+                formatBytes(old),
+                percent(old, node.bytes),
+              )}
             </p>
           ) : null}
           <ul className={styles.types}>

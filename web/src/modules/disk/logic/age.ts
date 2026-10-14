@@ -10,6 +10,13 @@ export function ageDays(modifiedSec: number, nowMs: number): number {
   return Math.floor((now - modifiedSec) / DAY);
 }
 
+/**
+ * When an entry was last used: the newer of change and access where the scan trusts access times
+ * (`ScanSummary.accessTracked`), else the change alone. Same rule as `tree::last_use` in Rust.
+ */
+export const lastUse = (n: Pick<DiskNode, 'modified' | 'accessed'>, byUse: boolean): number =>
+  byUse ? Math.max(n.modified, n.accessed) : n.modified;
+
 /** Bucket of an age in days; same rule as `kinds::age_bucket` in Rust. */
 export function ageIndex(days: number): number {
   const i = AGE_LIMITS_DAYS.findIndex((limit) => days < limit);

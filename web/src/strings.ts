@@ -916,6 +916,9 @@ export const de = {
       calmAttention: 'Ruhiges „Jetzt wichtig“',
       calmAttentionHint:
         'Fasst Wartendes in einem Hinweis zusammen und lässt Rot nur bei Geldfristen. Ohne Tageszähler.',
+      moduleNow: '„Jetzt“ auf Modulseiten',
+      moduleNowHint:
+        'Zeigt oben im Kalender, bei Geld und im Vorrat in einer schmalen Zeile, was gerade ansteht.',
       timeToNext: 'Zeit bis zum nächsten Termin',
       timeToNextHint: 'Zeigt groß, wie lange es bis zum nächsten Termin ist.',
       focusMinutes: 'Länge des Fokus-Timers',
@@ -1755,6 +1758,8 @@ export const de = {
     eventAt: (time: string) => `heute um ${time}`,
     budgetOver: (name: string) => `Budget „${name}“ überschritten`,
     pantryExpired: (n: number) => (n === 1 ? '1 Vorrat abgelaufen' : `${n} Vorräte abgelaufen`),
+    pantryLow: (n: number) =>
+      n === 1 ? '1 Vorrat geht zur Neige' : `${n} Vorräte gehen zur Neige`,
     pantrySoon: (n: number) => (n === 1 ? '1 Vorrat läuft bald ab' : `${n} Vorräte laufen bald ab`),
     docsExpired: (n: number) => (n === 1 ? '1 Dokument abgelaufen' : `${n} Dokumente abgelaufen`),
     docsSoon: (n: number) =>
@@ -1964,6 +1969,8 @@ export const de = {
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
     active: 'Aktiv',
     paused: 'Pausiert',
+    pause: 'Pausieren',
+    resume: 'Fortsetzen',
     empty: 'Noch keine Abos.',
     perMonth: 'Pro Monat',
     perYear: 'Pro Jahr',
@@ -2049,6 +2056,17 @@ export const de = {
     noCategory: 'Ohne Kategorie',
     changeCategory: 'Kategorie ändern',
     fromInvoice: 'Automatisch aus einer bezahlten Rechnung gebucht.',
+    repeat: 'Wiederholen',
+    repeatHint: 'Die nächste Buchung entsteht automatisch, sobald ihr Datum erreicht ist.',
+    repeatMeta: (every: string) => `↻ ${every}`,
+    repeatOptions: {
+      none: 'Nie',
+      monthly: 'Monatlich',
+      quarterly: 'Vierteljährlich',
+      yearly: 'Jährlich',
+    },
+    repeatBooked: (n: number) =>
+      n === 1 ? '1 wiederkehrende Buchung angelegt.' : `${n} wiederkehrende Buchungen angelegt.`,
     addAccount: 'Konto hinzufügen',
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
@@ -3183,6 +3201,8 @@ export const de = {
       byType: 'Dateityp',
       byDepth: 'Tiefe',
       byAge: 'Alter',
+      ageLegendUse:
+        'Farbe = letzte Benutzung (geöffnet oder geändert, was jünger ist). Bei Ordnern zählt die zuletzt benutzte Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr geöffnet.',
       depthLegend: 'Je dunkler die Fläche, desto tiefer liegt der Ordner.',
       ageLegend:
         'Farbe = letzte Änderung. Bei Ordnern zählt die neueste Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr angefasst.',
@@ -3248,6 +3268,7 @@ export const de = {
       topDirs: 'Größte Ordner',
       topFiles: 'Größte Dateien',
       old: 'Lange nicht geändert',
+      unused: 'Lange nicht benutzt',
       oldSince: 'Nicht geändert seit',
       months: (n: number) =>
         n % 12 === 0 ? (n === 12 ? 'einem Jahr' : `${n / 12} Jahren`) : `${n} Monaten`,
@@ -3320,6 +3341,8 @@ export const de = {
       ageBar: 'Anteile nach Alter',
       oldShare: (size: string, pct: number) =>
         `${size} (${pct} %) seit über einem Jahr nicht geändert`,
+      unusedShare: (size: string, pct: number) =>
+        `${size} (${pct} %) seit über einem Jahr nicht benutzt`,
       showOld: 'Alte Einträge hier zeigen',
       biggest: 'Größte Einträge hier',
       open: 'Ordner öffnen',

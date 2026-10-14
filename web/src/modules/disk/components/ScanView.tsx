@@ -109,7 +109,8 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
     scope: 'files',
     oldScope: 'all',
     topmost: true,
-    byAccess: false,
+    // Where Windows keeps the access time, "long unused" means not opened (or changed) for long.
+    byAccess: accessTracked,
     minBytes: 10 * MB,
   });
   // Entries ticked in a filter list (ids of the native tree), for basket or delete in one go.
@@ -305,10 +306,18 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
             {formatDate(n.modified)}
             {n.modified > 0 ? ` · ${t.disk.age.ago(ageDays(n.modified, now()))}` : ''}
           </dd>
+          {accessTracked && n.accessed > 0 ? (
+            <>
+              <dt>{t.disk.list.accessed}</dt>
+              <dd>
+                {formatDate(n.accessed)} · {t.disk.age.ago(ageDays(n.accessed, now()))}
+              </dd>
+            </>
+          ) : null}
         </dl>
       </>
     ),
-    [pathOf, current.bytes],
+    [pathOf, current.bytes, accessTracked],
   );
 
   const setKind = (kind: FilterKind) => setFilter((f) => ({ ...f, kind }));
@@ -492,7 +501,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
           onClick={() => setKind('topFiles')}
         />
         <Chip
-          label={t.disk.filter.old}
+          label={accessTracked ? t.disk.filter.unused : t.disk.filter.old}
           selected={filter.kind === 'old'}
           onClick={() => setKind('old')}
         />
@@ -612,6 +621,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
                 root={current}
                 nodes={mapNodes}
                 colorBy={colorBy}
+                byUse={accessTracked}
                 selectedId={selected?.id ?? null}
                 onSize={onSize}
                 onZoom={zoom}
@@ -619,7 +629,7 @@ export function ScanView({ summary }: { summary: ScanSummary }) {
                 onUp={up}
                 tooltip={tooltip}
               />
-              <Legend colorBy={colorBy} />
+              <Legend colorBy={colorBy} byUse={accessTracked} />
               <p id="disk-map-help" className={styles.help}>
                 {t.disk.map.help}
               </p>

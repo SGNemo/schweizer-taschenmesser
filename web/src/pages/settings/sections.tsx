@@ -322,6 +322,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
       {
+        key: 'moduleNow',
+        get label() {
+          return t.focus.settings.moduleNow;
+        },
+      },
+      {
         key: 'timeToNext',
         get label() {
           return t.focus.settings.timeToNext;

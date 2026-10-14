@@ -365,3 +365,47 @@ fn the_live_picture_ends_with_the_same_sums_as_the_tree() {
         .iter()
         .any(|v| v.kind == NodeKind::Small && v.parent_id == Some(0)));
 }
+
+#[test]
+fn ages_count_from_the_last_use_where_access_times_are_trusted() {
+    use std::time::{Duration, SystemTime};
+    let t = TempDir::new("last-use");
+    let day = Duration::from_secs(86_400);
+    let now = SystemTime::now();
+    for name in ["kept.bin", "small.bin"] {
+        let path = t.path().join(name);
+        fs::write(
+            &path,
+            vec![1u8; if name == "kept.bin" { 50_000 } else { 10 }],
+        )
+        .unwrap();
+        // Changed three years ago, opened last week.
+        let times = fs::FileTimes::new()
+            .set_modified(now - day * 1200)
+            .set_accessed(now - day * 7);
+        fs::File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_times(times)
+            .unwrap();
+    }
+    let run = |tracked: bool| {
+        let o = ScanOptions {
+            min_file_bytes: 20_000,
+            threads: 2,
+            access_tracked: Some(tracked),
+            ..Default::default()
+        };
+        scan(t.path(), &o, &ScanControl::default(), |_| {}).unwrap()
+    };
+    let by_change = run(false);
+    let by_use = run(true);
+    assert!(!by_change.access_tracked && by_use.access_tracked);
+    let ages = |r: &disk_scan::ScanResult| r.tree.view(0).unwrap().age_bytes;
+    let total = by_use.tree.view(0).unwrap().bytes;
+    // By change both the kept file and the folded small one are over three years old …
+    assert_eq!(ages(&by_change)[5], total);
+    // … by last use both are new.
+    assert_eq!(ages(&by_use)[0], total);
+}

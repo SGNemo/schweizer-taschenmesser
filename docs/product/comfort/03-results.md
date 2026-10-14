@@ -98,3 +98,24 @@ Deliberately kept visible although the plan listed them: estimate and "Für heut
 
 ## Package 6 – duplicate a to-do
 Row menu "Duplizieren" on a to-do: copy is open, undo in the toast (2 clicks; before: add again by hand, 3+). `comfort.spec.ts`.
+
+## Package 7 – "Jetzt" strip on module pages (`feat/comfort-now-strips`)
+Built: a slim row at the top of the calendar, money (finance, with invoice and budget items) and pantry pages with the same items as "Jetzt wichtig" on the overview, at most two. New pantry item "n Vorräte gehen zur Neige" (warning, folded under "Wartet noch" on the overview). Own switch in Einstellungen → Fokus & Aufmerksamkeit ("„Jetzt“ auf Modulseiten", on by default, synced focus scope).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 12 | See what is up when opening calendar / money / pantry | go to the overview first (2 / 3) | **0, it is at the top of the page** | `now-strip.spec.ts` |
+
+Calm by rule: nothing shown when nothing is up, no counters, red only where the overview already uses it (overdue invoice, exceeded budget); an item that points at the page you are on is text, not a link.
+
+## Package 6b – repeating bookings (`feat/comfort-recurring-bookings`)
+Built: field "Wiederholen" (Erweitert) on a booking. At the next app start the missed follow-ups (rent on the 15th, salary) are booked, a toast says how many and offers "Rückgängig"; the row shows "↻ Monatlich". Data version 2 (optional internal `repeat`, `repeatOf`).
+
+| # | Action | Before D / A | After D / A | Asserted in |
+|---|---|---|---|---|
+| 11 | Rent / salary booking every month | enter again each month (4 / 5) | **0, books itself** | `repeat-bookings.spec.ts`, `logic.test.ts` |
+
+Deliberately calm: nothing is booked in the future, at most 12 missed periods per start, deleting the newest booking ends the series.
+
+## Package 8a – row contract is enforced (`feat/comfort-check-rows`)
+`check:modules` now fails on hand-made list rows that open an editor without `ItemRow` (`checkRowSource`, 3 unit cases). The only page that broke the contract besides the progress-card budgets (marked with a reason) was **Abos**: its rows now use `ItemRow`, so they get the "⋯" menu (Pausieren/Fortsetzen, Löschen), swipe-left delete with undo and the list keys. Pause: 1 click (switch) as before, plus 2 via the menu and from the keyboard.

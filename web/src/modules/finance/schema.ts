@@ -24,8 +24,14 @@ export const transactionSchema = z.object({
   note: z.string().optional(),
   /** Origin of automatically booked entries, e.g. "invoice:<id>". */
   sourceRef: z.string().optional().meta({ internal: true }),
+  /** Repeating booking (rent, salary): the next one is created once its date has come. */
+  repeat: z.enum(['monthly', 'quarterly', 'yearly']).optional().meta({ internal: true }),
+  /** First booking of a repeating series; gives the follow-ups stable ids across devices. */
+  repeatOf: z.string().optional().meta({ internal: true }),
 });
 
+export const BOOKING_REPEATS = ['monthly', 'quarterly', 'yearly'] as const;
+export type BookingRepeat = (typeof BOOKING_REPEATS)[number];
 export type Account = z.output<typeof accountSchema>;
 export type Category = z.output<typeof categorySchema>;
 export type Transaction = z.output<typeof transactionSchema>;
