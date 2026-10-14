@@ -20,6 +20,7 @@ import {
   type PlanFlag,
   type ScanProgress,
   type ScanSummary,
+  type SteamGame,
 } from './disk';
 
 const GB = 1e9;
@@ -32,6 +33,8 @@ interface FakeFile {
   name: string;
   bytes: number;
   ageDays: number;
+  /** Days since the file was last opened (default: when it was changed). */
+  openedDays?: number;
 }
 interface FakeDir {
   name: string;
@@ -112,7 +115,7 @@ const SPEC: FakeDir = {
         {
           name: 'Spiel',
           ageDays: 200,
-          files: [{ name: 'daten.pak', bytes: 42 * GB, ageDays: 200 }],
+          files: [{ name: 'daten.pak', bytes: 42 * GB, ageDays: 200, openedDays: 3 }],
         },
       ],
     },
@@ -146,10 +149,18 @@ function fileKindOf(name: string): FileKind {
   return 'other';
 }
 
+/** Like Rust: only NTFS keeps access times here; the invented exFAT stick (E:) does not. */
+const accessTracked = (root: string): boolean => !root.startsWith('E:');
+
 class FakeTree {
   readonly nodes: DiskNode[] = [];
 
-  constructor(root: string, spec: FakeDir = SPEC) {
+  /** `byUse`: ages count from the last use (like Rust where access times are trusted). */
+  constructor(
+    root: string,
+    spec: FakeDir = SPEC,
+    private readonly byUse = false,
+  ) {
     this.add(null, { ...spec, name: root });
   }
 
@@ -168,6 +179,8 @@ class FakeTree {
       logicalBytes: 0,
       files: 0,
       modified: FAKE_NOW - d.ageDays * DAY,
+      // Like Rust: a folder's own access time never counts (the scan itself touches it).
+      accessed: 0,
       kindBytes: FILE_KINDS.map(() => 0),
       ageBytes: agesOf(0, 0),
       childCount: 0,
@@ -187,9 +200,13 @@ class FakeTree {
           logicalBytes: f.bytes,
           files: 1,
           modified: FAKE_NOW - f.ageDays * DAY,
+          accessed: FAKE_NOW - (f.openedDays ?? f.ageDays) * DAY,
           fileKind: fk,
           kindBytes: kb,
-          ageBytes: agesOf(f.bytes, f.ageDays),
+          ageBytes: agesOf(
+            f.bytes,
+            this.byUse ? Math.min(f.ageDays, f.openedDays ?? f.ageDays) : f.ageDays,
+          ),
           childCount: 0,
         }),
       );
@@ -207,6 +224,7 @@ class FakeTree {
           logicalBytes: d.small.bytes,
           files: d.small.count,
           modified: FAKE_NOW - d.ageDays * DAY,
+          accessed: FAKE_NOW - d.ageDays * DAY,
           fileKind: fk,
           kindBytes: kb,
           ageBytes: agesOf(d.small.bytes, d.ageDays),
@@ -221,6 +239,7 @@ class FakeTree {
       node.logicalBytes += c.logicalBytes;
       node.files += c.files;
       node.modified = Math.max(node.modified, c.modified);
+      node.accessed = Math.max(node.accessed, c.accessed);
       c.kindBytes.forEach((b, i) => (node.kindBytes[i]! += b));
       c.ageBytes.forEach((b, i) => (node.ageBytes[i]! += b));
     }
@@ -316,9 +335,10 @@ class FakeTree {
     for (const n of this.nodes) {
       if (this.removed.has(n.id) || !wanted(n.kind) || n.id === under) continue;
       if (under !== 0 && !this.isUnder(n.id, under)) continue;
-      if (q.olderThan !== undefined && n.modified >= q.olderThan) continue;
+      const stamp = (x: DiskNode) => (q.byAccess ? Math.max(x.accessed, x.modified) : x.modified);
+      if (q.olderThan !== undefined && stamp(n) >= q.olderThan) continue;
       if (q.topmost && q.olderThan !== undefined && n.parentId !== null && n.parentId !== under) {
-        if (this.nodes[n.parentId]!.modified < q.olderThan) continue;
+        if (stamp(this.nodes[n.parentId]!) < q.olderThan) continue;
       }
       if (q.onlyEmpty) {
         if (n.kind === 'dir' && n.files === 0 && n.bytes === 0) hits.push({ key: 0, n });
@@ -431,6 +451,8 @@ export function createFakeDisk(): DiskService {
     cancelled: boolean;
     paused: boolean;
     dupCancelled: boolean;
+    /** Share of the fake scan that has "run" (0–1); drives `liveScan`. */
+    done: number;
   }
   const scans = new Map<number, State>();
   const plans = new Map<number, { scanId: number; plan: DeletePlan; cancelled: boolean }>();
@@ -451,10 +473,11 @@ export function createFakeDisk(): DiskService {
     async startScan(root, onProgress) {
       const scanId = ++nextId;
       const state: State = {
-        tree: new FakeTree(root),
+        tree: new FakeTree(root, SPEC, accessTracked(root)),
         cancelled: false,
         paused: false,
         dupCancelled: false,
+        done: 0,
       };
       scans.set(scanId, state);
       const total = state.tree.nodes[0]!;
@@ -464,6 +487,7 @@ export function createFakeDisk(): DiskService {
         const tick = () => {
           if (state.paused && !state.cancelled) return void setTimeout(tick, 50);
           step++;
+          state.done = step / steps;
           const f = state.cancelled ? step / steps : Math.min(step / steps, 1);
           const p: ScanProgress = {
             files: Math.round(total.files * f),
@@ -484,6 +508,7 @@ export function createFakeDisk(): DiskService {
               logicalBytes: total.logicalBytes,
               cloudBytes: 0,
               skippedLinks: 1,
+              accessTracked: accessTracked(root),
               notRead: [{ path: `${root}System\\Geschützt`, reason: 'denied' }],
               notReadTotal: 1,
               elapsedMs: 300,
@@ -500,8 +525,24 @@ export function createFakeDisk(): DiskService {
     async pauseScan(id, paused) {
       get(id).paused = paused;
     },
+    async liveScan(id, minBytes) {
+      const state = scans.get(id);
+      if (!state) return [];
+      // The fake reveals its top folders one after the other while the scan "runs".
+      const t = state.tree;
+      const top = t.children(0, 1, 0).filter((n) => n.kind === 'dir');
+      const shown = top.slice(0, Math.ceil(top.length * state.done));
+      const ids = new Set(shown.map((n) => n.id));
+      const nodes = t
+        .children(0, 2, minBytes)
+        .filter((n) => n.kind === 'dir' && (ids.has(n.id) || ids.has(n.parentId ?? -1)));
+      const bytes = shown.reduce((s, n) => s + n.bytes, 0);
+      return [{ ...t.copy(0), bytes, childCount: shown.length }, ...nodes];
+    },
     async dropScan(id) {
       scans.delete(id);
+      // Like the native IPC round trip: the caller must not depend on this being instant.
+      await new Promise((r) => setTimeout(r, 120));
     },
     async children(id, node, depth, minBytes) {
       return get(id).tree.children(node, depth, minBytes);
@@ -514,6 +555,21 @@ export function createFakeDisk(): DiskService {
     },
     async query(id, q) {
       return get(id).tree.query(q);
+    },
+    async steamGames(id) {
+      // The invented "Programme\Spiel" plays the part of an installed Steam game.
+      const t = get(id).tree;
+      const games: SteamGame[] = [];
+      for (const hit of t.query({ scope: 'dirs', limit: 500 })) {
+        if (hit.name !== 'Spiel') continue;
+        games.push({
+          appId: 4242,
+          title: 'Beispielspiel',
+          lastPlayed: FAKE_NOW - 700 * DAY,
+          node: hit,
+        });
+      }
+      return games;
     },
 
     async knownPlaces() {

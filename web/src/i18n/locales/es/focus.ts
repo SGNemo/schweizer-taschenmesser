@@ -23,6 +23,9 @@ export const focus: Strings['focus'] = {
     calmAttention: '«Importante ahora» tranquilo',
     calmAttentionHint:
       'Agrupa lo pendiente en un solo aviso y usa rojo solo para plazos de dinero. Sin contador de días.',
+    moduleNow: '«Ahora» en las páginas de módulos',
+    moduleNowHint:
+      'Muestra en una línea estrecha, arriba en el calendario, el dinero y la despensa, lo que toca ahora.',
     timeToNext: 'Tiempo hasta el próximo evento',
     timeToNextHint: 'Muestra en grande cuánto falta para el próximo evento.',
     focusMinutes: 'Duración del temporizador',

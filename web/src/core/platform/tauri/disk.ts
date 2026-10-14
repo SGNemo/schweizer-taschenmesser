@@ -15,6 +15,7 @@ import type {
   ScanHandle,
   ScanProgress,
   ScanSummary,
+  SteamGame,
 } from '../disk';
 
 type ScanEvent =
@@ -37,9 +38,11 @@ export function createDisk(supported: boolean): DiskService {
       cancelScan: unsupported,
       pauseScan: unsupported,
       dropScan: unsupported,
+      liveScan: unsupported,
       children: unsupported,
       node: unsupported,
       query: unsupported,
+      steamGames: unsupported,
       knownPlaces: unsupported,
       placeSizes: unsupported,
       recycleSize: unsupported,
@@ -82,10 +85,12 @@ export function createDisk(supported: boolean): DiskService {
     cancelScan: (scanId) => call('disk_scan_cancel', { scanId }),
     pauseScan: (scanId, paused) => call('disk_scan_pause', { scanId, paused }),
     dropScan: (scanId) => call('disk_scan_drop', { scanId }),
+    liveScan: (scanId, minBytes) => call<DiskNode[]>('disk_scan_live', { scanId, minBytes }),
     children: (scanId, node, depth, minBytes) =>
       call<DiskNode[]>('disk_children', { scanId, node, depth, minBytes }),
     node: (scanId, node) => call<DiskNode | null>('disk_node', { scanId, node }),
     query: (scanId, query: DiskQuery) => call<DiskNode[]>('disk_query', { scanId, query }),
+    steamGames: (scanId) => call<SteamGame[]>('disk_steam_games', { scanId }),
     knownPlaces: () => call<Place[]>('disk_known_places'),
     placeSizes: () => call<PlaceSize[]>('disk_place_sizes'),
     recycleSize: () => call<number | null>('disk_recycle_size'),

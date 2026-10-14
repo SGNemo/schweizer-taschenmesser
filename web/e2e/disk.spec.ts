@@ -102,6 +102,26 @@ test('desktop: drive cards, scan with progress, result and unreadable folders', 
   await expect(page).toHaveURL(/\/disk$/);
 });
 
+test('the map fills up while the scan runs and stays usable as it grows', async ({ page }) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk');
+  await page.getByRole('button', { name: 'C:\\ (System) scannen' }).click();
+  // Pause half-way: the live map already shows the folders counted so far.
+  await page.getByRole('button', { name: 'Pause' }).click();
+  const live = page.getByRole('region', { name: 'Live-Ansicht des Scans' });
+  await expect(live).toBeVisible();
+  await expect(live.getByTestId('live-map')).toBeVisible();
+  await expect(live.getByRole('img', { name: /Kartenansicht/ })).toBeVisible();
+  await expect(live.getByRole('group', { name: 'Legende' })).toContainText('unter 1 Monat');
+  await audit(page, 'live map');
+  await page.getByRole('button', { name: 'Fortsetzen' }).click();
+  // When the scan is done the full, clickable map takes over.
+  await expect(page.getByTestId('scan-total')).toBeVisible();
+  await expect(live).toHaveCount(0);
+  await expect(page.getByTestId('treemap')).toBeVisible();
+});
+
 test('desktop: a running scan can be cancelled', async ({ page }) => {
   await asDesktop(page);
   await enableDisk(page);
@@ -155,6 +175,15 @@ test('treemap: click zooms into a folder, the breadcrumb goes back, details foll
   await expect(crumbs.getByRole('button', { name: 'Programme' })).toHaveCount(0);
 });
 
+test('after one scan another drive can be scanned right away', async ({ page }) => {
+  await openScan(page);
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await page.getByRole('button', { name: 'E:\\ (USB-Stick) scannen' }).click();
+  await expect(page.getByRole('heading', { name: 'Scan von E:\\' })).toBeVisible();
+  await expect(page.getByTestId('scan-total')).toBeVisible();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
+});
+
 test('treemap: keyboard selects, opens and goes up', async ({ page }) => {
   await openScan(page);
   const canvas = page.getByRole('img', { name: /Kartenansicht/ });
@@ -173,14 +202,15 @@ test('legend names every age bucket and file type (text, not only colour)', asyn
   await openScan(page);
   const legend = page.getByRole('group', { name: 'Legende' });
   const colorBy = page.getByRole('group', { name: 'Farbe nach' });
-  // The map starts coloured by age: what has not been changed for long stands out.
+  // The map starts coloured by age: what has not been used for long stands out.
   await expect(colorBy.getByRole('button', { name: 'Alter' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
   for (const bucket of ['unter 1 Monat', '1–2 Jahre', 'über 3 Jahre'])
     await expect(legend).toContainText(bucket);
-  await expect(legend).toContainText('letzte Änderung');
+  // C: is NTFS with access times kept, so the age counts from the last use.
+  await expect(legend).toContainText('letzte Benutzung');
   await colorBy.getByRole('button', { name: 'Dateityp' }).click();
   for (const kind of [
     'Videos',
@@ -228,8 +258,8 @@ test('quick filters: biggest files, older than, by type', async ({ page }) => {
   await page.getByRole('button', { name: 'Größte Ordner' }).click();
   expect(await first()).toBe('Programme');
 
-  await page.getByRole('button', { name: 'Lange nicht geändert' }).click();
-  await page.getByLabel('Nicht geändert seit', { exact: true }).selectOption('24');
+  await page.getByRole('button', { name: 'Lange nicht benutzt' }).click();
+  await page.getByLabel('Nicht geöffnet seit', { exact: true }).selectOption('24');
   await expect(table).toContainText('alt.iso');
   await expect(table).not.toContainText('Steuer.pdf');
 
@@ -241,14 +271,12 @@ test('quick filters: biggest files, older than, by type', async ({ page }) => {
   await expect(page.getByTestId('treemap')).toBeVisible();
 });
 
-test('long unchanged: each old folder once, with the total, ticked entries go to the basket', async ({
+test('long unused: each old folder once, with the total, ticked entries go to the basket', async ({
   page,
 }) => {
   await openScan(page);
-  // The drive's details say how much has not been changed for a year.
-  await expect(page.getByTestId('details-old')).toContainText(
-    'seit über einem Jahr nicht geändert',
-  );
+  // The drive's details say how much has not been used for a year.
+  await expect(page.getByTestId('details-old')).toContainText('seit über einem Jahr nicht benutzt');
   await page
     .getByTestId('details')
     .getByRole('button', { name: 'Alte Einträge hier zeigen' })
@@ -258,7 +286,7 @@ test('long unchanged: each old folder once, with the total, ticked entries go to
   // folder (listed once, not file by file); the small old PDF stays out.
   await expect(page.getByTestId('old-summary')).toContainText('3 Einträge');
   await expect(page.getByTestId('old-summary')).toContainText(
-    'seit über einem Jahr nicht geändert',
+    'seit über einem Jahr nicht geöffnet',
   );
   for (const name of ['Urlaub-2024.mp4', 'alt.iso', 'Scans'])
     await expect(table).toContainText(name);
@@ -286,6 +314,44 @@ test('long unchanged: each old folder once, with the total, ticked entries go to
   await expect(page.getByRole('dialog')).toContainText('Löschen bestätigen');
 });
 
+test('long unused counts from the last opening where Windows tracks it: a played game is in use', async ({
+  page,
+}) => {
+  await openScan(page);
+  await page.getByRole('button', { name: 'Lange nicht benutzt' }).click();
+  const basis = page.getByRole('group', { name: 'Gemessen an' });
+  await expect(basis.getByRole('button', { name: 'letztem Öffnen' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.getByLabel('Nicht geöffnet seit', { exact: true }).selectOption('6');
+  const table = page.getByRole('table', { name: 'Schnellfilter' });
+  await expect(page.getByTestId('old-summary')).toContainText('nicht geöffnet');
+  // Unchanged for 200 days, but opened three days ago: not listed …
+  await expect(table).not.toContainText('Spiel');
+  await expect(table).toContainText('alt.iso');
+  await expect(table.getByRole('columnheader', { name: 'Geöffnet' })).toBeVisible();
+  // … while the change date alone would call it unused.
+  await basis.getByRole('button', { name: 'letzter Änderung' }).click();
+  await page.getByLabel('Nicht geändert seit', { exact: true }).selectOption('6');
+  await expect(table).toContainText('Spiel');
+  await basis.getByRole('button', { name: 'letztem Öffnen' }).click();
+  await page.getByLabel('Nicht geöffnet seit', { exact: true }).selectOption('3');
+  await table.getByRole('button', { name: 'alt.iso' }).click();
+  await expect(page.getByTestId('details-accessed')).toContainText('vor 2 Jahren');
+  await audit(page, 'long unused by opening');
+});
+
+test('a drive without access times (exFAT stick) keeps counting from the last change', async ({
+  page,
+}) => {
+  await openScan(page, 'E:\\ (USB-Stick) scannen');
+  await expect(page.getByRole('group', { name: 'Legende' })).toContainText('letzte Änderung');
+  await page.getByRole('button', { name: 'Lange nicht geändert' }).click();
+  await expect(page.getByRole('group', { name: 'Gemessen an' })).toHaveCount(0);
+  await expect(page.getByLabel('Nicht geändert seit', { exact: true })).toBeVisible();
+});
+
 test('a result row opens the folder of the file in the map', async ({ page }) => {
   await openScan(page);
   await page.getByRole('button', { name: 'Größte Dateien' }).click();
@@ -297,6 +363,20 @@ test('a result row opens the folder of the file in the map', async ({ page }) =>
   await expect(
     page.getByRole('navigation', { name: 'Pfad' }).getByRole('button', { name: 'Spiel' }),
   ).toHaveAttribute('aria-current', 'location');
+});
+
+test('Steam games list when they were last played, oldest first', async ({ page }) => {
+  await openScan(page);
+  await page.getByRole('button', { name: 'Spiele (Steam)' }).click();
+  await expect(page.getByTestId('games-summary')).toContainText(
+    '1 Spiel mit zusammen 39,1 GB, davon 1 seit über einem Jahr nicht gespielt',
+  );
+  const table = page.getByRole('table', { name: 'Steam-Spiele' });
+  await expect(table.getByRole('row')).toHaveCount(2);
+  await expect(table).toContainText('Zuletzt gespielt am 16.7.2023');
+  await table.getByRole('button', { name: /Spiel/ }).click();
+  await expect(page.getByTestId('details-played')).toContainText('16.7.2023');
+  await audit(page, 'steam games list');
 });
 
 // --- deleting (against the in-memory fake only; never a real path) -----------------------------

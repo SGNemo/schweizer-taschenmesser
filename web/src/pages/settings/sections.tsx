@@ -4,6 +4,13 @@
  */
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
+import {
+  appearanceReset,
+  focusReset,
+  FOCUS_RESET_KEYS,
+  readingReset,
+  REMINDER_RESET_KEYS,
+} from '@/core/settings/reset';
 import { t } from '@/strings';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
@@ -27,6 +34,8 @@ import { AiWriteSection } from './AiWriteSection';
 import { CalmRemindersSection } from './CalmRemindersSection';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
+import { tAdvanced } from '@/strings.advanced';
+import { AdvancedSection } from './AdvancedSection';
 import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
@@ -214,6 +223,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: appearanceReset,
     render: () => <AppearanceSection />,
   },
   {
@@ -264,6 +274,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: readingReset,
     render: () => <ReadingSection />,
   },
   {
@@ -308,6 +319,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         key: 'calmAttention',
         get label() {
           return t.focus.settings.calmAttention;
+        },
+      },
+      {
+        key: 'moduleNow',
+        get label() {
+          return t.focus.settings.moduleNow;
         },
       },
       {
@@ -371,7 +388,34 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: focusReset(FOCUS_RESET_KEYS),
     render: () => <FocusSection />,
+  },
+  {
+    id: 'advanced',
+    category: 'darstellung',
+    order: 16,
+    get title() {
+      return tAdvanced.get().settings.title;
+    },
+    get description() {
+      return tAdvanced.get().settings.description;
+    },
+    get keywords() {
+      return tAdvanced.get().settings.keywords;
+    },
+    fields: [
+      {
+        key: 'advancedAll',
+        get label() {
+          return tAdvanced.get().settings.all;
+        },
+        get description() {
+          return tAdvanced.get().settings.allHint;
+        },
+      },
+    ],
+    render: () => <AdvancedSection />,
   },
   {
     id: 'favourites',
@@ -500,6 +544,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: focusReset(REMINDER_RESET_KEYS),
     render: () => <CalmRemindersSection />,
   },
   {

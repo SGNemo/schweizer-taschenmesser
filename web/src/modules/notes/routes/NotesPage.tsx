@@ -11,6 +11,7 @@ import {
   PageHeader,
   patternStyles,
   TextField,
+  useOpenParam,
 } from '@/ui';
 import { NoteEditor, type NoteTarget } from '../components/NoteEditor';
 import { StartDataButton } from '@/core/importer/StartDataButton';
@@ -21,6 +22,7 @@ export default function NotesPage() {
   const notes = useLiveQuery(() => noteRepo.active().toArray(), []);
   const [query, setQuery] = useState('');
   const [target, setTarget] = useState<NoteTarget>(null);
+  useOpenParam((id) => noteRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
 
   // `?new=1` opens an empty note; `title`/`text` come from the share page and prefill it.

@@ -1,6 +1,7 @@
 import { compareText } from '@/core/i18n/format';
-import { addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
-import type { Account, Transaction } from './schema';
+import { addMonthsStr, addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
+import { formatMoneyInput } from '@/core/money';
+import type { Account, BookingRepeat, Transaction } from './schema';
 
 type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'>;
 
@@ -119,4 +120,94 @@ export function availability(
 
 export function sortAccounts<T extends { order: number; name: string }>(list: T[]): T[] {
   return [...list].sort((a, b) => a.order - b.order || compareText(a.name, b.name));
+}
+
+export interface TxFilter {
+  /** Free text: payee, note, category name or the amount ("45", "12,50"). */
+  query: string;
+  kind: 'all' | 'expense' | 'income';
+}
+
+const fold = (s: string): string =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+/** Bookings that match the text (all words must appear) and the kind. Pure; the caller decides which months to pass in. */
+export function filterTransactions<T extends Tx & { payee?: string; note?: string }>(
+  txs: readonly T[],
+  filter: TxFilter,
+  categoryName: (id: string | undefined) => string | undefined,
+): T[] {
+  const words = fold(filter.query).split(/\s+/).filter(Boolean);
+  return txs.filter((x) => {
+    if (filter.kind !== 'all' && x.kind !== filter.kind) return false;
+    if (words.length === 0) return true;
+    const hay = fold(
+      [x.payee, x.note, categoryName(x.categoryId), formatMoneyInput(x.amountMinor)]
+        .filter(Boolean)
+        .join(' '),
+    );
+    return words.every((w) => hay.includes(w));
+  });
+}
+
+/** What the same payee was booked with last (same kind, case-insensitive, newest booking wins); fills the dialog so a repeat booking needs only the amount. */
+export function lastUsedFor(
+  txs: readonly (Tx & { payee?: string; createdAt: number })[],
+  payee: string,
+  kind: Tx['kind'],
+): { categoryId?: string; accountId: string } | undefined {
+  const key = payee.trim().toLocaleLowerCase();
+  if (!key) return undefined;
+  const hit = txs
+    .filter((x) => x.kind === kind && x.payee?.trim().toLocaleLowerCase() === key)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)[0];
+  return hit ? { categoryId: hit.categoryId, accountId: hit.accountId } : undefined;
+}
+
+const REPEAT_MONTHS: Record<BookingRepeat, number> = { monthly: 1, quarterly: 3, yearly: 12 };
+
+/** At most this many missed periods are booked per series and start (a long break never floods the list). */
+const MAX_CATCH_UP = 12;
+
+export type PlannedRepeat = { id: string; data: Transaction };
+
+/**
+ * The follow-up bookings of repeating series whose date has come (<= `day`). Ids derive from the
+ * series root and the date, so two devices create the same booking and sync converges. Only the
+ * newest booking of a series keeps `repeat`; `clear` lists the heads that hand it on.
+ */
+export function planRepeats(
+  heads: (Transaction & { id: string })[],
+  day: string,
+): { create: PlannedRepeat[]; clear: string[] } {
+  const create: PlannedRepeat[] = [];
+  const clear: string[] = [];
+  for (const head of heads) {
+    if (!head.repeat) continue;
+    const root = head.repeatOf ?? head.id;
+    const months = REPEAT_MONTHS[head.repeat];
+    let { date } = head;
+    let made = 0;
+    while (made < MAX_CATCH_UP) {
+      const next = addMonthsStr(date, months);
+      if (next > day) break;
+      const { id: _id, ...base } = head;
+      create.push({
+        id: `rep-${root}-${next}`,
+        data: { ...base, date: next, repeat: head.repeat, repeatOf: root, sourceRef: undefined },
+      });
+      date = next;
+      made++;
+    }
+    if (made > 0) {
+      clear.push(head.id);
+      // Only the newest keeps the series alive.
+      for (let i = create.length - made; i < create.length - 1; i++)
+        create[i]!.data.repeat = undefined;
+    }
+  }
+  return { create, clear };
 }

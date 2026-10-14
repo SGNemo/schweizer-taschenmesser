@@ -23,6 +23,9 @@ export const focus: Strings['focus'] = {
     calmAttention: '« Important maintenant » en mode calme',
     calmAttentionHint:
       'Regroupe ce qui attend en un seul message et ne garde le rouge que pour les échéances d’argent. Sans compteur de jours.',
+    moduleNow: '« Maintenant » sur les pages des modules',
+    moduleNowHint:
+      'Affiche en une ligne discrète, en haut du calendrier, de l’argent et du garde-manger, ce qui est à faire maintenant.',
     timeToNext: 'Temps jusqu’au prochain événement',
     timeToNextHint: 'Affiche en grand combien de temps il reste avant le prochain événement.',
     focusMinutes: 'Durée du minuteur de concentration',

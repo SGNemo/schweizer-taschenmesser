@@ -1,12 +1,25 @@
+import { NowStrip } from '@/core/modules/NowStrip';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { useAdvanced } from '@/core/settings/comfort';
 import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Card, Icon, IconButton, Segmented, SplitView, useSplitView } from '@/ui';
+import {
+  AdvancedToggle,
+  Button,
+  Card,
+  Icon,
+  IconButton,
+  patternStyles,
+  Segmented,
+  SplitView,
+  useOpenParam,
+  useSplitView,
+} from '@/ui';
 import { TransactionEditor, type TransactionTarget } from '../components/Editors';
 import { OverviewTab } from '../components/OverviewTab';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
-import { ensureDefaults } from '../repo';
+import { DEFAULT_CATEGORY_IDS, ensureDefaults, transactionRepo } from '../repo';
 import { useFinanceData } from '../summary';
 import styles from './finance.module.css';
 
@@ -18,6 +31,7 @@ export default function FinancePage() {
   const data = useFinanceData();
   const [params, setParams] = useSearchParams();
   const [target, setTarget] = useState<TransactionTarget>(null);
+  useOpenParam((id) => transactionRepo.get(id), setTarget);
   const wideScreen = useSplitView();
 
   useEffect(() => {
@@ -26,6 +40,18 @@ export default function FinancePage() {
 
   const rawTab = params.get('tab');
   const tab: Tab = TABS.includes(rawTab as Tab) ? (rawTab as Tab) : 'overview';
+  // Accounts and categories are set up once: they live in the Erweitert view, unless the user
+  // already has more than the defaults (or is on that tab, e.g. from a link).
+  const [advanced] = useAdvanced('finance');
+  const hasMoreAccounts = (data?.accounts.length ?? 0) > 1;
+  const hasOwnCategories = (data?.categories ?? []).some((c) => !DEFAULT_CATEGORY_IDS.has(c.id));
+  const tabs = TABS.filter((k) =>
+    k === 'accounts'
+      ? advanced || hasMoreAccounts || tab === k
+      : k === 'categories'
+        ? advanced || hasOwnCategories || tab === k
+        : true,
+  );
   const rawMonth = params.get('month');
   const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : monthOf(today());
 
@@ -54,22 +80,26 @@ export default function FinancePage() {
     <>
       <div className={styles.header}>
         <h1>{t.finance.title}</h1>
-        <Button
-          variant="primary"
-          onClick={() => setTarget({ draft: true })}
-          aria-label={t.finance.addTransaction}
-          disabled={!data || data.accounts.length === 0}
-        >
-          <Icon name="plus" size={18} />
-          {t.finance.addTransactionShort}
-        </Button>
+        <div className={patternStyles.hstackCenter}>
+          <AdvancedToggle moduleId="finance" />
+          <Button
+            variant="primary"
+            onClick={() => setTarget({ draft: true })}
+            aria-label={t.finance.addTransaction}
+            disabled={!data || data.accounts.length === 0}
+          >
+            <Icon name="plus" size={18} />
+            {t.finance.addTransactionShort}
+          </Button>
+        </div>
       </div>
 
+      <NowStrip modules={['finance', 'invoices', 'budgets']} />
       <div className={styles.tabs}>
         <Segmented
           label={t.finance.tabsLabel}
           value={tab}
-          options={TABS.map((k) => ({ value: k, label: t.finance.tabs[k] }))}
+          options={tabs.map((k) => ({ value: k, label: t.finance.tabs[k] }))}
           onChange={(k) => go({ tab: k })}
         />
       </div>
@@ -120,7 +150,12 @@ export default function FinancePage() {
             {tab === 'accounts' ? <AccountsTab data={data} /> : null}
             {tab === 'categories' ? <CategoriesTab data={data} /> : null}
           </SplitView>
-          <TransactionEditor target={openTarget} data={data} onClose={closeEditor} />
+          <TransactionEditor
+            target={openTarget}
+            data={data}
+            onClose={closeEditor}
+            onDuplicated={setTarget}
+          />
         </>
       ) : null}
     </>

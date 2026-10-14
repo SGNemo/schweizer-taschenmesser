@@ -25,6 +25,8 @@ export const focusSettingsSchema = z.object({
   planLimit: z.number().int().min(1).max(5),
   /** "Jetzt wichtig" collapsed to one calm chip; overdue ToDos without a day counter. */
   calmAttention: z.boolean(),
+  /** A slim "Jetzt" strip at the top of calendar, money and pantry pages (the same items as "Jetzt wichtig"). */
+  moduleNow: z.boolean(),
   /** Time until the next appointment and the day progress. */
   timeToNext: z.boolean(),
   /** Default length of the focus timer in minutes. */
@@ -73,6 +75,7 @@ export const DEFAULT_FOCUS: FocusSettings = {
   dayPlan: true,
   planLimit: 3,
   calmAttention: true,
+  moduleNow: true,
   timeToNext: true,
   focusMinutes: 25,
   focusSound: false,

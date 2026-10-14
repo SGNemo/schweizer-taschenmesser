@@ -220,6 +220,8 @@ export const disk: Strings['disk'] = {
     legend: 'Legend',
     byType: 'File type',
     byDepth: 'Depth',
+    ageLegendUse:
+      'Colour = last use (opened or changed, whichever is newer). For folders the most recently used file inside counts: a red folder has not been opened for years.',
     depthLegend: 'The darker the area, the deeper the folder.',
     byAge: 'Age',
     ageLegend:
@@ -284,6 +286,7 @@ export const disk: Strings['disk'] = {
     topDirs: 'Biggest folders',
     topFiles: 'Biggest files',
     old: 'Not changed for a long time',
+    unused: 'Not used for a long time',
     oldSince: 'Not changed for',
     months: (n: number) =>
       n % 12 === 0 ? (n === 12 ? '1 year' : `${n / 12} years`) : `${n} months`,
@@ -295,6 +298,14 @@ export const disk: Strings['disk'] = {
     oldSummary: (n: number, size: string, since: string) =>
       `${n} ${n === 1 ? 'entry' : 'entries'} with ${size} in total, not changed for over ${since}`,
     capped: (n: number) => `Showing the ${n} biggest.`,
+    basis: 'Based on',
+    byChange: 'last change',
+    byOpen: 'last opened',
+    notOpenedSince: 'Not opened for',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'entry' : 'entries'} with ${size} in total, not opened for over ${since}`,
+    accessHelp:
+      'On this drive Windows keeps track of when files were last opened (to within about an hour). Virus scanners, thumbnails or backups can set the date too; then a file looks newer than it is, never older.',
     oldHelp:
       'This counts the last change, not the last time something was opened: Windows usually doesn’t keep track of opening files reliably. For folders the newest file inside counts. For games an update resets the date, playing alone doesn’t.',
     type: 'File type',
@@ -307,12 +318,23 @@ export const disk: Strings['disk'] = {
     none_found: 'No results.',
     results: (n: number) => (n === 1 ? '1 result' : `${n} results`),
   },
+  games: {
+    filter: 'Games (Steam)',
+    label: 'Steam games',
+    lastPlayed: 'Last played',
+    played: (date: string, ago: string) => `Last played on ${date} · ${ago}`,
+    unknown: 'No play date from Steam',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'game' : 'games'} with ${size} in total, ${idle} of them not played for over a year`,
+    help: 'The date comes from Steam’s own files and counts the last time you played, not the last update. If it is missing, the game was never started or Steam did not record it. The cleanest way to uninstall a game is in Steam itself: if only the folder is deleted, Steam still shows it as installed.',
+  },
   list: {
     name: 'Name',
     size: 'Used',
     share: 'Share',
     files: 'Files',
     modified: 'Modified',
+    accessed: 'Opened',
     sortBy: (col: string) => `Sort by ${col}`,
     in: 'In',
     empty: 'No entries.',
@@ -330,10 +352,13 @@ export const disk: Strings['disk'] = {
     files: 'Files',
     modified: 'Last modified',
     modifiedFolder: 'Last modified (newest file inside)',
+    accessed: 'Last opened',
+    accessedFolder: 'Last opened (newest file inside)',
     types: 'File types',
     ages: 'Age of the data',
     ageBar: 'Shares by age',
     oldShare: (size: string, pct: number) => `${size} (${pct}%) not changed for over a year`,
+    unusedShare: (size: string, pct: number) => `${size} (${pct} %) not used for over a year`,
     showOld: 'Show old entries here',
     biggest: 'Biggest entries here',
     open: 'Open folder',
@@ -344,6 +369,10 @@ export const disk: Strings['disk'] = {
     title: (root: string) => `Scan of ${root}`,
     scanning: 'Scanning …',
     paused: 'Scan paused',
+    liveLabel: 'Live view of the scan',
+    liveHint:
+      'The map fills up while counting. Opening, selecting and deleting work once the scan is done.',
+    liveEmpty: 'Counting the first folders …',
     files: 'Files',
     folders: 'Folders',
     used: 'Used',

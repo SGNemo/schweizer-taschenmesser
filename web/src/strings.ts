@@ -118,6 +118,11 @@ export const de = {
     grabHandle: 'Zum Schließen nach unten ziehen',
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
+    rowMenu: 'Weitere Aktionen',
+    datePresetsLabel: 'Schnell wählen',
+    datePresets: { today: 'Heute', tomorrow: 'Morgen', nextWeek: 'Nächste Woche' },
+    deleted: 'Gelöscht.',
+    changed: 'Geändert.',
     undoFailed: 'Das ließ sich nicht mehr rückgängig machen.',
     nothingToUndo: 'Nichts zum Rückgängigmachen.',
     selection: 'Auswahl',
@@ -155,6 +160,7 @@ export const de = {
     hint: 'Einzelne Buchstaben wirken nur, wenn du nicht in einem Feld schreibst.',
     items: [
       { keys: ['Strg', 'K'], text: 'Suchen oder fragen' },
+      { keys: ['Strg', '.'], text: 'Werkzeuge öffnen' },
       { keys: ['N'], text: 'Neu erfassen' },
       { keys: ['G', 'dann H'], text: 'Zur Übersicht' },
       { keys: ['G', 'dann P / G / A / W / T'], text: 'Zu Planen, Geld, Haushalt, Wissen, Tresor' },
@@ -177,6 +183,8 @@ export const de = {
     cancel: 'Abbrechen',
     save: 'Speichern',
     delete: 'Löschen',
+    duplicate: 'Duplizieren',
+    duplicated: 'Dupliziert. Die Kopie ist offen.',
     edit: 'Bearbeiten',
     close: 'Schließen',
     enable: 'Aktivieren',
@@ -226,7 +234,9 @@ export const de = {
     notFoundTitle: 'Diese Kategorie gibt es nicht.',
     danger: {
       title: 'Gefahrenzone',
-      typePhrase: (phrase: string) => `Tippe „${phrase}“ zum Bestätigen`,
+      againTitle: 'Bist du sicher?',
+      againText: 'Das lässt sich nicht rückgängig machen. Bitte bestätige noch einmal.',
+      back: 'Zurück',
     },
     /** Extra search words per settings section (synonyms people type). */
     searchWords: {
@@ -713,6 +723,7 @@ export const de = {
       bookmark: 'Merkliste',
       list: 'Einkauf',
       finance: 'Ausgabe',
+      invoice: 'Rechnung',
       income: 'Einnahme',
       note: 'Notiz',
     },
@@ -723,6 +734,7 @@ export const de = {
       bookmark: 'Merkliste',
       list: 'Listen',
       finance: 'Finanzen',
+      invoice: 'Rechnungen',
       note: 'Notizen',
     },
     chip: {
@@ -904,6 +916,9 @@ export const de = {
       calmAttention: 'Ruhiges „Jetzt wichtig“',
       calmAttentionHint:
         'Fasst Wartendes in einem Hinweis zusammen und lässt Rot nur bei Geldfristen. Ohne Tageszähler.',
+      moduleNow: '„Jetzt“ auf Modulseiten',
+      moduleNowHint:
+        'Zeigt oben im Kalender, bei Geld und im Vorrat in einer schmalen Zeile, was gerade ansteht.',
       timeToNext: 'Zeit bis zum nächsten Termin',
       timeToNextHint: 'Zeigt groß, wie lange es bis zum nächsten Termin ist.',
       focusMinutes: 'Länge des Fokus-Timers',
@@ -1081,6 +1096,8 @@ export const de = {
     markedDone: 'Als erledigt markiert.',
     markedOpen: 'Wieder geöffnet.',
     taskDeleted: 'ToDo gelöscht.',
+    changed: 'ToDo geändert.',
+    noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
     someday: 'Irgendwann',
     somedayLabel: 'Irgendwann (nicht in den offenen Listen zeigen)',
@@ -1741,6 +1758,8 @@ export const de = {
     eventAt: (time: string) => `heute um ${time}`,
     budgetOver: (name: string) => `Budget „${name}“ überschritten`,
     pantryExpired: (n: number) => (n === 1 ? '1 Vorrat abgelaufen' : `${n} Vorräte abgelaufen`),
+    pantryLow: (n: number) =>
+      n === 1 ? '1 Vorrat geht zur Neige' : `${n} Vorräte gehen zur Neige`,
     pantrySoon: (n: number) => (n === 1 ? '1 Vorrat läuft bald ab' : `${n} Vorräte laufen bald ab`),
     docsExpired: (n: number) => (n === 1 ? '1 Dokument abgelaufen' : `${n} Dokumente abgelaufen`),
     docsSoon: (n: number) =>
@@ -1780,8 +1799,12 @@ export const de = {
     packingSummary: (packed: number, total: number) => `${packed} von ${total} gepackt`,
     contractsSummary: (n: number) =>
       n === 1 ? '1 Kündigungsfrist in Sicht' : `${n} Kündigungsfristen in Sicht`,
-    expirySummary: (expired: number, soon: number) =>
-      [expired ? `${expired} abgelaufen` : '', soon ? `${soon} bald` : '']
+    expirySummary: (expired: number, soon: number, low = 0) =>
+      [
+        expired ? `${expired} abgelaufen` : '',
+        soon ? `${soon} bald` : '',
+        low ? `${low} wenig` : '',
+      ]
         .filter(Boolean)
         .join(' · '),
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
@@ -1898,6 +1921,15 @@ export const de = {
     markPaid: 'Als bezahlt markieren',
     markedPaid: 'Als bezahlt markiert.',
     reopen: 'Wieder öffnen',
+    repeat: 'Wiederholen',
+    repeatHint: 'Wird die Rechnung bezahlt, entsteht die nächste automatisch.',
+    repeatMeta: (every: string) => `↻ ${every}`,
+    repeatOptions: {
+      none: 'Nie',
+      monthly: 'Monatlich',
+      quarterly: 'Vierteljährlich',
+      yearly: 'Jährlich',
+    },
     undo: 'Rückgängig',
     empty: 'Keine offenen Rechnungen.',
     emptyPaid: 'Noch keine bezahlten Rechnungen.',
@@ -1937,12 +1969,21 @@ export const de = {
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
     active: 'Aktiv',
     paused: 'Pausiert',
+    pause: 'Pausieren',
+    resume: 'Fortsetzen',
     empty: 'Noch keine Abos.',
     perMonth: 'Pro Monat',
     perYear: 'Pro Jahr',
     nextCharge: 'Nächste Abbuchung',
     cancelBy: 'Kündigen bis',
     ended: 'Beendet',
+    cancelledTo: 'Gekündigt zum (optional)',
+    cancelledToHint: 'Danach gibt es keine Abbuchungen und Fristen mehr.',
+    cancelledBadge: (date: string) => `Gekündigt zum ${date}`,
+    priceHistory: 'Preisverlauf',
+    priceChange: (date: string, from: string, to: string, pct: number) =>
+      `${date}: ${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+    priceUp: (pct: number) => `Preis erhöht (+${pct} %)`,
     every: 'Intervall',
     widgetEmpty: 'Keine aktiven Abos.',
     monthlyCost: (v: string) => `≙ ${v} pro Monat`,
@@ -2004,10 +2045,28 @@ export const de = {
     addTransaction: 'Buchung hinzufügen',
     editTransaction: 'Buchung bearbeiten',
     noTransactions: 'Keine Buchungen in diesem Monat.',
+    searchBookings: 'Buchungen durchsuchen',
+    filterKind: 'Art',
+    filterAll: 'Alle',
+    searchAllMonths: (n: number) =>
+      n === 1 ? '1 Treffer in allen Monaten' : `${n} Treffer in allen Monaten`,
+    noMatches: 'Keine passenden Buchungen.',
     payee: 'Empfänger / Titel',
     account: 'Konto',
     noCategory: 'Ohne Kategorie',
+    changeCategory: 'Kategorie ändern',
     fromInvoice: 'Automatisch aus einer bezahlten Rechnung gebucht.',
+    repeat: 'Wiederholen',
+    repeatHint: 'Die nächste Buchung entsteht automatisch, sobald ihr Datum erreicht ist.',
+    repeatMeta: (every: string) => `↻ ${every}`,
+    repeatOptions: {
+      none: 'Nie',
+      monthly: 'Monatlich',
+      quarterly: 'Vierteljährlich',
+      yearly: 'Jährlich',
+    },
+    repeatBooked: (n: number) =>
+      n === 1 ? '1 wiederkehrende Buchung angelegt.' : `${n} wiederkehrende Buchungen angelegt.`,
     addAccount: 'Konto hinzufügen',
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
@@ -2751,6 +2810,8 @@ export const de = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
+    restockAll: (n: number) => `Alle ${n} nachkaufen`,
+    restockedMany: (n: number) => `${n} Dinge an die Einkaufsliste gesendet.`,
     shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
@@ -2798,6 +2859,13 @@ export const de = {
     deleted: 'Person gelöscht.',
     giftsOpen: (n: number) => (n === 1 ? '1 Geschenk offen' : `${n} Geschenke offen`),
     giftsHeading: 'Geschenke',
+    viewLabel: 'Ansicht',
+    viewPeople: 'Personen',
+    viewGifts: 'Offene Geschenke',
+    giftsNoneOpen: 'Keine offenen Geschenkideen. Alles verschenkt.',
+    giftGivenAction: 'Verschenkt',
+    giftGivenAria: (what: string) => `„${what}“ als verschenkt markieren`,
+    giftGiven: 'Als verschenkt markiert.',
     giftsEmpty: 'Noch keine Geschenkideen für diese Person.',
     addGift: 'Geschenkidee hinzufügen',
     editGift: 'Geschenkidee bearbeiten',
@@ -3133,6 +3201,8 @@ export const de = {
       byType: 'Dateityp',
       byDepth: 'Tiefe',
       byAge: 'Alter',
+      ageLegendUse:
+        'Farbe = letzte Benutzung (geöffnet oder geändert, was jünger ist). Bei Ordnern zählt die zuletzt benutzte Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr geöffnet.',
       depthLegend: 'Je dunkler die Fläche, desto tiefer liegt der Ordner.',
       ageLegend:
         'Farbe = letzte Änderung. Bei Ordnern zählt die neueste Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr angefasst.',
@@ -3198,6 +3268,7 @@ export const de = {
       topDirs: 'Größte Ordner',
       topFiles: 'Größte Dateien',
       old: 'Lange nicht geändert',
+      unused: 'Lange nicht benutzt',
       oldSince: 'Nicht geändert seit',
       months: (n: number) =>
         n % 12 === 0 ? (n === 12 ? 'einem Jahr' : `${n / 12} Jahren`) : `${n} Monaten`,
@@ -3209,6 +3280,14 @@ export const de = {
       oldSummary: (n: number, size: string, since: string) =>
         `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} mit zusammen ${size}, seit über ${since} nicht geändert`,
       capped: (n: number) => `Gezeigt werden die ${n} größten.`,
+      basis: 'Gemessen an',
+      byChange: 'letzter Änderung',
+      byOpen: 'letztem Öffnen',
+      notOpenedSince: 'Nicht geöffnet seit',
+      oldSummaryOpened: (n: number, size: string, since: string) =>
+        `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} mit zusammen ${size}, seit über ${since} nicht geöffnet`,
+      accessHelp:
+        'Windows führt auf diesem Laufwerk mit, wann Dateien zuletzt geöffnet wurden (auf etwa eine Stunde genau). Virenscanner, Vorschaubilder oder Sicherungen können das Datum auch setzen; dann wirkt eine Datei jünger, als sie ist, aber nie älter.',
       oldHelp:
         'Gezählt wird die letzte Änderung, nicht das letzte Öffnen: Windows merkt sich das Öffnen von Dateien meist nicht zuverlässig. Bei Ordnern zählt die neueste Datei darin. Bei Spielen setzt ein Update das Datum neu, reines Spielen nicht.',
       type: 'Dateityp',
@@ -3221,12 +3300,23 @@ export const de = {
       none_found: 'Keine Treffer.',
       results: (n: number) => `${n} Treffer`,
     },
+    games: {
+      filter: 'Spiele (Steam)',
+      label: 'Steam-Spiele',
+      lastPlayed: 'Zuletzt gespielt',
+      played: (date: string, ago: string) => `Zuletzt gespielt am ${date} · ${ago}`,
+      unknown: 'Kein Spieldatum von Steam',
+      summary: (n: number, size: string, idle: number) =>
+        `${n} ${n === 1 ? 'Spiel' : 'Spiele'} mit zusammen ${size}, davon ${idle} seit über einem Jahr nicht gespielt`,
+      help: 'Das Datum stammt aus Steams eigenen Dateien und zählt das letzte Spielen, nicht das letzte Update. Fehlt es, wurde das Spiel nie gestartet oder Steam hat es nicht vermerkt. Am saubersten deinstallierst du ein Spiel in Steam selbst: Wird nur der Ordner gelöscht, zeigt Steam es weiter als installiert.',
+    },
     list: {
       name: 'Name',
       size: 'Belegt',
       share: 'Anteil',
       files: 'Dateien',
       modified: 'Geändert',
+      accessed: 'Geöffnet',
       sortBy: (col: string) => `Nach ${col} sortieren`,
       in: 'In',
       empty: 'Keine Einträge.',
@@ -3244,11 +3334,15 @@ export const de = {
       files: 'Dateien',
       modified: 'Zuletzt geändert',
       modifiedFolder: 'Zuletzt geändert (neueste Datei darin)',
+      accessed: 'Zuletzt geöffnet',
+      accessedFolder: 'Zuletzt geöffnet (neueste Datei darin)',
       types: 'Dateitypen',
       ages: 'Alter der Daten',
       ageBar: 'Anteile nach Alter',
       oldShare: (size: string, pct: number) =>
         `${size} (${pct} %) seit über einem Jahr nicht geändert`,
+      unusedShare: (size: string, pct: number) =>
+        `${size} (${pct} %) seit über einem Jahr nicht benutzt`,
       showOld: 'Alte Einträge hier zeigen',
       biggest: 'Größte Einträge hier',
       open: 'Ordner öffnen',
@@ -3259,6 +3353,10 @@ export const de = {
       title: (root: string) => `Scan von ${root}`,
       scanning: 'Scan läuft …',
       paused: 'Scan pausiert',
+      liveLabel: 'Live-Ansicht des Scans',
+      liveHint:
+        'Die Karte füllt sich, während gezählt wird. Öffnen, Auswählen und Löschen gehen, sobald der Scan fertig ist.',
+      liveEmpty: 'Die ersten Ordner werden gezählt …',
       files: 'Dateien',
       folders: 'Ordner',
       used: 'Belegt',
@@ -4353,6 +4451,9 @@ export const de = {
     export: 'Als Markdown exportieren',
     copy: 'Kopieren',
     copied: 'Kopiert.',
+    saveAsNote: 'Als Notiz speichern',
+    noteOff: 'Das Notizen-Modul ist aus. Schalte es in der Bibliothek ein.',
+    noteFailed: 'Das ließ sich nicht als Notiz speichern.',
     regenerate: 'Neu generieren',
     edit: 'Bearbeiten',
     editSave: 'Speichern und neu fragen',

@@ -27,7 +27,9 @@ async function setUpVault(app: Page) {
   await app.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
   await app.goto('http://localhost:4173/library');
   const card = app.getByTestId('module-accounts');
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
+  const toggle = card.getByRole('switch', { name: /einschalten/ });
+  await expect(toggle).toBeEnabled(); // disabled until the module states have loaded
+  if (!(await toggle.isChecked())) await toggle.click();
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
   await app.goto('http://localhost:4173/accounts');
   await app.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);

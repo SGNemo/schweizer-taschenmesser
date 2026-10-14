@@ -224,6 +224,8 @@ export const disk: Strings['disk'] = {
     legend: 'Leyenda',
     byType: 'Tipo de archivo',
     byDepth: 'Profundidad',
+    ageLegendUse:
+      'Color = último uso (abierto o modificado, lo más reciente). En las carpetas cuenta el archivo usado más recientemente: una carpeta roja no se abre desde hace años.',
     depthLegend: 'Cuanto más oscura es el área, más profunda está la carpeta.',
     byAge: 'Antigüedad',
     ageLegend:
@@ -288,6 +290,7 @@ export const disk: Strings['disk'] = {
     topDirs: 'Carpetas más grandes',
     topFiles: 'Archivos más grandes',
     old: 'Sin cambios desde hace tiempo',
+    unused: 'Sin usar desde hace tiempo',
     oldSince: 'Sin cambios desde hace',
     months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 año' : `${n / 12} años`) : `${n} meses`),
     all: 'Todo',
@@ -298,6 +301,14 @@ export const disk: Strings['disk'] = {
     oldSummary: (n: number, size: string, since: string) =>
       `${n} ${n === 1 ? 'elemento' : 'elementos'} con ${size} en total, sin cambios desde hace más de ${since}`,
     capped: (n: number) => `Se muestran los ${n} más grandes.`,
+    basis: 'Según',
+    byChange: 'último cambio',
+    byOpen: 'última apertura',
+    notOpenedSince: 'Sin abrir desde hace',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'elemento' : 'elementos'} con ${size} en total, sin abrir desde hace más de ${since}`,
+    accessHelp:
+      'En esta unidad Windows registra cuándo se abrieron los archivos por última vez (con una precisión de una hora aprox.). Los antivirus, las miniaturas o las copias de seguridad también pueden cambiar la fecha; entonces un archivo parece más reciente de lo que es, nunca más antiguo.',
     oldHelp:
       'Cuenta el último cambio, no la última vez que se abrió algo: Windows no suele registrar de forma fiable cuándo se abren los archivos. En las carpetas cuenta el archivo más reciente. En los juegos, una actualización cambia la fecha; jugar no.',
     type: 'Tipo de archivo',
@@ -310,12 +321,23 @@ export const disk: Strings['disk'] = {
     none_found: 'Sin resultados.',
     results: (n: number) => (n === 1 ? '1 resultado' : `${n} resultados`),
   },
+  games: {
+    filter: 'Juegos (Steam)',
+    label: 'Juegos de Steam',
+    lastPlayed: 'Jugado por última vez',
+    played: (date: string, ago: string) => `Jugado por última vez el ${date} · ${ago}`,
+    unknown: 'Steam no tiene fecha de juego',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'juego' : 'juegos'} con ${size} en total, ${idle} sin jugar desde hace más de un año`,
+    help: 'La fecha viene de los propios archivos de Steam y cuenta la última partida, no la última actualización. Si falta, el juego nunca se inició o Steam no la guardó. Lo más limpio es desinstalar un juego en Steam: si solo se borra la carpeta, Steam lo sigue mostrando como instalado.',
+  },
   list: {
     name: 'Nombre',
     size: 'Ocupado',
     share: 'Proporción',
     files: 'Archivos',
     modified: 'Modificado',
+    accessed: 'Abierto',
     sortBy: (col: string) => `Ordenar por ${col}`,
     in: 'En',
     empty: 'No hay elementos.',
@@ -333,11 +355,15 @@ export const disk: Strings['disk'] = {
     files: 'Archivos',
     modified: 'Última modificación',
     modifiedFolder: 'Última modificación (archivo más reciente)',
+    accessed: 'Última apertura',
+    accessedFolder: 'Última apertura (archivo más reciente)',
     types: 'Tipos de archivo',
     ages: 'Antigüedad de los datos',
     ageBar: 'Proporciones por antigüedad',
     oldShare: (size: string, pct: number) =>
       `${size} (${pct} %) sin cambios desde hace más de un año`,
+    unusedShare: (size: string, pct: number) =>
+      `${size} (${pct} %) sin usar desde hace más de un año`,
     showOld: 'Mostrar aquí los elementos antiguos',
     biggest: 'Elementos más grandes aquí',
     open: 'Abrir carpeta',
@@ -348,6 +374,10 @@ export const disk: Strings['disk'] = {
     title: (root: string) => `Análisis de ${root}`,
     scanning: 'Analizando …',
     paused: 'Análisis en pausa',
+    liveLabel: 'Vista en vivo del análisis',
+    liveHint:
+      'El mapa se va llenando mientras se cuenta. Abrir, seleccionar y eliminar funcionan cuando termine el análisis.',
+    liveEmpty: 'Contando las primeras carpetas …',
     files: 'Archivos',
     folders: 'Carpetas',
     used: 'Ocupado',
