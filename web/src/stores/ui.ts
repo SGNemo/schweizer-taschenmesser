@@ -32,8 +32,8 @@ export const LEADINGS = ['normal', 'compact', 'airy'] as const;
 export type LeadingChoice = (typeof LEADINGS)[number];
 export const MOTIONS = ['system', 'reduce'] as const;
 export type MotionChoice = (typeof MOTIONS)[number];
-/** "Alle Widgets" or the calm home view with only what starts the day (device-local). */
-export const HOME_VIEWS = ['all', 'calm'] as const;
+/** The calm home view with only what starts the day (default) or "Alle Widgets" (device-local). */
+export const HOME_VIEWS = ['calm', 'all'] as const;
 export type HomeViewChoice = (typeof HOME_VIEWS)[number];
 export const DENSITIES = ['normal', 'compact'] as const;
 export type DensityChoice = (typeof DENSITIES)[number];
@@ -344,7 +344,7 @@ export const useUiStore = create<UiState>((set) => ({
   },
   homeView: readChoice(HOME_VIEW_KEY, HOME_VIEWS),
   setHomeView(homeView) {
-    storeChoice(HOME_VIEW_KEY, homeView, homeView === 'all');
+    storeChoice(HOME_VIEW_KEY, homeView, homeView === 'calm');
     set({ homeView });
   },
   sidebar: readChoice(SIDEBAR_KEY, SIDEBARS),

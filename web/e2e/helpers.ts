@@ -56,3 +56,17 @@ export async function moreFields(page: Page) {
   const button = page.getByRole('dialog').getByRole('button', { name: 'Weitere Felder anzeigen' });
   if (await button.count()) await button.click();
 }
+
+/**
+ * Specs written before the calm defaults (focus audit 2) expect the full home screen: shows every
+ * widget on this device. A fresh app now starts with "Nur das Wichtigste".
+ */
+export async function showAllWidgets(page: Page) {
+  await page.addInitScript(() => localStorage.setItem('tm-home-view', 'all'));
+}
+
+/** Opens the folded "Weitere Einstellungen" block of Fokus & Aufmerksamkeit (once the page is loaded). */
+export async function openMoreFocus(page: Page) {
+  const more = page.getByTestId('focus-more');
+  if ((await more.getAttribute('open')) === null) await more.locator('summary').click();
+}

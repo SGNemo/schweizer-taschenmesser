@@ -40,6 +40,7 @@ export const focus: Strings['focus'] = {
     searchHistory: 'Historique de recherche',
     searchHistoryHint:
       'La recherche montre d’abord ce que vous avez utilisé récemment. L’historique reste sur cet appareil.',
+    more: 'Autres paramètres',
     clearHistory: 'Effacer l’historique',
     clearHistoryHint: 'Vide les entrées récemment utilisées de la recherche.',
     historyCleared: 'Historique effacé.',

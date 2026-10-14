@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { openMoreFocus, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -46,17 +46,9 @@ test.describe('Calm display, capture and finding things again', () => {
     expect(await html(page, 'data-text-size')).toBeNull();
   });
 
-  test('the calm home view shows only what starts the day and can be undone in one tap', async ({
+  test('the calm home view is the default, shows only what starts the day and is undone in one tap', async ({
     page,
   }) => {
-    await ready(page, '/');
-    await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
-    await ready(page, '/settings/darstellung');
-    await page
-      .getByRole('group', { name: 'Übersicht' })
-      .getByRole('button', { name: 'Nur das Wichtigste' })
-      .click();
-
     await ready(page, '/');
     await expect(page.getByTestId('widget-todos:next')).toBeVisible();
     await expect(page.getByTestId('widget-calendar:next')).toBeVisible();
@@ -68,6 +60,13 @@ test.describe('Calm display, capture and finding things again', () => {
     await page.getByRole('button', { name: 'Alle Widgets zeigen' }).click();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     await expect(page.getByTestId('home-calm-note')).toHaveCount(0);
+
+    // The choice is also one tap in the settings, in both directions.
+    await ready(page, '/settings/darstellung');
+    const group = page.getByRole('group', { name: 'Übersicht' });
+    await group.getByRole('button', { name: 'Nur das Wichtigste' }).click();
+    await ready(page, '/');
+    await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
   });
 
   test('inbox: a vague capture lands in the inbox and is sorted one thing at a time', async ({
@@ -117,6 +116,7 @@ test.describe('Calm display, capture and finding things again', () => {
 
     await page.keyboard.press('Escape');
     await ready(page, '/settings/darstellung');
+    await openMoreFocus(page);
     await page.getByRole('button', { name: 'Verlauf löschen' }).click();
     await expect(page.getByText('Verlauf gelöscht.')).toBeVisible();
     await ready(page, '/');
