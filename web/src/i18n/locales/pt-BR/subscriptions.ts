@@ -30,6 +30,8 @@ export const subscriptions: Strings['subscriptions'] = {
   noticeHint: 'Deixe vazio se dá para cancelar a qualquer momento.',
   active: 'Ativa',
   paused: 'Pausada',
+  pause: 'Pausar',
+  resume: 'Retomar',
   empty: 'Ainda não há assinaturas.',
   perMonth: 'Por mês',
   perYear: 'Por ano',

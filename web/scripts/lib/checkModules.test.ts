@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   checkDeleteSource,
   checkModule,
+  checkRowSource,
   checkSettingsSource,
   checkWidgetSource,
 } from './checkModules';
@@ -174,5 +175,21 @@ describe('checkDeleteSource', () => {
   });
   it('ignores files without a repo removal', () => {
     expect(checkDeleteSource('x', 'routes/P.tsx', 'await deletePerson(id);')).toEqual([]);
+  });
+});
+
+describe('checkRowSource', () => {
+  const own = '<Card as="li"><button onClick={() => setTarget(s)}>x</button></Card>';
+  it('flags hand-made rows that open an editor', () => {
+    expect(checkRowSource('x', 'routes/P.tsx', own)).toHaveLength(1);
+  });
+  it('accepts ItemRow, or a stated reason', () => {
+    expect(checkRowSource('x', 'routes/P.tsx', `${own} <ItemRow />`)).toEqual([]);
+    expect(
+      checkRowSource('x', 'routes/P.tsx', `// comfort-custom-row: progress cards\n${own}`),
+    ).toEqual([]);
+  });
+  it('ignores lists that open nothing', () => {
+    expect(checkRowSource('x', 'routes/P.tsx', '<li>step</li>')).toEqual([]);
   });
 });

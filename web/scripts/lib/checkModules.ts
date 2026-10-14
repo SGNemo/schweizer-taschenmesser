@@ -109,6 +109,22 @@ export function checkDeleteSource(id: string, file: string, src: string): string
     : [`${id}: "${file}" deletes without undo (use deleteWithUndo from @/core/undo/withToast)`];
 }
 
+/**
+ * Comfort contract: a list screen (`routes/`) whose hand-made rows (`<li>` / `Card as="li"`) open an
+ * editor on click must be built from `ItemRow`, so swipe, the "⋯" menu, the keys and undo come for
+ * free. A deliberately different row (progress cards, a conversation list) says why with a
+ * `comfort-custom-row:` comment in the file.
+ */
+export function checkRowSource(id: string, file: string, src: string): string[] {
+  const handMade = /<li\b|as=["']li["']/.test(src);
+  const opensEditor = /onClick=\{\(\)\s*=>\s*set\w*(Target|For)\(/.test(src);
+  if (!handMade || !opensEditor || /\bItemRow\b/.test(src) || /comfort-custom-row:/.test(src))
+    return [];
+  return [
+    `${id}: "${file}" builds its own list rows (use ItemRow from @/ui, or explain with a "comfort-custom-row:" comment)`,
+  ];
+}
+
 export function checkSettingsSource(
   id: string,
   source: string,
