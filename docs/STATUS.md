@@ -7,7 +7,7 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 „Standardwerte und Einstellungen“ (`feat/focus2-defaults`) gebaut; danach 2 Übersicht und Heute, 3 Erinnerungen, 4 Ergänzungen (Wetter, Screenshot, Kürzel); Handtest: eine Woche Nutzung pro Paket mit Tagebuch.
 
-Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): alle Pakete 1–7 in `develop`; Zeilenvertrag als `check:modules`-Regel (`feat/comfort-check-rows`), Finanz-Tabs Konten/Kategorien in Erweitert folgt; Handtests K1–K4.
+Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): alle Pakete in `develop` bis auf die Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`); Handtests K1–K4.
 
 Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); Rust-Panic-Log im Datenordner und Widget-Fehlergrenze in PR #92; offen: nur die Handtests der Checkliste.
 

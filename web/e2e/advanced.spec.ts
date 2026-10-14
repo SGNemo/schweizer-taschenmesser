@@ -77,3 +77,24 @@ test('a field that holds data is never hidden', async ({ page }) => {
     .click();
   await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toHaveValue('2026-10-01');
 });
+
+test('finance: accounts and categories sit behind "Erweitert", or show once there is more than the defaults', async ({
+  page,
+}) => {
+  await ready(page, '/finance');
+  await expect(page.getByRole('button', { name: 'Buchungen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Konten' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Kategorien' })).toHaveCount(0);
+
+  const toggle = page.getByRole('switch', { name: 'Erweitert' });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('button', { name: 'Konten' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Kategorien' })).toBeVisible();
+
+  // A link to the tab (e.g. from the balance widget) always works, even in Basis.
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  await ready(page, '/finance?tab=accounts');
+  await expect(page.getByRole('button', { name: 'Konto hinzufügen' })).toBeVisible();
+});
