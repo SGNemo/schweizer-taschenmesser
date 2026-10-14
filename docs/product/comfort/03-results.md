@@ -119,3 +119,6 @@ Deliberately calm: nothing is booked in the future, at most 12 missed periods pe
 
 ## Package 8a – row contract is enforced (`feat/comfort-check-rows`)
 `check:modules` now fails on hand-made list rows that open an editor without `ItemRow` (`checkRowSource`, 3 unit cases). The only page that broke the contract besides the progress-card budgets (marked with a reason) was **Abos**: its rows now use `ItemRow`, so they get the "⋯" menu (Pausieren/Fortsetzen, Löschen), swipe-left delete with undo and the list keys. Pause: 1 click (switch) as before, plus 2 via the menu and from the keyboard.
+
+## Package 8b – finance: accounts and categories in Erweitert (`feat/comfort-finance-advanced`)
+The finance page shows Übersicht and Buchungen in Basis. The tabs Konten and Kategorien appear in the Erweitert view (switch in the page header), as soon as the user has more than one account or an own category (nothing in use is ever hidden), or when a link points at them (balance widget "Konto anlegen"). The tab row loses two of four entries for everyone who never touches them.
