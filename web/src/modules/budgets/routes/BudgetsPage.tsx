@@ -33,6 +33,7 @@ import { budgetStatus, goalProgress } from '../logic';
 import { budgetRepo, depositRepo, goalRepo } from '../repo';
 import type { Goal } from '../schema';
 
+// comfort-custom-row: budgets and goals are progress cards (bar, deposit buttons), not one-line rows.
 type Tab = 'budgets' | 'goals';
 
 export default function BudgetsPage() {

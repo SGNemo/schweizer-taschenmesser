@@ -74,3 +74,21 @@ test('a cancellation date before the first charge cannot be saved (browser valid
   await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
+
+test('the row menu pauses a subscription (2 clicks) and the delete swipe action is undoable', async ({
+  page,
+}) => {
+  await addStreaming(page);
+  const row = page.getByRole('listitem').filter({ hasText: 'Streaming' });
+  await row.getByRole('button', { name: 'Weitere Aktionen' }).click(); // click 1
+  await page.getByRole('menuitem', { name: 'Pausieren' }).click(); // click 2
+  await expect(row).toContainText('Pausiert');
+  await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
+  await expect(row).not.toContainText('Pausiert');
+
+  await row.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await page.getByRole('menuitem', { name: 'Löschen' }).click();
+  await expect(row).toHaveCount(0);
+  await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
+  await expect(row).toHaveCount(1);
+});

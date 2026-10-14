@@ -9,6 +9,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   checkDeleteSource,
+  checkRowSource,
   checkModule,
   checkSettingsSource,
   checkWidgetSource,
@@ -44,14 +45,16 @@ for (const id of readdirSync(modulesDir).sort()) {
   }
 }
 
-// Comfort contract (docs/product/comfort): deletes in module screens are undoable.
+// Comfort contract (docs/product/comfort): deletes in module screens are undoable, list rows use ItemRow.
 for (const id of readdirSync(modulesDir).sort()) {
   if (id === 'disk' || id === 'example') continue; // disk has its own, stricter delete flow
   for (const sub of ['components', 'routes']) {
     const dir = join(modulesDir, id, sub);
     if (!existsSync(dir)) continue;
     for (const f of readdirSync(dir).filter((n) => /\.tsx?$/.test(n) && !/\.test\./.test(n))) {
-      errors.push(...checkDeleteSource(id, `${sub}/${f}`, readFileSync(join(dir, f), 'utf8')));
+      const src = readFileSync(join(dir, f), 'utf8');
+      errors.push(...checkDeleteSource(id, `${sub}/${f}`, src));
+      if (sub === 'routes') errors.push(...checkRowSource(id, `${sub}/${f}`, src));
     }
   }
 }

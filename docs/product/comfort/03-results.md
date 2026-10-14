@@ -116,3 +116,6 @@ Built: field "Wiederholen" (Erweitert) on a booking. At the next app start the m
 | 11 | Rent / salary booking every month | enter again each month (4 / 5) | **0, books itself** | `repeat-bookings.spec.ts`, `logic.test.ts` |
 
 Deliberately calm: nothing is booked in the future, at most 12 missed periods per start, deleting the newest booking ends the series.
+
+## Package 8a – row contract is enforced (`feat/comfort-check-rows`)
+`check:modules` now fails on hand-made list rows that open an editor without `ItemRow` (`checkRowSource`, 3 unit cases). The only page that broke the contract besides the progress-card budgets (marked with a reason) was **Abos**: its rows now use `ItemRow`, so they get the "⋯" menu (Pausieren/Fortsetzen, Löschen), swipe-left delete with undo and the list keys. Pause: 1 click (switch) as before, plus 2 via the menu and from the keyboard.
