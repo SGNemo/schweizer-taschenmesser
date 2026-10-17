@@ -13,7 +13,12 @@ export interface ProposedOp {
   data?: Record<string, unknown>;
   /** update / transition / delete: `id` is exact, `title` is matched against the stored entries locally. */
   target?: { id?: string; title?: string };
+  /** Set by the rules when they had to assume something the user did not say. */
+  hints?: ProposalHint[];
 }
+
+/** `rolled-day`: the time of day was already over today, so the entry is for tomorrow. */
+export type ProposalHint = 'rolled-day';
 
 export interface WriteProposal {
   ops: ProposedOp[];
@@ -62,6 +67,9 @@ export interface PreparedOp {
   lines: DiffLine[];
   /** Required fields that are still empty. */
   missing: string[];
+  /** Fields the module filled in because the sentence did not say them (shown as a hint). */
+  defaulted: string[];
+  hints: ProposalHint[];
   /** The entry to change could not be found / is not unique yet. */
   needsTarget: boolean;
   /** Set when the op cannot be written as it is. */

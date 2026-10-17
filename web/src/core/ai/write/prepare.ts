@@ -115,15 +115,22 @@ export async function prepareOp(
     collectionLabel: t.aiLabels.collections[`${manifest.id}.${def.collection}`] ?? schema.label,
     candidates: [],
     missing: [] as string[],
+    defaulted: [] as string[],
+    hints: op.hints ?? [],
     needsTarget: false,
   };
 
   if (def.kind === 'create') {
     const data = coerceData(manifest, def, op.data ?? {});
+    const defaulted: string[] = [];
     const loadDefaults = manifest.contributions?.aiCreateDefaults;
     if (loadDefaults) {
-      const defaults = await (await loadDefaults()).default(def.collection);
-      for (const [k, v] of Object.entries(defaults)) if (!(k in data)) data[k] = v;
+      const defaults = await (await loadDefaults()).default(def.collection, { ...data });
+      for (const [k, v] of Object.entries(defaults)) {
+        if (k in data) continue;
+        data[k] = v;
+        defaulted.push(k);
+      }
     }
     const missing = (def.required ?? []).filter((f) => data[f] === undefined);
     const parsed = collectionDef.schema.safeParse(data);
@@ -152,6 +159,7 @@ export async function prepareOp(
       data: clean,
       lines,
       missing,
+      defaulted,
       error: error ? `invalid-entry: ${error}` : undefined,
       ready: missing.length === 0 && !error,
     };

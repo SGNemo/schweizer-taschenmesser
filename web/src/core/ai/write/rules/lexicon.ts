@@ -60,6 +60,8 @@ export const UPDATE_PREFIXES = [
 export const UPDATE_WORDS = ['andere', 'aendere', 'andern', 'aendern'];
 /** Whole words only: "schreiben" in "Bericht schreiben" belongs to the title. */
 export const CREATE_WORDS = [
+  'stell',
+  'stelle',
   'lege',
   'leg',
   'erstelle',
@@ -100,6 +102,16 @@ export const MARK_VERBS = ['markier', 'hak', 'setz', 'stell', 'mach', 'kundig', 
 
 /** Words that may stay at the edges of what is left and are dropped there. */
 export const EDGE_FILLERS = new Set([
+  '',
+  'ans',
+  'ins',
+  'aufs',
+  'furs',
+  'fuers',
+  'dass',
+  'daran',
+  'soll',
+  'sollte',
   'hab',
   'habe',
   'hatte',
