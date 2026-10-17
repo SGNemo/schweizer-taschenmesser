@@ -202,7 +202,7 @@ test.describe('Dashboard', () => {
   test('the "Heute" card shows today\'s appointment and the ToDo that is due', async ({ page }) => {
     await ready(page, '/calendar?new=1');
     await page.getByLabel('Titel').fill('Teammeeting');
-    await page.getByLabel('Beginn').fill('09:30');
+    await page.getByLabel('Beginn').fill('11:30');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await ready(page, '/todos');
@@ -216,7 +216,7 @@ test.describe('Dashboard', () => {
     await ready(page, '/');
     // One card for the day (focus audit 2): time to the appointment, the suggested ToDo, the appointment.
     const widget = page.getByTestId('widget-todos:next');
-    await expect(widget.getByTestId('today-until')).toContainText('in 9 Std 30 Min');
+    await expect(widget.getByTestId('today-until')).toContainText('in 1 Std 30 Min');
     await expect(widget.getByTestId('next-card')).toContainText('Bericht senden');
     await expect(widget.getByTestId('today-appointments')).toContainText('Teammeeting');
     await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);

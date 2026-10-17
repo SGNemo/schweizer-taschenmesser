@@ -23,7 +23,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 | Focus audit 2 (phase 0–2: audit and plan, docs only) | `docs/focus-audit-2` | `docs/product/focus/**` | phase 0 – waiting for diary and answers | – | 2026-10-13 |
-| Focus audit 2, package 2a: one "Heute" card, pinning on home (ToDo page follows as 2b) | `feat/focus2-today` | `web/src/home/**`, `web/src/modules/todos/{widgets,today.ts}`, `web/src/core/time/until.ts`, `docs/product/focus/12-results-2.md` | building | – | 2026-10-17 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

@@ -119,7 +119,7 @@ test.describe('Focus and attention aids', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await ready(page, '/');
     const plan = page.getByTestId('day-plan');
-    await expect(plan).toContainText('Noch Platz für 1.');
+    await expect(plan).toContainText('Noch Platz für eine Sache.');
     await plan.getByRole('checkbox', { name: 'Brief schreiben' }).click();
     await expect(plan).toContainText('Erledigt heute: 1');
   });
