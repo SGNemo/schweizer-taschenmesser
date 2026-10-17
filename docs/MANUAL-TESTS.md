@@ -210,6 +210,12 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
+## Spracheingabe (nur von Hand prüfbar)
+V1. *Windows-App (WebView2):* Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
+V2. *Systemweite Taste (Windows):* Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
+V3. *Android (Chrome-PWA und APK):* PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
+V4. *Sprachen:* App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
+
 ## Sprachen (App in fünf Sprachen)
 - **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English, Español, Français, Português (Brasil) und Deutsch. Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
 - **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.

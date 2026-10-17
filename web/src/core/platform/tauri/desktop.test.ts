@@ -34,6 +34,14 @@ describe('desktop service', () => {
     expect(await d.setVaultHotkey('Ctrl+Alt+V')).toBe('taken');
   });
 
+  it('registers the voice key through its own command', async () => {
+    const d = createDesktopService(true);
+    expect(await d.setVoiceHotkey('Ctrl+Alt+M')).toBeNull();
+    expect(invoke).toHaveBeenCalledWith('desktop_set_voice_hotkey', { accelerator: 'Ctrl+Alt+M' });
+    invoke.mockRejectedValueOnce('taken');
+    expect(await d.setVoiceHotkey('Ctrl+Alt+M')).toBe('taken');
+  });
+
   it('maps registration failures to codes and never throws', async () => {
     const d = createDesktopService(true);
     invoke.mockRejectedValueOnce('taken');

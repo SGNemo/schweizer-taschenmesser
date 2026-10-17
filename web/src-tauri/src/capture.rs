@@ -49,6 +49,8 @@ pub struct CaptureState {
     hotkey: Mutex<Option<Shortcut>>,
     /// Second global key: opens the vault search (the web app decides whether the vault is unlocked).
     vault_hotkey: Mutex<Option<Shortcut>>,
+    /// Third global key: starts/stops voice input in the main window (off until the user sets one).
+    voice_hotkey: Mutex<Option<Shortcut>>,
     shown_at: Mutex<Option<Instant>>,
     tray: Mutex<Option<TrayItems>>,
 }
@@ -184,6 +186,15 @@ fn open_vault_search(app: &AppHandle) {
     show_main(app);
     if let Some(window) = app.get_webview_window(MAIN) {
         let _ = window.eval("window.dispatchEvent(new Event('tm-vault-search'))");
+    }
+}
+
+/// Brings the main window forward and tells the page to start or stop voice input. A constant
+/// script, no data crosses here; the page only acts on it while voice input is switched on.
+fn toggle_voice(app: &AppHandle) {
+    show_main(app);
+    if let Some(window) = app.get_webview_window(MAIN) {
+        let _ = window.eval("window.dispatchEvent(new Event('tm-voice-toggle'))");
     }
 }
 
@@ -335,6 +346,22 @@ pub fn desktop_set_vault_hotkey(
         &state.vault_hotkey,
         accelerator.as_deref(),
         open_vault_search,
+    )
+    .map_err(str::to_owned)
+}
+
+/// Same contract as `capture_set_hotkey`, for the voice input key (off until the user sets one).
+#[tauri::command]
+pub fn desktop_set_voice_hotkey(
+    app: AppHandle,
+    state: State<'_, CaptureState>,
+    accelerator: Option<String>,
+) -> Result<(), String> {
+    set_hotkey(
+        &app,
+        &state.voice_hotkey,
+        accelerator.as_deref(),
+        toggle_voice,
     )
     .map_err(str::to_owned)
 }

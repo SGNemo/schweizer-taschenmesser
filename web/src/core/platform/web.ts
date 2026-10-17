@@ -114,11 +114,20 @@ export const onVaultSearchEvent = (callback: () => void): (() => void) => {
   return () => window.removeEventListener(VAULT_SEARCH_EVENT, callback);
 };
 
+/** The DOM event the native shell dispatches into the main window for the voice input key. */
+export const VOICE_TOGGLE_EVENT = 'tm-voice-toggle';
+
+export const onVoiceToggleEvent = (callback: () => void): (() => void) => {
+  window.addEventListener(VOICE_TOGGLE_EVENT, callback);
+  return () => window.removeEventListener(VOICE_TOGGLE_EVENT, callback);
+};
+
 /** No tray, hotkey or autostart in a browser; the capture page itself still works there. */
 export const webDesktop: DesktopService = {
   supported: false,
   setHotkey: async () => 'failed',
   setVaultHotkey: async () => 'failed',
+  setVoiceHotkey: async () => 'failed',
   setCloseToTray: async () => undefined,
   setTrayLabels: async () => undefined,
   setAutostart: async () => undefined,
@@ -131,6 +140,7 @@ export const webDesktop: DesktopService = {
   readClipboard: () => navigator.clipboard.readText().catch(() => undefined),
   onCaptureOpen: onCaptureOpenEvent,
   onVaultSearch: onVaultSearchEvent,
+  onVoiceToggle: onVoiceToggleEvent,
 };
 
 /** The PWA receives shares through its web manifest (`share_target`), not through this service. */

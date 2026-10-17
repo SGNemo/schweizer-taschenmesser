@@ -7,6 +7,7 @@ import { ui } from './ui';
 import { groups } from './groups';
 import { meanings } from './meanings';
 import { shortcuts } from './shortcuts';
+import { voice } from './voice';
 import { actions } from './actions';
 import { home } from './home';
 import { library } from './library';
@@ -73,6 +74,7 @@ export const ptBR: Strings = {
   groups,
   meanings,
   shortcuts,
+  voice,
   actions,
   home,
   library,

@@ -176,6 +176,50 @@ export const de = {
       { keys: ['?'], text: 'Diese Übersicht' },
     ],
   },
+  voice: {
+    title: 'Spracheingabe',
+    intro:
+      'Mit einer Taste sprichst du mit der Suche und der KI. Der erkannte Text landet im Eingabefeld; abschicken tust du selbst.',
+    enable: 'Spracheingabe nutzen',
+    enableHint: 'Aus, bis du sie einschaltest.',
+    unavailable:
+      'Hier nicht verfügbar: Dieses Gerät oder dieser Browser bietet keine Spracherkennung. Tippen geht wie immer.',
+    key: 'Taste in der App',
+    keyHint: 'Halten und sprechen, oder einmal tippen und zum Beenden noch einmal. Esc bricht ab.',
+    keyRecord: 'Taste ändern',
+    keyRecording: 'Taste drücken …',
+    keyOff: 'Keine Taste',
+    keyClear: 'Entfernen',
+    keyDefault: 'Standard',
+    keyInvalid: 'Nimm eine Taste von F1 bis F12 oder eine Taste mit Strg oder Alt.',
+    globalKey: 'Systemweite Taste',
+    globalHint:
+      'Gilt auch, wenn Nemo im Hintergrund ist: ein Druck startet, der nächste beendet die Aufnahme.',
+    globalErrors: {
+      invalid: 'Diese Tastenkombination wird nicht verstanden.',
+      taken: 'Diese Tastenkombination gehört schon einem anderen Programm.',
+      failed: 'Die Taste konnte nicht gesetzt werden.',
+    },
+    noticeTitle: 'Spracheingabe einschalten?',
+    noticeText:
+      'Zum Erkennen schickt dein Browser oder dein System den Ton womöglich an den Anbieter, zum Beispiel Google oder Microsoft. Nemo speichert weder Ton noch erkannten Text, schreibt nichts in Protokolle und gibt nichts an die KI, bevor du selbst abschickst. Die Sprache folgt der App-Sprache.',
+    noticeConfirm: 'Einschalten',
+    noticeCancel: 'Lieber nicht',
+    button: 'Sprechen',
+    buttonStop: 'Aufnahme beenden',
+    listening: 'Ich höre zu …',
+    listeningHint: (key: string) => `Zum Beenden ${key} oder tippen. Esc bricht ab.`,
+    listeningHintNoKey: 'Zum Beenden tippen. Esc bricht ab.',
+    finishing: 'Einen Moment …',
+    shortcutText: 'Sprechen (halten oder tippen)',
+    notices: {
+      denied:
+        'Das Mikrofon ist nicht freigegeben. Du kannst es in den Browser-Einstellungen erlauben.',
+      silent: 'Ich habe nichts gehört. Versuch es gern noch einmal.',
+      failed: 'Spracheingabe klappt hier gerade nicht. Tippen geht wie immer.',
+    },
+    searchWords: ['Mikrofon', 'Diktat', 'Sprechen', 'Push-to-talk', 'Voice', 'Spracherkennung'],
+  },
   actions: {
     add: 'Hinzufügen',
     quickAdd: 'Schnell hinzufügen',
