@@ -25,6 +25,7 @@
     "check:legal": "node scripts/check-legal.mjs",
     "check:licenses": "node scripts/gen-licenses.mjs --check",
     "check:docs": "node scripts/check-docs.mjs",
+    "chats:status": "node scripts/chats-status.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
     "i18n:scaffold": "node scripts/i18n-scaffold.mjs",
     "check:readme": "node scripts/check-readme.mjs",
@@ -42,6 +43,7 @@
     "version:set": "node scripts/version.mjs set",
     "changelog": "node scripts/changelog.mjs",
     "screenshots": "playwright test -c playwright.screens.config.ts",
+    "measure:stimulus": "playwright test -c playwright.stimulus.config.ts",
     "ai:eval": "node scripts/ai-eval.mjs",
     "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome"
   },
