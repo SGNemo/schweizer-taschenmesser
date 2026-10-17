@@ -43,6 +43,7 @@
     "version:set": "node scripts/version.mjs set",
     "changelog": "node scripts/changelog.mjs",
     "screenshots": "playwright test -c playwright.screens.config.ts",
+    "measure:stimulus": "playwright test -c playwright.stimulus.config.ts",
     "ai:eval": "node scripts/ai-eval.mjs",
     "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome"
   },
