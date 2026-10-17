@@ -60,6 +60,9 @@ export const UPDATE_PREFIXES = [
 export const UPDATE_WORDS = ['andere', 'aendere', 'andern', 'aendern'];
 /** Whole words only: "schreiben" in "Bericht schreiben" belongs to the title. */
 export const CREATE_WORDS = [
+  'erinner',
+  'erinnere',
+  'erinnern',
   'stell',
   'stelle',
   'lege',

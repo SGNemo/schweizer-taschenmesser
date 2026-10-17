@@ -268,6 +268,15 @@ export const ai: Strings['ai'] = {
         : `${n} entries were skipped because they have changed.`,
     failed: 'That couldn’t be saved.',
     nothingReady: 'Some details are still missing.',
+    reminder: {
+      confirm: 'Save',
+      edit: 'Change',
+      notifies: 'You will get a notification then.',
+      defaultTime: (time: string) => `No time given – suggesting ${time}. You can change it.`,
+      rolledDay: 'That time has already passed today, so it is suggested for tomorrow.',
+      past: 'That moment is already in the past – there will be no notification.',
+      askTitle: 'What should I remind you of?',
+    },
     recurrence: {
       daily: 'Daily',
       weekly: 'Weekly',

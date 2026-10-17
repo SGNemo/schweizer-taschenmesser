@@ -10,6 +10,7 @@ import { setNow } from '@/core/time/now';
 import { clearAll } from '../testing';
 import { fold } from '../text';
 import { prepareProposal } from './prepare';
+import { detectIntent } from './rules/intent';
 import { parseWrite } from './rules/parse';
 
 const manifests = visibleManifests.filter((m) => m.id !== 'example');
@@ -168,5 +169,21 @@ describe('reminder sentences (rule stage)', () => {
     }
     expect(op!.defaulted.includes('startTime')).toBe(want.defaulted === true);
     if (want.freq) expect((op!.data.recurrence as { freq: string }).freq).toBe(want.freq);
+  });
+});
+
+describe('the bar offers "Eintragen" for every sentence of the table', () => {
+  it.each(CASES.map(([input]) => input))('%s', (input) => {
+    expect(detectIntent(input, manifests)).toBe('write');
+  });
+
+  it('questions and searches stay what they are', () => {
+    for (const q of [
+      'Was steht um 15 Uhr an?',
+      'Zeige Erinnerungen morgen',
+      'Wie viel kostet Netflix',
+    ]) {
+      expect(detectIntent(q, manifests), q).not.toBe('write');
+    }
   });
 });

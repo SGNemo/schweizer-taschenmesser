@@ -18,7 +18,8 @@ import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import type { AiFieldType } from '@/core/modules/types';
-import { today } from '@/core/time/dates';
+import { relativeDayLabel, toEpoch, today } from '@/core/time/dates';
+import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Checkbox, DateField, Icon, SelectField, TextField } from '@/ui';
@@ -125,6 +126,40 @@ function FieldInput({
   );
 }
 
+/** A reminder the assistant proposes: its date and time are the point of the card. */
+const isReminder = (op: PreparedOp): boolean =>
+  op.module === 'calendar' && op.kind === 'create' && op.data.kind === 'reminder';
+
+const REMINDER_FIELDS = new Set(['startDate', 'startTime']);
+
+function ReminderWhen({ op }: { op: PreparedOp }) {
+  const date = typeof op.data.startDate === 'string' ? op.data.startDate : undefined;
+  const time = typeof op.data.startTime === 'string' ? op.data.startTime : undefined;
+  if (!date || !time) return null;
+  const past = toEpoch(date, time) <= now();
+  const r = t.ai.write.reminder;
+  const hints = [
+    op.defaulted.includes('startTime') ? r.defaultTime(time) : undefined,
+    op.hints.includes('rolled-day') ? r.rolledDay : undefined,
+    past ? r.past : undefined,
+    !past && (op.data.notify as { enabled?: boolean } | undefined)?.enabled
+      ? r.notifies
+      : undefined,
+  ].filter((h): h is string => h !== undefined);
+  return (
+    <div className={styles.whenBox} data-testid="ai-write-when">
+      <p className={styles.when}>
+        <span>{relativeDayLabel(date)}</span> <span className={styles.whenTime}>{time}</span>
+      </p>
+      {hints.map((h) => (
+        <p key={h} className={past ? answer.error : answer.note}>
+          {h}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 function OpCard({
   op,
   included,
@@ -197,28 +232,33 @@ function OpCard({
           </p>
         )
       ) : (
-        <dl className={styles.lines}>
-          {op.lines.map((l) => (
-            <div key={l.field} style={{ display: 'contents' }}>
-              <dt>{l.label}</dt>
-              <dd>
-                {l.from !== undefined && l.to !== undefined ? (
-                  <>
-                    <del className={styles.from}>{l.from}</del>
-                    <span className={styles.arrow} aria-hidden="true">
-                      →
-                    </span>
-                    <ins className={styles.to}>{l.to}</ins>
-                  </>
-                ) : l.to !== undefined ? (
-                  l.to
-                ) : (
-                  l.from
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <>
+          {isReminder(op) ? <ReminderWhen op={op} /> : null}
+          <dl className={styles.lines}>
+            {op.lines
+              .filter((l) => !(isReminder(op) && REMINDER_FIELDS.has(l.field)))
+              .map((l) => (
+                <div key={l.field} style={{ display: 'contents' }}>
+                  <dt>{l.label}</dt>
+                  <dd>
+                    {l.from !== undefined && l.to !== undefined ? (
+                      <>
+                        <del className={styles.from}>{l.from}</del>
+                        <span className={styles.arrow} aria-hidden="true">
+                          →
+                        </span>
+                        <ins className={styles.to}>{l.to}</ins>
+                      </>
+                    ) : l.to !== undefined ? (
+                      l.to
+                    ) : (
+                      l.from
+                    )}
+                  </dd>
+                </div>
+              ))}
+          </dl>
+        </>
       )}
 
       {op.kind === 'delete' && !op.needsTarget ? (
@@ -301,8 +341,10 @@ export function WritePreview({ result, onDone }: { result: WriteResult; onDone: 
 
   const chosen = useMemo(() => ops.filter((o, i) => !off.has(i) && o.ready), [ops, off]);
   const kinds = new Set(chosen.map((o) => o.kind));
-  const confirmLabel =
-    kinds.size === 1 && kinds.has('create')
+  const reminders = ops.length > 0 && ops.every(isReminder);
+  const confirmLabel = reminders
+    ? t.ai.write.reminder.confirm
+    : kinds.size === 1 && kinds.has('create')
       ? t.ai.write.confirmCreate
       : kinds.size === 1 && kinds.has('delete')
         ? t.ai.write.confirmDelete
@@ -412,7 +454,7 @@ export function WritePreview({ result, onDone }: { result: WriteResult; onDone: 
           {confirmLabel}
         </Button>
         <Button onClick={() => setEditing((v) => !v)} disabled={busy}>
-          {editing ? t.ai.write.editDone : t.ai.write.edit}
+          {editing ? t.ai.write.editDone : reminders ? t.ai.write.reminder.edit : t.ai.write.edit}
         </Button>
         <Button variant="ghost" onClick={onDone} disabled={busy}>
           {t.ai.write.discard}
