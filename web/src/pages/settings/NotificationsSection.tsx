@@ -3,6 +3,7 @@ import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, Card, SettingsGroup } from '@/ui';
+import { GameModeCard } from './GameModeCard';
 import { PushSection } from './PushSection';
 import styles from './settings.module.css';
 
@@ -49,6 +50,7 @@ export function NotificationsSection() {
   return (
     <SettingsGroup id="notifications" title={t.notifications.title} bare>
       <NotificationsCard />
+      <GameModeCard />
       <PushSection />
     </SettingsGroup>
   );
