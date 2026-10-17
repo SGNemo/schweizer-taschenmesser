@@ -5,7 +5,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 „Standardwerte und Einstellungen“ (`feat/focus2-defaults`) gebaut; Paket 2a „Heute-Karte und Anheften“ (`feat/focus2-today`) gebaut, 2b ToDo-Seite folgt; danach 3 Erinnerungen, 4 Ergänzungen (Wetter, Screenshot, Kürzel); Handtest: eine Woche Nutzung pro Paket mit Tagebuch.
+Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 gemergt (#177); Runde 2 läuft in fünf parallelen Chats (Sprechtaste, KI-Erinnerungen, leiser Ton im Spielmodus, Wiederholung bis Antwort, Paket 2 Übersicht: 2a Heute-Karte und Anheften gebaut (`feat/focus2-today`), 2b ToDo-Seite folgt), Prompts in `product/focus/13-parallel-prompts.md`; Reizinventar messen: `npm run measure:stimulus`; danach 4 Ergänzungen (Wetter, Screenshot, Kürzel) und die Tagebuch-Woche.
 
 Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): alle Pakete in `develop` bis auf die Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`); Handtests K1–K4.
 

@@ -28,7 +28,7 @@ export default defineConfig({
     {
       // Specs that start from an empty app (setup assistant, disk) need the stable e2e build.
       name: 'plain',
-      testIgnore: ['capture.spec.ts', 'languages.spec.ts', 'measure-focus.spec.ts'],
+      testIgnore: ['capture.spec.ts', 'languages.spec.ts', 'stimulus.spec.ts', 'measure-focus.spec.ts'],
       use: { baseURL: 'http://localhost:4173' },
     },
   ],
