@@ -5,6 +5,8 @@ import { baseKey } from './policy';
 export interface InAppPrompt {
   key: string;
   title: string;
+  /** The reminder's own title (a repeat shows "Noch offen: …"); "Später" keeps this one. */
+  baseTitle?: string;
   body?: string;
   url?: string;
 }

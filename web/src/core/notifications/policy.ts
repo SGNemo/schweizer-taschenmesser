@@ -36,6 +36,26 @@ export const isRepeatKey = (key: string): boolean => REPEAT_RE.test(key);
 /** The reminder an extra notification (`…:s60` stage, `…:f` old follow-up, `…:r2` repeat) belongs to. */
 export const baseKey = (key: string): string => key.replace(/:(s\d+|f|r\d+)$/, '');
 
+/**
+ * After a long pause (app closed, device off) a whole series may be overdue at once. Only the latest
+ * of a reminder and its repeats is shown then, so reopening the app never plays back a pile of
+ * "Noch offen". Everything else passes unchanged.
+ */
+export function collapseRepeats(items: readonly DueNotification[]): DueNotification[] {
+  const repeated = new Set(items.filter((n) => isRepeatKey(n.key)).map((n) => baseKey(n.key)));
+  const latest = new Map<string, DueNotification>();
+  for (const n of items) {
+    const base = baseKey(n.key);
+    if (!repeated.has(base) || /:s\d+$/.test(n.key)) continue;
+    const seen = latest.get(base);
+    if (!seen || n.at > seen.at) latest.set(base, n);
+  }
+  return items.filter((n) => {
+    const base = baseKey(n.key);
+    return !repeated.has(base) || /:s\d+$/.test(n.key) || latest.get(base) === n;
+  });
+}
+
 export interface RepeatOptions {
   /** Minutes between two repeats. */
   everyMin: number;
@@ -50,7 +70,7 @@ export interface RepeatOptions {
  * and "Stumm" later drop single repeats (they count, they are not moved), see `applyQuiet`/`applyMute`.
  */
 export function repeatSeries(
-  base: Pick<DueNotification, 'key' | 'at' | 'url'>,
+  base: Pick<DueNotification, 'key' | 'at' | 'url' | 'title'>,
   opts: RepeatOptions,
   answered: boolean,
   range: { from: number; to: number },
@@ -65,6 +85,7 @@ export function repeatSeries(
       key: `${base.key}:r${n}`,
       at,
       url: base.url,
+      baseTitle: base.title,
       soft: true,
       ...text(n, n === opts.max),
     });

@@ -77,7 +77,7 @@
   },
   "_settings scope reminders": {
     "snoozed": [],
-    "acked": []
+    "ack:<notification key>": "time of the answer"
   },
   "_meta": {
     "update.prefs": {

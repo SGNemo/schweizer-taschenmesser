@@ -5,6 +5,7 @@ import {
   applyPolicy,
   applyQuiet,
   baseKey,
+  collapseRepeats,
   inQuiet,
   isRepeatKey,
   quietEnd,
@@ -108,7 +109,7 @@ describe('applyPolicy', () => {
 });
 
 describe('repeats until answered ("Ruhige Erinnerungen")', () => {
-  const base = { key: 'event:a:2026-10-02T10:00', at: at(10), url: '/calendar' };
+  const base = { key: 'event:a:2026-10-02T10:00', at: at(10), url: '/calendar', title: 'Paket' };
   const text = (k: number, last: boolean) => ({
     title: `Noch offen ${k}`,
     body: last ? 'letzte' : undefined,
@@ -141,6 +142,7 @@ describe('repeats until answered ("Ruhige Erinnerungen")', () => {
     expect(out[5]!.body).toBe('letzte');
     expect(out[0]!.body).toBeUndefined();
     expect(out[0]!.title).toBe('Noch offen 1');
+    expect(out[0]!.baseTitle).toBe('Paket');
   });
 
   it('a different gap and limit', () => {
@@ -181,7 +183,7 @@ describe('repeats until answered ("Ruhige Erinnerungen")', () => {
   });
 
   it('quiet hours: a repeat in the night is dropped, not moved; the series still ends at the limit', () => {
-    const late = { key: 'k', at: at(21, 30) };
+    const late = { key: 'k', at: at(21, 30), title: 'K' };
     const out = repeatSeries(
       late,
       { everyMin: 30, max: 6 },
@@ -233,21 +235,21 @@ describe('repeats until answered ("Ruhige Erinnerungen")', () => {
 
   it('several reminders at once keep separate series that end independently', () => {
     const a = repeatSeries(
-      { key: 'a', at: at(10) },
+      { key: 'a', at: at(10), title: 'a' },
       { everyMin: 30, max: 3 },
       false,
       { from: at(9), to: at(23) },
       text,
     );
     const b = repeatSeries(
-      { key: 'b', at: at(10, 15) },
+      { key: 'b', at: at(10, 15), title: 'b' },
       { everyMin: 30, max: 3 },
       true,
       { from: at(9), to: at(23) },
       text,
     );
     const c = repeatSeries(
-      { key: 'c', at: at(10, 15) },
+      { key: 'c', at: at(10, 15), title: 'c' },
       { everyMin: 30, max: 3 },
       false,
       { from: at(9), to: at(23) },
@@ -256,5 +258,17 @@ describe('repeats until answered ("Ruhige Erinnerungen")', () => {
     const out = applyPolicy([...a, ...b, ...c], { maxPerHour: 0 }, summary);
     expect(out.map((x) => x.key)).toEqual(['a:r1', 'c:r1', 'a:r2', 'c:r2', 'a:r3', 'c:r3']);
     expect(new Set(out.map((x) => x.key)).size).toBe(out.length);
+  });
+
+  it('catch-up after a long pause shows only the latest of a reminder and its repeats', () => {
+    const items = [
+      n('a', at(10)),
+      n('a:r1', at(10, 30), true),
+      n('a:r2', at(11), true),
+      n('a:s60', at(9), true),
+      n('b', at(10, 5)),
+    ];
+    expect(collapseRepeats(items).map((x) => x.key)).toEqual(['a:r2', 'a:s60', 'b']);
+    expect(collapseRepeats([n('c', at(9))]).map((x) => x.key)).toEqual(['c']);
   });
 });

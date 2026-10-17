@@ -117,6 +117,28 @@ test.describe('Calm reminders', () => {
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
   });
 
+  test('"Später" on a repeat ends the series and keeps the reminder\'s own title', async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await enableCard(page);
+    await addReminder(page, 'Wäsche aufhängen');
+    await page.clock.fastForward(90_000);
+    await page.clock.runFor(30 * 60_000); // 20:30, the first repeat
+    const card = page.getByTestId('reminder-prompt');
+    await expect(card).toContainText('Noch offen: Wäsche aufhängen');
+    await card.getByRole('button', { name: 'Später' }).click();
+    await card.getByRole('button', { name: 'In 1 Std' }).click();
+    await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
+
+    await page.clock.runFor(35 * 60_000); // 21:05: no further repeat
+    await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
+    await page.clock.runFor(30 * 60_000); // 21:35: the snoozed reminder, under its own title
+    const again = page.getByTestId('reminder-prompt');
+    await expect(again).toContainText('Wäsche aufhängen');
+    await expect(again).not.toContainText('Noch offen');
+  });
+
   test('the repeat can be switched off in the settings', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
     await enableCard(page);

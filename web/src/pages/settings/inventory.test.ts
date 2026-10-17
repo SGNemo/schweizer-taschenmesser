@@ -68,7 +68,7 @@ const CORE_KEYS = {
     weekReview: true,
     eveningWrapUp: true,
   },
-  '_settings scope reminders': { snoozed: [], acked: [] },
+  '_settings scope reminders': { snoozed: [], 'ack:<notification key>': 'time of the answer' },
   _meta: {
     'update.prefs': { channel: 'stable', auto: true },
     'update.lastCheckAt': 'timestamp',

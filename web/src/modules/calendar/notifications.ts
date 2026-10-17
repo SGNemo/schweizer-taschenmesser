@@ -1,5 +1,5 @@
 import { notDeleted } from '@/core/db/repo';
-import { isAcked } from '@/core/notifications/ack';
+import { loadAcked } from '@/core/notifications/ack';
 import { repeatSeries } from '@/core/notifications/policy';
 import type { DueNotification, NotificationSource } from '@/core/modules/types';
 import { datesInRange } from '@/core/recurrence/expand';
@@ -29,6 +29,7 @@ const source: NotificationSource = async ({ from, to }) => {
   );
   const fromDate = toDateString(new Date(from));
   const toDate = addDaysStr(toDateString(new Date(to)), MAX_LEAD_DAYS);
+  const acked = focus.followUp ? await loadAcked() : new Set<string>();
   const out: DueNotification[] = [];
   const inRange = (at: number) => at > from && at <= to;
   for (const e of events) {
@@ -56,9 +57,9 @@ const source: NotificationSource = async ({ from, to }) => {
       if (focus.followUp && e.kind === 'reminder') {
         out.push(
           ...repeatSeries(
-            { key, at, url },
+            { key, at, url, title: e.title },
             { everyMin: focus.repeatMinutes, max: focus.repeatMax },
-            await isAcked(key),
+            acked.has(key),
             { from, to },
             (_n, last) => ({
               title: t.calendar.followUpTitle(e.title),

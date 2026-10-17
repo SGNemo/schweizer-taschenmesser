@@ -13,7 +13,12 @@ export const DEFAULTS_ERA_KEY = 'focus.defaultsEra';
 const HOME_VIEW_STORAGE_KEY = 'tm-home-view';
 
 /** What these settings were before the calm defaults (kept for installations that already existed). */
-export const LEGACY_FOCUS_DEFAULTS = { moduleNow: true, streaks: true, weekReview: true } as const;
+export const LEGACY_FOCUS_DEFAULTS = {
+  moduleNow: true,
+  streaks: true,
+  weekReview: true,
+  followUp: false,
+} as const;
 
 export async function applyDefaultsEra(
   fresh: boolean,

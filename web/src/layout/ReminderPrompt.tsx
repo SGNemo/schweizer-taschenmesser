@@ -40,7 +40,7 @@ export function ReminderPrompt() {
     dismiss(current.key);
   };
   const later = async (option: SnoozeOption) => {
-    await snoozeNotification(current, option);
+    await snoozeNotification({ ...current, title: current.baseTitle ?? current.title }, option);
     // "Später" ends the repeats of the original on every device, like "Erledigt".
     await ackNotification(baseKey(current.key));
     setChoosing(false);

@@ -116,7 +116,7 @@ describe('calendar notifications: the series over a day', () => {
       deviceId: 'phone',
       deletedAt: null,
       _f: {},
-      acked: [key],
+      [`ack:${key}`]: 1,
     });
     // … and nothing else follows, however long we wait.
     expect(await source({ from: at('14:10'), to: toEpoch('2026-10-06', '12:00') })).toEqual([]);
