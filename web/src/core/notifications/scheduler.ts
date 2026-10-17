@@ -7,7 +7,7 @@ import { getPlatform } from '@/core/platform';
 import { getFocusSettings } from '@/core/settings/focus';
 import { collectDue } from './collect';
 import { useReminderPrompts } from './inapp';
-import { defaultGameDeps, gamingNow, withGameDelivery } from './gameDelivery';
+import { cardGivesWay, defaultGameDeps, withGameDelivery } from './gameDelivery';
 import type { NotificationService } from './service';
 import { removeSnoozed } from './snooze';
 
@@ -85,7 +85,7 @@ function defaultDeps(): SchedulerDeps {
     async present(n) {
       if (document.visibilityState !== 'visible') return false;
       // A card behind a full-screen game is never seen: the toast (with the app's tone) is better.
-      if (await gamingNow(defaultGameDeps())) return false;
+      if (await cardGivesWay(defaultGameDeps())) return false;
       if (!(await getFocusSettings()).inAppPrompt) return false;
       useReminderPrompts.getState().push({ key: n.key, title: n.title, body: n.body, url: n.url });
       return true;

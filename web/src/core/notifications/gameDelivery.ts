@@ -18,6 +18,17 @@ export function gamingNow(deps: Pick<GameDeliveryDeps, 'kind' | 'settings' | 'de
 }
 
 /**
+ * Whether the in-app card should give way to the OS toast: only on the desktop, where a game can
+ * cover the window. On Android and in the browser the user is in the app, so the card stays even
+ * with the manual switch on (the switch only makes the toast quiet there).
+ */
+export async function cardGivesWay(
+  deps: Pick<GameDeliveryDeps, 'kind' | 'settings' | 'detect'>,
+): Promise<boolean> {
+  return deps.kind === 'desktop' && (await gamingNow(deps));
+}
+
+/**
  * Game mode on top of a platform service. While gaming, a reminder is shown without the system
  * sound (`quiet`) and, on the desktop, followed by the app's own short tone. A reminder that is
  * already quiet ("Stumm") stays silent: no tone, ever. Everything else passes through unchanged,

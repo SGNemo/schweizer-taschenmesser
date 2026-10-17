@@ -6,7 +6,7 @@
  *
  * `auto` follows the detection (desktop only), `on` is the manual switch for when the detection
  * does not catch a game, `off` leaves reminders as they are. Where there is no tone (Android, PWA)
- * `on` makes reminders arrive on the quiet channel (see `policy.ts` `applyGaming`).
+ * `on` makes reminders arrive on the quiet channel (see `policy.ts` `applyQuietAll`).
  */
 import { useSyncExternalStore } from 'react';
 import { getPlatform } from '@/core/platform';

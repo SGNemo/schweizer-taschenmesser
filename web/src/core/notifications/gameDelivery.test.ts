@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { withGameDelivery, type GameDeliveryDeps } from './gameDelivery';
+import { cardGivesWay, withGameDelivery, type GameDeliveryDeps } from './gameDelivery';
 import type { GameSettings } from './gameMode';
 import type { NotificationService, ShowNotification } from './service';
 
@@ -79,5 +79,29 @@ describe('withGameDelivery', () => {
     await service.scheduleUpcoming?.([]);
     expect(scheduleUpcoming).toHaveBeenCalled();
     expect(service.permission()).toBe('granted');
+  });
+});
+
+describe('cardGivesWay', () => {
+  const on = () => ({ mode: 'on' as const, sound: 'soft' as const, volume: 40 });
+
+  it('lets the in-app card give way to the toast on the desktop while gaming', async () => {
+    expect(await cardGivesWay({ kind: 'desktop', settings: on })).toBe(true);
+  });
+
+  it('keeps the card on Android and in the browser, even with the switch on', async () => {
+    for (const kind of ['android', 'web'] as const) {
+      expect(await cardGivesWay({ kind, settings: on })).toBe(false);
+    }
+  });
+
+  it('keeps the card on the desktop when no game runs', async () => {
+    expect(
+      await cardGivesWay({
+        kind: 'desktop',
+        settings: () => ({ ...on(), mode: 'auto' }),
+        detect: async () => false,
+      }),
+    ).toBe(false);
   });
 });
