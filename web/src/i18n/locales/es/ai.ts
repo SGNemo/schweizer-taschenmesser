@@ -273,6 +273,15 @@ export const ai: Strings['ai'] = {
         : `${n} entradas se omitieron porque habían cambiado.`,
     failed: 'No se pudo guardar.',
     nothingReady: 'Aún faltan datos.',
+    reminder: {
+      confirm: 'Guardar',
+      edit: 'Cambiar',
+      notifies: 'Entonces recibirás una notificación.',
+      defaultTime: (time: string) => `No dijiste la hora – propongo las ${time}. Puedes cambiarla.`,
+      rolledDay: 'Esa hora ya pasó hoy, por eso se propone para mañana.',
+      past: 'Ese momento ya pasó – no habrá notificación.',
+      askTitle: '¿De qué quieres que te avise?',
+    },
     recurrence: {
       daily: 'Cada día',
       weekly: 'Cada semana',

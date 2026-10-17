@@ -74,6 +74,7 @@ const manifest: ModuleManifest = {
     ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    aiCreateDefaults: () => import('./aiDefaults'),
     services: () => import('./services'),
     externalCalendar: () => import('./external'),
   },

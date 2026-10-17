@@ -2590,6 +2590,16 @@ export const de = {
           : `${n} Einträge wurden übersprungen, weil sie sich geändert haben.`,
       failed: 'Das konnte nicht gespeichert werden.',
       nothingReady: 'Es fehlen noch Angaben.',
+      reminder: {
+        confirm: 'Speichern',
+        edit: 'Ändern',
+        notifies: 'Du bekommst dann eine Benachrichtigung.',
+        defaultTime: (time: string) =>
+          `Keine Uhrzeit genannt – ${time} Uhr vorgeschlagen. Du kannst sie ändern.`,
+        rolledDay: 'Diese Uhrzeit ist heute schon vorbei – darum für morgen vorgeschlagen.',
+        past: 'Dieser Zeitpunkt liegt schon zurück – es kommt keine Benachrichtigung.',
+        askTitle: 'Woran soll ich dich erinnern?',
+      },
       recurrence: {
         daily: 'Täglich',
         weekly: 'Wöchentlich',
