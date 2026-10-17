@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, moreFields, ready } from './helpers';
+import { enable, moreFields, openMoreFocus, ready } from './helpers';
 
 /** The slim "Jetzt" row on module pages (comfort review, package 7). */
 test.beforeEach(async ({ page }) => {
@@ -21,16 +21,23 @@ test('the pantry page says what runs low; the switch in the settings hides the r
   page,
 }) => {
   await enable(page, 'pantry');
+  // The strips are off by default (calm defaults): switch them on first.
+  await ready(page, '/settings/darstellung');
+  await openMoreFocus(page);
+  const toggle = page
+    .locator('section[aria-labelledby="focus"]')
+    .getByRole('switch', { name: '„Jetzt“ auf Modulseiten' });
+  await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+
   await page.goto('/pantry');
   await expect(page.getByTestId('now-strip')).toHaveCount(0); // nothing up, nothing shown
   await addLowItem(page);
   await expect(page.getByTestId('now-strip')).toContainText('1 Vorrat geht zur Neige');
 
   await ready(page, '/settings/darstellung');
-  const toggle = page
-    .locator('section[aria-labelledby="focus"]')
-    .getByRole('switch', { name: '„Jetzt“ auf Modulseiten' });
-  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  await openMoreFocus(page);
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-checked', 'false');
 

@@ -29,6 +29,7 @@ export const focus: Strings['focus'] = {
     focusIndicatorHint: 'Shows in the top bar that a focus round is running.',
     searchHistory: 'History in search',
     searchHistoryHint: 'Search shows what you used last first. The history stays on this device.',
+    more: 'More settings',
     clearHistory: 'Clear history',
     clearHistoryHint: 'Clears the recently used items in search.',
     historyCleared: 'History cleared.',

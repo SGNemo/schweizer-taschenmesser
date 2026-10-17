@@ -82,7 +82,7 @@ export const DEFAULT_FOCUS: FocusSettings = {
   dayPlan: true,
   planLimit: 3,
   calmAttention: true,
-  moduleNow: true,
+  moduleNow: false,
   timeToNext: true,
   focusMinutes: 25,
   focusSound: false,
@@ -104,8 +104,8 @@ export const DEFAULT_FOCUS: FocusSettings = {
   resumeCard: true,
   captureNoQuestion: true,
   searchHistory: true,
-  streaks: true,
-  weekReview: true,
+  streaks: false,
+  weekReview: false,
   eveningWrapUp: true,
 };
 

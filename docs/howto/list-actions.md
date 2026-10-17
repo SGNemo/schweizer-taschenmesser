@@ -11,5 +11,8 @@ Rule behind it: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md) click targets,
 6. **Home widget:** `DueList` entries take `action: { label, run }` (one tap, with the undo toast).
 7. Keys come for free from `ItemRow` (`J/K/E`); add `data-row-tick` for Space.
 
+## Enforced
+`check:modules` fails when a `routes/` file builds its own list rows (`<li>` / `Card as="li"`) that open an editor on click without `ItemRow`. A deliberately different row (progress cards, a conversation list) says why with a `comfort-custom-row:` comment in the file (see `budgets/routes/BudgetsPage.tsx`).
+
 ## Test it
 Unit: `ui/rowMenu.test.tsx` shows the pattern. E2E: `e2e/comfort.spec.ts` counts clicks as comments and asserts the result and the undo.

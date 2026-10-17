@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, moreFields, ready } from './helpers';
+import { calendarEntry, moreFields, ready, showAllWidgets } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
+  await showAllWidgets(page);
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
 
@@ -100,6 +101,7 @@ test.describe('Invoices', () => {
 
     // Finance shows the booking and the reduced balance
     await ready(page, '/finance?tab=transactions');
+    await page.getByRole('switch', { name: 'Erweitert' }).click(); // Konten/Kategorien live in Erweitert
     const row = page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ });
     await expect(row).toContainText('Rechnungen');
     await expect(row).toContainText(/−89,90\s€/);
@@ -299,6 +301,7 @@ test.describe('Finance', () => {
   }) => {
     await addTransaction(page, { kind: 'Einnahme', amount: '100,00', category: 'Gehalt' });
     await ready(page, '/finance?tab=accounts');
+    await page.getByRole('switch', { name: 'Erweitert' }).click(); // Konten/Kategorien live in Erweitert
     await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
     await page.getByLabel('Kontoname').fill('Sparkonto');
     await page.getByLabel('Anfangssaldo').fill('1.000,00');

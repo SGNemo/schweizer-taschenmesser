@@ -30,6 +30,8 @@ export const subscriptions: Strings['subscriptions'] = {
   noticeHint: 'Laissez vide s’il est résiliable à tout moment.',
   active: 'Actif',
   paused: 'En pause',
+  pause: 'Mettre en pause',
+  resume: 'Reprendre',
   empty: 'Aucun abonnement pour l’instant.',
   perMonth: 'Par mois',
   perYear: 'Par an',

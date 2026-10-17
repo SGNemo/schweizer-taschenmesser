@@ -1,0 +1,16 @@
+body{margin:0;padding:24px;background:#e9e6e1;font:15px/1.4 system-ui,sans-serif;color:#1d1b19;display:flex;gap:28px;align-items:flex-start}
+.col h2{font-size:14px;margin:0 0 8px;color:#555}
+.ph{width:360px;background:#f6f4f0;border-radius:22px;padding:14px;box-shadow:0 2px 12px #0002;min-height:640px;position:relative}
+.top{display:flex;justify-content:space-between;font-weight:700;color:#b5471a;margin-bottom:10px}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px}
+.big{font-size:20px;font-weight:700;margin:2px 0 8px}
+.btn{display:inline-block;background:#b5471a;color:#fff;border-radius:10px;padding:11px 16px;min-height:22px;font-weight:600}
+.q{color:#555;margin-left:10px}
+.mut{color:#666;font-size:13px}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid #eee}
+.handle{border:1px dashed #b5471a;color:#b5471a;border-radius:12px;padding:12px;text-align:center;font-weight:600;margin-top:6px}
+.chip{display:inline-block;border:1px solid #ccc;border-radius:99px;padding:6px 12px;margin:0 6px 6px 0;background:#fff}
+.nav{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:12px;background:#fff;border-radius:0 0 22px 22px;font-size:12px;color:#555}
+.note{max-width:260px;font-size:13px;color:#444}
+.bad{opacity:.55}
+.fab{position:absolute;right:18px;bottom:70px;background:#b5471a;color:#fff;border-radius:50%;width:48px;height:48px;text-align:center;line-height:46px;font-size:24px}

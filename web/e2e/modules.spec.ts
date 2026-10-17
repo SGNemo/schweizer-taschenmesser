@@ -1,7 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enableExample, mainNav, moduleSwitch } from './helpers';
+import { enableExample, mainNav, moduleSwitch, showAllWidgets } from './helpers';
 
 test.describe('module library', () => {
+  test.beforeEach(async ({ page }) => {
+    await showAllWidgets(page);
+  });
+
   test('fresh install has the core modules active with their widgets', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Übersicht', level: 1 })).toBeVisible();
