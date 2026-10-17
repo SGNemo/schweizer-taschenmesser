@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { enableExample, ready } from './helpers';
+import { enableExample, ready, showAllWidgets } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 
@@ -43,6 +43,7 @@ test('palette finds a setting by an everyday word and opens its row', async ({ p
 test('context gear: from a widget straight to the module settings, section highlighted', async ({
   page,
 }) => {
+  await showAllWidgets(page);
   await enableExample(page);
   await ready(page, '/');
   const widget = page.locator('[data-testid^="widget-example:"]').first();

@@ -177,6 +177,8 @@ function useDeepLink(ready: boolean) {
       // A setting without its own anchor (older sections) falls back to its section.
       const el = document.getElementById(id) ?? document.getElementById(sectionId);
       if (!el) return false;
+      // A setting inside a folded "more settings" block opens it first, else there is nothing to scroll to.
+      el.closest('details')?.setAttribute('open', '');
       el.scrollIntoView({ block: 'start' });
       if (historyOn) recordSectionVisit(sectionId);
       // Section anchors sit on the heading: highlight the whole section.

@@ -8,7 +8,7 @@ describe('reading comfort settings', () => {
     useUiStore.getState().setDensity('normal');
     useUiStore.getState().setLeading('normal');
     useUiStore.getState().setMotion('system');
-    useUiStore.getState().setHomeView('all');
+    useUiStore.getState().setHomeView('calm');
   });
 
   it('has a third text size, line spacing and an in-app motion switch (device-local, defaults remove the key)', () => {
@@ -16,18 +16,18 @@ describe('reading comfort settings', () => {
     ui.setTextSize('xlarge');
     ui.setLeading('airy');
     ui.setMotion('reduce');
-    ui.setHomeView('calm');
+    ui.setHomeView('all');
     expect(document.documentElement.dataset.textSize).toBe('xlarge');
     expect(document.documentElement.dataset.leading).toBe('airy');
     expect(document.documentElement.dataset.motion).toBe('reduce');
     expect(localStorage.getItem('tm-text-size')).toBe('xlarge');
     expect(localStorage.getItem('tm-leading')).toBe('airy');
     expect(localStorage.getItem('tm-motion')).toBe('reduce');
-    expect(localStorage.getItem('tm-home-view')).toBe('calm');
+    expect(localStorage.getItem('tm-home-view')).toBe('all');
     ui.setTextSize('normal');
     ui.setLeading('normal');
     ui.setMotion('system');
-    ui.setHomeView('all');
+    ui.setHomeView('calm');
     expect(document.documentElement.dataset.leading).toBeUndefined();
     expect(document.documentElement.dataset.motion).toBeUndefined();
     for (const k of ['tm-text-size', 'tm-leading', 'tm-motion', 'tm-home-view'])

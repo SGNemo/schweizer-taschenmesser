@@ -7,6 +7,7 @@ import {
 import { clearRecent } from '@/core/search/recent';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
+import styles from './settings.module.css';
 import { Button, Segmented, SettingRow, SettingsGroup, Switch } from '@/ui';
 
 type BoolKey = {
@@ -32,45 +33,56 @@ export function FocusSection() {
     <SettingsGroup id="focus" title={s.title} description={s.description}>
       {toggle('nextOne', 'nextOne', s.nextOne, s.nextOneHint)}
       {toggle('dayPlan', 'dayPlan', s.dayPlan, s.dayPlanHint)}
-      <SettingRow id="focus--planLimit" label={s.planLimit} description={s.planLimitHint}>
-        <Segmented<string>
-          label={s.planLimit}
-          value={String(values.planLimit)}
-          options={PLAN_LIMITS.map((n) => ({ value: String(n), label: String(n) }))}
-          onChange={(v) => void patch({ planLimit: Number(v) })}
-        />
-      </SettingRow>
       {toggle('calmAttention', 'calmAttention', s.calmAttention, s.calmAttentionHint)}
-      {toggle('moduleNow', 'moduleNow', s.moduleNow, s.moduleNowHint)}
       {toggle('timeToNext', 'timeToNext', s.timeToNext, s.timeToNextHint)}
-      <SettingRow id="focus--focusMinutes" label={s.focusMinutes} description={s.focusMinutesHint}>
-        <Segmented<string>
-          label={s.focusMinutes}
-          value={String(values.focusMinutes)}
-          options={FOCUS_MINUTES.map((n) => ({
-            value: String(n),
-            label: s.focusMinutesOption(n),
-          }))}
-          onChange={(v) => void patch({ focusMinutes: Number(v) })}
-        />
-      </SettingRow>
-      {toggle('focusSound', 'focusSound', s.focusSound, s.focusSoundHint)}
-      {toggle('focusIndicator', 'focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
       {toggle('resumeCard', 'resumeCard', s.resumeCard, s.resumeCardHint)}
-      {toggle('streaks', 'streaks', s.streaks, s.streaksHint)}
-      {toggle('weekReview', 'weekReview', s.weekReview, s.weekReviewHint)}
       {toggle('eveningWrapUp', 'eveningWrapUp', s.eveningWrapUp, s.eveningWrapUpHint)}
-      {toggle('searchHistory', 'searchHistory', s.searchHistory, s.searchHistoryHint)}
-      <SettingRow id="focus--clearHistory" label={s.clearHistory} description={s.clearHistoryHint}>
-        <Button
-          onClick={() => {
-            clearRecent();
-            toast(s.historyCleared);
-          }}
+      <details className={styles.details} data-testid="focus-more">
+        <summary>{s.more}</summary>
+        <SettingRow id="focus--planLimit" label={s.planLimit} description={s.planLimitHint}>
+          <Segmented<string>
+            label={s.planLimit}
+            value={String(values.planLimit)}
+            options={PLAN_LIMITS.map((n) => ({ value: String(n), label: String(n) }))}
+            onChange={(v) => void patch({ planLimit: Number(v) })}
+          />
+        </SettingRow>
+        <SettingRow
+          id="focus--focusMinutes"
+          label={s.focusMinutes}
+          description={s.focusMinutesHint}
         >
-          {s.clearHistory}
-        </Button>
-      </SettingRow>
+          <Segmented<string>
+            label={s.focusMinutes}
+            value={String(values.focusMinutes)}
+            options={FOCUS_MINUTES.map((n) => ({
+              value: String(n),
+              label: s.focusMinutesOption(n),
+            }))}
+            onChange={(v) => void patch({ focusMinutes: Number(v) })}
+          />
+        </SettingRow>
+        {toggle('moduleNow', 'moduleNow', s.moduleNow, s.moduleNowHint)}
+        {toggle('focusSound', 'focusSound', s.focusSound, s.focusSoundHint)}
+        {toggle('focusIndicator', 'focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
+        {toggle('streaks', 'streaks', s.streaks, s.streaksHint)}
+        {toggle('weekReview', 'weekReview', s.weekReview, s.weekReviewHint)}
+        {toggle('searchHistory', 'searchHistory', s.searchHistory, s.searchHistoryHint)}
+        <SettingRow
+          id="focus--clearHistory"
+          label={s.clearHistory}
+          description={s.clearHistoryHint}
+        >
+          <Button
+            onClick={() => {
+              clearRecent();
+              toast(s.historyCleared);
+            }}
+          >
+            {s.clearHistory}
+          </Button>
+        </SettingRow>
+      </details>
     </SettingsGroup>
   );
 }

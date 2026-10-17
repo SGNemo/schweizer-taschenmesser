@@ -3,7 +3,10 @@ import { loadModuleStates } from '@/core/modules/activation';
 import { runMigrations } from '@/core/modules/migrate';
 import { availableManifests } from '@/core/modules/available';
 import { loadSeed } from '@/core/seed/load';
-import { ensureSetupState } from '@/core/setup/detect';
+import { applyDefaultsEra } from '@/core/focus/defaults';
+import { appHasData, ensureSetupState } from '@/core/setup/detect';
+import { readSetupState } from '@/core/setup/state';
+import { useUiStore } from '@/stores/ui';
 
 /** One-time app start work: storage persistence and pending module migrations. */
 export async function initCore(): Promise<void> {
@@ -12,8 +15,11 @@ export async function initCore(): Promise<void> {
   } catch {
     // Best effort only.
   }
+  // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults.
+  const fresh = !(await readSetupState()) && !(await appHasData());
   // First: decides `dismissed` (installation with data) vs `notStarted` before anything writes.
   await ensureSetupState();
+  await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
   // Dev-Preview only (`loadSeed` is undefined in stable builds): fill a really empty app once.
   try {
     await (await loadSeed?.())?.autoFillIfEmpty();
