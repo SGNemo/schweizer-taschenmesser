@@ -26,6 +26,7 @@ import {
   toggleHidden,
   useHomeLayout,
   widgetKey,
+  withoutFolded,
   type HomeLayout,
 } from '@/home/layout';
 import { widgetsOf } from '@/home/AutoWidget';
@@ -90,11 +91,16 @@ export default function DashboardStep({ registerCommit }: SetupStepProps) {
 
   const rows = useMemo<Row[]>(
     () =>
-      availableManifests()
-        .filter((m) => states?.[m.id])
-        .flatMap((m) =>
-          widgetsOf(m).map((w) => ({ key: widgetKey(m.id, w.id), title: `${m.name}: ${w.title}` })),
-        ),
+      withoutFolded(
+        availableManifests()
+          .filter((m) => states?.[m.id])
+          .flatMap((m) =>
+            widgetsOf(m).map((w) => ({
+              key: widgetKey(m.id, w.id),
+              title: `${m.name}: ${w.title}`,
+            })),
+          ),
+      ),
     [states],
   );
 

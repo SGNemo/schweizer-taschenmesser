@@ -29,7 +29,9 @@ async function measure(page: Page) {
     const vh = window.innerHeight;
     const small = interactive.filter((el) => {
       const r = el.getBoundingClientRect();
-      return (r.width < 44 || r.height < 44) && !(el as HTMLInputElement).type?.match(/checkbox|radio/);
+      return (
+        (r.width < 44 || r.height < 44) && !(el as HTMLInputElement).type?.match(/checkbox|radio/)
+      );
     });
     return {
       buttons: all('button, [role="button"]').length,
