@@ -1009,6 +1009,7 @@ export const de = {
       emptyAction: 'Aufgabe anlegen',
       off: 'Die Vorschläge sind ausgeschaltet.',
       offAction: 'Einstellungen öffnen',
+      menu: 'Weitere Optionen',
     },
     waiting: {
       text: (n: number) => (n === 1 ? '1 ToDo wartet noch.' : `${n} ToDos warten noch.`),
@@ -1049,6 +1050,13 @@ export const de = {
       indicatorOver: 'Zeit ist um',
       indicatorAria: (title: string, time: string) => `Fokus: ${title}, ${time}. Zurück zum Fokus.`,
       otherRunning: (title: string) => `Gerade läuft eine Runde für „${title}“.`,
+    },
+    today: {
+      now: 'Jetzt',
+      inMinutes: (n: number) => `in ${n} Min`,
+      inHours: (h: number, m: number) => (m === 0 ? `in ${h} Std` : `in ${h} Std ${m} Min`),
+      appointments: 'Termine',
+      allAppointments: 'Alle Termine',
     },
     plan: {
       title: 'Heute',
@@ -1813,11 +1821,14 @@ export const de = {
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
   },
   homeEdit: {
-    calmNote: (n: number) =>
-      n === 1
-        ? 'Ruhige Ansicht: 1 Widget ist ausgeblendet.'
-        : `Ruhige Ansicht: ${n} Widgets sind ausgeblendet.`,
-    showAll: 'Alle Widgets zeigen',
+    showMore: (n: number) =>
+      n === 1 ? 'Mehr anzeigen · 1 Widget' : `Mehr anzeigen · ${n} Widgets`,
+    showLess: 'Nur das Wichtigste',
+    pinStart: 'Anheften…',
+    pin: (title: string) => `${title} anheften`,
+    unpin: (title: string) => `${title} lösen`,
+    pinned: 'Angeheftet',
+    pinNote: 'Angeheftete Widgets bleiben auch in der ruhigen Ansicht sichtbar.',
     customize: 'Anpassen',
     done: 'Fertig',
     hide: 'Ausblenden',

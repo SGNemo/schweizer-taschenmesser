@@ -50,16 +50,19 @@ test.describe('Calm display, capture and finding things again', () => {
     page,
   }) => {
     await ready(page, '/');
+    // One "Heute" card replaces "Jetzt dran", the plan, the time to the next appointment and the timeline.
     await expect(page.getByTestId('widget-todos:next')).toBeVisible();
-    await expect(page.getByTestId('widget-calendar:next')).toBeVisible();
-    await expect(page.getByTestId('widget-calendar:today')).toBeVisible();
+    await expect(page.getByTestId('widget-calendar:next')).toHaveCount(0);
+    await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
     await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
     await expect(page.getByTestId('widget-todos:open')).toHaveCount(0);
-    await expect(page.getByTestId('home-calm-note')).toContainText('Ruhige Ansicht');
+    await expect(page.getByTestId('home-calm-more')).toContainText('Widgets');
 
-    await page.getByRole('button', { name: 'Alle Widgets zeigen' }).click();
+    await page.getByRole('button', { name: /^Mehr anzeigen · \d+ Widgets$/ }).click();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
-    await expect(page.getByTestId('home-calm-note')).toHaveCount(0);
+    await expect(page.getByTestId('home-calm-more')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Nur das Wichtigste' }).click();
+    await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
 
     // The choice is also one tap in the settings, in both directions.
     await ready(page, '/settings/darstellung');
@@ -94,7 +97,7 @@ test.describe('Calm display, capture and finding things again', () => {
     await expect(page.getByTestId('todos-inbox')).toHaveCount(0);
 
     await ready(page, '/');
-    await expect(page.getByTestId('day-plan')).toContainText('Irgendwas mit Oma klären');
+    await expect(page.getByTestId('widget-todos:next')).toContainText('Irgendwas mit Oma klären');
   });
 
   test('search remembers what was used and shows it first; the history can be deleted', async ({

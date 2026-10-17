@@ -38,17 +38,17 @@ test.describe('Visible progress without pressure', () => {
   test('the week review is positive, and ticking something off updates it', async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     await switchOn(page, ['Rückblick auf die Woche']);
+    // Two planned ToDos: the first is the suggestion ("Jetzt dran"), the other one is a plan row.
     await addTodo(page, 'Steuerbeleg suchen');
+    await addTodo(page, 'Bücher zurückgeben');
     await ready(page, '/');
     const review = page.getByTestId('week-review');
     await expect(review).toContainText('Noch nichts erledigt');
     await page.getByRole('button', { name: 'Aus den offenen wählen' }).click();
-    await page.getByRole('button', { name: 'Einplanen' }).click();
+    await page.getByRole('button', { name: 'Einplanen' }).first().click();
+    await page.getByRole('button', { name: 'Einplanen' }).first().click();
     await page.keyboard.press('Escape');
-    await page
-      .getByTestId('day-plan')
-      .getByRole('checkbox', { name: 'Steuerbeleg suchen' })
-      .click();
+    await page.getByTestId('day-plan').getByRole('checkbox').click();
     await expect(review).toContainText('1 Aufgabe erledigt');
     await expect(review).toContainText('1 mehr als in der Woche davor');
   });
@@ -64,7 +64,7 @@ test.describe('Visible progress without pressure', () => {
     await page.getByRole('button', { name: 'Aus den offenen wählen' }).click();
     await page.getByRole('button', { name: 'Einplanen' }).click();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('day-plan')).toContainText('Wäsche aufhängen');
+    await expect(page.getByTestId('widget-todos:next')).toContainText('Wäsche aufhängen');
 
     await page.clock.setFixedTime(new Date('2026-09-29T18:30:00'));
     await ready(page, '/');

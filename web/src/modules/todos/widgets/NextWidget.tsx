@@ -2,22 +2,34 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { resetSkipped, skipSuggestion, useSkippedToday } from '@/core/focus/state';
+import { useNow } from '@/core/focus/useNow';
+import { useCalendarItems } from '@/core/modules/contributions';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
-import { now } from '@/core/time/now';
+import { now, pad2 } from '@/core/time/now';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Checkbox, Dialog, useWidgetSize, WidgetBody } from '@/ui';
+import { Button, Checkbox, Dialog, RowMenu, useWidgetSize, WidgetBody } from '@/ui';
 import { beginFocus, focusMinutesFor, focusPath } from '../focus';
-import { dayPlan, nextTier, pickNext, type PickTask } from '../next';
+import { nextTier, type PickTask } from '../next';
 import { EVENING_HOUR, leftToday, weekReview, type ProgressTask } from '../progress';
 import { listRepo, setDone, taskRepo } from '../repo';
+import { buildToday } from '../today';
 import styles from './NextWidget.module.css';
 
+/** "in 20 Min", "in 1 Std 5 Min", "Jetzt" for the time to the next appointment. */
+const untilText = (minutes: number): string =>
+  minutes <= 0
+    ? t.focus.today.now
+    : minutes < 60
+      ? t.focus.today.inMinutes(minutes)
+      : t.focus.today.inHours(Math.floor(minutes / 60), minutes % 60);
+
 /**
- * "Jetzt dran": one suggested task with Anfangen / Später / Etwas anderes, and the day plan
- * ("Heute", at most N things, what is done today). Each part has a switch in Settings → Fokus &
- * Aufmerksamkeit; nothing here is red, nothing counts days.
+ * The "Heute" card of the home screen, one place instead of three overlapping lists: the time to
+ * the next appointment, "Jetzt dran" (one main button), the day plan and today's appointments.
+ * The parts have switches in Settings → Fokus & Aufmerksamkeit; nothing here is red, nothing
+ * counts days.
  */
 export default function NextWidget() {
   const size = useWidgetSize();
@@ -28,13 +40,24 @@ export default function NextWidget() {
   const lists = useLiveQuery(() => listRepo.active().toArray(), []);
   const skipped = useSkippedToday(day);
   const [choosing, setChoosing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const tick = useNow(30_000, settings.timeToNext);
+  const clock = new Date(tick);
+  const items = useCalendarItems({ from: day, to: day });
 
   const all = useMemo(
     () => (tasks ?? []) as (PickTask & { title: string; listId: string })[],
     [tasks],
   );
-  const next = settings.nextOne ? pickNext(all, day, skipped ?? []) : undefined;
-  const plan = dayPlan(all, day, settings.planLimit);
+  const { next, plan, planRows, until, appointments } = buildToday({
+    tasks: all,
+    items: items ?? [],
+    day,
+    nowHhmm: `${pad2(clock.getHours())}:${pad2(clock.getMinutes())}`,
+    skipped: skipped ?? [],
+    planLimit: settings.planLimit,
+    showNext: settings.nextOne,
+  });
   const openCount = all.filter((x) => !x.done && !x.someday && !x.parentId).length;
   const showPlan = settings.dayPlan && size !== 's';
   const review = useMemo(
@@ -85,6 +108,13 @@ export default function NextWidget() {
       empty={t.focus.next.empty}
       emptyAction={{ label: t.focus.next.emptyAction, to: '/todos?new=1' }}
     >
+      {settings.timeToNext && until ? (
+        <p className={styles.until} data-testid="today-until">
+          <strong>{untilText(until.minutes)}</strong>
+          {` · ${until.item.time} ${until.item.title}`}
+        </p>
+      ) : null}
+
       {settings.nextOne ? (
         next ? (
           <div className={styles.card} data-testid="next-card">
@@ -101,10 +131,21 @@ export default function NextWidget() {
               <Button variant="primary" onClick={() => void start()}>
                 {t.focus.next.startMin(focusMinutesFor(next, settings.focusMinutes))}
               </Button>
-              <Button onClick={() => void later()}>{t.focus.next.later}</Button>
-              <Button variant="ghost" onClick={() => void skipSuggestion(next.id, day)}>
-                {t.focus.next.other}
+              <Button variant="ghost" onClick={() => void later()}>
+                {t.focus.next.later}
               </Button>
+              <RowMenu
+                label={t.focus.next.menu}
+                open={menuOpen}
+                onOpenChange={setMenuOpen}
+                items={[
+                  {
+                    id: 'other',
+                    label: t.focus.next.other,
+                    onSelect: () => void skipSuggestion(next.id, day),
+                  },
+                ]}
+              />
             </div>
           </div>
         ) : (
@@ -128,17 +169,9 @@ export default function NextWidget() {
 
       {showPlan ? (
         <div className={styles.plan} data-testid="day-plan">
-          <div className={styles.planHead}>
-            <span className={styles.planTitle}>{t.focus.plan.title}</span>
-            {plan.planned.length > 0 ? (
-              <span className={styles.est}>
-                {t.focus.plan.count(plan.planned.length + plan.hidden)}
-              </span>
-            ) : null}
-          </div>
-          {plan.planned.length > 0 ? (
+          {planRows.length > 0 ? (
             <ul className={styles.rows}>
-              {plan.planned.map((p) => {
+              {planRows.map((p) => {
                 const full = all.find((x) => x.id === p.id)!;
                 return (
                   <li key={p.id} className={styles.row}>
@@ -175,6 +208,23 @@ export default function NextWidget() {
           {plan.doneToday > 0 ? (
             <p className={styles.done}>{t.focus.plan.doneToday(plan.doneToday)}</p>
           ) : null}
+        </div>
+      ) : null}
+
+      {size !== 's' && appointments.shown.length > 0 ? (
+        <div className={styles.plan} data-testid="today-appointments">
+          <span className={styles.planTitle}>{t.focus.today.appointments}</span>
+          <ul className={styles.rows}>
+            {appointments.shown.map((i) => (
+              <li key={`${i.source}:${i.id}`} className={styles.row}>
+                <span>{i.title}</span>
+                <span className={styles.est}>{i.allDay || !i.time ? '' : i.time}</span>
+              </li>
+            ))}
+          </ul>
+          <Link to="/calendar" className={styles.allLink}>
+            {t.focus.today.allAppointments}
+          </Link>
         </div>
       ) : null}
 

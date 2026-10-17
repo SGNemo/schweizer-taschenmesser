@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
@@ -44,7 +44,14 @@ describe('NextWidget (Jetzt dran)', () => {
     const card = await screen.findByTestId('next-card');
     expect(card).toHaveTextContent('Formular ausfüllen');
     expect(card).toHaveTextContent('etwa 10 Min');
-    fireEvent.click(screen.getByRole('button', { name: 'Etwas anderes' }));
+    // One main button; "Später" is quiet and "Etwas anderes" waits in the menu.
+    expect(
+      within(card)
+        .getAllByRole('button')
+        .map((b) => b.textContent || b.getAttribute('aria-label')),
+    ).toEqual(['Anfangen · 10 Min', 'Später', 'Weitere Optionen']);
+    fireEvent.click(screen.getByRole('button', { name: 'Weitere Optionen' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Etwas anderes' }));
     await waitFor(() =>
       expect(screen.getByTestId('next-card')).toHaveTextContent('Fenster putzen'),
     );
@@ -61,6 +68,17 @@ describe('NextWidget (Jetzt dran)', () => {
     const plan = await screen.findByTestId('day-plan');
     expect(plan).toHaveTextContent('3 Dinge reichen für heute.');
     expect(plan).toHaveTextContent('Erledigt heute: 1');
+  });
+
+  it('does not repeat the suggested task in the plan rows', async () => {
+    await taskRepo.create({ ...base, title: 'Zuerst', plannedFor: '2026-10-02', order: 0 });
+    await taskRepo.create({ ...base, title: 'Danach', plannedFor: '2026-10-02', order: 1 });
+    renderWidget();
+    const card = await screen.findByTestId('next-card');
+    expect(card).toHaveTextContent('Zuerst');
+    const plan = screen.getByTestId('day-plan');
+    expect(plan).toHaveTextContent('Danach');
+    expect(plan).not.toHaveTextContent('Zuerst');
   });
 
   it('says so, friendly, when everything is done', async () => {
