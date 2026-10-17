@@ -1,6 +1,6 @@
 # Focus audit 2 – results per package (before / after)
 
-Measured with the same script as the audit (`10-audit-2.md`, PR #176): seeded Dev build, medium data, phone 412×915 and desktop 1280×800.
+Measured with `npm run measure:stimulus` (`web/e2e/screenshots/stimulus.spec.ts`, the audit's script, in the repo since round 2): seeded Dev build, medium data, phone 412×915 and desktop 1280×800.
 
 | Metric | Before | After package 1 |
 |---|---|---|

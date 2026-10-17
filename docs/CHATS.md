@@ -1,6 +1,6 @@
 # Chats – running work and hand-over
 
-Several Claude chats work in parallel and only see each other through GitHub. Keep this file short; delete finished rows. Last full review: 2026-10-02.
+Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours; notes and questions between chats go to [`scribble/`](../scribble/README.md) (develop only). Keep this file short; delete finished rows. Last full review: 2026-10-02.
 
 ## Wartet auf Sven
 Everything that needs a decision or a merge from the maintainer, in one place. A chat adds a row when it stops for him and removes it when done. Source of truth for PRs: GitHub (`list_pull_requests`).
@@ -22,7 +22,12 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Focus audit 2 (phase 0–2: audit and plan, docs only) | `docs/focus-audit-2` | `docs/product/focus/**` | phase 0 – waiting for diary and answers | – | 2026-10-13 |
+| Chat coordination: scribble folder, `chats:status`, CI guard for main | `chore/chat-scribble` | `scribble/`, `web/scripts/chats-status.mjs`, `ci.yml`, root `CLAUDE.md` step 2 | PR open | – | 2026-10-17 |
+| (announced) Voice key for the AI input | `feat/voice-ask` | `core/keyboard/shortcuts.ts`, `layout/assistant/*`, new `core/ai/voice/*`, settings section, `src-tauri` global shortcut | prompt in [product/focus/13-parallel-prompts.md](product/focus/13-parallel-prompts.md) | – | 2026-10-17 |
+| (announced) Reminders from an AI sentence | `feat/ai-reminders` | `core/ai/intent`, `core/ai/write/*`, `modules/calendar/ai.ts`, `WritePreview.tsx` | prompt in 13-parallel-prompts | – | 2026-10-17 |
+| (announced) Quiet ping in game mode (own sound) | `feat/quiet-ping` | `core/notifications/service.ts`, new `core/notifications/sound.ts`, notifications settings, `src-tauri` (system-info/capture) | prompt in 13-parallel-prompts | – | 2026-10-17 |
+| (announced) Reminder repeats until answered | `feat/reminder-repeat` | `core/notifications/{policy,collect,ack,snooze,scheduler,nativeSchedule,pushPayload}.ts` | prompt in 13-parallel-prompts | – | 2026-10-17 |
+| (announced) Focus package 2 – home 'Heute' card, pins, calm ToDos page | `feat/focus2-today` | `home/*`, `modules/todos/{widgets,routes}`, `modules/calendar/widgets` | prompt in 13-parallel-prompts | – | 2026-10-17 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
