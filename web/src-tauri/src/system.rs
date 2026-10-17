@@ -3,7 +3,8 @@
 
 use std::sync::{Arc, Mutex};
 
-use ::system_info::{DiskIo, Info, Monitor, Proc};
+use ::system_info::tone::Note;
+use ::system_info::{gaming, tone, DiskIo, Info, Monitor, Proc};
 use tauri::State;
 
 /// Keeps the sampler between calls (CPU load is the difference of two readings).
@@ -49,6 +50,24 @@ pub async fn system_disk_io(state: State<'_, SystemMonitor>) -> Result<Vec<DiskI
     })
     .await
     .map_err(|_| "internal".to_string())?
+}
+
+/// True while Windows reports a full-screen game, presentation or busy state (one yes/no from the
+/// shell's own notification state; no process or window information is read).
+#[tauri::command]
+pub fn system_game_active() -> bool {
+    gaming::game_active()
+}
+
+/// Plays the reminder tone described by the web side (notes and volume) natively, for when the
+/// window is hidden in the tray or covered by a game. Invalid requests are refused.
+#[tauri::command]
+pub fn system_play_tone(notes: Vec<Note>, volume: f32) -> Result<(), String> {
+    if tone::play(&notes, volume) {
+        Ok(())
+    } else {
+        Err("invalid".to_string())
+    }
 }
 
 /// Opens the Windows Task Manager (the only way to end a program: Nemo itself never does).

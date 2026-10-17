@@ -24,6 +24,8 @@ export function createDesktopService(supported: boolean): DesktopService {
     supported,
     safeMode: () => invoke<boolean>('desktop_safe_mode'),
     takePanicLog: () => invoke<string | null>('desktop_take_panic_log'),
+    gameActive: () => invoke<boolean>('system_game_active').catch(() => false),
+    playTone: (notes, volume) => invoke('system_play_tone', { notes, volume }),
     setHotkey: (accelerator) => register('capture_set_hotkey', accelerator),
     setVaultHotkey: (accelerator) => register('desktop_set_vault_hotkey', accelerator),
     setCloseToTray: (enabled) => invoke('desktop_set_close_to_tray', { enabled }),
