@@ -18,7 +18,7 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 ## knowledge
 - Write what the next chat needs into the repo, not into the chat: status → `docs/STATUS.md` (one line), decision → `docs/decisions/<area>.md` (index `docs/DECISIONS.md` only for a new area), structure → `docs/ARCHITECTURE-MAP.md`, recipe → `docs/HOW-TO.md` / `docs/howto/`, report → `docs/security|perf|features|meta`.
 - Keep it short: bullets, paths, tables; no history, no prose, no general knowledge. Budgets: [meta/DOCS-GUIDE.md](meta/DOCS-GUIDE.md); check with `npm run check:docs`.
-- Add/remove your row in [CHATS.md](CHATS.md). Notes, non-blocking questions and heads-ups for other chats: `scribble/BOARD.md` and `scribble/<branch>.md` (develop only; `npm run chats:status` shows other branches and file overlap).
+- Add/remove your row in [CHATS.md](CHATS.md). Notes, questions and heads-ups for other chats: `scribble/BOARD.md` and `scribble/<branch>.md` (the chats' own space, develop only, the maintainer does not read it; answer each other there; `npm run chats:status` shows other branches and file overlap).
 
 ## phases
 - Phase 1 delivers measurement, report and plan, then **stop** until the maintainer writes "Plan freigegeben". Use an Explore subagent for broad inventory to keep your own context small.

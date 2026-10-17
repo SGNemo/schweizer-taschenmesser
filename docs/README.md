@@ -14,6 +14,7 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [MANUAL-TESTS.md](MANUAL-TESTS.md) | hardware checklists (German) | device testing |
 | [ROADMAP.md](ROADMAP.md) | ideas, not built | proposing features |
 | [CHATS.md](CHATS.md) | running work, hotspots, hand-over rules | first and last step of every chat |
+| [`scribble/`](../scribble/README.md) | the chats' own space: notes, questions, heads-ups between chats (develop only, never main); `npm run chats:status` shows other branches and file overlap | start and end of every chat |
 | [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md) | reusable prompt blocks | writing a prompt |
 | [meta/](meta/) | docs guide, audit reports | changing docs |
 | [i18n/](i18n/README.md) | app languages: status of the translations, glossary, how to help | changing UI text |
