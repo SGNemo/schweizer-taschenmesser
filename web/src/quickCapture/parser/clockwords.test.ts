@@ -20,7 +20,7 @@ describe('spoken clock times', () => {
   ])('%s → %s (12-hour reading)', (text, time) => {
     const r = f(text);
     expect(r.time).toBe(time);
-    expect(!!r.twelveHour).toBe(!['halb eins'].includes(text));
+    expect(!!r.twelveHour).toBe(true);
   });
 
   it('a 24-hour or zero-padded time is not ambiguous', () => {
@@ -54,5 +54,36 @@ describe('relative times', () => {
   });
   it('days in words', () => {
     expect(f('in drei Tagen').date).toBe('2026-10-02');
+  });
+});
+
+describe('"um" that is not a clock time', () => {
+  it.each([
+    'Zahnarzt anrufen, um einen Termin zu vereinbaren',
+    'um 4 Eier zu kaufen',
+    'um einen Termin zu machen',
+    'um 4 Eier einzukaufen',
+    'um eine Pizza zu bestellen',
+  ])('%s has no time', (text) => {
+    expect(f(text).time).toBeUndefined();
+  });
+
+  it('keeps real times', () => {
+    expect(f('um ein Uhr').time).toBe('01:00');
+    expect(f('um 4 Uhr, Eier zu kaufen').time).toBe('04:00');
+    expect(f('um 4 Eier kaufen').time).toBe('04:00');
+  });
+});
+
+describe('night and midnight', () => {
+  it.each([
+    ['heute Nacht um 2', '02:00'],
+    ['nachts um halb drei', '02:30'],
+    ['heute Nacht um 11', '23:00'],
+    ['um 12 Uhr nachts', '00:00'],
+    ['um 12 Uhr mittags', '12:00'],
+    ['um 12 Uhr', '12:00'],
+  ])('%s → %s', (text, time) => {
+    expect(f(text).time).toBe(time);
   });
 });

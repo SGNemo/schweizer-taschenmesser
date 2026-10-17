@@ -18,14 +18,28 @@ export function settleClock(
   today: string,
 ): SettledClock {
   const keep: SettledClock = { date: input.date, time: input.time, rolled: false };
-  if (input.relative || (input.date !== undefined && input.date !== today)) return keep;
-  const nowMs = now.getTime();
-  if (toEpoch(today, input.time) > nowMs) return keep;
+  if (input.relative) return keep;
   const h = Number(input.time.slice(0, 2));
-  if (input.twelveHour && h >= 1 && h < 12) {
-    const pm = `${String(h + 12).padStart(2, '0')}${input.time.slice(2)}`;
-    if (toEpoch(today, pm) > nowMs) return { ...keep, time: pm };
+  const rest = input.time.slice(2);
+  const hh = (n: number): string => `${String(n).padStart(2, '0')}${rest}`;
+  const nowMs = now.getTime();
+  const sameDay = input.date === undefined || input.date === today;
+
+  if (input.twelveHour && h >= 1 && h <= 12) {
+    // The readings of a spoken hour, most likely first: "um 3" is the afternoon, "um 9" the
+    // morning, "halb eins" 12:30 or 00:30 – whichever comes next.
+    const readings = h === 12 ? [hh(0), hh(12)] : h <= 6 ? [hh(h + 12)] : [input.time, hh(h + 12)];
+    if (!sameDay) return { ...keep, time: h <= 6 ? hh(h + 12) : h === 12 ? hh(12) : input.time };
+    const ahead = readings.find((time) => toEpoch(today, time) > nowMs);
+    if (ahead) return { ...keep, time: ahead };
+    // Both readings are over today: tomorrow (first reading), unless the day was named.
+    const first = readings[0]!;
+    return input.date === undefined
+      ? { date: addDaysStr(today, 1), time: first, rolled: true }
+      : { ...keep, time: first };
   }
+
+  if (!sameDay || toEpoch(today, input.time) > nowMs) return keep;
   // An explicit "heute" stays today (the preview warns); without a day the next one is meant.
   return input.date === undefined ? { ...keep, date: addDaysStr(today, 1), rolled: true } : keep;
 }

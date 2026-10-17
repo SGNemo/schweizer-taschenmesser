@@ -268,7 +268,13 @@ function OpCard({
 
       {askFields.length > 0 ? (
         <div className={editing ? styles.fields : styles.missing}>
-          {editing ? null : <strong>{t.ai.write.missing}</strong>}
+          {editing ? null : (
+            <strong>
+              {isReminder(op) && op.missing.includes('title')
+                ? t.ai.write.reminder.askTitle
+                : t.ai.write.missing}
+            </strong>
+          )}
           {askFields.map((f) => (
             <FieldInput
               key={f}

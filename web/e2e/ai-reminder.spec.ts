@@ -132,3 +132,24 @@ test('without a time 09:00 is proposed, flagged, and can be changed before savin
     startTime: '08:30',
   });
 });
+
+test('a reminder without a title asks for it, then saves', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('main h1')).toBeVisible();
+  await say(page, 'Erinner mich um 15 Uhr');
+  await expect(page.getByTestId('ai-write-when')).toContainText('15:00');
+  await expect(page.getByText('Woran soll ich dich erinnern?')).toBeVisible();
+  await expect(page.getByTestId('ai-write-confirm')).toBeDisabled();
+
+  const title = page.getByLabel('Titel');
+  await title.fill('Wäsche');
+  await title.blur();
+  await expect(page.getByTestId('ai-write-confirm')).toBeEnabled();
+  await page.getByTestId('ai-write-confirm').click();
+  await expect.poll(async () => (await rows(page, 'calendar_event')).length).toBe(1);
+  expect((await rows(page, 'calendar_event'))[0]).toMatchObject({
+    title: 'Wäsche',
+    kind: 'reminder',
+    startTime: '15:00',
+  });
+});

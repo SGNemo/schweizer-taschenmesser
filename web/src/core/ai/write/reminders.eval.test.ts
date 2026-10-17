@@ -126,6 +126,20 @@ const CASES: [string, Want][] = [
     'Erinner mich morgen an die Tabletten',
     { title: 'Tabletten', date: '2026-09-30', time: '09:00', defaulted: true },
   ],
+  // "um … zu" is a purpose, not a time
+  [
+    'Erinner mich morgen an den Zahnarzt, um etwas zu vereinbaren',
+    {
+      title: 'Zahnarzt, um etwas zu vereinbaren',
+      date: '2026-09-30',
+      time: '09:00',
+      defaulted: true,
+    },
+  ],
+  [
+    'Erinner mich morgen früh, um 4 Eier zu kaufen',
+    { title: '4 Eier zu kaufen', date: '2026-09-30', time: '08:00' },
+  ],
   // recurring, voice (lowercase), no title
   [
     'Erinner mich jeden Montag um 8 an die Biotonne',
@@ -185,5 +199,59 @@ describe('the bar offers "Eintragen" for every sentence of the table', () => {
     ]) {
       expect(detectIntent(q, manifests), q).not.toBe('write');
     }
+  });
+});
+
+/** Same sentences at other times of day. */
+const LATER: [string, Date, Want][] = [
+  [
+    'Erinner mich um 3 an die Wäsche',
+    new Date(2026, 8, 29, 16, 0),
+    { title: 'Wäsche', date: '2026-09-30', time: '15:00' },
+  ],
+  [
+    'Erinner mich um 5 an den Tee',
+    new Date(2026, 8, 29, 18, 0),
+    { title: 'Tee', date: '2026-09-30', time: '17:00' },
+  ],
+  [
+    'Erinner mich um halb eins an die Tabletten',
+    new Date(2026, 8, 29, 20, 0),
+    { title: 'Tabletten', date: '2026-09-30', time: '00:30' },
+  ],
+  [
+    'Erinner mich um halb eins an die Tabletten',
+    NOW,
+    { title: 'Tabletten', date: TODAY, time: '12:30' },
+  ],
+  [
+    'Erinner mich heute Nacht um 2 an den Wecker',
+    NOW,
+    { title: 'Wecker', date: TODAY, time: '02:00' },
+  ],
+  [
+    'Erinner mich um 12 Uhr nachts an den Wecker',
+    NOW,
+    { title: 'Wecker', date: '2026-09-30', time: '00:00' },
+  ],
+  [
+    'Erinner mich um 15 Uhr an die Wäsche',
+    new Date(2026, 8, 29, 20, 0),
+    { title: 'Wäsche', date: '2026-09-30', time: '15:00' },
+  ],
+];
+
+describe('reminder sentences at other times of day', () => {
+  it.each(LATER)('%s (%s)', async (input, now, want) => {
+    const proposal = await parseWrite(input, { manifests, database: db, now, today: TODAY });
+    expect(proposal).toBeDefined();
+    const ctx = { manifests, known: manifests, database: db, today: TODAY };
+    const [op] = await prepareProposal(proposal!.ops, ctx);
+    expect(op!.data).toMatchObject({
+      kind: 'reminder',
+      startDate: want.date,
+      startTime: want.time,
+    });
+    expect(fold(String(op!.data.title))).toBe(fold(want.title!));
   });
 });

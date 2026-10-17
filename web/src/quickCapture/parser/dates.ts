@@ -67,17 +67,30 @@ const PART_SRC = Object.keys(DAY_PARTS)
   .sort((a, b) => b.length - a.length)
   .join('|');
 
-/** "abends um 8" is 20:00: a part of the day settles a clock time of 1–11 without am/pm. */
+/**
+ * "abends um 8" is 20:00: a part of the day settles a clock time of 1–11 (or a spoken 12:xx, "halb
+ * eins") without am/pm. "Nachts" counts 1–5 as night hours (stay), 6–11 as evening, 12 as midnight.
+ */
 function settleWithPart(st: DateTimeState, part: string): void {
-  if (!st.twelveHour || st.time === undefined) return;
+  if (st.time === undefined) return;
   const h = Number(st.time.slice(0, 2));
-  const pm = /^(?:abend|nachmittag|nacht)/.test(part)
-    ? h >= 1
-    : /^mittag/.test(part)
-      ? h <= 4
-      : false;
-  const am = /^(?:früh|morgen|vormittag)/.test(part);
-  if (pm && h < 12) st.time = fmtTime(h + 12, Number(st.time.slice(3)));
+  const min = Number(st.time.slice(3));
+  if (/^nacht/.test(part) && h === 12) {
+    st.time = fmtTime(0, min);
+    st.twelveHour = false;
+    return;
+  }
+  if (!st.twelveHour) return;
+  const night = /^nacht/.test(part);
+  const pm = night
+    ? h >= 6
+    : /^(?:abend|nachmittag)/.test(part)
+      ? h >= 1
+      : /^mittag/.test(part)
+        ? h <= 4
+        : false;
+  const am = night ? h <= 5 : /^(?:früh|morgen|vormittag)/.test(part);
+  if (pm && h < 12) st.time = fmtTime(h + 12, min);
   if (pm || am) st.twelveHour = false;
 }
 
@@ -193,13 +206,27 @@ function extractRelativeTime(s: Scan, st: DateTimeState, now: Date): void {
 }
 
 /** Marks 1–11 o'clock without am/pm; the digits "08:15" or "15 Uhr" are clear, "8 Uhr" is not. */
-function setClock(st: DateTimeState, h: number, min: number, spoken: boolean): boolean {
+function setClock(
+  st: DateTimeState,
+  h: number,
+  min: number,
+  spoken: boolean,
+  /** "halb eins" is 12:30 or 00:30; "12 Uhr" is noon. */
+  twelve = false,
+): boolean {
   if (!setTime(st, h, min)) return false;
-  if (spoken && h >= 1 && h <= 11) st.twelveHour = true;
+  if (spoken && ((h >= 1 && h <= 11) || (twelve && h === 12))) st.twelveHour = true;
   return true;
 }
 
 const HOUR_SRC = String.raw`\d{1,2}|${NUM_SRC}`;
+/** Without "ein/eine/einen …": "um einen Termin zu vereinbaren" names no hour. */
+const HOUR_BARE_SRC = String.raw`\d{1,2}|${Object.keys(NUMBER_WORDS)
+  .filter((k) => !/^ein(?!s$)/.test(k))
+  .sort((x, y) => y.length - x.length)
+  .join('|')}`;
+/** "um 4 Eier zu kaufen": an infinitive with "zu" later in the clause makes "um N" a purpose, not a time. */
+const PURPOSE_AHEAD = String.raw`(?![^.,;:!?]*(?:\szu\s+\p{L}{3,}(?:en|ern|eln)|\p{L}zu\p{L}{2,}(?:en|ern|eln))(?![\p{L}]))`;
 
 function extractClockTime(s: Scan, st: DateTimeState): void {
   if (st.time !== undefined) return;
@@ -220,7 +247,7 @@ function extractClockTime(s: Scan, st: DateTimeState): void {
     {
       // "Viertel nach drei", "zehn vor acht", "fünf nach 4"
       re: new RegExp(
-        String.raw`(?<![\p{L}\d])(viertel|zehn|fünf|fuenf|zwanzig)\s+(nach|vor)\s+(${HOUR_SRC})(?![\p{L}\d:.])`,
+        String.raw`(?<![\p{L}\d])(viertel|zehn|fünf|fuenf|zwanzig)\s+(nach|vor)\s+(${HOUR_BARE_SRC})(?![\p{L}\d:.])`,
         'iu',
       ),
       run: (m) => {
@@ -228,13 +255,19 @@ function extractClockTime(s: Scan, st: DateTimeState): void {
         const h = toNumber(m[3]!);
         if (h < 1 || h > 24) return false;
         const before = m[2]!.toLowerCase() === 'vor';
-        return setClock(st, before ? (h === 1 ? 12 : h - 1) : h, before ? 60 - min : min, true);
+        return setClock(
+          st,
+          before ? (h === 1 ? 12 : h - 1) : h,
+          before ? 60 - min : min,
+          true,
+          true,
+        );
       },
     },
     {
       // "Viertel vier" = 3:15, "dreiviertel vier" = 3:45, "halb 3" / "halb drei" = 2:30
       re: new RegExp(
-        String.raw`(?<![\p{L}\d])(dreiviertel|viertel|halb)\s+(${HOUR_SRC})(?![\p{L}\d:.])`,
+        String.raw`(?<![\p{L}\d])(dreiviertel|viertel|halb)\s+(${HOUR_BARE_SRC})(?![\p{L}\d:.])`,
         'iu',
       ),
       run: (m) => {
@@ -242,7 +275,7 @@ function extractClockTime(s: Scan, st: DateTimeState): void {
         if (h < 1 || h > 12) return false;
         const kind = m[1]!.toLowerCase();
         const min = kind === 'halb' ? 30 : kind === 'viertel' ? 15 : 45;
-        if (!setClock(st, h === 1 ? 12 : h - 1, min, true)) return false;
+        if (!setClock(st, h === 1 ? 12 : h - 1, min, true, true)) return false;
         if (kind === 'halb' && h <= 6) st.notes.add('ambiguous-time');
         return true;
       },
@@ -250,7 +283,7 @@ function extractClockTime(s: Scan, st: DateTimeState): void {
     {
       // "um 9", "um neun"
       re: new RegExp(
-        String.raw`(?<![\d.,:])(?:um|gegen)\s+(${HOUR_SRC})(?![\d.,:])(?!\s*(?:%|€|euro|prozent))(?![\p{L}])`,
+        String.raw`(?<![\d.,:])(?:um|gegen)\s+(${HOUR_BARE_SRC})(?![\d.,:])(?!\s*(?:%|€|euro|prozent))(?![\p{L}])${PURPOSE_AHEAD}`,
         'iu',
       ),
       run: (m) => {
