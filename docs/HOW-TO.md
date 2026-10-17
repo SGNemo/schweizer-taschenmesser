@@ -50,5 +50,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 
 ## Other recipes
 - Regenerate PWA icons: `npm run gen:icons` (native: `npx tauri icon brand/app-icon.svg`, see [howto/design-brand.md](howto/design-brand.md)).
+- Parallel chats: `npm run chats:status` (other branches, files, overlap with yours, open scribble items); scratch notes between chats in `scribble/` (develop only, removed in the release merge, CI guard on `main`).
+- Stimulus inventory (manual, not CI): `STIMULUS_DIR=<dir> npm run measure:stimulus` counts buttons, links, icons, badge-like elements, colours and page height per view (phone + desktop, seeded Dev build) into `<dir>/inventory.json`; compare in `docs/product/focus/12-results-2.md`.
 - Screenshots (manual, not CI): `npm run screenshots`; filters `SCREENS_VIEWPORTS`, `SCREENS_PAGES`, `SCREENS_SCHEME=dark`, `SCREENS_DIR`, `SCREENS_CSS`. The README images are `docs/screenshots/readme/dashboard-{light,dark}.png` (1280×720 dashboard).
 - Use the local AI import API / MCP: `docs/AI-IMPORT.md`.
