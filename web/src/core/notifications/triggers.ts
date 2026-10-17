@@ -24,19 +24,32 @@ export function startScheduleTriggers(
   // A pause starting or ending changes what is due when: rebuild the schedules now.
   const stopMute = onMuteChange(run);
 
+  const later = () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(run, DEBOUNCE_MS);
+  };
   let first = true;
   const subscription = liveQuery(() => database.table('_outbox').count()).subscribe({
     next: () => {
       if (first) first = false;
-      else {
-        clearTimeout(debounce);
-        debounce = setTimeout(run, DEBOUNCE_MS);
-      }
+      else later();
     },
     error: (e) => console.warn('[notifications] outbox stream failed', e),
   });
 
+  // An answer from another device arrives by sync (not through the outbox): stop its repeats soon,
+  // through the same throttle as local changes (a local answer passes both streams: one upload).
+  let firstAnswer = true;
+  const answers = liveQuery(() => database.table('_settings').get('reminders')).subscribe({
+    next: () => {
+      if (firstAnswer) firstAnswer = false;
+      else later();
+    },
+    error: (e) => console.warn('[notifications] answers stream failed', e),
+  });
+
   return () => {
+    answers.unsubscribe();
     clearInterval(interval);
     clearTimeout(debounce);
     document.removeEventListener('visibilitychange', onVisible);

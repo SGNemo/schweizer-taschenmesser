@@ -92,9 +92,14 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
-    followUp: 'Seguimiento suave',
+    followUp: 'Repetir con calma',
     followUpHint:
-      'Una sola pregunta a los 30 minutos si un recordatorio no se respondió con «Hecho».',
+      'Un recordatorio que pusiste tú vuelve a intervalos hasta que elijas «Hecho» o «Más tarde». De noche, silencio.',
+    repeatEvery: 'Intervalo',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'Como máximo',
+    repeatMaxHint: 'Después se detiene; el recordatorio sigue en el centro de notificaciones.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'Tareas por la mañana',
     todoDigestHint: 'Un aviso al día con las tareas de hoy. Sin avisos sueltos por cada tarea.',
     digestTime: 'Hora del resumen',

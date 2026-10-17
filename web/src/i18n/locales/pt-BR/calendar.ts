@@ -50,7 +50,8 @@ export const calendar: Strings['calendar'] = {
       : minutes >= 60
         ? `Em ${Math.round(minutes / 60)} h`
         : `Em ${minutes} min`) + ` · ${time}`,
-  followUpTitle: (title: string) => `Ainda vale? ${title}`,
+  followUpTitle: (title: string) => `Ainda em aberto: ${title}`,
+  followUpLast: 'Foi o último lembrete. Ele continua na central de notificações.',
   untilNext: {
     empty: 'Não há mais nada planejado para hoje.',
     off: 'O tempo até o próximo evento está desligado.',
