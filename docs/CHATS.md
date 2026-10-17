@@ -22,7 +22,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Push-to-talk voice input | `feat/voice-ptt` | `web/src/core/voice/**`, `core/keyboard/shortcuts.ts`, `layout/CommandPalette.tsx`, `layout/ShortcutSheet.tsx`, `layout/useShortcuts.ts`, `pages/settings` (new section), `src-tauri/src/capture.rs`, `build.rs`, `capabilities/desktop.json`, `docs/features/voice.md` | started | – | 2026-10-17 |
 | Focus audit 2 (phase 0–2: audit and plan, docs only) | `docs/focus-audit-2` | `docs/product/focus/**` | phase 0 – waiting for diary and answers | – | 2026-10-13 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
