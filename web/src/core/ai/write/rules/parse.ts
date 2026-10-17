@@ -9,7 +9,6 @@ import type { TaschenmesserDB } from '@/core/db/db';
 import type { AiActionDef, AiRole, ModuleManifest } from '@/core/modules/types';
 import { extractFacts, type ExtractedFacts } from '@/quickCapture/parser/extract';
 import { fold } from '../../text';
-import { addDaysStr } from '@/core/time/dates';
 import { aiModules, type AiModule } from '../../scope';
 import { findTarget, withinOneEdit } from '../targets';
 import type { ProposalHint, ProposedOp, WriteProposal } from '../types';
