@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setNow } from '@/core/time/now';
-import { CHORD_MS, createShortcutHandler, type ShortcutContext } from './shortcuts';
+import {
+  CHORD_MS,
+  createShortcutHandler,
+  matchesVoiceKey,
+  releasesVoiceKey,
+  type ShortcutContext,
+} from './shortcuts';
 
 let t0: number;
 let ctx: ShortcutContext & { calls: string[] };
@@ -132,5 +138,33 @@ describe('list keys', () => {
     expect(tick).toHaveBeenCalledOnce();
     press('/');
     expect(document.activeElement?.id).toBe('s');
+  });
+});
+
+describe('voice key matching', () => {
+  const ev = (key: string, code: string, extra: Partial<KeyboardEventInit> = {}) =>
+    new KeyboardEvent('keydown', { key, code, ...extra });
+
+  it('matches the configured key, with or without modifiers, and nothing else', () => {
+    expect(matchesVoiceKey(ev('F4', 'F4'), 'F4')).toBe(true);
+    expect(matchesVoiceKey(ev('F4', 'F4', { ctrlKey: true }), 'F4')).toBe(false);
+    expect(matchesVoiceKey(ev('m', 'KeyM', { altKey: true }), 'Alt+M')).toBe(true);
+    expect(matchesVoiceKey(ev('F5', 'F5'), 'F4')).toBe(false);
+  });
+
+  it('never matches when the key is switched off', () => {
+    expect(matchesVoiceKey(ev('F4', 'F4'), '')).toBe(false);
+    expect(releasesVoiceKey(ev('F4', 'F4'), '')).toBe(false);
+  });
+
+  it('the release only needs the main key (modifiers may be up already)', () => {
+    expect(releasesVoiceKey(ev('m', 'KeyM'), 'Alt+M')).toBe(true);
+    expect(releasesVoiceKey(ev('n', 'KeyN'), 'Alt+M')).toBe(false);
+  });
+
+  it('the shortcut handler leaves F4 alone (the voice hook owns it)', () => {
+    const e = press('F4');
+    expect(ctx.calls).toEqual([]);
+    expect(e.defaultPrevented).toBe(false);
   });
 });
