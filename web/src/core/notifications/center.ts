@@ -9,11 +9,11 @@ import type { DueNotification } from '@/core/modules/types';
 import { now as clockNow } from '@/core/time/now';
 import { ackNotification, isAcked } from './ack';
 import { collectDue } from './collect';
+import { baseKey } from './policy';
 import { MAX_CATCH_UP_MS } from './scheduler';
 import { snoozeNotification, type SnoozeOption } from './snooze';
 
-/** `…:s60` (staged lead) and `…:f` (follow-up) belong to the base reminder. */
-export const baseKey = (key: string): string => key.replace(/:(s\d+|f)$/, '');
+export { baseKey };
 
 /**
  * Open reminders, oldest first, one per base reminder (the latest stage wins). Pure: `acked`

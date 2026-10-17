@@ -82,9 +82,14 @@ export const focus: Strings['focus'] = {
     stages: 'En plus, avant',
     stageLabel: (m: number) =>
       m >= 1440 ? `${Math.round(m / 1440)} j` : m >= 60 ? `${Math.round(m / 60)} h` : `${m} min`,
-    followUp: 'Relance douce',
+    followUp: 'Répéter calmement',
     followUpHint:
-      'Une seule relance après 30 minutes, si un rappel n’a pas reçu la réponse « Fait ».',
+      'Un rappel que vous avez fixé revient à intervalles jusqu’à « Fait » ou « Plus tard ». Rien la nuit.',
+    repeatEvery: 'Intervalle',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'Au plus',
+    repeatMaxHint: 'Ensuite, ça s’arrête ; le rappel reste dans le centre de notifications.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'Tâches du matin',
     todoDigestHint:
       'Un message par jour qui cite les tâches du jour. Pas de message séparé pour chaque tâche.',

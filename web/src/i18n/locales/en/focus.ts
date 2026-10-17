@@ -73,8 +73,14 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
-    followUp: 'Gentle follow-up',
-    followUpHint: 'A single follow-up after 30 minutes if a reminder wasn’t answered with “Done”.',
+    followUp: 'Repeat quietly',
+    followUpHint:
+      'A reminder you set yourself comes back at intervals until you choose “Done” or “Later”. Nothing at night.',
+    repeatEvery: 'Gap',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'At most',
+    repeatMaxHint: 'After that it stops; the reminder stays in the notification centre.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'To-dos in the morning',
     todoDigestHint: 'One note per day listing today’s to-dos. No separate note for each task.',
     digestTime: 'Summary time',

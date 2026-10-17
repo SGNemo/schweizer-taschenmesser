@@ -36,7 +36,18 @@ export function startScheduleTriggers(
     error: (e) => console.warn('[notifications] outbox stream failed', e),
   });
 
+  // An answer from another device arrives by sync (not through the outbox): stop its repeats now.
+  let firstAnswer = true;
+  const answers = liveQuery(() => database.table('_settings').get('reminders')).subscribe({
+    next: () => {
+      if (firstAnswer) firstAnswer = false;
+      else run();
+    },
+    error: (e) => console.warn('[notifications] answers stream failed', e),
+  });
+
   return () => {
+    answers.unsubscribe();
     clearInterval(interval);
     clearTimeout(debounce);
     document.removeEventListener('visibilitychange', onVisible);

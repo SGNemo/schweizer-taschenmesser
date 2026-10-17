@@ -1,6 +1,8 @@
 import {
   MAX_PER_HOUR,
   PROMPT_SECONDS,
+  REPEAT_MAX,
+  REPEAT_MINUTES,
   STAGE_OPTIONS,
   useFocusSettings,
   type FocusSettings,
@@ -112,6 +114,36 @@ export function CalmRemindersSection() {
         </SettingRow>
       ) : null}
       {toggle('followUp', s.followUp, s.followUpHint)}
+      {v.followUp ? (
+        <>
+          <SettingRow id="calm-reminders--repeatMinutes" label={s.repeatEvery}>
+            <Segmented<string>
+              label={s.repeatEvery}
+              value={String(v.repeatMinutes)}
+              options={REPEAT_MINUTES.map((n) => ({
+                value: String(n),
+                label: s.repeatEveryOption(n),
+              }))}
+              onChange={(x) => void patch({ repeatMinutes: Number(x) })}
+            />
+          </SettingRow>
+          <SettingRow
+            id="calm-reminders--repeatMax"
+            label={s.repeatMax}
+            description={s.repeatMaxHint}
+          >
+            <Segmented<string>
+              label={s.repeatMax}
+              value={String(v.repeatMax)}
+              options={REPEAT_MAX.map((n) => ({
+                value: String(n),
+                label: s.repeatMaxOption(n),
+              }))}
+              onChange={(x) => void patch({ repeatMax: Number(x) })}
+            />
+          </SettingRow>
+        </>
+      ) : null}
       {toggle('todoDigest', s.todoDigest, s.todoDigestHint)}
       {v.todoDigest ? (
         <SettingRow id="calm-reminders--digestTime" label={s.digestTime}>

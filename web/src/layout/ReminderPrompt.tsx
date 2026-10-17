@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ackNotification } from '@/core/notifications/ack';
+import { baseKey } from '@/core/notifications/policy';
 import { useReminderPrompts, type InAppPrompt } from '@/core/notifications/inapp';
 import { snoozeNotification, snoozeOptions, type SnoozeOption } from '@/core/notifications/snooze';
 import { getPlatform } from '@/core/platform';
@@ -10,9 +11,6 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import styles from './ReminderPrompt.module.css';
-
-/** The base key of an extra notification (`…:s60`, `…:f`), so "Erledigt" also stops the follow-up. */
-const baseKey = (key: string): string => key.replace(/:(s\d+|f)$/, '');
 
 /**
  * A reminder that fires while the app is open appears here instead of as an OS popup: one card at a
@@ -43,6 +41,8 @@ export function ReminderPrompt() {
   };
   const later = async (option: SnoozeOption) => {
     await snoozeNotification(current, option);
+    // "Später" ends the repeats of the original on every device, like "Erledigt".
+    await ackNotification(baseKey(current.key));
     setChoosing(false);
     dismiss(current.key);
     toast(t.reminder.snoozed[option]);

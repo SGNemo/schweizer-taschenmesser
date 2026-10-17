@@ -29,6 +29,49 @@ function minuteOfDay(at: number): number {
   return d.getHours() * 60 + d.getMinutes();
 }
 
+/** `…:r3` = third repeat of an unanswered reminder ("Ruhige Erinnerungen"). */
+const REPEAT_RE = /:r\d+$/;
+export const isRepeatKey = (key: string): boolean => REPEAT_RE.test(key);
+
+/** The reminder an extra notification (`…:s60` stage, `…:f` old follow-up, `…:r2` repeat) belongs to. */
+export const baseKey = (key: string): string => key.replace(/:(s\d+|f|r\d+)$/, '');
+
+export interface RepeatOptions {
+  /** Minutes between two repeats. */
+  everyMin: number;
+  /** At most this many repeats; the last one says politely that it is the last. */
+  max: number;
+}
+
+/**
+ * The repeats of an unanswered reminder that fall into (from, to]: `…:r1` … `…:r<max>` every
+ * `everyMin` minutes after the reminder. A pure time series: an answered reminder ("Erledigt" or
+ * "Später") has no repeats, so the caller passes `answered` and the series ends at once. Quiet hours
+ * and "Stumm" later drop single repeats (they count, they are not moved), see `applyQuiet`/`applyMute`.
+ */
+export function repeatSeries(
+  base: Pick<DueNotification, 'key' | 'at' | 'url'>,
+  opts: RepeatOptions,
+  answered: boolean,
+  range: { from: number; to: number },
+  text: (n: number, last: boolean) => { title: string; body?: string },
+): DueNotification[] {
+  if (answered || opts.everyMin < 1 || opts.max < 1) return [];
+  const out: DueNotification[] = [];
+  for (let n = 1; n <= opts.max; n++) {
+    const at = base.at + n * opts.everyMin * 60_000;
+    if (at <= range.from || at > range.to) continue;
+    out.push({
+      key: `${base.key}:r${n}`,
+      at,
+      url: base.url,
+      soft: true,
+      ...text(n, n === opts.max),
+    });
+  }
+  return out;
+}
+
 export function inQuiet(at: number, quiet: { from: string; to: string }): boolean {
   const m = minuteOfDay(at);
   const from = minutes(quiet.from);
@@ -52,9 +95,10 @@ export function applyQuiet(
   quiet: Policy['quiet'],
 ): DueNotification[] {
   if (!quiet) return [...items];
-  return items.map((n) =>
-    n.soft && inQuiet(n.at, quiet) ? { ...n, at: quietEnd(n.at, quiet) } : n,
-  );
+  // A repeat in the night is dropped, not moved: no pile of "Noch offen" at seven in the morning.
+  return items
+    .filter((n) => !(isRepeatKey(n.key) && inQuiet(n.at, quiet)))
+    .map((n) => (n.soft && inQuiet(n.at, quiet) ? { ...n, at: quietEnd(n.at, quiet) } : n));
 }
 
 /**
@@ -78,6 +122,8 @@ export function applyLimit(
       out.push(...list);
       continue;
     }
+    // Repeats never push a first-time reminder of the same hour into the summary.
+    list.sort((a, b) => Number(isRepeatKey(a.key)) - Number(isRepeatKey(b.key)));
     const keep = Math.max(1, max - 1);
     const rest = list.slice(keep);
     out.push(...list.slice(0, keep));
@@ -106,10 +152,13 @@ export function applyMute(
   mute: Mute | undefined,
 ): DueNotification[] {
   if (!mute) return [...items];
-  return items.map((n) => {
-    if (n.at < mute.from || n.at >= mute.until) return n;
-    return n.soft ? { ...n, at: mute.until } : { ...n, quiet: true };
-  });
+  // Repeats during the pause are dropped (the reminder itself still arrives, quietly).
+  return items
+    .filter((n) => !(isRepeatKey(n.key) && n.at >= mute.from && n.at < mute.until))
+    .map((n) => {
+      if (n.at < mute.from || n.at >= mute.until) return n;
+      return n.soft ? { ...n, at: mute.until } : { ...n, quiet: true };
+    });
 }
 
 /** De-duplicates by key (first wins), then quiet hours, the hourly limit, and last a running mute. */
