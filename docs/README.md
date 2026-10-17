@@ -13,7 +13,7 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [STATUS.md](STATUS.md) | next one thing, 15-minute tasks, current release, open, known limits, "Offen – macht Sven" (German) | planning, hand-over |
 | [MANUAL-TESTS.md](MANUAL-TESTS.md) | hardware checklists (German) | device testing |
 | [ROADMAP.md](ROADMAP.md) | ideas, not built | proposing features |
-| [CHATS.md](CHATS.md) + [`scribble/`](../scribble/README.md) | running work, hotspots, hand-over; the chats' own notes (`npm run chats:status`) | first and last step of every chat |
+| [CHATS.md](CHATS.md), [`scribble/`](../scribble/README.md) | running work, hotspots, hand-over, chats' notes | first and last step of every chat |
 | [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md) | reusable prompt blocks | writing a prompt |
 | [meta/](meta/) | docs guide, audit reports | changing docs |
 | [i18n/](i18n/README.md) | app languages: status of the translations, glossary, how to help | changing UI text |
