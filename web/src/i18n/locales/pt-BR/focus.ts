@@ -114,6 +114,7 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Criar tarefa',
     off: 'As sugestões estão desligadas.',
     offAction: 'Abrir configurações',
+    menu: 'Mais opções',
   },
   waiting: {
     text: (n: number) =>
@@ -151,6 +152,13 @@ export const focus: Strings['focus'] = {
     indicatorOver: 'O tempo acabou',
     indicatorAria: (title: string, time: string) => `Foco: ${title}, ${time}. Voltar para o foco.`,
     otherRunning: (title: string) => `Já há uma rodada em andamento para “${title}”.`,
+  },
+  today: {
+    now: 'Agora',
+    inMinutes: (n: number) => `em ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `em ${h} h` : `em ${h} h ${m} min`),
+    appointments: 'Eventos',
+    allAppointments: 'Todos os eventos',
   },
   plan: {
     title: 'Hoje',

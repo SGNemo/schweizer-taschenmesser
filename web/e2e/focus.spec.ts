@@ -89,7 +89,9 @@ test.describe('Focus and attention aids', () => {
     // Whichever of the two is suggested first, "Etwas anderes" must show the other one.
     const shown = (await card.textContent()) ?? '';
     const other = shown.includes('Erste Aufgabe') ? 'Zweite Aufgabe' : 'Erste Aufgabe';
-    await card.getByRole('button', { name: 'Etwas anderes' }).click();
+    // "Etwas anderes" waits in the menu: one main button, "Später" quiet.
+    await card.getByRole('button', { name: 'Weitere Optionen' }).click();
+    await page.getByRole('menuitem', { name: 'Etwas anderes' }).click();
     await expect(page.getByTestId('next-card')).toContainText(other);
     await page.getByTestId('next-card').getByRole('button', { name: 'Später' }).click();
     await expect(page.getByText('Auf morgen verschoben.')).toBeVisible();
@@ -107,11 +109,18 @@ test.describe('Focus and attention aids', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await ready(page, '/');
+    // The planned ToDo is the suggestion; a second one is a plan row with a checkbox.
+    await expect(page.getByTestId('next-card')).toContainText('Zahnbürsten kaufen');
+    await expect(page.getByTestId('next-card')).toContainText('etwa 15 Min');
+    await addTodo(page, 'Brief schreiben');
+    await page.getByRole('button', { name: /Brief schreiben/ }).click();
+    await page.getByRole('button', { name: 'Für heute einplanen' }).click();
+    await page.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await ready(page, '/');
     const plan = page.getByTestId('day-plan');
-    await expect(plan).toContainText('Zahnbürsten kaufen');
-    await expect(plan).toContainText('15 Min');
-    await expect(plan).toContainText('Noch Platz für 2.');
-    await plan.getByRole('checkbox', { name: 'Zahnbürsten kaufen' }).click();
+    await expect(plan).toContainText('Noch Platz für eine Sache.');
+    await plan.getByRole('checkbox', { name: 'Brief schreiben' }).click();
     await expect(plan).toContainText('Erledigt heute: 1');
   });
 
@@ -152,9 +161,7 @@ test.describe('Focus and attention aids', () => {
     await timeToNext.click();
     await expect(timeToNext).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/');
-    await expect(
-      page.getByText('Die Zeit bis zum nächsten Termin ist ausgeschaltet.'),
-    ).toBeVisible();
+    await expect(page.getByTestId('today-until')).toHaveCount(0);
   });
 
   test('quick capture knows the estimate: "Formular ausfüllen 15 min" lands as a ToDo with 15 min', async ({

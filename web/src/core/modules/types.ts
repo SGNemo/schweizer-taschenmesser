@@ -359,7 +359,11 @@ export interface ModuleContributions {
   services?: () => Promise<{ default: () => (() => void) | void }>;
   /** Values the assistant cannot know when creating an entry (e.g. the default list or account). */
   aiCreateDefaults?: () => Promise<{
-    default: (collection: string) => Promise<Record<string, unknown>>;
+    /** `data` = the values already known; defaults may depend on them (a reminder needs a notification). */
+    default: (
+      collection: string,
+      data?: Record<string, unknown>,
+    ) => Promise<Record<string, unknown>>;
   }>;
   /** Module logic for actions with side effects, key = action id of `aiSchema.actions`. */
   aiActionHandlers?: () => Promise<{ default: Record<string, AiActionHandler> }>;

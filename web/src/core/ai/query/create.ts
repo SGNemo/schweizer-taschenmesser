@@ -34,7 +34,7 @@ export async function prepareCreate(
 
   const loadDefaults = manifest.contributions?.aiCreateDefaults;
   if (loadDefaults) {
-    const defaults = await (await loadDefaults()).default(collection);
+    const defaults = await (await loadDefaults()).default(collection, { ...data });
     for (const [k, v] of Object.entries(defaults)) if (!(k in data)) data[k] = v;
   }
 

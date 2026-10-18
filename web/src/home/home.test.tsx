@@ -22,6 +22,7 @@ describe('home layout storage', () => {
       order: ['todos:open'],
       hidden: ['finance:balance'],
       sizes: {},
+      pinned: [],
     });
     expect(await settingsRepo.get(HOME_SCOPE)).toBeUndefined();
 
@@ -30,6 +31,7 @@ describe('home layout storage', () => {
       order: ['todos:open'],
       hidden: ['finance:balance'],
       sizes: { 'todos:open': 'l' },
+      pinned: [],
     });
     expect(await settingsRepo.get('dashboard')).toMatchObject({ hidden: ['finance:balance'] });
   });
@@ -37,7 +39,30 @@ describe('home layout storage', () => {
   it('resets to the defaults without touching other records', async () => {
     await updateLayout({ order: ['a:b'], hidden: ['c:d'], sizes: { 'a:b': 'm' } });
     await resetLayout();
-    expect(await loadLayout()).toEqual({ order: [], hidden: [], sizes: {} });
+    expect(await loadLayout()).toEqual({ order: [], hidden: [], sizes: {}, pinned: [] });
+  });
+
+  it('adds pinning to a record from an older build without losing any field (migration)', async () => {
+    // As written before `pinned` existed: three fields only.
+    await settingsRepo.upsert(HOME_SCOPE, {
+      order: ['todos:open', 'finance:balance'],
+      hidden: ['notes:recent'],
+      sizes: { 'todos:open': 'm' },
+    });
+    expect(await loadLayout()).toEqual({
+      order: ['todos:open', 'finance:balance'],
+      hidden: ['notes:recent'],
+      sizes: { 'todos:open': 'm' },
+      pinned: [],
+    });
+
+    await updateLayout({ pinned: ['finance:balance'] });
+    expect(await loadLayout()).toEqual({
+      order: ['todos:open', 'finance:balance'],
+      hidden: ['notes:recent'],
+      sizes: { 'todos:open': 'm' },
+      pinned: ['finance:balance'],
+    });
   });
 
   it('keeps the position and visibility of a module that is switched off', async () => {
