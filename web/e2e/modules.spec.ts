@@ -9,7 +9,7 @@ test.describe('module library', () => {
   test('fresh install has the core modules active with their widgets', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Übersicht', level: 1 })).toBeVisible();
-    await expect(page.getByTestId('widget-calendar:today')).toBeVisible();
+    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
     await expect(page.getByTestId('widget-todos:open')).toBeVisible();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     await expect(page.getByTestId('widget-invoices:due')).toBeVisible();

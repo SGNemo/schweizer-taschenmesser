@@ -83,3 +83,22 @@
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
+
+.until {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-md);
+  font-variant-numeric: var(--font-num);
+  color: var(--text-muted);
+}
+.until strong {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+.actions {
+  align-items: center;
+}
+.allLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}

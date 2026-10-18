@@ -102,6 +102,7 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Add task',
     off: 'Suggestions are turned off.',
     offAction: 'Open settings',
+    menu: 'More options',
   },
   waiting: {
     text: (n: number) => (n === 1 ? '1 to-do is still waiting.' : `${n} to-dos are still waiting.`),
@@ -138,6 +139,13 @@ export const focus: Strings['focus'] = {
     indicatorOver: 'Time’s up',
     indicatorAria: (title: string, time: string) => `Focus: ${title}, ${time}. Back to focus.`,
     otherRunning: (title: string) => `A round is already running for “${title}”.`,
+  },
+  today: {
+    now: 'Now',
+    inMinutes: (n: number) => `in ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `in ${h} h` : `in ${h} h ${m} min`),
+    appointments: 'Events',
+    allAppointments: 'All events',
   },
   plan: {
     title: 'Today',
