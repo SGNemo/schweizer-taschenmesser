@@ -12,6 +12,8 @@ export interface RowMenuItem {
   danger?: boolean;
   /** Entries with a heading start a new group (`Später`, `Bewegen` …). */
   group?: string;
+  /** Marks the current choice (list filter, a switch that is on): `menuitemcheckbox` with `aria-checked`. */
+  checked?: boolean;
 }
 
 /**
@@ -35,7 +37,7 @@ export function RowMenu({
 
   useEffect(() => {
     if (!open) return;
-    const first = root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]');
+    const first = root.current?.querySelector<HTMLButtonElement>('[role^="menuitem"]');
     first?.focus();
     const away = (e: PointerEvent) => {
       if (!root.current?.contains(e.target as Node)) onOpenChange(false);
@@ -54,7 +56,9 @@ export function RowMenu({
     }
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     e.preventDefault();
-    const all = [...(root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])];
+    const all = [
+      ...(root.current?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? []),
+    ];
     const at = all.indexOf(document.activeElement as HTMLButtonElement);
     const next = (at + (e.key === 'ArrowDown' ? 1 : -1) + all.length) % all.length;
     all[next]?.focus();
@@ -75,7 +79,8 @@ export function RowMenu({
       <li key={item.id} role="none">
         <button
           type="button"
-          role="menuitem"
+          role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+          aria-checked={item.checked}
           className={`${styles.item} ${item.danger ? styles.danger : ''}`}
           onClick={() => {
             onOpenChange(false);
@@ -83,6 +88,7 @@ export function RowMenu({
           }}
         >
           {item.label}
+          {item.checked ? <Icon name="check" size={16} /> : null}
         </button>
       </li>,
     );

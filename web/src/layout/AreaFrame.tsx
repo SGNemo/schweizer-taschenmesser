@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { isFocusPath } from '@/core/focus/path';
-import { useAiOn } from '@/core/ai/switch';
-import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { areaOfPath } from '@/core/modules/areas';
+import { usePageChromeStore } from '@/core/shell/pageChrome';
+import { useWriteAvailable } from '@/core/shell/writeAvailable';
 import { availableManifests } from '@/core/modules/available';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -20,20 +20,12 @@ import styles from './AreaFrame.module.css';
 /** "Mit KI eintragen" for a module that declares AI actions (and the user has not switched them off). */
 function WriteButton({ pathname }: { pathname: string }) {
   const open = useUiStore((s) => s.openWritePalette);
-  const [settings] = useAiWriteSettings();
-  const aiOn = useAiOn();
+  const writeInMenu = usePageChromeStore((s) => s.chrome.writeInMenu);
   const manifest = availableManifests().find(
     (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
   );
-  const hasActions = Object.keys(manifest?.aiSchema?.actions ?? {}).length > 0;
-  if (
-    !aiOn ||
-    !manifest ||
-    !hasActions ||
-    !settings?.enabled ||
-    settings.modulesOff.includes(manifest.id)
-  )
-    return null;
+  const available = useWriteAvailable(manifest?.id);
+  if (!available || writeInMenu) return null;
   return (
     <Button variant="ghost" onClick={open} data-testid="ai-write-button">
       <Icon name="sparkles" size={16} /> {t.ai.palette.writeButton}
