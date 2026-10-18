@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { calendarEntry, moreFields, ready, showAllWidgets } from './helpers';
+import {
+  calendarEntry,
+  moreFields,
+  openTodosMenu,
+  pickTodosList,
+  ready,
+  showAllWidgets,
+} from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 const NOW = new Date('2026-09-29T10:00:00');
@@ -41,21 +48,19 @@ test.describe('ToDos', () => {
 
   test('a new list scopes the tasks; deleting a task removes it', async ({ page }) => {
     await ready(page, '/todos');
-    await page.getByRole('button', { name: 'Neue Liste' }).click();
+    await (await openTodosMenu(page)).getByRole('menuitem', { name: 'Neue Liste' }).click();
     await page.getByLabel('Listenname').fill('Haushalt');
     await page.getByRole('button', { name: 'Speichern' }).click();
-    await expect(page.getByRole('button', { name: 'Haushalt', exact: true })).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    // The new list is shown; the filter lives in the "⋯" menu and is named on the page.
+    await expect(page.getByTestId('todos-filter')).toContainText('Liste: Haushalt');
 
     await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Fenster putzen');
     await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Eingang', exact: true }).click();
+    await pickTodosList(page, 'Eingang');
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Alle offenen' }).click();
+    await page.getByTestId('todos-filter').getByRole('button', { name: 'Alle offenen' }).click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
 
     await page.getByRole('button', { name: /Fenster putzen/ }).click();

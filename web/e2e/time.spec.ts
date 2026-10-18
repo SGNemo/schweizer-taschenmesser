@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { moreFields, ready } from './helpers';
+import { moreFields, pickTodosList, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -48,7 +48,7 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('checkbox', { name: 'Dachboden aufräumen' })).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Irgendwann', exact: true }).click();
+    await pickTodosList(page, 'Irgendwann');
     await expect(page.getByRole('checkbox', { name: 'Dachboden aufräumen' })).toBeVisible();
   });
 });

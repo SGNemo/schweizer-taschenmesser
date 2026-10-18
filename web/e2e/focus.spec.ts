@@ -133,7 +133,11 @@ test.describe('Focus and attention aids', () => {
     await page.getByLabel('Fällig am').fill('2026-09-01');
     await page.getByRole('button', { name: 'Speichern' }).click();
 
-    await expect(page.getByTestId('todos-waiting')).toContainText('1 ToDo wartet noch.');
+    // "Wartet noch" is one group with a count (not a card plus a group); "Neu planen" sits inside it.
+    await expect(page.locator('[data-group="overdue"]')).toContainText('Wartet noch');
+    await expect(page.getByTestId('todos-waiting')).toContainText(
+      'Verteilt sie auf die nächsten Tage.',
+    );
     await expect(page.getByText('Überfällig', { exact: false })).toHaveCount(0);
     await page.getByRole('button', { name: 'Neu planen' }).click();
     await expect(page.getByText('Auf die nächsten Tage verteilt.')).toBeVisible();
