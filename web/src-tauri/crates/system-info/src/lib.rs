@@ -9,10 +9,12 @@ use sysinfo::{
     MINIMUM_CPU_UPDATE_INTERVAL,
 };
 
+pub mod gaming;
 pub mod gpu;
 pub mod net;
 mod platform;
 pub mod smbios;
+pub mod tone;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

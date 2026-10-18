@@ -272,3 +272,19 @@ describe('repeats until answered ("Ruhige Erinnerungen")', () => {
     expect(collapseRepeats([n('c', at(9))]).map((x) => x.key)).toEqual(['c']);
   });
 });
+
+describe('applyQuietAll (game mode without a tone)', () => {
+  it('marks every notification quiet and moves nothing', () => {
+    const items = [n('a', at(10)), n('b', at(11), true)];
+    const out = applyPolicy(items, { maxPerHour: 0, quietAll: true }, summary);
+    expect(out.map((x) => [x.key, x.at, x.quiet])).toEqual([
+      ['a', at(10), true],
+      ['b', at(11), true],
+    ]);
+  });
+
+  it('changes nothing when off', () => {
+    const out = applyPolicy([n('a', at(10))], { maxPerHour: 0 }, summary);
+    expect(out[0]?.quiet).toBeUndefined();
+  });
+});

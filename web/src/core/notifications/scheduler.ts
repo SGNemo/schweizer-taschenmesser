@@ -7,6 +7,7 @@ import { getPlatform } from '@/core/platform';
 import { getFocusSettings } from '@/core/settings/focus';
 import { collectDue } from './collect';
 import { useReminderPrompts } from './inapp';
+import { cardGivesWay, defaultGameDeps, withGameDelivery } from './gameDelivery';
 import type { NotificationService } from './service';
 import { baseKey, collapseRepeats, isRepeatKey } from './policy';
 import { removeSnoozed } from './snooze';
@@ -75,7 +76,7 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
 function defaultDeps(): SchedulerDeps {
   const meta = db.table<{ key: string; value: number }, string>('_meta');
   return {
-    service: getPlatform().notifications,
+    service: withGameDelivery(getPlatform().notifications),
     async loadDue(range) {
       return collectDue(range, activeManifests(await loadModuleStates()));
     },
@@ -85,6 +86,8 @@ function defaultDeps(): SchedulerDeps {
     // While the app is open the reminder appears in the app (Erledigt / Später), not as an OS popup.
     async present(n) {
       if (document.visibilityState !== 'visible') return false;
+      // A card behind a full-screen game is never seen: the toast (with the app's tone) is better.
+      if (await cardGivesWay(defaultGameDeps())) return false;
       if (!(await getFocusSettings()).inAppPrompt) return false;
       useReminderPrompts
         .getState()
