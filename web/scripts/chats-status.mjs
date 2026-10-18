@@ -45,7 +45,8 @@ const refs = lines(
   ),
 )
   .map((l) => l.split('\t'))
-  .filter(([ref]) => !/^origin\/(HEAD|main|develop|dependabot\/)/.test(ref))
+  // Bot branches (dependabot, code-scanning autofix) are not chats.
+  .filter(([ref]) => !/^origin\/(HEAD|main|develop|dependabot\/|alert-autofix-)/.test(ref))
   .filter(([ref]) => ref !== `origin/${mine}`);
 
 const days = (iso) => Math.round((Date.now() - Date.parse(iso)) / 86_400_000);
@@ -55,18 +56,25 @@ console.log(`You: ${mine} (${myFiles.size} files vs ${BASE})\n`);
 if (refs.length === 0) console.log('No other branches on origin.');
 const rows = refs
   .map(([ref, date, subject]) => {
-    const base = git('merge-base', BASE, ref);
+    // No common base (shallow clone, orphan branch): list the branch, but without a diff.
+    let base;
+    try {
+      base = git('merge-base', BASE, ref);
+    } catch {
+      return { ref, date, subject, files: [], ahead: 0, overlap: [], noBase: true };
+    }
     const files = lines(git('diff', '--name-only', base, ref));
     const ahead = lines(git('rev-list', `${base}..${ref}`)).length;
     const overlap = files.filter((f) => myFiles.has(f));
-    return { ref, date, subject, files, ahead, overlap };
+    return { ref, date, subject, files, ahead, overlap, noBase: false };
   })
   .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 for (const r of rows) {
   const flag = r.overlap.length ? '  !! overlap' : '';
-  console.log(
-    `${r.ref}  ·  ${days(r.date)} d ago  ·  ${r.ahead} commits  ·  ${r.files.length} files${flag}`,
-  );
+  const size = r.noBase
+    ? 'no common base with develop'
+    : `${r.ahead} commits  ·  ${r.files.length} files`;
+  console.log(`${r.ref}  ·  ${days(r.date)} d ago  ·  ${size}${flag}`);
   console.log(`   ${r.subject}`);
   const shown = argv.has('--files') ? r.files : dirs(r.files).slice(0, 6);
   if (shown.length)
