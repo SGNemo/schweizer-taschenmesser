@@ -302,6 +302,8 @@ export interface DueNotification {
   title: string;
   body?: string;
   url?: string;
+  /** The reminder's own title when `title` is reworded (a repeat: "Noch offen: …"); "Später" keeps this one. */
+  baseTitle?: string;
   /**
    * An automatic extra (staged lead, follow-up, morning digest): the quiet hours move it to their
    * end. Notifications the user set explicitly (an event's own lead, "Später") are never moved.

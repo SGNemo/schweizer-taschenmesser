@@ -1023,9 +1023,14 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      followUp: 'Sanfte Nachfrage',
+      followUp: 'Ruhig wiederholen',
       followUpHint:
-        'Eine einzige Nachfrage nach 30 Minuten, wenn eine Erinnerung nicht mit „Erledigt“ beantwortet wurde.',
+        'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
+      repeatEvery: 'Abstand',
+      repeatEveryOption: (m: number) => `${m} min`,
+      repeatMax: 'Höchstens',
+      repeatMaxHint: 'Danach hört es auf; die Erinnerung bleibt in der Benachrichtigungs-Zentrale.',
+      repeatMaxOption: (n: number) => `${n}×`,
       todoDigest: 'ToDos am Morgen',
       todoDigestHint:
         'Ein Hinweis pro Tag, der die ToDos für heute nennt. Keine Einzelhinweise je Aufgabe.',
@@ -1251,7 +1256,8 @@ export const de = {
         : minutes >= 60
           ? `In ${Math.round(minutes / 60)} Std`
           : `In ${minutes} Min`) + ` · ${time}`,
-    followUpTitle: (title: string) => `Noch aktuell? ${title}`,
+    followUpTitle: (title: string) => `Noch offen: ${title}`,
+    followUpLast: 'Das war die letzte Erinnerung. Es bleibt in der Benachrichtigungs-Zentrale.',
     untilNext: {
       empty: 'Heute ist nichts mehr geplant.',
       off: 'Die Zeit bis zum nächsten Termin ist ausgeschaltet.',

@@ -7,13 +7,13 @@ import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
 import type { DueNotification } from '@/core/modules/types';
 import { now as clockNow } from '@/core/time/now';
-import { ackNotification, isAcked } from './ack';
+import { ackNotification, loadAcked } from './ack';
 import { collectDue } from './collect';
+import { baseKey } from './policy';
 import { MAX_CATCH_UP_MS } from './scheduler';
 import { snoozeNotification, type SnoozeOption } from './snooze';
 
-/** `…:s60` (staged lead) and `…:f` (follow-up) belong to the base reminder. */
-export const baseKey = (key: string): string => key.replace(/:(s\d+|f)$/, '');
+export { baseKey };
 
 /**
  * Open reminders, oldest first, one per base reminder (the latest stage wins). Pure: `acked`
@@ -51,9 +51,7 @@ export async function loadOpen(at: number = clockNow()): Promise<DueNotification
     { from: at - MAX_CATCH_UP_MS, to: at },
     activeManifests(await loadModuleStates()),
   );
-  const acked = new Set<string>();
-  for (const n of due) if (await isAcked(baseKey(n.key))) acked.add(baseKey(n.key));
-  return pickOpen(due, acked);
+  return pickOpen(due, await loadAcked());
 }
 
 /** The next reminder that has not fired yet (within a day), shown when nothing is open. */
@@ -74,6 +72,6 @@ export async function markAllDone(open: readonly DueNotification[]): Promise<voi
 
 /** "Später": a new reminder at the chosen time; the original leaves the open list. */
 export async function snoozeOpen(n: DueNotification, option: SnoozeOption): Promise<void> {
-  await snoozeNotification(n, option);
+  await snoozeNotification({ ...n, title: n.baseTitle ?? n.title }, option);
   await markDone(n);
 }

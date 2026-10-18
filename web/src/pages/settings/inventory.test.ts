@@ -69,7 +69,7 @@ const CORE_KEYS = {
     weekReview: true,
     eveningWrapUp: true,
   },
-  '_settings scope reminders': { snoozed: [] },
+  '_settings scope reminders': { snoozed: [], 'ack:<notification key>': 'time of the answer' },
   _meta: {
     'update.prefs': { channel: 'stable', auto: true },
     'update.lastCheckAt': 'timestamp',
@@ -77,7 +77,7 @@ const CORE_KEYS = {
     'legal.notices': 'ids of acknowledged one-time notices (device-local)',
     'setup.state': 'checklistHidden false, status, steps',
     'focus.state': 'running focus session (task, end time), skipped suggestions of the day',
-    'reminders.acked': 'notification keys answered with Erledigt (device-local)',
+    'reminders.acked': 'older answers (Erledigt); now synced in the settings scope reminders',
     'focus.context': 'last visited route and title for the resume card (device-local)',
     'backup.auto.config': { enabled: false, interval: 'daily', keep: 7 },
     'backup.auto.last': 'timestamp',

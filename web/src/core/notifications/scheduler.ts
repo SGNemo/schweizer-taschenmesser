@@ -9,6 +9,7 @@ import { collectDue } from './collect';
 import { useReminderPrompts } from './inapp';
 import { cardGivesWay, defaultGameDeps, withGameDelivery } from './gameDelivery';
 import type { NotificationService } from './service';
+import { baseKey, collapseRepeats, isRepeatKey } from './policy';
 import { removeSnoozed } from './snooze';
 
 /** Never replay more than a day of missed notifications after the app was closed for a long time. */
@@ -47,7 +48,7 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
   if (from >= now) return 0;
   const seen = new Set<string>();
   let shown = 0;
-  for (const n of await deps.loadDue({ from, to: now })) {
+  for (const n of collapseRepeats(await deps.loadDue({ from, to: now }))) {
     if (seen.has(n.key)) continue;
     seen.add(n.key);
     try {
@@ -57,7 +58,8 @@ export async function checkDue(deps: SchedulerDeps): Promise<number> {
         await deps.service.show({
           title: n.title,
           body: n.body,
-          tag: n.key,
+          // A repeat replaces the earlier popup of the same reminder instead of piling up.
+          tag: isRepeatKey(n.key) ? baseKey(n.key) : n.key,
           url: n.url,
           ...(n.quiet ? { quiet: true } : {}),
         });
@@ -87,7 +89,9 @@ function defaultDeps(): SchedulerDeps {
       // A card behind a full-screen game is never seen: the toast (with the app's tone) is better.
       if (await cardGivesWay(defaultGameDeps())) return false;
       if (!(await getFocusSettings()).inAppPrompt) return false;
-      useReminderPrompts.getState().push({ key: n.key, title: n.title, body: n.body, url: n.url });
+      useReminderPrompts
+        .getState()
+        .push({ key: n.key, title: n.title, baseTitle: n.baseTitle, body: n.body, url: n.url });
       return true;
     },
     async consume(n) {
