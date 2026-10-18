@@ -126,6 +126,7 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Añadir tarea',
     off: 'Las sugerencias están desactivadas.',
     offAction: 'Abrir ajustes',
+    menu: 'Más opciones',
   },
   waiting: {
     text: (n: number) => (n === 1 ? '1 tarea sigue pendiente.' : `${n} tareas siguen pendientes.`),
@@ -163,6 +164,13 @@ export const focus: Strings['focus'] = {
     indicatorAria: (title: string, time: string) =>
       `Concentración: ${title}, ${time}. Volver a la concentración.`,
     otherRunning: (title: string) => `Ya hay una ronda en curso para «${title}».`,
+  },
+  today: {
+    now: 'Ahora',
+    inMinutes: (n: number) => `en ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `en ${h} h` : `en ${h} h ${m} min`),
+    appointments: 'Eventos',
+    allAppointments: 'Todos los eventos',
   },
   plan: {
     title: 'Hoy',

@@ -7,12 +7,22 @@ import {
   moveKey,
   orderWidgets,
   resolveLayout,
+  FOLDED_INTO_TODAY,
+  isCalmVisible,
   toggleHidden,
+  togglePinned,
+  TODAY_KEY,
+  withoutFolded,
   withSize,
 } from './layout';
 
 const w = (...keys: string[]) => keys.map((key) => ({ key }));
-const layout = (order: string[], hidden: string[] = []) => ({ order, hidden, sizes: {} });
+const layout = (order: string[], hidden: string[] = [], pinned: string[] = []) => ({
+  order,
+  hidden,
+  sizes: {},
+  pinned,
+});
 
 describe('home layout', () => {
   it('keeps manifest order without a saved layout', () => {
@@ -69,6 +79,7 @@ describe('home layout: migration of the old dashboard settings', () => {
       order: ['b:x', 'a:y'],
       hidden: ['a:y'],
       sizes: {},
+      pinned: [],
     });
   });
 
@@ -78,6 +89,7 @@ describe('home layout: migration of the old dashboard settings', () => {
       order: [],
       hidden: ['k'],
       sizes: {},
+      pinned: [],
     });
   });
 
@@ -90,6 +102,7 @@ describe('home layout: migration of the old dashboard settings', () => {
       order: [],
       hidden: ['q:r'],
       sizes: {},
+      pinned: [],
     });
   });
 
@@ -107,10 +120,59 @@ describe('home layout: migration of the old dashboard settings', () => {
       order: ['disk:system', 'a:x'],
       hidden: ['disk:system'],
       sizes: { 'disk:system': 'm' },
+      pinned: [],
     });
   });
 
   it('falls back to the defaults on an invalid home record', () => {
     expect(resolveLayout({ sizes: { 'a:x': 'xl' } }, undefined)).toEqual(DEFAULT_LAYOUT);
+  });
+});
+
+describe('home layout: pinned widgets (additive field)', () => {
+  it('reads a record written before pinning without losing anything', () => {
+    const stored = { order: ['a:x', 'b:y'], hidden: ['c:z'], sizes: { 'a:x': 'm' } };
+    expect(resolveLayout(stored, undefined)).toEqual({ ...stored, pinned: [] });
+  });
+
+  it('keeps stored pins and maps legacy keys inside them', () => {
+    const stored = { order: [], hidden: [], sizes: {}, pinned: ['a:x', 'system:status'] };
+    expect(resolveLayout(stored, undefined).pinned).toEqual(['a:x', 'disk:system']);
+  });
+
+  it('pins and unpins; pinning shows a hidden widget again', () => {
+    const base = layout([], ['a:x'], []);
+    expect(togglePinned(base, 'a:x')).toEqual({ pinned: ['a:x'], hidden: [] });
+    expect(togglePinned(layout([], [], ['a:x', 'b:y']), 'a:x')).toEqual({
+      pinned: ['b:y'],
+      hidden: [],
+    });
+  });
+
+  it('shows the Heute card and the pins in the calm view, nothing else', () => {
+    const saved = layout([], [], ['finance:balance']);
+    expect(isCalmVisible(TODAY_KEY, saved)).toBe(true);
+    expect(isCalmVisible('finance:balance', saved)).toBe(true);
+    expect(isCalmVisible('todos:open', saved)).toBe(false);
+  });
+});
+
+describe('home layout: the Heute card folds the calendar widgets', () => {
+  it('leaves them out while the card is available', () => {
+    const keys = withoutFolded(w(TODAY_KEY, 'calendar:next', 'calendar:today', 'todos:open')).map(
+      (x) => x.key,
+    );
+    expect(keys).toEqual([TODAY_KEY, 'todos:open']);
+    expect(FOLDED_INTO_TODAY).toEqual(['calendar:next', 'calendar:today']);
+  });
+
+  it('keeps them without the ToDos module, and keeps the stored choices for them', () => {
+    expect(withoutFolded(w('calendar:next', 'calendar:today')).length).toBe(2);
+    const stored = {
+      order: ['calendar:today'],
+      hidden: ['calendar:next'],
+      sizes: { 'calendar:today': 's' },
+    };
+    expect(resolveLayout(stored, undefined)).toMatchObject(stored);
   });
 });

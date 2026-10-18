@@ -38,6 +38,9 @@ test('the pantry page says what runs low; the switch in the settings hides the r
 
   await ready(page, '/settings/darstellung');
   await openMoreFocus(page);
+  // The switch shows the default (off) until the stored value is loaded: wait for "on" before
+  // clicking, or the click lands on the stale default and writes "on" again.
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-checked', 'false');
 

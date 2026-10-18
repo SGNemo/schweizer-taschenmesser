@@ -53,7 +53,7 @@ test.describe('Dev-Preview test data', () => {
 
     await page.goto('/');
     await expect(page.locator('main h1')).toBeVisible();
-    for (const id of ['calendar:today', 'todos:open', 'finance:balance', 'invoices:due'])
+    for (const id of ['todos:next', 'todos:open', 'finance:balance', 'invoices:due'])
       await expect(page.getByTestId(`widget-${id}`)).toBeVisible();
     // No widget falls back to its empty state.
     await expect(page.locator('[data-testid^="widget-"] [class*="emptyTitle"]')).toHaveCount(0);
