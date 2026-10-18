@@ -47,6 +47,7 @@ const COMMANDS: &[&str] = &[
     "system_play_tone",
     "capture_set_hotkey",
     "desktop_set_vault_hotkey",
+    "desktop_set_voice_hotkey",
     "vault_bridge_start",
     "vault_bridge_respond",
     "vault_bridge_stop",

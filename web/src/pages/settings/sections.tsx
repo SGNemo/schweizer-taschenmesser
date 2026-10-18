@@ -45,6 +45,7 @@ import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
+import { VoiceSection } from './VoiceSection';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
 import { ToolsSection } from './ToolsSection';
@@ -839,6 +840,48 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="quickcapture" title={t.quickCapture.settings.title} bare>
         <QuickCaptureSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'voice',
+    category: 'schnellerfassung',
+    order: 20,
+    get title() {
+      return t.voice.title;
+    },
+    get keywords() {
+      return t.voice.searchWords;
+    },
+    fields: [
+      {
+        key: 'enabled',
+        get label() {
+          return t.voice.enable;
+        },
+      },
+      {
+        key: 'key',
+        get label() {
+          return t.voice.key;
+        },
+        get description() {
+          return t.voice.keyHint;
+        },
+      },
+      {
+        key: 'globalHotkey',
+        get label() {
+          return t.voice.globalKey;
+        },
+        get description() {
+          return t.voice.globalHint;
+        },
+      },
+    ],
+    render: () => (
+      <SettingsGroup id="voice" title={t.voice.title} bare>
+        <VoiceSection />
       </SettingsGroup>
     ),
   },

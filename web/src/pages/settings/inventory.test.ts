@@ -28,6 +28,7 @@ const CORE_KEYS = {
     'tm-sidebar': 'wide',
     'tm-nav-closed': '[]',
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard',
+    'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
   },
   '_settings scope core': { displayName: '', weekStart: 'mon' },
   '_settings scope supporter': {

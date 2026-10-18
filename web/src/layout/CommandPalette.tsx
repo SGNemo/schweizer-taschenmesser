@@ -27,6 +27,8 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon, type IconName } from '@/ui';
 import { AnswerView } from './assistant/AnswerView';
+import { VoiceMic } from './voice/VoiceMic';
+import { useVoice } from '@/core/voice/store';
 import { useAssistant, useSearchHits } from './assistant/useAssistant';
 import { useModuleNavItems, useNavTree, useQuickAddActions } from './useNavItems';
 import { reportBug } from '@/core/diagnostics/report';
@@ -110,6 +112,19 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const [focus] = useFocusSettings();
   // Read once per opening of the palette: what was used before, newest first.
   const [recent] = useState<RecentEntry[]>(() => readRecent());
+
+  // Recognised speech lands in the input like typed text (appended, never replacing what is there).
+  const pending = useVoice((s) => s.pending);
+  const [handledVoice, setHandledVoice] = useState(0);
+  if (pending && pending.id !== handledVoice) {
+    // Adjusting state during render (like Dialog): the text joins what is already typed.
+    setHandledVoice(pending.id);
+    setQuery((q) => (q.trim() ? `${q.trimEnd()} ${pending.text}` : pending.text));
+    setActive(0);
+  }
+  useEffect(() => {
+    if (pending) useVoice.getState().takePending();
+  }, [pending]);
 
   const [devCommands, setDevCommands] = useState<Command[]>([]);
   useEffect(() => {
@@ -461,6 +476,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           }
         }}
       />
+      <VoiceMic />
       {options.length === 0 ? (
         <p className={styles.empty}>{t.palette.empty}</p>
       ) : (

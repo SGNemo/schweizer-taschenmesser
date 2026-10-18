@@ -210,6 +210,12 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
+## Spracheingabe (nur von Hand prüfbar)
+V1. *Windows-App (WebView2):* Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
+V2. *Systemweite Taste (Windows):* Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
+V3. *Android (Chrome-PWA und APK):* PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
+V4. *Sprachen:* App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
+
 ## Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrichtigungen: Erlaubnis erteilt, „Zock-Modus“ auf „Automatisch“; Lautstärke ca. 50 %. Hintergrund: [features/game-mode.md](features/game-mode.md).
 - **Z1 Kein Windows-Ton:** Zock-Modus „Aus“, Fenster im Hintergrund, „Testbenachrichtigung senden“: kommt der Toast ohne Windows-Benachrichtigungston? (Die App setzt keinen Ton; wenn doch einer kommt: melden.) ☐

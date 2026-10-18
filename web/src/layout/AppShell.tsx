@@ -29,6 +29,8 @@ import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
 import { useNavTree } from './useNavItems';
 import { useShortcuts } from './useShortcuts';
+import { useVoiceKey } from './voice/useVoiceKey';
+import { VoiceStatus } from './voice/VoiceStatus';
 import styles from './AppShell.module.css';
 
 let devNoticeShown = false;
@@ -52,6 +54,7 @@ export function AppShell() {
   const navigate = useNavigate();
   useNativeShare();
   useShortcuts();
+  useVoiceKey();
 
   // Global shortcuts: Ctrl/Cmd+K opens the command palette, Ctrl/Cmd+. the tools, Alt+Home goes home.
   useEffect(() => {
@@ -145,6 +148,7 @@ export function AppShell() {
           <ShortcutSheet />
           <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />
           <CommandPalette />
+          <VoiceStatus />
           <ToolsSheet />
           <OnboardingHost />
           <SetupHost />

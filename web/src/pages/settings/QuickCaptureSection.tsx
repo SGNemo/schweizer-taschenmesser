@@ -34,7 +34,7 @@ export function acceleratorOf(
  * One recordable global hotkey. `apply` registers it in the shell (the previous key stays active when
  * that fails); `save` stores it per device afterwards.
  */
-function HotkeyField({
+export function HotkeyField({
   label,
   hint,
   value,

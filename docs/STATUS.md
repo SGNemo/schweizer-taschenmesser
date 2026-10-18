@@ -15,6 +15,8 @@ Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary
 
 Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); Rust-Panic-Log im Datenordner und Widget-Fehlergrenze in PR #92; offen: nur die Handtests der Checkliste.
 
+Spracheingabe (`feat/voice-ptt`): Taste (Standard F4, halten oder tippen) und Mikrofon-Knopf in der Palette, Text landet im Eingabefeld, Standard aus mit Datenschutz-Hinweis; optional systemweite Taste (Windows); Handtests V1–V4 in [MANUAL-TESTS](MANUAL-TESTS.md), Plattformstand [features/voice.md](features/voice.md).
+
 Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md), kleine Fixes mit Tests umgesetzt, offen bleiben u. a. Pipe-Erstinstanz (X2), Windows-Hello-Wrapping (V2), Backup-Zeilenvalidierung (V5), Android-Manifest-Prüfung in CI (T2).
 
 Dieser PC – Aufräumen (`feat/disk-cleanup-ux`): Karte standardmäßig nach Alter gefärbt, Liste „Lange nicht geändert“ (jeder alte Ordner einmal, Summe, Mehrfachauswahl → Korb/Löschen), „Alter der Daten“ in den Details, Dateityp „Spieldaten“; PR gegen `develop`, wartet auf Review; Handtest D17 in [MANUAL-TESTS.md](MANUAL-TESTS.md).

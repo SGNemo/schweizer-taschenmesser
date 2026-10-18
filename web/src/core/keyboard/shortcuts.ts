@@ -6,8 +6,11 @@
  *  J/K or ↓/↑       next / previous row      E                    edit the focused row (`data-row-edit`, else open it)
  *  Space            tick the focused row (`data-row-tick`)         /   focus the list search (`data-list-search`)
  *  ?                shortcut sheet           Ctrl+Z               undo the last action
+ *  F4 (settable)    voice input: hold to talk or tap, tap again to finish; Esc cancels. Works inside
+ *                   text fields too and is wired in `layout/voice/useVoiceKey.ts` (it needs key up).
  */
 import { now } from '@/core/time/now';
+import { keyOf, keyString } from '@/core/voice/keys';
 import { isTypingTarget } from './typing';
 
 /** How long after `G` the second key may follow. */
@@ -146,4 +149,14 @@ export function createShortcutHandler(ctx: ShortcutContext): (e: Key) => void {
       }
     }
   };
+}
+
+/** Whether a key event is the configured voice key (`F4`, `Alt+M`); an empty setting never matches. */
+export function matchesVoiceKey(e: Parameters<typeof keyString>[0], key: string): boolean {
+  return key !== '' && keyString(e) === key;
+}
+
+/** Key up of the voice key's main key (modifiers may already be released). */
+export function releasesVoiceKey(e: Parameters<typeof keyOf>[0], key: string): boolean {
+  return key !== '' && keyOf(e) === key.split('+').pop();
 }

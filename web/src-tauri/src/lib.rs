@@ -164,6 +164,7 @@ pub fn run() {
             system::system_play_tone,
             capture::capture_set_hotkey,
             capture::desktop_set_vault_hotkey,
+            capture::desktop_set_voice_hotkey,
             vault_bridge::vault_bridge_start,
             vault_bridge::vault_bridge_respond,
             vault_bridge::vault_bridge_stop,

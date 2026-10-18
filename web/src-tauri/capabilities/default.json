@@ -36,6 +36,7 @@
     "allow-system-processes",
     "allow-capture-set-hotkey",
     "allow-desktop-set-vault-hotkey",
+    "allow-desktop-set-voice-hotkey",
     "allow-desktop-set-close-to-tray",
     "allow-desktop-set-tray-labels",
     "allow-desktop-set-autostart",
