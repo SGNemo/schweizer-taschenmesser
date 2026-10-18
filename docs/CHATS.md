@@ -22,6 +22,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Focus audit 2, package 2b: calm ToDo page ("⋯" menu, no FAB with an add field, "Wartet noch" once) | `feat/focus2-todos` | `web/src/modules/todos/routes/TodosPage.tsx`, `web/src/core/shell/**`, `layout/AppShell.tsx`/`AreaFrame.tsx` (small), `ui/RowMenu.tsx`/`GroupedList.tsx` (additive) | building | – | 2026-10-18 |
 | Chat coordination: scribble folder, `chats:status`, CI guard for main | `chore/chat-scribble` | `scribble/`, `web/scripts/chats-status.mjs`, `ci.yml`, root `CLAUDE.md` step 2 | PR open | – | 2026-10-17 |
 | (announced) Voice key for the AI input | `feat/voice-ask` | `core/keyboard/shortcuts.ts`, `layout/assistant/*`, new `core/ai/voice/*`, settings section, `src-tauri` global shortcut | prompt in [product/focus/13-parallel-prompts.md](product/focus/13-parallel-prompts.md) | – | 2026-10-17 |
 | (announced) Reminders from an AI sentence | `feat/ai-reminders` | `core/ai/intent`, `core/ai/write/*`, `modules/calendar/ai.ts`, `WritePreview.tsx` | prompt in 13-parallel-prompts | – | 2026-10-17 |
