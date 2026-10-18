@@ -15,6 +15,9 @@ export const FOCUS_MINUTES = [15, 25, 45, 60] as const;
 export const STAGE_OPTIONS = [1440, 120, 60, 30, 10] as const;
 export const MAX_PER_HOUR = [0, 2, 3, 5] as const;
 export const PROMPT_SECONDS = [0, 10, 30] as const;
+/** "Ruhige Erinnerungen": gap in minutes between repeats and the most repeats per reminder. */
+export const REPEAT_MINUTES = [10, 30, 60] as const;
+export const REPEAT_MAX = [3, 6, 10] as const;
 
 export const focusSettingsSchema = z.object({
   /** "Jetzt dran": one suggested next task on the home screen. */
@@ -44,8 +47,12 @@ export const focusSettingsSchema = z.object({
   /** Extra reminders before an appointment (in addition to its own lead). */
   staggered: z.boolean(),
   stages: z.array(z.number().int().min(1).max(10080)).max(5),
-  /** One gentle follow-up for reminders that were not answered. */
+  /** Reminders the user set come back ("Noch offen: …") until answered with "Erledigt" or "Später". */
   followUp: z.boolean(),
+  /** Minutes between two repeats. */
+  repeatMinutes: z.number().int().min(5).max(240),
+  /** At most this many repeats per reminder; then it stays in the notification centre. */
+  repeatMax: z.number().int().min(1).max(20),
   /** One notification in the morning that lists today's ToDos. */
   todoDigest: z.boolean(),
   todoDigestTime: z.string().regex(TIME_RE),
@@ -86,7 +93,9 @@ export const DEFAULT_FOCUS: FocusSettings = {
   maxPerHour: 3,
   staggered: false,
   stages: [60, 10],
-  followUp: false,
+  followUp: true,
+  repeatMinutes: 30,
+  repeatMax: 6,
   todoDigest: true,
   todoDigestTime: '09:00',
   inAppPrompt: false,

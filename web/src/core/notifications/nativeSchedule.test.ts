@@ -95,3 +95,25 @@ describe('in-app scheduler', () => {
     expect(cursor).toBe(NOW); // the cursor still advances
   });
 });
+
+describe('pickUpcoming with repeats', () => {
+  it('repeats only fill the alarm budget the reminders leave', () => {
+    const due = [
+      ...Array.from({ length: 5 }, (_, i) => ({
+        key: `r${i}:r1`,
+        at: 1_000 + i,
+        title: 'x',
+        soft: true,
+      })),
+      ...Array.from({ length: MAX_SCHEDULED }, (_, i) => ({
+        key: `k${i}`,
+        at: 10_000 + i,
+        title: 'x',
+      })),
+    ];
+    const out = pickUpcoming(due, 0);
+    expect(out).toHaveLength(MAX_SCHEDULED);
+    expect(out.some((n) => n.key.endsWith(':r1'))).toBe(false);
+    expect(pickUpcoming(due.slice(0, 5), 0)).toHaveLength(5);
+  });
+});

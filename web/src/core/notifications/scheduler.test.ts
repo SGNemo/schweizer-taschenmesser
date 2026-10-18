@@ -93,4 +93,16 @@ describe('notification scheduler', () => {
     expect(await checkDue({ ...s.deps, present })).toBe(1);
     expect(s.show).not.toHaveBeenCalled();
   });
+
+  it('after a long pause only the latest repeat of a reminder is shown', async () => {
+    const s = setup({
+      cursor: 0,
+      now: 100,
+      due: [n('a', 10), n('a:r1', 20), n('a:r2', 30), n('b', 40)],
+    });
+    expect(await checkDue(s.deps)).toBe(2);
+    // The tag is the reminder's own key: a later repeat replaces the earlier OS popup.
+    expect(s.show.mock.calls.map((c) => c[0].tag)).toEqual(['a', 'b']);
+    expect(s.show.mock.calls.map((c) => c[0].title)).toEqual(['a:r2', 'b']);
+  });
 });

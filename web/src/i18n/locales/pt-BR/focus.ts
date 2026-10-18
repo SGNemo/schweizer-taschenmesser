@@ -84,9 +84,14 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
-    followUp: 'Pergunta gentil',
+    followUp: 'Repetir com calma',
     followUpHint:
-      'Uma única pergunta depois de 30 minutos, se um lembrete não foi respondido com “Feito”.',
+      'Um lembrete que você definiu volta em intervalos até você escolher “Feito” ou “Depois”. À noite, silêncio.',
+    repeatEvery: 'Intervalo',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'No máximo',
+    repeatMaxHint: 'Depois disso para; o lembrete continua na central de notificações.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'Tarefas pela manhã',
     todoDigestHint:
       'Um aviso por dia com as tarefas de hoje. Sem avisos separados para cada tarefa.',
