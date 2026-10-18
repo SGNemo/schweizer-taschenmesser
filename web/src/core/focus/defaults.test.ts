@@ -13,6 +13,7 @@ beforeEach(async () => {
 describe('calm defaults', () => {
   it('are the new defaults for a fresh installation', async () => {
     expect(DEFAULT_FOCUS).toMatchObject({ streaks: false, weekReview: false, moduleNow: false });
+    expect(DEFAULT_FOCUS.followUp).toBe(true); // repeating reminders: on for a fresh installation
     const setHomeView = vi.fn();
     await applyDefaultsEra(true, setHomeView);
     expect(setHomeView).not.toHaveBeenCalled();
@@ -31,6 +32,7 @@ describe('calm defaults', () => {
       streaks: true,
       weekReview: true,
       moduleNow: true,
+      followUp: false, // an existing app does not start repeating reminders by itself
     });
   });
 
