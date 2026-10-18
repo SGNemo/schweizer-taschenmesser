@@ -5,6 +5,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 gemergt (#177); Runde 2 läuft in fünf parallelen Chats (Sprechtaste, KI-Erinnerungen, leiser Ton im Spielmodus, Wiederholung bis Antwort, Paket 2 Übersicht), Prompts in `product/focus/13-parallel-prompts.md`; Reizinventar messen: `npm run measure:stimulus`; danach 4 Ergänzungen (Wetter, Screenshot, Kürzel) und die Tagebuch-Woche.
+
 Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): alle Pakete in `develop` bis auf die Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`); Handtests K1–K4.
 
 Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); Rust-Panic-Log im Datenordner und Widget-Fehlergrenze in PR #92; offen: nur die Handtests der Checkliste.

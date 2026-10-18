@@ -1,11 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, showAllWidgets } from './helpers';
 
 /**
  * Comfort scenarios (docs/product/comfort): the click counts of everyday actions are asserted
  * by counting the `click()` calls after the page is open. Runs on desktop and on the phone viewport.
  */
 test.beforeEach(async ({ page }) => {
+  await showAllWidgets(page);
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
 

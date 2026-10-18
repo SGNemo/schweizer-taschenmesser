@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { showAllWidgets } from '../helpers';
 import { bootDev, SEED_TODAY, seedApp } from './helpers';
 
 const MODULES = [
@@ -47,6 +48,7 @@ const total = (counts: Record<string, number>) => Object.values(counts).reduce((
 test.describe('Dev-Preview test data', () => {
   test('dev flavour: load → home and every module show data → remove → empty', async ({ page }) => {
     await bootDev(page);
+    await showAllWidgets(page); // the calm home is the default; this test is about every widget
     await seedApp(page, 'small');
 
     await page.goto('/');

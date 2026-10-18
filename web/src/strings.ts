@@ -931,6 +931,7 @@ export const de = {
       searchHistory: 'Verlauf in der Suche',
       searchHistoryHint:
         'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
+      more: 'Weitere Einstellungen',
       clearHistory: 'Verlauf löschen',
       clearHistoryHint: 'Leert die zuletzt benutzten Einträge der Suche.',
       historyCleared: 'Verlauf gelöscht.',

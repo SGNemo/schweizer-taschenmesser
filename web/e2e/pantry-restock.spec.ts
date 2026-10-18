@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, moreFields } from './helpers';
+import { enable, moreFields, showAllWidgets } from './helpers';
 
 test.beforeEach(async ({ page }) => {
+  await showAllWidgets(page);
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
 

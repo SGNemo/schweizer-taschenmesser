@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, moreFields, ready } from './helpers';
+import { calendarEntry, moreFields, ready, showAllWidgets } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
+  await showAllWidgets(page);
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
 

@@ -1,5 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready } from './helpers';
+import { enable, openMoreFocus, ready } from './helpers';
+
+/** Week review and streaks are off by default (calm defaults): switch them on in the settings. */
+async function switchOn(page: Page, names: string[]) {
+  await ready(page, '/settings/darstellung');
+  await openMoreFocus(page);
+  for (const name of names) {
+    const sw = page.getByRole('switch', { name });
+    await expect(sw).toHaveAttribute('aria-checked', 'false');
+    await sw.click();
+    await expect(sw).toHaveAttribute('aria-checked', 'true');
+  }
+}
 
 async function addTodo(page: Page, title: string) {
   await ready(page, '/todos');
@@ -25,6 +37,7 @@ test.describe('Visible progress without pressure', () => {
 
   test('the week review is positive, and ticking something off updates it', async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+    await switchOn(page, ['Rückblick auf die Woche']);
     await addTodo(page, 'Steuerbeleg suchen');
     await ready(page, '/');
     const review = page.getByTestId('week-review');
@@ -65,11 +78,11 @@ test.describe('Visible progress without pressure', () => {
   test('every aid has a switch in Settings and goes away when it is off', async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     await addTodo(page, 'Etwas Kleines');
+    await switchOn(page, ['Rückblick auf die Woche', '„n in Folge“ bei Wiederholungen']);
+    await ready(page, '/');
+    await expect(page.getByTestId('week-review')).toBeVisible();
     await ready(page, '/settings/darstellung');
-    for (const name of ['Rückblick auf die Woche', '„n in Folge“ bei Wiederholungen']) {
-      const sw = page.getByRole('switch', { name });
-      await expect(sw).toHaveAttribute('aria-checked', 'true');
-    }
+    await openMoreFocus(page);
     await page.getByRole('switch', { name: 'Rückblick auf die Woche' }).click();
     await ready(page, '/');
     await expect(page.getByTestId('week-review')).toHaveCount(0);
