@@ -20,6 +20,8 @@ export interface Policy {
   maxPerHour: number;
   /** A running "Stumm" pause; absent = none. */
   mute?: Mute;
+  /** Game mode on a device without a tone (Android, PWA): everything arrives on the quiet channel. */
+  quietAll?: boolean;
 }
 
 const minutes = (hhmm: string): number => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
@@ -112,6 +114,14 @@ export function applyMute(
   });
 }
 
+/** Marks every notification quiet (no sound or vibration); nothing is moved or dropped. */
+export function applyQuietAll(
+  items: readonly DueNotification[],
+  on: boolean | undefined,
+): DueNotification[] {
+  return on ? items.map((n) => (n.quiet ? n : { ...n, quiet: true })) : [...items];
+}
+
 /** De-duplicates by key (first wins), then quiet hours, the hourly limit, and last a running mute. */
 export function applyPolicy(
   items: readonly DueNotification[],
@@ -126,5 +136,7 @@ export function applyPolicy(
     summary,
   );
   // Last, so the summary notification of a limited hour is silenced too.
-  return applyMute(limited, policy.mute).sort((a, b) => a.at - b.at);
+  return applyQuietAll(applyMute(limited, policy.mute), policy.quietAll).sort(
+    (a, b) => a.at - b.at,
+  );
 }

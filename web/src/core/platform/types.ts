@@ -158,6 +158,16 @@ export interface TrayLabels {
   tooltip: string;
 }
 
+/** One note of a reminder tone (see `core/notifications/sound.ts`); the native side renders it. */
+export interface ToneNote {
+  hz: number;
+  /** Start in ms from the beginning of the tone. */
+  atMs: number;
+  durMs: number;
+  /** 0–1, relative loudness of this note. */
+  gain: number;
+}
+
 /**
  * Desktop shell extras for quick capture (tray, global hotkey, start with Windows). `supported` is
  * true only in the native desktop app; everything else is a no-op there.
@@ -168,6 +178,13 @@ export interface DesktopService {
   safeMode?(): Promise<boolean>;
   /** Panic lines of earlier runs from the data folder (handed over once, then removed); optional so fakes keep compiling. */
   takePanicLog?(): Promise<string | null>;
+  /**
+   * True while Windows reports a full-screen game, presentation or busy state (one yes/no; no
+   * process or window information). Optional so fakes keep compiling; absent = cannot tell.
+   */
+  gameActive?(): Promise<boolean>;
+  /** Plays a short tone natively, for when the web view cannot (window hidden in the tray). */
+  playTone?(notes: ToneNote[], volume: number): Promise<void>;
   /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
   setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** Same for the vault search key (`null` removes it; unset by default). */

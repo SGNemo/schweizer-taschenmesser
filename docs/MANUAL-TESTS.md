@@ -210,6 +210,14 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
+## Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
+Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrichtigungen: Erlaubnis erteilt, „Zock-Modus“ auf „Automatisch“; Lautstärke ca. 50 %. Hintergrund: [features/game-mode.md](features/game-mode.md).
+- **Z1 Kein Windows-Ton:** Zock-Modus „Aus“, Fenster im Hintergrund, „Testbenachrichtigung senden“: kommt der Toast ohne Windows-Benachrichtigungston? (Die App setzt keinen Ton; wenn doch einer kommt: melden.) ☐
+- **Z2 Ton bei Fenster im Tray:** „Ton testen“ mit sichtbarem Fenster (alle drei Klänge, Lautstärke 0 = still). Dann Schließen-in-Tray an, Fenster schließen, Erinnerung für in 2 Minuten anlegen vorher, Zock-Modus „Immer“: kommt der Toast ohne Windows-Ton, und danach der App-Ton? Notieren: Verzögerung in Sekunden. ☐
+- **Z3 Vollbild-Spiel:** ein Spiel im Vollbild (Direct3D) starten, Zock-Modus „Automatisch“, Erinnerung für in 2 Minuten: nur der leichte App-Ton, kein Windows-Ton, der Toast wartet im Info-Center oder erscheint (Windows' Spiel-Ruhe kann ihn zurückhalten, das ist ok). Spiel beenden, nächste Erinnerung: normaler Weg, kein App-Ton. ☐
+- **Z4 Randfälle:** Browser-Video im Vollbild (F11/YouTube) zählt als „beschäftigt“ und löst ebenfalls den leisen Weg aus (gewollt); „Stumm“ an: weder Ton noch Windows-Ton; Zock-Modus „Aus“: nie ein App-Ton. Ein Spiel im Fenstermodus wird nicht erkannt → „Immer“ benutzen. ☐
+- **Z5 Android:** Zock-Modus „An“: Erinnerung kommt über den Kanal „Stumm“ ohne Ton und Vibration; „Aus“: wieder normal. ☐
+
 ## Sprachen (App in fünf Sprachen)
 - **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English, Español, Français, Português (Brasil) und Deutsch. Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
 - **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.
