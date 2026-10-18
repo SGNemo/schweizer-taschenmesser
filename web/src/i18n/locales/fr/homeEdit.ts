@@ -1,9 +1,14 @@
 import type { Strings } from '@/strings';
 
 export const homeEdit: Strings['homeEdit'] = {
-  calmNote: (n: number) =>
-    n <= 1 ? `Vue calme : ${n} widget est masqué.` : `Vue calme : ${n} widgets sont masqués.`,
-  showAll: 'Afficher tous les widgets',
+  showMore: (n: number) =>
+    n <= 1 ? `Afficher plus · ${n} widget` : `Afficher plus · ${n} widgets`,
+  showLess: 'Seulement l’essentiel',
+  pinStart: 'Épingler…',
+  pin: (title: string) => `Épingler ${title}`,
+  unpin: (title: string) => `Détacher ${title}`,
+  pinned: 'Épinglé',
+  pinNote: 'Les widgets épinglés restent visibles dans la vue calme.',
   customize: 'Personnaliser',
   done: 'Terminé',
   hide: 'Masquer',

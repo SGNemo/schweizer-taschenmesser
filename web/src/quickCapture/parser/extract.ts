@@ -21,6 +21,10 @@ export interface ExtractedFacts {
   /** 'HH:mm' */
   time?: string;
   notes: CaptureNote[];
+  /** The time is relative to now ("in 20 Minuten"). */
+  relative?: boolean;
+  /** 1–11 o'clock without am/pm that was not settled by a part of the day ("um 3", "halb vier"). */
+  twelveHour?: boolean;
 }
 
 /**
@@ -52,6 +56,8 @@ export function extractFacts(
   if (date) out.date = fmtDate(date);
   if (dt.time !== undefined) out.time = dt.time;
   out.notes = [...dt.notes];
+  if (dt.relative) out.relative = true;
+  if (dt.twelveHour) out.twelveHour = true;
   out.rest = scan.t;
   return out;
 }

@@ -5,13 +5,11 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
-<<<<<<< HEAD
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton (Erkennung nur Ja/Nein, Ton per Web Audio oder Rust); PR gegen `develop`, wartet auf Review; Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 „Standardwerte und Einstellungen“ (`feat/focus2-defaults`) gebaut; danach 2 Übersicht und Heute, 3 Erinnerungen, 4 Ergänzungen (Wetter, Screenshot, Kürzel); Handtest: eine Woche Nutzung pro Paket mit Tagebuch.
-=======
-Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 gemergt (#177); Runde 2 läuft in fünf parallelen Chats (Sprechtaste, KI-Erinnerungen, leiser Ton im Spielmodus, Wiederholung bis Antwort, Paket 2 Übersicht), Prompts in `product/focus/13-parallel-prompts.md`; Reizinventar messen: `npm run measure:stimulus`; danach 4 Ergänzungen (Wetter, Screenshot, Kürzel) und die Tagebuch-Woche.
->>>>>>> origin/develop
+Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 gemergt (#177); Runde 2 läuft in fünf parallelen Chats (Sprechtaste, KI-Erinnerungen, leiser Ton im Spielmodus, Wiederholung bis Antwort, Paket 2 Übersicht: 2a Heute-Karte und Anheften gebaut (`feat/focus2-today`), 2b ToDo-Seite folgt), Prompts in `product/focus/13-parallel-prompts.md`; Reizinventar messen: `npm run measure:stimulus`; danach 4 Ergänzungen (Wetter, Screenshot, Kürzel) und die Tagebuch-Woche.
+
+KI-Erinnerungen per Satz (`feat/ai-reminder-voice`): „Erinner mich um 15 Uhr an die Wäsche“, „in 20 Minuten Pizza rausnehmen“ → Erinnerung mit Benachrichtigung (Regeln, 0 Token, Zeiten rechnet der Code), Vorschau mit großer Uhrzeit, „Speichern“/„Ändern“; Handtest: Satz per Sprache auf dem Android-Gerät, Benachrichtigung zur Zeit.
 
 Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): alle Pakete in `develop` bis auf die Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`); Handtests K1–K4.
 

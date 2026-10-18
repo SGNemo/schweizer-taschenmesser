@@ -2,13 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { enable, mainNav, ready, showAllWidgets } from './helpers';
 
-const CORE = [
-  'calendar:today',
-  'todos:open',
-  'finance:balance',
-  'invoices:due',
-  'subscriptions:next',
-];
+const CORE = ['todos:next', 'todos:open', 'finance:balance', 'invoices:due', 'subscriptions:next'];
 
 test.describe('Home screen', () => {
   test.beforeEach(async ({ page }) => {

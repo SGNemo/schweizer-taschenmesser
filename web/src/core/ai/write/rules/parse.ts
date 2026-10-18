@@ -11,7 +11,7 @@ import { extractFacts, type ExtractedFacts } from '@/quickCapture/parser/extract
 import { fold } from '../../text';
 import { aiModules, type AiModule } from '../../scope';
 import { findTarget, withinOneEdit } from '../targets';
-import type { ProposedOp, WriteProposal } from '../types';
+import type { ProposalHint, ProposedOp, WriteProposal } from '../types';
 import {
   DELETE_VERBS,
   EDGE_FILLERS,
@@ -21,6 +21,7 @@ import {
   isSearchStart,
   POLITE,
 } from './lexicon';
+import { looksLikeErrand, settleClock } from './clock';
 
 export interface RuleContext {
   manifests: readonly ModuleManifest[];
@@ -239,6 +240,38 @@ const asciiAb = /^(?:ab|seit|von|beginnend)$/;
 /** The document says "ab 1.11." – a start date, not a due date. */
 const hasStartCue = (rest: string): boolean => toWords(rest).some((w) => asciiAb.test(w.n));
 
+/**
+ * Reminders by sentence: an errand with a time but no module word ("in 20 Minuten Pizza rausnehmen",
+ * "morgen früh um 8 an Zahnarzt anrufen") is a reminder, and its clock time is settled from `now`
+ * ("um 3" → 15:00, a time that is over → tomorrow).
+ */
+function refineReminder(
+  ref: ActionRef,
+  data: Record<string, unknown>,
+  facts: ExtractedFacts,
+  ctx: RuleContext,
+  title: string,
+  fallbackUsed: boolean,
+): ProposalHint[] {
+  const schema = ref.manifest.aiSchema.collections[ref.def.collection]!;
+  const kinds = schema.fields.kind?.startsWith('enum:')
+    ? schema.fields.kind.slice(5).split('|')
+    : [];
+  if (!kinds.includes('reminder') || !ref.def.fields?.includes('kind')) return [];
+  if (data.kind === undefined && fallbackUsed && (facts.relative || looksLikeErrand(title, fold))) {
+    data.kind = 'reminder';
+  }
+  if (data.kind !== 'reminder' || !facts.time) return [];
+  const settled = settleClock(
+    { date: facts.date, time: facts.time, twelveHour: facts.twelveHour, relative: facts.relative },
+    ctx.now,
+    ctx.today,
+  );
+  data.startTime = settled.time;
+  if (settled.rolled && settled.date) data.startDate = settled.date;
+  return settled.rolled ? ['rolled-day'] : [];
+}
+
 async function segmentToOp(
   segment: string,
   ctx: RuleContext,
@@ -434,7 +467,9 @@ async function segmentToOp(
   titles = titles.filter(Boolean);
   const titleField = fieldFor(ref, 'title');
   const noTitleNeeded = !titleField || !(ref.def.required ?? []).includes(titleField);
-  if (titles.length === 0 && !noTitleNeeded) return undefined;
+  // "Erinner mich um 15 Uhr": a reminder without a title; the preview asks for it.
+  const askTitle = data0.kind === 'reminder' && facts.time !== undefined;
+  if (titles.length === 0 && !noTitleNeeded && !askTitle) return undefined;
   if (titles.length === 0) titles = [''];
 
   // A bare noun with nothing else is a search ("Rechnungen"), a noun with a title is not.
@@ -480,8 +515,14 @@ async function segmentToOp(
   const ops = titles.map((title) => {
     const data = fillData(ref, facts, { title, quantity, startDateHint: startHint });
     Object.assign(data, data0);
+    const hints = refineReminder(ref, data, facts, ctx, title, fallbackUsed);
     applyDefaults(ref, data, ctx.today);
-    return { module: ref.manifest.id, action: ref.id, data };
+    return {
+      module: ref.manifest.id,
+      action: ref.id,
+      data,
+      ...(hints.length > 0 ? { hints } : {}),
+    };
   });
   return { ops, confidence: 0.9 };
 }

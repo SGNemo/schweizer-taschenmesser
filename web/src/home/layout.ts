@@ -14,6 +14,8 @@ export const homeLayoutSchema = z.object({
   hidden: z.array(z.string()),
   /** Chosen size per key; missing = the widget's `defaultSize`. */
   sizes: z.record(z.string(), z.enum(ALL_WIDGET_SIZES as [WidgetSize, ...WidgetSize[]])),
+  /** Keys pinned by the user: they stay visible in the calm view. Absent in older records = none. */
+  pinned: z.array(z.string()).default([]),
 });
 
 export type HomeLayout = z.output<typeof homeLayoutSchema>;
@@ -21,7 +23,7 @@ export type HomeLayout = z.output<typeof homeLayoutSchema>;
 export const HOME_SCOPE = 'home';
 /** The scope used before the home screen existed ("Übersicht" customisation); migrated, not deleted. */
 export const LEGACY_DASHBOARD_SCOPE = 'dashboard';
-export const DEFAULT_LAYOUT: HomeLayout = { order: [], hidden: [], sizes: {} };
+export const DEFAULT_LAYOUT: HomeLayout = { order: [], hidden: [], sizes: {}, pinned: [] };
 
 export const widgetKey = (moduleId: string, widgetId: string): string => `${moduleId}:${widgetId}`;
 
@@ -33,7 +35,7 @@ const legacySchema = z.object({
 /** Turns the stored legacy dashboard values (order, hidden) into the home layout. */
 export function migrateLegacyLayout(legacy: Record<string, unknown> | undefined): HomeLayout {
   const parsed = legacySchema.safeParse(legacy ?? {});
-  return parsed.success ? { ...parsed.data, sizes: {} } : DEFAULT_LAYOUT;
+  return parsed.success ? { ...parsed.data, sizes: {}, pinned: [] } : DEFAULT_LAYOUT;
 }
 
 /** Widget keys of modules that were merged into another one (Systeminfo → "Dieser PC"). */
@@ -41,12 +43,35 @@ export const LEGACY_WIDGET_KEYS: Readonly<Record<string, string>> = {
   'system:status': 'disk:system',
 };
 
+/** The one "Heute" card (ToDos): "Jetzt dran", the plan, the time to the next appointment and today's appointments. */
+export const TODAY_KEY = 'todos:next';
+
+/**
+ * Widgets whose content the "Heute" card now shows (focus audit 2): the time to the next
+ * appointment and the "Heute & Morgen" timeline. Not renames: the keys stay valid for an app without
+ * the ToDos module, and a user's hidden/size choices for them are kept in the stored layout. They
+ * are only left out while the card is there.
+ */
+export const FOLDED_INTO_TODAY: readonly string[] = ['calendar:next', 'calendar:today'];
+
+/** Drops the folded widgets while the "Heute" card is among the available ones. */
+export function withoutFolded<T extends { key: string }>(entries: T[]): T[] {
+  return entries.some((e) => e.key === TODAY_KEY)
+    ? entries.filter((e) => !FOLDED_INTO_TODAY.includes(e.key))
+    : entries;
+}
+
 function mapLegacyKeys(layout: HomeLayout): HomeLayout {
   const map = (keys: string[]) => [...new Set(keys.map((k) => LEGACY_WIDGET_KEYS[k] ?? k))];
   const sizes = Object.fromEntries(
     Object.entries(layout.sizes).map(([k, v]) => [LEGACY_WIDGET_KEYS[k] ?? k, v]),
   );
-  return { order: map(layout.order), hidden: map(layout.hidden), sizes };
+  return {
+    order: map(layout.order),
+    hidden: map(layout.hidden),
+    sizes,
+    pinned: map(layout.pinned),
+  };
 }
 
 /** The stored home layout; falls back to the legacy dashboard record until the first edit. */
@@ -130,6 +155,20 @@ export function mergeOrder(visibleKeys: string[], saved: HomeLayout): string[] {
   const known = new Set(visibleKeys);
   return [...visibleKeys, ...saved.order.filter((k) => !known.has(k))];
 }
+
+/** Pins or unpins `key`; pinning also shows a widget the user had hidden. */
+export function togglePinned(
+  saved: HomeLayout,
+  key: string,
+): Pick<HomeLayout, 'pinned' | 'hidden'> {
+  if (saved.pinned.includes(key))
+    return { pinned: saved.pinned.filter((k) => k !== key), hidden: saved.hidden };
+  return { pinned: [...saved.pinned, key], hidden: saved.hidden.filter((k) => k !== key) };
+}
+
+/** What the calm view shows: the "Heute" card, the user's pins; the rest waits behind "Mehr anzeigen". */
+export const isCalmVisible = (key: string, saved: HomeLayout): boolean =>
+  key === TODAY_KEY || saved.pinned.includes(key);
 
 export function toggleHidden(saved: HomeLayout, key: string): string[] {
   return saved.hidden.includes(key)
