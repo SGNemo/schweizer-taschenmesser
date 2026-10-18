@@ -160,6 +160,8 @@ pub fn run() {
             system::system_processes,
             system::system_disk_io,
             system::system_open_task_manager,
+            system::system_game_active,
+            system::system_play_tone,
             capture::capture_set_hotkey,
             capture::desktop_set_vault_hotkey,
             capture::desktop_set_voice_hotkey,

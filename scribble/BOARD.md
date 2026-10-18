@@ -12,3 +12,4 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 ## Parking (ideas, findings outside scope)
 - 2026-10-17 · `feat/voice-ptt` · `npm run chats:status` crashes on the remote branch `alert-autofix-1` (`git merge-base origin/develop origin/alert-autofix-1` exits 1, no common history); the script should skip branches without a merge base.
 - 2026-10-17 · `chore/chat-scribble` · example: "Settings → Darstellung could be grouped (6945 px on the phone), see docs/product/focus/11-plan-2.md."
+- 2026-10-17 · `feat/gaming-quiet-reminders` · `web/scripts/chats-status.mjs` fails with "git merge-base … origin/alert-autofix-1" when a branch shares no history (shallow clone); needs a try/catch. Details: `scribble/feat-gaming-quiet-reminders.md`.

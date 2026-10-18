@@ -43,6 +43,8 @@ const COMMANDS: &[&str] = &[
     "system_processes",
     "system_disk_io",
     "system_open_task_manager",
+    "system_game_active",
+    "system_play_tone",
     "capture_set_hotkey",
     "desktop_set_vault_hotkey",
     "desktop_set_voice_hotkey",
