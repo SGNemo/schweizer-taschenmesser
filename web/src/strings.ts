@@ -195,11 +195,6 @@ export const de = {
     globalKey: 'Systemweite Taste',
     globalHint:
       'Gilt auch, wenn Nemo im Hintergrund ist: ein Druck startet, der nächste beendet die Aufnahme.',
-    globalErrors: {
-      invalid: 'Diese Tastenkombination wird nicht verstanden.',
-      taken: 'Diese Tastenkombination gehört schon einem anderen Programm.',
-      failed: 'Die Taste konnte nicht gesetzt werden.',
-    },
     noticeTitle: 'Spracheingabe einschalten?',
     noticeText:
       'Zum Erkennen schickt dein Browser oder dein System den Ton womöglich an den Anbieter, zum Beispiel Google oder Microsoft. Nemo speichert weder Ton noch erkannten Text, schreibt nichts in Protokolle und gibt nichts an die KI, bevor du selbst abschickst. Die Sprache folgt der App-Sprache.',

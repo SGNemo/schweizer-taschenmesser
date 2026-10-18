@@ -87,6 +87,7 @@ export function HotkeyField({
           onBlur={() => setRecording(false)}
           aria-label={t.quickCapture.settings.hotkeyRecord}
           data-testid={testId}
+          data-hotkey-recording={recording || undefined}
         >
           {recording
             ? t.quickCapture.settings.hotkeyRecording

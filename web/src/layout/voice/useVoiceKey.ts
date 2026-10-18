@@ -19,6 +19,8 @@ export function useVoiceKey(): void {
   useEffect(() => {
     if (!active) return;
     const down = (e: KeyboardEvent) => {
+      // A key recorder in the settings owns every key while it records, the voice key included.
+      if ((e.target as Element | null)?.closest?.('[data-hotkey-recording]')) return;
       if (e.key === 'Escape' && useVoice.getState().state.phase !== 'idle') {
         // Esc ends the recording only; it must not also close the palette behind it.
         e.preventDefault();
