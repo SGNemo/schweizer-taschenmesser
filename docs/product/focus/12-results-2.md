@@ -58,4 +58,4 @@ Tool: `web/e2e/screenshots/targets-focus.spec.ts` (phone 412×915, ten pages, se
 - "Später" (out of today, always "tomorrow", with the toast and undo) is now one rule (`todos/postpone.ts`) used by the Heute card, the row menu (first entry) and the swipe-left of every open ToDo row. A task that is due today also moves its date, and it is not suggested again today (before, a due-today task came straight back on the card).
 - Feedback: adding a ToDo and planning one for today now answer with one line and "Rückgängig" (the other actions already did).
 - Tests: `todos/postpone.test.ts`, `nextWidget.test.tsx` (due today + Später), `e2e/todos-calm.spec.ts` (Später in the menu, with date, undo), `e2e/targets.spec.ts` (pixel-7, seven pages).
-- Not done: tests for the notification limit (`core/notifications` is outside this chat's scope; the hourly cap is covered by the existing policy tests).
+- Notification limits together: `core/notifications/limits.test.ts` (11 cases, no product change), see [repeat-reminders](../../features/repeat-reminders.md#grenzen-im-zusammenspiel).

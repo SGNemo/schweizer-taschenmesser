@@ -14,3 +14,15 @@ A reminder the user set (calendar kind `reminder`) that is not answered comes ba
 
 ## Test
 `policy.test.ts` (time series, quiet-hours boundary, mute, answer mid-series, several reminders), `calendar/__tests__/notifications.test.ts` (10:00-style day with a synced answer), `ack.test.ts`, `e2e/reminders.spec.ts` (fixed clock).
+
+## Grenzen im Zusammenspiel
+`core/notifications/limits.test.ts` drives the real calendar source, `collectDue` and `checkDue` with a fixed clock (5-minute ticks). Secured combinations:
+- **Quiet hours + repeats:** series of a 10:00 reminder ends at the last repeat before 22:00; nothing piles up at 07:00; an explicit reminder at 23:50 fires, its repeats across midnight are dropped.
+- **Answer:** mid-series it stops the next tick; a daily reminder is not silenced by yesterday's answer (key carries the date).
+- **Hourly cap + repeats:** three reminders in one hour against max 3: whole-hour view (Android, Web Push) = 2 firsts + one summary with the repeats; the open app, tick by tick, shows the three firsts and no repeat. Cap 0 = unlimited.
+- **Stumm mid-series:** repeats inside the pause are dropped but still count toward the hour's cap (so another reminder's repeat in that hour can be folded; known, accepted); explicit reminders arrive quiet.
+- **Zock-Modus on/off mid-series:** only what arrives in between is quiet (+ tone on desktop); a reminder already quiet by Stumm never gets the tone.
+- **Two devices:** an answer that syncs late lets the second device fire once more, never after it arrives.
+- **DST night** (Europe/Berlin, 2026-03-29): 02:30 does not exist, the reminder fires once at 03:30.
+- Known edge (not changed): the hour bucket is the UTC hour (`policy.ts` `applyLimit`), so in zones with a half-hour offset the cap's "clock hour" is shifted by 30 minutes.
+
