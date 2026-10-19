@@ -300,12 +300,20 @@ jobs:
           set -euo pipefail
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKMANAGER" --licenses > /dev/null || true
-          "$SDKMANAGER" "platforms;android-34" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "ndk;$NDK_VERSION"
+          "$SDKMANAGER" "platforms;android-34" "platforms;android-35" "platforms;android-36" "platforms;android-37" "build-tools;35.0.0" "ndk;$NDK_VERSION"
           echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
       # The dev identifier is applied at `init`, so the generated project gets the package id
       # io.github.sgnemo.taschenmesser.dev and the label "Nemo Dev" (the stable app is a different app).
       - run: npx tauri android init --ci --config src-tauri/tauri.dev.conf.json
+      # androidx.core 1.19 needs compileSdk 37; the Tauri template of the generated app module
+      # still says 36, so it is raised here (the build fails loudly if the line is not found).
+      - name: compileSdk 37 for the generated app module
+        run: |
+          set -euo pipefail
+          f=src-tauri/gen/android/app/build.gradle.kts
+          sed -i -E 's/compileSdk = [0-9]+/compileSdk = 37/' "$f"
+          grep -q 'compileSdk = 37' "$f"
       - name: Project icons into the generated Android project
         run: cp -r src-tauri/icons/android/. src-tauri/gen/android/app/src/main/res/
 
