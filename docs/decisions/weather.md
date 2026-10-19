@@ -1,0 +1,3 @@
+# Decisions – Weather
+
+- **Weather line (2026-10-19, package 4a):** one muted line under "Jetzt wichtig" (`core/weather/*`, synced scope `weather` {enabled default on, place, lat, lon}); nothing is shown or requested until a place is chosen (Settings → Verbindungen → Wetter), no error text when unreachable. Open-Meteo (no key); only the typed name (search) and the position rounded to ~1 km go out, plain `fetch`. Registered as data flow `weather` (+ one-time notice, DATA-FLOWS, website, README, user docs). Rain hint: first of the next 12 h with ≥ 60 %. Not a module (no collection). Open for the maintainer: Open-Meteo's free tier is non-commercial with attribution (CC BY 4.0); check that it fits before release.
