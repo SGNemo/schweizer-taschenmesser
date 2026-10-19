@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fetchForecast, searchPlaces, WeatherError } from './api';
+import forecastFixture from './fixtures/forecast-bern.json';
+import geocodingEmpty from './fixtures/geocoding-empty.json';
+import geocodingFixture from './fixtures/geocoding-bern.json';
 
 const ok = (body: unknown) =>
   vi.fn(async () => new Response(JSON.stringify(body), { status: 200 })) as unknown as typeof fetch;
@@ -60,5 +63,35 @@ describe('fetchForecast', () => {
 
   it('rejects an answer without current values', async () => {
     await expect(fetchForecast(1, 2, ok({}))).rejects.toBeInstanceOf(WeatherError);
+  });
+});
+
+describe('recorded response shapes (fixtures follow the documented Open-Meteo JSON, extra fields included)', () => {
+  it('parses a full forecast answer, nulls in the hourly series included', async () => {
+    const f = ok(forecastFixture);
+    expect(await fetchForecast(46.95, 7.45, f)).toEqual({
+      temp: 14,
+      group: 'partly',
+      rainFrom: '17',
+    });
+  });
+
+  it('parses a geocoding answer with and without region', async () => {
+    const out = await searchPlaces('Bern', ok(geocodingFixture));
+    expect(out.map((p) => p.label)).toEqual([
+      'Bern, Schweiz',
+      'Bern, Hessen, Deutschland',
+      'Bernau, Deutschland',
+    ]);
+    expect(await searchPlaces('Nirgendwo', ok(geocodingEmpty))).toEqual([]);
+  });
+
+  it('rejects answers of the wrong shape instead of guessing', async () => {
+    await expect(
+      fetchForecast(1, 2, ok({ current: { time: 'x', temperature_2m: 'warm', weather_code: 1 } })),
+    ).rejects.toBeInstanceOf(WeatherError);
+    await expect(
+      searchPlaces('Bern', ok({ results: [{ name: 'Bern', latitude: 'x', longitude: 1 }] })),
+    ).rejects.toBeInstanceOf(WeatherError);
   });
 });
