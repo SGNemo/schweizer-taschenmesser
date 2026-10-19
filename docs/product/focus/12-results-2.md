@@ -47,3 +47,15 @@ Same tool and data as 2a (`img/before2-*` = state before 2b, `img/after2b-*`). H
 - Above the first task: add field + one "⋯" (list filter, "Neue Liste", "Erweitert", "Mit KI eintragen"); no chips, no round "+" button, no separate "Wartet noch" card.
 - Tests: `ui/rowMenuChecked.test.tsx`, `core/shell/pageChrome.test.tsx`, `e2e/todos-calm.spec.ts` (desktop + pixel-7); specs that used the chips, the "Erweitert" switch or the AI button now go through the menu (`openTodosMenu`, `pickTodosList` in `e2e/helpers.ts`).
 - Not done (package 3): snooze on every row, not only the waiting ones; other pages with an add field keep the round button.
+
+## Package 3 – "Später" on rows, one feedback line, 44 px (`feat/focus2-reminders`)
+Tool: `web/e2e/screenshots/targets-focus.spec.ts` (phone 412×915, ten pages, seeded medium data; lists every button/link under 44 px except the controls that carry a 44 px hit area on purpose: icon/small buttons, switch tracks, chips, segment strips, calendar day numbers). Raw lists: `img/targets-before.json`, `img/targets-after.json`.
+
+| Metric (phone, ten pages) | Before | After |
+|---|---|---|
+| Real gaps under 44 px (logo link ×10, skip link ×10, short tab links ×3, calendar day numbers ×35) | 58 | **0** |
+
+- "Später" (out of today, always "tomorrow", with the toast and undo) is now one rule (`todos/postpone.ts`) used by the Heute card, the row menu (first entry) and the swipe-left of every open ToDo row. A task that is due today also moves its date, and it is not suggested again today (before, a due-today task came straight back on the card).
+- Feedback: adding a ToDo and planning one for today now answer with one line and "Rückgängig" (the other actions already did).
+- Tests: `todos/postpone.test.ts`, `nextWidget.test.tsx` (due today + Später), `e2e/todos-calm.spec.ts` (Später in the menu, with date, undo), `e2e/targets.spec.ts` (pixel-7, seven pages).
+- Not done: tests for the notification limit (`core/notifications` is outside this chat's scope; the hourly cap is covered by the existing policy tests).

@@ -154,6 +154,7 @@ export const focus: Strings['focus'] = {
     allAppointments: 'All events',
   },
   plan: {
+    planned: 'Planned for today.',
     title: 'Today',
     count: (n: number) => (n === 1 ? '1 thing' : `${n} things`),
     doneToday: (n: number) => `Done today: ${n}`,
