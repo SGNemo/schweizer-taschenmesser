@@ -9,9 +9,7 @@ import { ready } from './helpers';
 const PAGES = ['/', '/todos', '/finance', '/notes', '/pantry', '/bookmarks', '/calendar'];
 
 test.describe('Touch targets on the phone', () => {
-  test.beforeEach(({}, info) => {
-    test.skip(info.project.name !== 'pixel-7', 'a phone check');
-  });
+  test.skip(({ isMobile }) => !isMobile, 'a phone check');
 
   for (const url of PAGES) {
     test(`${url}: nothing below 44 px that is not a deliberate hit area`, async ({ page }) => {
