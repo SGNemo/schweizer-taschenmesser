@@ -1103,6 +1103,7 @@ export const de = {
       allAppointments: 'Alle Termine',
     },
     plan: {
+      planned: 'Für heute eingeplant.',
       title: 'Heute',
       count: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
       doneToday: (n: number) => `Erledigt heute: ${n}`,
@@ -1159,6 +1160,7 @@ export const de = {
     listName: 'Listenname',
     renameList: 'Liste umbenennen',
     moreOptions: 'Weitere Optionen',
+    added: 'ToDo hinzugefügt.',
     listGroup: 'Liste',
     moveToday: 'Auf heute',
     showingList: (name: string) => `Liste: ${name}`,

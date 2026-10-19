@@ -22,7 +22,12 @@ export default defineConfig({
     {
       // The layout tour runs on the Dev-Preview flavour with the shared, seeded test data.
       name: 'seeded',
-      testMatch: ['capture.spec.ts', 'languages.spec.ts', 'measure-focus.spec.ts'],
+      testMatch: [
+        'capture.spec.ts',
+        'languages.spec.ts',
+        'measure-focus.spec.ts',
+        'targets-focus.spec.ts',
+      ],
       use: { baseURL: 'http://localhost:4174' },
     },
     {
