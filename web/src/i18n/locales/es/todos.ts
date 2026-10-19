@@ -27,6 +27,7 @@ export const todos: Strings['todos'] = {
   listName: 'Nombre de la lista',
   renameList: 'Renombrar lista',
   moreOptions: 'Más opciones',
+  added: 'Tarea añadida.',
   listGroup: 'Lista',
   moveToday: 'Para hoy',
   showingList: (name: string) => `Lista: ${name}`,
