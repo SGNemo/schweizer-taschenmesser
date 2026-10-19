@@ -78,7 +78,7 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await expect(page.locator('[data-group="overdue"]')).toHaveCount(0);
     await expect(page.getByRole('checkbox', { name: 'Alte Sache' })).toBeVisible();
     // Undo is one tap away.
-    await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).last().click();
+    await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).click();
     await expect(page.locator('[data-group="overdue"]')).toHaveCount(1);
   });
 
@@ -129,7 +129,7 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await page.getByRole('menuitem', { name: 'Später', exact: true }).click();
     await expect(page.getByText('Auf morgen verschoben.')).toBeVisible();
     await expect(page.getByRole('button', { name: /Steuer vorbereiten/ })).toContainText('Morgen');
-    await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).last().click();
+    await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).click();
     await expect(page.getByRole('button', { name: /Steuer vorbereiten/ })).toContainText('Heute');
   });
 });

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { copyData } from '@/core/db/copy';
 import type { Stored } from '@/core/db/types';
+import { undoable } from '@/core/undo';
 import { skipSuggestion } from '@/core/focus/state';
 import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable } from '@/core/shell/writeAvailable';
@@ -252,6 +253,7 @@ export default function TodosPage() {
   const tx = tAdvanced.use();
   const writeAvailable = useWriteAvailable('todos');
   const openWrite = useUiStore((s) => s.openWritePalette);
+  const toast = useUiStore((s) => s.toast);
   // The page has its own add field: no round "+" button, and the AI entry lives in the "⋯" menu.
   usePageChrome({ hideFab: true, writeInMenu: true });
 
@@ -298,7 +300,8 @@ export default function TodosPage() {
     e.preventDefault();
     const value = title.trim();
     if (!value || !targetListId) return;
-    await undoableWithToast(t.todos.added, t.todos.added, () =>
+    // One line of feedback; Ctrl+Z still takes it back (no second "Rückgängig" next to the next action's).
+    await undoable(t.todos.added, () =>
       taskRepo.create({
         listId: targetListId,
         title: value,
@@ -308,6 +311,7 @@ export default function TodosPage() {
         ...(selected === SOMEDAY ? { someday: true } : {}),
       }),
     );
+    toast(t.todos.added);
     setTitle('');
   }
 
