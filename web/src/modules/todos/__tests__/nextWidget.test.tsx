@@ -81,6 +81,18 @@ describe('NextWidget (Jetzt dran)', () => {
     expect(plan).not.toHaveTextContent('Zuerst');
   });
 
+  it('"Später" also moves a date that is due today, so the same task is not suggested again', async () => {
+    await taskRepo.create({ ...base, title: 'Fällig heute', dueDate: '2026-10-02' });
+    await taskRepo.create({ ...base, title: 'Fällig bald', dueDate: '2026-10-04' });
+    renderWidget();
+    expect(await screen.findByTestId('next-card')).toHaveTextContent('Fällig heute');
+    fireEvent.click(screen.getByRole('button', { name: 'Später' }));
+    await waitFor(() => expect(screen.getByTestId('next-card')).toHaveTextContent('Fällig bald'));
+    const moved = (await taskRepo.active().toArray()).find((x) => x.title === 'Fällig heute')!;
+    expect(moved.dueDate).toBe('2026-10-03');
+    expect(moved.plannedFor).toBe('2026-10-03');
+  });
+
   it('says so, friendly, when everything is done', async () => {
     const t = await taskRepo.create({ ...base, title: 'Fertig' });
     await taskRepo.update(t.id, { done: true, completedAt: NOW });

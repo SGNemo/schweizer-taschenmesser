@@ -166,6 +166,7 @@ export const focus: Strings['focus'] = {
     allAppointments: 'Todos os eventos',
   },
   plan: {
+    planned: 'Planejada para hoje.',
     title: 'Hoje',
     count: (n: number) => (n <= 1 ? `${n} item` : `${n} itens`),
     doneToday: (n: number) => `Feito hoje: ${n}`,

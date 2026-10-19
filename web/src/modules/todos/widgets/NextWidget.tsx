@@ -14,6 +14,7 @@ import { beginFocus, focusMinutesFor, focusPath } from '../focus';
 import { nextTier, type PickTask } from '../next';
 import { EVENING_HOUR, leftToday, weekReview, type ProgressTask } from '../progress';
 import { listRepo, setDone, taskRepo } from '../repo';
+import { postponePatch } from '../postpone';
 import { buildToday } from '../today';
 import styles from './NextWidget.module.css';
 
@@ -73,12 +74,14 @@ export default function NextWidget() {
     await beginFocus(next, settings.focusMinutes);
     void navigate(focusPath(next.id));
   }
-  const later = () =>
-    next
-      ? undoableWithToast(t.focus.next.laterDone, t.focus.next.laterDone, () =>
-          taskRepo.update(next.id, { plannedFor: addDaysStr(day, 1) }),
-        )
-      : undefined;
+  // Out of today: moved to tomorrow and not suggested again today (a date within three days would bring it back).
+  const later = async () => {
+    if (!next) return;
+    await undoableWithToast(t.focus.next.laterDone, t.focus.next.laterDone, () =>
+      taskRepo.update(next.id, postponePatch(next, day)),
+    );
+    await skipSuggestion(next.id, day);
+  };
   const wrapUp = () =>
     undoableWithToast(t.focus.progress.wrapDone, t.focus.progress.wrapDone, async () => {
       for (const x of left) await taskRepo.update(x.id, { plannedFor: addDaysStr(day, 1) });
@@ -284,7 +287,9 @@ export default function NextWidget() {
                   <span>{o.title}</span>
                   <Button
                     onClick={() => {
-                      void taskRepo.update(o.id, { plannedFor: day });
+                      void undoableWithToast(t.focus.plan.planned, t.focus.plan.planned, () =>
+                        taskRepo.update(o.id, { plannedFor: day }),
+                      );
                       if (plan.free <= 1) setChoosing(false);
                     }}
                   >
