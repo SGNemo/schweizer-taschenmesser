@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { copyData } from '@/core/db/copy';
 import type { Stored } from '@/core/db/types';
+import { skipSuggestion } from '@/core/focus/state';
 import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable } from '@/core/shell/writeAvailable';
 import { useAdvanced } from '@/core/settings/comfort';
@@ -32,6 +33,7 @@ import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { dueTone, groupTasks, isActionable } from '../logic';
 import { replan, type PickTask } from '../next';
+import { postponePatch } from '../postpone';
 import { seriesKey, streaksOf, type Streak } from '../progress';
 import { deleteTask, ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
@@ -75,6 +77,11 @@ function TaskRow({
   const tone = dueTone(task.dueDate, task.done, day);
   const waiting = calm && tone === 'overdue';
   const streak = !task.done && task.recurrence ? streaks?.get(seriesKey(task.id)) : undefined;
+  const laterItem: RowMenuItem = {
+    id: 'later',
+    label: t.focus.next.later,
+    onSelect: () => postpone(task, day),
+  };
   const dueMenu: RowMenuItem[] = DATE_PRESETS.map((p) => ({
     id: `due-${p}`,
     group: t.todos.due,
@@ -106,10 +113,10 @@ function TaskRow({
       onOpen={() => onOpen(task)}
       onSwipeRight={() => onToggle(task, !task.done)}
       swipeRightLabel={task.done ? t.todos.markedOpen : t.todos.markedDone}
-      onSwipeLeft={task.done ? undefined : () => moveDue(task, presetDate('tomorrow', day))}
-      swipeLeftLabel={t.ui.datePresets.tomorrow}
+      onSwipeLeft={task.done ? undefined : () => postpone(task, day)}
+      swipeLeftLabel={t.focus.next.later}
       menu={[
-        ...(task.done ? [] : dueMenu),
+        ...(task.done ? [] : [laterItem, ...dueMenu]),
         ...(task.done ? [] : prioMenu),
         {
           id: 'duplicate',
@@ -215,6 +222,13 @@ function moveDue(task: StoredTask, dueDate: string | undefined) {
   void changeWithUndo(() => taskRepo.update(task.id, { dueDate }), t.todos.changed);
 }
 
+/** "Später": out of today in one step, with the same toast and undo as the card. */
+function postpone(task: StoredTask, day: string) {
+  void undoableWithToast(t.focus.next.laterDone, t.focus.next.laterDone, () =>
+    taskRepo.update(task.id, postponePatch(task, day)),
+  ).then(() => skipSuggestion(task.id, day));
+}
+
 function toggle(task: StoredTask, done: boolean) {
   const message = done ? t.todos.markedDone : t.todos.markedOpen;
   void undoableWithToast(message, message, () => setDone(task, done));
@@ -284,14 +298,16 @@ export default function TodosPage() {
     e.preventDefault();
     const value = title.trim();
     if (!value || !targetListId) return;
-    await taskRepo.create({
-      listId: targetListId,
-      title: value,
-      done: false,
-      priority: 0,
-      order: 0,
-      ...(selected === SOMEDAY ? { someday: true } : {}),
-    });
+    await undoableWithToast(t.todos.added, t.todos.added, () =>
+      taskRepo.create({
+        listId: targetListId,
+        title: value,
+        done: false,
+        priority: 0,
+        order: 0,
+        ...(selected === SOMEDAY ? { someday: true } : {}),
+      }),
+    );
     setTitle('');
   }
 

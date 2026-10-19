@@ -78,7 +78,7 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await expect(page.locator('[data-group="overdue"]')).toHaveCount(0);
     await expect(page.getByRole('checkbox', { name: 'Alte Sache' })).toBeVisible();
     // Undo is one tap away.
-    await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).click();
+    await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(page.locator('[data-group="overdue"]')).toHaveCount(1);
   });
 
@@ -105,5 +105,31 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
           ),
       );
     expect(small).toEqual([]);
+  });
+
+  test('"Später" is in every open row menu: out of today in one step, with undo', async ({
+    page,
+  }) => {
+    await addTodo(page, 'Wäsche falten');
+    // Adding is answered with one line and an undo.
+    await expect(page.getByRole('status').filter({ hasText: 'ToDo hinzugefügt.' })).toBeVisible();
+    await page.getByRole('button', { name: 'Weitere Aktionen' }).first().click();
+    await page.getByRole('menuitem', { name: 'Später', exact: true }).click();
+    await expect(page.getByText('Auf morgen verschoben.')).toBeVisible();
+    // Planned for tomorrow, so it is in "Später"... and not suggested for today.
+    await ready(page, '/');
+    await expect(page.getByTestId('widget-todos:next')).not.toContainText('Wäsche falten');
+  });
+
+  test('"Später" on a task that is due today also moves the date; undo brings it back', async ({
+    page,
+  }) => {
+    await addTodo(page, 'Steuer vorbereiten', '2026-09-29');
+    await page.getByRole('button', { name: 'Weitere Aktionen' }).first().click();
+    await page.getByRole('menuitem', { name: 'Später', exact: true }).click();
+    await expect(page.getByText('Auf morgen verschoben.')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Steuer vorbereiten/ })).toContainText('Morgen');
+    await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).last().click();
+    await expect(page.getByRole('button', { name: /Steuer vorbereiten/ })).toContainText('Heute');
   });
 });
