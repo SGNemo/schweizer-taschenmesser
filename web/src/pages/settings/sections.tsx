@@ -769,7 +769,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         ...shortcutActions().map((a) => ({
           key: shortcutRowKey(a),
           get label() {
-            return actionLabel(a);
+            return `${tKeys.get().colKey}: ${actionLabel(a)}`;
           },
         })),
         {
