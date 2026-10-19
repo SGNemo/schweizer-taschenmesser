@@ -4,6 +4,7 @@ import { useShortcutPrefs } from '@/core/keyboard/prefs';
 import { useTools } from '@/core/tools/state';
 import { keyCaps } from '@/core/voice/keys';
 import { useVoicePrefs } from '@/core/voice/settings';
+import { voiceSupport } from '@/core/voice/support';
 import { t } from '@/strings';
 import { tKeys } from '@/strings.keys';
 import { useUiStore } from '@/stores/ui';
@@ -57,7 +58,9 @@ export function ShortcutSheet() {
       : [];
   });
   const speak: Item[] =
-    voice.enabled && voice.key ? [{ id: 'voice', keys: keyCaps(voice.key), text: tx.voice }] : [];
+    voice.enabled && voice.key && voiceSupport().ok
+      ? [{ id: 'voice', keys: keyCaps(voice.key), text: t.voice.shortcutText }]
+      : [];
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)} title={t.shortcuts.title}>
