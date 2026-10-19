@@ -53,7 +53,7 @@ export function calendarEntry(page: Page, name: RegExp) {
 
 /** Opens the rarely used fields of the open dialog ("Mehr Felder"); a no-op in the Erweitert view or when they hold data. */
 export async function moreFields(page: Page) {
-  const button = page.getByRole('dialog').getByRole('button', { name: 'Weitere Felder anzeigen' });
+  const button = page.getByRole('dialog').getByRole('button', { name: 'Mehr Felder anzeigen' });
   if (await button.count()) await button.click();
 }
 

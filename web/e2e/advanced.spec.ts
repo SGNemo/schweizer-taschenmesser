@@ -13,7 +13,7 @@ test('Basis hides the rare fields; "Mehr Felder" reveals them for this dialog on
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByLabel('Titel')).toBeVisible();
   await expect(dialog.getByLabel('Ende (Datum)')).toHaveCount(0);
-  await dialog.getByRole('button', { name: 'Weitere Felder anzeigen' }).click();
+  await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await expect(dialog.getByLabel('Ende (Datum)')).toBeVisible();
   await expect(dialog.getByLabel('Wiederholung')).toBeVisible();
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();
@@ -62,7 +62,7 @@ test('a field that holds data is never hidden', async ({ page }) => {
   await ready(page, '/calendar?new=1');
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Konferenz');
-  await dialog.getByRole('button', { name: 'Weitere Felder anzeigen' }).click();
+  await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByLabel('Ende (Datum)').fill('2026-10-01');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toHaveCount(0);
