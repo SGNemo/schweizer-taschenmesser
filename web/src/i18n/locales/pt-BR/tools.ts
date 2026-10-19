@@ -124,6 +124,24 @@ export const tools: Strings['tools'] = {
     workDone: 'Fim do trabalho – hora de uma pausa.',
     restDone: 'Fim da pausa – vamos continuar.',
   },
+  screenshot: {
+    name: 'Captura de tela',
+    description:
+      'Capture uma tela, janela ou aba e salve ou copie como imagem. Tudo fica no seu dispositivo.',
+    hint: 'O navegador pergunta o que capturar. A imagem fica nesta página até você salvar, copiar ou descartar.',
+    take: 'Capturar tela',
+    again: 'Capturar de novo',
+    cancelled: 'Nada foi capturado.',
+    failed: 'A captura não funcionou. Tente de novo.',
+    save: 'Salvar',
+    copy: 'Copiar',
+    discard: 'Descartar',
+    copied: 'Imagem copiada.',
+    copyFailed: 'Copiar não funciona neste navegador. Use “Salvar”.',
+    alt: (w: number, h: number) => `Captura de tela ou janela, ${w} × ${h} pixels`,
+    unsupported:
+      'A captura de tela ou janela não está disponível neste dispositivo. No celular, use os botões do aparelho.',
+  },
   qr: {
     name: 'Código QR',
     description: 'Gerar códigos QR e lê-los com a câmera.',

@@ -1432,6 +1432,24 @@ export const de = {
       workDone: 'Arbeitsphase vorbei – Zeit für eine Pause.',
       restDone: 'Pause vorbei – weiter geht’s.',
     },
+    screenshot: {
+      name: 'Bildschirmfoto',
+      description:
+        'Bildschirm, Fenster oder Tab aufnehmen und als Bild speichern oder kopieren. Alles bleibt auf deinem Gerät.',
+      hint: 'Der Browser fragt, was aufgenommen werden soll. Das Bild bleibt auf dieser Seite, bis du es speicherst, kopierst oder verwirfst.',
+      take: 'Bildschirm aufnehmen',
+      again: 'Noch einmal aufnehmen',
+      cancelled: 'Nichts aufgenommen.',
+      failed: 'Die Aufnahme hat nicht geklappt. Probier es noch einmal.',
+      save: 'Speichern',
+      copy: 'Kopieren',
+      discard: 'Verwerfen',
+      copied: 'Bild kopiert.',
+      copyFailed: 'Kopieren geht in diesem Browser nicht. Nutze „Speichern“.',
+      alt: (w: number, h: number) => `Aufnahme von Bildschirm oder Fenster, ${w} × ${h} Pixel`,
+      unsupported:
+        'Die Aufnahme von Bildschirm oder Fenster gibt es auf diesem Gerät nicht. Am Telefon helfen die Tasten des Geräts.',
+    },
     qr: {
       name: 'QR-Code',
       description: 'QR-Codes erzeugen und mit der Kamera lesen.',

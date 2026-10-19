@@ -16,7 +16,7 @@ describe('tool registry', () => {
     const ids = allTools.map((x) => x.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(allTools.map((x) => x.order)).size).toBe(allTools.length);
-    expect(ids).toHaveLength(12);
+    expect(ids).toHaveLength(13);
     expect(ids).toEqual(expect.arrayContaining(['calc', 'dev', 'currency', 'timer', 'qr']));
     for (const gone of Object.keys(LEGACY_TOOL_IDS)) expect(ids).not.toContain(gone);
     for (const tool of allTools) {

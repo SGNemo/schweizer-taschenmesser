@@ -126,6 +126,24 @@ export const tools: Strings['tools'] = {
     workDone: 'Phase de travail terminée – c’est l’heure d’une pause.',
     restDone: 'Pause terminée – on reprend.',
   },
+  screenshot: {
+    name: 'Capture d’écran',
+    description:
+      'Capturez un écran, une fenêtre ou un onglet et enregistrez ou copiez-le comme image. Tout reste sur votre appareil.',
+    hint: 'Le navigateur demande ce qu’il faut capturer. L’image reste sur cette page jusqu’à ce que vous l’enregistriez, la copiiez ou l’écartiez.',
+    take: 'Capturer l’écran',
+    again: 'Capturer à nouveau',
+    cancelled: 'Rien n’a été capturé.',
+    failed: 'La capture n’a pas fonctionné. Réessayez.',
+    save: 'Enregistrer',
+    copy: 'Copier',
+    discard: 'Écarter',
+    copied: 'Image copiée.',
+    copyFailed: 'La copie ne fonctionne pas dans ce navigateur. Utilisez « Enregistrer ».',
+    alt: (w: number, h: number) => `Capture d’écran ou de fenêtre, ${w} × ${h} pixels`,
+    unsupported:
+      'La capture d’un écran ou d’une fenêtre n’est pas disponible sur cet appareil. Sur un téléphone, utilisez les boutons de l’appareil.',
+  },
   qr: {
     name: 'Code QR',
     description: 'Créer des codes QR et les lire avec la caméra.',
