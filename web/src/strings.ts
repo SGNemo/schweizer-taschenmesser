@@ -358,6 +358,16 @@ export const de = {
       homeViewHint:
         'Die ruhige Übersicht zeigt nur „Jetzt dran“, „Als Nächstes“ und „Heute & Morgen“. Alles andere ist ein Tipp entfernt.',
     },
+    appearanceGroups: {
+      change: 'Ändern',
+      done: 'Fertig',
+      line: (name: string, value: string) => `${name}: ${value}`,
+      theme: 'Thema',
+      colors: 'Farben',
+      text: 'Schrift & Lesen',
+      motion: 'Bewegung',
+      other: 'Sonstiges',
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:

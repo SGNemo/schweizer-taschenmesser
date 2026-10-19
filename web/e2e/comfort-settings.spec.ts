@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { enableExample, ready, showAllWidgets } from './helpers';
+import { enableExample, ready, showAllWidgets, openAppearanceGroup } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 
@@ -58,6 +58,7 @@ test('context gear: from a widget straight to the module settings, section highl
 
 test('reset a section: back to the default, undo brings the value back', async ({ page }) => {
   await ready(page, '/settings/darstellung');
+  await openAppearanceGroup(page, 'text');
   await page
     .locator('section[aria-labelledby="appearance"]')
     .getByRole('group', { name: 'Dichte' })
@@ -120,4 +121,44 @@ test('mute: reachable from the palette', async ({ page }, info) => {
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem('tm-mute')))
     .toContain('tomorrow');
+});
+
+test('appearance: a group shows the current choice, "Ändern" opens the picker, the theme switches', async ({
+  page,
+}) => {
+  await ready(page, '/settings/darstellung');
+  const group = page.getByTestId('appearance-group-theme');
+  await expect(group.locator('summary')).toContainText('Thema: System');
+  await expect(group.locator('summary')).toContainText('Ändern');
+  await expect(group.locator('summary')).toHaveAttribute('aria-expanded', 'false');
+  await expect(group.getByRole('group', { name: 'Farbschema' })).toBeHidden();
+  await group.locator('summary').click();
+  await expect(group.locator('summary')).toHaveAttribute('aria-expanded', 'true');
+  await group
+    .getByRole('group', { name: 'Farbschema' })
+    .getByRole('button', { name: 'Dunkel' })
+    .click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(group.locator('summary')).toContainText('Thema: Dunkel');
+  await expect(group.locator('summary')).toContainText('Fertig');
+});
+
+test('appearance: the group opens from the keyboard', async ({ page }, info) => {
+  test.skip(isPhone(info), 'keyboard');
+  await ready(page, '/settings/darstellung');
+  const group = page.getByTestId('appearance-group-motion');
+  await group.locator('summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(group.locator('summary')).toHaveAttribute('aria-expanded', 'true');
+  await expect(group.getByRole('group', { name: 'Bewegung' })).toBeVisible();
+});
+
+test('appearance: a deep link into a folded field opens its group and lands on the row', async ({
+  page,
+}) => {
+  await ready(page, '/settings/darstellung#appearance--density');
+  await expect(page.getByTestId('appearance-group-text')).toHaveAttribute('open', '');
+  await expect(page.locator('#appearance--density')).toBeInViewport();
+  await expect(page.locator('#appearance--density')).toHaveAttribute('data-highlight', 'true');
+  await expect(page.getByTestId('appearance-group-theme')).not.toHaveAttribute('open', '');
 });

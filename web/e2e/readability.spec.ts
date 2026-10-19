@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, openAppearanceGroup } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -65,6 +65,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
 
   test('the calm colour mode is a device setting', async ({ page }) => {
     await ready(page, '/settings/darstellung');
+    await openAppearanceGroup(page, 'colors');
     await page
       .getByRole('group', { name: 'Farben' })
       .getByRole('button', { name: 'Ruhig' })
@@ -72,6 +73,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     expect(await html(page, 'data-color')).toBe('calm');
     await page.reload();
     expect(await html(page, 'data-color')).toBe('calm');
+    await openAppearanceGroup(page, 'colors');
     await page
       .getByRole('group', { name: 'Farben' })
       .getByRole('button', { name: 'Mit Bedeutung' })

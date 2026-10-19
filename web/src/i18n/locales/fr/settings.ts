@@ -120,6 +120,16 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'La vue d’ensemble calme n’affiche que « À faire maintenant », « Ensuite » et « Aujourd’hui et demain ». Tout le reste est à un geste.',
   },
+  appearanceGroups: {
+    change: 'Modifier',
+    done: 'Terminé',
+    line: (name: string, value: string) => `${name} : ${value}`,
+    theme: 'Thème',
+    colors: 'Couleurs',
+    text: 'Texte et lecture',
+    motion: 'Animations',
+    other: 'Autres',
+  },
   modulesOverview: {
     title: 'Gérer les modules',
     description:

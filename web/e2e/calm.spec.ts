@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openMoreFocus, ready } from './helpers';
+import { openMoreFocus, ready, openAppearanceGroup } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -15,6 +15,8 @@ test.describe('Calm display, capture and finding things again', () => {
     page,
   }) => {
     await ready(page, '/settings/darstellung');
+    await openAppearanceGroup(page, 'text');
+    await openAppearanceGroup(page, 'motion');
     await page
       .getByRole('group', { name: 'Textgröße' })
       .getByRole('button', { name: 'Sehr groß' })
@@ -39,6 +41,7 @@ test.describe('Calm display, capture and finding things again', () => {
     const rootSize = await page.evaluate(() => getComputedStyle(document.documentElement).fontSize);
     expect(rootSize).toBe('20px');
 
+    await openAppearanceGroup(page, 'text');
     await page
       .getByRole('group', { name: 'Textgröße' })
       .getByRole('button', { name: 'Normal' })
@@ -66,6 +69,7 @@ test.describe('Calm display, capture and finding things again', () => {
 
     // The choice is also one tap in the settings, in both directions.
     await ready(page, '/settings/darstellung');
+    await openAppearanceGroup(page, 'other');
     const group = page.getByRole('group', { name: 'Übersicht' });
     await group.getByRole('button', { name: 'Nur das Wichtigste' }).click();
     await ready(page, '/');
@@ -129,6 +133,7 @@ test.describe('Calm display, capture and finding things again', () => {
 
   test('has no accessibility violations in the display settings', async ({ page }) => {
     await ready(page, '/settings/darstellung');
+    await openAppearanceGroup(page, 'text');
     await expect(page.getByRole('group', { name: 'Zeilenabstand' })).toBeVisible();
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations).toEqual([]);

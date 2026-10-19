@@ -112,6 +112,16 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'El resumen tranquilo muestra solo «Ahora toca», «Lo siguiente» y «Hoy y mañana». Todo lo demás está a un toque.',
   },
+  appearanceGroups: {
+    change: 'Cambiar',
+    done: 'Listo',
+    line: (name: string, value: string) => `${name}: ${value}`,
+    theme: 'Tema',
+    colors: 'Colores',
+    text: 'Texto y lectura',
+    motion: 'Movimiento',
+    other: 'Otros',
+  },
   modulesOverview: {
     title: 'Gestionar módulos',
     description:

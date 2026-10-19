@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { E2E_CODE_KAFFEE, E2E_CODE_KUCHEN_ADA } from './supporterCodes';
-import { ready } from './helpers';
+import { ready, openAppearanceGroup } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 const html = (page: Page) => page.locator('html');
@@ -19,6 +19,7 @@ test('a code unlocks the goodies, removing it takes them away again', async ({ p
 
   // Themes become selectable (no longer a preview) and survive a reload.
   await page.goto('/settings/darstellung');
+  await openAppearanceGroup(page, 'colors');
   const sand = page.getByTestId('palette-sand');
   await expect(sand).toHaveAccessibleName('Farbthema Sand wählen');
   await sand.click();
@@ -26,6 +27,7 @@ test('a code unlocks the goodies, removing it takes them away again', async ({ p
   await expect(page.getByTestId('palette-preview')).toHaveCount(0);
   await page.reload();
   await expect(html(page)).toHaveAttribute('data-palette', 'sand');
+  await openAppearanceGroup(page, 'colors');
 
   const logo = page.getByRole('switch', { name: 'Logo in Themenfarbe' });
   await expect(logo).toBeEnabled();
@@ -40,6 +42,7 @@ test('a code unlocks the goodies, removing it takes them away again', async ({ p
   await expect(html(page)).not.toHaveAttribute('data-logo', /.+/);
   await expect(page.getByTestId('supporter-badge-about')).toHaveCount(0);
   await page.goto('/settings/darstellung');
+  await openAppearanceGroup(page, 'colors');
   await expect(page.getByTestId('palette-sand')).toHaveAccessibleName(
     'Farbthema Sand 30 Sekunden ansehen',
   );

@@ -97,6 +97,16 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'The calm overview shows only “Up next”, “Next” and “Today & tomorrow”. Everything else is one tap away.',
   },
+  appearanceGroups: {
+    change: 'Change',
+    done: 'Done',
+    line: (name: string, value: string) => `${name}: ${value}`,
+    theme: 'Theme',
+    colors: 'Colours',
+    text: 'Text & reading',
+    motion: 'Motion',
+    other: 'Other',
+  },
   modulesOverview: {
     title: 'Manage modules',
     description:

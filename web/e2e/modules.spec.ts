@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enableExample, mainNav, moduleSwitch, showAllWidgets } from './helpers';
+import {
+  enableExample,
+  mainNav,
+  moduleSwitch,
+  showAllWidgets,
+  openAppearanceGroup,
+} from './helpers';
 
 test.describe('module library', () => {
   test.beforeEach(async ({ page }) => {
@@ -158,6 +164,7 @@ test.describe('shell', () => {
 
   test('theme choice is applied and remembered', async ({ page }) => {
     await page.goto('/settings/darstellung');
+    await openAppearanceGroup(page, 'theme');
     // The category's own field: on wide screens the quick bar above it has a "Farbschema" group, too.
     await page.locator('#appearance--theme').getByRole('button', { name: 'Dunkel' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
