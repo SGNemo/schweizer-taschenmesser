@@ -131,7 +131,7 @@ export default function NextWidget() {
                 .join(' · ')}
             </span>
             <div className={styles.actions}>
-              <Button variant="primary" onClick={() => void start()}>
+              <Button variant="primary" onClick={() => void start()} data-focus-start>
                 {t.focus.next.startMin(focusMinutesFor(next, settings.focusMinutes))}
               </Button>
               <Button variant="ghost" onClick={() => void later()}>

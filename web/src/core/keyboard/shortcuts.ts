@@ -6,11 +6,14 @@
  *  J/K or ↓/↑       next / previous row      E                    edit the focused row (`data-row-edit`, else open it)
  *  Space            tick the focused row (`data-row-tick`)         /   focus the list search (`data-list-search`)
  *  ?                shortcut sheet           Ctrl+Z               undo the last action
+ *  T then letter    open a tool (`TOOL_CHORDS` in `map.ts`; only tools that are on)
+ *  F2 F3 F6–F10     top actions, rebindable (`map.ts`); work inside text fields too (they type nothing)
  *  F4 (settable)    voice input: hold to talk or tap, tap again to finish; Esc cancels. Works inside
  *                   text fields too and is wired in `layout/voice/useVoiceKey.ts` (it needs key up).
  */
 import { now } from '@/core/time/now';
 import { keyOf, keyString } from '@/core/voice/keys';
+import { isToolChordLetter, TOOL_CHORDS, type FKeyAction } from './map';
 import { isTypingTarget } from './typing';
 
 /** How long after `G` the second key may follow. */
@@ -33,12 +36,19 @@ export interface ShortcutContext {
   quickAdd(): void;
   showShortcuts(): void;
   undo(): void;
+  /** Whether the tool exists and is switched on. */
+  toolAvailable(toolId: string): boolean;
+  openTool(toolId: string): void;
+  /** Current F-key map: key (`F8`) → action. Read at key time, so a change applies at once. */
+  fkeys(): Readonly<Record<string, FKeyAction>>;
+  runAction(action: FKeyAction): void;
 }
 
 type Key = Pick<
   KeyboardEvent,
   'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'shiftKey' | 'target' | 'defaultPrevented'
 > &
+  Partial<Pick<KeyboardEvent, 'repeat'>> &
   Partial<Pick<KeyboardEvent, 'preventDefault' | 'stopPropagation'>>;
 
 /** Rows on the page that can be seen (not inside a `hidden` or `display: none` container). */
@@ -69,11 +79,22 @@ const focusedRowItem = (): HTMLElement | null =>
 
 /** Builds the `keydown` handler (pure of React, so it can be tested directly). */
 export function createShortcutHandler(ctx: ShortcutContext): (e: Key) => void {
-  let chordAt: number | null = null;
+  let chord: { kind: 'g' | 't'; at: number } | null = null;
   return (e) => {
     if (e.defaultPrevented) return;
     const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const typing = isTypingTarget(e.target);
+
+    // F-keys: bare, also in text fields and dialogs (they type nothing). A key recorder owns every
+    // key while it records; a held key does not repeat the action.
+    if (/^F\d{1,2}$/.test(key) && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+      if ((e.target as Element | null)?.closest?.('[data-hotkey-recording]')) return;
+      const action = ctx.fkeys()[key];
+      if (!action) return;
+      e.preventDefault?.();
+      if (!e.repeat) ctx.runAction(action);
+      return;
+    }
 
     if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && key === 'z') {
       if (typing) return; // text undo belongs to the field
@@ -84,10 +105,20 @@ export function createShortcutHandler(ctx: ShortcutContext): (e: Key) => void {
     if (e.ctrlKey || e.metaKey || e.altKey || typing) return;
     if (document.querySelector('dialog[open]')) return;
 
-    if (chordAt !== null) {
-      const fresh = now() - chordAt <= CHORD_MS;
-      chordAt = null;
-      if (fresh && key in CHORD_LETTERS) {
+    if (chord !== null) {
+      const { kind, at } = chord;
+      const fresh = now() - at <= CHORD_MS;
+      chord = null;
+      if (fresh && kind === 't' && isToolChordLetter(key)) {
+        const id = TOOL_CHORDS[key];
+        if (ctx.toolAvailable(id)) {
+          e.preventDefault?.();
+          e.stopPropagation?.();
+          ctx.openTool(id);
+        }
+        return;
+      }
+      if (fresh && kind === 'g' && key in CHORD_LETTERS) {
         const to = ctx.destination(key as keyof typeof CHORD_LETTERS);
         if (to) {
           e.preventDefault?.();
@@ -100,7 +131,12 @@ export function createShortcutHandler(ctx: ShortcutContext): (e: Key) => void {
 
     switch (key) {
       case 'g':
-        chordAt = now();
+        chord = { kind: 'g', at: now() };
+        return;
+      case 't':
+        // The vault's entry view owns T (copy the code): the chord stays out of its way there.
+        if (!document.querySelector('[data-shortcut-scope="entry"]'))
+          chord = { kind: 't', at: now() };
         return;
       case 'n':
         e.preventDefault?.();

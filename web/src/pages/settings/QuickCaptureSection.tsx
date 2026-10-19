@@ -1,34 +1,12 @@
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { getPlatform, type HotkeyError } from '@/core/platform';
 import { useFocusSettings } from '@/core/settings/focus';
 import { applyHotkey, applyVaultHotkey, hotkeyLabel } from '@/quickCapture/desktop';
 import { DEFAULT_HOTKEY, useDevicePrefs, writePrefs } from '@/quickCapture/device';
 import { DEFAULT_TYPES, useCaptureSettings } from '@/quickCapture/settings';
 import { t } from '@/strings';
-import { Button, Card, HelpHint, SelectField, Switch } from '@/ui';
+import { Button, Card, HelpHint, KeyRecorder, SelectField, Switch } from '@/ui';
 import styles from './settings.module.css';
-
-const MODIFIER_KEYS = new Set(['Control', 'Shift', 'Alt', 'Meta', 'AltGraph']);
-
-/** `KeyboardEvent` → accelerator such as `Ctrl+Shift+Space`; undefined while only modifiers are down. */
-export function acceleratorOf(
-  e: Pick<KeyboardEvent, 'key' | 'code' | 'ctrlKey' | 'shiftKey' | 'altKey' | 'metaKey'>,
-): string | undefined {
-  if (MODIFIER_KEYS.has(e.key)) return undefined;
-  const key = /^Key[A-Z]$/.test(e.code)
-    ? e.code.slice(3)
-    : /^Digit\d$/.test(e.code)
-      ? e.code.slice(5)
-      : e.code; // Space, F1, ArrowUp, …
-  if (!key) return undefined;
-  const parts = [
-    e.ctrlKey && 'Ctrl',
-    e.altKey && 'Alt',
-    e.shiftKey && 'Shift',
-    e.metaKey && 'Super',
-  ];
-  return [...parts.filter(Boolean), key].join('+');
-}
 
 /**
  * One recordable global hotkey. `apply` registers it in the shell (the previous key stays active when
@@ -51,7 +29,6 @@ export function HotkeyField({
   save: (accelerator: string) => void;
   testId: string;
 }) {
-  const [recording, setRecording] = useState(false);
   const [error, setError] = useState('');
 
   async function set(accelerator: string) {
@@ -61,16 +38,8 @@ export function HotkeyField({
     save(accelerator);
   }
 
-  function onRecord(e: KeyboardEvent<HTMLButtonElement>) {
-    if (!recording) return;
-    e.preventDefault();
-    if (e.key === 'Escape') return setRecording(false);
-    const accelerator = acceleratorOf(e);
-    if (!accelerator) return;
-    setRecording(false);
-    if (!e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
-      return setError(t.quickCapture.settings.hotkeyNeedsModifier);
-    }
+  function onRecord(accelerator: string, modifiers: boolean) {
+    if (!modifiers) return setError(t.quickCapture.settings.hotkeyNeedsModifier);
     void set(accelerator);
   }
 
@@ -78,23 +47,16 @@ export function HotkeyField({
     <div>
       <span className={styles.muted}>{label}</span>
       <div>
-        <Button
-          onClick={() => {
-            setError('');
-            setRecording(true);
-          }}
-          onKeyDown={onRecord}
-          onBlur={() => setRecording(false)}
-          aria-label={t.quickCapture.settings.hotkeyRecord}
-          data-testid={testId}
-          data-hotkey-recording={recording || undefined}
-        >
-          {recording
-            ? t.quickCapture.settings.hotkeyRecording
-            : value
-              ? hotkeyLabel(value)
-              : t.quickCapture.settings.hotkeyOff}
-        </Button>{' '}
+        <KeyRecorder
+          value={value}
+          onRecord={onRecord}
+          onStart={() => setError('')}
+          display={hotkeyLabel}
+          recordingText={t.quickCapture.settings.hotkeyRecording}
+          emptyText={t.quickCapture.settings.hotkeyOff}
+          ariaLabel={t.quickCapture.settings.hotkeyRecord}
+          testId={testId}
+        />{' '}
         {defaultValue ? (
           <>
             <Button onClick={() => void set(defaultValue)}>{hotkeyLabel(defaultValue)}</Button>{' '}

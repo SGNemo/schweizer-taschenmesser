@@ -36,3 +36,8 @@
 .text {
   margin: 0;
 }
+.group {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}

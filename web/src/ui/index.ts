@@ -47,4 +47,6 @@ export { useOpenParam } from './useOpenParam';
 export { WidgetList, type WidgetEntry } from './WidgetList';
 export * from './widgets';
 
+export { KeyRecorder } from './KeyRecorder';
+export { Keys } from './Keys';
 export { AdvancedFields, AdvancedToggle } from './AdvancedFields';

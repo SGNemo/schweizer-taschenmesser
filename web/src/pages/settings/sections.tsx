@@ -45,9 +45,12 @@ import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
+import { ShortcutsSection } from './ShortcutsSection';
 import { VoiceSection } from './VoiceSection';
 import { WeatherSection } from './WeatherSection';
+import { tKeys } from '@/strings.keys';
 import { tWeather } from '@/strings.weather';
+import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
 import { ToolsSection } from './ToolsSection';
@@ -745,6 +748,47 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="connectors" title={t.connectors.title} hint={t.help.connectors} bare>
         <ConnectorsSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'shortcuts',
+    category: 'allgemein',
+    order: 30,
+    get title() {
+      return tKeys.get().title;
+    },
+    get description() {
+      return tKeys.get().description;
+    },
+    get keywords() {
+      return tKeys.de.keywords;
+    },
+    get fields() {
+      return [
+        ...shortcutActions().map((a) => ({
+          key: shortcutRowKey(a),
+          get label() {
+            return actionLabel(a);
+          },
+        })),
+        {
+          key: 'chords',
+          get label() {
+            return tKeys.get().groupChords;
+          },
+        },
+        {
+          key: 'voice',
+          get label() {
+            return tKeys.get().voice;
+          },
+        },
+      ];
+    },
+    render: () => (
+      <SettingsGroup id="shortcuts" title={tKeys.get().title} bare>
+        <ShortcutsSection />
       </SettingsGroup>
     ),
   },
