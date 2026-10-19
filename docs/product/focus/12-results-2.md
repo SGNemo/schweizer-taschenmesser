@@ -59,3 +59,17 @@ Tool: `web/e2e/screenshots/targets-focus.spec.ts` (phone 412×915, ten pages, se
 - Feedback: adding a ToDo and planning one for today now answer with one line and "Rückgängig" (the other actions already did).
 - Tests: `todos/postpone.test.ts`, `nextWidget.test.tsx` (due today + Später), `e2e/todos-calm.spec.ts` (Später in the menu, with date, undo), `e2e/targets.spec.ts` (pixel-7, seven pages).
 - Not done: tests for the notification limit (`core/notifications` is outside this chat's scope; the hourly cap is covered by the existing policy tests).
+
+## Darstellung – grouped (`feat/settings-appearance-fold`)
+Same tool, same seeded Dev build; baseline = `develop` after package 1. Screenshots: `img/before-appearance-phone.png`, `img/after-appearance-phone.png`.
+
+| Metric (Settings → Darstellung, phone 412×915) | Before | After |
+|---|---|---|
+| Page height | 6945 px (audit) / 5831 px (after package 1) | **4424 px** |
+| "Darstellung" card | ten rows, about 1660 px | five lines (Thema, Farben, Schrift & Lesen, Bewegung, Sonstiges), about 255 px |
+| Actions on the first screen | 20 | 38 (five "Ändern" lines instead of long pickers; the count includes the page header) |
+| Stored settings | 77 / 27 | unchanged (no key removed, no default changed) |
+
+- Each group is one line with the current choice ("Thema: Hell · Ändern"); "Ändern" opens the pickers, "Fertig" closes. Deep links (`#darstellung--density`, search, palette) open the surrounding group.
+- The remaining height is the other sections of the category (Lesen, Fokus & Aufmerksamkeit, Wetter, …), which this package does not touch; a further cut needs the same treatment there.
+- Tests: `AppearanceSection.test.tsx` (current choice shown, "Ändern" opens, all ten fields stay in a group), `e2e/comfort-settings.spec.ts` (switch the theme through the group, keyboard, deep link opens the group; desktop + pixel-7); the specs that click an appearance control open its group first (`openAppearanceGroup`).
