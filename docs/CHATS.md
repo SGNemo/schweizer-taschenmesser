@@ -22,6 +22,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Focus audit 2, package 4b: screenshot tool (Werkzeuge, getDisplayMedia, off by default) | `feat/focus2-screenshot` | `web/src/tools/screenshot/**`, `strings.ts` + `i18n/locales/*/tools.ts` (tools block only) | building | – | 2026-10-19 |
 | Chat coordination: scribble folder, `chats:status`, CI guard for main | `chore/chat-scribble` | `scribble/`, `web/scripts/chats-status.mjs`, `ci.yml`, root `CLAUDE.md` step 2 | PR open | – | 2026-10-17 |
 | (announced) Reminders from an AI sentence | `feat/ai-reminders` | `core/ai/intent`, `core/ai/write/*`, `modules/calendar/ai.ts`, `WritePreview.tsx` | prompt in 13-parallel-prompts | – | 2026-10-17 |
 | (announced) Quiet ping in game mode (own sound) | `feat/quiet-ping` | `core/notifications/service.ts`, new `core/notifications/sound.ts`, notifications settings, `src-tauri` (system-info/capture) | prompt in 13-parallel-prompts | – | 2026-10-17 |
