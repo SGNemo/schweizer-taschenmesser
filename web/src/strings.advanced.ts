@@ -6,7 +6,7 @@ export const tAdvanced = defineBundle(
     switchLabel: 'Erweitert',
     switchHint: 'Zeigt Spezialfelder und seltene Funktionen in diesem Modul.',
     moreFields: 'Mehr Felder',
-    moreFieldsAria: 'Weitere Felder anzeigen',
+    moreFieldsAria: 'Mehr Felder anzeigen',
     settings: {
       title: 'Basis oder Erweitert',
       description:
