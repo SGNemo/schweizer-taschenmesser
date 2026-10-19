@@ -69,6 +69,7 @@ const CORE_KEYS = {
     weekReview: true,
     eveningWrapUp: true,
   },
+  '_settings scope weather': { enabled: true, place: '', lat: 0, lon: 0 },
   '_settings scope reminders': { snoozed: [], 'ack:<notification key>': 'time of the answer' },
   _meta: {
     'update.prefs': { channel: 'stable', auto: true },

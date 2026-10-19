@@ -46,6 +46,8 @@ import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
 import { VoiceSection } from './VoiceSection';
+import { WeatherSection } from './WeatherSection';
+import { tWeather } from '@/core/weather/strings';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
 import { ToolsSection } from './ToolsSection';
@@ -743,6 +745,39 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="connectors" title={t.connectors.title} hint={t.help.connectors} bare>
         <ConnectorsSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'weather',
+    category: 'verbindungen',
+    order: 20,
+    get title() {
+      return tWeather.get().title;
+    },
+    get description() {
+      return tWeather.get().description;
+    },
+    get keywords() {
+      return tWeather.de.keywords;
+    },
+    fields: [
+      {
+        key: 'enabled',
+        get label() {
+          return tWeather.get().enable;
+        },
+      },
+      {
+        key: 'place',
+        get label() {
+          return tWeather.get().placeLabel;
+        },
+      },
+    ],
+    render: () => (
+      <SettingsGroup id="weather" title={tWeather.get().title} bare>
+        <WeatherSection />
       </SettingsGroup>
     ),
   },

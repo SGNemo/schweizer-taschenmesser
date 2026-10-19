@@ -87,6 +87,12 @@ export const tLegal = defineBundle(
         to: 'frankfurter.dev (öffentliche Kurse der Europäischen Zentralbank).',
         when: 'Beim Öffnen des Werkzeugs „Währung“.',
       },
+      weather: {
+        title: 'Wetter-Zeile (optional)',
+        what: 'Beim Suchen eines Ortes der eingegebene Ortsname; danach die auf etwa einen Kilometer gerundete Position des gewählten Ortes. Keine Einträge, keine Konto- oder Gerätedaten; open-meteo.com sieht deine IP-Adresse und die üblichen Verbindungsdaten.',
+        to: 'open-meteo.com (Geocoding und Vorhersage; kostenlos, ohne Schlüssel).',
+        when: 'Nur wenn du einen Ort wählst: beim Suchen und danach etwa alle 30 Minuten, solange die Übersicht offen ist. Ohne Ort passiert nichts; abschaltbar unter Verbindungen → Wetter.',
+      },
       ip: {
         title: 'Öffentliche IP anzeigen (Windows)',
         what: 'Eine Abfrage deiner öffentlichen IP-Adresse. Das Ergebnis wird nur angezeigt.',
@@ -138,6 +144,13 @@ export const tLegal = defineBundle(
         body: [
           'Nemo ruft die iCal-Adresse etwa alle 30 Minuten ab. Solche Adressen sind oft geheime Links: trage sie nur ein, wenn du dem Anbieter vertraust.',
           'Im Browser läuft die Abfrage über deinen eigenen Sync-Server. Die Termine werden als Einträge gespeichert und mit synchronisiert, wenn du Sync nutzt.',
+        ],
+      },
+      weather: {
+        title: 'Dein Wetter-Ort wird abgefragt',
+        body: [
+          'Beim Suchen geht der Ortsname, danach etwa alle 30 Minuten die auf etwa einen Kilometer gerundete Position deines Ortes an open-meteo.com. Nie deine Einträge.',
+          'Ohne gewählten Ort wird nichts abgefragt. Du kannst die Anzeige jederzeit ausschalten oder den Ort entfernen.',
         ],
       },
       supporter: {
@@ -253,6 +266,12 @@ export const tLegal = defineBundle(
           to: 'frankfurter.dev (public rates of the European Central Bank).',
           when: 'When you open the “Währung” (currency) tool.',
         },
+        weather: {
+          title: 'Weather line (optional)',
+          what: 'When you search for a place, the place name you typed; after that, the position of the chosen place rounded to about a kilometre. No entries, no account or device data; open-meteo.com sees your IP address and the usual connection data.',
+          to: 'open-meteo.com (geocoding and forecast; free, no key).',
+          when: 'Only when you choose a place: when you search and then about every 30 minutes while the Overview is open. Without a place nothing happens; can be switched off under Connections → Weather.',
+        },
         ip: {
           title: 'Show public IP (Windows)',
           what: 'A request for your public IP address. The result is only displayed.',
@@ -304,6 +323,13 @@ export const tLegal = defineBundle(
           body: [
             'Nemo fetches the iCal address about every 30 minutes. Such addresses are often secret links: only enter one if you trust the provider.',
             'In the browser the request goes through your own sync server. The events are stored as entries and synced too if you use sync.',
+          ],
+        },
+        weather: {
+          title: 'Your weather place will be requested',
+          body: [
+            'When you search, the place name goes to open-meteo.com; after that, about every 30 minutes, the position of your place rounded to about a kilometre. Never your entries.',
+            'Without a chosen place nothing is requested. You can switch the line off or remove the place at any time.',
           ],
         },
         supporter: {
