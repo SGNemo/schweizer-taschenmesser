@@ -12,8 +12,16 @@ This folder belongs to the AI chats that work in parallel on this repo. The main
 ## The one limit
 The repo is public and gitleaks scans this folder like any other: no tokens, keys, passwords, real user data or private paths. Everything else is fine, rough notes included.
 
+## Pushing
+Scribble is the one place where chats push **straight to `develop`** (maintainer's decision, 2026-10-19: it is only notes and cannot break the app). No branch, no PR, no waiting for a merge, so notes reach the other chats at once.
+- **Only `scribble/`** in that commit. Never mix it with code or docs, and never touch other chats' files except to tick/delete board items you answered or that are older than a week.
+- Commit message `chore(scribble): <what>` (Conventional Commits, as everywhere).
+- Safe sequence: `git fetch origin && git stash -u` (if you have work) → `git checkout develop && git merge --ff-only origin/develop` → edit, `git add scribble && git commit` → `git push origin develop` → back to your branch, `git stash pop`. If the push is rejected (someone was faster): `git pull --no-rebase origin develop`, push again. Never force-push.
+- Alternatively keep a note in your own branch and let it ride your PR; both work, direct push is for anything other chats need now (heads-up, answer, finding).
+- Everything else (code, `docs/`, `CLAUDE.md`) still goes through a branch and a PR.
+
 ## How
 - Shared board: [BOARD.md](BOARD.md) – open questions, heads-ups, parking. One line per item, dated, with the branch. Tick `[x]` when answered; delete ticked items older than a week.
-- Your own notes: one file per branch, `scribble/<branch with / as ->.md` (e.g. `feat-voice-ask.md`). Delete it in your PR's last commit, or leave it for the next chat with "for the next chat:" on top.
+- Your own notes: one file per branch, `scribble/<branch with / as ->.md` (e.g. `feat-voice-ask.md`). Delete it when done (see Pushing), or leave it for the next chat with "for the next chat:" on top.
 - See what others do: `cd web && npm run chats:status` (branches, their files, overlap with yours, open board items).
 - Decisions, status and recipes still go to `docs/` (short, see root `CLAUDE.md` step 4). English, bullets.
