@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "io.github.sgnemo.taschenmesser.shareintent"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
