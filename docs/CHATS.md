@@ -22,11 +22,11 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Chat coordination: scribble folder, `chats:status`, CI guard for main | `chore/chat-scribble` | `scribble/`, `web/scripts/chats-status.mjs`, `ci.yml`, root `CLAUDE.md` step 2 | PR open | – | 2026-10-17 |
-| (announced) Reminders from an AI sentence | `feat/ai-reminders` | `core/ai/intent`, `core/ai/write/*`, `modules/calendar/ai.ts`, `WritePreview.tsx` | prompt in 13-parallel-prompts | – | 2026-10-17 |
-| (announced) Quiet ping in game mode (own sound) | `feat/quiet-ping` | `core/notifications/service.ts`, new `core/notifications/sound.ts`, notifications settings, `src-tauri` (system-info/capture) | prompt in 13-parallel-prompts | – | 2026-10-17 |
-| (announced) Reminder repeats until answered | `feat/reminder-repeat` | `core/notifications/{policy,collect,ack,snooze,scheduler,nativeSchedule,pushPayload}.ts` | prompt in 13-parallel-prompts | – | 2026-10-17 |
-| (announced) Focus package 2 – home 'Heute' card, pins, calm ToDos page | `feat/focus2-today` | `home/*`, `modules/todos/{widgets,routes}`, `modules/calendar/widgets` | prompt in 13-parallel-prompts | – | 2026-10-17 |
+| (announced) Weather line on the home screen (Open-Meteo, city chosen once) | `feat/weather-widget` | new `core/weather/*`, `home/WeatherLine.tsx`, `pages/settings/WeatherSection.tsx`, one line in `home/Home.tsx` | prompt in [product/focus/14-parallel-prompts-3.md](product/focus/14-parallel-prompts-3.md) | – | 2026-10-19 |
+| (announced) Screenshot tool | `feat/screenshot-tool` | new `src/tools/screenshot/*`, `docs/features/screenshot.md` | prompt in 14-parallel-prompts-3 | – | 2026-10-19 |
+| (announced) Shortcut map: `T` chords for tools, F-keys rebindable | `feat/shortcut-map` | `core/keyboard/*`, `layout/useShortcuts.ts`, `layout/ShortcutSheet.tsx`, new `ui/KeyRecorder`, new settings section | prompt in 14-parallel-prompts-3 | – | 2026-10-19 |
+| (announced) Focus package 3 – snooze on rows, feedback line, limit tests, 44 px | `feat/focus2-reminders` | `modules/todos/{routes,widgets}`, `ui/RowMenu`, `core/notifications/*.test.ts` | prompt in 14-parallel-prompts-3 | – | 2026-10-19 |
+| (announced) Darstellung settings grouped | `feat/appearance-groups` | `pages/settings/AppearanceSection.tsx`, settings inventory | prompt in 14-parallel-prompts-3 | – | 2026-10-19 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
