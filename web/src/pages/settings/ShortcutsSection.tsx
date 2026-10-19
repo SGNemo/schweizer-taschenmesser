@@ -65,7 +65,7 @@ export function ShortcutsSection() {
                 display={(v) => keyCaps(v).join(' + ')}
                 recordingText={tx.recording}
                 emptyText={tx.none}
-                ariaLabel={tx.record(label)}
+                ariaLabel={`${tx.record(label)}: ${key ? keyCaps(key).join(' + ') : tx.none}`}
                 testId={`shortcut-${shortcutRowKey(action)}`}
               />{' '}
               {key !== DEFAULT_FKEYS[action] ? (

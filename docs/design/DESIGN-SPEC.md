@@ -181,6 +181,12 @@ Neutral base **cool**; every pair checked AA (`ROUND-4-TOKENS.md` has the ratios
 ## 8. Interaction
 
 - **Keyboard (desktop):** `Ctrl+K` search/ask · `N` new (quick capture) · `G` then `H/P/G/A/W/T` go to area (Heute, Planen, Geld, hAushalt, Wissen, Tresor) · `J/K` or arrows select row · `Enter` open, `E` edit, `Space` tick · `Ctrl+Z` undo (last 10, also after the toast) · `?` shortcut sheet · `Esc` close / clear selection · `/` focus list search · `Alt+Home` stays. Single letters never fire inside inputs or dialogs.
+  | Key | Action |
+  |---|---|
+  | `T` then `T/R/Q/U/D/S/C/Z/W/X/I/P/V` | open tool (timer, calc, QR, units, dates, screenshot, currency, timezones, dice, text, image, PDF, dev); only tools that are on |
+  | `F2` `F3` `F6` `F7` `F8` `F9` `F10` | Neu erfassen · Suchen · Heute · Fokus starten · Timer · Rechner · Einstellungen; rebindable (Einstellungen → Allgemein → Tastenkürzel); work inside fields; `F4` = voice; `F1` `F5` `F11` `F12` and combinations such as `Alt+F4` are refused |
+
+  Details: [features/shortcuts.md](../features/shortcuts.md).
 - **Mouse:** row actions on hover; right-click = same menu as "…"; drag-and-drop (dnd-kit) for ToDo order, home widgets, Einkauf, calendar move/resize (15-min steps).
 - **Multi-select:** checkbox / Shift-click ranges / long press → bulk bar (Erledigt · Verschieben · Löschen · Abbrechen).
 - **Touch:** swipe right = done/paid (green reveal 72 px), swipe left = move/snooze; long press = multi-select; pull-to-refresh only with sync on.
