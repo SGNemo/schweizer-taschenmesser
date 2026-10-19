@@ -1,5 +1,5 @@
 /** Pure parts of the weather line: weather code → words, rain hint, one-line text. */
-import type { tWeather } from './strings';
+import type { tWeather } from '@/strings.weather';
 
 export type CodeGroup = keyof typeof tWeather.de.codes;
 

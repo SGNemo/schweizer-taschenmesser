@@ -1,5 +1,5 @@
 import { useWeather } from '@/core/weather/useWeather';
-import { tWeather } from '@/core/weather/strings';
+import { tWeather } from '@/strings.weather';
 import styles from './Home.module.css';
 
 /**

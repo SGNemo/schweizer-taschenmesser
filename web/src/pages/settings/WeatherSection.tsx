@@ -7,7 +7,7 @@ import {
   setWeatherEnabled,
   useWeatherSettings,
 } from '@/core/weather/settings';
-import { tWeather } from '@/core/weather/strings';
+import { tWeather } from '@/strings.weather';
 import { Button, Switch, TextField, SettingRow } from '@/ui';
 import styles from './settings.module.css';
 

@@ -47,7 +47,7 @@ import { ReadingSection } from './ReadingSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
 import { VoiceSection } from './VoiceSection';
 import { WeatherSection } from './WeatherSection';
-import { tWeather } from '@/core/weather/strings';
+import { tWeather } from '@/strings.weather';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
 import { ToolsSection } from './ToolsSection';
