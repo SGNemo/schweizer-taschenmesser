@@ -39,6 +39,7 @@ function KeyField({ value, onChange }: { value: string; onChange: (key: string) 
           onBlur={() => setRecording(false)}
           aria-label={t.voice.keyRecord}
           data-testid="voice-key-record"
+          data-hotkey-recording={recording || undefined}
         >
           {recording ? t.voice.keyRecording : value ? keyCaps(value).join(' + ') : t.voice.keyOff}
         </Button>{' '}

@@ -155,3 +155,16 @@ test('the shortcut sheet lists the voice key once voice input is on', async ({ p
     'Sprechen (halten oder tippen)',
   );
 });
+
+test('while a key is being recorded, the old voice key does not start a recording', async ({
+  page,
+}) => {
+  await mockRecognition(page);
+  await enableVoice(page);
+  const record = page.getByTestId('voice-key-record');
+  await record.click();
+  await expect(record).toContainText('Taste drücken');
+  await page.keyboard.press('F4');
+  await expect(record).toContainText('F4');
+  await expect(page.getByTestId('voice-pill')).toHaveCount(0);
+});

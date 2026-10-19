@@ -19,11 +19,6 @@ export const voice: Strings['voice'] = {
   globalKey: 'System-wide key',
   globalHint:
     'Also works while Nemo is in the background: one press starts, the next one ends the recording.',
-  globalErrors: {
-    invalid: 'This key combination is not understood.',
-    taken: 'Another program already uses this key combination.',
-    failed: 'The key could not be set.',
-  },
   noticeTitle: 'Switch on voice input?',
   noticeText:
     'To recognise speech, your browser or system may send the audio to its provider, for example Google or Microsoft. Nemo stores neither audio nor recognised text, writes nothing to logs and passes nothing to the AI until you send it yourself. The language follows the app language.',

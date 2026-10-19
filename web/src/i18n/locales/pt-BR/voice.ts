@@ -19,11 +19,6 @@ export const voice: Strings['voice'] = {
   globalKey: 'Tecla do sistema',
   globalHint:
     'Também vale com o Nemo em segundo plano: um toque inicia e o próximo termina a gravação.',
-  globalErrors: {
-    invalid: 'Esta combinação de teclas não é compreendida.',
-    taken: 'Outro programa já usa esta combinação de teclas.',
-    failed: 'Não foi possível definir a tecla.',
-  },
   noticeTitle: 'Ativar a entrada de voz?',
   noticeText:
     'Para reconhecer a fala, seu navegador ou sistema pode enviar o áudio ao provedor, por exemplo Google ou Microsoft. O Nemo não guarda nem o áudio nem o texto reconhecido, não escreve nada em registros e não passa nada à IA até você enviar. O idioma segue o idioma do app.',

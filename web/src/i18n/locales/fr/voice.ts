@@ -20,11 +20,6 @@ export const voice: Strings['voice'] = {
   globalKey: 'Touche système',
   globalHint:
     'Fonctionne aussi quand Nemo est en arrière-plan : un appui démarre, le suivant termine l’enregistrement.',
-  globalErrors: {
-    invalid: 'Cette combinaison de touches n’est pas comprise.',
-    taken: 'Un autre programme utilise déjà cette combinaison de touches.',
-    failed: 'La touche n’a pas pu être définie.',
-  },
   noticeTitle: 'Activer la saisie vocale ?',
   noticeText:
     'Pour reconnaître la voix, votre navigateur ou votre système peut envoyer le son à son fournisseur, par exemple Google ou Microsoft. Nemo ne conserve ni le son ni le texte reconnu, n’écrit rien dans les journaux et ne transmet rien à l’IA tant que vous n’envoyez pas vous-même. La langue suit celle de l’app.',
