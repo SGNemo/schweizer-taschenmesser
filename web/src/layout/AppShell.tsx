@@ -27,6 +27,7 @@ import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
+import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useNavTree } from './useNavItems';
 import { useShortcuts } from './useShortcuts';
 import { useVoiceKey } from './voice/useVoiceKey';
@@ -108,6 +109,8 @@ export function AppShell() {
   const overflowAreas = tree.areas.slice(BOTTOM_AREA_SLOTS);
   // A focus screen (`/<module>/focus/…`) shows one thing: no menus, no quick add, no banners.
   const focusing = isFocusPath(location.pathname);
+  // A page with its own add field has no use for the round quick-add button.
+  const hideFab = usePageChromeStore((s) => s.chrome.hideFab);
 
   return (
     <div className={styles.shell} data-rail={rail} data-focus={focusing ? 'true' : undefined}>
@@ -143,7 +146,9 @@ export function AppShell() {
       {focusing ? null : (
         <>
           <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />
-          <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
+          {hideFab ? null : (
+            <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
+          )}
           <QuickAdd />
           <ShortcutSheet />
           <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />

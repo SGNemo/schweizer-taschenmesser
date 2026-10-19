@@ -14,6 +14,8 @@ export interface GroupedListGroup {
   children: ReactNode;
   /** Mark urgent groups (overdue): the header gets the danger tone, always with its text. */
   tone?: 'overdue' | 'today';
+  /** A group-level action ("Neu planen") shown at the top of the open group. */
+  action?: ReactNode;
 }
 
 /**
@@ -57,6 +59,7 @@ export function GroupedList({
               </button>
             </h2>
             <div id={bodyId} hidden={!open} className={styles.body}>
+              {g.action}
               {g.children}
             </div>
           </section>

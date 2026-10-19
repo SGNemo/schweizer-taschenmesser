@@ -32,3 +32,18 @@ Same seeded Dev build, medium data. Tool: `web/e2e/screenshots/measure-focus.spe
 - Widget title links are now 44 px high; the card shows no per-appointment links (one "Alle Termine" link).
 - Tests: `modules/todos/today.test.ts`, `home/layout.test.ts` (pinned, folding, migration of an old record), `home/home.test.tsx` (stored record without `pinned`), `e2e/today.spec.ts` (desktop + pixel-7). Specs that expected the three old blocks now check the card; the ones that expected the plan row of the suggested task use a second planned task.
 - Open for 2b: the ToDo page (calm layout, "Wartet noch" once, no FAB where there is an add field).
+
+## Package 2b – ToDo page (`feat/focus2-todos`)
+Same tool and data as 2a (`img/before2-*` = state before 2b, `img/after2b-*`). Honest reading: the first screen is calmer, the whole page is not shorter, because the waiting group now shows a move button per row.
+
+| Metric (ToDos) | Before 2b | After 2b |
+|---|---|---|
+| Phone, actions on the first screen | 44 | **37** |
+| Desktop, actions on the first screen | 74 | **50** |
+| Phone, page height | 3382 px | 3601 px |
+| Phone, buttons / links / icons | 108 / 10 / 60 | 107 / 10 / 58 |
+| Phone, elements counted under 44 px | 47 | 55 (8 "Auf heute" buttons look 32 px and keep a 44 px hit area) |
+
+- Above the first task: add field + one "⋯" (list filter, "Neue Liste", "Erweitert", "Mit KI eintragen"); no chips, no round "+" button, no separate "Wartet noch" card.
+- Tests: `ui/rowMenuChecked.test.tsx`, `core/shell/pageChrome.test.tsx`, `e2e/todos-calm.spec.ts` (desktop + pixel-7); specs that used the chips, the "Erweitert" switch or the AI button now go through the menu (`openTodosMenu`, `pickTodosList` in `e2e/helpers.ts`).
+- Not done (package 3): snooze on every row, not only the waiting ones; other pages with an add field keep the round button.

@@ -70,3 +70,21 @@ export async function openMoreFocus(page: Page) {
   const more = page.getByTestId('focus-more');
   if ((await more.getAttribute('open')) === null) await more.locator('summary').click();
 }
+
+/**
+ * The "⋯" menu of the ToDos page (list filter, "Neue Liste", "Erweitert", "Mit KI eintragen"):
+ * opens it and returns the menu. Pick an entry with `getByRole('menuitem' | 'menuitemcheckbox', …)`.
+ */
+export async function openTodosMenu(page: Page) {
+  const menu = page.getByRole('menu', { name: 'Weitere Optionen' });
+  if (!(await menu.isVisible()))
+    await page.getByRole('button', { name: 'Weitere Optionen' }).click();
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
+/** Shows one list of the ToDos page through the "⋯" menu ("Irgendwann", "Eingang", a list name). */
+export async function pickTodosList(page: Page, name: string) {
+  const menu = await openTodosMenu(page);
+  await menu.getByRole('menuitemcheckbox', { name, exact: true }).click();
+}
