@@ -93,6 +93,10 @@ describe('resolveKeys', () => {
     expect(resolved.quickAdd).toBe('F2');
     expect(resolved.settings).toBe('');
     expect(holderOf({ keys: { settings: 'F2' } }, 'F2')).toBe('quickAdd');
+    // With the voice key given, the action that key suppresses is not a holder (re-recording it
+    // for voice must not be refused with "F8 gehört schon zu Timer"), other defaults still are.
+    expect(holderOf({ keys: {} }, 'F8', 'F8')).toBeUndefined();
+    expect(holderOf({ keys: {} }, 'F9', 'F8')).toBe('tool:calc');
   });
 });
 

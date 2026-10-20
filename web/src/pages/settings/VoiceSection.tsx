@@ -103,7 +103,8 @@ export function VoiceSection() {
             value={prefs.key}
             onChange={(key) => writeVoicePrefs({ key })}
             check={(key) => {
-              const holder = holderOf(shortcuts, key);
+              // The current voice key already suppresses the action it sits on: re-recording it is free.
+              const holder = holderOf(shortcuts, key, prefs.key);
               const tx = tKeys.get();
               return holder ? tx.voiceTaken(key, actionLabel(holder)) : undefined;
             }}
