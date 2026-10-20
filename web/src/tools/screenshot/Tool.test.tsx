@@ -98,6 +98,23 @@ describe('ScreenshotTool', () => {
     await waitFor(() => expect(capture.shareImage).toHaveBeenCalled());
   });
 
+  it('closing the sheet during the pause ends the capture and keeps no picture', async () => {
+    let opts: { cancelled: () => boolean } | undefined;
+    capture.captureFrame.mockImplementation(async (o: { cancelled: () => boolean }) => {
+      opts = o;
+      await new Promise((r) => setTimeout(r, 20)); // a frame still arrives after the sheet closed
+      return shot;
+    });
+    const { unmount } = render(<ScreenshotTool />);
+    fireEvent.click(screen.getByRole('button', { name: 'Bildschirm aufnehmen' }));
+    await waitFor(() => expect(opts).toBeDefined());
+    expect(opts!.cancelled()).toBe(false);
+    unmount();
+    expect(opts!.cancelled()).toBe(true);
+    await new Promise((r) => setTimeout(r, 40));
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
   it('copies through the clipboard helper', async () => {
     capture.captureFrame.mockResolvedValue(shot);
     capture.copyImage.mockResolvedValue(true);

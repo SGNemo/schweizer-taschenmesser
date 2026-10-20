@@ -5,7 +5,7 @@ Tool in `web/src/tools/screenshot/` (group extra, **off by default**, order 170)
 ## Flow
 - `capture.ts` `captureFrame`: `getDisplayMedia({ video: true, audio: false })` → one frame on a canvas → PNG blob; the stream is stopped at once. The browser asks for permission every time.
 - Optional pause (checkbox, 3 s): starts **after** the source is picked, so the user can switch to the window. Calm text counter ("Aufnahme in 3 …"), no animation (reduced motion needs nothing), "Abbrechen" stops it.
-- Result: preview, then **Kopieren** (Web `ClipboardItem` `image/png`), **Speichern** (`getPlatform().saveFile`: download in the browser, dialog in the desktop app), **Teilen** (`navigator.share` with a file, button only where `canShare` says yes), **Verwerfen**.
+- Result: preview, then **Kopieren** (Web `ClipboardItem` `image/png`), **Speichern** (`getPlatform().saveFile`: download in the browser, dialog in the desktop app), **Teilen** (`navigator.share` with a file, button only where `canShare({ files })` accepts this PNG; many desktop browsers share text only), **Verwerfen**.
 - No history, no automatic storage: the picture lives in memory (object URL, revoked on discard) until an action. It never goes into diagnostics or error reports and is never sent anywhere.
 - Clipboard: `getPlatform().clipboard` has text only; an image method would touch the platform seam (hotspot), so the Web API is used on every platform.
 
