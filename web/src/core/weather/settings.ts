@@ -5,6 +5,7 @@
  */
 import { z } from 'zod';
 import { getSettings, setSettings, useSettings } from '@/core/settings/settings';
+import { clearCache } from './cache';
 
 export const WEATHER_SCOPE = 'weather';
 
@@ -38,5 +39,8 @@ export async function chooseWeatherPlace(place: string, lat: number, lon: number
 export const setWeatherEnabled = (enabled: boolean): Promise<void> =>
   setSettings(WEATHER_SCOPE, { enabled });
 
-export const clearWeatherPlace = (): Promise<void> =>
-  setSettings(WEATHER_SCOPE, { place: '', lat: 0, lon: 0 });
+/** Removes the place and the device-local forecast of it. */
+export function clearWeatherPlace(): Promise<void> {
+  clearCache();
+  return setSettings(WEATHER_SCOPE, { place: '', lat: 0, lon: 0 });
+}
