@@ -2,6 +2,7 @@
  * Open-Meteo (free, no key, CORS enabled): place search and a short forecast. Nothing but a place name
  * (search) or a rounded position (forecast) is sent. Failures throw `WeatherError`; the caller stays calm.
  */
+import { z } from 'zod';
 import { getLang } from '@/core/i18n/lang';
 import { codeGroup, rainFrom, type CodeGroup } from './logic';
 
@@ -31,6 +32,36 @@ export interface Forecast {
 
 type Fetch = typeof fetch;
 
+const placesSchema = z.object({
+  results: z
+    .array(
+      z.object({
+        name: z.string(),
+        admin1: z.string().optional(),
+        country: z.string().optional(),
+        latitude: z.number(),
+        longitude: z.number(),
+      }),
+    )
+    .optional(),
+});
+
+const forecastSchema = z.object({
+  current: z.object({ time: z.string(), temperature_2m: z.number(), weather_code: z.number() }),
+  hourly: z
+    .object({
+      time: z.array(z.string()),
+      precipitation_probability: z.array(z.number().nullable()),
+    })
+    .optional(),
+});
+
+function parse<T>(schema: z.ZodType<T>, body: unknown): T {
+  const out = schema.safeParse(body);
+  if (!out.success) throw new WeatherError('shape');
+  return out.data;
+}
+
 async function getJson(url: string, f: Fetch): Promise<unknown> {
   try {
     const res = await f(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
@@ -48,15 +79,7 @@ export async function searchPlaces(query: string, f: Fetch = fetch): Promise<Pla
   const name = query.trim();
   if (name.length < 2) return [];
   const url = `${GEOCODING_URL}?${new URLSearchParams({ name, count: '5', language: apiLang(), format: 'json' })}`;
-  const body = (await getJson(url, f)) as {
-    results?: {
-      name: string;
-      admin1?: string;
-      country?: string;
-      latitude: number;
-      longitude: number;
-    }[];
-  };
+  const body = parse(placesSchema, await getJson(url, f));
   return (body.results ?? []).map((r) => ({
     label: [r.name, r.admin1 && r.admin1 !== r.name ? r.admin1 : undefined, r.country]
       .filter(Boolean)
@@ -75,22 +98,11 @@ export async function fetchForecast(lat: number, lon: number, f: Fetch = fetch):
     timezone: 'auto',
     forecast_days: '1',
   })}`;
-  const body = (await getJson(url, f)) as {
-    current?: { time: string; temperature_2m: number; weather_code: number };
-    hourly?: { time: string[]; precipitation_probability: (number | null)[] };
-  };
-  const c = body.current;
-  if (!c || typeof c.temperature_2m !== 'number' || typeof c.weather_code !== 'number')
-    throw new WeatherError('shape');
+  const { current: c, hourly } = parse(forecastSchema, await getJson(url, f));
   const group = codeGroup(c.weather_code);
   return {
     temp: Math.round(c.temperature_2m),
     group,
-    rainFrom: rainFrom(
-      body.hourly?.time ?? [],
-      body.hourly?.precipitation_probability ?? [],
-      c.time,
-      group,
-    ),
+    rainFrom: rainFrom(hourly?.time ?? [], hourly?.precipitation_probability ?? [], c.time, group),
   };
 }

@@ -8,3 +8,4 @@
 | [repeat-reminders.md](repeat-reminders.md) | Ruhig wiederholen: unanswered reminders come back until Erledigt/Später, with calm limits |
 | [focus-aids.md](focus-aids.md) | Fokus- und Aufmerksamkeitshilfen: Diagnose, Entscheidungen, Pakete 1–4, Mockups |
 | [game-mode.md](game-mode.md) | Zock-Modus: leise Erinnerungen im Vollbild-Spiel, eigener Ton, Erkennung nur Ja/Nein |
+| [weather.md](weather.md) | Wetterzeile auf der Übersicht: Verhalten, Cache, was das Gerät verlässt, CORS |
