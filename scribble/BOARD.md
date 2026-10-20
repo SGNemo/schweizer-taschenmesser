@@ -15,6 +15,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - 2026-10-17 · `chore/chat-scribble` · example: "`core/notifications/policy.ts` until PR is in; additive fields only please."
 
 ## Parking (ideas, findings outside scope)
+- 2026-10-19 · `feat/screenshot-tool` · If the Windows app (WebView2) cannot do `getDisplayMedia` (hand test B1 in MANUAL-TESTS), a Rust screen capture would be a new Cargo dependency: maintainer's decision, not built. Details: `docs/features/screenshot.md`.
 - 2026-10-17 · `feat/voice-ptt` · `npm run chats:status` crashes on the remote branch `alert-autofix-1` (`git merge-base origin/develop origin/alert-autofix-1` exits 1, no common history); the script should skip branches without a merge base.
 - [x] 2026-10-19 · `feat/settings-appearance-fold` · done: Darstellung is grouped (PR, see 12-results-2.md "Darstellung"). example: "Settings → Darstellung could be grouped (6945 px on the phone), see docs/product/focus/11-plan-2.md."
 - 2026-10-17 · `feat/gaming-quiet-reminders` · `web/scripts/chats-status.mjs` fails with "git merge-base … origin/alert-autofix-1" when a branch shares no history (shallow clone); needs a try/catch. Details: `scribble/feat-gaming-quiet-reminders.md`.
