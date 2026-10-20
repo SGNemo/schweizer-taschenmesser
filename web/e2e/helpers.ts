@@ -71,6 +71,16 @@ export async function openMoreFocus(page: Page) {
   if ((await more.getAttribute('open')) === null) await more.locator('summary').click();
 }
 
+/** Opens one folded group of Einstellungen → Darstellung (`theme`, `colors`, `text`, `motion`, `other`). */
+export async function openAppearanceGroup(
+  page: Page,
+  id: 'theme' | 'colors' | 'text' | 'motion' | 'other',
+) {
+  const group = page.getByTestId(`appearance-group-${id}`);
+  if ((await group.getAttribute('open')) === null) await group.locator('summary').click();
+  await expect(group).toHaveAttribute('open', '');
+}
+
 /**
  * The "⋯" menu of the ToDos page (list filter, "Neue Liste", "Erweitert", "Mit KI eintragen"):
  * opens it and returns the menu. Pick an entry with `getByRole('menuitem' | 'menuitemcheckbox', …)`.

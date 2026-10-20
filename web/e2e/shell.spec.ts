@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { enable, mainNav, ready } from './helpers';
+import { enable, mainNav, ready, openAppearanceGroup } from './helpers';
 
 test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test.skip(({ isMobile }) => isMobile, 'sidebar is a desktop feature');
@@ -87,6 +87,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
     page,
   }) => {
     await ready(page, '/settings/darstellung');
+    await openAppearanceGroup(page, 'other');
     await page
       .getByRole('group', { name: 'Seitenleiste' })
       .getByRole('button', { name: 'Schmal' })

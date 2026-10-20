@@ -103,6 +103,16 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'A visão geral tranquila mostra só “Agora”, “A seguir” e “Hoje e amanhã”. Todo o resto está a um toque.',
   },
+  appearanceGroups: {
+    change: 'Alterar',
+    done: 'Pronto',
+    line: (name: string, value: string) => `${name}: ${value}`,
+    theme: 'Tema',
+    colors: 'Cores',
+    text: 'Texto e leitura',
+    motion: 'Movimento',
+    other: 'Outros',
+  },
   modulesOverview: {
     title: 'Gerenciar módulos',
     description:
