@@ -34,12 +34,7 @@ export function WeatherLine() {
         : undefined,
     ].filter(Boolean);
     return (
-      <Link
-        to={SETTINGS}
-        className={styles.weather}
-        data-testid="weather-line"
-        aria-label={tx.line}
-      >
+      <Link to={SETTINGS} className={styles.weather} data-testid="weather-line">
         <Icon name="sun" size={16} />
         <span>{parts.join(' · ')}</span>
       </Link>

@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { now } from '@/core/time/now';
 import { fetchForecast, type Forecast } from './api';
-import { cacheKey, isFresh, readCache, shouldFetch, writeCache } from './cache';
+import {
+  cacheKey,
+  isFresh,
+  noteTried,
+  readCache,
+  readTried,
+  shouldFetch,
+  writeCache,
+} from './cache';
 import { isWeatherActive, useWeatherSettings } from './settings';
 
 export interface WeatherView {
@@ -10,6 +18,18 @@ export interface WeatherView {
   /** Epoch ms of the values; the line shows "Stand hh:mm" when they are older than the cache lifetime. */
   at: number;
   stale: boolean;
+}
+
+/** One request per place at a time: a second mount while it runs shares it instead of asking again. */
+let inflight: { key: string; promise: Promise<Forecast> } | undefined;
+
+function request(key: string, lat: number, lon: number): Promise<Forecast> {
+  if (inflight?.key === key) return inflight.promise;
+  const promise = fetchForecast(lat, lon).finally(() => {
+    if (inflight?.promise === promise) inflight = undefined;
+  });
+  inflight = { key, promise };
+  return promise;
 }
 
 /**
@@ -29,16 +49,16 @@ export function useWeather(): WeatherView | undefined {
 
   useEffect(() => {
     const online = typeof navigator === 'undefined' || navigator.onLine !== false;
-    if (!active || !shouldFetch(cached, key, now(), online)) return;
+    if (!active || !shouldFetch(cached, key, now(), online, readTried())) return;
     let alive = true;
-    fetchForecast(lat, lon)
+    request(key, lat, lon)
       .then((f) => {
         if (!alive) return;
         const at = now();
         writeCache({ key, at, forecast: f });
         setFetched({ key, forecast: f, at });
       })
-      .catch(() => undefined);
+      .catch(() => noteTried({ key, at: now() }));
     return () => {
       alive = false;
     };

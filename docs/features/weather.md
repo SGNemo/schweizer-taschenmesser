@@ -5,7 +5,7 @@ One calm line on the Overview: place, temperature now, a few words, a rain hint 
 ## Behaviour
 - Default **on**, but nothing is shown or requested until a place is chosen. Without a place one quiet hint "Wetter: Stadt wählen" appears; "Später nicht mehr" ends it (device-local `tm-weather-hint`), after that only the settings offer it.
 - The line is one element (icon + text, no colour, no motion); a tap opens the settings. Not shown when switched off or when nothing was ever fetched; never an error banner.
-- Cache: device-local `localStorage` `tm-weather` (`core/weather/cache.ts`, clock `now()`): at most one request per place and 30 min, **none while offline** (`navigator.onLine`), values older than 30 min stay visible with "Stand hh:mm" (rain hint dropped, it would be stale). Removing the place clears the cache.
+- Cache: device-local `localStorage` `tm-weather` (`core/weather/cache.ts`, clock `now()`): at most one request per place and 30 min, **none while offline** (`navigator.onLine`), values older than 30 min stay visible with "Stand hh:mm" (rain hint dropped, it would be stale). A failed request is remembered (`tm-weather-tried`): no retry for 5 min, and one request per place at a time. Removing the place clears both.
 - Search runs on Enter/button, never per key; up to 5 hits (name, region, country).
 
 ## What leaves the device (and what does not)
