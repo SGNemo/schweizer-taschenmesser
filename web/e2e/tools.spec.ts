@@ -123,7 +123,8 @@ test('the palette lists tools and Ctrl+. toggles the sheet', async ({ page }, in
   await expect(page.locator('main h1')).toBeVisible();
   await page.keyboard.press('Control+k');
   await page.getByRole('combobox').fill('Werkzeug: Rechner');
-  await page.getByRole('option', { name: 'Werkzeug: Rechner', exact: true }).click();
+  // The option also names its keys ("… F9 T R"), so match the start of the name.
+  await page.getByRole('option', { name: /^Werkzeug: Rechner/ }).click();
   await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
   await page.keyboard.press('Control+.');
   await expect(page.getByRole('dialog')).toHaveCount(0);

@@ -51,7 +51,11 @@ test('search finds a setting by its description, jumps there and highlights it',
 }) => {
   await ready(page, '/settings');
   await page.getByRole('searchbox', { name: 'Einstellungen durchsuchen' }).fill('Tastenkürzel');
-  const hit = page.getByRole('link', { name: /Tastenkürzel/ }).first();
+  // "Tastenkürzel" is also a section of its own (Allgemein); the hit under Schnellerfassung is the hotkey.
+  const hit = page
+    .getByRole('link', { name: /Tastenkürzel/ })
+    .filter({ hasText: 'Schnellerfassung' })
+    .first();
   await expect(hit).toContainText('Schnellerfassung');
   await hit.click();
   await expect(page).toHaveURL(/\/settings\/schnellerfassung#quickcapture--hotkey$/);
@@ -85,7 +89,10 @@ test('the command palette reaches a single setting', async ({ page }, info) => {
   await ready(page, '/');
   await page.keyboard.press('Control+k');
   await page.getByRole('combobox').fill('Einstellung: Tastenkürzel');
-  await page.keyboard.press('Enter');
+  await page
+    .getByRole('option', { name: /^Tastenkürzel.*Schnellerfassung/ })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/settings\/schnellerfassung#quickcapture--hotkey$/);
 });
 

@@ -282,3 +282,8 @@ M2. *Web Push:* gleiche Prüfung mit geschlossener App und eingerichtetem Push: 
 M3. *Extras:* gestaffelte Erinnerung oder Tagesübersicht fällt in die Pause: kommt erst nach deren Ende. ☐
 M4. *Desktop:* Karte in der App erscheint wie sonst; der Ton der Windows-Benachrichtigung bleibt (bekannte Grenze). ☐
 
+
+### Tastenkürzel (Kürzelkarte)
+K1. *Windows-App:* `T` dann `T` öffnet den Timer; F8 ebenso, auch mit dem Cursor in einem Textfeld (nichts wird getippt). F10 öffnet nur die Einstellungen, kein Fenstermenü. ☐
+K2. *Umbelegen:* Einstellungen → Allgemein → Tastenkürzel: eine belegte Taste wird mit Text abgelehnt, F5/F11/F12 ebenso; nach „Entfernen“ bei Rechner lässt sich F9 für „Heute“ vergeben und wirkt sofort. ☐
+K3. *Handy:* der Abschnitt lässt sich nur mit Fingertipp bedienen („Entfernen“, „Standard“). ☐

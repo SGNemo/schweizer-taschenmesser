@@ -29,6 +29,7 @@ const CORE_KEYS = {
     'tm-nav-closed': '[]',
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard',
     'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
+    'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
   },
   '_settings scope core': { displayName: '', weekStart: 'mon' },
   '_settings scope supporter': {

@@ -91,7 +91,7 @@ function Body({
   }, [data, link]);
 
   return (
-    <div className={styles.detail} ref={root}>
+    <div className={styles.detail} ref={root} data-shortcut-scope="entry">
       {data.username ? (
         <div className={styles.detailRow}>
           <span>

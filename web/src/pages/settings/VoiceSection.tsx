@@ -1,27 +1,35 @@
-import { useState, type KeyboardEvent } from 'react';
+import { useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { applyVoiceHotkey } from '@/core/voice/hotkey';
-import { isValidVoiceKey, keyCaps, keyString } from '@/core/voice/keys';
+import { actionLabel } from '@/core/keyboard/labels';
+import { holderOf } from '@/core/keyboard/map';
+import { useShortcutPrefs } from '@/core/keyboard/prefs';
+import { isValidVoiceKey, keyCaps } from '@/core/voice/keys';
 import { DEFAULT_VOICE_KEY, useVoicePrefs, writeVoicePrefs } from '@/core/voice/settings';
 import { voiceSupport } from '@/core/voice/support';
 import { t } from '@/strings';
-import { Button, Card, Dialog, Switch } from '@/ui';
+import { tKeys } from '@/strings.keys';
+import { Button, Card, Dialog, KeyRecorder, Switch } from '@/ui';
 import { HotkeyField } from './QuickCaptureSection';
 import styles from './settings.module.css';
 
 /** In-app voice key: press the key you want (F1–F12, or a key with Ctrl/Alt). */
-function KeyField({ value, onChange }: { value: string; onChange: (key: string) => void }) {
-  const [recording, setRecording] = useState(false);
+function KeyField({
+  value,
+  onChange,
+  check,
+}: {
+  value: string;
+  onChange: (key: string) => void;
+  /** Error text when the key belongs to another action (the key map), else undefined. */
+  check: (key: string) => string | undefined;
+}) {
   const [error, setError] = useState('');
 
-  function onKey(e: KeyboardEvent<HTMLButtonElement>) {
-    if (!recording) return;
-    e.preventDefault();
-    if (e.key === 'Escape') return setRecording(false);
-    const key = keyString(e);
-    if (!key) return;
-    setRecording(false);
+  function onRecord(key: string) {
     if (!isValidVoiceKey(key)) return setError(t.voice.keyInvalid);
+    const taken = check(key);
+    if (taken) return setError(taken);
     setError('');
     onChange(key);
   }
@@ -30,19 +38,16 @@ function KeyField({ value, onChange }: { value: string; onChange: (key: string) 
     <div>
       <span className={styles.muted}>{t.voice.key}</span>
       <div>
-        <Button
-          onClick={() => {
-            setError('');
-            setRecording(true);
-          }}
-          onKeyDown={onKey}
-          onBlur={() => setRecording(false)}
-          aria-label={t.voice.keyRecord}
-          data-testid="voice-key-record"
-          data-hotkey-recording={recording || undefined}
-        >
-          {recording ? t.voice.keyRecording : value ? keyCaps(value).join(' + ') : t.voice.keyOff}
-        </Button>{' '}
+        <KeyRecorder
+          value={value}
+          onRecord={onRecord}
+          onStart={() => setError('')}
+          display={(v) => keyCaps(v).join(' + ')}
+          recordingText={t.voice.keyRecording}
+          emptyText={t.voice.keyOff}
+          ariaLabel={t.voice.keyRecord}
+          testId="voice-key-record"
+        />{' '}
         {value !== DEFAULT_VOICE_KEY ? (
           <Button onClick={() => onChange(DEFAULT_VOICE_KEY)}>
             {t.voice.keyDefault} ({DEFAULT_VOICE_KEY})
@@ -67,6 +72,7 @@ function KeyField({ value, onChange }: { value: string; onChange: (key: string) 
 /** Settings → "Schnellerfassung" → Spracheingabe: off by default, privacy notice on first use. */
 export function VoiceSection() {
   const prefs = useVoicePrefs();
+  const shortcuts = useShortcutPrefs();
   const desktop = getPlatform().desktop;
   const supported = voiceSupport().ok;
   const [asking, setAsking] = useState(false);
@@ -93,7 +99,15 @@ export function VoiceSection() {
       />
       {prefs.enabled && supported ? (
         <>
-          <KeyField value={prefs.key} onChange={(key) => writeVoicePrefs({ key })} />
+          <KeyField
+            value={prefs.key}
+            onChange={(key) => writeVoicePrefs({ key })}
+            check={(key) => {
+              const holder = holderOf(shortcuts, key);
+              const tx = tKeys.get();
+              return holder ? tx.voiceTaken(key, actionLabel(holder)) : undefined;
+            }}
+          />
           {desktop.supported ? (
             <HotkeyField
               label={t.voice.globalKey}
