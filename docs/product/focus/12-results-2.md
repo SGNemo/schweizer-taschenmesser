@@ -66,10 +66,10 @@ Same tool, same seeded Dev build; baseline = `develop` after package 1. Screensh
 | Metric (Settings → Darstellung, phone 412×915) | Before | After |
 |---|---|---|
 | Page height | 6945 px (audit) / 5831 px (after package 1) | **4424 px** |
-| "Darstellung" card | ten rows, about 1660 px | five lines (Thema, Farben, Schrift & Lesen, Bewegung, Sonstiges), about 255 px |
+| "Darstellung" card | eleven rows, about 1660 px | five lines (Thema, Farben, Schrift & Lesen, Bewegung, Sonstiges), about 255 px |
 | Actions on the first screen | 20 | 38 (five "Ändern" lines instead of long pickers; the count includes the page header) |
 | Stored settings | 77 / 27 | unchanged (no key removed, no default changed) |
 
-- Each group is one line with the current choice ("Thema: Hell · Ändern"); "Ändern" opens the pickers, "Fertig" closes. Deep links (`#darstellung--density`, search, palette) open the surrounding group.
+- Each group is one line with the current choice ("Thema: Hell · Ändern"); "Ändern" opens the pickers, "Fertig" closes. Deep links (`#appearance--density`, search, palette) open the surrounding group.
 - The remaining height is the other sections of the category (Lesen, Fokus & Aufmerksamkeit, Wetter, …), which this package does not touch; a further cut needs the same treatment there.
-- Tests: `AppearanceSection.test.tsx` (current choice shown, "Ändern" opens, all ten fields stay in a group), `e2e/comfort-settings.spec.ts` (switch the theme through the group, keyboard, deep link opens the group; desktop + pixel-7); the specs that click an appearance control open its group first (`openAppearanceGroup`).
+- Tests: `AppearanceSection.test.tsx` (current choice shown, "Ändern" opens, all eleven fields stay in a group), `e2e/comfort-settings.spec.ts` (switch the theme through the group, keyboard, deep link opens the group; desktop + pixel-7); the specs that click an appearance control open its group first (`openAppearanceGroup`).
