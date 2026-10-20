@@ -17,6 +17,8 @@ import {
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { useSyncStatus } from '@/core/sync/status';
+import { cacheKey, writeCache } from '@/core/weather/cache';
+import { chooseWeatherPlace } from '@/core/weather/settings';
 import todosManifest from '@/modules/todos/manifest';
 import { buildDiagnostics, describeOs, renderDiagnostics } from './export';
 import { issueUrl, mailtoUrl } from './report';
@@ -132,6 +134,10 @@ const CANARIES = {
   server: 'secret-sync.example.test',
   path: 'C:\\Users\\Erika\\Documents',
   homePath: '/home/erika/Dokumente',
+  // Weather place (settings + device-local cache): name and position never leave in a report.
+  weatherPlace: 'Geheimstadt-im-Wetter, Nirgendwo',
+  weatherLat: '47.3769',
+  weatherLon: '8.5417',
 };
 
 describe('diagnostics export', () => {
@@ -157,6 +163,16 @@ describe('diagnostics export', () => {
     );
     await lists.create({ name: CANARIES.entry, order: 0 } as never);
     useSyncStatus.setState({ phase: 'idle', server: CANARIES.server, encrypted: true });
+    await chooseWeatherPlace(
+      CANARIES.weatherPlace,
+      Number(CANARIES.weatherLat),
+      Number(CANARIES.weatherLon),
+    );
+    writeCache({
+      key: cacheKey(Number(CANARIES.weatherLat), Number(CANARIES.weatherLon)),
+      at: 1,
+      forecast: { temp: 7, group: 'rain' },
+    });
     recordError(
       'sync',
       new Error(

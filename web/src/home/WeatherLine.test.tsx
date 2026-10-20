@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
+import { setNow } from '@/core/time/now';
+import { WEATHER_TTL_MS } from '@/core/weather/cache';
 import { chooseWeatherPlace, setWeatherEnabled } from '@/core/weather/settings';
 import { WeatherLine } from './WeatherLine';
 
@@ -18,13 +21,21 @@ beforeEach(async () => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  setNow();
 });
+
+const renderLine = () =>
+  render(
+    <MemoryRouter>
+      <WeatherLine />
+    </MemoryRouter>,
+  );
 
 describe('WeatherLine', () => {
   it('shows nothing and asks nothing without a chosen place', async () => {
     const f = vi.fn();
     vi.stubGlobal('fetch', f);
-    render(<WeatherLine />);
+    renderLine();
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.queryByTestId('weather-line')).toBeNull();
     expect(f).not.toHaveBeenCalled();
@@ -36,7 +47,7 @@ describe('WeatherLine', () => {
       vi.fn(async () => new Response(JSON.stringify(forecastBody), { status: 200 })),
     );
     await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
-    render(<WeatherLine />);
+    renderLine();
     await waitFor(() =>
       expect(screen.getByTestId('weather-line')).toHaveTextContent(
         'Bern · 14° leicht bewölkt · ab 15 Uhr Regen',
@@ -50,16 +61,63 @@ describe('WeatherLine', () => {
     });
     vi.stubGlobal('fetch', f);
     await chooseWeatherPlace('Bern, Schweiz', 46.95, 7.45);
-    render(<WeatherLine />);
+    renderLine();
     await waitFor(() => expect(f).toHaveBeenCalled());
     expect(screen.queryByTestId('weather-line')).toBeNull();
 
     cleanup();
     f.mockClear();
     await setWeatherEnabled(false);
-    render(<WeatherLine />);
+    renderLine();
     await new Promise((r) => setTimeout(r, 50));
     expect(f).not.toHaveBeenCalled();
     expect(screen.queryByTestId('weather-line')).toBeNull();
+  });
+
+  it('offers one quiet hint without a place; "Später nicht mehr" ends it for good', async () => {
+    const f = vi.fn();
+    vi.stubGlobal('fetch', f);
+    renderLine();
+    const hint = await screen.findByTestId('weather-hint');
+    expect(hint).toHaveTextContent('Wetter: Stadt wählen');
+    fireEvent.click(screen.getByRole('button', { name: 'Später nicht mehr' }));
+    expect(screen.queryByTestId('weather-hint')).toBeNull();
+    expect(localStorage.getItem('tm-weather-hint')).toBe('off');
+    cleanup();
+    renderLine();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByTestId('weather-hint')).toBeNull();
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('shows no hint when the switch is off', async () => {
+    await setWeatherEnabled(false);
+    renderLine();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByTestId('weather-hint')).toBeNull();
+  });
+
+  it('offline: asks nothing and shows the old values with "Stand hh:mm"', async () => {
+    const t0 = new Date(2026, 9, 19, 10, 5).getTime();
+    setNow(() => t0);
+    localStorage.setItem(
+      'tm-weather',
+      JSON.stringify({
+        key: '46.95,7.45',
+        at: t0 - 2 * WEATHER_TTL_MS,
+        forecast: { temp: 9, group: 'rain', rainFrom: '15' },
+      }),
+    );
+    const f = vi.fn();
+    vi.stubGlobal('fetch', f);
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    await chooseWeatherPlace('Bern, Schweiz', 46.95, 7.45);
+    renderLine();
+    await waitFor(() =>
+      expect(screen.getByTestId('weather-line')).toHaveTextContent(
+        /^Bern · 9° Regen · Stand 0?9:05$/,
+      ),
+    );
+    expect(f).not.toHaveBeenCalled();
   });
 });
