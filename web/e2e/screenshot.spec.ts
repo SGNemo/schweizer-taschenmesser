@@ -87,8 +87,14 @@ test.describe('Screenshot tool', () => {
     const sheet = await openTool(page);
     await sheet.getByRole('button', { name: 'Bildschirm aufnehmen' }).click();
     await sheet.getByRole('button', { name: 'Kopieren' }).click();
-    const type = await page.evaluate(async () => (await navigator.clipboard.read())[0]!.types[0]);
-    expect(type).toBe('image/png');
+    // The write is asynchronous: poll until the clipboard holds the picture.
+    await expect
+      .poll(() =>
+        page
+          .evaluate(async () => (await navigator.clipboard.read())[0]?.types[0])
+          .catch(() => undefined),
+      )
+      .toBe('image/png');
   });
 
   test('a dismissed picker leaves no error, only "Nichts aufgenommen."', async ({ page }) => {
