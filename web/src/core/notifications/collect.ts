@@ -34,7 +34,8 @@ export async function collectDue(
     {
       quiet: settings.quietHours ? { from: settings.quietFrom, to: settings.quietTo } : undefined,
       maxPerHour: settings.maxPerHour,
-      mute: getMute(),
+      // A pause that already ended still covers the repeats that fell inside it.
+      mute: getMute(wide.from),
       quietAll: quietChannelWanted(getPlatform().kind, getGameSettings()),
     },
     t.notifications.summary,

@@ -5,8 +5,6 @@
  */
 import type { DueNotification } from '@/core/modules/types';
 
-const HOUR_MS = 3_600_000;
-
 /** "Stumm": a pause that began at `from` and ends at `until` (epoch ms). */
 export interface Mute {
   from: number;
@@ -125,8 +123,8 @@ export function applyQuiet(
 }
 
 /**
- * At most `max` notifications per clock hour: the first `max - 1` stay, everything else of that hour
- * becomes one summary ("Weitere Erinnerungen · 3"). Nothing is lost, nothing floods.
+ * At most `max` notifications per local clock hour: the first `max - 1` stay, everything else of
+ * that hour becomes one summary ("Weitere Erinnerungen · 3"). Nothing is lost, nothing floods.
  */
 export function applyLimit(
   items: readonly DueNotification[],
@@ -136,7 +134,8 @@ export function applyLimit(
   if (max <= 0) return [...items];
   const byHour = new Map<number, DueNotification[]>();
   for (const n of [...items].sort((a, b) => a.at - b.at)) {
-    const bucket = Math.floor(n.at / HOUR_MS);
+    // Start of the local clock hour (not the UTC hour: half-hour zones would shift the cap).
+    const bucket = new Date(n.at).setMinutes(0, 0, 0);
     byHour.set(bucket, [...(byHour.get(bucket) ?? []), n]);
   }
   const out: DueNotification[] = [];
@@ -170,6 +169,9 @@ export function applyLimit(
  * notifications in the pause still arrive, without sound (`quiet`); automatic extras (`soft`) wait
  * until the pause is over.
  */
+const inMutedRepeat = (n: DueNotification, mute: Mute | undefined): boolean =>
+  !!mute && isRepeatKey(n.key) && n.at >= mute.from && n.at < mute.until;
+
 export function applyMute(
   items: readonly DueNotification[],
   mute: Mute | undefined,
@@ -200,11 +202,9 @@ export function applyPolicy(
 ): DueNotification[] {
   const unique = new Map<string, DueNotification>();
   for (const n of items) if (!unique.has(n.key)) unique.set(n.key, n);
-  const limited = applyLimit(
-    applyQuiet([...unique.values()], policy.quiet),
-    policy.maxPerHour,
-    summary,
-  );
+  // A repeat dropped by a pause never counts toward the hour's cap (same as a quiet-hour repeat).
+  const unmuted = [...unique.values()].filter((n) => !inMutedRepeat(n, policy.mute));
+  const limited = applyLimit(applyQuiet(unmuted, policy.quiet), policy.maxPerHour, summary);
   // Last, so the summary notification of a limited hour is silenced too.
   return applyQuietAll(applyMute(limited, policy.mute), policy.quietAll).sort(
     (a, b) => a.at - b.at,
