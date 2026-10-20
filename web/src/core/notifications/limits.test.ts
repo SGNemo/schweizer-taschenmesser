@@ -177,8 +177,9 @@ describe('notification limits together', () => {
       ['10:00', 'Paket', false],
       ['10:30', 'Noch offen: Paket', false],
       ['11:15', 'Termin', true], // explicit: arrives, without sound
-      // r2 (11:00) and r3 (11:30) were inside the pause and are dropped, but they still count
-      // toward the cap of hour 11, which folds the Termin's own first repeat (11:45) as well.
+      // r2 (11:00) and r3 (11:30) were inside the pause: dropped, and they do not count toward
+      // the cap of hour 11, so the Termin's own first repeat (11:45) still arrives.
+      ['11:45', 'Noch offen: Termin', false],
       ['12:00', 'Noch offen: Paket', false],
       ['12:15', 'Noch offen: Termin', false],
       ['12:30', 'Noch offen: Paket', false],

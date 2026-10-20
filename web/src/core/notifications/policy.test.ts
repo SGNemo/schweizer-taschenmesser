@@ -63,7 +63,7 @@ describe('limit per hour', () => {
     expect(out.map((x) => x.key)).toEqual([
       'e1',
       'e2',
-      'summary:' + Math.floor(at(9, 3) / 3_600_000) + ':3',
+      'summary:' + new Date(at(9, 3)).setMinutes(0, 0, 0) + ':3',
     ]);
     expect(out[2]!.title).toBe('Weitere · 3');
     expect(out[2]!.body).toBe('e3, e4, e5');
@@ -105,6 +105,20 @@ describe('applyPolicy', () => {
     expect(out.find((x) => x.key === 'a')?.at).toBe(at(7, 0, 3));
     expect(out.filter((x) => x.key === 'a')).toHaveLength(1);
     expect(out.some((x) => x.key.startsWith('summary:'))).toBe(true);
+  });
+
+  it('a repeat dropped by a pause does not count toward the cap of its hour', () => {
+    // Pause 10:40–11:40: r2 (11:00) and r3 (11:30) are dropped; without them hour 11 holds only
+    // the Termin (11:15) and its first repeat (11:45), so nothing is folded.
+    const items = [
+      n('paket:r2', at(11, 0)),
+      n('termin', at(11, 15)),
+      n('paket:r3', at(11, 30)),
+      n('termin:r1', at(11, 45)),
+    ];
+    const mute = { from: at(10, 40), until: at(11, 40) };
+    const out = applyPolicy(items, { maxPerHour: 3, mute }, summary);
+    expect(out.map((x) => x.key)).toEqual(['termin', 'termin:r1']);
   });
 });
 
