@@ -5,8 +5,12 @@
 import type { Forecast } from './api';
 
 export const CACHE_KEY = 'tm-weather';
+/** The last failed request (localStorage, device-local): no retry storm while the service is down. */
+export const TRIED_KEY = 'tm-weather-tried';
 /** A forecast stays fresh for this long. */
 export const WEATHER_TTL_MS = 30 * 60 * 1000;
+/** After a failed request the line waits this long before it asks again. */
+export const WEATHER_RETRY_MS = 5 * 60 * 1000;
 
 export interface Cached {
   key: string;
@@ -41,8 +45,34 @@ export function writeCache(value: Cached): void {
 export function clearCache(): void {
   try {
     localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(TRIED_KEY);
   } catch {
     // Nothing to clear.
+  }
+}
+
+export interface Tried {
+  key: string;
+  at: number;
+}
+
+export function readTried(): Tried | undefined {
+  try {
+    const raw = localStorage.getItem(TRIED_KEY);
+    if (!raw) return undefined;
+    const v = JSON.parse(raw) as Partial<Tried>;
+    return typeof v.key === 'string' && typeof v.at === 'number' ? (v as Tried) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Remembers a failed request so the next one waits `WEATHER_RETRY_MS`. */
+export function noteTried(value: Tried): void {
+  try {
+    localStorage.setItem(TRIED_KEY, JSON.stringify(value));
+  } catch {
+    // Storage blocked: the line may ask again sooner, nothing else.
   }
 }
 
@@ -50,10 +80,17 @@ export function clearCache(): void {
 export const isFresh = (cached: Cached | undefined, key: string, at: number): boolean =>
   !!cached && cached.key === key && at - cached.at < WEATHER_TTL_MS;
 
-/** A request is due when the value is not fresh and the device is online. */
+/**
+ * A request is due when the value is not fresh, the device is online and the last request for this
+ * place did not fail within the retry window.
+ */
 export const shouldFetch = (
   cached: Cached | undefined,
   key: string,
   at: number,
   online: boolean,
-): boolean => online && !isFresh(cached, key, at);
+  tried?: Tried,
+): boolean =>
+  online &&
+  !isFresh(cached, key, at) &&
+  !(tried && tried.key === key && at - tried.at < WEATHER_RETRY_MS);

@@ -8,6 +8,9 @@ import {
   isFresh,
   readCache,
   shouldFetch,
+  noteTried,
+  readTried,
+  WEATHER_RETRY_MS,
   WEATHER_TTL_MS,
   writeCache,
 } from './cache';
@@ -54,5 +57,15 @@ describe('forecast cache (fixed clock)', () => {
     expect(shouldFetch(c, key, T0 + WEATHER_TTL_MS, true)).toBe(true);
     expect(shouldFetch(c, key, T0 + WEATHER_TTL_MS, false)).toBe(false);
     expect(shouldFetch(undefined, key, T0, false)).toBe(false);
+  });
+
+  it('waits a few minutes after a failed request, per place, and forgets it with the cache', () => {
+    noteTried({ key, at: T0 });
+    expect(readTried()).toEqual({ key, at: T0 });
+    expect(shouldFetch(undefined, key, T0 + 60_000, true, readTried())).toBe(false);
+    expect(shouldFetch(undefined, key, T0 + WEATHER_RETRY_MS, true, readTried())).toBe(true);
+    expect(shouldFetch(undefined, cacheKey(51.1, 9), T0 + 60_000, true, readTried())).toBe(true);
+    clearCache();
+    expect(readTried()).toBeUndefined();
   });
 });
