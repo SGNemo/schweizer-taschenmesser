@@ -16,10 +16,14 @@ export function screenshotFileName(date: Date): string {
   return `bildschirmfoto-${day}-${pad2(date.getHours())}${pad2(date.getMinutes())}.png`;
 }
 
-export type CaptureFailure = 'cancelled' | 'failed';
+export type CaptureFailure = 'cancelled' | 'unsupported' | 'failed';
 
-/** A refused or dismissed picker is not an error: nothing was taken, nothing is wrong. */
+/** A refused or dismissed picker is not an error: nothing was taken, nothing is wrong. A webview that refuses capture is "not available here". */
 export function classifyCaptureError(e: unknown): CaptureFailure {
   const name = (e as { name?: string } | undefined)?.name;
+  if (name === 'NotSupportedError') return 'unsupported';
   return name === 'NotAllowedError' || name === 'AbortError' ? 'cancelled' : 'failed';
 }
+
+/** The optional pause between choosing a source and the picture, to switch to the window. */
+export const CAPTURE_DELAY_SECONDS = 3;

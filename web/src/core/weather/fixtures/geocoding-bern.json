@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "id": 2661552,
+      "name": "Bern",
+      "latitude": 46.94809,
+      "longitude": 7.44744,
+      "elevation": 542.0,
+      "feature_code": "PPLC",
+      "country_code": "CH",
+      "admin1_id": 2661551,
+      "timezone": "Europe/Zurich",
+      "population": 134591,
+      "country_id": 2658434,
+      "country": "Schweiz",
+      "admin1": "Bern"
+    },
+    {
+      "id": 2946447,
+      "name": "Bern",
+      "latitude": 51.1,
+      "longitude": 9.0,
+      "feature_code": "PPL",
+      "country_code": "DE",
+      "timezone": "Europe/Berlin",
+      "country": "Deutschland",
+      "admin1": "Hessen"
+    },
+    {
+      "id": 6094817,
+      "name": "Bernau",
+      "latitude": 52.68,
+      "longitude": 13.59,
+      "country_code": "DE",
+      "country": "Deutschland"
+    }
+  ],
+  "generationtime_ms": 0.7
+}

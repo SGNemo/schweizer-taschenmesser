@@ -22,9 +22,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| (announced) Weather line on the home screen (Open-Meteo, city chosen once) | `feat/weather-widget` | new `core/weather/*`, `home/WeatherLine.tsx`, `pages/settings/WeatherSection.tsx`, one line in `home/Home.tsx` | prompt in [product/focus/14-parallel-prompts-3.md](product/focus/14-parallel-prompts-3.md) | – | 2026-10-19 |
-| (announced) Screenshot tool | `feat/screenshot-tool` | new `src/tools/screenshot/*`, `docs/features/screenshot.md` | prompt in 14-parallel-prompts-3 | – | 2026-10-19 |
-| (announced) Notification limits tested together (hourly cap, quiet hours, Stumm, Zock-Modus, repeats) | `test/notification-limits` | new `core/notifications/limits.test.ts`, `docs/features/repeat-reminders.md` | prompt in 14-parallel-prompts-3 | – | 2026-10-19 |
 | (announced) Darstellung settings grouped | `feat/appearance-groups` | `pages/settings/AppearanceSection.tsx`, settings inventory | prompt in 14-parallel-prompts-3 | – | 2026-10-19 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.

@@ -141,6 +141,10 @@ export const tools: Strings['tools'] = {
     alt: (w: number, h: number) => `Capture of screen or window, ${w} × ${h} pixels`,
     unsupported:
       'Capturing a screen or window is not available on this device. On a phone, use the device’s buttons.',
+    delay: (n: number) => `Capture after ${n} seconds`,
+    countdown: (n: number) => `Capturing in ${n} …`,
+    stop: 'Cancel',
+    share: 'Share',
   },
   qr: {
     name: 'QR code',

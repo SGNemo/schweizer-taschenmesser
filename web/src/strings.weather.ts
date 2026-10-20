@@ -36,6 +36,9 @@ export const tWeather = defineBundle(
     },
     rainFrom: (hour: string) => `ab ${hour} Uhr Regen`,
     noticeTitle: 'Dein Wetter-Ort wird abgefragt',
+    asOf: (time: string) => `Stand ${time}`,
+    chooseHint: 'Wetter: Stadt wählen',
+    chooseHintDismiss: 'Später nicht mehr',
   },
   {
     en: {
@@ -72,6 +75,9 @@ export const tWeather = defineBundle(
       },
       rainFrom: (hour: string) => `rain from ${hour}:00`,
       noticeTitle: 'Your weather place will be requested',
+      asOf: (time: string) => `As of ${time}`,
+      chooseHint: 'Weather: choose a city',
+      chooseHintDismiss: 'Not again',
     },
     es: {
       title: 'El tiempo',
@@ -107,6 +113,9 @@ export const tWeather = defineBundle(
       },
       rainFrom: (hour: string) => `lluvia desde las ${hour}:00`,
       noticeTitle: 'Se consultará el lugar del tiempo',
+      asOf: (time: string) => `Datos de las ${time}`,
+      chooseHint: 'El tiempo: elegir ciudad',
+      chooseHintDismiss: 'No volver a mostrar',
     },
     fr: {
       title: 'Météo',
@@ -142,6 +151,9 @@ export const tWeather = defineBundle(
       },
       rainFrom: (hour: string) => `pluie dès ${hour} h`,
       noticeTitle: 'Le lieu de la météo sera interrogé',
+      asOf: (time: string) => `Mis à jour à ${time}`,
+      chooseHint: 'Météo : choisir une ville',
+      chooseHintDismiss: 'Plus tard, non merci',
     },
     'pt-BR': {
       title: 'Clima',
@@ -177,6 +189,9 @@ export const tWeather = defineBundle(
       },
       rainFrom: (hour: string) => `chuva a partir das ${hour}:00`,
       noticeTitle: 'O local do clima será consultado',
+      asOf: (time: string) => `Atualizado às ${time}`,
+      chooseHint: 'Clima: escolher cidade',
+      chooseHintDismiss: 'Não mostrar mais',
     },
   },
 );

@@ -141,6 +141,10 @@ export const tools: Strings['tools'] = {
     alt: (w: number, h: number) => `Captura de pantalla o ventana, ${w} × ${h} píxeles`,
     unsupported:
       'Capturar una pantalla o ventana no está disponible en este dispositivo. En el teléfono, usa los botones del dispositivo.',
+    delay: (n: number) => `Capturar tras ${n} segundos`,
+    countdown: (n: number) => `Captura en ${n} …`,
+    stop: 'Cancelar',
+    share: 'Compartir',
   },
   qr: {
     name: 'Código QR',

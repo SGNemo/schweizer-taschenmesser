@@ -224,6 +224,14 @@ Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrich
 - **Z4 Randfälle:** Browser-Video im Vollbild (F11/YouTube) zählt als „beschäftigt“ und löst ebenfalls den leisen Weg aus (gewollt); „Stumm“ an: weder Ton noch Windows-Ton; Zock-Modus „Aus“: nie ein App-Ton. Ein Spiel im Fenstermodus wird nicht erkannt → „Immer“ benutzen. ☐
 - **Z5 Android:** Zock-Modus „An“: Erinnerung kommt über den Kanal „Stumm“ ohne Ton und Vibration; „Aus“: wieder normal. ☐
 
+## Bildschirmfoto (Windows-App, Handy) – nur von Hand prüfbar
+Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: [features/screenshot.md](features/screenshot.md).
+- **B1 Windows-App, Fenster:** Portable-EXE, Werkzeug „Bildschirmfoto“ → „Bildschirm aufnehmen“: kommt eine Auswahl (Bildschirm/Fenster)? Ein Fenster wählen: Vorschau erscheint. Kommt stattdessen „… gibt es auf diesem Gerät nicht“ (kein Fehler), ist WebView2 ohne Aufnahme – dann Notiz an den Maintainer (Rust-Aufnahme = neue Abhängigkeit). ☐
+- **B2 Kopieren:** „Kopieren“, dann in Paint/Mail einfügen (Strg+V): das Bild erscheint. ☐
+- **B3 Speichern:** „Speichern“: Windows-Dialog, Datei `bildschirmfoto-JJJJ-MM-TT-HHMM.png` öffnet sich als Bild. ☐
+- **B4 Pause:** „Nach 3 Sekunden aufnehmen“ an, Quelle wählen, zum Fenster wechseln: Zähler 3-2-1, dann Bild; „Abbrechen“ beim Zählen: „Nichts aufgenommen.“ ☐
+- **B5 Android:** Werkzeug zeigt nur den Hinweis, keinen Knopf. ☐
+
 ## Sprachen (App in fünf Sprachen)
 - **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English, Español, Français, Português (Brasil) und Deutsch. Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
 - **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.

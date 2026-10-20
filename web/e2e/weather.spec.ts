@@ -97,6 +97,42 @@ test.describe('Weather line', () => {
     await expect(page.getByTestId('weather-line')).toHaveCount(0);
   });
 
+  test('without a place: one quiet hint, "Später nicht mehr" ends it', async ({ page }) => {
+    const seen = await mockWeather(page);
+    await ready(page, '/');
+    await expect(page.getByTestId('weather-hint')).toContainText('Wetter: Stadt wählen');
+    await page.getByRole('button', { name: 'Später nicht mehr' }).click();
+    await expect(page.getByTestId('weather-hint')).toHaveCount(0);
+    await ready(page, '/');
+    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
+    await expect(page.getByTestId('weather-hint')).toHaveCount(0);
+    expect(seen).toEqual([]);
+  });
+
+  test('the line opens the settings', async ({ page }) => {
+    await mockWeather(page);
+    await choosePlace(page);
+    await ready(page, '/');
+    await page.getByTestId('weather-line').click();
+    await expect(page).toHaveURL(/\/settings\/verbindungen/);
+  });
+
+  test('offline later: the old values stay, marked "Stand hh:mm", no rain hint', async ({
+    page,
+  }) => {
+    await mockWeather(page);
+    await choosePlace(page);
+    await ready(page, '/');
+    await expect(page.getByTestId('weather-line')).toContainText('ab 15 Uhr Regen');
+    // An hour later the forecast cannot be reached any more.
+    await page.clock.setFixedTime(new Date('2026-09-29T11:00:00'));
+    await page.route('**://api.open-meteo.com/**', (route) => route.abort());
+    await ready(page, '/');
+    await expect(page.getByTestId('weather-line')).toHaveText(
+      'Bern · 14° leicht bewölkt · Stand 10:00',
+    );
+  });
+
   test('an unreachable service leaves no error on the Overview', async ({ page }) => {
     await mockWeather(page);
     await choosePlace(page);

@@ -1449,6 +1449,10 @@ export const de = {
       alt: (w: number, h: number) => `Aufnahme von Bildschirm oder Fenster, ${w} × ${h} Pixel`,
       unsupported:
         'Die Aufnahme von Bildschirm oder Fenster gibt es auf diesem Gerät nicht. Am Telefon helfen die Tasten des Geräts.',
+      delay: (n: number) => `Nach ${n} Sekunden aufnehmen`,
+      countdown: (n: number) => `Aufnahme in ${n} …`,
+      stop: 'Abbrechen',
+      share: 'Teilen',
     },
     qr: {
       name: 'QR-Code',

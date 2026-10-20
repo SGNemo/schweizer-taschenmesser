@@ -141,6 +141,10 @@ export const tools: Strings['tools'] = {
     alt: (w: number, h: number) => `Captura de tela ou janela, ${w} × ${h} pixels`,
     unsupported:
       'A captura de tela ou janela não está disponível neste dispositivo. No celular, use os botões do aparelho.',
+    delay: (n: number) => `Capturar após ${n} segundos`,
+    countdown: (n: number) => `Captura em ${n} …`,
+    stop: 'Cancelar',
+    share: 'Compartilhar',
   },
   qr: {
     name: 'Código QR',

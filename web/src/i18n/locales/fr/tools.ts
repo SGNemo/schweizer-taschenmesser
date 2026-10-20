@@ -143,6 +143,10 @@ export const tools: Strings['tools'] = {
     alt: (w: number, h: number) => `Capture d’écran ou de fenêtre, ${w} × ${h} pixels`,
     unsupported:
       'La capture d’un écran ou d’une fenêtre n’est pas disponible sur cet appareil. Sur un téléphone, utilisez les boutons de l’appareil.',
+    delay: (n: number) => `Capturer après ${n} secondes`,
+    countdown: (n: number) => `Capture dans ${n} …`,
+    stop: 'Annuler',
+    share: 'Partager',
   },
   qr: {
     name: 'Code QR',

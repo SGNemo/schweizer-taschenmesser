@@ -20,6 +20,7 @@ describe('screenshot tool logic', () => {
   it('treats a dismissed picker as "nothing taken", everything else as a failure', () => {
     expect(classifyCaptureError({ name: 'NotAllowedError' })).toBe('cancelled');
     expect(classifyCaptureError({ name: 'AbortError' })).toBe('cancelled');
+    expect(classifyCaptureError({ name: 'NotSupportedError' })).toBe('unsupported');
     expect(classifyCaptureError({ name: 'NotReadableError' })).toBe('failed');
     expect(classifyCaptureError(new Error('no-frame'))).toBe('failed');
     expect(classifyCaptureError(undefined)).toBe('failed');
