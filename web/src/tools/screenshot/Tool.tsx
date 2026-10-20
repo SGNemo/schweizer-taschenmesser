@@ -34,6 +34,13 @@ export default function ScreenshotTool() {
   const supported = canCaptureScreen();
 
   useEffect(() => () => (shot ? URL.revokeObjectURL(shot.url) : undefined), [shot]);
+  // Closing the sheet during the pause or the picker ends the capture (stream stops, no frame is kept).
+  useEffect(
+    () => () => {
+      stopped.current = true;
+    },
+    [],
+  );
 
   async function take() {
     setBusy(true);
@@ -45,6 +52,7 @@ export default function ScreenshotTool() {
         onTick: setSecondsLeft,
         cancelled: () => stopped.current,
       });
+      if (stopped.current) return; // gone meanwhile: an object URL now would never be revoked
       setShot({ ...frame, url: URL.createObjectURL(frame.blob) });
     } catch (e) {
       const kind = classifyCaptureError(e);
@@ -123,7 +131,9 @@ export default function ScreenshotTool() {
           <div className={styles.row}>
             <Button onClick={() => void save()}>{s.save}</Button>
             <Button onClick={() => void copy()}>{s.copy}</Button>
-            {canShareImage() ? <Button onClick={() => void share()}>{s.share}</Button> : null}
+            {canShareImage(shot.blob) ? (
+              <Button onClick={() => void share()}>{s.share}</Button>
+            ) : null}
             <Button variant="ghost" onClick={() => setShot(undefined)}>
               {s.discard}
             </Button>

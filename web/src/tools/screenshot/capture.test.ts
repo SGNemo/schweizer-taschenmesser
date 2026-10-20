@@ -109,13 +109,16 @@ describe('copyImage / shareImage', () => {
   it('shares a file only where the device can, a dismissed sheet is false', async () => {
     Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
     Object.defineProperty(navigator, 'canShare', { value: undefined, configurable: true });
-    expect(canShareImage()).toBe(false);
+    expect(canShareImage(png)).toBe(false);
     expect(await shareImage(png, 'a.png')).toBe(false);
 
     const share = vi.fn(async () => undefined);
     Object.defineProperty(navigator, 'share', { value: share, configurable: true });
+    // Web Share for text only (most desktop browsers): no button for a file.
+    Object.defineProperty(navigator, 'canShare', { value: () => false, configurable: true });
+    expect(canShareImage(png)).toBe(false);
     Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true });
-    expect(canShareImage()).toBe(true);
+    expect(canShareImage(png)).toBe(true);
     expect(await shareImage(png, 'a.png')).toBe(true);
     expect((share.mock.calls[0] as unknown as [{ files: File[] }])[0].files[0]!.name).toBe('a.png');
     share.mockRejectedValueOnce(new DOMException('x', 'AbortError'));

@@ -58,9 +58,17 @@ export async function shareImage(blob: Blob, fileName: string): Promise<boolean>
   }
 }
 
-/** True where a PNG can be shared as a file. */
-export function canShareImage(): boolean {
-  return typeof navigator.share === 'function' && typeof navigator.canShare === 'function';
+/** True where this PNG could be shared as a file (desktop browsers often have Web Share for text only). */
+export function canShareImage(blob: Blob): boolean {
+  if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function')
+    return false;
+  try {
+    return (
+      navigator.canShare({ files: [new File([blob], 'x.png', { type: 'image/png' })] }) === true
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** Puts a PNG on the clipboard; false when the browser does not allow it. */
