@@ -60,6 +60,43 @@ test.describe('Screenshot tool', () => {
     await expect(preview).toHaveCount(0);
   });
 
+  test('with the pause ticked it counts down calmly, then takes the picture', async ({ page }) => {
+    await page.addInitScript(fakeScreen);
+    const sheet = await openTool(page);
+    await sheet.getByLabel('Nach 3 Sekunden aufnehmen').check();
+    await sheet.getByRole('button', { name: 'Bildschirm aufnehmen' }).click();
+    await expect(sheet.getByTestId('screenshot-countdown')).toContainText('Aufnahme in');
+    await expect(sheet.getByTestId('screenshot-preview')).toBeVisible({ timeout: 10_000 });
+    await expect(sheet.getByTestId('screenshot-countdown')).toHaveCount(0);
+  });
+
+  test('the pause can be stopped and nothing is captured', async ({ page }) => {
+    await page.addInitScript(fakeScreen);
+    const sheet = await openTool(page);
+    await sheet.getByLabel('Nach 3 Sekunden aufnehmen').check();
+    await sheet.getByRole('button', { name: 'Bildschirm aufnehmen' }).click();
+    await sheet.getByRole('button', { name: 'Abbrechen' }).click();
+    await expect(sheet.getByText('Nichts aufgenommen.')).toBeVisible({ timeout: 10_000 });
+    await expect(sheet.getByTestId('screenshot-preview')).toHaveCount(0);
+  });
+
+  test('copies the picture to the clipboard as a PNG', async ({ page, context, browserName }) => {
+    test.skip(browserName !== 'chromium', 'clipboard permissions are Chromium only');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.addInitScript(fakeScreen);
+    const sheet = await openTool(page);
+    await sheet.getByRole('button', { name: 'Bildschirm aufnehmen' }).click();
+    await sheet.getByRole('button', { name: 'Kopieren' }).click();
+    // The write is asynchronous: poll until the clipboard holds the picture.
+    await expect
+      .poll(() =>
+        page
+          .evaluate(async () => (await navigator.clipboard.read())[0]?.types[0])
+          .catch(() => undefined),
+      )
+      .toBe('image/png');
+  });
+
   test('a dismissed picker leaves no error, only "Nichts aufgenommen."', async ({ page }) => {
     await page.addInitScript(() => {
       navigator.mediaDevices.getDisplayMedia = () =>
