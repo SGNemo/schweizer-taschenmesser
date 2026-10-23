@@ -73,3 +73,17 @@ Same tool, same seeded Dev build; baseline = `develop` after package 1. Screensh
 - Each group is one line with the current choice ("Thema: Hell · Ändern"); "Ändern" opens the pickers, "Fertig" closes. Deep links (`#darstellung--density`, search, palette) open the surrounding group.
 - The remaining height is the other sections of the category (Lesen, Fokus & Aufmerksamkeit, Wetter, …), which this package does not touch; a further cut needs the same treatment there.
 - Tests: `AppearanceSection.test.tsx` (current choice shown, "Ändern" opens, all ten fields stay in a group), `e2e/comfort-settings.spec.ts` (switch the theme through the group, keyboard, deep link opens the group; desktop + pixel-7); the specs that click an appearance control open its group first (`openAppearanceGroup`).
+
+## Darstellung – the rest folded (`feat/focus2-settings-fold-2`, round 4)
+Same tool and seeded Dev build; baseline = `develop` after #215–#219. Screenshots: `img/before-display-rest-phone.png`, `img/after-display-rest-phone.png`.
+
+| Metric (Settings → Darstellung, phone 412×915) | Before | After |
+|---|---|---|
+| Page height | 4424 px | **1787 px** |
+| Lesen | 5 rows incl. preview, about 900 px | one line ("Lesehilfe: Aus") |
+| Fokus & Aufmerksamkeit | 6 switches + 1 folded block | two lines ("Hilfen: 6 von 6 an", "Weitere Einstellungen: Tagesplan 3 · Timer 25 Min · 2 von 6 an") |
+| Favoriten | one switch per module | one line with the chosen modules |
+| Stored settings | unchanged | unchanged (no key removed, no default changed) |
+
+- "Basis oder Erweitert" stays as it is: one switch, a fold would add a step for nothing. The script's counts of buttons/links do not change (it counts the controls inside closed groups as well); the page is what gets shorter.
+- Tests: `ReadingSection.test.tsx`, `FocusSection.test.tsx` (closed lines with the right counts, every row inside its group, the line follows a change); the specs that click a reading, focus or favourite switch open its group first (`openFoldedGroup` in `e2e/helpers.ts`), none removed or weakened.

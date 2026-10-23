@@ -131,6 +131,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     // 25 % (default): only running text – headings and buttons are plain.
     await expect(page.locator('main h1 [data-rs]')).toHaveCount(0);
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'reading', 'aid');
     const cover = page.getByRole('group', { name: 'Umfang' });
     await cover.getByRole('button', { name: '50 %' }).click();
     await expect(page.locator('main h1 [data-rs]').first()).toBeVisible();
