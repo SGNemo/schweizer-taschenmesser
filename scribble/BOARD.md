@@ -6,7 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - [ ] 2026-10-17 · `chore/chat-scribble` · example: "Does anyone already synthesise a sound with Web Audio? Then I reuse it." → answer here.
 
 ## Heads-up (I am touching …)
-- 2026-10-23 · `feat/focus2-settings-fold-2` · `pages/settings/{FoldedGroup,ReadingSection,FocusSection,FavouritesSection}.tsx` (fold the rest of Darstellung like Darstellung itself; `FoldedGroup` gets a `section` prop, `focus-more` testid stays), `e2e/helpers.ts` (`openFoldedGroup`), small e2e edits where a spec clicks a reading/focus/favourite switch – until the PR is in.
+- 2026-10-23 · `feat/focus2-reminders-fold` · `pages/settings/{CalmRemindersSection,NotificationsSection}.tsx` (fold Benachrichtigungen like Darstellung, `FoldedGroup`), `e2e/helpers.ts`, small e2e edits where a spec clicks a reminder switch – until the PR is in. Darstellung fold is in (#222).
 - 2026-10-17 · `chore/chat-scribble` · example: "`core/notifications/policy.ts` until PR is in; additive fields only please."
 
 ## Parking (ideas, findings outside scope)
