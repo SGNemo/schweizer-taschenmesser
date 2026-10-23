@@ -3101,9 +3101,9 @@
     },
     {
       "name": "swift-rs",
-      "version": "1.0.8",
+      "version": "1.0.9",
       "license": "MIT OR Apache-2.0",
-      "url": "https://crates.io/crates/swift-rs/1.0.8"
+      "url": "https://crates.io/crates/swift-rs/1.0.9"
     },
     {
       "name": "syn",
@@ -3209,9 +3209,9 @@
     },
     {
       "name": "tauri-plugin",
-      "version": "2.7.0",
+      "version": "2.7.2",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin/2.7.0"
+      "url": "https://crates.io/crates/tauri-plugin/2.7.2"
     },
     {
       "name": "tauri-plugin-autostart",
@@ -3221,9 +3221,9 @@
     },
     {
       "name": "tauri-plugin-clipboard-manager",
-      "version": "2.4.0",
+      "version": "2.5.0",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-clipboard-manager/2.4.0"
+      "url": "https://crates.io/crates/tauri-plugin-clipboard-manager/2.5.0"
     },
     {
       "name": "tauri-plugin-dialog",
@@ -3233,9 +3233,9 @@
     },
     {
       "name": "tauri-plugin-fs",
-      "version": "2.6.0",
+      "version": "2.7.1",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-fs/2.6.0"
+      "url": "https://crates.io/crates/tauri-plugin-fs/2.7.1"
     },
     {
       "name": "tauri-plugin-global-shortcut",
@@ -3251,9 +3251,9 @@
     },
     {
       "name": "tauri-plugin-notification",
-      "version": "2.5.0",
+      "version": "2.7.0",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-notification/2.5.0"
+      "url": "https://crates.io/crates/tauri-plugin-notification/2.7.0"
     },
     {
       "name": "tauri-plugin-opener",
@@ -3287,9 +3287,9 @@
     },
     {
       "name": "tauri-utils",
-      "version": "2.10.0",
+      "version": "2.10.2",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-utils/2.10.0"
+      "url": "https://crates.io/crates/tauri-utils/2.10.2"
     },
     {
       "name": "tauri-winres",
