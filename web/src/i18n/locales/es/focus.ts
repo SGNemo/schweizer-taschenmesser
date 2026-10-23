@@ -40,6 +40,10 @@ export const focus: Strings['focus'] = {
     searchHistoryHint:
       'La búsqueda muestra primero lo que usaste hace poco. El historial se queda en este dispositivo.',
     more: 'Más ajustes',
+    aids: 'Ayudas',
+    aidsOn: (n: number, total: number) => `${n} de ${total} activadas`,
+    planShort: (n: number) => `Plan del día ${n}`,
+    timerShort: (n: number) => `Temporizador ${n} min`,
     clearHistory: 'Borrar historial',
     clearHistoryHint: 'Vacía las entradas usadas recientemente en la búsqueda.',
     historyCleared: 'Historial borrado.',

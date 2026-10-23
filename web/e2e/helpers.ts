@@ -71,14 +71,22 @@ export async function openMoreFocus(page: Page) {
   if ((await more.getAttribute('open')) === null) await more.locator('summary').click();
 }
 
+/**
+ * Opens one folded group of a settings section (`FoldedGroup`, test id `<section>-group-<id>`):
+ * Darstellung (`theme`, `colors`, `text`, `motion`, `other`), Lesen (`aid`), Fokus (`aids`), Favoriten (`list`).
+ */
+export async function openFoldedGroup(page: Page, section: string, id: string) {
+  const group = page.getByTestId(`${section}-group-${id}`);
+  if ((await group.getAttribute('open')) === null) await group.locator('summary').click();
+  await expect(group).toHaveAttribute('open', '');
+}
+
 /** Opens one folded group of Einstellungen → Darstellung (`theme`, `colors`, `text`, `motion`, `other`). */
 export async function openAppearanceGroup(
   page: Page,
   id: 'theme' | 'colors' | 'text' | 'motion' | 'other',
 ) {
-  const group = page.getByTestId(`appearance-group-${id}`);
-  if ((await group.getAttribute('open')) === null) await group.locator('summary').click();
-  await expect(group).toHaveAttribute('open', '');
+  await openFoldedGroup(page, 'appearance', id);
 }
 
 /**

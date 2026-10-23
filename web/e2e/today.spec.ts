@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { openFoldedGroup, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -39,6 +39,7 @@ test.describe('Heute card (focus audit 2, package 2)', () => {
     await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
 
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'focus', 'aids');
     const toggle = page
       .locator('section[aria-labelledby="focus"]')
       .getByRole('switch', { name: 'Zeit bis zum nächsten Termin' });

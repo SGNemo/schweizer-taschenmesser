@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { openFoldedGroup, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -149,6 +149,7 @@ test.describe('Focus and attention aids', () => {
     await ready(page, '/settings/darstellung');
     const section = page.locator('section[aria-labelledby="focus"]');
     await expect(section).toBeVisible();
+    await openFoldedGroup(page, 'focus', 'aids');
     for (const name of ['Nächste eine Sache', 'Tagesplan']) {
       const toggle = section.getByRole('switch', { name });
       await expect(toggle).toHaveAttribute('aria-checked', 'true');
@@ -160,6 +161,7 @@ test.describe('Focus and attention aids', () => {
     await expect(page.getByTestId('next-card')).toHaveCount(0);
 
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'focus', 'aids');
     const timeToNext = section.getByRole('switch', { name: 'Zeit bis zum nächsten Termin' });
     await expect(timeToNext).toHaveAttribute('aria-checked', 'true');
     await timeToNext.click();
