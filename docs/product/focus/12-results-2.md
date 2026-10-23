@@ -87,3 +87,15 @@ Same tool and seeded Dev build; baseline = `develop` after #215–#219. Screensh
 
 - "Basis oder Erweitert" stays as it is: one switch, a fold would add a step for nothing. The script's counts of buttons/links do not change (it counts the controls inside closed groups as well); the page is what gets shorter.
 - Tests: `ReadingSection.test.tsx`, `FocusSection.test.tsx` (closed lines with the right counts, every row inside its group, the line follows a change); the specs that click a reading, focus or favourite switch open its group first (`openFoldedGroup` in `e2e/helpers.ts`), none removed or weakened.
+
+## Benachrichtigungen – Ruhige Erinnerungen folded (`feat/focus2-reminders-fold`, round 4)
+Same tool and seeded Dev build; baseline = `develop` after #222. No screenshots: the first phone screen (permission card, Zock-Modus) is the same before and after.
+
+| Metric (Settings → Benachrichtigungen, phone 412×915) | Before | After |
+|---|---|---|
+| Page height | 3003 px | **1893 px** |
+| Ruhige Erinnerungen | 6 switches, 4 sub-rows open by default | six lines ("Karte in der App: Aus", "Ruhezeit: 22:00–07:00", "Höchstens pro Stunde: 3", "Gestaffelte Erinnerung: Aus", "Ruhig wiederholen: 30 min · 6×", "ToDos am Morgen: 09:00") |
+| Stored settings | unchanged | unchanged (no key removed, no default changed) |
+
+- The permission card and Zock-Modus above it are not touched (different pattern: cards with a heading, not setting rows).
+- Tests: `CalmRemindersSection.test.tsx` (six closed lines with the defaults, every row inside its group, the line follows a change); `e2e/reminders.spec.ts` opens the groups first (`openFoldedGroup`), none removed or weakened.

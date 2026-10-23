@@ -7,7 +7,7 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton (Erkennung nur Ja/Nein, Ton per Web Audio oder Rust); PR gegen `develop`, wartet auf Review; Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`): Prüfung und Plan #176; Paket 1 (#177), 2a Heute-Karte (#185), 2b ToDo-Seite (#188), 3 Später/Trefferflächen (#204) gemergt; Runde-2-Chats gemergt (#180–#182, #184; Prompts in `product/focus/13-parallel-prompts.md`). Paket 4a Wetterzeile (#206) und 4b Bildschirmfoto (#207) gemergt; Runde 3 gemergt (#211–#219, Darstellung gruppiert 5831→4424 px); Runde 4: Lesen, Fokus, Favoriten gefaltet (4424→1787 px, PR); danach die Tagebuch-Woche.
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Prüfung und Plan #176; Paket 1 (#177), 2a Heute-Karte (#185), 2b ToDo-Seite (#188), 3 Später/Trefferflächen (#204) gemergt; Runde-2-Chats gemergt (#180–#182, #184; Prompts in `product/focus/13-parallel-prompts.md`). Paket 4a Wetterzeile (#206) und 4b Bildschirmfoto (#207) gemergt; Runde 3 gemergt (#211–#219); Runde 4: Darstellung (#222, 4424→1787 px) und Ruhige Erinnerungen (3003→1893 px, PR) gefaltet; danach die Tagebuch-Woche.
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md).
 
