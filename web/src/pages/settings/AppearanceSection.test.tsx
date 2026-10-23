@@ -42,7 +42,7 @@ describe('Appearance settings, grouped', () => {
   it('keeps every field reachable: all rows exist inside their group', () => {
     render(<AppearanceSection />);
     const ids = ['theme', 'accent', 'palette', 'color', 'textSize', 'leading', 'density'];
-    ids.push('motion', 'sidebar', 'homeView');
+    ids.push('motion', 'sidebar', 'homeView', 'logo');
     for (const id of ids) {
       const row = document.getElementById(`appearance--${id}`);
       expect(row, id).not.toBeNull();
