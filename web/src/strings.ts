@@ -462,6 +462,7 @@ export const de = {
     favouritesHint:
       'Bis zu 5 Module stehen oben in der Seitenleiste. Der Stern an einem Modul in der Seitenleiste macht dasselbe.',
     favouritesFull: 'Höchstens 5 Favoriten – entferne zuerst einen anderen.',
+    favouritesNone: 'Keine',
     theme: 'Farbschema',
     themeSystem: 'System',
     themeLight: 'Hell',
@@ -499,6 +500,8 @@ export const de = {
       coverHint:
         '25 %: nur Fließtext. 50 %: dazu Überschriften und Listen. 75 %: dazu Beschriftungen und Tabellen. 100 %: jeder Text, auch Schaltflächen und Navigation (nicht im Tresor und in Eingabefeldern).',
       shortcut: 'Tastenkürzel: Alt + L schaltet die Lesehilfe ein und aus.',
+      on: 'An',
+      off: 'Aus',
       preview: 'Vorschau',
       previewText: 'So sieht ein längerer Satz mit Lesehilfe aus: Wortanfänge tragen den Blick.',
       hintTitle: 'Lesen fällt schwer?',
@@ -981,6 +984,10 @@ export const de = {
       searchHistoryHint:
         'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
       more: 'Weitere Einstellungen',
+      aids: 'Hilfen',
+      aidsOn: (n: number, total: number) => `${n} von ${total} an`,
+      planShort: (n: number) => `Tagesplan ${n}`,
+      timerShort: (n: number) => `Timer ${n} Min`,
       clearHistory: 'Verlauf löschen',
       clearHistoryHint: 'Leert die zuletzt benutzten Einträge der Suche.',
       historyCleared: 'Verlauf gelöscht.',

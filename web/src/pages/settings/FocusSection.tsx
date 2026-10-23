@@ -7,20 +7,42 @@ import {
 import { clearRecent } from '@/core/search/recent';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import styles from './settings.module.css';
 import { Button, Segmented, SettingRow, SettingsGroup, Switch } from '@/ui';
+import { FoldedGroup } from './FoldedGroup';
 
 type BoolKey = {
   [K in keyof FocusSettings]: FocusSettings[K] extends boolean ? K : never;
 }[keyof FocusSettings];
 
-/** Settings → Darstellung → "Fokus & Aufmerksamkeit": one switch per aid (synced scope `focus`). */
+/** The six aids of the first group and the six extra switches of "Weitere Einstellungen". */
+const AIDS: readonly BoolKey[] = [
+  'nextOne',
+  'dayPlan',
+  'calmAttention',
+  'timeToNext',
+  'resumeCard',
+  'eveningWrapUp',
+];
+const EXTRAS: readonly BoolKey[] = [
+  'moduleNow',
+  'focusSound',
+  'focusIndicator',
+  'streaks',
+  'weekReview',
+  'searchHistory',
+];
+
+/**
+ * Settings → Darstellung → "Fokus & Aufmerksamkeit": one switch per aid (synced scope `focus`),
+ * as two folded lines ("Hilfen: 6 von 6 an · Ändern", "Weitere Einstellungen: …").
+ */
 export function FocusSection() {
   const [values, patch] = useFocusSettings();
   const s = t.focus.settings;
   const toast = useUiStore((x) => x.toast);
-  const toggle = (id: string, key: BoolKey, label: string, hint: string) => (
-    <SettingRow id={`focus--${key}`} label={label} description={hint} key={id}>
+  const on = (keys: readonly BoolKey[]) => keys.filter((k) => values[k]).length;
+  const toggle = (key: BoolKey, label: string, hint: string) => (
+    <SettingRow id={`focus--${key}`} label={label} description={hint} key={key}>
       <Switch
         label={label}
         labelHidden
@@ -31,14 +53,30 @@ export function FocusSection() {
   );
   return (
     <SettingsGroup id="focus" title={s.title} description={s.description}>
-      {toggle('nextOne', 'nextOne', s.nextOne, s.nextOneHint)}
-      {toggle('dayPlan', 'dayPlan', s.dayPlan, s.dayPlanHint)}
-      {toggle('calmAttention', 'calmAttention', s.calmAttention, s.calmAttentionHint)}
-      {toggle('timeToNext', 'timeToNext', s.timeToNext, s.timeToNextHint)}
-      {toggle('resumeCard', 'resumeCard', s.resumeCard, s.resumeCardHint)}
-      {toggle('eveningWrapUp', 'eveningWrapUp', s.eveningWrapUp, s.eveningWrapUpHint)}
-      <details className={styles.details} data-testid="focus-more">
-        <summary>{s.more}</summary>
+      <FoldedGroup
+        section="focus"
+        id="aids"
+        title={s.aids}
+        current={[s.aidsOn(on(AIDS), AIDS.length)]}
+      >
+        {toggle('nextOne', s.nextOne, s.nextOneHint)}
+        {toggle('dayPlan', s.dayPlan, s.dayPlanHint)}
+        {toggle('calmAttention', s.calmAttention, s.calmAttentionHint)}
+        {toggle('timeToNext', s.timeToNext, s.timeToNextHint)}
+        {toggle('resumeCard', s.resumeCard, s.resumeCardHint)}
+        {toggle('eveningWrapUp', s.eveningWrapUp, s.eveningWrapUpHint)}
+      </FoldedGroup>
+      <FoldedGroup
+        section="focus"
+        id="more"
+        testId="focus-more"
+        title={s.more}
+        current={[
+          s.planShort(values.planLimit),
+          s.timerShort(values.focusMinutes),
+          s.aidsOn(on(EXTRAS), EXTRAS.length),
+        ]}
+      >
         <SettingRow id="focus--planLimit" label={s.planLimit} description={s.planLimitHint}>
           <Segmented<string>
             label={s.planLimit}
@@ -62,12 +100,12 @@ export function FocusSection() {
             onChange={(v) => void patch({ focusMinutes: Number(v) })}
           />
         </SettingRow>
-        {toggle('moduleNow', 'moduleNow', s.moduleNow, s.moduleNowHint)}
-        {toggle('focusSound', 'focusSound', s.focusSound, s.focusSoundHint)}
-        {toggle('focusIndicator', 'focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
-        {toggle('streaks', 'streaks', s.streaks, s.streaksHint)}
-        {toggle('weekReview', 'weekReview', s.weekReview, s.weekReviewHint)}
-        {toggle('searchHistory', 'searchHistory', s.searchHistory, s.searchHistoryHint)}
+        {toggle('moduleNow', s.moduleNow, s.moduleNowHint)}
+        {toggle('focusSound', s.focusSound, s.focusSoundHint)}
+        {toggle('focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
+        {toggle('streaks', s.streaks, s.streaksHint)}
+        {toggle('weekReview', s.weekReview, s.weekReviewHint)}
+        {toggle('searchHistory', s.searchHistory, s.searchHistoryHint)}
         <SettingRow
           id="focus--clearHistory"
           label={s.clearHistory}
@@ -82,7 +120,7 @@ export function FocusSection() {
             {s.clearHistory}
           </Button>
         </SettingRow>
-      </details>
+      </FoldedGroup>
     </SettingsGroup>
   );
 }

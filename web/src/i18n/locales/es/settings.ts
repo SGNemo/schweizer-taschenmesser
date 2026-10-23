@@ -222,6 +222,7 @@ export const settings: Strings['settings'] = {
   favouritesHint:
     'Hasta 5 módulos aparecen arriba en la barra lateral. La estrella de un módulo en la barra lateral hace lo mismo.',
   favouritesFull: 'Máximo 5 favoritos: quita otro primero.',
+  favouritesNone: 'Ninguno',
   theme: 'Esquema de color',
   themeSystem: 'Sistema',
   themeLight: 'Claro',
@@ -266,6 +267,8 @@ export const settings: Strings['settings'] = {
     coverHint:
       '25 %: solo texto corrido. 50 %: además títulos y listas. 75 %: además etiquetas y tablas. 100 %: todo el texto, también botones y navegación (no en la bóveda ni en campos de texto).',
     shortcut: 'Atajo de teclado: Alt + L activa y desactiva la ayuda de lectura.',
+    on: 'Activada',
+    off: 'Desactivada',
     preview: 'Vista previa',
     previewText:
       'Así se ve una frase larga con ayuda de lectura: el inicio de las palabras guía la mirada.',
