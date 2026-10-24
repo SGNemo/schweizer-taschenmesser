@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready, openAppearanceGroup } from './helpers';
+import { enable, openFoldedGroup, ready, openAppearanceGroup } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 const categoryNav = (page: Page) =>
@@ -100,9 +100,12 @@ test('the command palette reaches a single setting', async ({ page }, info) => {
 test('module settings are reachable; the vault settings sit under Sicherheit', async ({ page }) => {
   await ready(page, '/settings/module');
   const todos = page.locator('section[aria-labelledby="module-todos"]');
+  await expect(page.getByTestId('module-todos-group-fields')).not.toHaveAttribute('open', '');
+  await openFoldedGroup(page, 'module-todos', 'fields');
   await expect(todos.getByRole('switch', { name: 'Erledigte Aufgaben anzeigen' })).toBeVisible();
   await enable(page, 'accounts');
   await ready(page, '/settings/sicherheit');
+  await openFoldedGroup(page, 'module-accounts', 'fields');
   await expect(page.getByRole('group', { name: 'Tresor sperren nach Inaktivität' })).toBeVisible();
   await ready(page, '/settings/module');
   await expect(page.locator('section[aria-labelledby="module-accounts"]')).toHaveCount(0);
