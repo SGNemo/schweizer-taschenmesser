@@ -138,6 +138,7 @@ export function ItemRow({
   title,
   meta,
   onOpen,
+  href,
   lead,
   end,
   actions,
@@ -158,6 +159,8 @@ export function ItemRow({
   title: ReactNode;
   meta?: ReactNode;
   onOpen?: () => void;
+  /** An external address: the main element is a link (new tab, `noreferrer noopener`) instead of a button; `onOpen` is then unused. */
+  href?: string;
   lead?: ReactNode;
   end?: ReactNode;
   /** Row actions (icon buttons); shown on hover/focus, always on devices without hover. */
@@ -239,7 +242,11 @@ export function ItemRow({
           />
         ) : null}
         {lead}
-        {onOpen ? (
+        {href ? (
+          <a className={styles.main} data-row href={href} target="_blank" rel="noreferrer noopener">
+            {body}
+          </a>
+        ) : onOpen ? (
           <button type="button" className={styles.main} data-row onClick={onOpen}>
             {body}
           </button>

@@ -167,6 +167,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   min-height: var(--touch);
   justify-content: center;
@@ -226,6 +227,11 @@
   .actions {
     opacity: 1;
   }
+}
+/* The row's enter animation makes every row its own layer: the row with an open menu must sit above the rows below it. */
+.item:has(.actionsOpen) {
+  position: relative;
+  z-index: var(--z-hint);
 }
 .chips {
   display: flex;
