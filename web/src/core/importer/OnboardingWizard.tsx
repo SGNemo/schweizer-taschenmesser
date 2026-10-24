@@ -11,7 +11,7 @@ import { getConnector } from '@/core/connectors/registry';
 import { loadStatus } from '@/core/connectors/state';
 import { describeError, scanMail } from '@/core/connectors/service';
 import type { ModuleManifest } from '@/core/modules/types';
-import { pickTextFile } from '@/core/io/pickFile';
+import { pickTextFile, pickTextFiles } from '@/core/io/pickFile';
 import { today } from '@/core/time/now';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -223,6 +223,14 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
     if (!importer) return;
     setError('');
     try {
+      if (importer.multiple) {
+        const files = await pickTextFiles(importer.accept ?? '*/*');
+        if (files.length === 0) return;
+        const label = files.length === 1 ? files[0]!.name : t.onboarding.filesChosen(files.length);
+        setFileName(label);
+        await runParse({ kind: 'file', text: files[0]!.text, fileName: label, files });
+        return;
+      }
       const file = await pickTextFile(importer.accept ?? '*/*');
       if (!file) return;
       setFileName(file.name);
@@ -395,7 +403,7 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
         ) : null}
         {importer.kind === 'text' ? (
           <TextArea
-            label={t.onboarding.textLabel}
+            label={importer.textLabel || t.onboarding.textLabel}
             rows={8}
             value={text}
             placeholder={importer.placeholder}

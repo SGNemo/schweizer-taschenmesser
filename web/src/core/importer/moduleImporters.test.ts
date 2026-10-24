@@ -8,6 +8,7 @@ import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
 import { accountRepo, transactionRepo } from '@/modules/finance/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
+import { noteRepo } from '@/modules/notes/repo';
 import { itemRepo as listItemRepo } from '@/modules/lists/repo';
 import { personRepo } from '@/modules/people/repo';
 import { documentRepo } from '@/modules/vault/repo';
@@ -658,6 +659,69 @@ describe('bookmarks', () => {
     expect(
       (await run('bookmarks', 'text', text('https://EXAMPLE.org/a/'))).rows[0]!.duplicate,
     ).toBe(true);
+  });
+});
+
+describe('notes', () => {
+  const file = (files: { name: string; text: string }[]): ImportInput => ({
+    kind: 'file',
+    text: files[0]!.text,
+    fileName: files[0]!.name,
+    files,
+  });
+
+  it('reads pasted Markdown as one note and dedupes it', async () => {
+    const pasted = await run('notes', 'text', text('# Wochenplan\n\nEinkaufen #haushalt'));
+    expect(pasted.rows).toHaveLength(1);
+    expect(pasted.rows[0]!.candidate.data).toMatchObject({
+      title: 'Wochenplan',
+      body: 'Einkaufen #haushalt',
+    });
+    await commitImport(pasted.manifest, {
+      batchId: 'tb',
+      importerId: 'text',
+      source: 't',
+      rows: pasted.rows,
+    });
+    expect(await noteRepo.active().count()).toBe(1);
+    const again = await run('notes', 'text', text('# wochenplan\n\neinkaufen   #haushalt'));
+    expect(again.rows[0]!.duplicate).toBe(true);
+  });
+
+  it('reads several Markdown files and a Keep export in one go', async () => {
+    const keep = JSON.stringify([
+      { title: 'Einkauf', listContent: [{ text: 'Milch', isChecked: true }], labels: [] },
+      { title: 'Weg', textContent: 'x', isTrashed: true },
+    ]);
+    const r = await run(
+      'notes',
+      'file',
+      file([
+        { name: 'Idee.md', text: '---\ntags: [projekt]\n---\nBäume pflanzen' },
+        { name: 'leer.md', text: '' },
+        { name: 'Einkauf.json', text: keep },
+        { name: 'kaputt.json', text: '{"a":1}' },
+      ]),
+    );
+    expect(r.rows.map((x) => x.candidate.label).sort()).toEqual(['Einkauf', 'Idee']);
+    expect(r.rows.find((x) => x.candidate.label === 'Idee')!.candidate.data.body).toBe(
+      'Bäume pflanzen\n\n#projekt',
+    );
+    expect(r.notes).toHaveLength(3);
+    await commitImport(r.manifest, {
+      batchId: 'tb',
+      importerId: 'file',
+      source: 'f',
+      rows: r.rows,
+    });
+    expect(await noteRepo.active().count()).toBe(2);
+    const again = await run('notes', 'file', file([{ name: 'Einkauf.json', text: keep }]));
+    expect(again.rows[0]!.duplicate).toBe(true);
+  });
+
+  it('treats a single file chosen without a list like one file', async () => {
+    const r = await run('notes', 'file', { kind: 'file', text: 'Hallo', fileName: 'Gruß.md' });
+    expect(r.rows[0]!.candidate.data).toMatchObject({ title: 'Gruß', body: 'Hallo' });
   });
 });
 

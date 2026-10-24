@@ -12,6 +12,7 @@ export const onboarding: Strings['onboarding'] = {
   parsing: 'Lecture…',
   chooseFile: 'Choisir un fichier…',
   fileChosen: (name: string) => `Fichier : ${name}`,
+  filesChosen: (n: number) => `${n} fichiers`,
   textLabel: 'Une ligne = une entrée',
   pickTemplates: 'Choisir des suggestions',
   noInput: 'Veuillez saisir quelque chose.',
@@ -210,6 +211,25 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Coller des liens',
     textHint: 'Une ligne par lien, éventuellement précédé d’un titre.',
     placeholder: 'https://example.org/article\nBelle randonnée https://example.org/randonnee',
+  },
+  notes: {
+    file: 'Fichiers Markdown ou Google Keep',
+    fileHint:
+      'Choisissez des fichiers .md (p. ex. de votre dossier Obsidian, plusieurs à la fois) ou les fichiers .json de Google Takeout (Keep). Titres, listes de tâches et #mots-clés sont conservés. Décompressez d’abord les fichiers ZIP.',
+    text: 'Coller du Markdown',
+    textHint: 'Le texte collé devient une note ; un premier titre devient le titre de la note.',
+    textLabel: 'Texte Markdown',
+    placeholder: '# Plan de la semaine\n\n- Courses #maison\n- Appeler maman',
+    emptyFiles: (n: number) =>
+      n === 1 ? '1 fichier vide a été ignoré.' : `${n} fichiers vides ont été ignorés.`,
+    keepSkipped: (n: number) =>
+      n === 1
+        ? '1 note Keep de la corbeille ou des archives a été laissée de côté.'
+        : `${n} notes Keep de la corbeille ou des archives ont été laissées de côté.`,
+    unreadable: (n: number) =>
+      n === 1
+        ? '1 fichier JSON n’est pas une note Keep et a été ignoré.'
+        : `${n} fichiers JSON ne sont pas des notes Keep et ont été ignorés.`,
   },
   birthdays: {
     text: 'Coller des anniversaires',

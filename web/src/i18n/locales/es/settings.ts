@@ -122,6 +122,10 @@ export const settings: Strings['settings'] = {
     motion: 'Movimiento',
     other: 'Otros',
   },
+  moduleGroups: {
+    fields: 'Campos',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Gestionar módulos',
     description:

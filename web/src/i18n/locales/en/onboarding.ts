@@ -12,6 +12,7 @@ export const onboarding: Strings['onboarding'] = {
   parsing: 'Reading …',
   chooseFile: 'Choose file …',
   fileChosen: (name: string) => `File: ${name}`,
+  filesChosen: (n: number) => `${n} files`,
   textLabel: 'One line = one entry',
   pickTemplates: 'Choose suggestions',
   noInput: 'Please enter something.',
@@ -189,6 +190,25 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Paste links',
     textHint: 'One line per link, optionally with a title in front.',
     placeholder: 'https://example.org/article\nLovely hike https://example.org/hiking',
+  },
+  notes: {
+    file: 'Markdown files or Google Keep',
+    fileHint:
+      'Choose .md files (e.g. from your Obsidian folder, several at once) or the .json files from Google Takeout (Keep). Titles, checklists and #tags are kept. Please unzip ZIP files first.',
+    text: 'Paste Markdown',
+    textHint: 'The pasted text becomes one note; a first heading becomes the title.',
+    textLabel: 'Markdown text',
+    placeholder: '# Weekly plan\n\n- Shopping #household\n- Call Mum',
+    emptyFiles: (n: number) =>
+      n === 1 ? '1 empty file was skipped.' : `${n} empty files were skipped.`,
+    keepSkipped: (n: number) =>
+      n === 1
+        ? '1 Keep note from the trash or archive was left out.'
+        : `${n} Keep notes from the trash or archive were left out.`,
+    unreadable: (n: number) =>
+      n === 1
+        ? '1 JSON file is not a Keep note and was skipped.'
+        : `${n} JSON files are not Keep notes and were skipped.`,
   },
   birthdays: {
     text: 'Paste birthdays',
