@@ -5,11 +5,11 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
-Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton (Erkennung nur Ja/Nein, Ton per Web Audio oder Rust); PR gegen `develop`, wartet auf Review; Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
+Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–4 gemergt (#177–#229: Heute-Karte, ToDo-Seite, Später, Wetter, Bildschirmfoto, Tasten; Einstellungen gefaltet: Darstellung 4424→1787 px, Benachrichtigungen 3003→1893 px, Module 5582→3835 px); Runde 5 läuft (Erinnerungen-Reiter, Lesezeichen, Reste, Stimulus-Budget #227; 5b: Mobile, Import aus ToDo-/Notiz-Apps, Textvergleich/Regex #229, Spotify): `product/focus/15-parallel-prompts-4.md`.
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4, Runden 2–4 und erste Runde-5-PRs gemergt (#177–#230: Heute-Karte, ToDo-Seite, Später, Wetter, Bildschirmfoto, Tasten, Stimulus-Budget, Textvergleich/Regex, Notizen-Import; Einstellungen gefaltet: Darstellung 4424→1787 px, Benachrichtigungen 3003→1893 px, Module 5582→3835 px); offen in Runde 5: Erinnerungen-Reiter, Lesezeichen, ToDo-Import, Reste, Mobile, Spotify (`product/focus/15-parallel-prompts-4.md`).
 
-Kürzelkarte: [features/shortcuts.md](features/shortcuts.md). Neu (aus): Textvergleich, Regex-Tester.
+Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import (Markdown, Keep): [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester.
 
 KI-Erinnerungen per Satz (`feat/ai-reminder-voice`): „Erinner mich um 15 Uhr an die Wäsche“, „in 20 Minuten Pizza rausnehmen“ → Erinnerung mit Benachrichtigung (Regeln, 0 Token, Zeiten rechnet der Code), Vorschau mit großer Uhrzeit, „Speichern“/„Ändern“; Handtest: Satz per Sprache auf dem Android-Gerät, Benachrichtigung zur Zeit.
 
