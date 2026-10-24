@@ -79,3 +79,27 @@ describe('backStack', () => {
     expect(location.pathname).toBe('/');
   });
 });
+
+describe('backStack and the router', () => {
+  it('an entry the router replaced in place (same idx) is still removed on release', async () => {
+    history.replaceState({ idx: 3 }, '', '/bookmarks?new=1');
+    pushBack('a', () => undefined);
+    history.replaceState({ idx: 3 }, '', '/bookmarks'); // setParams({}, { replace: true })
+    releaseBack('a');
+    await settle();
+    expect(history.state?.idx).toBe(3);
+    expect(history.state?.tmBack).toBeUndefined();
+    expect(backDepth()).toBe(0);
+    // The entry below showed `?new=1`; it now shows what the router had made of ours.
+    expect(location.pathname + location.search).toBe('/bookmarks');
+  });
+
+  it('a page the router pushed after the entry is left alone', async () => {
+    history.replaceState({ idx: 3 }, '', '/a');
+    pushBack('a', () => undefined);
+    history.pushState({ idx: 4 }, '', '/b');
+    releaseBack('a');
+    await settle();
+    expect(location.pathname).toBe('/b');
+  });
+});

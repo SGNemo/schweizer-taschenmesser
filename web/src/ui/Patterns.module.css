@@ -551,7 +551,7 @@ button.chip[aria-pressed='true'] {
 .swipeable {
   position: relative;
   /* Only the sideways action layer is clipped; a row menu may open upwards or downwards over it. */
-  overflow-x: clip;
+  clip-path: inset(-100vh 0);
 }
 .swipeable > .row {
   position: relative;

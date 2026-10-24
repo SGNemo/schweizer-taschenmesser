@@ -43,14 +43,22 @@ export function RowMenu({
   useLayoutEffect(() => {
     if (!open || !list.current || !button.current) return;
     const rect = button.current.getBoundingClientRect();
+    // The menu is clipped by the page's scroll area, so measure against that, not the screen.
+    let scroller: HTMLElement | null = button.current.parentElement;
+    while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY))
+      scroller = scroller.parentElement;
+    const area = scroller?.getBoundingClientRect();
+    const screen = window.visualViewport?.height ?? window.innerHeight;
+    const top = area?.top ?? 0;
+    const bottom = Math.min(area?.bottom ?? screen, screen);
     const bar = document.querySelector('[data-bottom-bar]')?.getBoundingClientRect();
     setSide(
       menuSide({
-        triggerTop: rect.top,
-        triggerBottom: rect.bottom,
+        triggerTop: rect.top - top,
+        triggerBottom: rect.bottom - top,
         menuHeight: list.current.offsetHeight + 8,
-        viewportHeight: window.visualViewport?.height ?? window.innerHeight,
-        bottomReserve: bar && bar.height > 0 ? Math.max(0, window.innerHeight - bar.top) : 0,
+        viewportHeight: bottom - top,
+        bottomReserve: bar && bar.height > 0 ? Math.max(0, bottom - bar.top) : 0,
       }),
     );
   }, [open]);
