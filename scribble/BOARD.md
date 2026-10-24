@@ -6,6 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - [ ] 2026-10-17 · `chore/chat-scribble` · example: "Does anyone already synthesise a sound with Web Audio? Then I reuse it." → answer here.
 
 ## Heads-up (I am touching …)
+- 2026-10-24 · `feat/focus2-module-fold` · Settings → Module: `pages/settings/ModuleSection.tsx` (+ tiny `FoldedGroup.tsx` change: empty value shows the title only), new strings `settings.moduleGroups`, specs that click a module field open `module-<id>`/`fields` first.
 - 2026-10-24 · `feat/tools-diff-regex` · new `web/src/tools/diff`, `web/src/tools/regex`, tool strings (`strings.ts` block `tools`, `i18n/locales/*/tools.ts`), `TOOL_CHORDS` in `core/keyboard/map.ts` (two letters, additive), `e2e/tools-diff-regex.spec.ts`.
 - 2026-10-24 · `feat/notes-import` · `core/io/markdownNote.ts`, `core/io/googleKeep.ts`, `modules/notes/{importer,onboarding,manifest}.ts`, small additive `multiple` flag in `core/importer/{types,OnboardingWizard}`, `core/io/pickFile.ts`, onboarding strings.
 - 2026-10-24 · `feat/phone-one-hand` · touching `core/shell/backStack.ts` (new), `ui/Dialog.tsx`, `ui/RowMenu.tsx`, `layout/CommandPalette.tsx`, small additive in `layout/AppShell.tsx`, add fields (todos/notes/quick capture) for visualViewport, `e2e/phone-paths.spec.ts` (new). Until my PR is in: additive edits only there please.
