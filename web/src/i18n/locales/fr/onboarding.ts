@@ -110,7 +110,8 @@ export const onboarding: Strings['onboarding'] = {
     includeDone: 'Tâches terminées',
     doneNo: 'Laisser de côté',
     doneYes: 'Reprendre comme terminées',
-    repeatNote: (text: string) => `Répétition dans la source : ${text} (ne se répète pas automatiquement)`,
+    repeatNote: (text: string) =>
+      `Répétition dans la source : ${text} (ne se répète pas automatiquement)`,
     dueNote: (text: string) => `Échéance dans la source : ${text}`,
     skippedDone: (n: number) =>
       n === 1

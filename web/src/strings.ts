@@ -4328,7 +4328,8 @@ export const de = {
       includeDone: 'Erledigte Aufgaben',
       doneNo: 'Nicht mitnehmen',
       doneYes: 'Als erledigt mitnehmen',
-      repeatNote: (text: string) => `Wiederholung in der Quelle: ${text} (wird nicht automatisch wiederholt)`,
+      repeatNote: (text: string) =>
+        `Wiederholung in der Quelle: ${text} (wird nicht automatisch wiederholt)`,
       dueNote: (text: string) => `Fällig laut Quelle: ${text}`,
       skippedDone: (n: number) =>
         n === 1
