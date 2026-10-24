@@ -531,7 +531,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
                 {o.recent ? <span className={styles.optionMeta}>{t.palette.recent}</span> : null}
               </span>
               {o.kind === 'command' && o.command.shortcut ? (
-                <Keys keys={o.command.shortcut} />
+                <Keys keys={o.command.shortcut} decorative />
               ) : null}
             </li>
           ))}

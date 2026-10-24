@@ -38,3 +38,4 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Tool order by drag and drop** in Einstellungen → Werkzeuge via the shared `@/ui` `SortableList` (dnd-kit, same sensors and screen-reader texts as the home widgets); the up/down buttons stay as the plain alternative. Keyboard: Space, arrows, Space.
 - **Not done:** pinning the popover open (the toolbox is a dialog; a second window needs platform work), detachable/always-on-top tool windows and a background timer on Android (platform; see ROADMAP).
 
+- **Palette key caps are not part of the option name (2026-10-24):** `<Keys decorative>` sets `aria-hidden` inside `role="option"`, so the name is the label only ("Timer", not "Timer T dann T"); the key is not repeated in a hidden text because the `?` sheet lists every key. The voice key sorts among the F-keys there when it is an F-key.
