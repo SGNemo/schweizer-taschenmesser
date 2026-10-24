@@ -7,7 +7,7 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton (Erkennung nur Ja/Nein, Ton per Web Audio oder Rust); PR gegen `develop`, wartet auf Review; Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–4 gemergt (#177–#229: Heute-Karte, ToDo-Seite, Später, Wetterzeile, Bildschirmfoto, Tastenkarte; Einstellungen gefaltet: Darstellung 4424→1787 px, Benachrichtigungen 3003→1893 px, Module 5582→3835 px); Runde 5 läuft (Erinnerungen-Reiter, Lesezeichen, Reste, Stimulus-Budget #227; 5b: Mobile, Import aus ToDo-/Notiz-Apps, Textvergleich/Regex #229, Spotify): `product/focus/15-parallel-prompts-4.md`.
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–4 gemergt (#177–#229: Heute-Karte, ToDo-Seite, Später, Wetter, Bildschirmfoto, Tasten; Einstellungen gefaltet: Darstellung 4424→1787 px, Benachrichtigungen 3003→1893 px, Module 5582→3835 px); Runde 5 läuft (Erinnerungen-Reiter, Lesezeichen, Reste, Stimulus-Budget #227; 5b: Mobile, Import aus ToDo-/Notiz-Apps, Textvergleich/Regex #229, Spotify): `product/focus/15-parallel-prompts-4.md`.
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md). Neu (aus): Textvergleich, Regex-Tester.
 
