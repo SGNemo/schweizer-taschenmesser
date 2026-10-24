@@ -143,6 +143,7 @@ export function CaptureForm({
       setText('');
       setOverride(undefined);
       setConfirming(false);
+      inputRef.current?.focus();
     } catch (e) {
       setError(errorText(e));
       setConfirming(false);
@@ -164,6 +165,7 @@ export function CaptureForm({
     <form
       ref={formRef}
       className={styles.form}
+      data-keep-visible
       onSubmit={(e) => {
         e.preventDefault();
         submit();

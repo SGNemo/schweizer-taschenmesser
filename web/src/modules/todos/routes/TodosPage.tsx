@@ -313,6 +313,8 @@ export default function TodosPage() {
     );
     toast(t.todos.added);
     setTitle('');
+    // The next entry follows right away: the field keeps the focus (and the keyboard stays up).
+    addRef.current?.querySelector('input')?.focus();
   }
 
   function select(id: string) {
@@ -476,7 +478,7 @@ export default function TodosPage() {
 
       <div className={styles.layout}>
         <div className={styles.main}>
-          <form ref={addRef} onSubmit={add} className={styles.add}>
+          <form ref={addRef} onSubmit={add} className={styles.add} data-keep-visible>
             <div className={styles.grow}>
               <TextField
                 label={t.todos.add}

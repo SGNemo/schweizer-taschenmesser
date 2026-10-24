@@ -33,6 +33,16 @@
     max-width: none;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     padding-bottom: env(safe-area-inset-bottom);
+    /* A keyboard that only shrinks the visual viewport lifts the sheet (core/shell/keyboardInset.ts). */
+    margin-bottom: var(--kb-inset, 0px);
+    max-height: calc(88dvh - var(--kb-inset, 0px));
+  }
+  /* Thumb zone: the main action stays at the bottom edge, bottom right, while the form scrolls. */
+  .dialog:not(.full) .footer {
+    position: sticky;
+    inset-block-end: 0;
+    padding-block: var(--space-2);
+    background: var(--surface);
   }
   .dialog:not(.full)[open] {
     animation: slide var(--dur-slow) var(--ease-out);

@@ -15,6 +15,11 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-2);
 }
+.up {
+  inset-block-start: auto;
+  inset-block-end: 100%;
+  margin: 0 0 var(--space-1);
+}
 .group {
   padding: var(--space-2) var(--space-3) var(--space-1);
   color: var(--text-3);
