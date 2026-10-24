@@ -9,7 +9,7 @@ Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerunge
 
 Fokus-Prüfung Runde 2 (`docs/product/focus/`): Prüfung und Plan #176; Pakete 1–3 (#177, #185, #188, #204), Runde-2-Chats (#180–#184, Prompts `product/focus/13-parallel-prompts.md`), Wetterzeile (#206), Bildschirmfoto (#207) und Runde 3 (#211–#219) gemergt; Runde 4: Darstellung (#222, 4424→1787 px) und Ruhige Erinnerungen (3003→1893 px) und Module (5582→3835 px, PR) gefaltet; danach die Tagebuch-Woche.
 
-Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import (Markdown, Keep): [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
+Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
 
 KI-Erinnerungen per Satz (`feat/ai-reminder-voice`): „Erinner mich um 15 Uhr an die Wäsche“, „in 20 Minuten Pizza rausnehmen“ → Erinnerung mit Benachrichtigung (Regeln, 0 Token, Zeiten rechnet der Code), Vorschau mit großer Uhrzeit, „Speichern“/„Ändern“; Handtest: Satz per Sprache auf dem Android-Gerät, Benachrichtigung zur Zeit.
 
