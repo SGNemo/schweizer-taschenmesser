@@ -99,6 +99,9 @@ export const focus: Strings['focus'] = {
     todoDigestHint:
       'Un message par jour qui cite les tâches du jour. Pas de message séparé pour chaque tâche.',
     digestTime: 'Heure du résumé',
+    inAppGroup: 'Carte dans l’app',
+    on: 'Activé',
+    off: 'Désactivé',
   },
   resume: {
     title: 'Où en étais-je ?',

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { openFoldedGroup, ready } from './helpers';
 
 /** Creates a reminder for 20:00 on 2026-09-29 through the calendar's reminder dialog. */
 async function addReminder(page: Page, title: string) {
@@ -16,6 +16,7 @@ async function addReminder(page: Page, title: string) {
 /** The automatic in-app card is off by default; the tests of the card switch it on in the settings. */
 async function enableCard(page: Page) {
   await page.goto('/settings/benachrichtigungen');
+  await openFoldedGroup(page, 'calm-reminders', 'inApp');
   const card = page.getByRole('switch', { name: 'Erinnerungen in der App automatisch einblenden' });
   await expect(card).toHaveAttribute('aria-checked', 'false');
   await card.click();
@@ -143,6 +144,7 @@ test.describe('Calm reminders', () => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
     await enableCard(page);
     const section = page.locator('section[aria-labelledby="calm-reminders"]');
+    await openFoldedGroup(page, 'calm-reminders', 'followUp');
     const repeat = section.getByRole('switch', { name: 'Ruhig wiederholen' });
     await expect(repeat).toHaveAttribute('aria-checked', 'true');
     await repeat.click();
@@ -161,6 +163,9 @@ test.describe('Calm reminders', () => {
     await ready(page, '/settings/benachrichtigungen');
     const section = page.locator('section[aria-labelledby="calm-reminders"]');
     await expect(section).toBeVisible();
+    for (const id of ['quiet', 'limit', 'staggered', 'followUp', 'digest']) {
+      await openFoldedGroup(page, 'calm-reminders', id);
+    }
     const quiet = section.getByRole('switch', { name: 'Ruhezeit' });
     await expect(quiet).toHaveAttribute('aria-checked', 'true');
     await expect(section.getByLabel('Von')).toHaveValue('22:00');
@@ -176,6 +181,10 @@ test.describe('Calm reminders', () => {
 
     await page.reload();
     const again = page.locator('section[aria-labelledby="calm-reminders"]');
+    await expect(again).toBeVisible();
+    for (const id of ['quiet', 'limit', 'staggered', 'followUp', 'digest']) {
+      await openFoldedGroup(page, 'calm-reminders', id);
+    }
     await expect(again.getByLabel('Von')).toHaveValue('21:30');
     await expect(again.getByRole('button', { name: '5', exact: true })).toHaveAttribute(
       'aria-pressed',

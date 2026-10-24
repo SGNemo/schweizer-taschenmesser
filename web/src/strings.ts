@@ -1047,6 +1047,9 @@ export const de = {
       todoDigestHint:
         'Ein Hinweis pro Tag, der die ToDos für heute nennt. Keine Einzelhinweise je Aufgabe.',
       digestTime: 'Uhrzeit der Übersicht',
+      inAppGroup: 'Karte in der App',
+      on: 'An',
+      off: 'Aus',
     },
     resume: {
       title: 'Woran war ich?',

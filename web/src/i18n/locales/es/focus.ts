@@ -107,6 +107,9 @@ export const focus: Strings['focus'] = {
     todoDigest: 'Tareas por la mañana',
     todoDigestHint: 'Un aviso al día con las tareas de hoy. Sin avisos sueltos por cada tarea.',
     digestTime: 'Hora del resumen',
+    inAppGroup: 'Tarjeta en la app',
+    on: 'Activado',
+    off: 'Desactivado',
   },
   resume: {
     title: '¿Dónde me quedé?',

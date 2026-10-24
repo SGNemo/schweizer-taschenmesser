@@ -89,6 +89,9 @@ export const focus: Strings['focus'] = {
     todoDigest: 'To-dos in the morning',
     todoDigestHint: 'One note per day listing today’s to-dos. No separate note for each task.',
     digestTime: 'Summary time',
+    inAppGroup: 'Card in the app',
+    on: 'On',
+    off: 'Off',
   },
   resume: {
     title: 'Where was I?',
