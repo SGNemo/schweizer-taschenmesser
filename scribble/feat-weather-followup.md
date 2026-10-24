@@ -6,3 +6,4 @@ for the next chat:
 - Not built: setup-assistant step "Stadt für das Wetter" (parked, see feature note).
 - The line now sits under "Jetzt wichtig" (from #206), not above the Heute card; unchanged on purpose.
 - Gotcha: `git stash -u` while a background Playwright run is active breaks that run; also `pkill -f` kills your own shell.
+- Update 2026-10-24: Open-Meteo credit ("Wetterdaten von Open-Meteo.com (CC BY 4.0)") is merged (#223) in the weather settings. The `i18n-layout` 360 px test is green on current `develop` (the earlier local red was not reproducible). Still open for the maintainer: CORS check in a real browser, non-commercial licence question.
