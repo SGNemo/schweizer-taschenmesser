@@ -242,3 +242,13 @@ test('a profile shows its diff and needs a confirmation before it switches modul
   await dialog.getByLabel('Ich habe die Änderungen geprüft und möchte sie übernehmen.').check();
   await expect(dialog.getByRole('button', { name: 'Weiter' })).toBeEnabled();
 });
+
+test('an empty module page links to the assistant, which opens on the start-data step', async ({
+  page,
+}) => {
+  await ready(page, '/todos');
+  await expect(wizard(page)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Einrichtung öffnen' }).click();
+  await expect(wizard(page)).toBeVisible();
+  await expect(wizard(page).getByRole('heading', { name: 'Startdaten' })).toBeVisible();
+});
