@@ -144,6 +144,16 @@ test.describe('Weather line', () => {
     await expect(page.getByText('nicht erreichbar')).toHaveCount(0);
   });
 
+  test('the settings credit Open-Meteo (CC BY 4.0)', async ({ page }) => {
+    await ready(page, '/settings/verbindungen');
+    const credit = page.getByTestId('weather-attribution');
+    await expect(credit).toContainText('Wetterdaten von');
+    await expect(credit.getByRole('link', { name: 'Open-Meteo.com (CC BY 4.0)' })).toHaveAttribute(
+      'href',
+      'https://open-meteo.com/',
+    );
+  });
+
   test('a failing search says so calmly in the settings', async ({ page }) => {
     await page.route('**://geocoding-api.open-meteo.com/**', (route) => route.abort());
     await ready(page, '/settings/verbindungen');

@@ -83,6 +83,12 @@ export function WeatherSection() {
             ))}
           </ul>
         ) : null}
+        <p data-testid="weather-attribution">
+          {tx.attribution}{' '}
+          <a href="https://open-meteo.com/" target="_blank" rel="noreferrer noopener">
+            {tx.attributionLink}
+          </a>
+        </p>
       </SettingRow>
     </>
   );

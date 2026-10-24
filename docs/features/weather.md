@@ -17,6 +17,9 @@ One calm line on the Overview: place, temperature now, a few words, a rain hint 
 - The place name and position live in the synced settings scope `weather` and in the local cache; they are **not** part of diagnostics (canary test in `core/diagnostics/diagnostics.test.ts`), logs or bug reports. The assistant never gets them.
 - Registered as data flow `weather` ([DATA-FLOWS](../legal/DATA-FLOWS.md)) with a one-time notice before the first search.
 
+## Attribution
+Open-Meteo data is CC BY 4.0: Settings → Wetter shows "Wetterdaten von Open-Meteo.com (CC BY 4.0)" with a link (`weather-attribution`). Whether the non-commercial free tier fits stays the maintainer's call ([decisions/weather.md](../decisions/weather.md)).
+
 ## CORS
 Open-Meteo documents `Access-Control-Allow-Origin: *` for browser use, so the PWA and the Tauri webview call it directly. Not verified from the build sandbox (no outbound access to the host); the E2E specs mock both hosts (`web/e2e/weather.spec.ts`). Check once with a real browser before a release.
 
