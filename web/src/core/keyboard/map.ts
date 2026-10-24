@@ -22,6 +22,8 @@ export const TOOL_CHORDS = {
   i: 'image',
   p: 'pdf',
   v: 'dev',
+  f: 'diff',
+  e: 'regex',
 } as const;
 export type ToolChordLetter = keyof typeof TOOL_CHORDS;
 
