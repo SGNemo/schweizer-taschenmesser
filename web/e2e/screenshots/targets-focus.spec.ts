@@ -13,6 +13,7 @@ const PAGES = [
   '/',
   '/todos',
   '/calendar',
+  '/calendar?tab=reminders',
   '/finance',
   '/notes',
   '/lists',

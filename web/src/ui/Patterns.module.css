@@ -227,6 +227,11 @@
     opacity: 1;
   }
 }
+/* An open "⋯" menu paints above the positioned buttons (`end`) of the rows below it. */
+.item:has(.actionsOpen) {
+  position: relative;
+  z-index: var(--z-raised);
+}
 .chips {
   display: flex;
   flex-wrap: wrap;
