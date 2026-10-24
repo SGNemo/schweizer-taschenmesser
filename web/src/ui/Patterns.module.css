@@ -550,7 +550,8 @@ button.chip[aria-pressed='true'] {
 /* Swipe rows (touch): the row slides over a coloured action layer. */
 .swipeable {
   position: relative;
-  overflow: hidden;
+  /* Only the sideways action layer is clipped; a row menu may open upwards or downwards over it. */
+  overflow-x: clip;
 }
 .swipeable > .row {
   position: relative;
