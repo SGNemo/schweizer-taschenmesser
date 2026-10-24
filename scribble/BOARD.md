@@ -6,6 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - [ ] 2026-10-17 · `chore/chat-scribble` · example: "Does anyone already synthesise a sound with Web Audio? Then I reuse it." → answer here.
 
 ## Heads-up (I am touching …)
+- 2026-10-24 · `feat/notes-import` · `core/io/markdownNote.ts`, `core/io/googleKeep.ts`, `modules/notes/{importer,onboarding,manifest}.ts`, small additive `multiple` flag in `core/importer/{types,OnboardingWizard}`, `core/io/pickFile.ts`, onboarding strings.
 - 2026-10-24 · `feat/phone-one-hand` · touching `core/shell/backStack.ts` (new), `ui/Dialog.tsx`, `ui/RowMenu.tsx`, `layout/CommandPalette.tsx`, small additive in `layout/AppShell.tsx`, add fields (todos/notes/quick capture) for visualViewport, `e2e/phone-paths.spec.ts` (new). Until my PR is in: additive edits only there please.
 - 2026-10-24 · `fix/setup-link-empty-states` · `core/importer/StartDataButton.tsx`, `core/setup/registry.ts` (additive helper), `i18n` setup strings, `e2e/setup.spec.ts`. Next in line (own branches, one after the other): `fix/palette-keys-a11y` (`ui/Keys.tsx`, `layout/CommandPalette.tsx`, `layout/ShortcutSheet.tsx`), `fix/weather-cache-schema` (`core/weather/cache.ts` only).
 - 2026-10-24 · `chore/stimulus-budget` · `web/package.json` (scripts only: `check:stimulus`, `stimulus:baseline`), `.github/workflows/ci.yml` (one new warnings-only job next to `docs-budget`), `web/e2e/screenshots/stimulus.spec.ts`, new `web/e2e/stimulus-budget.json`.
