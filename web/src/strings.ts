@@ -4304,6 +4304,7 @@ export const de = {
     parsing: 'Wird gelesen …',
     chooseFile: 'Datei wählen …',
     fileChosen: (name: string) => `Datei: ${name}`,
+    filesChosen: (n: number) => `${n} Dateien`,
     textLabel: 'Eine Zeile = ein Eintrag',
     pickTemplates: 'Vorschläge auswählen',
     noInput: 'Bitte gib etwas ein.',
@@ -4460,6 +4461,25 @@ export const de = {
       text: 'Links einfügen',
       textHint: 'Eine Zeile pro Link, optional mit Titel davor.',
       placeholder: 'https://example.org/artikel\nSchöne Wanderung https://example.org/wandern',
+    },
+    notes: {
+      file: 'Markdown-Dateien oder Google Keep',
+      fileHint:
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen. ZIP-Dateien bitte vorher entpacken.',
+      text: 'Markdown einfügen',
+      textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
+      textLabel: 'Markdown-Text',
+      placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
+      emptyFiles: (n: number) =>
+        n === 1 ? '1 leere Datei wurde übersprungen.' : `${n} leere Dateien wurden übersprungen.`,
+      keepSkipped: (n: number) =>
+        n === 1
+          ? '1 Keep-Notiz aus Papierkorb oder Archiv wurde ausgelassen.'
+          : `${n} Keep-Notizen aus Papierkorb oder Archiv wurden ausgelassen.`,
+      unreadable: (n: number) =>
+        n === 1
+          ? '1 JSON-Datei ist keine Keep-Notiz und wurde übersprungen.'
+          : `${n} JSON-Dateien sind keine Keep-Notizen und wurden übersprungen.`,
     },
     birthdays: {
       text: 'Geburtstage einfügen',
