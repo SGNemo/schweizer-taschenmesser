@@ -57,8 +57,14 @@ export function groupNames(pattern: string): (string | undefined)[] {
     } else if (c === '(') {
       if (pattern[i + 1] !== '?') names.push(undefined);
       else {
-        const m = /^\(\?<([A-Za-z_$][\w$]*)>/.exec(pattern.slice(i, i + 80));
+        // Named groups allow any identifier (`(?<ü>…)`, `(?<日付>…)`); `(?:`, `(?=`, `(?<=` and `(?<!`
+        // capture nothing. A name that still fails to parse is pushed as unnamed so the numbering stays right.
+        const m = /^\(\?<([\p{ID_Start}$_][\p{ID_Continue}$\u200c\u200d]*)>/u.exec(
+          pattern.slice(i),
+        );
         if (m) names.push(m[1]);
+        else if (pattern[i + 2] === '<' && pattern[i + 3] !== '=' && pattern[i + 3] !== '!')
+          names.push(undefined);
       }
     }
   }
@@ -73,10 +79,12 @@ export function runRegex(req: RegexRequest): RegexOutcome {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
-  const names = groupNames(req.pattern);
+  const parsed = groupNames(req.pattern);
   const toHit = (m: RegExpMatchArray | RegExpExecArray): Hit => {
     const index = m.index ?? 0;
     const groups: GroupHit[] = [];
+    // The engine's count is the truth: when the scan disagrees, names could sit on the wrong group.
+    const names = parsed.length === m.length - 1 ? parsed : [];
     for (let n = 1; n < m.length; n++) {
       const name = names[n - 1];
       groups.push({ num: n, ...(name ? { name } : {}), value: m[n] });
