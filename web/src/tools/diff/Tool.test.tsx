@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const copy = vi.hoisted(() => vi.fn(async () => true));
+const copy = vi.hoisted(() => vi.fn<(text: string) => Promise<boolean>>(async () => true));
 vi.mock('../shared', async (orig) => ({ ...(await orig<object>()), copyText: copy }));
 
 import DiffTool from './Tool';
