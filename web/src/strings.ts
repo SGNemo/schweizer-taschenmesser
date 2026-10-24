@@ -4320,6 +4320,32 @@ export const de = {
         'Füge eine Liste aus einer Notiz-App oder einer Nachricht ein: eine Zeile pro Aufgabe.',
       placeholder: 'Steuerunterlagen sortieren\nZahnarzt anrufen\nFahrrad reparieren',
       list: 'In diese Liste',
+      file: 'Aus Todoist oder Google Tasks',
+      fileHint:
+        'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV oder Google-Tasks-Datei (JSON). Es wird nichts hochgeladen.',
+      perSource: 'Je Quell-Liste eine eigene Liste',
+      newList: 'Neue Liste',
+      includeDone: 'Erledigte Aufgaben',
+      doneNo: 'Nicht mitnehmen',
+      doneYes: 'Als erledigt mitnehmen',
+      repeatNote: (text: string) =>
+        `Wiederholung in der Quelle: ${text} (wird nicht automatisch wiederholt)`,
+      dueNote: (text: string) => `Fällig laut Quelle: ${text}`,
+      skippedDone: (n: number) =>
+        n === 1
+          ? '1 erledigte Aufgabe wurde nicht mitgenommen.'
+          : `${n} erledigte Aufgaben wurden nicht mitgenommen.`,
+      skippedOther: (n: number) =>
+        n === 1
+          ? '1 Eintrag (Abschnitt, gelöscht oder ohne Titel) wurde übersprungen.'
+          : `${n} Einträge (Abschnitte, gelöschte oder ohne Titel) wurden übersprungen.`,
+      repeats: (n: number) =>
+        n === 1
+          ? '1 Aufgabe wiederholt sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.'
+          : `${n} Aufgaben wiederholen sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.`,
+      tooMany: (max: number) => `Es werden die ersten ${max} Aufgaben gezeigt.`,
+      unknownFormat:
+        'Das Format wurde nicht erkannt. Gebraucht wird die Todoist-CSV oder die Google-Tasks-Datei (JSON).',
     },
     reminders: {
       textDetail: 'heute, 09:00 Uhr',

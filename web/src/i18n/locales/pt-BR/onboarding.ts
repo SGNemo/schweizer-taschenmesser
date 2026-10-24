@@ -99,6 +99,31 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Cole uma lista de um app de notas ou de uma mensagem: uma linha por tarefa.',
     placeholder: 'Organizar documentos do imposto\nLigar para o dentista\nConsertar a bicicleta',
     list: 'Nesta lista',
+    file: 'Do Todoist ou do Google Tasks',
+    fileHint:
+      'Escolha o arquivo que você mesmo exportou de lá: CSV do Todoist ou arquivo do Google Tasks (JSON). Nada é enviado.',
+    perSource: 'Uma lista própria para cada lista de origem',
+    newList: 'Lista nova',
+    includeDone: 'Tarefas concluídas',
+    doneNo: 'Deixar de fora',
+    doneYes: 'Trazer como concluídas',
+    repeatNote: (text: string) => `Repetição na origem: ${text} (não se repete automaticamente)`,
+    dueNote: (text: string) => `Vencimento na origem: ${text}`,
+    skippedDone: (n: number) =>
+      n === 1
+        ? '1 tarefa concluída foi deixada de fora.'
+        : `${n} tarefas concluídas foram deixadas de fora.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? '1 entrada (seção, excluída ou sem título) foi ignorada.'
+        : `${n} entradas (seções, excluídas ou sem título) foram ignoradas.`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 tarefa se repete na origem. A repetição aparece só como aviso na nota; nada se repete automaticamente.'
+        : `${n} tarefas se repetem na origem. A repetição aparece só como aviso na nota; nada se repete automaticamente.`,
+    tooMany: (max: number) => `Mostrando as primeiras ${max} tarefas.`,
+    unknownFormat:
+      'O formato não foi reconhecido. É preciso o CSV do Todoist ou o arquivo do Google Tasks (JSON).',
   },
   reminders: {
     textDetail: 'hoje, 09:00',
