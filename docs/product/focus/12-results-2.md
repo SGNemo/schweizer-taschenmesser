@@ -99,3 +99,21 @@ Same tool and seeded Dev build; baseline = `develop` after #222. No screenshots:
 
 - The permission card and Zock-Modus above it are not touched (different pattern: cards with a heading, not setting rows).
 - Tests: `CalmRemindersSection.test.tsx` (six closed lines with the defaults, every row inside its group, the line follows a change); `e2e/reminders.spec.ts` opens the groups first (`openFoldedGroup`), none removed or weakened.
+
+## Erinnerungen-Reiter – calm (`feat/focus2-reminders-tab`)
+Same tool (`measure:stimulus`, seeded medium data) and `targets-focus` (page `/calendar?tab=reminders` added).
+
+| Metric (Kalender → Erinnerungen) | Before | After |
+|---|---|---|
+| Phone, page height | 4064 px | **1996 px** |
+| Desktop, page height (1280×800) | 1921 px (scrolls) | **800 px (no scroll)** |
+| Phone, buttons | 82 | 59 |
+| Phone, first-screen actions | 30 | 36 (more rows fit above the fold) |
+| Phone, elements counted under 44 px (raw) | 53 | 31 (the rest are 32 px buttons/"⋯" with a 44 px hit area) |
+| Real gaps under 44 px (`targets-focus`) | 1 (banner link "Benachrichtigungen aktivieren") | **0** |
+
+- Per row: title, next time, one main button "Erledigt" (one-off reminders still to come) and "⋯" (Später, Pausieren / Wieder einschalten, Bearbeiten, Löschen). The on/off switch is gone from the row; a repeat has no "Erledigt".
+- Groups (`reminderGroups.ts`): Heute, Diese Woche (tomorrow to Sunday), Später; "Erledigt" (paused or over) starts folded (`GroupedList` `defaultClosed`).
+- Reminder logic, notifications, attention and data are untouched; "Erledigt" is the existing pause (notify off), undoable.
+- Tests: `__tests__/reminderGroups.test.ts`, `__tests__/remindersTab.test.tsx`, `e2e/reminders-tab.spec.ts` (desktop + pixel-7); `e2e/core.spec.ts` pauses through the menu.
+
