@@ -97,7 +97,7 @@ export function ModuleSection({ manifest }: { manifest: ModuleManifest }) {
             {importersOf(manifest).some((i) => i.id === JSON_IMPORTER_ID) ? (
               <CopySchemaButton manifest={manifest} />
             ) : null}
-            <StartDataButton moduleId={manifest.id} />
+            <StartDataButton moduleId={manifest.id} setupLink={false} />
           </span>
         </SettingRow>
       ) : null}
