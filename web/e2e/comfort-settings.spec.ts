@@ -162,3 +162,13 @@ test('appearance: a deep link into a folded field opens its group and lands on t
   await expect(page.locator('#appearance--density')).toHaveAttribute('data-highlight', 'true');
   await expect(page.getByTestId('appearance-group-theme')).not.toHaveAttribute('open', '');
 });
+
+test('module settings: a deep link into a folded field opens the module group and lands on the row', async ({
+  page,
+}) => {
+  await enableExample(page);
+  await ready(page, '/settings/module#module-example--showDone');
+  await expect(page.getByTestId('module-example-group-fields')).toHaveAttribute('open', '');
+  await expect(page.locator('#module-example--showDone')).toBeInViewport();
+  await expect(page.locator('#module-example--showDone')).toHaveAttribute('data-highlight', 'true');
+});

@@ -5,6 +5,7 @@ import {
   moduleSwitch,
   showAllWidgets,
   openAppearanceGroup,
+  openFoldedGroup,
 } from './helpers';
 
 test.describe('module library', () => {
@@ -175,12 +176,14 @@ test.describe('shell', () => {
   test('module settings appear for active modules and persist', async ({ page }) => {
     await enableExample(page);
     await page.goto('/settings/module');
+    await openFoldedGroup(page, 'module-example', 'fields');
     const toggle = page.getByRole('switch', { name: 'Erledigte anzeigen' });
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await toggle.click();
     // Wait until the write went through IndexedDB and the live query reflects it.
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await page.reload();
+    await openFoldedGroup(page, 'module-example', 'fields');
     await expect(page.getByRole('switch', { name: 'Erledigte anzeigen' })).toHaveAttribute(
       'aria-checked',
       'false',
