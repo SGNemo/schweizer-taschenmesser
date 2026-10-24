@@ -51,7 +51,7 @@ describe('runRegex', () => {
   });
 
   it('labels non-ASCII named groups correctly', () => {
-    const r = ok(runRegex({ pattern: '(?<ü>a)(?<x>b)', flags: [], text: 'ab' }));
+    const r = ok(runRegex({ pattern: '(?<ü>a)(?<x>b)', flags: '', text: 'ab' }));
     expect(r.hits[0]!.groups.map((g) => g.name)).toEqual(['ü', 'x']);
   });
   it('honours i, m and s', () => {
