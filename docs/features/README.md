@@ -11,3 +11,4 @@
 | [shortcuts.md](shortcuts.md) | key map: `T` chords for tools, rebindable F-keys, settings table, `?` sheet |
 | [screenshot.md](screenshot.md) | Bildschirmfoto tool: capture flow, pause, copy/save/share, platform check |
 | [weather.md](weather.md) | Wetterzeile auf der Übersicht: Verhalten, Cache, was das Gerät verlässt, CORS |
+| [import-todos.md](import-todos.md) | ToDo import from Todoist CSV / Google Tasks JSON: where to export, what is read, calm rules |

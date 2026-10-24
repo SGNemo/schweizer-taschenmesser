@@ -1,0 +1,53 @@
+{
+  "kind": "tasks#taskLists",
+  "items": [
+    {
+      "kind": "tasks#taskList",
+      "id": "list-1",
+      "title": "Einkäufe",
+      "items": [
+        {
+          "id": "b",
+          "title": "Käse",
+          "position": "00000000000000000002",
+          "parent": "a",
+          "status": "needsAction"
+        },
+        {
+          "id": "a",
+          "title": "Wocheneinkauf",
+          "notes": "Zettel liegt am Kühlschrank",
+          "position": "00000000000000000001",
+          "status": "needsAction",
+          "due": "2026-10-12T00:00:00.000Z"
+        },
+        {
+          "id": "c",
+          "title": "Milch",
+          "position": "00000000000000000003",
+          "parent": "b",
+          "status": "completed",
+          "completed": "2026-10-01T08:00:00.000Z"
+        },
+        { "id": "d", "title": "", "position": "00000000000000000004", "status": "needsAction" },
+        {
+          "id": "e",
+          "title": "Gelöscht",
+          "position": "00000000000000000005",
+          "deleted": true,
+          "status": "needsAction"
+        }
+      ]
+    },
+    {
+      "kind": "tasks#taskList",
+      "id": "list-2",
+      "title": "Arbeit",
+      "items": [
+        { "id": "x", "title": "Bericht schreiben", "status": "needsAction", "due": "kaputt" },
+        { "id": "y", "title": "Ärger mit Übergröße", "status": "completed" }
+      ]
+    },
+    { "kind": "tasks#taskList", "id": "list-3", "title": "Leer", "items": [] }
+  ]
+}

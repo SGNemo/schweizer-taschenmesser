@@ -87,6 +87,29 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Paste a list from a notes app or a message: one line per task.',
     placeholder: 'Sort tax papers\nCall the dentist\nFix the bike',
     list: 'Into this list',
+    file: 'From Todoist or Google Tasks',
+    fileHint:
+      'Choose the file you exported there yourself: Todoist CSV or Google Tasks file (JSON). Nothing is uploaded.',
+    perSource: 'A separate list for each source list',
+    newList: 'New list',
+    includeDone: 'Completed tasks',
+    doneNo: 'Leave out',
+    doneYes: 'Bring over as done',
+    repeatNote: (text: string) => `Repeat in the source: ${text} (does not repeat automatically)`,
+    dueNote: (text: string) => `Due in the source: ${text}`,
+    skippedDone: (n: number) =>
+      n === 1 ? '1 completed task was left out.' : `${n} completed tasks were left out.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? '1 entry (section, deleted or without a title) was skipped.'
+        : `${n} entries (sections, deleted or without a title) were skipped.`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 task repeats in the source. The repeat is only a hint in its note; nothing repeats automatically.'
+        : `${n} tasks repeat in the source. The repeat is only a hint in their note; nothing repeats automatically.`,
+    tooMany: (max: number) => `Showing the first ${max} tasks.`,
+    unknownFormat:
+      'The format wasn’t recognised. You need the Todoist CSV or the Google Tasks file (JSON).',
   },
   reminders: {
     textDetail: 'today, 09:00',
