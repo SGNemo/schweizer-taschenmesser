@@ -2,6 +2,8 @@
 
 Measured with `npm run measure:stimulus` (`web/e2e/screenshots/stimulus.spec.ts`, the audit's script, in the repo since round 2): seeded Dev build, medium data, phone 412×915 and desktop 1280×800.
 
+Budget since 2026-10-24: these numbers are guarded per page by `npm run check:stimulus` (`web/e2e/stimulus-budget.json`, CI warning only); a package that changes them on purpose re-baselines with `npm run stimulus:baseline` ([ci.md](../../howto/ci.md)).
+
 | Metric | Before | After package 1 |
 |---|---|---|
 | Phone home, page height | 6598 px | **2069 px** |
