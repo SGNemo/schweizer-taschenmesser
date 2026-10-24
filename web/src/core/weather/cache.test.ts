@@ -7,6 +7,7 @@ import {
   clearCache,
   isFresh,
   readCache,
+  TRIED_KEY,
   shouldFetch,
   noteTried,
   readTried,
@@ -67,5 +68,52 @@ describe('forecast cache (fixed clock)', () => {
     expect(shouldFetch(undefined, cacheKey(51.1, 9), T0 + 60_000, true, readTried())).toBe(true);
     clearCache();
     expect(readTried()).toBeUndefined();
+  });
+
+  it('drops damaged or foreign stored values and removes the entry', () => {
+    const bad: unknown[] = [
+      '{not json',
+      'null',
+      '[]',
+      42,
+      { key, at: T0 },
+      { key, at: '1', forecast },
+      { key: 5, at: T0, forecast },
+      { key, at: T0, forecast: { temp: '14', group: 'clear' } },
+      { key, at: T0, forecast: { temp: 14, group: 'hail' } },
+      { key, at: T0, forecast: { temp: 14, group: 'toString' } },
+      { key, at: T0, forecast: { temp: 14, group: 'clear', rainFrom: 7 } },
+      { key, at: null, forecast },
+    ];
+    for (const value of bad) {
+      localStorage.setItem(CACHE_KEY, typeof value === 'string' ? value : JSON.stringify(value));
+      expect(readCache()).toBeUndefined();
+      expect(localStorage.getItem(CACHE_KEY)).toBeNull();
+    }
+  });
+
+  it('keeps a valid value with a rain hour and leaves it stored', () => {
+    const c = { key, at: T0, forecast: { ...forecast, rainFrom: '15' } };
+    writeCache(c);
+    expect(readCache()).toEqual(c);
+    expect(localStorage.getItem(CACHE_KEY)).not.toBeNull();
+  });
+
+  it('drops damaged or foreign `tm-weather-tried` values and removes the entry', () => {
+    const bad: unknown[] = ['{oops', '"x"', { key }, { key, at: 'now' }, { key: 1, at: T0 }, []];
+    for (const value of bad) {
+      localStorage.setItem(TRIED_KEY, typeof value === 'string' ? value : JSON.stringify(value));
+      expect(readTried()).toBeUndefined();
+      expect(localStorage.getItem(TRIED_KEY)).toBeNull();
+    }
+    noteTried({ key, at: T0 });
+    expect(readTried()).toEqual({ key, at: T0 });
+  });
+
+  it('does not touch the other entry when one is damaged', () => {
+    noteTried({ key, at: T0 });
+    localStorage.setItem(CACHE_KEY, '{x');
+    expect(readCache()).toBeUndefined();
+    expect(readTried()).toEqual({ key, at: T0 });
   });
 });

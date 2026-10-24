@@ -2,7 +2,10 @@
  * Device-local cache of the last forecast (localStorage `tm-weather`, never synced): at most one request
  * per place and 30 minutes, nothing requested while offline, an older value is still shown with its time.
  */
+import { z } from 'zod';
+import { tWeather } from '@/strings.weather';
 import type { Forecast } from './api';
+import type { CodeGroup } from './logic';
 
 export const CACHE_KEY = 'tm-weather';
 /** The last failed request (localStorage, device-local): no retry storm while the service is down. */
@@ -21,17 +24,41 @@ export interface Cached {
 /** Cache key of a position (already rounded by the settings). */
 export const cacheKey = (lat: number, lon: number): string => `${lat},${lon}`;
 
-export function readCache(): Cached | undefined {
+const groupSchema = z.custom<CodeGroup>(
+  (v) => typeof v === 'string' && Object.hasOwn(tWeather.de.codes, v),
+);
+const forecastSchema = z.object({
+  temp: z.number().finite(),
+  group: groupSchema,
+  rainFrom: z.string().optional(),
+});
+const cachedSchema = z.object({
+  key: z.string(),
+  at: z.number().finite(),
+  forecast: forecastSchema,
+});
+const triedSchema = z.object({ key: z.string(), at: z.number().finite() });
+
+/** Parses a stored value; a damaged or foreign one is removed and reads as absent. */
+function readStored<T>(storageKey: string, schema: z.ZodType<T>): T | undefined {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return undefined;
-    const v = JSON.parse(raw) as Partial<Cached>;
-    return typeof v.key === 'string' && typeof v.at === 'number' && v.forecast
-      ? (v as Cached)
-      : undefined;
+    try {
+      const parsed = schema.safeParse(JSON.parse(raw));
+      if (parsed.success) return parsed.data;
+    } catch {
+      // Not JSON: treated like any other damaged value.
+    }
+    localStorage.removeItem(storageKey);
+    return undefined;
   } catch {
     return undefined;
   }
+}
+
+export function readCache(): Cached | undefined {
+  return readStored(CACHE_KEY, cachedSchema);
 }
 
 export function writeCache(value: Cached): void {
@@ -57,14 +84,7 @@ export interface Tried {
 }
 
 export function readTried(): Tried | undefined {
-  try {
-    const raw = localStorage.getItem(TRIED_KEY);
-    if (!raw) return undefined;
-    const v = JSON.parse(raw) as Partial<Tried>;
-    return typeof v.key === 'string' && typeof v.at === 'number' ? (v as Tried) : undefined;
-  } catch {
-    return undefined;
-  }
+  return readStored(TRIED_KEY, triedSchema);
 }
 
 /** Remembers a failed request so the next one waits `WEATHER_RETRY_MS`. */
