@@ -48,6 +48,11 @@ function splitFrontMatter(text: string): FrontMatter {
   if (lines[0]?.trim() !== '---') return { tags: [], rest: text };
   const end = lines.findIndex((l, i) => i > 0 && /^(?:---|\.\.\.)\s*$/.test(l));
   if (end < 0) return { tags: [], rest: text };
+  // A note that merely starts with a horizontal rule is not front matter: every line of a real
+  // block is blank, a `key:` (possibly indented) or a `- item`; anything else keeps the text whole.
+  for (let i = 1; i < end; i++) {
+    if (!/^\s*(?:$|[\w-]+\s*:|-\s)/.test(lines[i]!)) return { tags: [], rest: text };
+  }
   const fm: FrontMatter = { tags: [], rest: lines.slice(end + 1).join('\n') };
   for (let i = 1; i < end; i++) {
     const m = /^(title|tags?)\s*:\s*(.*)$/i.exec(lines[i]!);

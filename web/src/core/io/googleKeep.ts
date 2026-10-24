@@ -66,7 +66,9 @@ export function parseGoogleKeep(json: string): KeepResult {
     const list = listMarkdown(entry.listContent);
     const tags = Array.isArray(entry.labels)
       ? entry.labels
-          .map((l) => (isObject(l) ? str(l.name).trim().replace(/\s+/g, '-') : ''))
+          .map((l) =>
+            isObject(l) ? str(l.name).trim().replace(/^#+/, '').replace(/\s+/g, '-') : '',
+          )
           .filter(Boolean)
       : [];
     const title = str(entry.title).trim();
