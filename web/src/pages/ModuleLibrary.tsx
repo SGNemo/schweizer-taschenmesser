@@ -149,7 +149,9 @@ export function ModuleLibrary() {
                     </>
                   }
                 >
-                  {enabled && hasStartData(m) ? <StartDataButton moduleId={m.id} setupLink={false} /> : null}
+                  {enabled && hasStartData(m) ? (
+                    <StartDataButton moduleId={m.id} setupLink={false} />
+                  ) : null}
                   <Switch
                     label={text.toggle(m.name)}
                     checked={enabled}
