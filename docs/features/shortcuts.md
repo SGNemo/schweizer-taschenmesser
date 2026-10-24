@@ -4,7 +4,7 @@ Direct keys for what you reach all day. Code: `web/src/core/keyboard/` (`map.ts`
 
 | Key | What |
 |---|---|
-| `T`, then a letter | opens a tool; fixed letters in `TOOL_CHORDS` (t timer, r calc, q qr, u units, d dates, s screenshot, c currency, z timezones, w dice, x text, i image, p pdf, v dev). Only tools that exist **and** are on; otherwise nothing happens. Window `CHORD_MS` (1.2 s), never while typing, with a modifier, in a dialog, or on the vault entry view (`data-shortcut-scope="entry"`: its own `T` copies the code) |
+| `T`, then a letter | opens a tool; fixed letters in `TOOL_CHORDS` (t timer, r calc, q qr, u units, d dates, s screenshot, c currency, z timezones, w dice, x text, i image, p pdf, v dev, f diff, e regex). Only tools that exist **and** are on; otherwise nothing happens. Window `CHORD_MS` (1.2 s), never while typing, with a modifier, in a dialog, or on the vault entry view (`data-shortcut-scope="entry"`: its own `T` copies the code) |
 | F2 F3 F6 F7 F8 F9 F10 | rebindable: F2 Neu erfassen · F3 Suchen/Palette · F6 Heute · F7 Fokus starten · F8 Timer · F9 Rechner · F10 Einstellungen; Bildschirmfoto has no key by default |
 | F4 | voice (source stays `core/voice/settings`, changed under Schnellerfassung → Spracheingabe) |
 
