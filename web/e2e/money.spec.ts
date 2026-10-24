@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, moreFields, ready, showAllWidgets } from './helpers';
+import { calendarEntry, moreFields, openFoldedGroup, ready, showAllWidgets } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -358,6 +358,7 @@ test.describe('Finance', () => {
 
     // Switch the deduction off in the settings
     await ready(page, '/settings/module');
+    await openFoldedGroup(page, 'module-finance', 'fields');
     await page
       .getByRole('switch', { name: 'Offene Rechnungen vom verfügbaren Betrag abziehen' })
       .click();

@@ -368,6 +368,10 @@ export const de = {
       motion: 'Bewegung',
       other: 'Sonstiges',
     },
+    moduleGroups: {
+      fields: 'Felder',
+      more: (n: number) => `+ ${n}`,
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:

@@ -27,6 +27,7 @@ export function FoldedGroup({
 }) {
   const [open, setOpen] = useState(false);
   const g = t.settings.appearanceGroups;
+  const value = current.join(' · ');
   return (
     <details
       className={styles.group}
@@ -34,7 +35,7 @@ export function FoldedGroup({
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
       <summary className={styles.groupSummary} aria-expanded={open}>
-        <span className={styles.groupLine}>{g.line(title, current.join(' · '))}</span>
+        <span className={styles.groupLine}>{value === '' ? title : g.line(title, value)}</span>
         <span className={styles.groupAction}>{open ? g.done : g.change}</span>
       </summary>
       <div className={styles.groupBody}>{children}</div>

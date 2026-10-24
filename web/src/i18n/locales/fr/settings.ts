@@ -130,6 +130,10 @@ export const settings: Strings['settings'] = {
     motion: 'Animations',
     other: 'Autres',
   },
+  moduleGroups: {
+    fields: 'Champs',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Gérer les modules',
     description:

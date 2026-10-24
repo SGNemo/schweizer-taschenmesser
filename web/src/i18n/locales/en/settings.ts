@@ -107,6 +107,10 @@ export const settings: Strings['settings'] = {
     motion: 'Motion',
     other: 'Other',
   },
+  moduleGroups: {
+    fields: 'Fields',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Manage modules',
     description:
