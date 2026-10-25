@@ -125,11 +125,28 @@ fn read_request(stream: &mut TcpStream) -> String {
     String::from_utf8_lossy(&buf[..len]).into_owned()
 }
 
-/// Binds an ephemeral port on the loopback interface only.
+/// Binds the loopback interface only. Without `preferred_port` the system picks a free port. With
+/// one, that exact port is taken or the call fails with `port-busy: …`: some providers (Spotify)
+/// compare the redirect URI exactly, so quietly using another port would only fail later at the
+/// provider with a confusing message.
+fn bind_loopback(preferred_port: Option<u16>) -> Result<TcpListener, String> {
+    let port = preferred_port.unwrap_or(0);
+    TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, port))).map_err(|e| {
+        if preferred_port.is_some() && e.kind() == std::io::ErrorKind::AddrInUse {
+            format!("port-busy: {e}")
+        } else {
+            format!("listen-failed: {e}")
+        }
+    })
+}
+
+/// Binds a port on the loopback interface only (ephemeral, or `preferred_port` exactly).
 #[tauri::command]
-pub fn oauth_listen_start(state: tauri::State<'_, OAuthListener>) -> Result<u16, String> {
-    let listener = TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, 0)))
-        .map_err(|e| format!("listen-failed: {e}"))?;
+pub fn oauth_listen_start(
+    state: tauri::State<'_, OAuthListener>,
+    preferred_port: Option<u16>,
+) -> Result<u16, String> {
+    let listener = bind_loopback(preferred_port)?;
     let port = listener.local_addr().map_err(|e| e.to_string())?.port();
     *state.0.lock().map_err(|_| "listen-failed")? = Some(listener);
     Ok(port)
@@ -271,6 +288,20 @@ mod tests {
         let _ = real.read_to_string(&mut page);
         assert!(page.contains("200 OK") && page.contains("Anmeldung ist abgeschlossen"));
         assert_eq!(handle.join().unwrap(), Ok("abc".to_string()));
+    }
+
+    #[test]
+    fn a_busy_preferred_port_is_an_error_not_a_different_port() {
+        let holder = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let port = holder.local_addr().unwrap().port();
+        let err = bind_loopback(Some(port)).unwrap_err();
+        assert!(err.starts_with("port-busy: "), "{err}");
+        // Without a preference the system still finds a free port.
+        assert!(bind_loopback(None).is_ok());
+        // A free preferred port is taken exactly.
+        drop(holder);
+        let taken = bind_loopback(Some(port)).unwrap();
+        assert_eq!(taken.local_addr().unwrap().port(), port);
     }
 
     #[test]

@@ -19,6 +19,7 @@ import {
   randomToken,
   revokeToken,
 } from './oauth';
+import { clearNowPlayingData } from './nowPlaying';
 import { getConnector, connectors } from './registry';
 import { redact } from './redact';
 import {
@@ -101,7 +102,16 @@ export async function connectOAuth(
 
     const verifier = createVerifier();
     const state = randomToken(24);
-    const { redirectUri, wait } = await platform.oauth.start();
+    const { redirectUri, wait } = await platform.oauth
+      .start({ preferredPort: def.oauth.preferredPort })
+      .catch((e: unknown) => {
+        const message = e instanceof Error ? e.message : String(e);
+        // Fixed-port providers: say it is the port, not a generic network failure.
+        throw new ConnectorError(
+          message.startsWith('port-busy') ? 'port-busy' : 'network',
+          'login',
+        );
+      });
     if (signal?.aborted) return await loadStatus(def.id);
     await platform.app.openUrl(
       buildAuthUrl({
@@ -167,6 +177,7 @@ export async function disconnect(def: ConnectorDef, opts: { keepData: boolean })
   forgetAccessToken(def.id);
   await deleteLocalPrefix(`connector.${def.id}.`);
   await clearStatus(def.id);
+  if (def.nowPlaying) clearNowPlayingData();
   if (!opts.keepData) await (await getCalendarSink())?.clear(def.id);
 }
 
