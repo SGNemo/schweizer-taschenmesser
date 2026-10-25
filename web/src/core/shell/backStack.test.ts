@@ -13,6 +13,14 @@ beforeEach(async () => {
 afterEach(() => resetBackStack());
 
 describe('backStack', () => {
+  it('a synthetic popstate (a URL re-announced for the router) is not a Back', () => {
+    const close = vi.fn();
+    pushBack('a', close);
+    window.dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+    expect(close).not.toHaveBeenCalled();
+    expect(backDepth()).toBe(1);
+  });
+
   it('adds one history entry per element, none for a second registration', () => {
     const before = history.length;
     pushBack('a', () => undefined);

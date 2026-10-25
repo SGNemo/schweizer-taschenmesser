@@ -298,7 +298,14 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   }
 
   return (
-    <Dialog open onClose={requestClose} title={t.setup.dialogTitle} variant="full" footer={footer}>
+    <Dialog
+      open
+      onClose={requestClose}
+      title={t.setup.dialogTitle}
+      variant="full"
+      footer={footer}
+      backHandled
+    >
       <PageContainer variant="narrow">{body}</PageContainer>
     </Dialog>
   );
