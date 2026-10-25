@@ -42,6 +42,21 @@ export const allSetupSteps: readonly SetupStepDef[] = collectSetupSteps([
   ...connectors,
 ]);
 
+/**
+ * The assistant step that covers a module, for links from its empty state: a step of the module
+ * itself (`<id>.…`), else the shared start-data step when the module offers start data. `undefined`
+ * = the assistant has nothing for this module, so no link is shown.
+ */
+export function setupStepIdForModule(
+  moduleId: string,
+  offersStartData: boolean,
+  steps: readonly SetupStepDef[] = allSetupSteps,
+): string | undefined {
+  const own = steps.find((s) => s.id.startsWith(`${moduleId}.`));
+  if (own) return own.id;
+  return offersStartData ? steps.find((s) => s.id === 'core.startdata')?.id : undefined;
+}
+
 export async function buildSetupCtx(): Promise<SetupCtx> {
   const platform = getPlatform();
   return {

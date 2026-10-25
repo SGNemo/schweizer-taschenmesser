@@ -21,8 +21,19 @@ function candidate(note: ParsedNote): ImportCandidate {
   };
 }
 
+const parsesAsJson = (text: string): boolean => {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** `.json` is Keep; a file of unknown type is Keep only when it really is JSON (a note starting with `[[Link]]` is Markdown). */
 const isKeepFile = (name: string, text: string) =>
-  /\.json$/i.test(name) || (!/\.(?:md|markdown|txt)$/i.test(name) && /^\s*[[{]/.test(text));
+  /\.json$/i.test(name) ||
+  (!/\.(?:md|markdown|txt)$/i.test(name) && /^\s*[[{]/.test(text) && parsesAsJson(text));
 
 const runtime: ImporterRuntime = {
   parse(_id, input: ImportInput) {
