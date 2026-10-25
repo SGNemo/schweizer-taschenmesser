@@ -7,10 +7,10 @@
   "pages": {
     "desktop--bookmarks": {
       "height": 800,
-      "buttons": 83,
+      "buttons": 64,
       "links": 57,
-      "icons": 87,
-      "firstScreenActions": 75
+      "icons": 88,
+      "firstScreenActions": 62
     },
     "desktop--budgets": {
       "height": 800,
@@ -76,11 +76,11 @@
       "firstScreenActions": 63
     },
     "desktop--reminders": {
-      "height": 1921,
-      "buttons": 104,
+      "height": 800,
+      "buttons": 81,
       "links": 27,
-      "icons": 79,
-      "firstScreenActions": 62
+      "icons": 77,
+      "firstScreenActions": 60
     },
     "desktop--settings": {
       "height": 800,
@@ -132,11 +132,11 @@
       "firstScreenActions": 55
     },
     "phone--bookmarks": {
-      "height": 4227,
-      "buttons": 61,
+      "height": 2455,
+      "buttons": 42,
       "links": 41,
-      "icons": 44,
-      "firstScreenActions": 43
+      "icons": 45,
+      "firstScreenActions": 36
     },
     "phone--budgets": {
       "height": 1254,
@@ -202,11 +202,11 @@
       "firstScreenActions": 29
     },
     "phone--reminders": {
-      "height": 4064,
-      "buttons": 82,
+      "height": 1996,
+      "buttons": 59,
       "links": 11,
-      "icons": 36,
-      "firstScreenActions": 30
+      "icons": 34,
+      "firstScreenActions": 36
     },
     "phone--settings": {
       "height": 1611,
@@ -230,11 +230,11 @@
       "firstScreenActions": 38
     },
     "phone--settings-module": {
-      "height": 5582,
+      "height": 3835,
       "buttons": 41,
       "links": 8,
       "icons": 10,
-      "firstScreenActions": 14
+      "firstScreenActions": 15
     },
     "phone--subscriptions": {
       "height": 1241,
