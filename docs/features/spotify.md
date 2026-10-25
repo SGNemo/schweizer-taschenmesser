@@ -10,6 +10,12 @@ One calm line on the Overview under the weather: `Läuft gerade: Titel – Inter
 - Errors, all quiet: 204 = nothing plays (line hidden); 401 → fresh token via `ctx.accessToken({ refresh: true })`, one retry, then status "Abgelaufen" (card shows it, line gone); 429 → `Retry-After` is honoured (capped at 10 min); 403 `PREMIUM_REQUIRED` on a control → controls hidden for a day (`tm-spotify-no-premium`), one toast "Steuern braucht Spotify Premium.", the display stays; 404 (no active device), offline, 5xx → last reading stays, no message. Error text goes through `redact()`.
 - Last reading: device-local `localStorage` `tm-spotify-now` (Zod-checked, shown only when younger than 10 min before the first fresh read); disconnect and "reset this device" remove it.
 
+## Music in the focus round (package 2)
+Off by default, device-local (`tm-spotify-focus`: mode, playlist id, end switch – no names). Settings → Fokus & Aufmerksamkeit → Weitere Einstellungen → one folded line "Musik in der Fokus-Runde: Aus", **only visible while Spotify is connected with "Steuern" and Premium has not been ruled out**.
+- **Beim Start weiterspielen:** `play` without body (resumes, starts nothing new). **Playlist starten:** pick from your own playlists (`GET /me/playlists`, scope `playlist-read-private` = opt-in feature "Playlists", not ticked by default; the list is read when the row is opened, kept in memory, only the id is stored), start = `PUT /me/player/play {context_uri}`. **Am Ende pausieren** (switch, default on).
+- `core/focus/music.ts` is the only code that steers the player in a round: `onFocusStart` (from `beginFocus`) and `onFocusEnd` (time up in `FocusWatcher`, "Fertig", "Runde beenden"; once per round). Never in between (pinned by `music.test.ts`).
+- Failure never disturbs the round: no toast, only the line "Musik: nicht erreichbar" on the focus screen (`focus-music-status`). A 403 `PREMIUM_REQUIRED` hides the row for a day (same flag as the Overview line).
+
 ## Privacy
 Title and artist are user data: never to the AI (the connector cannot import `core/ai`, `privacy.test.ts` untouched), not in diagnostics (canary in `core/diagnostics/diagnostics.test.ts`), not synced (device-local only), not in logs. Data flow `spotify` in [DATA-FLOWS](../legal/DATA-FLOWS.md) and Settings → Über Nemo → Rechtliches.
 
@@ -20,4 +26,4 @@ Apps in development mode need an owner with Premium and allow only a few named u
 The login needs a redirect Spotify accepts: a fixed HTTPS callback page of our own or an Android deep link (`nemo://` custom scheme registered at Spotify). Both mean new infrastructure or a Tauri mobile plugin; not part of this package.
 
 ## Code and tests
-`connectors/spotify/{index,api}.ts` (+ tests with handwritten fixtures: track, episode, 204, 403, 429, 401), `core/connectors/nowPlaying.ts` (poller with fake timers, storage), `home/NowPlayingLine.tsx` (+ test), `strings.spotify.ts` (5 languages), `e2e/connector-spotify.spec.ts` (mocked `api.spotify.com`; login = hand test S1–S4 in [MANUAL-TESTS](../MANUAL-TESTS.md)), Rust test for the busy port in `src-tauri/src/oauth.rs`.
+`core/focus/music.ts`, `pages/settings/FocusMusicRow.tsx`, `e2e/spotify-focus.spec.ts`; `connectors/spotify/{index,api}.ts` (+ tests with handwritten fixtures: track, episode, 204, 403, 429, 401), `core/connectors/nowPlaying.ts` (poller with fake timers, storage), `home/NowPlayingLine.tsx` (+ test), `strings.spotify.ts` (5 languages), `e2e/connector-spotify.spec.ts` (mocked `api.spotify.com`; login = hand test S1–S4 in [MANUAL-TESTS](../MANUAL-TESTS.md)), Rust test for the busy port in `src-tauri/src/oauth.rs`.

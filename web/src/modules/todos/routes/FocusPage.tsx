@@ -12,6 +12,8 @@ import {
   resume,
   timeLeft,
 } from '@/core/focus/session';
+import { onFocusEnd, useMusicUnreachable } from '@/core/focus/music';
+import { tSpotify } from '@/strings.spotify';
 import {
   clearFocusSession,
   getFocusSession,
@@ -45,6 +47,8 @@ export default function FocusPage() {
   const session = useFocusSession();
   const tick = useNow(1000, Boolean(session));
   const [step, setStep] = useState('');
+  const musicUnreachable = useMusicUnreachable();
+  const music = tSpotify.use();
 
   const task = useLiveQuery(async () => (await taskRepo.get(taskId)) ?? null, [taskId]);
   const steps = useLiveQuery(
@@ -130,6 +134,7 @@ export default function FocusPage() {
   async function finish() {
     if (!task) return;
     const full = await taskRepo.get(task.id);
+    if (mine) void onFocusEnd(mine.startedAt);
     await clearFocusSession();
     if (full)
       await undoableWithToast(t.focus.mode.finished, t.focus.mode.finished, () =>
@@ -138,6 +143,7 @@ export default function FocusPage() {
     void navigate('/');
   }
   async function endRound() {
+    if (mine) void onFocusEnd(mine.startedAt);
     await clearFocusSession();
     toast(t.focus.mode.ended);
     void navigate('/');
@@ -226,6 +232,12 @@ export default function FocusPage() {
             : ''}
         </p>
       )}
+
+      {musicUnreachable ? (
+        <p className={styles.caption} role="status" data-testid="focus-music-status">
+          {music.roundUnreachable}
+        </p>
+      ) : null}
 
       <h2 className={styles.stepsTitle}>{t.focus.mode.steps}</h2>
       {steps && steps.length > 0 ? (

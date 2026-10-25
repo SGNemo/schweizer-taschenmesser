@@ -8,6 +8,7 @@ import { clearRecent } from '@/core/search/recent';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Segmented, SettingRow, SettingsGroup, Switch } from '@/ui';
+import { FocusMusicRow } from './FocusMusicRow';
 import { FoldedGroup } from './FoldedGroup';
 
 type BoolKey = {
@@ -120,6 +121,7 @@ export function FocusSection() {
             {s.clearHistory}
           </Button>
         </SettingRow>
+        <FocusMusicRow />
       </FoldedGroup>
     </SettingsGroup>
   );

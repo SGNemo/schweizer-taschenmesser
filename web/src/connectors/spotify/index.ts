@@ -1,7 +1,7 @@
 import type { ConnectorDef } from '@/core/connectors/types';
 import { t } from '@/strings';
 import { tSpotify } from '@/strings.spotify';
-import { readCurrentlyPlaying, sendCommand } from './api';
+import { listPlaylists, readCurrentlyPlaying, sendCommand, startPlaylist } from './api';
 
 const s = () => tSpotify.get();
 
@@ -56,10 +56,23 @@ const connector: ConnectorDef = {
       },
       scopes: ['user-modify-playback-state'],
     },
+    {
+      id: 'playlists',
+      get label() {
+        return s().playlistsFeature;
+      },
+      get description() {
+        return s().playlistsHint;
+      },
+      scopes: ['playlist-read-private'],
+      defaultOn: false,
+    },
   ],
   nowPlaying: {
     read: readCurrentlyPlaying,
     control: sendCommand,
+    playlists: listPlaylists,
+    startPlaylist,
   },
 };
 
