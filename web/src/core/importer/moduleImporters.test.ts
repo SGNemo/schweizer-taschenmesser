@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
@@ -95,6 +97,126 @@ describe('todos', () => {
     });
     const again = await run('todos', 'text', text('milch\nBrot'), { listId: choices[0]!.value });
     expect(again.rows.map((r) => r.duplicate)).toEqual([true, false]);
+  });
+
+  describe('files from Todoist and Google Tasks', () => {
+    const fixture = (name: string) => ({
+      kind: 'file' as const,
+      text: readFileSync(resolve(process.cwd(), 'src/core/io/__fixtures__', name), 'utf8'),
+      fileName: name,
+    });
+    const task = (rows: Awaited<ReturnType<typeof run>>['rows'], title: string) =>
+      rows.find((r) => r.candidate.label === title)!.candidate;
+
+    it('reads a Todoist CSV into the chosen list, with priority, day, subtask and hints', async () => {
+      await listRepo.create({ name: 'Inbox', order: 0 }, { id: INBOX_ID });
+      const { rows, notes, manifest } = await run('todos', 'file', fixture('todoist-de.csv'), {
+        fileList: INBOX_ID,
+        includeDone: 'no',
+      });
+      expect(rows.map((r) => r.candidate.label)).toContain('Küche aufräumen');
+      expect(rows.every((r) => r.selected && !r.invalid && r.candidate.collection === 'task')).toBe(
+        true,
+      );
+      const kitchen = task(rows, 'Küche aufräumen').data;
+      expect(kitchen).toMatchObject({
+        listId: INBOX_ID,
+        priority: 3,
+        dueDate: '2026-10-15',
+        done: false,
+      });
+      expect(String(kitchen.note)).toContain('Spülmittel');
+      const bins = task(rows, 'Müll rausbringen');
+      expect(String(bins.data.note)).toContain('jeden Montag');
+      expect(bins.data.recurrence).toBeUndefined();
+      expect(task(rows, 'Gelbe Säcke holen').data.parentId).toBe(bins.id);
+      expect(notes.join(' ')).toContain('wiederholt sich');
+
+      const batch = await commitImport(manifest, {
+        batchId: 'tb',
+        importerId: 'file',
+        source: 'todoist-de.csv',
+        rows,
+      });
+      expect(batch.records[0]!.ids).toHaveLength(6);
+      const stored = await taskRepo.active().toArray();
+      expect(stored.find((x) => x.title === 'Gelbe Säcke holen')!.parentId).toBe(bins.id);
+    });
+
+    it('recognises a file by its content, whatever it is called', async () => {
+      const text = fixture('google-tasks.json');
+      const { rows } = await run(
+        'todos',
+        'file',
+        { kind: 'file', text: text.text, fileName: 'export.csv' },
+        { fileList: INBOX_ID },
+      );
+      expect(rows.length).toBeGreaterThan(0);
+      const none = await run(
+        'todos',
+        'file',
+        { kind: 'file', text: 'Datum;Betrag\n1;2', fileName: 'bank.csv' },
+        { fileList: INBOX_ID },
+      );
+      expect(none.rows).toEqual([]);
+      expect(none.notes).toHaveLength(1);
+    });
+
+    it('leaves completed tasks out unless asked, and keeps them apart from open ones', async () => {
+      await listRepo.create({ name: 'Inbox', order: 0 }, { id: INBOX_ID });
+      const open = await run('todos', 'file', fixture('google-tasks.json'), {
+        fileList: INBOX_ID,
+        includeDone: 'no',
+      });
+      expect(open.rows.map((r) => r.candidate.label)).toEqual([
+        'Wocheneinkauf',
+        'Käse',
+        'Bericht schreiben',
+      ]);
+      expect(open.notes.join(' ')).toContain('2 erledigte');
+      const all = await run('todos', 'file', fixture('google-tasks.json'), {
+        fileList: INBOX_ID,
+        includeDone: 'yes',
+      });
+      expect(all.rows).toHaveLength(5);
+      expect(task(all.rows, 'Milch').data.done).toBe(true);
+      // "Milch" (done) is a child of "Käse"; with done left out nothing points to a missing parent.
+      expect(task(open.rows, 'Käse').data.parentId).toBe(task(open.rows, 'Wocheneinkauf').id);
+    });
+
+    it('makes a list per source list, reuses one with the same name, and flags a repeat import', async () => {
+      await listRepo.create({ name: 'Inbox', order: 0 }, { id: INBOX_ID });
+      await listRepo.create({ name: 'arbeit', order: 1 }, { id: 'work' });
+      const options = { fileList: '@source', includeDone: 'no' };
+      const first = await run('todos', 'file', fixture('google-tasks.json'), options);
+      const lists = first.rows.filter((r) => r.candidate.collection === 'list');
+      expect(lists.map((r) => r.candidate.label)).toEqual(['Einkäufe']);
+      expect(task(first.rows, 'Bericht schreiben').data.listId).toBe('work');
+      expect(task(first.rows, 'Käse').data.listId).toBe(lists[0]!.candidate.id);
+      await commitImport(first.manifest, {
+        batchId: 'tb',
+        importerId: 'file',
+        source: 'google-tasks.json',
+        rows: first.rows,
+      });
+      expect((await listRepo.active().toArray()).map((l) => l.name).sort()).toEqual([
+        'Einkäufe',
+        'Inbox',
+        'arbeit',
+      ]);
+
+      const again = await run('todos', 'file', fixture('google-tasks.json'), options);
+      // The lists exist now: none is proposed again, and every task is recognised.
+      expect(again.rows.filter((r) => r.candidate.collection === 'list')).toEqual([]);
+      expect(again.rows.map((r) => r.duplicate)).toEqual([true, true, true]);
+    });
+
+    it('offers the lists plus one list per source', async () => {
+      const { runtime } = await run('todos', 'file', fixture('todoist-en.csv'));
+      const choices = await runtime.optionChoices!('fileList');
+      expect(choices.at(-1)!.value).toBe('@source');
+      expect(choices.length).toBeGreaterThan(1);
+    });
   });
 });
 

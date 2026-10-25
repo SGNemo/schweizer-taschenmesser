@@ -167,6 +167,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   min-height: var(--touch);
   justify-content: center;

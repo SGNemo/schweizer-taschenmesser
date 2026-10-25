@@ -103,6 +103,32 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Collez une liste venant d’une app de notes ou d’un message : une ligne par tâche.',
     placeholder: 'Trier les papiers des impôts\nAppeler le dentiste\nRéparer le vélo',
     list: 'Dans cette liste',
+    file: 'Depuis Todoist ou Google Tasks',
+    fileHint:
+      'Choisis le fichier que tu y as exporté toi-même : CSV Todoist ou fichier Google Tasks (JSON). Rien n’est envoyé.',
+    perSource: 'Une liste distincte pour chaque liste d’origine',
+    newList: 'Nouvelle liste',
+    includeDone: 'Tâches terminées',
+    doneNo: 'Laisser de côté',
+    doneYes: 'Reprendre comme terminées',
+    repeatNote: (text: string) =>
+      `Répétition dans la source : ${text} (ne se répète pas automatiquement)`,
+    dueNote: (text: string) => `Échéance dans la source : ${text}`,
+    skippedDone: (n: number) =>
+      n === 1
+        ? '1 tâche terminée a été laissée de côté.'
+        : `${n} tâches terminées ont été laissées de côté.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? '1 entrée (section, supprimée ou sans titre) a été ignorée.'
+        : `${n} entrées (sections, supprimées ou sans titre) ont été ignorées.`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 tâche se répète dans la source. La répétition n’apparaît que comme indication dans sa note ; rien ne se répète automatiquement.'
+        : `${n} tâches se répètent dans la source. La répétition n’apparaît que comme indication dans leur note ; rien ne se répète automatiquement.`,
+    tooMany: (max: number) => `Les ${max} premières tâches sont affichées.`,
+    unknownFormat:
+      'Le format n’a pas été reconnu. Il faut le CSV de Todoist ou le fichier Google Tasks (JSON).',
   },
   reminders: {
     textDetail: 'aujourd’hui, 09:00',

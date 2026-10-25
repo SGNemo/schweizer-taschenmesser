@@ -21,6 +21,19 @@ describe('ItemRow', () => {
     expect(within(row).getByText('87,40 €')).toBeVisible();
   });
 
+  it('with an address the main element is one external link and not a button', () => {
+    render(
+      <ItemList>
+        <ItemRow title="Bahn" meta="bahn.example" href="https://bahn.example/" onOpen={vi.fn()} />
+      </ItemList>,
+    );
+    const link = screen.getByRole('link', { name: /Bahn/ });
+    expect(link).toHaveAttribute('href', 'https://bahn.example/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noreferrer noopener');
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
   it('marks the main element for keyboard navigation and shows actions as buttons', () => {
     render(
       <ItemList>
