@@ -1,0 +1,11 @@
+TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE,DURATION,DURATION_UNIT
+section,Haushalt,,,,,,,,,,
+task,Küche aufräumen,Schränke und Schubladen,1,1,Max (1),,15. Oktober 2026,de,Europe/Berlin,,
+note,Mit dem Spülmittel von letzter Woche,,,,,,,,,,
+task,Müll rausbringen,,4,1,Max (1),,jeden Montag,de,Europe/Berlin,,
+task,Gelbe Säcke holen,,3,2,Max (1),,,,,,
+task,Größe prüfen,,2,3,Max (1),,morgen,de,,,
+task,"Brot, Käse & Äpfel kaufen",,2,1,Max (1),,2026-10-20,,,,
+task,,,4,1,,,,,,,
+,,,,,,,,,,,
+task,Zahnarzt anrufen,,4,1,Max (1),,3 Nov um 09:30,de,Europe/Berlin,,

@@ -23,3 +23,11 @@ In the **module library** you turn modules on and off (when turning one off: kee
 - **Retired (0.4.0):** Messages, habit tracker and time tracking are no longer visible. Their data stays stored and is still part of every backup.
 - **Map & WhatsApp:** events with a location have "Show on map"; for people with a birthday the button opens WhatsApp with a greeting
   (you pick the contact in WhatsApp).
+
+## Bringing tasks from Todoist or Google Tasks
+Open **ToDos → Set up starter data → From Todoist or Google Tasks** (once the module holds tasks: Settings → Modules → ToDos → Set up starter data) and choose a file you exported yourself. Nothing is uploaded and no account is needed; you see a preview first and can undo the import.
+
+- **Todoist:** project menu (⋯) → *Export as CSV*. One file per project; it becomes one list named like the file.
+- **Google Tasks:** [Google Takeout](https://takeout.google.com) → only *Tasks* → `Tasks.json`. Choose *a separate list for each source list* to keep your lists apart.
+
+Titles, notes, priority (Todoist), due days and subtasks come along. Completed tasks stay out unless you switch them on. Repeating tasks are **not** turned into repeating tasks: the repeat only appears as a line in the note, so nothing comes back by itself. Tasks you already have (same list and title) are marked *already there*.
