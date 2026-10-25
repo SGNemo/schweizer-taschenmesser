@@ -271,6 +271,7 @@ S1. *Echter Login:* Einstellungen → Verbindungen → Spotify → Verbinden: Br
 S2. *Pause/Weiter/Nächster (Premium-Konto):* Knöpfe in der Zeile steuern den Player (Pause → „Pausiert: …“, Weiter, Nächster wechselt den Titel). Nemo minimieren: keine regelmäßigen Anfragen (die Zeile fragt nur bei sichtbarer App). ☐
 S3. *Ohne Premium (kostenloses Konto):* Pause klicken: einmal Hinweis „Steuern braucht Spotify Premium.“, Knöpfe weg, Anzeige bleibt; nach Neustart keine Knöpfe, kein zweiter Hinweis. ☐
 S4. *Port belegt:* ein anderes Programm auf Port 38417 starten (z. B. `python -m http.server 38417 --bind 127.0.0.1`), Verbinden klicken: Meldung „Port belegt …“, der Browser öffnet sich nicht; Programm beenden, erneut Verbinden klappt. Danach Trennen: Zeile weg. ☐
+S5. *Musik in der Fokus-Runde (Premium-Konto, Spotify offen auf dem PC):* beim Verbinden „Playlists“ ankreuzen; Einstellungen → Fokus & Aufmerksamkeit → Weitere Einstellungen → „Musik in der Fokus-Runde“ → „Playlist starten“, eine Playlist wählen. Fokus-Runde starten: die Playlist beginnt; „Fertig“ oder Zeit um: Pause. Spotify schließen und neu starten: Runde läuft normal weiter, Zeile „Musik: nicht erreichbar“. Mit „Beim Start weiterspielen“: pausierte Wiedergabe läuft los, nichts Neues startet. ☐
 
 ### Supporter-Modus (nur mit echter Zahlungsseite und Dienst prüfbar)
 Voraussetzung: Schlüsselpaar erzeugt, `publicKeys.ts` im Build, Webhook-Dienst deployt ([services/supporter-webhook/README.md](../services/supporter-webhook/README.md)). Ohne Dienst gehen Codes per CLI (`create`).

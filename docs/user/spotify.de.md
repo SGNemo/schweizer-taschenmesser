@@ -14,6 +14,7 @@ Du brauchst eine eigene, kostenlose Spotify-„App“ – einmalig ein paar Minu
 Gut zu wissen:
 - Steuern braucht Spotify **Premium**. Ohne Premium blendet Nemo die Knöpfe einmal mit einem kurzen Hinweis aus; die Anzeige funktioniert weiter.
 - „Port belegt“: ein anderes Programm nutzt Port 38417. Schließe es und klicke erneut auf Verbinden – Nemo weicht nie auf einen anderen Port aus, weil Spotify die Adresse genau prüft.
+- Optional: **Musik in der Fokus-Runde** (Einstellungen → Fokus & Aufmerksamkeit → Weitere Einstellungen, standardmäßig aus; braucht *Steuern*). Nemo kann beim Start weiterspielen oder eine deiner Playlists starten (beim Verbinden *Playlists* ankreuzen) und am Ende pausieren. Spotify wird nur zu Beginn und am Ende einer Runde angesprochen; klappt das nicht, läuft die Runde ganz normal weiter.
 - Nemo fragt etwa alle 30 Sekunden bei Spotify nach, nur solange die App offen und sichtbar ist. Titel und Interpret bleiben auf diesem Gerät: kein Sync, keine KI, keine Fehlerberichte.
 - Trennen jederzeit unter *Verbindungen → Spotify*; den Zugriff der App kannst du auch in deinem Spotify-Konto entziehen.
 - Spotify kann die Regeln für Entwickler-Apps ändern; wenn die Verbindung nicht mehr geht, schau zuerst ins Dashboard.
