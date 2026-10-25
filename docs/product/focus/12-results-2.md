@@ -151,3 +151,29 @@ Same tool (`measure:stimulus`, seeded medium data) and `targets-focus` (page `/c
 - Reminder logic, notifications, attention and data are untouched; "Erledigt" is the existing pause (notify off), undoable.
 - Tests: `__tests__/reminderGroups.test.ts`, `__tests__/remindersTab.test.tsx`, `e2e/reminders-tab.spec.ts` (desktop + pixel-7); `e2e/core.spec.ts` pauses through the menu.
 
+## Mobile – one hand (`feat/phone-one-hand`)
+Tools: `e2e/phone-paths.spec.ts` (project `pixel-7`; step = one touch or one input, looking is free; the table is attached to the test report and written to `test-results/phone-paths.md`), `targets-focus` and `npm run measure:stimulus` on the seeded Dev build. Baseline = `develop` (d03f701 + board commits), same spec run against it.
+
+| Path (phone 412×915) | Steps before | Steps after |
+|---|---|---|
+| 1 ToDo anlegen (field, text, Enter) | 3 | 3 |
+| 2 Später (swipe left) | 1 | 1 |
+| 3 Termin heute ansehen ("Jetzt wichtig" on the home screen) | 0 | 0 |
+| 4 Erinnerung erledigen (bell, "Nächste Erinnerung", "Erledigt") | 3 | 3 |
+| 5 Notiz anlegen (add, text, save) | 3 | 3 |
+| 6 Einkauf abhaken | 1 | 1 |
+| 7 Vorrat niedrig → Einkaufsliste | 1 | 1 |
+| 8 Tresor-Eintrag kopieren (row, "Passwort kopieren") | 2 | 2 |
+| 9 Einstellung ändern (Mehr, Einstellungen, Darstellung, Thema, Dunkel) | 5 | 5 |
+| 10 Suche (open, type, pick) | 3 | 3 |
+
+| Metric | Before | After |
+|---|---|---|
+| Touch targets under 44 px (10 pages, phone) | 0 | **0** |
+| Stimulus inventory (36 views: buttons, links, icons, colours, height …) | – | identical |
+| Back with a dialog / row menu / palette / "Mehr" sheet open | leaves the page (Android: closes the app) | closes the open thing, page stays |
+| Back with a draft | leaves | asks "Entwurf verwerfen?"; second Back = keep editing |
+
+- The steps do not change on purpose: the package adds no element. What changes is what Back and the keyboard do, so those have a case each (`Back gesture`, `Keyboard` in the same spec, Back also on desktop).
+- Tests: `core/shell/{backStack,keyboardInset}.test.ts` (one entry per element, order, `'keep'`, stale marker, inset maths, menu side), `ui/backClose.test.tsx` (Dialog, draft question, RowMenu).
+

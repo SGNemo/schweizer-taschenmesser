@@ -25,6 +25,7 @@ import { QuickAdd } from './QuickAdd';
 import { ShortcutSheet } from './ShortcutSheet';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { watchKeyboard } from '@/core/shell/keyboardInset';
 import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
@@ -43,6 +44,9 @@ export function AppShell() {
   const rail = sidebar === 'narrow' || !wide;
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
+
+  // Phone keyboard: `--kb-inset` + keeping a focused add field in view (core/shell/keyboardInset.ts).
+  useEffect(() => watchKeyboard(), []);
 
   // Dev-Preview builds say so once per start (a module flag survives StrictMode's double effect).
   useEffect(() => {

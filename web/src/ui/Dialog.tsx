@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useBackClose } from '@/core/shell/useBackClose';
 import { t } from '@/strings';
 import { Button, IconButton } from './Button';
 import { Icon } from './icons';
@@ -69,6 +70,20 @@ export function Dialog({
     if (dirty && !confirming) setConfirming(true);
     else onClose();
   };
+
+  // "Back" (Android gesture, browser button) closes the dialog first; with a draft it asks, and
+  // a second "Back" at the question means "keep editing".
+  useBackClose(open, () => {
+    if (confirming) {
+      setConfirming(false);
+      return 'keep';
+    }
+    if (dirty) {
+      setConfirming(true);
+      return 'keep';
+    }
+    onClose();
+  });
 
   const onHandleDown = (e: React.PointerEvent) => {
     dragFrom.current = e.clientY;

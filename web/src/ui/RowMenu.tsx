@@ -1,4 +1,6 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { menuSide, type MenuSide } from '@/core/shell/menuPlacement';
+import { useBackClose } from '@/core/shell/useBackClose';
 import { t } from '@/strings';
 import { IconButton } from './Button';
 import { Icon } from './icons';
@@ -34,6 +36,34 @@ export function RowMenu({
 }) {
   const root = useRef<HTMLSpanElement>(null);
   const button = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const [side, setSide] = useState<MenuSide>('down');
+
+  // Near the bottom bar the menu opens upwards (thumb zone); measured before paint, so it never jumps.
+  useLayoutEffect(() => {
+    if (!open || !list.current || !button.current) return;
+    const rect = button.current.getBoundingClientRect();
+    // The menu is clipped by the page's scroll area, so measure against that, not the screen.
+    let scroller: HTMLElement | null = button.current.parentElement;
+    while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY))
+      scroller = scroller.parentElement;
+    const area = scroller?.getBoundingClientRect();
+    const screen = window.visualViewport?.height ?? window.innerHeight;
+    const top = area?.top ?? 0;
+    const bottom = Math.min(area?.bottom ?? screen, screen);
+    const bar = document.querySelector('[data-bottom-bar]')?.getBoundingClientRect();
+    setSide(
+      menuSide({
+        triggerTop: rect.top - top,
+        triggerBottom: rect.bottom - top,
+        menuHeight: list.current.offsetHeight + 8,
+        viewportHeight: bottom - top,
+        bottomReserve: bar && bar.height > 0 ? Math.max(0, bottom - bar.top) : 0,
+      }),
+    );
+  }, [open]);
+
+  useBackClose(open, () => onOpenChange(false));
 
   useEffect(() => {
     if (!open) return;
@@ -106,7 +136,12 @@ export function RowMenu({
         <Icon name="more" size={18} />
       </IconButton>
       {open ? (
-        <ul role="menu" aria-label={label} className={styles.menu}>
+        <ul
+          ref={list}
+          role="menu"
+          aria-label={label}
+          className={`${styles.menu} ${side === 'up' ? styles.up : ''}`}
+        >
           {entries}
         </ul>
       ) : null}

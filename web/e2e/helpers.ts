@@ -21,9 +21,31 @@ export async function dismissNotices(page: Page) {
   });
 }
 
+/**
+ * A dialog, sheet or menu that just closed pops its Back entry with `history.back()`, which settles
+ * asynchronously (`core/shell/backStack`: marker `tmBack` in `history.state` while the entry exists,
+ * `window.__tmBackPending` while the pop is in flight). A `page.goto` or `page.goBack` in that gap
+ * is aborted by the late traversal, lands one entry short, or pops the next page's own entry
+ * (`?new=1` dropped, the new dialog closed again). Call it before navigating from the test; bounded,
+ * so an element that is open on purpose only costs the timeout.
+ */
+export async function backSettled(page: Page) {
+  await page
+    .waitForFunction(
+      () => {
+        const w = window as unknown as { __tmBackPending?: boolean };
+        return !w.__tmBackPending && !(history.state && 'tmBack' in (history.state as object));
+      },
+      undefined,
+      { timeout: 1500 },
+    )
+    .catch(() => undefined);
+}
+
 /** Opens `url` and waits for the page title, i.e. the app has booted and the route rendered. */
 export async function ready(page: Page, url: string) {
   await dismissNotices(page);
+  await backSettled(page);
   await page.goto(url);
   await expect(page.locator('main h1')).toBeVisible();
 }

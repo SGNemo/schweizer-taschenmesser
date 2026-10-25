@@ -29,7 +29,7 @@ export function BottomNav({ tree, onMore }: { tree: NavTree; onMore: () => void 
     })),
   ];
   return (
-    <nav aria-label={t.nav.main} className={styles.bottom}>
+    <nav aria-label={t.nav.main} className={styles.bottom} data-bottom-bar>
       {items.map((i) => (
         <Link
           key={i.key}
