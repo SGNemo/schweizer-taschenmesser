@@ -22,7 +22,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Mobile focus: back gesture, keyboard, phone paths | `feat/phone-one-hand` | new `core/shell/backStack.ts`, `ui/Dialog.tsx`, `ui/RowMenu.tsx`, `layout/CommandPalette.tsx`, `layout/AppShell.tsx` (small), new `e2e/phone-paths.spec.ts` | PR [#237](https://github.com/SGNemo/schweizer-taschenmesser/pull/237), reviewed, waiting for merge | 2026-10-25 | 2026-10-25 |
 | (announced) Spotify connector: "Läuft gerade" line, desktop first; then focus-round music | `feat/connector-spotify`, `feat/spotify-focus` | new `connectors/spotify/*`, `core/connectors/types.ts` (additive `nowPlaying`), `core/platform/types.ts` + `src-tauri/src/oauth.rs` (optional preferred port), new `home/NowPlayingLine.tsx`, docs/user | prompt in 15-parallel-prompts-4 (chat 10) | – | 2026-10-24 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
