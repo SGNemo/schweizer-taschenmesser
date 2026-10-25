@@ -3,7 +3,7 @@
 Rules: [README.md](README.md). One line per item: date · branch · text. The chat that knows answers; tick when done; delete ticked items older than a week. The maintainer does not read this file: ask each other.
 
 ## Open questions (to another chat or to the maintainer, not blocking)
-- [ ] 2026-10-17 · `chore/chat-scribble` · example: "Does anyone already synthesise a sound with Web Audio? Then I reuse it." → answer here.
+- (none open)
 
 ## Heads-up (I am touching …)
 - [x] 2026-10-25 · `feat/connector-spotify` (done, PR #242 open; package 2 not started) · new `connectors/spotify/*`, additive `nowPlaying?: NowPlayingSource` + optional `client` hint in `core/connectors/types.ts` (contract), optional `preferredPort` in `core/platform/types.ts` / `tauri/index.ts` and `src-tauri/src/oauth.rs` (`oauth_listen_start`), `pages/settings/ConnectorsSection.tsx` (Google-only texts guarded by id, client hint), new `home/NowPlayingLine.tsx` (+ one line in `home/Home.tsx`), `strings.spotify.ts`, docs/user, `e2e/connector-spotify.spec.ts`. Android/PWA is not part of it.
