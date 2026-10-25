@@ -1296,6 +1296,12 @@ export const de = {
       ended: 'Beendet',
       paused: 'Pausiert',
       active: 'Aktiv',
+      markDone: 'Erledigt',
+      markedDone: 'Erinnerung erledigt.',
+      pause: 'Pausieren',
+      resume: 'Wieder einschalten',
+      pausedToast: 'Pausiert.',
+      resumedToast: 'Wieder eingeschaltet.',
       widgetEmpty: 'Keine anstehenden Erinnerungen.',
     },
     notify: {

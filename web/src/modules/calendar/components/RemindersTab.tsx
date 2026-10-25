@@ -12,27 +12,42 @@ import { t } from '@/strings';
 import { deleteWithUndo, changeWithUndo } from '@/core/undo/withToast';
 import { snoozeOptions } from '@/core/notifications/snooze';
 import { snoozeTarget } from '@/core/time/quickShift';
-import { Badge, Button, Card, EmptyState, Icon, RowMenu, Switch, type RowMenuItem } from '@/ui';
+import {
+  Badge,
+  Button,
+  EmptyState,
+  GroupedList,
+  Icon,
+  ItemList,
+  ItemRow,
+  type RowMenuItem,
+} from '@/ui';
 import type { Stored } from '@/core/db/types';
 import type { CalendarEvent } from '../schema';
-import { isReminder, nextOccurrenceAt, reminderStatus, sortReminders } from '../reminders';
+import { groupReminders } from '../reminderGroups';
+import { isActive, isReminder, nextOccurrenceAt, reminderStatus } from '../reminders';
 import { eventRepo } from '../repo';
 import styles from '../routes/reminders.module.css';
 import { settings } from '../settings';
 import { EventEditor, type EventTarget } from './EventEditor';
 
-/** "⋯" of a reminder: move a one-off reminder to later (same options as the prompt) and delete, both undoable. */
-function ReminderMenu({
-  r,
-  open,
-  setOpen,
-}: {
-  r: Stored<CalendarEvent>;
-  open: boolean;
-  setOpen: (o: boolean) => void;
-}) {
+/** Pause or resume the notification; the reminder stays in the list (undoable). */
+function setEnabled(
+  r: Stored<CalendarEvent>,
+  enabled: boolean,
+  message: string = enabled ? t.calendar.reminders.resumedToast : t.calendar.reminders.pausedToast,
+) {
+  return changeWithUndo(
+    () =>
+      eventRepo.update(r.id, { notify: { minutesBefore: r.notify?.minutesBefore ?? 0, enabled } }),
+    message,
+  );
+}
+
+/** The "⋯" entries of a reminder: Später (one-off), pause/resume, edit, delete; the first four are all undoable. */
+export function reminderMenu(r: Stored<CalendarEvent>, onEdit: () => void): RowMenuItem[] {
   const items: RowMenuItem[] = [];
-  if (!r.recurrence) {
+  if (!r.recurrence && isActive(r)) {
     for (const option of snoozeOptions(now(), getPlatform().kind)) {
       if (option === 'pc') continue;
       items.push({
@@ -56,53 +71,56 @@ function ReminderMenu({
     }
   }
   items.push({
+    id: 'toggle',
+    label: isActive(r) ? t.calendar.reminders.pause : t.calendar.reminders.resume,
+    onSelect: () => void setEnabled(r, !isActive(r)),
+  });
+  items.push({ id: 'edit', label: t.actions.edit, onSelect: onEdit });
+  items.push({
     id: 'delete',
     label: t.actions.delete,
     danger: true,
     onSelect: () => void deleteWithUndo(() => eventRepo.remove(r.id)),
   });
-  return <RowMenu label={t.ui.rowMenu} items={items} open={open} onOpenChange={setOpen} />;
+  return items;
 }
 
-/** One reminder: card with the main button, the on/off switch and the "⋯" menu (also on right-click). */
-function ReminderCard({ r, onOpen }: { r: Stored<CalendarEvent>; onOpen: () => void }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+/**
+ * One reminder: a row with the title and the next time, the one main action "Erledigt" (a one-off
+ * reminder that is still coming: switches its notification off, so it moves to "Erledigt"; undoable) and the "⋯" menu with everything else.
+ * A repeat has no "Erledigt" (it would end the series); it is paused from the menu.
+ */
+export function ReminderRow({ r, onOpen }: { r: Stored<CalendarEvent>; onOpen: () => void }) {
   const status = reminderStatus(r, now());
   const next = nextOccurrenceAt(r, now());
+  const recurrence = describeRecurrence(r.recurrence);
   return (
-    <Card
-      as="li"
-      className={status === 'upcoming' ? '' : styles.inactive}
-      onContextMenu={(e: React.MouseEvent) => {
-        e.preventDefault();
-        setMenuOpen(true);
-      }}
-    >
-      <div className={styles.row}>
-        <button type="button" className={styles.main} onClick={onOpen}>
-          <span className={styles.title}>{r.title}</span>
-          <span className={styles.muted}>{describeRecurrence(r.recurrence)}</span>
-          <span className={styles.muted}>
-            {next
-              ? `${t.calendar.reminders.next}: ${formatDay(next.date, 'EEE, d. MMM yyyy')} · ${next.time}`
-              : null}
-            {status === 'ended' ? <Badge>{t.calendar.reminders.ended}</Badge> : null}
-            {status === 'paused' ? <Badge>{t.calendar.reminders.paused}</Badge> : null}
-          </span>
-        </button>
-        <Switch
-          label={`${r.title}: ${t.calendar.reminders.active}`}
-          labelHidden
-          checked={status !== 'paused'}
-          onChange={(enabled) =>
-            void eventRepo.update(r.id, {
-              notify: { minutesBefore: r.notify?.minutesBefore ?? 0, enabled },
-            })
-          }
-        />
-        <ReminderMenu r={r} open={menuOpen} setOpen={setMenuOpen} />
-      </div>
-    </Card>
+    <ItemRow
+      title={r.title}
+      done={status !== 'upcoming'}
+      onOpen={onOpen}
+      meta={
+        <>
+          {recurrence ? `${recurrence} · ` : null}
+          {next
+            ? `${t.calendar.reminders.next}: ${formatDay(next.date, 'EEE, d. MMM yyyy')} · ${next.time}`
+            : null}
+          {status === 'ended' ? <Badge>{t.calendar.reminders.ended}</Badge> : null}
+          {status === 'paused' ? <Badge>{t.calendar.reminders.paused}</Badge> : null}
+        </>
+      }
+      end={
+        status === 'upcoming' && !r.recurrence ? (
+          <Button
+            size="sm"
+            onClick={() => void setEnabled(r, false, t.calendar.reminders.markedDone)}
+          >
+            {t.calendar.reminders.markDone}
+          </Button>
+        ) : null
+      }
+      menu={reminderMenu(r, onOpen)}
+    />
   );
 }
 
@@ -115,9 +133,10 @@ export function RemindersTab({
   onNewHandled: () => void;
 }) {
   const reminders = useLiveQuery(
-    async () => sortReminders((await eventRepo.active().toArray()).filter(isReminder), now()),
+    async () => (await eventRepo.active().toArray()).filter(isReminder),
     [],
   );
+  const groups = reminders ? groupReminders(reminders, now()) : [];
   const [prefs] = useSettings('module.calendar', settings.schema, settings.defaults);
   const [target, setTarget] = useState<EventTarget>(null);
   const defaultTime = (prefs as { defaultReminderTime?: string } | undefined)?.defaultReminderTime;
@@ -160,11 +179,25 @@ export function RemindersTab({
           <StartDataButton moduleId="calendar" />
         </EmptyState>
       ) : null}
-      <ul className={styles.list}>
-        {reminders?.map((r) => (
-          <ReminderCard key={r.id} r={r} onOpen={() => setTarget(r)} />
-        ))}
-      </ul>
+      {groups.length > 0 ? (
+        <GroupedList
+          listId="calendar-reminders"
+          label={t.calendar.reminders.title}
+          groups={groups.map((g) => ({
+            id: g.id,
+            label: t.groups[g.id],
+            count: g.items.length,
+            defaultClosed: g.id === 'done',
+            children: (
+              <ItemList>
+                {g.items.map((r) => (
+                  <ReminderRow key={r.id} r={r} onOpen={() => setTarget(r)} />
+                ))}
+              </ItemList>
+            ),
+          }))}
+        />
+      ) : null}
 
       <EventEditor target={openTarget} onClose={close} onDuplicated={setTarget} />
     </>

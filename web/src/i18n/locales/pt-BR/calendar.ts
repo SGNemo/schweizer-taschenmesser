@@ -65,6 +65,12 @@ export const calendar: Strings['calendar'] = {
     ended: 'Encerrado',
     paused: 'Pausado',
     active: 'Ativo',
+    markDone: 'Concluído',
+    markedDone: 'Lembrete concluído.',
+    pause: 'Pausar',
+    resume: 'Reativar',
+    pausedToast: 'Pausado.',
+    resumedToast: 'Reativado.',
     widgetEmpty: 'Nenhum lembrete pendente.',
   },
   notify: {

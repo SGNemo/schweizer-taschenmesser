@@ -65,6 +65,12 @@ export const calendar: Strings['calendar'] = {
     ended: 'Finalizado',
     paused: 'En pausa',
     active: 'Activo',
+    markDone: 'Hecho',
+    markedDone: 'Recordatorio hecho.',
+    pause: 'Pausar',
+    resume: 'Volver a activar',
+    pausedToast: 'En pausa.',
+    resumedToast: 'Reactivado.',
     widgetEmpty: 'No hay recordatorios próximos.',
   },
   notify: {

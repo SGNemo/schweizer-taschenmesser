@@ -99,8 +99,14 @@ test.describe('Reminders', () => {
     await expect(calendarEntry(page, /Wasser trinken/)).toBeVisible();
 
     await ready(page, '/calendar?tab=reminders');
-    await page.getByRole('switch', { name: /Wasser trinken/ }).click();
-    await expect(page.getByText('Pausiert')).toBeVisible();
+    await page
+      .getByRole('listitem')
+      .filter({ hasText: 'Wasser trinken' })
+      .getByRole('button', { name: 'Weitere Aktionen' })
+      .click();
+    await page.getByRole('menuitem', { name: 'Pausieren' }).click();
+    await page.getByRole('button', { name: 'Erledigt ausklappen' }).click(); // paused ones sit in the folded group
+    await expect(page.getByText('Pausiert', { exact: true })).toBeVisible();
     await ready(page, '/calendar?view=week&date=2026-09-30');
     await expect(calendarEntry(page, /Wasser trinken/)).toHaveCount(0);
   });
