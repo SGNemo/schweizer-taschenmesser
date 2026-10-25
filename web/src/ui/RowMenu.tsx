@@ -23,6 +23,9 @@ export interface RowMenuItem {
  * row (the browser sends `contextmenu`). Arrow keys move, Enter picks, Esc closes and returns the
  * focus. Every entry is also reachable without this menu (swipe, edit dialog); it is a shortcut.
  */
+/** Gap between trigger and menu (`--space-1` in the stylesheet), counted when measuring the side. */
+const MENU_GAP_PX = 8;
+
 export function RowMenu({
   label,
   items,
@@ -56,7 +59,7 @@ export function RowMenu({
       menuSide({
         triggerTop: rect.top - top,
         triggerBottom: rect.bottom - top,
-        menuHeight: list.current.offsetHeight + 8,
+        menuHeight: list.current.offsetHeight + MENU_GAP_PX,
         viewportHeight: bottom - top,
         bottomReserve: bar && bar.height > 0 ? Math.max(0, bottom - bar.top) : 0,
       }),

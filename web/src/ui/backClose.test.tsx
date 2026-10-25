@@ -2,7 +2,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { resetBackStack } from '@/core/shell/backStack';
+import { backDepth, resetBackStack } from '@/core/shell/backStack';
 import { Dialog } from './Dialog';
 import { RowMenu } from './RowMenu';
 
@@ -49,6 +49,15 @@ describe('Back closes what is open', () => {
     // The entry was put back: one more Back asks again.
     await back();
     expect(screen.getByRole('alertdialog')).toBeTruthy();
+  });
+
+  it('a dialog whose parent handles Back adds no entry of its own', () => {
+    render(
+      <Dialog open onClose={() => undefined} title="T" backHandled>
+        <p>Inhalt</p>
+      </Dialog>,
+    );
+    expect(backDepth()).toBe(0);
   });
 
   it('a row menu, and the dialog under it stays', async () => {

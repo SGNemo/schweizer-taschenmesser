@@ -19,6 +19,8 @@ interface DialogProps {
   headerStart?: ReactNode;
   /** Fields were filled: closing asks "Entwurf verwerfen?" first. */
   dirty?: boolean;
+  /** The parent registers "Back" itself (setup assistant): the dialog adds no entry of its own. */
+  backHandled?: boolean;
 }
 
 /** Distance in px a sheet must be pulled down to close. */
@@ -39,6 +41,7 @@ export function Dialog({
   size = 'default',
   headerStart,
   dirty = false,
+  backHandled = false,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -73,7 +76,7 @@ export function Dialog({
 
   // "Back" (Android gesture, browser button) closes the dialog first; with a draft it asks, and
   // a second "Back" at the question means "keep editing".
-  useBackClose(open, () => {
+  useBackClose(open && !backHandled, () => {
     if (confirming) {
       setConfirming(false);
       return 'keep';
