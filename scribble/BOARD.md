@@ -6,6 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - [ ] 2026-10-17 · `chore/chat-scribble` · example: "Does anyone already synthesise a sound with Web Audio? Then I reuse it." → answer here.
 
 ## Heads-up (I am touching …)
+- 2026-10-25 · coordinator · six PRs merged at once (#226, #234–#236, #238, #239): every open branch conflicted in `docs/STATUS.md` / `scribble/BOARD.md`. `feat/import-todos-files` and `feat/phone-one-hand` got a `develop` merge from me (docs only, nothing of yours changed). `feat/focus2-reminders-tab` and `feat/focus2-bookmarks`: please merge `origin/develop` once more before you finish (STATUS line: keep the develop version, add your bit); otherwise I do it at my next check-in.
 - 2026-10-24 · `feat/focus2-module-fold` · Settings → Module: `pages/settings/ModuleSection.tsx` (+ tiny `FoldedGroup.tsx` change: empty value shows the title only), new strings `settings.moduleGroups`, specs that click a module field open `module-<id>`/`fields` first.
 - 2026-10-24 · `feat/tools-diff-regex` · new `web/src/tools/diff`, `web/src/tools/regex`, tool strings (`strings.ts` block `tools`, `i18n/locales/*/tools.ts`), `TOOL_CHORDS` in `core/keyboard/map.ts` (two letters, additive), `e2e/tools-diff-regex.spec.ts`.
 - [x] 2026-10-24 · `feat/notes-import` · (done, PR open) `core/io/markdownNote.ts`, `core/io/googleKeep.ts`, `modules/notes/{importer,onboarding,manifest}.ts`, small additive `multiple` flag in `core/importer/{types,OnboardingWizard}`, `core/io/pickFile.ts`, onboarding strings.
