@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, moreFields } from './helpers';
+import { backSettled, enable, moreFields } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -31,12 +31,14 @@ test('the share page offers only enabled modules and prefills the target', async
   await expect(dialog.getByLabel('Adresse (Link)')).toHaveValue('https://wandern.example/weg');
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();
 
+  await backSettled(page);
   await page.goBack();
   await page.getByTestId('share-notes').click();
   await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('Schöner Weg');
   await expect(page.getByRole('dialog').getByLabel('Text')).toHaveValue(/wandern\.example/);
   await page.getByRole('dialog').getByRole('button', { name: 'Abbrechen' }).click();
 
+  await backSettled(page);
   await page.goBack();
   await page.getByTestId('share-todos').click();
   await expect(page.getByPlaceholder('Neue Aufgabe …')).toHaveValue('Schöner Weg');
