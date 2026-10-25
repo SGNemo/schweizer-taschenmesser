@@ -62,8 +62,11 @@ export interface ScreenService {
  */
 export interface OAuthLoopback {
   supported: boolean;
-  /** Binds the port. Call `wait` after the browser was opened with `redirectUri`. */
-  start(): Promise<{
+  /**
+   * Binds the port. Call `wait` after the browser was opened with `redirectUri`. `preferredPort`
+   * takes exactly that port or rejects with `port-busy: …` (providers that check the URI exactly).
+   */
+  start(opts?: { preferredPort?: number }): Promise<{
     redirectUri: string;
     /** Resolves with the authorization code; rejects with `timeout`, `denied: …` or `listen-failed: …`. */
     wait(state: string, timeoutSeconds?: number): Promise<{ code: string }>;

@@ -188,8 +188,10 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     updater: createUpdater(kind, fetchFn),
     oauth: {
       supported: kind === 'desktop',
-      async start() {
-        const port = await invoke<number>('oauth_listen_start');
+      async start(opts) {
+        const port = await invoke<number>('oauth_listen_start', {
+          preferredPort: opts?.preferredPort,
+        });
         return {
           redirectUri: `http://127.0.0.1:${port}/callback`,
           wait: (state, timeoutSeconds = 300) =>

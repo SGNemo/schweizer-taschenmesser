@@ -75,6 +75,12 @@ export const tLegal = defineBundle(
         to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). Der Betreiber von Nemo erhält nichts.',
         when: 'Nur nach dem Verbinden. Kalender-Abgleich im Hintergrund etwa alle 30 Minuten. Trennen widerruft den Zugriff. Das Zugriffs-Token läuft ab, wenn dein Google-Projekt im Status „Testing“ ist (nach 7 Tagen): dann „Neu anmelden“.',
       },
+      spotify: {
+        title: 'Spotify (optional, Windows)',
+        what: 'Anmeldung mit deiner eigenen Spotify-App (Client-ID, ohne Geheimnis). Danach fragt das Gerät bei Spotify, was gerade läuft (Titel, Interpret), und sendet auf Klick Pause, Weiter oder Nächster. Titel und Interpret bleiben auf dem Gerät: kein Sync, keine KI, keine Fehlerberichte.',
+        to: 'Spotify (accounts.spotify.com und api.spotify.com).',
+        when: 'Nur nach Verbinden und nur bei geöffneter, sichtbarer Übersicht: höchstens alle 30 Sekunden. Trennen unter Verbindungen → Spotify.',
+      },
       supporter: {
         title: 'Supporter-Code und Ko-fi',
         what: 'In der App nichts: der Code wird nur auf dem Gerät geprüft (ohne Netz). Wer über Ko-fi unterstützt, gibt Ko-fi seine Daten; ein kleiner Dienst des Betreibers erhält von Ko-fi die Benachrichtigung (u. a. Betrag und E-Mail-Adresse), verschickt den Code per E-Mail und speichert nur Prüfwerte statt Klartext.',
@@ -253,6 +259,12 @@ export const tLegal = defineBundle(
           what: 'Sign-in to Google with your own OAuth application (read only). Calendar: events of the chosen calendars, from 60 days back to 400 days ahead. Email: only when you click, sender, subject, date and unsubscribe header of matching mails, never the content. Permissions: calendar.readonly and gmail.readonly, depending on your choice.',
           to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). The maintainer of Nemo receives nothing.',
           when: 'Only after connecting. Calendar sync in the background about every 30 minutes. Disconnecting revokes access. The access token expires if your Google project is in “Testing” status (after 7 days): then use “Neu anmelden” (sign in again).',
+        },
+        spotify: {
+          title: 'Spotify (optional, Windows)',
+          what: 'Sign-in with your own Spotify app (client ID, no secret). After that the device asks Spotify what is playing (title, artist) and, on a click, sends pause, resume or next. Title and artist stay on the device: no sync, no AI, no error reports.',
+          to: 'Spotify (accounts.spotify.com and api.spotify.com).',
+          when: 'Only after connecting and only while the Overview is open and visible: at most every 30 seconds. Disconnect under Connections → Spotify.',
         },
         supporter: {
           title: 'Supporter code and Ko-fi',

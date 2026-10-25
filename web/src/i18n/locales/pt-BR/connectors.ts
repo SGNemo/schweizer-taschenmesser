@@ -13,6 +13,8 @@ export const connectors: Strings['connectors'] = {
     denied: 'O login foi cancelado ou recusado.',
     'bad-response': 'O serviço enviou uma resposta inesperada.',
     unsupported: 'Isso não funciona neste dispositivo.',
+    'port-busy': 'Porta em uso. Feche o outro programa e tente conectar de novo.',
+    'premium-required': 'Controlar a reprodução exige uma conta Premium.',
   } as Record<string, string>,
   icsName: 'Assinatura de calendário (ICS)',
   icsDescription:

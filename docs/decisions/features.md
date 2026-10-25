@@ -12,7 +12,7 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **User brings their own Google OAuth client (Desktop app type); nothing shipped in repo/binary.** OAuth via PKCE + loopback listener; Google login not on Android yet. Source: architecture.md "Connectors"; CLAUDE.md.
 - **Gmail scan reads only metadata + snippet, never the body; user confirms each suggestion.** Source: architecture.md.
 - **Sync-server proxy `/v1/proxy` is deliberately narrow (SSRF hardening)** – needed by the PWA for ICS/RSS; native app fetches directly. Source: commit 7e93948; architecture.md.
-- **Spotify connector not built** (docs unreachable, API constraints); launcher preset opens the web player. Source: architecture.md step 6.
+- **Spotify connector (desktop): own Client ID, fixed port 38417; "Läuft gerade" line, ≤ 1 request/30 s while visible.** [spotify.md](../features/spotify.md)
 
 ## Disk module & platform-only modules
 - **Modules can declare `platforms`; the filter is `availableManifests()`, resolved lazily.** Module states are synced, so a desktop-only module must vanish from router, nav, dashboard and services on the other platforms, not only from the library. The platform is known only after `initPlatform()`; importing it in the registry would create a cycle through the DB, hence `core/modules/available.ts`. Source: PR #8 (2026-09-30).

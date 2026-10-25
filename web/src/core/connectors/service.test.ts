@@ -38,6 +38,8 @@ let waitOutcome: 'code' | 'denied' | 'timeout' | 'pending' = 'code';
 let release: () => void = () => {};
 let tokenResponse: () => Response;
 let revoked = 0;
+const startOpts: ({ preferredPort?: number } | undefined)[] = [];
+let startFails: string | undefined;
 
 const jsonResponse = (status: number, body: unknown, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers });
@@ -69,7 +71,9 @@ function installPlatform() {
     app: { ...web.app, openUrl: async (url) => void opened.push(url) },
     oauth: {
       supported: true,
-      async start() {
+      async start(opts) {
+        startOpts.push(opts);
+        if (startFails) throw startFails;
         return {
           redirectUri: 'http://127.0.0.1:5555/callback',
           async wait(state) {
@@ -136,6 +140,8 @@ beforeEach(async () => {
   tokenBodies.length = 0;
   syncCalls.length = 0;
   revoked = 0;
+  startOpts.length = 0;
+  startFails = undefined;
   waited = {};
   waitOutcome = 'code';
   tokenResponse = () =>
@@ -181,6 +187,29 @@ describe('connectOAuth', () => {
     await saveClient('testco', { clientId: 'client-abc-123' });
     await connectOAuth(def, ['calendar', 'mail']);
     expect(new URL(opened[0]!).searchParams.get('scope')).toBe('cal.readonly mail.readonly');
+  });
+
+  it('asks the platform for the fixed port of the provider, and only then', async () => {
+    await saveClient('testco', { clientId: 'client-abc-123' });
+    await connectOAuth(def, ['calendar']);
+    await connectOAuth({ ...def, oauth: { ...ENDPOINTS, preferredPort: 38417 } }, ['calendar']);
+    expect(startOpts).toEqual([{ preferredPort: undefined }, { preferredPort: 38417 }]);
+  });
+
+  it('reports a busy fixed port as such and opens no browser', async () => {
+    await saveClient('testco', { clientId: 'client-abc-123' });
+    startFails = 'port-busy: Address already in use';
+    const status = await connectOAuth({ ...def, oauth: { ...ENDPOINTS, preferredPort: 38417 } }, [
+      'calendar',
+    ]);
+    expect(status.state).toBe('error');
+    expect(status.message).toBe(describeError(new ConnectorError('port-busy')));
+    expect(opened).toEqual([]);
+    // Any other start failure stays a generic connection problem.
+    startFails = 'listen-failed: nope';
+    expect((await connectOAuth(def, ['calendar'])).message).toBe(
+      describeError(new ConnectorError('network')),
+    );
   });
 
   it('asks for the client id first', async () => {
@@ -384,5 +413,20 @@ describe('disconnect', () => {
     await connectOAuth(def, ['calendar']);
     await disconnect(def, { keepData: false });
     expect(await externalRepo.active().count()).toBe(0);
+  });
+
+  it('forgets the last now-playing reading of a media connector', async () => {
+    const media: ConnectorDef = {
+      ...def,
+      nowPlaying: { read: async () => undefined, control: async () => {} },
+    };
+    localStorage.setItem(
+      'tm-spotify-now',
+      '{"at":1,"value":{"title":"T","artist":"A","playing":true}}',
+    );
+    localStorage.setItem('tm-spotify-no-premium', '5');
+    await disconnect(media, { keepData: true });
+    expect(localStorage.getItem('tm-spotify-now')).toBeNull();
+    expect(localStorage.getItem('tm-spotify-no-premium')).toBeNull();
   });
 });

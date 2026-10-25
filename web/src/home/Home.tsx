@@ -49,6 +49,7 @@ import {
 import { widgetsOf } from './AutoWidget';
 import { AttentionStrip } from './AttentionStrip';
 import { ResumeCard } from './ResumeCard';
+import { NowPlayingLine } from './NowPlayingLine';
 import { WeatherLine } from './WeatherLine';
 
 import styles from './Home.module.css';
@@ -190,6 +191,7 @@ export function Home() {
       {!editing ? <ResumeCard /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
       {!editing ? <WeatherLine /> : null}
+      {!editing ? <NowPlayingLine /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
         <EmptyState title={t.home.emptyTitle}>
