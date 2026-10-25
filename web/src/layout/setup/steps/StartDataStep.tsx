@@ -55,7 +55,7 @@ export default function StartDataStep(_props: SetupStepProps) {
               </>
             ) : null}
           </span>
-          <StartDataButton moduleId={m.id} />
+          <StartDataButton moduleId={m.id} setupLink={false} />
         </li>
       ))}
     </ul>
