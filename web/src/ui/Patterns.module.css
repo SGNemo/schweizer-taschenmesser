@@ -227,6 +227,11 @@
     opacity: 1;
   }
 }
+/* The row's enter animation makes every row its own layer: the row with an open menu must sit above the rows below it. */
+.item:has(.actionsOpen) {
+  position: relative;
+  z-index: var(--z-hint);
+}
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -550,10 +555,8 @@ button.chip[aria-pressed='true'] {
 /* Swipe rows (touch): the row slides over a coloured action layer. */
 .swipeable {
   position: relative;
-  /* Only the sideways action layer is clipped; a row menu may open upwards or downwards over it.
-     `overflow-x: clip` (not `clip-path`, not `overflow: hidden`): neither creates a stacking context,
-     so the menu's z-index still counts against the following rows. */
-  overflow-x: clip;
+  /* Only the sideways action layer is clipped; a row menu may open upwards or downwards over it. */
+  clip-path: inset(-100vh 0);
 }
 .swipeable > .row {
   position: relative;
