@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, enable, moduleSwitch, moreFields, showAllWidgets } from './helpers';
+import {
+  calendarEntry,
+  enable,
+  moduleSwitch,
+  moreFields,
+  openBookmarksMenu,
+  showAllWidgets,
+} from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -43,17 +50,26 @@ test.describe('Merkliste', () => {
     await add('Pasta Rezept', 'koch.de/pasta', 'Kochen, Rezept', 'Lesen');
     await add('Dune', '', 'Film', 'Ansehen');
 
-    const list = page.getByRole('list', { name: 'Merkliste' });
+    const list = page.getByRole('group', { name: 'Merkliste' });
     await expect(list.getByRole('listitem')).toHaveCount(2);
     await expect(list.getByRole('link', { name: /Pasta Rezept/ })).toHaveAttribute(
       'href',
       'https://koch.de/pasta',
     );
 
-    await page.getByRole('button', { name: 'Kochen (1)' }).click();
+    await (
+      await openBookmarksMenu(page)
+    )
+      .getByRole('menuitemcheckbox', { name: 'Kochen (1)' })
+      .click();
     await expect(list.getByRole('listitem')).toHaveCount(1);
     await expect(list).toContainText('Pasta Rezept');
-    await page.getByRole('button', { name: 'Kochen (1)' }).click();
+    await (
+      await openBookmarksMenu(page)
+    )
+      .getByRole('menuitemcheckbox', { name: 'Kochen (1)' })
+      .click();
+    await expect(list.getByRole('listitem')).toHaveCount(2);
 
     await page.getByLabel('Merkliste durchsuchen').fill('dune');
     await expect(list.getByRole('listitem')).toHaveCount(1);
@@ -61,7 +77,11 @@ test.describe('Merkliste', () => {
 
     await page.getByRole('checkbox', { name: /Erledigt: Dune/ }).click(); // leaves the "Offen" view
     await expect(list.getByRole('listitem')).toHaveCount(1); // "Offen" view hides it
-    await page.getByRole('button', { name: 'Erledigt', exact: true }).click();
+    await (
+      await openBookmarksMenu(page)
+    )
+      .getByRole('menuitemcheckbox', { name: 'Erledigt' })
+      .click();
     await expect(list).toContainText('Dune');
   });
 

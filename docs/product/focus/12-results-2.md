@@ -115,6 +115,25 @@ Same tool and seeded Dev build (`STIMULUS_DIR=… npm run measure:stimulus`, pag
 - Text/number values are shown as stored; a switch that is off adds nothing, a module with all switches off shows just "Felder".
 - Tests: `ModuleSection.test.tsx` (closed line with values, "+ n", every field inside its group, the line follows a change), `e2e/comfort-settings.spec.ts` (deep link `#module-example--showDone` opens the group), `e2e/settings.spec.ts` (closed by default); specs that click a module field open the group first (`openFoldedGroup`), none removed or weakened.
 
+## Merkliste calmed (`feat/focus2-bookmarks`, round 4)
+Same tool and seeded Dev build (medium data); baseline = `develop` after #224. Screenshots: `img/before-bookmarks-phone.png`, `img/after-bookmarks-phone.png`.
+
+| Metric (Merkliste, phone 412×915) | Before | After |
+|---|---|---|
+| Page height | 4227 px | **2455 px** |
+| Buttons / links / icons | 61 / 41 / 44 | **42** / 41 / 45 |
+| Actions on the first screen | 43 | **36** |
+| Links per row | 1 icon link + title button | **1 (the title)** |
+| Real target gaps under 44 px (`targets-focus`, `/bookmarks`) | 0 | **0** |
+| Elements counted under 44 px (`measure:stimulus`) | 55 | 66 (the "⋯" buttons look 32 px and keep a 44 px hit area; one more per row) |
+
+- Row = checkbox, the title (the one link; an entry without an address opens the editor), one context line (type · domain · #tags), "⋯" with Bearbeiten, Link kopieren, one entry per tag (filter), Duplizieren, Löschen. The old "Link öffnen" icon link is gone; `rel="noreferrer noopener"` stays (`ItemRow` got an optional `href`).
+- Above the list: search field, one "⋯" (status, type, tag filter, "Gruppieren nach" Zuletzt hinzugefügt / Erster Tag / Art, "Erweitert"); an active filter is named in words with "Alle anzeigen". Status/type/tag chips and selects left the page; nothing was removed, nothing stored changed (the grouping choice is not stored, it starts at "Zuletzt hinzugefügt").
+- Groups are `GroupedList` (foldable, fold state device-local). Honest reading: the page is 42 % shorter, not short; with many entries the groups are the lever (fold, filter).
+- The Lesezeichen tile view is unchanged (button per tile + edit icon); same pattern is the next step there.
+- Tests: `bookmarks/__tests__/bookmarks.test.ts` (grouping), `bookmarkRow.test.tsx` (one link named by the title, menu entries), `ui/ItemRow.test.tsx` (`href`), `e2e/bookmarks.spec.ts` (desktop + pixel-7: open by title, edit/delete via menu, tag filter, page menu, grouping); `extras`/`lists` specs go through the menu (`openBookmarksMenu`).
+- Fix on the way: a row menu opened on a row above another one was painted under it (the enter animation makes each row a layer); `.item:has(.actionsOpen)` now sits above its neighbours.
+
 ## Erinnerungen-Reiter – calm (`feat/focus2-reminders-tab`)
 Same tool (`measure:stimulus`, seeded medium data) and `targets-focus` (page `/calendar?tab=reminders` added).
 

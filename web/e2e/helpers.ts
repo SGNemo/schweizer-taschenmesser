@@ -101,6 +101,9 @@ export async function openTodosMenu(page: Page) {
   return menu;
 }
 
+/** The "⋯" menu of the Merkliste page (status, type, tag filter, grouping, "Erweitert"): same pattern as the ToDos menu. */
+export const openBookmarksMenu = openTodosMenu;
+
 /** Shows one list of the ToDos page through the "⋯" menu ("Irgendwann", "Eingang", a list name). */
 export async function pickTodosList(page: Page, name: string) {
   const menu = await openTodosMenu(page);

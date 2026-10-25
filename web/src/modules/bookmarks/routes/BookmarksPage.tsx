@@ -2,30 +2,42 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
+import { useAdvanced } from '@/core/settings/comfort';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
+import { tAdvanced } from '@/strings.advanced';
 import {
-  AdvancedToggle,
   Button,
-  Checkbox,
-  Chip,
-  Chips,
   EmptyState,
+  GroupedList,
   Icon,
   IconButton,
   ItemList,
   ItemRow,
   PageHeader,
+  RowMenu,
   Segmented,
-  SelectField,
   TextField,
-  Toolbar,
   useOpenParam,
+  type RowMenuItem,
 } from '@/ui';
+import { BookmarkRow } from '../components/BookmarkRow';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
-import { filterItems, groupLinks, hostOf, normalizeUrl, tagCounts, type Filter } from '../logic';
+import {
+  filterItems,
+  groupItems,
+  groupLinks,
+  GROUPINGS,
+  hostOf,
+  normalizeUrl,
+  tagCounts,
+  type Filter,
+  type Grouping,
+} from '../logic';
 import { itemRepo } from '../repo';
-import { KINDS, type Kind } from '../schema';
+import { KINDS } from '../schema';
 import { StartDataButton } from '@/core/importer/StartDataButton';
+import styles from './bookmarks.module.css';
 
 /** The Web Share Target sends `title`, `text` and `url`; some apps put the link into `text`. */
 function sharedDraft(params: URLSearchParams): { draft: true; title?: string; url?: string } {
@@ -42,6 +54,10 @@ function sharedDraft(params: URLSearchParams): { draft: true; title?: string; ur
 export default function BookmarksPage() {
   const items = useLiveQuery(() => itemRepo.active().toArray(), []);
   const [filter, setFilter] = useState<Filter>({ view: 'open', kind: 'all', query: '' });
+  const [grouping, setGrouping] = useState<Grouping>('recent');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [advanced, setAdvanced] = useAdvanced('bookmarks');
+  const tx = tAdvanced.use();
   const [target, setTarget] = useState<ItemTarget>(null);
   useOpenParam((id) => itemRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
@@ -68,12 +84,84 @@ export default function BookmarksPage() {
       ),
     [items, filter.query],
   );
+  const groups = useMemo(
+    () =>
+      groupItems(shown, grouping, today()).map((g) => ({
+        id: g.id,
+        label:
+          grouping === 'recent'
+            ? t.bookmarks.recent[g.id as keyof typeof t.bookmarks.recent]
+            : grouping === 'kind'
+              ? t.bookmarks.kinds[g.id]!
+              : g.tag || t.bookmarks.noGroup,
+        count: g.items.length,
+        children: (
+          <ItemList>
+            {g.items.map((i) => (
+              <BookmarkRow key={i.id} item={i} onEdit={setTarget} onFilterTag={filterTag} />
+            ))}
+          </ItemList>
+        ),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [shown, grouping],
+  );
+  const sameTag = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
+  function filterTag(tag: string) {
+    setFilter((f) => ({ ...f, tag: sameTag(f.tag, tag) ? undefined : tag }));
+  }
   const setView = (view: 'list' | 'links') => {
     const next = new URLSearchParams(params);
     if (view === 'links') next.set('view', 'links');
     else next.delete('view');
     setParams(next, { replace: true });
   };
+
+  const listMenu: RowMenuItem[] = [
+    ...(['open', 'done', 'all'] as const).map((v) => ({
+      id: `view-${v}`,
+      group: t.bookmarks.view,
+      label: t.bookmarks.views[v],
+      checked: filter.view === v,
+      onSelect: () => setFilter({ ...filter, view: v }),
+    })),
+    ...(['all', ...KINDS] as const).map((k) => ({
+      id: `kind-${k}`,
+      group: t.bookmarks.kind,
+      label: k === 'all' ? t.bookmarks.allKinds : t.bookmarks.kinds[k]!,
+      checked: filter.kind === k,
+      onSelect: () => setFilter({ ...filter, kind: k }),
+    })),
+    ...tags.map(([tag, n]) => ({
+      id: `tag-${tag}`,
+      group: t.bookmarks.filterTags,
+      label: `${tag} (${n})`,
+      checked: sameTag(filter.tag, tag),
+      onSelect: () => filterTag(tag),
+    })),
+    ...GROUPINGS.map((g) => ({
+      id: `group-${g}`,
+      group: t.bookmarks.groupBy,
+      label: t.bookmarks.groupings[g],
+      checked: grouping === g,
+      onSelect: () => setGrouping(g),
+    })),
+  ];
+  const pageMenu: RowMenuItem[] = [
+    ...(linksView ? [] : listMenu),
+    {
+      id: 'advanced',
+      group: t.bookmarks.moreOptions,
+      label: tx.switchLabel,
+      checked: advanced,
+      onSelect: () => setAdvanced(!advanced),
+    },
+  ];
+  const activeFilters = [
+    filter.view !== 'open' ? t.bookmarks.views[filter.view] : '',
+    filter.kind !== 'all' ? t.bookmarks.kinds[filter.kind]! : '',
+    filter.tag ? `#${filter.tag}` : '',
+  ].filter(Boolean);
 
   return (
     <>
@@ -91,7 +179,6 @@ export default function BookmarksPage() {
           />
         }
       >
-        <AdvancedToggle moduleId="bookmarks" />
         <Button
           variant="primary"
           onClick={() => setTarget(linksView ? { draft: true, kind: 'link' } : { draft: true })}
@@ -99,56 +186,29 @@ export default function BookmarksPage() {
           <Icon name="plus" size={18} />
           {linksView ? t.bookmarks.addLink : t.bookmarks.add}
         </Button>
+        <RowMenu
+          label={t.bookmarks.moreOptions}
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          items={pageMenu}
+        />
       </PageHeader>
-      {linksView ? null : (
-        <Toolbar>
-          <Segmented
-            label={t.bookmarks.view}
-            value={filter.view}
-            options={(['open', 'done', 'all'] as const).map((v) => ({
-              value: v,
-              label: t.bookmarks.views[v],
-            }))}
-            onChange={(view) => setFilter({ ...filter, view })}
-          />
-          <SelectField
-            label={t.bookmarks.kind}
-            value={filter.kind}
-            onChange={(e) => setFilter({ ...filter, kind: e.target.value as Kind | 'all' })}
-          >
-            <option value="all">{t.bookmarks.allKinds}</option>
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {t.bookmarks.kinds[k]}
-              </option>
-            ))}
-          </SelectField>
-        </Toolbar>
-      )}
       <TextField
         label={t.bookmarks.search}
         type="search"
         value={filter.query}
         onChange={(e) => setFilter({ ...filter, query: e.target.value })}
       />
-      {!linksView && tags.length > 0 ? (
-        <div style={{ margin: 'var(--space-3) 0' }}>
-          <Chips label={t.bookmarks.filterTags}>
-            {tags.map(([tag, n]) => (
-              <Chip
-                key={tag}
-                label={`${tag} (${n})`}
-                selected={filter.tag?.toLowerCase() === tag.toLowerCase()}
-                onClick={() =>
-                  setFilter({
-                    ...filter,
-                    tag: filter.tag?.toLowerCase() === tag.toLowerCase() ? undefined : tag,
-                  })
-                }
-              />
-            ))}
-          </Chips>
-        </div>
+      {!linksView && activeFilters.length > 0 ? (
+        <p className={styles.note} data-testid="bookmarks-filter">
+          {t.bookmarks.showing(activeFilters.join(' · '))}
+          <Button
+            variant="ghost"
+            onClick={() => setFilter({ ...filter, view: 'open', kind: 'all', tag: undefined })}
+          >
+            {t.bookmarks.showAll}
+          </Button>
+        </p>
       ) : null}
 
       {linksView ? (
@@ -190,40 +250,8 @@ export default function BookmarksPage() {
           {items.length === 0 ? <StartDataButton moduleId="bookmarks" /> : null}
         </EmptyState>
       ) : null}
-      {linksView ? null : (
-        <ItemList layout="grid" label={t.bookmarks.title}>
-          {shown.map((i) => (
-            <ItemRow
-              key={i.id}
-              title={i.title}
-              onOpen={() => setTarget(i)}
-              lead={
-                <Checkbox
-                  aria-label={`${t.bookmarks.done}: ${i.title}`}
-                  label=""
-                  checked={i.done}
-                  onChange={(e) => void itemRepo.update(i.id, { done: e.target.checked })}
-                />
-              }
-              meta={[t.bookmarks.kinds[i.kind], hostOf(i.url), ...i.tags.map((x) => `#${x}`)]
-                .filter(Boolean)
-                .join(' · ')}
-              end={
-                i.url ? (
-                  <a
-                    href={i.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${t.bookmarks.open}: ${i.title}`}
-                    style={{ display: 'grid', placeItems: 'center', minWidth: 44, minHeight: 44 }}
-                  >
-                    <Icon name="external" />
-                  </a>
-                ) : undefined
-              }
-            />
-          ))}
-        </ItemList>
+      {linksView || shown.length === 0 ? null : (
+        <GroupedList listId={`bookmarks-${grouping}`} groups={groups} label={t.bookmarks.title} />
       )}
 
       <ItemEditor target={openTarget} onClose={closeEditor} />

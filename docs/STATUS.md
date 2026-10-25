@@ -7,9 +7,9 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`): Prüfung und Plan #176; Pakete 1–3 (#177, #185, #188, #204), Runde-2-Chats (#180–#184, Prompts `product/focus/13-parallel-prompts.md`), Wetterzeile (#206), Bildschirmfoto (#207) und Runde 3 (#211–#219) gemergt; Runde 4: Darstellung (#222, 4424→1787 px) und Ruhige Erinnerungen (3003→1893 px) und Module (5582→3835 px, PR) gefaltet; Erinnerungen-Reiter ruhig (4064→1996 px); danach die Tagebuch-Woche.
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4, Runden 2–4 und erste Runde-5-PRs gemergt (#177–#230: Heute-Karte, ToDo-Seite, Später, Wetter, Bildschirmfoto, Tasten, Stimulus-Budget, Diff/Regex, Notizen-Import; Einstellungen gefaltet: Darstellung 4424→1787 px, Benachrichtigungen 3003→1893 px, Module 5582→3835 px); Erinnerungen-Reiter (Seite 4064→1996 px); offen: Lesezeichen (Merkliste 4227→2455 px), ToDo-Import, Reste, Mobile, Spotify (`product/focus/15-parallel-prompts-4.md`).
 
-Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import (Markdown, Keep): [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester.
+Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
 
 KI-Erinnerungen per Satz (`feat/ai-reminder-voice`): „Erinner mich um 15 Uhr an die Wäsche“, „in 20 Minuten Pizza rausnehmen“ → Erinnerung mit Benachrichtigung (Regeln, 0 Token, Zeiten rechnet der Code), Vorschau mit großer Uhrzeit, „Speichern“/„Ändern“; Handtest: Satz per Sprache auf dem Android-Gerät, Benachrichtigung zur Zeit.
 
@@ -78,7 +78,7 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 0. Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ (Branch `feat/adhd-friendly`), danach Paket 2 Erinnerungen, 3 Erfassen/Ruhe, 4 Fortschritt – Plan: [features/focus-aids.md](features/focus-aids.md).
 1. Hardware-Checklisten ([MANUAL-TESTS.md](MANUAL-TESTS.md)) abarbeiten (Sven), Fehler melden.
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
-3. Einrichtungsassistent: offene Kleinigkeiten – Link „Einrichtung öffnen“ in den Leerzuständen der einzelnen Module (12 Seiten mit `StartDataButton`), Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.
+3. Einrichtungsassistent: offene Kleinigkeiten – Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.
 4. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
 5. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
 6. Entscheidungen: Spotify-Widget (L5), Precache der Wörterbücher, FAB-Änderung.

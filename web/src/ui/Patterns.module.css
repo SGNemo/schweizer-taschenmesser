@@ -167,6 +167,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   min-height: var(--touch);
   justify-content: center;
@@ -227,10 +228,10 @@
     opacity: 1;
   }
 }
-/* An open "⋯" menu paints above the positioned buttons (`end`) of the rows below it. */
+/* The row's enter animation makes every row its own layer: the row with an open menu must sit above the rows below it. */
 .item:has(.actionsOpen) {
   position: relative;
-  z-index: var(--z-raised);
+  z-index: var(--z-hint);
 }
 .chips {
   display: flex;
