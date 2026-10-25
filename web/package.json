@@ -44,6 +44,8 @@
     "changelog": "node scripts/changelog.mjs",
     "screenshots": "playwright test -c playwright.screens.config.ts",
     "measure:stimulus": "playwright test -c playwright.stimulus.config.ts",
+    "check:stimulus": "node scripts/check-stimulus.mjs",
+    "stimulus:baseline": "node scripts/check-stimulus.mjs --baseline",
     "ai:eval": "node scripts/ai-eval.mjs",
     "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome"
   },

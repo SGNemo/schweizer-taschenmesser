@@ -368,6 +368,10 @@ export const de = {
       motion: 'Bewegung',
       other: 'Sonstiges',
     },
+    moduleGroups: {
+      fields: 'Felder',
+      more: (n: number) => `+ ${n}`,
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:
@@ -1473,6 +1477,61 @@ export const de = {
       countdown: (n: number) => `Aufnahme in ${n} …`,
       stop: 'Abbrechen',
       share: 'Teilen',
+    },
+    diff: {
+      name: 'Textvergleich',
+      description:
+        'Zwei Texte nebeneinander legen und sehen, was sich geändert hat. Alles bleibt auf deinem Gerät.',
+      before: 'Vorher',
+      after: 'Nachher',
+      ignoreSpace: 'Leerraum ignorieren',
+      result: 'Unterschiede',
+      changed: (n: number) => (n === 1 ? '1 Zeile geändert' : `${n} Zeilen geändert`),
+      identical: 'Kein Unterschied.',
+      empty: 'Füge links und rechts einen Text ein.',
+      tooLong: (max: string) =>
+        `Der Text ist zu lang (höchstens ${max} Zeichen je Seite). Kürze ihn oder vergleiche ihn in Teilen.`,
+      rough: 'Die Texte unterscheiden sich so stark, dass nur grob verglichen wird.',
+      copyDiff: 'Als Unified Diff kopieren',
+      copied: 'Unified Diff kopiert.',
+      added: 'hinzugefügt',
+      removed: 'entfernt',
+      same: 'unverändert',
+    },
+    regex: {
+      name: 'Regex-Tester',
+      description:
+        'Ein Muster (reguläre Ausdrücke) an einem Text ausprobieren: Treffer, Gruppen und Ersetzen. Läuft nur auf deinem Gerät.',
+      pattern: 'Muster',
+      flags: 'Optionen',
+      flagNames: {
+        g: 'g – alle Treffer',
+        i: 'i – Groß-/Kleinschreibung ignorieren',
+        m: 'm – ^ und $ pro Zeile',
+        s: 's – Punkt trifft auch Zeilenumbruch',
+        u: 'u – Unicode',
+      } as Record<string, string>,
+      text: 'Testtext',
+      replacement: 'Ersetzen durch',
+      replacementHint: 'Mit $1 oder $<name> kannst du Gruppen einsetzen.',
+      highlighted: 'Treffer im Text',
+      matches: 'Treffer',
+      count: (n: number) => (n === 1 ? '1 Treffer' : `${n} Treffer`),
+      none: 'Kein Treffer.',
+      idle: 'Gib ein Muster und einen Text ein.',
+      invalid: 'Das Muster ist nicht gültig.',
+      tooSlow: 'Muster zu aufwendig. Die Prüfung wurde nach 1 Sekunde abgebrochen.',
+      tooLong: (max: string) => `Der Testtext ist zu lang (höchstens ${max} Zeichen). Kürze ihn.`,
+      capped: (max: string) => `Es werden nur die ersten ${max} Treffer gezeigt.`,
+      unsupported: 'Dieses Gerät kann den Tester nicht sicher ausführen.',
+      match: (n: number) => `Treffer ${n}`,
+      group: (n: number) => `Gruppe ${n}`,
+      named: (name: string) => `Gruppe „${name}“`,
+      notMatched: 'nicht beteiligt',
+      emptyMatch: '(leer)',
+      position: (at: number) => `ab Zeichen ${at}`,
+      preview: 'Vorschau der Ersetzung',
+      checking: 'Prüfe …',
     },
     qr: {
       name: 'QR-Code',
@@ -4245,6 +4304,7 @@ export const de = {
     parsing: 'Wird gelesen …',
     chooseFile: 'Datei wählen …',
     fileChosen: (name: string) => `Datei: ${name}`,
+    filesChosen: (n: number) => `${n} Dateien`,
     textLabel: 'Eine Zeile = ein Eintrag',
     pickTemplates: 'Vorschläge auswählen',
     noInput: 'Bitte gib etwas ein.',
@@ -4401,6 +4461,25 @@ export const de = {
       text: 'Links einfügen',
       textHint: 'Eine Zeile pro Link, optional mit Titel davor.',
       placeholder: 'https://example.org/artikel\nSchöne Wanderung https://example.org/wandern',
+    },
+    notes: {
+      file: 'Markdown-Dateien oder Google Keep',
+      fileHint:
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen. ZIP-Dateien bitte vorher entpacken.',
+      text: 'Markdown einfügen',
+      textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
+      textLabel: 'Markdown-Text',
+      placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
+      emptyFiles: (n: number) =>
+        n === 1 ? '1 leere Datei wurde übersprungen.' : `${n} leere Dateien wurden übersprungen.`,
+      keepSkipped: (n: number) =>
+        n === 1
+          ? '1 Keep-Notiz aus Papierkorb oder Archiv wurde ausgelassen.'
+          : `${n} Keep-Notizen aus Papierkorb oder Archiv wurden ausgelassen.`,
+      unreadable: (n: number) =>
+        n === 1
+          ? '1 JSON-Datei ist keine Keep-Notiz und wurde übersprungen.'
+          : `${n} JSON-Dateien sind keine Keep-Notizen und wurden übersprungen.`,
     },
     birthdays: {
       text: 'Geburtstage einfügen',

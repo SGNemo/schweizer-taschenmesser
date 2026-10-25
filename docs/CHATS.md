@@ -22,6 +22,16 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| (announced) Settings → Module folded | `feat/focus2-module-settings-fold` | `pages/settings/ModuleSection.tsx` (+ `FoldedGroup`), specs that click module fields | prompt in [product/focus/15-parallel-prompts-4.md](product/focus/15-parallel-prompts-4.md) | – | 2026-10-24 |
+| (announced) Reminders tab, calm rows | `feat/focus2-reminders-tab` | `modules/calendar/components/RemindersTab.tsx`, `routes/reminders.module.css`, new `e2e/reminders-tab.spec.ts` | prompt in 15-parallel-prompts-4 | – | 2026-10-24 |
+| (announced) Bookmarks page, calm rows | `feat/focus2-bookmarks-calm` | `modules/bookmarks/routes/*`, `components/*`, `e2e/bookmarks.spec.ts` | prompt in 15-parallel-prompts-4 | – | 2026-10-24 |
+| (announced) Small leftovers (three PRs) | `fix/setup-link-empty-states`, `fix/palette-keys-a11y`, `fix/weather-cache-schema` | `core/importer/StartDataButton.tsx`; `layout/CommandPalette.tsx`, `ui/Keys.tsx`, `layout/ShortcutSheet.tsx`; `core/weather/cache.ts` | prompt in 15-parallel-prompts-4 | – | 2026-10-24 |
+| (announced) Stimulus budget guard | `feat/stimulus-budget` | `e2e/screenshots/stimulus.spec.ts`, new `e2e/stimulus-budget.json`, `web/package.json` (scripts), `.github/workflows/ci.yml` (one warning-only job) | prompt in 15-parallel-prompts-4 | – | 2026-10-24 |
+| (announced) Mobile focus: back gesture, keyboard, phone paths | `feat/focus2-mobile-paths` | new `core/shell/backStack.ts`, `ui/Dialog.tsx`, `ui/RowMenu.tsx`, `layout/CommandPalette.tsx`, `layout/AppShell.tsx` (small, heads-up), new `e2e/phone-paths.spec.ts` | prompt in 15-parallel-prompts-4 (5b) | – | 2026-10-24 |
+| (announced) Import from Todoist and Google Tasks | `feat/import-todo-apps` | new `core/io/{todoistCsv,googleTasks}.ts`, `modules/todos/importer.ts`, docs/user | prompt in 15-parallel-prompts-4 (5b) | – | 2026-10-24 |
+| (announced) Import notes from Markdown, Obsidian, Google Keep | `feat/import-notes-markdown` | new `core/io/{markdownNote,googleKeep}.ts`, new `modules/notes/importer.ts`, `modules/notes/manifest.ts` (one entry), docs/user | prompt in 15-parallel-prompts-4 (5b) | – | 2026-10-24 |
+| (announced) Tools: text diff and regex tester | `feat/tools-diff-regex` | new `src/tools/{diff,regex}`, `core/keyboard/map.ts` (two letters), `strings.ts` tools block | prompt in 15-parallel-prompts-4 (5b) | – | 2026-10-24 |
+| (announced) Spotify connector: "Läuft gerade" line, desktop first; then focus-round music | `feat/connector-spotify`, `feat/spotify-focus` | new `connectors/spotify/*`, `core/connectors/types.ts` (additive `nowPlaying`), `core/platform/types.ts` + `src-tauri/src/oauth.rs` (optional preferred port), new `home/NowPlayingLine.tsx`, docs/user | prompt in 15-parallel-prompts-4 (chat 10) | – | 2026-10-24 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

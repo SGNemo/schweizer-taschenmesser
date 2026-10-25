@@ -2,6 +2,8 @@
 
 Measured with `npm run measure:stimulus` (`web/e2e/screenshots/stimulus.spec.ts`, the audit's script, in the repo since round 2): seeded Dev build, medium data, phone 412×915 and desktop 1280×800.
 
+Budget since 2026-10-24: these numbers are guarded per page by `npm run check:stimulus` (`web/e2e/stimulus-budget.json`, CI warning only); a package that changes them on purpose re-baselines with `npm run stimulus:baseline` ([ci.md](../../howto/ci.md)).
+
 | Metric | Before | After package 1 |
 |---|---|---|
 | Phone home, page height | 6598 px | **2069 px** |
@@ -99,6 +101,19 @@ Same tool and seeded Dev build; baseline = `develop` after #222. No screenshots:
 
 - The permission card and Zock-Modus above it are not touched (different pattern: cards with a heading, not setting rows).
 - Tests: `CalmRemindersSection.test.tsx` (six closed lines with the defaults, every row inside its group, the line follows a change); `e2e/reminders.spec.ts` opens the groups first (`openFoldedGroup`), none removed or weakened.
+
+## Einstellungen → Module folded (`feat/focus2-module-fold`, round 4)
+Same tool and seeded Dev build (`STIMULUS_DIR=… npm run measure:stimulus`, page `settings-module`); baseline = `develop` after #224.
+
+| Metric (Settings → Module, phone 412×915) | Before | After |
+|---|---|---|
+| Page height | 5582 px | **3835 px** |
+| Module section with fields | all fields open (up to 6 rows) | one line ("Felder: 5 Min · Sofort · Domain · + 2", "Felder: Erledigte anzeigen") |
+| Stored settings | unchanged | unchanged (no field removed, no default changed) |
+
+- Goal "under 2500 px" **not reached**: of 13 sections, 6 are start-data only (about 199 px, unchanged by the brief) and the start-data row (label + one or two buttons) is about 110 px in every section. The next cut is that row (one compact line per module, or a single "Startdaten" block); not done here.
+- Text/number values are shown as stored; a switch that is off adds nothing, a module with all switches off shows just "Felder".
+- Tests: `ModuleSection.test.tsx` (closed line with values, "+ n", every field inside its group, the line follows a change), `e2e/comfort-settings.spec.ts` (deep link `#module-example--showDone` opens the group), `e2e/settings.spec.ts` (closed by default); specs that click a module field open the group first (`openFoldedGroup`), none removed or weakened.
 
 ## Mobile – one hand (`feat/phone-one-hand`)
 Tools: `e2e/phone-paths.spec.ts` (project `pixel-7`; step = one touch or one input, looking is free; the table is attached to the test report and written to `test-results/phone-paths.md`), `targets-focus` and `npm run measure:stimulus` on the seeded Dev build. Baseline = `develop` (d03f701 + board commits), same spec run against it.

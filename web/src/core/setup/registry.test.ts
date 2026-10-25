@@ -8,6 +8,7 @@ import {
   applicableSteps,
   collectSetupSteps,
   detectDone,
+  setupStepIdForModule,
   validateSetupSteps,
 } from './registry';
 import type { SetupCtx, SetupStepDef } from './types';
@@ -63,5 +64,15 @@ describe('setup step registry', () => {
       step('c', { isDone: async () => Promise.reject(new Error('x')) }),
     ];
     expect([...(await detectDone(steps, ctx))]).toEqual(['a']);
+  });
+
+  it('finds the step that covers a module, else the start-data step, else none', () => {
+    const steps = [step('core.startdata'), step('accounts.vault')];
+    expect(setupStepIdForModule('accounts', false, steps)).toBe('accounts.vault');
+    expect(setupStepIdForModule('todos', true, steps)).toBe('core.startdata');
+    expect(setupStepIdForModule('todos', false, steps)).toBeUndefined();
+    expect(setupStepIdForModule('todos', true, [step('accounts.vault')])).toBeUndefined();
+    // "todo" must not match the id prefix of "todos."
+    expect(setupStepIdForModule('todo', false, [step('todos.a')])).toBeUndefined();
   });
 });
