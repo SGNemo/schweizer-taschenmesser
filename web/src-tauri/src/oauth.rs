@@ -140,16 +140,29 @@ fn bind_loopback(preferred_port: Option<u16>) -> Result<TcpListener, String> {
     })
 }
 
+/// Binds `preferred_port` (or an ephemeral one) and parks the listener in the slot. A listener left
+/// behind by a login that never reached `oauth_listen_wait` (aborted, browser failed to open) is
+/// dropped first: with a fixed port it would otherwise hold that port against the next start and
+/// the user would be told that another program is using it.
+fn replace_listener(
+    slot: &Mutex<Option<TcpListener>>,
+    preferred_port: Option<u16>,
+) -> Result<u16, String> {
+    let mut slot = slot.lock().map_err(|_| "listen-failed")?;
+    slot.take();
+    let listener = bind_loopback(preferred_port)?;
+    let port = listener.local_addr().map_err(|e| e.to_string())?.port();
+    *slot = Some(listener);
+    Ok(port)
+}
+
 /// Binds a port on the loopback interface only (ephemeral, or `preferred_port` exactly).
 #[tauri::command]
 pub fn oauth_listen_start(
     state: tauri::State<'_, OAuthListener>,
     preferred_port: Option<u16>,
 ) -> Result<u16, String> {
-    let listener = bind_loopback(preferred_port)?;
-    let port = listener.local_addr().map_err(|e| e.to_string())?.port();
-    *state.0.lock().map_err(|_| "listen-failed")? = Some(listener);
-    Ok(port)
+    replace_listener(&state.0, preferred_port)
 }
 
 fn wait_for_callback(
@@ -288,6 +301,16 @@ mod tests {
         let _ = real.read_to_string(&mut page);
         assert!(page.contains("200 OK") && page.contains("Anmeldung ist abgeschlossen"));
         assert_eq!(handle.join().unwrap(), Ok("abc".to_string()));
+    }
+
+    #[test]
+    fn a_second_start_on_the_same_fixed_port_replaces_the_stale_listener() {
+        let slot = Mutex::new(None);
+        let port = replace_listener(&slot, None).unwrap();
+        // The first login never reached `oauth_listen_wait`: the next start must not trip over
+        // our own socket.
+        assert_eq!(replace_listener(&slot, Some(port)).unwrap(), port);
+        assert!(slot.lock().unwrap().is_some());
     }
 
     #[test]

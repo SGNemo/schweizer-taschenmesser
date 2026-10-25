@@ -53,7 +53,7 @@ export function NowPlayingLine() {
     status.state !== 'disconnected' &&
     status.state !== 'expired' &&
     status.features.includes('show');
-  const canControl = active && status!.features.includes('control') && !noPremium;
+  const canControl = active && !!status?.features.includes('control') && !noPremium;
 
   useEffect(() => {
     if (!active || !def?.nowPlaying || !ctx) return;
