@@ -1,6 +1,6 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { dismissNotices, enable, moduleSwitch, openAppearanceGroup, ready } from './helpers';
+import { dismissNotices, enable, moduleSwitch, ready } from './helpers';
 
 /**
  * The ten everyday paths on the phone (one hand), with a step count per path. The ten paths run on the phone
@@ -254,7 +254,6 @@ test.describe('ten paths', () => {
     await s.tap(group.locator('summary'));
     await s.tap(page.locator('#appearance--theme').getByRole('button', { name: 'Dunkel' }));
     await expect(group.locator('summary')).toContainText('Thema: Dunkel');
-    void openAppearanceGroup;
     await record(info, '9 Einstellung ändern', s.n);
   });
 

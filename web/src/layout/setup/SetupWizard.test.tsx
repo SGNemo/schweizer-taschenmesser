@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { db } from '@/core/db/db';
+import { backDepth, resetBackStack } from '@/core/shell/backStack';
 import { readSetupState, SETUP_STATE_KEY, markStepDone } from '@/core/setup/state';
 import type { SetupStepDef, SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
@@ -45,6 +46,13 @@ async function open(props: Partial<React.ComponentProps<typeof SetupWizard>> = {
 }
 
 describe('setup wizard', () => {
+  it('holds one Back entry, not one per layer (assistant + dialog)', async () => {
+    resetBackStack();
+    await open();
+    expect(await screen.findByText('Inhalt a')).toBeInTheDocument();
+    expect(backDepth()).toBe(1);
+  });
+
   it('saves each step on "Weiter" and shows a summary at the end', async () => {
     const { user, onClose } = await open();
     expect(await screen.findByText('Inhalt a')).toBeInTheDocument();

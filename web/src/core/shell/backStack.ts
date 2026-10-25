@@ -73,8 +73,10 @@ function back(): void {
   history.back();
 }
 
-function onPop(): void {
-  if (announcing) return;
+function onPop(e: Event): void {
+  // Only a real traversal is a Back: the vault module re-announces a URL it pushed with a
+  // synthetic `popstate` for the router, and so does `announcing` below.
+  if (!e.isTrusted || announcing) return;
   if (swallow > 0) {
     swallow -= 1;
     announcePending();
