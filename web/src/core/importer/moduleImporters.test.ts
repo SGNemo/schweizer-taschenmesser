@@ -548,6 +548,17 @@ describe('notes', () => {
     files,
   });
 
+  it('treats a file of unknown type as Markdown unless it really is JSON', async () => {
+    const r = await run(
+      'notes',
+      'file',
+      file([{ name: 'plan.text', text: '[[Garten]] zuerst\nDann Keller' }]),
+    );
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]!.candidate.data).toMatchObject({ body: '[[Garten]] zuerst\nDann Keller' });
+    expect(r.notes).toEqual([]);
+  });
+
   it('reads pasted Markdown as one note and dedupes it', async () => {
     const pasted = await run('notes', 'text', text('# Wochenplan\n\nEinkaufen #haushalt'));
     expect(pasted.rows).toHaveLength(1);

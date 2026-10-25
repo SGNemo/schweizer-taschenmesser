@@ -138,6 +138,23 @@ describe('command palette', () => {
     // Navigation commands (dashboard, library, settings) are always there.
     expect((await screen.findAllByRole('option')).length).toBeGreaterThanOrEqual(3);
   });
+
+  it('names an option by its label only; the key caps are decorative', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'Timer');
+    await screen.findAllByRole('option', { name: /Timer/ });
+    const withKeys = screen.getAllByRole('option').filter((o) => o.querySelector('kbd'));
+    expect(withKeys.length).toBeGreaterThan(0);
+    for (const o of withKeys) {
+      expect(o.querySelector('kbd')!.closest('[aria-hidden="true"]')).not.toBeNull();
+      expect(o).toHaveAccessibleName(o.querySelector('span')!.textContent!.trim());
+    }
+  });
 });
 
 describe('assistant in the palette', () => {

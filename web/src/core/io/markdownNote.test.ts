@@ -55,6 +55,10 @@ describe('parseMarkdownNote', () => {
     expect(parseMarkdownNote('---\ntitle: X\n---\n', 'x.md')).toBeUndefined();
   });
 
+  it('keeps a note that starts with a horizontal rule whole', () => {
+    const text = '---\nSome text here\n---\nMore text';
+    expect(parseMarkdownNote(text, 'a.md')?.body).toBe(text);
+  });
   it('ignores an unclosed front matter block', () => {
     expect(parseMarkdownNote('---\nHallo', 'a.md')?.body).toBe('---\nHallo');
   });

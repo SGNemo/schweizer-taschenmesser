@@ -14,6 +14,11 @@ const note = (extra: Record<string, unknown>) => ({
 });
 
 describe('parseGoogleKeep', () => {
+  it('strips a leading # from a label so the tag line stays readable', () => {
+    const r = parseGoogleKeep(JSON.stringify(note({ title: 'T', labels: [{ name: '#x' }] })));
+    expect(r.notes[0]).toMatchObject({ tags: ['x'] });
+    expect(r.notes[0]!.body.endsWith('#x')).toBe(true);
+  });
   it('reads text, labels and pinned', () => {
     const r = parseGoogleKeep(
       JSON.stringify(
