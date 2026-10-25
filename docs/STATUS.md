@@ -75,13 +75,12 @@ Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressu
 Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, (Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Verträge → Unterlagen, Geburtstage + Geschenke → Personen: erledigt), Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung stillgelegt und mit Paket 6 entfernt; Werkzeuge 18 → 12. Pakete (0.4 … 0.9) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md](archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md). Review-Funde: alle behoben oder bewusst belassen. Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
 
 ## Nächste sinnvolle Schritte
-0. Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ (Branch `feat/adhd-friendly`), danach Paket 2 Erinnerungen, 3 Erfassen/Ruhe, 4 Fortschritt – Plan: [features/focus-aids.md](features/focus-aids.md).
 1. Hardware-Checklisten ([MANUAL-TESTS.md](MANUAL-TESTS.md)) abarbeiten (Sven), Fehler melden.
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
 3. Einrichtungsassistent: offene Kleinigkeiten – Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.
 4. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
 5. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
-6. Entscheidungen: Spotify-Widget (L5), Precache der Wörterbücher, FAB-Änderung.
+6. Entscheidungen: Precache der Wörterbücher, FAB-Änderung (Spotify: in Arbeit, Chat 10).
 
 ## Manuelle Tests offen
 Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).
