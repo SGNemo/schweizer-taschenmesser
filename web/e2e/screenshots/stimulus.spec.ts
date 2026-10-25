@@ -4,9 +4,10 @@ import { bootDev, seedApp } from '../seed/helpers';
 
 /**
  * Stimulus inventory (focus audit 2): counts visible buttons, links, icons, badge-like elements,
- * colours and page height per view, phone and desktop, on the seeded Dev-Preview build. Manual
- * tooling, not part of CI. Usage: STIMULUS_DIR=test-results/stimulus npm run measure:stimulus
- * Output: <dir>/inventory.json plus one screenshot per view. Compare runs in docs/product/focus/12-results-2.md.
+ * colours and page height per view, phone and desktop, on the seeded Dev-Preview build. Measuring only:
+ * it writes <dir>/inventory.json (plus one screenshot per view unless STIMULUS_SHOTS=0) and checks nothing. Manual use:
+ * STIMULUS_DIR=test-results/stimulus npm run measure:stimulus, compare runs in docs/product/focus/12-results-2.md.
+ * The budget check reads the inventory afterwards: `npm run check:stimulus` (scripts/check-stimulus.mjs, docs/howto/ci.md).
  */
 const OUT = process.env.STIMULUS_DIR ?? 'test-results/stimulus';
 const VPS = [
@@ -106,7 +107,11 @@ test('stimulus inventory', async ({ browser }) => {
         };
       });
       result.push({ vp: vp.name, page: name, ...m });
-      await page.screenshot({ path: `${OUT}/${vp.name}--${name}.png`, fullPage: name === 'home' });
+      if (process.env.STIMULUS_SHOTS !== '0')
+        await page.screenshot({
+          path: `${OUT}/${vp.name}--${name}.png`,
+          fullPage: name === 'home',
+        });
     }
     await context.close();
   }
