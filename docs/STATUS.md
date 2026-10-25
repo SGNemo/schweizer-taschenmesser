@@ -7,7 +7,7 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4, Runden 2–4 und erste Runde-5-PRs gemergt (#177–#230: Heute-Karte, ToDo-Seite, Später, Wetter, Bildschirmfoto, Tasten, Stimulus-Budget, Diff/Regex, Notizen-Import; Einstellungen gefaltet: Darstellung 4424→1787 px, Benachrichtigungen 3003→1893 px, Module 5582→3835 px); Erinnerungen-Reiter 4064→1996 px, Merkliste 4227→2455 px, ToDo-/Notizen-Import, Reste (#231–#239), Mobile (#237); Spotify-Verbindung gebaut (`feat/connector-spotify`, [features/spotify.md](features/spotify.md)); offen: Spotify-Fokus (`product/focus/15-parallel-prompts-4.md`).
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter, Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus (`product/focus/15-parallel-prompts-4.md`).
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
 
