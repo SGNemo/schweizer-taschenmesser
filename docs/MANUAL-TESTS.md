@@ -100,7 +100,7 @@ L1. *Karte:* Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Maps (
 L2. *WhatsApp:* Personen → Knopf neben dem Namen → WhatsApp (Web/App) mit Glückwunschtext, Kontakt wählen. ☐
 L3. *Teilen (Android, PWA in Chrome installiert):* in einer anderen App „Teilen“ → Nemo → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
 L4. *Lesezeichen:* Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
-L5. *Spotify:* nicht gebaut (siehe docs/architecture.md). Soll ein Now-Playing-Widget kommen, brauche ich eine Entscheidung: Premium-Konto als Entwickler nötig, max. 5 Nutzer. ☐
+L5. *Spotify:* gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
 ### Einrichtungsassistent
 E1. *Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):* Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐
@@ -264,6 +264,13 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 4. *Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID* → Typ **Desktop-App**. Client-ID und Client-Secret kopieren und in der Windows-App unter Einstellungen → Verbindungen → Google eintragen (landen im Windows-Anmeldeinformationsspeicher, nicht im Repo).
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
+
+### Spotify-Verbindung (Windows-App, eigenes Spotify-Konto) – nur von Hand prüfbar
+Vorher: App im Developer Dashboard anlegen, Redirect-URI `http://127.0.0.1:38417/callback`, eigenes Konto unter „User management“, Client ID in Nemo einfügen ([user/spotify.de.md](user/spotify.de.md)).
+S1. *Echter Login:* Einstellungen → Verbindungen → Spotify → Verbinden: Browser öffnet Spotify, nach „Zustimmen“ zeigt die Ergebnisseite „Anmeldung ist abgeschlossen“, Status „Verbunden“. Spiele in Spotify etwas ab: auf der Übersicht erscheint binnen etwa 30 s „Läuft gerade: Titel – Interpret“; der Titel öffnet Spotify im Browser. Spotify stoppen: die Zeile verschwindet. ☐
+S2. *Pause/Weiter/Nächster (Premium-Konto):* Knöpfe in der Zeile steuern den Player (Pause → „Pausiert: …“, Weiter, Nächster wechselt den Titel). Nemo minimieren: keine regelmäßigen Anfragen (die Zeile fragt nur bei sichtbarer App). ☐
+S3. *Ohne Premium (kostenloses Konto):* Pause klicken: einmal Hinweis „Steuern braucht Spotify Premium.“, Knöpfe weg, Anzeige bleibt; nach Neustart keine Knöpfe, kein zweiter Hinweis. ☐
+S4. *Port belegt:* ein anderes Programm auf Port 38417 starten (z. B. `python -m http.server 38417 --bind 127.0.0.1`), Verbinden klicken: Meldung „Port belegt …“, der Browser öffnet sich nicht; Programm beenden, erneut Verbinden klappt. Danach Trennen: Zeile weg. ☐
 
 ### Supporter-Modus (nur mit echter Zahlungsseite und Dienst prüfbar)
 Voraussetzung: Schlüsselpaar erzeugt, `publicKeys.ts` im Build, Webhook-Dienst deployt ([services/supporter-webhook/README.md](../services/supporter-webhook/README.md)). Ohne Dienst gehen Codes per CLI (`create`).
