@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
-import { parseCurrentlyPlaying, readCurrentlyPlaying, sendCommand } from './api';
+import {
+  listPlaylists,
+  parseCurrentlyPlaying,
+  readCurrentlyPlaying,
+  sendCommand,
+  startPlaylist,
+} from './api';
 
 // Handwritten bodies shaped after the documented responses of the Web API (no network in tests).
 const TRACK = {
@@ -177,5 +183,67 @@ describe('sendCommand', () => {
   it('404 (no active device) is a quiet bad-response', async () => {
     const { ctx } = ctxWith([json(404, { error: { reason: 'NO_ACTIVE_DEVICE' } })]);
     expect(await codeOf(sendCommand(ctx, 'next'))).toMatchObject({ code: 'bad-response' });
+  });
+});
+
+describe('listPlaylists', () => {
+  it('reads id and name, skips empty slots and odd ids', async () => {
+    const { ctx, calls } = ctxWith([
+      json(200, {
+        items: [
+          { id: 'pl1ABC', name: 'Fokus' },
+          null,
+          { id: 'bad id!', name: 'x' },
+          { id: 'pl2DEF', name: 'y'.repeat(300) },
+        ],
+      }),
+    ]);
+    const lists = await listPlaylists(ctx);
+    expect(lists.map((l) => l.id)).toEqual(['pl1ABC', 'pl2DEF']);
+    expect(lists[1]!.name).toHaveLength(200);
+    expect(calls[0]!.url).toBe('https://api.spotify.com/v1/me/playlists?limit=50');
+  });
+
+  it('an unexpected shape is an empty list, a missing scope is "denied"', async () => {
+    expect(await listPlaylists(ctxWith([json(200, { nope: 1 })]).ctx)).toEqual([]);
+    expect(await codeOf(listPlaylists(ctxWith([json(403, {})]).ctx))).toMatchObject({
+      code: 'denied',
+    });
+  });
+});
+
+describe('startPlaylist', () => {
+  it('plays the playlist as a context on the active device', async () => {
+    const seen: { url: string; body?: string; type?: string }[] = [];
+    const { ctx } = ctxWith([new Response(null, { status: 204 })]);
+    const inner = ctx.fetch;
+    ctx.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push({
+        url: String(input),
+        body: init?.body as string,
+        type: (init?.headers as Record<string, string>)['content-type'],
+      });
+      return inner(input, init);
+    }) as typeof fetch;
+    await startPlaylist(ctx, 'pl1ABC');
+    expect(seen).toEqual([
+      {
+        url: 'https://api.spotify.com/v1/me/player/play',
+        body: '{"context_uri":"spotify:playlist:pl1ABC"}',
+        type: 'application/json',
+      },
+    ]);
+  });
+
+  it('refuses an id that is not base 62 and reports Premium and a missing device', async () => {
+    const { ctx, calls } = ctxWith([]);
+    expect(await codeOf(startPlaylist(ctx, 'x"y'))).toMatchObject({ code: 'bad-response' });
+    expect(calls).toEqual([]);
+    const premium = ctxWith([json(403, { error: { reason: 'PREMIUM_REQUIRED' } })]);
+    expect(await codeOf(startPlaylist(premium.ctx, 'ok1'))).toMatchObject({
+      code: 'premium-required',
+    });
+    const none = ctxWith([json(404, { error: { reason: 'NO_ACTIVE_DEVICE' } })]);
+    expect(await codeOf(startPlaylist(none.ctx, 'ok1'))).toMatchObject({ code: 'bad-response' });
   });
 });

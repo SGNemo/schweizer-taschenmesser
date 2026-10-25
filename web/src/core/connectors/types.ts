@@ -53,6 +53,8 @@ export interface ConnectorFeature {
   label: string;
   description: string;
   scopes: string[];
+  /** `false`: not ticked by default (needs a scope most people do not need); the card still offers it. */
+  defaultOn?: boolean;
 }
 
 export interface ExternalCalendar {
@@ -184,12 +186,22 @@ export interface NowPlaying {
 
 export type NowPlayingCommand = 'pause' | 'play' | 'next';
 
+/** One of the user's own playlists. Names are user data: shown on request, never stored. */
+export interface Playlist {
+  id: string;
+  name: string;
+}
+
 /** Optional capability of a media connector: what plays now, and a few remote controls. */
 export interface NowPlayingSource {
   /** `undefined` = nothing is playing. */
   read(ctx: ConnectorContext): Promise<NowPlaying | undefined>;
   /** Rejects with `ConnectorError('premium-required')` when the service only controls for paid accounts. */
   control(ctx: ConnectorContext, command: NowPlayingCommand): Promise<void>;
+  /** The user's own playlists (one page), for the focus-round music. Needs its own feature/scope. */
+  playlists?(ctx: ConnectorContext): Promise<Playlist[]>;
+  /** Starts the playlist with this id on the active device. */
+  startPlaylist?(ctx: ConnectorContext, id: string): Promise<void>;
 }
 
 export interface ConnectorDef {

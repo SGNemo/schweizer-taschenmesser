@@ -30,6 +30,11 @@ const CORE_KEYS = {
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard',
     'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
     'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
+    'tm-spotify-now':
+      'last now-playing reading, only while connected (core/connectors/nowPlaying.ts)',
+    'tm-spotify-no-premium': 'time of a PREMIUM_REQUIRED answer; controls hidden for a day',
+    'tm-spotify-focus':
+      'focus-round music: mode off, playlistId unset, pauseAtEnd true (core/focus/music.ts)',
   },
   '_settings scope core': { displayName: '', weekStart: 'mon' },
   '_settings scope supporter': {

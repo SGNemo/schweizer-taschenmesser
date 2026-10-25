@@ -22,6 +22,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Spotify focus music: opt-in music at the start/end of a focus round | `feat/spotify-focus` | `core/focus/music.ts` (new), `connectors/spotify/*`, `core/connectors/types.ts` (additive playlist methods, `defaultOn`), `pages/settings/FocusSection.tsx` + `FoldedGroup.tsx` (additive `onToggle`), `modules/todos/{focus.ts,routes/FocusPage.tsx}`, `layout/FocusWatcher.tsx`, `strings.spotify.ts` | package 2 in progress | – | 2026-10-25 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

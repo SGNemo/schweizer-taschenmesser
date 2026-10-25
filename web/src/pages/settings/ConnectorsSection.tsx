@@ -122,7 +122,10 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     def.platforms.includes(platform.kind) &&
     platform.oauth.supported;
   const state = status?.state ?? 'disconnected';
-  const active = features ?? status?.features ?? def.features.map((f) => f.id);
+  const active =
+    features ??
+    status?.features ??
+    def.features.filter((f) => f.defaultOn !== false).map((f) => f.id);
   const connected = state === 'connected' || state === 'rate-limited' || state === 'error';
 
   // A login that is still waiting for the browser is abandoned when the card goes away.

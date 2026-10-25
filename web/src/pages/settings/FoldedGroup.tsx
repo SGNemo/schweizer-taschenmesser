@@ -14,6 +14,7 @@ export function FoldedGroup({
   testId,
   title,
   current,
+  onToggle,
   children,
 }: {
   id: string;
@@ -23,6 +24,8 @@ export function FoldedGroup({
   title: string;
   /** The values chosen right now, in the order of the pickers. */
   current: string[];
+  /** Called with the new state whenever the group opens or closes (lazy loading of a picker). */
+  onToggle?: (open: boolean) => void;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -32,7 +35,10 @@ export function FoldedGroup({
     <details
       className={styles.group}
       data-testid={testId ?? `${section}-group-${id}`}
-      onToggle={(e) => setOpen(e.currentTarget.open)}
+      onToggle={(e) => {
+        setOpen(e.currentTarget.open);
+        onToggle?.(e.currentTarget.open);
+      }}
     >
       <summary className={styles.groupSummary} aria-expanded={open}>
         <span className={styles.groupLine}>{value === '' ? title : g.line(title, value)}</span>

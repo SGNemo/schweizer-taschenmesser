@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { softBeep } from '@/core/focus/announce';
+import { onFocusEnd } from '@/core/focus/music';
 import { isOver, markAnnounced } from '@/core/focus/session';
 import { saveFocusSession, useFocusSession } from '@/core/focus/state';
 import { useNow } from '@/core/focus/useNow';
@@ -22,6 +23,7 @@ export function FocusWatcher() {
   useEffect(() => {
     if (!session || session.announced || !isOver(session, tick)) return;
     void saveFocusSession(markAnnounced(session));
+    void onFocusEnd(session.startedAt);
     toast(
       t.focus.mode.timeUp,
       session.path

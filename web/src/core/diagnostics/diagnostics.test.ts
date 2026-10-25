@@ -18,6 +18,7 @@ import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { useSyncStatus } from '@/core/sync/status';
 import { writeStoredNow } from '@/core/connectors/nowPlaying';
+import { setMusic } from '@/core/focus/music';
 import { cacheKey, writeCache } from '@/core/weather/cache';
 import { chooseWeatherPlace } from '@/core/weather/settings';
 import todosManifest from '@/modules/todos/manifest';
@@ -142,6 +143,8 @@ const CANARIES = {
   // Now playing (device-local reading of the Spotify connector): title and artist are user data.
   spotifyTitle: 'Geheimlied-aus-der-Wiedergabe',
   spotifyArtist: 'Geheime-Band-der-Wiedergabe',
+  // Focus-round music (device-local choice): the chosen playlist id never leaves in a report either.
+  spotifyPlaylist: 'GeheimePlaylist4711xyz',
 };
 
 describe('diagnostics export', () => {
@@ -177,6 +180,7 @@ describe('diagnostics export', () => {
       at: 1,
       forecast: { temp: 7, group: 'rain' },
     });
+    setMusic({ mode: 'playlist', playlistId: CANARIES.spotifyPlaylist });
     writeStoredNow(
       { title: CANARIES.spotifyTitle, artist: CANARIES.spotifyArtist, playing: true },
       1,
