@@ -22,16 +22,18 @@ export async function dismissNotices(page: Page) {
 }
 
 /**
- * A dialog, sheet or menu that just closed pops its Back entry asynchronously (`core/shell/backStack`,
- * marker `tmBack` in `history.state`). A navigation started in that gap is aborted by the late
- * traversal or lands on the entry below (`?new=1` dropped, the new dialog closed again), so wait
- * for the pop to settle first. Bounded: an element that is still open keeps its marker on purpose.
+ * A dialog, sheet or menu that just closed pops its Back entry with `history.back()`, which settles
+ * asynchronously (`core/shell/backStack` flags it as `window.__tmBackPending`). A navigation started
+ * in that gap is aborted by the late traversal or the traversal lands after the next page pushed its
+ * own entry (`?new=1` dropped, the new dialog closed again), so wait for it first. Bounded.
  */
 async function backSettled(page: Page) {
   await page
-    .waitForFunction(() => !(history.state && 'tmBack' in (history.state as object)), undefined, {
-      timeout: 1500,
-    })
+    .waitForFunction(
+      () => !(window as unknown as { __tmBackPending?: boolean }).__tmBackPending,
+      undefined,
+      { timeout: 1500 },
+    )
     .catch(() => undefined);
 }
 

@@ -61,8 +61,15 @@ function pushEntry(entry: Entry): void {
   else run();
 }
 
+/** e2e hook: a `history.back()` of ours is in flight (a navigation started now would race it). */
+function announcePending(): void {
+  if (typeof window === 'undefined') return;
+  (window as unknown as { __tmBackPending?: boolean }).__tmBackPending = swallow > 0;
+}
+
 function back(): void {
   swallow += 1;
+  announcePending();
   history.back();
 }
 
@@ -70,6 +77,7 @@ function onPop(): void {
   if (announcing) return;
   if (swallow > 0) {
     swallow -= 1;
+    announcePending();
     if (swallow === 0) {
       if (restore) {
         // We landed on the entry below ours (still showing `?new=1`); it takes over what the
