@@ -46,4 +46,12 @@ export const bookmarks: Strings['bookmarks'] = {
   widgetEmpty: 'Rien d’enregistré.',
   openCount: (n: number) =>
     n <= 1 ? `${n} élément enregistré ouvert` : `${n} éléments enregistrés ouverts`,
+  moreOptions: 'Plus d’options',
+  groupBy: 'Regrouper par',
+  groupings: { recent: 'Enregistré récemment', tag: 'Premier tag', kind: 'Type' },
+  recent: { today: 'Aujourd’hui', week: '7 derniers jours', older: 'Avant' },
+  copyLink: 'Copier le lien',
+  linkCopied: 'Lien copié.',
+  showing: (what: string) => `Filtré : ${what}`,
+  showAll: 'Tout afficher',
 };

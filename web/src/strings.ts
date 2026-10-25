@@ -2916,6 +2916,14 @@ export const de = {
     done: 'Erledigt',
     widgetEmpty: 'Nichts gemerkt.',
     openCount: (n: number) => (n === 1 ? '1 offener Merkzettel' : `${n} offene Merkzettel`),
+    moreOptions: 'Weitere Optionen',
+    groupBy: 'Gruppieren nach',
+    groupings: { recent: 'Zuletzt hinzugefügt', tag: 'Erster Tag', kind: 'Art' },
+    recent: { today: 'Heute', week: 'Letzte 7 Tage', older: 'Früher' },
+    copyLink: 'Link kopieren',
+    linkCopied: 'Link kopiert.',
+    showing: (what: string) => `Gefiltert: ${what}`,
+    showAll: 'Alle anzeigen',
   },
   notes: {
     meta: {

@@ -46,4 +46,12 @@ export const bookmarks: Strings['bookmarks'] = {
   widgetEmpty: 'Nada salvo.',
   openCount: (n: number) =>
     n === 0 || n === 1 ? `${n} item salvo aberto` : `${n} itens salvos abertos`,
+  moreOptions: 'Mais opções',
+  groupBy: 'Agrupar por',
+  groupings: { recent: 'Salvos recentemente', tag: 'Primeira tag', kind: 'Tipo' },
+  recent: { today: 'Hoje', week: 'Últimos 7 dias', older: 'Antes' },
+  copyLink: 'Copiar link',
+  linkCopied: 'Link copiado.',
+  showing: (what: string) => `Filtrado: ${what}`,
+  showAll: 'Mostrar tudo',
 };
