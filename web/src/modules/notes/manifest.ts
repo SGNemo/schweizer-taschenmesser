@@ -1,7 +1,7 @@
-import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
+import { onboarding } from './onboarding';
 import { noteSchema } from './schema';
 import { settings } from './settings';
 import { t } from '@/strings';
@@ -55,7 +55,7 @@ const manifest: ModuleManifest = {
   order: 80,
   area: 'knowledge',
   contributions: {
-    onboarding: noOnboarding,
+    onboarding,
     services: () => import('./services'),
     quickAdd: [
       {
