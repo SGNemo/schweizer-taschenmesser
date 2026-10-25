@@ -17,6 +17,7 @@ import {
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { useSyncStatus } from '@/core/sync/status';
+import { writeStoredNow } from '@/core/connectors/nowPlaying';
 import { cacheKey, writeCache } from '@/core/weather/cache';
 import { chooseWeatherPlace } from '@/core/weather/settings';
 import todosManifest from '@/modules/todos/manifest';
@@ -138,6 +139,9 @@ const CANARIES = {
   weatherPlace: 'Geheimstadt-im-Wetter, Nirgendwo',
   weatherLat: '47.3769',
   weatherLon: '8.5417',
+  // Now playing (device-local reading of the Spotify connector): title and artist are user data.
+  spotifyTitle: 'Geheimlied-aus-der-Wiedergabe',
+  spotifyArtist: 'Geheime-Band-der-Wiedergabe',
 };
 
 describe('diagnostics export', () => {
@@ -173,6 +177,10 @@ describe('diagnostics export', () => {
       at: 1,
       forecast: { temp: 7, group: 'rain' },
     });
+    writeStoredNow(
+      { title: CANARIES.spotifyTitle, artist: CANARIES.spotifyArtist, playing: true },
+      1,
+    );
     recordError(
       'sync',
       new Error(

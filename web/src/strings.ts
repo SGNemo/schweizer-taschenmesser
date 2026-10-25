@@ -4059,6 +4059,8 @@ export const de = {
       denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
       'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
       unsupported: 'Das geht auf diesem Gerät nicht.',
+      'port-busy': 'Port belegt. Schließe das andere Programm und versuche das Verbinden erneut.',
+      'premium-required': 'Das Steuern braucht ein Premium-Konto.',
     } as Record<string, string>,
     icsName: 'Kalender-Abo (ICS)',
     icsDescription:

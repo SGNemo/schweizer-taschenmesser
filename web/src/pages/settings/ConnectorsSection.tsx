@@ -59,8 +59,12 @@ function ClientForm({ def, onSaved }: { def: ConnectorDef; onSaved: () => void }
   }
 
   return (
-    <form onSubmit={(e) => void save(e)} className={styles.form} aria-label={s.client.title}>
-      <p className={styles.muted}>{s.client.intro}</p>
+    <form
+      onSubmit={(e) => void save(e)}
+      className={styles.form}
+      aria-label={def.client?.title ?? s.client.title}
+    >
+      <p className={styles.muted}>{def.client?.intro ?? s.client.intro}</p>
       <TextField
         label={s.client.id}
         value={clientId}
@@ -69,14 +73,16 @@ function ClientForm({ def, onSaved }: { def: ConnectorDef; onSaved: () => void }
         autoComplete="off"
         spellCheck={false}
       />
-      <TextField
-        label={s.client.secret}
-        hint={s.client.secretHint}
-        type="password"
-        value={clientSecret}
-        onChange={(e) => setClientSecret(e.target.value)}
-        autoComplete="off"
-      />
+      {def.client?.secret === false ? null : (
+        <TextField
+          label={s.client.secret}
+          hint={s.client.secretHint}
+          type="password"
+          value={clientSecret}
+          onChange={(e) => setClientSecret(e.target.value)}
+          autoComplete="off"
+        />
+      )}
       <div className={styles.row}>
         <Button type="submit">{s.client.save}</Button>
         {message ? <span role="status">{message}</span> : null}
@@ -207,7 +213,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
               def={def}
               onSaved={() => setClientVersion((v) => v + 1)}
             />
-            <p className={styles.muted}>{legal.googleTesting}</p>
+            <p className={styles.muted}>{def.client?.note ?? legal.googleTesting}</p>
             <fieldset className={styles.fieldset}>
               <legend className={styles.legend}>{s.features}</legend>
               {def.features.map((f) => (

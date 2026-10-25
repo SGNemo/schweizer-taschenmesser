@@ -12,6 +12,8 @@ export const connectors: Strings['connectors'] = {
     denied: 'El inicio de sesión se canceló o fue rechazado.',
     'bad-response': 'El servicio envió una respuesta inesperada.',
     unsupported: 'Esto no es posible en este dispositivo.',
+    'port-busy': 'Puerto ocupado. Cierra el otro programa e inténtalo de nuevo.',
+    'premium-required': 'Controlar la reproducción requiere una cuenta Premium.',
   } as Record<string, string>,
   icsName: 'Suscripción de calendario (ICS)',
   icsDescription:
