@@ -16,6 +16,11 @@ describe('groupNames', () => {
   it('numbers capture groups and finds the named ones', () => {
     expect(groupNames('(a)(?<year>\\d+)(?:x)(?=y)(b)')).toEqual([undefined, 'year', undefined]);
   });
+  it('keeps the numbering with non-ASCII, long and look-behind names', () => {
+    expect(groupNames('(?<ü>a)(?<x>b)')).toEqual(['ü', 'x']);
+    expect(groupNames(`(?<${'n'.repeat(90)}>a)(?<x>b)`)).toEqual(['n'.repeat(90), 'x']);
+    expect(groupNames('(?<=a)(?<!b)(?<日付>c)(d)')).toEqual(['日付', undefined]);
+  });
   it('ignores brackets in classes and escaped ones', () => {
     expect(groupNames('[(]\\((a)')).toEqual([undefined]);
   });
@@ -45,6 +50,10 @@ describe('runRegex', () => {
     ]);
   });
 
+  it('labels non-ASCII named groups correctly', () => {
+    const r = ok(runRegex({ pattern: '(?<ü>a)(?<x>b)', flags: '', text: 'ab' }));
+    expect(r.hits[0]!.groups.map((g) => g.name)).toEqual(['ü', 'x']);
+  });
   it('honours i, m and s', () => {
     expect(ok(runRegex({ pattern: 'abc', flags: 'i', text: 'ABC' })).hits).toHaveLength(1);
     expect(ok(runRegex({ pattern: '^b$', flags: 'gm', text: 'a\nb\nc' })).hits).toHaveLength(1);
