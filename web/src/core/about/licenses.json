@@ -206,6 +206,12 @@
       "url": "https://www.npmjs.com/package/@types/react/v/19.3.0"
     },
     {
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@types/react-dom/v/19.3.0"
+    },
+    {
       "name": "@types/use-sync-external-store",
       "version": "0.0.6",
       "license": "MIT",
@@ -339,9 +345,9 @@
     },
     {
       "name": "dexie",
-      "version": "4.4.6",
+      "version": "4.4.7",
       "license": "Apache-2.0",
-      "url": "https://www.npmjs.com/package/dexie/v/4.4.6"
+      "url": "https://www.npmjs.com/package/dexie/v/4.4.7"
     },
     {
       "name": "dexie-react-hooks",
@@ -399,9 +405,9 @@
     },
     {
       "name": "lucide-react",
-      "version": "1.57.0",
+      "version": "1.61.0",
       "license": "ISC",
-      "url": "https://www.npmjs.com/package/lucide-react/v/1.57.0"
+      "url": "https://www.npmjs.com/package/lucide-react/v/1.61.0"
     },
     {
       "name": "minisearch",
@@ -459,9 +465,9 @@
     },
     {
       "name": "react-router",
-      "version": "8.4.0",
+      "version": "8.5.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/react-router/v/8.4.0"
+      "url": "https://www.npmjs.com/package/react-router/v/8.5.0"
     },
     {
       "name": "recharts",
@@ -507,15 +513,15 @@
     },
     {
       "name": "tldts",
-      "version": "7.4.18",
+      "version": "7.4.19",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/tldts/v/7.4.18"
+      "url": "https://www.npmjs.com/package/tldts/v/7.4.19"
     },
     {
       "name": "tldts-core",
-      "version": "7.4.18",
+      "version": "7.4.19",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/tldts-core/v/7.4.18"
+      "url": "https://www.npmjs.com/package/tldts-core/v/7.4.19"
     },
     {
       "name": "ts-algebra",
@@ -555,9 +561,9 @@
     },
     {
       "name": "zustand",
-      "version": "5.0.15",
+      "version": "5.0.16",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/zustand/v/5.0.15"
+      "url": "https://www.npmjs.com/package/zustand/v/5.0.16"
     }
   ],
   "cargo": [
