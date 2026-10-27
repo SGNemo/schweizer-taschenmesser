@@ -3,9 +3,9 @@
   "npm": [
     {
       "name": "@anthropic-ai/sdk",
-      "version": "0.135.0",
-      "license": "MIT",
-      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.135.0"
+      "version": "1.1.0",
+      "license": "Apache-2.0",
+      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.1.0"
     },
     {
       "name": "@babel/runtime",

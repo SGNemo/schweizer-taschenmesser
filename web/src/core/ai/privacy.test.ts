@@ -64,7 +64,7 @@ const CASES: {
   {
     name: 'Anthropic (SDK)',
     preset: 'anthropic',
-    keyHeader: 'x-api-key',
+    keyHeader: 'authorization',
     answer: () => ({
       id: 'msg_1',
       type: 'message',

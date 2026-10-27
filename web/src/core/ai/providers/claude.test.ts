@@ -43,7 +43,8 @@ describe('Claude provider', () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://api.anthropic.com/v1/messages');
     const headers = new Headers(init.headers);
-    expect(headers.get('x-api-key')).toBe('sk-ant-test');
+    // SDK 1.x sends the key as a bearer token (0.x used x-api-key); it still only goes to api.anthropic.com.
+    expect(headers.get('authorization')).toBe('Bearer sk-ant-test');
     expect(headers.get('anthropic-dangerous-direct-browser-access')).toBe('true');
     const body = JSON.parse(String(init.body)) as Record<string, unknown>;
     expect(body).toMatchObject({
