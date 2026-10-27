@@ -425,8 +425,14 @@ describe('disconnect', () => {
       '{"at":1,"value":{"title":"T","artist":"A","playing":true}}',
     );
     localStorage.setItem('tm-spotify-no-premium', '5');
+    localStorage.setItem(
+      'tm-spotify-focus',
+      '{"mode":"playlist","playlistId":"37i9dQZF1DX","pauseAtEnd":true}',
+    );
     await disconnect(media, { keepData: true });
     expect(localStorage.getItem('tm-spotify-now')).toBeNull();
     expect(localStorage.getItem('tm-spotify-no-premium')).toBeNull();
+    // The focus-round music choice belonged to that account too.
+    expect(localStorage.getItem('tm-spotify-focus')).toBeNull();
   });
 });
