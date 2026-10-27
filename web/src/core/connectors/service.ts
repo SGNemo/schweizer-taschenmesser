@@ -19,6 +19,7 @@ import {
   randomToken,
   revokeToken,
 } from './oauth';
+import { clearMusic } from '@/core/focus/music';
 import { clearNowPlayingData } from './nowPlaying';
 import { getConnector, connectors } from './registry';
 import { redact } from './redact';
@@ -177,7 +178,10 @@ export async function disconnect(def: ConnectorDef, opts: { keepData: boolean })
   forgetAccessToken(def.id);
   await deleteLocalPrefix(`connector.${def.id}.`);
   await clearStatus(def.id);
-  if (def.nowPlaying) clearNowPlayingData();
+  if (def.nowPlaying) {
+    clearNowPlayingData();
+    clearMusic();
+  }
   if (!opts.keepData) await (await getCalendarSink())?.clear(def.id);
 }
 
