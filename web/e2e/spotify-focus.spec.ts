@@ -112,7 +112,10 @@ test.describe('Spotify music in the focus round', () => {
     await startRound(page);
     await expect(page.getByTestId('focus-music-status')).toHaveText('Musik: nicht erreichbar');
     await expect(page.getByRole('timer')).toContainText(/2[45]:\d\d/);
-    await expect(page.getByRole('alert')).toHaveCount(0);
+    // Toasts live in the polite live region (`ui/Misc.tsx`); none of them may mention the music.
+    await expect(
+      page.locator('[aria-live="polite"]').filter({ hasText: /Spotify|Musik/ }),
+    ).toHaveCount(0);
     await page.getByRole('button', { name: 'Fertig' }).click();
     await expect(page.getByText('Erledigt. Gut gemacht.')).toBeVisible();
   });
