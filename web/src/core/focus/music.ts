@@ -75,6 +75,12 @@ export function reloadMusic(): void {
   useStore.setState({ music: readMusic(), unreachable: false });
 }
 
+/** Spotify was disconnected: mode and playlist belonged to that account, back to "Aus". */
+export function clearMusic(): void {
+  localStorage.removeItem(MUSIC_KEY);
+  reloadMusic();
+}
+
 /** True after a start that did not work, until the round ends or the next one starts. */
 export const isMusicUnreachable = (): boolean => useStore.getState().unreachable;
 export const useMusicUnreachable = (): boolean => useStore((s) => s.unreachable);
