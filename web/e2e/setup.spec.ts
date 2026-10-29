@@ -373,3 +373,22 @@ test('the AI step asks nothing until "nach Ollama suchen" is clicked; Spotify ha
   await expect(dialog.getByRole('heading', { name: 'Konten verknüpfen' })).toBeVisible();
   await expect(dialog.getByText(/Testing/)).toHaveCount(1); // only the Google section
 });
+
+test('Back closes the import dialog above the assistant first, then asks about the assistant', async ({
+  page,
+}) => {
+  await ready(page, '/todos');
+  await page.getByRole('button', { name: 'Einrichtung öffnen' }).click();
+  await expect(wizard(page).getByRole('heading', { name: 'Importieren' })).toBeVisible();
+  await wizard(page).getByRole('button', { name: 'Importieren' }).first().click();
+  const importDialog = page.getByRole('dialog', { name: /^Importieren:/ });
+  await expect(importDialog).toBeVisible();
+
+  await page.goBack();
+  await expect(importDialog).toHaveCount(0);
+  await expect(wizard(page).getByRole('heading', { name: 'Importieren' })).toBeVisible();
+  await expect(wizard(page).getByTestId('setup-confirm')).toHaveCount(0);
+
+  await page.goBack();
+  await expect(wizard(page).getByTestId('setup-confirm')).toBeVisible();
+});
