@@ -1,0 +1,804 @@
+{
+ "persona": "herbert-rentner",
+ "build": "develop@4af432df (1.0.0)",
+ "date": "2026-10-29",
+ "findings": [
+  {
+   "id": "B01",
+   "type": "bug",
+   "severity": "hoch",
+   "area": "Einrichtung",
+   "module": "Einrichtung",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Einrichtung Schritt 3: „Weiter“ nach Profilwahl gesperrt, der Grund liegt unsichtbar weit unten",
+   "steps": [
+    "Frische Installation öffnen, „Einrichtung starten“.",
+    "Schritt 1 und 2 mit „Weiter“ bestätigen.",
+    "In Schritt 3 auf „Alltag“ klicken."
+   ],
+   "expected": "Entweder wird das Profil sofort übernommen, oder neben „Weiter“ steht, was fehlt.",
+   "actual": "Sichtbar ändert sich nur der Knopf „Alltag“ (leicht grau). „Weiter“ wird ausgegraut. Die Box „Das ändert sich“ mit dem Pflicht-Häkchen „Ich habe die Änderungen geprüft …“ liegt erst nach etwa einem Bildschirm Scrollen. Kein Hinweis, warum nichts mehr geht.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/03-setup-03b-nach-alltag.png",
+    "screenshots/03-setup-03c-weiter-gesperrt.png"
+   ],
+   "persona": "Herbert klickt „Alltag“, Weiter bleibt grau, er klickt mehrfach und denkt, die App hängt. Nur „Überspringen“ rettet ihn, dann hat er kein Profil."
+  },
+  {
+   "id": "B02",
+   "type": "bug",
+   "severity": "hoch",
+   "area": "Unterlagen",
+   "module": "Unterlagen",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Unterlage löschen: sofort weg, keine Rückfrage, kein „Rückgängig“",
+   "steps": [
+    "Unterlagen öffnen (drei Testeinträge, z. B. „Reisepass Herbert“).",
+    "Karte anklicken, im Fenster „Unterlage bearbeiten“ auf „Löschen“."
+   ],
+   "expected": "Rückfrage oder eine Meldung mit „Rückgängig“ (wie bei der Schnellerfassung: „Gespeichert in ToDos · Rückgängig“).",
+   "actual": "Die Unterlage ist sofort verschwunden. Nach 0,1 s, 0,6 s, 2,5 s und 5,5 s keine Meldung, kein Papierkorb in den Einstellungen (Suche „Papierkorb“ ohne Treffer). Hing eine Datei dran, ist sie auch weg und steht laut Hinweis nicht im Backup.",
+   "frequency": "immer (2 von 2 Versuchen)",
+   "screenshots": [
+    "screenshots/141-loeschen-frage.png"
+   ],
+   "persona": "Herbert hat Angst, etwas Falsches zu löschen. Hier passiert es ohne Vorwarnung bei seinen wichtigsten Dokumenten (Pass, Vertrag). Der Löschen-Knopf sitzt im Bearbeiten-Fenster direkt neben „Abbrechen“ und „Speichern“."
+  },
+  {
+   "id": "B03",
+   "type": "bug",
+   "severity": "hoch",
+   "area": "Unterlagen / Übersicht",
+   "module": "Unterlagen / Übersicht",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Verstrichene Kündigungsfrist wird nirgends als verpasst markiert",
+   "steps": [
+    "Dev-Build mit Testdaten (Stand: 29. Okt.) öffnen, Unterlagen.",
+    "„Handyvertrag“ ansehen: „Ende: 19. Nov. 2026 · Kündigen bis: Di., 20. Okt.“.",
+    "Auf der Übersicht das Widget „Fristen & Ablauf“ ansehen."
+   ],
+   "expected": "Eine Frist, die vor neun Tagen endete, ist als verstrichen gekennzeichnet („Kündigungsfrist vorbei“) und fällt auf.",
+   "actual": "Die Karte trägt nur den Chip „Bald“ (bezogen auf das Ende). „Kündigen bis“ steht als normaler Text. Das Widget „Fristen & Ablauf“ führt unter „abgelaufen“ nur die drei Dokumente mit verstrichenem Ende (Laptop Garantie, Rechtsschutz 21, Impfpass), keine verstrichene Kündigungsfrist. Auch „Wartungsvertrag Heizung“ (Kündigen bis 26. Aug.) und „Fitnessstudio“ (24. Okt.) sind betroffen.",
+   "frequency": "immer (in den Testdaten 5+ Verträge)",
+   "screenshots": [
+    "screenshots/20-unterlagen.png",
+    "screenshots/11-uebersicht-alle-widgets.png"
+   ],
+   "persona": "Das ist Herberts Hauptgrund für die App („Verträge mit Kündigungsfristen“). Er verlässt sich darauf, dass die App ihn warnt, bevor er in eine Vertragsverlängerung rutscht. Die Testdaten sind künstlich, die Logik darf trotzdem nicht stillschweigend sein."
+  },
+  {
+   "id": "B04",
+   "type": "bug",
+   "severity": "mittel",
+   "area": "Dialoge",
+   "module": "Dialoge",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Esc oder Klick neben das Fenster verwirft getippten Text ohne Rückfrage",
+   "steps": [
+    "Kalender → „Neuer Termin“.",
+    "„Termin beim Notar wegen Erbschaft und Testament“ tippen.",
+    "Esc drücken (oder neben das Fenster klicken)."
+   ],
+   "expected": "Rückfrage („Eingaben verwerfen?“) oder Entwurf bleibt erhalten.",
+   "actual": "Fenster schließt, nichts gespeichert, beim erneuten Öffnen ist der Titel leer. Gilt für Esc und Klick auf den Hintergrund.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/120-escape-mitten.png"
+   ],
+   "persona": "Herbert tippt langsam. Ein versehentlicher Klick daneben kostet ihn mehrere Minuten Arbeit."
+  },
+  {
+   "id": "B05",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Einstellungen",
+   "module": "Einstellungen",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Seitenleiste der Einstellungen: „Benachrichtigungen“ überlappt „Nicht erlaubt“",
+   "steps": [
+    "Einstellungen öffnen (1920×1080)."
+   ],
+   "expected": "Beschriftung und Status stehen nebeneinander.",
+   "actual": "Der Text „Nicht erlaubt“ liegt über dem Ende von „Benachrichtigungen“, beide unleserlich.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/61-einst-darstellung.png"
+   ],
+   "persona": "Herbert liest genau und hält das für einen Fehler der App, nicht für Absicht."
+  },
+  {
+   "id": "B06",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Notizen",
+   "module": "Notizen",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Sehr langer Titel ohne Leerzeichen sprengt Karte und Seite",
+   "steps": [
+    "Notizen → „Notiz hinzufügen“.",
+    "Titel: 300 mal „A“ (oder einen langen Link) einfügen, speichern."
+   ],
+   "expected": "Titel wird umgebrochen oder mit „…“ gekürzt.",
+   "actual": "Der Text läuft aus der Karte hinaus über den rechten Rand des Bildschirms.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/121-lange-notiz.png"
+   ],
+   "persona": "Er fügt gern Links in Notizen ein; lange Adressen haben auch keine Leerzeichen."
+  },
+  {
+   "id": "B07",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Kalender",
+   "module": "Kalender",
+   "platform": "Desktop, Fenster 640 px breit",
+   "title": "Schmales Fenster: Umschalter „Kalender | Erinnerungen“ abgeschnitten",
+   "steps": [
+    "Fenster auf 640 px Breite ziehen, Kalender öffnen."
+   ],
+   "expected": "Beide Schalter lesbar.",
+   "actual": "Es steht nur „Kal“, der Rest ist abgeschnitten und stößt an „Erweitert“.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/110-fenster-640-kalender.png"
+   ],
+   "persona": "Herbert zieht Fenster gern halb groß neben ein anderes."
+  },
+  {
+   "id": "B08",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Übersicht / Suche",
+   "module": "Übersicht / Suche",
+   "platform": "Android-Viewport 412×915",
+   "title": "Handy: Suchfeld nur noch ein kleines Oval mit „S“",
+   "steps": [
+    "Viewport 412 px, Übersicht öffnen."
+   ],
+   "expected": "Lupe oder lesbares Suchfeld.",
+   "actual": "Ein winziges Oval mit abgeschnittenem Buchstaben „S“.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/110-fenster-412-uebersicht.png"
+   ],
+   "persona": "Herbert nutzt das Handy selten, würde das Oval aber nicht als Suche erkennen."
+  },
+  {
+   "id": "B09",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Einstellungen / Einrichtung",
+   "module": "Einstellungen / Einrichtung",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Spotify-Karte trägt den Hinweistext der Kalender-Verbindung",
+   "steps": [
+    "Einstellungen → Verbindungen (oder Einrichtung Schritt 6) → Karte „Spotify“."
+   ],
+   "expected": "Hinweis passt zu Spotify.",
+   "actual": "Unter Spotify steht: „… Auf dem Handy und im Browser kommen die Termine über die Synchronisierung oder über ein Kalender-Abo (ICS).“ Der Play-Knopf hat keine Beschriftung.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/161-wetter.png"
+   ],
+   "persona": "Herbert nimmt den Text wörtlich und wundert sich, was Spotify mit Terminen zu tun hat."
+  },
+  {
+   "id": "B10",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Tastatur",
+   "module": "Tastatur",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Fokusring am Favoriten-Stern rechts angeschnitten",
+   "steps": [
+    "Übersicht öffnen, 4× Tab drücken."
+   ],
+   "expected": "Kompletter Fokusrahmen.",
+   "actual": "Der Rahmen um den Stern („ToDos aus den Favoriten entfernen“) ist am rechten Rand der Seitenleiste abgeschnitten.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/180-tab-fokus.png"
+   ],
+   "persona": "Herbert bedient viel mit Tab; Fokus ist sonst gut sichtbar."
+  },
+  {
+   "id": "B11",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Einrichtung",
+   "module": "Einrichtung",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Zusammenfassung meldet übergangene Schritte als „Erledigt“",
+   "steps": [
+    "Einrichtung durchklicken, in den Schritten 5 bis 8 (KI, Konten, Startdaten, Import per KI) nur „Weiter“ drücken."
+   ],
+   "expected": "„Übersprungen“ (wie bei Benachrichtigungen).",
+   "actual": "Alle vier stehen als „Erledigt“. Zusätzlich „10 von 11 Schritten“ im Assistenten gegenüber „11 von 12“ auf der Übersicht.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/04-nach-einrichtung.png"
+   ],
+   "persona": "Herbert glaubt dann, er habe Google oder KI eingerichtet, und wird misstrauisch."
+  },
+  {
+   "id": "B12",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Modul-Bibliothek",
+   "module": "Modul-Bibliothek",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Schalter heißt „Kalender einschalten“, obwohl er bereits eingeschaltet ist",
+   "steps": [
+    "Modul-Bibliothek öffnen, Karte „Kalender“ ansehen."
+   ],
+   "expected": "Beschriftung nennt den Zustand („Kalender: an“).",
+   "actual": "Neben dem aktiven Schalter steht „Kalender einschalten“, neben ausgeschalteten das Gleiche.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/30-modulbibliothek.png"
+   ],
+   "persona": "Herbert weiß nicht, ob er klicken muss, um das Modul an- oder auszuschalten."
+  },
+  {
+   "id": "B13",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Kalender / Handy",
+   "module": "Kalender / Handy",
+   "platform": "Android-Viewport 412×915",
+   "title": "Touch-Ziele unter 44 px",
+   "steps": [
+    "Viewport 412 px, Kalender → „Neuer Termin“ öffnen, Maße der Knöpfe messen."
+   ],
+   "expected": "Mindestens 44 px (steht so in den Projektregeln).",
+   "actual": "Tageskacheln im Mini-Kalender 32×32 px, Monat/Woche/Tag 38 px hoch, Umschalter „Kalender | Erinnerungen“ 38 px.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/213-phone-termin-dialog.png"
+   ],
+   "persona": "Herberts Finger sind nicht mehr so treffsicher."
+  },
+  {
+   "id": "B14",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Lesehilfe",
+   "module": "Lesehilfe",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Lesehilfe wirkt nicht überall und zerlegt Wörter",
+   "steps": [
+    "Einstellungen → Lesehilfe „An“.",
+    "Einstellungen und Unterlagen ansehen."
+   ],
+   "expected": "Einheitliche Hervorhebung.",
+   "actual": "In den Einstellungen sind nur Wortanfänge fett („Sch|alter“, „Ko|pf“), auf der Seite Unterlagen ist kein Unterschied zu sehen (Attribut data-read-aid=25 ist gesetzt). Die Zeile „Lesehilfe: An · 40 % · Weich · 25 %“ ist ohne Erklärung.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/193-lesehilfe-einstellung.png",
+    "screenshots/190b-lesehilfe-zoom.png"
+   ],
+   "persona": "Herbert findet die halbfetten Wortfetzen eher störend als hilfreich."
+  },
+  {
+   "id": "B15",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Übersicht",
+   "module": "Übersicht",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Name „für die Begrüßung auf der Übersicht“ – keine Begrüßung zu sehen",
+   "steps": [
+    "Name „Herbert“ in der Einrichtung eintragen.",
+    "Übersicht ansehen (frisch, befüllt, nach Backup-Import)."
+   ],
+   "expected": "Eine Begrüßung mit Namen, wie die Einstellung verspricht.",
+   "actual": "In der frischen App und im Import-Profil (beide mit Namen „Herbert“, Testzeit nachts) keine Begrüßung gesehen. Eventuell tageszeitabhängig, nicht weiter geprüft.",
+   "frequency": "immer (nicht bestätigt, ob zeitabhängig)",
+   "screenshots": [
+    "screenshots/160-uebersicht-imp.png"
+   ],
+   "persona": "Das wäre für Herbert ein freundlicher Einstieg."
+  },
+  {
+   "id": "B16",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "Einrichtung / Backup",
+   "module": "Einrichtung / Backup",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Nach Backup-Import in leere App erscheint wieder „Willkommen bei Nemo – Einrichtung starten“",
+   "steps": [
+    "Verschlüsseltes Backup exportieren.",
+    "In neuem, leerem Profil importieren („19 Einträge wiederhergestellt“).",
+    "Übersicht öffnen."
+   ],
+   "expected": "Keine Einrichtungs-Einladung, die Daten sind ja da.",
+   "actual": "Die Willkommenskarte samt „Lesehilfe …“-Frage erscheint erneut.",
+   "frequency": "immer",
+   "screenshots": [
+    "screenshots/160-uebersicht-imp.png"
+   ],
+   "persona": "Herbert fragt sich, ob die Wiederherstellung wirklich geklappt hat."
+  },
+  {
+   "id": "V01",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "Übersicht",
+   "module": "Übersicht",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Morgenüberblick zeigt heutige Termine sofort",
+   "situation": "Herbert öffnet die App morgens und will wissen: Arzt, Familie, Rechnungen?",
+   "problem": "Die Übersicht startet im Modus „Nur das Wichtigste“: Auf 1920 px Breite steht links eine einzige Karte mit EINER Aufgabe („Urlaubsantrag einreichen“), rechts ist über 60 % der Fläche leer. Termine (Medikament 08:00, Teammeeting 10:00), „Jetzt wichtig“ und Rechnungen erscheinen erst nach „Mehr anzeigen · 16 Widgets“.",
+   "proposal": "Heutige Termine und Fristen der nächsten 7 Tage standardmäßig oben zeigen (mit Uhrzeit, Ort). Die „eine Sache“ bleibt, aber darunter. Bei breitem Fenster zwei Spalten nutzen.",
+   "screenshots": [
+    "screenshots/10-dev-uebersicht.png",
+    "screenshots/11-uebersicht-alle-widgets.png"
+   ],
+   "persona": "Herbert: Herbert öffnet die App morgens und will wissen: Arzt, Familie, Rechnungen?"
+  },
+  {
+   "id": "V02",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "Einrichtung",
+   "module": "Einrichtung",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Profil „Papiere & Termine“ für Menschen wie Herbert",
+   "situation": "Herbert wählt in Schritt 3 ein Profil.",
+   "problem": "„Alltag“ schaltet Finanzen, Rechnungen, Abos aus und lässt Unterlagen und Accounts aus. „Finanz-Fokus“ nennt „Verträge“, aber nicht Geburtstage oder Notizen. Er muss in einer Liste mit 15 Zeilen in kleiner Grauschrift 5 Schalter selbst umlegen (Finanzen, Rechnungen, Abos, Unterlagen, Accounts). Jede Karte zeigt den Namen doppelt („Alltag“ + Knopf „Alltag“).",
+   "proposal": "Profil „Papiere, Termine, Rechnungen“ (Kalender, Unterlagen, Rechnungen, Abos, Personen, Notizen, Accounts) und einen Knopf „Auswählen“ statt Namensdoppelung. „Beispiel (Entwickler)“ aus der Liste für Nutzer ausblenden.",
+   "screenshots": [
+    "screenshots/03-setup-03b-nach-alltag.png",
+    "screenshots/03-setup-03c-weiter-gesperrt.png"
+   ],
+   "persona": "Herbert: Herbert wählt in Schritt 3 ein Profil."
+  },
+  {
+   "id": "V03",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "Unterlagen / Abos",
+   "module": "Unterlagen / Abos",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Kündigungsfrist in Monaten/Wochen eingeben, „Kündigen bis“ groß zeigen, früh erinnern",
+   "situation": "Im Zeitungsabo steht „3 Monate zum Quartalsende“.",
+   "problem": "Der Dialog verlangt „Kündigungsfrist (Tage vor Ende)“, im Abo-Dialog „Tage vor Abbuchung“ (nur unter „Mehr Felder“). Herbert muss Tage rechnen (3 Monate = 90?). Das Ergebnis „Kündigen bis: Do., 31. Dez.“ ist korrekt, aber klein im Kartentext. Eine Erinnerung davor richtet er nicht von selbst ein.",
+   "proposal": "Auswahl „Tage / Wochen / Monate“, danach Vorschau „Kündigen bis 31.12.2026“. Standard-Erinnerung 14 Tage vor „Kündigen bis“, sichtbar als Chip auf der Karte („Kündigen in 12 Tagen“, „Frist verpasst“).",
+   "screenshots": [
+    "screenshots/51-unterlage-dialog.png",
+    "screenshots/240-abo-dialog.png",
+    "screenshots/53-unterlagen-befuellt.png"
+   ],
+   "persona": "Herbert: Im Zeitungsabo steht „3 Monate zum Quartalsende“."
+  },
+  {
+   "id": "V04",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "Einrichtung / KI",
+   "module": "Einrichtung / KI",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "„Nur lokal, ohne KI“ als allererste Wahl und sichtbar in der Kopfzeile",
+   "situation": "Herbert hat Angst vor KI und Konten.",
+   "problem": "„Mit KI eintragen“ (Funkel-Symbol) steht auf jeder Modulseite, in der Schnellerfassung und die Suche startet mit „Assistent fragen“. Die Option „Ich möchte keine KI nutzen“ erscheint erst in Schritt 5 von 12. Sie wirkt (Kalender, Suche, Schnellerfassung zeigen danach keine KI mehr, Test „KI abschalten“), aber bis dahin ist die Skepsis geweckt.",
+   "proposal": "In Schritt 1 eine einzige Frage: „Soll Nemo KI-Funktionen zeigen? (Standard: nein)“. Die Schritte 5, 6 und 8 (KI, Konten, Import per KI) entfallen dann. Ein Hinweis in den Einstellungen „KI: aus“.",
+   "screenshots": [
+    "screenshots/03-setup-01.png",
+    "screenshots/251-einst-ki.png",
+    "screenshots/252-ki-abschalten-dialog.png"
+   ],
+   "persona": "Herbert: Herbert hat Angst vor KI und Konten."
+  },
+  {
+   "id": "V05",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "Einrichtung / Darstellung",
+   "module": "Einrichtung / Darstellung",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Textgröße gleich in Schritt 1 abfragen, „Sehr groß“ wirklich groß machen",
+   "situation": "Herbert sitzt vor einem großen Monitor und liest ungern kleine Schrift.",
+   "problem": "Die Einstellung existiert (Einstellungen → Darstellung → „Schrift & Lesen: Normal · Normal · Normal“ → Ändern → „Textgröße“), ist aber verschachtelt und die Zeile zeigt nur drei „Normal“ ohne Namen. Die Einrichtung fragt nicht danach.",
+   "proposal": "Schritt 1: Textgröße mit Vorschauzeile („So groß ist die Schrift“). „Sehr groß“ ist nur etwa 20 % größer. Der Monatskalender kürzt bei „Sehr groß“ noch mehr („Garantie endet:…“); dort Wochenliste als Standard vorschlagen. Graue Nebentexte (ca. 12–13 px, z. B. Modulbeschreibungen, „Schritt 3 von 12“) ebenfalls mit skalieren.",
+   "screenshots": [
+    "screenshots/61-einst-darstellung.png",
+    "screenshots/62-schrift-lesen.png",
+    "screenshots/63-sehr-gross-kalender.png",
+    "screenshots/63-sehr-gross-uebersicht.png"
+   ],
+   "persona": "Herbert: Herbert sitzt vor einem großen Monitor und liest ungern kleine Schrift."
+  },
+  {
+   "id": "V06",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Allgemein",
+   "module": "Allgemein",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Gelöschtes 30 Tage wiederherstellbar („Zuletzt gelöscht“)",
+   "situation": "Herbert löscht aus Versehen oder ändert seine Meinung.",
+   "problem": "Schnellerfassung bietet „Rückgängig“, Löschen von Unterlagen nicht. Es gibt keinen Papierkorb (Einstellungs-Suche „Papierkorb“ ohne Treffer).",
+   "proposal": "Einheitlich: jede Löschung zeigt „Gelöscht · Rückgängig“ und landet 30 Tage in „Zuletzt gelöscht“ (lokal; vereinbar mit Local-First).",
+   "screenshots": [
+    "screenshots/141-loeschen-frage.png"
+   ],
+   "persona": "Herbert: Herbert löscht aus Versehen oder ändert seine Meinung."
+  },
+  {
+   "id": "V07",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Suche",
+   "module": "Suche",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Suche: echte Treffer zuerst, „Assistent fragen“ nur wenn KI an",
+   "situation": "Herbert tippt „Zahnarzt“ und drückt Enter.",
+   "problem": "Erste, vorausgewählte Zeile ist „Assistent fragen: „Zahnarzt““ (KI-Symbol). Der Dialog heißt „Befehlspalette“, der Hinweis „Ctrl+K“ (nicht „Strg+K“).",
+   "proposal": "Treffer vorauswählen, Assistent-Zeile ans Ende. Dialog „Suchen“, Hinweis „Strg+K“. (Die Trefferliste selbst ist gut: „Kalender · Termin“ pro Zeile.)",
+   "screenshots": [
+    "screenshots/91-suche-zahnarzt.png"
+   ],
+   "persona": "Herbert: Herbert tippt „Zahnarzt“ und drückt Enter."
+  },
+  {
+   "id": "V08",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Dieser PC",
+   "module": "Dieser PC",
+   "platform": "Windows-App (nicht getestet)",
+   "title": "„Dieser PC“: Vorab erklären, was gelöscht wird und was nie",
+   "situation": "Herbert will den PC aufräumen und fürchtet, Falsches zu löschen.",
+   "problem": "Ich konnte das Modul nicht testen (läuft nur in der Windows-App, nicht im Browser/Linux). Nutzertexte sind knapp: README „Platz analysieren, sicher aufräumen“, Handbuch „Laufwerke analysieren und aufräumen“. In der Modul-Bibliothek des Browsers fehlt die Karte komplett, so kann er sich vorab nicht informieren.",
+   "proposal": "Karte „Dieser PC“ auch im Browser zeigen (mit Hinweis „nur Windows-App“), dazu ein Beispielbild und drei Sätze: „Zeigt zuerst nur an. Löschen geht in den Papierkorb. Systemordner sind gesperrt.“ Auf der Website nennen.",
+   "screenshots": [],
+   "persona": "Herbert: Herbert will den PC aufräumen und fürchtet, Falsches zu löschen."
+  },
+  {
+   "id": "V09",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Backup",
+   "module": "Backup",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Sicherung in Alltagssprache und regelmäßige Erinnerung",
+   "situation": "Herbert will seine Daten auf einen USB-Stick sichern und später zurückspielen.",
+   "problem": "Das Backup funktioniert gut (Vorschau, Zusammenführen/Ersetzen, Sicherheitskopie vorher), aber die Seite ist voll Fachwörter: „Passphrase“, „Chiffretext“, „Argon2id“, „19 Einträge in 27 Tabellen“, „Backup prüfen“, „Importieren“. Die Seite „Sync & Backup“ beginnt mit Sync (Server, Token, Tailscale), nicht mit dem Backup.",
+   "proposal": "Backup nach oben, Beschriftungen „Sicherung speichern“ / „Sicherung zurückspielen“. Schrittfolge „1 Datei wählen · 2 Passwort · 3 Prüfen · 4 Zurückspielen“. Optional Erinnerung alle 30 Tage („Letzte Sicherung: vor 45 Tagen“).",
+   "screenshots": [
+    "screenshots/134-backup-vorschau.png"
+   ],
+   "persona": "Herbert: Herbert will seine Daten auf einen USB-Stick sichern und später zurückspielen."
+  },
+  {
+   "id": "V10",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Kalender",
+   "module": "Kalender",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Nach „Speichern“ zeigen, wohin der Termin gegangen ist",
+   "situation": "Herbert trägt „Augenarzt 12. Nov.“ ein, der Kalender zeigt Oktober.",
+   "problem": "Der Termin war gespeichert (geprüft im November). Das Fenster schließt, der Kalender bleibt im Oktober, ich habe keine Bestätigung erfasst.",
+   "proposal": "Meldung „Augenarzt, Do. 12. Nov. 10:30 gespeichert · Anzeigen“ und Sprung in den Monat.",
+   "screenshots": [
+    "screenshots/43-termin-gespeichert.png"
+   ],
+   "persona": "Herbert: Herbert trägt „Augenarzt 12. Nov.“ ein, der Kalender zeigt Oktober."
+  },
+  {
+   "id": "V11",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Einrichtung",
+   "module": "Einrichtung",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Kurzer Einrichtungsweg („in 3 Fragen fertig“)",
+   "situation": "Herbert will loslegen, nicht 12 Schritte lesen.",
+   "problem": "12 Schritte, davon 4 (KI-Anbieter, Konten verknüpfen mit Google/Spotify, Startdaten, Import per KI) für ihn Internet-, Konto- oder KI-Themen. Der Assistent lässt sich schließen (X) und überspringen, die Karte „Einrichtung 11 von 12“ bleibt aber auf der Übersicht.",
+   "proposal": "Standardweg: Name, Textgröße, Module. Alles Weitere unter „Mehr einrichten“ gebündelt.",
+   "screenshots": [
+    "screenshots/04-nach-einrichtung.png"
+   ],
+   "persona": "Herbert: Herbert will loslegen, nicht 12 Schritte lesen."
+  },
+  {
+   "id": "V12",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Erinnerungen",
+   "module": "Erinnerungen",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Erinnerungsfenster: konkrete Titel, verständliche Knöpfe",
+   "situation": "Herbert öffnet die Glocke (Zahl 12).",
+   "problem": "Gruppen heißen „Weitere Erinnerungen · 3“, ohne dass man sieht, was drinsteckt. „Zufällige Erinnerung“ ist unklar. Alle Einträge „Gestern“ ohne Datum.",
+   "proposal": "Gruppen mit den ersten zwei Titeln aufklappbar. „Zufällige Erinnerung“ erklären oder entfernen.",
+   "screenshots": [
+    "screenshots/95-glocke.png"
+   ],
+   "persona": "Herbert: Herbert öffnet die Glocke (Zahl 12)."
+  },
+  {
+   "id": "V13",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Übersicht",
+   "module": "Übersicht",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "„Wartet noch“ konkret benennen",
+   "situation": "Rechnungen sind seit 12 Tagen offen.",
+   "problem": "Die Übersicht fasst in einer winzigen grauen Zeile zusammen: „Wartet noch · 4 · 2 Rechnungen überfällig · Budget „Freizeit“ überschritten“. Die Namen stehen erst im aufgeklappten Zustand oder im Widget „Fällige Rechnungen“. Der ruhige Ton ist gut, die Schrift klein.",
+   "proposal": "Zeile größer, mit Namen und Betrag („Stadtwerke 87,40 €, seit 12 Tagen“), weiter ohne Rot außer bei Geld.",
+   "screenshots": [
+    "screenshots/11-uebersicht-alle-widgets.png"
+   ],
+   "persona": "Herbert: Rechnungen sind seit 12 Tagen offen."
+  },
+  {
+   "id": "V14",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Accounts (Tresor)",
+   "module": "Accounts (Tresor)",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "„Passwörter“ statt „Accounts“, Generator erkennbar benennen",
+   "situation": "Herbert sucht, wo er Passwörter aufbewahrt.",
+   "problem": "Der Menüpunkt heißt „Accounts“ (auf Englisch „Passwords“, also fehlt nur die deutsche Übersetzung), Knopf „Neues Passwort“ (ist der Generator, klingt nach „Master-Passwort ändern“). Neben dem Passwortfeld sitzt ein Funkel-Symbol, das sonst „KI“ bedeutet (Generator). Kopieren, Auge und „Öffnen“ sind reine Symbole. Formularfeld „Einmalcode (TOTP) – Base32 oder otpauth://-Link“ ist unverständlich.",
+   "proposal": "„Passwörter“, „Passwort erzeugen“, Würfel-Symbol, Symbole mit Text beim Überfahren und auf Wunsch dauerhaft. Das TOTP-Feld erst unter „Mehr Felder“.",
+   "screenshots": [
+    "screenshots/75-zugang-hinzufuegen.png",
+    "screenshots/76-zugang-details.png"
+   ],
+   "persona": "Herbert: Herbert sucht, wo er Passwörter aufbewahrt."
+  },
+  {
+   "id": "V15",
+   "type": "improvement",
+   "benefit": "niedrig",
+   "area": "Abos",
+   "module": "Abos",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Abo-Dialog: Datumsfeld statt 31-Tage-Raster",
+   "situation": "Herbert trägt „Zeitung, monatlich, 24,90 €“ ein.",
+   "problem": "Der Dialog zeigt als erstes „Tag des Monats“ mit 31 Knöpfen plus „Letzter Tag“ und „Alle (Monate)“, die Kündigungsfrist steckt hinter „Mehr Felder“.",
+   "proposal": "Feld „Nächste Abbuchung“ (Datum) und Auswahl „Monatlich“; Kündigungsfrist sichtbar.",
+   "screenshots": [
+    "screenshots/240-abo-dialog.png"
+   ],
+   "persona": "Herbert: Herbert trägt „Zeitung, monatlich, 24,90 €“ ein."
+  },
+  {
+   "id": "V16",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Unterlagen",
+   "module": "Unterlagen",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Vorlagen für typische Papiere (Pass, Führerschein, TÜV, Versicherung)",
+   "situation": "Herbert hat Pass, Personalausweis, Führerschein, TÜV, Hausrat- und Haftpflicht.",
+   "problem": "Es gibt nur sieben Kategorien (Ausweise, Versicherung, Verträge, Garantien, Steuer, Gesundheit, Sonstiges). Das TÜV-Datum landet in „Sonstiges“. Der Chip „Bald“ folgt keiner erkennbaren Regel: „Waschmaschine Garantie“ (Ende in 45 Tagen) trägt „Bald“, „Zeitschriften-Abo 18“ (Ende in 33 Tagen) nicht; im eigenen Test hat der TÜV (37 Tage) „Bald“, der Reisepass (78 Tage) nicht.",
+   "proposal": "Vorlagen „Reisepass (Erinnerung 6 Monate vorher)“, „TÜV (4 Wochen)“, Kategorie „Fahrzeug“, Schwelle für „Bald“ einstellbar.",
+   "screenshots": [
+    "screenshots/53-unterlagen-befuellt.png"
+   ],
+   "persona": "Herbert: Herbert hat Pass, Personalausweis, Führerschein, TÜV, Hausrat- und Haftpflicht."
+  },
+  {
+   "id": "V17",
+   "type": "improvement",
+   "benefit": "niedrig",
+   "area": "Einstellungen",
+   "module": "Einstellungen",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Zeilen in „Darstellung“ benennen, nicht nur Werte zeigen",
+   "situation": "Herbert sucht die Schriftgröße.",
+   "problem": "„Schrift & Lesen: Normal · Normal · Normal“, „Sonstiges: Breit · Nur das Wichtigste“, „Farben: Nemo-Orange · Standard · Mit Bedeutung“ sagen nicht, was „Normal“ ist. Die Einstellungs-Suche hilft allerdings (Schriftgröße → Textgröße gefunden).",
+   "proposal": "„Textgröße: Normal · Zeilenabstand: Normal · Dichte: Normal“.",
+   "screenshots": [
+    "screenshots/61-einst-darstellung.png"
+   ],
+   "persona": "Herbert: Herbert sucht die Schriftgröße."
+  },
+  {
+   "id": "V19",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "Hilfe",
+   "module": "Hilfe",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "Anleitung in der App verlinken",
+   "situation": "Herbert liest gern Anleitungen und sucht nach „Hilfe“.",
+   "problem": "In der Seitenleiste, der Kopfzeile und unter Einstellungen → „Über Nemo“ (Version, Build, Updates, Einrichtung, Unterstützen) gibt es keinen Eintrag „Hilfe“ oder „Anleitung“. Die Handbücher liegen nur im Repository (docs/user) und im Netz.",
+   "proposal": "Eintrag „Hilfe und Anleitung“ in „Über Nemo“ und im Seitenmenü, öffnet eine mitgelieferte, offline lesbare Seite (Kapitel: Termine, Verträge, Passwörter, Sicherung).",
+   "screenshots": [],
+   "persona": "Herbert: Herbert liest gern Anleitungen und sucht nach „Hilfe“."
+  },
+  {
+   "id": "V18",
+   "type": "improvement",
+   "benefit": "niedrig",
+   "area": "Tastatur",
+   "module": "Tastatur",
+   "platform": "Desktop (Dev-Build im Browser, 1920×1080)",
+   "title": "„Strg“ statt „Ctrl“, weniger Tab-Stopps in der Seitenleiste",
+   "situation": "Herbert bedient viel mit Tastatur.",
+   "problem": "Hinweise zeigen „Ctrl+K“, im Fenster „Strg+Enter“; jede Favoriten-Zeile hat zwei Tab-Stopps (Link + Stern), so sind es ca. 25 Tab bis zum Inhalt. F2/F3/Strg+K funktionieren (gut).",
+   "proposal": "Überall „Strg“; Stern per Kontextaktion statt eigenem Tab-Stopp; „Zum Inhalt springen“ beim ersten Tab sichtbar machen.",
+   "screenshots": [
+    "screenshots/180-tab-fokus.png"
+   ],
+   "persona": "Herbert: Herbert bedient viel mit Tastatur."
+  },
+  {
+   "id": "U01",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "Lesehilfe („hebt Wortanfänge hervor“)",
+   "steps": [],
+   "proposal": "Unklar, was das ist; erst nach dem Einschalten sichtbar. → „Hebt den Anfang jedes Wortes fett hervor, das erleichtert manchen das Lesen“ plus Vorschau.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U02",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Wanduhrzeit“ (Einrichtung Schritt 1)",
+   "steps": [],
+   "proposal": "Fachwort. → „Uhrzeiten gelten für deinen Ort“.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U03",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Widgets“, „Anheften…“, „Mehr anzeigen · 16 Widgets“",
+   "steps": [],
+   "proposal": "Englisch/technisch. → „Bausteine“ bzw. „Karten“; „Anheften“ → „Karte hinzufügen“.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U04",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Beispiel – Referenzmodul aus dem Generator“ (Modul-Bibliothek, Einrichtung)",
+   "steps": [],
+   "proposal": "Entwicklerbegriff, soll Herbert nicht sehen (er steht auch in der Seitenleiste der Dev-Daten).",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U05",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Accounts“, „TOTP“, „Base32“, „otpauth://“, „Argon2id, AES-256“",
+   "steps": [],
+   "proposal": "Passwörter / „Zweiter Faktor (Einmalcode)“ / „sehr starke Verschlüsselung“. Argon2id schafft Vertrauen nur für Fachleute.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U06",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„JSON einfügen“, „Nemo-Format“, „Startdaten einrichten“, „Import per KI“",
+   "steps": [],
+   "proposal": "Herbert weiß nicht, was JSON ist. → „Daten aus einer Datei übernehmen“; „Startdaten“ nur für das, was es ist (erste Einträge).",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U07",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Befehlspalette“ (Strg+K)",
+   "steps": [],
+   "proposal": "→ „Suchen“.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U08",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Zufällige Erinnerung“, „Weitere Erinnerungen · 3“",
+   "steps": [],
+   "proposal": "Siehe V12.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U09",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Wartet noch“, „Später nicht mehr“ (Wetter), „Auf morgen schieben“",
+   "steps": [],
+   "proposal": "„Wartet noch“ versteht Herbert nach dem Ausprobieren, „Später nicht mehr“ klingt wie ein Widerspruch. → „Nicht mehr fragen“.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U10",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Anfangen · 5 Min“, „Vorschlag: 3 kleine Schritte“, „Nächste eine Sache“",
+   "steps": [],
+   "proposal": "Herbert erwartet, dass „Anfangen“ die Aufgabe öffnet; stattdessen startet sofort ein 5-Minuten-Zähler. Ob „Vorschlag“ ein Knopf oder KI ist, sieht man nicht. „Nächste eine Sache“ ist grammatisch falsch.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U11",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "„Passphrase“, „Chiffretext“, „LAN“, „Tailscale“, „Tabellen“ (Backup/Sync)",
+   "steps": [],
+   "proposal": "Siehe V09.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U12",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "Schalter „Erweitert“ in jedem Modul",
+   "steps": [],
+   "proposal": "Was wird erweitert? → „Mehr Felder anzeigen“ (dort schon so benannt).",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U13",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "Symbole: Funkel (KI und Passwort-Generator), Stern (Favorit), Glocke mit Zahl, Fisch im leeren Zustand",
+   "steps": [],
+   "proposal": "Der Fisch ist sympathisch. Funkel doppelt belegt (siehe V14). Stern: „zu Favoriten“ nur als Hinweis beim Überfahren.",
+   "persona": "Herbert hat dies nicht verstanden"
+  },
+  {
+   "id": "U14",
+   "type": "understanding",
+   "benefit": "mittel",
+   "area": "Texte/Begriffe",
+   "module": "Texte/Begriffe",
+   "platform": "alle",
+   "title": "Alle englischen Systemtexte im Browser (Datum „mm/dd/yyyy“, „Please fill out this field“, „Choose File“)",
+   "steps": [],
+   "proposal": "Kommen vom Browser dieses Tests (englisch), nicht von Nemo. In der deutschen Windows-App erwarte ich deutsche Texte; nicht bewertet, aber prüfen.",
+   "persona": "Herbert hat dies nicht verstanden"
+  }
+ ]
+}
