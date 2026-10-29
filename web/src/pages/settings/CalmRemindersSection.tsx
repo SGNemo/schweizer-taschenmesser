@@ -156,6 +156,12 @@ export function CalmRemindersSection() {
         </>,
       )}
       {group(
+        'leadHint',
+        s.leadHintTitle,
+        [v.leadHint ? s.on : s.off],
+        toggle('leadHint', s.leadHintTitle, s.leadHintHint),
+      )}
+      {group(
         'followUp',
         s.followUp,
         v.followUp

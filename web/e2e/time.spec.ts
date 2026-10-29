@@ -58,6 +58,7 @@ test('a calendar event can notify before it starts', async ({ page }) => {
   const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
   await dialog.getByLabel('Titel').fill('Zahnarzt');
   await dialog.getByLabel('Beginn').fill('14:30');
+  await dialog.getByRole('button', { name: 'Andere Zeit' }).click();
   await dialog.getByLabel('Benachrichtigen').selectOption({ label: '15 Minuten vorher' });
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

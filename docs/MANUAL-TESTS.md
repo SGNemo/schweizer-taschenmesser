@@ -305,3 +305,10 @@ E4. *Android, Akku „eingeschränkt“ für Nemo* und *„Wecker & Erinnerungen
 E5. *Android, „Beenden erzwingen“ und Flugmodus:* wie E1 (Flugmodus muss gehen). ☐
 E6. *PWA in Chrome (gleiches Handy), mit und ohne Web Push:* E1 und E3; ohne Push kommt nichts, mit Push kommt es. ☐
 
+### Erinnern-Zeile, Genommen, Ruhe (P5 Paket A)
+A1. *Android:* Termin mit Uhrzeit anlegen, „Erinnern → 1 h“ und „Als Vorgabe merken“; ein neuer Termin startet mit „1 h“, ein Termin ohne Uhrzeit bekommt nichts. Ohne Benachrichtigungs-Erlaubnis erscheint ein ruhiger Satz mit „Erlauben“ und „Nicht mehr zeigen“. ☐
+A2. *Einstellungen → Benachrichtigungen (Android, Windows, PWA):* der Einleitungstext passt zur Plattform; auf Android und Windows fehlt die Push-Karte. ☐
+A3. *Android:* Erinnerung mit „Einnahme“ anlegen: Karte und Glocke zeigen „Genommen“, danach ist sie weg, nichts wird gezählt. ☐
+A4. *Glocke:* mehr als drei Erinnerungen in einer Stunde zeigen konkrete Titel (nicht „Weitere Erinnerungen · n“); Älteres liegt unter „Früher“. ☐
+A5. *Ruhe:* eine Karte „Ruhe“ (Aus / 1 Stunde / Bis morgen) mit „Beim Spielen“ (Windows) bzw. „Immer leise“ (Android); Schnellleiste und Palette heißen „Ruhe“. ☐
+

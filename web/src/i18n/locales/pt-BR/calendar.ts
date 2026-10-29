@@ -66,6 +66,8 @@ export const calendar: Strings['calendar'] = {
     paused: 'Pausado',
     active: 'Ativo',
     markDone: 'Concluído',
+    intake: 'Dose (resposta “Tomado”)',
+    intakeHint: 'Para remédios e vitaminas: você confirma com “Tomado”. Nada é contado.',
     markedDone: 'Lembrete concluído.',
     pause: 'Pausar',
     resume: 'Reativar',
@@ -75,6 +77,18 @@ export const calendar: Strings['calendar'] = {
   },
   notify: {
     label: 'Notificar',
+    rowLabel: 'Lembrar',
+    noneShort: 'Nenhum',
+    hourShort: '1 h',
+    dayShort: '1 dia',
+    other: 'Outro horário',
+    remember: 'Lembrar como padrão',
+    permissionMissing:
+      'As notificações ainda não estão permitidas, então este lembrete não apareceria.',
+    permissionDenied:
+      'As notificações estão bloqueadas. Permita-as nas configurações do sistema ou do navegador, senão o lembrete não aparecerá.',
+    allow: 'Permitir',
+    hintOff: 'Não mostrar mais',
     none: 'Não notificar',
     atStart: 'No início',
     minutes: (n: number) => (n <= 1 ? `${n} minuto antes` : `${n} minutos antes`),

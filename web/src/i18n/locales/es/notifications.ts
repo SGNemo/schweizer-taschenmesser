@@ -7,7 +7,11 @@ export const notifications: Strings['notifications'] = {
   }),
   title: 'Notificaciones',
   intro:
-    'Los recordatorios aparecen como notificación mientras la app está abierta o en segundo plano. Con la app cerrada solo llegan con push (ver abajo).',
+    'Los recordatorios aparecen como notificación mientras la app está abierta o en segundo plano. Sin push no llega nada con la app cerrada; lo que venció entretanto lo verás en la campana al abrirla. Con push (abajo) llegan también entonces.',
+  introAndroid:
+    'En Android la app entrega los recordatorios al sistema para que lleguen también con la app cerrada. Funciona si Nemo puede enviar notificaciones y usar «Alarmas y recordatorios» y el uso de batería no está restringido (Ajustes → Aplicaciones → Nemo).',
+  introDesktop:
+    'Los recordatorios aparecen como notificación mientras Nemo se está ejecutando, también en segundo plano o en la bandeja del sistema. Si la app está cerrada no llegan; lo que venció entretanto lo verás en la campana al abrirla de nuevo.',
   enable: 'Activar notificaciones',
   granted: 'Activadas',
   denied: 'Bloqueadas: permítelas en los ajustes del navegador para este sitio.',

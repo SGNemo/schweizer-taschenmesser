@@ -194,7 +194,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           run: () => applyQuick(q, o.value),
         })),
       ),
-      // "Stumm: 1 Stunde", "Stumm: bis morgen", "Stumm: aus" (core/notifications/mute.ts).
+      // "Ruhe: 1 Stunde", "Ruhe: bis morgen", "Ruhe: aus" (core/notifications/mute.ts).
       ...(['off', ...MUTE_PRESETS] as const).map((v) => ({
         id: `mute-${v}`,
         label: `${tComfort.get().mute.title}: ${

@@ -566,3 +566,18 @@ button.itemRow:hover {
 .chip.done {
   color: var(--text-muted);
 }
+
+.leadRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.leadHint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+}

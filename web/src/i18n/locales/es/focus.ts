@@ -96,6 +96,9 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
+    leadHintTitle: 'Aviso en el formulario de citas',
+    leadHintHint:
+      'Muestra una frase tranquila cuando eliges un recordatorio pero las notificaciones no están permitidas.',
     followUp: 'Repetir con calma',
     followUpHint:
       'Un recordatorio que pusiste tú vuelve a intervalos hasta que elijas «Hecho» o «Más tarde». De noche, silencio.',

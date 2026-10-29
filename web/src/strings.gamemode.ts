@@ -6,12 +6,13 @@ import { defineBundle } from '@/core/i18n/bundle';
  */
 export const tGame = defineBundle(
   {
-    title: 'Zock-Modus',
+    title: 'Ruhe',
     description:
       'Wenn du spielst, kommt eine Erinnerung leise: ohne Windows-Ton, dafür mit einem kurzen, leichten Ton der App.',
     descriptionQuiet:
       'Erinnerungen kommen ohne Ton oder Vibration, solange der Schalter an ist. Du kannst ihn jederzeit ausschalten.',
-    mode: 'Zock-Modus',
+    mode: 'Beim Spielen',
+    modeQuiet: 'Immer leise',
     modes: { off: 'Aus', auto: 'Automatisch', on: 'Immer' },
     modesQuiet: { off: 'Aus', on: 'An' },
     autoHint:
@@ -21,16 +22,17 @@ export const tGame = defineBundle(
     volume: 'Lautstärke',
     volumeValue: (percent: number) => `${percent} %`,
     test: 'Ton testen',
-    muteNote: 'Bei „Stumm“ bleibt auch dieser Ton aus.',
+    muteNote: 'Bei „Ruhe“ bleibt auch dieser Ton aus.',
   },
   {
     en: {
-      title: 'Gaming mode',
+      title: 'Quiet',
       description:
         'While you play, a reminder arrives quietly: without the Windows sound, with a short, light tone from the app instead.',
       descriptionQuiet:
         'Reminders arrive without sound or vibration while this switch is on. You can turn it off any time.',
-      mode: 'Gaming mode',
+      mode: 'While gaming',
+      modeQuiet: 'Always quiet',
       modes: { off: 'Off', auto: 'Automatic', on: 'Always' },
       modesQuiet: { off: 'Off', on: 'On' },
       autoHint:
@@ -40,15 +42,16 @@ export const tGame = defineBundle(
       volume: 'Volume',
       volumeValue: (percent: number) => `${percent}%`,
       test: 'Test tone',
-      muteNote: 'While “Mute” is on, this tone stays off too.',
+      muteNote: 'While “Quiet” is on, this tone stays off too.',
     },
     es: {
-      title: 'Modo juego',
+      title: 'Calma',
       description:
         'Mientras juegas, el recordatorio llega en silencio: sin el sonido de Windows, con un tono breve y suave de la app.',
       descriptionQuiet:
         'Los recordatorios llegan sin sonido ni vibración mientras el interruptor esté activado. Puedes desactivarlo cuando quieras.',
-      mode: 'Modo juego',
+      mode: 'Al jugar',
+      modeQuiet: 'Siempre en calma',
       modes: { off: 'Desactivado', auto: 'Automático', on: 'Siempre' },
       modesQuiet: { off: 'Desactivado', on: 'Activado' },
       autoHint:
@@ -58,15 +61,16 @@ export const tGame = defineBundle(
       volume: 'Volumen',
       volumeValue: (percent: number) => `${percent} %`,
       test: 'Probar tono',
-      muteNote: 'Con «Silencio» activado, este tono tampoco suena.',
+      muteNote: 'Con «Calma» activado, este tono tampoco suena.',
     },
     fr: {
-      title: 'Mode jeu',
+      title: 'Calme',
       description:
         'Pendant que vous jouez, le rappel arrive discrètement : sans le son de Windows, avec un court signal léger de l’app.',
       descriptionQuiet:
         'Les rappels arrivent sans son ni vibration tant que l’interrupteur est activé. Vous pouvez le désactiver à tout moment.',
-      mode: 'Mode jeu',
+      mode: 'Pendant les jeux',
+      modeQuiet: 'Toujours au calme',
       modes: { off: 'Désactivé', auto: 'Automatique', on: 'Toujours' },
       modesQuiet: { off: 'Désactivé', on: 'Activé' },
       autoHint:
@@ -76,15 +80,16 @@ export const tGame = defineBundle(
       volume: 'Volume',
       volumeValue: (percent: number) => `${percent} %`,
       test: 'Tester le son',
-      muteNote: 'Quand « Muet » est activé, ce son reste coupé aussi.',
+      muteNote: 'Quand « Calme » est activé, ce son reste coupé aussi.',
     },
     'pt-BR': {
-      title: 'Modo jogo',
+      title: 'Calma',
       description:
         'Enquanto você joga, o lembrete chega em silêncio: sem o som do Windows, com um tom curto e leve do app.',
       descriptionQuiet:
         'Os lembretes chegam sem som nem vibração enquanto a chave estiver ligada. Você pode desligá-la quando quiser.',
-      mode: 'Modo jogo',
+      mode: 'Ao jogar',
+      modeQuiet: 'Sempre em calma',
       modes: { off: 'Desligado', auto: 'Automático', on: 'Sempre' },
       modesQuiet: { off: 'Desligado', on: 'Ligado' },
       autoHint:
@@ -94,7 +99,7 @@ export const tGame = defineBundle(
       volume: 'Volume',
       volumeValue: (percent: number) => `${percent}%`,
       test: 'Testar tom',
-      muteNote: 'Com “Silenciar” ligado, este tom também fica desligado.',
+      muteNote: 'Com “Calma” ligado, este tom também fica desligado.',
     },
   },
 );
