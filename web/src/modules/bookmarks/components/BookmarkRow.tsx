@@ -9,10 +9,13 @@ import { hostOf } from '../logic';
 import { itemRepo } from '../repo';
 import type { BookmarkItem } from '../schema';
 
-/** The "⋯" entries of one saved item: edit, copy the link, filter by one of its tags, duplicate, delete. */
+/**
+ * The "⋯" entries of one saved item: edit, copy the link, filter by one of its tags (only where
+ * the page has a tag filter: `filterTag`), duplicate, delete.
+ */
 export function bookmarkMenu(
   item: Stored<BookmarkItem>,
-  on: { edit: (item: Stored<BookmarkItem>) => void; filterTag: (tag: string) => void },
+  on: { edit: (item: Stored<BookmarkItem>) => void; filterTag?: (tag: string) => void },
 ): RowMenuItem[] {
   return [
     { id: 'edit', label: t.actions.edit, onSelect: () => on.edit(item) },
@@ -28,12 +31,14 @@ export function bookmarkMenu(
           },
         ]
       : []),
-    ...item.tags.map((tag) => ({
-      id: `tag-${tag}`,
-      group: t.bookmarks.filterTags,
-      label: tag,
-      onSelect: () => on.filterTag(tag),
-    })),
+    ...(on.filterTag
+      ? item.tags.map((tag) => ({
+          id: `tag-${tag}`,
+          group: t.bookmarks.filterTags,
+          label: tag,
+          onSelect: () => on.filterTag!(tag),
+        }))
+      : []),
     {
       id: 'duplicate',
       label: t.actions.duplicate,
