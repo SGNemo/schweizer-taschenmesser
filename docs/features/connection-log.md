@@ -39,5 +39,8 @@ No `<img>/<script>/<link>` to foreign hosts, no beacon/XHR/WebSocket/EventSource
 - **Rules touched:** none weakened. Diagnostics negative list gains `net.log`. No change in `core/sync/**` logic; only the platform fetch is wrapped (the sync adapter keeps using `getPlatform().fetch`).
 - **Probe fix:** Ollama detection only after a click ("Nach lokaler KI suchen") and mentioned in the legal text.
 
-## Open
-See questions in the phase-1 report (persisted vs session-only, probe, block scope).
+## Decided (Sven, phase 1)
+- Log: session memory by default, optional "Protokoll auf dem Gerät behalten".
+- Ollama probe: only after a click.
+- Netzwerk sperren: all outgoing requests incl. localhost, Rust parts blocked where possible, otherwise shown as "nicht erfasst".
+- Partner share: file/QR + pairing code, packages P1–P4 (see partner-share.md).
