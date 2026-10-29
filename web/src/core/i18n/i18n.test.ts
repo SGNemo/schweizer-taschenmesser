@@ -159,3 +159,14 @@ describe('bundles', () => {
     expect(b.get().n(2)).toBe('2 entries');
   });
 });
+
+describe('quotation marks', () => {
+  it('follow the UI language', async () => {
+    const { quoted } = await import('./format');
+    expect(quoted('x', 'de')).toBe('„x“');
+    expect(quoted('x', 'en')).toBe('“x”');
+    expect(quoted('x', 'es')).toBe('«x»');
+    expect(quoted('x', 'fr')).toBe('«\u00a0x\u00a0»');
+    expect(quoted('x', 'pt-BR')).toBe('“x”');
+  });
+});

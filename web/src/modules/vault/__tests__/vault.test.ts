@@ -219,3 +219,20 @@ describe('vault module', () => {
     expect((await prefs()).remindDaysBeforeDeadline).toBe(5);
   });
 });
+
+describe('start data: papers', () => {
+  it('offers ready-made papers with a category each, no dates, deduped by title', async () => {
+    const { default: runtime } = await import('../importer');
+    const { PAPER_TEMPLATES } = await import('../logic');
+    const res = await runtime.parse('papers', { kind: 'template', ids: [...PAPER_TEMPLATES] }, {
+      today: '2026-10-29',
+      batchId: 'b1',
+    } as never);
+    expect(res.candidates).toHaveLength(PAPER_TEMPLATES.length);
+    for (const c of res.candidates) {
+      expect(() => documentSchema.parse(c.data)).not.toThrow();
+      expect(c.data).not.toHaveProperty('expiresOn');
+    }
+    expect(new Set(res.candidates.map((c) => c.dedupeKey)).size).toBe(PAPER_TEMPLATES.length);
+  });
+});

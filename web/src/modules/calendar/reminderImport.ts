@@ -1,4 +1,4 @@
-import { addDaysStr, isoWeekday, pad2 } from '@/core/time/dates';
+import { addDaysStr, formatDay, isoWeekday, pad2 } from '@/core/time/dates';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import type { Recurrence } from '@/core/recurrence/types';
 import { parseLines } from '@/core/io/textLines';
@@ -131,7 +131,7 @@ export function parseReminders(input: ImportInput, ctx: { today: string }): Impo
         collection: 'event',
         data: eventData(tpl.title, startDate, tpl.time, tpl.recurrence),
         label: tpl.title,
-        detail: `${describeRecurrence(tpl.recurrence)} · ab ${startDate}, ${tpl.time} Uhr`,
+        detail: `${describeRecurrence(tpl.recurrence)} · ${t.time.startsFrom(formatDay(startDate, 'd. MMM yyyy'), tpl.time)}`,
         dedupeKey: reminderKey(tpl.title),
       });
     }

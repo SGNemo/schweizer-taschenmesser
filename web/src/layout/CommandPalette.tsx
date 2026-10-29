@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { useAiOn } from '@/core/ai/switch';
+import { quoted } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
 import { getPlatform } from '@/core/platform';
 import { useWriteLabel } from '@/core/shell/writeAvailable';
@@ -525,7 +526,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
             >
               <Icon name={o.icon} />
               <span className={styles.optionText}>
-                {o.kind === 'ask' ? `${o.label}: „${query.trim()}“` : o.label}
+                {o.kind === 'ask' ? `${o.label}: ${quoted(query.trim())}` : o.label}
                 {o.kind === 'setting' ? (
                   <span className={styles.optionMeta}>{o.hit.path}</span>
                 ) : null}

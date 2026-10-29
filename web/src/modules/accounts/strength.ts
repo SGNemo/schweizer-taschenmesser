@@ -3,16 +3,52 @@
  * dictionaries are large, so everything is loaded on first use in a separate chunk.
  */
 import type { ZxcvbnResult } from '@zxcvbn-ts/core';
+import { numberFormat } from '@/core/i18n/format';
+import { t } from '@/strings';
 
 export type Score = 0 | 1 | 2 | 3 | 4;
 
 export interface Strength {
+  /** Pattern score (zxcvbn), lowered to what the shown crack time supports so label and time never contradict. */
   score: Score;
   /** Estimated guesses (log10), for display and tests. */
   guessesLog10: number;
-  /** Crack time of an offline attack with a fast hash, in words. */
-  crackTime: string;
+  /** Crack time of an offline attack with a fast hash, in seconds. */
+  crackSeconds: number;
+  /** Key of the zxcvbn warning (`straightRow`, `common`, …) or empty; the text lives in the catalogs. */
   warning: string;
+}
+
+const UNITS: [number, Intl.NumberFormatOptions['unit']][] = [
+  [365 * 86400, 'year'],
+  [30 * 86400, 'month'],
+  [86400, 'day'],
+  [3600, 'hour'],
+  [60, 'minute'],
+  [1, 'second'],
+];
+
+/** "3 hours" / "2 Jahre" in the format locale; very short and very long times are words from the catalog. */
+export function formatCrackTime(seconds: number): string {
+  const s = t.accounts.strength;
+  if (seconds < 1) return s.lessThanSecond;
+  if (seconds >= 100 * 365 * 86400) return s.centuries;
+  const [size, unit] = UNITS.find(([n]) => seconds >= n)!;
+  return numberFormat({
+    style: 'unit',
+    unit,
+    unitDisplay: 'long',
+    maximumFractionDigits: 0,
+  }).format(Math.floor(seconds / size));
+}
+
+/** Strength level the shown crack time supports (offline attack, fast hash). */
+export function scoreOfSeconds(seconds: number): Score {
+  if (seconds < 1) return 0;
+  if (seconds < 3600) return 1;
+  if (seconds < 30 * 86400) return 2;
+  if (seconds < 100 * 365 * 86400) return 3;
+  return 4;
 }
 
 /** zxcvbn is quadratic-ish in the input length; a bounded prefix is enough to judge a password. */
@@ -28,8 +64,16 @@ async function load() {
       import('@zxcvbn-ts/language-en'),
       import('@zxcvbn-ts/language-de'),
     ]);
+    // The texts live in our catalogs (five languages): the library only reports which warning applies.
+    const keyed = (group: Record<string, string>) =>
+      Object.fromEntries(Object.keys(group).map((k) => [k, k]));
+    const translations = {
+      ...en.translations,
+      warnings: keyed(en.translations.warnings) as typeof en.translations.warnings,
+      suggestions: keyed(en.translations.suggestions) as typeof en.translations.suggestions,
+    };
     return new core.ZxcvbnFactory({
-      translations: de.translations,
+      translations,
       graphs: common.adjacencyGraphs,
       dictionary: { ...common.dictionary, ...en.dictionary, ...de.dictionary },
     });
@@ -41,10 +85,12 @@ export async function measureStrength(
   userInputs: string[] = [],
 ): Promise<Strength> {
   const result = (await load()).check(password.slice(0, MAX_LENGTH), userInputs);
+  // zxcvbn's "offline, fast hash" scenario: 10^10 guesses per second.
+  const crackSeconds = result.guesses / 1e10;
   return {
-    score: result.score,
+    score: Math.min(result.score, scoreOfSeconds(crackSeconds)) as Score,
     guessesLog10: result.guessesLog10,
-    crackTime: result.crackTimes.offlineFastHashingXPerSecond.display,
+    crackSeconds,
     warning: result.feedback.warning ?? '',
   };
 }

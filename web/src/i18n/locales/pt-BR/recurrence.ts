@@ -14,6 +14,7 @@ export const recurrence: Strings['recurrence'] = {
   yearsUnit: 'anos',
   weekdays: 'Dias da semana',
   monthDay: 'Dia do mês',
+  dayNumber: (d: number) => String(d),
   lastDay: 'Último dia',
   ends: 'Término',
   endsNever: 'Nunca',
