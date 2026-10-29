@@ -133,18 +133,28 @@ export async function sendCommand(
 
 const playlistsSchema = z.object({
   items: z.array(z.object({ id: z.string(), name: z.string() }).nullable()),
+  next: z.string().nullish(),
 });
+/** Pages of 50; four pages (200 playlists) are enough for a picker and keep the request count small. */
+const MAX_PLAYLIST_PAGES = 4;
+const API_ORIGIN = 'https://api.spotify.com/';
 /** Playlist ids are plain base-62; anything else never reaches a URI. */
 const PLAYLIST_ID = /^[A-Za-z0-9]{1,40}$/;
 
-/** The first 50 playlists the user owns or follows (`playlist-read-private`). */
+/** The user's playlists (`playlist-read-private`), up to 200, following Spotify's own `next` links. */
 export async function listPlaylists(ctx: ConnectorContext): Promise<Playlist[]> {
-  const { json } = await call(ctx, 'GET', 'https://api.spotify.com/v1/me/playlists?limit=50');
-  const parsed = playlistsSchema.safeParse(json);
-  if (!parsed.success) return [];
-  return parsed.data.items
-    .filter((p): p is { id: string; name: string } => p !== null && PLAYLIST_ID.test(p.id))
-    .map((p) => ({ id: p.id, name: clip(p.name) }));
+  const out: Playlist[] = [];
+  let url: string | null | undefined = `${API_ORIGIN}v1/me/playlists?limit=50`;
+  for (let page = 0; url && page < MAX_PLAYLIST_PAGES; page += 1) {
+    const { json } = await call(ctx, 'GET', url);
+    const parsed = playlistsSchema.safeParse(json);
+    if (!parsed.success) break;
+    for (const p of parsed.data.items)
+      if (p !== null && PLAYLIST_ID.test(p.id)) out.push({ id: p.id, name: clip(p.name) });
+    // Only follow a link that stays on the API host, never one the response made up.
+    url = parsed.data.next?.startsWith(API_ORIGIN) ? parsed.data.next : undefined;
+  }
+  return out;
 }
 
 export async function startPlaylist(ctx: ConnectorContext, id: string): Promise<void> {

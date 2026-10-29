@@ -12,7 +12,7 @@ One calm line on the Overview under the weather: `Läuft gerade: Titel – Inter
 
 ## Music in the focus round (package 2)
 Off by default, device-local (`tm-spotify-focus`: mode, playlist id, end switch – no names). Settings → Fokus & Aufmerksamkeit → Weitere Einstellungen → one folded line "Musik in der Fokus-Runde: Aus", **only visible while Spotify is connected with "Steuern" and Premium has not been ruled out**.
-- **Beim Start weiterspielen:** `play` without body (resumes, starts nothing new). **Playlist starten:** pick from your own playlists (`GET /me/playlists`, scope `playlist-read-private` = opt-in feature "Playlists", not ticked by default; the list is read when the row is opened, kept in memory, only the id is stored), start = `PUT /me/player/play {context_uri}`. **Am Ende pausieren** (switch, default on).
+- **Beim Start weiterspielen:** `play` without body (resumes, starts nothing new). **Playlist starten:** pick from your own playlists (`GET /me/playlists`, up to 4 pages of 50 via the `next` links, scope `playlist-read-private` = opt-in feature "Playlists", not ticked by default; the list is read when the row is opened, kept in memory, only the id is stored), start = `PUT /me/player/play {context_uri}`. **Am Ende pausieren** (switch, default on).
 - `core/focus/music.ts` is the only code that steers the player in a round: `onFocusStart` (from `beginFocus`) and `onFocusEnd` (time up in `FocusWatcher`, "Fertig", "Runde beenden"; once per round). Never in between (pinned by `music.test.ts`).
 - Failure never disturbs the round: no toast, only the line "Musik: nicht erreichbar" on the focus screen (`focus-music-status`). A 403 `PREMIUM_REQUIRED` hides the row for a day (same flag as the Overview line).
 
