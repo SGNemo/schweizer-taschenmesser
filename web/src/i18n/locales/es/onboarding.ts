@@ -66,6 +66,7 @@ export const onboarding: Strings['onboarding'] = {
         ? 'Se omitió 1 factura sin importe reconocible.'
         : `Se omitieron ${n} facturas sin importe reconocible.`,
     noEnd: 'Fin del contrato no detectado',
+    endsOn: (date: string) => `Termina el ${date}`,
     notice: (days: number) => `Plazo de cancelación: ${days} ${days === 1 ? 'día' : 'días'}`,
   },
   ics: {
@@ -276,6 +277,56 @@ export const onboarding: Strings['onboarding'] = {
         'Forfait',
         'Bálsamo labial',
       ],
+    },
+    familyTrip: {
+      name: 'Vacaciones con niños',
+      note: 'Para viajes con niños pequeños',
+      items: [
+        'DNI o pasaportes de los niños',
+        'Peluche favorito',
+        'Pañales y toallitas',
+        'Snacks para el camino',
+        'Ropa de cambio para los niños',
+        'Crema solar infantil',
+        'Botiquín infantil',
+        'Juguetes y libros',
+        'Cochecito o mochila portabebés',
+        'Cartilla de vacunación',
+      ],
+    },
+    school: {
+      name: 'Mochila del colegio',
+      note: 'Repasarla un momento cada noche',
+      items: [
+        'Estuche',
+        'Cuadernos y libros',
+        'Horario de clases',
+        'Agenda de deberes',
+        'Botella de agua',
+        'Almuerzo',
+        'Bolsa de deporte',
+        'Comunicados para los padres',
+      ],
+    },
+  },
+  papers: {
+    label: 'Papeles importantes',
+    hint: 'Documentos que conviene encontrar rápido',
+    templatesHint:
+      'Añade la fecha de caducidad más tarde: así aparecerá el plazo en «Plazos y vencimientos».',
+    kind: 'Papeles',
+    items: {
+      passport: { name: 'Pasaporte', category: 'identity' },
+      idCard: { name: 'Documento de identidad', category: 'identity' },
+      license: { name: 'Permiso de conducir', category: 'identity' },
+      vehicleInspection: {
+        name: 'Permiso de circulación e informe de inspección',
+        category: 'other',
+      },
+      healthCard: { name: 'Tarjeta del seguro médico', category: 'health' },
+      vaccination: { name: 'Cartilla de vacunación', category: 'health' },
+      rental: { name: 'Contrato de alquiler', category: 'contract' },
+      policies: { name: 'Pólizas de seguro', category: 'insurance' },
     },
   },
 };

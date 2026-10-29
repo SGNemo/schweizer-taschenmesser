@@ -66,6 +66,7 @@ export const onboarding: Strings['onboarding'] = {
         ? `${n} fatura sem valor reconhecível foi ignorada.`
         : `${n} faturas sem valor reconhecível foram ignoradas.`,
     noEnd: 'Fim do contrato não reconhecido',
+    endsOn: (date: string) => `Termina em ${date}`,
     notice: (days: number) => `Prazo de cancelamento de ${days} ${days <= 1 ? 'dia' : 'dias'}`,
   },
   ics: {
@@ -292,6 +293,53 @@ export const onboarding: Strings['onboarding'] = {
         'Passe de esqui',
         'Protetor labial',
       ],
+    },
+    familyTrip: {
+      name: 'Férias com crianças',
+      note: 'Para viagens com crianças pequenas',
+      items: [
+        'Documentos ou passaportes das crianças',
+        'Bichinho de pelúcia favorito',
+        'Fraldas e lenços umedecidos',
+        'Lanches para o caminho',
+        'Troca de roupa para as crianças',
+        'Protetor solar infantil',
+        'Kit de primeiros socorros infantil',
+        'Brinquedos e livros',
+        'Carrinho ou canguru',
+        'Caderneta de vacinação',
+      ],
+    },
+    school: {
+      name: 'Mochila da escola',
+      note: 'Conferir rapidinho toda noite',
+      items: [
+        'Estojo',
+        'Cadernos e livros',
+        'Horário de aulas',
+        'Agenda de lição de casa',
+        'Garrafinha de água',
+        'Lanche do recreio',
+        'Roupa de educação física',
+        'Bilhetes para os pais',
+      ],
+    },
+  },
+  papers: {
+    label: 'Documentos importantes',
+    hint: 'Papéis que você quer achar rápido',
+    templatesHint:
+      'Inclua a data de validade depois: o prazo aparece então em “Prazos e vencimentos”.',
+    kind: 'Documentos',
+    items: {
+      passport: { name: 'Passaporte', category: 'identity' },
+      idCard: { name: 'Documento de identidade', category: 'identity' },
+      license: { name: 'Carteira de motorista', category: 'identity' },
+      vehicleInspection: { name: 'Documento do veículo e laudo de vistoria', category: 'other' },
+      healthCard: { name: 'Carteirinha do plano de saúde', category: 'health' },
+      vaccination: { name: 'Caderneta de vacinação', category: 'health' },
+      rental: { name: 'Contrato de aluguel', category: 'contract' },
+      policies: { name: 'Apólices de seguro', category: 'insurance' },
     },
   },
 };

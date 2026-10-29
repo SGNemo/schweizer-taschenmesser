@@ -1,5 +1,5 @@
 import { formatMoney } from '@/core/money';
-import { formatDay, relativeDayLabel } from '@/core/time/dates';
+import { daysBetween, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields, CaptureNote, CaptureRecurrence, CaptureType } from '../parser';
 
@@ -65,7 +65,8 @@ export function describeRecurrence(r: CaptureRecurrence): string {
 /** "Heute", "Morgen" or a short date, with the calendar date appended for the two relative words. */
 export function describeDate(date: string, today: string): string {
   const label = relativeDayLabel(date, today);
-  return label === 'Heute' || label === 'Morgen' ? `${label}, ${formatDay(date, 'd. MMM')}` : label;
+  const diff = daysBetween(today, date);
+  return diff === 0 || diff === 1 ? `${label}, ${formatDay(date, 'd. MMM')}` : label;
 }
 
 const usesDate = (type: CaptureType) =>
@@ -93,7 +94,7 @@ export function previewChips(
     chips.push({ id: 'date', label: describeDate(fields.date, today) });
   if (fields.time && usesTime(type)) {
     const range = fields.endTime ? `${fields.time}–${fields.endTime}` : fields.time;
-    chips.push({ id: 'time', label: `${range} Uhr` });
+    chips.push({ id: 'time', label: t.time.atClock(range) });
   }
   if (type === 'todo' && fields.priority) {
     const c = t.quickCapture.chip;

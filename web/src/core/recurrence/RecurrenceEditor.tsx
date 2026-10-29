@@ -97,7 +97,7 @@ export function RecurrenceEditor({ value, onChange, startDate, required }: Props
                 >
                   {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                     <option key={d} value={d}>
-                      {d}.
+                      {t.recurrence.dayNumber(d)}
                     </option>
                   ))}
                   <option value="-1">{t.recurrence.lastDay}</option>

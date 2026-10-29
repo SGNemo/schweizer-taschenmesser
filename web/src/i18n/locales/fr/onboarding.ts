@@ -70,6 +70,7 @@ export const onboarding: Strings['onboarding'] = {
         ? `${n} facture sans montant reconnaissable a été ignorée.`
         : `${n} factures sans montant reconnaissable ont été ignorées.`,
     noEnd: 'Fin de contrat non reconnue',
+    endsOn: (date: string) => `Fin le ${date}`,
     notice: (days: number) => `Délai de résiliation ${days} ${days <= 1 ? 'jour' : 'jours'}`,
   },
   ics: {
@@ -300,6 +301,56 @@ export const onboarding: Strings['onboarding'] = {
         'Forfait de ski',
         'Baume à lèvres',
       ],
+    },
+    familyTrip: {
+      name: 'Vacances avec enfants',
+      note: 'Pour voyager avec de jeunes enfants',
+      items: [
+        'Pièces d’identité ou passeports des enfants',
+        'Doudou préféré',
+        'Couches et lingettes',
+        'Goûters pour la route',
+        'Vêtements de rechange pour les enfants',
+        'Crème solaire pour enfants',
+        'Pharmacie pour enfants',
+        'Jouets et livres',
+        'Poussette ou porte-bébé',
+        'Carnet de vaccination',
+      ],
+    },
+    school: {
+      name: 'Cartable',
+      note: 'Un coup d’œil rapide chaque soir',
+      items: [
+        'Trousse',
+        'Cahiers et livres',
+        'Emploi du temps',
+        'Cahier de textes',
+        'Gourde',
+        'Goûter',
+        'Sac de sport',
+        'Mots pour les parents',
+      ],
+    },
+  },
+  papers: {
+    label: 'Papiers importants',
+    hint: 'Documents à retrouver vite',
+    templatesHint:
+      'Ajoutez la date d’expiration plus tard : l’échéance apparaîtra alors sous « Échéances et expirations ».',
+    kind: 'Papiers',
+    items: {
+      passport: { name: 'Passeport', category: 'identity' },
+      idCard: { name: 'Carte d’identité', category: 'identity' },
+      license: { name: 'Permis de conduire', category: 'identity' },
+      vehicleInspection: {
+        name: 'Carte grise et rapport de contrôle technique',
+        category: 'other',
+      },
+      healthCard: { name: 'Carte d’assurance maladie', category: 'health' },
+      vaccination: { name: 'Carnet de vaccination', category: 'health' },
+      rental: { name: 'Contrat de location', category: 'contract' },
+      policies: { name: 'Contrats d’assurance', category: 'insurance' },
     },
   },
 };

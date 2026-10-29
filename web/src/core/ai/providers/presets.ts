@@ -4,6 +4,8 @@
  * none of these values is authoritative.
  */
 
+import { t } from '@/strings';
+
 export type ProviderKind = 'anthropic' | 'ollama' | 'openai-compatible';
 export type Tier = 'local' | 'free' | 'paid';
 export type PresetId =
@@ -141,7 +143,9 @@ export const PRESETS: readonly Preset[] = [
   },
   {
     id: 'custom',
-    label: 'Eigener Anbieter (OpenAI-kompatibel)',
+    get label() {
+      return t.ai.providerCustom;
+    },
     kind: 'openai-compatible',
     baseUrl: '',
     model: '',

@@ -146,8 +146,9 @@ function Fields({
       ) : null}
       <TextField
         label={t.accounts.fields.url}
-        type="url"
+        // Plain text: "service.berlin.de" is a fine address; the browser's own URL check would reject it.
         inputMode="url"
+        autoCapitalize="none"
         autoComplete="off"
         value={url}
         onChange={(e) => setUrl(e.target.value)}

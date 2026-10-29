@@ -21,7 +21,11 @@
   flex: 1;
   min-width: 10rem;
   font-size: var(--text-lg);
-  text-transform: capitalize;
+}
+/* First letter only: "octubre de 2026" must not become "Octubre De 2026". */
+
+.title::first-letter {
+  text-transform: uppercase;
 }
 
 /* Month grid */
