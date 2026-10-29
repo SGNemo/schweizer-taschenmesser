@@ -26,7 +26,7 @@ export const backup: Strings['backup'] = {
   encryptedExport: 'Export encrypted',
   encryptedExported: 'Encrypted backup downloaded.',
   exportHint:
-    'Recommended: export encrypted (Argon2id, AES-256). The normal backup holds all entries in plain text.',
+    'Recommended: back up with a password. The file is then encrypted and a change is noticed. Without a password, all entries are readable in the file.',
   exportPassphrase: 'Password for the backup',
   exportPassphraseHint:
     'At least 8 characters. Without this password the backup can’t be opened – there is no reset.',
@@ -67,7 +67,13 @@ export const backup: Strings['backup'] = {
     `Total: ${added} added, ${replaced} replaced, ${removed} deleted.`,
   previewNothing: 'Nothing changes.',
   safetyNote:
-    'First, the app automatically makes a safety copy of your current data. If anything goes wrong, everything stays as it was.',
+    'First, the app saves a safety copy of your current data. In the browser it arrives as a download in your Downloads folder (encrypted with the password if you entered one); in the app it goes into the data folder. If anything goes wrong, everything stays as it was.',
+  plainHint:
+    'Without a password: a readable file. The checksum catches damage and accidental edits, but not deliberate ones.',
+  filesNote:
+    'Not in the backup: document files (files in Documents). They stay on this device only.',
+  noChecksum:
+    'This file has no checksum (older version). There is no way to tell whether it was changed.',
   restoring: 'Restoring …',
   autoTitle: 'Automatic backups',
   autoIntro:
@@ -100,7 +106,7 @@ export const backup: Strings['backup'] = {
     invalid: 'The backup file is damaged.',
     'passphrase-required': 'This backup is encrypted. Enter the password.',
     'wrong-passphrase': 'Wrong password – or the file was changed.',
-    'checksum-mismatch': 'The checksum doesn’t match: the file is damaged or incomplete.',
+    'checksum-mismatch': 'The checksum doesn’t match: the file is damaged, incomplete or was changed.',
     'restore-failed': 'The trial restore failed.',
     'count-mismatch': 'Entries are missing after the trial restore.',
     'safety-failed': 'The safety copy couldn’t be created. Nothing was changed.',

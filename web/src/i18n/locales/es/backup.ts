@@ -29,7 +29,7 @@ export const backup: Strings['backup'] = {
   encryptedExport: 'Exportar cifrada',
   encryptedExported: 'Copia de seguridad cifrada descargada.',
   exportHint:
-    'Recomendado: exportar cifrada (Argon2id, AES-256). La copia normal contiene todas las entradas sin cifrar.',
+    'Recomendado: guardar con contraseña. Así el archivo queda cifrado y se nota cualquier cambio. Sin contraseña, todas las entradas se pueden leer en el archivo.',
   exportPassphrase: 'Contraseña de la copia',
   exportPassphraseHint:
     'Mínimo 8 caracteres. Sin esta contraseña no se puede abrir la copia y no hay forma de restablecerla.',
@@ -70,7 +70,13 @@ export const backup: Strings['backup'] = {
     `Total: ${added} se añaden, ${replaced} se reemplazan, ${removed} se eliminan.`,
   previewNothing: 'No cambia nada.',
   safetyNote:
-    'Antes, la app crea automáticamente una copia de seguridad de tus datos actuales. Si algo falla, todo queda como estaba.',
+    'Antes, la app guarda una copia de seguridad de tus datos actuales. En el navegador llega como descarga a tu carpeta de Descargas (cifrada con la contraseña si pusiste una); en la app va a la carpeta de datos. Si algo falla, todo queda como estaba.',
+  plainHint:
+    'Sin contraseña: archivo legible. La suma de comprobación detecta daños y cambios accidentales, pero no los deliberados.',
+  filesNote:
+    'No incluido en la copia: archivos de documentos (archivos de Documentos). Se quedan solo en este dispositivo.',
+  noChecksum:
+    'Este archivo no tiene suma de comprobación (versión anterior). No se puede saber si fue modificado.',
   restoring: 'Restaurando …',
   autoTitle: 'Copias automáticas',
   autoIntro:
@@ -104,7 +110,7 @@ export const backup: Strings['backup'] = {
     'passphrase-required': 'Esta copia está cifrada. Introduce la contraseña.',
     'wrong-passphrase': 'Contraseña incorrecta, o el archivo se ha modificado.',
     'checksum-mismatch':
-      'La suma de comprobación no coincide: el archivo está dañado o incompleto.',
+      'La suma de comprobación no coincide: el archivo está dañado, incompleto o fue modificado.',
     'restore-failed': 'La restauración de prueba falló.',
     'count-mismatch': 'Faltan entradas tras la restauración de prueba.',
     'safety-failed': 'No se pudo crear la copia de seguridad previa. No se ha cambiado nada.',

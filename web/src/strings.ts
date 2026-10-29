@@ -2402,7 +2402,7 @@ export const de = {
     encryptedExport: 'Verschlüsselt exportieren',
     encryptedExported: 'Verschlüsseltes Backup heruntergeladen.',
     exportHint:
-      'Empfohlen: verschlüsselt exportieren (Argon2id, AES-256). Das normale Backup enthält alle Einträge im Klartext.',
+      'Empfohlen: mit Passwort sichern. Dann ist die Datei verschlüsselt und eine Änderung fällt auf. Ohne Passwort liegen alle Einträge lesbar in der Datei.',
     exportPassphrase: 'Passwort für das Backup',
     exportPassphraseHint:
       'Mindestens 8 Zeichen. Ohne dieses Passwort lässt sich das Backup nicht öffnen – es gibt keine Rücksetzung.',
@@ -2441,7 +2441,13 @@ export const de = {
       `Gesamt: ${added} kommen dazu, ${replaced} werden ersetzt, ${removed} werden gelöscht.`,
     previewNothing: 'Es ändert sich nichts.',
     safetyNote:
-      'Vorher legt die App automatisch eine Sicherheitskopie deiner aktuellen Daten an. Bricht etwas ab, bleibt alles unverändert.',
+      'Vorher speichert die App eine Sicherheitskopie deiner aktuellen Daten. Im Browser kommt sie als Download in deinen Downloads-Ordner (mit Passwort verschlüsselt, wenn du eins eingegeben hast), in der App liegt sie im Datenordner. Bricht etwas ab, bleibt alles unverändert.',
+    plainHint:
+      'Ohne Passwort: lesbare Datei. Die Prüfsumme erkennt Beschädigung und versehentliche Änderungen, aber keine absichtlichen.',
+    filesNote:
+      'Nicht im Backup: Dokumentdateien (Dateien bei Unterlagen). Sie bleiben nur auf diesem Gerät.',
+    noChecksum:
+      'Diese Datei hat keine Prüfsumme (ältere Version). Ob sie verändert wurde, lässt sich nicht erkennen.',
     restoring: 'Stelle wieder her …',
     autoTitle: 'Automatische Backups',
     autoIntro:
@@ -2476,7 +2482,7 @@ export const de = {
       'passphrase-required': 'Dieses Backup ist verschlüsselt. Gib das Passwort ein.',
       'wrong-passphrase': 'Falsches Passwort – oder die Datei wurde verändert.',
       'checksum-mismatch':
-        'Die Prüfsumme stimmt nicht: Die Datei ist beschädigt oder unvollständig.',
+        'Die Prüfsumme stimmt nicht: Die Datei ist beschädigt, unvollständig oder wurde verändert.',
       'restore-failed': 'Die Probe-Wiederherstellung ist fehlgeschlagen.',
       'count-mismatch': 'Nach der Probe-Wiederherstellung fehlen Einträge.',
       'safety-failed':

@@ -2,7 +2,6 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import {
   backupFileName,
   createBackup,
-  serializeBackup,
   type Backup,
   type ImportMode,
 } from '@/core/backup/backup';
@@ -13,6 +12,7 @@ import {
   encryptedBackupFileName,
   readBackupText,
   serializeEncryptedBackup,
+  serializeSealedBackup,
 } from '@/core/backup/encrypted';
 import { planRestore, restoreBackup, type RestorePlan } from '@/core/backup/restore';
 import { SafetyBackupError, createSafetyBackup } from '@/core/backup/safety';
@@ -46,7 +46,7 @@ export function BackupSection() {
   const [busy, setBusy] = useState(false);
 
   async function exportPlain() {
-    const result = await downloadTextFile(backupFileName(), serializeBackup(await createBackup()));
+    const result = await downloadTextFile(backupFileName(), await serializeSealedBackup(await createBackup()));
     if (result === 'saved') toast(t.backup.exported);
   }
 
@@ -153,6 +153,7 @@ export function BackupSection() {
         <div className={styles.form}>
           <p>{t.backup.intro}</p>
           <p className={styles.muted}>{t.backup.exportHint}</p>
+          <p className={styles.muted}>{t.backup.filesNote}</p>
           <TextField
             label={t.backup.exportPassphrase}
             hint={t.backup.exportPassphraseHint}
@@ -172,6 +173,7 @@ export function BackupSection() {
             </Button>
             <Button onClick={() => void exportPlain()}>{t.backup.export}</Button>
           </div>
+          <p className={styles.muted}>{t.backup.plainHint}</p>
 
           <div>
             <label htmlFor="backup-file" className={styles.legend}>
