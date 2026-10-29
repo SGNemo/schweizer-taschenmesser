@@ -9,7 +9,7 @@ Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter (Tipp öffnet Vorschau: 12 h + 7 Tage, PR `feat/weather-forecast`), Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter (Detail-Vorschau), Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
 

@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import type { Forecast } from './api';
-import { codeGroup, dayRows, hasPreview, hourRows, placeNowIso, rainFrom } from './logic';
+import {
+  bestWindow,
+  codeGroup,
+  dayRows,
+  hasPreview,
+  hourRows,
+  placeNowIso,
+  rainFrom,
+  rate,
+  rateDay,
+  rateHour,
+  rateNow,
+} from './logic';
 
 describe('codeGroup', () => {
   it('groups WMO codes into nine calm words', () => {
@@ -70,15 +82,16 @@ describe('preview rows', () => {
   }));
   const forecast: Forecast = { temp: 1, group: 'clear', hours, days };
 
-  it('hourRows: the next 12 hours from the current one, across midnight', () => {
+  it('hourRows: the next 24 hours from the current one, across midnight', () => {
     const rows = hourRows(forecast, '2026-10-19T21:40');
-    expect(rows).toHaveLength(12);
+    expect(rows).toHaveLength(24);
     expect(rows[0]!.time).toBe('2026-10-19T21:00');
-    expect(rows[11]!.time).toBe('2026-10-20T08:00');
+    expect(rows[23]!.time).toBe('2026-10-20T20:00');
   });
 
   it('hourRows: fewer rows when less is left, none without data', () => {
     expect(hourRows(forecast, '2026-10-20T20:00')).toHaveLength(4);
+    expect(hourRows(forecast, '2026-10-19T00:10')[0]!.time).toBe('2026-10-19T00:00');
     expect(hourRows({ temp: 1, group: 'clear' }, '2026-10-19T08:00')).toEqual([]);
   });
 
@@ -104,5 +117,54 @@ describe('preview rows', () => {
   it('placeNowIso: device clock for values without a time', () => {
     const at = new Date(2026, 9, 19, 8, 5).getTime();
     expect(placeNowIso({ temp: 1, group: 'clear' }, at, at)).toBe('2026-10-19T08:05');
+  });
+});
+
+describe('rating', () => {
+  const base = { group: 'clear' as const, rain: 0, temp: 18 };
+
+  it('nothing against it is good; one thing is so-so; two or more are unpleasant', () => {
+    expect(rate(base)).toBe('good');
+    expect(rate({ ...base, group: 'cloudy' })).toBe('good');
+    expect(rate({ ...base, temp: 6 })).toBe('fair'); // chilly
+    expect(rate({ ...base, temp: 30 })).toBe('fair'); // warm
+    expect(rate({ ...base, rain: 45 })).toBe('fair');
+    expect(rate({ ...base, group: 'drizzle' })).toBe('fair');
+    expect(rate({ ...base, wind: 38 })).toBe('fair');
+    expect(rate({ ...base, group: 'rain' })).toBe('poor');
+    expect(rate({ ...base, group: 'thunder' })).toBe('poor');
+    expect(rate({ ...base, rain: 80 })).toBe('poor');
+    expect(rate({ ...base, gust: 75 })).toBe('poor');
+    expect(rate({ ...base, temp: -8 })).toBe('poor');
+    expect(rate({ ...base, temp: 35 })).toBe('poor');
+    expect(rate({ ...base, temp: 5, rain: 50 })).toBe('poor'); // two small things add up
+  });
+
+  it('rates hours, days and now from their own numbers (felt temperature first)', () => {
+    const h = { time: '2026-10-19T12:00', temp: 12, group: 'clear' as const, rain: 0 };
+    expect(rateHour(h)).toBe('good');
+    expect(rateHour({ ...h, feels: 2 })).toBe('fair');
+    const d = { date: '2026-10-19', min: 1, max: 14, group: 'partly' as const, rain: 10 };
+    expect(rateDay(d)).toBe('good'); // a cold night does not spoil the day
+    expect(rateDay({ ...d, rain: 90 })).toBe('poor');
+    expect(rateDay({ ...d, feelsMax: 4 })).toBe('fair');
+    expect(rateNow({ temp: 20, group: 'clear' })).toBe('good');
+    expect(rateNow({ temp: 20, group: 'clear', now: { feels: 20, wind: 55 } })).toBe('poor');
+  });
+
+  it('bestWindow: the longest good stretch of two hours or more, else none', () => {
+    const mk = (flags: string) =>
+      [...flags].map((c, i) => ({
+        time: `2026-10-19T${String(i).padStart(2, '0')}:00`,
+        temp: 15,
+        group: (c === 'g' ? 'clear' : 'rain') as 'clear' | 'rain',
+        rain: 0,
+      }));
+    expect(bestWindow(mk('bbggbgggb'))).toEqual({ from: '05', to: '08' });
+    expect(bestWindow(mk('gbgbgb'))).toBeUndefined();
+    expect(bestWindow(mk('gg'))).toEqual({ from: '00', to: '02' });
+    expect(bestWindow([])).toBeUndefined();
+    // Night hours are not "the best time", however calm.
+    expect(bestWindow(mk('ggggg').map((h) => ({ ...h, night: true })))).toBeUndefined();
   });
 });

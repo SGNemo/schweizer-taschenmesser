@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { WeatherPreview } from './WeatherPreview';
+import { weatherIcon } from './weatherIcon';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { dismissHint, isHintDismissed } from '@/core/weather/hint';
 import { useWeatherSettings } from '@/core/weather/settings';
@@ -43,7 +44,7 @@ export function WeatherLine() {
           data-testid="weather-line"
           onClick={() => setOpen(true)}
         >
-          <Icon name="sun" size={16} />
+          <Icon name={weatherIcon(forecast.group, forecast.now?.night)} size={16} />
           <span>{parts.join(' · ')}</span>
         </button>
         <WeatherPreview open={open} onClose={() => setOpen(false)} weather={weather} />

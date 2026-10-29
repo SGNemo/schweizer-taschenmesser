@@ -97,9 +97,86 @@ describe('fetchForecast', () => {
       group: 'thunder',
       rain: 42,
     });
-    expect(out.hours).toHaveLength(12);
+    expect(out.hours).toHaveLength(12); // the answer holds 24 hours; from the current hour on 12 remain
     // A day with a missing value is left out rather than invented.
     expect(out.days).toEqual([{ date: '2026-10-19', min: 7, max: 16, group: 'rain', rain: 80 }]);
+  });
+
+  it('keeps the detail values rounded and leaves out what is missing', async () => {
+    const f = ok({
+      current: {
+        time: '2026-10-19T12:20',
+        temperature_2m: 13.6,
+        weather_code: 2,
+        apparent_temperature: 11.5,
+        relative_humidity_2m: 71.2,
+        wind_speed_10m: 14.4,
+        wind_gusts_10m: 33.9,
+        is_day: 1,
+      },
+      hourly: {
+        time: ['2026-10-19T12:00', '2026-10-19T22:00'],
+        temperature_2m: [13.6, 8],
+        weather_code: [2, 0],
+        precipitation_probability: [10, 0],
+        apparent_temperature: [11.5, null],
+        precipitation: [0.04, 1.26],
+        wind_speed_10m: [14.4, 6],
+        wind_gusts_10m: [33.9, null],
+        relative_humidity_2m: [71.2, 80],
+        uv_index: [2.34, 0],
+        is_day: [1, 0],
+      },
+      daily: {
+        time: ['2026-10-19'],
+        weather_code: [2],
+        temperature_2m_max: [15],
+        temperature_2m_min: [7],
+        precipitation_probability_max: [30],
+        apparent_temperature_max: [13.4],
+        apparent_temperature_min: [5.5],
+        precipitation_sum: [2.44],
+        wind_speed_10m_max: [22.2],
+        wind_gusts_10m_max: [48],
+        uv_index_max: [3.06],
+        sunrise: ['2026-10-19T07:32'],
+        sunset: ['2026-10-19T18:21'],
+        sunshine_duration: [19800],
+      },
+    });
+    const out = await fetchForecast(46.95, 7.45, f);
+    expect(out.now).toEqual({ feels: 12, hum: 71, wind: 14, gust: 34, night: false });
+    expect(out.hours![0]).toMatchObject({
+      feels: 12,
+      mm: 0,
+      wind: 14,
+      gust: 34,
+      hum: 71,
+      uv: 2.3,
+      night: false,
+    });
+    expect(out.hours![1]).toMatchObject({ feels: undefined, mm: 1.3, night: true });
+    expect(out.days![0]).toEqual({
+      date: '2026-10-19',
+      min: 7,
+      max: 15,
+      group: 'partly',
+      rain: 30,
+      feelsMin: 6,
+      feelsMax: 13,
+      mm: 2.4,
+      wind: 22,
+      gust: 48,
+      uv: 3.1,
+      sunrise: '07:32',
+      sunset: '18:21',
+      sunMin: 330,
+    });
+    const url = String((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0]);
+    expect(url).toContain('apparent_temperature');
+    expect(url).toContain('sunshine_duration');
+    expect(url).toContain('latitude=46.95');
+    expect(url).not.toMatch(/name=|query=/);
   });
 
   it('leaves hours and days out when the answer has none', async () => {
@@ -110,6 +187,7 @@ describe('fetchForecast', () => {
     );
     expect(out.hours).toBeUndefined();
     expect(out.days).toBeUndefined();
+    expect(out.now).toBeUndefined();
   });
 
   it('rejects an answer without current values', async () => {

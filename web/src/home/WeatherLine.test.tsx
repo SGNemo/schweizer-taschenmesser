@@ -15,11 +15,25 @@ const forecastBody = {
 };
 const dayDates = Array.from({ length: 7 }, (_, i) => `2026-10-${19 + i}`);
 const previewBody = {
-  current: forecastBody.current,
+  current: {
+    ...forecastBody.current,
+    apparent_temperature: 11.6,
+    relative_humidity_2m: 71,
+    wind_speed_10m: 14,
+    wind_gusts_10m: 34,
+    is_day: 1,
+  },
   hourly: {
     time: [...times, ...times.map((t) => t.replace('-19T', '-20T'))],
     temperature_2m: Array.from({ length: 48 }, (_, i) => 10 + (i % 5)),
     weather_code: Array.from({ length: 48 }, () => 3),
+    apparent_temperature: Array.from({ length: 48 }, (_, i) => 12 + (i % 5)),
+    precipitation: Array.from({ length: 48 }, (_, i) => (i === 15 ? 1.2 : 0)),
+    wind_speed_10m: Array.from({ length: 48 }, () => 12),
+    wind_gusts_10m: Array.from({ length: 48 }, () => 20),
+    relative_humidity_2m: Array.from({ length: 48 }, () => 70),
+    uv_index: Array.from({ length: 48 }, () => 0),
+    is_day: Array.from({ length: 48 }, (_, i) => (i % 24 >= 7 && i % 24 < 19 ? 1 : 0)),
     precipitation_probability: Array.from({ length: 48 }, (_, i) =>
       i === 15 ? 80 : i === 16 ? 10 : 0,
     ),
@@ -30,6 +44,12 @@ const previewBody = {
     temperature_2m_max: dayDates.map(() => 15),
     temperature_2m_min: dayDates.map(() => 7),
     precipitation_probability_max: dayDates.map((_, i) => (i === 0 ? 40 : 10)),
+    sunrise: dayDates.map((d) => `${d}T07:32`),
+    sunset: dayDates.map((d) => `${d}T18:21`),
+    uv_index_max: dayDates.map(() => 3),
+    precipitation_sum: dayDates.map(() => 1),
+    wind_speed_10m_max: dayDates.map(() => 20),
+    wind_gusts_10m_max: dayDates.map(() => 35),
   },
 };
 
@@ -181,7 +201,7 @@ describe('WeatherLine', () => {
       return screen.findByTestId('weather-preview');
     };
 
-    it('a tap opens 12 hours and 7 days; rain only from 30 %, never a colour or a warning', async () => {
+    it('a tap opens 24 hours and 7 days; rain only from 30 %, the rating always with its word', async () => {
       setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
       vi.stubGlobal(
         'fetch',
@@ -192,14 +212,44 @@ describe('WeatherLine', () => {
       expect(screen.getByRole('heading', { name: 'Bern' })).toBeTruthy();
       const hours = screen.getByTestId('weather-hours').querySelectorAll('li');
       const days = screen.getByTestId('weather-days').querySelectorAll('li');
-      expect(hours).toHaveLength(12);
+      expect(hours).toHaveLength(24);
       expect(days).toHaveLength(7);
-      expect(hours[0]).toHaveTextContent(/12:00 · 12° · bedeckt$/);
-      expect(hours[3]).toHaveTextContent(/15:00 · 10° · bedeckt · Regen 80 %$/);
+      expect(hours[0]).toHaveTextContent('12:00');
+      expect(hours[0]).toHaveTextContent('bedeckt');
+      expect(hours[3]).toHaveTextContent('15:00');
+      expect(hours[3]).toHaveTextContent('Regen 80 % (1,2 mm)');
       expect(hours[4]).not.toHaveTextContent('Regen');
-      expect(days[0]).toHaveTextContent(/7° \/ 15° · Regen · Regen 40 %$/);
+      expect(days[0]).toHaveTextContent('Heute');
+      expect(days[0]).toHaveTextContent('Regen 40 %');
       expect(days[1]).not.toHaveTextContent('Regen 10');
+      // Every row names its rating in words (colour is never alone).
+      for (const li of [...hours, ...days]) {
+        expect(li.querySelector('[data-rating]')?.textContent).toMatch(/Gut|Geht so|Ungemütlich/);
+      }
+      expect(hours[3]!.querySelector('[data-rating]')).toHaveTextContent('Ungemütlich');
       expect(preview).not.toHaveTextContent('Stand');
+    });
+
+    it('shows now with its details, the chart and the best time', async () => {
+      setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(JSON.stringify(previewBody), { status: 200 })),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+      await open();
+      const now = screen.getByTestId('weather-now');
+      expect(now).toHaveTextContent('14°');
+      expect(now).toHaveTextContent('gefühlt 12°');
+      expect(now).toHaveTextContent('Wind 14 km/h');
+      expect(now).toHaveTextContent('Böen 34 km/h');
+      expect(now).toHaveTextContent('Luftfeuchte 71 %');
+      expect(now).toHaveTextContent('Sonne 07:32–18:21');
+      expect(now).toHaveTextContent('7° / 15°');
+      expect(screen.getByTestId('weather-chart').querySelector('svg')?.getAttribute('role')).toBe(
+        'img',
+      );
+      expect(screen.getByTestId('weather-best')).toHaveTextContent(/^Beste Zeit: \d\d–\d\d Uhr$/);
     });
 
     it('links to the weather settings and credits Open-Meteo', async () => {
