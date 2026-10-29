@@ -10,6 +10,8 @@ export interface Profile {
   modules: readonly string[];
   /** Non-dev tools to switch on; every other non-dev tool is switched off. */
   tools: readonly string[];
+  /** Shown on the first-run question; the others only in the full "Profil und Module" step. */
+  quick?: boolean;
 }
 
 export const PROFILES: readonly Profile[] = [
@@ -17,11 +19,31 @@ export const PROFILES: readonly Profile[] = [
     id: 'everyday',
     modules: ['calendar', 'todos', 'lists', 'notes', 'people'],
     tools: ['calc', 'timer', 'units', 'dates', 'qr'],
+    quick: true,
+  },
+  {
+    id: 'family',
+    modules: ['calendar', 'todos', 'lists', 'pantry', 'people'],
+    tools: ['calc', 'timer', 'units'],
+    quick: true,
+  },
+  {
+    id: 'papers',
+    modules: ['calendar', 'vault', 'subscriptions', 'invoices'],
+    tools: ['calc', 'dates'],
+    quick: true,
+  },
+  {
+    id: 'study',
+    modules: ['todos', 'calendar', 'notes', 'bookmarks'],
+    tools: ['timer', 'calc', 'dates', 'units'],
+    quick: true,
   },
   {
     id: 'finance',
     modules: ['finance', 'budgets', 'subscriptions', 'invoices', 'vault', 'calendar'],
     tools: ['calc', 'currency'],
+    quick: true,
   },
   {
     id: 'productive',
@@ -32,6 +54,7 @@ export const PROFILES: readonly Profile[] = [
     id: 'minimal',
     modules: ['calendar', 'todos'],
     tools: ['calc'],
+    quick: true,
   },
 ];
 
@@ -120,4 +143,12 @@ export function resolveProfile(
     tools: new Set(profile.tools.filter((id) => known.has(id))),
     viaDependency,
   };
+}
+
+/** Modules a profile switches off: enabled now, not part of its resolved selection. */
+export function modulesSwitchedOff(
+  current: ReadonlySet<string>,
+  result: Pick<ProfileResult, 'modules'>,
+): string[] {
+  return [...current].filter((id) => !result.modules.has(id));
 }

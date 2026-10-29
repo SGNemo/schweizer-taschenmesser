@@ -1,6 +1,6 @@
 # First run: 3 questions, rest later
 
-Package P1 of the QA round ([qa/CONSOLIDATED.md](../qa/CONSOLIDATED.md) on `docs/qa-consolidation`; findings V01, B04–B07, B16, B21). Status: **phase 1 (plan), waiting for "Plan freigegeben"**.
+Package P1 of the QA round (`docs/qa/CONSOLIDATED.md` on branch `docs/qa-consolidation`; findings V01, B04–B07, B16, B21). Status: **implemented** (PR against `develop`). Maintainer answers: "Nur lokal, ohne KI" pre-selected, 6 profile cards, honest counting, scope incl. `layout/setup/**`.
 
 ## Measured today (develop @ `d9c9bbe`, e2e build, 412 px, fresh install)
 | What | Value |
@@ -11,6 +11,9 @@ Package P1 of the QA round ([qa/CONSOLIDATED.md](../qa/CONSOLIDATED.md) on `docs
 | "Erledigt" without a write | every step where "Weiter" had nothing to save (9 of 12 in the run) |
 | Network before a click | 1 request: `GET http://localhost:11434/api/tags` when the "KI-Anbieter" step opens (`detectOllama`, fails with a console error). Nothing else leaves the page in the whole run. |
 | Example module | `devOnly`, hidden in release builds (`core/modules/registry.ts`); the QA build was the e2e build (`VITE_INCLUDE_EXAMPLE=true`) → B16 is a test-build effect; add a guard test only |
+
+## After (same measurement, `e2e/setup.spec.ts` "first run")
+3 questions, 5 taps (start card, Weiter, profile, Weiter, Fertig), 0 requests that leave the page (net log), dashboard card "2 von n Schritten erledigt" = the same total the wizard counts. The Ollama probe sends one request, only after the click "Auf diesem Computer nach Ollama suchen".
 
 ## Target flow (fresh install, status `notStarted`)
 Welcome card button (unchanged, belongs to P2) → **quick mode** of the existing wizard, three screens, "Frage n von 3":

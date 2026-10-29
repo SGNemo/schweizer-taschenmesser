@@ -46,20 +46,28 @@ async function overlayGone(page: Page) {
   await page.waitForFunction(() => !(history.state as { tmOverlay?: boolean } | null)?.tmOverlay);
 }
 
+/** A fresh installation opens the three questions; the full list is one click away. */
+async function startFull(page: Page) {
+  await page.getByRole('button', { name: 'Einrichtung starten' }).click();
+  await wizard(page).getByRole('button', { name: 'Alle Schritte ansehen' }).click();
+  await expect(wizard(page).getByText(/^Schritt 1 von \d+$/)).toBeVisible();
+}
+
+const later = (page: Page) => wizard(page).getByRole('button', { name: 'Später', exact: true });
+
 async function skipEverything(page: Page) {
   const dialog = wizard(page);
   const summary = dialog.getByTestId('setup-summary');
-  const skip = dialog.getByRole('button', { name: 'Überspringen' });
-  const stepOf = dialog.getByText(/^Schritt \d+ von \d+$/);
+  const skip = dialog.getByRole('button', { name: 'Später', exact: true });
+  const title = dialog.locator('h3').first();
   for (let i = 0; i < 40; i++) {
-    // Either the next step (with its skip button) or the summary shows up after each click.
-    await expect(stepOf.or(summary)).toBeVisible();
+    await expect(title).toBeVisible();
     if (await summary.isVisible()) return;
-    const label = await stepOf.textContent();
+    const label = await title.textContent();
     await skip.click();
     // The skip button of the old step stays clickable until the save finished and the wizard
-    // moved on; only a changed counter (or the summary) proves the step really changed.
-    await expect(stepOf.or(summary)).not.toHaveText(label ?? '');
+    // moved on; only a changed heading (or the summary) proves the step really changed.
+    await expect(title).not.toHaveText(label ?? '');
   }
 }
 
@@ -130,12 +138,12 @@ test('full run: every step can be skipped, the summary lists them, "Fertig" comp
   page,
 }) => {
   await ready(page, '/settings/ueber');
-  await page.getByRole('button', { name: 'Einrichtung starten' }).click();
+  await startFull(page);
   const dialog = wizard(page);
   await expect(dialog.getByRole('progressbar')).toBeVisible();
   await skipEverything(page);
   await expect(dialog.getByTestId('setup-summary')).toBeVisible();
-  await expect(dialog.getByText('Übersprungen').first()).toBeVisible();
+  await expect(dialog.getByText('Später', { exact: true }).first()).toBeVisible();
   await dialog.getByRole('button', { name: 'Fertig' }).click();
   await expect(wizard(page)).toHaveCount(0);
   await expect.poll(async () => (await setupState(page))?.status).toBe('completed');
@@ -145,7 +153,7 @@ test('cancelling keeps finished steps, drops the current one and resumes after a
   page,
 }) => {
   await ready(page, '/settings/ueber');
-  await page.getByRole('button', { name: 'Einrichtung starten' }).click();
+  await startFull(page);
   const dialog = wizard(page);
   await dialog.getByLabel('Dein Name (optional)').fill('Erika Erfunden');
   await dialog.getByRole('button', { name: 'Weiter' }).click();
@@ -178,11 +186,11 @@ test('cancelling keeps finished steps, drops the current one and resumes after a
 test('the Android back gesture asks before leaving the assistant', async ({ page }) => {
   await ready(page, '/settings/ueber');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
-  await expect(wizard(page)).toBeVisible();
+  await expect(wizard(page).getByText('Frage 1 von 3')).toBeVisible();
   await page.goBack();
   await expect(wizard(page).getByTestId('setup-confirm')).toBeVisible();
   await wizard(page).getByRole('button', { name: 'Weiter einrichten' }).click();
-  await expect(wizard(page).getByText('Schritt 1 von')).toBeVisible();
+  await expect(wizard(page).getByText('Frage 1 von 3')).toBeVisible();
 });
 
 test('starts from the command palette; ending leaves a checklist on the dashboard', async ({
@@ -205,9 +213,7 @@ test('starts from the command palette; ending leaves a checklist on the dashboar
   const checklist = page.getByTestId('setup-checklist');
   await expect(checklist).toBeVisible();
   await expect(checklist.getByText(/1 von \d+ Schritten erledigt/)).toBeVisible();
-  await checklist
-    .getByRole('button', { name: /Sync und Wiederherstellung: Einrichtung öffnen/ })
-    .click();
+  await checklist.getByRole('button', { name: /Sync und Wiederherstellung: Öffnen/ }).click();
   await expect(
     wizard(page).getByRole('heading', { name: 'Sync und Wiederherstellung' }),
   ).toBeVisible();
@@ -229,16 +235,18 @@ test('a profile shows its diff and needs a confirmation before it switches modul
   page,
 }) => {
   await ready(page, '/settings/ueber');
-  await page.getByRole('button', { name: 'Einrichtung starten' }).click();
+  await startFull(page);
   const dialog = wizard(page);
-  await dialog.getByRole('button', { name: 'Überspringen' }).click(); // basics
+  await later(page).click(); // basics
   // Wait for the next step: the old step's skip button is clickable until the wizard moved on.
   await expect(dialog.getByRole('heading', { name: 'Sync und Wiederherstellung' })).toBeVisible();
-  await dialog.getByRole('button', { name: 'Überspringen' }).click(); // sync
+  await later(page).click(); // sync
   await expect(dialog.getByRole('heading', { name: 'Profil und Module' })).toBeVisible();
   await dialog.getByTestId('profile-minimal').click();
   await expect(dialog.getByTestId('profile-diff')).toContainText('Wird deaktiviert');
   await expect(dialog.getByRole('button', { name: 'Weiter' })).toBeDisabled();
+  // The reason sits next to the button, not far below the fold.
+  await expect(dialog.getByRole('status').filter({ hasText: 'Hake bei' })).toBeVisible();
   await dialog.getByLabel('Ich habe die Änderungen geprüft und möchte sie übernehmen.').check();
   await expect(dialog.getByRole('button', { name: 'Weiter' })).toBeEnabled();
 });
@@ -251,4 +259,117 @@ test('an empty module page links to the assistant, which opens on the start-data
   await page.getByRole('button', { name: 'Einrichtung öffnen' }).click();
   await expect(wizard(page)).toBeVisible();
   await expect(wizard(page).getByRole('heading', { name: 'Startdaten' })).toBeVisible();
+});
+
+/** Everything that leaves the page (not the app's own origin, not data:/blob:). */
+function watchNetwork(page: Page) {
+  const external: string[] = [];
+  page.on('request', (r) => {
+    const url = r.url();
+    if (!/^(data:|blob:|http:\/\/localhost:4173)/.test(url)) external.push(url);
+  });
+  return external;
+}
+
+test('first run: three questions, five taps, nothing leaves the page, the rest waits in the checklist', async ({
+  page,
+}) => {
+  const external = watchNetwork(page);
+  await ready(page);
+  let taps = 0;
+  const tap = async (loc: ReturnType<Page['locator']>) => {
+    await loc.click();
+    taps++;
+  };
+  await tap(page.getByTestId('setup-welcome').getByRole('button', { name: 'Einrichtung starten' }));
+  const dialog = wizard(page);
+  await expect(dialog.getByText('Frage 1 von 3')).toBeVisible();
+  await dialog.getByLabel('Dein Name (optional)').fill('Erika Erfunden');
+  await tap(dialog.getByRole('button', { name: 'Weiter' }));
+
+  await expect(dialog.getByText('Frage 2 von 3')).toBeVisible();
+  // Each card says what it switches off; the choice is shown as chosen.
+  await expect(dialog.getByTestId('profile-everyday').locator('xpath=ancestor::li')).toContainText(
+    'Schaltet ab:',
+  );
+  await tap(dialog.getByTestId('profile-everyday'));
+  await expect(dialog.getByTestId('profile-everyday')).toHaveAttribute('aria-pressed', 'true');
+  await expect(dialog.getByRole('button', { name: 'Weiter' })).toBeEnabled();
+  await tap(dialog.getByRole('button', { name: 'Weiter' }));
+
+  await expect(dialog.getByText('Frage 3 von 3')).toBeVisible();
+  await expect(dialog.getByTestId('ai-choice-local')).toBeChecked();
+  await tap(dialog.getByRole('button', { name: 'Fertig' }));
+  await expect(wizard(page)).toHaveCount(0);
+
+  expect(taps).toBeLessThanOrEqual(6);
+  await expect.poll(async () => (await setupState(page))?.status).toBe('completed');
+  const state = await setupState(page);
+  expect(state?.doneSteps).toEqual(['core.basics', 'core.profiles', 'core.ai']);
+  // One number, and the open steps wait on the dashboard.
+  const checklist = page.getByTestId('setup-checklist');
+  await expect(checklist).toBeVisible();
+  await expect(checklist.getByText(/^2 von \d+ Schritten erledigt$/)).toBeVisible();
+  expect(external).toEqual([]);
+});
+
+test('"Rest später" on a question keeps everything open and shows the checklist', async ({
+  page,
+}) => {
+  await ready(page);
+  await page
+    .getByTestId('setup-welcome')
+    .getByRole('button', { name: 'Einrichtung starten' })
+    .click();
+  await wizard(page).getByRole('button', { name: 'Rest später' }).click();
+  await expect(wizard(page)).toHaveCount(0);
+  await expect.poll(async () => (await setupState(page))?.status).toBe('inProgress');
+  await expect(page.getByTestId('setup-checklist')).toBeVisible();
+  await expect(
+    page.getByTestId('setup-checklist').getByText(/^0 von \d+ Schritten erledigt$/),
+  ).toBeVisible();
+});
+
+test('"Weiter" without a change is not "erledigt"; the sync default is', async ({ page }) => {
+  await ready(page, '/settings/ueber');
+  await startFull(page);
+  const dialog = wizard(page);
+  await dialog.getByRole('button', { name: 'Weiter' }).click(); // basics: always writes
+  await expect(dialog.getByRole('heading', { name: 'Sync und Wiederherstellung' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Weiter' }).click(); // sync default is the answer
+  await expect(dialog.getByRole('heading', { name: 'Profil und Module' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Weiter' }).click(); // nothing chosen
+  await expect(dialog.getByRole('heading', { name: 'Werkzeugkasten' })).toBeVisible();
+  await expect
+    .poll(async () => (await setupState(page))?.doneSteps)
+    .toEqual(['core.basics', 'core.sync']);
+  expect((await setupState(page))?.skippedSteps).toEqual(['core.profiles']);
+});
+
+test('the AI step asks nothing until "nach Ollama suchen" is clicked; Spotify has no Google note', async ({
+  page,
+}) => {
+  const external = watchNetwork(page);
+  await page.route('http://localhost:11434/**', (route) =>
+    route.fulfill({ json: { models: [{ name: 'llama3' }] } }),
+  );
+  await ready(page, '/settings/ueber');
+  await startFull(page);
+  const dialog = wizard(page);
+  for (let i = 0; i < 6; i++) {
+    if (await dialog.getByRole('heading', { name: 'KI-Anbieter' }).isVisible()) break;
+    const label = await dialog.getByText(/^Schritt \d+ von \d+$/).textContent();
+    await later(page).click();
+    await expect(dialog.getByText(/^Schritt \d+ von \d+$/)).not.toHaveText(label ?? '');
+  }
+  await expect(dialog.getByRole('heading', { name: 'KI-Anbieter' })).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(external).toEqual([]);
+  await dialog.getByTestId('setup-ollama-search').click();
+  await expect(dialog.getByText('Ollama läuft auf diesem Computer.')).toBeVisible();
+  expect(external).toEqual(['http://localhost:11434/api/tags']);
+
+  await later(page).click();
+  await expect(dialog.getByRole('heading', { name: 'Konten verknüpfen' })).toBeVisible();
+  await expect(dialog.getByText(/Testing/)).toHaveCount(1); // only the Google section
 });

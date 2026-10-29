@@ -30,12 +30,60 @@ interface Added {
 }
 
 /** Adds providers as drafts; keys go to the secret store on "Weiter" and nowhere else. */
-export default function AiStep({ registerCommit }: SetupStepProps) {
+export default function AiStep(props: SetupStepProps) {
+  return props.mode === 'quick' ? <AiQuestion {...props} /> : <AiProviders {...props} />;
+}
+
+/** First-run question: "Nur lokal, ohne KI" (pre-selected) or "KI später einrichten". */
+function AiQuestion({ registerCommit }: SetupStepProps) {
+  const [choice, setChoice] = useState<'local' | 'later'>('local');
+  useEffect(() => {
+    registerCommit(choice === 'local' ? () => switchAiOff('device') : null);
+    return () => registerCommit(null);
+  }, [choice, registerCommit]);
+  return (
+    <fieldset className={patternStyles.fieldset}>
+      {(
+        [
+          ['local', s.quickLocal, s.quickLocalHint],
+          ['later', s.quickLater, s.quickLaterHint],
+        ] as const
+      ).map(([id, label, hint]) => (
+        <label
+          key={id}
+          style={{
+            display: 'flex',
+            gap: 'var(--space-2)',
+            minHeight: 44,
+            alignItems: 'flex-start',
+          }}
+        >
+          <input
+            type="radio"
+            name="setup-ai-choice"
+            checked={choice === id}
+            onChange={() => setChoice(id)}
+            data-testid={`ai-choice-${id}`}
+          />
+          <span>
+            <strong>{label}</strong>
+            <br />
+            <span className={patternStyles.muted}>{hint}</span>
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function AiProviders({ registerCommit }: SetupStepProps) {
   const aiOn = useAiOn();
   const [stored, setStored] = useState<AiConfig | undefined>();
   const [order, setOrder] = useState<string[]>([]);
   const [added, setAdded] = useState<Added[]>([]);
+  // Looking for a local Ollama is a request to localhost:11434, so it only happens on a click.
   const [ollama, setOllama] = useState<string[] | undefined>();
+  const [ollamaState, setOllamaState] = useState<'idle' | 'running' | 'done'>('idle');
   const addedRef = useRef(added);
   const orderRef = useRef(order);
 
@@ -46,7 +94,6 @@ export default function AiStep({ registerCommit }: SetupStepProps) {
       setStored(c);
       setOrder(c.providers.map((p) => p.id));
     });
-    void detectOllama().then((r) => live && setOllama(r.found ? r.models : undefined));
     return () => {
       live = false;
     };
@@ -132,6 +179,12 @@ export default function AiStep({ registerCommit }: SetupStepProps) {
   }
 
   const ollamaAdded = added.some((a) => a.entry.preset === 'ollama');
+  async function searchOllama() {
+    setOllamaState('running');
+    const r = await detectOllama();
+    setOllama(r.found ? r.models : undefined);
+    setOllamaState('done');
+  }
   return (
     <>
       <p className={patternStyles.muted}>
@@ -173,6 +226,18 @@ export default function AiStep({ registerCommit }: SetupStepProps) {
         ))}
       </ul>
 
+      {ollamaState !== 'done' || (!ollama && !ollamaAdded) ? (
+        <p className={patternStyles.muted}>
+          <Button
+            data-testid="setup-ollama-search"
+            onClick={() => void searchOllama()}
+            disabled={ollamaState === 'running'}
+          >
+            {ollamaState === 'running' ? s.ollamaSearching : s.ollamaSearch}
+          </Button>{' '}
+          {ollamaState === 'done' ? s.ollamaNone : s.ollamaHint}
+        </p>
+      ) : null}
       {ollama && !ollamaAdded ? (
         <p role="status">
           {s.ollamaFound}{' '}
