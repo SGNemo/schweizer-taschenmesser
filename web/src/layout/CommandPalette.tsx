@@ -2,6 +2,9 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { useAiOn } from '@/core/ai/switch';
+import { getLang } from '@/core/i18n/lang';
+import { getPlatform } from '@/core/platform';
+import { useWriteLabel } from '@/core/shell/writeAvailable';
 import { detectIntent } from '@/core/ai/write/rules/intent';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { calculate } from '@/core/calc/phrases';
@@ -59,6 +62,8 @@ export interface Command {
 
 export { normalize };
 
+const HELP_URL = 'https://github.com/SGNemo/schweizer-taschenmesser/blob/main/docs/user';
+
 export function filterCommands(commands: Command[], query: string): Command[] {
   const q = normalize(query);
   if (!q) return commands;
@@ -72,8 +77,14 @@ export function filterCommands(commands: Command[], query: string): Command[] {
 export function CommandPalette() {
   const open = useUiStore((s) => s.paletteOpen);
   const setOpen = useUiStore((s) => s.setPaletteOpen);
+  const writeMode = useUiStore((s) => s.paletteWrite);
+  const write = useWriteLabel();
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} title={t.palette.title}>
+    <Dialog
+      open={open}
+      onClose={() => setOpen(false)}
+      title={writeMode ? write.label : t.palette.title}
+    >
       {/* Dialog only renders children while open, so the body remounts with fresh state. */}
       <PaletteBody onDone={() => setOpen(false)} />
     </Dialog>
@@ -182,6 +193,14 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         label: tDiag.get().report.paletteCommand,
         icon: 'alert' as IconName,
         run: () => void reportBug(),
+      },
+      {
+        id: 'help',
+        label: t.palette.helpCommand,
+        icon: 'help',
+        keywords: ['help', 'hilfe', 'anleitung', 'faq'],
+        run: () =>
+          void getPlatform().app.openUrl(`${HELP_URL}/faq${getLang() === 'de' ? '.de' : ''}.md`),
       },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
       // One command per value of a quick switch: "Farbschema: Dunkel" changes it on the spot.
@@ -345,8 +364,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         list.push({
           kind: 'ask',
           key: 'ask',
-          label: t.ai.palette.ask,
-          icon: 'sparkles',
+          label: hasModel ? t.ai.palette.ask : t.ai.palette.askLocal,
+          icon: hasModel ? 'sparkles' : 'search',
           forceModel: false,
         });
       }

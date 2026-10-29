@@ -16,3 +16,4 @@
 | [notes-import.md](notes-import.md) | Notizen-Import: Markdown/Obsidian und Google Keep, Parser, Dedupe, Grenzen |
 | [connection-log.md](connection-log.md) | Verbindungsprotokoll + "Netzwerk sperren": network inventory, design (draft) |
 | [partner-share.md](partner-share.md) | "Mit Partner teilen" without a server: QR/file, pairing code, packages (draft) |
+| [first-run-setup.md](first-run-setup.md) | First run in 3 questions: measurement, target flow, per-finding changes (QA package P1) |

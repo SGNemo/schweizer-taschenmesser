@@ -75,12 +75,14 @@ function FieldRow({
 
 const MAX_SHOWN = 3;
 
-/** What the closed line says for one field: the option label, the label of a switch that is on, or the value; `undefined` = nothing to say. */
+/** What the closed line says for one field: "label: value", or just the label of a switch that is on; `undefined` = nothing to say. */
 function fieldSummary(f: SettingField, value: unknown): string | undefined {
   if (f.type === 'boolean') return value ? f.label : undefined;
-  if (f.type === 'select') return f.options?.find((o) => o.value === String(value))?.label;
-  const text = String(value ?? '');
-  return text === '' ? undefined : text;
+  const text =
+    f.type === 'select'
+      ? (f.options?.find((o) => o.value === String(value))?.label ?? '')
+      : String(value ?? '');
+  return text === '' ? undefined : `${f.label}: ${text}`;
 }
 
 /** The current values in field order, at most three, then "+ n". */
@@ -119,7 +121,11 @@ export function ModuleSection({ manifest }: { manifest: ModuleManifest }) {
         </FoldedGroup>
       ) : null}
       {startData ? (
-        <SettingRow id={`${sectionId}--startdata`} label={t.onboarding.button}>
+        <SettingRow
+          id={`${sectionId}--startdata`}
+          label={t.onboarding.rowLabel}
+          description={t.onboarding.rowHint}
+        >
           <span className={styles.row}>
             {importersOf(manifest).some((i) => i.id === JSON_IMPORTER_ID) ? (
               <CopySchemaButton manifest={manifest} />

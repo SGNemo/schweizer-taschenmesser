@@ -52,7 +52,7 @@ test('off by default: no key reaction and no microphone button', async ({ page }
   await page.keyboard.press('F4');
   await expect(page.getByTestId('voice-pill')).toHaveCount(0);
   await page.keyboard.press('Control+k');
-  await expect(page.getByRole('dialog', { name: 'Befehlspalette' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Suchen' })).toBeVisible();
   await expect(page.getByTestId('voice-mic')).toHaveCount(0);
 });
 
@@ -123,7 +123,7 @@ test('Esc cancels the recording and keeps what was typed, without closing the pa
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('voice-mic')).toHaveAttribute('aria-pressed', 'false');
   await expect(input).toHaveValue('Entwurf');
-  await expect(page.getByRole('dialog', { name: 'Befehlspalette' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Suchen' })).toBeVisible();
 });
 
 test('a denied microphone gives a friendly sentence, no error screen', async ({ page }) => {

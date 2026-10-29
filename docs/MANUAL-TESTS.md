@@ -237,7 +237,7 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.
 - **S3 – Bestandsinstallation:** ein Gerät mit vorhandenen Daten aktualisieren → bleibt Deutsch, bis die Sprache geändert wird.
 - **S4 – native Texte (Windows):** Google-Anmeldung abschließen → die Ergebnisseite im Browser erscheint in der Browsersprache; ohne WebView2 erscheint der Hinweis in der Windows-Sprache.
-
+- **S5 – Datums-/Zeitfelder (QA B25):** auf echtem Windows (portable exe) und Android-Handy mit deutscher bzw. spanischer Oberfläche einen Termin anlegen: zeigen die Felder Datum und Uhrzeit das Format des Geräts (TT.MM.JJJJ, 24 h) oder US-Format („10/29/2026“, AM/PM)? Der QA-Lauf sah US-Format in einem Test-Chromium; erst bei Bestätigung am Gerät wird Code geändert. ☐
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.

@@ -37,7 +37,7 @@ export const settings: Strings['settings'] = {
       'Date',
     ],
     appearance: ['Thème', 'Mode sombre', 'Police', 'Animation'],
-    modules: ['Bibliothèque', 'Activer un module', 'Données de départ'],
+    modules: ['Bibliothèque', 'Activer un module', 'Importer'],
     tools: ['Barre d’outils', 'Ordre'],
     notifications: ['Push', 'Autorisation', 'Rappel'],
     'browser-extension': ['Brave', 'Chrome', 'Remplissage automatique'],
@@ -166,7 +166,7 @@ export const settings: Strings['settings'] = {
     },
     module: {
       title: 'Modules',
-      description: 'Paramètres des modules et données de départ',
+      description: 'Paramètres des modules et import',
       keywords: ['Rappel', 'Données de départ', 'Import'],
     },
     werkzeuge: {
@@ -291,7 +291,7 @@ export const settings: Strings['settings'] = {
   motion: 'Animations',
   motionOptions: { system: 'Comme le système', reduce: 'Réduites' },
   homeView: 'Vue d’ensemble',
-  homeViewOptions: { all: 'Tous les widgets', calm: 'L’essentiel seulement' },
+  homeViewOptions: { all: 'Toutes les cartes', calm: 'L’essentiel seulement' },
   density: 'Densité',
   densityOptions: { normal: 'Normale', compact: 'Compacte' },
   modules: 'Modules',

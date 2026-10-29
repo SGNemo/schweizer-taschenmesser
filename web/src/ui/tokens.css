@@ -260,7 +260,7 @@
   font-size: clamp(1rem, 1rem + (100vw - 1920px) * 0.0026, 1.25rem);
 }
 
-/* Device-local settings (Einstellungen → Darstellung): text size 16 → 18 px (everything is rem), density. */
+/* Device-local settings (Einstellungen → Darstellung): text size 14.4 → 24 px (everything is rem), density. */
 :root[data-text-size='small'] {
   font-size: 90%; /* 14.4 px */
 }
@@ -268,7 +268,7 @@
   font-size: 112.5%;
 }
 :root[data-text-size='xlarge'] {
-  font-size: 125%; /* 20 px */
+  font-size: 150%; /* 24 px */
 }
 /* Line spacing for easier reading (Einstellungen → Darstellung). */
 :root[data-leading='compact'] {

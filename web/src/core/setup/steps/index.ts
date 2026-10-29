@@ -37,6 +37,7 @@ export const CORE_STEPS: SetupStepDef[] = [
     },
     order: 20,
     since: 1,
+    settledByContinue: true,
     isDone: async () => {
       return !!(await db.table('_secrets').get('syncConfig'));
     },
@@ -113,6 +114,14 @@ export const CORE_STEPS: SetupStepDef[] = [
       const { availableManifests } = await import('@/core/modules/available');
       const { hasStartData } = await import('@/core/dataapi/onboarding');
       return availableManifests().some((m) => ctx.modules[m.id] && hasStartData(m));
+    },
+    isDone: async (ctx) => {
+      const { availableManifests } = await import('@/core/modules/available');
+      const { hasStartData } = await import('@/core/dataapi/onboarding');
+      const { wasOnboardingHandled } = await import('@/core/importer/batches');
+      for (const m of availableManifests())
+        if (ctx.modules[m.id] && hasStartData(m) && (await wasOnboardingHandled(m.id))) return true;
+      return false;
     },
     component: () => import('@/layout/setup/steps/StartDataStep'),
   },

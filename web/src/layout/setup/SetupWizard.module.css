@@ -61,3 +61,14 @@
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+.later {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.blocked {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}

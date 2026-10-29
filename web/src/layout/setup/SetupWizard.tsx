@@ -11,6 +11,8 @@ import { useBackClose, useSetupState } from '@/core/setup/hooks';
 import { applicableSteps, buildSetupCtx, detectDone, allSetupSteps } from '@/core/setup/registry';
 import {
   completeSetup,
+  continueOutcome,
+  countedSteps,
   dismissSetup,
   initialState,
   markStepDone,
@@ -26,7 +28,10 @@ import { Badge, Button, Dialog, ReadableText } from '@/ui';
 import { PageContainer, PageFallback } from '../PageContainer';
 import styles from './SetupWizard.module.css';
 
-type View = 'start' | 'step' | 'summary' | 'confirm';
+type View = 'start' | 'step' | 'summary' | 'confirm' | 'quick';
+
+/** The three first-run questions, in order; a step the app does not offer right now is left out. */
+const QUICK_IDS = ['core.basics', 'core.profiles', 'core.ai'] as const;
 
 const lazyCache = new WeakMap<object, ComponentType<SetupStepProps>>();
 function stepComponent(step: SetupStepDef): ComponentType<SetupStepProps> {
@@ -68,6 +73,8 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [canContinue, setCanContinue] = useState(true);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  const [quickIndex, setQuickIndex] = useState(0);
   const commit = useRef<(() => Promise<void | 'skipped'>) | null>(null);
   const cancelled = useRef(false);
 
@@ -91,16 +98,27 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   // Where to begin: the checklist target, else the resume offer when there is progress.
   const target = list && stepId ? list.findIndex((s) => s.id === stepId) : -1;
   const hasProgress = !!state && state.doneSteps.length + state.skippedSteps.length > 0;
-  const view: View = pickedView ?? (target < 0 && hasProgress ? 'start' : 'step');
+  // A really empty installation gets the three questions; everyone else (or a checklist link) the full list.
+  const quickSteps = (list ?? []).filter((s) => (QUICK_IDS as readonly string[]).includes(s.id));
+  const firstRun =
+    quickSteps.length > 0 &&
+    target < 0 &&
+    !stepId &&
+    !hasProgress &&
+    state?.status === 'notStarted';
+  const view: View =
+    pickedView ?? (target < 0 && hasProgress ? 'start' : firstRun ? 'quick' : 'step');
   const index = pickedIndex ?? Math.max(0, target);
 
   const total = list?.length ?? 0;
-  const step = list?.[index];
+  const counted = countedSteps(list ?? []);
+  const step = view === 'quick' ? quickSteps[quickIndex] : list?.[index];
+  const numberOf = (s: SetupStepDef) => counted.findIndex((c) => c.id === s.id) + 1;
 
   const requestClose = useCallback(() => {
     if (view === 'confirm') setView(before);
-    else if (view === 'step') {
-      setBefore('step');
+    else if (view === 'step' || view === 'quick') {
+      setBefore(view);
       setView('confirm');
     } else onClose();
   }, [view, before, onClose]);
@@ -110,6 +128,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   function go(next: number) {
     commit.current = null;
     setCanContinue(true);
+    setBlockedReason(null);
     setError(false);
     if (next >= total) setView('summary');
     else {
@@ -120,9 +139,12 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   async function onNext() {
     if (!step) return;
+    // The first answer creates progress, which must not turn the questions into the resume view.
+    if (view === 'quick') setView('quick');
     setBusy(true);
     setError(false);
     let outcome: void | 'skipped';
+    const committed = commit.current !== null;
     try {
       outcome = await commit.current?.();
     } catch {
@@ -133,15 +155,35 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
     }
     setBusy(false);
     if (cancelled.current) return;
-    if (outcome === 'skipped') await markStepSkipped(step.id);
+    if (continueOutcome(step, committed, outcome) === 'skipped') await markStepSkipped(step.id);
     else await markStepDone(step.id);
-    go(index + 1);
+    if (view === 'quick') nextQuestion();
+    else go(index + 1);
+  }
+
+  /** After a question: the next one, or done – the rest lives on in the dashboard checklist. */
+  function nextQuestion() {
+    commit.current = null;
+    setCanContinue(true);
+    setBlockedReason(null);
+    if (quickIndex + 1 < quickSteps.length) setQuickIndex(quickIndex + 1);
+    else void finish();
   }
 
   async function onSkip() {
     if (!step) return;
     await markStepSkipped(step.id);
     go(index + 1);
+  }
+
+  /** "Alle Schritte ansehen": leave the questions for the full list, at the same step. */
+  function showAll() {
+    const at = step ? (list ?? []).findIndex((s) => s.id === step.id) : 0;
+    commit.current = null;
+    setCanContinue(true);
+    setBlockedReason(null);
+    setIndex(Math.max(0, at));
+    setView('step');
   }
 
   async function leave(kind: 'later' | 'end') {
@@ -215,8 +257,15 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
         <p className={styles.desc}>
           <ReadableText text={t.setup.summaryIntro} />
         </p>
+        <p className={styles.meta}>
+          {t.setup.checklistProgress(
+            counted.filter((s) => stepProgress(state, s.id, auto.has(s.id)) === 'done').length,
+            counted.length,
+          )}
+        </p>
         <ul className={styles.list}>
-          {list.map((s, i) => {
+          {counted.map((s) => {
+            const i = list.findIndex((x) => x.id === s.id);
             const p = stepProgress(state, s.id, auto.has(s.id));
             return (
               <li key={s.id} className={styles.row}>
@@ -230,7 +279,11 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
                         : t.setup.statusOpen}
                   </Badge>
                 </span>
-                {p !== 'done' ? <Button onClick={() => go(i)}>{t.setup.open}</Button> : null}
+                {p !== 'done' ? (
+                  <Button aria-label={`${s.title}: ${t.setup.openStep}`} onClick={() => go(i)}>
+                    {t.setup.openStep}
+                  </Button>
+                ) : null}
               </li>
             );
           })}
@@ -246,31 +299,44 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
       </>
     );
   } else if (step && ctx) {
+    const isQuick = view === 'quick';
+    const quickText = t.setup.quick[step.id.replace('core.', '') as keyof typeof t.setup.quick];
+    const position = isQuick ? quickIndex + 1 : numberOf(step);
+    const of = isQuick ? quickSteps.length : counted.length;
+    const last = isQuick ? quickIndex + 1 >= quickSteps.length : index + 1 >= total;
     body = (
       <div className={styles.body} key={step.id}>
-        <div
-          className={styles.progress}
-          role="progressbar"
-          aria-label={t.setup.progressLabel}
-          aria-valuemin={0}
-          aria-valuemax={total}
-          aria-valuenow={index + 1}
-        >
-          <div className={styles.bar} style={{ width: `${((index + 1) / total) * 100}%` }} />
-        </div>
-        <p className={styles.meta}>{t.setup.stepOf(index + 1, total)}</p>
-        <h3 className={styles.stepTitle}>{step.title}</h3>
+        {position > 0 ? (
+          <>
+            <div
+              className={styles.progress}
+              role="progressbar"
+              aria-label={t.setup.progressLabel}
+              aria-valuemin={0}
+              aria-valuemax={of}
+              aria-valuenow={position}
+            >
+              <div className={styles.bar} style={{ width: `${(position / of) * 100}%` }} />
+            </div>
+            <p className={styles.meta}>
+              {isQuick ? t.setup.questionOf(position, of) : t.setup.stepOf(position, of)}
+            </p>
+          </>
+        ) : null}
+        <h3 className={styles.stepTitle}>{isQuick && quickText ? quickText.title : step.title}</h3>
         <p className={styles.desc}>
-          <ReadableText text={step.description} />
+          <ReadableText text={isQuick && quickText ? quickText.description : step.description} />
         </p>
         <Suspense fallback={<PageFallback />}>
           <StepView
             step={step}
             ctx={ctx}
+            mode={isQuick ? 'quick' : 'full'}
             registerCommit={(fn) => {
               commit.current = fn;
             }}
             setCanContinue={setCanContinue}
+            setBlockedReason={setBlockedReason}
           />
         </Suspense>
         {error ? (
@@ -278,19 +344,39 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             {t.setup.commitFailed}
           </p>
         ) : null}
+        <div className={styles.later}>
+          <Button variant="ghost" onClick={() => void leave('later')} disabled={busy}>
+            {t.setup.restLater}
+          </Button>
+          {isQuick ? (
+            <Button variant="ghost" onClick={showAll} disabled={busy}>
+              {t.setup.allSteps}
+            </Button>
+          ) : null}
+        </div>
       </div>
     );
     footer = (
       <>
-        <Button onClick={() => go(index - 1)} disabled={index === 0 || busy}>
+        {blockedReason && !canContinue ? (
+          <p role="status" className={styles.blocked}>
+            {blockedReason}
+          </p>
+        ) : null}
+        <Button
+          onClick={() => (isQuick ? setQuickIndex(Math.max(0, quickIndex - 1)) : go(index - 1))}
+          disabled={(isQuick ? quickIndex === 0 : index === 0) || busy}
+        >
           {t.setup.back}
         </Button>
         <span className={styles.footerGroup}>
-          <Button onClick={() => void onSkip()} disabled={busy}>
-            {t.setup.skip}
-          </Button>
+          {isQuick ? null : (
+            <Button onClick={() => void onSkip()} disabled={busy}>
+              {t.setup.skip}
+            </Button>
+          )}
           <Button variant="primary" onClick={() => void onNext()} disabled={busy || !canContinue}>
-            {index + 1 >= total ? t.setup.finish : t.setup.next}
+            {last ? t.setup.finish : t.setup.next}
           </Button>
         </span>
       </>

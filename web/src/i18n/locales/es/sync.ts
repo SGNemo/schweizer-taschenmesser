@@ -4,7 +4,7 @@ export const sync: Strings['sync'] = {
   defaultDeviceName: 'Dispositivo',
   title: 'Sincronización',
   intro:
-    'Opcional: sincroniza tus datos a través de tu propio servidor de sincronización (en la red local o con Tailscale). Sin servidor, todo se queda en este dispositivo.',
+    'Opcional: sincroniza tus datos a través de tu propio servidor de sincronización (en tu red doméstica o con una red privada como Tailscale). Sin servidor, todo se queda en este dispositivo.',
   serverUrl: 'Dirección del servidor',
   serverUrlHint: 'p. ej. https://mi-pc.tailnet.ts.net',
   httpWarning:
@@ -18,10 +18,10 @@ export const sync: Strings['sync'] = {
   >,
   encrypt: 'Cifrado de extremo a extremo',
   encryptHint:
-    'Los valores se cifran en el dispositivo; el servidor solo ve texto cifrado. Solo es posible en un servidor vacío.',
+    'Los valores se cifran en el dispositivo; el servidor solo ve datos cifrados. Solo es posible en un servidor vacío.',
   plainWarning:
     'Sin cifrado de extremo a extremo, tus datos quedan en el servidor sin cifrar. Úsalo si el servidor no es solo tuyo o no guarda los datos cifrados.',
-  passphrase: 'Frase de contraseña',
+  passphrase: 'Frase de contraseña (varias palabras)',
   passphraseHint:
     'Mínimo 12 caracteres, mejor varias palabras. Sin la frase de contraseña, los datos no se pueden recuperar.',
   passphraseJoinHint: 'Solo hace falta si el servidor está cifrado.',

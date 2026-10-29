@@ -3,6 +3,7 @@ import { allManifests } from '@/core/modules/registry';
 import { allTools } from '@/core/tools/registry';
 import {
   diffSelection,
+  modulesSwitchedOff,
   PROFILES,
   resolveProfile,
   toggleModule,
@@ -30,6 +31,30 @@ describe('profiles', () => {
         p.id,
       ).toEqual([]);
     }
+  });
+
+  it('never puts a dev-only module into a profile, and the first-run question stays short', () => {
+    const devOnly = new Set(allManifests.filter((m) => m.devOnly).map((m) => m.id));
+    for (const p of PROFILES)
+      expect(
+        p.modules.filter((m) => devOnly.has(m)),
+        p.id,
+      ).toEqual([]);
+    const quick = PROFILES.filter((p) => p.quick).map((p) => p.id);
+    expect(quick).toEqual(['everyday', 'family', 'papers', 'study', 'finance', 'minimal']);
+  });
+
+  it('names what a profile switches off', () => {
+    const all = allManifests.map((m) => ({ id: m.id, requires: m.requires }));
+    const everyday = PROFILES.find((p) => p.id === 'everyday')!;
+    const result = resolveProfile(everyday, all, allTools);
+    const current = new Set(['calendar', 'todos', 'finance', 'invoices', 'subscriptions']);
+    expect(modulesSwitchedOff(current, result).sort()).toEqual([
+      'finance',
+      'invoices',
+      'subscriptions',
+    ]);
+    expect(modulesSwitchedOff(new Set(['calendar']), result)).toEqual([]);
   });
 
   it('declares only existing requirements without cycles', () => {

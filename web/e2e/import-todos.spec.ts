@@ -30,16 +30,16 @@ const GOOGLE_JSON = JSON.stringify({
 
 async function openWizard(page: Page, url = '/todos') {
   await ready(page, url);
-  const start = page.getByRole('button', { name: 'Startdaten einrichten' });
+  const start = page.getByRole('button', { name: 'Importieren' });
   // Once the module holds data the button lives in its settings section.
   await (
     url === '/todos'
       ? start
       : page.locator('section[aria-labelledby="module-todos"]').getByRole('button', {
-          name: 'Startdaten einrichten',
+          name: 'Importieren',
         })
   ).click();
-  const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+  const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog.getByRole('button', { name: /Aus Todoist oder Google Tasks/ }).click();
   return dialog;
 }
@@ -47,7 +47,7 @@ async function openWizard(page: Page, url = '/todos') {
 async function chooseFile(page: Page, name: string, mimeType: string, content: string) {
   const chooser = page.waitForEvent('filechooser');
   await page
-    .getByRole('dialog', { name: /Startdaten/ })
+    .getByRole('dialog', { name: /Importieren/ })
     .getByRole('button', { name: 'Datei wählen …' })
     .click();
   await (await chooser).setFiles({ name, mimeType, buffer: Buffer.from(content, 'utf8') });

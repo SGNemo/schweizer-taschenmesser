@@ -4,7 +4,7 @@ export const sync: Strings['sync'] = {
   defaultDeviceName: 'Appareil',
   title: 'Synchronisation',
   intro:
-    'Facultatif : synchronisez vos données via votre propre serveur de synchronisation (en réseau local ou via Tailscale). Sans serveur, tout reste sur cet appareil.',
+    'Facultatif : synchronisez vos données via votre propre serveur de synchronisation (sur votre réseau domestique ou via un réseau privé comme Tailscale). Sans serveur, tout reste sur cet appareil.',
   serverUrl: 'Adresse du serveur',
   serverUrlHint: 'p. ex. https://mon-pc.tailnet.ts.net',
   httpWarning:
@@ -19,10 +19,10 @@ export const sync: Strings['sync'] = {
   } as Record<string, string>,
   encrypt: 'Chiffrement de bout en bout',
   encryptHint:
-    'Les valeurs sont chiffrées sur l’appareil, le serveur ne voit que du texte chiffré. Possible uniquement sur un serveur vide.',
+    'Les valeurs sont chiffrées sur l’appareil, le serveur ne voit que des données chiffrées. Possible uniquement sur un serveur vide.',
   plainWarning:
     'Sans chiffrement de bout en bout, vos données sont stockées en clair sur le serveur. Activez-le si le serveur n’est pas qu’à vous ou si son stockage n’est pas chiffré.',
-  passphrase: 'Phrase secrète',
+  passphrase: 'Phrase secrète (plusieurs mots)',
   passphraseHint:
     'Au moins 12 caractères, idéalement plusieurs mots. Sans la phrase secrète, les données ne peuvent pas être récupérées.',
   passphraseJoinHint: 'Nécessaire uniquement si le serveur est chiffré.',

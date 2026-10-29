@@ -20,7 +20,7 @@ export const help: Strings['help'] = {
   startData:
     'L’assistant lit du texte ou des fichiers et affiche d’abord un aperçu. Rien n’est enregistré sans votre confirmation, et chaque import peut être annulé en entier.',
   localApi:
-    'L’interface n’écoute que sur cet ordinateur (127.0.0.1) et ne sert à rien sans clé d’accès. Chaque accès n’obtient que les droits que vous cochez. Les imports arrivent d’abord en aperçu dans l’app. Elle ne peut jamais atteindre le coffre-fort (Accounts), les paramètres ni les clés.',
+    'L’interface n’écoute que sur cet ordinateur (127.0.0.1) et ne sert à rien sans clé d’accès. Chaque accès n’obtient que les droits que vous cochez. Les imports arrivent d’abord en aperçu dans l’app. Elle ne peut jamais atteindre le coffre-fort (Mots de passe), les paramètres ni les clés.',
   connectors:
     'Les connexions ne font que lire, elles ne modifient rien chez le service. Les identifiants restent dans le trousseau de cet appareil et ne sont jamais synchronisés ni sauvegardés. Les e-mails sont analysés uniquement sur votre appareil et jamais envoyés à une IA.',
 };
