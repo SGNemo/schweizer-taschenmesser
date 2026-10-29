@@ -14,6 +14,9 @@ export const connectors: Strings['connectors'] = {
     unsupported: 'Esto no es posible en este dispositivo.',
     'port-busy': 'Puerto ocupado. Cierra el otro programa e inténtalo de nuevo.',
     'premium-required': 'Controlar la reproducción requiere una cuenta Premium.',
+    'no-callback':
+      'El navegador no devolvió ningún inicio de sesión. Comprueba en el servicio la URI de redirección registrada y si tu cuenta está habilitada, e inténtalo de nuevo.',
+    'bad-client': 'El servicio no reconoce este ID de cliente. Comprueba el ID introducido.',
   } as Record<string, string>,
   icsName: 'Suscripción de calendario (ICS)',
   icsDescription:

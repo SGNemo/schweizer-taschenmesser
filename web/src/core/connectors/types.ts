@@ -247,7 +247,11 @@ export type ConnectorErrorCode =
   | 'bad-response'
   | 'unsupported'
   | 'port-busy'
-  | 'premium-required';
+  | 'premium-required'
+  /** The browser never reached the loopback callback (provider error page, wrong redirect URI). */
+  | 'no-callback'
+  /** The token endpoint rejected the client id. */
+  | 'bad-client';
 
 /** Failure of a connector call; the message never contains secrets (see `redact`). */
 export class ConnectorError extends Error {
