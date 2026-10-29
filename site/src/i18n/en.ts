@@ -28,7 +28,7 @@ export const en = {
     checksumsTitle: 'Checksums (SHA-256)',
     checksumsHint: 'The checksum comes from the GitHub release. Compare it after downloading if you want to be sure.',
     screenshotAlt:
-      'Nemo overview with made-up sample data (German UI): “important now”, “still waiting”, the “up next” card with a first step and today’s plan',
+      'Nemo overview with made-up sample data (shown in German): “important now”, “still waiting”, the “up next” card with a first step and today’s plan',
     phoneAlt: 'The same overview on the phone',
   },
   features: {
@@ -42,7 +42,7 @@ export const en = {
       { icon: 'key', shot: 'vault', title: 'Vault', text: 'Passwords with TOTP and a generator, documents with expiry dates. Encrypted, invisible to AI.', alt: 'Unlocked vault with demo accounts' },
       { icon: 'bell', shot: 'reminders', title: 'Reminders', text: 'Bundled, with quiet hours and “later”, even when the app is closed.', alt: 'Reminders with switches and next time' },
     ],
-    more: 'Also: notes, lists, bookmarks, pantry, people, PC clean-up, messages with a local model. AI only if you want it. The app is in German.',
+    more: 'Also: notes, lists, bookmarks, pantry, people, PC clean-up, messages with a local model. AI only if you want it. The app speaks German, English, Spanish, French and Portuguese (Brazil).',
   },
   data: {
     eyebrow: 'Your data stays with you',
@@ -105,7 +105,7 @@ export const en = {
       windows: 'Dev preview for Windows',
       android: 'Dev preview for Android',
     },
-    more: 'Full guide (German)',
+    more: 'Full guide',
   },
   support: {
     eyebrow: 'Support',
