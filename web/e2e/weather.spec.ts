@@ -129,6 +129,7 @@ test.describe('Weather line', () => {
 
   test('the line opens a preview: 12 hours and 7 days; Escape and Back close it', async ({
     page,
+    isMobile,
   }) => {
     await mockWeather(page);
     await choosePlace(page);
@@ -148,6 +149,14 @@ test.describe('Weather line', () => {
       'Gewitter',
     );
     await expect(preview.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
+    if (!isMobile) {
+      // Desktop: everything fits, no scrolling needed.
+      const fits = await preview.evaluate((el) => {
+        const body = el.parentElement!;
+        return body.scrollHeight <= body.clientHeight;
+      });
+      expect(fits).toBe(true);
+    }
     await page.keyboard.press('Escape');
     await expect(preview).toHaveCount(0);
 
