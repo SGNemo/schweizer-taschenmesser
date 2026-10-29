@@ -61,7 +61,7 @@ describe('AdvancedFields', () => {
   it('the header switch reports the choice', async () => {
     const user = userEvent.setup();
     render(<AdvancedToggle moduleId="todos" />);
-    await user.click(screen.getByRole('switch', { name: 'Erweitert' }));
+    await user.click(screen.getByRole('switch', { name: 'Mehr Felder anzeigen' }));
     expect(setAdvanced).toHaveBeenCalledWith(true);
   });
 });

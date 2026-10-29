@@ -234,9 +234,9 @@ export const de = {
   home: {
     title: 'Übersicht',
     emptyTitle: 'Noch keine Module aktiv',
-    emptyText: 'Aktiviere Module in der Bibliothek, um hier Widgets zu sehen.',
+    emptyText: 'Aktiviere Module in der Bibliothek, um hier Karten zu sehen.',
     toLibrary: 'Zur Bibliothek',
-    noWidgets: 'Die aktiven Module bieten keine Widgets an.',
+    noWidgets: 'Die aktiven Module bieten keine Karten an.',
   },
   library: {
     title: 'Modul-Bibliothek',
@@ -290,7 +290,7 @@ export const de = {
         'Datum',
       ],
       appearance: ['Theme', 'Dunkelmodus', 'Schrift', 'Animation'],
-      modules: ['Bibliothek', 'Modul aktivieren', 'Startdaten'],
+      modules: ['Bibliothek', 'Modul aktivieren', 'Importieren'],
       tools: ['Werkzeugleiste', 'Reihenfolge'],
       notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
       'browser-extension': ['Brave', 'Chrome', 'Autofill'],
@@ -404,7 +404,7 @@ export const de = {
       },
       module: {
         title: 'Module',
-        description: 'Einstellungen der Module und Startdaten',
+        description: 'Einstellungen der Module und Importieren',
         keywords: ['Erinnerung', 'Startdaten', 'Import'],
       },
       werkzeuge: {
@@ -521,7 +521,7 @@ export const de = {
     motion: 'Bewegung',
     motionOptions: { system: 'Wie das System', reduce: 'Weniger' },
     homeView: 'Übersicht',
-    homeViewOptions: { all: 'Alle Widgets', calm: 'Nur das Wichtigste' },
+    homeViewOptions: { all: 'Alle Karten', calm: 'Nur das Wichtigste' },
     density: 'Dichte',
     densityOptions: { normal: 'Normal', compact: 'Kompakt' },
     modules: 'Module',
@@ -591,7 +591,7 @@ export const de = {
         connect: 'Mit Sync-Server verbinden',
         connected: 'Dieses Gerät ist bereits mit einem Sync-Server verbunden.',
         afterConnect:
-          'Liefert der Server bereits Module und Daten, kannst du die Schritte Profil und Startdaten überspringen.',
+          'Liefert der Server bereits Module und Daten, kannst du die Schritte Profil und Importieren überspringen.',
       },
       profiles: {
         title: 'Profil und Module',
@@ -656,10 +656,10 @@ export const de = {
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
       startdata: {
-        title: 'Startdaten',
+        title: 'Importieren',
         description:
           'Trage erste Einträge ein oder importiere sie: per Text, Datei, Vorlage oder Verbindung. Vor dem Speichern siehst du immer eine Vorschau, und jeder Import lässt sich rückgängig machen.',
-        none: 'Aktive Module bieten keine Startdaten an.',
+        none: 'Aktive Module bieten keinen Import an.',
         handled: 'Schon bearbeitet',
         hints: {
           finance: 'Konten, Kategorien und Startsalden.',
@@ -672,7 +672,7 @@ export const de = {
         description:
           'Lass eine KI deiner Wahl Daten aufbereiten: Du kopierst das Schema, sie liefert JSON, du siehst eine Vorschau.',
         none: 'Kein aktives Modul unterstützt den JSON-Import.',
-        hint: 'Es wird nur das Schema kopiert, nie deine Daten. Den Tresor (Accounts) gibt es hier nie.',
+        hint: 'Es wird nur das Schema kopiert, nie deine Daten. Den Tresor (Passwörter) gibt es hier nie.',
         desktop:
           'Am Computer gibt es zusätzlich die lokale Schnittstelle (Einstellungen → Lokale Schnittstelle).',
       },
@@ -713,8 +713,8 @@ export const de = {
       },
       dashboard: {
         title: 'Übersicht',
-        description: 'Welche Widgets erscheinen und in welcher Reihenfolge. Ziehen oder Tastatur.',
-        empty: 'Die aktiven Module haben keine Widgets.',
+        description: 'Welche Karten erscheinen und in welcher Reihenfolge. Ziehen oder Tastatur.',
+        empty: 'Die aktiven Module haben keine Karten.',
         hide: (title: string) => `${title} anzeigen`,
         drag: (title: string) => `${title} verschieben`,
         instructions:
@@ -742,13 +742,14 @@ export const de = {
     /** Typing the start of the word for settings shows settings entries (first letters, lower case). */
     settingsPrefix: 'einst',
     recent: 'Zuletzt benutzt',
-    title: 'Befehlspalette',
+    title: 'Suchen',
     placeholder: 'Suchen, springen oder fragen …',
     empty: 'Keine Treffer',
-    hint: 'Ctrl+K',
+    hint: 'Strg+K',
     newEntry: (what: string) => `Neu: ${what}`,
-    nextReminder: 'Nächste Erinnerung',
-    randomReminder: 'Zufällige Erinnerung',
+    nextReminder: 'Nächste Erinnerung zeigen',
+    helpCommand: 'Hilfe und Anleitung öffnen',
+    randomReminder: 'Eine Erinnerung zeigen',
   },
   share: {
     title: 'Teilen',
@@ -1082,7 +1083,7 @@ export const de = {
     waiting: {
       text: (n: number) => (n === 1 ? '1 ToDo wartet noch.' : `${n} ToDos warten noch.`),
       replan: 'Neu planen',
-      replanHint: 'Verteilt sie auf die nächsten Tage.',
+      replanHint: 'Überfällig, nicht dringend. Neu planen verteilt sie auf die nächsten Tage.',
       replanned: 'Auf die nächsten Tage verteilt.',
     },
     mode: {
@@ -1836,8 +1837,8 @@ export const de = {
     center: {
       title: 'Erinnerungen',
       bell: (n: number) => (n === 0 ? 'Erinnerungen' : `Erinnerungen, ${n} offen`),
-      next: 'Nächste Erinnerung',
-      random: 'Zufällige Erinnerung',
+      next: 'Nächste Erinnerung zeigen',
+      random: 'Eine Erinnerung zeigen',
       another: 'Noch eine',
       allRead: 'Alle gelesen',
       list: 'Offen',
@@ -1870,7 +1871,7 @@ export const de = {
   },
   notifications: {
     summary: (count: number, titles: string[]) => ({
-      title: `Weitere Erinnerungen · ${count}`,
+      title: `${count} Erinnerungen`,
       body: titles.slice(0, 3).join(' · ') + (titles.length > 3 ? ' …' : ''),
     }),
     title: 'Benachrichtigungen',
@@ -1937,6 +1938,7 @@ export const de = {
     updateAvailable: 'Update verfügbar',
     waiting: (n: number) => `Wartet noch · ${n}`,
     nothingNow: 'Nichts davon muss jetzt sein.',
+    waitingExplain: 'Überfällig, aber nicht dringend. Du kannst sie neu planen.',
     todosWaiting: (n: number) => (n === 1 ? '1 ToDo wartet' : `${n} ToDos warten`),
     todosWaitingDetail: 'Neu planen möglich',
   },
@@ -1979,14 +1981,13 @@ export const de = {
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
   },
   homeEdit: {
-    showMore: (n: number) =>
-      n === 1 ? 'Mehr anzeigen · 1 Widget' : `Mehr anzeigen · ${n} Widgets`,
+    showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),
     showLess: 'Nur das Wichtigste',
-    pinStart: 'Anheften…',
-    pin: (title: string) => `${title} anheften`,
-    unpin: (title: string) => `${title} lösen`,
-    pinned: 'Angeheftet',
-    pinNote: 'Angeheftete Widgets bleiben auch in der ruhigen Ansicht sichtbar.',
+    pinStart: 'Karte hinzufügen…',
+    pin: (title: string) => `${title} hinzufügen`,
+    unpin: (title: string) => `${title} entfernen`,
+    pinned: 'Hinzugefügt',
+    pinNote: 'Hinzugefügte Karten bleiben auch in der ruhigen Ansicht sichtbar.',
     customize: 'Anpassen',
     done: 'Fertig',
     hide: 'Ausblenden',
@@ -1999,15 +2000,15 @@ export const de = {
     moved: (title: string, pos: number) => `${title} auf Position ${pos} verschoben.`,
     dropped: (title: string, pos: number) => `${title} auf Position ${pos} abgelegt.`,
     cancelled: 'Verschieben abgebrochen.',
-    widgets: 'Widgets',
-    widgetsTitle: 'Widgets der Übersicht',
+    widgets: 'Karten',
+    widgetsTitle: 'Karten der Übersicht',
     widgetsNote:
       'Ausblenden betrifft nur die Übersicht, das Modul bleibt aktiv. Deaktivieren kannst du Module in der Bibliothek.',
-    widgetsNone: 'Keine aktiven Module mit Widgets.',
+    widgetsNone: 'Keine aktiven Module mit Karten.',
     reset: 'Zurücksetzen',
     resetTitle: 'Übersicht zurücksetzen?',
     resetText:
-      'Reihenfolge, Größen und ausgeblendete Widgets gehen auf den Standard zurück. Deine Module und Daten bleiben unverändert.',
+      'Reihenfolge, Größen und ausgeblendete Karten gehen auf den Standard zurück. Deine Module und Daten bleiben unverändert.',
     resetConfirm: 'Auf Standard zurücksetzen',
     cancel: 'Abbrechen',
     size: (title: string) => `Größe von ${title}`,
@@ -2254,7 +2255,7 @@ export const de = {
     defaultDeviceName: 'Gerät',
     title: 'Synchronisation',
     intro:
-      'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im LAN oder über Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
+      'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im Heimnetz oder über ein privates Netzwerk wie Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
     serverUrl: 'Server-Adresse',
     serverUrlHint: 'z. B. https://mein-pc.tailnet.ts.net',
     token: 'Zugangstoken',
@@ -2266,12 +2267,12 @@ export const de = {
     >,
     encrypt: 'Ende-zu-Ende-Verschlüsselung',
     encryptHint:
-      'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur Chiffretext. Nur auf einem leeren Server möglich.',
+      'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur verschlüsselte Daten. Nur auf einem leeren Server möglich.',
     plainWarning:
       'Ohne Ende-zu-Ende-Verschlüsselung liegen deine Daten auf dem Server im Klartext. Nutze sie, wenn der Server nicht nur dir gehört oder nicht verschlüsselt gespeichert wird.',
-    passphrase: 'Passphrase',
+    passphrase: 'Passwortsatz (mehrere Wörter)',
     passphraseHint:
-      'Mindestens 12 Zeichen, am besten mehrere Wörter. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
+      'Mindestens 12 Zeichen, am besten mehrere Wörter. Ohne den Passwortsatz sind die Daten nicht wiederherstellbar.',
     passphraseJoinHint: 'Nur nötig, wenn der Server verschlüsselt ist.',
     connect: 'Verbinden',
     connecting: 'Verbinde …',
@@ -2349,9 +2350,9 @@ export const de = {
       unauthorized: 'Der Server hat das Token abgelehnt.',
       server: 'Der Server hat einen Fehler gemeldet.',
       clock: 'Die Uhr dieses Geräts geht mehr als eine Stunde vor. Bitte Datum und Uhrzeit prüfen.',
-      decrypt: 'Entschlüsselung fehlgeschlagen – stimmt die Passphrase?',
+      decrypt: 'Entschlüsselung fehlgeschlagen – stimmt der Passwortsatz?',
       'no-key':
-        'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit Passphrase verbinden.',
+        'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit dem Passwortsatz verbinden.',
       unsupported: 'Nicht unterstützt.',
       unknown: 'Unbekannter Fehler.',
     } as Record<string, string>,
@@ -2360,9 +2361,9 @@ export const de = {
       unreachable:
         'Server nicht erreichbar. Wird die App per HTTPS geöffnet, muss auch der Server per HTTPS erreichbar sein (z. B. mit „tailscale serve“).',
       unauthorized: 'Das Token wurde abgelehnt.',
-      'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte die Passphrase eingeben.',
-      'passphrase-too-short': 'Die Passphrase braucht mindestens 12 Zeichen.',
-      'wrong-passphrase': 'Falsche Passphrase.',
+      'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte den Passwortsatz eingeben.',
+      'passphrase-too-short': 'Der Passwortsatz braucht mindestens 12 Zeichen.',
+      'wrong-passphrase': 'Falscher Passwortsatz.',
       'server-has-plain-data':
         'Auf dem Server liegen bereits unverschlüsselte Daten. Verschlüsselung ist nur auf einem leeren Server möglich.',
       revoked: 'Dieses Gerät ist auf dem Server gesperrt.',
@@ -2608,6 +2609,8 @@ export const de = {
       ask: 'Assistent fragen',
       write: 'Eintragen',
       writeButton: 'Mit KI eintragen',
+      writeSentence: 'Satz eintragen',
+      askLocal: 'Frage stellen',
       writePlaceholder: 'z. B. Rechnung Stadtwerke 89,90 € fällig 15.10.',
     },
     tier: {
@@ -3796,10 +3799,10 @@ export const de = {
   },
   accounts: {
     meta: {
-      name: 'Accounts',
+      name: 'Passwörter',
       description:
         'Passwort-Tresor: Zugangsdaten mit Master-Passwort verschlüsselt (Argon2id, AES-256), Generator, Einmalcodes (TOTP), Import/Export. Komplett von der KI ausgeschlossen.',
-      route: 'Accounts',
+      route: 'Passwörter',
       widget: 'Passwort-Tresor',
       settings: {
         keywords: ['Tresor', 'Passwort', 'Sperre', 'Auto-Lock', 'Browser-Erweiterung'],
@@ -3825,7 +3828,7 @@ export const de = {
     },
     pickEntry: 'Zugang auswählen',
     detail: 'Details',
-    title: 'Accounts',
+    title: 'Passwörter',
     setup: {
       title: 'Tresor einrichten',
       intro:
@@ -3870,7 +3873,7 @@ export const de = {
     },
     add: 'Zugang hinzufügen',
     edit: 'Zugang bearbeiten',
-    search: 'Accounts durchsuchen',
+    search: 'Passwörter durchsuchen',
     empty: 'Noch keine Zugänge.',
     emptyFiltered: 'Nichts gefunden.',
     undecryptable: (n: number) =>
@@ -4043,7 +4046,7 @@ export const de = {
     startData:
       'Der Assistent liest Text oder Dateien ein und zeigt zuerst eine Vorschau. Erst nach deiner Bestätigung wird gespeichert, und jeder Import lässt sich als Ganzes wieder rückgängig machen.',
     localApi:
-      'Die Schnittstelle hört nur auf diesem Computer (127.0.0.1) und ist ohne Zugangsschlüssel nutzlos. Jeder Zugang bekommt nur die Rechte, die du ankreuzt. Importe landen zuerst als Vorschau in der App. Den Tresor (Accounts), Einstellungen und Schlüssel kann sie nie erreichen.',
+      'Die Schnittstelle hört nur auf diesem Computer (127.0.0.1) und ist ohne Zugangsschlüssel nutzlos. Jeder Zugang bekommt nur die Rechte, die du ankreuzt. Importe landen zuerst als Vorschau in der App. Den Tresor (Passwörter), Einstellungen und Schlüssel kann sie nie erreichen.',
     connectors:
       'Verbindungen lesen nur, sie ändern nichts bei dem Dienst. Zugangsdaten liegen im Schlüsselspeicher dieses Geräts und werden nie synchronisiert oder gesichert. E-Mails werden ausschließlich auf deinem Gerät ausgewertet und nie an eine KI geschickt.',
   },
@@ -4174,7 +4177,7 @@ export const de = {
     intro:
       'Eine lokale Schnittstelle, über die eine KI auf diesem Computer (z. B. Claude Code, Claude Desktop) Daten in deine Module schreiben und – wenn du es erlaubst – lesen kann. Sie ist nur von diesem Computer aus erreichbar.',
     unsupported:
-      'Die Schnittstelle gibt es nur in der Windows-App. Im Browser und auf Android nutzt du „JSON einfügen“ unter Startdaten.',
+      'Die Schnittstelle gibt es nur in der Windows-App. Im Browser und auf Android nutzt du „JSON einfügen“ unter Importieren.',
     enable: 'Lokale Schnittstelle aktivieren',
     enableHint: 'Standardmäßig aus',
     port: 'Port',
@@ -4313,8 +4316,11 @@ export const de = {
     outOfRange: 'außerhalb des erlaubten Bereichs',
   },
   onboarding: {
-    button: 'Startdaten einrichten',
-    title: (module: string) => `Startdaten: ${module}`,
+    button: 'Importieren',
+    title: (module: string) => `Importieren: ${module}`,
+    rowLabel: 'Einträge übernehmen',
+    rowHint:
+      'Aus einer Datei, einem Text oder Vorschlägen. Nichts wird gespeichert, bevor du die Vorschau bestätigt hast.',
     chooseIntro:
       'Woher sollen die ersten Einträge kommen? Nichts wird gespeichert, bevor du die Vorschau bestätigt hast.',
     skip: 'Überspringen',

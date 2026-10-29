@@ -67,7 +67,7 @@ describe('notification centre', () => {
   it('"Nächste Erinnerung" shows the earliest open one, "Erledigt" answers it', async () => {
     draw();
     fireEvent.click(await screen.findByTestId('notification-bell'));
-    fireEvent.click(await screen.findByRole('button', { name: 'Nächste Erinnerung' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Nächste Erinnerung zeigen' }));
     const card = await screen.findByTestId('center-card');
     expect(within(card).getByText('Paket abholen')).toBeInTheDocument();
     fireEvent.click(within(card).getByRole('button', { name: 'Erledigt' }));
@@ -82,7 +82,7 @@ describe('notification centre', () => {
     let release!: () => void;
     due.gate = new Promise<void>((resolve) => (release = resolve));
     fireEvent.click(screen.getByTestId('notification-bell')); // starts a load that waits at the gate
-    fireEvent.click(await screen.findByRole('button', { name: 'Nächste Erinnerung' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Nächste Erinnerung zeigen' }));
     const card = await screen.findByTestId('center-card');
     expect(within(card).getByText('Paket abholen')).toBeInTheDocument();
     release();

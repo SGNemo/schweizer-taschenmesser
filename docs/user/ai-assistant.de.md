@@ -4,7 +4,7 @@
 
 ## Suche und KI-Assistent
 
-Strg+K (Handy: das Suchfeld oben) öffnet die Befehlspalette: springen, in allen Modulen suchen und Fragen stellen.
+Strg+K (Handy: das Suchfeld oben) öffnet die Suche: springen, in allen Modulen suchen und Fragen stellen.
 
 - **Lokal, ohne Kosten:** einfache Fragen versteht die App selbst – „Was steht heute an?“, „Termine morgen“, „offene Rechnungen“,
   „überfällige Aufgaben“, „Kontostand“, „Was kosten meine Abos?“, „Wie viel muss ich noch bezahlen?“, „suche Zahnarzt“.
@@ -18,7 +18,7 @@ Strg+K (Handy: das Suchfeld oben) öffnet die Befehlspalette: springen, in allen
   prüft einen Anbieter mit einer Minimal-Anfrage. Kostenlose Anbieter nutzen Eingaben teils für Training – die App weist darauf hin.
   In der installierten App (Windows/Android) gibt es keine CORS-Einschränkung; im Browser hängt die Erreichbarkeit vom Anbieter ab.
 - **Datenschutz:** an die Anbieter gehen nur deine Frage, das heutige Datum und eine kurze Beschreibung der aktiven Module – **niemals deine
-  Daten** (und nie der Passwort-Tresor „Accounts“). Das Modell wählt nur eine strukturierte Abfrage; sie wird lokal geprüft und ausgeführt.
+  Daten** (und nie der Passwort-Tresor „Passwörter“). Das Modell wählt nur eine strukturierte Abfrage; sie wird lokal geprüft und ausgeführt.
   API-Schlüssel bleiben verschlüsselt in der Datenbank dieses Geräts (nicht synchronisiert, nicht im Backup).
 - **Kosten im Blick:** identische Fragen am selben Tag kommen aus dem Cache (0 Token); Verbrauch pro Antwort und insgesamt steht in der Antwort
   bzw. den Einstellungen.
@@ -37,7 +37,7 @@ Schreibe einfach in die Leiste, was du eintragen willst – zum Beispiel „Rech
 
 Vorhandene Daten muss man nicht abtippen: Eine KI (Claude Code, ChatGPT …) liefert sie im Format der App, du bestätigst eine
 Vorschau. In der Windows-App über eine lokale, abgesicherte Schnittstelle (*Einstellungen → KI-Zugriff*, standardmäßig aus),
-überall sonst per „JSON einfügen“ im Startdaten-Assistenten. Anleitung, Beispiele und fertiger Prompt:
+überall sonst per „JSON einfügen“ im Import-Assistenten. Anleitung, Beispiele und fertiger Prompt:
 [`docs/AI-IMPORT.de.md`](../AI-IMPORT.de.md).
 
 ## Chat

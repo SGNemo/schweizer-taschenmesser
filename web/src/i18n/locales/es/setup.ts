@@ -66,7 +66,7 @@ export const setup: Strings['setup'] = {
       connect: 'Conectar con servidor de sincronización',
       connected: 'Este dispositivo ya está conectado a un servidor de sincronización.',
       afterConnect:
-        'Si el servidor ya trae módulos y datos, puedes omitir los pasos de perfil y datos iniciales.',
+        'Si el servidor ya trae módulos y datos, puedes omitir los pasos de perfil e importar.',
     },
     profiles: {
       title: 'Perfil y módulos',
@@ -131,10 +131,10 @@ export const setup: Strings['setup'] = {
       none: 'Esta versión no tiene conexiones.',
     },
     startdata: {
-      title: 'Datos iniciales',
+      title: 'Importar',
       description:
         'Añade las primeras entradas o impórtalas: con texto, archivo, plantilla o conexión. Antes de guardar siempre ves una vista previa, y cada importación se puede deshacer.',
-      none: 'Los módulos activos no ofrecen datos iniciales.',
+      none: 'Los módulos activos no ofrecen importación.',
       handled: 'Ya hecho',
       hints: {
         finance: 'Cuentas, categorías y saldos iniciales.',
@@ -187,8 +187,8 @@ export const setup: Strings['setup'] = {
     },
     dashboard: {
       title: 'Resumen',
-      description: 'Qué widgets aparecen y en qué orden. Arrastra o usa el teclado.',
-      empty: 'Los módulos activos no tienen widgets.',
+      description: 'Qué tarjetas aparecen y en qué orden. Arrastra o usa el teclado.',
+      empty: 'Los módulos activos no tienen tarjetas.',
       hide: (title: string) => `Mostrar ${title}`,
       drag: (title: string) => `Mover ${title}`,
       instructions:

@@ -4,7 +4,7 @@
 
 ## Search and AI assistant
 
-Ctrl+K (phone: the search field at the top) opens the command palette: jump, search across all modules and ask questions.
+Ctrl+K (phone: the search field at the top) opens the search: jump, search across all modules and ask questions.
 
 - **Local, free of charge:** the app understands simple questions itself, such as "What's on today?", "events tomorrow", "open invoices",
   "overdue tasks", "account balance", "What do my subscriptions cost?", "How much do I still have to pay?", "search dentist".
@@ -18,7 +18,7 @@ Ctrl+K (phone: the search field at the top) opens the command palette: jump, sea
   checks a provider with a minimal request. Free providers sometimes use inputs for training; the app points this out.
   In the installed app (Windows/Android) there is no CORS restriction; in the browser, reachability depends on the provider.
 - **Privacy:** providers only receive your question, today's date and a short description of the active modules, **never your
-  data** (and never the password vault "Accounts"). The model only picks a structured query; it is checked and run locally.
+  data** (and never the password vault "Passwords"). The model only picks a structured query; it is checked and run locally.
   API keys stay encrypted in this device's database (not synced, not in the backup).
 - **Costs at a glance:** identical questions on the same day come from the cache (0 tokens); usage per answer and in total is shown in the answer
   and in the settings.
@@ -37,7 +37,7 @@ Simply type into the bar what you want to add, for example "Rechnung Stadtwerke 
 
 You do not have to type in existing data: an AI (Claude Code, ChatGPT …) delivers it in the app's format and you confirm a
 preview. In the Windows app this works through a local, secured interface (*Settings → AI access*, off by default),
-everywhere else via "Paste JSON" in the starter-data assistant. Guide, examples and a ready-made prompt:
+everywhere else via "Paste JSON" in the import assistant. Guide, examples and a ready-made prompt:
 [`docs/AI-IMPORT.md`](../AI-IMPORT.md).
 
 ## Chat

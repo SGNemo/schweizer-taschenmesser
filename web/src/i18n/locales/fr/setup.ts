@@ -70,7 +70,7 @@ export const setup: Strings['setup'] = {
       connect: 'Se connecter à un serveur de synchronisation',
       connected: 'Cet appareil est déjà connecté à un serveur de synchronisation.',
       afterConnect:
-        'Si le serveur fournit déjà des modules et des données, vous pouvez passer les étapes Profil et Données de départ.',
+        'Si le serveur fournit déjà des modules et des données, vous pouvez passer les étapes Profil et Importer.',
     },
     profiles: {
       title: 'Profil et modules',
@@ -136,10 +136,10 @@ export const setup: Strings['setup'] = {
       none: 'Cette version ne propose aucune connexion.',
     },
     startdata: {
-      title: 'Données de départ',
+      title: 'Importer',
       description:
         'Saisissez vos premières entrées ou importez-les : par texte, fichier, modèle ou connexion. Avant d’enregistrer, vous voyez toujours un aperçu, et chaque import peut être annulé.',
-      none: 'Les modules actifs ne proposent pas de données de départ.',
+      none: 'Les modules actifs ne proposent pas d’import.',
       handled: 'Déjà traité',
       hints: {
         finance: 'Comptes, catégories et soldes de départ.',
@@ -193,8 +193,8 @@ export const setup: Strings['setup'] = {
     },
     dashboard: {
       title: 'Vue d’ensemble',
-      description: 'Quels widgets apparaissent et dans quel ordre. Glisser-déposer ou clavier.',
-      empty: 'Les modules actifs n’ont pas de widgets.',
+      description: 'Quelles cartes apparaissent et dans quel ordre. Glisser-déposer ou clavier.',
+      empty: 'Les modules actifs n’ont pas de cartes.',
       hide: (title: string) => `Afficher ${title}`,
       drag: (title: string) => `Déplacer ${title}`,
       instructions: 'Espace pour saisir, flèches pour déplacer, Espace pour déposer.',

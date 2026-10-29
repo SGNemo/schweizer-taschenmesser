@@ -71,7 +71,7 @@ export const tDiag = defineBundle(
       leaveForced: 'Beende Nemo und starte es ohne --safe-mode.',
     },
     widget: {
-      message: 'Dieses Widget konnte nicht angezeigt werden. Der Rest der Startseite läuft weiter.',
+      message: 'Diese Karte konnte nicht angezeigt werden. Der Rest der Startseite läuft weiter.',
       retry: 'Erneut versuchen',
     },
     card: {
@@ -150,7 +150,7 @@ export const tDiag = defineBundle(
         leaveForced: 'Quit Nemo and start it without --safe-mode.',
       },
       widget: {
-        message: 'This widget could not be shown. The rest of the home screen keeps running.',
+        message: 'This card could not be shown. The rest of the home screen keeps running.',
         retry: 'Try again',
       },
       card: {
@@ -233,7 +233,7 @@ export const tDiag = defineBundle(
       },
       widget: {
         message:
-          'No se pudo mostrar este widget. El resto de la pantalla de inicio sigue funcionando.',
+          'No se pudo mostrar esta tarjeta. El resto de la pantalla de inicio sigue funcionando.',
         retry: 'Reintentar',
       },
       card: {
@@ -316,7 +316,7 @@ export const tDiag = defineBundle(
       },
       widget: {
         message:
-          'Ce widget n’a pas pu s’afficher. Le reste de l’écran d’accueil continue de fonctionner.',
+          'Cette carte n’a pas pu s’afficher. Le reste de l’écran d’accueil continue de fonctionner.',
         retry: 'Réessayer',
       },
       card: {
@@ -400,7 +400,7 @@ export const tDiag = defineBundle(
       },
       widget: {
         message:
-          'Não foi possível exibir este widget. O resto da tela inicial continua funcionando.',
+          'Não foi possível exibir este cartão. O resto da tela inicial continua funcionando.',
         retry: 'Tentar de novo',
       },
       card: {

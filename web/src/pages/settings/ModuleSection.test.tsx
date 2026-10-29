@@ -17,8 +17,10 @@ describe('Module settings, folded', () => {
     render(<ModuleSection manifest={accounts} />);
     const fields = await group('accounts');
     const labels = accounts.settings.fields;
-    const value = (key: string, v: string) =>
-      labels.find((f) => f.key === key)?.options?.find((o) => o.value === v)?.label;
+    const value = (key: string, v: string) => {
+      const f = labels.find((x) => x.key === key);
+      return `${f?.label}: ${f?.options?.find((o) => o.value === v)?.label}`;
+    };
     const line = [
       value('autoLockMinutes', '5'),
       value('backgroundLock', 'now'),

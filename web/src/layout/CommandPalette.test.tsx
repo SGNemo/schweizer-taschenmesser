@@ -100,7 +100,7 @@ describe('command palette', () => {
     );
     await user.type(await screen.findByRole('combobox'), 'zzzzz');
     expect(screen.getAllByRole('option')).toHaveLength(1);
-    expect(screen.getByRole('option')).toHaveTextContent(`${t.ai.palette.ask}: „zzzzz“`);
+    expect(screen.getByRole('option')).toHaveTextContent(`${t.ai.palette.askLocal}: „zzzzz“`);
   });
 
   it('calculates arithmetic on the spot, before the assistant, without leaving the palette', async () => {
@@ -113,7 +113,7 @@ describe('command palette', () => {
     await user.type(await screen.findByRole('combobox'), '240 + 19%');
     const options = screen.getAllByRole('option');
     expect(options[0]).toHaveTextContent('240 + 19% = 285,6');
-    expect(options[1]).toHaveTextContent(t.ai.palette.ask);
+    expect(options[1]).toHaveTextContent(t.ai.palette.askLocal);
     await user.type(screen.getByRole('combobox'), '{Enter}');
     expect(useUiStore.getState().paletteOpen).toBe(true); // copying does not close it
   });

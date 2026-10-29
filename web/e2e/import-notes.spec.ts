@@ -21,7 +21,7 @@ test('Notizen: Markdown-Dateien und Keep-Export → Vorschau → Import → Wied
 }) => {
   await enable(page, 'notes');
   // Enabling offers the start-data wizard once.
-  const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+  const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog.getByRole('button', { name: /Markdown-Dateien oder Google Keep/ }).click();
 
   const chooser = page.waitForEvent('filechooser');
@@ -54,11 +54,8 @@ test('Notizen: Markdown-Dateien und Keep-Export → Vorschau → Import → Wied
 
   // Choosing the same files again: the stored note is recognised, the unticked one is new.
   await page.goto('/library');
-  await page
-    .getByTestId('module-notes')
-    .getByRole('button', { name: 'Startdaten einrichten' })
-    .click();
-  const again = page.getByRole('dialog', { name: /Startdaten/ });
+  await page.getByTestId('module-notes').getByRole('button', { name: 'Importieren' }).click();
+  const again = page.getByRole('dialog', { name: /Importieren/ });
   await again.getByRole('button', { name: /Markdown-Dateien oder Google Keep/ }).click();
   const chooser2 = page.waitForEvent('filechooser');
   await again.getByRole('button', { name: 'Datei wählen …' }).click();
@@ -78,7 +75,7 @@ test('Notizen: Markdown-Dateien und Keep-Export → Vorschau → Import → Wied
 
 test('Notizen: eingefügtes Markdown wird eine Notiz', async ({ page }) => {
   await enable(page, 'notes');
-  const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+  const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog.getByRole('button', { name: /Markdown einfügen/ }).click();
   await dialog
     .getByLabel('Markdown-Text')

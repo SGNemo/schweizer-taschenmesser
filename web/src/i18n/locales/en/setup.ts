@@ -64,7 +64,7 @@ export const setup: Strings['setup'] = {
       connect: 'Connect to a sync server',
       connected: 'This device is already connected to a sync server.',
       afterConnect:
-        'If the server already provides modules and data, you can skip the profile and starter data steps.',
+        'If the server already provides modules and data, you can skip the profile and import steps.',
     },
     profiles: {
       title: 'Profile and modules',
@@ -129,10 +129,10 @@ export const setup: Strings['setup'] = {
       none: 'There are no connections in this version.',
     },
     startdata: {
-      title: 'Starter data',
+      title: 'Import',
       description:
         'Add your first entries or import them: by text, file, template or connection. You always see a preview before saving, and every import can be undone.',
-      none: 'Active modules don’t offer starter data.',
+      none: 'Active modules don’t offer an import.',
       handled: 'Already done',
       hints: {
         finance: 'Accounts, categories and opening balances.',
@@ -185,8 +185,8 @@ export const setup: Strings['setup'] = {
     },
     dashboard: {
       title: 'Overview',
-      description: 'Which widgets appear and in what order. Drag or use the keyboard.',
-      empty: 'The active modules have no widgets.',
+      description: 'Which cards appear and in what order. Drag or use the keyboard.',
+      empty: 'The active modules have no cards.',
       hide: (title: string) => `Show ${title}`,
       drag: (title: string) => `Move ${title}`,
       instructions: 'Space to pick up, arrow keys to move, Space to drop.',

@@ -26,7 +26,7 @@ test('the module switch "Erweitert" is remembered and shows the fields right awa
   page,
 }) => {
   await ready(page, '/calendar');
-  const toggle = page.getByRole('switch', { name: 'Erweitert' });
+  const toggle = page.getByRole('switch', { name: 'Mehr Felder anzeigen' });
   await toggle.click();
   // the choice is written asynchronously: wait for it before leaving the page
   await expect(toggle).toHaveAttribute('aria-checked', 'true');
@@ -35,24 +35,26 @@ test('the module switch "Erweitert" is remembered and shows the fields right awa
   // another module is unaffected
   await ready(page, '/todos?new=1');
   await expect(
-    (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Erweitert' }),
+    (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
   ).toHaveAttribute('aria-checked', 'false');
 });
 
 test('the global setting switches every module; a module switch overrides it', async ({ page }) => {
   await ready(page, '/settings/darstellung');
-  const all = page.getByRole('switch', { name: 'Alle Module in der Erweitert-Ansicht' });
+  const all = page.getByRole('switch', { name: 'In allen Modulen mehr Felder anzeigen' });
   await all.click();
   await expect(all).toHaveAttribute('aria-checked', 'true');
   await ready(page, '/todos');
-  const advanced = (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Erweitert' });
+  const advanced = (await openTodosMenu(page)).getByRole('menuitemcheckbox', {
+    name: 'Mehr Felder anzeigen',
+  });
   await expect(advanced).toHaveAttribute('aria-checked', 'true');
   await advanced.click(); // picking an entry closes the menu
   await expect(
-    (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Erweitert' }),
+    (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
   ).toHaveAttribute('aria-checked', 'false');
   await ready(page, '/invoices');
-  await expect(page.getByRole('switch', { name: 'Erweitert' })).toHaveAttribute(
+  await expect(page.getByRole('switch', { name: 'Mehr Felder anzeigen' })).toHaveAttribute(
     'aria-checked',
     'true',
   );
@@ -82,7 +84,7 @@ test('finance: accounts and categories sit behind "Erweitert", or show once ther
   await expect(page.getByRole('button', { name: 'Konten' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Kategorien' })).toHaveCount(0);
 
-  const toggle = page.getByRole('switch', { name: 'Erweitert' });
+  const toggle = page.getByRole('switch', { name: 'Mehr Felder anzeigen' });
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByRole('button', { name: 'Konten' })).toBeVisible();
