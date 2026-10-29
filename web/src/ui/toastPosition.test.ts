@@ -26,8 +26,8 @@ describe('toast position', () => {
     ).toContain('bottom: var(--space-5)');
   });
 
-  it('stacks at most two, above the page layers', () => {
-    expect(MAX_TOASTS).toBe(2);
+  it('shows one at a time, above the page layers', () => {
+    expect(MAX_TOASTS).toBe(1);
     expect(block('.toasts')).toContain('z-index: var(--z-toast)');
   });
 });

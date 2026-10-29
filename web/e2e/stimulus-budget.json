@@ -122,7 +122,7 @@
       "buttons": 129,
       "links": 26,
       "icons": 102,
-      "firstScreenActions": 46
+      "firstScreenActions": 61
     },
     "desktop--vault": {
       "height": 800,
@@ -146,10 +146,10 @@
       "firstScreenActions": 25
     },
     "phone--calendar": {
-      "height": 1018,
+      "height": 1122,
       "buttons": 51,
       "links": 10,
-      "icons": 12,
+      "icons": 13,
       "firstScreenActions": 60
     },
     "phone--finance": {

@@ -14,17 +14,17 @@ afterEach(() => {
 });
 
 describe('toasts', () => {
-  it('stack at most two; a third pushes the oldest out', () => {
+  it('show one notice at a time; a new one replaces the old', () => {
     const { toast } = useUiStore.getState();
     act(() => {
       toast('eins');
       toast('zwei');
       toast('drei');
     });
-    expect(useUiStore.getState().toasts.map((x) => x.message)).toEqual(['zwei', 'drei']);
+    expect(useUiStore.getState().toasts.map((x) => x.message)).toEqual(['drei']);
   });
 
-  it('each toast disappears after 6 s on its own clock', () => {
+  it('a toast disappears after 6 s; a replacement starts its own clock', () => {
     render(<Toaster />);
     act(() => {
       useUiStore.getState().toast('alt');
@@ -34,7 +34,7 @@ describe('toasts', () => {
       useUiStore.getState().toast('neu');
     });
     act(() => {
-      vi.advanceTimersByTime(2100); // 'alt' is 6.1 s old, 'neu' only 2.1 s
+      vi.advanceTimersByTime(2100); // 'alt' would be 6.1 s old, 'neu' only 2.1 s
     });
     expect(screen.queryByText('alt')).toBeNull();
     expect(screen.getByText('neu')).toBeVisible();
