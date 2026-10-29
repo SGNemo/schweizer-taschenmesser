@@ -56,7 +56,7 @@ export function createContext(def: ConnectorDef, now: () => number = Date.now): 
     } catch (e) {
       if (e instanceof PublicFetchError)
         throw new ConnectorError(
-          e.code,
+          e.code === 'timeout' ? 'network' : e.code,
           e.code === 'no-proxy' ? 'no sync server' : redact(e.message),
         );
       throw e;

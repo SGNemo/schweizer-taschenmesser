@@ -7,6 +7,8 @@ export const sync: Strings['sync'] = {
     'Optional: sync your data through your own sync server (on your home network or via a private network such as Tailscale). Without a server, everything stays on this device.',
   serverUrl: 'Server address',
   serverUrlHint: 'e.g. https://my-pc.tailnet.ts.net',
+  httpWarning:
+    'With “http://” the token travels over the network unencrypted. Use https:// (for example Tailscale) – http is only fine for this computer (localhost).',
   token: 'Access token',
   deviceName: 'Device name',
   deviceNameHint: 'This is how this device appears in the device list.',
@@ -41,7 +43,10 @@ export const sync: Strings['sync'] = {
   state: { off: 'Off', idle: 'Synced', syncing: 'Syncing …', error: 'Error' },
   badge: (state: string) => `Sync: ${state}`,
   detailsTitle: 'Status',
-  lastResult: (pulled: number, pushed: number) => `Last time: ${pulled} received, ${pushed} sent`,
+  lastResult: (applied: number, pushed: number) =>
+    applied === 0 && pushed === 0
+      ? 'Last time: all up to date, nothing new'
+      : `Last time: ${applied} changes applied, ${pushed} sent`,
   rejected: (n: number) =>
     n === 1
       ? '1 received change couldn’t be decrypted and was skipped.'

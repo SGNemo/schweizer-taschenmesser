@@ -7,6 +7,8 @@ export const sync: Strings['sync'] = {
     'Facultatif : synchronisez vos données via votre propre serveur de synchronisation (sur votre réseau domestique ou via un réseau privé comme Tailscale). Sans serveur, tout reste sur cet appareil.',
   serverUrl: 'Adresse du serveur',
   serverUrlHint: 'p. ex. https://mon-pc.tailnet.ts.net',
+  httpWarning:
+    'Avec « http:// », le jeton circule non chiffré sur le réseau. Utilisez https:// (par exemple Tailscale) ; http n’est acceptable que pour cet ordinateur (localhost).',
   token: 'Token d’accès',
   deviceName: 'Nom de l’appareil',
   deviceNameHint: 'C’est ainsi que cet appareil apparaît dans la liste des appareils.',
@@ -46,8 +48,10 @@ export const sync: Strings['sync'] = {
   state: { off: 'Désactivée', idle: 'Synchronisé', syncing: 'Synchronisation…', error: 'Erreur' },
   badge: (state: string) => `Synchronisation : ${state}`,
   detailsTitle: 'État',
-  lastResult: (pulled: number, pushed: number) =>
-    `Dernière fois : ${pulled} reçu(s), ${pushed} envoyé(s)`,
+  lastResult: (applied: number, pushed: number) =>
+    applied === 0 && pushed === 0
+      ? 'Dernière fois : tout est à jour, rien de nouveau'
+      : `Dernière fois : ${applied} modification(s) appliquée(s), ${pushed} envoyée(s)`,
   rejected: (n: number) =>
     n <= 1
       ? `${n} modification reçue n’a pas pu être déchiffrée et a été ignorée.`

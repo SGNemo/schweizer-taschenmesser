@@ -16,6 +16,7 @@ import type { Backup } from './backup';
 import {
   checksumMatches,
   isEncryptedBackupText,
+  plainChecksumStatus,
   parseEncryptedBackup,
   readBackupText,
 } from './encrypted';
@@ -46,6 +47,8 @@ export interface VerifyReport {
   totals: { records: number; tombstones: number };
   /** Tables in the file that this app version does not know (they would be skipped). */
   skippedTables: number;
+  /** Plain file without a checksum: a change cannot be detected. */
+  unprotected?: boolean;
 }
 
 export interface VerifyDeps {
@@ -109,6 +112,17 @@ export async function verifyBackup(
     status.set('checksum', 'ok');
   }
 
+  let unprotected = false;
+  if (!encrypted) {
+    const sum = await plainChecksumStatus(text);
+    if (sum === 'mismatch') {
+      status.set('format', 'ok');
+      return fail('checksum', 'checksum-mismatch');
+    }
+    if (sum === 'ok') status.set('checksum', 'ok');
+    else unprotected = true;
+  }
+
   // 3 + 4: decrypt and validate
   const read = await readBackupText(text, passphrase);
   if (!read.ok) {
@@ -129,7 +143,7 @@ export async function verifyBackup(
   );
   const known = new Set(deps.tableNames);
   const skippedTables = Object.keys(backup.tables).filter((n) => !known.has(n)).length;
-  const details = { exportedAt: backup.exportedAt, modules, totals, skippedTables };
+  const details = { exportedAt: backup.exportedAt, modules, totals, skippedTables, unprotected };
 
   // 5 + 6: dry-run restore into a temporary database
   const tmp = deps.createTempDb();

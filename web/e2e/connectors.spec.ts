@@ -84,7 +84,7 @@ test.describe('connectors', () => {
     await expect(ics.getByRole('alert')).toContainText('Sync-Server');
     await ics.getByLabel('Adresse des Kalenders').fill('kein url');
     await ics.getByRole('button', { name: 'Kalender hinzufügen' }).click();
-    await expect(ics.getByRole('alert')).toContainText('keine gültige Adresse');
+    await expect(ics.getByRole('alert')).toContainText('keine gültige öffentliche Adresse');
   });
 
   test('an ICS subscription (through the sync server proxy) shows up in the calendar as read-only', async ({

@@ -42,6 +42,13 @@ export const accounts: Strings['accounts'] = {
     create: 'Create vault',
     creating: 'Calculating key …',
     mismatch: 'The passwords don’t match.',
+    weakNotice:
+      'This password can be guessed quickly. You can still use it – or take a suggestion made of several words: easier to remember, harder to crack.',
+    suggest: 'Suggest several words',
+    suggested: (phrase: string) =>
+      `Your suggestion: ${phrase}. It is already in both fields. Write it down before you continue.`,
+    weakAck: 'Use the weak password anyway',
+    weakNeedAck: 'Confirm above that you want to use the weak password anyway.',
     tooShort: (n: number) => `At least ${n} characters.`,
     exists: 'A vault already exists (e.g. from another device).',
   },
