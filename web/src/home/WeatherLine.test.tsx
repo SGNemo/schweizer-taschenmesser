@@ -13,6 +13,25 @@ const forecastBody = {
   current: { time: '2026-10-19T12:00', temperature_2m: 14.2, weather_code: 2 },
   hourly: { time: times, precipitation_probability: times.map((_, h) => (h === 15 ? 80 : 0)) },
 };
+const dayDates = Array.from({ length: 7 }, (_, i) => `2026-10-${19 + i}`);
+const previewBody = {
+  current: forecastBody.current,
+  hourly: {
+    time: [...times, ...times.map((t) => t.replace('-19T', '-20T'))],
+    temperature_2m: Array.from({ length: 48 }, (_, i) => 10 + (i % 5)),
+    weather_code: Array.from({ length: 48 }, () => 3),
+    precipitation_probability: Array.from({ length: 48 }, (_, i) =>
+      i === 15 ? 80 : i === 16 ? 10 : 0,
+    ),
+  },
+  daily: {
+    time: dayDates,
+    weather_code: dayDates.map(() => 61),
+    temperature_2m_max: dayDates.map(() => 15),
+    temperature_2m_min: dayDates.map(() => 7),
+    precipitation_probability_max: dayDates.map((_, i) => (i === 0 ? 40 : 10)),
+  },
+};
 
 beforeEach(async () => {
   await db.table('_settings').clear();
@@ -21,6 +40,7 @@ beforeEach(async () => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   setNow();
 });
 
@@ -95,7 +115,7 @@ describe('WeatherLine', () => {
     await waitFor(() => expect(f).toHaveBeenCalledTimes(2));
   });
 
-  it('names the line by its text, not by a label that hides it', async () => {
+  it('names the line (now a button) by its text, not by a label that hides it', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify(forecastBody), { status: 200 })),
@@ -103,7 +123,7 @@ describe('WeatherLine', () => {
     await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
     renderLine();
     await waitFor(() =>
-      expect(screen.getByRole('link', { name: /Bern · 14° leicht bewölkt/ })).toBeTruthy(),
+      expect(screen.getByRole('button', { name: /Bern · 14° leicht bewölkt/ })).toBeTruthy(),
     );
   });
 
@@ -152,5 +172,93 @@ describe('WeatherLine', () => {
       ),
     );
     expect(f).not.toHaveBeenCalled();
+  });
+
+  describe('preview', () => {
+    const open = async () => {
+      renderLine();
+      fireEvent.click(await screen.findByTestId('weather-line'));
+      return screen.findByTestId('weather-preview');
+    };
+
+    it('a tap opens 12 hours and 7 days; rain only from 30 %, never a colour or a warning', async () => {
+      setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(JSON.stringify(previewBody), { status: 200 })),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+      const preview = await open();
+      expect(screen.getByRole('heading', { name: 'Bern' })).toBeTruthy();
+      const hours = screen.getByTestId('weather-hours').querySelectorAll('li');
+      const days = screen.getByTestId('weather-days').querySelectorAll('li');
+      expect(hours).toHaveLength(12);
+      expect(days).toHaveLength(7);
+      expect(hours[0]).toHaveTextContent(/12:00 · 12° · bedeckt$/);
+      expect(hours[3]).toHaveTextContent(/15:00 · 10° · bedeckt · Regen 80 %$/);
+      expect(hours[4]).not.toHaveTextContent('Regen');
+      expect(days[0]).toHaveTextContent(/7° \/ 15° · Regen · Regen 40 %$/);
+      expect(days[1]).not.toHaveTextContent('Regen 10');
+      expect(preview).not.toHaveTextContent('Stand');
+    });
+
+    it('links to the weather settings and credits Open-Meteo', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(JSON.stringify(previewBody), { status: 200 })),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+      await open();
+      expect(screen.getByRole('link', { name: 'Einstellungen' }).getAttribute('href')).toBe(
+        '/settings/verbindungen#weather',
+      );
+      expect(screen.getByTestId('weather-preview-credit')).toHaveTextContent('Open-Meteo.com');
+    });
+
+    it('offline: the last preview stays with "Stand hh:mm" and nothing is asked', async () => {
+      const t0 = new Date(2026, 9, 19, 12, 5).getTime();
+      setNow(() => t0);
+      const f = vi.fn();
+      vi.stubGlobal('fetch', f);
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      localStorage.setItem(
+        'tm-weather',
+        JSON.stringify({
+          key: '46.95,7.45',
+          at: t0 - 2 * WEATHER_TTL_MS,
+          forecast: {
+            temp: 9,
+            group: 'rain',
+            time: '2026-10-19T11:05',
+            hours: [{ time: '2026-10-19T12:00', temp: 9, group: 'rain', rain: 90 }],
+            days: [{ date: '2026-10-19', min: 4, max: 11, group: 'rain', rain: 90 }],
+          },
+        }),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.95, 7.45);
+      const preview = await open();
+      expect(preview).toHaveTextContent(/Stand 0?11:05/);
+      expect(screen.getByTestId('weather-hours').querySelectorAll('li')).toHaveLength(1);
+      expect(f).not.toHaveBeenCalled();
+    });
+
+    it('an old cached value without preview data: "Wird geladen", one request, then the rows', async () => {
+      const t0 = new Date(2026, 9, 19, 12, 5).getTime();
+      setNow(() => t0);
+      localStorage.setItem(
+        'tm-weather',
+        JSON.stringify({ key: '46.95,7.45', at: t0, forecast: { temp: 9, group: 'rain' } }),
+      );
+      const f = vi.fn(async () => new Response(JSON.stringify(previewBody), { status: 200 }));
+      vi.stubGlobal('fetch', f);
+      await chooseWeatherPlace('Bern, Schweiz', 46.95, 7.45);
+      renderLine();
+      await screen.findByTestId('weather-line');
+      expect(f).not.toHaveBeenCalled(); // the line alone keeps the old value
+      fireEvent.click(screen.getByTestId('weather-line'));
+      expect(await screen.findByText('Wird geladen …')).toBeTruthy();
+      await waitFor(() => expect(screen.getByTestId('weather-hours')).toBeTruthy());
+      expect(f).toHaveBeenCalledTimes(1);
+    });
   });
 });

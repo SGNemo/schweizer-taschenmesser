@@ -1,0 +1,33 @@
+/* The weather preview: plain text rows, muted, no colour, no motion. */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-variant-numeric: var(--font-num);
+}
+.asOf,
+.loading,
+.foot {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--space-6);
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}

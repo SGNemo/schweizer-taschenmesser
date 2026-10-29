@@ -27,10 +27,27 @@ export const cacheKey = (lat: number, lon: number): string => `${lat},${lon}`;
 const groupSchema = z.custom<CodeGroup>(
   (v) => typeof v === 'string' && Object.hasOwn(tWeather.de.codes, v),
 );
+const hourSchema = z.object({
+  time: z.string(),
+  temp: z.number().finite(),
+  group: groupSchema,
+  rain: z.number().finite(),
+});
+const daySchema = z.object({
+  date: z.string(),
+  min: z.number().finite(),
+  max: z.number().finite(),
+  group: groupSchema,
+  rain: z.number().finite(),
+});
+/** `time`, `hours` and `days` are optional: a value cached before the preview stays valid for the line. */
 const forecastSchema = z.object({
   temp: z.number().finite(),
   group: groupSchema,
   rainFrom: z.string().optional(),
+  time: z.string().optional(),
+  hours: z.array(hourSchema).optional(),
+  days: z.array(daySchema).optional(),
 });
 const cachedSchema = z.object({
   key: z.string(),
@@ -101,8 +118,8 @@ export const isFresh = (cached: Cached | undefined, key: string, at: number): bo
   !!cached && cached.key === key && at - cached.at < WEATHER_TTL_MS;
 
 /**
- * A request is due when the value is not fresh, the device is online and the last request for this
- * place did not fail within the retry window.
+ * A request is due when the value is not fresh (or, when the preview is open, has no preview data yet),
+ * the device is online and the last request for this place did not fail within the retry window.
  */
 export const shouldFetch = (
   cached: Cached | undefined,
@@ -110,7 +127,9 @@ export const shouldFetch = (
   at: number,
   online: boolean,
   tried?: Tried,
+  needsPreview = false,
 ): boolean =>
   online &&
-  !isFresh(cached, key, at) &&
+  (!isFresh(cached, key, at) ||
+    (needsPreview && cached !== undefined && !(cached.forecast.hours && cached.forecast.days))) &&
   !(tried && tried.key === key && at - tried.at < WEATHER_RETRY_MS);

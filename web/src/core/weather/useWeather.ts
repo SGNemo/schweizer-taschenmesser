@@ -36,8 +36,9 @@ function request(key: string, lat: number, lon: number): Promise<Forecast> {
  * Forecast of the chosen place, or `undefined` while there is none (no place, switched off, still
  * loading, nothing cached and not reachable). Never an error state: the line then simply is not there.
  * An older cached forecast of the same place is kept (marked stale) when offline or a request fails.
+ * `needsPreview`: the preview is open, so a cached value without preview data is asked for once more.
  */
-export function useWeather(): WeatherView | undefined {
+export function useWeather(needsPreview = false): WeatherView | undefined {
   const [settings] = useWeatherSettings();
   const [fetched, setFetched] = useState<{ key: string; forecast: Forecast; at: number }>();
   const active = !!settings && isWeatherActive(settings);
@@ -47,9 +48,11 @@ export function useWeather(): WeatherView | undefined {
   const key = cacheKey(lat, lon);
   const cached = useMemo(() => (active ? readCache() : undefined), [active, key]);
 
+  const hit = fetched?.key === key ? fetched : cached?.key === key ? cached : undefined;
+
   useEffect(() => {
     const online = typeof navigator === 'undefined' || navigator.onLine !== false;
-    if (!active || !shouldFetch(cached, key, now(), online, readTried())) return;
+    if (!active || !shouldFetch(hit, key, now(), online, readTried(), needsPreview)) return;
     let alive = true;
     request(key, lat, lon)
       .then((f) => {
@@ -62,9 +65,8 @@ export function useWeather(): WeatherView | undefined {
     return () => {
       alive = false;
     };
-  }, [active, key, lat, lon, cached]);
+  }, [active, key, lat, lon, hit, needsPreview]);
 
-  const hit = fetched?.key === key ? fetched : cached?.key === key ? cached : undefined;
   if (!active || !hit) return undefined;
   return { place, forecast: hit.forecast, at: hit.at, stale: !isFresh(hit, key, now()) };
 }

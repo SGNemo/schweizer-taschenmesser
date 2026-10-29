@@ -17,7 +17,7 @@ The app opens these connections only in the cases named; apart from your IP addr
 
 - **GitHub** – daily update check (can be switched off) and update downloads.
 - **frankfurter.dev** (ECB rates) – when the currency converter is opened.
-- **open-meteo.com** (weather) – only after you choose a place: the place name when you search, then its position rounded to about a kilometre, about every 30 minutes while the Overview is open. Switch off under Settings → Connections → Weather.
+- **open-meteo.com** (weather) – only after you choose a place: the place name when you search, then its position rounded to about a kilometre (for the 7-day forecast), about every 30 minutes while the Overview is open. Switch off under Settings → Connections → Weather.
 - **api.ipify.org** – only on clicking "Öffentliche IP abfragen" (Dieser PC → System).
 - **huggingface.co** – download of the local AI model, only after your confirmation (checksum verified).
 - **Feed and calendar addresses** you subscribed to – directly in the app, in the browser through the proxy of your own sync server.

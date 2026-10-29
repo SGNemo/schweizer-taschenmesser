@@ -7,6 +7,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const times = Array.from({ length: 24 }, (_, h) => `2026-09-29T${String(h).padStart(2, '0')}:00`);
+const nextDay = times.map((t) => t.replace('-29T', '-30T'));
 
 /** Open-Meteo answers, made up; counts the requests that leave for the weather host. */
 async function mockWeather(page: Page) {
@@ -33,8 +34,25 @@ async function mockWeather(page: Page) {
       json: {
         current: { time: '2026-09-29T10:00', temperature_2m: 14.2, weather_code: 2 },
         hourly: {
-          time: times,
-          precipitation_probability: times.map((_, h) => (h === 15 ? 80 : 0)),
+          time: [...times, ...nextDay],
+          temperature_2m: Array.from({ length: 48 }, (_, i) => 10 + (i % 6)),
+          weather_code: Array.from({ length: 48 }, () => 3),
+          precipitation_probability: Array.from({ length: 48 }, (_, i) => (i === 15 ? 80 : 0)),
+        },
+        daily: {
+          time: [
+            '2026-09-29',
+            '2026-09-30',
+            '2026-10-01',
+            '2026-10-02',
+            '2026-10-03',
+            '2026-10-04',
+            '2026-10-05',
+          ],
+          weather_code: [2, 61, 0, 95, 3, 71, 1],
+          temperature_2m_max: [15, 14, 17, 12, 13, 5, 16],
+          temperature_2m_min: [8, 9, 6, 7, 8, 1, 7],
+          precipitation_probability_max: [80, 70, 0, 90, 10, 40, 0],
         },
       },
     });
@@ -109,12 +127,45 @@ test.describe('Weather line', () => {
     expect(seen).toEqual([]);
   });
 
-  test('the line opens the settings', async ({ page }) => {
+  test('the line opens a preview: 12 hours and 7 days; Escape and Back close it', async ({
+    page,
+  }) => {
+    await mockWeather(page);
+    await choosePlace(page);
+    await ready(page, '/');
+    await expect(page.getByTestId('weather-line')).toBeVisible();
+    await page.getByTestId('weather-line').click();
+    const preview = page.getByTestId('weather-preview');
+    await expect(preview).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(12);
+    await expect(preview.getByTestId('weather-days').locator('li')).toHaveCount(7);
+    await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('10:00');
+    await expect(preview.getByTestId('weather-hours').locator('li').nth(5)).toContainText(
+      'Regen 80 %',
+    );
+    await expect(preview.getByTestId('weather-days').locator('li').nth(3)).toContainText(
+      'Gewitter',
+    );
+    await expect(preview.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
+    await page.keyboard.press('Escape');
+    await expect(preview).toHaveCount(0);
+
+    await page.getByTestId('weather-line').click();
+    await expect(page.getByTestId('weather-preview')).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId('weather-preview')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test('the preview links on to the weather settings', async ({ page }) => {
     await mockWeather(page);
     await choosePlace(page);
     await ready(page, '/');
     await page.getByTestId('weather-line').click();
+    await page.getByTestId('weather-preview').getByRole('link', { name: 'Einstellungen' }).click();
     await expect(page).toHaveURL(/\/settings\/verbindungen/);
+    await expect(page.getByTestId('weather-place')).toBeVisible();
   });
 
   test('offline later: the old values stay, marked "Stand hh:mm", no rain hint', async ({
@@ -131,6 +182,11 @@ test.describe('Weather line', () => {
     await expect(page.getByTestId('weather-line')).toHaveText(
       'Bern · 14° leicht bewölkt · Stand 10:00',
     );
+    // The last preview stays, marked with its time; the hours start at the place's current hour.
+    await page.getByTestId('weather-line').click();
+    const preview = page.getByTestId('weather-preview');
+    await expect(preview).toContainText('Stand 10:00');
+    await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('11:00');
   });
 
   test('an unreachable service leaves no error on the Overview', async ({ page }) => {
