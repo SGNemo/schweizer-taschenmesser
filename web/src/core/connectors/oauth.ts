@@ -96,6 +96,7 @@ async function tokenRequest(client: TokenClient, params: Record<string, string>)
     // invalid_grant = revoked, expired (7-day limit of unverified "testing" apps) or reused token.
     if (error === 'invalid_grant') throw new ConnectorError('expired', error);
     if (error === 'access_denied') throw new ConnectorError('denied', error);
+    if (error === 'invalid_client') throw new ConnectorError('bad-client', error);
     throw new ConnectorError(
       res.status >= 500 ? 'network' : 'bad-response',
       redactWith(`token endpoint: ${error}`, [client.clientId, client.clientSecret]),

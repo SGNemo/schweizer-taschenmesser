@@ -224,7 +224,10 @@ describe('connectOAuth', () => {
     waitOutcome = 'denied';
     expect((await connectOAuth(def, ['calendar'])).state).toBe('disconnected');
     waitOutcome = 'timeout';
-    expect((await connectOAuth(def, ['calendar'])).state).toBe('error');
+    const timedOut = await connectOAuth(def, ['calendar']);
+    expect(timedOut.state).toBe('error');
+    // No redirect arrived: say so (provider error page, wrong redirect URI), not "not reachable".
+    expect(timedOut.message).toBe(describeError(new ConnectorError('no-callback')));
     expect(secrets.has('oauth:testco:refresh')).toBe(false);
   });
 
