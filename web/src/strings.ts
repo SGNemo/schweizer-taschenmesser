@@ -3845,6 +3845,13 @@ export const de = {
       create: 'Tresor erstellen',
       creating: 'Schlüssel wird berechnet …',
       mismatch: 'Die Passwörter stimmen nicht überein.',
+      weakNotice:
+        'Dieses Passwort lässt sich in kurzer Zeit erraten. Du kannst es trotzdem nehmen – oder einen Vorschlag aus mehreren Wörtern: leichter zu merken, schwerer zu knacken.',
+      suggest: 'Mehrwort-Vorschlag',
+      suggested: (phrase: string) =>
+        `Dein Vorschlag: ${phrase}. Er steht schon in beiden Feldern. Notiere ihn dir, bevor du weitermachst.`,
+      weakAck: 'Ich nehme das schwache Passwort trotzdem',
+      weakNeedAck: 'Bestätige oben, dass du das schwache Passwort trotzdem nehmen willst.',
       tooShort: (n: number) => `Mindestens ${n} Zeichen.`,
       exists: 'Es gibt bereits einen Tresor (z. B. von einem anderen Gerät).',
     },

@@ -6,7 +6,9 @@ import { HelpHint, SelectField, Switch, TextField } from '@/ui';
 import { biometricStatus, enableBiometricUnlock } from '../biometric';
 import { defaultSettings, settingsSchema, type AccountsSettings } from '../settings';
 import { createVault, MIN_MASTER_LENGTH, readHeader, type HeaderState } from '../vault';
+import type { Score } from '../strength';
 import { StrengthMeter } from './StrengthMeter';
+import { isWeakScore, WeakPasswordHelp } from './WeakPasswordHelp';
 import styles from '../accounts.module.css';
 
 const s = t.accounts.setupStep;
@@ -20,6 +22,8 @@ export default function VaultSetupStep({ registerCommit, setCanContinue }: Setup
   const [header, setHeader] = useState<HeaderState | undefined>();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [score, setScore] = useState<Score | undefined>();
+  const [weakOk, setWeakOk] = useState(false);
   const [wantBio, setWantBio] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [prefs, setPrefs] = useState<AccountsSettings>(defaultSettings);
@@ -48,7 +52,12 @@ export default function VaultSetupStep({ registerCommit, setCanContinue }: Setup
   }, [password]);
 
   const creating = header?.state === 'none';
-  const valid = [...password].length >= MIN_MASTER_LENGTH && password === confirm;
+  // The strength is measured a moment after typing; until then "Weiter" waits. A weak password needs a yes.
+  const valid =
+    [...password].length >= MIN_MASTER_LENGTH &&
+    password === confirm &&
+    score !== undefined &&
+    (!isWeakScore(score) || weakOk);
   const ok = header?.state === 'ready' || (creating && valid);
   useEffect(() => setCanContinue(ok), [ok, setCanContinue]);
 
@@ -85,10 +94,26 @@ export default function VaultSetupStep({ registerCommit, setCanContinue }: Setup
             type="password"
             autoComplete="new-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setScore(undefined);
+              setWeakOk(false);
+            }}
             data-autofocus
           />
-          <StrengthMeter password={password} />
+          <StrengthMeter password={password} onMeasured={setScore} />
+          {isWeakScore(score) ? (
+            <WeakPasswordHelp
+              acknowledged={weakOk}
+              onAcknowledge={setWeakOk}
+              onSuggest={(phrase) => {
+                setPassword(phrase);
+                setConfirm(phrase);
+                setScore(undefined);
+                setWeakOk(false);
+              }}
+            />
+          ) : null}
           <TextField
             label={t.accounts.setup.confirm}
             type="password"
