@@ -14,6 +14,10 @@ export const de = {
   time: {
     weekdayAndDistance: (weekday: string, distance: string) => `${weekday}, ${distance}`,
     overdueSince: (days: number) => (days === 1 ? 'seit gestern' : `seit ${days} Tagen`),
+    /** A clock time inside a sentence; only German adds "Uhr". */
+    atClock: (time: string) => `${time} Uhr`,
+    /** "ab 29. Sep. 2026, 08:00 Uhr" */
+    startsFrom: (date: string, time: string) => `ab ${date}, ${time} Uhr`,
   },
   about: {
     title: 'Über Nemo',
@@ -976,6 +980,8 @@ export const de = {
     yearsUnit: 'Jahre',
     weekdays: 'Wochentage',
     monthDay: 'Tag des Monats',
+    /** Day of the month in a list; only German writes the ordinal dot. */
+    dayNumber: (d: number) => `${d}.`,
     lastDay: 'Letzter Tag',
     ends: 'Ende',
     endsNever: 'Nie',
@@ -1098,6 +1104,9 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
+      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintHint:
+        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
         'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
@@ -1320,6 +1329,8 @@ export const de = {
     prev: 'Zurück',
     next: 'Weiter',
     newEvent: 'Neuer Termin',
+    endsAt: (time: string) => `bis ${time}`,
+    recent: 'Wie zuletzt',
     editEvent: 'Termin bearbeiten',
     allDay: 'Ganztägig',
     start: 'Beginn',
@@ -1357,6 +1368,9 @@ export const de = {
       paused: 'Pausiert',
       active: 'Aktiv',
       markDone: 'Erledigt',
+      intake: 'Einnahme (Antwort „Genommen“)',
+      intakeHint:
+        'Für Medikamente und Vitamine: du bestätigst mit „Genommen“. Es wird nichts gezählt.',
       markedDone: 'Erinnerung erledigt.',
       pause: 'Pausieren',
       resume: 'Wieder einschalten',
@@ -1366,6 +1380,18 @@ export const de = {
     },
     notify: {
       label: 'Benachrichtigen',
+      rowLabel: 'Erinnern',
+      noneShort: 'Keine',
+      hourShort: '1 h',
+      dayShort: '1 Tag',
+      other: 'Andere Zeit',
+      remember: 'Als Vorgabe merken',
+      permissionMissing:
+        'Benachrichtigungen sind noch nicht erlaubt, die Erinnerung bliebe deshalb aus.',
+      permissionDenied:
+        'Benachrichtigungen sind blockiert. Erlaube sie in den System- oder Browser-Einstellungen, sonst bleibt die Erinnerung aus.',
+      allow: 'Erlauben',
+      hintOff: 'Nicht mehr zeigen',
       none: 'Nicht benachrichtigen',
       atStart: 'Zum Beginn',
       minutes: (n: number) => `${n} Minuten vorher`,
@@ -1906,9 +1932,15 @@ export const de = {
       count: (n: number) => (n === 1 ? '1 offen' : `${n} offen`),
       doneAria: (title: string) => `${title}: erledigt`,
       doneToast: 'Erledigt.',
+      takenAria: (title: string) => `${title}: genommen`,
+      takenToast: 'Notiert.',
+      earlier: (n: number) => `Früher · ${n}`,
+      earlierLabel: 'Früher offen',
+      earlierClear: 'Früheres als gelesen markieren',
       allDoneToast: 'Alle als gelesen markiert.',
     },
     label: 'Erinnerung',
+    taken: 'Genommen',
     done: 'Erledigt',
     later: 'Später',
     open: 'Öffnen',
@@ -1935,7 +1967,11 @@ export const de = {
     }),
     title: 'Benachrichtigungen',
     intro:
-      'Erinnerungen erscheinen als Benachrichtigung, solange die App geöffnet ist oder im Hintergrund läuft. Bei geschlossener App kommen sie nur mit Push (siehe unten).',
+      'Erinnerungen erscheinen als Benachrichtigung, solange die App geöffnet ist oder im Hintergrund läuft. Ohne Push kommt bei geschlossener App nichts; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Öffnen in der Glocke. Mit Push (siehe unten) kommen sie auch dann.',
+    introAndroid:
+      'Auf Android plant die App Erinnerungen beim System ein, damit sie auch bei geschlossener App kommen. Das klappt, wenn Nemo Benachrichtigungen und „Wecker & Erinnerungen“ darf und der Akku nicht eingeschränkt ist (Einstellungen → Apps → Nemo).',
+    introDesktop:
+      'Erinnerungen erscheinen als Benachrichtigung, solange Nemo läuft, auch im Hintergrund oder im Infobereich. Ist die App beendet, kommen sie nicht; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Start in der Glocke.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',
@@ -2557,6 +2593,8 @@ export const de = {
     } as Record<string, string>,
   },
   ai: {
+    /** Name of the "bring your own endpoint" provider choice (brand names stay as they are). */
+    providerCustom: 'Eigener Anbieter (OpenAI-kompatibel)',
     title: 'KI-Assistent',
     off: {
       title: 'KI abschalten',
@@ -3779,6 +3817,10 @@ export const de = {
     markedDone: 'Abgehakt.',
     markedOpen: 'Wieder offen.',
     itemDeleted: 'Eintrag gelöscht.',
+    // Single-item notices name the entry (one notice at a time, so it must say what changed).
+    tickedItem: (name: string) => `„${name}“ abgehakt.`,
+    reopenedItem: (name: string) => `„${name}“ wieder offen.`,
+    removedItem: (name: string) => `„${name}“ gelöscht.`,
     itemsDeleted: (n: number) => (n === 1 ? '1 Eintrag gelöscht.' : `${n} Einträge gelöscht.`),
     listDeleted: 'Liste gelöscht.',
     deleteList: 'Liste löschen',
@@ -4010,6 +4052,26 @@ export const de = {
       label: 'Stärke',
       levels: ['Sehr schwach', 'Schwach', 'Mittel', 'Stark', 'Sehr stark'] as string[],
       crack: (time: string) => `Offline-Knackzeit ca. ${time}`,
+      warnings: {
+        straightRow: 'Gerade Tastaturreihen sind leicht zu erraten.',
+        keyPattern: 'Kurze Tastaturmuster sind leicht zu erraten.',
+        simpleRepeat: 'Wiederholte Zeichen wie „aaa“ sind leicht zu erraten.',
+        extendedRepeat: 'Wiederholte Muster wie „abcabcabc“ sind leicht zu erraten.',
+        sequences: 'Übliche Zeichenfolgen wie „abc“ sind leicht zu erraten.',
+        recentYears: 'Aktuelle Jahreszahlen sind leicht zu erraten.',
+        dates: 'Datumsangaben sind leicht zu erraten.',
+        topTen: 'Dieses Passwort wird sehr oft benutzt.',
+        topHundred: 'Dieses Passwort wird häufig benutzt.',
+        common: 'Dieses Passwort ist weit verbreitet.',
+        similarToCommon: 'Dieses Passwort ähnelt einem weit verbreiteten.',
+        wordByItself: 'Einzelne Wörter sind leicht zu erraten.',
+        namesByThemselves: 'Einzelne Namen sind leicht zu erraten.',
+        commonNames: 'Häufige Namen und Nachnamen sind leicht zu erraten.',
+        userInputs: 'Persönliche Angaben oder Seitennamen gehören nicht ins Passwort.',
+        pwned: 'Dieses Passwort stand in einem Datenleck im Internet.',
+      } as Record<string, string>,
+      lessThanSecond: 'weniger als eine Sekunde',
+      centuries: 'Jahrhunderte',
     },
     biometric: {
       title: 'Biometrisches Entsperren',
@@ -4459,6 +4521,7 @@ export const de = {
           ? '1 Rechnung ohne erkennbaren Betrag wurde übersprungen.'
           : `${n} Rechnungen ohne erkennbaren Betrag wurden übersprungen.`,
       noEnd: 'Vertragsende nicht erkannt',
+      endsOn: (date: string) => `Ende ${date}`,
       notice: (days: number) => `Kündigungsfrist ${days} Tage`,
     },
     ics: {
@@ -4675,6 +4738,53 @@ export const de = {
           'Skipass',
           'Lippenpflege',
         ],
+      },
+      familyTrip: {
+        name: 'Urlaub mit Kindern',
+        note: 'Für Reisen mit kleinen Kindern',
+        items: [
+          'Kinderausweise oder Reisepässe',
+          'Lieblingskuscheltier',
+          'Windeln und Feuchttücher',
+          'Snacks für unterwegs',
+          'Wechselkleidung für die Kinder',
+          'Sonnencreme für Kinder',
+          'Kinderapotheke',
+          'Spielzeug und Bücher',
+          'Buggy oder Tragetuch',
+          'Impfpass',
+        ],
+      },
+      school: {
+        name: 'Schulranzen',
+        note: 'Abends kurz durchgehen',
+        items: [
+          'Federmappe',
+          'Hefte und Bücher',
+          'Stundenplan',
+          'Hausaufgabenheft',
+          'Trinkflasche',
+          'Pausenbrot',
+          'Sportbeutel',
+          'Elternbriefe',
+        ],
+      },
+    },
+    papers: {
+      label: 'Wichtige Papiere',
+      hint: 'Dokumente, die man schnell finden will',
+      templatesHint:
+        'Ablaufdatum später nachtragen: dann erscheint die Frist unter „Fristen & Ablauf“.',
+      kind: 'Papiere',
+      items: {
+        passport: { name: 'Reisepass', category: 'identity' },
+        idCard: { name: 'Personalausweis', category: 'identity' },
+        license: { name: 'Führerschein', category: 'identity' },
+        vehicleInspection: { name: 'Fahrzeugschein und TÜV-Bericht', category: 'other' },
+        healthCard: { name: 'Krankenversicherungskarte', category: 'health' },
+        vaccination: { name: 'Impfpass', category: 'health' },
+        rental: { name: 'Mietvertrag', category: 'contract' },
+        policies: { name: 'Versicherungspolicen', category: 'insurance' },
       },
     },
   },

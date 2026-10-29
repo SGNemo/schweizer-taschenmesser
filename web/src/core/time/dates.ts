@@ -64,6 +64,7 @@ const DATE_FNS: Record<string, Locale> = {
   'en-IE': enIE,
   'en-US': enUS,
   'es-ES': es,
+  'es-MX': es,
   'fr-FR': fr,
   'pt-BR': ptBR,
   'pt-PT': pt,
@@ -125,6 +126,13 @@ const PATTERNS: Record<string, Partial<Record<Lang | 'en-US', string>>> = {
     'pt-BR': "EEE, d 'de' MMM",
   },
   'd. MMM': { en: 'd MMM', 'en-US': 'MMM d', es: 'd MMM', fr: 'd MMM', 'pt-BR': "d 'de' MMM" },
+  'EEE d.': { en: 'EEE d', es: 'EEE d', fr: 'EEE d', 'pt-BR': 'EEE d' },
+  "'KW' II": {
+    en: "'Week' II",
+    es: "'Semana' II",
+    fr: "'Semaine' II",
+    'pt-BR': "'Semana' II",
+  },
   'LLLL yyyy': { es: "LLLL 'de' yyyy", 'pt-BR': "LLLL 'de' yyyy" },
 };
 

@@ -19,7 +19,7 @@ import { relativeDayLabel } from '@/core/time/dates';
 import { pad2, toDateString } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog, EmptyState, Icon, IconButton, ItemList, ItemRow } from '@/ui';
+import { Button, Dialog, EmptyState, ItemList, ItemRow } from '@/ui';
 import styles from './NotificationCenter.module.css';
 
 /** "Heute · 14:30" – the day word and the local time of a reminder. */
@@ -77,7 +77,7 @@ export function NotificationCenter() {
   };
   const done = async (n: DueNotification) => {
     await markDone(n);
-    await after(t.reminder.center.doneToast);
+    await after(n.taken ? t.reminder.center.takenToast : t.reminder.center.doneToast);
   };
   const later = async (n: DueNotification, option: SnoozeOption) => {
     await snoozeOpen(n, option);
@@ -91,6 +91,33 @@ export function NotificationCenter() {
   };
 
   const options = snoozeOptions(now(), getPlatform().kind);
+  const todayStart = new Date(now()).setHours(0, 0, 0, 0);
+  const today = open.filter((n) => n.at >= todayStart);
+  const earlier = open.filter((n) => n.at < todayStart);
+  const renderRow = (n: DueNotification) => (
+    <ItemRow
+      key={n.key}
+      title={n.title}
+      meta={whenLabel(n.at)}
+      onOpen={() => {
+        setChoosing(false);
+        setAsRandom(false);
+        setFocused(n);
+      }}
+      end={
+        <Button
+          size="sm"
+          aria-label={
+            n.taken ? t.reminder.center.takenAria(n.title) : t.reminder.center.doneAria(n.title)
+          }
+          onClick={() => void done(n)}
+        >
+          {n.taken ? t.reminder.taken : t.reminder.done}
+        </Button>
+      }
+    />
+  );
+
   return (
     <Dialog open={isOpen} onClose={close} title={t.reminder.center.title}>
       <div className={styles.modes}>
@@ -127,7 +154,7 @@ export function NotificationCenter() {
           ) : (
             <div className={styles.actions}>
               <Button variant="primary" data-autofocus onClick={() => void done(focused)}>
-                {t.reminder.done}
+                {focused.taken ? t.reminder.taken : t.reminder.done}
               </Button>
               <Button onClick={() => setChoosing(true)}>{t.reminder.later}</Button>
               {focused.url ? (
@@ -167,28 +194,26 @@ export function NotificationCenter() {
               {t.reminder.center.allRead}
             </Button>
           </div>
-          <ItemList label={t.reminder.center.list}>
-            {open.map((n) => (
-              <ItemRow
-                key={n.key}
-                title={n.title}
-                meta={whenLabel(n.at)}
-                onOpen={() => {
-                  setChoosing(false);
-                  setAsRandom(false);
-                  setFocused(n);
-                }}
-                end={
-                  <IconButton
-                    label={t.reminder.center.doneAria(n.title)}
-                    onClick={() => void done(n)}
-                  >
-                    <Icon name="check" />
-                  </IconButton>
+          <ItemList label={t.reminder.center.list}>{today.map(renderRow)}</ItemList>
+          {earlier.length > 0 ? (
+            <details
+              className={styles.earlier}
+              open={today.length === 0}
+              data-testid="center-earlier"
+            >
+              <summary>{t.reminder.center.earlier(earlier.length)}</summary>
+              <ItemList label={t.reminder.center.earlierLabel}>{earlier.map(renderRow)}</ItemList>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  void markAllDone(earlier).then(() => after(t.reminder.center.allDoneToast))
                 }
-              />
-            ))}
-          </ItemList>
+              >
+                {t.reminder.center.earlierClear}
+              </Button>
+            </details>
+          ) : null}
         </>
       )}
     </Dialog>

@@ -159,6 +159,7 @@ export function applyLimit(
       title: text.title,
       body: text.body,
       url: '/',
+      members: rest,
     });
   }
   return out.sort((a, b) => a.at - b.at);

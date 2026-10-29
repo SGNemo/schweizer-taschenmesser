@@ -87,6 +87,9 @@ export const focus: Strings['focus'] = {
     stages: 'En plus, avant',
     stageLabel: (m: number) =>
       m >= 1440 ? `${Math.round(m / 1440)} j` : m >= 60 ? `${Math.round(m / 60)} h` : `${m} min`,
+    leadHintTitle: 'Note dans le formulaire de rendez-vous',
+    leadHintHint:
+      'Affiche une phrase discrète quand vous choisissez un rappel alors que les notifications ne sont pas autorisées.',
     followUp: 'Répéter calmement',
     followUpHint:
       'Un rappel que vous avez fixé revient à intervalles jusqu’à « Fait » ou « Plus tard ». Rien la nuit.',

@@ -204,6 +204,24 @@ describe('listPlaylists', () => {
     expect(calls[0]!.url).toBe('https://api.spotify.com/v1/me/playlists?limit=50');
   });
 
+  it('follows the next links up to four pages and never leaves the API host', async () => {
+    const page = (n: number, next: string | null) =>
+      json(200, { items: [{ id: `pl${n}`, name: `Liste ${n}` }], next });
+    const four = ctxWith([
+      page(1, 'https://api.spotify.com/v1/me/playlists?offset=50&limit=50'),
+      page(2, 'https://api.spotify.com/v1/me/playlists?offset=100&limit=50'),
+      page(3, 'https://api.spotify.com/v1/me/playlists?offset=150&limit=50'),
+      page(4, 'https://api.spotify.com/v1/me/playlists?offset=200&limit=50'),
+      page(5, null),
+    ]);
+    expect((await listPlaylists(four.ctx)).map((l) => l.id)).toEqual(['pl1', 'pl2', 'pl3', 'pl4']);
+    expect(four.calls).toHaveLength(4);
+
+    const foreign = ctxWith([page(1, 'https://evil.example.test/steal'), page(2, null)]);
+    expect((await listPlaylists(foreign.ctx)).map((l) => l.id)).toEqual(['pl1']);
+    expect(foreign.calls).toHaveLength(1);
+  });
+
   it('an unexpected shape is an empty list, a missing scope is "denied"', async () => {
     expect(await listPlaylists(ctxWith([json(200, { nope: 1 })]).ctx)).toEqual([]);
     expect(await codeOf(listPlaylists(ctxWith([json(403, {})]).ctx))).toMatchObject({

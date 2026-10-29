@@ -7,7 +7,8 @@
   margin-bottom: var(--space-4);
 }
 .headerViews {
-  flex: 1;
+  /* Wraps under the title instead of being squeezed (a cut-off switch on a phone); the segment itself never scrolls. */
+  flex: 1 1 14rem;
   display: flex;
   min-width: 0;
 }
@@ -188,19 +189,28 @@
   max-width: 100%;
   overflow-wrap: break-word;
 }
+/* Full wrap: the text is the point of the row (shopping list); words without spaces break too. */
+.titleFull {
+  display: block;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
 .grid .title {
   font-weight: var(--weight-semibold);
 }
+/* Quiet text. Only row meta (inside `.main`) ends in "…"; a paragraph elsewhere (setup steps, cards) is shown in full. */
 .muted {
   color: var(--text-muted);
   font-size: var(--text-sm);
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+.main .muted {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: var(--clamp-lines);
   line-clamp: var(--clamp-lines);
   overflow: hidden;
-  max-width: 100%;
-  overflow-wrap: break-word;
 }
 /* Row meta: 13 px, tertiary. */
 .rows .muted {

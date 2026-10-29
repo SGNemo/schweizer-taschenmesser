@@ -538,6 +538,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
       {
+        key: 'leadHint',
+        get label() {
+          return t.focus.reminders.leadHintTitle;
+        },
+      },
+      {
         key: 'followUp',
         get label() {
           return t.focus.reminders.followUp;

@@ -21,6 +21,8 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 |---|---|---|---|---|
 | Übersicht | Overview | Resumen | Vue d'ensemble | Visão geral |
 | Planen | Plan | Planificar | Planifier | Planejar |
+| Ruhe (Pause für Erinnerungen, früher Stumm/Zock-Modus) | Quiet | Calma | Calme | Calma |
+| Genommen (Antwort bei Einnahme) | Taken | Tomado | Pris | Tomado |
 | Geld | Money | Dinero | Argent | Dinheiro |
 | Haushalt | Household | Hogar | Maison | Casa |
 | Wissen | Knowledge | Conocimiento | Savoir | Conhecimento |

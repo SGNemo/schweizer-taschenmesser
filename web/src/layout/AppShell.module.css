@@ -25,7 +25,9 @@
   /* Width is decided per page by <PageContainer>; the shell only provides the fluid gutter. */
   display: flex;
   flex-direction: column;
-  padding: var(--space-5) var(--page-gutter) calc(var(--bottom-nav-h) + var(--space-7));
+  /* Room for the bottom bar plus the "+" button (56 px, 16 px above the bar), so it never covers the last field. */
+  padding: var(--space-5) var(--page-gutter)
+    calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 6rem);
 }
 /* Focus is moved here programmatically after navigation; a ring around the whole page is noise. */
 .main:focus,

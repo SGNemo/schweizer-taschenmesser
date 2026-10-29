@@ -9,7 +9,7 @@ import { tComfort } from '@/strings.comfort';
 import { Segmented } from '@/ui';
 import styles from './SettingsLayout.module.css';
 
-/** "Stumm": off, one hour or until tomorrow morning. Ends by itself; the hint says what it does. */
+/** "Ruhe" (formerly "Stumm"): off, one hour or until tomorrow morning. Ends by itself; the hint says what it does. */
 export function MuteSwitch() {
   const text = tComfort.get().mute;
   const mute = useMute();

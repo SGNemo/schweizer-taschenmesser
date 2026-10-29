@@ -52,5 +52,12 @@ export function copyName(name: string, existing: readonly string[]): string {
 }
 
 /** Ready-made packing lists the start-data wizard offers (texts live in `strings.ts`). */
-export const PACKING_TEMPLATES = ['weekend', 'camping', 'beach', 'ski'] as const;
+export const PACKING_TEMPLATES = [
+  'weekend',
+  'camping',
+  'beach',
+  'ski',
+  'familyTrip',
+  'school',
+] as const;
 export type PackingTemplate = (typeof PACKING_TEMPLATES)[number];

@@ -154,6 +154,18 @@
   font-size: var(--text-meta);
   font-weight: normal;
 }
+/* Narrow nav column: when title and status do not fit side by side the status drops under the title (it overlapped the title: "Benachrichtigungen" + "Nicht erlaubt"). */
+.nav .navLink {
+  flex-wrap: wrap;
+  padding-block: var(--space-1);
+  column-gap: var(--space-3);
+}
+.nav .linkText {
+  flex: 1 1 auto;
+}
+.nav .status {
+  margin-left: auto;
+}
 .quick {
   display: flex;
   flex-wrap: wrap;

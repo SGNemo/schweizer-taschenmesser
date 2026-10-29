@@ -7,6 +7,7 @@ export interface InAppPrompt {
   title: string;
   /** The reminder's own title (a repeat shows "Noch offen: …"); "Später" keeps this one. */
   baseTitle?: string;
+  taken?: boolean;
   body?: string;
   url?: string;
 }
