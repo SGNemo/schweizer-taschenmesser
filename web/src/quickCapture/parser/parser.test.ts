@@ -185,10 +185,11 @@ describe('type detection', () => {
     expect(money.alternatives.map((a) => a.type)).toContain('finance');
   });
 
-  it('recurrence with a time is a reminder, event stays an alternative', () => {
+  it('a weekly slot with a time is an appointment, a daily one stays a reminder', () => {
     const r = parse('jeden Montag 8 Uhr Wochenplanung');
-    expect(r.type).toBe('reminder');
-    expect(r.alternatives[0]?.type).toBe('event');
+    expect(r.type).toBe('event');
+    expect(r.alternatives[0]?.type).toBe('reminder');
+    expect(parse('jeden Tag 8 Uhr Tabletten').type).toBe('reminder');
   });
 });
 

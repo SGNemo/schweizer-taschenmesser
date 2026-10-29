@@ -16,9 +16,10 @@ Im Eingabefenster: **Enter** speichert, **Tab / Umschalt+Tab** oder **↑/↓** 
 ### Was erkannt wird
 
 - **Datum/Zeit:** heute, morgen, übermorgen, Wochentage („Freitag“, „nächsten Montag“), „am 3.10.“, „3. Oktober“, „in 2 Stunden“, „in 3 Tagen“, „nächste Woche“, „Ende des Monats“, „15 Uhr“, „14:30“, „halb 8“, „heute Abend“. Ein Datum ohne Jahr in der Vergangenheit rutscht ins nächste Jahr (mit Hinweis).
-- **Wiederholung:** „jede Woche“, „täglich“, „jeden Monat“, „jeden 1.“, „jeden Montag“, „alle 2 Wochen“, „jedes Jahr“.
+- **Wiederholung:** „jede Woche“, „täglich“, „jeden Monat“, „jeden 1.“, „jeden Montag“, „alle 2 Wochen“, „Mo–Fr“, „Mo und Mi“, „alle zwei Wochen Mittwoch“, „bis 31.12.“ (Ende der Wiederholung), „jedes Jahr“.
+- **Endzeit und Priorität:** „14:00 bis 16:00“, „6 bis 14:30“, „10–12 Uhr“ (Ende vor dem Beginn = Nachtdienst bis zum nächsten Tag); `!hoch`, `!mittel`, `!niedrig` für ToDos. „nächsten Freitag“ ist der Freitag der nächsten Woche.
 - **Beträge:** „12,50 €“, „12 EUR“, „€ 5“, „1.234,56 €“ (Einnahme bei „Gehalt“, „erhalten“, „+“).
-- **Typ:** Datum + Uhrzeit → Termin (Kalender); „erinnere mich …“ oder Wiederholung → Erinnerung; „todo“/„aufgabe“ oder Text ohne Signal → ToDo (Standardziel einstellbar); URL oder „merke …“ → Merkliste; Betrag → Finanzen (nur als Entwurf, wird erst nach „Buchen“ angelegt).
+- **Typ:** Datum + Uhrzeit → Termin (Kalender); „abgeben/einreichen/Frist“ → ToDo auch mit Uhrzeit; fester Wochen-Slot mit Uhrzeit („Mo–Fr 6 Uhr“) → Termin, tägliche Wiederholung bleibt Erinnerung; Betrag + „bis/fällig“ → Rechnung; Betrag + „monatlich/jährlich“ → Abo; „Geburtstag Anna 14.11.“ → Person; „… Ausgabe“ → Buchung; „erinnere mich …“ oder Wiederholung → Erinnerung; „todo“/„aufgabe“ oder Text ohne Signal → ToDo (Standardziel einstellbar); URL oder „merke …“ → Merkliste; Betrag → Finanzen (nur als Entwurf, wird erst nach „Buchen“ angelegt).
 - **Kurzbefehle** (erzwingen den Typ): `t ` ToDo, `k ` Kalender, `e ` Erinnerung, `m ` Merkliste, `l ` Einkauf, `n ` Notiz, `r ` Rechnung, `$ ` Finanzen.
 - **Rechnung:** „Rechnung Swisscom 89,90 € bis 31.10.“ oder `r 89,90 Swisscom 31.10.` legt eine offene Rechnung an (Empfänger = übrig bleibender Text, Datum = Fälligkeit, ohne Datum 14 Tage mit Hinweis „Datum angenommen“). Ohne Betrag bleibt „Rechnung“ ein normales Wort. Keine Bestätigung nötig, „Rückgängig“ entfernt sie wieder.
 

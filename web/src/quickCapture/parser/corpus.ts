@@ -14,12 +14,11 @@ export interface CorpusCase {
   date?: string;
   time?: string;
   endTime?: string;
-  until?: string;
   title?: string;
   recurrence?: CaptureRecurrence;
   amountMinor?: number;
   kind?: 'expense' | 'income';
-  priority?: 'high';
+  priority?: 1 | 2 | 3;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -98,7 +97,7 @@ export const CORPUS: CorpusCase[] = [
     text: 'Angebot an Kunde Schmidt schicken bis Freitag !hoch',
     type: 'todo',
     date: '2026-10-30',
-    priority: 'high',
+    priority: 3,
     title: 'Angebot an Kunde Schmidt schicken',
   },
   {
@@ -139,9 +138,8 @@ export const CORPUS: CorpusCase[] = [
     text: 'alle 2 Wochen Mo–Fr Frühdienst 6 Uhr bis 31.12.',
     type: 'event',
     time: '06:00',
-    until: '2026-12-31',
     title: 'Frühdienst',
-    recurrence: { freq: 'weekly', interval: 2, byWeekday: MO_FR },
+    recurrence: { freq: 'weekly', interval: 2, byWeekday: MO_FR, until: '2026-12-31' },
   },
   {
     from: 'L-V-09',

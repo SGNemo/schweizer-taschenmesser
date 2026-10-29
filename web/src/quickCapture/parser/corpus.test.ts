@@ -6,13 +6,12 @@ type Flat = Omit<CorpusCase, 'from' | 'text'>;
 
 /** The corpus fields a result offers; fields the parser does not know yet are simply absent. */
 function flatten(r: CaptureResult): Flat {
-  const f = r.fields as typeof r.fields & { endTime?: string; until?: string; priority?: 'high' };
+  const f = r.fields;
   return {
     type: r.type,
     date: f.date,
     time: f.time,
     endTime: f.endTime,
-    until: f.until,
     title: f.title,
     recurrence: f.recurrence,
     amountMinor: f.amountMinor,
@@ -32,7 +31,7 @@ function misses(c: CorpusCase): string[] {
 }
 
 // Ratchet: raise this when the parser gets better, never lower it.
-const MIN_HITS = 6;
+const MIN_HITS = 22;
 
 describe('parser corpus (QA sentences)', () => {
   it('reports the hit rate', () => {

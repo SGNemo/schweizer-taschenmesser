@@ -781,6 +781,8 @@ export const de = {
       finance: 'Ausgabe',
       invoice: 'Rechnung',
       income: 'Einnahme',
+      subscription: 'Abo',
+      birthday: 'Geburtstag',
       note: 'Notiz',
     },
     target: {
@@ -791,6 +793,8 @@ export const de = {
       list: 'Listen',
       finance: 'Finanzen',
       invoice: 'Rechnungen',
+      subscription: 'Abos',
+      birthday: 'Personen',
       note: 'Notizen',
     },
     chip: {
@@ -803,6 +807,9 @@ export const de = {
       allDay: 'ganztägig',
       income: 'Einnahme',
       expense: 'Ausgabe',
+      priorityLow: 'Priorität niedrig',
+      priorityMid: 'Priorität mittel',
+      priorityHigh: 'Priorität hoch',
     },
     recurrence: {
       daily: 'täglich',
@@ -817,6 +824,8 @@ export const de = {
       weekdays: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'],
       everyWeekday: (name: string) => `jeden ${name}`,
       monthDay: (d: number) => (d === -1 ? 'am letzten Tag des Monats' : `jeden ${d}. des Monats`),
+      onDays: (names: string) => `an: ${names}`,
+      until: (date: string) => `bis ${date}`,
     },
     chooseType: 'Bitte wähle, wohin der Eintrag soll.',
     inboxHint: (target: string) => `Landet in „${target}“. Sortieren geht später.`,

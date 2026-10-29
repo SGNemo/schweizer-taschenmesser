@@ -15,6 +15,8 @@ export const quickCapture: Strings['quickCapture'] = {
     finance: 'Gasto',
     invoice: 'Factura',
     income: 'Ingreso',
+    subscription: 'Suscripción',
+    birthday: 'Cumpleaños',
     note: 'Nota',
   },
   target: {
@@ -25,6 +27,8 @@ export const quickCapture: Strings['quickCapture'] = {
     list: 'Listas',
     finance: 'Finanzas',
     invoice: 'Facturas',
+    subscription: 'Suscripciones',
+    birthday: 'Personas',
     note: 'Notas',
   },
   chip: {
@@ -37,6 +41,9 @@ export const quickCapture: Strings['quickCapture'] = {
     allDay: 'todo el día',
     income: 'Ingreso',
     expense: 'Gasto',
+    priorityLow: 'Prioridad baja',
+    priorityMid: 'Prioridad media',
+    priorityHigh: 'Prioridad alta',
   },
   recurrence: {
     daily: 'cada día',
@@ -51,6 +58,8 @@ export const quickCapture: Strings['quickCapture'] = {
     weekdays: ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'],
     everyWeekday: (name: string) => `cada ${name}`,
     monthDay: (d: number) => (d === -1 ? 'el último día del mes' : `el día ${d} de cada mes`),
+    onDays: (names: string) => `días: ${names}`,
+    until: (date: string) => `hasta ${date}`,
   },
   chooseType: 'Elige adónde va la entrada.',
   inboxHint: (target: string) => `Irá a «${target}». Puedes ordenarla más tarde.`,
