@@ -79,7 +79,7 @@
   list-style: none;
   margin: 2px 0 0;
   padding: 0;
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 2px;
 }
@@ -104,7 +104,8 @@
   color: var(--text-muted);
 }
 .dots {
-  display: flex;
+  /* Replaced by the first entry's name in the cell (QA V12); kept for a possible dense mode. */
+  display: none;
   gap: 3px;
   padding: 0 var(--space-1);
 }
@@ -115,12 +116,6 @@
   background: var(--text-muted);
 }
 @media (min-width: 700px) {
-  .chips {
-    display: flex;
-  }
-  .dots {
-    display: none;
-  }
   .cell {
     height: 7.5rem;
   }
@@ -194,6 +189,15 @@
 }
 .weekDay.todayCell {
   border-color: var(--accent);
+}
+.weekDayEmpty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-1);
+}
+.weekDayEmpty .weekHead {
+  margin-bottom: 0;
 }
 .weekHead {
   font-size: var(--text-md);

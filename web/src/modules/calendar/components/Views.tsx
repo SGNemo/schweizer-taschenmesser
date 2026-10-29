@@ -21,10 +21,12 @@ const TIME_GRID_QUERY = '(min-width: 1400px)';
 
 /** Chips per month cell: taller windows have taller cells and room for more entries. */
 function useChipLimit(): number {
+  // A phone has room for one line per day: the first entry (the shift or appointment) is named.
+  const wide = useMediaQuery('(min-width: 700px)');
   const h800 = useMediaQuery('(min-height: 800px)');
   const h1000 = useMediaQuery('(min-height: 1000px)');
   const h1300 = useMediaQuery('(min-height: 1300px)');
-  return h1300 ? 7 : h1000 ? 5 : h800 ? 4 : 3;
+  return !wide ? 1 : h1300 ? 7 : h1000 ? 5 : h800 ? 4 : 3;
 }
 
 export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
@@ -125,10 +127,12 @@ export function WeekView({
     <div className={styles.week}>
       {days.map((d) => {
         const list = byDate.get(d) ?? [];
+        // An empty day is one quiet line, so a week with few entries stays short.
+        const empty = list.length === 0;
         return (
           <section
             key={d}
-            className={`${styles.weekDay} ${d === now ? styles.todayCell : ''}`}
+            className={`${styles.weekDay} ${empty ? styles.weekDayEmpty : ''} ${d === now ? styles.todayCell : ''}`}
             aria-label={formatDay(d, 'EEEE, d. MMMM')}
           >
             <h3 className={styles.weekHead}>
@@ -136,8 +140,8 @@ export function WeekView({
                 {formatDay(d, 'EEEE, d. MMMM')}
               </button>
             </h3>
-            {list.length === 0 ? (
-              <EmptyState compact title={t.calendar.nothing} />
+            {empty ? (
+              <span className={styles.muted}>{t.calendar.nothing}</span>
             ) : (
               <ul className={styles.itemList}>
                 {list.map((i) => (
