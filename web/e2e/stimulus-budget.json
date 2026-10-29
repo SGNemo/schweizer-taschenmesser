@@ -35,10 +35,10 @@
     },
     "desktop--home": {
       "height": 800,
-      "buttons": 34,
-      "links": 32,
-      "icons": 64,
-      "firstScreenActions": 48
+      "buttons": 36,
+      "links": 37,
+      "icons": 63,
+      "firstScreenActions": 51
     },
     "desktop--invoices": {
       "height": 800,
@@ -160,11 +160,11 @@
       "firstScreenActions": 23
     },
     "phone--home": {
-      "height": 1258,
-      "buttons": 12,
-      "links": 16,
+      "height": 1698,
+      "buttons": 14,
+      "links": 21,
       "icons": 21,
-      "firstScreenActions": 24
+      "firstScreenActions": 25
     },
     "phone--invoices": {
       "height": 1374,
