@@ -24,6 +24,7 @@
   background: var(--surface-2);
 }
 .searchBtn {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -48,9 +49,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Visually hidden, not display:none: the button keeps its visible-text name (axe label-content-name). */
 @container search (max-width: 7rem) {
   .searchLabel {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 .searchBtn:hover {

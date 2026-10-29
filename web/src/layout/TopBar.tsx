@@ -23,12 +23,7 @@ export function TopBar() {
           <Logo size={32} title={t.appName} />
         </span>
       </Link>
-      <button
-        type="button"
-        className={styles.searchBtn}
-        aria-label={t.actions.search}
-        onClick={() => setPaletteOpen(true)}
-      >
+      <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
         <Icon name="search" size={18} />
         <span className={styles.searchLabel}>{t.actions.search}</span>
         <kbd className={`${styles.kbd} ${styles.desktopOnly}`}>{t.palette.hint}</kbd>
