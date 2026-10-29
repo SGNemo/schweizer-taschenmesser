@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { codeGroup, rainFrom } from './logic';
+import type { Forecast } from './api';
+import { codeGroup, dayRows, hasPreview, hourRows, placeNowIso, rainFrom } from './logic';
 
 describe('codeGroup', () => {
   it('groups WMO codes into nine calm words', () => {
@@ -50,5 +51,58 @@ describe('rainFrom', () => {
         'cloudy',
       ),
     ).toBeUndefined();
+  });
+});
+
+describe('preview rows', () => {
+  const hours = Array.from({ length: 48 }, (_, i) => ({
+    time: `2026-10-${19 + Math.floor(i / 24)}T${String(i % 24).padStart(2, '0')}:00`,
+    temp: i,
+    group: 'clear' as const,
+    rain: 0,
+  }));
+  const days = Array.from({ length: 7 }, (_, i) => ({
+    date: `2026-10-${19 + i}`,
+    min: 1,
+    max: 2,
+    group: 'clear' as const,
+    rain: 0,
+  }));
+  const forecast: Forecast = { temp: 1, group: 'clear', hours, days };
+
+  it('hourRows: the next 12 hours from the current one, across midnight', () => {
+    const rows = hourRows(forecast, '2026-10-19T21:40');
+    expect(rows).toHaveLength(12);
+    expect(rows[0]!.time).toBe('2026-10-19T21:00');
+    expect(rows[11]!.time).toBe('2026-10-20T08:00');
+  });
+
+  it('hourRows: fewer rows when less is left, none without data', () => {
+    expect(hourRows(forecast, '2026-10-20T20:00')).toHaveLength(4);
+    expect(hourRows({ temp: 1, group: 'clear' }, '2026-10-19T08:00')).toEqual([]);
+  });
+
+  it('dayRows: today and six more, past days dropped', () => {
+    expect(dayRows(forecast, '2026-10-19').map((d) => d.date)).toEqual(
+      Array.from({ length: 7 }, (_, i) => `2026-10-${19 + i}`),
+    );
+    expect(dayRows(forecast, '2026-10-21')[0]!.date).toBe('2026-10-21');
+    expect(dayRows(forecast, '2026-10-21')).toHaveLength(5);
+  });
+
+  it('hasPreview needs both lists', () => {
+    expect(hasPreview(forecast)).toBe(true);
+    expect(hasPreview({ temp: 1, group: 'clear', hours })).toBe(false);
+  });
+
+  it('placeNowIso: the place clock moves on with the time passed since the fetch', () => {
+    const f: Forecast = { temp: 1, group: 'clear', time: '2026-10-19T23:30' };
+    expect(placeNowIso(f, 1000, 1000 + 45 * 60 * 1000)).toBe('2026-10-20T00:15');
+    expect(placeNowIso(f, 5000, 1000)).toBe('2026-10-19T23:30');
+  });
+
+  it('placeNowIso: device clock for values without a time', () => {
+    const at = new Date(2026, 9, 19, 8, 5).getTime();
+    expect(placeNowIso({ temp: 1, group: 'clear' }, at, at)).toBe('2026-10-19T08:05');
   });
 });

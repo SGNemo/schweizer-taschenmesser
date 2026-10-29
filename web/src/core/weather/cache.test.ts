@@ -117,3 +117,38 @@ describe('forecast cache (fixed clock)', () => {
     expect(readTried()).toEqual({ key, at: T0 });
   });
 });
+
+describe('preview data in the cache', () => {
+  const hours = [{ time: '2026-10-19T10:00', temp: 9, group: 'rain' as const, rain: 60 }];
+  const days = [{ date: '2026-10-19', min: 4, max: 11, group: 'cloudy' as const, rain: 20 }];
+
+  it('round-trips hours, days and the time of the values', () => {
+    const full = { ...forecast, time: '2026-10-19T10:00', hours, days };
+    writeCache({ key, at: T0, forecast: full });
+    expect(readCache()?.forecast).toEqual(full);
+  });
+
+  it('an old value without hours and days stays valid for the line', () => {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ key, at: T0, forecast }));
+    expect(readCache()).toEqual({ key, at: T0, forecast });
+  });
+
+  it('a damaged preview part is dropped with the whole value', () => {
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ key, at: T0, forecast: { ...forecast, hours: [{ time: 1 }] } }),
+    );
+    expect(readCache()).toBeUndefined();
+    expect(localStorage.getItem(CACHE_KEY)).toBeNull();
+  });
+
+  it('asks again for a fresh value without preview data only when the preview needs it', () => {
+    const cached = { key, at: T0, forecast };
+    expect(shouldFetch(cached, key, T0 + 1000, true, undefined, false)).toBe(false);
+    expect(shouldFetch(cached, key, T0 + 1000, true, undefined, true)).toBe(true);
+    expect(shouldFetch(cached, key, T0 + 1000, false, undefined, true)).toBe(false);
+    expect(shouldFetch(cached, key, T0 + 1000, true, { key, at: T0 }, true)).toBe(false);
+    const full = { key, at: T0, forecast: { ...forecast, hours, days } };
+    expect(shouldFetch(full, key, T0 + 1000, true, undefined, true)).toBe(false);
+  });
+});

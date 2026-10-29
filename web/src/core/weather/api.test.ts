@@ -55,10 +55,61 @@ describe('fetchForecast', () => {
       temp: 14,
       group: 'partly',
       rainFrom: '15',
+      time: '2026-10-19T12:00',
     });
     const url = String((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0]);
     expect(url).toContain('latitude=52.52');
     expect(url).toContain('longitude=13.41');
+  });
+
+  it('asks for hours and days in one request and keeps them rounded from the current hour on', async () => {
+    const days = ['2026-10-19', '2026-10-20'];
+    const f = ok({
+      current: { time: '2026-10-19T12:20', temperature_2m: 13.6, weather_code: 2 },
+      hourly: {
+        time: times,
+        temperature_2m: times.map((_, h) => h + 0.4),
+        weather_code: times.map((_, h) => (h === 14 ? 95 : 3)),
+        precipitation_probability: times.map((_, h) => (h === 14 ? 41.6 : null)),
+      },
+      daily: {
+        time: days,
+        weather_code: [61, 0],
+        temperature_2m_max: [15.5, 18.2],
+        temperature_2m_min: [7.4, null],
+        precipitation_probability_max: [80, 0],
+      },
+    });
+    const out = await fetchForecast(52.52, 13.41, f);
+    const url = String((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0]);
+    expect(url).toContain('forecast_days=7');
+    expect(url).toContain('hourly=temperature_2m%2Cweather_code%2Cprecipitation_probability');
+    expect(url).toContain('daily=weather_code%2Ctemperature_2m_max');
+    expect(out.hours?.[0]).toEqual({
+      time: '2026-10-19T12:00',
+      temp: 12,
+      group: 'cloudy',
+      rain: 0,
+    });
+    expect(out.hours?.[2]).toEqual({
+      time: '2026-10-19T14:00',
+      temp: 14,
+      group: 'thunder',
+      rain: 42,
+    });
+    expect(out.hours).toHaveLength(12);
+    // A day with a missing value is left out rather than invented.
+    expect(out.days).toEqual([{ date: '2026-10-19', min: 7, max: 16, group: 'rain', rain: 80 }]);
+  });
+
+  it('leaves hours and days out when the answer has none', async () => {
+    const out = await fetchForecast(
+      1,
+      2,
+      ok({ current: { time: '2026-10-19T12:00', temperature_2m: 1, weather_code: 0 } }),
+    );
+    expect(out.hours).toBeUndefined();
+    expect(out.days).toBeUndefined();
   });
 
   it('rejects an answer without current values', async () => {
@@ -73,6 +124,7 @@ describe('recorded response shapes (fixtures follow the documented Open-Meteo JS
       temp: 14,
       group: 'partly',
       rainFrom: '17',
+      time: '2026-10-19T12:00',
     });
   });
 

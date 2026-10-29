@@ -1,5 +1,6 @@
 /** Pure parts of the weather line: weather code → words, rain hint, one-line text. */
 import type { tWeather } from '@/strings.weather';
+import type { DayRow, Forecast, HourRow } from './api';
 
 export type CodeGroup = keyof typeof tWeather.de.codes;
 
@@ -46,4 +47,41 @@ export function rainFrom(
     if ((probabilities[i] ?? 0) >= RAIN_PERCENT) return String(h).padStart(2, '0');
   }
   return undefined;
+}
+
+/** Hours shown in the preview of "today". */
+export const PREVIEW_HOURS = 12;
+/** Days shown in the preview: today and the next six. */
+export const PREVIEW_DAYS = 7;
+/** Chance of rain (percent) from which the preview names it. */
+export const RAIN_SHOWN_PERCENT = 30;
+
+/** The next 12 hours from the current one (`nowIso` = the place's local `YYYY-MM-DDTHH:mm`). */
+export function hourRows(forecast: Forecast, nowIso: string): HourRow[] {
+  const from = `${nowIso.slice(0, 13)}:00`;
+  return (forecast.hours ?? []).filter((h) => h.time >= from).slice(0, PREVIEW_HOURS);
+}
+
+/** Today and the next six days (`today` = the place's local `YYYY-MM-DD`). */
+export function dayRows(forecast: Forecast, today: string): DayRow[] {
+  return (forecast.days ?? []).filter((d) => d.date >= today).slice(0, PREVIEW_DAYS);
+}
+
+/** True when the preview data is there (values cached before the preview have none). */
+export const hasPreview = (forecast: Forecast): boolean => !!forecast.hours && !!forecast.days;
+
+/**
+ * The place's local time now (`YYYY-MM-DDTHH:mm`): the time of the fetched values plus what has passed
+ * since, so a place in another time zone is not read with this device's clock. Falls back to the device
+ * clock for values without a time.
+ */
+export function placeNowIso(forecast: Forecast, fetchedAt: number, nowMs: number): string {
+  if (forecast.time) {
+    const base = Date.parse(`${forecast.time}:00Z`);
+    if (Number.isFinite(base))
+      return new Date(base + Math.max(0, nowMs - fetchedAt)).toISOString().slice(0, 16);
+  }
+  const d = new Date(nowMs);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
