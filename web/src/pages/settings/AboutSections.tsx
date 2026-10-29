@@ -248,6 +248,7 @@ export function DiagnosticsSection() {
         }
       >
         <p>{d.export.previewHint}</p>
+        <p>{d.export.fileLanguageNote}</p>
         <NoReadAid>
           <pre className={styles.diagPreview} data-testid="diagnostics-preview" tabIndex={0}>
             {text ?? d.export.loading}

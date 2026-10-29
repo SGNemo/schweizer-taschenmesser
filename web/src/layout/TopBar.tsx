@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import { isDevBuild } from '@/core/update/buildInfo';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Badge, Button, Icon, Wordmark } from '@/ui';
+import { Badge, Button, Icon, Logo, Wordmark } from '@/ui';
 import { FocusIndicator } from './FocusIndicator';
 import { NotificationBell } from './NotificationBell';
 import { SyncBadge } from './SyncBadge';
@@ -16,7 +16,12 @@ export function TopBar() {
   return (
     <header className={styles.topbar}>
       <Link to="/" className={`${styles.brand} ${styles.phoneOnly}`} aria-label={t.nav.homeAria}>
-        <Wordmark height={32} title={t.appName} />
+        <span className={styles.wordmark}>
+          <Wordmark height={32} title={t.appName} />
+        </span>
+        <span className={styles.mark}>
+          <Logo size={32} title={t.appName} />
+        </span>
       </Link>
       <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
         <Icon name="search" size={18} />
@@ -25,7 +30,7 @@ export function TopBar() {
       </button>
       <FocusIndicator />
       {isDevBuild() ? (
-        <span title={t.devPreview.badgeTitle} data-testid="dev-badge">
+        <span className={styles.devBadge} title={t.devPreview.badgeTitle} data-testid="dev-badge">
           <Badge tone="warning">{t.devPreview.badge}</Badge>
         </span>
       ) : null}

@@ -64,6 +64,11 @@
   padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border);
 }
+/* The text column may shrink below its longest word, so a long value wraps instead of being cut at the right edge. */
+.detailRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
 .detailLabel {
   display: block;
   font-size: var(--text-sm);
@@ -71,6 +76,7 @@
 }
 .detailValue {
   word-break: break-all;
+  overflow-wrap: anywhere;
   font-family: var(--font-mono, ui-monospace, monospace);
 }
 .detailActions {

@@ -43,6 +43,13 @@ export const accounts: Strings['accounts'] = {
     create: 'Criar Cofre',
     creating: 'Calculando a chave …',
     mismatch: 'As senhas não coincidem.',
+    weakNotice:
+      'Esta senha pode ser adivinhada rapidamente. Você pode usá-la mesmo assim – ou escolher uma sugestão com várias palavras: mais fácil de lembrar, mais difícil de quebrar.',
+    suggest: 'Sugerir várias palavras',
+    suggested: (phrase: string) =>
+      `Sua sugestão: ${phrase}. Ela já está nos dois campos. Anote antes de continuar.`,
+    weakAck: 'Usar a senha fraca mesmo assim',
+    weakNeedAck: 'Confirme acima que quer usar a senha fraca mesmo assim.',
     tooShort: (n: number) => `Pelo menos ${n} caracteres.`,
     exists: 'Já existe um Cofre (por exemplo, de outro dispositivo).',
   },

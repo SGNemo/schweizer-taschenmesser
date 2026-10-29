@@ -59,6 +59,24 @@ describe('normalizeIcsUrl', () => {
     expect(normalizeIcsUrl('javascript:alert(1)')).toBeUndefined();
     expect(normalizeIcsUrl('kein url')).toBeUndefined();
   });
+
+  it('accepts only what the error text names: public https addresses', () => {
+    expect(normalizeIcsUrl('http://cal.example.test/x.ics')).toBeUndefined();
+    for (const bad of [
+      'https://127.0.0.1:8788/v1/health',
+      'https://169.254.169.254/latest/meta-data',
+      'https://10.0.0.7/x.ics',
+      'https://[::1]/x.ics',
+      'https://localhost/x.ics',
+      'https://nas/x.ics',
+      'https://drucker.local/x.ics',
+      'https://user:pw@cal.example.test/x.ics',
+    ])
+      expect(normalizeIcsUrl(bad), bad).toBeUndefined();
+    expect(normalizeIcsUrl('https://cal.example.test/x.ics')).toBe(
+      'https://cal.example.test/x.ics',
+    );
+  });
 });
 
 describe('syncIcs', () => {

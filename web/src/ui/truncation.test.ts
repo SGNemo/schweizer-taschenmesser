@@ -13,7 +13,7 @@ describe('text truncation', () => {
   const patterns = read('./Patterns.module.css');
   const widgets = read('./widgets/Widgets.module.css');
 
-  it.each(['.title', '.muted', '.widgetItemTitle'])('%s is line-clamped', (sel) => {
+  it.each(['.title', '.main .muted', '.widgetItemTitle'])('%s is line-clamped', (sel) => {
     const css = block(patterns, sel);
     expect(css).toContain('-webkit-line-clamp: var(--clamp-lines)');
     expect(css).toContain('overflow: hidden');

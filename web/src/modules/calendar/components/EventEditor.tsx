@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
 import { mapsUrl } from '@/core/links';
 import { getPlatform } from '@/core/platform';
@@ -5,6 +6,7 @@ import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { copyData } from '@/core/db/copy';
+import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
   AdvancedFields,
@@ -18,6 +20,7 @@ import {
   TextField,
   patternStyles,
 } from '@/ui';
+import { recentSlots } from '../recentSlots';
 import { eventRepo } from '../repo';
 import { LeadRow, NOTIFY_LEADS, leadLabel } from './LeadRow';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
@@ -111,17 +114,25 @@ function Form({
   const [active, setActive] = useState(existing?.notify?.enabled ?? true);
   const [taken, setTaken] = useState(existing?.taken ?? false);
   const [error, setError] = useState('');
+  // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
+  const slots = useLiveQuery(
+    async () => (existing || reminder ? [] : recentSlots(await eventRepo.active().toArray())),
+    [existing, reminder],
+  );
 
   async function save(e: FormEvent) {
     e.preventDefault();
     const lead = notifyChoice === 'none' ? undefined : Number(notifyChoice);
+    // "21:30 to 06:30" ends on the next day; the schema wants that said explicitly.
+    const overnight =
+      !allDay && !reminder && !endDate && !!startTime && !!endTime && endTime < startTime;
     const data = {
       title: title.trim(),
       kind,
       allDay,
       startDate,
       startTime: allDay ? undefined : startTime || undefined,
-      endDate: endDate || undefined,
+      endDate: overnight ? addDaysStr(startDate, 1) : endDate || undefined,
       endTime: allDay ? undefined : endTime || undefined,
       location: location.trim() || undefined,
       note: note.trim() || undefined,
@@ -145,6 +156,23 @@ function Form({
 
   return (
     <form onSubmit={save} className={styles.form}>
+      {slots && slots.length > 0 ? (
+        <div className={patternStyles.hstack} role="group" aria-label={t.calendar.recent}>
+          {slots.map((s) => (
+            <Button
+              key={`${s.title}|${s.startTime}|${s.endTime}`}
+              variant="secondary"
+              onClick={() => {
+                setTitle(s.title);
+                setStartTime(s.startTime);
+                setEndTime(s.endTime);
+              }}
+            >
+              {`${s.title} ${s.startTime}–${s.endTime}`}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       <TextField
         label={t.form.title}
         value={title}
@@ -167,6 +195,14 @@ function Form({
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
+          />
+        )}
+        {allDay || reminder ? null : (
+          <TextField
+            label={t.calendar.end}
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
           />
         )}
       </div>
@@ -192,9 +228,7 @@ function Form({
           </Button>
         </div>
       ) : null}
-      {reminder ? (
-        <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
-      ) : null}
+      <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
       {!reminder && !allDay && startTime ? (
         <LeadRow value={notifyChoice} onChange={setNotifyChoice} isNew={!existing} />
       ) : (
@@ -217,10 +251,7 @@ function Form({
       {reminder ? (
         <Switch label={t.calendar.reminders.intake} checked={taken} onChange={setTaken} />
       ) : null}
-      <AdvancedFields
-        moduleId="calendar"
-        hasData={!!endDate || !!endTime || !!recurrence || !!note}
-      >
+      <AdvancedFields moduleId="calendar" hasData={!!endDate || !!note}>
         {reminder ? null : (
           <div className={styles.split}>
             <TextField
@@ -229,18 +260,7 @@ function Form({
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
-            {allDay ? null : (
-              <TextField
-                label={`${t.calendar.end} (${t.form.time})`}
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              />
-            )}
           </div>
-        )}
-        {reminder ? null : (
-          <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
         )}
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>

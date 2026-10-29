@@ -83,10 +83,25 @@ describe('expandEvent', () => {
       range,
     );
     expect(items.map((i) => [i.date, i.time, i.endTime, i.allDay])).toEqual([
-      ['2026-09-10', '09:00', undefined, false],
+      ['2026-09-10', '09:00', '17:00', false],
       ['2026-09-11', undefined, undefined, true],
       ['2026-09-12', undefined, '17:00', true],
     ]);
+    expect(items.map((i) => [i.endDate, i.continued])).toEqual([
+      ['2026-09-12', undefined],
+      [undefined, true],
+      [undefined, true],
+    ]);
+  });
+
+  it('a night shift names its end on the first day and marks the second as continued (QA B31)', () => {
+    const items = expandEvent(
+      'e1',
+      ev({ startDate: '2026-09-10', endDate: '2026-09-11', startTime: '21:30', endTime: '06:30' }),
+      range,
+    );
+    expect(items[0]).toMatchObject({ time: '21:30', endTime: '06:30', endDate: '2026-09-11' });
+    expect(items[1]).toMatchObject({ allDay: true, endTime: '06:30', continued: true });
   });
 
   it('multi-day event starting before the range still shows the covered days', () => {
@@ -207,5 +222,24 @@ describe('calendar with Sunday as first weekday', () => {
 
   it('keeps Monday-first as the default', () => {
     expect(rangeFor('week', '2026-09-29')).toEqual(rangeFor('week', '2026-09-29', 1));
+  });
+});
+
+describe('splitDay with a multi-day entry', () => {
+  it('runs a night shift to midnight on its first day', () => {
+    const [night] = splitDay([
+      {
+        id: 'e:1',
+        source: 'calendar',
+        kind: 'event',
+        title: 'Nacht',
+        date: '2026-09-10',
+        time: '21:30',
+        endTime: '23:00',
+        endDate: '2026-09-11',
+        allDay: false,
+      },
+    ]).timed;
+    expect(night!.end).toBe(24 * 60);
   });
 });

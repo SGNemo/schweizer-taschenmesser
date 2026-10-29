@@ -27,7 +27,7 @@ export const backup: Strings['backup'] = {
   encryptedExport: 'Exporter chiffré',
   encryptedExported: 'Sauvegarde chiffrée téléchargée.',
   exportHint:
-    'Recommandé : exporter chiffré (Argon2id, AES-256). La sauvegarde normale contient toutes les entrées en clair.',
+    'Recommandé : sauvegarder avec un mot de passe. Le fichier est alors chiffré et toute modification se remarque. Sans mot de passe, toutes les entrées sont lisibles dans le fichier.',
   exportPassphrase: 'Mot de passe de la sauvegarde',
   exportPassphraseHint:
     'Au moins 8 caractères. Sans ce mot de passe, la sauvegarde ne peut pas être ouverte – aucune réinitialisation n’est possible.',
@@ -68,7 +68,13 @@ export const backup: Strings['backup'] = {
     `Total : ${added} ${added <= 1 ? 'ajoutée' : 'ajoutées'}, ${replaced} ${replaced <= 1 ? 'remplacée' : 'remplacées'}, ${removed} ${removed <= 1 ? 'supprimée' : 'supprimées'}.`,
   previewNothing: 'Rien ne change.',
   safetyNote:
-    'Avant cela, l’app crée automatiquement une copie de sécurité de vos données actuelles. En cas d’interruption, rien n’est modifié.',
+    'Avant cela, l’app enregistre une copie de sécurité de vos données actuelles. Dans le navigateur, elle arrive en téléchargement dans votre dossier Téléchargements (chiffrée avec le mot de passe si vous en avez saisi un) ; dans l’app, elle va dans le dossier de données. En cas d’interruption, rien n’est modifié.',
+  plainHint:
+    'Sans mot de passe : fichier lisible. La somme de contrôle détecte les dégâts et les modifications accidentelles, mais pas les modifications délibérées.',
+  filesNote:
+    'Pas dans la sauvegarde : les fichiers de documents (fichiers de Documents). Ils restent uniquement sur cet appareil.',
+  noChecksum:
+    'Ce fichier n’a pas de somme de contrôle (version plus ancienne). Impossible de savoir s’il a été modifié.',
   restoring: 'Restauration…',
   autoTitle: 'Sauvegardes automatiques',
   autoIntro:
@@ -103,7 +109,7 @@ export const backup: Strings['backup'] = {
     'passphrase-required': 'Cette sauvegarde est chiffrée. Saisissez le mot de passe.',
     'wrong-passphrase': 'Mot de passe incorrect – ou le fichier a été modifié.',
     'checksum-mismatch':
-      'La somme de contrôle ne correspond pas : le fichier est endommagé ou incomplet.',
+      'La somme de contrôle ne correspond pas : le fichier est endommagé, incomplet ou a été modifié.',
     'restore-failed': 'La restauration d’essai a échoué.',
     'count-mismatch': 'Des entrées manquent après la restauration d’essai.',
     'safety-failed': 'La copie de sécurité n’a pas pu être créée. Rien n’a été modifié.',

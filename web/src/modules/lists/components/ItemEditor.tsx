@@ -47,9 +47,8 @@ function Fields({ item, onClose }: { item: Stored<Item>; onClose: () => void }) 
           <Button
             variant="danger"
             onClick={() => {
-              void undoableWithToast(t.lists.itemDeleted, t.lists.itemDeleted, () =>
-                itemRepo.remove(item.id),
-              );
+              const message = t.lists.removedItem(item.name);
+              void undoableWithToast(message, message, () => itemRepo.remove(item.id));
               onClose();
             }}
           >

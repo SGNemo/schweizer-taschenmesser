@@ -69,6 +69,34 @@ export async function sha256Hex(text: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Plain backups carry an optional `checksum` (hex SHA-256 of `JSON.stringify(tables)`). It detects
+ * damage and accidental edits; without a key it cannot stop someone who recomputes it on purpose,
+ * which is why the encrypted file stays the recommended one. Files without it (older versions)
+ * stay importable and are reported as "unprotected".
+ */
+export type PlainChecksumStatus = 'ok' | 'mismatch' | 'missing';
+
+/** The plain backup as text, sealed with its checksum. */
+export async function serializeSealedBackup(backup: Backup): Promise<string> {
+  const checksum = await sha256Hex(JSON.stringify(backup.tables));
+  return JSON.stringify({ ...backup, checksum });
+}
+
+export async function plainChecksumStatus(text: string): Promise<PlainChecksumStatus> {
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return 'missing';
+  }
+  if (typeof json !== 'object' || json === null) return 'missing';
+  const { checksum, tables } = json as { checksum?: unknown; tables?: unknown };
+  if (checksum === undefined) return 'missing';
+  if (typeof checksum !== 'string') return 'mismatch';
+  return (await sha256Hex(JSON.stringify(tables))) === checksum ? 'ok' : 'mismatch';
+}
+
 export async function encryptBackup(
   backup: Backup,
   passphrase: string,
@@ -149,6 +177,8 @@ export async function decryptBackup(
 export async function readBackupText(text: string, passphrase?: string): Promise<ReadResult> {
   if (!isEncryptedBackupText(text)) {
     const parsed = parseBackup(text);
+    if (parsed.ok && (await plainChecksumStatus(text)) === 'mismatch')
+      return { ok: false, reason: 'checksum-mismatch' };
     return parsed.ok ? { ok: true, backup: parsed.backup, encrypted: false } : parsed;
   }
   const file = parseEncryptedBackup(text);

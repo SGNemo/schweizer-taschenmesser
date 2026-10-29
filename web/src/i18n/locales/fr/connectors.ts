@@ -89,7 +89,8 @@ export const connectors: Strings['connectors'] = {
     add: 'Ajouter un calendrier',
     checking: 'Vérification…',
     remove: (name: string) => `Retirer le calendrier « ${name} »`,
-    badUrl: 'Ce n’est pas une adresse valide (https://… ou webcal://…).',
+    badUrl:
+      'Ce n’est pas une adresse publique valide (https://… ou webcal://…). Les adresses de votre réseau local ou avec identifiants ne sont pas autorisées.',
     notACalendar: 'Il n’y a pas de calendrier à cette adresse.',
     unreachable: 'L’adresse est injoignable.',
     noProxy:

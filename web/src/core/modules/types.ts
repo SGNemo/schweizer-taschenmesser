@@ -255,6 +255,10 @@ export interface CalendarItem {
   /** 'HH:mm'; absent for all-day items. */
   time?: string;
   endTime?: string;
+  /** Last day of an entry that spans several days; set on its first day only. */
+  endDate?: string;
+  /** True on the days after the first of a multi-day entry. */
+  continued?: boolean;
   allDay: boolean;
   done?: boolean;
   /** Route to open when the item is activated. */

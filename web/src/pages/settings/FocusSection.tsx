@@ -48,7 +48,11 @@ export function FocusSection() {
         label={label}
         labelHidden
         checked={values[key]}
-        onChange={(v) => void patch({ [key]: v })}
+        onChange={(v) => {
+          // Switching the history off also forgets what it kept.
+          if (key === 'searchHistory' && !v) clearRecent();
+          void patch({ [key]: v });
+        }}
       />
     </SettingRow>
   );

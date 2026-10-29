@@ -40,9 +40,10 @@ export default function IcsSettings({
     setError('');
     const address = normalizeIcsUrl(url);
     if (!address) return setError(s.badUrl);
+    // The notice may wait for a click; "Wird geprüft …" only shows once the address is really checked.
+    await requireNotice('connector-ics');
     setBusy(true);
     try {
-      await requireNotice('connector-ics');
       const entry: IcsSubscription = {
         id: crypto.randomUUID().slice(0, 8),
         name: name.trim() || s.defaultName(list.length + 1),

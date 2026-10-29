@@ -29,6 +29,8 @@ export const calendar: Strings['calendar'] = {
   prev: 'Back',
   next: 'Next',
   newEvent: 'New event',
+  endsAt: (time: string) => `until ${time}`,
+  recent: 'As before',
   editEvent: 'Edit event',
   allDay: 'All day',
   start: 'Start',

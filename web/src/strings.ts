@@ -1323,6 +1323,8 @@ export const de = {
     prev: 'Zurück',
     next: 'Weiter',
     newEvent: 'Neuer Termin',
+    endsAt: (time: string) => `bis ${time}`,
+    recent: 'Wie zuletzt',
     editEvent: 'Termin bearbeiten',
     allDay: 'Ganztägig',
     start: 'Beginn',
@@ -2345,6 +2347,8 @@ export const de = {
       'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im Heimnetz oder über ein privates Netzwerk wie Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
     serverUrl: 'Server-Adresse',
     serverUrlHint: 'z. B. https://mein-pc.tailnet.ts.net',
+    httpWarning:
+      'Mit „http://“ geht das Token unverschlüsselt über das Netz. Nutze https:// (z. B. Tailscale) – nur für diesen Rechner (localhost) ist http in Ordnung.',
     token: 'Zugangstoken',
     deviceName: 'Gerätename',
     deviceNameHint: 'So erscheint dieses Gerät in der Geräteliste.',
@@ -2379,8 +2383,10 @@ export const de = {
     state: { off: 'Aus', idle: 'Synchronisiert', syncing: 'Synchronisiere …', error: 'Fehler' },
     badge: (state: string) => `Synchronisation: ${state}`,
     detailsTitle: 'Status',
-    lastResult: (pulled: number, pushed: number) =>
-      `Zuletzt: ${pulled} empfangen, ${pushed} gesendet`,
+    lastResult: (applied: number, pushed: number) =>
+      applied === 0 && pushed === 0
+        ? 'Zuletzt: alles aktuell, nichts Neues'
+        : `Zuletzt: ${applied} Änderungen übernommen, ${pushed} gesendet`,
     rejected: (n: number) =>
       `${n} empfangene Änderungen konnten nicht entschlüsselt werden und wurden übersprungen.`,
     failuresInRow: (n: number) => (n === 1 ? '1 Fehlversuch' : `${n} Fehlversuche in Folge`),
@@ -2490,7 +2496,7 @@ export const de = {
     encryptedExport: 'Verschlüsselt exportieren',
     encryptedExported: 'Verschlüsseltes Backup heruntergeladen.',
     exportHint:
-      'Empfohlen: verschlüsselt exportieren (Argon2id, AES-256). Das normale Backup enthält alle Einträge im Klartext.',
+      'Empfohlen: mit Passwort sichern. Dann ist die Datei verschlüsselt und eine Änderung fällt auf. Ohne Passwort liegen alle Einträge lesbar in der Datei.',
     exportPassphrase: 'Passwort für das Backup',
     exportPassphraseHint:
       'Mindestens 8 Zeichen. Ohne dieses Passwort lässt sich das Backup nicht öffnen – es gibt keine Rücksetzung.',
@@ -2529,7 +2535,13 @@ export const de = {
       `Gesamt: ${added} kommen dazu, ${replaced} werden ersetzt, ${removed} werden gelöscht.`,
     previewNothing: 'Es ändert sich nichts.',
     safetyNote:
-      'Vorher legt die App automatisch eine Sicherheitskopie deiner aktuellen Daten an. Bricht etwas ab, bleibt alles unverändert.',
+      'Vorher speichert die App eine Sicherheitskopie deiner aktuellen Daten. Im Browser kommt sie als Download in deinen Downloads-Ordner (mit Passwort verschlüsselt, wenn du eins eingegeben hast), in der App liegt sie im Datenordner. Bricht etwas ab, bleibt alles unverändert.',
+    plainHint:
+      'Ohne Passwort: lesbare Datei. Die Prüfsumme erkennt Beschädigung und versehentliche Änderungen, aber keine absichtlichen.',
+    filesNote:
+      'Nicht im Backup: Dokumentdateien (Dateien bei Unterlagen). Sie bleiben nur auf diesem Gerät.',
+    noChecksum:
+      'Diese Datei hat keine Prüfsumme (ältere Version). Ob sie verändert wurde, lässt sich nicht erkennen.',
     restoring: 'Stelle wieder her …',
     autoTitle: 'Automatische Backups',
     autoIntro:
@@ -2564,7 +2576,7 @@ export const de = {
       'passphrase-required': 'Dieses Backup ist verschlüsselt. Gib das Passwort ein.',
       'wrong-passphrase': 'Falsches Passwort – oder die Datei wurde verändert.',
       'checksum-mismatch':
-        'Die Prüfsumme stimmt nicht: Die Datei ist beschädigt oder unvollständig.',
+        'Die Prüfsumme stimmt nicht: Die Datei ist beschädigt, unvollständig oder wurde verändert.',
       'restore-failed': 'Die Probe-Wiederherstellung ist fehlgeschlagen.',
       'count-mismatch': 'Nach der Probe-Wiederherstellung fehlen Einträge.',
       'safety-failed':
@@ -3797,6 +3809,10 @@ export const de = {
     markedDone: 'Abgehakt.',
     markedOpen: 'Wieder offen.',
     itemDeleted: 'Eintrag gelöscht.',
+    // Single-item notices name the entry (one notice at a time, so it must say what changed).
+    tickedItem: (name: string) => `„${name}“ abgehakt.`,
+    reopenedItem: (name: string) => `„${name}“ wieder offen.`,
+    removedItem: (name: string) => `„${name}“ gelöscht.`,
     itemsDeleted: (n: number) => (n === 1 ? '1 Eintrag gelöscht.' : `${n} Einträge gelöscht.`),
     listDeleted: 'Liste gelöscht.',
     deleteList: 'Liste löschen',
@@ -3927,6 +3943,13 @@ export const de = {
       create: 'Tresor erstellen',
       creating: 'Schlüssel wird berechnet …',
       mismatch: 'Die Passwörter stimmen nicht überein.',
+      weakNotice:
+        'Dieses Passwort lässt sich in kurzer Zeit erraten. Du kannst es trotzdem nehmen – oder einen Vorschlag aus mehreren Wörtern: leichter zu merken, schwerer zu knacken.',
+      suggest: 'Mehrwort-Vorschlag',
+      suggested: (phrase: string) =>
+        `Dein Vorschlag: ${phrase}. Er steht schon in beiden Feldern. Notiere ihn dir, bevor du weitermachst.`,
+      weakAck: 'Ich nehme das schwache Passwort trotzdem',
+      weakNeedAck: 'Bestätige oben, dass du das schwache Passwort trotzdem nehmen willst.',
       tooShort: (n: number) => `Mindestens ${n} Zeichen.`,
       exists: 'Es gibt bereits einen Tresor (z. B. von einem anderen Gerät).',
     },
@@ -4225,7 +4248,8 @@ export const de = {
       add: 'Kalender hinzufügen',
       checking: 'Wird geprüft …',
       remove: (name: string) => `Kalender „${name}“ entfernen`,
-      badUrl: 'Das ist keine gültige Adresse (https://… oder webcal://…).',
+      badUrl:
+        'Das ist keine gültige öffentliche Adresse (https://… oder webcal://…). Adressen im eigenen Netz und mit Zugangsdaten sind nicht erlaubt.',
       notACalendar: 'Unter dieser Adresse liegt kein Kalender.',
       unreachable: 'Die Adresse ist nicht erreichbar.',
       noProxy:
