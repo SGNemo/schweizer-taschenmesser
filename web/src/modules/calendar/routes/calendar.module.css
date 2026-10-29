@@ -79,9 +79,18 @@
   list-style: none;
   margin: 2px 0 0;
   padding: 0;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 2px;
+}
+.cellLabel {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 .chip,
 .more {
@@ -104,8 +113,7 @@
   color: var(--text-muted);
 }
 .dots {
-  /* Replaced by the first entry's name in the cell (QA V12); kept for a possible dense mode. */
-  display: none;
+  display: flex;
   gap: 3px;
   padding: 0 var(--space-1);
 }
@@ -116,6 +124,15 @@
   background: var(--text-muted);
 }
 @media (min-width: 700px) {
+  .dots {
+    display: none;
+  }
+  .chips {
+    display: flex;
+  }
+  .cellLabel {
+    display: none;
+  }
   .cell {
     height: 7.5rem;
   }

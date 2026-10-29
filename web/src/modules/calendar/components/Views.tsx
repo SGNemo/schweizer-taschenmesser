@@ -21,18 +21,18 @@ const TIME_GRID_QUERY = '(min-width: 1400px)';
 
 /** Chips per month cell: taller windows have taller cells and room for more entries. */
 function useChipLimit(): number {
-  // A phone has room for one line per day: the first entry (the shift or appointment) is named.
-  const wide = useMediaQuery('(min-width: 700px)');
   const h800 = useMediaQuery('(min-height: 800px)');
   const h1000 = useMediaQuery('(min-height: 1000px)');
   const h1300 = useMediaQuery('(min-height: 1300px)');
-  return !wide ? 1 : h1300 ? 7 : h1000 ? 5 : h800 ? 4 : 3;
+  return h1300 ? 7 : h1000 ? 5 : h800 ? 4 : 3;
 }
 
 export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
   const byDate = groupByDate(items);
   const now = today();
   const MAX_CHIPS = useChipLimit();
+  // A phone cell has room for one line, not for buttons: the first entry is named as plain text.
+  const wide = useMediaQuery('(min-width: 700px)');
   const weekStart = useWeekStart();
   return (
     <div className={styles.monthWrap}>
@@ -65,6 +65,13 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
                     >
                       {Number(d.slice(8, 10))}
                     </button>
+                    {!wide && list[0] ? (
+                      <span className={styles.cellLabel}>
+                        {list[0].time ? `${list[0].time} ` : ''}
+                        {list[0].title}
+                        {list.length > 1 ? ` +${list.length - 1}` : ''}
+                      </span>
+                    ) : null}
                     <ul className={styles.chips}>
                       {list.slice(0, MAX_CHIPS).map((i) => (
                         <li key={`${i.source}:${i.id}`}>
