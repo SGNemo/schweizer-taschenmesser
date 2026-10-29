@@ -119,6 +119,8 @@ export const ai: Strings['ai'] = {
     ask: 'Ask the assistant',
     write: 'Add',
     writeButton: 'Add with AI',
+    writeSentence: 'Add a sentence',
+    askLocal: 'Ask a question',
     writePlaceholder: 'e.g. Rechnung Stadtwerke 89,90 € fällig 15.10.',
   },
   tier: {

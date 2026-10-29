@@ -4,8 +4,8 @@ export const reminder: Strings['reminder'] = {
   center: {
     title: 'Rappels',
     bell: (n: number) => (n === 0 ? 'Rappels' : `Rappels, ${n} en attente`),
-    next: 'Rappel suivant',
-    random: 'Rappel au hasard',
+    next: 'Afficher le prochain rappel',
+    random: 'Afficher un rappel',
     another: 'Un autre',
     allRead: 'Tout lu',
     list: 'En attente',

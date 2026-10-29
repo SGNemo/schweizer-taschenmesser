@@ -20,7 +20,7 @@ test('an enabled module offers its start data right on its card (no detour via S
   // Enabling offers the start-data wizard once; skip it, the button stays on the card.
   await page.getByRole('button', { name: 'Überspringen' }).click();
   const card = page.getByTestId('module-bookmarks');
-  await card.getByRole('button', { name: 'Startdaten einrichten' }).click();
+  await card.getByRole('button', { name: 'Importieren' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
 

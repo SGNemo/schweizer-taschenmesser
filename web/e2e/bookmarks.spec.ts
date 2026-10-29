@@ -110,13 +110,15 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
     const main = page.locator('main');
     await expect(main.getByRole('button', { name: /^Kochen \(1\)/ })).toHaveCount(0);
     await expect(main.getByLabel('Art')).toHaveCount(0);
-    await expect(main.getByRole('switch', { name: 'Erweitert' })).toHaveCount(0);
+    await expect(main.getByRole('switch', { name: 'Mehr Felder anzeigen' })).toHaveCount(0);
 
     const menu = await openBookmarksMenu(page);
     await expect(
       menu.getByRole('menuitemcheckbox', { name: 'Offen', exact: true }),
     ).toHaveAttribute('aria-checked', 'true');
-    await expect(menu.getByRole('menuitemcheckbox', { name: 'Erweitert' })).toBeVisible();
+    await expect(
+      menu.getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
+    ).toBeVisible();
     await menu.getByRole('menuitemcheckbox', { name: 'Ansehen' }).click();
     await expect(page.getByTestId('bookmarks-filter')).toContainText('Ansehen');
     await expect(rowOf(page, 'Dune')).toBeVisible();

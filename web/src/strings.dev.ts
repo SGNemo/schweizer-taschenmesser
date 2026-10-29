@@ -51,7 +51,7 @@ export const tDev = {
     none: 'Keine Testdaten geladen.',
     entries: 'Einträge',
     demoVault: (phrase: string) =>
-      `Demo-Tresor (Modul Accounts): Passphrase „${phrase}“. Ein vorhandener Tresor wird nie überschrieben.`,
+      `Demo-Tresor (Modul Passwörter): Passwortsatz „${phrase}“. Ein vorhandener Tresor wird nie überschrieben.`,
   },
   banner: {
     text: 'Testdaten geladen, entfernen unter Einstellungen → Entwickler.',

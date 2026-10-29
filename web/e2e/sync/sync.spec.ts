@@ -226,10 +226,10 @@ test.describe('end-to-end encryption', () => {
     // Device B: no passphrase → asked for it; wrong → rejected; right → data arrives
     await submitConnect(b.page);
     await expect(b.page.getByTestId('sync-failure')).toContainText('verschlüsselt');
-    await b.page.getByLabel('Passphrase').fill('falsche passphrase');
+    await b.page.getByLabel('Passwortsatz').fill('falsche passphrase');
     await b.page.getByRole('button', { name: 'Verbinden', exact: true }).click();
-    await expect(b.page.getByTestId('sync-failure')).toHaveText('Falsche Passphrase.');
-    await b.page.getByLabel('Passphrase').fill('ein langer geheimer Satz');
+    await expect(b.page.getByTestId('sync-failure')).toHaveText('Falscher Passwortsatz.');
+    await b.page.getByLabel('Passwortsatz').fill('ein langer geheimer Satz');
     await b.page.getByRole('button', { name: 'Verbinden', exact: true }).click();
     await expect(b.page.getByTestId('sync-status')).toContainText('Synchronisiert');
     await b.page.goto('/todos');

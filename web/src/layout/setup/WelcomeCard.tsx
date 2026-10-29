@@ -3,7 +3,7 @@ import { useSetupState } from '@/core/setup/hooks';
 import { dismissSetup } from '@/core/setup/state';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card } from '@/ui';
+import { Button, Card, ReadableText } from '@/ui';
 import styles from './WelcomeCard.module.css';
 
 /**
@@ -25,7 +25,12 @@ export function WelcomeCard() {
         <p className={styles.text}>{t.setup.welcomeText}</p>
         {readAid || hintSeen ? null : (
           <div className={styles.hint} data-testid="read-hint">
-            <p className={styles.text}>{t.settings.reading.hintText}</p>
+            <p className={styles.text}>
+              {t.settings.reading.hintText}{' '}
+              <span data-testid="read-hint-preview">
+                <ReadableText text={t.settings.reading.previewText} force />
+              </span>
+            </p>
             <div className={styles.buttons}>
               <Button
                 onClick={() => {

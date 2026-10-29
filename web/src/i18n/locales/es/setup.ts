@@ -7,6 +7,7 @@ export const setup: Strings['setup'] = {
   start: 'Iniciar configuración',
   resume: 'Continuar configuración',
   open: 'Abrir configuración inicial',
+  openStep: 'Abrir',
   paletteCommand: 'Configuración inicial',
   welcomeTitle: 'Te damos la bienvenida a Nemo',
   welcomeText:
@@ -17,7 +18,7 @@ export const setup: Strings['setup'] = {
   progressLabel: 'Progreso de la configuración',
   back: 'Atrás',
   next: 'Siguiente',
-  skip: 'Omitir',
+  skip: 'Más tarde',
   finish: 'Listo',
   noSteps: 'Ahora mismo no hay nada que configurar.',
   startTitle: 'Hola de nuevo',
@@ -35,13 +36,30 @@ export const setup: Strings['setup'] = {
   summaryTitle: 'Resumen',
   summaryIntro: 'Así va tu configuración:',
   statusDone: 'Hecho',
-  statusSkipped: 'Omitido',
+  statusSkipped: 'Más tarde',
   statusOpen: 'Pendiente',
   isNew: 'Nuevo',
   showChecklist: 'Mostrar lista de control en el resumen',
   checklistProgress: (done: number, total: number) => `${done} de ${total} pasos hechos`,
   moreOpen: (n: number) => `… y ${n} más`,
   hideChecklist: 'Ocultar',
+  restLater: 'El resto, más tarde',
+  allSteps: 'Ver todos los pasos',
+  questionOf: (n: number, total: number) => `Pregunta ${n} de ${total}`,
+  quick: {
+    basics: {
+      title: '¿Cómo quieres que te llamemos?',
+      description: 'Nombre y tamaño del texto. Puedes cambiar ambos después.',
+    },
+    profiles: {
+      title: '¿Qué te va mejor?',
+      description: 'El perfil activa los módulos adecuados. Cada perfil indica qué desactiva.',
+    },
+    ai: {
+      title: '¿Quieres ayuda de una IA?',
+      description: 'La IA nunca ve tus datos. Puedes cambiarlo en cualquier momento en Ajustes.',
+    },
+  },
   steps: {
     basics: {
       title: 'Lo básico',
@@ -55,6 +73,8 @@ export const setup: Strings['setup'] = {
       fixedTitle: 'Valores fijos',
       timezone: (zone: string) => `Zona horaria: ${zone} (las horas son siempre la hora local)`,
       currency: 'Moneda: euro (EUR)',
+      textSize: 'Tamaño del texto',
+      more: 'Más ajustes',
     },
     sync: {
       title: 'Sincronización y restauración',
@@ -66,7 +86,7 @@ export const setup: Strings['setup'] = {
       connect: 'Conectar con servidor de sincronización',
       connected: 'Este dispositivo ya está conectado a un servidor de sincronización.',
       afterConnect:
-        'Si el servidor ya trae módulos y datos, puedes omitir los pasos de perfil y datos iniciales.',
+        'Si el servidor ya trae módulos y datos, puedes omitir los pasos de perfil e importar.',
     },
     profiles: {
       title: 'Perfil y módulos',
@@ -85,6 +105,12 @@ export const setup: Strings['setup'] = {
       toolsOn: (names: string) => `Herramientas activadas: ${names}`,
       toolsOff: (names: string) => `Herramientas desactivadas: ${names}`,
       confirm: 'He revisado los cambios y quiero aplicarlos.',
+      needConfirm: 'Marca la casilla de «Qué cambia» para confirmar que has revisado los cambios.',
+      switchesOff: (names: string) => `Desactiva: ${names}.`,
+      switchesNothingOff: 'No desactiva nada.',
+      dataKept: 'Los datos se conservan; puedes volver a activarlo todo.',
+      pick: 'Elegir',
+      picked: 'Elegido',
     },
     tools: {
       title: 'Caja de herramientas',
@@ -117,6 +143,15 @@ export const setup: Strings['setup'] = {
       mayTrain: 'Este proveedor puede usar lo que escribes para mejorar sus modelos.',
       ollamaFound: 'Ollama está funcionando en este ordenador.',
       ollamaAdd: 'Añadir Ollama',
+      quickLocal: 'Solo local, sin IA',
+      quickLocalHint:
+        'La búsqueda y la captura rápida funcionan en este dispositivo. Los botones de IA quedan apagados.',
+      quickLater: 'Configurar la IA más tarde',
+      quickLaterHint: 'El paso «Proveedor de IA» queda en la lista de tareas.',
+      ollamaSearch: 'Buscar Ollama en este ordenador',
+      ollamaSearching: 'Buscando …',
+      ollamaNone: 'No se encontró Ollama.',
+      ollamaHint: 'Solo consulta localhost:11434 en este ordenador, nada más.',
     },
     connectors: {
       title: 'Vincular cuentas',
@@ -131,10 +166,10 @@ export const setup: Strings['setup'] = {
       none: 'Esta versión no tiene conexiones.',
     },
     startdata: {
-      title: 'Datos iniciales',
+      title: 'Importar',
       description:
         'Añade las primeras entradas o impórtalas: con texto, archivo, plantilla o conexión. Antes de guardar siempre ves una vista previa, y cada importación se puede deshacer.',
-      none: 'Los módulos activos no ofrecen datos iniciales.',
+      none: 'Los módulos activos no ofrecen importación.',
       handled: 'Ya hecho',
       hints: {
         finance: 'Cuentas, categorías y saldos iniciales.',
@@ -187,8 +222,8 @@ export const setup: Strings['setup'] = {
     },
     dashboard: {
       title: 'Resumen',
-      description: 'Qué widgets aparecen y en qué orden. Arrastra o usa el teclado.',
-      empty: 'Los módulos activos no tienen widgets.',
+      description: 'Qué tarjetas aparecen y en qué orden. Arrastra o usa el teclado.',
+      empty: 'Los módulos activos no tienen tarjetas.',
       hide: (title: string) => `Mostrar ${title}`,
       drag: (title: string) => `Mover ${title}`,
       instructions:
@@ -210,5 +245,14 @@ export const setup: Strings['setup'] = {
       description: 'Tareas, notas, calendario, guardados y marcadores.',
     },
     minimal: { name: 'Mínimo', description: 'Solo calendario y tareas.' },
+    family: { name: 'Familia', description: 'Calendario, tareas, compra, despensa, cumpleaños.' },
+    papers: {
+      name: 'Papeles y citas',
+      description: 'Documentos con plazos, suscripciones, facturas y calendario.',
+    },
+    study: {
+      name: 'Estudios',
+      description: 'Tareas, notas, calendario, marcadores y temporizador.',
+    },
   } as Record<string, { name: string; description: string }>,
 };

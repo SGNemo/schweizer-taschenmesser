@@ -47,8 +47,11 @@ export function ChecklistCard() {
                 {item.title} {item.isNew ? <Badge tone="accent">{t.setup.isNew}</Badge> : null}
                 {item.progress === 'skipped' ? <Badge>{t.setup.statusSkipped}</Badge> : null}
               </span>
-              <Button aria-label={`${item.title}: ${t.setup.open}`} onClick={() => open(item.id)}>
-                {t.setup.open}
+              <Button
+                aria-label={`${item.title}: ${t.setup.openStep}`}
+                onClick={() => open(item.id)}
+              >
+                {t.setup.openStep}
               </Button>
             </li>
           ))}
