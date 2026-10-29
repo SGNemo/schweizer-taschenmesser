@@ -251,7 +251,9 @@ export type ConnectorErrorCode =
   /** The browser never reached the loopback callback (provider error page, wrong redirect URI). */
   | 'no-callback'
   /** The token endpoint rejected the client id. */
-  | 'bad-client';
+  | 'bad-client'
+  /** The system browser could not be opened for the login. */
+  | 'no-browser';
 
 /** Failure of a connector call; the message never contains secrets (see `redact`). */
 export class ConnectorError extends Error {

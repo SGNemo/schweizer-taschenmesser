@@ -114,16 +114,18 @@ export async function connectOAuth(
         );
       });
     if (signal?.aborted) return await loadStatus(def.id);
-    await platform.app.openUrl(
-      buildAuthUrl({
-        endpoints: def.oauth,
-        clientId,
-        redirectUri,
-        scopes,
-        state,
-        challenge: await challengeOf(verifier),
-      }),
-    );
+    const authUrl = buildAuthUrl({
+      endpoints: def.oauth,
+      clientId,
+      redirectUri,
+      scopes,
+      state,
+      challenge: await challengeOf(verifier),
+    });
+    // The shell refusing to open the browser is not a network problem: say so.
+    await platform.app.openUrl(authUrl).catch(() => {
+      throw new ConnectorError('no-browser', 'login');
+    });
     let code: string;
     try {
       // An abandoned login (the caller aborted): stop waiting and touch nothing – no token is

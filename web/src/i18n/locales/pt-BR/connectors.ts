@@ -18,6 +18,7 @@ export const connectors: Strings['connectors'] = {
     'no-callback':
       'O navegador não retornou nenhum login. Verifique no serviço o URI de redirecionamento cadastrado e se a sua conta está liberada, depois tente de novo.',
     'bad-client': 'O serviço não reconhece este ID de cliente. Verifique o ID informado.',
+    'no-browser': 'Não foi possível abrir o navegador para o login.',
   } as Record<string, string>,
   icsName: 'Assinatura de calendário (ICS)',
   icsDescription:
