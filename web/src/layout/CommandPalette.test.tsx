@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { prepareCreate } from '@/core/ai/query/create';
 import { clearAll, ctxFor } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
-import { addRecent, readRecent } from '@/core/search/recent';
+import { readRecent } from '@/core/search/recent';
 import { patchFocusSettings } from '@/core/settings/focus';
 import { setSettings } from '@/core/settings/settings';
 import { TOOLS_SCOPE } from '@/core/tools/layout';
@@ -259,16 +259,21 @@ describe('assistant in the palette', () => {
     ).toHaveLength(1);
   });
 
-  it('an earlier search is typed back into the field', async () => {
-    addRecent({ kind: 'query', key: 'q-offene rechnungen', label: 'offene Rechnungen' });
+  it('a question is never remembered and an old stored one is removed', async () => {
+    localStorage.setItem(
+      'tm-recent-search',
+      JSON.stringify([{ kind: 'query', key: 'q-a', label: 'offene Rechnungen' }]),
+    );
     const user = userEvent.setup();
     render(
       <MemoryRouter>
         <CommandPalette />
       </MemoryRouter>,
     );
-    await user.click(await screen.findByRole('option', { name: /offene Rechnungen/ }));
-    expect(await screen.findByRole('combobox')).toHaveValue('offene Rechnungen');
+    await screen.findByRole('combobox');
+    expect(screen.queryByRole('option', { name: /offene Rechnungen/ })).toBeNull();
+    await user.type(screen.getByRole('combobox'), 'meine frage{Enter}');
+    expect(localStorage.getItem('tm-recent-search') ?? '').not.toMatch(/offene|frage/);
   });
 
   it('does not remember anything when the history is switched off', async () => {

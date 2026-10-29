@@ -16,6 +16,11 @@ export function VerifyReportView({ report }: { report: VerifyReport }) {
           ? t.backup.verifyOk
           : `${t.backup.verifyFailed} ${t.backup.errors[report.failure ?? 'invalid'] ?? ''}`}
       </p>
+      {report.ok && report.unprotected ? (
+        <p role="status" className={styles.muted} data-testid="backup-unprotected">
+          {t.backup.noChecksum}
+        </p>
+      ) : null}
       <ul className={styles.muted}>
         {report.steps.map((s) => (
           <li key={s.id}>

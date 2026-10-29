@@ -16,6 +16,7 @@ import type { SecretStore } from '@/core/secrets/types';
 import { getSettings, setSettings, useSettings } from '@/core/settings/settings';
 import { clearAiCache } from './cache';
 import { defaultAiConfig, loadAiConfig, removeProvider, saveAiConfig } from './config';
+import { purgeTypedQueries } from '@/core/search/recent';
 import { resetUsage } from './usage';
 
 export const AI_SWITCH_SCOPE = 'ai.switch';
@@ -73,6 +74,8 @@ export async function purgeAi(
   await saveAiConfig(defaultAiConfig(), database);
   await clearAiCache(database);
   await resetUsage(database);
+  // Older versions kept typed questions in the search history.
+  purgeTypedQueries();
   // The local AI import API: stop it and revoke every token.
   const api = await loadConfig(database);
   for (const token of api.tokens) await revokeToken(token.id, database);

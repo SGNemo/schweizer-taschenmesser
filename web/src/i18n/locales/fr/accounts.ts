@@ -49,6 +49,13 @@ export const accounts: Strings['accounts'] = {
     create: 'Créer le coffre-fort',
     creating: 'Calcul de la clé…',
     mismatch: 'Les mots de passe ne correspondent pas.',
+    weakNotice:
+      'Ce mot de passe peut être deviné rapidement. Vous pouvez quand même le garder – ou prendre une suggestion de plusieurs mots : plus facile à retenir, plus difficile à casser.',
+    suggest: 'Suggérer plusieurs mots',
+    suggested: (phrase: string) =>
+      `Votre suggestion : ${phrase}. Elle est déjà dans les deux champs. Notez-la avant de continuer.`,
+    weakAck: 'Utiliser quand même le mot de passe faible',
+    weakNeedAck: 'Confirmez ci-dessus que vous voulez quand même utiliser le mot de passe faible.',
     tooShort: (n: number) => `Au moins ${n} caractères.`,
     exists: 'Un coffre-fort existe déjà (p. ex. depuis un autre appareil).',
   },

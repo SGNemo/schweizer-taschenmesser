@@ -8,17 +8,21 @@
  * it – HTTP 413 / 415 with `{ error }` – so callers see one shape on both paths.
  */
 import { getPlatform } from '@/core/platform';
+import { isPublicHttpsUrl } from './publicUrl';
 import { loadSyncConfig } from '@/core/sync/service';
 
 export class PublicFetchError extends Error {
   constructor(
-    readonly code: 'no-proxy' | 'network',
+    readonly code: 'no-proxy' | 'network' | 'timeout',
     message: string = code,
   ) {
     super(message);
     this.name = 'PublicFetchError';
   }
 }
+
+/** A feed that does not answer must end in an error, never in an endless "Wird geprüft …". */
+export const PUBLIC_FETCH_TIMEOUT_MS = 20_000;
 
 /** Same number as `MAX_PROXY_BYTES` in `server/src/proxy.ts` (not imported: no shared package). */
 export const MAX_PUBLIC_BYTES = 2 * 1024 * 1024;
@@ -77,16 +81,49 @@ export async function limitPublicResponse(res: Response): Promise<Response> {
   });
 }
 
-export async function fetchPublic(url: string, init?: RequestInit): Promise<Response> {
+/** Races a request against the timeout; the abort also stops the body read inside the caller's `res`. */
+async function withTimeout<T>(
+  run: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await Promise.race([
+      run(controller.signal),
+      new Promise<never>((_, reject) =>
+        controller.signal.addEventListener('abort', () =>
+          reject(new PublicFetchError('timeout', 'timeout')),
+        ),
+      ),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+const asNetworkError = (e: unknown): PublicFetchError =>
+  e instanceof PublicFetchError
+    ? e
+    : new PublicFetchError('network', e instanceof Error ? e.message : String(e));
+
+export async function fetchPublic(
+  url: string,
+  init?: RequestInit,
+  timeoutMs = PUBLIC_FETCH_TIMEOUT_MS,
+): Promise<Response> {
   const platform = getPlatform();
   if (platform.isNative) {
-    let res: Response;
+    // The desktop app asks the host itself, so the address rules the proxy would apply are checked here.
+    if (!isPublicHttpsUrl(url)) throw new PublicFetchError('network', 'not a public https address');
     try {
-      res = await platform.fetch(url, init);
+      return await withTimeout(
+        async (signal) => limitPublicResponse(await platform.fetch(url, { ...init, signal })),
+        timeoutMs,
+      );
     } catch (e) {
-      throw new PublicFetchError('network', e instanceof Error ? e.message : String(e));
+      throw asNetworkError(e);
     }
-    return limitPublicResponse(res);
   }
   const config = await loadSyncConfig();
   if (!config) throw new PublicFetchError('no-proxy');
@@ -94,8 +131,8 @@ export async function fetchPublic(url: string, init?: RequestInit): Promise<Resp
   const headers = new Headers(init?.headers);
   headers.set('authorization', `Bearer ${config.token}`);
   try {
-    return await fetch(proxied, { ...init, headers });
+    return await withTimeout((signal) => fetch(proxied, { ...init, headers, signal }), timeoutMs);
   } catch (e) {
-    throw new PublicFetchError('network', e instanceof Error ? e.message : String(e));
+    throw asNetworkError(e);
   }
 }

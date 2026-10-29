@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { backupFileName, createBackup, serializeBackup } from '@/core/backup/backup';
+import { backupFileName, createBackup } from '@/core/backup/backup';
 import { downloadTextFile } from '@/core/backup/download';
+import { serializeSealedBackup } from '@/core/backup/encrypted';
 import { getPlatform } from '@/core/platform';
 import type { SetupStepProps } from '@/core/setup/types';
 import { loadPrefs, savePrefs, type UpdatePrefs } from '@/core/update/prefs';
@@ -31,7 +32,10 @@ export default function BackupUpdatesStep({ registerCommit }: SetupStepProps) {
   }, [registerCommit, draft]);
 
   async function backupNow() {
-    const result = await downloadTextFile(backupFileName(), serializeBackup(await createBackup()));
+    const result = await downloadTextFile(
+      backupFileName(),
+      await serializeSealedBackup(await createBackup()),
+    );
     if (result === 'saved') toast(t.backup.exported);
   }
 

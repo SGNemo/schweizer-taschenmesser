@@ -7,6 +7,8 @@ export const sync: Strings['sync'] = {
     'Opcional: sincroniza tus datos a través de tu propio servidor de sincronización (en tu red doméstica o con una red privada como Tailscale). Sin servidor, todo se queda en este dispositivo.',
   serverUrl: 'Dirección del servidor',
   serverUrlHint: 'p. ej. https://mi-pc.tailnet.ts.net',
+  httpWarning:
+    'Con «http://» el token viaja sin cifrar por la red. Usa https:// (por ejemplo Tailscale); http solo es aceptable para este equipo (localhost).',
   token: 'Token de acceso',
   deviceName: 'Nombre del dispositivo',
   deviceNameHint: 'Así aparece este dispositivo en la lista de dispositivos.',
@@ -41,8 +43,10 @@ export const sync: Strings['sync'] = {
   state: { off: 'Desactivada', idle: 'Sincronizado', syncing: 'Sincronizando …', error: 'Error' },
   badge: (state: string) => `Sincronización: ${state}`,
   detailsTitle: 'Estado',
-  lastResult: (pulled: number, pushed: number) =>
-    `Última vez: ${pulled} recibidos, ${pushed} enviados`,
+  lastResult: (applied: number, pushed: number) =>
+    applied === 0 && pushed === 0
+      ? 'Última vez: todo al día, nada nuevo'
+      : `Última vez: ${applied} cambios aplicados, ${pushed} enviados`,
   rejected: (n: number) =>
     n === 1
       ? '1 cambio recibido no se pudo descifrar y se omitió.'

@@ -10,6 +10,8 @@ export const tDiag = defineBundle(
         'Zeigt zuerst genau, was in der Datei steht, und speichert sie erst nach deiner Bestätigung. Ohne Einträge, Tresor, Schlüssel, Server-Adressen und Pfade mit Benutzernamen. Die App sendet nichts.',
       previewTitle: 'Diagnose-Datei ansehen',
       previewHint: 'Das ist der komplette Inhalt der Datei. Prüfe ihn, bevor du speicherst.',
+      fileLanguageNote:
+        'Die Datei ist auf Englisch geschrieben, damit sie sich leicht weitergeben und lesen lässt. Sie enthält nur Zahlen, Einstellungen und Fehlermeldungen.',
       save: 'Speichern',
       cancel: 'Schließen',
       saved: 'Diagnose gespeichert.',
@@ -92,6 +94,8 @@ export const tDiag = defineBundle(
           'Shows exactly what is in the file first and only saves it after you confirm. No entries, vault, keys, server addresses or paths with user names. The app sends nothing.',
         previewTitle: 'Review diagnostics file',
         previewHint: 'This is the complete content of the file. Check it before you save.',
+        fileLanguageNote:
+          'The file is written in English so it is easy to pass on and read. It holds only numbers, settings and error messages.',
         save: 'Save',
         cancel: 'Close',
         saved: 'Diagnostics saved.',
@@ -170,6 +174,8 @@ export const tDiag = defineBundle(
           'Primero muestra exactamente lo que contiene el archivo y solo lo guarda cuando lo confirmas. Sin entradas, bóveda, claves, direcciones de servidor ni rutas con nombres de usuario. La app no envía nada.',
         previewTitle: 'Revisar archivo de diagnóstico',
         previewHint: 'Este es el contenido completo del archivo. Revísalo antes de guardarlo.',
+        fileLanguageNote:
+          'El archivo está escrito en inglés para que sea fácil de compartir y leer. Contiene solo números, ajustes y mensajes de error.',
         save: 'Guardar',
         cancel: 'Cerrar',
         saved: 'Diagnóstico guardado.',
@@ -253,6 +259,8 @@ export const tDiag = defineBundle(
           'Affiche d’abord exactement le contenu du fichier et ne l’enregistre qu’après votre confirmation. Sans entrées, coffre-fort, clés, adresses de serveur ni chemins contenant des noms d’utilisateur. L’app n’envoie rien.',
         previewTitle: 'Examiner le fichier de diagnostic',
         previewHint: 'Voici le contenu complet du fichier. Vérifiez-le avant d’enregistrer.',
+        fileLanguageNote:
+          'Le fichier est rédigé en anglais pour être facile à transmettre et à lire. Il ne contient que des chiffres, des réglages et des messages d’erreur.',
         save: 'Enregistrer',
         cancel: 'Fermer',
         saved: 'Diagnostic enregistré.',
@@ -336,6 +344,8 @@ export const tDiag = defineBundle(
           'Primeiro mostra exatamente o que está no arquivo e só salva depois da sua confirmação. Sem entradas, cofre, chaves, endereços de servidor nem caminhos com nomes de usuário. O app não envia nada.',
         previewTitle: 'Ver arquivo de diagnóstico',
         previewHint: 'Este é o conteúdo completo do arquivo. Confira antes de salvar.',
+        fileLanguageNote:
+          'O arquivo é escrito em inglês para ser fácil de repassar e ler. Ele contém apenas números, configurações e mensagens de erro.',
         save: 'Salvar',
         cancel: 'Fechar',
         saved: 'Diagnóstico salvo.',

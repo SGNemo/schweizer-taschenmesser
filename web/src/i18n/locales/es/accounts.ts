@@ -50,6 +50,13 @@ export const accounts: Strings['accounts'] = {
     create: 'Crear bóveda',
     creating: 'Calculando la clave …',
     mismatch: 'Las contraseñas no coinciden.',
+    weakNotice:
+      'Esta contraseña se puede adivinar en poco tiempo. Puedes usarla igualmente – o tomar una sugerencia de varias palabras: más fácil de recordar, más difícil de descifrar.',
+    suggest: 'Sugerir varias palabras',
+    suggested: (phrase: string) =>
+      `Tu sugerencia: ${phrase}. Ya está en los dos campos. Anótala antes de continuar.`,
+    weakAck: 'Usar la contraseña débil de todos modos',
+    weakNeedAck: 'Confirma arriba que quieres usar la contraseña débil de todos modos.',
     tooShort: (n: number) => `Mínimo ${n} caracteres.`,
     exists: 'Ya existe una bóveda (p. ej. de otro dispositivo).',
   },
