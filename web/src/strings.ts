@@ -1098,6 +1098,9 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
+      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintHint:
+        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
         'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
@@ -1359,6 +1362,9 @@ export const de = {
       paused: 'Pausiert',
       active: 'Aktiv',
       markDone: 'Erledigt',
+      intake: 'Einnahme (Antwort „Genommen“)',
+      intakeHint:
+        'Für Medikamente und Vitamine: du bestätigst mit „Genommen“. Es wird nichts gezählt.',
       markedDone: 'Erinnerung erledigt.',
       pause: 'Pausieren',
       resume: 'Wieder einschalten',
@@ -1368,6 +1374,18 @@ export const de = {
     },
     notify: {
       label: 'Benachrichtigen',
+      rowLabel: 'Erinnern',
+      noneShort: 'Keine',
+      hourShort: '1 h',
+      dayShort: '1 Tag',
+      other: 'Andere Zeit',
+      remember: 'Als Vorgabe merken',
+      permissionMissing:
+        'Benachrichtigungen sind noch nicht erlaubt, die Erinnerung bliebe deshalb aus.',
+      permissionDenied:
+        'Benachrichtigungen sind blockiert. Erlaube sie in den System- oder Browser-Einstellungen, sonst bleibt die Erinnerung aus.',
+      allow: 'Erlauben',
+      hintOff: 'Nicht mehr zeigen',
       none: 'Nicht benachrichtigen',
       atStart: 'Zum Beginn',
       minutes: (n: number) => `${n} Minuten vorher`,
@@ -1908,9 +1926,15 @@ export const de = {
       count: (n: number) => (n === 1 ? '1 offen' : `${n} offen`),
       doneAria: (title: string) => `${title}: erledigt`,
       doneToast: 'Erledigt.',
+      takenAria: (title: string) => `${title}: genommen`,
+      takenToast: 'Notiert.',
+      earlier: (n: number) => `Früher · ${n}`,
+      earlierLabel: 'Früher offen',
+      earlierClear: 'Früheres als gelesen markieren',
       allDoneToast: 'Alle als gelesen markiert.',
     },
     label: 'Erinnerung',
+    taken: 'Genommen',
     done: 'Erledigt',
     later: 'Später',
     open: 'Öffnen',
@@ -1937,7 +1961,11 @@ export const de = {
     }),
     title: 'Benachrichtigungen',
     intro:
-      'Erinnerungen erscheinen als Benachrichtigung, solange die App geöffnet ist oder im Hintergrund läuft. Bei geschlossener App kommen sie nur mit Push (siehe unten).',
+      'Erinnerungen erscheinen als Benachrichtigung, solange die App geöffnet ist oder im Hintergrund läuft. Ohne Push kommt bei geschlossener App nichts; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Öffnen in der Glocke. Mit Push (siehe unten) kommen sie auch dann.',
+    introAndroid:
+      'Auf Android plant die App Erinnerungen beim System ein, damit sie auch bei geschlossener App kommen. Das klappt, wenn Nemo Benachrichtigungen und „Wecker & Erinnerungen“ darf und der Akku nicht eingeschränkt ist (Einstellungen → Apps → Nemo).',
+    introDesktop:
+      'Erinnerungen erscheinen als Benachrichtigung, solange Nemo läuft, auch im Hintergrund oder im Infobereich. Ist die App beendet, kommen sie nicht; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Start in der Glocke.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',

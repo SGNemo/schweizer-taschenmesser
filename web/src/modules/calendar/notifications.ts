@@ -39,7 +39,7 @@ const source: NotificationSource = async ({ from, to }) => {
       const at = start - e.notify!.minutesBefore * MINUTE_MS;
       const key = `event:${e.id}:${date}T${time}`;
       const url = `/calendar?view=day&date=${date}`;
-      if (inRange(at)) out.push({ key, at, title: e.title, body: e.note, url });
+      if (inRange(at)) out.push({ key, at, title: e.title, body: e.note, url, taken: e.taken });
       if (focus.staggered)
         for (const stage of focus.stages) {
           if (stage === e.notify!.minutesBefore) continue;
@@ -64,6 +64,7 @@ const source: NotificationSource = async ({ from, to }) => {
             (_n, last) => ({
               title: t.calendar.followUpTitle(e.title),
               body: last ? t.calendar.followUpLast : e.note,
+              taken: e.taken,
             }),
           ),
         );

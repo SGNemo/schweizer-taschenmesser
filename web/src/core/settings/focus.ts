@@ -53,6 +53,10 @@ export const focusSettingsSchema = z.object({
   repeatMinutes: z.number().int().min(5).max(240),
   /** At most this many repeats per reminder; then it stays in the notification centre. */
   repeatMax: z.number().int().min(1).max(20),
+  /** Remembered "Erinnern" choice of the appointment editor (minutes before); null = none. Only preselects, never switches anything on. */
+  eventLead: z.number().int().min(0).max(10080).nullable(),
+  /** Calm note in the appointment editor when notifications are not allowed yet. */
+  leadHint: z.boolean(),
   /** One notification in the morning that lists today's ToDos. */
   todoDigest: z.boolean(),
   todoDigestTime: z.string().regex(TIME_RE),
@@ -96,6 +100,8 @@ export const DEFAULT_FOCUS: FocusSettings = {
   followUp: true,
   repeatMinutes: 30,
   repeatMax: 6,
+  eventLead: null,
+  leadHint: true,
   todoDigest: true,
   todoDigestTime: '09:00',
   inAppPrompt: false,

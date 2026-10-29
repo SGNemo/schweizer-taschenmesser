@@ -15,6 +15,8 @@ vi.mock('@/core/modules/contributions', () => ({ activeManifests: () => [] }));
 
 import {
   baseKey,
+  dropStaleSoft,
+  expandSummaries,
   loadOpen,
   markAllDone,
   markDone,
@@ -94,5 +96,37 @@ describe('in-app card setting', () => {
   it('position and duration default to top and "until answered"', async () => {
     const s = await getFocusSettings();
     expect([s.inAppPosition, s.inAppSeconds]).toEqual(['top', 0]);
+  });
+});
+
+describe('centre: summaries and stale extras (V08)', () => {
+  it('lists the members of an hourly summary by title instead of the summary', () => {
+    const a = n('a', NOW);
+    const b = n('b', NOW);
+    const summary: DueNotification = {
+      ...n('summary:1:2', NOW),
+      title: 'More · 2',
+      members: [a, b],
+    };
+    expect(expandSummaries([n('x', NOW), summary]).map((x) => x.key)).toEqual(['x', 'a', 'b']);
+  });
+
+  it('clears automatic extras from before today, keeps explicit reminders', () => {
+    const todayStart = new Date(NOW).setHours(0, 0, 0, 0);
+    const oldSoft = { ...n('old-soft', todayStart - HOUR), soft: true };
+    const oldExplicit = n('old-explicit', todayStart - HOUR);
+    const todaySoft = { ...n('today-soft', todayStart + HOUR), soft: true };
+    expect(dropStaleSoft([oldSoft, oldExplicit, todaySoft], todayStart).map((x) => x.key)).toEqual([
+      'old-explicit',
+      'today-soft',
+    ]);
+  });
+
+  it('loadOpen shows folded reminders by title', async () => {
+    setNow(() => NOW);
+    const a = n('event:a:1', NOW - HOUR);
+    due.list = [{ ...n('summary:1:1', NOW - HOUR), members: [a] }];
+    expect((await loadOpen(NOW)).map((x) => x.key)).toEqual(['event:a:1']);
+    due.list = [];
   });
 });

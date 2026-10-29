@@ -313,6 +313,10 @@ export interface DueNotification {
    * end. Notifications the user set explicitly (an event's own lead, "Später") are never moved.
    */
   soft?: boolean;
+  /** The reminder is answered with "Genommen" (intake) instead of "Erledigt"; the same answer, no statistics. */
+  taken?: boolean;
+  /** Set on the hourly summary: the reminders folded into it, so the centre can list them by title. */
+  members?: DueNotification[];
   /**
    * Set by the calm policy while "Stumm" is on: shown without sound or vibration. Modules never set
    * it themselves.

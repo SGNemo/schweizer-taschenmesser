@@ -7,7 +7,11 @@ export const notifications: Strings['notifications'] = {
   }),
   title: 'Notifications',
   intro:
-    'Les rappels s’affichent comme notification tant que l’app est ouverte ou tourne en arrière-plan. Quand l’app est fermée, ils n’arrivent que par Push (voir ci-dessous).',
+    'Les rappels apparaissent en notification tant que l’app est ouverte ou en arrière-plan. Sans push, rien n’arrive quand l’app est fermée ; ce qui est arrivé à échéance entre-temps apparaît dans la cloche à l’ouverture. Avec le push (voir ci-dessous), ils arrivent aussi à ce moment-là.',
+  introAndroid:
+    'Sur Android, l’app confie les rappels au système pour qu’ils arrivent aussi quand l’app est fermée. Cela fonctionne si Nemo peut envoyer des notifications et utiliser « Alarmes et rappels » et que la batterie n’est pas restreinte (Réglages → Applications → Nemo).',
+  introDesktop:
+    'Les rappels apparaissent en notification tant que Nemo tourne, y compris en arrière-plan ou dans la zone de notification. Si l’app est quittée, ils n’arrivent pas ; ce qui est arrivé à échéance entre-temps apparaît dans la cloche au prochain démarrage.',
   enable: 'Activer les notifications',
   granted: 'Activées',
   denied: 'Bloquées – veuillez les autoriser pour ce site dans les paramètres du navigateur.',

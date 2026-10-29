@@ -88,6 +88,9 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
+    leadHintTitle: 'Aviso no formulário de compromissos',
+    leadHintHint:
+      'Mostra uma frase tranquila quando você escolhe um lembrete, mas as notificações não estão permitidas.',
     followUp: 'Repetir com calma',
     followUpHint:
       'Um lembrete que você definiu volta em intervalos até você escolher “Feito” ou “Depois”. À noite, silêncio.',

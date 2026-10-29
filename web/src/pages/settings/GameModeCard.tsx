@@ -8,10 +8,11 @@ import { playReminderTone, REMINDER_SOUNDS, type ReminderSound } from '@/core/no
 import { getPlatform } from '@/core/platform';
 import { tGame } from '@/strings.gamemode';
 import { Button, Card, Segmented, SettingRow, TextField } from '@/ui';
+import { MuteSwitch } from './MuteSwitch';
 import styles from './settings.module.css';
 
 /**
- * Settings → Notifications → "Zock-Modus". On the desktop: automatic detection or manual switch,
+ * Settings → Notifications → "Ruhe". On the desktop: automatic detection or manual switch,
  * the app's own tone (three tunes, volume, test). On Android and in the browser there is no tone:
  * the switch only makes reminders arrive on the quiet channel. Device-local (`core/notifications/gameMode`).
  */
@@ -27,14 +28,15 @@ export function GameModeCard() {
     <Card>
       <div className={styles.form}>
         <h3>{s.title}</h3>
+        <MuteSwitch />
         <p>{desktop ? s.description : s.descriptionQuiet}</p>
         <SettingRow
           id="game-mode--mode"
-          label={s.mode}
+          label={desktop ? s.mode : s.modeQuiet}
           description={desktop ? s.autoHint : undefined}
         >
           <Segmented<GameMode>
-            label={s.mode}
+            label={desktop ? s.mode : s.modeQuiet}
             value={mode}
             options={modes.map((m) => ({
               value: m,

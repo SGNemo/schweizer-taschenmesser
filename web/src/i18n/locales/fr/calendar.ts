@@ -68,6 +68,8 @@ export const calendar: Strings['calendar'] = {
     paused: 'En pause',
     active: 'Actif',
     markDone: 'Terminé',
+    intake: 'Prise (réponse « Pris »)',
+    intakeHint: 'Pour médicaments et vitamines : vous confirmez avec « Pris ». Rien n’est compté.',
     markedDone: 'Rappel terminé.',
     pause: 'Mettre en pause',
     resume: 'Réactiver',
@@ -77,6 +79,18 @@ export const calendar: Strings['calendar'] = {
   },
   notify: {
     label: 'Notifier',
+    rowLabel: 'Me rappeler',
+    noneShort: 'Aucun',
+    hourShort: '1 h',
+    dayShort: '1 jour',
+    other: 'Autre durée',
+    remember: 'Retenir comme valeur par défaut',
+    permissionMissing:
+      'Les notifications ne sont pas encore autorisées, ce rappel n’apparaîtrait donc pas.',
+    permissionDenied:
+      'Les notifications sont bloquées. Autorisez-les dans les réglages du système ou du navigateur, sinon ce rappel n’apparaîtra pas.',
+    allow: 'Autoriser',
+    hintOff: 'Ne plus afficher',
     none: 'Ne pas notifier',
     atStart: 'Au début',
     minutes: (n: number) => (n <= 1 ? `${n} minute avant` : `${n} minutes avant`),

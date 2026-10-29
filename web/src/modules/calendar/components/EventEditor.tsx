@@ -22,6 +22,7 @@ import {
 } from '@/ui';
 import { recentSlots } from '../recentSlots';
 import { eventRepo } from '../repo';
+import { LeadRow, NOTIFY_LEADS, leadLabel } from './LeadRow';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
 import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
@@ -31,16 +32,7 @@ export type EventTarget =
   | { draft: { startDate: string; kind?: EventKind; startTime?: string } }
   | null;
 
-/** Lead times offered in the editor, in minutes. */
-export const NOTIFY_LEADS = [0, 5, 10, 15, 30, 60, 1440] as const;
-const leadLabel = (m: number): string =>
-  m === 0
-    ? t.calendar.notify.atStart
-    : m === 60
-      ? t.calendar.notify.hour
-      : m === 1440
-        ? t.calendar.notify.day
-        : t.calendar.notify.minutes(m);
+export { NOTIFY_LEADS } from './LeadRow';
 
 export function EventEditor({
   target,
@@ -120,6 +112,7 @@ function Form({
         : 'none',
   );
   const [active, setActive] = useState(existing?.notify?.enabled ?? true);
+  const [taken, setTaken] = useState(existing?.taken ?? false);
   const [error, setError] = useState('');
   // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
   const slots = useLiveQuery(
@@ -144,6 +137,7 @@ function Form({
       location: location.trim() || undefined,
       note: note.trim() || undefined,
       recurrence,
+      taken: reminder && taken ? true : undefined,
       notify:
         lead === undefined ? undefined : { minutesBefore: lead, enabled: reminder ? active : true },
     };
@@ -235,20 +229,27 @@ function Form({
         </div>
       ) : null}
       <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
-      <SelectField
-        label={t.calendar.notify.label}
-        value={notifyChoice}
-        onChange={(e) => setNotifyChoice(e.target.value)}
-      >
-        {reminder ? null : <option value="none">{t.calendar.notify.none}</option>}
-        {NOTIFY_LEADS.map((m) => (
-          <option key={m} value={m}>
-            {leadLabel(m)}
-          </option>
-        ))}
-      </SelectField>
+      {!reminder && !allDay && startTime ? (
+        <LeadRow value={notifyChoice} onChange={setNotifyChoice} isNew={!existing} />
+      ) : (
+        <SelectField
+          label={t.calendar.notify.label}
+          value={notifyChoice}
+          onChange={(e) => setNotifyChoice(e.target.value)}
+        >
+          {reminder ? null : <option value="none">{t.calendar.notify.none}</option>}
+          {NOTIFY_LEADS.map((m) => (
+            <option key={m} value={m}>
+              {leadLabel(m)}
+            </option>
+          ))}
+        </SelectField>
+      )}
       {reminder ? (
         <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
+      ) : null}
+      {reminder ? (
+        <Switch label={t.calendar.reminders.intake} checked={taken} onChange={setTaken} />
       ) : null}
       <AdvancedFields moduleId="calendar" hasData={!!endDate || !!note}>
         {reminder ? null : (
