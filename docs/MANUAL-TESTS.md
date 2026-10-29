@@ -312,3 +312,8 @@ A3. *Android:* Erinnerung mit „Einnahme“ anlegen: Karte und Glocke zeigen �
 A4. *Glocke:* mehr als drei Erinnerungen in einer Stunde zeigen konkrete Titel (nicht „Weitere Erinnerungen · n“); Älteres liegt unter „Früher“. ☐
 A5. *Ruhe:* eine Karte „Ruhe“ (Aus / 1 Stunde / Bis morgen) mit „Beim Spielen“ (Windows) bzw. „Immer leise“ (Android); Schnellleiste und Palette heißen „Ruhe“. ☐
 
+### Fristen (P5 Paket B)
+F1. *Android/Windows:* Unterlage „Vertrag“ mit Ende in 3 Monaten und Frist 4 Monate anlegen: Liste „Frist vorbei am …“ (ruhig, kein Rot), Übersicht zeigt es gedämpft, Kalender „Frist vorbei: …“. ☐
+F2. *Abo jährlich mit Frist „3 Monate“:* im Dialog steht „Kündigen bis …“ groß; Monatsabo hat kein 31-Tage-Feld, der Tag folgt dem Datum „Abbuchung am“. ☐
+F3. *Handy:* Einheit-Auswahl (Tage/Wochen/Monate) und Zahlenfeld gut treffbar, Zahl bleibt beim Wechsel der Einheit. ☐
+

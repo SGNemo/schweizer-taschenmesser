@@ -152,7 +152,7 @@ test('Unterlagen: cancellation deadline is flagged and on the calendar', async (
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Handyvertrag');
   await dialog.getByLabel('Ende / Ablauf').fill('2026-12-31');
-  await dialog.getByLabel(/Kündigungsfrist/).fill('90');
+  await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('90');
   await save(page);
   const row = page.getByRole('button', { name: /Handyvertrag/ });
   await expect(row).toContainText('Kündigen bis');

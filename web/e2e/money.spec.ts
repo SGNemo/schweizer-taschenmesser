@@ -141,7 +141,7 @@ test.describe('Subscriptions', () => {
     await dialog.getByLabel('Betrag').fill('12,99');
     await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
     await moreFields(page);
-    await dialog.getByLabel('Kündigungsfrist (Tage vor Abbuchung)').fill('30');
+    await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('30');
     await expect(dialog.getByText('≙ 12,99')).toBeVisible();
     await save(page);
 
@@ -176,7 +176,7 @@ test.describe('Subscriptions', () => {
     await dialog.getByLabel('Betrag').fill('29,90');
     await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
     await moreFields(page);
-    await dialog.getByLabel('Kündigungsfrist (Tage vor Abbuchung)').fill('10');
+    await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('10');
     await save(page);
 
     // Charge on 15 Oct, cancellation deadline 10 days earlier (5 Oct)

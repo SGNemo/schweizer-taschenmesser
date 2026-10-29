@@ -1,0 +1,12 @@
+.row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.amount {
+  flex: 2 1 10rem;
+}
+.unit {
+  flex: 1 1 7rem;
+}

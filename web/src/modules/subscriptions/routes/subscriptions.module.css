@@ -102,3 +102,21 @@
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
   }
 }
+
+.cancelBig {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+.cancelBig strong {
+  font-size: var(--text-xl);
+  font-weight: 650;
+}
+.missed {
+  color: var(--text-muted);
+}
+.cancelLine {
+  font-size: var(--text-md);
+  font-weight: 600;
+}

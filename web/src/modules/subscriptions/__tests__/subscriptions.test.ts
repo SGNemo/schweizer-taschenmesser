@@ -4,6 +4,7 @@ import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
 import { toEpoch } from '@/core/time/dates';
 import manifest from '../manifest';
+import { missedDeadline } from '../logic';
 import { listSubscriptionCharges, subscriptionTotals } from '../public';
 import { subscriptionRepo } from '../repo';
 import { subscriptionSchema } from '../schema';
@@ -102,5 +103,67 @@ describe('subscriptions module', () => {
         [manifest],
       ),
     ).toEqual([]);
+  });
+});
+
+describe('missed cancellation deadline (B08)', () => {
+  const yearly = {
+    recurrence: { freq: 'yearly' as const, interval: 1 },
+    startDate: '2025-11-15',
+    active: true,
+  };
+
+  it('is reported for a yearly contract once the deadline is behind but the charge is ahead', () => {
+    // charge 2026-11-15, 60 days notice → deadline 2026-09-16, today is after it
+    expect(missedDeadline({ ...yearly, cancelNoticeDays: 60 }, '2026-09-29')).toEqual({
+      deadline: '2026-09-16',
+      charge: '2026-11-15',
+    });
+  });
+
+  it('is not reported while the deadline is still reachable, without notice, paused or cancelled', () => {
+    expect(missedDeadline({ ...yearly, cancelNoticeDays: 30 }, '2026-09-29')).toBeUndefined();
+    expect(missedDeadline({ ...yearly }, '2026-09-29')).toBeUndefined();
+    expect(
+      missedDeadline({ ...yearly, cancelNoticeDays: 60, active: false }, '2026-09-29'),
+    ).toBeUndefined();
+    expect(
+      missedDeadline(
+        {
+          ...yearly,
+          cancelNoticeDays: 60,
+          recurrence: { ...yearly.recurrence, until: '2026-11-15' },
+        },
+        '2026-09-29',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('is never reported for monthly charges (it would always be "missed")', () => {
+    expect(
+      missedDeadline(
+        {
+          recurrence: { freq: 'monthly', interval: 1 },
+          startDate: '2026-01-15',
+          active: true,
+          cancelNoticeDays: 40,
+        },
+        '2026-09-29',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('counts quarterly cycles', () => {
+    expect(
+      missedDeadline(
+        {
+          recurrence: { freq: 'monthly', interval: 3 },
+          startDate: '2026-01-15',
+          active: true,
+          cancelNoticeDays: 30,
+        },
+        '2026-09-29',
+      ),
+    ).toEqual({ deadline: '2026-09-15', charge: '2026-10-15' });
   });
 });

@@ -1,3 +1,4 @@
+import { tDeadline } from '@/strings.deadline';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -120,9 +121,11 @@ export default function VaultPage() {
                 t.vault.categories[d.category],
                 d.provider,
                 end ? `${t.vault.endLabel}: ${formatDay(end, 'd. MMM yyyy')}` : undefined,
-                deadline && state !== 'expired'
-                  ? `${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`
-                  : undefined,
+                deadline && state === 'missed'
+                  ? tDeadline.get().missedOn(formatDay(deadline, 'd. MMM yyyy'))
+                  : deadline && state !== 'expired'
+                    ? `${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`
+                    : undefined,
                 d.fileName
                   ? `${d.fileName}${d.fileSize !== undefined ? ` (${formatSize(d.fileSize)})` : ''}${hasFile ? '' : ` · ${t.vault.fileElsewhere}`}`
                   : undefined,
@@ -133,7 +136,7 @@ export default function VaultPage() {
                 <>
                   {state === 'ok' || state === 'open-ended' ? null : (
                     <Badge tone={state === 'act-now' || state === 'expired' ? 'accent' : 'neutral'}>
-                      {t.vault.status[state]}
+                      {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
                     </Badge>
                   )}
                   {hasFile && d.fileName ? (

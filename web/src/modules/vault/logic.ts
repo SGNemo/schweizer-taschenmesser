@@ -22,7 +22,7 @@ export function cancelDeadline(d: D): string | undefined {
   return end && d.noticeDays !== undefined ? addDaysStr(end, -d.noticeDays) : undefined;
 }
 
-export type Status = 'expired' | 'act-now' | 'soon' | 'ok' | 'open-ended';
+export type Status = 'expired' | 'act-now' | 'missed' | 'soon' | 'ok' | 'open-ended';
 
 /** Days before a cancellation deadline from which an entry counts as "soon". */
 export const SOON_DAYS = 30;
@@ -32,6 +32,7 @@ export const EXPIRY_SOON_DAYS = 60;
 /**
  * - expired: the end date has passed
  * - act-now: the cancellation deadline is today or within 7 days (and not yet passed)
+ * - missed: the cancellation deadline has passed but the contract has not ended yet (it runs on)
  * - soon: the deadline is within `SOON_DAYS`, or the end within `EXPIRY_SOON_DAYS` (no deadline)
  */
 export function statusOf(d: D, today: string): Status {
@@ -44,8 +45,9 @@ export function statusOf(d: D, today: string): Status {
     if (days <= 7) return 'act-now';
     return days <= SOON_DAYS ? 'soon' : 'ok';
   }
+  if (deadline) return 'missed';
   const days = daysBetween(today, end);
-  return days <= (deadline ? SOON_DAYS : EXPIRY_SOON_DAYS) ? 'soon' : 'ok';
+  return days <= EXPIRY_SOON_DAYS ? 'soon' : 'ok';
 }
 
 /** The date that matters next: the deadline while it lies ahead, otherwise the end. */
@@ -55,7 +57,14 @@ export function nextRelevantDate(d: D, today: string): string | undefined {
   return endOf(d);
 }
 
-const RANK: Record<Status, number> = { 'act-now': 0, expired: 1, soon: 2, ok: 3, 'open-ended': 4 };
+const RANK: Record<Status, number> = {
+  'act-now': 0,
+  expired: 1,
+  missed: 2,
+  soon: 3,
+  ok: 4,
+  'open-ended': 5,
+};
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
