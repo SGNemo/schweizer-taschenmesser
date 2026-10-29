@@ -4061,6 +4061,9 @@ export const de = {
       unsupported: 'Das geht auf diesem Gerät nicht.',
       'port-busy': 'Port belegt. Schließe das andere Programm und versuche das Verbinden erneut.',
       'premium-required': 'Das Steuern braucht ein Premium-Konto.',
+      'no-callback':
+        'Der Browser hat keine Anmeldung zurückgemeldet. Prüfe beim Dienst die eingetragene Redirect-URI und ob dein Konto freigeschaltet ist, dann versuche es erneut.',
+      'bad-client': 'Der Dienst kennt diese Client-ID nicht. Prüfe die eingetragene ID.',
     } as Record<string, string>,
     icsName: 'Kalender-Abo (ICS)',
     icsDescription:
