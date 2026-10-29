@@ -7,6 +7,8 @@ export const sync: Strings['sync'] = {
     'Opcional: sincronize seus dados pelo seu próprio servidor de sincronização (na rede local ou via Tailscale). Sem servidor, tudo fica só neste dispositivo.',
   serverUrl: 'Endereço do servidor',
   serverUrlHint: 'ex.: https://meu-pc.tailnet.ts.net',
+  httpWarning:
+    'Com “http://” o token viaja sem criptografia pela rede. Use https:// (por exemplo Tailscale); http só é aceitável para este computador (localhost).',
   token: 'Token de acesso',
   deviceName: 'Nome do dispositivo',
   deviceNameHint: 'É assim que este dispositivo aparece na lista de dispositivos.',

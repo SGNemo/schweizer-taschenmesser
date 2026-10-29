@@ -2257,6 +2257,8 @@ export const de = {
       'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im LAN oder über Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
     serverUrl: 'Server-Adresse',
     serverUrlHint: 'z. B. https://mein-pc.tailnet.ts.net',
+    httpWarning:
+      'Mit „http://“ geht das Token unverschlüsselt über das Netz. Nutze https:// (z. B. Tailscale) – nur für diesen Rechner (localhost) ist http in Ordnung.',
     token: 'Zugangstoken',
     deviceName: 'Gerätename',
     deviceNameHint: 'So erscheint dieses Gerät in der Geräteliste.',

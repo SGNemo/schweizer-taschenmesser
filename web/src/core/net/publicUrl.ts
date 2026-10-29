@@ -43,3 +43,15 @@ export function isPublicHttpsUrl(input: string): boolean {
     return false;
   }
 }
+
+/** `http://` to anything but this computer: the sync token would travel unencrypted. */
+export function isInsecureRemoteUrl(input: string): boolean {
+  try {
+    const url = new URL(input.trim());
+    if (url.protocol !== 'http:') return false;
+    const host = url.hostname.toLowerCase();
+    return !(host === 'localhost' || host === '[::1]' || /^127(\.\d{1,3}){3}$/.test(host));
+  } catch {
+    return false;
+  }
+}
