@@ -1,4 +1,5 @@
 import { createFakeDisk } from './fakeDisk';
+import { loggedFetch } from '@/core/net/netlog';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeSystem } from './fakeSystem';
@@ -150,7 +151,7 @@ export function createWebPlatform(): PlatformService {
   return {
     kind: isE2eBuild() ? e2eKind() : 'web',
     isNative: false,
-    fetch: (input, init) => fetch(input, init),
+    fetch: loggedFetch((input, init) => fetch(input, init)),
     notifications: localNotificationService,
     async saveFile(req) {
       browserDownload(req);

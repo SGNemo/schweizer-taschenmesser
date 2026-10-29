@@ -9,6 +9,7 @@
  * plugin, its SHA-256 (from the release's `.sha256` asset) is checked, and the system installer
  * takes over; Android itself only accepts an APK signed with our keystore.
  */
+import { assertNetworkAllowed } from '@/core/net/netlog';
 import { Channel, invoke } from '@tauri-apps/api/core';
 import type { PlatformKind } from '../types';
 import {
@@ -49,6 +50,7 @@ export function createDesktopUpdater(fetchFn: typeof fetch): UpdateService {
         endpoint = release && assetUrl(release, MANIFEST_ASSET);
         if (!endpoint) return undefined;
       }
+      assertNetworkAllowed('github.com', 'update');
       const meta = await invoke<DesktopMeta | null>('check_update', { endpoint });
       if (!meta || !isNewer(meta.version, current)) return undefined;
       return {
@@ -66,6 +68,7 @@ export function createDesktopUpdater(fetchFn: typeof fetch): UpdateService {
         else if (message.event === 'progress') progress.downloaded += message.data.chunkLength;
         onProgress?.({ ...progress });
       };
+      assertNetworkAllowed('github.com', 'update');
       await invoke('install_update', { onEvent: channel });
       return 'restarting';
     },
@@ -125,6 +128,7 @@ export function createAndroidUpdater(fetchFn: typeof fetch): UpdateService {
       const sha256 = res.ok ? parseSha256(await res.text()) : undefined;
       if (!sha256) throw new Error('missing or malformed checksum');
 
+      assertNetworkAllowed('github.com', 'update');
       const poll = setInterval(() => {
         void invoke<InstallProgress>('plugin:apk-installer|download_progress')
           .then((p) => onProgress?.(p))

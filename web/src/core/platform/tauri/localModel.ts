@@ -1,4 +1,5 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
+import { assertNetworkAllowed } from '@/core/net/netlog';
 import type {
   LocalGenerateResult,
   LocalModelInfo,
@@ -20,6 +21,7 @@ export function createLocalModel(supported: boolean): LocalModelService {
     supported: true,
     status: () => invoke<LocalModelStatus>('llm_status'),
     async download(spec, onProgress, signal) {
+      assertNetworkAllowed(new URL(spec.url).host, 'download');
       const channel = new Channel<ProgressEvent>();
       channel.onmessage = (m) => onProgress(m.data.done, m.data.total);
       const cancel = () => void invoke('llm_download_cancel');

@@ -1,6 +1,6 @@
-# Verbindungsprotokoll and "Netzwerk sperren" (draft, phase 1)
+# Verbindungsprotokoll and "Netzwerk sperren"
 
-Findings B21/V21 (`docs/qa/CONSOLIDATED.md`, Tom's report). Goal: the privacy text ("nothing without your click") is checkable in the app, without Wireshark. Draft only; nothing built until "Plan freigegeben".
+Findings B21/V21 (`docs/qa/CONSOLIDATED.md`, Tom's report). Goal: the privacy text ("nothing without your click") is checkable in the app, without Wireshark. Built in package 2 of QA P6 (`feat/qa-connection-log`); the sections below keep the inventory and the reasons.
 
 ## Network inventory (develop, all paths under `web/`)
 Almost everything goes through `getPlatform().fetch` (`core/platform/web.ts:153`, `tauri/index.ts:142`).
@@ -29,18 +29,17 @@ No `<img>/<script>/<link>` to foreign hosts, no beacon/XHR/WebSocket/EventSource
 - No app-wide e2e "nothing without click"; existing listener tests exclude `localhost`, so the probe is invisible to them.
 - ICS "Wird geprüft …" (B26): `requireNotice` can wait forever, `fetchPublic` has no timeout, `normalizeIcsUrl` accepts any http(s) host (localhost, LAN, metadata IP) while the error names only https/webcal.
 
-## Design
-- **Hook:** wrap `fetch` once inside `createWebPlatform` and `createTauriPlatform`; weather and SyncSection switch to `getPlatform().fetch`. Rust-side calls (download, updater) report via one small Tauri event or are listed as "native, not logged" in the screen (honest > complete).
-- **Entry:** `{ at, host, reason, bytes, status }`. Host only (no path, query, token); `reason` is a fixed enum set by the caller via an optional `{ reason }` argument (`update`, `sync`, `weather`, `currency`, `calendar`, `ai`, `probe`, …), default `other`. Bytes = request + response size, never content.
-- **Storage:** in-memory ring buffer (last 200) for the session, optional persisted ring in device-local `_meta` (`net.log`, never synced, not in backups, excluded from diagnostics). Cleared by "Gerät zurücksetzen" and a "Verlauf löschen" button.
-- **Screen:** Settings → Verbindungen → "Was ging wohin?" grouped by host/reason, calm wording (FOCUS-GUIDELINES), plain language, a one-line summary at top ("Seit dem Start: 3 Verbindungen, keine mit deinen Daten").
-- **Netzwerk sperren:** device-local switch (`_meta` `net.block`). The wrapper rejects with a typed `blocked` error (fast, no request); sync/connectors/update show "gesperrt" instead of "nicht erreichbar". Exceptions: none, localhost included, but the switch itself and the log stay usable offline. Web build: Service Worker keeps the app working offline as today.
-- **Tests:** `netlog.test.ts` (host only, no query/token/body in entries), e2e "nothing without click" (fresh app + setup wizard + settings open, assert external **and** localhost requests are only the listed ones), negative-list test of diagnostics extended to prove the log is not exported.
-- **Rules touched:** none weakened. Diagnostics negative list gains `net.log`. No change in `core/sync/**` logic; only the platform fetch is wrapped (the sync adapter keeps using `getPlatform().fetch`).
-- **Probe fix:** Ollama detection only after a click ("Nach lokaler KI suchen") and mentioned in the legal text.
+## As built
+- `web/src/core/net/netlog.ts`: `loggedFetch` wraps `fetch` inside `createWebPlatform` and `createTauriPlatform`; entry = time, host(+port), reason (derived from host/path in `describeRequest`, no caller change), request bytes, answer bytes when named, status. Never path, query, headers, body.
+- Memory ring (200) per session; "Liste auf diesem Gerät behalten" keeps it in `localStorage` `tm-net-log` (device-local, not in Dexie, backups, sync or diagnostics; test in `diagnostics.test.ts`). `tm-net-block` is the switch.
+- "Netzwerk sperren": `loggedFetch` throws `NetBlockedError` (a `TypeError`) before sending, localhost included. Rust-made requests (updater, Android APK download, model download) call `assertNetworkAllowed` first: blocked, or listed as "von der App selbst, Größe unbekannt". Not covered: `pushManager.subscribe` (browser), tauri-plugin-updater internals after the check.
+- Moved onto `platform.fetch` so they appear: weather, calendar proxy call in `fetchPublic`, `/v1/health` in `SyncSection`.
+- UI: Settings → Verbindungen → "Was ging wohin?" (`pages/settings/NetworkSection.tsx`, texts `strings.netlog.ts`).
+- Tests: `netlog.test.ts`, `e2e/network.spec.ts` (tour with zero external requests incl. localhost; block + log flow).
+- Ollama probe: already click-only since #276.
 
 ## Decided (Sven, phase 1)
 - Log: session memory by default, optional "Protokoll auf dem Gerät behalten".
-- Ollama probe: only after a click.
+- Ollama probe: only after a click (done in #276).
 - Netzwerk sperren: all outgoing requests incl. localhost, Rust parts blocked where possible, otherwise shown as "nicht erfasst".
 - Partner share: file/QR + pairing code, packages P1–P4 (see partner-share.md).

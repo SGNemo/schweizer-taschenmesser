@@ -15,7 +15,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Privacy, backup, pairing (QA P6) | `feat/qa-privacy-backup` | Settings → Verbindungen/Backup/Sync, `core/backup`, `core/search`, ICS check, vault UI texts; not `core/sync/**` logic | package 1 in PR; package 2 next (connection log, block, Ollama probe) | docs drafts | 2026-10-29 |
 | Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
 | QA P4: Heute/Morgen, Wiederholung, Parser | `feat/qa-today-calendar` | `home/`, `modules/calendar`, `quickCapture/parser`, `modules/todos`, finance-Import-Vorschau; strings.ts (eigener Block) | Paket A (Parser) fertig, PR offen; B Kalender, C Übersicht, D ToDos/Finanzen, E V14 folgen je als eigener Branch | parser + corpus 22/22 | 2026-10-29 |
 

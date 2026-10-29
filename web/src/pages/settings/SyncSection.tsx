@@ -49,7 +49,8 @@ export function SyncSection() {
     // The installed app is not served by the sync server, so there is nothing to suggest.
     if (getPlatform().isNative) return;
     const controller = new AbortController();
-    fetch('/v1/health', { signal: controller.signal })
+    getPlatform()
+      .fetch('/v1/health', { signal: controller.signal })
       .then((res) => (res.ok ? (res.json() as Promise<{ ok?: boolean }>) : undefined))
       .then((body) => body?.ok && setUrl((current) => current || window.location.origin))
       .catch(() => undefined); // any other host answers with HTML or nothing: no suggestion

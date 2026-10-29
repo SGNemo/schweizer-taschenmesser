@@ -16,6 +16,7 @@ import {
 } from './errorLog';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
+import { recordNet } from '@/core/net/netlog';
 import { useSyncStatus } from '@/core/sync/status';
 import { writeStoredNow } from '@/core/connectors/nowPlaying';
 import { setMusic } from '@/core/focus/music';
@@ -192,6 +193,8 @@ describe('diagnostics export', () => {
       ),
     );
     logLine('warn', 'sync', `retry ${CANARIES.server} ${CANARIES.email} ${CANARIES.ip}`);
+    // The connection log (hosts the person talks to) is never part of the diagnostics.
+    recordNet({ host: CANARIES.server, reason: 'sync', out: 10, status: 200 });
     const text = renderDiagnostics(await buildDiagnostics());
     for (const [name, value] of Object.entries(CANARIES)) {
       expect(text, `leaked ${name}`).not.toContain(value);
