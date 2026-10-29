@@ -1,3 +1,4 @@
+import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields } from '../parser';
 import { CaptureError, type BuildContext, type CaptureTarget } from './types';
@@ -29,6 +30,7 @@ const todos: CaptureTarget = {
     title: title(f),
     ...(f.date ? { dueDate: date(f.date) } : {}),
     ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
+    ...(f.priority ? { priority: f.priority } : {}),
     ...(f.time ? { note: t.quickCapture.todoTimeNote(f.time) } : {}),
   }),
 };
@@ -37,13 +39,20 @@ const calendar: CaptureTarget = {
   type: 'event',
   moduleId: 'calendar',
   collection: 'event',
-  build: (f, ctx: BuildContext) => ({
-    title: title(f),
-    startDate: date(f.date ?? ctx.today),
-    allDay: !f.time,
-    ...(f.time ? { startTime: f.time } : {}),
-    ...(f.recurrence ? { recurrence: f.recurrence } : {}),
-  }),
+  build: (f, ctx: BuildContext) => {
+    const startDate = date(f.date ?? ctx.today)!;
+    // A range that ends before it starts ("21:30 bis 06:30") is a night shift: it ends the next day.
+    const overnight = !!f.time && !!f.endTime && f.endTime < f.time;
+    return {
+      title: title(f),
+      startDate,
+      allDay: !f.time,
+      ...(f.time ? { startTime: f.time } : {}),
+      ...(f.time && f.endTime ? { endTime: f.endTime } : {}),
+      ...(overnight ? { endDate: addDaysStr(startDate, 1) } : {}),
+      ...(f.recurrence ? { recurrence: f.recurrence } : {}),
+    };
+  },
 };
 
 const reminders: CaptureTarget = {
@@ -131,6 +140,33 @@ const invoices: CaptureTarget = {
   },
 };
 
+const subscriptions: CaptureTarget = {
+  type: 'subscription',
+  moduleId: 'subscriptions',
+  collection: 'subscription',
+  build: (f, ctx) => {
+    if (!f.amountMinor || f.amountMinor < 1 || !f.recurrence) throw new CaptureError('invalid');
+    return {
+      name: title(f),
+      amountMinor: f.amountMinor,
+      recurrence: f.recurrence,
+      startDate: date(f.date ?? ctx.today),
+    };
+  },
+};
+
+/** A birthday becomes a person; without a known year the age stays unknown. */
+const people: CaptureTarget = {
+  type: 'birthday',
+  moduleId: 'people',
+  collection: 'person',
+  build: (f) => {
+    const m = f.date ? /^\d{4}-(\d{2})-(\d{2})$/.exec(date(f.date)!) : null;
+    if (!m) throw new CaptureError('invalid');
+    return { name: title(f), birthday: { month: Number(m[1]), day: Number(m[2]) } };
+  },
+};
+
 const notes: CaptureTarget = {
   type: 'note',
   moduleId: 'notes',
@@ -155,4 +191,6 @@ export const TARGETS = {
   finance,
   invoice: invoices,
   note: notes,
+  subscription: subscriptions,
+  birthday: people,
 };

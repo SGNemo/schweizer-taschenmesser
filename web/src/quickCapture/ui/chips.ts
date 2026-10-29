@@ -28,19 +28,38 @@ const NOTE_LABEL: Record<CaptureNote, string> = {
   },
 };
 
+/** "Montag–Freitag" for a run of three or more days in a row, else the names with commas. */
+function weekdayNames(days: number[]): string {
+  const names = t.quickCapture.recurrence.weekdays;
+  const sorted = [...days].sort((x, y) => x - y);
+  const run = sorted.length >= 3 && sorted.every((d, i) => i === 0 || d === sorted[i - 1]! + 1);
+  return run
+    ? `${names[sorted[0]! - 1]}–${names[sorted[sorted.length - 1]! - 1]}`
+    : sorted.map((d) => names[d - 1]).join(', ');
+}
+
 export function describeRecurrence(r: CaptureRecurrence): string {
   const rc = t.quickCapture.recurrence;
-  if (r.freq === 'weekly' && r.byWeekday?.length === 1 && r.interval === 1) {
-    return rc.everyWeekday(rc.weekdays[r.byWeekday[0]! - 1] ?? '');
+  const unit = { daily: rc.days, weekly: rc.weeks, monthly: rc.months, yearly: rc.years }[r.freq];
+  let base: string;
+  if (r.freq === 'weekly' && r.byWeekday?.length) {
+    const days = r.byWeekday;
+    if (r.interval === 1) {
+      base =
+        days.length === 1
+          ? rc.everyWeekday(rc.weekdays[days[0]! - 1] ?? '')
+          : rc.onDays(weekdayNames(days));
+    } else {
+      base = `${rc.every(r.interval, unit)}, ${rc.onDays(weekdayNames(days))}`;
+    }
+  } else if (r.freq === 'monthly' && r.byMonthDay !== undefined && r.interval === 1) {
+    base = rc.monthDay(r.byMonthDay);
+  } else if (r.interval > 1) {
+    base = rc.every(r.interval, unit);
+  } else {
+    base = rc[r.freq];
   }
-  if (r.freq === 'monthly' && r.byMonthDay !== undefined && r.interval === 1) {
-    return rc.monthDay(r.byMonthDay);
-  }
-  if (r.interval > 1) {
-    const unit = { daily: rc.days, weekly: rc.weeks, monthly: rc.months, yearly: rc.years }[r.freq];
-    return rc.every(r.interval, unit);
-  }
-  return rc[r.freq];
+  return r.until ? `${base}, ${rc.until(formatDay(r.until, 'd. MMM yyyy'))}` : base;
 }
 
 /** "Heute", "Morgen" or a short date, with the calendar date appended for the two relative words. */
@@ -54,7 +73,9 @@ const usesDate = (type: CaptureType) =>
   type === 'event' ||
   type === 'reminder' ||
   type === 'finance' ||
-  type === 'invoice';
+  type === 'invoice' ||
+  type === 'subscription' ||
+  type === 'birthday';
 const usesTime = (type: CaptureType) => type === 'todo' || type === 'event' || type === 'reminder';
 
 /** The live preview: what will be saved where, derived from the parse result and the chosen type. */
@@ -70,12 +91,22 @@ export function previewChips(
   ];
   if (fields.date && usesDate(type))
     chips.push({ id: 'date', label: describeDate(fields.date, today) });
-  if (fields.time && usesTime(type)) chips.push({ id: 'time', label: `${fields.time} Uhr` });
+  if (fields.time && usesTime(type)) {
+    const range = fields.endTime ? `${fields.time}–${fields.endTime}` : fields.time;
+    chips.push({ id: 'time', label: `${range} Uhr` });
+  }
+  if (type === 'todo' && fields.priority) {
+    const c = t.quickCapture.chip;
+    chips.push({
+      id: 'priority',
+      label: [c.priorityLow, c.priorityMid, c.priorityHigh][fields.priority - 1]!,
+    });
+  }
   if (type === 'todo' && fields.estimateMin)
     chips.push({ id: 'estimate', label: t.todos.estimateAbout(fields.estimateMin) });
   if (type === 'event' && fields.date && !fields.time)
     chips.push({ id: 'allDay', label: t.quickCapture.chip.allDay });
-  if (fields.recurrence && (type === 'event' || type === 'reminder')) {
+  if (fields.recurrence && (type === 'event' || type === 'reminder' || type === 'subscription')) {
     chips.push({ id: 'recurrence', label: describeRecurrence(fields.recurrence) });
   }
   if (type === 'finance' && fields.amountMinor) {
@@ -83,7 +114,7 @@ export function previewChips(
       fields.kind === 'income' ? t.quickCapture.chip.income : t.quickCapture.chip.expense;
     chips.push({ id: 'amount', label: `${kind} ${formatMoney(fields.amountMinor)}` });
   }
-  if (type === 'invoice' && fields.amountMinor)
+  if ((type === 'invoice' || type === 'subscription') && fields.amountMinor)
     chips.push({ id: 'amount', label: formatMoney(fields.amountMinor) });
   if (fields.url && type !== 'note') {
     try {
