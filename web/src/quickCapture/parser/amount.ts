@@ -9,6 +9,8 @@ const AFTER = new RegExp(
 );
 const BEFORE = new RegExp(String.raw`(?<![\p{L}\d])(?:${CUR})\s?(${NUM})(?![\d])`, 'iu');
 const BARE = new RegExp(String.raw`(?<![\d.,:])((?<![\p{L}\d])[+-])?(${NUM})(?![\d.,:])`, 'u');
+/** A number with decimal comma and no currency word: "12,99" next to "monatlich". */
+const BARE_DECIMAL = /(?<![\d.,:])(\d{1,3}(?:\.\d{3})*,\d{1,2}|\d+,\d{1,2})(?![\d.,:])/u;
 const INCOME = word(
   'einnahmen?|gehalt|lohn|erhalten|bekommen|rückerstattung|erstattung|eingang|gutschrift',
 );
@@ -30,9 +32,9 @@ export interface AmountMatch {
 
 /**
  * Finds an amount. A currency marker (€, EUR, Euro) is required; with `allowBare` (finance prefix)
- * the first stand-alone number counts too. Call it after dates and times were removed from `s`.
+ * the first stand-alone number counts too; `'decimal'` only accepts one with a decimal comma. Call it after dates and times were removed from `s`.
  */
-export function extractAmount(s: Scan, allowBare: boolean): AmountMatch | undefined {
+export function extractAmount(s: Scan, allowBare: boolean | 'decimal'): AmountMatch | undefined {
   const original = s.t;
   let m = take(s, AFTER);
   let sign = m?.[1];
@@ -41,7 +43,10 @@ export function extractAmount(s: Scan, allowBare: boolean): AmountMatch | undefi
     m = take(s, BEFORE);
     num = m?.[1];
   }
-  if (!m && allowBare) {
+  if (!m && allowBare === 'decimal') {
+    m = take(s, BARE_DECIMAL);
+    num = m?.[1];
+  } else if (!m && allowBare) {
     m = take(s, BARE);
     sign = m?.[1];
     num = m?.[2];

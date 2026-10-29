@@ -1,0 +1,1838 @@
+{
+ "generated": "2026-10-29",
+ "basis": "docs/qa/*/findings.json + REPORT.md (7 Personas), develop @ 4af432d (getesteter Stand)",
+ "scoring": {
+  "bugs": "Schwere (hoch 3, mittel 2, niedrig 1) × Anzahl Personas, +3 bei „Grund zum Deinstallieren“ einer Persona",
+  "improvements": "Nutzen (hoch 3, mittel 2, niedrig 1) × Anzahl Personas"
+ },
+ "top_bugs": [
+  {
+   "id": "B03",
+   "title": "Kopfzeile bricht bei schmaler Breite: Suchfeld wird leeres Oval, Kalender/Erinnerungen-Umschalter abgeschnitten (412 px mit laufender Fokus-Runde, 320–640 px sonst)",
+   "personas": [
+    "Jonas",
+    "Herbert",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía"
+   ],
+   "persona_count": 6,
+   "severity": "hoch",
+   "score": 18,
+   "uninstall_reason": false,
+   "sources": [
+    "J-B1",
+    "H-B07",
+    "H-B08",
+    "L-B-07",
+    "M-F09",
+    "P-B14",
+    "S-B06"
+   ],
+   "status": "neu",
+   "package": "P2",
+   "note": "Sechs von sieben Personen, jede Seite betroffen.",
+   "rank": 1
+  },
+  {
+   "id": "B19",
+   "title": "Erinnerungen bei geschlossener App: der App-Text sagt, ohne Sync-Server-Push kommt nichts an; Fristen/Medikamente können unbemerkt ausbleiben",
+   "personas": [
+    "Lena",
+    "Jonas",
+    "Sofía",
+    "Mia"
+   ],
+   "persona_count": 4,
+   "severity": "hoch",
+   "score": 15,
+   "uninstall_reason": true,
+   "sources": [
+    "L-B-02",
+    "J-Tagesurteil",
+    "S-Tag",
+    "M-V09"
+   ],
+   "status": "teilweise bekannt",
+   "package": "P5",
+   "note": "Test lief als PWA. Die Android-App plant Alarme selbst (docs/features/repeat-reminders.md): erst auf einem Gerät gegenprüfen, danach entweder Text für PWA ehrlicher machen oder Lücke schließen.",
+   "rank": 2
+  },
+  {
+   "id": "B13",
+   "title": "Sprach- und Formatreste in fremder Oberfläche: deutsche Stärke-Hinweise und KI-Anbieter im spanischen Tresor/Assistenten, „KW 44“, „1.“ als Tag, „Octubre De“, deutsche Anführungszeichen, englischer Rechtstext, „06:00 Uhr“ in EN, „for 12 days“ statt „12 days overdue“, Diagnose-Vorschau",
+   "personas": [
+    "Sofía",
+    "Lena",
+    "Priya",
+    "Tom"
+   ],
+   "persona_count": 4,
+   "severity": "hoch",
+   "score": 12,
+   "uninstall_reason": false,
+   "sources": [
+    "S-B01",
+    "S-B02",
+    "S-B08",
+    "S-B09",
+    "S-B10",
+    "S-B13",
+    "S-B14",
+    "S-B23",
+    "L-B-09",
+    "P-B18",
+    "T-V-10"
+   ],
+   "status": "bekannt (Übersetzung maschinell, nicht geprüft: docs/i18n/README.md)",
+   "package": "P3",
+   "note": "Gehört zur Sprachrunde; Sofías Fundliste ist die Prüfliste.",
+   "rank": 3
+  },
+  {
+   "id": "B04",
+   "title": "Einrichtung: Fortschrittszahlen widersprechen sich („Schritt x von 12“, „10 von 11 erledigt“), übersprungene Schritte zählen als „Erledigt“, Karte bleibt nach „Fertig“ mit mehreren gleichen Knöpfen",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya"
+   ],
+   "persona_count": 5,
+   "severity": "mittel",
+   "score": 10,
+   "uninstall_reason": false,
+   "sources": [
+    "H-B11",
+    "J-B6",
+    "L-B-06",
+    "M-F11",
+    "P-B06"
+   ],
+   "status": "neu (STATUS nennt nur „offene Kleinigkeiten“)",
+   "package": "P1",
+   "note": "",
+   "rank": 4
+  },
+  {
+   "id": "B01",
+   "title": "Einkaufs-/Packliste: zwei gleiche Kästchen pro Zeile (linkes wählt nur aus), Abgehaktes springt sofort ans Ende, lange Einträge abgeschnitten",
+   "personas": [
+    "Lena",
+    "Mia",
+    "Sofía"
+   ],
+   "persona_count": 3,
+   "severity": "hoch",
+   "score": 9,
+   "uninstall_reason": false,
+   "sources": [
+    "L-B-01",
+    "M-F01",
+    "M-F07",
+    "M-F08",
+    "S-B07"
+   ],
+   "status": "neu",
+   "package": "P2",
+   "note": "Alltagsfunktion Nr. 1 auf dem Handy.",
+   "rank": 5
+  },
+  {
+   "id": "B08",
+   "title": "Verpasste Kündigungsfrist wird nirgends als verpasst markiert (Vertrag steht nur auf „Bald“; Übersicht zeigt es nicht)",
+   "personas": [
+    "Herbert",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "severity": "hoch",
+   "score": 9,
+   "uninstall_reason": true,
+   "sources": [
+    "H-B03",
+    "P-B05"
+   ],
+   "status": "neu",
+   "package": "P5",
+   "note": "Herbert: der Grund zum Deinstallieren. Ton: „Frist vorbei am …“, nicht Rot-Alarm (Fokus-Texte).",
+   "rank": 6
+  },
+  {
+   "id": "B12",
+   "title": "Schnellerfassung/Inline-Add erkennt falsch: „… Freitag 12 Uhr abgeben“ wird Termin, „morgen 23:59 Uhr“ bleibt im Titel, Wiederholung/„nächsten Freitag“, Betrag/Endzeit/Priorität, „Rechnung …“ wird ToDo, verstümmelter Titel",
+   "personas": [
+    "Jonas",
+    "Mia",
+    "Priya",
+    "Tom"
+   ],
+   "persona_count": 4,
+   "severity": "mittel",
+   "score": 8,
+   "uninstall_reason": false,
+   "sources": [
+    "J-B2",
+    "J-B3",
+    "M-F06",
+    "P-B02",
+    "T-F-10",
+    "L-V-06"
+   ],
+   "status": "neu (Trefferquote wird nur an Testsätzen gemessen)",
+   "package": "P4",
+   "note": "Regelparser; keine KI nötig. Parser-Korpus um diese Sätze erweitern.",
+   "rank": 7
+  },
+  {
+   "id": "B10",
+   "title": "Schwebender „+“-Knopf verdeckt Felder, Löschknöpfe und Inhalte am unteren Rand (Handy)",
+   "personas": [
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía"
+   ],
+   "persona_count": 4,
+   "severity": "mittel",
+   "score": 8,
+   "uninstall_reason": false,
+   "sources": [
+    "L-B-04",
+    "M-F08",
+    "P-B13",
+    "S-I13"
+   ],
+   "status": "teilweise bekannt (STATUS: FAB → „+ Neu“ nur für Desktop ab 900 px, Entscheidung offen)",
+   "package": "P2",
+   "note": "Handy-Fall ist neu.",
+   "rank": 8
+  },
+  {
+   "id": "B02",
+   "title": "Willkommenskarte: Text abgeschnitten, Knöpfe „Einschalten / Nicht jetzt“ nicht sichtbar bzw. wie Fließtext (Lesehilfe-Angebot)",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya"
+   ],
+   "persona_count": 4,
+   "severity": "mittel",
+   "score": 8,
+   "uninstall_reason": false,
+   "sources": [
+    "J-B7",
+    "L-B-03",
+    "M-F04",
+    "P-B17"
+   ],
+   "status": "neu",
+   "package": "P2",
+   "note": "",
+   "rank": 9
+  },
+  {
+   "id": "B14",
+   "title": "Text abgeschnitten ohne Weg, ihn zu lesen: Einrichtungstexte mitten im Wort, lange Rechnungs-/Listen-/Notiztitel, Tresor-Detailspalte, Wörter ohne Leerzeichen",
+   "personas": [
+    "Herbert",
+    "Mia",
+    "Sofía",
+    "Tom"
+   ],
+   "persona_count": 4,
+   "severity": "mittel",
+   "score": 8,
+   "uninstall_reason": false,
+   "sources": [
+    "S-B11",
+    "S-B17",
+    "M-F08",
+    "H-B06",
+    "T-F-07"
+   ],
+   "status": "neu",
+   "package": "P2",
+   "note": "",
+   "rank": 10
+  },
+  {
+   "id": "B21",
+   "title": "Datenschutz-Text und Verhalten laufen auseinander: Setup-Schritt „KI-Anbieter“ fragt ungefragt localhost:11434 ab (Konsolenfehler beim ersten Start)",
+   "personas": [
+    "Tom",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "severity": "mittel",
+   "score": 7,
+   "uninstall_reason": true,
+   "sources": [
+    "T-F-01",
+    "P-B20"
+   ],
+   "status": "bekannt als Best-Effort-Erkennung (STATUS), Text dazu fehlt",
+   "package": "P1",
+   "note": "Probe erst nach Klick oder im Rechtstext nennen. Tom: der zweite solche Fall mit externer Adresse = deinstalliert.",
+   "rank": 11
+  },
+  {
+   "id": "B09",
+   "title": "Unterlage löschen: sofort weg, weder Rückfrage noch „Rückgängig“; Esc/Klick daneben verwirft getippten Text",
+   "personas": [
+    "Herbert"
+   ],
+   "persona_count": 1,
+   "severity": "hoch",
+   "score": 6,
+   "uninstall_reason": true,
+   "sources": [
+    "H-B02",
+    "H-B04"
+   ],
+   "status": "neu",
+   "package": "P5",
+   "note": "Widerspricht dem Grundsatz „Rückgängig überall“ – Lücke, kein Konzeptproblem. Lösung: Undo-Toast und Entwurf behalten, kein Bestätigungsdialog.",
+   "rank": 12
+  },
+  {
+   "id": "B15",
+   "title": "README und Website sagen „Oberfläche ist Deutsch, weitere Sprachen folgen“, die App hat fünf Sprachen; keine spanische/englische Seite",
+   "personas": [
+    "Sofía",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "severity": "hoch",
+   "score": 6,
+   "uninstall_reason": false,
+   "sources": [
+    "S-B03",
+    "P-B19"
+   ],
+   "status": "neu (README.md Zeile 26)",
+   "package": "P3",
+   "note": "Sofía lädt deshalb nicht herunter. Reine Doku-/Website-Änderung, schnell.",
+   "rank": 13
+  },
+  {
+   "id": "B05",
+   "title": "Einrichtung: „Weiter“ nach Profilwahl grau, Grund (Bestätigungshäkchen) liegt unsichtbar weit unten",
+   "personas": [
+    "Herbert",
+    "Mia"
+   ],
+   "persona_count": 2,
+   "severity": "hoch",
+   "score": 6,
+   "uninstall_reason": false,
+   "sources": [
+    "H-B01",
+    "M-F03"
+   ],
+   "status": "neu",
+   "package": "P1",
+   "note": "",
+   "rank": 14
+  },
+  {
+   "id": "B06",
+   "title": "Profile schalten Module ab und sagen es nicht: „Alltag“ blendet Finanzen/Rechnungen/Abos aus, „Finanz-Fokus“ ToDos/Timer/QR; Profilkarten: Titel und Knopf heißen gleich, kein gewählt-Zustand",
+   "personas": [
+    "Mia",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "severity": "hoch",
+   "score": 6,
+   "uninstall_reason": false,
+   "sources": [
+    "M-F02",
+    "M-F14",
+    "P-B08"
+   ],
+   "status": "neu",
+   "package": "P1",
+   "note": "",
+   "rank": 15
+  },
+  {
+   "id": "B18",
+   "title": "Übersicht: „Heute: noch nichts geplant“ trotz Erinnerung in „Jetzt wichtig“; keine kommenden Termine (morgen/Woche) im Standard",
+   "personas": [
+    "Lena",
+    "Mia",
+    "Herbert"
+   ],
+   "persona_count": 3,
+   "severity": "mittel",
+   "score": 6,
+   "uninstall_reason": false,
+   "sources": [
+    "L-B-05",
+    "M-F05",
+    "H-V01"
+   ],
+   "status": "neu",
+   "package": "P4",
+   "note": "Hängt mit Verbesserung V02 zusammen.",
+   "rank": 16
+  },
+  {
+   "id": "B11",
+   "title": "Bestätigungs-Hinweise stapeln sich, verschwinden nicht von selbst, verdecken bis zu ein Fünftel des Handys und sagen nicht, was geändert wurde („Geändert.“)",
+   "personas": [
+    "Lena",
+    "Mia",
+    "Priya"
+   ],
+   "persona_count": 3,
+   "severity": "mittel",
+   "score": 6,
+   "uninstall_reason": false,
+   "sources": [
+    "L-B-11",
+    "M-F10",
+    "P-B15"
+   ],
+   "status": "neu",
+   "package": "P2",
+   "note": "",
+   "rank": 17
+  },
+  {
+   "id": "B16",
+   "title": "Entwickler-Modul „Beispiel“ (Referenzmodul aus dem Generator) erscheint in Modul-Bibliothek/Einrichtung für Nutzer",
+   "personas": [
+    "Sofía",
+    "Tom",
+    "Mia",
+    "Herbert"
+   ],
+   "persona_count": 4,
+   "severity": "niedrig",
+   "score": 4,
+   "uninstall_reason": false,
+   "sources": [
+    "S-B22",
+    "T-F-11",
+    "M-F13",
+    "H-U04"
+   ],
+   "status": "neu; Priya sah es nur im Dev-Build, Tom im Stable-Build: Kanal prüfen",
+   "package": "P1",
+   "note": "Ein-Zeilen-Fix, wenn Kanal-Filter fehlt.",
+   "rank": 18
+  },
+  {
+   "id": "B17",
+   "title": "Modul-Einstellungen zeigen Werte ohne Beschriftung („Felder: Monat · 09:00 · 09:00“) und je Modul zwei gleiche „Startdaten einrichten“-Knöpfe; Sicherheitszeile des Tresors unlesbar",
+   "personas": [
+    "Priya",
+    "Sofía",
+    "Herbert",
+    "Tom"
+   ],
+   "persona_count": 4,
+   "severity": "niedrig",
+   "score": 4,
+   "uninstall_reason": false,
+   "sources": [
+    "P-B10",
+    "S-B21",
+    "H-V17",
+    "T-V-08"
+   ],
+   "status": "neu (nach der Modul-Faltung weiterhin sichtbar)",
+   "package": "P3",
+   "note": "",
+   "rank": 19
+  },
+  {
+   "id": "B20",
+   "title": "ToDos-Seite am Desktop (1280–1920 px) auf eine 240-px-Spalte gequetscht, Titel brechen buchstabenweise um",
+   "personas": [
+    "Priya"
+   ],
+   "persona_count": 1,
+   "severity": "hoch",
+   "score": 3,
+   "uninstall_reason": false,
+   "sources": [
+    "P-B01"
+   ],
+   "status": "neu; nur Priya, Herbert (1920 px) sah es nicht: Zustand (Testdaten „medium/large“, viele ToDos?) klären",
+   "package": "P2",
+   "note": "Reproduktionsbedingung klären, bevor gefixt wird.",
+   "rank": 20
+  }
+ ],
+ "more_bugs": [
+  {
+   "id": "B25",
+   "title": "Native Datums-/Zeitfelder im US-Format („10/29/2026“, AM/PM, englische Validierung) in deutscher/spanischer Oberfläche",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Sofía",
+    "Herbert"
+   ],
+   "persona_count": 4,
+   "severity": "niedrig",
+   "score": 4,
+   "sources": [
+    "J-B9",
+    "L-B-10",
+    "S-B24",
+    "H-U14"
+   ],
+   "status": "ungeprüft: vermutlich Test-Chromium; auf echtem Windows/Android prüfen, nicht gerankt",
+   "package": "P3"
+  },
+  {
+   "id": "B32",
+   "title": "Sonstiges niedrig: Fokusring am Stern angeschnitten, Schalter „Kalender einschalten“ obwohl an, Touch-Ziele < 44 px im Kalender, Lesehilfe zerlegt Wörter, Namensfeld „für die Begrüßung“ ohne Begrüßung, „Willkommen“ nach Backup-Import in leere App, U+202E in Titeln, einmal doppelter Tresor-Eintrag, „Änderungen dieser Version“ leer, Konsolenwarnung „No routes matched“, Saldo/Balance/Disponible nebeneinander, doppeltes „Mañana“, Kurzbefehl-Hinweis auf dem Handy, Währungsrechner ohne Offline-Hinweis, Silencio/Modo juego, Dev-Toast",
+   "personas": [
+    "Herbert",
+    "Sofía",
+    "Tom",
+    "Jonas"
+   ],
+   "persona_count": 4,
+   "severity": "niedrig",
+   "score": 4,
+   "sources": [
+    "H-B10",
+    "H-B12",
+    "H-B13",
+    "H-B14",
+    "H-B15",
+    "H-B16",
+    "T-F-14",
+    "T-F-15",
+    "T-F-16",
+    "T-F-17",
+    "S-B15",
+    "S-B16",
+    "S-B18",
+    "S-B19",
+    "S-B20",
+    "J-B8",
+    "J-B10",
+    "T-F-09"
+   ],
+   "status": "neu",
+   "package": "P2/P3 nach Bereich"
+  },
+  {
+   "id": "B07",
+   "title": "Spotify-Karte/-Schritt trägt den Kalender-Hinweistext",
+   "personas": [
+    "Herbert",
+    "Priya",
+    "Tom"
+   ],
+   "persona_count": 3,
+   "severity": "niedrig",
+   "score": 3,
+   "sources": [
+    "H-B09",
+    "P-B07",
+    "T-F-12"
+   ],
+   "status": "neu",
+   "package": "P1"
+  },
+  {
+   "id": "B22",
+   "title": "Navigation der Einstellungen: „Benachrichtigungen“ überlappt „Nicht erlaubt“",
+   "personas": [
+    "Herbert",
+    "Priya",
+    "Tom"
+   ],
+   "persona_count": 3,
+   "severity": "niedrig",
+   "score": 3,
+   "sources": [
+    "H-B05",
+    "P-B09",
+    "T-F-06"
+   ],
+   "status": "wahrscheinlich behoben durch #259 (nach dem getesteten Stand) – nachtesten",
+   "package": "P2"
+  },
+  {
+   "id": "B30",
+   "title": "Sync-Anzeige: „0 empfangen“ trotz neuer Daten, Zähler passen nicht zur Erwartung; gesperrtes Gerät zeigt zusätzlich irreführenden „ältere Version“-Satz",
+   "personas": [
+    "Priya",
+    "Mia",
+    "Tom"
+   ],
+   "persona_count": 3,
+   "severity": "niedrig",
+   "score": 3,
+   "sources": [
+    "P-B12",
+    "M-F12",
+    "T-F-08"
+   ],
+   "status": "neu",
+   "package": "P6"
+  },
+  {
+   "id": "B23",
+   "title": "Suchverlauf „Zuletzt benutzt“ liegt im Klartext in localStorage, ist nicht löschbar und übersteht „KI abschalten“",
+   "personas": [
+    "Tom"
+   ],
+   "persona_count": 1,
+   "severity": "mittel",
+   "score": 2,
+   "sources": [
+    "T-F-03"
+   ],
+   "status": "neu",
+   "package": "P6"
+  },
+  {
+   "id": "B24",
+   "title": "Klartext-Backup meldet manipulierte Dateien als „in Ordnung“ (keine Prüfsumme), Sicherheitskopie vor Wiederherstellung ist ein stiller Download",
+   "personas": [
+    "Tom"
+   ],
+   "persona_count": 1,
+   "severity": "mittel",
+   "score": 2,
+   "sources": [
+    "T-F-04",
+    "T-F-13"
+   ],
+   "status": "neu (verschlüsseltes Backup prüft)",
+   "package": "P6"
+  },
+  {
+   "id": "B26",
+   "title": "Kalender-Abo: „Wird geprüft …“ endet nie; Adressprüfung lässt Ziele zu, die die Fehlermeldung nicht nennt (Details in Toms Bericht F-02)",
+   "personas": [
+    "Tom"
+   ],
+   "persona_count": 1,
+   "severity": "mittel",
+   "score": 2,
+   "sources": [
+    "T-F-02"
+   ],
+   "status": "neu",
+   "package": "P6"
+  },
+  {
+   "id": "B27",
+   "title": "Fokus: „3 kleine Schritte“ liefert immer dieselben Platzhalter und speichert sie als Teilaufgaben; neue Runde ersetzt laufende ohne Rückfrage; neue Aufgabe landet in „Haushalt / Ohne Datum“",
+   "personas": [
+    "Jonas"
+   ],
+   "persona_count": 1,
+   "severity": "mittel",
+   "score": 2,
+   "sources": [
+    "J-B2",
+    "J-B4",
+    "J-B5"
+   ],
+   "status": "neu",
+   "package": "P4"
+  },
+  {
+   "id": "B28",
+   "title": "Kontoauszug-Import verwirft Empfänger/Auftraggeber, keine Konto-/Kategoriewahl in der Vorschau; „Mit KI eintragen“ macht aus zwei Vorgängen einen Eintrag und heißt im Fenster „Befehlspalette“",
+   "personas": [
+    "Priya"
+   ],
+   "persona_count": 1,
+   "severity": "mittel",
+   "score": 2,
+   "sources": [
+    "P-B03",
+    "P-B04",
+    "P-B16"
+   ],
+   "status": "neu",
+   "package": "P4"
+  },
+  {
+   "id": "B29",
+   "title": "Tresor: Stärke-Label widerspricht Knackzeit; Website-Feld lehnt „service.berlin.de“ ab",
+   "personas": [
+    "Sofía"
+   ],
+   "persona_count": 1,
+   "severity": "mittel",
+   "score": 2,
+   "sources": [
+    "S-B04",
+    "S-B05"
+   ],
+   "status": "neu (Tresor: nur UI-Texte/Validierung, Krypto unberührt)",
+   "package": "P3"
+  },
+  {
+   "id": "B33",
+   "title": "Sync-Server: Verhalten des Anfragelimits bei Fehlversuchen (Verfügbarkeit, kein Datenzugriff). VERTRAULICH – Details nur in Toms Bericht F-05, Sven direkt informiert.",
+   "personas": [
+    "Tom"
+   ],
+   "persona_count": 1,
+   "severity": "mittel",
+   "score": 2,
+   "sources": [
+    "T-F-05"
+   ],
+   "status": "verwandt mit L1 im Launch-Review (lokale API)",
+   "package": "Sven"
+  },
+  {
+   "id": "B31",
+   "title": "Mehrtägiger Nachtdienst zeigt nur den Beginn („21:30“), kein Ende",
+   "personas": [
+    "Lena"
+   ],
+   "persona_count": 1,
+   "severity": "niedrig",
+   "score": 1,
+   "sources": [
+    "L-B-08"
+   ],
+   "status": "neu",
+   "package": "P4"
+  }
+ ],
+ "top_improvements": [
+  {
+   "id": "V01",
+   "title": "Kurzer Einrichtungsweg: 3 Fragen (Name, Profil inkl. „Familie“, „Papiere & Termine“, „Studium“, Beruf), Rest als spätere Checkliste; Experten-Weg „Rest später“ auf jedem Schritt; Textgröße und „Nur lokal, ohne KI“ als erste Wahl",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía",
+    "Tom"
+   ],
+   "persona_count": 7,
+   "benefit": "hoch",
+   "score": 21,
+   "sources": [
+    "H-V02",
+    "H-V04",
+    "H-V05",
+    "H-V11",
+    "J-V1",
+    "L-V-01",
+    "M-V05",
+    "P-V15",
+    "S-I06",
+    "S-B12",
+    "T-V-07"
+   ],
+   "status": "neu",
+   "package": "P1",
+   "rank": 1
+  },
+  {
+   "id": "V02",
+   "title": "Begriffe und Texte vereinfachen: „Erweitert“ beschriften, Accounts → Passwörter, Widgets/Anheften → Karten, Befehlspalette → Suchen, Startdaten → Importieren, „Zufällige/Weitere Erinnerungen“, Passphrase/Chiffretext/Tailscale, Lesehilfe mit Vorschau",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía",
+    "Tom"
+   ],
+   "persona_count": 7,
+   "benefit": "hoch",
+   "score": 21,
+   "sources": [
+    "H-U01..U14",
+    "J-Verständnis",
+    "L-Verständnis",
+    "M-Verständnis",
+    "P-Verständnis",
+    "S-Understanding",
+    "T-Verständnis"
+   ],
+   "status": "neu (Glossar docs/i18n/GLOSSARY.md anpassen)",
+   "package": "P3",
+   "rank": 2
+  },
+  {
+   "id": "V03",
+   "title": "Übersicht: Block „Heute · Morgen · diese Woche“ (Termine sofort, überfällig nicht eingeklappt); Dichte-Schalter Ruhig (Standard) / Ausführlich (mehrspaltig, alle Karten)",
+   "personas": [
+    "Herbert",
+    "Mia",
+    "Lena",
+    "Priya",
+    "Jonas"
+   ],
+   "persona_count": 5,
+   "benefit": "hoch",
+   "score": 15,
+   "sources": [
+    "H-V01",
+    "M-V04",
+    "L-V-07",
+    "P-V13",
+    "J-V8"
+   ],
+   "status": "neu (Zusammenspiel mit „ruhige Übersicht“ Paket 3)",
+   "package": "P4",
+   "rank": 3
+  },
+  {
+   "id": "V04",
+   "title": "Flexible Wiederholung im Kalender: alle N Wochen, mehrere Wochentage, Enddatum – sichtbar im Termin-Dialog und per Schnellerfassung; Schichtvorlagen mit festen Zeiten und Ende",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya"
+   ],
+   "persona_count": 4,
+   "benefit": "hoch",
+   "score": 12,
+   "sources": [
+    "J-V3",
+    "L-V-02",
+    "L-V-03",
+    "L-V-09",
+    "M-V02",
+    "P-V11"
+   ],
+   "status": "Engine vorhanden (core/recurrence kennt interval + byWeekday), Oberfläche/Parser fehlen",
+   "package": "P4",
+   "rank": 4
+  },
+  {
+   "id": "V05",
+   "title": "Erinnerung verlässlich und ehrlich: beim Speichern eines Termins mit Uhrzeit ein Tipp „Erinnern: keine / 1 h / 1 Tag“, ruhiger Hinweis (abschaltbar) wenn Benachrichtigungen fehlen, Satz was die PWA ohne Push kann; Medikamenten-Erinnerung mit „genommen“-Antwort (ohne Statistik)",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Sofía"
+   ],
+   "persona_count": 4,
+   "benefit": "hoch",
+   "score": 12,
+   "sources": [
+    "J-V4",
+    "L-V-05",
+    "M-V09",
+    "S-Tag"
+   ],
+   "status": "neu (Benachrichtigungsgrenzen: docs/design/FOCUS-GUIDELINES.md)",
+   "package": "P5",
+   "rank": 5
+  },
+  {
+   "id": "V06",
+   "title": "Backup: „Verschlüsselt“ als Hauptknopf, Klartext als Nebenoption mit Prüfsumme; Alltagssprache; Erinnerung an Sicherung (ruhig, abschaltbar); Hinweis, dass Dokumentdateien nicht im Backup sind",
+   "personas": [
+    "Tom",
+    "Herbert",
+    "Mia",
+    "Sofía"
+   ],
+   "persona_count": 4,
+   "benefit": "hoch",
+   "score": 12,
+   "sources": [
+    "T-V-03",
+    "T-V-09",
+    "M-V11",
+    "H-V09",
+    "S-I14",
+    "L-V-08"
+   ],
+   "status": "neu",
+   "package": "P6",
+   "rank": 6
+  },
+  {
+   "id": "V07",
+   "title": "KI-Knöpfe nur zeigen, wenn KI eingerichtet ist; „Mit KI eintragen“ heißt ohne Anbieter „Satz eintragen“; „Assistent fragen“ in der Suche nur bei KI an",
+   "personas": [
+    "Lena",
+    "Priya",
+    "Tom",
+    "Herbert",
+    "Sofía"
+   ],
+   "persona_count": 5,
+   "benefit": "mittel",
+   "score": 10,
+   "sources": [
+    "L-Verständnis",
+    "P-B16",
+    "P-V17",
+    "T-F-09",
+    "H-V07",
+    "S-Tag"
+   ],
+   "status": "neu",
+   "package": "P3",
+   "rank": 7
+  },
+  {
+   "id": "V08",
+   "title": "Erinnerungsliste/Glocke: konkrete Titel statt „Weitere Erinnerungen · 3“, aufklappbar, Knöpfe beschriftet, alte „Gestern“-Erinnerungen räumen sich auf",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Priya",
+    "Tom",
+    "Mia"
+   ],
+   "persona_count": 5,
+   "benefit": "mittel",
+   "score": 10,
+   "sources": [
+    "H-V12",
+    "J-V9",
+    "P-V18",
+    "T-Verständnis",
+    "M-Verständnis"
+   ],
+   "status": "neu (Reiter bereits gefaltet)",
+   "package": "P5",
+   "rank": 8
+  },
+  {
+   "id": "V09",
+   "title": "Daten ohne eigenen Server koppeln: Partner/zweites Gerät per QR oder Datei, einzelne Listen teilen (Einkauf, Familienkalender); Server-Teil unter Erweitert",
+   "personas": [
+    "Mia",
+    "Sofía",
+    "Lena"
+   ],
+   "persona_count": 3,
+   "benefit": "hoch",
+   "score": 9,
+   "sources": [
+    "M-V03",
+    "S-I03",
+    "L-V-08",
+    "M-Tagesurteil"
+   ],
+   "status": "bekannt als Lücke (STATUS: Drive-Adapter nur Stub); Entwurf nötig",
+   "package": "P6",
+   "rank": 9
+  },
+  {
+   "id": "V10",
+   "title": "Ruhe in einem Begriff: „Zock-Modus“ + „Stumm“ → „Ruhe/Nicht stören“, optional an Schichten koppelbar, ein Preset „Ruhig starten“",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Sofía",
+    "Tom"
+   ],
+   "persona_count": 4,
+   "benefit": "mittel",
+   "score": 8,
+   "sources": [
+    "J-V10",
+    "L-V-04",
+    "S-B15",
+    "T-Verständnis"
+   ],
+   "status": "neu (beide Funktionen existieren getrennt: #150, #180)",
+   "package": "P5",
+   "rank": 10
+  },
+  {
+   "id": "V11",
+   "title": "Vorlagen/Startlisten: Papiere (Pass, Führerschein, TÜV), deutsche Anbieter/Rechnungsarten, Packlisten (Urlaub mit Kindern, Schulranzen), Einkaufsvokabular",
+   "personas": [
+    "Herbert",
+    "Sofía",
+    "Mia",
+    "Lena"
+   ],
+   "persona_count": 4,
+   "benefit": "mittel",
+   "score": 8,
+   "sources": [
+    "H-V16",
+    "S-I05",
+    "S-I07",
+    "M-V06",
+    "M-V12"
+   ],
+   "status": "neu",
+   "package": "P3",
+   "rank": 11
+  },
+  {
+   "id": "V12",
+   "title": "Kalender lesbarer: kompakte Woche bei leeren Tagen, Dienstart je Tag in der Monatsansicht, Filter „nur Termine“, Farben",
+   "personas": [
+    "Lena",
+    "Sofía",
+    "Mia",
+    "Priya"
+   ],
+   "persona_count": 4,
+   "benefit": "mittel",
+   "score": 8,
+   "sources": [
+    "L-V-03",
+    "S-I08",
+    "M-V13",
+    "P-V11"
+   ],
+   "status": "neu",
+   "package": "P4",
+   "rank": 12
+  },
+  {
+   "id": "V13",
+   "title": "Finanzen: Einnahmen-Kategorien (BAföG, Nebenjob), Einnahmen/Ausgaben/Saldo nebeneinander, ein Wort für Saldo, Kontoauszug-Import dort anbieten, wo man ihn sucht, Kategorie-Regeln",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Sofía",
+    "Priya"
+   ],
+   "persona_count": 4,
+   "benefit": "mittel",
+   "score": 8,
+   "sources": [
+    "J-V7",
+    "L-V-10",
+    "S-B19",
+    "P-V06",
+    "P-V07"
+   ],
+   "status": "Kategorie-Regeln = ROADMAP M3",
+   "package": "P4",
+   "rank": 13
+  },
+  {
+   "id": "V14",
+   "title": "Person/Kunde als Zuordnung über Module (Familienmitglied bzw. Kunde: Farbe, Filter, Feld „Für“)",
+   "personas": [
+    "Mia",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "benefit": "hoch",
+   "score": 6,
+   "sources": [
+    "M-V01",
+    "M-V08",
+    "P-V02",
+    "P-V11"
+   ],
+   "status": "neu (Personen-Modul existiert)",
+   "package": "P4",
+   "rank": 14
+  },
+  {
+   "id": "V15",
+   "title": "Kündigungsfrist in Monaten/Wochen eingeben, „Kündigen bis“ groß zeigen, früh erinnern; Datumsfeld statt 31-Tage-Raster im Abo-Dialog",
+   "personas": [
+    "Herbert",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "benefit": "hoch",
+   "score": 6,
+   "sources": [
+    "H-V03",
+    "H-V15",
+    "S-B09"
+   ],
+   "status": "neu",
+   "package": "P5",
+   "rank": 15
+  },
+  {
+   "id": "V16",
+   "title": "Sprachen/Formate: Mexiko (es-MX) und Währung wählbar (je Konto/Rechnung), Website/README in den App-Sprachen mit passenden Screenshots",
+   "personas": [
+    "Sofía",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "benefit": "hoch",
+   "score": 6,
+   "sources": [
+    "S-I01",
+    "S-I02",
+    "P-V12"
+   ],
+   "status": "neu (ROADMAP T2 nennt Währungen nur im Rechner)",
+   "package": "P3",
+   "rank": 16
+  },
+  {
+   "id": "V17",
+   "title": "Schnellerfassung erweitern: Abo, Rechnung, Geburtstag, Betrag, Endzeit/Dauer, Priorität – als Vorschau-Chips, nicht als Dauer-Hervorhebung",
+   "personas": [
+    "Lena",
+    "Priya",
+    "Mia"
+   ],
+   "persona_count": 3,
+   "benefit": "mittel",
+   "score": 6,
+   "sources": [
+    "L-V-06",
+    "P-V16",
+    "M-F06"
+   ],
+   "status": "neu",
+   "package": "P4",
+   "rank": 17
+  },
+  {
+   "id": "V18",
+   "title": "Lesbarkeit: „Sehr groß“ wirklich groß (Grauschrift), Anleitung/Hilfe in der App verlinken, „Strg“ statt „Ctrl“, weniger Tab-Stopps in der Seitenleiste",
+   "personas": [
+    "Herbert",
+    "Priya"
+   ],
+   "persona_count": 2,
+   "benefit": "mittel",
+   "score": 4,
+   "sources": [
+    "H-V05",
+    "H-V19",
+    "H-V18"
+   ],
+   "status": "neu",
+   "package": "P3",
+   "rank": 18
+  },
+  {
+   "id": "V19",
+   "title": "Einkauf: ganze Zeile antippen/wischen zum Abhaken, Papierkorb weg von der Daumenzone, Gruppen/Läden, „Als Text teilen“",
+   "personas": [
+    "Lena",
+    "Mia"
+   ],
+   "persona_count": 2,
+   "benefit": "mittel",
+   "score": 4,
+   "sources": [
+    "L-V-11",
+    "M-V07"
+   ],
+   "status": "neu (hängt an B01)",
+   "package": "P2",
+   "rank": 19
+  },
+  {
+   "id": "V20",
+   "title": "Gelöschtes 30 Tage wiederherstellbar („Zuletzt gelöscht“) – mit Löschknopf und Schalter, weil es Daten länger hält",
+   "personas": [
+    "Herbert"
+   ],
+   "persona_count": 1,
+   "benefit": "hoch",
+   "score": 3,
+   "sources": [
+    "H-V06"
+   ],
+   "status": "bekannt: ROADMAP K4 (Papierkorb), nicht gebaut",
+   "package": "P5",
+   "rank": 20
+  }
+ ],
+ "more_improvements": [
+  {
+   "id": "V21",
+   "title": "Verbindungsprotokoll in der App („was ging seit dem Start wohin“, nur Host/Anlass/Menge, nie Inhalt) plus optional „Netzwerk sperren“",
+   "personas": [
+    "Tom"
+   ],
+   "persona_count": 1,
+   "benefit": "hoch",
+   "score": 3,
+   "sources": [
+    "T-V-01"
+   ],
+   "status": "neu; passt zu Local-First",
+   "package": "P6"
+  },
+  {
+   "id": "V22",
+   "title": "Schwaches Master-Passwort: zusätzliche Bestätigung und Mehrwort-Vorschlag (kein Zwang)",
+   "personas": [
+    "Tom"
+   ],
+   "persona_count": 1,
+   "benefit": "hoch",
+   "score": 3,
+   "sources": [
+    "T-V-02"
+   ],
+   "status": "neu (nur UI, Krypto unberührt)",
+   "package": "P6"
+  },
+  {
+   "id": "V23",
+   "title": "Suchverlauf abschaltbar/löschbar, KI-Fragen nie im Verlauf; http://-Warnung bei nicht-lokaler Sync-Adresse; Diagnose-Vorschau in App-Sprache",
+   "personas": [
+    "Tom"
+   ],
+   "persona_count": 1,
+   "benefit": "mittel",
+   "score": 2,
+   "sources": [
+    "T-V-04",
+    "T-V-05",
+    "T-V-10"
+   ],
+   "status": "neu",
+   "package": "P6"
+  },
+  {
+   "id": "V24",
+   "title": "Fokus: Länge direkt wählbar, echte Schrittvorlagen je Stichwort (lokal, ohne KI), „Weiter mit …“-Karte, Teilfristen für Abgaben, „Fällig am“ vs. „Geplant für“ erklären, Studium-Profil",
+   "personas": [
+    "Jonas"
+   ],
+   "persona_count": 1,
+   "benefit": "hoch",
+   "score": 3,
+   "sources": [
+    "J-V2",
+    "J-V5",
+    "J-V6",
+    "J-V8",
+    "J-V11"
+   ],
+   "status": "neu; Habits-Modul bleibt stillgelegt (siehe Liste)",
+   "package": "P4"
+  },
+  {
+   "id": "V25",
+   "title": "Priya-Paket: CSV-/ICS-Export je Modul, Mehrfachauswahl/Massenbearbeitung, Tastenkürzel auffindbar/anpassbar, KI-Zugang geräteübergreifend, Erweiterung für Chrome/Edge/Firefox",
+   "personas": [
+    "Priya"
+   ],
+   "persona_count": 1,
+   "benefit": "mittel",
+   "score": 2,
+   "sources": [
+    "P-V04",
+    "P-V05",
+    "P-V08",
+    "P-V14",
+    "P-V10"
+   ],
+   "status": "Kürzel gebaut (docs/features/shortcuts.md, #214), ICS-Export = ROADMAP M2, Store/Firefox = STATUS offen",
+   "package": "später"
+  },
+  {
+   "id": "V26",
+   "title": "Anhänge (Unterlagen/Belege) optional verschlüsselt in Sync und Backup",
+   "personas": [
+    "Priya",
+    "Mia",
+    "Sofía"
+   ],
+   "persona_count": 3,
+   "benefit": "mittel",
+   "score": 6,
+   "sources": [
+    "P-V09",
+    "M-V08",
+    "S-I14"
+   ],
+   "status": "bekannt: ROADMAP K3, „nach Unterlagen“",
+   "package": "später"
+  },
+  {
+   "id": "V27",
+   "title": "Passphrase-Wortliste in Spanisch, „Recibo/cuenta“-Wortwahl, Haushaltsaufgaben reihum, Tresor „Import, Export & Sicherheit“ aufteilen",
+   "personas": [
+    "Sofía",
+    "Mia",
+    "Tom"
+   ],
+   "persona_count": 3,
+   "benefit": "niedrig",
+   "score": 3,
+   "sources": [
+    "S-I09",
+    "S-I10",
+    "M-V10",
+    "T-Verständnis"
+   ],
+   "status": "neu",
+   "package": "später"
+  }
+ ],
+ "keep": [
+  {
+   "text": "Schnellerfassung per Satz mit Vorschau-Chips, „Datum angenommen“, Rückgängig",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía",
+    "Tom"
+   ]
+  },
+  {
+   "text": "Rückgängig statt Rückfrage (Abhaken, Löschen, Bezahlen)",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía"
+   ]
+  },
+  {
+   "text": "Backup-Wiederherstellung: Vorschau, Zusammenführen/Ersetzen, Sicherheitskopie, verschlüsselt, Prüfsumme",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía",
+    "Tom"
+   ]
+  },
+  {
+   "text": "Ruhige Übersicht: „3 Dinge reichen“, „Jetzt wichtig“, kein Alarm-Rot, keine Schuldtexte",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Sofía",
+    "Tom"
+   ]
+  },
+  {
+   "text": "Datenschutz-Ehrlichkeit und messbar gehaltene Versprechen (KI sieht keine Daten, offline null Anfragen), „KI abschalten“",
+   "personas": [
+    "Herbert",
+    "Priya",
+    "Sofía",
+    "Tom"
+   ]
+  },
+  {
+   "text": "Offline mit Service Worker",
+   "personas": [
+    "Herbert",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Tom"
+   ]
+  },
+  {
+   "text": "Sprachwechsel sofort, Dunkelmodus, kein waagerechtes Scrollen bis 320 px",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía",
+    "Tom"
+   ]
+  },
+  {
+   "text": "Tresor: ehrliche Warnung, Stärke live, gesperrt nach Neuladen, escaped Eingaben",
+   "personas": [
+    "Herbert",
+    "Priya",
+    "Sofía",
+    "Tom"
+   ]
+  },
+  {
+   "text": "„Anfangen · 5 Min“, „Wartet noch“/„Neu planen“, „Tag abschließen“",
+   "personas": [
+    "Jonas",
+    "Herbert",
+    "Mia"
+   ]
+  },
+  {
+   "text": "Vorräte (+/−, „Wird knapp“), Packlisten mit Fortschritt, Personen mit Geburtstag und Geschenkideen",
+   "personas": [
+    "Mia",
+    "Herbert",
+    "Lena"
+   ]
+  },
+  {
+   "text": "Rechnungen gruppiert mit „seit 12 Tagen“, Abos mit Summe pro Monat/Jahr, „Kündigen bis“",
+   "personas": [
+    "Lena",
+    "Sofía",
+    "Priya"
+   ]
+  },
+  {
+   "text": "Tastatur: Strg+K, N, G-dann, J/K, „?“",
+   "personas": [
+    "Priya",
+    "Herbert"
+   ]
+  },
+  {
+   "text": "Sync-Einrichtung (E2E vorausgewählt, Geräteliste, Sperren) und Gerät zurücksetzen",
+   "personas": [
+    "Priya",
+    "Tom"
+   ]
+  },
+  {
+   "text": "„Stumm: 1 Stunde / Bis morgen“",
+   "personas": [
+    "Jonas",
+    "Lena"
+   ]
+  },
+  {
+   "text": "Diagnose-Vorschau vor dem Senden; Regex-Tester mit Abbruch",
+   "personas": [
+    "Tom"
+   ]
+  },
+  {
+   "text": "Lokaler Assistent („Was steht morgen an?“, „Lokal“)",
+   "personas": [
+    "Mia"
+   ]
+  }
+ ],
+ "contradictions": [
+  {
+   "topic": "Mehr Erklärung vs. weniger Text",
+   "sides": "Herbert (liest Anleitungen, will Vorschau, Hilfe in der App) – Jonas, Lena, Tom (kurz, nicht ablenken)",
+   "proposal": "Standard: ein Satz. Dahinter ein „?“ / „Mehr erfahren“, aufklappbar (Basis). Einstellung „Erklärungen: kurz / ausführlich“ unter Darstellung (Erweitert); Lesehilfe bekommt eine Vorschau. Abgeschnittenen Text immer aufklappbar (B14)."
+  },
+  {
+   "topic": "Ruhige vs. dichte Übersicht",
+   "sides": "Jonas, Lena, Mia, Sofía („3 Dinge“, 16 Widgets = 9400 px) – Herbert, Priya (Termine sofort, alles sichtbar, mehrspaltig)",
+   "proposal": "Ein Schalter Ruhig (Standard) / Ausführlich. Beide Stufen zeigen „Heute · Morgen“ mit Terminen als einen Block; Ausführlich ergänzt Karten und Spalten ab 1280 px. Aus (Fokus-Checkliste 2)."
+  },
+  {
+   "topic": "„Wartet noch“: freundlich vs. eindeutig",
+   "sides": "Jonas, Herbert (gefällt) – Priya, Lena, Mia (unklar, „wer wartet worauf?“)",
+   "proposal": "Wort bleibt; direkt darunter eine Zeile „überfällig, nicht dringend – Neu planen“ beim ersten Mal, Tooltip danach. Zahl in Übersicht und ToDos gleich definieren (Jonas)."
+  },
+  {
+   "topic": "Rückfrage vs. Rückgängig",
+   "sides": "Herbert (Angst, etwas zu löschen) – alle anderen (lieben Rückgängig)",
+   "proposal": "Überall Undo-Toast, auch bei Unterlagen; zusätzlich „Zuletzt gelöscht“ (V20) und Entwurf behalten bei Esc. Keine Dialoge."
+  },
+  {
+   "topic": "Erinnerung standardmäßig an vs. keine Hinweisflut",
+   "sides": "Jonas, Mia (Frist-Erinnerung von allein) – Jonas selbst (ruhig), Fokus-Richtlinien (soft, Standard aus)",
+   "proposal": "Beim Speichern eines Termins mit Uhrzeit eine Zeile „Erinnern: keine · 1 h · 1 Tag“ (Vorgabe merkbar); fehlende Erlaubnis einmal ruhig melden, abschaltbar."
+  },
+  {
+   "topic": "Einfach koppeln vs. selbst hosten",
+   "sides": "Mia, Sofía, Lena (kein Server) – Priya, Tom (eigener Server, Rate-Limit, http-Warnung)",
+   "proposal": "Zwei Wege: Basis „Mit Partner teilen“ (QR/Datei, kein Server), Erweitert „Eigener Server“ mit den Sicherheitshinweisen von Tom."
+  },
+  {
+   "topic": "Wenige vs. viele Erkennungsfelder in der Schnellerfassung",
+   "sides": "Priya (Betrag, Endzeit, #Kunde) – Jonas, Lena (kurz, ruhig), Tom (Parser darf Titel nicht zerstören)",
+   "proposal": "Mehr erkennen, aber nur erkannte Teile als Chips zeigen; Titel unverändert lassen, wenn unsicher („Datum angenommen“)."
+  },
+  {
+   "topic": "KI sichtbar vs. verborgen",
+   "sides": "Herbert, Lena, Tom (keine KI, Knopf stört) – Priya (KI-Zugang einrichten, wiederverwenden)",
+   "proposal": "KI-Knöpfe nur bei eingerichteter KI (V07); Einrichtung fragt „Nur lokal, ohne KI“ zuerst; Priyas Geräte-Übernahme später unter Erweitert."
+  }
+ ],
+ "understanding": [
+  {
+   "item": "Schalter „Erweitert“ (jedes Modul)",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Sofía"
+   ],
+   "problem": "Unklar, was dazukommt",
+   "proposal": "„Mehr Felder anzeigen“ mit Untertitel, was erscheint"
+  },
+  {
+   "item": "Zufällige Erinnerung / Nächste Erinnerung / Weitere Erinnerungen · n",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Tom"
+   ],
+   "problem": "Erwartet eine Liste; unklar, was „zufällig“ tut",
+   "proposal": "Knöpfe beschriften, konkrete Titel, aufklappbar"
+  },
+  {
+   "item": "„Wartet noch“ (Übersicht, ToDos; zwei verschiedene Zahlen)",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Mia",
+    "Priya",
+    "Herbert"
+   ],
+   "problem": "„Wer wartet worauf?“",
+   "proposal": "siehe Widerspruch 3"
+  },
+  {
+   "item": "Zock-Modus / Stumm / Modo juego / Silencio",
+   "personas": [
+    "Jonas",
+    "Lena",
+    "Sofía",
+    "Tom"
+   ],
+   "problem": "Zwei Namen für dasselbe, „Zock“ klingt nach Spiel",
+   "proposal": "Ein Name: „Ruhe“ (Nicht stören)"
+  },
+  {
+   "item": "Accounts / Tresor / Passwort-Tresor / Unterlagen",
+   "personas": [
+    "Herbert",
+    "Lena",
+    "Priya",
+    "Mia",
+    "Sofía"
+   ],
+   "problem": "Accounts = Benutzerkonto? Impfpass unter „Tresor“?",
+   "proposal": "Modul „Passwörter“, Bereich „Unterlagen“ (nur Beschriftung, Modul-ID bleibt)"
+  },
+  {
+   "item": "Startdaten einrichten",
+   "personas": [
+    "Herbert",
+    "Lena",
+    "Priya",
+    "Mia"
+   ],
+   "problem": "Wirkt wie Pflicht, unklar was es tut",
+   "proposal": "„Importieren“, kleiner, nur bei leerem Modul"
+  },
+  {
+   "item": "Widgets, Anheften…, „Mehr anzeigen · 16 Widgets“",
+   "personas": [
+    "Herbert",
+    "Mia",
+    "Priya"
+   ],
+   "problem": "Englisch/technisch",
+   "proposal": "„Karten“, „Karte hinzufügen“"
+  },
+  {
+   "item": "JSON einfügen / Nemo-Format / Schema für KI kopieren / Import per KI",
+   "personas": [
+    "Herbert",
+    "Priya",
+    "Sofía"
+   ],
+   "problem": "Fachwort",
+   "proposal": "„Daten aus einer Datei übernehmen“; Kurzsatz zur KI-Schleife"
+  },
+  {
+   "item": "Passphrase, Chiffretext, LAN, Tailscale, Zugangstoken, Tabellen",
+   "personas": [
+    "Herbert",
+    "Lena",
+    "Mia",
+    "Tom"
+   ],
+   "problem": "Für Nicht-Techniker unverständlich",
+   "proposal": "Backup zuerst, Server unter Erweitert; Beispiel je Zeile"
+  },
+  {
+   "item": "Wanduhrzeit, „Zeitzone: UTC“ (Einrichtung Schritt 1)",
+   "personas": [
+    "Herbert",
+    "Jonas",
+    "Lena"
+   ],
+   "problem": "Fachwort / unplausibler Wert",
+   "proposal": "„Uhrzeiten gelten für deinen Ort“, Ort anzeigen"
+  },
+  {
+   "item": "Befehlspalette (Strg+K)",
+   "personas": [
+    "Herbert",
+    "Priya"
+   ],
+   "problem": "Name sagt nichts",
+   "proposal": "„Suchen“"
+  },
+  {
+   "item": "„Ziel: ToDos“, „Regeln · 0 Token“, „Lokal · 0 Token“",
+   "personas": [
+    "Mia",
+    "Priya"
+   ],
+   "problem": "„Token“ und „Ziel“ unbekannt",
+   "proposal": "„Wird gespeichert in: ToDos“, „ohne KI erkannt“"
+  },
+  {
+   "item": "„Anfangen · 5 Min“, „Vorschlag: 3 kleine Schritte“, „Nächste eine Sache“",
+   "personas": [
+    "Herbert",
+    "Jonas"
+   ],
+   "problem": "Startet sofort einen Zähler; „Vorschlag“ unklar (KI?); Grammatik",
+   "proposal": "Beschriftung „5-Minuten-Runde starten“; Grammatik korrigieren"
+  },
+  {
+   "item": "„Fällig am“ vs. „Geplant für“; Dauer-Chip „Offen“",
+   "personas": [
+    "Jonas"
+   ],
+   "problem": "Unklar",
+   "proposal": "Ein Satz Erklärung, „Dauer: offen“"
+  },
+  {
+   "item": "Lesehilfe „hebt Wortanfänge hervor“",
+   "personas": [
+    "Herbert",
+    "Priya",
+    "Jonas"
+   ],
+   "problem": "Erst nach dem Einschalten sichtbar",
+   "proposal": "Vorschau-Satz im Angebot"
+  },
+  {
+   "item": "Profilkarte: Titel und Knopf heißen gleich („Alltag“ / „Alltag“)",
+   "personas": [
+    "Jonas",
+    "Mia"
+   ],
+   "problem": "Muss ich noch etwas tun? Kein gewählt-Zustand",
+   "proposal": "Knopf „Wählen“, markierter Zustand"
+  },
+  {
+   "item": "Doppeltes „Kalender“ (Tab, Überschrift, Pille), Kalender-Knopf „Erinnerungen“ ohne Anlegen",
+   "personas": [
+    "Lena",
+    "Mia",
+    "Sofía"
+   ],
+   "problem": "Wirkt wie Fehler",
+   "proposal": "Eine Ebene, „Offene Erinnerungen“"
+  },
+  {
+   "item": "„Eingang“ / „Platz“ bei ToDos ohne Datum",
+   "personas": [
+    "Mia",
+    "Priya"
+   ],
+   "problem": "Unbekannter Begriff",
+   "proposal": "„Ohne Datum – jetzt einplanen“, „Neu erfasst“"
+  },
+  {
+   "item": "„Später nicht mehr“ (Wetter), „Auf morgen schieben“",
+   "personas": [
+    "Herbert",
+    "Mia"
+   ],
+   "problem": "Widerspruch / unklar",
+   "proposal": "„Nicht mehr fragen“, „Wetter ausblenden“"
+  },
+  {
+   "item": "„Mit KI eintragen“ ohne KI; Fenster „Befehlspalette“",
+   "personas": [
+    "Lena",
+    "Priya",
+    "Tom",
+    "Herbert"
+   ],
+   "problem": "Knopf dominiert, obwohl keine KI",
+   "proposal": "siehe V07"
+  },
+  {
+   "item": "Symbole: Funkel (KI und Passwort-Generator), Stern, Glocke mit Zahl, „…“-Menü, Haken in Rechnungszeile, Schraubenschlüssel (Werkzeuge, Handy ohne Beschriftung)",
+   "personas": [
+    "Herbert",
+    "Sofía",
+    "Priya",
+    "Mia"
+   ],
+   "problem": "Funkel doppelt belegt, Haken/„…“ ohne Text",
+   "proposal": "Tooltip/Kurztext beim ersten Mal; Funkel nur für KI"
+  },
+  {
+   "item": "Sicherheitszeile Tresor („Felder: 5 Minuten · Sofort …“), Modul-Einstellungen mit Rohwerten",
+   "personas": [
+    "Tom",
+    "Priya",
+    "Sofía",
+    "Herbert"
+   ],
+   "problem": "Werte ohne Beschriftung",
+   "proposal": "Ausschreiben („Sperrt nach 5 Min“)"
+  },
+  {
+   "item": "Merkliste / Merkzettel / Lesezeichen; Despensa / Hogar / Compra",
+   "personas": [
+    "Lena",
+    "Sofía"
+   ],
+   "problem": "Mehrere Wörter für Ähnliches",
+   "proposal": "Ein Wort je Konzept (Glossar)"
+  }
+ ],
+ "deferred_decisions": [
+  {
+   "item": "Zeiterfassung pro Kunde, Ausgangsrechnungen (Priya V01, V03)",
+   "reason": "Zeiterfassung wurde im Modul-Review bewusst stillgelegt (docs/product/MODULE-PLAN.md); Freiberufler-Kern wäre ein Kurswechsel. Entscheidung Sven."
+  },
+  {
+   "item": "Feed-Reader/RSS (Sofía I04)",
+   "reason": "News wurde stillgelegt, ROADMAP: „news as an optional extension“; neue Netzwerkaufrufe und Reizlast. Entscheidung Sven."
+  },
+  {
+   "item": "Koppeln ohne eigenen Server (Mia V03, Sofía I03)",
+   "reason": "Richtung gut (QR/Datei/Nahbereich, ohne Anbieter-Konto), aber Sync-Hotspot und Protokollfrage: erst Entwurf (Phase 1), dann Entscheidung Sven."
+  },
+  {
+   "item": "Chrome Web Store / Firefox für die Erweiterung (Priya V10)",
+   "reason": "STATUS: Store-Entscheidung offen."
+  },
+  {
+   "item": "Anhänge im Sync/Backup (K3)",
+   "reason": "Groß, Format- und Verschlüsselungsrisiko, ROADMAP „nach Unterlagen“."
+  }
+ ],
+ "do_not_implement": [
+  {
+   "item": "Schritte aus dem Aufgabentitel per KI vorschlagen (Jonas V5 als „KI“ gedacht)",
+   "reason": "AI-Privatsphäre: Assistent sieht nie Nutzerdaten (privacy.test.ts). Lokale Vorlagen je Stichwort sind erlaubt."
+  },
+  {
+   "item": "Erinnerung ungefragt für jeden Termin einschalten (Jonas V4, Mia V09 wörtlich)",
+   "reason": "Benachrichtigungsgrenzen der Fokus-Richtlinien: neue automatische Hinweise `soft` und standardmäßig aus. Stattdessen Ein-Tipp-Frage beim Speichern (V05)."
+  },
+  {
+   "item": "Dauer-Abzeichen „nur lokal“ in der Kopfzeile (Herbert V04, Teil)",
+   "reason": "Reizlast (Checkliste 1 und 9). Stattdessen erste Wahl in der Einrichtung und Eintrag in Einstellungen → Verbindungen."
+  },
+  {
+   "item": "Live-Farbhervorhebung beim Tippen in der Schnellerfassung (Priya V16, Teil)",
+   "reason": "Reizlast; die Vorschau-Chips reichen."
+  },
+  {
+   "item": "„Alle Widgets mehrspaltig“ als Standard-Übersicht (Priya V13)",
+   "reason": "Standard bleibt ruhig („3 Dinge reichen“); nur als Schalter „Ausführlich“ (V03)."
+  },
+  {
+   "item": "„Überfällig“ statt „Wartet noch“ als Standardwort (Priya)",
+   "reason": "Fokus-Textregel „sagen, was möglich ist“. Stattdessen Kurzerklärung unter der Überschrift; Geld bleibt „überfällig“ (rot nur dort)."
+  },
+  {
+   "item": "Bestätigungsdialog beim Löschen von Unterlagen (Herbert B02 wörtlich)",
+   "reason": "Grundsatz „Rückgängig statt Rückfrage“; Undo-Toast plus Entwurf behalten (B09)."
+  },
+  {
+   "item": "Habits-Modul zurückholen (Jonas V2)",
+   "reason": "Modul bewusst stillgelegt; Streak-Verlust nie (Fokus-Richtlinien). Prüfen, ob Routinen („n in Folge“ mit Pausentag) den Bedarf decken."
+  },
+  {
+   "item": "Medikamenten-Verlauf mit Quote/Serie (Lena V-05, Teil)",
+   "reason": "Schuld- und Gesundheitsdaten-Risiko; nur Bestätigung „genommen“, keine Statistik, kein Medizinprodukt-Anspruch."
+  },
+  {
+   "item": "Konto/Cloud bei einem Anbieter für das Teilen (Mia V03 „wie WhatsApp“)",
+   "reason": "ROADMAP „Explicitly not planned“: Cloud-Konten, Telemetrie."
+  }
+ ],
+ "packages": [
+  {
+   "id": "P1",
+   "name": "Erster Start und Einrichtung",
+   "branch": "feat/qa-first-run",
+   "covers": "V01, B04, B05, B06, B07, B16, B21",
+   "area": "core/setup/** (registry, Schritte, Profile), home-Willkommenskarte (nur Logik, Layout bei P2), Tests e2e/setup.spec.ts",
+   "hotspots": "strings.ts (Block setup) und alle vier Locale-Kataloge; core/setup/registry.ts (additive Helfer); ggf. core/modules/registry.ts, wenn Profile dort hängen → vorher Zeile in CHATS.md",
+   "prompt_sketch": "Phase 1: Plan + Messung (heutige Schrittzahl, Taps), Stopp bis „Plan freigegeben“. Danach: 3-Fragen-Weg mit „Rest später“ auf jedem Schritt; ehrlicher Fortschritt (übersprungen ≠ erledigt, eine Zahl); Profilkarten nennen, was sie abschalten; „Weiter“-Grund sichtbar; Spotify-Text; Modul „Beispiel“ nur im Dev-Kanal; Ollama-Probe (core/ai/detectOllama.ts) erst nach Klick (oder Rechtstext ergänzen).",
+   "acceptance": "Frische Installation: Übersicht nach ≤ 3 Fragen und ≤ 6 Taps; kein Netzwerkaufruf vor einem Klick (Playwright-Netzlog); Fokus-Checkliste in der PR-Beschreibung; `check:i18n`."
+  },
+  {
+   "id": "P2",
+   "name": "Handy-Layout und Rückmeldung",
+   "branch": "fix/qa-mobile-layout",
+   "covers": "B03, B01, B10, B02, B11, B14, B20, B22, V19",
+   "area": "layout/AppShell.tsx und Kopfzeile, ui/Toast* (Stapel, Text, Auto-Ausblenden), ui/Dialog, modules/lists (Zeile, Abhaken), home-Willkommenskarte, ToDos-Seite (Spaltenbreite), Playwright-Screenshots 412/320/640/1280",
+   "hotspots": "layout/AppShell.tsx, pages/Settings.tsx (nur Navigation), ui/*; keine Token-Änderung (ui/tokens.css gesperrt, sonst Zeile anlegen)",
+   "prompt_sketch": "Kopfzeile bleibt bei 320–640 px und laufendem Fokus-Timer bedienbar (Suche als Symbol, Umschalter umbrechen); eine Abhak-Fläche pro Listenzeile, Abgehaktes bleibt kurz an Ort und Stelle (Rückgängig), lange Einträge umbrechen/aufklappbar; „+“ verdeckt nie ein Feld (Platz reservieren); Hinweise: max. einer sichtbar, sagen was geändert wurde, verschwinden selbst; Willkommenskarte vollständig sichtbar; Reproduktion von B20 zuerst.",
+   "acceptance": "Screenshot-Spec bei 412/320/640/1280 ohne Abschneiden, Touch-Ziele ≥ 44 px, kein horizontales Scrollen; e2e für Listen und Toasts."
+  },
+  {
+   "id": "P3",
+   "name": "Verständliche Sprache und Übersetzungen",
+   "branch": "fix/qa-wording-i18n",
+   "covers": "V02, V07, V11, V16, V18, B13, B15, B17, B25, B29",
+   "area": "strings.ts + locales/{en,es,fr,pt-BR}, docs/i18n/GLOSSARY.md, README.md/README.de.md, site/, Tresor-Texte (nur UI), core/i18n/format (es-MX, Monatsnamen, KW, Ordinalpunkt), KI-Knöpfe nur bei eingerichteter KI",
+   "hotspots": "strings.ts und ALLE Locale-Kataloge: höchster Konflikt-Hotspot. Nur bestehende Werte ändern, neue Schlüssel nur im eigenen Block anhängen; nach P1/P2 starten oder `develop` täglich mergen",
+   "prompt_sketch": "Wortliste aus „Verständnisprobleme“ umsetzen (Glossar zuerst), Sofías Fundliste als Prüfliste für es/en, README/Website-Satz „German today“ ersetzen, Datums-/Zeitfeld auf echtem Gerät prüfen statt vermuten; keine Krypto-Änderung am Tresor.",
+   "acceptance": "`check:i18n`, Glossar aktualisiert, Spanisch-Durchlauf (Tresor, Einrichtung, Kalender, Abos) ohne deutsche Reste, `check:readme`."
+  },
+  {
+   "id": "P4",
+   "name": "Übersicht, Kalender und Schnellerfassung",
+   "branch": "feat/qa-today-calendar",
+   "covers": "V03, V04, V12, V13, V14, V17, V24, B12, B18, B27, B28, B31",
+   "area": "home (Heute/Morgen-Block, Dichte-Schalter), calendar (Wiederholung sichtbar, Schichtvorlagen, Monatsansicht), quickCapture/parser (+ Testkorpus), todos (Inline-Add, Fokus-Schritte lokal), finance-Import-Vorschau",
+   "hotspots": "home/Widget-Registry, strings.ts (nur eigener Block), ggf. core/modules/types.ts (Zuordnung Person/Kunde → eigene Zeile, eine Chat zur Zeit)",
+   "prompt_sketch": "Phase 1: Plan für Dichte-Schalter und Zuordnung Person/Kunde mit Stopp. Dann: Heute·Morgen-Block; Wiederholung „alle N Wochen, Mo–Fr, bis“ im Dialog und Parser; Parser-Testkorpus um alle gemeldeten Sätze erweitern (Trefferquote vorher/nachher); Fokus „3 Schritte“ nur mit lokalen Vorlagen.",
+   "acceptance": "Parser-Messung vorher/nachher, e2e Termin mit Wiederholung, Übersicht-Screenshots Ruhig/Ausführlich, `privacy.test.ts` grün."
+  },
+  {
+   "id": "P5",
+   "name": "Erinnerungen, Fristen und Löschsicherheit",
+   "branch": "feat/qa-reminders-safety",
+   "covers": "B19, B08, B09, V05, V08, V10, V15, V20",
+   "area": "core/notifications/policy.ts und ack, calendar/RemindersTab, subscriptions/Unterlagen (Frist-Status), Undo (core/undo) und Entwurf in Dialogen, „Zuletzt gelöscht“ (core/db tombstones, ROADMAP K4)",
+   "hotspots": "core/notifications/policy.ts (nur ein Chat), core/db (Tombstone-Lesezugriff additiv), ui/Dialog (Entwurf behalten, mit P2 absprechen)",
+   "prompt_sketch": "Phase 1: Gerätetest auf Android (Erinnerung, App wegwischen) und Plan; danach ein Satz „was die PWA ohne Push kann“, Ein-Tipp-Erinnerung beim Speichern, „Frist vorbei“-Status in Liste, Übersicht und Kalender (ruhiger Ton), Undo für Unterlagen, Entwurf bei Esc, „Ruhe“ als ein Begriff, „Zuletzt gelöscht“ mit Löschen-Knopf.",
+   "acceptance": "Neue Benachrichtigungsart `soft`, Schalter vorhanden, Standard aus; Unit-Tests für Frist-Status; Handtest-Zeile in MANUAL-TESTS."
+  },
+  {
+   "id": "P6",
+   "name": "Datenschutz, Backup und Koppeln",
+   "branch": "feat/qa-privacy-backup",
+   "covers": "B23, B24, B26, B30, V06, V09 (nur Entwurf), V21, V22, V23",
+   "area": "Einstellungen → Verbindungen/Backup/Sync, core/backup (Prüfsumme Klartext), Suchverlauf, Kalender-Abo-Prüfung, Verbindungsprotokoll, Tresor-UI (Warnung schwaches Master-Passwort, keine Krypto-Änderung)",
+   "hotspots": "core/sync/** gehört dem Sync-Chat: LWW-Regel unberührt, Koppeln ohne Server nur als Entwurf in docs/features; pages/Settings.tsx klein halten; Server-Fix F-05 nur nach Absprache mit Sven",
+   "prompt_sketch": "Phase 1: Entwurf „Mit Partner teilen“ (QR/Datei, kein Anbieter-Konto) und Verbindungsprotokoll, Stopp. Dann die kleinen Funde: Verlauf löschbar/abschaltbar, Klartext-Backup mit Prüfsumme und „Verschlüsselt“ zuerst, Warnung bei http://, Adressprüfung Kalender-Abo.",
+   "acceptance": "Netzwerk-Test (nichts ohne Klick), Backup-Fixtures 0.3.x weiter grün, negative-list-Test Diagnose, `exclusion.test.ts` unverändert grün."
+  }
+ ]
+}

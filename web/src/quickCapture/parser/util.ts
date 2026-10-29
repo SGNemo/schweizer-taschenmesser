@@ -74,3 +74,41 @@ export function take(s: Scan, re: RegExp): RegExpExecArray | null {
   s.t = `${s.t.slice(0, m.index)} ${s.t.slice(m.index + m[0].length)}`;
   return m;
 }
+
+export const NUMBER_WORDS: Record<string, number> = {
+  ein: 1,
+  eine: 1,
+  einen: 1,
+  einem: 1,
+  einer: 1,
+  eins: 1,
+  zwei: 2,
+  zwo: 2,
+  drei: 3,
+  vier: 4,
+  fünf: 5,
+  fuenf: 5,
+  sechs: 6,
+  sieben: 7,
+  acht: 8,
+  neun: 9,
+  zehn: 10,
+  elf: 11,
+  zwölf: 12,
+  zwoelf: 12,
+  dreizehn: 13,
+  vierzehn: 14,
+  fünfzehn: 15,
+  fuenfzehn: 15,
+  zwanzig: 20,
+  dreißig: 30,
+  dreissig: 30,
+  vierzig: 40,
+  fünfzig: 50,
+  fuenfzig: 50,
+};
+export const NUM_SRC = Object.keys(NUMBER_WORDS)
+  .sort((a, b) => b.length - a.length)
+  .join('|');
+/** "20" or "zwanzig". */
+export const toNumber = (s: string): number => NUMBER_WORDS[s.toLowerCase()] ?? Number(s);
