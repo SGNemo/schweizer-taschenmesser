@@ -135,7 +135,7 @@ export const focus: Strings['focus'] = {
     text: (n: number) =>
       n <= 1 ? `${n} tarefa ainda está esperando.` : `${n} tarefas ainda estão esperando.`,
     replan: 'Replanejar',
-    replanHint: 'Distribui pelos próximos dias.',
+    replanHint: 'Aberto há algum tempo, não urgente. Replanejar distribui pelos próximos dias.',
     replanned: 'Distribuído pelos próximos dias.',
   },
   mode: {

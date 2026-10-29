@@ -102,20 +102,20 @@ test.describe('Pinning on the home screen', () => {
     await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
     const more = page.getByTestId('home-calm-more');
     const label = (await more.getByRole('button').first().textContent()) ?? '';
-    const count = Number(/(\d+) Widgets/.exec(label)?.[1]);
+    const count = Number(/(\d+) Karten/.exec(label)?.[1]);
     expect(count).toBeGreaterThan(1);
 
-    await more.getByRole('button', { name: 'Anheften…' }).click();
+    await more.getByRole('button', { name: 'Karte hinzufügen…' }).click();
     // The existing edit mode, now with a pin per widget.
     await page
       .getByTestId('widget-finance:balance')
-      .getByRole('button', { name: 'Kontostand anheften' })
+      .getByRole('button', { name: 'Kontostand hinzufügen' })
       .click();
-    await expect(page.getByTestId('widget-finance:balance')).toContainText('Angeheftet');
+    await expect(page.getByTestId('widget-finance:balance')).toContainText('Hinzugefügt');
     await page.getByRole('button', { name: 'Fertig' }).click();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     await expect(page.getByTestId('widget-todos:open')).toHaveCount(0);
-    await expect(page.getByTestId('home-calm-more')).toContainText(`${count - 1} Widgets`);
+    await expect(page.getByTestId('home-calm-more')).toContainText(`${count - 1} Karten`);
 
     await page.reload();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
@@ -123,11 +123,11 @@ test.describe('Pinning on the home screen', () => {
     await page.getByRole('button', { name: 'Anpassen' }).click();
     await page
       .getByTestId('widget-finance:balance')
-      .getByRole('button', { name: 'Kontostand lösen' })
+      .getByRole('button', { name: 'Kontostand entfernen' })
       .click();
     await page.getByRole('button', { name: 'Fertig' }).click();
     await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
-    await expect(page.getByTestId('home-calm-more')).toContainText(`${count} Widgets`);
+    await expect(page.getByTestId('home-calm-more')).toContainText(`${count} Karten`);
   });
 
   test('pinning a hidden widget shows it again', async ({ page }) => {
@@ -136,7 +136,7 @@ test.describe('Pinning on the home screen', () => {
     const widget = page.getByTestId('widget-finance:balance');
     await widget.getByRole('button', { name: 'Ausblenden' }).click();
     await expect(widget).toContainText('Ausgeblendet');
-    await widget.getByRole('button', { name: 'Kontostand anheften' }).click();
+    await widget.getByRole('button', { name: 'Kontostand hinzufügen' }).click();
     await expect(widget).not.toContainText('Ausgeblendet');
     await page.getByRole('button', { name: 'Fertig' }).click();
     await expect(widget).toBeVisible();

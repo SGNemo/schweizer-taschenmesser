@@ -2,7 +2,7 @@ import type { Strings } from '@/strings';
 
 export const notifications: Strings['notifications'] = {
   summary: (count: number, titles: string[]) => ({
-    title: `Mais lembretes · ${count}`,
+    title: `${count} lembretes`,
     body: titles.slice(0, 3).join(' · ') + (titles.length > 3 ? ' …' : ''),
   }),
   title: 'Notificações',

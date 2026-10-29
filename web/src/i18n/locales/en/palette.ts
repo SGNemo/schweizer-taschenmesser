@@ -4,11 +4,12 @@ export const palette: Strings['palette'] = {
   /** Typing the start of the word for settings shows settings entries (first letters, lower case). */
   settingsPrefix: 'sett',
   recent: 'Recently used',
-  title: 'Command palette',
+  title: 'Search',
   placeholder: 'Search, jump or ask …',
   empty: 'No results',
   hint: 'Ctrl+K',
   newEntry: (what: string) => `New: ${what}`,
-  nextReminder: 'Next reminder',
-  randomReminder: 'Random reminder',
+  helpCommand: 'Open help and guide',
+  nextReminder: 'Show next reminder',
+  randomReminder: 'Show a reminder',
 };

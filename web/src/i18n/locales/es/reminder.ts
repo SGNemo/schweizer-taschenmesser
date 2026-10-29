@@ -5,8 +5,8 @@ export const reminder: Strings['reminder'] = {
     title: 'Recordatorios',
     bell: (n: number) =>
       n === 0 ? 'Recordatorios' : `Recordatorios, ${n} ${n === 1 ? 'pendiente' : 'pendientes'}`,
-    next: 'Próximo recordatorio',
-    random: 'Recordatorio al azar',
+    next: 'Mostrar el próximo recordatorio',
+    random: 'Mostrar un recordatorio',
     another: 'Otro más',
     allRead: 'Todo leído',
     list: 'Pendientes',

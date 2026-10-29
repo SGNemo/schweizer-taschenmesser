@@ -5,7 +5,7 @@ export const localApi: Strings['localApi'] = {
   intro:
     'A local interface that lets an AI on this computer (e.g. Claude Code, Claude Desktop) write data into your modules and – if you allow it – read it. It can only be reached from this computer.',
   unsupported:
-    'The interface is only available in the Windows app. In the browser and on Android, use “Paste JSON” under Starter data.',
+    'The interface is only available in the Windows app. In the browser and on Android, use “Paste JSON” under Import.',
   enable: 'Turn on local interface',
   enableHint: 'Off by default',
   port: 'Port',

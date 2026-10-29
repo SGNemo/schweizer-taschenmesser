@@ -18,12 +18,12 @@ test.describe('KI abschalten', () => {
     await ready(page, '/todos');
     // On the ToDos page the entry lives in the "⋯" menu (no second button in the area header).
     await expect(
-      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Mit KI eintragen' }),
+      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Satz eintragen' }),
     ).toBeVisible();
     await page.keyboard.press('Escape');
     await openPalette(page);
     await page.getByRole('combobox').fill('offene Rechnungen');
-    await expect(page.getByRole('option', { name: /Assistent fragen/ })).toBeVisible();
+    await expect(page.getByRole('option', { name: /Frage stellen/ })).toBeVisible();
     await page.keyboard.press('Escape');
 
     await ready(page, '/settings/ki');
@@ -37,12 +37,12 @@ test.describe('KI abschalten', () => {
 
     await ready(page, '/todos');
     await expect(
-      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Mit KI eintragen' }),
+      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Satz eintragen' }),
     ).toHaveCount(0);
     await page.keyboard.press('Escape');
     await openPalette(page);
     await page.getByRole('combobox').fill('offene Rechnungen');
-    await expect(page.getByRole('option', { name: /Assistent fragen/ })).toHaveCount(0);
+    await expect(page.getByRole('option', { name: /Frage stellen/ })).toHaveCount(0);
     await expect(page.getByRole('option', { name: /Mit KI/ })).toHaveCount(0);
     await page.keyboard.press('Escape');
 
@@ -54,7 +54,7 @@ test.describe('KI abschalten', () => {
     await expect(page.locator('section[aria-labelledby="ai"]')).toBeVisible();
     await ready(page, '/todos');
     await expect(
-      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Mit KI eintragen' }),
+      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Satz eintragen' }),
     ).toBeVisible();
   });
 

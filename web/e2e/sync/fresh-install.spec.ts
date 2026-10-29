@@ -30,14 +30,16 @@ async function finishSetup(page: Page) {
   await ready(page, '/settings/ueber');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   const dialog = wizard(page);
+  // A fresh installation opens the three questions; this run wants the full list.
+  await dialog.getByRole('button', { name: 'Alle Schritte ansehen' }).click();
   const summary = dialog.getByTestId('setup-summary');
-  const stepOf = dialog.getByText(/^Schritt \d+ von \d+$/);
+  const title = dialog.locator('h3').first();
   for (let i = 0; i < 40; i++) {
-    await expect(stepOf.or(summary)).toBeVisible();
+    await expect(title).toBeVisible();
     if (await summary.isVisible()) break;
-    const label = await stepOf.textContent();
-    await dialog.getByRole('button', { name: 'Überspringen' }).click();
-    await expect(stepOf.or(summary)).not.toHaveText(label ?? '');
+    const label = await title.textContent();
+    await dialog.getByRole('button', { name: 'Später', exact: true }).click();
+    await expect(title).not.toHaveText(label ?? '');
   }
   await dialog.getByRole('button', { name: 'Fertig' }).click();
   await expect(wizard(page)).toHaveCount(0);

@@ -123,7 +123,7 @@ export const focus: Strings['focus'] = {
   waiting: {
     text: (n: number) => (n === 1 ? '1 to-do is still waiting.' : `${n} to-dos are still waiting.`),
     replan: 'Replan',
-    replanHint: 'Spreads them over the next few days.',
+    replanHint: 'Open for a while, not urgent. Re-planning spreads them over the next few days.',
     replanned: 'Spread over the next few days.',
   },
   mode: {

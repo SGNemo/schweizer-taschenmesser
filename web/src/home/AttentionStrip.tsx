@@ -91,6 +91,7 @@ export function AttentionStrip() {
                 .join(' · ')}
             </span>
           </summary>
+          <p className={styles.reassure}>{t.attention.waitingExplain}</p>
           <Chips items={waiting} />
           <p className={styles.reassure}>{t.attention.nothingNow}</p>
         </details>

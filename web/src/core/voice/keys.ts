@@ -1,3 +1,5 @@
+import { getLang } from '@/core/i18n/lang';
+
 /**
  * Key strings of the voice key: `F4`, `Alt+M`, `Ctrl+Shift+Space` (the same form the global
  * hotkeys use). A bare key is only allowed for F1–F12 – anything else would steal typing.
@@ -6,6 +8,13 @@ type KeyEventLike = Pick<
   KeyboardEvent,
   'key' | 'code' | 'ctrlKey' | 'shiftKey' | 'altKey' | 'metaKey'
 >;
+
+/** German key cap names (the other languages keep the English ones, see docs/i18n/GLOSSARY.md). */
+const GERMAN_KEY_NAMES: Record<string, string> = {
+  Ctrl: 'Strg',
+  Shift: 'Umschalt',
+  Space: 'Leertaste',
+};
 
 const MODIFIERS = new Set(['Control', 'Shift', 'Alt', 'Meta', 'AltGraph']);
 const F_KEY = /^F([1-9]|1[0-2])$/;
@@ -40,4 +49,8 @@ export function isValidVoiceKey(key: string): boolean {
 }
 
 /** Display form: `Ctrl+Alt+M` → `Ctrl + Alt + M`-style key caps are built by the caller. */
-export const keyCaps = (key: string): string[] => key.split('+').filter(Boolean);
+export const keyCaps = (key: string): string[] =>
+  key
+    .split('+')
+    .filter(Boolean)
+    .map((k) => (getLang() === 'de' ? (GERMAN_KEY_NAMES[k] ?? k) : k));

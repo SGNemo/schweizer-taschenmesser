@@ -36,15 +36,17 @@ for (const vp of VIEWPORTS) {
       .getByRole('button', { name: 'Einrichtung starten' })
       .click();
     await expect(wizard(page)).toBeVisible();
+    await shot('1b-question');
+    await wizard(page).getByRole('button', { name: 'Alle Schritte ansehen' }).click();
     await wizard(page).getByLabel('Dein Name (optional)').fill('Erika Erfunden');
     await shot('2-basics');
     await wizard(page).getByRole('button', { name: 'Weiter' }).click();
-    await wizard(page).getByRole('button', { name: 'Überspringen' }).click(); // sync
+    await wizard(page).getByRole('button', { name: 'Später', exact: true }).click(); // sync
     await expect(wizard(page).getByRole('heading', { name: 'Profil und Module' })).toBeVisible();
     await wizard(page).getByTestId('profile-minimal').click();
     await shot('3-profiles-diff');
-    await wizard(page).getByRole('button', { name: 'Überspringen' }).click();
-    await wizard(page).getByRole('button', { name: 'Überspringen' }).click(); // tools
+    await wizard(page).getByRole('button', { name: 'Später', exact: true }).click();
+    await wizard(page).getByRole('button', { name: 'Später', exact: true }).click(); // tools
     await expect(wizard(page).getByRole('heading', { name: 'KI-Anbieter' })).toBeVisible();
     await shot('4-ai');
 

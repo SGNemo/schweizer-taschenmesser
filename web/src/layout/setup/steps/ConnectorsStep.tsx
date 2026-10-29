@@ -34,7 +34,8 @@ export default function ConnectorsStep(_props: SetupStepProps) {
                 </li>
               ))}
             </ul>
-            {def.authType === 'oauth-pkce' ? (
+            {/* The "Testing" note is about Google Cloud projects; Spotify and others have no such mode. */}
+            {def.id === 'google' ? (
               <>
                 <p>{s.testingNote}</p>
                 <p>{s.stepsNote}</p>

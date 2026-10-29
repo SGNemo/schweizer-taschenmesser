@@ -146,7 +146,7 @@ describe('notification limits together', () => {
     const hour = { from: T('08:55'), to: T('09:59') };
     // The whole hour at once (Android schedule, Web Push upload): firsts stay, repeats are folded.
     const all = await collectDue(hour, manifests);
-    expect(all.map((n) => n.title)).toEqual(['Eins', 'Zwei', 'Weitere Erinnerungen · 4']);
+    expect(all.map((n) => n.title)).toEqual(['Eins', 'Zwei', '4 Erinnerungen']);
     expect(all[2]!.body).toContain('Drei');
     // The open app sees the hour tick by tick: the three firsts are within the cap, no repeat follows.
     const d = device('08:55');

@@ -59,8 +59,8 @@ test.describe('Home screen', () => {
       'true',
     );
 
-    await page.getByRole('button', { name: 'Widgets', exact: true }).click();
-    const sheet = page.getByRole('dialog', { name: 'Widgets der Übersicht' });
+    await page.getByRole('button', { name: 'Karten', exact: true }).click();
+    const sheet = page.getByRole('dialog', { name: 'Karten der Übersicht' });
     await expect(sheet).toContainText('Ausblenden betrifft nur die Übersicht');
     const todos = sheet.getByRole('switch', { name: 'Offene ToDos' });
     await todos.click();
@@ -160,7 +160,7 @@ test.describe('Home screen', () => {
 
     await ready(page, '/');
     await page.getByRole('button', { name: 'Anpassen' }).click();
-    await page.getByRole('button', { name: 'Widgets', exact: true }).click();
+    await page.getByRole('button', { name: 'Karten', exact: true }).click();
     await page.getByRole('switch', { name: 'Jetzt wichtig' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Schließen' }).click();
     await page.getByRole('button', { name: 'Fertig' }).click();

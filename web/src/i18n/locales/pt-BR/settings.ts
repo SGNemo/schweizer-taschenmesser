@@ -37,7 +37,7 @@ export const settings: Strings['settings'] = {
       'Data',
     ],
     appearance: ['Tema', 'Modo escuro', 'Fonte', 'Animação'],
-    modules: ['Biblioteca', 'Ativar módulo', 'Dados iniciais'],
+    modules: ['Biblioteca', 'Ativar módulo', 'Importar'],
     tools: ['Barra de ferramentas', 'Ordem'],
     notifications: ['Push', 'Permissão', 'Lembrete'],
     'browser-extension': ['Brave', 'Chrome', 'Preenchimento automático'],
@@ -149,7 +149,7 @@ export const settings: Strings['settings'] = {
     },
     module: {
       title: 'Módulos',
-      description: 'Configurações dos módulos e dados iniciais',
+      description: 'Configurações dos módulos e importação',
       keywords: ['Lembrete', 'Dados iniciais', 'Importar'],
     },
     werkzeuge: {
@@ -274,7 +274,7 @@ export const settings: Strings['settings'] = {
   motion: 'Movimento',
   motionOptions: { system: 'Como o sistema', reduce: 'Menos' },
   homeView: 'Visão geral',
-  homeViewOptions: { all: 'Todos os widgets', calm: 'Só o essencial' },
+  homeViewOptions: { all: 'Todos os cartões', calm: 'Só o essencial' },
   density: 'Densidade',
   densityOptions: { normal: 'Normal', compact: 'Compacta' },
   modules: 'Módulos',

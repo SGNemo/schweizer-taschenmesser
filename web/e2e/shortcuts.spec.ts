@@ -61,7 +61,7 @@ test.describe('desktop', () => {
   test('F3 opens the palette, which shows the key behind an action', async ({ page }) => {
     await ready(page, '/');
     await page.keyboard.press('F3');
-    const palette = page.getByRole('dialog', { name: 'Befehlspalette' });
+    const palette = page.getByRole('dialog', { name: 'Suchen' });
     await expect(palette).toBeVisible();
     await page.getByRole('combobox').fill('Timer');
     const option = palette.getByRole('option', { name: /Werkzeug: Timer/ }).first();
