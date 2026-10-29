@@ -17,6 +17,12 @@ Source: `docs/qa/CONSOLIDATED.md` (B19, B08, B09, V05, V08, V10, V15, V20). Stat
 3. **C – Delete safe** (`feat/qa-delete-undo`): Unterlagen delete via `deleteWithUndo`, file kept while the record is a tombstone; drafts kept on Esc/backdrop via `useDraft` per form (longer TTL), **no `ui/Dialog` change** (so no clash with P2); e2e undo + draft.
 4. **D – Zuletzt gelöscht** (`feat/qa-recently-deleted`): read-only tombstone list (30 days) with restore, "Endgültig löschen" and a switch; additive `core/db` read helper.
 
+## Answers from Sven (2026-10-29)
+- Keep the file while the record is a tombstone; remove it after 30 days or on "Endgültig löschen" (replaces the vault exception in `decisions/ui-components.md`).
+- "Zuletzt gelöscht": start with Unterlagen, Abos, Termine/Erinnerungen (allowlist, `accounts` excluded); switch on by default.
+- "Ruhe" = one term only; coupling to shifts/events is a later package.
+- Order A → B → C → D, stop between packages, no `ui/Dialog` change.
+
 ## Android hand test (answers B19; record per step: on time / late (min) / never)
 Device: note model, Android version, battery mode. APK from the latest release, notifications allowed.
 1. Reminder in 3 min → swipe Nemo from recents → screen off → wait.
