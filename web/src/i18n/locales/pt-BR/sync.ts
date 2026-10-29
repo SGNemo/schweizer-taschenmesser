@@ -42,7 +42,10 @@ export const sync: Strings['sync'] = {
   state: { off: 'Desligada', idle: 'Sincronizado', syncing: 'Sincronizando…', error: 'Erro' },
   badge: (state: string) => `Sincronização: ${state}`,
   detailsTitle: 'Status',
-  lastResult: (pulled: number, pushed: number) => `Última: ${pulled} recebidas, ${pushed} enviadas`,
+  lastResult: (applied: number, pushed: number) =>
+    applied === 0 && pushed === 0
+      ? 'Última: tudo em dia, nada novo'
+      : `Última: ${applied} alterações aplicadas, ${pushed} enviadas`,
   rejected: (n: number) =>
     n <= 1
       ? `${n} alteração recebida não pôde ser descriptografada e foi ignorada.`

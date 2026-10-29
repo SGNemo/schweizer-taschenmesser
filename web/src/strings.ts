@@ -2291,8 +2291,10 @@ export const de = {
     state: { off: 'Aus', idle: 'Synchronisiert', syncing: 'Synchronisiere …', error: 'Fehler' },
     badge: (state: string) => `Synchronisation: ${state}`,
     detailsTitle: 'Status',
-    lastResult: (pulled: number, pushed: number) =>
-      `Zuletzt: ${pulled} empfangen, ${pushed} gesendet`,
+    lastResult: (applied: number, pushed: number) =>
+      applied === 0 && pushed === 0
+        ? 'Zuletzt: alles aktuell, nichts Neues'
+        : `Zuletzt: ${applied} Änderungen übernommen, ${pushed} gesendet`,
     rejected: (n: number) =>
       `${n} empfangene Änderungen konnten nicht entschlüsselt werden und wurden übersprungen.`,
     failuresInRow: (n: number) => (n === 1 ? '1 Fehlversuch' : `${n} Fehlversuche in Folge`),

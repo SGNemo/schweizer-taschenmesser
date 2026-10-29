@@ -46,8 +46,10 @@ export const sync: Strings['sync'] = {
   state: { off: 'Désactivée', idle: 'Synchronisé', syncing: 'Synchronisation…', error: 'Erreur' },
   badge: (state: string) => `Synchronisation : ${state}`,
   detailsTitle: 'État',
-  lastResult: (pulled: number, pushed: number) =>
-    `Dernière fois : ${pulled} reçu(s), ${pushed} envoyé(s)`,
+  lastResult: (applied: number, pushed: number) =>
+    applied === 0 && pushed === 0
+      ? 'Dernière fois : tout est à jour, rien de nouveau'
+      : `Dernière fois : ${applied} modification(s) appliquée(s), ${pushed} envoyée(s)`,
   rejected: (n: number) =>
     n <= 1
       ? `${n} modification reçue n’a pas pu être déchiffrée et a été ignorée.`

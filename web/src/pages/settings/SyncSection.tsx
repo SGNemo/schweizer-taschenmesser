@@ -103,7 +103,7 @@ export function SyncSection() {
                 <>
                   <dt>{t.sync.detailsTitle}</dt>
                   <dd data-testid="sync-last-result">
-                    {t.sync.lastResult(status.lastResult.pulled, status.lastResult.pushed)}
+                    {t.sync.lastResult(status.lastResult.applied, status.lastResult.pushed)}
                   </dd>
                 </>
               ) : null}

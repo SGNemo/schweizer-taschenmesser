@@ -21,6 +21,7 @@ export function SyncDevices() {
   const [error, setError] = useState<string | undefined>();
   // The list is read again after every sync, so devices that joined or were locked elsewhere show up.
   const lastSyncAt = useSyncStatus((s) => s.lastSyncAt);
+  const revoked = useSyncStatus((s) => s.error) === 'revoked';
 
   useEffect(() => {
     let live = true;
@@ -53,7 +54,8 @@ export function SyncDevices() {
     else setError(t.sync.deviceLockFailed);
   }
 
-  if (devices === undefined) return null;
+  // A locked device cannot ask the server, and the status above already says why.
+  if (devices === undefined || revoked) return null;
   return (
     <div className={styles.form} data-testid="sync-devices">
       <p className={styles.legend}>{t.sync.devicesTitle}</p>
