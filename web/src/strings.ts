@@ -1083,7 +1083,8 @@ export const de = {
     waiting: {
       text: (n: number) => (n === 1 ? '1 ToDo wartet noch.' : `${n} ToDos warten noch.`),
       replan: 'Neu planen',
-      replanHint: 'Schon länger offen, nicht dringend. Neu planen verteilt sie auf die nächsten Tage.',
+      replanHint:
+        'Schon länger offen, nicht dringend. Neu planen verteilt sie auf die nächsten Tage.',
       replanned: 'Auf die nächsten Tage verteilt.',
     },
     mode: {
