@@ -1,0 +1,323 @@
+{
+ "persona": "lena-pflegekraft",
+ "build": "develop@4af432d (web 1.0.0, Vite dev + prod build)",
+ "date": "2026-10-29",
+ "findings": [
+  {
+   "id": "B-01",
+   "severity": "hoch",
+   "area": "lists",
+   "platform": "Android-Viewport 412x915 (PWA)",
+   "title": "Einkaufsliste: zwei Kästchen pro Zeile, das linke wählt nur aus statt abzuhaken",
+   "steps": [
+    "Haushalt → Listen → Einkauf öffnen",
+    "Das linke, ganz außen liegende Kästchen bei „Milch“ antippen"
+   ],
+   "expected": "Artikel ist abgehakt (so verhalten sich alle Einkaufslisten-Apps).",
+   "actual": "Es erscheint eine Leiste „1 ausgewählt · Abhaken · Löschen · Abbrechen“. Abgehakt wird erst mit dem zweiten, rechten Kästchen. Beide sehen gleich aus; das linke trägt nur das Etikett „Auswählen“. Im Laden (einhändig, im Gehen) trifft man oft das falsche; daneben liegt der Papierkorb.",
+   "screenshot": "screenshots/46-list-second-box.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-02",
+   "severity": "hoch",
+   "area": "calendar/reminders/notifications",
+   "platform": "Browser/PWA (APK nicht prüfbar)",
+   "title": "Medikamenten-Erinnerung: bei geschlossener App nur mit Sync-Server-Push zugestellt (laut App-Text)",
+   "steps": [
+    "Schnell hinzufügen: „jeden Tag 8 Uhr Tabletten Mama“ → Speichern",
+    "Einstellungen → Benachrichtigungen lesen"
+   ],
+   "expected": "Eine täglich wiederkehrende Erinnerung klingelt auch, wenn die App zu ist.",
+   "actual": "Der Text sagt: „Bei geschlossener App kommen sie nur mit Push (siehe unten)“, und Push braucht „deinen Sync-Server“. Lena hat keinen. Die Erinnerung wird im Browser/PWA also nur geliefert, solange die App läuft. Im Dev-Build gespeichert und angezeigt (Jetzt wichtig), aber nirgends ein Hinweis beim Speichern, dass sie ohne Server evtl. nicht kommt. Ob die Android-APK lokal plant, konnte ohne Gerät nicht geprüft werden (README sagt „reminders even when the app is closed“, dann widerspricht der Einstellungstext dem).",
+   "screenshot": "screenshots/52-notif-settings.png",
+   "frequency": "immer (laut UI-Text)",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-03",
+   "severity": "mittel",
+   "area": "home/onboarding",
+   "platform": "Android-Viewport 412x915",
+   "title": "Willkommenskarte überdeckt das Lesehilfe-Angebot; Text abgeschnitten, Schalter nicht bedienbar",
+   "steps": [
+    "Frische Installation öffnen (leere Datenbank)",
+    "Startseite ansehen"
+   ],
+   "expected": "Zwei getrennte, lesbare Hinweise oder einer.",
+   "actual": "In der Karte „Willkommen bei Nemo“ sind zwei Sätze mit „…“ abgeschnitten („…in den Einstellungen…“, „…abschalten.…“). Die Knöpfe „Einschalten / Nicht jetzt“ der Lesehilfe liegen laut DOM bei y≈292 px genau unter den Knöpfen „Einrichtung starten / Später“; sichtbar sind sie nicht. Der erste Eindruck wirkt kaputt. Tritt auch nach Backup-Import in leere App auf.",
+   "screenshot": "screenshots/01-fresh-start.png",
+   "frequency": "immer bei leerer App",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-04",
+   "severity": "mittel",
+   "area": "ui/layout",
+   "platform": "Android-Viewport 412x915",
+   "title": "Runder „+“-Knopf verdeckt Bedienelemente und Inhalte",
+   "steps": [
+    "Planen → Kalender, Monat, nach unten scrollen (letzte Spalte, So 25 ist verdeckt)",
+    "Mehr → Werkzeuge: Schalter bei „Währung“ liegt unter dem Knopf"
+   ],
+   "expected": "Inhalt und Schalter bleiben erreichbar.",
+   "actual": "Der Knopf liegt über dem rechten Rand; dort sitzen oft Schalter, Papierkörbe, Sonntagsspalte. Muss erst weiter scrollen oder daneben tippen.",
+   "screenshot": "screenshots/90-tools.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-05",
+   "severity": "mittel",
+   "area": "home",
+   "platform": "Android-Viewport 412x915",
+   "title": "„Heute“ sagt „Noch nichts geplant“, obwohl „Jetzt wichtig“ eine Erinnerung für heute zeigt",
+   "steps": [
+    "Erinnerung „Tabletten Mama“ heute 08:00 anlegen",
+    "Startseite öffnen"
+   ],
+   "expected": "„Heute“ enthält die Erinnerung oder spricht nicht von „nichts geplant“.",
+   "actual": "Oben „Jetzt wichtig: Tabletten Mama, heute um 08:00“, direkt darunter „Heute · Noch nichts geplant. Eine Sache reicht.“ Wirkt widersprüchlich; die Karte „Heute“ kennt nur ToDos.",
+   "screenshot": "screenshots/20-home-with-reminder.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-06",
+   "severity": "niedrig",
+   "area": "setup",
+   "platform": "Android-Viewport 412x915",
+   "title": "Einrichtung: „Schritt x von 12“, später „10 von 11 Schritten erledigt“; Karte bleibt mit drei Knöpfen auf der Startseite",
+   "steps": [
+    "Einrichtung durchklicken, Benachrichtigungen überspringen",
+    "Startseite ansehen"
+   ],
+   "expected": "Eine Zahl, und die Karte verschwindet oder hat einen Knopf.",
+   "actual": "Zahlen passen nicht zusammen. Es bleibt die Karte „Einrichtung“ mit „Einrichtung öffnen“, „Einrichtung fortsetzen“ und „Ausblenden“ (die ersten zwei tun fast dasselbe). Das übersprungene Benachrichtigungen-Häkchen hält sie dauerhaft sichtbar.",
+   "screenshot": "screenshots/04-home-after-setup.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-07",
+   "severity": "niedrig",
+   "area": "calendar/ui",
+   "platform": "320x568 und Desktop 1280x800",
+   "title": "Kalender-Kopf: Bereichsauswahl „Kalender“ wird zum Schnipsel zusammengedrückt; bei 320 px Tab „Personen“ und Suchfeld abgeschnitten",
+   "steps": [
+    "Fenster auf 320 px (oder Desktop-Breite) ziehen, Planen → Kalender"
+   ],
+   "expected": "Alle Tabs/Chips lesbar.",
+   "actual": "Die Pille neben „Kalender“ ist nur ein Strich/Halbkreis, das Suchfeld zeigt „S.“, der Tab „Personen“ fehlt.",
+   "screenshot": "screenshots/72-small-320.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-08",
+   "severity": "niedrig",
+   "area": "calendar",
+   "platform": "Android-Viewport 412x915",
+   "title": "Mehrtägiger Nachtdienst zeigt nur Beginn („21:30“), kein Ende",
+   "steps": [
+    "Termin „Nachtdienst“ 1.11. 21:30, Ende 2.11. 06:30 anlegen",
+    "Wochenliste ansehen"
+   ],
+   "expected": "„21:30–06:30“ oder „bis Mo 06:30“.",
+   "actual": "Nur „21:30“. Ob 6:30 gespeichert ist, sieht man erst im Bearbeiten-Dialog.",
+   "screenshot": "screenshots/11-week.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-09",
+   "severity": "niedrig",
+   "area": "i18n",
+   "platform": "Android-Viewport 412x915",
+   "title": "Englische Oberfläche: Schnellerfassung zeigt „06:00 Uhr“",
+   "steps": [
+    "Einstellungen → Allgemein → English",
+    "Schnellerfassung: „Frühdienst morgen 6 Uhr“ eintippen"
+   ],
+   "expected": "„06:00“ bzw. englisches Zeitformat.",
+   "actual": "Chip „06:00 Uhr“ bleibt deutsch.",
+   "screenshot": "screenshots/95-quickadd-shift.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-10",
+   "severity": "niedrig",
+   "area": "calendar/forms",
+   "platform": "Chromium-Testumgebung (unsicher)",
+   "title": "Datum/Uhrzeit-Felder zeigen US-Format („10/29/2026“, „09:00 AM“) in deutscher Oberfläche",
+   "steps": [
+    "Planen → Neuer Termin"
+   ],
+   "expected": "29.10.2026 / 09:00.",
+   "actual": "US-Format, Platzhalter „mm/dd/yyyy“. Kann an der Test-Chromium-Locale liegen (native Eingabefelder folgen dem System), auf dem Handy der Persona nicht verifiziert. Notiert, weil Lena sich bei 05.11. vs. 11.05. vertun würde.",
+   "screenshot": "screenshots/09-more-fields.png",
+   "frequency": "immer in dieser Umgebung",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "B-11",
+   "severity": "niedrig",
+   "area": "ui/toasts",
+   "platform": "Android-Viewport 412x915",
+   "title": "Zwei gestapelte Hinweise („Abgehakt.“, „1 Eintrag gelöscht.“) verdecken ca. ein Fünftel des Bildschirms samt Navigation",
+   "steps": [
+    "Einkauf: einen Artikel abhaken, gleich danach einen löschen"
+   ],
+   "expected": "Hinweise stören die Liste nicht, oder ein einzelner Hinweis.",
+   "actual": "Beide stehen übereinander über den letzten Zeilen und der unteren Leiste, solange sie sichtbar sind.",
+   "screenshot": "screenshots/48-after-add.png",
+   "frequency": "immer",
+   "type": "bug",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-01",
+   "benefit": "hoch",
+   "area": "setup",
+   "title": "Einrichtung auf 3 Schritte kürzen, Rest später anbieten",
+   "situation": "Lena will in unter einer Minute loslegen.",
+   "problem": "12 Schritte, darunter KI-Anbieter, Konten verknüpfen, Import per KI, Werkzeugkasten, Backup, Sync. Nach Schritt 3 (Profil wählen) hätte sie abgebrochen. „Weiter“ geht auch ohne Profilwahl.",
+   "proposal": "Nur Sprache/Name, Profil („Alltag“ vorauswählen), Benachrichtigungen. Alles andere als einzelne Hinweise, wenn Lena das Modul erstmals öffnet.",
+   "example": "Banking-Apps, die erst beim ersten Bedarf nach Rechten fragen.",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-02",
+   "benefit": "hoch",
+   "area": "calendar",
+   "title": "Schicht-Vorlagen mit festen Zeiten und Ende direkt sichtbar",
+   "situation": "Lena trägt ca. 15 Dienste im Monat ein (Früh 06:00–14:30, Spät 13:30–22:00, Nacht 21:30–06:30).",
+   "problem": "Pro Dienst: Planen, Neuer Termin, Titel, Datum, Beginn, „Mehr Felder“, Ende, Speichern ≈ 15–18 Taps mit nativen Pickern, ca. 1–2 Min. Ende steht hinter „Mehr Felder“. Schnellerfassung erkennt „6 Uhr“, verwirft aber „bis 14:30“. „Duplizieren“ existiert, spart aber nicht das Datum.",
+   "proposal": "„Schicht eintragen“: drei Vorlagen-Kacheln, dann nur Tage im Monatsraster antippen. Schnellerfassung soll „6–14:30“ als Zeitspanne lesen. Eigene Schichtnamen/-zeiten speicherbar.",
+   "example": "Schichtplan-Apps (z. B. Shift-Kalender) mit Tippen-auf-Tage-Eintrag.",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-03",
+   "benefit": "hoch",
+   "area": "calendar",
+   "title": "Monatsansicht: Dienstart je Tag sichtbar (Kürzel/Farbe + Text)",
+   "situation": "Lena will auf einen Blick sehen, wann sie Früh/Spät/Nacht hat.",
+   "problem": "Der Monat zeigt für jeden Termin denselben orangen Punkt. Den Dienst sieht man nur in Woche/Tag.",
+   "proposal": "Kürzel „F/S/N“ in der Zelle oder Titelanfang; Farbe nur zusätzlich zu Text.",
+   "example": "Google Kalender zeigt Titel in der Zelle.",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-04",
+   "benefit": "hoch",
+   "area": "notifications",
+   "title": "„Zock-Modus“/„Stumm“ zu einem verständlichen „Ruhe“ zusammenlegen, an Schichten koppelbar",
+   "situation": "Nach der Nachtschicht schläft Lena tagsüber und will keine Töne, Mamas Tabletten sollen aber kommen.",
+   "problem": "Zwei getrennte Funktionen: „Stumm: Aus / 1 Stunde / Bis morgen“ in den Einstellungen und „Zock-Modus“ in Benachrichtigungen; dazu „Ruhezeit 22–07 Uhr“. Der Name „Zock-Modus“ sagt Lena nichts. Eine feste Ruhezeit passt nicht zu wechselnden Schichten.",
+   "proposal": "Ein Begriff („Nicht stören“), erreichbar von der Startseite, Zeitfenster pro Tag oder automatisch während eines Eintrags „Nachtdienst/Frei“.",
+   "example": "Android „Bitte nicht stören“ mit Zeitplan.",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-05",
+   "benefit": "hoch",
+   "area": "reminders",
+   "title": "Medikamenten-Erinnerung als eigener, ehrlicher Weg: Zustell-Hinweis und „genommen“-Bestätigung",
+   "situation": "Mama muss morgens und abends ihre Tabletten nehmen.",
+   "problem": "Erinnerung wird wie ein Kalendereintrag gespeichert (mit „Erinnerungen“-Knopf, der nur „Nächste/Zufällige Erinnerung“ zeigt, nichts anlegen lässt). Kein Hinweis beim Speichern, ob sie auch bei geschlossener App kommt; keine Bestätigung.",
+   "proposal": "Beim Speichern einer Erinnerung kurz prüfen und sagen: „Kommt auch bei geschlossener App“ oder „Nur bei geöffneter App – hier erlauben“. Optional Knopf „Genommen“ in der Benachrichtigung ohne Schuldtext.",
+   "example": "Medikamentenerinnerungs-Apps mit Tippen-zum-Bestätigen.",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-06",
+   "benefit": "mittel",
+   "area": "quick-add",
+   "title": "Schnellerfassung soll Abo, Rechnung und Geburtstag erkennen",
+   "situation": "„Netflix 12,99 monatlich“, „Strom 54,30 Euro bis Freitag“, „Geburtstag Anna 14.11.“",
+   "problem": "Netflix wird zur monatlichen Erinnerung ohne Betrag; Strom wird „Ausgabe 54,30 €“ statt Rechnung (Chip muss von Hand gewechselt werden); Geburtstag wird ToDo. Es gibt keinen Abo- und keinen Personen-Chip.",
+   "proposal": "Ziel-Chips Abo und Person ergänzen; Betrag + „bis“ → Rechnung vorschlagen.",
+   "example": "",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-07",
+   "benefit": "mittel",
+   "area": "home",
+   "title": "Morgenüberblick: ein kompakter Block „Heute“ statt 16 Widgets",
+   "situation": "Morgens in der Pause: Dienst heute? Was ist fällig? Tabletten?",
+   "problem": "Standard ist sehr ruhig (gut), aber dann fehlt Dienst/Termine; alles Weitere hinter „Mehr anzeigen · 16 Widgets“ ergibt eine Seite von ca. 6,7 Bildschirmhöhen.",
+   "proposal": "Option „Tagesblock“: Dienst/Termine heute, fällige Rechnungen, heutige Erinnerungen in einer Karte; „Mehr anzeigen“ nach Modul gruppieren.",
+   "example": "",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-08",
+   "benefit": "mittel",
+   "area": "settings",
+   "title": "„Sync & Backup“: Backup zuerst, Server-Teil zugeklappt",
+   "situation": "Lena will nur eine Sicherung.",
+   "problem": "Seite beginnt mit Server-Adresse, Zugangstoken, Ende-zu-Ende, Passphrase, Tailscale. Backup steht darunter; „Backup-Datei“ und „Backup prüfen“ vs. „Importieren“ sind nicht selbsterklärend. (Der Import selbst ist gut gemacht, siehe „Was gut ist“.)",
+   "proposal": "Reihenfolge tauschen, Synchronisation unter „Erweitert“ einklappen.",
+   "example": "",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-09",
+   "benefit": "mittel",
+   "area": "calendar",
+   "title": "Wiederholung für Schichtrhythmen (alle 2 Wochen, Mo–Fr)",
+   "situation": "Teilweise gleiche Dienste über Wochen.",
+   "problem": "Wiederholung kennt nur täglich/wöchentlich/monatlich/jährlich; „Mo–Fr“ in der Schnellerfassung wird ignoriert („Datum angenommen: heute“).",
+   "proposal": "Wochentage wählbar, Intervall (alle 2 Wochen).",
+   "example": "",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-10",
+   "benefit": "niedrig",
+   "area": "finance",
+   "title": "Finanzübersicht: Einnahmen/Ausgaben/Saldo nebeneinander",
+   "situation": "Geld ist knapp, Lena will schnell den Monat sehen.",
+   "problem": "Auf dem Handy belegen Kontostand, Einnahmen, Ausgaben und Saldo je eine volle Breite, der Monat ist erst nach 2 Bildschirmen komplett.",
+   "proposal": "Einnahmen/Ausgaben/Saldo in einer Zeile.",
+   "example": "",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  },
+  {
+   "id": "V-11",
+   "benefit": "niedrig",
+   "area": "lists",
+   "title": "Einkauf: Streichen/Tippen auf die ganze Zeile zum Abhaken, Papierkorb weg von der Daumenzone",
+   "situation": "Einhändig im Laden.",
+   "problem": "Siehe B-01; Papierkorb liegt direkt neben dem Kästchen, Rückgängig-Hinweis ist aber da (gut).",
+   "proposal": "Ganze Zeile antippen = abhaken; Auswahl über das Stift-Symbol.",
+   "example": "Bring!, Google Keep Einkaufslisten.",
+   "type": "improvement",
+   "persona": "Lena (Pflegekraft, Android-Handy, einhändig, wenig Geduld)"
+  }
+ ]
+}
