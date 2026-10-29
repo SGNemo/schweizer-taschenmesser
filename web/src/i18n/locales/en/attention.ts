@@ -22,7 +22,7 @@ export const attention: Strings['attention'] = {
   updateAvailable: 'Update available',
   waiting: (n: number) => `Still waiting · ${n}`,
   nothingNow: 'None of this has to happen now.',
-  waitingExplain: 'Overdue, but not urgent. You can re-plan them.',
+  waitingExplain: 'Open for a while, but not urgent. You can re-plan them.',
   todosWaiting: (n: number) => (n === 1 ? '1 to-do waiting' : `${n} to-dos waiting`),
   todosWaitingDetail: 'You can plan it again',
 };

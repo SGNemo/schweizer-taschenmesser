@@ -31,7 +31,7 @@ export const attention: Strings['attention'] = {
   updateAvailable: 'Actualización disponible',
   waiting: (n: number) => `En espera · ${n}`,
   nothingNow: 'Nada de esto tiene que ser ahora.',
-  waitingExplain: 'Vencido, pero no urgente. Puedes replanificarlo.',
+  waitingExplain: 'Abierto desde hace tiempo, pero no urgente. Puedes replanificarlo.',
   todosWaiting: (n: number) => (n === 1 ? '1 tarea en espera' : `${n} tareas en espera`),
   todosWaitingDetail: 'Puedes replanificar',
 };

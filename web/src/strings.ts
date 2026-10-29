@@ -1083,7 +1083,7 @@ export const de = {
     waiting: {
       text: (n: number) => (n === 1 ? '1 ToDo wartet noch.' : `${n} ToDos warten noch.`),
       replan: 'Neu planen',
-      replanHint: 'Überfällig, nicht dringend. Neu planen verteilt sie auf die nächsten Tage.',
+      replanHint: 'Schon länger offen, nicht dringend. Neu planen verteilt sie auf die nächsten Tage.',
       replanned: 'Auf die nächsten Tage verteilt.',
     },
     mode: {
@@ -1938,7 +1938,7 @@ export const de = {
     updateAvailable: 'Update verfügbar',
     waiting: (n: number) => `Wartet noch · ${n}`,
     nothingNow: 'Nichts davon muss jetzt sein.',
-    waitingExplain: 'Überfällig, aber nicht dringend. Du kannst sie neu planen.',
+    waitingExplain: 'Schon länger offen, aber nicht dringend. Du kannst sie neu planen.',
     todosWaiting: (n: number) => (n === 1 ? '1 ToDo wartet' : `${n} ToDos warten`),
     todosWaitingDetail: 'Neu planen möglich',
   },

@@ -136,7 +136,7 @@ test.describe('Focus and attention aids', () => {
     // "Wartet noch" is one group with a count (not a card plus a group); "Neu planen" sits inside it.
     await expect(page.locator('[data-group="overdue"]')).toContainText('Wartet noch');
     await expect(page.getByTestId('todos-waiting')).toContainText(
-      'Verteilt sie auf die nächsten Tage.',
+      'Neu planen verteilt sie auf die nächsten Tage.',
     );
     await expect(page.getByText('Überfällig', { exact: false })).toHaveCount(0);
     await page.getByRole('button', { name: 'Neu planen' }).click();

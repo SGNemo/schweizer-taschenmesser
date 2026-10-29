@@ -34,7 +34,7 @@ export const attention: Strings['attention'] = {
   updateAvailable: 'Atualização disponível',
   waiting: (n: number) => `Ainda esperando · ${n}`,
   nothingNow: 'Nada disso precisa ser agora.',
-  waitingExplain: 'Atrasado, mas não urgente. Você pode replanejar.',
+  waitingExplain: 'Aberto há algum tempo, mas não urgente. Você pode replanejar.',
   todosWaiting: (n: number) =>
     n === 0 || n === 1 ? `${n} tarefa esperando` : `${n} tarefas esperando`,
   todosWaitingDetail: 'Dá para replanejar',
