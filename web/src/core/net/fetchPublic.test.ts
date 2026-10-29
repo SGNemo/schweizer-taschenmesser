@@ -118,3 +118,28 @@ describe('fetchPublic (native branch)', () => {
     });
   });
 });
+
+describe('fetchPublic limits', () => {
+  it('ends with a timeout error when the host never answers', async () => {
+    nativeWith(() => new Promise<Response>(() => undefined));
+    await expect(
+      fetchPublic('https://cal.example.test/x.ics', undefined, 30),
+    ).rejects.toMatchObject({ code: 'timeout' });
+  });
+
+  it('refuses local and private targets before any request is made', async () => {
+    let called = false;
+    nativeWith(() => {
+      called = true;
+      return new Response(FEED, { status: 200, headers: { 'content-type': 'text/calendar' } });
+    });
+    for (const url of [
+      'http://127.0.0.1:8788/v1/health',
+      'http://169.254.169.254/latest/meta-data',
+      'https://localhost/x.ics',
+      'https://192.168.1.5/x.ics',
+    ])
+      await expect(fetchPublic(url)).rejects.toMatchObject({ code: 'network' });
+    expect(called).toBe(false);
+  });
+});

@@ -1,4 +1,5 @@
 /** The ICS addresses the user configured. They are secrets ("secret address in iCal format"). */
+import { isPublicHttpsUrl } from '@/core/net/publicUrl';
 import type { ConnectorContext } from '@/core/connectors/types';
 
 export interface IcsSubscription {
@@ -33,12 +34,11 @@ export async function saveSubscriptions(
   else await ctx.secrets.set(SECRET, JSON.stringify(list));
 }
 
-/** `webcal://` is an https address in disguise; anything but http(s) is refused. */
+/** `webcal://` is an https address in disguise; only public https addresses are accepted (the error text says so). */
 export function normalizeIcsUrl(input: string): string | undefined {
   const trimmed = input.trim().replace(/^webcal:\/\//i, 'https://');
   try {
-    const url = new URL(trimmed);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : undefined;
+    return isPublicHttpsUrl(trimmed) ? new URL(trimmed).toString() : undefined;
   } catch {
     return undefined;
   }

@@ -1,8 +1,8 @@
 /** Safety copy taken right before a restore, and the pruning shared with the other backup folders. */
 import { getPlatform } from '@/core/platform';
 import { now } from '@/core/time/now';
-import { createBackup, serializeBackup } from './backup';
-import { encryptBackup, serializeEncryptedBackup } from './encrypted';
+import { createBackup } from './backup';
+import { encryptBackup, serializeEncryptedBackup, serializeSealedBackup } from './encrypted';
 
 export const BACKUP_DIR = 'backups';
 export const SAFETY_PREFIX = 'pre-restore-';
@@ -70,7 +70,7 @@ export async function createSafetyBackup(
     const secret = passphrase ?? (deps.isNative ? await deps.storedPassphrase() : undefined);
     const text = secret
       ? serializeEncryptedBackup(await encryptBackup(backup, secret, deps.kdf, at))
-      : serializeBackup(backup);
+      : await serializeSealedBackup(backup);
     const name = `${SAFETY_PREFIX}${stampOf(at)}${secret ? '.enc.json' : '.json'}`;
 
     if (deps.isNative && deps.files) {

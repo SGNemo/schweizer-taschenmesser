@@ -1,6 +1,10 @@
 /** Local safety copy taken right before an update is installed. */
-import { createBackup, serializeBackup } from '@/core/backup/backup';
-import { encryptBackup, serializeEncryptedBackup } from '@/core/backup/encrypted';
+import { createBackup } from '@/core/backup/backup';
+import {
+  encryptBackup,
+  serializeEncryptedBackup,
+  serializeSealedBackup,
+} from '@/core/backup/encrypted';
 import { AUTO_PASSPHRASE_SECRET, stampOf } from '@/core/backup/safety';
 import { getPlatform } from '@/core/platform';
 
@@ -37,7 +41,7 @@ export async function createPreUpdateBackup(
   const backup = await createBackup();
   // Encrypted when a backup passphrase is set (automatic backups); the name stays the same, the
   // content is recognised by its format. Without a passphrase it stays plain JSON as before.
-  let text = serializeBackup(backup);
+  let text = await serializeSealedBackup(backup);
   try {
     const passphrase = await getPlatform().secrets.get(AUTO_PASSPHRASE_SECRET);
     if (passphrase) text = serializeEncryptedBackup(await encryptBackup(backup, passphrase));

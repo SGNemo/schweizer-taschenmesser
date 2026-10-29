@@ -98,7 +98,6 @@ type Option = { recent?: boolean } & (
   | { kind: 'tool'; key: string; label: string; icon: IconName; answer: ToolAnswer }
   | { kind: 'calc'; key: string; label: string; icon: IconName; value: number }
   | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean }
-  | { kind: 'query'; key: string; label: string; icon: IconName }
 );
 
 function PaletteBody({ onDone }: { onDone: () => void }) {
@@ -308,14 +307,6 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
             row: { id: r.key, title: r.label, subtitle: r.subtitle, fields: [], to: r.to },
             recent: true,
           });
-        } else if (r.kind === 'query') {
-          recents.push({
-            kind: 'query',
-            key: `r-${r.key}`,
-            label: r.label,
-            icon: 'search',
-            recent: true,
-          });
         }
       }
       const used = new Set(recents.map((o) => o.key.replace(/^r-/, '')));
@@ -422,14 +413,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
 
   const run = (o: Option | undefined) => {
     if (!o) return;
-    if (o.kind === 'query') {
-      // An earlier search is typed back into the field; Enter asks again.
-      setQuery(o.label);
-      setActive(0);
-      return;
-    }
     if (o.kind === 'ask') {
-      remember({ kind: 'query', key: `q-${query.trim()}`, label: query.trim() });
+      // Questions are never remembered: people type secrets into search fields.
       return void submit(query.trim(), o.forceModel, preferModule);
     }
     if (o.kind === 'tool') {
