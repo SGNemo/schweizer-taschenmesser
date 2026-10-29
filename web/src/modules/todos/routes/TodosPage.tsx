@@ -11,6 +11,7 @@ import { useAdvanced } from '@/core/settings/comfort';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
+import { now } from '@/core/time/now';
 import { groupByTime } from '@/core/time/groups';
 import { DATE_PRESETS, presetDate } from '@/core/time/quickShift';
 import { changeWithUndo, deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
@@ -36,6 +37,7 @@ import { dueTone, groupTasks, isActionable } from '../logic';
 import { replan, type PickTask } from '../next';
 import { postponePatch } from '../postpone';
 import { seriesKey, streaksOf, type Streak } from '../progress';
+import { readQuickAdd } from '../quickAdd';
 import { deleteTask, ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
@@ -299,17 +301,20 @@ export default function TodosPage() {
 
   async function add(e: FormEvent) {
     e.preventDefault();
-    const value = title.trim();
-    if (!value || !targetListId) return;
+    if (!title.trim() || !targetListId) return;
+    const typed = readQuickAdd(title, new Date(now()));
     // One line of feedback; Ctrl+Z still takes it back (no second "Rückgängig" next to the next action's).
     await undoable(t.todos.added, () =>
       taskRepo.create({
         listId: targetListId,
-        title: value,
+        title: typed.title,
         done: false,
-        priority: 0,
+        priority: typed.priority ?? 0,
         order: 0,
-        ...(selected === SOMEDAY ? { someday: true } : {}),
+        ...(typed.dueDate ? { dueDate: typed.dueDate } : {}),
+        ...(typed.estimateMin ? { estimateMin: typed.estimateMin } : {}),
+        ...(typed.note ? { note: typed.note } : {}),
+        ...(selected === SOMEDAY && !typed.dueDate ? { someday: true } : {}),
       }),
     );
     toast(t.todos.added);
