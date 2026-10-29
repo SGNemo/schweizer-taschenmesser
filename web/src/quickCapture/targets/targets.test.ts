@@ -11,6 +11,8 @@ const ON = {
   notes: true,
   finance: true,
   invoices: true,
+  subscriptions: true,
+  people: true,
 };
 
 beforeEach(async () => {
@@ -180,6 +182,62 @@ describe('saveCapture', () => {
     await saved.undo();
     const [task] = await rows('todos_task');
     expect(task!.deletedAt).toBeTruthy();
+  });
+});
+
+describe('saveCapture: QA types', () => {
+  it('stores the end of a range and sends a night shift into the next day', async () => {
+    await saveCapture(
+      'event',
+      { title: 'Nachtdienst', date: '2026-10-05', time: '21:30', endTime: '06:30' },
+      { states: ON },
+    );
+    expect((await rows('calendar_event'))[0]).toMatchObject({
+      startTime: '21:30',
+      endTime: '06:30',
+      endDate: '2026-10-06',
+    });
+  });
+
+  it('keeps weekdays, interval and end of a recurring shift', async () => {
+    const recurrence = {
+      freq: 'weekly' as const,
+      interval: 2,
+      byWeekday: [1, 2, 3, 4, 5],
+      until: '2026-12-31',
+    };
+    await saveCapture(
+      'event',
+      { title: 'Frühdienst', date: '2026-10-05', time: '06:00', recurrence },
+      { states: ON },
+    );
+    expect((await rows('calendar_event'))[0]!.recurrence).toMatchObject(recurrence);
+  });
+
+  it('writes the priority of a ToDo', async () => {
+    await saveCapture('todo', { title: 'Angebot', priority: 3 }, { states: ON });
+    expect((await rows('todos_task'))[0]).toMatchObject({ priority: 3 });
+  });
+
+  it('writes a subscription and a birthday', async () => {
+    await saveCapture(
+      'subscription',
+      { title: 'Netflix', amountMinor: 1299, recurrence: { freq: 'monthly', interval: 1 } },
+      { states: ON },
+    );
+    expect((await rows('subscriptions_subscription'))[0]).toMatchObject({
+      name: 'Netflix',
+      amountMinor: 1299,
+      startDate: '2026-09-30',
+    });
+    await saveCapture('birthday', { title: 'Anna', date: '2026-11-14' }, { states: ON });
+    expect((await rows('people_person'))[0]).toMatchObject({
+      name: 'Anna',
+      birthday: { month: 11, day: 14 },
+    });
+    await expect(saveCapture('birthday', { title: 'Anna' }, { states: ON })).rejects.toMatchObject({
+      code: 'invalid',
+    });
   });
 });
 
