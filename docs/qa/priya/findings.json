@@ -1,0 +1,614 @@
+[
+  {
+    "id": "B01",
+    "type": "bug",
+    "severity": "hoch",
+    "area": "todos",
+    "platform": "Desktop (1280–1920 px), stabiler Build und Dev-Build; Handy-Viewport unauffällig",
+    "title": "ToDos-Seite am Desktop auf eine 240-px-Spalte gequetscht, Titel brechen Buchstabe für Buchstabe um",
+    "steps": [
+      "Modul-Bibliothek → „ToDos einschalten“ (bzw. Dev-Build mit Testdaten), dann ToDos öffnen.",
+      "Fenster 1440×900 oder 1920×1080.",
+      "Zwei ToDos anlegen oder die überfälligen Einträge der Testdaten ansehen."
+    ],
+    "expected": "Liste nutzt die Inhaltsbreite wie Kalender und Finanzen; Titel stehen lesbar in einer Zeile.",
+    "actual": "Liste, Eingabefeld und „Wartet noch“-Karte sind nur 240 px breit, rechts bleibt über 1000 px leer. Das Eingabefeld zeigt „Neue Aufg…“, das Label „ToDo hinzufügen“ bricht um, überfällige Einträge zeigen je einen Buchstaben pro Zeile (neben „Auf heute“). Lange Titel werden nach zwei Zeilen mit „…“ abgeschnitten.",
+    "screenshots": [
+      "screenshots/30-todos.png",
+      "screenshots/31-todos-1440.png",
+      "screenshots/32-todos-stable.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B02",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "quick-add",
+    "platform": "Desktop",
+    "title": "Schnell hinzufügen: „Rechnung …“ und „… Ausgabe“ landen als ToDo, Betrag wird nicht erkannt, Endzeit und Priorität werden ignoriert",
+    "steps": [
+      "„Neu“ klicken.",
+      "„Rechnung Hosting 49,90 fällig 5.11.“ tippen: Ziel steht auf „ToDos“, nur das Datum wird erkannt.",
+      "„Kaffee 3,80 Ausgabe“ tippen: Ziel „ToDos“, kein Betrag.",
+      "„Workshop Kunde Müller am 12.11. 14:00 bis 16:00“: Ziel „Kalender“, Datum und 14:00, aber das Ende 16:00 fehlt in der Vorschau.",
+      "„Angebot an Kunde Schmidt schicken bis Freitag !hoch“: Datum stimmt, die Priorität „!hoch“ wird nicht erkannt."
+    ],
+    "expected": "Das Wort „Rechnung“ bzw. „Ausgabe“ und eine Zahl mit € oder Komma wählen Rechnung bzw. Buchung mit Betrag; Endzeit und Priorität werden übernommen.",
+    "actual": "Das Ziel muss von Hand umgeschaltet werden, und es ist nicht sichtbar, ob der Betrag beim Umschalten erhalten bleibt (nicht geprüft).",
+    "screenshots": [
+      "screenshots/22-neu-menu.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B03",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "ki-eintragen",
+    "platform": "Desktop (ohne KI-Anbieter, nur Regeln)",
+    "title": "„Mit KI eintragen“ macht aus einem Satz mit zwei Vorgängen einen einzigen Rechnungseintrag mit Fließtext im Empfängerfeld",
+    "steps": [
+      "Finanzen → „Mit KI eintragen“.",
+      "Eingeben: „Rechnung an Kunde Müller GmbH, Beratung Oktober, 2.400 € netto, fällig 15.11., außerdem Workshop mit Müller am 12.11. um 14 Uhr“.",
+      "Enter, Vorschau lesen."
+    ],
+    "expected": "Zwei Vorschläge (Rechnung, Termin) mit Empfänger „Müller GmbH“; „netto“ als Hinweis.",
+    "actual": "Ein Vorschlag „Rechnung anlegen“, Empfänger = „Kunde Müller GmbH, Beratung Oktober, netto, fällig , außerdem Workshop mit Müller am 12.11.“. Der Termin geht verloren. Gut: Die Vorschau fängt es ab („Es wird erst etwas gespeichert, wenn du bestätigst“). Mit echtem Anbieter nicht prüfbar (kein Netz in der Testumgebung).",
+    "screenshots": [
+      "screenshots/49-ki-eintragen-result.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B04",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "finance-import",
+    "platform": "Desktop",
+    "title": "Kontoauszug-Import verwirft den Auftraggeber/Empfänger und bietet weder Konto noch Kategorie in der Vorschau",
+    "steps": [
+      "Modul-Bibliothek → Finanzen → „Startdaten einrichten“ → „Kontoauszug importieren“.",
+      "Eine Semikolon-CSV mit Spalten Buchungstag;Wertstellung;Auftraggeber/Empfänger;Buchungstext;Verwendungszweck;Betrag;Währung wählen (6 erfundene Zeilen)."
+    ],
+    "expected": "Titel enthält die Gegenpartei („Müller GmbH“), Vorschau zeigt Konto und vorgeschlagene Kategorie, Doppelte werden markiert.",
+    "actual": "6 Einträge werden erkannt (Beträge und Daten richtig), aber nur der Verwendungszweck erscheint („Rechnung 2026-041 Beratung Oktober“). „Müller GmbH“ ist nirgends zu sehen, keine Kategorie, keine Konto-Auswahl, kein Duplikat-Hinweis in der Vorschau.",
+    "screenshots": [
+      "screenshots/102-bank-import-preview.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B05",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "unterlagen",
+    "platform": "Desktop",
+    "title": "Verpasste Kündigungsfrist wird nicht als solche markiert: Vertrag mit „Kündigen bis“ in der Vergangenheit steht nur auf „Bald“",
+    "steps": [
+      "Unterlagen öffnen (Testdaten, heute 29.10.).",
+      "„Fitnessstudio · Ende: 7. Nov. 2026 · Kündigen bis: Sa., 24. Okt.“ ansehen.",
+      "Ebenso „Handyvertrag · Kündigen bis 20. Okt.“, „Wartungsvertrag Heizung · Kündigen bis 26. Aug.“."
+    ],
+    "expected": "Hinweis „Kündigungsfrist verpasst“ bzw. Sortierung/Status nach der Frist, nicht nur nach dem Vertragsende.",
+    "actual": "Status „Bald“, Sortierung nach Ende. Wer Verträge wegen der Frist verwaltet, sieht die gerissene Frist nicht. Beim Wartungsvertrag lag die Frist 2 Monate zurück.",
+    "screenshots": [
+      "screenshots/43-vault.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B06",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "einrichtung",
+    "platform": "Desktop",
+    "title": "Einrichtung: Fortschrittszahlen widersprechen sich und durchgeklickte Schritte gelten als „Erledigt“",
+    "steps": [
+      "Einrichtung starten, alle 12 Schritte nur mit „Weiter“ durchgehen (nichts einrichten).",
+      "Zusammenfassung und Übersicht-Karte ansehen."
+    ],
+    "expected": "Zusammenfassung zeigt, was wirklich eingerichtet ist; Zahlen stimmen überein.",
+    "actual": "Dialog: „Schritt x von 12“. Karte auf der Übersicht danach: „10 von 11 Schritten erledigt“. KI-Anbieter, Konten verknüpfen, Startdaten, Import per KI stehen auf „Erledigt“, obwohl nichts eingerichtet wurde. Nur der Schritt „Benachrichtigungen“ steht auf „Übersprungen“.",
+    "screenshots": [
+      "screenshots/04-after-setup.png",
+      "screenshots/05-dashboard-fresh.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B07",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "einrichtung",
+    "platform": "Desktop",
+    "title": "Einrichtung Schritt 6: Beim Spotify-Block steht der Kalender-Hinweistext",
+    "steps": [
+      "Einrichtung → Schritt 6 „Konten verknüpfen“.",
+      "Unter „Spotify“ den Hinweis lesen."
+    ],
+    "expected": "Hinweis zu Spotify (Anmeldung nur in der Windows-App).",
+    "actual": "„… Auf dem Handy und im Browser kommen die Termine über die Synchronisierung oder über ein Kalender-Abo (ICS).“ – von Termine ist bei Spotify keine Rede.",
+    "screenshots": [],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B08",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "einrichtung",
+    "platform": "Desktop",
+    "title": "Profil „Finanz-Fokus“ schaltet ToDos, Timer und QR-Code aus; die Karte nennt das nicht",
+    "steps": [
+      "Einrichtung → Schritt 3 → „Finanz-Fokus“ wählen.",
+      "Liste „Das ändert sich“ lesen."
+    ],
+    "expected": "Die Beschreibung auf der Karte nennt, was abgeschaltet wird, oder ein Profil schaltet nur ein.",
+    "actual": "Karte: „Finanzen, Budgets, Abos, Rechnungen, Verträge – dazu Kalender und Erinnerungen.“ Erst darunter: „Wird deaktiviert: ToDos“ und „Werkzeuge aus: Timer & Stoppuhr, QR-Code“, dazu ein Pflicht-Häkchen. Außerdem trägt jede Karte den Profilnamen doppelt (Titel und gleichnamiger Button).",
+    "screenshots": [
+      "screenshots/03-setup-profile.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B09",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "settings",
+    "platform": "Desktop 1440 px",
+    "title": "Einstellungen: „Benachrichtigungen“ und „Nicht erlaubt“ überlappen in der Seitenleiste",
+    "steps": [
+      "Einstellungen öffnen, Fenster 1440×900."
+    ],
+    "expected": "Beschriftung und Status stehen getrennt.",
+    "actual": "„BenachrichtigungenNicht erlaubt“ läuft ineinander.",
+    "screenshots": [
+      "screenshots/55-ki-add-claude.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B10",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "settings",
+    "platform": "Desktop",
+    "title": "Modul-Einstellungen zeigen unbeschriftete Rohwerte („Felder: Monat · 09:00 · 09:00“) und je Modul zwei gleiche Buttons „Startdaten einrichten“",
+    "steps": [
+      "Einstellungen → Module (bzw. Zahnrad „Dieses Modul anpassen“).",
+      "Die Zeilen von Kalender, Personen, Rechnungen, Unterlagen lesen."
+    ],
+    "expected": "Jeder Wert mit Namen („Ansicht: Monat · Erinnerung 09:00“).",
+    "actual": "„Felder: 0 · 09:00“ (Personen), „Felder: 30 · 14 · 09:00“ (Unterlagen), „Felder: 2 · 09:00“ (Rechnungen). Man weiß nicht, was 0, 2, 30, 14 bedeuten. „Startdaten einrichten“ steht doppelt je Modul.",
+    "screenshots": [
+      "screenshots/99-module-settings-finance.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B11",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "ki-settings",
+    "platform": "Desktop",
+    "title": "„Verbindung testen“ meldet nur „Test fehlgeschlagen: Nicht erreichbar“",
+    "steps": [
+      "Einstellungen → KI → Anbieter „Claude (Anthropic)“ wählen, Schlüssel eintragen, Speichern.",
+      "„Verbindung testen“, Hinweis „Verstanden“."
+    ],
+    "expected": "Ursache unterscheiden: kein Netz / Schlüssel abgelehnt / Zertifikat / Browser blockiert.",
+    "actual": "Eine Meldung für alles. Hinweis: In der Testumgebung gab es kein echtes Netz (Zertifikatsfehler im Proxy), echte Antworten eines Anbieters konnte ich nicht prüfen. Ein Test mit echtem Token fehlt daher im Bericht.",
+    "screenshots": [
+      "screenshots/57-ki-test-result.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B12",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "sync",
+    "platform": "Desktop, Handy-Viewport",
+    "title": "Sync-Zähler passen nicht zur Erwartung: „Zuletzt: 6 empfangen, 0 gesendet“ nach dem Schreiben, „9 empfangen“ auf dem zweiten Gerät bei „2 Einträgen“ auf dem Server",
+    "steps": [
+      "Gerät A: Sync verbinden, ein ToDo anlegen, „Jetzt synchronisieren“.",
+      "Gerät B verbinden."
+    ],
+    "expected": "Zähler zeigen gesendete und empfangene Einträge nachvollziehbar.",
+    "actual": "Gerät A meldet „6 empfangen, 0 gesendet“, obwohl es der Absender war; Server zeigt „2 Einträge“. Daten kamen auf B korrekt an. Zahlen sind nicht deutbar.",
+    "screenshots": [
+      "screenshots/53-sync-connected.png",
+      "screenshots/62-phone-synced.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B13",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "layout-mobile",
+    "platform": "Handy-Viewport 412×915",
+    "title": "Schwebender „+“-Knopf überdeckt Felder am unteren Rand von Formularen (Passphrase-Feld im Sync-Formular)",
+    "steps": [
+      "Handy-Viewport, Einstellungen → Sync & Backup, nach unten bis „Passphrase“ scrollen."
+    ],
+    "expected": "Knopf verdeckt keine Eingabe.",
+    "actual": "Der Knopf liegt auf dem rechten Ende des Passphrase-Feldes (Auge/Text).",
+    "screenshots": [
+      "screenshots/61-phone-sync-section.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B14",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "layout",
+    "platform": "Desktop-Fenster 640 px",
+    "title": "Kalender bei 640 px Breite: „Erinnerungen“ im Umschalter abgeschnitten („Remind…“)",
+    "steps": [
+      "Kalender, Fenster auf 640 px verkleinern (englische Oberfläche)."
+    ],
+    "expected": "Beschriftung vollständig.",
+    "actual": "Segment-Beschriftung wird abgeschnitten, „Advanced“-Schalter rückt daneben.",
+    "screenshots": [
+      "screenshots/93-narrow-640.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B15",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "feedback",
+    "platform": "Desktop",
+    "title": "Bestätigungs-Toasts stapeln sich („ToDo hinzugefügt.“ doppelt) und verschwinden nicht von selbst",
+    "steps": [
+      "ToDos: zwei Aufgaben schnell hintereinander anlegen."
+    ],
+    "expected": "Ein Toast, der sich selbst schließt oder ersetzt wird.",
+    "actual": "Zwei gleiche Toasts übereinander, jeder mit „Schließen“.",
+    "screenshots": [
+      "screenshots/32-todos-stable.png"
+    ],
+    "frequency": "manchmal",
+    "persona": "priya"
+  },
+  {
+    "id": "B16",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "ki-eintragen",
+    "platform": "Desktop",
+    "title": "„Mit KI eintragen“ öffnet ein Fenster mit dem Titel „Befehlspalette“; ohne Anbieter trägt es per Regeln ein",
+    "steps": [
+      "Finanzen → „Mit KI eintragen“."
+    ],
+    "expected": "Fenstertitel passt zum Knopf; ohne Anbieter steht „ohne KI, Regeln“.",
+    "actual": "Titel „Befehlspalette“, erste Zeile „Eintragen“, zweite „Mit KI fragen“. Erst im Ergebnis zeigt ein kleiner Chip „Regeln · 0 Token“, dass keine KI beteiligt war.",
+    "screenshots": [
+      "screenshots/48-ki-eintragen.png",
+      "screenshots/49-ki-eintragen-result.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B17",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "uebersicht",
+    "platform": "Desktop",
+    "title": "Hinweis zur Lesehilfe: „Einschalten“ und „Nicht jetzt“ sehen aus wie Fließtext, nicht wie Knöpfe",
+    "steps": [
+      "Frische Installation, Übersicht ansehen."
+    ],
+    "expected": "Erkennbare Knöpfe.",
+    "actual": "Beide Wörter stehen fett am Zeilenende ohne Rahmen; ebenso „Später nicht mehr“ beim Wetter.",
+    "screenshots": [
+      "screenshots/01-fresh-start.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B18",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "i18n",
+    "platform": "Desktop, Englisch",
+    "title": "Englisch: überfällige Rechnung zeigt „for 12 days“ statt „12 days overdue“",
+    "steps": [
+      "Einstellungen → Allgemein → Language: English.",
+      "Invoices öffnen."
+    ],
+    "expected": "„12 days overdue“.",
+    "actual": "„⚠ for 12 days“ – ohne „overdue“ unklar.",
+    "screenshots": [
+      "screenshots/92-dark-english-invoices.png"
+    ],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B19",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "docs",
+    "platform": "README/Website",
+    "title": "README sagt „The app interface is German today; more languages are on the way“, die App hat fünf Sprachen",
+    "steps": [
+      "README lesen.",
+      "In der App Einstellungen → Allgemein → Sprache öffnen: Deutsch, English, Español, Français, Português (Brasil)."
+    ],
+    "expected": "README stimmt mit der App überein.",
+    "actual": "Aussage veraltet; wirkt, als wäre Englisch nicht möglich.",
+    "screenshots": [],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "B20",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "start",
+    "platform": "Desktop, stabiler Build",
+    "title": "Konsolenfehler beim Start der frischen Installation: „Failed to load resource: net::ERR_CONNECTION_REFUSED“",
+    "steps": [
+      "Frische Installation im Browser öffnen, Konsole ansehen (Playwright-Log)."
+    ],
+    "expected": "Keine Fehler ohne Verbindungswunsch.",
+    "actual": "Ein fehlgeschlagener Netzwerkaufruf beim Start (Ursache nicht geklärt, vermutlich Update-/Kursabfrage; in der Testumgebung gibt es kein Internet). Für Nutzer nicht sichtbar.",
+    "screenshots": [],
+    "frequency": "immer",
+    "persona": "priya"
+  },
+  {
+    "id": "V01",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "neu: Zeiterfassung",
+    "platform": "alle",
+    "title": "Zeiterfassung pro Kunde und Projekt",
+    "situation": "Priya rechnet Beratung nach Stunden ab und will wissen, was sie diese Woche für wen gearbeitet hat.",
+    "problem_today": "Es gibt kein Zeit-Modul. „Timer & Stoppuhr“ (F8) ist ein loses Werkzeug: keine Zuordnung zu Kunde oder ToDo, die gemessene Zeit wird nicht gespeichert. Die Modul-Bibliothek hat keinen Eintrag dafür.",
+    "suggestion": "Modul „Zeit“: Start/Stopp per Tastenkürzel, Kunde/Projekt/Tätigkeit, nachträgliche Einträge, Wochenübersicht, Summen, CSV-Export, Option „aus ToDo starten“. Läuft lokal; Dashboard-Widget „Heute erfasst“ ohne Druck (kein Ziel-Balken).",
+    "example": "Toggl Track, Todoist-Integrationen",
+    "persona": "priya"
+  },
+  {
+    "id": "V02",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "übergreifend",
+    "platform": "alle",
+    "title": "Kunden/Projekte als gemeinsames Merkmal in allen Modulen",
+    "situation": "Zu „Müller GmbH“ gehören Termine, ToDos, Rechnungen, Verträge, Notizen und Zeiten; Priya will alles auf einen Blick.",
+    "problem_today": "Es gibt Personen (nur Geburtstage/Geschenke) und je Modul eigene Kategorien. Verknüpfungen zwischen Einträgen verschiedener Module fehlen; die Module importieren sich bewusst nicht gegenseitig.",
+    "suggestion": "Ein „Kunde/Projekt“-Feld über die Modulgrenzen (über Events/Manifest-Beiträge), Kundenseite mit zugehörigen Einträgen, Filter „nur Kunde X“ in Kalender, ToDos, Finanzen, Unterlagen, Suche.",
+    "example": "Notion Relations",
+    "persona": "priya"
+  },
+  {
+    "id": "V03",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "invoices",
+    "platform": "alle",
+    "title": "Ausgangsrechnungen (Rechnungen an Kunden) statt nur Eingangsrechnungen",
+    "situation": "Priya schreibt Rechnungen an Kunden und will Zahlungseingang und Überfälligkeit sehen.",
+    "problem_today": "„Rechnungen“ meint Rechnungen, die man bezahlen muss („Empfänger“, „Als bezahlt markieren“ bucht eine Ausgabe, offene Summe wird vom „verfügbar“ abgezogen). Trägt sie dort Kundenrechnungen ein, rechnet Nemo ihr Geld ärmer statt reicher (aus Beschreibung und Anzeige abgeleitet, nicht mit eigener Buchung durchgespielt).",
+    "suggestion": "Richtung je Rechnung (zahlen / bekommen), Nummernkreis, Kunde, Netto/MwSt/Brutto, PDF-Erzeugung, Zahlungseingang bucht eine Einnahme, überfällige Forderungen im Widget „Jetzt wichtig“.",
+    "example": "Lexoffice, Zervant",
+    "persona": "priya"
+  },
+  {
+    "id": "V04",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "export",
+    "platform": "alle",
+    "title": "CSV-/ICS-Export je Modul statt nur Gesamt-Backup",
+    "situation": "Priya gibt ihrer Steuerberaterin die Buchungen eines Quartals und wechselt Termine in andere Kalender.",
+    "problem_today": "Export gibt es nur als Gesamt-Backup (JSON, auch verschlüsselt) und den Tresor als Bitwarden-CSV. Die Einstellungssuche nach „CSV“ und „Export“ findet nichts für Buchungen, ToDos oder Termine. Kalender-Abo ist nur Import.",
+    "suggestion": "In jeder Liste „Exportieren“ (CSV, bei Terminen ICS), mit Filter (Zeitraum, Kunde, Konto). Passt zu Local-First, Daten gehören dem Nutzer.",
+    "example": "Todoist-Export, Google Takeout",
+    "persona": "priya"
+  },
+  {
+    "id": "V05",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "listen",
+    "platform": "alle",
+    "title": "Mehrfachauswahl und Massenbearbeitung",
+    "situation": "Priya will 15 überfällige ToDos auf nächste Woche schieben oder 20 Buchungen einer Kategorie zuordnen.",
+    "problem_today": "Zeilenmenüs gelten für einen Eintrag (ToDos: Später, Fällig am, Priorität, Duplizieren, Löschen; Buchungen: Kategorie, Löschen). Es gibt keine Checkboxen oder Shift-Klick. Einzige Sammelhilfe: „Neu planen“ bei überfälligen ToDos.",
+    "suggestion": "Mehrfachauswahl (Shift/Ctrl-Klick, Strg+A) mit Sammelaktionen: Datum, Priorität, Kategorie, Kunde, Löschen mit Rückgängig.",
+    "example": "Todoist, Gmail",
+    "persona": "priya"
+  },
+  {
+    "id": "V06",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "finance",
+    "platform": "alle",
+    "title": "Regeln für Kategorien beim Bankimport",
+    "situation": "Jeden Monat 80 Buchungen importieren; „Hosting AG“ ist immer „Betriebskosten“.",
+    "problem_today": "Beim Import keine Kategorievorschläge und keine lernenden Regeln; Auftraggeber wird verworfen (B04).",
+    "suggestion": "Regeln „Empfänger enthält X → Kategorie Y / Kunde Z“, aus einer Korrektur ableitbar („Immer so zuordnen?“), Vorschau zeigt Treffer.",
+    "example": "YNAB, Firefly III",
+    "persona": "priya"
+  },
+  {
+    "id": "V07",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "finance",
+    "platform": "alle",
+    "title": "Kontoauszug-Import dort anbieten, wo man ihn sucht",
+    "situation": "Monatsanfang: Priya will den Auszug ihrer Bank einlesen.",
+    "problem_today": "Der Import steckt unter Modul-Bibliothek → Finanzen → „Startdaten einrichten“ → „Kontoauszug importieren“ (vier Klicks, Bezeichnung „Startdaten“ passt nicht zu „jeden Monat“). Auf der Finanzen-Seite gibt es keinen Import-Knopf. Ohne Spaltenzuordnung, Konto-Wahl und Duplikatprüfung in der Vorschau.",
+    "suggestion": "Knopf „Kontoauszug importieren“ in Finanzen → Buchungen, Spaltenzuordnung merken, Konto wählen, bereits vorhandene Buchungen ausgrauen.",
+    "example": "Firefly III Importer",
+    "persona": "priya"
+  },
+  {
+    "id": "V08",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "shortcuts",
+    "platform": "alle",
+    "title": "Tastenkürzel auffindbar und anpassbar machen",
+    "situation": "Priya arbeitet am Laptop mit zwei Monitoren fast ohne Maus.",
+    "problem_today": "Die App kann viel (N neu erfassen, G dann P/G/A/W/T zu einem Bereich, J/K und Pfeile in Listen, E bearbeiten, Leertaste abhaken, / Liste durchsuchen, Strg+Z, Strg+K), aber nur durch Zufall mit „?“ zu finden: Einstellungen → Tastenkürzel zeigt nur die Funktionstasten F2–F10 (neu, suchen, Übersicht, Fokus, Werkzeuge, Einstellungen) und „T, dann …“. Die Buchstabenkürzel stehen dort nicht und lassen sich nicht umbelegen. „G, dann P“ öffnet den zuletzt benutzten Reiter des Bereichs, nicht gezielt den Kalender. Auf Laptops brauchen F-Tasten oft Fn.",
+    "suggestion": "Hinweis „? = Tastenkürzel“ im Kopf oder in der Suche, Buchstabenkürzel in den Einstellungen anzeigen und umbelegen (auch mit Strg/Alt), direktes Springen zu einem Modul („G, K“ für Kalender).",
+    "example": "Todoist, Gmail, Linear",
+    "persona": "priya"
+  },
+  {
+    "id": "V09",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "unterlagen",
+    "platform": "alle",
+    "title": "Dateianhänge optional verschlüsselt in Sync und Backup",
+    "situation": "Verträge und Garantien als PDF am Laptop ablegen und unterwegs am Handy vorzeigen.",
+    "problem_today": "„Dateien bleiben nur auf diesem Gerät“: nicht im Sync, nicht im Backup (Hinweis in Unterlagen). Handy zeigt „Datei nur auf einem anderen Gerät“. Wer das Backup einspielt, verliert die Anhänge, ohne dass das beim Export deutlich wird.",
+    "suggestion": "Schalter „Dateien mit synchronisieren“ (Ende-zu-Ende verschlüsselt, Größenlimit, Auswahl je Unterlage); im Backup optional als Archiv.",
+    "example": "Bitwarden Anhänge (Premium)",
+    "persona": "priya"
+  },
+  {
+    "id": "V10",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "extension",
+    "platform": "alle",
+    "title": "Browser-Erweiterung auch für Chrome, Edge und Firefox, ohne Entwicklermodus",
+    "situation": "Priya benutzt Bitwarden im Browser und will umsteigen.",
+    "problem_today": "Laut Anleitung nur Brave, als entpackte Erweiterung im Entwicklermodus laden, nur mit laufender Desktop-App, nur Windows. Ich konnte die Erweiterung in der Testumgebung nicht ausführen.",
+    "suggestion": "Veröffentlichung im Chrome-Web-Store/Edge-Add-ons (signiert, automatische Updates), Chrome und Edge zuerst. Fortschritt ohne Cloud: Sicherheit bleibt (nur nativ).",
+    "example": "Bitwarden",
+    "persona": "priya"
+  },
+  {
+    "id": "V11",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "kalender",
+    "platform": "alle",
+    "title": "Wiederholungen, Farben und Kundenzuordnung im Kalender",
+    "situation": "Termine „alle 14 Tage Dienstag“, Kundentermine farblich getrennt.",
+    "problem_today": "Wiederholung nur täglich/wöchentlich/monatlich/jährlich, Ende und Ort hinter „Mehr Felder“, keine Terminfarbe/Kategorie. Monatsansicht schneidet Titel ab („18:00 Termin …“); Terminhäufung zeigt „+6 weitere“.",
+    "suggestion": "„Alle N Wochen“, Wochentage wählbar, Kategorien/Farben, Ende ohne Umweg im Hauptformular, Titel im Monatsfeld auf Wunsch zweizeilig.",
+    "example": "Google Kalender",
+    "persona": "priya"
+  },
+  {
+    "id": "V12",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "einstellungen",
+    "platform": "alle",
+    "title": "Währung je Konto/Rechnung statt fest Euro",
+    "situation": "Zwei Kunden zahlen in CHF und USD.",
+    "problem_today": "Einstellungen → Allgemein → Währung: „Fest eingestellt: Euro (€)“. Das Währungs-Werkzeug rechnet, speichert aber nichts.",
+    "suggestion": "Währung je Konto und je Rechnung, Kurs zum Buchungstag (EZB-Kurse sind schon als Werkzeug vorhanden).",
+    "example": "Firefly III",
+    "persona": "priya"
+  },
+  {
+    "id": "V13",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "uebersicht",
+    "platform": "alle",
+    "title": "Übersicht für große Monitore und Kenner: alle Widgets, mehrspaltig, überfällige Rechnungen sichtbar",
+    "situation": "Morgens ein Blick auf 1920 px: was ist fällig, was kommt Geld, was steht an.",
+    "problem_today": "Standard zeigt ein Widget („Heute“) auf halber Breite und „Mehr anzeigen · 16 Widgets“. Überfällige Rechnungen und das überschrittene Budget stehen eingeklappt unter „Wartet noch · 4“, während „Jetzt wichtig“ ein Medikament zeigt.",
+    "suggestion": "Option „Immer alle Widgets zeigen“ und Spaltenzahl; Rechnungen überfällig in „Jetzt wichtig“ wählbar. Ruhige Voreinstellung bleibt, die Option ist freiwillig.",
+    "example": "Notion Dashboards",
+    "persona": "priya"
+  },
+  {
+    "id": "V14",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "ki",
+    "platform": "alle",
+    "title": "KI-Zugang einmal einrichten und auf Geräten wiederverwenden",
+    "situation": "Eigener Claude-Schlüssel am Laptop und am Handy.",
+    "problem_today": "Schlüssel nur auf dem Gerät, nicht synchronisiert, nicht im Backup: auf jedem Gerät neu eintragen. Standard-Kostenlimit: 2 US-Dollar pro Monat, ohne Hinweis beim Anlegen. Reihenfolge der Anbieter mit Pfeilen (kein Ziehen).",
+    "suggestion": "Optional verschlüsselter Schlüsseltransfer per QR/Datei zwischen eigenen Geräten. Widerspricht dem heutigen Grundsatz „Schlüssel nie synchronisiert“; als Wunsch notiert, nur mit eigenem Weg ohne Server. Kostenlimit beim Anlegen anzeigen.",
+    "example": "Bitwarden-QR-Login",
+    "persona": "priya"
+  },
+  {
+    "id": "V15",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "einrichtung",
+    "platform": "alle",
+    "title": "Berufsprofil und Schnellstart in der Einrichtung",
+    "situation": "Priya will in unter 5 Minuten loslegen.",
+    "problem_today": "12 Schritte, davon etliche für Dinge, die sie nie nutzt (Spotify, Spracheingabe, Konten verknüpfen). Profile: Alltag, Finanz-Fokus, Produktiv, Minimal; keines für Selbstständige.",
+    "suggestion": "Oben „Schnell starten“ (Profil + Fertig); Profil „Selbstständig“ (Kalender, ToDos, Rechnungen, Finanzen, Unterlagen, Tresor, Notizen, Zeit).",
+    "example": "Notion-Vorlagen",
+    "persona": "priya"
+  },
+  {
+    "id": "V16",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "quick-add",
+    "platform": "alle",
+    "title": "Schnell hinzufügen: Betrag, Endzeit, Dauer, Priorität, #Kunde erkennen und beim Tippen farbig markieren",
+    "situation": "„Hosting 49,90 fällig 5.11.“, „Workshop Müller 12.11. 14–16 Uhr“.",
+    "problem_today": "Siehe B02. Es ist nicht erkennbar, welcher Teil des Satzes verstanden wurde.",
+    "suggestion": "Erkannte Teile als Chips (Datum, Betrag, Prio, Kunde) mit Klick zum Ändern.",
+    "example": "Todoist Quick Add",
+    "persona": "priya"
+  },
+  {
+    "id": "V17",
+    "type": "improvement",
+    "benefit": "niedrig",
+    "area": "ki-settings",
+    "platform": "alle",
+    "title": "KI-Einstellungen: Anbieter einrichten vor dem roten Abschalten-Kasten",
+    "situation": "Erster KI-Besuch in den Einstellungen.",
+    "problem_today": "Ganz oben steht „KI abschalten“ (rot), der Anbieter-Dialog erst weiter unten. Ein neuer Anbieter ist sofort „Aktiv“ und „Bezahlt“, bevor ein Schlüssel eingetragen ist.",
+    "suggestion": "Reihenfolge umdrehen; Abschalten nach unten.",
+    "example": "",
+    "persona": "priya"
+  },
+  {
+    "id": "V18",
+    "type": "improvement",
+    "benefit": "niedrig",
+    "area": "erinnerungen",
+    "platform": "alle",
+    "title": "Erinnerungsliste: Gruppen „Weitere Erinnerungen · 4“ aufklappbar und Knöpfe beschriften",
+    "situation": "Morgens 28 offene Erinnerungen abarbeiten.",
+    "problem_today": "Zeilen „Weitere Erinnerungen · 12“ sind kein erkennbarer Inhalt; der Haken pro Zeile hat keine sichtbare Beschriftung; Sortierung zeigt zuerst das Älteste („Gestern 07:30“).",
+    "suggestion": "Gruppen aufklappbar, Beschriftung „Erledigt“, Sortierung nach Dringlichkeit wählbar.",
+    "example": "",
+    "persona": "priya"
+  }
+]
