@@ -1,0 +1,361 @@
+{
+ "persona": "mia-familie",
+ "date": "2026-10-29",
+ "platforms": [
+  "android-viewport 412x915",
+  "desktop-viewport 1366x850"
+ ],
+ "findings": [
+  {
+   "id": "MIA-F01",
+   "type": "bug",
+   "severity": "hoch",
+   "area": "lists",
+   "platform": "android-viewport",
+   "title": "Zwei gleiche Kästchen pro Listenzeile (Auswählen vs. Abhaken)",
+   "steps": [
+    "Haushalt → Listen → Einkauf",
+    "Einträge anlegen",
+    "Zeile ansehen, Kästchen antippen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F02",
+   "type": "bug",
+   "severity": "hoch",
+   "area": "setup",
+   "platform": "android-viewport",
+   "title": "Profil Alltag schaltet Finanzen/Rechnungen/Abos ab, enthält Vorräte/Unterlagen nicht; Folge nur unten sichtbar",
+   "steps": [
+    "Einrichtung → Schritt 3",
+    "Alltag wählen",
+    "Zu 'Das ändert sich' scrollen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F03",
+   "type": "bug",
+   "severity": "mittel",
+   "area": "setup",
+   "platform": "android-viewport",
+   "title": "'Weiter' deaktiviert ohne sichtbaren Grund (Bestätigungshäkchen außerhalb des Bildschirms)",
+   "steps": [
+    "Profil wählen",
+    "Weiter ansehen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F04",
+   "type": "bug",
+   "severity": "mittel",
+   "area": "home",
+   "platform": "android-viewport",
+   "title": "Willkommenskarte gekürzt, Lesehilfe-Knöpfe unsichtbar",
+   "steps": [
+    "Frische Installation öffnen",
+    "Karte ansehen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F05",
+   "type": "bug",
+   "severity": "mittel",
+   "area": "home",
+   "platform": "both",
+   "title": "Übersicht zeigt keine kommenden Termine (morgen/Woche), kein Termin-Widget in Standardansicht",
+   "steps": [
+    "Termin für morgen speichern",
+    "Übersicht öffnen, 'Mehr anzeigen'"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F06",
+   "type": "bug",
+   "severity": "mittel",
+   "area": "quick-add",
+   "platform": "android-viewport",
+   "title": "Schnellerfassung: wiederkehrender Termin wird Erinnerung, 'alle zwei Wochen' und 'nächsten Freitag' falsch/nicht erkannt",
+   "steps": [
+    "+ antippen",
+    "'jeden Dienstag 16 Uhr Fußball Max', 'alle zwei Wochen Mittwoch Schwimmen', '… bis nächsten Freitag' eintippen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F07",
+   "type": "bug",
+   "severity": "mittel",
+   "area": "lists",
+   "platform": "android-viewport",
+   "title": "Abgehakte Einträge springen sofort ans Listenende, Liste verschiebt sich",
+   "steps": [
+    "Einkaufsliste mit 5 Einträgen",
+    "Obersten abhaken, sofort den zweiten tippen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F08",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "lists",
+   "platform": "android-viewport",
+   "title": "Lange Einträge abgeschnitten, FAB verdeckt Löschknopf der letzten Zeile",
+   "steps": [
+    "Langen Satz und langes Wort eintragen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F09",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "layout",
+   "platform": "desktop-narrow",
+   "title": "Bei 320 px: Suche leeres Oval, Kalender/Erinnerungen-Umschalter abgeschnitten",
+   "steps": [
+    "Kalender öffnen",
+    "Fenster auf 320 px"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F10",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "feedback",
+   "platform": "android-viewport",
+   "title": "Toasts 'Geändert.' stapeln sich und nennen nicht, was geändert wurde",
+   "steps": [
+    "Vorräte: dreimal '−' tippen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F11",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "setup",
+   "platform": "android-viewport",
+   "title": "Einrichtungs-Karte bleibt nach 'Fertig' dauerhaft auf der Übersicht; fünf gleiche 'Einrichtung öffnen'-Knöpfe",
+   "steps": [
+    "Einrichtung abschließen, Benachrichtigungen überspringen",
+    "Übersicht ansehen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F12",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "sync",
+   "platform": "android-viewport",
+   "title": "Änderungen vom Partnergerät erscheinen verzögert; Status '0 empfangen' trotz neuer Daten (nicht eindeutig reproduziert)",
+   "steps": [
+    "Zwei Profile mit demselben Server verbinden",
+    "Auf B Eintrag anlegen",
+    "Auf A 'Jetzt synchronisieren'"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F13",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "setup",
+   "platform": "android-viewport",
+   "title": "Entwickler-Modul 'Beispiel' in der Modulauswahl für Nutzer",
+   "steps": [
+    "Einrichtung → Profil und Module"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F14",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "setup",
+   "platform": "android-viewport",
+   "title": "Profilkarten: Titel und Knopf gleich benannt, kein klarer gewählt-Zustand",
+   "steps": [
+    "Einrichtung Schritt 3",
+    "Profil antippen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-F15",
+   "type": "bug",
+   "severity": "niedrig",
+   "area": "pantry",
+   "platform": "android-viewport",
+   "title": "Filterpille ohne Abstand zur ersten Überschrift",
+   "steps": [
+    "Vorräte öffnen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V01",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "calendar/todos/documents",
+   "platform": "all",
+   "title": "Familienmitglieder zu Terminen, Aufgaben, Unterlagen zuordnen (Farbe, Filter)",
+   "steps": [
+    "Termin 'Zahnarzt Lena' anlegen",
+    "Kein Feld für Person"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V02",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "calendar",
+   "platform": "all",
+   "title": "Flexible Wiederholungen (alle N Wochen, mehrere Wochentage, Enddatum), sichtbar und per Schnellerfassung",
+   "steps": [
+    "Neuer Termin → Mehr Felder → Wiederholung"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V03",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "sync",
+   "platform": "all",
+   "title": "Partner-Kopplung ohne eigenen Server (QR, Teilen einzelner Listen), ohne Cloud-Pflicht",
+   "steps": [
+    "Einstellungen → Sync & Backup"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V04",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "home",
+   "platform": "all",
+   "title": "Übersicht 'Heute, Morgen, diese Woche' mit Personenfarben, Überfälliges nicht eingeklappt",
+   "steps": [
+    "Übersicht öffnen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V05",
+   "type": "improvement",
+   "benefit": "hoch",
+   "area": "setup",
+   "platform": "all",
+   "title": "Profil 'Familie' und Kurzstart mit 3 Schritten statt 12",
+   "steps": [
+    "Einrichtung starten"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V06",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "lists",
+   "platform": "all",
+   "title": "Packlisten-Vorlagen (Urlaub mit Kindern, Schulranzen) statt nur Routinen",
+   "steps": [
+    "Aus Vorlage"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V07",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "lists",
+   "platform": "android-viewport",
+   "title": "Einkauf: Gruppen/Läden und 'Als Text teilen'",
+   "steps": [
+    "Einkaufsliste befüllen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V08",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "documents",
+   "platform": "all",
+   "title": "Dokumente als eigener Bereich, Feld 'Für', optional Dateien ins verschlüsselte Backup",
+   "steps": [
+    "Mehr → Tresor → Unterlage hinzufügen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V09",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "calendar/notifications",
+   "platform": "all",
+   "title": "Vorgabe-Erinnerung bei Terminen mit Uhrzeit, ruhiger Hinweis bei fehlender Erlaubnis (abschaltbar)",
+   "steps": [
+    "Neuer Termin: Benachrichtigen = Nicht benachrichtigen"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V10",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "todos",
+   "platform": "all",
+   "title": "Haushaltsaufgaben reihum an Personen verteilen (nicht tief getestet)",
+   "steps": [
+    "Schnellerfassung 'Müll rausbringen jeden Montag'"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V11",
+   "type": "improvement",
+   "benefit": "mittel",
+   "area": "backup",
+   "platform": "all",
+   "title": "Verschlüsseltes Backup als Hauptknopf, Klartext als Nebenoption",
+   "steps": [
+    "Einstellungen → Sync & Backup"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V12",
+   "type": "improvement",
+   "benefit": "niedrig",
+   "area": "lists",
+   "platform": "android-viewport",
+   "title": "Leere Liste: 'Tippe oben, was du brauchst' statt Startdaten-Import",
+   "steps": [
+    "Leere Einkaufsliste"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  },
+  {
+   "id": "MIA-V13",
+   "type": "improvement",
+   "benefit": "niedrig",
+   "area": "calendar",
+   "platform": "desktop",
+   "title": "Filter 'Nur Termine', Fristen dezenter",
+   "steps": [
+    "Kalender mit Testdaten medium"
+   ],
+   "persona": "Mia, 45, Familie mit Kindern 9 und 14, Android-Handy + PC"
+  }
+ ]
+}
