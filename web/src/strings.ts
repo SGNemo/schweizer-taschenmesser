@@ -3707,6 +3707,10 @@ export const de = {
     markedDone: 'Abgehakt.',
     markedOpen: 'Wieder offen.',
     itemDeleted: 'Eintrag gelöscht.',
+    // Single-item notices name the entry (one notice at a time, so it must say what changed).
+    tickedItem: (name: string) => `„${name}“ abgehakt.`,
+    reopenedItem: (name: string) => `„${name}“ wieder offen.`,
+    removedItem: (name: string) => `„${name}“ gelöscht.`,
     itemsDeleted: (n: number) => (n === 1 ? '1 Eintrag gelöscht.' : `${n} Einträge gelöscht.`),
     listDeleted: 'Liste gelöscht.',
     deleteList: 'Liste löschen',

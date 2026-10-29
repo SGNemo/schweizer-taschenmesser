@@ -3,7 +3,8 @@ import { useSetupState } from '@/core/setup/hooks';
 import { dismissSetup } from '@/core/setup/state';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, patternStyles } from '@/ui';
+import { Button, Card } from '@/ui';
+import styles from './WelcomeCard.module.css';
 
 /**
  * Discreet offer on the dashboard, only for a really empty app (`notStarted`; the start migration
@@ -18,28 +19,29 @@ export function WelcomeCard() {
   const seen = useUiStore((s) => s.markReadHintSeen);
   if (state?.status !== 'notStarted') return null;
   return (
-    <div data-testid="setup-welcome" style={{ marginBottom: 'var(--space-5)' }}>
+    <div data-testid="setup-welcome" className={styles.card}>
       <Card>
         <h2>{t.setup.welcomeTitle}</h2>
-        <p className={patternStyles.muted}>{t.setup.welcomeText}</p>
+        <p className={styles.text}>{t.setup.welcomeText}</p>
         {readAid || hintSeen ? null : (
-          <p className={patternStyles.muted} data-testid="read-hint">
-            {t.settings.reading.hintText}{' '}
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setReadAid(true);
-                seen();
-              }}
-            >
-              {t.settings.reading.hintOn}
-            </Button>
-            <Button variant="ghost" onClick={seen}>
-              {t.settings.reading.hintLater}
-            </Button>
-          </p>
+          <div className={styles.hint} data-testid="read-hint">
+            <p className={styles.text}>{t.settings.reading.hintText}</p>
+            <div className={styles.buttons}>
+              <Button
+                onClick={() => {
+                  setReadAid(true);
+                  seen();
+                }}
+              >
+                {t.settings.reading.hintOn}
+              </Button>
+              <Button variant="ghost" onClick={seen}>
+                {t.settings.reading.hintLater}
+              </Button>
+            </div>
+          </div>
         )}
-        <div className={patternStyles.hstackWrap}>
+        <div className={styles.buttons}>
           <Button variant="primary" onClick={() => open()}>
             {t.setup.start}
           </Button>
