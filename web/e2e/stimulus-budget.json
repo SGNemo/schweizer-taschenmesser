@@ -146,10 +146,10 @@
       "firstScreenActions": 25
     },
     "phone--calendar": {
-      "height": 1018,
+      "height": 1122,
       "buttons": 51,
       "links": 10,
-      "icons": 12,
+      "icons": 13,
       "firstScreenActions": 60
     },
     "phone--finance": {
