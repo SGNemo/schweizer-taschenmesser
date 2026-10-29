@@ -42,7 +42,7 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 | Vorräte | Pantry | Despensa | Provisions | Despensa |
 | Personen | People | Personas | Personnes | Pessoas |
 | Unterlagen | Documents | Documentos | Documents | Documentos |
-| Accounts (password vault) | Passwords | Contraseñas | Mots de passe | Senhas |
+| Accounts → Passwörter (password vault; module id stays `accounts`) | Passwords | Contraseñas | Mots de passe | Senhas |
 | Dieser PC | This PC | Este PC | Ce PC | Este PC |
 | Chat | Chat | Chat | Chat | Chat |
 | Werkzeuge | Tools | Herramientas | Outils | Ferramentas |
@@ -51,12 +51,15 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 | Deutsch | English | Español | Français | Português (Brasil) |
 |---|---|---|---|---|
 | Modul-Bibliothek | Module library | Biblioteca de módulos | Bibliothèque de modules | Biblioteca de módulos |
-| Widget | widget | widget | widget | widget |
+| Widget → Karte | Card | Tarjeta | Carte | Cartão |
+| Karte hinzufügen (pin a widget) | Add card | Añadir tarjeta | Ajouter une carte | Adicionar cartão |
 | Favoriten | Favourites | Favoritos | Favoris | Favoritos |
 | Einstellungen | Settings | Ajustes | Paramètres | Configurações |
 | Einrichtung / Einrichtungsassistent | Setup / setup assistant | Configuración inicial / asistente | Configuration / assistant de configuration | Configuração / assistente de configuração |
-| Startdaten | Starter data | Datos iniciales | Données de départ | Dados iniciais |
-| Befehlspalette | Command palette | Paleta de comandos | Palette de commandes | Paleta de comandos |
+| Startdaten → Importieren | Import | Importar | Importer | Importar |
+| Befehlspalette → Suchen | Search | Buscar | Rechercher | Buscar |
+| Erweitert (switch) → Mehr Felder anzeigen | Show more fields | Mostrar más campos | Afficher plus de champs | Mostrar mais campos |
+| Satz eintragen (Mit KI eintragen, no provider) | Add a sentence | Añadir una frase | Saisir une phrase | Adicionar uma frase |
 | Schnell erfassen / Schnellerfassung | Quick capture | Captura rápida | Saisie rapide | Captura rápida |
 | Jetzt wichtig | Important now | Importante ahora | Important maintenant | Importante agora |
 | Jetzt dran | Up next | Ahora toca | À faire maintenant | Agora |
@@ -71,7 +74,7 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 | Sync / Synchronisation | Sync | Sincronización | Synchronisation | Sincronização |
 | Sync-Server | Sync server | Servidor de sincronización | Serveur de synchronisation | Servidor de sincronização |
 | Ende-zu-Ende-Verschlüsselung | End-to-end encryption | Cifrado de extremo a extremo | Chiffrement de bout en bout | Criptografia de ponta a ponta |
-| Passphrase | Passphrase | Frase de contraseña | Phrase secrète | Frase secreta |
+| Passphrase → Passwortsatz (mehrere Wörter) | Passphrase (several words) | Frase de contraseña (varias palabras) | Phrase secrète (plusieurs mots) | Frase secreta (várias palavras) |
 | Backup | Backup | Copia de seguridad | Sauvegarde | Backup |
 | Wiederherstellen | Restore | Restaurar | Restaurer | Restaurar |
 | KI / KI-Assistent | AI / AI assistant | IA / asistente de IA | IA / assistant IA | IA / assistente de IA |

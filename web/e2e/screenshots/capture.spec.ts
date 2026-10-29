@@ -171,7 +171,7 @@ test('capture notification centre', async ({ browser }) => {
     await page.getByTestId('notification-bell').click();
     await page.waitForTimeout(600);
     await page.screenshot({ path: `${OUT}/${vp.name}--notification-centre.png` });
-    await page.getByRole('dialog').getByRole('button', { name: 'Zufällige Erinnerung' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Eine Erinnerung zeigen' }).click();
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${OUT}/${vp.name}--notification-centre-random.png` });
     await context.close();

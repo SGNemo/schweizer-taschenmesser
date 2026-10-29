@@ -137,7 +137,7 @@ test('search finds entries only in the unlocked vault', async ({ page }) => {
   await page.keyboard.press('Escape'); // the detail view opens after saving
   await addEntry(page, { title: 'Beta Bank' });
   await page.keyboard.press('Escape');
-  await page.getByLabel('Accounts durchsuchen').fill('beta');
+  await page.getByLabel('Passwörter durchsuchen').fill('beta');
   await expect(page.getByRole('listitem').filter({ hasText: 'Beta Bank' })).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: 'Alpha Shop' })).toHaveCount(0);
 });

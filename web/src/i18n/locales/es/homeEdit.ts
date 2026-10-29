@@ -1,13 +1,13 @@
 import type { Strings } from '@/strings';
 
 export const homeEdit: Strings['homeEdit'] = {
-  showMore: (n: number) => (n === 1 ? 'Mostrar más · 1 widget' : `Mostrar más · ${n} widgets`),
+  showMore: (n: number) => (n === 1 ? 'Mostrar más · 1 tarjeta' : `Mostrar más · ${n} tarjetas`),
   showLess: 'Solo lo importante',
-  pinStart: 'Fijar…',
-  pin: (title: string) => `Fijar ${title}`,
+  pinStart: 'Añadir tarjeta…',
+  pin: (title: string) => `Añadir ${title}`,
   unpin: (title: string) => `Quitar ${title}`,
-  pinned: 'Fijado',
-  pinNote: 'Los widgets fijados siguen visibles en la vista tranquila.',
+  pinned: 'Añadida',
+  pinNote: 'Las tarjetas añadidas siguen visibles en la vista tranquila.',
   customize: 'Personalizar',
   done: 'Listo',
   hide: 'Ocultar',
@@ -20,15 +20,15 @@ export const homeEdit: Strings['homeEdit'] = {
   moved: (title: string, pos: number) => `${title} movido a la posición ${pos}.`,
   dropped: (title: string, pos: number) => `${title} colocado en la posición ${pos}.`,
   cancelled: 'Movimiento cancelado.',
-  widgets: 'Widgets',
-  widgetsTitle: 'Widgets del resumen',
+  widgets: 'Tarjetas',
+  widgetsTitle: 'Tarjetas del resumen',
   widgetsNote:
     'Ocultar solo afecta al resumen; el módulo sigue activo. Puedes desactivar módulos en la biblioteca.',
-  widgetsNone: 'No hay módulos activos con widgets.',
+  widgetsNone: 'No hay módulos activos con tarjetas.',
   reset: 'Restablecer',
   resetTitle: '¿Restablecer el resumen?',
   resetText:
-    'El orden, los tamaños y los widgets ocultos vuelven a los valores predeterminados. Tus módulos y datos no cambian.',
+    'El orden, los tamaños y las tarjetas ocultas vuelven a los valores predeterminados. Tus módulos y datos no cambian.',
   resetConfirm: 'Restablecer valores',
   cancel: 'Cancelar',
   size: (title: string) => `Tamaño de ${title}`,

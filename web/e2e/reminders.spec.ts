@@ -39,7 +39,7 @@ test.describe('Notification centre (manual reminders)', () => {
     await expect(bell).toHaveAccessibleName('Erinnerungen, 1 offen');
     await bell.click();
     const panel = page.getByRole('dialog', { name: 'Erinnerungen' });
-    await panel.getByRole('button', { name: 'Nächste Erinnerung' }).click();
+    await panel.getByRole('button', { name: 'Nächste Erinnerung zeigen' }).click();
     const card = panel.getByTestId('center-card');
     await expect(card).toContainText('Tabletten nehmen');
     await card.getByRole('button', { name: 'Erledigt' }).click();
@@ -50,12 +50,12 @@ test.describe('Notification centre (manual reminders)', () => {
     await expect(bell).toHaveAccessibleName('Erinnerungen');
   });
 
-  test('"Zufällige Erinnerung" is reachable from the command palette', async ({ page }) => {
+  test('"Eine Erinnerung zeigen" is reachable from the command palette', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
     await addReminder(page, 'Wäsche aufhängen');
     await page.clock.fastForward(120_000);
     await page.getByRole('button', { name: 'Suchen' }).first().click();
-    await page.getByRole('combobox').fill('Zufällige');
+    await page.getByRole('combobox').fill('Eine Erinnerung');
     await page.keyboard.press('Enter');
     const card = page.getByRole('dialog', { name: 'Erinnerungen' }).getByTestId('center-card');
     await expect(card).toContainText('Wäsche aufhängen');

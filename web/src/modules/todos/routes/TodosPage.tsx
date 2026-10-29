@@ -6,7 +6,7 @@ import type { Stored } from '@/core/db/types';
 import { undoable } from '@/core/undo';
 import { skipSuggestion } from '@/core/focus/state';
 import { usePageChrome } from '@/core/shell/pageChrome';
-import { useWriteAvailable } from '@/core/shell/writeAvailable';
+import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { useAdvanced } from '@/core/settings/comfort';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
@@ -254,6 +254,7 @@ export default function TodosPage() {
   const [advanced, setAdvanced] = useAdvanced('todos');
   const tx = tAdvanced.use();
   const writeAvailable = useWriteAvailable('todos');
+  const writeLabel = useWriteLabel();
   const openWrite = useUiStore((s) => s.openWritePalette);
   const toast = useUiStore((s) => s.toast);
   // The page has its own add field: no round "+" button, and the AI entry lives in the "⋯" menu.
@@ -451,7 +452,7 @@ export default function TodosPage() {
           {
             id: 'write',
             group: t.todos.moreOptions,
-            label: t.ai.palette.writeButton,
+            label: writeLabel.label,
             onSelect: openWrite,
           },
         ]

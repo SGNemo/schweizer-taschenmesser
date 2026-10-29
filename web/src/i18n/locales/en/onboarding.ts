@@ -1,8 +1,10 @@
 import type { Strings } from '@/strings';
 
 export const onboarding: Strings['onboarding'] = {
-  button: 'Set up starter data',
-  title: (module: string) => `Starter data: ${module}`,
+  button: 'Import',
+  title: (module: string) => `Import: ${module}`,
+  rowLabel: 'Add entries',
+  rowHint: 'From a file, a text or suggestions. Nothing is saved until you confirm the preview.',
   chooseIntro:
     'Where should the first entries come from? Nothing is saved until you confirm the preview.',
   skip: 'Skip',

@@ -5,7 +5,7 @@ export const localApi: Strings['localApi'] = {
   intro:
     'Una interfaz local con la que una IA en este ordenador (p. ej. Claude Code, Claude Desktop) puede escribir datos en tus módulos y, si lo permites, leerlos. Solo es accesible desde este ordenador.',
   unsupported:
-    'La interfaz solo existe en la app de Windows. En el navegador y en Android usa «Pegar JSON» en Datos iniciales.',
+    'La interfaz solo existe en la app de Windows. En el navegador y en Android usa «Pegar JSON» en Importar.',
   enable: 'Activar la interfaz local',
   enableHint: 'Desactivada por defecto',
   port: 'Puerto',

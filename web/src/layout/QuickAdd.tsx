@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router';
 import { useAiOn } from '@/core/ai/switch';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
+import { useWriteLabel } from '@/core/shell/writeAvailable';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
@@ -17,6 +18,7 @@ export function QuickAdd() {
   const openWritePalette = useUiStore((s) => s.openWritePalette);
   const [write] = useAiWriteSettings();
   const aiOn = useAiOn();
+  const writeLabel = useWriteLabel();
 
   const onSaved: Parameters<typeof CaptureForm>[0]['onSaved'] = (saved) => {
     setOpen(false);
@@ -45,7 +47,7 @@ export function QuickAdd() {
             openWritePalette();
           }}
         >
-          <Icon name="sparkles" size={16} /> {t.ai.palette.writeButton}
+          <Icon name={writeLabel.ai ? 'sparkles' : 'plus'} size={16} /> {writeLabel.label}
         </Button>
       ) : null}
       {actions.length === 0 ? (

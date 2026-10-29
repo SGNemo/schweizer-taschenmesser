@@ -10,8 +10,8 @@ test('start-data wizard: paste lines → preview → import → undo', async ({ 
   await ready(page, '/todos');
   await expect(page.getByText('Nichts zu tun – gut so.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Startdaten einrichten' }).click();
-  const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+  await page.getByRole('button', { name: 'Importieren' }).click();
+  const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog.getByRole('button', { name: /Aufgaben einfügen/ }).click();
   await dialog
     .getByLabel('Eine Zeile = ein Eintrag')
@@ -34,9 +34,9 @@ test('start-data wizard: paste lines → preview → import → undo', async ({ 
   await page.goto('/settings/module');
   await page
     .locator('section[aria-labelledby="module-todos"]')
-    .getByRole('button', { name: 'Startdaten einrichten' })
+    .getByRole('button', { name: 'Importieren' })
     .click();
-  const again = page.getByRole('dialog', { name: /Startdaten/ });
+  const again = page.getByRole('dialog', { name: /Importieren/ });
   await again.getByRole('button', { name: 'Import rückgängig machen' }).click();
   await expect(again.getByText('rückgängig gemacht')).toBeVisible();
   await page.goto('/todos');
@@ -47,8 +47,8 @@ test('JSON fallback: paste → preview with a bad entry → import → repeat is
   page,
 }) => {
   await ready(page, '/todos');
-  await page.getByRole('button', { name: 'Startdaten einrichten' }).click();
-  const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+  await page.getByRole('button', { name: 'Importieren' }).click();
+  const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog.getByRole('button', { name: /JSON einfügen/ }).click();
   await expect(dialog.getByRole('button', { name: 'Schema für KI kopieren' })).toBeVisible();
 
@@ -71,9 +71,9 @@ test('JSON fallback: paste → preview with a bad entry → import → repeat is
   await page.goto('/settings/module');
   await page
     .locator('section[aria-labelledby="module-todos"]')
-    .getByRole('button', { name: 'Startdaten einrichten' })
+    .getByRole('button', { name: 'Importieren' })
     .click();
-  const again = page.getByRole('dialog', { name: /Startdaten/ });
+  const again = page.getByRole('dialog', { name: /Importieren/ });
   await again.getByRole('button', { name: /JSON einfügen/ }).click();
   await again.getByLabel('JSON', { exact: true }).fill(json);
   await again.getByRole('button', { name: 'Vorschau anzeigen' }).click();

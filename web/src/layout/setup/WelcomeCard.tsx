@@ -3,7 +3,7 @@ import { useSetupState } from '@/core/setup/hooks';
 import { dismissSetup } from '@/core/setup/state';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, patternStyles } from '@/ui';
+import { Button, Card, ReadableText, patternStyles } from '@/ui';
 
 /**
  * Discreet offer on the dashboard, only for a really empty app (`notStarted`; the start migration
@@ -25,6 +25,9 @@ export function WelcomeCard() {
         {readAid || hintSeen ? null : (
           <p className={patternStyles.muted} data-testid="read-hint">
             {t.settings.reading.hintText}{' '}
+            <span data-testid="read-hint-preview">
+              <ReadableText text={t.settings.reading.previewText} force />
+            </span>{' '}
             <Button
               variant="ghost"
               onClick={() => {

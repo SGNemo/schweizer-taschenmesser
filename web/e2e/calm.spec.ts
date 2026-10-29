@@ -39,7 +39,7 @@ test.describe('Calm display, capture and finding things again', () => {
     expect(await html(page, 'data-leading')).toBe('airy');
     expect(await html(page, 'data-motion')).toBe('reduce');
     const rootSize = await page.evaluate(() => getComputedStyle(document.documentElement).fontSize);
-    expect(rootSize).toBe('20px');
+    expect(rootSize).toBe('24px');
 
     await openAppearanceGroup(page, 'text');
     await page
@@ -59,9 +59,9 @@ test.describe('Calm display, capture and finding things again', () => {
     await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
     await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
     await expect(page.getByTestId('widget-todos:open')).toHaveCount(0);
-    await expect(page.getByTestId('home-calm-more')).toContainText('Widgets');
+    await expect(page.getByTestId('home-calm-more')).toContainText('Karten');
 
-    await page.getByRole('button', { name: /^Mehr anzeigen · \d+ Widgets$/ }).click();
+    await page.getByRole('button', { name: /^Mehr anzeigen · \d+ Karten$/ }).click();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     await expect(page.getByTestId('home-calm-more')).toHaveCount(0);
     await page.getByRole('button', { name: 'Nur das Wichtigste' }).click();

@@ -4,7 +4,7 @@ export const sync: Strings['sync'] = {
   defaultDeviceName: 'Device',
   title: 'Sync',
   intro:
-    'Optional: sync your data through your own sync server (on your LAN or via Tailscale). Without a server, everything stays on this device.',
+    'Optional: sync your data through your own sync server (on your home network or via a private network such as Tailscale). Without a server, everything stays on this device.',
   serverUrl: 'Server address',
   serverUrlHint: 'e.g. https://my-pc.tailnet.ts.net',
   token: 'Access token',
@@ -16,10 +16,10 @@ export const sync: Strings['sync'] = {
   >,
   encrypt: 'End-to-end encryption',
   encryptHint:
-    'Values are encrypted on the device; the server only sees ciphertext. Only possible on an empty server.',
+    'Values are encrypted on the device; the server only sees encrypted data. Only possible on an empty server.',
   plainWarning:
     'Without end-to-end encryption, your data is stored on the server in plain text. Use it if the server isn’t yours alone or isn’t stored encrypted.',
-  passphrase: 'Passphrase',
+  passphrase: 'Passphrase (several words)',
   passphraseHint:
     'At least 12 characters, ideally several words. Without the passphrase, the data can’t be recovered.',
   passphraseJoinHint: 'Only needed if the server is encrypted.',
