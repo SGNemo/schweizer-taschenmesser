@@ -4,6 +4,7 @@ import { availableManifests } from '@/core/modules/available';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import {
   diffSelection,
+  modulesSwitchedOff,
   PROFILES,
   resolveProfile,
   toggleModule,
@@ -13,7 +14,7 @@ import type { SetupStepProps } from '@/core/setup/types';
 import { DEFAULT_TOOLS, isEnabled, toolsSettingsSchema, TOOLS_SCOPE } from '@/core/tools/layout';
 import { allTools } from '@/core/tools/registry';
 import { t } from '@/strings';
-import { Button, Card, Checkbox, patternStyles, Switch } from '@/ui';
+import { Button, Card, Checkbox, Icon, patternStyles, Switch } from '@/ui';
 
 const s = t.setup.steps.profiles;
 const names = (ids: string[]) =>
@@ -28,13 +29,20 @@ const nonDevTools = allTools.filter((tool) => tool.group !== 'dev');
  * change that switches something off has to be confirmed after looking at the diff. Disabled
  * modules always keep their data.
  */
-export default function ProfilesStep({ registerCommit, setCanContinue }: SetupStepProps) {
+export default function ProfilesStep({
+  registerCommit,
+  setCanContinue,
+  setBlockedReason,
+  mode,
+}: SetupStepProps) {
+  const quick = mode === 'quick';
   const states = useModuleStates();
   const [tools] = useSettings(TOOLS_SCOPE, toolsSettingsSchema, DEFAULT_TOOLS);
   const [touched, setTouched] = useState<
     { modules: Set<string>; tools: Set<string> } | undefined
   >();
   const [confirmed, setConfirmed] = useState(false);
+  const [pickedId, setPickedId] = useState<string | undefined>();
   const [via, setVia] = useState<Record<string, string[]>>({});
 
   const current = useMemo(
@@ -60,10 +68,16 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
       toolDiff.enable.length +
       toolDiff.disable.length >
     0;
-  const needsConfirm = changed && (modDiff.disable.length > 0 || toolDiff.disable.length > 0);
+  // The quick question lists what each card switches off, so the choice itself is the consent.
+  const needsConfirm =
+    !quick && changed && (modDiff.disable.length > 0 || toolDiff.disable.length > 0);
   const ok = !needsConfirm || confirmed;
 
-  useEffect(() => setCanContinue(ok), [ok, setCanContinue]);
+  useEffect(() => {
+    setCanContinue(ok);
+    setBlockedReason?.(ok ? null : s.needConfirm);
+    return () => setBlockedReason?.(null);
+  }, [ok, setCanContinue, setBlockedReason]);
 
   useEffect(() => {
     if (!touched || !changed) {
@@ -97,34 +111,87 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
   const pick = (id: string) => {
     const profile = PROFILES.find((p) => p.id === id)!;
     const r = resolveProfile(profile, availableManifests(), nonDevTools);
+    setPickedId(id);
     setVia(r.viaDependency);
     setConfirmed(false);
     setTouched({ modules: r.modules, tools: r.tools });
   };
   const toggle = (id: string, on: boolean) => {
     setConfirmed(false);
+    setPickedId(undefined);
     const next = toggleModule(selection, id, on, availableManifests());
     setVia(withDependencies(next, availableManifests()).viaDependency);
     setTouched({ modules: next, tools: toolSelection });
   };
 
-  return (
-    <>
-      <p className={patternStyles.muted}>{s.currentState}</p>
-      <h4>{s.choose}</h4>
-      <ul className={patternStyles.gridList}>
-        {PROFILES.map((p) => (
+  const shownProfiles = quick ? PROFILES.filter((p) => p.quick) : PROFILES;
+  const profileCards = (
+    <ul className={patternStyles.gridList}>
+      {shownProfiles.map((p) => {
+        const off = modulesSwitchedOff(
+          current,
+          resolveProfile(p, availableManifests(), nonDevTools),
+        );
+        const chosen = pickedId === p.id;
+        return (
           <li key={p.id}>
             <Card>
               <strong>{t.setup.profiles[p.id]?.name}</strong>
               <p className={patternStyles.muted}>{t.setup.profiles[p.id]?.description}</p>
-              <Button data-testid={`profile-${p.id}`} onClick={() => pick(p.id)}>
-                {t.setup.profiles[p.id]?.name}
+              <p className={patternStyles.muted}>
+                {off.length ? `${s.switchesOff(names(off))} ${s.dataKept}` : s.switchesNothingOff}
+              </p>
+              <Button
+                data-testid={`profile-${p.id}`}
+                aria-pressed={chosen}
+                aria-label={`${t.setup.profiles[p.id]?.name}: ${chosen ? s.picked : s.pick}`}
+                onClick={() => pick(p.id)}
+              >
+                {chosen ? (
+                  <>
+                    <Icon name="check" size={16} /> {s.picked}
+                  </>
+                ) : (
+                  s.pick
+                )}
               </Button>
             </Card>
           </li>
-        ))}
-      </ul>
+        );
+      })}
+    </ul>
+  );
+
+  const diff = (
+    <div data-testid="profile-diff" aria-live="polite">
+      <h4>{s.diffTitle}</h4>
+      {!changed ? <p>{s.diffNone}</p> : null}
+      {modDiff.enable.length ? <p>{s.willEnable(names(modDiff.enable))}</p> : null}
+      {modDiff.disable.length ? (
+        <p>
+          {s.willDisable(names(modDiff.disable))} {s.keepData}
+        </p>
+      ) : null}
+      {toolDiff.enable.length ? <p>{s.toolsOn(toolNames(toolDiff.enable))}</p> : null}
+      {toolDiff.disable.length ? <p>{s.toolsOff(toolNames(toolDiff.disable))}</p> : null}
+      {needsConfirm ? (
+        <Checkbox
+          label={s.confirm}
+          checked={confirmed}
+          onChange={(e) => setConfirmed(e.target.checked)}
+        />
+      ) : null}
+    </div>
+  );
+
+  if (quick) return profileCards;
+
+  return (
+    <>
+      <p className={patternStyles.muted}>{s.currentState}</p>
+      <h4>{s.choose}</h4>
+      {profileCards}
+      {diff}
 
       <h4>{s.modules}</h4>
       <ul className={patternStyles.gridList}>
@@ -145,26 +212,6 @@ export default function ProfilesStep({ registerCommit, setCanContinue }: SetupSt
           </li>
         ))}
       </ul>
-
-      <div data-testid="profile-diff" aria-live="polite">
-        <h4>{s.diffTitle}</h4>
-        {!changed ? <p>{s.diffNone}</p> : null}
-        {modDiff.enable.length ? <p>{s.willEnable(names(modDiff.enable))}</p> : null}
-        {modDiff.disable.length ? (
-          <p>
-            {s.willDisable(names(modDiff.disable))} {s.keepData}
-          </p>
-        ) : null}
-        {toolDiff.enable.length ? <p>{s.toolsOn(toolNames(toolDiff.enable))}</p> : null}
-        {toolDiff.disable.length ? <p>{s.toolsOff(toolNames(toolDiff.disable))}</p> : null}
-        {needsConfirm ? (
-          <Checkbox
-            label={s.confirm}
-            checked={confirmed}
-            onChange={(e) => setConfirmed(e.target.checked)}
-          />
-        ) : null}
-      </div>
     </>
   );
 }

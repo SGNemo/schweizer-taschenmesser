@@ -533,6 +533,7 @@ export const de = {
     start: 'Einrichtung starten',
     resume: 'Einrichtung fortsetzen',
     open: 'Einrichtung öffnen',
+    openStep: 'Öffnen',
     paletteCommand: 'Einrichtung',
     welcomeTitle: 'Willkommen bei Nemo',
     welcomeText:
@@ -543,7 +544,7 @@ export const de = {
     progressLabel: 'Fortschritt der Einrichtung',
     back: 'Zurück',
     next: 'Weiter',
-    skip: 'Überspringen',
+    skip: 'Später',
     finish: 'Fertig',
     noSteps: 'Aktuell gibt es nichts einzurichten.',
     startTitle: 'Willkommen zurück',
@@ -562,13 +563,32 @@ export const de = {
     summaryTitle: 'Zusammenfassung',
     summaryIntro: 'So steht es um deine Einrichtung:',
     statusDone: 'Erledigt',
-    statusSkipped: 'Übersprungen',
+    statusSkipped: 'Später',
     statusOpen: 'Offen',
     isNew: 'Neu',
     showChecklist: 'Checkliste auf der Übersicht anzeigen',
     checklistProgress: (done: number, total: number) => `${done} von ${total} Schritten erledigt`,
     moreOpen: (n: number) => `… und ${n} weitere`,
     hideChecklist: 'Ausblenden',
+    restLater: 'Rest später',
+    allSteps: 'Alle Schritte ansehen',
+    questionOf: (n: number, total: number) => `Frage ${n} von ${total}`,
+    quick: {
+      basics: {
+        title: 'Wie darfst du heißen?',
+        description: 'Name und Textgröße. Beides lässt sich später ändern.',
+      },
+      profiles: {
+        title: 'Was passt zu dir?',
+        description:
+          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet.',
+      },
+      ai: {
+        title: 'Soll eine KI helfen?',
+        description:
+          'Die KI sieht nie deine Daten. Du kannst das jederzeit in den Einstellungen ändern.',
+      },
+    },
     steps: {
       basics: {
         title: 'Grundlagen',
@@ -581,6 +601,8 @@ export const de = {
         fixedTitle: 'Feste Vorgaben',
         timezone: (zone: string) => `Zeitzone: ${zone} (Uhrzeiten bleiben lokale Wanduhrzeit)`,
         currency: 'Währung: Euro (EUR)',
+        textSize: 'Textgröße',
+        more: 'Weitere Einstellungen',
       },
       sync: {
         title: 'Sync und Wiederherstellung',
@@ -610,6 +632,12 @@ export const de = {
         toolsOn: (names: string) => `Werkzeuge an: ${names}`,
         toolsOff: (names: string) => `Werkzeuge aus: ${names}`,
         confirm: 'Ich habe die Änderungen geprüft und möchte sie übernehmen.',
+        needConfirm: 'Hake bei „Das ändert sich“ an, dass du die Änderungen geprüft hast.',
+        switchesOff: (names: string) => `Schaltet ab: ${names}.`,
+        switchesNothingOff: 'Schaltet nichts ab.',
+        dataKept: 'Daten bleiben erhalten, alles lässt sich wieder einschalten.',
+        pick: 'Wählen',
+        picked: 'Gewählt',
       },
       tools: {
         title: 'Werkzeugkasten',
@@ -642,6 +670,15 @@ export const de = {
         mayTrain: 'Dieser Anbieter kann Eingaben zum Verbessern seiner Modelle nutzen.',
         ollamaFound: 'Ollama läuft auf diesem Computer.',
         ollamaAdd: 'Ollama hinzufügen',
+        quickLocal: 'Nur lokal, ohne KI',
+        quickLocalHint:
+          'Suche und Schnellerfassung laufen auf diesem Gerät. KI-Knöpfe bleiben aus.',
+        quickLater: 'KI später einrichten',
+        quickLaterHint: 'Der Schritt „KI-Anbieter“ bleibt in der Checkliste.',
+        ollamaSearch: 'Auf diesem Computer nach Ollama suchen',
+        ollamaSearching: 'Suche …',
+        ollamaNone: 'Ollama wurde nicht gefunden.',
+        ollamaHint: 'Fragt nur localhost:11434 auf diesem Computer ab, sonst nichts.',
       },
       connectors: {
         title: 'Konten verknüpfen',
@@ -736,6 +773,18 @@ export const de = {
         description: 'Aufgaben, Notizen, Kalender, Merkliste und Lesezeichen.',
       },
       minimal: { name: 'Minimal', description: 'Nur Kalender und Aufgaben.' },
+      family: {
+        name: 'Familie',
+        description: 'Kalender, Aufgaben, Einkauf, Vorräte, Geburtstage.',
+      },
+      papers: {
+        name: 'Papiere & Termine',
+        description: 'Unterlagen mit Fristen, Abos, Rechnungen und Kalender.',
+      },
+      study: {
+        name: 'Studium',
+        description: 'Aufgaben, Notizen, Kalender, Lesezeichen und Timer.',
+      },
     } as Record<string, { name: string; description: string }>,
   },
   palette: {

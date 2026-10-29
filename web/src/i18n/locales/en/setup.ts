@@ -7,6 +7,7 @@ export const setup: Strings['setup'] = {
   start: 'Start setup',
   resume: 'Continue setup',
   open: 'Open setup',
+  openStep: 'Open',
   paletteCommand: 'Setup',
   welcomeTitle: 'Welcome to Nemo',
   welcomeText:
@@ -17,7 +18,7 @@ export const setup: Strings['setup'] = {
   progressLabel: 'Setup progress',
   back: 'Back',
   next: 'Next',
-  skip: 'Skip',
+  skip: 'Later',
   finish: 'Done',
   noSteps: 'There’s nothing to set up right now.',
   startTitle: 'Welcome back',
@@ -35,13 +36,31 @@ export const setup: Strings['setup'] = {
   summaryTitle: 'Summary',
   summaryIntro: 'Here’s where your setup stands:',
   statusDone: 'Done',
-  statusSkipped: 'Skipped',
+  statusSkipped: 'Later',
   statusOpen: 'Open',
   isNew: 'New',
   showChecklist: 'Show checklist on the overview',
   checklistProgress: (done: number, total: number) => `${done} of ${total} steps done`,
   moreOpen: (n: number) => `… and ${n} more`,
   hideChecklist: 'Hide',
+  restLater: 'Rest later',
+  allSteps: 'See all steps',
+  questionOf: (n: number, total: number) => `Question ${n} of ${total}`,
+  quick: {
+    basics: {
+      title: 'What should we call you?',
+      description: 'Name and text size. You can change both later.',
+    },
+    profiles: {
+      title: 'What fits you?',
+      description:
+        'The profile switches on matching modules. Each profile says what it switches off.',
+    },
+    ai: {
+      title: 'Should an AI help?',
+      description: 'The AI never sees your data. You can change this any time in Settings.',
+    },
+  },
   steps: {
     basics: {
       title: 'Basics',
@@ -54,6 +73,8 @@ export const setup: Strings['setup'] = {
       fixedTitle: 'Fixed defaults',
       timezone: (zone: string) => `Time zone: ${zone} (times stay local wall-clock time)`,
       currency: 'Currency: euro (EUR)',
+      textSize: 'Text size',
+      more: 'More settings',
     },
     sync: {
       title: 'Sync and restore',
@@ -83,6 +104,12 @@ export const setup: Strings['setup'] = {
       toolsOn: (names: string) => `Tools on: ${names}`,
       toolsOff: (names: string) => `Tools off: ${names}`,
       confirm: 'I’ve checked the changes and want to apply them.',
+      needConfirm: 'Tick the box under “What changes” to confirm you’ve checked the changes.',
+      switchesOff: (names: string) => `Switches off: ${names}.`,
+      switchesNothingOff: 'Switches nothing off.',
+      dataKept: 'Data is kept; you can switch everything back on.',
+      pick: 'Choose',
+      picked: 'Chosen',
     },
     tools: {
       title: 'Toolbox',
@@ -115,6 +142,14 @@ export const setup: Strings['setup'] = {
       mayTrain: 'This provider may use inputs to improve its models.',
       ollamaFound: 'Ollama is running on this computer.',
       ollamaAdd: 'Add Ollama',
+      quickLocal: 'Local only, no AI',
+      quickLocalHint: 'Search and quick capture run on this device. AI buttons stay off.',
+      quickLater: 'Set up AI later',
+      quickLaterHint: 'The “AI provider” step stays in the checklist.',
+      ollamaSearch: 'Look for Ollama on this computer',
+      ollamaSearching: 'Looking …',
+      ollamaNone: 'Ollama wasn’t found.',
+      ollamaHint: 'Only asks localhost:11434 on this computer, nothing else.',
     },
     connectors: {
       title: 'Link accounts',
@@ -207,5 +242,11 @@ export const setup: Strings['setup'] = {
       description: 'Tasks, notes, calendar, saved items and bookmarks.',
     },
     minimal: { name: 'Minimal', description: 'Only calendar and tasks.' },
+    family: { name: 'Family', description: 'Calendar, tasks, shopping, pantry, birthdays.' },
+    papers: {
+      name: 'Papers & dates',
+      description: 'Documents with deadlines, subscriptions, invoices and calendar.',
+    },
+    study: { name: 'Study', description: 'Tasks, notes, calendar, bookmarks and timer.' },
   } as Record<string, { name: string; description: string }>,
 };

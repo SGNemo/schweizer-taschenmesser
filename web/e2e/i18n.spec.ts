@@ -35,19 +35,19 @@ test('switching to English changes the UI at once and stays after a reload', asy
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
 });
 
-test('the setup assistant asks for the language in its first step', async ({ page }) => {
+test('the setup assistant asks for the language in its first question', async ({ page }) => {
   await ready(page, '/');
   await page
     .getByTestId('setup-welcome')
     .getByRole('button', { name: 'Einrichtung starten' })
     .click();
   const wizard = page.getByRole('dialog', { name: 'Einrichtung' });
-  await expect(wizard.getByText(/^Schritt 1 von \d+$/)).toBeVisible();
+  await expect(wizard.getByText('Frage 1 von 3')).toBeVisible();
   await wizard.getByRole('combobox', { name: 'Sprache', exact: true }).selectOption('es');
 
   // The assistant stays open on the same step, now in Spanish.
   const asistente = page.getByRole('dialog', { name: 'Configuración inicial' });
-  await expect(asistente.getByText(/^Paso 1 de \d+$/)).toBeVisible();
+  await expect(asistente.getByText('Pregunta 1 de 3')).toBeVisible();
   await expect(asistente.getByRole('combobox', { name: 'Idioma', exact: true })).toHaveValue('es');
 });
 

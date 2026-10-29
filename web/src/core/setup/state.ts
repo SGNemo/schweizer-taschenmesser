@@ -133,3 +133,21 @@ export function resumeStep<T extends StepLike>(
 ): T | undefined {
   return steps.find((s) => stepProgress(state, s.id) === 'open');
 }
+
+/**
+ * What "Weiter" records. Done only when the step wrote something (or its default is the answer);
+ * a step that merely was looked at stays on the checklist as skipped ("Später").
+ */
+export function continueOutcome(
+  step: { settledByContinue?: boolean },
+  committed: boolean,
+  result: void | 'skipped',
+): 'done' | 'skipped' {
+  if (result === 'skipped') return 'skipped';
+  return committed || step.settledByContinue ? 'done' : 'skipped';
+}
+
+/** Steps that count in "x von y" – hints are shown but never counted. One number everywhere. */
+export function countedSteps<T extends { hint?: boolean }>(steps: readonly T[]): T[] {
+  return steps.filter((s) => !s.hint);
+}

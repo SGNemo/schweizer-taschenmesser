@@ -7,6 +7,7 @@ export const setup: Strings['setup'] = {
   start: 'Lancer la configuration',
   resume: 'Reprendre la configuration',
   open: 'Ouvrir la configuration',
+  openStep: 'Ouvrir',
   paletteCommand: 'Configuration',
   welcomeTitle: 'Bienvenue dans Nemo',
   welcomeText:
@@ -17,7 +18,7 @@ export const setup: Strings['setup'] = {
   progressLabel: 'Progression de la configuration',
   back: 'Retour',
   next: 'Suivant',
-  skip: 'Passer',
+  skip: 'Plus tard',
   finish: 'Terminé',
   noSteps: 'Il n’y a rien à configurer pour le moment.',
   startTitle: 'Bon retour',
@@ -38,7 +39,7 @@ export const setup: Strings['setup'] = {
   summaryTitle: 'Récapitulatif',
   summaryIntro: 'Où en est votre configuration :',
   statusDone: 'Terminé',
-  statusSkipped: 'Passé',
+  statusSkipped: 'Plus tard',
   statusOpen: 'À faire',
   isNew: 'Nouveau',
   showChecklist: 'Afficher la liste de contrôle sur la vue d’ensemble',
@@ -46,6 +47,25 @@ export const setup: Strings['setup'] = {
     `${done} ${done <= 1 ? 'étape terminée' : 'étapes terminées'} sur ${total}`,
   moreOpen: (n: number) => (n <= 1 ? `… et ${n} autre` : `… et ${n} autres`),
   hideChecklist: 'Masquer',
+  restLater: 'Le reste plus tard',
+  allSteps: 'Voir toutes les étapes',
+  questionOf: (n: number, total: number) => `Question ${n} sur ${total}`,
+  quick: {
+    basics: {
+      title: 'Comment souhaitez-vous être appelé ?',
+      description: 'Nom et taille du texte. Vous pourrez modifier les deux plus tard.',
+    },
+    profiles: {
+      title: 'Qu’est-ce qui vous convient ?',
+      description:
+        'Le profil active les modules adaptés. Chaque profil indique ce qu’il désactive.',
+    },
+    ai: {
+      title: 'Une IA doit-elle aider ?',
+      description:
+        'L’IA ne voit jamais vos données. Vous pouvez changer cela à tout moment dans les paramètres.',
+    },
+  },
   steps: {
     basics: {
       title: 'Bases',
@@ -59,6 +79,8 @@ export const setup: Strings['setup'] = {
       fixedTitle: 'Réglages fixes',
       timezone: (zone: string) => `Fuseau horaire : ${zone} (les heures restent l’heure locale)`,
       currency: 'Devise : euro (EUR), montants au format allemand',
+      textSize: 'Taille du texte',
+      more: 'Autres paramètres',
     },
     sync: {
       title: 'Synchronisation et restauration',
@@ -90,6 +112,13 @@ export const setup: Strings['setup'] = {
       toolsOn: (names: string) => `Outils activés : ${names}`,
       toolsOff: (names: string) => `Outils désactivés : ${names}`,
       confirm: 'J’ai vérifié les changements et je souhaite les appliquer.',
+      needConfirm:
+        'Cochez la case sous « Ce qui change » pour confirmer que vous avez vérifié les changements.',
+      switchesOff: (names: string) => `Désactive : ${names}.`,
+      switchesNothingOff: 'Ne désactive rien.',
+      dataKept: 'Les données sont conservées ; vous pouvez tout réactiver.',
+      pick: 'Choisir',
+      picked: 'Choisi',
     },
     tools: {
       title: 'Boîte à outils',
@@ -122,6 +151,15 @@ export const setup: Strings['setup'] = {
       mayTrain: 'Ce fournisseur peut utiliser les saisies pour améliorer ses modèles.',
       ollamaFound: 'Ollama tourne sur cet ordinateur.',
       ollamaAdd: 'Ajouter Ollama',
+      quickLocal: 'En local uniquement, sans IA',
+      quickLocalHint:
+        'La recherche et la saisie rapide fonctionnent sur cet appareil. Les boutons d’IA restent désactivés.',
+      quickLater: 'Configurer l’IA plus tard',
+      quickLaterHint: 'L’étape « Fournisseur d’IA » reste dans la liste de contrôle.',
+      ollamaSearch: 'Chercher Ollama sur cet ordinateur',
+      ollamaSearching: 'Recherche …',
+      ollamaNone: 'Ollama est introuvable.',
+      ollamaHint: 'Interroge uniquement localhost:11434 sur cet ordinateur, rien d’autre.',
     },
     connectors: {
       title: 'Associer des comptes',
@@ -215,5 +253,14 @@ export const setup: Strings['setup'] = {
       description: 'Tâches, notes, calendrier, enregistrés et signets.',
     },
     minimal: { name: 'Minimaliste', description: 'Calendrier et tâches uniquement.' },
+    family: {
+      name: 'Famille',
+      description: 'Calendrier, tâches, courses, provisions, anniversaires.',
+    },
+    papers: {
+      name: 'Papiers et rendez-vous',
+      description: 'Documents avec échéances, abonnements, factures et calendrier.',
+    },
+    study: { name: 'Études', description: 'Tâches, notes, calendrier, signets et minuteur.' },
   } as Record<string, { name: string; description: string }>,
 };

@@ -39,6 +39,8 @@ Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, E
 
 KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen → KI, löscht Schlüssel, Cache, Statistik und API-Tokens; PR gegen `develop`, wartet auf Review; Handtests A1–A2 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
+Erster Start in 3 Fragen (`feat/qa-first-run`, QA-P1): Name + Textgröße, Profil, „Nur lokal, ohne KI“; Rest in der Checkliste; PR wartet auf Review ([first-run-setup](features/first-run-setup.md)).
+
 App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien), Wahl unter Einstellungen → Allgemein und im ersten Einrichtungsschritt, Standard Systemsprache sonst Englisch; Übersetzungen maschinell, noch nicht muttersprachlich geprüft ([i18n/README.md](i18n/README.md)); PR gegen `develop`, wartet auf Review; Handtests S1–S4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Komfort Einstellungen, Bibliothek, Werkzeugkasten (gemergt: #132 Einstellungen, #150 Stumm, #151 Bibliothek, #153 Werkzeugkasten): Schnellleiste, Palette-Direktumschaltung und Suche ohne Präfix, „Häufig genutzt“, Kontext-Zahnrad, Zurücksetzen, Stumm, Bibliothek- und Werkzeugsuche, „timer 10m“/„umrechnen 5 km“ in der Leiste. Ergebnis: [product/comfort/06-settings-results.md](product/comfort/06-settings-results.md). Offen (Sven): Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Woche Nutzung (Reizlast Zahnrad/Schnellleiste).
