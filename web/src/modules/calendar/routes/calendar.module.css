@@ -83,6 +83,15 @@
   flex-direction: column;
   gap: 2px;
 }
+.cellLabel {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
 .chip,
 .more {
   display: block;
@@ -115,10 +124,13 @@
   background: var(--text-muted);
 }
 @media (min-width: 700px) {
+  .dots {
+    display: none;
+  }
   .chips {
     display: flex;
   }
-  .dots {
+  .cellLabel {
     display: none;
   }
   .cell {
@@ -194,6 +206,15 @@
 }
 .weekDay.todayCell {
   border-color: var(--accent);
+}
+.weekDayEmpty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-1);
+}
+.weekDayEmpty .weekHead {
+  margin-bottom: 0;
 }
 .weekHead {
   font-size: var(--text-md);

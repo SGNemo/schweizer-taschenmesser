@@ -1320,6 +1320,8 @@ export const de = {
     prev: 'Zurück',
     next: 'Weiter',
     newEvent: 'Neuer Termin',
+    endsAt: (time: string) => `bis ${time}`,
+    recent: 'Wie zuletzt',
     editEvent: 'Termin bearbeiten',
     allDay: 'Ganztägig',
     start: 'Beginn',
