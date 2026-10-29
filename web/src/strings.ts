@@ -4141,7 +4141,8 @@ export const de = {
       add: 'Kalender hinzufügen',
       checking: 'Wird geprüft …',
       remove: (name: string) => `Kalender „${name}“ entfernen`,
-      badUrl: 'Das ist keine gültige Adresse (https://… oder webcal://…).',
+      badUrl:
+        'Das ist keine gültige öffentliche Adresse (https://… oder webcal://…). Adressen im eigenen Netz und mit Zugangsdaten sind nicht erlaubt.',
       notACalendar: 'Unter dieser Adresse liegt kein Kalender.',
       unreachable: 'Die Adresse ist nicht erreichbar.',
       noProxy:

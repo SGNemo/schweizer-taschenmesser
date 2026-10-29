@@ -106,7 +106,8 @@ export const backup: Strings['backup'] = {
     invalid: 'The backup file is damaged.',
     'passphrase-required': 'This backup is encrypted. Enter the password.',
     'wrong-passphrase': 'Wrong password – or the file was changed.',
-    'checksum-mismatch': 'The checksum doesn’t match: the file is damaged, incomplete or was changed.',
+    'checksum-mismatch':
+      'The checksum doesn’t match: the file is damaged, incomplete or was changed.',
     'restore-failed': 'The trial restore failed.',
     'count-mismatch': 'Entries are missing after the trial restore.',
     'safety-failed': 'The safety copy couldn’t be created. Nothing was changed.',

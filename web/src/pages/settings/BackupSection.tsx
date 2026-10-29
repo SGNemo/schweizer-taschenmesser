@@ -1,10 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
-import {
-  backupFileName,
-  createBackup,
-  type Backup,
-  type ImportMode,
-} from '@/core/backup/backup';
+import { backupFileName, createBackup, type Backup, type ImportMode } from '@/core/backup/backup';
 import { downloadTextFile } from '@/core/backup/download';
 import {
   MIN_BACKUP_PASSPHRASE_LENGTH,
@@ -46,7 +41,10 @@ export function BackupSection() {
   const [busy, setBusy] = useState(false);
 
   async function exportPlain() {
-    const result = await downloadTextFile(backupFileName(), await serializeSealedBackup(await createBackup()));
+    const result = await downloadTextFile(
+      backupFileName(),
+      await serializeSealedBackup(await createBackup()),
+    );
     if (result === 'saved') toast(t.backup.exported);
   }
 
