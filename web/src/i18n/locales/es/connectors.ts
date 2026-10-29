@@ -17,6 +17,7 @@ export const connectors: Strings['connectors'] = {
     'no-callback':
       'El navegador no devolvió ningún inicio de sesión. Comprueba en el servicio la URI de redirección registrada y si tu cuenta está habilitada, e inténtalo de nuevo.',
     'bad-client': 'El servicio no reconoce este ID de cliente. Comprueba el ID introducido.',
+    'no-browser': 'No se pudo abrir el navegador para iniciar sesión.',
   } as Record<string, string>,
   icsName: 'Suscripción de calendario (ICS)',
   icsDescription:

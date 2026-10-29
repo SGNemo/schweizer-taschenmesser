@@ -40,6 +40,7 @@ let tokenResponse: () => Response;
 let revoked = 0;
 const startOpts: ({ preferredPort?: number } | undefined)[] = [];
 let startFails: string | undefined;
+let openFails = false;
 
 const jsonResponse = (status: number, body: unknown, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers });
@@ -68,7 +69,13 @@ function installPlatform() {
       set: async (name, value) => void secrets.set(name, value),
       delete: async (name) => void secrets.delete(name),
     },
-    app: { ...web.app, openUrl: async (url) => void opened.push(url) },
+    app: {
+      ...web.app,
+      async openUrl(url) {
+        if (openFails) throw new Error('forbidden url');
+        opened.push(url);
+      },
+    },
     oauth: {
       supported: true,
       async start(opts) {
@@ -142,6 +149,7 @@ beforeEach(async () => {
   revoked = 0;
   startOpts.length = 0;
   startFails = undefined;
+  openFails = false;
   waited = {};
   waitOutcome = 'code';
   tokenResponse = () =>
@@ -210,6 +218,15 @@ describe('connectOAuth', () => {
     expect((await connectOAuth(def, ['calendar'])).message).toBe(
       describeError(new ConnectorError('network')),
     );
+  });
+
+  it('reports a browser that could not be opened as such, and stores nothing', async () => {
+    await saveClient('testco', { clientId: 'client-abc-123' });
+    openFails = true;
+    const status = await connectOAuth(def, ['calendar']);
+    expect(status.state).toBe('error');
+    expect(status.message).toBe(describeError(new ConnectorError('no-browser')));
+    expect(secrets.has('oauth:testco:refresh')).toBe(false);
   });
 
   it('asks for the client id first', async () => {

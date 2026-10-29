@@ -18,6 +18,7 @@ export const connectors: Strings['connectors'] = {
       'Le navigateur n’a renvoyé aucune connexion. Vérifiez l’URI de redirection saisie chez le service et si votre compte est autorisé, puis réessayez.',
     'bad-client':
       'Le service ne reconnaît pas cet identifiant client. Vérifiez l’identifiant saisi.',
+    'no-browser': 'Le navigateur pour la connexion n’a pas pu être ouvert.',
   } as Record<string, string>,
   icsName: 'Abonnement calendrier (ICS)',
   icsDescription:

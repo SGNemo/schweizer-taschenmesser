@@ -4064,6 +4064,7 @@ export const de = {
       'no-callback':
         'Der Browser hat keine Anmeldung zurückgemeldet. Prüfe beim Dienst die eingetragene Redirect-URI und ob dein Konto freigeschaltet ist, dann versuche es erneut.',
       'bad-client': 'Der Dienst kennt diese Client-ID nicht. Prüfe die eingetragene ID.',
+      'no-browser': 'Der Browser für die Anmeldung konnte nicht geöffnet werden.',
     } as Record<string, string>,
     icsName: 'Kalender-Abo (ICS)',
     icsDescription:

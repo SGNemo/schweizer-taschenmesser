@@ -16,6 +16,7 @@ export const connectors: Strings['connectors'] = {
     'no-callback':
       'The browser did not report a sign-in. Check the redirect URI entered at the service and whether your account is allowed, then try again.',
     'bad-client': 'The service does not know this client ID. Check the ID you entered.',
+    'no-browser': 'The browser for the sign-in could not be opened.',
   } as Record<string, string>,
   icsName: 'Calendar subscription (ICS)',
   icsDescription:
