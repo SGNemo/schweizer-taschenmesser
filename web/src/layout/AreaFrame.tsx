@@ -3,7 +3,7 @@ import { useLocation } from 'react-router';
 import { isFocusPath } from '@/core/focus/path';
 import { areaOfPath } from '@/core/modules/areas';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
-import { useWriteAvailable } from '@/core/shell/writeAvailable';
+import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { availableManifests } from '@/core/modules/available';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -25,10 +25,11 @@ function WriteButton({ pathname }: { pathname: string }) {
     (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
   );
   const available = useWriteAvailable(manifest?.id);
+  const write = useWriteLabel();
   if (!available || writeInMenu) return null;
   return (
     <Button variant="ghost" onClick={open} data-testid="ai-write-button">
-      <Icon name="sparkles" size={16} /> {t.ai.palette.writeButton}
+      <Icon name={write.ai ? 'sparkles' : 'plus'} size={16} /> {write.label}
     </Button>
   );
 }

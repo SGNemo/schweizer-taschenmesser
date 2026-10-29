@@ -122,6 +122,8 @@ export const ai: Strings['ai'] = {
     ask: 'Demander à l’assistant',
     write: 'Ajouter',
     writeButton: 'Ajouter avec l’IA',
+    writeSentence: 'Saisir une phrase',
+    askLocal: 'Poser une question',
     writePlaceholder: 'p. ex. Rechnung Stadtwerke 89,90 € fällig 15.10.',
   },
   tier: {

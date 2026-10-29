@@ -27,6 +27,10 @@ export interface SetupStepProps {
   registerCommit(commit: (() => Promise<void | 'skipped'>) | null): void;
   /** `false` disables "Weiter" (e.g. a change that still needs an explicit confirmation). */
   setCanContinue(ok: boolean): void;
+  /** Why "Weiter" is disabled; shown next to the button. `null` clears it. */
+  setBlockedReason?(reason: string | null): void;
+  /** `quick` = one of the three first-run questions (short form of the step); default `full`. */
+  mode?: 'quick' | 'full';
 }
 
 export interface SetupStepDef {
@@ -40,6 +44,11 @@ export interface SetupStepDef {
   since: number;
   /** A pure hint: shown in the assistant, but never counted or listed in the dashboard checklist. */
   hint?: boolean;
+  /**
+   * "Weiter" without anything to write counts as skipped ("Später"), not done. Set this where
+   * leaving the default as is already is the answer (e.g. sync: "only on this device").
+   */
+  settledByContinue?: boolean;
   /** Only shown when this returns true (e.g. module active, native only). */
   when?(ctx: SetupCtx): boolean | Promise<boolean>;
   /** Detects a step that was completed elsewhere (e.g. a provider added in the settings). */

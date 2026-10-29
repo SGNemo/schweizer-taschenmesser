@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import {
   completeSetup,
+  continueOutcome,
+  countedSteps,
   dismissSetup,
   initialState,
   markStepDone,
@@ -96,5 +98,20 @@ describe('setup state', () => {
     const state = { ...initialState(), doneSteps: ['a'] };
     expect(newSteps(steps, state).map((s) => s.id)).toEqual(['n']);
     expect(newSteps(steps, { ...state, version: SETUP_VERSION + 1 })).toEqual([]);
+  });
+});
+
+describe('honest progress', () => {
+  it('counts "Weiter" as done only when something was written or the default is the answer', () => {
+    expect(continueOutcome({}, true, undefined)).toBe('done');
+    expect(continueOutcome({}, false, undefined)).toBe('skipped');
+    expect(continueOutcome({ settledByContinue: true }, false, undefined)).toBe('done');
+    expect(continueOutcome({}, true, 'skipped')).toBe('skipped');
+    expect(continueOutcome({ settledByContinue: true }, true, 'skipped')).toBe('skipped');
+  });
+
+  it('never counts hint steps, so the wizard and the card show the same total', () => {
+    const steps = [{ id: 'a' }, { id: 'b', hint: true }, { id: 'c' }];
+    expect(countedSteps(steps).map((x) => x.id)).toEqual(['a', 'c']);
   });
 });

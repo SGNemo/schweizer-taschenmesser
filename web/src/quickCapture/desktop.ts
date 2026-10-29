@@ -1,19 +1,20 @@
-import { onLangChange } from '@/core/i18n/lang';
+import { getLang, onLangChange } from '@/core/i18n/lang';
 import { getPlatform, type HotkeyError } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { readPrefs } from './device';
 
-/** Human-readable accelerator for messages: `Ctrl+Shift+Space` → `Strg+Umschalt+Leertaste`. */
+/** Human-readable accelerator for messages: `Ctrl+Shift+Space` → `Strg+Umschalt+Leertaste` (German UI only). */
 export function hotkeyLabel(accelerator: string): string {
+  const de = getLang() === 'de';
   const names: Record<string, string> = {
-    ctrl: 'Strg',
-    control: 'Strg',
-    commandorcontrol: 'Strg',
-    cmdorctrl: 'Strg',
-    shift: 'Umschalt',
+    ctrl: de ? 'Strg' : 'Ctrl',
+    control: de ? 'Strg' : 'Ctrl',
+    commandorcontrol: de ? 'Strg' : 'Ctrl',
+    cmdorctrl: de ? 'Strg' : 'Ctrl',
+    shift: de ? 'Umschalt' : 'Shift',
     alt: 'Alt',
-    space: 'Leertaste',
+    space: de ? 'Leertaste' : 'Space',
     super: 'Win',
     meta: 'Win',
   };

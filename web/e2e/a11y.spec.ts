@@ -219,8 +219,8 @@ for (const scheme of ['light', 'dark'] as const) {
 
     test('start-data wizard: choose, input, preview, result, help hint', async ({ page }) => {
       await page.goto('/todos');
-      await page.getByRole('button', { name: 'Startdaten einrichten' }).click();
-      const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+      await page.getByRole('button', { name: 'Importieren' }).click();
+      const dialog = page.getByRole('dialog', { name: /Importieren/ });
       await expect(dialog).toBeVisible();
       await audit(page, `wizard choose (${scheme})`);
       await dialog.getByRole('button', { name: /Hilfe/ }).click();

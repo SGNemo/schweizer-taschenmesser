@@ -5,6 +5,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 Sprachen, KI-Knöpfe nur mit KI-Zugang, „Sehr groß“ = 150 %; P3b/P3c folgen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
 Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter (Tipp öffnet Vorschau: 12 h + 7 Tage, PR `feat/weather-forecast`), Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
@@ -36,6 +38,8 @@ KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leis
 Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), Entwurf [design/READABILITY-PLAN.md](design/READABILITY-PLAN.md).
 
 KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen → KI, löscht Schlüssel, Cache, Statistik und API-Tokens; PR gegen `develop`, wartet auf Review; Handtests A1–A2 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Erster Start in 3 Fragen (`feat/qa-first-run`, QA-P1): Name + Textgröße, Profil, „Nur lokal, ohne KI“; Rest in der Checkliste; PR wartet auf Review ([first-run-setup](features/first-run-setup.md)).
 
 App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien), Wahl unter Einstellungen → Allgemein und im ersten Einrichtungsschritt, Standard Systemsprache sonst Englisch; Übersetzungen maschinell, noch nicht muttersprachlich geprüft ([i18n/README.md](i18n/README.md)); PR gegen `develop`, wartet auf Review; Handtests S1–S4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 

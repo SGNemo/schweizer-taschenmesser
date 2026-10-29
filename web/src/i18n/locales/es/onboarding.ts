@@ -1,8 +1,11 @@
 import type { Strings } from '@/strings';
 
 export const onboarding: Strings['onboarding'] = {
-  button: 'Configurar datos iniciales',
-  title: (module: string) => `Datos iniciales: ${module}`,
+  button: 'Importar',
+  title: (module: string) => `Importar: ${module}`,
+  rowLabel: 'Añadir entradas',
+  rowHint:
+    'Desde un archivo, un texto o sugerencias. No se guarda nada hasta que confirmes la vista previa.',
   chooseIntro:
     '¿De dónde salen las primeras entradas? No se guarda nada hasta que confirmes la vista previa.',
   skip: 'Omitir',

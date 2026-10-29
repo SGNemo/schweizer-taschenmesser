@@ -122,6 +122,8 @@ export const ai: Strings['ai'] = {
     ask: 'Preguntar al asistente',
     write: 'Añadir',
     writeButton: 'Añadir con IA',
+    writeSentence: 'Añadir una frase',
+    askLocal: 'Hacer una pregunta',
     writePlaceholder: 'p. ej. Rechnung Stadtwerke 89,90 € fällig 15.10.',
   },
   tier: {

@@ -1,7 +1,9 @@
 import { extractAmount } from './amount';
 import { extractDateTime } from './dates';
+import { extractEndTime } from './endtime';
 import { extractEstimate } from './estimate';
 import { extractRecurrence } from './recurrence';
+import { extractUntil } from './until';
 import type {
   CaptureAlternative,
   CaptureFields,
@@ -48,6 +50,22 @@ const KEYWORDS = {
   bookmark: word(String.raw`merke(?:\s+dir)?`),
   list: word(String.raw`(?:auf\s+die\s+)?einkaufs?liste`),
   invoice: word(String.raw`rechnung`),
+  birthday: word(String.raw`geburtstage?`),
+  spend: word(String.raw`ausgaben?|ausgegeben`),
+  income: word(String.raw`einnahmen?`),
+  due: word(String.raw`fällig(?:keit)?(?:\s+am)?|zahlbar`),
+};
+/** Words that make a dated sentence a deadline (a ToDo), even with a clock time. */
+const DEADLINE = word(String.raw`abgeben|abgabe|einreichen|abschicken|hochladen|deadline|frist`);
+/** "bis 5.11.", "fällig am": a payment target when an amount is there. */
+const DUE_HINT = word(String.raw`bis|fällig|zahlbar`);
+const PRIORITY_RE = /(?<![\p{L}\d])!(hoch|wichtig|dringend|mittel|niedrig)(?![\p{L}\d])/iu;
+const PRIORITY: Record<string, 1 | 2 | 3> = {
+  hoch: 3,
+  wichtig: 3,
+  dringend: 3,
+  mittel: 2,
+  niedrig: 1,
 };
 const DANGLING =
   /^(?:um|am|an|den|dem|bis|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|ab|für|und|zu|,|;|:|-|–)+$/iu;
@@ -61,9 +79,15 @@ function cleanTitle(raw: string): string {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-/** First occurrence of a recurrence rule on or after `today`, used when no date was given. */
-export function startForRecurrence(rec: CaptureRecurrence, today: Ymd): Ymd {
-  if (rec.byWeekday?.[0]) return nextWeekday(today, rec.byWeekday[0], true);
+/**
+ * First occurrence of a recurrence rule on or after `today`, used when no date was given. With
+ * `skipToday` a weekday rule starts at the next matching day after today (today's time is past).
+ */
+export function startForRecurrence(rec: CaptureRecurrence, today: Ymd, skipToday = false): Ymd {
+  if (rec.byWeekday?.length) {
+    const days = rec.byWeekday.map((wd) => nextWeekday(today, wd, !skipToday));
+    return days.reduce((a, b) => (cmpDate(b, a) < 0 ? b : a));
+  }
   const day = rec.byMonthDay;
   if (day !== undefined) {
     if (day === -1) return { ...today, d: new Date(today.y, today.m, 0).getDate() };
@@ -111,23 +135,45 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     bookmark: !!take(scan, KEYWORDS.bookmark),
     list: !!take(scan, KEYWORDS.list),
     invoice: !!take(scan, KEYWORDS.invoice),
+    birthday: !!take(scan, KEYWORDS.birthday),
+    spend: !!take(scan, KEYWORDS.spend),
+    income: !!take(scan, KEYWORDS.income),
+    due: !!take(scan, KEYWORDS.due),
+    deadline: DEADLINE.test(scan.t),
+    dueHint: DUE_HINT.test(scan.t),
   };
 
+  const priorityMatch = take(scan, PRIORITY_RE);
+  if (priorityMatch) fields.priority = PRIORITY[priorityMatch[1]!.toLowerCase()];
+
   const recurrence = extractRecurrence(scan);
-  if (recurrence) fields.recurrence = recurrence;
+  if (recurrence) {
+    const until = extractUntil(scan, opts.now);
+    if (until) recurrence.until = until;
+    fields.recurrence = recurrence;
+  }
+  const endTime = extractEndTime(scan);
+  const slowRecurrence =
+    recurrence && (recurrence.freq === 'monthly' || recurrence.freq === 'yearly');
 
   const amount = extractAmount(scan, false);
   const dt = extractDateTime(scan, opts.now);
-  const bare =
-    !amount && (forced === 'finance' || forced === 'invoice')
+  const wantsBare =
+    forced === 'finance' || forced === 'invoice' || kw.invoice || kw.spend || kw.income;
+  const bare = amount
+    ? undefined
+    : wantsBare
       ? extractAmount(scan, true)
-      : undefined;
+      : slowRecurrence
+        ? extractAmount(scan, 'decimal')
+        : undefined;
   const money = amount ?? bare;
   if (money) {
     fields.amountMinor = money.amountMinor;
-    fields.kind = money.kind;
+    fields.kind = kw.income ? 'income' : money.kind;
   }
   dt.notes.forEach((n) => notes.add(n));
+  if (endTime && dt.time !== undefined) fields.endTime = endTime;
   // The estimate is only taken for ToDos (decided below); everything else keeps the text as typed.
   const estimateScan: Scan = { t: scan.t };
   const estimate = extractEstimate(estimateScan);
@@ -143,11 +189,19 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (kw.reminder) score(scores, 'reminder', 95);
   if (kw.todo) score(scores, 'todo', 95);
   if (recurrence && !kw.reminder) {
-    score(scores, 'reminder', 75);
-    if (hasTime) score(scores, 'event', 40);
+    // A fixed weekly slot ("Mo–Fr 6 Uhr", "jeden Dienstag 16 Uhr") is an appointment, a daily
+    // "8 Uhr Tabletten" stays a reminder.
+    const slot = hasTime && (recurrence.byWeekday?.length || recurrence.until || endTime);
+    score(scores, 'reminder', slot ? 60 : 75);
+    if (hasTime) score(scores, 'event', slot ? 88 : 40);
   }
-  if (money) score(scores, 'finance', 80);
+  if (money) score(scores, 'finance', kw.spend || kw.income ? 92 : 80);
+  if (money && slowRecurrence && !hasTime && !kw.invoice) score(scores, 'subscription', 92);
   if (money && kw.invoice) score(scores, 'invoice', 92);
+  else if (money && hasDate && !recurrence && (kw.due || kw.dueHint) && !kw.spend && !kw.income)
+    score(scores, 'invoice', 90);
+  if (kw.birthday && hasDate && !hasTime && !recurrence) score(scores, 'birthday', 93);
+  if (kw.deadline && !money && !recurrence) score(scores, 'todo', 96);
   if (hasDate && hasTime && !recurrence) score(scores, 'event', 85);
   else if (!hasDate && hasTime && !recurrence) score(scores, 'event', 70);
   else if (hasDate && !hasTime && !recurrence && !money) {
@@ -161,12 +215,14 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   const second = ranked.find(([t]) => t !== primaryType)?.[1] ?? 0;
   const needsChoice = !forced && (primaryScore < 60 || primaryScore - second < 10);
 
+  const nowTime = fmtTime(opts.now.getHours(), opts.now.getMinutes());
+  const timePassed = hasTime && dt.time! <= nowTime;
+
   // Date/time defaults per type – always reported through `notes`, never silent.
   let date = dt.date;
   if (primaryType === 'event' || primaryType === 'reminder') {
-    if (!date && recurrence) date = startForRecurrence(recurrence, today);
+    if (!date && recurrence) date = startForRecurrence(recurrence, today, timePassed);
     if (!date && hasTime) {
-      const nowTime = fmtTime(opts.now.getHours(), opts.now.getMinutes());
       date = dt.time! > nowTime ? today : addDays(today, 1);
       notes.add('assumed-date');
     }
@@ -184,6 +240,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   }
 
   if (date) fields.date = fmtDate(date);
+  if (primaryType !== 'todo') delete fields.priority;
   if (dt.time !== undefined) fields.time = dt.time;
   if (primaryType === 'event' && date && !hasTime) fields.allDay = true;
 

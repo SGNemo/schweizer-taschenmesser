@@ -3,79 +3,84 @@ import { defineBundle } from '@/core/i18n/bundle';
 /** Texts of the Basis/Erweitert view ("Erweitert" switch, "Mehr Felder", settings row), every UI language. */
 export const tAdvanced = defineBundle(
   {
-    switchLabel: 'Erweitert',
-    switchHint: 'Zeigt Spezialfelder und seltene Funktionen in diesem Modul.',
+    switchLabel: 'Mehr Felder anzeigen',
+    switchHint:
+      'Blendet in diesem Modul zusätzliche Felder und seltene Funktionen ein, zum Beispiel Kategorien, Notizen oder Wiederholungen.',
     moreFields: 'Mehr Felder',
     moreFieldsAria: 'Mehr Felder anzeigen',
     settings: {
-      title: 'Basis oder Erweitert',
+      title: 'Mehr Felder anzeigen',
       description:
-        'Standard ist Basis: Module zeigen, was du täglich brauchst. Erweitert blendet Spezialfelder und seltene Funktionen ein.',
+        'Standard: Module zeigen, was du täglich brauchst. Hier schaltest du für alle Module zusätzliche Felder und seltene Funktionen dazu.',
       keywords: ['erweitert', 'basis', 'einfach', 'spezialfelder', 'mehr felder'],
-      all: 'Alle Module in der Erweitert-Ansicht',
+      all: 'In allen Modulen mehr Felder anzeigen',
       allHint:
-        'Der Schalter „Erweitert“ im Kopf eines Moduls gilt dann nur für dieses Modul und überschreibt diese Einstellung.',
+        'Der Schalter „Mehr Felder anzeigen“ im Kopf eines Moduls gilt dann nur für dieses Modul und überschreibt diese Einstellung.',
     },
   },
   {
     en: {
-      switchLabel: 'Advanced',
-      switchHint: 'Shows special fields and rarely used functions in this module.',
+      switchLabel: 'Show more fields',
+      switchHint:
+        'Adds extra fields and rarely used functions to this module, for example categories, notes or repeats.',
       moreFields: 'More fields',
       moreFieldsAria: 'Show more fields',
       settings: {
-        title: 'Basic or advanced',
+        title: 'Show more fields',
         description:
-          'Basic is the default: modules show what you need every day. Advanced adds special fields and rarely used functions.',
+          'By default modules show what you need every day. Here you add extra fields and rarely used functions to all modules.',
         keywords: ['advanced', 'basic', 'simple', 'special fields', 'more fields'],
-        all: 'All modules in the advanced view',
+        all: 'Show more fields in all modules',
         allHint:
-          'The "Advanced" switch in a module header then applies to that module only and overrides this setting.',
+          'The "Show more fields" switch in a module header then applies to that module only and overrides this setting.',
       },
     },
     es: {
-      switchLabel: 'Avanzado',
-      switchHint: 'Muestra campos especiales y funciones poco usadas en este módulo.',
+      switchLabel: 'Mostrar más campos',
+      switchHint:
+        'Añade a este módulo campos extra y funciones poco usadas, por ejemplo categorías, notas o repeticiones.',
       moreFields: 'Más campos',
       moreFieldsAria: 'Mostrar más campos',
       settings: {
-        title: 'Básico o avanzado',
+        title: 'Mostrar más campos',
         description:
-          'Lo predeterminado es básico: los módulos muestran lo que necesitas a diario. Avanzado añade campos especiales y funciones poco usadas.',
+          'Por defecto los módulos muestran lo que necesitas a diario. Aquí añades campos extra y funciones poco usadas a todos los módulos.',
         keywords: ['avanzado', 'básico', 'simple', 'campos especiales', 'más campos'],
-        all: 'Todos los módulos en la vista avanzada',
+        all: 'Mostrar más campos en todos los módulos',
         allHint:
-          'El interruptor «Avanzado» en la cabecera de un módulo vale entonces solo para ese módulo y anula este ajuste.',
+          'El interruptor «Mostrar más campos» en la cabecera de un módulo vale entonces solo para ese módulo y anula este ajuste.',
       },
     },
     fr: {
-      switchLabel: 'Avancé',
-      switchHint: 'Affiche les champs spéciaux et les fonctions rarement utilisées dans ce module.',
+      switchLabel: 'Afficher plus de champs',
+      switchHint:
+        'Ajoute à ce module des champs supplémentaires et des fonctions rarement utilisées, par exemple catégories, notes ou répétitions.',
       moreFields: 'Plus de champs',
       moreFieldsAria: 'Afficher plus de champs',
       settings: {
-        title: 'Basique ou avancé',
+        title: 'Afficher plus de champs',
         description:
-          'Basique par défaut : les modules montrent ce dont vous avez besoin chaque jour. Avancé ajoute les champs spéciaux et les fonctions rarement utilisées.',
+          'Par défaut, les modules montrent ce dont vous avez besoin chaque jour. Ici, vous ajoutez des champs supplémentaires et des fonctions rarement utilisées à tous les modules.',
         keywords: ['avancé', 'basique', 'simple', 'champs spéciaux', 'plus de champs'],
-        all: 'Tous les modules en vue avancée',
+        all: 'Afficher plus de champs dans tous les modules',
         allHint:
-          "L'interrupteur « Avancé » dans l'en-tête d'un module ne vaut alors que pour ce module et remplace ce réglage.",
+          "L'interrupteur « Afficher plus de champs » dans l'en-tête d'un module ne vaut alors que pour ce module et remplace ce réglage.",
       },
     },
     'pt-BR': {
-      switchLabel: 'Avançado',
-      switchHint: 'Mostra campos especiais e funções pouco usadas neste módulo.',
+      switchLabel: 'Mostrar mais campos',
+      switchHint:
+        'Inclui neste módulo campos extras e funções pouco usadas, por exemplo categorias, notas ou repetições.',
       moreFields: 'Mais campos',
       moreFieldsAria: 'Mostrar mais campos',
       settings: {
-        title: 'Básico ou avançado',
+        title: 'Mostrar mais campos',
         description:
-          'O padrão é básico: os módulos mostram o que você precisa todo dia. Avançado inclui campos especiais e funções pouco usadas.',
+          'Por padrão os módulos mostram o que você precisa todo dia. Aqui você inclui campos extras e funções pouco usadas em todos os módulos.',
         keywords: ['avançado', 'básico', 'simples', 'campos especiais', 'mais campos'],
-        all: 'Todos os módulos na visão avançada',
+        all: 'Mostrar mais campos em todos os módulos',
         allHint:
-          'O botão "Avançado" no cabeçalho de um módulo vale então só para esse módulo e substitui esta configuração.',
+          'O botão "Mostrar mais campos" no cabeçalho de um módulo vale então só para esse módulo e substitui esta configuração.',
       },
     },
   },

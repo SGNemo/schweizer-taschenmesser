@@ -29,7 +29,7 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await expect(main.getByRole('button', { name: 'Weitere Optionen' })).toBeVisible();
     // No separate list chips, no "Neue Liste" button, no "Erweitert" switch on the page itself.
     await expect(main.getByRole('button', { name: 'Neue Liste' })).toHaveCount(0);
-    await expect(main.getByRole('switch', { name: 'Erweitert' })).toHaveCount(0);
+    await expect(main.getByRole('switch', { name: 'Mehr Felder anzeigen' })).toHaveCount(0);
     await expect(main.getByRole('navigation', { name: 'Liste' })).toHaveCount(0);
 
     const menu = await openTodosMenu(page);
@@ -38,7 +38,9 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
       'true',
     );
     await expect(menu.getByRole('menuitem', { name: 'Neue Liste' })).toBeVisible();
-    await expect(menu.getByRole('menuitemcheckbox', { name: 'Erweitert' })).toBeVisible();
+    await expect(
+      menu.getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
+    ).toBeVisible();
     await expect(menu.getByRole('menuitemcheckbox', { name: 'Irgendwann' })).toBeVisible();
   });
 
