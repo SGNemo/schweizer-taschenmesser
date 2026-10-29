@@ -15,6 +15,8 @@
 .brand {
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: var(--touch);
   min-height: var(--touch);
   color: var(--text);
   text-decoration: none;
@@ -24,12 +26,16 @@
   background: var(--surface-2);
 }
 .searchBtn {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
   flex: 1;
   /* May shrink below its text so long labels (other languages) never push the bar wider. */
-  min-width: 0;
+  /* Never narrower than a round 44 px button: with a focus chip, badge and icons next to it the
+     label goes (container query below) and the magnifier stays, instead of an empty oval. */
+  min-width: var(--touch);
+  container: search / inline-size;
   min-height: var(--touch);
   padding: 0 var(--space-3);
   border: 1px solid var(--border-strong);
@@ -44,6 +50,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Visually hidden, not display:none: the button keeps its visible-text name (axe label-content-name). */
+@container search (max-width: 7rem) {
+  .searchLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
 }
 .searchBtn:hover {
   border-color: var(--accent);
@@ -80,6 +96,30 @@
 .desktopOnly {
   display: none;
 }
+.mark {
+  display: none;
+}
+/* Small phones (320 px): tighter gaps and no "Dev" badge (the dev notice says it already), so
+   nothing at the right edge (bell, sync) is pushed out of the bar. */
+@media (max-width: 26rem) {
+  .topbar {
+    gap: var(--space-2);
+    padding-inline: var(--space-3);
+  }
+  .devBadge {
+    display: none;
+  }
+  /* The fish alone instead of the wordmark: leaves room for the focus chip and the icons. */
+  .wordmark {
+    display: none;
+  }
+  .mark {
+    display: inline-flex;
+  }
+  .tools {
+    padding: 0;
+  }
+}
 @media (min-width: 900px) {
   .topbar {
     padding-top: var(--space-3);
@@ -115,4 +155,9 @@
 .focusTime {
   font-variant-numeric: var(--font-num);
   font-size: var(--text-sm);
+}
+@media (max-width: 26rem) {
+  .focusChip {
+    padding: 0 var(--space-2);
+  }
 }

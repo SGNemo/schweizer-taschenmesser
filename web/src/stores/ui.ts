@@ -252,13 +252,13 @@ interface UiState {
   homeEditing: boolean;
   setHomeEditing(editing: boolean): void;
   toasts: Toast[];
-  /** At most two toasts stack; a third pushes the oldest out. */
+  /** One notice at a time: a new one replaces the old (stacked notices covered a fifth of a phone). */
   toast(message: string, action?: Toast['action'], icon?: IconName): number;
   dismissToast(id: number): void;
 }
 
 let toastId = 0;
-export const MAX_TOASTS = 2;
+export const MAX_TOASTS = 1;
 
 /** UI-only state. Persistent data lives in Dexie, never here. */
 export const useUiStore = create<UiState>((set) => ({

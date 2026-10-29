@@ -147,6 +147,8 @@ export const REMINDER_RESET_KEYS = [
   'staggered',
   'stages',
   'followUp',
+  'eventLead',
+  'leadHint',
   'todoDigest',
   'todoDigestTime',
 ] as const satisfies readonly (keyof FocusSettings)[];

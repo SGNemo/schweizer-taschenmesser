@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { t } from '@/strings';
-import { measureStrength, type Score, type Strength } from '../strength';
+import { formatCrackTime, measureStrength, type Score, type Strength } from '../strength';
 import styles from '../accounts.module.css';
 
 /** Pattern-based strength (zxcvbn) of `password`, debounced; hidden for an empty value. */
@@ -38,12 +38,13 @@ export function StrengthMeter({
   }, [password, inputs]);
 
   if (!password || result?.password !== password) return null;
-  const { score, crackTime, warning } = result.strength;
+  const { score, crackSeconds, warning } = result.strength;
+  const warningText = warning ? t.accounts.strength.warnings[warning] : undefined;
   return (
     <div className={styles.meter} data-testid="strength" data-score={score}>
       <span>
         {t.accounts.strength.label}: <strong>{t.accounts.strength.levels[score]}</strong> ·{' '}
-        {t.accounts.strength.crack(crackTime)}
+        {t.accounts.strength.crack(formatCrackTime(crackSeconds))}
       </span>
       <div
         className={styles.meterBar}
@@ -56,7 +57,7 @@ export function StrengthMeter({
       >
         <div className={styles.meterFill} style={{ width: `${(score + 1) * 20}%` }} />
       </div>
-      {warning ? <span>{warning}</span> : null}
+      {warningText ? <span>{warningText}</span> : null}
     </div>
   );
 }

@@ -136,6 +136,7 @@ function isTeaser(meta: string): boolean {
  */
 export function ItemRow({
   title,
+  titleFull,
   meta,
   onOpen,
   href,
@@ -157,6 +158,8 @@ export function ItemRow({
   children,
 }: {
   title: ReactNode;
+  /** Wrap a long title in full instead of ending it in "…" after two lines (lists the user reads and ticks). */
+  titleFull?: boolean;
   meta?: ReactNode;
   onOpen?: () => void;
   /** An external address: the main element is a link (new tab, `noreferrer noopener`) instead of a button; `onOpen` is then unused. */
@@ -186,7 +189,10 @@ export function ItemRow({
 }) {
   const body = (
     <>
-      <span className={styles.title} title={typeof title === 'string' ? title : undefined}>
+      <span
+        className={titleFull ? `${styles.title} ${styles.titleFull}` : styles.title}
+        title={typeof title === 'string' ? title : undefined}
+      >
         {typeof title === 'string' ? <ReadableText text={title} kind="list" /> : title}
       </span>
       {meta ? (

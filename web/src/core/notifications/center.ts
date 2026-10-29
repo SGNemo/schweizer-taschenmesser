@@ -46,12 +46,32 @@ export function randomOpen(
   return pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
 }
 
+/**
+ * The hourly summary ("Weitere Erinnerungen · 3") is a delivery detail: in the centre its members
+ * are listed by title, each answerable on its own.
+ */
+export function expandSummaries(due: readonly DueNotification[]): DueNotification[] {
+  return due.flatMap((n) => (n.members ? n.members : [n]));
+}
+
+/**
+ * Automatic extras (soft: staged leads, follow-ups, digest) from before today clear themselves;
+ * what the user set explicitly stays until answered. `todayStart` is local midnight.
+ */
+export function dropStaleSoft(
+  open: readonly DueNotification[],
+  todayStart: number,
+): DueNotification[] {
+  return open.filter((n) => !(n.soft && n.at < todayStart));
+}
+
 export async function loadOpen(at: number = clockNow()): Promise<DueNotification[]> {
   const due = await collectDue(
     { from: at - MAX_CATCH_UP_MS, to: at },
     activeManifests(await loadModuleStates()),
   );
-  return pickOpen(due, await loadAcked());
+  const todayStart = new Date(at).setHours(0, 0, 0, 0);
+  return dropStaleSoft(pickOpen(expandSummaries(due), await loadAcked()), todayStart);
 }
 
 /** The next reminder that has not fired yet (within a day), shown when nothing is open. */

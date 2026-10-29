@@ -38,6 +38,17 @@ describe('menuSide', () => {
   it('opens up near the bottom bar when there is more room above', () => {
     expect(menuSide({ ...o, triggerTop: 700, triggerBottom: 744 })).toBe('up');
   });
+  it('stays down when the menu does not fit above either (the top edge would clip it)', () => {
+    expect(
+      menuSide({
+        menuHeight: 430,
+        viewportHeight: 650,
+        bottomReserve: 0,
+        triggerTop: 390,
+        triggerBottom: 430,
+      }),
+    ).toBe('down');
+  });
   it('stays down when neither side fits and above is not larger', () => {
     expect(menuSide({ ...o, triggerTop: 60, triggerBottom: 104, viewportHeight: 300 })).toBe(
       'down',

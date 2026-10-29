@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const ai: Strings['ai'] = {
+  providerCustom: 'Proveedor propio (compatible con OpenAI)',
   title: 'Asistente de IA',
   off: {
     title: 'Desactivar la IA',

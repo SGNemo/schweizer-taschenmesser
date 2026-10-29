@@ -1,4 +1,5 @@
 import type { CalendarItem } from '@/core/modules/types';
+import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import styles from '../routes/calendar.module.css';
 
@@ -12,9 +13,19 @@ export function kindLabel(kind: string): string {
   return t.calendar.kinds[kind] ?? kind;
 }
 
+/** "09:00–10:30", "21:30 → Mo 06:30" (ends on a later day), "bis 06:30" (second day of a night shift). */
+function timeLabel(item: CalendarItem): string | null {
+  if (item.allDay) return item.continued && item.endTime ? t.calendar.endsAt(item.endTime) : null;
+  const start = item.time ?? '';
+  if (item.endDate && item.endDate > item.date) {
+    return `${start} → ${formatDay(item.endDate, 'EEE')}${item.endTime ? ` ${item.endTime}` : ''}`;
+  }
+  return `${start}${item.endTime ? `–${item.endTime}` : ''}`;
+}
+
 /** One calendar entry: time (or "ganztägig"), kind badge and title. */
 export function ItemRow({ item, onOpen, compact }: Props) {
-  const time = item.allDay ? null : `${item.time ?? ''}${item.endTime ? `–${item.endTime}` : ''}`;
+  const time = timeLabel(item);
   const content = (
     <>
       <span className={styles.time}>{time ?? (compact ? '' : t.calendar.allDay)}</span>

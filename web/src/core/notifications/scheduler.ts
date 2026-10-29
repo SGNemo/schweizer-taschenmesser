@@ -89,9 +89,14 @@ function defaultDeps(): SchedulerDeps {
       // A card behind a full-screen game is never seen: the toast (with the app's tone) is better.
       if (await cardGivesWay(defaultGameDeps())) return false;
       if (!(await getFocusSettings()).inAppPrompt) return false;
-      useReminderPrompts
-        .getState()
-        .push({ key: n.key, title: n.title, baseTitle: n.baseTitle, body: n.body, url: n.url });
+      useReminderPrompts.getState().push({
+        key: n.key,
+        title: n.title,
+        baseTitle: n.baseTitle,
+        body: n.body,
+        url: n.url,
+        taken: n.taken,
+      });
       return true;
     },
     async consume(n) {

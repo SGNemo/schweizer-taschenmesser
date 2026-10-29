@@ -4,7 +4,7 @@ test.use({ permissions: ['notifications'] });
 
 test('game mode: the browser has only the manual switch, no tone settings', async ({ page }) => {
   await page.goto('/settings/benachrichtigungen');
-  const mode = page.getByRole('group', { name: 'Zock-Modus' });
+  const mode = page.getByRole('group', { name: 'Immer leise' });
   await expect(mode).toBeVisible();
   await expect(mode.getByRole('button', { name: 'Aus' })).toHaveAttribute('aria-pressed', 'true');
   await expect(mode.getByRole('button', { name: 'Automatisch' })).toHaveCount(0);
@@ -14,7 +14,7 @@ test('game mode: the browser has only the manual switch, no tone settings', asyn
   // Kept on this device across a reload.
   await page.reload();
   await expect(
-    page.getByRole('group', { name: 'Zock-Modus' }).getByRole('button', { name: 'An' }),
+    page.getByRole('group', { name: 'Immer leise' }).getByRole('button', { name: 'An' }),
   ).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -35,7 +35,7 @@ test('game mode on: a due reminder arrives silently', async ({ page }) => {
 
   await page.goto('/settings/benachrichtigungen');
   await page
-    .getByRole('group', { name: 'Zock-Modus' })
+    .getByRole('group', { name: 'Immer leise' })
     .getByRole('button', { name: 'An', exact: true })
     .click();
 

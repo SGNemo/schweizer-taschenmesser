@@ -302,3 +302,13 @@ describe('applyQuietAll (game mode without a tone)', () => {
     expect(out[0]?.quiet).toBeUndefined();
   });
 });
+
+describe('applyLimit summary members', () => {
+  it('keeps the folded reminders on the summary so the centre can list them', () => {
+    const at = new Date(2026, 9, 2, 10, 0).getTime();
+    const items = ['a', 'b', 'c', 'd'].map((k, i) => ({ key: k, at: at + i * 60_000, title: k }));
+    const out = applyLimit(items, 3, (count) => ({ title: `More · ${count}` }));
+    const summary = out.find((x) => x.key.startsWith('summary:'));
+    expect(summary?.members?.map((m) => m.key)).toEqual(['c', 'd']);
+  });
+});

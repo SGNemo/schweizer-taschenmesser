@@ -70,7 +70,7 @@ export function ReminderPrompt() {
       ) : (
         <div className={styles.actions}>
           <Button variant="primary" data-autofocus onClick={() => void done()}>
-            {t.reminder.done}
+            {current.taken ? t.reminder.taken : t.reminder.done}
           </Button>
           <Button onClick={() => setChoosing(true)}>{t.reminder.later}</Button>
           {current.url ? (

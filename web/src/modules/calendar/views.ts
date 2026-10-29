@@ -93,7 +93,10 @@ export function expandEvent(
         title: e.title,
         date,
         time: timed ? e.startTime : undefined,
-        endTime: !e.allDay && last && e.endTime ? e.endTime : undefined,
+        // The end belongs to the last day; the first day of a multi-day entry names it too.
+        endTime: !e.allDay && (last || (first && timed)) && e.endTime ? e.endTime : undefined,
+        ...(first && span > 0 && e.endDate ? { endDate: e.endDate } : {}),
+        ...(first ? {} : { continued: true }),
         allDay: !timed,
         to: `/calendar?view=day&date=${date}`,
       });
@@ -130,11 +133,12 @@ export function splitDay(items: CalendarItem[]): { untimed: CalendarItem[]; time
     .filter((i) => !i.allDay && i.time)
     .map((item) => {
       const start = toMinutes(item.time!);
+      const spans = !!item.endDate && item.endDate > item.date;
       const rawEnd = item.endTime ? toMinutes(item.endTime) : start + DEFAULT_BLOCK_MINUTES;
-      // Clamp to the day; an end before the start (multi-day) runs to midnight.
+      // Clamp to the day; an end before the start, or on a later day, runs to midnight.
       const end = Math.min(
         24 * 60,
-        Math.max(rawEnd > start ? rawEnd : 24 * 60, start + MIN_BLOCK_MINUTES),
+        Math.max(rawEnd > start && !spans ? rawEnd : 24 * 60, start + MIN_BLOCK_MINUTES),
       );
       return { item, start, end, lane: 0, lanes: 1 };
     })

@@ -6,6 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - (none open)
 
 ## Heads-up (I am touching …)
+- 2026-10-29 · `fix/qa-mobile-layout` (PR open) · `layout/TopBar*`, `layout/AppShell.module.css` (main bottom padding), `layout/setup/WelcomeCard*`, `ui/Patterns.{tsx,module.css}` (`.muted` clamp only in rows, `titleFull`, `PageHeader views` wrap), `ui/Misc` Toaster unchanged but `MAX_TOASTS` 2→1 in `stores/ui.ts`, `modules/lists/*`, `pages/settings/SettingsLayout.module.css`, `strings.ts` lists block (+4 locales). `ui/Dialog` NOT touched, so P5 (draft) can go first.
 - 2026-10-29 · `feat/weather-detail` · weather preview v2 (graph, good/bad rating, more details, wide dialog): `core/weather/*`, `home/WeatherPreview*`, new `home/WeatherChart.tsx`, `strings.weather.ts`, additive icon names in `ui/icons.tsx` (cloud*, wind, droplets, sunrise, sunset, umbrella), `e2e/weather.spec.ts`, docs/features/weather.md.
 - 2026-10-29 · `feat/qa-today-calendar` (QA package P4) · I own `home/` and `quickCapture/parser/**`; `modules/calendar` (editor, recurrence UI, views), `modules/todos` focus steps, finance import preview. Not touching `core/notifications/policy.ts` (P5 owns it). `core/modules/types.ts` only for V14, after a row in CHATS.md.
 - [x] 2026-10-29 · `feat/weather-forecast` (done, PR open) · `core/weather/{api,cache,logic,useWeather}.ts` (+tests), `home/WeatherLine.tsx`, new `home/WeatherPreview.tsx`, `strings.weather.ts`, one sentence in `strings.legal.ts` (weather flow, "7 Tage"), `e2e/weather.spec.ts`, docs/features/weather.md.

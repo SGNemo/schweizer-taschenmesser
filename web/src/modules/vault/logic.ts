@@ -87,3 +87,16 @@ export function sortDocuments<T extends VaultDocument>(docs: readonly T[], today
 
 /** Keeps a download name safe for file systems. */
 export const safeFileName = (name: string): string => name.replace(/[\\/:*?"<>|]+/g, '_');
+
+/** Ready-made papers the start-data wizard offers (texts live in `strings.ts`, category per paper). */
+export const PAPER_TEMPLATES = [
+  'passport',
+  'idCard',
+  'license',
+  'vehicleInspection',
+  'healthCard',
+  'vaccination',
+  'rental',
+  'policies',
+] as const;
+export type PaperTemplate = (typeof PAPER_TEMPLATES)[number];

@@ -14,6 +14,7 @@ export const FORMAT_REGIONS = [
   'en-IE',
   'en-US',
   'es-ES',
+  'es-MX',
   'fr-FR',
   'pt-BR',
   'pt-PT',
@@ -77,6 +78,19 @@ export function useFormatLocale(): FormatRegion {
   const p = useFormatPref();
   return p === 'auto' ? DEFAULT_REGION[lang] : p;
 }
+
+const QUOTES: Record<Lang, [string, string]> = {
+  de: ['„', '“'],
+  en: ['“', '”'],
+  es: ['«', '»'],
+  fr: ['«\u00a0', '\u00a0»'],
+  'pt-BR': ['“', '”'],
+};
+/** Text in the quotation marks of the UI language („…“ / “…” / «…» / « … »). */
+export const quoted = (text: string, lang: Lang = getLang()): string => {
+  const [open, close] = QUOTES[lang];
+  return `${open}${text}${close}`;
+};
 
 const collators = new Map<string, Intl.Collator>();
 /** Sorting for names and titles in the current language (like `localeCompare(…, lang)`). */

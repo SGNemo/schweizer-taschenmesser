@@ -142,29 +142,10 @@
   font-weight: 600;
 }
 
-/* Wide pages: lists as a vertical rail on the left, tasks in one or two columns on the right. */
+/* The list rail is gone (lists live in the "⋯" menu): the page is one column, never a grid with a
+   reserved side column (that squeezed the tasks into 240 px on wide screens). */
 .main {
   min-width: 0;
-}
-@container page (min-width: 60rem) {
-  .layout {
-    display: grid;
-    grid-template-columns: 15rem minmax(0, 1fr);
-    gap: var(--space-5);
-    align-items: start;
-  }
-  .chips {
-    flex-direction: column;
-    overflow: visible;
-    margin-bottom: 0;
-    padding-bottom: 0;
-    position: sticky;
-    top: 0;
-  }
-  .chip {
-    justify-content: flex-start;
-    border-radius: var(--radius-md);
-  }
 }
 @container page (min-width: 84rem) {
   /* Column flow: a task with its subtasks is one unbreakable block, so columns stay gap-free. */
