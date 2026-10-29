@@ -27,11 +27,19 @@ export const cacheKey = (lat: number, lon: number): string => `${lat},${lon}`;
 const groupSchema = z.custom<CodeGroup>(
   (v) => typeof v === 'string' && Object.hasOwn(tWeather.de.codes, v),
 );
+const num = z.number().finite().optional();
 const hourSchema = z.object({
   time: z.string(),
   temp: z.number().finite(),
   group: groupSchema,
   rain: z.number().finite(),
+  feels: num,
+  mm: num,
+  wind: num,
+  gust: num,
+  hum: num,
+  uv: num,
+  night: z.boolean().optional(),
 });
 const daySchema = z.object({
   date: z.string(),
@@ -39,6 +47,22 @@ const daySchema = z.object({
   max: z.number().finite(),
   group: groupSchema,
   rain: z.number().finite(),
+  feelsMin: num,
+  feelsMax: num,
+  mm: num,
+  wind: num,
+  gust: num,
+  uv: num,
+  sunrise: z.string().optional(),
+  sunset: z.string().optional(),
+  sunMin: num,
+});
+const nowSchema = z.object({
+  feels: num,
+  hum: num,
+  wind: num,
+  gust: num,
+  night: z.boolean().optional(),
 });
 /** `time`, `hours` and `days` are optional: a value cached before the preview stays valid for the line. */
 const forecastSchema = z.object({
@@ -48,6 +72,7 @@ const forecastSchema = z.object({
   time: z.string().optional(),
   hours: z.array(hourSchema).optional(),
   days: z.array(daySchema).optional(),
+  now: nowSchema.optional(),
 });
 const cachedSchema = z.object({
   key: z.string(),

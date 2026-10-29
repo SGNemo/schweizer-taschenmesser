@@ -1,0 +1,76 @@
+.chart {
+  width: 100%;
+  min-width: 0;
+  font-variant-numeric: var(--font-num);
+}
+.chart svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+}
+.grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.night {
+  fill: var(--text);
+  opacity: 0.06;
+}
+.line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.area {
+  fill: color-mix(in srgb, var(--text) 8%, transparent);
+  stroke: none;
+}
+.dot {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 2;
+}
+.axis {
+  fill: var(--text-3);
+  font-size: var(--text-meta);
+}
+.value {
+  fill: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+.rain {
+  fill: var(--info);
+  opacity: 0.8;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.5rem;
+  border-radius: var(--radius-sm);
+}
+.swatchLine {
+  height: 2px;
+  background: var(--text);
+}
+.swatchRain {
+  background: var(--info);
+}

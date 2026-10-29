@@ -128,6 +128,33 @@ describe('preview data in the cache', () => {
     expect(readCache()?.forecast).toEqual(full);
   });
 
+  it('round-trips the detail values and still accepts rows without them', () => {
+    const rich = {
+      ...forecast,
+      now: { feels: 12, hum: 70, wind: 14, gust: 30, night: false },
+      hours: [
+        { ...hours[0]!, feels: 7, mm: 0.4, wind: 10, gust: 22, hum: 80, uv: 1.2, night: true },
+        hours[0]!,
+      ],
+      days: [
+        {
+          ...days[0]!,
+          feelsMin: 2,
+          feelsMax: 10,
+          mm: 3.2,
+          wind: 20,
+          gust: 40,
+          uv: 3,
+          sunrise: '07:30',
+          sunset: '18:20',
+          sunMin: 300,
+        },
+      ],
+    };
+    writeCache({ key, at: T0, forecast: rich });
+    expect(readCache()?.forecast).toEqual(rich);
+  });
+
   it('an old value without hours and days stays valid for the line', () => {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ key, at: T0, forecast }));
     expect(readCache()).toEqual({ key, at: T0, forecast });
