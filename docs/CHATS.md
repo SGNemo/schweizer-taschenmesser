@@ -15,6 +15,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Phone one-hand follow-up: editors ask after typing | `feat/phone-one-hand` | `ui/Dialog.tsx`, `NoteEditor`, `TaskEditor`, `QuickAdd` | in progress | – | 2026-10-29 |
 | Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
 | P5 QA: Erinnerungen, Fristen, Löschsicherheit | `feat/qa-reminders-safety` | `core/notifications/**` (policy.ts), `calendar` RemindersTab/EventEditor, `subscriptions`, `vault`, `core/undo`, `core/db` (additiv) | package A in review (hotspots: `core/notifications/policy.ts`, `core/modules/types.ts` – additive fields `taken`, `members`) – [features/qa-reminders-safety.md](features/qa-reminders-safety.md) | – | 2026-10-29 |
 | QA P4 B: Kalender (Wiederholung, Mehrtages-Anzeige, Wochenansicht) | `feat/qa-calendar-recurrence` | `modules/calendar/**`; `core/modules/types.ts` (hotspot, one chat: additive `CalendarItem.endDate`/`continued`, V14 later); `strings.ts` calendar block | PR offen | Paket B | 2026-10-29 |

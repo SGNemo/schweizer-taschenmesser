@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { backDepth, resetBackStack } from '@/core/shell/backStack';
@@ -77,5 +77,33 @@ describe('Back closes what is open', () => {
     expect(screen.getByRole('menu')).toBeTruthy();
     await back();
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+});
+
+describe('askAfterTyping', () => {
+  function Editor() {
+    const [open, setOpen] = useState(true);
+    return (
+      <>
+        <span>{open ? 'offen' : 'zu'}</span>
+        <Dialog open={open} onClose={() => setOpen(false)} title="T" askAfterTyping>
+          <input aria-label="Feld" />
+        </Dialog>
+      </>
+    );
+  }
+
+  it('an empty editor closes at once on Back', async () => {
+    render(<Editor />);
+    await back();
+    expect(screen.getByText('zu')).toBeTruthy();
+  });
+
+  it('after typing, Back asks first', async () => {
+    render(<Editor />);
+    fireEvent.input(screen.getByLabelText('Feld'), { target: { value: 'x' } });
+    await back();
+    expect(screen.getByText('offen')).toBeTruthy();
+    expect(screen.getByRole('alertdialog')).toBeTruthy();
   });
 });
