@@ -61,7 +61,7 @@ export const tLegal = defineBundle(
         title: 'KI-Anbieter (Cloud)',
         what: 'Deine Frage oder dein Satz, das heutige Datum und eine kurze Beschreibung der Felder der aktiven Module (Namen und Typen, keine Inhalte), dazu dein API-Schlüssel im Kopf der Anfrage. Nie deine Einträge. Im Chat geht der Chat-Text an den Anbieter, und Daten aus der App nur, wenn du sie dort nach Vorschau mit „Mit Daten senden“ freigibst. Was du in eine Frage schreibst, geht mit.',
         to: 'Der Anbieter, den du selbst einrichtest (z. B. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral oder eine eigene Adresse). Kostenlose Tarife können Eingaben zum Training nutzen; das steht an der Karte des Anbieters.',
-        when: 'Nur wenn du einen Anbieter mit Schlüssel eingerichtet hast und die KI eine Anfrage nicht lokal beantworten kann. Alles aus: Einstellungen → KI → „KI abschalten“. Ollama und das eingebaute Modell laufen lokal.',
+        when: 'Nur wenn du einen Anbieter mit Schlüssel eingerichtet hast und die KI eine Anfrage nicht lokal beantworten kann. Alles aus: Einstellungen → KI → „KI abschalten“. Ollama und das eingebaute Modell laufen lokal. Die Suche nach Ollama im Einrichtungsassistenten fragt nur localhost:11434 auf diesem Computer ab, und erst nach einem Klick.',
       },
       'ai-model': {
         title: 'Download des eingebauten Modells (Windows)',
@@ -246,7 +246,7 @@ export const tLegal = defineBundle(
           title: 'AI provider (cloud)',
           what: 'Your question or sentence, today’s date and a short description of the fields of the active modules (names and types, no contents), plus your API key in the request header. Never your entries. In chat, the chat text goes to the provider, and app data only if you release it there after a preview with “Mit Daten senden” (send with data). Whatever you write in a question goes with it.',
           to: 'The provider you set up yourself (e.g. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral or a custom address). Free tiers may use inputs for training; this is shown on the provider’s card.',
-          when: 'Only if you have set up a provider with a key and the AI cannot answer a request locally. Everything off: Settings → AI → “KI abschalten” (switch AI off). Ollama and the built-in model run locally.',
+          when: 'Only if you have set up a provider with a key and the AI cannot answer a request locally. Everything off: Settings → AI → “KI abschalten” (switch AI off). Ollama and the built-in model run locally. The Ollama search in the setup assistant only asks localhost:11434 on this computer, and only after a click.',
         },
         'ai-model': {
           title: 'Download of the built-in model (Windows)',

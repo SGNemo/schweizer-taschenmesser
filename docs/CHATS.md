@@ -7,7 +7,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
-| QA-Wording P3b (`fix/qa-formats-i18n`) | PR ansehen, mergen; danach P3c (README/Website) freigeben. Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md) |
+| QA-Wording (P3, abgeschlossen) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
 | Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
@@ -15,11 +15,13 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+<<<<<<< HEAD
 | QA P4 C: Heute·Morgen-Block, Ruhig/Ausführlich | `feat/qa-today-block` | `home/**`, `modules/todos/widgets/NextWidget.tsx` (appointment list removed), `home` strings in 5 locales, `e2e/{agenda,today,core,calm}.spec.ts` | PR offen | Paket C | 2026-10-29 |
 | Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
+=======
+>>>>>>> origin/develop
 | P5 QA: Erinnerungen, Fristen, Löschsicherheit | `feat/qa-reminders-safety` | `core/notifications/**` (policy.ts), `calendar` RemindersTab/EventEditor, `subscriptions`, `vault`, `core/undo`, `core/db` (additiv) | package A in review (hotspots: `core/notifications/policy.ts`, `core/modules/types.ts` – additive fields `taken`, `members`) – [features/qa-reminders-safety.md](features/qa-reminders-safety.md) | – | 2026-10-29 |
 | QA P4 B: Kalender (Wiederholung, Mehrtages-Anzeige, Wochenansicht) | `feat/qa-calendar-recurrence` | `modules/calendar/**`; `core/modules/types.ts` (hotspot, one chat: additive `CalendarItem.endDate`/`continued`, V14 later); `strings.ts` calendar block | PR offen | Paket B | 2026-10-29 |
-| Wording & i18n (QA P3b: Formate, Tresor-Texte, Vorlagen) | `fix/qa-formats-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3b ready (P3c README/site follows) | – | 2026-10-29 |
 | QA P4: Heute/Morgen, Wiederholung, Parser | `feat/qa-today-calendar` | `home/`, `modules/calendar`, `quickCapture/parser`, `modules/todos`, finance-Import-Vorschau; strings.ts (eigener Block) | Paket A (Parser) fertig, PR offen; B Kalender, C Übersicht, D ToDos/Finanzen, E V14 folgen je als eigener Branch | parser + corpus 22/22 | 2026-10-29 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
