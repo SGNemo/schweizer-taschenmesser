@@ -6,6 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - (none open)
 
 ## Heads-up (I am touching …)
+- 2026-10-29 · `feat/weather-detail` · weather preview v2 (graph, good/bad rating, more details, wide dialog): `core/weather/*`, `home/WeatherPreview*`, new `home/WeatherChart.tsx`, `strings.weather.ts`, additive icon names in `ui/icons.tsx` (cloud*, wind, droplets, sunrise, sunset, umbrella), `e2e/weather.spec.ts`, docs/features/weather.md.
 - 2026-10-29 · `feat/qa-today-calendar` (QA package P4) · I own `home/` and `quickCapture/parser/**`; `modules/calendar` (editor, recurrence UI, views), `modules/todos` focus steps, finance import preview. Not touching `core/notifications/policy.ts` (P5 owns it). `core/modules/types.ts` only for V14, after a row in CHATS.md.
 - [x] 2026-10-29 · `feat/weather-forecast` (done, PR open) · `core/weather/{api,cache,logic,useWeather}.ts` (+tests), `home/WeatherLine.tsx`, new `home/WeatherPreview.tsx`, `strings.weather.ts`, one sentence in `strings.legal.ts` (weather flow, "7 Tage"), `e2e/weather.spec.ts`, docs/features/weather.md.
 - 2026-10-29 · coordinator · finding: the desktop main window had `opener:allow-open-url` without `opener:allow-default-urls`, so every `getPlatform().app.openUrl` failed in the Windows app (OAuth logins, bookmark/account/map links). Fix in `fix/desktop-open-url-scope` (#261, one line in `src-tauri/capabilities/default.json`). If you add a plugin permission, check the plugin's `permissions/default.toml` for a scope permission that must come along.
