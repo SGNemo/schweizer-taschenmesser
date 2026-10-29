@@ -139,7 +139,14 @@ export async function connectOAuth(
       ({ code } = outcome);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      throw new ConnectorError(message.startsWith('denied') ? 'denied' : 'network', 'login');
+      // No redirect within the wait: the provider most likely showed an error page (redirect URI
+      // not registered, account not allowed) – that is not a network problem on this side.
+      const code = message.startsWith('denied')
+        ? 'denied'
+        : message.startsWith('timeout')
+          ? 'no-callback'
+          : 'network';
+      throw new ConnectorError(code, 'login');
     }
     if (signal?.aborted) return await loadStatus(def.id);
     const tokens = await exchangeCode(
