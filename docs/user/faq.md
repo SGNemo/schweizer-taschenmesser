@@ -12,7 +12,7 @@ No. On the iPhone you can use the PWA in the browser (without push).
 Yes. Settings → Backup creates a file with everything except credentials; the vault has its own encrypted export. Details: [Backup](backup.md).
 
 ## Which languages does the app speak?
-The interface is German today. More languages (English, Spanish, French, Portuguese) are in preparation. Your own entries are never translated.
+German, English, Spanish, French and Brazilian Portuguese. The app follows your device language; change it under Settings → General. Your own entries are never translated. Quick capture understands German sentences only for now.
 
 ## Isn't the project called "Schweizer Taschenmesser"?
 That was the old name. Technical identifiers (package name, file paths) keep it so updates and data stay intact.
