@@ -19,6 +19,8 @@ import {
   randomToken,
   revokeToken,
 } from './oauth';
+import { clearMusic } from '@/core/focus/music';
+import { clearNowPlayingData } from './nowPlaying';
 import { getConnector, connectors } from './registry';
 import { redact } from './redact';
 import {
@@ -101,7 +103,16 @@ export async function connectOAuth(
 
     const verifier = createVerifier();
     const state = randomToken(24);
-    const { redirectUri, wait } = await platform.oauth.start();
+    const { redirectUri, wait } = await platform.oauth
+      .start({ preferredPort: def.oauth.preferredPort })
+      .catch((e: unknown) => {
+        const message = e instanceof Error ? e.message : String(e);
+        // Fixed-port providers: say it is the port, not a generic network failure.
+        throw new ConnectorError(
+          message.startsWith('port-busy') ? 'port-busy' : 'network',
+          'login',
+        );
+      });
     if (signal?.aborted) return await loadStatus(def.id);
     await platform.app.openUrl(
       buildAuthUrl({
@@ -128,7 +139,14 @@ export async function connectOAuth(
       ({ code } = outcome);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      throw new ConnectorError(message.startsWith('denied') ? 'denied' : 'network', 'login');
+      // No redirect within the wait: the provider most likely showed an error page (redirect URI
+      // not registered, account not allowed) – that is not a network problem on this side.
+      const code = message.startsWith('denied')
+        ? 'denied'
+        : message.startsWith('timeout')
+          ? 'no-callback'
+          : 'network';
+      throw new ConnectorError(code, 'login');
     }
     if (signal?.aborted) return await loadStatus(def.id);
     const tokens = await exchangeCode(
@@ -167,6 +185,10 @@ export async function disconnect(def: ConnectorDef, opts: { keepData: boolean })
   forgetAccessToken(def.id);
   await deleteLocalPrefix(`connector.${def.id}.`);
   await clearStatus(def.id);
+  if (def.nowPlaying) {
+    clearNowPlayingData();
+    clearMusic();
+  }
   if (!opts.keepData) await (await getCalendarSink())?.clear(def.id);
 }
 

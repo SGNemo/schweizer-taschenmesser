@@ -97,6 +97,20 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'The calm overview shows only “Up next”, “Next” and “Today & tomorrow”. Everything else is one tap away.',
   },
+  appearanceGroups: {
+    change: 'Change',
+    done: 'Done',
+    line: (name: string, value: string) => `${name}: ${value}`,
+    theme: 'Theme',
+    colors: 'Colours',
+    text: 'Text & reading',
+    motion: 'Motion',
+    other: 'Other',
+  },
+  moduleGroups: {
+    fields: 'Fields',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Manage modules',
     description:
@@ -191,6 +205,7 @@ export const settings: Strings['settings'] = {
   favouritesHint:
     'Up to 5 modules sit at the top of the sidebar. The star on a module in the sidebar does the same.',
   favouritesFull: 'At most 5 favourites – remove another one first.',
+  favouritesNone: 'None',
   theme: 'Colour scheme',
   themeSystem: 'System',
   themeLight: 'Light',
@@ -228,6 +243,8 @@ export const settings: Strings['settings'] = {
     coverHint:
       '25 %: body text only. 50 %: plus headings and lists. 75 %: plus labels and tables. 100 %: all text, including buttons and navigation (not in the vault or input fields).',
     shortcut: 'Keyboard shortcut: Alt + L turns the reading aid on and off.',
+    on: 'On',
+    off: 'Off',
     preview: 'Preview',
     previewText:
       'This is how a longer sentence looks with the reading aid: word starts guide the eye.',

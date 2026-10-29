@@ -1,0 +1,54 @@
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block: var(--space-2);
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+/* Listening is a steady state, not an animation: filled accent plus the words next to it. */
+.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.pill {
+  position: fixed;
+  inset-inline: var(--page-gutter);
+  bottom: calc(var(--bottom-nav-h) + var(--space-3));
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  max-width: calc(100vw - 2 * var(--page-gutter));
+  margin-inline: auto;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  color: var(--text);
+  box-shadow: var(--shadow-1);
+}
+@media (min-width: 48rem) {
+  .pill {
+    bottom: var(--space-5);
+  }
+}

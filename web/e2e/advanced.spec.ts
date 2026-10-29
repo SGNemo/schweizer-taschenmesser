@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { openTodosMenu, ready } from './helpers';
 
 /** Basis / Erweitert view (docs/product/comfort): rare fields behind "Mehr Felder" or the module switch. */
 test.beforeEach(async ({ page }) => {
@@ -13,7 +13,7 @@ test('Basis hides the rare fields; "Mehr Felder" reveals them for this dialog on
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByLabel('Titel')).toBeVisible();
   await expect(dialog.getByLabel('Ende (Datum)')).toHaveCount(0);
-  await dialog.getByRole('button', { name: 'Weitere Felder anzeigen' }).click();
+  await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await expect(dialog.getByLabel('Ende (Datum)')).toBeVisible();
   await expect(dialog.getByLabel('Wiederholung')).toBeVisible();
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();
@@ -34,10 +34,9 @@ test('the module switch "Erweitert" is remembered and shows the fields right awa
   await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toBeVisible();
   // another module is unaffected
   await ready(page, '/todos?new=1');
-  await expect(page.getByRole('switch', { name: 'Erweitert' })).toHaveAttribute(
-    'aria-checked',
-    'false',
-  );
+  await expect(
+    (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Erweitert' }),
+  ).toHaveAttribute('aria-checked', 'false');
 });
 
 test('the global setting switches every module; a module switch overrides it', async ({ page }) => {
@@ -46,15 +45,12 @@ test('the global setting switches every module; a module switch overrides it', a
   await all.click();
   await expect(all).toHaveAttribute('aria-checked', 'true');
   await ready(page, '/todos');
-  await expect(page.getByRole('switch', { name: 'Erweitert' })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
-  await page.getByRole('switch', { name: 'Erweitert' }).click();
-  await expect(page.getByRole('switch', { name: 'Erweitert' })).toHaveAttribute(
-    'aria-checked',
-    'false',
-  );
+  const advanced = (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Erweitert' });
+  await expect(advanced).toHaveAttribute('aria-checked', 'true');
+  await advanced.click(); // picking an entry closes the menu
+  await expect(
+    (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Erweitert' }),
+  ).toHaveAttribute('aria-checked', 'false');
   await ready(page, '/invoices');
   await expect(page.getByRole('switch', { name: 'Erweitert' })).toHaveAttribute(
     'aria-checked',
@@ -66,7 +62,7 @@ test('a field that holds data is never hidden', async ({ page }) => {
   await ready(page, '/calendar?new=1');
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Konferenz');
-  await dialog.getByRole('button', { name: 'Weitere Felder anzeigen' }).click();
+  await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByLabel('Ende (Datum)').fill('2026-10-01');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toHaveCount(0);

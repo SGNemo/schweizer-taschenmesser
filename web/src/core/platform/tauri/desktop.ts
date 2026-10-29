@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { onCaptureOpenEvent, onVaultSearchEvent, webDesktop } from '../web';
+import { onCaptureOpenEvent, onVaultSearchEvent, onVoiceToggleEvent, webDesktop } from '../web';
 import type { DesktopService, HotkeyError } from '../types';
 
 const isHotkeyError = (v: unknown): v is HotkeyError =>
@@ -24,8 +24,11 @@ export function createDesktopService(supported: boolean): DesktopService {
     supported,
     safeMode: () => invoke<boolean>('desktop_safe_mode'),
     takePanicLog: () => invoke<string | null>('desktop_take_panic_log'),
+    gameActive: () => invoke<boolean>('system_game_active').catch(() => false),
+    playTone: (notes, volume) => invoke('system_play_tone', { notes, volume }),
     setHotkey: (accelerator) => register('capture_set_hotkey', accelerator),
     setVaultHotkey: (accelerator) => register('desktop_set_vault_hotkey', accelerator),
+    setVoiceHotkey: (accelerator) => register('desktop_set_voice_hotkey', accelerator),
     setCloseToTray: (enabled) => invoke('desktop_set_close_to_tray', { enabled }),
     setTrayLabels: (labels) => invoke('desktop_set_tray_labels', { labels }),
     setAutostart: (enabled) => invoke('desktop_set_autostart', { enabled }),
@@ -42,5 +45,6 @@ export function createDesktopService(supported: boolean): DesktopService {
     },
     onCaptureOpen: onCaptureOpenEvent,
     onVaultSearch: onVaultSearchEvent,
+    onVoiceToggle: onVoiceToggleEvent,
   };
 }

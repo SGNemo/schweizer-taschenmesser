@@ -12,6 +12,7 @@ export const onboarding: Strings['onboarding'] = {
   parsing: 'Leyendo …',
   chooseFile: 'Elegir archivo …',
   fileChosen: (name: string) => `Archivo: ${name}`,
+  filesChosen: (n: number) => `${n} archivos`,
   textLabel: 'Una línea = una entrada',
   pickTemplates: 'Elegir sugerencias',
   noInput: 'Escribe algo, por favor.',
@@ -85,6 +86,29 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Pega una lista de una app de notas o de un mensaje: una línea por tarea.',
     placeholder: 'Ordenar papeles de impuestos\nLlamar al dentista\nArreglar la bici',
     list: 'En esta lista',
+    file: 'Desde Todoist o Google Tasks',
+    fileHint:
+      'Elige el archivo que exportaste allí: CSV de Todoist o archivo de Google Tasks (JSON). No se sube nada.',
+    perSource: 'Una lista propia por cada lista de origen',
+    newList: 'Lista nueva',
+    includeDone: 'Tareas completadas',
+    doneNo: 'Dejar fuera',
+    doneYes: 'Traer como hechas',
+    repeatNote: (text: string) => `Repetición en el origen: ${text} (no se repite automáticamente)`,
+    dueNote: (text: string) => `Vencimiento en el origen: ${text}`,
+    skippedDone: (n: number) =>
+      n === 1 ? 'Se dejó fuera 1 tarea completada.' : `Se dejaron fuera ${n} tareas completadas.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? 'Se omitió 1 entrada (sección, eliminada o sin título).'
+        : `Se omitieron ${n} entradas (secciones, eliminadas o sin título).`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 tarea se repite en el origen. La repetición solo aparece como aviso en su nota; nada se repite automáticamente.'
+        : `${n} tareas se repiten en el origen. La repetición solo aparece como aviso en su nota; nada se repite automáticamente.`,
+    tooMany: (max: number) => `Se muestran las primeras ${max} tareas.`,
+    unknownFormat:
+      'No se reconoció el formato. Hace falta el CSV de Todoist o el archivo de Google Tasks (JSON).',
   },
   reminders: {
     textDetail: 'hoy, 09:00',
@@ -163,6 +187,26 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Pegar enlaces',
     textHint: 'Una línea por enlace, opcionalmente con un título delante.',
     placeholder: 'https://example.org/articulo\nRuta bonita https://example.org/senderismo',
+  },
+  notes: {
+    file: 'Archivos Markdown o Google Keep',
+    fileHint:
+      'Elige archivos .md (p. ej. de tu carpeta de Obsidian, varios a la vez) o los archivos .json de Google Takeout (Keep). Se conservan títulos, listas de tareas y #etiquetas. Descomprime antes los archivos ZIP.',
+    text: 'Pegar Markdown',
+    textHint:
+      'El texto pegado se convierte en una nota; un primer encabezado pasa a ser el título.',
+    textLabel: 'Texto Markdown',
+    placeholder: '# Plan semanal\n\n- Compras #casa\n- Llamar a mamá',
+    emptyFiles: (n: number) =>
+      n === 1 ? 'Se omitió 1 archivo vacío.' : `Se omitieron ${n} archivos vacíos.`,
+    keepSkipped: (n: number) =>
+      n === 1
+        ? 'Se dejó fuera 1 nota de Keep de la papelera o del archivo.'
+        : `Se dejaron fuera ${n} notas de Keep de la papelera o del archivo.`,
+    unreadable: (n: number) =>
+      n === 1
+        ? '1 archivo JSON no es una nota de Keep y se omitió.'
+        : `${n} archivos JSON no son notas de Keep y se omitieron.`,
   },
   birthdays: {
     text: 'Pegar cumpleaños',

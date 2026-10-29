@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { addTask, connect, newDevice, resetServer, serverDump, syncNow } from './helpers';
-import { moduleSwitch } from '../helpers';
+import { backSettled, moduleSwitch } from '../helpers';
 
 /**
  * "Fresh install" run for the launch: empty database, setup assistant to the end, sync against the
@@ -15,6 +15,8 @@ test.beforeEach(async ({ request }) => {
 const wizard = (page: Page) => page.getByRole('dialog', { name: 'Einrichtung' });
 
 async function ready(page: Page, url: string) {
+  await backSettled(page);
+  await backSettled(page);
   await page.goto(url);
   await expect(page.locator('main h1')).toBeVisible();
 }
@@ -39,7 +41,7 @@ async function finishSetup(page: Page) {
   }
   await dialog.getByRole('button', { name: 'Fertig' }).click();
   await expect(wizard(page)).toHaveCount(0);
-  await page.waitForFunction(() => !(history.state as { tmOverlay?: boolean } | null)?.tmOverlay);
+  await backSettled(page);
 }
 
 async function addInvoice(page: Page) {
@@ -61,6 +63,7 @@ async function addTransaction(page: Page) {
 }
 
 async function addNote(page: Page) {
+  await backSettled(page);
   await page.goto('/library');
   const card = page.getByTestId('module-notes');
   await moduleSwitch(card).click();
@@ -97,6 +100,7 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
   expect((await serverDump(request)).ops.length).toBeGreaterThan(0);
 
   // 4. backup, lose a task, restore (replace) → the task is back
+  await backSettled(page);
   await page.goto('/settings/sync');
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Backup herunterladen' }).click();
@@ -106,10 +110,12 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
   for (const table of ['todos_task', 'finance_transaction', 'invoices_invoice', 'notes_note']) {
     expect(backup.tables[table]?.length, table).toBeGreaterThan(0);
   }
+  await backSettled(page);
   await page.goto('/todos?list=inbox');
   await page.getByRole('button', { name: /Brot kaufen/ }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await backSettled(page);
   await page.goto('/settings/sync');
   await page.locator('#backup-file').setInputFiles(path);
   await page.getByRole('radio', { name: /Ersetzen/ }).check();
@@ -119,10 +125,12 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
     .getByRole('button', { name: 'Ersetzen', exact: true })
     .click();
   await expect(page.getByText(/Einträge wiederhergestellt|entfernt/).first()).toBeVisible();
+  await backSettled(page);
   await page.goto('/todos?list=inbox');
   await expect(page.getByRole('checkbox', { name: 'Brot kaufen' })).toBeVisible();
 
   // 5. the diagnostics file shows the sync state and counts, but no entry contents
+  await backSettled(page);
   await page.goto('/settings/ueber');
   await page.getByRole('button', { name: 'Diagnose exportieren' }).click();
   const preview = page.getByTestId('diagnostics-preview');
@@ -136,15 +144,19 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
   // 6. language switch (Settings → Allgemein): new texts follow, the choice survives a reload, and back
   const language = (name: string) =>
     page.getByRole('main').getByRole('combobox', { name, exact: true });
+  await backSettled(page);
   await page.goto('/settings/allgemein');
   await language('Sprache').selectOption('en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await backSettled(page);
   await page.goto('/settings/ueber');
   await expect(page.getByRole('heading', { name: 'Diagnostics and bug reports' })).toBeVisible();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await backSettled(page);
   await page.goto('/settings/allgemein');
   await language('Language').selectOption('de');
+  await backSettled(page);
   await page.goto('/settings/ueber');
   await expect(page.getByRole('heading', { name: 'Diagnose und Fehler melden' })).toBeVisible();
 });

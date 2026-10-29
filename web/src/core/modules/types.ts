@@ -302,6 +302,8 @@ export interface DueNotification {
   title: string;
   body?: string;
   url?: string;
+  /** The reminder's own title when `title` is reworded (a repeat: "Noch offen: …"); "Später" keeps this one. */
+  baseTitle?: string;
   /**
    * An automatic extra (staged lead, follow-up, morning digest): the quiet hours move it to their
    * end. Notifications the user set explicitly (an event's own lead, "Später") are never moved.
@@ -359,7 +361,11 @@ export interface ModuleContributions {
   services?: () => Promise<{ default: () => (() => void) | void }>;
   /** Values the assistant cannot know when creating an entry (e.g. the default list or account). */
   aiCreateDefaults?: () => Promise<{
-    default: (collection: string) => Promise<Record<string, unknown>>;
+    /** `data` = the values already known; defaults may depend on them (a reminder needs a notification). */
+    default: (
+      collection: string,
+      data?: Record<string, unknown>,
+    ) => Promise<Record<string, unknown>>;
   }>;
   /** Module logic for actions with side effects, key = action id of `aiSchema.actions`. */
   aiActionHandlers?: () => Promise<{ default: Record<string, AiActionHandler> }>;

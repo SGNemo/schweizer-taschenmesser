@@ -45,8 +45,9 @@ const manifest: ModuleManifest = {
   widgets: [
     {
       id: 'next',
+      // The "Heute" card (focus audit 2); the key `todos:next` stays, so layouts keep working.
       get title() {
-        return t.focus.next.title;
+        return t.focus.plan.title;
       },
       defaultSize: 'l',
       sizes: ALL_WIDGET_SIZES,

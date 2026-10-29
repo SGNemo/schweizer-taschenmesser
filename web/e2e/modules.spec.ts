@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enableExample, mainNav, moduleSwitch, showAllWidgets } from './helpers';
+import {
+  enableExample,
+  mainNav,
+  moduleSwitch,
+  showAllWidgets,
+  openAppearanceGroup,
+  openFoldedGroup,
+} from './helpers';
 
 test.describe('module library', () => {
   test.beforeEach(async ({ page }) => {
@@ -9,7 +16,7 @@ test.describe('module library', () => {
   test('fresh install has the core modules active with their widgets', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Übersicht', level: 1 })).toBeVisible();
-    await expect(page.getByTestId('widget-calendar:today')).toBeVisible();
+    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
     await expect(page.getByTestId('widget-todos:open')).toBeVisible();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     await expect(page.getByTestId('widget-invoices:due')).toBeVisible();
@@ -158,6 +165,7 @@ test.describe('shell', () => {
 
   test('theme choice is applied and remembered', async ({ page }) => {
     await page.goto('/settings/darstellung');
+    await openAppearanceGroup(page, 'theme');
     // The category's own field: on wide screens the quick bar above it has a "Farbschema" group, too.
     await page.locator('#appearance--theme').getByRole('button', { name: 'Dunkel' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
@@ -168,12 +176,14 @@ test.describe('shell', () => {
   test('module settings appear for active modules and persist', async ({ page }) => {
     await enableExample(page);
     await page.goto('/settings/module');
+    await openFoldedGroup(page, 'module-example', 'fields');
     const toggle = page.getByRole('switch', { name: 'Erledigte anzeigen' });
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await toggle.click();
     // Wait until the write went through IndexedDB and the live query reflects it.
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await page.reload();
+    await openFoldedGroup(page, 'module-example', 'fields');
     await expect(page.getByRole('switch', { name: 'Erledigte anzeigen' })).toHaveAttribute(
       'aria-checked',
       'false',

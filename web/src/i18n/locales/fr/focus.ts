@@ -41,6 +41,10 @@ export const focus: Strings['focus'] = {
     searchHistoryHint:
       'La recherche montre d’abord ce que vous avez utilisé récemment. L’historique reste sur cet appareil.',
     more: 'Autres paramètres',
+    aids: 'Aides',
+    aidsOn: (n: number, total: number) => `${n} sur ${total} activées`,
+    planShort: (n: number) => `Plan du jour ${n}`,
+    timerShort: (n: number) => `Minuteur ${n} min`,
     clearHistory: 'Effacer l’historique',
     clearHistoryHint: 'Vide les entrées récemment utilisées de la recherche.',
     historyCleared: 'Historique effacé.',
@@ -83,13 +87,21 @@ export const focus: Strings['focus'] = {
     stages: 'En plus, avant',
     stageLabel: (m: number) =>
       m >= 1440 ? `${Math.round(m / 1440)} j` : m >= 60 ? `${Math.round(m / 60)} h` : `${m} min`,
-    followUp: 'Relance douce',
+    followUp: 'Répéter calmement',
     followUpHint:
-      'Une seule relance après 30 minutes, si un rappel n’a pas reçu la réponse « Fait ».',
+      'Un rappel que vous avez fixé revient à intervalles jusqu’à « Fait » ou « Plus tard ». Rien la nuit.',
+    repeatEvery: 'Intervalle',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'Au plus',
+    repeatMaxHint: 'Ensuite, ça s’arrête ; le rappel reste dans le centre de notifications.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'Tâches du matin',
     todoDigestHint:
       'Un message par jour qui cite les tâches du jour. Pas de message séparé pour chaque tâche.',
     digestTime: 'Heure du résumé',
+    inAppGroup: 'Carte dans l’app',
+    on: 'Activé',
+    off: 'Désactivé',
   },
   resume: {
     title: 'Où en étais-je ?',
@@ -113,6 +125,7 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Créer une tâche',
     off: 'Les suggestions sont désactivées.',
     offAction: 'Ouvrir les paramètres',
+    menu: 'Plus d’options',
   },
   waiting: {
     text: (n: number) => (n <= 1 ? `${n} tâche attend encore.` : `${n} tâches attendent encore.`),
@@ -151,7 +164,15 @@ export const focus: Strings['focus'] = {
       `Concentration : ${title}, ${time}. Retour à la concentration.`,
     otherRunning: (title: string) => `Une séance est déjà en cours pour « ${title} ».`,
   },
+  today: {
+    now: 'Maintenant',
+    inMinutes: (n: number) => `dans ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `dans ${h} h` : `dans ${h} h ${m} min`),
+    appointments: 'Événements',
+    allAppointments: 'Tous les événements',
+  },
   plan: {
+    planned: 'Prévue pour aujourd’hui.',
     title: 'Aujourd’hui',
     count: (n: number) => (n <= 1 ? `${n} chose` : `${n} choses`),
     doneToday: (n: number) => `Fait aujourd’hui : ${n}`,

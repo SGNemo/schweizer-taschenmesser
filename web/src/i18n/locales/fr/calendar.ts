@@ -50,7 +50,8 @@ export const calendar: Strings['calendar'] = {
       : minutes >= 60
         ? `Dans ${Math.round(minutes / 60)} h`
         : `Dans ${minutes} min`) + ` · ${time}`,
-  followUpTitle: (title: string) => `Toujours d’actualité ? ${title}`,
+  followUpTitle: (title: string) => `Encore ouvert : ${title}`,
+  followUpLast: 'C’était le dernier rappel. Il reste dans le centre de notifications.',
   untilNext: {
     empty: 'Plus rien de prévu aujourd’hui.',
     off: 'Le temps jusqu’au prochain événement est désactivé.',
@@ -64,6 +65,12 @@ export const calendar: Strings['calendar'] = {
     ended: 'Terminé',
     paused: 'En pause',
     active: 'Actif',
+    markDone: 'Terminé',
+    markedDone: 'Rappel terminé.',
+    pause: 'Mettre en pause',
+    resume: 'Réactiver',
+    pausedToast: 'En pause.',
+    resumedToast: 'Réactivé.',
     widgetEmpty: 'Aucun rappel à venir.',
   },
   notify: {

@@ -276,6 +276,16 @@ export const ai: Strings['ai'] = {
         : `${n} entrées ont été ignorées, car elles ont changé.`,
     failed: 'Cela n’a pas pu être enregistré.',
     nothingReady: 'Il manque encore des informations.',
+    reminder: {
+      confirm: 'Enregistrer',
+      edit: 'Modifier',
+      notifies: 'Vous recevrez alors une notification.',
+      defaultTime: (time: string) =>
+        `Aucune heure indiquée – ${time} proposée. Vous pouvez la modifier.`,
+      rolledDay: 'Cette heure est déjà passée aujourd’hui, elle est donc proposée pour demain.',
+      past: 'Ce moment est déjà passé – il n’y aura pas de notification.',
+      askTitle: 'De quoi dois-je vous rappeler ?',
+    },
     recurrence: {
       daily: 'Tous les jours',
       weekly: 'Toutes les semaines',

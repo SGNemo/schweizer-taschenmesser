@@ -314,7 +314,7 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
     // Privacy: the request carries the key header, the date, the question and schemas – no data.
     expect(mock.requests).toHaveLength(1);
     const sent = mock.requests[0]!;
-    expect(sent.headers['x-api-key']).toBe('sk-ant-e2e-key');
+    expect(sent.headers['authorization']).toBe('Bearer sk-ant-e2e-key');
     expect(sent.headers['anthropic-dangerous-direct-browser-access']).toBe('true');
     const payload = JSON.stringify(sent.body);
     expect(payload).toContain('Heute: 2026-09-29 (Dienstag)');

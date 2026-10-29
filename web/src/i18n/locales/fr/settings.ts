@@ -120,6 +120,20 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'La vue d’ensemble calme n’affiche que « À faire maintenant », « Ensuite » et « Aujourd’hui et demain ». Tout le reste est à un geste.',
   },
+  appearanceGroups: {
+    change: 'Modifier',
+    done: 'Terminé',
+    line: (name: string, value: string) => `${name} : ${value}`,
+    theme: 'Thème',
+    colors: 'Couleurs',
+    text: 'Texte et lecture',
+    motion: 'Animations',
+    other: 'Autres',
+  },
+  moduleGroups: {
+    fields: 'Champs',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Gérer les modules',
     description:
@@ -214,6 +228,7 @@ export const settings: Strings['settings'] = {
   favouritesHint:
     'Jusqu’à 5 modules figurent en haut de la barre latérale. L’étoile d’un module dans la barre latérale fait la même chose.',
   favouritesFull: '5 favoris au maximum – retirez-en d’abord un autre.',
+  favouritesNone: 'Aucun',
   theme: 'Thème de couleurs',
   themeSystem: 'Système',
   themeLight: 'Clair',
@@ -258,6 +273,8 @@ export const settings: Strings['settings'] = {
     coverHint:
       '25 % : texte courant seulement. 50 % : plus les titres et les listes. 75 % : plus les libellés et les tableaux. 100 % : tout le texte, y compris boutons et navigation (pas dans le coffre-fort ni dans les champs de saisie).',
     shortcut: 'Raccourci clavier : Alt + L active et désactive l’aide à la lecture.',
+    on: 'Activée',
+    off: 'Désactivée',
     preview: 'Aperçu',
     previewText:
       'Voici une phrase plus longue avec l’aide à la lecture : les débuts de mots guident le regard.',

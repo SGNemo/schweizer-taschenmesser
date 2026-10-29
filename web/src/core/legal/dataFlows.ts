@@ -15,8 +15,10 @@ export const DATA_FLOW_IDS = [
   'ai-cloud',
   'ai-model',
   'google',
+  'spotify',
   'supporter',
   'currency',
+  'weather',
   'ip',
   'links',
 ] as const;

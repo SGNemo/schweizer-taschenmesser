@@ -11,6 +11,12 @@ CI jobs, caches, sharding; rolling Dev-Preview build. Index: [HOW-TO](../HOW-TO.
 - Each job has a `timeout-minutes` so a hang cannot hold a runner for the default six hours.
 - Timings before/after: [`docs/perf/BUILD-BASELINE-2026-10-01.md`](../perf/BUILD-BASELINE-2026-10-01.md).
 
+## Stimulus budget (warnings only)
+- **What:** `npm run check:stimulus` (in `web/`) runs `e2e/screenshots/stimulus.spec.ts` (measuring only, writes `inventory.json`) on the seeded build and compares per page × viewport (phone, desktop) page height, buttons, links, icons and actions on the first screen with `e2e/stimulus-budget.json`. Logic: `scripts/lib/stimulusBudget.ts` (unit-tested); runner: `scripts/check-stimulus.mjs`.
+- **Tolerance:** height +10 % or +50 px (the larger), counts +10 % but at least +1. Over budget → list `page · value · budget → measured`, exit 1. A page that is in the budget but not measured, or measured but not in the budget, is a note only.
+- **Intended change** (a focus package that folds or adds things): `npm run stimulus:baseline` rewrites the budget (about 1 min); commit `stimulus-budget.json` and name the numbers in the PR. Improvements are never flagged but the budget only tightens when someone re-baselines.
+- **CI:** job `Stimulus budget (warnings only)` in `ci.yml` next to `docs-budget`, `continue-on-error: true`, skipped on documentation-only changes (`changes`). Warning only so parallel chats are not blocked ([why](../decisions/meta.md)). `STIMULUS_SHOTS=0` skips the screenshots (set by the runner).
+
 ## Dev-Preview
 - **What:** after every green push to `develop` that changed more than docs, `ci.yml` calls `dev-preview.yml`: gitleaks → version → signed Windows exe + Android APK (same signing, audit and keystore-cleanup steps as `release.yml`, plus `verify-sig.mjs` and `apksigner verify`) → rolling **pre-release** `dev-preview` (`--prerelease --latest=false`, assets replaced, tag moved to the commit, `dev-latest.json` uploaded last, link check, `releases/latest` compared before/after). A failed run publishes nothing; the previous preview stays.
 - **Files:** `Nemo-Portable-dev.exe(.sig)`, `Nemo-dev.apk(.sha256)`, `dev-latest.json` under `…/releases/download/dev-preview/`. List: `DEV_ASSETS` in `web/scripts/lib/devPreview.ts`.

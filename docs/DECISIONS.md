@@ -10,13 +10,16 @@ Index. Each area file holds one bullet per decision (**what** – why, with date
 | Native, distribution, releases, security | [decisions/distribution.md](decisions/distribution.md) | thin Tauri shell, `PlatformService` seam, portable exe + signed self-update, APK signing, bundle id never changes, OS keystore, Conventional Commits, tag or dispatch release, gitleaks + artifact audit, no Authenticode, Dev-Preview app + dev channel |
 | Imports, local API, connectors, disk, setup, extension | [decisions/features.md](decisions/features.md) | preview-before-write, one import format per collection, local AI import API, MCP wrapper, Google OAuth, narrow `/v1/proxy`, `manifest.platforms`, disk scan/delete/block list, Tauri permissions, setup assistant, browser extension & vault bridge (native messaging, pairing, origin rule) |
 | Modules 0.4–0.7 | [decisions/modules.md](decisions/modules.md) | merged and retired modules, tools, Notizzettel, Dieser PC, LWW-faithful app migrations, Listen, Unterlagen, Personen, Zeit |
+| Tools (screenshot) | [decisions/tools.md](decisions/tools.md) | off by default, nothing stored or sent |
 | UI, home screen, brand | [decisions/ui-brand.md](decisions/ui-brand.md) | home is not a module + widget per module, `PageContainer` + tokens, Design "Klar" / "Klar 2" tokens, widget types (red only for overdue), licence MIT, name Nemo with unchanged identifiers, `Nemo-*` release assets, logo C12, Android icons |
 | Shell and navigation | [decisions/ui-shell.md](decisions/ui-shell.md) | navigation areas, favourites, one "+ Neu", settings categories and registry |
 | Shared components | [decisions/ui-components.md](decisions/ui-components.md) | Klar 2 phase 3, `ItemRow`, sheets on phones, undo journal, shortcuts, fluid root size, grid heights and truncation |
 | Focus and attention aids | [decisions/focus.md](decisions/focus.md) | one switch per aid, calm wording, notification centre instead of banners, doc budgets |
+| Phone with one hand | [decisions/focus-phone.md](decisions/focus-phone.md) | Back closes the open thing first, keyboard fallback, thumb zone, step counts |
+| Weather line | [decisions/weather.md](decisions/weather.md) | Open-Meteo, a place chosen once, nothing sent without it |
 | Readability | [decisions/readability.md](decisions/readability.md) | reading aid off by default, colour only with meaning, grouped lists, "Ruhig" mode |
 | Supporter mode | [decisions/supporter.md](decisions/supporter.md) | cosmetic only, Ed25519 codes verified offline, status derived from the code, Cloudflare Worker issuer |
 | Languages | [decisions/language.md](decisions/language.md) | English docs source with German `*.de.md` copies, brand claim per language, app UI in five languages |
 | Website | [decisions/website.md](decisions/website.md) | static `site/` (Astro), Cloudflare Pages from the repo, no tracking, release data at build time, tokens pinned to the app |
-| Chats and docs process | [decisions/meta.md](decisions/meta.md) | scribble folder (develop only, CI guard on main), `chats:status` overlap check |
+| Chats and docs process | [decisions/meta.md](decisions/meta.md) | scribble folder (develop only, CI guard on main), `chats:status` overlap check, stimulus budget (warning only) |
 | Legal notices | [decisions/legal.md](decisions/legal.md) | placeholders instead of invented details, one-time notices at the place of use, generated + allowlisted licence list |

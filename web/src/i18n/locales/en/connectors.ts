@@ -11,6 +11,11 @@ export const connectors: Strings['connectors'] = {
     denied: 'Sign-in was cancelled or denied.',
     'bad-response': 'The service sent an unexpected response.',
     unsupported: 'That isn’t possible on this device.',
+    'port-busy': 'Port in use. Close the other program and try connecting again.',
+    'premium-required': 'Controlling needs a Premium account.',
+    'no-callback':
+      'The browser did not report a sign-in. Check the redirect URI entered at the service and whether your account is allowed, then try again.',
+    'bad-client': 'The service does not know this client ID. Check the ID you entered.',
   } as Record<string, string>,
   icsName: 'Calendar subscription (ICS)',
   icsDescription:

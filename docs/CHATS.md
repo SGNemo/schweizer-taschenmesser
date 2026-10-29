@@ -7,27 +7,13 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
-| Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
-| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
-| Fehlerberichte/Absturzfestigkeit: PRs #85 → #87 → #88 → #92 (gestapelt, Reihenfolge einhalten; #84 ist gemergt) | nacheinander mergen; Basis springt jeweils automatisch auf `develop` |
+| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
 | Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
-| Fehlerberichte: Rust im CI prüfen | nach Merge von #87/#92 `Native shell (fmt, clippy, tests)` grün? (`desktop_safe_mode`, `desktop_take_panic_log` wurden lokal nicht gebaut); Handtest: `Nemo-Portable.exe --safe-mode` |
-| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokushilfen Paket 1 „Anfangen“ | ansehen, mergen (zuerst) ([focus-aids](features/focus-aids.md)) |
-| [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57) | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt |
-| [PR #59](https://github.com/SGNemo/schweizer-taschenmesser/pull/59): Fokushilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (gestapelt auf #58) | nach #58 mergen; Basis wird automatisch auf `develop` umgestellt |
-| [PR #60](https://github.com/SGNemo/schweizer-taschenmesser/pull/60): Fokushilfen Paket 4 „Fortschritt“ (gestapelt auf #59) | nach #59 mergen; Basis wird automatisch auf `develop` umgestellt |
-| PR „App-UI in 5 Sprachen“ (`feat/i18n-ui`, PR 2/2 nach #86) | ansehen, mergen; danach brauchen neue Texte alle 5 Sprachen (`npm run check:i18n`); Repo-Felder aus [meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md) setzen, falls noch offen |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Chat coordination: scribble folder, `chats:status`, CI guard for main | `chore/chat-scribble` | `scribble/`, `web/scripts/chats-status.mjs`, `ci.yml`, root `CLAUDE.md` step 2 | PR open | – | 2026-10-17 |
-| (announced) Voice key for the AI input | `feat/voice-ask` | `core/keyboard/shortcuts.ts`, `layout/assistant/*`, new `core/ai/voice/*`, settings section, `src-tauri` global shortcut | prompt in [product/focus/13-parallel-prompts.md](product/focus/13-parallel-prompts.md) | – | 2026-10-17 |
-| (announced) Reminders from an AI sentence | `feat/ai-reminders` | `core/ai/intent`, `core/ai/write/*`, `modules/calendar/ai.ts`, `WritePreview.tsx` | prompt in 13-parallel-prompts | – | 2026-10-17 |
-| (announced) Quiet ping in game mode (own sound) | `feat/quiet-ping` | `core/notifications/service.ts`, new `core/notifications/sound.ts`, notifications settings, `src-tauri` (system-info/capture) | prompt in 13-parallel-prompts | – | 2026-10-17 |
-| (announced) Reminder repeats until answered | `feat/reminder-repeat` | `core/notifications/{policy,collect,ack,snooze,scheduler,nativeSchedule,pushPayload}.ts` | prompt in 13-parallel-prompts | – | 2026-10-17 |
-| (announced) Focus package 2 – home 'Heute' card, pins, calm ToDos page | `feat/focus2-today` | `home/*`, `modules/todos/{widgets,routes}`, `modules/calendar/widgets` | prompt in 13-parallel-prompts | – | 2026-10-17 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

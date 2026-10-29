@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { openFoldedGroup, ready } from './helpers';
 
 /** Creates a reminder for 20:00 on 2026-09-29 through the calendar's reminder dialog. */
 async function addReminder(page: Page, title: string) {
@@ -16,6 +16,7 @@ async function addReminder(page: Page, title: string) {
 /** The automatic in-app card is off by default; the tests of the card switch it on in the settings. */
 async function enableCard(page: Page) {
   await page.goto('/settings/benachrichtigungen');
+  await openFoldedGroup(page, 'calm-reminders', 'inApp');
   const card = page.getByRole('switch', { name: 'Erinnerungen in der App automatisch einblenden' });
   await expect(card).toHaveAttribute('aria-checked', 'false');
   await card.click();
@@ -96,12 +97,75 @@ test.describe('Calm reminders', () => {
     await expect(page.getByTestId('reminder-prompt')).toContainText('Wäsche aufhängen');
   });
 
+  test('an unanswered reminder comes back every 30 minutes until "Erledigt"', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await enableCard(page);
+    await addReminder(page, 'Wäsche aufhängen');
+    await page.clock.fastForward(90_000); // 20:00:30
+    const card = page.getByTestId('reminder-prompt');
+    await expect(card).toContainText('Wäsche aufhängen');
+    await expect(card).not.toContainText('Noch offen');
+
+    await page.clock.runFor(30 * 60_000); // 20:30
+    await expect(card).toContainText('Noch offen: Wäsche aufhängen');
+    await page.clock.runFor(30 * 60_000); // 21:00, the card is replaced, not stacked
+    await expect(card).toContainText('Noch offen: Wäsche aufhängen');
+    await expect(card).not.toContainText('weitere');
+
+    await card.getByRole('button', { name: 'Erledigt' }).click();
+    await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
+    await page.clock.runFor(60 * 60_000); // would be 21:30 and 22:00
+    await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
+  });
+
+  test('"Später" on a repeat ends the series and keeps the reminder\'s own title', async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await enableCard(page);
+    await addReminder(page, 'Wäsche aufhängen');
+    await page.clock.fastForward(90_000);
+    await page.clock.runFor(30 * 60_000); // 20:30, the first repeat
+    const card = page.getByTestId('reminder-prompt');
+    await expect(card).toContainText('Noch offen: Wäsche aufhängen');
+    await card.getByRole('button', { name: 'Später' }).click();
+    await card.getByRole('button', { name: 'In 1 Std' }).click();
+    await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
+
+    await page.clock.runFor(35 * 60_000); // 21:05: no further repeat
+    await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
+    await page.clock.runFor(30 * 60_000); // 21:35: the snoozed reminder, under its own title
+    const again = page.getByTestId('reminder-prompt');
+    await expect(again).toContainText('Wäsche aufhängen');
+    await expect(again).not.toContainText('Noch offen');
+  });
+
+  test('the repeat can be switched off in the settings', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
+    await enableCard(page);
+    const section = page.locator('section[aria-labelledby="calm-reminders"]');
+    await openFoldedGroup(page, 'calm-reminders', 'followUp');
+    const repeat = section.getByRole('switch', { name: 'Ruhig wiederholen' });
+    await expect(repeat).toHaveAttribute('aria-checked', 'true');
+    await repeat.click();
+    await expect(repeat).toHaveAttribute('aria-checked', 'false');
+    await addReminder(page, 'Wäsche aufhängen');
+    await page.clock.fastForward(90_000);
+    const card = page.getByTestId('reminder-prompt');
+    await expect(card).toContainText('Wäsche aufhängen');
+    await page.clock.runFor(35 * 60_000);
+    await expect(card).not.toContainText('Noch offen');
+  });
+
   test('settings: quiet hours, limit, stages and morning ToDos can be changed and survive a reload', async ({
     page,
   }) => {
     await ready(page, '/settings/benachrichtigungen');
     const section = page.locator('section[aria-labelledby="calm-reminders"]');
     await expect(section).toBeVisible();
+    for (const id of ['quiet', 'limit', 'staggered', 'followUp', 'digest']) {
+      await openFoldedGroup(page, 'calm-reminders', id);
+    }
     const quiet = section.getByRole('switch', { name: 'Ruhezeit' });
     await expect(quiet).toHaveAttribute('aria-checked', 'true');
     await expect(section.getByLabel('Von')).toHaveValue('22:00');
@@ -111,12 +175,16 @@ test.describe('Calm reminders', () => {
     const staggered = section.getByRole('switch', { name: 'Gestaffelte Erinnerung' });
     await staggered.click();
     await section.getByRole('button', { name: '1 Tag' }).click();
-    await section.getByRole('switch', { name: 'Sanfte Nachfrage' }).click();
+    await section.getByRole('switch', { name: 'Ruhig wiederholen' }).click();
     await section.getByRole('switch', { name: 'ToDos am Morgen' }).click();
     await expect(section.getByLabel('Uhrzeit der Übersicht')).toHaveCount(0);
 
     await page.reload();
     const again = page.locator('section[aria-labelledby="calm-reminders"]');
+    await expect(again).toBeVisible();
+    for (const id of ['quiet', 'limit', 'staggered', 'followUp', 'digest']) {
+      await openFoldedGroup(page, 'calm-reminders', id);
+    }
     await expect(again.getByLabel('Von')).toHaveValue('21:30');
     await expect(again.getByRole('button', { name: '5', exact: true })).toHaveAttribute(
       'aria-pressed',
@@ -126,10 +194,11 @@ test.describe('Calm reminders', () => {
       'aria-pressed',
       'true',
     );
-    await expect(again.getByRole('switch', { name: 'Sanfte Nachfrage' })).toHaveAttribute(
+    await expect(again.getByRole('switch', { name: 'Ruhig wiederholen' })).toHaveAttribute(
       'aria-checked',
-      'true',
+      'false', // on by default, switched off above
     );
+    await expect(again.getByLabel('Abstand')).toHaveCount(0);
     await expect(again.getByRole('switch', { name: 'ToDos am Morgen' })).toHaveAttribute(
       'aria-checked',
       'false',

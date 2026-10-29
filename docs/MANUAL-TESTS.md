@@ -100,7 +100,7 @@ L1. *Karte:* Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Maps (
 L2. *WhatsApp:* Personen → Knopf neben dem Namen → WhatsApp (Web/App) mit Glückwunschtext, Kontakt wählen. ☐
 L3. *Teilen (Android, PWA in Chrome installiert):* in einer anderen App „Teilen“ → Nemo → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
 L4. *Lesezeichen:* Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
-L5. *Spotify:* nicht gebaut (siehe docs/architecture.md). Soll ein Now-Playing-Widget kommen, brauche ich eine Entscheidung: Premium-Konto als Entwickler nötig, max. 5 Nutzer. ☐
+L5. *Spotify:* gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
 ### Einrichtungsassistent
 E1. *Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):* Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐
@@ -210,6 +210,28 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
+## Spracheingabe (nur von Hand prüfbar)
+V1. *Windows-App (WebView2):* Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
+V2. *Systemweite Taste (Windows):* Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
+V3. *Android (Chrome-PWA und APK):* PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
+V4. *Sprachen:* App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
+
+## Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
+Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrichtigungen: Erlaubnis erteilt, „Zock-Modus“ auf „Automatisch“; Lautstärke ca. 50 %. Hintergrund: [features/game-mode.md](features/game-mode.md).
+- **Z1 Kein Windows-Ton:** Zock-Modus „Aus“, Fenster im Hintergrund, „Testbenachrichtigung senden“: kommt der Toast ohne Windows-Benachrichtigungston? (Die App setzt keinen Ton; wenn doch einer kommt: melden.) ☐
+- **Z2 Ton bei Fenster im Tray:** „Ton testen“ mit sichtbarem Fenster (alle drei Klänge, Lautstärke 0 = still). Dann Schließen-in-Tray an, Fenster schließen, Erinnerung für in 2 Minuten anlegen vorher, Zock-Modus „Immer“: kommt der Toast ohne Windows-Ton, und danach der App-Ton? Notieren: Verzögerung in Sekunden. ☐
+- **Z3 Vollbild-Spiel:** ein Spiel im Vollbild (Direct3D) starten, Zock-Modus „Automatisch“, Erinnerung für in 2 Minuten: nur der leichte App-Ton, kein Windows-Ton, der Toast wartet im Info-Center oder erscheint (Windows' Spiel-Ruhe kann ihn zurückhalten, das ist ok). Spiel beenden, nächste Erinnerung: normaler Weg, kein App-Ton. ☐
+- **Z4 Randfälle:** Browser-Video im Vollbild (F11/YouTube) zählt als „beschäftigt“ und löst ebenfalls den leisen Weg aus (gewollt); „Stumm“ an: weder Ton noch Windows-Ton; Zock-Modus „Aus“: nie ein App-Ton. Ein Spiel im Fenstermodus wird nicht erkannt → „Immer“ benutzen. ☐
+- **Z5 Android:** Zock-Modus „An“: Erinnerung kommt über den Kanal „Stumm“ ohne Ton und Vibration; „Aus“: wieder normal. ☐
+
+## Bildschirmfoto (Windows-App, Handy) – nur von Hand prüfbar
+Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: [features/screenshot.md](features/screenshot.md).
+- **B1 Windows-App, Fenster:** Portable-EXE, Werkzeug „Bildschirmfoto“ → „Bildschirm aufnehmen“: kommt eine Auswahl (Bildschirm/Fenster)? Ein Fenster wählen: Vorschau erscheint. Kommt stattdessen „… gibt es auf diesem Gerät nicht“ (kein Fehler), ist WebView2 ohne Aufnahme – dann Notiz an den Maintainer (Rust-Aufnahme = neue Abhängigkeit). ☐
+- **B2 Kopieren:** „Kopieren“, dann in Paint/Mail einfügen (Strg+V): das Bild erscheint. ☐
+- **B3 Speichern:** „Speichern“: Windows-Dialog, Datei `bildschirmfoto-JJJJ-MM-TT-HHMM.png` öffnet sich als Bild. ☐
+- **B4 Pause:** „Nach 3 Sekunden aufnehmen“ an, Quelle wählen, zum Fenster wechseln: Zähler 3-2-1, dann Bild; „Abbrechen“ beim Zählen: „Nichts aufgenommen.“ ☐
+- **B5 Android:** Werkzeug zeigt nur den Hinweis, keinen Knopf. ☐
+
 ## Sprachen (App in fünf Sprachen)
 - **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English, Español, Français, Português (Brasil) und Deutsch. Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
 - **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.
@@ -243,6 +265,14 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
 
+### Spotify-Verbindung (Windows-App, eigenes Spotify-Konto) – nur von Hand prüfbar
+Vorher: App im Developer Dashboard anlegen, Redirect-URI `http://127.0.0.1:38417/callback`, eigenes Konto unter „User management“, Client ID in Nemo einfügen ([user/spotify.de.md](user/spotify.de.md)).
+S1. *Echter Login:* Einstellungen → Verbindungen → Spotify → Verbinden: Browser öffnet Spotify, nach „Zustimmen“ zeigt die Ergebnisseite „Anmeldung ist abgeschlossen“, Status „Verbunden“. Spiele in Spotify etwas ab: auf der Übersicht erscheint binnen etwa 30 s „Läuft gerade: Titel – Interpret“; der Titel öffnet Spotify im Browser. Spotify stoppen: die Zeile verschwindet. ☐
+S2. *Pause/Weiter/Nächster (Premium-Konto):* Knöpfe in der Zeile steuern den Player (Pause → „Pausiert: …“, Weiter, Nächster wechselt den Titel). Nemo minimieren: keine regelmäßigen Anfragen (die Zeile fragt nur bei sichtbarer App). ☐
+S3. *Ohne Premium (kostenloses Konto):* Pause klicken: einmal Hinweis „Steuern braucht Spotify Premium.“, Knöpfe weg, Anzeige bleibt; nach Neustart keine Knöpfe, kein zweiter Hinweis. ☐
+S4. *Port belegt:* ein anderes Programm auf Port 38417 starten (z. B. `python -m http.server 38417 --bind 127.0.0.1`), Verbinden klicken: Meldung „Port belegt …“, der Browser öffnet sich nicht; Programm beenden, erneut Verbinden klappt. Danach Trennen: Zeile weg. ☐
+S5. *Musik in der Fokus-Runde (Premium-Konto, Spotify offen auf dem PC):* beim Verbinden „Playlists“ ankreuzen; Einstellungen → Fokus & Aufmerksamkeit → Weitere Einstellungen → „Musik in der Fokus-Runde“ → „Playlist starten“, eine Playlist wählen. Fokus-Runde starten: die Playlist beginnt; „Fertig“ oder Zeit um: Pause. Spotify schließen und neu starten: Runde läuft normal weiter, Zeile „Musik: nicht erreichbar“. Mit „Beim Start weiterspielen“: pausierte Wiedergabe läuft los, nichts Neues startet. ☐
+
 ### Supporter-Modus (nur mit echter Zahlungsseite und Dienst prüfbar)
 Voraussetzung: Schlüsselpaar erzeugt, `publicKeys.ts` im Build, Webhook-Dienst deployt ([services/supporter-webhook/README.md](../services/supporter-webhook/README.md)). Ohne Dienst gehen Codes per CLI (`create`).
 S1. *Test-Spende mit kleinem Betrag* bei Ko-fi: Mail mit Code (Deutsch und Englisch) kommt an, nicht im Spam; Absender und Inhalt stimmen, Hinweis „freiwillig“ steht drin. ☐
@@ -260,3 +290,8 @@ M2. *Web Push:* gleiche Prüfung mit geschlossener App und eingerichtetem Push: 
 M3. *Extras:* gestaffelte Erinnerung oder Tagesübersicht fällt in die Pause: kommt erst nach deren Ende. ☐
 M4. *Desktop:* Karte in der App erscheint wie sonst; der Ton der Windows-Benachrichtigung bleibt (bekannte Grenze). ☐
 
+
+### Tastenkürzel (Kürzelkarte)
+K1. *Windows-App:* `T` dann `T` öffnet den Timer; F8 ebenso, auch mit dem Cursor in einem Textfeld (nichts wird getippt). F10 öffnet nur die Einstellungen, kein Fenstermenü. ☐
+K2. *Umbelegen:* Einstellungen → Allgemein → Tastenkürzel: eine belegte Taste wird mit Text abgelehnt, F5/F11/F12 ebenso; nach „Entfernen“ bei Rechner lässt sich F9 für „Heute“ vergeben und wirkt sofort. ☐
+K3. *Handy:* der Abschnitt lässt sich nur mit Fingertipp bedienen („Entfernen“, „Standard“). ☐

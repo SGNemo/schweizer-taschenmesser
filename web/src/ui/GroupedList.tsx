@@ -14,12 +14,16 @@ export interface GroupedListGroup {
   children: ReactNode;
   /** Mark urgent groups (overdue): the header gets the danger tone, always with its text. */
   tone?: 'overdue' | 'today';
+  /** A group-level action ("Neu planen") shown at the top of the open group. */
+  action?: ReactNode;
+  /** Starts folded (finished entries); the reader's own choice is still remembered. */
+  defaultClosed?: boolean;
 }
 
 /**
  * Lists grouped by time or status (DESIGN-SPEC §7b): the group header is a small muted toggle with a count, groups are
  * separated by space and one hairline (never between every entry), and each group can be folded. The fold state is
- * device-local and keyed by `listId:groupId`. Rows inside are normal `ItemRow`s in an `ItemList`-like surface.
+ * device-local and keyed by `listId:groupId` (for a `defaultClosed` group the key lists the choice "open"). Rows inside are normal `ItemRow`s in an `ItemList`-like surface.
  */
 export function GroupedList({
   listId,
@@ -36,7 +40,8 @@ export function GroupedList({
     <div className={styles.root} role="group" aria-label={label}>
       {groups.map((g) => {
         const key = `${listId}:${g.id}`;
-        const open = !closed.includes(key);
+        const toggled = closed.includes(key);
+        const open = g.defaultClosed ? toggled : !toggled;
         const bodyId = `grp-${listId}-${g.id}`;
         return (
           <section key={g.id} className={styles.group} data-group={g.id}>
@@ -57,6 +62,7 @@ export function GroupedList({
               </button>
             </h2>
             <div id={bodyId} hidden={!open} className={styles.body}>
+              {g.action}
               {g.children}
             </div>
           </section>

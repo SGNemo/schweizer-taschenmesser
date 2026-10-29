@@ -1,14 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { enable, mainNav, ready, showAllWidgets } from './helpers';
+import { enable, mainNav, ready, showAllWidgets, openFoldedGroup } from './helpers';
 
-const CORE = [
-  'calendar:today',
-  'todos:open',
-  'finance:balance',
-  'invoices:due',
-  'subscriptions:next',
-];
+const CORE = ['todos:next', 'todos:open', 'finance:balance', 'invoices:due', 'subscriptions:next'];
 
 test.describe('Home screen', () => {
   test.beforeEach(async ({ page }) => {
@@ -102,6 +96,7 @@ test.describe('Home screen', () => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     // This test is about the classic strip: switch the calm mode ("Ruhiges Jetzt wichtig") off first.
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'focus', 'aids');
     const calm = page.getByRole('switch', { name: /Ruhiges/ });
     await expect(calm).toHaveAttribute('aria-checked', 'true');
     await calm.click();

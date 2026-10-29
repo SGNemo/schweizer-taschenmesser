@@ -128,11 +128,16 @@ function FrequentNav({ list }: { list?: boolean }) {
   );
 }
 
-function CategoryNav({ list }: { list?: boolean }) {
+/**
+ * "Häufig genutzt" and the categories. One element on purpose: on desktop it is the first of the two
+ * grid columns, so the two navigations must never become two grid children (the content would then
+ * wrap into the narrow column).
+ */
+export function CategoryNav({ list }: { list?: boolean }) {
   const sections = useSettingsSections();
   const ids = visibleCategoryIds(sections);
   return (
-    <>
+    <div className={list ? undefined : styles.aside} data-testid="settings-nav">
       <FrequentNav list={list} />
       <nav aria-label={t.settings.categoriesNav} className={list ? styles.list : styles.nav}>
         <ul>
@@ -143,7 +148,7 @@ function CategoryNav({ list }: { list?: boolean }) {
           ))}
         </ul>
       </nav>
-    </>
+    </div>
   );
 }
 

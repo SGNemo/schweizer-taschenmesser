@@ -46,4 +46,12 @@ export const bookmarks: Strings['bookmarks'] = {
   widgetEmpty: 'Nada guardado.',
   openCount: (n: number) =>
     n === 1 ? '1 elemento guardado pendiente' : `${n} elementos guardados pendientes`,
+  moreOptions: 'Más opciones',
+  groupBy: 'Agrupar por',
+  groupings: { recent: 'Guardado recientemente', tag: 'Primera etiqueta', kind: 'Tipo' },
+  recent: { today: 'Hoy', week: 'Últimos 7 días', older: 'Antes' },
+  copyLink: 'Copiar enlace',
+  linkCopied: 'Enlace copiado.',
+  showing: (what: string) => `Filtrado: ${what}`,
+  showAll: 'Mostrar todo',
 };

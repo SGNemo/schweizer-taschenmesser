@@ -25,8 +25,13 @@ import { useTools } from '@/core/tools/state';
 import type { ToolAnswer } from '@/core/tools/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Dialog, Icon, type IconName } from '@/ui';
+import { Button, Dialog, Icon, Keys, type IconName } from '@/ui';
+import { paletteKeys } from '@/core/keyboard/labels';
+import { useShortcutPrefs } from '@/core/keyboard/prefs';
+import { useVoicePrefs } from '@/core/voice/settings';
 import { AnswerView } from './assistant/AnswerView';
+import { VoiceMic } from './voice/VoiceMic';
+import { useVoice } from '@/core/voice/store';
 import { useAssistant, useSearchHits } from './assistant/useAssistant';
 import { useModuleNavItems, useNavTree, useQuickAddActions } from './useNavItems';
 import { reportBug } from '@/core/diagnostics/report';
@@ -48,6 +53,8 @@ export interface Command {
   onlyWhenQueryStartsWith?: string;
   /** Extra words that find the command (everyday names, descriptions) besides its label. */
   keywords?: readonly string[];
+  /** The keys that reach this command directly (`F8`, `T R`), shown behind its label. */
+  shortcut?: string[];
 }
 
 export { normalize };
@@ -111,14 +118,38 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   // Read once per opening of the palette: what was used before, newest first.
   const [recent] = useState<RecentEntry[]>(() => readRecent());
 
+  // Recognised speech lands in the input like typed text (appended, never replacing what is there).
+  const pending = useVoice((s) => s.pending);
+  const [handledVoice, setHandledVoice] = useState(0);
+  if (pending && pending.id !== handledVoice) {
+    // Adjusting state during render (like Dialog): the text joins what is already typed.
+    setHandledVoice(pending.id);
+    setQuery((q) => (q.trim() ? `${q.trimEnd()} ${pending.text}` : pending.text));
+    setActive(0);
+  }
+  useEffect(() => {
+    if (pending) useVoice.getState().takePending();
+  }, [pending]);
+
   const [devCommands, setDevCommands] = useState<Command[]>([]);
   useEffect(() => {
     void loadDevCommands?.().then((m) => setDevCommands(m.devCommands()));
   }, []);
 
+  const shortcutPrefs = useShortcutPrefs();
+  const voiceKey = useVoicePrefs().key;
+  const keyHints = useMemo(
+    () =>
+      paletteKeys(
+        shortcutPrefs,
+        voiceKey,
+        (tools?.active ?? []).map((x) => x.id),
+      ),
+    [shortcutPrefs, voiceKey, tools],
+  );
   const commands = useMemo<Command[]>(() => {
     const go = (to: string) => () => void navigate(to);
-    return [
+    const list: Command[] = [
       { id: 'dashboard', label: t.nav.home, icon: 'home', run: go('/') },
       ...tree.areas.map((a) => ({
         id: `area-${a.id}`,
@@ -201,7 +232,19 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       })),
       ...devCommands,
     ];
-  }, [navigate, moduleItems, tree, quickActions, openSetup, openTools, tools, devCommands, states]);
+    return list.map((c) => ({ ...c, shortcut: keyHints[c.id] }));
+  }, [
+    navigate,
+    moduleItems,
+    tree,
+    quickActions,
+    openSetup,
+    openTools,
+    tools,
+    devCommands,
+    states,
+    keyHints,
+  ]);
 
   const hits = useSearchHits(query);
   const settingHits = useMemo(() => {
@@ -461,6 +504,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           }
         }}
       />
+      <VoiceMic />
       {options.length === 0 ? (
         <p className={styles.empty}>{t.palette.empty}</p>
       ) : (
@@ -486,6 +530,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
                 ) : null}
                 {o.recent ? <span className={styles.optionMeta}>{t.palette.recent}</span> : null}
               </span>
+              {o.kind === 'command' && o.command.shortcut ? (
+                <Keys keys={o.command.shortcut} decorative />
+              ) : null}
             </li>
           ))}
         </ul>

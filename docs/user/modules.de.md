@@ -18,7 +18,16 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
   weitere (Einheiten, Datumsrechner, Zeitzonen, Würfel, Text, Bilder, PDF und **Entwickler** mit Base64/URL, JSON, UUID, Hash) schaltest du
   unter „Werkzeuge verwalten“ ein. In der Befehlspalette (Strg+K) wird eine Rechnung wie „240 + 19 %“ sofort gerechnet, „Werkzeug: …“ öffnet ein
   Werkzeug. Den früheren Notizzettel findest du jetzt als **Zettel** oben in den Notizen (dein alter Text wird einmal übernommen).
+- **Import in Notizen:** „Startdaten einrichten“ auf der Karte der Notizen (Modul-Bibliothek) liest Markdown-Dateien (z. B. aus einem Obsidian-Ordner, auch mehrere auf einmal, oder eingefügten Text) und Google-Keep-Exporte (die `.json`-Dateien aus dem Google-Takeout). Du siehst zuerst eine Vorschau und nimmst Häkchen weg, was du nicht willst; schon vorhandene Notizen sind markiert. Titel kommen aus dem Kopfbereich, der ersten Überschrift oder dem Dateinamen; Tags bleiben als `#Tags` im Text, Keep-Checklisten werden zu Aufgabenlisten, Keep-Notizen im Papierkorb oder Archiv bleiben draußen. ZIP-Dateien bitte vorher entpacken.
 - **Dieser PC** (nur Windows-App): Laufwerke analysieren und aufräumen, im Tab „System“ Prozessor, Speicher, Akku, Grafik und Netzwerk.
 - **Stillgelegt (0.4.0):** Nachrichten, Habit-Tracker und Zeiterfassung sind nicht mehr sichtbar. Ihre Daten bleiben gespeichert und stecken weiter in jedem Backup.
 - **Karte & WhatsApp:** Termine mit Ort haben „Auf der Karte zeigen“; bei Personen mit Geburtstag öffnet der Knopf WhatsApp mit einem Glückwunsch
   (den Kontakt wählst du in WhatsApp).
+
+## Aufgaben aus Todoist oder Google Tasks mitnehmen
+Öffne **ToDos → Startdaten einrichten → Aus Todoist oder Google Tasks** (sobald das Modul Aufgaben enthält: Einstellungen → Module → ToDos → Startdaten einrichten) und wähle eine Datei, die du selbst exportiert hast. Es wird nichts hochgeladen und kein Konto gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen.
+
+- **Todoist:** Projektmenü (⋯) → *Als CSV exportieren*. Eine Datei pro Projekt; daraus wird eine Liste mit dem Namen der Datei.
+- **Google Tasks:** [Google Takeout](https://takeout.google.com) → nur *Tasks* → `Tasks.json`. Mit *Je Quell-Liste eine eigene Liste* bleiben deine Listen getrennt.
+
+Titel, Notizen, Priorität (Todoist), Fälligkeitstage und Unteraufgaben kommen mit. Erledigte Aufgaben bleiben draußen, solange du sie nicht einschaltest. Wiederkehrende Aufgaben werden **nicht** zu wiederkehrenden Aufgaben: die Wiederholung steht nur als Zeile in der Notiz, damit nichts von selbst zurückkommt. Aufgaben, die du schon hast (gleiche Liste und gleicher Titel), sind als *Schon vorhanden* markiert.

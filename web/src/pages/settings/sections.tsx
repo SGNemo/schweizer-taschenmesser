@@ -45,6 +45,12 @@ import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
+import { ShortcutsSection } from './ShortcutsSection';
+import { VoiceSection } from './VoiceSection';
+import { WeatherSection } from './WeatherSection';
+import { tKeys } from '@/strings.keys';
+import { tWeather } from '@/strings.weather';
+import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
 import { ToolsSection } from './ToolsSection';
@@ -746,6 +752,80 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     ),
   },
   {
+    id: 'shortcuts',
+    category: 'allgemein',
+    order: 30,
+    get title() {
+      return tKeys.get().title;
+    },
+    get description() {
+      return tKeys.get().description;
+    },
+    get keywords() {
+      return tKeys.de.keywords;
+    },
+    get fields() {
+      return [
+        ...shortcutActions().map((a) => ({
+          key: shortcutRowKey(a),
+          get label() {
+            return `${tKeys.get().colKey}: ${actionLabel(a)}`;
+          },
+        })),
+        {
+          key: 'chords',
+          get label() {
+            return tKeys.get().groupChords;
+          },
+        },
+        {
+          key: 'voice',
+          get label() {
+            return tKeys.get().voice;
+          },
+        },
+      ];
+    },
+    render: () => (
+      <SettingsGroup id="shortcuts" title={tKeys.get().title} bare>
+        <ShortcutsSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'weather',
+    category: 'verbindungen',
+    order: 20,
+    get title() {
+      return tWeather.get().title;
+    },
+    get description() {
+      return tWeather.get().description;
+    },
+    get keywords() {
+      return tWeather.de.keywords;
+    },
+    fields: [
+      {
+        key: 'enabled',
+        get label() {
+          return tWeather.get().enable;
+        },
+      },
+      {
+        key: 'place',
+        get label() {
+          return tWeather.get().placeLabel;
+        },
+      },
+    ],
+    render: () => (
+      <SettingsGroup id="weather" title={tWeather.get().title} bare>
+        <WeatherSection />
+      </SettingsGroup>
+    ),
+  },
+  {
     id: 'localapi',
     category: 'verbindungen',
     order: 20,
@@ -839,6 +919,48 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="quickcapture" title={t.quickCapture.settings.title} bare>
         <QuickCaptureSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'voice',
+    category: 'schnellerfassung',
+    order: 20,
+    get title() {
+      return t.voice.title;
+    },
+    get keywords() {
+      return t.voice.searchWords;
+    },
+    fields: [
+      {
+        key: 'enabled',
+        get label() {
+          return t.voice.enable;
+        },
+      },
+      {
+        key: 'key',
+        get label() {
+          return t.voice.key;
+        },
+        get description() {
+          return t.voice.keyHint;
+        },
+      },
+      {
+        key: 'globalHotkey',
+        get label() {
+          return t.voice.globalKey;
+        },
+        get description() {
+          return t.voice.globalHint;
+        },
+      },
+    ],
+    render: () => (
+      <SettingsGroup id="voice" title={t.voice.title} bare>
+        <VoiceSection />
       </SettingsGroup>
     ),
   },

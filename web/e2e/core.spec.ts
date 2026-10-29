@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { calendarEntry, moreFields, ready, showAllWidgets } from './helpers';
+import {
+  calendarEntry,
+  moreFields,
+  openTodosMenu,
+  pickTodosList,
+  ready,
+  showAllWidgets,
+} from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 const NOW = new Date('2026-09-29T10:00:00');
@@ -41,21 +48,19 @@ test.describe('ToDos', () => {
 
   test('a new list scopes the tasks; deleting a task removes it', async ({ page }) => {
     await ready(page, '/todos');
-    await page.getByRole('button', { name: 'Neue Liste' }).click();
+    await (await openTodosMenu(page)).getByRole('menuitem', { name: 'Neue Liste' }).click();
     await page.getByLabel('Listenname').fill('Haushalt');
     await page.getByRole('button', { name: 'Speichern' }).click();
-    await expect(page.getByRole('button', { name: 'Haushalt', exact: true })).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    // The new list is shown; the filter lives in the "⋯" menu and is named on the page.
+    await expect(page.getByTestId('todos-filter')).toContainText('Liste: Haushalt');
 
     await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Fenster putzen');
     await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Eingang', exact: true }).click();
+    await pickTodosList(page, 'Eingang');
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Alle offenen' }).click();
+    await page.getByTestId('todos-filter').getByRole('button', { name: 'Alle offenen' }).click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
 
     await page.getByRole('button', { name: /Fenster putzen/ }).click();
@@ -94,8 +99,14 @@ test.describe('Reminders', () => {
     await expect(calendarEntry(page, /Wasser trinken/)).toBeVisible();
 
     await ready(page, '/calendar?tab=reminders');
-    await page.getByRole('switch', { name: /Wasser trinken/ }).click();
-    await expect(page.getByText('Pausiert')).toBeVisible();
+    await page
+      .getByRole('listitem')
+      .filter({ hasText: 'Wasser trinken' })
+      .getByRole('button', { name: 'Weitere Aktionen' })
+      .click();
+    await page.getByRole('menuitem', { name: 'Pausieren' }).click();
+    await page.getByRole('button', { name: 'Erledigt ausklappen' }).click(); // paused ones sit in the folded group
+    await expect(page.getByText('Pausiert', { exact: true })).toBeVisible();
     await ready(page, '/calendar?view=week&date=2026-09-30');
     await expect(calendarEntry(page, /Wasser trinken/)).toHaveCount(0);
   });
@@ -199,26 +210,27 @@ test.describe('Calendar', () => {
 });
 
 test.describe('Dashboard', () => {
-  test('"Heute & Morgen" shows today and tomorrow across modules', async ({ page }) => {
+  test('the "Heute" card shows today\'s appointment and the ToDo that is due', async ({ page }) => {
     await ready(page, '/calendar?new=1');
     await page.getByLabel('Titel').fill('Teammeeting');
-    await page.getByLabel('Beginn').fill('09:30');
+    await page.getByLabel('Beginn').fill('11:30');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await ready(page, '/todos');
     await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Bericht senden');
     await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await page.getByRole('button', { name: /Bericht senden/ }).click();
-    await page.getByLabel('Fällig am').fill('2026-09-30');
+    await page.getByLabel('Fällig am').fill('2026-09-29');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     await ready(page, '/');
-    const widget = page.getByTestId('widget-calendar:today');
-    // "Heute" is a timeline now (the widget is large by default, so tomorrow follows below it).
-    await expect(widget).toContainText('Teammeeting');
-    await expect(widget.getByRole('heading', { name: 'Morgen', exact: true })).toBeVisible();
-    await expect(widget).toContainText('Bericht senden');
+    // One card for the day (focus audit 2): time to the appointment, the suggested ToDo, the appointment.
+    const widget = page.getByTestId('widget-todos:next');
+    await expect(widget.getByTestId('today-until')).toContainText('in 1 Std 30 Min');
+    await expect(widget.getByTestId('next-card')).toContainText('Bericht senden');
+    await expect(widget.getByTestId('today-appointments')).toContainText('Teammeeting');
+    await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
     await expect(page.getByTestId('widget-todos:open')).toContainText('1 offen');
   });
 
@@ -231,7 +243,7 @@ test.describe('Dashboard', () => {
     await expect(page.getByTestId('widget-todos:open')).toHaveCount(0);
 
     await page.reload();
-    await expect(page.getByTestId('widget-calendar:today')).toBeVisible();
+    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
     await expect(page.getByTestId('widget-todos:open')).toHaveCount(0);
 
     // Show again
@@ -251,8 +263,6 @@ test.describe('Dashboard', () => {
     const before = await order();
     expect(before).toEqual([
       'widget-todos:next',
-      'widget-calendar:next',
-      'widget-calendar:today',
       'widget-todos:open',
       'widget-finance:balance',
       'widget-invoices:due',
@@ -265,11 +275,11 @@ test.describe('Dashboard', () => {
     // dnd-kit announces every step in a live region; waiting for it keeps the keyboard steps reliable.
     const live = page.locator('[id^="DndLiveRegion"]');
     await page.keyboard.press('Space');
-    await expect(live).toContainText('Position 5 verschoben'); // picked up (starts at position 5)
+    await expect(live).toContainText('Position 3 verschoben'); // picked up (starts at position 3)
     // dnd-kit needs a moment to measure the drop targets; keep pressing until the item moved.
     await expect(async () => {
       await page.keyboard.press('ArrowUp');
-      await expect(live).not.toContainText('Position 5', { timeout: 500 });
+      await expect(live).not.toContainText('Position 3', { timeout: 500 });
     }).toPass();
     await page.keyboard.press('Space');
     await expect(live).toContainText('abgelegt');

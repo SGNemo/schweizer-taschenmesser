@@ -3,10 +3,12 @@ import { db } from '@/core/db/db';
 import { validateManifest } from '@/core/modules/registry';
 import {
   filterItems,
+  groupItems,
   groupLinks,
   hostOf,
   normalizeUrl,
   parseTags,
+  recentBucket,
   tagCounts,
   type Filter,
 } from '../logic';
@@ -102,5 +104,56 @@ describe('Lesezeichen (links as tiles)', () => {
     expect(groups.map(([g]) => g)).toEqual(['pakete', 'Reisen', '']);
     expect(groups[0]![1].map((i) => i.title)).toEqual(['DHL', 'Hermes']);
     expect(groups[1]![1].map((i) => i.title)).toEqual(['Bahn', 'Karten']);
+  });
+});
+
+describe('grouping of the list', () => {
+  const at = (day: string, hour = 12) =>
+    new Date(`${day}T${String(hour).padStart(2, '0')}:00:00`).getTime();
+  const g = (title: string, createdAt: number, over: Record<string, unknown> = {}) =>
+    stored({ title, ...over }, createdAt);
+  const day = '2026-09-29';
+
+  it('puts an entry into today, the last 7 days or earlier', () => {
+    expect(recentBucket(at('2026-09-29', 0), day)).toBe('today');
+    expect(recentBucket(at('2026-09-28', 23), day)).toBe('week');
+    expect(recentBucket(at('2026-09-23'), day)).toBe('week');
+    expect(recentBucket(at('2026-09-22'), day)).toBe('older');
+  });
+
+  it('"recent": newest first inside each bucket, empty buckets are left out', () => {
+    const items = [
+      g('alt', at('2026-08-01')),
+      g('heute früh', at('2026-09-29', 8)),
+      g('heute spät', at('2026-09-29', 20)),
+    ];
+    const groups = groupItems(items, 'recent', day);
+    expect(groups.map((x) => x.id)).toEqual(['today', 'older']);
+    expect(groups[0]!.items.map((i) => i.title)).toEqual(['heute spät', 'heute früh']);
+  });
+
+  it('"tag": by first tag, alphabetical, without tag last, entries by title, ids safe for the DOM', () => {
+    const items = [
+      g('Wetter', 1),
+      g('Karten', 2, { tags: ['Reisen', 'x'] }),
+      g('Bahn', 3, { tags: ['reisen'] }),
+      g('Rezept', 4, { tags: ['Kochen & Co'] }),
+    ];
+    const groups = groupItems(items, 'tag', day);
+    expect(groups.map((x) => x.tag)).toEqual(['Kochen & Co', 'Reisen', '']);
+    expect(groups[1]!.items.map((i) => i.title)).toEqual(['Bahn', 'Karten']);
+    expect(groups.map((x) => x.id)).toEqual(['tag-kochen%20%26%20co', 'tag-reisen', 'none']);
+  });
+
+  it('"kind": in the order of the types, nothing dropped', () => {
+    const items = [
+      g('a', 1, { kind: 'idea' }),
+      g('b', 2, { kind: 'link' }),
+      g('c', 3, { kind: 'idea' }),
+    ];
+    const groups = groupItems(items, 'kind', day);
+    expect(groups.map((x) => x.id)).toEqual(['link', 'idea']);
+    expect(groups.flatMap((x) => x.items)).toHaveLength(items.length);
+    expect(groups[1]!.items.map((i) => i.title)).toEqual(['c', 'a']);
   });
 });

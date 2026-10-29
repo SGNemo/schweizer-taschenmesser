@@ -1,0 +1,41 @@
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-3);
+}
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--text-sm);
+}
+.row {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: var(--space-2);
+  padding: var(--space-hair) var(--space-3);
+  min-width: max-content;
+  white-space: pre-wrap;
+}
+.add,
+.del {
+  background: var(--surface-2);
+}
+.sign {
+  color: var(--text-muted);
+  user-select: none;
+}
+.row ins {
+  text-decoration: underline;
+}
+.row del {
+  text-decoration: line-through;
+}
+.summary {
+  font-weight: var(--weight-semibold);
+  margin: 0;
+}

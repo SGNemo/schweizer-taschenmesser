@@ -21,7 +21,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
 - `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), finance, invoices, **lists**, notes, pantry, **people**, subscriptions, todos, vault; **disk** = Dieser PC.
-- `src/tools/<id>/` – small stateless helpers (12: calc, currency, dates, dev, dice, image, pdf, qr, text, timer, timezones, units).
+- `src/tools/<id>/` – helpers (13: calc, currency, dates, dev, dice, image, pdf, qr, screenshot, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `ToolsSheet`, `assistant/`.
 - `src/pages/` – `settings/` (layout, sections), `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
@@ -61,7 +61,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Connectors** | framework `web/src/core/connectors/{types,registry,context,oauth,redact,service,state}.ts` (glob `connectors/*/index.ts`); impls `web/src/connectors/google/*`, `web/src/connectors/ics/*`; UI `pages/settings/ConnectorsSection.tsx`; isolation `connectors/isolation.test.ts` | `ConnectorDef` |
 | **Home screen (not a module)** | `web/src/home/` (`Home.tsx`, `layout.ts` scope `home`, `AutoWidget.tsx`); widget contract `ModuleManifest.widgets` (`WidgetDef`) checked by `validateManifest`, `scripts/check-modules.mjs`, `core/modules/widgets.test.tsx`; route `/` in `router.tsx`. Details: [architecture/setup-home.md](architecture/setup-home.md) | |
 | **Focus and attention aids** | `core/settings/focus.ts`, `core/focus/`, `modules/todos/{next.ts,routes/FocusPage.tsx,widgets/NextWidget.tsx}`; paths and rules: [features/focus-aids.md](features/focus-aids.md#where-things-live) | |
-| **Undo / keyboard** | `core/undo`, `core/db/recorder.ts`, `core/keyboard`, `layout/useShortcuts.ts`; dev page `/dev/components` | `UndoEntry` |
+| **Undo / keyboard** | `core/undo`, `core/db/recorder.ts`, `core/keyboard`, `core/voice`, `layout/useShortcuts`; dev `/dev/components` | `UndoEntry` |
 | **Navigation areas** | `manifest.area`, `core/modules/areas.ts`, `core/settings/nav.ts`, [decisions/ui-shell.md](decisions/ui-shell.md) | `NavTree` |
 | **Layout system** | `web/src/layout/PageContainer.tsx` + `.module.css`; `PageLayout`/`PAGE_LAYOUTS` in `core/modules/types.ts`; applied once in `router.tsx` via `manifest.layout` / `route.layout` | `narrow`/`content`/`wide`/`full` |
 | **Onboarding / import framework** | `web/src/core/importer/` (`types.ts`, `plan.ts`, `batches.ts`, `host.tsx`, `OnboardingWizard.tsx`, `ImportPreview.tsx`, `StartDataButton.tsx`); parsers `web/src/core/io/*`; per-module `modules/<id>/onboarding.ts` + `importer.ts`; e2e `e2e/onboarding.spec.ts` | `ImporterMeta`, `ImportBatch`, table `_imports` |

@@ -1,11 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, openAppearanceGroup } from './helpers';
 
 const html = (page: Page) => page.locator('html');
 
 test('without a supporter code a theme is only a 30 second preview', async ({ page }) => {
   await page.clock.install();
   await ready(page, '/settings/darstellung');
+  await openAppearanceGroup(page, 'colors');
   await expect(html(page)).not.toHaveAttribute('data-palette', /.+/);
 
   // Locked tiles say so, and a click tries the theme out instead of choosing it.
@@ -28,6 +29,7 @@ test('without a supporter code a theme is only a 30 second preview', async ({ pa
 
 test('the preview can be ended early and survives no reload', async ({ page }) => {
   await ready(page, '/settings/darstellung');
+  await openAppearanceGroup(page, 'colors');
   await page.getByTestId('palette-sand').click();
   await expect(html(page)).toHaveAttribute('data-palette', 'sand');
   await page.getByRole('button', { name: 'Vorschau beenden' }).click();
@@ -41,6 +43,7 @@ test('the preview can be ended early and survives no reload', async ({ page }) =
 
 test('the logo switch is locked without a code and nothing is blocked', async ({ page }) => {
   await ready(page, '/settings/darstellung');
+  await openAppearanceGroup(page, 'colors');
   await expect(page.getByRole('switch', { name: 'Logo in Themenfarbe' })).toBeDisabled();
   // Everything else on the page keeps working.
   await expect(page.getByRole('combobox', { name: 'Akzentfarbe' })).toBeEnabled();

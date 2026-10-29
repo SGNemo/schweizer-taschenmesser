@@ -176,6 +176,45 @@ export const de = {
       { keys: ['?'], text: 'Diese Übersicht' },
     ],
   },
+  voice: {
+    title: 'Spracheingabe',
+    intro:
+      'Mit einer Taste sprichst du mit der Suche und der KI. Der erkannte Text landet im Eingabefeld; abschicken tust du selbst.',
+    enable: 'Spracheingabe nutzen',
+    enableHint: 'Aus, bis du sie einschaltest.',
+    unavailable:
+      'Hier nicht verfügbar: Dieses Gerät oder dieser Browser bietet keine Spracherkennung. Tippen geht wie immer.',
+    key: 'Taste in der App',
+    keyHint: 'Halten und sprechen, oder einmal tippen und zum Beenden noch einmal. Esc bricht ab.',
+    keyRecord: 'Taste ändern',
+    keyRecording: 'Taste drücken …',
+    keyOff: 'Keine Taste',
+    keyClear: 'Entfernen',
+    keyDefault: 'Standard',
+    keyInvalid: 'Nimm eine Taste von F1 bis F12 oder eine Taste mit Strg oder Alt.',
+    globalKey: 'Systemweite Taste',
+    globalHint:
+      'Gilt auch, wenn Nemo im Hintergrund ist: ein Druck startet, der nächste beendet die Aufnahme.',
+    noticeTitle: 'Spracheingabe einschalten?',
+    noticeText:
+      'Zum Erkennen schickt dein Browser oder dein System den Ton womöglich an den Anbieter, zum Beispiel Google oder Microsoft. Nemo speichert weder Ton noch erkannten Text, schreibt nichts in Protokolle und gibt nichts an die KI, bevor du selbst abschickst. Die Sprache folgt der App-Sprache.',
+    noticeConfirm: 'Einschalten',
+    noticeCancel: 'Lieber nicht',
+    button: 'Sprechen',
+    buttonStop: 'Aufnahme beenden',
+    listening: 'Ich höre zu …',
+    listeningHint: (key: string) => `Zum Beenden ${key} oder tippen. Esc bricht ab.`,
+    listeningHintNoKey: 'Zum Beenden tippen. Esc bricht ab.',
+    finishing: 'Einen Moment …',
+    shortcutText: 'Sprechen (halten oder tippen)',
+    notices: {
+      denied:
+        'Das Mikrofon ist nicht freigegeben. Du kannst es in den Browser-Einstellungen erlauben.',
+      silent: 'Ich habe nichts gehört. Versuch es gern noch einmal.',
+      failed: 'Spracheingabe klappt hier gerade nicht. Tippen geht wie immer.',
+    },
+    searchWords: ['Mikrofon', 'Diktat', 'Sprechen', 'Push-to-talk', 'Voice', 'Spracherkennung'],
+  },
   actions: {
     add: 'Hinzufügen',
     quickAdd: 'Schnell hinzufügen',
@@ -319,6 +358,20 @@ export const de = {
       homeViewHint:
         'Die ruhige Übersicht zeigt nur „Jetzt dran“, „Als Nächstes“ und „Heute & Morgen“. Alles andere ist ein Tipp entfernt.',
     },
+    appearanceGroups: {
+      change: 'Ändern',
+      done: 'Fertig',
+      line: (name: string, value: string) => `${name}: ${value}`,
+      theme: 'Thema',
+      colors: 'Farben',
+      text: 'Schrift & Lesen',
+      motion: 'Bewegung',
+      other: 'Sonstiges',
+    },
+    moduleGroups: {
+      fields: 'Felder',
+      more: (n: number) => `+ ${n}`,
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:
@@ -413,6 +466,7 @@ export const de = {
     favouritesHint:
       'Bis zu 5 Module stehen oben in der Seitenleiste. Der Stern an einem Modul in der Seitenleiste macht dasselbe.',
     favouritesFull: 'Höchstens 5 Favoriten – entferne zuerst einen anderen.',
+    favouritesNone: 'Keine',
     theme: 'Farbschema',
     themeSystem: 'System',
     themeLight: 'Hell',
@@ -450,6 +504,8 @@ export const de = {
       coverHint:
         '25 %: nur Fließtext. 50 %: dazu Überschriften und Listen. 75 %: dazu Beschriftungen und Tabellen. 100 %: jeder Text, auch Schaltflächen und Navigation (nicht im Tresor und in Eingabefeldern).',
       shortcut: 'Tastenkürzel: Alt + L schaltet die Lesehilfe ein und aus.',
+      on: 'An',
+      off: 'Aus',
       preview: 'Vorschau',
       previewText: 'So sieht ein längerer Satz mit Lesehilfe aus: Wortanfänge tragen den Blick.',
       hintTitle: 'Lesen fällt schwer?',
@@ -932,6 +988,10 @@ export const de = {
       searchHistoryHint:
         'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
       more: 'Weitere Einstellungen',
+      aids: 'Hilfen',
+      aidsOn: (n: number, total: number) => `${n} von ${total} an`,
+      planShort: (n: number) => `Tagesplan ${n}`,
+      timerShort: (n: number) => `Timer ${n} Min`,
       clearHistory: 'Verlauf löschen',
       clearHistoryHint: 'Leert die zuletzt benutzten Einträge der Suche.',
       historyCleared: 'Verlauf gelöscht.',
@@ -979,13 +1039,21 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      followUp: 'Sanfte Nachfrage',
+      followUp: 'Ruhig wiederholen',
       followUpHint:
-        'Eine einzige Nachfrage nach 30 Minuten, wenn eine Erinnerung nicht mit „Erledigt“ beantwortet wurde.',
+        'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
+      repeatEvery: 'Abstand',
+      repeatEveryOption: (m: number) => `${m} min`,
+      repeatMax: 'Höchstens',
+      repeatMaxHint: 'Danach hört es auf; die Erinnerung bleibt in der Benachrichtigungs-Zentrale.',
+      repeatMaxOption: (n: number) => `${n}×`,
       todoDigest: 'ToDos am Morgen',
       todoDigestHint:
         'Ein Hinweis pro Tag, der die ToDos für heute nennt. Keine Einzelhinweise je Aufgabe.',
       digestTime: 'Uhrzeit der Übersicht',
+      inAppGroup: 'Karte in der App',
+      on: 'An',
+      off: 'Aus',
     },
     resume: {
       title: 'Woran war ich?',
@@ -1009,6 +1077,7 @@ export const de = {
       emptyAction: 'Aufgabe anlegen',
       off: 'Die Vorschläge sind ausgeschaltet.',
       offAction: 'Einstellungen öffnen',
+      menu: 'Weitere Optionen',
     },
     waiting: {
       text: (n: number) => (n === 1 ? '1 ToDo wartet noch.' : `${n} ToDos warten noch.`),
@@ -1050,7 +1119,15 @@ export const de = {
       indicatorAria: (title: string, time: string) => `Fokus: ${title}, ${time}. Zurück zum Fokus.`,
       otherRunning: (title: string) => `Gerade läuft eine Runde für „${title}“.`,
     },
+    today: {
+      now: 'Jetzt',
+      inMinutes: (n: number) => `in ${n} Min`,
+      inHours: (h: number, m: number) => (m === 0 ? `in ${h} Std` : `in ${h} Std ${m} Min`),
+      appointments: 'Termine',
+      allAppointments: 'Alle Termine',
+    },
     plan: {
+      planned: 'Für heute eingeplant.',
       title: 'Heute',
       count: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
       doneToday: (n: number) => `Erledigt heute: ${n}`,
@@ -1106,6 +1183,11 @@ export const de = {
     newList: 'Neue Liste',
     listName: 'Listenname',
     renameList: 'Liste umbenennen',
+    moreOptions: 'Weitere Optionen',
+    added: 'ToDo hinzugefügt.',
+    listGroup: 'Liste',
+    moveToday: 'Auf heute',
+    showingList: (name: string) => `Liste: ${name}`,
     deleteList: 'Liste löschen',
     deleteListHint: 'Die Liste und alle ihre Aufgaben werden gelöscht.',
     inbox: 'Eingang',
@@ -1199,7 +1281,8 @@ export const de = {
         : minutes >= 60
           ? `In ${Math.round(minutes / 60)} Std`
           : `In ${minutes} Min`) + ` · ${time}`,
-    followUpTitle: (title: string) => `Noch aktuell? ${title}`,
+    followUpTitle: (title: string) => `Noch offen: ${title}`,
+    followUpLast: 'Das war die letzte Erinnerung. Es bleibt in der Benachrichtigungs-Zentrale.',
     untilNext: {
       empty: 'Heute ist nichts mehr geplant.',
       off: 'Die Zeit bis zum nächsten Termin ist ausgeschaltet.',
@@ -1213,6 +1296,12 @@ export const de = {
       ended: 'Beendet',
       paused: 'Pausiert',
       active: 'Aktiv',
+      markDone: 'Erledigt',
+      markedDone: 'Erinnerung erledigt.',
+      pause: 'Pausieren',
+      resume: 'Wieder einschalten',
+      pausedToast: 'Pausiert.',
+      resumedToast: 'Wieder eingeschaltet.',
       widgetEmpty: 'Keine anstehenden Erinnerungen.',
     },
     notify: {
@@ -1372,6 +1461,83 @@ export const de = {
       round: (n: number) => `Runde ${n}`,
       workDone: 'Arbeitsphase vorbei – Zeit für eine Pause.',
       restDone: 'Pause vorbei – weiter geht’s.',
+    },
+    screenshot: {
+      name: 'Bildschirmfoto',
+      description:
+        'Bildschirm, Fenster oder Tab aufnehmen und als Bild speichern oder kopieren. Alles bleibt auf deinem Gerät.',
+      hint: 'Der Browser fragt, was aufgenommen werden soll. Das Bild bleibt auf dieser Seite, bis du es speicherst, kopierst oder verwirfst.',
+      take: 'Bildschirm aufnehmen',
+      again: 'Noch einmal aufnehmen',
+      cancelled: 'Nichts aufgenommen.',
+      failed: 'Die Aufnahme hat nicht geklappt. Probier es noch einmal.',
+      save: 'Speichern',
+      copy: 'Kopieren',
+      discard: 'Verwerfen',
+      copied: 'Bild kopiert.',
+      copyFailed: 'Kopieren geht in diesem Browser nicht. Nutze „Speichern“.',
+      alt: (w: number, h: number) => `Aufnahme von Bildschirm oder Fenster, ${w} × ${h} Pixel`,
+      unsupported:
+        'Die Aufnahme von Bildschirm oder Fenster gibt es auf diesem Gerät nicht. Am Telefon helfen die Tasten des Geräts.',
+      delay: (n: number) => `Nach ${n} Sekunden aufnehmen`,
+      countdown: (n: number) => `Aufnahme in ${n} …`,
+      stop: 'Abbrechen',
+      share: 'Teilen',
+    },
+    diff: {
+      name: 'Textvergleich',
+      description:
+        'Zwei Texte nebeneinander legen und sehen, was sich geändert hat. Alles bleibt auf deinem Gerät.',
+      before: 'Vorher',
+      after: 'Nachher',
+      ignoreSpace: 'Leerraum ignorieren',
+      result: 'Unterschiede',
+      changed: (n: number) => (n === 1 ? '1 Zeile geändert' : `${n} Zeilen geändert`),
+      identical: 'Kein Unterschied.',
+      empty: 'Füge links und rechts einen Text ein.',
+      tooLong: (max: string) =>
+        `Der Text ist zu lang (höchstens ${max} Zeichen je Seite). Kürze ihn oder vergleiche ihn in Teilen.`,
+      rough: 'Die Texte unterscheiden sich so stark, dass nur grob verglichen wird.',
+      copyDiff: 'Als Unified Diff kopieren',
+      copied: 'Unified Diff kopiert.',
+      added: 'hinzugefügt',
+      removed: 'entfernt',
+      same: 'unverändert',
+    },
+    regex: {
+      name: 'Regex-Tester',
+      description:
+        'Ein Muster (reguläre Ausdrücke) an einem Text ausprobieren: Treffer, Gruppen und Ersetzen. Läuft nur auf deinem Gerät.',
+      pattern: 'Muster',
+      flags: 'Optionen',
+      flagNames: {
+        g: 'g – alle Treffer',
+        i: 'i – Groß-/Kleinschreibung ignorieren',
+        m: 'm – ^ und $ pro Zeile',
+        s: 's – Punkt trifft auch Zeilenumbruch',
+        u: 'u – Unicode',
+      } as Record<string, string>,
+      text: 'Testtext',
+      replacement: 'Ersetzen durch',
+      replacementHint: 'Mit $1 oder $<name> kannst du Gruppen einsetzen.',
+      highlighted: 'Treffer im Text',
+      matches: 'Treffer',
+      count: (n: number) => (n === 1 ? '1 Treffer' : `${n} Treffer`),
+      none: 'Kein Treffer.',
+      idle: 'Gib ein Muster und einen Text ein.',
+      invalid: 'Das Muster ist nicht gültig.',
+      tooSlow: 'Muster zu aufwendig. Die Prüfung wurde nach 1 Sekunde abgebrochen.',
+      tooLong: (max: string) => `Der Testtext ist zu lang (höchstens ${max} Zeichen). Kürze ihn.`,
+      capped: (max: string) => `Es werden nur die ersten ${max} Treffer gezeigt.`,
+      unsupported: 'Dieses Gerät kann den Tester nicht sicher ausführen.',
+      match: (n: number) => `Treffer ${n}`,
+      group: (n: number) => `Gruppe ${n}`,
+      named: (name: string) => `Gruppe „${name}“`,
+      notMatched: 'nicht beteiligt',
+      emptyMatch: '(leer)',
+      position: (at: number) => `ab Zeichen ${at}`,
+      preview: 'Vorschau der Ersetzung',
+      checking: 'Prüfe …',
     },
     qr: {
       name: 'QR-Code',
@@ -1813,11 +1979,14 @@ export const de = {
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
   },
   homeEdit: {
-    calmNote: (n: number) =>
-      n === 1
-        ? 'Ruhige Ansicht: 1 Widget ist ausgeblendet.'
-        : `Ruhige Ansicht: ${n} Widgets sind ausgeblendet.`,
-    showAll: 'Alle Widgets zeigen',
+    showMore: (n: number) =>
+      n === 1 ? 'Mehr anzeigen · 1 Widget' : `Mehr anzeigen · ${n} Widgets`,
+    showLess: 'Nur das Wichtigste',
+    pinStart: 'Anheften…',
+    pin: (title: string) => `${title} anheften`,
+    unpin: (title: string) => `${title} lösen`,
+    pinned: 'Angeheftet',
+    pinNote: 'Angeheftete Widgets bleiben auch in der ruhigen Ansicht sichtbar.',
     customize: 'Anpassen',
     done: 'Fertig',
     hide: 'Ausblenden',
@@ -2590,6 +2759,16 @@ export const de = {
           : `${n} Einträge wurden übersprungen, weil sie sich geändert haben.`,
       failed: 'Das konnte nicht gespeichert werden.',
       nothingReady: 'Es fehlen noch Angaben.',
+      reminder: {
+        confirm: 'Speichern',
+        edit: 'Ändern',
+        notifies: 'Du bekommst dann eine Benachrichtigung.',
+        defaultTime: (time: string) =>
+          `Keine Uhrzeit genannt – ${time} Uhr vorgeschlagen. Du kannst sie ändern.`,
+        rolledDay: 'Diese Uhrzeit ist heute schon vorbei – darum für morgen vorgeschlagen.',
+        past: 'Dieser Zeitpunkt liegt schon zurück – es kommt keine Benachrichtigung.',
+        askTitle: 'Woran soll ich dich erinnern?',
+      },
       recurrence: {
         daily: 'Täglich',
         weekly: 'Wöchentlich',
@@ -2743,6 +2922,14 @@ export const de = {
     done: 'Erledigt',
     widgetEmpty: 'Nichts gemerkt.',
     openCount: (n: number) => (n === 1 ? '1 offener Merkzettel' : `${n} offene Merkzettel`),
+    moreOptions: 'Weitere Optionen',
+    groupBy: 'Gruppieren nach',
+    groupings: { recent: 'Zuletzt hinzugefügt', tag: 'Erster Tag', kind: 'Art' },
+    recent: { today: 'Heute', week: 'Letzte 7 Tage', older: 'Früher' },
+    copyLink: 'Link kopieren',
+    linkCopied: 'Link kopiert.',
+    showing: (what: string) => `Gefiltert: ${what}`,
+    showAll: 'Alle anzeigen',
   },
   notes: {
     meta: {
@@ -3872,6 +4059,11 @@ export const de = {
       denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
       'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
       unsupported: 'Das geht auf diesem Gerät nicht.',
+      'port-busy': 'Port belegt. Schließe das andere Programm und versuche das Verbinden erneut.',
+      'premium-required': 'Das Steuern braucht ein Premium-Konto.',
+      'no-callback':
+        'Der Browser hat keine Anmeldung zurückgemeldet. Prüfe beim Dienst die eingetragene Redirect-URI und ob dein Konto freigeschaltet ist, dann versuche es erneut.',
+      'bad-client': 'Der Dienst kennt diese Client-ID nicht. Prüfe die eingetragene ID.',
     } as Record<string, string>,
     icsName: 'Kalender-Abo (ICS)',
     icsDescription:
@@ -4131,6 +4323,7 @@ export const de = {
     parsing: 'Wird gelesen …',
     chooseFile: 'Datei wählen …',
     fileChosen: (name: string) => `Datei: ${name}`,
+    filesChosen: (n: number) => `${n} Dateien`,
     textLabel: 'Eine Zeile = ein Eintrag',
     pickTemplates: 'Vorschläge auswählen',
     noInput: 'Bitte gib etwas ein.',
@@ -4206,6 +4399,32 @@ export const de = {
         'Füge eine Liste aus einer Notiz-App oder einer Nachricht ein: eine Zeile pro Aufgabe.',
       placeholder: 'Steuerunterlagen sortieren\nZahnarzt anrufen\nFahrrad reparieren',
       list: 'In diese Liste',
+      file: 'Aus Todoist oder Google Tasks',
+      fileHint:
+        'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV oder Google-Tasks-Datei (JSON). Es wird nichts hochgeladen.',
+      perSource: 'Je Quell-Liste eine eigene Liste',
+      newList: 'Neue Liste',
+      includeDone: 'Erledigte Aufgaben',
+      doneNo: 'Nicht mitnehmen',
+      doneYes: 'Als erledigt mitnehmen',
+      repeatNote: (text: string) =>
+        `Wiederholung in der Quelle: ${text} (wird nicht automatisch wiederholt)`,
+      dueNote: (text: string) => `Fällig laut Quelle: ${text}`,
+      skippedDone: (n: number) =>
+        n === 1
+          ? '1 erledigte Aufgabe wurde nicht mitgenommen.'
+          : `${n} erledigte Aufgaben wurden nicht mitgenommen.`,
+      skippedOther: (n: number) =>
+        n === 1
+          ? '1 Eintrag (Abschnitt, gelöscht oder ohne Titel) wurde übersprungen.'
+          : `${n} Einträge (Abschnitte, gelöschte oder ohne Titel) wurden übersprungen.`,
+      repeats: (n: number) =>
+        n === 1
+          ? '1 Aufgabe wiederholt sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.'
+          : `${n} Aufgaben wiederholen sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.`,
+      tooMany: (max: number) => `Es werden die ersten ${max} Aufgaben gezeigt.`,
+      unknownFormat:
+        'Das Format wurde nicht erkannt. Gebraucht wird die Todoist-CSV oder die Google-Tasks-Datei (JSON).',
     },
     reminders: {
       textDetail: 'heute, 09:00 Uhr',
@@ -4287,6 +4506,25 @@ export const de = {
       text: 'Links einfügen',
       textHint: 'Eine Zeile pro Link, optional mit Titel davor.',
       placeholder: 'https://example.org/artikel\nSchöne Wanderung https://example.org/wandern',
+    },
+    notes: {
+      file: 'Markdown-Dateien oder Google Keep',
+      fileHint:
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen. ZIP-Dateien bitte vorher entpacken.',
+      text: 'Markdown einfügen',
+      textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
+      textLabel: 'Markdown-Text',
+      placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
+      emptyFiles: (n: number) =>
+        n === 1 ? '1 leere Datei wurde übersprungen.' : `${n} leere Dateien wurden übersprungen.`,
+      keepSkipped: (n: number) =>
+        n === 1
+          ? '1 Keep-Notiz aus Papierkorb oder Archiv wurde ausgelassen.'
+          : `${n} Keep-Notizen aus Papierkorb oder Archiv wurden ausgelassen.`,
+      unreadable: (n: number) =>
+        n === 1
+          ? '1 JSON-Datei ist keine Keep-Notiz und wurde übersprungen.'
+          : `${n} JSON-Dateien sind keine Keep-Notizen und wurden übersprungen.`,
     },
     birthdays: {
       text: 'Geburtstage einfügen',

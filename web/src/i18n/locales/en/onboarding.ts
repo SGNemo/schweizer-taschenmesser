@@ -12,6 +12,7 @@ export const onboarding: Strings['onboarding'] = {
   parsing: 'Reading …',
   chooseFile: 'Choose file …',
   fileChosen: (name: string) => `File: ${name}`,
+  filesChosen: (n: number) => `${n} files`,
   textLabel: 'One line = one entry',
   pickTemplates: 'Choose suggestions',
   noInput: 'Please enter something.',
@@ -87,6 +88,29 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Paste a list from a notes app or a message: one line per task.',
     placeholder: 'Sort tax papers\nCall the dentist\nFix the bike',
     list: 'Into this list',
+    file: 'From Todoist or Google Tasks',
+    fileHint:
+      'Choose the file you exported there yourself: Todoist CSV or Google Tasks file (JSON). Nothing is uploaded.',
+    perSource: 'A separate list for each source list',
+    newList: 'New list',
+    includeDone: 'Completed tasks',
+    doneNo: 'Leave out',
+    doneYes: 'Bring over as done',
+    repeatNote: (text: string) => `Repeat in the source: ${text} (does not repeat automatically)`,
+    dueNote: (text: string) => `Due in the source: ${text}`,
+    skippedDone: (n: number) =>
+      n === 1 ? '1 completed task was left out.' : `${n} completed tasks were left out.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? '1 entry (section, deleted or without a title) was skipped.'
+        : `${n} entries (sections, deleted or without a title) were skipped.`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 task repeats in the source. The repeat is only a hint in its note; nothing repeats automatically.'
+        : `${n} tasks repeat in the source. The repeat is only a hint in their note; nothing repeats automatically.`,
+    tooMany: (max: number) => `Showing the first ${max} tasks.`,
+    unknownFormat:
+      'The format wasn’t recognised. You need the Todoist CSV or the Google Tasks file (JSON).',
   },
   reminders: {
     textDetail: 'today, 09:00',
@@ -166,6 +190,25 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Paste links',
     textHint: 'One line per link, optionally with a title in front.',
     placeholder: 'https://example.org/article\nLovely hike https://example.org/hiking',
+  },
+  notes: {
+    file: 'Markdown files or Google Keep',
+    fileHint:
+      'Choose .md files (e.g. from your Obsidian folder, several at once) or the .json files from Google Takeout (Keep). Titles, checklists and #tags are kept. Please unzip ZIP files first.',
+    text: 'Paste Markdown',
+    textHint: 'The pasted text becomes one note; a first heading becomes the title.',
+    textLabel: 'Markdown text',
+    placeholder: '# Weekly plan\n\n- Shopping #household\n- Call Mum',
+    emptyFiles: (n: number) =>
+      n === 1 ? '1 empty file was skipped.' : `${n} empty files were skipped.`,
+    keepSkipped: (n: number) =>
+      n === 1
+        ? '1 Keep note from the trash or archive was left out.'
+        : `${n} Keep notes from the trash or archive were left out.`,
+    unreadable: (n: number) =>
+      n === 1
+        ? '1 JSON file is not a Keep note and was skipped.'
+        : `${n} JSON files are not Keep notes and were skipped.`,
   },
   birthdays: {
     text: 'Paste birthdays',

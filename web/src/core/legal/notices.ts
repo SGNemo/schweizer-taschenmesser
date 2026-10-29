@@ -7,7 +7,13 @@ import { z } from 'zod';
 import { create } from 'zustand';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 
-export const NOTICE_IDS = ['cloud-ai', 'connector-google', 'connector-ics', 'supporter'] as const;
+export const NOTICE_IDS = [
+  'cloud-ai',
+  'connector-google',
+  'connector-ics',
+  'weather',
+  'supporter',
+] as const;
 export type NoticeId = (typeof NOTICE_IDS)[number];
 
 export const NOTICES_KEY = 'legal.notices';

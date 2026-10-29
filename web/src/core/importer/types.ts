@@ -59,6 +59,10 @@ export interface ImporterMeta {
   placeholder?: string;
   /** kind `file`: value for `<input accept>`. */
   accept?: string;
+  /** kind `file`: several files may be chosen at once; they arrive as `files` of the input. */
+  multiple?: boolean;
+  /** kind `text`: label of the text box instead of the default "one line = one entry". */
+  textLabel?: string;
   /** kind `form`: the fields. */
   fields?: ImportField[];
   /** kind `template`: the suggestions. */
@@ -84,7 +88,8 @@ export const noOnboarding: OnboardingDef = { importers: [] };
 export type ImportInput =
   | { kind: 'text'; text: string }
   | { kind: 'json'; text: string }
-  | { kind: 'file'; text: string; fileName: string }
+  /** `text`/`fileName` = the first file; `files` = all chosen files (importers with `multiple`). */
+  | { kind: 'file'; text: string; fileName: string; files?: { name: string; text: string }[] }
   | { kind: 'template'; ids: string[] }
   | { kind: 'form'; values: Record<string, string> }
   /** Suggestions a connector scan found (`MailFinding`s); nothing of the source text is included. */

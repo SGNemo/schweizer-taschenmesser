@@ -50,7 +50,8 @@ export const calendar: Strings['calendar'] = {
       : minutes >= 60
         ? `In ${Math.round(minutes / 60)} h`
         : `In ${minutes} min`) + ` · ${time}`,
-  followUpTitle: (title: string) => `Still relevant? ${title}`,
+  followUpTitle: (title: string) => `Still open: ${title}`,
+  followUpLast: 'That was the last reminder. It stays in the notification centre.',
   untilNext: {
     empty: 'Nothing else is planned for today.',
     off: 'Time until the next event is turned off.',
@@ -64,6 +65,12 @@ export const calendar: Strings['calendar'] = {
     ended: 'Ended',
     paused: 'Paused',
     active: 'Active',
+    markDone: 'Done',
+    markedDone: 'Reminder done.',
+    pause: 'Pause',
+    resume: 'Turn back on',
+    pausedToast: 'Paused.',
+    resumedToast: 'Turned back on.',
     widgetEmpty: 'No upcoming reminders.',
   },
   notify: {

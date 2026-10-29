@@ -95,6 +95,9 @@ describe('token requests', () => {
     await expect(refreshTokens(client(json(200, { nothing: true })), 'RT')).rejects.toMatchObject({
       code: 'bad-response',
     });
+    await expect(
+      refreshTokens(client(json(400, { error: 'invalid_client' })), 'RT'),
+    ).rejects.toMatchObject({ code: 'bad-client' });
   });
 
   it('keeps client data out of error messages', async () => {

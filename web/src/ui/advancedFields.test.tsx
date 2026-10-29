@@ -26,7 +26,7 @@ describe('AdvancedFields', () => {
       </AdvancedFields>,
     );
     expect(screen.queryByLabelText('Notiz')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Weitere Felder anzeigen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mehr Felder anzeigen' })).toBeInTheDocument();
   });
 
   it('"Mehr Felder" reveals them for this form only and does not change the setting', async () => {
@@ -36,7 +36,7 @@ describe('AdvancedFields', () => {
         <input aria-label="Notiz" />
       </AdvancedFields>,
     );
-    await user.click(screen.getByRole('button', { name: 'Weitere Felder anzeigen' }));
+    await user.click(screen.getByRole('button', { name: 'Mehr Felder anzeigen' }));
     expect(screen.getByLabelText('Notiz')).toBeInTheDocument();
     expect(setAdvanced).not.toHaveBeenCalled();
   });

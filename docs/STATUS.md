@@ -5,11 +5,19 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`, `product/focus/11-plan-2.md` (mit PR #176)): Prüfung und Plan als PR #176; Paket 1 gemergt (#177); Runde 2 läuft in fünf parallelen Chats (Sprechtaste, KI-Erinnerungen, leiser Ton im Spielmodus, Wiederholung bis Antwort, Paket 2 Übersicht), Prompts in `product/focus/13-parallel-prompts.md`; Reizinventar messen: `npm run measure:stimulus`; danach 4 Ergänzungen (Wetter, Screenshot, Kürzel) und die Tagebuch-Woche.
+Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
+
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter, Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
+
+Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
+
+KI-Erinnerungen per Satz (`feat/ai-reminder-voice`): „Erinner mich um 15 Uhr an die Wäsche“, „in 20 Minuten Pizza rausnehmen“ → Erinnerung mit Benachrichtigung (Regeln, 0 Token, Zeiten rechnet der Code), Vorschau mit großer Uhrzeit, „Speichern“/„Ändern“; Handtest: Satz per Sprache auf dem Android-Gerät, Benachrichtigung zur Zeit.
 
 Komfort-Review (`docs/product/comfort/`, [07-summary](product/comfort/07-summary.md)): alle Pakete in `develop` bis auf die Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`); Handtests K1–K4.
 
 Fehlerberichte und Absturzfestigkeit (PRs #84 gemergt, #85, #87, #88, #92): Diagnose mit Vorschau, „Fehler melden“, Modul-Fehlerkarte, Wiederherstellungsbildschirm, Sicherer Modus, Backup-Fixtures 0.3.x, E2E „frische Installation“, `npm run test:update-path`, [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md); Rust-Panic-Log im Datenordner und Widget-Fehlergrenze in PR #92; offen: nur die Handtests der Checkliste.
+
+Spracheingabe (`feat/voice-ptt`): Taste (Standard F4, halten oder tippen) und Mikrofon-Knopf in der Palette, Text landet im Eingabefeld, Standard aus mit Datenschutz-Hinweis; optional systemweite Taste (Windows); Handtests V1–V4 in [MANUAL-TESTS](MANUAL-TESTS.md), Plattformstand [features/voice.md](features/voice.md).
 
 Sicherheits-Review vor dem Launch (`security/launch-review`): Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md), kleine Fixes mit Tests umgesetzt, offen bleiben u. a. Pipe-Erstinstanz (X2), Windows-Hello-Wrapping (V2), Backup-Zeilenvalidierung (V5), Android-Manifest-Prüfung in CI (T2).
 
@@ -48,7 +56,7 @@ Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressu
 - Browser-Erweiterung: nur Brave/Chromium (MV3); Firefox, Safari, Store-Veröffentlichung (Chrome Web Store/Edge Add-ons, eigene Erweiterungs-ID → Allowlist), Release-Zip in `release.yml` (Vorschlag in [howto/browser-extension.md](howto/browser-extension.md)) offen; mehrstufige Logins und Felder in geschlossenen Shadow-Roots werden nicht erkannt.
 - Android: Autofill-Dienst (Folge-PR geplant, Notiz in [ROADMAP.md](ROADMAP.md)); bis dahin Kopieren mit sensibler Zwischenablage, per Erweiterung gespeicherte Einträge kommen per Sync aufs Handy.
 - Google-Login auf Android, zweiseitiger Kalender-Sync, FinTS/PSD2, Mail-Body-Parsing.
-- Spotify-Connector (bewusst nicht gebaut), natives Android-Share-Target für die APK.
+- Spotify am Handy ([spotify.md](features/spotify.md)), natives Android-Share-Target für die APK.
 - Windows-Binaries ohne Authenticode-Zertifikat (SmartScreen-Warnung); Pre-Update-Backups liegen im `%APPDATA%`-Ordner, auch im portablen Modus.
 - Providerdaten (Modellnamen, Preise, Limits, CORS aus der PWA), Bankdatei-Spaltennamen und Launcher-Adressen sind unverifiziert (siehe [MANUAL-TESTS.md](MANUAL-TESTS.md)).
 - Geräteverhalten der nativen Shells (Windows Hello, Android-Keystore/Biometrie, Update-Austausch, Push) nur von Hand prüfbar.
@@ -67,13 +75,12 @@ Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressu
 Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, (Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Verträge → Unterlagen, Geburtstage + Geschenke → Personen: erledigt), Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung stillgelegt und mit Paket 6 entfernt; Werkzeuge 18 → 12. Pakete (0.4 … 0.9) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md](archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md). Review-Funde: alle behoben oder bewusst belassen. Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
 
 ## Nächste sinnvolle Schritte
-0. Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ (Branch `feat/adhd-friendly`), danach Paket 2 Erinnerungen, 3 Erfassen/Ruhe, 4 Fortschritt – Plan: [features/focus-aids.md](features/focus-aids.md).
 1. Hardware-Checklisten ([MANUAL-TESTS.md](MANUAL-TESTS.md)) abarbeiten (Sven), Fehler melden.
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
-3. Einrichtungsassistent: offene Kleinigkeiten – Link „Einrichtung öffnen“ in den Leerzuständen der einzelnen Module (12 Seiten mit `StartDataButton`), Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.
+3. Einrichtungsassistent: offene Kleinigkeiten – Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.
 4. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
 5. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
-6. Entscheidungen: Spotify-Widget (L5), Precache der Wörterbücher, FAB-Änderung.
+6. Entscheidungen: Precache der Wörterbücher, FAB-Änderung (Spotify: in Arbeit, Chat 10).
 
 ## Manuelle Tests offen
 Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).
