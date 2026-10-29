@@ -131,7 +131,10 @@ export async function fetchPublic(
   const headers = new Headers(init?.headers);
   headers.set('authorization', `Bearer ${config.token}`);
   try {
-    return await withTimeout((signal) => fetch(proxied, { ...init, headers, signal }), timeoutMs);
+    return await withTimeout(
+      (signal) => platform.fetch(proxied, { ...init, headers, signal }),
+      timeoutMs,
+    );
   } catch (e) {
     throw asNetworkError(e);
   }

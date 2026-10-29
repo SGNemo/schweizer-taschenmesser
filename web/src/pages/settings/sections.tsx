@@ -32,6 +32,8 @@ import { BackupSection } from './BackupSection';
 import { AiStatsSection } from './AiStatsSection';
 import { AiWriteSection } from './AiWriteSection';
 import { CalmRemindersSection } from './CalmRemindersSection';
+import { NetworkSection } from './NetworkSection';
+import { tNet } from '@/strings.netlog';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
 import { tAdvanced } from '@/strings.advanced';
@@ -754,6 +756,25 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="connectors" title={t.connectors.title} hint={t.help.connectors} bare>
         <ConnectorsSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'network',
+    category: 'verbindungen',
+    order: 20,
+    get title() {
+      return tNet.get().title;
+    },
+    get description() {
+      return tNet.get().description;
+    },
+    get keywords() {
+      return tNet.get().keywords;
+    },
+    render: () => (
+      <SettingsGroup id="network" title={tNet.get().title} bare>
+        <NetworkSection />
       </SettingsGroup>
     ),
   },

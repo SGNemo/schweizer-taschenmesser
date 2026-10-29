@@ -2,6 +2,7 @@
  * Open-Meteo (free, no key, CORS enabled): place search and a short forecast. Nothing but a place name
  * (search) or a rounded position (forecast) is sent. Failures throw `WeatherError`; the caller stays calm.
  */
+import { getPlatform } from '@/core/platform';
 import { z } from 'zod';
 import { getLang } from '@/core/i18n/lang';
 import { codeGroup, rainFrom, type CodeGroup } from './logic';
@@ -93,6 +94,8 @@ export interface Forecast {
 export const HOURS_KEPT = 48;
 
 type Fetch = typeof fetch;
+/** Through the platform, so the connection log sees it and "Netzwerk sperren" applies. */
+const platformFetch: Fetch = (input, init) => getPlatform().fetch(input, init);
 
 const placesSchema = z.object({
   results: z
@@ -254,7 +257,7 @@ async function getJson(url: string, f: Fetch): Promise<unknown> {
 /** Open-Meteo knows "pt", not "pt-BR". */
 const apiLang = (): string => getLang().split('-')[0]!;
 
-export async function searchPlaces(query: string, f: Fetch = fetch): Promise<Place[]> {
+export async function searchPlaces(query: string, f: Fetch = platformFetch): Promise<Place[]> {
   const name = query.trim();
   if (name.length < 2) return [];
   const url = `${GEOCODING_URL}?${new URLSearchParams({ name, count: '5', language: apiLang(), format: 'json' })}`;
@@ -268,7 +271,11 @@ export async function searchPlaces(query: string, f: Fetch = fetch): Promise<Pla
   }));
 }
 
-export async function fetchForecast(lat: number, lon: number, f: Fetch = fetch): Promise<Forecast> {
+export async function fetchForecast(
+  lat: number,
+  lon: number,
+  f: Fetch = platformFetch,
+): Promise<Forecast> {
   const url = `${FORECAST_URL}?${new URLSearchParams({
     latitude: String(lat),
     longitude: String(lon),
