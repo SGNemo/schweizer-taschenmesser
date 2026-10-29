@@ -295,3 +295,13 @@ M4. *Desktop:* Karte in der App erscheint wie sonst; der Ton der Windows-Benachr
 K1. *Windows-App:* `T` dann `T` öffnet den Timer; F8 ebenso, auch mit dem Cursor in einem Textfeld (nichts wird getippt). F10 öffnet nur die Einstellungen, kein Fenstermenü. ☐
 K2. *Umbelegen:* Einstellungen → Allgemein → Tastenkürzel: eine belegte Taste wird mit Text abgelehnt, F5/F11/F12 ebenso; nach „Entfernen“ bei Rechner lässt sich F9 für „Heute“ vergeben und wirkt sofort. ☐
 K3. *Handy:* der Abschnitt lässt sich nur mit Fingertipp bedienen („Entfernen“, „Standard“). ☐
+
+### Erinnerungen bei geschlossener App (P5) – nur auf Android prüfbar
+Skript und Auswertung: [features/qa-reminders-safety.md](features/qa-reminders-safety.md). Je Zeile notieren: pünktlich / verspätet (Minuten) / nie; Gerät, Android-Version, Akkumodus.
+E1. *Android:* Erinnerung in 3 Minuten, App aus den zuletzt benutzten Apps wegwischen, Bildschirm aus: kommt pünktlich. ☐
+E2. *Android, Ruhezustand:* Gerät 30+ Minuten unberührt (nicht am Ladegerät), Erinnerung in 45 Minuten: kommt. ☐
+E3. *Android, Neustart:* Erinnerung in 10 Minuten, Gerät neu starten, Nemo nicht öffnen: kommt. ☐
+E4. *Android, Akku „eingeschränkt“ für Nemo* und *„Wecker & Erinnerungen“ entzogen*: jeweils wie E1; Ergebnis dokumentieren. ☐
+E5. *Android, „Beenden erzwingen“ und Flugmodus:* wie E1 (Flugmodus muss gehen). ☐
+E6. *PWA in Chrome (gleiches Handy), mit und ohne Web Push:* E1 und E3; ohne Push kommt nichts, mit Push kommt es. ☐
+
