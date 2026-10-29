@@ -10,7 +10,7 @@
 .content {
   min-width: 0;
 }
-.nav {
+.aside {
   position: sticky;
   top: var(--space-4);
   max-height: calc(100dvh - var(--space-6));
