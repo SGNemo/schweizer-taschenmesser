@@ -110,11 +110,6 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
     pickedView ?? (target < 0 && hasProgress ? 'start' : firstRun ? 'quick' : 'step');
   const index = pickedIndex ?? Math.max(0, target);
 
-  // Pin the questions: the first answer creates progress, which must not turn this into the resume view.
-  useEffect(() => {
-    if (firstRun && pickedView === null) setView('quick');
-  }, [firstRun, pickedView]);
-
   const total = list?.length ?? 0;
   const counted = countedSteps(list ?? []);
   const step = view === 'quick' ? quickSteps[quickIndex] : list?.[index];
@@ -144,6 +139,8 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   async function onNext() {
     if (!step) return;
+    // The first answer creates progress, which must not turn the questions into the resume view.
+    if (view === 'quick') setView('quick');
     setBusy(true);
     setError(false);
     let outcome: void | 'skipped';
