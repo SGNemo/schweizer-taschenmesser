@@ -32,7 +32,10 @@ export default function BackupUpdatesStep({ registerCommit }: SetupStepProps) {
   }, [registerCommit, draft]);
 
   async function backupNow() {
-    const result = await downloadTextFile(backupFileName(), await serializeSealedBackup(await createBackup()));
+    const result = await downloadTextFile(
+      backupFileName(),
+      await serializeSealedBackup(await createBackup()),
+    );
     if (result === 'saved') toast(t.backup.exported);
   }
 

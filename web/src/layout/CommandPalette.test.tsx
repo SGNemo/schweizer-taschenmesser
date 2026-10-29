@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { prepareCreate } from '@/core/ai/query/create';
 import { clearAll, ctxFor } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
-import { addRecent, readRecent } from '@/core/search/recent';
+import { readRecent } from '@/core/search/recent';
 import { patchFocusSettings } from '@/core/settings/focus';
 import { setSettings } from '@/core/settings/settings';
 import { TOOLS_SCOPE } from '@/core/tools/layout';
