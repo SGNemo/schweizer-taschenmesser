@@ -177,6 +177,21 @@
   min-width: 0;
   min-height: var(--row-h);
 }
+/* Phone: the text keeps at least 9 rem; status, amount and actions drop to a second line (right-aligned)
+   instead of squeezing the title and meta to one letter per line. */
+@media (max-width: 40rem) {
+  .rows .row {
+    flex-wrap: wrap;
+    padding-block: var(--space-1);
+  }
+  .rows .main {
+    flex: 1 1 9rem;
+    min-width: 9rem;
+  }
+  .rows .main + * {
+    margin-left: auto;
+  }
+}
 .static {
   cursor: default;
 }
@@ -198,19 +213,12 @@
 .grid .title {
   font-weight: var(--weight-semibold);
 }
-/* Quiet text. Only row meta (inside `.main`) ends in "…"; a paragraph elsewhere (setup steps, cards) is shown in full. */
+/* Quiet text, shown in full. Row meta carries facts ("Kündigen bis …", file notes) that must stay readable on a phone, so it wraps instead of ending in "…"; only row titles are clamped. */
 .muted {
   color: var(--text-muted);
   font-size: var(--text-sm);
   max-width: 100%;
-  overflow-wrap: break-word;
-}
-.main .muted {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: var(--clamp-lines);
-  line-clamp: var(--clamp-lines);
-  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 /* Row meta: 13 px, tertiary. */
 .rows .muted {

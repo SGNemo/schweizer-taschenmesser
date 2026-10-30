@@ -62,6 +62,8 @@ async function parseFile(
   const candidates: ImportCandidate[] = [];
   /** Source list name → id of the stored or newly proposed list. */
   const listIds = new Map<string, string>();
+  /** Lists proposed in this import; their tasks depend on them. */
+  const newListIds = new Set<string>();
   if (perSource) {
     const stored = await listRepo.active().toArray();
     let order = stored.reduce((max, list) => Math.max(max, list.order), 0);
@@ -73,6 +75,7 @@ async function parseFile(
       }
       const id = `imp-${ctx.batchId}-l${listIds.size}`;
       listIds.set(name, id);
+      newListIds.add(id);
       candidates.push({
         collection: 'list',
         id,
@@ -108,6 +111,7 @@ async function parseFile(
     candidates.push({
       collection: 'task',
       id: taskIds.get(task.key),
+      ...(newListIds.has(listId) ? { dependsOn: listId } : {}),
       data,
       label: task.title,
       detail:

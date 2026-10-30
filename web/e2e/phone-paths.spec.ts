@@ -313,6 +313,30 @@ test.describe('Back gesture', () => {
     await expect(page).toHaveURL(/\/dev\/components$/);
   });
 
+  test('a note editor: empty closes at once on Back, with typing it asks first', async ({
+    page,
+  }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await page.getByRole('button', { name: 'Notiz hinzufügen' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.goBack();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/notes$/);
+
+    await page.getByRole('button', { name: 'Notiz hinzufügen' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Text').fill('Halber Gedanke');
+    await page.goBack();
+    await expect(dialog.getByText('Entwurf verwerfen?')).toBeVisible();
+    await page.goBack();
+    await expect(dialog.getByLabel('Text')).toHaveValue('Halber Gedanke');
+    await page.goBack();
+    await dialog.getByRole('button', { name: 'Verwerfen' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/notes$/);
+  });
+
   test('the "Mehr" sheet: opening a page from it, one Back returns to where it was', async ({
     page,
   }, info) => {

@@ -108,3 +108,19 @@ test('an unknown file is explained, nothing is imported', async ({ page }) => {
   await chooseFile(page, 'bank.csv', 'text/csv', 'Datum;Betrag\n1.1.2026;5');
   await expect(dialog.getByText(/Das Format wurde nicht erkannt/)).toBeVisible();
 });
+
+test('unticking a new list also unticks its tasks, ticking a task brings the list back', async ({
+  page,
+}) => {
+  const dialog = await openWizard(page);
+  await dialog
+    .getByLabel('In diese Liste')
+    .selectOption({ label: 'Je Quell-Liste eine eigene Liste' });
+  await chooseFile(page, 'Tasks.json', 'application/json', GOOGLE_JSON);
+  const list = dialog.getByRole('checkbox', { name: /Einkäufe/ }).first();
+  const task = dialog.getByRole('checkbox', { name: /Brot kaufen/ });
+  await list.click();
+  await expect(task).not.toBeChecked();
+  await task.click();
+  await expect(list).toBeChecked();
+});

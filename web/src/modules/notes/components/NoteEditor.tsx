@@ -17,6 +17,7 @@ export function NoteEditor({ target, onClose }: { target: NoteTarget; onClose: (
     <Dialog
       open={target !== null}
       onClose={onClose}
+      askAfterTyping
       title={
         (existing && isScratch(existing)) || (target && 'scratch' in target)
           ? t.notes.scratch

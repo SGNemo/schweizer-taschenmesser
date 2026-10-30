@@ -177,3 +177,15 @@ Tools: `e2e/phone-paths.spec.ts` (project `pixel-7`; step = one touch or one inp
 - The steps do not change on purpose: the package adds no element. What changes is what Back and the keyboard do, so those have a case each (`Back gesture`, `Keyboard` in the same spec, Back also on desktop).
 - Tests: `core/shell/{backStack,keyboardInset}.test.ts` (one entry per element, order, `'keep'`, stale marker, inset maths, menu side), `ui/backClose.test.tsx` (Dialog, draft question, RowMenu).
 
+## Lesezeichen tiles (`feat/focus2-bookmarks-tiles`, round 4)
+Same tool and seeded Dev build; `measure:stimulus` now also lists `/bookmarks?view=links` (page `bookmarks-links`). Baseline = `develop` after #284.
+
+| Metric (Lesezeichen tiles, phone 412×915) | Before | After |
+|---|---|---|
+| Page height | 1855 px | 1855 px |
+| Buttons / links / icons | 36 / 10 / 27 | 36 / 10 / 27 |
+| Elements counted under 44 px | 17 | 17 |
+
+- Honest reading: **no measurable calming**, by design. The tile view was already one button per tile plus one edit icon; the icon became the same "⋯" button as on the list, so the count does not move. What changes is parity: a tile now offers Bearbeiten, Link kopieren, Duplizieren, Löschen like a list row (no tag filter, the tile view has none). The tile itself still opens the address through the platform (`openUrl`, safe in the desktop app).
+- Tests: `bookmarkRow.test.tsx` (tile menu has no tag entries), `e2e/bookmarks.spec.ts` (tiles: open by tile, no edit icon, edit/delete via the menu with undo; desktop + pixel-7); `links.spec`/`lists.spec` unchanged and green.
+

@@ -118,6 +118,11 @@ export interface ImportCandidate {
   dedupeKey: string;
   /** Reminder for the user, shown as a badge (e.g. "Betrag unsicher"). */
   warning?: string;
+  /**
+   * Id of another candidate of this import that must be written too (a new list for its tasks).
+   * The preview ticks and unticks them together and the commit skips a row whose dependency is out.
+   */
+  dependsOn?: string;
   /** Reference to the origin (mail id …). */
   ref?: string;
   /** Set when the importer already knows the entry cannot be stored; shown instead of the Zod issue. */
