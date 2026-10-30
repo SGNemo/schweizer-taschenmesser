@@ -16,6 +16,8 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| QA P4 D: Fokus-Schritte, Kontoauszug-Import | `feat/qa-focus-finance` | `modules/todos` (focus, FocusPage, TodosPage inbox), `modules/finance` (importer, categories), `core/io/bank.ts`, strings focus/finance in 5 locales | PR offen | Paket D | 2026-10-30 |
+| QA P4 C: Heute·Morgen-Block, Ruhig/Ausführlich | `feat/qa-today-block` | `home/**`, `modules/todos/widgets/NextWidget.tsx` (appointment list removed), `home` strings in 5 locales, `e2e/{agenda,today,core,calm}.spec.ts` | PR offen | Paket C | 2026-10-29 |
 | Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
 | P5 QA Paket D: „Zuletzt gelöscht“ mit Löschen-Knopf und Schalter (gestapelt auf C) | `feat/qa-recently-deleted` | `core/trash/**`, `core/db/trash.ts`, `pages/settings` (neuer Abschnitt), `modules/vault/repo.ts` | in review – [features/qa-reminders-safety.md](features/qa-reminders-safety.md) | – | 2026-10-30 |
 | P5 QA Paket C: Unterlagen löschen mit Rückgängig, Entwurf behalten (gestapelt auf B) | `feat/qa-delete-undo` | `modules/vault` (repo, Editor, Seite), `ui/useFormDraft`, `core/db/trash.ts` | in review – [features/qa-reminders-safety.md](features/qa-reminders-safety.md) | – | 2026-10-30 |

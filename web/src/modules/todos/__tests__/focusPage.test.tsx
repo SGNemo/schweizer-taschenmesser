@@ -7,6 +7,7 @@ import { startSession } from '@/core/focus/session';
 import { getFocusSession, saveFocusSession } from '@/core/focus/state';
 import { setNow } from '@/core/time/now';
 import FocusPage from '../routes/FocusPage';
+import { focusPath } from '../focus';
 import { taskRepo } from '../repo';
 
 const NOW = new Date(2026, 9, 2, 10, 0).getTime();
@@ -100,20 +101,51 @@ describe('FocusPage', () => {
     expect(await getFocusSession()).toBeDefined();
   });
 
-  it('suggests three small steps and lets the user tick them', async () => {
-    const t = await taskRepo.create({ ...base, title: 'X' });
-    await saveFocusSession(startSession({ id: t.id, title: 'X' }, 25, NOW));
+  it('proposes steps from a local template, stores them only after "Übernehmen", and lets the user tick them', async () => {
+    const t = await taskRepo.create({ ...base, title: 'Formular ausfüllen' });
+    await saveFocusSession(startSession({ id: t.id, title: 'Formular ausfüllen' }, 25, NOW));
     renderAt(t.id);
-    fireEvent.click(await screen.findByRole('button', { name: 'Vorschlag: 3 kleine Schritte' }));
-    const step = await screen.findByRole('checkbox', { name: 'Öffnen und Überblick verschaffen' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Schritte aus einer Vorlage' }));
+    expect(await screen.findByTestId('steps-proposal')).toHaveTextContent(
+      'Alle Unterlagen an einen Platz legen',
+    );
+    // Only a preview so far.
+    expect((await taskRepo.active().toArray()).filter((x) => x.parentId)).toHaveLength(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Übernehmen' }));
+    const step = await screen.findByRole('checkbox', {
+      name: 'Alle Unterlagen an einen Platz legen',
+    });
     fireEvent.click(step);
     await waitFor(async () =>
       expect(
         (await taskRepo.active().toArray()).find(
-          (x) => x.title === 'Öffnen und Überblick verschaffen',
+          (x) => x.title === 'Alle Unterlagen an einen Platz legen',
         )?.done,
       ).toBe(true),
     );
+  });
+
+  it('can discard the proposal without storing anything', async () => {
+    const t = await taskRepo.create({ ...base, title: 'X' });
+    await saveFocusSession(startSession({ id: t.id, title: 'X' }, 25, NOW));
+    renderAt(t.id);
+    fireEvent.click(await screen.findByRole('button', { name: 'Schritte aus einer Vorlage' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Verwerfen' }));
+    expect(screen.queryByTestId('steps-proposal')).toBeNull();
+    expect((await taskRepo.active().toArray()).filter((x) => x.parentId)).toHaveLength(0);
+  });
+
+  it('asks before a new round replaces one that runs for another task', async () => {
+    const a = await taskRepo.create({ ...base, title: 'Erste' });
+    const b = await taskRepo.create({ ...base, title: 'Zweite' });
+    await saveFocusSession(startSession({ id: a.id, title: 'Erste' }, 25, NOW, focusPath(a.id)));
+    renderAt(b.id);
+    expect(
+      await screen.findByText(/Neue Runde starten und die laufende ersetzen/),
+    ).toBeInTheDocument();
+    expect((await getFocusSession())?.taskId).toBe(a.id);
+    fireEvent.click(screen.getByRole('button', { name: 'Neue Runde starten' }));
+    await waitFor(async () => expect((await getFocusSession())?.taskId).toBe(b.id));
   });
 
   it('says so when the task is gone', async () => {

@@ -99,6 +99,12 @@ export const tLegal = defineBundle(
         to: 'open-meteo.com (Geocoding und Vorhersage; kostenlos, ohne Schlüssel).',
         when: 'Nur wenn du einen Ort wählst: beim Suchen und danach etwa alle 30 Minuten, solange die Übersicht offen ist. Ohne Ort passiert nichts; abschaltbar unter Verbindungen → Wetter.',
       },
+      maps: {
+        title: 'Karten & Orte (optional)',
+        what: 'Beim Öffnen der Karte die Kartenkacheln des gezeigten Ausschnitts (Zoomstufe und Kachelnummern, daraus lässt sich ablesen, welches Gebiet du ansiehst); bei der Ortssuche der eingetippte Suchbegriff. Gespeicherte Orte und Routen bleiben auf dem Gerät und gehen nie an die KI.',
+        to: 'OpenStreetMap (tile.openstreetmap.org und nominatim.openstreetmap.org) oder ein eigener Dienst, den du in den Einstellungen einträgst. Der Dienst sieht deine IP-Adresse.',
+        when: 'Nur wenn du den Reiter „Karte“ öffnest oder eine Ortssuche abschickst, nie im Hintergrund. Die Übersicht und die Listen fragen nichts ab. Karten-Apps (OpenStreetMap, Google Maps, Apple Karten) öffnen sich nur auf deinen Klick im Browser.',
+      },
       ip: {
         title: 'Öffentliche IP anzeigen (Windows)',
         what: 'Eine Abfrage deiner öffentlichen IP-Adresse. Das Ergebnis wird nur angezeigt.',
@@ -157,6 +163,13 @@ export const tLegal = defineBundle(
         body: [
           'Beim Suchen geht der Ortsname, danach etwa alle 30 Minuten die auf etwa einen Kilometer gerundete Position deines Ortes an open-meteo.com. Nie deine Einträge.',
           'Ohne gewählten Ort wird nichts abgefragt. Du kannst die Anzeige jederzeit ausschalten oder den Ort entfernen.',
+        ],
+      },
+      maps: {
+        title: 'Die Karte lädt Kartenkacheln',
+        body: [
+          'Beim Öffnen der Karte lädt Nemo die Kartenkacheln des gezeigten Ausschnitts von OpenStreetMap, bei einer Ortssuche geht der Suchbegriff an dessen Suchdienst. Der Dienst sieht deine IP-Adresse und welches Gebiet du ansiehst. Nie deine gespeicherten Orte.',
+          'Die Liste deiner Orte und Routen ist rein lokal. Die Dienste kannst du in den Einstellungen des Moduls ändern.',
         ],
       },
       supporter: {
@@ -284,6 +297,12 @@ export const tLegal = defineBundle(
           to: 'open-meteo.com (geocoding and forecast; free, no key).',
           when: 'Only when you choose a place: when you search and then about every 30 minutes while the Overview is open. Without a place nothing happens; can be switched off under Connections → Weather.',
         },
+        maps: {
+          title: 'Maps & places (optional)',
+          what: 'When you open the map, the map tiles of the shown area (zoom level and tile numbers, which reveal the area you look at); for the place search, the search term you typed. Saved places and routes stay on the device and never go to the AI.',
+          to: 'OpenStreetMap (tile.openstreetmap.org and nominatim.openstreetmap.org) or a service of your own that you enter in the settings. The service sees your IP address.',
+          when: 'Only when you open the “Karte” tab or submit a place search, never in the background. The Overview and the lists request nothing. Map apps (OpenStreetMap, Google Maps, Apple Maps) open in the browser only when you click.',
+        },
         ip: {
           title: 'Show public IP (Windows)',
           what: 'A request for your public IP address. The result is only displayed.',
@@ -342,6 +361,13 @@ export const tLegal = defineBundle(
           body: [
             'When you search, the place name goes to open-meteo.com; after that, about every 30 minutes, the position of your place rounded to about a kilometre. Never your entries.',
             'Without a chosen place nothing is requested. You can switch the line off or remove the place at any time.',
+          ],
+        },
+        maps: {
+          title: 'The map loads map tiles',
+          body: [
+            'When you open the map, Nemo loads the map tiles of the shown area from OpenStreetMap; for a place search the search term goes to its search service. The service sees your IP address and the area you look at. Never your saved places.',
+            'The list of your places and routes is purely local. You can change the services in the module settings.',
           ],
         },
         supporter: {

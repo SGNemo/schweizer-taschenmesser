@@ -1,0 +1,76 @@
+.mapTab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.search {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.searchField {
+  flex: 1;
+  min-width: 0;
+}
+.hits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.hit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hit:hover {
+  background: var(--surface-2);
+}
+.note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.cardTitle {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.openIn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.openIn a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}

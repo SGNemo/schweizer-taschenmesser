@@ -27,7 +27,8 @@ import { undoableWithToast } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Checkbox, EmptyState, Skeleton, TextField } from '@/ui';
-import { beginFocus, focusMinutesFor } from '../focus';
+import { beginFocus, focusMinutesFor, focusPath } from '../focus';
+import { proposeSteps } from '../stepTemplates';
 import { listRepo, setDone, taskRepo } from '../repo';
 import styles from './FocusPage.module.css';
 
@@ -47,6 +48,8 @@ export default function FocusPage() {
   const session = useFocusSession();
   const tick = useNow(1000, Boolean(session));
   const [step, setStep] = useState('');
+  /** The proposal is only shown; nothing is stored until the user takes it. */
+  const [proposal, setProposal] = useState<readonly string[] | null>(null);
   const musicUnreachable = useMusicUnreachable();
   const music = tSpotify.use();
 
@@ -107,11 +110,12 @@ export default function FocusPage() {
     });
     setStep('');
   }
-  const suggestSteps = () =>
+  const takeSteps = (titles: readonly string[]) =>
     void undoableWithToast(t.focus.mode.steps, t.focus.mode.steps, async () => {
       if (!task) return;
+      setProposal(null);
       await taskRepo.createMany(
-        t.focus.mode.stepsTemplate.map((title, i) => ({
+        titles.map((title, i) => ({
           data: {
             listId: task.listId,
             parentId: task.id,
@@ -165,18 +169,36 @@ export default function FocusPage() {
         <div className={styles.head}>
           <h1 className={styles.title}>{task.title}</h1>
         </div>
-        {session ? (
-          <p className={styles.caption}>{t.focus.mode.otherRunning(session.title)}</p>
-        ) : null}
-        <div className={styles.actions}>
-          <Button
-            variant="primary"
-            data-autofocus
-            onClick={() => void beginFocus(task, settings.focusMinutes)}
-          >
-            {t.focus.mode.start(focusMinutesFor(task, settings.focusMinutes))}
-          </Button>
-        </div>
+        {session && session.taskId !== taskId ? (
+          <>
+            <p className={styles.caption}>{t.focus.mode.otherRunning(session.title)}</p>
+            <p className={styles.caption}>{t.focus.mode.replaceAsk}</p>
+            <div className={styles.actions}>
+              <Button
+                variant="primary"
+                data-autofocus
+                onClick={() => void navigate(session.path ?? focusPath(session.taskId))}
+              >
+                {t.focus.mode.replaceKeep}
+              </Button>
+              <Button
+                onClick={() => void beginFocus(task, settings.focusMinutes, { replace: true })}
+              >
+                {t.focus.mode.replaceStart}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className={styles.actions}>
+            <Button
+              variant="primary"
+              data-autofocus
+              onClick={() => void beginFocus(task, settings.focusMinutes, { replace: true })}
+            >
+              {t.focus.mode.start(focusMinutesFor(task, settings.focusMinutes))}
+            </Button>
+          </div>
+        )}
         {steps && steps.length > 0 ? (
           <ul className={styles.steps}>
             {steps.map((s) => (
@@ -263,11 +285,31 @@ export default function FocusPage() {
         </div>
         <Button type="submit">{t.actions.add}</Button>
       </form>
-      {steps && steps.length === 0 ? (
+      {steps && steps.length === 0 && !proposal ? (
         <div className={styles.actions}>
-          <Button variant="ghost" onClick={suggestSteps}>
+          <Button variant="ghost" onClick={() => setProposal(proposeSteps(task.title).steps)}>
             {t.focus.mode.stepsSuggest}
           </Button>
+        </div>
+      ) : null}
+      {proposal ? (
+        <div data-testid="steps-proposal">
+          <p className={styles.caption}>{t.focus.mode.stepsPreview}</p>
+          <ul className={styles.steps}>
+            {proposal.map((s) => (
+              <li key={s} className={styles.step}>
+                {s}
+              </li>
+            ))}
+          </ul>
+          <div className={styles.actions}>
+            <Button variant="primary" onClick={() => takeSteps(proposal)}>
+              {t.focus.mode.stepsTake}
+            </Button>
+            <Button variant="ghost" onClick={() => setProposal(null)}>
+              {t.focus.mode.stepsDrop}
+            </Button>
+          </div>
         </div>
       ) : null}
 

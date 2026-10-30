@@ -31,7 +31,7 @@ export const finance: Strings['finance'] = {
   nextMonth: 'Próximo mês',
   income: 'Receitas',
   expense: 'Despesas',
-  net: 'Saldo',
+  net: 'Resultado',
   incomeOne: 'Receita',
   expenseOne: 'Despesa',
   kind: 'Tipo',

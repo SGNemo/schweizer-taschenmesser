@@ -159,8 +159,40 @@ export const focus: Strings['focus'] = {
     finished: 'Feito. Muito bem.',
     steps: 'Etapas',
     addStep: 'Adicionar etapa',
-    stepsSuggest: 'Sugestão: 3 pequenas etapas',
+    stepsSuggest: 'Passos de um modelo',
     stepsTemplate: ['Abrir e ter uma visão geral', 'Fazer a primeira parte', 'Revisar e concluir'],
+    stepSets: [
+      {
+        words: ['trabalho', 'redação', 'relatório', 'apresentação', 'slides', 'escrever'],
+        steps: ['Anotar um roteiro', 'Escrever o primeiro parágrafo', 'Reler e melhorar um trecho'],
+      },
+      {
+        words: ['formulário', 'requerimento', 'imposto', 'inscrição', 'cancelar', 'seguro'],
+        steps: ['Reunir os documentos', 'Preencher e marcar o que falta', 'Conferir e enviar'],
+      },
+      {
+        words: ['ligar', 'telefonar', 'marcar consulta', 'consulta'],
+        steps: ['Anotar o número e o motivo', 'Ligar', 'Anotar o resultado'],
+      },
+      {
+        words: ['limpar', 'arrumar', 'roupa', 'louça', 'lixo', 'poeira'],
+        steps: ['Música e cronômetro', 'Terminar uma área', 'Levar o lixo e a roupa'],
+      },
+      {
+        words: ['comprar', 'encomendar', 'pedir', 'presente', 'compras'],
+        steps: ['Escrever o essencial', 'Comprar ou pedir', 'Guardar e riscar'],
+      },
+      {
+        words: ['estudar', 'prova', 'vocabulário', 'aula', 'capítulo', 'aprender'],
+        steps: ['Reunir o material', 'Estudar um capítulo', 'Anotar três perguntas'],
+      },
+    ],
+    stepsPreview: 'Modelo, não salvo:',
+    stepsTake: 'Usar',
+    stepsDrop: 'Descartar',
+    replaceAsk: 'Começar uma nova rodada e substituir a que está em andamento?',
+    replaceStart: 'Começar uma nova rodada',
+    replaceKeep: 'Ficar com a atual',
     missing: 'Esta tarefa não existe mais.',
     missingAction: 'Ir para Tarefas',
     notifyTitle: 'Foco: o tempo acabou',

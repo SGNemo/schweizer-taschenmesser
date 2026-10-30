@@ -3,6 +3,7 @@
     "ai.local.testSentence",
     "connectors.ics.name",
     "invoices.meta.settings.remindTimeHelp",
+    "maps.apps.google",
     "pantry.meta.settings.remindTimeHelp",
     "people.gift.url",
     "people.meta.settings.remindTimeHelp",
@@ -17,11 +18,13 @@
   ],
   "es": [
     "ai.local.testSentence",
+    "maps.apps.google",
     "tools.timezones.zones.America/Argentina/Buenos_Aires",
     "tools.timezones.zones.America/Sao_Paulo"
   ],
   "fr": [
     "ai.local.testSentence",
+    "maps.apps.google",
     "tools.timezones.zones.America/Argentina/Buenos_Aires",
     "tools.timezones.zones.America/Los_Angeles",
     "tools.timezones.zones.America/New_York",
@@ -30,6 +33,7 @@
   ],
   "pt-BR": [
     "ai.local.testSentence",
+    "maps.apps.google",
     "tools.timezones.zones.America/Argentina/Buenos_Aires",
     "tools.timezones.zones.America/Los_Angeles",
     "tools.timezones.zones.America/Sao_Paulo"
