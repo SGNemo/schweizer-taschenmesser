@@ -1,6 +1,6 @@
 # Spotify: „Läuft gerade“ auf der Übersicht
 
-Nemo kann auf der Übersicht in einer ruhigen Zeile zeigen, was in Spotify läuft, und Pause/Weiter und Nächster anbieten. Nemo spielt selbst keine Musik ab. Vorerst nur in der Windows-App.
+Nemo kann auf der Übersicht in einer ruhigen Zeile zeigen, was in Spotify läuft, und Pause/Weiter und Nächster anbieten. Nemo spielt selbst keine Musik ab. Funktioniert in der Windows-App und in der installierten PWA (Browser), noch nicht in der Android-App.
 
 Du brauchst eine eigene, kostenlose Spotify-„App“ – einmalig ein paar Minuten:
 
@@ -9,7 +9,9 @@ Du brauchst eine eigene, kostenlose Spotify-„App“ – einmalig ein paar Minu
 3. App öffnen → *Settings* → **User management**: dein eigenes Spotify-Konto hinzufügen (Name und E-Mail-Adresse dieses Kontos). Apps im Entwicklungsmodus funktionieren nur für dort eingetragene Konten.
 4. **Client ID** kopieren (nicht das Secret – das braucht Nemo nicht).
 5. In Nemo: *Einstellungen → Verbindungen → Spotify*, Client ID einfügen, speichern. **Anzeigen** (was läuft) wählen und, wenn du magst, **Steuern** (Pause, Weiter, Nächster).
-6. **Verbinden** klicken. Der Browser öffnet Spotify; Zugriff erlauben. Danach zeigt Nemo auf der Übersicht „Läuft gerade: …“, sobald etwas läuft.
+6. **Verbinden** klicken. Der Browser öffnet Spotify (in der PWA geht die Seite selbst zu Spotify und kommt zurück); Zugriff erlauben. Danach zeigt Nemo auf der Übersicht „Läuft gerade: …“, sobald etwas läuft.
+
+In der **PWA** (Browser oder aus dem Browser installiert) ist die Redirect-URI eine andere: Nemo zeigt sie auf der Spotify-Karte – es ist deine Nemo-Adresse plus `/oauth/callback`, zum Beispiel `https://deine-nemo-adresse/oauth/callback`. Trage genau diese in Schritt 2 ein (eine zusätzliche ist in Ordnung, die für Windows darf bleiben). Sie muss mit `https://` beginnen; `http://localhost` nimmt Spotify nicht an.
 
 Gut zu wissen:
 - Steuern braucht Spotify **Premium**. Ohne Premium blendet Nemo die Knöpfe einmal mit einem kurzen Hinweis aus; die Anzeige funktioniert weiter.

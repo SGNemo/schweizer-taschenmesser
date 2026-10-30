@@ -24,8 +24,11 @@ Title and artist are user data: never to the AI (the connector cannot import `co
 ## Spotify's limits (as documented, re-check before relying on them)
 Apps in development mode need an owner with Premium and allow only a few named users (the user's own account must be added under "User management"); one Client ID per developer. Playback control needs the *listener's* account to be Premium. Not built: playback inside Nemo (no Web Playback SDK), queue editing, Android/PWA.
 
-## Android / PWA – what is missing
-The login needs a redirect Spotify accepts: a fixed HTTPS callback page of our own or an Android deep link (`nemo://` custom scheme registered at Spotify). Both mean new infrastructure or a Tauri mobile plugin; not part of this package.
+## PWA login (browser) and what Android still lacks
+- `oauth.browserLogin: true` lets the PWA log in too: `core/connectors/oauthRedirect.ts` stores the PKCE verifier and `state` in `sessionStorage` (`tm-oauth-pending`, this tab, 10 min, used once), the page goes to Spotify, Spotify returns to **`<app origin>/oauth/callback`** (route `pages/OAuthCallback.tsx`), which checks `state`, exchanges the code (browser `fetch`, no secret) and stores the refresh token like the desktop login. The address is replaced afterwards; a wrong or unknown `state` is ignored.
+- The user registers `<their Nemo address>/oauth/callback` at Spotify (shown on the card). Only `https://` (and `http://127.0.0.1`) pages offer the button; the card says so otherwise. The E2E build mocks Spotify (`e2e/connector-spotify.spec.ts`).
+- Not verified against the real service from the build sandbox: that `accounts.spotify.com/api/token` and `api.spotify.com` answer a browser `fetch` with CORS headers (Spotify documents PKCE for browser apps; hand test S6).
+- **Android app (Tauri webview):** still no login. Its origin is not an https address Spotify accepts, and a deep link (`nemo://` registered at Spotify) needs a Tauri plugin (new Cargo dependency, maintainer's decision). Use the PWA in the phone's browser meanwhile.
 
 ## Code and tests
 `core/focus/music.ts`, `pages/settings/FocusMusicRow.tsx`, `e2e/spotify-focus.spec.ts`; `connectors/spotify/{index,api}.ts` (+ tests with handwritten fixtures: track, episode, 204, 403, 429, 401), `core/connectors/nowPlaying.ts` (poller with fake timers, storage), `home/{NowPlayingLine,SpotifyPlayer,useNowPlaying,useCover,nowPlayingTime}.ts(x)` (+ test), `strings.spotify.ts` (5 languages), `e2e/connector-spotify.spec.ts` (mocked `api.spotify.com`; login = hand test S1–S4 in [MANUAL-TESTS](../MANUAL-TESTS.md)), Rust test for the busy port in `src-tauri/src/oauth.rs`.

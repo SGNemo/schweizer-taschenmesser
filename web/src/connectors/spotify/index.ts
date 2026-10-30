@@ -1,5 +1,6 @@
 import type { ConnectorDef } from '@/core/connectors/types';
-import { t } from '@/strings';
+import { redirectUri } from '@/core/connectors/redirect';
+import { getPlatform } from '@/core/platform';
 import { tSpotify } from '@/strings.spotify';
 import {
   likedSongs,
@@ -36,17 +37,25 @@ const connector: ConnectorDef = {
   },
   icon: 'play',
   authType: 'oauth-pkce',
-  platforms: ['desktop'],
+  platforms: ['desktop', 'web'],
   get unavailableHint() {
-    return t.connectors.desktopOnly;
+    return s().browserHint;
   },
   oauth: {
     authUrl: 'https://accounts.spotify.com/authorize',
     tokenUrl: 'https://accounts.spotify.com/api/token',
     preferredPort: SPOTIFY_REDIRECT_PORT,
+    browserLogin: true,
   },
   get client() {
-    return { title: s().clientTitle, intro: s().clientIntro, secret: false, note: s().privacy };
+    // In the browser the redirect address is the app's own; on the PC it is the fixed loopback port.
+    const web = getPlatform().kind === 'web';
+    return {
+      title: s().clientTitle,
+      intro: web ? s().clientIntroWeb(redirectUri()) : s().clientIntro,
+      secret: false,
+      note: s().privacy,
+    };
   },
   features: [
     {
