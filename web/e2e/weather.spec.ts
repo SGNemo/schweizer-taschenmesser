@@ -37,6 +37,27 @@ async function mockWeather(page: Page) {
       },
     });
   });
+  await page.route('**://air-quality-api.open-meteo.com/**', async (route) => {
+    seen.push(route.request().url());
+    await route.fulfill({
+      json: {
+        current: {
+          european_aqi: 52,
+          pm2_5: 12.4,
+          pm10: 20,
+          ozone: 80,
+          birch_pollen: 120,
+          grass_pollen: 3,
+          alder_pollen: 0,
+        },
+        hourly: {
+          time: [...times, ...nextDay],
+          birch_pollen: Array.from({ length: 48 }, (_, i) => (i >= 24 ? 200 : 120)),
+          grass_pollen: Array.from({ length: 48 }, () => 3),
+        },
+      },
+    });
+  });
   await page.route('**://api.open-meteo.com/**', async (route) => {
     seen.push(route.request().url());
     await route.fulfill({
@@ -184,6 +205,15 @@ test.describe('Weather line', () => {
     );
     await expect(preview.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
     await expect(preview.getByTestId('weather-chart')).toBeVisible();
+    // Airways and allergy: air index with its word, pollen strongest first, always with words.
+    await expect(preview.getByTestId('weather-aqi')).toContainText('mäßig');
+    await expect(preview.getByTestId('weather-pollen').locator('li').first()).toContainText(
+      'Birke',
+    );
+    await expect(preview.getByTestId('weather-pollen').locator('li').first()).toContainText('hoch');
+    await expect(preview.getByTestId('weather-days').locator('li').nth(1)).toContainText(
+      'Pollen: Birke',
+    );
     await expect(preview.getByTestId('weather-now')).toContainText('gefühlt 12°');
     await expect(preview.getByTestId('weather-now')).toContainText('Wind 14 km/h');
     // Colour never stands alone: every row names its rating.

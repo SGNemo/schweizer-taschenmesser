@@ -13,8 +13,8 @@ interface DialogProps {
   footer?: ReactNode;
   /** `full` fills the screen (setup assistant). Everything else is a centred dialog that becomes a bottom sheet on phones. */
   variant?: 'center' | 'full';
-  /** Desktop width: `default` 34 rem (forms), `roomy` 40 rem (quick capture), `wide` 56 rem (tools). */
-  size?: 'default' | 'roomy' | 'wide';
+  /** Desktop width: `default` 34 rem (forms), `roomy` 40 rem (quick capture), `wide` 56 rem (tools), `xl` 76 rem (rich overviews, e.g. the weather). */
+  size?: 'default' | 'roomy' | 'wide' | 'xl';
   /** Shown in the header before the title (e.g. a back button). */
   headerStart?: ReactNode;
   /** Fields were filled: closing asks "Entwurf verwerfen?" first. */
@@ -132,6 +132,7 @@ export function Dialog({
         styles.dialog,
         size === 'wide' ? styles.wide : '',
         size === 'roomy' ? styles.roomy : '',
+        size === 'xl' ? styles.xl : '',
         variant === 'full' ? styles.full : '',
       ].join(' ')}
       style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}

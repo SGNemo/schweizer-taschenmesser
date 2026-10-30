@@ -22,6 +22,9 @@ const previewBody = {
     wind_speed_10m: 14,
     wind_gusts_10m: 34,
     is_day: 1,
+    cloud_cover: 80,
+    pressure_msl: 1015.3,
+    wind_direction_10m: 268,
   },
   hourly: {
     time: [...times, ...times.map((t) => t.replace('-19T', '-20T'))],
@@ -33,6 +36,9 @@ const previewBody = {
     wind_gusts_10m: Array.from({ length: 48 }, () => 20),
     relative_humidity_2m: Array.from({ length: 48 }, () => 70),
     uv_index: Array.from({ length: 48 }, () => 0),
+    cloud_cover: Array.from({ length: 48 }, () => 80),
+    pressure_msl: Array.from({ length: 48 }, () => 1015),
+    wind_direction_10m: Array.from({ length: 48 }, () => 268),
     is_day: Array.from({ length: 48 }, (_, i) => (i % 24 >= 7 && i % 24 < 19 ? 1 : 0)),
     precipitation_probability: Array.from({ length: 48 }, (_, i) =>
       i === 15 ? 80 : i === 16 ? 10 : 0,
@@ -48,6 +54,8 @@ const previewBody = {
     sunset: dayDates.map((d) => `${d}T18:21`),
     uv_index_max: dayDates.map(() => 3),
     precipitation_sum: dayDates.map(() => 1),
+    precipitation_hours: dayDates.map(() => 3),
+    wind_direction_10m_dominant: dayDates.map(() => 45),
     wind_speed_10m_max: dayDates.map(() => 20),
     wind_gusts_10m_max: dayDates.map(() => 35),
   },
@@ -63,6 +71,10 @@ afterEach(() => {
   vi.restoreAllMocks();
   setNow();
 });
+
+/** Requests that went to the forecast (the air-quality request is a second, optional one). */
+const forecastCalls = (f: ReturnType<typeof vi.fn>): number =>
+  f.mock.calls.filter(([u]) => String(u).includes('/v1/forecast')).length;
 
 const renderLine = () =>
   render(
@@ -123,16 +135,16 @@ describe('WeatherLine', () => {
     vi.stubGlobal('fetch', f);
     await chooseWeatherPlace('Bern, Schweiz', 46.95, 7.45);
     renderLine();
-    await waitFor(() => expect(f).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(forecastCalls(f)).toBe(1));
     await waitFor(() => expect(localStorage.getItem('tm-weather-tried')).toContain('"at"'));
     cleanup();
     renderLine(); // a reload a minute later: no new request
     await new Promise((r) => setTimeout(r, 50));
-    expect(f).toHaveBeenCalledTimes(1);
+    expect(forecastCalls(f)).toBe(1);
     cleanup();
     setNow(() => T0 + WEATHER_RETRY_MS);
     renderLine(); // after the retry window it asks once more
-    await waitFor(() => expect(f).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(forecastCalls(f)).toBe(2));
   });
 
   it('names the line (now a button) by its text, not by a label that hides it', async () => {
@@ -241,7 +253,18 @@ describe('WeatherLine', () => {
       const now = screen.getByTestId('weather-now');
       expect(now).toHaveTextContent('14°');
       expect(now).toHaveTextContent('gefühlt 12°');
-      expect(now).toHaveTextContent('Wind 14 km/h');
+      expect(now).toHaveTextContent('Wind 14 km/h W');
+      expect(now).toHaveTextContent('Bewölkung 80 %');
+      expect(now).toHaveTextContent('1015 hPa');
+      expect(screen.getByTestId('weather-hours').querySelector('li')).toHaveTextContent(
+        'Wind 12 km/h W',
+      );
+      expect(screen.getByTestId('weather-days').querySelector('li')).toHaveTextContent(
+        '3 h Niederschlag',
+      );
+      expect(screen.getByTestId('weather-days').querySelector('li')).toHaveTextContent(
+        'Wind 20 km/h NO',
+      );
       expect(now).toHaveTextContent('Böen 34 km/h');
       expect(now).toHaveTextContent('Luftfeuchte 71 %');
       expect(now).toHaveTextContent('Sonne 07:32–18:21');
@@ -250,6 +273,68 @@ describe('WeatherLine', () => {
         'img',
       );
       expect(screen.getByTestId('weather-best')).toHaveTextContent(/^Beste Zeit: \d\d–\d\d Uhr$/);
+    });
+
+    it('shows air quality and pollen for the airways, strongest first, and the pollen of coming days', async () => {
+      setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
+      const airBody = {
+        current: {
+          european_aqi: 52,
+          pm2_5: 12.4,
+          ozone: 80,
+          birch_pollen: 120,
+          grass_pollen: 3,
+          alder_pollen: 0,
+        },
+        hourly: {
+          time: dayDates.map((d) => `${d}T12:00`),
+          birch_pollen: dayDates.map((_, i) => (i === 1 ? 200 : 5)),
+          grass_pollen: dayDates.map(() => 3),
+        },
+      };
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          async (url: RequestInfo | URL) =>
+            new Response(
+              JSON.stringify(String(url).includes('air-quality') ? airBody : previewBody),
+              { status: 200 },
+            ),
+        ),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+      await open();
+      const air = screen.getByTestId('weather-air');
+      expect(air).toHaveTextContent('Atemwege & Allergie');
+      expect(screen.getByTestId('weather-aqi')).toHaveTextContent('Luftqualität 52mäßig');
+      expect(air).toHaveTextContent('Feinstaub PM2,5');
+      const rows = screen.getByTestId('weather-pollen').querySelectorAll('li');
+      expect(rows[0]).toHaveTextContent('Birke');
+      expect(rows[0]).toHaveTextContent('hoch');
+      expect(rows[0]).toHaveTextContent('120 Pollen/m³');
+      expect(rows[rows.length - 1]).toHaveTextContent('Erle');
+      expect(air.querySelector('[data-rating]')).toHaveTextContent('Ungemütlich');
+      // Wind direction, cloud cover and pressure are in the detail rows.
+      const days = screen.getByTestId('weather-days').querySelectorAll('li');
+      expect(days[1]).toHaveTextContent('Pollen: Birke hoch');
+      expect(days[0]).not.toHaveTextContent('Pollen:');
+    });
+
+    it('without air values: one calm sentence, the weather stays complete', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url: RequestInfo | URL) =>
+          String(url).includes('air-quality')
+            ? new Response('x', { status: 500 })
+            : new Response(JSON.stringify(previewBody), { status: 200 }),
+        ),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+      await open();
+      expect(screen.getByTestId('weather-air')).toHaveTextContent(
+        'Luft- und Pollenwerte sind gerade nicht verfügbar.',
+      );
+      expect(screen.getByTestId('weather-hours').querySelectorAll('li')).toHaveLength(24);
     });
 
     it('links to the weather settings and credits Open-Meteo', async () => {
@@ -308,7 +393,7 @@ describe('WeatherLine', () => {
       fireEvent.click(screen.getByTestId('weather-line'));
       expect(await screen.findByText('Wird geladen …')).toBeTruthy();
       await waitFor(() => expect(screen.getByTestId('weather-hours')).toBeTruthy());
-      expect(f).toHaveBeenCalledTimes(1);
+      expect(forecastCalls(f)).toBe(1);
     });
   });
 });

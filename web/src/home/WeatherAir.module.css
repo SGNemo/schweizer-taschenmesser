@@ -1,0 +1,101 @@
+.air {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  font-variant-numeric: var(--font-num);
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+.aqi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+}
+.aqiValue {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+.pollutants,
+.pollen {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pollutants {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-1) var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.pollutants li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.sub {
+  margin: var(--space-2) 0 0;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}
+.pollen li {
+  display: grid;
+  grid-template-columns: minmax(5rem, 1fr) auto minmax(4.5rem, auto) minmax(5.5rem, auto);
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--space-6);
+  font-size: var(--text-sm);
+}
+.pollenName {
+  font-weight: var(--weight-medium);
+}
+.pollenLevel {
+  text-align: right;
+}
+.pollenGrains {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-align: right;
+}
+.pollen li[data-level='none'] {
+  color: var(--text-muted);
+}
+.meter {
+  display: inline-flex;
+  gap: 2px;
+}
+.meter span {
+  width: 0.75rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  background: var(--border);
+}
+.meter .on {
+  background: var(--text-muted);
+}
+.meter[data-level='moderate'] .on,
+.meter[data-level='high'] .on,
+.meter[data-level='veryHigh'] .on {
+  background: var(--warning);
+}
+.note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}

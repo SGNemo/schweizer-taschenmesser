@@ -16,6 +16,10 @@
 .wide {
   width: min(92vw, 56.25rem);
 }
+.xl {
+  width: min(96vw, 76rem);
+  max-height: 92dvh;
+}
 .dialog::backdrop {
   background: var(--overlay);
 }

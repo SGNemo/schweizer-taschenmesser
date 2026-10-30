@@ -27,6 +27,16 @@ interface Props {
   startDate: string;
   /** Hide the "none" option (items that always repeat, e.g. subscriptions). */
   required?: boolean;
+  /**
+   * Monthly rules follow the day of `startDate` instead of offering a 31-day list (subscriptions:
+   * the first-charge date already says the day). A rule that pins another day keeps the list.
+   */
+  followStartDay?: boolean;
+}
+
+/** True when the rule has no pinned day, or pins the day `startDate` already has. */
+function followsStart(r: Recurrence, startDate: string): boolean {
+  return r.byMonthDay === undefined || r.byMonthDay === Number(startDate.slice(8, 10));
 }
 
 function ends(r: Recurrence): 'never' | 'until' | 'count' {
@@ -34,7 +44,7 @@ function ends(r: Recurrence): 'never' | 'until' | 'count' {
 }
 
 /** Form control for a recurrence rule (shared by reminders, calendar, subscriptions …). */
-export function RecurrenceEditor({ value, onChange, startDate, required }: Props) {
+export function RecurrenceEditor({ value, onChange, startDate, required, followStartDay }: Props) {
   const set = (patch: Partial<Recurrence>) => value && onChange({ ...value, ...patch });
 
   function changeFreq(freq: string) {
@@ -86,7 +96,7 @@ export function RecurrenceEditor({ value, onChange, startDate, required }: Props
                 }
               />
             </div>
-            {value.freq === 'monthly' ? (
+            {value.freq === 'monthly' && !(followStartDay && followsStart(value, startDate)) ? (
               <div className={styles.grow}>
                 <SelectField
                   label={t.recurrence.monthDay}

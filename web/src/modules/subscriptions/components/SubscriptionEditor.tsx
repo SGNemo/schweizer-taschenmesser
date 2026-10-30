@@ -2,11 +2,13 @@ import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoney, formatMoneyInput, parseMoney } from '@/core/money';
 import { formatDay } from '@/core/time/dates';
+import { NoticeField } from '@/core/deadline/NoticeField';
+import { tDeadline } from '@/strings.deadline';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { changePercent, recordPriceChange } from '../logic';
+import { changePercent, nextCancelDeadline, recordPriceChange } from '../logic';
 import { AdvancedFields, Button, Dialog, patternStyles, Switch, TextArea, TextField } from '@/ui';
 import { annualCost } from '../logic';
 import { subscriptionRepo } from '../repo';
@@ -42,15 +44,14 @@ function Form({
   existing: Stored<Subscription> | null;
   onClose: () => void;
 }) {
+  const dl = tDeadline.use();
   const [name, setName] = useState(existing?.name ?? '');
   const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.amountMinor) : '');
   const [startDate, setStartDate] = useState(existing?.startDate ?? today());
   const [recurrence, setRecurrence] = useState<Recurrence>(
     existing?.recurrence ?? { freq: 'monthly', interval: 1 },
   );
-  const [notice, setNotice] = useState(
-    existing?.cancelNoticeDays !== undefined ? String(existing.cancelNoticeDays) : '',
-  );
+  const [notice, setNotice] = useState<number | undefined>(existing?.cancelNoticeDays);
   const [active, setActive] = useState(existing?.active ?? true);
   const [note, setNote] = useState(existing?.note ?? '');
   const [error, setError] = useState('');
@@ -60,20 +61,23 @@ function Form({
     ? Math.round(annualCost({ amountMinor, recurrence }) / 12)
     : undefined;
 
+  const cancelBy =
+    notice !== undefined && !recurrence.until
+      ? nextCancelDeadline({ recurrence, startDate, cancelNoticeDays: notice }, today())?.deadline
+      : undefined;
+
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!amountMinor || amountMinor < 1) {
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
-    const days =
-      notice.trim() === '' ? undefined : Math.max(0, Math.min(365, Math.round(Number(notice))));
     const data = {
       name: name.trim(),
       amountMinor,
       recurrence,
       startDate,
-      cancelNoticeDays: Number.isFinite(days) ? days : undefined,
+      cancelNoticeDays: notice,
       active,
       note: note.trim() || undefined,
       priceHistory: existing
@@ -112,7 +116,13 @@ function Form({
           label={t.subscriptions.firstCharge}
           type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => {
+            // A monthly rule that followed the old day keeps following the first-charge date.
+            const oldDay = Number(startDate.slice(8, 10));
+            if (recurrence.freq === 'monthly' && recurrence.byMonthDay === oldDay)
+              setRecurrence({ ...recurrence, byMonthDay: undefined });
+            setStartDate(e.target.value);
+          }}
           required
         />
       </div>
@@ -121,6 +131,7 @@ function Form({
         onChange={(r) => r && setRecurrence(r)}
         startDate={startDate}
         required
+        followStartDay
       />
       {existing ? (
         <TextField
@@ -151,16 +162,14 @@ function Form({
           </ul>
         </div>
       ) : null}
-      <AdvancedFields moduleId="subscriptions" hasData={!!notice || !!note}>
-        <TextField
-          label={t.subscriptions.noticeDays}
-          type="number"
-          min={0}
-          max={365}
-          value={notice}
-          onChange={(e) => setNotice(e.target.value)}
-          hint={t.subscriptions.noticeHint}
-        />
+      {cancelBy ? (
+        <p className={styles.cancelBig} data-testid="cancel-by">
+          <span>{dl.cancelBy}</span>
+          <strong>{formatDay(cancelBy, 'd. MMM yyyy')}</strong>
+        </p>
+      ) : null}
+      <AdvancedFields moduleId="subscriptions" hasData={notice !== undefined || !!note}>
+        <NoticeField days={notice} onChange={setNotice} max={365} />
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>
       {existing ? (

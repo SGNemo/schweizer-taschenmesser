@@ -72,6 +72,26 @@ export function nextCancelDeadline(
   return charge ? { deadline: addDaysStr(charge, -s.cancelNoticeDays), charge } : undefined;
 }
 
+/** Cycles at most this many times a year (quarterly or longer) are where a missed deadline matters. */
+const MISSED_MAX_CHARGES_PER_YEAR = 4;
+
+/**
+ * A deadline that has just passed for a charge that is still ahead: the contract renews anyway and a
+ * cancellation now only takes effect afterwards. Only for cycles of a quarter or longer (with a
+ * monthly charge the deadline would always be "missed"), active and not already cancelled "zum".
+ */
+export function missedDeadline(
+  s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'active'>,
+  today: string,
+): CancelDeadline | undefined {
+  if (!s.active || s.cancelNoticeDays === undefined || s.recurrence.until) return undefined;
+  if (chargesPerYear(s.recurrence) > MISSED_MAX_CHARGES_PER_YEAR) return undefined;
+  const charge = nextCharge(s, today);
+  if (!charge) return undefined;
+  const deadline = addDaysStr(charge, -s.cancelNoticeDays);
+  return deadline < today ? { deadline, charge } : undefined;
+}
+
 /** Cancellation deadlines that fall within [from, to]. */
 export function cancelDeadlinesInRange(
   s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays'>,

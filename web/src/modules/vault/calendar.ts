@@ -1,6 +1,8 @@
 import { notDeleted } from '@/core/db/repo';
 import type { CalendarItem, CalendarSource } from '@/core/modules/types';
 import { t } from '@/strings';
+import { today } from '@/core/time/dates';
+import { tDeadline } from '@/strings.deadline';
 import { cancelDeadline, endOf } from './logic';
 import { documentRepo } from './repo';
 
@@ -28,7 +30,10 @@ const source: CalendarSource = async (range) => {
         id: `${d.id}:cancel`,
         source: 'vault',
         kind: 'cancel',
-        title: t.vault.cancelBy(d.title),
+        title:
+          deadline < today() && end && end >= today()
+            ? tDeadline.get().missedCalendar(d.title)
+            : t.vault.cancelBy(d.title),
         date: deadline,
         allDay: true,
         to: '/vault',
