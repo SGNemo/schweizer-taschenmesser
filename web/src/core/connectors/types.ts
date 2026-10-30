@@ -182,9 +182,41 @@ export interface NowPlaying {
   playing: boolean;
   /** Link that opens the track in the service. */
   trackUrl?: string;
+  /** Album (or nothing for a podcast episode); small cover image of the service's own CDN. */
+  album?: string;
+  coverUrl?: string;
+  /** Position and length in milliseconds, as of the moment of the reading. */
+  progressMs?: number;
+  durationMs?: number;
 }
 
-export type NowPlayingCommand = 'pause' | 'play' | 'next';
+export type NowPlayingCommand = 'pause' | 'play' | 'next' | 'previous';
+
+/** What the player itself reports: device, volume, shuffle and repeat. Device-local, never stored. */
+export interface PlayerState {
+  device?: string;
+  /** 0–100; absent when the device has no volume control. */
+  volume?: number;
+  shuffle?: boolean;
+  repeat?: 'off' | 'track' | 'context';
+}
+
+export type MediaKind = 'track' | 'playlist' | 'album';
+
+/** A track, playlist or album the user can start. Names are user data: shown on request, never stored. */
+export interface MediaItem {
+  kind: MediaKind;
+  id: string;
+  name: string;
+  /** Artist of a track or album. */
+  subtitle?: string;
+}
+
+export interface SearchResult {
+  tracks: MediaItem[];
+  playlists: MediaItem[];
+  albums: MediaItem[];
+}
 
 /** One of the user's own playlists. Names are user data: shown on request, never stored. */
 export interface Playlist {
@@ -202,6 +234,18 @@ export interface NowPlayingSource {
   playlists?(ctx: ConnectorContext): Promise<Playlist[]>;
   /** Starts the playlist with this id on the active device. */
   startPlaylist?(ctx: ConnectorContext, id: string): Promise<void>;
+  /** Device, volume, shuffle and repeat of the active player; `undefined` = no active device. */
+  state?(ctx: ConnectorContext): Promise<PlayerState | undefined>;
+  seek?(ctx: ConnectorContext, ms: number): Promise<void>;
+  setVolume?(ctx: ConnectorContext, percent: number): Promise<void>;
+  setShuffle?(ctx: ConnectorContext, on: boolean): Promise<void>;
+  setRepeat?(ctx: ConnectorContext, mode: 'off' | 'track' | 'context'): Promise<void>;
+  /** Searches tracks, playlists and albums. The typed words go to the service; nothing is kept. */
+  search?(ctx: ConnectorContext, query: string): Promise<SearchResult>;
+  /** The user's most recently saved songs (one page). Needs its own feature/scope. */
+  likedSongs?(ctx: ConnectorContext): Promise<MediaItem[]>;
+  /** Starts a track (optionally with the following `queue`), playlist or album on the active device. */
+  play?(ctx: ConnectorContext, item: MediaItem, queue?: MediaItem[]): Promise<void>;
 }
 
 export interface ConnectorDef {

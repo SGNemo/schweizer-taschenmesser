@@ -1,5 +1,5 @@
 import { BankFormatError, bankDedupeKey, parseBankFile } from '@/core/io/bank';
-import { formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
+import { currencyOf, formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
 import type { ImportInput, ImporterRuntime, ImportParseResult } from '@/core/importer/types';
 import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
@@ -10,7 +10,11 @@ const nameKey = (name: string) => name.trim().toLowerCase();
 
 const MAX_BANK_ROWS = 2000;
 
-async function parseBank(input: ImportInput, accountId: string): Promise<ImportParseResult> {
+async function parseBank(
+  input: ImportInput,
+  accountId: string,
+  currency: string,
+): Promise<ImportParseResult> {
   const s = t.onboarding.finance;
   if (input.kind !== 'file') return { candidates: [], notes: [] };
   if (!accountId) return { candidates: [], notes: [s.noAccounts] };
@@ -62,10 +66,10 @@ async function parseBank(input: ImportInput, accountId: string): Promise<ImportP
           ...(tx.payee ? { payee: tx.payee } : {}),
           ...(tx.purpose ? { note: tx.purpose } : {}),
         },
-        label: tx.payee || tx.purpose || formatMoney(Math.abs(tx.amountMinor)),
+        label: tx.payee || tx.purpose || formatMoney(Math.abs(tx.amountMinor), currency),
         // Payee is the title; the purpose and a suggested category follow in the detail line.
         detail: [
-          `${formatDay(tx.date, 'd. MMM yyyy')} · ${tx.amountMinor < 0 ? '−' : '+'}${formatMoney(Math.abs(tx.amountMinor))}`,
+          `${formatDay(tx.date, 'd. MMM yyyy')} · ${tx.amountMinor < 0 ? '−' : '+'}${formatMoney(Math.abs(tx.amountMinor), currency)}`,
           tx.payee ? tx.purpose : '',
           categoryId ? categoryName(categoryId) : '',
         ]
@@ -80,7 +84,11 @@ async function parseBank(input: ImportInput, accountId: string): Promise<ImportP
 
 const runtime: ImporterRuntime = {
   async parse(id, input, ctx) {
-    if (id === 'bank') return await parseBank(input, ctx.options.accountId ?? '');
+    if (id === 'bank') {
+      const accountId = ctx.options.accountId ?? '';
+      const account = accountId ? await accountRepo.get(accountId) : undefined;
+      return await parseBank(input, accountId, currencyOf(account));
+    }
     if (input.kind !== 'form') return { candidates: [], notes: [] };
     const name = (input.values.name ?? '').trim();
     const balance = parseMoney(input.values.balance ?? '', { allowNegative: true });

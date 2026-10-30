@@ -34,6 +34,24 @@ describe('buildAgenda', () => {
     expect(a.empty).toBe(false);
   });
 
+  it('names a multi-day event once, on its first day in range', () => {
+    const a = buildAgenda(
+      [
+        item('trip', '2026-10-30'),
+        item('trip', '2026-10-31', { continued: true }),
+        item('trip', '2026-11-01', { continued: true }),
+        // Started before today: its first day in range is today, continued or not.
+        item('fair', '2026-10-29', { continued: true }),
+        item('fair', '2026-10-30', { continued: true }),
+      ],
+      DAY,
+    );
+    expect(a.today.map((i) => i.id)).toEqual(['fair']);
+    expect(a.tomorrow.map((i) => i.id)).toEqual(['trip']);
+    expect(a.week).toEqual([]);
+    expect(a.hidden).toBe(0);
+  });
+
   it('leaves out done items and the ToDos due today (the "Heute" card lists them)', () => {
     const a = buildAgenda(
       [

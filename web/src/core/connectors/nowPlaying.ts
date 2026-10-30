@@ -23,6 +23,10 @@ const nowSchema = z.object({
     artist: z.string().max(200),
     playing: z.boolean(),
     trackUrl: z.string().max(300).optional(),
+    album: z.string().max(200).optional(),
+    coverUrl: z.string().max(300).optional(),
+    progressMs: z.number().finite().optional(),
+    durationMs: z.number().finite().optional(),
   }),
 });
 export interface StoredNow {

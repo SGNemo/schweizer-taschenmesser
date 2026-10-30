@@ -5,6 +5,12 @@ export const accountSchema = z.object({
   name: z.string().min(1),
   /** Balance at the start; may be negative. Cents. */
   openingBalanceMinor: z.number().int().default(0),
+  /** ISO 4217 code of the account and its bookings; none means euro (since version 3). */
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .optional()
+    .meta({ description: 'ISO 4217, z. B. EUR, USD, MXN; ohne Angabe EUR' }),
   order: z.number().default(0),
 });
 

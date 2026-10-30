@@ -10,7 +10,9 @@ import {
   updatePair,
   type SharePair,
 } from '@/core/share/pairs';
+import { splitIntoFrames } from '@/core/share/frames';
 import { createPairFile, shareFileName, shareableModules } from '@/core/share/share';
+import { QrPlayer } from './ShareQr';
 import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { tShare } from '@/strings.share';
@@ -30,6 +32,9 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
   const [fresh, setFresh] = useState<{ name: string; code: string } | undefined>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [qr, setQr] = useState<
+    { pair: SharePair; frames: string[]; upto: string | undefined; rows: number } | undefined
+  >();
 
   useEffect(() => {
     let live = true;
@@ -67,6 +72,33 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
     }
   }
 
+  /** The same file as `send`, shown as a run of QR codes; counted as handed over when "Fertig gezeigt" is tapped. */
+  async function showQr(pair: SharePair) {
+    const code = await pairCode(pair.id);
+    if (!code) return;
+    setBusy(true);
+    try {
+      const file = await createPairFile({
+        modules: pair.modules,
+        code,
+        pairId: pair.id,
+        since: pair.sentUpto,
+      });
+      if (file.rows === 0 && pair.sentUpto) return toast(n.pairNothing);
+      setQr({ pair, frames: splitIntoFrames(file.text), upto: file.upto, rows: file.rows });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function qrDone() {
+    if (!qr) return;
+    await updatePair(qr.pair.id, { sentUpto: qr.upto, sentAt: now() });
+    toast(n.qrSent(qr.rows));
+    setQr(undefined);
+    onChanged();
+  }
+
   async function remove(pair: SharePair) {
     await removePair(pair.id);
     toast(n.pairRemoved);
@@ -97,12 +129,16 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
                 <Button disabled={busy} onClick={() => void send(p, true)}>
                   {n.pairResend}
                 </Button>
+                <Button disabled={busy} onClick={() => void showQr(p)}>
+                  {n.qrShow}
+                </Button>
                 <Button onClick={() => void remove(p)}>{n.remove(p.name)}</Button>
               </div>
             </li>
           ))}
         </ul>
       ) : null}
+      {qr ? <QrPlayer frames={qr.frames} onDone={() => void qrDone()} /> : null}
       {fresh ? (
         <div role="status" data-testid="share-pair-code">
           <p className={styles.legend}>{`${n.code}: ${fresh.name}`}</p>

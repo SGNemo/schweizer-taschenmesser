@@ -1,6 +1,6 @@
 import { compareText } from '@/core/i18n/format';
 import { addMonthsStr, addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
-import { formatMoneyInput } from '@/core/money';
+import { currencyOf, DEFAULT_CURRENCY, formatMoneyInput } from '@/core/money';
 import type { Account, BookingRepeat, Transaction } from './schema';
 
 type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'>;
@@ -210,4 +210,25 @@ export function planRepeats(
     }
   }
   return { create, clear };
+}
+
+/** Currencies of the accounts, the euro first; the euro when there are no accounts. */
+export function currenciesOf(accounts: Pick<Account, 'currency'>[]): string[] {
+  const set = new Set(accounts.map((a) => currencyOf(a)));
+  if (set.size === 0) return [DEFAULT_CURRENCY];
+  return [...set].sort((a, b) =>
+    a === DEFAULT_CURRENCY ? -1 : b === DEFAULT_CURRENCY ? 1 : a.localeCompare(b),
+  );
+}
+
+/** Only the accounts in `currency` and their bookings; amounts of different currencies are never mixed. */
+export function filterByCurrency<
+  D extends {
+    accounts: (Pick<Account, 'currency'> & { id: string })[];
+    txs: { accountId: string }[];
+  },
+>(data: D, currency: string): D {
+  const accounts = data.accounts.filter((a) => currencyOf(a) === currency);
+  const ids = new Set(accounts.map((a) => a.id));
+  return { ...data, accounts, txs: data.txs.filter((x) => ids.has(x.accountId)) };
 }
