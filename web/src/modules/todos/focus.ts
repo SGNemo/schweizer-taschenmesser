@@ -1,6 +1,6 @@
 import { now } from '@/core/time/now';
 import { onFocusStart } from '@/core/focus/music';
-import { saveFocusSession } from '@/core/focus/state';
+import { getFocusSession, saveFocusSession } from '@/core/focus/state';
 import { startSession } from '@/core/focus/session';
 import type { Task } from './schema';
 
@@ -12,14 +12,21 @@ export const focusMinutesFor = (task: Pick<Task, 'estimateMin'>, defaultMinutes:
     ? task.estimateMin
     : defaultMinutes;
 
-/** Starts a focus round for the task (replacing a running one on this device). */
+/**
+ * Starts a focus round for the task. A round that runs for another task is only replaced with
+ * `replace` (the focus screen asks first); returns false when it kept the running one.
+ */
 export async function beginFocus(
   task: { id: string; title: string } & Pick<Task, 'estimateMin'>,
   defaultMinutes: number,
-): Promise<void> {
+  opts: { replace?: boolean } = {},
+): Promise<boolean> {
+  const running = await getFocusSession();
+  if (running && running.taskId !== task.id && !opts.replace) return false;
   await saveFocusSession(
     startSession(task, focusMinutesFor(task, defaultMinutes), now(), focusPath(task.id)),
   );
   // Optional music (off by default); never waits for Spotify and never fails the round.
   void onFocusStart();
+  return true;
 }

@@ -109,6 +109,21 @@
       }
     }
   },
+  "maps": {
+    "scope": "module.maps",
+    "fields": {
+      "tileUrl": {
+        "type": "text",
+        "label": "Kartenkacheln (Adresse)",
+        "default": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+      },
+      "searchUrl": {
+        "type": "text",
+        "label": "Ortssuche (Adresse)",
+        "default": "https://nominatim.openstreetmap.org/search"
+      }
+    }
+  },
   "pantry": {
     "scope": "module.pantry",
     "fields": {

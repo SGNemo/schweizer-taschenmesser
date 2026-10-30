@@ -1,5 +1,5 @@
 {
-  "version": 19,
+  "version": 20,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -29,6 +29,8 @@
     "invoices_invoice": "id, updatedAt, dueDate, status",
     "lists_item": "id, updatedAt, listId, done",
     "lists_list": "id, updatedAt, kind",
+    "maps_place": "id, updatedAt, createdAt",
+    "maps_route": "id, updatedAt, createdAt",
     "notes_note": "id, updatedAt, pinned",
     "pantry_item": "id, updatedAt, expires",
     "people_gift": "id, updatedAt, personId, status, date",
