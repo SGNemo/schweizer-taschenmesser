@@ -47,6 +47,22 @@ describe('ChatPage', () => {
     expect(screen.getByRole('button', { name: c.emptyAction })).toBeInTheDocument();
   });
 
+  it('points to the local model download until a model or provider is set up', async () => {
+    setPlatform({
+      ...createWebPlatform(),
+      localModel: createFakeLocalModel({ models: [], answer: () => '' }),
+    });
+    view();
+    const hint = await screen.findByTestId('chat-setup-hint');
+    expect(within(hint).getByRole('button', { name: c.setup.openLocal })).toBeInTheDocument();
+  });
+
+  it('shows no setup hint once a model is downloaded', async () => {
+    view();
+    expect(await screen.findByText(c.empty)).toBeInTheDocument();
+    expect(screen.queryByTestId('chat-setup-hint')).toBeNull();
+  });
+
   it('shows a calm notice instead of the chat while "KI abschalten" is on', async () => {
     await threadRepo.create({
       title: 'Alt',

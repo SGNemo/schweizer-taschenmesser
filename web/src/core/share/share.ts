@@ -18,12 +18,13 @@ import {
   type PasswordBlob,
 } from '@/core/crypto';
 import { applyBackup, moduleOfTable, planRestore, type RestorePlan } from '@/core/backup/apply';
-import { createBackup, parseBackup, serializeBackup, type Backup } from '@/core/backup/backup';
+import { createBackup, parseBackup, type Backup } from '@/core/backup/backup';
 import { sha256Hex } from '@/core/backup/encrypted';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
 import { generatePassphrase, loadWordlist } from '@nemo/vault-core';
 import { allManifests } from '@/core/modules/registry';
+import { maxHlc } from '@/core/db/hlc';
 
 export const SHARE_FORMAT = 'taschenmesser-share';
 export const SHARE_VERSION = 1;
@@ -37,6 +38,11 @@ const fileSchema = z.object({
   format: z.literal(SHARE_FORMAT),
   version: z.number().int().min(1),
   createdAt: z.string(),
+  /** Standing connection this file belongs to (random id, readable before the code is tried). */
+  pairId: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{4,64}$/)
+    .optional(),
   checksum: z.string().regex(/^[0-9a-f]{64}$/),
   blob: z.object({
     format: z.string(),
@@ -56,16 +62,31 @@ interface ShareFile {
   format: typeof SHARE_FORMAT;
   version: number;
   createdAt: string;
+  pairId?: string;
   /** Hex SHA-256 of `blob.data`: damage is noticed before the code is tried. */
   checksum: string;
   blob: PasswordBlob;
+}
+
+/** Where a delta file starts and ends (stamps of the shared rows); lives inside the encrypted payload. */
+export interface ShareRange {
+  /** Absent: a full state (snapshot). */
+  since?: string;
+  upto?: string;
 }
 
 export type ShareReadFailure =
   'not-json' | 'wrong-format' | 'newer-version' | 'invalid' | 'checksum-mismatch' | 'wrong-code';
 
 export type ShareReadResult =
-  | { ok: true; backup: Backup; createdAt: string; modules: string[] }
+  | {
+      ok: true;
+      backup: Backup;
+      createdAt: string;
+      modules: string[];
+      pairId?: string;
+      range: ShareRange;
+    }
   | { ok: false; reason: ShareReadFailure };
 
 /** Modules that can be offered for sharing, with their tables. */
@@ -104,26 +125,61 @@ export interface CreateShareOptions {
   tableNames?: string[];
   kdf?: { m?: number; t?: number; p?: number };
   createdAt?: Date;
+  /** A standing connection: the file carries its id and only what changed since `since`. */
+  pairId?: string;
+  since?: string;
 }
 
-/** The share file (JSON text) for the chosen modules. An empty choice or code is a programming error. */
-export async function createShareFile(opts: CreateShareOptions): Promise<string> {
+export interface CreatedShare {
+  text: string;
+  /** Newest stamp among the shared rows at this moment (the next file starts after it). */
+  upto: string | undefined;
+  /** Rows in the file. */
+  rows: number;
+}
+
+const rowStamps = (row: { _f: Record<string, string> }): string[] => Object.values(row._f);
+
+/** The share file for the chosen modules. An empty choice or code is a programming error. */
+export async function createPairFile(opts: CreateShareOptions): Promise<CreatedShare> {
   const code = normalizeCode(opts.code);
   if (!code) throw new RangeError('pairing code is empty');
   const chosen = new Set(opts.modules);
   const tables = shareableTables(opts.tableNames).filter((n) => chosen.has(moduleOfTable(n)));
   if (tables.length === 0) throw new RangeError('no module chosen');
   const at = opts.createdAt ?? new Date();
-  const backup = await createBackup(opts.database ?? defaultDb, tables, at);
-  const blob = await encryptWithPassword(PAYLOAD_FORMAT, code, serializeBackup(backup), opts.kdf);
+  const full = await createBackup(opts.database ?? defaultDb, tables, at);
+  // Newest stamp of everything shared, before the delta filter: that is where the next file starts.
+  const upto = maxHlc(Object.values(full.tables).flatMap((rows) => rows.flatMap(rowStamps)));
+  const since = opts.since;
+  const backup: Backup = since
+    ? {
+        ...full,
+        tables: Object.fromEntries(
+          Object.entries(full.tables).map(([name, rows]) => [
+            name,
+            rows.filter((r) => rowStamps(r).some((stamp) => stamp > since)),
+          ]),
+        ),
+      }
+    : full;
+  const rows = Object.values(backup.tables).reduce((n, r) => n + r.length, 0);
+  const payload = JSON.stringify({ ...backup, share: { since, upto } });
+  const blob = await encryptWithPassword(PAYLOAD_FORMAT, code, payload, opts.kdf);
   const file: ShareFile = {
     format: SHARE_FORMAT,
     version: SHARE_VERSION,
     createdAt: at.toISOString(),
+    ...(opts.pairId ? { pairId: opts.pairId } : {}),
     checksum: await sha256Hex(blob.data),
     blob,
   };
-  return JSON.stringify(file);
+  return { text: JSON.stringify(file), upto, rows };
+}
+
+/** A one-off share file (no standing connection): the full state of the chosen modules. */
+export async function createShareFile(opts: CreateShareOptions): Promise<string> {
+  return (await createPairFile({ ...opts, pairId: undefined, since: undefined })).text;
 }
 
 export async function readShareFile(text: string, codeInput: string): Promise<ShareReadResult> {
@@ -158,6 +214,14 @@ export async function readShareFile(text: string, codeInput: string): Promise<Sh
   }
   const backup = parseBackup(plain);
   if (!backup.ok) return { ok: false, reason: 'invalid' };
+  let range: ShareRange = {};
+  try {
+    const meta = (JSON.parse(plain) as { share?: { since?: unknown; upto?: unknown } }).share;
+    if (typeof meta?.since === 'string') range.since = meta.since;
+    if (typeof meta?.upto === 'string') range.upto = meta.upto;
+  } catch {
+    range = {};
+  }
   const allowed = new Set(shareableTables());
   const modules = [
     ...new Set(
@@ -166,7 +230,32 @@ export async function readShareFile(text: string, codeInput: string): Promise<Sh
         .map(moduleOfTable),
     ),
   ];
-  return { ok: true, backup: backup.backup, createdAt: file.createdAt, modules };
+  return {
+    ok: true,
+    backup: backup.backup,
+    createdAt: file.createdAt,
+    modules,
+    ...(file.pairId ? { pairId: file.pairId } : {}),
+    range,
+  };
+}
+
+/** The connection id in the clear file header (before any code is tried), if the file has one. */
+export function peekPairId(text: string): string | undefined {
+  try {
+    const parsed = fileSchema.safeParse(JSON.parse(text));
+    return parsed.success ? parsed.data.pairId : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Is this file the next one for the connection? A delta must start at or before what this device
+ * already received; otherwise an earlier file was missed and its changes would silently be absent.
+ */
+export function followsReceived(range: ShareRange, receivedUpto: string | undefined): boolean {
+  return !range.since || (receivedUpto !== undefined && receivedUpto >= range.since);
 }
 
 /** What opening the file would change, computed without writing. */
