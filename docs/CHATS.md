@@ -16,12 +16,8 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| QA P4 D: Fokus-Schritte, Kontoauszug-Import | `feat/qa-focus-finance` | `modules/todos` (focus, FocusPage, TodosPage inbox), `modules/finance` (importer, categories), `core/io/bank.ts`, strings focus/finance in 5 locales | PR offen | Paket D | 2026-10-30 |
-| QA P4 C: Heute·Morgen-Block, Ruhig/Ausführlich | `feat/qa-today-block` | `home/**`, `modules/todos/widgets/NextWidget.tsx` (appointment list removed), `home` strings in 5 locales, `e2e/{agenda,today,core,calm}.spec.ts` | PR offen | Paket C | 2026-10-29 |
 | Localized test data (package 1: seed language + notes, pantry) | `feat/qa-localized-seed` | `core/seed/*`, `modules/{notes,pantry}/seed.ts`, `docs/howto/seed-data.md` | in review | – | 2026-10-30 |
 | Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
-| QA P4 E: Für = Person/Kunde (V14) | `feat/qa-assign-person` | `core/people/**`, `core/modules/types.ts` (hotspot: additive `CalendarItem.personId`, one chat), `modules/calendar`, `modules/todos` (schema v+1, empty migrations), strings `assign` in 5 locales | PR offen | Paket E | 2026-10-30 |
-| QA P4 C: Heute·Morgen-Block, Ruhig/Ausführlich | `feat/qa-today-block` | `home/**`, `modules/todos/widgets/NextWidget.tsx` (appointment list removed), `home` strings in 5 locales, `e2e/{agenda,today,core,calm}.spec.ts` | PR offen | Paket C | 2026-10-29 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
