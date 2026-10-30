@@ -98,6 +98,7 @@ export function expandEvent(
         ...(first && span > 0 && e.endDate ? { endDate: e.endDate } : {}),
         ...(first ? {} : { continued: true }),
         allDay: !timed,
+        ...(e.personId ? { personId: e.personId } : {}),
         to: `/calendar?view=day&date=${date}`,
       });
     }

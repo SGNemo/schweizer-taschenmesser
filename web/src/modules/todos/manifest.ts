@@ -12,7 +12,7 @@ const manifest: ModuleManifest = {
     return t.todos.meta.name;
   },
   icon: 'checklist',
-  version: 2,
+  version: 3,
   get description() {
     return t.todos.meta.description;
   },

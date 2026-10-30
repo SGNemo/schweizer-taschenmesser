@@ -4,6 +4,7 @@ import { weekdayShort } from '@/core/recurrence/describe';
 import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
 import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
+import { personName, usePeople } from '@/core/people/people';
 import { groupByDate, monthWeeks } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
 import { TimeGrid } from './TimeGrid';
@@ -128,6 +129,7 @@ export function WeekView({
   const byDate = groupByDate(items);
   const now = today();
   const grid = useMediaQuery(TIME_GRID_QUERY);
+  const people = usePeople();
   if (grid)
     return <TimeGrid days={days} items={items} onPickDay={onPickDay} onOpenItem={onOpenItem} />;
   return (
@@ -152,7 +154,12 @@ export function WeekView({
             ) : (
               <ul className={styles.itemList}>
                 {list.map((i) => (
-                  <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} />
+                  <ItemRow
+                    key={`${i.source}:${i.id}`}
+                    item={i}
+                    onOpen={onOpenItem}
+                    person={personName(people, i.personId)}
+                  />
                 ))}
               </ul>
             )}
@@ -170,6 +177,7 @@ export function DayView({
   onAdd,
 }: Omit<ViewProps, 'onPickDay'> & { onAdd: (date: string) => void }) {
   const grid = useMediaQuery(TIME_GRID_QUERY);
+  const people = usePeople();
   if (grid)
     return (
       <TimeGrid days={[date]} items={items} onPickDay={() => undefined} onOpenItem={onOpenItem} />
@@ -179,7 +187,12 @@ export function DayView({
       {items.length === 0 ? <EmptyState compact title={t.calendar.nothing} /> : null}
       <ul className={styles.itemList}>
         {items.map((i) => (
-          <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} />
+          <ItemRow
+            key={`${i.source}:${i.id}`}
+            item={i}
+            onOpen={onOpenItem}
+            person={personName(people, i.personId)}
+          />
         ))}
       </ul>
       <div className={patternStyles.gapTop}>
