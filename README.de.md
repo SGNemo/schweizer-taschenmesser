@@ -105,7 +105,7 @@ Nemo ist und bleibt kostenlos, alle Funktionen stehen allen offen. Wer das Proje
 
 ## Mehr
 
-- [Website](https://nemo-adhd-helper.online)
+- Website: [Deutsch](https://nemo-adhd-helper.online) · [English](https://nemo-adhd-helper.online/en) · [Español](https://nemo-adhd-helper.online/es) · [Français](https://nemo-adhd-helper.online/fr) · [Português (Brasil)](https://nemo-adhd-helper.online/pt-br)
 - [Dokumentation](docs/README.md) für Nutzer und Entwickler
 - [Roadmap](docs/ROADMAP.md) mit Ideen für spätere Versionen
 - [Änderungen](CHANGELOG.md)
