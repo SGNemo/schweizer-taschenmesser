@@ -147,8 +147,40 @@ export const focus: Strings['focus'] = {
     finished: 'Done. Well done.',
     steps: 'Steps',
     addStep: 'Add step',
-    stepsSuggest: 'Suggestion: 3 small steps',
+    stepsSuggest: 'Steps from a template',
     stepsTemplate: ['Open it and get an overview', 'Do the first part', 'Check and finish'],
+    stepSets: [
+      {
+        words: ['essay', 'paper', 'report', 'thesis', 'presentation', 'slides', 'write'],
+        steps: ['Jot down an outline', 'Write the first paragraph', 'Read it and improve one spot'],
+      },
+      {
+        words: ['form', 'application', 'tax', 'register', 'cancel', 'insurance'],
+        steps: ['Put all documents in one place', 'Fill it in, mark the gaps', 'Check and send'],
+      },
+      {
+        words: ['call', 'phone', 'book an appointment', 'appointment'],
+        steps: ['Write down the number and the reason', 'Make the call', 'Note the result'],
+      },
+      {
+        words: ['clean', 'tidy', 'laundry', 'dishes', 'trash', 'dust'],
+        steps: ['Music on, set a timer', 'Finish one area', 'Take out the trash and laundry'],
+      },
+      {
+        words: ['buy', 'shop', 'order', 'groceries', 'gift'],
+        steps: ['Write a list of the essentials', 'Get or order it', 'Put it away and tick it off'],
+      },
+      {
+        words: ['study', 'exam', 'test', 'vocab', 'lecture', 'chapter', 'learn'],
+        steps: ['Gather the material', 'Work through one chapter', 'Write down three questions'],
+      },
+    ],
+    stepsPreview: 'Template, not saved:',
+    stepsTake: 'Use them',
+    stepsDrop: 'Discard',
+    replaceAsk: 'Start a new round and replace the running one?',
+    replaceStart: 'Start a new round',
+    replaceKeep: 'Stay with the running one',
     missing: 'This task no longer exists.',
     missingAction: 'Go to To-dos',
     notifyTitle: 'Focus: time’s up',

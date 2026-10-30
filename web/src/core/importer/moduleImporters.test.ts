@@ -6,7 +6,7 @@ import { db } from '@/core/db/db';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
-import { accountRepo, transactionRepo } from '@/modules/finance/repo';
+import { accountRepo, categoryRepo, transactionRepo } from '@/modules/finance/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
 import { noteRepo } from '@/modules/notes/repo';
 import { itemRepo as listItemRepo } from '@/modules/lists/repo';
@@ -380,6 +380,31 @@ describe('bank statement import', () => {
 
     const second = await run('finance', 'bank', file, { accountId: acc.id });
     expect(second.rows.every((r) => r.duplicate && !r.selected)).toBe(true);
+  });
+
+  it('takes the category of an earlier booking of the same payee and shows payee, purpose and category (QA B28)', async () => {
+    const acc = await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 });
+    const cat = await categoryRepo.create({ name: 'Freizeit', kind: 'expense' });
+    await transactionRepo.create({
+      accountId: acc.id,
+      categoryId: cat.id,
+      kind: 'expense',
+      amountMinor: 1299,
+      date: '2026-06-03',
+      payee: 'Filmfreund GmbH',
+    });
+    const r = await run(
+      'finance',
+      'bank',
+      { kind: 'file', text: STATEMENT, fileName: 'x.csv' },
+      { accountId: acc.id },
+    );
+    const stream = r.rows.find((x) => x.candidate.label === 'Filmfreund GmbH')!.candidate;
+    expect(stream.data).toMatchObject({ categoryId: cat.id });
+    expect(stream.detail).toContain('Streaming Monatsbeitrag');
+    expect(stream.detail).toContain('Freizeit');
+    const salary = r.rows.find((x) => x.candidate.label === 'Beispiel AG')!.candidate;
+    expect(salary.data).not.toHaveProperty('categoryId');
   });
 
   it('asks for an account and explains an unknown file format', async () => {

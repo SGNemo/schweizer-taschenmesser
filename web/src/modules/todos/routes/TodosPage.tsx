@@ -277,7 +277,9 @@ export default function TodosPage() {
 
   const selected = params.get('list') ?? ALL;
   const currentList = lists?.find((l) => l.id === selected);
-  const targetListId = currentList?.id ?? lists?.[0]?.id;
+  // Without a chosen list a new ToDo lands in the inbox (sorted later), not in whichever list is first.
+  const targetListId =
+    currentList?.id ?? lists?.find((l) => l.id === INBOX_ID)?.id ?? lists?.[0]?.id;
   const showDone =
     ((prefs as { showDone?: boolean } | undefined)?.showDone ?? true) &&
     selected !== ALL &&

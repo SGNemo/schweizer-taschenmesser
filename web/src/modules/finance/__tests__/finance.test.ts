@@ -46,7 +46,7 @@ describe('finance module', () => {
     await ensureDefaults();
     await ensureDefaults();
     expect(await accountRepo.active().count()).toBe(1);
-    expect(await categoryRepo.active().count()).toBe(10);
+    expect(await categoryRepo.active().count()).toBe(12);
 
     await categoryRepo.removeMany((await categoryRepo.active().primaryKeys()) as string[]);
     await ensureDefaults();

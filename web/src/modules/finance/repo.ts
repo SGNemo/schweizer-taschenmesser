@@ -20,6 +20,8 @@ const SEED_CATEGORIES = [
   [INVOICE_CATEGORY_ID, 'Rechnungen', 'expense'],
   ['cat-other', 'Sonstiges', 'expense'],
   ['cat-salary', 'Gehalt', 'income'],
+  ['cat-side-job', 'Nebenjob', 'income'],
+  ['cat-grant', 'BAföG / Stipendium', 'income'],
   ['cat-income-other', 'Sonstige Einnahmen', 'income'],
 ] as const;
 

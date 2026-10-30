@@ -71,6 +71,7 @@ export default function NextWidget() {
 
   async function start() {
     if (!next) return;
+    // A round that runs for another task is not replaced here: the focus screen asks first.
     await beginFocus(next, settings.focusMinutes);
     void navigate(focusPath(next.id));
   }

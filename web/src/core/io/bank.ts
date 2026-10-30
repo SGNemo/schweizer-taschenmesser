@@ -47,6 +47,12 @@ const COLUMNS = {
     'name zahlungsbeteiligter',
     'empfaenger',
     'auftraggeber empfaenger',
+    // `normalizeHeader` drops the umlaut dots instead of spelling them out: "Empfänger" → "empfanger".
+    'begunstigter',
+    'empfanger',
+    'zahlungsempfanger',
+    'auftraggeber empfanger',
+    'auftraggeber',
   ],
   purpose: ['verwendungszweck', 'buchungstext verwendungszweck', 'zweck'],
   bookingText: ['buchungstext'],
