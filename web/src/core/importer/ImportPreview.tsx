@@ -16,6 +16,9 @@ export function toggleRow(rows: PreviewRow[], index: number, selected: boolean):
   const target = rows.find((r) => r.index === index);
   const id = target?.candidate.id;
   const need = target?.candidate.dependsOn;
+  // A row whose new list is invalid cannot be imported (the commit guard would drop it silently):
+  // it stays unticked instead of looking selected.
+  if (selected && need && rows.some((x) => x.candidate.id === need && x.invalid)) return rows;
   return rows.map((x) => {
     if (x.index === index) return { ...x, selected };
     if (selected && need && x.candidate.id === need && !x.invalid) return { ...x, selected };

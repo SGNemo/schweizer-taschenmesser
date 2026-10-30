@@ -48,7 +48,7 @@ const hasSha = buttons.some((b) => r.assets[b.key].sha256);
         <p class="meta version">
           {versionLine} · <a href={RELEASES_URL} rel="noopener">{s.hero.allReleases}</a>{hasSha && <> · <a href="#checksums">{s.hero.checksums}</a></>}
         </p>
-        <ul class="trust" aria-label={locale === 'de' ? 'Auf einen Blick' : 'At a glance'}>
+        <ul class="trust" aria-label={s.a11y.glance}>
           {s.hero.trust.map((f) => <li><Icon name="check" size={16} />{f}</li>)}
         </ul>
       </div>

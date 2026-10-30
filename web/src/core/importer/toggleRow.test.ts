@@ -25,6 +25,11 @@ describe('toggleRow', () => {
     const off = toggleRow(rows(), 0, false);
     expect(toggleRow(off, 1, true).map((r) => r.selected)).toEqual([true, true, false, true]);
   });
+  it('a row whose list is invalid cannot be ticked', () => {
+    const list = { ...row(0, 'list', undefined, false), invalid: 'broken' };
+    const all = [list, row(1, 'a', 'list', false), row(2, 'other')];
+    expect(toggleRow(all, 1, true).map((r) => r.selected)).toEqual([false, false, true]);
+  });
   it('unticking one dependent leaves the list and its siblings', () => {
     expect(toggleRow(rows(), 1, false).map((r) => r.selected)).toEqual([true, false, true, true]);
   });
