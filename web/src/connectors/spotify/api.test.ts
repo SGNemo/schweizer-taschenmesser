@@ -1,7 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import {
+  COVER_URL,
+  likedSongs,
   listPlaylists,
+  play,
+  readPlayerState,
+  search,
+  seek,
+  setRepeat,
+  setShuffle,
+  setVolume,
   parseCurrentlyPlaying,
   readCurrentlyPlaying,
   sendCommand,
@@ -263,5 +272,207 @@ describe('startPlaylist', () => {
     });
     const none = ctxWith([json(404, { error: { reason: 'NO_ACTIVE_DEVICE' } })]);
     expect(await codeOf(startPlaylist(none.ctx, 'ok1'))).toMatchObject({ code: 'bad-response' });
+  });
+});
+
+describe('widget data of the reading', () => {
+  const FULL = {
+    ...TRACK,
+    progress_ms: 61_000,
+    item: {
+      ...TRACK.item,
+      duration_ms: 215_000,
+      album: {
+        name: 'Erfundenes Album',
+        images: [
+          { url: 'https://i.scdn.co/image/large1', width: 640 },
+          { url: 'https://i.scdn.co/image/mid2', width: 300 },
+          { url: 'https://i.scdn.co/image/small3', width: 64 },
+        ],
+      },
+    },
+  };
+
+  it('reads album, position, length and the smallest cover that is wide enough', () => {
+    expect(parseCurrentlyPlaying(FULL)).toMatchObject({
+      album: 'Erfundenes Album',
+      progressMs: 61_000,
+      durationMs: 215_000,
+      coverUrl: 'https://i.scdn.co/image/small3',
+    });
+  });
+
+  it("accepts covers from Spotify's image host only", () => {
+    const odd = {
+      ...FULL,
+      item: {
+        ...FULL.item,
+        album: { name: 'A', images: [{ url: 'https://evil.test/image/x', width: 300 }] },
+      },
+    };
+    expect(parseCurrentlyPlaying(odd)!.coverUrl).toBeUndefined();
+    expect(COVER_URL.test('https://i.scdn.co/image/ab67616d')).toBe(true);
+    expect(COVER_URL.test('http://i.scdn.co/image/ab')).toBe(false);
+    expect(COVER_URL.test('https://i.scdn.co.evil.test/image/ab')).toBe(false);
+  });
+
+  it('an episode has no album; its picture comes from the episode', () => {
+    const out = parseCurrentlyPlaying({
+      ...EPISODE,
+      item: { ...EPISODE.item, images: [{ url: 'https://i.scdn.co/image/ep1', width: 300 }] },
+    })!;
+    expect(out.album).toBeUndefined();
+    expect(out.coverUrl).toBe('https://i.scdn.co/image/ep1');
+  });
+});
+
+describe('player state and settings', () => {
+  it('reads device, volume, shuffle and repeat; 204 is "no device"', async () => {
+    const { ctx, calls } = ctxWith([
+      json(200, {
+        device: { name: 'Küche', volume_percent: 40 },
+        shuffle_state: true,
+        repeat_state: 'context',
+      }),
+      new Response(null, { status: 204 }),
+    ]);
+    expect(await readPlayerState(ctx)).toEqual({
+      device: 'Küche',
+      volume: 40,
+      shuffle: true,
+      repeat: 'context',
+    });
+    expect(calls[0]!.url).toBe('https://api.spotify.com/v1/me/player');
+    expect(await readPlayerState(ctx)).toBeUndefined();
+  });
+
+  it('seek, volume, shuffle and repeat are PUTs with clamped, rounded values', async () => {
+    const { ctx, calls } = ctxWith([
+      new Response(null, { status: 204 }),
+      new Response(null, { status: 204 }),
+      new Response(null, { status: 204 }),
+      new Response(null, { status: 204 }),
+    ]);
+    await seek(ctx, -5);
+    await setVolume(ctx, 140.4);
+    await setShuffle(ctx, true);
+    await setRepeat(ctx, 'track');
+    expect(
+      calls.map((c) => `${c.method} ${c.url.replace('https://api.spotify.com/v1/me/player', '')}`),
+    ).toEqual([
+      'PUT /seek?position_ms=0',
+      'PUT /volume?volume_percent=100',
+      'PUT /shuffle?state=true',
+      'PUT /repeat?state=track',
+    ]);
+  });
+
+  it('"previous" is a POST', async () => {
+    const { ctx, calls } = ctxWith([new Response(null, { status: 204 })]);
+    await sendCommand(ctx, 'previous');
+    expect(calls[0]).toMatchObject({
+      method: 'POST',
+      url: 'https://api.spotify.com/v1/me/player/previous',
+    });
+  });
+});
+
+describe('search, saved songs and play', () => {
+  it('asks only for words of two letters or more and sends them URL-encoded', async () => {
+    const empty = ctxWith([]);
+    expect(await search(empty.ctx, ' a ')).toEqual({ tracks: [], playlists: [], albums: [] });
+    expect(empty.calls).toHaveLength(0);
+
+    const { ctx, calls } = ctxWith([
+      json(200, {
+        tracks: { items: [{ id: 'T1', name: 'Lied', artists: [{ name: 'Band' }] }, null] },
+        playlists: { items: [null, { id: 'P1', name: 'Liste' }] },
+        albums: {
+          items: [
+            { id: 'A1', name: 'Album', artists: [{ name: 'Band' }] },
+            { id: 'bad id!', name: 'x' },
+          ],
+        },
+      }),
+    ]);
+    const out = await search(ctx, 'Rage & Fire');
+    expect(calls[0]!.url).toContain('https://api.spotify.com/v1/search?q=Rage+%26+Fire');
+    expect(calls[0]!.url).toContain('type=track%2Cplaylist%2Calbum');
+    expect(out.tracks).toEqual([{ kind: 'track', id: 'T1', name: 'Lied', subtitle: 'Band' }]);
+    expect(out.playlists).toEqual([
+      { kind: 'playlist', id: 'P1', name: 'Liste', subtitle: undefined },
+    ]);
+    expect(out.albums.map((a) => a.id)).toEqual(['A1']);
+  });
+
+  it('lists the saved songs and drops entries without an id', async () => {
+    const { ctx, calls } = ctxWith([
+      json(200, {
+        items: [
+          { track: { id: 'T1', name: 'Eins', artists: [{ name: 'Band' }] } },
+          { track: { id: null, name: 'Lokal' } },
+          null,
+          { track: { id: 'T2', name: 'Zwei' } },
+        ],
+      }),
+    ]);
+    const out = await likedSongs(ctx);
+    expect(calls[0]!.url).toBe('https://api.spotify.com/v1/me/tracks?limit=50');
+    expect(out.map((t) => t.id)).toEqual(['T1', 'T2']);
+  });
+
+  it('starts a track inside its list, a playlist or album as a context, and refuses odd ids', async () => {
+    const replies = () => [new Response(null, { status: 204 })];
+    const track = ctxWith(replies());
+    const list = [
+      { kind: 'track' as const, id: 'T1', name: 'Eins' },
+      { kind: 'track' as const, id: 'T2', name: 'Zwei' },
+    ];
+    await play(track.ctx, list[1]!, list);
+    expect(track.calls[0]!.method).toBe('PUT');
+    const sent = ctxWith(replies());
+    await play(sent.ctx, { kind: 'playlist', id: 'P1', name: 'Liste' });
+    await play(ctxWith(replies()).ctx, { kind: 'album', id: 'A1', name: 'Album' });
+    expect(sent.calls[0]!.url).toBe('https://api.spotify.com/v1/me/player/play');
+    expect(
+      await codeOf(play(ctxWith([]).ctx, { kind: 'track', id: 'x/../y', name: 'bad' })),
+    ).toMatchObject({
+      code: 'bad-response',
+    });
+  });
+});
+
+describe('play bodies', () => {
+  const bodies: unknown[] = [];
+  const ctx: ConnectorContext = {
+    fetch: (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      return new Response(null, { status: 204 });
+    }) as typeof fetch,
+    accessToken: async () => 'AT',
+    fetchPublic: async () => new Response(),
+    secrets: { get: async () => undefined, set: async () => {}, delete: async () => {} },
+    redact: (t) => t,
+  };
+
+  it('a track starts inside its list at its own position; playlists and albums are contexts', async () => {
+    const list = [
+      { kind: 'track' as const, id: 'T1', name: 'Eins' },
+      { kind: 'track' as const, id: 'T2', name: 'Zwei' },
+      { kind: 'track' as const, id: 'T3', name: 'Drei' },
+    ];
+    await play(ctx, list[1]!, list);
+    await play(ctx, list[0]!);
+    await play(ctx, { kind: 'playlist', id: 'P1', name: 'Liste' });
+    await play(ctx, { kind: 'album', id: 'A1', name: 'Album' });
+    expect(bodies).toEqual([
+      {
+        uris: ['spotify:track:T1', 'spotify:track:T2', 'spotify:track:T3'],
+        offset: { position: 1 },
+      },
+      { uris: ['spotify:track:T1'], offset: { position: 0 } },
+      { context_uri: 'spotify:playlist:P1' },
+      { context_uri: 'spotify:album:A1' },
+    ]);
   });
 });

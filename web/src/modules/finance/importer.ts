@@ -1,5 +1,5 @@
 import { BankFormatError, bankDedupeKey, parseBankFile } from '@/core/io/bank';
-import { formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
+import { currencyOf, formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
 import type { ImportInput, ImporterRuntime, ImportParseResult } from '@/core/importer/types';
 import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
@@ -9,7 +9,7 @@ const nameKey = (name: string) => name.trim().toLowerCase();
 
 const MAX_BANK_ROWS = 2000;
 
-function parseBank(input: ImportInput, accountId: string): ImportParseResult {
+function parseBank(input: ImportInput, accountId: string, currency: string): ImportParseResult {
   const s = t.onboarding.finance;
   if (input.kind !== 'file') return { candidates: [], notes: [] };
   if (!accountId) return { candidates: [], notes: [s.noAccounts] };
@@ -47,8 +47,8 @@ function parseBank(input: ImportInput, accountId: string): ImportParseResult {
         ...(tx.payee ? { payee: tx.payee } : {}),
         ...(tx.purpose ? { note: tx.purpose } : {}),
       },
-      label: tx.payee || tx.purpose || formatMoney(Math.abs(tx.amountMinor)),
-      detail: `${formatDay(tx.date, 'd. MMM yyyy')} · ${tx.amountMinor < 0 ? '−' : '+'}${formatMoney(Math.abs(tx.amountMinor))}`,
+      label: tx.payee || tx.purpose || formatMoney(Math.abs(tx.amountMinor), currency),
+      detail: `${formatDay(tx.date, 'd. MMM yyyy')} · ${tx.amountMinor < 0 ? '−' : '+'}${formatMoney(Math.abs(tx.amountMinor), currency)}`,
       dedupeKey: keyed(tx),
     })),
     notes,
@@ -57,7 +57,11 @@ function parseBank(input: ImportInput, accountId: string): ImportParseResult {
 
 const runtime: ImporterRuntime = {
   async parse(id, input, ctx) {
-    if (id === 'bank') return parseBank(input, ctx.options.accountId ?? '');
+    if (id === 'bank') {
+      const accountId = ctx.options.accountId ?? '';
+      const account = accountId ? await accountRepo.get(accountId) : undefined;
+      return parseBank(input, accountId, currencyOf(account));
+    }
     if (input.kind !== 'form') return { candidates: [], notes: [] };
     const name = (input.values.name ?? '').trim();
     const balance = parseMoney(input.values.balance ?? '', { allowNegative: true });

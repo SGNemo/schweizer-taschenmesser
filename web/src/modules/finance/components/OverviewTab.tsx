@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { formatMoney } from '@/core/money';
+import { useCurrency } from '../currency';
 import { t } from '@/strings';
 import { Button, Card } from '@/ui';
 import { expensesByCategory, monthSummary, monthlyTrend } from '../logic';
@@ -43,8 +44,10 @@ export function OverviewTab({
   month: string;
   narrow?: boolean;
 }) {
+  const currency = useCurrency();
+  const money = (minor: number) => formatMoney(minor, currency);
   const balance = totalBalance(data);
-  const a = useAvailability(balance);
+  const a = useAvailability(balance, currency);
   const sum = monthSummary(data.txs, month);
   const byCategory = expensesByCategory(data.txs, month, data.categories);
   const trend = monthlyTrend(data.txs, month, 6);
@@ -64,14 +67,14 @@ export function OverviewTab({
             className={`${styles.heroValue} ${(deducting ? a.available : a.balance) < 0 ? styles.negative : ''}`}
             data-testid="hero"
           >
-            {formatMoney(deducting ? a.available : a.balance)}
+            {money(deducting ? a.available : a.balance)}
           </div>
           {deducting ? (
             <div className={styles.heroNote} data-testid="hero-breakdown">
               {t.finance.breakdown(
-                formatMoney(a.balance),
-                a.useInvoices && a.openInvoices ? formatMoney(a.openInvoices) : '',
-                a.useSubs && a.subscriptions ? formatMoney(a.subscriptions) : '',
+                money(a.balance),
+                a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
+                a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
               )}
             </div>
           ) : null}
@@ -82,13 +85,13 @@ export function OverviewTab({
         <Card className={styles.kpi}>
           <span className={styles.kpiLabel}>{t.finance.income}</span>
           <span className={`${styles.kpiValue} ${styles.income}`} data-testid="kpi-income">
-            {formatMoney(sum.income)}
+            {money(sum.income)}
           </span>
         </Card>
         <Card className={styles.kpi}>
           <span className={styles.kpiLabel}>{t.finance.expense}</span>
           <span className={styles.kpiValue} data-testid="kpi-expense">
-            {formatMoney(sum.expense)}
+            {money(sum.expense)}
           </span>
         </Card>
         <Card className={styles.kpi}>
@@ -97,7 +100,7 @@ export function OverviewTab({
             className={`${styles.kpiValue} ${sum.net < 0 ? styles.negative : ''}`}
             data-testid="kpi-net"
           >
-            {formatMoney(sum.net)}
+            {money(sum.net)}
           </span>
         </Card>
       </div>

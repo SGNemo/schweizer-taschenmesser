@@ -1,4 +1,5 @@
 import { bus } from '@/core/events';
+import { currencyOf } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
@@ -21,6 +22,7 @@ export async function bookInvoiceExpense(p: {
   amountMinor: number;
   paidAt: string;
   note?: string;
+  currency?: string;
 }): Promise<void> {
   await ensureDefaults();
   const id = invoiceTransactionId(p.invoiceId);
@@ -41,7 +43,7 @@ export async function bookInvoiceExpense(p: {
     : undefined;
   await transactionRepo.create(
     {
-      accountId: await primaryAccountId(),
+      accountId: await primaryAccountId(currencyOf(p.currency)),
       categoryId,
       kind: 'expense',
       amountMinor: p.amountMinor,

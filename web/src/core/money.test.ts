@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, formatMoneyAxis, formatMoneyInput, parseMoney, sumMinor } from './money';
+import {
+  currencyOf,
+  formatMoney,
+  formatMoneyAxis,
+  formatMoneyInput,
+  formatTotals,
+  isCurrencyCode,
+  parseMoney,
+  sumByCurrency,
+  sumMinor,
+} from './money';
 
 describe('parseMoney', () => {
   it.each([
@@ -46,5 +56,44 @@ describe('formatting', () => {
   it('sums minor units exactly', () => {
     expect(sumMinor([10, 20, 30])).toBe(60);
     expect(sumMinor([])).toBe(0);
+  });
+});
+
+describe('currencies', () => {
+  it('knows valid ISO codes and falls back to the euro', () => {
+    expect(isCurrencyCode('MXN')).toBe(true);
+    expect(isCurrencyCode('mxn')).toBe(false);
+    expect(isCurrencyCode('EURO')).toBe(false);
+    expect(isCurrencyCode('ZZZ')).toBe(false);
+    expect(currencyOf(undefined)).toBe('EUR');
+    expect(currencyOf({ currency: 'USD' })).toBe('USD');
+    expect(currencyOf({ currency: 'nonsense' })).toBe('EUR');
+    expect(currencyOf(null)).toBe('EUR');
+  });
+
+  it('formats in the given currency and never converts', () => {
+    expect(formatMoney(1234, 'USD')).toMatch(/12[.,]34/);
+    expect(formatMoney(1234, 'USD')).toMatch(/\$|USD/);
+    expect(formatMoney(1234)).toContain('€');
+  });
+
+  it('sums per currency, the euro first, and writes them side by side', () => {
+    const totals = sumByCurrency([
+      { amountMinor: 100, currency: 'MXN' },
+      { amountMinor: 250 },
+      { amountMinor: 50, currency: 'EUR' },
+      { amountMinor: 900, currency: 'MXN' },
+    ]);
+    expect([...totals]).toEqual([
+      ['EUR', 300],
+      ['MXN', 1000],
+    ]);
+    expect(formatTotals(totals)).toContain(' · ');
+    expect(formatTotals(new Map())).toContain('€');
+  });
+
+  it('parses an amount typed with a currency symbol', () => {
+    expect(parseMoney('$12,50')).toBe(1250);
+    expect(parseMoney('12.50 £')).toBe(1250);
   });
 });

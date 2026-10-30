@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { formatMoneyInput, parseMoney } from '@/core/money';
+import { currencyOf, formatMoneyInput, isCurrencyCode, parseMoney } from '@/core/money';
 import { addMonthsStr, today } from '@/core/time/dates';
 import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
 import {
   AdvancedFields,
   Button,
+  CurrencyField,
   DateChips,
   Dialog,
   SelectField,
@@ -64,6 +65,7 @@ function Form({
   const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.amountMinor) : '');
   const [dueDate, setDueDate] = useState(existing?.dueDate ?? today());
   const [paidAt, setPaidAt] = useState(existing?.paidAt ?? '');
+  const [currency, setCurrency] = useState(currencyOf(existing));
   const [reference, setReference] = useState(existing?.reference ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
   const [repeat, setRepeat] = useState<InvoiceRepeat | ''>(existing?.repeat ?? '');
@@ -77,9 +79,14 @@ function Form({
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
+    if (!isCurrencyCode(currency)) {
+      setError(t.money.currencyInvalid);
+      return;
+    }
     await saveInvoice(existing?.id ?? null, {
       payee: payee.trim(),
       amountMinor,
+      currency: currency === 'EUR' ? undefined : currency,
       dueDate,
       status: existing?.status ?? 'open',
       paidAt: isPaid ? paidAt || today() : undefined,
@@ -143,7 +150,11 @@ function Form({
           </option>
         ))}
       </SelectField>
-      <AdvancedFields moduleId="invoices" hasData={!!reference || !!note}>
+      <AdvancedFields
+        moduleId="invoices"
+        hasData={!!reference || !!note || currencyOf(existing) !== 'EUR'}
+      >
+        <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
         <TextField
           label={t.invoices.reference}
           value={reference}
