@@ -291,7 +291,7 @@ export const settings: Strings['settings'] = {
   motion: 'Animations',
   motionOptions: { system: 'Comme le système', reduce: 'Réduites' },
   homeView: 'Vue d’ensemble',
-  homeViewOptions: { all: 'Toutes les cartes', calm: 'L’essentiel seulement' },
+  homeViewOptions: { all: 'Détaillée', calm: 'Calme' },
   density: 'Densité',
   densityOptions: { normal: 'Normale', compact: 'Compacte' },
   modules: 'Modules',

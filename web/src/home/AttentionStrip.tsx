@@ -48,8 +48,12 @@ function Chips({ items }: { items: AttentionItem[] }) {
   );
 }
 
-/** Items that need an action today stay visible; everything else is "Wartet noch", folded away. */
-const isToday = (i: AttentionItem): boolean => i.tone === 'accent' || i.id.startsWith('core:');
+/**
+ * Items that need an action today stay visible, and so does everything overdue or expired (tone
+ * `danger`: calm wording, red only here); the rest is "Wartet noch", folded away.
+ */
+const isToday = (i: AttentionItem): boolean =>
+  i.tone === 'accent' || i.tone === 'danger' || i.id.startsWith('core:');
 
 export function AttentionStrip() {
   const items = useAttentionItems();

@@ -27,7 +27,7 @@ import type { WidgetDef, WidgetSize } from '@/core/modules/types';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
-import { useUiStore } from '@/stores/ui';
+import { HOME_VIEWS, useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
@@ -47,6 +47,7 @@ import {
   WidgetSizeContext,
 } from '@/ui';
 import { widgetsOf } from './AutoWidget';
+import { AgendaBlock } from './AgendaBlock';
 import { AttentionStrip } from './AttentionStrip';
 import { ResumeCard } from './ResumeCard';
 import { NowPlayingLine } from './NowPlayingLine';
@@ -101,6 +102,8 @@ const allEntries = (): Entry[] =>
 
 /** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
 const ATTENTION_KEY = 'core:attention';
+/** Key of the "Heute · Morgen · diese Woche" block in the layout's hidden list. */
+const AGENDA_KEY = 'core:agenda';
 
 const SIZE_CLASS: Record<WidgetSize, string> = { s: styles.s!, m: styles.m!, l: styles.l! };
 
@@ -174,6 +177,17 @@ export function Home() {
                 </Button>
               </>
             ) : null}
+            {editing ? null : (
+              <Segmented
+                label={t.settings.homeView}
+                value={homeView}
+                options={HOME_VIEWS.map((v) => ({
+                  value: v,
+                  label: t.settings.homeViewOptions[v],
+                }))}
+                onChange={setHomeView}
+              />
+            )}
             <Button
               variant={editing ? 'primary' : 'secondary'}
               onClick={() => setEditing(!editing)}
@@ -190,6 +204,7 @@ export function Home() {
       <ChecklistCard />
       {!editing ? <ResumeCard /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
+      {!editing && !layout.hidden.includes(AGENDA_KEY) ? <AgendaBlock /> : null}
       {!editing ? <WeatherLine /> : null}
       {!editing ? <NowPlayingLine /> : null}
 
@@ -244,18 +259,18 @@ export function Home() {
           </Button>
         </div>
       ) : null}
-      {homeView === 'all' && !editing && entries.length > 0 ? (
-        <div className={styles.moreRow}>
-          <Button variant="ghost" onClick={() => setHomeView('calm')}>
-            {t.homeEdit.showLess}
-          </Button>
-        </div>
-      ) : null}
 
       <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title={t.homeEdit.widgetsTitle}>
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
         {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}
         <ul className={patternStyles.plainList}>
+          <li>
+            <Switch
+              label={t.home.agenda.title}
+              checked={!layout.hidden.includes(AGENDA_KEY)}
+              onChange={() => void updateLayout({ hidden: toggleHidden(layout, AGENDA_KEY) })}
+            />
+          </li>
           <li>
             <Switch
               label={t.attention.title}
