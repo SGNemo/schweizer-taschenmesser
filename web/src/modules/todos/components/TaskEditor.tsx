@@ -47,7 +47,7 @@ interface Props {
 
 export function TaskEditor({ task, subtasks, lists, onClose }: Props) {
   return (
-    <Dialog open={task !== null} onClose={onClose} title={t.todos.editTask}>
+    <Dialog open={task !== null} onClose={onClose} title={t.todos.editTask} askAfterTyping>
       {task ? (
         <EditorForm key={task.id} task={task} subtasks={subtasks} lists={lists} onClose={onClose} />
       ) : null}

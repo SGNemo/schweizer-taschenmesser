@@ -13,11 +13,17 @@ describe('text truncation', () => {
   const patterns = read('./Patterns.module.css');
   const widgets = read('./widgets/Widgets.module.css');
 
-  it.each(['.title', '.main .muted', '.widgetItemTitle'])('%s is line-clamped', (sel) => {
+  it.each(['.title', '.widgetItemTitle'])('%s is line-clamped', (sel) => {
     const css = block(patterns, sel);
     expect(css).toContain('-webkit-line-clamp: var(--clamp-lines)');
     expect(css).toContain('overflow: hidden');
     expect(css).not.toContain('overflow-wrap: anywhere');
+  });
+
+  it('row meta wraps in full (facts such as "Kündigen bis" are never cut)', () => {
+    const css = block(patterns, '.muted');
+    expect(css).not.toContain('line-clamp');
+    expect(css).not.toContain('overflow: hidden');
   });
 
   it('tile labels may shrink and are clamped', () => {

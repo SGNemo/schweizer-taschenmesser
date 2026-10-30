@@ -26,7 +26,13 @@ export function QuickAdd() {
   };
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} title={t.quickAdd.title} size="roomy">
+    <Dialog
+      open={open}
+      onClose={() => setOpen(false)}
+      title={t.quickAdd.title}
+      size="roomy"
+      askAfterTyping
+    >
       {open ? (
         <CaptureForm
           onSaved={onSaved}
