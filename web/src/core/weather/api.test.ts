@@ -51,7 +51,7 @@ describe('fetchForecast', () => {
         precipitation_probability: times.map((_, h) => (h === 15 ? 80 : 0)),
       },
     });
-    expect(await fetchForecast(52.52, 13.41, f)).toEqual({
+    expect(await fetchForecast(52.52, 13.41, f)).toMatchObject({
       temp: 14,
       group: 'partly',
       rainFrom: '15',
@@ -179,6 +179,34 @@ describe('fetchForecast', () => {
     expect(url).not.toMatch(/name=|query=/);
   });
 
+  it('asks the air-quality service with the same rounded position; its failure leaves the forecast whole', async () => {
+    const body = { current: { time: '2026-10-19T12:00', temperature_2m: 1, weather_code: 0 } };
+    const air = { current: { european_aqi: 33, birch_pollen: 80 } };
+    const f = vi.fn(async (url: RequestInfo | URL) =>
+      String(url).includes('air-quality-api')
+        ? new Response(JSON.stringify(air), { status: 200 })
+        : new Response(JSON.stringify(body), { status: 200 }),
+    ) as unknown as typeof fetch;
+    const out = await fetchForecast(46.95, 7.45, f);
+    const urls = (f as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => String(c[0]));
+    expect(urls[0]).toContain('/v1/forecast');
+    const airUrl = urls.find((u) => u.includes('air-quality-api.open-meteo.com'))!;
+    expect(airUrl).toContain('latitude=46.95');
+    expect(airUrl).toContain('longitude=7.45');
+    expect(airUrl).toContain('birch_pollen');
+    expect(airUrl).not.toMatch(/name=|query=/);
+    expect(out.air?.now.aqi).toBe(33);
+    expect(out.air?.pollen).toEqual({ birch: 80 });
+
+    const down = vi.fn(async (url: RequestInfo | URL) => {
+      if (String(url).includes('air-quality-api')) throw new TypeError('offline');
+      return new Response(JSON.stringify(body), { status: 200 });
+    }) as unknown as typeof fetch;
+    const without = await fetchForecast(46.95, 7.45, down);
+    expect(without.temp).toBe(1);
+    expect(without.air).toBeUndefined();
+  });
+
   it('leaves hours and days out when the answer has none', async () => {
     const out = await fetchForecast(
       1,
@@ -198,7 +226,7 @@ describe('fetchForecast', () => {
 describe('recorded response shapes (fixtures follow the documented Open-Meteo JSON, extra fields included)', () => {
   it('parses a full forecast answer, nulls in the hourly series included', async () => {
     const f = ok(forecastFixture);
-    expect(await fetchForecast(46.95, 7.45, f)).toEqual({
+    expect(await fetchForecast(46.95, 7.45, f)).toMatchObject({
       temp: 14,
       group: 'partly',
       rainFrom: '17',

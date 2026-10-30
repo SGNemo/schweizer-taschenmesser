@@ -5,10 +5,13 @@
 import { getPlatform } from '@/core/platform';
 import { z } from 'zod';
 import { getLang } from '@/core/i18n/lang';
+import type { Air } from './air';
+import { parseAir } from './air';
 import { codeGroup, rainFrom, type CodeGroup } from './logic';
 
 export const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 export const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
+export const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const TIMEOUT_MS = 8000;
 
 export class WeatherError extends Error {
@@ -43,6 +46,10 @@ export interface HourRow {
   /** Relative humidity, percent. */
   hum?: number;
   uv?: number;
+  /** Cloud cover, percent; pressure at sea level, hPa; wind direction, degrees (where it blows from). */
+  cloud?: number;
+  hpa?: number;
+  dir?: number;
   /** True when the sun is down. */
   night?: boolean;
 }
@@ -65,6 +72,9 @@ export interface DayRow {
   sunset?: string;
   /** Minutes of sunshine. */
   sunMin?: number;
+  /** Hours with precipitation; dominant wind direction, degrees. */
+  rainHours?: number;
+  dir?: number;
 }
 
 /** The current values beyond temperature and word. */
@@ -73,6 +83,9 @@ export interface NowDetail {
   hum?: number;
   wind?: number;
   gust?: number;
+  cloud?: number;
+  hpa?: number;
+  dir?: number;
   night?: boolean;
 }
 
@@ -88,10 +101,15 @@ export interface Forecast {
   days?: DayRow[];
   /** Current detail (felt temperature, wind, humidity); absent in older cached values. */
   now?: NowDetail;
+  /** Air quality and pollen; absent in older cached values and when that request failed. */
+  air?: Air;
 }
 
 /** Hours kept for the preview (a stale offline view still finds its next 12). */
 export const HOURS_KEPT = 48;
+
+const AIR_VARIABLES =
+  'european_aqi,pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen';
 
 type Fetch = typeof fetch;
 /** Through the platform, so the connection log sees it and "Netzwerk sperren" applies. */
@@ -124,6 +142,9 @@ const forecastSchema = z.object({
     wind_speed_10m: z.number().nullable().optional(),
     wind_gusts_10m: z.number().nullable().optional(),
     is_day: z.number().nullable().optional(),
+    cloud_cover: z.number().nullable().optional(),
+    pressure_msl: z.number().nullable().optional(),
+    wind_direction_10m: z.number().nullable().optional(),
   }),
   hourly: z
     .object({
@@ -138,6 +159,9 @@ const forecastSchema = z.object({
       relative_humidity_2m: series,
       uv_index: series,
       is_day: series,
+      cloud_cover: series,
+      pressure_msl: series,
+      wind_direction_10m: series,
     })
     .optional(),
   daily: z
@@ -156,6 +180,8 @@ const forecastSchema = z.object({
       sunrise: stringSeries,
       sunset: stringSeries,
       sunshine_duration: series,
+      precipitation_hours: series,
+      wind_direction_10m_dominant: series,
     })
     .optional(),
 });
@@ -192,6 +218,9 @@ function hourRowsOf(h: Hourly | undefined, nowIso: string): HourRow[] | undefine
       gust: round(h.wind_gusts_10m?.[i]),
       hum: round(h.relative_humidity_2m?.[i]),
       uv: round1(h.uv_index?.[i]),
+      cloud: round(h.cloud_cover?.[i]),
+      hpa: round(h.pressure_msl?.[i]),
+      dir: round(h.wind_direction_10m?.[i]),
       night: isDay == null ? undefined : isDay === 0,
     });
   });
@@ -222,6 +251,8 @@ function dayRowsOf(d: Daily | undefined): DayRow[] | undefined {
       sunrise: clock(d.sunrise?.[i]),
       sunset: clock(d.sunset?.[i]),
       sunMin: sun == null ? undefined : Math.round(sun / 60),
+      rainHours: round(d.precipitation_hours?.[i]),
+      dir: round(d.wind_direction_10m_dominant?.[i]),
     });
   });
   return rows;
@@ -233,6 +264,9 @@ function nowOf(c: Current): NowDetail | undefined {
     hum: round(c.relative_humidity_2m),
     wind: round(c.wind_speed_10m),
     gust: round(c.wind_gusts_10m),
+    cloud: round(c.cloud_cover),
+    hpa: round(c.pressure_msl),
+    dir: round(c.wind_direction_10m),
     night: c.is_day == null ? undefined : c.is_day === 0,
   };
   return Object.values(out).some((v) => v !== undefined) ? out : undefined;
@@ -280,15 +314,27 @@ export async function fetchForecast(
     latitude: String(lat),
     longitude: String(lon),
     current:
-      'temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,is_day',
+      'temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,is_day,cloud_cover,pressure_msl,wind_direction_10m',
     hourly:
-      'temperature_2m,weather_code,precipitation_probability,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,uv_index,is_day',
+      'temperature_2m,weather_code,precipitation_probability,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,uv_index,is_day,cloud_cover,pressure_msl,wind_direction_10m',
     daily:
-      'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,apparent_temperature_max,apparent_temperature_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset,sunshine_duration',
+      'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,apparent_temperature_max,apparent_temperature_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset,sunshine_duration,precipitation_hours,wind_direction_10m_dominant',
     timezone: 'auto',
     forecast_days: '7',
   })}`;
-  const { current: c, hourly, daily } = parse(forecastSchema, await getJson(url, f));
+  // Air quality and pollen are a second, optional request to the same provider: if it fails or the
+  // place has no data, the forecast stays complete without it.
+  const airUrl = `${AIR_URL}?${new URLSearchParams({
+    latitude: String(lat),
+    longitude: String(lon),
+    current: AIR_VARIABLES,
+    hourly: AIR_VARIABLES,
+    timezone: 'auto',
+    forecast_days: '5',
+  })}`;
+  const forecastBody = getJson(url, f);
+  const airBody = getJson(airUrl, f).catch(() => undefined);
+  const { current: c, hourly, daily } = parse(forecastSchema, await forecastBody);
   const group = codeGroup(c.weather_code);
   return {
     temp: Math.round(c.temperature_2m),
@@ -298,5 +344,6 @@ export async function fetchForecast(
     hours: hourRowsOf(hourly, c.time),
     days: dayRowsOf(daily),
     now: nowOf(c),
+    air: parseAir(await airBody),
   };
 }
