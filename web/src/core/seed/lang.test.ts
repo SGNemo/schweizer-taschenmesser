@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { LANGS } from '@/core/i18n/lang';
+import bookmarks from '@/modules/bookmarks/seed';
+import budgets from '@/modules/budgets/seed';
+import invoices from '@/modules/invoices/seed';
+import lists from '@/modules/lists/seed';
 import notes from '@/modules/notes/seed';
 import pantry from '@/modules/pantry/seed';
+import subscriptions from '@/modules/subscriptions/seed';
+import todos from '@/modules/todos/seed';
 import { createSeedContext } from './context';
 
 const texts = (rows: Record<string, { data: Record<string, unknown> }[]>) =>
@@ -25,6 +31,12 @@ describe('localized seed text', () => {
   it.each([
     ['notes', notes],
     ['pantry', pantry],
+    ['lists', lists],
+    ['todos', todos],
+    ['bookmarks', bookmarks],
+    ['subscriptions', subscriptions],
+    ['budgets', budgets],
+    ['invoices', invoices],
   ])('%s: every language has its own text and the same row ids', (id, mod) => {
     const make = (lang: (typeof LANGS)[number]) =>
       mod.seed(createSeedContext({ moduleId: id, today: '2026-09-29', scale: 'medium', lang }));
