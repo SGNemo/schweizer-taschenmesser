@@ -65,6 +65,7 @@ import { chat } from './chat';
 import { example } from './example';
 import { supporter } from './supporter';
 import { aiLabels } from './aiLabels';
+import { maps } from './maps';
 
 export const fr: Strings = {
   appName: 'Nemo',
@@ -133,4 +134,5 @@ export const fr: Strings = {
   example,
   supporter,
   aiLabels,
+  maps,
 };

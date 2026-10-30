@@ -12,6 +12,7 @@ export const NOTICE_IDS = [
   'connector-google',
   'connector-ics',
   'weather',
+  'maps',
   'supporter',
 ] as const;
 export type NoticeId = (typeof NOTICE_IDS)[number];

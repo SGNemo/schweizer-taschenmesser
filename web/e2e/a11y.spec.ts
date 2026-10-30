@@ -21,6 +21,7 @@ const MODULES = [
   'pantry',
   'people',
   'lists',
+  'maps',
 ];
 
 /** Enables every module (raw write into the module table, like the library would do). */
@@ -106,6 +107,8 @@ const PAGES = [
   ['pantry', '/pantry'],
   ['people', '/people'],
   ['lists', '/lists'],
+  ['maps', '/maps'],
+  ['maps routes', '/maps?view=routes'],
   ['bookmarks links', '/bookmarks?view=links'],
   ['components sheet', '/dev/components'],
   ['share', '/share?title=Beispiel&text=Schau%20mal%20https%3A%2F%2Fbeispiel.example%2Fx'],

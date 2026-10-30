@@ -19,6 +19,7 @@ export const DATA_FLOW_IDS = [
   'supporter',
   'currency',
   'weather',
+  'maps',
   'ip',
   'links',
 ] as const;
