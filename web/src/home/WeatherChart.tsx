@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { HourRow } from '@/core/weather/api';
 import { rateHour, type Rating } from '@/core/weather/logic';
@@ -20,20 +20,26 @@ export const RATING_COLOR: Record<Rating, string> = {
   poor: 'var(--warning)',
 };
 
-/** Width of the element, kept up to date; a fixed guess where there is no ResizeObserver (tests). */
-function useWidth<T extends Element>(): [React.RefObject<T | null>, number] {
-  const ref = useRef<T>(null);
+/**
+ * Width of the element, kept up to date; a fixed guess where there is no ResizeObserver (tests). A
+ * callback ref, so the observer also attaches when the element appears only later (the chart renders
+ * nothing while fewer than two hours are known and fills up after the next fetch).
+ */
+function useWidth<T extends Element>(): [(el: T | null) => void, number] {
   const [width, setWidth] = useState(640);
-  useEffect(() => {
-    const el = ref.current;
+  const observer = useRef<ResizeObserver | null>(null);
+  const ref = useCallback((el: T | null) => {
+    observer.current?.disconnect();
+    observer.current = null;
     if (!el || typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(([entry]) => {
       const w = Math.floor(entry?.contentRect.width ?? 0);
       if (w > 0) setWidth(w);
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    observer.current = ro;
   }, []);
+  useEffect(() => () => observer.current?.disconnect(), []);
   return [ref, width];
 }
 

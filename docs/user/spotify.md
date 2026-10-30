@@ -15,6 +15,7 @@ Good to know:
 - Controlling needs Spotify **Premium**. Without it Nemo hides the buttons once, with one short note; the display keeps working.
 - "Port in use": another program uses port 38417. Close it and click Connect again – Nemo never picks another port, because Spotify checks the address exactly.
 - Optional: **Music in the focus round** (Settings → Focus & attention → More settings, off by default; needs *Control*). Nemo can keep playing at the start or start one of your playlists (tick *Playlists* when connecting), and pause at the end. It only touches Spotify at the start and the end of a round; if that fails the round carries on normally.
+- Tap the card on the Overview to open the **player**: previous / pause / next, shuffle, repeat, position and volume, and your **playlists**, your **liked songs** (tick *Liked songs* when connecting) and a **search**. Playing needs *Control* and Premium. You can switch the card off under *Customize → Cards → Now playing (Spotify)*. The cover picture comes from Spotify's image server; the search words go to Spotify only.
 - Nemo asks Spotify about every 30 seconds, only while the app is open and visible. Title and artist stay on this device: no sync, no AI, no error reports.
 - Disconnect any time under *Connections → Spotify*; you can also remove the app's access in your Spotify account.
 - Spotify may change its rules for developer apps; if the connection stops working, check the dashboard first.

@@ -2,6 +2,7 @@ import { NowStrip } from '@/core/modules/NowStrip';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAdvanced } from '@/core/settings/comfort';
+import { DEFAULT_CURRENCY } from '@/core/money';
 import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
@@ -21,6 +22,8 @@ import { OverviewTab } from '../components/OverviewTab';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
 import { DEFAULT_CATEGORY_IDS, ensureDefaults, transactionRepo } from '../repo';
 import { useFinanceData } from '../summary';
+import { CurrencyContext } from '../currency';
+import { currenciesOf, filterByCurrency } from '../logic';
 import styles from './finance.module.css';
 
 const TABS = ['overview', 'transactions', 'accounts', 'categories'] as const;
@@ -52,11 +55,18 @@ export default function FinancePage() {
         ? advanced || hasOwnCategories || tab === k
         : true,
   );
+  // Accounts in several currencies: one currency at a time, nothing is converted or mixed.
+  const currencies = data ? currenciesOf(data.accounts) : [DEFAULT_CURRENCY];
+  const rawCur = params.get('cur');
+  const currency =
+    rawCur && currencies.includes(rawCur) ? rawCur : (currencies[0] ?? DEFAULT_CURRENCY);
+  const view = data && currencies.length > 1 ? filterByCurrency(data, currency) : data;
   const rawMonth = params.get('month');
   const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : monthOf(today());
 
-  function go(next: { tab?: Tab; month?: string }) {
+  function go(next: { tab?: Tab; month?: string; cur?: string }) {
     const p = new URLSearchParams(params);
+    if (next.cur) p.set('cur', next.cur);
     if (next.tab) p.set('tab', next.tab);
     if (next.month) p.set('month', next.month);
     p.delete('new');
@@ -104,6 +114,17 @@ export default function FinancePage() {
         />
       </div>
 
+      {currencies.length > 1 && (tab === 'overview' || tab === 'transactions') ? (
+        <div className={styles.tabs}>
+          <Segmented
+            label={t.money.currency}
+            value={currency}
+            options={currencies.map((c) => ({ value: c, label: c }))}
+            onChange={(c) => go({ cur: c })}
+          />
+        </div>
+      ) : null}
+
       {tab === 'overview' || tab === 'transactions' ? (
         <div className={styles.filter} role="group" aria-label={t.finance.month}>
           <IconButton
@@ -129,23 +150,23 @@ export default function FinancePage() {
         </div>
       ) : null}
 
-      {data ? (
-        <>
+      {data && view ? (
+        <CurrencyContext.Provider value={currency}>
           {/* Wide screens: the month's bookings sit next to the overview instead of a tab away. */}
           <SplitView
             enabled={wideScreen && tab === 'overview'}
             asideLabel={t.finance.tabs.transactions}
             aside={
               <Card title={t.finance.tabs.transactions}>
-                <TransactionsTab data={data} month={month} onOpen={setTarget} />
+                <TransactionsTab data={view} month={month} onOpen={setTarget} />
               </Card>
             }
           >
             {tab === 'overview' ? (
-              <OverviewTab data={data} month={month} narrow={wideScreen} />
+              <OverviewTab data={view} month={month} narrow={wideScreen} />
             ) : null}
             {tab === 'transactions' ? (
-              <TransactionsTab data={data} month={month} onOpen={setTarget} />
+              <TransactionsTab data={view} month={month} onOpen={setTarget} />
             ) : null}
             {tab === 'accounts' ? <AccountsTab data={data} /> : null}
             {tab === 'categories' ? <CategoriesTab data={data} /> : null}
@@ -156,7 +177,7 @@ export default function FinancePage() {
             onClose={closeEditor}
             onDuplicated={setTarget}
           />
-        </>
+        </CurrencyContext.Provider>
       ) : null}
     </>
   );

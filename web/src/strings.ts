@@ -235,12 +235,29 @@ export const de = {
     reload: 'Neu laden',
     update: 'Aktualisieren',
   },
+  assign: {
+    label: 'Für',
+    none: '– niemand –',
+    removed: '(Person entfernt)',
+    filter: 'Für wen',
+    all: 'Alle',
+    forName: (name: string) => `für ${name}`,
+  },
   home: {
     title: 'Übersicht',
     emptyTitle: 'Noch keine Module aktiv',
     emptyText: 'Aktiviere Module in der Bibliothek, um hier Karten zu sehen.',
     toLibrary: 'Zur Bibliothek',
     noWidgets: 'Die aktiven Module bieten keine Karten an.',
+    agenda: {
+      title: 'Heute · Morgen · diese Woche',
+      today: 'Heute',
+      tomorrow: 'Morgen',
+      week: 'Diese Woche',
+      empty: 'In den nächsten Tagen steht nichts an.',
+      emptyAction: 'Termin anlegen',
+      all: 'Alle Termine',
+    },
   },
   library: {
     title: 'Modul-Bibliothek',
@@ -525,7 +542,7 @@ export const de = {
     motion: 'Bewegung',
     motionOptions: { system: 'Wie das System', reduce: 'Weniger' },
     homeView: 'Übersicht',
-    homeViewOptions: { all: 'Alle Karten', calm: 'Nur das Wichtigste' },
+    homeViewOptions: { all: 'Ausführlich', calm: 'Ruhig' },
     density: 'Dichte',
     densityOptions: { normal: 'Normal', compact: 'Kompakt' },
     modules: 'Module',
@@ -1141,7 +1158,7 @@ export const de = {
       allDone: 'Alles erledigt. Zeit für etwas Schönes.',
       nothingMore: 'Das war es für heute. Mehr findest du in den ToDos.',
       resetSkipped: 'Vorschläge zurücksetzen',
-      empty: 'Noch nichts geplant. Eine Sache reicht.',
+      empty: 'Noch keine ToDos. Eine Sache reicht.',
       emptyAction: 'Aufgabe anlegen',
       off: 'Die Vorschläge sind ausgeschaltet.',
       offAction: 'Einstellungen öffnen',
@@ -2077,7 +2094,6 @@ export const de = {
   },
   homeEdit: {
     showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),
-    showLess: 'Nur das Wichtigste',
     pinStart: 'Karte hinzufügen…',
     pin: (title: string) => `${title} hinzufügen`,
     unpin: (title: string) => `${title} entfernen`,
@@ -2156,6 +2172,11 @@ export const de = {
   money: {
     amount: 'Betrag',
     invalidAmount: (sample: string) => `Bitte einen gültigen Betrag eingeben, z. B. ${sample}`,
+    currency: 'Währung',
+    currencyOther: 'Andere …',
+    currencyCode: 'Währungscode (3 Buchstaben)',
+    currencyInvalid: 'Bitte einen gültigen Währungscode eingeben, z. B. USD.',
+    currencyHint: 'Es wird nichts umgerechnet: Beträge bleiben in ihrer Währung.',
   },
   invoices: {
     importDetail: (amount: string, due: string) => `${amount} · fällig ${due}`,
@@ -2983,6 +3004,16 @@ export const de = {
         'not-configured': 'Unvollständig eingerichtet',
         'invalid-response': 'Unbrauchbare Antwort',
       } as Record<string, string>,
+      advanced: 'Erweitert: Limits und Preise',
+      ollamaHelpWeb: (origin: string) =>
+        `Starte Ollama und erlaube diese App: Setze die Umgebungsvariable OLLAMA_ORIGINS auf ${origin} und starte Ollama neu. Danach „Verbindung testen“.`,
+      ollamaHelpNative:
+        'Ollama läuft nicht oder ist nicht installiert. Du brauchst es nicht unbedingt: Das eingebaute lokale Modell lädst du unter Einstellungen → Lokales Modell herunter. Oder installiere Ollama und starte es (Port 11434), dann „Verbindung testen“.',
+      ollamaDownload: 'Ollama herunterladen',
+      statusRunning: 'Läuft',
+      statusDown: 'Nicht erreichbar',
+      statusModelMissing: (m: string) =>
+        `Läuft, aber das Modell „${m}“ fehlt. Im Terminal: ollama pull ${m}`,
       baseUrlInsecure:
         'Die Adresse muss mit https:// beginnen. http:// geht nur für Server auf diesem Gerät oder im eigenen Netz (z. B. localhost, 192.168.…).',
     },
@@ -4616,6 +4647,23 @@ export const de = {
       bankTruncated: (n: number) => `Es werden nur die ersten ${n} Buchungen angezeigt.`,
     },
     invoices: {
+      /** Typical names offered while typing in the form (no prices). */
+      suggestions: [
+        'Strom',
+        'Gas',
+        'Wasser',
+        'Heizung',
+        'Internet',
+        'Handy',
+        'Rundfunkbeitrag',
+        'Miete',
+        'Nebenkosten',
+        'Hausverwaltung',
+        'Versicherung',
+        'Kfz-Steuer',
+        'Arzt',
+        'Finanzamt',
+      ] as string[],
       form: 'Offene Rechnung erfassen',
       payee: 'Rechnungssteller',
       amount: 'Betrag',
@@ -4625,6 +4673,23 @@ export const de = {
       badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
     },
     subscriptions: {
+      /** Typical names offered while typing in the form (no prices). */
+      suggestions: [
+        'Deutschlandticket',
+        'Netflix',
+        'Disney+',
+        'Amazon Prime',
+        'Spotify',
+        'YouTube Premium',
+        'iCloud+',
+        'Handyvertrag',
+        'Internet',
+        'Fitnessstudio',
+        'Zeitung',
+        'Rundfunkbeitrag',
+        'Cloud-Speicher',
+        'Versicherung',
+      ] as string[],
       form: 'Abo erfassen',
       name: 'Name',
       amount: 'Preis pro Abbuchung',
@@ -4911,6 +4976,15 @@ export const de = {
       previewWithout: 'Ohne Daten senden',
       nothing: 'Zu dieser Frage wurden in den gewählten Modulen keine Daten gefunden.',
       attached: 'Mit Daten aus der App',
+    },
+    setup: {
+      title: 'Noch keine KI eingerichtet',
+      bodyLocal:
+        'Für den Chat brauchst du ein Modell. Das eingebaute lokale Modell läuft nur auf diesem Gerät, offline und kostenlos; du lädst es einmal herunter. Dieser Hinweis verschwindet, sobald es eingerichtet ist.',
+      bodyProviders:
+        'Für den Chat brauchst du einen KI-Anbieter. Richte einen unter Einstellungen → KI-Assistent ein. Dieser Hinweis verschwindet, sobald es eingerichtet ist.',
+      openLocal: 'Lokales Modell herunterladen',
+      openProviders: 'KI-Anbieter einrichten',
     },
     aiOff: 'KI ist abgeschaltet. Unter Einstellungen → KI kannst du sie wieder einschalten.',
     errors: {

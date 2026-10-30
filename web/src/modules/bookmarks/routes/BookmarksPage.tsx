@@ -11,7 +11,6 @@ import {
   EmptyState,
   GroupedList,
   Icon,
-  IconButton,
   ItemList,
   ItemRow,
   PageHeader,
@@ -21,7 +20,7 @@ import {
   useOpenParam,
   type RowMenuItem,
 } from '@/ui';
-import { BookmarkRow } from '../components/BookmarkRow';
+import { BookmarkRow, bookmarkMenu } from '../components/BookmarkRow';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import {
   filterItems,
@@ -230,14 +229,7 @@ export default function BookmarksPage() {
                     onOpen={
                       i.url ? () => void getPlatform().app.openUrl(i.url!) : () => setTarget(i)
                     }
-                    actions={
-                      <IconButton
-                        label={`${t.bookmarks.edit}: ${i.title}`}
-                        onClick={() => setTarget(i)}
-                      >
-                        <Icon name="edit" />
-                      </IconButton>
-                    }
+                    menu={bookmarkMenu(i, { edit: setTarget })}
                   />
                 ))}
               </ItemList>

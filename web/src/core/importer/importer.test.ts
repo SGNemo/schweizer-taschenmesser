@@ -103,6 +103,28 @@ describe('commitImport / undoImport', () => {
     expect(await db.table('_outbox').count()).toBeGreaterThanOrEqual(3);
   });
 
+  it('skips a row whose dependency is not written', async () => {
+    const list: ImportCandidate = {
+      collection: 'list',
+      id: 'new-list',
+      data: { name: 'Neu', order: 1 },
+      label: 'Neu',
+      dedupeKey: 'list|neu',
+    };
+    const child: ImportCandidate = {
+      ...task('A'),
+      id: 'child',
+      data: { listId: 'new-list', title: 'A' },
+      dependsOn: 'new-list',
+    };
+    const rows = await buildPreview(todos, runtime, [list, child]);
+    rows[0]!.selected = false;
+    await expect(
+      commitImport(todos, { batchId: 'b1', importerId: 'text', source: 'Text', rows }),
+    ).rejects.toBeInstanceOf(ImportError);
+    expect(await taskRepo.get('child')).toBeUndefined();
+  });
+
   it('honours fixed candidate ids', async () => {
     const rows = await buildPreview(todos, runtime, [{ ...task('A'), id: 'fixed-1' }]);
     await commitImport(todos, { batchId: 'b1', importerId: 'text', source: 'Text', rows });

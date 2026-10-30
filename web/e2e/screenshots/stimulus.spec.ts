@@ -28,6 +28,7 @@ const PAGES = [
   ['pantry', '/pantry'],
   ['people', '/people'],
   ['bookmarks', '/bookmarks'],
+  ['bookmarks-links', '/bookmarks?view=links'],
   ['vault', '/vault'],
   ['settings', '/settings'],
   ['settings-darstellung', '/settings/darstellung'],

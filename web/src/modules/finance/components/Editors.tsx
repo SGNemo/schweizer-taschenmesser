@@ -1,7 +1,7 @@
 import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { formatMoneyInput, parseMoney } from '@/core/money';
+import { currencyOf, formatMoneyInput, isCurrencyCode, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
@@ -9,6 +9,7 @@ import { lastUsedFor } from '../logic';
 import {
   AdvancedFields,
   Button,
+  CurrencyField,
   Dialog,
   patternStyles,
   Segmented,
@@ -122,6 +123,7 @@ function TransactionForm({
   const [chosenAccountId, setChosenAccountId] = useState(existing?.accountId ?? '');
   // Falls back to the first account, which may only appear after the defaults were created.
   const accountId = chosenAccountId || data.accounts[0]?.id || '';
+  const accountCurrency = currencyOf(data.accounts.find((a) => a.id === accountId));
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? '');
   // The category (and account) came from the payee's last booking, not from the user.
   const [autoFilled, setAutoFilled] = useState(false);
@@ -169,7 +171,9 @@ function TransactionForm({
       />
       <div className={styles.split}>
         <TextField
-          label={t.money.amount}
+          label={
+            accountCurrency === 'EUR' ? t.money.amount : `${t.money.amount} (${accountCurrency})`
+          }
           inputMode="decimal"
           placeholder="0,00"
           value={amount}
@@ -311,21 +315,33 @@ function AccountForm({
   const [opening, setOpening] = useState(
     existing ? formatMoneyInput(existing.openingBalanceMinor) : '0,00',
   );
+  const [currency, setCurrency] = useState(currencyOf(existing));
   const [error, setError] = useState('');
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    if (!isCurrencyCode(currency)) {
+      setError(t.money.currencyInvalid);
+      return;
+    }
     const openingBalanceMinor =
       opening.trim() === '' ? 0 : parseMoney(opening, { allowNegative: true });
     if (openingBalanceMinor === undefined) {
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
-    if (existing) await accountRepo.update(existing.id, { name: name.trim(), openingBalanceMinor });
+    const stored = currency === 'EUR' ? undefined : currency;
+    if (existing)
+      await accountRepo.update(existing.id, {
+        name: name.trim(),
+        openingBalanceMinor,
+        currency: stored,
+      });
     else
       await accountRepo.create({
         name: name.trim(),
         openingBalanceMinor,
+        currency: stored,
         order: 'draft' in target ? target.order : 0,
       });
     onClose();
@@ -350,6 +366,7 @@ function AccountForm({
         }}
         error={error}
       />
+      <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
       {existing ? <p className={styles.muted}>{t.finance.deleteAccountHint}</p> : null}
       <Actions
         onClose={onClose}

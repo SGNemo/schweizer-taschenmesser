@@ -2,6 +2,8 @@ import { useCalendarItems } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
 import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
+import { usePersonFilter } from '@/core/people/PersonFilter';
+import { personName, usePeople } from '@/core/people/people';
 import { groupByDate } from '../views';
 import { ItemRow } from './ItemRow';
 import styles from '../routes/calendar.module.css';
@@ -17,7 +19,9 @@ export function Agenda({
   onOpenItem: (item: CalendarItem) => void;
 }) {
   const items = useCalendarItems({ from: date, to: addDaysStr(date, DAYS - 1) });
-  const byDate = groupByDate(items ?? []);
+  const people = usePeople();
+  const forPerson = usePersonFilter();
+  const byDate = groupByDate((items ?? []).filter((i) => !forPerson || i.personId === forPerson));
   const days = Array.from({ length: DAYS }, (_, i) => addDaysStr(date, i)).filter(
     (d, i) => i === 0 || byDate.has(d),
   );
@@ -34,7 +38,13 @@ export function Agenda({
             ) : (
               <ul className={styles.itemList}>
                 {list.map((i) => (
-                  <ItemRow key={`${i.source}:${i.id}`} item={i} onOpen={onOpenItem} compact />
+                  <ItemRow
+                    key={`${i.source}:${i.id}`}
+                    item={i}
+                    onOpen={onOpenItem}
+                    compact
+                    person={personName(people, i.personId)}
+                  />
                 ))}
               </ul>
             )}

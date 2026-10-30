@@ -162,7 +162,7 @@ export function itemJsonSchema(format: CollectionFormat): JsonObject {
     },
   };
   for (const f of format.fields) properties[f.name] = f.schema;
-  if (hasMoney(format)) {
+  if (hasMoney(format) && !format.fields.some((f) => f.name === 'currency')) {
     properties.currency = { const: 'EUR', description: 'Währung der Beträge; nur EUR.' };
   }
   return {

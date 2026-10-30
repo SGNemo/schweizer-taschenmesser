@@ -1,7 +1,20 @@
 import type { ConnectorDef } from '@/core/connectors/types';
 import { t } from '@/strings';
 import { tSpotify } from '@/strings.spotify';
-import { listPlaylists, readCurrentlyPlaying, sendCommand, startPlaylist } from './api';
+import {
+  likedSongs,
+  listPlaylists,
+  play,
+  readCurrentlyPlaying,
+  readPlayerState,
+  search,
+  seek,
+  sendCommand,
+  setRepeat,
+  setShuffle,
+  setVolume,
+  startPlaylist,
+} from './api';
 
 const s = () => tSpotify.get();
 
@@ -67,12 +80,31 @@ const connector: ConnectorDef = {
       scopes: ['playlist-read-private'],
       defaultOn: false,
     },
+    {
+      id: 'library',
+      get label() {
+        return s().libraryFeature;
+      },
+      get description() {
+        return s().libraryHint;
+      },
+      scopes: ['user-library-read'],
+      defaultOn: false,
+    },
   ],
   nowPlaying: {
     read: readCurrentlyPlaying,
     control: sendCommand,
     playlists: listPlaylists,
     startPlaylist,
+    state: readPlayerState,
+    seek,
+    setVolume,
+    setShuffle,
+    setRepeat,
+    search,
+    likedSongs,
+    play,
   },
 };
 

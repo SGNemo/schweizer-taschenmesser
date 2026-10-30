@@ -10,7 +10,9 @@ export const en = {
   },
   nav: { features: 'Features', privacy: 'Privacy', install: 'Install', support: 'Support', github: 'GitHub' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
-  langSwitch: { label: 'Language', de: 'Deutsch', en: 'English', short: { de: 'DE', en: 'EN' } },
+  langSwitch: { label: 'Language', de: 'Deutsch', en: 'English', es: 'Español', fr: 'Français', 'pt-BR': 'Português (Brasil)', short: { de: 'DE', en: 'EN', es: 'ES', fr: 'FR', 'pt-BR': 'PT' } },
+  a11y: { mainNav: 'Main navigation', footerNav: 'Footer', glance: 'At a glance' },
+  ogLocale: 'en_GB',
   skip: 'Skip to content',
   hero: {
     title: 'Everything that matters, in one place.',

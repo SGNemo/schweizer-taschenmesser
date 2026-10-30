@@ -3,7 +3,9 @@ import {
   accountBalance,
   availability,
   balances,
+  currenciesOf,
   expensesByCategory,
+  filterByCurrency,
   monthSummary,
   monthlyTrend,
   OTHERS,
@@ -160,5 +162,32 @@ describe('planRepeats', () => {
         (c) => c.data.date,
       ),
     ).toEqual(['2026-03-01']);
+  });
+});
+
+describe('currencies', () => {
+  const accounts = [
+    { id: 'a', openingBalanceMinor: 0 },
+    { id: 'b', openingBalanceMinor: 0, currency: 'MXN' },
+    { id: 'c', openingBalanceMinor: 0, currency: 'USD' },
+  ];
+  it('lists the currencies of the accounts, the euro first', () => {
+    expect(currenciesOf(accounts)).toEqual(['EUR', 'MXN', 'USD']);
+    expect(currenciesOf([{ currency: 'MXN' }])).toEqual(['MXN']);
+    expect(currenciesOf([])).toEqual(['EUR']);
+  });
+  it('keeps only the accounts and bookings of one currency', () => {
+    const data = {
+      accounts,
+      txs: [
+        { accountId: 'a', amountMinor: 1 },
+        { accountId: 'b', amountMinor: 2 },
+        { accountId: 'b', amountMinor: 3 },
+      ],
+    };
+    const mx = filterByCurrency(data, 'MXN');
+    expect(mx.accounts.map((a) => a.id)).toEqual(['b']);
+    expect(mx.txs).toHaveLength(2);
+    expect(filterByCurrency(data, 'EUR').txs).toHaveLength(1);
   });
 });

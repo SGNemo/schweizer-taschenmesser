@@ -27,7 +27,7 @@ import type { WidgetDef, WidgetSize } from '@/core/modules/types';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
-import { useUiStore } from '@/stores/ui';
+import { HOME_VIEWS, useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
@@ -47,9 +47,12 @@ import {
   WidgetSizeContext,
 } from '@/ui';
 import { widgetsOf } from './AutoWidget';
+import { AgendaBlock } from './AgendaBlock';
 import { AttentionStrip } from './AttentionStrip';
 import { ResumeCard } from './ResumeCard';
 import { NowPlayingLine } from './NowPlayingLine';
+import { useNowPlayingAvailable } from './useNowPlaying';
+import { tSpotify } from '@/strings.spotify';
 import { WeatherLine } from './WeatherLine';
 
 import styles from './Home.module.css';
@@ -101,11 +104,17 @@ const allEntries = (): Entry[] =>
 
 /** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
 const ATTENTION_KEY = 'core:attention';
+/** Key of the "Läuft gerade" widget in the layout's hidden list (shown by default once Spotify is connected). */
+export const NOWPLAYING_KEY = 'core:nowplaying';
+/** Key of the "Heute · Morgen · diese Woche" block in the layout's hidden list. */
+const AGENDA_KEY = 'core:agenda';
 
 const SIZE_CLASS: Record<WidgetSize, string> = { s: styles.s!, m: styles.m!, l: styles.l! };
 
 export function Home() {
   const states = useModuleStates();
+  const nowPlayingAvailable = useNowPlayingAvailable();
+  const tSp = tSpotify.use();
   const saved = useHomeLayout();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
@@ -174,6 +183,17 @@ export function Home() {
                 </Button>
               </>
             ) : null}
+            {editing ? null : (
+              <Segmented
+                label={t.settings.homeView}
+                value={homeView}
+                options={HOME_VIEWS.map((v) => ({
+                  value: v,
+                  label: t.settings.homeViewOptions[v],
+                }))}
+                onChange={setHomeView}
+              />
+            )}
             <Button
               variant={editing ? 'primary' : 'secondary'}
               onClick={() => setEditing(!editing)}
@@ -190,8 +210,9 @@ export function Home() {
       <ChecklistCard />
       {!editing ? <ResumeCard /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
+      {!editing && !layout.hidden.includes(AGENDA_KEY) ? <AgendaBlock /> : null}
       {!editing ? <WeatherLine /> : null}
-      {!editing ? <NowPlayingLine /> : null}
+      {!editing && !layout.hidden.includes(NOWPLAYING_KEY) ? <NowPlayingLine /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
         <EmptyState title={t.home.emptyTitle}>
@@ -244,18 +265,18 @@ export function Home() {
           </Button>
         </div>
       ) : null}
-      {homeView === 'all' && !editing && entries.length > 0 ? (
-        <div className={styles.moreRow}>
-          <Button variant="ghost" onClick={() => setHomeView('calm')}>
-            {t.homeEdit.showLess}
-          </Button>
-        </div>
-      ) : null}
 
       <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title={t.homeEdit.widgetsTitle}>
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
         {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}
         <ul className={patternStyles.plainList}>
+          <li>
+            <Switch
+              label={t.home.agenda.title}
+              checked={!layout.hidden.includes(AGENDA_KEY)}
+              onChange={() => void updateLayout({ hidden: toggleHidden(layout, AGENDA_KEY) })}
+            />
+          </li>
           <li>
             <Switch
               label={t.attention.title}
@@ -264,6 +285,16 @@ export function Home() {
               onChange={() => void updateLayout({ hidden: toggleHidden(layout, ATTENTION_KEY) })}
             />
           </li>
+          {nowPlayingAvailable ? (
+            <li>
+              <Switch
+                label={tSp.widgetSwitch}
+                hint={tSp.widgetHint}
+                checked={!layout.hidden.includes(NOWPLAYING_KEY)}
+                onChange={() => void updateLayout({ hidden: toggleHidden(layout, NOWPLAYING_KEY) })}
+              />
+            </li>
+          ) : null}
           {ordered.map((e) => (
             <li key={e.key}>
               <Switch

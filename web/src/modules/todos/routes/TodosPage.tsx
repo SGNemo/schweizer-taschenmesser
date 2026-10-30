@@ -37,6 +37,8 @@ import { dueTone, groupTasks, isActionable } from '../logic';
 import { replan, type PickTask } from '../next';
 import { postponePatch } from '../postpone';
 import { seriesKey, streaksOf, type Streak } from '../progress';
+import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
+import { personName, usePeople } from '@/core/people/people';
 import { readQuickAdd } from '../quickAdd';
 import { deleteTask, ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
@@ -56,6 +58,8 @@ interface RowProps {
   day: string;
   /** Name of the task's list, shown in the "all" view. */
   showList?: string;
+  /** Name of the person the task is for. */
+  person?: string;
   sub?: boolean;
   /** Calm wording: an old date is a plain date, not "Überfällig" in red. */
   calm?: boolean;
@@ -71,6 +75,7 @@ function TaskRow({
   allSubs,
   day,
   showList,
+  person,
   sub,
   calm,
   streaks,
@@ -161,6 +166,7 @@ function TaskRow({
       meta={
         <span className={styles.meta}>
           {showList ? <span>{showList}</span> : null}
+          {person ? <span>{t.assign.forName(person)}</span> : null}
           {task.priority >= 2 ? (
             <span className={task.priority === 3 ? styles.prio3 : styles.prio2}>
               ● {t.todos.prio[task.priority]}
@@ -283,6 +289,8 @@ export default function TodosPage() {
     selected !== ALL &&
     selected !== SOMEDAY;
 
+  const forPerson = usePersonFilter();
+  const people = usePeople();
   const visible = useMemo(() => {
     const scoped =
       selected === SOMEDAY
@@ -290,8 +298,8 @@ export default function TodosPage() {
         : (tasks ?? []).filter(
             (x) => isActionable(x) && (selected === ALL || x.listId === selected),
           );
-    return scoped.filter((x) => showDone || !x.done);
-  }, [tasks, selected, showDone]);
+    return scoped.filter((x) => (showDone || !x.done) && (!forPerson || x.personId === forPerson));
+  }, [tasks, selected, showDone, forPerson]);
   const { top, children } = useMemo(() => groupTasks(visible), [visible]);
   const listName = (id: string) => lists?.find((l) => l.id === id)?.name ?? '';
   const editingSubs = editing
@@ -345,6 +353,7 @@ export default function TodosPage() {
         allSubs={(tasks ?? []).filter((x) => x.parentId === task.id)}
         day={day}
         showList={selected === ALL || selected === SOMEDAY ? listName(task.listId) : undefined}
+        person={personName(people, task.personId)}
         calm={focus.calmAttention}
         streaks={streaks}
         onToggle={toggle}
@@ -482,6 +491,7 @@ export default function TodosPage() {
         </p>
       ) : null}
 
+      <PersonFilter usedIds={(tasks ?? []).flatMap((x) => (x.personId ? [x.personId] : []))} />
       <div className={styles.layout}>
         <div className={styles.main}>
           <form ref={addRef} onSubmit={add} className={styles.add} data-keep-visible>

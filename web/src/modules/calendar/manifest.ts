@@ -12,7 +12,7 @@ const manifest: ModuleManifest = {
     return t.calendar.meta.name;
   },
   icon: 'calendar',
-  version: 1,
+  version: 2,
   get description() {
     return t.calendar.meta.description;
   },
