@@ -3,7 +3,7 @@
  * duplicate flags, confirm – only then anything is stored, as one batch that can be undone.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { CopySchemaButton } from '@/core/dataapi/CopySchemaButton';
 import { importersOf, runtimeFor } from '@/core/dataapi/onboarding';
 import { ImportJsonError } from '@/core/dataapi/parse';
@@ -79,6 +79,7 @@ function FieldInput({
   onChange: (value: string) => void;
   choices: Choice[];
 }) {
+  const listId = useId();
   if (field.type === 'select') {
     const options = field.dynamicChoices ? choices : (field.choices ?? []);
     return (
@@ -97,15 +98,25 @@ function FieldInput({
     );
   }
   return (
-    <TextField
-      label={field.label}
-      hint={field.hint}
-      type={field.type === 'text' ? 'text' : field.type}
-      value={value}
-      placeholder={field.placeholder}
-      required={field.required}
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <>
+      <TextField
+        label={field.label}
+        hint={field.hint}
+        type={field.type === 'text' ? 'text' : field.type}
+        value={value}
+        placeholder={field.placeholder}
+        required={field.required}
+        list={field.suggestions?.length ? listId : undefined}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {field.suggestions?.length ? (
+        <datalist id={listId}>
+          {field.suggestions.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+      ) : null}
+    </>
   );
 }
 

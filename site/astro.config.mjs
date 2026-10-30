@@ -9,7 +9,7 @@ export default defineConfig({
   trailingSlash: 'never',
   i18n: {
     defaultLocale: 'de',
-    locales: ['de', 'en'],
+    locales: ['de', 'en', 'es', 'fr', 'pt-br'],
     routing: { prefixDefaultLocale: false, redirectToDefaultLocale: false },
   },
   build: {
@@ -19,7 +19,7 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      i18n: { defaultLocale: 'de', locales: { de: 'de', en: 'en' } },
+      i18n: { defaultLocale: 'de', locales: { de: 'de', en: 'en', es: 'es', fr: 'fr', 'pt-br': 'pt-BR' } },
       filter: (page) => !page.endsWith('/404'),
     }),
   ],

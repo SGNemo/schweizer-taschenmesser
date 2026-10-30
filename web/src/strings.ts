@@ -235,6 +235,14 @@ export const de = {
     reload: 'Neu laden',
     update: 'Aktualisieren',
   },
+  assign: {
+    label: 'Für',
+    none: '– niemand –',
+    removed: '(Person entfernt)',
+    filter: 'Für wen',
+    all: 'Alle',
+    forName: (name: string) => `für ${name}`,
+  },
   home: {
     title: 'Übersicht',
     emptyTitle: 'Noch keine Module aktiv',
@@ -2991,6 +2999,14 @@ export const de = {
         'not-configured': 'Unvollständig eingerichtet',
         'invalid-response': 'Unbrauchbare Antwort',
       } as Record<string, string>,
+      advanced: 'Erweitert: Limits und Preise',
+      ollamaHelpWeb: (origin: string) =>
+        `Starte Ollama und erlaube diese App: Setze die Umgebungsvariable OLLAMA_ORIGINS auf ${origin} und starte Ollama neu. Danach „Verbindung testen“.`,
+      ollamaHelpNative: 'Starte Ollama (Port 11434) und teste die Verbindung dann erneut.',
+      statusRunning: 'Läuft',
+      statusDown: 'Nicht erreichbar',
+      statusModelMissing: (m: string) =>
+        `Läuft, aber das Modell „${m}“ fehlt. Im Terminal: ollama pull ${m}`,
       baseUrlInsecure:
         'Die Adresse muss mit https:// beginnen. http:// geht nur für Server auf diesem Gerät oder im eigenen Netz (z. B. localhost, 192.168.…).',
     },
@@ -4624,6 +4640,23 @@ export const de = {
       bankTruncated: (n: number) => `Es werden nur die ersten ${n} Buchungen angezeigt.`,
     },
     invoices: {
+      /** Typical names offered while typing in the form (no prices). */
+      suggestions: [
+        'Strom',
+        'Gas',
+        'Wasser',
+        'Heizung',
+        'Internet',
+        'Handy',
+        'Rundfunkbeitrag',
+        'Miete',
+        'Nebenkosten',
+        'Hausverwaltung',
+        'Versicherung',
+        'Kfz-Steuer',
+        'Arzt',
+        'Finanzamt',
+      ] as string[],
       form: 'Offene Rechnung erfassen',
       payee: 'Rechnungssteller',
       amount: 'Betrag',
@@ -4633,6 +4666,23 @@ export const de = {
       badDate: 'Bitte ein Datum wie 15.03.2026 eingeben.',
     },
     subscriptions: {
+      /** Typical names offered while typing in the form (no prices). */
+      suggestions: [
+        'Deutschlandticket',
+        'Netflix',
+        'Disney+',
+        'Amazon Prime',
+        'Spotify',
+        'YouTube Premium',
+        'iCloud+',
+        'Handyvertrag',
+        'Internet',
+        'Fitnessstudio',
+        'Zeitung',
+        'Rundfunkbeitrag',
+        'Cloud-Speicher',
+        'Versicherung',
+      ] as string[],
       form: 'Abo erfassen',
       name: 'Name',
       amount: 'Preis pro Abbuchung',
