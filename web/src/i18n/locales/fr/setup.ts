@@ -132,6 +132,8 @@ export const setup: Strings['setup'] = {
       title: 'Fournisseurs d’IA',
       description:
         'Facultatif. Sans fournisseur, la recherche locale reste entièrement utilisable. Seuls votre question et un court schéma sont envoyés à l’IA, jamais vos données.',
+      localModelHint:
+        'Modèle local intégré : l’app a son propre modèle d’IA, qui fonctionne uniquement sur cet appareil, hors ligne et gratuitement. Vous le téléchargez une fois dans Réglages → Modèle local. Aucun fournisseur d’IA n’est nécessaire.',
       existing: 'Déjà configurés',
       none: 'Aucun fournisseur configuré pour l’instant.',
       usable: 'prêt',
