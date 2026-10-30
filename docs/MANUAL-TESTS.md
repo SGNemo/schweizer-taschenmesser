@@ -317,3 +317,7 @@ F1. *Android/Windows:* Unterlage „Vertrag“ mit Ende in 3 Monaten und Frist 4
 F2. *Abo jährlich mit Frist „3 Monate“:* im Dialog steht „Kündigen bis …“ groß; Monatsabo hat kein 31-Tage-Feld, der Tag folgt dem Datum „Abbuchung am“. ☐
 F3. *Handy:* Einheit-Auswahl (Tage/Wochen/Monate) und Zahlenfeld gut treffbar, Zahl bleibt beim Wechsel der Einheit. ☐
 
+### Löschen mit Rückgängig, Entwurf (P5 Paket C)
+U1. *Android/Windows:* Unterlage mit Datei löschen: keine Rückfrage, Toast „Gelöscht · Rückgängig“; „Rückgängig“ bringt Eintrag und Datei zurück (Herunterladen geht). ☐
+U2. *Handy:* Unterlage-Dialog öffnen, Text tippen, Zurück-Geste bzw. neben den Dialog tippen, Dialog erneut öffnen: Text ist da; „Abbrechen“ verwirft ihn. ☐
+

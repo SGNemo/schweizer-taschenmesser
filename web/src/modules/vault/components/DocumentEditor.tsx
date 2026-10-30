@@ -2,7 +2,19 @@ import { NoticeField } from '@/core/deadline/NoticeField';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, SelectField, Split, TextArea, TextField } from '@/ui';
+import { tDraft } from '@/strings.draft';
+import { deleteWithUndo } from '@/core/undo/withToast';
+import {
+  Button,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  Split,
+  TextArea,
+  TextField,
+  useFormDraft,
+} from '@/ui';
 import { endOf, formatSize, MAX_FILE_BYTES } from '../logic';
 import { deleteDocument, saveDocument } from '../repo';
 import { CATEGORIES, documentSchema, type DocCategory, type VaultDocument } from '../schema';
@@ -31,14 +43,27 @@ function Fields({
   existing: Stored<VaultDocument> | null;
   onClose: () => void;
 }) {
-  const [title, setTitle] = useState(existing?.title ?? '');
-  const [category, setCategory] = useState<DocCategory>(existing?.category ?? 'other');
-  const [provider, setProvider] = useState(existing?.provider ?? '');
-  const [startDate, setStartDate] = useState(existing?.startDate ?? '');
-  const [endDate, setEndDate] = useState((existing && endOf(existing)) ?? '');
-  const [notice, setNotice] = useState<number | undefined>(existing?.noticeDays);
+  // Typed text survives Esc or a tap beside the dialog (in memory, 30 minutes); "Abbrechen" and
+  // saving drop it.
+  const dr = tDraft.use();
+  const draft = useFormDraft(`vault:document:${existing?.id ?? 'new'}`, {
+    title: existing?.title ?? '',
+    category: (existing?.category ?? 'other') as DocCategory,
+    provider: existing?.provider ?? '',
+    startDate: existing?.startDate ?? '',
+    endDate: (existing && endOf(existing)) ?? '',
+    notice: existing?.noticeDays as number | undefined,
+    note: existing?.note ?? '',
+  });
+  const { title, category, provider, startDate, endDate, notice, note } = draft.values;
+  const setTitle = (v: string) => draft.set('title', v);
+  const setCategory = (v: DocCategory) => draft.set('category', v);
+  const setProvider = (v: string) => draft.set('provider', v);
+  const setStartDate = (v: string) => draft.set('startDate', v);
+  const setEndDate = (v: string) => draft.set('endDate', v);
+  const setNotice = (v: number | undefined) => draft.set('notice', v);
+  const setNote = (v: string) => draft.set('note', v);
   const [dateError, setDateError] = useState('');
-  const [note, setNote] = useState(existing?.note ?? '');
   const [file, setFile] = useState<File | 'remove' | undefined>();
   const [error, setError] = useState('');
 
@@ -57,8 +82,13 @@ function Fields({
     });
     if (!parsed.success) return setDateError(t.vault.invalid);
     await saveDocument(existing?.id ?? null, parsed.data, file);
+    draft.clear();
     onClose();
   }
+  const cancel = () => {
+    draft.clear();
+    onClose();
+  };
 
   const shownFile =
     file instanceof File
@@ -69,6 +99,14 @@ function Fields({
 
   return (
     <Form onSubmit={() => void save()}>
+      {draft.restored ? (
+        <p role="status" data-testid="draft-restored">
+          {dr.restored}{' '}
+          <Button variant="ghost" onClick={draft.discard}>
+            {dr.discard}
+          </Button>
+        </p>
+      ) : null}
       <TextField
         label={t.form.title}
         value={title}
@@ -146,7 +184,9 @@ function Fields({
             <Button
               variant="danger"
               onClick={async () => {
-                await deleteDocument(existing.id);
+                // No question: the toast offers "Rückgängig"; the file stays until it is restorable no more.
+                await deleteWithUndo(() => deleteDocument(existing.id));
+                draft.clear();
                 onClose();
               }}
             >
@@ -155,7 +195,7 @@ function Fields({
           ) : undefined
         }
       >
-        <Button onClick={onClose}>{t.actions.cancel}</Button>
+        <Button onClick={cancel}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
           {t.actions.save}
         </Button>

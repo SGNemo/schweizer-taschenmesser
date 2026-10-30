@@ -30,7 +30,7 @@ import {
   sortDocuments,
   statusOf,
 } from '../logic';
-import { documentRepo } from '../repo';
+import { documentRepo, keepBlobIds } from '../repo';
 import { CATEGORIES, type DocCategory } from '../schema';
 
 async function download(id: string, name: string) {
@@ -60,9 +60,11 @@ export default function VaultPage() {
   };
 
   // Files of documents that were deleted on another device are dead weight here.
+  // A document deleted here stays restorable for 30 days, so its file stays too.
+  const keep = useLiveQuery(() => keepBlobIds(), []);
   useEffect(() => {
-    if (docs) void pruneBlobs(new Set(docs.map((d) => d.id)));
-  }, [docs]);
+    if (keep) void pruneBlobs(keep);
+  }, [keep]);
 
   const shown = useMemo(
     () => sortDocuments(filterDocuments(docs ?? [], { category, query }), day),

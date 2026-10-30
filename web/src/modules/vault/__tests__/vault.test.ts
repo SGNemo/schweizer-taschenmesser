@@ -19,7 +19,7 @@ import {
 import manifest from '../manifest';
 import { carryOverSettings } from '../services';
 import { settings, settingsSchema } from '../settings';
-import { deleteDocument, documentRepo, saveDocument } from '../repo';
+import { deleteDocument, documentRepo, keepBlobIds, saveDocument } from '../repo';
 import { documentSchema } from '../schema';
 
 beforeEach(async () => {
@@ -155,11 +155,31 @@ describe('vault module', () => {
     expect((await documentRepo.get(id))?.fileName).toBeUndefined();
   });
 
-  it('deleting a document deletes its file', async () => {
+  it('deleting a document keeps its file so it can come back (30 days)', async () => {
     const id = await saveDocument(null, doc(), new File(['x'], 'x.txt'));
     await deleteDocument(id);
     expect(await documentRepo.get(id)).toBeUndefined();
-    expect(await getBlob(id)).toBeUndefined();
+    expect(await getBlob(id)).toBeDefined();
+
+    // Restoring brings the record back together with its file.
+    await documentRepo.restore(id);
+    expect((await documentRepo.get(id))?.title).toBe('Reisepass');
+    expect((await getBlob(id))?.size).toBe(1);
+  });
+
+  it('the clean-up keeps files of restorable documents and drops older ones', async () => {
+    const fresh = await saveDocument(null, doc({ title: 'neu' }), new File(['a'], 'a.txt'));
+    const old = await saveDocument(null, doc({ title: 'alt' }), new File(['b'], 'b.txt'));
+    const live = await saveDocument(null, doc({ title: 'aktiv' }), new File(['c'], 'c.txt'));
+    await deleteDocument(fresh);
+    await deleteDocument(old);
+    const later = Date.now() + 31 * 24 * 3_600_000;
+    // `old` was deleted just now too; asking from 31 days later it is outside the window
+    expect([...(await keepBlobIds(later))]).toEqual([live]); // only the active one
+    const keepNow = await keepBlobIds(Date.now());
+    expect(keepNow.has(fresh) && keepNow.has(old) && keepNow.has(live)).toBe(true);
+    await pruneBlobs(keepNow);
+    expect((await blobKeys()).sort()).toEqual([fresh, old, live].sort());
   });
 
   it('shows end and cancellation deadline on the calendar', async () => {
