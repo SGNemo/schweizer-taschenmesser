@@ -4,12 +4,22 @@ import { formatMoney, formatMoneyInput, parseMoney } from '@/core/money';
 import { formatDay } from '@/core/time/dates';
 import { NoticeField } from '@/core/deadline/NoticeField';
 import { tDeadline } from '@/strings.deadline';
+import { tDraft } from '@/strings.draft';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { changePercent, nextCancelDeadline, recordPriceChange } from '../logic';
-import { AdvancedFields, Button, Dialog, patternStyles, Switch, TextArea, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  Dialog,
+  patternStyles,
+  Switch,
+  TextArea,
+  TextField,
+  useFormDraft,
+} from '@/ui';
 import { annualCost } from '../logic';
 import { subscriptionRepo } from '../repo';
 import type { Subscription } from '../schema';
@@ -45,15 +55,26 @@ function Form({
   onClose: () => void;
 }) {
   const dl = tDeadline.use();
-  const [name, setName] = useState(existing?.name ?? '');
-  const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.amountMinor) : '');
-  const [startDate, setStartDate] = useState(existing?.startDate ?? today());
-  const [recurrence, setRecurrence] = useState<Recurrence>(
-    existing?.recurrence ?? { freq: 'monthly', interval: 1 },
-  );
-  const [notice, setNotice] = useState<number | undefined>(existing?.cancelNoticeDays);
-  const [active, setActive] = useState(existing?.active ?? true);
-  const [note, setNote] = useState(existing?.note ?? '');
+  // Typed text survives Esc or a tap beside the dialog (memory only, 30 minutes); saving and
+  // "Abbrechen" drop it.
+  const dr = tDraft.use();
+  const draft = useFormDraft(`subscriptions:subscription:${existing?.id ?? 'new'}`, {
+    name: existing?.name ?? '',
+    amount: existing ? formatMoneyInput(existing.amountMinor) : '',
+    startDate: existing?.startDate ?? today(),
+    recurrence: (existing?.recurrence ?? { freq: 'monthly', interval: 1 }) as Recurrence,
+    notice: existing?.cancelNoticeDays as number | undefined,
+    active: existing?.active ?? true,
+    note: existing?.note ?? '',
+  });
+  const { name, amount, startDate, recurrence, notice, active, note } = draft.values;
+  const setName = (v: string) => draft.set('name', v);
+  const setAmount = (v: string) => draft.set('amount', v);
+  const setStartDate = (v: string) => draft.set('startDate', v);
+  const setRecurrence = (v: Recurrence) => draft.set('recurrence', v);
+  const setNotice = (v: number | undefined) => draft.set('notice', v);
+  const setActive = (v: boolean) => draft.set('active', v);
+  const setNote = (v: string) => draft.set('note', v);
   const [error, setError] = useState('');
 
   const amountMinor = parseMoney(amount);
@@ -86,11 +107,24 @@ function Form({
     };
     if (existing) await subscriptionRepo.update(existing.id, data);
     else await subscriptionRepo.create(data);
+    draft.clear();
     onClose();
   }
+  const cancel = () => {
+    draft.clear();
+    onClose();
+  };
 
   return (
     <form onSubmit={save} className={styles.form}>
+      {draft.restored ? (
+        <p role="status" data-testid="draft-restored">
+          {dr.restored}{' '}
+          <Button variant="ghost" onClick={draft.discard}>
+            {dr.discard}
+          </Button>
+        </p>
+      ) : null}
       <TextField
         label={t.subscriptions.name}
         value={name}
@@ -181,6 +215,7 @@ function Form({
             variant="danger"
             onClick={async () => {
               await deleteWithUndo(() => subscriptionRepo.remove(existing.id));
+              draft.clear();
               onClose();
             }}
           >
@@ -190,7 +225,7 @@ function Form({
           <span />
         )}
         <span className={patternStyles.hstack}>
-          <Button onClick={onClose}>{t.actions.cancel}</Button>
+          <Button onClick={cancel}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}
           </Button>
