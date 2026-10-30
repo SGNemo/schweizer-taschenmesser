@@ -4962,6 +4962,15 @@ export const de = {
       nothing: 'Zu dieser Frage wurden in den gewählten Modulen keine Daten gefunden.',
       attached: 'Mit Daten aus der App',
     },
+    setup: {
+      title: 'Noch keine KI eingerichtet',
+      bodyLocal:
+        'Für den Chat brauchst du ein Modell. Das eingebaute lokale Modell läuft nur auf diesem Gerät, offline und kostenlos; du lädst es einmal herunter. Dieser Hinweis verschwindet, sobald es eingerichtet ist.',
+      bodyProviders:
+        'Für den Chat brauchst du einen KI-Anbieter. Richte einen unter Einstellungen → KI-Assistent ein. Dieser Hinweis verschwindet, sobald es eingerichtet ist.',
+      openLocal: 'Lokales Modell herunterladen',
+      openProviders: 'KI-Anbieter einrichten',
+    },
     aiOff: 'KI ist abgeschaltet. Unter Einstellungen → KI kannst du sie wieder einschalten.',
     errors: {
       'ai-off': 'KI ist abgeschaltet. Unter Einstellungen → KI kannst du sie wieder einschalten.',
