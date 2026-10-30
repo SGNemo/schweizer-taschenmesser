@@ -312,3 +312,10 @@ A3. *Android:* Erinnerung mit „Einnahme“ anlegen: Karte und Glocke zeigen �
 A4. *Glocke:* mehr als drei Erinnerungen in einer Stunde zeigen konkrete Titel (nicht „Weitere Erinnerungen · n“); Älteres liegt unter „Früher“. ☐
 A5. *Ruhe:* eine Karte „Ruhe“ (Aus / 1 Stunde / Bis morgen) mit „Beim Spielen“ (Windows) bzw. „Immer leise“ (Android); Schnellleiste und Palette heißen „Ruhe“. ☐
 
+### Mit Partner teilen: QR-Bilder (Kamera) – nur von Hand prüfbar
+Q1. *Zwei Geräte (z. B. Handy und Laptop, Chromium-Browser mit QR-Erkennung):* Einstellungen → Verbindungen → „Dauerhaft teilen“ → Verbindung anlegen, Code notieren, „Als QR-Bilder zeigen“. Auf dem anderen Gerät „Mit Kamera lesen“, Kamera auf den Bildschirm halten: Fortschritt „n von m Bildern“ läuft hoch, danach erscheint die Vorschau, „Zusammenführen“ übernimmt. ☐
+Q2. *Reihenfolge und Wiederholung:* „Anhalten“, Kamera wegnehmen und später wieder hinhalten: das Lesen läuft weiter, nichts geht verloren. ☐
+Q3. *Firefox/Safari:* dort steht „Dieser Browser kann QR-Codes nicht lesen. Nimm stattdessen die Datei.“, der Dateiweg geht. ☐
+Q4. *Kamera verweigert:* ruhiger Hinweis, die Kamera bleibt aus, die Datei geht. Nach „Kamera ausschalten“ und beim Schließen der Seite erlischt die Kamera-Anzeige. ☐
+Q5. *Android-App:* QR-Lesen braucht Kamera-Berechtigung und eine WebView mit QR-Erkennung; wenn das Lesen nicht startet, gilt der Dateiweg. ☐
+
