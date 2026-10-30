@@ -235,6 +235,14 @@ export const de = {
     reload: 'Neu laden',
     update: 'Aktualisieren',
   },
+  assign: {
+    label: 'Für',
+    none: '– niemand –',
+    removed: '(Person entfernt)',
+    filter: 'Für wen',
+    all: 'Alle',
+    forName: (name: string) => `für ${name}`,
+  },
   home: {
     title: 'Übersicht',
     emptyTitle: 'Noch keine Module aktiv',
