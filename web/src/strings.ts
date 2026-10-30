@@ -3002,7 +3002,9 @@ export const de = {
       advanced: 'Erweitert: Limits und Preise',
       ollamaHelpWeb: (origin: string) =>
         `Starte Ollama und erlaube diese App: Setze die Umgebungsvariable OLLAMA_ORIGINS auf ${origin} und starte Ollama neu. Danach „Verbindung testen“.`,
-      ollamaHelpNative: 'Starte Ollama (Port 11434) und teste die Verbindung dann erneut.',
+      ollamaHelpNative:
+        'Ollama läuft nicht oder ist nicht installiert. Du brauchst es nicht unbedingt: Das eingebaute lokale Modell lädst du unter Einstellungen → Lokales Modell herunter. Oder installiere Ollama und starte es (Port 11434), dann „Verbindung testen“.',
+      ollamaDownload: 'Ollama herunterladen',
       statusRunning: 'Läuft',
       statusDown: 'Nicht erreichbar',
       statusModelMissing: (m: string) =>

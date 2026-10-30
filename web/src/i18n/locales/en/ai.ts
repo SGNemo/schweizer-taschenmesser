@@ -381,7 +381,9 @@ export const ai: Strings['ai'] = {
     advanced: 'Advanced: limits and prices',
     ollamaHelpWeb: (origin: string) =>
       `Start Ollama and allow this app: set the environment variable OLLAMA_ORIGINS to ${origin} and restart Ollama. Then use “Test connection”.`,
-    ollamaHelpNative: 'Start Ollama (port 11434), then test the connection again.',
+    ollamaHelpNative:
+      'Ollama isn’t running or isn’t installed. You don’t strictly need it: download the built-in local model under Settings → Local model. Or install Ollama and start it (port 11434), then use “Test connection”.',
+    ollamaDownload: 'Download Ollama',
     statusRunning: 'Running',
     statusDown: 'Not reachable',
     statusModelMissing: (m: string) =>
