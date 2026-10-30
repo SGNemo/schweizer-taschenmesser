@@ -2172,6 +2172,11 @@ export const de = {
   money: {
     amount: 'Betrag',
     invalidAmount: (sample: string) => `Bitte einen gültigen Betrag eingeben, z. B. ${sample}`,
+    currency: 'Währung',
+    currencyOther: 'Andere …',
+    currencyCode: 'Währungscode (3 Buchstaben)',
+    currencyInvalid: 'Bitte einen gültigen Währungscode eingeben, z. B. USD.',
+    currencyHint: 'Es wird nichts umgerechnet: Beträge bleiben in ihrer Währung.',
   },
   invoices: {
     importDetail: (amount: string, due: string) => `${amount} · fällig ${due}`,

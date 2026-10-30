@@ -145,7 +145,10 @@ const HOST_REASONS: [RegExp, NetReason][] = [
   [/^api\.ipify\.org$/, 'ip'],
   [/(^|\.)huggingface\.co$/, 'download'],
   [/^api\.(openai|anthropic)\.com$|^generativelanguage\.googleapis\.com$|:11434$/, 'ai'],
-  [/(^|\.)googleapis\.com$|^accounts\.google\.com$|(^|\.)spotify\.com$/, 'connector'],
+  [
+    /(^|\.)googleapis\.com$|^accounts\.google\.com$|(^|\.)spotify\.com$|(^|\.)scdn\.co$/,
+    'connector',
+  ],
 ];
 
 /** Host (with port) and reason of a URL. Pure, so the log never needs a caller to name the reason. */

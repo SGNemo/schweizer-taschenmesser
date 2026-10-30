@@ -26,7 +26,7 @@ const source: NotificationSource = async ({ from, to }) => {
       at: toEpoch(addDaysStr(i.dueDate, -prefs.remindDaysBefore), prefs.remindTime),
       title: t.invoices.dueTitle(i.payee),
       body: t.invoices.dueBody(
-        formatMoney(i.amountMinor),
+        formatMoney(i.amountMinor, i.currency),
         i.dueDate.split('-').reverse().join('.'),
       ),
       url: '/invoices',

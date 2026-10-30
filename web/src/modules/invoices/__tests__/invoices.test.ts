@@ -180,3 +180,24 @@ describe('repeating invoices', () => {
     expect(await invoiceRepo.active().toArray()).toHaveLength(1);
   });
 });
+
+describe('currencies', () => {
+  it('sums open invoices per currency; the default sum is the euro only', async () => {
+    await invoiceRepo.create(inv({ amountMinor: 1000 }));
+    await invoiceRepo.create(inv({ amountMinor: 5000, currency: 'MXN' }));
+    await invoiceRepo.create(inv({ amountMinor: 700, currency: 'MXN' }));
+    expect(await sumOpenInvoices()).toBe(1000);
+    expect(await sumOpenInvoices('MXN')).toBe(5700);
+    expect((await listOpenInvoices()).map((i) => i.currency).sort()).toEqual(['EUR', 'MXN', 'MXN']);
+  });
+
+  it('announces the currency when an invoice is paid and keeps it on the next one', async () => {
+    const seen = vi.fn();
+    bus.on('invoice.paid', seen);
+    const created = await invoiceRepo.create(inv({ currency: 'USD', repeat: 'monthly' }));
+    await markPaid(created.id, '2026-10-05');
+    expect(seen).toHaveBeenCalledWith(expect.objectContaining({ currency: 'USD' }));
+    const next = (await invoiceRepo.active().toArray()).find((i) => i.repeatOf === created.id);
+    expect(next?.currency).toBe('USD');
+  });
+});

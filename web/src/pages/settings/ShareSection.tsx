@@ -5,6 +5,7 @@ import type { Backup } from '@/core/backup/backup';
 import { allManifests } from '@/core/modules/registry';
 import { joinPair, loadPairs, pairCode, updatePair, type SharePair } from '@/core/share/pairs';
 import { SharePairs } from './SharePairs';
+import { canScanQr, QrScanner } from './ShareQr';
 import {
   applyShare,
   createShareFile,
@@ -52,6 +53,7 @@ export function ShareSection() {
   const [pairs, setPairs] = useState<SharePair[]>([]);
   const [version, setVersion] = useState(0);
   const [joinName, setJoinName] = useState('');
+  const [scanning, setScanning] = useState(false);
   const knownPair = (text && pairs.find((p) => p.id === peekPairId(text))) || undefined;
   const newPairId = text && !knownPair ? peekPairId(text) : undefined;
   const [openError, setOpenError] = useState('');
@@ -211,6 +213,23 @@ export function ShareSection() {
             onChange={(e) => void onFile(e)}
           />
         </div>
+        {scanning ? (
+          <QrScanner
+            onStop={() => setScanning(false)}
+            onText={(received) => {
+              setScanning(false);
+              setOpened(undefined);
+              setOpenError('');
+              setText(received);
+            }}
+          />
+        ) : canScanQr() ? (
+          <div className={styles.row}>
+            <Button onClick={() => setScanning(true)}>{n.qrScan}</Button>
+          </div>
+        ) : (
+          <p className={styles.muted}>{n.qrUnsupported}</p>
+        )}
         {knownPair ? <p className={styles.muted}>{n.known(knownPair.name)}</p> : null}
         {newPairId ? <p className={styles.muted}>{n.pairNew}</p> : null}
         {newPairId ? (

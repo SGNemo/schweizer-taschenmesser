@@ -316,4 +316,10 @@ A5. *Ruhe:* eine Karte „Ruhe“ (Aus / 1 Stunde / Bis morgen) mit „Beim Spie
 F1. *Android/Windows:* Unterlage „Vertrag“ mit Ende in 3 Monaten und Frist 4 Monate anlegen: Liste „Frist vorbei am …“ (ruhig, kein Rot), Übersicht zeigt es gedämpft, Kalender „Frist vorbei: …“. ☐
 F2. *Abo jährlich mit Frist „3 Monate“:* im Dialog steht „Kündigen bis …“ groß; Monatsabo hat kein 31-Tage-Feld, der Tag folgt dem Datum „Abbuchung am“. ☐
 F3. *Handy:* Einheit-Auswahl (Tage/Wochen/Monate) und Zahlenfeld gut treffbar, Zahl bleibt beim Wechsel der Einheit. ☐
+### Mit Partner teilen: QR-Bilder (Kamera) – nur von Hand prüfbar
+Q1. *Zwei Geräte (z. B. Handy und Laptop, Chromium-Browser mit QR-Erkennung):* Einstellungen → Verbindungen → „Dauerhaft teilen“ → Verbindung anlegen, Code notieren, „Als QR-Bilder zeigen“. Auf dem anderen Gerät „Mit Kamera lesen“, Kamera auf den Bildschirm halten: Fortschritt „n von m Bildern“ läuft hoch, danach erscheint die Vorschau, „Zusammenführen“ übernimmt. ☐
+Q2. *Reihenfolge und Wiederholung:* „Anhalten“, Kamera wegnehmen und später wieder hinhalten: das Lesen läuft weiter, nichts geht verloren. ☐
+Q3. *Firefox/Safari:* dort steht „Dieser Browser kann QR-Codes nicht lesen. Nimm stattdessen die Datei.“, der Dateiweg geht. ☐
+Q4. *Kamera verweigert:* ruhiger Hinweis, die Kamera bleibt aus, die Datei geht. Nach „Kamera ausschalten“ und beim Schließen der Seite erlischt die Kamera-Anzeige. ☐
+Q5. *Android-App:* QR-Lesen braucht Kamera-Berechtigung und eine WebView mit QR-Erkennung; wenn das Lesen nicht startet, gilt der Dateiweg. ☐
 

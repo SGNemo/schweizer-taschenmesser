@@ -14,7 +14,7 @@ const source: CalendarSource = async (range) => {
     id: i.id,
     source: 'invoices',
     kind: 'invoice',
-    title: `${i.payee} · ${formatMoney(i.amountMinor)}`,
+    title: `${i.payee} · ${formatMoney(i.amountMinor, i.currency)}`,
     date: i.dueDate,
     allDay: true,
     to: '/invoices',

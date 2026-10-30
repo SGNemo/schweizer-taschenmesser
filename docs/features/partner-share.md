@@ -43,3 +43,9 @@ Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einf
 - **Gap check** (`followsReceived`): a delta whose `since` is newer than what this device received is refused with "Es fehlt eine frühere Datei" instead of silently missing changes. Re-applying a file is harmless (LWW is idempotent).
 - Opening: a file of a known connection uses the stored code (no code field); a file of an unknown connection asks for the code and a name and creates the connection on merge.
 - UI: `pages/settings/SharePairs.tsx` (create, save changes, resend all, remove) inside the existing section; tests `core/share/pairs.test.ts`, `e2e/share.spec.ts`.
+
+## As built (P3, `feat/partner-share-p3`, stacked on P2)
+- **Frames** (`core/share/frames.ts`): the file text (already sealed by the code) is cut into `NSH1.<session>.<i>.<n>.<base64url chunk>` frames of 400 characters; the collector takes them in any order, with repeats, restarts on a new session, ignores foreign codes; a damaged stitch fails later at the file's checksum/AEAD. More than 150 frames: the screen says the file is easier.
+- **Show** (`pages/settings/ShareQr.tsx` `QrPlayer`): one QR (the existing `tools/qr` generator, error correction M) every 450 ms, pause and "next picture"; starts paused when motion is reduced. "Fertig gezeigt" counts the changes as handed over (like saving the file does).
+- **Read** (`QrScanner`): camera plus `BarcodeDetector` (Chromium; elsewhere the screen points to the file), progress "n von m Bildern", hands the text to the normal open flow, camera off on done, stop and unmount. Android needs the camera permission; hand tests Q1–Q5 in MANUAL-TESTS.
+- Tests: `core/share/frames.test.ts`, `pages/settings/ShareQr.test.tsx` (fake detector and camera: shuffled, repeated frames, camera released), `e2e/share.spec.ts` (frames run, pause, count as handed over).

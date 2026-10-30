@@ -56,16 +56,57 @@ test.describe('Spotify connector', () => {
     await ready(page, '/');
     const line = page.getByTestId('now-playing-line');
     await expect(line).toContainText('Testlied');
-    await expect(line.getByRole('button')).toHaveCount(0);
+    await expect(line.getByTestId('now-playing-toggle')).toHaveCount(0);
+    await expect(line.getByTestId('now-playing-next')).toHaveCount(0);
   });
 
-  test('nothing playing (204): the line is not there', async ({ page }) => {
+  test('nothing playing (204): the card gives way to one quiet row', async ({ page }) => {
     const mock = await mockSpotify(page);
     mock.player = () => ({ status: 204 });
     await seedConnected(page, ['show', 'control']);
     await ready(page, '/');
     await expect.poll(() => mock.api).toContain('GET /currently-playing');
     await expect(page.getByTestId('now-playing-line')).toHaveCount(0);
+    await expect(page.getByTestId('now-playing-idle')).toContainText(
+      'Spotify: gerade läuft nichts.',
+    );
+  });
+
+  test('the card is a widget: it opens the player (playlist, saved song, search) and can be switched off', async ({
+    page,
+  }) => {
+    const mock = await mockSpotify(page);
+    await seedConnected(page, ['show', 'control', 'playlists', 'library']);
+    await ready(page, '/');
+    await expect(page.getByTestId('now-playing-line')).toContainText('Testlied');
+    await page.getByTestId('now-playing-open').click();
+    const player = page.getByTestId('spotify-player');
+    await expect(player).toContainText('Auf Küche');
+    await player.getByRole('button', { name: 'Ruhe abspielen' }).click();
+    await expect
+      .poll(() =>
+        mock.api.some((c) => c.startsWith('PUT /play') && c.includes('spotify:playlist:pl2DEF')),
+      )
+      .toBe(true);
+    await player.getByRole('button', { name: 'Lieblingssongs' }).click();
+    await player.getByRole('button', { name: 'Lieblingslied abspielen' }).click();
+    await expect.poll(() => mock.api.some((c) => c.includes('spotify:track:lk1AAA'))).toBe(true);
+    await player.getByRole('button', { name: 'Suchen', exact: true }).first().click();
+    await player.getByLabel('Titel, Playlist oder Album suchen').fill('Feuer');
+    await player.getByRole('button', { name: 'Suchen' }).last().click();
+    await player.getByRole('button', { name: 'Gefundenes Lied abspielen' }).click();
+    await expect.poll(() => mock.api.some((c) => c.includes('spotify:track:trk9ZZ'))).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('spotify-player')).toHaveCount(0);
+
+    // Switched off on the Overview: gone, and nothing is read any more.
+    await page.getByRole('button', { name: 'Anpassen' }).click();
+    await page.getByRole('button', { name: 'Karten' }).click();
+    await page.getByRole('switch', { name: 'Läuft gerade (Spotify)' }).click();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Fertig' }).click();
+    await expect(page.getByTestId('now-playing-line')).toHaveCount(0);
+    await expect(page.getByTestId('now-playing-idle')).toHaveCount(0);
   });
 
   test('without Premium the controls go away with one quiet hint, the display stays', async ({
@@ -81,7 +122,8 @@ test.describe('Spotify connector', () => {
     const line = page.getByTestId('now-playing-line');
     await line.getByRole('button', { name: 'Pause' }).click();
     await expect(page.getByText('Steuern braucht Spotify Premium.')).toBeVisible();
-    await expect(line.getByRole('button')).toHaveCount(0);
+    await expect(line.getByTestId('now-playing-toggle')).toHaveCount(0);
+    await expect(line.getByTestId('now-playing-next')).toHaveCount(0);
     await expect(line).toContainText('Testlied');
   });
 

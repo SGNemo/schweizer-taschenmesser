@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useModuleStates } from '@/core/modules/activation';
-import { sumMinor } from '@/core/money';
+import { DEFAULT_CURRENCY, sumMinor } from '@/core/money';
 import { useSettings } from '@/core/settings/settings';
 import { endOfMonthStr, today } from '@/core/time/dates';
 // Sanctioned cross-module read access (see CLAUDE.md): only the public.ts of these two modules.
@@ -27,21 +27,26 @@ export function useFinanceData(): FinanceData | undefined {
  * What is really available: balance minus open invoices and subscription charges until the end
  * of the month. Parts of disabled modules (and of switched-off settings) are left out.
  */
-export function useAvailability(totalBalance: number | undefined) {
+export function useAvailability(
+  totalBalance: number | undefined,
+  currency: string = DEFAULT_CURRENCY,
+) {
   const states = useModuleStates();
   const [prefs] = useSettings('module.finance', settings.schema, settings.defaults);
   const useInvoices = Boolean(
     states?.invoices &&
     (prefs as { includeOpenInvoices?: boolean } | undefined)?.includeOpenInvoices,
   );
+  // Subscriptions are in euro only (for now): they count only against euro accounts.
   const useSubs = Boolean(
     states?.subscriptions &&
+    currency === DEFAULT_CURRENCY &&
     (prefs as { includeSubscriptions?: boolean } | undefined)?.includeSubscriptions,
   );
 
   const openInvoices = useLiveQuery(
-    async () => (useInvoices ? sumOpenInvoices() : 0),
-    [useInvoices],
+    async () => (useInvoices ? sumOpenInvoices(currency) : 0),
+    [useInvoices, currency],
   );
   const subscriptions = useLiveQuery(async () => {
     if (!useSubs) return 0;

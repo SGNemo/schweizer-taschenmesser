@@ -4,7 +4,7 @@ import { today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
 import { DueList } from '@/ui';
-import { openTotal, sortInvoices } from '../logic';
+import { openTotalText, sortInvoices } from '../logic';
 import { payWithUndo } from '../quickActions';
 import { invoiceRepo } from '../repo';
 
@@ -24,13 +24,13 @@ export default function DueInvoicesWidget() {
       emptyAction={{ label: t.homeEmpty.invoices, to: '/invoices?new=1' }}
       summary={
         open && open.length > 0
-          ? t.widgets.invoicesSummary(formatMoney(openTotal(open)), overdue)
+          ? t.widgets.invoicesSummary(openTotalText(open), overdue)
           : undefined
       }
       entries={rows.map(({ i, s }) => ({
         key: i.id,
         title: i.payee,
-        amount: formatMoney(i.amountMinor),
+        amount: formatMoney(i.amountMinor, i.currency),
         tone: s.tone,
         label: s.label,
         action: { label: `${t.invoices.markPaid}: ${i.payee}`, run: () => void payWithUndo(i.id) },
