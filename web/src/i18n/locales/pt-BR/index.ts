@@ -64,6 +64,7 @@ import { chat } from './chat';
 import { example } from './example';
 import { supporter } from './supporter';
 import { aiLabels } from './aiLabels';
+import { maps } from './maps';
 
 export const ptBR: Strings = {
   appName: 'Nemo',
@@ -131,4 +132,5 @@ export const ptBR: Strings = {
   example,
   supporter,
   aiLabels,
+  maps,
 };

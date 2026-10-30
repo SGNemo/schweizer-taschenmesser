@@ -1,0 +1,31 @@
+# Karten & Orte (module `maps`)
+
+Saved places and routes, a map and a place search; opens your map app for what Nemo does not do itself. Package 1 of 3 (below). Decisions: [decisions/maps.md](../decisions/maps.md). Rules: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md).
+
+## Behaviour
+- Module `web/src/modules/maps/`, off by default (Modul-Bibliothek), area *Planen*, wide layout. Page `/maps` with three views (`?view=places|routes|map`, default **Orte**).
+- **Orte** (`maps_place`: name, lat/lon, address, note, category, pinned) and **Routen** (`maps_route`: name, mode walk/bike/car/transit, from, to, up to 3 stops, note, pinned; ends are copied `{label, lat, lon}`, a deleted place never breaks a route). Rows have a menu: show on map, open in OpenStreetMap / Google Maps / Apple Karten (the phone's own `geo:` choice on Android), edit, delete (with undo). Routes show the straight-line distance (labelled "Luftlinie").
+- **Karte:** a hand-drawn slippy map (no map library): Web Mercator tiles as `<img>`, drag / pinch / wheel / double-click / arrow keys, +/− buttons, "Mein Standort" (browser geolocation, on click). Saved places are markers; a tap on the map picks a point; a search hit shows a card with "Als Ort speichern", "Route von hier / hierhin", "In Karten-App öffnen" and the coordinates. Pure maths in `logic.ts` (tested), `components/TileMap.tsx`.
+- **Search:** Nominatim-compatible (`geocode.ts`), runs on submit only, one request per 1.1 s, coordinates ("49.5981, 11.0044") are read locally without any request.
+- **Widget** (`widgets/PlacesWidget.tsx`, tiles): pinned places and routes first; a tap opens the place on the map or the route editor. Makes no request.
+- **Quick-Add** "Ort speichern" opens the map tab with the search field focused; `?open=<id>` opens a place (map + card) or a route (editor).
+- Settings (Module → Karten & Orte): tile URL template and search URL (https only, `{z}/{x}/{y}`; anything else falls back to OpenStreetMap, `settings.ts` `servicesOf`).
+
+## What leaves the device (data flow `maps`, one-time notice)
+| When | Sent | Never |
+|---|---|---|
+| the Karte tab is open | tile requests of the shown area (zoom and tile numbers) to `tile.openstreetmap.org` (or your tile server), IP visible | places, routes, notes |
+| a place search is submitted | the typed words and the UI language to `nominatim.openstreetmap.org` (or your service) | places, routes |
+| a link is clicked | the browser opens the map app with the coordinates in the address | – |
+Tiles go through the platform fetch (connection log reason "Karte und Ortssuche", "Netzwerk sperren" applies) and are shown as local `blob:` URLs (CSP `img-src` unchanged), kept in memory only (300 tiles, LRU). No `aiSchema`: places and routes never reach the assistant; the module is not in the data-API exclusion list but holds no secrets.
+
+## Attribution and usage policy
+"© OpenStreetMap-Mitwirkende" with a link is always on the map. OpenStreetMap's tile server is for light use; heavy use needs an own server (the setting exists for that). Whether the default fits a wide release stays the maintainer's call.
+
+## Packages
+1. **This one:** module, places, routes (saved, opened in apps), map, search.
+2. Planned: in-app routing (OSRM instances of FOSSGIS for foot / bike / car: distance, time, the line on the map), kept as an opt-in request.
+3. Planned: public transport (Transitous / MOTIS: connections by bus and train, times, changes) and saved connections.
+
+## Code and tests
+`modules/maps/{schema,repo,logic,geocode,tiles,settings,icons,seed}.ts`, `components/{TileMap,PlaceEditor,RouteEditor,EndpointPicker}.tsx`, `routes/MapsPage.tsx`, `widgets/`, `__tests__/` (maths, links, search parser, tile cache, page flows, widget, seed), `e2e/maps.spec.ts`, strings `t.maps` in 5 languages.
