@@ -193,6 +193,9 @@ describe('todos', () => {
       expect(lists.map((r) => r.candidate.label)).toEqual(['Einkäufe']);
       expect(task(first.rows, 'Bericht schreiben').data.listId).toBe('work');
       expect(task(first.rows, 'Käse').data.listId).toBe(lists[0]!.candidate.id);
+      // The tasks of a new list travel with it.
+      const newList = lists[0]!.candidate.id;
+      expect(first.rows.filter((r) => r.candidate.dependsOn === newList)).toHaveLength(2);
       await commitImport(first.manifest, {
         batchId: 'tb',
         importerId: 'file',

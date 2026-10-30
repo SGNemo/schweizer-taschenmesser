@@ -6,6 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - (none open)
 
 ## Heads-up (I am touching …)
+- 2026-10-30 · coordinator · follow-ups to merged PRs: `fix/dialog-discard-followups` (#298, `ui/Dialog.tsx` only: Esc at the question keeps editing, typing detector) and `fix/import-invalid-dependency` (`core/importer/ImportPreview.tsx` toggleRow guard). Review points still open on #290 (wording, toast count, save() catch, dataApi:false scope), #294 (multi-day keys, week window), #296 (30-day months, permanent 'Frist vorbei'), #288 (hard rate-limit tier), #287 (submit test): their chats, not mine.
 - [ ] 2026-10-29 · `fix/import-dependent-rows` · small additive `dependsOn` on `ImportCandidate` (`core/importer/{types,ImportPreview,batches}`), todos importer sets it for new lists.
 - 2026-10-29 · `feat/focus2-bookmarks-tiles` (done, PR open) · Lesezeichen tile view (`?view=links`): `modules/bookmarks/routes/BookmarksPage.tsx` (tiles part), `components/BookmarkRow.tsx` (menu helper), bookmarks e2e (`links.spec.ts`, `lists.spec.ts`, `bookmarks.spec.ts`).
 - [x] 2026-10-29 · `feat/weather-detail` (done, PR open) · weather preview v2 (graph, good/bad rating, more details, wide dialog): `core/weather/*`, `home/WeatherPreview*`, new `home/WeatherChart.tsx`, `strings.weather.ts`, additive icon names in `ui/icons.tsx` (cloud*, wind, droplets, sunrise, sunset, umbrella), `e2e/weather.spec.ts`, docs/features/weather.md.
