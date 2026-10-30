@@ -1,5 +1,6 @@
 import { deleteBlob, putBlob } from '@/core/blobs';
 import { isLiveOrRestorable } from '@/core/db/trash';
+import { trashRetentionMs } from '@/core/trash/settings';
 import { now } from '@/core/time/now';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
@@ -41,7 +42,8 @@ export async function deleteDocument(id: string): Promise<void> {
 }
 
 /** Ids whose files must be kept: active documents and ones deleted within the restore window. */
-export async function keepBlobIds(at: number = now()): Promise<Set<string>> {
+export async function keepBlobIds(at: number = now(), retentionMs?: number): Promise<Set<string>> {
+  const window = retentionMs ?? (await trashRetentionMs());
   const all = await documentRepo.table.toArray();
-  return new Set(all.filter((d) => isLiveOrRestorable(d.deletedAt, at)).map((d) => d.id));
+  return new Set(all.filter((d) => isLiveOrRestorable(d.deletedAt, at, window)).map((d) => d.id));
 }
