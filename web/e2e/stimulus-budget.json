@@ -7,156 +7,170 @@
   "pages": {
     "desktop--bookmarks": {
       "height": 800,
-      "buttons": 64,
-      "links": 57,
-      "icons": 88,
+      "buttons": 65,
+      "links": 58,
+      "icons": 90,
       "firstScreenActions": 62
+    },
+    "desktop--bookmarks-links": {
+      "height": 800,
+      "buttons": 59,
+      "links": 27,
+      "icons": 71,
+      "firstScreenActions": 59
     },
     "desktop--budgets": {
       "height": 800,
-      "buttons": 39,
-      "links": 27,
-      "icons": 55,
+      "buttons": 40,
+      "links": 28,
+      "icons": 57,
       "firstScreenActions": 51
     },
     "desktop--calendar": {
       "height": 800,
-      "buttons": 264,
-      "links": 26,
-      "icons": 55,
-      "firstScreenActions": 132
+      "buttons": 265,
+      "links": 28,
+      "icons": 57,
+      "firstScreenActions": 133
     },
     "desktop--finance": {
       "height": 800,
-      "buttons": 76,
-      "links": 27,
-      "icons": 75,
+      "buttons": 77,
+      "links": 28,
+      "icons": 77,
       "firstScreenActions": 57
     },
     "desktop--home": {
       "height": 800,
-      "buttons": 36,
-      "links": 37,
-      "icons": 63,
-      "firstScreenActions": 51
+      "buttons": 37,
+      "links": 38,
+      "icons": 65,
+      "firstScreenActions": 53
     },
     "desktop--invoices": {
       "height": 800,
-      "buttons": 56,
-      "links": 27,
-      "icons": 67,
+      "buttons": 57,
+      "links": 28,
+      "icons": 69,
       "firstScreenActions": 65
     },
     "desktop--lists": {
       "height": 800,
-      "buttons": 65,
-      "links": 25,
-      "icons": 70,
+      "buttons": 66,
+      "links": 26,
+      "icons": 72,
       "firstScreenActions": 67
     },
     "desktop--notes": {
       "height": 800,
-      "buttons": 40,
-      "links": 26,
-      "icons": 58,
+      "buttons": 41,
+      "links": 27,
+      "icons": 60,
       "firstScreenActions": 50
     },
     "desktop--pantry": {
       "height": 800,
-      "buttons": 82,
-      "links": 25,
-      "icons": 69,
+      "buttons": 83,
+      "links": 26,
+      "icons": 71,
       "firstScreenActions": 62
     },
     "desktop--people": {
       "height": 800,
-      "buttons": 88,
-      "links": 26,
-      "icons": 83,
-      "firstScreenActions": 63
+      "buttons": 89,
+      "links": 28,
+      "icons": 85,
+      "firstScreenActions": 64
     },
     "desktop--reminders": {
       "height": 800,
-      "buttons": 81,
-      "links": 27,
-      "icons": 77,
-      "firstScreenActions": 60
+      "buttons": 82,
+      "links": 29,
+      "icons": 79,
+      "firstScreenActions": 61
     },
     "desktop--settings": {
       "height": 800,
-      "buttons": 54,
-      "links": 35,
-      "icons": 67,
+      "buttons": 55,
+      "links": 36,
+      "icons": 69,
       "firstScreenActions": 55
     },
     "desktop--settings-benachrichtigungen": {
       "height": 800,
-      "buttons": 56,
-      "links": 35,
-      "icons": 65,
-      "firstScreenActions": 56
+      "buttons": 61,
+      "links": 36,
+      "icons": 67,
+      "firstScreenActions": 57
     },
     "desktop--settings-darstellung": {
       "height": 800,
-      "buttons": 115,
-      "links": 35,
-      "icons": 67,
+      "buttons": 117,
+      "links": 36,
+      "icons": 69,
       "firstScreenActions": 79
     },
     "desktop--settings-module": {
       "height": 800,
-      "buttons": 73,
-      "links": 36,
-      "icons": 65,
+      "buttons": 76,
+      "links": 37,
+      "icons": 67,
       "firstScreenActions": 56
     },
     "desktop--subscriptions": {
       "height": 800,
-      "buttons": 57,
-      "links": 27,
-      "icons": 64,
+      "buttons": 58,
+      "links": 28,
+      "icons": 66,
       "firstScreenActions": 69
     },
     "desktop--todos": {
       "height": 800,
-      "buttons": 129,
-      "links": 26,
-      "icons": 102,
-      "firstScreenActions": 61
+      "buttons": 130,
+      "links": 28,
+      "icons": 104,
+      "firstScreenActions": 62
     },
     "desktop--vault": {
       "height": 800,
-      "buttons": 71,
-      "links": 25,
-      "icons": 55,
+      "buttons": 72,
+      "links": 26,
+      "icons": 57,
       "firstScreenActions": 55
     },
     "phone--bookmarks": {
-      "height": 2782,
+      "height": 2807,
       "buttons": 42,
       "links": 41,
-      "icons": 45,
-      "firstScreenActions": 36
+      "icons": 46,
+      "firstScreenActions": 33
+    },
+    "phone--bookmarks-links": {
+      "height": 1855,
+      "buttons": 36,
+      "links": 10,
+      "icons": 27,
+      "firstScreenActions": 29
     },
     "phone--budgets": {
-      "height": 1254,
+      "height": 1302,
       "buttons": 17,
       "links": 11,
-      "icons": 12,
+      "icons": 13,
       "firstScreenActions": 25
     },
     "phone--calendar": {
       "height": 1122,
       "buttons": 51,
-      "links": 10,
+      "links": 11,
       "icons": 13,
-      "firstScreenActions": 60
+      "firstScreenActions": 61
     },
     "phone--finance": {
-      "height": 1752,
+      "height": 1800,
       "buttons": 15,
       "links": 11,
-      "icons": 14,
+      "icons": 15,
       "firstScreenActions": 23
     },
     "phone--home": {
@@ -167,94 +181,94 @@
       "firstScreenActions": 25
     },
     "phone--invoices": {
-      "height": 1733,
+      "height": 1707,
       "buttons": 34,
       "links": 11,
-      "icons": 31,
-      "firstScreenActions": 34
+      "icons": 32,
+      "firstScreenActions": 29
     },
     "phone--lists": {
       "height": 1396,
       "buttons": 43,
       "links": 9,
-      "icons": 27,
-      "firstScreenActions": 43
+      "icons": 28,
+      "firstScreenActions": 41
     },
     "phone--notes": {
-      "height": 1697,
+      "height": 1745,
       "buttons": 18,
       "links": 10,
-      "icons": 15,
+      "icons": 16,
       "firstScreenActions": 22
     },
     "phone--pantry": {
       "height": 2153,
       "buttons": 60,
       "links": 9,
-      "icons": 26,
-      "firstScreenActions": 37
-    },
-    "phone--people": {
-      "height": 3381,
-      "buttons": 66,
-      "links": 10,
-      "icons": 40,
-      "firstScreenActions": 29
-    },
-    "phone--reminders": {
-      "height": 2265,
-      "buttons": 59,
-      "links": 11,
-      "icons": 34,
+      "icons": 27,
       "firstScreenActions": 36
     },
+    "phone--people": {
+      "height": 3429,
+      "buttons": 66,
+      "links": 11,
+      "icons": 41,
+      "firstScreenActions": 30
+    },
+    "phone--reminders": {
+      "height": 2244,
+      "buttons": 59,
+      "links": 12,
+      "icons": 35,
+      "firstScreenActions": 35
+    },
     "phone--settings": {
-      "height": 1611,
+      "height": 1659,
       "buttons": 15,
       "links": 19,
-      "icons": 35,
+      "icons": 36,
       "firstScreenActions": 26
     },
     "phone--settings-benachrichtigungen": {
-      "height": 2091,
-      "buttons": 27,
+      "height": 2173,
+      "buttons": 28,
       "links": 7,
-      "icons": 10,
-      "firstScreenActions": 14
+      "icons": 11,
+      "firstScreenActions": 15
     },
     "phone--settings-darstellung": {
-      "height": 1787,
-      "buttons": 83,
+      "height": 1835,
+      "buttons": 84,
       "links": 7,
-      "icons": 12,
+      "icons": 13,
       "firstScreenActions": 38
     },
     "phone--settings-module": {
-      "height": 3835,
-      "buttons": 41,
+      "height": 4456,
+      "buttons": 43,
       "links": 8,
-      "icons": 10,
-      "firstScreenActions": 15
+      "icons": 11,
+      "firstScreenActions": 14
     },
     "phone--subscriptions": {
-      "height": 1663,
+      "height": 1642,
       "buttons": 35,
       "links": 11,
-      "icons": 21,
-      "firstScreenActions": 39
+      "icons": 22,
+      "firstScreenActions": 33
     },
     "phone--todos": {
       "height": 4015,
       "buttons": 106,
-      "links": 10,
-      "icons": 58,
+      "links": 11,
+      "icons": 59,
       "firstScreenActions": 30
     },
     "phone--vault": {
-      "height": 4606,
+      "height": 4766,
       "buttons": 49,
       "links": 9,
-      "icons": 12,
+      "icons": 13,
       "firstScreenActions": 26
     }
   }
