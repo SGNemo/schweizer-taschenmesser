@@ -15,6 +15,8 @@ export interface SharePair {
   /** What this device calls the other side. */
   name: string;
   modules: string[];
+  /** Per module: only these lists are shared (`scopes.ts`); absent = the whole module. */
+  lists?: Record<string, string[]>;
   createdAt: number;
   /** Newest stamp already handed over in a file this device saved. */
   sentUpto?: string;
@@ -52,7 +54,7 @@ export async function updatePair(
 
 /** A new connection on this side: returns the code to tell the other person. */
 export async function createPair(
-  input: { name: string; modules: string[] },
+  input: { name: string; modules: string[]; lists?: Record<string, string[]> },
   database: TaschenmesserDB = defaultDb,
 ): Promise<{ pair: SharePair; code: string }> {
   const code = await newPairingCode();
@@ -60,6 +62,7 @@ export async function createPair(
     id: randomDeviceId(),
     name: input.name.trim() || '?',
     modules: input.modules,
+    ...(input.lists ? { lists: input.lists } : {}),
     createdAt: now(),
   };
   await savePairs([...(await loadPairs(database)), pair], database);
