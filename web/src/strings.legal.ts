@@ -95,7 +95,7 @@ export const tLegal = defineBundle(
       },
       weather: {
         title: 'Wetter-Zeile (optional)',
-        what: 'Beim Suchen eines Ortes der eingegebene Ortsname; danach die auf etwa einen Kilometer gerundete Position des gewählten Ortes (für die Vorhersage der nächsten 7 Tage). Keine Einträge, keine Konto- oder Gerätedaten; open-meteo.com sieht deine IP-Adresse und die üblichen Verbindungsdaten.',
+        what: 'Beim Suchen eines Ortes der eingegebene Ortsname; danach die auf etwa einen Kilometer gerundete Position des gewählten Ortes (für die Vorhersage der nächsten 7 Tage sowie Luftqualität und Pollen). Keine Einträge, keine Konto- oder Gerätedaten; open-meteo.com sieht deine IP-Adresse und die üblichen Verbindungsdaten.',
         to: 'open-meteo.com (Geocoding und Vorhersage; kostenlos, ohne Schlüssel).',
         when: 'Nur wenn du einen Ort wählst: beim Suchen und danach etwa alle 30 Minuten, solange die Übersicht offen ist. Ohne Ort passiert nichts; abschaltbar unter Verbindungen → Wetter.',
       },
@@ -280,7 +280,7 @@ export const tLegal = defineBundle(
         },
         weather: {
           title: 'Weather line (optional)',
-          what: 'When you search for a place, the place name you typed; after that, the position of the chosen place rounded to about a kilometre (for the forecast of the next 7 days). No entries, no account or device data; open-meteo.com sees your IP address and the usual connection data.',
+          what: 'When you search for a place, the place name you typed; after that, the position of the chosen place rounded to about a kilometre (for the forecast of the next 7 days, plus air quality and pollen). No entries, no account or device data; open-meteo.com sees your IP address and the usual connection data.',
           to: 'open-meteo.com (geocoding and forecast; free, no key).',
           when: 'Only when you choose a place: when you search and then about every 30 minutes while the Overview is open. Without a place nothing happens; can be switched off under Connections → Weather.',
         },
