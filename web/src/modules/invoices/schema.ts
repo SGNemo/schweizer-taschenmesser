@@ -9,6 +9,12 @@ export const invoiceSchema = z.object({
   payee: z.string().min(1),
   /** Positive amount in cents. */
   amountMinor: z.number().int().min(1),
+  /** ISO 4217 code of the amount; none means euro (since version 3). */
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .optional()
+    .meta({ description: 'ISO 4217, z. B. EUR, USD, MXN; ohne Angabe EUR' }),
   dueDate: z.string().regex(DATE_RE),
   status: z.enum(['open', 'paid']).default('open'),
   /** Set while status is "paid", 'YYYY-MM-DD'. */

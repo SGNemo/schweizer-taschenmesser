@@ -229,7 +229,7 @@ test.describe('Dashboard', () => {
     const widget = page.getByTestId('widget-todos:next');
     await expect(widget.getByTestId('today-until')).toContainText('in 1 Std 30 Min');
     await expect(widget.getByTestId('next-card')).toContainText('Bericht senden');
-    await expect(widget.getByTestId('today-appointments')).toContainText('Teammeeting');
+    await expect(page.getByTestId('agenda-today')).toContainText('Teammeeting');
     await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
     await expect(page.getByTestId('widget-todos:open')).toContainText('1 offen');
   });

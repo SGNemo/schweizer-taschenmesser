@@ -81,6 +81,9 @@ export interface Mock {
   player: () => { status: number; body?: unknown };
   command: (name: string) => { status: number; body?: unknown };
   playlists: () => { status: number; body?: unknown };
+  search: () => { status: number; body?: unknown };
+  liked: () => { status: number; body?: unknown };
+  state: () => { status: number; body?: unknown };
 }
 
 /** Mocks the token endpoint and the Web API; `api` collects "METHOD path" of every call. */
@@ -89,6 +92,28 @@ export async function mockSpotify(page: Page): Promise<Mock> {
     api: [],
     player: () => ({ status: 200, body: TRACK }),
     command: () => ({ status: 204 }),
+    search: () => ({
+      status: 200,
+      body: {
+        tracks: { items: [{ id: 'trk9ZZ', name: 'Gefundenes Lied', artists: [{ name: 'Band' }] }] },
+        playlists: { items: [] },
+        albums: { items: [] },
+      },
+    }),
+    liked: () => ({
+      status: 200,
+      body: {
+        items: [{ track: { id: 'lk1AAA', name: 'Lieblingslied', artists: [{ name: 'Band' }] } }],
+      },
+    }),
+    state: () => ({
+      status: 200,
+      body: {
+        device: { name: 'Küche', volume_percent: 40 },
+        shuffle_state: false,
+        repeat_state: 'off',
+      },
+    }),
     playlists: () => ({
       status: 200,
       body: {
@@ -117,7 +142,13 @@ export async function mockSpotify(page: Page): Promise<Mock> {
         ? mock.player()
         : path === '/v1/me/playlists'
           ? mock.playlists()
-          : mock.command(path.slice(1));
+          : path === '/v1/search'
+            ? mock.search()
+            : path === '/v1/me/tracks'
+              ? mock.liked()
+              : path === '' && request.method() === 'GET'
+                ? mock.state()
+                : mock.command(path.slice(1));
     return route.fulfill({
       status: reply.status,
       headers: CORS,

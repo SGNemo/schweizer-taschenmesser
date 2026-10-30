@@ -200,6 +200,14 @@ function ProviderCard({
       {reach && !reach.found ? (
         <p className={styles.muted} role="status">
           {ollamaHelp(entry, 'unavailable')}
+          {getPlatform().isNative ? (
+            <>
+              {' '}
+              <Button onClick={() => void getPlatform().app.openUrl('https://ollama.com/download')}>
+                {s.ollamaDownload}
+              </Button>
+            </>
+          ) : null}
         </p>
       ) : null}
       {cooling && !(reach && !reach.found) ? (

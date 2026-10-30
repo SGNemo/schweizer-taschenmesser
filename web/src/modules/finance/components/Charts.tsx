@@ -10,6 +10,7 @@ import {
   type TooltipContentProps,
 } from 'recharts';
 import { formatMoney, formatMoneyAxis } from '@/core/money';
+import { useCurrency } from '../currency';
 import { useMediaQuery } from '@/ui';
 import { t } from '@/strings';
 import type { CategoryTotal, MonthPoint } from '../logic';
@@ -23,6 +24,7 @@ const ROW = 40;
 const shorten = (s: string) => (s.length > 16 ? `${s.slice(0, 15)}…` : s);
 
 function CategoryTooltip({ active, payload }: TooltipContentProps) {
+  const currency = useCurrency();
   const row = payload?.[0]?.payload as CategoryTotal | undefined;
   if (!active || !row) return null;
   return (
@@ -30,7 +32,7 @@ function CategoryTooltip({ active, payload }: TooltipContentProps) {
       <div className={styles.tooltipTitle}>{row.name}</div>
       <div className={styles.tooltipRow}>
         <span className={styles.lineKey} style={{ background: 'var(--viz-1)' }} />
-        <span className={styles.tooltipValue}>{formatMoney(row.amountMinor)}</span>
+        <span className={styles.tooltipValue}>{formatMoney(row.amountMinor, currency)}</span>
       </div>
     </div>
   );
@@ -41,6 +43,7 @@ function CategoryTooltip({ active, payload }: TooltipContentProps) {
  * size, value at the bar tip. Hit target = the bar; the table twin carries every value.
  */
 export function CategoryBars({ rows }: { rows: CategoryTotal[] }) {
+  const currency = useCurrency();
   const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
   return (
     <div style={{ height: rows.length * ROW + 8 }} data-testid="chart-categories">
@@ -76,7 +79,7 @@ export function CategoryBars({ rows }: { rows: CategoryTotal[] }) {
             <LabelList
               dataKey="amountMinor"
               position="right"
-              formatter={(v: unknown) => formatMoney(Number(v))}
+              formatter={(v: unknown) => formatMoney(Number(v), currency)}
               fill="var(--text)"
               fontSize={12}
             />
@@ -105,6 +108,7 @@ const SERIES = [
 ] as const;
 
 function TrendTooltip({ active, payload }: TooltipContentProps) {
+  const currency = useCurrency();
   const point = payload?.[0]?.payload as MonthPoint | undefined;
   if (!active || !point) return null;
   return (
@@ -113,7 +117,7 @@ function TrendTooltip({ active, payload }: TooltipContentProps) {
       {SERIES.map((s) => (
         <div key={s.key} className={styles.tooltipRow}>
           <span className={styles.lineKey} style={{ background: s.color }} />
-          <span className={styles.tooltipValue}>{formatMoney(point[s.key])}</span>
+          <span className={styles.tooltipValue}>{formatMoney(point[s.key], currency)}</span>
           <span className={styles.tooltipName}>{s.name}</span>
         </div>
       ))}
@@ -180,6 +184,7 @@ export function TrendColumns({ points }: { points: MonthPoint[] }) {
 
 /** Table twin of the category chart (every value reachable without hover). */
 export function CategoryTable({ rows }: { rows: CategoryTotal[] }) {
+  const currency = useCurrency();
   return (
     <table className={styles.table} data-testid="table-categories">
       <thead>
@@ -194,7 +199,7 @@ export function CategoryTable({ rows }: { rows: CategoryTotal[] }) {
         {rows.map((r) => (
           <tr key={r.categoryId ?? r.name}>
             <td>{r.name}</td>
-            <td className={styles.num}>{formatMoney(r.amountMinor)}</td>
+            <td className={styles.num}>{formatMoney(r.amountMinor, currency)}</td>
           </tr>
         ))}
       </tbody>
@@ -204,6 +209,7 @@ export function CategoryTable({ rows }: { rows: CategoryTotal[] }) {
 
 /** Table twin of the trend chart. */
 export function TrendTable({ points }: { points: MonthPoint[] }) {
+  const currency = useCurrency();
   return (
     <table className={styles.table} data-testid="table-trend">
       <thead>
@@ -224,9 +230,9 @@ export function TrendTable({ points }: { points: MonthPoint[] }) {
         {points.map((p) => (
           <tr key={p.month}>
             <td>{p.label}</td>
-            <td className={styles.num}>{formatMoney(p.income)}</td>
-            <td className={styles.num}>{formatMoney(p.expense)}</td>
-            <td className={styles.num}>{formatMoney(p.net)}</td>
+            <td className={styles.num}>{formatMoney(p.income, currency)}</td>
+            <td className={styles.num}>{formatMoney(p.expense, currency)}</td>
+            <td className={styles.num}>{formatMoney(p.net, currency)}</td>
           </tr>
         ))}
       </tbody>
