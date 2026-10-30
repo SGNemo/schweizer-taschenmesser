@@ -21,17 +21,20 @@ export async function listExpenseCategories(): Promise<ExpenseCategory[]> {
 
 /**
  * Expenses (cents) of a month ('YYYY-MM') per category id; uncategorised bookings use the key ''.
- * Only euro accounts count: budgets are in euro and nothing is converted.
+ * Only accounts in `currency` (default euro) count: nothing is converted.
  */
-export async function expensesByCategory(month: string): Promise<Map<string, number>> {
+export async function expensesByCategory(
+  month: string,
+  currency: string = DEFAULT_CURRENCY,
+): Promise<Map<string, number>> {
   const sums = new Map<string, number>();
-  const euroAccounts = new Set(
+  const accountIds = new Set(
     (await accountRepo.active().toArray())
-      .filter((a) => currencyOf(a) === DEFAULT_CURRENCY)
+      .filter((a) => currencyOf(a) === currency)
       .map((a) => a.id),
   );
   for (const tx of await transactionRepo.active().toArray()) {
-    if (tx.kind !== 'expense' || monthOf(tx.date) !== month || !euroAccounts.has(tx.accountId))
+    if (tx.kind !== 'expense' || monthOf(tx.date) !== month || !accountIds.has(tx.accountId))
       continue;
     const key = tx.categoryId ?? '';
     sums.set(key, (sums.get(key) ?? 0) + tx.amountMinor);

@@ -48,3 +48,28 @@ test('an invoice can be in another currency; the open total lists each currency'
   await expect(page.getByTestId('open-total')).toContainText(/USD|\$/);
   await expect(page.getByRole('list').getByText(/1[.,]200[.,]00/)).toBeVisible();
 });
+
+test('a subscription in another currency gets its own total next to the euro one', async ({
+  page,
+}) => {
+  await ready(page, '/subscriptions?new=1');
+  let dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  await dialog.getByLabel('Name').fill('Streaming');
+  await dialog.getByLabel('Betrag').fill('12,99');
+  await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
+  await save(page);
+
+  await ready(page, '/subscriptions?new=1');
+  dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  await dialog.getByLabel('Name').fill('Gym Cancún');
+  await dialog.getByLabel('Betrag').fill('600,00');
+  await dialog.getByLabel('Abbuchung am').fill('2026-10-01');
+  await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
+  await dialog.getByLabel('Währung', { exact: true }).selectOption('MXN');
+  await save(page);
+
+  // Euro first, then pesos; the two are never added together.
+  await expect(page.getByTestId('total-month')).toHaveText(/12,99\s€/);
+  await expect(page.getByTestId('total-month')).toContainText(/MXN|MX\$/);
+  await expect(page.getByTestId('total-month')).toHaveText(/600[.,]00/);
+});

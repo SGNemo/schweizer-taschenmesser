@@ -1,5 +1,5 @@
 import { loadModuleStates } from '@/core/modules/activation';
-import { currencyOf, DEFAULT_CURRENCY, formatMoney, sumMinor } from '@/core/money';
+import { currencyOf, formatMoney, sumMinor } from '@/core/money';
 import { getSettings } from '@/core/settings/settings';
 import type { AiComputedResult } from '@/core/modules/types';
 import { endOfMonthStr } from '@/core/time/dates';
@@ -30,13 +30,6 @@ export default async function compute(
 
   const useInvoices = Boolean(states.invoices && prefs.includeOpenInvoices);
   const useSubs = Boolean(states.subscriptions && prefs.includeSubscriptions);
-  const subs = useSubs
-    ? sumMinor(
-        (await listSubscriptionCharges(ctx.today, endOfMonthStr(ctx.today))).map(
-          (c) => c.amountMinor,
-        ),
-      )
-    : 0;
 
   const lines: AiComputedResult['lines'] = [
     ...(accounts.length > 1
@@ -50,8 +43,13 @@ export default async function compute(
     const group = accounts.filter((a) => currencyOf(a) === currency);
     const total = sumMinor(group.map((a) => perAccount.get(a.id) ?? 0));
     const invoices = useInvoices ? await sumOpenInvoices(currency) : 0;
-    // Subscriptions are in euro only (for now).
-    const subsHere = currency === DEFAULT_CURRENCY ? subs : 0;
+    const subsHere = useSubs
+      ? sumMinor(
+          (await listSubscriptionCharges(ctx.today, endOfMonthStr(ctx.today), currency)).map(
+            (c) => c.amountMinor,
+          ),
+        )
+      : 0;
     const suffix = many ? ` (${currency})` : '';
     lines.push({ label: `${t.finance.balance}${suffix}`, value: formatMoney(total, currency) });
     if (invoices > 0 || subsHere > 0) {

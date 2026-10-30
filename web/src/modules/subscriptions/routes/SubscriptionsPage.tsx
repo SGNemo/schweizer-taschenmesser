@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { formatMoney } from '@/core/money';
+import { currencyOf, formatMoney, formatTotals } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { daysBetween, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo, deleteWithUndo } from '@/core/undo/withToast';
@@ -25,7 +25,8 @@ import {
   nextCharge,
   recentIncrease,
   sortSubscriptions,
-  totals,
+  pickTotals,
+  totalsByCurrency,
 } from '../logic';
 import { subscriptionRepo } from '../repo';
 import { tDeadline } from '@/strings.deadline';
@@ -52,7 +53,7 @@ export default function SubscriptionsPage() {
     if (params.get('new')) setParams({}, { replace: true });
   };
 
-  const sums = totals(subs ?? [], day);
+  const sums = totalsByCurrency(subs ?? [], day);
 
   return (
     <>
@@ -69,13 +70,13 @@ export default function SubscriptionsPage() {
         <div className={styles.stat}>
           <span className={styles.statLabel}>{t.subscriptions.perMonth}</span>
           <span className={styles.statValue} data-testid="total-month">
-            {formatMoney(sums.monthly)}
+            {formatTotals(pickTotals(sums, 'monthly'))}
           </span>
         </div>
         <div className={styles.stat}>
           <span className={styles.statLabel}>{t.subscriptions.perYear}</span>
           <span className={styles.statValue} data-testid="total-year">
-            {formatMoney(sums.yearly)}
+            {formatTotals(pickTotals(sums, 'yearly'))}
           </span>
         </div>
       </div>
@@ -142,7 +143,7 @@ export default function SubscriptionsPage() {
               ]}
               end={
                 <>
-                  <span className={styles.amount}>{formatMoney(s.amountMinor)}</span>
+                  <span className={styles.amount}>{formatMoney(s.amountMinor, currencyOf(s))}</span>
                   <Switch
                     label={`${s.name}: ${t.subscriptions.active}`}
                     labelHidden

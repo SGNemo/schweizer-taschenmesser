@@ -5,11 +5,23 @@ import { DATE_RE } from '@/core/time/dates';
 export const budgetSchema = z.object({
   categoryId: z.string().min(1),
   monthlyLimitMinor: z.number().int().min(1),
+  /** ISO 4217 code of the amount; none means euro (since version 2). */
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .optional()
+    .meta({ description: 'ISO 4217, z. B. EUR, USD, MXN; ohne Angabe EUR' }),
 });
 
 export const goalSchema = z.object({
   name: z.string().min(1),
   targetMinor: z.number().int().min(1),
+  /** ISO 4217 code of the amount; none means euro (since version 2). */
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .optional()
+    .meta({ description: 'ISO 4217, z. B. EUR, USD, MXN; ohne Angabe EUR' }),
   deadline: z.string().regex(DATE_RE).optional(),
   note: z.string().optional(),
 });

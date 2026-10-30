@@ -13,7 +13,7 @@ Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-S
 Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
-Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos und Budgets bleiben Euro.
+Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos, Budgets und Sparziele haben dasselbe optionale `currency` (`feat/qa-currency-subs-budgets`), Summen je Währung.
 Website in fünf Sprachen (`feat/site-languages`): /es, /fr, /pt-br mit eigenen Texten; Screenshots bleiben deutsch, bis die Testdaten übersetzt sind.
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).

@@ -52,4 +52,26 @@ describe('finance public read API', () => {
     await spend('mxn', 99999);
     expect(Object.fromEntries(await expensesByCategory('2026-09'))).toEqual({ food: 1000 });
   });
+
+  it('sums the asked currency only', async () => {
+    await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 }, { id: 'eur' });
+    await accountRepo.create(
+      { name: 'Peso', openingBalanceMinor: 0, currency: 'MXN', order: 1 },
+      { id: 'mxn' },
+    );
+    for (const [accountId, amountMinor] of [
+      ['eur', 1000],
+      ['mxn', 99999],
+    ] as const)
+      await transactionRepo.create({
+        accountId,
+        kind: 'expense',
+        amountMinor,
+        date: '2026-09-10',
+        categoryId: 'food',
+      } as never);
+    expect(Object.fromEntries(await expensesByCategory('2026-09', 'MXN'))).toEqual({
+      food: 99999,
+    });
+  });
 });

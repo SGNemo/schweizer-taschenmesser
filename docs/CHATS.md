@@ -17,6 +17,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 | Localized test data (package 2: lists, todos, bookmarks, subscriptions, budgets, invoices) | `feat/qa-localized-seed-2` | `modules/{lists,todos,bookmarks,subscriptions,budgets,invoices}/seed.ts`, `core/seed/lang.test.ts` | in review | – | 2026-10-30 |
+| Currency on subscriptions, budgets, goals | `feat/qa-currency-subs-budgets` | `modules/{subscriptions,budgets}/*`, `finance/{public,summary,aiComputed}.ts`, `e2e/currency.spec.ts` | in review | – | 2026-10-30 |
 | Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.

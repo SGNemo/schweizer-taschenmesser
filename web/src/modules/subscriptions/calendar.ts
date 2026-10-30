@@ -1,4 +1,4 @@
-import { formatMoney } from '@/core/money';
+import { currencyOf, formatMoney } from '@/core/money';
 import type { CalendarItem, CalendarSource } from '@/core/modules/types';
 import { today } from '@/core/time/dates';
 import { tDeadline } from '@/strings.deadline';
@@ -17,7 +17,7 @@ const source: CalendarSource = async (range) => {
         id: `${s.id}:charge:${date}`,
         source: 'subscriptions',
         kind: 'subscription',
-        title: `${s.name} · ${formatMoney(s.amountMinor)}`,
+        title: `${s.name} · ${formatMoney(s.amountMinor, currencyOf(s))}`,
         date,
         allDay: true,
         to: '/subscriptions',

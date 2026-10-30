@@ -172,7 +172,7 @@ Per entry, `items[]` has a `status`: `ok`, `duplicate` (already there), `invalid
 ### 6. Entry format
 
 - Every entry names its collection: `"collection": "task"`. The fields are listed in `/v1/modules`.
-- Amounts as numbers (`12.5`). Accounts and invoices take an optional `"currency"` (ISO 4217 such as `"MXN"`, default EUR) that applies to their amounts; for the other collections `"currency"` may only be `"EUR"`.
+- Amounts as numbers (`12.5`). Accounts, invoices, subscriptions, budgets and goals take an optional `"currency"` (ISO 4217 such as `"MXN"`, default EUR) that applies to their amounts; for the other collections `"currency"` may only be `"EUR"`.
 - Dates `YYYY-MM-DD`, times `HH:mm`.
 - New entries **without** `id` and without timestamps; the app assigns them.
 - References (for example `listId`, `accountId`): title of an existing entry, its `id`, or `"@name"` if an entry

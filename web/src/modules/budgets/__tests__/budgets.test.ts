@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { validateManifest } from '@/core/modules/registry';
+import { spentOf, type SpentByCurrency } from '../data';
 import { budgetStatus, goalProgress } from '../logic';
 import manifest from '../manifest';
 import { budgetRepo, deleteGoal, depositRepo, goalRepo } from '../repo';
@@ -95,5 +96,27 @@ describe('budgets module', () => {
     expect((await goalRepo.active().toArray()).map((g) => g.name)).toEqual(['B']);
     expect((await depositRepo.active().toArray()).map((d) => d.amountMinor)).toEqual([200]);
     expect(await budgetRepo.active().count()).toBe(1);
+  });
+});
+
+describe('budgets and goals in another currency', () => {
+  it("takes the spending of the budget's own currency; none means euro", () => {
+    const spent: SpentByCurrency = new Map([
+      ['EUR', new Map([['food', 1000]])],
+      ['MXN', new Map([['food', 99999]])],
+    ]);
+    expect(spentOf(spent, { categoryId: 'food' })).toBe(1000);
+    expect(spentOf(spent, { categoryId: 'food', currency: 'MXN' })).toBe(99999);
+    expect(spentOf(spent, { categoryId: 'home', currency: 'MXN' })).toBe(0);
+  });
+
+  it('stores an optional ISO code on budgets and goals', () => {
+    expect(
+      budgetSchema.parse({ categoryId: 'c', monthlyLimitMinor: 1, currency: 'MXN' }).currency,
+    ).toBe('MXN');
+    expect(goalSchema.parse({ name: 'Trip', targetMinor: 100 }).currency).toBeUndefined();
+    expect(goalSchema.safeParse({ name: 'Trip', targetMinor: 100, currency: 'peso' }).success).toBe(
+      false,
+    );
   });
 });
