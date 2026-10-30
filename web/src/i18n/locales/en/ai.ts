@@ -370,6 +370,10 @@ export const ai: Strings['ai'] = {
     ollamaHelpWeb: (origin: string) =>
       `Start Ollama and allow this app: set the environment variable OLLAMA_ORIGINS to ${origin} and restart Ollama. Then use “Test connection”.`,
     ollamaHelpNative: 'Start Ollama (port 11434), then test the connection again.',
+    statusRunning: 'Running',
+    statusDown: 'Not reachable',
+    statusModelMissing: (m: string) =>
+      `Running, but model “${m}” is missing. In a terminal: ollama pull ${m}`,
     baseUrlInsecure:
       'The address must start with https://. http:// only works for servers on this device or in your own network (e.g. localhost, 192.168.…).',
   },

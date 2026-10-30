@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { clearAiCache } from '@/core/ai/cache';
 import {
   addProvider,
@@ -13,6 +13,7 @@ import {
   type AiConfig,
   type ProviderEntry,
 } from '@/core/ai/config';
+import { detectOllama, type OllamaDetection } from '@/core/ai/detectOllama';
 import { PRESETS, getPreset, type PresetId } from '@/core/ai/providers/presets';
 import { coolingDown, clearCooldown } from '@/core/ai/router';
 import { testConnection, type ConnectionTest } from '@/core/ai/testConnection';
@@ -74,6 +75,15 @@ function ProviderCard({
   const [test, setTest] = useState<ConnectionTest | 'running' | undefined>();
   const [confirmRemove, setConfirmRemove] = useState(false);
   const preset = getPreset(entry.preset);
+  const [reach, setReach] = useState<OllamaDetection | undefined>();
+  useEffect(() => {
+    if (entry.kind !== 'ollama') return;
+    let live = true;
+    void detectOllama(undefined, 1500, entry.baseUrl || undefined).then((r) => live && setReach(r));
+    return () => {
+      live = false;
+    };
+  }, [entry.kind, entry.baseUrl, test]);
   const cooling = coolingDown(entry.id, now());
   const s = t.ai.settings;
 
@@ -140,6 +150,11 @@ function ProviderCard({
         <span className={styles.providerTitle}>
           {entry.label || preset.label}
           <Badge>{s.tiers[entry.tier]}</Badge>
+          {reach ? (
+            <Badge tone={reach.found ? undefined : 'accent'}>
+              {reach.found ? s.statusRunning : s.statusDown}
+            </Badge>
+          ) : null}
           {entry.mayTrainOnInputs ? <Badge tone="accent">{s.trainingNotice}</Badge> : null}
         </span>
         <span className={styles.row}>
@@ -177,7 +192,17 @@ function ProviderCard({
           : ''}
         {stats?.costUsd !== undefined ? ` · ${s.statsCost(usd(stats.costUsd))}` : ''}
       </p>
-      {cooling ? (
+      {reach?.found && !reach.models.includes(entry.model) ? (
+        <p className={styles.muted} role="status">
+          {s.statusModelMissing(entry.model)}
+        </p>
+      ) : null}
+      {reach && !reach.found ? (
+        <p className={styles.muted} role="status">
+          {ollamaHelp(entry, 'unavailable')}
+        </p>
+      ) : null}
+      {cooling && !(reach && !reach.found) ? (
         <p className={styles.muted} role="status">
           {s.coolingDown(Math.max(1, Math.ceil((cooling.until - now()) / 60_000)))}{' '}
           {s.errors[cooling.code] ?? ''} {ollamaHelp(entry, cooling.code) ?? ''}
