@@ -139,18 +139,20 @@ describe('missed cancellation deadline (B08)', () => {
     ).toBeUndefined();
   });
 
-  it('is never reported for monthly charges (it would always be "missed")', () => {
-    expect(
-      missedDeadline(
-        {
-          recurrence: { freq: 'monthly', interval: 1 },
-          startDate: '2026-01-15',
-          active: true,
-          cancelNoticeDays: 40,
-        },
-        '2026-09-29',
-      ),
-    ).toBeUndefined();
+  it('monthly with a long notice period counts only for a week after the deadline', () => {
+    const monthly = {
+      recurrence: { freq: 'monthly' as const, interval: 1 },
+      startDate: '2026-01-15',
+      active: true,
+      cancelNoticeDays: 40,
+    };
+    // charge 2026-10-15 has its deadline on 2026-09-05; charges are the 15th of every month
+    expect(missedDeadline(monthly, '2026-09-08')).toEqual({
+      deadline: '2026-09-05',
+      charge: '2026-10-15',
+    });
+    expect(missedDeadline(monthly, '2026-09-13')).toBeUndefined(); // 8 days over: no nagging all month
+    expect(missedDeadline(monthly, '2026-09-05')).toBeUndefined(); // the deadline day itself is still reachable
   });
 
   it('counts quarterly cycles', () => {

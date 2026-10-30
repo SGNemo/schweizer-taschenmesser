@@ -37,7 +37,7 @@ Outcome: all of 1–4 on time → Android text says closed app works; PWA text s
 
 ## Package B (built)
 - `vault/logic.ts` `statusOf` has a new status `missed`: deadline behind us, contract still runs (was shown as "Bald"/nothing). Shown as "Frist vorbei am …" in the list (neutral badge), the overview widget (muted tone, own summary line) and the calendar ("Frist vorbei: …").
-- `subscriptions/logic.ts` `missedDeadline`: only for cycles of a quarter or longer, active, not cancelled "zum" (a monthly charge would always be "missed"). List row + calendar; "Kündigen bis" is larger in the row and as a big line in the dialog (next reachable deadline).
+- `subscriptions/logic.ts` `missedDeadline`: for cycles of a quarter or longer the note stays until the charge; for monthly (long notice) it shows only for 7 days after the deadline (`MISSED_RECENT_DAYS`), otherwise it would be "missed" all the time; active, not cancelled "zum". List row + calendar; "Kündigen bis" is larger in the row and as a big line in the dialog (next reachable deadline).
 - `core/deadline/`: `NoticeField` (amount + days/weeks/months, stored as days, a month = 30 days) used by subscriptions and Unterlagen. `RecurrenceEditor` `followStartDay` hides the 31-day list for subscriptions (the first-charge date says the day; a rule that pins another day keeps the list).
 - Tests: `vault.test.ts`, `subscriptions.test.ts`, `core/deadline/notice.test.ts`, `e2e/deadline.spec.ts`. Hand test: MANUAL-TESTS F1–F3.
 
@@ -53,4 +53,5 @@ Outcome: all of 1–4 on time → Android text says closed app works; PWA text s
 - **Switch** "Gelöschtes 30 Tage aufbewahren" (synced scope `trash`, default on): off = list hidden, window shrinks to 10 minutes (`TRASH_GRACE_MS`, enough for the "Rückgängig" toast); files of Unterlagen follow the same window (`trashRetentionMs`).
 - Tests: `core/trash/trash.test.ts`, `core/db/trash.test.ts`, `e2e/recently-deleted.spec.ts`. Hand test: MANUAL-TESTS G1–G3.
 - Docs were stale: `purgeTombstones` (90 days after a successful sync) exists, "no tombstone GC" in `decisions/core.md`/`sync-backup.md`/STATUS is outdated.
+- **Follow-up (feat/trash-more-modules):** the allow-list now also covers ToDos, notes, bookmarks, lists, pantry items, people, gifts, invoices, budgets and savings goals. Left out on purpose: list items and bank transactions (bulk data), caches, and `accounts` (never).
 

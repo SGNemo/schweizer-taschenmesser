@@ -103,7 +103,7 @@ export const tLegal = defineBundle(
         title: 'Karten & Orte (optional)',
         what: 'Beim Öffnen der Karte die Kartenkacheln des gezeigten Ausschnitts (Zoomstufe und Kachelnummern, daraus lässt sich ablesen, welches Gebiet du ansiehst); bei der Ortssuche der eingetippte Suchbegriff. Gespeicherte Orte und Routen bleiben auf dem Gerät und gehen nie an die KI.',
         to: 'OpenStreetMap (tile.openstreetmap.org und nominatim.openstreetmap.org) oder ein eigener Dienst, den du in den Einstellungen einträgst. Der Dienst sieht deine IP-Adresse.',
-        when: 'Nur wenn du den Reiter „Karte“ öffnest oder eine Ortssuche abschickst, nie im Hintergrund. Die Übersicht und die Listen fragen nichts ab. Karten-Apps (OpenStreetMap, Google Maps, Apple Karten) öffnen sich nur auf deinen Klick im Browser.',
+        when: 'Nur wenn du den Reiter „Karte“ öffnest oder eine Ortssuche abschickst, nie im Hintergrund. Die Übersicht und die Listen fragen nichts ab. Karten-Apps (OpenStreetMap, Google Maps, Apple Karten) öffnen sich nur auf deinen Klick im Browser. Berechnest du eine Route auf der Karte, gehen Start, Ziel, Zwischenstopps (Koordinaten) und die Fortbewegungsart an routing.openstreetmap.de, nur auf Klick.',
       },
       ip: {
         title: 'Öffentliche IP anzeigen (Windows)',
@@ -170,6 +170,13 @@ export const tLegal = defineBundle(
         body: [
           'Beim Öffnen der Karte lädt Nemo die Kartenkacheln des gezeigten Ausschnitts von OpenStreetMap, bei einer Ortssuche geht der Suchbegriff an dessen Suchdienst. Der Dienst sieht deine IP-Adresse und welches Gebiet du ansiehst. Nie deine gespeicherten Orte.',
           'Die Liste deiner Orte und Routen ist rein lokal. Die Dienste kannst du in den Einstellungen des Moduls ändern.',
+        ],
+      },
+      'maps-route': {
+        title: 'Die Route wird berechnet',
+        body: [
+          'Für die Berechnung gehen Start, Ziel, Zwischenstopps (als Koordinaten) und die Art der Fortbewegung an den Routendienst von OpenStreetMap (FOSSGIS). Der Dienst sieht deine IP-Adresse und wohin du willst. Nie deine Notizen oder Namen.',
+          'Es passiert nur auf deinen Klick, nie im Hintergrund. Den Dienst kannst du in den Einstellungen des Moduls ändern.',
         ],
       },
       supporter: {
@@ -301,7 +308,7 @@ export const tLegal = defineBundle(
           title: 'Maps & places (optional)',
           what: 'When you open the map, the map tiles of the shown area (zoom level and tile numbers, which reveal the area you look at); for the place search, the search term you typed. Saved places and routes stay on the device and never go to the AI.',
           to: 'OpenStreetMap (tile.openstreetmap.org and nominatim.openstreetmap.org) or a service of your own that you enter in the settings. The service sees your IP address.',
-          when: 'Only when you open the “Karte” tab or submit a place search, never in the background. The Overview and the lists request nothing. Map apps (OpenStreetMap, Google Maps, Apple Maps) open in the browser only when you click.',
+          when: 'Only when you open the “Karte” tab or submit a place search, never in the background. The Overview and the lists request nothing. Map apps (OpenStreetMap, Google Maps, Apple Maps) open in the browser only when you click. If you calculate a route on the map, start, destination, stops (coordinates) and the way of travel go to routing.openstreetmap.de, on click only.',
         },
         ip: {
           title: 'Show public IP (Windows)',
@@ -368,6 +375,13 @@ export const tLegal = defineBundle(
           body: [
             'When you open the map, Nemo loads the map tiles of the shown area from OpenStreetMap; for a place search the search term goes to its search service. The service sees your IP address and the area you look at. Never your saved places.',
             'The list of your places and routes is purely local. You can change the services in the module settings.',
+          ],
+        },
+        'maps-route': {
+          title: 'The route is being calculated',
+          body: [
+            'For the calculation, start, destination, stops (as coordinates) and the way of travel go to the OpenStreetMap routing service (FOSSGIS). The service sees your IP address and where you want to go. Never your notes or names.',
+            'It happens only on your click, never in the background. You can change the service in the module settings.',
           ],
         },
         supporter: {

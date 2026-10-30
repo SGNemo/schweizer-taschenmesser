@@ -14,6 +14,7 @@ import {
   storedCalendars,
   syncCalendars,
 } from '@/core/connectors/service';
+import { beginBrowserLogin, browserLoginAvailable } from '@/core/connectors/oauthRedirect';
 import { saveStatus, useConnectorStatus } from '@/core/connectors/state';
 import type { ConnectorContext, ConnectorDef, ExternalCalendar } from '@/core/connectors/types';
 import { requireNotice } from '@/core/legal/notices';
@@ -117,15 +118,14 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
   const [confirm, setConfirm] = useState(false);
   const [clientVersion, setClientVersion] = useState(0);
 
-  const canLogin =
-    def.authType === 'oauth-pkce' &&
-    def.platforms.includes(platform.kind) &&
-    platform.oauth.supported;
+  const nativeLogin = def.platforms.includes(platform.kind) && platform.oauth.supported;
+  const canLogin = def.authType === 'oauth-pkce' && (nativeLogin || browserLoginAvailable(def));
   const state = status?.state ?? 'disconnected';
+  // A card that was never connected has no choice yet: start from the defaults (an empty stored list
+  // would otherwise leave every box unticked and "Verbinden" disabled).
+  const stored = status && status.features.length > 0 ? status.features : undefined;
   const active =
-    features ??
-    status?.features ??
-    def.features.filter((f) => f.defaultOn !== false).map((f) => f.id);
+    features ?? stored ?? def.features.filter((f) => f.defaultOn !== false).map((f) => f.id);
   const connected = state === 'connected' || state === 'rate-limited' || state === 'error';
 
   // A login that is still waiting for the browser is abandoned when the card goes away.
@@ -138,6 +138,11 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     loginAbort.current = controller;
     try {
       if (def.id === 'google') await requireNotice('connector-google');
+      if (!nativeLogin) {
+        // Browser login: the page leaves for the provider and the callback route finishes it.
+        await beginBrowserLogin(def, active);
+        return;
+      }
       const next = await connectOAuth(def, active, { signal: controller.signal });
       if (controller.signal.aborted) return;
       if (next.state === 'connected' && def.calendar && active.includes('calendar')) {

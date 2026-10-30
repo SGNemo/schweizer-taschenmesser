@@ -13,6 +13,7 @@ export const NOTICE_IDS = [
   'connector-ics',
   'weather',
   'maps',
+  'maps-route',
   'supporter',
 ] as const;
 export type NoticeId = (typeof NOTICE_IDS)[number];

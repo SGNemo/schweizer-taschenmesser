@@ -101,24 +101,39 @@ export function nextCancelDeadline(
   return charge ? { deadline: addDaysStr(charge, -s.cancelNoticeDays), charge } : undefined;
 }
 
-/** Cycles at most this many times a year (quarterly or longer) are where a missed deadline matters. */
+/** Cycles at most this many times a year (quarterly or longer) keep a missed deadline visible until the charge. */
 const MISSED_MAX_CHARGES_PER_YEAR = 4;
+/** With shorter cycles (monthly …) a deadline counts as missed only this many days, so it never nags all month. */
+export const MISSED_RECENT_DAYS = 7;
 
 /**
  * A deadline that has just passed for a charge that is still ahead: the contract renews anyway and a
- * cancellation now only takes effect afterwards. Only for cycles of a quarter or longer (with a
- * monthly charge the deadline would always be "missed"), active and not already cancelled "zum".
+ * cancellation now only takes effect afterwards. For cycles of a quarter or longer the note stays
+ * until the charge; for shorter ones (monthly with a long notice period) it shows for
+ * `MISSED_RECENT_DAYS` after the deadline only, otherwise it would be "missed" all the time.
+ * Active subscriptions that are not already cancelled "zum" a date.
  */
 export function missedDeadline(
   s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'active'>,
   today: string,
 ): CancelDeadline | undefined {
   if (!s.active || s.cancelNoticeDays === undefined || s.recurrence.until) return undefined;
-  if (chargesPerYear(s.recurrence) > MISSED_MAX_CHARGES_PER_YEAR) return undefined;
-  const charge = nextCharge(s, today);
-  if (!charge) return undefined;
-  const deadline = addDaysStr(charge, -s.cancelNoticeDays);
-  return deadline < today ? { deadline, charge } : undefined;
+  const n = s.cancelNoticeDays;
+  if (chargesPerYear(s.recurrence) <= MISSED_MAX_CHARGES_PER_YEAR) {
+    const charge = nextCharge(s, today);
+    if (!charge) return undefined;
+    const deadline = addDaysStr(charge, -n);
+    return deadline < today ? { deadline, charge } : undefined;
+  }
+  // Short cycles: the most recent deadline that passed within the last `MISSED_RECENT_DAYS`, for a
+  // charge that is still ahead (deadline in [today - 7, today - 1] means charge in [today + n - 7, today + n - 1]).
+  const charges = chargesInRange(
+    s,
+    addDaysStr(today, n - MISSED_RECENT_DAYS),
+    addDaysStr(today, n - 1),
+  ).filter((c) => c >= today);
+  const charge = charges[charges.length - 1];
+  return charge ? { deadline: addDaysStr(charge, -n), charge } : undefined;
 }
 
 /** Cancellation deadlines that fall within [from, to]. */

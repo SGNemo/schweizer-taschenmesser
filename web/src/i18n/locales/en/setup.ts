@@ -123,6 +123,8 @@ export const setup: Strings['setup'] = {
       title: 'AI providers',
       description:
         'Optional. Without a provider, local search still works fully. Only your question and a short schema go to the AI, never your data.',
+      localModelHint:
+        'Built-in local model: the app has its own AI model that runs only on this device, offline and free. You download it once under Settings → Local model. No AI provider is needed for it.',
       existing: 'Already set up',
       none: 'No provider set up yet.',
       usable: 'ready to use',
