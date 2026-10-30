@@ -35,4 +35,11 @@ Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einf
 - Opening is always a **merge** through `applyBackup` (same LWW rule as sync, nothing deleted, changes queued for sync). `accounts` (vault) and `core` (settings) are never exported and ignored on import (tested with a hand-made file).
 - UI: Settings → Verbindungen → "Mit Partner teilen" (`pages/settings/ShareSection.tsx`, texts `strings.share.ts`, 5 languages): choose modules (none preselected), code shown, save file; open file + code → preview (added/replaced per module) → merge.
 - Tests: `core/share/share.test.ts` (round trip, LWW, deletions travel, wrong code, tampering, vault ignored), `e2e/share.spec.ts`.
-- Not yet: QR frames (P3), delta files with `since` (P2: today each file is the full state of the chosen modules, merging is idempotent), per-list scope (module level only), revocation hints in the UI.
+- Not yet at P1: QR frames (P3), delta files (P2), per-list scope (module level only), revocation hints in the UI.
+
+## As built (P2, `feat/partner-share-p2`, stacked on P1)
+- **Standing connections** (`core/share/pairs.ts`): device-local `_meta` key `share.pairs` = `{ id, name, modules, sentUpto, receivedUpto, sentAt, receivedAt }`; the code is kept in `getPlatform().secrets` (`share.code.<id>`), never in data, backup, sync or diagnostics. Removing a connection deletes both.
+- **Delta files** (`createPairFile`): the header carries the connection id in the clear (random, readable before a code is tried); `since`/`upto` (newest stamp of the shared rows) travel inside the encrypted payload. A file holds only rows with a field stamp newer than `since`; the first file has no `since` (full state). After saving, `sentUpto = upto`; "Alles neu senden" starts over.
+- **Gap check** (`followsReceived`): a delta whose `since` is newer than what this device received is refused with "Es fehlt eine frühere Datei" instead of silently missing changes. Re-applying a file is harmless (LWW is idempotent).
+- Opening: a file of a known connection uses the stored code (no code field); a file of an unknown connection asks for the code and a name and creates the connection on merge.
+- UI: `pages/settings/SharePairs.tsx` (create, save changes, resend all, remove) inside the existing section; tests `core/share/pairs.test.ts`, `e2e/share.spec.ts`.
