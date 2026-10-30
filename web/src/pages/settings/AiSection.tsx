@@ -39,6 +39,14 @@ function parseNumber(text: string): number | undefined {
 }
 const show = (n: number | undefined) => (n === undefined ? '' : String(n).replace('.', ','));
 
+/** Concrete next step when a local Ollama can't be reached (the common first-run problem). */
+function ollamaHelp(entry: ProviderEntry, code: string | undefined): string | undefined {
+  if (entry.kind !== 'ollama' || code !== 'unavailable') return undefined;
+  return getPlatform().isNative
+    ? t.ai.settings.ollamaHelpNative
+    : t.ai.settings.ollamaHelpWeb(window.location.origin);
+}
+
 function ProviderCard({
   entry,
   index,
@@ -172,7 +180,7 @@ function ProviderCard({
       {cooling ? (
         <p className={styles.muted} role="status">
           {s.coolingDown(Math.max(1, Math.ceil((cooling.until - now()) / 60_000)))}{' '}
-          {s.errors[cooling.code] ?? ''}
+          {s.errors[cooling.code] ?? ''} {ollamaHelp(entry, cooling.code) ?? ''}
         </p>
       ) : null}
 
@@ -239,44 +247,51 @@ function ProviderCard({
               <option value="json">{s.toolModeJson}</option>
             </SelectField>
           ) : null}
-          <TextField
-            label={s.limitRequests}
-            hint={s.limitHint}
-            inputMode="numeric"
-            value={limitReq}
-            onChange={(e) => {
-              setLimitReq(e.target.value);
-              setSaved(false);
-            }}
-          />
-          <TextField
-            label={s.limitCost}
-            inputMode="decimal"
-            value={limitCost}
-            onChange={(e) => {
-              setLimitCost(e.target.value);
-              setSaved(false);
-            }}
-          />
-          <TextField
-            label={s.priceIn}
-            hint={s.priceHint}
-            inputMode="decimal"
-            value={priceIn}
-            onChange={(e) => {
-              setPriceIn(e.target.value);
-              setSaved(false);
-            }}
-          />
-          <TextField
-            label={s.priceOut}
-            inputMode="decimal"
-            value={priceOut}
-            onChange={(e) => {
-              setPriceOut(e.target.value);
-              setSaved(false);
-            }}
-          />
+          <details className={styles.form}>
+            <summary>{s.advanced}</summary>
+            <TextField
+              label={s.limitRequests}
+              hint={s.limitHint}
+              inputMode="numeric"
+              value={limitReq}
+              onChange={(e) => {
+                setLimitReq(e.target.value);
+                setSaved(false);
+              }}
+            />
+            {entry.tier !== 'local' ? (
+              <>
+                <TextField
+                  label={s.limitCost}
+                  inputMode="decimal"
+                  value={limitCost}
+                  onChange={(e) => {
+                    setLimitCost(e.target.value);
+                    setSaved(false);
+                  }}
+                />
+                <TextField
+                  label={s.priceIn}
+                  hint={s.priceHint}
+                  inputMode="decimal"
+                  value={priceIn}
+                  onChange={(e) => {
+                    setPriceIn(e.target.value);
+                    setSaved(false);
+                  }}
+                />
+                <TextField
+                  label={s.priceOut}
+                  inputMode="decimal"
+                  value={priceOut}
+                  onChange={(e) => {
+                    setPriceOut(e.target.value);
+                    setSaved(false);
+                  }}
+                />
+              </>
+            ) : null}
+          </details>
           {!getPlatform().isNative && entry.kind === 'openai-compatible' ? (
             <p className={styles.muted}>{s.browserNote}</p>
           ) : null}
@@ -300,6 +315,7 @@ function ProviderCard({
                 : s.testFailed(
                     `${s.errors[test.code] ?? test.code}${test.detail && test.detail !== test.code ? ` (${test.detail})` : ''}`,
                   )}
+              {failure ? ` ${ollamaHelp(entry, failure.code) ?? ''}` : ''}
             </p>
           ) : null}
           <div className={styles.row}>

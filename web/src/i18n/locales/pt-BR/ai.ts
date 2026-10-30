@@ -372,6 +372,10 @@ export const ai: Strings['ai'] = {
       'not-configured': 'Configuração incompleta',
       'invalid-response': 'Resposta inutilizável',
     } as Record<string, string>,
+    advanced: 'Avançado: limites e preços',
+    ollamaHelpWeb: (origin: string) =>
+      `Inicie o Ollama e autorize este app: defina a variável de ambiente OLLAMA_ORIGINS como ${origin} e reinicie o Ollama. Depois use “Testar conexão”.`,
+    ollamaHelpNative: 'Inicie o Ollama (porta 11434) e teste a conexão novamente.',
     baseUrlInsecure:
       'O endereço precisa começar com https://. http:// só funciona para servidores neste dispositivo ou na sua própria rede (por exemplo, localhost, 192.168.…).',
   },

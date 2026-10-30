@@ -2633,6 +2633,10 @@ export const de = {
         'not-configured': 'Unvollständig eingerichtet',
         'invalid-response': 'Unbrauchbare Antwort',
       } as Record<string, string>,
+      advanced: 'Erweitert: Limits und Preise',
+      ollamaHelpWeb: (origin: string) =>
+        `Starte Ollama und erlaube diese App: Setze die Umgebungsvariable OLLAMA_ORIGINS auf ${origin} und starte Ollama neu. Danach „Verbindung testen“.`,
+      ollamaHelpNative: 'Starte Ollama (Port 11434) und teste die Verbindung dann erneut.',
       baseUrlInsecure:
         'Die Adresse muss mit https:// beginnen. http:// geht nur für Server auf diesem Gerät oder im eigenen Netz (z. B. localhost, 192.168.…).',
     },
