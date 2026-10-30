@@ -87,7 +87,7 @@ export async function submitConnect(page: Page, o: ConnectOptions = {}): Promise
   if ((await encrypt.getAttribute('aria-checked')) !== wanted) await encrypt.click();
   if (o.passphrase !== undefined) {
     // The field appears with the switch or after the server asked for a passphrase.
-    await page.getByLabel('Passphrase').fill(o.passphrase);
+    await page.getByLabel('Passwortsatz').fill(o.passphrase);
   }
   await page.getByRole('button', { name: 'Verbinden', exact: true }).click();
 }

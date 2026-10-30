@@ -108,6 +108,7 @@ export const disk: Strings['disk'] = {
     clear: 'Vaciar cesta',
     deleteAll: 'Eliminar todo …',
     remove: (name: string) => `Sacar ${name} de la cesta`,
+    added: (n: number) => `${n} ${n === 1 ? 'elemento' : 'elementos'} en la cesta`,
   },
   del: {
     title: 'Confirmar eliminación',
@@ -123,8 +124,15 @@ export const disk: Strings['disk'] = {
     modePermanent: 'Eliminar definitivamente, sin papelera',
     trashBtn: 'A la papelera',
     permBtn: 'Eliminar definitivamente',
-    typeLabel: (phrase: string) => `Para confirmar, escribe «${phrase}»`,
-    typeHint: 'Para que nada desaparezca por error.',
+    twiceHint: 'Como es mucho o definitivo, Nemo vuelve a preguntar.',
+    againTitle: '¿Eliminar de verdad?',
+    againTrash: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 elemento' : `${n} elementos`} con ${size} (${files} archivos) irán a la papelera.`,
+    againPermanent: (n: number, size: string, files: string) =>
+      `${n === 1 ? '1 elemento' : `${n} elementos`} con ${size} (${files} archivos) se eliminarán definitivamente. No se puede deshacer.`,
+    againYesTrash: 'Sí, a la papelera',
+    againYesPermanent: 'Sí, eliminar definitivamente',
+    back: 'Atrás',
     warnUser:
       'Esto está en tus carpetas personales (Documentos, Imágenes, Escritorio, Vídeos, Música). Comprueba bien que de verdad ya no lo necesitas.',
     warnProgram:
@@ -142,7 +150,7 @@ export const disk: Strings['disk'] = {
     stop: 'Detener',
     close: 'Cerrar',
     errors: {
-      'confirmation-mismatch': 'La confirmación no coincide.',
+      'confirmation-missing': 'Falta la segunda confirmación. Vuelve a eliminar.',
       'plan-expired': 'La comprobación ha caducado. Vuelve a iniciar la eliminación.',
       'unknown-plan': 'La comprobación ha caducado. Vuelve a iniciar la eliminación.',
       'already-running': 'Ya hay una eliminación en curso.',
@@ -216,7 +224,12 @@ export const disk: Strings['disk'] = {
     legend: 'Leyenda',
     byType: 'Tipo de archivo',
     byDepth: 'Profundidad',
+    ageLegendUse:
+      'Color = último uso (abierto o modificado, lo más reciente). En las carpetas cuenta el archivo usado más recientemente: una carpeta roja no se abre desde hace años.',
     depthLegend: 'Cuanto más oscura es el área, más profunda está la carpeta.',
+    byAge: 'Antigüedad',
+    ageLegend:
+      'Color = último cambio. En las carpetas cuenta el archivo más reciente: una carpeta roja no se ha tocado desde hace años.',
     colorBy: 'Color según',
     kind: {
       video: 'Vídeos',
@@ -225,8 +238,44 @@ export const disk: Strings['disk'] = {
       archive: 'Archivos comprimidos',
       program: 'Programas',
       document: 'Documentos',
+      game: 'Datos de juegos',
       other: 'Otros',
     },
+  },
+  age: {
+    buckets: [
+      'menos de 1 mes',
+      '1–6 meses',
+      '6–12 meses',
+      '1–2 años',
+      '2–3 años',
+      'más de 3 años',
+    ] as readonly string[],
+    ago: (days: number) => {
+      if (days < 1) return 'hoy';
+      if (days < 2) return 'ayer';
+      if (days < 14) return `hace ${Math.floor(days)} días`;
+      if (days < 61) return `hace ${Math.floor(days / 7)} semanas`;
+      if (days < 730) return `hace ${Math.floor(days / 30.44)} meses`;
+      return `hace ${Math.floor(days / 365.25)} años`;
+    },
+    short: (days: number) => {
+      if (days < 1) return 'hoy';
+      if (days < 14) return `${Math.floor(days)} d`;
+      if (days < 61) return `${Math.floor(days / 7)} sem.`;
+      if (days < 730) return `${Math.floor(days / 30.44)} m.`;
+      return `${Math.floor(days / 365.25)} a.`;
+    },
+  },
+  select: {
+    label: 'Resultados seleccionados',
+    row: (name: string) => `Seleccionar ${name}`,
+    all: 'Seleccionar todos los resultados',
+    summary: (n: number, size: string) =>
+      `${n} ${n === 1 ? 'elemento seleccionado' : 'elementos seleccionados'} · ${size}`,
+    toBasket: 'A la cesta',
+    delete: 'Eliminar selección …',
+    clear: 'Quitar selección',
   },
   views: { label: 'Vista', map: 'Mapa', list: 'Lista' },
   nav: {
@@ -240,8 +289,28 @@ export const disk: Strings['disk'] = {
     none: 'Todo',
     topDirs: 'Carpetas más grandes',
     topFiles: 'Archivos más grandes',
-    old: 'Más antiguo que',
-    months: (n: number) => (n === 12 ? '1 año' : n === 24 ? '2 años' : `${n} meses`),
+    old: 'Sin cambios desde hace tiempo',
+    unused: 'Sin usar desde hace tiempo',
+    oldSince: 'Sin cambios desde hace',
+    months: (n: number) => (n % 12 === 0 ? (n === 12 ? '1 año' : `${n / 12} años`) : `${n} meses`),
+    all: 'Todo',
+    topmost: 'Mostrar las carpetas antiguas solo una vez (sin su contenido)',
+    minSize: 'Tamaño mínimo',
+    anySize: 'cualquier tamaño',
+    fromSize: (size: string) => `desde ${size}`,
+    oldSummary: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'elemento' : 'elementos'} con ${size} en total, sin cambios desde hace más de ${since}`,
+    capped: (n: number) => `Se muestran los ${n} más grandes.`,
+    basis: 'Según',
+    byChange: 'último cambio',
+    byOpen: 'última apertura',
+    notOpenedSince: 'Sin abrir desde hace',
+    oldSummaryOpened: (n: number, size: string, since: string) =>
+      `${n} ${n === 1 ? 'elemento' : 'elementos'} con ${size} en total, sin abrir desde hace más de ${since}`,
+    accessHelp:
+      'En esta unidad Windows registra cuándo se abrieron los archivos por última vez (con una precisión de una hora aprox.). Los antivirus, las miniaturas o las copias de seguridad también pueden cambiar la fecha; entonces un archivo parece más reciente de lo que es, nunca más antiguo.',
+    oldHelp:
+      'Cuenta el último cambio, no la última vez que se abrió algo: Windows no suele registrar de forma fiable cuándo se abren los archivos. En las carpetas cuenta el archivo más reciente. En los juegos, una actualización cambia la fecha; jugar no.',
     type: 'Tipo de archivo',
     scope: 'Mostrar',
     dirs: 'Carpetas',
@@ -252,12 +321,23 @@ export const disk: Strings['disk'] = {
     none_found: 'Sin resultados.',
     results: (n: number) => (n === 1 ? '1 resultado' : `${n} resultados`),
   },
+  games: {
+    filter: 'Juegos (Steam)',
+    label: 'Juegos de Steam',
+    lastPlayed: 'Jugado por última vez',
+    played: (date: string, ago: string) => `Jugado por última vez el ${date} · ${ago}`,
+    unknown: 'Steam no tiene fecha de juego',
+    summary: (n: number, size: string, idle: number) =>
+      `${n} ${n === 1 ? 'juego' : 'juegos'} con ${size} en total, ${idle} sin jugar desde hace más de un año`,
+    help: 'La fecha viene de los propios archivos de Steam y cuenta la última partida, no la última actualización. Si falta, el juego nunca se inició o Steam no la guardó. Lo más limpio es desinstalar un juego en Steam: si solo se borra la carpeta, Steam lo sigue mostrando como instalado.',
+  },
   list: {
     name: 'Nombre',
     size: 'Ocupado',
     share: 'Proporción',
     files: 'Archivos',
     modified: 'Modificado',
+    accessed: 'Abierto',
     sortBy: (col: string) => `Ordenar por ${col}`,
     in: 'En',
     empty: 'No hay elementos.',
@@ -275,7 +355,16 @@ export const disk: Strings['disk'] = {
     files: 'Archivos',
     modified: 'Última modificación',
     modifiedFolder: 'Última modificación (archivo más reciente)',
+    accessed: 'Última apertura',
+    accessedFolder: 'Última apertura (archivo más reciente)',
     types: 'Tipos de archivo',
+    ages: 'Antigüedad de los datos',
+    ageBar: 'Proporciones por antigüedad',
+    oldShare: (size: string, pct: number) =>
+      `${size} (${pct} %) sin cambios desde hace más de un año`,
+    unusedShare: (size: string, pct: number) =>
+      `${size} (${pct} %) sin usar desde hace más de un año`,
+    showOld: 'Mostrar aquí los elementos antiguos',
     biggest: 'Elementos más grandes aquí',
     open: 'Abrir carpeta',
     percent: (p: number) => `${p} %`,
@@ -285,6 +374,10 @@ export const disk: Strings['disk'] = {
     title: (root: string) => `Análisis de ${root}`,
     scanning: 'Analizando …',
     paused: 'Análisis en pausa',
+    liveLabel: 'Vista en vivo del análisis',
+    liveHint:
+      'El mapa se va llenando mientras se cuenta. Abrir, seleccionar y eliminar funcionan cuando termine el análisis.',
+    liveEmpty: 'Contando las primeras carpetas …',
     files: 'Archivos',
     folders: 'Carpetas',
     used: 'Ocupado',

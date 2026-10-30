@@ -12,6 +12,10 @@ Rules for every feature that helps with focus, starting, remembering or time. No
 
 7. **Readability:** Does the colour carry meaning (state, category, urgency) and is it paired with text or an icon? Is the group recognisable (space, small header, count)? Is the line too long (> 68 ch)? Is long text offered with the reading aid, and does it stay off for numbers, inputs and the vault?
 
+9. **What could be removed instead?** (mandatory since focus audit 2) Name one element, setting or hint that this feature makes redundant, or state why nothing can go. A feature that only adds needs a situation from the usage diary (`docs/product/focus/09-diary-template.md`) that it solves.
+
+8. **Clicks:** Is the everyday action on a list one tap/swipe (row action or ⋯ menu, with undo), and is anything rare moved into the module's "Erweitert" layer (never anything important only there)? Count taps before/after in the PR ([howto/list-actions.md](../howto/list-actions.md), [howto/advanced-fields.md](../howto/advanced-fields.md)).
+
 ## Principles
 - **One thing at a time.** Offer one next action, show the rest collapsed. Plans hold at most 3 main items per day.
 - **Start small.** Estimates in short steps (5/15/30/60 min), first step visible, "Anfangen" instead of "Planen".
@@ -32,7 +36,7 @@ Rules for every feature that helps with focus, starting, remembering or time. No
 ## Notification limits (binding for any new reminder)
 - Default: at most 3 notifications per hour (the rest is folded into one summary) and quiet hours 22:00–07:00 for automatic extras; both configurable, both in `core/notifications/policy.ts`. Anything the user set explicitly (an event's own lead, "Später") is never moved or dropped.
 - A new kind of automatic notification is `soft: true`, goes through `collectDue`, has a switch in "Ruhige Erinnerungen", and defaults to off unless it replaces something noisier (the morning digest replaces per-task notifications).
-- Staggered leads are optional (default one lead); one gentle follow-up at most, never a chain, stopped by "Erledigt".
+- Staggered leads are optional (default one lead). Automatic extras (digest, stages) get one gentle follow-up at most, never a chain. A reminder the user set explicitly may repeat until answered (maintainer decision, focus round 2): interval settable (default 30 min), a cap per reminder (default 6, then a quiet end visible in the notification centre), quiet hours, Stumm and the per-hour limit still apply, the wording stays neutral ("Noch offen: …"), and "Erledigt" or "Später" stops it on every device (details: [repeat-reminders](../features/repeat-reminders.md)).
 - Snooze always offers sensible options (10 min, 1 h, this evening, tomorrow morning, "wenn ich am PC bin").
 - No dark patterns: no fake urgency, no badges that cannot be cleared, no re-asking after "no".
 - Everything local: reminders use the existing local scheduling (OS scheduler / Web Push of the user's own server); no tracking.

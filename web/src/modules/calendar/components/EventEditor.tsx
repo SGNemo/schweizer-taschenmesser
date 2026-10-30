@@ -1,41 +1,49 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
 import { mapsUrl } from '@/core/links';
 import { getPlatform } from '@/core/platform';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
+import { copyData } from '@/core/db/copy';
+import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
+  AdvancedFields,
   Button,
+  DateChips,
   Dialog,
   Icon,
-  patternStyles,
   SelectField,
   Switch,
   TextArea,
   TextField,
+  patternStyles,
 } from '@/ui';
+import { recentSlots } from '../recentSlots';
 import { eventRepo } from '../repo';
+import { LeadRow, NOTIFY_LEADS, leadLabel } from './LeadRow';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
+import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
 export type EventTarget =
   | Stored<CalendarEvent>
   | { draft: { startDate: string; kind?: EventKind; startTime?: string } }
   | null;
 
-/** Lead times offered in the editor, in minutes. */
-export const NOTIFY_LEADS = [0, 5, 10, 15, 30, 60, 1440] as const;
-const leadLabel = (m: number): string =>
-  m === 0
-    ? t.calendar.notify.atStart
-    : m === 60
-      ? t.calendar.notify.hour
-      : m === 1440
-        ? t.calendar.notify.day
-        : t.calendar.notify.minutes(m);
+export { NOTIFY_LEADS } from './LeadRow';
 
-export function EventEditor({ target, onClose }: { target: EventTarget; onClose: () => void }) {
+export function EventEditor({
+  target,
+  onClose,
+  onDuplicated,
+}: {
+  target: EventTarget;
+  onClose: () => void;
+  /** The copy made by "Duplizieren"; the page opens it for editing. */
+  onDuplicated?: (copy: Stored<CalendarEvent>) => void;
+}) {
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
@@ -51,7 +59,14 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
             : t.calendar.newEvent
       }
     >
-      {target ? <Form key={existing?.id ?? 'new'} target={target} onClose={onClose} /> : null}
+      {target ? (
+        <Form
+          key={existing?.id ?? 'new'}
+          target={target}
+          onClose={onClose}
+          onDuplicated={onDuplicated}
+        />
+      ) : null}
     </Dialog>
   );
 }
@@ -59,7 +74,15 @@ export function EventEditor({ target, onClose }: { target: EventTarget; onClose:
 const isReminder = (target: EventTarget): boolean =>
   !!target && ('id' in target ? target.kind === 'reminder' : target.draft.kind === 'reminder');
 
-function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: () => void }) {
+function Form({
+  target,
+  onClose,
+  onDuplicated,
+}: {
+  target: NonNullable<EventTarget>;
+  onClose: () => void;
+  onDuplicated?: (copy: Stored<CalendarEvent>) => void;
+}) {
   const existing = 'id' in target ? target : null;
   const kind: EventKind = isReminder(target) ? 'reminder' : 'event';
   const reminder = kind === 'reminder';
@@ -89,22 +112,32 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
         : 'none',
   );
   const [active, setActive] = useState(existing?.notify?.enabled ?? true);
+  const [taken, setTaken] = useState(existing?.taken ?? false);
   const [error, setError] = useState('');
+  // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
+  const slots = useLiveQuery(
+    async () => (existing || reminder ? [] : recentSlots(await eventRepo.active().toArray())),
+    [existing, reminder],
+  );
 
   async function save(e: FormEvent) {
     e.preventDefault();
     const lead = notifyChoice === 'none' ? undefined : Number(notifyChoice);
+    // "21:30 to 06:30" ends on the next day; the schema wants that said explicitly.
+    const overnight =
+      !allDay && !reminder && !endDate && !!startTime && !!endTime && endTime < startTime;
     const data = {
       title: title.trim(),
       kind,
       allDay,
       startDate,
       startTime: allDay ? undefined : startTime || undefined,
-      endDate: endDate || undefined,
+      endDate: overnight ? addDaysStr(startDate, 1) : endDate || undefined,
       endTime: allDay ? undefined : endTime || undefined,
       location: location.trim() || undefined,
       note: note.trim() || undefined,
       recurrence,
+      taken: reminder && taken ? true : undefined,
       notify:
         lead === undefined ? undefined : { minutesBefore: lead, enabled: reminder ? active : true },
     };
@@ -123,6 +156,23 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
 
   return (
     <form onSubmit={save} className={styles.form}>
+      {slots && slots.length > 0 ? (
+        <div className={patternStyles.hstack} role="group" aria-label={t.calendar.recent}>
+          {slots.map((s) => (
+            <Button
+              key={`${s.title}|${s.startTime}|${s.endTime}`}
+              variant="secondary"
+              onClick={() => {
+                setTitle(s.title);
+                setStartTime(s.startTime);
+                setEndTime(s.endTime);
+              }}
+            >
+              {`${s.title} ${s.startTime}–${s.endTime}`}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       <TextField
         label={t.form.title}
         value={title}
@@ -147,25 +197,22 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
             onChange={(e) => setStartTime(e.target.value)}
           />
         )}
-      </div>
-      {reminder ? null : (
-        <div className={styles.split}>
+        {allDay || reminder ? null : (
           <TextField
-            label={`${t.calendar.end} (${t.form.date})`}
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            label={t.calendar.end}
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
           />
-          {allDay ? null : (
-            <TextField
-              label={`${t.calendar.end} (${t.form.time})`}
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
-          )}
-        </div>
-      )}
+        )}
+      </div>
+      <DateChips
+        value={startDate}
+        onChange={(d) => {
+          setStartDate(d);
+          if (endDate && endDate < d) setEndDate(d);
+        }}
+      />
       {reminder ? null : (
         <TextField
           label={t.calendar.location}
@@ -182,22 +229,41 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
         </div>
       ) : null}
       <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
-      <SelectField
-        label={t.calendar.notify.label}
-        value={notifyChoice}
-        onChange={(e) => setNotifyChoice(e.target.value)}
-      >
-        {reminder ? null : <option value="none">{t.calendar.notify.none}</option>}
-        {NOTIFY_LEADS.map((m) => (
-          <option key={m} value={m}>
-            {leadLabel(m)}
-          </option>
-        ))}
-      </SelectField>
+      {!reminder && !allDay && startTime ? (
+        <LeadRow value={notifyChoice} onChange={setNotifyChoice} isNew={!existing} />
+      ) : (
+        <SelectField
+          label={t.calendar.notify.label}
+          value={notifyChoice}
+          onChange={(e) => setNotifyChoice(e.target.value)}
+        >
+          {reminder ? null : <option value="none">{t.calendar.notify.none}</option>}
+          {NOTIFY_LEADS.map((m) => (
+            <option key={m} value={m}>
+              {leadLabel(m)}
+            </option>
+          ))}
+        </SelectField>
+      )}
       {reminder ? (
         <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
       ) : null}
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      {reminder ? (
+        <Switch label={t.calendar.reminders.intake} checked={taken} onChange={setTaken} />
+      ) : null}
+      <AdvancedFields moduleId="calendar" hasData={!!endDate || !!note}>
+        {reminder ? null : (
+          <div className={styles.split}>
+            <TextField
+              label={`${t.calendar.end} (${t.form.date})`}
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+        )}
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       {error ? (
         <p role="alert" className={styles.error}>
           {error}
@@ -208,7 +274,7 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           <Button
             variant="danger"
             onClick={async () => {
-              await eventRepo.remove(existing.id);
+              await deleteWithUndo(() => eventRepo.remove(existing.id));
               onClose();
             }}
           >
@@ -218,6 +284,22 @@ function Form({ target, onClose }: { target: NonNullable<EventTarget>; onClose: 
           <span />
         )}
         <span className={patternStyles.hstack}>
+          {existing ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                const copy = await undoableWithToast(
+                  t.actions.duplicated,
+                  t.actions.duplicated,
+                  () => eventRepo.create(copyData(existing)),
+                );
+                onClose();
+                onDuplicated?.(copy);
+              }}
+            >
+              {t.actions.duplicate}
+            </Button>
+          ) : null}
           <Button onClick={onClose}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}

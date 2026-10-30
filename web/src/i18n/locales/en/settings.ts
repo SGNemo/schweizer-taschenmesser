@@ -20,7 +20,9 @@ export const settings: Strings['settings'] = {
   notFoundTitle: 'This category doesn’t exist.',
   danger: {
     title: 'Danger zone',
-    typePhrase: (phrase: string) => `Type “${phrase}” to confirm`,
+    againTitle: 'Are you sure?',
+    againText: 'This can’t be undone. Please confirm once more.',
+    back: 'Back',
   },
   /** Extra search words per settings section (synonyms people type). */
   searchWords: {
@@ -35,7 +37,7 @@ export const settings: Strings['settings'] = {
       'Date',
     ],
     appearance: ['Theme', 'Dark mode', 'Font', 'Animation'],
-    modules: ['Library', 'Enable module', 'Starter data'],
+    modules: ['Library', 'Enable module', 'Import'],
     tools: ['Toolbar', 'Order'],
     notifications: ['Push', 'Permission', 'Reminder'],
     'browser-extension': ['Brave', 'Chrome', 'Autofill'],
@@ -95,6 +97,20 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'The calm overview shows only “Up next”, “Next” and “Today & tomorrow”. Everything else is one tap away.',
   },
+  appearanceGroups: {
+    change: 'Change',
+    done: 'Done',
+    line: (name: string, value: string) => `${name}: ${value}`,
+    theme: 'Theme',
+    colors: 'Colours',
+    text: 'Text & reading',
+    motion: 'Motion',
+    other: 'Other',
+  },
+  moduleGroups: {
+    fields: 'Fields',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Manage modules',
     description:
@@ -127,7 +143,7 @@ export const settings: Strings['settings'] = {
     },
     module: {
       title: 'Modules',
-      description: 'Module settings and starter data',
+      description: 'Module settings and import',
       keywords: ['Reminder', 'Starter data', 'Import'],
     },
     werkzeuge: {
@@ -189,6 +205,7 @@ export const settings: Strings['settings'] = {
   favouritesHint:
     'Up to 5 modules sit at the top of the sidebar. The star on a module in the sidebar does the same.',
   favouritesFull: 'At most 5 favourites – remove another one first.',
+  favouritesNone: 'None',
   theme: 'Colour scheme',
   themeSystem: 'System',
   themeLight: 'Light',
@@ -226,6 +243,8 @@ export const settings: Strings['settings'] = {
     coverHint:
       '25 %: body text only. 50 %: plus headings and lists. 75 %: plus labels and tables. 100 %: all text, including buttons and navigation (not in the vault or input fields).',
     shortcut: 'Keyboard shortcut: Alt + L turns the reading aid on and off.',
+    on: 'On',
+    off: 'Off',
     preview: 'Preview',
     previewText:
       'This is how a longer sentence looks with the reading aid: word starts guide the eye.',
@@ -242,7 +261,7 @@ export const settings: Strings['settings'] = {
   motion: 'Motion',
   motionOptions: { system: 'Same as system', reduce: 'Less' },
   homeView: 'Overview',
-  homeViewOptions: { all: 'All widgets', calm: 'Only the essentials' },
+  homeViewOptions: { all: 'All cards', calm: 'Only the essentials' },
   density: 'Density',
   densityOptions: { normal: 'Normal', compact: 'Compact' },
   modules: 'Modules',

@@ -1,11 +1,22 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enableExample, mainNav } from './helpers';
+import {
+  enableExample,
+  mainNav,
+  moduleSwitch,
+  showAllWidgets,
+  openAppearanceGroup,
+  openFoldedGroup,
+} from './helpers';
 
 test.describe('module library', () => {
+  test.beforeEach(async ({ page }) => {
+    await showAllWidgets(page);
+  });
+
   test('fresh install has the core modules active with their widgets', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Übersicht', level: 1 })).toBeVisible();
-    await expect(page.getByTestId('widget-calendar:today')).toBeVisible();
+    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
     await expect(page.getByTestId('widget-todos:open')).toBeVisible();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     await expect(page.getByTestId('widget-invoices:due')).toBeVisible();
@@ -25,11 +36,9 @@ test.describe('module library', () => {
     await page.goto('/library');
     for (const id of ['calendar', 'todos', 'finance', 'invoices', 'subscriptions']) {
       const card = page.getByTestId(`module-${id}`);
-      await card.getByRole('button', { name: 'Deaktivieren' }).click();
-      await page.getByRole('button', { name: 'Daten behalten (ausgeblendet)' }).click();
-      // the write is finished when the dialog has closed (a `goto` before that can lose it)
-      await expect(page.getByRole('dialog')).toBeHidden();
-      await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
+      await moduleSwitch(card).click(); // no data: no dialog
+      // the write is finished when the switch has flipped (a `goto` before that can lose it)
+      await expect(moduleSwitch(card)).not.toBeChecked();
     }
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Noch keine Module aktiv' })).toBeVisible();
@@ -50,9 +59,8 @@ test.describe('module library', () => {
     await expect(exampleNav(page, phone)).toBeVisible();
 
     const card = page.getByTestId('module-example');
-    await card.getByRole('button', { name: 'Deaktivieren' }).click();
-    await page.getByRole('button', { name: 'Daten behalten (ausgeblendet)' }).click();
-    await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
+    await moduleSwitch(card).click();
+    await expect(moduleSwitch(card)).not.toBeChecked();
     await expect(exampleNav(page, phone)).toHaveCount(0);
   });
 
@@ -93,18 +101,18 @@ test.describe('entries (local-first data)', () => {
 
     await page.goto('/library');
     const card = page.getByTestId('module-example');
-    await card.getByRole('button', { name: 'Deaktivieren' }).click();
+    await moduleSwitch(card).click();
     await page.getByRole('button', { name: 'Daten behalten (ausgeblendet)' }).click();
-    await card.getByRole('button', { name: 'Aktivieren' }).click();
+    await moduleSwitch(card).click();
     // Let the write reach IndexedDB before navigating away.
     await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
     await page.goto('/example');
     await expect(page.getByText('Bleibt')).toBeVisible();
 
     await page.goto('/library');
-    await card.getByRole('button', { name: 'Deaktivieren' }).click();
+    await moduleSwitch(card).click();
     await page.getByRole('button', { name: 'Daten löschen' }).click();
-    await card.getByRole('button', { name: 'Aktivieren' }).click();
+    await moduleSwitch(card).click();
     // Let the write reach IndexedDB before navigating away.
     await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
     await page.goto('/example');
@@ -157,10 +165,9 @@ test.describe('shell', () => {
 
   test('theme choice is applied and remembered', async ({ page }) => {
     await page.goto('/settings/darstellung');
-    await page
-      .getByRole('group', { name: 'Farbschema' })
-      .getByRole('button', { name: 'Dunkel' })
-      .click();
+    await openAppearanceGroup(page, 'theme');
+    // The category's own field: on wide screens the quick bar above it has a "Farbschema" group, too.
+    await page.locator('#appearance--theme').getByRole('button', { name: 'Dunkel' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
@@ -169,12 +176,14 @@ test.describe('shell', () => {
   test('module settings appear for active modules and persist', async ({ page }) => {
     await enableExample(page);
     await page.goto('/settings/module');
+    await openFoldedGroup(page, 'module-example', 'fields');
     const toggle = page.getByRole('switch', { name: 'Erledigte anzeigen' });
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await toggle.click();
     // Wait until the write went through IndexedDB and the live query reflects it.
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await page.reload();
+    await openFoldedGroup(page, 'module-example', 'fields');
     await expect(page.getByRole('switch', { name: 'Erledigte anzeigen' })).toHaveAttribute(
       'aria-checked',
       'false',

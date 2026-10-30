@@ -255,6 +255,10 @@ export interface CalendarItem {
   /** 'HH:mm'; absent for all-day items. */
   time?: string;
   endTime?: string;
+  /** Last day of an entry that spans several days; set on its first day only. */
+  endDate?: string;
+  /** True on the days after the first of a multi-day entry. */
+  continued?: boolean;
   allDay: boolean;
   done?: boolean;
   /** Route to open when the item is activated. */
@@ -302,11 +306,22 @@ export interface DueNotification {
   title: string;
   body?: string;
   url?: string;
+  /** The reminder's own title when `title` is reworded (a repeat: "Noch offen: …"); "Später" keeps this one. */
+  baseTitle?: string;
   /**
    * An automatic extra (staged lead, follow-up, morning digest): the quiet hours move it to their
    * end. Notifications the user set explicitly (an event's own lead, "Später") are never moved.
    */
   soft?: boolean;
+  /** The reminder is answered with "Genommen" (intake) instead of "Erledigt"; the same answer, no statistics. */
+  taken?: boolean;
+  /** Set on the hourly summary: the reminders folded into it, so the centre can list them by title. */
+  members?: DueNotification[];
+  /**
+   * Set by the calm policy while "Stumm" is on: shown without sound or vibration. Modules never set
+   * it themselves.
+   */
+  quiet?: boolean;
 }
 
 export type NotificationSource = (range: {
@@ -354,7 +369,11 @@ export interface ModuleContributions {
   services?: () => Promise<{ default: () => (() => void) | void }>;
   /** Values the assistant cannot know when creating an entry (e.g. the default list or account). */
   aiCreateDefaults?: () => Promise<{
-    default: (collection: string) => Promise<Record<string, unknown>>;
+    /** `data` = the values already known; defaults may depend on them (a reminder needs a notification). */
+    default: (
+      collection: string,
+      data?: Record<string, unknown>,
+    ) => Promise<Record<string, unknown>>;
   }>;
   /** Module logic for actions with side effects, key = action id of `aiSchema.actions`. */
   aiActionHandlers?: () => Promise<{ default: Record<string, AiActionHandler> }>;

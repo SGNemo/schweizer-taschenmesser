@@ -20,7 +20,9 @@ export const settings: Strings['settings'] = {
   notFoundTitle: 'Cette catégorie n’existe pas.',
   danger: {
     title: 'Zone de danger',
-    typePhrase: (phrase: string) => `Saisissez « ${phrase} » pour confirmer`,
+    againTitle: 'Vous êtes sûr ?',
+    againText: 'Impossible d’annuler. Veuillez confirmer une nouvelle fois.',
+    back: 'Retour',
   },
   /** Extra search words per settings section (synonyms people type). */
   searchWords: {
@@ -35,7 +37,7 @@ export const settings: Strings['settings'] = {
       'Date',
     ],
     appearance: ['Thème', 'Mode sombre', 'Police', 'Animation'],
-    modules: ['Bibliothèque', 'Activer un module', 'Données de départ'],
+    modules: ['Bibliothèque', 'Activer un module', 'Importer'],
     tools: ['Barre d’outils', 'Ordre'],
     notifications: ['Push', 'Autorisation', 'Rappel'],
     'browser-extension': ['Brave', 'Chrome', 'Remplissage automatique'],
@@ -118,6 +120,20 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'La vue d’ensemble calme n’affiche que « À faire maintenant », « Ensuite » et « Aujourd’hui et demain ». Tout le reste est à un geste.',
   },
+  appearanceGroups: {
+    change: 'Modifier',
+    done: 'Terminé',
+    line: (name: string, value: string) => `${name} : ${value}`,
+    theme: 'Thème',
+    colors: 'Couleurs',
+    text: 'Texte et lecture',
+    motion: 'Animations',
+    other: 'Autres',
+  },
+  moduleGroups: {
+    fields: 'Champs',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Gérer les modules',
     description:
@@ -150,7 +166,7 @@ export const settings: Strings['settings'] = {
     },
     module: {
       title: 'Modules',
-      description: 'Paramètres des modules et données de départ',
+      description: 'Paramètres des modules et import',
       keywords: ['Rappel', 'Données de départ', 'Import'],
     },
     werkzeuge: {
@@ -212,6 +228,7 @@ export const settings: Strings['settings'] = {
   favouritesHint:
     'Jusqu’à 5 modules figurent en haut de la barre latérale. L’étoile d’un module dans la barre latérale fait la même chose.',
   favouritesFull: '5 favoris au maximum – retirez-en d’abord un autre.',
+  favouritesNone: 'Aucun',
   theme: 'Thème de couleurs',
   themeSystem: 'Système',
   themeLight: 'Clair',
@@ -256,6 +273,8 @@ export const settings: Strings['settings'] = {
     coverHint:
       '25 % : texte courant seulement. 50 % : plus les titres et les listes. 75 % : plus les libellés et les tableaux. 100 % : tout le texte, y compris boutons et navigation (pas dans le coffre-fort ni dans les champs de saisie).',
     shortcut: 'Raccourci clavier : Alt + L active et désactive l’aide à la lecture.',
+    on: 'Activée',
+    off: 'Désactivée',
     preview: 'Aperçu',
     previewText:
       'Voici une phrase plus longue avec l’aide à la lecture : les débuts de mots guident le regard.',
@@ -272,7 +291,7 @@ export const settings: Strings['settings'] = {
   motion: 'Animations',
   motionOptions: { system: 'Comme le système', reduce: 'Réduites' },
   homeView: 'Vue d’ensemble',
-  homeViewOptions: { all: 'Tous les widgets', calm: 'L’essentiel seulement' },
+  homeViewOptions: { all: 'Toutes les cartes', calm: 'L’essentiel seulement' },
   density: 'Densité',
   densityOptions: { normal: 'Normale', compact: 'Compacte' },
   modules: 'Modules',

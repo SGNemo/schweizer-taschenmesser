@@ -1,8 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, calendarEntry } from './helpers';
+import {
+  calendarEntry,
+  enable,
+  moduleSwitch,
+  moreFields,
+  openBookmarksMenu,
+  showAllWidgets,
+} from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
+  await showAllWidgets(page);
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
 
@@ -20,9 +28,7 @@ async function save(page: Page) {
 test('the extra modules are off until enabled', async ({ page }) => {
   await open(page, '/library');
   for (const id of ['bookmarks', 'notes', 'lists', 'people', 'budgets', 'vault']) {
-    await expect(
-      page.getByTestId(`module-${id}`).getByRole('button', { name: 'Aktivieren' }),
-    ).toBeVisible();
+    await expect(moduleSwitch(page.getByTestId(`module-${id}`))).not.toBeChecked();
   }
   await page.goto('/bookmarks');
   await expect(page).toHaveURL(/\/library|\/$/); // disabled module: redirected away
@@ -36,6 +42,7 @@ test.describe('Merkliste', () => {
       const dialog = page.getByRole('dialog');
       await dialog.getByLabel('Titel').fill(title);
       if (url) await dialog.getByLabel('Adresse (Link)').fill(url);
+      await moreFields(page);
       await dialog.getByLabel('Art').selectOption({ label: kind });
       await dialog.getByLabel('Tags').fill(tags);
       await save(page);
@@ -43,17 +50,26 @@ test.describe('Merkliste', () => {
     await add('Pasta Rezept', 'koch.de/pasta', 'Kochen, Rezept', 'Lesen');
     await add('Dune', '', 'Film', 'Ansehen');
 
-    const list = page.getByRole('list', { name: 'Merkliste' });
+    const list = page.getByRole('group', { name: 'Merkliste' });
     await expect(list.getByRole('listitem')).toHaveCount(2);
     await expect(list.getByRole('link', { name: /Pasta Rezept/ })).toHaveAttribute(
       'href',
       'https://koch.de/pasta',
     );
 
-    await page.getByRole('button', { name: 'Kochen (1)' }).click();
+    await (
+      await openBookmarksMenu(page)
+    )
+      .getByRole('menuitemcheckbox', { name: 'Kochen (1)' })
+      .click();
     await expect(list.getByRole('listitem')).toHaveCount(1);
     await expect(list).toContainText('Pasta Rezept');
-    await page.getByRole('button', { name: 'Kochen (1)' }).click();
+    await (
+      await openBookmarksMenu(page)
+    )
+      .getByRole('menuitemcheckbox', { name: 'Kochen (1)' })
+      .click();
+    await expect(list.getByRole('listitem')).toHaveCount(2);
 
     await page.getByLabel('Merkliste durchsuchen').fill('dune');
     await expect(list.getByRole('listitem')).toHaveCount(1);
@@ -61,7 +77,11 @@ test.describe('Merkliste', () => {
 
     await page.getByRole('checkbox', { name: /Erledigt: Dune/ }).click(); // leaves the "Offen" view
     await expect(list.getByRole('listitem')).toHaveCount(1); // "Offen" view hides it
-    await page.getByRole('button', { name: 'Erledigt', exact: true }).click();
+    await (
+      await openBookmarksMenu(page)
+    )
+      .getByRole('menuitemcheckbox', { name: 'Erledigt' })
+      .click();
     await expect(list).toContainText('Dune');
   });
 
@@ -148,13 +168,8 @@ test.describe('Budgets & Sparziele', () => {
     // finance is enabled by default; disable it
     await page.goto('/library');
     const card = page.getByTestId('module-finance');
-    await card.getByRole('button', { name: 'Deaktivieren' }).click();
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: /behalten/i })
-      .click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-    await expect(card.getByRole('button', { name: 'Aktivieren' })).toBeVisible();
+    await moduleSwitch(card).click(); // no data: switched off directly, no dialog
+    await expect(moduleSwitch(card)).not.toBeChecked();
     await open(page, '/budgets');
     await expect(page.getByText('Budgets brauchen das Modul „Finanzen“.')).toBeVisible();
   });

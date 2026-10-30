@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { moduleSwitch } from './helpers';
 
 const MASTER = 'Mein-Master-Passwort-1';
 const SECRET_TITLE = 'Beispiel-Bank-Konto';
@@ -11,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 async function enableAccounts(page: Page) {
   await page.goto('/library');
   const card = page.getByTestId('module-accounts');
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
+  await moduleSwitch(card).click();
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
 }
 
@@ -64,9 +65,7 @@ async function storedText(page: Page): Promise<string> {
 
 test('accounts are off until enabled', async ({ page }) => {
   await page.goto('/library');
-  await expect(
-    page.getByTestId('module-accounts').getByRole('button', { name: 'Aktivieren' }),
-  ).toBeVisible();
+  await expect(moduleSwitch(page.getByTestId('module-accounts'))).not.toBeChecked();
 });
 
 test('set up the vault, add an entry, lock, wrong password, unlock', async ({ page }) => {
@@ -138,7 +137,7 @@ test('search finds entries only in the unlocked vault', async ({ page }) => {
   await page.keyboard.press('Escape'); // the detail view opens after saving
   await addEntry(page, { title: 'Beta Bank' });
   await page.keyboard.press('Escape');
-  await page.getByLabel('Accounts durchsuchen').fill('beta');
+  await page.getByLabel('Passwörter durchsuchen').fill('beta');
   await expect(page.getByRole('listitem').filter({ hasText: 'Beta Bank' })).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: 'Alpha Shop' })).toHaveCount(0);
 });

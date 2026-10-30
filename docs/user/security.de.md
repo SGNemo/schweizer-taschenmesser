@@ -17,10 +17,11 @@ Diese Verbindungen baut die App nur in den genannten Fällen auf; außer deiner 
 
 - **GitHub** – täglicher Update-Check (abschaltbar) und Download von Updates.
 - **frankfurter.dev** (Kurse der EZB) – beim Öffnen des Währungsrechners.
+- **open-meteo.com** (Wetter) – erst nachdem du einen Ort gewählt hast: der Ortsname beim Suchen, danach seine auf etwa einen Kilometer gerundete Position (für die 7-Tage-Vorhersage), etwa alle 30 Minuten, solange die Übersicht offen ist. Abschaltbar unter Einstellungen → Verbindungen → Wetter.
 - **api.ipify.org** – nur auf Klick auf „Öffentliche IP abfragen“ (Dieser PC → System).
 - **huggingface.co** – Download des lokalen KI-Modells, erst nach deiner Bestätigung (Prüfsumme wird kontrolliert).
 - **Feed- und Kalender-Adressen**, die du abonniert hast – in der App direkt, im Browser über den Proxy deines eigenen Sync-Servers.
-- **Google** – nur mit einer von dir eingerichteten Verbindung; **KI-Anbieter** – nur mit einem von dir hinterlegten Schlüssel.
+- **Google** und **Spotify** – nur mit einer von dir eingerichteten Verbindung (Spotify: was gerade läuft und ein paar Steuerbefehle; Titel und Interpret bleiben auf diesem Gerät); **KI-Anbieter** – nur mit einem von dir hinterlegten Schlüssel.
 
 ### Sync-Server absichern
 

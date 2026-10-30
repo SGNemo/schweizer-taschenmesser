@@ -11,6 +11,7 @@ export const attention: Strings['attention'] = {
   eventAt: (time: string) => `today at ${time}`,
   budgetOver: (name: string) => `Budget “${name}” exceeded`,
   pantryExpired: (n: number) => (n === 1 ? '1 pantry item expired' : `${n} pantry items expired`),
+  pantryLow: (n: number) => (n === 1 ? '1 item running low' : `${n} items running low`),
   pantrySoon: (n: number) =>
     n === 1 ? '1 pantry item expiring soon' : `${n} pantry items expiring soon`,
   docsExpired: (n: number) => (n === 1 ? '1 document expired' : `${n} documents expired`),
@@ -21,6 +22,7 @@ export const attention: Strings['attention'] = {
   updateAvailable: 'Update available',
   waiting: (n: number) => `Still waiting · ${n}`,
   nothingNow: 'None of this has to happen now.',
+  waitingExplain: 'Open for a while, but not urgent. You can re-plan them.',
   todosWaiting: (n: number) => (n === 1 ? '1 to-do waiting' : `${n} to-dos waiting`),
   todosWaitingDetail: 'You can plan it again',
 };

@@ -1,11 +1,13 @@
 import type { Strings } from '@/strings';
 
 export const homeEdit: Strings['homeEdit'] = {
-  calmNote: (n: number) =>
-    n === 0 || n === 1
-      ? `Visualização calma: ${n} widget está oculto.`
-      : `Visualização calma: ${n} widgets estão ocultos.`,
-  showAll: 'Mostrar todos os widgets',
+  showMore: (n: number) => (n <= 1 ? `Mostrar mais · ${n} cartão` : `Mostrar mais · ${n} cartões`),
+  showLess: 'Só o essencial',
+  pinStart: 'Adicionar cartão…',
+  pin: (title: string) => `Adicionar ${title}`,
+  unpin: (title: string) => `Remover ${title}`,
+  pinned: 'Adicionado',
+  pinNote: 'Cartões adicionados continuam visíveis na visualização calma.',
   customize: 'Personalizar',
   done: 'Pronto',
   hide: 'Ocultar',
@@ -18,14 +20,14 @@ export const homeEdit: Strings['homeEdit'] = {
   moved: (title: string, pos: number) => `${title} movido para a posição ${pos}.`,
   dropped: (title: string, pos: number) => `${title} solto na posição ${pos}.`,
   cancelled: 'Movimento cancelado.',
-  widgets: 'Widgets',
-  widgetsTitle: 'Widgets da visão geral',
+  widgets: 'Cartões',
+  widgetsTitle: 'Cartões da visão geral',
   widgetsNote:
     'Ocultar afeta só a visão geral, o módulo continua ativo. Você pode desativar módulos na biblioteca.',
-  widgetsNone: 'Nenhum módulo ativo com widgets.',
+  widgetsNone: 'Nenhum módulo ativo com cartões.',
   reset: 'Redefinir',
   resetTitle: 'Redefinir a visão geral?',
-  resetText: 'Ordem, tamanhos e widgets ocultos voltam ao padrão. Seus módulos e dados não mudam.',
+  resetText: 'Ordem, tamanhos e cartões ocultos voltam ao padrão. Seus módulos e dados não mudam.',
   resetConfirm: 'Voltar ao padrão',
   cancel: 'Cancelar',
   size: (title: string) => `Tamanho de ${title}`,

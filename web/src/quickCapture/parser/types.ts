@@ -3,7 +3,17 @@
  * anything from outside `quickCapture/parser/` (guarded by `isolation.test.ts`).
  */
 
-export type CaptureType = 'todo' | 'event' | 'reminder' | 'bookmark' | 'list' | 'finance' | 'note';
+export type CaptureType =
+  | 'todo'
+  | 'event'
+  | 'reminder'
+  | 'bookmark'
+  | 'list'
+  | 'finance'
+  | 'invoice'
+  | 'note'
+  | 'subscription'
+  | 'birthday';
 
 /** Same shape as the app's recurrence schema, declared locally to keep the parser dependency-free. */
 export interface CaptureRecurrence {
@@ -13,6 +23,8 @@ export interface CaptureRecurrence {
   byWeekday?: number[];
   /** 1–31, or -1 for the last day of the month. */
   byMonthDay?: number;
+  /** Last day of the rule, 'YYYY-MM-DD' ("bis 31.12."). */
+  until?: string;
 }
 
 export interface CaptureFields {
@@ -21,6 +33,10 @@ export interface CaptureFields {
   date?: string;
   /** 'HH:mm', local wall clock. */
   time?: string;
+  /** 'HH:mm' end of a time range ("14:00 bis 16:00"); may be earlier than `time` for a night shift. */
+  endTime?: string;
+  /** 1 low … 3 high, from "!hoch" and the like; only ToDos use it. */
+  priority?: 1 | 2 | 3;
   /** True for a date-only entry that is meant as a calendar event. */
   allDay?: boolean;
   recurrence?: CaptureRecurrence;

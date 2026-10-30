@@ -132,7 +132,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.getByTestId('tool-calc')).toBeVisible();
       const names: string[] = [];
       for (const card of await page.locator('[data-testid^="tool-"]').all()) {
-        const name = (await card.locator('span[class*="moduleName"]').innerText()).trim();
+        const name = (await card.locator('[data-card-name]').innerText()).trim();
         const toggle = card.getByLabel(`${name} einschalten`);
         if (!(await toggle.isChecked())) await toggle.click();
         await expect(toggle).toBeChecked();
@@ -219,8 +219,8 @@ for (const scheme of ['light', 'dark'] as const) {
 
     test('start-data wizard: choose, input, preview, result, help hint', async ({ page }) => {
       await page.goto('/todos');
-      await page.getByRole('button', { name: 'Startdaten einrichten' }).click();
-      const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+      await page.getByRole('button', { name: 'Importieren' }).click();
+      const dialog = page.getByRole('dialog', { name: /Importieren/ });
       await expect(dialog).toBeVisible();
       await audit(page, `wizard choose (${scheme})`);
       await dialog.getByRole('button', { name: /Hilfe/ }).click();

@@ -192,8 +192,12 @@ test.describe('KI-Suche Stufe 1 (lokal, 0 Token)', () => {
       .getByTestId('ai-answer')
       .getByRole('button', { name: /Vodafone/ })
       .click();
+    // the answer row deep-links to the record: the invoice opens in its dialog (?open=<id>)
     await expect(page).toHaveURL(/\/invoices$/);
-    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: /Rechnung/ })).toBeVisible();
+    await expect(page.getByRole('dialog').getByLabel('Empfänger', { exact: true })).toHaveValue(
+      /Vodafone/,
+    );
   });
 
   test('shows live full text hits while typing', async ({ page }) => {
@@ -310,7 +314,7 @@ test.describe('KI-Assistent Stufe 2 (Claude, gemockt)', () => {
     // Privacy: the request carries the key header, the date, the question and schemas – no data.
     expect(mock.requests).toHaveLength(1);
     const sent = mock.requests[0]!;
-    expect(sent.headers['x-api-key']).toBe('sk-ant-e2e-key');
+    expect(sent.headers['authorization']).toBe('Bearer sk-ant-e2e-key');
     expect(sent.headers['anthropic-dangerous-direct-browser-access']).toBe('true');
     const payload = JSON.stringify(sent.body);
     expect(payload).toContain('Heute: 2026-09-29 (Dienstag)');

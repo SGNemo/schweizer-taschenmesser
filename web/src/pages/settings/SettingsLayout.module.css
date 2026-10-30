@@ -10,7 +10,7 @@
 .content {
   min-width: 0;
 }
-.nav {
+.aside {
   position: sticky;
   top: var(--space-4);
   max-height: calc(100dvh - var(--space-6));
@@ -153,4 +153,55 @@
   color: var(--text-3);
   font-size: var(--text-meta);
   font-weight: normal;
+}
+/* Narrow nav column: when title and status do not fit side by side the status drops under the title (it overlapped the title: "Benachrichtigungen" + "Nicht erlaubt"). */
+.nav .navLink {
+  flex-wrap: wrap;
+  padding-block: var(--space-1);
+  column-gap: var(--space-3);
+}
+.nav .linkText {
+  flex: 1 1 auto;
+}
+.nav .status {
+  margin-left: auto;
+}
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-4);
+  max-width: 44rem;
+}
+.quickItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.quickLabel {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.frequent {
+  margin-bottom: var(--space-3);
+}
+.frequentTitle {
+  margin: 0 0 var(--space-1);
+  padding: 0 var(--space-3);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}
+.reset {
+  align-self: flex-start;
+}
+@media (max-width: 899px) {
+  /* The search stays within reach while a category scrolls. */
+  .search.stickySearch {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky, 1);
+    background: var(--bg);
+    padding-top: var(--space-2);
+  }
 }

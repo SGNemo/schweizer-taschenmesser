@@ -1,0 +1,279 @@
+[
+ {
+  "id": "JONAS-B1",
+  "type": "bug",
+  "severity": "hoch",
+  "area": "layout/header",
+  "platform": "mobile",
+  "title": "Search field collapses to an empty pill while a focus round runs",
+  "steps": [
+   "Start focus from Home",
+   "Leave focus screen",
+   "Open any page at 412px"
+  ],
+  "screenshot": "screenshots/20-planen.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B2",
+  "type": "bug",
+  "severity": "mittel",
+  "area": "todos",
+  "platform": "all",
+  "title": "Inline add keeps 'morgen 23:59 Uhr' in the title, no date, lands in list Haushalt / Ohne Datum",
+  "steps": [
+   "Planen > ToDos",
+   "Type 'Hausarbeit Statistik abgeben morgen 23:59 Uhr'",
+   "Hinzufügen"
+  ],
+  "screenshot": "screenshots/30-todo-added.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B3",
+  "type": "bug",
+  "severity": "mittel",
+  "area": "quick-capture",
+  "platform": "all",
+  "title": "Quick add classifies '... freitag 12 Uhr abgeben' as Termin instead of ToDo with due date",
+  "steps": [
+   "Tap + ",
+   "Type 'Statistik Hausarbeit freitag 12 Uhr abgeben'"
+  ],
+  "screenshot": "screenshots/72-qc-c.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B4",
+  "type": "bug",
+  "severity": "mittel",
+  "area": "todos/focus",
+  "platform": "all",
+  "title": "'Vorschlag: 3 kleine Schritte' returns the same generic steps for every task and saves them as subtasks",
+  "steps": [
+   "Open ToDo > Fokus",
+   "Tap Vorschlag: 3 kleine Schritte"
+  ],
+  "screenshot": "screenshots/41-fokus-vorschlag.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B5",
+  "type": "bug",
+  "severity": "mittel",
+  "area": "focus",
+  "platform": "mobile",
+  "title": "Starting a new focus round silently replaces a running one",
+  "steps": [
+   "Start Anfangen on one todo, leave",
+   "Open another todo > Fokus"
+  ],
+  "screenshot": "screenshots/40-fokus-new.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B6",
+  "type": "bug",
+  "severity": "mittel",
+  "area": "setup",
+  "platform": "mobile",
+  "title": "Setup summary marks every step Erledigt although nothing was chosen",
+  "steps": [
+   "Fresh app > Einrichtung starten",
+   "Tap Weiter 12 times"
+  ],
+  "screenshot": "screenshots/03-setup-end.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B7",
+  "type": "bug",
+  "severity": "mittel",
+  "area": "home/onboarding",
+  "platform": "mobile",
+  "title": "Reading-aid offer and its buttons are clipped on the welcome card",
+  "steps": [
+   "Open fresh app at 412px"
+  ],
+  "screenshot": "screenshots/01-fresh-start.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B8",
+  "type": "bug",
+  "severity": "niedrig",
+  "area": "dev-preview",
+  "platform": "mobile",
+  "title": "Dev-Preview toast covers focus buttons and returns on every reload (dev only)",
+  "steps": [
+   "Open focus screen in Dev-Preview"
+  ],
+  "screenshot": "screenshots/11-anfangen.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B9",
+  "type": "bug",
+  "severity": "niedrig",
+  "area": "forms",
+  "platform": "all",
+  "title": "Native date/time format mm/dd/yyyy, AM/PM and English validation message in German UI (may be test-browser locale, unverified)",
+  "steps": [
+   "Neuer Termin",
+   "Speichern without amount in Buchung"
+  ],
+  "screenshot": "screenshots/102-empty-save.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-B10",
+  "type": "bug",
+  "severity": "niedrig",
+  "area": "backup",
+  "platform": "all",
+  "title": "Backup import 'Ersetzen' not conclusively verified; marker entry remained",
+  "steps": [
+   "Download backup",
+   "Add todo",
+   "Import file > Backup prüfen > Importieren"
+  ],
+  "screenshot": "screenshots/97-backup-import.png",
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V1",
+  "type": "improvement",
+  "benefit": "hoch",
+  "area": "setup",
+  "platform": "all",
+  "title": "Cut setup to three steps (name, profile, go); rest as later checklist",
+  "steps": [
+   "Fresh app",
+   "12 steps before first use"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V2",
+  "type": "improvement",
+  "benefit": "hoch",
+  "area": "modules",
+  "platform": "all",
+  "title": "Habits module (sleep, sport) without streaks, plus a Studium profile",
+  "steps": [
+   "Search 'Schlaf' finds only reading-list items",
+   "Profiles: Alltag, Finanz-Fokus, Produktiv, Minimal"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V3",
+  "type": "improvement",
+  "benefit": "hoch",
+  "area": "calendar",
+  "platform": "all",
+  "title": "Weekly repeat on chosen weekdays and end date for lecture schedule",
+  "steps": [
+   "Neuer Termin > Mehr Felder > Wiederholung"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V4",
+  "type": "improvement",
+  "benefit": "hoch",
+  "area": "reminders",
+  "platform": "all",
+  "title": "Calm default reminder for events and todos with deadline; explain what happens without push on the PWA",
+  "steps": [
+   "Neuer Termin defaults to Nicht benachrichtigen",
+   "Push needs own sync server"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V5",
+  "type": "improvement",
+  "benefit": "hoch",
+  "area": "todos",
+  "platform": "all",
+  "title": "Deadline planning in stages / real step templates per keyword (Hausarbeit, Klausur, Referat)",
+  "steps": [
+   "Todo with Frist",
+   "Subtasks have no dates"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V6",
+  "type": "improvement",
+  "benefit": "mittel",
+  "area": "todos",
+  "platform": "all",
+  "title": "Explain or merge 'Fällig am' and 'Geplant für'",
+  "steps": [
+   "ToDo bearbeiten"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V7",
+  "type": "improvement",
+  "benefit": "mittel",
+  "area": "finance",
+  "platform": "all",
+  "title": "Income categories BAföG, Nebenjob, Eltern, Stipendium",
+  "steps": [
+   "Buchung > Einnahme: only Gehalt, Sonstige Einnahmen"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V8",
+  "type": "improvement",
+  "benefit": "mittel",
+  "area": "home/focus",
+  "platform": "all",
+  "title": "'Weiter mit …' re-entry card after leaving a focus round (single, switchable)",
+  "steps": [
+   "Verlassen in focus screen"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V9",
+  "type": "improvement",
+  "benefit": "mittel",
+  "area": "reminders",
+  "platform": "all",
+  "title": "Auto-clear old Gestern reminders, badge without count",
+  "steps": [
+   "Bell shows 12, many 'Noch offen' and 'Weitere Erinnerungen'"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V10",
+  "type": "improvement",
+  "benefit": "mittel",
+  "area": "settings",
+  "platform": "all",
+  "title": "One 'Ruhig' preset bundling mute, quiet hours, reading aid, density",
+  "steps": [
+   "Settings > Benachrichtigungen: six Ändern rows"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ },
+ {
+  "id": "JONAS-V11",
+  "type": "improvement",
+  "benefit": "niedrig",
+  "area": "focus",
+  "platform": "all",
+  "title": "Choose focus length (5/15/25) directly",
+  "steps": [
+   "Anfangen uses todo duration"
+  ],
+  "persona": "Jonas (19, Student, ADHS)"
+ }
+]

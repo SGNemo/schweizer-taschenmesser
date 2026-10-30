@@ -203,3 +203,45 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* A text field with its button beside it (weather place search). */
+.inlineForm {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.inlineForm > :first-child {
+  flex: 1;
+}
+/* A folded group of settings: one line with the current choice, the pickers below once opened. */
+.group {
+  border-top: 1px solid var(--border);
+}
+.group:first-child {
+  border-top: 0;
+}
+.groupSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--touch);
+  cursor: pointer;
+  list-style: none;
+}
+.groupSummary::-webkit-details-marker {
+  display: none;
+}
+.groupLine {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.groupAction {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+.groupBody {
+  padding-bottom: var(--space-2);
+}

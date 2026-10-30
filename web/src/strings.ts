@@ -14,6 +14,10 @@ export const de = {
   time: {
     weekdayAndDistance: (weekday: string, distance: string) => `${weekday}, ${distance}`,
     overdueSince: (days: number) => (days === 1 ? 'seit gestern' : `seit ${days} Tagen`),
+    /** A clock time inside a sentence; only German adds "Uhr". */
+    atClock: (time: string) => `${time} Uhr`,
+    /** "ab 29. Sep. 2026, 08:00 Uhr" */
+    startsFrom: (date: string, time: string) => `ab ${date}, ${time} Uhr`,
   },
   about: {
     title: 'Über Nemo',
@@ -80,6 +84,7 @@ export const de = {
     homeAria: 'Zur Übersicht',
     modules: 'Module',
     library: 'Modul-Bibliothek',
+    libraryShort: 'Bibliothek',
     settings: 'Einstellungen',
     more: 'Mehr',
     main: 'Hauptnavigation',
@@ -117,6 +122,11 @@ export const de = {
     grabHandle: 'Zum Schließen nach unten ziehen',
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
+    rowMenu: 'Weitere Aktionen',
+    datePresetsLabel: 'Schnell wählen',
+    datePresets: { today: 'Heute', tomorrow: 'Morgen', nextWeek: 'Nächste Woche' },
+    deleted: 'Gelöscht.',
+    changed: 'Geändert.',
     undoFailed: 'Das ließ sich nicht mehr rückgängig machen.',
     nothingToUndo: 'Nichts zum Rückgängigmachen.',
     selection: 'Auswahl',
@@ -154,6 +164,7 @@ export const de = {
     hint: 'Einzelne Buchstaben wirken nur, wenn du nicht in einem Feld schreibst.',
     items: [
       { keys: ['Strg', 'K'], text: 'Suchen oder fragen' },
+      { keys: ['Strg', '.'], text: 'Werkzeuge öffnen' },
       { keys: ['N'], text: 'Neu erfassen' },
       { keys: ['G', 'dann H'], text: 'Zur Übersicht' },
       { keys: ['G', 'dann P / G / A / W / T'], text: 'Zu Planen, Geld, Haushalt, Wissen, Tresor' },
@@ -169,6 +180,45 @@ export const de = {
       { keys: ['?'], text: 'Diese Übersicht' },
     ],
   },
+  voice: {
+    title: 'Spracheingabe',
+    intro:
+      'Mit einer Taste sprichst du mit der Suche und der KI. Der erkannte Text landet im Eingabefeld; abschicken tust du selbst.',
+    enable: 'Spracheingabe nutzen',
+    enableHint: 'Aus, bis du sie einschaltest.',
+    unavailable:
+      'Hier nicht verfügbar: Dieses Gerät oder dieser Browser bietet keine Spracherkennung. Tippen geht wie immer.',
+    key: 'Taste in der App',
+    keyHint: 'Halten und sprechen, oder einmal tippen und zum Beenden noch einmal. Esc bricht ab.',
+    keyRecord: 'Taste ändern',
+    keyRecording: 'Taste drücken …',
+    keyOff: 'Keine Taste',
+    keyClear: 'Entfernen',
+    keyDefault: 'Standard',
+    keyInvalid: 'Nimm eine Taste von F1 bis F12 oder eine Taste mit Strg oder Alt.',
+    globalKey: 'Systemweite Taste',
+    globalHint:
+      'Gilt auch, wenn Nemo im Hintergrund ist: ein Druck startet, der nächste beendet die Aufnahme.',
+    noticeTitle: 'Spracheingabe einschalten?',
+    noticeText:
+      'Zum Erkennen schickt dein Browser oder dein System den Ton womöglich an den Anbieter, zum Beispiel Google oder Microsoft. Nemo speichert weder Ton noch erkannten Text, schreibt nichts in Protokolle und gibt nichts an die KI, bevor du selbst abschickst. Die Sprache folgt der App-Sprache.',
+    noticeConfirm: 'Einschalten',
+    noticeCancel: 'Lieber nicht',
+    button: 'Sprechen',
+    buttonStop: 'Aufnahme beenden',
+    listening: 'Ich höre zu …',
+    listeningHint: (key: string) => `Zum Beenden ${key} oder tippen. Esc bricht ab.`,
+    listeningHintNoKey: 'Zum Beenden tippen. Esc bricht ab.',
+    finishing: 'Einen Moment …',
+    shortcutText: 'Sprechen (halten oder tippen)',
+    notices: {
+      denied:
+        'Das Mikrofon ist nicht freigegeben. Du kannst es in den Browser-Einstellungen erlauben.',
+      silent: 'Ich habe nichts gehört. Versuch es gern noch einmal.',
+      failed: 'Spracheingabe klappt hier gerade nicht. Tippen geht wie immer.',
+    },
+    searchWords: ['Mikrofon', 'Diktat', 'Sprechen', 'Push-to-talk', 'Voice', 'Spracherkennung'],
+  },
   actions: {
     add: 'Hinzufügen',
     quickAdd: 'Schnell hinzufügen',
@@ -176,6 +226,8 @@ export const de = {
     cancel: 'Abbrechen',
     save: 'Speichern',
     delete: 'Löschen',
+    duplicate: 'Duplizieren',
+    duplicated: 'Dupliziert. Die Kopie ist offen.',
     edit: 'Bearbeiten',
     close: 'Schließen',
     enable: 'Aktivieren',
@@ -186,9 +238,9 @@ export const de = {
   home: {
     title: 'Übersicht',
     emptyTitle: 'Noch keine Module aktiv',
-    emptyText: 'Aktiviere Module in der Bibliothek, um hier Widgets zu sehen.',
+    emptyText: 'Aktiviere Module in der Bibliothek, um hier Karten zu sehen.',
     toLibrary: 'Zur Bibliothek',
-    noWidgets: 'Die aktiven Module bieten keine Widgets an.',
+    noWidgets: 'Die aktiven Module bieten keine Karten an.',
   },
   library: {
     title: 'Modul-Bibliothek',
@@ -225,7 +277,9 @@ export const de = {
     notFoundTitle: 'Diese Kategorie gibt es nicht.',
     danger: {
       title: 'Gefahrenzone',
-      typePhrase: (phrase: string) => `Tippe „${phrase}“ zum Bestätigen`,
+      againTitle: 'Bist du sicher?',
+      againText: 'Das lässt sich nicht rückgängig machen. Bitte bestätige noch einmal.',
+      back: 'Zurück',
     },
     /** Extra search words per settings section (synonyms people type). */
     searchWords: {
@@ -240,7 +294,7 @@ export const de = {
         'Datum',
       ],
       appearance: ['Theme', 'Dunkelmodus', 'Schrift', 'Animation'],
-      modules: ['Bibliothek', 'Modul aktivieren', 'Startdaten'],
+      modules: ['Bibliothek', 'Modul aktivieren', 'Importieren'],
       tools: ['Werkzeugleiste', 'Reihenfolge'],
       notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
       'browser-extension': ['Brave', 'Chrome', 'Autofill'],
@@ -308,6 +362,20 @@ export const de = {
       homeViewHint:
         'Die ruhige Übersicht zeigt nur „Jetzt dran“, „Als Nächstes“ und „Heute & Morgen“. Alles andere ist ein Tipp entfernt.',
     },
+    appearanceGroups: {
+      change: 'Ändern',
+      done: 'Fertig',
+      line: (name: string, value: string) => `${name}: ${value}`,
+      theme: 'Thema',
+      colors: 'Farben',
+      text: 'Schrift & Lesen',
+      motion: 'Bewegung',
+      other: 'Sonstiges',
+    },
+    moduleGroups: {
+      fields: 'Felder',
+      more: (n: number) => `+ ${n}`,
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:
@@ -340,7 +408,7 @@ export const de = {
       },
       module: {
         title: 'Module',
-        description: 'Einstellungen der Module und Startdaten',
+        description: 'Einstellungen der Module und Importieren',
         keywords: ['Erinnerung', 'Startdaten', 'Import'],
       },
       werkzeuge: {
@@ -402,6 +470,7 @@ export const de = {
     favouritesHint:
       'Bis zu 5 Module stehen oben in der Seitenleiste. Der Stern an einem Modul in der Seitenleiste macht dasselbe.',
     favouritesFull: 'Höchstens 5 Favoriten – entferne zuerst einen anderen.',
+    favouritesNone: 'Keine',
     theme: 'Farbschema',
     themeSystem: 'System',
     themeLight: 'Hell',
@@ -439,6 +508,8 @@ export const de = {
       coverHint:
         '25 %: nur Fließtext. 50 %: dazu Überschriften und Listen. 75 %: dazu Beschriftungen und Tabellen. 100 %: jeder Text, auch Schaltflächen und Navigation (nicht im Tresor und in Eingabefeldern).',
       shortcut: 'Tastenkürzel: Alt + L schaltet die Lesehilfe ein und aus.',
+      on: 'An',
+      off: 'Aus',
       preview: 'Vorschau',
       previewText: 'So sieht ein längerer Satz mit Lesehilfe aus: Wortanfänge tragen den Blick.',
       hintTitle: 'Lesen fällt schwer?',
@@ -454,7 +525,7 @@ export const de = {
     motion: 'Bewegung',
     motionOptions: { system: 'Wie das System', reduce: 'Weniger' },
     homeView: 'Übersicht',
-    homeViewOptions: { all: 'Alle Widgets', calm: 'Nur das Wichtigste' },
+    homeViewOptions: { all: 'Alle Karten', calm: 'Nur das Wichtigste' },
     density: 'Dichte',
     densityOptions: { normal: 'Normal', compact: 'Kompakt' },
     modules: 'Module',
@@ -466,6 +537,7 @@ export const de = {
     start: 'Einrichtung starten',
     resume: 'Einrichtung fortsetzen',
     open: 'Einrichtung öffnen',
+    openStep: 'Öffnen',
     paletteCommand: 'Einrichtung',
     welcomeTitle: 'Willkommen bei Nemo',
     welcomeText:
@@ -476,7 +548,7 @@ export const de = {
     progressLabel: 'Fortschritt der Einrichtung',
     back: 'Zurück',
     next: 'Weiter',
-    skip: 'Überspringen',
+    skip: 'Später',
     finish: 'Fertig',
     noSteps: 'Aktuell gibt es nichts einzurichten.',
     startTitle: 'Willkommen zurück',
@@ -495,13 +567,32 @@ export const de = {
     summaryTitle: 'Zusammenfassung',
     summaryIntro: 'So steht es um deine Einrichtung:',
     statusDone: 'Erledigt',
-    statusSkipped: 'Übersprungen',
+    statusSkipped: 'Später',
     statusOpen: 'Offen',
     isNew: 'Neu',
     showChecklist: 'Checkliste auf der Übersicht anzeigen',
     checklistProgress: (done: number, total: number) => `${done} von ${total} Schritten erledigt`,
     moreOpen: (n: number) => `… und ${n} weitere`,
     hideChecklist: 'Ausblenden',
+    restLater: 'Rest später',
+    allSteps: 'Alle Schritte ansehen',
+    questionOf: (n: number, total: number) => `Frage ${n} von ${total}`,
+    quick: {
+      basics: {
+        title: 'Wie darfst du heißen?',
+        description: 'Name und Textgröße. Beides lässt sich später ändern.',
+      },
+      profiles: {
+        title: 'Was passt zu dir?',
+        description:
+          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet.',
+      },
+      ai: {
+        title: 'Soll eine KI helfen?',
+        description:
+          'Die KI sieht nie deine Daten. Du kannst das jederzeit in den Einstellungen ändern.',
+      },
+    },
     steps: {
       basics: {
         title: 'Grundlagen',
@@ -514,6 +605,8 @@ export const de = {
         fixedTitle: 'Feste Vorgaben',
         timezone: (zone: string) => `Zeitzone: ${zone} (Uhrzeiten bleiben lokale Wanduhrzeit)`,
         currency: 'Währung: Euro (EUR)',
+        textSize: 'Textgröße',
+        more: 'Weitere Einstellungen',
       },
       sync: {
         title: 'Sync und Wiederherstellung',
@@ -524,7 +617,7 @@ export const de = {
         connect: 'Mit Sync-Server verbinden',
         connected: 'Dieses Gerät ist bereits mit einem Sync-Server verbunden.',
         afterConnect:
-          'Liefert der Server bereits Module und Daten, kannst du die Schritte Profil und Startdaten überspringen.',
+          'Liefert der Server bereits Module und Daten, kannst du die Schritte Profil und Importieren überspringen.',
       },
       profiles: {
         title: 'Profil und Module',
@@ -543,6 +636,12 @@ export const de = {
         toolsOn: (names: string) => `Werkzeuge an: ${names}`,
         toolsOff: (names: string) => `Werkzeuge aus: ${names}`,
         confirm: 'Ich habe die Änderungen geprüft und möchte sie übernehmen.',
+        needConfirm: 'Hake bei „Das ändert sich“ an, dass du die Änderungen geprüft hast.',
+        switchesOff: (names: string) => `Schaltet ab: ${names}.`,
+        switchesNothingOff: 'Schaltet nichts ab.',
+        dataKept: 'Daten bleiben erhalten, alles lässt sich wieder einschalten.',
+        pick: 'Wählen',
+        picked: 'Gewählt',
       },
       tools: {
         title: 'Werkzeugkasten',
@@ -575,6 +674,15 @@ export const de = {
         mayTrain: 'Dieser Anbieter kann Eingaben zum Verbessern seiner Modelle nutzen.',
         ollamaFound: 'Ollama läuft auf diesem Computer.',
         ollamaAdd: 'Ollama hinzufügen',
+        quickLocal: 'Nur lokal, ohne KI',
+        quickLocalHint:
+          'Suche und Schnellerfassung laufen auf diesem Gerät. KI-Knöpfe bleiben aus.',
+        quickLater: 'KI später einrichten',
+        quickLaterHint: 'Der Schritt „KI-Anbieter“ bleibt in der Checkliste.',
+        ollamaSearch: 'Auf diesem Computer nach Ollama suchen',
+        ollamaSearching: 'Suche …',
+        ollamaNone: 'Ollama wurde nicht gefunden.',
+        ollamaHint: 'Fragt nur localhost:11434 auf diesem Computer ab, sonst nichts.',
       },
       connectors: {
         title: 'Konten verknüpfen',
@@ -589,10 +697,10 @@ export const de = {
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
       startdata: {
-        title: 'Startdaten',
+        title: 'Importieren',
         description:
           'Trage erste Einträge ein oder importiere sie: per Text, Datei, Vorlage oder Verbindung. Vor dem Speichern siehst du immer eine Vorschau, und jeder Import lässt sich rückgängig machen.',
-        none: 'Aktive Module bieten keine Startdaten an.',
+        none: 'Aktive Module bieten keinen Import an.',
         handled: 'Schon bearbeitet',
         hints: {
           finance: 'Konten, Kategorien und Startsalden.',
@@ -605,7 +713,7 @@ export const de = {
         description:
           'Lass eine KI deiner Wahl Daten aufbereiten: Du kopierst das Schema, sie liefert JSON, du siehst eine Vorschau.',
         none: 'Kein aktives Modul unterstützt den JSON-Import.',
-        hint: 'Es wird nur das Schema kopiert, nie deine Daten. Den Tresor (Accounts) gibt es hier nie.',
+        hint: 'Es wird nur das Schema kopiert, nie deine Daten. Den Tresor (Passwörter) gibt es hier nie.',
         desktop:
           'Am Computer gibt es zusätzlich die lokale Schnittstelle (Einstellungen → Lokale Schnittstelle).',
       },
@@ -646,8 +754,8 @@ export const de = {
       },
       dashboard: {
         title: 'Übersicht',
-        description: 'Welche Widgets erscheinen und in welcher Reihenfolge. Ziehen oder Tastatur.',
-        empty: 'Die aktiven Module haben keine Widgets.',
+        description: 'Welche Karten erscheinen und in welcher Reihenfolge. Ziehen oder Tastatur.',
+        empty: 'Die aktiven Module haben keine Karten.',
         hide: (title: string) => `${title} anzeigen`,
         drag: (title: string) => `${title} verschieben`,
         instructions:
@@ -669,19 +777,32 @@ export const de = {
         description: 'Aufgaben, Notizen, Kalender, Merkliste und Lesezeichen.',
       },
       minimal: { name: 'Minimal', description: 'Nur Kalender und Aufgaben.' },
+      family: {
+        name: 'Familie',
+        description: 'Kalender, Aufgaben, Einkauf, Vorräte, Geburtstage.',
+      },
+      papers: {
+        name: 'Papiere & Termine',
+        description: 'Unterlagen mit Fristen, Abos, Rechnungen und Kalender.',
+      },
+      study: {
+        name: 'Studium',
+        description: 'Aufgaben, Notizen, Kalender, Lesezeichen und Timer.',
+      },
     } as Record<string, { name: string; description: string }>,
   },
   palette: {
     /** Typing the start of the word for settings shows settings entries (first letters, lower case). */
     settingsPrefix: 'einst',
     recent: 'Zuletzt benutzt',
-    title: 'Befehlspalette',
+    title: 'Suchen',
     placeholder: 'Suchen, springen oder fragen …',
     empty: 'Keine Treffer',
-    hint: 'Ctrl+K',
+    hint: 'Strg+K',
     newEntry: (what: string) => `Neu: ${what}`,
-    nextReminder: 'Nächste Erinnerung',
-    randomReminder: 'Zufällige Erinnerung',
+    nextReminder: 'Nächste Erinnerung zeigen',
+    helpCommand: 'Hilfe und Anleitung öffnen',
+    randomReminder: 'Eine Erinnerung zeigen',
   },
   share: {
     title: 'Teilen',
@@ -712,7 +833,10 @@ export const de = {
       bookmark: 'Merkliste',
       list: 'Einkauf',
       finance: 'Ausgabe',
+      invoice: 'Rechnung',
       income: 'Einnahme',
+      subscription: 'Abo',
+      birthday: 'Geburtstag',
       note: 'Notiz',
     },
     target: {
@@ -722,6 +846,9 @@ export const de = {
       bookmark: 'Merkliste',
       list: 'Listen',
       finance: 'Finanzen',
+      invoice: 'Rechnungen',
+      subscription: 'Abos',
+      birthday: 'Personen',
       note: 'Notizen',
     },
     chip: {
@@ -734,6 +861,9 @@ export const de = {
       allDay: 'ganztägig',
       income: 'Einnahme',
       expense: 'Ausgabe',
+      priorityLow: 'Priorität niedrig',
+      priorityMid: 'Priorität mittel',
+      priorityHigh: 'Priorität hoch',
     },
     recurrence: {
       daily: 'täglich',
@@ -748,6 +878,8 @@ export const de = {
       weekdays: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'],
       everyWeekday: (name: string) => `jeden ${name}`,
       monthDay: (d: number) => (d === -1 ? 'am letzten Tag des Monats' : `jeden ${d}. des Monats`),
+      onDays: (names: string) => `an: ${names}`,
+      until: (date: string) => `bis ${date}`,
     },
     chooseType: 'Bitte wähle, wohin der Eintrag soll.',
     inboxHint: (target: string) => `Landet in „${target}“. Sortieren geht später.`,
@@ -848,6 +980,8 @@ export const de = {
     yearsUnit: 'Jahre',
     weekdays: 'Wochentage',
     monthDay: 'Tag des Monats',
+    /** Day of the month in a list; only German writes the ordinal dot. */
+    dayNumber: (d: number) => `${d}.`,
     lastDay: 'Letzter Tag',
     ends: 'Ende',
     endsNever: 'Nie',
@@ -903,6 +1037,9 @@ export const de = {
       calmAttention: 'Ruhiges „Jetzt wichtig“',
       calmAttentionHint:
         'Fasst Wartendes in einem Hinweis zusammen und lässt Rot nur bei Geldfristen. Ohne Tageszähler.',
+      moduleNow: '„Jetzt“ auf Modulseiten',
+      moduleNowHint:
+        'Zeigt oben im Kalender, bei Geld und im Vorrat in einer schmalen Zeile, was gerade ansteht.',
       timeToNext: 'Zeit bis zum nächsten Termin',
       timeToNextHint: 'Zeigt groß, wie lange es bis zum nächsten Termin ist.',
       focusMinutes: 'Länge des Fokus-Timers',
@@ -915,6 +1052,11 @@ export const de = {
       searchHistory: 'Verlauf in der Suche',
       searchHistoryHint:
         'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
+      more: 'Weitere Einstellungen',
+      aids: 'Hilfen',
+      aidsOn: (n: number, total: number) => `${n} von ${total} an`,
+      planShort: (n: number) => `Tagesplan ${n}`,
+      timerShort: (n: number) => `Timer ${n} Min`,
       clearHistory: 'Verlauf löschen',
       clearHistoryHint: 'Leert die zuletzt benutzten Einträge der Suche.',
       historyCleared: 'Verlauf gelöscht.',
@@ -962,13 +1104,24 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      followUp: 'Sanfte Nachfrage',
+      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintHint:
+        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
+      followUp: 'Ruhig wiederholen',
       followUpHint:
-        'Eine einzige Nachfrage nach 30 Minuten, wenn eine Erinnerung nicht mit „Erledigt“ beantwortet wurde.',
+        'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
+      repeatEvery: 'Abstand',
+      repeatEveryOption: (m: number) => `${m} min`,
+      repeatMax: 'Höchstens',
+      repeatMaxHint: 'Danach hört es auf; die Erinnerung bleibt in der Benachrichtigungs-Zentrale.',
+      repeatMaxOption: (n: number) => `${n}×`,
       todoDigest: 'ToDos am Morgen',
       todoDigestHint:
         'Ein Hinweis pro Tag, der die ToDos für heute nennt. Keine Einzelhinweise je Aufgabe.',
       digestTime: 'Uhrzeit der Übersicht',
+      inAppGroup: 'Karte in der App',
+      on: 'An',
+      off: 'Aus',
     },
     resume: {
       title: 'Woran war ich?',
@@ -992,11 +1145,13 @@ export const de = {
       emptyAction: 'Aufgabe anlegen',
       off: 'Die Vorschläge sind ausgeschaltet.',
       offAction: 'Einstellungen öffnen',
+      menu: 'Weitere Optionen',
     },
     waiting: {
       text: (n: number) => (n === 1 ? '1 ToDo wartet noch.' : `${n} ToDos warten noch.`),
       replan: 'Neu planen',
-      replanHint: 'Verteilt sie auf die nächsten Tage.',
+      replanHint:
+        'Schon länger offen, nicht dringend. Neu planen verteilt sie auf die nächsten Tage.',
       replanned: 'Auf die nächsten Tage verteilt.',
     },
     mode: {
@@ -1033,7 +1188,15 @@ export const de = {
       indicatorAria: (title: string, time: string) => `Fokus: ${title}, ${time}. Zurück zum Fokus.`,
       otherRunning: (title: string) => `Gerade läuft eine Runde für „${title}“.`,
     },
+    today: {
+      now: 'Jetzt',
+      inMinutes: (n: number) => `in ${n} Min`,
+      inHours: (h: number, m: number) => (m === 0 ? `in ${h} Std` : `in ${h} Std ${m} Min`),
+      appointments: 'Termine',
+      allAppointments: 'Alle Termine',
+    },
     plan: {
+      planned: 'Für heute eingeplant.',
       title: 'Heute',
       count: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
       doneToday: (n: number) => `Erledigt heute: ${n}`,
@@ -1080,6 +1243,8 @@ export const de = {
     markedDone: 'Als erledigt markiert.',
     markedOpen: 'Wieder geöffnet.',
     taskDeleted: 'ToDo gelöscht.',
+    changed: 'ToDo geändert.',
+    noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
     someday: 'Irgendwann',
     somedayLabel: 'Irgendwann (nicht in den offenen Listen zeigen)',
@@ -1087,6 +1252,11 @@ export const de = {
     newList: 'Neue Liste',
     listName: 'Listenname',
     renameList: 'Liste umbenennen',
+    moreOptions: 'Weitere Optionen',
+    added: 'ToDo hinzugefügt.',
+    listGroup: 'Liste',
+    moveToday: 'Auf heute',
+    showingList: (name: string) => `Liste: ${name}`,
     deleteList: 'Liste löschen',
     deleteListHint: 'Die Liste und alle ihre Aufgaben werden gelöscht.',
     inbox: 'Eingang',
@@ -1159,6 +1329,8 @@ export const de = {
     prev: 'Zurück',
     next: 'Weiter',
     newEvent: 'Neuer Termin',
+    endsAt: (time: string) => `bis ${time}`,
+    recent: 'Wie zuletzt',
     editEvent: 'Termin bearbeiten',
     allDay: 'Ganztägig',
     start: 'Beginn',
@@ -1180,7 +1352,8 @@ export const de = {
         : minutes >= 60
           ? `In ${Math.round(minutes / 60)} Std`
           : `In ${minutes} Min`) + ` · ${time}`,
-    followUpTitle: (title: string) => `Noch aktuell? ${title}`,
+    followUpTitle: (title: string) => `Noch offen: ${title}`,
+    followUpLast: 'Das war die letzte Erinnerung. Es bleibt in der Benachrichtigungs-Zentrale.',
     untilNext: {
       empty: 'Heute ist nichts mehr geplant.',
       off: 'Die Zeit bis zum nächsten Termin ist ausgeschaltet.',
@@ -1194,10 +1367,31 @@ export const de = {
       ended: 'Beendet',
       paused: 'Pausiert',
       active: 'Aktiv',
+      markDone: 'Erledigt',
+      intake: 'Einnahme (Antwort „Genommen“)',
+      intakeHint:
+        'Für Medikamente und Vitamine: du bestätigst mit „Genommen“. Es wird nichts gezählt.',
+      markedDone: 'Erinnerung erledigt.',
+      pause: 'Pausieren',
+      resume: 'Wieder einschalten',
+      pausedToast: 'Pausiert.',
+      resumedToast: 'Wieder eingeschaltet.',
       widgetEmpty: 'Keine anstehenden Erinnerungen.',
     },
     notify: {
       label: 'Benachrichtigen',
+      rowLabel: 'Erinnern',
+      noneShort: 'Keine',
+      hourShort: '1 h',
+      dayShort: '1 Tag',
+      other: 'Andere Zeit',
+      remember: 'Als Vorgabe merken',
+      permissionMissing:
+        'Benachrichtigungen sind noch nicht erlaubt, die Erinnerung bliebe deshalb aus.',
+      permissionDenied:
+        'Benachrichtigungen sind blockiert. Erlaube sie in den System- oder Browser-Einstellungen, sonst bleibt die Erinnerung aus.',
+      allow: 'Erlauben',
+      hintOff: 'Nicht mehr zeigen',
       none: 'Nicht benachrichtigen',
       atStart: 'Zum Beginn',
       minutes: (n: number) => `${n} Minuten vorher`,
@@ -1353,6 +1547,83 @@ export const de = {
       round: (n: number) => `Runde ${n}`,
       workDone: 'Arbeitsphase vorbei – Zeit für eine Pause.',
       restDone: 'Pause vorbei – weiter geht’s.',
+    },
+    screenshot: {
+      name: 'Bildschirmfoto',
+      description:
+        'Bildschirm, Fenster oder Tab aufnehmen und als Bild speichern oder kopieren. Alles bleibt auf deinem Gerät.',
+      hint: 'Der Browser fragt, was aufgenommen werden soll. Das Bild bleibt auf dieser Seite, bis du es speicherst, kopierst oder verwirfst.',
+      take: 'Bildschirm aufnehmen',
+      again: 'Noch einmal aufnehmen',
+      cancelled: 'Nichts aufgenommen.',
+      failed: 'Die Aufnahme hat nicht geklappt. Probier es noch einmal.',
+      save: 'Speichern',
+      copy: 'Kopieren',
+      discard: 'Verwerfen',
+      copied: 'Bild kopiert.',
+      copyFailed: 'Kopieren geht in diesem Browser nicht. Nutze „Speichern“.',
+      alt: (w: number, h: number) => `Aufnahme von Bildschirm oder Fenster, ${w} × ${h} Pixel`,
+      unsupported:
+        'Die Aufnahme von Bildschirm oder Fenster gibt es auf diesem Gerät nicht. Am Telefon helfen die Tasten des Geräts.',
+      delay: (n: number) => `Nach ${n} Sekunden aufnehmen`,
+      countdown: (n: number) => `Aufnahme in ${n} …`,
+      stop: 'Abbrechen',
+      share: 'Teilen',
+    },
+    diff: {
+      name: 'Textvergleich',
+      description:
+        'Zwei Texte nebeneinander legen und sehen, was sich geändert hat. Alles bleibt auf deinem Gerät.',
+      before: 'Vorher',
+      after: 'Nachher',
+      ignoreSpace: 'Leerraum ignorieren',
+      result: 'Unterschiede',
+      changed: (n: number) => (n === 1 ? '1 Zeile geändert' : `${n} Zeilen geändert`),
+      identical: 'Kein Unterschied.',
+      empty: 'Füge links und rechts einen Text ein.',
+      tooLong: (max: string) =>
+        `Der Text ist zu lang (höchstens ${max} Zeichen je Seite). Kürze ihn oder vergleiche ihn in Teilen.`,
+      rough: 'Die Texte unterscheiden sich so stark, dass nur grob verglichen wird.',
+      copyDiff: 'Als Unified Diff kopieren',
+      copied: 'Unified Diff kopiert.',
+      added: 'hinzugefügt',
+      removed: 'entfernt',
+      same: 'unverändert',
+    },
+    regex: {
+      name: 'Regex-Tester',
+      description:
+        'Ein Muster (reguläre Ausdrücke) an einem Text ausprobieren: Treffer, Gruppen und Ersetzen. Läuft nur auf deinem Gerät.',
+      pattern: 'Muster',
+      flags: 'Optionen',
+      flagNames: {
+        g: 'g – alle Treffer',
+        i: 'i – Groß-/Kleinschreibung ignorieren',
+        m: 'm – ^ und $ pro Zeile',
+        s: 's – Punkt trifft auch Zeilenumbruch',
+        u: 'u – Unicode',
+      } as Record<string, string>,
+      text: 'Testtext',
+      replacement: 'Ersetzen durch',
+      replacementHint: 'Mit $1 oder $<name> kannst du Gruppen einsetzen.',
+      highlighted: 'Treffer im Text',
+      matches: 'Treffer',
+      count: (n: number) => (n === 1 ? '1 Treffer' : `${n} Treffer`),
+      none: 'Kein Treffer.',
+      idle: 'Gib ein Muster und einen Text ein.',
+      invalid: 'Das Muster ist nicht gültig.',
+      tooSlow: 'Muster zu aufwendig. Die Prüfung wurde nach 1 Sekunde abgebrochen.',
+      tooLong: (max: string) => `Der Testtext ist zu lang (höchstens ${max} Zeichen). Kürze ihn.`,
+      capped: (max: string) => `Es werden nur die ersten ${max} Treffer gezeigt.`,
+      unsupported: 'Dieses Gerät kann den Tester nicht sicher ausführen.',
+      match: (n: number) => `Treffer ${n}`,
+      group: (n: number) => `Gruppe ${n}`,
+      named: (name: string) => `Gruppe „${name}“`,
+      notMatched: 'nicht beteiligt',
+      emptyMatch: '(leer)',
+      position: (at: number) => `ab Zeichen ${at}`,
+      preview: 'Vorschau der Ersetzung',
+      checking: 'Prüfe …',
     },
     qr: {
       name: 'QR-Code',
@@ -1651,8 +1922,8 @@ export const de = {
     center: {
       title: 'Erinnerungen',
       bell: (n: number) => (n === 0 ? 'Erinnerungen' : `Erinnerungen, ${n} offen`),
-      next: 'Nächste Erinnerung',
-      random: 'Zufällige Erinnerung',
+      next: 'Nächste Erinnerung zeigen',
+      random: 'Eine Erinnerung zeigen',
       another: 'Noch eine',
       allRead: 'Alle gelesen',
       list: 'Offen',
@@ -1661,9 +1932,15 @@ export const de = {
       count: (n: number) => (n === 1 ? '1 offen' : `${n} offen`),
       doneAria: (title: string) => `${title}: erledigt`,
       doneToast: 'Erledigt.',
+      takenAria: (title: string) => `${title}: genommen`,
+      takenToast: 'Notiert.',
+      earlier: (n: number) => `Früher · ${n}`,
+      earlierLabel: 'Früher offen',
+      earlierClear: 'Früheres als gelesen markieren',
       allDoneToast: 'Alle als gelesen markiert.',
     },
     label: 'Erinnerung',
+    taken: 'Genommen',
     done: 'Erledigt',
     later: 'Später',
     open: 'Öffnen',
@@ -1685,12 +1962,16 @@ export const de = {
   },
   notifications: {
     summary: (count: number, titles: string[]) => ({
-      title: `Weitere Erinnerungen · ${count}`,
+      title: `${count} Erinnerungen`,
       body: titles.slice(0, 3).join(' · ') + (titles.length > 3 ? ' …' : ''),
     }),
     title: 'Benachrichtigungen',
     intro:
-      'Erinnerungen erscheinen als Benachrichtigung, solange die App geöffnet ist oder im Hintergrund läuft. Bei geschlossener App kommen sie nur mit Push (siehe unten).',
+      'Erinnerungen erscheinen als Benachrichtigung, solange die App geöffnet ist oder im Hintergrund läuft. Ohne Push kommt bei geschlossener App nichts; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Öffnen in der Glocke. Mit Push (siehe unten) kommen sie auch dann.',
+    introAndroid:
+      'Auf Android plant die App Erinnerungen beim System ein, damit sie auch bei geschlossener App kommen. Das klappt, wenn Nemo Benachrichtigungen und „Wecker & Erinnerungen“ darf und der Akku nicht eingeschränkt ist (Einstellungen → Apps → Nemo).',
+    introDesktop:
+      'Erinnerungen erscheinen als Benachrichtigung, solange Nemo läuft, auch im Hintergrund oder im Infobereich. Ist die App beendet, kommen sie nicht; was in der Zwischenzeit fällig wurde, siehst du beim nächsten Start in der Glocke.',
     enable: 'Benachrichtigungen aktivieren',
     granted: 'Aktiviert',
     denied: 'Blockiert – bitte in den Browser-Einstellungen für diese Seite erlauben.',
@@ -1740,6 +2021,8 @@ export const de = {
     eventAt: (time: string) => `heute um ${time}`,
     budgetOver: (name: string) => `Budget „${name}“ überschritten`,
     pantryExpired: (n: number) => (n === 1 ? '1 Vorrat abgelaufen' : `${n} Vorräte abgelaufen`),
+    pantryLow: (n: number) =>
+      n === 1 ? '1 Vorrat geht zur Neige' : `${n} Vorräte gehen zur Neige`,
     pantrySoon: (n: number) => (n === 1 ? '1 Vorrat läuft bald ab' : `${n} Vorräte laufen bald ab`),
     docsExpired: (n: number) => (n === 1 ? '1 Dokument abgelaufen' : `${n} Dokumente abgelaufen`),
     docsSoon: (n: number) =>
@@ -1750,6 +2033,7 @@ export const de = {
     updateAvailable: 'Update verfügbar',
     waiting: (n: number) => `Wartet noch · ${n}`,
     nothingNow: 'Nichts davon muss jetzt sein.',
+    waitingExplain: 'Schon länger offen, aber nicht dringend. Du kannst sie neu planen.',
     todosWaiting: (n: number) => (n === 1 ? '1 ToDo wartet' : `${n} ToDos warten`),
     todosWaitingDetail: 'Neu planen möglich',
   },
@@ -1779,8 +2063,12 @@ export const de = {
     packingSummary: (packed: number, total: number) => `${packed} von ${total} gepackt`,
     contractsSummary: (n: number) =>
       n === 1 ? '1 Kündigungsfrist in Sicht' : `${n} Kündigungsfristen in Sicht`,
-    expirySummary: (expired: number, soon: number) =>
-      [expired ? `${expired} abgelaufen` : '', soon ? `${soon} bald` : '']
+    expirySummary: (expired: number, soon: number, low = 0) =>
+      [
+        expired ? `${expired} abgelaufen` : '',
+        soon ? `${soon} bald` : '',
+        low ? `${low} wenig` : '',
+      ]
         .filter(Boolean)
         .join(' · '),
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
@@ -1788,11 +2076,13 @@ export const de = {
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
   },
   homeEdit: {
-    calmNote: (n: number) =>
-      n === 1
-        ? 'Ruhige Ansicht: 1 Widget ist ausgeblendet.'
-        : `Ruhige Ansicht: ${n} Widgets sind ausgeblendet.`,
-    showAll: 'Alle Widgets zeigen',
+    showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),
+    showLess: 'Nur das Wichtigste',
+    pinStart: 'Karte hinzufügen…',
+    pin: (title: string) => `${title} hinzufügen`,
+    unpin: (title: string) => `${title} entfernen`,
+    pinned: 'Hinzugefügt',
+    pinNote: 'Hinzugefügte Karten bleiben auch in der ruhigen Ansicht sichtbar.',
     customize: 'Anpassen',
     done: 'Fertig',
     hide: 'Ausblenden',
@@ -1805,15 +2095,15 @@ export const de = {
     moved: (title: string, pos: number) => `${title} auf Position ${pos} verschoben.`,
     dropped: (title: string, pos: number) => `${title} auf Position ${pos} abgelegt.`,
     cancelled: 'Verschieben abgebrochen.',
-    widgets: 'Widgets',
-    widgetsTitle: 'Widgets der Übersicht',
+    widgets: 'Karten',
+    widgetsTitle: 'Karten der Übersicht',
     widgetsNote:
       'Ausblenden betrifft nur die Übersicht, das Modul bleibt aktiv. Deaktivieren kannst du Module in der Bibliothek.',
-    widgetsNone: 'Keine aktiven Module mit Widgets.',
+    widgetsNone: 'Keine aktiven Module mit Karten.',
     reset: 'Zurücksetzen',
     resetTitle: 'Übersicht zurücksetzen?',
     resetText:
-      'Reihenfolge, Größen und ausgeblendete Widgets gehen auf den Standard zurück. Deine Module und Daten bleiben unverändert.',
+      'Reihenfolge, Größen und ausgeblendete Karten gehen auf den Standard zurück. Deine Module und Daten bleiben unverändert.',
     resetConfirm: 'Auf Standard zurücksetzen',
     cancel: 'Abbrechen',
     size: (title: string) => `Größe von ${title}`,
@@ -1897,6 +2187,15 @@ export const de = {
     markPaid: 'Als bezahlt markieren',
     markedPaid: 'Als bezahlt markiert.',
     reopen: 'Wieder öffnen',
+    repeat: 'Wiederholen',
+    repeatHint: 'Wird die Rechnung bezahlt, entsteht die nächste automatisch.',
+    repeatMeta: (every: string) => `↻ ${every}`,
+    repeatOptions: {
+      none: 'Nie',
+      monthly: 'Monatlich',
+      quarterly: 'Vierteljährlich',
+      yearly: 'Jährlich',
+    },
     undo: 'Rückgängig',
     empty: 'Keine offenen Rechnungen.',
     emptyPaid: 'Noch keine bezahlten Rechnungen.',
@@ -1936,12 +2235,21 @@ export const de = {
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
     active: 'Aktiv',
     paused: 'Pausiert',
+    pause: 'Pausieren',
+    resume: 'Fortsetzen',
     empty: 'Noch keine Abos.',
     perMonth: 'Pro Monat',
     perYear: 'Pro Jahr',
     nextCharge: 'Nächste Abbuchung',
     cancelBy: 'Kündigen bis',
     ended: 'Beendet',
+    cancelledTo: 'Gekündigt zum (optional)',
+    cancelledToHint: 'Danach gibt es keine Abbuchungen und Fristen mehr.',
+    cancelledBadge: (date: string) => `Gekündigt zum ${date}`,
+    priceHistory: 'Preisverlauf',
+    priceChange: (date: string, from: string, to: string, pct: number) =>
+      `${date}: ${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+    priceUp: (pct: number) => `Preis erhöht (+${pct} %)`,
     every: 'Intervall',
     widgetEmpty: 'Keine aktiven Abos.',
     monthlyCost: (v: string) => `≙ ${v} pro Monat`,
@@ -2003,10 +2311,28 @@ export const de = {
     addTransaction: 'Buchung hinzufügen',
     editTransaction: 'Buchung bearbeiten',
     noTransactions: 'Keine Buchungen in diesem Monat.',
+    searchBookings: 'Buchungen durchsuchen',
+    filterKind: 'Art',
+    filterAll: 'Alle',
+    searchAllMonths: (n: number) =>
+      n === 1 ? '1 Treffer in allen Monaten' : `${n} Treffer in allen Monaten`,
+    noMatches: 'Keine passenden Buchungen.',
     payee: 'Empfänger / Titel',
     account: 'Konto',
     noCategory: 'Ohne Kategorie',
+    changeCategory: 'Kategorie ändern',
     fromInvoice: 'Automatisch aus einer bezahlten Rechnung gebucht.',
+    repeat: 'Wiederholen',
+    repeatHint: 'Die nächste Buchung entsteht automatisch, sobald ihr Datum erreicht ist.',
+    repeatMeta: (every: string) => `↻ ${every}`,
+    repeatOptions: {
+      none: 'Nie',
+      monthly: 'Monatlich',
+      quarterly: 'Vierteljährlich',
+      yearly: 'Jährlich',
+    },
+    repeatBooked: (n: number) =>
+      n === 1 ? '1 wiederkehrende Buchung angelegt.' : `${n} wiederkehrende Buchungen angelegt.`,
     addAccount: 'Konto hinzufügen',
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
@@ -2024,9 +2350,11 @@ export const de = {
     defaultDeviceName: 'Gerät',
     title: 'Synchronisation',
     intro:
-      'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im LAN oder über Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
+      'Optional: gleiche deine Daten über deinen eigenen Sync-Server ab (im Heimnetz oder über ein privates Netzwerk wie Tailscale). Ohne Server bleibt alles lokal auf diesem Gerät.',
     serverUrl: 'Server-Adresse',
     serverUrlHint: 'z. B. https://mein-pc.tailnet.ts.net',
+    httpWarning:
+      'Mit „http://“ geht das Token unverschlüsselt über das Netz. Nutze https:// (z. B. Tailscale) – nur für diesen Rechner (localhost) ist http in Ordnung.',
     token: 'Zugangstoken',
     deviceName: 'Gerätename',
     deviceNameHint: 'So erscheint dieses Gerät in der Geräteliste.',
@@ -2036,12 +2364,12 @@ export const de = {
     >,
     encrypt: 'Ende-zu-Ende-Verschlüsselung',
     encryptHint:
-      'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur Chiffretext. Nur auf einem leeren Server möglich.',
+      'Werte werden auf dem Gerät verschlüsselt, der Server sieht nur verschlüsselte Daten. Nur auf einem leeren Server möglich.',
     plainWarning:
       'Ohne Ende-zu-Ende-Verschlüsselung liegen deine Daten auf dem Server im Klartext. Nutze sie, wenn der Server nicht nur dir gehört oder nicht verschlüsselt gespeichert wird.',
-    passphrase: 'Passphrase',
+    passphrase: 'Passwortsatz (mehrere Wörter)',
     passphraseHint:
-      'Mindestens 12 Zeichen, am besten mehrere Wörter. Ohne die Passphrase sind die Daten nicht wiederherstellbar.',
+      'Mindestens 12 Zeichen, am besten mehrere Wörter. Ohne den Passwortsatz sind die Daten nicht wiederherstellbar.',
     passphraseJoinHint: 'Nur nötig, wenn der Server verschlüsselt ist.',
     connect: 'Verbinden',
     connecting: 'Verbinde …',
@@ -2061,8 +2389,10 @@ export const de = {
     state: { off: 'Aus', idle: 'Synchronisiert', syncing: 'Synchronisiere …', error: 'Fehler' },
     badge: (state: string) => `Synchronisation: ${state}`,
     detailsTitle: 'Status',
-    lastResult: (pulled: number, pushed: number) =>
-      `Zuletzt: ${pulled} empfangen, ${pushed} gesendet`,
+    lastResult: (applied: number, pushed: number) =>
+      applied === 0 && pushed === 0
+        ? 'Zuletzt: alles aktuell, nichts Neues'
+        : `Zuletzt: ${applied} Änderungen übernommen, ${pushed} gesendet`,
     rejected: (n: number) =>
       `${n} empfangene Änderungen konnten nicht entschlüsselt werden und wurden übersprungen.`,
     failuresInRow: (n: number) => (n === 1 ? '1 Fehlversuch' : `${n} Fehlversuche in Folge`),
@@ -2119,9 +2449,9 @@ export const de = {
       unauthorized: 'Der Server hat das Token abgelehnt.',
       server: 'Der Server hat einen Fehler gemeldet.',
       clock: 'Die Uhr dieses Geräts geht mehr als eine Stunde vor. Bitte Datum und Uhrzeit prüfen.',
-      decrypt: 'Entschlüsselung fehlgeschlagen – stimmt die Passphrase?',
+      decrypt: 'Entschlüsselung fehlgeschlagen – stimmt der Passwortsatz?',
       'no-key':
-        'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit Passphrase verbinden.',
+        'Die Daten auf dem Server sind verschlüsselt. Bitte trennen und neu mit dem Passwortsatz verbinden.',
       unsupported: 'Nicht unterstützt.',
       unknown: 'Unbekannter Fehler.',
     } as Record<string, string>,
@@ -2130,9 +2460,9 @@ export const de = {
       unreachable:
         'Server nicht erreichbar. Wird die App per HTTPS geöffnet, muss auch der Server per HTTPS erreichbar sein (z. B. mit „tailscale serve“).',
       unauthorized: 'Das Token wurde abgelehnt.',
-      'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte die Passphrase eingeben.',
-      'passphrase-too-short': 'Die Passphrase braucht mindestens 12 Zeichen.',
-      'wrong-passphrase': 'Falsche Passphrase.',
+      'passphrase-required': 'Dieser Server ist verschlüsselt. Bitte den Passwortsatz eingeben.',
+      'passphrase-too-short': 'Der Passwortsatz braucht mindestens 12 Zeichen.',
+      'wrong-passphrase': 'Falscher Passwortsatz.',
       'server-has-plain-data':
         'Auf dem Server liegen bereits unverschlüsselte Daten. Verschlüsselung ist nur auf einem leeren Server möglich.',
       revoked: 'Dieses Gerät ist auf dem Server gesperrt.',
@@ -2172,7 +2502,7 @@ export const de = {
     encryptedExport: 'Verschlüsselt exportieren',
     encryptedExported: 'Verschlüsseltes Backup heruntergeladen.',
     exportHint:
-      'Empfohlen: verschlüsselt exportieren (Argon2id, AES-256). Das normale Backup enthält alle Einträge im Klartext.',
+      'Empfohlen: mit Passwort sichern. Dann ist die Datei verschlüsselt und eine Änderung fällt auf. Ohne Passwort liegen alle Einträge lesbar in der Datei.',
     exportPassphrase: 'Passwort für das Backup',
     exportPassphraseHint:
       'Mindestens 8 Zeichen. Ohne dieses Passwort lässt sich das Backup nicht öffnen – es gibt keine Rücksetzung.',
@@ -2211,7 +2541,13 @@ export const de = {
       `Gesamt: ${added} kommen dazu, ${replaced} werden ersetzt, ${removed} werden gelöscht.`,
     previewNothing: 'Es ändert sich nichts.',
     safetyNote:
-      'Vorher legt die App automatisch eine Sicherheitskopie deiner aktuellen Daten an. Bricht etwas ab, bleibt alles unverändert.',
+      'Vorher speichert die App eine Sicherheitskopie deiner aktuellen Daten. Im Browser kommt sie als Download in deinen Downloads-Ordner (mit Passwort verschlüsselt, wenn du eins eingegeben hast), in der App liegt sie im Datenordner. Bricht etwas ab, bleibt alles unverändert.',
+    plainHint:
+      'Ohne Passwort: lesbare Datei. Die Prüfsumme erkennt Beschädigung und versehentliche Änderungen, aber keine absichtlichen.',
+    filesNote:
+      'Nicht im Backup: Dokumentdateien (Dateien bei Unterlagen). Sie bleiben nur auf diesem Gerät.',
+    noChecksum:
+      'Diese Datei hat keine Prüfsumme (ältere Version). Ob sie verändert wurde, lässt sich nicht erkennen.',
     restoring: 'Stelle wieder her …',
     autoTitle: 'Automatische Backups',
     autoIntro:
@@ -2246,7 +2582,7 @@ export const de = {
       'passphrase-required': 'Dieses Backup ist verschlüsselt. Gib das Passwort ein.',
       'wrong-passphrase': 'Falsches Passwort – oder die Datei wurde verändert.',
       'checksum-mismatch':
-        'Die Prüfsumme stimmt nicht: Die Datei ist beschädigt oder unvollständig.',
+        'Die Prüfsumme stimmt nicht: Die Datei ist beschädigt, unvollständig oder wurde verändert.',
       'restore-failed': 'Die Probe-Wiederherstellung ist fehlgeschlagen.',
       'count-mismatch': 'Nach der Probe-Wiederherstellung fehlen Einträge.',
       'safety-failed':
@@ -2257,6 +2593,8 @@ export const de = {
     } as Record<string, string>,
   },
   ai: {
+    /** Name of the "bring your own endpoint" provider choice (brand names stay as they are). */
+    providerCustom: 'Eigener Anbieter (OpenAI-kompatibel)',
     title: 'KI-Assistent',
     off: {
       title: 'KI abschalten',
@@ -2378,6 +2716,8 @@ export const de = {
       ask: 'Assistent fragen',
       write: 'Eintragen',
       writeButton: 'Mit KI eintragen',
+      writeSentence: 'Satz eintragen',
+      askLocal: 'Frage stellen',
       writePlaceholder: 'z. B. Rechnung Stadtwerke 89,90 € fällig 15.10.',
     },
     tier: {
@@ -2529,6 +2869,16 @@ export const de = {
           : `${n} Einträge wurden übersprungen, weil sie sich geändert haben.`,
       failed: 'Das konnte nicht gespeichert werden.',
       nothingReady: 'Es fehlen noch Angaben.',
+      reminder: {
+        confirm: 'Speichern',
+        edit: 'Ändern',
+        notifies: 'Du bekommst dann eine Benachrichtigung.',
+        defaultTime: (time: string) =>
+          `Keine Uhrzeit genannt – ${time} Uhr vorgeschlagen. Du kannst sie ändern.`,
+        rolledDay: 'Diese Uhrzeit ist heute schon vorbei – darum für morgen vorgeschlagen.',
+        past: 'Dieser Zeitpunkt liegt schon zurück – es kommt keine Benachrichtigung.',
+        askTitle: 'Woran soll ich dich erinnern?',
+      },
       recurrence: {
         daily: 'Täglich',
         weekly: 'Wöchentlich',
@@ -2690,6 +3040,14 @@ export const de = {
     done: 'Erledigt',
     widgetEmpty: 'Nichts gemerkt.',
     openCount: (n: number) => (n === 1 ? '1 offener Merkzettel' : `${n} offene Merkzettel`),
+    moreOptions: 'Weitere Optionen',
+    groupBy: 'Gruppieren nach',
+    groupings: { recent: 'Zuletzt hinzugefügt', tag: 'Erster Tag', kind: 'Art' },
+    recent: { today: 'Heute', week: 'Letzte 7 Tage', older: 'Früher' },
+    copyLink: 'Link kopieren',
+    linkCopied: 'Link kopiert.',
+    showing: (what: string) => `Gefiltert: ${what}`,
+    showAll: 'Alle anzeigen',
   },
   notes: {
     meta: {
@@ -2758,6 +3116,8 @@ export const de = {
     until: (date: string) => `Haltbar bis ${date}`,
     restock: 'Auf die Einkaufsliste',
     restocked: (n: string) => `„${n}“ an die Einkaufsliste gesendet.`,
+    restockAll: (n: number) => `Alle ${n} nachkaufen`,
+    restockedMany: (n: number) => `${n} Dinge an die Einkaufsliste gesendet.`,
     shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
@@ -2805,6 +3165,13 @@ export const de = {
     deleted: 'Person gelöscht.',
     giftsOpen: (n: number) => (n === 1 ? '1 Geschenk offen' : `${n} Geschenke offen`),
     giftsHeading: 'Geschenke',
+    viewLabel: 'Ansicht',
+    viewPeople: 'Personen',
+    viewGifts: 'Offene Geschenke',
+    giftsNoneOpen: 'Keine offenen Geschenkideen. Alles verschenkt.',
+    giftGivenAction: 'Verschenkt',
+    giftGivenAria: (what: string) => `„${what}“ als verschenkt markieren`,
+    giftGiven: 'Als verschenkt markiert.',
     giftsEmpty: 'Noch keine Geschenkideen für diese Person.',
     addGift: 'Geschenkidee hinzufügen',
     editGift: 'Geschenkidee bearbeiten',
@@ -3024,6 +3391,7 @@ export const de = {
       clear: 'Korb leeren',
       deleteAll: 'Alle löschen …',
       remove: (name: string) => `${name} aus dem Korb nehmen`,
+      added: (n: number) => (n === 1 ? '1 Eintrag im Korb' : `${n} Einträge im Korb`),
     },
     del: {
       title: 'Löschen bestätigen',
@@ -3039,8 +3407,15 @@ export const de = {
       modePermanent: 'Endgültig löschen – ohne Papierkorb',
       trashBtn: 'In den Papierkorb',
       permBtn: 'Endgültig löschen',
-      typeLabel: (phrase: string) => `Tippe zur Bestätigung „${phrase}“ ein`,
-      typeHint: 'Damit nichts aus Versehen verschwindet.',
+      twiceHint: 'Weil das viel ist oder endgültig, fragt Nemo gleich noch einmal nach.',
+      againTitle: 'Wirklich löschen?',
+      againTrash: (n: number, size: string, files: string) =>
+        `${n === 1 ? '1 Eintrag' : `${n} Einträge`} mit ${size} (${files} Dateien) kommen in den Papierkorb.`,
+      againPermanent: (n: number, size: string, files: string) =>
+        `${n === 1 ? '1 Eintrag' : `${n} Einträge`} mit ${size} (${files} Dateien) werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.`,
+      againYesTrash: 'Ja, in den Papierkorb',
+      againYesPermanent: 'Ja, endgültig löschen',
+      back: 'Zurück',
       warnUser:
         'Das liegt in deinen persönlichen Ordnern (Dokumente, Bilder, Desktop, Videos, Musik). Prüfe genau, ob du es wirklich nicht mehr brauchst.',
       warnProgram:
@@ -3058,7 +3433,7 @@ export const de = {
       stop: 'Stoppen',
       close: 'Schließen',
       errors: {
-        'confirmation-mismatch': 'Die Bestätigung stimmt nicht überein.',
+        'confirmation-missing': 'Die zweite Bestätigung fehlt. Bitte noch einmal löschen.',
         'plan-expired': 'Die Prüfung ist abgelaufen. Bitte starte das Löschen noch einmal.',
         'unknown-plan': 'Die Prüfung ist abgelaufen. Bitte starte das Löschen noch einmal.',
         'already-running': 'Es läuft schon ein Löschvorgang.',
@@ -3131,7 +3506,12 @@ export const de = {
       legend: 'Legende',
       byType: 'Dateityp',
       byDepth: 'Tiefe',
+      byAge: 'Alter',
+      ageLegendUse:
+        'Farbe = letzte Benutzung (geöffnet oder geändert, was jünger ist). Bei Ordnern zählt die zuletzt benutzte Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr geöffnet.',
       depthLegend: 'Je dunkler die Fläche, desto tiefer liegt der Ordner.',
+      ageLegend:
+        'Farbe = letzte Änderung. Bei Ordnern zählt die neueste Datei darin: Ein roter Ordner wurde seit Jahren nicht mehr angefasst.',
       colorBy: 'Farbe nach',
       kind: {
         video: 'Videos',
@@ -3140,8 +3520,46 @@ export const de = {
         archive: 'Archive',
         program: 'Programme',
         document: 'Dokumente',
+        game: 'Spieldaten',
         other: 'Sonstiges',
       },
+    },
+    age: {
+      buckets: [
+        'unter 1 Monat',
+        '1–6 Monate',
+        '6–12 Monate',
+        '1–2 Jahre',
+        '2–3 Jahre',
+        'über 3 Jahre',
+      ] as readonly string[],
+      /** "vor 3 Wochen" for an age in days. */
+      ago: (days: number) => {
+        if (days < 1) return 'heute';
+        if (days < 2) return 'gestern';
+        if (days < 14) return `vor ${Math.floor(days)} Tagen`;
+        if (days < 61) return `vor ${Math.floor(days / 7)} Wochen`;
+        if (days < 730) return `vor ${Math.floor(days / 30.44)} Monaten`;
+        return `vor ${Math.floor(days / 365.25)} Jahren`;
+      },
+      /** Compact form for the map tiles. */
+      short: (days: number) => {
+        if (days < 1) return 'heute';
+        if (days < 14) return `${Math.floor(days)} T.`;
+        if (days < 61) return `${Math.floor(days / 7)} Wo.`;
+        if (days < 730) return `${Math.floor(days / 30.44)} Mon.`;
+        return `${Math.floor(days / 365.25)} J.`;
+      },
+    },
+    select: {
+      label: 'Ausgewählte Treffer',
+      row: (name: string) => `${name} auswählen`,
+      all: 'Alle Treffer auswählen',
+      summary: (n: number, size: string) =>
+        `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} ausgewählt · ${size}`,
+      toBasket: 'In den Korb',
+      delete: 'Auswahl löschen …',
+      clear: 'Auswahl aufheben',
     },
     views: { label: 'Ansicht', map: 'Karte', list: 'Liste' },
     nav: {
@@ -3155,8 +3573,29 @@ export const de = {
       none: 'Alle',
       topDirs: 'Größte Ordner',
       topFiles: 'Größte Dateien',
-      old: 'Älter als',
-      months: (n: number) => (n === 12 ? '1 Jahr' : n === 24 ? '2 Jahre' : `${n} Monate`),
+      old: 'Lange nicht geändert',
+      unused: 'Lange nicht benutzt',
+      oldSince: 'Nicht geändert seit',
+      months: (n: number) =>
+        n % 12 === 0 ? (n === 12 ? 'einem Jahr' : `${n / 12} Jahren`) : `${n} Monaten`,
+      all: 'Alles',
+      topmost: 'Alte Ordner nur einmal zeigen (ohne ihren Inhalt)',
+      minSize: 'Mindestgröße',
+      anySize: 'jede Größe',
+      fromSize: (size: string) => `ab ${size}`,
+      oldSummary: (n: number, size: string, since: string) =>
+        `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} mit zusammen ${size}, seit über ${since} nicht geändert`,
+      capped: (n: number) => `Gezeigt werden die ${n} größten.`,
+      basis: 'Gemessen an',
+      byChange: 'letzter Änderung',
+      byOpen: 'letztem Öffnen',
+      notOpenedSince: 'Nicht geöffnet seit',
+      oldSummaryOpened: (n: number, size: string, since: string) =>
+        `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} mit zusammen ${size}, seit über ${since} nicht geöffnet`,
+      accessHelp:
+        'Windows führt auf diesem Laufwerk mit, wann Dateien zuletzt geöffnet wurden (auf etwa eine Stunde genau). Virenscanner, Vorschaubilder oder Sicherungen können das Datum auch setzen; dann wirkt eine Datei jünger, als sie ist, aber nie älter.',
+      oldHelp:
+        'Gezählt wird die letzte Änderung, nicht das letzte Öffnen: Windows merkt sich das Öffnen von Dateien meist nicht zuverlässig. Bei Ordnern zählt die neueste Datei darin. Bei Spielen setzt ein Update das Datum neu, reines Spielen nicht.',
       type: 'Dateityp',
       scope: 'Zeige',
       dirs: 'Ordner',
@@ -3167,12 +3606,23 @@ export const de = {
       none_found: 'Keine Treffer.',
       results: (n: number) => `${n} Treffer`,
     },
+    games: {
+      filter: 'Spiele (Steam)',
+      label: 'Steam-Spiele',
+      lastPlayed: 'Zuletzt gespielt',
+      played: (date: string, ago: string) => `Zuletzt gespielt am ${date} · ${ago}`,
+      unknown: 'Kein Spieldatum von Steam',
+      summary: (n: number, size: string, idle: number) =>
+        `${n} ${n === 1 ? 'Spiel' : 'Spiele'} mit zusammen ${size}, davon ${idle} seit über einem Jahr nicht gespielt`,
+      help: 'Das Datum stammt aus Steams eigenen Dateien und zählt das letzte Spielen, nicht das letzte Update. Fehlt es, wurde das Spiel nie gestartet oder Steam hat es nicht vermerkt. Am saubersten deinstallierst du ein Spiel in Steam selbst: Wird nur der Ordner gelöscht, zeigt Steam es weiter als installiert.',
+    },
     list: {
       name: 'Name',
       size: 'Belegt',
       share: 'Anteil',
       files: 'Dateien',
       modified: 'Geändert',
+      accessed: 'Geöffnet',
       sortBy: (col: string) => `Nach ${col} sortieren`,
       in: 'In',
       empty: 'Keine Einträge.',
@@ -3190,7 +3640,16 @@ export const de = {
       files: 'Dateien',
       modified: 'Zuletzt geändert',
       modifiedFolder: 'Zuletzt geändert (neueste Datei darin)',
+      accessed: 'Zuletzt geöffnet',
+      accessedFolder: 'Zuletzt geöffnet (neueste Datei darin)',
       types: 'Dateitypen',
+      ages: 'Alter der Daten',
+      ageBar: 'Anteile nach Alter',
+      oldShare: (size: string, pct: number) =>
+        `${size} (${pct} %) seit über einem Jahr nicht geändert`,
+      unusedShare: (size: string, pct: number) =>
+        `${size} (${pct} %) seit über einem Jahr nicht benutzt`,
+      showOld: 'Alte Einträge hier zeigen',
       biggest: 'Größte Einträge hier',
       open: 'Ordner öffnen',
       percent: (p: number) => `${p} %`,
@@ -3200,6 +3659,10 @@ export const de = {
       title: (root: string) => `Scan von ${root}`,
       scanning: 'Scan läuft …',
       paused: 'Scan pausiert',
+      liveLabel: 'Live-Ansicht des Scans',
+      liveHint:
+        'Die Karte füllt sich, während gezählt wird. Öffnen, Auswählen und Löschen gehen, sobald der Scan fertig ist.',
+      liveEmpty: 'Die ersten Ordner werden gezählt …',
       files: 'Dateien',
       folders: 'Ordner',
       used: 'Belegt',
@@ -3362,6 +3825,10 @@ export const de = {
     markedDone: 'Abgehakt.',
     markedOpen: 'Wieder offen.',
     itemDeleted: 'Eintrag gelöscht.',
+    // Single-item notices name the entry (one notice at a time, so it must say what changed).
+    tickedItem: (name: string) => `„${name}“ abgehakt.`,
+    reopenedItem: (name: string) => `„${name}“ wieder offen.`,
+    removedItem: (name: string) => `„${name}“ gelöscht.`,
     itemsDeleted: (n: number) => (n === 1 ? '1 Eintrag gelöscht.' : `${n} Einträge gelöscht.`),
     listDeleted: 'Liste gelöscht.',
     deleteList: 'Liste löschen',
@@ -3451,10 +3918,10 @@ export const de = {
   },
   accounts: {
     meta: {
-      name: 'Accounts',
+      name: 'Passwörter',
       description:
         'Passwort-Tresor: Zugangsdaten mit Master-Passwort verschlüsselt (Argon2id, AES-256), Generator, Einmalcodes (TOTP), Import/Export. Komplett von der KI ausgeschlossen.',
-      route: 'Accounts',
+      route: 'Passwörter',
       widget: 'Passwort-Tresor',
       settings: {
         keywords: ['Tresor', 'Passwort', 'Sperre', 'Auto-Lock', 'Browser-Erweiterung'],
@@ -3480,7 +3947,7 @@ export const de = {
     },
     pickEntry: 'Zugang auswählen',
     detail: 'Details',
-    title: 'Accounts',
+    title: 'Passwörter',
     setup: {
       title: 'Tresor einrichten',
       intro:
@@ -3492,6 +3959,13 @@ export const de = {
       create: 'Tresor erstellen',
       creating: 'Schlüssel wird berechnet …',
       mismatch: 'Die Passwörter stimmen nicht überein.',
+      weakNotice:
+        'Dieses Passwort lässt sich in kurzer Zeit erraten. Du kannst es trotzdem nehmen – oder einen Vorschlag aus mehreren Wörtern: leichter zu merken, schwerer zu knacken.',
+      suggest: 'Mehrwort-Vorschlag',
+      suggested: (phrase: string) =>
+        `Dein Vorschlag: ${phrase}. Er steht schon in beiden Feldern. Notiere ihn dir, bevor du weitermachst.`,
+      weakAck: 'Ich nehme das schwache Passwort trotzdem',
+      weakNeedAck: 'Bestätige oben, dass du das schwache Passwort trotzdem nehmen willst.',
       tooShort: (n: number) => `Mindestens ${n} Zeichen.`,
       exists: 'Es gibt bereits einen Tresor (z. B. von einem anderen Gerät).',
     },
@@ -3525,7 +3999,7 @@ export const de = {
     },
     add: 'Zugang hinzufügen',
     edit: 'Zugang bearbeiten',
-    search: 'Accounts durchsuchen',
+    search: 'Passwörter durchsuchen',
     empty: 'Noch keine Zugänge.',
     emptyFiltered: 'Nichts gefunden.',
     undecryptable: (n: number) =>
@@ -3586,6 +4060,26 @@ export const de = {
       label: 'Stärke',
       levels: ['Sehr schwach', 'Schwach', 'Mittel', 'Stark', 'Sehr stark'] as string[],
       crack: (time: string) => `Offline-Knackzeit ca. ${time}`,
+      warnings: {
+        straightRow: 'Gerade Tastaturreihen sind leicht zu erraten.',
+        keyPattern: 'Kurze Tastaturmuster sind leicht zu erraten.',
+        simpleRepeat: 'Wiederholte Zeichen wie „aaa“ sind leicht zu erraten.',
+        extendedRepeat: 'Wiederholte Muster wie „abcabcabc“ sind leicht zu erraten.',
+        sequences: 'Übliche Zeichenfolgen wie „abc“ sind leicht zu erraten.',
+        recentYears: 'Aktuelle Jahreszahlen sind leicht zu erraten.',
+        dates: 'Datumsangaben sind leicht zu erraten.',
+        topTen: 'Dieses Passwort wird sehr oft benutzt.',
+        topHundred: 'Dieses Passwort wird häufig benutzt.',
+        common: 'Dieses Passwort ist weit verbreitet.',
+        similarToCommon: 'Dieses Passwort ähnelt einem weit verbreiteten.',
+        wordByItself: 'Einzelne Wörter sind leicht zu erraten.',
+        namesByThemselves: 'Einzelne Namen sind leicht zu erraten.',
+        commonNames: 'Häufige Namen und Nachnamen sind leicht zu erraten.',
+        userInputs: 'Persönliche Angaben oder Seitennamen gehören nicht ins Passwort.',
+        pwned: 'Dieses Passwort stand in einem Datenleck im Internet.',
+      } as Record<string, string>,
+      lessThanSecond: 'weniger als eine Sekunde',
+      centuries: 'Jahrhunderte',
     },
     biometric: {
       title: 'Biometrisches Entsperren',
@@ -3698,7 +4192,7 @@ export const de = {
     startData:
       'Der Assistent liest Text oder Dateien ein und zeigt zuerst eine Vorschau. Erst nach deiner Bestätigung wird gespeichert, und jeder Import lässt sich als Ganzes wieder rückgängig machen.',
     localApi:
-      'Die Schnittstelle hört nur auf diesem Computer (127.0.0.1) und ist ohne Zugangsschlüssel nutzlos. Jeder Zugang bekommt nur die Rechte, die du ankreuzt. Importe landen zuerst als Vorschau in der App. Den Tresor (Accounts), Einstellungen und Schlüssel kann sie nie erreichen.',
+      'Die Schnittstelle hört nur auf diesem Computer (127.0.0.1) und ist ohne Zugangsschlüssel nutzlos. Jeder Zugang bekommt nur die Rechte, die du ankreuzt. Importe landen zuerst als Vorschau in der App. Den Tresor (Passwörter), Einstellungen und Schlüssel kann sie nie erreichen.',
     connectors:
       'Verbindungen lesen nur, sie ändern nichts bei dem Dienst. Zugangsdaten liegen im Schlüsselspeicher dieses Geräts und werden nie synchronisiert oder gesichert. E-Mails werden ausschließlich auf deinem Gerät ausgewertet und nie an eine KI geschickt.',
   },
@@ -3714,6 +4208,12 @@ export const de = {
       denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
       'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
       unsupported: 'Das geht auf diesem Gerät nicht.',
+      'port-busy': 'Port belegt. Schließe das andere Programm und versuche das Verbinden erneut.',
+      'premium-required': 'Das Steuern braucht ein Premium-Konto.',
+      'no-callback':
+        'Der Browser hat keine Anmeldung zurückgemeldet. Prüfe beim Dienst die eingetragene Redirect-URI und ob dein Konto freigeschaltet ist, dann versuche es erneut.',
+      'bad-client': 'Der Dienst kennt diese Client-ID nicht. Prüfe die eingetragene ID.',
+      'no-browser': 'Der Browser für die Anmeldung konnte nicht geöffnet werden.',
     } as Record<string, string>,
     icsName: 'Kalender-Abo (ICS)',
     icsDescription:
@@ -3784,7 +4284,8 @@ export const de = {
       add: 'Kalender hinzufügen',
       checking: 'Wird geprüft …',
       remove: (name: string) => `Kalender „${name}“ entfernen`,
-      badUrl: 'Das ist keine gültige Adresse (https://… oder webcal://…).',
+      badUrl:
+        'Das ist keine gültige öffentliche Adresse (https://… oder webcal://…). Adressen im eigenen Netz und mit Zugangsdaten sind nicht erlaubt.',
       notACalendar: 'Unter dieser Adresse liegt kein Kalender.',
       unreachable: 'Die Adresse ist nicht erreichbar.',
       noProxy:
@@ -3823,7 +4324,7 @@ export const de = {
     intro:
       'Eine lokale Schnittstelle, über die eine KI auf diesem Computer (z. B. Claude Code, Claude Desktop) Daten in deine Module schreiben und – wenn du es erlaubst – lesen kann. Sie ist nur von diesem Computer aus erreichbar.',
     unsupported:
-      'Die Schnittstelle gibt es nur in der Windows-App. Im Browser und auf Android nutzt du „JSON einfügen“ unter Startdaten.',
+      'Die Schnittstelle gibt es nur in der Windows-App. Im Browser und auf Android nutzt du „JSON einfügen“ unter Importieren.',
     enable: 'Lokale Schnittstelle aktivieren',
     enableHint: 'Standardmäßig aus',
     port: 'Port',
@@ -3962,8 +4463,11 @@ export const de = {
     outOfRange: 'außerhalb des erlaubten Bereichs',
   },
   onboarding: {
-    button: 'Startdaten einrichten',
-    title: (module: string) => `Startdaten: ${module}`,
+    button: 'Importieren',
+    title: (module: string) => `Importieren: ${module}`,
+    rowLabel: 'Einträge übernehmen',
+    rowHint:
+      'Aus einer Datei, einem Text oder Vorschlägen. Nichts wird gespeichert, bevor du die Vorschau bestätigt hast.',
     chooseIntro:
       'Woher sollen die ersten Einträge kommen? Nichts wird gespeichert, bevor du die Vorschau bestätigt hast.',
     skip: 'Überspringen',
@@ -3973,6 +4477,7 @@ export const de = {
     parsing: 'Wird gelesen …',
     chooseFile: 'Datei wählen …',
     fileChosen: (name: string) => `Datei: ${name}`,
+    filesChosen: (n: number) => `${n} Dateien`,
     textLabel: 'Eine Zeile = ein Eintrag',
     pickTemplates: 'Vorschläge auswählen',
     noInput: 'Bitte gib etwas ein.',
@@ -4024,6 +4529,7 @@ export const de = {
           ? '1 Rechnung ohne erkennbaren Betrag wurde übersprungen.'
           : `${n} Rechnungen ohne erkennbaren Betrag wurden übersprungen.`,
       noEnd: 'Vertragsende nicht erkannt',
+      endsOn: (date: string) => `Ende ${date}`,
       notice: (days: number) => `Kündigungsfrist ${days} Tage`,
     },
     ics: {
@@ -4048,6 +4554,32 @@ export const de = {
         'Füge eine Liste aus einer Notiz-App oder einer Nachricht ein: eine Zeile pro Aufgabe.',
       placeholder: 'Steuerunterlagen sortieren\nZahnarzt anrufen\nFahrrad reparieren',
       list: 'In diese Liste',
+      file: 'Aus Todoist oder Google Tasks',
+      fileHint:
+        'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV oder Google-Tasks-Datei (JSON). Es wird nichts hochgeladen.',
+      perSource: 'Je Quell-Liste eine eigene Liste',
+      newList: 'Neue Liste',
+      includeDone: 'Erledigte Aufgaben',
+      doneNo: 'Nicht mitnehmen',
+      doneYes: 'Als erledigt mitnehmen',
+      repeatNote: (text: string) =>
+        `Wiederholung in der Quelle: ${text} (wird nicht automatisch wiederholt)`,
+      dueNote: (text: string) => `Fällig laut Quelle: ${text}`,
+      skippedDone: (n: number) =>
+        n === 1
+          ? '1 erledigte Aufgabe wurde nicht mitgenommen.'
+          : `${n} erledigte Aufgaben wurden nicht mitgenommen.`,
+      skippedOther: (n: number) =>
+        n === 1
+          ? '1 Eintrag (Abschnitt, gelöscht oder ohne Titel) wurde übersprungen.'
+          : `${n} Einträge (Abschnitte, gelöschte oder ohne Titel) wurden übersprungen.`,
+      repeats: (n: number) =>
+        n === 1
+          ? '1 Aufgabe wiederholt sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.'
+          : `${n} Aufgaben wiederholen sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.`,
+      tooMany: (max: number) => `Es werden die ersten ${max} Aufgaben gezeigt.`,
+      unknownFormat:
+        'Das Format wurde nicht erkannt. Gebraucht wird die Todoist-CSV oder die Google-Tasks-Datei (JSON).',
     },
     reminders: {
       textDetail: 'heute, 09:00 Uhr',
@@ -4130,6 +4662,25 @@ export const de = {
       textHint: 'Eine Zeile pro Link, optional mit Titel davor.',
       placeholder: 'https://example.org/artikel\nSchöne Wanderung https://example.org/wandern',
     },
+    notes: {
+      file: 'Markdown-Dateien oder Google Keep',
+      fileHint:
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen. ZIP-Dateien bitte vorher entpacken.',
+      text: 'Markdown einfügen',
+      textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
+      textLabel: 'Markdown-Text',
+      placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
+      emptyFiles: (n: number) =>
+        n === 1 ? '1 leere Datei wurde übersprungen.' : `${n} leere Dateien wurden übersprungen.`,
+      keepSkipped: (n: number) =>
+        n === 1
+          ? '1 Keep-Notiz aus Papierkorb oder Archiv wurde ausgelassen.'
+          : `${n} Keep-Notizen aus Papierkorb oder Archiv wurden ausgelassen.`,
+      unreadable: (n: number) =>
+        n === 1
+          ? '1 JSON-Datei ist keine Keep-Notiz und wurde übersprungen.'
+          : `${n} JSON-Dateien sind keine Keep-Notizen und wurden übersprungen.`,
+    },
     birthdays: {
       text: 'Geburtstage einfügen',
       textHint: 'Eine Zeile pro Person: Name und Datum, mit oder ohne Jahr.',
@@ -4195,6 +4746,53 @@ export const de = {
           'Skipass',
           'Lippenpflege',
         ],
+      },
+      familyTrip: {
+        name: 'Urlaub mit Kindern',
+        note: 'Für Reisen mit kleinen Kindern',
+        items: [
+          'Kinderausweise oder Reisepässe',
+          'Lieblingskuscheltier',
+          'Windeln und Feuchttücher',
+          'Snacks für unterwegs',
+          'Wechselkleidung für die Kinder',
+          'Sonnencreme für Kinder',
+          'Kinderapotheke',
+          'Spielzeug und Bücher',
+          'Buggy oder Tragetuch',
+          'Impfpass',
+        ],
+      },
+      school: {
+        name: 'Schulranzen',
+        note: 'Abends kurz durchgehen',
+        items: [
+          'Federmappe',
+          'Hefte und Bücher',
+          'Stundenplan',
+          'Hausaufgabenheft',
+          'Trinkflasche',
+          'Pausenbrot',
+          'Sportbeutel',
+          'Elternbriefe',
+        ],
+      },
+    },
+    papers: {
+      label: 'Wichtige Papiere',
+      hint: 'Dokumente, die man schnell finden will',
+      templatesHint:
+        'Ablaufdatum später nachtragen: dann erscheint die Frist unter „Fristen & Ablauf“.',
+      kind: 'Papiere',
+      items: {
+        passport: { name: 'Reisepass', category: 'identity' },
+        idCard: { name: 'Personalausweis', category: 'identity' },
+        license: { name: 'Führerschein', category: 'identity' },
+        vehicleInspection: { name: 'Fahrzeugschein und TÜV-Bericht', category: 'other' },
+        healthCard: { name: 'Krankenversicherungskarte', category: 'health' },
+        vaccination: { name: 'Impfpass', category: 'health' },
+        rental: { name: 'Mietvertrag', category: 'contract' },
+        policies: { name: 'Versicherungspolicen', category: 'insurance' },
       },
     },
   },
@@ -4294,6 +4892,9 @@ export const de = {
     export: 'Als Markdown exportieren',
     copy: 'Kopieren',
     copied: 'Kopiert.',
+    saveAsNote: 'Als Notiz speichern',
+    noteOff: 'Das Notizen-Modul ist aus. Schalte es in der Bibliothek ein.',
+    noteFailed: 'Das ließ sich nicht als Notiz speichern.',
     regenerate: 'Neu generieren',
     edit: 'Bearbeiten',
     editSave: 'Speichern und neu fragen',

@@ -18,7 +18,7 @@
   margin: var(--space-3) 0 0;
   font-size: var(--text-sm);
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .path {
   margin: 0;
@@ -104,4 +104,24 @@
   background: var(--surface-2);
   border-left: 4px solid var(--warning);
   font-size: var(--text-sm);
+}
+
+.ago {
+  color: var(--text-muted);
+}
+.ageBar {
+  display: flex;
+  gap: 2px;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.ageBar > span {
+  min-width: 2px;
+}
+.oldNote {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
 }

@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const ai: Strings['ai'] = {
+  providerCustom: 'Your own provider (OpenAI-compatible)',
   title: 'AI assistant',
   off: {
     title: 'Turn off AI',
@@ -119,6 +120,8 @@ export const ai: Strings['ai'] = {
     ask: 'Ask the assistant',
     write: 'Add',
     writeButton: 'Add with AI',
+    writeSentence: 'Add a sentence',
+    askLocal: 'Ask a question',
     writePlaceholder: 'e.g. Rechnung Stadtwerke 89,90 € fällig 15.10.',
   },
   tier: {
@@ -268,6 +271,15 @@ export const ai: Strings['ai'] = {
         : `${n} entries were skipped because they have changed.`,
     failed: 'That couldn’t be saved.',
     nothingReady: 'Some details are still missing.',
+    reminder: {
+      confirm: 'Save',
+      edit: 'Change',
+      notifies: 'You will get a notification then.',
+      defaultTime: (time: string) => `No time given – suggesting ${time}. You can change it.`,
+      rolledDay: 'That time has already passed today, so it is suggested for tomorrow.',
+      past: 'That moment is already in the past – there will be no notification.',
+      askTitle: 'What should I remind you of?',
+    },
     recurrence: {
       daily: 'Daily',
       weekly: 'Weekly',

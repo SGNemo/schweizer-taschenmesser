@@ -24,7 +24,9 @@ import { lazyComponent } from '@/core/modules/lazy';
 import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
 import type { WidgetDef, WidgetSize } from '@/core/modules/types';
+import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { t } from '@/strings';
+import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
@@ -39,6 +41,7 @@ import {
   PageHeader,
   patternStyles,
   Segmented,
+  SettingsLink,
   Skeleton,
   Switch,
   WidgetSizeContext,
@@ -46,19 +49,24 @@ import {
 import { widgetsOf } from './AutoWidget';
 import { AttentionStrip } from './AttentionStrip';
 import { ResumeCard } from './ResumeCard';
+import { NowPlayingLine } from './NowPlayingLine';
+import { WeatherLine } from './WeatherLine';
 
 import styles from './Home.module.css';
 import {
   DEFAULT_LAYOUT,
   effectiveSize,
+  isCalmVisible,
   mergeOrder,
   moveKey,
   orderWidgets,
   resetLayout,
   toggleHidden,
+  togglePinned,
   updateLayout,
   useHomeLayout,
   widgetKey,
+  withoutFolded,
   withSize,
 } from './layout';
 
@@ -94,9 +102,6 @@ const allEntries = (): Entry[] =>
 /** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
 const ATTENTION_KEY = 'core:attention';
 
-/** The calm home view shows only what starts the day. */
-const CALM_WIDGETS: readonly string[] = ['todos:next', 'calendar:next', 'calendar:today'];
-
 const SIZE_CLASS: Record<WidgetSize, string> = { s: styles.s!, m: styles.m!, l: styles.l! };
 
 export function Home() {
@@ -107,7 +112,10 @@ export function Home() {
   const editing = useUiStore((s) => s.homeEditing);
   const setEditing = useUiStore((s) => s.setHomeEditing);
 
-  const entries = useMemo(() => allEntries().filter((e) => states?.[e.moduleId]), [states]);
+  const entries = useMemo(
+    () => withoutFolded(allEntries().filter((e) => states?.[e.moduleId])),
+    [states],
+  );
   const layout = saved ?? DEFAULT_LAYOUT;
   const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
   const homeView = useUiStore((s) => s.homeView);
@@ -117,7 +125,7 @@ export function Home() {
   const shown = editing
     ? ordered
     : ordered.filter(
-        (e) => !layout.hidden.includes(e.key) && (!calm || CALM_WIDGETS.includes(e.key)),
+        (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout)),
       );
   const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
 
@@ -182,6 +190,8 @@ export function Home() {
       <ChecklistCard />
       {!editing ? <ResumeCard /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
+      {!editing ? <WeatherLine /> : null}
+      {!editing ? <NowPlayingLine /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
         <EmptyState title={t.home.emptyTitle}>
@@ -201,6 +211,7 @@ export function Home() {
             screenReaderInstructions: { draggable: t.homeEdit.instructions },
           }}
         >
+          {editing ? <p className={styles.hint}>{t.homeEdit.pinNote}</p> : null}
           <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
             <div className={`${styles.grid} ${editing ? styles.editing : ''}`}>
               {shown.map((e) => (
@@ -210,6 +221,8 @@ export function Home() {
                   editing={editing}
                   size={effectiveSize(e, e.key, layout)}
                   hidden={layout.hidden.includes(e.key)}
+                  pinned={layout.pinned.includes(e.key)}
+                  onTogglePinned={() => void updateLayout(togglePinned(layout, e.key))}
                   onToggleHidden={() => void updateLayout({ hidden: toggleHidden(layout, e.key) })}
                   onSize={(size) =>
                     void updateLayout({ sizes: withSize(layout, e.key, size, e.defaultSize) })
@@ -222,12 +235,21 @@ export function Home() {
       )}
 
       {calm && folded > 0 ? (
-        <p className={styles.hint} data-testid="home-calm-note">
-          {t.homeEdit.calmNote(folded)}{' '}
-          <button type="button" className={styles.linkButton} onClick={() => setHomeView('all')}>
-            {t.homeEdit.showAll}
-          </button>
-        </p>
+        <div className={styles.moreRow} data-testid="home-calm-more">
+          <Button variant="secondary" onClick={() => setHomeView('all')}>
+            {t.homeEdit.showMore(folded)}
+          </Button>
+          <Button variant="ghost" onClick={() => setEditing(true)}>
+            {t.homeEdit.pinStart}
+          </Button>
+        </div>
+      ) : null}
+      {homeView === 'all' && !editing && entries.length > 0 ? (
+        <div className={styles.moreRow}>
+          <Button variant="ghost" onClick={() => setHomeView('calm')}>
+            {t.homeEdit.showLess}
+          </Button>
+        </div>
       ) : null}
 
       <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title={t.homeEdit.widgetsTitle}>
@@ -294,11 +316,22 @@ interface WidgetProps {
   editing: boolean;
   size: WidgetSize;
   hidden: boolean;
+  pinned: boolean;
+  onTogglePinned: () => void;
   onToggleHidden: () => void;
   onSize: (size: WidgetSize) => void;
 }
 
-function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }: WidgetProps) {
+function SortableWidget({
+  entry,
+  editing,
+  size,
+  hidden,
+  pinned,
+  onTogglePinned,
+  onToggleHidden,
+  onSize,
+}: WidgetProps) {
   const {
     attributes,
     listeners,
@@ -312,6 +345,8 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
     disabled: !editing,
   });
   const Widget = entry.Component;
+  const manifest = availableManifests().find((m) => m.id === entry.moduleId);
+  const settingsTo = manifest ? moduleSettingsPath(manifest) : undefined;
   return (
     <div
       ref={setNodeRef}
@@ -336,6 +371,11 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
               entry.title
             )}
           </h2>
+          {!editing && settingsTo ? (
+            <span className={styles.gear}>
+              <SettingsLink to={settingsTo} label={tComfort.get().gear.module} />
+            </span>
+          ) : null}
           {editing ? (
             <>
               {entry.sizes.length > 1 ? (
@@ -349,6 +389,14 @@ function SortableWidget({ entry, editing, size, hidden, onToggleHidden, onSize }
                   onChange={onSize}
                 />
               ) : null}
+              {pinned ? <span className={styles.pinnedTag}>{t.homeEdit.pinned}</span> : null}
+              <IconButton
+                label={pinned ? t.homeEdit.unpin(entry.title) : t.homeEdit.pin(entry.title)}
+                aria-pressed={pinned}
+                onClick={onTogglePinned}
+              >
+                <Icon name="pin" />
+              </IconButton>
               <IconButton
                 label={hidden ? t.homeEdit.show : t.homeEdit.hide}
                 onClick={onToggleHidden}

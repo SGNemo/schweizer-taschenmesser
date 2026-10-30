@@ -84,7 +84,7 @@ test.describe('connectors', () => {
     await expect(ics.getByRole('alert')).toContainText('Sync-Server');
     await ics.getByLabel('Adresse des Kalenders').fill('kein url');
     await ics.getByRole('button', { name: 'Kalender hinzufügen' }).click();
-    await expect(ics.getByRole('alert')).toContainText('keine gültige Adresse');
+    await expect(ics.getByRole('alert')).toContainText('keine gültige öffentliche Adresse');
   });
 
   test('an ICS subscription (through the sync server proxy) shows up in the calendar as read-only', async ({
@@ -187,9 +187,9 @@ test.describe('bank statement', () => {
     await page.goto('/settings/module');
     await page
       .locator('section[aria-labelledby="module-finance"]')
-      .getByRole('button', { name: 'Startdaten einrichten' })
+      .getByRole('button', { name: 'Importieren' })
       .click();
-    const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+    const dialog = page.getByRole('dialog', { name: /Importieren/ });
     await dialog.getByRole('button', { name: /Kontoauszug importieren/ }).click();
     await expect(dialog.getByLabel('Buchen auf Konto')).toBeVisible();
     await uploadStatement(page, dialog);
@@ -205,9 +205,9 @@ test.describe('bank statement', () => {
     await page.goto('/settings/module');
     await page
       .locator('section[aria-labelledby="module-finance"]')
-      .getByRole('button', { name: 'Startdaten einrichten' })
+      .getByRole('button', { name: 'Importieren' })
       .click();
-    const again = page.getByRole('dialog', { name: /Startdaten/ });
+    const again = page.getByRole('dialog', { name: /Importieren/ });
     await again.getByRole('button', { name: /Kontoauszug importieren/ }).click();
     await uploadStatement(page, again);
     await expect(again.getByText('Schon vorhanden')).toHaveCount(4, { timeout: 15_000 });
@@ -216,8 +216,8 @@ test.describe('bank statement', () => {
 
   test('recurring debits become subscription suggestions', async ({ page }) => {
     await ready(page, '/subscriptions');
-    await page.getByRole('button', { name: 'Startdaten einrichten' }).click();
-    const dialog = page.getByRole('dialog', { name: /Startdaten/ });
+    await page.getByRole('button', { name: 'Importieren' }).click();
+    const dialog = page.getByRole('dialog', { name: /Importieren/ });
     await dialog.getByRole('button', { name: /Abos im Kontoauszug erkennen/ }).click();
     await uploadStatement(page, dialog);
     await expect(dialog.getByText('1 Eintrag erkannt')).toBeVisible({ timeout: 15_000 });

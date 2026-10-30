@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { enable, mainNav, ready } from './helpers';
+import { enable, mainNav, ready, openAppearanceGroup, openFoldedGroup } from './helpers';
 
 test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test.skip(({ isMobile }) => isMobile, 'sidebar is a desktop feature');
@@ -87,6 +87,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
     page,
   }) => {
     await ready(page, '/settings/darstellung');
+    await openAppearanceGroup(page, 'other');
     await page
       .getByRole('group', { name: 'Seitenleiste' })
       .getByRole('button', { name: 'Schmal' })
@@ -111,6 +112,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
 
   test('favourites can also be set in the settings (touch path)', async ({ page }) => {
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'favourites', 'list');
     const row = page.getByRole('switch', { name: 'Abos' });
     await expect(row).toHaveAttribute('aria-checked', 'false');
     await row.click();

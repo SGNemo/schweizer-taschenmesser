@@ -26,7 +26,7 @@ export const backup: Strings['backup'] = {
   encryptedExport: 'Exportar criptografado',
   encryptedExported: 'Backup criptografado baixado.',
   exportHint:
-    'Recomendado: exportar criptografado (Argon2id, AES-256). O backup normal contém todos os registros em texto puro.',
+    'Recomendado: salvar com senha. Assim o arquivo fica criptografado e qualquer alteração é notada. Sem senha, todos os registros ficam legíveis no arquivo.',
   exportPassphrase: 'Senha do backup',
   exportPassphraseHint:
     'Pelo menos 8 caracteres. Sem esta senha, o backup não pode ser aberto – não há como redefini-la.',
@@ -67,7 +67,13 @@ export const backup: Strings['backup'] = {
     `Total: ${added} ${added <= 1 ? 'adicionado' : 'adicionados'}, ${replaced} ${replaced <= 1 ? 'substituído' : 'substituídos'}, ${removed} ${removed <= 1 ? 'excluído' : 'excluídos'}.`,
   previewNothing: 'Nada muda.',
   safetyNote:
-    'Antes, o app cria automaticamente uma cópia de segurança dos seus dados atuais. Se algo falhar, tudo fica como estava.',
+    'Antes, o app salva uma cópia de segurança dos seus dados atuais. No navegador ela chega como download na sua pasta Downloads (criptografada com a senha, se você digitou uma); no app vai para a pasta de dados. Se algo falhar, tudo fica como estava.',
+  plainHint:
+    'Sem senha: arquivo legível. A soma de verificação detecta danos e alterações acidentais, mas não as intencionais.',
+  filesNote:
+    'Fora do backup: arquivos de documentos (arquivos de Documentos). Eles ficam só neste dispositivo.',
+  noChecksum:
+    'Este arquivo não tem soma de verificação (versão antiga). Não há como saber se foi alterado.',
   restoring: 'Restaurando…',
   autoTitle: 'Backups automáticos',
   autoIntro:
@@ -101,7 +107,7 @@ export const backup: Strings['backup'] = {
     'passphrase-required': 'Este backup é criptografado. Digite a senha.',
     'wrong-passphrase': 'Senha incorreta – ou o arquivo foi alterado.',
     'checksum-mismatch':
-      'A soma de verificação não confere: o arquivo está danificado ou incompleto.',
+      'A soma de verificação não confere: o arquivo está danificado, incompleto ou foi alterado.',
     'restore-failed': 'A restauração de teste falhou.',
     'count-mismatch': 'Faltam registros após a restauração de teste.',
     'safety-failed': 'Não foi possível criar a cópia de segurança. Nada foi alterado.',

@@ -23,7 +23,7 @@
   <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk"><img src="https://img.shields.io/badge/Android-download_APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: download the APK"></a>
 </p>
 
-<p align="center">The buttons download the latest <strong>stable</strong> version. Pre-releases (beta) and all changes: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>. The app interface is German today; more languages are on the way.</p>
+<p align="center">The buttons download the latest <strong>stable</strong> version. Pre-releases (beta) and all changes: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>. The app speaks German, English, Spanish, French and Brazilian Portuguese; it follows your device language (Settings → General).</p>
 
 <p align="center">
   <picture>
@@ -59,7 +59,7 @@ More detail, including moving from an old version and installing the PWA: [Insta
 
 - **Stored locally.** Data lives in your device's database. No account, no Nemo cloud service.
 - **Sync is optional.** Only through a server you run yourself (Docker or Node), end-to-end encrypted if you want.
-- **Only what you set up leaves the device.** Update check (GitHub, can be switched off), AI provider, Google connection, calendar subscription, model download, currency rates: each with what is sent and when, in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
+- **Only what you set up leaves the device.** Update check (GitHub, can be switched off), AI provider, Google connection, Spotify connection, calendar subscription, model download, currency rates, weather (only with a chosen place): each with what is sent and when, in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
 - **Never your data to AI.** The assistant only sends your question, the date and field names, never entries. The only exceptions are ones you trigger yourself: attaching a module's data in the chat (with a preview) or granting an AI read access through the local import API. The vault is completely invisible to AI.
 - **Signed updates.** Every update is checked against the project's key before it is applied. Details: [Security](docs/user/security.md).
 

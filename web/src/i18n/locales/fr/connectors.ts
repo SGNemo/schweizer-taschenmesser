@@ -12,6 +12,13 @@ export const connectors: Strings['connectors'] = {
     denied: 'La connexion a été annulée ou refusée.',
     'bad-response': 'Le service a envoyé une réponse inattendue.',
     unsupported: 'Ce n’est pas possible sur cet appareil.',
+    'port-busy': 'Port occupé. Fermez l’autre programme et réessayez de vous connecter.',
+    'premium-required': 'Le contrôle nécessite un compte Premium.',
+    'no-callback':
+      'Le navigateur n’a renvoyé aucune connexion. Vérifiez l’URI de redirection saisie chez le service et si votre compte est autorisé, puis réessayez.',
+    'bad-client':
+      'Le service ne reconnaît pas cet identifiant client. Vérifiez l’identifiant saisi.',
+    'no-browser': 'Le navigateur pour la connexion n’a pas pu être ouvert.',
   } as Record<string, string>,
   icsName: 'Abonnement calendrier (ICS)',
   icsDescription:
@@ -82,7 +89,8 @@ export const connectors: Strings['connectors'] = {
     add: 'Ajouter un calendrier',
     checking: 'Vérification…',
     remove: (name: string) => `Retirer le calendrier « ${name} »`,
-    badUrl: 'Ce n’est pas une adresse valide (https://… ou webcal://…).',
+    badUrl:
+      'Ce n’est pas une adresse publique valide (https://… ou webcal://…). Les adresses de votre réseau local ou avec identifiants ne sont pas autorisées.',
     notACalendar: 'Il n’y a pas de calendrier à cette adresse.',
     unreachable: 'L’adresse est injoignable.',
     noProxy:

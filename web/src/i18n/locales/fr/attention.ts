@@ -13,6 +13,8 @@ export const attention: Strings['attention'] = {
   eventAt: (time: string) => `aujourd’hui à ${time}`,
   budgetOver: (name: string) => `Budget « ${name} » dépassé`,
   pantryExpired: (n: number) => (n <= 1 ? `${n} provision périmée` : `${n} provisions périmées`),
+  pantryLow: (n: number) =>
+    n <= 1 ? `${n} provision bientôt épuisée` : `${n} provisions bientôt épuisées`,
   pantrySoon: (n: number) =>
     n <= 1 ? `${n} provision bientôt périmée` : `${n} provisions bientôt périmées`,
   docsExpired: (n: number) => (n <= 1 ? `${n} document expiré` : `${n} documents expirés`),
@@ -26,6 +28,7 @@ export const attention: Strings['attention'] = {
   updateAvailable: 'Mise à jour disponible',
   waiting: (n: number) => `En attente · ${n}`,
   nothingNow: 'Rien de tout cela ne presse.',
+  waitingExplain: 'Ouvert depuis un moment, mais pas urgent. Vous pouvez le replanifier.',
   todosWaiting: (n: number) => (n <= 1 ? `${n} tâche en attente` : `${n} tâches en attente`),
   todosWaitingDetail: 'Vous pouvez les replanifier',
 };

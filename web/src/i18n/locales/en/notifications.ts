@@ -2,12 +2,16 @@ import type { Strings } from '@/strings';
 
 export const notifications: Strings['notifications'] = {
   summary: (count: number, titles: string[]) => ({
-    title: `More reminders · ${count}`,
+    title: `${count} reminders`,
     body: titles.slice(0, 3).join(' · ') + (titles.length > 3 ? ' …' : ''),
   }),
   title: 'Notifications',
   intro:
-    'Reminders appear as notifications while the app is open or running in the background. When the app is closed, they only arrive with push (see below).',
+    'Reminders appear as notifications while the app is open or running in the background. Without push, nothing arrives while the app is closed; what fell due meanwhile shows in the bell when you open it. With push (see below) they arrive then too.',
+  introAndroid:
+    'On Android the app hands reminders to the system so they also arrive when the app is closed. This works when Nemo may send notifications and use “Alarms & reminders” and battery use is not restricted (Settings → Apps → Nemo).',
+  introDesktop:
+    'Reminders appear as notifications while Nemo is running, also in the background or the system tray. If the app is quit they don’t arrive; what fell due meanwhile shows in the bell at the next start.',
   enable: 'Turn on notifications',
   granted: 'On',
   denied: 'Blocked – please allow them for this site in your browser settings.',

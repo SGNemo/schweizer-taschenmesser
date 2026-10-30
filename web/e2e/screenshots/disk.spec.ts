@@ -44,9 +44,33 @@ test('disk module screenshots', async ({ page }) => {
   await page.screenshot({ path: `${OUT}/1-laufwerke.png` });
 
   await page.getByRole('button', { name: 'C:\\ (System) scannen' }).click();
+  // The live map while the scan runs (paused half-way so the picture holds still).
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect(page.getByTestId('live-map')).toBeVisible();
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: `${OUT}/1b-scan-live.png` });
+  await page.getByRole('button', { name: 'Fortsetzen' }).click();
   await expect(page.getByTestId('treemap')).toBeVisible();
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${OUT}/2-treemap.png` });
+
+  // The same map coloured by file type, and the clean-up list of long unchanged entries.
+  await page
+    .getByRole('group', { name: 'Farbe nach' })
+    .getByRole('button', { name: 'Dateityp' })
+    .click();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: `${OUT}/2b-treemap-dateityp.png` });
+  await page
+    .getByTestId('details')
+    .getByRole('button', { name: 'Alte Einträge hier zeigen' })
+    .click();
+  await page
+    .getByRole('table', { name: 'Schnellfilter' })
+    .getByRole('checkbox', { name: 'alt.iso auswählen' })
+    .click();
+  await page.screenshot({ path: `${OUT}/2c-lange-nicht-geaendert.png` });
+  await page.getByRole('button', { name: 'Alle', exact: true }).click();
 
   await page.getByRole('button', { name: 'Liste', exact: true }).click();
   await expect(page.getByRole('table', { name: 'Einträge des Ordners' })).toBeVisible();

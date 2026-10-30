@@ -1,22 +1,44 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
+import { copyData } from '@/core/db/copy';
 import type { Stored } from '@/core/db/types';
+import { undoable } from '@/core/undo';
+import { skipSuggestion } from '@/core/focus/state';
+import { usePageChrome } from '@/core/shell/pageChrome';
+import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
+import { useAdvanced } from '@/core/settings/comfort';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
+import { now } from '@/core/time/now';
 import { groupByTime } from '@/core/time/groups';
-import { undoableWithToast } from '@/core/undo/withToast';
+import { DATE_PRESETS, presetDate } from '@/core/time/quickShift';
+import { changeWithUndo, deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, EmptyState, GroupedList, Icon, IconButton, TextField } from '@/ui';
+import { tAdvanced } from '@/strings.advanced';
+import { useUiStore } from '@/stores/ui';
+import {
+  Button,
+  EmptyState,
+  GroupedList,
+  ItemList,
+  ItemRow,
+  RowMenu,
+  TextField,
+  useOpenParam,
+  type RowMenuItem,
+} from '@/ui';
 import { InboxSorter } from '../components/InboxSorter';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { dueTone, groupTasks, isActionable } from '../logic';
-import { replan, waitingTasks, type PickTask } from '../next';
+import { replan, type PickTask } from '../next';
+import { postponePatch } from '../postpone';
 import { seriesKey, streaksOf, type Streak } from '../progress';
-import { ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
+import { readQuickAdd } from '../quickAdd';
+import { deleteTask, ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
 import styles from './todos.module.css';
@@ -58,59 +80,126 @@ function TaskRow({
   const tone = dueTone(task.dueDate, task.done, day);
   const waiting = calm && tone === 'overdue';
   const streak = !task.done && task.recurrence ? streaks?.get(seriesKey(task.id)) : undefined;
+  const laterItem: RowMenuItem = {
+    id: 'later',
+    label: t.focus.next.later,
+    onSelect: () => postpone(task, day),
+  };
+  const dueMenu: RowMenuItem[] = DATE_PRESETS.map((p) => ({
+    id: `due-${p}`,
+    group: t.todos.due,
+    label: t.ui.datePresets[p],
+    onSelect: () => moveDue(task, presetDate(p, day)),
+  }));
+  if (task.dueDate)
+    dueMenu.push({
+      id: 'due-none',
+      group: t.todos.due,
+      label: t.todos.noDue,
+      onSelect: () => moveDue(task, undefined),
+    });
+  const prioMenu: RowMenuItem[] = ([3, 0] as const)
+    .filter((p) => p !== task.priority)
+    .map((p) => ({
+      id: `prio-${p}`,
+      group: t.todos.priority,
+      label: t.todos.prio[p],
+      onSelect: () =>
+        void changeWithUndo(() => taskRepo.update(task.id, { priority: p }), t.todos.changed),
+    }));
   return (
-    <li>
-      <div className={`${styles.row} ${sub ? styles.sub : ''} ${task.done ? styles.done : ''}`}>
+    <ItemRow
+      title={task.title}
+      done={task.done}
+      tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
+      className={sub ? styles.sub : undefined}
+      onOpen={() => onOpen(task)}
+      onSwipeRight={() => onToggle(task, !task.done)}
+      swipeRightLabel={task.done ? t.todos.markedOpen : t.todos.markedDone}
+      onSwipeLeft={task.done ? undefined : () => postpone(task, day)}
+      swipeLeftLabel={t.focus.next.later}
+      menu={[
+        ...(task.done ? [] : [laterItem, ...dueMenu]),
+        ...(task.done ? [] : prioMenu),
+        {
+          id: 'duplicate',
+          label: t.actions.duplicate,
+          onSelect: () =>
+            void undoableWithToast(t.actions.duplicated, t.actions.duplicated, () =>
+              taskRepo.create({ ...copyData(task), done: false, completedAt: undefined }),
+            ),
+        },
+        {
+          id: 'delete',
+          label: t.actions.delete,
+          danger: true,
+          onSelect: () => void deleteWithUndo(() => deleteTask(task.id), t.todos.taskDeleted),
+        },
+      ]}
+      end={
+        waiting ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => moveDue(task, presetDate('today', day))}
+            data-testid="move-today"
+          >
+            {t.todos.moveToday}
+          </Button>
+        ) : undefined
+      }
+      lead={
         <input
           type="checkbox"
           className={styles.check}
           aria-label={task.title}
+          data-row-tick
           checked={task.done}
           onChange={(e) => onToggle(task, e.target.checked)}
         />
-        <button type="button" className={styles.open} onClick={() => onOpen(task)}>
-          <span className={styles.title}>{task.title}</span>
-          <span className={styles.meta}>
-            {showList ? <span>{showList}</span> : null}
-            {task.priority >= 2 ? (
-              <span className={task.priority === 3 ? styles.prio3 : styles.prio2}>
-                ● {t.todos.prio[task.priority]}
-              </span>
-            ) : null}
-            {task.dueDate ? (
-              <span
-                className={
-                  waiting
-                    ? styles.waitingDate
-                    : tone === 'overdue'
-                      ? styles.overdue
-                      : tone === 'today'
-                        ? styles.today
-                        : ''
-                }
-              >
-                {tone === 'overdue' && !waiting ? `${t.todos.overdue}: ` : ''}
-                {waiting
-                  ? formatDay(task.dueDate, 'EEE, d. MMM')
-                  : relativeDayLabel(task.dueDate, day)}
-              </span>
-            ) : null}
-            {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
-            {streak ? (
-              <span data-testid="streak">
-                {streak.rest > 0
-                  ? t.focus.progress.streakRest(streak.streak)
-                  : t.focus.progress.streak(streak.streak)}
-              </span>
-            ) : null}
-            {allSubs.length > 0 ? (
-              <span>{t.todos.progress(allSubs.filter((x) => x.done).length, allSubs.length)}</span>
-            ) : null}
-          </span>
-        </button>
-      </div>
+      }
+      meta={
+        <span className={styles.meta}>
+          {showList ? <span>{showList}</span> : null}
+          {task.priority >= 2 ? (
+            <span className={task.priority === 3 ? styles.prio3 : styles.prio2}>
+              ● {t.todos.prio[task.priority]}
+            </span>
+          ) : null}
+          {task.dueDate ? (
+            <span
+              className={
+                waiting
+                  ? styles.waitingDate
+                  : tone === 'overdue'
+                    ? styles.overdue
+                    : tone === 'today'
+                      ? styles.today
+                      : ''
+              }
+            >
+              {tone === 'overdue' && !waiting ? `${t.todos.overdue}: ` : ''}
+              {waiting
+                ? formatDay(task.dueDate, 'EEE, d. MMM')
+                : relativeDayLabel(task.dueDate, day)}
+            </span>
+          ) : null}
+          {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
+          {streak ? (
+            <span data-testid="streak">
+              {streak.rest > 0
+                ? t.focus.progress.streakRest(streak.streak)
+                : t.focus.progress.streak(streak.streak)}
+            </span>
+          ) : null}
+          {allSubs.length > 0 ? (
+            <span>{t.todos.progress(allSubs.filter((x) => x.done).length, allSubs.length)}</span>
+          ) : null}
+        </span>
+      }
+    >
       {subs.length > 0 ? (
-        <ul className={styles.list} style={{ marginTop: 'var(--space-2)' }}>
+        <ItemList>
           {subs.map((s) => (
             <TaskRow
               key={s.id}
@@ -125,10 +214,22 @@ function TaskRow({
               onOpen={onOpen}
             />
           ))}
-        </ul>
+        </ItemList>
       ) : null}
-    </li>
+    </ItemRow>
   );
+}
+
+/** Moves the due date ("Morgen", "Nächste Woche", none) as one undoable change. */
+function moveDue(task: StoredTask, dueDate: string | undefined) {
+  void changeWithUndo(() => taskRepo.update(task.id, { dueDate }), t.todos.changed);
+}
+
+/** "Später": out of today in one step, with the same toast and undo as the card. */
+function postpone(task: StoredTask, day: string) {
+  void undoableWithToast(t.focus.next.laterDone, t.focus.next.laterDone, () =>
+    taskRepo.update(task.id, postponePatch(task, day)),
+  ).then(() => skipSuggestion(task.id, day));
 }
 
 function toggle(task: StoredTask, done: boolean) {
@@ -145,9 +246,19 @@ export default function TodosPage() {
   // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
   const [title, setTitle] = useState(() => params.get('title') ?? '');
   const [editing, setEditing] = useState<StoredTask | null>(null);
+  useOpenParam((id) => taskRepo.get(id), setEditing);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
   const [sorting, setSorting] = useState(false);
   const addRef = useRef<HTMLFormElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [advanced, setAdvanced] = useAdvanced('todos');
+  const tx = tAdvanced.use();
+  const writeAvailable = useWriteAvailable('todos');
+  const writeLabel = useWriteLabel();
+  const openWrite = useUiStore((s) => s.openWritePalette);
+  const toast = useUiStore((s) => s.toast);
+  // The page has its own add field: no round "+" button, and the AI entry lives in the "⋯" menu.
+  usePageChrome({ hideFab: true, writeInMenu: true });
 
   useEffect(() => {
     if (lists && lists.length === 0) void ensureInbox(t.todos.inbox);
@@ -190,17 +301,26 @@ export default function TodosPage() {
 
   async function add(e: FormEvent) {
     e.preventDefault();
-    const value = title.trim();
-    if (!value || !targetListId) return;
-    await taskRepo.create({
-      listId: targetListId,
-      title: value,
-      done: false,
-      priority: 0,
-      order: 0,
-      ...(selected === SOMEDAY ? { someday: true } : {}),
-    });
+    if (!title.trim() || !targetListId) return;
+    const typed = readQuickAdd(title, new Date(now()));
+    // One line of feedback; Ctrl+Z still takes it back (no second "Rückgängig" next to the next action's).
+    await undoable(t.todos.added, () =>
+      taskRepo.create({
+        listId: targetListId,
+        title: typed.title,
+        done: false,
+        priority: typed.priority ?? 0,
+        order: 0,
+        ...(typed.dueDate ? { dueDate: typed.dueDate } : {}),
+        ...(typed.estimateMin ? { estimateMin: typed.estimateMin } : {}),
+        ...(typed.note ? { note: typed.note } : {}),
+        ...(selected === SOMEDAY && !typed.dueDate ? { someday: true } : {}),
+      }),
+    );
+    toast(t.todos.added);
     setTitle('');
+    // The next entry follows right away: the field keeps the focus (and the keyboard stays up).
+    addRef.current?.querySelector('input')?.focus();
   }
 
   function select(id: string) {
@@ -215,11 +335,6 @@ export default function TodosPage() {
     () => (focus.streaks && tasks ? streaksOf(tasks, day) : undefined),
     [focus.streaks, tasks, day],
   );
-  const waiting = useMemo(
-    () => (focus.calmAttention ? waitingTasks((tasks ?? []) as unknown as PickTask[], day) : []),
-    [focus.calmAttention, tasks, day],
-  );
-
   const groups = useMemo(() => {
     const open = top.filter((x) => !x.done);
     const row = (task: StoredTask) => (
@@ -244,7 +359,16 @@ export default function TodosPage() {
           : (t.groups[g.id as keyof typeof t.groups] as string),
       count: g.items.length,
       tone: g.id === 'overdue' && !focus.calmAttention ? ('overdue' as const) : undefined,
-      children: <ul className={styles.list}>{g.items.map(row)}</ul>,
+      action:
+        g.id === 'overdue' && focus.calmAttention ? (
+          <div className={styles.waiting} data-testid="todos-waiting">
+            <span className={styles.waitingText}>
+              <span>{t.focus.waiting.replanHint}</span>
+            </span>
+            <Button onClick={replanNow}>{t.focus.waiting.replan}</Button>
+          </div>
+        ) : undefined,
+      children: <ItemList>{g.items.map(row)}</ItemList>,
     }));
     const done = top.filter((x) => x.done);
     return done.length > 0
@@ -255,7 +379,7 @@ export default function TodosPage() {
             label: t.groups.done,
             count: done.length,
             tone: undefined,
-            children: <ul className={styles.list}>{done.map(row)}</ul>,
+            children: <ItemList>{done.map(row)}</ItemList>,
           },
         ]
       : timed;
@@ -278,54 +402,89 @@ export default function TodosPage() {
     });
   }
 
+  const pageMenu: RowMenuItem[] = [
+    {
+      id: 'list-all',
+      group: t.todos.listGroup,
+      label: t.todos.allOpen,
+      checked: selected === ALL,
+      onSelect: () => select(ALL),
+    },
+    {
+      id: 'list-someday',
+      group: t.todos.listGroup,
+      label: t.todos.someday,
+      checked: selected === SOMEDAY,
+      onSelect: () => select(SOMEDAY),
+    },
+    ...(lists ?? []).map((l) => ({
+      id: `list-${l.id}`,
+      group: t.todos.listGroup,
+      label: l.name,
+      checked: selected === l.id,
+      onSelect: () => select(l.id),
+    })),
+    {
+      id: 'new-list',
+      group: t.todos.moreOptions,
+      label: t.todos.newList,
+      onSelect: () => setListTarget('new'),
+    },
+    ...(currentList
+      ? [
+          {
+            id: 'rename-list',
+            group: t.todos.moreOptions,
+            label: t.todos.renameList,
+            onSelect: () => setListTarget(currentList),
+          },
+        ]
+      : []),
+    {
+      id: 'advanced',
+      group: t.todos.moreOptions,
+      label: tx.switchLabel,
+      checked: advanced,
+      onSelect: () => setAdvanced(!advanced),
+    },
+    ...(writeAvailable
+      ? [
+          {
+            id: 'write',
+            group: t.todos.moreOptions,
+            label: writeLabel.label,
+            onSelect: openWrite,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
       <div className={styles.header}>
         <h1>{t.todos.title}</h1>
-        <Button onClick={() => setListTarget('new')}>
-          <Icon name="plus" size={18} />
-          {t.todos.newList}
-        </Button>
+        <RowMenu
+          label={t.todos.moreOptions}
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          items={pageMenu}
+        />
       </div>
 
-      <div className={styles.layout}>
-        <nav className={styles.chips} aria-label={t.todos.list}>
-          <button
-            type="button"
-            className={styles.chip}
-            aria-current={selected === ALL}
-            onClick={() => select(ALL)}
-          >
+      {selected !== ALL ? (
+        <p className={styles.filterNote} data-testid="todos-filter">
+          {t.todos.showingList(
+            selected === SOMEDAY ? t.todos.someday : (currentList?.name ?? t.todos.allOpen),
+          )}{' '}
+          <button type="button" className={styles.filterReset} onClick={() => select(ALL)}>
             {t.todos.allOpen}
           </button>
-          <button
-            type="button"
-            className={styles.chip}
-            aria-current={selected === SOMEDAY}
-            onClick={() => select(SOMEDAY)}
-          >
-            {t.todos.someday}
-          </button>
-          {lists?.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              className={styles.chip}
-              aria-current={selected === l.id}
-              onClick={() => select(l.id)}
-            >
-              {l.name}
-            </button>
-          ))}
-          {currentList ? (
-            <IconButton label={t.todos.renameList} onClick={() => setListTarget(currentList)}>
-              <Icon name="edit" />
-            </IconButton>
-          ) : null}
-        </nav>
+        </p>
+      ) : null}
 
+      <div className={styles.layout}>
         <div className={styles.main}>
-          <form ref={addRef} onSubmit={add} className={styles.add}>
+          <form ref={addRef} onSubmit={add} className={styles.add} data-keep-visible>
             <div className={styles.grow}>
               <TextField
                 label={t.todos.add}
@@ -345,16 +504,6 @@ export default function TodosPage() {
                 <strong>{t.todos.sort.hint(inboxOpen.length)}</strong>
               </span>
               <Button onClick={() => setSorting(true)}>{t.todos.sort.title}</Button>
-            </div>
-          ) : null}
-
-          {waiting.length > 0 && selected === ALL ? (
-            <div className={styles.waiting} data-testid="todos-waiting">
-              <span className={styles.waitingText}>
-                <strong>{t.focus.waiting.text(waiting.length)}</strong>
-                <span>{t.focus.waiting.replanHint}</span>
-              </span>
-              <Button onClick={replanNow}>{t.focus.waiting.replan}</Button>
             </div>
           ) : null}
 

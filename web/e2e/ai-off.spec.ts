@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { openTodosMenu, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -16,10 +16,14 @@ test.describe('KI abschalten', () => {
     page,
   }) => {
     await ready(page, '/todos');
-    await expect(page.getByTestId('ai-write-button')).toBeVisible();
+    // On the ToDos page the entry lives in the "⋯" menu (no second button in the area header).
+    await expect(
+      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Satz eintragen' }),
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
     await openPalette(page);
     await page.getByRole('combobox').fill('offene Rechnungen');
-    await expect(page.getByRole('option', { name: /Assistent fragen/ })).toBeVisible();
+    await expect(page.getByRole('option', { name: /Frage stellen/ })).toBeVisible();
     await page.keyboard.press('Escape');
 
     await ready(page, '/settings/ki');
@@ -32,10 +36,13 @@ test.describe('KI abschalten', () => {
     await expect(page.locator('section[aria-labelledby="ai-write"]')).toHaveCount(0);
 
     await ready(page, '/todos');
-    await expect(page.getByTestId('ai-write-button')).toHaveCount(0);
+    await expect(
+      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Satz eintragen' }),
+    ).toHaveCount(0);
+    await page.keyboard.press('Escape');
     await openPalette(page);
     await page.getByRole('combobox').fill('offene Rechnungen');
-    await expect(page.getByRole('option', { name: /Assistent fragen/ })).toHaveCount(0);
+    await expect(page.getByRole('option', { name: /Frage stellen/ })).toHaveCount(0);
     await expect(page.getByRole('option', { name: /Mit KI/ })).toHaveCount(0);
     await page.keyboard.press('Escape');
 
@@ -46,7 +53,9 @@ test.describe('KI abschalten', () => {
     await page.getByTestId('ai-on').click();
     await expect(page.locator('section[aria-labelledby="ai"]')).toBeVisible();
     await ready(page, '/todos');
-    await expect(page.getByTestId('ai-write-button')).toBeVisible();
+    await expect(
+      (await openTodosMenu(page)).getByRole('menuitem', { name: 'Satz eintragen' }),
+    ).toBeVisible();
   });
 
   test('"all devices" is a synced setting; the device flag stays unset', async ({ page }) => {

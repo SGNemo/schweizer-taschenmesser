@@ -2,6 +2,10 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { useAiOn } from '@/core/ai/switch';
+import { quoted } from '@/core/i18n/format';
+import { getLang } from '@/core/i18n/lang';
+import { getPlatform } from '@/core/platform';
+import { useWriteLabel } from '@/core/shell/writeAvailable';
 import { detectIntent } from '@/core/ai/write/rules/intent';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { calculate } from '@/core/calc/phrases';
@@ -12,19 +16,31 @@ import { openReminderCenter } from '@/core/notifications/centerStore';
 import { addRecent, readRecent, type RecentEntry } from '@/core/search/recent';
 import { useFocusSettings } from '@/core/settings/focus';
 import { settingsPath } from '@/core/settings/registry/paths';
+import { SETTINGS_CATEGORIES } from '@/core/settings/registry/categories';
+import { searchSettings, type SettingsSearchResult } from '@/core/settings/registry/search';
+import { applyQuick, QUICK_SETTINGS } from '@/core/settings/quick';
+import { formatMuteEnd, MUTE_PRESETS, muteUntil, setMute } from '@/core/notifications/mute';
+import { now } from '@/core/time/now';
 import { normalize } from '@/core/text/normalize';
 import { useSettingsSections } from '@/pages/settings/useSections';
 import type { ResultRow } from '@/core/ai/query/types';
 import { useSetupHost } from '@/core/setup/host';
 import { useTools } from '@/core/tools/state';
+import type { ToolAnswer } from '@/core/tools/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Dialog, Icon, type IconName } from '@/ui';
+import { Button, Dialog, Icon, Keys, type IconName } from '@/ui';
+import { paletteKeys } from '@/core/keyboard/labels';
+import { useShortcutPrefs } from '@/core/keyboard/prefs';
+import { useVoicePrefs } from '@/core/voice/settings';
 import { AnswerView } from './assistant/AnswerView';
+import { VoiceMic } from './voice/VoiceMic';
+import { useVoice } from '@/core/voice/store';
 import { useAssistant, useSearchHits } from './assistant/useAssistant';
 import { useModuleNavItems, useNavTree, useQuickAddActions } from './useNavItems';
 import { reportBug } from '@/core/diagnostics/report';
 import { tDiag } from '@/strings.diagnostics';
+import { tComfort } from '@/strings.comfort';
 import styles from './CommandPalette.module.css';
 import { loadDevCommands } from './devTools';
 import answerStyles from './assistant/assistant.module.css';
@@ -39,9 +55,15 @@ export interface Command {
    * (every setting) that would otherwise hijack Enter for natural-language questions.
    */
   onlyWhenQueryStartsWith?: string;
+  /** Extra words that find the command (everyday names, descriptions) besides its label. */
+  keywords?: readonly string[];
+  /** The keys that reach this command directly (`F8`, `T R`), shown behind its label. */
+  shortcut?: string[];
 }
 
 export { normalize };
+
+const HELP_URL = 'https://github.com/SGNemo/schweizer-taschenmesser/blob/main/docs/user';
 
 export function filterCommands(commands: Command[], query: string): Command[] {
   const q = normalize(query);
@@ -49,15 +71,21 @@ export function filterCommands(commands: Command[], query: string): Command[] {
   return commands.filter(
     (c) =>
       (!c.onlyWhenQueryStartsWith || q.startsWith(c.onlyWhenQueryStartsWith)) &&
-      normalize(c.label).includes(q),
+      normalize([c.label, ...(c.keywords ?? [])].join(' ')).includes(q),
   );
 }
 
 export function CommandPalette() {
   const open = useUiStore((s) => s.paletteOpen);
   const setOpen = useUiStore((s) => s.setPaletteOpen);
+  const writeMode = useUiStore((s) => s.paletteWrite);
+  const write = useWriteLabel();
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} title={t.palette.title}>
+    <Dialog
+      open={open}
+      onClose={() => setOpen(false)}
+      title={writeMode ? write.label : t.palette.title}
+    >
       {/* Dialog only renders children while open, so the body remounts with fresh state. */}
       <PaletteBody onDone={() => setOpen(false)} />
     </Dialog>
@@ -67,9 +95,10 @@ export function CommandPalette() {
 type Option = { recent?: boolean } & (
   | { kind: 'command'; key: string; label: string; icon: IconName; command: Command }
   | { kind: 'hit'; key: string; label: string; icon: IconName; row: ResultRow }
+  | { kind: 'setting'; key: string; label: string; icon: IconName; hit: SettingsSearchResult }
+  | { kind: 'tool'; key: string; label: string; icon: IconName; answer: ToolAnswer }
   | { kind: 'calc'; key: string; label: string; icon: IconName; value: number }
   | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean }
-  | { kind: 'query'; key: string; label: string; icon: IconName }
 );
 
 function PaletteBody({ onDone }: { onDone: () => void }) {
@@ -100,14 +129,38 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   // Read once per opening of the palette: what was used before, newest first.
   const [recent] = useState<RecentEntry[]>(() => readRecent());
 
+  // Recognised speech lands in the input like typed text (appended, never replacing what is there).
+  const pending = useVoice((s) => s.pending);
+  const [handledVoice, setHandledVoice] = useState(0);
+  if (pending && pending.id !== handledVoice) {
+    // Adjusting state during render (like Dialog): the text joins what is already typed.
+    setHandledVoice(pending.id);
+    setQuery((q) => (q.trim() ? `${q.trimEnd()} ${pending.text}` : pending.text));
+    setActive(0);
+  }
+  useEffect(() => {
+    if (pending) useVoice.getState().takePending();
+  }, [pending]);
+
   const [devCommands, setDevCommands] = useState<Command[]>([]);
   useEffect(() => {
     void loadDevCommands?.().then((m) => setDevCommands(m.devCommands()));
   }, []);
 
+  const shortcutPrefs = useShortcutPrefs();
+  const voiceKey = useVoicePrefs().key;
+  const keyHints = useMemo(
+    () =>
+      paletteKeys(
+        shortcutPrefs,
+        voiceKey,
+        (tools?.active ?? []).map((x) => x.id),
+      ),
+    [shortcutPrefs, voiceKey, tools],
+  );
   const commands = useMemo<Command[]>(() => {
     const go = (to: string) => () => void navigate(to);
-    return [
+    const list: Command[] = [
       { id: 'dashboard', label: t.nav.home, icon: 'home', run: go('/') },
       ...tree.areas.map((a) => ({
         id: `area-${a.id}`,
@@ -142,23 +195,54 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         icon: 'alert' as IconName,
         run: () => void reportBug(),
       },
+      {
+        id: 'help',
+        label: t.palette.helpCommand,
+        icon: 'help',
+        keywords: ['help', 'hilfe', 'anleitung', 'faq'],
+        run: () =>
+          void getPlatform().app.openUrl(`${HELP_URL}/faq${getLang() === 'de' ? '.de' : ''}.md`),
+      },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
-      ...settingsSections.flatMap((sec) => [
-        {
-          id: `settings-${sec.id}`,
-          label: t.settings.paletteCommand(sec.title),
+      // One command per value of a quick switch: "Farbschema: Dunkel" changes it on the spot.
+      ...QUICK_SETTINGS.flatMap((q) =>
+        q.options().map((o) => ({
+          id: `quick-${q.id}-${o.value}`,
+          label: `${q.label()}: ${o.label}`,
           icon: 'settings' as IconName,
-          onlyWhenQueryStartsWith: t.palette.settingsPrefix,
-          run: go(settingsPath(sec.category, sec.id)),
-        },
-        ...(sec.fields ?? []).map((f) => ({
-          id: `settings-${sec.id}--${f.key}`,
-          label: t.settings.paletteCommand(f.label),
-          icon: 'settings' as IconName,
-          onlyWhenQueryStartsWith: t.palette.settingsPrefix,
-          run: go(settingsPath(sec.category, sec.id, f.key)),
+          run: () => applyQuick(q, o.value),
         })),
-      ]),
+      ),
+      // "Ruhe: 1 Stunde", "Ruhe: bis morgen", "Ruhe: aus" (core/notifications/mute.ts).
+      ...(['off', ...MUTE_PRESETS] as const).map((v) => ({
+        id: `mute-${v}`,
+        label: `${tComfort.get().mute.title}: ${
+          v === 'off'
+            ? tComfort.get().mute.off
+            : v === '1h'
+              ? tComfort.get().mute.hour
+              : tComfort.get().mute.tomorrow
+        }`,
+        icon: 'bell' as IconName,
+        run: () => {
+          setMute(v === 'off' ? undefined : v);
+          toast(
+            v === 'off'
+              ? `${tComfort.get().mute.title}: ${tComfort.get().mute.off}`
+              : tComfort.get().mute.until(formatMuteEnd(muteUntil(v, now()))),
+          );
+        },
+      })),
+      // Modules that are off are still found by name or purpose and lead to their library card.
+      ...availableManifests()
+        .filter((m) => states !== undefined && !states[m.id])
+        .map((m) => ({
+          id: `library-${m.id}`,
+          label: tComfort.get().library.enable(m.name),
+          icon: m.icon,
+          keywords: [m.description],
+          run: go(`/library#module-${m.id}`),
+        })),
       ...(tools?.active ?? []).map((tool) => ({
         id: `tool-${tool.id}`,
         label: t.tools.paletteCommand(tool.name),
@@ -167,6 +251,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       })),
       ...devCommands,
     ];
+    return list.map((c) => ({ ...c, shortcut: keyHints[c.id] }));
   }, [
     navigate,
     moduleItems,
@@ -176,10 +261,19 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     openTools,
     tools,
     devCommands,
-    settingsSections,
+    states,
+    keyHints,
   ]);
 
   const hits = useSearchHits(query);
+  const settingHits = useMemo(() => {
+    const prefix = t.palette.settingsPrefix;
+    const q = normalize(query);
+    const rest = q.startsWith(prefix) ? q.replace(/^\S+\s*/, '') : q;
+    return rest.length >= 2
+      ? searchSettings(settingsSections, SETTINGS_CATEGORIES, rest).slice(0, 5)
+      : [];
+  }, [query, settingsSections]);
   const hasModel = aiOn && config ? isAiConfigured(config) : false;
 
   const options = useMemo<Option[]>(() => {
@@ -214,19 +308,32 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
             row: { id: r.key, title: r.label, subtitle: r.subtitle, fields: [], to: r.to },
             recent: true,
           });
-        } else if (r.kind === 'query') {
-          recents.push({
-            kind: 'query',
-            key: `r-${r.key}`,
-            label: r.label,
-            icon: 'search',
-            recent: true,
-          });
         }
       }
       const used = new Set(recents.map((o) => o.key.replace(/^r-/, '')));
       return [...recents, ...list.filter((o) => !(o.kind === 'command' && used.has(o.command.id)))];
     }
+    // A line a tool understands ("timer 10m", "umrechnen 5 km") is answered on the spot, first.
+    for (const tool of tools?.active ?? []) {
+      const answer = tool.expression?.(query);
+      if (answer)
+        list.unshift({
+          kind: 'tool',
+          key: `tool-${tool.id}`,
+          label: answer.text,
+          icon: tool.icon,
+          answer,
+        });
+    }
+    // Settings are found without any prefix, listed after the assistant's entries so that Enter on
+    // a question still asks it ("offene Rechnungen" must not open a settings page).
+    const settingOptions: Option[] = settingHits.map((hit) => ({
+      kind: 'setting',
+      key: `s-${hit.sectionId}-${hit.fieldKey ?? ''}`,
+      label: hit.label,
+      icon: 'settings',
+      hit,
+    }));
     // Arithmetic is answered on the spot (0 tokens, nothing leaves the device); Enter copies it.
     const sum = calculate(query);
     if (sum) {
@@ -258,8 +365,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         list.push({
           kind: 'ask',
           key: 'ask',
-          label: t.ai.palette.ask,
-          icon: 'sparkles',
+          label: hasModel ? t.ai.palette.ask : t.ai.palette.askLocal,
+          icon: hasModel ? 'sparkles' : 'search',
           forceModel: false,
         });
       }
@@ -273,6 +380,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         });
       }
     }
+    // "Einstellung: …" says what is meant: then the settings come first.
+    if (normalize(query).startsWith(t.palette.settingsPrefix)) list.unshift(...settingOptions);
+    else list.push(...settingOptions);
     for (const row of hits) {
       list.push({
         kind: 'hit',
@@ -286,6 +396,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   }, [
     commands,
     hits,
+    settingHits,
+    tools,
     query,
     hasModel,
     aiOn,
@@ -302,15 +414,23 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
 
   const run = (o: Option | undefined) => {
     if (!o) return;
-    if (o.kind === 'query') {
-      // An earlier search is typed back into the field; Enter asks again.
-      setQuery(o.label);
-      setActive(0);
-      return;
-    }
     if (o.kind === 'ask') {
-      remember({ kind: 'query', key: `q-${query.trim()}`, label: query.trim() });
+      // Questions are never remembered: people type secrets into search fields.
       return void submit(query.trim(), o.forceModel, preferModule);
+    }
+    if (o.kind === 'tool') {
+      const { run: act, copy } = o.answer;
+      if (act) {
+        onDone();
+        void Promise.resolve(act());
+      } else if (copy !== undefined) {
+        // Stays open like the calculator: copy, then carry on typing.
+        void navigator.clipboard.writeText(copy).then(
+          () => toast(t.tools.calc.copied),
+          () => undefined,
+        );
+      }
+      return;
     }
     if (o.kind === 'calc') {
       // Plain decimal without thousands separators so it pastes into any field.
@@ -322,7 +442,11 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       return;
     }
     onDone();
-    if (o.kind === 'command') {
+    if (o.kind === 'setting') {
+      const to = settingsPath(o.hit.category, o.hit.sectionId, o.hit.fieldKey);
+      remember({ kind: 'hit', key: o.key, label: o.label, to, subtitle: o.hit.path });
+      void navigate(to);
+    } else if (o.kind === 'command') {
       remember({ kind: 'command', key: o.command.id, label: o.label });
       o.command.run();
     } else if (o.row.to) {
@@ -385,6 +509,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           }
         }}
       />
+      <VoiceMic />
       {options.length === 0 ? (
         <p className={styles.empty}>{t.palette.empty}</p>
       ) : (
@@ -401,12 +526,18 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
             >
               <Icon name={o.icon} />
               <span className={styles.optionText}>
-                {o.kind === 'ask' ? `${o.label}: „${query.trim()}“` : o.label}
+                {o.kind === 'ask' ? `${o.label}: ${quoted(query.trim())}` : o.label}
+                {o.kind === 'setting' ? (
+                  <span className={styles.optionMeta}>{o.hit.path}</span>
+                ) : null}
                 {o.kind === 'hit' && o.row.subtitle ? (
                   <span className={styles.optionMeta}>{o.row.subtitle}</span>
                 ) : null}
                 {o.recent ? <span className={styles.optionMeta}>{t.palette.recent}</span> : null}
               </span>
+              {o.kind === 'command' && o.command.shortcut ? (
+                <Keys keys={o.command.shortcut} decorative />
+              ) : null}
             </li>
           ))}
         </ul>

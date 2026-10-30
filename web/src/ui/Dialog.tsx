@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useBackClose } from '@/core/shell/useBackClose';
 import { t } from '@/strings';
 import { Button, IconButton } from './Button';
 import { Icon } from './icons';
@@ -18,6 +19,10 @@ interface DialogProps {
   headerStart?: ReactNode;
   /** Fields were filled: closing asks "Entwurf verwerfen?" first. */
   dirty?: boolean;
+  /** Editors: the dialog notices typing itself; once something was typed, closing asks first (an empty one closes at once). */
+  askAfterTyping?: boolean;
+  /** The parent registers "Back" itself (setup assistant): the dialog adds no entry of its own. */
+  backHandled?: boolean;
 }
 
 /** Distance in px a sheet must be pulled down to close. */
@@ -37,17 +42,24 @@ export function Dialog({
   variant = 'center',
   size = 'default',
   headerStart,
-  dirty = false,
+  dirty: dirtyProp = false,
+  askAfterTyping = false,
+  backHandled = false,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [confirming, setConfirming] = useState(false);
   // A closed dialog never reopens on the "discard?" question (adjusting state during render).
   const [wasOpen, setWasOpen] = useState(open);
+  const [typed, setTyped] = useState(false);
   if (open !== wasOpen) {
     setWasOpen(open);
-    if (!open) setConfirming(false);
+    if (!open) {
+      setConfirming(false);
+      setTyped(false);
+    }
   }
+  const dirty = dirtyProp || (askAfterTyping && typed);
   const [dragY, setDragY] = useState(0);
   const dragFrom = useRef<number | null>(null);
 
@@ -69,6 +81,20 @@ export function Dialog({
     if (dirty && !confirming) setConfirming(true);
     else onClose();
   };
+
+  // "Back" (Android gesture, browser button) closes the dialog first; with a draft it asks, and
+  // a second "Back" at the question means "keep editing".
+  useBackClose(open && !backHandled, () => {
+    if (confirming) {
+      setConfirming(false);
+      return 'keep';
+    }
+    if (dirty) {
+      setConfirming(true);
+      return 'keep';
+    }
+    onClose();
+  });
 
   const onHandleDown = (e: React.PointerEvent) => {
     dragFrom.current = e.clientY;
@@ -107,7 +133,7 @@ export function Dialog({
       }}
     >
       {open ? (
-        <div className={styles.inner}>
+        <div className={styles.inner} onInput={askAfterTyping ? () => setTyped(true) : undefined}>
           {variant === 'full' ? null : (
             <div
               className={styles.handle}

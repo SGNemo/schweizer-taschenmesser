@@ -31,6 +31,8 @@ export const eventSchema = z
     note: z.string().optional(),
     recurrence: recurrenceSchema.optional(),
     notify: notifySchema.optional(),
+    /** A reminder answered with "Genommen" instead of "Erledigt" (medication, vitamins); nothing is counted. */
+    taken: z.boolean().optional(),
   })
   .refine((e) => !e.endDate || e.endDate >= e.startDate, {
     message: 'endDate must not be before startDate',

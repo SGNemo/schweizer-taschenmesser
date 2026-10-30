@@ -1,27 +1,23 @@
 # Chats – running work and hand-over
 
-Several Claude chats work in parallel and only see each other through GitHub. Keep this file short; delete finished rows. Last full review: 2026-10-02.
+Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours; notes and questions between chats go to [`scribble/`](../scribble/README.md) (develop only). Keep this file short; delete finished rows. Last full review: 2026-10-02.
 
 ## Wartet auf Sven
 Everything that needs a decision or a merge from the maintainer, in one place. A chat adds a row when it stops for him and removes it when done. Source of truth for PRs: GitHub (`list_pull_requests`).
 
 | Was | Was zu tun ist |
 |---|---|
-| Entwurfs-PRs #27, #29, #30, #31, #32, #33 (`alert-autofix-*`, Code-Scanning-Vorschläge) | ansehen, annehmen oder schließen (Sicherheitsbereich, kein Chat fasst sie an) |
-| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Spotify-Widget, Precache der Wörterbücher, „+ Neu“ statt FAB |
-| Fehlerberichte/Absturzfestigkeit: PRs #85 → #87 → #88 → #92 (gestapelt, Reihenfolge einhalten; #84 ist gemergt) | nacheinander mergen; Basis springt jeweils automatisch auf `develop` |
+| QA-Wording (P3, abgeschlossen) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
+| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
 | Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
-| Fehlerberichte: Rust im CI prüfen | nach Merge von #87/#92 `Native shell (fmt, clippy, tests)` grün? (`desktop_safe_mode`, `desktop_take_panic_log` wurden lokal nicht gebaut); Handtest: `Nemo-Portable.exe --safe-mode` |
-| [PR #57](https://github.com/SGNemo/schweizer-taschenmesser/pull/57): Fokushilfen Paket 1 „Anfangen“ | ansehen, mergen (zuerst) ([focus-aids](features/focus-aids.md)) |
-| [PR #58](https://github.com/SGNemo/schweizer-taschenmesser/pull/58): Fokushilfen Paket 2 „Erinnerungen“ (gestapelt auf #57) | nach #57 mergen; Basis wird automatisch auf `develop` umgestellt |
-| [PR #59](https://github.com/SGNemo/schweizer-taschenmesser/pull/59): Fokushilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (gestapelt auf #58) | nach #58 mergen; Basis wird automatisch auf `develop` umgestellt |
-| [PR #60](https://github.com/SGNemo/schweizer-taschenmesser/pull/60): Fokushilfen Paket 4 „Fortschritt“ (gestapelt auf #59) | nach #59 mergen; Basis wird automatisch auf `develop` umgestellt |
-| PR „App-UI in 5 Sprachen“ (`feat/i18n-ui`, PR 2/2 nach #86) | ansehen, mergen; danach brauchen neue Texte alle 5 Sprachen (`npm run check:i18n`); Repo-Felder aus [meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md) setzen, falls noch offen |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| P5 QA: Erinnerungen, Fristen, Löschsicherheit | `feat/qa-reminders-safety` | `core/notifications/**` (policy.ts), `calendar` RemindersTab/EventEditor, `subscriptions`, `vault`, `core/undo`, `core/db` (additiv) | package A in review (hotspots: `core/notifications/policy.ts`, `core/modules/types.ts` – additive fields `taken`, `members`) – [features/qa-reminders-safety.md](features/qa-reminders-safety.md) | – | 2026-10-29 |
+| QA P4 B: Kalender (Wiederholung, Mehrtages-Anzeige, Wochenansicht) | `feat/qa-calendar-recurrence` | `modules/calendar/**`; `core/modules/types.ts` (hotspot, one chat: additive `CalendarItem.endDate`/`continued`, V14 later); `strings.ts` calendar block | PR offen | Paket B | 2026-10-29 |
+| QA P4: Heute/Morgen, Wiederholung, Parser | `feat/qa-today-calendar` | `home/`, `modules/calendar`, `quickCapture/parser`, `modules/todos`, finance-Import-Vorschau; strings.ts (eigener Block) | Paket A (Parser) fertig, PR offen; B Kalender, C Übersicht, D ToDos/Finanzen, E V14 folgen je als eigener Branch | parser + corpus 22/22 | 2026-10-29 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

@@ -1,4 +1,5 @@
 import { now } from '@/core/time/now';
+import { onFocusStart } from '@/core/focus/music';
 import { saveFocusSession } from '@/core/focus/state';
 import { startSession } from '@/core/focus/session';
 import type { Task } from './schema';
@@ -19,4 +20,6 @@ export async function beginFocus(
   await saveFocusSession(
     startSession(task, focusMinutesFor(task, defaultMinutes), now(), focusPath(task.id)),
   );
+  // Optional music (off by default); never waits for Spotify and never fails the round.
+  void onFocusStart();
 }

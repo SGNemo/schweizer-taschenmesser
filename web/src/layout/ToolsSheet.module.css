@@ -36,3 +36,9 @@
   align-self: flex-start;
   color: var(--accent);
 }
+.recentTitle {
+  margin: 0 0 var(--space-2);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}

@@ -1,8 +1,10 @@
 import type { Strings } from '@/strings';
 
 export const onboarding: Strings['onboarding'] = {
-  button: 'Set up starter data',
-  title: (module: string) => `Starter data: ${module}`,
+  button: 'Import',
+  title: (module: string) => `Import: ${module}`,
+  rowLabel: 'Add entries',
+  rowHint: 'From a file, a text or suggestions. Nothing is saved until you confirm the preview.',
   chooseIntro:
     'Where should the first entries come from? Nothing is saved until you confirm the preview.',
   skip: 'Skip',
@@ -12,6 +14,7 @@ export const onboarding: Strings['onboarding'] = {
   parsing: 'Reading …',
   chooseFile: 'Choose file …',
   fileChosen: (name: string) => `File: ${name}`,
+  filesChosen: (n: number) => `${n} files`,
   textLabel: 'One line = one entry',
   pickTemplates: 'Choose suggestions',
   noInput: 'Please enter something.',
@@ -62,6 +65,7 @@ export const onboarding: Strings['onboarding'] = {
         ? '1 invoice without a recognisable amount was skipped.'
         : `${n} invoices without a recognisable amount were skipped.`,
     noEnd: 'Contract end not recognised',
+    endsOn: (date: string) => `Ends ${date}`,
     notice: (days: number) => `Notice period ${days} ${days === 1 ? 'day' : 'days'}`,
   },
   ics: {
@@ -87,6 +91,29 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Paste a list from a notes app or a message: one line per task.',
     placeholder: 'Sort tax papers\nCall the dentist\nFix the bike',
     list: 'Into this list',
+    file: 'From Todoist or Google Tasks',
+    fileHint:
+      'Choose the file you exported there yourself: Todoist CSV or Google Tasks file (JSON). Nothing is uploaded.',
+    perSource: 'A separate list for each source list',
+    newList: 'New list',
+    includeDone: 'Completed tasks',
+    doneNo: 'Leave out',
+    doneYes: 'Bring over as done',
+    repeatNote: (text: string) => `Repeat in the source: ${text} (does not repeat automatically)`,
+    dueNote: (text: string) => `Due in the source: ${text}`,
+    skippedDone: (n: number) =>
+      n === 1 ? '1 completed task was left out.' : `${n} completed tasks were left out.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? '1 entry (section, deleted or without a title) was skipped.'
+        : `${n} entries (sections, deleted or without a title) were skipped.`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 task repeats in the source. The repeat is only a hint in its note; nothing repeats automatically.'
+        : `${n} tasks repeat in the source. The repeat is only a hint in their note; nothing repeats automatically.`,
+    tooMany: (max: number) => `Showing the first ${max} tasks.`,
+    unknownFormat:
+      'The format wasn’t recognised. You need the Todoist CSV or the Google Tasks file (JSON).',
   },
   reminders: {
     textDetail: 'today, 09:00',
@@ -167,6 +194,25 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'One line per link, optionally with a title in front.',
     placeholder: 'https://example.org/article\nLovely hike https://example.org/hiking',
   },
+  notes: {
+    file: 'Markdown files or Google Keep',
+    fileHint:
+      'Choose .md files (e.g. from your Obsidian folder, several at once) or the .json files from Google Takeout (Keep). Titles, checklists and #tags are kept. Please unzip ZIP files first.',
+    text: 'Paste Markdown',
+    textHint: 'The pasted text becomes one note; a first heading becomes the title.',
+    textLabel: 'Markdown text',
+    placeholder: '# Weekly plan\n\n- Shopping #household\n- Call Mum',
+    emptyFiles: (n: number) =>
+      n === 1 ? '1 empty file was skipped.' : `${n} empty files were skipped.`,
+    keepSkipped: (n: number) =>
+      n === 1
+        ? '1 Keep note from the trash or archive was left out.'
+        : `${n} Keep notes from the trash or archive were left out.`,
+    unreadable: (n: number) =>
+      n === 1
+        ? '1 JSON file is not a Keep note and was skipped.'
+        : `${n} JSON files are not Keep notes and were skipped.`,
+  },
   birthdays: {
     text: 'Paste birthdays',
     textHint: 'One line per person: name and date, with or without the year.',
@@ -225,6 +271,52 @@ export const onboarding: Strings['onboarding'] = {
       name: 'Ski weekend',
       note: '',
       items: ['Ski jacket', 'Gloves', 'Ski goggles', 'Thermal underwear', 'Ski pass', 'Lip balm'],
+    },
+    familyTrip: {
+      name: 'Holiday with kids',
+      note: 'For trips with small children',
+      items: [
+        'Children’s IDs or passports',
+        'Favourite cuddly toy',
+        'Nappies and wet wipes',
+        'Snacks for the way',
+        'Spare clothes for the kids',
+        'Sun cream for kids',
+        'Children’s first-aid kit',
+        'Toys and books',
+        'Buggy or baby carrier',
+        'Vaccination record',
+      ],
+    },
+    school: {
+      name: 'School bag',
+      note: 'A quick look every evening',
+      items: [
+        'Pencil case',
+        'Exercise books and textbooks',
+        'Timetable',
+        'Homework planner',
+        'Water bottle',
+        'Snack for break',
+        'PE kit',
+        'Letters for parents',
+      ],
+    },
+  },
+  papers: {
+    label: 'Important papers',
+    hint: 'Documents you want to find fast',
+    templatesHint: 'Add the expiry date later: it then shows up under “Deadlines & expiry”.',
+    kind: 'Papers',
+    items: {
+      passport: { name: 'Passport', category: 'identity' },
+      idCard: { name: 'ID card', category: 'identity' },
+      license: { name: 'Driving licence', category: 'identity' },
+      vehicleInspection: { name: 'Vehicle registration and inspection report', category: 'other' },
+      healthCard: { name: 'Health insurance card', category: 'health' },
+      vaccination: { name: 'Vaccination record', category: 'health' },
+      rental: { name: 'Rental agreement', category: 'contract' },
+      policies: { name: 'Insurance policies', category: 'insurance' },
     },
   },
 };

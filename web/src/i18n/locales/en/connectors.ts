@@ -11,6 +11,12 @@ export const connectors: Strings['connectors'] = {
     denied: 'Sign-in was cancelled or denied.',
     'bad-response': 'The service sent an unexpected response.',
     unsupported: 'That isn’t possible on this device.',
+    'port-busy': 'Port in use. Close the other program and try connecting again.',
+    'premium-required': 'Controlling needs a Premium account.',
+    'no-callback':
+      'The browser did not report a sign-in. Check the redirect URI entered at the service and whether your account is allowed, then try again.',
+    'bad-client': 'The service does not know this client ID. Check the ID you entered.',
+    'no-browser': 'The browser for the sign-in could not be opened.',
   } as Record<string, string>,
   icsName: 'Calendar subscription (ICS)',
   icsDescription:
@@ -79,7 +85,8 @@ export const connectors: Strings['connectors'] = {
     add: 'Add calendar',
     checking: 'Checking …',
     remove: (name: string) => `Remove calendar “${name}”`,
-    badUrl: 'That isn’t a valid address (https://… or webcal://…).',
+    badUrl:
+      'That isn’t a valid public address (https://… or webcal://…). Addresses on your own network or with credentials are not allowed.',
     notACalendar: 'There is no calendar at this address.',
     unreachable: 'The address can’t be reached.',
     noProxy:

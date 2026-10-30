@@ -12,6 +12,7 @@ import {
 import { useSyncStatus } from '@/core/sync/status';
 import { getPlatform } from '@/core/platform';
 import { formatDateTime } from '@/core/time/dates';
+import { isInsecureRemoteUrl } from '@/core/net/publicUrl';
 import { t } from '@/strings';
 import { Badge, Button, Card, Dialog, Switch, TextField } from '@/ui';
 import { SyncConflicts } from './SyncConflicts';
@@ -48,7 +49,8 @@ export function SyncSection() {
     // The installed app is not served by the sync server, so there is nothing to suggest.
     if (getPlatform().isNative) return;
     const controller = new AbortController();
-    fetch('/v1/health', { signal: controller.signal })
+    getPlatform()
+      .fetch('/v1/health', { signal: controller.signal })
       .then((res) => (res.ok ? (res.json() as Promise<{ ok?: boolean }>) : undefined))
       .then((body) => body?.ok && setUrl((current) => current || window.location.origin))
       .catch(() => undefined); // any other host answers with HTML or nothing: no suggestion
@@ -103,7 +105,7 @@ export function SyncSection() {
                 <>
                   <dt>{t.sync.detailsTitle}</dt>
                   <dd data-testid="sync-last-result">
-                    {t.sync.lastResult(status.lastResult.pulled, status.lastResult.pushed)}
+                    {t.sync.lastResult(status.lastResult.applied, status.lastResult.pushed)}
                   </dd>
                 </>
               ) : null}
@@ -164,6 +166,11 @@ export function SyncSection() {
               onChange={(e) => setUrl(e.target.value)}
               required
             />
+            {isInsecureRemoteUrl(url) ? (
+              <p role="note" className={styles.error} data-testid="sync-http-warning">
+                {t.sync.httpWarning}
+              </p>
+            ) : null}
             <TextField
               label={t.sync.token}
               type="password"

@@ -1,0 +1,419 @@
+[
+  {
+    "id": "F-01",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "Setup-Assistent",
+    "platform": "Web (Dev-Server, Stable-Flavour)",
+    "title": "Setup-Schritt „KI-Anbieter“ fragt unaufgefordert localhost:11434 ab",
+    "steps": [
+      "Frische Installation, Einrichtung starten",
+      "Netzwerklog mitschreiben",
+      "Bis Schritt 5 „KI-Anbieter“ mit „Weiter“ gehen, nichts anklicken"
+    ],
+    "expected": "Datenschutztext (Über Nemo → Rechtliches): „nichts davon passiert ohne dein Einrichten oder deinen Klick“; kein Eintrag zu lokalen Ports",
+    "actual": "Beim Betreten des Schritts zwei GET http://localhost:11434/api/tags (Ollama-Suche), Konsole: ERR_CONNECTION_REFUSED. Nur Loopback, aber ungefragt und nicht dokumentiert.",
+    "screenshot": "setup-step4.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-02",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "Verbindungen / Kalender-Abo",
+    "platform": "Web (Produktions-Build)",
+    "title": "Kalender-Abo: „Wird geprüft …“ endet nie, keine Netzanfrage, kein Fehler",
+    "steps": [
+      "Einstellungen → Verbindungen",
+      "Adresse https://example.invalid/cal.ics eintragen, „Kalender hinzufügen“",
+      "25 Sekunden warten (ohne und mit verbundenem Sync-Server)"
+    ],
+    "expected": "Fehlermeldung oder Abbruch nach Timeout; ohne Sync-Server Hinweis, dass im Browser ein Proxy nötig ist",
+    "actual": "Status bleibt dauerhaft „Wird geprüft …“. Zusätzlich: http://-Adressen (127.0.0.1, 169.254.169.254) passieren die Prüfung, obwohl der Hinweis nur https:// oder webcal:// nennt.",
+    "screenshot": "ics-haengt.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-03",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "Suche / KI",
+    "platform": "Web (Dev-Preview)",
+    "title": "„Zuletzt benutzt“ speichert Fragen im Klartext, nicht löschbar, überlebt „KI abschalten“",
+    "steps": [
+      "Suche öffnen, „mein passwort ist hunter2-geheim“ eingeben, Enter",
+      "Suche erneut öffnen: Eintrag steht unter „Zuletzt benutzt“",
+      "localStorage prüfen: tm-recent-search enthält den Text",
+      "Einstellungen → KI → „KI abschalten“ bestätigen"
+    ],
+    "expected": "Verlauf abschaltbar/löschbar; mit „KI abschalten“ oder Gerät zurücksetzen weg",
+    "actual": "Verlauf bleibt nach „KI abschalten“; keine Löschfunktion sichtbar. Nur „Gerät zurücksetzen“ räumt ihn weg. Fragen können Geheimnisse enthalten, weil Nutzer sie tippen.",
+    "screenshot": "suche-verlauf.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-04",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "Backup",
+    "platform": "Web",
+    "title": "Klartext-Backup ohne Integritätsprüfung: manipulierte Datei gilt als „in Ordnung“",
+    "steps": [
+      "Sync & Backup → „Backup herunterladen“",
+      "In der Datei einen Tresor-Eintrag auf „v1.AAAA.BBBB“ setzen, ein Modul-ID durch HTML ersetzen, createdAt auf 1e999 setzen",
+      "Datei wählen → „Backup prüfen“"
+    ],
+    "expected": "Warnung, dass Datei verändert sein könnte, oder Prüfsumme",
+    "actual": "Alle drei Varianten: „Das Backup ist in Ordnung“, „Prüfsumme (SHA-256): –“. Importieren geht durch, kein Absturz, kein XSS. Beim verschlüsselten Backup wird dieselbe Manipulation sauber erkannt („Prüfsumme stimmt nicht“).",
+    "screenshot": "tamper-08-corrupt-vault-entry.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-05",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "Sync-Server",
+    "platform": "Server (Node, lokal)",
+    "title": "Rate-Limit pro IP sperrt auch das gültige Token (ca. 60 s) – vertraulich, zuerst Sven",
+    "steps": [
+      "Server mit Token starten",
+      "30 Anfragen mit falschem Bearer-Token an /v1/status senden (ab der 14. kommt 429)",
+      "Direkt danach mit dem richtigen Token anfragen"
+    ],
+    "expected": "Brute-Force gebremst, aber der Eigentümer mit gültigem Token nicht ausgesperrt",
+    "actual": "Gültiges Token bekommt 429 (retry-after ca. 36 s). Wer im LAN (oder hinter einem Reverse-Proxy, wo alle Clients dieselbe IP haben) wiederholt falsche Tokens schickt, hält den Sync für alle Geräte an. Kein Datenzugriff, nur Verfügbarkeit.",
+    "screenshot": "(curl-Log, kein Screenshot)",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-06",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Einstellungen",
+    "platform": "Web",
+    "title": "Navigation: „Benachrichtigungen“ überlappt „Nicht erlaubt“",
+    "steps": [
+      "Einstellungen öffnen, Fenster 1280×800"
+    ],
+    "expected": "Zwei getrennte Texte",
+    "actual": "Beide Texte liegen übereinander",
+    "screenshot": "import-10-bad-timestamps.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-07",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Tresor",
+    "platform": "Web",
+    "title": "Detailspalte schneidet lange Werte rechts ab",
+    "steps": [
+      "Zugang mit langem Benutzernamen (z. B. 60 Zeichen ohne Leerzeichen) und 200 Zeichen Notiz anlegen",
+      "Eintrag öffnen, 1280 px Breite"
+    ],
+    "expected": "Umbrechen oder scrollen",
+    "actual": "Text läuft am rechten Kartenrand aus und ist abgeschnitten",
+    "screenshot": "tresor-detail.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-08",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Sync",
+    "platform": "Web",
+    "title": "Gesperrtes Gerät zeigt zusätzlich irreführend „Dieser Server kennt keine Geräteverwaltung (ältere V…)“",
+    "steps": [
+      "Zwei Geräte am Server, auf A das Gerät B „Sperren“",
+      "Auf B „Jetzt synchronisieren“"
+    ],
+    "expected": "Nur „Dieses Gerät wurde gesperrt“",
+    "actual": "Zusätzlich der Satz über eine angeblich ältere Server-Version",
+    "screenshot": "sync-gesperrtes-geraet.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-09",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Assistent",
+    "platform": "Web",
+    "title": "Bei ausgeschaltetem KI-Schreiben: „konnte ich nicht sicher zuordnen. Bitte anders formulieren.“",
+    "steps": [
+      "KI-Anbieter einrichten, „Einträge per KI vorschlagen“ Aus lassen",
+      "In der Suche „Lösche bitte alle Aufgaben mit Recherche …“ eingeben"
+    ],
+    "expected": "Hinweis, dass Schreiben aus ist (und wo man es einschaltet)",
+    "actual": "Allgemeine Fehlermeldung, Umformulieren hilft nie",
+    "screenshot": "ki-schreiben-aus.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-10",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Assistent",
+    "platform": "Web",
+    "title": "Regelparser verstümmelt den Titel („Räum bitte die Recherche weg und dir etwas danke“)",
+    "steps": [
+      "Schreiben einschalten, Satz „Räum bitte die Aufgabe Recherche weg und notiere dir etwas Neues, danke“ eingeben"
+    ],
+    "expected": "Rückfrage oder wörtlicher Titel",
+    "actual": "Vorschlag „Aufgabe anlegen“ mit zerhacktem Titel (0 Token, lokal). Er braucht eine Bestätigung, es geht nichts verloren.",
+    "screenshot": "ki-schreiben-an.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-11",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Modul-Bibliothek",
+    "platform": "Web",
+    "title": "Modul „Beispiel“ (Tag „Entwickler“) ist im Stable-Build für alle sichtbar",
+    "steps": [
+      "Frische Installation, Modul-Bibliothek öffnen (auch Setup-Schritt 3)"
+    ],
+    "expected": "Entwickler-Vorlage nur im Dev-Build",
+    "actual": "„Beispiel · Referenzmodul aus dem Generator … Dient als Vorlage und Testträger“ steht neben echten Modulen",
+    "screenshot": "modul-bibliothek.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-12",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Setup-Assistent",
+    "platform": "Web",
+    "title": "Spotify-Text wiederholt den Kalender-Satz („Termine kommen über die Synchronisierung“)",
+    "steps": [
+      "Setup Schritt 6 „Konten verknüpfen“ oder Einstellungen → Verbindungen"
+    ],
+    "expected": "Spotify-Satz ohne Termine",
+    "actual": "Gleicher Hinweistext wie bei Google, passt nicht zu Spotify",
+    "screenshot": "settings-verbindungen.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-13",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Backup",
+    "platform": "Web",
+    "title": "Vorab-Sicherheitskopie landet als stiller Download „pre-restore-….json“ im Downloads-Ordner",
+    "steps": [
+      "Backup einspielen (Zusammenführen oder Ersetzen)"
+    ],
+    "expected": "Hinweis, dass eine Datei gespeichert wird, wohin, und ob verschlüsselt",
+    "actual": "Text sagt nur „legt die App automatisch eine Sicherheitskopie an“. Im Browser ist das ein unangekündigter Download. Ob er verschlüsselt ist, zeigt die Oberfläche nicht.",
+    "screenshot": "restore-Zusammenführen.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-14",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "ToDos",
+    "platform": "Web",
+    "title": "U+202E (Rechts-nach-links-Überschreibung) wird in Titeln akzeptiert und angezeigt",
+    "steps": [
+      "ToDo mit Titel „\\u202Eevil-rtl.txt“ anlegen"
+    ],
+    "expected": "Steuerzeichen entfernen oder anzeigen",
+    "actual": "Titel erscheint gespiegelt (Spoofing-Möglichkeit bei Dateinamen/Absendern)",
+    "screenshot": "todos-sonderzeichen.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-15",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Tresor",
+    "platform": "Web",
+    "title": "Einmal erschien ein Zugang doppelt (2 Zeilen in der Datenbank), nicht reproduzierbar",
+    "steps": [
+      "Zugang „Router <img …>“ mit 200-Zeichen-Notiz und javascript:-Website anlegen (einmal gespeichert)",
+      "Liste ansehen"
+    ],
+    "expected": "Ein Eintrag",
+    "actual": "Zwei gleiche Einträge; spätere Versuche mit Einzelspeichern erzeugten keine Duplikate",
+    "screenshot": "tresor-detail.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "einmal"
+  },
+  {
+    "id": "F-16",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Über Nemo",
+    "platform": "Web",
+    "title": "„Änderungen dieser Version“ ist leer",
+    "steps": [
+      "Einstellungen → Über Nemo → Updates und Änderungen"
+    ],
+    "expected": "Änderungsliste",
+    "actual": "Überschrift ohne Inhalt",
+    "screenshot": "settings-ueber.png",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "F-17",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "Konsole",
+    "platform": "Web (Dev-Server)",
+    "title": "Konsolenwarnung „No routes matched location“ beim ersten Laden und beim Neuladen von /settings/ueber",
+    "steps": [
+      "Frische Installation öffnen, Konsole ansehen"
+    ],
+    "expected": "Keine Warnung",
+    "actual": "Zwei Warnungen. Rein kosmetisch, nur im Dev-Server beobachtet.",
+    "screenshot": "(Konsole)",
+    "persona": "Tom, Sysadmin, misstrauisch",
+    "frequency": "immer"
+  },
+  {
+    "id": "V-01",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "Verbindungen / Datenschutz",
+    "platform": "alle",
+    "title": "Verbindungsprotokoll: lokale Liste „Was hat Nemo seit dem Start wohin gesendet“",
+    "situation": "Tom will prüfen, ob die Datenschutzversprechen stimmen, ohne Wireshark.",
+    "problem": "Die Aussage steht nur als Text. Prüfen geht nur mit Fremdwerkzeugen. Der unbemerkte Ollama-Zugriff (F-01) zeigt, dass Text und Verhalten auseinanderlaufen können.",
+    "proposal": "Unter Einstellungen → Verbindungen ein Protokoll: Zeitpunkt, Ziel (Host), Anlass (z. B. „Währungsrechner geöffnet“), Datenmenge, nie Inhalt. Dazu ein Schalter „Netzwerk komplett sperren“, der nur Sync/KI/Updates abschaltet, was der Nutzer nicht ausdrücklich braucht.",
+    "note": "Passt zu Local-First und „kein Tracking“: bleibt lokal, nichts wird gesendet. Beispiel: Little Snitch / „Datenschutzbericht“ in iOS.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-02",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "Tresor",
+    "platform": "alle",
+    "title": "Schwache Master-Passwörter nicht stillschweigend akzeptieren",
+    "situation": "Tom legt den Tresor an und tippt aus Bequemlichkeit „1234567890“.",
+    "problem": "Nur 10 Zeichen sind Pflicht. Die Anzeige „Sehr schwach“ erscheint, aber „Tresor erstellen“ geht trotzdem durch.",
+    "proposal": "Bei „schwach/sehr schwach“ eine zusätzliche Bestätigung („Das ist in Sekunden knackbar. Trotzdem verwenden?“) und ein Vorschlag mit mehreren Wörtern. Kein Zwang, nur Reibung.",
+    "note": "Der Tresor ist nur so stark wie dieses Passwort. Beispiel: Bitwarden verlangt Bestätigung bei schwachem Master-Passwort.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-03",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "Backup",
+    "platform": "alle",
+    "title": "Klartext-Backup deutlicher abgrenzen und Verschlüsselt als Standard vorschlagen",
+    "situation": "Tom will ein Backup auf den NAS legen.",
+    "problem": "Zwei Schaltflächen nebeneinander, die Klartext-Variante ist ohne Prüfsumme und für den Nutzer nicht von „sicher“ zu unterscheiden (F-04).",
+    "proposal": "Standard „verschlüsselt exportieren“ (Passwort-Feld zuerst), die Klartextdatei als „Ohne Schutz speichern“ mit Prüfsumme und Hinweis, dass Manipulation nicht erkennbar ist.",
+    "note": "Vermeidet, dass Todo-Inhalte unverschlüsselt in Downloads liegen.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-04",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "Sync",
+    "platform": "alle",
+    "title": "Warnung bei http:// an nicht-lokale Adressen",
+    "situation": "Tom trägt http://192.168.x.y:8787 ein.",
+    "problem": "Keine Warnung in der App; nur die Doku sagt „nutze HTTPS“. Das Token geht im LAN im Klartext.",
+    "proposal": "Gelber Hinweis unter dem Adressfeld: „Token wird unverschlüsselt übertragen. Nutze HTTPS (z. B. Tailscale)“, nicht bei localhost.",
+    "note": "Ein Satz verhindert einen häufigen Konfigurationsfehler.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-05",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "Suche",
+    "platform": "alle",
+    "title": "„Zuletzt benutzt“ abschaltbar und löschbar",
+    "situation": "Tom tippt Fragen an den Assistenten, manche mit Inhalten, die er nicht in der App stehen haben will.",
+    "problem": "Verlauf liegt im Klartext in localStorage (F-03), kein Löschen-Knopf.",
+    "proposal": "Knopf „Verlauf löschen“ in der Suche, Einstellung „Verlauf nicht speichern“, KI-Fragen nie im Verlauf.",
+    "note": "Kleine Änderung, passt zum Versprechen „du bestimmst, was bleibt“.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-06",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "Sync-Server",
+    "platform": "alle",
+    "title": "Rate-Limit pro Token/Gerät statt nur pro IP; Hinweis für Reverse-Proxy",
+    "situation": "Tom betreibt den Server hinter Traefik.",
+    "problem": "Hinter einem Proxy teilen sich alle Clients eine IP; falsche Versuche sperren alle (F-05).",
+    "proposal": "Fehlversuche pro IP hochsetzen, gültige Tokens vom Limit ausnehmen, X-Forwarded-For nur per Option beachten, Doku-Satz dazu.",
+    "note": "Wichtig für Selbsthoster.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-07",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "Einrichtung",
+    "platform": "alle",
+    "title": "Expertenpfad: „Alles überspringen“ nach Schritt 1",
+    "situation": "Tom will in 2 Minuten fertig sein.",
+    "problem": "12 Schritte, auf jedem einzeln „Überspringen“ oder „Weiter“ (insgesamt 11 Klicks).",
+    "proposal": "Ein Link „Rest später, zur Übersicht“ auf jedem Schritt. Der Assistent bleibt als Checkliste erhalten.",
+    "note": "Spart Tom 10 Klicks; Fokus-Richtlinien bleiben gewahrt, weil nichts Neues erzwungen wird.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-08",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "Tresor",
+    "platform": "alle",
+    "title": "Zusammenfassungszeile der Sicherheitsseite lesbar machen",
+    "situation": "Tom sucht die Auto-Sperre.",
+    "problem": "„Accounts: Felder: 5 Minuten · Sofort · Dieselbe Domain … + 2“ sagt nicht, was die Zahlen sind; die Einstellungen stecken hinter „Ändern“.",
+    "proposal": "Zeile ausschreiben: „Sperrt nach 5 Min Inaktivität, sofort im Hintergrund“.",
+    "note": "Findet er in 5 s statt nach Suchen und Raten (die Einstellungssuche findet sie, die Seite nicht).",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-09",
+    "type": "improvement",
+    "benefit": "niedrig",
+    "area": "Backup",
+    "platform": "alle",
+    "title": "Sicherheitskopie vor Wiederherstellung ankündigen",
+    "situation": "Tom will wissen, was auf seine Platte geschrieben wird (F-13).",
+    "problem": "Stiller Download.",
+    "proposal": "Vorschau-Text: „Vorher wird pre-restore-….json in deinem Download-Ordner gespeichert (nicht verschlüsselt)“. Option „verschlüsselt mit Backup-Passwort“.",
+    "note": "Transparenz.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  },
+  {
+    "id": "V-10",
+    "type": "improvement",
+    "benefit": "niedrig",
+    "area": "Diagnose",
+    "platform": "alle",
+    "title": "Diagnose-Vorschau in der App-Sprache",
+    "situation": "Tom liest die Vorschau, bevor er sie speichert.",
+    "problem": "Rahmen ist Deutsch, Datei komplett Englisch („Nemo diagnostics …“).",
+    "proposal": "Entweder beides Englisch (für Entwickler) oder Hinweis „Datei ist englisch, damit Entwickler sie lesen“.",
+    "note": "Konsistenz.",
+    "persona": "Tom, Sysadmin, misstrauisch"
+  }
+]

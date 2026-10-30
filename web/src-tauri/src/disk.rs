@@ -11,9 +11,10 @@ use std::time::{Duration, Instant};
 
 use ::disk_scan::{
     apply_to_tree, drive_kind_of, execute, find_duplicates, known_places, list_drives, plan,
-    platform_trasher, reveal_in_file_manager, scan, system_guard, user_data_dirs, DeleteControl,
-    DeleteProgress, Denied, DriveInfo, DriveKind, DupGroup, Flag, Mode, NodeView, NotRead, Place,
-    Plan, Progress, Query, Report, ScanControl, ScanOptions, Tree,
+    platform_trasher, reveal_in_file_manager, scan, steam_games, steam_install_dirs, system_guard,
+    user_data_dirs, DeleteControl, DeleteProgress, Denied, DriveInfo, DriveKind, DupGroup, Flag,
+    Mode, NodeView, NotRead, Place, Plan, Progress, Query, Report, ScanControl, ScanOptions,
+    SteamGame, Tree,
 };
 use serde::Serialize;
 use tauri::{ipc::Channel, AppHandle, Manager, State};
@@ -62,6 +63,8 @@ pub struct Summary {
     logical_bytes: u64,
     cloud_bytes: u64,
     skipped_links: u64,
+    /// "Last opened" dates can be trusted on this volume (Windows, NTFS, updates on).
+    access_tracked: bool,
     not_read: Vec<NotRead>,
     not_read_total: u64,
     elapsed_ms: u64,
@@ -171,6 +174,7 @@ pub fn disk_scan_start(
                         logical_bytes: r.logical_bytes,
                         cloud_bytes: r.cloud_bytes,
                         skipped_links: r.skipped_links,
+                        access_tracked: r.access_tracked,
                         not_read: r.not_read,
                         not_read_total: r.not_read_total,
                         elapsed_ms: r.elapsed_ms,
@@ -235,6 +239,24 @@ pub fn disk_scan_drop(state: State<'_, DiskScans>, scan_id: u64) -> Result<(), S
     Ok(())
 }
 
+/// The live picture of a running scan (top folder levels with what was counted so far), so the
+/// map can fill up while the scan runs. Empty when the scan is unknown or has not started yet.
+#[tauri::command]
+pub fn disk_scan_live(
+    state: State<'_, DiskScans>,
+    scan_id: u64,
+    min_bytes: u64,
+) -> Result<Vec<NodeView>, String> {
+    let session = state
+        .0
+        .lock()
+        .map_err(|_| "internal")?
+        .scans
+        .get(&scan_id)
+        .cloned();
+    Ok(session.map_or_else(Vec::new, |s| s.control.live.snapshot(min_bytes)))
+}
+
 #[tauri::command]
 pub fn disk_children(
     state: State<'_, DiskScans>,
@@ -262,6 +284,18 @@ pub fn disk_query(
     query: Query,
 ) -> Result<Vec<NodeView>, String> {
     Ok(read(&tree_of(&state, scan_id)?).query(&query))
+}
+
+/// Steam games inside the scan with the time they were last played (Steam's own files, read only).
+#[tauri::command]
+pub async fn disk_steam_games(
+    state: State<'_, DiskScans>,
+    scan_id: u64,
+) -> Result<Vec<SteamGame>, String> {
+    let tree = tree_of(&state, scan_id)?;
+    tauri::async_runtime::spawn_blocking(move || steam_games(&read(&tree), &steam_install_dirs()))
+        .await
+        .map_err(|_| "internal".to_string())
 }
 
 // --- clean-up: places, duplicates, paths ------------------------------------------------------
@@ -424,10 +458,10 @@ pub struct PlanView {
     total_bytes: u64,
     total_files: u64,
     large: bool,
-    /// What has to be typed for a move to the recycle bin (`None` = a plain confirmation is enough).
-    trash_confirmation: Option<String>,
-    /// What has to be typed for a permanent delete (always required).
-    permanent_confirmation: Option<String>,
+    /// A move to the recycle bin needs a second confirmation (large deletions).
+    trash_double_confirm: bool,
+    /// A permanent delete needs a second confirmation (always true).
+    permanent_double_confirm: bool,
     /// False when an item is on a network/removable drive, where the recycle bin often cannot be used.
     trash_likely: bool,
 }
@@ -476,8 +510,8 @@ pub fn disk_delete_plan(
         p.total_bytes(),
         p.total_files(),
         p.is_large(),
-        p.required_confirmation(Mode::Trash),
-        p.required_confirmation(Mode::Permanent),
+        p.needs_double_confirmation(Mode::Trash),
+        p.needs_double_confirmation(Mode::Permanent),
     );
     let trash_likely = items.iter().all(|i| i.drive == DriveKind::Fixed);
     let mut inner = state.0.lock().map_err(|_| "internal")?;
@@ -510,8 +544,8 @@ pub fn disk_delete_plan(
         total_bytes: view_base.0,
         total_files: view_base.1,
         large: view_base.2,
-        trash_confirmation: view_base.3,
-        permanent_confirmation: view_base.4,
+        trash_double_confirm: view_base.3,
+        permanent_double_confirm: view_base.4,
         trash_likely,
     })
 }
@@ -532,15 +566,16 @@ pub enum DeleteEvent {
     Done(Box<DoneView>),
 }
 
-/// Runs a confirmed plan. `mode` is `trash` or `permanent`; `confirm` must be the exact phrase the
-/// plan asks for (checked here, not only in the UI). Progress and the report arrive on the channel.
+/// Runs a confirmed plan. `mode` is `trash` or `permanent`; `confirmed_twice` must be set when the
+/// plan needs a second confirmation (checked here, not only in the UI). Progress and the report
+/// arrive on the channel.
 #[tauri::command]
 pub fn disk_delete(
     app: AppHandle,
     state: State<'_, DiskScans>,
     plan_id: u64,
     mode: String,
-    confirm: Option<String>,
+    confirmed_twice: bool,
     on_event: Channel<DeleteEvent>,
 ) -> Result<(), String> {
     let mode = match mode.as_str() {
@@ -555,10 +590,8 @@ pub fn disk_delete(
     if Instant::now().duration_since(stored.created) >= PLAN_TTL {
         return Err("plan-expired".into());
     }
-    if let Some(expected) = stored.plan.required_confirmation(mode) {
-        if confirm.as_deref().map(str::trim) != Some(expected.as_str()) {
-            return Err("confirmation-mismatch".into());
-        }
+    if stored.plan.needs_double_confirmation(mode) && !confirmed_twice {
+        return Err("confirmation-missing".into());
     }
     if stored
         .running

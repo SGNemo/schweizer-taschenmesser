@@ -15,6 +15,9 @@ export const focus: Strings['focus'] = {
     calmAttention: '“Importante agora” tranquilo',
     calmAttentionHint:
       'Junta o que está esperando em um único aviso e usa vermelho só para prazos de dinheiro. Sem contador de dias.',
+    moduleNow: '“Agora” nas páginas dos módulos',
+    moduleNowHint:
+      'Mostra em uma linha discreta, no topo do calendário, do dinheiro e da despensa, o que está em pauta agora.',
     timeToNext: 'Tempo até o próximo evento',
     timeToNextHint: 'Mostra em destaque quanto falta para o próximo evento.',
     focusMinutes: 'Duração do timer de foco',
@@ -27,6 +30,11 @@ export const focus: Strings['focus'] = {
     searchHistory: 'Histórico na busca',
     searchHistoryHint:
       'A busca mostra primeiro o que você usou por último. O histórico fica neste dispositivo.',
+    more: 'Mais configurações',
+    aids: 'Ajudas',
+    aidsOn: (n: number, total: number) => `${n} de ${total} ativadas`,
+    planShort: (n: number) => `Plano do dia ${n}`,
+    timerShort: (n: number) => `Timer ${n} min`,
     clearHistory: 'Apagar histórico',
     clearHistoryHint: 'Limpa os itens usados recentemente na busca.',
     historyCleared: 'Histórico apagado.',
@@ -80,13 +88,24 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
-    followUp: 'Pergunta gentil',
+    leadHintTitle: 'Aviso no formulário de compromissos',
+    leadHintHint:
+      'Mostra uma frase tranquila quando você escolhe um lembrete, mas as notificações não estão permitidas.',
+    followUp: 'Repetir com calma',
     followUpHint:
-      'Uma única pergunta depois de 30 minutos, se um lembrete não foi respondido com “Feito”.',
+      'Um lembrete que você definiu volta em intervalos até você escolher “Feito” ou “Depois”. À noite, silêncio.',
+    repeatEvery: 'Intervalo',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'No máximo',
+    repeatMaxHint: 'Depois disso para; o lembrete continua na central de notificações.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'Tarefas pela manhã',
     todoDigestHint:
       'Um aviso por dia com as tarefas de hoje. Sem avisos separados para cada tarefa.',
     digestTime: 'Horário do resumo',
+    inAppGroup: 'Cartão no app',
+    on: 'Ligado',
+    off: 'Desligado',
   },
   resume: {
     title: 'Onde eu estava?',
@@ -110,12 +129,13 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Criar tarefa',
     off: 'As sugestões estão desligadas.',
     offAction: 'Abrir configurações',
+    menu: 'Mais opções',
   },
   waiting: {
     text: (n: number) =>
       n <= 1 ? `${n} tarefa ainda está esperando.` : `${n} tarefas ainda estão esperando.`,
     replan: 'Replanejar',
-    replanHint: 'Distribui pelos próximos dias.',
+    replanHint: 'Aberto há algum tempo, não urgente. Replanejar distribui pelos próximos dias.',
     replanned: 'Distribuído pelos próximos dias.',
   },
   mode: {
@@ -148,7 +168,15 @@ export const focus: Strings['focus'] = {
     indicatorAria: (title: string, time: string) => `Foco: ${title}, ${time}. Voltar para o foco.`,
     otherRunning: (title: string) => `Já há uma rodada em andamento para “${title}”.`,
   },
+  today: {
+    now: 'Agora',
+    inMinutes: (n: number) => `em ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `em ${h} h` : `em ${h} h ${m} min`),
+    appointments: 'Eventos',
+    allAppointments: 'Todos os eventos',
+  },
   plan: {
+    planned: 'Planejada para hoje.',
     title: 'Hoje',
     count: (n: number) => (n <= 1 ? `${n} item` : `${n} itens`),
     doneToday: (n: number) => `Feito hoje: ${n}`,

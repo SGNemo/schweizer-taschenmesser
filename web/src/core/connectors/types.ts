@@ -40,6 +40,11 @@ export interface OAuthEndpoints {
   revokeUrl?: string;
   /** Extra query parameters of the authorization request (`access_type=offline` …). */
   authParams?: Record<string, string>;
+  /**
+   * Fixed loopback port for providers that compare the redirect URI exactly (Spotify). Busy → the
+   * login fails with `port-busy`; the app never silently uses another port.
+   */
+  preferredPort?: number;
 }
 
 /** Something the user can switch on; each may need its own OAuth scopes. */
@@ -48,6 +53,8 @@ export interface ConnectorFeature {
   label: string;
   description: string;
   scopes: string[];
+  /** `false`: not ticked by default (needs a scope most people do not need); the card still offers it. */
+  defaultOn?: boolean;
 }
 
 export interface ExternalCalendar {
@@ -132,8 +139,11 @@ export interface MailScanRequest {
 export interface ConnectorContext {
   /** `fetch` of the platform (native: no CORS). */
   fetch: typeof fetch;
-  /** A valid OAuth access token; refreshed on demand. Rejects with `ConnectorError('expired')`. */
-  accessToken(): Promise<string>;
+  /**
+   * A valid OAuth access token; refreshed on demand. Rejects with `ConnectorError('expired')`.
+   * `refresh: true` skips the in-memory token and gets a new one (after a 401).
+   */
+  accessToken(opts?: { refresh?: boolean }): Promise<string>;
   /**
    * Fetches a public URL (ICS/RSS feed). Native: directly; in the browser through the sync
    * server's proxy, or rejects with `ConnectorError('no-proxy')` when none is configured.
@@ -164,6 +174,36 @@ export interface MailCapability {
   scan(ctx: ConnectorContext, req: MailScanRequest): Promise<MailScanResult>;
 }
 
+/** What is playing right now. Title and artist are user data: device-local, never to the AI, never in reports. */
+export interface NowPlaying {
+  title: string;
+  /** Artist, or the show of a podcast episode. */
+  artist: string;
+  playing: boolean;
+  /** Link that opens the track in the service. */
+  trackUrl?: string;
+}
+
+export type NowPlayingCommand = 'pause' | 'play' | 'next';
+
+/** One of the user's own playlists. Names are user data: shown on request, never stored. */
+export interface Playlist {
+  id: string;
+  name: string;
+}
+
+/** Optional capability of a media connector: what plays now, and a few remote controls. */
+export interface NowPlayingSource {
+  /** `undefined` = nothing is playing. */
+  read(ctx: ConnectorContext): Promise<NowPlaying | undefined>;
+  /** Rejects with `ConnectorError('premium-required')` when the service only controls for paid accounts. */
+  control(ctx: ConnectorContext, command: NowPlayingCommand): Promise<void>;
+  /** The user's own playlists (one page), for the focus-round music. Needs its own feature/scope. */
+  playlists?(ctx: ConnectorContext): Promise<Playlist[]>;
+  /** Starts the playlist with this id on the active device. */
+  startPlaylist?(ctx: ConnectorContext, id: string): Promise<void>;
+}
+
 export interface ConnectorDef {
   id: string;
   name: string;
@@ -180,6 +220,12 @@ export interface ConnectorDef {
   setupSteps?: SetupStepDef[];
   calendar?: CalendarCapability;
   mail?: MailCapability;
+  nowPlaying?: NowPlayingSource;
+  /**
+   * Own wording for the client-id form of the card (default: the Google text, incl. its "Testing"
+   * note); `secret: false` hides the secret field; `note` replaces the note below the form.
+   */
+  client?: { title: string; intro: string; secret?: boolean; note?: string };
   /** Connectors without a login: true once they have what they need (an ICS address …). */
   isConfigured?(ctx: ConnectorContext): Promise<boolean>;
   /**
@@ -199,7 +245,15 @@ export type ConnectorErrorCode =
   | 'network'
   | 'denied'
   | 'bad-response'
-  | 'unsupported';
+  | 'unsupported'
+  | 'port-busy'
+  | 'premium-required'
+  /** The browser never reached the loopback callback (provider error page, wrong redirect URI). */
+  | 'no-callback'
+  /** The token endpoint rejected the client id. */
+  | 'bad-client'
+  /** The system browser could not be opened for the login. */
+  | 'no-browser';
 
 /** Failure of a connector call; the message never contains secrets (see `redact`). */
 export class ConnectorError extends Error {

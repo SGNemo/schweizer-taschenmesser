@@ -2,7 +2,7 @@ import type { FileKind } from '@/core/platform/disk';
 
 /** Pattern per file type, so the legend and the map never rely on colour alone. */
 export type PatternId =
-  'diagonal' | 'dots' | 'vertical' | 'cross' | 'horizontal' | 'backdiagonal' | 'none';
+  'diagonal' | 'dots' | 'vertical' | 'cross' | 'horizontal' | 'backdiagonal' | 'grid' | 'none';
 
 export const KIND_PATTERN: Record<FileKind, PatternId> = {
   video: 'diagonal',
@@ -11,6 +11,7 @@ export const KIND_PATTERN: Record<FileKind, PatternId> = {
   archive: 'cross',
   program: 'horizontal',
   document: 'backdiagonal',
+  game: 'grid',
   other: 'none',
 };
 
@@ -22,6 +23,7 @@ export const KIND_VAR: Record<FileKind, string> = {
   archive: '--k-archive',
   program: '--k-program',
   document: '--k-document',
+  game: '--k-game',
   other: '--k-other',
 };
 
@@ -77,12 +79,12 @@ export function drawPattern(
         ctx.moveTo(x + d, y);
         ctx.lineTo(x + d - h, y + h);
       }
-    if (id === 'vertical')
+    if (id === 'vertical' || id === 'grid')
       for (let xx = x + 2; xx < x + w; xx += step - 2) {
         ctx.moveTo(xx, y);
         ctx.lineTo(xx, y + h);
       }
-    if (id === 'horizontal')
+    if (id === 'horizontal' || id === 'grid')
       for (let yy = y + 2; yy < y + h; yy += step - 2) {
         ctx.moveTo(x, yy);
         ctx.lineTo(x + w, yy);

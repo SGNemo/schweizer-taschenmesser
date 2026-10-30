@@ -16,6 +16,8 @@ export const attention: Strings['attention'] = {
   budgetOver: (name: string) => `Orçamento “${name}” ultrapassado`,
   pantryExpired: (n: number) =>
     n === 0 || n === 1 ? `${n} item da despensa vencido` : `${n} itens da despensa vencidos`,
+  pantryLow: (n: number) =>
+    n === 1 ? '1 item da despensa acabando' : `${n} itens da despensa acabando`,
   pantrySoon: (n: number) =>
     n === 0 || n === 1
       ? `${n} item da despensa vence em breve`
@@ -32,6 +34,7 @@ export const attention: Strings['attention'] = {
   updateAvailable: 'Atualização disponível',
   waiting: (n: number) => `Ainda esperando · ${n}`,
   nothingNow: 'Nada disso precisa ser agora.',
+  waitingExplain: 'Aberto há algum tempo, mas não urgente. Você pode replanejar.',
   todosWaiting: (n: number) =>
     n === 0 || n === 1 ? `${n} tarefa esperando` : `${n} tarefas esperando`,
   todosWaitingDetail: 'Dá para replanejar',

@@ -17,6 +17,7 @@ import {
   ItemRow,
   PageHeader,
   TextField,
+  useOpenParam,
 } from '@/ui';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
 import {
@@ -47,6 +48,7 @@ export default function VaultPage() {
   const [category, setCategory] = useState<DocCategory | 'all'>('all');
   const [query, setQuery] = useState('');
   const [target, setTarget] = useState<DocumentTarget>(null);
+  useOpenParam((id) => documentRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
   const day = today();
 

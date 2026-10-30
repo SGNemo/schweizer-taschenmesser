@@ -7,7 +7,13 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { checkModule, checkSettingsSource, checkWidgetSource } from './lib/checkModules.ts';
+import {
+  checkDeleteSource,
+  checkRowSource,
+  checkModule,
+  checkSettingsSource,
+  checkWidgetSource,
+} from './lib/checkModules.ts';
 import { validateAiActions } from '../src/core/modules/aiActions.ts';
 import { SETTINGS_CATEGORY_IDS } from '../src/core/settings/registry/types.ts';
 
@@ -36,6 +42,20 @@ for (const id of readdirSync(modulesDir).sort()) {
   for (const m of manifest.matchAll(/import\(\s*['"]\.\/(widgets\/[^'"]+)['"]\s*\)/g)) {
     const file = ['.tsx', '.ts'].map((e) => join(dir, m[1] + e)).find(existsSync);
     if (file) errors.push(...checkWidgetSource(id, m[1], readFileSync(file, 'utf8')));
+  }
+}
+
+// Comfort contract (docs/product/comfort): deletes in module screens are undoable, list rows use ItemRow.
+for (const id of readdirSync(modulesDir).sort()) {
+  if (id === 'disk' || id === 'example') continue; // disk has its own, stricter delete flow
+  for (const sub of ['components', 'routes']) {
+    const dir = join(modulesDir, id, sub);
+    if (!existsSync(dir)) continue;
+    for (const f of readdirSync(dir).filter((n) => /\.tsx?$/.test(n) && !/\.test\./.test(n))) {
+      const src = readFileSync(join(dir, f), 'utf8');
+      errors.push(...checkDeleteSource(id, `${sub}/${f}`, src));
+      if (sub === 'routes') errors.push(...checkRowSource(id, `${sub}/${f}`, src));
+    }
   }
 }
 

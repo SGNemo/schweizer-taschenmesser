@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { checkModule, checkSettingsSource, checkWidgetSource } from './checkModules';
+import {
+  checkDeleteSource,
+  checkModule,
+  checkRowSource,
+  checkSettingsSource,
+  checkWidgetSource,
+} from './checkModules';
 
 const good = `
 const manifest = {
@@ -139,5 +145,51 @@ describe('checkSettingsSource', () => {
   });
   it('rejects an unknown category', () => {
     expect(checkSettingsSource('x', "{ category: 'misc' }", categories)).toHaveLength(1);
+  });
+});
+
+describe('checkDeleteSource', () => {
+  it('flags a direct repo removal without undo', () => {
+    expect(checkDeleteSource('x', 'components/E.tsx', 'await itemRepo.remove(id);')).toHaveLength(
+      1,
+    );
+    expect(checkDeleteSource('x', 'routes/P.tsx', 'void itemRepo.removeMany(ids);')).toHaveLength(
+      1,
+    );
+  });
+  it('accepts removals wrapped in the undo helpers', () => {
+    expect(
+      checkDeleteSource(
+        'x',
+        'components/E.tsx',
+        'await deleteWithUndo(() => itemRepo.remove(id));',
+      ),
+    ).toEqual([]);
+    expect(
+      checkDeleteSource(
+        'x',
+        'routes/P.tsx',
+        'undoableWithToast(a, b, () => itemRepo.removeMany(ids));',
+      ),
+    ).toEqual([]);
+  });
+  it('ignores files without a repo removal', () => {
+    expect(checkDeleteSource('x', 'routes/P.tsx', 'await deletePerson(id);')).toEqual([]);
+  });
+});
+
+describe('checkRowSource', () => {
+  const own = '<Card as="li"><button onClick={() => setTarget(s)}>x</button></Card>';
+  it('flags hand-made rows that open an editor', () => {
+    expect(checkRowSource('x', 'routes/P.tsx', own)).toHaveLength(1);
+  });
+  it('accepts ItemRow, or a stated reason', () => {
+    expect(checkRowSource('x', 'routes/P.tsx', `${own} <ItemRow />`)).toEqual([]);
+    expect(
+      checkRowSource('x', 'routes/P.tsx', `// comfort-custom-row: progress cards\n${own}`),
+    ).toEqual([]);
+  });
+  it('ignores lists that open nothing', () => {
+    expect(checkRowSource('x', 'routes/P.tsx', '<li>step</li>')).toEqual([]);
   });
 });

@@ -28,6 +28,13 @@ const CORE_KEYS = {
     'tm-sidebar': 'wide',
     'tm-nav-closed': '[]',
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard',
+    'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
+    'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
+    'tm-spotify-now':
+      'last now-playing reading, only while connected (core/connectors/nowPlaying.ts)',
+    'tm-spotify-no-premium': 'time of a PREMIUM_REQUIRED answer; controls hidden for a day',
+    'tm-spotify-focus':
+      'focus-round music: mode off, playlistId unset, pauseAtEnd true (core/focus/music.ts)',
   },
   '_settings scope core': { displayName: '', weekStart: 'mon' },
   '_settings scope supporter': {
@@ -44,6 +51,7 @@ const CORE_KEYS = {
     dayPlan: true,
     planLimit: 3,
     calmAttention: true,
+    moduleNow: true,
     timeToNext: true,
     focusMinutes: 25,
     focusSound: false,
@@ -67,7 +75,8 @@ const CORE_KEYS = {
     weekReview: true,
     eveningWrapUp: true,
   },
-  '_settings scope reminders': { snoozed: [] },
+  '_settings scope weather': { enabled: true, place: '', lat: 0, lon: 0 },
+  '_settings scope reminders': { snoozed: [], 'ack:<notification key>': 'time of the answer' },
   _meta: {
     'update.prefs': { channel: 'stable', auto: true },
     'update.lastCheckAt': 'timestamp',
@@ -75,7 +84,7 @@ const CORE_KEYS = {
     'legal.notices': 'ids of acknowledged one-time notices (device-local)',
     'setup.state': 'checklistHidden false, status, steps',
     'focus.state': 'running focus session (task, end time), skipped suggestions of the day',
-    'reminders.acked': 'notification keys answered with Erledigt (device-local)',
+    'reminders.acked': 'older answers (Erledigt); now synced in the settings scope reminders',
     'focus.context': 'last visited route and title for the resume card (device-local)',
     'backup.auto.config': { enabled: false, interval: 'daily', keep: 7 },
     'backup.auto.last': 'timestamp',

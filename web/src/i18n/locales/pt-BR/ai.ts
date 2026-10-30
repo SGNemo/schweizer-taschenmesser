@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const ai: Strings['ai'] = {
+  providerCustom: 'Provedor próprio (compatível com OpenAI)',
   title: 'Assistente de IA',
   off: {
     title: 'Desligar a IA',
@@ -122,6 +123,8 @@ export const ai: Strings['ai'] = {
     ask: 'Perguntar ao assistente',
     write: 'Adicionar',
     writeButton: 'Adicionar com IA',
+    writeSentence: 'Adicionar uma frase',
+    askLocal: 'Fazer uma pergunta',
     writePlaceholder: 'ex.: Rechnung Stadtwerke 89,90 € fällig 15.10.',
   },
   tier: {
@@ -270,6 +273,16 @@ export const ai: Strings['ai'] = {
         : `${n} itens foram ignorados, porque mudaram.`,
     failed: 'Não foi possível salvar.',
     nothingReady: 'Ainda faltam informações.',
+    reminder: {
+      confirm: 'Salvar',
+      edit: 'Alterar',
+      notifies: 'Você receberá uma notificação nesse horário.',
+      defaultTime: (time: string) =>
+        `Nenhum horário informado – sugerindo ${time}. Você pode alterar.`,
+      rolledDay: 'Esse horário já passou hoje, por isso foi sugerido para amanhã.',
+      past: 'Esse momento já passou – não haverá notificação.',
+      askTitle: 'Do que devo lembrar você?',
+    },
     recurrence: {
       daily: 'Diariamente',
       weekly: 'Semanalmente',

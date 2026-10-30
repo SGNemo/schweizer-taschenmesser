@@ -20,7 +20,9 @@ export const settings: Strings['settings'] = {
   notFoundTitle: 'Esta categoría no existe.',
   danger: {
     title: 'Zona de peligro',
-    typePhrase: (phrase: string) => `Escribe «${phrase}» para confirmar`,
+    againTitle: '¿Seguro?',
+    againText: 'No se puede deshacer. Confirma una vez más.',
+    back: 'Atrás',
   },
   /** Extra search words per settings section (synonyms people type). */
   searchWords: {
@@ -35,7 +37,7 @@ export const settings: Strings['settings'] = {
       'fecha',
     ],
     appearance: ['tema', 'modo oscuro', 'fuente', 'animación'],
-    modules: ['biblioteca', 'activar módulo', 'datos iniciales'],
+    modules: ['biblioteca', 'activar módulo', 'importar'],
     tools: ['barra de herramientas', 'orden'],
     notifications: ['push', 'permiso', 'recordatorio'],
     'browser-extension': ['Brave', 'Chrome', 'autocompletar'],
@@ -110,6 +112,20 @@ export const settings: Strings['settings'] = {
     homeViewHint:
       'El resumen tranquilo muestra solo «Ahora toca», «Lo siguiente» y «Hoy y mañana». Todo lo demás está a un toque.',
   },
+  appearanceGroups: {
+    change: 'Cambiar',
+    done: 'Listo',
+    line: (name: string, value: string) => `${name}: ${value}`,
+    theme: 'Tema',
+    colors: 'Colores',
+    text: 'Texto y lectura',
+    motion: 'Movimiento',
+    other: 'Otros',
+  },
+  moduleGroups: {
+    fields: 'Campos',
+    more: (n: number) => `+ ${n}`,
+  },
   modulesOverview: {
     title: 'Gestionar módulos',
     description:
@@ -142,7 +158,7 @@ export const settings: Strings['settings'] = {
     },
     module: {
       title: 'Módulos',
-      description: 'Ajustes de los módulos y datos iniciales',
+      description: 'Ajustes de los módulos y importar',
       keywords: ['recordatorio', 'datos iniciales', 'importar'],
     },
     werkzeuge: {
@@ -210,6 +226,7 @@ export const settings: Strings['settings'] = {
   favouritesHint:
     'Hasta 5 módulos aparecen arriba en la barra lateral. La estrella de un módulo en la barra lateral hace lo mismo.',
   favouritesFull: 'Máximo 5 favoritos: quita otro primero.',
+  favouritesNone: 'Ninguno',
   theme: 'Esquema de color',
   themeSystem: 'Sistema',
   themeLight: 'Claro',
@@ -254,6 +271,8 @@ export const settings: Strings['settings'] = {
     coverHint:
       '25 %: solo texto corrido. 50 %: además títulos y listas. 75 %: además etiquetas y tablas. 100 %: todo el texto, también botones y navegación (no en la bóveda ni en campos de texto).',
     shortcut: 'Atajo de teclado: Alt + L activa y desactiva la ayuda de lectura.',
+    on: 'Activada',
+    off: 'Desactivada',
     preview: 'Vista previa',
     previewText:
       'Así se ve una frase larga con ayuda de lectura: el inicio de las palabras guía la mirada.',
@@ -270,7 +289,7 @@ export const settings: Strings['settings'] = {
   motion: 'Movimiento',
   motionOptions: { system: 'Como el sistema', reduce: 'Menos' },
   homeView: 'Resumen',
-  homeViewOptions: { all: 'Todos los widgets', calm: 'Solo lo importante' },
+  homeViewOptions: { all: 'Todas las tarjetas', calm: 'Solo lo importante' },
   density: 'Densidad',
   densityOptions: { normal: 'Normal', compact: 'Compacta' },
   modules: 'Módulos',

@@ -8,6 +8,22 @@ import { Badge, Button, Checkbox } from '@/ui';
 import type { PreviewRow } from './types';
 import styles from './OnboardingWizard.module.css';
 
+/**
+ * Ticks or unticks one row. Rows are linked by `dependsOn` (a task and its new list): unticking the
+ * row others depend on unticks them too, ticking a dependent row ticks what it needs.
+ */
+export function toggleRow(rows: PreviewRow[], index: number, selected: boolean): PreviewRow[] {
+  const target = rows.find((r) => r.index === index);
+  const id = target?.candidate.id;
+  const need = target?.candidate.dependsOn;
+  return rows.map((x) => {
+    if (x.index === index) return { ...x, selected };
+    if (selected && need && x.candidate.id === need && !x.invalid) return { ...x, selected };
+    if (!selected && id && x.candidate.dependsOn === id) return { ...x, selected };
+    return x;
+  });
+}
+
 export function ImportPreview({
   rows,
   onChange,
@@ -36,13 +52,7 @@ export function ImportPreview({
               <Checkbox
                 checked={r.selected}
                 disabled={Boolean(r.invalid)}
-                onChange={(e) =>
-                  onChange(
-                    rows.map((x) =>
-                      x.index === r.index ? { ...x, selected: e.target.checked } : x,
-                    ),
-                  )
-                }
+                onChange={(e) => onChange(toggleRow(rows, r.index, e.target.checked))}
                 label={
                   <span className={styles.rowText}>
                     <span className={styles.rowTitle}>{r.candidate.label}</span>

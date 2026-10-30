@@ -1,8 +1,11 @@
 import type { Strings } from '@/strings';
 
 export const onboarding: Strings['onboarding'] = {
-  button: 'Configurar datos iniciales',
-  title: (module: string) => `Datos iniciales: ${module}`,
+  button: 'Importar',
+  title: (module: string) => `Importar: ${module}`,
+  rowLabel: 'Añadir entradas',
+  rowHint:
+    'Desde un archivo, un texto o sugerencias. No se guarda nada hasta que confirmes la vista previa.',
   chooseIntro:
     '¿De dónde salen las primeras entradas? No se guarda nada hasta que confirmes la vista previa.',
   skip: 'Omitir',
@@ -12,6 +15,7 @@ export const onboarding: Strings['onboarding'] = {
   parsing: 'Leyendo …',
   chooseFile: 'Elegir archivo …',
   fileChosen: (name: string) => `Archivo: ${name}`,
+  filesChosen: (n: number) => `${n} archivos`,
   textLabel: 'Una línea = una entrada',
   pickTemplates: 'Elegir sugerencias',
   noInput: 'Escribe algo, por favor.',
@@ -62,6 +66,7 @@ export const onboarding: Strings['onboarding'] = {
         ? 'Se omitió 1 factura sin importe reconocible.'
         : `Se omitieron ${n} facturas sin importe reconocible.`,
     noEnd: 'Fin del contrato no detectado',
+    endsOn: (date: string) => `Termina el ${date}`,
     notice: (days: number) => `Plazo de cancelación: ${days} ${days === 1 ? 'día' : 'días'}`,
   },
   ics: {
@@ -85,6 +90,29 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Pega una lista de una app de notas o de un mensaje: una línea por tarea.',
     placeholder: 'Ordenar papeles de impuestos\nLlamar al dentista\nArreglar la bici',
     list: 'En esta lista',
+    file: 'Desde Todoist o Google Tasks',
+    fileHint:
+      'Elige el archivo que exportaste allí: CSV de Todoist o archivo de Google Tasks (JSON). No se sube nada.',
+    perSource: 'Una lista propia por cada lista de origen',
+    newList: 'Lista nueva',
+    includeDone: 'Tareas completadas',
+    doneNo: 'Dejar fuera',
+    doneYes: 'Traer como hechas',
+    repeatNote: (text: string) => `Repetición en el origen: ${text} (no se repite automáticamente)`,
+    dueNote: (text: string) => `Vencimiento en el origen: ${text}`,
+    skippedDone: (n: number) =>
+      n === 1 ? 'Se dejó fuera 1 tarea completada.' : `Se dejaron fuera ${n} tareas completadas.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? 'Se omitió 1 entrada (sección, eliminada o sin título).'
+        : `Se omitieron ${n} entradas (secciones, eliminadas o sin título).`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 tarea se repite en el origen. La repetición solo aparece como aviso en su nota; nada se repite automáticamente.'
+        : `${n} tareas se repiten en el origen. La repetición solo aparece como aviso en su nota; nada se repite automáticamente.`,
+    tooMany: (max: number) => `Se muestran las primeras ${max} tareas.`,
+    unknownFormat:
+      'No se reconoció el formato. Hace falta el CSV de Todoist o el archivo de Google Tasks (JSON).',
   },
   reminders: {
     textDetail: 'hoy, 09:00',
@@ -164,6 +192,26 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Una línea por enlace, opcionalmente con un título delante.',
     placeholder: 'https://example.org/articulo\nRuta bonita https://example.org/senderismo',
   },
+  notes: {
+    file: 'Archivos Markdown o Google Keep',
+    fileHint:
+      'Elige archivos .md (p. ej. de tu carpeta de Obsidian, varios a la vez) o los archivos .json de Google Takeout (Keep). Se conservan títulos, listas de tareas y #etiquetas. Descomprime antes los archivos ZIP.',
+    text: 'Pegar Markdown',
+    textHint:
+      'El texto pegado se convierte en una nota; un primer encabezado pasa a ser el título.',
+    textLabel: 'Texto Markdown',
+    placeholder: '# Plan semanal\n\n- Compras #casa\n- Llamar a mamá',
+    emptyFiles: (n: number) =>
+      n === 1 ? 'Se omitió 1 archivo vacío.' : `Se omitieron ${n} archivos vacíos.`,
+    keepSkipped: (n: number) =>
+      n === 1
+        ? 'Se dejó fuera 1 nota de Keep de la papelera o del archivo.'
+        : `Se dejaron fuera ${n} notas de Keep de la papelera o del archivo.`,
+    unreadable: (n: number) =>
+      n === 1
+        ? '1 archivo JSON no es una nota de Keep y se omitió.'
+        : `${n} archivos JSON no son notas de Keep y se omitieron.`,
+  },
   birthdays: {
     text: 'Pegar cumpleaños',
     textHint: 'Una línea por persona: nombre y fecha, con o sin año.',
@@ -229,6 +277,56 @@ export const onboarding: Strings['onboarding'] = {
         'Forfait',
         'Bálsamo labial',
       ],
+    },
+    familyTrip: {
+      name: 'Vacaciones con niños',
+      note: 'Para viajes con niños pequeños',
+      items: [
+        'DNI o pasaportes de los niños',
+        'Peluche favorito',
+        'Pañales y toallitas',
+        'Snacks para el camino',
+        'Ropa de cambio para los niños',
+        'Crema solar infantil',
+        'Botiquín infantil',
+        'Juguetes y libros',
+        'Cochecito o mochila portabebés',
+        'Cartilla de vacunación',
+      ],
+    },
+    school: {
+      name: 'Mochila del colegio',
+      note: 'Repasarla un momento cada noche',
+      items: [
+        'Estuche',
+        'Cuadernos y libros',
+        'Horario de clases',
+        'Agenda de deberes',
+        'Botella de agua',
+        'Almuerzo',
+        'Bolsa de deporte',
+        'Comunicados para los padres',
+      ],
+    },
+  },
+  papers: {
+    label: 'Papeles importantes',
+    hint: 'Documentos que conviene encontrar rápido',
+    templatesHint:
+      'Añade la fecha de caducidad más tarde: así aparecerá el plazo en «Plazos y vencimientos».',
+    kind: 'Papeles',
+    items: {
+      passport: { name: 'Pasaporte', category: 'identity' },
+      idCard: { name: 'Documento de identidad', category: 'identity' },
+      license: { name: 'Permiso de conducir', category: 'identity' },
+      vehicleInspection: {
+        name: 'Permiso de circulación e informe de inspección',
+        category: 'other',
+      },
+      healthCard: { name: 'Tarjeta del seguro médico', category: 'health' },
+      vaccination: { name: 'Cartilla de vacunación', category: 'health' },
+      rental: { name: 'Contrato de alquiler', category: 'contract' },
+      policies: { name: 'Pólizas de seguro', category: 'insurance' },
     },
   },
 };

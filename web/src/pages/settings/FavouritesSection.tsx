@@ -3,33 +3,42 @@ import { useNavTree } from '@/layout/useNavItems';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { SettingRow, SettingsGroup, Switch } from '@/ui';
+import { FoldedGroup } from './FoldedGroup';
 
-/** Favourites (max. 5): the same choice as the star in the sidebar, reachable on touch devices. */
+/**
+ * Favourites (max. 5): the same choice as the star in the sidebar, reachable on touch devices.
+ * One folded line names the chosen modules; the switch per module sits inside.
+ */
 export function FavouritesSection() {
   const tree = useNavTree();
   const toast = useUiStore((s) => s.toast);
   const shown = tree.favourites.flatMap((i) => (i.moduleId ? [i.moduleId] : []));
   const items = tree.areas.flatMap((a) => a.items).filter((i) => i.moduleId);
+  const current = tree.favourites.length
+    ? tree.favourites.map((i) => i.label)
+    : [t.settings.favouritesNone];
   return (
     <SettingsGroup
       id="favourites"
       title={t.settings.favourites}
       description={t.settings.favouritesHint}
     >
-      {items.map((i) => (
-        <SettingRow key={i.to} id={`favourites--${i.moduleId}`} label={i.label}>
-          <Switch
-            label={i.label}
-            labelHidden
-            checked={shown.includes(i.moduleId!)}
-            onChange={() => {
-              void setFavourite(i.moduleId!, shown).then((changed) => {
-                if (!changed) toast(t.settings.favouritesFull);
-              });
-            }}
-          />
-        </SettingRow>
-      ))}
+      <FoldedGroup section="favourites" id="list" title={t.settings.favourites} current={current}>
+        {items.map((i) => (
+          <SettingRow key={i.to} id={`favourites--${i.moduleId}`} label={i.label}>
+            <Switch
+              label={i.label}
+              labelHidden
+              checked={shown.includes(i.moduleId!)}
+              onChange={() => {
+                void setFavourite(i.moduleId!, shown).then((changed) => {
+                  if (!changed) toast(t.settings.favouritesFull);
+                });
+              }}
+            />
+          </SettingRow>
+        ))}
+      </FoldedGroup>
     </SettingsGroup>
   );
 }

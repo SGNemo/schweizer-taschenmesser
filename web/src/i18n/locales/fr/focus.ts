@@ -23,6 +23,9 @@ export const focus: Strings['focus'] = {
     calmAttention: '« Important maintenant » en mode calme',
     calmAttentionHint:
       'Regroupe ce qui attend en un seul message et ne garde le rouge que pour les échéances d’argent. Sans compteur de jours.',
+    moduleNow: '« Maintenant » sur les pages des modules',
+    moduleNowHint:
+      'Affiche en une ligne discrète, en haut du calendrier, de l’argent et du garde-manger, ce qui est à faire maintenant.',
     timeToNext: 'Temps jusqu’au prochain événement',
     timeToNextHint: 'Affiche en grand combien de temps il reste avant le prochain événement.',
     focusMinutes: 'Durée du minuteur de concentration',
@@ -37,6 +40,11 @@ export const focus: Strings['focus'] = {
     searchHistory: 'Historique de recherche',
     searchHistoryHint:
       'La recherche montre d’abord ce que vous avez utilisé récemment. L’historique reste sur cet appareil.',
+    more: 'Autres paramètres',
+    aids: 'Aides',
+    aidsOn: (n: number, total: number) => `${n} sur ${total} activées`,
+    planShort: (n: number) => `Plan du jour ${n}`,
+    timerShort: (n: number) => `Minuteur ${n} min`,
     clearHistory: 'Effacer l’historique',
     clearHistoryHint: 'Vide les entrées récemment utilisées de la recherche.',
     historyCleared: 'Historique effacé.',
@@ -79,13 +87,24 @@ export const focus: Strings['focus'] = {
     stages: 'En plus, avant',
     stageLabel: (m: number) =>
       m >= 1440 ? `${Math.round(m / 1440)} j` : m >= 60 ? `${Math.round(m / 60)} h` : `${m} min`,
-    followUp: 'Relance douce',
+    leadHintTitle: 'Note dans le formulaire de rendez-vous',
+    leadHintHint:
+      'Affiche une phrase discrète quand vous choisissez un rappel alors que les notifications ne sont pas autorisées.',
+    followUp: 'Répéter calmement',
     followUpHint:
-      'Une seule relance après 30 minutes, si un rappel n’a pas reçu la réponse « Fait ».',
+      'Un rappel que vous avez fixé revient à intervalles jusqu’à « Fait » ou « Plus tard ». Rien la nuit.',
+    repeatEvery: 'Intervalle',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'Au plus',
+    repeatMaxHint: 'Ensuite, ça s’arrête ; le rappel reste dans le centre de notifications.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'Tâches du matin',
     todoDigestHint:
       'Un message par jour qui cite les tâches du jour. Pas de message séparé pour chaque tâche.',
     digestTime: 'Heure du résumé',
+    inAppGroup: 'Carte dans l’app',
+    on: 'Activé',
+    off: 'Désactivé',
   },
   resume: {
     title: 'Où en étais-je ?',
@@ -109,11 +128,13 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Créer une tâche',
     off: 'Les suggestions sont désactivées.',
     offAction: 'Ouvrir les paramètres',
+    menu: 'Plus d’options',
   },
   waiting: {
     text: (n: number) => (n <= 1 ? `${n} tâche attend encore.` : `${n} tâches attendent encore.`),
     replan: 'Replanifier',
-    replanHint: 'Les répartit sur les prochains jours.',
+    replanHint:
+      'Ouvert depuis un moment, pas urgent. Replanifier le répartit sur les prochains jours.',
     replanned: 'Réparti sur les prochains jours.',
   },
   mode: {
@@ -147,7 +168,15 @@ export const focus: Strings['focus'] = {
       `Concentration : ${title}, ${time}. Retour à la concentration.`,
     otherRunning: (title: string) => `Une séance est déjà en cours pour « ${title} ».`,
   },
+  today: {
+    now: 'Maintenant',
+    inMinutes: (n: number) => `dans ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `dans ${h} h` : `dans ${h} h ${m} min`),
+    appointments: 'Événements',
+    allAppointments: 'Tous les événements',
+  },
   plan: {
+    planned: 'Prévue pour aujourd’hui.',
     title: 'Aujourd’hui',
     count: (n: number) => (n <= 1 ? `${n} chose` : `${n} choses`),
     doneToday: (n: number) => `Fait aujourd’hui : ${n}`,

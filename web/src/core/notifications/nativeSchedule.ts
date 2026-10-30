@@ -8,6 +8,7 @@ import { loadModuleStates } from '@/core/modules/activation';
 import { activeManifests } from '@/core/modules/contributions';
 import type { DueNotification } from '@/core/modules/types';
 import { collectDue } from './collect';
+import { isRepeatKey } from './policy';
 import { getPlatform } from '@/core/platform';
 import { now as clockNow } from '@/core/time/now';
 import type { NotificationService, ScheduledNotification } from './service';
@@ -30,10 +31,23 @@ export function pickUpcoming(
 ): ScheduledNotification[] {
   const unique = new Map<string, DueNotification>();
   for (const n of due) if (n.at > from && !unique.has(n.key)) unique.set(n.key, n);
-  return [...unique.values()]
+  // Repeats only fill what the reminders themselves leave of the alarm budget.
+  const all = [...unique.values()];
+  const firsts = all.filter((n) => !isRepeatKey(n.key)).sort((a, b) => a.at - b.at);
+  const repeats = all.filter((n) => isRepeatKey(n.key)).sort((a, b) => a.at - b.at);
+  return [
+    ...firsts.slice(0, MAX_SCHEDULED),
+    ...repeats.slice(0, Math.max(0, MAX_SCHEDULED - firsts.length)),
+  ]
     .sort((a, b) => a.at - b.at)
-    .slice(0, MAX_SCHEDULED)
-    .map(({ key, at, title, body, url }) => ({ key, at, title, body, url }));
+    .map(({ key, at, title, body, url, quiet }) => ({
+      key,
+      at,
+      title,
+      body,
+      url,
+      ...(quiet ? { quiet: true } : {}),
+    }));
 }
 
 /** Returns the number of notifications scheduled, or undefined when the platform cannot do it. */

@@ -1,5 +1,6 @@
 import { compareText } from '@/core/i18n/format';
-import type { BookmarkItem, Kind } from './schema';
+import { addDaysStr, toDateString } from '@/core/time/dates';
+import { KINDS, type BookmarkItem, type Kind } from './schema';
 
 /** "example.com/x" → "https://example.com/x"; anything that is not a http(s) address → undefined. */
 export function normalizeUrl(input: string): string | undefined {
@@ -97,4 +98,54 @@ export function filterItems<T extends BookmarkItem & { createdAt: number }>(
       (i) => !q || fold([i.title, i.url ?? '', i.note ?? '', ...i.tags].join(' ')).includes(q),
     )
     .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/** How the list is grouped: by when it was saved (default), by first tag or by type. */
+export type Grouping = 'recent' | 'tag' | 'kind';
+export const GROUPINGS: readonly Grouping[] = ['recent', 'tag', 'kind'];
+
+/** `id` is stable and safe in a DOM id; `tag` is the tag text of a tag group ('' = no tag). */
+export interface ItemGroup<T> {
+  id: string;
+  tag?: string;
+  items: T[];
+}
+
+type Groupable = Pick<BookmarkItem, 'tags' | 'title' | 'kind'> & { createdAt: number };
+
+/** Buckets for "recent": saved today, in the last 7 days (incl. yesterday), earlier. */
+export function recentBucket(createdAt: number, day: string): 'today' | 'week' | 'older' {
+  const saved = toDateString(new Date(createdAt));
+  if (saved >= day) return 'today';
+  return saved > addDaysStr(day, -7) ? 'week' : 'older';
+}
+
+/**
+ * Groups the (already filtered) items for display; empty groups are omitted. "recent": today,
+ * last 7 days, earlier, newest first. "tag": by first tag, groups alphabetical, no tag last,
+ * entries by title. "kind": in the order of `KINDS`, newest first. Nothing is dropped.
+ */
+export function groupItems<T extends Groupable>(
+  items: readonly T[],
+  mode: Grouping,
+  day: string,
+): ItemGroup<T>[] {
+  const newestFirst = (list: T[]) => list.sort((a, b) => b.createdAt - a.createdAt);
+  if (mode === 'tag')
+    return groupLinks(items).map(([tag, list]) => ({
+      id: tag ? `tag-${encodeURIComponent(tag.toLowerCase())}` : 'none',
+      tag,
+      items: list,
+    }));
+  if (mode === 'kind')
+    return KINDS.map((k) => ({
+      id: k,
+      items: newestFirst(items.filter((i) => i.kind === k)),
+    })).filter((g) => g.items.length > 0);
+  return (['today', 'week', 'older'] as const)
+    .map((id) => ({
+      id,
+      items: newestFirst(items.filter((i) => recentBucket(i.createdAt, day) === id)),
+    }))
+    .filter((g) => g.items.length > 0);
 }

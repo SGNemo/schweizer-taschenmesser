@@ -112,3 +112,15 @@ export function totals(gifts: readonly Gift[]): Totals {
 /** Gifts that still need action (idea or bought, not yet given). */
 export const openGifts = <T extends Gift>(gifts: readonly T[]): T[] =>
   gifts.filter((g) => g.status !== 'given');
+
+/** Gifts that are not given yet (idea or bought) across all people, in the usual gift order, each with its person. Gifts of a missing person are left out. */
+export function openGiftsWithPerson<G extends Gift, P extends { id: string }>(
+  gifts: readonly G[],
+  people: readonly P[],
+): { gift: G; person: P }[] {
+  const byId = new Map(people.map((p) => [p.id, p]));
+  return sortGifts(gifts.filter((g) => g.status !== 'given')).flatMap((gift) => {
+    const person = byId.get(gift.personId);
+    return person ? [{ gift, person }] : [];
+  });
+}

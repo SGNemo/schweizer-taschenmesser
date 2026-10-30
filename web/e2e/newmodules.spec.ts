@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { moreFields } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -47,6 +48,7 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
+  await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
   await dialog.getByLabel('Haltbar bis (optional)').fill('2026-09-30');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
@@ -92,6 +94,7 @@ test('pantry: the hand-over also arrives when the app loads slowly (services sta
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
+  await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toBeHidden();
@@ -137,6 +140,8 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await page.getByRole('button', { name: 'Person hinzufügen' }).first().click();
   const person = page.getByRole('dialog', { name: 'Person hinzufügen' });
   await person.getByLabel('Name', { exact: true }).fill('Anna');
+  // A new person has no date preset (it used to be today and was saved as a wrong birthday).
+  await person.getByRole('checkbox', { name: 'Geburtstag eintragen' }).uncheck();
   await person.getByRole('button', { name: 'Speichern' }).click();
   await expect(person).toBeHidden();
   await page.getByRole('button', { name: /^Anna(?! per WhatsApp)/ }).click();
@@ -158,7 +163,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await expect(gifts.getByRole('button', { name: /Link öffnen/ })).toHaveCount(0);
   await expect(page.getByTestId('gifts-total')).toHaveCount(0);
 
-  await gifts.getByRole('button', { name: /Kochbuch/ }).click();
+  await gifts.getByRole('button', { name: /Kochbuch Geburtstag/ }).click();
   await page
     .getByRole('dialog', { name: 'Geschenkidee bearbeiten' })
     .getByLabel('Stand')

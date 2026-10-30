@@ -23,6 +23,9 @@ export const focus: Strings['focus'] = {
     calmAttention: '«Importante ahora» tranquilo',
     calmAttentionHint:
       'Agrupa lo pendiente en un solo aviso y usa rojo solo para plazos de dinero. Sin contador de días.',
+    moduleNow: '«Ahora» en las páginas de módulos',
+    moduleNowHint:
+      'Muestra en una línea estrecha, arriba en el calendario, el dinero y la despensa, lo que toca ahora.',
     timeToNext: 'Tiempo hasta el próximo evento',
     timeToNextHint: 'Muestra en grande cuánto falta para el próximo evento.',
     focusMinutes: 'Duración del temporizador',
@@ -36,6 +39,11 @@ export const focus: Strings['focus'] = {
     searchHistory: 'Historial en la búsqueda',
     searchHistoryHint:
       'La búsqueda muestra primero lo que usaste hace poco. El historial se queda en este dispositivo.',
+    more: 'Más ajustes',
+    aids: 'Ayudas',
+    aidsOn: (n: number, total: number) => `${n} de ${total} activadas`,
+    planShort: (n: number) => `Plan del día ${n}`,
+    timerShort: (n: number) => `Temporizador ${n} min`,
     clearHistory: 'Borrar historial',
     clearHistoryHint: 'Vacía las entradas usadas recientemente en la búsqueda.',
     historyCleared: 'Historial borrado.',
@@ -88,12 +96,23 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
-    followUp: 'Seguimiento suave',
+    leadHintTitle: 'Aviso en el formulario de citas',
+    leadHintHint:
+      'Muestra una frase tranquila cuando eliges un recordatorio pero las notificaciones no están permitidas.',
+    followUp: 'Repetir con calma',
     followUpHint:
-      'Una sola pregunta a los 30 minutos si un recordatorio no se respondió con «Hecho».',
+      'Un recordatorio que pusiste tú vuelve a intervalos hasta que elijas «Hecho» o «Más tarde». De noche, silencio.',
+    repeatEvery: 'Intervalo',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'Como máximo',
+    repeatMaxHint: 'Después se detiene; el recordatorio sigue en el centro de notificaciones.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'Tareas por la mañana',
     todoDigestHint: 'Un aviso al día con las tareas de hoy. Sin avisos sueltos por cada tarea.',
     digestTime: 'Hora del resumen',
+    inAppGroup: 'Tarjeta en la app',
+    on: 'Activado',
+    off: 'Desactivado',
   },
   resume: {
     title: '¿Dónde me quedé?',
@@ -117,11 +136,13 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Añadir tarea',
     off: 'Las sugerencias están desactivadas.',
     offAction: 'Abrir ajustes',
+    menu: 'Más opciones',
   },
   waiting: {
     text: (n: number) => (n === 1 ? '1 tarea sigue pendiente.' : `${n} tareas siguen pendientes.`),
     replan: 'Replanificar',
-    replanHint: 'Las reparte entre los próximos días.',
+    replanHint:
+      'Abierto desde hace tiempo, no urgente. Replanificar lo reparte entre los próximos días.',
     replanned: 'Repartidas entre los próximos días.',
   },
   mode: {
@@ -155,7 +176,15 @@ export const focus: Strings['focus'] = {
       `Concentración: ${title}, ${time}. Volver a la concentración.`,
     otherRunning: (title: string) => `Ya hay una ronda en curso para «${title}».`,
   },
+  today: {
+    now: 'Ahora',
+    inMinutes: (n: number) => `en ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `en ${h} h` : `en ${h} h ${m} min`),
+    appointments: 'Eventos',
+    allAppointments: 'Todos los eventos',
+  },
   plan: {
+    planned: 'Planificada para hoy.',
     title: 'Hoy',
     count: (n: number) => (n === 1 ? '1 cosa' : `${n} cosas`),
     doneToday: (n: number) => `Hecho hoy: ${n}`,

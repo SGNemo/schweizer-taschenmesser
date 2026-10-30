@@ -21,8 +21,10 @@ const node = (id: number, parentId: number | null, o: Partial<DiskNode> = {}): D
   logicalBytes: 0,
   files: 0,
   modified: 0,
+  accessed: 0,
   fileKind: 'other',
-  kindBytes: [0, 0, 0, 0, 0, 0, 0],
+  kindBytes: [0, 0, 0, 0, 0, 0, 0, 0],
+  ageBytes: [0, 0, 0, 0, 0, 0],
   childCount: 0,
   ...o,
 });

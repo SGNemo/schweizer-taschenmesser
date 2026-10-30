@@ -4,9 +4,11 @@ export const sync: Strings['sync'] = {
   defaultDeviceName: 'Dispositivo',
   title: 'Sincronização',
   intro:
-    'Opcional: sincronize seus dados pelo seu próprio servidor de sincronização (na rede local ou via Tailscale). Sem servidor, tudo fica só neste dispositivo.',
+    'Opcional: sincronize seus dados pelo seu próprio servidor de sincronização (na sua rede doméstica ou via uma rede privada como o Tailscale). Sem servidor, tudo fica só neste dispositivo.',
   serverUrl: 'Endereço do servidor',
   serverUrlHint: 'ex.: https://meu-pc.tailnet.ts.net',
+  httpWarning:
+    'Com “http://” o token viaja sem criptografia pela rede. Use https:// (por exemplo Tailscale); http só é aceitável para este computador (localhost).',
   token: 'Token de acesso',
   deviceName: 'Nome do dispositivo',
   deviceNameHint: 'É assim que este dispositivo aparece na lista de dispositivos.',
@@ -17,10 +19,10 @@ export const sync: Strings['sync'] = {
   } as Record<string, string>,
   encrypt: 'Criptografia de ponta a ponta',
   encryptHint:
-    'Os valores são criptografados no dispositivo; o servidor só vê texto cifrado. Só é possível em um servidor vazio.',
+    'Os valores são criptografados no dispositivo; o servidor só vê dados criptografados. Só é possível em um servidor vazio.',
   plainWarning:
     'Sem criptografia de ponta a ponta, seus dados ficam no servidor em texto puro. Use-a se o servidor não for só seu ou não guardar os dados criptografados.',
-  passphrase: 'Frase secreta',
+  passphrase: 'Frase secreta (várias palavras)',
   passphraseHint:
     'Pelo menos 12 caracteres, de preferência várias palavras. Sem a frase secreta, não dá para recuperar os dados.',
   passphraseJoinHint: 'Só é necessária se o servidor for criptografado.',
@@ -42,7 +44,10 @@ export const sync: Strings['sync'] = {
   state: { off: 'Desligada', idle: 'Sincronizado', syncing: 'Sincronizando…', error: 'Erro' },
   badge: (state: string) => `Sincronização: ${state}`,
   detailsTitle: 'Status',
-  lastResult: (pulled: number, pushed: number) => `Última: ${pulled} recebidas, ${pushed} enviadas`,
+  lastResult: (applied: number, pushed: number) =>
+    applied === 0 && pushed === 0
+      ? 'Última: tudo em dia, nada novo'
+      : `Última: ${applied} alterações aplicadas, ${pushed} enviadas`,
   rejected: (n: number) =>
     n <= 1
       ? `${n} alteração recebida não pôde ser descriptografada e foi ignorada.`

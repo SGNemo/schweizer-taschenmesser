@@ -34,6 +34,14 @@ describe('desktop service', () => {
     expect(await d.setVaultHotkey('Ctrl+Alt+V')).toBe('taken');
   });
 
+  it('registers the voice key through its own command', async () => {
+    const d = createDesktopService(true);
+    expect(await d.setVoiceHotkey('Ctrl+Alt+M')).toBeNull();
+    expect(invoke).toHaveBeenCalledWith('desktop_set_voice_hotkey', { accelerator: 'Ctrl+Alt+M' });
+    invoke.mockRejectedValueOnce('taken');
+    expect(await d.setVoiceHotkey('Ctrl+Alt+M')).toBe('taken');
+  });
+
   it('maps registration failures to codes and never throws', async () => {
     const d = createDesktopService(true);
     invoke.mockRejectedValueOnce('taken');
@@ -72,5 +80,27 @@ describe('desktop service', () => {
     off();
     window.dispatchEvent(new Event('tm-capture-open'));
     expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks the shell for the game state and treats a failure as "no game"', async () => {
+    const d = createDesktopService(true);
+    invoke.mockResolvedValueOnce(true);
+    expect(await d.gameActive?.()).toBe(true);
+    expect(invoke).toHaveBeenLastCalledWith('system_game_active');
+    invoke.mockRejectedValueOnce(new Error('x'));
+    expect(await d.gameActive?.()).toBe(false);
+  });
+
+  it('hands the tone to the native player', async () => {
+    const d = createDesktopService(true);
+    const notes = [{ hz: 660, atMs: 0, durMs: 200, gain: 1 }];
+    await d.playTone?.(notes, 0.5);
+    expect(invoke).toHaveBeenCalledWith('system_play_tone', { notes, volume: 0.5 });
+  });
+
+  it('has no game detection or native tone in the browser', () => {
+    const d = createDesktopService(false);
+    expect(d.gameActive).toBeUndefined();
+    expect(d.playTone).toBeUndefined();
   });
 });

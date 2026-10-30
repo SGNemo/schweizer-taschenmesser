@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { enable } from './helpers';
+import { enable, moreFields } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
@@ -108,10 +108,11 @@ test('Lesezeichen: links as tiles, grouped by the first tag', async ({ page }) =
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Bahn');
   await dialog.getByLabel('Adresse (Link)').fill('https://bahn.example.org');
+  await moreFields(page);
   await dialog.getByLabel('Tags').fill('Reisen');
   await save(page);
   await expect(page.getByRole('heading', { name: 'Reisen' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Bahn bahn.example.org' })).toBeVisible();
   await page.getByRole('button', { name: 'Merkliste', exact: true }).click();
-  await expect(page.getByRole('button', { name: /Bahn Link/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Bahn Link/ })).toBeVisible();
 });

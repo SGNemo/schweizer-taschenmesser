@@ -11,6 +11,12 @@ All data in examples is invented.
 | `nemo-backup-YYYY-MM-DD.json` (before the rename: `taschenmesser-backup-…`) | `taschenmesser-backup`, `version: 1` | Plain JSON, unchanged. Old files stay importable (test fixture: `web/src/core/backup/fixtures/backup-v1.json`). |
 | `nemo-backup-YYYY-MM-DD.enc.json` (before the rename: `taschenmesser-backup-….enc.json`) | `taschenmesser-backup-encrypted`, `version: 1` | The plain backup sealed with a passphrase. |
 
+Plain files written since P6 carry `checksum` (hex SHA-256 of `JSON.stringify(tables)`): import and the
+check refuse a file whose checksum does not match; older files without it stay importable and the check
+reports them as "unprotected". Without a key this does not stop someone who recomputes it, hence the
+encrypted file is the recommended one. Not in any backup: document files of "Unterlagen" (local-only
+blobs); the safety copy before a restore is announced in the preview text (browser: a download).
+
 Encrypted layout: `{ format, version, createdAt, checksum, blob }`. `blob` is the existing
 `encryptWithPassword` payload of the crypto service (Argon2id, 64 MiB / t=3 / p=1 stored in the
 header, AES-256-GCM, random 96-bit nonce, AAD `taschenmesser/password-blob/v1/taschenmesser-backup-payload`).
@@ -111,8 +117,8 @@ Entries expire after 30 days (resolved) or 90 days (open); at most 500 rows.
 after all its chunks were accepted, so an interrupted first upload resumes and the server ignores
 duplicates. Pull advances the cursor page by page. Failed cycles retry with exponential backoff
 (5 s doubling to 5 min, ±20 % jitter); locked device, wrong key and similar errors are not retried in
-the background. Server: `TRUST_PROXY=true` behind a reverse proxy, `AUTH_FAILURE_LIMIT` (default 20 per
-minute and address, then `429`).
+the background. Server: `TRUST_PROXY=true` behind a reverse proxy, `AUTH_FAILURE_LIMIT` (default 20 wrong tokens per
+minute and address, then `429` for further wrong tokens; a valid token is never blocked by it).
 
 **Tombstones.** Synced deletions older than 90 days are removed locally once a day, only after a
 successful sync and never while unsynced.

@@ -3,13 +3,17 @@ import { t } from '@/strings';
 import { Button, Form, HelpHint, TextField } from '@/ui';
 import { createVault, MIN_MASTER_LENGTH, VaultError } from '../vault';
 import styles from '../accounts.module.css';
+import { measureStrength, type Score } from '../strength';
 import { StrengthMeter } from './StrengthMeter';
+import { isWeakScore, WeakPasswordHelp } from './WeakPasswordHelp';
 
 export function SetupScreen() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [score, setScore] = useState<Score | undefined>();
+  const [weakOk, setWeakOk] = useState(false);
 
   async function submit() {
     if ([...password].length < MIN_MASTER_LENGTH)
@@ -17,6 +21,12 @@ export function SetupScreen() {
     if (password !== confirm) return setError(t.accounts.setup.mismatch);
     setBusy(true);
     try {
+      // A weak password is allowed, but only after the person said so.
+      const weak = isWeakScore(score ?? (await measureStrength(password).then((m) => m.score)));
+      if (weak && !weakOk) {
+        setError(t.accounts.setup.weakNeedAck);
+        return;
+      }
       await createVault(password);
     } catch (e) {
       setError(
@@ -45,11 +55,26 @@ export function SetupScreen() {
           value={password}
           onChange={(e) => {
             setPassword(e.target.value);
+            setScore(undefined);
+            setWeakOk(false);
             setError('');
           }}
           data-autofocus
         />
-        <StrengthMeter password={password} />
+        <StrengthMeter password={password} onMeasured={setScore} />
+        {isWeakScore(score) ? (
+          <WeakPasswordHelp
+            acknowledged={weakOk}
+            onAcknowledge={setWeakOk}
+            onSuggest={(phrase) => {
+              setPassword(phrase);
+              setConfirm(phrase);
+              setScore(undefined);
+              setWeakOk(false);
+              setError('');
+            }}
+          />
+        ) : null}
         <TextField
           label={t.accounts.setup.confirm}
           type="password"

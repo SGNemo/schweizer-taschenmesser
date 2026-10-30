@@ -5,6 +5,7 @@ export const nav: Strings['nav'] = {
   homeAria: 'Ir para a visão geral',
   modules: 'Módulos',
   library: 'Biblioteca de módulos',
+  libraryShort: 'Biblioteca',
   settings: 'Configurações',
   more: 'Mais',
   main: 'Navegação principal',

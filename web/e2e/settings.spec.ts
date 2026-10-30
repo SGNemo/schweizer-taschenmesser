@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready } from './helpers';
+import { enable, openFoldedGroup, ready, openAppearanceGroup } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 const categoryNav = (page: Page) =>
@@ -39,6 +39,7 @@ test('phone: the categories are the first level, the back link returns to the li
   await expect(list.getByRole('link', { name: /Darstellung/ })).toContainText('Farbschema');
   await list.getByRole('link', { name: /Darstellung/ }).click();
   await expect(page).toHaveURL(/\/settings\/darstellung$/);
+  await openAppearanceGroup(page, 'theme');
   await expect(page.getByRole('group', { name: 'Farbschema' })).toBeVisible();
   await page.getByRole('link', { name: 'Einstellungen', exact: true }).click();
   await expect(page).toHaveURL(/\/settings$/);
@@ -51,7 +52,11 @@ test('search finds a setting by its description, jumps there and highlights it',
 }) => {
   await ready(page, '/settings');
   await page.getByRole('searchbox', { name: 'Einstellungen durchsuchen' }).fill('Tastenkürzel');
-  const hit = page.getByRole('link', { name: /Tastenkürzel/ }).first();
+  // "Tastenkürzel" is also a section of its own (Allgemein); the hit under Schnellerfassung is the hotkey.
+  const hit = page
+    .getByRole('link', { name: /Tastenkürzel/ })
+    .filter({ hasText: 'Schnellerfassung' })
+    .first();
   await expect(hit).toContainText('Schnellerfassung');
   await hit.click();
   await expect(page).toHaveURL(/\/settings\/schnellerfassung#quickcapture--hotkey$/);
@@ -85,16 +90,22 @@ test('the command palette reaches a single setting', async ({ page }, info) => {
   await ready(page, '/');
   await page.keyboard.press('Control+k');
   await page.getByRole('combobox').fill('Einstellung: Tastenkürzel');
-  await page.keyboard.press('Enter');
+  await page
+    .getByRole('option', { name: /^Tastenkürzel.*Schnellerfassung/ })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/settings\/schnellerfassung#quickcapture--hotkey$/);
 });
 
 test('module settings are reachable; the vault settings sit under Sicherheit', async ({ page }) => {
   await ready(page, '/settings/module');
   const todos = page.locator('section[aria-labelledby="module-todos"]');
+  await expect(page.getByTestId('module-todos-group-fields')).not.toHaveAttribute('open', '');
+  await openFoldedGroup(page, 'module-todos', 'fields');
   await expect(todos.getByRole('switch', { name: 'Erledigte Aufgaben anzeigen' })).toBeVisible();
   await enable(page, 'accounts');
   await ready(page, '/settings/sicherheit');
+  await openFoldedGroup(page, 'module-accounts', 'fields');
   await expect(page.getByRole('group', { name: 'Tresor sperren nach Inaktivität' })).toBeVisible();
   await ready(page, '/settings/module');
   await expect(page.locator('section[aria-labelledby="module-accounts"]')).toHaveCount(0);
@@ -120,7 +131,7 @@ test('the diagnostics file is shown in full before anything is saved', async ({ 
   await expect(page.getByRole('button', { name: 'Fehler melden' }).first()).toBeVisible();
 });
 
-test('the danger zone needs the typed phrase and then wipes this device', async ({ page }) => {
+test('the danger zone asks twice, then wipes this device', async ({ page }) => {
   await ready(page, '/todos?list=inbox');
   await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Erfundene Aufgabe');
   await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
@@ -130,10 +141,15 @@ test('the danger zone needs the typed phrase and then wipes this device', async 
   await page.getByRole('button', { name: 'Alle Daten auf diesem Gerät löschen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Alle Daten auf diesem Gerät löschen?' });
   const confirm = dialog.getByRole('button', { name: 'Endgültig löschen' });
+  // Nothing to type; the first click only asks once more.
+  await expect(dialog.getByRole('textbox')).toHaveCount(0);
+  await confirm.click();
+  await expect(dialog.getByTestId('confirm-again')).toContainText('Bist du sicher?');
+  // "Zurück" changes nothing; the second "yes" is off for a moment (no double-click wipe).
+  await dialog.getByRole('button', { name: 'Zurück' }).click();
+  await expect(dialog.getByTestId('confirm-again')).toHaveCount(0);
+  await confirm.click();
   await expect(confirm).toBeDisabled();
-  await dialog.getByLabel(/Tippe „LÖSCHEN“/).fill('löschen bitte');
-  await expect(confirm).toBeDisabled();
-  await dialog.getByLabel(/Tippe „LÖSCHEN“/).fill('LÖSCHEN');
   await expect(confirm).toBeEnabled();
   // The page reloads once the database is gone.
   await Promise.all([page.waitForEvent('load'), confirm.click()]);

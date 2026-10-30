@@ -3,6 +3,8 @@
  * label the first option ("Eintragen …"); the real decision is made by the stages.
  */
 import type { ModuleManifest } from '@/core/modules/types';
+import { extractFacts } from '@/quickCapture/parser/extract';
+import { now } from '@/core/time/now';
 import { fold } from '../../text';
 import { aiModules } from '../../scope';
 import { DELETE_VERBS, isCreateWord, isSearchStart, isUpdateWord, POLITE } from './lexicon';
@@ -23,6 +25,9 @@ export function detectIntent(text: string, manifests: readonly ModuleManifest[])
     return /^(?:such|find|zeig|anzeig|offne|oeffne)/.test(words[0]!) ? 'search' : 'question';
   }
   if (starts(DELETE_VERBS) || words.some(isUpdateWord) || words.some(isCreateWord)) return 'write';
+  // "in 20 Minuten Pizza rausnehmen", "morgen um 8 Zahnarzt anrufen": a clock time plus an errand.
+  if (words.length >= 3 && extractFacts(text, { now: new Date(now()) }).time !== undefined)
+    return 'write';
   const keywords = aiModules(manifests).flatMap((m) =>
     Object.values(m.aiSchema.actions ?? {}).flatMap((a) => (a.parse?.keywords ?? []).map(fold)),
   );

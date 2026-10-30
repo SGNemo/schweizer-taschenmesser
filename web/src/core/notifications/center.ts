@@ -7,13 +7,13 @@ import { activeManifests } from '@/core/modules/contributions';
 import { loadModuleStates } from '@/core/modules/activation';
 import type { DueNotification } from '@/core/modules/types';
 import { now as clockNow } from '@/core/time/now';
-import { ackNotification, isAcked } from './ack';
+import { ackNotification, loadAcked } from './ack';
 import { collectDue } from './collect';
+import { baseKey } from './policy';
 import { MAX_CATCH_UP_MS } from './scheduler';
 import { snoozeNotification, type SnoozeOption } from './snooze';
 
-/** `…:s60` (staged lead) and `…:f` (follow-up) belong to the base reminder. */
-export const baseKey = (key: string): string => key.replace(/:(s\d+|f)$/, '');
+export { baseKey };
 
 /**
  * Open reminders, oldest first, one per base reminder (the latest stage wins). Pure: `acked`
@@ -46,14 +46,32 @@ export function randomOpen(
   return pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
 }
 
+/**
+ * The hourly summary ("Weitere Erinnerungen · 3") is a delivery detail: in the centre its members
+ * are listed by title, each answerable on its own.
+ */
+export function expandSummaries(due: readonly DueNotification[]): DueNotification[] {
+  return due.flatMap((n) => (n.members ? n.members : [n]));
+}
+
+/**
+ * Automatic extras (soft: staged leads, follow-ups, digest) from before today clear themselves;
+ * what the user set explicitly stays until answered. `todayStart` is local midnight.
+ */
+export function dropStaleSoft(
+  open: readonly DueNotification[],
+  todayStart: number,
+): DueNotification[] {
+  return open.filter((n) => !(n.soft && n.at < todayStart));
+}
+
 export async function loadOpen(at: number = clockNow()): Promise<DueNotification[]> {
   const due = await collectDue(
     { from: at - MAX_CATCH_UP_MS, to: at },
     activeManifests(await loadModuleStates()),
   );
-  const acked = new Set<string>();
-  for (const n of due) if (await isAcked(baseKey(n.key))) acked.add(baseKey(n.key));
-  return pickOpen(due, acked);
+  const todayStart = new Date(at).setHours(0, 0, 0, 0);
+  return dropStaleSoft(pickOpen(expandSummaries(due), await loadAcked()), todayStart);
 }
 
 /** The next reminder that has not fired yet (within a day), shown when nothing is open. */
@@ -74,6 +92,6 @@ export async function markAllDone(open: readonly DueNotification[]): Promise<voi
 
 /** "Später": a new reminder at the chosen time; the original leaves the open list. */
 export async function snoozeOpen(n: DueNotification, option: SnoozeOption): Promise<void> {
-  await snoozeNotification(n, option);
+  await snoozeNotification({ ...n, title: n.baseTitle ?? n.title }, option);
   await markDone(n);
 }

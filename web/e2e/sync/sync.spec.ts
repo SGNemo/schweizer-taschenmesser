@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { moduleSwitch } from '../helpers';
 import {
   addTask,
   connect,
@@ -109,7 +110,7 @@ test.describe('two devices', () => {
 
     await a.page.goto('/library');
     const card = a.page.getByTestId('module-example');
-    await card.getByRole('button', { name: 'Aktivieren' }).click();
+    await moduleSwitch(card).click();
     await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
     await syncNow(a.page);
     await syncNow(b.page);
@@ -150,9 +151,10 @@ test.describe('two devices', () => {
     await b.page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
     await expect(b.page.getByRole('button', { name: /Stadtwerke/ })).toBeVisible();
     await b.page.goto('/finance?tab=transactions');
-    await expect(b.page.getByRole('button', { name: /Stadtwerke/ })).toContainText(/−89,90\s€/);
+    const booking = b.page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ });
+    await expect(booking).toContainText(/−89,90\s€/);
     // Only one booking, even though both devices ran the finance service for the event.
-    await expect(b.page.getByRole('button', { name: /Stadtwerke/ })).toHaveCount(1);
+    await expect(booking).toHaveCount(1);
     await a.context.close();
     await b.context.close();
   });
@@ -224,10 +226,10 @@ test.describe('end-to-end encryption', () => {
     // Device B: no passphrase → asked for it; wrong → rejected; right → data arrives
     await submitConnect(b.page);
     await expect(b.page.getByTestId('sync-failure')).toContainText('verschlüsselt');
-    await b.page.getByLabel('Passphrase').fill('falsche passphrase');
+    await b.page.getByLabel('Passwortsatz').fill('falsche passphrase');
     await b.page.getByRole('button', { name: 'Verbinden', exact: true }).click();
-    await expect(b.page.getByTestId('sync-failure')).toHaveText('Falsche Passphrase.');
-    await b.page.getByLabel('Passphrase').fill('ein langer geheimer Satz');
+    await expect(b.page.getByTestId('sync-failure')).toHaveText('Falscher Passwortsatz.');
+    await b.page.getByLabel('Passwortsatz').fill('ein langer geheimer Satz');
     await b.page.getByRole('button', { name: 'Verbinden', exact: true }).click();
     await expect(b.page.getByTestId('sync-status')).toContainText('Synchronisiert');
     await b.page.goto('/todos');
@@ -316,7 +318,7 @@ test.describe('password vault', () => {
     // A: enable, set up, add an entry
     await a.page.goto('/library');
     const card = a.page.getByTestId('module-accounts');
-    await card.getByRole('button', { name: 'Aktivieren' }).click();
+    await moduleSwitch(card).click();
     await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
     await a.page.goto('/accounts');
     await a.page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);

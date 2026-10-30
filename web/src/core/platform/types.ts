@@ -62,8 +62,11 @@ export interface ScreenService {
  */
 export interface OAuthLoopback {
   supported: boolean;
-  /** Binds the port. Call `wait` after the browser was opened with `redirectUri`. */
-  start(): Promise<{
+  /**
+   * Binds the port. Call `wait` after the browser was opened with `redirectUri`. `preferredPort`
+   * takes exactly that port or rejects with `port-busy: …` (providers that check the URI exactly).
+   */
+  start(opts?: { preferredPort?: number }): Promise<{
     redirectUri: string;
     /** Resolves with the authorization code; rejects with `timeout`, `denied: …` or `listen-failed: …`. */
     wait(state: string, timeoutSeconds?: number): Promise<{ code: string }>;
@@ -158,6 +161,16 @@ export interface TrayLabels {
   tooltip: string;
 }
 
+/** One note of a reminder tone (see `core/notifications/sound.ts`); the native side renders it. */
+export interface ToneNote {
+  hz: number;
+  /** Start in ms from the beginning of the tone. */
+  atMs: number;
+  durMs: number;
+  /** 0–1, relative loudness of this note. */
+  gain: number;
+}
+
 /**
  * Desktop shell extras for quick capture (tray, global hotkey, start with Windows). `supported` is
  * true only in the native desktop app; everything else is a no-op there.
@@ -168,10 +181,19 @@ export interface DesktopService {
   safeMode?(): Promise<boolean>;
   /** Panic lines of earlier runs from the data folder (handed over once, then removed); optional so fakes keep compiling. */
   takePanicLog?(): Promise<string | null>;
+  /**
+   * True while Windows reports a full-screen game, presentation or busy state (one yes/no; no
+   * process or window information). Optional so fakes keep compiling; absent = cannot tell.
+   */
+  gameActive?(): Promise<boolean>;
+  /** Plays a short tone natively, for when the web view cannot (window hidden in the tray). */
+  playTone?(notes: ToneNote[], volume: number): Promise<void>;
   /** Registers the capture hotkey (`null` removes it). Resolves to an error code, or `null` on success. */
   setHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** Same for the vault search key (`null` removes it; unset by default). */
   setVaultHotkey(accelerator: string | null): Promise<HotkeyError | null>;
+  /** Same for the voice input key (`null` removes it; unset by default). */
+  setVoiceHotkey(accelerator: string | null): Promise<HotkeyError | null>;
   /** True = the window's close button hides the app in the tray instead of quitting. */
   setCloseToTray(enabled: boolean): Promise<void>;
   setTrayLabels(labels: TrayLabels): Promise<void>;
@@ -192,6 +214,8 @@ export interface DesktopService {
   onCaptureOpen(callback: () => void): () => void;
   /** Main window: fires when the vault search key was pressed (the listener checks the vault state). */
   onVaultSearch(callback: () => void): () => void;
+  /** Main window: fires when the global voice key was pressed (the listener checks the voice switch). */
+  onVoiceToggle(callback: () => void): () => void;
 }
 
 export interface PlatformService {

@@ -17,10 +17,9 @@ import {
   ItemRow,
   PageHeader,
   Progress,
-  SelectionBar,
   Tabs,
   TextField,
-  useSelection,
+  useOpenParam,
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
 import { ListEditor, type ListTarget } from '../components/ListEditor';
@@ -38,8 +37,11 @@ import type { Item } from '../schema';
 import { createRoutine, ROUTINES } from '../templates';
 import styles from './lists.module.css';
 
+/** A ticked entry keeps its place this long (with "Rückgängig" in the notice) before it moves down. */
+const HOLD_MS = 4000;
+
 function toggle(item: Stored<Item>, done: boolean) {
-  const message = done ? t.lists.markedDone : t.lists.markedOpen;
+  const message = done ? t.lists.tickedItem(item.name) : t.lists.reopenedItem(item.name);
   void undoableWithToast(message, message, () => itemRepo.update(item.id, { done }));
 }
 
@@ -68,13 +70,35 @@ export default function ListsPage() {
     }
   }, [params, setParams]);
 
+  // A search hit links here with ?open=<id> of a list or an item: show that list.
+  useOpenParam(
+    async (id) => (await listRepo.get(id)) ?? (await itemRepo.get(id)),
+    (r) => ({ list: 'listId' in r ? r.listId : r.id }),
+  );
   const sorted = useMemo(() => sortLists(lists ?? []), [lists]);
   const current = sorted.find((l) => l.id === params.get('list')) ?? sorted[0];
-  const shown = useMemo(
-    () => sortItems((items ?? []).filter((i) => i.listId === current?.id)),
-    [items, current?.id],
-  );
-  const selection = useSelection(shown.map((i) => i.id));
+  // id -> `done` before the change: such an entry sorts as if nothing changed until HOLD_MS is over.
+  const [held, setHeld] = useState<ReadonlyMap<string, boolean>>(new Map());
+  const shown = useMemo(() => {
+    const own = (items ?? []).filter((i) => i.listId === current?.id);
+    const order = sortItems(own.map((i) => (held.has(i.id) ? { ...i, done: held.get(i.id)! } : i)));
+    const byId = new Map(own.map((i) => [i.id, i]));
+    return order.map((i) => byId.get(i.id)!);
+  }, [items, current?.id, held]);
+  const tick = (item: Stored<Item>, done: boolean) => {
+    const id = item.id;
+    setHeld((m) => (m.has(id) ? m : new Map(m).set(id, item.done)));
+    setTimeout(
+      () =>
+        setHeld((m) => {
+          const next = new Map(m);
+          next.delete(id);
+          return next;
+        }),
+      HOLD_MS,
+    );
+    toggle(item, done);
+  };
   const doneCount = shown.filter((i) => i.done).length;
   const stats = progress(shown);
 
@@ -83,22 +107,6 @@ export default function ListsPage() {
     if (!current) return;
     await addItem(current.id, text, current.kind);
     setText('');
-  }
-
-  function bulk(action: 'done' | 'delete') {
-    const picked = shown.filter((i) => selection.isSelected(i.id));
-    selection.clear();
-    if (action === 'delete') {
-      void undoableWithToast(
-        t.lists.itemsDeleted(picked.length),
-        t.lists.itemsDeleted(picked.length),
-        () => itemRepo.removeMany(picked.map((i) => i.id)),
-      );
-    } else {
-      void undoableWithToast(t.lists.markedDone, t.lists.markedDone, async () => {
-        for (const i of picked) await itemRepo.update(i.id, { done: true });
-      });
-    }
   }
 
   return (
@@ -116,7 +124,6 @@ export default function ListsPage() {
             label={t.lists.tabsLabel}
             items={sorted.map((l) => ({ id: l.id, label: l.name, active: l.id === current.id }))}
             onSelect={(id) => {
-              selection.clear();
               setParams({ list: id }, { replace: true });
             }}
           />
@@ -191,14 +198,6 @@ export default function ListsPage() {
               <Progress value={stats.done} max={stats.total} label={current.name} />
             </div>
           ) : null}
-          <SelectionBar count={selection.count} onCancel={selection.clear}>
-            <Button size="sm" onClick={() => bulk('done')}>
-              {t.lists.selectedDone}
-            </Button>
-            <Button size="sm" variant="quietDanger" onClick={() => bulk('delete')}>
-              {t.lists.selectedDelete}
-            </Button>
-          </SelectionBar>
           {items && shown.length === 0 ? (
             <EmptyState title={t.lists.empty}>
               <StartDataButton moduleId="lists" />
@@ -209,33 +208,33 @@ export default function ListsPage() {
               <ItemRow
                 key={i.id}
                 title={i.name}
+                titleFull
                 done={i.done}
                 lead={
                   <Checkbox
                     label={i.name}
                     labelHidden
                     checked={i.done}
-                    onChange={(e) => toggle(i, e.target.checked)}
+                    onChange={(e) => tick(i, e.target.checked)}
                     data-row-tick
                   />
                 }
                 end={i.quantity ? <span className={styles.quantity}>{i.quantity}</span> : undefined}
-                onOpen={() => setEditingItem(i)}
-                selectable
-                selected={selection.isSelected(i.id)}
-                onSelectChange={(_, extend) => selection.toggle(i.id, extend)}
-                onSwipeRight={() => toggle(i, !i.done)}
+                // The whole row ticks; the pencil (and the dialog behind it) edits and deletes.
+                onOpen={() => tick(i, !i.done)}
+                onSwipeRight={() => tick(i, !i.done)}
                 swipeRightLabel={t.lists.swipeDone}
+                onSwipeLeft={() =>
+                  void undoableWithToast(
+                    t.lists.removedItem(i.name),
+                    t.lists.removedItem(i.name),
+                    () => itemRepo.remove(i.id),
+                  )
+                }
+                swipeLeftLabel={t.actions.delete}
                 actions={
-                  <IconButton
-                    label={t.actions.delete}
-                    onClick={() =>
-                      void undoableWithToast(t.lists.itemDeleted, t.lists.itemDeleted, () =>
-                        itemRepo.remove(i.id),
-                      )
-                    }
-                  >
-                    <Icon name="trash" />
+                  <IconButton label={t.lists.editItem} onClick={() => setEditingItem(i)}>
+                    <Icon name="edit" />
                   </IconButton>
                 }
               />

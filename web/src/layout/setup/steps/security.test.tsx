@@ -98,12 +98,34 @@ describe('vault step', () => {
     expect(everything).not.toContain(MASTER);
   });
 
+  it('asks twice for a weak password, offers several words, and forces nothing', async () => {
+    const h = harness();
+    const user = userEvent.setup();
+    render(<VaultSetupStep {...h.props} />);
+    await user.type(await screen.findByLabelText(t.accounts.setup.password), '1234567890');
+    await user.type(screen.getByLabelText(t.accounts.setup.confirm), '1234567890');
+    expect(await screen.findByTestId('weak-password')).toBeInTheDocument();
+    expect(h.canContinue).toHaveBeenLastCalledWith(false);
+    // Saying yes lets the person go on with it.
+    await user.click(screen.getByRole('switch', { name: t.accounts.setup.weakAck }));
+    await waitFor(() => expect(h.canContinue).toHaveBeenLastCalledWith(true));
+    // A suggestion replaces both fields and needs no further confirmation (it is strong).
+    await user.click(screen.getByRole('button', { name: t.accounts.setup.suggest }));
+    await waitFor(() => expect(screen.queryByTestId('weak-password')).toBeNull());
+    expect(await screen.findByTestId('strength')).toBeInTheDocument();
+    await waitFor(() => expect(h.canContinue).toHaveBeenLastCalledWith(true));
+    expect((screen.getByLabelText(t.accounts.setup.password) as HTMLInputElement).value).toMatch(
+      /^[a-z-]{14,}$/,
+    );
+  });
+
   it('keeps an existing vault untouched and only offers the lock settings', async () => {
     const first = harness();
     const user = userEvent.setup();
     const view = render(<VaultSetupStep {...first.props} />);
     await user.type(await screen.findByLabelText(t.accounts.setup.password), MASTER);
     await user.type(screen.getByLabelText(t.accounts.setup.confirm), MASTER);
+    await waitFor(() => expect(first.canContinue).toHaveBeenLastCalledWith(true));
     await first.run();
     view.unmount();
     const before = JSON.stringify(await db.table('accounts_vault').toArray());

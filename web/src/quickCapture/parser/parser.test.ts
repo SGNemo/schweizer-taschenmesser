@@ -185,10 +185,11 @@ describe('type detection', () => {
     expect(money.alternatives.map((a) => a.type)).toContain('finance');
   });
 
-  it('recurrence with a time is a reminder, event stays an alternative', () => {
+  it('a weekly slot with a time is an appointment, a daily one stays a reminder', () => {
     const r = parse('jeden Montag 8 Uhr Wochenplanung');
-    expect(r.type).toBe('reminder');
-    expect(r.alternatives[0]?.type).toBe('event');
+    expect(r.type).toBe('event');
+    expect(r.alternatives[0]?.type).toBe('reminder');
+    expect(parse('jeden Tag 8 Uhr Tabletten').type).toBe('reminder');
   });
 });
 
@@ -205,6 +206,8 @@ describe('prefixes', () => {
     ['l Milch', 'list', 'Milch'],
     ['$ 12,50 Mittagessen', 'finance', 'Mittagessen'],
     ['$12 Kaffee', 'finance', 'Kaffee'],
+    ['n Idee für den Garten', 'note', 'Idee für den Garten'],
+    ['r 89,90 Swisscom 31.10.', 'invoice', 'Swisscom'],
   ])('%s', (text, type, title) => {
     const r = parse(text);
     expect(r.type).toBe(type);
@@ -221,6 +224,25 @@ describe('prefixes', () => {
 
   it('forced finance takes a bare number', () => {
     expect(parse('$ 12,50 Mittagessen').fields.amountMinor).toBe(1250);
+  });
+});
+
+describe('invoices', () => {
+  it('"Rechnung" with an amount picks the invoice type; the date is the due date', () => {
+    const r = parse('Rechnung Swisscom 89,90 € bis 31.10.');
+    expect(r.type).toBe('invoice');
+    expect(r.fields.amountMinor).toBe(8990);
+    expect(r.fields.date).toBe('2026-10-31');
+    expect(r.fields.title).toBe('Swisscom');
+    expect(r.needsChoice).toBe(false);
+  });
+  it('without a date the usual 14 days are assumed and reported', () => {
+    const r = parse('r 120 Stadtwerke');
+    expect(r.fields.date).toBe('2026-10-14');
+    expect(r.notes).toContain('assumed-date');
+  });
+  it('"Rechnung" without an amount stays a normal entry', () => {
+    expect(parse('Rechnung prüfen').type).not.toBe('invoice');
   });
 });
 

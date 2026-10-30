@@ -1,8 +1,9 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { t } from '@/strings';
 import { Checkbox } from './Fields';
 import { ReadableText } from './ReadableText';
+import { RowMenu, type RowMenuItem } from './RowMenu';
 import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
@@ -135,11 +136,15 @@ function isTeaser(meta: string): boolean {
  */
 export function ItemRow({
   title,
+  titleFull,
   meta,
   onOpen,
+  href,
   lead,
   end,
   actions,
+  menu,
+  menuLabel,
   selectable,
   selected,
   onSelectChange,
@@ -153,12 +158,19 @@ export function ItemRow({
   children,
 }: {
   title: ReactNode;
+  /** Wrap a long title in full instead of ending it in "…" after two lines (lists the user reads and ticks). */
+  titleFull?: boolean;
   meta?: ReactNode;
   onOpen?: () => void;
+  /** An external address: the main element is a link (new tab, `noreferrer noopener`) instead of a button; `onOpen` is then unused. */
+  href?: string;
   lead?: ReactNode;
   end?: ReactNode;
   /** Row actions (icon buttons); shown on hover/focus, always on devices without hover. */
   actions?: ReactNode;
+  /** Overflow menu ("⋯"); also opens on right-click and long press. Entries are shortcuts: each one stays reachable in the edit dialog. */
+  menu?: RowMenuItem[];
+  menuLabel?: string;
   /** Shows a checkbox on the left; `onSelectChange` also reports a Shift-click for ranges. */
   selectable?: boolean;
   selected?: boolean;
@@ -177,7 +189,10 @@ export function ItemRow({
 }) {
   const body = (
     <>
-      <span className={styles.title} title={typeof title === 'string' ? title : undefined}>
+      <span
+        className={titleFull ? `${styles.title} ${styles.titleFull}` : styles.title}
+        title={typeof title === 'string' ? title : undefined}
+      >
         {typeof title === 'string' ? <ReadableText text={title} kind="list" /> : title}
       </span>
       {meta ? (
@@ -192,8 +207,17 @@ export function ItemRow({
     </>
   );
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <li
+      onContextMenu={
+        menu?.length
+          ? (e) => {
+              e.preventDefault();
+              setMenuOpen(true);
+            }
+          : undefined
+      }
       data-tone={tone}
       className={[
         styles.item,
@@ -224,7 +248,11 @@ export function ItemRow({
           />
         ) : null}
         {lead}
-        {onOpen ? (
+        {href ? (
+          <a className={styles.main} data-row href={href} target="_blank" rel="noreferrer noopener">
+            {body}
+          </a>
+        ) : onOpen ? (
           <button type="button" className={styles.main} data-row onClick={onOpen}>
             {body}
           </button>
@@ -234,7 +262,19 @@ export function ItemRow({
           </div>
         )}
         {end}
-        {actions ? <div className={styles.actions}>{actions}</div> : null}
+        {actions || menu?.length ? (
+          <div className={`${styles.actions} ${menuOpen ? styles.actionsOpen : ''}`}>
+            {actions}
+            {menu?.length ? (
+              <RowMenu
+                label={menuLabel ?? t.ui.rowMenu}
+                items={menu}
+                open={menuOpen}
+                onOpenChange={setMenuOpen}
+              />
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {children}
     </li>

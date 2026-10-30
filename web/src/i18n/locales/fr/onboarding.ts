@@ -1,8 +1,11 @@
 import type { Strings } from '@/strings';
 
 export const onboarding: Strings['onboarding'] = {
-  button: 'Configurer les données de départ',
-  title: (module: string) => `Données de départ : ${module}`,
+  button: 'Importer',
+  title: (module: string) => `Importer : ${module}`,
+  rowLabel: 'Ajouter des entrées',
+  rowHint:
+    'Depuis un fichier, un texte ou des suggestions. Rien n’est enregistré avant que vous ayez confirmé l’aperçu.',
   chooseIntro:
     'D’où doivent venir les premières entrées ? Rien n’est enregistré avant que vous ayez confirmé l’aperçu.',
   skip: 'Passer',
@@ -12,6 +15,7 @@ export const onboarding: Strings['onboarding'] = {
   parsing: 'Lecture…',
   chooseFile: 'Choisir un fichier…',
   fileChosen: (name: string) => `Fichier : ${name}`,
+  filesChosen: (n: number) => `${n} fichiers`,
   textLabel: 'Une ligne = une entrée',
   pickTemplates: 'Choisir des suggestions',
   noInput: 'Veuillez saisir quelque chose.',
@@ -66,6 +70,7 @@ export const onboarding: Strings['onboarding'] = {
         ? `${n} facture sans montant reconnaissable a été ignorée.`
         : `${n} factures sans montant reconnaissable ont été ignorées.`,
     noEnd: 'Fin de contrat non reconnue',
+    endsOn: (date: string) => `Fin le ${date}`,
     notice: (days: number) => `Délai de résiliation ${days} ${days <= 1 ? 'jour' : 'jours'}`,
   },
   ics: {
@@ -102,6 +107,32 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Collez une liste venant d’une app de notes ou d’un message : une ligne par tâche.',
     placeholder: 'Trier les papiers des impôts\nAppeler le dentiste\nRéparer le vélo',
     list: 'Dans cette liste',
+    file: 'Depuis Todoist ou Google Tasks',
+    fileHint:
+      'Choisis le fichier que tu y as exporté toi-même : CSV Todoist ou fichier Google Tasks (JSON). Rien n’est envoyé.',
+    perSource: 'Une liste distincte pour chaque liste d’origine',
+    newList: 'Nouvelle liste',
+    includeDone: 'Tâches terminées',
+    doneNo: 'Laisser de côté',
+    doneYes: 'Reprendre comme terminées',
+    repeatNote: (text: string) =>
+      `Répétition dans la source : ${text} (ne se répète pas automatiquement)`,
+    dueNote: (text: string) => `Échéance dans la source : ${text}`,
+    skippedDone: (n: number) =>
+      n === 1
+        ? '1 tâche terminée a été laissée de côté.'
+        : `${n} tâches terminées ont été laissées de côté.`,
+    skippedOther: (n: number) =>
+      n === 1
+        ? '1 entrée (section, supprimée ou sans titre) a été ignorée.'
+        : `${n} entrées (sections, supprimées ou sans titre) ont été ignorées.`,
+    repeats: (n: number) =>
+      n === 1
+        ? '1 tâche se répète dans la source. La répétition n’apparaît que comme indication dans sa note ; rien ne se répète automatiquement.'
+        : `${n} tâches se répètent dans la source. La répétition n’apparaît que comme indication dans leur note ; rien ne se répète automatiquement.`,
+    tooMany: (max: number) => `Les ${max} premières tâches sont affichées.`,
+    unknownFormat:
+      'Le format n’a pas été reconnu. Il faut le CSV de Todoist ou le fichier Google Tasks (JSON).',
   },
   reminders: {
     textDetail: 'aujourd’hui, 09:00',
@@ -185,6 +216,25 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Une ligne par lien, éventuellement précédé d’un titre.',
     placeholder: 'https://example.org/article\nBelle randonnée https://example.org/randonnee',
   },
+  notes: {
+    file: 'Fichiers Markdown ou Google Keep',
+    fileHint:
+      'Choisissez des fichiers .md (p. ex. de votre dossier Obsidian, plusieurs à la fois) ou les fichiers .json de Google Takeout (Keep). Titres, listes de tâches et #mots-clés sont conservés. Décompressez d’abord les fichiers ZIP.',
+    text: 'Coller du Markdown',
+    textHint: 'Le texte collé devient une note ; un premier titre devient le titre de la note.',
+    textLabel: 'Texte Markdown',
+    placeholder: '# Plan de la semaine\n\n- Courses #maison\n- Appeler maman',
+    emptyFiles: (n: number) =>
+      n === 1 ? '1 fichier vide a été ignoré.' : `${n} fichiers vides ont été ignorés.`,
+    keepSkipped: (n: number) =>
+      n === 1
+        ? '1 note Keep de la corbeille ou des archives a été laissée de côté.'
+        : `${n} notes Keep de la corbeille ou des archives ont été laissées de côté.`,
+    unreadable: (n: number) =>
+      n === 1
+        ? '1 fichier JSON n’est pas une note Keep et a été ignoré.'
+        : `${n} fichiers JSON ne sont pas des notes Keep et ont été ignorés.`,
+  },
   birthdays: {
     text: 'Coller des anniversaires',
     textHint: 'Une ligne par personne : nom et date, avec ou sans année.',
@@ -251,6 +301,56 @@ export const onboarding: Strings['onboarding'] = {
         'Forfait de ski',
         'Baume à lèvres',
       ],
+    },
+    familyTrip: {
+      name: 'Vacances avec enfants',
+      note: 'Pour voyager avec de jeunes enfants',
+      items: [
+        'Pièces d’identité ou passeports des enfants',
+        'Doudou préféré',
+        'Couches et lingettes',
+        'Goûters pour la route',
+        'Vêtements de rechange pour les enfants',
+        'Crème solaire pour enfants',
+        'Pharmacie pour enfants',
+        'Jouets et livres',
+        'Poussette ou porte-bébé',
+        'Carnet de vaccination',
+      ],
+    },
+    school: {
+      name: 'Cartable',
+      note: 'Un coup d’œil rapide chaque soir',
+      items: [
+        'Trousse',
+        'Cahiers et livres',
+        'Emploi du temps',
+        'Cahier de textes',
+        'Gourde',
+        'Goûter',
+        'Sac de sport',
+        'Mots pour les parents',
+      ],
+    },
+  },
+  papers: {
+    label: 'Papiers importants',
+    hint: 'Documents à retrouver vite',
+    templatesHint:
+      'Ajoutez la date d’expiration plus tard : l’échéance apparaîtra alors sous « Échéances et expirations ».',
+    kind: 'Papiers',
+    items: {
+      passport: { name: 'Passeport', category: 'identity' },
+      idCard: { name: 'Carte d’identité', category: 'identity' },
+      license: { name: 'Permis de conduire', category: 'identity' },
+      vehicleInspection: {
+        name: 'Carte grise et rapport de contrôle technique',
+        category: 'other',
+      },
+      healthCard: { name: 'Carte d’assurance maladie', category: 'health' },
+      vaccination: { name: 'Carnet de vaccination', category: 'health' },
+      rental: { name: 'Contrat de location', category: 'contract' },
+      policies: { name: 'Contrats d’assurance', category: 'insurance' },
     },
   },
 };

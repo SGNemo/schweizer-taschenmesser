@@ -1,5 +1,8 @@
-export { Button, IconButton } from './Button';
+export { Button, IconButton, IconLink } from './Button';
+export { SettingsLink } from './SettingsLink';
+export { useHashTarget } from './useHashTarget';
 export { Card } from './Card';
+export { LibraryCard } from './LibraryCard';
 export { Dialog } from './Dialog';
 export { useDraft } from './useDraft';
 export { TextField, TextArea, SelectField, DateField, Checkbox, Switch } from './Fields';
@@ -12,7 +15,7 @@ export { ReaderView } from './ReaderView';
 export { Prose } from './Prose';
 export { MEANINGS, categoryColor, categoryIndex, type Meaning } from './semantics';
 export { HelpHint } from './HelpHint';
-export { DangerZone, SettingRow, SettingsGroup, TypedConfirmDialog } from './SettingsParts';
+export { DangerZone, SettingRow, SettingsGroup, DoubleConfirmDialog } from './SettingsParts';
 export { Icon } from './icons';
 export { Logo } from './Logo';
 export { Wordmark } from './Wordmark';
@@ -35,7 +38,15 @@ export {
   patternStyles,
 } from './Patterns';
 export { SelectionBar } from './SelectionBar';
+export { SortableList, moveId } from './SortableList';
+export { RowMenu, type RowMenuItem } from './RowMenu';
+export { DateChips } from './DateChips';
 export { useMediaQuery } from './useMediaQuery';
 export { useSelection } from './useSelection';
+export { useOpenParam } from './useOpenParam';
 export { WidgetList, type WidgetEntry } from './WidgetList';
 export * from './widgets';
+
+export { KeyRecorder } from './KeyRecorder';
+export { Keys } from './Keys';
+export { AdvancedFields, AdvancedToggle } from './AdvancedFields';

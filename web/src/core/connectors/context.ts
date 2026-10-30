@@ -29,8 +29,8 @@ export function createContext(def: ConnectorDef, now: () => number = Date.now): 
   const literals: (string | undefined)[] = [];
   const redact = (text: string) => redactWith(text, literals);
 
-  async function accessToken(): Promise<string> {
-    const cached = tokenCache.get(def.id);
+  async function accessToken(opts?: { refresh?: boolean }): Promise<string> {
+    const cached = opts?.refresh ? undefined : tokenCache.get(def.id);
     if (cached && cached.expiresAt - 60_000 > now()) return cached.token;
     if (!def.oauth) throw new ConnectorError('unsupported', 'no oauth');
     const { clientId, clientSecret, refreshToken } = await loadClient(def.id);
@@ -56,7 +56,7 @@ export function createContext(def: ConnectorDef, now: () => number = Date.now): 
     } catch (e) {
       if (e instanceof PublicFetchError)
         throw new ConnectorError(
-          e.code,
+          e.code === 'timeout' ? 'network' : e.code,
           e.code === 'no-proxy' ? 'no sync server' : redact(e.message),
         );
       throw e;

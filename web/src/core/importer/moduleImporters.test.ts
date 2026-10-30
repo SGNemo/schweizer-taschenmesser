@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
@@ -6,6 +8,7 @@ import { setNow } from '@/core/time/now';
 import { eventRepo } from '@/modules/calendar/repo';
 import { accountRepo, transactionRepo } from '@/modules/finance/repo';
 import { itemRepo as bookmarkRepo } from '@/modules/bookmarks/repo';
+import { noteRepo } from '@/modules/notes/repo';
 import { itemRepo as listItemRepo } from '@/modules/lists/repo';
 import { personRepo } from '@/modules/people/repo';
 import { documentRepo } from '@/modules/vault/repo';
@@ -94,6 +97,129 @@ describe('todos', () => {
     });
     const again = await run('todos', 'text', text('milch\nBrot'), { listId: choices[0]!.value });
     expect(again.rows.map((r) => r.duplicate)).toEqual([true, false]);
+  });
+
+  describe('files from Todoist and Google Tasks', () => {
+    const fixture = (name: string) => ({
+      kind: 'file' as const,
+      text: readFileSync(resolve(process.cwd(), 'src/core/io/__fixtures__', name), 'utf8'),
+      fileName: name,
+    });
+    const task = (rows: Awaited<ReturnType<typeof run>>['rows'], title: string) =>
+      rows.find((r) => r.candidate.label === title)!.candidate;
+
+    it('reads a Todoist CSV into the chosen list, with priority, day, subtask and hints', async () => {
+      await listRepo.create({ name: 'Inbox', order: 0 }, { id: INBOX_ID });
+      const { rows, notes, manifest } = await run('todos', 'file', fixture('todoist-de.csv'), {
+        fileList: INBOX_ID,
+        includeDone: 'no',
+      });
+      expect(rows.map((r) => r.candidate.label)).toContain('Küche aufräumen');
+      expect(rows.every((r) => r.selected && !r.invalid && r.candidate.collection === 'task')).toBe(
+        true,
+      );
+      const kitchen = task(rows, 'Küche aufräumen').data;
+      expect(kitchen).toMatchObject({
+        listId: INBOX_ID,
+        priority: 3,
+        dueDate: '2026-10-15',
+        done: false,
+      });
+      expect(String(kitchen.note)).toContain('Spülmittel');
+      const bins = task(rows, 'Müll rausbringen');
+      expect(String(bins.data.note)).toContain('jeden Montag');
+      expect(bins.data.recurrence).toBeUndefined();
+      expect(task(rows, 'Gelbe Säcke holen').data.parentId).toBe(bins.id);
+      expect(notes.join(' ')).toContain('wiederholt sich');
+
+      const batch = await commitImport(manifest, {
+        batchId: 'tb',
+        importerId: 'file',
+        source: 'todoist-de.csv',
+        rows,
+      });
+      expect(batch.records[0]!.ids).toHaveLength(6);
+      const stored = await taskRepo.active().toArray();
+      expect(stored.find((x) => x.title === 'Gelbe Säcke holen')!.parentId).toBe(bins.id);
+    });
+
+    it('recognises a file by its content, whatever it is called', async () => {
+      const text = fixture('google-tasks.json');
+      const { rows } = await run(
+        'todos',
+        'file',
+        { kind: 'file', text: text.text, fileName: 'export.csv' },
+        { fileList: INBOX_ID },
+      );
+      expect(rows.length).toBeGreaterThan(0);
+      const none = await run(
+        'todos',
+        'file',
+        { kind: 'file', text: 'Datum;Betrag\n1;2', fileName: 'bank.csv' },
+        { fileList: INBOX_ID },
+      );
+      expect(none.rows).toEqual([]);
+      expect(none.notes).toHaveLength(1);
+    });
+
+    it('leaves completed tasks out unless asked, and keeps them apart from open ones', async () => {
+      await listRepo.create({ name: 'Inbox', order: 0 }, { id: INBOX_ID });
+      const open = await run('todos', 'file', fixture('google-tasks.json'), {
+        fileList: INBOX_ID,
+        includeDone: 'no',
+      });
+      expect(open.rows.map((r) => r.candidate.label)).toEqual([
+        'Wocheneinkauf',
+        'Käse',
+        'Bericht schreiben',
+      ]);
+      expect(open.notes.join(' ')).toContain('2 erledigte');
+      const all = await run('todos', 'file', fixture('google-tasks.json'), {
+        fileList: INBOX_ID,
+        includeDone: 'yes',
+      });
+      expect(all.rows).toHaveLength(5);
+      expect(task(all.rows, 'Milch').data.done).toBe(true);
+      // "Milch" (done) is a child of "Käse"; with done left out nothing points to a missing parent.
+      expect(task(open.rows, 'Käse').data.parentId).toBe(task(open.rows, 'Wocheneinkauf').id);
+    });
+
+    it('makes a list per source list, reuses one with the same name, and flags a repeat import', async () => {
+      await listRepo.create({ name: 'Inbox', order: 0 }, { id: INBOX_ID });
+      await listRepo.create({ name: 'arbeit', order: 1 }, { id: 'work' });
+      const options = { fileList: '@source', includeDone: 'no' };
+      const first = await run('todos', 'file', fixture('google-tasks.json'), options);
+      const lists = first.rows.filter((r) => r.candidate.collection === 'list');
+      expect(lists.map((r) => r.candidate.label)).toEqual(['Einkäufe']);
+      expect(task(first.rows, 'Bericht schreiben').data.listId).toBe('work');
+      expect(task(first.rows, 'Käse').data.listId).toBe(lists[0]!.candidate.id);
+      // The tasks of a new list travel with it.
+      const newList = lists[0]!.candidate.id;
+      expect(first.rows.filter((r) => r.candidate.dependsOn === newList)).toHaveLength(2);
+      await commitImport(first.manifest, {
+        batchId: 'tb',
+        importerId: 'file',
+        source: 'google-tasks.json',
+        rows: first.rows,
+      });
+      expect((await listRepo.active().toArray()).map((l) => l.name).sort()).toEqual([
+        'Einkäufe',
+        'Inbox',
+        'arbeit',
+      ]);
+
+      const again = await run('todos', 'file', fixture('google-tasks.json'), options);
+      // The lists exist now: none is proposed again, and every task is recognised.
+      expect(again.rows.filter((r) => r.candidate.collection === 'list')).toEqual([]);
+      expect(again.rows.map((r) => r.duplicate)).toEqual([true, true, true]);
+    });
+
+    it('offers the lists plus one list per source', async () => {
+      const { runtime } = await run('todos', 'file', fixture('todoist-en.csv'));
+      const choices = await runtime.optionChoices!('fileList');
+      expect(choices.at(-1)!.value).toBe('@source');
+      expect(choices.length).toBeGreaterThan(1);
+    });
   });
 });
 
@@ -536,6 +662,80 @@ describe('bookmarks', () => {
     expect(
       (await run('bookmarks', 'text', text('https://EXAMPLE.org/a/'))).rows[0]!.duplicate,
     ).toBe(true);
+  });
+});
+
+describe('notes', () => {
+  const file = (files: { name: string; text: string }[]): ImportInput => ({
+    kind: 'file',
+    text: files[0]!.text,
+    fileName: files[0]!.name,
+    files,
+  });
+
+  it('treats a file of unknown type as Markdown unless it really is JSON', async () => {
+    const r = await run(
+      'notes',
+      'file',
+      file([{ name: 'plan.text', text: '[[Garten]] zuerst\nDann Keller' }]),
+    );
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]!.candidate.data).toMatchObject({ body: '[[Garten]] zuerst\nDann Keller' });
+    expect(r.notes).toEqual([]);
+  });
+
+  it('reads pasted Markdown as one note and dedupes it', async () => {
+    const pasted = await run('notes', 'text', text('# Wochenplan\n\nEinkaufen #haushalt'));
+    expect(pasted.rows).toHaveLength(1);
+    expect(pasted.rows[0]!.candidate.data).toMatchObject({
+      title: 'Wochenplan',
+      body: 'Einkaufen #haushalt',
+    });
+    await commitImport(pasted.manifest, {
+      batchId: 'tb',
+      importerId: 'text',
+      source: 't',
+      rows: pasted.rows,
+    });
+    expect(await noteRepo.active().count()).toBe(1);
+    const again = await run('notes', 'text', text('# wochenplan\n\neinkaufen   #haushalt'));
+    expect(again.rows[0]!.duplicate).toBe(true);
+  });
+
+  it('reads several Markdown files and a Keep export in one go', async () => {
+    const keep = JSON.stringify([
+      { title: 'Einkauf', listContent: [{ text: 'Milch', isChecked: true }], labels: [] },
+      { title: 'Weg', textContent: 'x', isTrashed: true },
+    ]);
+    const r = await run(
+      'notes',
+      'file',
+      file([
+        { name: 'Idee.md', text: '---\ntags: [projekt]\n---\nBäume pflanzen' },
+        { name: 'leer.md', text: '' },
+        { name: 'Einkauf.json', text: keep },
+        { name: 'kaputt.json', text: '{"a":1}' },
+      ]),
+    );
+    expect(r.rows.map((x) => x.candidate.label).sort()).toEqual(['Einkauf', 'Idee']);
+    expect(r.rows.find((x) => x.candidate.label === 'Idee')!.candidate.data.body).toBe(
+      'Bäume pflanzen\n\n#projekt',
+    );
+    expect(r.notes).toHaveLength(3);
+    await commitImport(r.manifest, {
+      batchId: 'tb',
+      importerId: 'file',
+      source: 'f',
+      rows: r.rows,
+    });
+    expect(await noteRepo.active().count()).toBe(2);
+    const again = await run('notes', 'file', file([{ name: 'Einkauf.json', text: keep }]));
+    expect(again.rows[0]!.duplicate).toBe(true);
+  });
+
+  it('treats a single file chosen without a list like one file', async () => {
+    const r = await run('notes', 'file', { kind: 'file', text: 'Hallo', fileName: 'Gruß.md' });
+    expect(r.rows[0]!.candidate.data).toMatchObject({ title: 'Gruß', body: 'Hallo' });
   });
 });
 

@@ -9,7 +9,7 @@ import { reportBug, reportByMail } from '@/core/diagnostics/report';
 import { NoReadAid } from '@/core/text/ReadableText';
 import { tDiag } from '@/strings.diagnostics';
 import { getPlatform } from '@/core/platform';
-import { RESET_PHRASE, resetDevice } from '@/core/reset/device';
+import { resetDevice } from '@/core/reset/device';
 import { checkForUpdate, useUpdateStore } from '@/core/update/controller';
 import { notesPreview } from '@/core/update/notes';
 import { getLastCheckAt } from '@/core/update/prefs';
@@ -22,7 +22,7 @@ import {
   Logo,
   SettingRow,
   SettingsGroup,
-  TypedConfirmDialog,
+  DoubleConfirmDialog,
 } from '@/ui';
 import { SupporterBadge } from '@/layout/SupporterBadge';
 import styles from './settings.module.css';
@@ -248,6 +248,7 @@ export function DiagnosticsSection() {
         }
       >
         <p>{d.export.previewHint}</p>
+        <p>{d.export.fileLanguageNote}</p>
         <NoReadAid>
           <pre className={styles.diagPreview} data-testid="diagnostics-preview" tabIndex={0}>
             {text ?? d.export.loading}
@@ -270,16 +271,15 @@ export function DeviceResetSection() {
           </Button>
         </SettingRow>
       </DangerZone>
-      <TypedConfirmDialog
+      <DoubleConfirmDialog
         open={open}
         onClose={() => setOpen(false)}
         title={a.reset.dialogTitle}
-        phrase={RESET_PHRASE}
         confirmLabel={a.reset.confirm}
         onConfirm={() => resetDevice()}
       >
         <p>{a.reset.warning}</p>
-      </TypedConfirmDialog>
+      </DoubleConfirmDialog>
     </SettingsGroup>
   );
 }

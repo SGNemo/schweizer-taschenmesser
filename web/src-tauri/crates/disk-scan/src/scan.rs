@@ -5,8 +5,9 @@
 //! points are never entered, unreadable folders are collected instead of failing the scan, and
 //! cloud placeholders ("files on demand") are neither opened nor counted as local size.
 
-use crate::kinds::{classify, KIND_COUNT};
-use crate::tree::{DirTemp, FileTemp, SmallAgg, Tree};
+use crate::kinds::{age_bucket, classify, KIND_COUNT};
+use crate::live::{Counted, LiveTree, LIVE_DEPTH};
+use crate::tree::{last_use, DirTemp, FileTemp, SmallAgg, Tree};
 use rayon::prelude::*;
 use serde::Serialize;
 use std::fs::{self, Metadata};
@@ -14,7 +15,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
 use std::sync::Mutex;
-use std::time::{Duration, Instant, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug)]
 pub struct ScanOptions {
@@ -26,6 +27,10 @@ pub struct ScanOptions {
     pub max_depth: usize,
     /// Cap of the "not read" list (the counter keeps counting).
     pub max_not_read: usize,
+    /// Whether file access times can be trusted on this volume; `None` = ask the system
+    /// ([`crate::access_time_tracked`]). When they can, ages count from the last use (opened or
+    /// changed, whichever is newer) instead of the last change.
+    pub access_tracked: Option<bool>,
 }
 
 impl Default for ScanOptions {
@@ -35,15 +40,18 @@ impl Default for ScanOptions {
             threads: 0,
             max_depth: 512,
             max_not_read: 1000,
+            access_tracked: None,
         }
     }
 }
 
-/// Cancel / pause flags shared with the caller.
+/// Cancel / pause flags shared with the caller, plus the live picture of the running scan.
 #[derive(Default)]
 pub struct ScanControl {
     cancel: AtomicBool,
     paused: AtomicBool,
+    /// The top folder levels with what was counted so far (see [`LiveTree`]).
+    pub live: LiveTree,
 }
 
 impl ScanControl {
@@ -78,6 +86,8 @@ pub struct NotRead {
 
 pub struct ScanResult {
     pub tree: Tree,
+    /// Access times can be trusted on this volume, so ages count from the last use.
+    pub access_tracked: bool,
     pub files: u64,
     pub dirs: u64,
     pub bytes: u64,
@@ -95,6 +105,10 @@ struct Ctx<'a> {
     opts: &'a ScanOptions,
     control: &'a ScanControl,
     cluster: u64,
+    /// Scan start (Unix seconds): the reference point of the age buckets.
+    now: i64,
+    /// Ages count from the last use (access or change) instead of the last change.
+    by_use: bool,
     files: AtomicU64,
     dirs: AtomicU64,
     bytes: AtomicU64,
@@ -229,7 +243,15 @@ mod plat {
 }
 
 fn unix_secs(md: &Metadata) -> i64 {
-    match md.modified().map(|t| t.duration_since(UNIX_EPOCH)) {
+    secs(md.modified())
+}
+
+fn access_secs(md: &Metadata) -> i64 {
+    secs(md.accessed())
+}
+
+fn secs(t: std::io::Result<std::time::SystemTime>) -> i64 {
+    match t.map(|t| t.duration_since(UNIX_EPOCH)) {
         Ok(Ok(d)) => d.as_secs() as i64,
         Ok(Err(e)) => -(e.duration().as_secs() as i64),
         Err(_) => 0,
@@ -238,7 +260,7 @@ fn unix_secs(md: &Metadata) -> i64 {
 
 // --- the walk ------------------------------------------------------------------------------
 
-fn scan_dir(path: &Path, name: String, depth: usize, ctx: &Ctx) -> DirTemp {
+fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) -> DirTemp {
     let mut out = DirTemp {
         name,
         ..Default::default()
@@ -302,6 +324,7 @@ fn scan_dir(path: &Path, name: String, depth: usize, ctx: &Ctx) -> DirTemp {
             subdirs.push((entry.path(), file_name));
         } else if file_type.is_file() {
             let modified = unix_secs(&md);
+            let accessed = access_secs(&md);
             let logical = md.len();
             let (bytes, logical_local) = if plat::is_cloud(&md) {
                 ctx.cloud.fetch_add(logical, Relaxed);
@@ -318,27 +341,73 @@ fn scan_dir(path: &Path, name: String, depth: usize, ctx: &Ctx) -> DirTemp {
                     bytes,
                     logical: logical_local,
                     modified,
+                    accessed,
                 });
             } else {
-                add_small(&mut out.small, &file_name, bytes, logical_local, modified);
+                add_small(
+                    &mut out.small,
+                    &file_name,
+                    bytes,
+                    logical_local,
+                    (modified, accessed),
+                    ctx.now,
+                    ctx.by_use,
+                );
             }
         }
     }
+    // Live picture: what this folder holds directly counts towards its live node right away; the
+    // top levels get their own nodes before the walk goes deeper.
+    let mut counted = Counted {
+        bytes: out.small.bytes,
+        files: out.small.count,
+        modified: out.small.modified,
+        kind_bytes: out.small.kind_bytes,
+    };
+    for f in &out.files {
+        counted.bytes += f.bytes;
+        counted.files += 1;
+        counted.modified = counted.modified.max(f.modified);
+        counted.kind_bytes[classify(&f.name).index()] += f.bytes;
+    }
+    ctx.control.live.add(live_id, &counted);
+    let subdirs: Vec<(PathBuf, String, u32)> = subdirs
+        .into_iter()
+        .map(|(p, n)| {
+            let id = if depth < LIVE_DEPTH {
+                ctx.control.live.add_folder(live_id, &n)
+            } else {
+                live_id
+            };
+            (p, n, id)
+        })
+        .collect();
     let children: Vec<DirTemp> = subdirs
         .into_par_iter()
-        .map(|(p, n)| scan_dir(&p, n, depth + 1, ctx))
+        .map(|(p, n, id)| scan_dir(&p, n, depth + 1, id, ctx))
         .collect();
     out.dirs = children;
     out
 }
 
-fn add_small(agg: &mut SmallAgg, name: &str, bytes: u64, logical: u64, modified: i64) {
+/// `times`: (modified, accessed) in Unix seconds; `by_use`: age from the newer of the two.
+fn add_small(
+    agg: &mut SmallAgg,
+    name: &str,
+    bytes: u64,
+    logical: u64,
+    (modified, accessed): (i64, i64),
+    now: i64,
+    by_use: bool,
+) {
     agg.count += 1;
     agg.bytes += bytes;
     agg.logical += logical;
     agg.modified = agg.modified.max(modified);
+    agg.accessed = agg.accessed.max(accessed);
     debug_assert_eq!(agg.kind_bytes.len(), KIND_COUNT);
     agg.kind_bytes[classify(name).index()] += bytes;
+    agg.age_bytes[age_bucket(last_use(modified, accessed, by_use), now)] += bytes;
 }
 
 /// Scans `root` (a folder) in parallel. `on_progress` is called about every 100 ms from a helper
@@ -359,6 +428,7 @@ where
             "not a directory",
         ));
     }
+    control.live.reset(root.to_string_lossy().into_owned());
     let started = Instant::now();
     let threads = if opts.threads > 0 {
         opts.threads
@@ -371,10 +441,17 @@ where
         .thread_name(|i| format!("disk-scan-{i}"))
         .build()
         .map_err(|e| io::Error::other(e.to_string()))?;
+    let by_use = opts
+        .access_tracked
+        .unwrap_or_else(|| crate::access_time_tracked(root));
     let ctx = Ctx {
         opts,
         control,
+        by_use,
         cluster: plat::cluster_size(root),
+        now: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs() as i64),
         files: AtomicU64::new(0),
         dirs: AtomicU64::new(0),
         bytes: AtomicU64::new(0),
@@ -397,15 +474,16 @@ where
                 }
             }
         });
-        let t = pool.install(|| scan_dir(root, String::new(), 0, &ctx));
+        let t = pool.install(|| scan_dir(root, String::new(), 0, 0, &ctx));
         done.store(true, Relaxed);
         t
     });
     on_progress(ctx.progress());
-    let tree = pool.install(|| Tree::from_temp(root.to_path_buf(), temp));
+    let tree = pool.install(|| Tree::from_temp(root.to_path_buf(), temp, ctx.now, by_use));
     let not_read = ctx.not_read.into_inner().unwrap_or_else(|e| e.into_inner());
     Ok(ScanResult {
         tree,
+        access_tracked: by_use,
         files: ctx.files.into_inner(),
         dirs: ctx.dirs.into_inner(),
         bytes: ctx.bytes.into_inner(),

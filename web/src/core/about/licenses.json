@@ -3,9 +3,9 @@
   "npm": [
     {
       "name": "@anthropic-ai/sdk",
-      "version": "0.129.0",
-      "license": "MIT",
-      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/0.129.0"
+      "version": "1.1.0",
+      "license": "Apache-2.0",
+      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.1.0"
     },
     {
       "name": "@babel/runtime",
@@ -56,6 +56,12 @@
       "url": "https://www.npmjs.com/package/@noble/hashes/v/2.4.0"
     },
     {
+      "name": "@opentelemetry/api",
+      "version": "1.9.1",
+      "license": "Apache-2.0",
+      "url": "https://www.npmjs.com/package/@opentelemetry/api/v/1.9.1"
+    },
+    {
       "name": "@pdf-lib/standard-fonts",
       "version": "1.0.0",
       "license": "MIT",
@@ -99,45 +105,45 @@
     },
     {
       "name": "@tauri-apps/api",
-      "version": "2.12.0",
+      "version": "2.12.4",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.4"
     },
     {
       "name": "@tauri-apps/plugin-clipboard-manager",
-      "version": "2.4.0",
+      "version": "2.5.0",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-clipboard-manager/v/2.4.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-clipboard-manager/v/2.5.0"
     },
     {
       "name": "@tauri-apps/plugin-dialog",
-      "version": "2.8.0",
+      "version": "2.8.3",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.3"
     },
     {
       "name": "@tauri-apps/plugin-fs",
-      "version": "2.6.0",
+      "version": "2.7.1",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-fs/v/2.6.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-fs/v/2.7.1"
     },
     {
       "name": "@tauri-apps/plugin-http",
-      "version": "2.8.0",
+      "version": "2.8.3",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-http/v/2.8.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-http/v/2.8.3"
     },
     {
       "name": "@tauri-apps/plugin-notification",
-      "version": "2.5.0",
+      "version": "2.7.0",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-notification/v/2.5.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-notification/v/2.7.0"
     },
     {
       "name": "@tauri-apps/plugin-opener",
-      "version": "2.7.0",
+      "version": "2.7.2",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-opener/v/2.7.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-opener/v/2.7.2"
     },
     {
       "name": "@types/d3-array",
@@ -198,6 +204,12 @@
       "version": "19.3.0",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/@types/react/v/19.3.0"
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@types/react-dom/v/19.3.0"
     },
     {
       "name": "@types/use-sync-external-store",
@@ -333,9 +345,9 @@
     },
     {
       "name": "dexie",
-      "version": "4.4.6",
+      "version": "4.4.7",
       "license": "Apache-2.0",
-      "url": "https://www.npmjs.com/package/dexie/v/4.4.6"
+      "url": "https://www.npmjs.com/package/dexie/v/4.4.7"
     },
     {
       "name": "dexie-react-hooks",
@@ -393,9 +405,9 @@
     },
     {
       "name": "lucide-react",
-      "version": "1.49.0",
+      "version": "1.61.0",
       "license": "ISC",
-      "url": "https://www.npmjs.com/package/lucide-react/v/1.49.0"
+      "url": "https://www.npmjs.com/package/lucide-react/v/1.61.0"
     },
     {
       "name": "minisearch",
@@ -429,15 +441,15 @@
     },
     {
       "name": "react",
-      "version": "19.3.0",
+      "version": "19.3.1",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/react/v/19.3.0"
+      "url": "https://www.npmjs.com/package/react/v/19.3.1"
     },
     {
       "name": "react-dom",
-      "version": "19.3.0",
+      "version": "19.3.1",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/react-dom/v/19.3.0"
+      "url": "https://www.npmjs.com/package/react-dom/v/19.3.1"
     },
     {
       "name": "react-is",
@@ -453,9 +465,9 @@
     },
     {
       "name": "react-router",
-      "version": "8.4.0",
+      "version": "8.5.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/react-router/v/8.4.0"
+      "url": "https://www.npmjs.com/package/react-router/v/8.5.0"
     },
     {
       "name": "recharts",
@@ -501,15 +513,15 @@
     },
     {
       "name": "tldts",
-      "version": "7.4.16",
+      "version": "7.4.19",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/tldts/v/7.4.16"
+      "url": "https://www.npmjs.com/package/tldts/v/7.4.19"
     },
     {
       "name": "tldts-core",
-      "version": "7.4.16",
+      "version": "7.4.19",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/tldts-core/v/7.4.16"
+      "url": "https://www.npmjs.com/package/tldts-core/v/7.4.19"
     },
     {
       "name": "ts-algebra",
@@ -543,15 +555,15 @@
     },
     {
       "name": "zod",
-      "version": "4.6.5",
+      "version": "4.6.7",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/zod/v/4.6.5"
+      "url": "https://www.npmjs.com/package/zod/v/4.6.7"
     },
     {
       "name": "zustand",
-      "version": "5.0.15",
+      "version": "5.0.16",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/zustand/v/5.0.15"
+      "url": "https://www.npmjs.com/package/zustand/v/5.0.16"
     }
   ],
   "cargo": [
@@ -3095,9 +3107,9 @@
     },
     {
       "name": "swift-rs",
-      "version": "1.0.8",
+      "version": "1.0.9",
       "license": "MIT OR Apache-2.0",
-      "url": "https://crates.io/crates/swift-rs/1.0.8"
+      "url": "https://crates.io/crates/swift-rs/1.0.9"
     },
     {
       "name": "syn",
@@ -3203,9 +3215,9 @@
     },
     {
       "name": "tauri-plugin",
-      "version": "2.7.0",
+      "version": "2.7.2",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin/2.7.0"
+      "url": "https://crates.io/crates/tauri-plugin/2.7.2"
     },
     {
       "name": "tauri-plugin-autostart",
@@ -3215,9 +3227,9 @@
     },
     {
       "name": "tauri-plugin-clipboard-manager",
-      "version": "2.4.0",
+      "version": "2.5.0",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-clipboard-manager/2.4.0"
+      "url": "https://crates.io/crates/tauri-plugin-clipboard-manager/2.5.0"
     },
     {
       "name": "tauri-plugin-dialog",
@@ -3227,9 +3239,9 @@
     },
     {
       "name": "tauri-plugin-fs",
-      "version": "2.6.0",
+      "version": "2.7.1",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-fs/2.6.0"
+      "url": "https://crates.io/crates/tauri-plugin-fs/2.7.1"
     },
     {
       "name": "tauri-plugin-global-shortcut",
@@ -3245,9 +3257,9 @@
     },
     {
       "name": "tauri-plugin-notification",
-      "version": "2.5.0",
+      "version": "2.7.0",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-notification/2.5.0"
+      "url": "https://crates.io/crates/tauri-plugin-notification/2.7.0"
     },
     {
       "name": "tauri-plugin-opener",
@@ -3281,9 +3293,9 @@
     },
     {
       "name": "tauri-utils",
-      "version": "2.10.0",
+      "version": "2.10.2",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-utils/2.10.0"
+      "url": "https://crates.io/crates/tauri-utils/2.10.2"
     },
     {
       "name": "tauri-winres",

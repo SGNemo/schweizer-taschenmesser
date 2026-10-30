@@ -12,6 +12,12 @@ export const connectors: Strings['connectors'] = {
     denied: 'El inicio de sesión se canceló o fue rechazado.',
     'bad-response': 'El servicio envió una respuesta inesperada.',
     unsupported: 'Esto no es posible en este dispositivo.',
+    'port-busy': 'Puerto ocupado. Cierra el otro programa e inténtalo de nuevo.',
+    'premium-required': 'Controlar la reproducción requiere una cuenta Premium.',
+    'no-callback':
+      'El navegador no devolvió ningún inicio de sesión. Comprueba en el servicio la URI de redirección registrada y si tu cuenta está habilitada, e inténtalo de nuevo.',
+    'bad-client': 'El servicio no reconoce este ID de cliente. Comprueba el ID introducido.',
+    'no-browser': 'No se pudo abrir el navegador para iniciar sesión.',
   } as Record<string, string>,
   icsName: 'Suscripción de calendario (ICS)',
   icsDescription:
@@ -80,7 +86,8 @@ export const connectors: Strings['connectors'] = {
     add: 'Añadir calendario',
     checking: 'Comprobando …',
     remove: (name: string) => `Quitar el calendario «${name}»`,
-    badUrl: 'No es una dirección válida (https://… o webcal://…).',
+    badUrl:
+      'No es una dirección pública válida (https://… o webcal://…). No se permiten direcciones de tu propia red ni con credenciales.',
     notACalendar: 'En esta dirección no hay ningún calendario.',
     unreachable: 'No se puede acceder a la dirección.',
     noProxy:

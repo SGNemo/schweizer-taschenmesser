@@ -66,6 +66,7 @@
 .titleLink {
   display: inline-flex;
   align-items: center;
+  min-height: var(--touch);
   gap: var(--space-1);
   color: inherit;
   text-decoration: none;
@@ -114,5 +115,76 @@
   font: inherit;
   text-decoration: underline;
   text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+/* Context gear of a widget: with a mouse it appears on hover or keyboard focus, on touch it is always there. */
+.gear {
+  display: inline-flex;
+}
+@media (hover: hover) {
+  .gear {
+    opacity: 0;
+  }
+  .widget:hover .gear,
+  .widget:focus-within .gear {
+    opacity: 1;
+  }
+}
+
+/* "Mehr anzeigen" / "Anheften…" under the calm view. */
+.moreRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.pinnedTag {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* The weather line: one muted sentence with an icon, no card, no colour, no motion. */
+.weather {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+  text-decoration: none;
+}
+/* The "Läuft gerade" line: the weather line's look; the controls are quiet text buttons. */
+.nowPlaying {
+  composes: weather;
+  flex-wrap: wrap;
+}
+.nowPlayingText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.nowPlayingText a {
+  color: inherit;
+}
+.nowPlayingControls {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+.weatherLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  color: inherit;
+  text-decoration: none;
+}
+/* The weather line as a button: same look as the link it was, no button chrome. */
+.weatherButton {
+  width: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
 }

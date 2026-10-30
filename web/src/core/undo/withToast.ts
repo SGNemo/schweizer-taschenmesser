@@ -26,3 +26,19 @@ export async function undoableWithToast<R>(
   );
   return result;
 }
+
+/** Delete (or any removal) with the standard "Gelöscht" toast and "Rückgängig"; use it for every delete in a module UI. */
+export function deleteWithUndo<R>(
+  fn: () => Promise<R>,
+  message: string = t.ui.deleted,
+): Promise<R> {
+  return undoableWithToast(message, message, fn);
+}
+
+/** A non-destructive single change (pause, count ±) with the "Geändert" toast and "Rückgängig". */
+export function changeWithUndo<R>(
+  fn: () => Promise<R>,
+  message: string = t.ui.changed,
+): Promise<R> {
+  return undoableWithToast(message, message, fn);
+}

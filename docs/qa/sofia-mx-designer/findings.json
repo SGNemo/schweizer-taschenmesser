@@ -1,0 +1,577 @@
+[
+  {
+    "id": "B01",
+    "type": "bug",
+    "severity": "hoch",
+    "area": "accounts (vault)",
+    "platform": "phone (web)",
+    "title": "Password-strength feedback is in German inside the Spanish UI",
+    "steps": [
+      "Settings language: Spanish (or English).",
+      "More → Bóveda → Contraseñas → create vault.",
+      "Type \"1234\" as master password; later type a strong one or add a login with a password."
+    ],
+    "expected": "Everything in the strength hint is in Spanish.",
+    "actual": "\"aprox. weniger als eine Sekunde\", \"Dies ist ein sehr häufig verwendetes Passwort.\", \"aprox. 2 Stunden\", \"aprox. Jahrhunderte\". Same text appears in the add-login form.",
+    "screenshot": "screenshots/31-vault-weak.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B02",
+    "type": "bug",
+    "severity": "hoch",
+    "area": "setup / ai",
+    "platform": "phone (web)",
+    "title": "AI provider names and options are German in the Spanish setup wizard",
+    "steps": [
+      "Spanish UI, start setup, go to step 5 \"Proveedor de IA\".",
+      "Open the \"Añadir proveedor\" dropdown."
+    ],
+    "expected": "Provider names like \"Ollama (local)\", \"OpenRouter (modelos gratuitos)\", \"Proveedor propio (compatible con OpenAI)\".",
+    "actual": "\"Ollama (lokal)\", \"OpenRouter (kostenlose Modelle)\", \"Eigener Anbieter (OpenAI-kompatibel)\".",
+    "screenshot": "screenshots/03-setup-step05.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B03",
+    "type": "bug",
+    "severity": "hoch",
+    "area": "website / readme",
+    "platform": "web",
+    "title": "README and website tell international visitors the app is German-only",
+    "steps": [
+      "Open README.md and the site texts (EN)."
+    ],
+    "expected": "Says the app is available in Spanish (and 4 languages) with the download buttons.",
+    "actual": "README: \"The app interface is German today; more languages are on the way.\" Website: \"The app is in German.\", \"Full guide (German)\", screenshots in German, site only in DE/EN. The app itself has 5 languages. I would not download it.",
+    "screenshot": "screenshots/(text, no screenshot)",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B04",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "accounts (vault)",
+    "platform": "phone (web)",
+    "title": "Strength label contradicts crack time",
+    "steps": [
+      "Vault unlocked → Añadir acceso.",
+      "Type password \"Tortilla-2026-xyz!\"."
+    ],
+    "expected": "Consistent label (\"Moderada/Fuerte\") for a password that is cracked offline in about 2 hours.",
+    "actual": "Label \"Muy fuerte\" next to \"aprox. 2 Stunden\" (and a full bar).",
+    "screenshot": "screenshots/36-after-save.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B05",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "accounts (vault)",
+    "platform": "phone (web)",
+    "title": "Website field rejects \"service.berlin.de\" with a browser tooltip",
+    "steps": [
+      "Vault → Añadir acceso, fill name, user, password.",
+      "Website: type service.berlin.de, tap Guardar."
+    ],
+    "expected": "Domain accepted (the Saved module accepts \"elpais.com\") or a clear Spanish hint.",
+    "actual": "Save does nothing visible except the browser tooltip \"Please enter a URL.\" (English in my test browser). Easy to think saving is broken.",
+    "screenshot": "screenshots/36-after-save.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B06",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "calendar",
+    "platform": "phone 412 px",
+    "title": "Calendar/Reminders switch is squeezed and cut off next to the page title at phone width",
+    "steps": [
+      "Phone width 412 px, Planificar → Calendario."
+    ],
+    "expected": "Readable switch or placed on its own row.",
+    "actual": "A pill with the text \"Calenda\" (cut) sits between the title \"Calendario\" and the \"Avanzado\" toggle. The same screen has two other ways to switch (top tabs Calendario/Tareas).",
+    "screenshot": "screenshots/16-calendar.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B07",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "lists",
+    "platform": "phone",
+    "title": "Two identical checkboxes per shopping-list row",
+    "steps": [
+      "Hogar → Compra, add \"2 aguacates\".",
+      "Try to tick it off."
+    ],
+    "expected": "One clear checkbox for \"bought\".",
+    "actual": "Two same-looking checkboxes side by side: left = \"Seleccionar\" (bulk select), right = bought. In a shop I tapped the wrong one first and got a \"1 seleccionado / Marcar / Eliminar\" bar.",
+    "screenshot": "screenshots/23-groceries.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B08",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "calendar / i18n",
+    "platform": "phone",
+    "title": "\"KW 44\" (German Kalenderwoche) in week header",
+    "steps": [
+      "Planificar → Calendario → Semana."
+    ],
+    "expected": "\"Sem. 44\" or no week number.",
+    "actual": "\"KW 44 · 26 Oct – 1 Nov 2026\"; month names also capitalised here but lower-case elsewhere (\"1 nov 2026\").",
+    "screenshot": "screenshots/18-cal-week.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B09",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "subscriptions / i18n",
+    "platform": "phone",
+    "title": "Day-of-month list uses German ordinal dots (\"1.\", \"2.\", \"3.\")",
+    "steps": [
+      "Dinero → Suscripciones → Añadir suscripción.",
+      "Open \"Día del mes\"."
+    ],
+    "expected": "\"1\", \"2\", \"3\" or \"día 1\".",
+    "actual": "\"1.\" … \"31.\" and \"Último día\".",
+    "screenshot": "screenshots/11-sub-form.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B10",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "i18n (dates)",
+    "platform": "phone + desktop",
+    "title": "Month headings are title-cased in Spanish: \"Octubre De 2026\"",
+    "steps": [
+      "Dinero → Finanzas or Planificar → Calendario."
+    ],
+    "expected": "\"octubre de 2026\" (or \"Octubre 2026\").",
+    "actual": "\"Octubre De 2026\" (capital D). Looks like a bug on every month header, phone and desktop.",
+    "screenshot": "screenshots/09-money-hub.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B11",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "setup / i18n",
+    "platform": "phone",
+    "title": "Explanatory paragraphs are cut off mid-word with \"…\" and no way to read the rest",
+    "steps": [
+      "Spanish UI, start setup.",
+      "Look at the welcome card on Resumen and step 5 (AI provider)."
+    ],
+    "expected": "Full text or a \"more\" link, especially for the privacy statement.",
+    "actual": "\"…cuando quieras e…\", \"…en Ajustes → IA….\", \"…la breve descripción de l…\" (privacy sentence cut).",
+    "screenshot": "screenshots/03-setup-step05.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B12",
+    "type": "bug",
+    "severity": "mittel",
+    "area": "setup",
+    "platform": "phone",
+    "title": "Setup wizard has 12 steps with technical topics for a first-time user",
+    "steps": [
+      "Start setup, tap through steps 1–12."
+    ],
+    "expected": "Short start (language, modules) with the rest optional later.",
+    "actual": "AI provider, calendar subscription (ICS), \"Importar con IA\", JSON schema, update channel, \"Mostrar herramientas de desarrollo\" before I have used the app. I would quit at step 5–6.",
+    "screenshot": "screenshots/03-setup-step05.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B13",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "search / i18n",
+    "platform": "phone",
+    "title": "German-style quotation marks in Spanish",
+    "steps": [
+      "Open search (Buscar), type \"noticias RSS\"."
+    ],
+    "expected": "«noticias RSS».",
+    "actual": "\"Preguntar al asistente: „noticias RSS“\" (German low-9 quote). Elsewhere the app correctly uses «…».",
+    "screenshot": "screenshots/38-search-news.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B14",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "settings / i18n",
+    "platform": "phone",
+    "title": "English text in Spanish \"Acerca de Nemo\" legal block",
+    "steps": [
+      "Settings → Acerca de Nemo, scroll to the end."
+    ],
+    "expected": "Spanish.",
+    "actual": "\"Legal: imprint and contact\", \"Whom to contact with questions\".",
+    "screenshot": "screenshots/50-about.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B15",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "notifications",
+    "platform": "phone",
+    "title": "Same feature has two names: \"Silencio\" and \"Modo juego\"",
+    "steps": [
+      "Open Settings (top card \"Silencio\").",
+      "Open Settings → Notificaciones."
+    ],
+    "expected": "One name.",
+    "actual": "Home card says \"Silencio: Desactivado / 1 hora / Hasta mañana\"; the Notifications page calls the same idea \"Modo juego\" (gaming mode). I would not find it.",
+    "screenshot": "screenshots/04-settings-es.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B16",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "tools",
+    "platform": "phone",
+    "title": "Currency tool error is unclear and gives no offline fallback",
+    "steps": [
+      "Open Herramientas → Divisas without internet."
+    ],
+    "expected": "Short sentence with \"tipos de cambio\" and a retry; ideally bundled rates.",
+    "actual": "\"No se pudieron cargar los tipos y aún no hay ninguno guardado.\" (\"tipos\" alone is not clear.) Tool is useless until first online use.",
+    "screenshot": "screenshots/39-currency.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B17",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "invoices",
+    "platform": "phone",
+    "title": "Long invoice title is cut in the list and cannot be read in full",
+    "steps": [
+      "Facturas → add \"Hausverwaltung Miete Nachzahlung (Nebenkostenabrechnung 2025)\"."
+    ],
+    "expected": "Wrap to two lines or full text on tap.",
+    "actual": "\"Hausverwaltung Miete Nachzahlung…\" cut; the brackets part is lost.",
+    "screenshot": "screenshots/14-invoices.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B18",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "invoices",
+    "platform": "phone",
+    "title": "Redundant \"Mañana\" (group header and chip on the row)",
+    "steps": [
+      "Add an invoice due tomorrow."
+    ],
+    "expected": "Say it once.",
+    "actual": "Group header \"Mañana\" and the row repeats \"Mañana\" next to the amount.",
+    "screenshot": "screenshots/14-invoices.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B19",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "finance",
+    "platform": "phone + desktop",
+    "title": "\"Saldo\", \"Balance\" and \"Disponible\" next to each other",
+    "steps": [
+      "Dinero → Finanzas."
+    ],
+    "expected": "Clear difference or fewer terms.",
+    "actual": "\"Saldo 0,00 €\" above \"Balance 0,00 €\"; on desktop \"Disponible\" plus \"Saldo … · facturas pendientes\". For me saldo and balance are the same word.",
+    "screenshot": "screenshots/09-money-hub.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B20",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "accounts (vault)",
+    "platform": "phone",
+    "title": "Keyboard shortcut hint is shown on the phone",
+    "steps": [
+      "Open a login detail in the vault."
+    ],
+    "expected": "No keyboard hints on touch devices.",
+    "actual": "\"Teclas: U usuario, P contraseña, T código, O abrir sitio web.\"",
+    "screenshot": "screenshots/37-access-detail.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B21",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "settings",
+    "platform": "phone",
+    "title": "Module settings summaries show values without labels",
+    "steps": [
+      "Settings → Módulos."
+    ],
+    "expected": "Label for each value.",
+    "actual": "\"Campos: Mes · 09:00 · 09:00\", \"Campos: 2 · 09:00\", \"Campos: 3 · 09:00\".",
+    "screenshot": "screenshots/05-module-library.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B22",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "library",
+    "platform": "phone",
+    "title": "Developer module \"Ejemplo\" is offered in the module library for normal users",
+    "steps": [
+      "More → Biblioteca de módulos → Hogar/Conocimiento."
+    ],
+    "expected": "Hidden unless developer mode.",
+    "actual": "\"Ejemplo – Desarrolladores – Módulo de referencia del generador…\" can be switched on.",
+    "screenshot": "screenshots/06-module-library.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B23",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "dev preview",
+    "platform": "phone (dev preview)",
+    "title": "Dev-preview banners and the Settings → Desarrollo page are German in a Spanish UI",
+    "steps": [
+      "Open the dev build (linked from README), language Spanish."
+    ],
+    "expected": "Spanish or clearly marked English.",
+    "actual": "\"Testdaten geladen, entfernen unter Einstellungen → Entwickler.\" and the whole developer page in German. Low because it is the untested preview.",
+    "screenshot": "screenshots/43-dev-first.png",
+    "frequency": "always",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "B24",
+    "type": "bug",
+    "severity": "niedrig",
+    "area": "forms",
+    "platform": "phone (web)",
+    "title": "Native date field format follows the test browser (10/29/2026)",
+    "steps": [
+      "Add subscription → \"Cargo el\"."
+    ],
+    "expected": "dd/mm/aaaa (what I use).",
+    "actual": "Showed 10/29/2026 in my headless Chromium. Not verified on a real Android phone, so unclear whether this is the app or the test setup.",
+    "screenshot": "screenshots/11-sub-form.png",
+    "frequency": "unverified",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I01",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "i18n / formats",
+    "platform": "all",
+    "title": "Add Mexico (es-MX) formats and a currency choice",
+    "situation": "I read 1,716.84 and 12,410.93 differently than the app shows.",
+    "problem": "Formats list only offers Spain (1716,84 €, 12.410,93 €); no Mexico, Latin America or currency choice (EUR fixed). 4-digit amounts have no thousands separator.",
+    "proposal": "Add \"México (español): 31/12/2026, 1,234.56\" and an optional second display currency (MXN) for transfers home.",
+    "example": "Apple Settings → Region.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I02",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "website / readme",
+    "platform": "all",
+    "title": "Spanish (and the other app languages) on website and README, with localised screenshots",
+    "situation": "Deciding whether to download.",
+    "problem": "Site and README are DE/EN only and say the app is German (see B03).",
+    "proposal": "Say \"5 languages\" in the hero, add an ES page or at least an ES README, use Spanish screenshots. Trust signals (open source, no account) are already good.",
+    "example": "Signal, Obsidian sites.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I03",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "sync",
+    "platform": "all",
+    "title": "Move data phone ↔ laptop without running a server",
+    "situation": "I use Android and a Windows laptop and want the same bills and calendar on both.",
+    "problem": "Sync needs \"Dirección del servidor\" and a token (own server, Tailscale). That is out of reach for me. Backup file works but is manual.",
+    "proposal": "Offer a no-server path: pair two devices over the local network or by QR code, or a one-tap \"send backup to my other device\". Still local-first, no cloud. (A hosted cloud would contradict the principle.)",
+    "example": "Syncthing, KDE Connect pairing, Quick Share.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I04",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "news / bookmarks",
+    "platform": "all",
+    "title": "A feed reader or at least RSS subscriptions inside Saved",
+    "situation": "Reading Spanish and English news.",
+    "problem": "No module for feeds. Searching \"noticias RSS\" only offers the AI assistant. \"Saved\" stores single links.",
+    "proposal": "Optional feed list (RSS/Atom URLs) that fetches only after I add it, with a clear \"this contacts the site\" hint. Fits \"only what you set up leaves the device\"; flag: adds new outgoing traffic.",
+    "example": "Feedly, NetNewsWire, Feeder.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I05",
+    "type": "improvement",
+    "benefit": "hoch",
+    "area": "subscriptions / invoices",
+    "platform": "all",
+    "title": "Starter list of common German providers and bill types",
+    "situation": "I did not know what Rundfunkbeitrag, Nebenkosten, Deutschlandticket or Hausverwaltung mean.",
+    "problem": "Free text only, no hint, no cancellation info.",
+    "proposal": "Offline preset list (name, usual interval, one-line explanation in my language) when adding a subscription/invoice; \"what is this?\" help line.",
+    "example": "Bank apps with merchant logos; Wise.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I06",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "setup",
+    "platform": "all",
+    "title": "Short first run: language, name, 2–3 modules, done",
+    "situation": "First 10 minutes.",
+    "problem": "12 steps (see B12).",
+    "proposal": "Show 3 steps, put the rest in a checklist that stays on Resumen (already exists). Profile cards could pre-select with one tap and show what changed.",
+    "example": "Notion onboarding.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I07",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "lists",
+    "platform": "all",
+    "title": "Spanish shopping vocabulary and templates",
+    "situation": "Groceries (tortillas, aguacate, chile) plus German items.",
+    "problem": "List is called \"Compra\"; in Mexico I say \"súper\" or \"despensa\" (and the app uses \"Despensa\" for the pantry module).",
+    "proposal": "Let me rename the default list at creation; a suggestion list when typing; unit chips (kg, g, pza).",
+    "example": "AnyList, Bring!.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I08",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "calendar",
+    "platform": "all",
+    "title": "Compact week view for empty days",
+    "situation": "Checking my week.",
+    "problem": "Each empty day takes a whole card with the fish and \"Sin entradas\" (7 cards = 4+ screens).",
+    "proposal": "Collapse empty days into one line or a 7-column strip.",
+    "example": "Google Calendar schedule view.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I09",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "accounts (vault)",
+    "platform": "all",
+    "title": "Spanish passphrase word list",
+    "situation": "Memorable master password.",
+    "problem": "Generator offers only English words (\"squiggle\", \"puritan\").",
+    "proposal": "Word list per language, with accent-free words.",
+    "example": "Bitwarden passphrase options.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I10",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "invoices",
+    "platform": "all",
+    "title": "\"Recibo/cuenta\" wording for bills I owe",
+    "situation": "Paying utilities.",
+    "problem": "\"Facturas\" means tax invoices I issue for me; the module is for bills to pay.",
+    "proposal": "\"Recibos y cuentas por pagar\" or \"Pagos pendientes\" as es label; keep Factura for the other.",
+    "example": "—",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I11",
+    "type": "improvement",
+    "benefit": "mittel",
+    "area": "search",
+    "platform": "all",
+    "title": "Say clearly what the search can and cannot do",
+    "situation": "Typing \"noticias RSS\".",
+    "problem": "Only offers \"Preguntar al asistente\" even though no AI is configured.",
+    "proposal": "If no AI is set up, show \"no results\" plus the link to modules.",
+    "example": "Spotlight.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I12",
+    "type": "improvement",
+    "benefit": "niedrig",
+    "area": "design",
+    "platform": "all",
+    "title": "Wordmark readability at small size",
+    "situation": "Designer eye.",
+    "problem": "The hand-drawn \"Nemo\" in the header is hard to read at 20 px height (letters merge).",
+    "proposal": "Icon-only or simpler wordmark in the header on small screens.",
+    "example": "—",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I13",
+    "type": "improvement",
+    "benefit": "niedrig",
+    "area": "forms",
+    "platform": "all",
+    "title": "Quick-add FAB covers content and duplicates the page button",
+    "situation": "Adding things.",
+    "problem": "\"+\" round button overlaps the last card, while \"+ Movimiento\"/\"Añadir factura\" exist on the page.",
+    "proposal": "Hide the FAB on pages with their own primary button or lift it above content.",
+    "example": "Material guidelines.",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  },
+  {
+    "id": "I14",
+    "type": "improvement",
+    "benefit": "niedrig",
+    "area": "documents",
+    "platform": "all",
+    "title": "Warn clearly that document files are not in backup",
+    "situation": "Storing passport/residence permit scans.",
+    "problem": "Note exists but is easy to miss; losing the phone loses the files.",
+    "proposal": "Show it at the moment of attaching a file, with a \"export files\" button.",
+    "example": "—",
+    "persona": "Sofía (30, graphic designer, Mexico, Berlin, es/en)"
+  }
+]

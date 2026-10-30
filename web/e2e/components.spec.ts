@@ -128,9 +128,9 @@ test.describe('component sheet', () => {
     await expect(page.getByText('3 ausgewählt')).toHaveCount(0);
   });
 
-  test('toasts stack at most two', async ({ page }) => {
+  test('a new notice replaces the old one (one at a time)', async ({ page }) => {
     await ready(page, '/dev/components');
     for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Toast zeigen' }).click();
-    await expect(page.getByText('Als bezahlt markiert.')).toHaveCount(2);
+    await expect(page.getByText('Als bezahlt markiert.')).toHaveCount(1);
   });
 });

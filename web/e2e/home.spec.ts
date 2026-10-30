@@ -1,16 +1,14 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { enable, mainNav, ready } from './helpers';
+import { enable, mainNav, ready, showAllWidgets, openFoldedGroup } from './helpers';
 
-const CORE = [
-  'calendar:today',
-  'todos:open',
-  'finance:balance',
-  'invoices:due',
-  'subscriptions:next',
-];
+const CORE = ['todos:next', 'todos:open', 'finance:balance', 'invoices:due', 'subscriptions:next'];
 
 test.describe('Home screen', () => {
+  test.beforeEach(async ({ page }) => {
+    await showAllWidgets(page);
+  });
+
   test('is the start route; the logo leads back from any module', async ({ page }) => {
     await ready(page, '/');
     await expect(page.getByRole('heading', { name: 'Übersicht', level: 1 })).toBeVisible();
@@ -61,8 +59,8 @@ test.describe('Home screen', () => {
       'true',
     );
 
-    await page.getByRole('button', { name: 'Widgets', exact: true }).click();
-    const sheet = page.getByRole('dialog', { name: 'Widgets der Übersicht' });
+    await page.getByRole('button', { name: 'Karten', exact: true }).click();
+    const sheet = page.getByRole('dialog', { name: 'Karten der Übersicht' });
     await expect(sheet).toContainText('Ausblenden betrifft nur die Übersicht');
     const todos = sheet.getByRole('switch', { name: 'Offene ToDos' });
     await todos.click();
@@ -98,6 +96,7 @@ test.describe('Home screen', () => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     // This test is about the classic strip: switch the calm mode ("Ruhiges Jetzt wichtig") off first.
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'focus', 'aids');
     const calm = page.getByRole('switch', { name: /Ruhiges/ });
     await expect(calm).toHaveAttribute('aria-checked', 'true');
     await calm.click();
@@ -161,7 +160,7 @@ test.describe('Home screen', () => {
 
     await ready(page, '/');
     await page.getByRole('button', { name: 'Anpassen' }).click();
-    await page.getByRole('button', { name: 'Widgets', exact: true }).click();
+    await page.getByRole('button', { name: 'Karten', exact: true }).click();
     await page.getByRole('switch', { name: 'Jetzt wichtig' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Schließen' }).click();
     await page.getByRole('button', { name: 'Fertig' }).click();

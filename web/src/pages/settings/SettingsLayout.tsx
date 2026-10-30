@@ -1,22 +1,18 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
-import {
-  Link,
-  Navigate,
-  NavLink,
-  Outlet,
-  useLocation,
-  useMatch,
-  useNavigate,
-  useParams,
-} from 'react-router';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
+import { useFocusSettings } from '@/core/settings/focus';
+import { frequentSections, recordSectionVisit } from '@/core/settings/frequent';
+import { resetSection } from '@/core/settings/reset';
 import { categoryDef, SETTINGS_CATEGORIES } from '@/core/settings/registry/categories';
 import { legacyTarget, settingsPath } from '@/core/settings/registry/paths';
 import { sectionsOf, visibleCategoryIds } from '@/core/settings/registry/registry';
 import { searchSettings } from '@/core/settings/registry/search';
 import { isCategoryId, type SettingsCategoryId } from '@/core/settings/registry/types';
 import { t } from '@/strings';
-import { EmptyState, Icon, Skeleton, TextField, useMediaQuery, type IconName } from '@/ui';
+import { tComfort } from '@/strings.comfort';
+import { Button, EmptyState, Icon, Skeleton, TextField, useMediaQuery, type IconName } from '@/ui';
 import { CategoryStatus } from './CategoryStatus';
+import { QuickBar } from './QuickBar';
 import { useSettingsSections } from './useSections';
 import styles from './SettingsLayout.module.css';
 
@@ -38,7 +34,7 @@ function SettingsSearch() {
     void navigate(settingsPath(r.category, r.sectionId, r.fieldKey));
   };
   return (
-    <div role="search" className={styles.search}>
+    <div role="search" className={`${styles.search} ${styles.stickySearch}`}>
       <TextField
         label={t.settings.search}
         labelHidden
@@ -97,19 +93,62 @@ function CategoryLink({ id, list }: { id: SettingsCategoryId; list?: boolean }) 
   );
 }
 
-function CategoryNav({ list }: { list?: boolean }) {
+/** The sections opened most often on this device (see `core/settings/frequent.ts`); empty until used. */
+function FrequentNav({ list }: { list?: boolean }) {
+  const sections = useSettingsSections();
+  const [focus] = useFocusSettings();
+  const ids = focus.searchHistory ? frequentSections(sections.map((x) => x.id)) : [];
+  if (ids.length === 0) return null;
+  const title = tComfort.get().frequent.title;
+  return (
+    <nav aria-label={title} className={`${list ? styles.list : styles.nav} ${styles.frequent}`}>
+      <p className={styles.frequentTitle}>{title}</p>
+      <ul>
+        {ids.map((id) => {
+          const sec = sections.find((x) => x.id === id)!;
+          return (
+            <li key={id}>
+              <Link
+                to={settingsPath(sec.category, sec.id)}
+                className={list ? styles.listLink : styles.navLink}
+              >
+                <span className={styles.linkText}>
+                  <span className={styles.linkTitle}>{sec.title}</span>
+                  {list ? (
+                    <span className={styles.linkDesc}>{categoryDef(sec.category).title}</span>
+                  ) : null}
+                </span>
+                {list ? <Icon name="chevronRight" /> : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+/**
+ * "Häufig genutzt" and the categories. One element on purpose: on desktop it is the first of the two
+ * grid columns, so the two navigations must never become two grid children (the content would then
+ * wrap into the narrow column).
+ */
+export function CategoryNav({ list }: { list?: boolean }) {
   const sections = useSettingsSections();
   const ids = visibleCategoryIds(sections);
   return (
-    <nav aria-label={t.settings.categoriesNav} className={list ? styles.list : styles.nav}>
-      <ul>
-        {ids.map((id) => (
-          <li key={id}>
-            <CategoryLink id={id} list={list} />
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <div className={list ? undefined : styles.aside} data-testid="settings-nav">
+      <FrequentNav list={list} />
+      <nav aria-label={t.settings.categoriesNav} className={list ? styles.list : styles.nav}>
+        <ul>
+          {ids.map((id) => (
+            <li key={id}>
+              <CategoryLink id={id} list={list} />
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
   );
 }
 
@@ -120,28 +159,55 @@ export function SettingsIndex() {
   const legacy = legacyTarget(hash);
   if (legacy) return <Navigate to={legacy} replace />;
   if (wide) return <Navigate to={settingsPath('allgemein')} replace />;
-  return <CategoryNav list />;
+  return (
+    <>
+      <QuickBar />
+      <CategoryNav list />
+    </>
+  );
 }
 
 /** Scrolls to `#<section or section--field>` once the sections are rendered and highlights it briefly. */
 function useDeepLink(ready: boolean) {
   const { hash, pathname } = useLocation();
+  const [focus] = useFocusSettings();
+  const historyOn = focus.searchHistory;
   useEffect(() => {
     if (!ready || !hash) return;
     const id = decodeURIComponent(hash.slice(1));
-    // A setting without its own anchor (older sections) falls back to its section.
-    const el = document.getElementById(id) ?? document.getElementById(id.split('--')[0] ?? id);
-    if (!el) return;
-    el.scrollIntoView({ block: 'start' });
-    // Section anchors sit on the heading: highlight the whole section.
-    const target = el.matches('h2') ? (el.closest('section') ?? el) : el;
-    target.dataset.highlight = 'true';
-    const timer = setTimeout(() => delete target.dataset.highlight, HIGHLIGHT_MS);
-    return () => {
-      clearTimeout(timer);
-      delete target.dataset.highlight;
+    const sectionId = id.split('--')[0] ?? id;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let marked: HTMLElement | undefined;
+    const apply = (): boolean => {
+      // A setting without its own anchor (older sections) falls back to its section.
+      const el = document.getElementById(id) ?? document.getElementById(sectionId);
+      if (!el) return false;
+      // A setting inside a folded "more settings" block opens it first, else there is nothing to scroll to.
+      el.closest('details')?.setAttribute('open', '');
+      el.scrollIntoView({ block: 'start' });
+      if (historyOn) recordSectionVisit(sectionId);
+      // Section anchors sit on the heading: highlight the whole section.
+      marked = el.matches('h2') ? (el.closest('section') ?? el) : el;
+      marked.dataset.highlight = 'true';
+      timer = setTimeout(() => marked && delete marked.dataset.highlight, HIGHLIGHT_MS);
+      return true;
     };
-  }, [ready, hash, pathname]);
+    // Some sections render only after their values are loaded (module settings): wait for them.
+    let observer: MutationObserver | undefined;
+    if (!document.getElementById(sectionId)) {
+      observer = new MutationObserver(() => {
+        if (document.getElementById(sectionId) && apply()) observer?.disconnect();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    } else {
+      apply();
+    }
+    return () => {
+      observer?.disconnect();
+      clearTimeout(timer);
+      if (marked) delete marked.dataset.highlight;
+    };
+  }, [ready, hash, pathname, historyOn]);
 }
 
 export function CategoryPage() {
@@ -151,6 +217,16 @@ export function CategoryPage() {
   const known = isCategoryId(category);
   const own = known ? sectionsOf(sections, category) : [];
   useDeepLink(own.length > 0);
+  const [focus] = useFocusSettings();
+  const counted = useRef(new Set<string>());
+  /** Using a setting counts as a visit of its section, once per time the category is open. */
+  const noteUse = (e: { target: EventTarget }) => {
+    if (!focus.searchHistory || !(e.target instanceof Element)) return;
+    const id = e.target.closest('section')?.querySelector('h2[id]')?.id;
+    if (!id || counted.current.has(id)) return;
+    counted.current.add(id);
+    recordSectionVisit(id);
+  };
   if (sections.length === 0) return <Skeleton />;
   if (!known || own.length === 0)
     return (
@@ -159,7 +235,7 @@ export function CategoryPage() {
       </EmptyState>
     );
   return (
-    <div className={styles.category}>
+    <div className={styles.category} onChange={noteUse} onClick={noteUse}>
       {wide ? null : (
         <Link to="/settings" className={styles.back}>
           <Icon name="chevronLeft" />
@@ -172,7 +248,19 @@ export function CategoryPage() {
         </p>
       )}
       {own.map((s) => (
-        <Fragment key={s.id}>{s.render()}</Fragment>
+        <Fragment key={s.id}>
+          {s.render()}
+          {s.reset ? (
+            <Button
+              variant="ghost"
+              className={styles.reset}
+              onClick={() => void resetSection(s.reset!, s.title)}
+              data-testid={`reset-${s.id}`}
+            >
+              {tComfort.get().reset.button}: {s.title}
+            </Button>
+          ) : null}
+        </Fragment>
       ))}
     </div>
   );
@@ -180,13 +268,13 @@ export function CategoryPage() {
 
 export function SettingsLayout() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
-  const inCategory = useMatch('/settings/:category/*') !== null;
   return (
     <>
       <div className={styles.header}>
         <h1>{t.settings.title}</h1>
       </div>
-      {wide || !inCategory ? <SettingsSearch /> : null}
+      <SettingsSearch />
+      {wide ? <QuickBar /> : null}
       {wide ? (
         <div className={styles.split}>
           <CategoryNav />

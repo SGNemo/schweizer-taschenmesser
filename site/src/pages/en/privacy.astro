@@ -51,8 +51,10 @@ const p = provider();
     <li><strong>Update check:</strong> the Windows and Android apps ask GitHub for the version file (at most once a day, can be switched off); no app data, GitHub sees your IP address.</li>
     <li><strong>AI provider (optional):</strong> only with a provider you set up (e.g. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral): your question, the date and the field names of the modules, never your entries. In chat, the chat text goes to the provider. With a local model or Ollama nothing leaves the device. Everything can be switched off with “KI abschalten”.</li>
     <li><strong>Google connection (optional, Windows):</strong> sign-in with your own Google application, read only (calendar: <code>calendar.readonly</code>, email headers: <code>gmail.readonly</code>); the data goes from Google straight to your device. If your Google project is in “Testing” status, the sign-in expires after 7 days.</li>
+    <li><strong>Spotify connection (optional, Windows):</strong> sign-in with your own Spotify app (client ID, no secret). The device then asks Spotify what is playing (title, artist), at most every 30 seconds and only while the app is visible, and sends pause, resume or next on a click (and optionally at the start and end of a focus round). Title and artist stay on the device: no sync, no AI, no error reports.</li>
     <li><strong>Calendar subscription (optional):</strong> fetching the iCal address you enter.</li>
     <li><strong>Model download (optional):</strong> the built-in language model is downloaded from Hugging Face after you confirm.</li>
+    <li><strong>Weather (optional):</strong> only with a chosen place: the place name when you search, then the position rounded to about a kilometre, to open-meteo.com. Without a place nothing happens.</li>
     <li><strong>Currency tool:</strong> when opened, euro rates are requested from frankfurter.dev, without any app data.</li>
     <li><strong>Supporter code:</strong> only checked on the device; the service that emails it is described above under Ko-fi.</li>
   </ul>

@@ -9,21 +9,25 @@ import {
   type ReactNode,
 } from 'react';
 import type { DiskNode } from '@/core/platform/disk';
+import { now } from '@/core/time/now';
 import { t } from '@/strings';
+import { AGE_VAR, ageDays, ageIndex, lastUse } from '../logic/age';
 import { KIND_PATTERN, KIND_VAR, drawPattern, textOn } from '../logic/colors';
 import { formatBytes } from '../format';
 import { groupByParent, toLayoutNodes } from '../logic/tree';
-import { hitTest, layoutTree, type LaidOut } from '../logic/treemap';
+import { DEFAULT_LAYOUT, hitTest, layoutTree, type LaidOut } from '../logic/treemap';
 import { useThemeKey } from './useThemeKey';
 import styles from './TreemapView.module.css';
 
-export type ColorMode = 'type' | 'depth';
+export type ColorMode = 'age' | 'type' | 'depth';
 
 interface Props {
   /** The folder shown; its entries (and their children) are `nodes`. */
   root: DiskNode;
   nodes: readonly DiskNode[];
   colorBy: ColorMode;
+  /** Age colours count from the last use (opened or changed) instead of the last change. */
+  byUse?: boolean;
   selectedId: number | null;
   /** Called with the canvas size whenever it changes (the parent fetches what fits). */
   onSize: (w: number, h: number) => void;
@@ -31,10 +35,14 @@ interface Props {
   onSelect: (node: DiskNode) => void;
   onUp: () => void;
   tooltip: (node: DiskNode) => ReactNode;
+  /** Shown over an empty map (default: "nothing uses space here"). */
+  emptyText?: string;
+  testId?: string;
 }
 
 interface Palette {
   kinds: Record<string, string>;
+  ages: string[];
   surface: string;
   surface2: string;
   text: string;
@@ -50,6 +58,7 @@ const readPalette = (el: HTMLElement): Palette => {
   for (const [k, name] of Object.entries(KIND_VAR)) kinds[k] = v(name) || '#7a7f87';
   return {
     kinds,
+    ages: AGE_VAR.map((name) => v(name) || '#7a7f87'),
     surface: v('--surface') || '#ffffff',
     surface2: v('--surface-2') || '#f0f0ed',
     text: v('--text') || '#1c1d1f',
@@ -75,12 +84,15 @@ export function TreemapView({
   root,
   nodes,
   colorBy,
+  byUse = false,
   selectedId,
   onSize,
   onZoom,
   onSelect,
   onUp,
   tooltip,
+  emptyText,
+  testId = 'treemap',
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -138,51 +150,108 @@ export function TreemapView({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = p.surface2;
     ctx.fillRect(0, 0, size.w, size.h);
-    ctx.font = `12px ${p.font}`;
     ctx.textBaseline = 'top';
+
+    const nowMs = now();
+    const header = DEFAULT_LAYOUT.header;
+    const colorOf = (n: DiskNode): string =>
+      colorBy === 'type'
+        ? (p.kinds[n.fileKind] ?? p.kinds.other!)
+        : colorBy === 'age'
+          ? p.ages[ageIndex(ageDays(lastUse(n, byUse), nowMs))]!
+          : p.accent;
 
     for (const tile of tiles) {
       const n = byId.get(tile.id);
       if (!n) continue;
       const { x, y, w, h } = tile.rect;
-      const kindColor = p.kinds[n.fileKind] ?? p.kinds.other!;
-      let fill: string;
-      let alpha: number;
-      if (colorBy === 'type') {
-        fill = kindColor;
-        alpha = tile.open ? 0.3 : n.kind === 'small' ? 0.6 : 1;
-      } else {
-        fill = p.accent;
-        alpha = tile.open
-          ? 0.18 + 0.12 * tile.depth
-          : n.kind === 'dir'
-            ? 0.75
-            : 0.5 + 0.1 * tile.depth;
-      }
-      ctx.fillStyle = p.surface;
-      ctx.fillRect(x, y, w, h);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = fill;
-      ctx.fillRect(x, y, w, h);
-      ctx.globalAlpha = 1;
-      if (colorBy === 'type' && !tile.open) {
-        drawPattern(ctx, KIND_PATTERN[n.fileKind], x, y, w, h, 'rgba(255,255,255,0.28)');
-      }
-      ctx.strokeStyle = tile.open ? fill : p.surface;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+      const color = colorOf(n);
 
-      if (w > 56 && h > 18) {
-        const solid = !tile.open;
-        const ink = solid ? textOn(colorBy === 'type' ? kindColor : p.accent) : p.text;
-        ctx.fillStyle = ink;
+      if (tile.open) {
+        // An open folder: a quiet tinted body and a stronger header band with its name and size.
+        ctx.fillStyle = p.surface;
+        ctx.fillRect(x, y, w, h);
+        ctx.globalAlpha = colorBy === 'depth' ? 0.1 + 0.08 * tile.depth : 0.14;
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+        const band = Math.min(header, h);
+        ctx.globalAlpha = colorBy === 'depth' ? 0.45 + 0.1 * tile.depth : 0.6;
+        ctx.fillRect(x, y, w, band);
+        ctx.globalAlpha = 1;
+        if (w > 40 && band >= 14) {
+          ctx.fillStyle = textOn(color);
+          ctx.font = `600 11px ${p.font}`;
+          const size = formatBytes(n.bytes);
+          const sizeW = ctx.measureText(size).width;
+          const room = w - 8 - (w > 120 ? sizeW + 8 : 0);
+          const label = fit(ctx, n.name, room);
+          if (label) ctx.fillText(label, x + 4, y + 2);
+          if (w > 120) {
+            ctx.font = `11px ${p.font}`;
+            ctx.fillText(size, x + w - 4 - sizeW, y + 2);
+          }
+        }
+        continue;
+      }
+
+      // A leaf: a small gap to its neighbours, rounded corners and a soft cushion shading.
+      const gap = w > 6 && h > 6 ? 1 : 0;
+      const rx = x + gap;
+      const ry = y + gap;
+      const rw = w - 2 * gap;
+      const rh = h - 2 * gap;
+      const r = Math.min(3, rw / 4, rh / 4);
+      const shape = () => {
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') ctx.roundRect(rx, ry, rw, rh, r);
+        else ctx.rect(rx, ry, rw, rh);
+      };
+      shape();
+      ctx.fillStyle = p.surface;
+      ctx.fill();
+      ctx.globalAlpha =
+        colorBy === 'depth'
+          ? n.kind === 'dir'
+            ? 0.75
+            : 0.5 + 0.1 * tile.depth
+          : n.kind === 'small'
+            ? 0.65
+            : 1;
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      if (rw > 8 && rh > 8) {
+        const shade = ctx.createLinearGradient(rx, ry, rx + rw, ry + rh);
+        shade.addColorStop(0, 'rgba(255,255,255,0.18)');
+        shade.addColorStop(0.6, 'rgba(255,255,255,0)');
+        shade.addColorStop(1, 'rgba(0,0,0,0.12)');
+        ctx.fillStyle = shade;
+        ctx.fill();
+      }
+      if (colorBy === 'type') {
+        drawPattern(ctx, KIND_PATTERN[n.fileKind], rx, ry, rw, rh, 'rgba(255,255,255,0.22)');
+      }
+      if (n.id === hoverId) {
+        shape();
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fill();
+      }
+
+      if (rw > 50 && rh > 18) {
+        ctx.fillStyle = textOn(color);
+        ctx.font = `600 12px ${p.font}`;
         const name = n.kind === 'small' ? t.disk.scan.smallFiles(n.files) : n.name;
-        const label = fit(ctx, name, w - 8);
-        if (label) ctx.fillText(label, x + 4, y + 3);
-        if (solid && h > 34) {
-          ctx.globalAlpha = 0.85;
-          const size = fit(ctx, formatBytes(n.bytes), w - 8);
-          if (size) ctx.fillText(size, x + 4, y + 18);
+        const label = fit(ctx, name, rw - 10);
+        if (label) ctx.fillText(label, rx + 5, ry + 4);
+        if (rh > 36) {
+          ctx.font = `11px ${p.font}`;
+          ctx.globalAlpha = 0.9;
+          const info =
+            colorBy === 'age'
+              ? `${formatBytes(n.bytes)} · ${t.disk.age.short(ageDays(lastUse(n, byUse), nowMs))}`
+              : formatBytes(n.bytes);
+          const line = fit(ctx, info, rw - 10);
+          if (line) ctx.fillText(line, rx + 5, ry + 20);
           ctx.globalAlpha = 1;
         }
       }
@@ -199,7 +268,7 @@ export function TreemapView({
     };
     outline(hoverId, p.text, 2);
     outline(selectedId, p.focus, 3);
-  }, [tiles, byId, colorBy, hoverId, selectedId, size, themeKey]);
+  }, [tiles, byId, colorBy, byUse, hoverId, selectedId, size, themeKey]);
 
   const pointer = (e: PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -259,7 +328,7 @@ export function TreemapView({
   const hovered = hoverId !== null ? byId.get(hoverId) : undefined;
 
   return (
-    <div className={styles.wrap} ref={wrap} data-testid="treemap">
+    <div className={styles.wrap} ref={wrap} data-testid={testId}>
       <canvas
         ref={canvas}
         className={styles.canvas}
@@ -272,7 +341,9 @@ export function TreemapView({
         onClick={onClick}
         onKeyDown={onKey}
       />
-      {nodes.length === 0 ? <div className={styles.empty}>{t.disk.map.empty}</div> : null}
+      {nodes.length === 0 ? (
+        <div className={styles.empty}>{emptyText ?? t.disk.map.empty}</div>
+      ) : null}
       {hovered ? (
         <div
           className={styles.tip}

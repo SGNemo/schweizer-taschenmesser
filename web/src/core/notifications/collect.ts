@@ -9,6 +9,8 @@ import type { DueNotification, ModuleManifest } from '@/core/modules/types';
 import { getPlatform } from '@/core/platform';
 import { getFocusSettings } from '@/core/settings/focus';
 import { t } from '@/strings';
+import { getGameSettings, quietChannelWanted } from './gameMode';
+import { getMute } from './mute';
 import { applyPolicy } from './policy';
 import { getSnoozed, snoozedDue } from './snooze';
 
@@ -32,6 +34,9 @@ export async function collectDue(
     {
       quiet: settings.quietHours ? { from: settings.quietFrom, to: settings.quietTo } : undefined,
       maxPerHour: settings.maxPerHour,
+      // A pause that already ended still covers the repeats that fell inside it.
+      mute: getMute(wide.from),
+      quietAll: quietChannelWanted(getPlatform().kind, getGameSettings()),
     },
     t.notifications.summary,
   );

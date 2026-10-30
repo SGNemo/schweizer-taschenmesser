@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { dismissNotices } from './helpers';
+import { dismissNotices, moduleSwitch } from './helpers';
 
 test.beforeEach(({ page }) => dismissNotices(page));
 
@@ -44,7 +44,7 @@ async function mockClaude(page: Page, answers: string[]): Promise<Sent[]> {
 async function setUp(page: Page) {
   await page.goto('/library');
   const card = page.getByTestId('module-chat');
-  await card.getByRole('button', { name: 'Aktivieren' }).click();
+  await moduleSwitch(card).click();
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
   await page.goto('/settings/ki');
   const section = page.locator('section[aria-labelledby="ai"]');
@@ -94,6 +94,40 @@ test.describe('Chat', () => {
     // Automatic title from the first question; statistics count the cloud answers.
     await page.getByRole('button', { name: 'Zur Chat-Liste' }).click();
     await expect(page.getByRole('button', { name: /Plane meine Woche/ })).toBeVisible();
+  });
+
+  test('an answer can be kept as a note with one click, and the notes module must be on', async ({
+    page,
+  }) => {
+    await mockClaude(page, ['Rezept für Linsensuppe:\n\n- Linsen\n- Karotten']);
+    await setUp(page);
+    await page.goto('/chat?new=1');
+    await page.getByPlaceholder('Nachricht schreiben …').fill('Wie koche ich Linsensuppe?');
+    await page.getByRole('button', { name: 'Senden' }).click();
+    const answer = page.getByTestId('msg-assistant').first();
+    await expect(answer).toContainText('Linsen');
+
+    // Notes are off by default: the click explains instead of failing silently.
+    await answer.getByRole('button', { name: 'Als Notiz speichern' }).click();
+    await expect(page.getByText('Das Notizen-Modul ist aus.')).toBeVisible();
+
+    await page.goto('/library');
+    const card = page.getByTestId('module-notes');
+    await moduleSwitch(card).click();
+    await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
+    await page.goto('/chat');
+    await page
+      .getByRole('button', { name: /Linsensuppe/ })
+      .first()
+      .click();
+    await page
+      .getByTestId('msg-assistant')
+      .first()
+      .getByRole('button', { name: 'Als Notiz speichern' })
+      .click();
+    await expect(page.getByText(/Gespeichert in/)).toBeVisible();
+    await page.goto('/notes');
+    await expect(page.getByText('Rezept für Linsensuppe:').first()).toBeVisible();
   });
 
   test('deleting asks first and removes the chat', async ({ page }) => {

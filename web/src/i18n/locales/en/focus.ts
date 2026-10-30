@@ -15,6 +15,9 @@ export const focus: Strings['focus'] = {
     calmAttention: 'Calm “Important now”',
     calmAttentionHint:
       'Gathers waiting items into one note and keeps red only for money deadlines. No day counters.',
+    moduleNow: '“Now” on module pages',
+    moduleNowHint:
+      'Shows what is up right now in one slim row at the top of the calendar, money and pantry pages.',
     timeToNext: 'Time to the next event',
     timeToNextHint: 'Shows in large type how long it is until the next event.',
     focusMinutes: 'Focus timer length',
@@ -26,6 +29,11 @@ export const focus: Strings['focus'] = {
     focusIndicatorHint: 'Shows in the top bar that a focus round is running.',
     searchHistory: 'History in search',
     searchHistoryHint: 'Search shows what you used last first. The history stays on this device.',
+    more: 'More settings',
+    aids: 'Aids',
+    aidsOn: (n: number, total: number) => `${n} of ${total} on`,
+    planShort: (n: number) => `Day plan ${n}`,
+    timerShort: (n: number) => `Timer ${n} min`,
     clearHistory: 'Clear history',
     clearHistoryHint: 'Clears the recently used items in search.',
     historyCleared: 'History cleared.',
@@ -70,11 +78,23 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
-    followUp: 'Gentle follow-up',
-    followUpHint: 'A single follow-up after 30 minutes if a reminder wasn’t answered with “Done”.',
+    leadHintTitle: 'Note in the appointment form',
+    leadHintHint:
+      'Shows one calm sentence when you pick a reminder but notifications are not allowed.',
+    followUp: 'Repeat quietly',
+    followUpHint:
+      'A reminder you set yourself comes back at intervals until you choose “Done” or “Later”. Nothing at night.',
+    repeatEvery: 'Gap',
+    repeatEveryOption: (m: number) => `${m} min`,
+    repeatMax: 'At most',
+    repeatMaxHint: 'After that it stops; the reminder stays in the notification centre.',
+    repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'To-dos in the morning',
     todoDigestHint: 'One note per day listing today’s to-dos. No separate note for each task.',
     digestTime: 'Summary time',
+    inAppGroup: 'Card in the app',
+    on: 'On',
+    off: 'Off',
   },
   resume: {
     title: 'Where was I?',
@@ -98,11 +118,12 @@ export const focus: Strings['focus'] = {
     emptyAction: 'Add task',
     off: 'Suggestions are turned off.',
     offAction: 'Open settings',
+    menu: 'More options',
   },
   waiting: {
     text: (n: number) => (n === 1 ? '1 to-do is still waiting.' : `${n} to-dos are still waiting.`),
     replan: 'Replan',
-    replanHint: 'Spreads them over the next few days.',
+    replanHint: 'Open for a while, not urgent. Re-planning spreads them over the next few days.',
     replanned: 'Spread over the next few days.',
   },
   mode: {
@@ -135,7 +156,15 @@ export const focus: Strings['focus'] = {
     indicatorAria: (title: string, time: string) => `Focus: ${title}, ${time}. Back to focus.`,
     otherRunning: (title: string) => `A round is already running for “${title}”.`,
   },
+  today: {
+    now: 'Now',
+    inMinutes: (n: number) => `in ${n} min`,
+    inHours: (h: number, m: number) => (m === 0 ? `in ${h} h` : `in ${h} h ${m} min`),
+    appointments: 'Events',
+    allAppointments: 'All events',
+  },
   plan: {
+    planned: 'Planned for today.',
     title: 'Today',
     count: (n: number) => (n === 1 ? '1 thing' : `${n} things`),
     doneToday: (n: number) => `Done today: ${n}`,

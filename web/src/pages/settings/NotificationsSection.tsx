@@ -3,8 +3,15 @@ import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, Card, SettingsGroup } from '@/ui';
+import { GameModeCard } from './GameModeCard';
 import { PushSection } from './PushSection';
 import styles from './settings.module.css';
+
+function introText(): string {
+  const platform = getPlatform();
+  if (platform.kind === 'android') return t.notifications.introAndroid;
+  return platform.isNative ? t.notifications.introDesktop : t.notifications.intro;
+}
 
 function NotificationsCard() {
   const [permission, setPermission] = useState<NotificationPermissionState>(() =>
@@ -13,7 +20,7 @@ function NotificationsCard() {
   return (
     <Card>
       <div className={styles.form}>
-        <p>{t.notifications.intro}</p>
+        <p>{introText()}</p>
         <p role="status" data-testid="notification-status">
           {t.notifications[permission]}
         </p>
@@ -49,7 +56,8 @@ export function NotificationsSection() {
   return (
     <SettingsGroup id="notifications" title={t.notifications.title} bare>
       <NotificationsCard />
-      <PushSection />
+      <GameModeCard />
+      {getPlatform().isNative ? null : <PushSection />}
     </SettingsGroup>
   );
 }

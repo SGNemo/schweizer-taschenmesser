@@ -52,7 +52,7 @@ describe('collectDue', () => {
   it('folds a crowded hour into one summary', async () => {
     const m = softSource([1, 2, 3, 4, 5].map((i) => ({ key: `e${i}`, at: at(9, i) })));
     const out = await collectDue({ from: at(8), to: at(10) }, m);
-    expect(out.map((n) => n.title)).toEqual(['e1', 'e2', 'Weitere Erinnerungen · 3']);
+    expect(out.map((n) => n.title)).toEqual(['e1', 'e2', '3 Erinnerungen']);
   });
 
   it('without quiet hours nothing moves', async () => {

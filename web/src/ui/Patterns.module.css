@@ -7,7 +7,8 @@
   margin-bottom: var(--space-4);
 }
 .headerViews {
-  flex: 1;
+  /* Wraps under the title instead of being squeezed (a cut-off switch on a phone); the segment itself never scrolls. */
+  flex: 1 1 14rem;
   display: flex;
   min-width: 0;
 }
@@ -167,6 +168,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   min-height: var(--touch);
   justify-content: center;
@@ -174,6 +176,21 @@
 .rows .main {
   min-width: 0;
   min-height: var(--row-h);
+}
+/* Phone: the text keeps at least 9 rem; status, amount and actions drop to a second line (right-aligned)
+   instead of squeezing the title and meta to one letter per line. */
+@media (max-width: 40rem) {
+  .rows .row {
+    flex-wrap: wrap;
+    padding-block: var(--space-1);
+  }
+  .rows .main {
+    flex: 1 1 9rem;
+    min-width: 9rem;
+  }
+  .rows .main + * {
+    margin-left: auto;
+  }
 }
 .static {
   cursor: default;
@@ -187,19 +204,21 @@
   max-width: 100%;
   overflow-wrap: break-word;
 }
+/* Full wrap: the text is the point of the row (shopping list); words without spaces break too. */
+.titleFull {
+  display: block;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
 .grid .title {
   font-weight: var(--weight-semibold);
 }
+/* Quiet text, shown in full. Row meta carries facts ("Kündigen bis …", file notes) that must stay readable on a phone, so it wraps instead of ending in "…"; only row titles are clamped. */
 .muted {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: var(--clamp-lines);
-  line-clamp: var(--clamp-lines);
-  overflow: hidden;
   max-width: 100%;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 /* Row meta: 13 px, tertiary. */
 .rows .muted {
@@ -218,13 +237,19 @@
   opacity: 0;
 }
 .item:hover .actions,
-.item:focus-within .actions {
+.item:focus-within .actions,
+.actionsOpen {
   opacity: 1;
 }
 @media (hover: none) {
   .actions {
     opacity: 1;
   }
+}
+/* The row's enter animation makes every row its own layer: the row with an open menu must sit above the rows below it. */
+.item:has(.actionsOpen) {
+  position: relative;
+  z-index: var(--z-hint);
 }
 .chips {
   display: flex;
@@ -549,7 +574,8 @@ button.chip[aria-pressed='true'] {
 /* Swipe rows (touch): the row slides over a coloured action layer. */
 .swipeable {
   position: relative;
-  overflow: hidden;
+  /* Only the sideways action layer is clipped; a row menu may open upwards or downwards over it. */
+  clip-path: inset(-100vh 0);
 }
 .swipeable > .row {
   position: relative;

@@ -10,6 +10,8 @@ export const tDiag = defineBundle(
         'Zeigt zuerst genau, was in der Datei steht, und speichert sie erst nach deiner Bestätigung. Ohne Einträge, Tresor, Schlüssel, Server-Adressen und Pfade mit Benutzernamen. Die App sendet nichts.',
       previewTitle: 'Diagnose-Datei ansehen',
       previewHint: 'Das ist der komplette Inhalt der Datei. Prüfe ihn, bevor du speicherst.',
+      fileLanguageNote:
+        'Die Datei ist auf Englisch geschrieben, damit sie sich leicht weitergeben und lesen lässt. Sie enthält nur Zahlen, Einstellungen und Fehlermeldungen.',
       save: 'Speichern',
       cancel: 'Schließen',
       saved: 'Diagnose gespeichert.',
@@ -53,8 +55,7 @@ export const tDiag = defineBundle(
         'Zuerst wird eine Kopie des defekten Stands gesichert. Danach beginnt Nemo ohne Daten.',
       resetTitle: 'Mit leerer Datenbank neu starten',
       resetWarning:
-        'Alle lokalen Daten auf diesem Gerät werden ersetzt (die Kopie bleibt erhalten). Tippe zur Bestätigung NEU STARTEN.',
-      resetPhrase: 'NEU STARTEN',
+        'Alle lokalen Daten auf diesem Gerät werden ersetzt (die Kopie bleibt erhalten).',
       resetConfirm: 'Neu starten',
       copyCancelled: 'Ohne gesicherte Kopie wird nichts verändert.',
       report: 'Fehler melden',
@@ -72,7 +73,7 @@ export const tDiag = defineBundle(
       leaveForced: 'Beende Nemo und starte es ohne --safe-mode.',
     },
     widget: {
-      message: 'Dieses Widget konnte nicht angezeigt werden. Der Rest der Startseite läuft weiter.',
+      message: 'Diese Karte konnte nicht angezeigt werden. Der Rest der Startseite läuft weiter.',
       retry: 'Erneut versuchen',
     },
     card: {
@@ -93,6 +94,8 @@ export const tDiag = defineBundle(
           'Shows exactly what is in the file first and only saves it after you confirm. No entries, vault, keys, server addresses or paths with user names. The app sends nothing.',
         previewTitle: 'Review diagnostics file',
         previewHint: 'This is the complete content of the file. Check it before you save.',
+        fileLanguageNote:
+          'The file is written in English so it is easy to pass on and read. It holds only numbers, settings and error messages.',
         save: 'Save',
         cancel: 'Close',
         saved: 'Diagnostics saved.',
@@ -133,9 +136,7 @@ export const tDiag = defineBundle(
         reset: 'Start again with an empty database',
         resetHint: 'A copy of the defective state is saved first. Then Nemo starts without data.',
         resetTitle: 'Start again with an empty database',
-        resetWarning:
-          'All local data on this device is replaced (the copy is kept). Type RESTART to confirm.',
-        resetPhrase: 'RESTART',
+        resetWarning: 'All local data on this device is replaced (the copy is kept).',
         resetConfirm: 'Start again',
         copyCancelled: 'Nothing is changed without a saved copy.',
         report: 'Report a bug',
@@ -153,7 +154,7 @@ export const tDiag = defineBundle(
         leaveForced: 'Quit Nemo and start it without --safe-mode.',
       },
       widget: {
-        message: 'This widget could not be shown. The rest of the home screen keeps running.',
+        message: 'This card could not be shown. The rest of the home screen keeps running.',
         retry: 'Try again',
       },
       card: {
@@ -173,6 +174,8 @@ export const tDiag = defineBundle(
           'Primero muestra exactamente lo que contiene el archivo y solo lo guarda cuando lo confirmas. Sin entradas, bóveda, claves, direcciones de servidor ni rutas con nombres de usuario. La app no envía nada.',
         previewTitle: 'Revisar archivo de diagnóstico',
         previewHint: 'Este es el contenido completo del archivo. Revísalo antes de guardarlo.',
+        fileLanguageNote:
+          'El archivo está escrito en inglés para que sea fácil de compartir y leer. Contiene solo números, ajustes y mensajes de error.',
         save: 'Guardar',
         cancel: 'Cerrar',
         saved: 'Diagnóstico guardado.',
@@ -216,8 +219,7 @@ export const tDiag = defineBundle(
         resetHint: 'Primero se guarda una copia del estado dañado. Luego Nemo se inicia sin datos.',
         resetTitle: 'Empezar de nuevo con una base de datos vacía',
         resetWarning:
-          'Se sustituyen todos los datos locales de este dispositivo (la copia se conserva). Escribe REINICIAR para confirmar.',
-        resetPhrase: 'REINICIAR',
+          'Se sustituyen todos los datos locales de este dispositivo (la copia se conserva).',
         resetConfirm: 'Empezar de nuevo',
         copyCancelled: 'No se cambia nada sin una copia guardada.',
         report: 'Informar de un error',
@@ -237,7 +239,7 @@ export const tDiag = defineBundle(
       },
       widget: {
         message:
-          'No se pudo mostrar este widget. El resto de la pantalla de inicio sigue funcionando.',
+          'No se pudo mostrar esta tarjeta. El resto de la pantalla de inicio sigue funcionando.',
         retry: 'Reintentar',
       },
       card: {
@@ -257,6 +259,8 @@ export const tDiag = defineBundle(
           'Affiche d’abord exactement le contenu du fichier et ne l’enregistre qu’après votre confirmation. Sans entrées, coffre-fort, clés, adresses de serveur ni chemins contenant des noms d’utilisateur. L’app n’envoie rien.',
         previewTitle: 'Examiner le fichier de diagnostic',
         previewHint: 'Voici le contenu complet du fichier. Vérifiez-le avant d’enregistrer.',
+        fileLanguageNote:
+          'Le fichier est rédigé en anglais pour être facile à transmettre et à lire. Il ne contient que des chiffres, des réglages et des messages d’erreur.',
         save: 'Enregistrer',
         cancel: 'Fermer',
         saved: 'Diagnostic enregistré.',
@@ -300,8 +304,7 @@ export const tDiag = defineBundle(
           'Une copie de l’état défectueux est d’abord enregistrée. Nemo démarre ensuite sans données.',
         resetTitle: 'Recommencer avec une base de données vide',
         resetWarning:
-          'Toutes les données locales de cet appareil sont remplacées (la copie est conservée). Saisissez RECOMMENCER pour confirmer.',
-        resetPhrase: 'RECOMMENCER',
+          'Toutes les données locales de cet appareil sont remplacées (la copie est conservée).',
         resetConfirm: 'Recommencer',
         copyCancelled: 'Rien n’est modifié sans copie enregistrée.',
         report: 'Signaler une erreur',
@@ -321,7 +324,7 @@ export const tDiag = defineBundle(
       },
       widget: {
         message:
-          'Ce widget n’a pas pu s’afficher. Le reste de l’écran d’accueil continue de fonctionner.',
+          'Cette carte n’a pas pu s’afficher. Le reste de l’écran d’accueil continue de fonctionner.',
         retry: 'Réessayer',
       },
       card: {
@@ -341,6 +344,8 @@ export const tDiag = defineBundle(
           'Primeiro mostra exatamente o que está no arquivo e só salva depois da sua confirmação. Sem entradas, cofre, chaves, endereços de servidor nem caminhos com nomes de usuário. O app não envia nada.',
         previewTitle: 'Ver arquivo de diagnóstico',
         previewHint: 'Este é o conteúdo completo do arquivo. Confira antes de salvar.',
+        fileLanguageNote:
+          'O arquivo é escrito em inglês para ser fácil de repassar e ler. Ele contém apenas números, configurações e mensagens de erro.',
         save: 'Salvar',
         cancel: 'Fechar',
         saved: 'Diagnóstico salvo.',
@@ -385,8 +390,7 @@ export const tDiag = defineBundle(
           'Primeiro é salva uma cópia do estado com defeito. Depois o Nemo inicia sem dados.',
         resetTitle: 'Começar de novo com um banco de dados vazio',
         resetWarning:
-          'Todos os dados locais deste dispositivo são substituídos (a cópia é mantida). Digite RECOMEÇAR para confirmar.',
-        resetPhrase: 'RECOMEÇAR',
+          'Todos os dados locais deste dispositivo são substituídos (a cópia é mantida).',
         resetConfirm: 'Começar de novo',
         copyCancelled: 'Nada é alterado sem uma cópia salva.',
         report: 'Relatar um erro',
@@ -406,7 +410,7 @@ export const tDiag = defineBundle(
       },
       widget: {
         message:
-          'Não foi possível exibir este widget. O resto da tela inicial continua funcionando.',
+          'Não foi possível exibir este cartão. O resto da tela inicial continua funcionando.',
         retry: 'Tentar de novo',
       },
       card: {

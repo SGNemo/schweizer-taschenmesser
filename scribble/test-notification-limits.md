@@ -1,0 +1,3 @@
+# test/notification-limits – for the next chat:
+- `core/notifications/limits.test.ts`: real calendar source + `collectDue` + `checkDue`, 5-minute ticks, `setNow` clock. Platform kind is mocked (`platform.kind`) because the tone only exists on desktop and `quietAll` on web would silence everything.
+- Findings, not changed (tests only): (1) `applyLimit` buckets by UTC hour, so half-hour-offset zones get a shifted "clock hour". (2) Repeats dropped by Stumm still count toward the hour's cap and can fold another reminder's repeat; the folded summary sits in the past for the open app and is never shown (Android shows it). Both documented in `docs/features/repeat-reminders.md`.

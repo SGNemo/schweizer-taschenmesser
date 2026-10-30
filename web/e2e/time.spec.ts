@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { moreFields, pickTodosList, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -19,6 +19,7 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
     await page.getByRole('button', { name: /Müll rausbringen/ }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Fällig am').fill('2026-09-29');
+    await moreFields(page);
     await dialog.getByLabel('Wiederholung').selectOption('weekly');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -41,12 +42,13 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
     await addTask(page, 'Dachboden aufräumen');
     await page.getByRole('button', { name: /Dachboden aufräumen/ }).click();
     const dialog = page.getByRole('dialog');
+    await moreFields(page);
     await dialog.getByRole('switch', { name: /Irgendwann/ }).click();
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('checkbox', { name: 'Dachboden aufräumen' })).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Irgendwann', exact: true }).click();
+    await pickTodosList(page, 'Irgendwann');
     await expect(page.getByRole('checkbox', { name: 'Dachboden aufräumen' })).toBeVisible();
   });
 });
@@ -56,6 +58,7 @@ test('a calendar event can notify before it starts', async ({ page }) => {
   const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
   await dialog.getByLabel('Titel').fill('Zahnarzt');
   await dialog.getByLabel('Beginn').fill('14:30');
+  await dialog.getByRole('button', { name: 'Andere Zeit' }).click();
   await dialog.getByLabel('Benachrichtigen').selectOption({ label: '15 Minuten vorher' });
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

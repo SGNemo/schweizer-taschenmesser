@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, openAppearanceGroup, openFoldedGroup } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -29,6 +29,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     page,
   }) => {
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'reading', 'aid');
     const preview = page.getByTestId('reading-preview');
     await expect(preview.locator('[data-rs]')).toHaveCount(0);
     const before = await preview.boundingBox();
@@ -49,6 +50,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     expect(Number(weight)).toBeGreaterThanOrEqual(600);
 
     await page.reload();
+    await openFoldedGroup(page, 'reading', 'aid');
     await expect(page.getByTestId('reading-preview').locator('[data-rs]').first()).toBeVisible();
     await page.getByRole('switch', { name: 'Lesehilfe' }).click();
     await expect(page.getByTestId('reading-preview').locator('[data-rs]')).toHaveCount(0);
@@ -56,6 +58,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
 
   test('Alt+L switches the reading aid', async ({ page }) => {
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'reading', 'aid');
     await page.keyboard.press('Alt+KeyL');
     await expect(page.getByText('Lesehilfe ist an')).toBeVisible();
     await expect(page.getByTestId('reading-preview').locator('[data-rs]').first()).toBeVisible();
@@ -65,6 +68,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
 
   test('the calm colour mode is a device setting', async ({ page }) => {
     await ready(page, '/settings/darstellung');
+    await openAppearanceGroup(page, 'colors');
     await page
       .getByRole('group', { name: 'Farben' })
       .getByRole('button', { name: 'Ruhig' })
@@ -72,6 +76,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     expect(await html(page, 'data-color')).toBe('calm');
     await page.reload();
     expect(await html(page, 'data-color')).toBe('calm');
+    await openAppearanceGroup(page, 'colors');
     await page
       .getByRole('group', { name: 'Farben' })
       .getByRole('button', { name: 'Mit Bedeutung' })
@@ -126,6 +131,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     // 25 % (default): only running text – headings and buttons are plain.
     await expect(page.locator('main h1 [data-rs]')).toHaveCount(0);
     await ready(page, '/settings/darstellung');
+    await openFoldedGroup(page, 'reading', 'aid');
     const cover = page.getByRole('group', { name: 'Umfang' });
     await cover.getByRole('button', { name: '50 %' }).click();
     await expect(page.locator('main h1 [data-rs]').first()).toBeVisible();

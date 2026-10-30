@@ -4,6 +4,13 @@
  */
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
+import {
+  appearanceReset,
+  focusReset,
+  FOCUS_RESET_KEYS,
+  readingReset,
+  REMINDER_RESET_KEYS,
+} from '@/core/settings/reset';
 import { t } from '@/strings';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
@@ -25,8 +32,12 @@ import { BackupSection } from './BackupSection';
 import { AiStatsSection } from './AiStatsSection';
 import { AiWriteSection } from './AiWriteSection';
 import { CalmRemindersSection } from './CalmRemindersSection';
+import { NetworkSection } from './NetworkSection';
+import { tNet } from '@/strings.netlog';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
+import { tAdvanced } from '@/strings.advanced';
+import { AdvancedSection } from './AdvancedSection';
 import { FocusSection } from './FocusSection';
 import { GeneralSection } from './GeneralSection';
 import { LocalApiSection } from './LocalApiSection';
@@ -36,6 +47,12 @@ import { ModelLicensesSection } from './ModelLicensesSection';
 import { NotificationsSection } from './NotificationsSection';
 import { ReadingSection } from './ReadingSection';
 import { QuickCaptureSection } from './QuickCaptureSection';
+import { ShortcutsSection } from './ShortcutsSection';
+import { VoiceSection } from './VoiceSection';
+import { WeatherSection } from './WeatherSection';
+import { tKeys } from '@/strings.keys';
+import { tWeather } from '@/strings.weather';
+import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
 import { ToolsSection } from './ToolsSection';
@@ -214,6 +231,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: appearanceReset,
     render: () => <AppearanceSection />,
   },
   {
@@ -264,6 +282,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: readingReset,
     render: () => <ReadingSection />,
   },
   {
@@ -308,6 +327,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         key: 'calmAttention',
         get label() {
           return t.focus.settings.calmAttention;
+        },
+      },
+      {
+        key: 'moduleNow',
+        get label() {
+          return t.focus.settings.moduleNow;
         },
       },
       {
@@ -371,7 +396,34 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: focusReset(FOCUS_RESET_KEYS),
     render: () => <FocusSection />,
+  },
+  {
+    id: 'advanced',
+    category: 'darstellung',
+    order: 16,
+    get title() {
+      return tAdvanced.get().settings.title;
+    },
+    get description() {
+      return tAdvanced.get().settings.description;
+    },
+    get keywords() {
+      return tAdvanced.get().settings.keywords;
+    },
+    fields: [
+      {
+        key: 'advancedAll',
+        get label() {
+          return tAdvanced.get().settings.all;
+        },
+        get description() {
+          return tAdvanced.get().settings.allHint;
+        },
+      },
+    ],
+    render: () => <AdvancedSection />,
   },
   {
     id: 'favourites',
@@ -488,6 +540,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
       {
+        key: 'leadHint',
+        get label() {
+          return t.focus.reminders.leadHintTitle;
+        },
+      },
+      {
         key: 'followUp',
         get label() {
           return t.focus.reminders.followUp;
@@ -500,6 +558,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
+    reset: focusReset(REMINDER_RESET_KEYS),
     render: () => <CalmRemindersSection />,
   },
   {
@@ -701,6 +760,99 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     ),
   },
   {
+    id: 'network',
+    category: 'verbindungen',
+    order: 20,
+    get title() {
+      return tNet.get().title;
+    },
+    get description() {
+      return tNet.get().description;
+    },
+    get keywords() {
+      return tNet.get().keywords;
+    },
+    render: () => (
+      <SettingsGroup id="network" title={tNet.get().title} bare>
+        <NetworkSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'shortcuts',
+    category: 'allgemein',
+    order: 30,
+    get title() {
+      return tKeys.get().title;
+    },
+    get description() {
+      return tKeys.get().description;
+    },
+    get keywords() {
+      return tKeys.de.keywords;
+    },
+    get fields() {
+      return [
+        ...shortcutActions().map((a) => ({
+          key: shortcutRowKey(a),
+          get label() {
+            return `${tKeys.get().colKey}: ${actionLabel(a)}`;
+          },
+        })),
+        {
+          key: 'chords',
+          get label() {
+            return tKeys.get().groupChords;
+          },
+        },
+        {
+          key: 'voice',
+          get label() {
+            return tKeys.get().voice;
+          },
+        },
+      ];
+    },
+    render: () => (
+      <SettingsGroup id="shortcuts" title={tKeys.get().title} bare>
+        <ShortcutsSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'weather',
+    category: 'verbindungen',
+    order: 20,
+    get title() {
+      return tWeather.get().title;
+    },
+    get description() {
+      return tWeather.get().description;
+    },
+    get keywords() {
+      return tWeather.de.keywords;
+    },
+    fields: [
+      {
+        key: 'enabled',
+        get label() {
+          return tWeather.get().enable;
+        },
+      },
+      {
+        key: 'place',
+        get label() {
+          return tWeather.get().placeLabel;
+        },
+      },
+    ],
+    render: () => (
+      <SettingsGroup id="weather" title={tWeather.get().title} bare>
+        <WeatherSection />
+      </SettingsGroup>
+    ),
+  },
+  {
     id: 'localapi',
     category: 'verbindungen',
     order: 20,
@@ -794,6 +946,48 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="quickcapture" title={t.quickCapture.settings.title} bare>
         <QuickCaptureSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'voice',
+    category: 'schnellerfassung',
+    order: 20,
+    get title() {
+      return t.voice.title;
+    },
+    get keywords() {
+      return t.voice.searchWords;
+    },
+    fields: [
+      {
+        key: 'enabled',
+        get label() {
+          return t.voice.enable;
+        },
+      },
+      {
+        key: 'key',
+        get label() {
+          return t.voice.key;
+        },
+        get description() {
+          return t.voice.keyHint;
+        },
+      },
+      {
+        key: 'globalHotkey',
+        get label() {
+          return t.voice.globalKey;
+        },
+        get description() {
+          return t.voice.globalHint;
+        },
+      },
+    ],
+    render: () => (
+      <SettingsGroup id="voice" title={t.voice.title} bare>
+        <VoiceSection />
       </SettingsGroup>
     ),
   },

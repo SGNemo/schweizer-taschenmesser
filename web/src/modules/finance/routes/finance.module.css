@@ -1,5 +1,6 @@
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
@@ -20,7 +21,11 @@
   font-weight: 600;
   min-width: 9rem;
   text-align: center;
-  text-transform: capitalize;
+}
+/* First letter only: "octubre de 2026" must not become "Octubre De 2026". */
+
+.monthLabel::first-letter {
+  text-transform: uppercase;
 }
 
 /* Hero + KPI tiles */

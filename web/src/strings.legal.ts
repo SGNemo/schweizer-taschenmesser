@@ -61,7 +61,7 @@ export const tLegal = defineBundle(
         title: 'KI-Anbieter (Cloud)',
         what: 'Deine Frage oder dein Satz, das heutige Datum und eine kurze Beschreibung der Felder der aktiven Module (Namen und Typen, keine Inhalte), dazu dein API-Schlüssel im Kopf der Anfrage. Nie deine Einträge. Im Chat geht der Chat-Text an den Anbieter, und Daten aus der App nur, wenn du sie dort nach Vorschau mit „Mit Daten senden“ freigibst. Was du in eine Frage schreibst, geht mit.',
         to: 'Der Anbieter, den du selbst einrichtest (z. B. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral oder eine eigene Adresse). Kostenlose Tarife können Eingaben zum Training nutzen; das steht an der Karte des Anbieters.',
-        when: 'Nur wenn du einen Anbieter mit Schlüssel eingerichtet hast und die KI eine Anfrage nicht lokal beantworten kann. Alles aus: Einstellungen → KI → „KI abschalten“. Ollama und das eingebaute Modell laufen lokal.',
+        when: 'Nur wenn du einen Anbieter mit Schlüssel eingerichtet hast und die KI eine Anfrage nicht lokal beantworten kann. Alles aus: Einstellungen → KI → „KI abschalten“. Ollama und das eingebaute Modell laufen lokal. Die Suche nach Ollama im Einrichtungsassistenten fragt nur localhost:11434 auf diesem Computer ab, und erst nach einem Klick.',
       },
       'ai-model': {
         title: 'Download des eingebauten Modells (Windows)',
@@ -75,6 +75,12 @@ export const tLegal = defineBundle(
         to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). Der Betreiber von Nemo erhält nichts.',
         when: 'Nur nach dem Verbinden. Kalender-Abgleich im Hintergrund etwa alle 30 Minuten. Trennen widerruft den Zugriff. Das Zugriffs-Token läuft ab, wenn dein Google-Projekt im Status „Testing“ ist (nach 7 Tagen): dann „Neu anmelden“.',
       },
+      spotify: {
+        title: 'Spotify (optional, Windows)',
+        what: 'Anmeldung mit deiner eigenen Spotify-App (Client-ID, ohne Geheimnis). Danach fragt das Gerät bei Spotify, was gerade läuft (Titel, Interpret), und sendet auf Klick Pause, Weiter oder Nächster. Titel und Interpret bleiben auf dem Gerät: kein Sync, keine KI, keine Fehlerberichte.',
+        to: 'Spotify (accounts.spotify.com und api.spotify.com).',
+        when: 'Nur nach Verbinden und nur bei geöffneter, sichtbarer Übersicht: höchstens alle 30 Sekunden. Trennen unter Verbindungen → Spotify.',
+      },
       supporter: {
         title: 'Supporter-Code und Ko-fi',
         what: 'In der App nichts: der Code wird nur auf dem Gerät geprüft (ohne Netz). Wer über Ko-fi unterstützt, gibt Ko-fi seine Daten; ein kleiner Dienst des Betreibers erhält von Ko-fi die Benachrichtigung (u. a. Betrag und E-Mail-Adresse), verschickt den Code per E-Mail und speichert nur Prüfwerte statt Klartext.',
@@ -86,6 +92,12 @@ export const tLegal = defineBundle(
         what: 'Eine Abfrage der Euro-Wechselkurse ohne Daten aus der App. Die Kurse werden auf dem Gerät zwischengespeichert.',
         to: 'frankfurter.dev (öffentliche Kurse der Europäischen Zentralbank).',
         when: 'Beim Öffnen des Werkzeugs „Währung“.',
+      },
+      weather: {
+        title: 'Wetter-Zeile (optional)',
+        what: 'Beim Suchen eines Ortes der eingegebene Ortsname; danach die auf etwa einen Kilometer gerundete Position des gewählten Ortes (für die Vorhersage der nächsten 7 Tage). Keine Einträge, keine Konto- oder Gerätedaten; open-meteo.com sieht deine IP-Adresse und die üblichen Verbindungsdaten.',
+        to: 'open-meteo.com (Geocoding und Vorhersage; kostenlos, ohne Schlüssel).',
+        when: 'Nur wenn du einen Ort wählst: beim Suchen und danach etwa alle 30 Minuten, solange die Übersicht offen ist. Ohne Ort passiert nichts; abschaltbar unter Verbindungen → Wetter.',
       },
       ip: {
         title: 'Öffentliche IP anzeigen (Windows)',
@@ -138,6 +150,13 @@ export const tLegal = defineBundle(
         body: [
           'Nemo ruft die iCal-Adresse etwa alle 30 Minuten ab. Solche Adressen sind oft geheime Links: trage sie nur ein, wenn du dem Anbieter vertraust.',
           'Im Browser läuft die Abfrage über deinen eigenen Sync-Server. Die Termine werden als Einträge gespeichert und mit synchronisiert, wenn du Sync nutzt.',
+        ],
+      },
+      weather: {
+        title: 'Dein Wetter-Ort wird abgefragt',
+        body: [
+          'Beim Suchen geht der Ortsname, danach etwa alle 30 Minuten die auf etwa einen Kilometer gerundete Position deines Ortes an open-meteo.com. Nie deine Einträge.',
+          'Ohne gewählten Ort wird nichts abgefragt. Du kannst die Anzeige jederzeit ausschalten oder den Ort entfernen.',
         ],
       },
       supporter: {
@@ -227,7 +246,7 @@ export const tLegal = defineBundle(
           title: 'AI provider (cloud)',
           what: 'Your question or sentence, today’s date and a short description of the fields of the active modules (names and types, no contents), plus your API key in the request header. Never your entries. In chat, the chat text goes to the provider, and app data only if you release it there after a preview with “Mit Daten senden” (send with data). Whatever you write in a question goes with it.',
           to: 'The provider you set up yourself (e.g. Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Mistral or a custom address). Free tiers may use inputs for training; this is shown on the provider’s card.',
-          when: 'Only if you have set up a provider with a key and the AI cannot answer a request locally. Everything off: Settings → AI → “KI abschalten” (switch AI off). Ollama and the built-in model run locally.',
+          when: 'Only if you have set up a provider with a key and the AI cannot answer a request locally. Everything off: Settings → AI → “KI abschalten” (switch AI off). Ollama and the built-in model run locally. The Ollama search in the setup assistant only asks localhost:11434 on this computer, and only after a click.',
         },
         'ai-model': {
           title: 'Download of the built-in model (Windows)',
@@ -241,6 +260,12 @@ export const tLegal = defineBundle(
           to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). The maintainer of Nemo receives nothing.',
           when: 'Only after connecting. Calendar sync in the background about every 30 minutes. Disconnecting revokes access. The access token expires if your Google project is in “Testing” status (after 7 days): then use “Neu anmelden” (sign in again).',
         },
+        spotify: {
+          title: 'Spotify (optional, Windows)',
+          what: 'Sign-in with your own Spotify app (client ID, no secret). After that the device asks Spotify what is playing (title, artist) and, on a click, sends pause, resume or next. Title and artist stay on the device: no sync, no AI, no error reports.',
+          to: 'Spotify (accounts.spotify.com and api.spotify.com).',
+          when: 'Only after connecting and only while the Overview is open and visible: at most every 30 seconds. Disconnect under Connections → Spotify.',
+        },
         supporter: {
           title: 'Supporter code and Ko-fi',
           what: 'In the app, nothing: the code is only checked on the device (offline). Whoever supports via Ko-fi gives Ko-fi their data; a small service run by the maintainer receives the notification from Ko-fi (among other things amount and email address), sends the code by email and stores only check values instead of plain text.',
@@ -252,6 +277,12 @@ export const tLegal = defineBundle(
           what: 'A request for the euro exchange rates without any data from the app. The rates are cached on the device.',
           to: 'frankfurter.dev (public rates of the European Central Bank).',
           when: 'When you open the “Währung” (currency) tool.',
+        },
+        weather: {
+          title: 'Weather line (optional)',
+          what: 'When you search for a place, the place name you typed; after that, the position of the chosen place rounded to about a kilometre (for the forecast of the next 7 days). No entries, no account or device data; open-meteo.com sees your IP address and the usual connection data.',
+          to: 'open-meteo.com (geocoding and forecast; free, no key).',
+          when: 'Only when you choose a place: when you search and then about every 30 minutes while the Overview is open. Without a place nothing happens; can be switched off under Connections → Weather.',
         },
         ip: {
           title: 'Show public IP (Windows)',
@@ -304,6 +335,13 @@ export const tLegal = defineBundle(
           body: [
             'Nemo fetches the iCal address about every 30 minutes. Such addresses are often secret links: only enter one if you trust the provider.',
             'In the browser the request goes through your own sync server. The events are stored as entries and synced too if you use sync.',
+          ],
+        },
+        weather: {
+          title: 'Your weather place will be requested',
+          body: [
+            'When you search, the place name goes to open-meteo.com; after that, about every 30 minutes, the position of your place rounded to about a kilometre. Never your entries.',
+            'Without a chosen place nothing is requested. You can switch the line off or remove the place at any time.',
           ],
         },
         supporter: {

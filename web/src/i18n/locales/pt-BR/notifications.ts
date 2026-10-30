@@ -2,12 +2,16 @@ import type { Strings } from '@/strings';
 
 export const notifications: Strings['notifications'] = {
   summary: (count: number, titles: string[]) => ({
-    title: `Mais lembretes · ${count}`,
+    title: `${count} lembretes`,
     body: titles.slice(0, 3).join(' · ') + (titles.length > 3 ? ' …' : ''),
   }),
   title: 'Notificações',
   intro:
-    'Os lembretes aparecem como notificação enquanto o app estiver aberto ou rodando em segundo plano. Com o app fechado, eles só chegam por push (veja abaixo).',
+    'Os lembretes aparecem como notificação enquanto o app está aberto ou em segundo plano. Sem push, nada chega com o app fechado; o que venceu nesse meio-tempo aparece no sino ao abrir. Com push (veja abaixo) eles chegam também nesse caso.',
+  introAndroid:
+    'No Android, o app entrega os lembretes ao sistema para que cheguem também com o app fechado. Funciona se o Nemo puder enviar notificações e usar “Alarmes e lembretes” e o uso da bateria não estiver restrito (Configurações → Apps → Nemo).',
+  introDesktop:
+    'Os lembretes aparecem como notificação enquanto o Nemo está em execução, também em segundo plano ou na bandeja do sistema. Com o app encerrado eles não chegam; o que venceu nesse meio-tempo aparece no sino na próxima abertura.',
   enable: 'Ativar notificações',
   granted: 'Ativadas',
   denied: 'Bloqueadas – permita nas configurações do navegador para esta página.',

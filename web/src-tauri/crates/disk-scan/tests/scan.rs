@@ -82,6 +82,8 @@ fn sums_match_the_files_on_disk() {
     assert_eq!(root.logical_bytes, r.logical_bytes);
     assert_eq!(root.bytes, r.bytes);
     assert_eq!(r.not_read_total, 0);
+    // Access times are collected, too (whether they can be trusted is decided per volume).
+    assert!(root.accessed > 0);
 }
 
 #[test]
@@ -120,6 +122,8 @@ fn queries_find_the_biggest_folder_and_file() {
         min_bytes: None,
         limit: Some(1),
         only_empty: false,
+        topmost: false,
+        by_access: false,
     });
     assert_eq!(files[0].name, "d.mp4");
     let dirs = r.tree.query(&Query {
@@ -130,6 +134,8 @@ fn queries_find_the_biggest_folder_and_file() {
         min_bytes: None,
         limit: Some(1),
         only_empty: false,
+        topmost: false,
+        by_access: false,
     });
     assert_eq!(dirs[0].name, "media");
     let path = r.tree.path(files[0].id).unwrap();
@@ -331,4 +337,75 @@ fn perf_synthetic_tree() {
         println!("children(depth 3): {:?}", q.elapsed());
         assert_eq!(r.files as usize, dirs * per_dir);
     }
+}
+
+#[test]
+fn the_live_picture_ends_with_the_same_sums_as_the_tree() {
+    let t = fixture();
+    let control = ScanControl::default();
+    assert!(control.live.snapshot(0).is_empty());
+    let r = scan(t.path(), &opts(1000), &control, |_| {}).unwrap();
+    let live = control.live.snapshot(0);
+    let tree_root = r.tree.view(0).unwrap();
+    // Root and every top-level folder add up to what the finished tree says.
+    assert_eq!(live[0].bytes, tree_root.bytes);
+    assert_eq!(live[0].files, tree_root.files);
+    for top in r.tree.children(0, 1, 0) {
+        if top.kind != NodeKind::Dir {
+            continue;
+        }
+        let l = live
+            .iter()
+            .find(|v| v.kind == NodeKind::Dir && v.name == top.name && v.parent_id == Some(0))
+            .unwrap();
+        assert_eq!(l.bytes, top.bytes, "{}", top.name);
+    }
+    // The root's own file (top.txt) shows as "files here" next to the folders.
+    assert!(live
+        .iter()
+        .any(|v| v.kind == NodeKind::Small && v.parent_id == Some(0)));
+}
+
+#[test]
+fn ages_count_from_the_last_use_where_access_times_are_trusted() {
+    use std::time::{Duration, SystemTime};
+    let t = TempDir::new("last-use");
+    let day = Duration::from_secs(86_400);
+    let now = SystemTime::now();
+    for name in ["kept.bin", "small.bin"] {
+        let path = t.path().join(name);
+        fs::write(
+            &path,
+            vec![1u8; if name == "kept.bin" { 50_000 } else { 10 }],
+        )
+        .unwrap();
+        // Changed three years ago, opened last week.
+        let times = fs::FileTimes::new()
+            .set_modified(now - day * 1200)
+            .set_accessed(now - day * 7);
+        fs::File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_times(times)
+            .unwrap();
+    }
+    let run = |tracked: bool| {
+        let o = ScanOptions {
+            min_file_bytes: 20_000,
+            threads: 2,
+            access_tracked: Some(tracked),
+            ..Default::default()
+        };
+        scan(t.path(), &o, &ScanControl::default(), |_| {}).unwrap()
+    };
+    let by_change = run(false);
+    let by_use = run(true);
+    assert!(!by_change.access_tracked && by_use.access_tracked);
+    let ages = |r: &disk_scan::ScanResult| r.tree.view(0).unwrap().age_bytes;
+    let total = by_use.tree.view(0).unwrap().bytes;
+    // By change both the kept file and the folded small one are over three years old …
+    assert_eq!(ages(&by_change)[5], total);
+    // … by last use both are new.
+    assert_eq!(ages(&by_use)[0], total);
 }

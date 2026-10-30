@@ -31,6 +31,8 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
   const byDate = groupByDate(items);
   const now = today();
   const MAX_CHIPS = useChipLimit();
+  // A phone cell has room for one line, not for buttons: the first entry is named as plain text.
+  const wide = useMediaQuery('(min-width: 700px)');
   const weekStart = useWeekStart();
   return (
     <div className={styles.monthWrap}>
@@ -63,6 +65,13 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
                     >
                       {Number(d.slice(8, 10))}
                     </button>
+                    {!wide && list[0] ? (
+                      <span className={styles.cellLabel}>
+                        {list[0].time ? `${list[0].time} ` : ''}
+                        {list[0].title}
+                        {list.length > 1 ? ` +${list.length - 1}` : ''}
+                      </span>
+                    ) : null}
                     <ul className={styles.chips}>
                       {list.slice(0, MAX_CHIPS).map((i) => (
                         <li key={`${i.source}:${i.id}`}>
@@ -125,10 +134,12 @@ export function WeekView({
     <div className={styles.week}>
       {days.map((d) => {
         const list = byDate.get(d) ?? [];
+        // An empty day is one quiet line, so a week with few entries stays short.
+        const empty = list.length === 0;
         return (
           <section
             key={d}
-            className={`${styles.weekDay} ${d === now ? styles.todayCell : ''}`}
+            className={`${styles.weekDay} ${empty ? styles.weekDayEmpty : ''} ${d === now ? styles.todayCell : ''}`}
             aria-label={formatDay(d, 'EEEE, d. MMMM')}
           >
             <h3 className={styles.weekHead}>
@@ -136,8 +147,8 @@ export function WeekView({
                 {formatDay(d, 'EEEE, d. MMMM')}
               </button>
             </h3>
-            {list.length === 0 ? (
-              <EmptyState compact title={t.calendar.nothing} />
+            {empty ? (
+              <span className={styles.muted}>{t.calendar.nothing}</span>
             ) : (
               <ul className={styles.itemList}>
                 {list.map((i) => (

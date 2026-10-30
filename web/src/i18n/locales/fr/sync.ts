@@ -4,9 +4,11 @@ export const sync: Strings['sync'] = {
   defaultDeviceName: 'Appareil',
   title: 'Synchronisation',
   intro:
-    'Facultatif : synchronisez vos données via votre propre serveur de synchronisation (en réseau local ou via Tailscale). Sans serveur, tout reste sur cet appareil.',
+    'Facultatif : synchronisez vos données via votre propre serveur de synchronisation (sur votre réseau domestique ou via un réseau privé comme Tailscale). Sans serveur, tout reste sur cet appareil.',
   serverUrl: 'Adresse du serveur',
   serverUrlHint: 'p. ex. https://mon-pc.tailnet.ts.net',
+  httpWarning:
+    'Avec « http:// », le jeton circule non chiffré sur le réseau. Utilisez https:// (par exemple Tailscale) ; http n’est acceptable que pour cet ordinateur (localhost).',
   token: 'Token d’accès',
   deviceName: 'Nom de l’appareil',
   deviceNameHint: 'C’est ainsi que cet appareil apparaît dans la liste des appareils.',
@@ -17,10 +19,10 @@ export const sync: Strings['sync'] = {
   } as Record<string, string>,
   encrypt: 'Chiffrement de bout en bout',
   encryptHint:
-    'Les valeurs sont chiffrées sur l’appareil, le serveur ne voit que du texte chiffré. Possible uniquement sur un serveur vide.',
+    'Les valeurs sont chiffrées sur l’appareil, le serveur ne voit que des données chiffrées. Possible uniquement sur un serveur vide.',
   plainWarning:
     'Sans chiffrement de bout en bout, vos données sont stockées en clair sur le serveur. Activez-le si le serveur n’est pas qu’à vous ou si son stockage n’est pas chiffré.',
-  passphrase: 'Phrase secrète',
+  passphrase: 'Phrase secrète (plusieurs mots)',
   passphraseHint:
     'Au moins 12 caractères, idéalement plusieurs mots. Sans la phrase secrète, les données ne peuvent pas être récupérées.',
   passphraseJoinHint: 'Nécessaire uniquement si le serveur est chiffré.',
@@ -46,8 +48,10 @@ export const sync: Strings['sync'] = {
   state: { off: 'Désactivée', idle: 'Synchronisé', syncing: 'Synchronisation…', error: 'Erreur' },
   badge: (state: string) => `Synchronisation : ${state}`,
   detailsTitle: 'État',
-  lastResult: (pulled: number, pushed: number) =>
-    `Dernière fois : ${pulled} reçu(s), ${pushed} envoyé(s)`,
+  lastResult: (applied: number, pushed: number) =>
+    applied === 0 && pushed === 0
+      ? 'Dernière fois : tout est à jour, rien de nouveau'
+      : `Dernière fois : ${applied} modification(s) appliquée(s), ${pushed} envoyée(s)`,
   rejected: (n: number) =>
     n <= 1
       ? `${n} modification reçue n’a pas pu être déchiffrée et a été ignorée.`
