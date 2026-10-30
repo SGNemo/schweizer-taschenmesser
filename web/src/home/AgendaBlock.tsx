@@ -29,7 +29,7 @@ function Group({ title, items, testId }: { title: string; items: CalendarItem[];
       <h3 className={styles.group}>{title}</h3>
       <ul className={styles.list}>
         {items.map((i) => (
-          <Row key={`${i.source}:${i.id}`} item={i} />
+          <Row key={`${i.source}:${i.id}:${i.date}`} item={i} />
         ))}
       </ul>
     </div>
@@ -63,7 +63,9 @@ export function AgendaBlock() {
               <h3 className={styles.group}>{t.home.agenda.week}</h3>
               <ul className={styles.list}>
                 {agenda.week.flatMap((d) =>
-                  d.items.map((i) => <Row key={`${i.source}:${i.id}`} item={i} withDay />),
+                  d.items.map((i) => (
+                    <Row key={`${i.source}:${i.id}:${i.date}`} item={i} withDay />
+                  )),
                 )}
               </ul>
             </div>

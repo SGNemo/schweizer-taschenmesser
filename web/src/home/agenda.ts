@@ -40,7 +40,18 @@ export function buildAgenda(
   day: string,
   limits: Limits = LIMITS.all,
 ): Agenda {
-  const open = items.filter((i) => !i.done);
+  // A multi-day event arrives once per day it covers (`continued`): the block names it on its
+  // first day in range only, so it is neither listed three times nor keyed twice.
+  const seen = new Set<string>();
+  const open = [...items]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .filter((i) => {
+      if (i.done) return false;
+      const key = `${i.source}:${i.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   const tomorrowDate = addDaysStr(day, 1);
   const today = open.filter((i) => i.date === day && i.source !== 'todos');
   const tomorrow = open.filter((i) => i.date === tomorrowDate);
