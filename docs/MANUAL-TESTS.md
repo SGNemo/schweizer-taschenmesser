@@ -321,3 +321,8 @@ F3. *Handy:* Einheit-Auswahl (Tage/Wochen/Monate) und Zahlenfeld gut treffbar, Z
 U1. *Android/Windows:* Unterlage mit Datei löschen: keine Rückfrage, Toast „Gelöscht · Rückgängig“; „Rückgängig“ bringt Eintrag und Datei zurück (Herunterladen geht). ☐
 U2. *Handy:* Unterlage-Dialog öffnen, Text tippen, Zurück-Geste bzw. neben den Dialog tippen, Dialog erneut öffnen: Text ist da; „Abbrechen“ verwirft ihn. ☐
 
+### Zuletzt gelöscht (P5 Paket D)
+G1. *Android/Windows:* Unterlage mit Datei, ein Abo und einen Termin löschen; Einstellungen → Allgemein → „Zuletzt gelöscht“ zeigt alle drei mit „noch 30 Tage“. „Wiederherstellen“ bringt sie zurück (Datei der Unterlage ist da). ☐
+G2. *Mit eingerichtetem Sync-Server, zwei Geräte:* auf Gerät A löschen und „Endgültig löschen“; nach dem Abgleich ist der Eintrag auch auf Gerät B weg und nicht in dessen Liste. ☐
+G3. *Schalter „Gelöschtes 30 Tage aufbewahren“ aus:* Liste verschwindet mit Hinweis; „Rückgängig“ direkt nach dem Löschen geht weiter. ☐
+
