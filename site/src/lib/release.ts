@@ -1,5 +1,6 @@
 import data from '../release/latest.json';
 import { ASSETS, downloadUrl } from '../config.js';
+import type { Locale } from '../i18n';
 
 export type Platform = 'windows' | 'android';
 export interface AssetInfo {
@@ -17,16 +18,19 @@ export interface ReleaseInfo {
 
 export const release = data as ReleaseInfo;
 
-/** 10331648 → "10,3 MB" (de) / "10.3 MB" (en). */
-export function formatSize(bytes: number, locale: 'de' | 'en'): string {
+/** Intl locale per page language. */
+const INTL: Record<Locale, string> = { de: 'de-DE', en: 'en-GB', es: 'es-ES', fr: 'fr-FR', 'pt-BR': 'pt-BR' };
+
+/** 10331648 → "10,3 MB" (de) / "10.3 MB" (en), in the page language. */
+export function formatSize(bytes: number, locale: Locale): string {
   const mb = bytes / 1_000_000;
-  return `${mb.toLocaleString(locale === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} MB`;
+  return `${mb.toLocaleString(INTL[locale], { maximumFractionDigits: 1, minimumFractionDigits: 1 })} MB`;
 }
 
-export function formatDate(iso: string, locale: 'de' | 'en'): string {
+export function formatDate(iso: string, locale: Locale): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
   const [y, m, d] = iso.split('-').map(Number);
-  return new Date(Date.UTC(y!, m! - 1, d!)).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-GB', {
+  return new Date(Date.UTC(y!, m! - 1, d!)).toLocaleDateString(INTL[locale], {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

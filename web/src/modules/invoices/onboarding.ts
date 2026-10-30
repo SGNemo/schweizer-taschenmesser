@@ -17,6 +17,9 @@ export const onboarding: OnboardingDef = {
           get label() {
             return s.payee;
           },
+          get suggestions() {
+            return s.suggestions;
+          },
           type: 'text',
           required: true,
         },
