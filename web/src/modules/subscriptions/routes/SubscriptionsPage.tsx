@@ -21,12 +21,14 @@ import { SubscriptionEditor, type SubscriptionTarget } from '../components/Subsc
 import {
   changePercent,
   nextCancelDeadline,
+  missedDeadline,
   nextCharge,
   recentIncrease,
   sortSubscriptions,
   totals,
 } from '../logic';
 import { subscriptionRepo } from '../repo';
+import { tDeadline } from '@/strings.deadline';
 import styles from './subscriptions.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 
@@ -87,6 +89,7 @@ export default function SubscriptionsPage() {
         {subs?.map((s) => {
           const charge = s.active ? nextCharge(s, day) : undefined;
           const cancel = s.active ? nextCancelDeadline(s, day) : undefined;
+          const missed = s.active ? missedDeadline(s, day) : undefined;
           const urgent = cancel ? daysBetween(day, cancel.deadline) <= WARN_DAYS : false;
           const increase = recentIncrease(s.priceHistory ?? [], day);
           const facts = [
@@ -112,8 +115,14 @@ export default function SubscriptionsPage() {
               meta={
                 <>
                   {facts.join(' · ')}
+                  {missed ? (
+                    <span className={styles.missed} title={tDeadline.get().missedNote}>
+                      {' · '}
+                      {tDeadline.get().missedOn(formatDay(missed.deadline, 'd. MMM yyyy'))}
+                    </span>
+                  ) : null}
                   {cancel ? (
-                    <span className={urgent ? styles.warn : undefined}>
+                    <span className={`${styles.cancelLine} ${urgent ? styles.warn : ''}`}>
                       {' · '}
                       {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}
                     </span>

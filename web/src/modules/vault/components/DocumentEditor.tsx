@@ -1,3 +1,4 @@
+import { NoticeField } from '@/core/deadline/NoticeField';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
@@ -35,7 +36,7 @@ function Fields({
   const [provider, setProvider] = useState(existing?.provider ?? '');
   const [startDate, setStartDate] = useState(existing?.startDate ?? '');
   const [endDate, setEndDate] = useState((existing && endOf(existing)) ?? '');
-  const [notice, setNotice] = useState(existing?.noticeDays?.toString() ?? '');
+  const [notice, setNotice] = useState<number | undefined>(existing?.noticeDays);
   const [dateError, setDateError] = useState('');
   const [note, setNote] = useState(existing?.note ?? '');
   const [file, setFile] = useState<File | 'remove' | undefined>();
@@ -48,7 +49,7 @@ function Fields({
       provider: provider.trim() || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
-      noticeDays: notice.trim() === '' ? undefined : Number(notice),
+      noticeDays: notice,
       note: note.trim() || undefined,
       fileName: existing?.fileName,
       fileType: existing?.fileType,
@@ -111,15 +112,7 @@ function Fields({
           error={dateError}
         />
       </Split>
-      <TextField
-        label={t.vault.noticeDays}
-        hint={t.vault.noticeHint}
-        type="number"
-        inputMode="numeric"
-        min={0}
-        value={notice}
-        onChange={(e) => setNotice(e.target.value)}
-      />
+      <NoticeField days={notice} onChange={setNotice} max={730} />
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       <div>
         <TextField

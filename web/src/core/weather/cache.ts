@@ -39,6 +39,9 @@ const hourSchema = z.object({
   gust: num,
   hum: num,
   uv: num,
+  cloud: num,
+  hpa: num,
+  dir: num,
   night: z.boolean().optional(),
 });
 const daySchema = z.object({
@@ -56,13 +59,24 @@ const daySchema = z.object({
   sunrise: z.string().optional(),
   sunset: z.string().optional(),
   sunMin: num,
+  rainHours: num,
+  dir: num,
 });
 const nowSchema = z.object({
   feels: num,
   hum: num,
   wind: num,
   gust: num,
+  cloud: num,
+  hpa: num,
+  dir: num,
   night: z.boolean().optional(),
+});
+const pollenSchema = z.record(z.string(), z.number().finite());
+const airSchema = z.object({
+  now: z.object({ aqi: num, pm25: num, pm10: num, o3: num, no2: num, so2: num }),
+  pollen: pollenSchema,
+  days: z.array(z.object({ date: z.string(), pollen: pollenSchema, aqi: num })),
 });
 /** `time`, `hours` and `days` are optional: a value cached before the preview stays valid for the line. */
 const forecastSchema = z.object({
@@ -73,6 +87,7 @@ const forecastSchema = z.object({
   hours: z.array(hourSchema).optional(),
   days: z.array(daySchema).optional(),
   now: nowSchema.optional(),
+  air: airSchema.optional(),
 });
 const cachedSchema = z.object({
   key: z.string(),

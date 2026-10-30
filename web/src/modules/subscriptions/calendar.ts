@@ -1,6 +1,8 @@
 import { formatMoney } from '@/core/money';
 import type { CalendarItem, CalendarSource } from '@/core/modules/types';
-import { cancelDeadlinesInRange, chargesInRange } from './logic';
+import { today } from '@/core/time/dates';
+import { tDeadline } from '@/strings.deadline';
+import { cancelDeadlinesInRange, chargesInRange, missedDeadline } from './logic';
 import { subscriptionRepo } from './repo';
 import { t } from '@/strings';
 
@@ -8,6 +10,7 @@ import { t } from '@/strings';
 const source: CalendarSource = async (range) => {
   const subs = (await subscriptionRepo.active().toArray()).filter((s) => s.active);
   const items: CalendarItem[] = [];
+  const day = today();
   for (const s of subs) {
     for (const date of chargesInRange(s, range.from, range.to)) {
       items.push({
@@ -20,12 +23,16 @@ const source: CalendarSource = async (range) => {
         to: '/subscriptions',
       });
     }
+    const missed = missedDeadline(s, day);
     for (const d of cancelDeadlinesInRange(s, range.from, range.to)) {
+      const passed = missed?.deadline === d.deadline;
       items.push({
         id: `${s.id}:cancel:${d.deadline}`,
         source: 'subscriptions',
         kind: 'cancel',
-        title: t.subscriptions.cancelCalendar(s.name),
+        title: passed
+          ? tDeadline.get().missedCalendar(s.name)
+          : t.subscriptions.cancelCalendar(s.name),
         date: d.deadline,
         allDay: true,
         to: '/subscriptions',

@@ -7,6 +7,8 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Verbindungsprotokoll und „Netzwerk sperren“ (QA P6, `feat/qa-connection-log`): [features/connection-log.md](features/connection-log.md).
 Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 Sprachen, KI-Knöpfe nur mit KI-Zugang, „Sehr groß“ = 150 %; P3b/P3c folgen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Paket B (Frist vorbei, Frist in Monaten) gebaut, C–D folgen ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
+Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-Stärketexte, Vorlagen; P3c (README/Website) folgt; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
 P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Pakete B–D folgen ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
@@ -18,6 +20,7 @@ Website in fünf Sprachen (`feat/site-languages`): /es, /fr, /pt-br mit eigenen 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
 Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter (Detail-Vorschau), Modul Karten & Orte (Paket 1), Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter (Detail-Vorschau, Luft & Pollen), Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
 
 Handy-Layout (QA P2, `fix/qa-mobile-layout`): Kopfzeile, Listenzeilen, Hinweise, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi; `e2e/screenshots/mobile-layout.spec.ts`; Gerätetest offen.
 

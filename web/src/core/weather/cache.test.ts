@@ -155,6 +155,16 @@ describe('preview data in the cache', () => {
     expect(readCache()?.forecast).toEqual(rich);
   });
 
+  it('round-trips air quality and pollen', () => {
+    const air = {
+      now: { aqi: 33, pm25: 8.1, o3: 60 },
+      pollen: { birch: 80, grass: 3 },
+      days: [{ date: '2026-10-19', pollen: { birch: 120 }, aqi: 45 }],
+    };
+    writeCache({ key, at: T0, forecast: { ...forecast, air } });
+    expect(readCache()?.forecast.air).toEqual(air);
+  });
+
   it('an old value without hours and days stays valid for the line', () => {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ key, at: T0, forecast }));
     expect(readCache()).toEqual({ key, at: T0, forecast });
