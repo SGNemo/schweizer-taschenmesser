@@ -190,7 +190,7 @@ describe('fetchForecast', () => {
     const out = await fetchForecast(46.95, 7.45, f);
     const urls = (f as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => String(c[0]));
     expect(urls[0]).toContain('/v1/forecast');
-    const airUrl = urls.find((u) => u.includes('air-quality-api.open-meteo.com'))!;
+    const airUrl = urls.find((u) => new URL(u).host === 'air-quality-api.open-meteo.com')!;
     expect(airUrl).toContain('latitude=46.95');
     expect(airUrl).toContain('longitude=7.45');
     expect(airUrl).toContain('birch_pollen');
