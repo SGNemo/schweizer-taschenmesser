@@ -23,7 +23,7 @@
   <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/latest/download/Nemo.apk"><img src="https://img.shields.io/badge/Android-APK_herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android: APK herunterladen"></a>
 </p>
 
-<p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>. Die App-Oberfläche ist heute Deutsch; weitere Sprachen sind in Arbeit.</p>
+<p align="center">Die Buttons laden die neueste <strong>stabile</strong> Version. Vorabversionen (Beta) und alle Änderungen: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases">Releases</a>. Die App gibt es auf Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien); sie folgt der Gerätesprache (Einstellungen → Allgemein).</p>
 
 <p align="center">
   <picture>
