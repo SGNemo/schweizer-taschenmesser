@@ -191,6 +191,156 @@ const CONTRACT_PROVIDERS = [
 ];
 const CONTRACT_KINDS = ['contract', 'insurance', 'warranty'] as const;
 
+/** German source text → [en, es, fr, pt-BR]; a text without an entry stays German (company names do). */
+const TR: Record<string, readonly [string, string, string, string]> = {
+  Reisepass: ['Passport', 'Pasaporte', 'Passeport', 'Passaporte'],
+  Personalausweis: [
+    'ID card',
+    'Documento de identidad',
+    'Carte d’identité',
+    'Carteira de identidade',
+  ],
+  'Hausratversicherung Police': [
+    'Home contents insurance policy',
+    'Póliza del seguro del hogar',
+    'Police d’assurance habitation',
+    'Apólice do seguro residencial',
+  ],
+  Haftpflichtversicherung: [
+    'Liability insurance',
+    'Seguro de responsabilidad civil',
+    'Assurance responsabilité civile',
+    'Seguro de responsabilidade civil',
+  ],
+  'Mietvertrag Wohnung': [
+    'Flat rental agreement',
+    'Contrato de alquiler del piso',
+    'Bail de l’appartement',
+    'Contrato de aluguel do apartamento',
+  ],
+  'Steuerbescheid 2024': [
+    'Tax assessment 2024',
+    'Liquidación de impuestos 2024',
+    'Avis d’imposition 2024',
+    'Notificação de imposto 2024',
+  ],
+  Impfpass: [
+    'Vaccination record',
+    'Cartilla de vacunación',
+    'Carnet de vaccination',
+    'Carteira de vacinação',
+  ],
+  'Garantie Waschmaschine': [
+    'Washing machine warranty',
+    'Garantía de la lavadora',
+    'Garantie du lave-linge',
+    'Garantia da máquina de lavar',
+  ],
+  Führerschein: [
+    'Driving licence',
+    'Carné de conducir',
+    'Permis de conduire',
+    'Carteira de motorista',
+  ],
+  Zahnbonusheft: [
+    'Dental bonus booklet',
+    'Cartilla de revisiones dentales',
+    'Carnet de suivi dentaire',
+    'Caderneta odontológica',
+  ],
+  'Verlängerung rechtzeitig beantragen': [
+    'Apply for renewal in good time',
+    'Solicitar la renovación con tiempo',
+    'Demander le renouvellement à temps',
+    'Pedir a renovação com antecedência',
+  ],
+  'Auffrischung fällig': [
+    'Booster due',
+    'Refuerzo pendiente',
+    'Rappel à faire',
+    'Reforço pendente',
+  ],
+  Handyvertrag: ['Mobile plan', 'Contrato de móvil', 'Forfait mobile', 'Plano de celular'],
+  'Kündigung schriftlich': [
+    'Cancel in writing',
+    'Cancelar por escrito',
+    'Résiliation par écrit',
+    'Cancelar por escrito',
+  ],
+  'Internet & Telefon': [
+    'Internet & phone',
+    'Internet y teléfono',
+    'Internet et téléphone',
+    'Internet e telefone',
+  ],
+  Hausratversicherung: [
+    'Home contents insurance',
+    'Seguro del hogar',
+    'Assurance habitation',
+    'Seguro residencial',
+  ],
+  Fitnessstudio: ['Gym', 'Gimnasio', 'Salle de sport', 'Academia'],
+  'Waschmaschine Garantie': [
+    'Washing machine warranty',
+    'Garantía de la lavadora',
+    'Garantie du lave-linge',
+    'Garantia da máquina de lavar',
+  ],
+  Stromvertrag: [
+    'Electricity contract',
+    'Contrato de luz',
+    'Contrat d’électricité',
+    'Contrato de energia',
+  ],
+  'Laptop Garantie': [
+    'Laptop warranty',
+    'Garantía del portátil',
+    'Garantie de l’ordinateur portable',
+    'Garantia do notebook',
+  ],
+  'Zeitschriften-Abo': [
+    'Magazine subscription',
+    'Suscripción a revista',
+    'Abonnement magazine',
+    'Assinatura de revista',
+  ],
+  'Kfz-Versicherung': ['Car insurance', 'Seguro de coche', 'Assurance auto', 'Seguro de carro'],
+  Rechtsschutz: [
+    'Legal expenses insurance',
+    'Seguro de defensa jurídica',
+    'Protection juridique',
+    'Seguro de proteção jurídica',
+  ],
+  'Kühlschrank Garantie': [
+    'Fridge warranty',
+    'Garantía del frigorífico',
+    'Garantie du réfrigérateur',
+    'Garantia da geladeira',
+  ],
+  'Streaming-Dienst': [
+    'Streaming service',
+    'Servicio de streaming',
+    'Service de streaming',
+    'Serviço de streaming',
+  ],
+  Gartenpflege: ['Garden care', 'Cuidado del jardín', 'Entretien du jardin', 'Cuidado do jardim'],
+  'Wartungsvertrag Heizung': [
+    'Heating maintenance contract',
+    'Contrato de mantenimiento de la calefacción',
+    'Contrat d’entretien du chauffage',
+    'Contrato de manutenção do aquecimento',
+  ],
+  'Cloud-Speicher': [
+    'Cloud storage',
+    'Almacenamiento en la nube',
+    'Stockage cloud',
+    'Armazenamento na nuvem',
+  ],
+};
+const LANG_INDEX = { en: 0, es: 1, fr: 2, 'pt-BR': 3 } as const;
+const tr = (ctx: SeedContext, de: string): string =>
+  ctx.lang === 'de' ? de : (TR[de]?.[LANG_INDEX[ctx.lang]] ?? de);
+
 // Only metadata: no blob is created. The page shows the entry without a file on this device.
 function seed(ctx: SeedContext): SeedRows {
   const n = ctx.count({ small: 5, medium: 10, large: 80 });
@@ -199,7 +349,7 @@ function seed(ctx: SeedContext): SeedRows {
   for (let i = contracts.length; i < m; i++) {
     const kind = ctx.rng.pick(CONTRACT_KINDS);
     contracts.push({
-      name: `${ctx.rng.pick(CONTRACT_NAMES)} ${i}`,
+      name: `${tr(ctx, ctx.rng.pick(CONTRACT_NAMES))} ${i}`,
       kind,
       provider: ctx.rng.pick(CONTRACT_PROVIDERS),
       end: ctx.rng.int(-60, 600),
@@ -215,9 +365,9 @@ function seed(ctx: SeedContext): SeedRows {
         return {
           id: ctx.id('vault', 'document', i),
           data: {
-            title: round === 0 ? b.title : `${b.title} (${round + 1})`,
+            title: round === 0 ? tr(ctx, b.title) : `${tr(ctx, b.title)} (${round + 1})`,
             category: b.category,
-            ...(b.note ? { note: b.note } : {}),
+            ...(b.note ? { note: tr(ctx, b.note) } : {}),
             ...(b.exp !== undefined ? { endDate: ctx.day(b.exp + round * 30) } : {}),
             fileName: b.file,
             fileType: b.type,
@@ -228,14 +378,14 @@ function seed(ctx: SeedContext): SeedRows {
       ...contracts.map((b, i) => {
         const endDate = ctx.day(b.end);
         const data: Record<string, unknown> = {
-          title: b.name,
+          title: tr(ctx, b.name),
           category: b.kind,
           provider: b.provider,
           startDate: addDaysStr(endDate, -b.term),
           endDate,
         };
         if (b.noticeDays !== undefined) data.noticeDays = b.noticeDays;
-        if (b.note) data.note = b.note;
+        if (b.note) data.note = tr(ctx, b.note);
         return { id: ctx.id('vault', 'contract', i), data };
       }),
     ],
