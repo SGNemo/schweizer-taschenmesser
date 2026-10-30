@@ -87,6 +87,7 @@ export function TileMap({
   template,
   markers,
   selected,
+  line,
   onPick,
   onMarker,
   onLocate,
@@ -98,6 +99,8 @@ export function TileMap({
   template: string;
   markers: readonly MapMarker[];
   selected?: { lat: number; lon: number };
+  /** A route line to draw (already thinned). */
+  line?: readonly { lat: number; lon: number }[];
   onPick?: (lat: number, lon: number) => void;
   onMarker?: (id: string) => void;
   onLocate?: () => void;
@@ -279,6 +282,25 @@ export function TileMap({
             onError={onTileError}
           />
         ))}
+        {line && line.length > 1 ? (
+          <svg
+            className={styles.line}
+            width={size.w}
+            height={size.h}
+            aria-hidden="true"
+            data-testid="map-line"
+          >
+            <polyline
+              fill="none"
+              points={line
+                .map((pt) => {
+                  const p = toScreen(view, pt.lat, pt.lon, size.w, size.h);
+                  return `${Math.round(p.x * 10) / 10},${Math.round(p.y * 10) / 10}`;
+                })
+                .join(' ')}
+            />
+          </svg>
+        ) : null}
         {pins.map((m) => {
           const p = toScreen(view, m.lat, m.lon, size.w, size.h);
           if (p.x < -24 || p.y < -48 || p.x > size.w + 24 || p.y > size.h + 24) return null;
