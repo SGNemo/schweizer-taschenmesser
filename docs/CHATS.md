@@ -10,7 +10,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | QA-Wording P3b (`fix/qa-formats-i18n`) | PR ansehen, mergen; danach P3c (README/Website) freigeben. Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | QA-Wording (P3, abgeschlossen) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
-| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 6 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
 | Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
 
