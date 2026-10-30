@@ -11,6 +11,7 @@ import {
   type SharePair,
 } from '@/core/share/pairs';
 import { splitIntoFrames } from '@/core/share/frames';
+import { listChoices, listScopeOf } from '@/core/share/scopes';
 import { createPairFile, shareFileName, shareableModules } from '@/core/share/share';
 import { QrPlayer } from './ShareQr';
 import { now } from '@/core/time/now';
@@ -29,6 +30,8 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
   const [pairs, setPairs] = useState<SharePair[]>([]);
   const [name, setName] = useState('');
   const [chosen, setChosen] = useState<string[]>([]);
+  const [choices, setChoices] = useState<Record<string, { id: string; name: string }[]>>({});
+  const [lists, setLists] = useState<Record<string, string[]>>({});
   const [fresh, setFresh] = useState<{ name: string; code: string } | undefined>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -44,13 +47,33 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
     };
   }, [version]);
 
+  useEffect(() => {
+    let live = true;
+    void Promise.all(
+      chosen
+        .filter((id) => listScopeOf(id))
+        .map(async (id) => [id, await listChoices(id)] as const),
+    ).then((entries) => live && setChoices(Object.fromEntries(entries)));
+    return () => {
+      live = false;
+    };
+  }, [chosen]);
+
   async function create() {
     setError('');
     if (chosen.length === 0) return setError(n.pickModules);
-    const { pair, code } = await createPair({ name, modules: chosen });
+    const picked = Object.fromEntries(
+      Object.entries(lists).filter(([id, ids]) => chosen.includes(id) && ids.length > 0),
+    );
+    const { pair, code } = await createPair({
+      name,
+      modules: chosen,
+      ...(Object.keys(picked).length > 0 ? { lists: picked } : {}),
+    });
     setFresh({ name: pair.name, code });
     setName('');
     setChosen([]);
+    setLists({});
     onChanged();
   }
 
@@ -60,7 +83,13 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
     setBusy(true);
     try {
       const since = all ? undefined : pair.sentUpto;
-      const file = await createPairFile({ modules: pair.modules, code, pairId: pair.id, since });
+      const file = await createPairFile({
+        modules: pair.modules,
+        code,
+        pairId: pair.id,
+        since,
+        lists: pair.lists,
+      });
       if (file.rows === 0 && since) return toast(n.pairNothing);
       const result = await downloadTextFile(shareFileName(), file.text);
       if (result !== 'saved') return;
@@ -83,6 +112,7 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
         code,
         pairId: pair.id,
         since: pair.sentUpto,
+        lists: pair.lists,
       });
       if (file.rows === 0 && pair.sentUpto) return toast(n.pairNothing);
       setQr({ pair, frames: splitIntoFrames(file.text), upto: file.upto, rows: file.rows });
@@ -117,6 +147,7 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
           {pairs.map((p) => (
             <li key={p.id} data-testid="share-pair">
               <strong>{p.name}</strong> · {p.modules.map(moduleName).join(', ')}
+              {p.lists && Object.keys(p.lists).length > 0 ? ` · ${n.listsOnly}` : ''}
               <br />
               <span className={styles.muted}>
                 {when(p.sentAt, n.pairNeverSent, n.lastSent)} ·{' '}
@@ -154,16 +185,40 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
       <fieldset className={styles.fieldset}>
         <legend className={styles.legend}>{n.modules}</legend>
         {modules.map((m) => (
-          <Checkbox
-            key={m.id}
-            label={m.name}
-            checked={chosen.includes(m.id)}
-            onChange={(e) =>
-              setChosen((cur) =>
-                e.target.checked ? [...cur, m.id] : cur.filter((x) => x !== m.id),
-              )
-            }
-          />
+          <div key={m.id}>
+            <Checkbox
+              label={m.name}
+              checked={chosen.includes(m.id)}
+              onChange={(e) =>
+                setChosen((cur) =>
+                  e.target.checked ? [...cur, m.id] : cur.filter((x) => x !== m.id),
+                )
+              }
+            />
+            {chosen.includes(m.id) && (choices[m.id]?.length ?? 0) > 0 ? (
+              <fieldset className={styles.fieldset} data-testid={`share-lists-${m.id}`}>
+                <legend className={styles.muted}>{n.listsHint}</legend>
+                {choices[m.id]!.map((l) => (
+                  <Checkbox
+                    key={l.id}
+                    label={l.name}
+                    checked={lists[m.id]?.includes(l.id) ?? false}
+                    onChange={(e) =>
+                      setLists((cur) => {
+                        const picked = cur[m.id] ?? [];
+                        return {
+                          ...cur,
+                          [m.id]: e.target.checked
+                            ? [...picked, l.id]
+                            : picked.filter((x) => x !== l.id),
+                        };
+                      })
+                    }
+                  />
+                ))}
+              </fieldset>
+            ) : null}
+          </div>
         ))}
       </fieldset>
       {error ? (

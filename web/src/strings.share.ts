@@ -8,6 +8,8 @@ export const tShare = defineBundle(
       'Gib ausgewählte Bereiche als verschlüsselte Datei weiter, ohne Server und ohne Konto. Die andere Person öffnet sie mit einem Code und führt sie mit ihren Daten zusammen. Nichts wird gelöscht.',
     keywords: ['Teilen', 'Partner', 'Koppeln', 'Datei', 'Familie', 'Einkauf', 'Code'],
     qrSent: (n: number) => `Gezeigt: ${n} geänderte ${n === 1 ? 'Eintrag' : 'Einträge'}.`,
+    listsHint: 'Nur diese Listen teilen (nichts angehakt: alle)',
+    listsOnly: 'nur ausgewählte Listen',
     qrShow: 'Als QR-Bilder zeigen',
     qrHint:
       'Die andere Person öffnet hier „Mit Kamera lesen“ und hält die Kamera auf den Bildschirm, bis alle Bilder gelesen sind. Die Reihenfolge ist egal.',
@@ -84,6 +86,8 @@ export const tShare = defineBundle(
         'Pass chosen areas on as an encrypted file, with no server and no account. The other person opens it with a code and merges it with their data. Nothing is deleted.',
       keywords: ['share', 'partner', 'pair', 'file', 'family', 'shopping', 'code'],
       qrSent: (n: number) => `Shown: ${n} changed ${n === 1 ? 'entry' : 'entries'}.`,
+      listsHint: 'Share only these lists (none ticked: all)',
+      listsOnly: 'selected lists only',
       qrShow: 'Show as QR pictures',
       qrHint:
         'The other person opens “Read with camera” here and points the camera at the screen until all pictures are read. The order does not matter.',
@@ -159,6 +163,8 @@ export const tShare = defineBundle(
       keywords: ['compartir', 'pareja', 'vincular', 'archivo', 'familia', 'compra', 'código'],
       qrSent: (n: number) =>
         `Mostrado: ${n} ${n === 1 ? 'entrada modificada' : 'entradas modificadas'}.`,
+      listsHint: 'Compartir solo estas listas (ninguna marcada: todas)',
+      listsOnly: 'solo listas elegidas',
       qrShow: 'Mostrar como imágenes QR',
       qrHint:
         'La otra persona abre aquí «Leer con la cámara» y apunta la cámara a la pantalla hasta leer todas las imágenes. El orden no importa.',
@@ -235,6 +241,8 @@ export const tShare = defineBundle(
         'Transmettez des domaines choisis sous forme de fichier chiffré, sans serveur ni compte. L’autre personne l’ouvre avec un code et le fusionne avec ses données. Rien n’est supprimé.',
       keywords: ['partager', 'partenaire', 'associer', 'fichier', 'famille', 'courses', 'code'],
       qrSent: (n: number) => `Affiché : ${n} ${n === 1 ? 'entrée modifiée' : 'entrées modifiées'}.`,
+      listsHint: 'Partager seulement ces listes (aucune cochée : toutes)',
+      listsOnly: 'listes choisies seulement',
       qrShow: 'Afficher en images QR',
       qrHint:
         'L’autre personne ouvre ici « Lire avec la caméra » et dirige la caméra vers l’écran jusqu’à ce que toutes les images soient lues. L’ordre n’a pas d’importance.',
@@ -313,6 +321,8 @@ export const tShare = defineBundle(
       keywords: ['compartilhar', 'parceiro', 'parear', 'arquivo', 'família', 'compras', 'código'],
       qrSent: (n: number) =>
         `Mostrado: ${n} ${n === 1 ? 'registro alterado' : 'registros alterados'}.`,
+      listsHint: 'Compartilhar só estas listas (nenhuma marcada: todas)',
+      listsOnly: 'só listas escolhidas',
       qrShow: 'Mostrar como imagens QR',
       qrHint:
         'A outra pessoa abre aqui “Ler com a câmera” e aponta a câmera para a tela até ler todas as imagens. A ordem não importa.',

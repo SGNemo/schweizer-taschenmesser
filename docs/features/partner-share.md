@@ -49,3 +49,8 @@ Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einf
 - **Show** (`pages/settings/ShareQr.tsx` `QrPlayer`): one QR (the existing `tools/qr` generator, error correction M) every 450 ms, pause and "next picture"; starts paused when motion is reduced. "Fertig gezeigt" counts the changes as handed over (like saving the file does).
 - **Read** (`QrScanner`): camera plus `BarcodeDetector` (Chromium; elsewhere the screen points to the file), progress "n von m Bildern", hands the text to the normal open flow, camera off on done, stop and unmount. Android needs the camera permission; hand tests Q1–Q5 in MANUAL-TESTS.
 - Tests: `core/share/frames.test.ts`, `pages/settings/ShareQr.test.tsx` (fake detector and camera: shuffled, repeated frames, camera released), `e2e/share.spec.ts` (frames run, pause, count as handed over).
+
+## As built (P4, `feat/partner-share-p4`, stacked on P3)
+- **Lists instead of whole modules** (`core/share/scopes.ts`): a small table of modules built as "list → entries with the list's id" (`lists`: `lists_list`/`lists_item`, `todos`: `todos_list`/`todos_task`). A connection may name lists per module; the file then holds only those list rows and the entries that belong to them (deleted ones too, so removals travel). Nothing chosen = the whole module. `scopes.test.ts` checks that every table and field named in the table exists in the schemas.
+- UI: ticking a module in "Dauerhaft teilen" shows its lists to pick from; the connection row says "nur ausgewählte Listen". The one-off file (P1) stays module-level.
+- Limits: no other module has a scope yet (add one entry to `LIST_SCOPES`); an entry moved to another list leaves the scope; the receiving side does not know which lists the other side chose.

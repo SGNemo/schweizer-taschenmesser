@@ -114,3 +114,22 @@ test('a connection can show its changes as QR pictures that run, pause and count
   ).toBeVisible();
   await expect(row).toContainText('Zuletzt gesendet');
 });
+
+test('a connection can share only chosen lists of a module', async ({ page }, info) => {
+  test.skip(info.project.name === 'pixel-7', 'same flow as desktop');
+  await ready(page, '/todos');
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Zelt packen');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Zelt packen' })).toBeVisible();
+  await page.goto('/settings/verbindungen');
+  const pairs = page.getByTestId('share-pairs');
+  await pairs.getByLabel('Name der Verbindung (z. B. Anna)').fill('Clara');
+  await pairs.getByRole('checkbox', { name: 'ToDos', exact: true }).check();
+  const lists = page.getByTestId('share-lists-todos');
+  await expect(lists).toBeVisible();
+  await lists.getByRole('checkbox').first().check();
+  await pairs.getByRole('button', { name: 'Verbindung anlegen' }).click();
+  await expect(page.getByTestId('share-pair').filter({ hasText: 'Clara' })).toContainText(
+    'nur ausgewählte Listen',
+  );
+});

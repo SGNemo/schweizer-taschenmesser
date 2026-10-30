@@ -25,6 +25,7 @@ import { syncedTableNames } from '@/core/db/schema';
 import { generatePassphrase, loadWordlist } from '@nemo/vault-core';
 import { allManifests } from '@/core/modules/registry';
 import { maxHlc } from '@/core/db/hlc';
+import { applyListChoice } from './scopes';
 
 export const SHARE_FORMAT = 'taschenmesser-share';
 export const SHARE_VERSION = 1;
@@ -128,6 +129,8 @@ export interface CreateShareOptions {
   /** A standing connection: the file carries its id and only what changed since `since`. */
   pairId?: string;
   since?: string;
+  /** Per module: only these lists (see `scopes.ts`); a module without an entry is shared whole. */
+  lists?: Record<string, string[]>;
 }
 
 export interface CreatedShare {
@@ -148,7 +151,8 @@ export async function createPairFile(opts: CreateShareOptions): Promise<CreatedS
   const tables = shareableTables(opts.tableNames).filter((n) => chosen.has(moduleOfTable(n)));
   if (tables.length === 0) throw new RangeError('no module chosen');
   const at = opts.createdAt ?? new Date();
-  const full = await createBackup(opts.database ?? defaultDb, tables, at);
+  const whole = await createBackup(opts.database ?? defaultDb, tables, at);
+  const full: Backup = { ...whole, tables: applyListChoice(whole.tables, opts.lists) };
   // Newest stamp of everything shared, before the delta filter: that is where the next file starts.
   const upto = maxHlc(Object.values(full.tables).flatMap((rows) => rows.flatMap(rowStamps)));
   const since = opts.since;
