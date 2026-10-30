@@ -38,5 +38,6 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - 2026-10-17 · `chore/chat-scribble` · example: "`core/notifications/policy.ts` until PR is in; additive fields only please."
 
 ## Parking (ideas, findings outside scope)
+- 2026-10-30 · `claude/zen-clarke-gtsne6` · maintainer wish: the app should become usable in the browser too (today the site only offers the download; the PWA exists but is not the entry point). Not started; needs a decision on what the web build may do without the native shell (no local model, no Ollama without `OLLAMA_ORIGINS`, no local API, no disk module). Finding from the Ollama work (#306): users on the exe expect the AI to be built in; the built-in local model must be downloaded in Settings → Local model, and Ollama is only an external alternative.
 - 2026-10-23 · `feat/focus2-settings-fold-2` · `chats-status.mjs` merge-base crash (two parking notes) is already fixed on `develop` (try/catch, `noBase`); notes removed.
 - 2026-10-19 · `feat/screenshot-tool` · If the Windows app (WebView2) cannot do `getDisplayMedia` (hand test B1 in MANUAL-TESTS), a Rust screen capture would be a new Cargo dependency: maintainer's decision, not built. Details: `docs/features/screenshot.md`.

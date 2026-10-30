@@ -606,3 +606,7 @@ button.itemRow:hover {
   border-radius: var(--radius-md);
   background: var(--accent-soft);
 }
+
+.person {
+  color: var(--text-muted);
+}

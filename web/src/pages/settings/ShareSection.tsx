@@ -3,15 +3,21 @@ import { downloadTextFile } from '@/core/backup/download';
 import type { RestorePlan } from '@/core/backup/restore';
 import type { Backup } from '@/core/backup/backup';
 import { allManifests } from '@/core/modules/registry';
+import { joinPair, loadPairs, pairCode, updatePair, type SharePair } from '@/core/share/pairs';
+import { SharePairs } from './SharePairs';
 import {
   applyShare,
   createShareFile,
+  followsReceived,
   newPairingCode,
+  peekPairId,
   planShare,
   readShareFile,
+  type ShareRange,
   shareFileName,
   shareableModules,
 } from '@/core/share/share';
+import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tShare } from '@/strings.share';
@@ -32,8 +38,31 @@ export function ShareSection() {
 
   const [text, setText] = useState<string | undefined>();
   const [openCode, setOpenCode] = useState('');
-  const [opened, setOpened] = useState<{ backup: Backup; plan: RestorePlan } | undefined>();
+  const [opened, setOpened] = useState<
+    | {
+        backup: Backup;
+        plan: RestorePlan;
+        modules: string[];
+        pairId?: string;
+        range: ShareRange;
+        code: string;
+      }
+    | undefined
+  >();
+  const [pairs, setPairs] = useState<SharePair[]>([]);
+  const [version, setVersion] = useState(0);
+  const [joinName, setJoinName] = useState('');
+  const knownPair = (text && pairs.find((p) => p.id === peekPairId(text))) || undefined;
+  const newPairId = text && !knownPair ? peekPairId(text) : undefined;
   const [openError, setOpenError] = useState('');
+
+  useEffect(() => {
+    let live = true;
+    void loadPairs().then((p) => live && setPairs(p));
+    return () => {
+      live = false;
+    };
+  }, [version]);
 
   useEffect(() => {
     let live = true;
@@ -62,9 +91,20 @@ export function ShareSection() {
     setOpened(undefined);
     setBusy(true);
     try {
-      const read = await readShareFile(text, openCode);
+      const stored = knownPair ? await pairCode(knownPair.id) : undefined;
+      const code = stored ?? openCode;
+      const read = await readShareFile(text, code);
       if (!read.ok) return setOpenError(n.errors[read.reason] ?? n.errors.failed!);
-      setOpened({ backup: read.backup, plan: await planShare(read.backup) });
+      if (knownPair && !followsReceived(read.range, knownPair.receivedUpto))
+        return setOpenError(n.errors.gap!);
+      setOpened({
+        backup: read.backup,
+        plan: await planShare(read.backup),
+        modules: read.modules,
+        pairId: read.pairId,
+        range: read.range,
+        code,
+      });
     } finally {
       setBusy(false);
     }
@@ -75,6 +115,22 @@ export function ShareSection() {
     setBusy(true);
     try {
       const { records } = await applyShare(opened.backup);
+      if (opened.pairId) {
+        const pair =
+          knownPair ??
+          (await joinPair({
+            id: opened.pairId,
+            name: joinName,
+            modules: opened.modules,
+            code: opened.code,
+          }));
+        const upto = [pair.receivedUpto, opened.range.upto]
+          .filter((x): x is string => x !== undefined)
+          .sort()
+          .at(-1);
+        await updatePair(pair.id, { receivedUpto: upto, receivedAt: now() });
+        setVersion((v) => v + 1);
+      }
       setOpened(undefined);
       setText(undefined);
       setOpenCode('');
@@ -99,7 +155,9 @@ export function ShareSection() {
       <div className={styles.form}>
         <p>{n.description}</p>
 
-        <fieldset className={styles.fieldset}>
+        <SharePairs version={version} onChanged={() => setVersion((v) => v + 1)} />
+
+        <fieldset className={styles.fieldset} data-testid="share-once-modules">
           <legend className={styles.legend}>{n.modules}</legend>
           {modules.map((m) => (
             <Checkbox
@@ -153,24 +211,38 @@ export function ShareSection() {
             onChange={(e) => void onFile(e)}
           />
         </div>
-        <TextField
-          label={n.openCode}
-          autoComplete="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          value={openCode}
-          onChange={(e) => {
-            setOpenCode(e.target.value);
-            setOpened(undefined);
-          }}
-        />
+        {knownPair ? <p className={styles.muted}>{n.known(knownPair.name)}</p> : null}
+        {newPairId ? <p className={styles.muted}>{n.pairNew}</p> : null}
+        {newPairId ? (
+          <TextField
+            label={n.pairNameJoin}
+            value={joinName}
+            onChange={(e) => setJoinName(e.target.value)}
+          />
+        ) : null}
+        {knownPair ? null : (
+          <TextField
+            label={n.openCode}
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={openCode}
+            onChange={(e) => {
+              setOpenCode(e.target.value);
+              setOpened(undefined);
+            }}
+          />
+        )}
         {openError ? (
           <p role="alert" className={styles.error} data-testid="share-error">
             {openError}
           </p>
         ) : null}
         <div className={styles.row}>
-          <Button disabled={busy || !text || !openCode.trim()} onClick={() => void check()}>
+          <Button
+            disabled={busy || !text || (!knownPair && !openCode.trim())}
+            onClick={() => void check()}
+          >
             {busy && !opened ? n.checking : n.check}
           </Button>
         </div>

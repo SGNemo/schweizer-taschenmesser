@@ -14,7 +14,7 @@ test('a share file made with a code opens with that code, wrong codes are refuse
   await page.getByRole('button', { name: 'Datei speichern' }).click();
   await expect(page.getByRole('alert')).toContainText('mindestens einen Bereich');
 
-  await page.getByRole('checkbox', { name: 'ToDos' }).check();
+  await page.getByTestId('share-once-modules').getByRole('checkbox', { name: 'ToDos' }).check();
   const code = (await page.getByTestId('share-code').innerText()).trim();
   expect(code.split(/\s+/)).toHaveLength(6);
 
@@ -35,4 +35,48 @@ test('a share file made with a code opens with that code, wrong codes are refuse
   await expect(page.getByTestId('share-plan')).toBeVisible();
   await page.getByRole('button', { name: 'Zusammenführen' }).click();
   await expect(page.getByText(/zusammengeführt/)).toBeVisible();
+});
+
+test('a standing connection saves only what changed and opens its own files without asking for the code', async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name === 'pixel-7',
+    'same flow as desktop; file download is covered there',
+  );
+  await ready(page, '/todos');
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Milch kaufen');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Milch kaufen' })).toBeVisible();
+  await page.goto('/settings/verbindungen');
+  const pairs = page.getByTestId('share-pairs');
+  await pairs.getByLabel('Name der Verbindung (z. B. Anna)').fill('Anna');
+  await pairs.getByRole('checkbox', { name: 'ToDos' }).check();
+  await pairs.getByRole('button', { name: 'Verbindung anlegen' }).click();
+  await expect(page.getByTestId('share-pair-code')).toBeVisible();
+  const row = page.getByTestId('share-pair').filter({ hasText: 'Anna' });
+  await expect(row).toContainText('Noch nichts gesendet');
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    row.getByRole('button', { name: 'Änderungen als Datei speichern' }).click(),
+  ]);
+  const path = await download.path();
+  await expect(row).toContainText('Zuletzt gesendet');
+
+  // Nothing changed since: no second file.
+  await row.getByRole('button', { name: 'Änderungen als Datei speichern' }).click();
+  await expect(page.getByText('Seit der letzten Datei hat sich nichts geändert.')).toBeVisible();
+
+  // The file belongs to the connection: the stored code is used, no code field.
+  await page.locator('#share-file').setInputFiles(path);
+  await expect(page.getByText(/Der gespeicherte Code wird benutzt/)).toBeVisible();
+  await expect(page.getByLabel('Kopplungscode der Datei')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Prüfen' }).click();
+  await expect(page.getByTestId('share-plan')).toBeVisible();
+  await page.getByRole('button', { name: 'Zusammenführen' }).click();
+  await expect(row).toContainText('Zuletzt empfangen');
+
+  await row.getByRole('button', { name: 'Verbindung „Anna“ entfernen' }).click();
+  await expect(page.getByTestId('share-pair')).toHaveCount(0);
 });
