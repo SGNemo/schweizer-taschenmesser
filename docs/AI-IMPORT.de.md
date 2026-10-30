@@ -166,7 +166,7 @@ Je Eintrag steht in `items[]` ein `status`: `ok`, `duplicate` (schon vorhanden),
 ### 6. Format der Einträge
 
 - Jeder Eintrag nennt seine Sammlung: `"collection": "task"`. Die Felder stehen in `/v1/modules`.
-- Beträge als Zahl in Euro (`12.5`), optional `"currency": "EUR"`; andere Währungen werden abgelehnt.
+- Beträge als Zahl in Euro (`12.5`), optional `"currency"` (ISO 4217, z. B. `"MXN"`, ohne Angabe EUR) bei Konten, Rechnungen, Abos, Budgets und Sparzielen; bei den übrigen Sammlungen nur `"EUR"`, andere Währungen werden abgelehnt.
 - Datum `JJJJ-MM-TT`, Uhrzeit `HH:mm`.
 - Neue Einträge **ohne** `id` und ohne Zeitstempel – die App vergibt sie.
 - Verweise (z. B. `listId`, `accountId`): Titel eines vorhandenen Eintrags, dessen `id`, oder `"@name"`, wenn ein Eintrag

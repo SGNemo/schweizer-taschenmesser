@@ -1,9 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { formatMoney } from '@/core/money';
+import { currencyOf, formatMoney } from '@/core/money';
 import { monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { ProgressList, Skeleton } from '@/ui';
-import { useBudgetData } from '../data';
+import { spentOf, useBudgetData } from '../data';
 import { budgetStatus, goalProgress } from '../logic';
 import { depositRepo, goalRepo } from '../repo';
 
@@ -17,17 +17,18 @@ export default function OverviewWidget() {
   const name = (id: string) =>
     data.categories.find((c) => c.id === id)?.name ?? t.budgets.unknownCategory;
   const budgets = data.budgets
-    .map((b) => ({ b, s: budgetStatus(b.monthlyLimitMinor, data.spent.get(b.categoryId) ?? 0) }))
+    .map((b) => ({ b, s: budgetStatus(b.monthlyLimitMinor, spentOf(data.spent, b)) }))
     .filter((x) => x.s.tone !== 'ok');
   const over = budgets.filter((x) => x.s.tone === 'over');
   const budgetEntries = [...over, ...budgets.filter((x) => x.s.tone !== 'over')].map(
     ({ b, s }) => ({
       key: `b-${b.id}`,
       title: name(b.categoryId),
-      value: data.spent.get(b.categoryId) ?? 0,
+      value: spentOf(data.spent, b),
       max: b.monthlyLimitMinor,
       detail: `${s.pct} %`,
-      overText: s.tone === 'over' ? t.budgets.over(formatMoney(-s.remaining)) : undefined,
+      overText:
+        s.tone === 'over' ? t.budgets.over(formatMoney(-s.remaining, currencyOf(b))) : undefined,
     }),
   );
   const goalEntries = goals.map((g) => {

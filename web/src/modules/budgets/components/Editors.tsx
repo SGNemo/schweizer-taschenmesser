@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
-import { formatMoney, formatMoneyInput, parseMoney } from '@/core/money';
+import {
+  currencyOf,
+  formatMoney,
+  formatMoneyInput,
+  isCurrencyCode,
+  parseMoney,
+} from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
+  CurrencyField,
   Button,
   Dialog,
   Form,
@@ -72,6 +79,7 @@ function BudgetFields({
   onClose: () => void;
 }) {
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? '');
+  const [currency, setCurrency] = useState(currencyOf(existing));
   const [limit, setLimit] = useState(existing ? formatMoneyInput(existing.monthlyLimitMinor) : '');
   const [error, setError] = useState('');
 
@@ -79,9 +87,15 @@ function BudgetFields({
     const monthlyLimitMinor = parseMoney(limit);
     if (!monthlyLimitMinor || monthlyLimitMinor < 1)
       return setError(t.money.invalidAmount(formatMoneyInput(1250)));
+    if (!isCurrencyCode(currency)) return setError(t.money.currencyInvalid);
     if (!categoryId) return;
-    if (existing) await budgetRepo.update(existing.id, { categoryId, monthlyLimitMinor });
-    else await budgetRepo.create({ categoryId, monthlyLimitMinor });
+    const data = {
+      categoryId,
+      monthlyLimitMinor,
+      currency: currency === 'EUR' ? undefined : currency,
+    };
+    if (existing) await budgetRepo.update(existing.id, data);
+    else await budgetRepo.create(data);
     onClose();
   }
 
@@ -112,6 +126,7 @@ function BudgetFields({
         error={error}
         required
       />
+      <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
       <FormActions
         start={
           existing ? (
@@ -154,6 +169,7 @@ export function GoalEditor({ target, onClose }: { target: GoalTarget; onClose: (
 
 function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onClose: () => void }) {
   const [name, setName] = useState(existing?.name ?? '');
+  const [currency, setCurrency] = useState(currencyOf(existing));
   const [target, setTarget] = useState(existing ? formatMoneyInput(existing.targetMinor) : '');
   const [deadline, setDeadline] = useState(existing?.deadline ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
@@ -163,9 +179,11 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
     const targetMinor = parseMoney(target);
     if (!targetMinor || targetMinor < 1)
       return setError(t.money.invalidAmount(formatMoneyInput(1250)));
+    if (!isCurrencyCode(currency)) return setError(t.money.currencyInvalid);
     const data = {
       name: name.trim(),
       targetMinor,
+      currency: currency === 'EUR' ? undefined : currency,
       deadline: deadline || undefined,
       note: note.trim() || undefined,
     };
@@ -203,6 +221,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
           onChange={(e) => setDeadline(e.target.value)}
         />
       </Split>
+      <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
       <TextField label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       <FormActions
         start={
@@ -332,7 +351,7 @@ export function HistoryDialog({
               >
                 <span className={patternStyles.grow}>{d.date.split('-').reverse().join('.')}</span>
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {formatMoney(d.amountMinor)}
+                  {formatMoney(d.amountMinor, currencyOf(goal))}
                 </span>
                 <IconButton
                   label={`${t.actions.delete}: ${d.date}`}

@@ -1,4 +1,4 @@
-import { formatMoney } from '@/core/money';
+import { currencyOf, formatMoney } from '@/core/money';
 import type { NotificationSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { addDaysStr, formatDay, toDateString, toEpoch } from '@/core/time/dates';
@@ -29,7 +29,7 @@ const source: NotificationSource = async ({ from, to }) => {
         title: t.subscriptions.cancelTitle(s.name),
         body: t.subscriptions.cancelBody(
           formatDay(d.deadline, 'd. MMM yyyy'),
-          formatMoney(s.amountMinor),
+          formatMoney(s.amountMinor, currencyOf(s)),
           formatDay(d.charge, 'd. MMM yyyy'),
         ),
         url: '/subscriptions',

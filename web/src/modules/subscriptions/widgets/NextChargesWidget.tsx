@@ -1,10 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { formatMoney } from '@/core/money';
+import { currencyOf, formatMoney, formatTotals } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
 import { DueList } from '@/ui';
-import { nextCharge, sortSubscriptions, totals } from '../logic';
+import { nextCharge, pickTotals, sortSubscriptions, totalsByCurrency } from '../logic';
 import { subscriptionRepo } from '../repo';
 
 export default function NextChargesWidget() {
@@ -26,7 +26,7 @@ export default function NextChargesWidget() {
       summary={
         subs && subs.length > 0
           ? t.widgets.subsSummary(
-              formatMoney(totals(subs).monthly),
+              formatTotals(pickTotals(totalsByCurrency(subs), 'monthly')),
               first ? formatDay(first, 'd. MMM') : undefined,
             )
           : undefined
@@ -36,7 +36,7 @@ export default function NextChargesWidget() {
         return {
           key: s.id,
           title: s.name,
-          amount: formatMoney(s.amountMinor),
+          amount: formatMoney(s.amountMinor, currencyOf(s)),
           tone: state?.tone ?? 'none',
           label: state?.label ?? '–',
         };

@@ -1,11 +1,12 @@
 import { compareText } from '@/core/i18n/format';
+import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
 import { firstOnOrAfter, occurrencesBetween } from '@/core/recurrence/expand';
 import { addDaysStr } from '@/core/time/dates';
 import type { PriceChange, Subscription } from './schema';
 
 type Sub = Pick<
   Subscription,
-  'amountMinor' | 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'active'
+  'amountMinor' | 'currency' | 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'active'
 >;
 
 /** Charges per year implied by the rule (365 days, 52 weeks, 12 months). */
@@ -42,6 +43,34 @@ export function totals(subs: Sub[], today?: string): CostTotals {
     .reduce((sum, s) => sum + annualCost(s), 0);
   return { monthly: Math.round(yearly / 12), yearly: Math.round(yearly) };
 }
+
+/**
+ * Totals per currency (the euro first, then by code); a subscription without a currency is in euro.
+ * Currencies without any counted subscription are left out.
+ * Nothing is converted, so amounts of different currencies are never added.
+ */
+export function totalsByCurrency(subs: Sub[], today?: string): Map<string, CostTotals> {
+  const groups = new Map<string, Sub[]>();
+  for (const s of subs) {
+    const c = currencyOf(s);
+    groups.set(c, [...(groups.get(c) ?? []), s]);
+  }
+  return new Map(
+    [...groups]
+      .map(([c, list]) => [c, totals(list, today)] as const)
+      // A currency with nothing active in it (only paused ones) adds no "0" to the totals.
+      .filter(([, sum]) => sum.yearly > 0)
+      .sort(([a], [b]) =>
+        a === DEFAULT_CURRENCY ? -1 : b === DEFAULT_CURRENCY ? 1 : a.localeCompare(b),
+      ),
+  );
+}
+
+/** Monthly or yearly totals of `totalsByCurrency` as plain amounts per currency, for `formatTotals`. */
+export const pickTotals = (
+  byCurrency: Map<string, CostTotals>,
+  key: keyof CostTotals,
+): Map<string, number> => new Map([...byCurrency].map(([c, v]) => [c, v[key]]));
 
 /** Next charge on or after `from`, or undefined when the rule has ended. */
 export const nextCharge = (

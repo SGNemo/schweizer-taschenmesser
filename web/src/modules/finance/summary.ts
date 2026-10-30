@@ -37,10 +37,9 @@ export function useAvailability(
     states?.invoices &&
     (prefs as { includeOpenInvoices?: boolean } | undefined)?.includeOpenInvoices,
   );
-  // Subscriptions are in euro only (for now): they count only against euro accounts.
+  // Subscriptions count against the accounts of their own currency.
   const useSubs = Boolean(
     states?.subscriptions &&
-    currency === DEFAULT_CURRENCY &&
     (prefs as { includeSubscriptions?: boolean } | undefined)?.includeSubscriptions,
   );
 
@@ -52,9 +51,9 @@ export function useAvailability(
     if (!useSubs) return 0;
     const day = today();
     return sumMinor(
-      (await listSubscriptionCharges(day, endOfMonthStr(day))).map((c) => c.amountMinor),
+      (await listSubscriptionCharges(day, endOfMonthStr(day), currency)).map((c) => c.amountMinor),
     );
-  }, [useSubs]);
+  }, [useSubs, currency]);
 
   if (totalBalance === undefined || openInvoices === undefined || subscriptions === undefined)
     return undefined;

@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { formatMoney, formatMoneyInput, parseMoney } from '@/core/money';
+import {
+  currencyOf,
+  formatMoney,
+  formatMoneyInput,
+  isCurrencyCode,
+  parseMoney,
+} from '@/core/money';
 import { formatDay } from '@/core/time/dates';
 import { NoticeField } from '@/core/deadline/NoticeField';
 import { tDeadline } from '@/strings.deadline';
@@ -13,6 +19,7 @@ import { changePercent, nextCancelDeadline, recordPriceChange } from '../logic';
 import {
   AdvancedFields,
   Button,
+  CurrencyField,
   Dialog,
   patternStyles,
   Switch,
@@ -61,15 +68,17 @@ function Form({
   const draft = useFormDraft(`subscriptions:subscription:${existing?.id ?? 'new'}`, {
     name: existing?.name ?? '',
     amount: existing ? formatMoneyInput(existing.amountMinor) : '',
+    currency: currencyOf(existing),
     startDate: existing?.startDate ?? today(),
     recurrence: (existing?.recurrence ?? { freq: 'monthly', interval: 1 }) as Recurrence,
     notice: existing?.cancelNoticeDays as number | undefined,
     active: existing?.active ?? true,
     note: existing?.note ?? '',
   });
-  const { name, amount, startDate, recurrence, notice, active, note } = draft.values;
+  const { name, amount, currency, startDate, recurrence, notice, active, note } = draft.values;
   const setName = (v: string) => draft.set('name', v);
   const setAmount = (v: string) => draft.set('amount', v);
+  const setCurrency = (v: string) => draft.set('currency', v);
   const setStartDate = (v: string) => draft.set('startDate', v);
   const setRecurrence = (v: Recurrence) => draft.set('recurrence', v);
   const setNotice = (v: number | undefined) => draft.set('notice', v);
@@ -93,9 +102,14 @@ function Form({
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
+    if (!isCurrencyCode(currency)) {
+      setError(t.money.currencyInvalid);
+      return;
+    }
     const data = {
       name: name.trim(),
       amountMinor,
+      currency: currency === 'EUR' ? undefined : currency,
       recurrence,
       startDate,
       cancelNoticeDays: notice,
@@ -143,7 +157,7 @@ function Form({
             setError('');
           }}
           error={error}
-          hint={monthly ? t.subscriptions.monthlyCost(formatMoney(monthly)) : undefined}
+          hint={monthly ? t.subscriptions.monthlyCost(formatMoney(monthly, currency)) : undefined}
           required
         />
         <TextField
@@ -187,8 +201,8 @@ function Form({
               <li key={`${c.date}-${c.toMinor}`}>
                 {t.subscriptions.priceChange(
                   formatDay(c.date, 'd. MMM yyyy'),
-                  formatMoney(c.fromMinor),
-                  formatMoney(c.toMinor),
+                  formatMoney(c.fromMinor, currencyOf(existing)),
+                  formatMoney(c.toMinor, currencyOf(existing)),
                   changePercent(c),
                 )}
               </li>
@@ -202,7 +216,11 @@ function Form({
           <strong>{formatDay(cancelBy, 'd. MMM yyyy')}</strong>
         </p>
       ) : null}
-      <AdvancedFields moduleId="subscriptions" hasData={notice !== undefined || !!note}>
+      <AdvancedFields
+        moduleId="subscriptions"
+        hasData={notice !== undefined || !!note || currencyOf(existing) !== 'EUR'}
+      >
+        <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
         <NoticeField days={notice} onChange={setNotice} max={365} />
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>

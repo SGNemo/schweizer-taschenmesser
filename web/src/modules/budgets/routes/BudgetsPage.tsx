@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
-import { formatMoney } from '@/core/money';
+import { currencyOf, formatMoney } from '@/core/money';
 import { addMonthsToMonth, formatDay, formatMonth, monthOf, today } from '@/core/time/dates';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
@@ -20,7 +20,7 @@ import {
   Stat,
   useOpenParam,
 } from '@/ui';
-import { useBudgetData } from '../data';
+import { spentOf, useBudgetData } from '../data';
 import {
   BudgetEditor,
   DepositDialog,
@@ -131,7 +131,8 @@ export default function BudgetsPage() {
               ) : null}
               <ItemList layout="grid" label={t.budgets.tabBudgets}>
                 {budgets.map((b) => {
-                  const s = budgetStatus(b.monthlyLimitMinor, data?.spent.get(b.categoryId) ?? 0);
+                  const s = budgetStatus(b.monthlyLimitMinor, data ? spentOf(data.spent, b) : 0);
+                  const cur = currencyOf(b);
                   return (
                     <Card as="li" key={b.id}>
                       <div className={patternStyles.row}>
@@ -146,11 +147,14 @@ export default function BudgetsPage() {
                               s.tone === 'over' ? patternStyles.overdue : patternStyles.muted
                             }
                           >
-                            {t.budgets.spentOf(formatMoney(s.spent), formatMoney(s.limit))}
+                            {t.budgets.spentOf(
+                              formatMoney(s.spent, cur),
+                              formatMoney(s.limit, cur),
+                            )}
                             {' · '}
                             {s.remaining >= 0
-                              ? t.budgets.left(formatMoney(s.remaining))
-                              : t.budgets.over(formatMoney(-s.remaining))}
+                              ? t.budgets.left(formatMoney(s.remaining, cur))
+                              : t.budgets.over(formatMoney(-s.remaining, cur))}
                           </span>
                         </button>
                         <span>{s.pct} %</span>
@@ -185,7 +189,8 @@ export default function BudgetsPage() {
                     >
                       <span className={patternStyles.title}>{g.name}</span>
                       <span className={patternStyles.muted}>
-                        {formatMoney(p.saved)} / {formatMoney(g.targetMinor)}
+                        {formatMoney(p.saved, currencyOf(g))} /{' '}
+                        {formatMoney(g.targetMinor, currencyOf(g))}
                         {g.deadline
                           ? ` · ${t.budgets.until(formatDay(g.deadline, 'd. MMM yyyy'))}`
                           : ''}
@@ -193,13 +198,13 @@ export default function BudgetsPage() {
                     </button>
                     <Stat
                       label={p.reached ? t.budgets.reached : t.budgets.remaining}
-                      value={p.reached ? '✓' : formatMoney(p.remaining)}
+                      value={p.reached ? '✓' : formatMoney(p.remaining, currencyOf(g))}
                     />
                   </div>
                   <Progress value={p.saved} max={g.targetMinor} label={g.name} />
                   {p.perMonth !== undefined ? (
                     <p className={patternStyles.muted}>
-                      {t.budgets.perMonth(formatMoney(p.perMonth))}
+                      {t.budgets.perMonth(formatMoney(p.perMonth, currencyOf(g)))}
                     </p>
                   ) : null}
                   <div className={patternStyles.row} style={{ marginTop: 'var(--space-2)' }}>

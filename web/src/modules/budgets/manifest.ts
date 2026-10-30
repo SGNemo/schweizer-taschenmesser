@@ -13,7 +13,7 @@ const manifest: ModuleManifest = {
     return t.budgets.meta.name;
   },
   icon: 'piggy',
-  version: 1,
+  version: 2,
   get description() {
     return t.budgets.meta.description;
   },
