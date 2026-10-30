@@ -153,3 +153,45 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
     await expect(list.getByRole('listitem')).toHaveCount(2);
   });
 });
+
+test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
+  test.beforeEach(async ({ page }) => {
+    await enable(page, 'bookmarks');
+    await add(page, 'Bahn', 'bahn.example.org', 'Reisen');
+    await ready(page, '/bookmarks?view=links');
+  });
+
+  const tile = (page: Page, title: string) =>
+    page.getByRole('list', { name: 'Reisen' }).getByRole('listitem').filter({ hasText: title });
+
+  test('a tile opens the address from its title; the rest is in one "⋯" menu', async ({ page }) => {
+    const row = tile(page, 'Bahn');
+    await expect(row.getByRole('button', { name: /^Bahn/ })).toBeVisible();
+    // No separate edit icon any more, one menu button instead.
+    await expect(row.getByRole('button', { name: /Merkzettel bearbeiten/ })).toHaveCount(0);
+    await expect(row.getByRole('button', { name: 'Weitere Aktionen' })).toBeVisible();
+    const popup = page.context().waitForEvent('page');
+    await row.getByRole('button', { name: /^Bahn/ }).click();
+    expect((await popup).url()).toBe('https://bahn.example.org/');
+  });
+
+  test('edit and delete go through the tile menu', async ({ page }) => {
+    await tile(page, 'Bahn').getByRole('button', { name: 'Weitere Aktionen' }).click();
+    const menu = page.getByRole('menu', { name: 'Weitere Aktionen' });
+    for (const name of ['Bearbeiten', 'Link kopieren', 'Duplizieren', 'Löschen'])
+      await expect(menu.getByRole('menuitem', { name })).toBeVisible();
+    await menu.getByRole('menuitem', { name: 'Bearbeiten' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Titel').fill('Bahn neu');
+    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await expect(dialog).toHaveCount(0);
+    await tile(page, 'Bahn neu').getByRole('button', { name: 'Weitere Aktionen' }).click();
+    await page
+      .getByRole('menu', { name: 'Weitere Aktionen' })
+      .getByRole('menuitem', { name: 'Löschen' })
+      .click();
+    await expect(tile(page, 'Bahn neu')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Rückgängig' }).click();
+    await expect(tile(page, 'Bahn neu')).toBeVisible();
+  });
+});

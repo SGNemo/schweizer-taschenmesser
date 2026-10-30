@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import type { Stored } from '@/core/db/types';
 import { ItemList } from '@/ui';
-import { BookmarkRow } from '../components/BookmarkRow';
+import { BookmarkRow, bookmarkMenu } from '../components/BookmarkRow';
 import { itemRepo } from '../repo';
 import { itemSchema, type BookmarkItem } from '../schema';
 
@@ -100,5 +100,15 @@ describe('BookmarkRow', () => {
     const all = await itemRepo.active().toArray();
     expect(all).toHaveLength(2);
     expect(all.filter((i) => !i.done)).toHaveLength(1);
+  });
+
+  it('the menu of a tile (no tag filter on that view) has no tag entries', () => {
+    const ids = bookmarkMenu(
+      stored({ title: 'Bahn', url: 'https://bahn.example/', tags: ['Reisen'] }),
+      {
+        edit: vi.fn(),
+      },
+    ).map((m) => m.id);
+    expect(ids).toEqual(['edit', 'copy-link', 'duplicate', 'delete']);
   });
 });

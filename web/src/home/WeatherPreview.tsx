@@ -23,7 +23,9 @@ import styles from './WeatherPreview.module.css';
 
 const SETTINGS = settingsPath('verbindungen', 'weather');
 
-const RATING_ICON: Record<Rating, IconName> = { good: 'ok', fair: 'circleMinus', poor: 'alert' };
+// "Ungemütlich" gets the umbrella, not the warning triangle: that one is reserved for overdue things
+// (`ui/semantics.ts`) and weather is never urgent.
+const RATING_ICON: Record<Rating, IconName> = { good: 'ok', fair: 'circleMinus', poor: 'umbrella' };
 
 const localDate = (iso: string, hour = 0): Date =>
   new Date(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)), hour);

@@ -10,6 +10,9 @@ import {
   enableBiometricUnlock,
   type BiometricStatus,
 } from '../biometric';
+import { StrengthMeter } from './StrengthMeter';
+import { isWeakScore, WeakPasswordHelp } from './WeakPasswordHelp';
+import type { Score } from '../strength';
 import { exportEncryptedBackup, importEncryptedBackup, withoutDuplicates } from '../backup';
 import { CsvFormatError, exportBitwardenCsv, importBitwardenCsv } from '../csv';
 import type { EntryData } from '../schema';
@@ -64,6 +67,8 @@ function Body({ entries, onClose }: { entries: readonly DecryptedEntry[]; onClos
   const [importPw, setImportPw] = useState('');
   const [oldPw, setOldPw] = useState('');
   const [newPw, setNewPw] = useState('');
+  const [newScore, setNewScore] = useState<Score | undefined>();
+  const [weakOk, setWeakOk] = useState(false);
   const [bio, setBio] = useState<BiometricStatus>();
   const [bioPw, setBioPw] = useState('');
 
@@ -254,6 +259,7 @@ function Body({ entries, onClose }: { entries: readonly DecryptedEntry[]; onClos
               await changeMasterPassword(oldPw, newPw);
               setOldPw('');
               setNewPw('');
+              setWeakOk(false);
               toast(tl.passwordChanged);
               onClose();
             } catch (e) {
@@ -278,9 +284,34 @@ function Body({ entries, onClose }: { entries: readonly DecryptedEntry[]; onClos
           type="password"
           autoComplete="new-password"
           value={newPw}
-          onChange={(e) => setNewPw(e.target.value)}
+          onChange={(e) => {
+            setNewPw(e.target.value);
+            setNewScore(undefined);
+            setWeakOk(false);
+          }}
         />
-        <Button type="submit" disabled={busy || oldPw === '' || newPw === ''}>
+        <StrengthMeter password={newPw} onMeasured={setNewScore} />
+        {isWeakScore(newScore) ? (
+          <WeakPasswordHelp
+            acknowledged={weakOk}
+            onAcknowledge={setWeakOk}
+            onSuggest={(phrase) => {
+              setNewPw(phrase);
+              setNewScore(undefined);
+              setWeakOk(false);
+            }}
+          />
+        ) : null}
+        <Button
+          type="submit"
+          disabled={
+            busy ||
+            oldPw === '' ||
+            newPw === '' ||
+            newScore === undefined ||
+            (isWeakScore(newScore) && !weakOk)
+          }
+        >
           {busy ? tl.working : tl.changePassword}
         </Button>
       </Form>
