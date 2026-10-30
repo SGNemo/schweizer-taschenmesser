@@ -7,6 +7,7 @@ import type { Endpoint, RouteMode } from './schema';
 /** Default services (OpenStreetMap). Here, not in the files that talk to the network, so the manifest never pulls the platform in. */
 export const DEFAULT_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const DEFAULT_SEARCH_URL = 'https://nominatim.openstreetmap.org/search';
+export const DEFAULT_TRANSIT_URL = 'https://api.transitous.org/api/v1';
 export const DEFAULT_ROUTING_URL = 'https://routing.openstreetmap.de/routed-{profile}';
 
 export const TILE_SIZE = 256;

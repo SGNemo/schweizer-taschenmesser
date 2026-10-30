@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { validateManifest } from '@/core/modules/registry';
 import manifest from '../manifest';
 import { placeSchema, routeSchema } from '../schema';
-import { DEFAULT_ROUTING_URL, DEFAULT_SEARCH_URL, DEFAULT_TILE_URL } from '../logic';
+import {
+  DEFAULT_ROUTING_URL,
+  DEFAULT_SEARCH_URL,
+  DEFAULT_TILE_URL,
+  DEFAULT_TRANSIT_URL,
+} from '../logic';
 import { servicesOf } from '../settings';
 
 describe('maps module', () => {
@@ -43,28 +48,33 @@ describe('maps module', () => {
       tileUrl: DEFAULT_TILE_URL,
       searchUrl: DEFAULT_SEARCH_URL,
       routingUrl: DEFAULT_ROUTING_URL,
+      transitUrl: DEFAULT_TRANSIT_URL,
     });
     expect(
       servicesOf({
         tileUrl: 'http://x.test/{z}/{x}/{y}.png',
         searchUrl: 'ftp://x',
         routingUrl: 'http://r.test',
+        transitUrl: 'http://t.test',
       }),
     ).toEqual({
       tileUrl: DEFAULT_TILE_URL,
       searchUrl: DEFAULT_SEARCH_URL,
       routingUrl: DEFAULT_ROUTING_URL,
+      transitUrl: DEFAULT_TRANSIT_URL,
     });
     expect(
       servicesOf({
         tileUrl: 'https://t.example/{z}/{x}/{y}.png',
         searchUrl: 'https://s.example/q',
         routingUrl: 'https://r.example/{profile}',
+        transitUrl: 'https://m.example/api',
       }),
     ).toEqual({
       tileUrl: 'https://t.example/{z}/{x}/{y}.png',
       searchUrl: 'https://s.example/q',
       routingUrl: 'https://r.example/{profile}',
+      transitUrl: 'https://m.example/api',
     });
   });
 });

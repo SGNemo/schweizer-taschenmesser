@@ -126,6 +126,11 @@
         "type": "text",
         "label": "Routenberechnung (Adresse)",
         "default": "https://routing.openstreetmap.de/routed-{profile}"
+      },
+      "transitUrl": {
+        "type": "text",
+        "label": "Verbindungssuche (Adresse)",
+        "default": "https://api.transitous.org/api/v1"
       }
     }
   },
