@@ -43,6 +43,9 @@ test.describe('Focus: steps from local templates, one round at a time (QA V24/B2
       .getByTestId('next-card')
       .getByRole('button', { name: /Anfangen/ })
       .click();
+    // Wait for the focus screen itself: on a slow runner the heading is still the home page's.
+    await expect(page).toHaveURL(/\/todos\/focus\//);
+    await expect(page.getByRole('timer')).toBeVisible();
     const first = await page.getByRole('heading', { level: 1 }).textContent();
     await page.getByRole('button', { name: 'Verlassen' }).click();
     // The other task's focus screen: no silent replacement.
