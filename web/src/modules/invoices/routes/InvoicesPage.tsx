@@ -25,7 +25,7 @@ import {
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { markOpen } from '../actions';
 import { payWithUndo } from '../quickActions';
-import { openTotal, sortInvoices } from '../logic';
+import { openTotalText, sortInvoices } from '../logic';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
 import styles from './invoices.module.css';
@@ -93,7 +93,7 @@ export default function InvoicesPage() {
             {i.status === 'open' && state.tone !== 'later' ? (
               <StateBadge tone={state.tone} label={state.label} />
             ) : null}
-            <span className={styles.amount}>{formatMoney(i.amountMinor)}</span>
+            <span className={styles.amount}>{formatMoney(i.amountMinor, i.currency)}</span>
             {i.status === 'open' ? (
               narrow ? (
                 <IconButton label={t.invoices.markPaid} onClick={() => void pay(i.id)}>
@@ -140,7 +140,7 @@ export default function InvoicesPage() {
         <div className={styles.stat}>
           <span className={styles.statLabel}>{t.invoices.openTotal}</span>
           <span className={styles.statValue} data-testid="open-total">
-            {formatMoney(openTotal(invoices ?? []))}
+            {openTotalText(invoices ?? [])}
           </span>
         </div>
         <Segmented

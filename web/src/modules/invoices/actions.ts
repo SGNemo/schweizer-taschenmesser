@@ -12,6 +12,7 @@ async function announcePaid(invoice: Stored<Invoice>): Promise<void> {
     amountMinor: invoice.amountMinor,
     paidAt: invoice.paidAt ?? today(),
     note: invoice.note,
+    ...(invoice.currency ? { currency: invoice.currency } : {}),
   });
 }
 
@@ -33,6 +34,7 @@ async function createNext(invoice: Stored<Invoice>): Promise<void> {
   await invoiceRepo.create({
     payee: invoice.payee,
     amountMinor: invoice.amountMinor,
+    ...(invoice.currency ? { currency: invoice.currency } : {}),
     dueDate: nextDueDate(invoice.dueDate, invoice.repeat),
     status: 'open',
     reference: invoice.reference,

@@ -1,15 +1,24 @@
-import { formatMoney } from '@/core/money';
+import { DEFAULT_CURRENCY, formatMoney, sumMinor } from '@/core/money';
 import { endOfMonthStr, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { KpiWidget } from '@/ui';
-import { balances, monthlyTrend } from '../logic';
+import { balances, currenciesOf, filterByCurrency, monthlyTrend } from '../logic';
 import { totalBalance, useAvailability, useFinanceData } from '../summary';
-import { sumMinor } from '@/core/money';
 
 export default function BalanceWidget() {
-  const data = useFinanceData();
+  const all = useFinanceData();
+  // The widget shows the first currency (the euro if there is a euro account); the others are named below.
+  const currencies = all ? currenciesOf(all.accounts) : [DEFAULT_CURRENCY];
+  const currency = currencies[0] ?? DEFAULT_CURRENCY;
+  const data = all && currencies.length > 1 ? filterByCurrency(all, currency) : all;
+  const others = all
+    ? currencies
+        .slice(1)
+        .map((c) => formatMoney(totalBalance(filterByCurrency(all, c)) ?? 0, c))
+        .join(' · ')
+    : '';
   const balance = totalBalance(data);
-  const a = useAvailability(balance);
+  const a = useAvailability(balance, currency);
   const loading = !data || balance === undefined || !a;
   const noAccounts = Boolean(data && data.accounts.length === 0);
 
@@ -25,15 +34,19 @@ export default function BalanceWidget() {
   return (
     <KpiWidget
       loading={loading && !noAccounts}
-      value={noAccounts || balance === undefined ? undefined : formatMoney(balance)}
+      value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
       empty={t.finance.noAccounts}
       emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
-      context={a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available)) : undefined}
+      context={
+        [a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '', others]
+          .filter(Boolean)
+          .join(' · ') || undefined
+      }
       trend={
         net !== 0
           ? {
               direction: net > 0 ? 'up' : 'down',
-              text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net)}`),
+              text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net, currency)}`),
             }
           : undefined
       }
