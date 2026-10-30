@@ -236,9 +236,12 @@ export async function buildCandidates(
       else Object.assign(data, existing);
     }
     const refIds = new Map<string, string>();
+    // Accounts and invoices have a real `currency` field; elsewhere it only confirms the euro.
+    const ownCurrency = format.fields.some((f) => f.name === 'currency');
 
     for (const [name, value] of Object.entries(draft.raw)) {
-      if (META_KEYS.includes(name) || name === 'id' || value === undefined) continue;
+      const own = name === 'currency' && ownCurrency;
+      if ((META_KEYS.includes(name) && !own) || name === 'id' || value === undefined) continue;
       const field = format.fields.find((f) => f.name === name);
       if (!field) {
         errors.push(t.dataApi.unknownField(name));
@@ -272,7 +275,7 @@ export async function buildCandidates(
         data[field.storeName] = value;
       }
     }
-    if ('currency' in draft.raw && draft.raw.currency !== null) {
+    if (!ownCurrency && 'currency' in draft.raw && draft.raw.currency !== null) {
       if (!hasMoney(format) || draft.raw.currency !== CURRENCY)
         errors.push(`currency: ${t.dataApi.badCurrency}`);
     }

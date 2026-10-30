@@ -1,5 +1,6 @@
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
+import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
 import { settingsRepo } from '@/core/settings/settings';
 import { accountSchema, categorySchema, transactionSchema } from './schema';
 
@@ -67,10 +68,24 @@ function stripEnvelope(row: Record<string, unknown>): Record<string, unknown> {
   return rest;
 }
 
-/** The account new automatic bookings go to: the first one; creates/revives the default if none exists. */
-export async function primaryAccountId(): Promise<string> {
-  const first = (await accountRepo.active().sortBy('order'))[0];
-  if (first) return first.id;
+/**
+ * The account new automatic bookings go to: the first one in `currency` (the euro by default);
+ * creates/revives the default if none exists. Another currency without an account gets one named
+ * after its code, so nothing is ever booked in the wrong currency.
+ */
+export async function primaryAccountId(currency: string = DEFAULT_CURRENCY): Promise<string> {
+  const accounts = await accountRepo.active().sortBy('order');
+  const match = accounts.find((a) => currencyOf(a) === currency);
+  if (match) return match.id;
+  if (currency !== DEFAULT_CURRENCY) {
+    const created = await accountRepo.create({
+      name: currency,
+      openingBalanceMinor: 0,
+      currency,
+      order: accounts.length,
+    });
+    return created.id;
+  }
   const existing = await accountRepo.table.get(DEFAULT_ACCOUNT_ID);
   if (existing) {
     await accountRepo.restore(DEFAULT_ACCOUNT_ID);

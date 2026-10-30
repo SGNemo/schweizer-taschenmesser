@@ -33,4 +33,23 @@ describe('finance public read API', () => {
     const sums = await expensesByCategory('2026-09');
     expect(Object.fromEntries(sums)).toEqual({ food: 2000, home: 50000, '': 300 });
   });
+
+  it('counts only euro accounts into the budget sums (nothing is converted)', async () => {
+    await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 }, { id: 'eur' });
+    await accountRepo.create(
+      { name: 'Peso', openingBalanceMinor: 0, currency: 'MXN', order: 1 },
+      { id: 'mxn' },
+    );
+    const spend = (accountId: string, amountMinor: number) =>
+      transactionRepo.create({
+        accountId,
+        kind: 'expense',
+        amountMinor,
+        date: '2026-09-10',
+        categoryId: 'food',
+      } as never);
+    await spend('eur', 1000);
+    await spend('mxn', 99999);
+    expect(Object.fromEntries(await expensesByCategory('2026-09'))).toEqual({ food: 1000 });
+  });
 });
