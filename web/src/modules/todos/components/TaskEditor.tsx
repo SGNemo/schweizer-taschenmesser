@@ -22,6 +22,7 @@ import {
 import { t } from '@/strings';
 import { now, today } from '@/core/time/now';
 import { undoableWithToast } from '@/core/undo/withToast';
+import { PersonField } from '@/core/people/PersonField';
 import { beginFocus, focusPath } from '../focus';
 import { deleteTask, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
@@ -70,6 +71,7 @@ function EditorForm({
   const [estimate, setEstimate] = useState<number | undefined>(task.estimateMin);
   const [plannedFor, setPlannedFor] = useState(task.plannedFor ?? '');
   const [note, setNote] = useState(task.note ?? '');
+  const [personId, setPersonId] = useState(task.personId ?? '');
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
   const navigate = useNavigate();
@@ -89,6 +91,7 @@ function EditorForm({
       estimateMin: estimate,
       plannedFor: plannedFor || undefined,
       note: note.trim() || undefined,
+      personId: personId || undefined,
     });
     // Subtasks always live in the list of their parent.
     if (listId !== task.listId) {
@@ -138,6 +141,7 @@ function EditorForm({
           ))}
         </SelectField>
       )}
+      {isSub ? null : <PersonField value={personId} onChange={setPersonId} />}
       <SelectField
         label={t.todos.priority}
         value={String(priority)}

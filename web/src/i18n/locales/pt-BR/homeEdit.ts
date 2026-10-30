@@ -2,7 +2,6 @@ import type { Strings } from '@/strings';
 
 export const homeEdit: Strings['homeEdit'] = {
   showMore: (n: number) => (n <= 1 ? `Mostrar mais · ${n} cartão` : `Mostrar mais · ${n} cartões`),
-  showLess: 'Só o essencial',
   pinStart: 'Adicionar cartão…',
   pin: (title: string) => `Adicionar ${title}`,
   unpin: (title: string) => `Remover ${title}`,

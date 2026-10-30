@@ -10,7 +10,9 @@ export const de = {
   },
   nav: { features: 'Funktionen', privacy: 'Datenschutz', install: 'Installation', support: 'Unterstützen', github: 'GitHub' },
   theme: { toDark: 'Dunkles Design einschalten', toLight: 'Helles Design einschalten' },
-  langSwitch: { label: 'Sprache', de: 'Deutsch', en: 'English', short: { de: 'DE', en: 'EN' } },
+  langSwitch: { label: 'Sprache', de: 'Deutsch', en: 'English', es: 'Español', fr: 'Français', 'pt-BR': 'Português (Brasil)', short: { de: 'DE', en: 'EN', es: 'ES', fr: 'FR', 'pt-BR': 'PT' } },
+  a11y: { mainNav: 'Hauptnavigation', footerNav: 'Fußzeile', glance: 'Auf einen Blick' },
+  ogLocale: 'de_DE',
   skip: 'Zum Inhalt springen',
   hero: {
     title: 'Alles Wichtige an einem Ort.',
