@@ -53,4 +53,5 @@ Outcome: all of 1–4 on time → Android text says closed app works; PWA text s
 - **Switch** "Gelöschtes 30 Tage aufbewahren" (synced scope `trash`, default on): off = list hidden, window shrinks to 10 minutes (`TRASH_GRACE_MS`, enough for the "Rückgängig" toast); files of Unterlagen follow the same window (`trashRetentionMs`).
 - Tests: `core/trash/trash.test.ts`, `core/db/trash.test.ts`, `e2e/recently-deleted.spec.ts`. Hand test: MANUAL-TESTS G1–G3.
 - Docs were stale: `purgeTombstones` (90 days after a successful sync) exists, "no tombstone GC" in `decisions/core.md`/`sync-backup.md`/STATUS is outdated.
+- **Follow-up (feat/trash-more-modules):** the allow-list now also covers ToDos, notes, bookmarks, lists, pantry items, people, gifts, invoices, budgets and savings goals. Left out on purpose: list items and bank transactions (bulk data), caches, and `accounts` (never).
 

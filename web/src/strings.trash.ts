@@ -5,14 +5,29 @@ export const tTrash = defineBundle(
   {
     title: 'Zuletzt gelöscht',
     description:
-      'Gelöschte Unterlagen, Abos und Termine bleiben 30 Tage hier und lassen sich zurückholen.',
+      'Gelöschtes (Unterlagen, Abos, Termine, ToDos, Notizen und mehr) bleibt 30 Tage hier und lässt sich zurückholen.',
     keywords: ['Papierkorb', 'wiederherstellen', 'gelöscht', 'zurückholen'],
     keep: 'Gelöschtes 30 Tage aufbewahren',
     keepHint:
       'Aus: Zurückholen geht nur direkt nach dem Löschen („Rückgängig“), Dateien von Unterlagen werden nach kurzer Zeit entfernt. An: Gelöschtes bleibt 30 Tage auf diesem Gerät, auch im Backup.',
     off: 'Aufbewahren ist aus. Gelöschtes lässt sich nur direkt über „Rückgängig“ zurückholen.',
     empty: 'In den letzten 30 Tagen wurde nichts gelöscht.',
-    kinds: { document: 'Unterlage', subscription: 'Abo', event: 'Termin', reminder: 'Erinnerung' },
+    kinds: {
+      document: 'Unterlage',
+      subscription: 'Abo',
+      event: 'Termin',
+      reminder: 'Erinnerung',
+      todo: 'ToDo',
+      note: 'Notiz',
+      bookmark: 'Merkliste',
+      list: 'Liste',
+      pantry: 'Vorrat',
+      person: 'Person',
+      gift: 'Geschenk',
+      invoice: 'Rechnung',
+      budget: 'Budget',
+      goal: 'Sparziel',
+    },
     meta: (kind: string, date: string, days: number) =>
       `${kind} · gelöscht ${date} · noch ${days === 1 ? '1 Tag' : `${days} Tage`}`,
     restore: 'Wiederherstellen',
@@ -29,7 +44,7 @@ export const tTrash = defineBundle(
     en: {
       title: 'Recently deleted',
       description:
-        'Deleted documents, subscriptions and appointments stay here for 30 days and can be brought back.',
+        'Deleted items (documents, subscriptions, appointments, to-dos, notes and more) stay here for 30 days and can be brought back.',
       keywords: ['trash', 'recycle bin', 'restore', 'deleted', 'undelete'],
       keep: 'Keep deleted items for 30 days',
       keepHint:
@@ -41,6 +56,16 @@ export const tTrash = defineBundle(
         subscription: 'Subscription',
         event: 'Appointment',
         reminder: 'Reminder',
+        todo: 'To-do',
+        note: 'Note',
+        bookmark: 'Bookmark',
+        list: 'List',
+        pantry: 'Pantry item',
+        person: 'Person',
+        gift: 'Gift',
+        invoice: 'Invoice',
+        budget: 'Budget',
+        goal: 'Savings goal',
       },
       meta: (kind: string, date: string, days: number) =>
         `${kind} · deleted ${date} · ${days === 1 ? '1 day' : `${days} days`} left`,
@@ -57,7 +82,7 @@ export const tTrash = defineBundle(
     es: {
       title: 'Eliminados recientemente',
       description:
-        'Los documentos, suscripciones y citas eliminados se quedan aquí 30 días y se pueden recuperar.',
+        'Lo eliminado (documentos, suscripciones, citas, tareas, notas y más) se queda aquí 30 días y se puede recuperar.',
       keywords: ['papelera', 'restaurar', 'eliminado', 'recuperar'],
       keep: 'Conservar lo eliminado 30 días',
       keepHint:
@@ -69,6 +94,16 @@ export const tTrash = defineBundle(
         subscription: 'Suscripción',
         event: 'Cita',
         reminder: 'Recordatorio',
+        todo: 'Tarea',
+        note: 'Nota',
+        bookmark: 'Marcador',
+        list: 'Lista',
+        pantry: 'Despensa',
+        person: 'Persona',
+        gift: 'Regalo',
+        invoice: 'Factura',
+        budget: 'Presupuesto',
+        goal: 'Meta de ahorro',
       },
       meta: (kind: string, date: string, days: number) =>
         `${kind} · eliminado ${date} · ${days === 1 ? 'queda 1 día' : `quedan ${days} días`}`,
@@ -85,7 +120,7 @@ export const tTrash = defineBundle(
     fr: {
       title: 'Supprimés récemment',
       description:
-        'Les documents, abonnements et rendez-vous supprimés restent ici 30 jours et peuvent être récupérés.',
+        'Ce qui est supprimé (documents, abonnements, rendez-vous, tâches, notes et plus) reste ici 30 jours et peut être récupéré.',
       keywords: ['corbeille', 'restaurer', 'supprimé', 'récupérer'],
       keep: 'Conserver les éléments supprimés 30 jours',
       keepHint:
@@ -97,6 +132,16 @@ export const tTrash = defineBundle(
         subscription: 'Abonnement',
         event: 'Rendez-vous',
         reminder: 'Rappel',
+        todo: 'Tâche',
+        note: 'Note',
+        bookmark: 'Favori',
+        list: 'Liste',
+        pantry: 'Provision',
+        person: 'Personne',
+        gift: 'Cadeau',
+        invoice: 'Facture',
+        budget: 'Budget',
+        goal: 'Objectif d’épargne',
       },
       meta: (kind: string, date: string, days: number) =>
         `${kind} · supprimé ${date} · ${days === 1 ? '1 jour restant' : `${days} jours restants`}`,
@@ -113,7 +158,7 @@ export const tTrash = defineBundle(
     'pt-BR': {
       title: 'Excluídos recentemente',
       description:
-        'Documentos, assinaturas e compromissos excluídos ficam aqui por 30 dias e podem ser recuperados.',
+        'O que foi excluído (documentos, assinaturas, compromissos, tarefas, notas e mais) fica aqui por 30 dias e pode ser recuperado.',
       keywords: ['lixeira', 'restaurar', 'excluído', 'recuperar'],
       keep: 'Manter excluídos por 30 dias',
       keepHint:
@@ -125,6 +170,16 @@ export const tTrash = defineBundle(
         subscription: 'Assinatura',
         event: 'Compromisso',
         reminder: 'Lembrete',
+        todo: 'Tarefa',
+        note: 'Nota',
+        bookmark: 'Favorito',
+        list: 'Lista',
+        pantry: 'Despensa',
+        person: 'Pessoa',
+        gift: 'Presente',
+        invoice: 'Fatura',
+        budget: 'Orçamento',
+        goal: 'Meta de poupança',
       },
       meta: (kind: string, date: string, days: number) =>
         `${kind} · excluído ${date} · ${days === 1 ? 'resta 1 dia' : `restam ${days} dias`}`,
