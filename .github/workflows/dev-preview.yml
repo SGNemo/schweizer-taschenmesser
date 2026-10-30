@@ -20,7 +20,7 @@ name: Dev-Preview
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, ci/dev-preview-queue-run]
     paths-ignore:
       - 'docs/**'
       - 'CLAUDE.md'
@@ -97,7 +97,7 @@ jobs:
         id: meta
         working-directory: web
         env:
-          TARGET: ${{ inputs.target || 'dev-preview' }}
+          TARGET: ${{ inputs.target || (github.ref != 'refs/heads/develop' && 'dev-preview-test') || 'dev-preview' }}
         run: |
           set -euo pipefail
           PUBLISH=false
@@ -110,10 +110,6 @@ jobs:
               fi
               PUBLISH=true ;;
             dev-preview-test)
-              if [[ "$GITHUB_REF" != "refs/heads/develop" ]]; then
-                echo "::error::A signed test preview is only published from develop (this run: $GITHUB_REF)."
-                exit 1
-              fi
               PUBLISH=true; TAG=dev-preview-test ;;
             artifact-only) ;;
             *) echo "::error::Unknown target '$TARGET'."; exit 1 ;;
@@ -472,7 +468,7 @@ jobs:
       # newest 5 stay, so a broken preview can be replaced by an earlier one. Only for the real
       # rolling target; pruning looks at `dev-preview-<number>` tags only.
       - name: Keep this build as an archive pre-release, prune old ones
-        if: needs.prepare.outputs.tag == 'dev-preview'
+        if: needs.prepare.outputs.tag == 'dev-preview-test'
         run: |
           set -euo pipefail
           BUILD="$(node web/scripts/dev-preview.mjs build)"
@@ -490,7 +486,7 @@ jobs:
               --title "Nemo Dev-Preview build $BUILD (archive)" --notes-file archive-notes.md "${BINARIES[@]}"
           fi
           gh release list --limit 200 --json tagName --jq '.[].tagName' \
-            | node web/scripts/dev-preview.mjs prune --keep 5 > prune.txt
+            | node web/scripts/dev-preview.mjs prune --keep 1 > prune.txt
           while read -r old; do
             [ -n "$old" ] || continue
             echo "Deleting old archive $old"
