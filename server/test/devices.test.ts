@@ -215,7 +215,7 @@ describe('devices', () => {
 });
 
 describe('failed-login limiter', () => {
-  it('blocks an address after too many failures, even for a valid token, and recovers', async () => {
+  it('slows an address down after too many wrong tokens, never a valid one, and recovers', async () => {
     await boot({ authFailureLimit: 3 });
     const bad = () =>
       app.inject({ method: 'GET', url: '/v1/pull', headers: bearer('wrong-token-xxxxxxxxxxxx') });
@@ -225,14 +225,20 @@ describe('failed-login limiter', () => {
     const blocked = await bad();
     expect(blocked.statusCode).toBe(429);
     expect(Number(blocked.headers['retry-after'])).toBeGreaterThan(0);
-    expect((await app.inject({ method: 'GET', url: '/v1/pull', headers: auth })).statusCode).toBe(
-      429,
-    );
-
-    clock += 61_000;
+    // The right token still works from the same address (a noisy neighbour cannot lock it out) ...
     expect((await app.inject({ method: 'GET', url: '/v1/pull', headers: auth })).statusCode).toBe(
       200,
     );
+    // ... and a device token as well, while wrong guesses stay blocked.
+    const deviceToken = await register();
+    expect(
+      (await app.inject({ method: 'GET', url: '/v1/pull', headers: bearer(deviceToken) }))
+        .statusCode,
+    ).toBe(200);
+    expect((await bad()).statusCode).toBe(429);
+
+    clock += 61_000;
+    expect((await bad()).statusCode).toBe(401); // the window is over: counted again
   });
 
   it('successful requests never count as failures', async () => {
