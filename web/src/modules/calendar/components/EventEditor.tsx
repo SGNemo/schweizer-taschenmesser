@@ -9,6 +9,7 @@ import { copyData } from '@/core/db/copy';
 import { PersonField } from '@/core/people/PersonField';
 import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
+import { tDraft } from '@/strings.draft';
 import {
   AdvancedFields,
   Button,
@@ -20,6 +21,7 @@ import {
   TextArea,
   TextField,
   patternStyles,
+  useFormDraft,
 } from '@/ui';
 import { recentSlots } from '../recentSlots';
 import { eventRepo } from '../repo';
@@ -87,34 +89,51 @@ function Form({
   const existing = 'id' in target ? target : null;
   const kind: EventKind = isReminder(target) ? 'reminder' : 'event';
   const reminder = kind === 'reminder';
-  const [title, setTitle] = useState(existing?.title ?? '');
-  const [allDay, setAllDay] = useState(!reminder && (existing?.allDay ?? false));
-  const [startDate, setStartDate] = useState(
-    existing?.startDate ?? ('draft' in target ? target.draft.startDate : ''),
-  );
-  const [startTime, setStartTime] = useState(
-    existing?.startTime ??
+  // Typed text survives Esc or a tap beside the dialog (memory only, 30 minutes); saving and
+  // "Abbrechen" drop it. A new entry from another day starts with its own draft.
+  const dr = tDraft.use();
+  const startDay = existing?.startDate ?? ('draft' in target ? target.draft.startDate : '');
+  const draft = useFormDraft(`calendar:event:${existing?.id ?? `new:${kind}:${startDay}`}`, {
+    title: existing?.title ?? '',
+    allDay: !reminder && (existing?.allDay ?? false),
+    startDate: startDay,
+    startTime:
+      existing?.startTime ??
       ('draft' in target && target.draft.startTime
         ? target.draft.startTime
         : existing
           ? ''
           : '09:00'),
-  );
-  const [endDate, setEndDate] = useState(existing?.endDate ?? '');
-  const [endTime, setEndTime] = useState(existing?.endTime ?? '');
-  const [location, setLocation] = useState(existing?.location ?? '');
-  const [note, setNote] = useState(existing?.note ?? '');
-  const [personId, setPersonId] = useState(existing?.personId ?? '');
-  const [recurrence, setRecurrence] = useState<Recurrence | undefined>(existing?.recurrence);
-  const [notifyChoice, setNotifyChoice] = useState<string>(
-    existing?.notify?.enabled || (reminder && !existing)
+    endDate: existing?.endDate ?? '',
+    endTime: existing?.endTime ?? '',
+    location: existing?.location ?? '',
+    note: existing?.note ?? '',
+    personId: existing?.personId ?? '',
+    recurrence: existing?.recurrence as Recurrence | undefined,
+    notifyChoice: (existing?.notify?.enabled || (reminder && !existing)
       ? String(existing?.notify?.minutesBefore ?? 0)
       : existing?.notify && reminder
         ? String(existing.notify.minutesBefore)
-        : 'none',
-  );
-  const [active, setActive] = useState(existing?.notify?.enabled ?? true);
-  const [taken, setTaken] = useState(existing?.taken ?? false);
+        : 'none') as string,
+    active: existing?.notify?.enabled ?? true,
+    taken: existing?.taken ?? false,
+  });
+  const { title, allDay, startDate, startTime, endDate, endTime, location, note, personId } =
+    draft.values;
+  const { recurrence, notifyChoice, active, taken } = draft.values;
+  const setTitle = (v: string) => draft.set('title', v);
+  const setAllDay = (v: boolean) => draft.set('allDay', v);
+  const setStartDate = (v: string) => draft.set('startDate', v);
+  const setStartTime = (v: string) => draft.set('startTime', v);
+  const setEndDate = (v: string) => draft.set('endDate', v);
+  const setEndTime = (v: string) => draft.set('endTime', v);
+  const setLocation = (v: string) => draft.set('location', v);
+  const setNote = (v: string) => draft.set('note', v);
+  const setPersonId = (v: string) => draft.set('personId', v);
+  const setRecurrence = (v: Recurrence | undefined) => draft.set('recurrence', v);
+  const setNotifyChoice = (v: string) => draft.set('notifyChoice', v);
+  const setActive = (v: boolean) => draft.set('active', v);
+  const setTaken = (v: boolean) => draft.set('taken', v);
   const [error, setError] = useState('');
   // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
   const slots = useLiveQuery(
@@ -154,11 +173,24 @@ function Form({
     }
     if (existing) await eventRepo.update(existing.id, data);
     else await eventRepo.create(data);
+    draft.clear();
     onClose();
   }
+  const cancel = () => {
+    draft.clear();
+    onClose();
+  };
 
   return (
     <form onSubmit={save} className={styles.form}>
+      {draft.restored ? (
+        <p role="status" data-testid="draft-restored">
+          {dr.restored}{' '}
+          <Button variant="ghost" onClick={draft.discard}>
+            {dr.discard}
+          </Button>
+        </p>
+      ) : null}
       {slots && slots.length > 0 ? (
         <div className={patternStyles.hstack} role="group" aria-label={t.calendar.recent}>
           {slots.map((s) => (
@@ -234,7 +266,11 @@ function Form({
       <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
       <PersonField value={personId} onChange={setPersonId} />
       {!reminder && !allDay && startTime ? (
-        <LeadRow value={notifyChoice} onChange={setNotifyChoice} isNew={!existing} />
+        <LeadRow
+          value={notifyChoice}
+          onChange={setNotifyChoice}
+          isNew={!existing && !draft.restored}
+        />
       ) : (
         <SelectField
           label={t.calendar.notify.label}
@@ -279,6 +315,7 @@ function Form({
             variant="danger"
             onClick={async () => {
               await deleteWithUndo(() => eventRepo.remove(existing.id));
+              draft.clear();
               onClose();
             }}
           >
@@ -297,6 +334,7 @@ function Form({
                   t.actions.duplicated,
                   () => eventRepo.create(copyData(existing)),
                 );
+                draft.clear();
                 onClose();
                 onDuplicated?.(copy);
               }}
@@ -304,7 +342,7 @@ function Form({
               {t.actions.duplicate}
             </Button>
           ) : null}
-          <Button onClick={onClose}>{t.actions.cancel}</Button>
+          <Button onClick={cancel}>{t.actions.cancel}</Button>
           <Button type="submit" variant="primary">
             {t.actions.save}
           </Button>
