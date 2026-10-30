@@ -1,6 +1,187 @@
 import { addDaysStr, addMonthsToMonth, monthOf } from '@/core/time/dates';
 import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/types';
 
+/** German source text → [en, es, fr, pt-BR]; a text without an entry stays German. */
+const TR: Record<string, readonly [string, string, string, string]> = {
+  Lebensmittel: ['Groceries', 'Alimentación', 'Alimentation', 'Alimentação'],
+  Wohnen: ['Housing', 'Vivienda', 'Logement', 'Moradia'],
+  Mobilität: ['Mobility', 'Movilidad', 'Mobilité', 'Mobilidade'],
+  Freizeit: ['Leisure', 'Ocio', 'Loisirs', 'Lazer'],
+  Gesundheit: ['Health', 'Salud', 'Santé', 'Saúde'],
+  Abos: ['Subscriptions', 'Suscripciones', 'Abonnements', 'Assinaturas'],
+  Rechnungen: ['Bills', 'Facturas', 'Factures', 'Contas'],
+  Sonstiges: ['Other', 'Otros', 'Divers', 'Outros'],
+  Gehalt: ['Salary', 'Sueldo', 'Salaire', 'Salário'],
+  Nebenjob: ['Side job', 'Trabajo extra', 'Job d’appoint', 'Trabalho extra'],
+  'BAföG / Stipendium': [
+    'Student grant',
+    'Beca de estudios',
+    'Bourse d’études',
+    'Bolsa de estudos',
+  ],
+  'Sonstige Einnahmen': ['Other income', 'Otros ingresos', 'Autres revenus', 'Outras receitas'],
+  Girokonto: ['Checking account', 'Cuenta corriente', 'Compte courant', 'Conta corrente'],
+  Sparkonto: ['Savings account', 'Cuenta de ahorro', 'Compte d’épargne', 'Conta poupança'],
+  Bargeld: ['Cash', 'Efectivo', 'Espèces', 'Dinheiro'],
+  'Musterfirma GmbH': [
+    'Musterfirma Ltd',
+    'Musterfirma S.L.',
+    'Musterfirma SARL',
+    'Musterfirma Ltda',
+  ],
+  Miete: ['Rent', 'Alquiler', 'Loyer', 'Aluguel'],
+  'Hausverwaltung Beispiel': [
+    'Beispiel Property Management',
+    'Administración de fincas Beispiel',
+    'Syndic Beispiel',
+    'Administradora Beispiel',
+  ],
+  'Strom & Wasser': ['Electricity & water', 'Luz y agua', 'Électricité et eau', 'Luz e água'],
+  'Stadtwerke Musterstadt': [
+    'Musterstadt Utilities',
+    'Suministros Musterstadt',
+    'Services municipaux Musterstadt',
+    'Serviços Municipais Musterstadt',
+  ],
+  Abo: ['Subscription', 'Suscripción', 'Abonnement', 'Assinatura'],
+  'Musik Flat': ['Music Unlimited', 'Música sin límites', 'Musique illimitée', 'Música ilimitada'],
+  'Konzertkasse Nord': [
+    'Nord Concert Tickets',
+    'Entradas de conciertos Nord',
+    'Billetterie concerts Nord',
+    'Bilheteria de shows Nord',
+  ],
+  Tickets: ['Tickets', 'Entradas', 'Billets', 'Ingressos'],
+  'Steuererstattung Beispiel': [
+    'Beispiel tax refund',
+    'Devolución de impuestos Beispiel',
+    'Remboursement d’impôts Beispiel',
+    'Restituição de imposto Beispiel',
+  ],
+  'Sparkasse Beispiel': [
+    'Beispiel Savings Bank',
+    'Caja de ahorros Beispiel',
+    'Caisse d’épargne Beispiel',
+    'Caixa econômica Beispiel',
+  ],
+  Zinsen: ['Interest', 'Intereses', 'Intérêts', 'Juros'],
+  'Bäckerei Sonnenschein': [
+    'Sonnenschein Bakery',
+    'Panadería Sonnenschein',
+    'Boulangerie Sonnenschein',
+    'Padaria Sonnenschein',
+  ],
+  'Café Morgenrot': ['Café Morgenrot', 'Café Morgenrot', 'Café Morgenrot', 'Café Morgenrot'],
+  'Tankstelle Nordring': [
+    'Nordring Petrol Station',
+    'Gasolinera Nordring',
+    'Station-service Nordring',
+    'Posto Nordring',
+  ],
+  Tanken: ['Fuel', 'Gasolina', 'Carburant', 'Combustível'],
+  'Supermarkt Mühlenfeld': [
+    'Mühlenfeld Supermarket',
+    'Supermercado Mühlenfeld',
+    'Supermarché Mühlenfeld',
+    'Supermercado Mühlenfeld',
+  ],
+  'Biomarkt Grünhof': [
+    'Grünhof Organic Market',
+    'Ecotienda Grünhof',
+    'Magasin bio Grünhof',
+    'Mercado orgânico Grünhof',
+  ],
+  Wochenmarkt: ['Weekly market', 'Mercadillo semanal', 'Marché hebdomadaire', 'Feira semanal'],
+  'Discounter Preisblick': [
+    'Preisblick Discount Store',
+    'Supermercado económico Preisblick',
+    'Discounter Preisblick',
+    'Atacarejo Preisblick',
+  ],
+  'Deutsche Bahn Beispiel': [
+    'Beispiel Railways',
+    'Ferrocarriles Beispiel',
+    'Chemins de fer Beispiel',
+    'Ferrovias Beispiel',
+  ],
+  'Stadtwerke ÖPNV': [
+    'City public transport',
+    'Transporte público urbano',
+    'Transports en commun de la ville',
+    'Transporte público municipal',
+  ],
+  'Parkhaus Zentrum': [
+    'Central car park',
+    'Aparcamiento Centro',
+    'Parking Centre',
+    'Estacionamento Centro',
+  ],
+  'Kino Lichtspiele': [
+    'Lichtspiele Cinema',
+    'Cine Lichtspiele',
+    'Cinéma Lichtspiele',
+    'Cinema Lichtspiele',
+  ],
+  'Restaurant Zum Anker': [
+    'Zum Anker Restaurant',
+    'Restaurante Zum Anker',
+    'Restaurant Zum Anker',
+    'Restaurante Zum Anker',
+  ],
+  'Buchhandlung Seitenblick': [
+    'Seitenblick Bookshop',
+    'Librería Seitenblick',
+    'Librairie Seitenblick',
+    'Livraria Seitenblick',
+  ],
+  'Sportartikel Fuchs': [
+    'Fuchs Sports Shop',
+    'Deportes Fuchs',
+    'Articles de sport Fuchs',
+    'Artigos esportivos Fuchs',
+  ],
+  'Apotheke am Markt': [
+    'Market Pharmacy',
+    'Farmacia de la Plaza',
+    'Pharmacie du Marché',
+    'Farmácia da Praça',
+  ],
+  'Drogerie Rosenstein': [
+    'Rosenstein Drugstore',
+    'Droguería Rosenstein',
+    'Droguerie Rosenstein',
+    'Drogaria Rosenstein',
+  ],
+  'Physiopraxis Beispiel': [
+    'Beispiel Physio Practice',
+    'Fisioterapia Beispiel',
+    'Cabinet de kiné Beispiel',
+    'Clínica de fisioterapia Beispiel',
+  ],
+  'Baumarkt Heimwerk': [
+    'Heimwerk DIY Store',
+    'Ferretería Heimwerk',
+    'Magasin de bricolage Heimwerk',
+    'Loja de construção Heimwerk',
+  ],
+  'Geschenke & Mehr': ['Gifts & More', 'Regalos y más', 'Cadeaux & Co', 'Presentes e mais'],
+  'Schreibwaren Tinte': [
+    'Tinte Stationery',
+    'Papelería Tinte',
+    'Papeterie Tinte',
+    'Papelaria Tinte',
+  ],
+  'Friseur Kammgold': [
+    'Kammgold Hairdresser',
+    'Peluquería Kammgold',
+    'Coiffeur Kammgold',
+    'Cabeleireiro Kammgold',
+  ],
+};
+const LANG_INDEX = { en: 0, es: 1, fr: 2, 'pt-BR': 3 } as const;
+const tr = (ctx: SeedContext, de: string): string =>
+  ctx.lang === 'de' ? de : (TR[de]?.[LANG_INDEX[ctx.lang]] ?? de);
+
 // Fixed default ids/names, copied from SEED_CATEGORIES in ./repo.ts (this file must not import the
 // repo): the finance defaults then find these records and never create duplicates.
 const CATEGORIES = [
@@ -87,13 +268,22 @@ function seed(ctx: SeedContext): SeedRows {
     cash: ctx.id('finance', 'account', 'cash'),
   };
   const accounts: SeedRow[] = [
-    { id: accountIds.main, data: { name: 'Girokonto', openingBalanceMinor: 120000, order: 0 } },
-    { id: accountIds.savings, data: { name: 'Sparkonto', openingBalanceMinor: 850000, order: 1 } },
-    { id: accountIds.cash, data: { name: 'Bargeld', openingBalanceMinor: 6000, order: 2 } },
+    {
+      id: accountIds.main,
+      data: { name: tr(ctx, 'Girokonto'), openingBalanceMinor: 120000, order: 0 },
+    },
+    {
+      id: accountIds.savings,
+      data: { name: tr(ctx, 'Sparkonto'), openingBalanceMinor: 850000, order: 1 },
+    },
+    {
+      id: accountIds.cash,
+      data: { name: tr(ctx, 'Bargeld'), openingBalanceMinor: 6000, order: 2 },
+    },
   ];
   const categories: SeedRow[] = CATEGORIES.map(([id, name, kind]) => ({
     id,
-    data: { name, kind },
+    data: { name: tr(ctx, name), kind },
   }));
 
   const months = ctx.count({ small: 2, medium: 4, large: 12 });
@@ -231,7 +421,11 @@ function seed(ctx: SeedContext): SeedRows {
     category: categories,
     transaction: txs.map((t, i) => ({
       id: ctx.id('finance', 'transaction', i),
-      data: { ...t },
+      data: {
+        ...t,
+        payee: tr(ctx, t.payee),
+        ...(t.note ? { note: tr(ctx, t.note) } : {}),
+      },
     })),
   };
 }

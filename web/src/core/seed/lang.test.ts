@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { LANGS } from '@/core/i18n/lang';
+import calendar from '@/modules/calendar/seed';
+import finance from '@/modules/finance/seed';
+import people from '@/modules/people/seed';
+import vault from '@/modules/vault/seed';
 import bookmarks from '@/modules/bookmarks/seed';
 import budgets from '@/modules/budgets/seed';
 import invoices from '@/modules/invoices/seed';
@@ -31,6 +35,10 @@ describe('localized seed text', () => {
   it.each([
     ['notes', notes],
     ['pantry', pantry],
+    ['calendar', calendar],
+    ['finance', finance],
+    ['people', people],
+    ['vault', vault],
     ['lists', lists],
     ['todos', todos],
     ['bookmarks', bookmarks],
@@ -49,6 +57,19 @@ describe('localized seed text', () => {
       const other = make(lang);
       expect(ids(other)).toEqual(ids(de));
       expect(texts(other)).not.toEqual(texts(de));
+    }
+  });
+});
+
+describe('localized demo vault entries', () => {
+  it('translates titles, notes and tags but keeps logins and passwords', async () => {
+    const { demoEntries } = await import('@/modules/accounts/seed');
+    const de = demoEntries('de');
+    for (const lang of LANGS.filter((l) => l !== 'de')) {
+      const other = demoEntries(lang);
+      expect(other.map((e) => e.username)).toEqual(de.map((e) => e.username));
+      expect(other.map((e) => e.password)).toEqual(de.map((e) => e.password));
+      expect(other.map((e) => e.title)).not.toEqual(de.map((e) => e.title));
     }
   });
 });
