@@ -1,12 +1,20 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { hasStartData } from '@/core/dataapi/onboarding';
-import { moduleHasData } from '@/core/modules/activation';
+import { moduleHasEntries } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { setupStepIdForModule } from '@/core/setup/registry';
 import { useSetupHost } from '@/core/setup/host';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { useOnboardingHost } from './host';
+
+/** Collections a module fills by itself: they do not make the module "in use". */
+const SELF_FILLED: Record<string, string[]> = {
+  todos: ['list'],
+  lists: ['list'],
+  finance: ['account', 'category'],
+  calendar: ['external'],
+};
 
 /**
  * Opens the start-data wizard of a module; renders nothing when the module has no importer. Next to
@@ -28,7 +36,7 @@ export function StartDataButton({
   const openSetup = useSetupHost((s) => s.openWizard);
   const manifest = getManifest(moduleId);
   const filled = useLiveQuery(
-    () => (manifest && setupLink ? moduleHasData(manifest) : false),
+    () => (manifest && setupLink ? moduleHasEntries(manifest, SELF_FILLED[moduleId] ?? []) : false),
     [moduleId, setupLink],
   );
   if (!manifest || !hasStartData(manifest)) return null;
