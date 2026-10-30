@@ -73,6 +73,15 @@ export const chat: Strings['chat'] = {
     nothing: 'Nenhum dado sobre esta pergunta foi encontrado nos módulos escolhidos.',
     attached: 'Com dados do app',
   },
+  setup: {
+    title: 'Nenhuma IA configurada ainda',
+    bodyLocal:
+      'O chat precisa de um modelo. O modelo local integrado roda só neste dispositivo, offline e de graça; você o baixa uma vez. Este aviso some quando estiver configurado.',
+    bodyProviders:
+      'O chat precisa de um provedor de IA. Configure um em Configurações → Assistente de IA. Este aviso some quando estiver configurado.',
+    openLocal: 'Baixar o modelo local',
+    openProviders: 'Configurar provedor de IA',
+  },
   aiOff: 'A IA está desligada. Você pode ligá-la de novo em Configurações → IA.',
   errors: {
     'ai-off': 'A IA está desligada. Você pode ligá-la de novo em Configurações → IA.',

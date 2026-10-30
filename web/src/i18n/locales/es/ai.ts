@@ -390,7 +390,9 @@ export const ai: Strings['ai'] = {
     advanced: 'Avanzado: límites y precios',
     ollamaHelpWeb: (origin: string) =>
       `Inicia Ollama y permite esta app: define la variable de entorno OLLAMA_ORIGINS como ${origin} y reinicia Ollama. Después usa «Probar conexión».`,
-    ollamaHelpNative: 'Inicia Ollama (puerto 11434) y vuelve a probar la conexión.',
+    ollamaHelpNative:
+      'Ollama no está en marcha o no está instalado. No lo necesitas por fuerza: descarga el modelo local integrado en Ajustes → Modelo local. O instala Ollama e inícialo (puerto 11434) y usa «Probar conexión».',
+    ollamaDownload: 'Descargar Ollama',
     statusRunning: 'En marcha',
     statusDown: 'No accesible',
     statusModelMissing: (m: string) =>
