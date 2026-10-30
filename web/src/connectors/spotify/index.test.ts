@@ -15,9 +15,10 @@ const loginUrl = (featureIds: string[]) =>
   );
 
 describe('spotify connector', () => {
-  it('logs in with PKCE at the Spotify endpoints on the fixed port 38417, desktop only', () => {
+  it('logs in with PKCE at the Spotify endpoints on the fixed port 38417 (desktop) or the own app address in the browser', () => {
     expect(connector.authType).toBe('oauth-pkce');
-    expect(connector.platforms).toEqual(['desktop']);
+    expect(connector.platforms).toEqual(['desktop', 'web']);
+    expect(connector.oauth?.browserLogin).toBe(true);
     expect(connector.oauth).toMatchObject({
       authUrl: 'https://accounts.spotify.com/authorize',
       tokenUrl: 'https://accounts.spotify.com/api/token',

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { ready } from './helpers';
-import { mockSpotify, seedConnected } from './spotify-mock';
+import { CORS, mockSpotify, seedConnected } from './spotify-mock';
 
 /**
  * Spotify connector: the line "Läuft gerade" and its controls against a mocked Web API. The login
@@ -9,15 +9,109 @@ import { mockSpotify, seedConnected } from './spotify-mock';
  */
 
 test.describe('Spotify connector', () => {
-  test('settings: the card is there, says desktop only and offers no login on this device', async ({
+  test('settings, Android app: the card explains where signing in works and offers no login', async ({
     page,
   }) => {
+    await page.addInitScript(() => localStorage.setItem('__tmPlatformKind', 'android'));
     await ready(page, '/settings/verbindungen');
     const card = page.getByTestId('connector-spotify');
     await expect(card).toBeVisible();
     await expect(card.getByText('Nicht verbunden')).toBeVisible();
-    await expect(card.getByText(/nur in der Windows-App/)).toBeVisible();
+    await expect(card.getByText(/Windows-App und im Browser/)).toBeVisible();
     await expect(card.getByRole('button', { name: 'Verbinden' })).toHaveCount(0);
+  });
+
+  test("settings, browser: names the app's own redirect address and offers the login", async ({
+    page,
+  }) => {
+    await ready(page, '/settings/verbindungen');
+    const card = page.getByTestId('connector-spotify');
+    await expect(card.getByText('Nicht verbunden')).toBeVisible();
+    await expect(card.getByText(/\/oauth\/callback/)).toBeVisible();
+    await expect(card.getByText(/38417/)).toHaveCount(0);
+    // Fresh card: the two basic features are ticked, the optional ones are not.
+    await expect(card.getByRole('checkbox', { name: /^Anzeigen/ })).toBeChecked();
+    await expect(card.getByRole('checkbox', { name: /^Steuern/ })).toBeChecked();
+    await expect(card.getByRole('checkbox', { name: /^Playlists/ })).not.toBeChecked();
+    await expect(card.getByRole('button', { name: 'Verbinden' })).toBeEnabled();
+  });
+
+  test('browser login: to Spotify and back to the callback address, then connected', async ({
+    page,
+  }) => {
+    const mock = await mockSpotify(page);
+    const authorize: string[] = [];
+    // The provider's login page: answer with the redirect back to the app, carrying the state.
+    await page.route('https://accounts.spotify.com/authorize**', (route) => {
+      const url = new URL(route.request().url());
+      authorize.push(url.search);
+      const back = new URL(url.searchParams.get('redirect_uri')!);
+      back.searchParams.set('code', 'CODE-invented');
+      back.searchParams.set('state', url.searchParams.get('state')!);
+      return route.fulfill({ status: 302, headers: { location: back.toString() } });
+    });
+    let tokenBody = '';
+    await page.route('https://accounts.spotify.com/api/token', (route) => {
+      tokenBody = route.request().postData() ?? '';
+      return route.fulfill({
+        status: 200,
+        headers: CORS,
+        json: { access_token: 'AT-invented', refresh_token: 'RT-invented', expires_in: 3600 },
+      });
+    });
+    await ready(page, '/settings/verbindungen');
+    const card = page.getByTestId('connector-spotify');
+    await card.getByLabel('Client-ID').fill('client-invented-123');
+    await card.getByRole('button', { name: 'Speichern' }).click();
+    await expect(card.getByPlaceholder('••••••••')).toBeVisible();
+    await card.getByRole('button', { name: 'Verbinden' }).click();
+
+    // Back in the app on the connection card: connected, and the address holds no code any more.
+    await expect(page).toHaveURL(/\/settings\/verbindungen/);
+    await expect(page.getByTestId('connector-spotify').getByText('Verbunden')).toBeVisible();
+    expect(page.url()).not.toContain('code=');
+    const query = new URLSearchParams(authorize[0]);
+    expect(query.get('scope')).toBe(
+      'user-read-currently-playing user-read-playback-state user-modify-playback-state',
+    );
+    expect(query.get('code_challenge_method')).toBe('S256');
+    expect(tokenBody).toContain('grant_type=authorization_code');
+    expect(tokenBody).toContain('code=CODE-invented');
+    expect(tokenBody).toContain('code_verifier=');
+    expect(decodeURIComponent(tokenBody)).toContain('/oauth/callback');
+
+    // The Overview line works with that login.
+    await ready(page, '/');
+    await expect(page.getByTestId('now-playing-line')).toContainText('Testlied');
+    expect(mock.api.length).toBeGreaterThan(0);
+  });
+
+  test('browser login: a forged callback address connects nothing', async ({ page }) => {
+    await mockSpotify(page);
+    await page.goto('/oauth/callback?code=forged&state=nothing-pending-123456');
+    await expect(page).toHaveURL(/\/settings\/verbindungen/);
+    await expect(page.getByTestId('connector-spotify').getByText('Nicht verbunden')).toBeVisible();
+  });
+
+  test('browser login: refusing at Spotify leaves the card on "Nicht verbunden"', async ({
+    page,
+  }) => {
+    await mockSpotify(page);
+    await page.route('https://accounts.spotify.com/authorize**', (route) => {
+      const url = new URL(route.request().url());
+      const back = new URL(url.searchParams.get('redirect_uri')!);
+      back.searchParams.set('error', 'access_denied');
+      back.searchParams.set('state', url.searchParams.get('state')!);
+      return route.fulfill({ status: 302, headers: { location: back.toString() } });
+    });
+    await ready(page, '/settings/verbindungen');
+    const card = page.getByTestId('connector-spotify');
+    await card.getByLabel('Client-ID').fill('client-invented-123');
+    await card.getByRole('button', { name: 'Speichern' }).click();
+    await card.getByRole('button', { name: 'Verbinden' }).click();
+    await expect(page).toHaveURL(/\/settings\/verbindungen/);
+    await expect(page.getByTestId('connector-spotify').getByText('Nicht verbunden')).toBeVisible();
+    await expect(page.getByTestId('connector-spotify').getByRole('alert')).toHaveCount(0);
   });
 
   test('not connected: no line and no request to Spotify', async ({ page }) => {
