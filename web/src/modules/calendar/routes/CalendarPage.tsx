@@ -1,4 +1,5 @@
 import { NowStrip } from '@/core/modules/NowStrip';
+import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
@@ -69,6 +70,7 @@ export default function CalendarPage() {
   const date = rawDate && DATE_RE.test(rawDate) ? rawDate : today();
   const range = rangeFor(view ?? 'month', date, weekStart);
   const items = useCalendarItems(range);
+  const forPerson = usePersonFilter();
 
   function go(next: { view?: CalendarView; date?: string }) {
     const p = new URLSearchParams(params);
@@ -99,7 +101,7 @@ export default function CalendarPage() {
   }
 
   if (!view) return null;
-  const list = items ?? [];
+  const list = (items ?? []).filter((i) => !forPerson || i.personId === forPerson);
   const tab = params.get('tab') === 'reminders' ? 'reminders' : 'calendar';
   const pickTab = (next: string) => {
     const p = new URLSearchParams();
@@ -164,6 +166,7 @@ export default function CalendarPage() {
       </PageHeader>
       <NowStrip modules={['calendar']} />
 
+      <PersonFilter usedIds={(items ?? []).flatMap((i) => (i.personId ? [i.personId] : []))} />
       <div className={styles.toolbar}>
         <div className={styles.navBtns}>
           <IconButton
