@@ -1,4 +1,6 @@
 import { deleteBlob, putBlob } from '@/core/blobs';
+import { isLiveOrRestorable } from '@/core/db/trash';
+import { now } from '@/core/time/now';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { documentSchema, type VaultDocument } from './schema';
@@ -29,7 +31,17 @@ export async function saveDocument(
   return saved.id;
 }
 
+/**
+ * Deletes the record (a tombstone, so "Rückgängig" and "Zuletzt gelöscht" can bring it back). The
+ * file stays on this device while the record can be restored; `restorableIds` decides what the
+ * clean-up may remove.
+ */
 export async function deleteDocument(id: string): Promise<void> {
   await documentRepo.remove(id);
-  await deleteBlob(id);
+}
+
+/** Ids whose files must be kept: active documents and ones deleted within the restore window. */
+export async function keepBlobIds(at: number = now()): Promise<Set<string>> {
+  const all = await documentRepo.table.toArray();
+  return new Set(all.filter((d) => isLiveOrRestorable(d.deletedAt, at)).map((d) => d.id));
 }

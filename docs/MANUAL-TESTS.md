@@ -323,3 +323,7 @@ Q3. *Firefox/Safari:* dort steht „Dieser Browser kann QR-Codes nicht lesen. Ni
 Q4. *Kamera verweigert:* ruhiger Hinweis, die Kamera bleibt aus, die Datei geht. Nach „Kamera ausschalten“ und beim Schließen der Seite erlischt die Kamera-Anzeige. ☐
 Q5. *Android-App:* QR-Lesen braucht Kamera-Berechtigung und eine WebView mit QR-Erkennung; wenn das Lesen nicht startet, gilt der Dateiweg. ☐
 
+### Löschen mit Rückgängig, Entwurf (P5 Paket C)
+U1. *Android/Windows:* Unterlage mit Datei löschen: keine Rückfrage, Toast „Gelöscht · Rückgängig“; „Rückgängig“ bringt Eintrag und Datei zurück (Herunterladen geht). ☐
+U2. *Handy:* Unterlage-Dialog öffnen, Text tippen, Zurück-Geste bzw. neben den Dialog tippen, Dialog erneut öffnen: Text ist da; „Abbrechen“ verwirft ihn. ☐
+

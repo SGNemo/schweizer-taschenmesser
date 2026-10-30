@@ -7,11 +7,10 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Verbindungsprotokoll und „Netzwerk sperren“ (QA P6, `feat/qa-connection-log`): [features/connection-log.md](features/connection-log.md).
 Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 Sprachen, KI-Knöpfe nur mit KI-Zugang, „Sehr groß“ = 150 %; P3b/P3c folgen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
-P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Paket B (Frist vorbei, Frist in Monaten) gebaut, C–D folgen ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
+P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Paket B (Frist vorbei, Frist in Monaten) gemergt (#296), Paket C (Löschen mit Rückgängig, Entwurf) in Review (#308), Paket D („Zuletzt gelöscht“) in Review (#318) ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
 Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-Stärketexte, Vorlagen; P3c (README/Website) folgt; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
-P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Pakete B–D folgen ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos und Budgets bleiben Euro.
@@ -66,7 +65,6 @@ Komfort Einstellungen, Bibliothek, Werkzeugkasten (gemergt: #132 Einstellungen, 
 Launch-Auftritt (`docs/launch-polish`): README und Nutzerdoku auf Englisch mit deutscher Übersetzung (`*.de.md`, `check:readme`), Community-Dateien, englische Issue-Vorlagen; PR gegen `develop`, wartet auf Review. Danach: App-UI in 5 Sprachen (`feat/i18n-ui`); dort auch die deutsche Website auf `installation.de.md` verlinken (geht erst, wenn die Datei auf `develop` liegt, sonst schlägt `site.yml` → `check:links` fehl).
 
 Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressum/Datenschutz-Platzhaltern, DE/EN; PR gegen `develop`, wartet auf Review; danach Cloudflare-Pages-Projekt, Domain und Deploy-Hook einrichten ([site/README.md](../site/README.md) → „Offen – macht Sven“).
-
 
 ## Nicht gebaut / bekannte Grenzen
 - Google-Drive-Sync-Adapter (nur `core/sync/adapters/googleDrive.stub.ts`), Binär-Anhänge im Sync, Tombstone-GC, Mehrmandanten-Server.
