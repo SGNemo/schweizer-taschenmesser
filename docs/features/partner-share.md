@@ -1,6 +1,6 @@
-# "Mit Partner teilen" without an own server (draft, no implementation)
+# "Mit Partner teilen" without an own server
 
-Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einfach koppeln vs. selbst hosten"). Today sharing needs the self-hosted sync server; Google Drive adapter is a stub. Goal: a non-technical user shares or copies data to a partner or second device with **no server and no provider account**. The server stays as "Erweitert → Eigener Server". Not part of this PR's code.
+Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einfach koppeln vs. selbst hosten"). Today sharing needs the self-hosted sync server; Google Drive adapter is a stub. Goal: a non-technical user shares or copies data to a partner or second device with **no server and no provider account**. The server stays as "Erweitert → Eigener Server". Package P1 is built (below); P2–P4 are drafts.
 
 ## Principles
 - Local-first, no new data holder: the transport is a **QR code or a file** that the users carry themselves (AirDrop, messenger, USB, cloud drive of their own choosing).
@@ -29,3 +29,10 @@ Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einf
 - Deletion: tombstones travel in deltas; retention 90 days (`tombstones.ts`) means a partner offline longer must re-pair via snapshot.
 - Scope of a "list" for modules with relations (e.g. shopping + recipes): start with single collections.
 - Package plan: P1 envelope + file transport + pairing (one device pair, whole data); P2 per-list scope; P3 QR frames; P4 UI polish. One PR each.
+
+## As built (P1, `feat/partner-share-p1`)
+- `web/src/core/share/share.ts`: file `taschenmesser-share` v1 = checksum + `encryptWithPassword` (Argon2id, AES-GCM, own AAD `taschenmesser-share-payload`) of the backup rows (with stamps and tombstones) of the **chosen modules**. Code = 6 random words from the EFF list, normalised (lower case, single spaces), never stored in the file.
+- Opening is always a **merge** through `applyBackup` (same LWW rule as sync, nothing deleted, changes queued for sync). `accounts` (vault) and `core` (settings) are never exported and ignored on import (tested with a hand-made file).
+- UI: Settings → Verbindungen → "Mit Partner teilen" (`pages/settings/ShareSection.tsx`, texts `strings.share.ts`, 5 languages): choose modules (none preselected), code shown, save file; open file + code → preview (added/replaced per module) → merge.
+- Tests: `core/share/share.test.ts` (round trip, LWW, deletions travel, wrong code, tampering, vault ignored), `e2e/share.spec.ts`.
+- Not yet: QR frames (P3), delta files with `since` (P2: today each file is the full state of the chosen modules, merging is idempotent), per-list scope (module level only), revocation hints in the UI.

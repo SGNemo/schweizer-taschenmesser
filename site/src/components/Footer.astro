@@ -1,15 +1,15 @@
 ---
 import { REPO_URL, RELEASES_URL, CHANGELOG_URL, ROADMAP_URL } from '../config.js';
-import { routes, t, type Locale, type RouteKey } from '../i18n';
+import { localesFor, routes, t, type Locale, type RouteKey } from '../i18n';
 
 interface Props { locale: Locale; route: RouteKey }
 const { locale, route } = Astro.props;
 const s = t(locale);
-const other: Locale = locale === 'de' ? 'en' : 'de';
+const choices = localesFor(route);
 ---
 <footer class="site-footer">
   <div class="wrap">
-    <nav aria-label={locale === 'de' ? 'Fußzeile' : 'Footer'}>
+    <nav aria-label={s.a11y.footerNav}>
       <a href={REPO_URL} rel="noopener">{s.footer.github}</a>
       <a href={RELEASES_URL} rel="noopener">{s.footer.releases}</a>
       <a href={CHANGELOG_URL} rel="noopener">{s.footer.changelog}</a>
@@ -17,7 +17,14 @@ const other: Locale = locale === 'de' ? 'en' : 'de';
       <a href={`${REPO_URL}/blob/main/LICENSE`} rel="noopener">{s.footer.license}</a>
     </nav>
     <p class="lang">
-      <span lang={locale}>{s.langSwitch[locale]}</span> · <a href={routes[route][other]} lang={other} hreflang={other}>{s.langSwitch[other]}</a>
+      {choices.map((l, i) => (
+        <>
+          {i > 0 ? ' · ' : null}
+          {routes[route][l] === routes[route][locale]
+            ? <span lang={locale}>{s.langSwitch[locale]}</span>
+            : <a href={routes[route][l]} lang={l} hreflang={l}>{s.langSwitch[l]}</a>}
+        </>
+      ))}
     </p>
     <p class="fine">
       <a href={routes.privacy[locale]}>{s.footer.privacy}</a>

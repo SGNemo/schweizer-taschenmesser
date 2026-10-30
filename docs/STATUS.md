@@ -7,8 +7,12 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Verbindungsprotokoll und „Netzwerk sperren“ (QA P6, `feat/qa-connection-log`): [features/connection-log.md](features/connection-log.md).
 Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 Sprachen, KI-Knöpfe nur mit KI-Zugang, „Sehr groß“ = 150 %; P3b/P3c folgen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
 P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Pakete B–D folgen ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Website in fünf Sprachen (`feat/site-languages`): /es, /fr, /pt-br mit eigenen Texten; Screenshots bleiben deutsch, bis die Testdaten übersetzt sind.
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
@@ -86,10 +90,9 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 ## Nächste sinnvolle Schritte
 1. Hardware-Checklisten ([MANUAL-TESTS.md](MANUAL-TESTS.md)) abarbeiten (Sven), Fehler melden.
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
-3. Einrichtungsassistent: offene Kleinigkeiten – Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.
-4. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
-5. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
-6. Entscheidungen: Precache der Wörterbücher, FAB-Änderung (Spotify: in Arbeit, Chat 10).
+3. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
+4. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
+5. Entscheidungen: Precache der Wörterbücher, FAB-Änderung (Spotify: in Arbeit, Chat 10).
 
 ## Manuelle Tests offen
 Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).

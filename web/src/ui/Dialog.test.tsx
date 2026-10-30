@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setNow } from '@/core/time/now';
@@ -40,6 +40,50 @@ describe('dialog', () => {
     await user.click(screen.getByRole('button', { name: 'Schließen' }));
     await user.click(screen.getByRole('button', { name: 'Verwerfen' }));
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('at the question, Esc and the X mean "keep editing"; only "Verwerfen" discards', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(
+      <Dialog open onClose={onClose} title="Neu" dirty>
+        <input aria-label="Name" defaultValue="Anna" />
+      </Dialog>,
+    );
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(screen.getByText('Entwurf verwerfen?')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(screen.queryByText('Entwurf verwerfen?')).toBeNull();
+    expect(screen.getByLabelText('Name')).toHaveValue('Anna');
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Esc reaches the dialog as the native `cancel` event (jsdom does not raise it by itself).
+    const esc = () =>
+      fireEvent(document.querySelector('dialog')!, new Event('cancel', { cancelable: true }));
+    esc();
+    expect(screen.getByText('Entwurf verwerfen?')).toBeVisible();
+    esc();
+    expect(screen.queryByText('Entwurf verwerfen?')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('a toggled checkbox is not a draft, typed text is', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(
+      <Dialog open onClose={onClose} title="Neu" askAfterTyping>
+        <input aria-label="Name" />
+        <input type="checkbox" aria-label="Erledigt" />
+      </Dialog>,
+    );
+    await user.click(screen.getByLabelText('Erledigt'));
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(onClose).toHaveBeenCalledOnce();
+
+    await user.type(screen.getByLabelText('Name'), 'A');
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.getByText('Entwurf verwerfen?')).toBeVisible();
   });
 
   it('shows what the caller puts before the title', () => {
