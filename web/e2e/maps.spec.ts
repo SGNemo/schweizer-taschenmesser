@@ -38,6 +38,41 @@ async function mockOsm(page: Page) {
       ],
     });
   });
+  await page.route('**://routing.openstreetmap.de/**', async (route) => {
+    seen.push(route.request().url());
+    await route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: {
+        code: 'Ok',
+        routes: [
+          {
+            distance: 3400,
+            duration: 1260,
+            geometry: {
+              coordinates: [
+                [11.0044, 49.5981],
+                [11.015, 49.585],
+                [11.0257, 49.5712],
+              ],
+            },
+            legs: [
+              {
+                steps: [
+                  {
+                    distance: 900,
+                    duration: 300,
+                    name: 'Hauptstraße',
+                    maneuver: { type: 'depart' },
+                  },
+                  { distance: 0, duration: 0, name: '', maneuver: { type: 'arrive' } },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+  });
   return seen;
 }
 
@@ -121,5 +156,37 @@ test.describe('Karten & Orte', () => {
     const row = page.getByText(/Fahrrad · 49\.5981, 11\.0044 → 49\.5712, 11\.0257/);
     await expect(row).toBeVisible();
     await expect(page.getByText('Zum Markt')).toBeVisible();
+  });
+
+  test('a saved route is calculated on the map only on click: line, distance, time and steps', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    await enable(page, 'maps');
+    await ready(page, '/maps?view=routes');
+    await page.getByRole('button', { name: 'Route hinzufügen' }).first().click();
+    await page.getByLabel('Name').first().fill('Zum Markt');
+    await page.getByLabel('Unterwegs mit').selectOption('bike');
+    const from = page.getByTestId('endpoint-Start');
+    await from.getByLabel('Ort suchen').fill('49.5981, 11.0044');
+    await from.getByRole('button', { name: 'Suchen' }).click();
+    await from.getByRole('button', { name: '49.5981, 11.0044' }).click();
+    const to = page.getByTestId('endpoint-Ziel');
+    await to.getByLabel('Ort suchen').fill('49.5712, 11.0257');
+    await to.getByRole('button', { name: 'Suchen' }).click();
+    await to.getByRole('button', { name: '49.5712, 11.0257' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+    await expect(page.getByText('Zum Markt')).toBeVisible();
+    expect(seen.filter((u) => hostOf(u) === 'routing.openstreetmap.de')).toEqual([]);
+
+    await page.getByRole('button', { name: 'Karten & Orte', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Route auf der Karte berechnen' }).click();
+    const plan = page.getByTestId('map-plan');
+    await expect(plan).toContainText('21 Min.');
+    await expect(plan.getByTestId('map-plan-steps')).toContainText('Los geht’s auf Hauptstraße');
+    await expect(page.getByTestId('map-line')).toBeAttached();
+    expect(seen.filter((u) => hostOf(u) === 'routing.openstreetmap.de')).toHaveLength(1);
+    await plan.getByRole('button', { name: 'Route ausblenden' }).click();
+    await expect(page.getByTestId('map-line')).toHaveCount(0);
   });
 });

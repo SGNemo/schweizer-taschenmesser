@@ -121,6 +121,11 @@
         "type": "text",
         "label": "Ortssuche (Adresse)",
         "default": "https://nominatim.openstreetmap.org/search"
+      },
+      "routingUrl": {
+        "type": "text",
+        "label": "Routenberechnung (Adresse)",
+        "default": "https://routing.openstreetmap.de/routed-{profile}"
       }
     }
   },

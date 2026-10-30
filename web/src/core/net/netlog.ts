@@ -143,6 +143,7 @@ const HOST_REASONS: [RegExp, NetReason][] = [
   [/^(api\.)?github\.com$|(^|\.)githubusercontent\.com$/, 'update'],
   [/(^|\.)open-meteo\.com$/, 'weather'],
   [/^(tile|nominatim)\.openstreetmap\.org$/, 'maps'],
+  [/^routing\.openstreetmap\.de$/, 'maps'],
   [/^api\.frankfurter\.(dev|app)$/, 'currency'],
   [/^api\.ipify\.org$/, 'ip'],
   [/(^|\.)huggingface\.co$/, 'download'],

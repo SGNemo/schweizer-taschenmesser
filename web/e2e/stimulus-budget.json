@@ -91,7 +91,7 @@
     },
     "desktop--settings": {
       "height": 800,
-      "buttons": 55,
+      "buttons": 56,
       "links": 36,
       "icons": 69,
       "firstScreenActions": 55
@@ -244,18 +244,18 @@
       "firstScreenActions": 38
     },
     "phone--settings-module": {
-      "height": 4456,
+      "height": 4533,
       "buttons": 43,
       "links": 8,
       "icons": 11,
       "firstScreenActions": 14
     },
     "phone--subscriptions": {
-      "height": 1642,
+      "height": 1785,
       "buttons": 35,
       "links": 11,
       "icons": 22,
-      "firstScreenActions": 33
+      "firstScreenActions": 30
     },
     "phone--todos": {
       "height": 4015,
@@ -265,7 +265,7 @@
       "firstScreenActions": 30
     },
     "phone--vault": {
-      "height": 4766,
+      "height": 4878,
       "buttons": 49,
       "links": 9,
       "icons": 13,

@@ -24,7 +24,7 @@ import {
 import { PlaceEditor, type PlaceTarget } from '../components/PlaceEditor';
 import { RouteEditor, type RouteTarget } from '../components/RouteEditor';
 import { TileMap, type MapMarker } from '../components/TileMap';
-import { searchPlaces, type Hit } from '../geocode';
+import { searchPlaces, MapsError, type Hit } from '../geocode';
 import { CATEGORY_ICON, MODE_ICON } from '../icons';
 import {
   MAP_APPS,
@@ -39,6 +39,7 @@ import {
   type View,
 } from '../logic';
 import { placeRepo, routeRepo } from '../repo';
+import { describeStep, fetchPlan, isDrivingMode, splitDuration, type Plan } from '../routing';
 import type { Endpoint, Place, Route } from '../schema';
 import { servicesOf, settings, DEFAULT_TILE_URL } from '../settings';
 import styles from './maps.module.css';
@@ -46,6 +47,12 @@ import styles from './maps.module.css';
 type Tab = 'places' | 'routes' | 'map';
 const TABS: readonly Tab[] = ['places', 'routes', 'map'];
 const GERMANY: View = { lat: 51.1657, lon: 10.4515, zoom: 5 };
+
+interface Shown {
+  route: Stored<Route>;
+  status: 'busy' | 'ok' | 'noroute' | 'blocked' | 'error';
+  plan?: Plan;
+}
 
 interface Selection {
   lat: number;
@@ -63,11 +70,91 @@ const openUrl = (url: string) => void getPlatform().app.openUrl(url);
 const isAndroid = () => getPlatform().kind === 'android';
 const apps = (): MapApp[] => MAP_APPS.filter((a) => a !== 'geo' || isAndroid());
 
+const formatTime = (seconds: number): string => {
+  const { h, m } = splitDuration(seconds);
+  return h > 0
+    ? `${h} ${t.maps.plan.hours} ${m} ${t.maps.plan.minutes}`
+    : `${m} ${t.maps.plan.minutes}`;
+};
+
+function stepText(step: Plan['steps'][number]): string {
+  const d = describeStep(step);
+  const p = t.maps.plan;
+  const onto = d.name ? ` ${p.onto(d.name)}` : '';
+  switch (d.kind) {
+    case 'depart':
+      return `${p.depart}${onto}`;
+    case 'arrive':
+      return p.arrive;
+    case 'roundabout':
+      return `${p.roundabout}${onto}`;
+    case 'continue':
+      return `${p.continue}${onto}`;
+    default:
+      return `${p.turn[d.direction ?? 'straight']}${onto}`;
+  }
+}
+
+function PlanCard({ shown, onHide }: { shown: Shown; onHide: () => void }) {
+  const { route, status, plan } = shown;
+  const p = t.maps.plan;
+  const message =
+    status === 'busy'
+      ? p.busy
+      : status === 'noroute'
+        ? p.noRoute
+        : status === 'blocked'
+          ? p.blocked
+          : status === 'error'
+            ? p.unreachable
+            : undefined;
+  return (
+    <section
+      className={styles.card}
+      data-testid="map-plan"
+      aria-label={route.name}
+      aria-live="polite"
+    >
+      <p className={styles.cardTitle}>{route.name}</p>
+      {message ? <p className={styles.note}>{message}</p> : null}
+      {plan ? (
+        <>
+          <p className={styles.note} data-testid="map-plan-summary">
+            {p.summary(
+              (() => {
+                const d = formatDistance(plan.distance, (n) =>
+                  formatNumber(n, { maximumFractionDigits: 1 }),
+                );
+                return `${d.value} ${d.unit}`;
+              })(),
+              formatTime(plan.duration),
+            )}
+          </p>
+          <h3 className={styles.stepsTitle}>{p.steps}</h3>
+          <ol className={styles.steps} data-testid="map-plan-steps">
+            {plan.steps.map((s, i) => (
+              <li key={i}>{stepText(s)}</li>
+            ))}
+          </ol>
+          <p className={styles.note}>{p.attribution}</p>
+        </>
+      ) : null}
+      <div className={styles.actions}>
+        <Button variant="ghost" onClick={onHide}>
+          {p.hide}
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 export default function MapsPage() {
   const places = useLiveQuery(() => placeRepo.active().sortBy('createdAt'), []);
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
-  const { tileUrl, searchUrl } = servicesOf(prefs as Record<string, unknown> | undefined);
+  const { tileUrl, searchUrl, routingUrl } = servicesOf(
+    prefs as Record<string, unknown> | undefined,
+  );
   const [params, setParams] = useSearchParams();
   const tab: Tab = TABS.includes(params.get('view') as Tab)
     ? (params.get('view') as Tab)
@@ -91,6 +178,7 @@ export default function MapsPage() {
   const [hits, setHits] = useState<Hit[]>();
   const [searching, setSearching] = useState<'idle' | 'busy' | 'error'>('idle');
   const [note, setNote] = useState('');
+  const [shown, setShown] = useState<Shown>();
   const searchInput = useRef<HTMLInputElement>(null);
   const view = mapView ?? fitView(places ?? [], 800, 480) ?? GERMANY;
 
@@ -139,6 +227,27 @@ export default function MapsPage() {
     } catch {
       setHits(undefined);
       setSearching('error');
+    }
+  }
+
+  /** Only on click and after the notice: asks the routing service, then shows the line on the map. */
+  async function calculate(r: Stored<Route>) {
+    if (!isDrivingMode(r.mode)) return;
+    setTab('map');
+    setSelected(undefined);
+    setShown({ route: r, status: 'busy' });
+    try {
+      await requireNotice('maps-route');
+      setReady(true);
+      const plan = await fetchPlan(r.mode, [r.from, ...r.via, r.to], { template: routingUrl });
+      setShown({ route: r, status: 'ok', plan });
+      setMapView(fitView(plan.line, 800, 480) ?? undefined);
+    } catch (e) {
+      const why = e instanceof MapsError ? e.message : 'error';
+      setShown({
+        route: r,
+        status: why === 'noroute' ? 'noroute' : why === 'blocked' ? 'blocked' : 'error',
+      });
     }
   }
 
@@ -205,6 +314,9 @@ export default function MapsPage() {
     },
   ];
   const routeMenu = (r: Stored<Route>): RowMenuItem[] => [
+    ...(isDrivingMode(r.mode)
+      ? [{ id: 'calculate', label: t.maps.plan.show, onSelect: () => void calculate(r) }]
+      : []),
     ...apps().flatMap((a) => {
       const url = routeLink(a, r.mode, r.from, r.to, r.via);
       return url
@@ -345,6 +457,7 @@ export default function MapsPage() {
               template={tileUrl}
               markers={markers}
               selected={selected && !selected.place ? selected : undefined}
+              line={shown?.plan?.line}
               onPick={(lat, lon) =>
                 setSelected({
                   lat: roundCoord(lat),
@@ -370,6 +483,8 @@ export default function MapsPage() {
           ) : (
             <p className={styles.note}>{t.maps.map.hint}</p>
           )}
+
+          {shown ? <PlanCard shown={shown} onHide={() => setShown(undefined)} /> : null}
 
           {selected ? (
             <section
