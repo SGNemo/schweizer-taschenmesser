@@ -8,7 +8,15 @@ import { db } from '@/core/db/db';
 import { setPlatform, type PlatformService } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
 import { useUiStore } from '@/stores/ui';
+import { MemoryRouter } from 'react-router';
 import { NowPlayingLine } from './NowPlayingLine';
+
+const renderLine = () =>
+  render(
+    <MemoryRouter>
+      <NowPlayingLine />
+    </MemoryRouter>,
+  );
 
 const TRACK = {
   is_playing: true,
@@ -27,6 +35,7 @@ const secrets = new Map<string, string>([
 type Reply = () => Response;
 let player: Reply;
 let command: (name: string) => Response;
+let extra: (url: string) => Response | undefined;
 const requests: string[] = [];
 
 function install() {
@@ -43,6 +52,8 @@ function install() {
         `${init?.method ?? 'GET'} ${url.replace('https://api.spotify.com/v1/me/player', '')}`,
       );
       if (url.includes('/currently-playing')) return player();
+      const more = extra(url);
+      if (more) return more;
       return command(url.split('/').pop()!);
     }) as typeof fetch,
     secrets: {
@@ -66,6 +77,7 @@ beforeEach(async () => {
   requests.length = 0;
   player = body(200, TRACK);
   command = () => new Response(null, { status: 204 });
+  extra = () => undefined;
   localStorage.clear();
   forgetAccessToken('spotify');
   install();
@@ -79,7 +91,7 @@ afterEach(() => {
 
 describe('NowPlayingLine', () => {
   it('shows nothing and asks nothing while Spotify is not connected', async () => {
-    render(<NowPlayingLine />);
+    renderLine();
     await new Promise((r) => setTimeout(r, 60));
     expect(screen.queryByTestId('now-playing-line')).toBeNull();
     expect(requests).toEqual([]);
@@ -87,7 +99,7 @@ describe('NowPlayingLine', () => {
 
   it('shows "Läuft gerade: Titel – Interpret" with the title as a safe link', async () => {
     await connect();
-    render(<NowPlayingLine />);
+    renderLine();
     const line = await screen.findByTestId('now-playing-line');
     expect(line).toHaveTextContent('Läuft gerade: Testlied – Erfundene Band');
     const link = screen.getByRole('link', { name: 'Testlied' });
@@ -105,7 +117,7 @@ describe('NowPlayingLine', () => {
       NOW_KEY,
       JSON.stringify({ at: Date.now(), value: { title: 'Alt', artist: 'x', playing: true } }),
     );
-    render(<NowPlayingLine />);
+    renderLine();
     await waitFor(() => expect(requests.length).toBeGreaterThan(0));
     await waitFor(() => expect(screen.queryByTestId('now-playing-line')).toBeNull());
     expect(localStorage.getItem(NOW_KEY)).toBeNull();
@@ -113,7 +125,7 @@ describe('NowPlayingLine', () => {
 
   it('shows nothing without "Anzeigen", even if the control scope is there', async () => {
     await connect(['control']);
-    render(<NowPlayingLine />);
+    renderLine();
     await new Promise((r) => setTimeout(r, 60));
     expect(screen.queryByTestId('now-playing-line')).toBeNull();
     expect(requests).toEqual([]);
@@ -121,7 +133,7 @@ describe('NowPlayingLine', () => {
 
   it('pauses and resumes, and asks for the next track', async () => {
     await connect();
-    render(<NowPlayingLine />);
+    renderLine();
     const toggle = await screen.findByTestId('now-playing-toggle');
     expect(toggle).toHaveTextContent('Pause');
     fireEvent.click(toggle);
@@ -141,7 +153,7 @@ describe('NowPlayingLine', () => {
 
   it('shows no controls without the "Steuern" feature', async () => {
     await connect(['show']);
-    render(<NowPlayingLine />);
+    renderLine();
     await screen.findByTestId('now-playing-line');
     expect(screen.queryByTestId('now-playing-toggle')).toBeNull();
     expect(screen.queryByTestId('now-playing-next')).toBeNull();
@@ -153,7 +165,7 @@ describe('NowPlayingLine', () => {
       new Response(JSON.stringify({ error: { status: 403, reason: 'PREMIUM_REQUIRED' } }), {
         status: 403,
       });
-    render(<NowPlayingLine />);
+    renderLine();
     fireEvent.click(await screen.findByTestId('now-playing-toggle'));
     await waitFor(() => expect(screen.queryByTestId('now-playing-toggle')).toBeNull());
     expect(screen.queryByTestId('now-playing-next')).toBeNull();
@@ -165,7 +177,7 @@ describe('NowPlayingLine', () => {
     // A later start does not offer them again (and does not repeat the hint).
     cleanup();
     useUiStore.setState({ toasts: [] });
-    render(<NowPlayingLine />);
+    renderLine();
     await screen.findByTestId('now-playing-line');
     expect(screen.queryByTestId('now-playing-toggle')).toBeNull();
     expect(useUiStore.getState().toasts).toEqual([]);
@@ -174,7 +186,7 @@ describe('NowPlayingLine', () => {
   it('marks the connection expired when Spotify rejects the sign-in, and the line goes away', async () => {
     await connect();
     player = body(401);
-    render(<NowPlayingLine />);
+    renderLine();
     await waitFor(async () => expect((await loadStatus('spotify')).state).toBe('expired'));
     await waitFor(() => expect(screen.queryByTestId('now-playing-line')).toBeNull());
   });
@@ -189,7 +201,7 @@ describe('NowPlayingLine', () => {
         value: { title: 'Zuletzt', artist: 'Band', playing: true },
       }),
     );
-    render(<NowPlayingLine />);
+    renderLine();
     await waitFor(() => expect(requests.length).toBeGreaterThan(0));
     await act(async () => {
       await new Promise((r) => setTimeout(r, 30));
@@ -197,5 +209,125 @@ describe('NowPlayingLine', () => {
     expect(screen.getByTestId('now-playing-line')).toHaveTextContent('Zuletzt');
     expect(screen.queryByRole('alert')).toBeNull();
     expect((await loadStatus('spotify')).state).toBe('connected');
+  });
+
+  describe('widget and player', () => {
+    const FULL = {
+      ...TRACK,
+      progress_ms: 61_000,
+      item: {
+        ...TRACK.item,
+        duration_ms: 215_000,
+        album: { name: 'Erfundenes Album', images: [] },
+      },
+    };
+    const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
+
+    it('shows album and a progress bar with the position, and "Zurück" asks for the previous track', async () => {
+      await connect();
+      player = body(200, FULL);
+      renderLine();
+      const line = await screen.findByTestId('now-playing-line');
+      expect(line).toHaveTextContent('Erfundenes Album');
+      const bar = screen.getByRole('progressbar', { name: 'Position' });
+      expect(bar).toHaveAttribute('aria-valuenow', '28');
+      expect(line).toHaveTextContent('1:01');
+      expect(line).toHaveTextContent('3:35');
+      fireEvent.click(screen.getByRole('button', { name: 'Zurück' }));
+      await waitFor(() => expect(requests).toContain('POST /previous'));
+    });
+
+    it('while nothing plays: one quiet row with the way into the player (and no stale card)', async () => {
+      await connect();
+      player = () => new Response(null, { status: 204 });
+      renderLine();
+      const idle = await screen.findByTestId('now-playing-idle');
+      expect(idle).toHaveTextContent('Spotify: gerade läuft nichts.');
+      expect(screen.queryByTestId('now-playing-line')).toBeNull();
+      fireEvent.click(screen.getByTestId('now-playing-open'));
+      expect(await screen.findByTestId('spotify-player')).toHaveTextContent('Gerade läuft nichts.');
+    });
+
+    it('the card opens the player; a playlist starts with one tap', async () => {
+      await connect(['show', 'control', 'playlists']);
+      player = body(200, FULL);
+      extra = (url) =>
+        url.includes('/v1/me/playlists')
+          ? json({
+              items: [
+                { id: 'PL1', name: 'Fokus' },
+                { id: 'PL2', name: 'Sport' },
+              ],
+            })
+          : url.endsWith('/v1/me/player')
+            ? json({
+                device: { name: 'Küche', volume_percent: 40 },
+                shuffle_state: false,
+                repeat_state: 'off',
+              })
+            : undefined;
+      renderLine();
+      await screen.findByTestId('now-playing-line');
+      fireEvent.click(screen.getByTestId('now-playing-open'));
+      const dialog = await screen.findByTestId('spotify-player');
+      expect(await screen.findByRole('button', { name: 'Fokus abspielen' })).toBeTruthy();
+      await waitFor(() => expect(dialog).toHaveTextContent('Auf Küche'));
+      expect(screen.getByRole('slider', { name: 'Position' })).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: 'Sport abspielen' }));
+      await waitFor(() => expect(requests).toContain('PUT /play'));
+    });
+
+    it('saved songs and playlists name the missing feature instead of failing', async () => {
+      await connect(['show', 'control']);
+      renderLine();
+      await screen.findByTestId('now-playing-line');
+      fireEvent.click(screen.getByTestId('now-playing-open'));
+      const dialog = await screen.findByTestId('spotify-player');
+      expect(dialog).toHaveTextContent('„Playlists“ ankreuzen');
+      fireEvent.click(screen.getByRole('button', { name: 'Lieblingssongs' }));
+      expect(dialog).toHaveTextContent('„Lieblingssongs“ ankreuzen');
+    });
+
+    it('the search runs on submit only, shows tracks and starts the tapped one', async () => {
+      await connect();
+      const searches: string[] = [];
+      extra = (url) => {
+        if (url.includes('/v1/search')) {
+          searches.push(url);
+          return json({
+            tracks: { items: [{ id: 'T9', name: 'Gefundenes Lied', artists: [{ name: 'Band' }] }] },
+            playlists: { items: [] },
+            albums: { items: [] },
+          });
+        }
+        return undefined;
+      };
+      renderLine();
+      await screen.findByTestId('now-playing-line');
+      fireEvent.click(screen.getByTestId('now-playing-open'));
+      await screen.findByTestId('spotify-player');
+      fireEvent.click(screen.getByRole('button', { name: 'Suchen' }));
+      const input = screen.getByLabelText('Titel, Playlist oder Album suchen');
+      fireEvent.change(input, { target: { value: 'Fe' } });
+      fireEvent.change(input, { target: { value: 'Feuer' } });
+      expect(searches).toHaveLength(0); // not per key
+      fireEvent.submit(input.closest('form')!);
+      const results = await screen.findByTestId('spotify-results');
+      expect(searches).toHaveLength(1);
+      expect(searches[0]).toContain('q=Feuer');
+      expect(results).toHaveTextContent('Gefundenes Lied');
+      fireEvent.click(screen.getByRole('button', { name: 'Gefundenes Lied abspielen' }));
+      await waitFor(() => expect(requests).toContain('PUT /play'));
+    });
+
+    it('without "Steuern" the player shows what plays and says how to enable playing', async () => {
+      await connect(['show']);
+      renderLine();
+      await screen.findByTestId('now-playing-line');
+      fireEvent.click(screen.getByTestId('now-playing-open'));
+      const dialog = await screen.findByTestId('spotify-player');
+      expect(dialog).toHaveTextContent('„Steuern“ ankreuzen');
+      expect(screen.queryByTestId('player-toggle')).toBeNull();
+    });
   });
 });
