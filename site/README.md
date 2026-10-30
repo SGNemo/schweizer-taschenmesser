@@ -1,8 +1,8 @@
 # Nemo website (`site/`)
 
 Static site for downloading Nemo and supporting the project. Own package, own build, own CI job
-(`.github/workflows/site.yml`); it never touches the app. Texts are German with English under
-`/en`; code and comments are English.
+(`.github/workflows/site.yml`); it never touches the app. Texts are German with English, Spanish,
+French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and comments are English.
 
 ## Stack and rules
 - **Astro 7**, static output, no client JavaScript except `public/theme.js` (theme switch, ~1 KB,
@@ -27,7 +27,7 @@ Static site for downloading Nemo and supporting the project. Own package, own bu
 
 ## Layout
 ```
-astro.config.mjs       site URL (env SITE_URL), i18n de/en, sitemap
+astro.config.mjs       site URL (env SITE_URL), i18n de/en/es/fr/pt-br, sitemap
 src/config.js          SITE_URL placeholder, repository links, Ko-fi URL, asset names
 src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
 src/release/latest.json  last known release (updated by the build, committed as fallback)
@@ -91,7 +91,7 @@ in a workflow with the secrets `CLOUDFLARE_API_TOKEN` (Pages:Edit) and `CLOUDFLA
 triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so A is preferred.
 
 ## Updating texts, release data and screenshots
-- Texts: `src/i18n/de.ts` and `en.ts` (same keys). Legal pages: `src/pages/impressum.astro`,
+- Texts: `src/i18n/de.ts`, `en.ts`, `es.ts`, `fr.ts`, `pt.ts` (same keys; es/fr/pt are machine-assisted, not yet reviewed by native speakers). The legal pages exist in German and English only; the other languages link to the English ones. Legal pages: `src/pages/impressum.astro`,
   `datenschutz.astro`, `en/imprint.astro`, `en/privacy.astro`; search for `PLATZHALTER` /
   `PLACEHOLDER`.
 - Release data refreshes itself on every build; to update the committed fallback run

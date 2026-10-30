@@ -6,3 +6,4 @@
 - 2026-10-06 **Design tokens copied, not imported** – `site/src/styles/tokens.css` is a tested subset of `web/src/ui/tokens.css` (`tokens.test.mjs`), so the site has no dependency on the app's build.
 - 2026-10-06 **German without prefix, English under `/en`, no auto-redirect by browser language** – explicit switch in header and footer, `hreflang` alternates on every page.
 - 2026-10-06 **Legal pages ship as placeholders** – structure plus a short note on what usually belongs into a German Impressum/Datenschutzerklärung; no invented personal data, explicitly no legal advice.
+- 2026-10-30 **Website in the five app languages** – `/es`, `/fr`, `/pt-br` next to `/` and `/en` (same page, own texts, `hreflang` per language, switch in header and footer). Legal pages stay German/English (the new languages link to the English ones, labelled "in English"). Screenshots stay the German set until the seed data is localized; the alt text says so.

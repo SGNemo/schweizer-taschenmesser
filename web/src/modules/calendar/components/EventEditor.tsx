@@ -6,6 +6,7 @@ import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { copyData } from '@/core/db/copy';
+import { PersonField } from '@/core/people/PersonField';
 import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
@@ -103,6 +104,7 @@ function Form({
   const [endTime, setEndTime] = useState(existing?.endTime ?? '');
   const [location, setLocation] = useState(existing?.location ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
+  const [personId, setPersonId] = useState(existing?.personId ?? '');
   const [recurrence, setRecurrence] = useState<Recurrence | undefined>(existing?.recurrence);
   const [notifyChoice, setNotifyChoice] = useState<string>(
     existing?.notify?.enabled || (reminder && !existing)
@@ -136,6 +138,7 @@ function Form({
       endTime: allDay ? undefined : endTime || undefined,
       location: location.trim() || undefined,
       note: note.trim() || undefined,
+      personId: personId || undefined,
       recurrence,
       taken: reminder && taken ? true : undefined,
       notify:
@@ -229,6 +232,7 @@ function Form({
         </div>
       ) : null}
       <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+      <PersonField value={personId} onChange={setPersonId} />
       {!reminder && !allDay && startTime ? (
         <LeadRow value={notifyChoice} onChange={setNotifyChoice} isNew={!existing} />
       ) : (

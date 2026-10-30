@@ -7,4 +7,6 @@ import type { ModuleManifest } from '@/core/modules/types';
 export const migrations: ModuleManifest['migrations'] = {
   // 2: tasks gained the optional fields `plannedFor` and `estimateMin`; old records stay valid as they are.
   2: async () => {},
+  // 3: tasks gained the optional `personId` ("Für"); old records stay valid as they are.
+  3: async () => {},
 };

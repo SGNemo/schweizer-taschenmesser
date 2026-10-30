@@ -4,6 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type * as RegistryModule from '@/core/setup/registry';
 import { useSetupHost } from '@/core/setup/host';
+import { db } from '@/core/db/db';
+import { taskRepo } from '@/modules/todos/repo';
+import { taskSchema } from '@/modules/todos/schema';
 import { t } from '@/strings';
 import { StartDataButton } from './StartDataButton';
 
@@ -44,5 +47,19 @@ describe('StartDataButton setup link', () => {
     stepFor.mockReturnValue('core.startdata');
     const { container } = render(<StartDataButton moduleId="nope" />);
     expect(container.textContent).toBe('');
+  });
+});
+
+describe('StartDataButton once the module holds entries', () => {
+  it('is one small quiet button without the assistant link', async () => {
+    stepFor.mockReturnValue('core.startdata');
+    await db.table('todos_task').clear();
+    await taskRepo.create(taskSchema.parse({ listId: 'inbox', title: 'Vorhanden' }));
+    render(<StartDataButton moduleId="todos" />);
+    const button = await screen.findByRole('button', { name: t.onboarding.button });
+    await vi.waitFor(() => expect(screen.queryByRole('button', { name: t.setup.open })).toBeNull());
+    expect(button.className).toMatch(/ghost/);
+    expect(button.className).toMatch(/sm/);
+    await db.table('todos_task').clear();
   });
 });

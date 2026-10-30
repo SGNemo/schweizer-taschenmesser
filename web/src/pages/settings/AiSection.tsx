@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { clearAiCache } from '@/core/ai/cache';
 import {
   addProvider,
@@ -13,6 +13,7 @@ import {
   type AiConfig,
   type ProviderEntry,
 } from '@/core/ai/config';
+import { detectOllama, type OllamaDetection } from '@/core/ai/detectOllama';
 import { PRESETS, getPreset, type PresetId } from '@/core/ai/providers/presets';
 import { coolingDown, clearCooldown } from '@/core/ai/router';
 import { testConnection, type ConnectionTest } from '@/core/ai/testConnection';
@@ -38,6 +39,14 @@ function parseNumber(text: string): number | undefined {
   return trimmed === '' ? undefined : Number(trimmed);
 }
 const show = (n: number | undefined) => (n === undefined ? '' : String(n).replace('.', ','));
+
+/** Concrete next step when a local Ollama can't be reached (the common first-run problem). */
+function ollamaHelp(entry: ProviderEntry, code: string | undefined): string | undefined {
+  if (entry.kind !== 'ollama' || code !== 'unavailable') return undefined;
+  return getPlatform().isNative
+    ? t.ai.settings.ollamaHelpNative
+    : t.ai.settings.ollamaHelpWeb(window.location.origin);
+}
 
 function ProviderCard({
   entry,
@@ -66,6 +75,15 @@ function ProviderCard({
   const [test, setTest] = useState<ConnectionTest | 'running' | undefined>();
   const [confirmRemove, setConfirmRemove] = useState(false);
   const preset = getPreset(entry.preset);
+  const [reach, setReach] = useState<OllamaDetection | undefined>();
+  useEffect(() => {
+    if (entry.kind !== 'ollama') return;
+    let live = true;
+    void detectOllama(undefined, 1500, entry.baseUrl || undefined).then((r) => live && setReach(r));
+    return () => {
+      live = false;
+    };
+  }, [entry.kind, entry.baseUrl, test]);
   const cooling = coolingDown(entry.id, now());
   const s = t.ai.settings;
 
@@ -132,6 +150,11 @@ function ProviderCard({
         <span className={styles.providerTitle}>
           {entry.label || preset.label}
           <Badge>{s.tiers[entry.tier]}</Badge>
+          {reach ? (
+            <Badge tone={reach.found ? undefined : 'accent'}>
+              {reach.found ? s.statusRunning : s.statusDown}
+            </Badge>
+          ) : null}
           {entry.mayTrainOnInputs ? <Badge tone="accent">{s.trainingNotice}</Badge> : null}
         </span>
         <span className={styles.row}>
@@ -169,10 +192,20 @@ function ProviderCard({
           : ''}
         {stats?.costUsd !== undefined ? ` · ${s.statsCost(usd(stats.costUsd))}` : ''}
       </p>
-      {cooling ? (
+      {reach?.found && !reach.models.includes(entry.model) ? (
+        <p className={styles.muted} role="status">
+          {s.statusModelMissing(entry.model)}
+        </p>
+      ) : null}
+      {reach && !reach.found ? (
+        <p className={styles.muted} role="status">
+          {ollamaHelp(entry, 'unavailable')}
+        </p>
+      ) : null}
+      {cooling && !(reach && !reach.found) ? (
         <p className={styles.muted} role="status">
           {s.coolingDown(Math.max(1, Math.ceil((cooling.until - now()) / 60_000)))}{' '}
-          {s.errors[cooling.code] ?? ''}
+          {s.errors[cooling.code] ?? ''} {ollamaHelp(entry, cooling.code) ?? ''}
         </p>
       ) : null}
 
@@ -239,44 +272,51 @@ function ProviderCard({
               <option value="json">{s.toolModeJson}</option>
             </SelectField>
           ) : null}
-          <TextField
-            label={s.limitRequests}
-            hint={s.limitHint}
-            inputMode="numeric"
-            value={limitReq}
-            onChange={(e) => {
-              setLimitReq(e.target.value);
-              setSaved(false);
-            }}
-          />
-          <TextField
-            label={s.limitCost}
-            inputMode="decimal"
-            value={limitCost}
-            onChange={(e) => {
-              setLimitCost(e.target.value);
-              setSaved(false);
-            }}
-          />
-          <TextField
-            label={s.priceIn}
-            hint={s.priceHint}
-            inputMode="decimal"
-            value={priceIn}
-            onChange={(e) => {
-              setPriceIn(e.target.value);
-              setSaved(false);
-            }}
-          />
-          <TextField
-            label={s.priceOut}
-            inputMode="decimal"
-            value={priceOut}
-            onChange={(e) => {
-              setPriceOut(e.target.value);
-              setSaved(false);
-            }}
-          />
+          <details className={styles.form}>
+            <summary>{s.advanced}</summary>
+            <TextField
+              label={s.limitRequests}
+              hint={s.limitHint}
+              inputMode="numeric"
+              value={limitReq}
+              onChange={(e) => {
+                setLimitReq(e.target.value);
+                setSaved(false);
+              }}
+            />
+            {entry.tier !== 'local' ? (
+              <>
+                <TextField
+                  label={s.limitCost}
+                  inputMode="decimal"
+                  value={limitCost}
+                  onChange={(e) => {
+                    setLimitCost(e.target.value);
+                    setSaved(false);
+                  }}
+                />
+                <TextField
+                  label={s.priceIn}
+                  hint={s.priceHint}
+                  inputMode="decimal"
+                  value={priceIn}
+                  onChange={(e) => {
+                    setPriceIn(e.target.value);
+                    setSaved(false);
+                  }}
+                />
+                <TextField
+                  label={s.priceOut}
+                  inputMode="decimal"
+                  value={priceOut}
+                  onChange={(e) => {
+                    setPriceOut(e.target.value);
+                    setSaved(false);
+                  }}
+                />
+              </>
+            ) : null}
+          </details>
           {!getPlatform().isNative && entry.kind === 'openai-compatible' ? (
             <p className={styles.muted}>{s.browserNote}</p>
           ) : null}
@@ -300,6 +340,7 @@ function ProviderCard({
                 : s.testFailed(
                     `${s.errors[test.code] ?? test.code}${test.detail && test.detail !== test.code ? ` (${test.detail})` : ''}`,
                   )}
+              {failure ? ` ${ollamaHelp(entry, failure.code) ?? ''}` : ''}
             </p>
           ) : null}
           <div className={styles.row}>
