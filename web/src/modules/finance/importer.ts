@@ -3,13 +3,18 @@ import { currencyOf, formatMoney, parseMoney, formatMoneyInput } from '@/core/mo
 import type { ImportInput, ImporterRuntime, ImportParseResult } from '@/core/importer/types';
 import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
-import { accountRepo, transactionRepo } from './repo';
+import { accountRepo, categoryRepo, transactionRepo } from './repo';
+import { suggestCategories } from './categoryHints';
 
 const nameKey = (name: string) => name.trim().toLowerCase();
 
 const MAX_BANK_ROWS = 2000;
 
-function parseBank(input: ImportInput, accountId: string, currency: string): ImportParseResult {
+async function parseBank(
+  input: ImportInput,
+  accountId: string,
+  currency: string,
+): Promise<ImportParseResult> {
   const s = t.onboarding.finance;
   if (input.kind !== 'file') return { candidates: [], notes: [] };
   if (!accountId) return { candidates: [], notes: [s.noAccounts] };
@@ -36,21 +41,43 @@ function parseBank(input: ImportInput, accountId: string, currency: string): Imp
     seen.set(base, n);
     return `${base}#${n}`;
   };
+  // Earlier bookings of the same payee suggest the category (shown in the row, changeable later).
+  const kindOf = (tx: (typeof rows)[number]) => (tx.amountMinor < 0 ? 'expense' : 'income');
+  const [past, categories] = await Promise.all([
+    transactionRepo.active().toArray(),
+    categoryRepo.active().toArray(),
+  ]);
+  const hints = suggestCategories(
+    past,
+    rows.map((tx) => ({ payee: tx.payee, kind: kindOf(tx) })),
+  );
+  const categoryName = (id: string | undefined) => categories.find((c) => c.id === id)?.name;
   return {
-    candidates: rows.map((tx) => ({
-      collection: 'transaction',
-      data: {
-        accountId,
-        kind: tx.amountMinor < 0 ? 'expense' : 'income',
-        amountMinor: Math.abs(tx.amountMinor),
-        date: tx.date,
-        ...(tx.payee ? { payee: tx.payee } : {}),
-        ...(tx.purpose ? { note: tx.purpose } : {}),
-      },
-      label: tx.payee || tx.purpose || formatMoney(Math.abs(tx.amountMinor), currency),
-      detail: `${formatDay(tx.date, 'd. MMM yyyy')} · ${tx.amountMinor < 0 ? '−' : '+'}${formatMoney(Math.abs(tx.amountMinor), currency)}`,
-      dedupeKey: keyed(tx),
-    })),
+    candidates: rows.map((tx, i) => {
+      const categoryId = categoryName(hints[i]) ? hints[i] : undefined;
+      return {
+        collection: 'transaction',
+        data: {
+          accountId,
+          kind: kindOf(tx),
+          amountMinor: Math.abs(tx.amountMinor),
+          date: tx.date,
+          ...(categoryId ? { categoryId } : {}),
+          ...(tx.payee ? { payee: tx.payee } : {}),
+          ...(tx.purpose ? { note: tx.purpose } : {}),
+        },
+        label: tx.payee || tx.purpose || formatMoney(Math.abs(tx.amountMinor), currency),
+        // Payee is the title; the purpose and a suggested category follow in the detail line.
+        detail: [
+          `${formatDay(tx.date, 'd. MMM yyyy')} · ${tx.amountMinor < 0 ? '−' : '+'}${formatMoney(Math.abs(tx.amountMinor), currency)}`,
+          tx.payee ? tx.purpose : '',
+          categoryId ? categoryName(categoryId) : '',
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        dedupeKey: keyed(tx),
+      };
+    }),
     notes,
   };
 }
@@ -60,7 +87,7 @@ const runtime: ImporterRuntime = {
     if (id === 'bank') {
       const accountId = ctx.options.accountId ?? '';
       const account = accountId ? await accountRepo.get(accountId) : undefined;
-      return parseBank(input, accountId, currencyOf(account));
+      return await parseBank(input, accountId, currencyOf(account));
     }
     if (input.kind !== 'form') return { candidates: [], notes: [] };
     const name = (input.values.name ?? '').trim();

@@ -1192,12 +1192,73 @@ export const de = {
       finished: 'Erledigt. Gut gemacht.',
       steps: 'Schritte',
       addStep: 'Schritt hinzufügen',
-      stepsSuggest: 'Vorschlag: 3 kleine Schritte',
+      stepsSuggest: 'Schritte aus einer Vorlage',
       stepsTemplate: [
         'Öffnen und Überblick verschaffen',
         'Den ersten Teil erledigen',
         'Prüfen und abschließen',
       ],
+      stepSets: [
+        {
+          words: [
+            'hausarbeit',
+            'referat',
+            'bericht',
+            'aufsatz',
+            'essay',
+            'präsentation',
+            'folien',
+            'schreiben',
+          ],
+          steps: [
+            'Gliederung in Stichpunkten aufschreiben',
+            'Den ersten Absatz schreiben',
+            'Lesen und eine Stelle verbessern',
+          ],
+        },
+        {
+          words: ['formular', 'antrag', 'steuer', 'anmeldung', 'kündig', 'versicher', 'bewerbung'],
+          steps: [
+            'Alle Unterlagen an einen Platz legen',
+            'Ausfüllen, Lücken markieren',
+            'Prüfen und abschicken',
+          ],
+        },
+        {
+          words: ['anrufen', 'telefon', 'termin vereinbaren', 'arzttermin'],
+          steps: ['Nummer und Anliegen aufschreiben', 'Anrufen', 'Ergebnis notieren'],
+        },
+        {
+          words: ['putzen', 'aufräumen', 'wäsche', 'spülen', 'müll', 'staub'],
+          steps: [
+            'Musik an, Timer stellen',
+            'Einen Bereich fertig machen',
+            'Müll und Wäsche wegbringen',
+          ],
+        },
+        {
+          words: ['einkaufen', 'besorgen', 'kaufen', 'bestellen', 'geschenk'],
+          steps: [
+            'Liste mit dem Nötigsten schreiben',
+            'Besorgen oder bestellen',
+            'Wegräumen und abhaken',
+          ],
+        },
+        {
+          words: ['lernen', 'klausur', 'prüfung', 'vokabel', 'vorlesung', 'kapitel'],
+          steps: [
+            'Material zusammenlegen',
+            'Ein Kapitel durcharbeiten',
+            'Drei Fragen dazu aufschreiben',
+          ],
+        },
+      ],
+      stepsPreview: 'Vorlage, nicht gespeichert:',
+      stepsTake: 'Übernehmen',
+      stepsDrop: 'Verwerfen',
+      replaceAsk: 'Neue Runde starten und die laufende ersetzen?',
+      replaceStart: 'Neue Runde starten',
+      replaceKeep: 'Bei der laufenden bleiben',
       missing: 'Diese Aufgabe gibt es nicht mehr.',
       missingAction: 'Zu den ToDos',
       notifyTitle: 'Fokus: Zeit ist um',
@@ -2306,7 +2367,7 @@ export const de = {
     nextMonth: 'Nächster Monat',
     income: 'Einnahmen',
     expense: 'Ausgaben',
-    net: 'Saldo',
+    net: 'Ergebnis',
     incomeOne: 'Einnahme',
     expenseOne: 'Ausgabe',
     kind: 'Art',

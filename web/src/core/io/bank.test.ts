@@ -12,6 +12,22 @@ const CSV = [
   '"DE00123456780000000001";"kaputt";"";"";"";"";"";"";"";"";"";"";"";"";"12,00";"EUR";""',
 ].join('\r\n');
 
+describe('parseBankCsv: payee column with real umlauts (QA B28)', () => {
+  it.each([
+    'Auftraggeber/Empfänger',
+    'Empfänger',
+    'Begünstigter/Zahlungspflichtiger',
+    'Zahlungsempfänger',
+  ])('reads the payee from "%s"', (name) => {
+    const csv = `Buchungstag;Wertstellung;${name};Buchungstext;Verwendungszweck;Betrag;Währung\n05.10.2026;05.10.2026;Müller GmbH;Gutschrift;Rechnung 2026-041 Beratung Oktober;2.400,00;EUR\n`;
+    const [tx] = parseBankCsv(csv).transactions;
+    expect(tx).toMatchObject({
+      payee: 'Müller GmbH',
+      purpose: 'Rechnung 2026-041 Beratung Oktober',
+    });
+  });
+});
+
 describe('parseBankCsv', () => {
   it('reads dates, signed amounts, payee, purpose and own account', () => {
     const r = parseBankCsv(CSV);
