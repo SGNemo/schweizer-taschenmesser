@@ -33,6 +33,16 @@ const SWIPE_CLOSE_PX = 80;
  * Esc, backdrop, the close button and a swipe down on the sheet handle all go through one
  * `requestClose`, which asks before throwing away a `dirty` draft.
  */
+/** Only text someone typed counts as a draft; a toggled checkbox or switch is saved as it is. */
+function isTyping(target: EventTarget | null): boolean {
+  if (target instanceof HTMLTextAreaElement) return true;
+  if (target instanceof HTMLInputElement)
+    return !['checkbox', 'radio', 'range', 'file', 'button', 'submit', 'reset', 'color'].includes(
+      target.type,
+    );
+  return target instanceof HTMLElement && target.isContentEditable;
+}
+
 export function Dialog({
   open,
   onClose,
@@ -77,8 +87,11 @@ export function Dialog({
     }
   }, [open]);
 
+  // Esc, the backdrop, the X and the swipe all come here. At the "discard?" question they mean
+  // "keep editing", like a second Back: only the explicit "Verwerfen" button throws a draft away.
   const requestClose = () => {
-    if (dirty && !confirming) setConfirming(true);
+    if (confirming) setConfirming(false);
+    else if (dirty) setConfirming(true);
     else onClose();
   };
 
@@ -134,7 +147,16 @@ export function Dialog({
       }}
     >
       {open ? (
-        <div className={styles.inner} onInput={askAfterTyping ? () => setTyped(true) : undefined}>
+        <div
+          className={styles.inner}
+          onInput={
+            askAfterTyping
+              ? (e) => {
+                  if (isTyping(e.target)) setTyped(true);
+                }
+              : undefined
+          }
+        >
           {variant === 'full' ? null : (
             <div
               className={styles.handle}

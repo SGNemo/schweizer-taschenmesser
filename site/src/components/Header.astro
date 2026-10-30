@@ -1,6 +1,6 @@
 ---
 import { REPO_URL } from '../config.js';
-import { routes, t, type Locale, type RouteKey } from '../i18n';
+import { localesFor, routes, t, type Locale, type RouteKey } from '../i18n';
 import Icon from './Icon.astro';
 import logo from '../assets/brand/logo-mark.svg';
 
@@ -8,12 +8,12 @@ interface Props { locale: Locale; route: RouteKey }
 const { locale, route } = Astro.props;
 const s = t(locale);
 const home = routes.home[locale];
-const other: Locale = locale === 'de' ? 'en' : 'de';
+const choices = localesFor(route);
 ---
 <header class="site-header">
   <div class="wrap bar">
     <a class="brand" href={home}><img src={logo.src} width="26" height="26" alt="" />{s.siteName}</a>
-    <nav aria-label={locale === 'de' ? 'Hauptnavigation' : 'Main navigation'}>
+    <nav aria-label={s.a11y.mainNav}>
       <a href={`${home === '/' ? '' : home}#features`}>{s.nav.features}</a>
       <a href={`${home === '/' ? '' : home}#daten`}>{s.nav.privacy}</a>
       <a href={`${home === '/' ? '' : home}#install`}>{s.nav.install}</a>
@@ -33,8 +33,10 @@ const other: Locale = locale === 'de' ? 'en' : 'de';
         <Icon name="sun" class="sun" size={18} /><Icon name="moon" class="moon" size={18} />
       </button>
       <nav class="lang" aria-label={s.langSwitch.label}>
-        <a href={routes[route][locale]} aria-current="page" lang={locale}>{s.langSwitch.short[locale]}</a>
-        <a href={routes[route][other]} lang={other} hreflang={other} title={s.langSwitch[other]}>{s.langSwitch.short[other]}</a>
+        {choices.map((l) =>
+          l === locale || (routes[route][l] === routes[route][locale])
+            ? <a href={routes[route][locale]} aria-current="page" lang={locale}>{s.langSwitch.short[locale]}</a>
+            : <a href={routes[route][l]} lang={l} hreflang={l} title={s.langSwitch[l]}>{s.langSwitch.short[l]}</a>)}
       </nav>
     </div>
   </div>
@@ -139,6 +141,12 @@ const other: Locale = locale === 'de' ? 'en' : 'de';
   .lang a:focus-visible {
     outline-offset: -2px;
     border-radius: 0;
+  }
+  /* Five languages: tighter on a phone so the switch stays on screen. */
+  @media (max-width: 29.99rem) {
+    .bar { gap: var(--space-3); }
+    .end { gap: var(--space-2); }
+    .lang a { padding: 0 0.5rem; }
   }
   @media (min-width: 64rem) {
     nav:not(.lang),

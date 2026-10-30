@@ -35,6 +35,8 @@ export interface ImportField {
   required?: boolean;
   placeholder?: string;
   hint?: string;
+  /** `text`: typical entries offered while typing (a datalist; the value stays free text). */
+  suggestions?: string[];
   /** Fixed choices for `select`. */
   choices?: Choice[];
   /** `select` whose choices depend on stored data; resolved by `ImporterRuntime.optionChoices`. */

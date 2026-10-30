@@ -268,6 +268,8 @@ export interface CalendarItem {
   location?: string;
   /** Link that opens the item in the service it came from. */
   url?: string;
+  /** The person or client the entry is for (id of a People record), if the source knows one. */
+  personId?: string;
   /** True for events copied from an outside service (read-only). */
   external?: boolean;
 }

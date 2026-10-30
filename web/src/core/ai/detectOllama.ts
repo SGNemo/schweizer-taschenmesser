@@ -7,11 +7,14 @@ export type OllamaDetection = { found: true; models: string[] } | { found: false
 export async function detectOllama(
   fetchFn: typeof fetch = getPlatform().fetch,
   timeoutMs = 1500,
+  baseUrl: string = DEFAULT_OLLAMA_URL,
 ): Promise<OllamaDetection> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetchFn(`${DEFAULT_OLLAMA_URL}/api/tags`, { signal: controller.signal });
+    const res = await fetchFn(`${baseUrl.replace(/\/+$/, '')}/api/tags`, {
+      signal: controller.signal,
+    });
     if (!res.ok) return { found: false };
     const body = (await res.json()) as { models?: { name?: unknown }[] };
     const models = (body.models ?? [])

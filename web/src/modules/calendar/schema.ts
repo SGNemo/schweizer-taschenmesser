@@ -29,6 +29,8 @@ export const eventSchema = z
     endTime: z.string().regex(TIME_RE).optional(),
     location: z.string().optional(),
     note: z.string().optional(),
+    /** The person or client the entry is for (People module); only the id, never sent to an AI. */
+    personId: z.string().optional().meta({ internal: true }),
     recurrence: recurrenceSchema.optional(),
     notify: notifySchema.optional(),
     /** A reminder answered with "Genommen" instead of "Erledigt" (medication, vitamins); nothing is counted. */
