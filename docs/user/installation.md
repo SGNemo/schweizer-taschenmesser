@@ -57,5 +57,6 @@ After every change on `develop`, GitHub automatically builds a preview (Windows 
 
 - **Separate app, separate data.** The dev preview is called "Nemo Dev" and runs next to the stable app. The stable app's data is not there; bring it over via sync or backup. On Windows it has its own data folder (portable: folder `data-dev` instead of `data` next to the exe).
 - **Download:** [Windows](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe) · [Android](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk). A "Dev" badge in the app shows that it is the preview.
+- **Earlier builds:** the last five builds stay available as separate pre-releases (`dev-preview-<number>`) on the [releases page](https://github.com/SGNemo/schweizer-taschenmesser/releases), in case a preview is broken. Installing an older Android build over a newer one only works after uninstalling "Nemo Dev" (back up first).
 - **Updates:** the dev preview always follows the dev channel (Settings → App updates) and makes a backup copy before every update. The stable app never offers a dev preview.
 - **Back to the stable version:** the stable app is a separate program. Keep using it or reinstall it; you can simply delete the dev preview.

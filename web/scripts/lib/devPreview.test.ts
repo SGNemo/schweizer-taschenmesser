@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { compareSemver } from '../../src/core/update/semver';
 import {
   DEV_ASSETS,
+  archiveTagsToDelete,
+  devArchiveTag,
+  devBuildNumber,
   DEV_TAG,
   devAssetUrls,
   devVersion,
@@ -77,5 +80,43 @@ describe('dev assets', () => {
       expect(url).toContain('/releases/download/dev-preview/');
     }
     expect(DEV_ASSETS).toContain('dev-latest.json');
+  });
+});
+
+describe('archive builds', () => {
+  it('reads the build number and names the tag', () => {
+    expect(devBuildNumber('0.3.2-dev.102')).toBe(102);
+    expect(devArchiveTag(102)).toBe('dev-preview-102');
+    expect(() => devBuildNumber('0.3.2')).toThrow();
+    expect(() => devBuildNumber('0.3.2-beta.1')).toThrow();
+  });
+
+  it('keeps the newest builds, ordered by number (not text)', () => {
+    const tags = [
+      'dev-preview-99',
+      'dev-preview-100',
+      'dev-preview-101',
+      'dev-preview-9',
+      'dev-preview-102',
+    ];
+    expect(archiveTagsToDelete(tags, 3).sort()).toEqual(['dev-preview-9', 'dev-preview-99']);
+    expect(archiveTagsToDelete(tags, 5)).toEqual([]);
+  });
+
+  it('never selects the rolling release, test releases or stable tags', () => {
+    const tags = [
+      'dev-preview',
+      'dev-preview-test',
+      'dev-preview-test-2',
+      'v0.3.1',
+      'v0.3.2-beta.1',
+      'dev-preview-1',
+      'dev-preview-2',
+    ];
+    expect(archiveTagsToDelete(tags, 1)).toEqual(['dev-preview-1']);
+  });
+
+  it('refuses to delete everything', () => {
+    expect(() => archiveTagsToDelete(['dev-preview-1'], 0)).toThrow();
   });
 });

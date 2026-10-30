@@ -76,3 +76,39 @@ export const isDevNewer = (candidate: string, previous: string): boolean =>
 
 export const devAssetUrls = (repo: string, tag: string = DEV_TAG): string[] =>
   DEV_ASSETS.map((n) => `https://github.com/${repo}/releases/download/${tag}/${n}`);
+
+/** Every build is also kept as its own pre-release `dev-preview-<build>` (the newest few). */
+export const DEV_ARCHIVE_PREFIX = 'dev-preview-';
+export const DEV_ARCHIVE_KEEP = 5;
+
+const ARCHIVE_RE = /^dev-preview-(\d+)$/;
+
+/** The build number of `X.Y.Z-dev.N`. */
+export function devBuildNumber(version: string): number {
+  const v = parseSemver(version);
+  const [label, n] = v?.prerelease ?? [];
+  if (label !== 'dev' || typeof n !== 'number') throw new Error(`Not a dev version: "${version}"`);
+  return n;
+}
+
+export const devArchiveTag = (build: number): string => `${DEV_ARCHIVE_PREFIX}${build}`;
+
+/**
+ * Archive tags to delete so that only the newest `keep` remain. Looks at `dev-preview-<number>` only:
+ * the rolling `dev-preview`, the throw-away `dev-preview-test` and every `v*` release are never touched.
+ */
+export function archiveTagsToDelete(
+  tags: readonly string[],
+  keep: number = DEV_ARCHIVE_KEEP,
+): string[] {
+  if (!Number.isInteger(keep) || keep < 1)
+    throw new Error(`Invalid number of builds to keep: ${keep}`);
+  return tags
+    .flatMap((tag) => {
+      const m = ARCHIVE_RE.exec(tag.trim());
+      return m ? [{ tag: tag.trim(), build: Number(m[1]) }] : [];
+    })
+    .sort((a, b) => b.build - a.build)
+    .slice(keep)
+    .map((x) => x.tag);
+}

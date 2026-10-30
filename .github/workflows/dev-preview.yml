@@ -5,21 +5,31 @@ name: Dev-Preview
 # `v*.*.*`, the release is created with --prerelease --latest=false, `releases/latest` is checked before and
 # after, and the stable updater (which reads `latest.json`) never sees these files.
 #
-# Called as the last job of ci.yml after a green push to `develop` (a `workflow_run` trigger would only
-# fire for workflow files on the default branch, i.e. never for develop). `workflow_dispatch` works once
-# this file is on `main`; `target` decides what happens:
+# Runs on every push to `develop` that changes more than documentation, independent of the CI run: the
+# preview must not wait for (or be cancelled together with) the test jobs, and a stream of merges must
+# not starve it. Concurrency does not cancel a running build: it finishes and publishes, and of all
+# pushes that arrive meanwhile only the newest one waits (GitHub drops older pending runs), so the
+# newest state is built next. `workflow_dispatch` works once this file is on `main`; `target`:
 #   dev-preview       publish to the rolling release (only allowed on develop)
 #   dev-preview-test  publish to a throw-away pre-release `dev-preview-test` (to test this workflow)
 #   artifact-only     build and upload workflow artifacts only
+# Besides the rolling release every build is also kept as its own pre-release `dev-preview-<build>`
+# (newest 5), so a broken preview can be replaced by an earlier one.
 # Same signing and audit steps as release.yml (gitleaks, audit, keystore cleanup, signature check).
 # Docs: docs/howto/ci.md -> "Dev-Preview".
 
 on:
-  workflow_call:
-    inputs:
-      target:
-        type: string
-        default: dev-preview
+  push:
+    branches: [develop]
+    paths-ignore:
+      - 'docs/**'
+      - 'CLAUDE.md'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'CHANGELOG.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
   workflow_dispatch:
     inputs:
       target:
@@ -31,9 +41,11 @@ on:
 permissions:
   contents: read
 
+# A running build is never cancelled (that is what starved the preview while merges kept coming in);
+# a newer push replaces only the run that is still waiting.
 concurrency:
   group: dev-preview
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: 26
@@ -63,7 +75,6 @@ jobs:
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
   prepare:
-    needs: secret-scan
     name: Version, notes, signing check
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -374,7 +385,7 @@ jobs:
 
   publish:
     name: Publish rolling pre-release
-    needs: [prepare, windows, android]
+    needs: [secret-scan, prepare, windows, android]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -456,6 +467,38 @@ jobs:
       - name: Check the download links
         run: node web/scripts/check-links.mjs --repo "$GITHUB_REPOSITORY" --dev --tag "$TAG"
 
+      # The rolling release always holds the newest build. Every build is also kept as its own pre-release
+      # `dev-preview-<build>` (binaries only, no manifest: the in-app update reads the rolling one), the
+      # newest 5 stay, so a broken preview can be replaced by an earlier one. Only for the real
+      # rolling target; pruning looks at `dev-preview-<number>` tags only.
+      - name: Keep this build as an archive pre-release, prune old ones
+        if: needs.prepare.outputs.tag == 'dev-preview'
+        run: |
+          set -euo pipefail
+          BUILD="$(node web/scripts/dev-preview.mjs build)"
+          ARCHIVE="dev-preview-$BUILD"
+          mapfile -t NAMES < assets.txt
+          BINARIES=()
+          for n in "${NAMES[@]}"; do [[ "$n" == dev-latest.json ]] || BINARIES+=("dl/$n"); done
+          if ! gh release view "$ARCHIVE" >/dev/null 2>&1; then
+            {
+              echo "> Archived Dev-Preview build ${{ needs.prepare.outputs.full }}. The newest build is always under the tag \`dev-preview\`; this one stays for a while as a fallback."
+              echo
+              cat dl/DEV_NOTES.md
+            } > archive-notes.md
+            gh release create "$ARCHIVE" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title "Nemo Dev-Preview build $BUILD (archive)" --notes-file archive-notes.md "${BINARIES[@]}"
+          fi
+          gh release list --limit 200 --json tagName --jq '.[].tagName' \
+            | node web/scripts/dev-preview.mjs prune --keep 5 > prune.txt
+          while read -r old; do
+            [ -n "$old" ] || continue
+            echo "Deleting old archive $old"
+            gh release delete "$old" --cleanup-tag --yes
+          done < prune.txt
+          LATEST_AFTER="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || echo none)"
+          echo "releases/latest after archiving: $LATEST_AFTER"
+
       - name: Summary
         run: |
           {
@@ -463,4 +506,5 @@ jobs:
             echo
             echo "- Windows: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Nemo-Portable-dev.exe"
             echo "- Android: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Nemo-dev.apk"
+            echo "- Earlier builds: https://github.com/$GITHUB_REPOSITORY/releases (tags dev-preview-<build>, newest 5)"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -70,7 +70,7 @@ More detail, including moving from an old version and installing the PWA: [Insta
 
 **Android:** open the APK, allow "Install from this source" for your browser or file manager, install. The app downloads later updates itself and checks the checksum; Android only accepts APKs signed with the same key.
 
-**Dev preview:** after every change on `develop` an untested preview is built: <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe">Windows</a> · <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk">Android</a>. It is a **separate app "Nemo Dev" with its own data** and does not replace the stable app.
+**Dev preview:** after every change on `develop` an untested preview is built (the last 5 builds stay on the releases page): <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe">Windows</a> · <a href="https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk">Android</a>. It is a **separate app "Nemo Dev" with its own data** and does not replace the stable app.
 
 Full guide: [Installation](docs/user/installation.md).
 </details>

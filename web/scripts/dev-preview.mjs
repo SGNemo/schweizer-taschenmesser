@@ -8,6 +8,8 @@
  *   node scripts/dev-preview.mjs tauri-config    JSON for `tauri build --config` (version)
  *   node scripts/dev-preview.mjs android-config  JSON for `tauri android build --config` (version + versionCode)
  *   node scripts/dev-preview.mjs last-stable-tag newest stable `vX.Y.Z` tag (for the release notes)
+ *   node scripts/dev-preview.mjs build           the build number N of the version
+ *   node scripts/dev-preview.mjs prune [--keep 5]  reads tags (one per line) on stdin, prints archive tags to delete
  *   node scripts/dev-preview.mjs assets          the file names a Dev-Preview carries, one per line
  *
  * The build number is the commit count of HEAD (monotonic on `develop`, independent of workflow run
@@ -20,6 +22,9 @@ import { fileURLToPath } from 'node:url';
 import { compareSemver, isPrerelease } from '../src/core/update/semver.ts';
 import {
   DEV_ASSETS,
+  DEV_ARCHIVE_KEEP,
+  archiveTagsToDelete,
+  devBuildNumber,
   devVersion,
   devVersionCode,
   devVersionFull,
@@ -64,12 +69,22 @@ try {
     case 'last-stable-tag':
       console.log(lastStableTag());
       break;
+    case 'build':
+      console.log(devBuildNumber(version()));
+      break;
+    case 'prune': {
+      const keepArg = process.argv.indexOf('--keep');
+      const keep = keepArg > 0 ? Number(process.argv[keepArg + 1]) : DEV_ARCHIVE_KEEP;
+      const tags = readFileSync(0, 'utf8').split('\n').filter(Boolean);
+      for (const tag of archiveTagsToDelete(tags, keep)) console.log(tag);
+      break;
+    }
     case 'assets':
       console.log(DEV_ASSETS.join('\n'));
       break;
     default:
       console.error(
-        'Usage: dev-preview.mjs version | full | code | tauri-config | android-config | last-stable-tag | assets',
+        'Usage: dev-preview.mjs version | full | code | tauri-config | android-config | last-stable-tag | build | prune | assets',
       );
       process.exit(2);
   }

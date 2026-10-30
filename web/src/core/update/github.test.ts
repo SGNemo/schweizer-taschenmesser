@@ -85,6 +85,8 @@ describe('pickUpdate', () => {
       rel('dev-preview', { prerelease: true }),
       rel('dev-preview', { prerelease: false }),
       rel('dev-preview-test', { prerelease: true }),
+      rel('dev-preview-102', { prerelease: true }), // archived builds
+      rel('dev-preview-103', { prerelease: false }),
     ];
     for (const channel of ['stable', 'beta'] as const) {
       expect(pickUpdate(dev, channel, '0.0.1')).toBeUndefined();
