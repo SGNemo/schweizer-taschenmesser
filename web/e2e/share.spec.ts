@@ -80,3 +80,37 @@ test('a standing connection saves only what changed and opens its own files with
   await row.getByRole('button', { name: 'Verbindung „Anna“ entfernen' }).click();
   await expect(page.getByTestId('share-pair')).toHaveCount(0);
 });
+
+test('a connection can show its changes as QR pictures that run, pause and count as handed over', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name === 'pixel-7', 'same flow as desktop');
+  await ready(page, '/todos');
+  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Brot kaufen');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Brot kaufen' })).toBeVisible();
+  await page.goto('/settings/verbindungen');
+  const pairs = page.getByTestId('share-pairs');
+  await pairs.getByLabel('Name der Verbindung (z. B. Anna)').fill('Ben');
+  await pairs.getByRole('checkbox', { name: 'ToDos' }).check();
+  await pairs.getByRole('button', { name: 'Verbindung anlegen' }).click();
+  const row = page.getByTestId('share-pair').filter({ hasText: 'Ben' });
+  await row.getByRole('button', { name: 'Als QR-Bilder zeigen' }).click();
+
+  const player = page.getByTestId('share-qr-player');
+  await expect(player.getByRole('img')).toBeVisible();
+  const frame = player.getByTestId('share-qr-frame');
+  const first = await frame.innerText();
+  await expect.poll(async () => frame.innerText(), { timeout: 8000 }).not.toBe(first);
+
+  await player.getByRole('button', { name: 'Anhalten' }).click();
+  const paused = await frame.innerText();
+  await page.waitForTimeout(1200);
+  expect(await frame.innerText()).toBe(paused);
+
+  await player.getByRole('button', { name: 'Fertig gezeigt' }).click();
+  await expect(
+    page.getByText(/Gezeigt: 1 geänderter? Eintrag|Gezeigt: \d+ geänderte/),
+  ).toBeVisible();
+  await expect(row).toContainText('Zuletzt gesendet');
+});
