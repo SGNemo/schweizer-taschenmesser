@@ -36,6 +36,8 @@ import { NetworkSection } from './NetworkSection';
 import { ShareSection } from './ShareSection';
 import { tShare } from '@/strings.share';
 import { tNet } from '@/strings.netlog';
+import { tTrash } from '@/strings.trash';
+import { RecentlyDeletedSection } from './RecentlyDeletedSection';
 import { ConnectorsSection } from './ConnectorsSection';
 import { FavouritesSection } from './FavouritesSection';
 import { tAdvanced } from '@/strings.advanced';
@@ -839,6 +841,29 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <ShortcutsSection />
       </SettingsGroup>
     ),
+  },
+  {
+    id: 'recently-deleted',
+    category: 'allgemein',
+    order: 40,
+    get title() {
+      return tTrash.get().title;
+    },
+    get description() {
+      return tTrash.get().description;
+    },
+    get keywords() {
+      return tTrash.get().keywords;
+    },
+    fields: [
+      {
+        key: 'keep',
+        get label() {
+          return tTrash.get().keep;
+        },
+      },
+    ],
+    render: () => <RecentlyDeletedSection />,
   },
   {
     id: 'weather',
