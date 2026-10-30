@@ -124,7 +124,7 @@ export const focus: Strings['focus'] = {
     allDone: 'Tout est fait. Place à quelque chose d’agréable.',
     nothingMore: 'C’est tout pour aujourd’hui. Vous trouverez le reste dans les tâches.',
     resetSkipped: 'Réinitialiser les suggestions',
-    empty: 'Rien de prévu pour l’instant. Une seule chose suffit.',
+    empty: 'Pas encore de tâches. Une seule chose suffit.',
     emptyAction: 'Créer une tâche',
     off: 'Les suggestions sont désactivées.',
     offAction: 'Ouvrir les paramètres',

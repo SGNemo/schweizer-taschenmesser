@@ -274,7 +274,7 @@ export const settings: Strings['settings'] = {
   motion: 'Movimento',
   motionOptions: { system: 'Como o sistema', reduce: 'Menos' },
   homeView: 'Visão geral',
-  homeViewOptions: { all: 'Todos os cartões', calm: 'Só o essencial' },
+  homeViewOptions: { all: 'Detalhada', calm: 'Calma' },
   density: 'Densidade',
   densityOptions: { normal: 'Normal', compact: 'Compacta' },
   modules: 'Módulos',

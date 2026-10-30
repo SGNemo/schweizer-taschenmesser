@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type * as RegistryModule from '@/core/setup/registry';
 import { useSetupHost } from '@/core/setup/host';
 import { db } from '@/core/db/db';
-import { taskRepo } from '@/modules/todos/repo';
+import { ensureInbox, taskRepo } from '@/modules/todos/repo';
 import { taskSchema } from '@/modules/todos/schema';
 import { t } from '@/strings';
 import { StartDataButton } from './StartDataButton';
@@ -61,5 +61,20 @@ describe('StartDataButton once the module holds entries', () => {
     expect(button.className).toMatch(/ghost/);
     expect(button.className).toMatch(/sm/);
     await db.table('todos_task').clear();
+  });
+
+  it('stays the full button next to the assistant link while only the self-made inbox list exists', async () => {
+    stepFor.mockReturnValue('core.startdata');
+    await db.table('todos_task').clear();
+    await db.table('todos_list').clear();
+    await ensureInbox('Eingang');
+    render(<StartDataButton moduleId="todos" />);
+    await screen.findByRole('button', { name: t.onboarding.button });
+    // Give the live "has entries" query time to settle: the link must still be there afterwards.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 300));
+    });
+    expect(screen.getByRole('button', { name: t.setup.open })).toBeTruthy();
+    await db.table('todos_list').clear();
   });
 });

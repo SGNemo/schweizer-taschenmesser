@@ -6,6 +6,7 @@ import { useSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Badge, Button, EmptyState, Icon, PageHeader, TextField } from '@/ui';
+import { SetupHint } from '../components/SetupHint';
 import { ThreadView } from '../components/ThreadView';
 import { expiredThreads, searchThreads, sortThreads } from '../logic';
 import { messageRepo, threadRepo } from '../repo';
@@ -87,7 +88,12 @@ export default function ChatPage() {
   }
 
   if (selected && threads?.some((x) => x.id === selected)) {
-    return <ThreadView threadId={selected} onBack={() => setParams({}, { replace: true })} />;
+    return (
+      <>
+        <SetupHint />
+        <ThreadView threadId={selected} onBack={() => setParams({}, { replace: true })} />
+      </>
+    );
   }
 
   return (
@@ -98,6 +104,7 @@ export default function ChatPage() {
           {c.newChat}
         </Button>
       </PageHeader>
+      <SetupHint />
       <div className={styles.layout}>
         <TextField
           label={c.search}

@@ -50,7 +50,7 @@ export default function NextWidget() {
     () => (tasks ?? []) as (PickTask & { title: string; listId: string })[],
     [tasks],
   );
-  const { next, plan, planRows, until, appointments } = buildToday({
+  const { next, plan, planRows, until } = buildToday({
     tasks: all,
     items: items ?? [],
     day,
@@ -212,23 +212,6 @@ export default function NextWidget() {
           {plan.doneToday > 0 ? (
             <p className={styles.done}>{t.focus.plan.doneToday(plan.doneToday)}</p>
           ) : null}
-        </div>
-      ) : null}
-
-      {size !== 's' && appointments.shown.length > 0 ? (
-        <div className={styles.plan} data-testid="today-appointments">
-          <span className={styles.planTitle}>{t.focus.today.appointments}</span>
-          <ul className={styles.rows}>
-            {appointments.shown.map((i) => (
-              <li key={`${i.source}:${i.id}`} className={styles.row}>
-                <span>{i.title}</span>
-                <span className={styles.est}>{i.allDay || !i.time ? '' : i.time}</span>
-              </li>
-            ))}
-          </ul>
-          <Link to="/calendar" className={styles.allLink}>
-            {t.focus.today.allAppointments}
-          </Link>
         </div>
       ) : null}
 

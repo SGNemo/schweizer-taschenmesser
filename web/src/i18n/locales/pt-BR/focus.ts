@@ -125,7 +125,7 @@ export const focus: Strings['focus'] = {
     allDone: 'Tudo feito. Hora de algo bom.',
     nothingMore: 'Por hoje é isso. Você encontra mais em Tarefas.',
     resetSkipped: 'Redefinir sugestões',
-    empty: 'Nada planejado ainda. Uma coisa basta.',
+    empty: 'Nenhuma tarefa ainda. Uma coisa basta.',
     emptyAction: 'Criar tarefa',
     off: 'As sugestões estão desligadas.',
     offAction: 'Abrir configurações',
