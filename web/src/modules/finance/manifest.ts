@@ -12,7 +12,7 @@ const manifest: ModuleManifest = {
     return t.finance.meta.name;
   },
   icon: 'wallet',
-  version: 2,
+  version: 3,
   get description() {
     return t.finance.meta.description;
   },

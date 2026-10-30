@@ -13,12 +13,14 @@ interface DialogProps {
   footer?: ReactNode;
   /** `full` fills the screen (setup assistant). Everything else is a centred dialog that becomes a bottom sheet on phones. */
   variant?: 'center' | 'full';
-  /** Desktop width: `default` 34 rem (forms), `roomy` 40 rem (quick capture), `wide` 56 rem (tools). */
-  size?: 'default' | 'roomy' | 'wide';
+  /** Desktop width: `default` 34 rem (forms), `roomy` 40 rem (quick capture), `wide` 56 rem (tools), `xl` 76 rem (rich overviews, e.g. the weather). */
+  size?: 'default' | 'roomy' | 'wide' | 'xl';
   /** Shown in the header before the title (e.g. a back button). */
   headerStart?: ReactNode;
   /** Fields were filled: closing asks "Entwurf verwerfen?" first. */
   dirty?: boolean;
+  /** Editors: the dialog notices typing itself; once something was typed, closing asks first (an empty one closes at once). */
+  askAfterTyping?: boolean;
   /** The parent registers "Back" itself (setup assistant): the dialog adds no entry of its own. */
   backHandled?: boolean;
 }
@@ -31,6 +33,16 @@ const SWIPE_CLOSE_PX = 80;
  * Esc, backdrop, the close button and a swipe down on the sheet handle all go through one
  * `requestClose`, which asks before throwing away a `dirty` draft.
  */
+/** Only text someone typed counts as a draft; a toggled checkbox or switch is saved as it is. */
+function isTyping(target: EventTarget | null): boolean {
+  if (target instanceof HTMLTextAreaElement) return true;
+  if (target instanceof HTMLInputElement)
+    return !['checkbox', 'radio', 'range', 'file', 'button', 'submit', 'reset', 'color'].includes(
+      target.type,
+    );
+  return target instanceof HTMLElement && target.isContentEditable;
+}
+
 export function Dialog({
   open,
   onClose,
@@ -40,7 +52,8 @@ export function Dialog({
   variant = 'center',
   size = 'default',
   headerStart,
-  dirty = false,
+  dirty: dirtyProp = false,
+  askAfterTyping = false,
   backHandled = false,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -48,10 +61,15 @@ export function Dialog({
   const [confirming, setConfirming] = useState(false);
   // A closed dialog never reopens on the "discard?" question (adjusting state during render).
   const [wasOpen, setWasOpen] = useState(open);
+  const [typed, setTyped] = useState(false);
   if (open !== wasOpen) {
     setWasOpen(open);
-    if (!open) setConfirming(false);
+    if (!open) {
+      setConfirming(false);
+      setTyped(false);
+    }
   }
+  const dirty = dirtyProp || (askAfterTyping && typed);
   const [dragY, setDragY] = useState(0);
   const dragFrom = useRef<number | null>(null);
 
@@ -69,8 +87,11 @@ export function Dialog({
     }
   }, [open]);
 
+  // Esc, the backdrop, the X and the swipe all come here. At the "discard?" question they mean
+  // "keep editing", like a second Back: only the explicit "Verwerfen" button throws a draft away.
   const requestClose = () => {
-    if (dirty && !confirming) setConfirming(true);
+    if (confirming) setConfirming(false);
+    else if (dirty) setConfirming(true);
     else onClose();
   };
 
@@ -111,6 +132,7 @@ export function Dialog({
         styles.dialog,
         size === 'wide' ? styles.wide : '',
         size === 'roomy' ? styles.roomy : '',
+        size === 'xl' ? styles.xl : '',
         variant === 'full' ? styles.full : '',
       ].join(' ')}
       style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
@@ -125,7 +147,16 @@ export function Dialog({
       }}
     >
       {open ? (
-        <div className={styles.inner}>
+        <div
+          className={styles.inner}
+          onInput={
+            askAfterTyping
+              ? (e) => {
+                  if (isTyping(e.target)) setTyped(true);
+                }
+              : undefined
+          }
+        >
           {variant === 'full' ? null : (
             <div
               className={styles.handle}

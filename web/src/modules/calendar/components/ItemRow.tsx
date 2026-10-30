@@ -7,6 +7,8 @@ interface Props {
   item: CalendarItem;
   onOpen?: (item: CalendarItem) => void;
   compact?: boolean;
+  /** Name of the person the entry is for ("für Lena"), resolved by the page. */
+  person?: string;
 }
 
 export function kindLabel(kind: string): string {
@@ -24,7 +26,7 @@ function timeLabel(item: CalendarItem): string | null {
 }
 
 /** One calendar entry: time (or "ganztägig"), kind badge and title. */
-export function ItemRow({ item, onOpen, compact }: Props) {
+export function ItemRow({ item, onOpen, compact, person }: Props) {
   const time = timeLabel(item);
   const content = (
     <>
@@ -37,6 +39,7 @@ export function ItemRow({ item, onOpen, compact }: Props) {
           <span className={styles.colorDot} style={{ background: item.color }} aria-hidden="true" />
         ) : null}
         {item.title}
+        {person ? <span className={styles.person}>{` · ${t.assign.forName(person)}`}</span> : null}
       </span>
     </>
   );

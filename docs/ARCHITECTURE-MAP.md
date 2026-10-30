@@ -51,6 +51,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Crypto service** | `web/src/core/crypto/`: `aead.ts` (AES-GCM), `kdf.ts` (Argon2id), `keychain.ts` (KEK/DEK), `passwordBlob.ts`, `random.ts` | used by vault (`modules/accounts`) |
 | Secrets store | `web/src/core/secrets/{types,deviceKey,migrating}.ts` | `SecretStore`; keystore primary, WebCrypto device key legacy |
 | Backup | `web/src/core/backup/backup.ts` | JSON `taschenmesser-backup`, merge/replace; per-release fixtures `web/tests/fixtures/backups/` |
+| Share file | `web/src/core/share/share.ts` | `taschenmesser-share` v1, encrypted modules, merge only, six-word code ([features/partner-share.md](features/partner-share.md)) |
 | **Diagnostics / bug report** | `web/src/core/diagnostics/{errorLog,export,report,config}.ts` (ring buffers, scrub, text report, issue/mailto links); UI `pages/settings/AboutSections.tsx`, `layout/ModuleErrorBoundary.tsx` | `buildDiagnostics`, `renderDiagnostics`, `reportBug` |
 | **Recovery / safe mode** | `core/db/{health,recovery}.ts`, `core/safemode/safeMode.ts`, UI `layout/{RecoveryScreen,FatalErrorScreen,SafeModeBanner}.tsx`, boot in `main.tsx`; desktop flag `capture::desktop_safe_mode` | `checkDb`, `dumpDb`, `isSafeMode` |
 | **Language (DE/EN for new texts)** | `web/src/core/i18n/{lang,bundle}.ts`, bundles `strings.i18n.ts`, `strings.diagnostics.ts` | `defineBundle`, `useLang` |

@@ -78,6 +78,24 @@ export async function moduleHasData(
   return false;
 }
 
+/**
+ * Does the module hold entries of the person's own? Like `moduleHasData`, but collections that the
+ * module fills by itself (the ToDo inbox list, the shopping list, the default account and
+ * categories, connector data) do not count, so a fresh module is still "empty".
+ */
+export async function moduleHasEntries(
+  manifest: ModuleManifest,
+  ignore: readonly string[] = [],
+  database: TaschenmesserDB = defaultDb,
+): Promise<boolean> {
+  for (const collection of Object.keys(manifest.dataSchema.collections)) {
+    if (ignore.includes(collection)) continue;
+    if ((await createCollectionRepo(manifest, collection, database).active().count()) > 0)
+      return true;
+  }
+  return false;
+}
+
 export async function disableModule(
   manifest: ModuleManifest,
   policy: DataPolicy,

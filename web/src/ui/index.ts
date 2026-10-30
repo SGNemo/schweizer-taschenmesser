@@ -7,6 +7,7 @@ export { Dialog } from './Dialog';
 export { useDraft } from './useDraft';
 export { useFormDraft } from './useFormDraft';
 export { TextField, TextArea, SelectField, DateField, Checkbox, Switch } from './Fields';
+export { CurrencyField } from './CurrencyField';
 export { Tabs, type TabItem } from './Tabs';
 export { Badge, EmptyState, ErrorState, Fab, Skeleton, SkeletonRows, Toaster } from './Misc';
 export { NoReadAid, ReadableText } from './ReadableText';

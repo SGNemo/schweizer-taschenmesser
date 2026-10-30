@@ -393,6 +393,16 @@ export const ai: Strings['ai'] = {
       'not-configured': 'Configuration incomplète',
       'invalid-response': 'Réponse inutilisable',
     } as Record<string, string>,
+    advanced: 'Avancé : limites et prix',
+    ollamaHelpWeb: (origin: string) =>
+      `Démarrez Ollama et autorisez cette app : définissez la variable d’environnement OLLAMA_ORIGINS sur ${origin} et redémarrez Ollama. Puis « Tester la connexion ».`,
+    ollamaHelpNative:
+      'Ollama ne tourne pas ou n’est pas installé. Vous n’en avez pas forcément besoin : téléchargez le modèle local intégré dans Réglages → Modèle local. Ou installez Ollama et démarrez-le (port 11434), puis « Tester la connexion ».',
+    ollamaDownload: 'Télécharger Ollama',
+    statusRunning: 'En marche',
+    statusDown: 'Inaccessible',
+    statusModelMissing: (m: string) =>
+      `En marche, mais le modèle « ${m} » manque. Dans un terminal : ollama pull ${m}`,
     baseUrlInsecure:
       'L’adresse doit commencer par https://. http:// ne fonctionne que pour les serveurs sur cet appareil ou dans votre propre réseau (p. ex. localhost, 192.168.…).',
   },

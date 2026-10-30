@@ -9,6 +9,7 @@ import { meanings } from './meanings';
 import { shortcuts } from './shortcuts';
 import { voice } from './voice';
 import { actions } from './actions';
+import { assign } from './assign';
 import { home } from './home';
 import { library } from './library';
 import { settings } from './settings';
@@ -76,6 +77,7 @@ export const es: Strings = {
   shortcuts,
   voice,
   actions,
+  assign,
   home,
   library,
   settings,

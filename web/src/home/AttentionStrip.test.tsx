@@ -82,7 +82,7 @@ describe('AttentionStrip (calm, the default)', () => {
   });
   afterEach(cleanup);
 
-  it('keeps today visible and folds everything else into "Wartet noch"', async () => {
+  it('keeps today and everything overdue visible, folds the rest into "Wartet noch"', async () => {
     items.value = [
       { id: 'a', tone: 'accent', icon: 'checklist', title: '2 ToDos heute fällig', to: '/todos' },
       {
@@ -96,13 +96,15 @@ describe('AttentionStrip (calm, the default)', () => {
     ];
     const { container } = draw();
     const waiting = await screen.findByTestId('attention-waiting');
-    expect(waiting).toHaveTextContent('Wartet noch · 2');
+    expect(waiting).toHaveTextContent('Wartet noch · 1');
     expect(waiting).toHaveTextContent('Nichts davon muss jetzt sein.');
     expect(waiting.hasAttribute('open')).toBe(false);
     // The "today" chip is outside the folded block.
     const today = screen.getByRole('link', { name: /2 ToDos heute fällig/ });
     expect(waiting.contains(today)).toBe(false);
-    // Money keeps its red edge inside the folded block (colour plus icon plus text).
+    // Overdue money is not folded away (QA B18/B08); it keeps its red edge (colour plus icon plus text).
+    const overdue = screen.getByRole('link', { name: /2 Rechnungen überfällig/ });
+    expect(waiting.contains(overdue)).toBe(false);
     expect(container.querySelector('[data-tone="danger"]')?.textContent).toContain('überfällig');
   });
 

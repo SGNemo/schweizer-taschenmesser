@@ -117,8 +117,8 @@ Entries expire after 30 days (resolved) or 90 days (open); at most 500 rows.
 after all its chunks were accepted, so an interrupted first upload resumes and the server ignores
 duplicates. Pull advances the cursor page by page. Failed cycles retry with exponential backoff
 (5 s doubling to 5 min, ±20 % jitter); locked device, wrong key and similar errors are not retried in
-the background. Server: `TRUST_PROXY=true` behind a reverse proxy, `AUTH_FAILURE_LIMIT` (default 20 per
-minute and address, then `429`).
+the background. Server: `TRUST_PROXY=true` behind a reverse proxy, `AUTH_FAILURE_LIMIT` (default 20 wrong tokens per
+minute and address, then `429` for further wrong tokens; a valid token is never blocked by it).
 
 **Tombstones.** Synced deletions older than 90 days are removed locally once a day, only after a
 successful sync and never while unsynced.

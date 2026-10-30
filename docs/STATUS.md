@@ -7,14 +7,18 @@ Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/nod
 
 Verbindungsprotokoll und „Netzwerk sperren“ (QA P6, `feat/qa-connection-log`): [features/connection-log.md](features/connection-log.md).
 Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 Sprachen, KI-Knöpfe nur mit KI-Zugang, „Sehr groß“ = 150 %; P3b/P3c folgen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
-P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Paket B (Frist vorbei, Frist in Monaten) in Review (#296), Paket C (Löschen mit Rückgängig, Entwurf) in Review (#308), Paket D („Zuletzt gelöscht“, Einstellungen → Allgemein) gebaut ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
+P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Paket B (Frist vorbei, Frist in Monaten) gemergt (#296), Paket C (Löschen mit Rückgängig, Entwurf) in Review (#308), Paket D („Zuletzt gelöscht“, Einstellungen → Allgemein) in Review (#318) ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
 Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-Stärketexte, Vorlagen; P3c (README/Website) folgt; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
-P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Pakete B–D folgen ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
+
+Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos und Budgets bleiben Euro.
+Website in fünf Sprachen (`feat/site-languages`): /es, /fr, /pt-br mit eigenen Texten; Screenshots bleiben deutsch, bis die Testdaten übersetzt sind.
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
 
-Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter (Detail-Vorschau), Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
+Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Runden 2–5 gemergt (#177–#241: Heute-Karte, ToDo-Seite, Wetter (Detail-Vorschau, Luft & Pollen), Bildschirmfoto, Tasten, Diff/Regex, Importe, Mobile; Einstellungen, Erinnerungen-Reiter und Merkliste gefaltet, Darstellung 4424→1787 px); Spotify-Verbindung [features/spotify.md](features/spotify.md); offen: Spotify-Fokus-Musik (`feat/spotify-focus`).
 
 Handy-Layout (QA P2, `fix/qa-mobile-layout`): Kopfzeile, Listenzeilen, Hinweise, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi; `e2e/screenshots/mobile-layout.spec.ts`; Gerätetest offen.
 
@@ -61,7 +65,6 @@ Launch-Auftritt (`docs/launch-polish`): README und Nutzerdoku auf Englisch mit d
 
 Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressum/Datenschutz-Platzhaltern, DE/EN; PR gegen `develop`, wartet auf Review; danach Cloudflare-Pages-Projekt, Domain und Deploy-Hook einrichten ([site/README.md](../site/README.md) → „Offen – macht Sven“).
 
-
 ## Nicht gebaut / bekannte Grenzen
 - Google-Drive-Sync-Adapter (nur `core/sync/adapters/googleDrive.stub.ts`), Binär-Anhänge im Sync, Tombstone-GC, Mehrmandanten-Server.
 - Browser-Erweiterung: nur Brave/Chromium (MV3); Firefox, Safari, Store-Veröffentlichung (Chrome Web Store/Edge Add-ons, eigene Erweiterungs-ID → Allowlist), Release-Zip in `release.yml` (Vorschlag in [howto/browser-extension.md](howto/browser-extension.md)) offen; mehrstufige Logins und Felder in geschlossenen Shadow-Roots werden nicht erkannt.
@@ -88,10 +91,9 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 ## Nächste sinnvolle Schritte
 1. Hardware-Checklisten ([MANUAL-TESTS.md](MANUAL-TESTS.md)) abarbeiten (Sven), Fehler melden.
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
-3. Einrichtungsassistent: offene Kleinigkeiten – Verbindungs-/Import-Schritte per Android-Zurück-Geste (Import-Dialog über dem Assistenten), automatische Backups als eigenes Feature.
-4. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
-5. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
-6. Entscheidungen: Precache der Wörterbücher, FAB-Änderung (Spotify: in Arbeit, Chat 10).
+3. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
+4. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
+5. Entscheidungen: Precache der Wörterbücher, FAB-Änderung (Spotify: in Arbeit, Chat 10).
 
 ## Manuelle Tests offen
 Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).

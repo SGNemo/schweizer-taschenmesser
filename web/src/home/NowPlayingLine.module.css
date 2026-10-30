@@ -1,0 +1,101 @@
+/* The "Läuft gerade" widget: a card with cover, text, progress and controls; calm, no animation. */
+.card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-variant-numeric: var(--font-num);
+}
+.cover {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-3);
+  cursor: pointer;
+}
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.body {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.title,
+.meta {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+.title a {
+  color: inherit;
+}
+.lead {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular, 400);
+}
+.meta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.time {
+  min-width: 2.5rem;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-align: center;
+}
+.bar {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--border);
+}
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--text-muted);
+}
+.controls {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.idle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.idleText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

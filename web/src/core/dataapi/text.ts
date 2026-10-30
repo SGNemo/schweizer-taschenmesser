@@ -62,7 +62,8 @@ export function buildAiSchemaText(manifest: ModuleManifest): string {
       const d = (x.schema as Json).description;
       if (typeof d === 'string' && x.kind === 'plain') lines.push(`  ${x.name}: ${d}`);
     }
-    if (hasMoney(f)) lines.push('  Optional "currency":"EUR" (andere Währungen werden abgelehnt).');
+    if (hasMoney(f) && !f.fields.some((x) => x.name === 'currency'))
+      lines.push('  Optional "currency":"EUR" (andere Währungen werden abgelehnt).');
   }
   lines.push('', 'Beispiel (erfundene Daten):', JSON.stringify({ items: buildExample(manifest) }));
   return lines.join('\n');

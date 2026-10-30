@@ -1,6 +1,6 @@
-# "Mit Partner teilen" without an own server (draft, no implementation)
+# "Mit Partner teilen" without an own server
 
-Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einfach koppeln vs. selbst hosten"). Today sharing needs the self-hosted sync server; Google Drive adapter is a stub. Goal: a non-technical user shares or copies data to a partner or second device with **no server and no provider account**. The server stays as "Erweitert → Eigener Server". Not part of this PR's code.
+Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einfach koppeln vs. selbst hosten"). Today sharing needs the self-hosted sync server; Google Drive adapter is a stub. Goal: a non-technical user shares or copies data to a partner or second device with **no server and no provider account**. The server stays as "Erweitert → Eigener Server". Package P1 is built (below); P2–P4 are drafts.
 
 ## Principles
 - Local-first, no new data holder: the transport is a **QR code or a file** that the users carry themselves (AirDrop, messenger, USB, cloud drive of their own choosing).
@@ -29,3 +29,23 @@ Finding V09 (`docs/qa/CONSOLIDATED.md`: Mia, Sofía, Lena; contradiction 6 "einf
 - Deletion: tombstones travel in deltas; retention 90 days (`tombstones.ts`) means a partner offline longer must re-pair via snapshot.
 - Scope of a "list" for modules with relations (e.g. shopping + recipes): start with single collections.
 - Package plan: P1 envelope + file transport + pairing (one device pair, whole data); P2 per-list scope; P3 QR frames; P4 UI polish. One PR each.
+
+## As built (P1, `feat/partner-share-p1`)
+- `web/src/core/share/share.ts`: file `taschenmesser-share` v1 = checksum + `encryptWithPassword` (Argon2id, AES-GCM, own AAD `taschenmesser-share-payload`) of the backup rows (with stamps and tombstones) of the **chosen modules**. Code = 6 random words from the EFF list, normalised (lower case, single spaces), never stored in the file.
+- Opening is always a **merge** through `applyBackup` (same LWW rule as sync, nothing deleted, changes queued for sync). `accounts` (vault) and `core` (settings) are never exported and ignored on import (tested with a hand-made file).
+- UI: Settings → Verbindungen → "Mit Partner teilen" (`pages/settings/ShareSection.tsx`, texts `strings.share.ts`, 5 languages): choose modules (none preselected), code shown, save file; open file + code → preview (added/replaced per module) → merge.
+- Tests: `core/share/share.test.ts` (round trip, LWW, deletions travel, wrong code, tampering, vault ignored), `e2e/share.spec.ts`.
+- Not yet at P1: QR frames (P3), delta files (P2), per-list scope (module level only), revocation hints in the UI.
+
+## As built (P2, `feat/partner-share-p2`, stacked on P1)
+- **Standing connections** (`core/share/pairs.ts`): device-local `_meta` key `share.pairs` = `{ id, name, modules, sentUpto, receivedUpto, sentAt, receivedAt }`; the code is kept in `getPlatform().secrets` (`share.code.<id>`), never in data, backup, sync or diagnostics. Removing a connection deletes both.
+- **Delta files** (`createPairFile`): the header carries the connection id in the clear (random, readable before a code is tried); `since`/`upto` (newest stamp of the shared rows) travel inside the encrypted payload. A file holds only rows with a field stamp newer than `since`; the first file has no `since` (full state). After saving, `sentUpto = upto`; "Alles neu senden" starts over.
+- **Gap check** (`followsReceived`): a delta whose `since` is newer than what this device received is refused with "Es fehlt eine frühere Datei" instead of silently missing changes. Re-applying a file is harmless (LWW is idempotent).
+- Opening: a file of a known connection uses the stored code (no code field); a file of an unknown connection asks for the code and a name and creates the connection on merge.
+- UI: `pages/settings/SharePairs.tsx` (create, save changes, resend all, remove) inside the existing section; tests `core/share/pairs.test.ts`, `e2e/share.spec.ts`.
+
+## As built (P3, `feat/partner-share-p3`, stacked on P2)
+- **Frames** (`core/share/frames.ts`): the file text (already sealed by the code) is cut into `NSH1.<session>.<i>.<n>.<base64url chunk>` frames of 400 characters; the collector takes them in any order, with repeats, restarts on a new session, ignores foreign codes; a damaged stitch fails later at the file's checksum/AEAD. More than 150 frames: the screen says the file is easier.
+- **Show** (`pages/settings/ShareQr.tsx` `QrPlayer`): one QR (the existing `tools/qr` generator, error correction M) every 450 ms, pause and "next picture"; starts paused when motion is reduced. "Fertig gezeigt" counts the changes as handed over (like saving the file does).
+- **Read** (`QrScanner`): camera plus `BarcodeDetector` (Chromium; elsewhere the screen points to the file), progress "n von m Bildern", hands the text to the normal open flow, camera off on done, stop and unmount. Android needs the camera permission; hand tests Q1–Q5 in MANUAL-TESTS.
+- Tests: `core/share/frames.test.ts`, `pages/settings/ShareQr.test.tsx` (fake detector and camera: shuffled, repeated frames, camera released), `e2e/share.spec.ts` (frames run, pause, count as handed over).

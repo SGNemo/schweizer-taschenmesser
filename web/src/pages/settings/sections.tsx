@@ -33,6 +33,8 @@ import { AiStatsSection } from './AiStatsSection';
 import { AiWriteSection } from './AiWriteSection';
 import { CalmRemindersSection } from './CalmRemindersSection';
 import { NetworkSection } from './NetworkSection';
+import { ShareSection } from './ShareSection';
+import { tShare } from '@/strings.share';
 import { tNet } from '@/strings.netlog';
 import { tTrash } from '@/strings.trash';
 import { RecentlyDeletedSection } from './RecentlyDeletedSection';
@@ -758,6 +760,25 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="connectors" title={t.connectors.title} hint={t.help.connectors} bare>
         <ConnectorsSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'share',
+    category: 'verbindungen',
+    order: 15,
+    get title() {
+      return tShare.get().title;
+    },
+    get description() {
+      return tShare.get().description;
+    },
+    get keywords() {
+      return tShare.get().keywords;
+    },
+    render: () => (
+      <SettingsGroup id="share" title={tShare.get().title} bare>
+        <ShareSection />
       </SettingsGroup>
     ),
   },

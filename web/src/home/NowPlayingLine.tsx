@@ -1,142 +1,127 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { createContext } from '@/core/connectors/context';
-import {
-  NO_PREMIUM_MS,
-  SHOW_STALE_MS,
-  noPremiumSince,
-  readStoredNow,
-  setNoPremium,
-  startPoller,
-  writeStoredNow,
-  type Poller,
-} from '@/core/connectors/nowPlaying';
-import { connectors } from '@/core/connectors/registry';
-import { describeError } from '@/core/connectors/service';
-import { saveStatus, useConnectorStatus } from '@/core/connectors/state';
-import { ConnectorError, type NowPlaying, type NowPlayingCommand } from '@/core/connectors/types';
-import { now } from '@/core/time/now';
-import { useUiStore } from '@/stores/ui';
+import { useState } from 'react';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Icon } from '@/ui';
-import styles from './Home.module.css';
-
-const def = connectors.find((c) => c.nowPlaying);
-
-function initial(): NowPlaying | undefined {
-  const stored = readStoredNow();
-  return stored && now() - stored.at < SHOW_STALE_MS ? stored.value : undefined;
-}
+import { SpotifyPlayer } from './SpotifyPlayer';
+import { clock, useProgress } from './nowPlayingTime';
+import { useCover } from './useCover';
+import { useNowPlaying } from './useNowPlaying';
+import styles from './NowPlayingLine.module.css';
 
 /**
- * One calm line under the weather: "Läuft gerade: Titel – Interpret" with Pause/Weiter and Nächster.
- * Not there until a media connector (Spotify) is connected with "Anzeigen" – and not there while
- * nothing plays. No cover, no progress bar, no colour. The title opens the service. Reads at most every
- * 30 s while the app is visible (`core/connectors/nowPlaying.ts`); the last reading lives on this device.
+ * The "Läuft gerade" widget under the weather: cover, "Läuft gerade: Titel – Interpret", album, a progress
+ * bar and Zurück / Pause or Weiter / Nächster. A tap on the card opens the player (playlists, saved
+ * songs, search). Not there until a media connector (Spotify) is connected with "Anzeigen" or when the
+ * user switched it off on the Overview. While nothing plays it is one quiet row with the way into the
+ * player. Reads at most every 30 s while the app is visible; the last reading lives on this device.
  * Without Premium the controls disappear (once, with a quiet hint); the display stays.
  */
 export function NowPlayingLine() {
-  const status = useConnectorStatus(def?.id ?? '');
+  const np = useNowPlaying();
   const tx = tSpotify.use();
-  const toast = useUiStore((st) => st.toast);
-  const ctx = useMemo(() => (def ? createContext(def) : undefined), []);
-  const [current, setCurrent] = useState<NowPlaying | undefined>(initial);
-  const [noPremium, setNoPremiumState] = useState(() => {
-    const since = noPremiumSince();
-    return since !== undefined && now() - since < NO_PREMIUM_MS;
-  });
-  const poller = useRef<Poller | undefined>(undefined);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [open, setOpen] = useState(false);
+  const cover = useCover(np?.ctx, np?.current?.coverUrl);
+  const current = np?.current;
+  const position = useProgress(
+    current?.progressMs,
+    current?.durationMs,
+    current?.playing ?? false,
+    np?.readAt ?? 0,
+  );
+  if (!np) return null;
+  const player = open ? (
+    <SpotifyPlayer open={open} onClose={() => setOpen(false)} np={np} cover={cover} />
+  ) : null;
 
-  const active =
-    !!def?.nowPlaying &&
-    !!status &&
-    status.state !== 'disconnected' &&
-    status.state !== 'expired' &&
-    status.features.includes('show');
-  const canControl = active && !!status?.features.includes('control') && !noPremium;
-
-  useEffect(() => {
-    if (!active || !def?.nowPlaying || !ctx) return;
-    const source = def.nowPlaying;
-    const p = startPoller(async () => {
-      try {
-        const value = await source.read(ctx);
-        writeStoredNow(value, now());
-        setCurrent(value);
-      } catch (e) {
-        if (e instanceof ConnectorError && e.code === 'expired')
-          void saveStatus(def.id, { state: 'expired', message: describeError(e) });
-        // Rate limit: wait as long as the service asks. Anything else: keep the last reading, no message.
-        if (e instanceof ConnectorError && e.code === 'rate-limited') return e.retryAfter ?? 60;
-      }
-      return undefined;
-    });
-    poller.current = p;
-    return () => {
-      p.stop();
-      poller.current = undefined;
-      clearTimeout(timer.current);
-    };
-  }, [active, ctx]);
-
-  async function control(command: NowPlayingCommand) {
-    if (!def?.nowPlaying || !ctx) return;
-    try {
-      await def.nowPlaying.control(ctx, command);
-      if (command !== 'next' && current) {
-        const next = { ...current, playing: command === 'play' };
-        writeStoredNow(next, now());
-        setCurrent(next);
-      }
-      // Spotify needs a moment before "next" shows up in the player state.
-      clearTimeout(timer.current);
-      timer.current = setTimeout(() => poller.current?.refresh(), 1000);
-    } catch (e) {
-      if (e instanceof ConnectorError && e.code === 'premium-required') {
-        setNoPremium(now());
-        setNoPremiumState(true);
-        toast(tx.premiumHint);
-      } else if (e instanceof ConnectorError && e.code === 'expired') {
-        void saveStatus(def.id, { state: 'expired', message: describeError(e) });
-      }
-      // Anything else (no active device, offline): the line stays as it is, no message.
-    }
+  if (!current) {
+    return (
+      <>
+        <div className={styles.idle} data-testid="now-playing-idle">
+          <Icon name="music" size={16} />
+          <span className={styles.idleText}>{tx.idle}</span>
+          <Button variant="ghost" data-testid="now-playing-open" onClick={() => setOpen(true)}>
+            {tx.openPlayer}
+          </Button>
+        </div>
+        {player}
+      </>
+    );
   }
 
-  if (!active || !current) return null;
   const lead = tx.lead(current.playing ? tx.playing : tx.paused);
+  const progress =
+    position !== undefined && current.durationMs ? position / current.durationMs : undefined;
   return (
-    <div className={styles.nowPlaying} data-testid="now-playing-line">
-      <Icon name="play" size={16} />
-      <span className={styles.nowPlayingText}>
-        {lead}
-        {current.trackUrl ? (
-          <a href={current.trackUrl} target="_blank" rel="noreferrer noopener">
-            {current.title}
-          </a>
-        ) : (
-          current.title
-        )}
-        {current.artist ? ` – ${current.artist}` : ''}
-      </span>
-      {canControl ? (
-        <span role="group" aria-label={tx.controlsLabel} className={styles.nowPlayingControls}>
-          <Button
-            variant="ghost"
-            data-testid="now-playing-toggle"
-            onClick={() => void control(current.playing ? 'pause' : 'play')}
-          >
-            {current.playing ? tx.pause : tx.resume}
-          </Button>
-          <Button
-            variant="ghost"
-            data-testid="now-playing-next"
-            onClick={() => void control('next')}
-          >
-            {tx.next}
-          </Button>
-        </span>
-      ) : null}
-    </div>
+    <>
+      <section className={styles.card} data-testid="now-playing-line" aria-label={tx.playerTitle}>
+        <button
+          type="button"
+          className={styles.cover}
+          onClick={() => setOpen(true)}
+          aria-label={tx.openPlayer}
+          data-testid="now-playing-open"
+        >
+          {cover ? <img src={cover} alt="" /> : <Icon name="music" size={28} />}
+        </button>
+        <div className={styles.body}>
+          <p className={styles.title}>
+            <span className={styles.lead}>{lead}</span>
+            {current.trackUrl ? (
+              <a href={current.trackUrl} target="_blank" rel="noreferrer noopener">
+                {current.title}
+              </a>
+            ) : (
+              current.title
+            )}
+            {current.artist ? ` – ${current.artist}` : ''}
+          </p>
+          {current.album ? <p className={styles.meta}>{current.album}</p> : null}
+          {progress !== undefined && position !== undefined ? (
+            <div className={styles.progressRow}>
+              <span className={styles.time}>{clock(position)}</span>
+              <div
+                className={styles.bar}
+                role="progressbar"
+                aria-label={tx.position}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(progress * 100)}
+              >
+                <span style={{ width: `${Math.round(progress * 1000) / 10}%` }} />
+              </div>
+              <span className={styles.time}>{clock(current.durationMs!)}</span>
+            </div>
+          ) : null}
+        </div>
+        {np.canControl ? (
+          <span role="group" aria-label={tx.controlsLabel} className={styles.controls}>
+            <Button
+              variant="ghost"
+              data-testid="now-playing-previous"
+              aria-label={tx.previous}
+              onClick={() => void np.control('previous')}
+            >
+              <Icon name="skipBack" size={18} />
+            </Button>
+            <Button
+              variant="ghost"
+              data-testid="now-playing-toggle"
+              onClick={() => void np.control(current.playing ? 'pause' : 'play')}
+            >
+              <Icon name={current.playing ? 'pause' : 'play'} size={18} />
+              {current.playing ? tx.pause : tx.resume}
+            </Button>
+            <Button
+              variant="ghost"
+              data-testid="now-playing-next"
+              onClick={() => void np.control('next')}
+            >
+              {tx.next}
+              <Icon name="skipForward" size={18} />
+            </Button>
+          </span>
+        ) : null}
+      </section>
+      {player}
+    </>
   );
 }

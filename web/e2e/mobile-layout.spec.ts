@@ -125,6 +125,18 @@ test.describe('shopping list on a phone', () => {
     await noSideScroll(page);
   });
 
+  test('a wide trailing value never squeezes the text to a sliver', async ({ page }) => {
+    await addItems(page, ['Haferflocken']);
+    const row = page.getByRole('list', { name: 'Einkauf' }).getByRole('listitem').first();
+    await row.getByRole('button', { name: 'Eintrag bearbeiten' }).click();
+    await page.getByLabel('Menge (optional)').fill('12 große Packungen aus dem Großhandel');
+    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    const main = row.getByRole('button', { name: /Haferflocken/ });
+    await expect(row.getByText(/Großhandel/)).toBeVisible();
+    expect((await main.boundingBox())!.width).toBeGreaterThanOrEqual(140);
+    await noSideScroll(page);
+  });
+
   test('the "+" button leaves room: the last row can be scrolled above it', async ({ page }) => {
     await addItems(page, ['Milch']);
     const fab = page.getByRole('button', { name: 'Schnell hinzufügen' });

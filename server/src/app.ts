@@ -134,12 +134,15 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     reply.header('x-content-type-options', 'nosniff');
     // CORS preflight carries no credentials; the cors plugin answers it before this hook matters.
     if (req.method === 'OPTIONS' || req.url === '/v1/health') return;
-    const wait = failures.blockedFor(req.ip);
-    if (wait > 0) {
-      return reply.code(429).header('retry-after', wait).send({ error: 'too-many-failures' });
-    }
+    // Valid credentials always pass: the failure limit only slows down wrong guesses, so a client
+    // that shares an address with a noisy one (reverse proxy, LAN) is never locked out by it.
+    // Guessing stays capped by the per-address request limit above and the token length.
     const who = authenticate(req.headers.authorization);
     if (!who) {
+      const wait = failures.blockedFor(req.ip);
+      if (wait > 0) {
+        return reply.code(429).header('retry-after', wait).send({ error: 'too-many-failures' });
+      }
       failures.fail(req.ip);
       return reply.code(401).header('www-authenticate', 'Bearer').send({ error: 'unauthorized' });
     }
