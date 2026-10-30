@@ -6,6 +6,8 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 });
 
+const hostOf = (url: string): string => new URL(url).host;
+
 // A 1x1 transparent PNG: the tiles of the mocked map server.
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
@@ -61,12 +63,12 @@ test.describe('Karten & Orte', () => {
     await ready(page, '/maps?view=map');
     // The first look at the map brings the one-time notice (clicked away by the helper); tiles follow.
     await expect(page.getByTestId('tile-map')).toBeVisible();
-    await expect.poll(() => seen.some((u) => u.includes('tile.openstreetmap.org'))).toBe(true);
+    await expect.poll(() => seen.some((u) => hostOf(u) === 'tile.openstreetmap.org')).toBe(true);
 
     await page.getByLabel('Ort oder Adresse suchen').fill('Schlossplatz Erlangen');
     await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
     await expect
-      .poll(() => seen.find((u) => u.includes('nominatim')))
+      .poll(() => seen.find((u) => hostOf(u) === 'nominatim.openstreetmap.org'))
       .toContain('q=Schlossplatz+Erlangen');
     await page
       .getByTestId('map-hits')

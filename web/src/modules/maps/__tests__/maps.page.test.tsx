@@ -11,6 +11,7 @@ import { placeRepo, routeRepo } from '../repo';
 import MapsPage from '../routes/MapsPage';
 
 const requests: string[] = [];
+const hostOf = (url: string): string => new URL(url).host;
 let blockTiles = false;
 
 function install() {
@@ -20,7 +21,7 @@ function install() {
     fetch: (async (input: RequestInfo | URL) => {
       const url = String(input);
       requests.push(url);
-      if (url.includes('nominatim')) {
+      if (hostOf(url) === 'nominatim.openstreetmap.org') {
         return new Response(
           JSON.stringify([
             {
@@ -130,11 +131,13 @@ describe('Karten & Orte page', () => {
     const input = await screen.findByLabelText('Ort oder Adresse suchen');
     fireEvent.change(input, { target: { value: 'Schloss' } });
     fireEvent.change(input, { target: { value: 'Schlossplatz Erlangen' } });
-    expect(requests.filter((u) => u.includes('nominatim'))).toHaveLength(0);
+    expect(requests.filter((u) => hostOf(u) === 'nominatim.openstreetmap.org')).toHaveLength(0);
     fireEvent.submit(input.closest('form')!);
     const hits = await screen.findByTestId('map-hits');
-    expect(requests.filter((u) => u.includes('nominatim'))).toHaveLength(1);
-    expect(requests.find((u) => u.includes('nominatim'))).toContain('q=Schlossplatz+Erlangen');
+    expect(requests.filter((u) => hostOf(u) === 'nominatim.openstreetmap.org')).toHaveLength(1);
+    expect(requests.find((u) => hostOf(u) === 'nominatim.openstreetmap.org')).toContain(
+      'q=Schlossplatz+Erlangen',
+    );
     fireEvent.click(within(hits).getByText(/Erlangen, Bayern/));
     const card = await screen.findByTestId('map-selection');
     expect(card).toHaveTextContent('49.5981, 11.0044');
