@@ -21,6 +21,7 @@ const source: CalendarSource = async (range) => {
     date: t.dueDate!,
     allDay: true,
     done: t.done,
+    ...(t.personId ? { personId: t.personId } : {}),
     to: '/todos',
   }));
   const recurring = (await taskRepo.table.filter(notDeleted).toArray()).filter(
@@ -37,6 +38,7 @@ const source: CalendarSource = async (range) => {
         date,
         allDay: true,
         done: false,
+        ...(t.personId ? { personId: t.personId } : {}),
         to: '/todos',
       });
     }

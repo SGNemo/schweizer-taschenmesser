@@ -32,6 +32,8 @@ export const taskSchema = z.object({
   /** Set for subtasks (one level only). */
   parentId: z.string().optional(),
   note: z.string().optional(),
+  /** The person or client the task is for (People module); only the id, never sent to an AI. */
+  personId: z.string().optional().meta({ internal: true }),
   order: z.number().default(0),
   completedAt: z.number().optional().meta({ internal: true }),
 });
