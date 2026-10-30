@@ -65,7 +65,9 @@ describe('vault logic', () => {
     [{ endDate: '2026-12-31', noticeDays: 90 }, 'act-now'], // deadline 2026-10-02, 3 days away
     [{ endDate: '2026-12-31', noticeDays: 60 }, 'ok'], // deadline 2026-11-01
     [{ endDate: '2026-12-31', noticeDays: 70 }, 'soon'], // deadline 2026-10-22
-    [{ endDate: '2026-10-05', noticeDays: 30 }, 'soon'], // deadline passed, end within 30 days
+    [{ endDate: '2026-10-05', noticeDays: 30 }, 'missed'], // deadline 2026-09-05 passed, contract still runs
+    [{ endDate: '2026-12-31', noticeDays: 120 }, 'missed'], // deadline 2026-09-02, months before the end
+    [{ endDate: '2026-09-28', noticeDays: 30 }, 'expired'], // ended: expired wins over missed
     [{ endDate: '2026-09-29', noticeDays: 0 }, 'act-now'], // last day today
   ])('status of %j is %s', (over, state) => {
     expect(statusOf(doc(over), '2026-09-29')).toBe(state);
