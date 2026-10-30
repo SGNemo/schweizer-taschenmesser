@@ -672,6 +672,8 @@ export const de = {
         title: 'KI-Anbieter',
         description:
           'Optional. Ohne Anbieter bleibt die lokale Suche voll nutzbar. Es gehen nur deine Frage und ein kurzes Schema an die KI, nie deine Daten.',
+        localModelHint:
+          'Eingebautes lokales Modell: Die App bringt ein eigenes KI-Modell mit, das nur auf diesem Gerät läuft, offline und kostenlos. Du lädst es einmal unter Einstellungen → Lokales Modell herunter. Ein KI-Anbieter ist dafür nicht nötig.',
         existing: 'Bereits eingerichtet',
         none: 'Noch kein Anbieter eingerichtet.',
         usable: 'einsatzbereit',

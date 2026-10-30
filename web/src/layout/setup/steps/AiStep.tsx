@@ -11,6 +11,7 @@ import {
   type AiConfig,
   type ProviderEntry,
 } from '@/core/ai/config';
+import { useLocalModel } from '@/core/ai/local/state';
 import { switchAiOff, switchAiOn, useAiOn } from '@/core/ai/switch';
 import { detectOllama } from '@/core/ai/detectOllama';
 import type { PresetId } from '@/core/ai/providers/presets';
@@ -78,6 +79,7 @@ function AiQuestion({ registerCommit }: SetupStepProps) {
 
 function AiProviders({ registerCommit }: SetupStepProps) {
   const aiOn = useAiOn();
+  const localStatus = useLocalModel((st) => st.status);
   const [stored, setStored] = useState<AiConfig | undefined>();
   const [order, setOrder] = useState<string[]>([]);
   const [added, setAdded] = useState<Added[]>([]);
@@ -89,6 +91,7 @@ function AiProviders({ registerCommit }: SetupStepProps) {
 
   useEffect(() => {
     let live = true;
+    void useLocalModel.getState().refresh();
     void loadAiConfig().then((c) => {
       if (!live) return;
       setStored(c);
@@ -200,6 +203,12 @@ function AiProviders({ registerCommit }: SetupStepProps) {
       <p className={patternStyles.muted}>
         {t.ai.settings.privacy} <HelpHint text={t.help.aiRouter} label={t.help.label} />
       </p>
+
+      {localStatus && !localStatus.unavailable && localStatus.models.length === 0 ? (
+        <p role="note" data-testid="setup-local-model-hint">
+          {s.localModelHint}
+        </p>
+      ) : null}
 
       <h4>{s.existing}</h4>
       {existing.length === 0 ? <p>{s.none}</p> : null}

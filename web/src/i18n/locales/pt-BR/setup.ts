@@ -127,6 +127,8 @@ export const setup: Strings['setup'] = {
       title: 'Provedores de IA',
       description:
         'Opcional. Sem provedor, a busca local continua totalmente utilizável. Só sua pergunta e um esquema curto vão para a IA, nunca seus dados.',
+      localModelHint:
+        'Modelo local integrado: o app tem seu próprio modelo de IA, que roda só neste dispositivo, offline e de graça. Você o baixa uma vez em Configurações → Modelo local. Nenhum provedor de IA é necessário.',
       existing: 'Já configurado',
       none: 'Nenhum provedor configurado ainda.',
       usable: 'pronto para usar',
