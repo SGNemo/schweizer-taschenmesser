@@ -13,6 +13,7 @@ import type { ImportBatch } from '@/core/importer/types';
 import { newBatchId } from '@/core/importer/batches';
 import { appHasData } from '@/core/setup/detect';
 import { completeSetup, setChecklistHidden } from '@/core/setup/state';
+import { getLang, type Lang } from '@/core/i18n/lang';
 import { now, today as realToday } from '@/core/time/now';
 import { createSeedContext } from './context';
 import { SEED_SYNC_KEY, SEED_TABLE, seedKey, type SeedRegistryRow } from './guard';
@@ -128,6 +129,8 @@ export interface ApplyOptions {
   scale: SeedScale;
   /** Reference date; default is the real today. */
   today?: string;
+  /** Language of the test texts; default is the UI language. */
+  lang?: Lang;
   database?: TaschenmesserDB;
   manifests?: readonly ModuleManifest[];
   /** Switch all modules on and finish the setup assistant (the dev app default). */
@@ -141,6 +144,7 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
   const database = opts.database ?? defaultDb;
   const manifests = opts.manifests ?? availableManifests();
   const today = opts.today ?? realToday();
+  const lang = opts.lang ?? getLang();
   const ordered = orderBySeedDeps(manifests);
   const enabledRows: string[] = [];
 
@@ -178,7 +182,7 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
     plans.push(
       ...planRows(
         m,
-        mod.seed(createSeedContext({ moduleId: m.id, today, scale: opts.scale })),
+        mod.seed(createSeedContext({ moduleId: m.id, today, scale: opts.scale, lang })),
         manifests,
       ),
     );
@@ -202,7 +206,9 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
     const mod = modules.get(m.id);
     if (!mod?.afterSeed || opts.afterSeed === false) continue;
     const created =
-      (await mod.afterSeed(createSeedContext({ moduleId: m.id, today, scale: opts.scale }))) ?? [];
+      (await mod.afterSeed(
+        createSeedContext({ moduleId: m.id, today, scale: opts.scale, lang }),
+      )) ?? [];
     for (const c of created) {
       const table = tableName(m.id, c.collection);
       await registry(database).bulkPut(

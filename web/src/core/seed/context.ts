@@ -1,4 +1,5 @@
 import { addDaysStr, toEpoch } from '@/core/time/dates';
+import type { Lang } from '@/core/i18n/lang';
 import { createRng } from './rng';
 import type { SeedContext, SeedScale } from './types';
 
@@ -10,11 +11,15 @@ export function createSeedContext(args: {
   moduleId: string;
   today: string;
   scale: SeedScale;
+  lang?: Lang;
 }): SeedContext {
+  const lang = args.lang ?? 'de';
   return {
     rng: createRng(`${SEED_RANDOM}:${args.moduleId}`),
     today: args.today,
     scale: args.scale,
+    lang,
+    text: (by) => by[lang] ?? by.de,
     day: (days) => addDaysStr(args.today, days),
     at: (days, time = '12:00') => toEpoch(addDaysStr(args.today, days), time),
     count: (by) => by[args.scale],

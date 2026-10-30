@@ -17,6 +17,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 | QA P4 C: Heute·Morgen-Block, Ruhig/Ausführlich | `feat/qa-today-block` | `home/**`, `modules/todos/widgets/NextWidget.tsx` (appointment list removed), `home` strings in 5 locales, `e2e/{agenda,today,core,calm}.spec.ts` | PR offen | Paket C | 2026-10-29 |
+| Localized test data (package 1: seed language + notes, pantry) | `feat/qa-localized-seed` | `core/seed/*`, `modules/{notes,pantry}/seed.ts`, `docs/howto/seed-data.md` | in review | – | 2026-10-30 |
 | Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
 | P5 QA: Erinnerungen, Fristen, Löschsicherheit | `feat/qa-reminders-safety` | `core/notifications/**` (policy.ts), `calendar` RemindersTab/EventEditor, `subscriptions`, `vault`, `core/undo`, `core/db` (additiv) | package A in review (hotspots: `core/notifications/policy.ts`, `core/modules/types.ts` – additive fields `taken`, `members`) – [features/qa-reminders-safety.md](features/qa-reminders-safety.md) | – | 2026-10-29 |
 
