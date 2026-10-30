@@ -64,14 +64,17 @@ test.describe('Calm display, capture and finding things again', () => {
     await page.getByRole('button', { name: /^Mehr anzeigen · \d+ Karten$/ }).click();
     await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
     await expect(page.getByTestId('home-calm-more')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Nur das Wichtigste' }).click();
+    await page
+      .getByRole('group', { name: 'Übersicht' })
+      .getByRole('button', { name: 'Ruhig' })
+      .click();
     await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
 
     // The choice is also one tap in the settings, in both directions.
     await ready(page, '/settings/darstellung');
     await openAppearanceGroup(page, 'other');
     const group = page.getByRole('group', { name: 'Übersicht' });
-    await group.getByRole('button', { name: 'Nur das Wichtigste' }).click();
+    await group.getByRole('button', { name: 'Ruhig' }).click();
     await ready(page, '/');
     await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
   });

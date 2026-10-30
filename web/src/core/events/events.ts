@@ -13,6 +13,8 @@ export interface EventMap {
     /** 'YYYY-MM-DD' */
     paidAt: string;
     note?: string;
+    /** ISO 4217 code; none means euro. */
+    currency?: string;
   };
   /** A paid invoice was reopened. Finance removes the expense it booked. */
   'invoice.unpaid': { invoiceId: string };

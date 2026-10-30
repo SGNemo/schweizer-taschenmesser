@@ -73,6 +73,15 @@ export const chat: Strings['chat'] = {
     nothing: 'Aucune donnée n’a été trouvée pour cette question dans les modules choisis.',
     attached: 'Avec des données de l’app',
   },
+  setup: {
+    title: 'Aucune IA configurée',
+    bodyLocal:
+      'Le chat a besoin d’un modèle. Le modèle local intégré fonctionne uniquement sur cet appareil, hors ligne et gratuitement ; vous le téléchargez une fois. Cet avis disparaît dès que c’est configuré.',
+    bodyProviders:
+      'Le chat a besoin d’un fournisseur d’IA. Configurez-en un dans Réglages → Assistant IA. Cet avis disparaît dès que c’est configuré.',
+    openLocal: 'Télécharger le modèle local',
+    openProviders: 'Configurer un fournisseur d’IA',
+  },
   aiOff: 'L’IA est désactivée. Vous pouvez la réactiver dans Paramètres → IA.',
   errors: {
     'ai-off': 'L’IA est désactivée. Vous pouvez la réactiver dans Paramètres → IA.',

@@ -2,7 +2,7 @@
 import '../styles/tokens.css';
 import '../styles/global.css';
 import { SITE_URL } from '../config.js';
-import { routes, t, type Locale, type RouteKey } from '../i18n';
+import { hreflang, localesFor, routes, t, type Locale, type RouteKey } from '../i18n';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
@@ -30,14 +30,14 @@ const ogImage = url('/og-image.png');
     <title>{pageTitle}</title>
     <meta name="description" content={desc} />
     <link rel="canonical" href={canonical} />
-    {Object.entries(routes[route]).map(([l, p]) => <link rel="alternate" hreflang={l} href={url(p)} />)}
+    {localesFor(route).map((l) => <link rel="alternate" hreflang={hreflang(l)} href={url(routes[route][l])} />)}
     <link rel="alternate" hreflang="x-default" href={url(routes[route].de)} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={s.siteName} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content={locale === 'de' ? 'de_DE' : 'en_GB'} />
+    <meta property="og:locale" content={s.ogLocale} />
     {og && <meta property="og:image" content={ogImage} />}
     {og && <meta property="og:image:width" content="1280" />}
     {og && <meta property="og:image:height" content="640" />}

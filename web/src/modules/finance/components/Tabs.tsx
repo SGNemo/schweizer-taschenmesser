@@ -1,6 +1,7 @@
 import { compareText } from '@/core/i18n/format';
 import { useState } from 'react';
-import { formatMoney } from '@/core/money';
+import { currencyOf, formatMoney } from '@/core/money';
+import { useCurrency } from '../currency';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { changeWithUndo, deleteWithUndo } from '@/core/undo/withToast';
@@ -32,6 +33,7 @@ export function TransactionsTab({
   month: string;
   onOpen: (tx: Stored<Transaction>) => void;
 }) {
+  const currency = useCurrency();
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<TxFilter['kind']>('all');
   const category = new Map(data.categories.map((c) => [c.id, c.name]));
@@ -113,7 +115,7 @@ export function TransactionsTab({
                         className={`${styles.amount} ${x.kind === 'income' ? styles.income : ''}`}
                       >
                         {x.kind === 'income' ? '+' : '−'}
-                        {formatMoney(Math.abs(signed(x)))}
+                        {formatMoney(Math.abs(signed(x)), currency)}
                       </span>
                     }
                   />
@@ -149,7 +151,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
                 <span className={styles.rowTitle}>{a.name}</span>
               </span>
               <span className={styles.amount} data-testid={`balance-${a.name}`}>
-                {formatMoney(map.get(a.id) ?? 0)}
+                {formatMoney(map.get(a.id) ?? 0, currencyOf(a))}
               </span>
             </button>
           </li>

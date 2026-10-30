@@ -1,4 +1,4 @@
-import { sumMinor } from '@/core/money';
+import { formatTotals, sumByCurrency, sumMinor } from '@/core/money';
 import { addMonthsStr } from '@/core/time/dates';
 import type { Invoice, InvoiceRepeat } from './schema';
 
@@ -17,6 +17,11 @@ export function sortInvoices<
 
 export const openTotal = (list: Pick<Invoice, 'status' | 'amountMinor'>[]): number =>
   sumMinor(list.filter((i) => i.status === 'open').map((i) => i.amountMinor));
+
+/** The open total as text, per currency when there is more than one ("120,00 € · 80,00 USD"). */
+export const openTotalText = (
+  list: Pick<Invoice, 'status' | 'amountMinor' | 'currency'>[],
+): string => formatTotals(sumByCurrency(list.filter((i) => i.status === 'open')));
 
 const REPEAT_MONTHS: Record<InvoiceRepeat, number> = { monthly: 1, quarterly: 3, yearly: 12 };
 

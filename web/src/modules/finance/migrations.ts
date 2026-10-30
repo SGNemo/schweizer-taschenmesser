@@ -7,4 +7,6 @@ import type { ModuleManifest } from '@/core/modules/types';
 export const migrations: ModuleManifest['migrations'] = {
   // 2: optional `repeat` / `repeatOf` on transactions; existing bookings need no change.
   2: () => Promise.resolve(),
+  // 3: optional `currency` on accounts; an account without one is in euro, so nothing is rewritten.
+  3: () => Promise.resolve(),
 };

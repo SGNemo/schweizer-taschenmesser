@@ -33,7 +33,8 @@ test.describe('Heute card (focus audit 2, package 2)', () => {
     await expect(card.getByTestId('today-until')).toContainText('in 1 Std 30 Min');
     await expect(card.getByTestId('today-until')).toContainText('11:30 Zahnarzt');
     await expect(card.getByTestId('next-card')).toContainText('Formular ausfüllen');
-    await expect(card.getByTestId('today-appointments')).toContainText('Zahnarzt');
+    // The appointments sit in the block above the cards, not in the card.
+    await expect(page.getByTestId('agenda-today')).toContainText('Zahnarzt');
     // The three former blocks are not repeated beside it.
     await expect(page.getByTestId('widget-calendar:next')).toHaveCount(0);
     await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
@@ -47,7 +48,7 @@ test.describe('Heute card (focus audit 2, package 2)', () => {
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/');
     await expect(page.getByTestId('today-until')).toHaveCount(0);
-    await expect(page.getByTestId('today-appointments')).toContainText('Zahnarzt');
+    await expect(page.getByTestId('agenda-today')).toContainText('Zahnarzt');
   });
 
   test('"Anfangen" is the one main button and starts the focus screen; "Später" is quiet', async ({

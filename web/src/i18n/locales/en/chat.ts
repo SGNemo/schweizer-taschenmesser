@@ -73,6 +73,15 @@ export const chat: Strings['chat'] = {
     nothing: 'No data for this question was found in the chosen modules.',
     attached: 'With data from the app',
   },
+  setup: {
+    title: 'No AI set up yet',
+    bodyLocal:
+      'The chat needs a model. The built-in local model runs only on this device, offline and free; you download it once. This notice goes away once it is set up.',
+    bodyProviders:
+      'The chat needs an AI provider. Set one up under Settings → AI assistant. This notice goes away once it is set up.',
+    openLocal: 'Download local model',
+    openProviders: 'Set up AI provider',
+  },
   aiOff: 'AI is turned off. You can turn it back on under Settings → AI.',
   errors: {
     'ai-off': 'AI is turned off. You can turn it back on under Settings → AI.',

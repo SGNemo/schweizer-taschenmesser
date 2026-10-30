@@ -261,7 +261,7 @@ export const settings: Strings['settings'] = {
   motion: 'Motion',
   motionOptions: { system: 'Same as system', reduce: 'Less' },
   homeView: 'Overview',
-  homeViewOptions: { all: 'All cards', calm: 'Only the essentials' },
+  homeViewOptions: { all: 'Detailed', calm: 'Calm' },
   density: 'Density',
   densityOptions: { normal: 'Normal', compact: 'Compact' },
   modules: 'Modules',
