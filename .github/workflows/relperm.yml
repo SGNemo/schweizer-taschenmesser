@@ -1,0 +1,29 @@
+name: Release permission probe
+on:
+  push:
+    branches: [ci/relperm-test]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - run: echo probe > probe.txt
+      - name: A - create release at the branch commit
+        continue-on-error: true
+        run: gh release create relperm-a --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false --title probe-a --notes probe probe.txt
+      - name: B - create release at a develop commit
+        continue-on-error: true
+        run: gh release create relperm-b --repo "$GITHUB_REPOSITORY" --target "cd149230fa30662aaee0bdb241a345446d436188" --prerelease --latest=false --title probe-b --notes probe probe.txt
+      - name: C - create release without target (default branch head)
+        continue-on-error: true
+        run: gh release create relperm-c --repo "$GITHUB_REPOSITORY" --prerelease --latest=false --title probe-c --notes probe probe.txt
+      - name: Cleanup
+        if: always()
+        run: |
+          for t in relperm-a relperm-b relperm-c; do gh release delete "$t" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true; done
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 8
