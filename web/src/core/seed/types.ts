@@ -4,6 +4,8 @@
  * builds; this file holds types only, so importing it costs nothing in stable builds.
  */
 
+import type { Lang } from '@/core/i18n/lang';
+
 export type SeedScale = 'small' | 'medium' | 'large';
 export const SEED_SCALES: readonly SeedScale[] = ['small', 'medium', 'large'];
 
@@ -31,6 +33,9 @@ export interface Rng {
   shuffle<T>(list: readonly T[]): T[];
 }
 
+/** Seed text per language; `de` is required, the others fall back to it. */
+export type LocalizedSeedText<T = string> = { de: T } & Partial<Record<Exclude<Lang, 'de'>, T>>;
+
 export interface SeedContext {
   rng: Rng;
   /** Reference date 'YYYY-MM-DD' ("today"); all dates are derived from it. */
@@ -40,6 +45,10 @@ export interface SeedContext {
   day(days: number): string;
   /** Epoch ms of local `today + days` at `time` ('HH:mm', default 12:00) – technical timestamps only. */
   at(days: number, time?: string): number;
+  /** Language of the test data (the UI language when it was loaded; tests use `de`). */
+  lang: Lang;
+  /** Picks the text for `lang`; German is the source, a missing language falls back to it. */
+  text<T = string>(by: LocalizedSeedText<T>): T;
   /** Picks the value for the current scale. */
   count<T = number>(by: Record<SeedScale, T>): T;
   /**
