@@ -19,10 +19,11 @@
   max-width: var(--page-narrow);
 }
 .content {
-  max-width: var(--page-content);
+  /* On big monitors the page keeps its share of the screen instead of floating in empty margins. */
+  max-width: max(var(--page-content), 70vw);
 }
 .wide {
-  max-width: var(--page-wide);
+  max-width: max(var(--page-wide), 86vw);
 }
 .full {
   max-width: none;

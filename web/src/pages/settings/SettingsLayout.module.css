@@ -1,9 +1,15 @@
 .header {
   margin-bottom: var(--space-4);
 }
+/* Settings column: 44 rem as before, growing with very wide screens (set on the parts that share it). */
+.split,
+.search,
+.quick {
+  --settings-w: clamp(44rem, 40vw, 70rem);
+}
 .split {
   display: grid;
-  grid-template-columns: 16rem minmax(0, 44rem);
+  grid-template-columns: 16rem minmax(0, var(--settings-w));
   gap: var(--space-5);
   align-items: start;
 }
@@ -94,6 +100,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  min-width: 0;
+}
+/* Long addresses (model licences, links) wrap instead of widening the page. */
+.category a {
+  overflow-wrap: anywhere;
 }
 .categoryTitle {
   font-size: var(--text-xl);
@@ -112,7 +123,7 @@
 .search {
   position: relative;
   margin-bottom: var(--space-4);
-  max-width: 44rem;
+  max-width: var(--settings-w);
 }
 .results {
   margin-top: var(--space-2);
@@ -171,7 +182,7 @@
   flex-wrap: wrap;
   gap: var(--space-3) var(--space-5);
   margin-bottom: var(--space-4);
-  max-width: 44rem;
+  max-width: var(--settings-w);
 }
 .quickItem {
   display: flex;
@@ -199,9 +210,10 @@
   /* The search stays within reach while a category scrolls. */
   .search.stickySearch {
     position: sticky;
-    top: 0;
-    z-index: var(--z-sticky, 1);
+    /* Below the top bar (44 px target + its padding + the status-bar inset), never over it. */
+    top: calc(var(--touch) + 2 * var(--space-3) + env(safe-area-inset-top));
+    z-index: calc(var(--z-sticky, 1) - 1);
     background: var(--bg);
-    padding-top: var(--space-2);
+    padding-block: var(--space-2);
   }
 }

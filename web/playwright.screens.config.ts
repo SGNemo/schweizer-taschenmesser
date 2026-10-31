@@ -28,6 +28,7 @@ export default defineConfig({
         'measure-focus.spec.ts',
         'targets-focus.spec.ts',
         'clipped-text.spec.ts',
+        'overflow-finder.spec.ts',
         'mobile-layout.spec.ts',
       ],
       use: { baseURL: 'http://localhost:4174' },

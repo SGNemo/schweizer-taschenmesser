@@ -13,6 +13,12 @@
   background: var(--accent-soft);
   box-shadow: var(--shadow-1);
 }
+/* Phone: the page scrolls under the sticky top bar, so the bar sticks below it instead of behind it. */
+@media (max-width: 899px) {
+  .bar {
+    top: calc(var(--touch) + 2 * var(--space-3) + env(safe-area-inset-top) + var(--space-2));
+  }
+}
 .count {
   font-weight: var(--weight-semibold);
   color: var(--accent);
