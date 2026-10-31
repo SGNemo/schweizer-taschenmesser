@@ -3,7 +3,7 @@ import { t } from '@/strings';
 import { Button, Form, HelpHint, TextField } from '@/ui';
 import { createVault, MIN_MASTER_LENGTH, VaultError } from '../vault';
 import styles from '../accounts.module.css';
-import { measureStrength, type Score } from '../strength';
+import { measureStrength, StrengthUnavailable, type Score } from '../strength';
 import { StrengthMeter } from './StrengthMeter';
 import { isWeakScore, WeakPasswordHelp } from './WeakPasswordHelp';
 
@@ -22,7 +22,17 @@ export function SetupScreen() {
     setBusy(true);
     try {
       // A weak password is allowed, but only after the person said so.
-      const weak = isWeakScore(score ?? (await measureStrength(password).then((m) => m.score)));
+      // Offline before the dictionaries ever loaded: no score, so no advice (it never blocks anyway).
+      const measured =
+        score ??
+        (await measureStrength(password).then(
+          (m) => m.score,
+          (e: unknown) => {
+            if (e instanceof StrengthUnavailable) return undefined;
+            throw e;
+          },
+        ));
+      const weak = isWeakScore(measured);
       if (weak && !weakOk) {
         setError(t.accounts.setup.weakNeedAck);
         return;

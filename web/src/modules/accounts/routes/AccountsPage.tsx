@@ -23,6 +23,7 @@ import { SetupScreen } from '../components/SetupScreen';
 import { ToolsDialog } from '../components/ToolsDialog';
 import { useEntries, useHeaderState } from '../hooks';
 import { useSession } from '../session';
+import { preloadStrength } from '../strength';
 import { deleteEntry, lockVault, type DecryptedEntry } from '../vault';
 import styles from '../accounts.module.css';
 
@@ -51,6 +52,12 @@ export default function AccountsPage() {
     const { screen } = getPlatform();
     void screen.setSecure(true);
     return () => void screen.setSecure(false);
+  }, []);
+
+  // The strength dictionaries are not precached: fetch them once in the background (offline later).
+  useEffect(() => {
+    const timer = setTimeout(preloadStrength, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!header) return <PageHeader title={t.accounts.title} />;
