@@ -14,6 +14,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
   device** where they were added (not synced, not in the backup, max. 10 MB per file).
 - **Share (Android, installed as a PWA):** "Nemo" appears in the share menu; the "Share" page asks where the content should go
   (Saved, note or to-do; only enabled modules are offered). The native Android app (APK) does not have the share target yet.
+- **Quick capture:** one line = one entry, so several things land at once (with a preview row each). In the Android app, long-press the app icon for "Capture", "Search" and "Today", or add the quick-settings tile "Nemo: Capture".
 - **Tools:** the "Tools" button at the top (or **Ctrl+.**) opens the calculator (with percent/VAT and split modes), currency, timer and QR code;
   more (units, date calculator, time zones, dice, text, images, PDF and **Developer** with Base64/URL, JSON, UUID, hash) can be turned on
   under "Manage tools". In the search (Ctrl+K) a calculation like "240 + 19 %" is computed right away, "Tool: …" opens a

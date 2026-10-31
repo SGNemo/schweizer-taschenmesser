@@ -26,6 +26,7 @@ Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser.
    neben der `.exe`; du kannst die Datei also jederzeit austauschen oder verschieben. **Portabler Modus (z. B. USB-Stick):**
    Lege einen leeren Ordner `data` neben die `.exe` – dann liegen die App-Daten dort statt im Benutzerprofil (die
    automatischen Update-Sicherungen bleiben in `%APPDATA%`).
+6. **Tray-Symbol:** Ein Rechtsklick zeigt oben „Heute“: bis zu 5 Dinge von heute (nur Titel und Uhrzeit, nie Beträge); ein Klick öffnet den Eintrag. Abschaltbar unter Einstellungen → Schnellerfassung.
 
 **Von der installierten Version (Setup/MSI, bis `0.2.0-beta.1`) umsteigen:** Die portable App nutzt dieselbe
 App-Kennung und findet deine Daten im Benutzerprofil deshalb sofort wieder.
