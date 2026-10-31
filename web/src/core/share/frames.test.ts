@@ -32,6 +32,26 @@ describe('QR frames', () => {
     expect(last).toEqual({ state: 'done', text });
   });
 
+  it('get a session from the CSPRNG that the frame format accepts', () => {
+    const a = splitIntoFrames('x');
+    const b = splitIntoFrames('x');
+    expect(a[0]).toMatch(/^NSH1\.[0-9a-f]{6}\.1\.1\./);
+    expect(a[0]).not.toEqual(b[0]);
+  });
+
+  it('can be reset after a damaged result and then collect a fresh run', () => {
+    const collector = createFrameCollector();
+    const good = splitIntoFrames('again'.repeat(300), 'abc123');
+    // Same session and total, but one chunk cut mid-way: everything is there, nothing fits.
+    const damaged = good.map((f, i) => (i === 0 ? f.slice(0, -3) : f));
+    let last;
+    for (const f of damaged) last = collector.add(f);
+    expect(last).toEqual({ state: 'broken' });
+    collector.reset();
+    for (const f of good) last = collector.add(f);
+    expect(last).toEqual({ state: 'done', text: 'again'.repeat(300) });
+  });
+
   it('ignore other codes and restart when a new session begins', () => {
     const a = splitIntoFrames('first text '.repeat(200), 'aaaaaa');
     const b = splitIntoFrames('second text '.repeat(200), 'bbbbbb');
