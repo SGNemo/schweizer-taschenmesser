@@ -6,7 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - (none open)
 
 ## Heads-up (I am touching …)
-- 2026-10-31 · `feat/weather-hours-toggle` · weather window: hourly list shows every 3rd hour by default with a switch for all hours: `web/src/home/WeatherPreview.tsx`, `strings.weather.ts` (+ 4 catalogs), `WeatherLine.test.tsx`, `e2e/weather.spec.ts`.
+- 2026-10-31 · `feat/weather-hours-toggle` · weather window: hourly list shows every 3rd hour by default with a switch for all hours: `web/src/home/WeatherPreview.tsx`, `strings.weather.ts` (+ 4 catalogs), `WeatherLine.test.tsx`, `e2e/weather.spec.ts`. (done, PR #335)
 - 2026-10-31 · `fix/maps-tiles` · maps: tiles do not load in the desktop app (send an identifying User-Agent as the OSM policy asks, show the reason), tidier search row and map tab: `web/src/modules/maps/*` (`tiles.ts`, `TileMap`, `maps.module.css`), strings `maps`. (done, PR #331)
 - 2026-10-31 · `feat/weather-colors` · weather detail window clearer and more colourful (meaningful colours with text: temperature, rain, UV, air, pollen; fewer numbers at once): `web/src/home/Weather*.tsx` + css, `core/weather/logic.ts` (read-only use), strings `weather`. (done, PR #332)
 - 2026-10-30 · `feat/maps-routing` · maps package 2 of 3 (in-app routing, FOSSGIS OSRM: distance, time, line on the map, turn list): `web/src/modules/maps/*` (new `routing.ts`, `TileMap` line overlay, `MapsPage`), new notice id `maps-route` (`core/legal/notices.ts`, `strings.legal.ts`), `core/net/netlog.ts` host, `strings.ts`/locales `maps`, `e2e/maps.spec.ts`, docs/features/maps.md. Package 3 (public transport) follows. (done, PR #323)
