@@ -9,6 +9,7 @@ Verbindungsprotokoll und „Netzwerk sperren“ (QA P6, `feat/qa-connection-log`
 Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 Sprachen, KI-Knöpfe nur mit KI-Zugang, „Sehr groß“ = 150 %; P3b/P3c folgen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Pakete B (Frist vorbei), C (Löschen mit Rückgängig, Entwurf) gemergt, Paket D („Zuletzt gelöscht“, Einstellungen → Allgemein) in Review (#318) ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
 Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-Stärketexte, Vorlagen; P3c (README/Website) folgt; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+Eigene Karte (Modul Karten & Orte, Phase 0, Branch `claude/kind-cannon-6jvo2t`): Machbarkeitsbericht [features/map-own.md](features/map-own.md) (Quellen, Erzeuger, Zeichnen, Speicher, Stufen, Fortschritt, 5 Pakete); kein App-Code, wartet auf das Ja zu den Paketen.
 
 Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
