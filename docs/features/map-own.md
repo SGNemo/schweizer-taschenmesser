@@ -4,6 +4,11 @@ Goal: a map built from real OpenStreetMap data, stored on the device, built rare
 
 **Numbers:** the build sandbox has no network to any map service. Every figure is marked **(doc)** = from the service's documentation or download page as remembered, **(est)** = our estimate from formulas, **(measure)** = the maintainer measures it with the first package. Nothing here was measured.
 
+## Status
+
+- **Package 1 `feat/map-own-tiles` – store and draw (done):** `web/src/modules/maps/own/` – `mvt.ts` (MVT writer/reader), `cut.ts` (features → tiles: projection, clipping, simplification, ring orientation), `style.ts` + `palette.module.css` (style table, palette from tokens), `render.ts` (canvas renderer: areas, lines with casing, labels with halo and collision check, overzoom), `draw.ts` (OffscreenCanvas / canvas), `local.ts` (tile source with memory cache), `theme.ts`, `sample.ts` (fixture town for tests). Collections `maps_region` / `maps_tile` (`local: true`), setting `offlineOnly` ("Nur eigene Karte (offline)"), `TileMap` `resolve` seam, page wiring. Tests: `__tests__/maps.own.*.test.ts`, page test, e2e "the own map draws its stored tiles itself". Nothing leaves the device in this package; no new data flow.
+- **Next:** package 2 `feat/map-own-build` (Overpass → `Feature[]` → `cutTile` + `encodeTile` → `tileRepo`, progress row, notice `maps-build`).
+
 ## 1. Data sources for a city cut
 
 | Source                                                                                                                    | What you get                                                                                                       | Rules (doc)                                                                                                                                                                           | Size, mid-size city (Erlangen, 77 km²)                                                                                                                   | Fit                                                                                                                                                                  |
