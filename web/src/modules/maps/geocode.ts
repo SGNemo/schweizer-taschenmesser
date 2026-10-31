@@ -5,6 +5,7 @@
  */
 import { z } from 'zod';
 import { getPlatform } from '@/core/platform';
+import { identify } from './agent';
 import { DEFAULT_SEARCH_URL, parseCoordinates, roundCoord } from './logic';
 
 const TIMEOUT_MS = 8000;
@@ -70,7 +71,7 @@ export async function searchPlaces(
   const url = `${base}${base.includes('?') ? '&' : '?'}${params}`;
   let body: unknown;
   try {
-    const res = await f(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const res = await f(url, { signal: AbortSignal.timeout(TIMEOUT_MS), ...identify() });
     if (!res.ok) throw new MapsError(`http ${res.status}`);
     body = await res.json();
   } catch (e) {

@@ -418,7 +418,6 @@ export default function MapsPage() {
               <TextField
                 ref={searchInput}
                 label={t.maps.map.search}
-                hint={t.maps.map.searchHint}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 autoComplete="off"
@@ -434,6 +433,7 @@ export default function MapsPage() {
               {searching === 'busy' ? t.maps.map.searching : t.maps.map.searchButton}
             </Button>
           </form>
+          <p className={styles.note}>{t.maps.map.searchHint}</p>
           {searching === 'error' ? <p className={styles.note}>{t.maps.map.unreachable}</p> : null}
           {hits && hits.length === 0 ? <p className={styles.note}>{t.maps.map.noResults}</p> : null}
           {hits && hits.length > 0 ? (
