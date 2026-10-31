@@ -89,10 +89,38 @@
 .meter .on {
   background: var(--text-muted);
 }
-.meter[data-level='moderate'] .on,
+.meter[data-level='low'] .on {
+  background: var(--success);
+}
+.meter[data-level='moderate'] .on {
+  background: var(--warning);
+}
 .meter[data-level='high'] .on,
 .meter[data-level='veryHigh'] .on {
-  background: var(--warning);
+  background: var(--accent);
+}
+.pollen li[data-level='moderate'] .pollenLevel {
+  color: var(--warning-ink);
+}
+.pollen li[data-level='high'] .pollenLevel,
+.pollen li[data-level='veryHigh'] .pollenLevel {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+.pollen li[data-level='low'] .pollenLevel {
+  color: var(--success-ink);
+}
+.aqi[data-band='veryGood'] .aqiValue,
+.aqi[data-band='good'] .aqiValue {
+  color: var(--success-ink);
+}
+.aqi[data-band='fair'] .aqiValue {
+  color: var(--warning-ink);
+}
+.aqi[data-band='poor'] .aqiValue,
+.aqi[data-band='veryPoor'] .aqiValue,
+.aqi[data-band='extreme'] .aqiValue {
+  color: var(--accent);
 }
 .note {
   margin: 0;
