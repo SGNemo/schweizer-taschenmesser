@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const copy = vi.hoisted(() => vi.fn<(text: string) => Promise<boolean>>(async () => true));
 vi.mock('../shared', async (orig) => ({ ...(await orig<object>()), copyText: copy }));
 
-import DiffTool from './Tool';
+import DiffTool from './View';
 import { MAX_CHARS } from './logic';
 
 afterEach(cleanup);

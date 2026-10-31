@@ -13,7 +13,7 @@ vi.mock('./run', () => ({
   workerSupported: () => mocks.supported,
 }));
 
-import RegexTool from './Tool';
+import RegexTool from './View';
 import { MAX_TEXT } from './logic';
 
 beforeEach(() => {
