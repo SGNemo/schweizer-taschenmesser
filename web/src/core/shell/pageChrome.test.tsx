@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { usePageChrome, usePageChromeStore } from './pageChrome';
 
 function Page({ fab }: { fab: boolean }) {
-  usePageChrome({ hideFab: fab, writeInMenu: true });
+  usePageChrome({ hideFab: fab, writeInMenu: true, advancedInMenu: true });
   return null;
 }
 
@@ -12,12 +12,24 @@ afterEach(cleanup);
 
 describe('page chrome', () => {
   it('is empty by default, set while the page is mounted and reset when it goes away', () => {
-    expect(usePageChromeStore.getState().chrome).toEqual({ hideFab: false, writeInMenu: false });
+    expect(usePageChromeStore.getState().chrome).toEqual({
+      hideFab: false,
+      writeInMenu: false,
+      advancedInMenu: false,
+    });
     const view = render(<Page fab />);
-    expect(usePageChromeStore.getState().chrome).toEqual({ hideFab: true, writeInMenu: true });
+    expect(usePageChromeStore.getState().chrome).toEqual({
+      hideFab: true,
+      writeInMenu: true,
+      advancedInMenu: true,
+    });
     view.rerender(<Page fab={false} />);
     expect(usePageChromeStore.getState().chrome.hideFab).toBe(false);
     view.unmount();
-    expect(usePageChromeStore.getState().chrome).toEqual({ hideFab: false, writeInMenu: false });
+    expect(usePageChromeStore.getState().chrome).toEqual({
+      hideFab: false,
+      writeInMenu: false,
+      advancedInMenu: false,
+    });
   });
 });

@@ -7,6 +7,8 @@
  * text, sliced). A frame of another session restarts the collection. The file's own checksum and
  * the AEAD tag catch a wrongly stitched or damaged result when it is opened.
  */
+import { randomBytes } from '@/core/crypto/random';
+
 const PREFIX = 'NSH1';
 /** Characters of payload per frame: small enough for a calm, reliable scan with error correction M. */
 export const FRAME_CHARS = 400;
@@ -27,9 +29,13 @@ const fromBase64Url = (b64: string): string => {
   return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
 };
 
+/** Six hex characters from the platform CSPRNG: a foreign stream is told apart, not guessed. */
+export const newSession = (): string =>
+  Array.from(randomBytes(3), (b) => b.toString(16).padStart(2, '0')).join('');
+
 export function splitIntoFrames(
   text: string,
-  session: string = Math.random().toString(36).slice(2, 8).padEnd(6, '0'),
+  session: string = newSession(),
   size: number = FRAME_CHARS,
 ): string[] {
   const data = toBase64Url(text);

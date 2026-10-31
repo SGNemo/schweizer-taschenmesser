@@ -169,7 +169,13 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
           ))}
         </ul>
       ) : null}
-      {qr ? <QrPlayer frames={qr.frames} onDone={() => void qrDone()} /> : null}
+      {qr ? (
+        <QrPlayer
+          frames={qr.frames}
+          onDone={() => void qrDone()}
+          onCancel={() => setQr(undefined)}
+        />
+      ) : null}
       {fresh ? (
         <div role="status" data-testid="share-pair-code">
           <p className={styles.legend}>{`${n.code}: ${fresh.name}`}</p>
