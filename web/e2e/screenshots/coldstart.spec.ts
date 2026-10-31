@@ -15,7 +15,8 @@ import { devices, test, type BrowserContext, type Page } from '@playwright/test'
  * (`/?capture=1`, the "Quick capture" shortcut of the installed app: the field takes keys).
  */
 const RUNS = Number(process.env.COLDSTART_RUNS ?? 5);
-const OUT = process.env.COLDSTART_OUT ?? 'test-results/coldstart';
+// Not under test-results/: Playwright empties that folder at every run.
+const OUT = process.env.COLDSTART_OUT ?? 'node_modules/.cache/coldstart';
 const LABEL = process.env.COLDSTART_LABEL ?? 'run';
 const URL = '/?capture=1';
 

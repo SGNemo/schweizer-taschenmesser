@@ -83,7 +83,7 @@ Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressu
 ## Bekannte Probleme / Hinweise
 - README-Download-Badges zeigen auf das neueste *stabile* Release und funktionieren jetzt (seit `v0.2.0`).
 - TypeScript ist auf 6.0.x gepinnt (typescript-eslint unterstützt `<6.1`).
-- Aus PR #2 zurückgestellte Vorschläge: TypeScript 7 / `@types/node` 26, zxcvbn-Wörterbücher aus dem Precache nehmen (Entscheidung nötig, ~2,5 MB beim ersten Laden), Vitest-`node`-Projekt für reine Logiktests, `windows`-Crate 0.61 → 0.62 (nur per CI prüfbar). Erledigt 2026-09-30: JS-Plugin-Bumps (`plugin-http` 2.8.0, `plugin-opener` 2.7.0; die Rust-Seite bleibt `~2.7`, siehe Cargo), CI-Caching. `serde_json` bleibt: `tauri::generate_context!` braucht es.
+- Aus PR #2 zurückgestellte Vorschläge: TypeScript 7 / `@types/node` 26, Vitest-`node`-Projekt für reine Logiktests, `windows`-Crate 0.61 → 0.62 (nur per CI prüfbar). Erledigt 2026-09-30: JS-Plugin-Bumps (`plugin-http` 2.8.0, `plugin-opener` 2.7.0; die Rust-Seite bleibt `~2.7`, siehe Cargo), CI-Caching. `serde_json` bleibt: `tauri::generate_context!` braucht es.
 - Commit `792e7aa` (Logo) hat zwei durch Shell-Backticks verschluckte Wörter im Text („after . Logo gets a prop“) – bewusst nicht per Force-Push korrigiert.
 - Aus PR #3 offene Vorschläge: globaler „+“-FAB ab 900 px durch „+ Neu“ in der Top-Bar ersetzen; ToDo-Board mit Listen als Spalten.
 
@@ -95,7 +95,7 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
 3. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
 4. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
-5. Entscheidungen: Precache der Wörterbücher, FAB-Änderung (Spotify: in Arbeit, Chat 10).
+5. Entscheidung: FAB-Änderung (Chat 10). Kaltstart/Precache: [perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md).
 
 ## Manuelle Tests offen
 Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).

@@ -8,7 +8,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Was | Was zu tun ist |
 |---|---|
 | Eigene Karte (Phase 0, #339) | Bericht [features/map-own.md](features/map-own.md) mergen; Fragen sind beantwortet, Pakete 1–3 freigegeben |
-| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
+| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
 | Nächste Runde: sechs Chat-Prompts | starten, Reihenfolge und Links in [product/next/00-README.md](product/next/00-README.md) (Merge: T4 → T2 → T1 → T5 → T6 → T3) |
