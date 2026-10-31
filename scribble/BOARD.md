@@ -6,6 +6,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 - (none open)
 
 ## Heads-up (I am touching …)
+- 2026-10-31 · `claude/charming-volta-ruetox` (mobile header, task 04) · `layout/AreaFrame.{tsx,module.css}`, `layout/TopBar.{tsx,module.css}` (collapse on scroll), `layout/SeedBanner.tsx`, `core/shell/pageChrome.ts` (+ new `topbarCollapse.ts`), `ui/Patterns.{tsx,module.css}` (h1 size), `ui/AdvancedFields.tsx`, and ONLY the `PageHeader` line in `CalendarPage`, `FinancePage`, `InvoicesPage`, `SubscriptionsPage`, `PantryPage`, `PeoplePage` (T2: finance: please keep merges small there), `e2e/layout.spec.ts`.
 - 2026-10-31 · `feat/weather-hours-toggle` · weather window: hourly list shows every 3rd hour by default with a switch for all hours: `web/src/home/WeatherPreview.tsx`, `strings.weather.ts` (+ 4 catalogs), `WeatherLine.test.tsx`, `e2e/weather.spec.ts`. (done, PR #335)
 - 2026-10-31 · `fix/maps-tiles` · maps: tiles do not load in the desktop app (send an identifying User-Agent as the OSM policy asks, show the reason), tidier search row and map tab: `web/src/modules/maps/*` (`tiles.ts`, `TileMap`, `maps.module.css`), strings `maps`. (done, PR #331)
 - 2026-10-31 · `feat/weather-colors` · weather detail window clearer and more colourful (meaningful colours with text: temperature, rain, UV, air, pollen; fewer numbers at once): `web/src/home/Weather*.tsx` + css, `core/weather/logic.ts` (read-only use), strings `weather`. (done, PR #332)
