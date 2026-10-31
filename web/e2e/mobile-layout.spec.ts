@@ -206,3 +206,54 @@ test.describe('Settings navigation on a wide screen', () => {
     expect(overlaps).toBe(0);
   });
 });
+
+test.describe('Settings on a phone', () => {
+  test.use({ viewport: { width: 360, height: 800 } });
+
+  test('a stacked setting (weather place) lays its parts under each other', async ({ page }) => {
+    await page.route('**://geocoding-api.open-meteo.com/**', (route) =>
+      route.fulfill({
+        json: {
+          results: [
+            { name: 'Bern', admin1: 'Bern', country: 'Schweiz', latitude: 46.9, longitude: 7.4 },
+          ],
+        },
+      }),
+    );
+    await ready(page, '/settings/verbindungen');
+    await page.getByLabel('Ort suchen').fill('Bern');
+    await page
+      .locator('#weather--place')
+      .getByRole('button', { name: 'Suchen', exact: true })
+      .click();
+    await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click();
+    await expect(page.getByTestId('weather-place')).toHaveText('Bern, Schweiz');
+    const place = (await page.getByTestId('weather-place').boundingBox())!;
+    const field = (await page.getByLabel('Ort suchen').boundingBox())!;
+    expect(field.y).toBeGreaterThan(place.y); // under the place, not beside it
+    expect(field.width).toBeGreaterThan(150);
+    await noSideScroll(page);
+  });
+
+  test('the sticky settings search stays below the top bar', async ({ page }) => {
+    await ready(page, '/settings/darstellung');
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(300);
+    const bar = (await page.locator('header').first().boundingBox())!;
+    const search = (await page.getByRole('search').boundingBox())!;
+    expect(search.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+    await noSideScroll(page);
+  });
+});
+
+test.describe('Big monitor', () => {
+  test.use({ viewport: { width: 2550, height: 1400 } });
+
+  test('settings use a good share of the screen', async ({ page }) => {
+    await ready(page, '/settings/allgemein');
+    const settings = (await page.getByRole('main').locator('h1').boundingBox())!;
+    const field = (await page.getByLabel('Dein Name').boundingBox())!;
+    expect(settings.x).toBeLessThan(650); // before: ~790 px of empty margin at the left
+    expect(field.x + field.width - settings.x).toBeGreaterThan(1150);
+  });
+});

@@ -57,6 +57,7 @@
 }
 .control {
   flex: none;
+  min-width: 0;
   max-width: 100%;
   display: flex;
   justify-content: flex-end;
@@ -69,6 +70,10 @@
 }
 .stacked .control {
   flex: 1;
+  min-width: 0;
+  /* Several children (text, buttons, a form) belong under each other, never side by side. */
+  flex-direction: column;
+  align-items: stretch;
   justify-content: flex-start;
 }
 /* Stack label above control when the settings column is narrow. */

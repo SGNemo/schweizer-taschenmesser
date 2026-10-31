@@ -47,3 +47,10 @@
   color: var(--text-muted);
   margin: 0;
 }
+/* The one next step is a real touch target (it was a 20 px text link). */
+.empty a,
+.more a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
