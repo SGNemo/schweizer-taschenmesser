@@ -12,9 +12,11 @@ export interface PageChrome {
   hideFab: boolean;
   /** The page's own menu holds "Mit KI eintragen": the area header does not repeat it. */
   writeInMenu: boolean;
+  /** The page's own menu holds the "Erweitert" switch: the page header does not repeat it. */
+  advancedInMenu: boolean;
 }
 
-const NONE: PageChrome = { hideFab: false, writeInMenu: false };
+const NONE: PageChrome = { hideFab: false, writeInMenu: false, advancedInMenu: false };
 
 export const usePageChromeStore = create<{ chrome: PageChrome; set: (c: PageChrome) => void }>(
   (set) => ({ chrome: NONE, set: (chrome) => set({ chrome }) }),
@@ -25,8 +27,9 @@ export function usePageChrome(chrome: Partial<PageChrome>): void {
   const set = usePageChromeStore((s) => s.set);
   const hideFab = chrome.hideFab ?? false;
   const writeInMenu = chrome.writeInMenu ?? false;
+  const advancedInMenu = chrome.advancedInMenu ?? false;
   useEffect(() => {
-    set({ hideFab, writeInMenu });
+    set({ hideFab, writeInMenu, advancedInMenu });
     return () => set(NONE);
-  }, [set, hideFab, writeInMenu]);
+  }, [set, hideFab, writeInMenu, advancedInMenu]);
 }
