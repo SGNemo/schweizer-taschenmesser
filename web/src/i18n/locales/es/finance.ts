@@ -80,6 +80,35 @@ export const finance: Strings['finance'] = {
   openingBalance: 'Saldo inicial',
   deleteAccountHint: 'También elimina todos los movimientos de esta cuenta.',
   noAccounts: 'Aún no hay cuentas.',
+  fromSubscription: 'Asignado a la suscripción por una regla.',
+  rules: {
+    title: 'Reglas sugeridas',
+    hint: 'No hay nada marcado. Una regla solo se crea si la marcas y confirmas la importación. Puedes quitarla en Categorías.',
+    proposalBoth: (payee: string, sub: string, category: string) =>
+      `¿Registrar siempre «${payee}» como suscripción «${sub}» en la categoría «${category}»?`,
+    proposalSubscription: (payee: string, sub: string) =>
+      `¿Asignar siempre «${payee}» a la suscripción «${sub}»?`,
+    proposalCategory: (payee: string, category: string) =>
+      `¿Registrar siempre «${payee}» en la categoría «${category}»?`,
+    applied: (name: string) => `Regla: ${name}`,
+    manageTitle: 'Reglas para la importación',
+    manageHint:
+      'La importación del extracto aplica estas reglas. Quitar una no cambia ningún movimiento existente.',
+    manageEmpty: 'Aún no hay reglas. Las sugerencias aparecen tras una importación.',
+    remove: (match: string) => `Quitar la regla de «${match}»`,
+  },
+  bankMap: {
+    title: '¿Qué columna es cuál?',
+    hint: 'Elige la columna adecuada para cada dato. Abajo ves las primeras filas; la app recuerda la asignación para la próxima importación de este tipo de archivo.',
+    date: 'Fecha',
+    amount: 'Importe',
+    payee: 'Beneficiario (opcional)',
+    purpose: 'Concepto (opcional)',
+    none: '– ninguna –',
+    choose: '– elegir –',
+    sample: 'Primeras filas del archivo',
+    apply: 'Usar estas columnas',
+  },
   addCategory: 'Añadir categoría',
   editCategory: 'Editar categoría',
   categoryName: 'Nombre',

@@ -80,6 +80,35 @@ export const finance: Strings['finance'] = {
   openingBalance: 'Saldo inicial',
   deleteAccountHint: 'Também exclui todos os lançamentos desta conta.',
   noAccounts: 'Ainda não há contas.',
+  fromSubscription: 'Associado à assinatura por uma regra.',
+  rules: {
+    title: 'Regras sugeridas',
+    hint: 'Nada está marcado. Uma regra só é criada se você marcá-la e confirmar a importação. Você pode removê-la em Categorias.',
+    proposalBoth: (payee: string, sub: string, category: string) =>
+      `Sempre lançar “${payee}” como assinatura “${sub}” na categoria “${category}”?`,
+    proposalSubscription: (payee: string, sub: string) =>
+      `Sempre associar “${payee}” à assinatura “${sub}”?`,
+    proposalCategory: (payee: string, category: string) =>
+      `Sempre lançar “${payee}” na categoria “${category}”?`,
+    applied: (name: string) => `Regra: ${name}`,
+    manageTitle: 'Regras da importação',
+    manageHint:
+      'A importação do extrato aplica estas regras. Remover uma não altera nenhum lançamento existente.',
+    manageEmpty: 'Ainda não há regras. As sugestões aparecem após uma importação.',
+    remove: (match: string) => `Remover a regra de “${match}”`,
+  },
+  bankMap: {
+    title: 'Qual coluna é qual?',
+    hint: 'Escolha a coluna correspondente para cada item. As primeiras linhas aparecem abaixo; o app lembra a associação para a próxima importação desse tipo de arquivo.',
+    date: 'Data',
+    amount: 'Valor',
+    payee: 'Beneficiário (opcional)',
+    purpose: 'Descrição (opcional)',
+    none: '– nenhuma –',
+    choose: '– escolher –',
+    sample: 'Primeiras linhas do arquivo',
+    apply: 'Usar estas colunas',
+  },
   addCategory: 'Adicionar categoria',
   editCategory: 'Editar categoria',
   categoryName: 'Nome',

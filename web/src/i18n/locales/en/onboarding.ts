@@ -142,18 +142,26 @@ export const onboarding: Strings['onboarding'] = {
     balance: 'Balance today',
     balanceHint: (sample: string) => `e.g. ${sample} – with “-” for a negative amount.`,
     badBalance: (sample: string) => `Please enter an amount like ${sample}.`,
-    bank: 'Import bank statement (CSV or CAMT)',
+    bank: 'Import bank statement (CSV, OFX, QIF or CAMT)',
     bankHint:
-      'In online banking, export your transactions (e.g. “CSV-CAMT” or “CAMT”) and choose the file here. The file is only read on this device.',
+      'In online banking, export your transactions (CSV, OFX, QIF or CAMT) and choose the file here. Known banks are recognised; for an unknown CSV you assign the columns once and the app remembers it. The file is only read on this device.',
     bankAccount: 'Book to account',
     noAccounts: 'Add an account first.',
     bankFormat:
-      'The file format wasn’t recognised. Expected is a CSV file with booking date and amount, or a CAMT file (XML).',
+      'The file format wasn’t recognised. Expected is an OFX, QIF or CAMT file, or a CSV file with date and amount.',
     bankSkipped: (n: number) =>
       n === 1
         ? '1 line without a valid date or amount was skipped.'
         : `${n} lines without a valid date or amount were skipped.`,
     bankTruncated: (n: number) => `Only the first ${n} transactions are shown.`,
+    bankDetected: (name: string) => `Recognised: ${name}`,
+    bankRemembered: 'Recognised: your saved column assignment',
+    bankNeedsMapping:
+      'This layout isn’t known yet. Assign the columns below – the app remembers it for the next import.',
+    bankCurrencySkipped: (n: number, from: string, to: string) =>
+      n === 1
+        ? `1 transaction in ${from} was not imported: this account is in ${to}. Choose an account in ${from}.`
+        : `${n} transactions in ${from} were not imported: this account is in ${to}. Choose an account in ${from}.`,
   },
   invoices: {
     suggestions: [

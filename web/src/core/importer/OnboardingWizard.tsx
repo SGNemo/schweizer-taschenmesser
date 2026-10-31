@@ -31,6 +31,8 @@ import type {
   ImportBatch,
   ImportField,
   ImporterMeta,
+  ImportInput,
+  ImportSlot,
   ImporterRuntime,
   PreviewRow,
 } from './types';
@@ -157,6 +159,8 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<ImportBatch | null>(null);
+  const [slot, setSlot] = useState<ImportSlot | null>(null);
+  const lastInput = useRef<ImportInput | null>(null);
   const batchId = useRef(newBatchId());
   const alive = useRef(true);
   useEffect(() => {
@@ -192,6 +196,7 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
       setTicked((meta.templates ?? []).filter((tpl) => tpl.preselected).map((tpl) => tpl.id));
       setText('');
       setFileName('');
+      setSlot(null);
       setImporter(meta);
       setStep('input');
     } catch (e) {
@@ -208,6 +213,7 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
     if (!importer || !runtime) return;
     setError('');
     setBusy(true);
+    lastInput.current = input;
     try {
       const result = await runtime.parse(importer.id, input, {
         today: today(),
@@ -215,9 +221,14 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
         batchId: batchId.current,
       });
       if (!alive.current) return;
+      setSlot(result.slot ?? null);
       if (result.candidates.length === 0) {
         setNotes([...prefaceNotes, ...result.notes]);
-        setError(result.notes.length === 0 ? t.onboarding.nothingFound : '');
+        setError(
+          result.notes.length === 0 && result.slot?.placement !== 'resolve'
+            ? t.onboarding.nothingFound
+            : '',
+        );
         return;
       }
       setRows(await buildPreview(manifest, runtime, result.candidates));
@@ -242,7 +253,10 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
         await runParse({ kind: 'file', text: files[0]!.text, fileName: label, files });
         return;
       }
-      const file = await pickTextFile(importer.accept ?? '*/*');
+      const file = await pickTextFile(
+        importer.accept ?? '*/*',
+        importer.legacyEncoding ? { legacyEncoding: true } : undefined,
+      );
       if (!file) return;
       setFileName(file.name);
       await runParse({ kind: 'file', text: file.text, fileName: file.name });
@@ -309,6 +323,10 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
       });
       await markOnboardingHandled(manifest.id);
       batchId.current = newBatchId();
+      // The importer's own follow-up (finance: the rules the user ticked); a failure must not hide
+      // that the import itself succeeded.
+      if (slot?.placement === 'preview')
+        await Promise.resolve(slot.onCommitted?.(rows)).catch(() => {});
       if (!alive.current) return;
       setDone(batch);
       setStep('done');
@@ -508,6 +526,17 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
             ))}
           </ul>
         ) : null}
+        {slot?.placement === 'resolve' ? (
+          <slot.Panel
+            busy={busy}
+            rows={[]}
+            onChange={() => {}}
+            submit={(extras) => {
+              const last = lastInput.current;
+              if (last?.kind === 'file') void runParse({ ...last, extras });
+            }}
+          />
+        ) : null}
         {error ? (
           <p className={styles.error} role="alert">
             {error}
@@ -530,6 +559,9 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
       <div className={styles.stack}>
         <p className={styles.lead}>{t.onboarding.previewIntro}</p>
         <ImportPreview rows={rows} onChange={setRows} />
+        {slot?.placement === 'preview' ? (
+          <slot.Panel busy={busy} rows={rows} onChange={setRows} submit={() => {}} />
+        ) : null}
         {notes.length > 0 ? (
           <ul className={styles.notes}>
             {notes.map((n) => (

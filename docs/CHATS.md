@@ -16,6 +16,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Bank import (OFX/QIF/presets/column mapping) + finance rules (T2) | `claude/keen-ramanujan-if6k0i` | `core/io/{bank,ofx,qif}.ts`, `core/importer` (additive slot), `modules/finance/*`, invoices/subscriptions settings + attention | in progress | – | 2026-10-31 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

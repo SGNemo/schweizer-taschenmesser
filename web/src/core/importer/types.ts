@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import type { MailFinding } from '@/core/connectors/types';
 /**
  * Start-data importers. A module declares them in `contributions.onboarding`; the generic wizard
@@ -63,6 +64,8 @@ export interface ImporterMeta {
   accept?: string;
   /** kind `file`: several files may be chosen at once; they arrive as `files` of the input. */
   multiple?: boolean;
+  /** kind `file`: read the bytes and fall back to Windows-1252 when they are not valid UTF-8. */
+  legacyEncoding?: boolean;
   /** kind `text`: label of the text box instead of the default "one line = one entry". */
   textLabel?: string;
   /** kind `form`: the fields. */
@@ -90,8 +93,17 @@ export const noOnboarding: OnboardingDef = { importers: [] };
 export type ImportInput =
   | { kind: 'text'; text: string }
   | { kind: 'json'; text: string }
-  /** `text`/`fileName` = the first file; `files` = all chosen files (importers with `multiple`). */
-  | { kind: 'file'; text: string; fileName: string; files?: { name: string; text: string }[] }
+  /**
+   * `text`/`fileName` = the first file; `files` = all chosen files (importers with `multiple`);
+   * `extras` = the answer of a `slot` panel (the same file is parsed again with it).
+   */
+  | {
+      kind: 'file';
+      text: string;
+      fileName: string;
+      files?: { name: string; text: string }[];
+      extras?: Record<string, string>;
+    }
   | { kind: 'template'; ids: string[] }
   | { kind: 'form'; values: Record<string, string> }
   /** Suggestions a connector scan found (`MailFinding`s); nothing of the source text is included. */
@@ -150,10 +162,36 @@ export interface CandidateUpdate {
   lines: { field: string; from: string; to: string }[];
 }
 
+/** What the wizard hands to the panel of an `ImportSlot`. */
+export interface ImportSlotProps {
+  /** A parse is running. */
+  busy: boolean;
+  /** The rows of the preview (empty for `resolve`). */
+  rows: PreviewRow[];
+  /** `resolve`: answers the question; the wizard parses the same input again with `extras`. */
+  submit(extras: Record<string, string>): void;
+  /** `preview`: replaces the rows (a ticked suggestion shows its effect on them at once). */
+  onChange(rows: PreviewRow[]): void;
+}
+
+/**
+ * Optional extra step of one importer (finance: column mapping, rule suggestions). Importers that
+ * do not return one are unaffected; the shared preview list itself is never changed.
+ */
+export interface ImportSlot {
+  /** `resolve`: shown instead of the preview while nothing could be read; `preview`: below the list. */
+  placement: 'resolve' | 'preview';
+  Panel: ComponentType<ImportSlotProps>;
+  /** `preview`: called once the batch was written, with the rows of the preview. */
+  onCommitted?(rows: PreviewRow[]): Promise<void> | void;
+}
+
 export interface ImportParseResult {
   candidates: ImportCandidate[];
   /** German hints about what could not be imported ("2 Zeilen übersprungen …"). */
   notes: string[];
+  /** An extra question or panel of the importer; see `ImportSlot`. */
+  slot?: ImportSlot;
 }
 
 export interface ImporterRuntime {

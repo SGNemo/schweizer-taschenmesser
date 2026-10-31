@@ -1,0 +1,4 @@
+"Buchungstag";"Wertstellung (Valuta)";"Vorgang";"Buchungstext";"Umsatz in EUR";
+"03.10.2026";"03.10.2026";"Lastschrift";"Empfänger: Filmfreund GmbH Kto/IBAN: DE00999999990000000002 BLZ/BIC: TESTDEFFXXX Buchungstext: Streaming Monatsbeitrag Oktober Ref. 1A2B3C4D/12";"-9,99";
+"01.10.2026";"01.10.2026";"Überweisung";"Auftraggeber: Beispiel AG Buchungstext: Gehalt Oktober Ref. 5E6F7A8B/34";"2.345,67";
+"02.10.2026";"02.10.2026";"Kartenverfuegung";"Empfänger: Marktkauf Mustertal Buchungstext: Einkauf Lebensmittel Ref. 9C0D1E2F/56";"-23,40";

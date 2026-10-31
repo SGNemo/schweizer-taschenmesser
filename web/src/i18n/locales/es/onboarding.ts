@@ -140,18 +140,26 @@ export const onboarding: Strings['onboarding'] = {
     balance: 'Saldo de hoy',
     balanceHint: (sample: string) => `p. ej. ${sample}; si es negativo, con «-».`,
     badBalance: (sample: string) => `Introduce un importe como ${sample}.`,
-    bank: 'Importar extracto bancario (CSV o CAMT)',
+    bank: 'Importar extracto bancario (CSV, OFX, QIF o CAMT)',
     bankHint:
-      'En la banca online, exporta los movimientos (p. ej. «CSV-CAMT» o «CAMT») y elige el archivo aquí. El archivo solo se lee en este dispositivo.',
+      'En la banca online, exporta tus movimientos (CSV, OFX, QIF o CAMT) y elige el archivo aquí. Los bancos conocidos se reconocen; con un CSV desconocido asignas las columnas una vez y la app lo recuerda. El archivo solo se lee en este dispositivo.',
     bankAccount: 'Registrar en la cuenta',
     noAccounts: 'Primero crea una cuenta.',
     bankFormat:
-      'No se reconoció el formato del archivo. Se espera un CSV con fecha de movimiento e importe o un archivo CAMT (XML).',
+      'No se reconoció el formato del archivo. Se espera un archivo OFX, QIF o CAMT, o un CSV con fecha e importe.',
     bankSkipped: (n: number) =>
       n === 1
         ? 'Se omitió 1 línea sin fecha o importe válido.'
         : `Se omitieron ${n} líneas sin fecha o importe válido.`,
     bankTruncated: (n: number) => `Solo se muestran los primeros ${n} movimientos.`,
+    bankDetected: (name: string) => `Reconocido: ${name}`,
+    bankRemembered: 'Reconocido: tu asignación de columnas guardada',
+    bankNeedsMapping:
+      'Este formato aún no se conoce. Asigna abajo las columnas: la app lo recordará para la próxima importación.',
+    bankCurrencySkipped: (n: number, from: string, to: string) =>
+      n === 1
+        ? `1 movimiento en ${from} no se importó: esta cuenta está en ${to}. Elige una cuenta en ${from}.`
+        : `${n} movimientos en ${from} no se importaron: esta cuenta está en ${to}. Elige una cuenta en ${from}.`,
   },
   invoices: {
     suggestions: [
