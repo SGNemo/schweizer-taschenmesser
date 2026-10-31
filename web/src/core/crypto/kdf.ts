@@ -1,9 +1,9 @@
 /**
  * Password → key with Argon2id (`hash-wasm`, the reference implementation compiled to WASM).
  * The raw KDF output only exists inside `deriveKey`: it is imported as a **non-extractable**
- * AES-GCM key and overwritten right away.
+ * AES-GCM key and overwritten right away. The WASM module loads on the first derivation (it is not
+ * needed to start the app, docs/perf/COLD-START-2026-10.md).
  */
-import { argon2id } from 'hash-wasm';
 import { fromBase64, toBase64 } from '@/core/sync/crypto';
 import { CryptoError } from './errors';
 import { randomBytes, wipe } from './random';
@@ -87,6 +87,7 @@ export async function deriveKey(
   usages: KeyUsage[] = ['encrypt', 'decrypt'],
 ): Promise<CryptoKey> {
   assertKdfParams(params);
+  const { argon2id } = await import('hash-wasm');
   const raw = await argon2id({
     password: passwordBytes(password),
     salt: decodeSalt(params.salt),
