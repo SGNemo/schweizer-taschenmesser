@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -12,14 +12,30 @@ import { AreaFrame } from '@/layout/AreaFrame';
 import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
-import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
-import { OAuthCallback } from '@/pages/OAuthCallback';
-import { CategoryPage, SettingsIndex, SettingsLayout } from '@/pages/settings/SettingsLayout';
-import { ShareTarget } from '@/pages/ShareTarget';
-import { ToolLibrary } from '@/pages/ToolLibrary';
 
 import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
+
+// Pages that a start rarely needs load on first visit (still precached, so they work offline):
+// keeps them off the critical path of every start (docs/perf/COLD-START-2026-10.md).
+const ModuleLibrary = lazy(() =>
+  import('@/pages/ModuleLibrary').then((m) => ({ default: m.ModuleLibrary })),
+);
+const ToolLibrary = lazy(() =>
+  import('@/pages/ToolLibrary').then((m) => ({ default: m.ToolLibrary })),
+);
+const OAuthCallback = lazy(() =>
+  import('@/pages/OAuthCallback').then((m) => ({ default: m.OAuthCallback })),
+);
+const ShareTarget = lazy(() =>
+  import('@/pages/ShareTarget').then((m) => ({ default: m.ShareTarget })),
+);
+const settingsPage = () => import('@/pages/settings/SettingsLayout');
+const SettingsLayout = lazy(() => settingsPage().then((m) => ({ default: m.SettingsLayout })));
+const SettingsIndex = lazy(() => settingsPage().then((m) => ({ default: m.SettingsIndex })));
+const CategoryPage = lazy(() => settingsPage().then((m) => ({ default: m.CategoryPage })));
+
+const page = (node: ReactNode) => <Suspense fallback={<PageFallback />}>{node}</Suspense>;
 
 function ModuleDisabled() {
   const toast = useUiStore((s) => s.toast);
@@ -112,7 +128,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'library',
           element: (
             <PageContainer key="ModuleLibrary" variant="wide">
-              <ModuleLibrary />
+              {page(<ModuleLibrary />)}
             </PageContainer>
           ),
         },
@@ -120,7 +136,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'tools',
           element: (
             <PageContainer key="ToolLibrary" variant="wide">
-              <ToolLibrary />
+              {page(<ToolLibrary />)}
             </PageContainer>
           ),
         },
@@ -129,7 +145,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'oauth/callback',
           element: (
             <PageContainer key="OAuthCallback" variant="narrow">
-              <OAuthCallback />
+              {page(<OAuthCallback />)}
             </PageContainer>
           ),
         },
@@ -137,7 +153,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'share',
           element: (
             <PageContainer key="ShareTarget" variant="narrow">
-              <ShareTarget />
+              {page(<ShareTarget />)}
             </PageContainer>
           ),
         },
@@ -145,12 +161,12 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'settings',
           element: (
             <PageContainer key="Settings" variant="wide">
-              <SettingsLayout />
+              {page(<SettingsLayout />)}
             </PageContainer>
           ),
           children: [
-            { index: true, element: <SettingsIndex /> },
-            { path: ':category', element: <CategoryPage /> },
+            { index: true, element: page(<SettingsIndex />) },
+            { path: ':category', element: page(<CategoryPage />) },
           ],
         },
         ...(ComponentSheet
