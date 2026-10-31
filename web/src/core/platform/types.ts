@@ -138,10 +138,15 @@ export interface LocalApiService {
   stop(): Promise<void>;
 }
 
+/** Screens an Android launcher shortcut or the quick-settings tile may open (fixed list). */
+export type ShortcutTarget = 'capture' | 'search' | 'today';
+
 /** Text or a link another Android app shared with this app. */
 export interface SharedContent {
   title: string;
   text: string;
+  /** Set by a launcher shortcut or the quick-settings tile instead of a share (title/text empty). */
+  open?: ShortcutTarget;
 }
 
 /** Android "Share" target. `supported` is false everywhere except the Android app. */
