@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createFrameCollector, MANY_FRAMES } from '@/core/share/frames';
 import toolStyles from '@/tools/tools.module.css';
 import { makeQr, qrPath } from '@/tools/qr/logic';
+import { t } from '@/strings';
 import { tShare } from '@/strings.share';
 import { Button } from '@/ui';
 import styles from './settings.module.css';
@@ -11,10 +12,26 @@ const prefersReducedMotion = (): boolean =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** The file as a run of QR codes, one after the other. Starts paused when motion is reduced. */
-export function QrPlayer({ frames, onDone }: { frames: string[]; onDone: () => void }) {
+export function QrPlayer({
+  frames,
+  onDone,
+  onCancel,
+}: {
+  frames: string[];
+  onDone: () => void;
+  /** Closes the player without counting the pictures as handed over. */
+  onCancel?: () => void;
+}) {
   const n = tShare.use();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(() => !prefersReducedMotion());
+  // A new run of pictures (another connection) starts at its first one again (state adjusted
+  // during render, so the first paint never shows an index past the end).
+  const [shown, setShown] = useState(frames);
+  if (frames !== shown) {
+    setShown(frames);
+    setIndex(0);
+  }
 
   useEffect(() => {
     if (!playing) return;
@@ -22,7 +39,7 @@ export function QrPlayer({ frames, onDone }: { frames: string[]; onDone: () => v
     return () => clearInterval(timer);
   }, [playing, frames.length]);
 
-  const drawn = useMemo(() => qrPath(makeQr(frames[index]!)), [frames, index]);
+  const drawn = useMemo(() => qrPath(makeQr(frames[index] ?? frames[0]!)), [frames, index]);
   return (
     <div className={styles.form} data-testid="share-qr-player">
       <svg
@@ -34,7 +51,13 @@ export function QrPlayer({ frames, onDone }: { frames: string[]; onDone: () => v
       >
         <path d={drawn.path} />
       </svg>
-      <p role="status" className={styles.muted} data-testid="share-qr-frame">
+      {/* The counter changes every 450 ms while playing: announced only when paused. */}
+      <p
+        role="status"
+        aria-live={playing ? 'off' : 'polite'}
+        className={styles.muted}
+        data-testid="share-qr-frame"
+      >
         {n.qrFrame(index + 1, frames.length)}
       </p>
       {frames.length > MANY_FRAMES ? (
@@ -49,6 +72,11 @@ export function QrPlayer({ frames, onDone }: { frames: string[]; onDone: () => v
         <Button variant="primary" onClick={onDone}>
           {n.qrDone}
         </Button>
+        {onCancel ? (
+          <Button variant="ghost" onClick={onCancel}>
+            {t.actions.cancel}
+          </Button>
+        ) : null}
       </div>
     </div>
   );
@@ -111,8 +139,16 @@ export function QrScanner({
               for (const code of codes) {
                 if (!alive) return;
                 const result = collector.add(code.rawValue);
-                if (result.state === 'collecting') setProgress(result);
-                if (result.state === 'broken') setError(n.errors.invalid!);
+                if (result.state === 'collecting') {
+                  setProgress(result);
+                  setError('');
+                }
+                if (result.state === 'broken') {
+                  // All pictures were seen but do not fit together: start over instead of
+                  // repeating the same verdict on every tick.
+                  collector.reset();
+                  setError(n.errors.invalid!);
+                }
                 if (result.state === 'done') {
                   alive = false;
                   release();
