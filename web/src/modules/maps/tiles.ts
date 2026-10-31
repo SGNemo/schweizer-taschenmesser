@@ -5,6 +5,7 @@
  */
 import { NetBlockedError } from '@/core/net/netlog';
 import { getPlatform } from '@/core/platform';
+import { identify } from './agent';
 
 export const MAX_TILES = 300;
 const MAX_BYTES = 600_000;
@@ -12,6 +13,8 @@ const MAX_BYTES = 600_000;
 export interface TileResult {
   src?: string;
   error?: 'blocked' | 'failed';
+  /** HTTP status of a refused tile, for the message. */
+  status?: number;
 }
 
 const cache = new Map<string, string>();
@@ -46,8 +49,8 @@ export function loadTile(
   const promise = (async (): Promise<TileResult> => {
     try {
       if (typeof URL.createObjectURL !== 'function') return { error: 'failed' };
-      const res = await f(url, { signal: AbortSignal.timeout(10_000) });
-      if (!res.ok) return { error: 'failed' };
+      const res = await f(url, { signal: AbortSignal.timeout(10_000), ...identify() });
+      if (!res.ok) return { error: 'failed', status: res.status };
       const blob = await res.blob();
       if (!blob.type.startsWith('image/') || blob.size > MAX_BYTES) return { error: 'failed' };
       const src = URL.createObjectURL(blob);

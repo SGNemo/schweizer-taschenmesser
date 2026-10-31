@@ -43,7 +43,10 @@ describe('loadTile', () => {
     }) as unknown as typeof fetch;
     expect(await loadTile('https://t.test/3/3/3.png', blocked)).toEqual({ error: 'blocked' });
     const gone = vi.fn(async () => new Response('', { status: 404 })) as unknown as typeof fetch;
-    expect(await loadTile('https://t.test/4/4/4.png', gone)).toEqual({ error: 'failed' });
+    expect(await loadTile('https://t.test/4/4/4.png', gone)).toEqual({
+      error: 'failed',
+      status: 404,
+    });
     const html = vi.fn(
       async () => new Response('<html>', { status: 200, headers: { 'content-type': 'text/html' } }),
     ) as unknown as typeof fetch;

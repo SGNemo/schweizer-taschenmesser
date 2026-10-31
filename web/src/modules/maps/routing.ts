@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { NetBlockedError } from '@/core/net/netlog';
 import { getPlatform } from '@/core/platform';
+import { identify } from './agent';
 import { MapsError } from './geocode';
 import { DEFAULT_ROUTING_URL, roundCoord } from './logic';
 import type { Endpoint, RouteMode } from './schema';
@@ -120,6 +121,7 @@ export async function fetchPlan(
   try {
     const res = await (opts.fetch ?? platformFetch)(url, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
+      ...identify(),
     });
     // OSRM answers "no route" with a 400 and a JSON body: read it before judging the status.
     body = await res.json().catch(() => undefined);

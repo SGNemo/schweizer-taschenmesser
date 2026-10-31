@@ -5,13 +5,18 @@
   margin-top: var(--space-3);
 }
 .search {
-  display: flex;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
   gap: var(--space-3);
 }
 .searchField {
-  flex: 1;
   min-width: 0;
+}
+@media (max-width: 30rem) {
+  .search {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .hits {
   margin: 0;

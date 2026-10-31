@@ -51,7 +51,7 @@ function Tile({
   left: number;
   top: number;
   size: number;
-  onError: (why: 'blocked' | 'failed') => void;
+  onError: (why: 'blocked' | 'failed', status?: number) => void;
 }) {
   const [src, setSrc] = useState<string>();
   useEffect(() => {
@@ -59,7 +59,7 @@ function Tile({
     void loadTile(url).then((r) => {
       if (!alive) return;
       if (r.src) setSrc(r.src);
-      else onError(r.error ?? 'failed');
+      else onError(r.error ?? 'failed', r.status);
     });
     return () => {
       alive = false;
@@ -109,7 +109,7 @@ export function TileMap({
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 640, h: 420 });
-  const [problem, setProblem] = useState<'blocked' | 'failed'>();
+  const [problem, setProblem] = useState<{ why: 'blocked' | 'failed'; status?: number }>();
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef({ moved: 0, startX: 0, startY: 0, pinch: 0 });
   const latest = useRef({ view, onView });
@@ -152,7 +152,8 @@ export function TileMap({
   }, []);
 
   const tiles = visibleTiles(view, size.w, size.h);
-  const onTileError = (why: 'blocked' | 'failed') => setProblem((p) => (p === 'blocked' ? p : why));
+  const onTileError = (why: 'blocked' | 'failed', status?: number) =>
+    setProblem((p) => (p?.why === 'blocked' ? p : { why, status }));
 
   function down(e: PointerEvent) {
     box.current?.setPointerCapture(e.pointerId);
@@ -330,7 +331,11 @@ export function TileMap({
         })}
         {problem ? (
           <p className={styles.problem} role="status">
-            {problem === 'blocked' ? labels.blocked : labels.failed}
+            {problem.why === 'blocked'
+              ? labels.blocked
+              : problem.status
+                ? `${labels.failed} (HTTP ${problem.status})`
+                : labels.failed}
           </p>
         ) : null}
       </div>
