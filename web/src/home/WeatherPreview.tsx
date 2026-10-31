@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { dateTimeFormat, formatNumber } from '@/core/i18n/format';
 import { settingsPath } from '@/core/settings/registry/paths';
@@ -22,7 +23,7 @@ import {
 } from '@/core/weather/air';
 import type { WeatherView } from '@/core/weather/useWeather';
 import { tWeather } from '@/strings.weather';
-import { Dialog, GroupedList, Icon, type IconName } from '@/ui';
+import { Button, Dialog, GroupedList, Icon, type IconName } from '@/ui';
 import { WeatherChart } from './WeatherChart';
 import { RatingChip } from './RatingChip';
 import { WeatherAir } from './WeatherAir';
@@ -78,6 +79,8 @@ export function WeatherPreview({
   weather: WeatherView;
 }) {
   const tx = tWeather.use();
+  // Calm by default: every third hour; the switch brings back all 24 (kept only while the window is open).
+  const [allHours, setAllHours] = useState(false);
   const { forecast, place, stale, at } = weather;
   const nowIso = placeNowIso(forecast, at, now());
   const today = nowIso.slice(0, 10);
@@ -213,9 +216,19 @@ export function WeatherPreview({
                           {best ? tx.bestTime(best.from, best.to) : tx.noBestTime}
                         </p>
                         <WeatherChart hours={hours} />
-                        <h3 className={styles.sub}>{tx.hourly}</h3>
+                        <div className={styles.subRow}>
+                          <h3 className={styles.sub}>{tx.hourly}</h3>
+                          <Button
+                            variant="ghost"
+                            aria-pressed={allHours}
+                            onClick={() => setAllHours((v) => !v)}
+                            data-testid="weather-hours-toggle"
+                          >
+                            {allHours ? tx.hourlyFew : tx.hourlyAll}
+                          </Button>
+                        </div>
                         <ul className={styles.rows} data-testid="weather-hours">
-                          {hours.map((h) => (
+                          {(allHours ? hours : hours.filter((_, i) => i % 3 === 0)).map((h) => (
                             <li key={h.time} className={styles.row} data-rating={rateHour(h)}>
                               <Icon name={weatherIcon(h.group, h.night)} size={20} />
                               <div className={styles.rowBody}>

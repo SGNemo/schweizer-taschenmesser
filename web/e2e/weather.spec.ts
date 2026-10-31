@@ -194,6 +194,8 @@ test.describe('Weather line', () => {
     const preview = page.getByTestId('weather-preview');
     await expect(preview).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
+    await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(8);
+    await preview.getByTestId('weather-hours-toggle').click();
     await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(24);
     await expect(preview.getByTestId('weather-days').locator('li')).toHaveCount(7);
     await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('10:00');
