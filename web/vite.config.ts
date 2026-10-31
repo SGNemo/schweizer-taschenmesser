@@ -127,6 +127,14 @@ export default defineConfig({
   build: {
     manifest: bundleReport,
     rollupOptions: {
+      // The shared vault package and tldts have no import-time side effects. Saying so lets the bundler
+      // drop unused re-exports of the `@nemo/vault-core` barrel: `core/crypto/random.ts` needs only
+      // `randomInt`, and without this the whole public-suffix list (tldts, ~110 KB gzip) sat on the
+      // critical path of every start although only the vault's origin matching uses it.
+      treeshake: {
+        moduleSideEffects: (id: string) =>
+          !/[\\/]packages[\\/]vault-core[\\/]src[\\/]|node_modules[\\/]tldts/.test(id),
+      },
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         capture: fileURLToPath(new URL('./capture.html', import.meta.url)),
