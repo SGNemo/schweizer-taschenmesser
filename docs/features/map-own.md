@@ -98,9 +98,11 @@ A self-hosted Overpass (≈ 100 GB disk for the planet, ≈ 30 GB for Germany; d
 - **No live check in the sandbox:** parser and query shapes are written from the Overpass docs with fixtures, like the Transitous package; the first device run is a hand test.
 - **Licence step** when prebuilt files are distributed (§1).
 
-## Open questions (≤ 4, each with a recommendation)
+## Decided by the maintainer (2026-10-31)
 
-1. **Renderer:** own Canvas (recommended: no dependency, the same on all platforms, tokens and dark mode) vs MapLibre + PMTiles (two dependencies, prettier labels). The data stays MVT either way.
-2. **Scaling path:** plan package 4 with own-hosted PMTiles (recommended: Cloudflare R2 or any static host, built by Planetiler on the maintainer's machine) vs Overpass only. Decides nothing before package 3, but fixes MVT as the tile format now.
-3. **Source default:** `https://overpass-api.de/api/interpreter` as the default with a URL setting (recommended; our User-Agent rule already applies) vs a mirror as the default.
-4. **Online fallback:** outside built regions keep the OSM raster tiles (recommended: default on, switch "Nur eigene Karte, offline") vs plain background only.
+1. **Renderer:** own Canvas renderer on `logic.ts`; tiles stored as MVT so MapLibre could read the same data if ever needed.
+2. **Scaling path:** own prebuilt PMTiles region files on an own static host (package 4 is planned); MVT is the tile format from package 1 on.
+3. **Source default:** `https://overpass-api.de/api/interpreter`, https-only URL setting, User-Agent rule as today.
+4. **Online fallback:** OSM raster tiles outside built regions (as today), module switch "Nur eigene Karte" for offline-only.
+
+Packages 1–3 are released; 4 and 5 follow after 3.

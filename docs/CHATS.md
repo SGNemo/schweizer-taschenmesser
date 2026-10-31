@@ -7,7 +7,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
-| Eigene Karte (Phase 0) | Machbarkeitsbericht [features/map-own.md](features/map-own.md) lesen, die 4 offenen Fragen beantworten (je mit Empfehlung), Pakete 1–5 freigeben oder stoppen |
+| Eigene Karte (Phase 0, #339) | Bericht [features/map-own.md](features/map-own.md) mergen; Fragen sind beantwortet, Pakete 1–3 freigegeben |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
@@ -17,7 +17,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Eigene Karte aus OSM-Daten (Phase 0, Bericht) | `claude/kind-cannon-6jvo2t` | `docs/features/map-own.md`, `docs/decisions/maps.md`; packages later: `modules/maps/*`, `core/db` (`db:bump`), `core/legal/notices.ts`, `core/net/netlog.ts`, strings `maps` | report done, waits for the maintainer's yes | docs | 2026-10-31 |
+| Eigene Karte aus OSM-Daten (Phase 0, Bericht) | `claude/kind-cannon-6jvo2t` | `docs/features/map-own.md`, `docs/decisions/maps.md`; packages later: `modules/maps/*`, `core/db` (`db:bump`), `core/legal/notices.ts`, `core/net/netlog.ts`, strings `maps` | report done, questions answered, packages 1–3 released; package 1 next on `feat/map-own-tiles` | docs | 2026-10-31 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

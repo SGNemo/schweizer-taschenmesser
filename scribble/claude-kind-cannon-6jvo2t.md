@@ -6,7 +6,7 @@ Decided without asking (as proposals in the report, not implemented): Overpass p
 
 for the next chat:
 
-- Start only after the maintainer's yes (CHATS.md "Wartet auf Sven"). Package 1 = `feat/map-own-tiles` (store + MVT + renderer with a fixture region, no Overpass yet); packages are listed at the end of the report.
+- The maintainer answered all four questions with the recommended options on 2026-10-31 (see the report's last section) and released packages 1–3. Package 1 = `feat/map-own-tiles` (store + MVT + renderer with a fixture region, no Overpass yet); packages are listed at the end of the report.
 - Hotspots you will touch from package 1 on: `modules/maps/*` (`tiles.ts`, `TileMap.tsx`, `settings.ts`, `manifest.ts`), `core/db` via `npm run db:bump` (+ `schema-history.json`), from package 2: `core/legal/notices.ts` (new id `maps-build`), `strings.legal.ts` (data flow wording), `core/net/netlog.ts` (host `overpass-api.de`), `strings.ts` block `maps` + 4 locales, `docs/legal/DATA-FLOWS.md` row `maps`.
 - `local: true` collections are supported by the framework but nobody uses them yet (`core/db/repo.ts`, `syncedTableNames`, `dataapi/scope.ts`): expect to be the first; `createRepo(..., { local: true })` skips the outbox and offers `purge`.
 - The Overpass answer shape and the fair-use numbers come from the docs, not from a live call: the first device run is a hand test, as with Transitous (`scribble/feat-maps-transit.md`).
