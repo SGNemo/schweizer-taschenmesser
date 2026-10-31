@@ -13,7 +13,7 @@ Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-S
 Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
-Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos und Budgets bleiben Euro.
+Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos, Budgets und Sparziele haben dasselbe optionale `currency` (`feat/qa-currency-subs-budgets`), Summen je Währung.
 Website in fünf Sprachen (`feat/site-languages`): /es, /fr, /pt-br mit eigenen Texten; Screenshots bleiben deutsch, bis die Testdaten übersetzt sind.
 
 Zock-Modus (`feat/gaming-quiet-reminders`): im Vollbild-Spiel kommen Erinnerungen ohne Windows-Ton mit eigenem, leichtem App-Ton; gemergt (#180); Handtests Z1–Z5, [features/game-mode.md](features/game-mode.md).
@@ -71,7 +71,7 @@ Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressu
 - Browser-Erweiterung: nur Brave/Chromium (MV3); Firefox, Safari, Store-Veröffentlichung (Chrome Web Store/Edge Add-ons, eigene Erweiterungs-ID → Allowlist), Release-Zip in `release.yml` (Vorschlag in [howto/browser-extension.md](howto/browser-extension.md)) offen; mehrstufige Logins und Felder in geschlossenen Shadow-Roots werden nicht erkannt.
 - Android: Autofill-Dienst (Folge-PR geplant, Notiz in [ROADMAP.md](ROADMAP.md)); bis dahin Kopieren mit sensibler Zwischenablage, per Erweiterung gespeicherte Einträge kommen per Sync aufs Handy.
 - Google-Login auf Android, zweiseitiger Kalender-Sync, FinTS/PSD2, Mail-Body-Parsing.
-- Spotify am Handy ([spotify.md](features/spotify.md)), natives Android-Share-Target für die APK.
+- Spotify in der Android-App ([spotify.md](features/spotify.md)), natives Android-Share-Target für die APK.
 - Windows-Binaries ohne Authenticode-Zertifikat (SmartScreen-Warnung); Pre-Update-Backups liegen im `%APPDATA%`-Ordner, auch im portablen Modus.
 - Providerdaten (Modellnamen, Preise, Limits, CORS aus der PWA), Bankdatei-Spaltennamen und Launcher-Adressen sind unverifiziert (siehe [MANUAL-TESTS.md](MANUAL-TESTS.md)).
 - Geräteverhalten der nativen Shells (Windows Hello, Android-Keystore/Biometrie, Update-Austausch, Push) nur von Hand prüfbar.

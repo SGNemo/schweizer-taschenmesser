@@ -23,6 +23,11 @@ export const tSpotify = defineBundle(
     next: 'Nächster',
     controlsLabel: 'Wiedergabe steuern',
     premiumHint: 'Steuern braucht Spotify Premium.',
+    browserHint:
+      'Anmelden geht in der Windows-App und im Browser über eine https-Adresse (die installierte PWA). Hier nicht.',
+    clientIntroWeb: (uri: string) =>
+      `Zum Anmelden brauchst du eine eigene „Client ID“ aus dem Spotify Developer Dashboard. Trage dort als Redirect-URI genau ${uri} ein. Die Schritte stehen in docs/user/spotify.de.md.`,
+    callbackWorking: 'Die Anmeldung wird abgeschlossen …',
     playlistsFeature: 'Playlists',
     playlistsHint: 'Deine Playlists zur Auswahl für die Fokus-Runde lesen.',
     musicTitle: 'Musik in der Fokus-Runde',
@@ -108,6 +113,11 @@ export const tSpotify = defineBundle(
       next: 'Next',
       controlsLabel: 'Playback controls',
       premiumHint: 'Controlling needs Spotify Premium.',
+      browserHint:
+        'Signing in works in the Windows app and in the browser on an https address (the installed PWA). Not here.',
+      clientIntroWeb: (uri: string) =>
+        `To sign in you need your own “Client ID” from the Spotify Developer Dashboard. Add exactly ${uri} there as the redirect URI. The steps are in docs/user/spotify.md.`,
+      callbackWorking: 'Finishing the sign-in …',
       playlistsFeature: 'Playlists',
       playlistsHint: 'Read your playlists so you can choose one for the focus round.',
       musicTitle: 'Music in the focus round',
@@ -190,6 +200,11 @@ export const tSpotify = defineBundle(
       next: 'Siguiente',
       controlsLabel: 'Controlar la reproducción',
       premiumHint: 'Controlar requiere Spotify Premium.',
+      browserHint:
+        'Iniciar sesión funciona en la app de Windows y en el navegador con una dirección https (la PWA instalada). Aquí no.',
+      clientIntroWeb: (uri: string) =>
+        `Para iniciar sesión necesitas tu propio «Client ID» del Spotify Developer Dashboard. Añade allí exactamente ${uri} como URI de redirección. Los pasos están en docs/user/spotify.md.`,
+      callbackWorking: 'Terminando el inicio de sesión …',
       playlistsFeature: 'Listas de reproducción',
       playlistsHint: 'Leer tus listas para poder elegir una para la ronda de concentración.',
       musicTitle: 'Música en la ronda de concentración',
@@ -273,6 +288,11 @@ export const tSpotify = defineBundle(
       next: 'Suivant',
       controlsLabel: 'Commandes de lecture',
       premiumHint: 'La commande nécessite Spotify Premium.',
+      browserHint:
+        'La connexion fonctionne dans l’appli Windows et dans le navigateur avec une adresse https (la PWA installée). Pas ici.',
+      clientIntroWeb: (uri: string) =>
+        `Pour vous connecter, il faut votre propre « Client ID » du Spotify Developer Dashboard. Ajoutez-y exactement ${uri} comme URI de redirection. Les étapes sont dans docs/user/spotify.md.`,
+      callbackWorking: 'Finalisation de la connexion …',
       playlistsFeature: 'Playlists',
       playlistsHint: 'Lire vos playlists pour en choisir une pour la session de concentration.',
       musicTitle: 'Musique pendant la session de concentration',
@@ -356,6 +376,11 @@ export const tSpotify = defineBundle(
       next: 'Próxima',
       controlsLabel: 'Controles de reprodução',
       premiumHint: 'Controlar exige Spotify Premium.',
+      browserHint:
+        'Entrar funciona no app do Windows e no navegador com um endereço https (o PWA instalado). Aqui não.',
+      clientIntroWeb: (uri: string) =>
+        `Para entrar você precisa do seu próprio «Client ID» do Spotify Developer Dashboard. Adicione lá exatamente ${uri} como URI de redirecionamento. Os passos estão em docs/user/spotify.md.`,
+      callbackWorking: 'Concluindo a entrada …',
       playlistsFeature: 'Playlists',
       playlistsHint: 'Ler suas playlists para você escolher uma para a rodada de foco.',
       musicTitle: 'Música na rodada de foco',

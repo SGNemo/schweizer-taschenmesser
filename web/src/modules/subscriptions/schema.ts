@@ -14,6 +14,12 @@ export const subscriptionSchema = z.object({
   name: z.string().min(1),
   /** Price per charge in cents. */
   amountMinor: z.number().int().min(1),
+  /** ISO 4217 code of the price; none means euro (since version 3). */
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .optional()
+    .meta({ description: 'ISO 4217, z. B. EUR, USD, MXN; ohne Angabe EUR' }),
   /** How often it is charged. The rule is anchored at `startDate`. */
   recurrence: recurrenceSchema,
   /** A known charge date; the rule repeats from here. */

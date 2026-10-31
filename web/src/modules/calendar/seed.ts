@@ -1,6 +1,210 @@
 import { addDaysStr, isoWeekday } from '@/core/time/dates';
 import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/types';
 
+/** German source text → [en, es, fr, pt-BR]; a text without an entry stays German (places do). */
+const TR: Record<string, readonly [string, string, string, string]> = {
+  Teammeeting: ['Team meeting', 'Reunión de equipo', 'Réunion d’équipe', 'Reunião de equipe'],
+  'Zahnarzt Dr. Beispiel': [
+    'Dentist Dr. Beispiel',
+    'Dentista Dr. Beispiel',
+    'Dentiste Dr Beispiel',
+    'Dentista Dr. Beispiel',
+  ],
+  'Sport: Schwimmen': [
+    'Sport: swimming',
+    'Deporte: natación',
+    'Sport : natation',
+    'Esporte: natação',
+  ],
+  'Elternabend Grundschule': [
+    'Parents’ evening at primary school',
+    'Reunión de padres del colegio',
+    'Réunion de parents à l’école primaire',
+    'Reunião de pais da escola',
+  ],
+  'Geburtstagsfeier Oma': [
+    'Grandma’s birthday party',
+    'Fiesta de cumpleaños de la abuela',
+    'Fête d’anniversaire de Mamie',
+    'Festa de aniversário da vovó',
+  ],
+  'Kuchen mitbringen': ['Bring a cake', 'Llevar una tarta', 'Apporter un gâteau', 'Levar um bolo'],
+  'Feiertag-Brückentag': ['Bridge day', 'Puente festivo', 'Pont', 'Dia de ponte'],
+  'Wochenendausflug Tegernsee': [
+    'Weekend trip to Tegernsee',
+    'Escapada de fin de semana a Tegernsee',
+    'Week-end à Tegernsee',
+    'Passeio de fim de semana em Tegernsee',
+  ],
+  'Ferienwohnung ist gebucht': [
+    'Holiday flat is booked',
+    'El apartamento vacacional está reservado',
+    'Le meublé de vacances est réservé',
+    'O apartamento de temporada está reservado',
+  ],
+  'Müllabfuhr: Biotonne': [
+    'Bin collection: organic waste',
+    'Recogida de basura: contenedor orgánico',
+    'Ramassage : bac à déchets organiques',
+    'Coleta de lixo: orgânico',
+  ],
+  'Handwerkertermin Heizung': [
+    'Heating engineer appointment',
+    'Cita con el técnico de la calefacción',
+    'Rendez-vous chauffagiste',
+    'Visita do técnico do aquecimento',
+  ],
+  Kinoabend: ['Cinema night', 'Noche de cine', 'Soirée cinéma', 'Noite de cinema'],
+  'Miete überweisen': ['Pay the rent', 'Pagar el alquiler', 'Payer le loyer', 'Pagar o aluguel'],
+  Lauftreff: ['Running group', 'Grupo de running', 'Groupe de course', 'Grupo de corrida'],
+  Arzttermin: ['Doctor’s appointment', 'Cita médica', 'Rendez-vous médical', 'Consulta médica'],
+  Friseur: ['Hairdresser', 'Peluquería', 'Coiffeur', 'Cabeleireiro'],
+  'Videocall mit Team': [
+    'Video call with the team',
+    'Videollamada con el equipo',
+    'Appel vidéo avec l’équipe',
+    'Chamada de vídeo com a equipe',
+  ],
+  'Mittagessen mit Anna': [
+    'Lunch with Anna',
+    'Almuerzo con Anna',
+    'Déjeuner avec Anna',
+    'Almoço com a Anna',
+  ],
+  'Yoga-Kurs': ['Yoga class', 'Clase de yoga', 'Cours de yoga', 'Aula de ioga'],
+  Autowerkstatt: ['Car garage', 'Taller mecánico', 'Garage auto', 'Oficina mecânica'],
+  Steuerberatung: ['Tax adviser', 'Asesoría fiscal', 'Conseil fiscal', 'Consultoria fiscal'],
+  'Chor-Probe': [
+    'Choir rehearsal',
+    'Ensayo del coro',
+    'Répétition de la chorale',
+    'Ensaio do coral',
+  ],
+  Wochenmarkt: ['Weekly market', 'Mercadillo semanal', 'Marché hebdomadaire', 'Feira semanal'],
+  Zahnreinigung: ['Dental cleaning', 'Limpieza dental', 'Détartrage', 'Limpeza dental'],
+  Spieleabend: ['Games night', 'Noche de juegos', 'Soirée jeux', 'Noite de jogos'],
+  Bibliothek: ['Library', 'Biblioteca', 'Bibliothèque', 'Biblioteca'],
+  'Geburtstag Kollege': [
+    'Colleague’s birthday',
+    'Cumpleaños de un compañero',
+    'Anniversaire d’un collègue',
+    'Aniversário de um colega',
+  ],
+  Fahrradcheck: ['Bike check', 'Revisión de la bici', 'Révision du vélo', 'Revisão da bicicleta'],
+  Nachbarschaftstreff: [
+    'Neighbourhood meet-up',
+    'Encuentro vecinal',
+    'Rencontre de voisins',
+    'Encontro de vizinhos',
+  ],
+  Konzert: ['Concert', 'Concierto', 'Concert', 'Show'],
+  Wandern: ['Hiking', 'Senderismo', 'Randonnée', 'Trilha'],
+  Brunch: ['Brunch', 'Brunch', 'Brunch', 'Brunch'],
+  'Medikament nehmen': [
+    'Take medication',
+    'Tomar la medicación',
+    'Prendre le médicament',
+    'Tomar o remédio',
+  ],
+  'Paket abholen': [
+    'Collect parcel',
+    'Recoger el paquete',
+    'Récupérer le colis',
+    'Buscar a encomenda',
+  ],
+  'Abholschein liegt im Flur': [
+    'Collection slip is in the hallway',
+    'El aviso de recogida está en el pasillo',
+    'L’avis de passage est dans le couloir',
+    'O aviso de retirada está no corredor',
+  ],
+  'Anna zurückrufen': [
+    'Call Anna back',
+    'Devolver la llamada a Anna',
+    'Rappeler Anna',
+    'Retornar a ligação da Anna',
+  ],
+  'Pflanzen gießen': [
+    'Water the plants',
+    'Regar las plantas',
+    'Arroser les plantes',
+    'Regar as plantas',
+  ],
+  'Zählerstand ablesen': [
+    'Read the meter',
+    'Leer el contador',
+    'Relever le compteur',
+    'Ler o medidor',
+  ],
+  'Rechnung Stadtwerke prüfen': [
+    'Check the utilities bill',
+    'Revisar la factura de suministros',
+    'Vérifier la facture des services municipaux',
+    'Conferir a conta de serviços',
+  ],
+  'Reifenwechsel buchen': [
+    'Book tyre change',
+    'Reservar el cambio de neumáticos',
+    'Réserver le changement de pneus',
+    'Agendar a troca de pneus',
+  ],
+  'Werkstatt Rotbuche anrufen': [
+    'Call Rotbuche garage',
+    'Llamar al taller Rotbuche',
+    'Appeler le garage Rotbuche',
+    'Ligar para a oficina Rotbuche',
+  ],
+  'Altes Abo kündigen': [
+    'Cancel old subscription',
+    'Cancelar la suscripción antigua',
+    'Résilier l’ancien abonnement',
+    'Cancelar a assinatura antiga',
+  ],
+  'Wäsche aufhängen': [
+    'Hang up the laundry',
+    'Tender la ropa',
+    'Étendre le linge',
+    'Estender a roupa',
+  ],
+  'Müll rausbringen': [
+    'Take out the rubbish',
+    'Sacar la basura',
+    'Sortir les poubelles',
+    'Levar o lixo para fora',
+  ],
+  'Geschenk besorgen': [
+    'Get a gift',
+    'Comprar un regalo',
+    'Trouver un cadeau',
+    'Comprar um presente',
+  ],
+  'Termin bestätigen': [
+    'Confirm appointment',
+    'Confirmar la cita',
+    'Confirmer le rendez-vous',
+    'Confirmar o compromisso',
+  ],
+  'Mama anrufen': ['Call Mum', 'Llamar a mamá', 'Appeler maman', 'Ligar para a mãe'],
+  'Bücher zurückgeben': ['Return books', 'Devolver libros', 'Rendre les livres', 'Devolver livros'],
+  'Auto tanken': ['Fill up the car', 'Echar gasolina', 'Faire le plein', 'Abastecer o carro'],
+  'Backup prüfen': [
+    'Check the backup',
+    'Comprobar la copia de seguridad',
+    'Vérifier la sauvegarde',
+    'Conferir o backup',
+  ],
+  'Blumen kaufen': ['Buy flowers', 'Comprar flores', 'Acheter des fleurs', 'Comprar flores'],
+  'Putzplan checken': [
+    'Check the cleaning rota',
+    'Revisar el plan de limpieza',
+    'Vérifier le planning ménage',
+    'Conferir a escala de limpeza',
+  ],
+};
+const LANG_INDEX = { en: 0, es: 1, fr: 2, 'pt-BR': 3 } as const;
+const tr = (ctx: SeedContext, de: string): string =>
+  ctx.lang === 'de' ? de : (TR[de]?.[LANG_INDEX[ctx.lang]] ?? de);
+
 interface Base {
   title: string;
   day: number;
@@ -116,7 +320,7 @@ const TIMES = ['08:00', '09:30', '11:00', '13:00', '16:00', '17:30', '19:00'];
 
 function toRow(ctx: SeedContext, key: number, b: Base): SeedRow {
   const data: Record<string, unknown> = {
-    title: b.title,
+    title: tr(ctx, b.title),
     allDay: !b.time,
     startDate: ctx.day(b.day),
   };
@@ -124,7 +328,7 @@ function toRow(ctx: SeedContext, key: number, b: Base): SeedRow {
   if (b.end) data.endTime = b.end;
   if (b.endDay !== undefined && b.endDay > b.day) data.endDate = ctx.day(b.endDay);
   if (b.location) data.location = b.location;
-  if (b.note) data.note = b.note;
+  if (b.note) data.note = tr(ctx, b.note);
   if (b.recurrence) data.recurrence = b.recurrence;
   return { id: ctx.id('calendar', 'event', key), data };
 }
@@ -200,14 +404,14 @@ function reminderRows(ctx: SeedContext) {
   }
   return list.map((b, i) => {
     const data: Record<string, unknown> = {
-      title: b.title,
+      title: tr(ctx, b.title),
       kind: 'reminder',
       allDay: false,
       startDate: ctx.day(b.day),
       startTime: b.time,
       notify: { minutesBefore: 0, enabled: b.active ?? true },
     };
-    if (b.note) data.note = b.note;
+    if (b.note) data.note = tr(ctx, b.note);
     if (b.recurrence) data.recurrence = b.recurrence;
     return { id: ctx.id('calendar', 'reminder', i), data };
   });

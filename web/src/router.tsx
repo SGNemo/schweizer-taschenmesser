@@ -14,6 +14,7 @@ import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
 import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
+import { OAuthCallback } from '@/pages/OAuthCallback';
 import { CategoryPage, SettingsIndex, SettingsLayout } from '@/pages/settings/SettingsLayout';
 import { ShareTarget } from '@/pages/ShareTarget';
 import { ToolLibrary } from '@/pages/ToolLibrary';
@@ -124,6 +125,14 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           ),
         },
         { path: 'tools/:id', element: <ToolRoute /> },
+        {
+          path: 'oauth/callback',
+          element: (
+            <PageContainer key="OAuthCallback" variant="narrow">
+              <OAuthCallback />
+            </PageContainer>
+          ),
+        },
         {
           path: 'share',
           element: (

@@ -13,7 +13,29 @@ import { loadSyncConfig } from '@/core/sync/service';
 import { now } from '@/core/time/now';
 import { trashRetentionMs } from './settings';
 
-export type TrashKind = 'document' | 'subscription' | 'event' | 'reminder';
+export type TrashKind =
+  | 'document'
+  | 'subscription'
+  | 'event'
+  | 'reminder'
+  | 'todo'
+  | 'note'
+  | 'bookmark'
+  | 'list'
+  | 'pantry'
+  | 'person'
+  | 'gift'
+  | 'invoice'
+  | 'budget'
+  | 'goal';
+
+const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+/** First non-empty line of a text, for records without a real title (a note with only a body). */
+const firstLine = (v: unknown): string =>
+  str(v)
+    .split('\n')
+    .find((l) => l.trim() !== '')
+    ?.trim() ?? '';
 
 interface TrashCollection {
   table: string;
@@ -23,7 +45,10 @@ interface TrashCollection {
   onPurge?: (id: string) => Promise<void>;
 }
 
-/** The collections that show up in "Zuletzt gelöscht". Passwords never do. */
+/**
+ * The collections that show up in "Zuletzt gelöscht": what people create by hand. Passwords
+ * (`accounts`) never do; neither do bulk or derived data (bank transactions, list items, caches).
+ */
 export const TRASH_COLLECTIONS: readonly TrashCollection[] = [
   {
     table: 'vault_document',
@@ -36,6 +61,20 @@ export const TRASH_COLLECTIONS: readonly TrashCollection[] = [
     title: (r) => String(r.name ?? ''),
     kind: () => 'subscription',
   },
+  { table: 'todos_task', title: (r) => str(r.title), kind: () => 'todo' },
+  {
+    table: 'notes_note',
+    title: (r) => str(r.title).trim() || firstLine(r.body),
+    kind: () => 'note',
+  },
+  { table: 'bookmarks_item', title: (r) => str(r.title), kind: () => 'bookmark' },
+  { table: 'lists_list', title: (r) => str(r.name), kind: () => 'list' },
+  { table: 'pantry_item', title: (r) => str(r.name), kind: () => 'pantry' },
+  { table: 'people_person', title: (r) => str(r.name), kind: () => 'person' },
+  { table: 'people_gift', title: (r) => str(r.title), kind: () => 'gift' },
+  { table: 'invoices_invoice', title: (r) => str(r.payee), kind: () => 'invoice' },
+  { table: 'budgets_budget', title: (r) => str(r.name), kind: () => 'budget' },
+  { table: 'budgets_goal', title: (r) => str(r.name), kind: () => 'goal' },
   {
     table: 'calendar_event',
     title: (r) => String(r.title ?? ''),

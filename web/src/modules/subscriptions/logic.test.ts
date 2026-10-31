@@ -10,7 +10,9 @@ import {
   recentIncrease,
   recordPriceChange,
   sortSubscriptions,
+  pickTotals,
   totals,
+  totalsByCurrency,
 } from './logic';
 import { subscriptionSchema } from './schema';
 
@@ -148,5 +150,21 @@ describe('cancelled for a date (recurrence end)', () => {
     expect(totals([cancelled, plain], '2026-10-16').yearly).toBe(annualCost(plain));
     // without `today` the old behaviour stays (callers that do not pass it)
     expect(totals([cancelled, plain]).yearly).toBe(annualCost(cancelled) + annualCost(plain));
+  });
+});
+
+describe('subscription costs per currency', () => {
+  it('sums each currency on its own, the euro first, and never adds them together', () => {
+    const list = [
+      sub({ amountMinor: 1200 }), // 144.00 / year, euro by default
+      sub({ amountMinor: 30000, currency: 'MXN' }), // 3 600.00 / year
+      sub({ amountMinor: 500, currency: 'EUR' }), // 60.00 / year
+      sub({ amountMinor: 900, currency: 'USD', active: false }), // inactive: not counted
+    ];
+    const byCurrency = totalsByCurrency(list);
+    expect([...byCurrency.keys()]).toEqual(['EUR', 'MXN']);
+    expect(byCurrency.get('EUR')).toEqual({ monthly: 1700, yearly: 20400 });
+    expect(pickTotals(byCurrency, 'monthly').get('MXN')).toBe(30000);
+    expect(totals(list.filter((s) => !s.currency)).yearly).toBe(14400);
   });
 });

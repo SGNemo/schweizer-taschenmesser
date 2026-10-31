@@ -45,6 +45,12 @@ export interface OAuthEndpoints {
    * login fails with `port-busy`; the app never silently uses another port.
    */
   preferredPort?: number;
+  /**
+   * The PWA may log in too: the browser goes to the provider and comes back to
+   * `<app address>/oauth/callback` (`core/connectors/oauthRedirect.ts`). Only for providers that accept
+   * an https redirect and a PKCE login without a secret.
+   */
+  browserLogin?: boolean;
 }
 
 /** Something the user can switch on; each may need its own OAuth scopes. */

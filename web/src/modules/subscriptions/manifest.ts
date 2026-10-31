@@ -12,7 +12,7 @@ const manifest: ModuleManifest = {
     return t.subscriptions.meta.name;
   },
   icon: 'repeat',
-  version: 2,
+  version: 3,
   get description() {
     return t.subscriptions.meta.description;
   },

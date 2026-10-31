@@ -10,6 +10,9 @@ import { flushPurgeQueue, listTrash, purgeEntry, restoreEntry } from './trash';
 const docs = createRepo('vault_document', z.looseObject({}));
 const subs = createRepo('subscriptions_subscription', z.looseObject({}));
 const events = createRepo('calendar_event', z.looseObject({}));
+const tasks = createRepo('todos_task', z.looseObject({}));
+const notes = createRepo('notes_note', z.looseObject({}));
+const people = createRepo('people_person', z.looseObject({}));
 
 beforeEach(async () => {
   await Promise.all(
@@ -17,6 +20,9 @@ beforeEach(async () => {
       'vault_document',
       'subscriptions_subscription',
       'calendar_event',
+      'todos_task',
+      'notes_note',
+      'people_person',
       '_outbox',
       '_blobs',
       '_meta',
@@ -40,6 +46,28 @@ describe('recently deleted', () => {
     expect(list.find((e) => e.title === 'Tabletten')?.kind).toBe('reminder');
     expect(list.find((e) => e.title === 'Mietvertrag')?.kind).toBe('document');
     expect(list.every((e) => e.daysLeft >= 29 && e.daysLeft <= 30)).toBe(true);
+  });
+
+  it('lists ToDos, notes (title or first line of the body) and people too', async () => {
+    const t = await tasks.create({ title: 'Steuer machen' });
+    const n1 = await notes.create({ title: 'Idee', body: 'x' });
+    const n2 = await notes.create({ title: '', body: '\n  Einkaufszettel Samstag\nMilch' });
+    const p = await people.create({ name: 'Anna' });
+    for (const [repo, r] of [
+      [tasks, t],
+      [notes, n1],
+      [notes, n2],
+      [people, p],
+    ] as const) {
+      await repo.remove(r.id);
+    }
+    const list = await listTrash();
+    expect(list.map((e) => `${e.kind}:${e.title}`).sort()).toEqual([
+      'note:Einkaufszettel Samstag',
+      'note:Idee',
+      'person:Anna',
+      'todo:Steuer machen',
+    ]);
   });
 
   it('hides records older than the window', async () => {

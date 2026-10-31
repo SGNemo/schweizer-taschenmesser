@@ -139,18 +139,20 @@ describe('missed cancellation deadline (B08)', () => {
     ).toBeUndefined();
   });
 
-  it('is never reported for monthly charges (it would always be "missed")', () => {
-    expect(
-      missedDeadline(
-        {
-          recurrence: { freq: 'monthly', interval: 1 },
-          startDate: '2026-01-15',
-          active: true,
-          cancelNoticeDays: 40,
-        },
-        '2026-09-29',
-      ),
-    ).toBeUndefined();
+  it('monthly with a long notice period counts only for a week after the deadline', () => {
+    const monthly = {
+      recurrence: { freq: 'monthly' as const, interval: 1 },
+      startDate: '2026-01-15',
+      active: true,
+      cancelNoticeDays: 40,
+    };
+    // charge 2026-10-15 has its deadline on 2026-09-05; charges are the 15th of every month
+    expect(missedDeadline(monthly, '2026-09-08')).toEqual({
+      deadline: '2026-09-05',
+      charge: '2026-10-15',
+    });
+    expect(missedDeadline(monthly, '2026-09-13')).toBeUndefined(); // 8 days over: no nagging all month
+    expect(missedDeadline(monthly, '2026-09-05')).toBeUndefined(); // the deadline day itself is still reachable
   });
 
   it('counts quarterly cycles', () => {
@@ -165,5 +167,23 @@ describe('missed cancellation deadline (B08)', () => {
         '2026-09-29',
       ),
     ).toEqual({ deadline: '2026-09-15', charge: '2026-10-15' });
+  });
+});
+
+describe('subscriptions public API per currency', () => {
+  it('lists charges and totals of the asked currency only (euro by default)', async () => {
+    await subscriptionRepo.create(sub({ name: 'Euro', amountMinor: 1000 }));
+    await subscriptionRepo.create(sub({ name: 'Peso', amountMinor: 20000, currency: 'MXN' }));
+    const eur = await listSubscriptionCharges('2026-06-01', '2026-06-30');
+    expect(eur.map((c) => [c.name, c.amountMinor, c.currency])).toEqual([['Euro', 1000, 'EUR']]);
+    const mxn = await listSubscriptionCharges('2026-06-01', '2026-06-30', 'MXN');
+    expect(mxn.map((c) => [c.name, c.amountMinor, c.currency])).toEqual([['Peso', 20000, 'MXN']]);
+    expect((await subscriptionTotals('MXN')).yearly).toBe(240000);
+    expect((await subscriptionTotals()).yearly).toBe(12000);
+  });
+
+  it('accepts a currency on the schema and rejects a malformed code', () => {
+    expect(sub({ currency: 'MXN' }).currency).toBe('MXN');
+    expect(subscriptionSchema.safeParse({ ...sub(), currency: 'mxn' }).success).toBe(false);
   });
 });
