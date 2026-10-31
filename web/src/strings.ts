@@ -915,6 +915,18 @@ export const de = {
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,
     noTargets: 'Es ist kein Zielmodul eingeschaltet.',
+    multi: {
+      lineHint: 'Eine Zeile = ein Eintrag',
+      shiftEnter: 'Umschalt+Enter: neue Zeile. Eine Zeile = ein Eintrag.',
+      listLabel: (n: number) => `Vorschau: ${n} Einträge`,
+      rowTarget: (text: string) => `Ziel für „${text}“`,
+      choose: 'Bitte wählen',
+      inbox: 'Eingang',
+      financeDraft: 'Buchung (Entwurf)',
+      saveAll: (n: number) => `Alle speichern (${n})`,
+      saved: (n: number) => `${n} Dinge gespeichert`,
+      change: 'Ändern',
+    },
     tray: {
       capture: 'Erfassen',
       open: 'App öffnen',
@@ -922,7 +934,7 @@ export const de = {
       tooltip: 'Nemo',
     },
     window: {
-      hint: 'Enter speichert · Tab wechselt den Typ · Esc schließt',
+      hint: 'Enter speichert · Umschalt+Enter neue Zeile · Tab wechselt den Typ · Esc schließt',
     },
     settings: {
       title: 'Schnellerfassung',

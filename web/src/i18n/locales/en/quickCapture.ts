@@ -77,6 +77,18 @@ export const quickCapture: Strings['quickCapture'] = {
   },
   todoTimeNote: (time: string) => `Time: ${time}`,
   noTargets: 'No target module is turned on.',
+  multi: {
+    lineHint: 'One line = one entry',
+    shiftEnter: 'Shift+Enter: new line. One line = one entry.',
+    listLabel: (n: number) => `Preview: ${n} entries`,
+    rowTarget: (text: string) => `Target for “${text}”`,
+    choose: 'Please choose',
+    inbox: 'Inbox',
+    financeDraft: 'Booking (draft)',
+    saveAll: (n: number) => `Save all (${n})`,
+    saved: (n: number) => `${n} things saved`,
+    change: 'Change',
+  },
   tray: {
     capture: 'Capture',
     open: 'Open app',
@@ -84,7 +96,7 @@ export const quickCapture: Strings['quickCapture'] = {
     tooltip: 'Nemo',
   },
   window: {
-    hint: 'Enter saves · Tab changes the type · Esc closes',
+    hint: 'Enter saves · Shift+Enter new line · Tab changes the type · Esc closes',
   },
   settings: {
     title: 'Quick capture',
