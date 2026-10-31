@@ -7,18 +7,15 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
-| QA-Wording P3b (`fix/qa-formats-i18n`) | PR ansehen, mergen; danach P3c (README/Website) freigeben. Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
-| QA-Wording (P3, abgeschlossen) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
+| QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
+| Nächste Runde: sechs Chat-Prompts | starten, Reihenfolge und Links in [product/next/00-README.md](product/next/00-README.md) (Merge: T4 → T2 → T1 → T5 → T6 → T3) |
 | Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Localized test data (package 3: finance, calendar, people, vault, accounts demo) | `feat/qa-localized-seed-3` | `modules/{finance,calendar,people,vault,accounts}/seed.ts`, `core/seed/lang.test.ts` | in review | – | 2026-10-30 |
-| Wording & i18n (QA P3a: Wortliste, KI-Knöpfe, Lesbarkeit) | `fix/qa-wording-i18n` | `strings*.ts` + all `i18n/locales/*` (append/change values only), `ui/tokens.css` (xlarge rule only), `docs/i18n/GLOSSARY.md` | P3a ready (P3b formats/B13/B29, P3c README/site follow) | – | 2026-10-29 |
-| Currency on subscriptions, budgets, goals | `feat/qa-currency-subs-budgets` | `modules/{subscriptions,budgets}/*`, `finance/{public,summary,aiComputed}.ts`, `e2e/currency.spec.ts` | in review | – | 2026-10-30 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
