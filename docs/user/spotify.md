@@ -13,6 +13,12 @@ You need your own free Spotify "app" – a few minutes, once:
 
 In the **PWA** (browser or installed from the browser) the Redirect URI is different: Nemo shows it on the Spotify card – it is your Nemo address plus `/oauth/callback`, for example `https://your-nemo-address/oauth/callback`. Register exactly that one in step 2 (an additional entry is fine, you can keep the Windows one). It must be an `https://` address; `http://localhost` is not accepted by Spotify.
 
+**The player** (tap the "Now playing" card on the Overview): your library on the left (liked songs, recently played, queue, search, every playlist), the opened list in the middle with all its songs, and a bar at the bottom with what plays, the controls, volume and the device.
+- A tap on a **playlist** opens its songs – nothing plays until you tap a song or "Play". A tap on a song plays it inside its playlist.
+- **♥** saves a song to your liked songs (or removes it). **⋯** adds it to the queue, hides it in this list or opens it in Spotify.
+- **Hide:** a hidden song disappears from the list in Nemo only; at Spotify nothing changes. "Play" skips hidden songs. "Show hidden" brings them back.
+- Extra permissions are opt-in when connecting: *Playlists*, *Liked songs* (read **and** save) and *Recently played*. If you connected earlier, tick them under Connections → Spotify and connect again.
+
 Good to know:
 - Controlling needs Spotify **Premium**. Without it Nemo hides the buttons once, with one short note; the display keeps working.
 - "Port in use": another program uses port 38417. Close it and click Connect again – Nemo never picks another port, because Spotify checks the address exactly.

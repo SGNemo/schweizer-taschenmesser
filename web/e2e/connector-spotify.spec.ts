@@ -176,18 +176,26 @@ test.describe('Spotify connector', () => {
     await page.getByTestId('now-playing-open').click();
     const player = page.getByTestId('spotify-player');
     await expect(player).toContainText('Auf Küche');
-    await player.getByRole('button', { name: 'Ruhe abspielen' }).click();
+    await player.getByRole('button', { name: /Ruhe/ }).click();
+    await expect(player.getByRole('heading', { name: 'Ruhe' })).toBeVisible();
+    await player.getByRole('button', { name: 'Abspielen', exact: true }).click();
     await expect
       .poll(() =>
         mock.api.some((c) => c.startsWith('PUT /play') && c.includes('spotify:playlist:pl2DEF')),
       )
       .toBe(true);
-    await player.getByRole('button', { name: 'Lieblingssongs' }).click();
+    const back = player.getByRole('button', { name: 'Zurück zur Bibliothek' });
+    if (await back.isVisible()) await back.click();
+    await player
+      .getByRole('button', { name: /Lieblingssongs/ })
+      .first()
+      .click();
     await player.getByRole('button', { name: 'Lieblingslied abspielen' }).click();
     await expect.poll(() => mock.api.some((c) => c.includes('spotify:track:lk1AAA'))).toBe(true);
-    await player.getByRole('button', { name: 'Suchen', exact: true }).first().click();
+    if (await back.isVisible()) await back.click();
+    await player.getByRole('button', { name: /^Suchen$/ }).click();
     await player.getByLabel('Titel, Playlist oder Album suchen').fill('Feuer');
-    await player.getByRole('button', { name: 'Suchen' }).last().click();
+    await player.getByRole('button', { name: 'Suchen', exact: true }).last().click();
     await player.getByRole('button', { name: 'Gefundenes Lied abspielen' }).click();
     await expect.poll(() => mock.api.some((c) => c.includes('spotify:track:trk9ZZ'))).toBe(true);
     await page.keyboard.press('Escape');

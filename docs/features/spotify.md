@@ -18,6 +18,16 @@ Off by default, device-local (`tm-spotify-focus`: mode, playlist id, end switch 
 - `core/focus/music.ts` is the only code that steers the player in a round: `onFocusStart` (from `beginFocus`) and `onFocusEnd` (time up in `FocusWatcher`, "Fertig", "Runde beenden"; once per round). Never in between (pinned by `music.test.ts`).
 - Failure never disturbs the round: no toast, only the line "Musik: nicht erreichbar" on the focus screen (`focus-music-status`). A 403 `PREMIUM_REQUIRED` hides the row for a day (same flag as the Overview line).
 
+## The player (library | list | bar)
+`home/SpotifyPlayer.tsx` + `home/spotify/*`, opened from the "Läuft gerade" card (dialog `xl`; on a phone the library and the opened list take turns, "Zurück zur Bibliothek").
+- **Library (left):** Lieblingssongs, Zuletzt gespielt, Warteschlange, Suchen, and every playlist (up to 200). A tap opens a list, **it never plays anything by itself**.
+- **List (middle):** playlist or album with cover, owner, count and "Abspielen" / "Zufällig"; all songs (first 200) as a table: title + artist, album, ♥, length, "⋯". A tap on a song plays it **inside its playlist** (`context_uri` + `offset`), so the rest plays on. Search results, saved and recent songs play as a list.
+- **♥:** saves / removes the song in Lieblingssongs (`user-library-modify`, state from `me/tracks/contains`, applied at once and taken back on failure; 403 says "neu ankreuzen"). The same heart is in the bar for the current song.
+- **Ausblenden:** "⋯" → "In dieser Liste ausblenden" hides a song **only in Nemo** (device-local `tm-spotify-hidden`, ids per playlist, `core/connectors/hiddenTracks.ts`; Spotify is not touched, nothing is removed from the playlist). "n ausgeblendet · Ausgeblendete zeigen" brings them back; "Abspielen" / a tap on a song then plays the *visible* songs as the list (up to 100), so hidden ones are skipped. Without hidden songs the playlist itself plays.
+- **Queue:** "⋯" → "Zur Warteschlange hinzufügen" (`POST me/player/queue`), view "Warteschlange" (now + next). **Devices:** menu in the bar lists the devices, one tap moves the music (`PUT me/player` with `play: true`).
+- Features (each its own scope, all opt-in except the first two; existing logins tick and connect again): `playlists` (+ `playlist-read-collaborative`), `library` (`user-library-read` + `user-library-modify`), `history` ("Zuletzt gehört", `user-read-recently-played`). Parsers in `connectors/spotify/browse.ts` accept both the documented and the newer playlist shape (`tracks`/`items`, `track`/`item`); unknown fields mean fewer details, never an error.
+- Covers only for the open list and the bar (via `useCover`, no per-row requests). Not built: adding songs to playlists or removing them (needs the playlist-modify scopes and changes the user's playlists; a separate decision), artist pages.
+
 ## Privacy
 Title and artist are user data: never to the AI (the connector cannot import `core/ai`, `privacy.test.ts` untouched), not in diagnostics (canary in `core/diagnostics/diagnostics.test.ts`), not synced (device-local only), not in logs. Data flow `spotify` in [DATA-FLOWS](../legal/DATA-FLOWS.md) and Settings → Über Nemo → Rechtliches.
 

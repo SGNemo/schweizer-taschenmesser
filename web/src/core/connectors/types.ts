@@ -216,6 +216,36 @@ export interface MediaItem {
   name: string;
   /** Artist of a track or album. */
   subtitle?: string;
+  /** Tracks: album name, length in ms and a small cover of the service's own image host. */
+  album?: string;
+  durationMs?: number;
+  coverUrl?: string;
+}
+
+/** The content of a playlist or album: its own details and the tracks (up to 200). Shown on request, never stored. */
+export interface Tracklist {
+  name: string;
+  /** Owner of a playlist, artist of an album. */
+  subtitle?: string;
+  coverUrl?: string;
+  /** How many tracks the whole list has (can be more than `items`). */
+  total?: number;
+  items: MediaItem[];
+}
+
+/** A device Spotify can play on right now. */
+export interface PlayerDevice {
+  id: string;
+  name: string;
+  /** "Computer", "Smartphone", "Speaker" … as the service names it. */
+  type: string;
+  active: boolean;
+  volume?: number;
+}
+
+export interface PlayerQueue {
+  current?: MediaItem;
+  next: MediaItem[];
 }
 
 export interface SearchResult {
@@ -228,6 +258,10 @@ export interface SearchResult {
 export interface Playlist {
   id: string;
   name: string;
+  /** Extras of the player's own list (the focus-round picker needs only id and name). */
+  trackCount?: number;
+  coverUrl?: string;
+  owner?: string;
 }
 
 /** Optional capability of a media connector: what plays now, and a few remote controls. */
@@ -252,6 +286,25 @@ export interface NowPlayingSource {
   likedSongs?(ctx: ConnectorContext): Promise<MediaItem[]>;
   /** Starts a track (optionally with the following `queue`), playlist or album on the active device. */
   play?(ctx: ConnectorContext, item: MediaItem, queue?: MediaItem[]): Promise<void>;
+  /** The tracks of a playlist or album (up to 200), with its name and cover. */
+  tracks?(ctx: ConnectorContext, kind: 'playlist' | 'album', id: string): Promise<Tracklist>;
+  /** Starts one track inside its playlist or album, so playback goes on with the rest of it. */
+  playFrom?(
+    ctx: ConnectorContext,
+    context: { kind: 'playlist' | 'album'; id: string },
+    trackId: string,
+  ): Promise<void>;
+  /** The songs played most recently (about 30, each once). Needs its own feature/scope. */
+  recent?(ctx: ConnectorContext): Promise<MediaItem[]>;
+  queue?(ctx: ConnectorContext): Promise<PlayerQueue>;
+  addToQueue?(ctx: ConnectorContext, trackId: string): Promise<void>;
+  devices?(ctx: ConnectorContext): Promise<PlayerDevice[]>;
+  /** Moves the playback to another device and keeps it playing. */
+  transfer?(ctx: ConnectorContext, deviceId: string): Promise<void>;
+  /** For each id: is the song in the user's saved songs? (up to 50 ids) */
+  saved?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
+  /** Saves or removes songs in the user's saved songs ("Lieblingssongs"). */
+  save?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
 }
 
 export interface ConnectorDef {

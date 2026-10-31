@@ -248,7 +248,7 @@ describe('NowPlayingLine', () => {
       expect(await screen.findByTestId('spotify-player')).toHaveTextContent('Gerade läuft nichts.');
     });
 
-    it('the card opens the player; a playlist starts with one tap', async () => {
+    it('the card opens the player; a playlist opens its songs and "Abspielen" starts it', async () => {
       await connect(['show', 'control', 'playlists']);
       player = body(200, FULL);
       extra = (url) =>
@@ -259,21 +259,33 @@ describe('NowPlayingLine', () => {
                 { id: 'PL2', name: 'Sport' },
               ],
             })
-          : url.endsWith('/v1/me/player')
+          : url.includes('/v1/playlists/PL2')
             ? json({
-                device: { name: 'Küche', volume_percent: 40 },
-                shuffle_state: false,
-                repeat_state: 'off',
+                name: 'Sport',
+                owner: { display_name: 'Ich' },
+                tracks: {
+                  total: 1,
+                  items: [{ track: { id: 'S1', name: 'Lauflied', artists: [{ name: 'Band' }] } }],
+                },
               })
-            : undefined;
+            : url.endsWith('/v1/me/player')
+              ? json({
+                  device: { name: 'Küche', volume_percent: 40 },
+                  shuffle_state: false,
+                  repeat_state: 'off',
+                })
+              : undefined;
       renderLine();
       await screen.findByTestId('now-playing-line');
       fireEvent.click(screen.getByTestId('now-playing-open'));
       const dialog = await screen.findByTestId('spotify-player');
-      expect(await screen.findByRole('button', { name: 'Fokus abspielen' })).toBeTruthy();
+      expect(await screen.findByRole('button', { name: /Fokus/ })).toBeTruthy();
       await waitFor(() => expect(dialog).toHaveTextContent('Auf Küche'));
       expect(screen.getByRole('slider', { name: 'Position' })).toBeTruthy();
-      fireEvent.click(screen.getByRole('button', { name: 'Sport abspielen' }));
+      fireEvent.click(screen.getByRole('button', { name: /Sport/ }));
+      expect(await screen.findByRole('button', { name: 'Lauflied abspielen' })).toBeTruthy();
+      expect(requests).not.toContain('PUT /play'); // opening a playlist plays nothing
+      fireEvent.click(screen.getByRole('button', { name: 'Abspielen' }));
       await waitFor(() => expect(requests).toContain('PUT /play'));
     });
 
@@ -284,8 +296,10 @@ describe('NowPlayingLine', () => {
       fireEvent.click(screen.getByTestId('now-playing-open'));
       const dialog = await screen.findByTestId('spotify-player');
       expect(dialog).toHaveTextContent('„Playlists“ ankreuzen');
-      fireEvent.click(screen.getByRole('button', { name: 'Lieblingssongs' }));
-      expect(dialog).toHaveTextContent('„Lieblingssongs“ ankreuzen');
+      fireEvent.click(screen.getByRole('button', { name: /Lieblingssongs/ }));
+      expect(dialog).toHaveTextContent('„Lieblingssongs“');
+      fireEvent.click(screen.getByRole('button', { name: /Zuletzt gespielt/ }));
+      expect(dialog).toHaveTextContent('„Zuletzt gehört“ ankreuzen');
     });
 
     it('the search runs on submit only, shows tracks and starts the tapped one', async () => {
@@ -306,7 +320,7 @@ describe('NowPlayingLine', () => {
       await screen.findByTestId('now-playing-line');
       fireEvent.click(screen.getByTestId('now-playing-open'));
       await screen.findByTestId('spotify-player');
-      fireEvent.click(screen.getByRole('button', { name: 'Suchen' }));
+      fireEvent.click(screen.getByRole('button', { name: /^Suchen$/ }));
       const input = screen.getByLabelText('Titel, Playlist oder Album suchen');
       fireEvent.change(input, { target: { value: 'Fe' } });
       fireEvent.change(input, { target: { value: 'Feuer' } });

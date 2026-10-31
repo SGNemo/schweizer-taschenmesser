@@ -48,7 +48,9 @@ describe('spotify connector', () => {
   it('"Playlists" is an opt-in feature with only the read scope for private playlists', () => {
     const f = connector.features.find((x) => x.id === 'playlists')!;
     expect(f.defaultOn).toBe(false);
-    expect(loginUrl(['playlists']).searchParams.get('scope')).toBe('playlist-read-private');
+    expect(loginUrl(['playlists']).searchParams.get('scope')).toBe(
+      'playlist-read-private playlist-read-collaborative',
+    );
     expect(loginUrl(['show', 'control']).searchParams.get('scope')).not.toContain('playlist');
   });
 
