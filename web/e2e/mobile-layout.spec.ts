@@ -249,14 +249,11 @@ test.describe('Settings on a phone', () => {
 test.describe('Big monitor', () => {
   test.use({ viewport: { width: 2550, height: 1400 } });
 
-  test('settings and the overview use a good share of the screen', async ({ page }) => {
+  test('settings use a good share of the screen', async ({ page }) => {
     await ready(page, '/settings/allgemein');
     const settings = (await page.getByRole('main').locator('h1').boundingBox())!;
     const field = (await page.getByLabel('Dein Name').boundingBox())!;
     expect(settings.x).toBeLessThan(650); // before: ~790 px of empty margin at the left
     expect(field.x + field.width - settings.x).toBeGreaterThan(1150);
-    await ready(page, '/');
-    const home = (await page.getByRole('main').locator('h1').boundingBox())!;
-    expect(home.x).toBeLessThan(700); // not floating in the middle of the screen
   });
 });

@@ -5,7 +5,7 @@
 .split,
 .search,
 .quick {
-  --settings-w: clamp(44rem, 40vw, 70rem);
+  --settings-w: clamp(44rem, 50vw, 85rem);
 }
 .split {
   display: grid;

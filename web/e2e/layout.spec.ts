@@ -101,7 +101,7 @@ for (const vp of VIEWPORTS) {
 
     test('the page container honours its variant', async ({ page }) => {
       await prepare(page);
-      // todos = wide (100 rem), settings = content (70 rem: category list + 44 rem column).
+      // todos and settings = wide (100 rem; settings: category list + a column from 44 rem that grows on big screens).
       await page.goto('/todos');
       await expect(page.locator('main h1')).toBeVisible();
       const wide = await metrics(page);
@@ -109,7 +109,7 @@ for (const vp of VIEWPORTS) {
       await page.goto('/settings');
       await expect(page.locator('main h1')).toBeVisible();
       const narrow = await metrics(page);
-      expect(narrow.pageWidth).toBeLessThanOrEqual(70 * narrow.rem + 1);
+      expect(narrow.pageWidth).toBeLessThanOrEqual(100 * narrow.rem + 1);
     });
 
     test('the root size grows with the screen (16 px up to 1920 px, 20 px at 3440 px)', async ({

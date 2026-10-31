@@ -144,7 +144,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
         {
           path: 'settings',
           element: (
-            <PageContainer key="Settings" variant="content">
+            <PageContainer key="Settings" variant="wide">
               <SettingsLayout />
             </PageContainer>
           ),
