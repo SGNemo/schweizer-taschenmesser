@@ -2,8 +2,6 @@ import { getLang, onLangChange } from '@/core/i18n/lang';
 import { getPlatform, type DesktopService, type HotkeyError } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { useTimer } from '@/tools/timer/engine';
-import { isRunning } from '@/tools/timer/logic';
 import { readPrefs } from './device';
 
 /** Minutes of the tray's "Timer 25 Minuten". */
@@ -15,8 +13,15 @@ function openRoute(route: string): void {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
-/** "Timer 25 Minuten": starts it unless a timer already runs, and shows the timer tool. */
-export function startTrayTimer(): void {
+/**
+ * "Timer 25 Minuten": starts it unless a timer already runs, and shows the timer tool. Loaded on
+ * click, so the timer stays out of the start bundle.
+ */
+export async function startTrayTimer(): Promise<void> {
+  const [{ useTimer }, { isRunning }] = await Promise.all([
+    import('@/tools/timer/engine'),
+    import('@/tools/timer/logic'),
+  ]);
   const timer = useTimer.getState();
   if (!isRunning(timer.timer)) {
     timer.setMode('timer');
@@ -37,7 +42,7 @@ export async function startTrayToday(desktop: DesktopService): Promise<() => voi
   const stopLang = onLangChange(tray.refreshTraySnapshot);
   const stopClicks = tray.onTrayItem((id) => {
     const action = tray.trayAction(id);
-    if (action?.kind === 'timer') startTrayTimer();
+    if (action?.kind === 'timer') void startTrayTimer();
     else if (action) openRoute(action.route);
   });
   return () => {

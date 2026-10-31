@@ -103,16 +103,16 @@ describe('tray "Heute"', () => {
     expect(readPrefs().trayToday).toBe(false);
   });
 
-  it('"Timer 25 Minuten" starts a 25-minute timer and shows it, but never resets a running one', () => {
+  it('"Timer 25 Minuten" starts a 25-minute timer and shows it, but never resets a running one', async () => {
     useTimer.getState().reset();
-    startTrayTimer();
+    await startTrayTimer();
     const st = useTimer.getState();
     expect(st.mode).toBe('timer');
     expect(isRunning(st.timer)).toBe(true);
     expect(st.timer.durationMs).toBe(25 * 60_000);
     expect(useUiStore.getState()).toMatchObject({ toolsOpen: true, activeTool: 'timer' });
     const endAt = st.timer.endAt;
-    startTrayTimer();
+    await startTrayTimer();
     expect(useTimer.getState().timer.endAt).toBe(endAt);
     useTimer.getState().pause();
     useTimer.getState().reset();
