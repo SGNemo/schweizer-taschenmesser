@@ -19,6 +19,9 @@ export const subscriptions: Strings['subscriptions'] = {
       cancelRemindDaysBeforeHelp: '0 = on the last day of the notice period',
       remindTime: 'Reminder time',
       remindTimeHelp: 'Format HH:mm',
+      priceHint: 'Notice when a price goes up',
+      priceHintHelp:
+        'Shows once under “Important now” when a subscription got more expensive. You can switch it off at any time.',
     },
   },
   title: 'Subscriptions',

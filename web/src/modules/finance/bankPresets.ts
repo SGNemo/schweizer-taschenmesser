@@ -197,7 +197,7 @@ export const BANK_PRESETS: readonly BankPreset[] = [
 
 /** The preset whose header is in the file, or undefined for an unknown layout. */
 export function detectBankPreset(text: string): BankPreset | undefined {
-  const body = text.replace(/^﻿/, '');
+  const body = text.replace(/^\uFEFF/, '');
   for (const preset of BANK_PRESETS) {
     const hit = locateHeader(
       body,

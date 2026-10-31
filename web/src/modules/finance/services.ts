@@ -3,7 +3,9 @@ import { currencyOf } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
+import { paidInvoiceBookingOn } from '@/modules/invoices/public';
 import { planRepeats } from './logic';
+import { normalizePayee } from './rules';
 import {
   categoryRepo,
   ensureDefaults,
@@ -56,6 +58,25 @@ export async function bookInvoiceExpense(p: {
   );
 }
 
+/**
+ * A repeating booking (rent, insurance) with the same payee and amount already stands for this
+ * payment: booking the paid invoice too would count it twice.
+ */
+export async function coveredByRepeatingBooking(p: {
+  payee: string;
+  amountMinor: number;
+}): Promise<boolean> {
+  const payee = normalizePayee(p.payee);
+  if (!payee) return false;
+  return (await transactionRepo.active().toArray()).some(
+    (x) =>
+      (x.repeat || x.repeatOf) &&
+      x.kind === 'expense' &&
+      x.amountMinor === p.amountMinor &&
+      normalizePayee(x.payee ?? '') === payee,
+  );
+}
+
 /** Removes the expense of a reopened invoice. */
 export async function removeInvoiceExpense(invoiceId: string): Promise<void> {
   const id = invoiceTransactionId(invoiceId);
@@ -85,7 +106,14 @@ export async function bookDueRepeats(): Promise<number> {
 /** Runs while the finance module is enabled: reacts to invoice events from the bus. */
 export default function start(): () => void {
   void bookDueRepeats();
-  const offPaid = bus.on('invoice.paid', (p) => bookInvoiceExpense(p));
+  const offPaid = bus.on('invoice.paid', async (p) => {
+    // Only while Finances is on (this service runs only then) and the user keeps the invoice
+    // setting on; an existing booking of this invoice is left to `bookInvoiceExpense` (idempotent).
+    if (!(await paidInvoiceBookingOn())) return;
+    if (!(await transactionRepo.table.get(invoiceTransactionId(p.invoiceId))))
+      if (await coveredByRepeatingBooking(p)) return;
+    await bookInvoiceExpense(p);
+  });
   const offUnpaid = bus.on('invoice.unpaid', ({ invoiceId }) => removeInvoiceExpense(invoiceId));
   return () => {
     offPaid();

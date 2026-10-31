@@ -55,7 +55,7 @@ export function looksLikeOfx(text: string): boolean {
 }
 
 export function parseOfx(text: string): BankParseResult {
-  const body = text.replace(/^﻿/, '');
+  const body = text.replace(/^\uFEFF/, '');
   if (!/<OFX[\s>]/i.test(body)) throw new Error('not-ofx');
   // One statement per STMTRS / CCSTMTRS; a file without them is read as a single statement.
   const parts = body.split(/<(?:CC)?STMTRS>/i);

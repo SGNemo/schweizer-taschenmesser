@@ -3,7 +3,7 @@
  * "-1.234,56", an American one "-1,234.56"). Pure; returns signed cents or `undefined`.
  */
 export function parseLooseAmount(input: string): number | undefined {
-  let s = input.replace(/[\s  €$£¥']/g, '').replace(/^\+/, '');
+  let s = input.replace(/[\s\u00a0\u202f€$£¥']/g, '').replace(/^\+/, '');
   if (!s) return undefined;
   let negative = false;
   if (s.startsWith('-')) {

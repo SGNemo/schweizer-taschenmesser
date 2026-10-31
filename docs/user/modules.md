@@ -24,6 +24,11 @@ In the **module library** you turn modules on and off (when turning one off: kee
 - **Map & WhatsApp:** events with a location have "Show on map"; for people with a birthday the button opens WhatsApp with a greeting
   (you pick the contact in WhatsApp).
 
+## Importing a bank statement
+In **Finances** (Settings → Modules → Finances → Set up starter data → *Import bank statement*) choose the file you exported in online banking: **OFX**, **QIF**, **CAMT** or **CSV**. Nothing is uploaded and no login is needed; you see a preview first and can undo the import. Well-known banks (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) are recognised from the file and named in the preview ("Recognised: DKB"). For a CSV the app does not know, you assign the columns date / amount / payee / purpose once; the app remembers it for the next export of that kind. A file imported twice adds nothing new, and a file in another currency is only booked to an account in that currency.
+
+After an import the preview may suggest **rules** ("Always book Netflix in category Subscriptions?"). Nothing is ticked: a rule is only created if you tick it and confirm the import, it then sorts later imports, and you can remove it under Finances → Categories. A paid invoice is booked as an expense in Finances (Invoices → settings can turn that off), and a price rise of a subscription shows once under *Important now* (Subscriptions → settings can turn that off).
+
 ## Bringing tasks from Todoist or Google Tasks
 Open **ToDos → Import → From Todoist or Google Tasks** (once the module holds tasks: Settings → Modules → ToDos → Set up starter data) and choose a file you exported yourself. Nothing is uploaded and no account is needed; you see a preview first and can undo the import.
 

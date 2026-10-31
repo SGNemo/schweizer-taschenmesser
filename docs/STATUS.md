@@ -10,7 +10,7 @@ Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 
 P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Pakete B (Frist vorbei), C (Löschen mit Rückgängig, Entwurf) gemergt, Paket D („Zuletzt gelöscht“, Einstellungen → Allgemein) in Review (#318) ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
 Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-Stärketexte, Vorlagen; P3c (README/Website) folgt; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
-Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
+Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise). Kontoauszug-Import (T2, [features/bank-import.md](features/bank-import.md)): OFX, QIF, Bank-Vorlagen, Spaltenzuordnung, Regeln aus Vorschlägen, „Preis erhöht“; Handtest je Bank mit echter Datei offen.
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos, Budgets und Sparziele haben dasselbe optionale `currency` (`feat/qa-currency-subs-budgets`), Summen je Währung.

@@ -2095,6 +2095,9 @@ export const de = {
       n === 1 ? '1 Rechnung überfällig' : `${n} Rechnungen überfällig`,
     invoicesToday: (n: number) =>
       n === 1 ? '1 Rechnung heute fällig' : `${n} Rechnungen heute fällig`,
+    subscriptionPrice: (name: string, from: string, to: string) =>
+      `${name} kostet jetzt ${to} statt ${from}`,
+    subscriptionPriceSince: (date: string) => `Neuer Preis seit ${date}`,
     todosOverdue: (n: number) => (n === 1 ? '1 ToDo überfällig' : `${n} ToDos überfällig`),
     todosToday: (n: number) => (n === 1 ? '1 ToDo heute fällig' : `${n} ToDos heute fällig`),
     eventNext: (title: string) => title,
@@ -2257,6 +2260,9 @@ export const de = {
         remindDaysBeforeHelp: '0 = am Fälligkeitstag',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        bookWhenPaid: 'Bezahlte Rechnung als Ausgabe buchen',
+        bookWhenPaidHelp:
+          'Legt in Finanzen die Buchung an, sobald du eine Rechnung als bezahlt markierst. Ohne Finanz-Modul passiert nichts; eine wiederkehrende Buchung mit gleichem Empfänger und Betrag wird nicht doppelt gebucht.',
       },
     },
     title: 'Rechnungen',
@@ -2308,6 +2314,9 @@ export const de = {
         cancelRemindDaysBeforeHelp: '0 = am letzten Tag der Frist',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        priceHint: 'Hinweis bei Preiserhöhung',
+        priceHintHelp:
+          'Zeigt einmal unter „Jetzt wichtig“, wenn ein Abo teurer geworden ist. Du kannst es jederzeit ausschalten.',
       },
     },
     title: 'Abos',

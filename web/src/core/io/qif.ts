@@ -42,7 +42,7 @@ function qifDate(value: string, slashOrder: Order): string | undefined {
 
 export function parseQif(text: string): BankParseResult {
   const lines = text
-    .replace(/^﻿/, '')
+    .replace(/^\uFEFF/, '')
     .split(/\r\n|\n|\r/)
     .map((l) => l.trimEnd());
   if (!lines.some((l) => /^!Type:/i.test(l.trim()))) throw new Error('not-qif');
