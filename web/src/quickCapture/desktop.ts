@@ -1,8 +1,57 @@
 import { getLang, onLangChange } from '@/core/i18n/lang';
-import { getPlatform, type HotkeyError } from '@/core/platform';
+import { getPlatform, type DesktopService, type HotkeyError } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import { useTimer } from '@/tools/timer/engine';
+import { isRunning } from '@/tools/timer/logic';
 import { readPrefs } from './device';
+
+/** Minutes of the tray's "Timer 25 Minuten". */
+export const TRAY_TIMER_MIN = 25;
+
+/** Opens an in-app route from outside React (the router follows `popstate`). */
+function openRoute(route: string): void {
+  history.pushState(null, '', route);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
+/** "Timer 25 Minuten": starts it unless a timer already runs, and shows the timer tool. */
+export function startTrayTimer(): void {
+  const timer = useTimer.getState();
+  if (!isRunning(timer.timer)) {
+    timer.setMode('timer');
+    timer.setMinutes(TRAY_TIMER_MIN);
+    timer.start();
+  }
+  useUiStore.getState().openTools('timer');
+}
+
+/**
+ * The tray's "Heute" block: keeps its snapshot current and acts on its clicks (the shell has
+ * already brought the main window forward). Off with the switch in Settings → Schnellerfassung.
+ */
+export async function startTrayToday(desktop: DesktopService): Promise<() => void> {
+  const tray = await import('@/core/platform/tauri/traySnapshot');
+  const stopSnapshot = tray.startTraySnapshot(desktop, () => readPrefs().trayToday);
+  // The labels are native: send them again in the new language.
+  const stopLang = onLangChange(tray.refreshTraySnapshot);
+  const stopClicks = tray.onTrayItem((id) => {
+    const action = tray.trayAction(id);
+    if (action?.kind === 'timer') startTrayTimer();
+    else if (action) openRoute(action.route);
+  });
+  return () => {
+    stopSnapshot();
+    stopLang();
+    stopClicks();
+  };
+}
+
+/** After the switch changed: show or hide the block at once (no-op outside the desktop app). */
+export function refreshTrayToday(): void {
+  if (!getPlatform().desktop.supported) return;
+  void import('@/core/platform/tauri/traySnapshot').then((tray) => tray.refreshTraySnapshot());
+}
 
 /** Human-readable accelerator for messages: `Ctrl+Shift+Space` → `Strg+Umschalt+Leertaste` (German UI only). */
 export function hotkeyLabel(accelerator: string): string {
@@ -49,6 +98,7 @@ export async function startQuickCaptureDesktop(): Promise<void> {
   } catch {
     // The shell is older than this frontend or the call was refused; the app still works.
   }
+  void startTrayToday(desktop).catch(() => undefined);
   if (prefs.hotkey) {
     const error = await applyHotkey(prefs.hotkey);
     if (error) {

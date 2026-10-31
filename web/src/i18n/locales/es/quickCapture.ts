@@ -88,6 +88,11 @@ export const quickCapture: Strings['quickCapture'] = {
     saved: (n: number) => `${n} cosas guardadas`,
     change: 'Cambiar',
   },
+  trayToday: {
+    heading: 'Hoy',
+    now: 'Empezar ahora',
+    timer: 'Temporizador 25 minutos',
+  },
   tray: {
     capture: 'Capturar',
     open: 'Abrir la app',
@@ -122,6 +127,9 @@ export const quickCapture: Strings['quickCapture'] = {
     },
     hotkeyStartupError: (keys: string) => `No se pudo registrar el atajo de teclado ${keys}.`,
     closeToTray: 'Minimizar a la bandeja en lugar de salir',
+    trayToday: 'Mostrar hoy en el menú de la bandeja',
+    trayTodayHint:
+      'Hasta 5 cosas de hoy (solo título y hora, nunca importes) en el menú del icono de la bandeja. Un clic abre la entrada.',
     autostart: 'Iniciar con Windows',
     autostartPortable:
       'La app se ejecuta desde una carpeta con «data» (p. ej. una memoria USB). El inicio automático apunta a esa ubicación; si la memoria no está conectada al iniciar sesión, no se abre nada.',

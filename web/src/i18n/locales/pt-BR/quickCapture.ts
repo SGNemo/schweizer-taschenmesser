@@ -96,6 +96,11 @@ export const quickCapture: Strings['quickCapture'] = {
     saved: (n: number) => `${n} itens salvos`,
     change: 'Alterar',
   },
+  trayToday: {
+    heading: 'Hoje',
+    now: 'Começar agora',
+    timer: 'Temporizador 25 minutos',
+  },
   tray: {
     capture: 'Capturar',
     open: 'Abrir app',
@@ -130,6 +135,9 @@ export const quickCapture: Strings['quickCapture'] = {
     },
     hotkeyStartupError: (keys: string) => `Não foi possível registrar o atalho ${keys}.`,
     closeToTray: 'Minimizar para a bandeja em vez de fechar',
+    trayToday: 'Mostrar hoje no menu da bandeja',
+    trayTodayHint:
+      'Até 5 coisas de hoje (só título e horário, nunca valores) no menu do ícone da bandeja. Um clique abre o item.',
     autostart: 'Iniciar com o Windows',
     autostartPortable:
       'O app roda de uma pasta com “data” (ex.: pen drive). A inicialização automática aponta para esse local; se o pen drive não estiver conectado ao entrar, nada inicia.',

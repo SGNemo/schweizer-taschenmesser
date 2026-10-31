@@ -927,6 +927,11 @@ export const de = {
       saved: (n: number) => `${n} Dinge gespeichert`,
       change: 'Ändern',
     },
+    trayToday: {
+      heading: 'Heute',
+      now: 'Jetzt dran anfangen',
+      timer: 'Timer 25 Minuten',
+    },
     tray: {
       capture: 'Erfassen',
       open: 'App öffnen',
@@ -963,6 +968,9 @@ export const de = {
       hotkeyStartupError: (keys: string) =>
         `Das Tastenkürzel ${keys} konnte nicht registriert werden.`,
       closeToTray: 'In den Tray minimieren statt beenden',
+      trayToday: 'Heute im Tray-Menü zeigen',
+      trayTodayHint:
+        'Bis zu 5 Dinge von heute (nur Titel und Uhrzeit, nie Beträge) im Menü des Tray-Symbols. Ein Klick öffnet den Eintrag.',
       autostart: 'Mit Windows starten',
       autostartPortable:
         'Die App läuft aus einem Ordner mit „data“ (z. B. USB-Stick). Der Autostart-Eintrag zeigt auf diesen Ort; ist der Stick beim Anmelden nicht da, startet nichts.',
