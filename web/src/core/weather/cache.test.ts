@@ -165,6 +165,16 @@ describe('preview data in the cache', () => {
     expect(readCache()?.forecast.air).toEqual(air);
   });
 
+  it('drops a value with a foreign pollen type instead of crashing the preview later', () => {
+    const air = { now: { aqi: 33 }, pollen: { birch: 80, toString: 3 }, days: [] };
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ key, at: T0, forecast: { ...forecast, air } }),
+    );
+    expect(readCache()).toBeUndefined();
+    expect(localStorage.getItem(CACHE_KEY)).toBeNull();
+  });
+
   it('an old value without hours and days stays valid for the line', () => {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ key, at: T0, forecast }));
     expect(readCache()).toEqual({ key, at: T0, forecast });

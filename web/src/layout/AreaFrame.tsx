@@ -16,6 +16,7 @@ import styles from './AreaFrame.module.css';
 /**
  * Frame of a module page that belongs to an area: the area name as eyebrow and, when the area has
  * more than one enabled module, its modules as tabs. Pure navigation; the module renders below.
+ * On a phone it is one line (label, scrollable tabs, actions); on the desktop the tabs sit below.
  */
 /** "Mit KI eintragen" for a module that declares AI actions (and the user has not switched them off). */
 function WriteButton({ pathname }: { pathname: string }) {
@@ -51,23 +52,25 @@ export function AreaFrame({ children }: { children: ReactNode }) {
   if (!area || isFocusPath(pathname)) return <>{children}</>;
   return (
     <>
-      <div className={styles.frame}>
-        <div className={styles.eyebrowRow}>
-          <p className={styles.eyebrow}>{area.label}</p>
+      <div className={styles.frame} data-tabs={area.items.length > 1 ? 'true' : undefined}>
+        <p className={styles.eyebrow}>{area.label}</p>
+        {area.items.length > 1 ? (
+          <div className={styles.tabs}>
+            <Tabs
+              label={t.nav.areaTabs(area.label)}
+              items={area.items.map((i) => ({
+                id: i.to,
+                label: i.label,
+                to: i.to,
+                active: pathname === i.to || pathname.startsWith(`${i.to}/`),
+              }))}
+            />
+          </div>
+        ) : null}
+        <div className={styles.actions}>
           <WriteButton pathname={pathname} />
           <ModuleSettingsLink pathname={pathname} />
         </div>
-        {area.items.length > 1 ? (
-          <Tabs
-            label={t.nav.areaTabs(area.label)}
-            items={area.items.map((i) => ({
-              id: i.to,
-              label: i.label,
-              to: i.to,
-              active: pathname === i.to || pathname.startsWith(`${i.to}/`),
-            }))}
-          />
-        ) : null}
       </div>
       {children}
     </>

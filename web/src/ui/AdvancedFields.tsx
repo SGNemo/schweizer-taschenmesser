@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useAdvanced } from '@/core/settings/comfort';
 import { tAdvanced } from '@/strings.advanced';
 import { Button } from './Button';
@@ -11,6 +12,8 @@ import { Switch } from './Fields';
 export function AdvancedToggle({ moduleId }: { moduleId: string }) {
   const [advanced, setAdvanced] = useAdvanced(moduleId);
   const tx = tAdvanced.use();
+  const inMenu = usePageChromeStore((s) => s.chrome.advancedInMenu);
+  if (inMenu) return null;
   return <Switch label={tx.switchLabel} checked={advanced} onChange={setAdvanced} />;
 }
 
