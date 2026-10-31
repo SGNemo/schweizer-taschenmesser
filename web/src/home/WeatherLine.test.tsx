@@ -242,6 +242,25 @@ describe('WeatherLine', () => {
       expect(preview).not.toHaveTextContent('Stand');
     });
 
+    it('colours only carry meaning and always sit next to words: rain blue, temperature tone, rating rail', async () => {
+      setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(JSON.stringify(previewBody), { status: 200 })),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+      await open();
+      const hours = screen.getByTestId('weather-hours').querySelectorAll('li');
+      expect(hours[3]!.querySelector('[data-kind="rain"]')).toHaveTextContent('Regen 80 %');
+      expect(hours[3]).toHaveAttribute('data-rating', 'poor');
+      expect(hours[3]!.querySelector('[data-tone]')).toHaveTextContent('°');
+      expect(screen.getByTestId('weather-now')).toHaveAttribute('data-rating');
+      // The facts carry an icon each, next to their words.
+      expect(screen.getByTestId('weather-now').querySelectorAll('li svg').length).toBeGreaterThan(
+        3,
+      );
+    });
+
     it('shows now with its details, the chart and the best time', async () => {
       setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
       vi.stubGlobal(

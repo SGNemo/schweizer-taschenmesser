@@ -22,7 +22,7 @@ import {
 } from '@/core/weather/air';
 import type { WeatherView } from '@/core/weather/useWeather';
 import { tWeather } from '@/strings.weather';
-import { Dialog, GroupedList, Icon } from '@/ui';
+import { Dialog, GroupedList, Icon, type IconName } from '@/ui';
 import { WeatherChart } from './WeatherChart';
 import { RatingChip } from './RatingChip';
 import { WeatherAir } from './WeatherAir';
@@ -37,6 +37,30 @@ const localDate = (iso: string, hour = 0): Date =>
   new Date(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)), hour);
 
 const dec = (n: number): string => formatNumber(n, { maximumFractionDigits: 1 });
+
+/** A piece of a row's detail line; `kind` only picks a meaningful colour (rain blue, strong UV / pollen amber). */
+interface Part {
+  t: string;
+  k?: 'rain' | 'uv' | 'pollen';
+}
+const txt = (t: string, k?: Part['k']): Part => ({ t, k });
+
+/** Temperature as a tone for colour, always printed next to the number. */
+const tone = (t: number): 'cold' | 'mild' | 'warm' | 'hot' =>
+  t <= 5 ? 'cold' : t < 18 ? 'mild' : t < 28 ? 'warm' : 'hot';
+
+function Meta({ parts, className }: { parts: Part[]; className?: string }) {
+  return (
+    <p className={className}>
+      {parts.map((p, i) => (
+        <span key={p.t}>
+          {i > 0 ? ' · ' : ''}
+          <span data-kind={p.k}>{p.t}</span>
+        </span>
+      ))}
+    </p>
+  );
+}
 
 /**
  * The weather behind the line: now with its details, the next 24 hours as a picture and hour by hour,
@@ -68,22 +92,24 @@ export function WeatherPreview({
 
   const rain = (n: number, mm?: number) =>
     n >= RAIN_SHOWN_PERCENT
-      ? [tx.rainChance(n) + (mm && mm >= 0.1 ? ` (${tx.rainMm(dec(mm))})` : '')]
+      ? [txt(tx.rainChance(n) + (mm && mm >= 0.1 ? ` (${tx.rainMm(dec(mm))})` : ''), 'rain')]
       : [];
+  const uv = (v?: number) =>
+    v != null && v >= 1 ? [txt(tx.uvIndex(dec(v)), v >= 6 ? 'uv' : undefined)] : [];
   const compass = (dir?: number) => (dir != null ? ` ${tx.compass[compassIndex(dir)]}` : '');
   const windParts = (wind?: number, gust?: number, dir?: number) => [
-    ...(wind != null ? [tx.windSpeed(wind) + compass(dir)] : []),
-    ...(gust != null && wind != null && gust - wind >= 10 ? [tx.gustSpeed(gust)] : []),
+    ...(wind != null ? [txt(tx.windSpeed(wind) + compass(dir))] : []),
+    ...(gust != null && wind != null && gust - wind >= 10 ? [txt(tx.gustSpeed(gust))] : []),
   ];
 
-  const hourLine = (h: HourRow) => [
-    ...(h.feels != null && h.feels !== h.temp ? [tx.feels(h.feels)] : []),
+  const hourLine = (h: HourRow): Part[] => [
+    ...(h.feels != null && h.feels !== h.temp ? [txt(tx.feels(h.feels))] : []),
     ...rain(h.rain, h.mm),
     ...windParts(h.wind, h.gust, h.dir),
-    ...(h.hum != null ? [tx.humidity(h.hum)] : []),
-    ...(h.cloud != null ? [tx.cloud(h.cloud)] : []),
-    ...(h.hpa != null ? [tx.pressure(h.hpa)] : []),
-    ...(h.uv != null && h.uv >= 1 ? [tx.uvIndex(dec(h.uv))] : []),
+    ...(h.hum != null ? [txt(tx.humidity(h.hum))] : []),
+    ...(h.cloud != null ? [txt(tx.cloud(h.cloud))] : []),
+    ...(h.hpa != null ? [txt(tx.pressure(h.hpa))] : []),
+    ...uv(h.uv),
   ];
   /** "Pollen: Birke hoch, Gräser mäßig": only what is at least moderate, strongest first, at most three. */
   const pollenOfDay = (date: string) => {
@@ -95,15 +121,15 @@ export function WeatherPreview({
       .sort((a, b) => levelRank(b.l) - levelRank(a.l) || b.g - a.g)
       .slice(0, 3)
       .map((r) => `${tx.pollen[r.t]} ${tx.levels[r.l]}`);
-    return list.length > 0 ? [tx.pollenDay(list.join(', '))] : [];
+    return list.length > 0 ? [txt(tx.pollenDay(list.join(', ')), 'pollen')] : [];
   };
-  const dayLine = (d: DayRow) => [
+  const dayLine = (d: DayRow): Part[] => [
     ...rain(d.rain, d.mm),
     ...windParts(d.wind, d.gust, d.dir),
-    ...(d.rainHours != null && d.rainHours >= 1 ? [tx.rainHours(d.rainHours)] : []),
-    ...(d.uv != null && d.uv >= 1 ? [tx.uvIndex(dec(d.uv))] : []),
-    ...(d.sunrise && d.sunset ? [tx.sunSpan(d.sunrise, d.sunset)] : []),
-    ...(d.sunMin != null && d.sunMin > 0 ? [tx.sunshine(dec(d.sunMin / 60))] : []),
+    ...(d.rainHours != null && d.rainHours >= 1 ? [txt(tx.rainHours(d.rainHours), 'rain')] : []),
+    ...uv(d.uv),
+    ...(d.sunrise && d.sunset ? [txt(tx.sunSpan(d.sunrise, d.sunset))] : []),
+    ...(d.sunMin != null && d.sunMin > 0 ? [txt(tx.sunshine(dec(d.sunMin / 60)))] : []),
     ...pollenOfDay(d.date),
   ];
 
@@ -111,28 +137,56 @@ export function WeatherPreview({
   const hi = Math.max(...days.map((d) => d.max));
   const span = hi - lo || 1;
 
+  /** The bar of a day sits where its range lies; the gradient (cool → warm) spans the whole week. */
+  const fillStyle = (d: DayRow) => {
+    const left = ((d.min - lo) / span) * 100;
+    const width = Math.max(3, ((d.max - d.min) / span) * 100);
+    return {
+      left: `${left}%`,
+      width: `${width}%`,
+      backgroundSize: `${10000 / width}% 100%`,
+      backgroundPosition: `${width >= 100 ? 0 : (left / (100 - width)) * 100}% 0`,
+    };
+  };
+
   const nowCard = (
-    <section className={styles.now} data-testid="weather-now" aria-label={tx.now}>
+    <section
+      className={styles.now}
+      data-testid="weather-now"
+      data-rating={rateNow(forecast)}
+      aria-label={tx.now}
+    >
       <div className={styles.nowMain}>
         <Icon name={weatherIcon(forecast.group, detail?.night)} size={40} />
         <div>
-          <p className={styles.temp}>{tx.temp(forecast.temp)}</p>
+          <p className={styles.temp} data-tone={tone(forecast.temp)}>
+            {tx.temp(forecast.temp)}
+          </p>
           <p className={styles.word}>{tx.codes[forecast.group]}</p>
         </div>
         <RatingChip rating={rateNow(forecast)} />
       </div>
       <ul className={styles.facts}>
-        {[
-          ...(detail?.feels != null ? [tx.feels(detail.feels)] : []),
-          ...(first ? [tx.range(first.min, first.max)] : []),
-          ...windParts(detail?.wind, detail?.gust, detail?.dir),
-          ...(detail?.hum != null ? [tx.humidity(detail.hum)] : []),
-          ...(detail?.cloud != null ? [tx.cloud(detail.cloud)] : []),
-          ...(detail?.hpa != null ? [tx.pressure(detail.hpa)] : []),
-          ...(first?.sunrise && first.sunset ? [tx.sunSpan(first.sunrise, first.sunset)] : []),
-          ...(first?.uv != null && first.uv >= 1 ? [tx.uvIndex(dec(first.uv))] : []),
-        ].map((f) => (
-          <li key={f}>{f}</li>
+        {(
+          [
+            ...(detail?.feels != null ? [['thermometer', tx.feels(detail.feels)] as const] : []),
+            ...(first ? [['thermometer', tx.range(first.min, first.max)] as const] : []),
+            ...windParts(detail?.wind, detail?.gust, detail?.dir).map(
+              (p) => ['wind', p.t] as const,
+            ),
+            ...(detail?.hum != null ? [['droplets', tx.humidity(detail.hum)] as const] : []),
+            ...(detail?.cloud != null ? [['cloud', tx.cloud(detail.cloud)] as const] : []),
+            ...(detail?.hpa != null ? [['gauge', tx.pressure(detail.hpa)] as const] : []),
+            ...(first?.sunrise && first.sunset
+              ? [['sunrise', tx.sunSpan(first.sunrise, first.sunset)] as const]
+              : []),
+            ...uv(first?.uv).map((p) => ['sun', p.t] as const),
+          ] as (readonly [IconName, string])[]
+        ).map(([icon, f]) => (
+          <li key={f} data-icon={icon}>
+            <Icon name={icon} size={16} />
+            {f}
+          </li>
         ))}
       </ul>
     </section>
@@ -162,7 +216,7 @@ export function WeatherPreview({
                         <h3 className={styles.sub}>{tx.hourly}</h3>
                         <ul className={styles.rows} data-testid="weather-hours">
                           {hours.map((h) => (
-                            <li key={h.time} className={styles.row}>
+                            <li key={h.time} className={styles.row} data-rating={rateHour(h)}>
                               <Icon name={weatherIcon(h.group, h.night)} size={20} />
                               <div className={styles.rowBody}>
                                 <p className={styles.rowMain}>
@@ -171,11 +225,13 @@ export function WeatherPreview({
                                       localDate(h.time, Number(h.time.slice(11, 13))),
                                     )}
                                   </span>
-                                  <span className={styles.big}>{tx.temp(h.temp)}</span>
+                                  <span className={styles.big} data-tone={tone(h.temp)}>
+                                    {tx.temp(h.temp)}
+                                  </span>
                                   <span>{tx.codes[h.group]}</span>
                                   <RatingChip rating={rateHour(h)} />
                                 </p>
-                                <p className={styles.rowMeta}>{hourLine(h).join(' · ')}</p>
+                                <Meta className={styles.rowMeta} parts={hourLine(h)} />
                               </div>
                             </li>
                           ))}
@@ -202,7 +258,7 @@ export function WeatherPreview({
                     children: (
                       <ul className={styles.rows} data-testid="weather-days">
                         {days.map((d) => (
-                          <li key={d.date} className={styles.row}>
+                          <li key={d.date} className={styles.row} data-rating={rateDay(d)}>
                             <Icon name={weatherIcon(d.group)} size={20} />
                             <div className={styles.rowBody}>
                               <p className={styles.rowMain}>
@@ -213,20 +269,18 @@ export function WeatherPreview({
                                 <RatingChip rating={rateDay(d)} />
                               </p>
                               <div className={styles.range}>
-                                <span className={styles.rangeLabel}>{tx.temp(d.min)}</span>
-                                <span className={styles.track} aria-hidden="true">
-                                  <span
-                                    className={styles.fill}
-                                    style={{
-                                      left: `${((d.min - lo) / span) * 100}%`,
-                                      width: `${Math.max(3, ((d.max - d.min) / span) * 100)}%`,
-                                    }}
-                                  />
+                                <span className={styles.rangeLabel} data-tone={tone(d.min)}>
+                                  {tx.temp(d.min)}
                                 </span>
-                                <span className={styles.rangeLabel}>{tx.temp(d.max)}</span>
+                                <span className={styles.track} aria-hidden="true">
+                                  <span className={styles.fill} style={fillStyle(d)} />
+                                </span>
+                                <span className={styles.rangeLabel} data-tone={tone(d.max)}>
+                                  {tx.temp(d.max)}
+                                </span>
                                 <span className={styles.srOnly}>{tx.range(d.min, d.max)}</span>
                               </div>
-                              <p className={styles.rowMeta}>{dayLine(d).join(' · ')}</p>
+                              <Meta className={styles.rowMeta} parts={dayLine(d)} />
                             </div>
                           </li>
                         ))}

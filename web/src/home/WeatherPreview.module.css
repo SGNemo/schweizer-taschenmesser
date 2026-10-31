@@ -44,6 +44,15 @@
   border-radius: var(--radius-md);
   background: var(--surface-2);
 }
+/* The tint follows the rating (good / unpleasant); the word and icon next to it say the same. */
+.now[data-rating='good'] {
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+  background: linear-gradient(var(--success-soft), var(--success-soft)), var(--surface-2);
+}
+.now[data-rating='poor'] {
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
+  background: linear-gradient(var(--warning-soft), var(--warning-soft)), var(--surface-2);
+}
 .nowMain {
   display: flex;
   align-items: center;
@@ -61,14 +70,43 @@
   color: var(--text-muted);
 }
 .facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
-  color: var(--text-muted);
+  color: var(--text);
   font-size: var(--text-sm);
+}
+.facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.facts li[data-icon='droplets'] svg {
+  color: var(--info-ink);
+}
+.facts li[data-icon='sun'] svg,
+.facts li[data-icon='sunrise'] svg {
+  color: var(--warning-ink);
+}
+[data-tone='cold'] {
+  color: var(--info-ink);
+}
+[data-tone='warm'],
+[data-tone='hot'] {
+  color: var(--warning-ink);
+}
+[data-kind='rain'] {
+  color: var(--info-ink);
+}
+[data-kind='uv'],
+[data-kind='pollen'] {
+  color: var(--warning-ink);
 }
 .best {
   margin: 0 0 var(--space-3);
@@ -96,6 +134,13 @@
 }
 .row:first-child {
   border-top: 0;
+}
+/* A quiet rail at the left: the rating at a glance, the chip on the row says it in words. */
+.row[data-rating='good'] {
+  box-shadow: inset 3px 0 0 var(--success);
+}
+.row[data-rating='poor'] {
+  box-shadow: inset 3px 0 0 var(--warning);
 }
 .rowBody {
   flex: 1;
@@ -134,14 +179,21 @@
   font-size: var(--text-meta);
   font-weight: var(--weight-medium);
 }
+.chip {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
 .chip[data-rating='good'] {
   color: var(--success-ink);
+  background: var(--success-soft);
 }
 .chip[data-rating='fair'] {
   color: var(--text-muted);
+  background: var(--surface-2);
 }
 .chip[data-rating='poor'] {
   color: var(--warning-ink);
+  background: var(--warning-soft);
 }
 .range {
   display: flex;
@@ -166,7 +218,8 @@
   top: 0;
   bottom: 0;
   border-radius: var(--radius-sm);
-  background: var(--text-muted);
+  background-image: linear-gradient(90deg, var(--info), var(--warning));
+  background-repeat: no-repeat;
 }
 .srOnly {
   position: absolute;

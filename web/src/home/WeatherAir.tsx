@@ -58,7 +58,7 @@ export function WeatherAir({ air }: { air: Air | undefined }) {
       ) : (
         <>
           {now?.aqi != null ? (
-            <p className={styles.aqi} data-testid="weather-aqi">
+            <p className={styles.aqi} data-testid="weather-aqi" data-band={aqiBand(now.aqi)}>
               <span className={styles.aqiValue}>{tx.airQuality(now.aqi)}</span>
               <span>{tx.bands[aqiBand(now.aqi)]}</span>
             </p>
