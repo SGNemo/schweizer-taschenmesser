@@ -12,6 +12,7 @@ export default tseslint.config(
     ignores: [
       'dist',
       'dist-e2e-seed',
+      'dist-bundle',
       'dev-dist',
       'playwright-report',
       'test-results',

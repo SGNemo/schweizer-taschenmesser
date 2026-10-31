@@ -2,7 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import type { Plugin } from 'vite';
 import { extractChangelogSection } from './scripts/lib/aboutData.ts';
 import { fileURLToPath } from 'node:url';
 
@@ -12,6 +13,41 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 // The Tauri CLI sets TAURI_ENV_PLATFORM for its build/dev commands. Native builds ship no service
 // worker (the shell has its own updater); the PWA hooks are replaced by an inert stub.
 const native = Boolean(process.env.TAURI_ENV_PLATFORM);
+// Measurement only (`npm run check:bundle`): Vite's manifest plus a per-chunk module list in dist/.vite/.
+const bundleReport = process.env.VITE_BUNDLE_REPORT === '1';
+
+const short = (id: string) =>
+  id
+    .replace(/^.*node_modules\//, 'node_modules/')
+    .replace(/^.*\/web\//, '')
+    .replace(/^.*\/packages\//, '../packages/');
+
+/** Writes `.vite/modules.json` (chunk file → its modules with rendered size) for scripts/check-bundle.mjs. */
+function moduleReport(): Plugin {
+  return {
+    name: 'nemo-module-report',
+    apply: 'build',
+    writeBundle(options, bundle) {
+      const out: Record<string, [string, number][]> = {};
+      for (const [file, c] of Object.entries(bundle)) {
+        if (c.type !== 'chunk') continue;
+        out[file] = Object.entries(c.modules)
+          .map(([id, m]): [string, number] => [short(id), m.renderedLength])
+          .sort((a, b) => b[1] - a[1]);
+      }
+      // Static import edges (module → what it imports statically), for `check:bundle -- --why <text>`.
+      const imports: Record<string, string[]> = {};
+      for (const id of this.getModuleIds()) {
+        const info = this.getModuleInfo(id);
+        if (info) imports[short(id)] = info.importedIds.map(short);
+      }
+      const dir = `${options.dir ?? 'dist'}/.vite`;
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(`${dir}/modules.json`, JSON.stringify(out));
+      writeFileSync(`${dir}/imports.json`, JSON.stringify(imports));
+    },
+  };
+}
 
 /** Short commit id of this build ('' outside a git checkout); shown in Settings → Über Nemo. */
 function gitSha(): string {
@@ -41,6 +77,7 @@ export default defineConfig({
     __CHANGELOG__: JSON.stringify(changelog()),
   },
   plugins: [
+    ...(bundleReport ? [moduleReport()] : []),
     react({ jsxImportSource: '@/core/text/readjsx' }),
     VitePWA({
       disable: native,
@@ -88,6 +125,7 @@ export default defineConfig({
   ],
   // Two entries: the app and the small quick-capture window of the desktop shell (capture.html).
   build: {
+    manifest: bundleReport,
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
