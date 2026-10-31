@@ -222,6 +222,7 @@ describe('WeatherLine', () => {
       await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
       const preview = await open();
       expect(screen.getByRole('heading', { name: 'Bern' })).toBeTruthy();
+      fireEvent.click(screen.getByTestId('weather-hours-toggle'));
       const hours = screen.getByTestId('weather-hours').querySelectorAll('li');
       const days = screen.getByTestId('weather-days').querySelectorAll('li');
       expect(hours).toHaveLength(24);
@@ -250,6 +251,7 @@ describe('WeatherLine', () => {
       );
       await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
       await open();
+      fireEvent.click(screen.getByTestId('weather-hours-toggle'));
       const hours = screen.getByTestId('weather-hours').querySelectorAll('li');
       expect(hours[3]!.querySelector('[data-kind="rain"]')).toHaveTextContent('Regen 80 %');
       expect(hours[3]).toHaveAttribute('data-rating', 'poor');
@@ -259,6 +261,27 @@ describe('WeatherLine', () => {
       expect(screen.getByTestId('weather-now').querySelectorAll('li svg').length).toBeGreaterThan(
         3,
       );
+    });
+
+    it('the hourly list is calm by default (every third hour); the switch shows all and back', async () => {
+      setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(JSON.stringify(previewBody), { status: 200 })),
+      );
+      await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+      await open();
+      const rows = () => screen.getByTestId('weather-hours').querySelectorAll('li');
+      expect(rows()).toHaveLength(8);
+      expect(rows()[1]).toHaveTextContent('15:00');
+      const toggle = screen.getByTestId('weather-hours-toggle');
+      expect(toggle).toHaveTextContent('Alle Stunden zeigen');
+      fireEvent.click(toggle);
+      expect(rows()).toHaveLength(24);
+      expect(toggle).toHaveAttribute('aria-pressed', 'true');
+      expect(toggle).toHaveTextContent('Nur alle 3 Stunden');
+      fireEvent.click(toggle);
+      expect(rows()).toHaveLength(8);
     });
 
     it('shows now with its details, the chart and the best time', async () => {
@@ -353,6 +376,8 @@ describe('WeatherLine', () => {
       expect(screen.getByTestId('weather-air')).toHaveTextContent(
         'Luft- und Pollenwerte sind gerade nicht verfügbar.',
       );
+      expect(screen.getByTestId('weather-hours').querySelectorAll('li')).toHaveLength(8);
+      fireEvent.click(screen.getByTestId('weather-hours-toggle'));
       expect(screen.getByTestId('weather-hours').querySelectorAll('li')).toHaveLength(24);
     });
 

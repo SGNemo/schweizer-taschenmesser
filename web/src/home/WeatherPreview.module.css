@@ -229,3 +229,13 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+.subRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.subRow .sub {
+  margin: 0;
+}

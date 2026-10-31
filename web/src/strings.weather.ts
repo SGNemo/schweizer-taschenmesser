@@ -66,6 +66,8 @@ export const tWeather = defineBundle(
     legendTemp: 'Temperatur',
     legendRain: 'Regenchance',
     hourly: 'Stunde für Stunde',
+    hourlyFew: 'Nur alle 3 Stunden',
+    hourlyAll: 'Alle Stunden zeigen',
     airTitle: 'Atemwege & Allergie',
     airQuality: (n: number) => `Luftqualität ${n}`,
     bands: {
@@ -175,6 +177,8 @@ export const tWeather = defineBundle(
       legendTemp: 'Temperature',
       legendRain: 'Chance of rain',
       hourly: 'Hour by hour',
+      hourlyFew: 'Every 3 hours only',
+      hourlyAll: 'Show every hour',
       airTitle: 'Airways & allergy',
       airQuality: (n: number) => `Air quality ${n}`,
       bands: {
@@ -282,6 +286,8 @@ export const tWeather = defineBundle(
       legendTemp: 'Temperatura',
       legendRain: 'Prob. de lluvia',
       hourly: 'Hora a hora',
+      hourlyFew: 'Solo cada 3 horas',
+      hourlyAll: 'Mostrar cada hora',
       airTitle: 'Vías respiratorias y alergia',
       airQuality: (n: number) => `Calidad del aire ${n}`,
       bands: {
@@ -388,6 +394,8 @@ export const tWeather = defineBundle(
       legendTemp: 'Température',
       legendRain: 'Risque de pluie',
       hourly: 'Heure par heure',
+      hourlyFew: 'Toutes les 3 heures seulement',
+      hourlyAll: 'Afficher chaque heure',
       airTitle: 'Voies respiratoires et allergies',
       airQuality: (n: number) => `Qualité de l’air ${n}`,
       bands: {
@@ -495,6 +503,8 @@ export const tWeather = defineBundle(
       legendTemp: 'Temperatura',
       legendRain: 'Chance de chuva',
       hourly: 'Hora a hora',
+      hourlyFew: 'Somente a cada 3 horas',
+      hourlyAll: 'Mostrar cada hora',
       airTitle: 'Vias respiratórias e alergia',
       airQuality: (n: number) => `Qualidade do ar ${n}`,
       bands: {
