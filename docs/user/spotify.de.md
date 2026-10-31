@@ -13,6 +13,12 @@ Du brauchst eine eigene, kostenlose Spotify-„App“ – einmalig ein paar Minu
 
 In der **PWA** (Browser oder aus dem Browser installiert) ist die Redirect-URI eine andere: Nemo zeigt sie auf der Spotify-Karte – es ist deine Nemo-Adresse plus `/oauth/callback`, zum Beispiel `https://deine-nemo-adresse/oauth/callback`. Trage genau diese in Schritt 2 ein (eine zusätzliche ist in Ordnung, die für Windows darf bleiben). Sie muss mit `https://` beginnen; `http://localhost` nimmt Spotify nicht an.
 
+**Der Player** (Karte „Läuft gerade“ auf der Übersicht antippen): links deine Bibliothek (Lieblingssongs, Zuletzt gespielt, Warteschlange, Suche, alle Playlists), in der Mitte die geöffnete Liste mit allen Titeln, unten eine Leiste mit dem, was läuft, den Knöpfen, Lautstärke und Gerät.
+- Ein Tipp auf eine **Playlist** öffnet ihre Titel – es spielt nichts, bis du einen Titel oder „Abspielen“ antippst. Ein Tipp auf einen Titel spielt ihn innerhalb seiner Playlist.
+- **♥** speichert einen Titel in deinen Lieblingssongs (oder entfernt ihn). **⋯** legt ihn in die Warteschlange, blendet ihn in dieser Liste aus oder öffnet ihn in Spotify.
+- **Ausblenden:** ein ausgeblendeter Titel verschwindet nur in Nemo aus der Liste; bei Spotify ändert sich nichts. „Abspielen“ überspringt ihn. „Ausgeblendete zeigen“ holt sie zurück.
+- Zusätzliche Berechtigungen sind beim Verbinden freiwillig: *Playlists*, *Lieblingssongs* (lesen **und** speichern) und *Zuletzt gehört*. Wenn du schon verbunden warst, hake sie unter Verbindungen → Spotify an und verbinde neu.
+
 Gut zu wissen:
 - Steuern braucht Spotify **Premium**. Ohne Premium blendet Nemo die Knöpfe einmal mit einem kurzen Hinweis aus; die Anzeige funktioniert weiter.
 - „Port belegt“: ein anderes Programm nutzt Port 38417. Schließe es und klicke erneut auf Verbinden – Nemo weicht nie auf einen anderen Port aus, weil Spotify die Adresse genau prüft.

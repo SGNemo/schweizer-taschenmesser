@@ -19,6 +19,7 @@ import { tableName } from '@/core/db/schema';
 import { recordNet } from '@/core/net/netlog';
 import { useSyncStatus } from '@/core/sync/status';
 import { writeStoredNow } from '@/core/connectors/nowPlaying';
+import { setHidden } from '@/core/connectors/hiddenTracks';
 import { setMusic } from '@/core/focus/music';
 import { cacheKey, writeCache } from '@/core/weather/cache';
 import { chooseWeatherPlace } from '@/core/weather/settings';
@@ -146,6 +147,8 @@ const CANARIES = {
   spotifyArtist: 'Geheime-Band-der-Wiedergabe',
   // Focus-round music (device-local choice): the chosen playlist id never leaves in a report either.
   spotifyPlaylist: 'GeheimePlaylist4711xyz',
+  // Songs hidden in the player (device-local view setting): ids only, and never in a report.
+  spotifyHiddenTrack: 'GeheimerHiddenSong8842',
 };
 
 describe('diagnostics export', () => {
@@ -182,6 +185,7 @@ describe('diagnostics export', () => {
       forecast: { temp: 7, group: 'rain' },
     });
     setMusic({ mode: 'playlist', playlistId: CANARIES.spotifyPlaylist });
+    setHidden('PL1', CANARIES.spotifyHiddenTrack, true);
     writeStoredNow(
       { title: CANARIES.spotifyTitle, artist: CANARIES.spotifyArtist, playing: true },
       1,

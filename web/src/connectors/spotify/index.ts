@@ -16,6 +16,17 @@ import {
   setVolume,
   startPlaylist,
 } from './api';
+import {
+  addToQueue,
+  devices,
+  playFrom,
+  queue,
+  recent,
+  save,
+  saved,
+  tracks,
+  transfer,
+} from './browse';
 
 const s = () => tSpotify.get();
 
@@ -86,7 +97,7 @@ const connector: ConnectorDef = {
       get description() {
         return s().playlistsHint;
       },
-      scopes: ['playlist-read-private'],
+      scopes: ['playlist-read-private', 'playlist-read-collaborative'],
       defaultOn: false,
     },
     {
@@ -97,7 +108,18 @@ const connector: ConnectorDef = {
       get description() {
         return s().libraryHint;
       },
-      scopes: ['user-library-read'],
+      scopes: ['user-library-read', 'user-library-modify'],
+      defaultOn: false,
+    },
+    {
+      id: 'history',
+      get label() {
+        return s().historyFeature;
+      },
+      get description() {
+        return s().historyHint;
+      },
+      scopes: ['user-read-recently-played'],
       defaultOn: false,
     },
   ],
@@ -114,6 +136,15 @@ const connector: ConnectorDef = {
     search,
     likedSongs,
     play,
+    tracks,
+    playFrom,
+    recent,
+    queue,
+    addToQueue,
+    devices,
+    transfer,
+    saved,
+    save,
   },
 };
 

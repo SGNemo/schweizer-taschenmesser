@@ -35,6 +35,8 @@ const CORE_KEYS = {
     'tm-spotify-no-premium': 'time of a PREMIUM_REQUIRED answer; controls hidden for a day',
     'tm-spotify-focus':
       'focus-round music: mode off, playlistId unset, pauseAtEnd true (core/focus/music.ts)',
+    'tm-spotify-hidden':
+      'songs hidden per playlist in the Spotify player, ids only (core/connectors/hiddenTracks.ts)',
   },
   '_settings scope core': { displayName: '', weekStart: 'mon' },
   '_settings scope supporter': {

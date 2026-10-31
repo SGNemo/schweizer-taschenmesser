@@ -10,7 +10,7 @@ import {
   type SearchResult,
 } from '@/core/connectors/types';
 
-const PLAYER = 'https://api.spotify.com/v1/me/player';
+export const PLAYER = 'https://api.spotify.com/v1/me/player';
 const MAX_TEXT = 200;
 /** Links from the service open in the browser: only Spotify's own site is accepted. */
 const OPEN_URL = /^https:\/\/open\.spotify\.com\//;
@@ -34,13 +34,13 @@ const playingSchema = z.object({
   item: itemSchema.nullish(),
 });
 
-const clip = (text: string): string => text.trim().slice(0, MAX_TEXT);
+export const clip = (text: string): string => text.trim().slice(0, MAX_TEXT);
 
 /** Covers come from Spotify's own image host only; anything else is never fetched. */
 export const COVER_URL = /^https:\/\/i\.scdn\.co\/image\/[A-Za-z0-9]+$/;
 
 /** The smallest image that is still at least 64 px wide (a widget cover needs no more); else the first. */
-function pickCover(
+export function pickCover(
   images: { url: string; width?: number | null }[] | undefined,
 ): string | undefined {
   const ok = (images ?? []).filter((i) => COVER_URL.test(i.url));
@@ -88,9 +88,9 @@ interface Reply {
  * One call against the Web API. 401 → a fresh token, one more try; 429 → `rate-limited` with
  * `Retry-After`; 403 `PREMIUM_REQUIRED` → `premium-required`. Statuses in `allow` are returned.
  */
-async function call(
+export async function call(
   ctx: ConnectorContext,
-  method: 'GET' | 'PUT' | 'POST',
+  method: 'GET' | 'PUT' | 'POST' | 'DELETE',
   url: string,
   allow: number[] = [],
   json?: unknown,
@@ -162,12 +162,24 @@ export async function sendCommand(
 }
 
 const playlistsSchema = z.object({
-  items: z.array(z.object({ id: z.string(), name: z.string() }).nullable()),
+  items: z.array(
+    z
+      .object({
+        id: z.string(),
+        name: z.string(),
+        images: z.array(imageSchema).nullish(),
+        owner: z.object({ display_name: z.string().nullish() }).nullish(),
+        // The documented field is `tracks`; the newer shape calls the same object `items`.
+        tracks: z.object({ total: z.number().nullish() }).nullish(),
+        items: z.object({ total: z.number().nullish() }).nullish(),
+      })
+      .nullable(),
+  ),
   next: z.string().nullish(),
 });
 /** Pages of 50; four pages (200 playlists) are enough for a picker and keep the request count small. */
 const MAX_PLAYLIST_PAGES = 4;
-const API_ORIGIN = 'https://api.spotify.com/';
+export const API_ORIGIN = 'https://api.spotify.com/';
 /** Playlist ids are plain base-62; anything else never reaches a URI. */
 const PLAYLIST_ID = /^[A-Za-z0-9]{1,40}$/;
 
@@ -180,7 +192,14 @@ export async function listPlaylists(ctx: ConnectorContext): Promise<Playlist[]> 
     const parsed = playlistsSchema.safeParse(json);
     if (!parsed.success) break;
     for (const p of parsed.data.items)
-      if (p !== null && PLAYLIST_ID.test(p.id)) out.push({ id: p.id, name: clip(p.name) });
+      if (p !== null && PLAYLIST_ID.test(p.id))
+        out.push({
+          id: p.id,
+          name: clip(p.name),
+          trackCount: p.tracks?.total ?? p.items?.total ?? undefined,
+          coverUrl: pickCover(p.images ?? undefined),
+          owner: p.owner?.display_name ? clip(p.owner.display_name) : undefined,
+        });
     // Only follow a link that stays on the API host, never one the response made up.
     url = parsed.data.next?.startsWith(API_ORIGIN) ? parsed.data.next : undefined;
   }
@@ -234,7 +253,7 @@ export async function setRepeat(
   await call(ctx, 'PUT', `${PLAYER}/repeat?state=${mode}`);
 }
 
-const ID = /^[A-Za-z0-9]{1,40}$/;
+export const ID = /^[A-Za-z0-9]{1,40}$/;
 const searchSchema = z.object({
   tracks: z
     .object({
@@ -334,7 +353,7 @@ export async function likedSongs(ctx: ConnectorContext): Promise<MediaItem[]> {
 }
 
 /**
- * Starts a track (with the tracks after it in the list, up to 50) or a whole playlist / album on the
+ * Starts a track (with the tracks after it in the list, up to 100) or a whole playlist / album on the
  * active device. Ids are checked before they become part of a URI.
  */
 export async function play(
@@ -346,7 +365,7 @@ export async function play(
   if (item.kind === 'track') {
     const tracks = (queue ?? [item])
       .filter((t) => t.kind === 'track' && ID.test(t.id))
-      .slice(0, 50);
+      .slice(0, 100);
     const position = Math.max(
       0,
       tracks.findIndex((t) => t.id === item.id),

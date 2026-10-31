@@ -1,0 +1,426 @@
+/* The Spotify player: library | list | bar. Calm: surfaces and text colours only, no accent fills. */
+.player {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  height: min(80dvh, 52rem);
+  font-variant-numeric: var(--font-num);
+}
+.shell {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+}
+.nav,
+.main {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-right: var(--space-2);
+  border-right: 1px solid var(--border);
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-right: var(--space-1);
+}
+.back {
+  display: none;
+}
+.plain {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.playlists {
+  overflow-y: auto;
+}
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.navItem:hover,
+.navOn {
+  background: var(--surface-2);
+}
+.navOn {
+  font-weight: var(--weight-medium);
+}
+.navName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.navCount {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}
+.sub {
+  margin: var(--space-3) 0 var(--space-1);
+  padding: 0 var(--space-3);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}
+.note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* List header: cover, name, owner and the play buttons. */
+.header {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+.headCover {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 9rem;
+  height: 9rem;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+.headCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.headTitle {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+.headSub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* The song table. */
+.table {
+  display: flex;
+  flex-direction: column;
+}
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) 9.5rem;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.head > span:first-child {
+  padding-left: 2.25rem;
+}
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.track {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+.track:hover {
+  background: var(--surface-2);
+}
+.playing .trackName {
+  font-weight: var(--weight-medium);
+}
+.dim {
+  opacity: 0.55;
+}
+.trackMain {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 3fr) minmax(0, 2fr);
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.index {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-align: right;
+}
+.trackText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.trackName,
+.trackSub,
+.trackAlbum {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trackSub,
+.trackAlbum {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.colAlbum {
+  padding-left: 0;
+}
+.colLength {
+  text-align: right;
+}
+.length {
+  min-width: 3rem;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-align: right;
+}
+.heart {
+  display: grid;
+  place-items: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.heart:hover {
+  color: var(--text);
+}
+.heartOn {
+  color: var(--text);
+}
+.heartOn :global(svg) {
+  fill: currentColor;
+}
+.hiddenMark {
+  color: var(--text-muted);
+}
+
+/* Search. */
+.search {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.searchForm {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.searchForm > :first-child {
+  flex: 1;
+}
+
+/* Bottom bar. */
+.bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+.barNow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.barCover {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+.barCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.barText {
+  min-width: 0;
+}
+.barTitle,
+.barSub {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.barTitle a {
+  color: inherit;
+}
+.barSub {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.barMid {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+}
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.seek,
+.volume {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.seek input,
+.volume input {
+  flex: 1;
+  min-height: var(--touch);
+  accent-color: var(--text);
+}
+.time {
+  min-width: 3rem;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-align: center;
+}
+.barRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.volume {
+  flex: 1;
+  max-width: 12rem;
+}
+.devices {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: var(--space-2);
+  color: var(--text-muted);
+}
+
+/* Narrow screens (phone): one pane at a time, a compact bar, no cover in the header, no volume (hardware keys). */
+@media (max-width: 48rem) {
+  .player {
+    height: 68dvh;
+    gap: var(--space-2);
+  }
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shell[data-pane='nav'] .main,
+  .shell[data-pane='main'] .nav {
+    display: none;
+  }
+  .nav {
+    padding-right: 0;
+    border-right: 0;
+  }
+  .back {
+    display: block;
+  }
+  .headCover {
+    display: none;
+  }
+  .head {
+    grid-template-columns: minmax(0, 1fr) 4rem;
+  }
+  .head .colAlbum,
+  .trackAlbum {
+    display: none;
+  }
+  .trackMain {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+  .bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'now right'
+      'mid mid';
+    gap: var(--space-1) var(--space-2);
+    padding-top: var(--space-2);
+  }
+  .barNow {
+    grid-area: now;
+  }
+  .barMid {
+    grid-area: mid;
+  }
+  .barRight {
+    grid-area: right;
+  }
+  .barCover {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .volume {
+    display: none;
+  }
+  .controls {
+    gap: 0;
+  }
+}

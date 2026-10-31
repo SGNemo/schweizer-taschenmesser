@@ -5,6 +5,7 @@
  */
 import { z } from 'zod';
 import { now } from '@/core/time/now';
+import { clearHidden } from './hiddenTracks';
 import type { NowPlaying } from './types';
 
 export const NOW_KEY = 'tm-spotify-now';
@@ -80,10 +81,11 @@ export function setNoPremium(at: number | undefined): void {
   }
 }
 
-/** Disconnecting forgets the last reading and the "no Premium" note. */
+/** Disconnecting forgets the last reading, the "no Premium" note and the songs hidden in the player. */
 export function clearNowPlayingData(): void {
   writeStoredNow(undefined, 0);
   setNoPremium(undefined);
+  clearHidden();
 }
 
 export interface Poller {
