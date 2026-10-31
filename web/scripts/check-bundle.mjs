@@ -160,7 +160,7 @@ if (has('--baseline')) {
   const old = existsSync(budgetPath) ? JSON.parse(readFileSync(budgetPath, 'utf8')) : undefined;
   writeFileSync(
     budgetPath,
-    `${JSON.stringify(makeBudget(measured, old?.tolerancePercent), null, 1)}\n`,
+    `${JSON.stringify(makeBudget(measured, old?.tolerancePercent), null, 2)}\n`,
   );
   console.log('\nBundle budget written → scripts/bundle-budget.json');
   process.exit(0);
