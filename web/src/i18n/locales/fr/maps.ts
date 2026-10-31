@@ -16,6 +16,8 @@ export const maps: Strings['maps'] = {
     routingUrl: 'Calcul d’itinéraire (adresse)',
     routingUrlHelp:
       'Un service compatible OSRM ; {profile} vaut foot, bike ou car. Par défaut : OpenStreetMap (FOSSGIS).',
+    transitUrl: 'Recherche de trajets (adresse)',
+    transitUrlHelp: 'Un service compatible MOTIS. Par défaut : Transitous (horaires ouverts).',
   },
   tabs: { label: 'Vue', places: 'Lieux', routes: 'Itinéraires', map: 'Carte' },
   empty: { places: 'Pas encore de lieux.', routes: 'Pas encore d’itinéraires.' },
@@ -122,6 +124,24 @@ export const maps: Strings['maps'] = {
       uturn: 'Faire demi-tour',
     },
     onto: (name: string) => `sur ${name}`,
+  },
+  transit: {
+    show: 'Chercher des trajets',
+    busy: 'Recherche de trajets …',
+    hide: 'Masquer les trajets',
+    unreachable: 'La recherche de trajets est indisponible pour le moment.',
+    none: 'Aucun trajet trouvé. Les horaires de cette zone manquent peut-être.',
+    blocked: 'Pas de recherche : le réseau est bloqué (Réglages → Connexions).',
+    title: 'Trajets à partir de maintenant',
+    attribution: 'Horaires : Transitous (données ouvertes)',
+    fallback:
+      'Les données de bus et de train peuvent manquer. L’appli de cartes du menu aide alors.',
+    pick: 'Choisir un trajet',
+    dep: 'dép.',
+    arr: 'arr.',
+    changes: (n: number) =>
+      n === 0 ? 'Direct' : n === 1 ? '1 correspondance' : `${n} correspondances`,
+    kinds: { walk: 'À pied', train: 'Train', bus: 'Bus', tram: 'Tram', other: 'Trajet' },
   },
   apps: {
     osm: 'OpenStreetMap',

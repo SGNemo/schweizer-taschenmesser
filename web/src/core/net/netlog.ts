@@ -144,6 +144,7 @@ const HOST_REASONS: [RegExp, NetReason][] = [
   [/(^|\.)open-meteo\.com$/, 'weather'],
   [/^(tile|nominatim)\.openstreetmap\.org$/, 'maps'],
   [/^routing\.openstreetmap\.de$/, 'maps'],
+  [/^api\.transitous\.org$/, 'maps'],
   [/^api\.frankfurter\.(dev|app)$/, 'currency'],
   [/^api\.ipify\.org$/, 'ip'],
   [/(^|\.)huggingface\.co$/, 'download'],

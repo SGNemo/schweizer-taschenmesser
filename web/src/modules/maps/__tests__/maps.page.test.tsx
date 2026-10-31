@@ -13,6 +13,28 @@ import MapsPage from '../routes/MapsPage';
 const requests: string[] = [];
 const hostOf = (url: string): string => new URL(url).host;
 let blockTiles = false;
+const MOTIS_OK = {
+  itineraries: [
+    {
+      duration: 1800,
+      startTime: '2026-11-02T08:00:00Z',
+      endTime: '2026-11-02T08:30:00Z',
+      transfers: 0,
+      legs: [
+        {
+          mode: 'REGIONAL_RAIL',
+          startTime: '2026-11-02T08:00:00Z',
+          endTime: '2026-11-02T08:30:00Z',
+          from: { name: 'Erlangen Hbf', lat: 49.5959, lon: 11.0 },
+          to: { name: 'Nürnberg Hbf', lat: 49.4521, lon: 11.0767 },
+          routeShortName: 'RE 1',
+          headsign: 'Nürnberg',
+        },
+      ],
+    },
+  ],
+};
+let transitAnswer: unknown = MOTIS_OK;
 let routingAnswer: { status: number; body: unknown } = { status: 200, body: {} };
 const OSRM_OK = {
   code: 'Ok',
@@ -65,6 +87,10 @@ function install() {
           { status: 200 },
         );
       }
+      if (hostOf(url) === 'api.transitous.org') {
+        if (blockTiles) throw new NetBlockedError();
+        return new Response(JSON.stringify(transitAnswer), { status: 200 });
+      }
       if (hostOf(url) === 'routing.openstreetmap.de') {
         if (blockTiles) throw new NetBlockedError();
         return new Response(JSON.stringify(routingAnswer.body), { status: routingAnswer.status });
@@ -87,6 +113,7 @@ beforeEach(async () => {
   requests.length = 0;
   blockTiles = false;
   routingAnswer = { status: 200, body: OSRM_OK };
+  transitAnswer = MOTIS_OK;
   let n = 0;
   URL.createObjectURL = () => `blob:t${++n}`;
   URL.revokeObjectURL = () => undefined;
@@ -325,7 +352,53 @@ describe('Karten & Orte page', () => {
       expect(await screen.findByText(/Keine Berechnung: Das Netzwerk ist gesperrt/)).toBeTruthy();
     });
 
-    it('public transport routes have no in-app calculation yet (only the apps)', async () => {
+    it('public transport: connections are searched on click, listed, with line and stops', async () => {
+      await routeRepo.create({
+        name: 'Mit dem Zug',
+        mode: 'transit',
+        from: { label: 'A', lat: 49.5981, lon: 11.0044 },
+        to: { label: 'B', lat: 49.4521, lon: 11.0767 },
+        via: [],
+        pinned: false,
+      });
+      open('/maps?view=routes');
+      await screen.findByText(/Mit dem Zug/);
+      expect(requests.filter((u) => hostOf(u) === 'api.transitous.org')).toHaveLength(0);
+      fireEvent.click(screen.getByRole('button', { name: 'Karten & Orte' }));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'Verbindungen suchen' }));
+      const card = await screen.findByTestId('map-transit');
+      const options = await within(card).findByTestId('map-transit-options');
+      expect(options).toHaveTextContent('Direkt');
+      expect(options).toHaveTextContent('30 Min.');
+      expect(within(card).getByTestId('map-transit-steps')).toHaveTextContent(
+        'Erlangen Hbf · Bahn RE 1 → Nürnberg · ',
+      );
+      const asked = requests.filter((u) => hostOf(u) === 'api.transitous.org');
+      expect(asked).toHaveLength(1);
+      expect(asked[0]).toContain('fromPlace=49.5981%2C11.0044');
+      expect(await screen.findByTestId('map-line')).toBeTruthy();
+      fireEvent.click(within(card).getByRole('button', { name: 'Verbindungen ausblenden' }));
+      expect(screen.queryByTestId('map-transit')).toBeNull();
+    });
+
+    it('says calmly when no connection is found', async () => {
+      await routeRepo.create({
+        name: 'Mit dem Zug',
+        mode: 'transit',
+        from: { label: 'A', lat: 49.5981, lon: 11.0044 },
+        to: { label: 'B', lat: 49.4521, lon: 11.0767 },
+        via: [],
+        pinned: false,
+      });
+      transitAnswer = { itineraries: [] };
+      open('/maps?view=routes');
+      await screen.findByText(/Mit dem Zug/);
+      fireEvent.click(screen.getByRole('button', { name: 'Karten & Orte' }));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'Verbindungen suchen' }));
+      expect(await screen.findByText(/Keine Verbindung gefunden/)).toBeTruthy();
+    });
+
+    it('public transport routes have no car-style calculation (only connections and the apps)', async () => {
       await routeRepo.create({
         name: 'Mit dem Zug',
         mode: 'transit',

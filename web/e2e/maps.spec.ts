@@ -38,6 +38,33 @@ async function mockOsm(page: Page) {
       ],
     });
   });
+  await page.route('**://api.transitous.org/**', async (route) => {
+    seen.push(route.request().url());
+    await route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: {
+        itineraries: [
+          {
+            duration: 1800,
+            startTime: '2026-09-29T08:00:00Z',
+            endTime: '2026-09-29T08:30:00Z',
+            transfers: 0,
+            legs: [
+              {
+                mode: 'REGIONAL_RAIL',
+                startTime: '2026-09-29T08:00:00Z',
+                endTime: '2026-09-29T08:30:00Z',
+                from: { name: 'Erlangen Hbf', lat: 49.5959, lon: 11.0 },
+                to: { name: 'Nürnberg Hbf', lat: 49.4521, lon: 11.0767 },
+                routeShortName: 'RE 1',
+                headsign: 'Nürnberg',
+              },
+            ],
+          },
+        ],
+      },
+    });
+  });
   await page.route('**://routing.openstreetmap.de/**', async (route) => {
     seen.push(route.request().url());
     await route.fulfill({
@@ -188,5 +215,35 @@ test.describe('Karten & Orte', () => {
     expect(seen.filter((u) => hostOf(u) === 'routing.openstreetmap.de')).toHaveLength(1);
     await plan.getByRole('button', { name: 'Route ausblenden' }).click();
     await expect(page.getByTestId('map-line')).toHaveCount(0);
+  });
+
+  test('a bus and train route finds connections only on click: list, line and steps', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    await enable(page, 'maps');
+    await ready(page, '/maps?view=routes');
+    await page.getByRole('button', { name: 'Route hinzufügen' }).first().click();
+    await page.getByLabel('Name').first().fill('Mit dem Zug');
+    await page.getByLabel('Unterwegs mit').selectOption('transit');
+    const from = page.getByTestId('endpoint-Start');
+    await from.getByLabel('Ort suchen').fill('49.5959, 11.0');
+    await from.getByRole('button', { name: 'Suchen' }).click();
+    await from.getByRole('button', { name: '49.5959, 11' }).click();
+    const to = page.getByTestId('endpoint-Ziel');
+    await to.getByLabel('Ort suchen').fill('49.4521, 11.0767');
+    await to.getByRole('button', { name: 'Suchen' }).click();
+    await to.getByRole('button', { name: '49.4521, 11.0767' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+    await expect(page.getByText('Mit dem Zug')).toBeVisible();
+    expect(seen.filter((u) => hostOf(u) === 'api.transitous.org')).toEqual([]);
+
+    await page.getByRole('button', { name: 'Karten & Orte', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Verbindungen suchen' }).click();
+    const card = page.getByTestId('map-transit');
+    await expect(card.getByTestId('map-transit-options')).toContainText('30 Min.');
+    await expect(card.getByTestId('map-transit-steps')).toContainText('RE 1 → Nürnberg');
+    await expect(page.getByTestId('map-line')).toBeAttached();
+    expect(seen.filter((u) => hostOf(u) === 'api.transitous.org')).toHaveLength(1);
   });
 });

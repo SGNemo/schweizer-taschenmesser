@@ -16,6 +16,9 @@ export const maps: Strings['maps'] = {
     routingUrl: 'Cálculo de rutas (dirección)',
     routingUrlHelp:
       'Un servicio compatible con OSRM; {profile} es foot, bike o car. Predeterminado: OpenStreetMap (FOSSGIS).',
+    transitUrl: 'Búsqueda de conexiones (dirección)',
+    transitUrlHelp:
+      'Un servicio compatible con MOTIS. Predeterminado: Transitous (horarios abiertos).',
   },
   tabs: { label: 'Vista', places: 'Lugares', routes: 'Rutas', map: 'Mapa' },
   empty: { places: 'Aún no hay lugares.', routes: 'Aún no hay rutas.' },
@@ -122,6 +125,22 @@ export const maps: Strings['maps'] = {
       uturn: 'Dar la vuelta',
     },
     onto: (name: string) => `hacia ${name}`,
+  },
+  transit: {
+    show: 'Buscar conexiones',
+    busy: 'Buscando conexiones …',
+    hide: 'Ocultar las conexiones',
+    unreachable: 'La búsqueda de conexiones no está disponible ahora.',
+    none: 'No se encontró ninguna conexión. Puede faltar información de horarios en esta zona.',
+    blocked: 'Sin búsqueda: la red está bloqueada (Ajustes → Conexiones).',
+    title: 'Conexiones desde ahora',
+    attribution: 'Horarios: Transitous (datos abiertos)',
+    fallback: 'Pueden faltar datos de autobús y tren. Entonces ayuda la app de mapas del menú.',
+    pick: 'Elegir una conexión',
+    dep: 'sal.',
+    arr: 'lleg.',
+    changes: (n: number) => (n === 0 ? 'Directo' : n === 1 ? '1 transbordo' : `${n} transbordos`),
+    kinds: { walk: 'A pie', train: 'Tren', bus: 'Autobús', tram: 'Tranvía', other: 'Trayecto' },
   },
   apps: {
     osm: 'OpenStreetMap',

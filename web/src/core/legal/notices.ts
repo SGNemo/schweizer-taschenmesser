@@ -14,6 +14,7 @@ export const NOTICE_IDS = [
   'weather',
   'maps',
   'maps-route',
+  'maps-transit',
   'supporter',
 ] as const;
 export type NoticeId = (typeof NOTICE_IDS)[number];

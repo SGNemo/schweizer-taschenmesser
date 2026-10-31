@@ -5244,6 +5244,8 @@ export const de = {
       routingUrl: 'Routenberechnung (Adresse)',
       routingUrlHelp:
         'Ein OSRM-kompatibler Dienst; {profile} steht für foot, bike oder car. Standard: OpenStreetMap (FOSSGIS).',
+      transitUrl: 'Verbindungssuche (Adresse)',
+      transitUrlHelp: 'Ein MOTIS-kompatibler Dienst. Standard: Transitous (offene Fahrplandaten).',
     },
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },
@@ -5350,6 +5352,23 @@ export const de = {
         uturn: 'Wenden',
       },
       onto: (name: string) => `auf ${name}`,
+    },
+    transit: {
+      show: 'Verbindungen suchen',
+      busy: 'Suche Verbindungen …',
+      hide: 'Verbindungen ausblenden',
+      unreachable: 'Die Verbindungssuche ist gerade nicht erreichbar.',
+      none: 'Keine Verbindung gefunden. Vielleicht fehlen Fahrplandaten für diese Gegend.',
+      blocked: 'Keine Suche: Das Netzwerk ist gesperrt (Einstellungen → Verbindungen).',
+      title: 'Verbindungen ab jetzt',
+      attribution: 'Fahrplandaten: Transitous (offene Daten)',
+      fallback:
+        'Bei Bus und Bahn kann es sein, dass die Daten fehlen. Dann hilft dir die Karten-App im Menü.',
+      pick: 'Verbindung wählen',
+      dep: 'ab',
+      arr: 'an',
+      changes: (n: number) => (n === 0 ? 'Direkt' : n === 1 ? '1 Umstieg' : `${n} Umstiege`),
+      kinds: { walk: 'Zu Fuß', train: 'Bahn', bus: 'Bus', tram: 'Tram', other: 'Fahrt' },
     },
     apps: {
       osm: 'OpenStreetMap',

@@ -24,6 +24,7 @@ import {
 import { PlaceEditor, type PlaceTarget } from '../components/PlaceEditor';
 import { RouteEditor, type RouteTarget } from '../components/RouteEditor';
 import { TileMap, type MapMarker } from '../components/TileMap';
+import { TransitCard, type Trip } from '../components/TransitCard';
 import { searchPlaces, MapsError, type Hit } from '../geocode';
 import { CATEGORY_ICON, MODE_ICON } from '../icons';
 import {
@@ -39,6 +40,7 @@ import {
   type View,
 } from '../logic';
 import { placeRepo, routeRepo } from '../repo';
+import { connectionPath, fetchConnections } from '../transit';
 import { describeStep, fetchPlan, isDrivingMode, splitDuration, type Plan } from '../routing';
 import type { Endpoint, Place, Route } from '../schema';
 import { servicesOf, settings, DEFAULT_TILE_URL } from '../settings';
@@ -152,7 +154,7 @@ export default function MapsPage() {
   const places = useLiveQuery(() => placeRepo.active().sortBy('createdAt'), []);
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
-  const { tileUrl, searchUrl, routingUrl } = servicesOf(
+  const { tileUrl, searchUrl, routingUrl, transitUrl } = servicesOf(
     prefs as Record<string, unknown> | undefined,
   );
   const [params, setParams] = useSearchParams();
@@ -179,6 +181,7 @@ export default function MapsPage() {
   const [searching, setSearching] = useState<'idle' | 'busy' | 'error'>('idle');
   const [note, setNote] = useState('');
   const [shown, setShown] = useState<Shown>();
+  const [trip, setTrip] = useState<Trip>();
   const searchInput = useRef<HTMLInputElement>(null);
   const view = mapView ?? fitView(places ?? [], 800, 480) ?? GERMANY;
 
@@ -235,6 +238,7 @@ export default function MapsPage() {
     if (!isDrivingMode(r.mode)) return;
     setTab('map');
     setSelected(undefined);
+    setTrip(undefined);
     setShown({ route: r, status: 'busy' });
     try {
       await requireNotice('maps-route');
@@ -249,6 +253,34 @@ export default function MapsPage() {
         status: why === 'noroute' ? 'noroute' : why === 'blocked' ? 'blocked' : 'error',
       });
     }
+  }
+
+  /** Only on click and after the notice: asks the timetable service for connections from now. */
+  async function findConnections(r: Stored<Route>) {
+    setTab('map');
+    setSelected(undefined);
+    setShown(undefined);
+    setTrip({ name: r.name, status: 'busy', index: 0 });
+    try {
+      await requireNotice('maps-transit');
+      setReady(true);
+      const options = await fetchConnections(r.from, r.to, { template: transitUrl });
+      setTrip({ name: r.name, status: 'ok', options, index: 0 });
+      setMapView(fitView(connectionPath(options[0]!), 800, 480) ?? undefined);
+    } catch (e) {
+      const why = e instanceof MapsError ? e.message : 'error';
+      setTrip({
+        name: r.name,
+        status: why === 'noroute' ? 'none' : why === 'blocked' ? 'blocked' : 'error',
+        index: 0,
+      });
+    }
+  }
+
+  function pickConnection(index: number) {
+    if (!trip?.options?.[index]) return;
+    setTrip({ ...trip, index });
+    setMapView(fitView(connectionPath(trip.options[index]), 800, 480) ?? undefined);
   }
 
   function choose(h: Hit) {
@@ -316,7 +348,13 @@ export default function MapsPage() {
   const routeMenu = (r: Stored<Route>): RowMenuItem[] => [
     ...(isDrivingMode(r.mode)
       ? [{ id: 'calculate', label: t.maps.plan.show, onSelect: () => void calculate(r) }]
-      : []),
+      : [
+          {
+            id: 'connections',
+            label: t.maps.transit.show,
+            onSelect: () => void findConnections(r),
+          },
+        ]),
     ...apps().flatMap((a) => {
       const url = routeLink(a, r.mode, r.from, r.to, r.via);
       return url
@@ -457,7 +495,10 @@ export default function MapsPage() {
               template={tileUrl}
               markers={markers}
               selected={selected && !selected.place ? selected : undefined}
-              line={shown?.plan?.line}
+              line={
+                shown?.plan?.line ??
+                (trip?.options ? connectionPath(trip.options[trip.index]!) : undefined)
+              }
               onPick={(lat, lon) =>
                 setSelected({
                   lat: roundCoord(lat),
@@ -485,6 +526,9 @@ export default function MapsPage() {
           )}
 
           {shown ? <PlanCard shown={shown} onHide={() => setShown(undefined)} /> : null}
+          {trip ? (
+            <TransitCard trip={trip} onPick={pickConnection} onHide={() => setTrip(undefined)} />
+          ) : null}
 
           {selected ? (
             <section
