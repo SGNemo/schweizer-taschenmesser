@@ -11,6 +11,15 @@
   background: color-mix(in srgb, var(--bg) 85%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
+  transition:
+    transform var(--dur-fast) var(--ease),
+    opacity var(--dur-fast) var(--ease);
+}
+/* Phone, while reading: the bar slides up and out; scrolling up, the top of the page, keyboard focus in the bar, an open palette/dialog or the on-screen keyboard bring it back (useTopbarCollapse). */
+.topbar[data-collapsed='true'] {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
 }
 .brand {
   display: flex;
