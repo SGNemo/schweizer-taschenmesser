@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router';
-import { WeatherPreview } from './WeatherPreview';
 import { weatherIcon } from './weatherIcon';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { dismissHint, isHintDismissed } from '@/core/weather/hint';
@@ -10,6 +9,11 @@ import { dateTimeFormat } from '@/core/i18n/format';
 import { tWeather } from '@/strings.weather';
 import { Button, Icon } from '@/ui';
 import styles from './Home.module.css';
+
+/** The forecast dialog (chart, air quality) loads on the first tap, not with the Overview. */
+const WeatherPreview = lazy(() =>
+  import('./WeatherPreview').then((m) => ({ default: m.WeatherPreview })),
+);
 
 const SETTINGS = settingsPath('verbindungen', 'weather');
 
@@ -21,6 +25,8 @@ const SETTINGS = settingsPath('verbindungen', 'weather');
  */
 export function WeatherLine() {
   const [open, setOpen] = useState(false);
+  // Mounted from the first tap on (keeps the dialog's close transition), loaded only then.
+  const [opened, setOpened] = useState(false);
   const weather = useWeather(open);
   const [settings] = useWeatherSettings();
   const tx = tWeather.use();
@@ -42,12 +48,19 @@ export function WeatherLine() {
           type="button"
           className={`${styles.weather} ${styles.weatherButton}`}
           data-testid="weather-line"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setOpened(true);
+            setOpen(true);
+          }}
         >
           <Icon name={weatherIcon(forecast.group, forecast.now?.night)} size={16} />
           <span>{parts.join(' · ')}</span>
         </button>
-        <WeatherPreview open={open} onClose={() => setOpen(false)} weather={weather} />
+        {opened ? (
+          <Suspense fallback={null}>
+            <WeatherPreview open={open} onClose={() => setOpen(false)} weather={weather} />
+          </Suspense>
+        ) : null}
       </>
     );
   }
