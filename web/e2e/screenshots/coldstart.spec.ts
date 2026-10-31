@@ -52,7 +52,9 @@ function probe() {
 async function throttle(page: Page) {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Network.enable');
-  await cdp.send('Network.emulateNetworkConditions', FAST_3G);
+  // COLDSTART_NET=0 separates CPU from network (comparison runs only; the documented numbers use Fast 3G).
+  if (process.env.COLDSTART_NET !== '0')
+    await cdp.send('Network.emulateNetworkConditions', FAST_3G);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
 }
 
@@ -133,7 +135,8 @@ test('cold start on a throttled phone (CPU 4×, Fast 3G)', async ({ browser }, i
 
   mkdirSync(OUT, { recursive: true });
   writeFileSync(`${OUT}/${LABEL}.json`, `${JSON.stringify(result, null, 1)}\n`);
-  console.log(`\nCold start, pixel-7, CPU 4×, Fast 3G, median of ${RUNS} (ms)`);
+  const net = process.env.COLDSTART_NET === '0' ? 'no network throttling' : 'Fast 3G';
+  console.log(`\nCold start, pixel-7, CPU 4×, ${net}, median of ${RUNS} (ms)`);
   console.log('scenario       first paint   main h1   capture field');
   for (const [name, r] of Object.entries(result)) {
     console.log(
