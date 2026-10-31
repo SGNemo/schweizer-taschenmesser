@@ -8,6 +8,7 @@ const ctx = (over: Partial<SettingsContext> = {}): SettingsContext => ({
   platform: 'desktop',
   isDev: false,
   isModuleEnabled: () => true,
+  showPreview: false,
   ...over,
 });
 

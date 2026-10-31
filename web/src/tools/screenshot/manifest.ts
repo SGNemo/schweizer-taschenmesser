@@ -14,6 +14,7 @@ const tool: ToolManifest = {
   offline: true,
   // A function for people who use it daily; everyone else keeps the toolbar short.
   defaultEnabled: false,
+  maturity: 'stable',
   order: 170,
   component: () => import('./Tool'),
 };

@@ -4,6 +4,7 @@
  * generated from this list, so nothing can be appended "somewhere at the bottom" of the page.
  */
 import type { ReactNode } from 'react';
+import type { Maturity } from '@/core/modules/types';
 import type { PlatformKind } from '@/core/platform/types';
 import type { ResetPlan } from '../reset';
 
@@ -37,6 +38,8 @@ export interface SettingsContext {
   isModuleEnabled(moduleId: string): boolean;
   /** AI is allowed (master switch Settings → KI); sections about AI hide when this is `false`. */
   aiOn?: boolean;
+  /** "In Arbeit anzeigen" (device-local, `stores/ui.ts`): `preview` sections show only while true. */
+  showPreview: boolean;
 }
 
 /** A single setting inside a section, listed so the search can find it and jump to its row. */
@@ -61,6 +64,16 @@ export interface SettingsSectionDef {
   fields?: readonly SettingsFieldRef[];
   /** Hidden when this returns false (dev build only, desktop only, module enabled, …). */
   visibleWhen?: (ctx: SettingsContext) => boolean;
+  /**
+   * Required. `preview` hides the section until "In Arbeit anzeigen" is on (`visibleSections`),
+   * shown then with an "In Arbeit" badge. Module sections inherit the module's maturity.
+   */
+  maturity: Maturity;
+  /**
+   * Preview sections only: true while what the section controls is switched on, so the section
+   * stays reachable with "In Arbeit anzeigen" off (nothing the user turned on may vanish).
+   */
+  previewInUse?: (ctx: SettingsContext) => boolean;
   /**
    * Offers "Auf Standard zurücksetzen" under the section. Opt-in and never for anything security
    * related (tested in `reset.test.ts`).

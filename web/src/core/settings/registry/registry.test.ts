@@ -9,12 +9,14 @@ const ctx = (over: Partial<SettingsContext> = {}): SettingsContext => ({
   platform: 'web',
   isDev: false,
   isModuleEnabled: () => true,
+  showPreview: false,
   ...over,
 });
 const sec = (over: Partial<SettingsSectionDef> & { id: string }): SettingsSectionDef => ({
   category: 'allgemein',
   order: 10,
   title: over.id,
+  maturity: 'stable',
   render: () => null,
   ...over,
 });
@@ -50,6 +52,32 @@ describe('settings registry', () => {
     expect(
       visibleSections(all, ctx({ isModuleEnabled: () => false })).map((s) => s.id),
     ).not.toContain('mod');
+  });
+
+  it('hides preview sections until "In Arbeit anzeigen", unless what they control is in use', () => {
+    const all = [
+      sec({ id: 'done' }),
+      sec({ id: 'wip', maturity: 'preview' }),
+      sec({ id: 'wipOn', maturity: 'preview', previewInUse: (c) => c.isModuleEnabled('x') }),
+      sec({ id: 'wipDev', maturity: 'preview', visibleWhen: (c) => c.isDev }),
+    ];
+    const ids = (c: SettingsContext) => visibleSections(all, c).map((s) => s.id);
+    expect(ids(ctx({ isModuleEnabled: () => false }))).toEqual(['done']);
+    expect(ids(ctx())).toEqual(['done', 'wipOn']);
+    expect(ids(ctx({ showPreview: true }))).toEqual(['done', 'wip', 'wipOn']);
+    // visibleWhen still applies with the switch on.
+    expect(ids(ctx({ showPreview: true, isDev: true }))).toEqual([
+      'done',
+      'wip',
+      'wipDev',
+      'wipOn',
+    ]);
+  });
+
+  it('rejects a section without a maturity', () => {
+    const bad = { ...sec({ id: 'a' }), maturity: undefined as unknown as 'stable' };
+    expect(validateSections([bad]).join()).toContain("maturity 'stable' or 'preview'");
+    expect(validateSections([sec({ id: 'a', maturity: 'preview' })])).toEqual([]);
   });
 
   it('only lists categories that have a visible section', () => {

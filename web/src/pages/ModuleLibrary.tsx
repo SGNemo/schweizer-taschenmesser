@@ -7,7 +7,7 @@ import {
   moduleHasData,
   useModuleStates,
 } from '@/core/modules/activation';
-import { availableManifests } from '@/core/modules/available';
+import { availableManifests, useCatalogManifests } from '@/core/modules/available';
 import { libraryBadges, markLibrarySeen } from '@/core/modules/librarySeen';
 import { normalize } from '@/core/text/normalize';
 import { hasStartData } from '@/core/dataapi/onboarding';
@@ -32,9 +32,9 @@ interface LibraryGroup {
 const haystack = (m: ModuleManifest) =>
   normalize([m.name, m.description, ...(m.settings.keywords ?? [])].join(' '));
 
-function libraryGroups(query: string): LibraryGroup[] {
+function libraryGroups(catalog: readonly ModuleManifest[], query: string): LibraryGroup[] {
   const tokens = normalize(query).split(/\s+/).filter(Boolean);
-  const all = availableManifests().filter((m) => {
+  const all = catalog.filter((m) => {
     const text = haystack(m);
     return tokens.every((tok) => text.includes(tok));
   });
@@ -55,6 +55,8 @@ function libraryGroups(query: string): LibraryGroup[] {
 
 export function ModuleLibrary() {
   const states = useModuleStates();
+  // Preview modules only with "In Arbeit anzeigen" or when already on (core/modules/available.ts).
+  const catalog = useCatalogManifests(states);
   const [pending, setPending] = useState<ModuleManifest | null>(null);
   const [offer, setOffer] = useState<ModuleManifest | null>(null);
   const [query, setQuery] = useState('');
@@ -66,7 +68,7 @@ export function ModuleLibrary() {
   // `/library#module-<id>` (from the palette or a link) scrolls to that card and marks it.
   useHashTarget(states !== undefined);
 
-  const groups = libraryGroups(query);
+  const groups = libraryGroups(catalog, query);
 
   async function enable(m: ModuleManifest) {
     await enableModule(m);
@@ -146,6 +148,7 @@ export function ModuleLibrary() {
                         <Badge>{badges[m.id] === 'new' ? text.badgeNew : text.badgeUpdated}</Badge>
                       ) : null}
                       {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
+                      {m.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
                     </>
                   }
                 >

@@ -9,6 +9,7 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { validateSections, visibleSections } from '@/core/settings/registry/registry';
 import type { SettingsContext, SettingsSectionDef } from '@/core/settings/registry/types';
 import { isDevBuild } from '@/core/update/buildInfo';
+import { useUiStore } from '@/stores/ui';
 import { createElement } from 'react';
 import { ModuleSection } from './ModuleSection';
 import { CORE_SECTIONS } from './sections';
@@ -41,6 +42,9 @@ export function moduleSections(
     keywords: m.settings.keywords,
     fields: m.settings.fields.map((f) => ({ key: f.key, label: f.label, description: f.help })),
     visibleWhen: (ctx: SettingsContext) => ctx.isModuleEnabled(m.id),
+    // Inherits the module's maturity; an enabled preview module keeps its settings reachable.
+    maturity: m.maturity,
+    previewInUse: (ctx: SettingsContext) => ctx.isModuleEnabled(m.id),
     render: () => createElement(ModuleSection, { manifest: m }),
   }));
 }
@@ -65,6 +69,7 @@ let lastStates: ModuleStates | undefined;
 /** Sections visible right now (platform, dev build, enabled modules), in navigation order. */
 export function useSettingsSections(): SettingsSectionDef[] {
   const aiOn = useAiOn();
+  const showPreview = useUiStore((s) => s.showPreview);
   const states = useLiveQuery(
     async () => {
       const read = await loadModuleStates();
@@ -81,7 +86,8 @@ export function useSettingsSections(): SettingsSectionDef[] {
       isDev: isDevBuild(),
       isModuleEnabled: (id) => Boolean(states[id]),
       aiOn,
+      showPreview,
     };
     return visibleSections(allSettingsSections(), ctx);
-  }, [states, aiOn]);
+  }, [states, aiOn, showPreview]);
 }

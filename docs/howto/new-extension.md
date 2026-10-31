@@ -4,7 +4,7 @@ Recipes for the other extension points. Index: [HOW-TO](../HOW-TO.md). Commands 
 
 ## New tool
 Tools are not modules (no own data, no cross-imports; see `tools/isolation.test.ts`).
-1. Create `web/src/tools/<id>/` with `manifest.ts` (copy `tools/uuid/manifest.ts`: `id`, `name`, `icon`, `description`, `group` `basis|extra|dev`, `offline`, `defaultEnabled`, `order`, `component: () => import('./Tool')`), `Tool.tsx`, optional pure `logic.ts` + `logic.test.ts`.
+1. Create `web/src/tools/<id>/` with `manifest.ts` (copy `tools/uuid/manifest.ts`: `id`, `name`, `icon`, `description`, `group` `basis|extra|dev`, `offline`, `defaultEnabled` (= off but listed), `maturity: 'stable' | 'preview'` (required, `check:modules`; `preview` = hidden from toolbox, library, palette and settings until "In Arbeit anzeigen"), `order`, `component: () => import('./Tool')`), `Tool.tsx`, optional pure `logic.ts` + `logic.test.ts`.
 2. Strings under `t.tools.<id>` in `src/strings.ts`. Discovery is automatic (`core/tools/registry.ts` glob).
 3. Persist anything through `useSettings` (scope `tools.<id>`); do not import modules, connectors, `core/db`, `core/ai`.
 4. No generator exists (`gen:module` is modules only).
