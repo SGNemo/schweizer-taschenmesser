@@ -5,6 +5,7 @@ import { execSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Plugin } from 'vite';
 import { extractChangelogSection } from './scripts/lib/aboutData.ts';
+import { onlineOnlyFiles } from './scripts/lib/precacheSplit.ts';
 import { fileURLToPath } from 'node:url';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
@@ -15,6 +16,49 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 const native = Boolean(process.env.TAURI_ENV_PLATFORM);
 // Measurement only (`npm run check:bundle`): Vite's manifest plus a per-chunk module list in dist/.vite/.
 const bundleReport = process.env.VITE_BUNDLE_REPORT === '1';
+
+/**
+ * Files that leave the precache (tools, chat, password dictionaries; rule in
+ * scripts/lib/precacheSplit.ts). Filled from the app's bundle, read by the precache filter below; the
+ * service worker's runtime cache keeps them after their first (online) use.
+ */
+const onlineOnly = new Set<string>();
+
+function precacheSplit(): Plugin {
+  return {
+    name: 'nemo-precache-split',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).flatMap((c) =>
+        c.type === 'chunk'
+          ? [
+              {
+                file: c.fileName,
+                isEntry: c.isEntry,
+                facadeModuleId: c.facadeModuleId,
+                imports: c.imports,
+                dynamicImports: c.dynamicImports,
+                assets: [
+                  ...(c.viteMetadata?.importedCss ?? []),
+                  ...(c.viteMetadata?.importedAssets ?? []),
+                ],
+              },
+            ]
+          : [],
+      );
+      // Only the app build (the service worker is built separately and has no HTML entry).
+      if (!chunks.some((c) => c.isEntry && c.facadeModuleId?.endsWith('index.html'))) return;
+      onlineOnly.clear();
+      for (const f of onlineOnlyFiles(chunks)) onlineOnly.add(f);
+    },
+    writeBundle(options) {
+      if (!bundleReport || onlineOnly.size === 0) return;
+      const dir = `${options.dir ?? 'dist'}/.vite`;
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(`${dir}/lazy-online.json`, JSON.stringify([...onlineOnly].sort()));
+    },
+  };
+}
 
 const short = (id: string) =>
   id
@@ -78,6 +122,7 @@ export default defineConfig({
   },
   plugins: [
     ...(bundleReport ? [moduleReport()] : []),
+    precacheSplit(),
     react({ jsxImportSource: '@/core/text/readjsx' }),
     VitePWA({
       disable: native,
@@ -120,6 +165,14 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Tools, chat and the password dictionaries load on first use (decision in
+        // docs/decisions/core.md); everything else stays precached so the app works offline.
+        manifestTransforms: [
+          (entries) => ({
+            manifest: entries.filter((e) => !onlineOnly.has(e.url)),
+            warnings: [],
+          }),
+        ],
       },
     }),
   ],
