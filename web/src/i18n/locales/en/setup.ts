@@ -165,6 +165,63 @@ export const setup: Strings['setup'] = {
       stepsNote: 'Steps: docs/MANUAL-TESTS.md → “Google-Verbindung einrichten”.',
       none: 'There are no connections in this version.',
     },
+    migrate: {
+      title: 'Moving from another app',
+      description:
+        'Coming from Google, Todoist, Obsidian, a banking app or Bitwarden? Pick where you come from and Nemo takes you to the matching import. Everything stays on your device, you see a preview first, and every import can be undone.',
+      optional: 'All of this is optional. “Next” without a choice files the step under “Later”.',
+      chosen: 'Chosen',
+      origins: {
+        google: {
+          title: 'Google (Calendar, Tasks, Keep)',
+          how: 'Get your data from Google Takeout (takeout.google.com): tick only Calendar, Tasks and Keep. Unzip the ZIP file first.',
+        },
+        todoist: {
+          title: 'Todoist',
+          how: 'Project menu (⋯) → “Export as CSV”. One file per project.',
+        },
+        obsidian: {
+          title: 'Obsidian / Markdown',
+          how: 'Choose the .md files of your folder, several at once if you like. Titles, tags and task lists are kept.',
+        },
+        bank: {
+          title: 'Bank (statement)',
+          how: 'In your online banking, download the statement as a CSV or CAMT file.',
+        },
+        bitwarden: {
+          title: 'Bitwarden',
+          how: 'Web vault → Tools → Export vault → file format .csv. The import runs in Passwords under “Import, Export & Security” and needs your master password.',
+        },
+        paper: {
+          title: 'Paper / in my head',
+          how: 'Then start with Quick capture.',
+        },
+      } as Record<string, { title: string; how: string }>,
+      actions: {
+        calendar: 'Import calendar',
+        tasks: 'Import to-dos',
+        notes: 'Import notes',
+        bank: 'Import statement',
+        vault: 'Import in Passwords',
+      } as Record<string, string>,
+      items: {
+        'google.calendar': 'Calendar (.ics) imported',
+        'google.tasks': 'Tasks.json imported',
+        'google.keep': 'Keep notes imported',
+        'google.subscription': 'Connect the calendar as a subscription (Settings → Connections)',
+        'todoist.tasks': 'Todoist CSV imported',
+        'obsidian.notes': 'Markdown notes imported',
+        'bank.statement': 'Statement imported',
+        'bitwarden.vault': 'Bitwarden CSV imported in Passwords',
+      } as Record<string, string>,
+      tick: 'Tick off',
+      untick: 'Reopen',
+      subLabel: 'What is still missing',
+      settingsRow: 'Moving from another app …',
+      settingsHint:
+        'From Google, Todoist, Obsidian, a banking app or Bitwarden: leads to the matching imports.',
+      settingsOpen: 'Open',
+    },
     startdata: {
       title: 'Import',
       description:

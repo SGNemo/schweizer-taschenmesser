@@ -15,6 +15,7 @@ import { verifyBackup, type VerifyReport } from '@/core/backup/verify';
 import { db } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
+import { MigratePicker } from '@/layout/setup/steps/MigrateStep';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Card, Dialog, TextField } from '@/ui';
@@ -39,6 +40,7 @@ export function BackupSection() {
   const [report, setReport] = useState<VerifyReport | undefined>();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [moving, setMoving] = useState(false);
 
   async function exportPlain() {
     const result = await downloadTextFile(
@@ -273,6 +275,28 @@ export function BackupSection() {
               {t.backup.previewTotals(plan.totals.added, plan.totals.replaced, plan.totals.removed)}
             </p>
           ) : null}
+        </Dialog>
+      </Card>
+      <Card>
+        <div className={styles.form}>
+          <div className={styles.row}>
+            <div>
+              <strong>{t.setup.steps.migrate.settingsRow}</strong>
+              <p className={styles.muted}>{t.setup.steps.migrate.settingsHint}</p>
+            </div>
+            <Button data-testid="migrate-open" onClick={() => setMoving(true)}>
+              {t.setup.steps.migrate.settingsOpen}
+            </Button>
+          </div>
+        </div>
+        <Dialog
+          open={moving}
+          onClose={() => setMoving(false)}
+          title={t.setup.steps.migrate.title}
+          footer={<Button onClick={() => setMoving(false)}>{t.actions.close}</Button>}
+        >
+          <p>{t.setup.steps.migrate.description}</p>
+          {moving ? <MigratePicker onLeave={() => setMoving(false)} /> : null}
         </Dialog>
       </Card>
       <AutoBackupCard

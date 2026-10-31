@@ -52,6 +52,9 @@ Chrome/Edge (Windows) bzw. Chrome (Android) öffnen → „App installieren“. 
 HTTPS (oder `localhost`).
 
 
+## Umzug von einer anderen App
+Du kommst von Google, Todoist, Obsidian, einer Bank-App oder Bitwarden? Öffne die Checkliste auf der Übersicht (Zeile „Umzug von einer anderen App“) oder **Einstellungen → Sync & Backup → Umzug von einer anderen App …**. Wähle, woher du kommst: Nemo sagt, wo du den Export bekommst (bei Google: Google Takeout, die ZIP-Datei vorher entpacken), und öffnet den passenden Import mit Vorschau. Es wird nichts hochgeladen, du brauchst kein Konto, und jeder Import lässt sich rückgängig machen. Unter der Checklisten-Zeile siehst du, was je Herkunft noch fehlt; Punkte, die die App nicht erkennen kann (Kalender-Abo verbinden, Bitwarden-Import), hakst du selbst ab. Alles ist freiwillig.
+
 ## Dev-Preview (ungetestete Zwischenstände)
 
 Nach jedem Stand von `develop` baut GitHub automatisch eine Vorschau (Windows-Portable und Android-APK). Sie ist für Tester gedacht und kann Fehler enthalten.

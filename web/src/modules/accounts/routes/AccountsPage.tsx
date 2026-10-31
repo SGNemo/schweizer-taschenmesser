@@ -77,12 +77,13 @@ function Unlocked() {
   const [query, setQuery] = useState('');
   const [detailId, setDetailId] = useState<string | null>(null);
   const [form, setForm] = useState<EntryTarget>(null);
-  const [tools, setTools] = useState(false);
+  // `?tools=1` (setup "Umzug": Bitwarden): open import & export right away.
+  const [params] = useSearchParams();
+  const [tools, setTools] = useState(params.get('tools') === '1');
   const [generator, setGenerator] = useState(false);
   const [bridge, setBridge] = useState(false);
   const searchBox = useRef<HTMLInputElement>(null);
   // `?find=n` (vault search key): focus the search field.
-  const [params] = useSearchParams();
   const find = params.get('find');
   useEffect(() => {
     if (find) searchBox.current?.focus();

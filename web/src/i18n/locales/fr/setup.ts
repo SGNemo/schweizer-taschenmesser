@@ -175,6 +175,64 @@ export const setup: Strings['setup'] = {
       stepsNote: 'Étapes : docs/MANUAL-TESTS.md → « Google-Verbindung einrichten ».',
       none: 'Cette version ne propose aucune connexion.',
     },
+    migrate: {
+      title: 'Déménagement depuis une autre appli',
+      description:
+        'Vous venez de Google, Todoist, Obsidian, d’une appli bancaire ou de Bitwarden ? Choisissez votre origine et Nemo vous mène à l’import adapté. Tout reste sur votre appareil, vous voyez d’abord un aperçu, et chaque import peut être annulé.',
+      optional:
+        'Tout ceci est facultatif. « Suivant » sans choix classe l’étape sous « Plus tard ».',
+      chosen: 'Choisi',
+      origins: {
+        google: {
+          title: 'Google (Agenda, Tasks, Keep)',
+          how: 'Récupérez vos données avec Google Takeout (takeout.google.com) : cochez seulement Agenda, Tasks et Keep. Décompressez d’abord le fichier ZIP.',
+        },
+        todoist: {
+          title: 'Todoist',
+          how: 'Menu (⋯) d’un projet → « Exporter au format CSV ». Un fichier par projet.',
+        },
+        obsidian: {
+          title: 'Obsidian / Markdown',
+          how: 'Choisissez les fichiers .md de votre dossier, plusieurs à la fois si vous voulez. Titres, étiquettes et listes de tâches sont conservés.',
+        },
+        bank: {
+          title: 'Banque (relevé)',
+          how: 'Dans votre banque en ligne, téléchargez le relevé au format CSV ou CAMT.',
+        },
+        bitwarden: {
+          title: 'Bitwarden',
+          how: 'Coffre web → Outils → Exporter le coffre → format .csv. L’import se fait dans Mots de passe, sous « Import, export et sécurité », et demande votre mot de passe maître.',
+        },
+        paper: {
+          title: 'Papier / de tête',
+          how: 'Alors commencez par la saisie rapide.',
+        },
+      } as Record<string, { title: string; how: string }>,
+      actions: {
+        calendar: 'Importer l’agenda',
+        tasks: 'Importer les tâches',
+        notes: 'Importer les notes',
+        bank: 'Importer le relevé',
+        vault: 'Importer dans Mots de passe',
+      } as Record<string, string>,
+      items: {
+        'google.calendar': 'Agenda (.ics) importé',
+        'google.tasks': 'Tasks.json importé',
+        'google.keep': 'Notes Keep importées',
+        'google.subscription': 'Connecter l’agenda comme abonnement (Réglages → Connexions)',
+        'todoist.tasks': 'CSV Todoist importé',
+        'obsidian.notes': 'Notes Markdown importées',
+        'bank.statement': 'Relevé importé',
+        'bitwarden.vault': 'CSV Bitwarden importé dans Mots de passe',
+      } as Record<string, string>,
+      tick: 'Cocher',
+      untick: 'Rouvrir',
+      subLabel: 'Ce qui manque encore',
+      settingsRow: 'Déménagement depuis une autre appli …',
+      settingsHint:
+        'Depuis Google, Todoist, Obsidian, une appli bancaire ou Bitwarden : mène aux imports adaptés.',
+      settingsOpen: 'Ouvrir',
+    },
     startdata: {
       title: 'Importer',
       description:
