@@ -24,6 +24,8 @@ Mix: 1 cleanup/comfort (T3) · 1 visual (T4) · 3 function (T1, T2, T5) · 1 tec
 - **Why T4 first:** CSS only, measurable, and T5-2/T5-3 and T1 render inside the header it changes.
 
 ## Shared files (every chat, own block only)
+Docs budget (2026-10-31): `docs/STATUS.md`, `decisions/features.md`, `decisions/modules.md`, `decisions/focus.md` and `ARCHITECTURE-MAP.md` are already over budget on `develop` (warnings). Chats **replace or shorten** a line there instead of appending; a new decision goes into the matching area file only as one short bullet, merged with a related bullet where possible.
+
 `web/src/strings.ts` + `i18n/locales/{en,es,fr,pt-BR}/*` (T1 `setup`/`onboarding`, T2 `finance`, T3 `settings`, T4 none, T5 `quickCapture`, T6 none) · `docs/STATUS.md` (one line each; 5000-token budget, change a line rather than append) · `docs/CHATS.md` (own row) · `docs/decisions/<area>.md` (one bullet) · `scribble/BOARD.md` (heads-up before the first code commit) · `pages/settings/inventory.core.json` + `inventory.test.ts`: every chat may add **one additive row** for its own new persisted key (T1 `_meta` migrate state, T2 remembered mappings only if not in `_meta`, T5-3 tray toggle); T3 owns the files and resolves the snapshot when it merges last.
 
 ## Before you start (maintainer)
