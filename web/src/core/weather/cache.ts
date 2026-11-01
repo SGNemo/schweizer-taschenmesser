@@ -4,6 +4,7 @@
  */
 import { z } from 'zod';
 import { tWeather } from '@/strings.weather';
+import { POLLEN_TYPES } from './air';
 import type { Forecast } from './api';
 import type { CodeGroup } from './logic';
 
@@ -72,7 +73,9 @@ const nowSchema = z.object({
   dir: num,
   night: z.boolean().optional(),
 });
-const pollenSchema = z.record(z.string(), z.number().finite());
+// Only known pollen types: a foreign key would reach `pollenLevel()` without limits and crash the
+// open preview from a tampered value (a foreign value reads as absent, like everything else here).
+const pollenSchema = z.partialRecord(z.enum(POLLEN_TYPES), z.number().finite());
 const airSchema = z.object({
   now: z.object({ aqi: num, pm25: num, pm10: num, o3: num, no2: num, so2: num }),
   pollen: pollenSchema,

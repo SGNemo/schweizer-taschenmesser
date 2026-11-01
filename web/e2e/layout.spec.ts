@@ -214,3 +214,117 @@ test.describe('wide screens (1920x1080)', () => {
     await expect(page.getByRole('complementary', { name: 'Details' })).toHaveCount(0);
   });
 });
+
+// Phone header (mobile header, task 04): area label and tabs in one line, the topbar folds away
+// while reading, comes back on scrolling up / keyboard focus, and stays put with less motion.
+test.describe('phone header', () => {
+  test.use({ viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  const header = (page: Page) => page.locator('header').first();
+  const makeTall = (page: Page) =>
+    page.evaluate(() => {
+      document.getElementById('main')!.style.minHeight = '4000px';
+    });
+  const scrollTo = (page: Page, y: number) => page.evaluate((top) => window.scrollTo(0, top), y);
+
+  test('area label, tabs and gear share one line; the title starts high', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/calendar');
+    await expect(page.locator('main h1').first()).toBeVisible();
+    const box = await page.evaluate(() => {
+      const r = (el: Element | null) => el?.getBoundingClientRect();
+      const label = document.querySelector('main p');
+      const tabs = document.querySelector('main nav[aria-label]');
+      const h1 = document.querySelector('main h1');
+      return {
+        labelMid: (r(label)!.top + r(label)!.bottom) / 2,
+        tabsMid: (r(tabs)!.top + r(tabs)!.bottom) / 2,
+        tabHeights: [...tabs!.querySelectorAll('a')].map((a) => a.getBoundingClientRect().height),
+        h1Top: r(h1)!.top,
+        mainTop: r(document.querySelector('main'))!.top,
+      };
+    });
+    expect(Math.abs(box.labelMid - box.tabsMid)).toBeLessThan(6);
+    for (const h of box.tabHeights) expect(h).toBeGreaterThanOrEqual(44);
+    // topbar + one 44 px frame row + padding: before, label row and tab row were two lines.
+    expect(box.h1Top - box.mainTop).toBeLessThan(100);
+  });
+
+  test('the topbar folds away on scrolling down and returns on scrolling up', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/calendar');
+    await expect(page.locator('main h1').first()).toBeVisible();
+    await makeTall(page);
+    await expect(header(page)).not.toHaveAttribute('data-collapsed', 'true');
+    await scrollTo(page, 150);
+    await scrollTo(page, 300);
+    await expect(header(page)).toHaveAttribute('data-collapsed', 'true');
+    await scrollTo(page, 250);
+    await expect(header(page)).not.toHaveAttribute('data-collapsed', 'true');
+    await scrollTo(page, 600);
+    await expect(header(page)).toHaveAttribute('data-collapsed', 'true');
+    await scrollTo(page, 0);
+    await expect(header(page)).not.toHaveAttribute('data-collapsed', 'true');
+  });
+
+  test('keyboard focus in the topbar brings it back; search stays reachable', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/calendar');
+    await expect(page.locator('main h1').first()).toBeVisible();
+    await makeTall(page);
+    await scrollTo(page, 200);
+    await scrollTo(page, 500);
+    await expect(header(page)).toHaveAttribute('data-collapsed', 'true');
+    await header(page).getByRole('button', { name: /suche/i }).focus();
+    await expect(header(page)).not.toHaveAttribute('data-collapsed', 'true');
+  });
+
+  test('an open dialog keeps the topbar out of the way of folding', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/calendar');
+    await expect(page.locator('main h1').first()).toBeVisible();
+    await makeTall(page);
+    await page.keyboard.press('Control+k');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await scrollTo(page, 200);
+    await scrollTo(page, 500);
+    await expect(header(page)).not.toHaveAttribute('data-collapsed', 'true');
+  });
+
+  test.describe('with less motion', () => {
+    test.use({ reducedMotion: 'reduce' });
+    test('the topbar stays fixed', async ({ page }) => {
+      await prepare(page);
+      await page.goto('/calendar');
+      await expect(page.locator('main h1').first()).toBeVisible();
+      await makeTall(page);
+      await scrollTo(page, 200);
+      await scrollTo(page, 500);
+      await page.waitForTimeout(300);
+      await expect(header(page)).not.toHaveAttribute('data-collapsed', 'true');
+    });
+  });
+});
+
+test.describe('desktop header', () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+  test('the topbar does not fold while the content scrolls', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/calendar');
+    await expect(page.locator('main h1').first()).toBeVisible();
+    await page.evaluate(() => {
+      const main = document.getElementById('main')!;
+      main.style.minHeight = '4000px';
+      main.scrollTop = 200;
+      main.scrollTop = 500;
+    });
+    await page.waitForTimeout(300);
+    await expect(page.locator('header').first()).not.toHaveAttribute('data-collapsed', 'true');
+    // area label above the tabs, as before
+    const stacked = await page.evaluate(() => {
+      const label = document.querySelector('main p')!.getBoundingClientRect();
+      const tabs = document.querySelector('main nav[aria-label]')!.getBoundingClientRect();
+      return tabs.top >= label.bottom - 1;
+    });
+    expect(stacked).toBe(true);
+  });
+});

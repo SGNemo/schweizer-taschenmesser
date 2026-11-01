@@ -6,6 +6,7 @@ import { Badge, Button, Icon, Logo, Wordmark } from '@/ui';
 import { FocusIndicator } from './FocusIndicator';
 import { NotificationBell } from './NotificationBell';
 import { SyncBadge } from './SyncBadge';
+import { useTopbarCollapse } from './useTopbarCollapse';
 import styles from './TopBar.module.css';
 
 /** Search, the one "+ Neu", tools and sync; the logo only shows where there is no sidebar. */
@@ -13,8 +14,13 @@ export function TopBar() {
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
   const openTools = useUiStore((s) => s.openTools);
+  const { collapsed, focusProps } = useTopbarCollapse();
   return (
-    <header className={styles.topbar}>
+    <header
+      className={styles.topbar}
+      data-collapsed={collapsed ? 'true' : undefined}
+      {...focusProps}
+    >
       <Link to="/" className={`${styles.brand} ${styles.phoneOnly}`} aria-label={t.nav.homeAria}>
         <span className={styles.wordmark}>
           <Wordmark height={32} title={t.appName} />
