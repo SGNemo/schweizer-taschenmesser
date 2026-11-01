@@ -386,14 +386,15 @@ test.describe('Karten & Orte', () => {
     expect(seen.filter((u) => hostOf(u) === 'overpass-api.de').length).toBeGreaterThan(before);
     await expect(row.getByRole('button', { name: 'Genauer machen' })).toHaveCount(0);
 
-    // Zoomed out, the shown area has cells no own map holds: "Hier erweitern" builds just those.
-    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Verkleinern' }).click();
+    // Zoomed out, the shown area has cells no own map holds: "Hier erweitern" builds just those
+    // (two steps: a wide desktop window at z12 would mean dozens of cells, a second each).
+    for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Verkleinern' }).click();
     await page.getByTestId('map-extend').click();
     await expect(page.getByTestId('map-region')).toHaveCount(2);
     // The e2e clock is frozen, so both regions share a creation time: find the new one by name.
     const section = page.getByTestId('map-region').filter({ hasText: 'Kartenausschnitt' });
     await expect(section).toHaveCount(1);
-    await expect(section).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+    await expect(section).toHaveAttribute('data-status', 'done', { timeout: 45_000 });
 
     await page.getByRole('button', { name: 'Alle Karten löschen' }).click();
     await expect(page.getByText('Alle eigenen Karten löschen?')).toBeVisible();
