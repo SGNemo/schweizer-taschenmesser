@@ -5,11 +5,15 @@
  */
 import { cutRegion, featuresBbox, type Feature, type LonLat } from './cut';
 import { encodeTile } from './mvt';
+import { encodePmtiles } from './pmtiles';
 import type { Region, Tile } from '../schema';
 
 export const SAMPLE_REGION_ID = 'sample-nemostadt';
 export const SAMPLE_CENTER: LonLat = { lat: 49.5981, lon: 11.0044 };
 export const SAMPLE_ZOOMS = [12, 13, 14, 15, 16] as const;
+/** The credit the fixture region file carries in its metadata (as a host would write it, with a link). */
+export const SAMPLE_ATTRIBUTION =
+  'Kartendaten © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende (Beispiel)';
 
 const M_LAT = 1 / 111_320;
 const M_LON = 1 / (111_320 * Math.cos((SAMPLE_CENTER.lat * Math.PI) / 180));
@@ -336,4 +340,23 @@ export function sampleRegion(): SampleRegion {
     },
     tiles,
   };
+}
+
+/**
+ * The same town as a region file (PMTiles v3, directories and tiles uncompressed), as an own host would
+ * serve it: the tests and the e2e mock answer range requests from these bytes.
+ */
+export function samplePmtiles(options: { leafSize?: number; maxZoom?: number } = {}): Uint8Array {
+  const { region, tiles } = sampleRegion();
+  const maxZoom = options.maxZoom ?? region.zooms.max;
+  return encodePmtiles({
+    tiles: tiles
+      .filter((t) => t.data.z <= maxZoom)
+      .map((t) => ({ z: t.data.z, x: t.data.x, y: t.data.y, bytes: new Uint8Array(t.data.bytes) })),
+    bounds: region.bbox,
+    minZoom: region.zooms.min,
+    maxZoom,
+    metadata: { name: 'Nemostadt', attribution: SAMPLE_ATTRIBUTION },
+    ...(options.leafSize ? { leafSize: options.leafSize } : {}),
+  });
 }

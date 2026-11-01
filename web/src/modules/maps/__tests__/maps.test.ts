@@ -51,6 +51,7 @@ describe('maps module', () => {
       routingUrl: DEFAULT_ROUTING_URL,
       transitUrl: DEFAULT_TRANSIT_URL,
       overpassUrl: DEFAULT_OVERPASS_URL,
+      regionUrl: '',
     });
     expect(
       servicesOf({
@@ -59,6 +60,7 @@ describe('maps module', () => {
         routingUrl: 'http://r.test',
         transitUrl: 'http://t.test',
         overpassUrl: 'http://o.test',
+        regionUrl: 'http://f.test/region.pmtiles',
       }),
     ).toEqual({
       tileUrl: DEFAULT_TILE_URL,
@@ -66,6 +68,7 @@ describe('maps module', () => {
       routingUrl: DEFAULT_ROUTING_URL,
       transitUrl: DEFAULT_TRANSIT_URL,
       overpassUrl: DEFAULT_OVERPASS_URL,
+      regionUrl: '',
     });
     expect(
       servicesOf({
@@ -74,6 +77,7 @@ describe('maps module', () => {
         routingUrl: 'https://r.example/{profile}',
         transitUrl: 'https://m.example/api',
         overpassUrl: 'https://o.example/api/interpreter',
+        regionUrl: ' https://f.example/region.pmtiles ',
       }),
     ).toEqual({
       tileUrl: 'https://t.example/{z}/{x}/{y}.png',
@@ -81,6 +85,7 @@ describe('maps module', () => {
       routingUrl: 'https://r.example/{profile}',
       transitUrl: 'https://m.example/api',
       overpassUrl: 'https://o.example/api/interpreter',
+      regionUrl: 'https://f.example/region.pmtiles',
     });
   });
 });

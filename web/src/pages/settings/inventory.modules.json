@@ -151,6 +151,11 @@
         "type": "boolean",
         "label": "Fortschritt unter der Karte zeigen",
         "default": true
+      },
+      "regionUrl": {
+        "type": "text",
+        "label": "Kartendatei (Adresse)",
+        "default": ""
       }
     }
   },

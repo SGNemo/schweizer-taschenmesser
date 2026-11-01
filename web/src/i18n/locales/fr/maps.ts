@@ -27,6 +27,9 @@ export const maps: Strings['maps'] = {
     showBuildProgress: 'Afficher la progression sous la carte',
     showBuildProgressHelp:
       'Une ligne discrète pendant la création d’une carte personnelle. Vous pouvez la désactiver à tout moment.',
+    regionUrl: 'Fichier de région (adresse)',
+    regionUrlHelp:
+      'Un fichier de région préconstruit (PMTiles) sur votre propre serveur. S’il est renseigné, les cartes personnelles en sont créées au lieu du service Overpass ; https uniquement.',
   },
   tabs: { label: 'Vue', places: 'Lieux', routes: 'Itinéraires', map: 'Carte' },
   empty: { places: 'Pas encore de lieux.', routes: 'Pas encore d’itinéraires.' },
@@ -177,6 +180,11 @@ export const maps: Strings['maps'] = {
     removeAll: 'Supprimer toutes les cartes',
     confirmRemoveAll: 'Supprimer toutes les cartes personnelles ?',
     asOf: (date: string) => `au ${date}`,
+    fileMiss:
+      'Le fichier de région ne couvre pas cette zone. La carte est créée à partir du service Overpass.',
+    fileUnreachable:
+      'Le fichier de région est injoignable pour le moment. La carte est créée à partir du service Overpass.',
+    fromFile: 'depuis le fichier de région',
     reasons: {
       busy: 'Le service cartographique est surchargé pour le moment. Continuez plus tard.',
       network: 'Le service cartographique est injoignable pour le moment. Continuez plus tard.',

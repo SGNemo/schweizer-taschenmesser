@@ -28,6 +28,9 @@ export const maps: Strings['maps'] = {
     showBuildProgress: 'Mostrar el progreso bajo el mapa',
     showBuildProgressHelp:
       'Una línea tranquila mientras se crea un mapa propio. Puedes desactivarla cuando quieras.',
+    regionUrl: 'Archivo de región (dirección)',
+    regionUrlHelp:
+      'Un archivo de región ya preparado (PMTiles) en tu propio servidor. Si está configurado, los mapas propios se crean a partir de él en lugar del servicio Overpass; solo https.',
   },
   tabs: { label: 'Vista', places: 'Lugares', routes: 'Rutas', map: 'Mapa' },
   empty: { places: 'Aún no hay lugares.', routes: 'Aún no hay rutas.' },
@@ -176,6 +179,11 @@ export const maps: Strings['maps'] = {
     removeAll: 'Borrar todos los mapas',
     confirmRemoveAll: '¿Borrar todos los mapas propios?',
     asOf: (date: string) => `a fecha de ${date}`,
+    fileMiss:
+      'El archivo de región no cubre esta zona. El mapa se crea desde el servicio Overpass.',
+    fileUnreachable:
+      'El archivo de región no está disponible ahora mismo. El mapa se crea desde el servicio Overpass.',
+    fromFile: 'desde archivo de región',
     reasons: {
       busy: 'El servicio de mapas está saturado ahora mismo. Continúa más tarde.',
       network: 'El servicio de mapas no está disponible ahora mismo. Continúa más tarde.',

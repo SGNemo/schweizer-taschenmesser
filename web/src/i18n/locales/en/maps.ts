@@ -27,6 +27,9 @@ export const maps: Strings['maps'] = {
     showBuildProgress: 'Show progress under the map',
     showBuildProgressHelp:
       'A calm line while an own map is being built. You can switch it off any time.',
+    regionUrl: 'Region file (address)',
+    regionUrlHelp:
+      'A prebuilt region file (PMTiles) on your own server. When set, own maps are built from it instead of the Overpass service; https only.',
   },
   tabs: { label: 'View', places: 'Places', routes: 'Routes', map: 'Map' },
   empty: { places: 'No places yet.', routes: 'No routes yet.' },
@@ -171,6 +174,11 @@ export const maps: Strings['maps'] = {
     removeAll: 'Delete all maps',
     confirmRemoveAll: 'Delete all own maps?',
     asOf: (date: string) => `as of ${date}`,
+    fileMiss:
+      'The region file does not cover this area. The map is built from the Overpass service.',
+    fileUnreachable:
+      'The region file cannot be reached right now. The map is built from the Overpass service.',
+    fromFile: 'from region file',
     reasons: {
       busy: 'The map service is busy right now. Continue later.',
       network: 'The map service cannot be reached right now. Continue later.',

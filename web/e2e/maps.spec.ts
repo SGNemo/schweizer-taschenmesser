@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enable, openFoldedGroup, ready, showAllWidgets } from './helpers';
 import { overpassFixture } from '../src/modules/maps/own/fixtures';
-import { SAMPLE_CENTER, sampleRegion } from '../src/modules/maps/own/sample';
+import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../src/modules/maps/own/sample';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -107,6 +107,34 @@ async function mockOsm(page: Page) {
             ],
           },
         ],
+      },
+    });
+  });
+  // An own host with a region file: answers range requests (and a preflight, should one come).
+  const file = samplePmtiles();
+  await page.route('**://maps.example/**', async (route) => {
+    seen.push(route.request().url());
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-headers': '*',
+          'access-control-allow-methods': 'GET',
+        },
+      });
+      return;
+    }
+    const m = /^bytes=(\d+)-(\d+)$/.exec(route.request().headers()['range'] ?? '');
+    const start = m ? Number(m[1]) : 0;
+    const end = m ? Math.min(Number(m[2]), file.length - 1) : file.length - 1;
+    await route.fulfill({
+      status: m ? 206 : 200,
+      body: Buffer.from(file.subarray(start, end + 1)),
+      contentType: 'application/octet-stream',
+      headers: {
+        'access-control-allow-origin': '*',
+        'content-range': `bytes ${start}-${end}/${file.length}`,
       },
     });
   });
@@ -400,5 +428,50 @@ test.describe('Karten & Orte', () => {
     await expect(page.getByText('Alle eigenen Karten löschen?')).toBeVisible();
     await page.getByRole('button', { name: 'Alle Karten löschen' }).click();
     await expect(page.getByTestId('map-region')).toHaveCount(0);
+  });
+
+  test('a region file on an own host is copied with range requests; the map data service is never asked', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    const fileRequests = () => seen.filter((u) => hostOf(u) === 'maps.example');
+    await enable(page, 'maps');
+    // The address of the file is a module setting (saved on leaving the field).
+    await ready(page, '/settings/module');
+    await openFoldedGroup(page, 'module-maps', 'fields');
+    const field = page.getByLabel('Kartendatei (Adresse)');
+    await field.fill('https://maps.example/nemostadt.pmtiles');
+    await field.blur();
+    await ready(page, '/settings/module');
+    await openFoldedGroup(page, 'module-maps', 'fields');
+    await expect(page.getByLabel('Kartendatei (Adresse)')).toHaveValue(
+      'https://maps.example/nemostadt.pmtiles',
+    );
+    expect(fileRequests()).toEqual([]);
+
+    await ready(page, '/maps?view=map');
+    await page.getByLabel('Ort oder Adresse suchen').fill('Schlossplatz Erlangen');
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    await page
+      .getByTestId('map-hits')
+      .getByText(/Schlossplatz, Erlangen/)
+      .click();
+    await page
+      .getByTestId('map-selection')
+      .getByRole('button', { name: 'Eigene Karte erzeugen' })
+      .click();
+    const row = page.getByTestId('map-region');
+    await expect(row).toHaveAttribute('data-status', 'done', { timeout: 30_000 });
+    await expect(row).toContainText(/aus Kartendatei · genau · Fertig/);
+    await expect(row).toContainText('Kartendaten © OpenStreetMap-Mitwirkende (Beispiel)');
+    await expect(row.getByRole('button', { name: 'Genauer machen' })).toHaveCount(0);
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de')).toEqual([]);
+    expect(fileRequests().length).toBeGreaterThan(1);
+    // The map draws the copied tiles itself.
+    const map = page.getByTestId('tile-map');
+    await expect.poll(() => map.locator('img[src^="blob:"]').count()).toBeGreaterThan(0);
+    await test
+      .info()
+      .attach('own-map-file', { body: await map.screenshot(), contentType: 'image/png' });
   });
 });
