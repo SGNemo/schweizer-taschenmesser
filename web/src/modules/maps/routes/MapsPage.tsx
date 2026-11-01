@@ -169,7 +169,7 @@ function PlanCard({ shown, onHide }: { shown: Shown; onHide: () => void }) {
 export default function MapsPage() {
   const places = useLiveQuery(() => placeRepo.active().sortBy('createdAt'), []);
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
-  const regions = useLiveQuery(() => regionRepo.active().toArray(), []);
+  const regions = useLiveQuery(() => regionRepo.active().sortBy('createdAt'), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
   const { tileUrl, searchUrl, routingUrl, transitUrl, overpassUrl } = servicesOf(
     prefs as Record<string, unknown> | undefined,

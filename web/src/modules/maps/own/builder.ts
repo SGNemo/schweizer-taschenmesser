@@ -82,6 +82,8 @@ type Fetched = { json: string } | { reason: PauseReason };
 export function createBuilder(deps: BuilderDeps): Builder {
   const paused = new Set<string>();
   const removed = new Set<string>();
+  /** Regions in the order they were started: first come, first built. */
+  const queue: string[] = [];
   const waiters = new Map<string, (() => void)[]>();
   let pumping = false;
   let compute: Compute | undefined;
@@ -224,10 +226,20 @@ export function createBuilder(deps: BuilderDeps): Builder {
     pumping = true;
     try {
       for (;;) {
-        const next = (await deps.regions.active().toArray())
-          .filter((r) => r.status === 'building' && !paused.has(r.id) && !removed.has(r.id))
-          .sort((a, b) => a.createdAt - b.createdAt)[0];
+        const building = (await deps.regions.active().toArray()).filter(
+          (r) => r.status === 'building' && !paused.has(r.id) && !removed.has(r.id),
+        );
+        // Started ones first, in their order; anything else found building after them.
+        const rank = (id: string) => {
+          const i = queue.indexOf(id);
+          return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+        };
+        const next = building.sort(
+          (a, b) => rank(a.id) - rank(b.id) || a.createdAt - b.createdAt,
+        )[0];
         if (!next) break;
+        const at = queue.indexOf(next.id);
+        if (at !== -1) queue.splice(at, 1);
         try {
           await runRegion(next.id);
         } catch {
@@ -301,6 +313,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
       paused.delete(id);
       const region = await deps.regions.get(id);
       if (!region || region.status === 'done') return;
+      if (!queue.includes(id)) queue.push(id);
       await deps.regions.update(id, { status: 'building', reason: undefined });
       const done = new Promise<void>((resolve) =>
         waiters.set(id, [...(waiters.get(id) ?? []), resolve]),
