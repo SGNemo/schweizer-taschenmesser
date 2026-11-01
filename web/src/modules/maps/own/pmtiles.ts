@@ -229,15 +229,22 @@ async function readRange(
   throw new Error(`pmtiles: http ${res.status}`);
 }
 
-/** Text of an attribution that may carry HTML links, as plain text. */
-export const plainAttribution = (html: string | undefined): string | undefined =>
-  html
-    ? html
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 200) || undefined
-    : undefined;
+/**
+ * Text of an attribution that may carry HTML links, as plain text: everything between `<` and `>`
+ * is dropped and no angle bracket survives (a character scan, not a regex that could leave a tag
+ * behind). The credit is shown as text only; this just keeps the line readable.
+ */
+export function plainAttribution(html: string | undefined): string | undefined {
+  if (!html) return undefined;
+  let text = '';
+  let inTag = false;
+  for (const ch of html) {
+    if (ch === '<') inTag = true;
+    else if (ch === '>') inTag = false;
+    else if (!inTag) text += ch;
+  }
+  return text.replace(/\s+/g, ' ').trim().slice(0, 200) || undefined;
+}
 
 /** Opens a file: header, root directory and metadata with as few requests as possible. */
 export async function openPmtiles(url: string, options: OpenOptions): Promise<Pmtiles> {

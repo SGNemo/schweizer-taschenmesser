@@ -181,6 +181,9 @@ it('plainAttribution drops links and tags, squeezes whitespace and caps the leng
   );
   expect(plainAttribution('  <b>a</b>\n\n b ')).toBe('a b');
   expect(plainAttribution('<a href="x"></a>')).toBeUndefined();
+  // No angle bracket survives, however the tags are nested or broken.
+  expect(plainAttribution('a <b<i>>b <<c')).toBe('a b');
+  expect(plainAttribution('<scr<script>ipt>x')).not.toMatch(/[<>]/);
   expect(plainAttribution(undefined)).toBeUndefined();
   expect(plainAttribution('x'.repeat(300))).toHaveLength(200);
 });
