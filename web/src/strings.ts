@@ -973,6 +973,23 @@ export const de = {
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,
     noTargets: 'Es ist kein Zielmodul eingeschaltet.',
+    multi: {
+      lineHint: 'Eine Zeile = ein Eintrag',
+      shiftEnter: 'Umschalt+Enter: neue Zeile. Eine Zeile = ein Eintrag.',
+      listLabel: (n: number) => `Vorschau: ${n} Einträge`,
+      rowTarget: (text: string) => `Ziel für „${text}“`,
+      choose: 'Bitte wählen',
+      inbox: 'Eingang',
+      financeDraft: 'Buchung (Entwurf)',
+      saveAll: (n: number) => `Alle speichern (${n})`,
+      saved: (n: number) => `${n} Dinge gespeichert`,
+      change: 'Ändern',
+    },
+    trayToday: {
+      heading: 'Heute',
+      now: 'Jetzt dran anfangen',
+      timer: 'Timer 25 Minuten',
+    },
     tray: {
       capture: 'Erfassen',
       open: 'App öffnen',
@@ -980,7 +997,7 @@ export const de = {
       tooltip: 'Nemo',
     },
     window: {
-      hint: 'Enter speichert · Tab wechselt den Typ · Esc schließt',
+      hint: 'Enter speichert · Umschalt+Enter neue Zeile · Tab wechselt den Typ · Esc schließt',
     },
     settings: {
       title: 'Schnellerfassung',
@@ -1009,6 +1026,9 @@ export const de = {
       hotkeyStartupError: (keys: string) =>
         `Das Tastenkürzel ${keys} konnte nicht registriert werden.`,
       closeToTray: 'In den Tray minimieren statt beenden',
+      trayToday: 'Heute im Tray-Menü zeigen',
+      trayTodayHint:
+        'Bis zu 5 Dinge von heute (nur Titel und Uhrzeit, nie Beträge) im Menü des Tray-Symbols. Ein Klick öffnet den Eintrag.',
       autostart: 'Mit Windows starten',
       autostartPortable:
         'Die App läuft aus einem Ordner mit „data“ (z. B. USB-Stick). Der Autostart-Eintrag zeigt auf diesen Ort; ist der Stick beim Anmelden nicht da, startet nichts.',

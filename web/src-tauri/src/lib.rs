@@ -175,6 +175,7 @@ pub fn run() {
             capture::capture_read_clipboard,
             capture::desktop_set_close_to_tray,
             capture::desktop_set_tray_labels,
+            capture::desktop_set_tray_today,
             capture::desktop_set_autostart,
             capture::desktop_autostart_enabled,
             capture::desktop_info,

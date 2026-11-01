@@ -1,6 +1,6 @@
 //! Quick capture shell: a small always-on-top input window that is created hidden at startup (so
-//! it opens instantly), a global hotkey that toggles it, a tray icon with a menu, "close to tray",
-//! and "start with Windows".
+//! it opens instantly), a global hotkey that toggles it, a tray icon with a menu (with an optional
+//! "Heute" block the web app fills), "close to tray", and "start with Windows".
 //!
 //! Everything here is plumbing. What is typed, parsed and saved lives in the TypeScript app
 //! (`web/src/quickCapture`); the capture window loads `capture.html`, a second entry of the same
@@ -41,6 +41,16 @@ struct TrayItems {
     quit: MenuItem<Wry>,
 }
 
+/// Lines of the tray's "Heute" block; the web app never sends more (`traySnapshot.ts`).
+const TRAY_TODAY_MAX: usize = 5;
+/// Longest label shown in the tray (the web app already cuts titles to 40 characters).
+const TRAY_LABEL_MAX_CHARS: usize = 60;
+/// Menu ids of the "Heute" block, in order; a click only sends the id back to the page.
+const TRAY_TODAY_IDS: [&str; TRAY_TODAY_MAX] =
+    ["today-0", "today-1", "today-2", "today-3", "today-4"];
+const TRAY_NOW: &str = "tray-now";
+const TRAY_TIMER: &str = "tray-timer";
+
 #[derive(Default)]
 pub struct CaptureState {
     close_to_tray: AtomicBool,
@@ -62,6 +72,21 @@ pub struct TrayLabels {
     open: String,
     quit: String,
     tooltip: String,
+}
+
+/// The tray's "Heute" block, all texts from the web app (Rust knows no strings). Only these labels
+/// live here, inside the native menu; where a line leads stays in the web app. Never logged.
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TrayToday {
+    #[serde(default)]
+    heading: String,
+    #[serde(default)]
+    items: Vec<String>,
+    #[serde(default)]
+    now: String,
+    #[serde(default)]
+    timer: String,
 }
 
 #[derive(Serialize)]
@@ -109,15 +134,116 @@ fn create_capture_window(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+/// One line of plain text for a native menu: no line breaks or control characters, capped, and
+/// `&` doubled (a single one would turn the next letter into a keyboard mnemonic on Windows).
+fn tray_text(label: &str) -> String {
+    let flat: String = label
+        .chars()
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect();
+    let words: Vec<&str> = flat.split_whitespace().collect();
+    let joined = words.join(" ");
+    let capped: String = if joined.chars().count() > TRAY_LABEL_MAX_CHARS {
+        let mut cut: String = joined.chars().take(TRAY_LABEL_MAX_CHARS - 1).collect();
+        cut.push('…');
+        cut
+    } else {
+        joined
+    };
+    capped.replace('&', "&&")
+}
+
+/// The page script for a click on a tray item of the "Heute" block. Constant per id: only the
+/// fixed id crosses, never a label or a route.
+fn tray_item_script(id: &str) -> Option<&'static str> {
+    Some(match id {
+        "today-0" => "window.dispatchEvent(new CustomEvent('tm-tray-item',{detail:'today-0'}))",
+        "today-1" => "window.dispatchEvent(new CustomEvent('tm-tray-item',{detail:'today-1'}))",
+        "today-2" => "window.dispatchEvent(new CustomEvent('tm-tray-item',{detail:'today-2'}))",
+        "today-3" => "window.dispatchEvent(new CustomEvent('tm-tray-item',{detail:'today-3'}))",
+        "today-4" => "window.dispatchEvent(new CustomEvent('tm-tray-item',{detail:'today-4'}))",
+        TRAY_NOW => "window.dispatchEvent(new CustomEvent('tm-tray-item',{detail:'now'}))",
+        TRAY_TIMER => "window.dispatchEvent(new CustomEvent('tm-tray-item',{detail:'timer'}))",
+        _ => return None,
+    })
+}
+
+/// The "Heute" labels that will be shown, with their position in what the page sent (a click
+/// reports that position, so a dropped empty label never shifts the others): at most five.
+fn tray_today_lines(today: &TrayToday) -> Vec<(usize, String)> {
+    today
+        .items
+        .iter()
+        .take(TRAY_TODAY_MAX)
+        .map(|l| tray_text(l))
+        .enumerate()
+        .filter(|(_, l)| !l.is_empty())
+        .collect()
+}
+
+/// The whole tray menu: the "Heute" block (only when it has lines), then capture/open/quit as
+/// before. The three fixed items are reused, so their translated labels stay.
+fn tray_menu(app: &AppHandle, items: &TrayItems, today: &TrayToday) -> tauri::Result<Menu<Wry>> {
+    let menu = Menu::new(app)?;
+    let lines = tray_today_lines(today);
+    if !lines.is_empty() {
+        let heading = MenuItem::with_id(
+            app,
+            "today-heading",
+            tray_text(&today.heading),
+            false,
+            None::<&str>,
+        )?;
+        menu.append(&heading)?;
+        for (index, label) in &lines {
+            let id = TRAY_TODAY_IDS[*index];
+            menu.append(&MenuItem::with_id(app, id, label, true, None::<&str>)?)?;
+        }
+        menu.append(&PredefinedMenuItem::separator(app)?)?;
+        menu.append(&MenuItem::with_id(
+            app,
+            TRAY_NOW,
+            tray_text(&today.now),
+            true,
+            None::<&str>,
+        )?)?;
+        menu.append(&MenuItem::with_id(
+            app,
+            TRAY_TIMER,
+            tray_text(&today.timer),
+            true,
+            None::<&str>,
+        )?)?;
+        menu.append(&PredefinedMenuItem::separator(app)?)?;
+    }
+    menu.append(&items.capture)?;
+    menu.append(&items.open)?;
+    menu.append(&PredefinedMenuItem::separator(app)?)?;
+    menu.append(&items.quit)?;
+    Ok(menu)
+}
+
+/// A click in the "Heute" block: the main window comes forward (the existing open path) and the
+/// page gets the item id; it navigates or starts the timer itself.
+fn open_tray_item(app: &AppHandle, id: &str) {
+    let Some(script) = tray_item_script(id) else {
+        return;
+    };
+    show_main(app);
+    if let Some(window) = app.get_webview_window(MAIN) {
+        let _ = window.eval(script);
+    }
+}
+
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let (capture, open, quit, tooltip) = DEFAULT_LABELS;
-    let capture = MenuItem::with_id(app, "capture", capture, true, None::<&str>)?;
-    let open = MenuItem::with_id(app, "open", open, true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", quit, true, None::<&str>)?;
-    let menu = Menu::with_items(
-        app,
-        &[&capture, &open, &PredefinedMenuItem::separator(app)?, &quit],
-    )?;
+    let items = TrayItems {
+        capture: MenuItem::with_id(app, "capture", capture, true, None::<&str>)?,
+        open: MenuItem::with_id(app, "open", open, true, None::<&str>)?,
+        quit: MenuItem::with_id(app, "quit", quit, true, None::<&str>)?,
+    };
+    // No "Heute" block until the web app sends one.
+    let menu = tray_menu(app, &items, &TrayToday::default())?;
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
         .tooltip(tooltip)
         .menu(&menu)
@@ -126,7 +252,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             "capture" => show_capture(app),
             "open" => show_main(app),
             "quit" => app.exit(0),
-            _ => {}
+            other => open_tray_item(app, other),
         })
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click {
@@ -143,11 +269,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     }
     tray.build(app)?;
     if let Ok(mut slot) = app.state::<CaptureState>().tray.lock() {
-        *slot = Some(TrayItems {
-            capture,
-            open,
-            quit,
-        });
+        *slot = Some(items);
     }
     Ok(())
 }
@@ -398,6 +520,21 @@ pub fn desktop_set_tray_labels(app: AppHandle, state: State<'_, CaptureState>, l
     }
 }
 
+/// Replaces the tray's "Heute" block (rebuilds the menu; no polling, nothing stored but the labels
+/// inside the menu). No items = the block is hidden and the menu is the one from before.
+#[tauri::command]
+pub fn desktop_set_tray_today(app: AppHandle, state: State<'_, CaptureState>, today: TrayToday) {
+    let Ok(items) = state.tray.lock() else {
+        return;
+    };
+    let Some(items) = items.as_ref() else {
+        return;
+    };
+    if let (Ok(menu), Some(tray)) = (tray_menu(&app, items, &today), app.tray_by_id(TRAY_ID)) {
+        let _ = tray.set_menu(Some(menu));
+    }
+}
+
 #[tauri::command]
 pub fn desktop_set_autostart(app: AppHandle, enabled: bool) -> Result<(), String> {
     let launcher = app.autolaunch();
@@ -508,6 +645,63 @@ pub fn desktop_show_main(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tray_labels_are_one_plain_capped_line() {
+        assert_eq!(tray_text("  15:00 · Zahnarzt\n "), "15:00 · Zahnarzt");
+        assert_eq!(tray_text("Max & Moritz"), "Max && Moritz");
+        assert_eq!(tray_text("a\tb\u{0007}c"), "a b c");
+        let long = "x".repeat(200);
+        let cut = tray_text(&long);
+        assert_eq!(cut.chars().count(), TRAY_LABEL_MAX_CHARS);
+        assert!(cut.ends_with('…'));
+    }
+
+    #[test]
+    fn tray_today_shows_at_most_five_non_empty_lines() {
+        let today = TrayToday {
+            items: (0..8)
+                .map(|i| format!("Ding {i}"))
+                .chain([" ".into()])
+                .collect(),
+            ..Default::default()
+        };
+        assert_eq!(tray_today_lines(&today).len(), TRAY_TODAY_MAX);
+        assert!(tray_today_lines(&TrayToday::default()).is_empty());
+        let blank = TrayToday {
+            items: vec!["".into(), " \n".into()],
+            ..Default::default()
+        };
+        assert!(tray_today_lines(&blank).is_empty());
+        let gap = TrayToday {
+            items: vec!["A".into(), "\n".into(), "C".into()],
+            ..Default::default()
+        };
+        assert_eq!(
+            tray_today_lines(&gap),
+            vec![(0, "A".to_owned()), (2, "C".to_owned())]
+        );
+    }
+
+    #[test]
+    fn tray_clicks_send_only_fixed_ids() {
+        for (i, id) in TRAY_TODAY_IDS.iter().enumerate() {
+            let script = tray_item_script(id).unwrap();
+            assert!(script.contains(&format!("'today-{i}'")));
+        }
+        assert!(tray_item_script(TRAY_NOW).unwrap().contains("'now'"));
+        assert!(tray_item_script(TRAY_TIMER).unwrap().contains("'timer'"));
+        for other in [
+            "capture",
+            "open",
+            "quit",
+            "today-5",
+            "today-heading",
+            "x');alert(1);//",
+        ] {
+            assert!(tray_item_script(other).is_none(), "{other}");
+        }
+    }
 
     #[test]
     fn classifies_registration_failures() {

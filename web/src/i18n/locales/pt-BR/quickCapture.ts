@@ -84,6 +84,23 @@ export const quickCapture: Strings['quickCapture'] = {
   },
   todoTimeNote: (time: string) => `Horário: ${time}`,
   noTargets: 'Nenhum módulo de destino está ativado.',
+  multi: {
+    lineHint: 'Uma linha = um item',
+    shiftEnter: 'Shift+Enter: nova linha. Uma linha = um item.',
+    listLabel: (n: number) => `Prévia: ${n} itens`,
+    rowTarget: (text: string) => `Destino de “${text}”`,
+    choose: 'Escolha, por favor',
+    inbox: 'Caixa de entrada',
+    financeDraft: 'Lançamento (rascunho)',
+    saveAll: (n: number) => `Salvar tudo (${n})`,
+    saved: (n: number) => `${n} itens salvos`,
+    change: 'Alterar',
+  },
+  trayToday: {
+    heading: 'Hoje',
+    now: 'Começar agora',
+    timer: 'Temporizador 25 minutos',
+  },
   tray: {
     capture: 'Capturar',
     open: 'Abrir app',
@@ -91,7 +108,7 @@ export const quickCapture: Strings['quickCapture'] = {
     tooltip: 'Nemo',
   },
   window: {
-    hint: 'Enter salva · Tab troca o tipo · Esc fecha',
+    hint: 'Enter salva · Shift+Enter nova linha · Tab troca o tipo · Esc fecha',
   },
   settings: {
     title: 'Captura rápida',
@@ -118,6 +135,9 @@ export const quickCapture: Strings['quickCapture'] = {
     },
     hotkeyStartupError: (keys: string) => `Não foi possível registrar o atalho ${keys}.`,
     closeToTray: 'Minimizar para a bandeja em vez de fechar',
+    trayToday: 'Mostrar hoje no menu da bandeja',
+    trayTodayHint:
+      'Até 5 coisas de hoje (só título e horário, nunca valores) no menu do ícone da bandeja. Um clique abre o item.',
     autostart: 'Iniciar com o Windows',
     autostartPortable:
       'O app roda de uma pasta com “data” (ex.: pen drive). A inicialização automática aponta para esse local; se o pen drive não estiver conectado ao entrar, nada inicia.',

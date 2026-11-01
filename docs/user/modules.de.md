@@ -14,6 +14,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
   Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).
 - **Teilen (Android, als PWA installiert):** „Nemo“ erscheint im Teilen-Menü; die Seite „Teilen“ fragt, wohin der Inhalt soll
   (Merkliste, Notiz oder ToDo – nur eingeschaltete Module werden angeboten). In der nativen Android-App (APK) gibt es das Teilen-Ziel noch nicht.
+- **Schnell erfassen:** Eine Zeile = ein Eintrag, so landen mehrere Dinge auf einmal (je mit einer Vorschau-Zeile). In der Android-App lange auf das App-Symbol drücken für „Erfassen“, „Suchen“ und „Heute“, oder die Schnelleinstellungs-Kachel „Nemo: Erfassen“ hinzufügen.
 - **Werkzeuge:** Der Knopf „Werkzeuge“ oben (oder **Strg+.**) öffnet Rechner (mit den Modi Prozent/MwSt und Teilen), Währung, Timer und QR-Code;
   weitere (Einheiten, Datumsrechner, Zeitzonen, Würfel, Text, Bilder, PDF und **Entwickler** mit Base64/URL, JSON, UUID, Hash) schaltest du
   unter „Werkzeuge verwalten“ ein. In der Suche (Strg+K) wird eine Rechnung wie „240 + 19 %“ sofort gerechnet, „Werkzeug: …“ öffnet ein

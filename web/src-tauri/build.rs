@@ -58,6 +58,7 @@ const COMMANDS: &[&str] = &[
     "capture_read_clipboard",
     "desktop_set_close_to_tray",
     "desktop_set_tray_labels",
+    "desktop_set_tray_today",
     "desktop_set_autostart",
     "desktop_autostart_enabled",
     "desktop_info",

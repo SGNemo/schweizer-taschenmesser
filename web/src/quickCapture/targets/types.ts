@@ -38,4 +38,8 @@ export interface SavedCapture {
   moduleId: string;
   /** Soft-deletes the record again (tombstone, syncs like any delete). */
   undo(): Promise<void>;
+  /** Several entries saved at once (multi-line capture): how many; `undo` removes all of them. */
+  count?: number;
+  /** The text they came from, so "Ändern" can put it back into the form. */
+  text?: string;
 }

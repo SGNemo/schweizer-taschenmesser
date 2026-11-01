@@ -14,6 +14,8 @@ export interface DevicePrefs {
   autostart: boolean;
   /** Pre-fill the capture window from the clipboard. Off unless the user turns it on. */
   clipboard: boolean;
+  /** The tray menu lists up to 5 things of today (titles and times only). On; one switch turns it off. */
+  trayToday: boolean;
 }
 
 export const DEFAULT_HOTKEY = 'Ctrl+Shift+Space';
@@ -23,6 +25,7 @@ export const DEFAULT_PREFS: DevicePrefs = {
   closeToTray: false,
   autostart: false,
   clipboard: false,
+  trayToday: true,
 };
 
 const KEY = 'tm-quick-capture';
@@ -38,6 +41,7 @@ export function readPrefs(): DevicePrefs {
       closeToTray: v.closeToTray === true,
       autostart: v.autostart === true,
       clipboard: v.clipboard === true,
+      trayToday: v.trayToday !== false,
     };
   } catch {
     return DEFAULT_PREFS;

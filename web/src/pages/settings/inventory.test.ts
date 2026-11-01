@@ -27,7 +27,7 @@ const CORE_KEYS = {
     'tm-home-view': 'all',
     'tm-sidebar': 'wide',
     'tm-nav-closed': '[]',
-    'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard',
+    'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard, trayToday',
     'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
     'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
     'tm-spotify-now':

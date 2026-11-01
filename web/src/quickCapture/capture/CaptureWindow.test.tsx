@@ -80,4 +80,24 @@ describe('CaptureWindow', () => {
     await waitFor(async () => expect(await box()).toHaveValue('https://example.org/x'));
     expect(readClipboard).toHaveBeenCalledTimes(1);
   });
+
+  it('saves three lines at once; "Ändern" takes them back and refills the form', async () => {
+    const d = desktop();
+    setPlatform({ ...createWebPlatform(), desktop: d });
+    const user = userEvent.setup();
+    render(<CaptureWindow />);
+    await user.type(
+      await box(),
+      'Milch kaufen{Shift>}{Enter}{/Shift}Oma anrufen{Shift>}{Enter}{/Shift}Steuer abgeben',
+    );
+    expect(await screen.findAllByTestId('capture-row')).toHaveLength(3);
+    await user.keyboard('{Enter}');
+    expect(await screen.findByTestId('capture-saved')).toHaveTextContent('3 Dinge gespeichert');
+    expect(await db.table('todos_task').count()).toBe(3);
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.change }));
+    await waitFor(async () =>
+      expect((await db.table('todos_task').toArray()).every((x) => x.deletedAt)).toBe(true),
+    );
+    expect(await box()).toHaveValue('Milch kaufen\nOma anrufen\nSteuer abgeben');
+  });
 });

@@ -335,6 +335,10 @@ jobs:
 
       # The Gradle project is generated, not committed (src-tauri/gen is git-ignored).
       - run: npx tauri android init --ci
+      # Launcher shortcuts (share-intent plugin, res/xml/shortcuts.xml) name their target app
+      # literally: resource XML knows no ${applicationId}. Point them at this build's id.
+      - name: Application id into the launcher shortcuts
+        run: node scripts/android-shortcuts.mjs src-tauri/tauri.conf.json
       # `tauri android init` writes the CLI's template icons; the project's launcher layers
       # (adaptive foreground/monochrome, notification icon, rendered by gen-icons) live in git.
       - name: Project icons into the generated Android project
