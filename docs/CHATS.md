@@ -12,6 +12,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
 | Nächste Runde: sechs Chat-Prompts | starten, Reihenfolge und Links in [product/next/00-README.md](product/next/00-README.md) (Merge: T4 → T2 → T1 → T5 → T6 → T3) |
+| T3 Reifegrad: Vorschlagsliste `preview` (Draft-PR `claude/friendly-tesla-ak9vb6`) | Kandidaten ankreuzen in [product/next/03-maturity-proposal.md](product/next/03-maturity-proposal.md) bzw. im PR-Text; bis dahin bleibt alles `stable`. Merge zuletzt (nach T1, T2, T4, T5, T6). |
 | Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
 
 ## Läuft gerade (Running work)
