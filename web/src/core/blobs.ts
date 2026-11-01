@@ -35,12 +35,15 @@ export const deleteBlob = (key: string, database: TaschenmesserDB = defaultDb): 
 export const blobKeys = (database: TaschenmesserDB = defaultDb): Promise<string[]> =>
   table(database).toCollection().primaryKeys();
 
+/** Keys of other features (`notes:img:<id>`, …) live in the same table; the vault never prunes them. */
+const isForeignKey = (key: string): boolean => key.startsWith('notes:');
+
 /** Removes files whose key is not in `keep` (e.g. documents deleted on another device). */
 export async function pruneBlobs(
   keep: ReadonlySet<string>,
   database: TaschenmesserDB = defaultDb,
 ): Promise<number> {
-  const orphans = (await blobKeys(database)).filter((k) => !keep.has(k));
+  const orphans = (await blobKeys(database)).filter((k) => !keep.has(k) && !isForeignKey(k));
   await table(database).bulkDelete(orphans);
   return orphans.length;
 }
