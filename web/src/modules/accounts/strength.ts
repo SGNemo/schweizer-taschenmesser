@@ -1,6 +1,9 @@
 /**
  * Password strength with zxcvbn-ts (pattern based, not just length/character classes). The
- * dictionaries are large, so everything is loaded on first use in a separate chunk.
+ * dictionaries are large, so everything is loaded on first use in a separate chunk. They are not in the
+ * service worker's precache (decision in docs/decisions/core.md): the first vault open loads them in the
+ * background, the runtime cache keeps them for offline use. Never loaded and offline, measuring rejects
+ * with `StrengthUnavailable` and the meter shows a calm note instead.
  */
 import type { ZxcvbnResult } from '@zxcvbn-ts/core';
 import { numberFormat } from '@/core/i18n/format';
@@ -54,6 +57,14 @@ export function scoreOfSeconds(seconds: number): Score {
 /** zxcvbn is quadratic-ish in the input length; a bounded prefix is enough to judge a password. */
 const MAX_LENGTH = 100;
 
+/** The dictionaries could not be loaded (offline before their first use); nothing was measured. */
+export class StrengthUnavailable extends Error {
+  constructor(cause: unknown) {
+    super('password strength check unavailable', { cause });
+    this.name = 'StrengthUnavailable';
+  }
+}
+
 let ready: Promise<{ check(password: string, userInputs?: string[]): ZxcvbnResult }> | undefined;
 
 async function load() {
@@ -77,7 +88,23 @@ async function load() {
       graphs: common.adjacencyGraphs,
       dictionary: { ...common.dictionary, ...en.dictionary, ...de.dictionary },
     });
-  })());
+  })().catch((e: unknown) => {
+    // Not cached as failed: the next measurement (back online) tries again.
+    ready = undefined;
+    throw new StrengthUnavailable(e);
+  }));
+}
+
+/**
+ * Loads the dictionaries in the background when the vault is opened, so the meter works offline later.
+ * Skipped offline and with the browser's data saver; a failure is silent (measuring tries again).
+ */
+export function preloadStrength(): void {
+  const nav = typeof navigator === 'undefined' ? undefined : navigator;
+  const saveData = (nav as (Navigator & { connection?: { saveData?: boolean } }) | undefined)
+    ?.connection?.saveData;
+  if (nav?.onLine === false || saveData) return;
+  void load().catch(() => undefined);
 }
 
 export async function measureStrength(

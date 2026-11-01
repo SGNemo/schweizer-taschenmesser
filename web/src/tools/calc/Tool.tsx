@@ -1,26 +1,8 @@
-import { useState } from 'react';
-import { t } from '@/strings';
-import { Segmented } from '@/ui';
-import styles from '../tools.module.css';
-import ExprMode from './ExprMode';
-import PercentMode from './PercentMode';
-import SplitMode from './SplitMode';
+import { lazyOnline } from '@/core/net/OnlineChunk';
 
-const s = t.tools.calc;
-const MODES = ['expr', 'percent', 'split'] as const;
-type Mode = (typeof MODES)[number];
-
-export default function CalcTool() {
-  const [mode, setMode] = useState<Mode>('expr');
-  return (
-    <div className={styles.stack}>
-      <Segmented
-        label={s.modesLabel}
-        value={mode}
-        options={MODES.map((m) => ({ value: m, label: s.modes[m]! }))}
-        onChange={setMode}
-      />
-      {mode === 'expr' ? <ExprMode /> : mode === 'percent' ? <PercentMode /> : <SplitMode />}
-    </div>
-  );
-}
+/**
+ * Thin entry of the tool (precached). The tool itself (`View.tsx`) loads on first use and stays in the
+ * runtime cache; opened offline before that, a calm note says it continues once online
+ * (docs/perf/COLD-START-2026-10.md).
+ */
+export default lazyOnline(() => import('./View'));

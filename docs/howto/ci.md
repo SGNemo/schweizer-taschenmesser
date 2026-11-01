@@ -17,6 +17,9 @@ CI jobs, caches, sharding; rolling Dev-Preview build. Index: [HOW-TO](../HOW-TO.
 - **Intended change** (a focus package that folds or adds things): `npm run stimulus:baseline` rewrites the budget (about 1 min); commit `stimulus-budget.json` and name the numbers in the PR. Improvements are never flagged but the budget only tightens when someone re-baselines.
 - **CI:** job `Stimulus budget (warnings only)` in `ci.yml` next to `docs-budget`, `continue-on-error: true`, skipped on documentation-only changes (`changes`). Warning only so parallel chats are not blocked ([why](../decisions/meta.md)). `STIMULUS_SHOTS=0` skips the screenshots (set by the runner).
 
+## Bundle budget (warnings only)
+- Step `Bundle budget (warnings only)` in E2E shard 1: the E2E build sets `VITE_BUNDLE_REPORT=1`, then `node scripts/check-bundle.mjs --dir dist` compares critical path and precache with `web/scripts/bundle-budget.json` (+5 %), `continue-on-error: true`, no extra build. Locally: `npm run check:bundle`; numbers and rebaseline: [`docs/perf/COLD-START-2026-10.md`](../perf/COLD-START-2026-10.md).
+
 ## Dev-Preview
 - **What:** after every green push to `develop` that changed more than docs, `ci.yml` calls `dev-preview.yml`: gitleaks → version → signed Windows exe + Android APK (same signing, audit and keystore-cleanup steps as `release.yml`, plus `verify-sig.mjs` and `apksigner verify`) → rolling **pre-release** `dev-preview` (`--prerelease --latest=false`, assets replaced, tag moved to the commit, `dev-latest.json` uploaded last, link check, `releases/latest` compared before/after). A failed run publishes nothing; the previous preview stays.
 - **Files:** `Nemo-Portable-dev.exe(.sig)`, `Nemo-dev.apk(.sha256)`, `dev-latest.json` under `…/releases/download/dev-preview/`. List: `DEV_ASSETS` in `web/scripts/lib/devPreview.ts`.

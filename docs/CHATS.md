@@ -8,7 +8,8 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Was | Was zu tun ist |
 |---|---|
 | Eigene Karte, Paket 4 (`feat/map-own-regions`) | PR reviewen und mergen; Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, dann „Genauer machen“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser; danach entscheiden, ob Paket 5 (lokale Suche) folgt |
-| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | Precache der Wörterbücher, „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
+| T6 Kaltstart & Bundle (`claude/busy-darwin-zfoab0`, PR) | PR reviewen und mergen (Reihenfolge 5, vor T3); Handtest: PWA am Handy einmal online öffnen, Flugmodus, App, ein benutztes Werkzeug und die Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)) |
+| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
 | Nächste Runde: sechs Chat-Prompts | starten, Reihenfolge und Links in [product/next/00-README.md](product/next/00-README.md) (Merge: T4 → T2 → T1 → T5 → T6 → T3) |

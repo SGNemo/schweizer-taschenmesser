@@ -12,7 +12,7 @@ vi.mock('./capture', () => capture);
 const saveFile = vi.hoisted(() => vi.fn(async () => 'saved'));
 vi.mock('@/core/platform', () => ({ getPlatform: () => ({ saveFile }) }));
 
-import ScreenshotTool from './Tool';
+import ScreenshotTool from './View';
 
 const shot = { blob: new Blob(['png'], { type: 'image/png' }), width: 640, height: 400 };
 

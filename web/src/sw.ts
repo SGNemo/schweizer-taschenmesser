@@ -13,6 +13,7 @@ import {
   type PushPayload,
 } from '@/core/notifications/pushPayload';
 import { decryptValue, isEncrypted } from '@/core/sync/crypto';
+import { cacheFirst, isLazyAsset } from '@/pwa/lazyCache';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -20,6 +21,12 @@ declare const self: ServiceWorkerGlobalScope;
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
+// Build files outside the precache (tools, chat, password dictionaries) load on first use and are kept
+// here afterwards, so they work offline too (src/pwa/lazyCache.ts).
+registerRoute(
+  ({ url, request }) => isLazyAsset(url, request.method, self.location.origin),
+  ({ request }) => cacheFirst(request),
+);
 
 // The page asks us to activate a waiting worker after the user accepted the update prompt.
 self.addEventListener('message', (event) => {

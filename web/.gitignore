@@ -7,3 +7,4 @@ test-results
 .env
 .env.local
 dist-e2e-seed
+dist-bundle

@@ -13,7 +13,7 @@ import { createWebPlatform } from '@/core/platform/web';
 import { t } from '@/strings';
 import { tLegal } from '@/strings.legal';
 import { messageRepo, threadRepo } from '../repo';
-import ChatPage from '../routes/ChatPage';
+import ChatPage from '../routes/ChatView';
 
 const c = t.chat;
 const entry = LOCAL_MODELS[0]!;
