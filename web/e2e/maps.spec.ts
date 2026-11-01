@@ -389,10 +389,11 @@ test.describe('Karten & Orte', () => {
     // Zoomed out, the shown area has cells no own map holds: "Hier erweitern" builds just those.
     for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Verkleinern' }).click();
     await page.getByTestId('map-extend').click();
-    const rows = page.getByTestId('map-region');
-    await expect(rows).toHaveCount(2);
-    await expect(rows.nth(1)).toContainText('Kartenausschnitt');
-    await expect(rows.nth(1)).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+    await expect(page.getByTestId('map-region')).toHaveCount(2);
+    // The e2e clock is frozen, so both regions share a creation time: find the new one by name.
+    const section = page.getByTestId('map-region').filter({ hasText: 'Kartenausschnitt' });
+    await expect(section).toHaveCount(1);
+    await expect(section).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
 
     await page.getByRole('button', { name: 'Alle Karten löschen' }).click();
     await expect(page.getByText('Alle eigenen Karten löschen?')).toBeVisible();
