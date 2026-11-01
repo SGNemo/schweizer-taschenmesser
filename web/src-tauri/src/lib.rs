@@ -3,6 +3,10 @@
 //! `PlatformService` interface. Keep it thin: logic belongs into the (tested) TypeScript side.
 
 #[cfg(desktop)]
+mod browser;
+#[cfg(windows)]
+mod browser_win;
+#[cfg(desktop)]
 mod capture;
 #[cfg(desktop)]
 mod disk;
@@ -109,6 +113,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![capture::AUTOSTART_FLAG]),
         ))
+        .manage(browser::BrowserState::default())
         .manage(capture::CaptureState::default())
         .on_window_event(capture::on_window_event)
         .manage(update::PendingUpdate::default())
@@ -119,6 +124,16 @@ pub fn run() {
         .manage(local_llm::LocalLlm::new())
         .manage(vault_bridge::VaultBridge::default())
         .invoke_handler(tauri::generate_handler![
+            browser::browser_open,
+            browser::browser_navigate,
+            browser::browser_back,
+            browser::browser_forward,
+            browser::browser_reload,
+            browser::browser_close,
+            browser::browser_show,
+            browser::browser_set_zoom,
+            browser::browser_configure,
+            browser::browser_clear_data,
             update::check_update,
             update::install_update,
             oauth::oauth_listen_start,

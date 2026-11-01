@@ -42,10 +42,13 @@ fn main_window_permissions() -> Vec<String> {
     let mut granted = Vec::new();
     for file in ["capabilities/default.json", "capabilities/desktop.json"] {
         let value: serde_json::Value = serde_json::from_str(&read(file)).unwrap();
-        let windows = value["windows"].as_array().unwrap();
+        // `webviews`, not `windows`: the browser tabs are child webviews INSIDE the main window and
+        // must not inherit what the main webview may do.
+        assert!(value.get("windows").is_none(), "{file}: use webviews");
+        let webviews = value["webviews"].as_array().unwrap();
         assert!(
-            windows.iter().any(|w| w == "main"),
-            "{file} does not apply to the main window"
+            webviews.iter().any(|w| w == "main"),
+            "{file} does not apply to the main webview"
         );
         granted.extend(
             value["permissions"]
@@ -88,4 +91,41 @@ fn capture_window_gets_only_its_own_commands() {
         ["allow-capture-hide", "allow-capture-read-clipboard"]
     );
     assert_eq!(value["windows"], serde_json::json!(["capture"]));
+}
+
+/// The built-in browser loads foreign pages in child webviews (`browser-tab-<n>`) of the main window.
+/// They must reach nothing of Nemo: no capability may name them, match everything, or open IPC to a
+/// remote origin.
+#[test]
+fn browser_tabs_get_no_capability() {
+    for entry in fs::read_dir(format!("{}/capabilities", env!("CARGO_MANIFEST_DIR"))).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().is_none_or(|e| e != "json") {
+            continue;
+        }
+        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+        let value: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert!(
+            value.get("remote").is_none(),
+            "{name}: remote IPC is forbidden"
+        );
+        for key in ["windows", "webviews"] {
+            for label in value[key].as_array().into_iter().flatten() {
+                let label = label.as_str().unwrap();
+                assert!(
+                    !label.contains('*') && !label.starts_with("browser"),
+                    "{name}: {key} entry {label:?} could match a browser tab"
+                );
+            }
+        }
+    }
+}
+
+/// Only the main webview may drive tabs: every browser command checks its caller.
+#[test]
+fn browser_commands_check_the_caller() {
+    let src = read("src/browser.rs");
+    let commands = src.matches("#[tauri::command]").count();
+    assert_eq!(commands, src.matches("ensure_main(&webview)?;").count());
 }
