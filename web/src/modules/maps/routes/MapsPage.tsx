@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
 import { formatNumber } from '@/core/i18n/format';
@@ -23,7 +23,8 @@ import {
 } from '@/ui';
 import { PlaceEditor, type PlaceTarget } from '../components/PlaceEditor';
 import { RouteEditor, type RouteTarget } from '../components/RouteEditor';
-import { TileMap, type MapMarker } from '../components/TileMap';
+import { RegionsCard } from '../components/RegionsCard';
+import { TileMap, type MapMarker, type TileResolver } from '../components/TileMap';
 import { TransitCard, type Trip } from '../components/TransitCard';
 import { searchPlaces, MapsError, type Hit } from '../geocode';
 import { CATEGORY_ICON, MODE_ICON } from '../icons';
@@ -39,11 +40,23 @@ import {
   type MapApp,
   type View,
 } from '../logic';
-import { placeRepo, routeRepo } from '../repo';
+import { getBuilder, setOverpassUrl, useBuildStore } from '../own/builder';
+import type { Bbox } from '../own/cut';
+import { createLocalTiles } from '../own/local';
+import { regionName } from '../own/plan';
+import { watchTheme } from '../own/theme';
+import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 import { connectionPath, fetchConnections } from '../transit';
 import { describeStep, fetchPlan, isDrivingMode, splitDuration, type Plan } from '../routing';
 import type { Endpoint, Place, Route } from '../schema';
-import { servicesOf, settings, DEFAULT_TILE_URL } from '../settings';
+import {
+  offlineOnlyOf,
+  servicesOf,
+  settings,
+  showBuildProgressOf,
+  DEFAULT_TILE_URL,
+} from '../settings';
+import { loadTile } from '../tiles';
 import styles from './maps.module.css';
 
 type Tab = 'places' | 'routes' | 'map';
@@ -62,6 +75,8 @@ interface Selection {
   label: string;
   /** Set when the point is a saved place. */
   place?: Stored<Place>;
+  /** The area of a search hit (a town, a district): the own map can be built for it. */
+  bbox?: Bbox;
 }
 
 /** "Schlossplatz, Erlangen, Bayern" → "Schlossplatz"; coordinates stay whole. */
@@ -153,10 +168,45 @@ function PlanCard({ shown, onHide }: { shown: Shown; onHide: () => void }) {
 export default function MapsPage() {
   const places = useLiveQuery(() => placeRepo.active().sortBy('createdAt'), []);
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
+  const regions = useLiveQuery(() => regionRepo.active().toArray(), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
-  const { tileUrl, searchUrl, routingUrl, transitUrl } = servicesOf(
+  const { tileUrl, searchUrl, routingUrl, transitUrl, overpassUrl } = servicesOf(
     prefs as Record<string, unknown> | undefined,
   );
+  const offlineOnly = offlineOnlyOf(prefs as { offlineOnly?: unknown } | undefined);
+  const showProgress = showBuildProgressOf(prefs as { showBuildProgress?: unknown } | undefined);
+
+  // The builder of the own map: one request per cell, only after a click, never after a restart.
+  useEffect(() => setOverpassUrl(overpassUrl), [overpassUrl]);
+  const builder = useMemo(() => getBuilder(), []);
+  const build = useBuildStore();
+  useEffect(() => {
+    void builder.settle();
+  }, [builder]);
+  const activeRegion = build.active ? regions?.find((r) => r.id === build.active) : undefined;
+
+  // The own map (stored vector tiles, docs/features/map-own.md) answers first; the online tiles only
+  // fill what it does not cover, and nothing at all in offline-only mode. The map waits for the
+  // regions and the settings, so the first frame never asks the internet for a covered area.
+  const ownMaxZoom = useRef<number | undefined>(undefined);
+  ownMaxZoom.current = regions?.length ? Math.max(...regions.map((r) => r.zooms.max)) : undefined;
+  const local = useMemo(
+    () => createLocalTiles({ read: (id) => tileRepo.get(id), maxZoom: () => ownMaxZoom.current }),
+    [],
+  );
+  const [sourceVersion, setSourceVersion] = useState(0);
+  const regionsKey = (regions ?? []).map((r) => `${r.id}:${r.updatedAt}`).join(',');
+  useEffect(() => {
+    // Drawn tiles follow the tokens and the stored data: both changes empty the memory and ask again.
+    const refresh = () => {
+      local.invalidate();
+      setSourceVersion((v) => v + 1);
+    };
+    refresh();
+    return watchTheme(refresh);
+  }, [local, regionsKey]);
+  const resolve: TileResolver = async (z, x, y, url) =>
+    (await local.get(z, x, y)) ?? (offlineOnly ? {} : loadTile(url));
   const [params, setParams] = useSearchParams();
   const tab: Tab = TABS.includes(params.get('view') as Tab)
     ? (params.get('view') as Tab)
@@ -286,8 +336,22 @@ export default function MapsPage() {
   function choose(h: Hit) {
     setHits(undefined);
     setQuery('');
-    setSelected({ lat: h.lat, lon: h.lon, label: h.label });
+    setSelected({ lat: h.lat, lon: h.lon, label: h.label, ...(h.bbox ? { bbox: h.bbox } : {}) });
     setMapView({ lat: h.lat, lon: h.lon, zoom: 16 });
+  }
+
+  /** Only on click and after its notice: the own map of the selected area starts to build. */
+  async function buildOwnMap() {
+    if (!selected?.bbox) return;
+    await requireNotice('maps-build');
+    setReady(true);
+    const { capped } = await builder.createAndStart({
+      name: regionName(selected.label),
+      bbox: selected.bbox,
+      centre: { lat: selected.lat, lon: selected.lon },
+      level: 'lean',
+    });
+    setNote(capped ? `${t.maps.own.started} ${t.maps.own.capped}` : t.maps.own.started);
   }
 
   function locate() {
@@ -377,8 +441,9 @@ export default function MapsPage() {
     },
   ];
 
+  // The own map is OpenStreetMap data as well: the credit stays whatever the online source is.
   const attribution =
-    tileUrl === DEFAULT_TILE_URL ? (
+    tileUrl === DEFAULT_TILE_URL || (regions?.length ?? 0) > 0 ? (
       <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer noopener">
         {t.maps.map.attribution}
       </a>
@@ -488,11 +553,13 @@ export default function MapsPage() {
           ) : null}
           {note ? <p className={styles.note}>{note}</p> : null}
 
-          {ready ? (
+          {ready && regions && prefs ? (
             <TileMap
               view={view}
               onView={setMapView}
               template={tileUrl}
+              resolve={resolve}
+              resolveKey={`${sourceVersion}:${offlineOnly ? 'own' : 'all'}`}
               markers={markers}
               selected={selected && !selected.place ? selected : undefined}
               line={
@@ -524,6 +591,23 @@ export default function MapsPage() {
           ) : (
             <p className={styles.note}>{t.maps.map.hint}</p>
           )}
+
+          {showProgress && activeRegion ? (
+            <p className={styles.note} role="status" data-testid="map-build-progress">
+              {build.phase === 'overview'
+                ? t.maps.own.overview
+                : t.maps.own.building(activeRegion.cells.done, activeRegion.cells.total)}{' '}
+              · {activeRegion.name}
+            </p>
+          ) : null}
+          <RegionsCard
+            regions={regions ?? []}
+            active={build.active}
+            phase={build.phase}
+            onPause={(id) => void builder.pause(id)}
+            onResume={(id) => void builder.start(id)}
+            onRemove={(id) => void builder.remove(id)}
+          />
 
           {shown ? <PlanCard shown={shown} onHide={() => setShown(undefined)} /> : null}
           {trip ? (
@@ -569,6 +653,12 @@ export default function MapsPage() {
                 <Button onClick={() => setRouteTarget({ draft: true, to: asEnd(selected) })}>
                   {t.maps.map.routeTo}
                 </Button>
+                {selected.bbox && !selected.place ? (
+                  <Button onClick={() => void buildOwnMap()}>
+                    <Icon name="map" size={18} />
+                    {t.maps.own.build}
+                  </Button>
+                ) : null}
                 <Button variant="ghost" onClick={() => setSelected(undefined)}>
                   {t.maps.map.clear}
                 </Button>

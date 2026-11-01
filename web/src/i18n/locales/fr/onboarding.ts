@@ -163,18 +163,26 @@ export const onboarding: Strings['onboarding'] = {
     balance: 'Solde aujourd’hui',
     balanceHint: (sample: string) => `p. ex. ${sample} – avec « - » pour un solde négatif.`,
     badBalance: (sample: string) => `Veuillez saisir un montant comme ${sample}.`,
-    bank: 'Importer un relevé de compte (CSV ou CAMT)',
+    bank: 'Importer un relevé bancaire (CSV, OFX, QIF ou CAMT)',
     bankHint:
-      'Dans votre banque en ligne, exportez les opérations (p. ex. « CSV-CAMT » ou « CAMT ») et sélectionnez le fichier ici. Le fichier n’est lu que sur cet appareil.',
+      'Dans la banque en ligne, exportez vos opérations (CSV, OFX, QIF ou CAMT) et choisissez le fichier ici. Les banques connues sont reconnues ; pour un CSV inconnu, vous associez les colonnes une fois et l’app s’en souvient. Le fichier n’est lu que sur cet appareil.',
     bankAccount: 'Enregistrer sur le compte',
     noAccounts: 'Créez d’abord un compte.',
     bankFormat:
-      'Le format du fichier n’a pas été reconnu. Attendu : un fichier CSV avec date d’opération et montant, ou un fichier CAMT (XML).',
+      'Le format du fichier n’a pas été reconnu. Un fichier OFX, QIF ou CAMT, ou un CSV avec date et montant est attendu.',
     bankSkipped: (n: number) =>
       n <= 1
         ? `${n} ligne sans date ou montant valide a été ignorée.`
         : `${n} lignes sans date ou montant valide ont été ignorées.`,
     bankTruncated: (n: number) => `Seules les ${n} premières opérations sont affichées.`,
+    bankDetected: (name: string) => `Reconnu : ${name}`,
+    bankRemembered: 'Reconnu : votre association de colonnes enregistrée',
+    bankNeedsMapping:
+      'Cette structure n’est pas encore connue. Associez les colonnes ci-dessous : l’app s’en souviendra pour le prochain import.',
+    bankCurrencySkipped: (n: number, from: string, to: string) =>
+      n === 1
+        ? `1 opération en ${from} n’a pas été importée : ce compte est en ${to}. Choisissez un compte en ${from}.`
+        : `${n} opérations en ${from} n’ont pas été importées : ce compte est en ${to}. Choisissez un compte en ${from}.`,
   },
   invoices: {
     suggestions: [

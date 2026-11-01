@@ -167,6 +167,63 @@ export const setup: Strings['setup'] = {
       stepsNote: 'Pasos: docs/MANUAL-TESTS.md → «Google-Verbindung einrichten».',
       none: 'Esta versión no tiene conexiones.',
     },
+    migrate: {
+      title: 'Mudanza desde otra app',
+      description:
+        '¿Vienes de Google, Todoist, Obsidian, una app bancaria o Bitwarden? Elige de dónde vienes y Nemo te lleva a la importación adecuada. Todo se queda en tu dispositivo, ves una vista previa antes y cada importación se puede deshacer.',
+      optional: 'Todo esto es opcional. «Siguiente» sin elegir deja el paso en «Más tarde».',
+      chosen: 'Elegido',
+      origins: {
+        google: {
+          title: 'Google (Calendario, Tasks, Keep)',
+          how: 'Obtén tus datos en Google Takeout (takeout.google.com): marca solo Calendario, Tasks y Keep. Descomprime antes el archivo ZIP.',
+        },
+        todoist: {
+          title: 'Todoist',
+          how: 'Menú (⋯) de un proyecto → «Exportar como CSV». Un archivo por proyecto.',
+        },
+        obsidian: {
+          title: 'Obsidian / Markdown',
+          how: 'Elige los archivos .md de tu carpeta, varios a la vez si quieres. Se conservan títulos, etiquetas y listas de tareas.',
+        },
+        bank: {
+          title: 'Banco (extracto)',
+          how: 'En tu banca online, descarga el extracto como archivo CSV o CAMT.',
+        },
+        bitwarden: {
+          title: 'Bitwarden',
+          how: 'Bóveda web → Herramientas → Exportar bóveda → formato .csv. La importación se hace en Contraseñas, en «Importar, exportar y seguridad», y necesita tu contraseña maestra.',
+        },
+        paper: {
+          title: 'Papel / de memoria',
+          how: 'Entonces empieza con la captura rápida.',
+        },
+      } as Record<string, { title: string; how: string }>,
+      actions: {
+        calendar: 'Importar calendario',
+        tasks: 'Importar tareas',
+        notes: 'Importar notas',
+        bank: 'Importar extracto',
+        vault: 'Importar en Contraseñas',
+      } as Record<string, string>,
+      items: {
+        'google.calendar': 'Calendario (.ics) importado',
+        'google.tasks': 'Tasks.json importado',
+        'google.keep': 'Notas de Keep importadas',
+        'google.subscription': 'Conectar el calendario como suscripción (Ajustes → Conexiones)',
+        'todoist.tasks': 'CSV de Todoist importado',
+        'obsidian.notes': 'Notas Markdown importadas',
+        'bank.statement': 'Extracto importado',
+        'bitwarden.vault': 'CSV de Bitwarden importado en Contraseñas',
+      } as Record<string, string>,
+      tick: 'Marcar como hecho',
+      untick: 'Reabrir',
+      subLabel: 'Lo que aún falta',
+      settingsRow: 'Mudanza desde otra app …',
+      settingsHint:
+        'Desde Google, Todoist, Obsidian, una app bancaria o Bitwarden: lleva a las importaciones adecuadas.',
+      settingsOpen: 'Elegir origen',
+    },
     startdata: {
       title: 'Importar',
       description:

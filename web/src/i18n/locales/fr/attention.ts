@@ -6,6 +6,9 @@ export const attention: Strings['attention'] = {
   invoicesOverdue: (n: number) => (n <= 1 ? `${n} facture en retard` : `${n} factures en retard`),
   invoicesToday: (n: number) =>
     n <= 1 ? `${n} facture à échéance aujourd’hui` : `${n} factures à échéance aujourd’hui`,
+  subscriptionPrice: (name: string, from: string, to: string) =>
+    `${name} coûte maintenant ${to} au lieu de ${from}`,
+  subscriptionPriceSince: (date: string) => `Nouveau prix depuis le ${date}`,
   todosOverdue: (n: number) => (n <= 1 ? `${n} tâche en retard` : `${n} tâches en retard`),
   todosToday: (n: number) =>
     n <= 1 ? `${n} tâche à échéance aujourd’hui` : `${n} tâches à échéance aujourd’hui`,

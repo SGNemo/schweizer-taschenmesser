@@ -77,6 +77,23 @@ export const quickCapture: Strings['quickCapture'] = {
   },
   todoTimeNote: (time: string) => `Heure : ${time}`,
   noTargets: 'Aucun module de destination n’est activé.',
+  multi: {
+    lineHint: 'Une ligne = une entrée',
+    shiftEnter: 'Maj+Entrée : nouvelle ligne. Une ligne = une entrée.',
+    listLabel: (n: number) => `Aperçu : ${n} entrées`,
+    rowTarget: (text: string) => `Destination de « ${text} »`,
+    choose: 'Veuillez choisir',
+    inbox: 'Boîte de réception',
+    financeDraft: 'Opération (brouillon)',
+    saveAll: (n: number) => `Tout enregistrer (${n})`,
+    saved: (n: number) => `${n} éléments enregistrés`,
+    change: 'Modifier',
+  },
+  trayToday: {
+    heading: 'Aujourd’hui',
+    now: 'Commencer maintenant',
+    timer: 'Minuteur 25 minutes',
+  },
   tray: {
     capture: 'Saisir',
     open: 'Ouvrir l’app',
@@ -84,7 +101,7 @@ export const quickCapture: Strings['quickCapture'] = {
     tooltip: 'Nemo',
   },
   window: {
-    hint: 'Entrée enregistre · Tab change le type · Échap ferme',
+    hint: 'Entrée enregistre · Maj+Entrée nouvelle ligne · Tab change le type · Échap ferme',
   },
   settings: {
     title: 'Saisie rapide',
@@ -112,6 +129,9 @@ export const quickCapture: Strings['quickCapture'] = {
     },
     hotkeyStartupError: (keys: string) => `Le raccourci ${keys} n’a pas pu être enregistré.`,
     closeToTray: 'Réduire dans la zone de notification au lieu de quitter',
+    trayToday: 'Afficher aujourd’hui dans le menu de la zone de notification',
+    trayTodayHint:
+      'Jusqu’à 5 éléments d’aujourd’hui (titre et heure seulement, jamais de montants) dans le menu de l’icône. Un clic ouvre l’élément.',
     autostart: 'Lancer avec Windows',
     autostartPortable:
       'L’app tourne depuis un dossier avec « data » (p. ex. une clé USB). Le démarrage automatique pointe vers cet emplacement ; si la clé est absente à la connexion, rien ne démarre.',

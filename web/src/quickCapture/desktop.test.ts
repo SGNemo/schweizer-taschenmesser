@@ -1,10 +1,17 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setPlatform, type DesktopService } from '@/core/platform';
+import type { TrayToday } from '@/core/platform/types';
 import { createWebPlatform } from '@/core/platform/web';
 import { useUiStore } from '@/stores/ui';
 import { DEFAULT_HOTKEY, DEFAULT_PREFS, readPrefs, writePrefs } from './device';
-import { hotkeyLabel, startQuickCaptureDesktop } from './desktop';
+import { clearAll } from '@/core/ai/testing';
+import { TRAY_ITEM_EVENT } from '@/core/platform/tauri/traySnapshot';
+import { setNow } from '@/core/time/now';
+import { useTimer } from '@/tools/timer/engine';
+import { isRunning } from '@/tools/timer/logic';
+import { saveCapture } from './targets';
+import { hotkeyLabel, startQuickCaptureDesktop, startTrayTimer, startTrayToday } from './desktop';
 
 const fakeDesktop = (over: Partial<DesktopService> = {}): DesktopService => ({
   ...createWebPlatform().desktop,
@@ -86,5 +93,46 @@ describe('startQuickCaptureDesktop', () => {
     setPlatform({ ...createWebPlatform(), desktop: d });
     await startQuickCaptureDesktop();
     expect(useUiStore.getState().toasts[0]?.message).toContain('Strg+Umschalt+Leertaste');
+  });
+});
+
+describe('tray "Heute"', () => {
+  it('is on by default and can be switched off per device', () => {
+    expect(DEFAULT_PREFS.trayToday).toBe(true);
+    writePrefs({ trayToday: false });
+    expect(readPrefs().trayToday).toBe(false);
+  });
+
+  it('"Timer 25 Minuten" starts a 25-minute timer and shows it, but never resets a running one', async () => {
+    useTimer.getState().reset();
+    await startTrayTimer();
+    const st = useTimer.getState();
+    expect(st.mode).toBe('timer');
+    expect(isRunning(st.timer)).toBe(true);
+    expect(st.timer.durationMs).toBe(25 * 60_000);
+    expect(useUiStore.getState()).toMatchObject({ toolsOpen: true, activeTool: 'timer' });
+    const endAt = st.timer.endAt;
+    await startTrayTimer();
+    expect(useTimer.getState().timer.endAt).toBe(endAt);
+    useTimer.getState().pause();
+    useTimer.getState().reset();
+    useUiStore.getState().closeTools();
+  });
+
+  it('shows today in the tray and opens the clicked line', async () => {
+    setNow(() => new Date(2026, 8, 30, 10, 0).getTime());
+    await clearAll();
+    await saveCapture('event', { title: 'Zahnarzt', date: '2026-09-30', time: '15:00' });
+    const setTrayToday = vi.fn(async (_today: TrayToday) => undefined);
+    const stop = await startTrayToday(fakeDesktop({ setTrayToday }));
+    await vi.waitFor(() =>
+      expect(setTrayToday).toHaveBeenCalledWith(
+        expect.objectContaining({ items: ['15:00 · Zahnarzt'] }),
+      ),
+    );
+    window.dispatchEvent(new CustomEvent(TRAY_ITEM_EVENT, { detail: 'today-0' }));
+    expect(location.pathname).toBe('/calendar');
+    stop();
+    setNow();
   });
 });

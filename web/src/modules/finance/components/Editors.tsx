@@ -252,7 +252,11 @@ function TransactionForm({
           ))}
         </SelectField>
       </AdvancedFields>
-      {existing?.sourceRef ? <p className={styles.muted}>{t.finance.fromInvoice}</p> : null}
+      {existing?.sourceRef?.startsWith('subscription:') ? (
+        <p className={styles.muted}>{t.finance.fromSubscription}</p>
+      ) : existing?.sourceRef ? (
+        <p className={styles.muted}>{t.finance.fromInvoice}</p>
+      ) : null}
       <Actions
         onClose={onClose}
         onDelete={

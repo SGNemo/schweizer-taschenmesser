@@ -19,6 +19,9 @@ export const subscriptions: Strings['subscriptions'] = {
       cancelRemindDaysBeforeHelp: '0 = le dernier jour du délai',
       remindTime: 'Heure du rappel',
       remindTimeHelp: 'Au format HH:mm',
+      priceHint: 'Avis en cas de hausse de prix',
+      priceHintHelp:
+        'Affiche une fois sous « Important maintenant » quand un abonnement devient plus cher. Vous pouvez le désactiver à tout moment.',
     },
   },
   title: 'Abonnements',

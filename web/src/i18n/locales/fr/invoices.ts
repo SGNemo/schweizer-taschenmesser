@@ -16,6 +16,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = le jour de l’échéance',
       remindTime: 'Heure du rappel',
       remindTimeHelp: 'Au format HH:mm',
+      bookWhenPaid: 'Enregistrer une facture payée comme dépense',
+      bookWhenPaidHelp:
+        'Crée l’opération dans Finances dès que vous marquez une facture comme payée. Sans le module Finances, rien ne se passe ; une opération récurrente avec le même bénéficiaire et le même montant n’est pas enregistrée deux fois.',
     },
   },
   title: 'Factures',

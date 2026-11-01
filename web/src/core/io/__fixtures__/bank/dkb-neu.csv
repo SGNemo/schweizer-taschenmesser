@@ -1,0 +1,9 @@
+"Konto";"Girokonto DE00120300000000000005"
+"";""
+"Kontostand vom 31.10.2026:";"1.234,56 €"
+
+"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
+"03.10.26";"03.10.26";"Gebucht";"Erika Mustermann";"Filmfreund GmbH";"Streaming Monatsbeitrag Oktober";"Ausgang";"DE00999999990000000002";"-9,99";"";"";""
+"01.10.26";"01.10.26";"Gebucht";"Beispiel AG";"Erika Mustermann";"Gehalt Oktober";"Eingang";"DE00999999990000000003";"2.345,67";"";"";""
+"02.10.26";"02.10.26";"Gebucht";"Erika Mustermann";"Marktkauf Mustertal";"Einkauf Lebensmittel";"Ausgang";"";"-23,40";"";"";""
+"04.10.26";"04.10.26";"Vorgemerkt";"Erika Mustermann";"Noch Offen GmbH";"Noch nicht gebucht";"Ausgang";"";"-5,00";"";"";""

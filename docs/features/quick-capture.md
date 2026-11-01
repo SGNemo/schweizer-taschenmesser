@@ -7,11 +7,19 @@ Einträge in Sekunden anlegen, ohne das passende Modul zu öffnen. Der Parser l�
 | Wo                            | Wie                                                                                                                                   |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | In der App (alle Plattformen) | Schnell-Hinzufügen-Button (Plus unten rechts) → Eingabefeld oben im Blatt. Auch über `/?capture=1` (PWA-Shortcut „Schnell erfassen“). |
-| Windows-App                   | Globales Tastenkürzel (Standard `Strg+Umschalt+Leertaste`) oder Tray-Symbol → kleines Eingabefenster.                                 |
-| Android-App                   | Text oder Link in einer anderen App „Teilen“ → Nemo → Vorschlag, Speichern mit einem Tipp.                                   |
+| Windows-App                   | Globales Tastenkürzel (Standard `Strg+Umschalt+Leertaste`) oder Tray-Symbol → kleines Eingabefenster. Das Tray-Menü zeigt oben „Heute“ (siehe unten). |
+| Android-App                   | Text oder Link in einer anderen App „Teilen“ → Nemo → Vorschlag, Speichern mit einem Tipp. Lange auf das App-Symbol drücken → „Erfassen“, „Suchen“, „Heute“; Kachel „Nemo: Erfassen“ in den Schnelleinstellungen. |
 | PWA                           | Share-Target `/share` (wie bisher), jetzt mit Parser-Vorschlag.                                                                       |
 
-Im Eingabefenster: **Enter** speichert, **Tab / Umschalt+Tab** oder **↑/↓** wechseln den Typ, **Esc** schließt. Nach dem Speichern erscheint eine Bestätigung mit „Rückgängig“.
+Im Eingabefenster: **Enter** speichert, **Umschalt+Enter** beginnt eine neue Zeile, **Tab / Umschalt+Tab** oder **↑/↓** wechseln den Typ, **Esc** schließt. Nach dem Speichern erscheint eine Bestätigung mit „Rückgängig“.
+
+### Mehrere Dinge auf einmal
+
+**Eine Zeile = ein Eintrag.** Mehrere Zeilen, Aufzählungen (`-`, `*`, `•`, `1.`) oder ein Satz wie „Milch kaufen, morgen Oma anrufen und Freitag Zahnarzt 9 Uhr“ werden zu einzelnen Einträgen. Jede Zeile zeigt ihr Ziel (änderbar über das Menü der Zeile) und ihr Datum; „Alle speichern“ legt alle auf einmal an, „Ändern“ im Hinweis danach nimmt alle zurück und holt den Text wieder ins Feld. Unklare Zeilen landen wie gewohnt im Eingang (mit „Ohne Rückfrage speichern“ aus: erst wählen), Buchungen bleiben Entwurf bis zur Bestätigung. Nicht getrennt wird bei Beträgen („12,50“), Uhrzeiten („um 9, 30 Min“), Zeitspannen („9–10 Uhr“), Wochentagslisten („Mo, Mi und Fr“), „bis 31.12.“, Klammern und Links – und immer dann, wenn ein Teil allein kein Eintrag wäre („Brot, Milch und Eier kaufen“ bleibt eins). Am Handy steht „Eine Zeile = ein Eintrag“ unter dem Feld; Diktat („neue Zeile“, „Komma“) und geteilter Text mit mehreren Zeilen funktionieren genauso.
+
+### Tray „Heute“ (Windows-App)
+
+Rechtsklick auf das Tray-Symbol zeigt oben bis zu 5 Dinge von heute: Überfälliges, dann heutige Termine und ToDos mit Uhrzeit (nur Titel, auf 40 Zeichen gekürzt; nie Beträge, nie Tresor, nie Notizinhalte). Ein Klick öffnet den Eintrag im Hauptfenster; „Jetzt dran anfangen“ öffnet den Fokus für das erste ToDo, „Timer 25 Minuten“ startet den Timer. Aktualisiert sich bei jeder Änderung und alle 5 Minuten. Abschaltbar unter Einstellungen → Schnellerfassung → „Heute im Tray-Menü zeigen“. Leerer Tag oder ausgeschaltet: Menü wie vorher.
 
 ### Was erkannt wird
 
@@ -28,7 +36,7 @@ Ist die Erkennung unsicher (z. B. Link + Termin, oder Betrag + Termin), wird nic
 ### Einstellungen (Einstellungen → Schnellerfassung)
 
 - Standardziel für Text ohne Hinweis.
-- Windows: Tastenkürzel (aufnehmen; Fehler wie „schon belegt“ werden erklärt, das alte Kürzel bleibt aktiv), „In den Tray minimieren statt beenden“, „Mit Windows starten“, „Zwischenablage beim Öffnen einfügen“. Alles standardmäßig **aus** (außer dem Kürzel selbst).
+- Windows: Tastenkürzel (aufnehmen; Fehler wie „schon belegt“ werden erklärt, das alte Kürzel bleibt aktiv), „In den Tray minimieren statt beenden“, „Heute im Tray-Menü zeigen“ (an), „Mit Windows starten“, „Zwischenablage beim Öffnen einfügen“. Alles andere standardmäßig **aus** (außer dem Kürzel selbst).
 - **Wichtig:** Das Tastenkürzel funktioniert nur, solange die App läuft. Mit „In den Tray minimieren“ bleibt sie beim Schließen im Hintergrund. Beim Verstecken im Tray gilt die App als „im Hintergrund“ (Tresor-Auto-Sperre greift).
 - Portable-Exe von einem USB-Stick: Der Autostart-Eintrag zeigt auf den aktuellen Speicherort; fehlt der Stick beim Anmelden, startet nichts.
 
@@ -36,7 +44,8 @@ Ist die Erkennung unsicher (z. B. Link + Termin, oder Betrag + Termin), wird nic
 
 ```
 web/src/quickCapture/
-  parser/      pure TS, relative imports only (lint + isolation.test.ts). parseCapture(text, {now, defaultType})
+  parser/      pure TS, relative imports only (lint + isolation.test.ts). parseCapture(text, {now, defaultType});
+               split.ts splitCapture(text) runs in front of it (one line = one entry)
   targets/     adapter layer: one adapter per destination, saveCapture(type, fields)
   ui/          CaptureForm (live chips, type switching), chips.ts, announceSaved.ts
   capture/     entry of the second window (capture.html): CaptureWindow
@@ -45,7 +54,8 @@ web/src/quickCapture/
   nativeShare.ts  Android share -> /share
 web/capture.html                  second Vite input
 web/src-tauri/src/capture.rs      hidden capture window, tray, hotkey, close-to-tray, autostart
-web/src-tauri/plugins/share-intent  Android ACTION_SEND plugin (Kotlin) + stub
+web/src-tauri/plugins/share-intent  Android ACTION_SEND plugin (Kotlin) + stub; launcher shortcuts + quick-settings tile
+web/src/core/platform/tauri/traySnapshot.ts  tray "Heute" block: selection, refresh, click routes
 ```
 
 - **Parser:** deterministic, integer scores, `CaptureResult { type, fields, confidence, needsChoice, forced, alternatives, notes }`. `needsChoice` when the best score is below 60 or within 10 of the runner-up. No `chrono-node`: it misses "am 3.10.", recurrence and amounts, and would add ~3 MB.
@@ -57,14 +67,16 @@ web/src-tauri/plugins/share-intent  Android ACTION_SEND plugin (Kotlin) + stub
 - **Clipboard:** read only in the capture window, only when the user turned it on, capped at 1000 characters, never logged.
 - **Privacy:** typed text is never logged; errors never echo user text.
 
-### Android app shortcut (proposal, not implemented)
+- **Multi-line (`parser/split.ts`):** lines always split; inside a line, sentence ends, commas/semicolons and an "und" after the last comma split only when every part reads as an entry (≥ 2 words, one not a date/time word). Never at digit-comma-digit, inside brackets or links, after a digit or short abbreviation. Fewer than two parts = the old single path with the text as typed (`split.test.ts` pins every corpus sentence as one entry). Each part goes through `parseCapture` and the same `ui/resolve.ts` as a single entry; `targets/saveCaptures` writes them one after the other, all or nothing, and returns one `SavedCapture` (`count`, `text`, one `undo`). `ui/reopen.ts` puts the text back into the sheet for "Ändern". `extra` (shared note) applies to single entries only.
+- **Tray "Heute" (`core/platform/tauri/traySnapshot.ts`, `capture.rs`):** the web app reads today from the `todos` and `calendar` contributions only (`calendarItems`, overdue `attention`), keeps ≤ 5 lines (title cut to 40, amounts stripped, internal routes only) and sends only labels via `desktop_set_tray_today`; Rust rebuilds the tray menu (block hidden when empty), keeps nothing else and logs nothing. A click shows the main window and dispatches `tm-tray-item` with a fixed id (`today-0…4`, `now`, `timer`); the route is looked up in the web app. Refresh: Dexie live query on those tables + every 5 min; no polling in Rust. Started from `startQuickCaptureDesktop` (desktop only, not in safe mode); per-device switch `trayToday` in `tm-quick-capture` (default on).
 
-Tauri 2 has no API for launcher shortcuts, so this needs native Kotlin. Two options, both inside the existing `share-intent` plugin (library manifest merge, no committed `gen/`):
+### Android app shortcuts and quick-settings tile (built)
 
-1. **Static:** `res/xml/shortcuts.xml` with one shortcut (`android.intent.action.VIEW`, data `taschenmesser://capture`) and `<meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>` on the launcher activity. The activity needs an intent filter for that URI; the plugin turns it into a pending "open capture" flag that the web app opens as `/?capture=1`.
-2. **Dynamic:** `ShortcutManagerCompat.setDynamicShortcuts` from `ShareIntentPlugin.load` (adds `androidx.core:core` as a dependency).
-
-Recommendation: option 1 (works before the first app start after install, no runtime code). Needs a device test: long-press on the icon.
+Inside the `share-intent` plugin (library manifest merge, no committed `gen/`):
+- `res/xml/shortcuts.xml`: static shortcuts Erfassen / Suchen / Heute (explicit `VIEW` intent to `<id>.MainActivity` with the extra `…shareintent.OPEN` = `capture|search|today`), hooked to the launcher activity with `<meta-data android:name="android.app.shortcuts">`; labels in `res/values{,-de,-es,-fr,-pt-rBR}/strings.xml`, own vector icons (a library cannot safely reference the app's mipmaps).
+- `CaptureTileService.kt`: tile "Nemo: Erfassen" (`BIND_QUICK_SETTINGS_TILE`), starts the launch intent of its own package with the same extra; `startActivityAndCollapse(PendingIntent)` from Android 14, the `Intent` variant before; unlocks first. Reads no data.
+- `ShareIntentPlugin.kt` keeps the extra as `open` next to a pending share; `share.ts` lets only the three values through; `nativeShare.ts` opens the capture sheet, the palette or `/` (a waiting share wins).
+- **Application id:** `${applicationId}` works in the manifest, not in resource XML. `shortcuts.xml` names the stable id; `scripts/android-shortcuts.mjs <tauri config>` rewrites the targets right after `tauri android init` in `release.yml` and `dev-preview.yml` (`scripts/lib/androidShortcuts.test.ts` pins file, languages and both steps). The tile needs no patch.
 
 ### Suggestion for a later manifest field
 

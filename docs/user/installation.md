@@ -26,6 +26,7 @@ Nemo comes as a portable Windows file, as an Android app and as a PWA in the bro
    next to the `.exe`, so you can replace or move the file at any time. **Portable mode (for example a USB stick):**
    put an empty folder `data` next to the `.exe` and the app data lives there instead of in your profile (the
    automatic update backups stay in `%APPDATA%`).
+6. **Tray icon:** a right-click shows "Today" at the top: up to 5 things of today (title and time only, never amounts); a click opens the entry. Can be turned off under Settings → Quick capture.
 
 **Switching from the installed version (Setup/MSI, up to `0.2.0-beta.1`):** the portable app uses the same
 app id and therefore finds your data in your profile right away.
@@ -50,6 +51,9 @@ The old installed version cannot update itself to the portable file; the switch 
 ## Installing as a PWA
 Open Chrome/Edge (Windows) or Chrome (Android) → "Install app". Service worker and installation need
 HTTPS (or `localhost`).
+
+## Moving from another app
+Coming from Google, Todoist, Obsidian, a banking app or Bitwarden? Open the checklist on the Overview (row "Moving from another app") or **Settings → Sync & Backup → Moving from another app …**. Choose where you come from: Nemo says where to get the export (for Google: Google Takeout, unzip the ZIP first) and opens the matching import with a preview. Nothing is uploaded, no account is needed, every import can be undone. Under the checklist row you see what is still missing for each origin; points that cannot be detected (connecting a calendar subscription, the Bitwarden import) you tick off yourself. All of it is optional.
 
 ## Dev preview (untested builds)
 

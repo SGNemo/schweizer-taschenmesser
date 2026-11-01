@@ -138,10 +138,15 @@ export interface LocalApiService {
   stop(): Promise<void>;
 }
 
+/** Screens an Android launcher shortcut or the quick-settings tile may open (fixed list). */
+export type ShortcutTarget = 'capture' | 'search' | 'today';
+
 /** Text or a link another Android app shared with this app. */
 export interface SharedContent {
   title: string;
   text: string;
+  /** Set by a launcher shortcut or the quick-settings tile instead of a share (title/text empty). */
+  open?: ShortcutTarget;
 }
 
 /** Android "Share" target. `supported` is false everywhere except the Android app. */
@@ -159,6 +164,18 @@ export interface TrayLabels {
   open: string;
   quit: string;
   tooltip: string;
+}
+
+/**
+ * The tray's "Heute" block (desktop): up to 5 short lines plus the two action labels. Only labels
+ * cross to Rust; the routes stay in the web app (`core/platform/tauri/traySnapshot.ts`). No items =
+ * the block is hidden and the tray menu looks as before.
+ */
+export interface TrayToday {
+  heading: string;
+  items: string[];
+  now: string;
+  timer: string;
 }
 
 /** One note of a reminder tone (see `core/notifications/sound.ts`); the native side renders it. */
@@ -197,6 +214,8 @@ export interface DesktopService {
   /** True = the window's close button hides the app in the tray instead of quitting. */
   setCloseToTray(enabled: boolean): Promise<void>;
   setTrayLabels(labels: TrayLabels): Promise<void>;
+  /** Replaces the tray's "Heute" block; optional so fakes keep compiling (absent = `traySnapshot.ts` invokes the command). */
+  setTrayToday?(today: TrayToday): Promise<void>;
   setAutostart(enabled: boolean): Promise<void>;
   autostart(): Promise<boolean>;
   /** `portable`: the app runs from a folder with a `data/` directory (e.g. a USB stick). */

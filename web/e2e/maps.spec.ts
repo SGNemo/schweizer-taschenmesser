@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready, showAllWidgets } from './helpers';
+import { enable, openFoldedGroup, ready, showAllWidgets } from './helpers';
+import { overpassFixture } from '../src/modules/maps/own/fixtures';
+import { SAMPLE_CENTER, sampleRegion } from '../src/modules/maps/own/sample';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -34,8 +36,16 @@ async function mockOsm(page: Page) {
           display_name: 'Schlossplatz, Erlangen, Bayern, Deutschland',
           lat: '49.5981',
           lon: '11.0044',
+          boundingbox: ['49.5950', '49.6010', '11.0000', '11.0090'],
         },
       ],
+    });
+  });
+  await page.route('**://overpass-api.de/**', async (route) => {
+    seen.push(route.request().url());
+    await route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: overpassFixture(),
     });
   });
   await page.route('**://api.transitous.org/**', async (route) => {
@@ -245,5 +255,132 @@ test.describe('Karten & Orte', () => {
     await expect(card.getByTestId('map-transit-steps')).toContainText('RE 1 → Nürnberg');
     await expect(page.getByTestId('map-line')).toBeAttached();
     expect(seen.filter((u) => hostOf(u) === 'api.transitous.org')).toHaveLength(1);
+  });
+
+  test('the own map draws its stored tiles itself; offline-only leaves everything else empty', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    const coveredRequests = () =>
+      seen.filter(
+        (u) => hostOf(u) === 'tile.openstreetmap.org' && /\/1[2-9]\/\d+\/\d+\.png$/.test(u),
+      );
+    await enable(page, 'maps');
+    await ready(page, '/maps');
+
+    // Package 1 has no builder yet: the fixture town goes straight into the module's local tables,
+    // in the row shape the repo writes (envelope + data; nothing of it is ever queued for sync).
+    const { id, region, tiles } = sampleRegion();
+    await page.evaluate(
+      async ({ id, region, tiles }) => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onsuccess = () => resolve(open.result);
+          open.onerror = () => reject(open.error);
+        });
+        const envelope = (key: string) => ({
+          id: key,
+          createdAt: 1_700_000_000_000,
+          updatedAt: 1_700_000_000_000,
+          deviceId: 'e2e',
+          deletedAt: null,
+          _f: {},
+        });
+        const tx = db.transaction(['maps_region', 'maps_tile'], 'readwrite');
+        tx.objectStore('maps_region').put({ ...region, ...envelope(id) });
+        for (const t of tiles)
+          tx.objectStore('maps_tile').put({
+            ...t.data,
+            bytes: new Uint8Array(t.data.bytes).buffer,
+            ...envelope(t.id),
+          });
+        await new Promise<void>((resolve, reject) => {
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+      },
+      {
+        id,
+        region,
+        tiles: tiles.map((t) => ({
+          id: t.id,
+          data: { ...t.data, bytes: Array.from(new Uint8Array(t.data.bytes)) },
+        })),
+      },
+    );
+
+    await ready(page, '/maps?view=map');
+    await expect(page.getByTestId('tile-map')).toBeVisible();
+    // Coordinates are read locally (no search request) and put the map on the town at zoom 16.
+    const centre = `${SAMPLE_CENTER.lat}, ${SAMPLE_CENTER.lon}`;
+    await page.getByLabel('Ort oder Adresse suchen').fill(centre);
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    await page.getByTestId('map-hits').getByText(centre).click();
+    const map = page.getByTestId('tile-map');
+    await expect.poll(() => map.locator('img[src^="blob:"]').count()).toBeGreaterThan(3);
+    expect(seen.filter((u) => hostOf(u) === 'nominatim.openstreetmap.org')).toEqual([]);
+    expect(coveredRequests()).toEqual([]);
+    await test.info().attach('own-map', { body: await map.screenshot(), contentType: 'image/png' });
+
+    // Zooming out beyond the stored zooms still shows the online tiles (the default).
+    for (let i = 0; i < 6; i++) await page.getByRole('button', { name: 'Verkleinern' }).click();
+    await expect
+      .poll(
+        () => seen.filter((u) => hostOf(u) === 'tile.openstreetmap.org' && /\/10\//.test(u)).length,
+      )
+      .toBeGreaterThan(0);
+
+    // "Nur eigene Karte (offline)": nothing outside the own map is requested or drawn.
+    await ready(page, '/settings/module');
+    await openFoldedGroup(page, 'module-maps', 'fields');
+    const toggle = page.getByRole('switch', { name: 'Nur eigene Karte (offline)' });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+    const before = seen.length;
+    await ready(page, '/maps?view=map');
+    await expect(page.getByTestId('tile-map')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Verkleinern' })).toBeVisible();
+    await page.waitForTimeout(400); // give a stray request the chance to show up
+    expect(seen.slice(before).filter((u) => hostOf(u) === 'tile.openstreetmap.org')).toEqual([]);
+    await expect(page.getByTestId('tile-map').locator('img')).toHaveCount(0);
+    await expect(page.getByText(/konnten nicht geladen werden/)).toHaveCount(0);
+  });
+
+  test('the own map is built from the map data service only on click, cell by cell, and can be deleted', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    await enable(page, 'maps');
+    await ready(page, '/maps?view=map');
+    await page.getByLabel('Ort oder Adresse suchen').fill('Schlossplatz Erlangen');
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    await page
+      .getByTestId('map-hits')
+      .getByText(/Schlossplatz, Erlangen/)
+      .click();
+    const card = page.getByTestId('map-selection');
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de')).toEqual([]);
+    // The first build brings its own one-time notice (clicked away by the helper), then the requests.
+    await card.getByRole('button', { name: 'Eigene Karte erzeugen' }).click();
+    const row = page.getByTestId('map-region');
+    await expect(row).toContainText('Schlossplatz');
+    await expect(row).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+    await expect(row).toContainText(/Fertig · \d+ Teile/);
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de').length).toBeGreaterThanOrEqual(1);
+    // Every request is a POST with the query in its body, never in the address.
+    for (const u of seen.filter((u) => hostOf(u) === 'overpass-api.de'))
+      expect(u).not.toContain('data=');
+    // The map draws its own tiles for the built area.
+    const map = page.getByTestId('tile-map');
+    await expect.poll(() => map.locator('img[src^="blob:"]').count()).toBeGreaterThan(0);
+    await test
+      .info()
+      .attach('own-map-built', { body: await map.screenshot(), contentType: 'image/png' });
+
+    await row.getByRole('button', { name: 'Karte löschen' }).click();
+    await expect(row).toContainText('Wirklich löschen?');
+    await row.getByRole('button', { name: 'Karte löschen' }).click();
+    await expect(page.getByTestId('map-region')).toHaveCount(0);
   });
 });

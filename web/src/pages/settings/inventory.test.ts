@@ -27,7 +27,7 @@ const CORE_KEYS = {
     'tm-home-view': 'all',
     'tm-sidebar': 'wide',
     'tm-nav-closed': '[]',
-    'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard',
+    'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard, trayToday',
     'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
     'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
     'tm-spotify-now':
@@ -85,6 +85,8 @@ const CORE_KEYS = {
     'update.dismissedVersion': 'version',
     'legal.notices': 'ids of acknowledged one-time notices (device-local)',
     'setup.state': 'checklistHidden false, status, steps',
+    'migrate.state':
+      'setup: chosen origin ids with time, ticked point ids (device-local, no contents)',
     'focus.state': 'running focus session (task, end time), skipped suggestions of the day',
     'reminders.acked': 'older answers (Erledigt); now synced in the settings scope reminders',
     'focus.context': 'last visited route and title for the resume card (device-local)',
@@ -94,6 +96,9 @@ const CORE_KEYS = {
     'sync.lastSyncAt': 'timestamp',
     'seed.sync': false,
     'connector.<id>': 'status',
+    'finance.bankMappings': 'column assignment per header of an unknown bank CSV (device-local)',
+    'finance.rules': 'import rules: payee pattern → category / subscription (device-local)',
+    'subscriptions.priceHints': 'day a price rise was first noticed, per rise (device-local)',
   },
   '_secrets / platform secrets': {
     syncConfig: 'server, token, deviceName, encryption',

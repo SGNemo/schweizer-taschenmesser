@@ -17,6 +17,7 @@ import {
 } from '@/ui';
 import { transactionRepo } from '../repo';
 import { AccountEditor, CategoryEditor, type AccountTarget, type CategoryTarget } from './Editors';
+import { RulesList } from './RulesList';
 import { balances, filterTransactions, signed, type TxFilter } from '../logic';
 import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
@@ -195,6 +196,7 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
           </div>
         </section>
       ))}
+      <RulesList categories={data.categories} />
       <CategoryEditor target={target} onClose={() => setTarget(null)} />
     </>
   );

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher shortcuts and quick-settings tile (English, default). Short labels stay around 10 characters; escape apostrophes (\'). -->
+<resources>
+    <string name="nemo_shortcut_capture_short">Capture</string>
+    <string name="nemo_shortcut_capture_long">Quick capture</string>
+    <string name="nemo_shortcut_search_short">Search</string>
+    <string name="nemo_shortcut_search_long">Search in Nemo</string>
+    <string name="nemo_shortcut_today_short">Today</string>
+    <string name="nemo_shortcut_today_long">Open today</string>
+    <string name="nemo_tile_capture">Nemo: Capture</string>
+</resources>

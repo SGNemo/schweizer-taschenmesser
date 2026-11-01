@@ -16,6 +16,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = on the due date',
       remindTime: 'Reminder time',
       remindTimeHelp: 'Format HH:mm',
+      bookWhenPaid: 'Book a paid invoice as an expense',
+      bookWhenPaidHelp:
+        'Creates the booking in Finances as soon as you mark an invoice as paid. Without the Finance module nothing happens; a repeating booking with the same payee and amount is not booked twice.',
     },
   },
   title: 'Invoices',

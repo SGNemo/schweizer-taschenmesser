@@ -80,6 +80,35 @@ export const finance: Strings['finance'] = {
   openingBalance: 'Opening balance',
   deleteAccountHint: 'Also deletes all transactions of this account.',
   noAccounts: 'No accounts yet.',
+  fromSubscription: 'Assigned to the subscription by a rule.',
+  rules: {
+    title: 'Suggested rules',
+    hint: 'Nothing is ticked. A rule is only created if you tick it and confirm the import. You can remove it under Categories.',
+    proposalBoth: (payee: string, sub: string, category: string) =>
+      `Always book “${payee}” as subscription “${sub}” in category “${category}”?`,
+    proposalSubscription: (payee: string, sub: string) =>
+      `Always assign “${payee}” to subscription “${sub}”?`,
+    proposalCategory: (payee: string, category: string) =>
+      `Always book “${payee}” in category “${category}”?`,
+    applied: (name: string) => `Rule: ${name}`,
+    manageTitle: 'Rules for the import',
+    manageHint:
+      'The bank statement import applies these rules. Removing one does not change any existing transaction.',
+    manageEmpty: 'No rules yet. Suggestions appear after an import.',
+    remove: (match: string) => `Remove rule for “${match}”`,
+  },
+  bankMap: {
+    title: 'Which column is what?',
+    hint: 'Pick the matching column for each item. You see the first rows below; the app remembers the assignment for the next import of this kind of file.',
+    date: 'Date',
+    amount: 'Amount',
+    payee: 'Payee (optional)',
+    purpose: 'Purpose (optional)',
+    none: '– none –',
+    choose: '– choose –',
+    sample: 'First rows of the file',
+    apply: 'Use these columns',
+  },
   addCategory: 'Add category',
   editCategory: 'Edit category',
   categoryName: 'Name',

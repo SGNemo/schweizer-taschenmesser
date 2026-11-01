@@ -76,6 +76,23 @@ export const quickCapture: Strings['quickCapture'] = {
   },
   todoTimeNote: (time: string) => `Hora: ${time}`,
   noTargets: 'No hay ningún módulo de destino activado.',
+  multi: {
+    lineHint: 'Una línea = una entrada',
+    shiftEnter: 'Mayús+Enter: nueva línea. Una línea = una entrada.',
+    listLabel: (n: number) => `Vista previa: ${n} entradas`,
+    rowTarget: (text: string) => `Destino de «${text}»`,
+    choose: 'Elige, por favor',
+    inbox: 'Bandeja de entrada',
+    financeDraft: 'Movimiento (borrador)',
+    saveAll: (n: number) => `Guardar todo (${n})`,
+    saved: (n: number) => `${n} cosas guardadas`,
+    change: 'Cambiar',
+  },
+  trayToday: {
+    heading: 'Hoy',
+    now: 'Empezar ahora',
+    timer: 'Temporizador 25 minutos',
+  },
   tray: {
     capture: 'Capturar',
     open: 'Abrir la app',
@@ -83,7 +100,7 @@ export const quickCapture: Strings['quickCapture'] = {
     tooltip: 'Nemo',
   },
   window: {
-    hint: 'Enter guarda · Tab cambia el tipo · Esc cierra',
+    hint: 'Enter guarda · Mayús+Enter nueva línea · Tab cambia el tipo · Esc cierra',
   },
   settings: {
     title: 'Captura rápida',
@@ -110,6 +127,9 @@ export const quickCapture: Strings['quickCapture'] = {
     },
     hotkeyStartupError: (keys: string) => `No se pudo registrar el atajo de teclado ${keys}.`,
     closeToTray: 'Minimizar a la bandeja en lugar de salir',
+    trayToday: 'Mostrar hoy en el menú de la bandeja',
+    trayTodayHint:
+      'Hasta 5 cosas de hoy (solo título y hora, nunca importes) en el menú del icono de la bandeja. Un clic abre la entrada.',
     autostart: 'Iniciar con Windows',
     autostartPortable:
       'La app se ejecuta desde una carpeta con «data» (p. ej. una memoria USB). El inicio automático apunta a esa ubicación; si la memoria no está conectada al iniciar sesión, no se abre nada.',

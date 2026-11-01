@@ -1,0 +1,13 @@
+Umsatzanzeige;Datei erstellt am: 31.10.2026 10:00
+
+IBAN;DE00500105170000000004
+Kontoname;Girokonto
+Bank;ING
+Kunde;Erika Mustermann
+Zeitraum;01.10.2026 - 31.10.2026
+Saldo;1.234,56;EUR
+
+Buchung;Valuta;Auftraggeber/Empfänger;Buchungstext;Verwendungszweck;Saldo;Währung;Betrag;Währung
+03.10.2026;03.10.2026;Filmfreund GmbH;Lastschrift;Streaming Monatsbeitrag Oktober;1.234,56;EUR;-9,99;EUR
+01.10.2026;01.10.2026;Beispiel AG;Gehalt/Rente;Gehalt Oktober;1.244,55;EUR;2.345,67;EUR
+02.10.2026;02.10.2026;Marktkauf Mustertal;Lastschrift;Einkauf Lebensmittel;1.234,56;EUR;-23,40;EUR

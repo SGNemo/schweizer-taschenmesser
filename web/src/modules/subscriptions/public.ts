@@ -50,3 +50,10 @@ export async function subscriptionTotals(
   );
   return totals(subs, today());
 }
+
+/** Ids and names of the subscriptions, for matching bank bookings to them (finance rules). */
+export async function listSubscriptionNames(): Promise<{ id: string; name: string }[]> {
+  return (await subscriptionRepo.active().toArray())
+    .filter((s) => s.active)
+    .map((s) => ({ id: s.id, name: s.name }));
+}

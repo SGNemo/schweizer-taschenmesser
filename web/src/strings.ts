@@ -715,6 +715,64 @@ export const de = {
         stepsNote: 'Schritte: docs/MANUAL-TESTS.md → „Google-Verbindung einrichten“.',
         none: 'In dieser Version gibt es keine Verbindungen.',
       },
+      migrate: {
+        title: 'Umzug von einer anderen App',
+        description:
+          'Du kommst von Google, Todoist, Obsidian, einer Bank-App oder Bitwarden? Wähle, woher du kommst: Nemo führt dich zum passenden Import. Alles bleibt auf deinem Gerät, du siehst vorher eine Vorschau, und jeder Import lässt sich rückgängig machen.',
+        optional:
+          'Alles hier ist freiwillig. „Weiter“ ohne Auswahl merkt den Schritt unter „Später“.',
+        chosen: 'Gewählt',
+        origins: {
+          google: {
+            title: 'Google (Kalender, Tasks, Keep)',
+            how: 'Hol die Daten bei Google Takeout (takeout.google.com): nur Kalender, Tasks und Keep anhaken. Die ZIP-Datei vorher entpacken.',
+          },
+          todoist: {
+            title: 'Todoist',
+            how: 'Menü (⋯) eines Projekts → „Als CSV exportieren“. Eine Datei pro Projekt.',
+          },
+          obsidian: {
+            title: 'Obsidian / Markdown',
+            how: 'Wähle die .md-Dateien deines Ordners aus, auch mehrere auf einmal. Titel, Tags und Aufgabenlisten bleiben erhalten.',
+          },
+          bank: {
+            title: 'Bank (Kontoauszug)',
+            how: 'Lade im Online-Banking den Kontoauszug als CSV- oder CAMT-Datei herunter.',
+          },
+          bitwarden: {
+            title: 'Bitwarden',
+            how: 'Web-Tresor → Werkzeuge → Tresor exportieren → Dateiformat .csv. Der Import läuft bei den Passwörtern unter „Import, Export & Sicherheit“ und braucht dein Master-Passwort.',
+          },
+          paper: {
+            title: 'Papier / Kopf',
+            how: 'Dann fang mit der Schnellerfassung an.',
+          },
+        } as Record<string, { title: string; how: string }>,
+        actions: {
+          calendar: 'Kalender importieren',
+          tasks: 'ToDos importieren',
+          notes: 'Notizen importieren',
+          bank: 'Kontoauszug importieren',
+          vault: 'Bei den Passwörtern importieren',
+        } as Record<string, string>,
+        items: {
+          'google.calendar': 'Kalender (.ics) importiert',
+          'google.tasks': 'Tasks.json importiert',
+          'google.keep': 'Keep-Notizen importiert',
+          'google.subscription': 'Kalender als Abo verbinden (Einstellungen → Verbindungen)',
+          'todoist.tasks': 'Todoist-CSV importiert',
+          'obsidian.notes': 'Markdown-Notizen importiert',
+          'bank.statement': 'Kontoauszug importiert',
+          'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importiert',
+        } as Record<string, string>,
+        tick: 'Abhaken',
+        untick: 'Wieder öffnen',
+        subLabel: 'Was noch fehlt',
+        settingsRow: 'Umzug von einer anderen App …',
+        settingsHint:
+          'Von Google, Todoist, Obsidian, einer Bank-App oder Bitwarden: führt zu den passenden Importen.',
+        settingsOpen: 'Herkunft wählen',
+      },
       startdata: {
         title: 'Importieren',
         description:
@@ -915,6 +973,23 @@ export const de = {
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,
     noTargets: 'Es ist kein Zielmodul eingeschaltet.',
+    multi: {
+      lineHint: 'Eine Zeile = ein Eintrag',
+      shiftEnter: 'Umschalt+Enter: neue Zeile. Eine Zeile = ein Eintrag.',
+      listLabel: (n: number) => `Vorschau: ${n} Einträge`,
+      rowTarget: (text: string) => `Ziel für „${text}“`,
+      choose: 'Bitte wählen',
+      inbox: 'Eingang',
+      financeDraft: 'Buchung (Entwurf)',
+      saveAll: (n: number) => `Alle speichern (${n})`,
+      saved: (n: number) => `${n} Dinge gespeichert`,
+      change: 'Ändern',
+    },
+    trayToday: {
+      heading: 'Heute',
+      now: 'Jetzt dran anfangen',
+      timer: 'Timer 25 Minuten',
+    },
     tray: {
       capture: 'Erfassen',
       open: 'App öffnen',
@@ -922,7 +997,7 @@ export const de = {
       tooltip: 'Nemo',
     },
     window: {
-      hint: 'Enter speichert · Tab wechselt den Typ · Esc schließt',
+      hint: 'Enter speichert · Umschalt+Enter neue Zeile · Tab wechselt den Typ · Esc schließt',
     },
     settings: {
       title: 'Schnellerfassung',
@@ -951,6 +1026,9 @@ export const de = {
       hotkeyStartupError: (keys: string) =>
         `Das Tastenkürzel ${keys} konnte nicht registriert werden.`,
       closeToTray: 'In den Tray minimieren statt beenden',
+      trayToday: 'Heute im Tray-Menü zeigen',
+      trayTodayHint:
+        'Bis zu 5 Dinge von heute (nur Titel und Uhrzeit, nie Beträge) im Menü des Tray-Symbols. Ein Klick öffnet den Eintrag.',
       autostart: 'Mit Windows starten',
       autostartPortable:
         'Die App läuft aus einem Ordner mit „data“ (z. B. USB-Stick). Der Autostart-Eintrag zeigt auf diesen Ort; ist der Stick beim Anmelden nicht da, startet nichts.',
@@ -2095,6 +2173,9 @@ export const de = {
       n === 1 ? '1 Rechnung überfällig' : `${n} Rechnungen überfällig`,
     invoicesToday: (n: number) =>
       n === 1 ? '1 Rechnung heute fällig' : `${n} Rechnungen heute fällig`,
+    subscriptionPrice: (name: string, from: string, to: string) =>
+      `${name} kostet jetzt ${to} statt ${from}`,
+    subscriptionPriceSince: (date: string) => `Neuer Preis seit ${date}`,
     todosOverdue: (n: number) => (n === 1 ? '1 ToDo überfällig' : `${n} ToDos überfällig`),
     todosToday: (n: number) => (n === 1 ? '1 ToDo heute fällig' : `${n} ToDos heute fällig`),
     eventNext: (title: string) => title,
@@ -2257,6 +2338,9 @@ export const de = {
         remindDaysBeforeHelp: '0 = am Fälligkeitstag',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        bookWhenPaid: 'Bezahlte Rechnung als Ausgabe buchen',
+        bookWhenPaidHelp:
+          'Legt in Finanzen die Buchung an, sobald du eine Rechnung als bezahlt markierst. Ohne Finanz-Modul passiert nichts; eine wiederkehrende Buchung mit gleichem Empfänger und Betrag wird nicht doppelt gebucht.',
       },
     },
     title: 'Rechnungen',
@@ -2308,6 +2392,9 @@ export const de = {
         cancelRemindDaysBeforeHelp: '0 = am letzten Tag der Frist',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        priceHint: 'Hinweis bei Preiserhöhung',
+        priceHintHelp:
+          'Zeigt einmal unter „Jetzt wichtig“, wenn ein Abo teurer geworden ist. Du kannst es jederzeit ausschalten.',
       },
     },
     title: 'Abos',
@@ -2423,6 +2510,35 @@ export const de = {
     openingBalance: 'Anfangssaldo',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
+    fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',
+    rules: {
+      title: 'Regeln vorschlagen',
+      hint: 'Nichts ist angehakt. Eine Regel entsteht nur, wenn du sie ankreuzt und den Import bestätigst. Du kannst sie unter Kategorien wieder entfernen.',
+      proposalBoth: (payee: string, sub: string, category: string) =>
+        `„${payee}“ immer als Abo „${sub}“ und Kategorie „${category}“ buchen?`,
+      proposalSubscription: (payee: string, sub: string) =>
+        `„${payee}“ immer dem Abo „${sub}“ zuordnen?`,
+      proposalCategory: (payee: string, category: string) =>
+        `„${payee}“ immer in der Kategorie „${category}“ buchen?`,
+      applied: (name: string) => `Regel: ${name}`,
+      manageTitle: 'Regeln für den Import',
+      manageHint:
+        'Diese Regeln wendet der Kontoauszug-Import an. Entfernen ändert keine vorhandene Buchung.',
+      manageEmpty: 'Noch keine Regeln. Vorschläge erscheinen nach einem Import.',
+      remove: (match: string) => `Regel für „${match}“ entfernen`,
+    },
+    bankMap: {
+      title: 'Welche Spalte ist was?',
+      hint: 'Wähle für jede Angabe die passende Spalte. Die ersten Zeilen siehst du unten; die App merkt sich die Zuordnung für den nächsten Import dieser Dateiart.',
+      date: 'Datum',
+      amount: 'Betrag',
+      payee: 'Empfänger (optional)',
+      purpose: 'Verwendungszweck (optional)',
+      none: '– keine –',
+      choose: '– wählen –',
+      sample: 'Erste Zeilen der Datei',
+      apply: 'Spalten übernehmen',
+    },
     addCategory: 'Kategorie hinzufügen',
     editCategory: 'Kategorie bearbeiten',
     categoryName: 'Name',
@@ -4696,18 +4812,26 @@ export const de = {
       balance: 'Kontostand heute',
       balanceHint: (sample: string) => `z. B. ${sample} – bei einem Minus mit „-“.`,
       badBalance: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
-      bank: 'Kontoauszug importieren (CSV oder CAMT)',
+      bank: 'Kontoauszug importieren (CSV, OFX, QIF oder CAMT)',
       bankHint:
-        'Im Online-Banking unter Umsätze exportieren (z. B. „CSV-CAMT“ oder „CAMT“) und die Datei hier auswählen. Die Datei wird nur auf diesem Gerät gelesen.',
+        'Im Online-Banking unter Umsätze exportieren (CSV, OFX, QIF oder CAMT) und die Datei hier auswählen. Bekannte Banken werden erkannt; bei einer unbekannten CSV ordnest du die Spalten einmal zu und die App merkt es sich. Die Datei wird nur auf diesem Gerät gelesen.',
       bankAccount: 'Buchen auf Konto',
       noAccounts: 'Lege zuerst ein Konto an.',
       bankFormat:
-        'Das Dateiformat wurde nicht erkannt. Erwartet wird eine CSV-Datei mit Buchungstag und Betrag oder eine CAMT-Datei (XML).',
+        'Das Dateiformat wurde nicht erkannt. Erwartet wird eine OFX-, QIF- oder CAMT-Datei oder eine CSV-Datei mit Datum und Betrag.',
       bankSkipped: (n: number) =>
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
           : `${n} Zeilen ohne gültiges Datum oder Betrag wurden übersprungen.`,
       bankTruncated: (n: number) => `Es werden nur die ersten ${n} Buchungen angezeigt.`,
+      bankDetected: (name: string) => `Erkannt: ${name}`,
+      bankRemembered: 'Erkannt: deine gemerkte Spaltenzuordnung',
+      bankNeedsMapping:
+        'Dieses Layout ist noch nicht bekannt. Ordne unten die Spalten zu – die App merkt es sich für den nächsten Import.',
+      bankCurrencySkipped: (n: number, from: string, to: string) =>
+        n === 1
+          ? `1 Buchung in ${from} wurde nicht übernommen: Dieses Konto führt ${to}. Wähle ein Konto in ${from}.`
+          : `${n} Buchungen in ${from} wurden nicht übernommen: Dieses Konto führt ${to}. Wähle ein Konto in ${from}.`,
     },
     invoices: {
       /** Typical names offered while typing in the form (no prices). */
@@ -5246,6 +5370,15 @@ export const de = {
         'Ein OSRM-kompatibler Dienst; {profile} steht für foot, bike oder car. Standard: OpenStreetMap (FOSSGIS).',
       transitUrl: 'Verbindungssuche (Adresse)',
       transitUrlHelp: 'Ein MOTIS-kompatibler Dienst. Standard: Transitous (offene Fahrplandaten).',
+      offlineOnly: 'Nur eigene Karte (offline)',
+      offlineOnlyHelp:
+        'Zeigt nur die Karten, die du selbst erzeugt hast. Außerhalb bleibt die Fläche leer, nichts wird aus dem Internet geladen.',
+      overpassUrl: 'Kartendaten (Adresse)',
+      overpassUrlHelp:
+        'Ein Overpass-kompatibler Dienst, aus dem die eigene Karte entsteht. Standard: overpass-api.de (OpenStreetMap, nur für leichte Nutzung).',
+      showBuildProgress: 'Fortschritt unter der Karte zeigen',
+      showBuildProgressHelp:
+        'Eine ruhige Zeile, solange eine eigene Karte entsteht. Du kannst sie jederzeit ausschalten.',
     },
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },
@@ -5369,6 +5502,31 @@ export const de = {
       arr: 'an',
       changes: (n: number) => (n === 0 ? 'Direkt' : n === 1 ? '1 Umstieg' : `${n} Umstiege`),
       kinds: { walk: 'Zu Fuß', train: 'Bahn', bus: 'Bus', tram: 'Tram', other: 'Fahrt' },
+    },
+    own: {
+      title: 'Eigene Karten',
+      build: 'Eigene Karte erzeugen',
+      level: { lean: 'abgespeckt', full: 'genau' },
+      building: (done: number, total: number) =>
+        `Die Welt baut sich langsam auf · ${done} von ${total}`,
+      overview: 'Übersicht wird gezeichnet …',
+      paused: (done: number, total: number) => `Angehalten bei ${done} von ${total}`,
+      queued: 'Wartet, bis die andere Karte fertig ist',
+      done: (n: number) => `Fertig · ${n} Teile`,
+      started: 'Die Karte entsteht. Du kannst weitermachen, sie füllt sich von selbst.',
+      capped: 'Das Gebiet war groß. Erzeugt wird zuerst die Mitte.',
+      pause: 'Pause',
+      resume: 'Weiter',
+      remove: 'Karte löschen',
+      confirmRemove: 'Wirklich löschen?',
+      keep: 'Behalten',
+      removed: 'Karte gelöscht',
+      reasons: {
+        busy: 'Der Kartendienst ist gerade ausgelastet. Später weitermachen.',
+        network: 'Der Kartendienst ist gerade nicht erreichbar. Später weitermachen.',
+        blocked: 'Keine Verbindung: Das Netzwerk ist gesperrt (Einstellungen → Verbindungen).',
+        error: 'Die Antwort des Kartendienstes war nicht lesbar. Später noch einmal versuchen.',
+      },
     },
     apps: {
       osm: 'OpenStreetMap',
