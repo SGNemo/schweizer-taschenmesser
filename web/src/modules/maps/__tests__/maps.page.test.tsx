@@ -1,13 +1,20 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { NetBlockedError } from '@/core/net/netlog';
 import { setPlatform, type PlatformService } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
+import { setSettings } from '@/core/settings/settings';
 import { clearTileCache } from '../tiles';
-import { placeRepo, routeRepo } from '../repo';
+import { SAMPLE_CENTER, sampleRegion } from '../own/sample';
+import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
+
+// jsdom has no canvas: the own map's drawing is a tiny PNG stand-in here (the renderer has its own tests).
+vi.mock('../own/draw', () => ({
+  drawTile: vi.fn(async () => new Blob(['png'], { type: 'image/png' })),
+}));
 import MapsPage from '../routes/MapsPage';
 
 const requests: string[] = [];
@@ -121,6 +128,9 @@ beforeEach(async () => {
   install();
   await db.table('maps_place').clear();
   await db.table('maps_route').clear();
+  await db.table('maps_region').clear();
+  await db.table('maps_tile').clear();
+  await db.table('_settings').clear();
 });
 afterEach(() => {
   cleanup();
@@ -413,5 +423,52 @@ describe('Karten & Orte page', () => {
       await screen.findAllByRole('menuitem');
       expect(screen.queryByRole('menuitem', { name: 'Route auf der Karte berechnen' })).toBeNull();
     });
+  });
+});
+
+describe('own map (stored vector tiles)', () => {
+  const tileRequests = () =>
+    requests.filter((u) => u.startsWith('https://tile.openstreetmap.org/'));
+  /** Online requests for the zooms the fixture covers (the first frame shows the whole country at zoom 5). */
+  const coveredRequests = () => tileRequests().filter((u) => /\/1[2-9]\/\d+\/\d+\.png$/.test(u));
+  const blobTiles = () => document.querySelectorAll('[data-testid="tile-map"] img[src^="blob:"]');
+
+  async function storeSample() {
+    const { id, region, tiles } = sampleRegion();
+    await regionRepo.create(region, { id });
+    await tileRepo.createMany(tiles.map((t) => ({ id: t.id, data: t.data })));
+  }
+
+  it('draws its own tiles for the area it covers and asks the internet for nothing there', async () => {
+    await storeSample();
+    await place('Wohnung', SAMPLE_CENTER.lat, SAMPLE_CENTER.lon);
+    open('/maps?view=map');
+    await screen.findByTestId('tile-map');
+    await waitFor(() => expect(blobTiles().length).toBeGreaterThan(3));
+    expect(coveredRequests()).toEqual([]);
+    expect(screen.getByRole('link', { name: '© OpenStreetMap-Mitwirkende' })).toHaveAttribute(
+      'href',
+      'https://www.openstreetmap.org/copyright',
+    );
+    // The stored rows are caches: nothing is queued for sync.
+    expect(await db.table('_outbox').where('collection').equals('maps_tile').count()).toBe(0);
+  });
+
+  it('falls back to the online tiles outside the own map, unless the map is offline-only', async () => {
+    await storeSample();
+    open('/maps?view=map');
+    await screen.findByTestId('tile-map');
+    // No places: the map opens on the whole country, far above the stored zooms.
+    await waitFor(() => expect(tileRequests().length).toBeGreaterThan(0));
+    expect(blobTiles().length).toBeGreaterThan(0);
+    cleanup();
+    requests.length = 0;
+    await setSettings('module.maps', { offlineOnly: true });
+    open('/maps?view=map');
+    await screen.findByTestId('tile-map');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Vergrößern' })).toBeTruthy());
+    await new Promise((r) => setTimeout(r, 50));
+    expect(tileRequests()).toEqual([]);
+    expect(screen.queryByText(/konnten nicht geladen werden/)).toBeNull();
   });
 });

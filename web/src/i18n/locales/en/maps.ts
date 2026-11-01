@@ -18,6 +18,9 @@ export const maps: Strings['maps'] = {
       'An OSRM-compatible service; {profile} stands for foot, bike or car. Default: OpenStreetMap (FOSSGIS).',
     transitUrl: 'Connection search (address)',
     transitUrlHelp: 'A MOTIS-compatible service. Default: Transitous (open timetable data).',
+    offlineOnly: 'Own map only (offline)',
+    offlineOnlyHelp:
+      'Shows only the maps you built yourself. Outside them the area stays empty and nothing is loaded from the internet.',
   },
   tabs: { label: 'View', places: 'Places', routes: 'Routes', map: 'Map' },
   empty: { places: 'No places yet.', routes: 'No routes yet.' },

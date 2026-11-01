@@ -18,3 +18,4 @@
 | [connection-log.md](connection-log.md) | Verbindungsprotokoll + "Netzwerk sperren": network inventory, design (draft) |
 | [partner-share.md](partner-share.md) | "Mit Partner teilen" without a server: QR/file, pairing code, packages (draft) |
 | [first-run-setup.md](first-run-setup.md) | First run in 3 questions: measurement, target flow, per-finding changes (QA package P1) |
+| [map-own.md](map-own.md) | Own offline map from OSM data (phase 0): sources, builder, renderer, storage, levels, progress, packages, open questions |

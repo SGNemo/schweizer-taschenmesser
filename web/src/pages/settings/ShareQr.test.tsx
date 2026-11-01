@@ -21,6 +21,24 @@ describe('QrPlayer', () => {
   });
 });
 
+describe('QrPlayer with another run', () => {
+  it('starts at the first picture again and offers to cancel without handing over', () => {
+    const long = splitIntoFrames(text);
+    const short = splitIntoFrames('short');
+    const onCancel = vi.fn();
+    const { rerender } = render(<QrPlayer frames={long} onDone={() => undefined} />);
+    const label = () => screen.getByTestId('share-qr-frame').textContent;
+    act(() => screen.getByRole('button', { name: 'Anhalten' }).click());
+    act(() => screen.getByRole('button', { name: 'Nächstes Bild' }).click());
+    expect(label()).toContain('Bild 2 ');
+    // The next connection has one picture only: index 1 would be out of range.
+    rerender(<QrPlayer frames={short} onDone={() => undefined} onCancel={onCancel} />);
+    expect(label()).toContain('Bild 1 von 1');
+    act(() => screen.getByRole('button', { name: 'Abbrechen' }).click());
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
 describe('QrScanner', () => {
   const stops = vi.fn();
   beforeEach(() => {

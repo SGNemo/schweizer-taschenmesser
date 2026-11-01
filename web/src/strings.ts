@@ -5266,6 +5266,9 @@ export const de = {
         'Ein OSRM-kompatibler Dienst; {profile} steht für foot, bike oder car. Standard: OpenStreetMap (FOSSGIS).',
       transitUrl: 'Verbindungssuche (Adresse)',
       transitUrlHelp: 'Ein MOTIS-kompatibler Dienst. Standard: Transitous (offene Fahrplandaten).',
+      offlineOnly: 'Nur eigene Karte (offline)',
+      offlineOnlyHelp:
+        'Zeigt nur die Karten, die du selbst erzeugt hast. Außerhalb bleibt die Fläche leer, nichts wird aus dem Internet geladen.',
     },
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },

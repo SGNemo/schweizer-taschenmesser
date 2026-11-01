@@ -18,6 +18,9 @@ export const maps: Strings['maps'] = {
       'Un service compatible OSRM ; {profile} vaut foot, bike ou car. Par défaut : OpenStreetMap (FOSSGIS).',
     transitUrl: 'Recherche de trajets (adresse)',
     transitUrlHelp: 'Un service compatible MOTIS. Par défaut : Transitous (horaires ouverts).',
+    offlineOnly: 'Carte personnelle uniquement (hors ligne)',
+    offlineOnlyHelp:
+      'N’affiche que les cartes que vous avez créées vous-même. En dehors, la zone reste vide et rien n’est chargé depuis Internet.',
   },
   tabs: { label: 'Vue', places: 'Lieux', routes: 'Itinéraires', map: 'Carte' },
   empty: { places: 'Pas encore de lieux.', routes: 'Pas encore d’itinéraires.' },
