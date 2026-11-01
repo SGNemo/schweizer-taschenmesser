@@ -19,7 +19,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
 | Eigene Karte aus OSM-Daten, Paket 4: eigene Regionsdateien (PMTiles) | `feat/map-own-regions` | `modules/maps/own/{pmtiles,builder,sample,work}.ts`, `maps/{schema,settings}.ts`, `components/RegionsCard.tsx`, `MapsPage.tsx`, strings `maps.settings`/`maps.own` + 4 locales, `strings.legal.ts` (`maps-build`, flows), `pages/settings/inventory.modules.json`, `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
-| Mail module, package 0: several Google accounts in the connector framework (heads-up: `core/connectors/*`) | `feat/connector-accounts` | `core/connectors/{types,context,service}.ts`, `connectors/google/{index,identify}.ts`, `core/reset/device.ts`, `pages/settings/ConnectorsSection.tsx`, strings `connectors` + 4 locales | in progress | row | 2026-11-01 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
