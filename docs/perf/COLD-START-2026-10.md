@@ -37,43 +37,45 @@ through the `@nemo/vault-core` barrel by `core/crypto/random.ts`), settings sect
 ## After (this branch)
 | | Before | After |
 |---|---|---|
-| Critical path `index.html` | 72 requests, 722.1 KB gzip | **54 requests, 537.4 KB gzip (−25.6 %)** |
-| Critical path `capture.html` | 22 requests, 428.0 KB gzip | 17 requests, 316.7 KB gzip (−26.0 %) |
-| Precache | 308 files, 7459.6 KB | 338 files, **4498.8 KB (−40 %)**; 27 files load on first use |
+| Critical path `index.html` | 72 requests, 722.1 KB gzip | **68 requests, 601.0 KB gzip (−16.8 %)** |
+| Critical path `capture.html` | 22 requests, 428.0 KB gzip | 18 requests, 325.3 KB gzip (−24.0 %) |
+| Precache | 308 files, 7459.6 KB | 313 files, **4617.8 KB (−38 %)**; 27 files load on first use |
 
 One commit per step, critical path gzip after each: tldts off the path (`treeshake.moduleSideEffects` for vault-core +
-tldts) 611.9 · Spotify player on first open 606.4 · rarely used pages lazy in `router.tsx` (library, tool list,
-settings, OAuth, share) 601.5 · settings section components lazy in `pages/settings/sections.tsx` (registry stays
-eager) 554.1 · weather forecast dialog on first tap + Argon2 WASM on first derivation 538.0 · vendor chunk (react,
-react-router, dexie, zod, zustand: its hash survives app updates) 536.4, 54 requests.
+tldts) 611.9 · Spotify player on first open 606.4 · library, tool list, OAuth and share page lazy in `router.tsx`
+601.5 · weather forecast dialog on first tap + Argon2 WASM on first derivation · vendor chunk (react, react-router,
+dexie, zod, zustand: its hash survives app updates) · final 601.0, 68 requests. Split-off parts use `lazyOnline`:
+precached as before; offline without a service worker a calm note instead of an error screen.
 
-Split-off pages that must also work offline without a service worker (settings layout and every section,
-library, tool list, share page, weather dialog, Argon2) load in the first idle slot after the start
-(`core/modules/idlePreload.ts`, called from `router.tsx`); right after the render instead cost ~0.7 s on the phone
-profile. Not preloaded: OAuth page and Spotify player (need the network anyway).
+Tried and reverted: settings section components lazy (−47 KB gzip, 54 requests, 537 KB = −25.6 %). Offline
+client-side navigation into Settings without a service worker (sync E2E "offline edits") then needs the sections
+loaded beforehand; preloading them right after the render cost ~0.7 s to the capture field, preloading in the idle
+slot made other specs flaky under load (3 of 27 repeated runs, 0 without). Settings stay in the start bundle.
 
-Final numbers, before (worktree at the measurement commit) and after measured back to back on the same sandbox
-(a slower one than the first measurement above, so its "before" is higher; CPU-only rows: median of 10 runs,
-interleaved; Fast 3G rows: median of 5):
+Final numbers: before (worktree at the measurement commit) and after measured back to back on the same sandbox (a
+slower one than the first "before" above). CPU-only rows: median of 10 runs, interleaved; Fast 3G rows: median of 5.
 
 | Cold start (ms) | first paint | `main h1` | capture field focused |
 |---|---|---|---|
-| first visit, Fast 3G | 2636 → 2992 | 10937 → 8860 | **11167 → 9032** |
-| installed, Fast 3G | 2384 → 2368 | 9144 → 7348 | **9315 → 7513** |
-| first visit, CPU 4× only | 308 → 304 | 1571 → 1412 | 1750 → 1672 |
-| installed, CPU 4× only | 304 → 280 | 1554 → 1332 | **1743 → 1567** |
+| first visit, Fast 3G | 2648 → 3128 | 10704 → 10348 | 10863 → 10564 (−3 %) |
+| installed, Fast 3G | 2392 → 2388 | 8978 → 8993 | 9141 → 9209 (noise) |
+| first visit, CPU 4× only | 336 → 308 | 1424 → 1423 | 1608 → 1597 |
+| installed, CPU 4× only | 284 → 284 | 1476 → 1333 | **1635 → 1530 (−6 %)** |
 
-- Installed PWA, CPU 4×: −10 % to the focused capture field; on the first sandbox (before the idle preload) it was
-  1446 → 1281 ms, under the 1.5 s target; on this slower one 1567 ms. With "Fast 3G" Chromium
-  also delays answers that come from the service worker cache (each of the 54 requests pays the 562 ms latency on 6
-  HTTP/1.1 connections of `vite preview`), so that row is pessimistic for an installed app; requests count there more
-  than bytes. First paint of the first visit waits for 7 render-blocking stylesheets that now compete with the larger
-  vendor chunk (+0.36 s); everything after it is earlier.
-- Why not −30 %: the next posts sit in files this work must not touch. `layout/AppShell.tsx` imports
-  `CommandPalette` → `layout/assistant/useAssistant` → `core/ai` + minisearch eagerly; made lazy there (measured, not
-  committed) the path is **502.5 KB (−30.4 %)**, 52 requests. Others: @dnd-kit via `ui/index.ts` → `SortableList`
-  (~25 KB gzip), @noble via `layout/SupporterEffects` (sync API, ~14 KB), `OnboardingWizard` via
-  `core/importer/host` (~17 KB). Handed to the layout owner on `scribble/BOARD.md`.
+- The < 1.5 s target (installed, CPU 4×) is not reached on this sandbox (1.53 s); on the first, faster sandbox the
+  same build path measured 1.45 → 1.28 s with the settings split, which is reverted now.
+- With "Fast 3G" Chromium also delays answers from the service worker cache: each of the 68 requests pays the
+  562 ms latency on 6 HTTP/1.1 connections of `vite preview`, so request count, not bytes, decides that row (the
+  settings split took it to 54 requests and 7.3 s). First paint of the first visit waits for 7 render-blocking
+  stylesheets that now compete with the larger vendor chunk (+0.5 s); what follows is earlier.
+- The precache is the clear gain: 7.46 → 4.62 MB for the first install and every update.
+
+- Why not −30 %: Settings stay eager (above). The next post sits in a file this work must not touch:
+  `layout/AppShell.tsx` imports `CommandPalette` → `layout/assistant/useAssistant` → `core/ai` + minisearch eagerly
+  (~35 KB gzip; measured lazy, not committed). Others: @dnd-kit via `ui/index.ts` → `SortableList` (~25 KB),
+  @noble via `layout/SupporterEffects` (sync API, ~14 KB), `OnboardingWizard` via `core/importer/host` (~17 KB),
+  `qrcode-generator` via `pages/settings/ShareQr.tsx` (~13 KB, just reworked in #338). Handed over on
+  `scribble/BOARD.md`.
 - Unchanged on purpose: `index.html` (Vite already preloads exactly the critical path; Inter is local with
   `font-display: swap`), `core/modules/registry.ts` (manifests are small; the chat manifest pulls schema, settings
   and migrations only, ~3 KB), the quick bar (`umrechnen 5 km`, `timer 10m` use `tools/*/logic.ts`, which stays in a
@@ -88,8 +90,8 @@ status line (`core/net/OnlineChunk.tsx`, `strings.offline.ts`); back online "Ern
 Chromium remembers a failed dynamic import for the page. Proof: `web/e2e/offline.spec.ts`.
 
 ## Budget
-`web/scripts/bundle-budget.json` (+5 % tolerance): critical path 549 107 B gzip, 54 requests, 338 precache files,
-4 602 814 B precached. `npm run check` shows WARN when over (never fails); CI E2E shard 1 measures its own build
+`web/scripts/bundle-budget.json` (+5 % tolerance): critical path 615 396 B gzip, 68 requests, 313 precache files,
+4 728 579 B precached. `npm run check` shows WARN when over (never fails); CI E2E shard 1 measures its own build
 (`continue-on-error`). Intended change: `npm run check:bundle -- --baseline`, commit the JSON, say why in the PR.
 
 ## Decided without asking (calmer/safer option)
@@ -97,5 +99,5 @@ Chromium remembers a failed dynamic import for the page. Proof: `web/e2e/offline
 - The cloud model SDK stays precached (an offline import would bypass `core/ai/providers/claude.ts`' error mapping).
 - No automatic reload anywhere; back online, a reload happens only on "Erneut versuchen".
 - The first vault open fetches the dictionaries in the background only online and without the browser's data saver.
-- Settings sections, rarely used pages, weather dialog, Argon2 load lazily but stay precached and are preloaded
-  in the first idle slot (offline unchanged, also without a service worker); Spotify player and OAuth page only on use.
+- Settings stay in the start bundle (offline without a worker must not depend on timing); the other split-off parts
+  stay precached and show a calm note offline without a worker.
