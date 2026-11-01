@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
 import { formatNumber } from '@/core/i18n/format';
@@ -23,7 +23,7 @@ import {
 } from '@/ui';
 import { PlaceEditor, type PlaceTarget } from '../components/PlaceEditor';
 import { RouteEditor, type RouteTarget } from '../components/RouteEditor';
-import { TileMap, type MapMarker } from '../components/TileMap';
+import { TileMap, type MapMarker, type TileResolver } from '../components/TileMap';
 import { TransitCard, type Trip } from '../components/TransitCard';
 import { searchPlaces, MapsError, type Hit } from '../geocode';
 import { CATEGORY_ICON, MODE_ICON } from '../icons';
@@ -39,11 +39,14 @@ import {
   type MapApp,
   type View,
 } from '../logic';
-import { placeRepo, routeRepo } from '../repo';
+import { createLocalTiles } from '../own/local';
+import { watchTheme } from '../own/theme';
+import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 import { connectionPath, fetchConnections } from '../transit';
 import { describeStep, fetchPlan, isDrivingMode, splitDuration, type Plan } from '../routing';
 import type { Endpoint, Place, Route } from '../schema';
-import { servicesOf, settings, DEFAULT_TILE_URL } from '../settings';
+import { offlineOnlyOf, servicesOf, settings, DEFAULT_TILE_URL } from '../settings';
+import { loadTile } from '../tiles';
 import styles from './maps.module.css';
 
 type Tab = 'places' | 'routes' | 'map';
@@ -153,10 +156,35 @@ function PlanCard({ shown, onHide }: { shown: Shown; onHide: () => void }) {
 export default function MapsPage() {
   const places = useLiveQuery(() => placeRepo.active().sortBy('createdAt'), []);
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
+  const regions = useLiveQuery(() => regionRepo.active().toArray(), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
   const { tileUrl, searchUrl, routingUrl, transitUrl } = servicesOf(
     prefs as Record<string, unknown> | undefined,
   );
+  const offlineOnly = offlineOnlyOf(prefs as { offlineOnly?: unknown } | undefined);
+
+  // The own map (stored vector tiles, docs/features/map-own.md) answers first; the online tiles only
+  // fill what it does not cover, and nothing at all in offline-only mode. The map waits for the
+  // regions and the settings, so the first frame never asks the internet for a covered area.
+  const ownMaxZoom = useRef<number | undefined>(undefined);
+  ownMaxZoom.current = regions?.length ? Math.max(...regions.map((r) => r.zooms.max)) : undefined;
+  const local = useMemo(
+    () => createLocalTiles({ read: (id) => tileRepo.get(id), maxZoom: () => ownMaxZoom.current }),
+    [],
+  );
+  const [sourceVersion, setSourceVersion] = useState(0);
+  const regionsKey = (regions ?? []).map((r) => `${r.id}:${r.updatedAt}`).join(',');
+  useEffect(() => {
+    // Drawn tiles follow the tokens and the stored data: both changes empty the memory and ask again.
+    const refresh = () => {
+      local.invalidate();
+      setSourceVersion((v) => v + 1);
+    };
+    refresh();
+    return watchTheme(refresh);
+  }, [local, regionsKey]);
+  const resolve: TileResolver = async (z, x, y, url) =>
+    (await local.get(z, x, y)) ?? (offlineOnly ? {} : loadTile(url));
   const [params, setParams] = useSearchParams();
   const tab: Tab = TABS.includes(params.get('view') as Tab)
     ? (params.get('view') as Tab)
@@ -377,8 +405,9 @@ export default function MapsPage() {
     },
   ];
 
+  // The own map is OpenStreetMap data as well: the credit stays whatever the online source is.
   const attribution =
-    tileUrl === DEFAULT_TILE_URL ? (
+    tileUrl === DEFAULT_TILE_URL || (regions?.length ?? 0) > 0 ? (
       <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer noopener">
         {t.maps.map.attribution}
       </a>
@@ -488,11 +517,13 @@ export default function MapsPage() {
           ) : null}
           {note ? <p className={styles.note}>{note}</p> : null}
 
-          {ready ? (
+          {ready && regions && prefs ? (
             <TileMap
               view={view}
               onView={setMapView}
               template={tileUrl}
+              resolve={resolve}
+              resolveKey={`${sourceVersion}:${offlineOnly ? 'own' : 'all'}`}
               markers={markers}
               selected={selected && !selected.place ? selected : undefined}
               line={

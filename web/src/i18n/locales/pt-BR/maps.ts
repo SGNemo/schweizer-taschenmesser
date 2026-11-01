@@ -18,6 +18,9 @@ export const maps: Strings['maps'] = {
       'Um serviço compatível com OSRM; {profile} é foot, bike ou car. Padrão: OpenStreetMap (FOSSGIS).',
     transitUrl: 'Busca de conexões (endereço)',
     transitUrlHelp: 'Um serviço compatível com MOTIS. Padrão: Transitous (horários abertos).',
+    offlineOnly: 'Só o mapa próprio (off-line)',
+    offlineOnlyHelp:
+      'Mostra apenas os mapas que você mesmo criou. Fora deles a área fica vazia e nada é carregado da internet.',
   },
   tabs: { label: 'Visão', places: 'Lugares', routes: 'Rotas', map: 'Mapa' },
   empty: { places: 'Ainda não há lugares.', routes: 'Ainda não há rotas.' },

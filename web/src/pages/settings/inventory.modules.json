@@ -131,6 +131,11 @@
         "type": "text",
         "label": "Verbindungssuche (Adresse)",
         "default": "https://api.transitous.org/api/v1"
+      },
+      "offlineOnly": {
+        "type": "boolean",
+        "label": "Nur eigene Karte (offline)",
+        "default": false
       }
     }
   },

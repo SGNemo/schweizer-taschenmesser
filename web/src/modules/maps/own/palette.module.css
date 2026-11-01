@@ -1,0 +1,83 @@
+/*
+ * Colours of the own map, read by `style.ts` through a hidden probe element (`getComputedStyle`), so the
+ * canvas draws from the design tokens in both themes. Every colour is a token or a mix of tokens; the
+ * plain token before each `color-mix` is the fallback for an engine without it.
+ */
+.probe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.land {
+  color: var(--surface-2);
+  color: color-mix(in srgb, var(--surface) 55%, var(--surface-2));
+}
+.water {
+  color: var(--info);
+  color: color-mix(in srgb, var(--info) 26%, var(--surface));
+}
+.park {
+  color: var(--success);
+  color: color-mix(in srgb, var(--success) 20%, var(--surface));
+}
+.forest {
+  color: var(--success);
+  color: color-mix(in srgb, var(--success) 34%, var(--surface-2));
+}
+.residential {
+  color: var(--surface-2);
+  color: color-mix(in srgb, var(--surface-2) 70%, var(--surface));
+}
+.industrial {
+  color: var(--surface-2);
+  color: color-mix(in srgb, var(--warning) 9%, var(--surface-2));
+}
+.building {
+  color: var(--border);
+  color: color-mix(in srgb, var(--text) 11%, var(--surface-2));
+}
+.buildingLine {
+  color: var(--border-strong);
+  color: color-mix(in srgb, var(--text) 24%, var(--surface-2));
+}
+.roadMajor {
+  color: var(--surface);
+}
+.roadMajorCasing {
+  color: var(--border-strong);
+}
+.roadMinor {
+  color: var(--surface);
+}
+.roadMinorCasing {
+  color: var(--border);
+  color: color-mix(in srgb, var(--border-strong) 55%, var(--border));
+}
+.motorway {
+  color: var(--accent-soft);
+}
+.motorwayCasing {
+  color: var(--accent);
+  color: color-mix(in srgb, var(--accent) 60%, var(--border-strong));
+}
+.path {
+  color: var(--text-muted);
+}
+.rail {
+  color: var(--text-muted);
+}
+.boundary {
+  color: var(--cat-3);
+}
+.text {
+  color: var(--text);
+}
+.textHalo {
+  color: var(--surface);
+}
+.poi {
+  color: var(--text-muted);
+}

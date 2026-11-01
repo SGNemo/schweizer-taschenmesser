@@ -17,8 +17,15 @@ import {
   zoomAt,
   type View,
 } from '../logic';
-import { loadTile } from '../tiles';
+import { loadTile, type TileResult } from '../tiles';
 import styles from './TileMap.module.css';
+
+/**
+ * Gives the image of tile `z/x/y` (`url` = the online address from the template). The page decides
+ * where it comes from: the own map first, the online tiles after, or nothing (`{}`) in offline-only mode.
+ */
+export type TileResolver = (z: number, x: number, y: number, url: string) => Promise<TileResult>;
+const onlineOnly: TileResolver = (_z, _x, _y, url) => loadTile(url);
 
 export interface MapMarker {
   id: string;
@@ -42,29 +49,46 @@ const CLICK_PX = 5;
 
 function Tile({
   url,
+  z,
+  x,
+  y,
   left,
   top,
   size,
+  resolve,
+  resolveKey,
   onError,
 }: {
   url: string;
+  z: number;
+  x: number;
+  y: number;
   left: number;
   top: number;
   size: number;
+  resolve: TileResolver;
+  /** Changes when the source changed (theme, own map, setting): the tile asks again. */
+  resolveKey: string;
   onError: (why: 'blocked' | 'failed', status?: number) => void;
 }) {
   const [src, setSrc] = useState<string>();
+  // The callbacks change identity on every render of the map; the tile only re-asks for a new address or key.
+  const latest = useRef({ resolve, onError });
+  useEffect(() => {
+    latest.current = { resolve, onError };
+  });
   useEffect(() => {
     let alive = true;
-    void loadTile(url).then((r) => {
+    void resolveKey;
+    void latest.current.resolve(z, x, y, url).then((r) => {
       if (!alive) return;
       if (r.src) setSrc(r.src);
-      else onError(r.error ?? 'failed', r.status);
+      else if (r.error) latest.current.onError(r.error, r.status);
     });
     return () => {
       alive = false;
     };
-  }, [url, onError]);
+  }, [url, z, x, y, resolveKey]);
   return src ? (
     <img
       className={styles.tile}
@@ -93,10 +117,15 @@ export function TileMap({
   onLocate,
   labels,
   attribution,
+  resolve = onlineOnly,
+  resolveKey = '',
 }: {
   view: View;
   onView: (view: View) => void;
   template: string;
+  /** Where tiles come from; default: the online template only. */
+  resolve?: TileResolver;
+  resolveKey?: string;
   markers: readonly MapMarker[];
   selected?: { lat: number; lon: number };
   /** A route line to draw (already thinned). */
@@ -277,9 +306,14 @@ export function TileMap({
           <Tile
             key={`${t.z}/${t.x}/${t.y}`}
             url={tileUrl(template, t.z, t.x, t.y)}
+            z={t.z}
+            x={t.x}
+            y={t.y}
             left={t.left}
             top={t.top}
             size={t.size}
+            resolve={resolve}
+            resolveKey={resolveKey}
             onError={onTileError}
           />
         ))}
