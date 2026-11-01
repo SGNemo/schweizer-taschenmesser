@@ -72,3 +72,40 @@ export async function saveCapture(
     undo: () => repo.remove(saved.id),
   };
 }
+
+/** One entry of a multi-line capture, already typed and parsed. */
+export interface CaptureItem {
+  type: CaptureType;
+  fields: CaptureFields;
+}
+
+/**
+ * Saves several entries as one batch: one after the other (so a new ToDo inbox is created once),
+ * all or nothing (a failing entry removes the ones written before it). The result counts as one
+ * saved capture whose `undo` takes every entry back.
+ */
+export async function saveCaptures(
+  items: readonly CaptureItem[],
+  text: string,
+  opts: SaveOptions = {},
+): Promise<SavedCapture> {
+  if (items.length === 0) throw new CaptureError('invalid');
+  const saved: SavedCapture[] = [];
+  try {
+    for (const item of items) saved.push(await saveCapture(item.type, item.fields, opts));
+  } catch (e) {
+    await Promise.allSettled(saved.map((s) => s.undo()));
+    throw e;
+  }
+  const first = saved[0]!;
+  return {
+    id: first.id,
+    type: first.type,
+    moduleId: first.moduleId,
+    count: saved.length,
+    text,
+    undo: async () => {
+      await Promise.all(saved.map((s) => s.undo()));
+    },
+  };
+}

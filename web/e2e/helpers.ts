@@ -90,7 +90,8 @@ export async function showAllWidgets(page: Page) {
 /** Opens the folded "Weitere Einstellungen" block of Fokus & Aufmerksamkeit (once the page is loaded). */
 export async function openMoreFocus(page: Page) {
   const more = page.getByTestId('focus-more');
-  if ((await more.getAttribute('open')) === null) await more.locator('summary').click();
+  // Its own summary only: the nested music group (Spotify) has one too.
+  if ((await more.getAttribute('open')) === null) await more.locator(':scope > summary').click();
 }
 
 /**
@@ -99,7 +100,7 @@ export async function openMoreFocus(page: Page) {
  */
 export async function openFoldedGroup(page: Page, section: string, id: string) {
   const group = page.getByTestId(`${section}-group-${id}`);
-  if ((await group.getAttribute('open')) === null) await group.locator('summary').click();
+  if ((await group.getAttribute('open')) === null) await group.locator(':scope > summary').click();
   await expect(group).toHaveAttribute('open', '');
 }
 

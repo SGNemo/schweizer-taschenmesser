@@ -1,7 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { getPlatform, type HotkeyError } from '@/core/platform';
 import { useFocusSettings } from '@/core/settings/focus';
-import { applyHotkey, applyVaultHotkey, hotkeyLabel } from '@/quickCapture/desktop';
+import {
+  applyHotkey,
+  applyVaultHotkey,
+  hotkeyLabel,
+  refreshTrayToday,
+} from '@/quickCapture/desktop';
 import { DEFAULT_HOTKEY, useDevicePrefs, writePrefs } from '@/quickCapture/device';
 import { DEFAULT_TYPES, useCaptureSettings } from '@/quickCapture/settings';
 import { t } from '@/strings';
@@ -157,6 +162,15 @@ export function QuickCaptureSection() {
             onChange={(closeToTray) => {
               writePrefs({ closeToTray });
               void desktop.setCloseToTray(closeToTray);
+            }}
+          />
+          <Switch
+            label={t.quickCapture.settings.trayToday}
+            hint={t.quickCapture.settings.trayTodayHint}
+            checked={prefs.trayToday}
+            onChange={(trayToday) => {
+              writePrefs({ trayToday });
+              refreshTrayToday();
             }}
           />
           <Switch

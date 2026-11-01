@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher shortcut icon (Heute: calendar page): brand circle with a plain glyph, drawn here (no copied artwork). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="@color/nemo_shortcut_background"
+        android:pathData="M24,0A24,24 0,1 1,24,48A24,24 0,1 1,24,0Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/nemo_shortcut_glyph"
+        android:strokeWidth="3"
+        android:pathData="M15,16h18v17h-18z" />
+    <path
+        android:fillColor="@color/nemo_shortcut_glyph"
+        android:pathData="M15,16h18v5h-18zM19,12h3v6h-3zM26,12h3v6h-3zM22,25h4v4h-4z" />
+</vector>

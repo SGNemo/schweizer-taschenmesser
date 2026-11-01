@@ -306,6 +306,10 @@ jobs:
       # The dev identifier is applied at `init`, so the generated project gets the package id
       # io.github.sgnemo.taschenmesser.dev and the label "Nemo Dev" (the stable app is a different app).
       - run: npx tauri android init --ci --config src-tauri/tauri.dev.conf.json
+      # Launcher shortcuts (share-intent plugin, res/xml/shortcuts.xml) name their target app
+      # literally: resource XML knows no ${applicationId}. Point them at this build's id.
+      - name: Application id into the launcher shortcuts
+        run: node scripts/android-shortcuts.mjs src-tauri/tauri.dev.conf.json
       - name: Project icons into the generated Android project
         run: cp -r src-tauri/icons/android/. src-tauri/gen/android/app/src/main/res/
 

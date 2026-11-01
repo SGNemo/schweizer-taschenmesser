@@ -2,8 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import type { Plugin } from 'vite';
 import { extractChangelogSection } from './scripts/lib/aboutData.ts';
+import { onlineOnlyFiles } from './scripts/lib/precacheSplit.ts';
 import { fileURLToPath } from 'node:url';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
@@ -12,6 +14,84 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 // The Tauri CLI sets TAURI_ENV_PLATFORM for its build/dev commands. Native builds ship no service
 // worker (the shell has its own updater); the PWA hooks are replaced by an inert stub.
 const native = Boolean(process.env.TAURI_ENV_PLATFORM);
+// Measurement only (`npm run check:bundle`): Vite's manifest plus a per-chunk module list in dist/.vite/.
+const bundleReport = process.env.VITE_BUNDLE_REPORT === '1';
+
+/**
+ * Files that leave the precache (tools, chat, password dictionaries; rule in
+ * scripts/lib/precacheSplit.ts). Filled from the app's bundle, read by the precache filter below; the
+ * service worker's runtime cache keeps them after their first (online) use.
+ */
+const onlineOnly = new Set<string>();
+
+function precacheSplit(): Plugin {
+  return {
+    name: 'nemo-precache-split',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).flatMap((c) =>
+        c.type === 'chunk'
+          ? [
+              {
+                file: c.fileName,
+                isEntry: c.isEntry,
+                facadeModuleId: c.facadeModuleId,
+                imports: c.imports,
+                dynamicImports: c.dynamicImports,
+                assets: [
+                  ...(c.viteMetadata?.importedCss ?? []),
+                  ...(c.viteMetadata?.importedAssets ?? []),
+                ],
+              },
+            ]
+          : [],
+      );
+      // Only the app build (the service worker is built separately and has no HTML entry).
+      if (!chunks.some((c) => c.isEntry && c.facadeModuleId?.endsWith('index.html'))) return;
+      onlineOnly.clear();
+      for (const f of onlineOnlyFiles(chunks)) onlineOnly.add(f);
+    },
+    writeBundle(options) {
+      if (!bundleReport || onlineOnly.size === 0) return;
+      const dir = `${options.dir ?? 'dist'}/.vite`;
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(`${dir}/lazy-online.json`, JSON.stringify([...onlineOnly].sort()));
+    },
+  };
+}
+
+const short = (id: string) =>
+  id
+    .replace(/^.*node_modules\//, 'node_modules/')
+    .replace(/^.*\/web\//, '')
+    .replace(/^.*\/packages\//, '../packages/');
+
+/** Writes `.vite/modules.json` (chunk file → its modules with rendered size) for scripts/check-bundle.mjs. */
+function moduleReport(): Plugin {
+  return {
+    name: 'nemo-module-report',
+    apply: 'build',
+    writeBundle(options, bundle) {
+      const out: Record<string, [string, number][]> = {};
+      for (const [file, c] of Object.entries(bundle)) {
+        if (c.type !== 'chunk') continue;
+        out[file] = Object.entries(c.modules)
+          .map(([id, m]): [string, number] => [short(id), m.renderedLength])
+          .sort((a, b) => b[1] - a[1]);
+      }
+      // Static import edges (module → what it imports statically), for `check:bundle -- --why <text>`.
+      const imports: Record<string, string[]> = {};
+      for (const id of this.getModuleIds()) {
+        const info = this.getModuleInfo(id);
+        if (info) imports[short(id)] = info.importedIds.map(short);
+      }
+      const dir = `${options.dir ?? 'dist'}/.vite`;
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(`${dir}/modules.json`, JSON.stringify(out));
+      writeFileSync(`${dir}/imports.json`, JSON.stringify(imports));
+    },
+  };
+}
 
 /** Short commit id of this build ('' outside a git checkout); shown in Settings → Über Nemo. */
 function gitSha(): string {
@@ -41,6 +121,8 @@ export default defineConfig({
     __CHANGELOG__: JSON.stringify(changelog()),
   },
   plugins: [
+    ...(bundleReport ? [moduleReport()] : []),
+    precacheSplit(),
     react({ jsxImportSource: '@/core/text/readjsx' }),
     VitePWA({
       disable: native,
@@ -83,12 +165,42 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Tools, chat and the password dictionaries load on first use (decision in
+        // docs/decisions/core.md); everything else stays precached so the app works offline.
+        manifestTransforms: [
+          (entries) => ({
+            manifest: entries.filter((e) => !onlineOnly.has(e.url)),
+            warnings: [],
+          }),
+        ],
       },
     }),
   ],
   // Two entries: the app and the small quick-capture window of the desktop shell (capture.html).
   build: {
+    manifest: bundleReport,
     rollupOptions: {
+      // The shared vault package and tldts have no import-time side effects. Saying so lets the bundler
+      // drop unused re-exports of the `@nemo/vault-core` barrel: `core/crypto/random.ts` needs only
+      // `randomInt`, and without this the whole public-suffix list (tldts, ~110 KB gzip) sat on the
+      // critical path of every start although only the vault's origin matching uses it.
+      treeshake: {
+        moduleSideEffects: (id: string) =>
+          !/[\\/]packages[\\/]vault-core[\\/]src[\\/]|node_modules[\\/]tldts/.test(id),
+      },
+      // One stable vendor chunk for the libraries every start needs: its hash only changes with a
+      // dependency update, so an app update re-downloads less (before, react-dom shared a chunk with app
+      // code). Measured: 2 requests fewer on the critical path, no byte added to a lazy path.
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor',
+              test: /node_modules[\\/](react|react-dom|scheduler|react-router|dexie|dexie-react-hooks|zod|zustand)[\\/]/,
+            },
+          ],
+        },
+      },
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         capture: fileURLToPath(new URL('./capture.html', import.meta.url)),

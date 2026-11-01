@@ -8,6 +8,7 @@
     "allow-desktop-data-dir",
     "allow-desktop-safe-mode",
     "allow-desktop-take-panic-log",
+    "allow-desktop-set-tray-today",
     "allow-desktop-open-data-dir",
     "allow-check-update",
     "allow-install-update",

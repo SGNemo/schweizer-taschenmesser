@@ -14,6 +14,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
   device** where they were added (not synced, not in the backup, max. 10 MB per file).
 - **Share (Android, installed as a PWA):** "Nemo" appears in the share menu; the "Share" page asks where the content should go
   (Saved, note or to-do; only enabled modules are offered). The native Android app (APK) does not have the share target yet.
+- **Quick capture:** one line = one entry, so several things land at once (with a preview row each). In the Android app, long-press the app icon for "Capture", "Search" and "Today", or add the quick-settings tile "Nemo: Capture".
 - **Tools:** the "Tools" button at the top (or **Ctrl+.**) opens the calculator (with percent/VAT and split modes), currency, timer and QR code;
   more (units, date calculator, time zones, dice, text, images, PDF and **Developer** with Base64/URL, JSON, UUID, hash) can be turned on
   under "Manage tools". In the search (Ctrl+K) a calculation like "240 + 19 %" is computed right away, "Tool: …" opens a
@@ -23,6 +24,11 @@ In the **module library** you turn modules on and off (when turning one off: kee
 - **Retired (0.4.0):** Messages, habit tracker and time tracking are no longer visible. Their data stays stored and is still part of every backup.
 - **Map & WhatsApp:** events with a location have "Show on map"; for people with a birthday the button opens WhatsApp with a greeting
   (you pick the contact in WhatsApp).
+
+## Importing a bank statement
+In **Finances** (Settings → Modules → Finances → Set up starter data → *Import bank statement*) choose the file you exported in online banking: **OFX**, **QIF**, **CAMT** or **CSV**. Nothing is uploaded and no login is needed; you see a preview first and can undo the import. Well-known banks (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) are recognised from the file and named in the preview ("Recognised: DKB"). For a CSV the app does not know, you assign the columns date / amount / payee / purpose once; the app remembers it for the next export of that kind. A file imported twice adds nothing new, and a file in another currency is only booked to an account in that currency.
+
+After an import the preview may suggest **rules** ("Always book Netflix in category Subscriptions?"). Nothing is ticked: a rule is only created if you tick it and confirm the import, it then sorts later imports, and you can remove it under Finances → Categories. A paid invoice is booked as an expense in Finances (Invoices → settings can turn that off), and a price rise of a subscription shows once under *Important now* (Subscriptions → settings can turn that off).
 
 ## Bringing tasks from Todoist or Google Tasks
 Open **ToDos → Import → From Todoist or Google Tasks** (once the module holds tasks: Settings → Modules → ToDos → Set up starter data) and choose a file you exported yourself. Nothing is uploaded and no account is needed; you see a preview first and can undo the import.

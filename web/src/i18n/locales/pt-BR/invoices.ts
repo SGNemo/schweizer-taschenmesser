@@ -16,6 +16,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = no dia do vencimento',
       remindTime: 'Horário do lembrete',
       remindTimeHelp: 'Formato HH:mm',
+      bookWhenPaid: 'Lançar a fatura paga como despesa',
+      bookWhenPaidHelp:
+        'Cria o lançamento em Finanças assim que você marca uma fatura como paga. Sem o módulo Finanças nada acontece; um lançamento recorrente com o mesmo beneficiário e valor não é lançado duas vezes.',
     },
   },
   title: 'Faturas',

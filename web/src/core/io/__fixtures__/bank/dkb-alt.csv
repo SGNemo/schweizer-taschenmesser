@@ -1,0 +1,9 @@
+"Konto:";"Girokonto / DE00120300000000000005";
+"Von:";"01.10.2026";
+"Bis:";"31.10.2026";
+"Kontostand vom 31.10.2026:";"1.234,56 EUR";
+
+"Buchungstag";"Wertstellung";"Buchungstext";"Auftraggeber / Begünstigter";"Verwendungszweck";"Kontonummer";"BLZ";"Betrag (EUR)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz";
+"03.10.2026";"03.10.2026";"Lastschrift";"Filmfreund GmbH";"Streaming Monatsbeitrag Oktober";"000000002";"10000000";"-9,99";"";"";"";
+"01.10.2026";"01.10.2026";"Eingang";"Beispiel AG";"Gehalt Oktober";"000000003";"10000000";"2.345,67";"";"";"";
+"02.10.2026";"02.10.2026";"Kartenzahlung";"Marktkauf Mustertal";"Einkauf Lebensmittel";"";"";"-23,40";"";"";"";

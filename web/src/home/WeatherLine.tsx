@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { Suspense, useState, type ComponentProps } from 'react';
 import { Link } from 'react-router';
-import { WeatherPreview } from './WeatherPreview';
 import { weatherIcon } from './weatherIcon';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { dismissHint, isHintDismissed } from '@/core/weather/hint';
 import { useWeatherSettings } from '@/core/weather/settings';
 import { useWeather } from '@/core/weather/useWeather';
 import { dateTimeFormat } from '@/core/i18n/format';
+import { lazyOnline } from '@/core/net/OnlineChunk';
 import { tWeather } from '@/strings.weather';
 import { Button, Icon } from '@/ui';
+import type { WeatherPreview as Preview } from './WeatherPreview';
 import styles from './Home.module.css';
+
+/** The forecast dialog (chart, air quality) loads on the first tap, not with the Overview (precached). */
+const WeatherPreview = lazyOnline<ComponentProps<typeof Preview>>(() =>
+  import('./WeatherPreview').then((m) => ({ default: m.WeatherPreview })),
+);
 
 const SETTINGS = settingsPath('verbindungen', 'weather');
 
@@ -21,6 +27,8 @@ const SETTINGS = settingsPath('verbindungen', 'weather');
  */
 export function WeatherLine() {
   const [open, setOpen] = useState(false);
+  // Mounted from the first tap on (keeps the dialog's close transition), loaded only then.
+  const [opened, setOpened] = useState(false);
   const weather = useWeather(open);
   const [settings] = useWeatherSettings();
   const tx = tWeather.use();
@@ -42,12 +50,19 @@ export function WeatherLine() {
           type="button"
           className={`${styles.weather} ${styles.weatherButton}`}
           data-testid="weather-line"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setOpened(true);
+            setOpen(true);
+          }}
         >
           <Icon name={weatherIcon(forecast.group, forecast.now?.night)} size={16} />
           <span>{parts.join(' · ')}</span>
         </button>
-        <WeatherPreview open={open} onClose={() => setOpen(false)} weather={weather} />
+        {opened ? (
+          <Suspense fallback={null}>
+            <WeatherPreview open={open} onClose={() => setOpen(false)} weather={weather} />
+          </Suspense>
+        ) : null}
       </>
     );
   }

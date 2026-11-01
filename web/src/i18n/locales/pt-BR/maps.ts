@@ -21,6 +21,15 @@ export const maps: Strings['maps'] = {
     offlineOnly: 'Só o mapa próprio (off-line)',
     offlineOnlyHelp:
       'Mostra apenas os mapas que você mesmo criou. Fora deles a área fica vazia e nada é carregado da internet.',
+    overpassUrl: 'Dados do mapa (endereço)',
+    overpassUrlHelp:
+      'Um serviço compatível com Overpass a partir do qual o seu mapa próprio é criado. Padrão: overpass-api.de (OpenStreetMap, só para uso leve).',
+    showBuildProgress: 'Mostrar o progresso abaixo do mapa',
+    showBuildProgressHelp:
+      'Uma linha tranquila enquanto um mapa próprio é criado. Você pode desativá-la quando quiser.',
+    regionUrl: 'Arquivo de região (endereço)',
+    regionUrlHelp:
+      'Um arquivo de região pré-construído (PMTiles) no seu próprio servidor. Se estiver definido, os mapas próprios são criados a partir dele em vez do serviço Overpass; só https.',
   },
   tabs: { label: 'Visão', places: 'Lugares', routes: 'Rotas', map: 'Mapa' },
   empty: { places: 'Ainda não há lugares.', routes: 'Ainda não há rotas.' },
@@ -143,6 +152,43 @@ export const maps: Strings['maps'] = {
     arr: 'chegada',
     changes: (n: number) => (n === 0 ? 'Direto' : n === 1 ? '1 baldeação' : `${n} baldeações`),
     kinds: { walk: 'A pé', train: 'Trem', bus: 'Ônibus', tram: 'Bonde', other: 'Trajeto' },
+  },
+  own: {
+    title: 'Mapas próprios',
+    build: 'Criar meu mapa próprio',
+    level: { lean: 'básico', full: 'detalhado' },
+    building: (done: number, total: number) =>
+      `O mundo vai tomando forma aos poucos · ${done} de ${total}`,
+    overview: 'Desenhando a visão geral …',
+    paused: (done: number, total: number) => `Pausado em ${done} de ${total}`,
+    queued: 'Espera o outro mapa terminar',
+    done: (n: number) => `Pronto · ${n} partes`,
+    started: 'O mapa está sendo criado. Você pode continuar, ele se completa sozinho.',
+    capped: 'A área era grande. O centro vem primeiro.',
+    pause: 'Pausar',
+    resume: 'Continuar',
+    remove: 'Excluir mapa',
+    confirmRemove: 'Excluir mesmo?',
+    keep: 'Manter',
+    removed: 'Mapa excluído',
+    upgrade: 'Deixar detalhado',
+    extend: 'Ampliar aqui',
+    viewportName: 'Trecho do mapa',
+    covered: 'Este trecho já está no seu mapa.',
+    removeAll: 'Excluir todos os mapas',
+    confirmRemoveAll: 'Excluir todos os mapas próprios?',
+    asOf: (date: string) => `em ${date}`,
+    fileMiss:
+      'O arquivo de região não cobre esta área. O mapa é criado a partir do serviço Overpass.',
+    fileUnreachable:
+      'O arquivo de região não está acessível agora. O mapa é criado a partir do serviço Overpass.',
+    fromFile: 'do arquivo de região',
+    reasons: {
+      busy: 'O serviço de mapas está sobrecarregado agora. Continue mais tarde.',
+      network: 'O serviço de mapas não está acessível agora. Continue mais tarde.',
+      blocked: 'Sem conexão: a rede está bloqueada (Configurações → Conexões).',
+      error: 'A resposta do serviço de mapas não pôde ser lida. Tente de novo mais tarde.',
+    },
   },
   apps: {
     osm: 'OpenStreetMap',

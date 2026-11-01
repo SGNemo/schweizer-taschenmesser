@@ -80,6 +80,35 @@ export const finance: Strings['finance'] = {
   openingBalance: 'Solde initial',
   deleteAccountHint: 'Supprime aussi toutes les opérations de ce compte.',
   noAccounts: 'Aucun compte pour l’instant.',
+  fromSubscription: 'Associé à l’abonnement par une règle.',
+  rules: {
+    title: 'Règles suggérées',
+    hint: 'Rien n’est coché. Une règle n’est créée que si vous la cochez et confirmez l’import. Vous pouvez la supprimer sous Catégories.',
+    proposalBoth: (payee: string, sub: string, category: string) =>
+      `Toujours enregistrer « ${payee} » comme abonnement « ${sub} » dans la catégorie « ${category} » ?`,
+    proposalSubscription: (payee: string, sub: string) =>
+      `Toujours associer « ${payee} » à l’abonnement « ${sub} » ?`,
+    proposalCategory: (payee: string, category: string) =>
+      `Toujours enregistrer « ${payee} » dans la catégorie « ${category} » ?`,
+    applied: (name: string) => `Règle : ${name}`,
+    manageTitle: 'Règles pour l’import',
+    manageHint:
+      'L’import du relevé applique ces règles. En supprimer une ne modifie aucune opération existante.',
+    manageEmpty: 'Aucune règle pour l’instant. Les suggestions apparaissent après un import.',
+    remove: (match: string) => `Supprimer la règle pour « ${match} »`,
+  },
+  bankMap: {
+    title: 'Quelle colonne est laquelle ?',
+    hint: 'Choisissez la colonne correspondante pour chaque information. Les premières lignes sont affichées ci-dessous ; l’app mémorise l’association pour le prochain import de ce type de fichier.',
+    date: 'Date',
+    amount: 'Montant',
+    payee: 'Bénéficiaire (facultatif)',
+    purpose: 'Libellé (facultatif)',
+    none: '– aucune –',
+    choose: '– choisir –',
+    sample: 'Premières lignes du fichier',
+    apply: 'Utiliser ces colonnes',
+  },
   addCategory: 'Ajouter une catégorie',
   editCategory: 'Modifier la catégorie',
   categoryName: 'Nom',

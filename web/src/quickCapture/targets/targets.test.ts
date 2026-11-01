@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { visibleManifests } from '@/core/modules/registry';
-import { CaptureError, TARGETS, availableTypes, saveCapture } from './index';
+import { CaptureError, TARGETS, availableTypes, saveCapture, saveCaptures } from './index';
 
 const ON = {
   todos: true,
@@ -253,5 +253,52 @@ describe('targets', () => {
       'reminder',
     ]);
     expect(availableTypes(undefined)).toEqual([]);
+  });
+});
+
+describe('saveCaptures', () => {
+  it('saves several entries as one batch with one undo for all', async () => {
+    const saved = await saveCaptures(
+      [
+        { type: 'todo', fields: { title: 'Milch kaufen' } },
+        { type: 'todo', fields: { title: 'Oma anrufen' } },
+        { type: 'event', fields: { title: 'Zahnarzt', date: '2026-10-02', time: '09:00' } },
+      ],
+      'Milch kaufen\nOma anrufen\nFreitag Zahnarzt 9 Uhr',
+      { states: ON },
+    );
+    expect(saved.count).toBe(3);
+    expect(saved.text).toContain('Oma anrufen');
+    const tasks = await rows('todos_task');
+    expect(tasks).toHaveLength(2);
+    // One inbox for both, not one per entry.
+    expect(new Set(tasks.map((x) => x.listId)).size).toBe(1);
+    await saved.undo();
+    expect((await rows('todos_task')).every((x) => x.deletedAt)).toBe(true);
+    expect((await rows('calendar_event')).every((x) => x.deletedAt)).toBe(true);
+  });
+
+  it('is all or nothing: a failing entry takes back the ones before it', async () => {
+    await expect(
+      saveCaptures(
+        [
+          { type: 'todo', fields: { title: 'Milch kaufen' } },
+          { type: 'bookmark', fields: { title: 'Link', url: 'https://example.org' } },
+        ],
+        'x',
+        { states: { ...ON, bookmarks: false } },
+      ),
+    ).rejects.toBeInstanceOf(CaptureError);
+    expect((await rows('todos_task')).every((x) => x.deletedAt)).toBe(true);
+  });
+
+  it('refuses bookings without confirmation and an empty batch', async () => {
+    await expect(
+      saveCaptures([{ type: 'finance', fields: { title: 'Kino', amountMinor: 1250 } }], 'x', {
+        states: ON,
+      }),
+    ).rejects.toBeInstanceOf(CaptureError);
+    await expect(saveCaptures([], '', { states: ON })).rejects.toBeInstanceOf(CaptureError);
+    expect(await rows('finance_transaction')).toHaveLength(0);
   });
 });

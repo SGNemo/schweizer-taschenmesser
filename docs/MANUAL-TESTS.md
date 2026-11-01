@@ -334,3 +334,12 @@ G1. *Android/Windows:* Unterlage mit Datei, ein Abo und einen Termin löschen; E
 G2. *Mit eingerichtetem Sync-Server, zwei Geräte:* auf Gerät A löschen und „Endgültig löschen“; nach dem Abgleich ist der Eintrag auch auf Gerät B weg und nicht in dessen Liste. ☐
 G3. *Schalter „Gelöschtes 30 Tage aufbewahren“ aus:* Liste verschwindet mit Hinweis; „Rückgängig“ direkt nach dem Löschen geht weiter. ☐
 
+
+### Schnellerfassung: Android-Kurzbefehle, Kachel, Tray „Heute“ – nur auf echter Hardware prüfbar
+Android-Teil: Gradle baut ihn nur im Job „Android APK (dev)“ von `.github/workflows/dev-preview.yml` (nach jedem grünen Push auf `develop`) bzw. „Android APK“ von `release.yml` (Trockenlauf bei Push auf `develop` mit Änderungen unter `web/src-tauri/**`), nicht im PR.
+Q1. *Android, Launcher:* lange auf das Nemo-Symbol drücken: drei Kurzbefehle „Erfassen“, „Suchen“, „Heute“ (Gerätesprache). „Erfassen“ öffnet die App mit dem Erfassen-Blatt, „Suchen“ mit der Suche, „Heute“ auf der Übersicht – auch wenn die App schon offen war. ☐
+Q2. *Android, Schnelleinstellungen:* Schnelleinstellungen bearbeiten → Kachel „Nemo: Erfassen“ hinzufügen, tippen: Leiste klappt zu, App öffnet mit dem Erfassen-Blatt (Android 14+ und älter). Bei gesperrtem Handy erst entsperren, nichts öffnet über dem Sperrbildschirm. ☐
+Q3. *Dev-Preview parallel installiert:* Kurzbefehle und Kachel der „Nemo Dev“ öffnen „Nemo Dev“, die der stabilen App die stabile App (nie die andere, keine Auswahl-Abfrage). Teilen von Text funktioniert in beiden wie vorher. ☐
+T1. *Windows, Tray:* ein Termin heute 15:00 und ein überfälliges ToDo anlegen, Rechtsklick auf das Tray-Symbol: oben „Heute“ mit „Überfälliges ToDo“ und „15:00 · Termin“, darunter „Jetzt dran anfangen“ und „Timer 25 Minuten“, dann Erfassen/App öffnen/Beenden wie bisher. Keine Beträge, kein Tresor, keine Notizinhalte. ☐
+T2. *Klick:* Klick auf die Termin-Zeile holt das Hauptfenster nach vorn und öffnet den Kalender an dem Tag; „Timer 25 Minuten“ startet den Timer und zeigt ihn; „Jetzt dran anfangen“ öffnet den Fokus für das ToDo. ☐
+T3. *Aktualisieren und Abschalten:* ToDo erledigen → nach dem nächsten Öffnen des Tray-Menüs ist die Zeile weg (sofort, spätestens nach 5 Minuten). Einstellungen → Schnellerfassung → „Heute im Tray-Menü zeigen“ aus: Block verschwindet, Menü wie vorher. Leerer Tag: kein Block. ☐

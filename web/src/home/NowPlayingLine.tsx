@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { Suspense, useState, type ComponentProps } from 'react';
+import { lazyOnline } from '@/core/net/OnlineChunk';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Icon } from '@/ui';
-import { SpotifyPlayer } from './SpotifyPlayer';
 import { clock, useProgress } from './nowPlayingTime';
 import { useCover } from './useCover';
 import { useNowPlaying } from './useNowPlaying';
+import type { SpotifyPlayer as Player } from './SpotifyPlayer';
 import styles from './NowPlayingLine.module.css';
+
+/** The player (playlists, saved songs, search) loads when it is first opened, not with the Overview. */
+const SpotifyPlayer = lazyOnline<ComponentProps<typeof Player>>(() =>
+  import('./SpotifyPlayer').then((m) => ({ default: m.SpotifyPlayer })),
+);
 
 /**
  * The "Läuft gerade" widget under the weather: cover, "Läuft gerade: Titel – Interpret", album, a progress
@@ -29,7 +35,9 @@ export function NowPlayingLine() {
   );
   if (!np) return null;
   const player = open ? (
-    <SpotifyPlayer open={open} onClose={() => setOpen(false)} np={np} cover={cover} />
+    <Suspense fallback={null}>
+      <SpotifyPlayer open={open} onClose={() => setOpen(false)} np={np} cover={cover} />
+    </Suspense>
   ) : null;
 
   if (!current) {

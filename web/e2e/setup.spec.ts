@@ -392,3 +392,52 @@ test('Back closes the import dialog above the assistant first, then asks about t
   await page.goBack();
   await expect(wizard(page).getByTestId('setup-confirm')).toBeVisible();
 });
+
+test('"Umzug von einer anderen App": checklist row → Google → ToDos importer → the point ticks itself', async ({
+  page,
+}) => {
+  await ready(page, '/settings/ueber');
+  await page.getByRole('button', { name: 'Einrichtung starten' }).click();
+  await expect(wizard(page)).toBeVisible();
+  await wizard(page).getByRole('button', { name: 'Schließen' }).first().click();
+  await wizard(page).getByRole('button', { name: 'Einrichtung beenden' }).click();
+
+  // Tap 1: the row on the overview. Tap 2: the tile's importer button.
+  await overlayGone(page);
+  await page.goto('/');
+  const checklist = page.getByTestId('setup-checklist');
+  await checklist.getByRole('button', { name: /Umzug von einer anderen App: Öffnen/ }).click();
+  const google = wizard(page).getByRole('region', { name: /^Google/ });
+  await expect(google.getByText(/ZIP-Datei vorher entpacken/)).toBeVisible();
+  await google.getByRole('button', { name: 'ToDos importieren' }).click();
+
+  const importDialog = page.getByRole('dialog', { name: /^Importieren:/ });
+  await importDialog.getByRole('button', { name: /Aus Todoist oder Google Tasks/ }).click();
+  const chooser = page.waitForEvent('filechooser');
+  await importDialog.getByRole('button', { name: 'Datei wählen …' }).click();
+  await (await chooser).setFiles('src/core/io/__fixtures__/google-tasks.json');
+  await importDialog.getByRole('button', { name: /Einträge importieren/ }).click();
+  await expect(importDialog.getByRole('status')).toContainText('importiert');
+  await importDialog.getByRole('button', { name: 'Schließen' }).last().click();
+
+  // The point ticks itself; the calendar subscription stays open until it is ticked by hand.
+  await expect(google.getByTestId('migrate-item-google.tasks')).toHaveText(
+    /✓.*Tasks\.json importiert/,
+  );
+  await expect(google.getByTestId('migrate-item-google.subscription')).not.toContainText('✓');
+
+  // "Weiter" settles the step; the row stays on the overview because a point is still open.
+  await wizard(page).getByRole('button', { name: 'Schließen' }).first().click();
+  await wizard(page).getByRole('button', { name: 'Einrichtung beenden' }).click();
+  await expect(checklist.getByText('Kalender als Abo verbinden')).toBeVisible();
+  await checklist.getByRole('button', { name: 'Abhaken' }).click();
+  await expect(checklist.getByText('Kalender als Abo verbinden')).toContainText('✓');
+});
+
+test('Settings → Sync & Backup has a row that opens the same tiles', async ({ page }) => {
+  await ready(page, '/settings/sync');
+  await page.getByTestId('migrate-open').click();
+  const dialog = page.getByRole('dialog', { name: 'Umzug von einer anderen App' });
+  await expect(dialog.getByRole('region', { name: 'Todoist' })).toBeVisible();
+  await expect(dialog.getByText('Dann fang mit der Schnellerfassung an.')).toBeVisible();
+});

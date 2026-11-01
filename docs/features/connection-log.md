@@ -15,7 +15,7 @@ Almost everything goes through `getPlatform().fetch` (`core/platform/web.ts:153`
 | Connector loop (`core/connectors/service.ts`) | googleapis, spotify | 5 s after start, every 5 min | connector connected | auth only (calendar read-only) |
 | ICS subscription (`connectors/ics/sync.ts`) | user's ICS URL (web: via `<server>/v1/proxy`) | add click, then connector loop | subscription added | secret ICS URL |
 | Weather (`core/weather/api.ts`) | open-meteo.com | search typing; forecast on home mount | `enabled && place` | place name, lat/lon |
-| Currency (`tools/currency/Tool.tsx`) | api.frankfurter.dev | opening the tool | none (named exception in legal text) | nothing |
+| Currency (`tools/currency/View.tsx`) | api.frankfurter.dev | opening the tool | none (named exception in legal text) | nothing |
 | Public IP (`modules/disk/.../PublicIp.tsx`) | api.ipify.org | click | click | nothing |
 | Settings → Sync (`pages/settings/SyncSection.tsx:51`) | own origin `/v1/health` | open section (web) | none | nothing |
 | Local model download (`src-tauri/crates/local-llm`) | allow-listed HTTPS host | click | click | nothing |

@@ -64,6 +64,7 @@ const manifest: ModuleManifest = {
     ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    attention: () => import('./attention'),
     aiComputed: () => import('./aiComputed'),
   },
 };

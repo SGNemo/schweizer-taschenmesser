@@ -23,6 +23,7 @@ import {
 } from '@/ui';
 import { PlaceEditor, type PlaceTarget } from '../components/PlaceEditor';
 import { RouteEditor, type RouteTarget } from '../components/RouteEditor';
+import { RegionsCard } from '../components/RegionsCard';
 import { TileMap, type MapMarker, type TileResolver } from '../components/TileMap';
 import { TransitCard, type Trip } from '../components/TransitCard';
 import { searchPlaces, MapsError, type Hit } from '../geocode';
@@ -39,13 +40,23 @@ import {
   type MapApp,
   type View,
 } from '../logic';
+import { getBuilder, setOverpassUrl, useBuildStore } from '../own/builder';
+import type { Bbox } from '../own/cut';
 import { createLocalTiles } from '../own/local';
+import { tileId, tilesCovering } from '../own/cut';
+import { CELL_ZOOM, regionName, viewportBbox } from '../own/plan';
 import { watchTheme } from '../own/theme';
 import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 import { connectionPath, fetchConnections } from '../transit';
 import { describeStep, fetchPlan, isDrivingMode, splitDuration, type Plan } from '../routing';
 import type { Endpoint, Place, Route } from '../schema';
-import { offlineOnlyOf, servicesOf, settings, DEFAULT_TILE_URL } from '../settings';
+import {
+  offlineOnlyOf,
+  servicesOf,
+  settings,
+  showBuildProgressOf,
+  DEFAULT_TILE_URL,
+} from '../settings';
 import { loadTile } from '../tiles';
 import styles from './maps.module.css';
 
@@ -65,6 +76,8 @@ interface Selection {
   label: string;
   /** Set when the point is a saved place. */
   place?: Stored<Place>;
+  /** The area of a search hit (a town, a district): the own map can be built for it. */
+  bbox?: Bbox;
 }
 
 /** "Schlossplatz, Erlangen, Bayern" → "Schlossplatz"; coordinates stay whole. */
@@ -156,12 +169,22 @@ function PlanCard({ shown, onHide }: { shown: Shown; onHide: () => void }) {
 export default function MapsPage() {
   const places = useLiveQuery(() => placeRepo.active().sortBy('createdAt'), []);
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
-  const regions = useLiveQuery(() => regionRepo.active().toArray(), []);
+  const regions = useLiveQuery(() => regionRepo.active().sortBy('createdAt'), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
-  const { tileUrl, searchUrl, routingUrl, transitUrl } = servicesOf(
+  const { tileUrl, searchUrl, routingUrl, transitUrl, overpassUrl, regionUrl } = servicesOf(
     prefs as Record<string, unknown> | undefined,
   );
   const offlineOnly = offlineOnlyOf(prefs as { offlineOnly?: unknown } | undefined);
+  const showProgress = showBuildProgressOf(prefs as { showBuildProgress?: unknown } | undefined);
+
+  // The builder of the own map: one request per cell, only after a click, never after a restart.
+  useEffect(() => setOverpassUrl(overpassUrl), [overpassUrl]);
+  const builder = useMemo(() => getBuilder(), []);
+  const build = useBuildStore();
+  useEffect(() => {
+    void builder.settle();
+  }, [builder]);
+  const activeRegion = build.active ? regions?.find((r) => r.id === build.active) : undefined;
 
   // The own map (stored vector tiles, docs/features/map-own.md) answers first; the online tiles only
   // fill what it does not cover, and nothing at all in offline-only mode. The map waits for the
@@ -212,6 +235,26 @@ export default function MapsPage() {
   const [trip, setTrip] = useState<Trip>();
   const searchInput = useRef<HTMLInputElement>(null);
   const view = mapView ?? fitView(places ?? [], 800, 480) ?? GERMANY;
+
+  // "Hier erweitern": offered when the shown area has cells no own map holds yet (checked calmly,
+  // from the rounded view, never per frame).
+  const [mapSize, setMapSize] = useState({ w: 800, h: 480 });
+  const [uncovered, setUncovered] = useState(0);
+  const viewKey = `${Math.round(view.lat * 500)}:${Math.round(view.lon * 500)}:${Math.round(view.zoom)}:${mapSize.w}x${mapSize.h}`;
+  const extendable = (regions?.length ?? 0) > 0 && view.zoom >= 11;
+  useEffect(() => {
+    if (!extendable) return;
+    let alive = true;
+    const cells = tilesCovering(viewportBbox(view, mapSize.w, mapSize.h), CELL_ZOOM.lean);
+    void Promise.all(cells.map((c) => tileRepo.get(tileId(c.z, c.x, c.y)))).then((rows) => {
+      if (alive) setUncovered(rows.filter((r) => !r).length);
+    });
+    return () => {
+      alive = false;
+    };
+    // The rounded view key stands for the view: one check per settled position.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewKey, regionsKey, extendable]);
 
   // The map (and with it every tile request) only starts once its tab is open and the notice is read.
   useEffect(() => {
@@ -314,8 +357,48 @@ export default function MapsPage() {
   function choose(h: Hit) {
     setHits(undefined);
     setQuery('');
-    setSelected({ lat: h.lat, lon: h.lon, label: h.label });
+    setSelected({ lat: h.lat, lon: h.lon, label: h.label, ...(h.bbox ? { bbox: h.bbox } : {}) });
     setMapView({ lat: h.lat, lon: h.lon, zoom: 16 });
+  }
+
+  /** Only on click and after its notice: the own map of the selected area starts to build. */
+  async function buildOwnMap() {
+    if (!selected?.bbox) return;
+    await requireNotice('maps-build');
+    setReady(true);
+    const { capped, file } = await builder.createAndStart({
+      name: regionName(selected.label),
+      bbox: selected.bbox,
+      centre: { lat: selected.lat, lon: selected.lon },
+      level: 'lean',
+      ...(regionUrl ? { fileUrl: regionUrl } : {}),
+    });
+    setNote(buildNote(capped, file));
+  }
+
+  /** The calm line after a build started: where it comes from, whether the area was cut down. */
+  function buildNote(capped: boolean, file: 'used' | 'miss' | 'unreachable' | undefined): string {
+    const o = t.maps.own;
+    const parts: string[] = [o.started];
+    if (file === 'miss') parts.push(o.fileMiss);
+    if (file === 'unreachable') parts.push(o.fileUnreachable);
+    if (capped) parts.push(o.capped);
+    return parts.join(' ');
+  }
+
+  /** Only on click: the shown area joins the own map (cells already built are left out). */
+  async function extendHere() {
+    await requireNotice('maps-build');
+    setReady(true);
+    const { cells, capped, file } = await builder.createAndStart({
+      name: t.maps.own.viewportName,
+      bbox: viewportBbox(view, mapSize.w, mapSize.h),
+      centre: { lat: view.lat, lon: view.lon },
+      level: 'lean',
+      skipBuilt: true,
+      ...(regionUrl ? { fileUrl: regionUrl } : {}),
+    });
+    setNote(cells === 0 ? t.maps.own.covered : buildNote(capped, file));
   }
 
   function locate() {
@@ -524,6 +607,7 @@ export default function MapsPage() {
               template={tileUrl}
               resolve={resolve}
               resolveKey={`${sourceVersion}:${offlineOnly ? 'own' : 'all'}`}
+              onSize={(w, h) => setMapSize((s) => (s.w === w && s.h === h ? s : { w, h }))}
               markers={markers}
               selected={selected && !selected.place ? selected : undefined}
               line={
@@ -555,6 +639,33 @@ export default function MapsPage() {
           ) : (
             <p className={styles.note}>{t.maps.map.hint}</p>
           )}
+
+          {showProgress && activeRegion ? (
+            <p className={styles.note} role="status" data-testid="map-build-progress">
+              {build.phase === 'overview'
+                ? t.maps.own.overview
+                : t.maps.own.building(activeRegion.cells.done, activeRegion.cells.total)}{' '}
+              · {activeRegion.name}
+            </p>
+          ) : null}
+          {extendable && uncovered > 0 && !build.active ? (
+            <div className={styles.actions}>
+              <Button onClick={() => void extendHere()} data-testid="map-extend">
+                <Icon name="plus" size={18} />
+                {t.maps.own.extend}
+              </Button>
+            </div>
+          ) : null}
+          <RegionsCard
+            regions={regions ?? []}
+            active={build.active}
+            phase={build.phase}
+            onPause={(id) => void builder.pause(id)}
+            onResume={(id) => void builder.start(id)}
+            onRemove={(id) => void builder.remove(id)}
+            onUpgrade={(id) => void builder.upgrade(id)}
+            onRemoveAll={() => void builder.removeAll()}
+          />
 
           {shown ? <PlanCard shown={shown} onHide={() => setShown(undefined)} /> : null}
           {trip ? (
@@ -600,6 +711,12 @@ export default function MapsPage() {
                 <Button onClick={() => setRouteTarget({ draft: true, to: asEnd(selected) })}>
                   {t.maps.map.routeTo}
                 </Button>
+                {selected.bbox && !selected.place ? (
+                  <Button onClick={() => void buildOwnMap()}>
+                    <Icon name="map" size={18} />
+                    {t.maps.own.build}
+                  </Button>
+                ) : null}
                 <Button variant="ghost" onClick={() => setSelected(undefined)}>
                   {t.maps.map.clear}
                 </Button>

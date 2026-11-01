@@ -9,7 +9,7 @@ import { Button } from '@/ui';
 import { useOnboardingHost } from './host';
 
 /** Collections a module fills by itself: they do not make the module "in use". */
-const SELF_FILLED: Record<string, string[]> = {
+export const SELF_FILLED: Record<string, string[]> = {
   todos: ['list'],
   lists: ['list'],
   finance: ['account', 'category'],

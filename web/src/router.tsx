@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -12,14 +12,30 @@ import { AreaFrame } from '@/layout/AreaFrame';
 import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
-import { ModuleLibrary } from '@/pages/ModuleLibrary';
 import { NotFound } from '@/pages/NotFound';
-import { OAuthCallback } from '@/pages/OAuthCallback';
 import { CategoryPage, SettingsIndex, SettingsLayout } from '@/pages/settings/SettingsLayout';
-import { ShareTarget } from '@/pages/ShareTarget';
-import { ToolLibrary } from '@/pages/ToolLibrary';
+import { lazyOnline } from '@/core/net/OnlineChunk';
 
 import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
+
+// Pages that a start rarely needs load on first visit (still precached, so they work offline; without a
+// service worker and offline, `lazyOnline` shows a calm note instead of an error screen). Settings stay
+// in the start bundle: offline client-side navigation into them must work without a worker
+// (docs/perf/COLD-START-2026-10.md).
+const ModuleLibrary = lazyOnline<object>(() =>
+  import('@/pages/ModuleLibrary').then((m) => ({ default: m.ModuleLibrary })),
+);
+const ToolLibrary = lazyOnline<object>(() =>
+  import('@/pages/ToolLibrary').then((m) => ({ default: m.ToolLibrary })),
+);
+const OAuthCallback = lazyOnline<object>(() =>
+  import('@/pages/OAuthCallback').then((m) => ({ default: m.OAuthCallback })),
+);
+const ShareTarget = lazyOnline<object>(() =>
+  import('@/pages/ShareTarget').then((m) => ({ default: m.ShareTarget })),
+);
+
+const page = (node: ReactNode) => <Suspense fallback={<PageFallback />}>{node}</Suspense>;
 
 function ModuleDisabled() {
   const toast = useUiStore((s) => s.toast);
@@ -112,7 +128,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'library',
           element: (
             <PageContainer key="ModuleLibrary" variant="wide">
-              <ModuleLibrary />
+              {page(<ModuleLibrary />)}
             </PageContainer>
           ),
         },
@@ -120,7 +136,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'tools',
           element: (
             <PageContainer key="ToolLibrary" variant="wide">
-              <ToolLibrary />
+              {page(<ToolLibrary />)}
             </PageContainer>
           ),
         },
@@ -129,7 +145,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'oauth/callback',
           element: (
             <PageContainer key="OAuthCallback" variant="narrow">
-              <OAuthCallback />
+              {page(<OAuthCallback />)}
             </PageContainer>
           ),
         },
@@ -137,7 +153,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'share',
           element: (
             <PageContainer key="ShareTarget" variant="narrow">
-              <ShareTarget />
+              {page(<ShareTarget />)}
             </PageContainer>
           ),
         },

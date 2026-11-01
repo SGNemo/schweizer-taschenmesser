@@ -3,6 +3,7 @@ import { useModuleStates } from '@/core/modules/activation';
 import { applicableSteps, allSetupSteps, buildSetupCtx, detectDone } from './registry';
 import { newSteps, stepProgress, type SetupState, type StepProgress } from './state';
 import { useSetupState } from './hooks';
+import { MIGRATE_STEP_ID, useMigrateOverview } from './migrate';
 import type { SetupStepDef } from './types';
 
 export interface ChecklistItem {
@@ -11,6 +12,15 @@ export interface ChecklistItem {
   progress: StepProgress;
   /** Added by a later release than the one the user last went through. */
   isNew: boolean;
+  /** "Was fehlt noch": open points under the row (ids only; the card resolves the wording). */
+  sub?: ChecklistSub[];
+}
+
+export interface ChecklistSub {
+  id: string;
+  done: boolean;
+  /** Ticked by hand (nothing in the app can see it). */
+  manual: boolean;
 }
 
 export interface Checklist {
@@ -25,15 +35,23 @@ export function buildChecklist(
   allSteps: readonly Pick<SetupStepDef, 'id' | 'title' | 'since' | 'hint'>[],
   state: SetupState,
   autoDone: ReadonlySet<string> = new Set(),
+  /** Points per step id; a step with an open point stays on the list even when it was settled. */
+  subs: Readonly<Record<string, readonly ChecklistSub[]>> = {},
 ): Checklist {
   const steps = allSteps.filter((s) => !s.hint);
   const fresh = new Set(newSteps(steps, state).map((s) => s.id));
-  const items = steps.map((s) => ({
-    id: s.id,
-    title: s.title,
-    progress: stepProgress(state, s.id, autoDone.has(s.id)),
-    isNew: fresh.has(s.id),
-  }));
+  const items = steps.map((s): ChecklistItem => {
+    const sub = subs[s.id];
+    const base = stepProgress(state, s.id, autoDone.has(s.id));
+    const progress = base === 'done' && sub?.some((x) => !x.done) ? 'open' : base;
+    return {
+      id: s.id,
+      title: s.title,
+      progress,
+      isNew: fresh.has(s.id),
+      ...(sub && sub.length > 0 ? { sub: [...sub] } : {}),
+    };
+  });
   return {
     total: items.length,
     done: items.filter((i) => i.progress === 'done').length,
@@ -51,21 +69,23 @@ export function showChecklist(state: SetupState, list: Checklist): boolean {
 export function useChecklist(steps: readonly SetupStepDef[] = allSetupSteps) {
   const state = useSetupState();
   const modules = useModuleStates();
+  const migrate = useMigrateOverview();
   const [list, setList] = useState<Checklist | undefined>();
 
   useEffect(() => {
-    if (!state || !modules) return;
+    if (!state || !modules || !migrate) return;
     let live = true;
     void (async () => {
       const ctx = { ...(await buildSetupCtx()), modules };
       const applicable = await applicableSteps(steps, ctx);
       const done = await detectDone(applicable, ctx);
-      if (live) setList(buildChecklist(applicable, state, done));
+      if (live)
+        setList(buildChecklist(applicable, state, done, { [MIGRATE_STEP_ID]: migrate.items }));
     })();
     return () => {
       live = false;
     };
-  }, [state, modules, steps]);
+  }, [state, modules, migrate, steps]);
 
   return state && list ? { state, list } : undefined;
 }

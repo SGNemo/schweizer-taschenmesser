@@ -8,7 +8,10 @@ import { setPlatform, type PlatformService } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
 import { setSettings } from '@/core/settings/settings';
 import { clearTileCache } from '../tiles';
-import { SAMPLE_CENTER, sampleRegion } from '../own/sample';
+import { resetBuilder } from '../own/builder';
+import { overpassFixture } from '../own/fixtures';
+import { encodePmtiles } from '../own/pmtiles';
+import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../own/sample';
 import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 
 // jsdom has no canvas: the own map's drawing is a tiny PNG stand-in here (the renderer has its own tests).
@@ -20,6 +23,10 @@ import MapsPage from '../routes/MapsPage';
 const requests: string[] = [];
 const hostOf = (url: string): string => new URL(url).host;
 let blockTiles = false;
+/** The region file an own host serves (range requests); `fileStatus` lets the host fail. */
+const SAMPLE_FILE = samplePmtiles();
+let fileBytes: Uint8Array = SAMPLE_FILE;
+let fileStatus = 200;
 const MOTIS_OK = {
   itineraries: [
     {
@@ -78,9 +85,18 @@ function install() {
   const web = createWebPlatform();
   const platform: PlatformService = {
     ...web,
-    fetch: (async (input: RequestInfo | URL) => {
+    fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       requests.push(url);
+      if (hostOf(url) === 'maps.example') {
+        if (blockTiles) throw new NetBlockedError();
+        if (fileStatus !== 200) return new Response(null, { status: fileStatus });
+        const range = String((init?.headers as Record<string, string> | undefined)?.Range ?? '');
+        const m = /^bytes=(\d+)-(\d+)$/.exec(range);
+        const start = m ? Number(m[1]) : 0;
+        const end = m ? Math.min(Number(m[2]), fileBytes.length - 1) : fileBytes.length - 1;
+        return new Response(fileBytes.slice(start, end + 1), { status: m ? 206 : 200 });
+      }
       if (hostOf(url) === 'nominatim.openstreetmap.org') {
         return new Response(
           JSON.stringify([
@@ -88,6 +104,7 @@ function install() {
               display_name: 'Schlossplatz, Erlangen, Bayern, Deutschland',
               lat: '49.5981',
               lon: '11.0044',
+              boundingbox: ['49.5950', '49.6010', '11.0000', '11.0090'],
             },
             { display_name: 'Schlossplatz, Stuttgart', lat: '48.7785', lon: '9.1800' },
           ]),
@@ -97,6 +114,10 @@ function install() {
       if (hostOf(url) === 'api.transitous.org') {
         if (blockTiles) throw new NetBlockedError();
         return new Response(JSON.stringify(transitAnswer), { status: 200 });
+      }
+      if (hostOf(url) === 'overpass-api.de') {
+        if (blockTiles) throw new NetBlockedError();
+        return new Response(JSON.stringify(overpassFixture()), { status: 200 });
       }
       if (hostOf(url) === 'routing.openstreetmap.de') {
         if (blockTiles) throw new NetBlockedError();
@@ -119,6 +140,8 @@ const open = (url = '/maps') =>
 beforeEach(async () => {
   requests.length = 0;
   blockTiles = false;
+  fileBytes = SAMPLE_FILE;
+  fileStatus = 200;
   routingAnswer = { status: 200, body: OSRM_OK };
   transitAnswer = MOTIS_OK;
   let n = 0;
@@ -131,6 +154,7 @@ beforeEach(async () => {
   await db.table('maps_region').clear();
   await db.table('maps_tile').clear();
   await db.table('_settings').clear();
+  resetBuilder();
 });
 afterEach(() => {
   cleanup();
@@ -470,5 +494,180 @@ describe('own map (stored vector tiles)', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(tileRequests()).toEqual([]);
     expect(screen.queryByText(/konnten nicht geladen werden/)).toBeNull();
+  });
+});
+
+/**
+ * Searches Erlangen on the map tab and picks the hit with an area: the card that offers the own map.
+ * The first map frame keeps the event loop busy; on a loaded CI runner the (mocked) search can take
+ * longer than the one-second default of `findBy`, so these lookups wait up to five.
+ */
+async function chooseErlangen() {
+  open('/maps?view=map');
+  const input = await screen.findByLabelText('Ort oder Adresse suchen');
+  fireEvent.change(input, { target: { value: 'Schlossplatz Erlangen' } });
+  fireEvent.submit(input.closest('form')!);
+  const slow = { timeout: 5000 };
+  const hits = await screen.findByTestId('map-hits', undefined, slow);
+  fireEvent.click(await within(hits).findByText(/Erlangen, Bayern/, undefined, slow));
+  return screen.findByTestId('map-selection', undefined, slow);
+}
+
+describe('own map build (Overpass)', () => {
+  const overpassRequests = () => requests.filter((u) => hostOf(u) === 'overpass-api.de');
+  const blobTiles = () => document.querySelectorAll('[data-testid="tile-map"] img[src^="blob:"]');
+
+  it('a search hit with an area offers the own map; a click builds it cell by cell, nothing before', async () => {
+    const card = await chooseErlangen();
+    expect(overpassRequests()).toEqual([]);
+    fireEvent.click(within(card).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const row = await screen.findByTestId('map-region');
+    expect(row).toHaveTextContent('Schlossplatz');
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 5000 });
+    expect(row).toHaveTextContent(/abgespeckt · Fertig · \d+ Teile/);
+    const region = (await regionRepo.active().toArray())[0]!;
+    expect(region.cells.done).toBe(region.cells.total);
+    expect(overpassRequests()).toHaveLength(region.cells.total);
+    expect(await tileRepo.active().count()).toBeGreaterThan(region.cells.total);
+    // The map now draws the stored tiles itself.
+    await waitFor(() => expect(blobTiles().length).toBeGreaterThan(0));
+    expect(screen.getByText(/Die Karte entsteht/)).toBeTruthy();
+    // Nothing of it is queued for sync.
+    expect(
+      await db.table('_outbox').where('collection').anyOf(['maps_region', 'maps_tile']).count(),
+    ).toBe(0);
+  });
+
+  it('a coordinate hit has no area and no build button; a built map can be deleted after a second look', async () => {
+    open('/maps?view=map');
+    const input = await screen.findByLabelText('Ort oder Adresse suchen');
+    fireEvent.change(input, { target: { value: '49.5981, 11.0044' } });
+    fireEvent.submit(input.closest('form')!);
+    fireEvent.click(await screen.findByText('49.5981, 11.0044', { selector: 'span' }));
+    const card = await screen.findByTestId('map-selection');
+    expect(within(card).queryByRole('button', { name: 'Eigene Karte erzeugen' })).toBeNull();
+    cleanup();
+
+    const hit = await chooseErlangen();
+    fireEvent.click(within(hit).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const row = await screen.findByTestId('map-region');
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 5000 });
+    fireEvent.click(within(row).getByRole('button', { name: 'Karte löschen' }));
+    expect(within(row).getByText('Wirklich löschen?')).toBeTruthy();
+    fireEvent.click(within(row).getByRole('button', { name: 'Behalten' }));
+    expect(within(row).queryByText('Wirklich löschen?')).toBeNull();
+    fireEvent.click(within(row).getByRole('button', { name: 'Karte löschen' }));
+    fireEvent.click(within(row).getByRole('button', { name: 'Karte löschen' }));
+    await waitFor(async () => expect(await regionRepo.table.count()).toBe(0));
+    expect(await tileRepo.table.count()).toBe(0);
+    await waitFor(() => expect(screen.queryByTestId('map-region')).toBeNull());
+  });
+
+  it('a blocked network pauses the build with a calm reason and "Weiter"', async () => {
+    const card = await chooseErlangen();
+    blockTiles = true;
+    fireEvent.click(within(card).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const row = await screen.findByTestId('map-region');
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'paused'), { timeout: 5000 });
+    expect(row).toHaveTextContent(/Angehalten bei 0 von \d+ · Keine Verbindung/);
+    expect(within(row).getByRole('button', { name: 'Weiter' })).toBeTruthy();
+  });
+
+  it('a finished lean map can be made detailed; two maps offer "Alle Karten löschen"', async () => {
+    const card = await chooseErlangen();
+    fireEvent.click(within(card).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const row = await screen.findByTestId('map-region');
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 5000 });
+    expect(row).toHaveTextContent(/KB|MB/);
+    expect(row).toHaveTextContent(/Stand /);
+    const leanTiles = await tileRepo.active().count();
+    fireEvent.click(within(row).getByRole('button', { name: 'Genauer machen' }));
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'building'));
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 10_000 });
+    expect(row).toHaveTextContent(/genau · Fertig/);
+    expect(within(row).queryByRole('button', { name: 'Genauer machen' })).toBeNull();
+    const rows = await tileRepo.active().toArray();
+    expect(rows.length).toBeGreaterThan(leanTiles);
+    expect(rows.some((r) => r.z === 16)).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Alle Karten löschen' })).toBeNull();
+
+    // A second region (stored directly: a cache row) brings the "delete all" step.
+    await regionRepo.create({
+      name: 'Zweite',
+      bbox: { minLat: 48, maxLat: 48.01, minLon: 11, maxLon: 11.01 },
+      level: 'lean',
+      zooms: { min: 8, max: 14 },
+      cellZoom: 13,
+      cells: { done: 1, total: 1 },
+      status: 'done',
+      bytes: 10,
+    });
+    const all = await screen.findByRole('button', { name: 'Alle Karten löschen' });
+    fireEvent.click(all);
+    expect(screen.getByText('Alle eigenen Karten löschen?')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Alle Karten löschen' }));
+    await waitFor(async () => expect(await regionRepo.table.count()).toBe(0));
+    expect(await tileRepo.table.count()).toBe(0);
+  });
+});
+
+describe('own map from a region file', () => {
+  const FILE_URL = 'https://maps.example/nemostadt.pmtiles';
+  const fileRequests = () => requests.filter((u) => hostOf(u) === 'maps.example');
+  const overpassRequests = () => requests.filter((u) => hostOf(u) === 'overpass-api.de');
+  const blobTiles = () => document.querySelectorAll('[data-testid="tile-map"] img[src^="blob:"]');
+
+  it('with a file entered, the tiles are copied from it with range requests; the row credits the file', async () => {
+    await setSettings('module.maps', { regionUrl: FILE_URL });
+    const card = await chooseErlangen();
+    expect(fileRequests()).toEqual([]);
+    fireEvent.click(within(card).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const row = await screen.findByTestId('map-region');
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 10_000 });
+    expect(row).toHaveTextContent(/aus Kartendatei · genau · Fertig · \d+ Teile/);
+    expect(row).toHaveTextContent('Kartendaten © OpenStreetMap-Mitwirkende (Beispiel)');
+    expect(within(row).queryByRole('button', { name: 'Genauer machen' })).toBeNull();
+    expect(overpassRequests()).toEqual([]);
+    expect(fileRequests().length).toBeGreaterThan(1);
+    expect(screen.getByText(/Die Karte entsteht/)).toBeTruthy();
+    expect(screen.queryByText(/nicht erreichbar|deckt dieses Gebiet nicht/)).toBeNull();
+    const rows = await tileRepo.active().toArray();
+    expect(rows.some((r) => r.z === 16)).toBe(true);
+    const region = (await regionRepo.active().toArray())[0]!;
+    expect(region).toMatchObject({ source: 'file', sourceUrl: FILE_URL, level: 'full' });
+    await waitFor(() => expect(blobTiles().length).toBeGreaterThan(0));
+  });
+
+  it('a file that does not answer, or does not cover the place, leaves the build to the map data service and says so', async () => {
+    await setSettings('module.maps', { regionUrl: FILE_URL });
+    fileStatus = 404;
+    const card = await chooseErlangen();
+    fireEvent.click(within(card).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const row = await screen.findByTestId('map-region');
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 5000 });
+    expect(screen.getByText(/Die Kartendatei ist gerade nicht erreichbar/)).toBeTruthy();
+    expect(row).toHaveTextContent(/abgespeckt · Fertig/);
+    expect(row).not.toHaveTextContent('Kartendatei');
+    expect(overpassRequests().length).toBeGreaterThan(0);
+    expect(fileRequests()).toHaveLength(1);
+    cleanup();
+
+    requests.length = 0;
+    fileStatus = 200;
+    fileBytes = encodePmtiles({
+      tiles: [],
+      bounds: { minLat: 48, maxLat: 48.1, minLon: 9, maxLon: 9.1 },
+      minZoom: 8,
+      maxZoom: 14,
+    });
+    await db.table('maps_region').clear();
+    await db.table('maps_tile').clear();
+    const again = await chooseErlangen();
+    fireEvent.click(within(again).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const second = await screen.findByTestId('map-region');
+    await waitFor(() => expect(second).toHaveAttribute('data-status', 'done'), { timeout: 5000 });
+    expect(screen.getByText(/Die Kartendatei deckt dieses Gebiet nicht ab/)).toBeTruthy();
+    expect(fileRequests()).toHaveLength(1);
+    expect(overpassRequests().length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enable, openFoldedGroup, ready, showAllWidgets, showPreview } from './helpers';
-import { SAMPLE_CENTER, sampleRegion } from '../src/modules/maps/own/sample';
+import { overpassFixture } from '../src/modules/maps/own/fixtures';
+import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../src/modules/maps/own/sample';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -38,8 +39,16 @@ async function mockOsm(page: Page) {
           display_name: 'Schlossplatz, Erlangen, Bayern, Deutschland',
           lat: '49.5981',
           lon: '11.0044',
+          boundingbox: ['49.5950', '49.6010', '11.0000', '11.0090'],
         },
       ],
+    });
+  });
+  await page.route('**://overpass-api.de/**', async (route) => {
+    seen.push(route.request().url());
+    await route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: overpassFixture(),
     });
   });
   await page.route('**://api.transitous.org/**', async (route) => {
@@ -101,6 +110,34 @@ async function mockOsm(page: Page) {
             ],
           },
         ],
+      },
+    });
+  });
+  // An own host with a region file: answers range requests (and a preflight, should one come).
+  const file = samplePmtiles();
+  await page.route('**://maps.example/**', async (route) => {
+    seen.push(route.request().url());
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-headers': '*',
+          'access-control-allow-methods': 'GET',
+        },
+      });
+      return;
+    }
+    const m = /^bytes=(\d+)-(\d+)$/.exec(route.request().headers()['range'] ?? '');
+    const start = m ? Number(m[1]) : 0;
+    const end = m ? Math.min(Number(m[2]), file.length - 1) : file.length - 1;
+    await route.fulfill({
+      status: m ? 206 : 200,
+      body: Buffer.from(file.subarray(start, end + 1)),
+      contentType: 'application/octet-stream',
+      headers: {
+        'access-control-allow-origin': '*',
+        'content-range': `bytes ${start}-${end}/${file.length}`,
       },
     });
   });
@@ -339,5 +376,105 @@ test.describe('Karten & Orte', () => {
     expect(seen.slice(before).filter((u) => hostOf(u) === 'tile.openstreetmap.org')).toEqual([]);
     await expect(page.getByTestId('tile-map').locator('img')).toHaveCount(0);
     await expect(page.getByText(/konnten nicht geladen werden/)).toHaveCount(0);
+  });
+
+  test('the own map is built from the map data service only on click, cell by cell, and can be deleted', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    await enable(page, 'maps');
+    await ready(page, '/maps?view=map');
+    await page.getByLabel('Ort oder Adresse suchen').fill('Schlossplatz Erlangen');
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    await page
+      .getByTestId('map-hits')
+      .getByText(/Schlossplatz, Erlangen/)
+      .click();
+    const card = page.getByTestId('map-selection');
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de')).toEqual([]);
+    // The first build brings its own one-time notice (clicked away by the helper), then the requests.
+    await card.getByRole('button', { name: 'Eigene Karte erzeugen' }).click();
+    const row = page.getByTestId('map-region');
+    await expect(row).toContainText('Schlossplatz');
+    await expect(row).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+    await expect(row).toContainText(/Fertig · \d+ Teile/);
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de').length).toBeGreaterThanOrEqual(1);
+    // Every request is a POST with the query in its body, never in the address.
+    for (const u of seen.filter((u) => hostOf(u) === 'overpass-api.de'))
+      expect(u).not.toContain('data=');
+    // The map draws its own tiles for the built area.
+    const map = page.getByTestId('tile-map');
+    await expect.poll(() => map.locator('img[src^="blob:"]').count()).toBeGreaterThan(0);
+    await test
+      .info()
+      .attach('own-map-built', { body: await map.screenshot(), contentType: 'image/png' });
+
+    // "Genauer machen": the same area again at the full level (buildings, paths, names).
+    const before = seen.filter((u) => hostOf(u) === 'overpass-api.de').length;
+    await row.getByRole('button', { name: 'Genauer machen' }).click();
+    await expect(row).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+    await expect(row).toContainText(/genau · Fertig/);
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de').length).toBeGreaterThan(before);
+    await expect(row.getByRole('button', { name: 'Genauer machen' })).toHaveCount(0);
+
+    // Zoomed out, the shown area has cells no own map holds: "Hier erweitern" builds just those
+    // (two steps: a wide desktop window at z12 would mean dozens of cells, a second each).
+    for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Verkleinern' }).click();
+    await page.getByTestId('map-extend').click();
+    await expect(page.getByTestId('map-region')).toHaveCount(2);
+    // The e2e clock is frozen, so both regions share a creation time: find the new one by name.
+    const section = page.getByTestId('map-region').filter({ hasText: 'Kartenausschnitt' });
+    await expect(section).toHaveCount(1);
+    await expect(section).toHaveAttribute('data-status', 'done', { timeout: 45_000 });
+
+    await page.getByRole('button', { name: 'Alle Karten löschen' }).click();
+    await expect(page.getByText('Alle eigenen Karten löschen?')).toBeVisible();
+    await page.getByRole('button', { name: 'Alle Karten löschen' }).click();
+    await expect(page.getByTestId('map-region')).toHaveCount(0);
+  });
+
+  test('a region file on an own host is copied with range requests; the map data service is never asked', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    const fileRequests = () => seen.filter((u) => hostOf(u) === 'maps.example');
+    await enable(page, 'maps');
+    // The address of the file is a module setting (saved on leaving the field).
+    await ready(page, '/settings/module');
+    await openFoldedGroup(page, 'module-maps', 'fields');
+    const field = page.getByLabel('Kartendatei (Adresse)');
+    await field.fill('https://maps.example/nemostadt.pmtiles');
+    await field.blur();
+    await ready(page, '/settings/module');
+    await openFoldedGroup(page, 'module-maps', 'fields');
+    await expect(page.getByLabel('Kartendatei (Adresse)')).toHaveValue(
+      'https://maps.example/nemostadt.pmtiles',
+    );
+    expect(fileRequests()).toEqual([]);
+
+    await ready(page, '/maps?view=map');
+    await page.getByLabel('Ort oder Adresse suchen').fill('Schlossplatz Erlangen');
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    await page
+      .getByTestId('map-hits')
+      .getByText(/Schlossplatz, Erlangen/)
+      .click();
+    await page
+      .getByTestId('map-selection')
+      .getByRole('button', { name: 'Eigene Karte erzeugen' })
+      .click();
+    const row = page.getByTestId('map-region');
+    await expect(row).toHaveAttribute('data-status', 'done', { timeout: 30_000 });
+    await expect(row).toContainText(/aus Kartendatei · genau · Fertig/);
+    await expect(row).toContainText('Kartendaten © OpenStreetMap-Mitwirkende (Beispiel)');
+    await expect(row.getByRole('button', { name: 'Genauer machen' })).toHaveCount(0);
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de')).toEqual([]);
+    expect(fileRequests().length).toBeGreaterThan(1);
+    // The map draws the copied tiles itself.
+    const map = page.getByTestId('tile-map');
+    await expect.poll(() => map.locator('img[src^="blob:"]').count()).toBeGreaterThan(0);
+    await test
+      .info()
+      .attach('own-map-file', { body: await map.screenshot(), contentType: 'image/png' });
   });
 });

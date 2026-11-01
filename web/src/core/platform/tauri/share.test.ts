@@ -21,4 +21,14 @@ describe('share service', () => {
     invoke.mockResolvedValueOnce(null);
     expect(await s.takePending()).toBeUndefined();
   });
+
+  it('passes on only the three known shortcut targets', async () => {
+    const s = createShare(true);
+    invoke.mockResolvedValueOnce({ title: '', text: '', open: 'capture' });
+    expect(await s.takePending()).toEqual({ title: '', text: '', open: 'capture' });
+    invoke.mockResolvedValueOnce({ title: '', text: '', open: 'today' });
+    expect((await s.takePending())?.open).toBe('today');
+    invoke.mockResolvedValueOnce({ title: '', text: '', open: '/settings/vault' });
+    expect(await s.takePending()).toEqual({ title: '', text: '' });
+  });
 });

@@ -7,6 +7,9 @@ export const attention: Strings['attention'] = {
     n === 0 || n === 1 ? `${n} fatura atrasada` : `${n} faturas atrasadas`,
   invoicesToday: (n: number) =>
     n === 0 || n === 1 ? `${n} fatura vence hoje` : `${n} faturas vencem hoje`,
+  subscriptionPrice: (name: string, from: string, to: string) =>
+    `${name} agora custa ${to} em vez de ${from}`,
+  subscriptionPriceSince: (date: string) => `Novo preço desde ${date}`,
   todosOverdue: (n: number) =>
     n === 0 || n === 1 ? `${n} tarefa atrasada` : `${n} tarefas atrasadas`,
   todosToday: (n: number) =>

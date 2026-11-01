@@ -77,6 +77,23 @@ export const quickCapture: Strings['quickCapture'] = {
   },
   todoTimeNote: (time: string) => `Time: ${time}`,
   noTargets: 'No target module is turned on.',
+  multi: {
+    lineHint: 'One line = one entry',
+    shiftEnter: 'Shift+Enter: new line. One line = one entry.',
+    listLabel: (n: number) => `Preview: ${n} entries`,
+    rowTarget: (text: string) => `Target for “${text}”`,
+    choose: 'Please choose',
+    inbox: 'Inbox',
+    financeDraft: 'Booking (draft)',
+    saveAll: (n: number) => `Save all (${n})`,
+    saved: (n: number) => `${n} things saved`,
+    change: 'Change',
+  },
+  trayToday: {
+    heading: 'Today',
+    now: 'Start on it now',
+    timer: 'Timer 25 minutes',
+  },
   tray: {
     capture: 'Capture',
     open: 'Open app',
@@ -84,7 +101,7 @@ export const quickCapture: Strings['quickCapture'] = {
     tooltip: 'Nemo',
   },
   window: {
-    hint: 'Enter saves · Tab changes the type · Esc closes',
+    hint: 'Enter saves · Shift+Enter new line · Tab changes the type · Esc closes',
   },
   settings: {
     title: 'Quick capture',
@@ -111,6 +128,9 @@ export const quickCapture: Strings['quickCapture'] = {
     },
     hotkeyStartupError: (keys: string) => `The shortcut ${keys} couldn’t be registered.`,
     closeToTray: 'Minimise to tray instead of quitting',
+    trayToday: 'Show today in the tray menu',
+    trayTodayHint:
+      'Up to 5 things of today (only title and time, never amounts) in the menu of the tray icon. A click opens the entry.',
     autostart: 'Start with Windows',
     autostartPortable:
       'The app runs from a folder with “data” (e.g. a USB stick). The autostart entry points to this location; if the stick isn’t there when you sign in, nothing starts.',

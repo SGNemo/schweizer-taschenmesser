@@ -82,3 +82,49 @@
 .draft strong {
   font-size: var(--text-lg, 1.125rem);
 }
+textarea.input {
+  padding: var(--space-2) var(--space-3);
+  line-height: 1.5;
+  resize: none;
+}
+/* "Eine Zeile = ein Eintrag": on the phone, where there is no Shift+Enter hint. */
+.lineHint {
+  display: none;
+}
+@media (pointer: coarse), (max-width: 599px) {
+  .lineHint {
+    display: block;
+  }
+  .desktopHint {
+    display: none;
+  }
+}
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.rowTitle {
+  overflow-wrap: anywhere;
+}
+.rowType {
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+}

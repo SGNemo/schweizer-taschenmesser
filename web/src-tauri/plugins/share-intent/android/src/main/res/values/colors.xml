@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shortcut icon colours: the launcher background of src-tauri/icons/android (gen-icons) and white. -->
+<resources>
+    <color name="nemo_shortcut_background">#E0550F</color>
+    <color name="nemo_shortcut_glyph">#FFFFFFFF</color>
+</resources>

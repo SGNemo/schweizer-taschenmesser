@@ -1,0 +1,4 @@
+"Auftragskonto";"Buchungstag";"Valutadatum";"Buchungstext";"Verwendungszweck";"Glaeubiger ID";"Mandatsreferenz";"Kundenreferenz (End-to-End)";"Sammlerreferenz";"Lastschrift Ursprungsbetrag";"Auslagenersatz Ruecklastschrift";"Beguenstigter/Zahlungspflichtiger";"Kontonummer/IBAN";"BIC (SWIFT-Code)";"Betrag";"Waehrung";"Info"
+"DE00123456780000000001";"03.10.26";"03.10.26";"LASTSCHRIFT";"Streaming Monatsbeitrag Oktober";"";"";"";"";"";"";"Filmfreund GmbH";"DE00999999990000000002";"TESTDEFFXXX";"-9,99";"EUR";"Umsatz gebucht"
+"DE00123456780000000001";"01.10.26";"01.10.26";"GEHALT/RENTE";"Gehalt Oktober";"";"";"";"";"";"";"Beispiel AG";"DE00999999990000000003";"TESTDEFFXXX";"2.345,67";"EUR";"Umsatz gebucht"
+"DE00123456780000000001";"02.10.26";"02.10.26";"KARTENZAHLUNG";"Einkauf Lebensmittel";"";"";"";"";"";"";"Marktkauf Mustertal";"";"";"-23,40";"EUR";"Umsatz gebucht"

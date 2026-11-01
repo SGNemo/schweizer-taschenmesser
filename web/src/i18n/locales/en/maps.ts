@@ -21,6 +21,15 @@ export const maps: Strings['maps'] = {
     offlineOnly: 'Own map only (offline)',
     offlineOnlyHelp:
       'Shows only the maps you built yourself. Outside them the area stays empty and nothing is loaded from the internet.',
+    overpassUrl: 'Map data (address)',
+    overpassUrlHelp:
+      'An Overpass-compatible service the own map is built from. Default: overpass-api.de (OpenStreetMap, light use only).',
+    showBuildProgress: 'Show progress under the map',
+    showBuildProgressHelp:
+      'A calm line while an own map is being built. You can switch it off any time.',
+    regionUrl: 'Region file (address)',
+    regionUrlHelp:
+      'A prebuilt region file (PMTiles) on your own server. When set, own maps are built from it instead of the Overpass service; https only.',
   },
   tabs: { label: 'View', places: 'Places', routes: 'Routes', map: 'Map' },
   empty: { places: 'No places yet.', routes: 'No routes yet.' },
@@ -139,6 +148,43 @@ export const maps: Strings['maps'] = {
     arr: 'arr.',
     changes: (n: number) => (n === 0 ? 'Direct' : n === 1 ? '1 change' : `${n} changes`),
     kinds: { walk: 'On foot', train: 'Train', bus: 'Bus', tram: 'Tram', other: 'Ride' },
+  },
+  own: {
+    title: 'Own maps',
+    build: 'Build my own map',
+    level: { lean: 'lean', full: 'detailed' },
+    building: (done: number, total: number) =>
+      `The world is slowly taking shape · ${done} of ${total}`,
+    overview: 'Drawing the overview …',
+    paused: (done: number, total: number) => `Paused at ${done} of ${total}`,
+    queued: 'Waits until the other map is finished',
+    done: (n: number) => `Done · ${n} pieces`,
+    started: 'The map is being built. You can carry on, it fills in by itself.',
+    capped: 'The area was large. The centre comes first.',
+    pause: 'Pause',
+    resume: 'Continue',
+    remove: 'Delete map',
+    confirmRemove: 'Really delete?',
+    keep: 'Keep',
+    removed: 'Map deleted',
+    upgrade: 'Make it detailed',
+    extend: 'Extend here',
+    viewportName: 'Map section',
+    covered: 'This section is already in your map.',
+    removeAll: 'Delete all maps',
+    confirmRemoveAll: 'Delete all own maps?',
+    asOf: (date: string) => `as of ${date}`,
+    fileMiss:
+      'The region file does not cover this area. The map is built from the Overpass service.',
+    fileUnreachable:
+      'The region file cannot be reached right now. The map is built from the Overpass service.',
+    fromFile: 'from region file',
+    reasons: {
+      busy: 'The map service is busy right now. Continue later.',
+      network: 'The map service cannot be reached right now. Continue later.',
+      blocked: 'No connection: the network is blocked (Settings → Connections).',
+      error: 'The answer of the map service was not readable. Try again later.',
+    },
   },
   apps: {
     osm: 'OpenStreetMap',

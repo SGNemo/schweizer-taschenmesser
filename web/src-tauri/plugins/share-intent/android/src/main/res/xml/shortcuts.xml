@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher shortcuts (long-press on the app icon). Static, so they exist right after install.
+  Resource XML knows no ${applicationId}: the target below is the stable app id, and the Dev-Preview
+  workflow rewrites it to the dev id right after `tauri android init` (step "Application id into the
+  launcher shortcuts"; scripts/lib/androidShortcuts.test.ts pins both). The extra only names one of
+  three fixed screens; the app reads nothing else from it and the shortcuts carry no data.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/nemo_shortcut_capture"
+        android:shortcutId="capture"
+        android:shortcutLongLabel="@string/nemo_shortcut_capture_long"
+        android:shortcutShortLabel="@string/nemo_shortcut_capture_short">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="io.github.sgnemo.taschenmesser.MainActivity"
+            android:targetPackage="io.github.sgnemo.taschenmesser">
+            <extra
+                android:name="io.github.sgnemo.taschenmesser.shareintent.OPEN"
+                android:value="capture" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/nemo_shortcut_search"
+        android:shortcutId="search"
+        android:shortcutLongLabel="@string/nemo_shortcut_search_long"
+        android:shortcutShortLabel="@string/nemo_shortcut_search_short">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="io.github.sgnemo.taschenmesser.MainActivity"
+            android:targetPackage="io.github.sgnemo.taschenmesser">
+            <extra
+                android:name="io.github.sgnemo.taschenmesser.shareintent.OPEN"
+                android:value="search" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/nemo_shortcut_today"
+        android:shortcutId="today"
+        android:shortcutLongLabel="@string/nemo_shortcut_today_long"
+        android:shortcutShortLabel="@string/nemo_shortcut_today_short">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="io.github.sgnemo.taschenmesser.MainActivity"
+            android:targetPackage="io.github.sgnemo.taschenmesser">
+            <extra
+                android:name="io.github.sgnemo.taschenmesser.shareintent.OPEN"
+                android:value="today" />
+        </intent>
+    </shortcut>
+</shortcuts>

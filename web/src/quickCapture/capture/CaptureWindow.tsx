@@ -13,7 +13,8 @@ export const SAVED_MS = 3000;
 /**
  * Content of the small capture window. Each time the shell opens it, the form starts over (and,
  * only if the user switched that on, is pre-filled from the clipboard). After saving, a short
- * confirmation with "Rückgängig" replaces the form.
+ * confirmation with "Rückgängig" replaces the form; for several entries at once it offers
+ * "Ändern", which takes them all back and puts the text into the form again.
  */
 export function CaptureWindow() {
   const [session, setSession] = useState(0);
@@ -54,9 +55,12 @@ export function CaptureWindow() {
     if (!saved) return;
     clearTimeout(timer.current);
     await saved.undo();
+    // Several entries: their text comes back into the form to change the rows.
+    setPrefill(saved.count && saved.count > 1 ? (saved.text ?? '') : '');
     setSaved(null);
     setSession((s) => s + 1);
   };
+  const many = !!saved?.count && saved.count > 1;
 
   return (
     <main
@@ -67,10 +71,14 @@ export function CaptureWindow() {
     >
       {saved ? (
         <div className={styles.saved} role="status" data-testid="capture-saved">
-          <strong>{t.quickCapture.saved(t.quickCapture.target[saved.type])}</strong>
+          <strong>
+            {many
+              ? t.quickCapture.multi.saved(saved.count!)
+              : t.quickCapture.saved(t.quickCapture.target[saved.type])}
+          </strong>
           <div className={styles.actions}>
             <Button onClick={() => void undo()} data-autofocus>
-              {t.quickCapture.undo}
+              {many ? t.quickCapture.multi.change : t.quickCapture.undo}
             </Button>
             <Button variant="primary" onClick={hide}>
               {t.actions.close}
