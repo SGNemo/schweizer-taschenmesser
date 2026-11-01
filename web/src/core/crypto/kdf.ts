@@ -78,6 +78,12 @@ export function assertKdfParams(p: KdfParams): void {
   if (decodeSalt(p.salt).length < 16) throw new CryptoError('malformed', 'salt too short');
 }
 
+/** Argon2 from `hash-wasm`, loaded on first use (destructured so only Argon2 is bundled). */
+const loadArgon2 = () => import('hash-wasm').then(({ argon2id }) => argon2id);
+
+/** Loads the Argon2 WASM module ahead of use (idle preload after start, for offline unlock). */
+export const preloadArgon2 = (): Promise<unknown> => loadArgon2();
+
 /** NFKC so that the same password typed on different keyboards/OSes derives the same key. */
 const passwordBytes = (password: string) => new TextEncoder().encode(password.normalize('NFKC'));
 
@@ -87,7 +93,7 @@ export async function deriveKey(
   usages: KeyUsage[] = ['encrypt', 'decrypt'],
 ): Promise<CryptoKey> {
   assertKdfParams(params);
-  const { argon2id } = await import('hash-wasm');
+  const argon2id = await loadArgon2();
   const raw = await argon2id({
     password: passwordBytes(password),
     salt: decodeSalt(params.salt),

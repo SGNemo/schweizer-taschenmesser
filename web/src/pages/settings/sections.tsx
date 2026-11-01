@@ -30,7 +30,9 @@ import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/la
  * titles, keywords, fields) stays eager because the shell, the command palette and the search need it
  * at start. `CategoryPage` renders inside the router's Suspense (docs/perf/COLD-START-2026-10.md).
  */
+const sectionLoaders = new Set<() => Promise<unknown>>();
 function lazySection<K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) {
+  sectionLoaders.add(load);
   return lazy(async (): Promise<{ default: ComponentType }> => ({ default: (await load())[name] }));
 }
 const AboutSection = lazySection(() => import('./AboutSections'), 'AboutSection');
@@ -85,6 +87,10 @@ const SetupSection = lazySection(() => import('./SetupSection'), 'SetupSection')
 const SyncSection = lazySection(() => import('./SyncSection'), 'SyncSection');
 const ToolsSection = lazySection(() => import('./ToolsSection'), 'ToolsSection');
 const UpdateSection = lazySection(() => import('./UpdateSection'), 'UpdateSection');
+
+/** Loads every section component (right after start, `core/modules/idlePreload.ts`). */
+export const preloadSectionComponents = (): Promise<unknown> =>
+  Promise.all([...sectionLoaders].map((load) => load()));
 
 const s = t.settings;
 

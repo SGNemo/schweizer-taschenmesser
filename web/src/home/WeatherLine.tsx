@@ -10,9 +10,10 @@ import { tWeather } from '@/strings.weather';
 import { Button, Icon } from '@/ui';
 import styles from './Home.module.css';
 
-/** The forecast dialog (chart, air quality) loads on the first tap, not with the Overview. */
+/** The forecast dialog (chart, air quality) loads on the first tap (or idle after start), not with the Overview. */
+export const loadWeatherPreview = () => import('./WeatherPreview');
 const WeatherPreview = lazy(() =>
-  import('./WeatherPreview').then((m) => ({ default: m.WeatherPreview })),
+  loadWeatherPreview().then((m) => ({ default: m.WeatherPreview })),
 );
 
 const SETTINGS = settingsPath('verbindungen', 'weather');
