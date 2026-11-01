@@ -37,7 +37,7 @@ const SettingsIndex = lazy(() => settingsPage().then((m) => ({ default: m.Settin
 const CategoryPage = lazy(() => settingsPage().then((m) => ({ default: m.CategoryPage })));
 
 /**
- * Right after the first render: the parts above (and the other start-path cuts) that must also work
+ * In the first idle slot after the start: the parts above (and the other start-path cuts) that must also work
  * offline without a service worker. OAuth and the Spotify player need the network anyway.
  */
 const IDLE_PRELOAD = [
