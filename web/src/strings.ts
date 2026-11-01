@@ -771,7 +771,7 @@ export const de = {
         settingsRow: 'Umzug von einer anderen App …',
         settingsHint:
           'Von Google, Todoist, Obsidian, einer Bank-App oder Bitwarden: führt zu den passenden Importen.',
-        settingsOpen: 'Öffnen',
+        settingsOpen: 'Herkunft wählen',
       },
       startdata: {
         title: 'Importieren',

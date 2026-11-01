@@ -220,7 +220,7 @@ export const setup: Strings['setup'] = {
       settingsRow: 'Moving from another app …',
       settingsHint:
         'From Google, Todoist, Obsidian, a banking app or Bitwarden: leads to the matching imports.',
-      settingsOpen: 'Open',
+      settingsOpen: 'Choose origin',
     },
     startdata: {
       title: 'Import',

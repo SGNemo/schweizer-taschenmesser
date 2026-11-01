@@ -225,7 +225,7 @@ export const setup: Strings['setup'] = {
       settingsRow: 'Mudança de outro app …',
       settingsHint:
         'Do Google, Todoist, Obsidian, de um app de banco ou do Bitwarden: leva às importações certas.',
-      settingsOpen: 'Abrir',
+      settingsOpen: 'Escolher origem',
     },
     startdata: {
       title: 'Importar',

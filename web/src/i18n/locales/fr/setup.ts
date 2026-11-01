@@ -231,7 +231,7 @@ export const setup: Strings['setup'] = {
       settingsRow: 'Déménagement depuis une autre appli …',
       settingsHint:
         'Depuis Google, Todoist, Obsidian, une appli bancaire ou Bitwarden : mène aux imports adaptés.',
-      settingsOpen: 'Ouvrir',
+      settingsOpen: 'Choisir l’origine',
     },
     startdata: {
       title: 'Importer',
