@@ -4451,6 +4451,15 @@ export const de = {
       'Der Zugriff wird beim Dienst widerrufen und die gespeicherten Anmeldedaten werden von diesem Gerät gelöscht.',
     keepData: 'Übernommene Termine behalten',
     deleteData: 'Übernommene Termine löschen',
+    accounts: 'Konten',
+    accountsHint:
+      'Mehrere Google-Konten sind möglich. Jedes Konto wird einzeln angemeldet und lässt sich einzeln entfernen.',
+    addAccount: 'Weiteres Konto hinzufügen',
+    accountUnnamed: (n: number) => `Konto ${n}`,
+    removeAccount: 'Konto entfernen',
+    removeAccountTitle: (name: string) => `${name} entfernen?`,
+    removeAccountBody:
+      'Der Zugriff dieses Kontos wird beim Dienst widerrufen und seine Anmeldedaten werden von diesem Gerät gelöscht. Die anderen Konten bleiben.',
     client: {
       title: 'Eigene Google-Anwendung',
       intro:

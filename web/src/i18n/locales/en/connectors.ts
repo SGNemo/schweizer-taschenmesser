@@ -51,6 +51,15 @@ export const connectors: Strings['connectors'] = {
     'Access is revoked at the service and the stored sign-in data is deleted from this device.',
   keepData: 'Keep imported events',
   deleteData: 'Delete imported events',
+  accounts: 'Accounts',
+  accountsHint:
+    'You can use several Google accounts. Each one signs in on its own and can be removed on its own.',
+  addAccount: 'Add another account',
+  accountUnnamed: (n: number) => `Account ${n}`,
+  removeAccount: 'Remove account',
+  removeAccountTitle: (name: string) => `Remove ${name}?`,
+  removeAccountBody:
+    'This account’s access is revoked at the service and its sign-in data is deleted from this device. Your other accounts stay.',
   client: {
     title: 'Your own Google app',
     intro:

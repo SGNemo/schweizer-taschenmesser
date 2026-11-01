@@ -30,6 +30,17 @@ export interface ConnectorStatus {
   message?: string;
   /** Who is connected (mail address …), if the service tells. */
   account?: string;
+  /** Further accounts of a `multiAccount` connector (the first account keeps the fields above). */
+  accounts?: ConnectorAccount[];
+}
+
+/** An additional login of the same service (own refresh token, own feature set). */
+export interface ConnectorAccount {
+  /** Stable local id (`a…`); the first account has none. */
+  id: string;
+  /** Mail address as the service reports it; absent when the service did not tell. */
+  email?: string;
+  features: string[];
 }
 
 export const DISCONNECTED: ConnectorStatus = { state: 'disconnected', features: [] };
@@ -163,6 +174,8 @@ export interface ConnectorContext {
   };
   /** Removes tokens and keys from a text before it may be shown or stored. */
   redact(text: string): string;
+  /** The additional account this context works for; absent = the first account. */
+  accountId?: string;
 }
 
 export interface CalendarCapability {
@@ -338,6 +351,10 @@ export interface ConnectorDef {
   settings?: ComponentType<{ ctx: ConnectorContext; onChanged: () => void }>;
   /** Names of the private secrets of `ctx.secrets`, so "reset this device" can remove them too. */
   secretNames?: readonly string[];
+  /** More than one login per service is possible (`addAccount`); the first keeps the plain keys. */
+  multiAccount?: boolean;
+  /** Who is signed in (mail address); best effort, errors are ignored. */
+  identify?(ctx: ConnectorContext): Promise<string | undefined>;
 }
 
 export type ConnectorErrorCode =
