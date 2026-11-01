@@ -1,0 +1,19 @@
+[package]
+name = "tauri-plugin-screen-mode"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Android: immersive mode (system bars hidden) and keep-awake for the cockpit. A stub elsewhere."
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+links = "tauri-plugin-screen-mode"
+
+[dependencies]
+tauri = { version = "2.12" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+[build-dependencies]
+tauri-plugin = { version = "2.7", features = ["build"] }
