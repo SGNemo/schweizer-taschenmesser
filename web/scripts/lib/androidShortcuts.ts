@@ -20,11 +20,8 @@ export function setShortcutAppId(xml: string, appId: string): string {
       `android:targetClass="${appId}.MainActivity"`,
     );
   const targets = (out.match(/android:targetPackage="/g) ?? []).length;
-  const classes = (
-    out.match(
-      new RegExp(`android:targetClass="${appId.replace(/\./g, '\\.')}\\.MainActivity"`, 'g'),
-    ) ?? []
-  ).length;
+  // Plain substring count: no regular expression is built from the id.
+  const classes = out.split(`android:targetClass="${appId}.MainActivity"`).length - 1;
   if (targets === 0 || targets !== classes)
     throw new Error('shortcuts.xml: every shortcut needs targetPackage and targetClass');
   return out;
