@@ -19,7 +19,7 @@ export interface EditorSurfaceProps {
   autoFocus: boolean;
   onError: (message: string) => void;
   /** Filled with imperative helpers once the editor exists. */
-  apiRef?: { current: { clear: () => void } | null };
+  apiRef?: { current: { clear: () => void; focus: () => void } | null };
 }
 
 /** The rich-text surface (lazy chunk of the notes route). Markdown in, Markdown out. */
@@ -91,7 +91,10 @@ export default function EditorSurface({
   useEffect(() => {
     editorRef.current = editor;
     if (apiRef && editor)
-      apiRef.current = { clear: () => void editor.chain().focus().clearContent(true).run() };
+      apiRef.current = {
+        focus: () => void editor.chain().focus('start').run(),
+        clear: () => void editor.chain().focus().clearContent(true).run(),
+      };
     return () => {
       if (apiRef) apiRef.current = null;
     };

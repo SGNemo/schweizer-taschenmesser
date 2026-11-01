@@ -60,7 +60,7 @@ export function NotePane(props: NotePaneProps) {
   const [error, setError] = useState('');
   const readBody = useRef<() => string>(() => initial.body);
   const titleRef = useRef(initial.title);
-  const apiRef = useRef<{ clear: () => void } | null>(null);
+  const apiRef = useRef<{ clear: () => void; focus: () => void } | null>(null);
   const callbacks = useRef(props);
   useEffect(() => {
     callbacks.current = props;
@@ -166,6 +166,12 @@ export function NotePane(props: NotePaneProps) {
               setTitle(e.target.value);
               titleRef.current = e.target.value;
               dirty();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                apiRef.current?.focus();
+              }
             }}
             data-autofocus={initial.title === '' && !initial.body ? true : undefined}
           />

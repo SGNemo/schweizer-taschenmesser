@@ -158,32 +158,35 @@ export default function NotesPage() {
 
   const loadingPane = sel?.kind === 'note' && !current && notes !== undefined;
   return (
-    <div
-      className={focusMode ? `${styles.root} ${styles.focus}` : styles.root}
-      data-writing={focusMode || undefined}
-    >
-      {showList ? list : null}
-      {showPane && !loadingPane ? (
-        <div className={styles.paneHost}>
-          <NotePane
-            key={paneKey}
-            existing={sel.kind === 'note' ? current : sel.kind === 'scratch' ? scratchNote : null}
-            scratch={sel.kind === 'scratch'}
-            prefill={sel.kind === 'new' ? prefill : undefined}
-            prefs={prefs}
-            focusMode={focusMode}
-            onToggleFocus={() => setFocusMode((v) => !v)}
-            onFullscreen={fullscreen}
-            onBack={wide ? undefined : () => setPicked({ kind: 'list' })}
-            onCreated={(id) => {
-              writeLast(id);
-              setPicked({ kind: 'note', id });
-            }}
-            onDeleted={() => (wide ? open({ kind: 'scratch' }) : setPicked({ kind: 'list' }))}
-            autoFocus={wide || sel.kind === 'new'}
-          />
-        </div>
-      ) : null}
-    </div>
+    <>
+      <h1 className="sr-only">{t.notes.title}</h1>
+      <div
+        className={focusMode ? `${styles.root} ${styles.focus}` : styles.root}
+        data-writing={focusMode || undefined}
+      >
+        {showList ? list : null}
+        {showPane && !loadingPane ? (
+          <div className={styles.paneHost}>
+            <NotePane
+              key={paneKey}
+              existing={sel.kind === 'note' ? current : sel.kind === 'scratch' ? scratchNote : null}
+              scratch={sel.kind === 'scratch'}
+              prefill={sel.kind === 'new' ? prefill : undefined}
+              prefs={prefs}
+              focusMode={focusMode}
+              onToggleFocus={() => setFocusMode((v) => !v)}
+              onFullscreen={fullscreen}
+              onBack={wide ? undefined : () => setPicked({ kind: 'list' })}
+              onCreated={(id) => {
+                writeLast(id);
+                setPicked({ kind: 'note', id });
+              }}
+              onDeleted={() => (wide ? open({ kind: 'scratch' }) : setPicked({ kind: 'list' }))}
+              autoFocus={wide || sel.kind === 'new'}
+            />
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }
