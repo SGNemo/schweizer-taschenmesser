@@ -28,11 +28,11 @@ test('the toolbar lists the everyday tools and the calculator works', async ({ p
   await expect(sheet.getByRole('alert')).toContainText('Durch null');
 
   // Percent / VAT and cost splitting are modes of the calculator.
-  await sheet.getByRole('button', { name: 'Prozent & MwSt' }).click();
+  await sheet.getByRole('button', { name: 'Prozent & Finanzen' }).click();
   await sheet.getByLabel('Prozent', { exact: true }).fill('19');
   await sheet.getByLabel('von Grundwert').fill('200');
   await expect(sheet.getByRole('status', { name: 'Ergebnis', exact: true })).toHaveText('38');
-  await sheet.getByRole('button', { name: 'Teilen', exact: true }).click();
+  await sheet.getByLabel('Prozent & Finanzen', { exact: true }).selectOption('split');
   await sheet.getByLabel('Rechnungsbetrag').fill('90');
   await sheet.getByLabel('Personen').fill('3');
   await expect(sheet.getByRole('status')).toContainText('30,00');
@@ -130,4 +130,55 @@ test('the palette lists tools and Ctrl+. toggles the sheet', async ({ page }, in
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.keyboard.press('Control+.');
   await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
+});
+
+test('the calculator has scientific, programmer and date modes and remembers the tab', async ({
+  page,
+}) => {
+  await openSheet(page);
+  const sheet = page.getByRole('dialog');
+  await sheet.getByRole('button', { name: 'Rechner' }).click();
+
+  await sheet.getByRole('button', { name: 'Wissenschaftlich' }).click();
+  await sheet.getByLabel('Rechnung').fill('sin(30) + log10(1000)');
+  await expect(sheet.getByTestId('calc-result')).toHaveText('3,5');
+  await sheet.getByLabel('Rechnung').fill('2 pi');
+  await expect(sheet.getByTestId('calc-result')).toHaveText('6,28318530717959');
+
+  await sheet.getByRole('button', { name: 'Programmierer' }).click();
+  await sheet.getByLabel('Rechnung (ganze Zahlen)').fill('0xFF & 0x0F');
+  await expect(sheet.getByRole('status').getByText('0F')).toBeVisible();
+  await expect(sheet.getByRole('status').getByText('15', { exact: true })).toBeVisible();
+
+  await sheet.getByRole('button', { name: 'Datum' }).click();
+  await sheet.getByRole('button', { name: 'Plus / Minus' }).click();
+  await sheet.getByLabel('Start').fill('2026-10-02');
+  await sheet.getByLabel('Einheit').selectOption('workdays');
+  await sheet.getByLabel('Anzahl (minus geht zurück)').fill('1');
+  await expect(sheet.getByRole('status', { name: 'Ergebnis' })).toContainText('5. Oktober 2026');
+
+  // The last tab is remembered.
+  await page.reload();
+  await page.getByRole('button', { name: 'Werkzeuge' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Rechner' }).click();
+  await expect(page.getByRole('dialog').getByRole('button', { name: 'Datum' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+});
+
+test('the palette evaluates "=" expressions, base conversions and date phrases', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name === 'pixel-7', 'keyboard shortcut is a desktop feature');
+  await page.goto('/');
+  await expect(page.locator('main h1')).toBeVisible();
+  await page.keyboard.press('Control+k');
+  const box = page.getByRole('combobox');
+  await box.fill('=sqrt(2)*3');
+  await expect(page.getByRole('option').first()).toHaveText('sqrt(2)*3 = 4,24264068711929');
+  await box.fill('0x1F in dez');
+  await expect(page.getByRole('option').first()).toHaveText('0x1F = 31');
+  await box.fill('15.03.2027 + 45 Tage');
+  await expect(page.getByRole('option').first()).toContainText('29. April 2027');
 });
