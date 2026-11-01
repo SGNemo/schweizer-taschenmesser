@@ -6,7 +6,7 @@ import { dateTimeFormat, decimalSeparator } from '@/core/i18n/format';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { datePhrase } from './dates';
-import { evaluateExpression } from './engine';
+import { copyValue, evaluateExpression } from './engine';
 import { CalcError, evaluate, formatNumber } from './expr';
 import { baseConversion } from './programmer';
 
@@ -50,7 +50,7 @@ export async function calculateExpression(
     const r = await evaluateExpression(body);
     return {
       text: `${body} = ${r.display}`,
-      copy: r.value !== undefined ? plainNumber(r.value) : r.canonical,
+      copy: copyValue(r),
     };
   } catch (e) {
     if (e instanceof CalcError)

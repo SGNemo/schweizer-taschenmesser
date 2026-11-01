@@ -164,6 +164,14 @@ export function localize(canonical: string): string {
   return `${sign}${grouped}${frac ? decimalSeparator() + frac : ''}${rest ?? ''}`;
 }
 
+/** What "copy" puts on the clipboard: plain digits with the locale's decimal mark, no grouping. */
+export function copyValue(r: EvalResult): string {
+  return r.canonical.replace(
+    /^(-?[0-9]+)\.([0-9]+)/,
+    (_m, int: string, frac: string) => `${int}${decimalSeparator()}${frac}`,
+  );
+}
+
 function finish(canonical: string, value: number | undefined, basic: boolean): EvalResult {
   return { canonical, display: localize(canonical), value, basic };
 }
