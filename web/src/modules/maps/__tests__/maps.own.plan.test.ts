@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { tileBbox, tilesCovering } from '../own/cut';
-import { CELL_ZOOM, MAX_CELLS, capBbox, cellBbox, planRegion, regionName } from '../own/plan';
+import {
+  CELL_ZOOM,
+  MAX_CELLS,
+  capBbox,
+  cellBbox,
+  planRegion,
+  regionName,
+  viewportBbox,
+} from '../own/plan';
 import { SAMPLE_CENTER } from '../own/sample';
 
 // Erlangen-sized: about 12 km × 10 km.
@@ -50,5 +58,15 @@ describe('build plan', () => {
     expect(regionName('Erlangen, Bayern, Deutschland')).toBe('Erlangen');
     expect(regionName('49.5981, 11.0044')).toBe('49.5981');
     expect(regionName('   ')).toBe('   ');
+  });
+
+  it('the viewport bbox follows the map element: twice the width, twice the area', () => {
+    const view = { lat: SAMPLE_CENTER.lat, lon: SAMPLE_CENTER.lon, zoom: 14 };
+    const a = viewportBbox(view, 400, 300);
+    const b = viewportBbox(view, 800, 300);
+    expect(a.minLat).toBeLessThan(SAMPLE_CENTER.lat);
+    expect(a.maxLat).toBeGreaterThan(SAMPLE_CENTER.lat);
+    expect((b.maxLon - b.minLon) / (a.maxLon - a.minLon)).toBeCloseTo(2, 5);
+    expect(b.maxLat - b.minLat).toBeCloseTo(a.maxLat - a.minLat, 8);
   });
 });

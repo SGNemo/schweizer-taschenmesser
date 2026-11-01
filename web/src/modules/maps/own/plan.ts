@@ -3,7 +3,7 @@
  * tile zooms are stored, and how a too-large area is cut down to a calm first piece around its centre.
  * Pure; the cell order is deterministic, so a build resumes from `cells.done`.
  */
-import { TILE_SIZE, project } from '../logic';
+import { TILE_SIZE, fromScreen, project, type View } from '../logic';
 import type { MapLevel } from '../schema';
 import { tileBbox, tilesCovering, type Bbox, type LonLat, type TileAddress } from './cut';
 
@@ -73,6 +73,18 @@ export function capBbox(
       maxLon: Math.min(bbox.maxLon, last.maxLon - eps),
     },
     capped: true,
+  };
+}
+
+/** The area the map element shows right now ("Hier erweitern" builds it). */
+export function viewportBbox(view: View, width: number, height: number): Bbox {
+  const a = fromScreen(view, 0, 0, width, height);
+  const b = fromScreen(view, width, height, width, height);
+  return {
+    minLat: Math.min(a.lat, b.lat),
+    maxLat: Math.max(a.lat, b.lat),
+    minLon: Math.min(a.lon, b.lon),
+    maxLon: Math.max(a.lon, b.lon),
   };
 }
 

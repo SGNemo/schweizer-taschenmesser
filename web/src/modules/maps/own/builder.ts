@@ -17,7 +17,7 @@ import type { MapLevel, Region, Tile } from '../schema';
 import { defaultCompute, type Compute } from './compute';
 import { tileId, tilesCovering, type Bbox, type LonLat, type TileAddress } from './cut';
 import { DEFAULT_OVERPASS_URL, overpassQuery } from './overpass';
-import { capBbox, cellBbox, planRegion } from './plan';
+import { STORED_ZOOMS, capBbox, cellBbox, planRegion } from './plan';
 import type { TileBytes } from './work';
 
 export type PauseReason = 'busy' | 'network' | 'blocked' | 'error';
@@ -49,18 +49,26 @@ export interface BuilderDeps {
 }
 
 export interface Builder {
-  /** Creates a region around a search hit and starts building it. Returns the region id. */
+  /**
+   * Creates a region and starts building it. With `skipBuilt`, cells another region already holds
+   * are left out; when nothing remains, no region is created (`cells` = 0).
+   */
   createAndStart(input: {
     name: string;
     bbox: Bbox;
     centre: LonLat;
     level: MapLevel;
-  }): Promise<{ id: string; capped: boolean }>;
+    skipBuilt?: boolean;
+  }): Promise<{ id?: string; capped: boolean; cells: number }>;
+  /** A finished lean region is built again at the full level (z14 cells, tiles down to z16). */
+  upgrade(id: string): Promise<void>;
   /** (Re)starts a region; resolves when the builder stopped working on it (done, paused, removed). */
   start(id: string): Promise<void>;
   pause(id: string): Promise<void>;
   /** Purges the region and all its tiles. A running build stops first. */
   remove(id: string): Promise<void>;
+  /** Purges every region and tile of the own map. */
+  removeAll(): Promise<void>;
   /** After a restart: a region that was "building" when the app closed waits for "Weiter". */
   settle(): Promise<void>;
 }
@@ -74,6 +82,8 @@ type Fetched = { json: string } | { reason: PauseReason };
 export function createBuilder(deps: BuilderDeps): Builder {
   const paused = new Set<string>();
   const removed = new Set<string>();
+  /** Regions in the order they were started: first come, first built. */
+  const queue: string[] = [];
   const waiters = new Map<string, (() => void)[]>();
   let pumping = false;
   let compute: Compute | undefined;
@@ -142,7 +152,9 @@ export function createBuilder(deps: BuilderDeps): Builder {
     const region = await deps.regions.get(id);
     if (!region) return;
     const plan = planRegion(region.level, region.bbox);
-    const total = plan.cells.length;
+    const skip = new Set(region.skipCells ?? []);
+    const cells = plan.cells.filter((c) => !skip.has(tileId(c.z, c.x, c.y)));
+    const total = cells.length;
     compute ??= deps.compute();
     useBuildStore.setState({ active: id, phase: 'cells' });
     let bytes = region.bytes;
@@ -152,7 +164,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
         await deps.regions.update(id, { status: 'paused' });
         return;
       }
-      const fetched = await fetchCell(plan.cells[i]!, region.level);
+      const fetched = await fetchCell(cells[i]!, region.level);
       if (removed.has(id)) return;
       if ('reason' in fetched) {
         await deps.regions.update(id, { status: 'paused', reason: fetched.reason });
@@ -162,7 +174,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
         kind: 'cell',
         id: ++requestId,
         level: region.level,
-        cell: plan.cells[i]!,
+        cell: cells[i]!,
         maxZoom: plan.zooms.max,
         json: fetched.json,
       });
@@ -214,10 +226,20 @@ export function createBuilder(deps: BuilderDeps): Builder {
     pumping = true;
     try {
       for (;;) {
-        const next = (await deps.regions.active().toArray())
-          .filter((r) => r.status === 'building' && !paused.has(r.id) && !removed.has(r.id))
-          .sort((a, b) => a.createdAt - b.createdAt)[0];
+        const building = (await deps.regions.active().toArray()).filter(
+          (r) => r.status === 'building' && !paused.has(r.id) && !removed.has(r.id),
+        );
+        // Started ones first, in their order; anything else found building after them.
+        const rank = (id: string) => {
+          const i = queue.indexOf(id);
+          return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+        };
+        const next = building.sort(
+          (a, b) => rank(a.id) - rank(b.id) || a.createdAt - b.createdAt,
+        )[0];
         if (!next) break;
+        const at = queue.indexOf(next.id);
+        if (at !== -1) queue.splice(at, 1);
         try {
           await runRegion(next.id);
         } catch {
@@ -237,27 +259,61 @@ export function createBuilder(deps: BuilderDeps): Builder {
   }
 
   const builder: Builder = {
-    async createAndStart({ name, bbox, centre, level }) {
+    async createAndStart({ name, bbox, centre, level, skipBuilt }) {
       const cap = capBbox(bbox, centre, level);
       const plan = planRegion(level, cap.bbox);
+      const skipCells: string[] = [];
+      if (skipBuilt) {
+        for (const c of plan.cells) {
+          const id = tileId(c.z, c.x, c.y);
+          if (await deps.tiles.get(id)) skipCells.push(id);
+        }
+      }
+      const total = plan.cells.length - skipCells.length;
+      if (total === 0) return { capped: cap.capped, cells: 0 };
       const region = await deps.regions.create({
         name,
         bbox: cap.bbox,
         level,
         zooms: plan.zooms,
         cellZoom: plan.cellZoom,
-        cells: { done: 0, total: plan.cells.length },
+        ...(skipCells.length > 0 ? { skipCells } : {}),
+        cells: { done: 0, total },
         status: 'building',
         bytes: 0,
         source: 'overpass',
       });
       void builder.start(region.id);
-      return { id: region.id, capped: cap.capped };
+      return { id: region.id, capped: cap.capped, cells: total };
+    },
+    async upgrade(id) {
+      const region = await deps.regions.get(id);
+      if (!region || region.level === 'full' || region.status === 'building') return;
+      const plan = planRegion('full', region.bbox);
+      const skip = new Set(region.skipCells ?? []);
+      // A lean cell that was skipped covers four full cells: skip those as well.
+      const skipCells = plan.cells
+        .map((c) => tileId(c.z, c.x, c.y))
+        .filter((_, i) => {
+          const c = plan.cells[i]!;
+          return skip.has(tileId(c.z - 1, c.x >> 1, c.y >> 1));
+        });
+      await deps.regions.update(id, {
+        level: 'full',
+        zooms: STORED_ZOOMS.full,
+        cellZoom: plan.cellZoom,
+        ...(skipCells.length > 0 ? { skipCells } : {}),
+        cells: { done: 0, total: plan.cells.length - skipCells.length },
+        status: 'paused',
+        reason: undefined,
+      });
+      await builder.start(id);
     },
     async start(id) {
       paused.delete(id);
       const region = await deps.regions.get(id);
       if (!region || region.status === 'done') return;
+      if (!queue.includes(id)) queue.push(id);
       await deps.regions.update(id, { status: 'building', reason: undefined });
       const done = new Promise<void>((resolve) =>
         waiters.set(id, [...(waiters.get(id) ?? []), resolve]),
@@ -286,6 +342,9 @@ export function createBuilder(deps: BuilderDeps): Builder {
       await deps.regions.purge([id]);
       removed.delete(id);
       paused.delete(id);
+    },
+    async removeAll() {
+      for (const r of await deps.regions.active().toArray()) await builder.remove(r.id);
     },
     async settle() {
       const active = useBuildStore.getState().active;

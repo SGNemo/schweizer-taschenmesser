@@ -49,6 +49,16 @@ const three = (() => {
 
 const okAnswer = () => new Response(JSON.stringify(overpassFixture()), { status: 200 });
 
+/** createAndStart for a region that surely has cells (the tests here never ask for a covered area). */
+async function start(
+  b: ReturnType<typeof createBuilder>,
+  input: Parameters<ReturnType<typeof createBuilder>['createAndStart']>[0],
+): Promise<{ id: string; capped: boolean }> {
+  const r = await b.createAndStart(input);
+  if (!r.id) throw new Error('no region created');
+  return { id: r.id, capped: r.capped };
+}
+
 function setup(overrides: Partial<BuilderDeps> = {}) {
   const db = createTestDb();
   const regions = createRepo(tableName('maps', 'region'), regionSchema, db, { local: true });
@@ -84,7 +94,7 @@ afterEach(() => vi.restoreAllMocks());
 describe('own map builder', () => {
   it('builds a region cell by cell, then the overview, and finishes with a date and size', async () => {
     const { builder, regions, tiles, fetch } = setup();
-    const { id, capped } = await builder.createAndStart({
+    const { id, capped } = await start(builder, {
       name: 'Nemostadt',
       bbox: one,
       centre: SAMPLE_CENTER,
@@ -123,7 +133,7 @@ describe('own map builder', () => {
       return okAnswer();
     }) as unknown as typeof globalThis.fetch;
     const { builder, regions, tiles } = setup({ fetch });
-    const { id } = await builder.createAndStart({
+    const { id } = await start(builder, {
       name: 'Drei',
       bbox: three,
       centre: SAMPLE_CENTER,
@@ -154,7 +164,7 @@ describe('own map builder', () => {
       async () => new Response('', { status: 429 }),
     ) as unknown as typeof globalThis.fetch;
     const { builder, regions, tiles, sleep } = setup({ fetch });
-    const { id } = await builder.createAndStart({
+    const { id } = await start(builder, {
       name: 'Busy',
       bbox: one,
       centre: SAMPLE_CENTER,
@@ -170,7 +180,7 @@ describe('own map builder', () => {
   it('names the other reasons: blocked network (no retry), unreachable, unreadable, overloaded', async () => {
     const run = async (fetch: typeof globalThis.fetch) => {
       const s = setup({ fetch });
-      const { id } = await s.builder.createAndStart({
+      const { id } = await start(s.builder, {
         name: 'X',
         bbox: one,
         centre: SAMPLE_CENTER,
@@ -216,7 +226,7 @@ describe('own map builder', () => {
 
   it('removes a region with all its tiles, also while it is being built', async () => {
     const { builder, regions, tiles } = setup();
-    const { id } = await builder.createAndStart({
+    const { id } = await start(builder, {
       name: 'Weg',
       bbox: one,
       centre: SAMPLE_CENTER,
@@ -249,7 +259,7 @@ describe('own map builder', () => {
       return okAnswer();
     }) as unknown as typeof globalThis.fetch;
     const s = setup({ fetch: slow });
-    const running = await s.builder.createAndStart({
+    const running = await start(s.builder, {
       name: 'Lang',
       bbox: one,
       centre: SAMPLE_CENTER,
@@ -265,13 +275,13 @@ describe('own map builder', () => {
 
   it('runs one region at a time; a queued one can be paused at once; a restart leaves builds paused', async () => {
     const { builder, regions } = setup();
-    const a = await builder.createAndStart({
+    const a = await start(builder, {
       name: 'A',
       bbox: one,
       centre: SAMPLE_CENTER,
       level: 'lean',
     });
-    const b = await builder.createAndStart({
+    const b = await start(builder, {
       name: 'B',
       bbox: one,
       centre: SAMPLE_CENTER,
@@ -295,5 +305,76 @@ describe('own map builder', () => {
     await regions.update(c.id, { status: 'building' });
     await builder.settle();
     expect((await regions.get(c.id))!.status).toBe('paused');
+  });
+
+  it('upgrades a finished lean region to the full level: z14 cells, tiles down to z16, the overview redrawn', async () => {
+    const { builder, regions, tiles, fetch } = setup();
+    const { id } = await start(builder, {
+      name: 'Voll',
+      bbox: one,
+      centre: SAMPLE_CENTER,
+      level: 'lean',
+    });
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    const leanCalls = fetch.mock.calls.length;
+    const leanRows = await tiles.active().count();
+    await builder.upgrade(id);
+    const region = (await regions.get(id))!;
+    expect(region.level).toBe('full');
+    expect(region.cellZoom).toBe(14);
+    expect(region.zooms).toEqual({ min: 8, max: 16 });
+    expect(region.status).toBe('done');
+    expect(region.cells.total).toBeGreaterThanOrEqual(4);
+    expect(fetch.mock.calls.length - leanCalls).toBe(region.cells.total);
+    expect(String((fetch.mock.calls[leanCalls]! as [string, RequestInit])[1].body)).toContain(
+      encodeURIComponent('way["building"]'),
+    );
+    const rows = await tiles.active().toArray();
+    expect(rows.length).toBeGreaterThan(leanRows);
+    expect([...new Set(rows.map((r) => r.z))].sort((a, b) => a - b)).toEqual([
+      8, 9, 10, 11, 12, 13, 14, 15, 16,
+    ]);
+    expect(rows.every((r) => r.regionId === id)).toBe(true);
+    // A second upgrade or an upgrade of a running build does nothing.
+    await builder.upgrade(id);
+    expect(fetch.mock.calls.length - leanCalls).toBe(region.cells.total);
+  });
+
+  it('"Hier erweitern" leaves out cells another region holds, and makes no region for a covered area', async () => {
+    const { builder, regions, tiles } = setup();
+    const { id } = await start(builder, {
+      name: 'Erst',
+      bbox: one,
+      centre: SAMPLE_CENTER,
+      level: 'lean',
+    });
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    const covered = await builder.createAndStart({
+      name: 'Ausschnitt',
+      bbox: one,
+      centre: SAMPLE_CENTER,
+      level: 'lean',
+      skipBuilt: true,
+    });
+    expect(covered).toEqual({ capped: false, cells: 0 });
+    expect(await regions.table.count()).toBe(1);
+    const wider = await builder.createAndStart({
+      name: 'Ausschnitt',
+      bbox: three,
+      centre: SAMPLE_CENTER,
+      level: 'lean',
+      skipBuilt: true,
+    });
+    expect(wider.cells).toBe(2);
+    await vi.waitFor(async () => expect((await regions.get(wider.id!))!.status).toBe('done'));
+    const second = (await regions.get(wider.id!))!;
+    expect(second.skipCells).toHaveLength(1);
+    expect(second.cells).toEqual({ done: 2, total: 2 });
+    // The first region's cell tile still belongs to it.
+    const firstCell = tilesCovering(one, CELL_ZOOM.lean)[0]!;
+    expect((await tiles.get(`${firstCell.z}/${firstCell.x}/${firstCell.y}`))!.regionId).toBe(id);
+    await builder.removeAll();
+    expect(await regions.table.count()).toBe(0);
+    expect(await tiles.table.count()).toBe(0);
   });
 });

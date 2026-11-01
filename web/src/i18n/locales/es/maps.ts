@@ -169,6 +169,13 @@ export const maps: Strings['maps'] = {
     confirmRemove: '¿Borrar de verdad?',
     keep: 'Conservar',
     removed: 'Mapa borrado',
+    upgrade: 'Hacerlo detallado',
+    extend: 'Ampliar aquí',
+    viewportName: 'Sección del mapa',
+    covered: 'Esta sección ya está en tu mapa.',
+    removeAll: 'Borrar todos los mapas',
+    confirmRemoveAll: '¿Borrar todos los mapas propios?',
+    asOf: (date: string) => `a fecha de ${date}`,
     reasons: {
       busy: 'El servicio de mapas está saturado ahora mismo. Continúa más tarde.',
       network: 'El servicio de mapas no está disponible ahora mismo. Continúa más tarde.',
