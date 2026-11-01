@@ -25,10 +25,11 @@ async function openToolbar(page: Page) {
   await expect(toolbar(page)).toBeVisible();
 }
 
-async function paletteOptions(page: Page, text: string) {
+/** The palette entries for `text`, without the "Frage stellen" line the assistant always offers. */
+async function paletteOptions(page: Page, text: string, label: string) {
   await page.keyboard.press('Control+k');
   await page.getByRole('combobox', { name: 'Suchen, springen oder fragen …' }).fill(text);
-  return page.getByRole('option', { name: new RegExp(text) });
+  return page.getByRole('option', { name: label, exact: true });
 }
 
 test('by default a preview tool, module and section are nowhere to be found', async ({ page }) => {
@@ -51,7 +52,9 @@ test('by default a preview tool, module and section are nowhere to be found', as
   await expect(page.getByTestId('module-maps')).toHaveCount(0);
 
   // The palette offers modules that are off by name; a preview module is not among them.
-  await expect(await paletteOptions(page, 'Karten & Orte')).toHaveCount(0);
+  await expect(
+    await paletteOptions(page, 'Karten & Orte', 'Karten & Orte in der Bibliothek einschalten'),
+  ).toHaveCount(0);
   await page.keyboard.press('Escape');
 
   await ready(page, '/settings/verbindungen');
@@ -117,7 +120,9 @@ test('a preview tool the user switched on stays reachable with the switch off', 
   await expect(page.getByRole('dialog').getByLabel('Vorher')).toBeVisible();
   await page.keyboard.press('Escape');
 
-  await expect(await paletteOptions(page, 'Textvergleich')).toHaveCount(1);
+  await expect(await paletteOptions(page, 'Textvergleich', 'Werkzeug: Textvergleich')).toHaveCount(
+    1,
+  );
   await page.keyboard.press('Escape');
 
   // Turning it off in the library hides it again (no explicit "on" any more).
