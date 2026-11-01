@@ -5,6 +5,9 @@ export const attention: Strings['attention'] = {
   hint: 'Overdue, due today and expiring things at the top.',
   invoicesOverdue: (n: number) => (n === 1 ? '1 invoice overdue' : `${n} invoices overdue`),
   invoicesToday: (n: number) => (n === 1 ? '1 invoice due today' : `${n} invoices due today`),
+  subscriptionPrice: (name: string, from: string, to: string) =>
+    `${name} now costs ${to} instead of ${from}`,
+  subscriptionPriceSince: (date: string) => `New price since ${date}`,
   todosOverdue: (n: number) => (n === 1 ? '1 to-do overdue' : `${n} to-dos overdue`),
   todosToday: (n: number) => (n === 1 ? '1 to-do due today' : `${n} to-dos due today`),
   eventNext: (title: string) => title,

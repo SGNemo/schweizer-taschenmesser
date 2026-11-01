@@ -156,18 +156,26 @@ export const onboarding: Strings['onboarding'] = {
     balance: 'Saldo hoje',
     balanceHint: (sample: string) => `por exemplo, ${sample} – se for negativo, com “-”.`,
     badBalance: (sample: string) => `Digite um valor como ${sample}.`,
-    bank: 'Importar extrato (CSV ou CAMT)',
+    bank: 'Importar extrato bancário (CSV, OFX, QIF ou CAMT)',
     bankHint:
-      'No internet banking, exporte as movimentações (por exemplo, “CSV-CAMT” ou “CAMT”) e escolha o arquivo aqui. O arquivo só é lido neste dispositivo.',
+      'No internet banking, exporte suas movimentações (CSV, OFX, QIF ou CAMT) e escolha o arquivo aqui. Bancos conhecidos são reconhecidos; num CSV desconhecido você associa as colunas uma vez e o app lembra. O arquivo só é lido neste dispositivo.',
     bankAccount: 'Lançar na conta',
     noAccounts: 'Crie uma conta primeiro.',
     bankFormat:
-      'O formato do arquivo não foi reconhecido. Espera-se um arquivo CSV com data do lançamento e valor ou um arquivo CAMT (XML).',
+      'O formato do arquivo não foi reconhecido. Espera-se um arquivo OFX, QIF ou CAMT, ou um CSV com data e valor.',
     bankSkipped: (n: number) =>
       n <= 1
         ? `${n} linha sem data ou valor válido foi ignorada.`
         : `${n} linhas sem data ou valor válido foram ignoradas.`,
     bankTruncated: (n: number) => `Só os primeiros ${n} lançamentos são mostrados.`,
+    bankDetected: (name: string) => `Reconhecido: ${name}`,
+    bankRemembered: 'Reconhecido: sua associação de colunas salva',
+    bankNeedsMapping:
+      'Este layout ainda não é conhecido. Associe as colunas abaixo – o app lembra na próxima importação.',
+    bankCurrencySkipped: (n: number, from: string, to: string) =>
+      n === 1
+        ? `1 lançamento em ${from} não foi importado: esta conta está em ${to}. Escolha uma conta em ${from}.`
+        : `${n} lançamentos em ${from} não foram importados: esta conta está em ${to}. Escolha uma conta em ${from}.`,
   },
   invoices: {
     suggestions: [

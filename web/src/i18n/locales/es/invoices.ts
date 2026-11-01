@@ -16,6 +16,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = el día del vencimiento',
       remindTime: 'Hora del recordatorio',
       remindTimeHelp: 'Formato HH:mm',
+      bookWhenPaid: 'Registrar la factura pagada como gasto',
+      bookWhenPaidHelp:
+        'Crea el movimiento en Finanzas en cuanto marcas una factura como pagada. Sin el módulo de Finanzas no pasa nada; un movimiento recurrente con el mismo beneficiario e importe no se registra dos veces.',
     },
   },
   title: 'Facturas',

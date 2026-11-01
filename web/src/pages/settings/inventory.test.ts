@@ -94,6 +94,9 @@ const CORE_KEYS = {
     'sync.lastSyncAt': 'timestamp',
     'seed.sync': false,
     'connector.<id>': 'status',
+    'finance.bankMappings': 'column assignment per header of an unknown bank CSV (device-local)',
+    'finance.rules': 'import rules: payee pattern → category / subscription (device-local)',
+    'subscriptions.priceHints': 'day a price rise was first noticed, per rise (device-local)',
   },
   '_secrets / platform secrets': {
     syncConfig: 'server, token, deviceName, encryption',

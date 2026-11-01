@@ -1,0 +1,4 @@
+"Booking Date","Value Date","Partner Name","Partner Iban",Type,"Payment Reference","Account Name","Amount (EUR)","Original Amount","Original Currency","Exchange Rate"
+"2026-10-03","2026-10-03","Filmfreund GmbH","DE00999999990000000002","Direct Debit","Streaming Monatsbeitrag Oktober","Erika Mustermann","-9.99","","",""
+"2026-10-01","2026-10-01","Beispiel AG","DE00999999990000000003","Income","Gehalt Oktober","Erika Mustermann","2345.67","","",""
+"2026-10-02","2026-10-02","Marktkauf Mustertal","","MasterCard Payment","","Erika Mustermann","-23.4","","",""

@@ -3,7 +3,9 @@
  * Everything else must use the event bus (`invoice.paid`, `invoice.unpaid`).
  */
 import { currencyOf, DEFAULT_CURRENCY, sumMinor } from '@/core/money';
+import { getSettings } from '@/core/settings/settings';
 import { invoiceRepo } from './repo';
+import { settings } from './settings';
 
 export interface OpenInvoice {
   id: string;
@@ -31,5 +33,13 @@ export async function listOpenInvoices(): Promise<OpenInvoice[]> {
 export async function sumOpenInvoices(currency: string = DEFAULT_CURRENCY): Promise<number> {
   return sumMinor(
     (await listOpenInvoices()).filter((i) => i.currency === currency).map((i) => i.amountMinor),
+  );
+}
+
+/** Does the user want a paid invoice booked as an expense (Rechnungen → Einstellungen)? */
+export async function paidInvoiceBookingOn(): Promise<boolean> {
+  return (
+    (await getSettings('module.invoices', settings.schema, settings.defaults)).bookWhenPaid !==
+    false
   );
 }

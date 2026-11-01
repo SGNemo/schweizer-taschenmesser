@@ -1,0 +1,4 @@
+"Datum","Empfänger","Kontonummer","Transaktionstyp","Verwendungszweck","Betrag (EUR)","Betrag (Fremdwährung)","Fremdwährung","Wechselkurs"
+"2026-10-03","Filmfreund GmbH","DE00999999990000000002","Lastschrift","Streaming Monatsbeitrag Oktober","-9.99","","",""
+"2026-10-01","Beispiel AG","DE00999999990000000003","Gutschrift","Gehalt Oktober","2345.67","","",""
+"2026-10-02","Marktkauf Mustertal","","MasterCard Zahlung","Einkauf Lebensmittel","-23.40","","",""

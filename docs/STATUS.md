@@ -11,7 +11,7 @@ P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, 
 Verständliche Sprache (QA P3b, `fix/qa-formats-i18n`): Formate, es-MX, Tresor-Stärketexte, Vorlagen; P3c (README/Website) folgt; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 Eigene Karte (Modul Karten & Orte): Machbarkeitsbericht und Entscheidungen in [features/map-own.md](features/map-own.md); Paket 1 (`feat/map-own-tiles`): Speicher (`maps_region`/`maps_tile`, gerätelokal), MVT-Schreiber/Leser, Canvas-Renderer, Kachelquelle lokal-zuerst, Schalter „Nur eigene Karte (offline)“. Paket 2 (Overpass-Erzeuger) folgt.
 
-Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise).
+Abo-/Rechnungsformular (`feat/qa-provider-templates`): beim Tippen des Namens erscheinen typische Anbieter und Rechnungsarten (Datalist, ohne Preise). Kontoauszug-Import (T2, [features/bank-import.md](features/bank-import.md)): OFX, QIF, Bank-Vorlagen, Spaltenzuordnung, Regeln aus Vorschlägen, „Preis erhöht“; Handtest je Bank mit echter Datei offen.
 Verständliche Sprache (QA P3 gemergt/PR `docs/qa-readme-languages`): einfachere Wörter, Formate, es-MX, Tresor-Texte, Vorlagen; README, Website und FAQ nennen die fünf App-Sprachen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Währung je Konto/Rechnung (`feat/qa-currency`): optionales `currency` (ISO 4217, ohne Angabe EUR), Finanzen zeigt eine Währung nach der anderen, nichts wird umgerechnet; Abos, Budgets und Sparziele haben dasselbe optionale `currency` (`feat/qa-currency-subs-budgets`), Summen je Währung.

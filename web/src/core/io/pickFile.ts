@@ -10,7 +10,24 @@ export interface PickedFile {
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
-export function pickTextFile(accept: string): Promise<PickedFile | undefined> {
+/**
+ * UTF-8 first; a file that is not valid UTF-8 (the replacement character appears) is read again as
+ * Windows-1252, the encoding many bank exports still use. Plain ASCII and UTF-8 are unaffected.
+ */
+export function decodeTextBytes(bytes: ArrayBuffer | Uint8Array): string {
+  const utf8 = new TextDecoder('utf-8').decode(bytes);
+  return utf8.includes('\uFFFD') ? new TextDecoder('windows-1252').decode(bytes) : utf8;
+}
+
+/** What to read a chosen file with; `legacyEncoding` = fall back to Windows-1252 (bank exports). */
+export interface PickOptions {
+  legacyEncoding?: boolean;
+}
+
+const readFile = (file: File, opts?: PickOptions): Promise<string> =>
+  opts?.legacyEncoding ? file.arrayBuffer().then(decodeTextBytes) : file.text();
+
+export function pickTextFile(accept: string, opts?: PickOptions): Promise<PickedFile | undefined> {
   return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -19,7 +36,7 @@ export function pickTextFile(accept: string): Promise<PickedFile | undefined> {
       const file = input.files?.[0];
       if (!file) return resolve(undefined);
       if (file.size > MAX_BYTES) return reject(new Error('file-too-large'));
-      file.text().then((text) => resolve({ name: file.name, text }), reject);
+      readFile(file, opts).then((text) => resolve({ name: file.name, text }), reject);
     });
     input.addEventListener('cancel', () => resolve(undefined));
     input.click();

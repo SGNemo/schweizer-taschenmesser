@@ -5,6 +5,9 @@ export const attention: Strings['attention'] = {
   hint: 'Lo vencido, lo que vence hoy y lo que caduca, arriba del todo.',
   invoicesOverdue: (n: number) => (n === 1 ? '1 factura vencida' : `${n} facturas vencidas`),
   invoicesToday: (n: number) => (n === 1 ? '1 factura vence hoy' : `${n} facturas vencen hoy`),
+  subscriptionPrice: (name: string, from: string, to: string) =>
+    `${name} ahora cuesta ${to} en vez de ${from}`,
+  subscriptionPriceSince: (date: string) => `Nuevo precio desde ${date}`,
   todosOverdue: (n: number) => (n === 1 ? '1 tarea vencida' : `${n} tareas vencidas`),
   todosToday: (n: number) => (n === 1 ? '1 tarea vence hoy' : `${n} tareas vencen hoy`),
   eventNext: (title: string) => title,

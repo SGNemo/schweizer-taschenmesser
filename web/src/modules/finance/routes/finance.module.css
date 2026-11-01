@@ -256,3 +256,23 @@
     align-items: start;
   }
 }
+
+/* Import rules (folded under the categories) */
+.rulesBox {
+  margin-top: var(--space-4);
+}
+.rulesBox > summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.ruleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}

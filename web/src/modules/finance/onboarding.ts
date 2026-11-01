@@ -47,7 +47,9 @@ export const onboarding: OnboardingDef = {
       get description() {
         return s.bankHint;
       },
-      accept: '.csv,.xml,text/csv,text/xml',
+      accept: '.csv,.xml,.ofx,.qif,text/csv,text/xml',
+      // Bank exports are often Windows-1252; the reader falls back to it only when UTF-8 fails.
+      legacyEncoding: true,
       options: [
         {
           key: 'accountId',

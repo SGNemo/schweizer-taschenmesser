@@ -24,6 +24,11 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 - **Karte & WhatsApp:** Termine mit Ort haben „Auf der Karte zeigen“; bei Personen mit Geburtstag öffnet der Knopf WhatsApp mit einem Glückwunsch
   (den Kontakt wählst du in WhatsApp).
 
+## Kontoauszug importieren
+In **Finanzen** (Einstellungen → Module → Finanzen → Startdaten einrichten → *Kontoauszug importieren*) wählst du die Datei, die du im Online-Banking exportiert hast: **OFX**, **QIF**, **CAMT** oder **CSV**. Es wird nichts hochgeladen und kein Login gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen. Bekannte Banken (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) werden an der Datei erkannt und in der Vorschau genannt („Erkannt: DKB“). Bei einer CSV, die die App nicht kennt, ordnest du die Spalten Datum / Betrag / Empfänger / Verwendungszweck einmal zu; die App merkt es sich für den nächsten Export dieser Art. Eine Datei, die du zweimal importierst, bringt nichts Neues, und eine Datei in einer anderen Währung wird nur auf ein Konto dieser Währung gebucht.
+
+Nach einem Import schlägt die Vorschau eventuell **Regeln** vor („Netflix immer in der Kategorie Abos buchen?“). Nichts ist angehakt: eine Regel entsteht nur, wenn du sie ankreuzt und den Import bestätigst, sie sortiert dann spätere Importe, und du entfernst sie unter Finanzen → Kategorien. Eine bezahlte Rechnung wird in Finanzen als Ausgabe gebucht (unter Rechnungen → Einstellungen abschaltbar), und eine Preiserhöhung bei einem Abo erscheint einmal unter *Jetzt wichtig* (unter Abos → Einstellungen abschaltbar).
+
 ## Aufgaben aus Todoist oder Google Tasks mitnehmen
 Öffne **ToDos → Importieren → Aus Todoist oder Google Tasks** (sobald das Modul Aufgaben enthält: Einstellungen → Module → ToDos → Startdaten einrichten) und wähle eine Datei, die du selbst exportiert hast. Es wird nichts hochgeladen und kein Konto gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen.
 

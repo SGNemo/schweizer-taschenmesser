@@ -2095,6 +2095,9 @@ export const de = {
       n === 1 ? '1 Rechnung überfällig' : `${n} Rechnungen überfällig`,
     invoicesToday: (n: number) =>
       n === 1 ? '1 Rechnung heute fällig' : `${n} Rechnungen heute fällig`,
+    subscriptionPrice: (name: string, from: string, to: string) =>
+      `${name} kostet jetzt ${to} statt ${from}`,
+    subscriptionPriceSince: (date: string) => `Neuer Preis seit ${date}`,
     todosOverdue: (n: number) => (n === 1 ? '1 ToDo überfällig' : `${n} ToDos überfällig`),
     todosToday: (n: number) => (n === 1 ? '1 ToDo heute fällig' : `${n} ToDos heute fällig`),
     eventNext: (title: string) => title,
@@ -2257,6 +2260,9 @@ export const de = {
         remindDaysBeforeHelp: '0 = am Fälligkeitstag',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        bookWhenPaid: 'Bezahlte Rechnung als Ausgabe buchen',
+        bookWhenPaidHelp:
+          'Legt in Finanzen die Buchung an, sobald du eine Rechnung als bezahlt markierst. Ohne Finanz-Modul passiert nichts; eine wiederkehrende Buchung mit gleichem Empfänger und Betrag wird nicht doppelt gebucht.',
       },
     },
     title: 'Rechnungen',
@@ -2308,6 +2314,9 @@ export const de = {
         cancelRemindDaysBeforeHelp: '0 = am letzten Tag der Frist',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        priceHint: 'Hinweis bei Preiserhöhung',
+        priceHintHelp:
+          'Zeigt einmal unter „Jetzt wichtig“, wenn ein Abo teurer geworden ist. Du kannst es jederzeit ausschalten.',
       },
     },
     title: 'Abos',
@@ -2423,6 +2432,35 @@ export const de = {
     openingBalance: 'Anfangssaldo',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
+    fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',
+    rules: {
+      title: 'Regeln vorschlagen',
+      hint: 'Nichts ist angehakt. Eine Regel entsteht nur, wenn du sie ankreuzt und den Import bestätigst. Du kannst sie unter Kategorien wieder entfernen.',
+      proposalBoth: (payee: string, sub: string, category: string) =>
+        `„${payee}“ immer als Abo „${sub}“ und Kategorie „${category}“ buchen?`,
+      proposalSubscription: (payee: string, sub: string) =>
+        `„${payee}“ immer dem Abo „${sub}“ zuordnen?`,
+      proposalCategory: (payee: string, category: string) =>
+        `„${payee}“ immer in der Kategorie „${category}“ buchen?`,
+      applied: (name: string) => `Regel: ${name}`,
+      manageTitle: 'Regeln für den Import',
+      manageHint:
+        'Diese Regeln wendet der Kontoauszug-Import an. Entfernen ändert keine vorhandene Buchung.',
+      manageEmpty: 'Noch keine Regeln. Vorschläge erscheinen nach einem Import.',
+      remove: (match: string) => `Regel für „${match}“ entfernen`,
+    },
+    bankMap: {
+      title: 'Welche Spalte ist was?',
+      hint: 'Wähle für jede Angabe die passende Spalte. Die ersten Zeilen siehst du unten; die App merkt sich die Zuordnung für den nächsten Import dieser Dateiart.',
+      date: 'Datum',
+      amount: 'Betrag',
+      payee: 'Empfänger (optional)',
+      purpose: 'Verwendungszweck (optional)',
+      none: '– keine –',
+      choose: '– wählen –',
+      sample: 'Erste Zeilen der Datei',
+      apply: 'Spalten übernehmen',
+    },
     addCategory: 'Kategorie hinzufügen',
     editCategory: 'Kategorie bearbeiten',
     categoryName: 'Name',
@@ -4696,18 +4734,26 @@ export const de = {
       balance: 'Kontostand heute',
       balanceHint: (sample: string) => `z. B. ${sample} – bei einem Minus mit „-“.`,
       badBalance: (sample: string) => `Bitte einen Betrag wie ${sample} eingeben.`,
-      bank: 'Kontoauszug importieren (CSV oder CAMT)',
+      bank: 'Kontoauszug importieren (CSV, OFX, QIF oder CAMT)',
       bankHint:
-        'Im Online-Banking unter Umsätze exportieren (z. B. „CSV-CAMT“ oder „CAMT“) und die Datei hier auswählen. Die Datei wird nur auf diesem Gerät gelesen.',
+        'Im Online-Banking unter Umsätze exportieren (CSV, OFX, QIF oder CAMT) und die Datei hier auswählen. Bekannte Banken werden erkannt; bei einer unbekannten CSV ordnest du die Spalten einmal zu und die App merkt es sich. Die Datei wird nur auf diesem Gerät gelesen.',
       bankAccount: 'Buchen auf Konto',
       noAccounts: 'Lege zuerst ein Konto an.',
       bankFormat:
-        'Das Dateiformat wurde nicht erkannt. Erwartet wird eine CSV-Datei mit Buchungstag und Betrag oder eine CAMT-Datei (XML).',
+        'Das Dateiformat wurde nicht erkannt. Erwartet wird eine OFX-, QIF- oder CAMT-Datei oder eine CSV-Datei mit Datum und Betrag.',
       bankSkipped: (n: number) =>
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
           : `${n} Zeilen ohne gültiges Datum oder Betrag wurden übersprungen.`,
       bankTruncated: (n: number) => `Es werden nur die ersten ${n} Buchungen angezeigt.`,
+      bankDetected: (name: string) => `Erkannt: ${name}`,
+      bankRemembered: 'Erkannt: deine gemerkte Spaltenzuordnung',
+      bankNeedsMapping:
+        'Dieses Layout ist noch nicht bekannt. Ordne unten die Spalten zu – die App merkt es sich für den nächsten Import.',
+      bankCurrencySkipped: (n: number, from: string, to: string) =>
+        n === 1
+          ? `1 Buchung in ${from} wurde nicht übernommen: Dieses Konto führt ${to}. Wähle ein Konto in ${from}.`
+          : `${n} Buchungen in ${from} wurden nicht übernommen: Dieses Konto führt ${to}. Wähle ein Konto in ${from}.`,
     },
     invoices: {
       /** Typical names offered while typing in the form (no prices). */

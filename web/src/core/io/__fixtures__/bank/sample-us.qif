@@ -1,0 +1,19 @@
+!Account
+NChecking
+TBank
+^
+!Type:Bank
+D10/ 3'26
+T-1,250.00
+PLandlord
+MRent
+^
+D10/15/2026
+U3,000.50
+PExample Inc
+MSalary
+^
+D2026-10-20
+T-45.1
+PGrocer
+^

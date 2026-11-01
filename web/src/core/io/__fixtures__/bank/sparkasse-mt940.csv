@@ -1,0 +1,4 @@
+"Auftragskonto";"Buchungstag";"Valutadatum";"Buchungstext";"Verwendungszweck";"Beguenstigter/Zahlungspflichtiger";"Kontonummer";"BLZ";"Betrag";"Waehrung"
+"123456789";"03.10.2026";"03.10.2026";"LASTSCHRIFT";"Streaming Monatsbeitrag Oktober";"Filmfreund GmbH";"000000002";"10000000";"-9,99";"EUR"
+"123456789";"01.10.2026";"01.10.2026";"GEHALT/RENTE";"Gehalt Oktober";"Beispiel AG";"000000003";"10000000";"2345,67";"EUR"
+"123456789";"02.10.2026";"02.10.2026";"KARTENZAHLUNG";"Einkauf Lebensmittel";"Marktkauf Mustertal";"";"";"-23,40";"EUR"
