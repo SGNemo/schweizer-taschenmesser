@@ -343,3 +343,9 @@ Q3. *Dev-Preview parallel installiert:* Kurzbefehle und Kachel der „Nemo Dev�
 T1. *Windows, Tray:* ein Termin heute 15:00 und ein überfälliges ToDo anlegen, Rechtsklick auf das Tray-Symbol: oben „Heute“ mit „Überfälliges ToDo“ und „15:00 · Termin“, darunter „Jetzt dran anfangen“ und „Timer 25 Minuten“, dann Erfassen/App öffnen/Beenden wie bisher. Keine Beträge, kein Tresor, keine Notizinhalte. ☐
 T2. *Klick:* Klick auf die Termin-Zeile holt das Hauptfenster nach vorn und öffnet den Kalender an dem Tag; „Timer 25 Minuten“ startet den Timer und zeigt ihn; „Jetzt dran anfangen“ öffnet den Fokus für das ToDo. ☐
 T3. *Aktualisieren und Abschalten:* ToDo erledigen → nach dem nächsten Öffnen des Tray-Menüs ist die Zeile weg (sofort, spätestens nach 5 Minuten). Einstellungen → Schnellerfassung → „Heute im Tray-Menü zeigen“ aus: Block verschwindet, Menü wie vorher. Leerer Tag: kein Block. ☐
+
+### Rechner-Modi (Branch `feat/calculator-modes`)
+C1. *Android-APK:* Rechner öffnen, alle sechs Tabs durchtippen; die Tab-Leiste scrollt seitlich, die aktive Tab bleibt sichtbar, Tasten sind gut treffbar, Tastatur verdeckt das Ergebnis nicht. ☐
+C2. *Offline:* App einmal online öffnen, Flugmodus, Rechner öffnen: Wissenschaft (sin, log) geht nur, wenn der Rechner vorher online geöffnet war; sonst Grundrechenarten und der ruhige Hinweis. ☐
+C3. *Sprachen:* Format-Region auf en-US stellen: `1,234.5 + 1` und `1.234,5 + 1` ergeben beide 1235.5, Ergebnis mit Punkt als Dezimalzeichen. ☐
+C4. *Notiz:* Notizen einschalten, Verlauf → „In Notiz übernehmen“ öffnet eine neue Notiz mit den Zeilen. ☐
