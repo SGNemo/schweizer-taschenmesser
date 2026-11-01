@@ -16,6 +16,7 @@
   "src/quickCapture/parser/amount.ts": "parser vocabulary for quick capture (German input)",
   "src/quickCapture/parser/index.ts": "parser vocabulary for quick capture (German input)",
   "src/quickCapture/parser/until.ts": "parser vocabulary for quick capture (German input)",
+  "src/quickCapture/parser/split.ts": "parser vocabulary for quick capture (German input: when-words that never make an entry alone)",
   "src/quickCapture/parser/corpus.ts": "German test sentences for the quick-capture parser",
   "src/connectors/google/mail.ts": "keywords to recognise German mails",
   "src/modules/chat/logic.ts": "prompt text sent to the model",
