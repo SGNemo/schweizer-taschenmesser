@@ -3,7 +3,9 @@ import { tWeather } from '@/strings.weather';
 import { Icon, type IconName } from '@/ui';
 import styles from './WeatherPreview.module.css';
 
-const RATING_ICON: Record<Rating, IconName> = { good: 'ok', fair: 'circleMinus', poor: 'alert' };
+// "Ungemütlich" gets the umbrella, not the warning triangle: that one is reserved for overdue things
+// (`ui/semantics.ts`), and neither weather nor air quality is ever urgent.
+const RATING_ICON: Record<Rating, IconName> = { good: 'ok', fair: 'circleMinus', poor: 'umbrella' };
 
 /** Rating as word + icon + colour: the colour is never alone. */
 export function RatingChip({ rating }: { rating: Rating }) {

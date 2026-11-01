@@ -19,6 +19,9 @@ export const maps: Strings['maps'] = {
     transitUrl: 'Búsqueda de conexiones (dirección)',
     transitUrlHelp:
       'Un servicio compatible con MOTIS. Predeterminado: Transitous (horarios abiertos).',
+    offlineOnly: 'Solo mapa propio (sin conexión)',
+    offlineOnlyHelp:
+      'Muestra solo los mapas que has creado tú. Fuera de ellos el área queda vacía y no se descarga nada de internet.',
   },
   tabs: { label: 'Vista', places: 'Lugares', routes: 'Rutas', map: 'Mapa' },
   empty: { places: 'Aún no hay lugares.', routes: 'Aún no hay rutas.' },

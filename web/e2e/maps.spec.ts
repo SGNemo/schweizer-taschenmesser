@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready, showAllWidgets } from './helpers';
+import { enable, openFoldedGroup, ready, showAllWidgets } from './helpers';
+import { SAMPLE_CENTER, sampleRegion } from '../src/modules/maps/own/sample';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -245,5 +246,95 @@ test.describe('Karten & Orte', () => {
     await expect(card.getByTestId('map-transit-steps')).toContainText('RE 1 → Nürnberg');
     await expect(page.getByTestId('map-line')).toBeAttached();
     expect(seen.filter((u) => hostOf(u) === 'api.transitous.org')).toHaveLength(1);
+  });
+
+  test('the own map draws its stored tiles itself; offline-only leaves everything else empty', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    const coveredRequests = () =>
+      seen.filter(
+        (u) => hostOf(u) === 'tile.openstreetmap.org' && /\/1[2-9]\/\d+\/\d+\.png$/.test(u),
+      );
+    await enable(page, 'maps');
+    await ready(page, '/maps');
+
+    // Package 1 has no builder yet: the fixture town goes straight into the module's local tables,
+    // in the row shape the repo writes (envelope + data; nothing of it is ever queued for sync).
+    const { id, region, tiles } = sampleRegion();
+    await page.evaluate(
+      async ({ id, region, tiles }) => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onsuccess = () => resolve(open.result);
+          open.onerror = () => reject(open.error);
+        });
+        const envelope = (key: string) => ({
+          id: key,
+          createdAt: 1_700_000_000_000,
+          updatedAt: 1_700_000_000_000,
+          deviceId: 'e2e',
+          deletedAt: null,
+          _f: {},
+        });
+        const tx = db.transaction(['maps_region', 'maps_tile'], 'readwrite');
+        tx.objectStore('maps_region').put({ ...region, ...envelope(id) });
+        for (const t of tiles)
+          tx.objectStore('maps_tile').put({
+            ...t.data,
+            bytes: new Uint8Array(t.data.bytes).buffer,
+            ...envelope(t.id),
+          });
+        await new Promise<void>((resolve, reject) => {
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+      },
+      {
+        id,
+        region,
+        tiles: tiles.map((t) => ({
+          id: t.id,
+          data: { ...t.data, bytes: Array.from(new Uint8Array(t.data.bytes)) },
+        })),
+      },
+    );
+
+    await ready(page, '/maps?view=map');
+    await expect(page.getByTestId('tile-map')).toBeVisible();
+    // Coordinates are read locally (no search request) and put the map on the town at zoom 16.
+    const centre = `${SAMPLE_CENTER.lat}, ${SAMPLE_CENTER.lon}`;
+    await page.getByLabel('Ort oder Adresse suchen').fill(centre);
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    await page.getByTestId('map-hits').getByText(centre).click();
+    const map = page.getByTestId('tile-map');
+    await expect.poll(() => map.locator('img[src^="blob:"]').count()).toBeGreaterThan(3);
+    expect(seen.filter((u) => hostOf(u) === 'nominatim.openstreetmap.org')).toEqual([]);
+    expect(coveredRequests()).toEqual([]);
+    await test.info().attach('own-map', { body: await map.screenshot(), contentType: 'image/png' });
+
+    // Zooming out beyond the stored zooms still shows the online tiles (the default).
+    for (let i = 0; i < 6; i++) await page.getByRole('button', { name: 'Verkleinern' }).click();
+    await expect
+      .poll(
+        () => seen.filter((u) => hostOf(u) === 'tile.openstreetmap.org' && /\/10\//.test(u)).length,
+      )
+      .toBeGreaterThan(0);
+
+    // "Nur eigene Karte (offline)": nothing outside the own map is requested or drawn.
+    await ready(page, '/settings/module');
+    await openFoldedGroup(page, 'module-maps', 'fields');
+    const toggle = page.getByRole('switch', { name: 'Nur eigene Karte (offline)' });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+    const before = seen.length;
+    await ready(page, '/maps?view=map');
+    await expect(page.getByTestId('tile-map')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Verkleinern' })).toBeVisible();
+    await page.waitForTimeout(400); // give a stray request the chance to show up
+    expect(seen.slice(before).filter((u) => hostOf(u) === 'tile.openstreetmap.org')).toEqual([]);
+    await expect(page.getByTestId('tile-map').locator('img')).toHaveCount(0);
+    await expect(page.getByText(/konnten nicht geladen werden/)).toHaveCount(0);
   });
 });

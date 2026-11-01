@@ -18,9 +18,11 @@ async function save(page: Page) {
 test('the share page offers only enabled modules and prefills the target', async ({ page }) => {
   await enable(page, 'bookmarks');
   await enable(page, 'notes');
-  await page.goto(
-    '/share?title=Sch%C3%B6ner%20Weg&text=Schau%20mal%20https%3A%2F%2Fwandern.example%2Fweg',
-  );
+  // Reopened by address between the targets: `goBack()` after a dialog close raced the pending
+  // back traversal on the phone project and sometimes landed one page too early.
+  const share =
+    '/share?title=Sch%C3%B6ner%20Weg&text=Schau%20mal%20https%3A%2F%2Fwandern.example%2Fweg';
+  await page.goto(share);
   await expect(page.getByTestId('shared-content')).toContainText('Schöner Weg');
   await expect(page.getByTestId('share-todos')).toBeVisible();
   await expect(page.getByTestId('share-bookmarks')).toBeVisible();
@@ -32,14 +34,14 @@ test('the share page offers only enabled modules and prefills the target', async
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();
 
   await backSettled(page);
-  await page.goBack();
+  await page.goto(share);
   await page.getByTestId('share-notes').click();
   await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('Schöner Weg');
   await expect(page.getByRole('dialog').getByLabel('Text')).toHaveValue(/wandern\.example/);
   await page.getByRole('dialog').getByRole('button', { name: 'Abbrechen' }).click();
 
   await backSettled(page);
-  await page.goBack();
+  await page.goto(share);
   await page.getByTestId('share-todos').click();
   await expect(page.getByPlaceholder('Neue Aufgabe …')).toHaveValue('Schöner Weg');
 });

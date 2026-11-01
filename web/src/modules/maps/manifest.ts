@@ -3,7 +3,7 @@ import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
-import { placeSchema, routeSchema } from './schema';
+import { placeSchema, regionSchema, routeSchema, tileSchema } from './schema';
 import { settings } from './settings';
 
 /**
@@ -35,6 +35,9 @@ const manifest: ModuleManifest = {
     collections: {
       place: { schema: placeSchema, indexes: ['createdAt'] },
       route: { schema: routeSchema, indexes: ['createdAt'] },
+      // The own map (docs/features/map-own.md): caches on this device only, never synced or backed up.
+      region: { schema: regionSchema, indexes: ['status'], local: true },
+      tile: { schema: tileSchema, indexes: ['regionId', 'z'], local: true },
     },
   },
   migrations,

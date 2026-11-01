@@ -60,6 +60,12 @@ h1 {
 h1 {
   font-size: var(--text-h1);
 }
+/* Phone: the page title is one step smaller, so the first entry starts higher. */
+@media (max-width: 899px) {
+  h1 {
+    font-size: var(--text-2xl);
+  }
+}
 h2 {
   font-size: var(--text-xl);
 }

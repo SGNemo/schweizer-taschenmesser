@@ -6,7 +6,7 @@ const executablePath = existsSync('/opt/pw-browsers/chromium')
   : undefined;
 export default defineConfig({
   testDir: './e2e/screenshots',
-  testMatch: ['stimulus.spec.ts'],
+  testMatch: ['stimulus.spec.ts', 'first-row.spec.ts'],
   workers: 1,
   timeout: 600_000,
   reporter: 'list',

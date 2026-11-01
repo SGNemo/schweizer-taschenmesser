@@ -17,6 +17,8 @@ const schema = z.object({
   searchUrl: z.string(),
   routingUrl: z.string(),
   transitUrl: z.string(),
+  /** Own map only: nothing outside the built regions is loaded from the internet. */
+  offlineOnly: z.boolean(),
 });
 
 export const settings: ModuleSettings = {
@@ -26,6 +28,7 @@ export const settings: ModuleSettings = {
     searchUrl: DEFAULT_SEARCH_URL,
     routingUrl: DEFAULT_ROUTING_URL,
     transitUrl: DEFAULT_TRANSIT_URL,
+    offlineOnly: false,
   },
   keywords: [
     'karte',
@@ -39,6 +42,8 @@ export const settings: ModuleSettings = {
     'bahn',
     'bus',
     'transitous',
+    'offline',
+    'eigene karte',
   ],
   fields: [
     {
@@ -81,8 +86,22 @@ export const settings: ModuleSettings = {
       },
       type: 'text',
     },
+    {
+      key: 'offlineOnly',
+      get label() {
+        return t.maps.settings.offlineOnly;
+      },
+      get help() {
+        return t.maps.settings.offlineOnlyHelp;
+      },
+      type: 'boolean',
+    },
   ],
 };
+
+/** Whether the map may load online tiles outside the own regions. */
+export const offlineOnlyOf = (prefs: { offlineOnly?: unknown } | undefined): boolean =>
+  prefs?.offlineOnly === true;
 
 /** The addresses in use: a changed value that is not a safe https address falls back to the default. */
 export function servicesOf(
