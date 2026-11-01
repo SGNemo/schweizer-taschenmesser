@@ -2,6 +2,7 @@ import { createFakeDisk } from './fakeDisk';
 import { loggedFetch } from '@/core/net/netlog';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
+import { createFakeBrowser } from './fakeBrowser';
 import { createFakeSystem } from './fakeSystem';
 import { noLocalModel } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
@@ -246,6 +247,22 @@ export function createWebPlatform(): PlatformService {
           processes: unsupported,
           diskIo: unsupported,
           openTaskManager: unsupported,
+        },
+    // E2E builds only: tabs are faked, no page is loaded.
+    browser: isE2eBuild()
+      ? createFakeBrowser()
+      : {
+          supported: false,
+          open: unsupported,
+          navigate: unsupported,
+          back: unsupported,
+          forward: unsupported,
+          reload: unsupported,
+          close: unsupported,
+          show: unsupported,
+          setZoom: unsupported,
+          setBlocker: unsupported,
+          clearData: unsupported,
         },
     localModel: noLocalModel,
     desktop: webDesktop,

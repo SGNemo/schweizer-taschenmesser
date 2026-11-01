@@ -3,6 +3,7 @@ import type { SecretStore } from '@/core/secrets/types';
 import type { UpdateService } from '@/core/update/types';
 import type { DiskService } from './disk';
 import type { LocalModelService } from './localModel';
+import type { BrowserService } from './browser';
 import type { SystemService } from './system';
 
 /**
@@ -258,6 +259,8 @@ export interface PlatformService {
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */
   system: SystemService;
+  /** Isolated tabs of the built-in browser (desktop only). */
+  browser: BrowserService;
   /** The built-in local language model (desktop only; stage 1 of the AI entry pipeline). */
   localModel: LocalModelService;
   desktop: DesktopService;
