@@ -106,7 +106,7 @@ test.describe('Cockpit mode', () => {
     await page.getByRole('switch', { name: 'Großanzeige' }).click();
     await page.getByRole('switch', { name: 'Dichtes Raster' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Schließen' }).click();
-    await page.getByRole('button', { name: 'Fertig' }).click();
+    await page.getByTestId('cockpit-edit-tools').getByRole('button', { name: 'Fertig' }).click();
     await expect(page.getByTestId('cockpit-stats')).toBeVisible();
     await expect(page.getByTestId('cockpit-stats')).toContainText('Nächster Termin');
 

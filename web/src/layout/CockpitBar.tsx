@@ -54,6 +54,12 @@ export function CockpitBar() {
     clearTimer();
     timer.current = window.setTimeout(() => setOpen(false), LINGER_MS);
   };
+  /** An action taken from the bar retracts it: what it opened (palette, sheet, edit tools) needs the room. */
+  const retract = () => {
+    clearTimer();
+    setPinnedOpen(false);
+    setOpen(false);
+  };
 
   // Pointer at the top edge (mouse / pen only): the bar slides in and lingers a moment after leaving.
   useEffect(() => {
@@ -107,26 +113,45 @@ export function CockpitBar() {
         <span className={styles.gripLine} aria-hidden="true" />
       </button>
       <div id="cockpit-bar" className={styles.bar} role="toolbar" aria-label={tx.bar}>
-        <button type="button" className={styles.search} onClick={() => setPaletteOpen(true)}>
+        <button
+          type="button"
+          className={styles.search}
+          onClick={() => {
+            retract();
+            setPaletteOpen(true);
+          }}
+        >
           <Icon name="search" size={18} />
           <span className={styles.label}>{t.actions.search}</span>
         </button>
         <Button
           variant="primary"
           aria-label={t.nav.createAria}
-          onClick={() => setQuickAddOpen(true)}
+          onClick={() => {
+            retract();
+            setQuickAddOpen(true);
+          }}
         >
           <Icon name="plus" size={18} />
           <span className={styles.label}>{t.nav.create}</span>
         </Button>
         <NotificationBell />
-        <IconButton label={t.tools.open} onClick={() => openTools()}>
+        <IconButton
+          label={t.tools.open}
+          onClick={() => {
+            retract();
+            openTools();
+          }}
+        >
           <Icon name="wrench" />
         </IconButton>
         <IconButton
           label={editing ? t.homeEdit.done : tx.customize}
           aria-pressed={editing}
-          onClick={() => setEditing(!editing)}
+          onClick={() => {
+            retract();
+            setEditing(!editing);
+          }}
         >
           <Icon name={editing ? 'check' : 'edit'} />
         </IconButton>
