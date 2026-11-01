@@ -8,7 +8,8 @@
  * three run in parallel and the tools reuse their caches under node_modules/.cache, so a repeat run
  * after a small edit takes seconds. Output of every check is shown after all have finished.
  * The bundle budget (scripts/check-bundle.mjs) runs alongside as a warning only: it never fails the gate.
- * Skip it with CHECK_BUNDLE=0 (it builds the app into dist-bundle/, a few seconds).
+ * It rebuilds dist-bundle/ only when a source is newer than the last build (`--if-stale`), so a repeat run
+ * without changes stays at seconds; after an edit it costs one production build. CHECK_BUNDLE=0 skips it.
  */
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -51,7 +52,13 @@ const checks = [
   { name: 'typecheck node', args: tsc('tsconfig.node.json') },
   ...(process.env.CHECK_BUNDLE === '0'
     ? []
-    : [{ name: 'bundle budget', node: ['scripts/check-bundle.mjs'], warnOnly: true }]),
+    : [
+        {
+          name: 'bundle budget',
+          node: ['scripts/check-bundle.mjs', '--if-stale'],
+          warnOnly: true,
+        },
+      ]),
 ];
 
 function run({ name, args, node, warnOnly }) {

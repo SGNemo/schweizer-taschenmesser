@@ -109,6 +109,13 @@ export function labelOf(manifest: ViteManifest, file: string): string {
   return file;
 }
 
+/** A build is reusable when it is newer than every source file (mtimes in ms; no build yet → stale). */
+export function isStale(buildMtime: number | undefined, sourceMtimes: Iterable<number>): boolean {
+  if (buildMtime === undefined) return true;
+  for (const m of sourceMtimes) if (m > buildMtime) return true;
+  return false;
+}
+
 // --- Budget ---------------------------------------------------------------------------------------
 
 export interface Budget {

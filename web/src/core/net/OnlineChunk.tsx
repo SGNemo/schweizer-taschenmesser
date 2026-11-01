@@ -11,8 +11,9 @@ import styles from './OnlineChunk.module.css';
  * and it retries by itself when the device is back online (or on "Erneut versuchen").
  *
  * Chromium remembers a failed dynamic import for the life of the page (a second `import()` of the same URL
- * fails at once, even online). So a retry first tries in place (enough where the browser does not remember);
- * when that failed while online, "Erneut versuchen" reloads the page. Nothing reloads by itself.
+ * fails at once, even online). So coming back online first retries in place (enough where the browser does
+ * not remember); "Erneut versuchen" while online reloads the page right away (also for a stale page after
+ * a deploy), offline it retries in place. Nothing reloads by itself.
  */
 
 /** Seam for tests (jsdom cannot reload). */
@@ -45,16 +46,16 @@ interface BoundaryProps {
   children: ReactNode;
 }
 
-class ChunkBoundary extends Component<BoundaryProps, { error: unknown; tries: number }> {
-  override state: { error: unknown; tries: number } = { error: undefined, tries: 0 };
+class ChunkBoundary extends Component<BoundaryProps, { error: unknown }> {
+  override state: { error: unknown } = { error: undefined };
   static getDerivedStateFromError(error: unknown) {
     return { error };
   }
   retry = (fromOnlineEvent = false) => {
-    // Failed again although online: this page remembers the failure, only a reload loads it.
-    if (!fromOnlineEvent && this.state.tries > 0 && navigator.onLine) return page.reload();
+    // A click while online: this page may remember the failure, only a reload loads it for sure.
+    if (!fromOnlineEvent && navigator.onLine) return page.reload();
     this.props.onRetry();
-    this.setState((s) => ({ error: undefined, tries: s.tries + 1 }));
+    this.setState({ error: undefined });
   };
   override componentDidMount() {
     window.addEventListener('online', this.onOnline);

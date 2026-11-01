@@ -4,7 +4,10 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ChunkUnavailable, lazyOnline, page } from './OnlineChunk';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const Part = ({ word }: { word: string }) => <p>{word}</p>;
 const ok = () => Promise.resolve({ default: Part });
@@ -35,10 +38,11 @@ describe('lazyOnline', () => {
     expect(await screen.findByText('geladen')).toBeTruthy();
   });
 
-  it('a failed import shows the calm notice, not an error; "Erneut versuchen" loads it', async () => {
+  it('a failed import shows the calm notice, not an error; "Erneut versuchen" (offline) retries in place', async () => {
     const load = vi.fn<typeof ok>().mockImplementationOnce(offline).mockImplementation(ok);
     const Cmp = lazyOnline(load);
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     render(
       <Outer>
         <Cmp word="geladen" />
@@ -69,7 +73,7 @@ describe('lazyOnline', () => {
     expect(await screen.findByText('wieder da')).toBeTruthy();
   });
 
-  it('failed again while online (the browser remembers the failure): "Erneut versuchen" reloads the page', async () => {
+  it('failed again after coming back online (the browser remembers): "Erneut versuchen" reloads the page', async () => {
     const Cmp = lazyOnline<{ word: string }>(offline);
     const reload = vi.spyOn(page, 'reload').mockImplementation(() => undefined);
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -87,6 +91,21 @@ describe('lazyOnline', () => {
     expect(reload).not.toHaveBeenCalled();
     fireEvent.click(again);
     expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('failed while online (stale page after a deploy): the first "Erneut versuchen" reloads', async () => {
+    const load = vi.fn(offline);
+    const Cmp = lazyOnline<{ word: string }>(load);
+    const reload = vi.spyOn(page, 'reload').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Outer>
+        <Cmp word="x" />
+      </Outer>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Erneut versuchen' }));
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledTimes(1);
   });
 
   it('an error inside the loaded part still reaches the outer boundary', async () => {

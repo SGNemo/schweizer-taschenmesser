@@ -9,11 +9,13 @@
  *   npm run check:bundle -- --no-build       report on the existing dist-bundle/
  *   npm run check:bundle -- --baseline       build + rewrite the budget (PRs that change the numbers on purpose)
  *   npm run check:bundle -- --modules        also list the largest modules on the main critical path
+ *   node scripts/check-bundle.mjs --if-stale     rebuild only when a source is newer than the last build
+ *                                                (used by `npm run check`, so a repeat run takes seconds)
  *   node scripts/check-bundle.mjs --build-only   only the build (used by playwright.coldstart.config.ts)
  *   node scripts/check-bundle.mjs --dir dist     report on another build folder (needs VITE_BUNDLE_REPORT=1)
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
@@ -24,6 +26,7 @@ import {
   forbiddenInPrecache,
   formatBudget,
   formatTable,
+  isStale,
   kb,
   labelOf,
   lazyFiles,
@@ -38,7 +41,36 @@ const has = (flag) => args.includes(flag);
 const dirIdx = args.indexOf('--dir');
 const outDir = resolve(web, dirIdx >= 0 ? (args[dirIdx + 1] ?? '') : 'dist-bundle');
 
-if (!has('--no-build') && dirIdx < 0) {
+/** Newest mtime of everything the build reads (app sources, shared packages, build config, lock file). */
+function* sourceMtimes() {
+  const walk = function* (dir) {
+    if (!existsSync(dir)) return;
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) yield* walk(p);
+      else yield statSync(p).mtimeMs;
+    }
+  };
+  yield* walk(join(web, 'src'));
+  yield* walk(resolve(web, '../packages/vault-core/src'));
+  yield* walk(resolve(web, '../packages/supporter-codes/src'));
+  for (const f of [
+    'index.html',
+    'capture.html',
+    'vite.config.ts',
+    'package-lock.json',
+    'scripts/lib/precacheSplit.ts',
+  ])
+    if (existsSync(join(web, f))) yield statSync(join(web, f)).mtimeMs;
+}
+
+const builtAt = () => {
+  const m = join(outDir, '.vite/manifest.json');
+  return existsSync(m) ? statSync(m).mtimeMs : undefined;
+};
+const skipBuild = has('--no-build') || (has('--if-stale') && !isStale(builtAt(), sourceMtimes()));
+
+if (!skipBuild && dirIdx < 0) {
   const run = spawnSync(
     'npx',
     ['vite', 'build', '--outDir', outDir, '--emptyOutDir', '--logLevel', 'warn'],

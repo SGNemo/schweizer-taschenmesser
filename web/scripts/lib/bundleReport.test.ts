@@ -5,6 +5,7 @@ import {
   entries,
   forbiddenInPrecache,
   formatBudget,
+  isStale,
   labelOf,
   lazyFiles,
   makeBudget,
@@ -128,5 +129,16 @@ describe('budget', () => {
     expect(compareBudget(budget, { ...measured, criticalGzip: 10 }).some((l) => l.over)).toBe(
       false,
     );
+  });
+});
+
+describe('isStale', () => {
+  it('no build yet, or a source newer than the build: rebuild', () => {
+    expect(isStale(undefined, [1])).toBe(true);
+    expect(isStale(100, [50, 101])).toBe(true);
+  });
+  it('every source older than the build: reuse it', () => {
+    expect(isStale(100, [50, 100])).toBe(false);
+    expect(isStale(100, [])).toBe(false);
   });
 });
