@@ -261,7 +261,7 @@ export function createWebPlatform(): PlatformService {
           close: unsupported,
           show: unsupported,
           setZoom: unsupported,
-          setBlocker: unsupported,
+          configure: unsupported,
           clearData: unsupported,
         },
     localModel: noLocalModel,

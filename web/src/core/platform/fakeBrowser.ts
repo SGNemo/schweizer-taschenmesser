@@ -28,6 +28,10 @@ export function createFakeBrowser(): BrowserService {
     async open(o, onEvent) {
       sinks.set(o.tab, onEvent);
       log(`open:${o.tab}:${o.privateTab ? 'private' : 'normal'}:${o.url}`);
+      if (o.url.startsWith('http://') && !o.allowHttp) {
+        onEvent({ event: 'httpHeld', tab: o.tab, url: o.url });
+        return;
+      }
       load(o.tab, o.url);
     },
     async navigate(tab, url, allowHttp) {
@@ -57,8 +61,8 @@ export function createFakeBrowser(): BrowserService {
     async setZoom(tab, factor) {
       log(`zoom:${tab}:${factor}`);
     },
-    async setBlocker(config) {
-      log(`blocker:${config.enabled}:${config.rules.length}`);
+    async configure(config) {
+      log(`configure:${config.warnHttp}:${config.blockerEnabled}:${config.rules.length}`);
     },
     async clearData() {
       log('clearData');

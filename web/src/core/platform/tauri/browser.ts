@@ -1,5 +1,5 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
-import type { BlockerConfig, BrowserBounds, BrowserEvent, BrowserOpenOptions, BrowserService } from '../browser';
+import type { BrowserConfig, BrowserBounds, BrowserEvent, BrowserOpenOptions, BrowserService } from '../browser';
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('unsupported'));
 
@@ -16,7 +16,7 @@ export function createBrowser(supported: boolean): BrowserService {
       close: unsupported,
       show: unsupported,
       setZoom: unsupported,
-      setBlocker: unsupported,
+      configure: unsupported,
       clearData: unsupported,
     };
   return {
@@ -34,7 +34,7 @@ export function createBrowser(supported: boolean): BrowserService {
     close: (tab: number) => invoke<void>('browser_close', { tab }),
     show: (tab: number | null, bounds?: BrowserBounds) => invoke<void>('browser_show', { tab, bounds }),
     setZoom: (tab: number, factor: number) => invoke<void>('browser_set_zoom', { tab, factor }),
-    setBlocker: (config: BlockerConfig) => invoke<void>('browser_set_blocker', { config }),
+    configure: (config: BrowserConfig) => invoke<void>('browser_configure', { config }),
     clearData: () => invoke<void>('browser_clear_data'),
   };
 }

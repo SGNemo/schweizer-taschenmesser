@@ -28,8 +28,10 @@ export type BrowserEvent =
   /** A third-party host the page talked to (for "Blocker" panel). */
   | { event: 'seen'; tab: number; host: string };
 
-export interface BlockerConfig {
-  enabled: boolean;
+export interface BrowserConfig {
+  /** Hold plain-HTTP navigations back until the user confirms (`httpHeld`). */
+  warnHttp: boolean;
+  blockerEnabled: boolean;
   /** User rules, same shape as Rust `Rule`. */
   rules: Array<{ kind: 'domain' | 'address'; value: string }>;
   /** Sites where the user paused the blocker. */
@@ -43,6 +45,8 @@ export interface BrowserOpenOptions {
   /** Private tab: no stored cookies/cache after closing, no history. */
   privateTab: boolean;
   zoom: number;
+  /** The user already confirmed this plain-HTTP address. */
+  allowHttp?: boolean;
 }
 
 export interface BrowserService {
@@ -58,7 +62,7 @@ export interface BrowserService {
   /** Show this tab (and hide all others); `null` hides every tab (e.g. while a Nemo dialog is open). */
   show(tab: number | null, bounds?: BrowserBounds): Promise<void>;
   setZoom(tab: number, factor: number): Promise<void>;
-  setBlocker(config: BlockerConfig): Promise<void>;
+  configure(config: BrowserConfig): Promise<void>;
   /** Close every tab and delete cookies, cache and site data of the browser (not of Nemo). */
   clearData(): Promise<void>;
 }
