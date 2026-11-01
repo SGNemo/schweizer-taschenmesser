@@ -206,6 +206,12 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **L3 Ruhig-Modus:** Farben → Ruhig: bleiben nur Überfälliges und Heutiges farbig; erkennt man Kategorien noch am Namen?
 - **L4 Gliederung:** Rechnungen/ToDos: Gruppen einklappen, nach Neustart bleibt der Zustand; Kalender-Woche: Stundenlinien, Wochenende, Jetzt-Linie; Bereichsfarben in Seitenleiste und Modul-Bibliothek (hell/dunkel, Rail, Handy).
 
+### Notizen: Editor (`feat/notes-editor`) – nur auf echter Hardware prüfbar
+- **E1 Android:** Seite öffnen, Tastatur (Gboard) mit Autokorrektur: tippen, `# ` und `- ` Kürzel, `/`-Menü, Text markieren → schwebende Leiste bedienbar (Fett, Hervorheben, Link); Bild aus der Galerie per „/Bild“; Zurück zur Liste. ☐
+- **E2 Windows-App:** Strg+B/I, Tab/Shift+Tab in Listen, Strg+Z/Y; Vollbild; Bild aus der Zwischenablage einfügen und nach Neustart noch da. ☐
+- **E3 Absturz:** Seite mit viel Text, Tab/Fenster hart beenden (Task-Manager), neu öffnen: Text ist da (ggf. Hinweis „wiederhergestellt“). ☐
+- **E4 Große Seite:** 100.000 Zeichen einfügen (z. B. langer Markdown-Text): Tippen und Scrollen bleibt flüssig auf dem Handy? ☐
+
 ### KI abschalten – nur mit zwei Geräten prüfbar
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
