@@ -164,6 +164,13 @@ export const maps: Strings['maps'] = {
     confirmRemove: 'Really delete?',
     keep: 'Keep',
     removed: 'Map deleted',
+    upgrade: 'Make it detailed',
+    extend: 'Extend here',
+    viewportName: 'Map section',
+    covered: 'This section is already in your map.',
+    removeAll: 'Delete all maps',
+    confirmRemoveAll: 'Delete all own maps?',
+    asOf: (date: string) => `as of ${date}`,
     reasons: {
       busy: 'The map service is busy right now. Continue later.',
       network: 'The map service cannot be reached right now. Continue later.',

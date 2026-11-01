@@ -170,6 +170,13 @@ export const maps: Strings['maps'] = {
     confirmRemove: 'Vraiment supprimer ?',
     keep: 'Garder',
     removed: 'Carte supprimée',
+    upgrade: 'Rendre détaillée',
+    extend: 'Étendre ici',
+    viewportName: 'Section de carte',
+    covered: 'Cette section est déjà dans votre carte.',
+    removeAll: 'Supprimer toutes les cartes',
+    confirmRemoveAll: 'Supprimer toutes les cartes personnelles ?',
+    asOf: (date: string) => `au ${date}`,
     reasons: {
       busy: 'Le service cartographique est surchargé pour le moment. Continuez plus tard.',
       network: 'Le service cartographique est injoignable pour le moment. Continuez plus tard.',

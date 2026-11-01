@@ -71,6 +71,8 @@ export const regionSchema = z.object({
   reason: z.enum(PAUSE_REASONS).optional(),
   /** Zoom of the build cells (one request each); the cell order is derived from it on resume. */
   cellZoom: zoom.default(13),
+  /** Cells (`z/x/y`) of the plan that were already built by another region and are left out. */
+  skipCells: z.array(z.string()).optional(),
   /** Epoch ms of the last finished build (a technical timestamp, shown as a date). */
   builtAt: z.number().int().optional(),
   /** Stored bytes of all its tiles. */

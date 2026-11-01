@@ -5521,6 +5521,13 @@ export const de = {
       confirmRemove: 'Wirklich löschen?',
       keep: 'Behalten',
       removed: 'Karte gelöscht',
+      upgrade: 'Genauer machen',
+      extend: 'Hier erweitern',
+      viewportName: 'Kartenausschnitt',
+      covered: 'Dieser Ausschnitt ist schon in deiner Karte.',
+      removeAll: 'Alle Karten löschen',
+      confirmRemoveAll: 'Alle eigenen Karten löschen?',
+      asOf: (date: string) => `Stand ${date}`,
       reasons: {
         busy: 'Der Kartendienst ist gerade ausgelastet. Später weitermachen.',
         network: 'Der Kartendienst ist gerade nicht erreichbar. Später weitermachen.',

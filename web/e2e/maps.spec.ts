@@ -378,9 +378,25 @@ test.describe('Karten & Orte', () => {
       .info()
       .attach('own-map-built', { body: await map.screenshot(), contentType: 'image/png' });
 
-    await row.getByRole('button', { name: 'Karte löschen' }).click();
-    await expect(row).toContainText('Wirklich löschen?');
-    await row.getByRole('button', { name: 'Karte löschen' }).click();
+    // "Genauer machen": the same area again at the full level (buildings, paths, names).
+    const before = seen.filter((u) => hostOf(u) === 'overpass-api.de').length;
+    await row.getByRole('button', { name: 'Genauer machen' }).click();
+    await expect(row).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+    await expect(row).toContainText(/genau · Fertig/);
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de').length).toBeGreaterThan(before);
+    await expect(row.getByRole('button', { name: 'Genauer machen' })).toHaveCount(0);
+
+    // Zoomed out, the shown area has cells no own map holds: "Hier erweitern" builds just those.
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Verkleinern' }).click();
+    await page.getByTestId('map-extend').click();
+    const rows = page.getByTestId('map-region');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(1)).toContainText('Kartenausschnitt');
+    await expect(rows.nth(1)).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+
+    await page.getByRole('button', { name: 'Alle Karten löschen' }).click();
+    await expect(page.getByText('Alle eigenen Karten löschen?')).toBeVisible();
+    await page.getByRole('button', { name: 'Alle Karten löschen' }).click();
     await expect(page.getByTestId('map-region')).toHaveCount(0);
   });
 });
