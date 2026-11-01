@@ -48,7 +48,22 @@ describe('tool visibility filter', () => {
     expect(allTools.map((x) => x.id)).toEqual(before);
   });
 
-  it('every tool names a maturity', () => {
+  it('every tool names a maturity; the preview ones are the ticked list', () => {
     for (const x of allTools) expect(['stable', 'preview'], x.id).toContain(x.maturity);
+    expect(
+      allTools
+        .filter((x) => x.maturity === 'preview')
+        .map((x) => x.id)
+        .sort(),
+    ).toEqual(['diff', 'regex', 'screenshot']);
+    // Hidden by default, listed with the switch, and after an explicit "on" also without it.
+    const off = visibleTools({ showPreview: false, saved: DEFAULT_TOOLS }).map((x) => x.id);
+    expect(off).not.toContain('diff');
+    expect(visibleTools({ showPreview: true, saved: DEFAULT_TOOLS }).map((x) => x.id)).toContain(
+      'diff',
+    );
+    expect(
+      visibleTools({ showPreview: false, saved: saved({ diff: true }) }).map((x) => x.id),
+    ).toContain('diff');
   });
 });

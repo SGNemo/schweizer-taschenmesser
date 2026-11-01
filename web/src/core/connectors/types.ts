@@ -8,6 +8,7 @@
  * (ESLint), so nothing that was read from a mailbox can reach a model.
  */
 import type { ComponentType } from 'react';
+import type { Maturity } from '@/core/modules/types';
 import type { PlatformKind } from '@/core/platform/types';
 import type { Recurrence } from '@/core/recurrence/types';
 import type { SetupStepDef } from '@/core/setup/types';
@@ -313,6 +314,12 @@ export interface ConnectorDef {
   description: string;
   icon: IconName;
   authType: ConnectorAuth;
+  /**
+   * Optional, default `stable`. `preview` hides the card in Settings → Verbindungen until
+   * "In Arbeit anzeigen" is on or the connector is connected (`core/connectors/registry.ts`
+   * `isVisible`); setup steps, the home line and the focus row only ever show a connected one.
+   */
+  maturity?: Maturity;
   /** Where "connect" works; the card explains the rest. */
   platforms: PlatformKind[];
   oauth?: OAuthEndpoints;

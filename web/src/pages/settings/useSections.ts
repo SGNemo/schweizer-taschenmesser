@@ -8,7 +8,11 @@ import { getPlatform } from '@/core/platform';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { validateSections, visibleSections } from '@/core/settings/registry/registry';
 import type { SettingsContext, SettingsSectionDef } from '@/core/settings/registry/types';
+import { useLocalApiConfig } from '@/core/localapi/config';
+import { useNetLog } from '@/core/net/netlog';
+import { loadPairs } from '@/core/share/pairs';
 import { isDevBuild } from '@/core/update/buildInfo';
+import { useVoicePrefs } from '@/core/voice/settings';
 import { useUiStore } from '@/stores/ui';
 import { createElement } from 'react';
 import { ModuleSection } from './ModuleSection';
@@ -67,9 +71,32 @@ export function allSettingsSections(
 let lastStates: ModuleStates | undefined;
 
 /** Sections visible right now (platform, dev build, enabled modules), in navigation order. */
+/**
+ * Which preview sections are in use right now (`SettingsContext.inUse`): they stay listed with
+ * "In Arbeit anzeigen" off, so nothing the user switched on can vanish from the settings.
+ */
+export function useSectionsInUse(): Readonly<Record<string, boolean>> {
+  const localApi = useLocalApiConfig();
+  const readAid = useUiStore((s) => s.readAid);
+  const voice = useVoicePrefs();
+  const networkBlocked = useNetLog((s) => s.blocked);
+  const pairs = useLiveQuery(() => loadPairs(), []);
+  return useMemo(
+    () => ({
+      localapi: localApi?.enabled === true,
+      reading: readAid,
+      voice: voice.enabled,
+      network: networkBlocked,
+      share: (pairs?.length ?? 0) > 0,
+    }),
+    [localApi?.enabled, readAid, voice.enabled, networkBlocked, pairs?.length],
+  );
+}
+
 export function useSettingsSections(): SettingsSectionDef[] {
   const aiOn = useAiOn();
   const showPreview = useUiStore((s) => s.showPreview);
+  const inUse = useSectionsInUse();
   const states = useLiveQuery(
     async () => {
       const read = await loadModuleStates();
@@ -87,7 +114,8 @@ export function useSettingsSections(): SettingsSectionDef[] {
       isModuleEnabled: (id) => Boolean(states[id]),
       aiOn,
       showPreview,
+      inUse,
     };
     return visibleSections(allSettingsSections(), ctx);
-  }, [states, aiOn, showPreview]);
+  }, [states, aiOn, showPreview, inUse]);
 }

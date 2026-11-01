@@ -40,6 +40,12 @@ export interface SettingsContext {
   aiOn?: boolean;
   /** "In Arbeit anzeigen" (device-local, `stores/ui.ts`): `preview` sections show only while true. */
   showPreview: boolean;
+  /**
+   * Section id → true while what that section controls is switched on (local API running, reading
+   * aid on, voice key on, a share pair, network lock). A preview section in use stays reachable
+   * with "In Arbeit anzeigen" off; filled by `useSettingsSections`.
+   */
+  inUse?: Readonly<Record<string, boolean>>;
 }
 
 /** A single setting inside a section, listed so the search can find it and jump to its row. */

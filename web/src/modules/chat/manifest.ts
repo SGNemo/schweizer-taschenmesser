@@ -52,7 +52,7 @@ const manifest: ModuleManifest = {
   ],
   settings,
   defaultEnabled: false,
-  maturity: 'stable',
+  maturity: 'preview',
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   area: 'knowledge',

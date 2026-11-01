@@ -74,6 +74,17 @@ describe('settings registry', () => {
     ]);
   });
 
+  it('a preview section in use (inUse map) stays listed with the switch off', () => {
+    const all = [
+      sec({ id: 'wip', maturity: 'preview' }),
+      sec({ id: 'other', maturity: 'preview' }),
+    ];
+    expect(visibleSections(all, ctx()).map((s) => s.id)).toEqual([]);
+    expect(
+      visibleSections(all, ctx({ inUse: { wip: true, other: false } })).map((s) => s.id),
+    ).toEqual(['wip']);
+  });
+
   it('rejects a section without a maturity', () => {
     const bad = { ...sec({ id: 'a' }), maturity: undefined as unknown as 'stable' };
     expect(validateSections([bad]).join()).toContain("maturity 'stable' or 'preview'");

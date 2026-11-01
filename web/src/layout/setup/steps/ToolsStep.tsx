@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { allTools } from '@/core/tools/registry';
+import { visibleTools } from '@/core/tools/state';
+import { useUiStore } from '@/stores/ui';
 import {
   DEFAULT_TOOLS,
   isEnabled,
@@ -20,6 +21,7 @@ export default function ToolsStep({ registerCommit }: SetupStepProps) {
   const [saved] = useSettings(TOOLS_SCOPE, toolsSettingsSchema, DEFAULT_TOOLS);
   const [draft, setDraft] = useState<typeof DEFAULT_TOOLS | undefined>();
   const [showDev, setShowDev] = useState(false);
+  const showPreview = useUiStore((s) => s.showPreview);
   const values = draft ?? saved;
 
   useEffect(() => {
@@ -28,7 +30,8 @@ export default function ToolsStep({ registerCommit }: SetupStepProps) {
   }, [registerCommit, draft]);
 
   if (!values) return null;
-  const ordered = orderTools(allTools, values);
+  // Preview tools only with "In Arbeit anzeigen" or when switched on explicitly (maturity filter).
+  const ordered = orderTools(visibleTools({ showPreview, saved: values }), values);
   const shown = ordered.filter((tool) => showDev || tool.group !== 'dev');
   const ids = ordered.map((tool) => tool.id);
   return (

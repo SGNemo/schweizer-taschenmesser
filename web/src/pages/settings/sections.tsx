@@ -243,7 +243,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'reading',
     category: 'darstellung',
-    maturity: 'stable',
+    maturity: 'preview',
     order: 12,
     get title() {
       return s.reading.title;
@@ -587,7 +587,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'browser-extension',
     category: 'verbindungen',
-    maturity: 'stable',
+    maturity: 'preview',
     order: 30,
     get title() {
       return s.linkRow.browserExtension;
@@ -794,7 +794,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'share',
     category: 'verbindungen',
-    maturity: 'stable',
+    maturity: 'preview',
     order: 15,
     get title() {
       return tShare.get().title;
@@ -814,7 +814,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'network',
     category: 'verbindungen',
-    maturity: 'stable',
+    maturity: 'preview',
     order: 20,
     get title() {
       return tNet.get().title;
@@ -934,7 +934,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'localapi',
     category: 'verbindungen',
-    maturity: 'stable',
+    maturity: 'preview',
     order: 20,
     get title() {
       return t.localApi.title;
@@ -1033,7 +1033,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'voice',
     category: 'schnellerfassung',
-    maturity: 'stable',
+    maturity: 'preview',
     order: 20,
     get title() {
       return t.voice.title;

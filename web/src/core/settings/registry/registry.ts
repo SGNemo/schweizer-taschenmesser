@@ -32,7 +32,10 @@ const bySort = (a: SettingsSectionDef, b: SettingsSectionDef) =>
  * what it controls is in use (`previewInUse`), so nothing the user switched on becomes unreachable.
  */
 export const isMaturityVisible = (s: SettingsSectionDef, ctx: SettingsContext): boolean =>
-  s.maturity !== 'preview' || ctx.showPreview || s.previewInUse?.(ctx) === true;
+  s.maturity !== 'preview' ||
+  ctx.showPreview ||
+  ctx.inUse?.[s.id] === true ||
+  s.previewInUse?.(ctx) === true;
 
 /** Visible sections in navigation order (category order, then `order`, then title). */
 export function visibleSections(

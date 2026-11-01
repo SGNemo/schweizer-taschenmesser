@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
-import { availableManifests } from '@/core/modules/available';
+import { availableManifests, isVisible } from '@/core/modules/available';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import {
   diffSelection,
@@ -10,9 +10,11 @@ import {
   toggleModule,
   withDependencies,
 } from '@/core/setup/profiles';
+import type { ModuleManifest } from '@/core/modules/types';
 import type { SetupStepProps } from '@/core/setup/types';
 import { DEFAULT_TOOLS, isEnabled, toolsSettingsSchema, TOOLS_SCOPE } from '@/core/tools/layout';
 import { allTools } from '@/core/tools/registry';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Card, Checkbox, Icon, patternStyles, Switch } from '@/ui';
 
@@ -38,6 +40,10 @@ export default function ProfilesStep({
   const quick = mode === 'quick';
   const states = useModuleStates();
   const [tools] = useSettings(TOOLS_SCOPE, toolsSettingsSchema, DEFAULT_TOOLS);
+  // Preview modules only with "In Arbeit anzeigen" or when already on (maturity filter).
+  const showPreview = useUiStore((st) => st.showPreview);
+  const listedModule = (m: ModuleManifest) =>
+    isVisible(m, { showPreview, isEnabled: (id) => Boolean(states?.[id]) });
   const [touched, setTouched] = useState<
     { modules: Set<string>; tools: Set<string> } | undefined
   >();
@@ -195,22 +201,24 @@ export default function ProfilesStep({
 
       <h4>{s.modules}</h4>
       <ul className={patternStyles.gridList}>
-        {availableManifests().map((m) => (
-          <li key={m.id}>
-            <Switch
-              label={m.name}
-              hint={[
-                m.description,
-                m.requires?.length ? s.requires(names(m.requires)) : '',
-                via[m.id] && selection.has(m.id) ? s.viaDependency(names(via[m.id]!)) : '',
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-              checked={selection.has(m.id)}
-              onChange={(on) => toggle(m.id, on)}
-            />
-          </li>
-        ))}
+        {availableManifests()
+          .filter(listedModule)
+          .map((m) => (
+            <li key={m.id}>
+              <Switch
+                label={m.name}
+                hint={[
+                  m.description,
+                  m.requires?.length ? s.requires(names(m.requires)) : '',
+                  via[m.id] && selection.has(m.id) ? s.viaDependency(names(via[m.id]!)) : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                checked={selection.has(m.id)}
+                onChange={(on) => toggle(m.id, on)}
+              />
+            </li>
+          ))}
       </ul>
     </>
   );

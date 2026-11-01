@@ -1,4 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { showPreview } from './helpers';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 /**
  * Settings → KI-Zugriff with the e2e stand-in for the native server (`core/platform/fakeLocalApi.ts`):
