@@ -1,3 +1,4 @@
+import { gzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
@@ -8,7 +9,8 @@ import { inlineCompute } from '../own/compute';
 import { tileBbox, tilesCovering } from '../own/cut';
 import { overpassBusyFixture, overpassFixture } from '../own/fixtures';
 import { CELL_ZOOM } from '../own/plan';
-import { SAMPLE_CENTER } from '../own/sample';
+import { encodePmtiles } from '../own/pmtiles';
+import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../own/sample';
 import { regionSchema, tileSchema } from '../schema';
 
 const OVERPASS = 'https://overpass-api.de/api/interpreter';
@@ -376,5 +378,160 @@ describe('own map builder', () => {
     await builder.removeAll();
     expect(await regions.table.count()).toBe(0);
     expect(await tiles.table.count()).toBe(0);
+  });
+});
+
+describe('own map from a region file', () => {
+  const FILE = 'https://maps.example/nemostadt.pmtiles';
+  type Calls = [unknown, RequestInit][];
+  type Host = { fetch: typeof globalThis.fetch; calls: Calls };
+  const fileCalls = (h: Host) => h.calls.filter(([u]) => String(u) === FILE);
+  const overpassCalls = (h: Host) => h.calls.filter(([u]) => String(u) === OVERPASS);
+
+  /** The file's host (range requests) next to Overpass; `state` lets the host fail or go away. */
+  function fileFetch(
+    bytes: Uint8Array,
+    state: { status?: number; blockAfter?: number } = {},
+  ): Host {
+    let n = 0;
+    const calls: Calls = [];
+    const fetch = async (input: unknown, init?: RequestInit) => {
+      calls.push([input, init ?? {}]);
+      if (String(input) !== FILE) return okAnswer();
+      n++;
+      if (state.blockAfter !== undefined && n > state.blockAfter) throw new NetBlockedError();
+      if (state.status) return new Response(null, { status: state.status });
+      const range = String((init?.headers as Record<string, string>).Range);
+      const m = /^bytes=(\d+)-(\d+)$/.exec(range);
+      if (!m) throw new Error('no range');
+      const start = Number(m[1]);
+      const end = Math.min(Number(m[2]), bytes.length - 1);
+      return new Response(bytes.slice(start, end + 1), { status: 206 });
+    };
+    return { fetch: fetch as unknown as typeof globalThis.fetch, calls };
+  }
+
+  const input = { name: 'Nemostadt', bbox: one, centre: SAMPLE_CENTER, level: 'lean' as const };
+
+  it('copies the tiles cell by cell with range requests, then the lower zooms, and credits the file', async () => {
+    const host = fileFetch(samplePmtiles());
+    const { builder, regions, tiles } = setup({ fetch: host.fetch });
+    const r = await builder.createAndStart({ ...input, fileUrl: FILE });
+    expect(r).toMatchObject({ capped: false, cells: 1, file: 'used' });
+    const id = r.id!;
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    const region = (await regions.get(id))!;
+    expect(region).toMatchObject({
+      source: 'file',
+      sourceUrl: FILE,
+      credit: 'Kartendaten © OpenStreetMap-Mitwirkende (Beispiel)',
+      level: 'full',
+      zooms: { min: 12, max: 16 },
+      cellZoom: 13,
+      cells: { done: 1, total: 1 },
+      builtAt: 1_700_000_000_000,
+    });
+    expect(overpassCalls(host)).toEqual([]);
+    expect(fileCalls(host).length).toBeGreaterThan(1);
+    for (const [, init] of fileCalls(host))
+      expect(init.headers).toMatchObject({
+        Range: expect.stringMatching(/^bytes=\d+-\d+$/) as string,
+        'User-Agent': 'Nemo',
+      });
+    const rows = await tiles.active().toArray();
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((t) => t.regionId === id && !t.gzip && t.size === t.bytes.byteLength)).toBe(
+      true,
+    );
+    expect([...new Set(rows.map((t) => t.z))].sort((a, b) => a - b)).toEqual([12, 13, 14, 15, 16]);
+    // Byte for byte what the file holds, nothing computed here.
+    const sample = new Map(sampleRegion().tiles.map((t) => [t.id, new Uint8Array(t.data.bytes)]));
+    for (const t of rows) expect(new Uint8Array(t.bytes)).toEqual(sample.get(t.id));
+    expect(region.bytes).toBe(rows.reduce((n, t) => n + t.size, 0));
+    expect(useBuildStore.getState()).toEqual({ active: undefined, phase: undefined });
+    // "Hier erweitern" over a covered area creates nothing, with a file as without.
+    expect(await builder.createAndStart({ ...input, skipBuilt: true, fileUrl: FILE })).toEqual({
+      capped: false,
+      cells: 0,
+      file: 'used',
+    });
+  });
+
+  it('without the place in the file, or without an answer from its host, Overpass builds and the reason is named', async () => {
+    const elsewhere = encodePmtiles({
+      tiles: [],
+      bounds: { minLat: 48, maxLat: 48.1, minLon: 9, maxLon: 9.1 },
+      minZoom: 8,
+      maxZoom: 14,
+    });
+    const ha = fileFetch(elsewhere);
+    const a = setup({ fetch: ha.fetch });
+    const r1 = await a.builder.createAndStart({ ...input, fileUrl: FILE });
+    expect(r1.file).toBe('miss');
+    await vi.waitFor(async () => expect((await a.regions.get(r1.id!))!.status).toBe('done'));
+    expect(await a.regions.get(r1.id!)).toMatchObject({ source: 'overpass', level: 'lean' });
+    expect(overpassCalls(ha)).toHaveLength(1);
+    expect(fileCalls(ha)).toHaveLength(1); // opened once, kept for the next build
+
+    const hb = fileFetch(samplePmtiles(), { status: 503 });
+    const b = setup({ fetch: hb.fetch });
+    const r2 = await b.builder.createAndStart({ ...input, fileUrl: FILE });
+    expect(r2.file).toBe('unreachable');
+    await vi.waitFor(async () => expect((await b.regions.get(r2.id!))!.status).toBe('done'));
+    expect((await b.regions.get(r2.id!))!.source).toBe('overpass');
+    expect(overpassCalls(hb)).toHaveLength(1);
+  });
+
+  it('pauses on a blocked network with what it has, continues from the file, and is never "made more detailed"', async () => {
+    const state: { blockAfter?: number } = { blockAfter: 1 }; // the header, then nothing
+    const host = fileFetch(samplePmtiles({ maxZoom: 14 }), state);
+    const { builder, regions, tiles } = setup({ fetch: host.fetch });
+    const r = await builder.createAndStart({ ...input, fileUrl: FILE });
+    expect(r.file).toBe('used');
+    const id = r.id!;
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('paused'));
+    expect((await regions.get(id))!).toMatchObject({
+      reason: 'blocked',
+      cells: { done: 0, total: 1 },
+      level: 'lean',
+      zooms: { min: 12, max: 14 },
+    });
+    expect(await tiles.active().count()).toBe(0);
+
+    delete state.blockAfter;
+    await builder.start(id);
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    expect([...new Set((await tiles.active().toArray()).map((t) => t.z))].sort()).toEqual([
+      12, 13, 14,
+    ]);
+    // A file holds what it holds: no second build at another level.
+    const calls = host.calls.length;
+    await builder.upgrade(id);
+    expect(await regions.get(id)).toMatchObject({ level: 'lean', status: 'done' });
+    expect(host.calls.length).toBe(calls);
+    expect(overpassCalls(host)).toEqual([]);
+  });
+
+  it('keeps gzip tiles as the file holds them, flagged for the renderer', async () => {
+    const { region, tiles: sample } = sampleRegion();
+    const zipped = encodePmtiles({
+      tiles: sample.map((x) => ({
+        z: x.data.z,
+        x: x.data.x,
+        y: x.data.y,
+        bytes: new Uint8Array(gzipSync(new Uint8Array(x.data.bytes))),
+      })),
+      bounds: region.bbox,
+      minZoom: 12,
+      maxZoom: 16,
+      gzip: true,
+    });
+    const { builder, regions, tiles } = setup({ fetch: fileFetch(zipped).fetch });
+    const r = await builder.createAndStart({ ...input, fileUrl: FILE });
+    await vi.waitFor(async () => expect((await regions.get(r.id!))!.status).toBe('done'));
+    const rows = await tiles.active().toArray();
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((t) => t.gzip && new Uint8Array(t.bytes)[0] === 0x1f)).toBe(true);
+    expect((await regions.get(r.id!))!.credit).toBeUndefined();
   });
 });

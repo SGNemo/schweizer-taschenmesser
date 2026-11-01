@@ -21,6 +21,7 @@ export function regionStatus(
   if (region.status === 'done') {
     const parts = [o.done(total), formatBytes(region.bytes)];
     if (region.builtAt) parts.push(o.asOf(formatBuiltAt(region.builtAt)));
+    if (region.credit) parts.push(region.credit);
     return parts.join(' · ');
   }
   const reason = region.reason ? ` · ${o.reasons[region.reason]}` : '';
@@ -60,6 +61,7 @@ export function RegionsCard({
             <div className={styles.text}>
               <p className={styles.name}>{r.name}</p>
               <p className={styles.meta} role="status">
+                {r.source === 'file' ? `${o.fromFile} · ` : ''}
                 {o.level[r.level]} · {regionStatus(r, active, phase)}
               </p>
             </div>
@@ -90,7 +92,7 @@ export function RegionsCard({
                       {o.resume}
                     </Button>
                   ) : null}
-                  {r.status === 'done' && r.level === 'lean' ? (
+                  {r.status === 'done' && r.level === 'lean' && r.source !== 'file' ? (
                     <Button onClick={() => onUpgrade(r.id)}>{o.upgrade}</Button>
                   ) : null}
                   {r.status !== 'building' ? (

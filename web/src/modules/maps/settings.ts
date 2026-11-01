@@ -24,6 +24,8 @@ const schema = z.object({
   overpassUrl: z.string(),
   /** The calm progress line under the map while a build runs. */
   showBuildProgress: z.boolean(),
+  /** A prebuilt region file (PMTiles) on an own host; empty = build from Overpass. */
+  regionUrl: z.string(),
 });
 
 export const settings: ModuleSettings = {
@@ -36,6 +38,7 @@ export const settings: ModuleSettings = {
     offlineOnly: false,
     overpassUrl: DEFAULT_OVERPASS_URL,
     showBuildProgress: true,
+    regionUrl: '',
   },
   keywords: [
     'karte',
@@ -53,6 +56,8 @@ export const settings: ModuleSettings = {
     'eigene karte',
     'overpass',
     'fortschritt',
+    'pmtiles',
+    'kartendatei',
   ],
   fields: [
     {
@@ -125,6 +130,16 @@ export const settings: ModuleSettings = {
       },
       type: 'boolean',
     },
+    {
+      key: 'regionUrl',
+      get label() {
+        return t.maps.settings.regionUrl;
+      },
+      get help() {
+        return t.maps.settings.regionUrlHelp;
+      },
+      type: 'text',
+    },
   ],
 };
 
@@ -145,6 +160,7 @@ export function servicesOf(
         routingUrl?: unknown;
         transitUrl?: unknown;
         overpassUrl?: unknown;
+        regionUrl?: unknown;
       }
     | undefined,
 ): {
@@ -153,17 +169,21 @@ export function servicesOf(
   routingUrl: string;
   transitUrl: string;
   overpassUrl: string;
+  /** Empty when none (or not a safe https address) is set. */
+  regionUrl: string;
 } {
   const tile = typeof prefs?.tileUrl === 'string' ? prefs.tileUrl.trim() : '';
   const search = typeof prefs?.searchUrl === 'string' ? prefs.searchUrl.trim() : '';
   const routing = typeof prefs?.routingUrl === 'string' ? prefs.routingUrl.trim() : '';
   const transit = typeof prefs?.transitUrl === 'string' ? prefs.transitUrl.trim() : '';
   const overpass = typeof prefs?.overpassUrl === 'string' ? prefs.overpassUrl.trim() : '';
+  const region = typeof prefs?.regionUrl === 'string' ? prefs.regionUrl.trim() : '';
   return {
     tileUrl: isTileTemplate(tile) ? tile : DEFAULT_TILE_URL,
     searchUrl: isHttpsUrl(search) ? search : DEFAULT_SEARCH_URL,
     routingUrl: isHttpsUrl(routing) ? routing : DEFAULT_ROUTING_URL,
     transitUrl: isHttpsUrl(transit) ? transit : DEFAULT_TRANSIT_URL,
     overpassUrl: isHttpsUrl(overpass) ? overpass : DEFAULT_OVERPASS_URL,
+    regionUrl: isHttpsUrl(region) ? region : '',
   };
 }

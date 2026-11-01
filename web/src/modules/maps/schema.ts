@@ -77,8 +77,12 @@ export const regionSchema = z.object({
   builtAt: z.number().int().optional(),
   /** Stored bytes of all its tiles. */
   bytes: z.number().int().min(0).default(0),
-  /** Where the data came from (for the credit line). */
+  /** Where the data came from: `overpass` or `file` (a prebuilt region file). */
   source: z.string().optional(),
+  /** The region file the tiles were read from (file regions only). */
+  sourceUrl: z.string().optional(),
+  /** Attribution the region file names (plain text), shown with the region. */
+  credit: z.string().optional(),
 });
 export type Region = z.output<typeof regionSchema>;
 

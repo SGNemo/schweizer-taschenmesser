@@ -5379,6 +5379,9 @@ export const de = {
       showBuildProgress: 'Fortschritt unter der Karte zeigen',
       showBuildProgressHelp:
         'Eine ruhige Zeile, solange eine eigene Karte entsteht. Du kannst sie jederzeit ausschalten.',
+      regionUrl: 'Kartendatei (Adresse)',
+      regionUrlHelp:
+        'Eine vorgebaute Kartendatei (PMTiles) auf einem eigenen Server. Ist sie eingetragen, entstehen eigene Karten daraus statt aus dem Overpass-Dienst; nur https.',
     },
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },
@@ -5528,6 +5531,11 @@ export const de = {
       removeAll: 'Alle Karten löschen',
       confirmRemoveAll: 'Alle eigenen Karten löschen?',
       asOf: (date: string) => `Stand ${date}`,
+      fileMiss:
+        'Die Kartendatei deckt dieses Gebiet nicht ab. Die Karte entsteht aus dem Overpass-Dienst.',
+      fileUnreachable:
+        'Die Kartendatei ist gerade nicht erreichbar. Die Karte entsteht aus dem Overpass-Dienst.',
+      fromFile: 'aus Kartendatei',
       reasons: {
         busy: 'Der Kartendienst ist gerade ausgelastet. Später weitermachen.',
         network: 'Der Kartendienst ist gerade nicht erreichbar. Später weitermachen.',

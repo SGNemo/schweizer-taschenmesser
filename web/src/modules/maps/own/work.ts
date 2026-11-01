@@ -14,6 +14,8 @@ export interface TileBytes {
   x: number;
   y: number;
   bytes: ArrayBuffer;
+  /** Stored gzip (tiles copied from a region file); the renderer inflates on read. */
+  gzip?: boolean;
 }
 
 export interface CellRequest {

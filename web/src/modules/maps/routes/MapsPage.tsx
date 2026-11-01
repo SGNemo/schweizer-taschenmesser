@@ -171,7 +171,7 @@ export default function MapsPage() {
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
   const regions = useLiveQuery(() => regionRepo.active().sortBy('createdAt'), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
-  const { tileUrl, searchUrl, routingUrl, transitUrl, overpassUrl } = servicesOf(
+  const { tileUrl, searchUrl, routingUrl, transitUrl, overpassUrl, regionUrl } = servicesOf(
     prefs as Record<string, unknown> | undefined,
   );
   const offlineOnly = offlineOnlyOf(prefs as { offlineOnly?: unknown } | undefined);
@@ -366,33 +366,39 @@ export default function MapsPage() {
     if (!selected?.bbox) return;
     await requireNotice('maps-build');
     setReady(true);
-    const { capped } = await builder.createAndStart({
+    const { capped, file } = await builder.createAndStart({
       name: regionName(selected.label),
       bbox: selected.bbox,
       centre: { lat: selected.lat, lon: selected.lon },
       level: 'lean',
+      ...(regionUrl ? { fileUrl: regionUrl } : {}),
     });
-    setNote(capped ? `${t.maps.own.started} ${t.maps.own.capped}` : t.maps.own.started);
+    setNote(buildNote(capped, file));
+  }
+
+  /** The calm line after a build started: where it comes from, whether the area was cut down. */
+  function buildNote(capped: boolean, file: 'used' | 'miss' | 'unreachable' | undefined): string {
+    const o = t.maps.own;
+    const parts: string[] = [o.started];
+    if (file === 'miss') parts.push(o.fileMiss);
+    if (file === 'unreachable') parts.push(o.fileUnreachable);
+    if (capped) parts.push(o.capped);
+    return parts.join(' ');
   }
 
   /** Only on click: the shown area joins the own map (cells already built are left out). */
   async function extendHere() {
     await requireNotice('maps-build');
     setReady(true);
-    const { cells, capped } = await builder.createAndStart({
+    const { cells, capped, file } = await builder.createAndStart({
       name: t.maps.own.viewportName,
       bbox: viewportBbox(view, mapSize.w, mapSize.h),
       centre: { lat: view.lat, lon: view.lon },
       level: 'lean',
       skipBuilt: true,
+      ...(regionUrl ? { fileUrl: regionUrl } : {}),
     });
-    setNote(
-      cells === 0
-        ? t.maps.own.covered
-        : capped
-          ? `${t.maps.own.started} ${t.maps.own.capped}`
-          : t.maps.own.started,
-    );
+    setNote(cells === 0 ? t.maps.own.covered : buildNote(capped, file));
   }
 
   function locate() {
