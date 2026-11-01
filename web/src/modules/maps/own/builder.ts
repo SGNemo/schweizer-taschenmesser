@@ -4,7 +4,8 @@
  * the region row updated after every cell (the map fills visibly). Nothing starts by itself: `start`
  * is a click; a build found running after a restart is set to "paused" and offers "Weiter". One
  * region at a time, a short breath between requests, a few retries with growing pauses when the
- * donated server is busy, then a calm pause with a reason.
+ * donated server is busy, then a calm pause with a reason. With a region file (PMTiles on an own host)
+ * the tiles are copied from the file instead, cell by cell, with range requests.
  */
 import { create } from 'zustand';
 import type { Repo } from '@/core/db/repo';
@@ -17,8 +18,9 @@ import type { MapLevel, Region, Tile } from '../schema';
 import { defaultCompute, type Compute } from './compute';
 import { tileId, tilesCovering, type Bbox, type LonLat, type TileAddress } from './cut';
 import { DEFAULT_OVERPASS_URL, overpassQuery } from './overpass';
+import { openPmtiles, plainAttribution, type Pmtiles } from './pmtiles';
 import { STORED_ZOOMS, capBbox, cellBbox, planRegion } from './plan';
-import type { TileBytes } from './work';
+import { tilesUnder, type TileBytes } from './work';
 
 export type PauseReason = 'busy' | 'network' | 'blocked' | 'error';
 
@@ -38,6 +40,8 @@ export interface BuilderDeps {
   headers: () => Record<string, string>;
   overpassUrl: () => string;
   compute: () => Compute;
+  /** Opens a region file (header, root directory, metadata). */
+  openFile?: (url: string) => Promise<Pmtiles>;
   sleep: (ms: number) => Promise<void>;
   clock: () => number;
   /** Pauses before the retries of a busy or unreachable server. */
@@ -48,10 +52,14 @@ export interface BuilderDeps {
   timeoutMs?: number;
 }
 
+/** How a build with a region file went: used, or why Overpass was taken instead. */
+export type FileOutcome = 'used' | 'miss' | 'unreachable';
+
 export interface Builder {
   /**
    * Creates a region and starts building it. With `skipBuilt`, cells another region already holds
-   * are left out; when nothing remains, no region is created (`cells` = 0).
+   * are left out; when nothing remains, no region is created (`cells` = 0). With `fileUrl` the tiles
+   * come from that region file when it covers the centre; otherwise from Overpass (`file` says why).
    */
   createAndStart(input: {
     name: string;
@@ -59,7 +67,8 @@ export interface Builder {
     centre: LonLat;
     level: MapLevel;
     skipBuilt?: boolean;
-  }): Promise<{ id?: string; capped: boolean; cells: number }>;
+    fileUrl?: string;
+  }): Promise<{ id?: string; capped: boolean; cells: number; file?: FileOutcome }>;
   /** A finished lean region is built again at the full level (z14 cells, tiles down to z16). */
   upgrade(id: string): Promise<void>;
   /** (Re)starts a region; resolves when the builder stopped working on it (done, paused, removed). */
@@ -85,9 +94,23 @@ export function createBuilder(deps: BuilderDeps): Builder {
   /** Regions in the order they were started: first come, first built. */
   const queue: string[] = [];
   const waiters = new Map<string, (() => void)[]>();
+  const files = new Map<string, Promise<Pmtiles>>();
   let pumping = false;
   let compute: Compute | undefined;
   let requestId = 0;
+
+  /** The opened region file, shared between regions; a failed open is not remembered. */
+  function openFile(url: string): Promise<Pmtiles> {
+    const hit = files.get(url);
+    if (hit) return hit;
+    const open =
+      deps.openFile ??
+      ((u: string) => openPmtiles(u, { fetch: deps.fetch, headers: deps.headers() }));
+    const p = open(url);
+    files.set(url, p);
+    p.catch(() => files.delete(url));
+    return p;
+  }
 
   const settled = (id: string) => {
     for (const w of waiters.get(id) ?? []) w();
@@ -135,12 +158,95 @@ export function createBuilder(deps: BuilderDeps): Builder {
           x: t.x,
           y: t.y,
           bytes: t.bytes,
-          gzip: false,
+          gzip: t.gzip ?? false,
           size: t.bytes.byteLength,
         },
       })),
     );
     return tiles.reduce((n, t) => n + t.bytes.byteLength, 0);
+  }
+
+  /** The tiles of a region file for the given addresses, a few at a time, each tried like a cell. */
+  async function readFileTiles(
+    file: Pmtiles,
+    addresses: TileAddress[],
+  ): Promise<{ tiles: TileBytes[] } | { reason: PauseReason }> {
+    const delays = deps.retryDelays ?? DEFAULT_RETRY;
+    const tiles: TileBytes[] = [];
+    const one = async (a: TileAddress): Promise<PauseReason | undefined> => {
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        if (attempt > 0) await deps.sleep(delays[attempt - 1]!);
+        try {
+          const t = await file.getTile(a.z, a.x, a.y);
+          if (t) tiles.push({ ...a, bytes: t.bytes, gzip: t.gzip });
+          return undefined;
+        } catch (e) {
+          if (e instanceof NetBlockedError) return 'blocked';
+        }
+      }
+      return 'network';
+    };
+    for (let i = 0; i < addresses.length; i += 4) {
+      const reasons = await Promise.all(addresses.slice(i, i + 4).map(one));
+      const bad = reasons.find((r) => r !== undefined);
+      if (bad) return { reason: bad };
+    }
+    return { tiles };
+  }
+
+  /** A region copied from a region file: the cells' tiles, then the lower zooms, all from the file. */
+  async function runFileRegion(region: Region & { id: string }): Promise<void> {
+    const id = region.id;
+    let file: Pmtiles;
+    try {
+      file = await openFile(region.sourceUrl ?? '');
+    } catch (e) {
+      await deps.regions.update(id, {
+        status: 'paused',
+        reason: e instanceof NetBlockedError ? 'blocked' : 'network',
+      });
+      return;
+    }
+    const skip = new Set(region.skipCells ?? []);
+    const cells = tilesCovering(region.bbox, region.cellZoom).filter(
+      (c) => !skip.has(tileId(c.z, c.x, c.y)),
+    );
+    const total = cells.length;
+    useBuildStore.setState({ active: id, phase: 'cells' });
+    let bytes = region.bytes;
+    for (let i = region.cells.done; i < total; i++) {
+      if (removed.has(id)) return;
+      if (paused.has(id)) {
+        await deps.regions.update(id, { status: 'paused' });
+        return;
+      }
+      const read = await readFileTiles(file, tilesUnder(cells[i]!, region.zooms.max));
+      if (removed.has(id)) return;
+      if ('reason' in read) {
+        await deps.regions.update(id, { status: 'paused', reason: read.reason });
+        return;
+      }
+      bytes += await writeTiles(id, read.tiles);
+      await deps.regions.update(id, { cells: { done: i + 1, total }, bytes });
+    }
+    // The overview comes from the file as well (it holds the lower zooms already).
+    useBuildStore.setState({ active: id, phase: 'overview' });
+    for (let z = region.cellZoom - 1; z >= region.zooms.min; z--) {
+      if (removed.has(id)) return;
+      const read = await readFileTiles(file, tilesCovering(region.bbox, z));
+      if ('reason' in read) {
+        await deps.regions.update(id, { status: 'paused', reason: read.reason });
+        return;
+      }
+      await writeTiles(id, read.tiles);
+    }
+    if (removed.has(id)) return;
+    await deps.regions.update(id, {
+      status: 'done',
+      cells: { done: total, total },
+      bytes: await bytesOf(id),
+      builtAt: deps.clock(),
+    });
   }
 
   async function bytesOf(regionId: string): Promise<number> {
@@ -151,6 +257,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
   async function runRegion(id: string): Promise<void> {
     const region = await deps.regions.get(id);
     if (!region) return;
+    if (region.source === 'file') return runFileRegion(region);
     const plan = planRegion(region.level, region.bbox);
     const skip = new Set(region.skipCells ?? []);
     const cells = plan.cells.filter((c) => !skip.has(tileId(c.z, c.x, c.y)));
@@ -259,36 +366,67 @@ export function createBuilder(deps: BuilderDeps): Builder {
   }
 
   const builder: Builder = {
-    async createAndStart({ name, bbox, centre, level, skipBuilt }) {
-      const cap = capBbox(bbox, centre, level);
-      const plan = planRegion(level, cap.bbox);
+    async createAndStart({ name, bbox, centre, level, skipBuilt, fileUrl }) {
+      // A region file first, when one is set and it covers the centre; Overpass otherwise.
+      let file: Pmtiles | undefined;
+      let outcome: FileOutcome | undefined;
+      if (fileUrl) {
+        try {
+          file = await openFile(fileUrl);
+          outcome = file.covers(centre) ? 'used' : 'miss';
+        } catch {
+          outcome = 'unreachable';
+        }
+        if (outcome !== 'used') file = undefined;
+      }
+      const cap = capBbox(bbox, centre, file ? 'lean' : level);
+      const zooms = file
+        ? {
+            min: Math.max(STORED_ZOOMS.lean.min, file.header.minZoom),
+            max: Math.min(STORED_ZOOMS.full.max, file.header.maxZoom),
+          }
+        : planRegion(level, cap.bbox).zooms;
+      const cellZoom = file
+        ? Math.min(planRegion('lean', cap.bbox).cellZoom, zooms.max)
+        : planRegion(level, cap.bbox).cellZoom;
+      const cells = tilesCovering(cap.bbox, cellZoom);
       const skipCells: string[] = [];
       if (skipBuilt) {
-        for (const c of plan.cells) {
+        for (const c of cells) {
           const id = tileId(c.z, c.x, c.y);
           if (await deps.tiles.get(id)) skipCells.push(id);
         }
       }
-      const total = plan.cells.length - skipCells.length;
-      if (total === 0) return { capped: cap.capped, cells: 0 };
+      const total = cells.length - skipCells.length;
+      if (total === 0)
+        return { capped: cap.capped, cells: 0, ...(outcome ? { file: outcome } : {}) };
+      const credit = file ? plainAttribution(file.metadata.attribution) : undefined;
       const region = await deps.regions.create({
         name,
         bbox: cap.bbox,
-        level,
-        zooms: plan.zooms,
-        cellZoom: plan.cellZoom,
+        level: file ? (zooms.max >= 15 ? 'full' : 'lean') : level,
+        zooms,
+        cellZoom,
         ...(skipCells.length > 0 ? { skipCells } : {}),
         cells: { done: 0, total },
         status: 'building',
         bytes: 0,
-        source: 'overpass',
+        source: file ? 'file' : 'overpass',
+        ...(file ? { sourceUrl: file.url } : {}),
+        ...(credit ? { credit } : {}),
       });
       void builder.start(region.id);
-      return { id: region.id, capped: cap.capped, cells: total };
+      return {
+        id: region.id,
+        capped: cap.capped,
+        cells: total,
+        ...(outcome ? { file: outcome } : {}),
+      };
     },
     async upgrade(id) {
       const region = await deps.regions.get(id);
       if (!region || region.level === 'full' || region.status === 'building') return;
+      if (region.source === 'file') return; // a file holds what it holds
       const plan = planRegion('full', region.bbox);
       const skip = new Set(region.skipCells ?? []);
       // A lean cell that was skipped covers four full cells: skip those as well.

@@ -102,7 +102,7 @@ export const tLegal = defineBundle(
       maps: {
         title: 'Karten & Orte (optional)',
         what: 'Beim Öffnen der Karte die Kartenkacheln des gezeigten Ausschnitts (Zoomstufe und Kachelnummern, daraus lässt sich ablesen, welches Gebiet du ansiehst); bei der Ortssuche der eingetippte Suchbegriff; beim Erzeugen einer eigenen Karte die Koordinaten jedes Teilstücks des gewählten Gebiets. Gespeicherte Orte und Routen bleiben auf dem Gerät und gehen nie an die KI.',
-        to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, für die eigene Karte overpass-api.de) oder ein eigener Dienst, den du in den Einstellungen einträgst. Der Dienst sieht deine IP-Adresse.',
+        to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, für die eigene Karte overpass-api.de) oder ein eigener Dienst, den du in den Einstellungen einträgst; mit eingetragener Kartendatei deren Server (je Kachel eine Bereichsanfrage). Der Dienst sieht deine IP-Adresse.',
         when: 'Nur wenn du den Reiter „Karte“ öffnest oder eine Ortssuche abschickst, nie im Hintergrund. Die Übersicht und die Listen fragen nichts ab. Karten-Apps (OpenStreetMap, Google Maps, Apple Karten) öffnen sich nur auf deinen Klick im Browser. Berechnest du eine Route auf der Karte, gehen Start, Ziel, Zwischenstopps (Koordinaten) und die Fortbewegungsart an routing.openstreetmap.de; suchst du Bus und Bahn, gehen Start, Ziel und die Uhrzeit an api.transitous.org. Erzeugst du eine eigene Karte, gehen je Teilstück die Koordinaten des Gebiets an overpass-api.de, nur solange die App offen ist. Alles nur auf Klick.',
       },
       ip: {
@@ -190,7 +190,7 @@ export const tLegal = defineBundle(
         title: 'Die eigene Karte wird erzeugt',
         body: [
           'Für jedes Teilstück gehen die Koordinaten des Gebiets an den Overpass-Dienst von OpenStreetMap (overpass-api.de), der die Kartendaten liefert. Der Dienst sieht deine IP-Adresse und welches Gebiet du dir erzeugst. Nie deine Orte, Routen oder Notizen.',
-          'Es passiert nur auf deinen Klick und nur, solange die App offen ist; danach liegt die Karte auf deinem Gerät. Der Dienst ist gespendet und für leichte Nutzung gedacht. Du kannst ihn in den Einstellungen des Moduls ändern.',
+          'Es passiert nur auf deinen Klick und nur, solange die App offen ist; danach liegt die Karte auf deinem Gerät. Der Dienst ist gespendet und für leichte Nutzung gedacht. Du kannst ihn in den Einstellungen des Moduls ändern. Hast du dort eine eigene Kartendatei eingetragen, kommen die Teile von diesem Server statt vom Overpass-Dienst.',
         ],
       },
       supporter: {
@@ -321,7 +321,7 @@ export const tLegal = defineBundle(
         maps: {
           title: 'Maps & places (optional)',
           what: 'When you open the map, the map tiles of the shown area (zoom level and tile numbers, which reveal the area you look at); for the place search, the search term you typed; when you build your own map, the coordinates of every piece of the chosen area. Saved places and routes stay on the device and never go to the AI.',
-          to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, for the own map overpass-api.de) or a service of your own that you enter in the settings. The service sees your IP address.',
+          to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, for the own map overpass-api.de) or a service of your own that you enter in the settings; with a region file entered, its server (one range request per tile). The service sees your IP address.',
           when: 'Only when you open the “Karte” tab or submit a place search, never in the background. The Overview and the lists request nothing. Map apps (OpenStreetMap, Google Maps, Apple Maps) open in the browser only when you click. If you calculate a route on the map, start, destination, stops (coordinates) and the way of travel go to routing.openstreetmap.de; if you search bus and train, start, destination and the time go to api.transitous.org. If you build your own map, the coordinates of each piece go to overpass-api.de, only while the app is open. All of it on click only.',
         },
         ip: {
@@ -409,7 +409,7 @@ export const tLegal = defineBundle(
           title: 'Your own map is being built',
           body: [
             'For every piece, the coordinates of the area go to the Overpass service of OpenStreetMap (overpass-api.de), which delivers the map data. The service sees your IP address and which area you build. Never your places, routes or notes.',
-            'It happens only on your click and only while the app is open; afterwards the map lives on your device. The service is donated and meant for light use. You can change it in the module settings.',
+            'It happens only on your click and only while the app is open; afterwards the map lives on your device. The service is donated and meant for light use. You can change it in the module settings. If you entered your own region file there, the pieces come from that server instead of the Overpass service.',
           ],
         },
         supporter: {
