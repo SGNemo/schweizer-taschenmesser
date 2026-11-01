@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { allManifests } from '@/core/modules/registry';
 import { visibleSections } from '@/core/settings/registry/registry';
 import { SETTINGS_CATEGORY_IDS, type SettingsContext } from '@/core/settings/registry/types';
-import { preloadSectionComponents } from './sections';
 import { allSettingsSections } from './useSections';
 
 const ctx = (over: Partial<SettingsContext> = {}): SettingsContext => ({
@@ -41,19 +40,5 @@ describe('registered settings sections', () => {
     const visible = visibleSections(sections, ctx({ isModuleEnabled: (id) => id !== 'todos' }));
     expect(visible.map((s) => s.id)).not.toContain('module-todos');
     expect(visible.map((s) => s.id)).toContain('module-calendar');
-  });
-});
-
-describe('lazy section components', () => {
-  it('the start preload loads every section module, one per distinct import', async () => {
-    const raw = (await import('./sections.tsx?raw')).default;
-    const modules = new Set(
-      [...raw.matchAll(/lazySection\(\s*\(\) => import\('([^']+)'\)/g)].map((m) => m[1]),
-    );
-    const calls = raw.match(/= lazySection\(/g)?.length ?? 0;
-    expect(calls).toBeGreaterThan(30);
-    const loaded = (await preloadSectionComponents()) as unknown[];
-    expect(loaded).toHaveLength(calls);
-    expect(modules.size).toBeGreaterThan(20);
   });
 });

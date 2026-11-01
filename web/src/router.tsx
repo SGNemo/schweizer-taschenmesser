@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -13,42 +13,27 @@ import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
 import { NotFound } from '@/pages/NotFound';
-import { preloadSectionComponents } from '@/pages/settings/sections';
-import { loadWeatherPreview } from '@/home/WeatherLine';
-import { preloadArgon2 } from '@/core/crypto/kdf';
-import { preloadWhenIdle } from '@/core/modules/idlePreload';
+import { CategoryPage, SettingsIndex, SettingsLayout } from '@/pages/settings/SettingsLayout';
+import { lazyOnline } from '@/core/net/OnlineChunk';
 
 import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
 
-// Pages that a start rarely needs load on first visit (still precached, so they work offline):
-// keeps them off the critical path of every start (docs/perf/COLD-START-2026-10.md).
-const settingsPage = () => import('@/pages/settings/SettingsLayout');
-const loadModuleLibrary = () => import('@/pages/ModuleLibrary');
-const loadToolLibrary = () => import('@/pages/ToolLibrary');
-const loadShareTarget = () => import('@/pages/ShareTarget');
-const ModuleLibrary = lazy(() => loadModuleLibrary().then((m) => ({ default: m.ModuleLibrary })));
-const ToolLibrary = lazy(() => loadToolLibrary().then((m) => ({ default: m.ToolLibrary })));
-const OAuthCallback = lazy(() =>
+// Pages that a start rarely needs load on first visit (still precached, so they work offline; without a
+// service worker and offline, `lazyOnline` shows a calm note instead of an error screen). Settings stay
+// in the start bundle: offline client-side navigation into them must work without a worker
+// (docs/perf/COLD-START-2026-10.md).
+const ModuleLibrary = lazyOnline<object>(() =>
+  import('@/pages/ModuleLibrary').then((m) => ({ default: m.ModuleLibrary })),
+);
+const ToolLibrary = lazyOnline<object>(() =>
+  import('@/pages/ToolLibrary').then((m) => ({ default: m.ToolLibrary })),
+);
+const OAuthCallback = lazyOnline<object>(() =>
   import('@/pages/OAuthCallback').then((m) => ({ default: m.OAuthCallback })),
 );
-const ShareTarget = lazy(() => loadShareTarget().then((m) => ({ default: m.ShareTarget })));
-const SettingsLayout = lazy(() => settingsPage().then((m) => ({ default: m.SettingsLayout })));
-const SettingsIndex = lazy(() => settingsPage().then((m) => ({ default: m.SettingsIndex })));
-const CategoryPage = lazy(() => settingsPage().then((m) => ({ default: m.CategoryPage })));
-
-/**
- * In the first idle slot after the start: the parts above (and the other start-path cuts) that must also work
- * offline without a service worker. OAuth and the Spotify player need the network anyway.
- */
-const IDLE_PRELOAD = [
-  settingsPage,
-  preloadSectionComponents,
-  loadModuleLibrary,
-  loadToolLibrary,
-  loadShareTarget,
-  loadWeatherPreview,
-  preloadArgon2,
-];
+const ShareTarget = lazyOnline<object>(() =>
+  import('@/pages/ShareTarget').then((m) => ({ default: m.ShareTarget })),
+);
 
 const page = (node: ReactNode) => <Suspense fallback={<PageFallback />}>{node}</Suspense>;
 
@@ -176,12 +161,12 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'settings',
           element: (
             <PageContainer key="Settings" variant="wide">
-              {page(<SettingsLayout />)}
+              <SettingsLayout />
             </PageContainer>
           ),
           children: [
-            { index: true, element: page(<SettingsIndex />) },
-            { path: ':category', element: page(<CategoryPage />) },
+            { index: true, element: <SettingsIndex /> },
+            { path: ':category', element: <CategoryPage /> },
           ],
         },
         ...(ComponentSheet
@@ -219,7 +204,6 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
 
 export function AppRoutes() {
   const states = useModuleStates();
-  useEffect(() => preloadWhenIdle(IDLE_PRELOAD), []);
   const routes = useMemo(() => (states ? buildRoutes(states) : null), [states]);
   // Routes are only known once module states are loaded; avoids a redirect flash on deep links.
   const element = useRoutes(routes ?? []);

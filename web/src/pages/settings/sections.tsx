@@ -16,81 +16,51 @@ import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
 import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
-import { lazy, Suspense, type ComponentType } from 'react';
+import { Suspense } from 'react';
+import {
+  AboutSection,
+  AboutUpdatesSection,
+  DeviceResetSection,
+  DiagnosticsSection,
+  LinksSection,
+} from './AboutSections';
+import { AiSection } from './AiSection';
+import { AiSwitchSection } from './AiSwitchSection';
+import { AppearanceSection } from './AppearanceSection';
+import { SupporterSection } from './SupporterSection';
+import { BackupSection } from './BackupSection';
+import { AiStatsSection } from './AiStatsSection';
+import { AiWriteSection } from './AiWriteSection';
+import { CalmRemindersSection } from './CalmRemindersSection';
+import { NetworkSection } from './NetworkSection';
+import { ShareSection } from './ShareSection';
 import { tShare } from '@/strings.share';
 import { tNet } from '@/strings.netlog';
 import { tTrash } from '@/strings.trash';
+import { RecentlyDeletedSection } from './RecentlyDeletedSection';
+import { ConnectorsSection } from './ConnectorsSection';
+import { FavouritesSection } from './FavouritesSection';
 import { tAdvanced } from '@/strings.advanced';
+import { AdvancedSection } from './AdvancedSection';
+import { FocusSection } from './FocusSection';
+import { GeneralSection } from './GeneralSection';
+import { LocalApiSection } from './LocalApiSection';
+import { LocalModelSection } from './LocalModelSection';
+import { LegalImprintSection, LegalLicensesSection, LegalPrivacySection } from './LegalSections';
+import { ModelLicensesSection } from './ModelLicensesSection';
+import { NotificationsSection } from './NotificationsSection';
+import { ReadingSection } from './ReadingSection';
+import { QuickCaptureSection } from './QuickCaptureSection';
+import { ShortcutsSection } from './ShortcutsSection';
+import { VoiceSection } from './VoiceSection';
+import { WeatherSection } from './WeatherSection';
 import { tKeys } from '@/strings.keys';
 import { tWeather } from '@/strings.weather';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
-
-/**
- * Section components load with their category page, not with the app: the registry below (ids,
- * titles, keywords, fields) stays eager because the shell, the command palette and the search need it
- * at start. `CategoryPage` renders inside the router's Suspense (docs/perf/COLD-START-2026-10.md).
- */
-const sectionLoaders = new Set<() => Promise<unknown>>();
-function lazySection<K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) {
-  sectionLoaders.add(load);
-  return lazy(async (): Promise<{ default: ComponentType }> => ({ default: (await load())[name] }));
-}
-const AboutSection = lazySection(() => import('./AboutSections'), 'AboutSection');
-const AboutUpdatesSection = lazySection(() => import('./AboutSections'), 'AboutUpdatesSection');
-const DeviceResetSection = lazySection(() => import('./AboutSections'), 'DeviceResetSection');
-const DiagnosticsSection = lazySection(() => import('./AboutSections'), 'DiagnosticsSection');
-const LinksSection = lazySection(() => import('./AboutSections'), 'LinksSection');
-const AiSection = lazySection(() => import('./AiSection'), 'AiSection');
-const AiSwitchSection = lazySection(() => import('./AiSwitchSection'), 'AiSwitchSection');
-const AppearanceSection = lazySection(() => import('./AppearanceSection'), 'AppearanceSection');
-const SupporterSection = lazySection(() => import('./SupporterSection'), 'SupporterSection');
-const BackupSection = lazySection(() => import('./BackupSection'), 'BackupSection');
-const AiStatsSection = lazySection(() => import('./AiStatsSection'), 'AiStatsSection');
-const AiWriteSection = lazySection(() => import('./AiWriteSection'), 'AiWriteSection');
-const CalmRemindersSection = lazySection(
-  () => import('./CalmRemindersSection'),
-  'CalmRemindersSection',
-);
-const NetworkSection = lazySection(() => import('./NetworkSection'), 'NetworkSection');
-const ShareSection = lazySection(() => import('./ShareSection'), 'ShareSection');
-const RecentlyDeletedSection = lazySection(
-  () => import('./RecentlyDeletedSection'),
-  'RecentlyDeletedSection',
-);
-const ConnectorsSection = lazySection(() => import('./ConnectorsSection'), 'ConnectorsSection');
-const FavouritesSection = lazySection(() => import('./FavouritesSection'), 'FavouritesSection');
-const AdvancedSection = lazySection(() => import('./AdvancedSection'), 'AdvancedSection');
-const FocusSection = lazySection(() => import('./FocusSection'), 'FocusSection');
-const GeneralSection = lazySection(() => import('./GeneralSection'), 'GeneralSection');
-const LocalApiSection = lazySection(() => import('./LocalApiSection'), 'LocalApiSection');
-const LocalModelSection = lazySection(() => import('./LocalModelSection'), 'LocalModelSection');
-const LegalImprintSection = lazySection(() => import('./LegalSections'), 'LegalImprintSection');
-const LegalLicensesSection = lazySection(() => import('./LegalSections'), 'LegalLicensesSection');
-const LegalPrivacySection = lazySection(() => import('./LegalSections'), 'LegalPrivacySection');
-const ModelLicensesSection = lazySection(
-  () => import('./ModelLicensesSection'),
-  'ModelLicensesSection',
-);
-const NotificationsSection = lazySection(
-  () => import('./NotificationsSection'),
-  'NotificationsSection',
-);
-const ReadingSection = lazySection(() => import('./ReadingSection'), 'ReadingSection');
-const QuickCaptureSection = lazySection(
-  () => import('./QuickCaptureSection'),
-  'QuickCaptureSection',
-);
-const ShortcutsSection = lazySection(() => import('./ShortcutsSection'), 'ShortcutsSection');
-const VoiceSection = lazySection(() => import('./VoiceSection'), 'VoiceSection');
-const WeatherSection = lazySection(() => import('./WeatherSection'), 'WeatherSection');
-const SetupSection = lazySection(() => import('./SetupSection'), 'SetupSection');
-const SyncSection = lazySection(() => import('./SyncSection'), 'SyncSection');
-const ToolsSection = lazySection(() => import('./ToolsSection'), 'ToolsSection');
-const UpdateSection = lazySection(() => import('./UpdateSection'), 'UpdateSection');
-
-/** Loads every section component (right after start, `core/modules/idlePreload.ts`). */
-export const preloadSectionComponents = (): Promise<unknown> =>
-  Promise.all([...sectionLoaders].map((load) => load()));
+import { SetupSection } from './SetupSection';
+import { SyncSection } from './SyncSection';
+import { ToolsSection } from './ToolsSection';
+import { UpdateSection } from './UpdateSection';
 
 const s = t.settings;
 

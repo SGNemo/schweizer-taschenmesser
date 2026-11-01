@@ -81,9 +81,6 @@ export function assertKdfParams(p: KdfParams): void {
 /** Argon2 from `hash-wasm`, loaded on first use (destructured so only Argon2 is bundled). */
 const loadArgon2 = () => import('hash-wasm').then(({ argon2id }) => argon2id);
 
-/** Loads the Argon2 WASM module ahead of use (idle preload after start, for offline unlock). */
-export const preloadArgon2 = (): Promise<unknown> => loadArgon2();
-
 /** NFKC so that the same password typed on different keyboards/OSes derives the same key. */
 const passwordBytes = (password: string) => new TextEncoder().encode(password.normalize('NFKC'));
 

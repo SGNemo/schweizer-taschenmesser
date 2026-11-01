@@ -1,13 +1,15 @@
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, useState, type ComponentProps } from 'react';
+import { lazyOnline } from '@/core/net/OnlineChunk';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Icon } from '@/ui';
 import { clock, useProgress } from './nowPlayingTime';
 import { useCover } from './useCover';
 import { useNowPlaying } from './useNowPlaying';
+import type { SpotifyPlayer as Player } from './SpotifyPlayer';
 import styles from './NowPlayingLine.module.css';
 
 /** The player (playlists, saved songs, search) loads when it is first opened, not with the Overview. */
-const SpotifyPlayer = lazy(() =>
+const SpotifyPlayer = lazyOnline<ComponentProps<typeof Player>>(() =>
   import('./SpotifyPlayer').then((m) => ({ default: m.SpotifyPlayer })),
 );
 

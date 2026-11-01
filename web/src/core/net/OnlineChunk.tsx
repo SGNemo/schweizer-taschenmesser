@@ -85,8 +85,8 @@ export function lazyOnline<P extends object>(
   load: () => Promise<{ default: ComponentType<P> }>,
 ): ComponentType<P> {
   const make = () =>
-    lazy(() =>
-      load().catch((e: unknown) => {
+    lazy<ComponentType<P>>(() =>
+      load().catch((e: unknown): never => {
         throw new ChunkUnavailable(e);
       }),
     );
