@@ -8,7 +8,7 @@ import { getPlatform } from '@/core/platform';
 import { useWriteLabel } from '@/core/shell/writeAvailable';
 import { detectIntent } from '@/core/ai/write/rules/intent';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
-import { calculate } from '@/core/calc/phrases';
+import { calculate, calculateExpression } from '@/core/calc/phrases';
 import { activeManifests } from '@/core/modules/contributions';
 import { useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
@@ -97,7 +97,7 @@ type Option = { recent?: boolean } & (
   | { kind: 'hit'; key: string; label: string; icon: IconName; row: ResultRow }
   | { kind: 'setting'; key: string; label: string; icon: IconName; hit: SettingsSearchResult }
   | { kind: 'tool'; key: string; label: string; icon: IconName; answer: ToolAnswer }
-  | { kind: 'calc'; key: string; label: string; icon: IconName; value: number }
+  | { kind: 'calc'; key: string; label: string; icon: IconName; copy?: string }
   | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean }
 );
 
@@ -118,6 +118,24 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
   )?.id;
   const [query, setQuery] = useState('');
+  // "=…" is evaluated by the calculator engine, which loads on first use; the answer belongs to one query.
+  const [exprAnswer, setExprAnswer] = useState<{
+    query: string;
+    answer: Awaited<ReturnType<typeof calculateExpression>> & object;
+  }>();
+  useEffect(() => {
+    if (!query.trim().startsWith('=')) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void calculateExpression(query).then((answer) => {
+        if (!cancelled && answer) setExprAnswer({ query, answer });
+      });
+    }, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query]);
   const [active, setActive] = useState(0);
   const listId = useId();
   const toast = useUiStore((s) => s.toast);
@@ -337,12 +355,16 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     // Arithmetic is answered on the spot (0 tokens, nothing leaves the device); Enter copies it.
     const sum = calculate(query);
     if (sum) {
+      list.push({ kind: 'calc', key: 'calc', label: sum.text, icon: 'calculator', copy: sum.copy });
+    } else if (exprAnswer?.query === query) {
+      // "=sqrt(2)*3": answered by the calculator engine (loads on first use).
+      const a = exprAnswer.answer;
       list.push({
         kind: 'calc',
         key: 'calc',
-        label: sum.text,
+        label: a.error ?? a.text,
         icon: 'calculator',
-        value: sum.value,
+        copy: a.error ? undefined : a.copy,
       });
     }
     const writeIntent =
@@ -406,6 +428,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     writeMode,
     writeSettings?.enabled,
     states,
+    exprAnswer,
   ]);
 
   const remember = (entry: RecentEntry) => {
@@ -433,9 +456,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       return;
     }
     if (o.kind === 'calc') {
-      // Plain decimal without thousands separators so it pastes into any field.
-      const text = String(o.value).replace('.', ',');
-      void navigator.clipboard.writeText(text).then(
+      if (o.copy === undefined) return;
+      void navigator.clipboard.writeText(o.copy).then(
         () => toast(t.tools.calc.copied),
         () => undefined,
       );
