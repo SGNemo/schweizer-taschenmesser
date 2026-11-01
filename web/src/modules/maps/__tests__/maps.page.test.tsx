@@ -497,16 +497,20 @@ describe('own map (stored vector tiles)', () => {
   });
 });
 
-/** Searches Erlangen on the map tab and picks the hit with an area: the card that offers the own map. */
+/**
+ * Searches Erlangen on the map tab and picks the hit with an area: the card that offers the own map.
+ * The first map frame keeps the event loop busy; on a loaded CI runner the (mocked) search can take
+ * longer than the one-second default of `findBy`, so these lookups wait up to five.
+ */
 async function chooseErlangen() {
   open('/maps?view=map');
   const input = await screen.findByLabelText('Ort oder Adresse suchen');
   fireEvent.change(input, { target: { value: 'Schlossplatz Erlangen' } });
   fireEvent.submit(input.closest('form')!);
-  fireEvent.click(
-    await within(await screen.findByTestId('map-hits')).findByText(/Erlangen, Bayern/),
-  );
-  return screen.findByTestId('map-selection');
+  const slow = { timeout: 5000 };
+  const hits = await screen.findByTestId('map-hits', undefined, slow);
+  fireEvent.click(await within(hits).findByText(/Erlangen, Bayern/, undefined, slow));
+  return screen.findByTestId('map-selection', undefined, slow);
 }
 
 describe('own map build (Overpass)', () => {
