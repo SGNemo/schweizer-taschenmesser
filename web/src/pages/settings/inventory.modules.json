@@ -136,6 +136,16 @@
         "type": "boolean",
         "label": "Nur eigene Karte (offline)",
         "default": false
+      },
+      "overpassUrl": {
+        "type": "text",
+        "label": "Kartendaten (Adresse)",
+        "default": "https://overpass-api.de/api/interpreter"
+      },
+      "showBuildProgress": {
+        "type": "boolean",
+        "label": "Fortschritt unter der Karte zeigen",
+        "default": true
       }
     }
   },

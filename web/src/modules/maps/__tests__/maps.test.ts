@@ -8,6 +8,7 @@ import {
   DEFAULT_TILE_URL,
   DEFAULT_TRANSIT_URL,
 } from '../logic';
+import { DEFAULT_OVERPASS_URL } from '../own/overpass';
 import { servicesOf } from '../settings';
 
 describe('maps module', () => {
@@ -49,6 +50,7 @@ describe('maps module', () => {
       searchUrl: DEFAULT_SEARCH_URL,
       routingUrl: DEFAULT_ROUTING_URL,
       transitUrl: DEFAULT_TRANSIT_URL,
+      overpassUrl: DEFAULT_OVERPASS_URL,
     });
     expect(
       servicesOf({
@@ -56,12 +58,14 @@ describe('maps module', () => {
         searchUrl: 'ftp://x',
         routingUrl: 'http://r.test',
         transitUrl: 'http://t.test',
+        overpassUrl: 'http://o.test',
       }),
     ).toEqual({
       tileUrl: DEFAULT_TILE_URL,
       searchUrl: DEFAULT_SEARCH_URL,
       routingUrl: DEFAULT_ROUTING_URL,
       transitUrl: DEFAULT_TRANSIT_URL,
+      overpassUrl: DEFAULT_OVERPASS_URL,
     });
     expect(
       servicesOf({
@@ -69,12 +73,14 @@ describe('maps module', () => {
         searchUrl: 'https://s.example/q',
         routingUrl: 'https://r.example/{profile}',
         transitUrl: 'https://m.example/api',
+        overpassUrl: 'https://o.example/api/interpreter',
       }),
     ).toEqual({
       tileUrl: 'https://t.example/{z}/{x}/{y}.png',
       searchUrl: 'https://s.example/q',
       routingUrl: 'https://r.example/{profile}',
       transitUrl: 'https://m.example/api',
+      overpassUrl: 'https://o.example/api/interpreter',
     });
   });
 });

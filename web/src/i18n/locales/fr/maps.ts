@@ -21,6 +21,12 @@ export const maps: Strings['maps'] = {
     offlineOnly: 'Carte personnelle uniquement (hors ligne)',
     offlineOnlyHelp:
       'N’affiche que les cartes que vous avez créées vous-même. En dehors, la zone reste vide et rien n’est chargé depuis Internet.',
+    overpassUrl: 'Données cartographiques (adresse)',
+    overpassUrlHelp:
+      'Un service compatible Overpass à partir duquel votre carte personnelle est créée. Par défaut : overpass-api.de (OpenStreetMap, usage léger uniquement).',
+    showBuildProgress: 'Afficher la progression sous la carte',
+    showBuildProgressHelp:
+      'Une ligne discrète pendant la création d’une carte personnelle. Vous pouvez la désactiver à tout moment.',
   },
   tabs: { label: 'Vue', places: 'Lieux', routes: 'Itinéraires', map: 'Carte' },
   empty: { places: 'Pas encore de lieux.', routes: 'Pas encore d’itinéraires.' },
@@ -145,6 +151,31 @@ export const maps: Strings['maps'] = {
     changes: (n: number) =>
       n === 0 ? 'Direct' : n === 1 ? '1 correspondance' : `${n} correspondances`,
     kinds: { walk: 'À pied', train: 'Train', bus: 'Bus', tram: 'Tram', other: 'Trajet' },
+  },
+  own: {
+    title: 'Cartes personnelles',
+    build: 'Créer ma carte personnelle',
+    level: { lean: 'allégée', full: 'détaillée' },
+    building: (done: number, total: number) =>
+      `Le monde prend forme petit à petit · ${done} sur ${total}`,
+    overview: 'Dessin de la vue d’ensemble …',
+    paused: (done: number, total: number) => `En pause à ${done} sur ${total}`,
+    queued: 'Attend la fin de l’autre carte',
+    done: (n: number) => `Terminé · ${n} morceaux`,
+    started: 'La carte se crée. Vous pouvez continuer, elle se remplit toute seule.',
+    capped: 'La zone était grande. Le centre vient en premier.',
+    pause: 'Pause',
+    resume: 'Continuer',
+    remove: 'Supprimer la carte',
+    confirmRemove: 'Vraiment supprimer ?',
+    keep: 'Garder',
+    removed: 'Carte supprimée',
+    reasons: {
+      busy: 'Le service cartographique est surchargé pour le moment. Continuez plus tard.',
+      network: 'Le service cartographique est injoignable pour le moment. Continuez plus tard.',
+      blocked: 'Pas de connexion : le réseau est bloqué (Réglages → Connexions).',
+      error: 'La réponse du service cartographique était illisible. Réessayez plus tard.',
+    },
   },
   apps: {
     osm: 'OpenStreetMap',

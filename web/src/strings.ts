@@ -5249,6 +5249,12 @@ export const de = {
       offlineOnly: 'Nur eigene Karte (offline)',
       offlineOnlyHelp:
         'Zeigt nur die Karten, die du selbst erzeugt hast. Außerhalb bleibt die Fläche leer, nichts wird aus dem Internet geladen.',
+      overpassUrl: 'Kartendaten (Adresse)',
+      overpassUrlHelp:
+        'Ein Overpass-kompatibler Dienst, aus dem die eigene Karte entsteht. Standard: overpass-api.de (OpenStreetMap, nur für leichte Nutzung).',
+      showBuildProgress: 'Fortschritt unter der Karte zeigen',
+      showBuildProgressHelp:
+        'Eine ruhige Zeile, solange eine eigene Karte entsteht. Du kannst sie jederzeit ausschalten.',
     },
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },
@@ -5372,6 +5378,31 @@ export const de = {
       arr: 'an',
       changes: (n: number) => (n === 0 ? 'Direkt' : n === 1 ? '1 Umstieg' : `${n} Umstiege`),
       kinds: { walk: 'Zu Fuß', train: 'Bahn', bus: 'Bus', tram: 'Tram', other: 'Fahrt' },
+    },
+    own: {
+      title: 'Eigene Karten',
+      build: 'Eigene Karte erzeugen',
+      level: { lean: 'abgespeckt', full: 'genau' },
+      building: (done: number, total: number) =>
+        `Die Welt baut sich langsam auf · ${done} von ${total}`,
+      overview: 'Übersicht wird gezeichnet …',
+      paused: (done: number, total: number) => `Angehalten bei ${done} von ${total}`,
+      queued: 'Wartet, bis die andere Karte fertig ist',
+      done: (n: number) => `Fertig · ${n} Teile`,
+      started: 'Die Karte entsteht. Du kannst weitermachen, sie füllt sich von selbst.',
+      capped: 'Das Gebiet war groß. Erzeugt wird zuerst die Mitte.',
+      pause: 'Pause',
+      resume: 'Weiter',
+      remove: 'Karte löschen',
+      confirmRemove: 'Wirklich löschen?',
+      keep: 'Behalten',
+      removed: 'Karte gelöscht',
+      reasons: {
+        busy: 'Der Kartendienst ist gerade ausgelastet. Später weitermachen.',
+        network: 'Der Kartendienst ist gerade nicht erreichbar. Später weitermachen.',
+        blocked: 'Keine Verbindung: Das Netzwerk ist gesperrt (Einstellungen → Verbindungen).',
+        error: 'Die Antwort des Kartendienstes war nicht lesbar. Später noch einmal versuchen.',
+      },
     },
     apps: {
       osm: 'OpenStreetMap',

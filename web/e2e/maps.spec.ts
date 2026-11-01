@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enable, openFoldedGroup, ready, showAllWidgets } from './helpers';
+import { overpassFixture } from '../src/modules/maps/own/fixtures';
 import { SAMPLE_CENTER, sampleRegion } from '../src/modules/maps/own/sample';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -35,8 +36,16 @@ async function mockOsm(page: Page) {
           display_name: 'Schlossplatz, Erlangen, Bayern, Deutschland',
           lat: '49.5981',
           lon: '11.0044',
+          boundingbox: ['49.5950', '49.6010', '11.0000', '11.0090'],
         },
       ],
+    });
+  });
+  await page.route('**://overpass-api.de/**', async (route) => {
+    seen.push(route.request().url());
+    await route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: overpassFixture(),
     });
   });
   await page.route('**://api.transitous.org/**', async (route) => {
@@ -336,5 +345,42 @@ test.describe('Karten & Orte', () => {
     expect(seen.slice(before).filter((u) => hostOf(u) === 'tile.openstreetmap.org')).toEqual([]);
     await expect(page.getByTestId('tile-map').locator('img')).toHaveCount(0);
     await expect(page.getByText(/konnten nicht geladen werden/)).toHaveCount(0);
+  });
+
+  test('the own map is built from the map data service only on click, cell by cell, and can be deleted', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    await enable(page, 'maps');
+    await ready(page, '/maps?view=map');
+    await page.getByLabel('Ort oder Adresse suchen').fill('Schlossplatz Erlangen');
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    await page
+      .getByTestId('map-hits')
+      .getByText(/Schlossplatz, Erlangen/)
+      .click();
+    const card = page.getByTestId('map-selection');
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de')).toEqual([]);
+    // The first build brings its own one-time notice (clicked away by the helper), then the requests.
+    await card.getByRole('button', { name: 'Eigene Karte erzeugen' }).click();
+    const row = page.getByTestId('map-region');
+    await expect(row).toContainText('Schlossplatz');
+    await expect(row).toHaveAttribute('data-status', 'done', { timeout: 20_000 });
+    await expect(row).toContainText(/Fertig · \d+ Teile/);
+    expect(seen.filter((u) => hostOf(u) === 'overpass-api.de').length).toBeGreaterThanOrEqual(1);
+    // Every request is a POST with the query in its body, never in the address.
+    for (const u of seen.filter((u) => hostOf(u) === 'overpass-api.de'))
+      expect(u).not.toContain('data=');
+    // The map draws its own tiles for the built area.
+    const map = page.getByTestId('tile-map');
+    await expect.poll(() => map.locator('img[src^="blob:"]').count()).toBeGreaterThan(0);
+    await test
+      .info()
+      .attach('own-map-built', { body: await map.screenshot(), contentType: 'image/png' });
+
+    await row.getByRole('button', { name: 'Karte löschen' }).click();
+    await expect(row).toContainText('Wirklich löschen?');
+    await row.getByRole('button', { name: 'Karte löschen' }).click();
+    await expect(page.getByTestId('map-region')).toHaveCount(0);
   });
 });

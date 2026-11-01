@@ -328,6 +328,7 @@ export function sampleRegion(): SampleRegion {
       bbox,
       level: 'full',
       zooms: { min: SAMPLE_ZOOMS[0], max: SAMPLE_ZOOMS[SAMPLE_ZOOMS.length - 1]! },
+      cellZoom: 14,
       cells: { done: tiles.length, total: tiles.length },
       status: 'done',
       bytes: tiles.reduce((n, t) => n + t.data.size, 0),
