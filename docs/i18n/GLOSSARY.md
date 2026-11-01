@@ -20,6 +20,7 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 | Deutsch | English | Español | Français | Português (Brasil) |
 |---|---|---|---|---|
 | Übersicht | Overview | Resumen | Vue d'ensemble | Visão geral |
+| Cockpit (Übersicht allein, Vollbild) | Cockpit | Cabina | Cockpit | Cockpit |
 | Planen | Plan | Planificar | Planifier | Planejar |
 | Ruhe (Pause für Erinnerungen, früher Stumm/Zock-Modus) | Quiet | Calma | Calme | Calma |
 | Genommen (Antwort bei Einnahme) | Taken | Tomado | Pris | Tomado |
