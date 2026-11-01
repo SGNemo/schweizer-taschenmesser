@@ -168,6 +168,13 @@ export const maps: Strings['maps'] = {
     confirmRemove: 'Excluir mesmo?',
     keep: 'Manter',
     removed: 'Mapa excluído',
+    upgrade: 'Deixar detalhado',
+    extend: 'Ampliar aqui',
+    viewportName: 'Trecho do mapa',
+    covered: 'Este trecho já está no seu mapa.',
+    removeAll: 'Excluir todos os mapas',
+    confirmRemoveAll: 'Excluir todos os mapas próprios?',
+    asOf: (date: string) => `em ${date}`,
     reasons: {
       busy: 'O serviço de mapas está sobrecarregado agora. Continue mais tarde.',
       network: 'O serviço de mapas não está acessível agora. Continue mais tarde.',

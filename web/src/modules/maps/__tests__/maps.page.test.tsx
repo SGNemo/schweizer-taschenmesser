@@ -549,4 +549,41 @@ describe('own map build (Overpass)', () => {
     expect(row).toHaveTextContent(/Angehalten bei 0 von \d+ · Keine Verbindung/);
     expect(within(row).getByRole('button', { name: 'Weiter' })).toBeTruthy();
   });
+
+  it('a finished lean map can be made detailed; two maps offer "Alle Karten löschen"', async () => {
+    const card = await chooseErlangen();
+    fireEvent.click(within(card).getByRole('button', { name: 'Eigene Karte erzeugen' }));
+    const row = await screen.findByTestId('map-region');
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 5000 });
+    expect(row).toHaveTextContent(/KB|MB/);
+    expect(row).toHaveTextContent(/Stand /);
+    const leanTiles = await tileRepo.active().count();
+    fireEvent.click(within(row).getByRole('button', { name: 'Genauer machen' }));
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'building'));
+    await waitFor(() => expect(row).toHaveAttribute('data-status', 'done'), { timeout: 10_000 });
+    expect(row).toHaveTextContent(/genau · Fertig/);
+    expect(within(row).queryByRole('button', { name: 'Genauer machen' })).toBeNull();
+    const rows = await tileRepo.active().toArray();
+    expect(rows.length).toBeGreaterThan(leanTiles);
+    expect(rows.some((r) => r.z === 16)).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Alle Karten löschen' })).toBeNull();
+
+    // A second region (stored directly: a cache row) brings the "delete all" step.
+    await regionRepo.create({
+      name: 'Zweite',
+      bbox: { minLat: 48, maxLat: 48.01, minLon: 11, maxLon: 11.01 },
+      level: 'lean',
+      zooms: { min: 8, max: 14 },
+      cellZoom: 13,
+      cells: { done: 1, total: 1 },
+      status: 'done',
+      bytes: 10,
+    });
+    const all = await screen.findByRole('button', { name: 'Alle Karten löschen' });
+    fireEvent.click(all);
+    expect(screen.getByText('Alle eigenen Karten löschen?')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Alle Karten löschen' }));
+    await waitFor(async () => expect(await regionRepo.table.count()).toBe(0));
+    expect(await tileRepo.table.count()).toBe(0);
+  });
 });

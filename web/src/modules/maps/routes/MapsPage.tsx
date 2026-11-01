@@ -43,7 +43,8 @@ import {
 import { getBuilder, setOverpassUrl, useBuildStore } from '../own/builder';
 import type { Bbox } from '../own/cut';
 import { createLocalTiles } from '../own/local';
-import { regionName } from '../own/plan';
+import { tileId, tilesCovering } from '../own/cut';
+import { CELL_ZOOM, regionName, viewportBbox } from '../own/plan';
 import { watchTheme } from '../own/theme';
 import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 import { connectionPath, fetchConnections } from '../transit';
@@ -168,7 +169,7 @@ function PlanCard({ shown, onHide }: { shown: Shown; onHide: () => void }) {
 export default function MapsPage() {
   const places = useLiveQuery(() => placeRepo.active().sortBy('createdAt'), []);
   const routes = useLiveQuery(() => routeRepo.active().sortBy('createdAt'), []);
-  const regions = useLiveQuery(() => regionRepo.active().toArray(), []);
+  const regions = useLiveQuery(() => regionRepo.active().sortBy('createdAt'), []);
   const [prefs] = useSettings('module.maps', settings.schema, settings.defaults);
   const { tileUrl, searchUrl, routingUrl, transitUrl, overpassUrl } = servicesOf(
     prefs as Record<string, unknown> | undefined,
@@ -234,6 +235,26 @@ export default function MapsPage() {
   const [trip, setTrip] = useState<Trip>();
   const searchInput = useRef<HTMLInputElement>(null);
   const view = mapView ?? fitView(places ?? [], 800, 480) ?? GERMANY;
+
+  // "Hier erweitern": offered when the shown area has cells no own map holds yet (checked calmly,
+  // from the rounded view, never per frame).
+  const [mapSize, setMapSize] = useState({ w: 800, h: 480 });
+  const [uncovered, setUncovered] = useState(0);
+  const viewKey = `${Math.round(view.lat * 500)}:${Math.round(view.lon * 500)}:${Math.round(view.zoom)}:${mapSize.w}x${mapSize.h}`;
+  const extendable = (regions?.length ?? 0) > 0 && view.zoom >= 11;
+  useEffect(() => {
+    if (!extendable) return;
+    let alive = true;
+    const cells = tilesCovering(viewportBbox(view, mapSize.w, mapSize.h), CELL_ZOOM.lean);
+    void Promise.all(cells.map((c) => tileRepo.get(tileId(c.z, c.x, c.y)))).then((rows) => {
+      if (alive) setUncovered(rows.filter((r) => !r).length);
+    });
+    return () => {
+      alive = false;
+    };
+    // The rounded view key stands for the view: one check per settled position.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewKey, regionsKey, extendable]);
 
   // The map (and with it every tile request) only starts once its tab is open and the notice is read.
   useEffect(() => {
@@ -352,6 +373,26 @@ export default function MapsPage() {
       level: 'lean',
     });
     setNote(capped ? `${t.maps.own.started} ${t.maps.own.capped}` : t.maps.own.started);
+  }
+
+  /** Only on click: the shown area joins the own map (cells already built are left out). */
+  async function extendHere() {
+    await requireNotice('maps-build');
+    setReady(true);
+    const { cells, capped } = await builder.createAndStart({
+      name: t.maps.own.viewportName,
+      bbox: viewportBbox(view, mapSize.w, mapSize.h),
+      centre: { lat: view.lat, lon: view.lon },
+      level: 'lean',
+      skipBuilt: true,
+    });
+    setNote(
+      cells === 0
+        ? t.maps.own.covered
+        : capped
+          ? `${t.maps.own.started} ${t.maps.own.capped}`
+          : t.maps.own.started,
+    );
   }
 
   function locate() {
@@ -560,6 +601,7 @@ export default function MapsPage() {
               template={tileUrl}
               resolve={resolve}
               resolveKey={`${sourceVersion}:${offlineOnly ? 'own' : 'all'}`}
+              onSize={(w, h) => setMapSize((s) => (s.w === w && s.h === h ? s : { w, h }))}
               markers={markers}
               selected={selected && !selected.place ? selected : undefined}
               line={
@@ -600,6 +642,14 @@ export default function MapsPage() {
               · {activeRegion.name}
             </p>
           ) : null}
+          {extendable && uncovered > 0 && !build.active ? (
+            <div className={styles.actions}>
+              <Button onClick={() => void extendHere()} data-testid="map-extend">
+                <Icon name="plus" size={18} />
+                {t.maps.own.extend}
+              </Button>
+            </div>
+          ) : null}
           <RegionsCard
             regions={regions ?? []}
             active={build.active}
@@ -607,6 +657,8 @@ export default function MapsPage() {
             onPause={(id) => void builder.pause(id)}
             onResume={(id) => void builder.start(id)}
             onRemove={(id) => void builder.remove(id)}
+            onUpgrade={(id) => void builder.upgrade(id)}
+            onRemoveAll={() => void builder.removeAll()}
           />
 
           {shown ? <PlanCard shown={shown} onHide={() => setShown(undefined)} /> : null}

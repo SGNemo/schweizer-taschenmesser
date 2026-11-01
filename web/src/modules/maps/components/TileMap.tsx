@@ -119,6 +119,7 @@ export function TileMap({
   attribution,
   resolve = onlineOnly,
   resolveKey = '',
+  onSize,
 }: {
   view: View;
   onView: (view: View) => void;
@@ -126,6 +127,8 @@ export function TileMap({
   /** Where tiles come from; default: the online template only. */
   resolve?: TileResolver;
   resolveKey?: string;
+  /** The map element's size in CSS px, whenever it changes (the page derives the shown area from it). */
+  onSize?: (width: number, height: number) => void;
   markers: readonly MapMarker[];
   selected?: { lat: number; lon: number };
   /** A route line to draw (already thinned). */
@@ -141,9 +144,9 @@ export function TileMap({
   const [problem, setProblem] = useState<{ why: 'blocked' | 'failed'; status?: number }>();
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef({ moved: 0, startX: 0, startY: 0, pinch: 0 });
-  const latest = useRef({ view, onView });
+  const latest = useRef({ view, onView, onSize });
   useEffect(() => {
-    latest.current = { view, onView };
+    latest.current = { view, onView, onSize };
   });
 
   useEffect(() => {
@@ -151,7 +154,10 @@ export function TileMap({
     if (!el) return;
     const measure = () => {
       const r = el.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) setSize({ w: Math.round(r.width), h: Math.round(r.height) });
+      if (r.width > 0 && r.height > 0) {
+        setSize({ w: Math.round(r.width), h: Math.round(r.height) });
+        latest.current.onSize?.(Math.round(r.width), Math.round(r.height));
+      }
     };
     measure();
     if (typeof ResizeObserver === 'undefined') return;
