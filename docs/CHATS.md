@@ -18,6 +18,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Browser module (P1 of browser + downloads) | `feat/browser` | `modules/browser`, `core/platform/browser*`, `src-tauri/src/browser.rs`, `crates/browser-filter`; hotspots: `Cargo.toml` (tauri `unstable`), `capabilities/*.json`, `build.rs`, `strings.ts` (browser block) | started | – | 2026-11-01 |
 | Eigene Karte aus OSM-Daten, Paket 4: eigene Regionsdateien (PMTiles) | `feat/map-own-regions` | `modules/maps/own/{pmtiles,builder,sample,work}.ts`, `maps/{schema,settings}.ts`, `components/RegionsCard.tsx`, `MapsPage.tsx`, strings `maps.settings`/`maps.own` + 4 locales, `strings.legal.ts` (`maps-build`, flows), `pages/settings/inventory.modules.json`, `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
