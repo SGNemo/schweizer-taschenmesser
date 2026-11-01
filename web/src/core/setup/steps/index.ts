@@ -101,6 +101,19 @@ export const CORE_STEPS: SetupStepDef[] = [
     component: () => import('@/layout/setup/steps/ConnectorsStep'),
   },
   {
+    id: 'core.migrate',
+    get title() {
+      return s.migrate.title;
+    },
+    get description() {
+      return s.migrate.description;
+    },
+    order: 75, // directly before the start data; not one of the three first-run questions
+    since: 1,
+    when: async () => (await import('../migrate')).migrateStepApplies(),
+    component: () => import('@/layout/setup/steps/MigrateStep'),
+  },
+  {
     id: 'core.startdata',
     get title() {
       return s.startdata.title;

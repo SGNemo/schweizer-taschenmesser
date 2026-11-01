@@ -47,5 +47,11 @@ Afterwards the dashboard checklist card lists the remaining steps (sync, tools, 
 9. Removed instead: the confirm box in quick mode, the double progress number, the duplicate card buttons, the automatic Ollama probe.
 8. Clicks: 14 → 5.
 
+## Moving from another app (`core.migrate`)
+- Full assistant only (order 75, before start data; not in `QUICK_IDS`); offered on an empty installation, or while an origin is chosen. Tiles: Google, Todoist, Obsidian/Markdown, Bank, Bitwarden, "Papier / Kopf" (opens nothing). A tile switches the target module on and opens its existing importer (`core/importer`); Bitwarden goes to Passwords `?tools=1` (vault import stays in `ToolsDialog`).
+- Progress: `_meta` `migrate.state` (`core/setup/migrate.ts`): origin ids + time, ticked manual point ids; never contents. A point is done when a committed `_imports` batch of its module is newer than the choice; manual points (calendar subscription, Bitwarden) are ticked by hand.
+- `buildChecklist(…, subs)` adds `sub` rows under `core.migrate`; the row stays while a point is open. "Weiter": chosen + import run (or "Papier") = done, else "Später". The checklist row keeps its place even when more than five steps are open.
+- Same tiles in Settings → Sync & Backup (`BackupSection`, dialog). ZIP is not unpacked.
+
 ## Not in this package
 Everything under "Nicht umsetzen" / "Zurückgestellt" in CONSOLIDATED.md; other findings go into the PR text.

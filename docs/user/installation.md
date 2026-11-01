@@ -51,6 +51,9 @@ The old installed version cannot update itself to the portable file; the switch 
 Open Chrome/Edge (Windows) or Chrome (Android) → "Install app". Service worker and installation need
 HTTPS (or `localhost`).
 
+## Moving from another app
+Coming from Google, Todoist, Obsidian, a banking app or Bitwarden? Open the checklist on the Overview (row "Moving from another app") or **Settings → Sync & Backup → Moving from another app …**. Choose where you come from: Nemo says where to get the export (for Google: Google Takeout, unzip the ZIP first) and opens the matching import with a preview. Nothing is uploaded, no account is needed, every import can be undone. Under the checklist row you see what is still missing for each origin; points that cannot be detected (connecting a calendar subscription, the Bitwarden import) you tick off yourself. All of it is optional.
+
 ## Dev preview (untested builds)
 
 After every change on `develop`, GitHub automatically builds a preview (Windows portable and Android APK). It is meant for testers and may contain bugs.
