@@ -24,7 +24,7 @@ export const settings: ModuleSettings = {
     blocker: true,
     hint: true,
   },
-  keywords: ['Browser', 'Internet', 'Suche', 'Werbung', 'Tracker', 'Verlauf', 'Lesezeichen'],
+  keywords: ['Browser', 'Internet', 'Suche', 'Werbung', 'Tracker'],
   fields: [
     {
       key: 'engine',
