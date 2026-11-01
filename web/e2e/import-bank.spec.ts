@@ -12,7 +12,7 @@ const fixture = (name: string) =>
   readFileSync(resolve(process.cwd(), 'src/core/io/__fixtures__/bank', name));
 
 /** Waits until a table of the app database has at least one row (async writes finish after the UI). */
-async function waitForRows(page: Page, table: string) {
+async function waitForRows(page: Page, table: string, atLeast = 1) {
   await expect
     .poll(() =>
       page.evaluate(
@@ -33,14 +33,15 @@ async function waitForRows(page: Page, table: string) {
         table,
       ),
     )
-    .toBeGreaterThan(0);
+    .toBeGreaterThanOrEqual(atLeast);
 }
 
 async function openBankImport(page: Page): Promise<Locator> {
   await ready(page, '/finance?tab=transactions');
   // The page creates its default account and categories after the title is shown.
   await waitForRows(page, 'finance_account');
-  await waitForRows(page, 'finance_category');
+  // The twelve default categories are created one after another.
+  await waitForRows(page, 'finance_category', 12);
   await page.goto('/settings/module');
   await page
     .locator('section[aria-labelledby="module-finance"]')
