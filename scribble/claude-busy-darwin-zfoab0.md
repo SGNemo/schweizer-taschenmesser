@@ -1,0 +1,14 @@
+# claude/busy-darwin-zfoab0 (T6 cold start, prompt `perf/cold-start`) – for the next chat:
+
+- **Measure first:** `cd web && npm run check:bundle -- --modules` (critical path, lazy chunks, precache, budget). "Why is X on the start path?": `dist-bundle/.vite/imports.json` holds the static import edges; a BFS from `src/main.tsx` gives the chain (that is how tldts, settings sections and core/ai were found).
+- **Biggest post left (not mine to touch):** `layout/AppShell.tsx` imports `CommandPalette` eagerly → `layout/assistant/useAssistant` → `core/ai` + minisearch. Lazy there = critical path 537 → 502.5 KB gzip (measured, reverted). Then `ui/index.ts` → `SortableList` → @dnd-kit (~25 KB), `layout/SupporterEffects` → @noble (~14 KB, sync API), `core/importer/host` → `OnboardingWizard` (~17 KB).
+- **Chromium remembers a failed dynamic import per page** (same URL fails again even online; a `?query` would load). That is why `lazyOnline` and the strength meter reload on "Erneut versuchen" once back online. Don't "fix" it with an automatic reload.
+- **Tools:** `src/tools/<id>/Tool.tsx` is a thin precached `lazyOnline` entry, the tool lives in `View.tsx` (not precached). A new tool follows `docs/howto/new-extension.md`. Tests of a tool import `./View`.
+- **Precache rule** is graph based (`scripts/lib/precacheSplit.ts`), not file-name based: a shared helper of a tool view stays precached if anything precached needs it. New online roots = one regex there + a test.
+- **Coldstart numbers:** `npm run measure:coldstart` (~4 min). With "Fast 3G" Chromium also delays SW-cache answers; `COLDSTART_NET=0` gives the CPU-only view (installed: 1.28 s). Don't keep a `vite preview` running on :4173 while running e2e: Playwright reuses it and tests a stale build.
+- **Settings sections are lazy** (`pages/settings/sections.tsx`, `lazySection`): a new section component is added the same way; the registry entry (title, keywords, fields) stays eager.
+- Budget: `scripts/bundle-budget.json`; intended growth → `npm run check:bundle -- --baseline` and say why in the PR.
+- **Split-off pages are preloaded in the first idle slot** (`core/modules/idlePreload.ts`, list `IDLE_PRELOAD` in `router.tsx`): the sync E2E "offline edits" navigates offline *without* a service worker into Settings. Preloading right after the render cost ~0.7 s on the phone profile; the idle slot does not. A new lazy settings section registers itself (`lazySection` → `sectionLoaders`), nothing to add by hand.
+- `import('hash-wasm')` without destructuring bundles every hash (27 → 215 KB): keep `loadArgon2` in `core/crypto/kdf.ts`.
+- e2e helpers `openMoreFocus`/`openFoldedGroup` click `:scope > summary` (nested folds, e.g. the Spotify music group inside "Weitere").
+- Container restarts can land on a slower machine: compare before/after only back to back (worktree of the base commit + `COLDSTART_OUT`).

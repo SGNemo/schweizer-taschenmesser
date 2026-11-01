@@ -37,9 +37,9 @@ through the `@nemo/vault-core` barrel by `core/crypto/random.ts`), settings sect
 ## After (this branch)
 | | Before | After |
 |---|---|---|
-| Critical path `index.html` | 72 requests, 722.1 KB gzip | **54 requests, 537.1 KB gzip (−25.6 %)** |
+| Critical path `index.html` | 72 requests, 722.1 KB gzip | **54 requests, 537.4 KB gzip (−25.6 %)** |
 | Critical path `capture.html` | 22 requests, 428.0 KB gzip | 17 requests, 316.7 KB gzip (−26.0 %) |
-| Precache | 308 files, 7459.6 KB | 338 files, **4498.3 KB (−40 %)**; 27 files load on first use |
+| Precache | 308 files, 7459.6 KB | 338 files, **4498.8 KB (−40 %)**; 27 files load on first use |
 
 One commit per step, critical path gzip after each: tldts off the path (`treeshake.moduleSideEffects` for vault-core +
 tldts) 611.9 · Spotify player on first open 606.4 · rarely used pages lazy in `router.tsx` (library, tool list,
@@ -47,18 +47,28 @@ settings, OAuth, share) 601.5 · settings section components lazy in `pages/sett
 eager) 554.1 · weather forecast dialog on first tap + Argon2 WASM on first derivation 538.0 · vendor chunk (react,
 react-router, dexie, zod, zustand: its hash survives app updates) 536.4, 54 requests.
 
-| Cold start (median of 5, ms) | first paint | `main h1` | capture field focused |
-|---|---|---|---|
-| first visit, Fast 3G | 2628 → 2984 | 10557 → 8744 | **10728 → 8925** |
-| installed, Fast 3G | 2356 → 2376 | 8899 → 7128 | **9078 → 7288** |
-| first visit, CPU 4× only | 316 → 268 | 1361 → 1162 | 1559 → 1350 |
-| installed, CPU 4× only | 256 → 232 | 1246 → 1092 | **1446 → 1281** |
+Split-off pages that must also work offline without a service worker (settings layout and every section,
+library, tool list, share page, weather dialog, Argon2) load in the first idle slot after the start
+(`core/modules/idlePreload.ts`, called from `router.tsx`); right after the render instead cost ~0.7 s on the phone
+profile. Not preloaded: OAuth page and Spotify player (need the network anyway).
 
-- Installed PWA, CPU 4×: **1.28 s** to the focused capture field, under the 1.5 s target. With "Fast 3G" Chromium
+Final numbers, before (worktree at the measurement commit) and after measured back to back on the same sandbox
+(a slower one than the first measurement above, so its "before" is higher; CPU-only rows: median of 10 runs,
+interleaved; Fast 3G rows: median of 5):
+
+| Cold start (ms) | first paint | `main h1` | capture field focused |
+|---|---|---|---|
+| first visit, Fast 3G | 2636 → 2992 | 10937 → 8860 | **11167 → 9032** |
+| installed, Fast 3G | 2384 → 2368 | 9144 → 7348 | **9315 → 7513** |
+| first visit, CPU 4× only | 308 → 304 | 1571 → 1412 | 1750 → 1672 |
+| installed, CPU 4× only | 304 → 280 | 1554 → 1332 | **1743 → 1567** |
+
+- Installed PWA, CPU 4×: −10 % to the focused capture field; on the first sandbox (before the idle preload) it was
+  1446 → 1281 ms, under the 1.5 s target; on this slower one 1567 ms. With "Fast 3G" Chromium
   also delays answers that come from the service worker cache (each of the 54 requests pays the 562 ms latency on 6
   HTTP/1.1 connections of `vite preview`), so that row is pessimistic for an installed app; requests count there more
   than bytes. First paint of the first visit waits for 7 render-blocking stylesheets that now compete with the larger
-  vendor chunk; it moved within the run-to-run noise of this row (develop merged in between).
+  vendor chunk (+0.36 s); everything after it is earlier.
 - Why not −30 %: the next posts sit in files this work must not touch. `layout/AppShell.tsx` imports
   `CommandPalette` → `layout/assistant/useAssistant` → `core/ai` + minisearch eagerly; made lazy there (measured, not
   committed) the path is **502.5 KB (−30.4 %)**, 52 requests. Others: @dnd-kit via `ui/index.ts` → `SortableList`
@@ -87,5 +97,5 @@ Chromium remembers a failed dynamic import for the page. Proof: `web/e2e/offline
 - The cloud model SDK stays precached (an offline import would bypass `core/ai/providers/claude.ts`' error mapping).
 - No automatic reload anywhere; back online, a reload happens only on "Erneut versuchen".
 - The first vault open fetches the dictionaries in the background only online and without the browser's data saver.
-- Settings sections, rarely used pages, Spotify player, weather dialog, Argon2 load lazily but stay precached
-  (offline unchanged).
+- Settings sections, rarely used pages, weather dialog, Argon2 load lazily but stay precached and are preloaded
+  in the first idle slot (offline unchanged, also without a service worker); Spotify player and OAuth page only on use.
