@@ -8,6 +8,7 @@
  * as delta-encoded varints, tiles addressed by a Hilbert curve id).
  */
 import type { Bbox } from './cut';
+import { gunzip } from './gzip';
 
 export const HEADER_LENGTH = 127;
 /** Bytes fetched first: the header plus, for most files, the whole root directory. */
@@ -200,13 +201,6 @@ export interface OpenOptions {
   fetch: typeof fetch;
   headers?: Record<string, string>;
   timeoutMs?: number;
-}
-
-async function gunzip(bytes: ArrayBuffer): Promise<ArrayBuffer> {
-  if (typeof DecompressionStream === 'undefined') throw new Error('pmtiles: no inflate');
-  const body = new Response(bytes).body;
-  if (!body) throw new Error('pmtiles: no inflate');
-  return new Response(body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
 }
 
 /** Reads `[offset, offset + length)` of the file with one range request. */
