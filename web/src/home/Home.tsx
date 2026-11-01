@@ -18,7 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Suspense, useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { lazyComponent } from '@/core/modules/lazy';
 import { availableManifests } from '@/core/modules/available';
@@ -27,6 +27,8 @@ import type { WidgetDef, WidgetSize } from '@/core/modules/types';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
+import { tCockpit } from '@/strings.cockpit';
+import { enterCockpit } from '@/layout/useCockpit';
 import { HOME_VIEWS, useUiStore } from '@/stores/ui';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
@@ -49,6 +51,7 @@ import {
 import { widgetsOf } from './AutoWidget';
 import { AgendaBlock } from './AgendaBlock';
 import { AttentionStrip } from './AttentionStrip';
+import { CockpitStats } from './CockpitStats';
 import { ResumeCard } from './ResumeCard';
 import { NowPlayingLine } from './NowPlayingLine';
 import { useNowPlayingAvailable } from './useNowPlaying';
@@ -57,7 +60,9 @@ import { WeatherLine } from './WeatherLine';
 
 import styles from './Home.module.css';
 import {
+  COCKPIT_SCOPE,
   DEFAULT_LAYOUT,
+  HOME_SCOPE,
   effectiveSize,
   isCalmVisible,
   mergeOrder,
@@ -111,11 +116,19 @@ const AGENDA_KEY = 'core:agenda';
 
 const SIZE_CLASS: Record<WidgetSize, string> = { s: styles.s!, m: styles.m!, l: styles.l! };
 
-export function Home() {
+/**
+ * The overview. With `cockpit` it is the cockpit's widget wall: own layout scope, no greeting,
+ * cards or weather line, optional dense grid and large figures (`CockpitStats`).
+ */
+export function Home({ cockpit = false }: { cockpit?: boolean }) {
+  const scope = cockpit ? COCKPIT_SCOPE : HOME_SCOPE;
   const states = useModuleStates();
   const nowPlayingAvailable = useNowPlayingAvailable();
   const tSp = tSpotify.use();
-  const saved = useHomeLayout();
+  const tx = tCockpit.use();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const saved = useHomeLayout(scope);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const editing = useUiStore((s) => s.homeEditing);
@@ -129,7 +142,7 @@ export function Home() {
   const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
   const homeView = useUiStore((s) => s.homeView);
   const setHomeView = useUiStore((s) => s.setHomeView);
-  const calm = homeView === 'calm' && !editing;
+  const calm = homeView === 'calm' && !editing && !cockpit;
   const hiddenByUser = ordered.filter((e) => layout.hidden.includes(e.key));
   const shown = editing
     ? ordered
@@ -152,7 +165,7 @@ export function Home() {
       String(active.id),
       String(over.id),
     );
-    void updateLayout({ order: mergeOrder(keys, layout) });
+    void updateLayout({ order: mergeOrder(keys, layout) }, scope);
   }
 
   const title = (id: string | number) => ordered.find((e) => e.key === id)?.title ?? String(id);
@@ -167,51 +180,81 @@ export function Home() {
     onDragCancel: () => t.homeEdit.cancelled,
   };
 
+  const editTools =
+    entries.length > 0 && editing ? (
+      <>
+        <Button variant="secondary" onClick={() => setSheetOpen(true)}>
+          <Icon name="eye" size={18} />
+          {t.homeEdit.widgets}
+        </Button>
+        <Button variant="secondary" onClick={() => setResetOpen(true)}>
+          {t.homeEdit.reset}
+        </Button>
+      </>
+    ) : null;
+
   return (
     <>
-      <PageHeader title={t.home.title}>
-        {entries.length > 0 ? (
-          <>
-            {editing ? (
-              <>
-                <Button variant="secondary" onClick={() => setSheetOpen(true)}>
-                  <Icon name="eye" size={18} />
-                  {t.homeEdit.widgets}
-                </Button>
-                <Button variant="secondary" onClick={() => setResetOpen(true)}>
-                  {t.homeEdit.reset}
-                </Button>
-              </>
-            ) : null}
-            {editing ? null : (
-              <Segmented
-                label={t.settings.homeView}
-                value={homeView}
-                options={HOME_VIEWS.map((v) => ({
-                  value: v,
-                  label: t.settings.homeViewOptions[v],
-                }))}
-                onChange={setHomeView}
-              />
-            )}
-            <Button
-              variant={editing ? 'primary' : 'secondary'}
-              onClick={() => setEditing(!editing)}
-              aria-pressed={editing}
-            >
-              <Icon name={editing ? 'check' : 'edit'} size={18} />
-              {editing ? t.homeEdit.done : t.homeEdit.customize}
+      {cockpit ? (
+        editing ? (
+          <div className={styles.cockpitTools} data-testid="cockpit-edit-tools">
+            {editTools}
+            <Button variant="primary" onClick={() => setEditing(false)} aria-pressed>
+              <Icon name="check" size={18} />
+              {t.homeEdit.done}
             </Button>
-          </>
-        ) : null}
-      </PageHeader>
+          </div>
+        ) : null
+      ) : (
+        <PageHeader title={t.home.title}>
+          {entries.length > 0 ? (
+            <>
+              {editTools}
+              {editing ? null : (
+                <Button
+                  variant="secondary"
+                  onClick={() => enterCockpit((to) => void navigate(to), pathname)}
+                  data-testid="cockpit-enter"
+                >
+                  <Icon name="maximize" size={18} />
+                  {tx.enter}
+                </Button>
+              )}
+              {editing ? null : (
+                <Segmented
+                  label={t.settings.homeView}
+                  value={homeView}
+                  options={HOME_VIEWS.map((v) => ({
+                    value: v,
+                    label: t.settings.homeViewOptions[v],
+                  }))}
+                  onChange={setHomeView}
+                />
+              )}
+              <Button
+                variant={editing ? 'primary' : 'secondary'}
+                onClick={() => setEditing(!editing)}
+                aria-pressed={editing}
+              >
+                <Icon name={editing ? 'check' : 'edit'} size={18} />
+                {editing ? t.homeEdit.done : t.homeEdit.customize}
+              </Button>
+            </>
+          ) : null}
+        </PageHeader>
+      )}
 
-      <WelcomeCard />
-      <ChecklistCard />
-      {!editing ? <ResumeCard /> : null}
+      {cockpit ? null : (
+        <>
+          <WelcomeCard />
+          <ChecklistCard />
+          {!editing ? <ResumeCard /> : null}
+        </>
+      )}
+      {cockpit && !editing && layout.stats ? <CockpitStats /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
       {!editing && !layout.hidden.includes(AGENDA_KEY) ? <AgendaBlock /> : null}
-      {!editing ? <WeatherLine /> : null}
+      {!editing && !cockpit ? <WeatherLine /> : null}
       {!editing && !layout.hidden.includes(NOWPLAYING_KEY) ? <NowPlayingLine /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
@@ -234,7 +277,15 @@ export function Home() {
         >
           {editing ? <p className={styles.hint}>{t.homeEdit.pinNote}</p> : null}
           <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
-            <div className={`${styles.grid} ${editing ? styles.editing : ''}`}>
+            <div
+              className={[
+                styles.grid,
+                editing ? styles.editing : '',
+                cockpit ? styles.cockpit : '',
+                cockpit && layout.dense ? styles.dense : '',
+              ].join(' ')}
+              data-testid={cockpit ? 'cockpit-grid' : 'home-grid'}
+            >
               {shown.map((e) => (
                 <SortableWidget
                   key={e.key}
@@ -243,10 +294,15 @@ export function Home() {
                   size={effectiveSize(e, e.key, layout)}
                   hidden={layout.hidden.includes(e.key)}
                   pinned={layout.pinned.includes(e.key)}
-                  onTogglePinned={() => void updateLayout(togglePinned(layout, e.key))}
-                  onToggleHidden={() => void updateLayout({ hidden: toggleHidden(layout, e.key) })}
+                  onTogglePinned={() => void updateLayout(togglePinned(layout, e.key), scope)}
+                  onToggleHidden={() =>
+                    void updateLayout({ hidden: toggleHidden(layout, e.key) }, scope)
+                  }
                   onSize={(size) =>
-                    void updateLayout({ sizes: withSize(layout, e.key, size, e.defaultSize) })
+                    void updateLayout(
+                      { sizes: withSize(layout, e.key, size, e.defaultSize) },
+                      scope,
+                    )
                   }
                 />
               ))}
@@ -270,11 +326,33 @@ export function Home() {
         <p className={styles.hint}>{t.homeEdit.widgetsNote}</p>
         {ordered.length === 0 ? <p>{t.homeEdit.widgetsNone}</p> : null}
         <ul className={patternStyles.plainList}>
+          {cockpit ? (
+            <>
+              <li>
+                <Switch
+                  label={tx.dense}
+                  hint={tx.denseHint}
+                  checked={!!layout.dense}
+                  onChange={(dense) => void updateLayout({ dense }, scope)}
+                />
+              </li>
+              <li>
+                <Switch
+                  label={tx.stats}
+                  hint={tx.statsHint}
+                  checked={!!layout.stats}
+                  onChange={(stats) => void updateLayout({ stats }, scope)}
+                />
+              </li>
+            </>
+          ) : null}
           <li>
             <Switch
               label={t.home.agenda.title}
               checked={!layout.hidden.includes(AGENDA_KEY)}
-              onChange={() => void updateLayout({ hidden: toggleHidden(layout, AGENDA_KEY) })}
+              onChange={() =>
+                void updateLayout({ hidden: toggleHidden(layout, AGENDA_KEY) }, scope)
+              }
             />
           </li>
           <li>
@@ -282,7 +360,9 @@ export function Home() {
               label={t.attention.title}
               hint={t.attention.hint}
               checked={!layout.hidden.includes(ATTENTION_KEY)}
-              onChange={() => void updateLayout({ hidden: toggleHidden(layout, ATTENTION_KEY) })}
+              onChange={() =>
+                void updateLayout({ hidden: toggleHidden(layout, ATTENTION_KEY) }, scope)
+              }
             />
           </li>
           {nowPlayingAvailable ? (
@@ -291,7 +371,9 @@ export function Home() {
                 label={tSp.widgetSwitch}
                 hint={tSp.widgetHint}
                 checked={!layout.hidden.includes(NOWPLAYING_KEY)}
-                onChange={() => void updateLayout({ hidden: toggleHidden(layout, NOWPLAYING_KEY) })}
+                onChange={() =>
+                  void updateLayout({ hidden: toggleHidden(layout, NOWPLAYING_KEY) }, scope)
+                }
               />
             </li>
           ) : null}
@@ -301,7 +383,7 @@ export function Home() {
                 label={e.title}
                 hint={allManifests.find((m) => m.id === e.moduleId)?.name}
                 checked={!layout.hidden.includes(e.key)}
-                onChange={() => void updateLayout({ hidden: toggleHidden(layout, e.key) })}
+                onChange={() => void updateLayout({ hidden: toggleHidden(layout, e.key) }, scope)}
               />
             </li>
           ))}
@@ -319,7 +401,7 @@ export function Home() {
             </Button>
             <Button
               onClick={() => {
-                void resetLayout();
+                void resetLayout(scope);
                 setResetOpen(false);
               }}
             >
