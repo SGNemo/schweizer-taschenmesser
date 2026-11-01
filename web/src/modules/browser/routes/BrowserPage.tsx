@@ -152,13 +152,12 @@ export default function BrowserPage() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.tabs} role="tablist" aria-label={t.browser.toolbar.tabs}>
+      <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs}>
         {tabs.map((x) => (
           <div key={x.id} className={`${styles.tab} ${x.id === activeId ? styles.tabActive : ''}`}>
             <button
               type="button"
-              role="tab"
-              aria-selected={x.id === activeId}
+              aria-current={x.id === activeId ? 'page' : undefined}
               className={styles.tabTitle}
               onClick={() => {
                 useBrowserTabs.getState().setActive(x.id);
@@ -185,7 +184,7 @@ export default function BrowserPage() {
         >
           <Icon name="plus" />
         </IconButton>
-      </div>
+      </nav>
 
       <form
         className={styles.bar}
