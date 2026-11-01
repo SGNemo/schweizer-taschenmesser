@@ -1,0 +1,15 @@
+[package]
+name = "taschenmesser-browser-filter"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Pure decisions for the built-in browser: which URLs may load (scheme policy, HTTP warning) and which requests the ad/tracker blocker stops. No Tauri, so it is unit-tested on any machine."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "browser_filter"
+
+[dependencies]
+url = "2"
+serde = { version = "1", features = ["derive"] }
