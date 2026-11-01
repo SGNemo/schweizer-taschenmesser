@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   historyText,
@@ -33,10 +34,9 @@ describe('history', () => {
   it('stores and reloads, and carries over the former format', () => {
     saveHistory(list);
     expect(loadHistory()).toEqual(list);
-    localStorage.clear();
-    localStorage.setItem('tm-calc-history', JSON.stringify([{ expr: '1+1', result: 2.5 }]));
+    localStorage.setItem('tm-calc-history', JSON.stringify([{ expr: '1+1', result: 2.5 }, 5]));
     expect(loadHistory()).toEqual([{ expr: '1+1', result: '2,5' }]);
-    localStorage.setItem('tm-calc-history-2', 'not json');
+    localStorage.setItem('tm-calc-history', 'not json');
     expect(loadHistory()).toEqual([]);
   });
 });

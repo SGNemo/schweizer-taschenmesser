@@ -17,6 +17,7 @@ describe('isOnlineRoot', () => {
     expect(isOnlineRoot('C:\\repo\\web\\src\\tools\\calc\\View.tsx')).toBe(true);
     expect(isOnlineRoot('/repo/web/src/modules/chat/routes/ChatView.tsx')).toBe(true);
     expect(isOnlineRoot('/repo/web/node_modules/@zxcvbn-ts/language-de/dist/index.mjs')).toBe(true);
+    expect(isOnlineRoot('/repo/web/node_modules/mathjs/lib/esm/index.js')).toBe(true);
   });
   it('never the thin entries, module pages or other libraries', () => {
     expect(isOnlineRoot('/repo/web/src/tools/pdf/Tool.tsx')).toBe(false);

@@ -39,9 +39,11 @@ function phrase(s: string): CalcAnswer | undefined {
  * The library loads on first use; offline it falls back to plain arithmetic. An error is an answer
  * with `error` set, so the palette can say what is wrong instead of staying silent.
  */
-export async function calculateExpression(
-  input: string,
-): Promise<(CalcAnswer & { error?: undefined }) | { error: string } | undefined> {
+export type ExpressionAnswer =
+  | { text: string; copy: string; error?: undefined }
+  | { error: string; text?: undefined; copy?: undefined };
+
+export async function calculateExpression(input: string): Promise<ExpressionAnswer | undefined> {
   const body = input.trim().replace(/^=\s*/, '');
   if (!input.trim().startsWith('=') || body === '') return undefined;
   const quick = phrase(body);

@@ -31,7 +31,7 @@ describe('calculator tool', () => {
     await waitFor(() => expect(result()).toHaveTextContent('0,3'));
     await user.type(field, '{Enter}');
     expect(await screen.findByRole('button', { name: /0,1 \+ 0,2/ })).toBeVisible();
-    expect(JSON.parse(localStorage.getItem('tm-calc-history-2')!)).toEqual([
+    expect(JSON.parse(localStorage.getItem('tm-calc-history')!)).toEqual([
       { expr: '0,1 + 0,2', result: '0,3' },
     ]);
   });
@@ -74,7 +74,7 @@ describe('calculator tool', () => {
 
   it('searches the history and offers no note button while the notes module is off', async () => {
     localStorage.setItem(
-      'tm-calc-history-2',
+      'tm-calc-history',
       JSON.stringify([
         { expr: 'sqrt(2)', result: '1,41' },
         { expr: '2+2', result: '4' },

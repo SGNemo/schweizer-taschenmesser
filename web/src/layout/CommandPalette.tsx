@@ -8,7 +8,7 @@ import { getPlatform } from '@/core/platform';
 import { useWriteLabel } from '@/core/shell/writeAvailable';
 import { detectIntent } from '@/core/ai/write/rules/intent';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
-import { calculate, calculateExpression } from '@/core/calc/phrases';
+import { calculate, calculateExpression, type ExpressionAnswer } from '@/core/calc/phrases';
 import { activeManifests } from '@/core/modules/contributions';
 import { useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
@@ -121,7 +121,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   // "=…" is evaluated by the calculator engine, which loads on first use; the answer belongs to one query.
   const [exprAnswer, setExprAnswer] = useState<{
     query: string;
-    answer: Awaited<ReturnType<typeof calculateExpression>> & object;
+    answer: ExpressionAnswer;
   }>();
   useEffect(() => {
     if (!query.trim().startsWith('=')) return;
@@ -364,7 +364,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         key: 'calc',
         label: a.error ?? a.text,
         icon: 'calculator',
-        copy: a.error ? undefined : a.copy,
+        copy: a.copy,
       });
     }
     const writeIntent =

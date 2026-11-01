@@ -6,34 +6,26 @@ export interface HistoryEntry {
   result: string;
 }
 
-const KEY = 'tm-calc-history-2';
-const LEGACY_KEY = 'tm-calc-history';
+const KEY = 'tm-calc-history';
 export const MAX_HISTORY = 100;
 
-function isEntry(e: unknown): e is HistoryEntry {
-  return (
-    typeof e === 'object' &&
-    e !== null &&
-    typeof (e as HistoryEntry).expr === 'string' &&
-    typeof (e as HistoryEntry).result === 'string'
-  );
-}
-
-/** The newest 100 calculations; entries of the former format (numeric result) are carried over. */
+/**
+ * The newest 100 calculations. The storage key is the one of the former calculator (it stays, see
+ * brand-ids.test.ts); entries it wrote have a numeric result, new ones the result as shown.
+ */
 export function loadHistory(): HistoryEntry[] {
   try {
-    const parsed: unknown = JSON.parse(readStored(KEY) ?? 'null');
-    if (Array.isArray(parsed)) return parsed.filter(isEntry).slice(0, MAX_HISTORY);
-    const legacy: unknown = JSON.parse(readStored(LEGACY_KEY) ?? '[]');
-    return Array.isArray(legacy)
-      ? legacy
-          .filter(
-            (e): e is { expr: string; result: number } =>
-              typeof e?.expr === 'string' && Number.isFinite(e?.result),
-          )
-          .map((e) => ({ expr: e.expr, result: String(e.result).replace('.', ',') }))
-          .slice(0, MAX_HISTORY)
-      : [];
+    const parsed: unknown = JSON.parse(readStored(KEY) ?? '[]');
+    if (!Array.isArray(parsed)) return [];
+    const out: HistoryEntry[] = [];
+    for (const e of parsed as Array<{ expr?: unknown; result?: unknown }>) {
+      if (typeof e?.expr !== 'string') continue;
+      if (typeof e.result === 'string') out.push({ expr: e.expr, result: e.result });
+      else if (typeof e.result === 'number' && Number.isFinite(e.result)) {
+        out.push({ expr: e.expr, result: String(e.result).replace('.', ',') });
+      }
+    }
+    return out.slice(0, MAX_HISTORY);
   } catch {
     return [];
   }

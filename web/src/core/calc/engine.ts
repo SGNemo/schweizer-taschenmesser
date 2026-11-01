@@ -76,7 +76,7 @@ let loading: Promise<Loaded> | undefined;
 
 function load(): Promise<Loaded> {
   loading ??= import('mathjs').then(({ create, all }) => {
-    const math = create(all, { number: 'BigNumber', precision: 64 });
+    const math = create(all!, { number: 'BigNumber', precision: 64 });
     const run = math.evaluate.bind(math);
     const blocked = (): never => {
       throw new CalcError('syntax');
