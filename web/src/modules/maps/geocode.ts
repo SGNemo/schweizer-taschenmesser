@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { getPlatform } from '@/core/platform';
 import { identify } from './agent';
 import { DEFAULT_SEARCH_URL, parseCoordinates, roundCoord } from './logic';
+import type { Bbox } from './own/cut';
 
 const TIMEOUT_MS = 8000;
 /** Nominatim's usage policy: at most one request per second. */
@@ -23,15 +24,41 @@ export interface Hit {
   label: string;
   lat: number;
   lon: number;
+  /** The area of the hit (a town, a district), when the service names one: the own map builds it. */
+  bbox?: Bbox;
 }
 
+const coord = z.union([z.string(), z.number()]);
 const hitsSchema = z.array(
   z.object({
     display_name: z.string(),
-    lat: z.union([z.string(), z.number()]),
-    lon: z.union([z.string(), z.number()]),
+    lat: coord,
+    lon: coord,
+    boundingbox: z.array(coord).optional(),
   }),
 );
+
+/** Nominatim's `[south, north, west, east]` → bbox, or undefined when it is not sane. */
+export function bboxOf(box: readonly (string | number)[] | undefined): Bbox | undefined {
+  if (!box || box.length !== 4) return undefined;
+  const [s, n, w, e] = box.map(Number) as [number, number, number, number];
+  if (![s, n, w, e].every(Number.isFinite)) return undefined;
+  if (
+    s >= n ||
+    w >= e ||
+    Math.abs(s) > 90 ||
+    Math.abs(n) > 90 ||
+    Math.abs(w) > 180 ||
+    Math.abs(e) > 180
+  )
+    return undefined;
+  return {
+    minLat: roundCoord(s),
+    maxLat: roundCoord(n),
+    minLon: roundCoord(w),
+    maxLon: roundCoord(e),
+  };
+}
 
 type Fetch = typeof fetch;
 const platformFetch: Fetch = (input, init) => getPlatform().fetch(input, init);
@@ -84,8 +111,14 @@ export async function searchPlaces(
     const lon = Number(h.lon);
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180)
       return [];
+    const bbox = bboxOf(h.boundingbox);
     return [
-      { label: h.display_name.trim().slice(0, 160), lat: roundCoord(lat), lon: roundCoord(lon) },
+      {
+        label: h.display_name.trim().slice(0, 160),
+        lat: roundCoord(lat),
+        lon: roundCoord(lon),
+        ...(bbox ? { bbox } : {}),
+      },
     ];
   });
 }

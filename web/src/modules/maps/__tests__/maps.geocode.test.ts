@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MapsError, searchPlaces } from '../geocode';
+import { MapsError, bboxOf, searchPlaces } from '../geocode';
 
 const ok = (body: unknown) =>
   vi.fn(async () => new Response(JSON.stringify(body), { status: 200 })) as unknown as typeof fetch;
@@ -65,5 +65,37 @@ describe('searchPlaces', () => {
     await expect(
       searchPlaces('Bern', { lang: 'de', fetch: ok({ nope: 1 }) }),
     ).rejects.toBeInstanceOf(MapsError);
+  });
+});
+
+describe('bboxOf', () => {
+  it("reads Nominatim's south, north, west, east and rejects nonsense", () => {
+    expect(bboxOf(['49.5', '49.7', '10.9', '11.1'])).toEqual({
+      minLat: 49.5,
+      maxLat: 49.7,
+      minLon: 10.9,
+      maxLon: 11.1,
+    });
+    expect(bboxOf([49.5, 49.7, 10.9, 11.1])).toBeDefined();
+    expect(bboxOf(undefined)).toBeUndefined();
+    expect(bboxOf(['49.7', '49.5', '10.9', '11.1'])).toBeUndefined();
+    expect(bboxOf(['x', '49.5', '10.9', '11.1'])).toBeUndefined();
+    expect(bboxOf(['-95', '49.5', '10.9', '11.1'])).toBeUndefined();
+    expect(bboxOf(['49.5', '49.7', '10.9'])).toBeUndefined();
+  });
+
+  it('a hit carries its area when the service names one', async () => {
+    const f = ok([
+      {
+        display_name: 'Erlangen, Bayern, Deutschland',
+        lat: '49.5981',
+        lon: '11.0044',
+        boundingbox: ['49.55', '49.64', '10.93', '11.09'],
+      },
+      { display_name: 'Ohne', lat: '49.5', lon: '11.0' },
+    ]);
+    const hits = await searchPlaces('Erlangen', { lang: 'de', fetch: f });
+    expect(hits[0]!.bbox).toEqual({ minLat: 49.55, maxLat: 49.64, minLon: 10.93, maxLon: 11.09 });
+    expect(hits[1]!.bbox).toBeUndefined();
   });
 });
