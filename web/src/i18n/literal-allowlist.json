@@ -11,6 +11,8 @@
   "src/core/dataapi/openapi.ts": "OpenAPI descriptions for external AI tools",
   "src/core/dataapi/format.ts": "field descriptions for external AI tools",
   "src/core/calc/phrases.ts": "parser patterns for calculator phrases (German input)",
+  "src/tools/persona/logic.ts": "transliteration table of names (ä → ae, ß → ss) for usernames",
+  "src/tools/persona/data.ts": "word lists of the persona generator: names, streets, cities and interests of the five countries (data, not UI text)",
   "src/core/calc/dates.ts": "parser vocabulary for date phrases (heute, morgen, Tage, Wochen … in the app languages)",
   "src/quickCapture/parser/dates.ts": "parser vocabulary for quick capture (German input)",
   "src/quickCapture/parser/recurrence.ts": "parser vocabulary for quick capture (German input)",
