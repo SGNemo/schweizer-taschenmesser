@@ -313,6 +313,7 @@ export const de = {
       appearance: ['Theme', 'Dunkelmodus', 'Schrift', 'Animation'],
       modules: ['Bibliothek', 'Modul aktivieren', 'Importieren'],
       tools: ['Werkzeugleiste', 'Reihenfolge'],
+      persona: ['Persona', 'Wegwerf-Mail', 'Fake-Daten', 'Anmeldung', 'Testdaten'],
       notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
       'browser-extension': ['Brave', 'Chrome', 'Autofill'],
       sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passphrase'],

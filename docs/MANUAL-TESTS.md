@@ -391,7 +391,8 @@ D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird g
 D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
 
 ### Anonyme Persona (Branch `feat/tool-anonymous-persona`)
-P1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
-P2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
-P3. *Telefon:* Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
-P4. *Android:* die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐
+AP1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
+AP2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
+AP3. *Telefon:* Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
+AP4. *Android:* die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐
+AP5. *Einstellungen:* Einstellungen → Werkzeuge → „Anonyme Persona“: Anbieter ändern; im Werkzeug zeigt „Wegwerf-Mail öffnen“ den gleichen Anbieter und öffnet dessen Seite. ☐

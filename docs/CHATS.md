@@ -7,6 +7,9 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
+| [PR #372](https://github.com/SGNemo/schweizer-taschenmesser/pull/372): Werkzeug „Anonyme Persona“ | ansehen, mergen; Handtests AP1–AP5 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche); offen: Tresor-Eintrag als eigener PR |
+| [PR #376](https://github.com/SGNemo/schweizer-taschenmesser/pull/376): zufälliger Passphrasen-Test (Erweiterung und `vault-core`) | ansehen, mergen (nur Tests) |
+| Rechner-Modi (PR #359, gemergt) | Handtests C1–C4 in [MANUAL-TESTS](MANUAL-TESTS.md): Android-Tabs, Offline vor dem ersten Gebrauch, en-US-Eingabe, Verlauf → Notiz |
 | Eigene Karte, Paket 5 (`feat/map-own-search`) | PR reviewen und mergen; Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, dann „Genauer machen“, dann eine Straße der Stadt suchen → „Aus deiner Karte“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser |
 | T6 Kaltstart & Bundle (`claude/busy-darwin-zfoab0`, PR) | PR reviewen und mergen (Reihenfolge 5, vor T3); Handtest: PWA am Handy einmal online öffnen, Flugmodus, App, ein benutztes Werkzeug und die Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | „+ Neu“ statt FAB (Spotify läuft, Chat 10) |

@@ -22,7 +22,13 @@ import {
   type Persona,
   type PersonaOptions,
 } from './logic';
-import { DEFAULT_MAIL_PROVIDER, MAIL_PROVIDERS, type MailProviderId } from './mail';
+import { PERSONA_SCOPE } from '@/core/tools/mailProviders';
+import {
+  DEFAULT_MAIL_PROVIDER,
+  MAIL_PROVIDERS,
+  MAIL_PROVIDER_IDS,
+  type MailProviderId,
+} from './mail';
 
 const s = t.tools.persona;
 
@@ -54,7 +60,7 @@ function valueOf(p: Persona, f: Field): string | undefined {
 }
 
 export default function PersonaTool() {
-  const [stored, patch] = useSettings('tools.persona', schema, {
+  const [stored, patch] = useSettings(PERSONA_SCOPE, schema, {
     age: 'a26',
     gender: 'none',
     bio: false,
@@ -82,7 +88,7 @@ export default function PersonaTool() {
 }
 
 function Generator({
-  options,
+  options: initial,
   mailProvider,
   noticeSeen,
   patch,
@@ -93,7 +99,9 @@ function Generator({
   patch: (p: Partial<z.input<typeof schema>>) => void;
 }) {
   const saveAsNote = useSaveAsNote();
-  const [persona, setPersona] = useState<Persona>(() => generatePersona(options));
+  // The choices are kept here so a control shows its new value at once; they are stored in the settings next to it.
+  const [options, setOptions] = useState<PersonaOptions>(initial);
+  const [persona, setPersona] = useState<Persona>(() => generatePersona(initial));
   const rows = useMemo(
     () =>
       FIELDS.flatMap((f) => {
@@ -108,7 +116,9 @@ function Generator({
   // The panel stays mounted, so focus stays on the control that was changed.
   const change = (stored: Partial<z.input<typeof schema>>, now: Partial<PersonaOptions>) => {
     patch(stored);
-    setPersona(generatePersona({ ...options, ...now }));
+    const next = { ...options, ...now };
+    setOptions(next);
+    setPersona(generatePersona(next));
   };
 
   return (
@@ -221,7 +231,7 @@ function Generator({
               value={mailProvider}
               onChange={(e) => patch({ mailProvider: e.target.value as MailProviderId })}
             >
-              {(Object.keys(MAIL_PROVIDERS) as MailProviderId[]).map((id) => (
+              {MAIL_PROVIDER_IDS.map((id) => (
                 <option key={id} value={id}>
                   {s.providers[id]}
                 </option>

@@ -39,6 +39,7 @@ export const settings: Strings['settings'] = {
     appearance: ['Theme', 'Dark mode', 'Font', 'Animation'],
     modules: ['Library', 'Enable module', 'Import'],
     tools: ['Toolbar', 'Order'],
+    persona: ['Persona', 'Disposable mail', 'Fake data', 'Sign-up', 'Test data'],
     notifications: ['Push', 'Permission', 'Reminder'],
     'browser-extension': ['Brave', 'Chrome', 'Autofill'],
     sync: ['Server', 'Token', 'Devices', 'End-to-end', 'Passphrase'],
