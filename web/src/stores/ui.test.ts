@@ -111,3 +111,16 @@ describe('cockpit flags', () => {
       expect(localStorage.getItem(k)).toBeNull();
   });
 });
+
+describe('module colours', () => {
+  afterEach(() => useUiStore.getState().setModuleColors('on'));
+
+  it('"off" sets data-module-colors on <html> and persists; "on" removes both', () => {
+    useUiStore.getState().setModuleColors('off');
+    expect(document.documentElement.dataset.moduleColors).toBe('off');
+    expect(localStorage.getItem('tm-module-colors')).toBe('off');
+    useUiStore.getState().setModuleColors('on');
+    expect(document.documentElement.dataset.moduleColors).toBeUndefined();
+    expect(localStorage.getItem('tm-module-colors')).toBeNull();
+  });
+});

@@ -12,6 +12,7 @@ const manifest: ModuleManifest = {
     return t.lists.meta.name;
   },
   icon: 'cart',
+  identity: { hue: 'orchid', widgetType: 'checklist' },
   version: 1,
   get description() {
     return t.lists.meta.description;

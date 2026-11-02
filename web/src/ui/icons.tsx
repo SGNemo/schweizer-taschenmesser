@@ -1,4 +1,5 @@
 import {
+  Mail,
   Footprints,
   Bike,
   Car,
@@ -228,6 +229,7 @@ const ICONS = {
   navigation: Navigation,
   map: Map,
   locate: LocateFixed,
+  mail: Mail,
   route: Route,
   minus: Minus,
   swap: ArrowLeftRight,

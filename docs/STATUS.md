@@ -24,6 +24,7 @@ Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Rund
 
 Handy-Layout (QA P2, `fix/qa-mobile-layout`, Kopf: [Zahlen](product/next/04-header-results.md)): Kopfzeile, Listenzeilen, Hinweise, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi; `e2e/screenshots/mobile-layout.spec.ts`; Gerätetest offen.
 
+Modul-Identität (`feat/module-identity`, Paket 2): Pflichtfeld `identity` im Manifest, Zehner-Palette `--mod-*` (hell/dunkel, kontrast- und abstandsgeprüft), Plättchen + Kante an Widgets, Modulrahmen und Kalender-Heute, Navi-Icon in Modulfarbe, Schalter „Modulfarben“, Cockpit-Großanzeige mit Kontostand (`contributions.headline`).
 Cockpit-Modus (`feat/cockpit-mode`): Übersicht allein im Fenster (F10, Knopf, Palette), schwebende Mini-Leiste, Module als Panel darüber, eigenes Cockpit-Layout (dicht, Großanzeige), F11 Vollbild, Android immersiv + wach halten; Handtests C1–C4 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Modul-Identität folgt als eigenes Paket nach der Varianten-Wahl.
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
@@ -47,6 +48,8 @@ Dieser PC – „Lange nicht benutzt“ (`feat/disk-age-by-last-use`): wo Window
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](features/focus-aids.md).
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Browser + Downloads: Paket 1 „Browser“ (Branch `feat/browser`, Desktop, isolierte Tabs, Blocker, Lesezeichen/Verlauf) ist gebaut, PR gegen `develop` wartet auf Review; Rust-Teil nur per `cargo check` (Windows-Ziel) geprüft, Handtests B1–B8 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Danach: Paket 2 Download-Manager (HTTP), 3 Torrent, 4 Android/Dateizuordnung.
 
 KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); Regel-Trefferquote jetzt an drei Sätzen gemessen (Tuning, Held-out, Blind; erste Blind-Messung 97,4 %, 1 Fehlgriff bei Fragen); PR B (Branch `feat/ai-local-model`): lokales Modell als Stufe 1 (Rust-Laufzeit hinter Cargo-Feature, Einstellungen, Download mit Zustimmung/Prüfsumme, Mess-Harness); Modellwahl steht aus; PR C (Branch `feat/ai-chat-module`, gestapelt auf B): Chat-Modul (mehrere Chats, lokales Modell oder Anbieter, Daten aus Modulen nur freiwillig mit Vorschau, sicheres Markdown, Export). Handtests K1–K4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
@@ -131,6 +134,7 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - Pakete 3–6 (0.5.0–0.9.0): Listen, Unterlagen, Personen, Erinnerungen im Kalender, ToDo-Wiederholung; Paket 6: 15 alte Tabellen entfernt.
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (Erfassen ohne Rückfrage, Eingang sortieren, Suchverlauf, Textgröße/Zeilenabstand/Bewegung, ruhige Übersicht; gestapelt auf Paket 2).
+- Auf PR (`feat/mail-read`): Mail-Modul Paket 1 – Gmail lesen (Posteingang, Labels, Suche, Threads, HTML sicher, Anhänge, Widgets; aus, nur Windows-App).
 - Auf PR (`feat/connector-accounts`): mehrere Google-Konten im Connector-Rahmen (Paket 0 des Mail-Moduls).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 4 „Fortschritt“ („n in Folge“ mit Pausentag, Wochenrückblick, Tag abschließen, Routine-Vorlagen; gestapelt auf Paket 3).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 2 „Erinnerungen“ (Ruhezeit, Limit, Später, Morgen-Übersicht, Erinnerungs-Karte, „Woran war ich?“; gestapelt auf Paket 1).

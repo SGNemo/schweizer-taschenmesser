@@ -171,6 +171,10 @@
   color: var(--accent);
 }
 
+/* Module identity: the active module's icon takes its hue (the text keeps the accent). */
+.row[data-hue] .link[aria-current='page'] > svg {
+  color: var(--module-color);
+}
 /* Area colour: icon only (never the text) plus a thin stripe on the group head. The active item keeps the accent. */
 .row[data-area] .link:not([aria-current='page']) > svg,
 li[data-area] .railLink:not([aria-current='page']) > svg,

@@ -15,6 +15,7 @@ const manifest = {
     { id: 'a', title: 'A', defaultSize: 's', sizes: ALL_WIDGET_SIZES, component: () => import('./widgets/AWidget') },
   ],
   layout: 'wide',
+  identity: { hue: 'teal', widgetType: 'kpi' },
   platforms: ['desktop'],
   maturity: 'stable',
   seed: { version: 1, dependsOn: [] },
@@ -50,6 +51,22 @@ describe('checkModule', () => {
     expect(
       checkModule({ id: 'x', manifest: good, fileExists: has('widgets/AWidget.tsx', 'seed.ts') }),
     ).toEqual([]);
+  });
+
+  it('requires an identity from the fixed hue and widget-type lists', () => {
+    const files = has('widgets/AWidget.tsx', 'seed.ts');
+    const without = good.replace(/\n {2}identity: \{[^}]*\},/, '');
+    expect(checkModule({ id: 'x', manifest: without, fileExists: files }).join()).toContain(
+      'identity',
+    );
+    const badHue = good.replace("hue: 'teal'", "hue: 'mauve'");
+    expect(checkModule({ id: 'x', manifest: badHue, fileExists: files }).join()).toContain(
+      'identity.hue "mauve"',
+    );
+    const badType = good.replace("widgetType: 'kpi'", "widgetType: 'chart'");
+    expect(checkModule({ id: 'x', manifest: badType, fileExists: files }).join()).toContain(
+      'identity.widgetType "chart"',
+    );
   });
 
   it('fails without a widget (error, not a warning)', () => {

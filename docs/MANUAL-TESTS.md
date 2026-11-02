@@ -96,6 +96,16 @@ C5. *Gmail-Scan:* Feature „E-Mails" einschalten (neuer Login mit mehr Rechten)
 C6. *Trennen:* „Trennen" → Dialog „Termine behalten / löschen"; danach ist der Zugriff in deinem Google-Konto unter „Sicherheit → Drittanbieter-Zugriff" verschwunden. ☐
 C7. *Kontoauszug:* Online-Banking → Umsätze → Export „CSV-CAMT" (oder „CAMT"). **Bitte nur die Kopfzeile (erste Zeile) einer echten Datei prüfen/schicken** und mit `Buchungstag`, `Verwendungszweck`, `Beguenstigter/Zahlungspflichtiger`, `Betrag` vergleichen; dann Finanzen → Einstellungen → Startdaten → „Kontoauszug importieren": Vorschau, Import, zweiter Import zeigt nur „Schon vorhanden". Abos: „Abos im Kontoauszug erkennen" zeigt regelmäßige Abbuchungen. ☐
 
+### E-Mail lesen (Modul „E-Mail“, `feat/mail-read`) – nur mit echtem Google-Konto auf Windows prüfbar
+M1. In Einstellungen → Verbindungen Google verbinden, Funktion „E-Mails" einschalten; Modul „E-Mail" in der Bibliothek aktivieren. Der Posteingang zeigt deine Threads, die Ordnerliste (Posteingang, Markiert, eigene Labels) hat Ungelesen-Zahlen. ☐
+M2. Suche mit Gmail-Syntax (`from:… has:attachment newer_than:7d`) liefert dasselbe wie in Gmail. ☐
+M3. Eine HTML-Mail öffnen (Newsletter): Bilder sind blockiert („N externe Bilder blockiert"), „Bilder laden" lädt sie; ein Link öffnet im Standardbrowser, nicht im Fenster. Prüfe, dass die Mail im Gmail-Web weiterhin **ungelesen** ist (Nemo ändert nichts). ☐
+M4. Anhang herunterladen und öffnen (PDF, Bild). Mail mit eingebettetem Logo (`cid:`) zeigt das Logo. ☐
+M5. Zweites Google-Konto hinzufügen (Verbindungen → „Weiteres Konto hinzufügen"): im Mail-Modul erscheint eine Kontoauswahl. ☐
+M6. Netz aus: die zuletzt gesehenen Köpfe erscheinen mit dem Hinweis „Kein Netz". Token widerrufen (Google-Kontoeinstellungen): Hinweis „abgelaufen" mit Link zu den Verbindungen. ☐
+M7. Mail-Einstellungen → „Zwischenspeicher leeren"; danach ist die Liste erst nach dem Laden wieder gefüllt. Der Cache ist nicht im Sync (zweites Gerät zeigt nichts davon) und nicht im Backup. ☐
+M8. Das HTML-Fenster funktioniert im Windows-Fenster (WebView2) wie im Browser: Mail wird angezeigt, kein Skript läuft. ☐
+
 ### Werkzeuge (Phase 13, Schritt 5)
 T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
 T2. *Währung:* mit Internet: Kurse laden, umrechnen; danach Netz aus → gespeicherte Kurse mit Datum. Die Schnittstelle `api.frankfurter.dev` ist nur per Doku geprüft (in der Windows-App keine CORS-Hürde, im Browser hängt es an deren CORS-Erlaubnis). ☐
@@ -355,3 +365,13 @@ Q3. *Dev-Preview parallel installiert:* Kurzbefehle und Kachel der „Nemo Dev�
 T1. *Windows, Tray:* ein Termin heute 15:00 und ein überfälliges ToDo anlegen, Rechtsklick auf das Tray-Symbol: oben „Heute“ mit „Überfälliges ToDo“ und „15:00 · Termin“, darunter „Jetzt dran anfangen“ und „Timer 25 Minuten“, dann Erfassen/App öffnen/Beenden wie bisher. Keine Beträge, kein Tresor, keine Notizinhalte. ☐
 T2. *Klick:* Klick auf die Termin-Zeile holt das Hauptfenster nach vorn und öffnet den Kalender an dem Tag; „Timer 25 Minuten“ startet den Timer und zeigt ihn; „Jetzt dran anfangen“ öffnet den Fokus für das ToDo. ☐
 T3. *Aktualisieren und Abschalten:* ToDo erledigen → nach dem nächsten Öffnen des Tray-Menüs ist die Zeile weg (sofort, spätestens nach 5 Minuten). Einstellungen → Schnellerfassung → „Heute im Tray-Menü zeigen“ aus: Block verschwindet, Menü wie vorher. Leerer Tag: kein Block. ☐
+
+### Browser (Desktop, nur mit echtem Fenster prüfbar)
+B1. *Tab sitzt im Nemo-Fenster:* Modul „Browser“ in der Bibliothek einschalten, `/browser` öffnen, `example.org` eintippen: die Seite erscheint genau im grauen Rahmen, Fenster vergrößern/verkleinern: sie folgt. Menü („Mehr“) öffnen: die Seite verschwindet, das Menü ist lesbar; schließen: sie ist wieder da. ☐
+B2. *Isolation:* auf einer beliebigen Seite die Entwicklerkonsole (F12 ist aus; Rechtsklick → Untersuchen nur im Debug-Build) – `window.__TAURI_INTERNALS__` ist nicht definiert, `fetch('http://ipc.localhost/…')` bleibt ohne Antwort. ☐
+B3. *HTTP-Warnung:* `http://neverssl.com` → Warnseite mit „Zurück“/„Trotzdem öffnen“; Einstellung „Vor unverschlüsselten Seiten warnen“ aus: öffnet direkt. ☐
+B4. *Pop-ups, Downloads, Rechte:* eine Seite mit `window.open` – kein Fenster, Hinweis „Ein Pop-up wurde blockiert“; ein Download-Link – nichts wird gespeichert, Hinweis mit „Im Systembrowser öffnen“; Kamera/Mikrofon/Standort-Abfrage einer Testseite wird ohne Rückfrage abgelehnt (Windows/WebView2; Linux/macOS: nicht gebaut). ☐
+B5. *Privat:* privater Tab, auf einer Seite anmelden/Cookie setzen, Tab schließen, neuen privaten Tab: nicht mehr angemeldet; Verlauf bleibt leer. Normaler Tab: Anmeldung bleibt nach App-Neustart; „Browserdaten löschen“ entfernt sie. ☐
+B6. *Blocker (Windows):* eine Seite mit vielen Anzeigen: Zähler im Menü „Blocker“ steigt, Fremdserver-Liste füllt sich, „Blocken“ legt eine eigene Regel an, nach „Neu laden“ fehlt dieser Server. Pausieren auf der Seite lädt alles wieder. ☐
+B7. *Suchen auf der Seite:* Strg+F zeigt die Suchleiste von WebView2 (nicht von Nemo gebaut). ☐
+B8. *Merkliste/Notiz:* „In Merkliste speichern“ (Modul an) legt den Eintrag an, „Als Notiz speichern“ öffnet eine neue Notiz mit Titel und Adresse. ☐

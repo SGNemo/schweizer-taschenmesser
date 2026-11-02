@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
 import { visibleSections } from '@/core/settings/registry/registry';
 import { SETTINGS_CATEGORY_IDS, type SettingsContext } from '@/core/settings/registry/types';
@@ -46,7 +47,9 @@ describe('registered settings sections', () => {
 
 describe('preview sections (maturity)', () => {
   const PREVIEW = ['localapi', 'share', 'network', 'browser-extension', 'reading', 'voice'];
-  const ids = (c: SettingsContext) => visibleSections(allSettingsSections(), c).map((s) => s.id);
+  // All manifests (not only those of the web platform): desktop-only preview modules count too.
+  const all = allSettingsSections(allManifests.filter((m) => !m.retired));
+  const ids = (c: SettingsContext) => visibleSections(all, c).map((s) => s.id);
 
   it('are hidden by default and listed with "In Arbeit anzeigen"', () => {
     const hidden = ids(ctx());
@@ -62,7 +65,8 @@ describe('preview sections (maturity)', () => {
   });
 
   it('an enabled preview module keeps its settings section', () => {
-    const preview = allManifests.filter(
+    // Only modules of this platform have sections (desktop-only previews like the browser are not listed on the web).
+    const preview = availableManifests().filter(
       (m) => m.maturity === 'preview' && m.settings.fields.length > 0,
     );
     expect(preview.map((m) => m.id)).toContain('chat');

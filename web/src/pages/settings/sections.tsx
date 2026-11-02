@@ -3,6 +3,7 @@
  * category. Modules contribute theirs through `manifest.settings` (see `useSections.ts`).
  */
 import { tCockpit } from '@/strings.cockpit';
+import { tIdentity } from '@/strings.identity';
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import {
@@ -226,6 +227,15 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
         get description() {
           return s.colorHint;
+        },
+      },
+      {
+        key: 'moduleColors',
+        get label() {
+          return tIdentity.get().moduleColors;
+        },
+        get description() {
+          return tIdentity.get().moduleColorsHint;
         },
       },
       {
