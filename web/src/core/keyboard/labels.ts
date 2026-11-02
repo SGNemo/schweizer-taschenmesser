@@ -43,9 +43,11 @@ export function paletteKeys(
       ? 'dashboard'
       : a === 'settings'
         ? 'settings'
-        : toolOfAction(a)
-          ? `tool-${toolOfAction(a)}`
-          : undefined;
+        : a === 'cockpit'
+          ? 'cockpit'
+          : toolOfAction(a)
+            ? `tool-${toolOfAction(a)}`
+            : undefined;
   for (const id of activeToolIds) {
     const letter = chordLetterOf(id);
     if (letter) out[`tool-${id}`] = [`T ${letter.toUpperCase()}`];

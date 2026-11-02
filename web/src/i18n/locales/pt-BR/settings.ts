@@ -117,6 +117,12 @@ export const settings: Strings['settings'] = {
     fields: 'Campos',
     more: (n: number) => `+ ${n}`,
   },
+  maturity: {
+    badge: 'Em construção',
+    show: 'Mostrar o que está em construção',
+    showHint:
+      'Mostra também módulos, ferramentas, widgets e configurações ainda não concluídos, marcados como “Em construção”; o que você já ativou continua sempre visível.',
+  },
   modulesOverview: {
     title: 'Gerenciar módulos',
     description:

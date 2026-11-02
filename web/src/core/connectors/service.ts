@@ -10,7 +10,7 @@ import type { ExternalCalendarSink } from '@/core/modules/types';
 import { getPlatform } from '@/core/platform';
 import { now } from '@/core/time/now';
 import { addDaysStr, today } from '@/core/time/dates';
-import { createContext, forgetAccessToken, loadClient, secretName } from './context';
+import { accountKey, createContext, forgetAccessToken, loadClient, secretName } from './context';
 import {
   buildAuthUrl,
   challengeOf,
@@ -33,6 +33,7 @@ import {
 } from './state';
 import {
   ConnectorError,
+  type ConnectorAccount,
   type ConnectorDef,
   type ConnectorStatus,
   type ExternalCalendar,
@@ -89,10 +90,11 @@ export async function hasClient(id: string): Promise<boolean> {
 export async function connectOAuth(
   def: ConnectorDef,
   featureIds: string[],
-  opts: { signal?: AbortSignal } = {},
+  opts: { signal?: AbortSignal; accountId?: string } = {},
 ): Promise<ConnectorStatus> {
   const platform = getPlatform();
-  const { signal } = opts;
+  const { signal, accountId } = opts;
+  if (accountId && !def.multiAccount) throw new ConnectorError('unsupported');
   try {
     if (!def.oauth || !platform.oauth.supported) throw new ConnectorError('unsupported');
     const { clientId, clientSecret } = await loadClient(def.id);
@@ -162,8 +164,17 @@ export async function connectOAuth(
       await revokeToken(platform.fetch, def.oauth, tokens.refreshToken).catch(() => undefined);
       return await loadStatus(def.id);
     }
-    await platform.secrets.set(secretName(def.id, 'refresh'), tokens.refreshToken);
-    forgetAccessToken(def.id);
+    const key = accountKey(def.id, accountId);
+    await platform.secrets.set(secretName(key, 'refresh'), tokens.refreshToken);
+    forgetAccessToken(key);
+    if (accountId) {
+      const email = await identifyAccount(def, accountId);
+      return await upsertAccount(def, {
+        id: accountId,
+        email,
+        features: features.map((f) => f.id),
+      });
+    }
     return await saveStatus(def.id, {
       state: 'connected',
       features: features.map((f) => f.id),
@@ -171,6 +182,8 @@ export async function connectOAuth(
       retryAt: undefined,
     });
   } catch (e) {
+    // A failed extra login must not turn the working first account into an error.
+    if (accountId) return await saveStatus(def.id, { message: describeError(e) });
     return await saveStatus(def.id, {
       state: e instanceof ConnectorError && e.code === 'denied' ? 'disconnected' : 'error',
       message: describeError(e),
@@ -178,9 +191,59 @@ export async function connectOAuth(
   }
 }
 
+/** Asks the service who signed in; a service that does not tell (or a missing scope) gives none. */
+async function identifyAccount(def: ConnectorDef, accountId?: string): Promise<string | undefined> {
+  try {
+    return (await def.identify?.(createContext(def, undefined, accountId)))?.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function upsertAccount(
+  def: ConnectorDef,
+  account: ConnectorAccount,
+): Promise<ConnectorStatus> {
+  const status = await loadStatus(def.id);
+  const others = (status.accounts ?? []).filter((a) => a.id !== account.id);
+  return await saveStatus(def.id, {
+    accounts: [...others, account],
+    message: undefined,
+  });
+}
+
+/** Signs in one more account of a `multiAccount` connector; returns its local id with the status. */
+export async function addAccount(
+  def: ConnectorDef,
+  featureIds: string[],
+  opts: { signal?: AbortSignal } = {},
+): Promise<{ accountId: string; status: ConnectorStatus }> {
+  const accountId = `a${randomToken(6)}`.replace(/[^a-zA-Z0-9]/g, 'x');
+  const status = await connectOAuth(def, featureIds, { ...opts, accountId });
+  return { accountId, status };
+}
+
+/** Revokes and forgets one additional account; the first account and the others stay untouched. */
+export async function removeAccount(def: ConnectorDef, accountId: string): Promise<void> {
+  const platform = getPlatform();
+  const key = accountKey(def.id, accountId);
+  const refresh = await platform.secrets.get(secretName(key, 'refresh'));
+  if (refresh && def.oauth) await revokeToken(platform.fetch, def.oauth, refresh);
+  await platform.secrets.delete(secretName(key, 'refresh'));
+  forgetAccessToken(key);
+  const status = await loadStatus(def.id);
+  await saveStatus(def.id, { accounts: (status.accounts ?? []).filter((a) => a.id !== accountId) });
+}
+
+/** Local ids of the additional accounts (for secret cleanup). */
+export async function accountIds(def: ConnectorDef): Promise<string[]> {
+  return ((await loadStatus(def.id)).accounts ?? []).map((a) => a.id);
+}
+
 /** Revokes the token and forgets everything device-local. `keepData` keeps the copied events. */
 export async function disconnect(def: ConnectorDef, opts: { keepData: boolean }): Promise<void> {
   const platform = getPlatform();
+  for (const id of await accountIds(def)) await removeAccount(def, id);
   const refresh = await platform.secrets.get(secretName(def.id, 'refresh'));
   if (refresh && def.oauth) await revokeToken(platform.fetch, def.oauth, refresh);
   await platform.secrets.delete(secretName(def.id, 'refresh'));

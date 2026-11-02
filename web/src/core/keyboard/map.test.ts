@@ -22,6 +22,12 @@ describe('defaults', () => {
     expect(Object.keys(DEFAULT_FKEYS).sort()).toEqual([...FKEY_ACTIONS].sort());
   });
 
+  it('give F10 to the cockpit; the settings page starts without a key', () => {
+    expect(DEFAULT_FKEYS.cockpit).toBe('F10');
+    expect(DEFAULT_FKEYS.settings).toBe('');
+    expect(keyToAction(DEFAULT_SHORTCUT_PREFS).F10).toBe('cockpit');
+  });
+
   it('never use F1, F4 (voice), F5, F11 or F12', () => {
     for (const k of ['F1', 'F4', 'F5', 'F11', 'F12']) expect(ASSIGNABLE_FKEYS).not.toContain(k);
   });

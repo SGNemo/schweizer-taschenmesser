@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { moduleSwitch } from './helpers';
+import { moduleSwitch, showPreview } from './helpers';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 // App side of the browser extension bridge. The native pipe is replaced by the e2e fake
 // (`window.__tmVaultBridge`), everything behind it – validation, pairing, sessions, origin matching,

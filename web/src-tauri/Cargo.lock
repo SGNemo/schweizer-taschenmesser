@@ -4615,6 +4615,7 @@ dependencies = [
  "tauri-plugin-http",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
+ "tauri-plugin-screen-mode",
  "tauri-plugin-secure-store",
  "tauri-plugin-share-intent",
  "tauri-plugin-single-instance",
@@ -4984,6 +4985,17 @@ dependencies = [
  "url",
  "windows 0.62.2",
  "zbus",
+]
+
+[[package]]
+name = "tauri-plugin-screen-mode"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

@@ -5,6 +5,8 @@
   "webviews": ["main"],
   "platforms": ["windows", "linux", "macOS"],
   "permissions": [
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-is-fullscreen",
     "allow-desktop-data-dir",
     "allow-downloads-watch",
     "allow-downloads-default-dir",

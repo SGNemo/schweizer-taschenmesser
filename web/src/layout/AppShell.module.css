@@ -30,6 +30,10 @@
     calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 6rem);
 }
 /* Focus is moved here programmatically after navigation; a ring around the whole page is noise. */
+/* Cockpit (phone): no bottom bar, so no room kept for it; the mini bar floats over the top edge. */
+.shell[data-cockpit='true'] .main {
+  padding: var(--space-3) var(--space-3) var(--space-5);
+}
 .main:focus,
 .main:focus-visible {
   outline: none;
@@ -51,6 +55,9 @@
   /* Focus screen: no sidebar, one column. */
   .shell[data-focus='true'] {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .shell[data-cockpit='true'] .main {
+    padding: var(--space-3) var(--space-3) var(--space-4);
   }
   .col {
     display: flex;

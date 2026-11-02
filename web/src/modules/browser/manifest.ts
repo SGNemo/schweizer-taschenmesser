@@ -16,6 +16,8 @@ const manifest: ModuleManifest = {
     return t.browser.meta.description;
   },
   platforms: ['desktop'],
+  // Package 1 of 2 (browser + downloads): listed under "In Arbeit anzeigen" until the maintainer says so.
+  maturity: 'preview',
   routes: [
     {
       path: '/browser',

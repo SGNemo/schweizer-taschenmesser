@@ -2,6 +2,7 @@
  * The core part of the settings registry: every section the app itself provides, each in exactly one
  * category. Modules contribute theirs through `manifest.settings` (see `useSections.ts`).
  */
+import { tCockpit } from '@/strings.cockpit';
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import {
@@ -68,6 +69,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'general',
     category: 'allgemein',
+    maturity: 'stable',
     order: 10,
     get title() {
       return s.general.title;
@@ -127,6 +129,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'appearance',
     category: 'darstellung',
+    maturity: 'stable',
     order: 10,
     get title() {
       return s.appearance;
@@ -234,6 +237,24 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
           return s.rows.homeViewHint;
         },
       },
+      {
+        key: 'cockpitStart',
+        get label() {
+          return tCockpit.get().startTitle;
+        },
+        get description() {
+          return tCockpit.get().startHint;
+        },
+      },
+      {
+        key: 'cockpitAwake',
+        get label() {
+          return tCockpit.get().awakeTitle;
+        },
+        get description() {
+          return tCockpit.get().awakeHint;
+        },
+      },
     ],
     reset: appearanceReset,
     render: () => <AppearanceSection />,
@@ -241,6 +262,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'reading',
     category: 'darstellung',
+    maturity: 'preview',
     order: 12,
     get title() {
       return s.reading.title;
@@ -292,6 +314,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'focus',
     category: 'darstellung',
+    maturity: 'stable',
     order: 15,
     get title() {
       return t.focus.settings.title;
@@ -406,6 +429,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'advanced',
     category: 'darstellung',
+    maturity: 'stable',
     order: 16,
     get title() {
       return tAdvanced.get().settings.title;
@@ -426,12 +450,22 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
           return tAdvanced.get().settings.allHint;
         },
       },
+      {
+        key: 'showPreview',
+        get label() {
+          return s.maturity.show;
+        },
+        get description() {
+          return s.maturity.showHint;
+        },
+      },
     ],
     render: () => <AdvancedSection />,
   },
   {
     id: 'favourites',
     category: 'darstellung',
+    maturity: 'stable',
     order: 20,
     get title() {
       return s.favourites;
@@ -444,6 +478,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'modules',
     category: 'module',
+    maturity: 'stable',
     order: 0,
     get title() {
       return s.modulesOverview.title;
@@ -469,6 +504,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'tools',
     category: 'werkzeuge',
+    maturity: 'stable',
     order: 10,
     get title() {
       return s.tools.title;
@@ -484,6 +520,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'notifications',
     category: 'benachrichtigungen',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.notifications.title;
@@ -496,6 +533,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'calm-reminders',
     category: 'benachrichtigungen',
+    maturity: 'stable',
     order: 20,
     get title() {
       return t.focus.reminders.title;
@@ -568,6 +606,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'browser-extension',
     category: 'verbindungen',
+    maturity: 'preview',
     order: 30,
     get title() {
       return s.linkRow.browserExtension;
@@ -590,6 +629,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'sync',
     category: 'sync',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.sync.title;
@@ -609,6 +649,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'backup',
     category: 'sync',
+    maturity: 'stable',
     order: 20,
     get title() {
       return t.backup.title;
@@ -625,6 +666,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'ai-switch',
     category: 'ki',
+    maturity: 'stable',
     order: 5,
     get title() {
       return t.ai.off.title;
@@ -651,6 +693,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'ai-write',
     category: 'ki',
+    maturity: 'stable',
     order: 15,
     get title() {
       return t.ai.writeSettings.title;
@@ -696,6 +739,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'ai-local',
     category: 'ki',
+    maturity: 'stable',
     order: 16,
     get title() {
       return t.ai.local.title;
@@ -711,6 +755,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'ai-stats',
     category: 'ki',
+    maturity: 'stable',
     order: 17,
     get title() {
       return t.ai.stats.title;
@@ -727,6 +772,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'ai',
     category: 'ki',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.ai.title;
@@ -747,6 +793,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'connectors',
     category: 'verbindungen',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.connectors.title;
@@ -766,6 +813,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'share',
     category: 'verbindungen',
+    maturity: 'preview',
     order: 15,
     get title() {
       return tShare.get().title;
@@ -785,6 +833,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'network',
     category: 'verbindungen',
+    maturity: 'preview',
     order: 20,
     get title() {
       return tNet.get().title;
@@ -804,6 +853,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'shortcuts',
     category: 'allgemein',
+    maturity: 'stable',
     order: 30,
     get title() {
       return tKeys.get().title;
@@ -845,6 +895,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'recently-deleted',
     category: 'allgemein',
+    maturity: 'stable',
     order: 40,
     get title() {
       return tTrash.get().title;
@@ -868,6 +919,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'weather',
     category: 'verbindungen',
+    maturity: 'stable',
     order: 20,
     get title() {
       return tWeather.get().title;
@@ -901,6 +953,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'localapi',
     category: 'verbindungen',
+    maturity: 'preview',
     order: 20,
     get title() {
       return t.localApi.title;
@@ -935,6 +988,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'quickcapture',
     category: 'schnellerfassung',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.quickCapture.settings.title;
@@ -998,6 +1052,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'voice',
     category: 'schnellerfassung',
+    maturity: 'preview',
     order: 20,
     get title() {
       return t.voice.title;
@@ -1040,6 +1095,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'updates',
     category: 'updates',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.update.title;
@@ -1079,6 +1135,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'developer',
     category: 'entwickler',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.settings.cat.entwickler.title;
@@ -1099,6 +1156,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'model-licenses',
     category: 'ueber',
+    maturity: 'stable',
     order: 55,
     get title() {
       return t.ai.local.licensesTitle;
@@ -1111,6 +1169,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'setup',
     category: 'ueber',
+    maturity: 'stable',
     order: 30,
     get title() {
       return t.setup.title;
@@ -1127,6 +1186,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'about',
     category: 'ueber',
+    maturity: 'stable',
     order: 10,
     get title() {
       return t.about.title;
@@ -1183,6 +1243,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'supporter',
     category: 'ueber',
+    maturity: 'stable',
     order: 35,
     get title() {
       return t.supporter.section.title;
@@ -1212,6 +1273,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'about-updates',
     category: 'ueber',
+    maturity: 'stable',
     order: 20,
     get title() {
       return t.about.updates.title;
@@ -1232,6 +1294,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'links',
     category: 'ueber',
+    maturity: 'stable',
     order: 40,
     get title() {
       return t.about.links.title;
@@ -1244,6 +1307,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'legal-imprint',
     category: 'ueber',
+    maturity: 'stable',
     order: 42,
     get title() {
       return tLegal.get().imprint.title;
@@ -1256,6 +1320,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'legal-privacy',
     category: 'ueber',
+    maturity: 'stable',
     order: 44,
     get title() {
       return tLegal.get().privacy.title;
@@ -1268,6 +1333,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'licenses',
     category: 'ueber',
+    maturity: 'stable',
     order: 50,
     get title() {
       return tLegal.get().licenses.title;
@@ -1280,6 +1346,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'diagnostics',
     category: 'ueber',
+    maturity: 'stable',
     order: 60,
     get title() {
       return tDiag.get().title;
@@ -1300,6 +1367,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'device-reset',
     category: 'ueber',
+    maturity: 'stable',
     order: 70,
     get title() {
       return t.about.reset.title;

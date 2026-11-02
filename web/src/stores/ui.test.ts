@@ -9,6 +9,17 @@ describe('reading comfort settings', () => {
     useUiStore.getState().setLeading('normal');
     useUiStore.getState().setMotion('system');
     useUiStore.getState().setHomeView('calm');
+    useUiStore.getState().setShowPreview(false);
+  });
+
+  it('"In Arbeit anzeigen" is off by default, device-local, and the default removes the key', () => {
+    const ui = useUiStore.getState();
+    expect(ui.showPreview).toBe(false);
+    ui.setShowPreview(true);
+    expect(useUiStore.getState().showPreview).toBe(true);
+    expect(localStorage.getItem('tm-show-preview')).toBe('1');
+    useUiStore.getState().setShowPreview(false);
+    expect(localStorage.getItem('tm-show-preview')).toBeNull();
   });
 
   it('has a third text size, line spacing and an in-app motion switch (device-local, defaults remove the key)', () => {
@@ -72,5 +83,31 @@ describe('sidebar state', () => {
     useUiStore.getState().toggleAreaOpen('money');
     expect(useUiStore.getState().closedAreas).toEqual([]);
     expect(localStorage.getItem('tm-nav-closed')).toBeNull();
+  });
+});
+
+describe('cockpit flags', () => {
+  afterEach(() => {
+    const ui = useUiStore.getState();
+    ui.setCockpit(false);
+    ui.setCockpitStart(false);
+    ui.setCockpitAwake(false);
+  });
+
+  it('remembers the cockpit, "start in cockpit" and keep-awake on this device; off removes the keys', () => {
+    const ui = useUiStore.getState();
+    expect(ui.cockpit).toBe(false);
+    ui.setCockpit(true);
+    ui.setCockpitStart(true);
+    ui.setCockpitAwake(true);
+    expect(useUiStore.getState().cockpit).toBe(true);
+    expect(localStorage.getItem('tm-cockpit')).toBe('1');
+    expect(localStorage.getItem('tm-cockpit-start')).toBe('1');
+    expect(localStorage.getItem('tm-cockpit-awake')).toBe('1');
+    ui.setCockpit(false);
+    ui.setCockpitStart(false);
+    ui.setCockpitAwake(false);
+    for (const k of ['tm-cockpit', 'tm-cockpit-start', 'tm-cockpit-awake'])
+      expect(localStorage.getItem(k)).toBeNull();
   });
 });

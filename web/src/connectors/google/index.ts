@@ -2,6 +2,7 @@ import type { ConnectorDef } from '@/core/connectors/types';
 import { t } from '@/strings';
 import { googleCalendar } from './calendar';
 import { googleMail } from './mail';
+import { googleIdentify } from './identify';
 
 const s = t.connectors.google;
 
@@ -21,6 +22,8 @@ const connector: ConnectorDef = {
   icon: 'calendar',
   authType: 'oauth-pkce',
   platforms: ['desktop'],
+  multiAccount: true,
+  identify: googleIdentify,
   get unavailableHint() {
     return t.connectors.desktopOnly;
   },

@@ -26,6 +26,10 @@ export interface Hit {
   lon: number;
   /** The area of the hit (a town, a district), when the service names one: the own map builds it. */
   bbox?: Bbox;
+  /** A second line (kind and region) for hits of the own map. */
+  detail?: string;
+  /** Found in the own map, not online. */
+  own?: boolean;
 }
 
 const coord = z.union([z.string(), z.number()]);

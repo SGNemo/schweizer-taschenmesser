@@ -51,8 +51,12 @@ test.describe('desktop', () => {
     await expect(page).toHaveURL(/\/$/);
     await ready(page, '/settings/allgemein');
     await page.getByRole('textbox').first().focus();
-    await page.keyboard.press('F10'); // Einstellungen
-    await expect(page).toHaveURL(/\/settings/);
+    await page.keyboard.press('F10'); // Cockpit
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('cockpit-grid')).toBeVisible();
+    await page.keyboard.press('F10'); // and back
+    await expect(page.getByTestId('cockpit-grid')).toHaveCount(0);
+    await ready(page, '/settings/allgemein');
     await page.getByRole('textbox').first().focus();
     await page.keyboard.press('F2'); // Neu erfassen
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -102,7 +106,7 @@ test.describe('desktop', () => {
   test('a key recorder keeps the key to itself while it records', async ({ page }) => {
     await ready(page, SHORTCUTS);
     await page.getByTestId('shortcut-today').click();
-    await page.keyboard.press('F10'); // would open the settings; the recorder takes it
+    await page.keyboard.press('F10'); // would toggle the cockpit; the recorder takes it
     await expect(page.getByTestId('shortcut-message')).toContainText('gehört schon');
   });
 });

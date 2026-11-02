@@ -217,3 +217,8 @@
     padding-block: var(--space-2);
   }
 }
+
+/* "In Arbeit" mark above a preview section (only shown with "In Arbeit anzeigen"). */
+.previewBadge {
+  margin: 0 0 calc(-1 * var(--space-2));
+}

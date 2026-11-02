@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, showPreview } from './helpers';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 
