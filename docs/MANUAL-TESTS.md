@@ -396,3 +396,9 @@ D3. *Limit:* Einstellung „Tempolimit“ auf 200 KB/s: die Anzeige bleibt darun
 D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden: neue heißt „name (1).ext“, die alte bleibt. „Im Ordner zeigen“ markiert die Datei im Explorer, öffnet sie nicht. Eine ausführbare Datei wird nie gestartet. ☐
 D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
 D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
+
+### Anonyme Persona (Branch `feat/tool-anonymous-persona`)
+P1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
+P2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
+P3. *Telefon:* Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
+P4. *Android:* die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐
