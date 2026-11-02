@@ -212,6 +212,12 @@
       "url": "https://www.npmjs.com/package/@types/react-dom/v/19.3.0"
     },
     {
+      "name": "@types/trusted-types",
+      "version": "2.0.7",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@types/trusted-types/v/2.0.7"
+    },
+    {
       "name": "@types/use-sync-external-store",
       "version": "0.0.6",
       "license": "MIT",
@@ -354,6 +360,12 @@
       "version": "4.4.0",
       "license": "Apache-2.0",
       "url": "https://www.npmjs.com/package/dexie-react-hooks/v/4.4.0"
+    },
+    {
+      "name": "dompurify",
+      "version": "3.4.17",
+      "license": "(MPL-2.0 OR Apache-2.0)",
+      "url": "https://www.npmjs.com/package/dompurify/v/3.4.17"
     },
     {
       "name": "es-toolkit",

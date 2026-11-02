@@ -96,6 +96,16 @@ C5. *Gmail-Scan:* Feature „E-Mails" einschalten (neuer Login mit mehr Rechten)
 C6. *Trennen:* „Trennen" → Dialog „Termine behalten / löschen"; danach ist der Zugriff in deinem Google-Konto unter „Sicherheit → Drittanbieter-Zugriff" verschwunden. ☐
 C7. *Kontoauszug:* Online-Banking → Umsätze → Export „CSV-CAMT" (oder „CAMT"). **Bitte nur die Kopfzeile (erste Zeile) einer echten Datei prüfen/schicken** und mit `Buchungstag`, `Verwendungszweck`, `Beguenstigter/Zahlungspflichtiger`, `Betrag` vergleichen; dann Finanzen → Einstellungen → Startdaten → „Kontoauszug importieren": Vorschau, Import, zweiter Import zeigt nur „Schon vorhanden". Abos: „Abos im Kontoauszug erkennen" zeigt regelmäßige Abbuchungen. ☐
 
+### E-Mail lesen (Modul „E-Mail“, `feat/mail-read`) – nur mit echtem Google-Konto auf Windows prüfbar
+M1. In Einstellungen → Verbindungen Google verbinden, Funktion „E-Mails" einschalten; Modul „E-Mail" in der Bibliothek aktivieren. Der Posteingang zeigt deine Threads, die Ordnerliste (Posteingang, Markiert, eigene Labels) hat Ungelesen-Zahlen. ☐
+M2. Suche mit Gmail-Syntax (`from:… has:attachment newer_than:7d`) liefert dasselbe wie in Gmail. ☐
+M3. Eine HTML-Mail öffnen (Newsletter): Bilder sind blockiert („N externe Bilder blockiert"), „Bilder laden" lädt sie; ein Link öffnet im Standardbrowser, nicht im Fenster. Prüfe, dass die Mail im Gmail-Web weiterhin **ungelesen** ist (Nemo ändert nichts). ☐
+M4. Anhang herunterladen und öffnen (PDF, Bild). Mail mit eingebettetem Logo (`cid:`) zeigt das Logo. ☐
+M5. Zweites Google-Konto hinzufügen (Verbindungen → „Weiteres Konto hinzufügen"): im Mail-Modul erscheint eine Kontoauswahl. ☐
+M6. Netz aus: die zuletzt gesehenen Köpfe erscheinen mit dem Hinweis „Kein Netz". Token widerrufen (Google-Kontoeinstellungen): Hinweis „abgelaufen" mit Link zu den Verbindungen. ☐
+M7. Mail-Einstellungen → „Zwischenspeicher leeren"; danach ist die Liste erst nach dem Laden wieder gefüllt. Der Cache ist nicht im Sync (zweites Gerät zeigt nichts davon) und nicht im Backup. ☐
+M8. Das HTML-Fenster funktioniert im Windows-Fenster (WebView2) wie im Browser: Mail wird angezeigt, kein Skript läuft. ☐
+
 ### Werkzeuge (Phase 13, Schritt 5)
 T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
 T2. *Währung:* mit Internet: Kurse laden, umrechnen; danach Netz aus → gespeicherte Kurse mit Datum. Die Schnittstelle `api.frankfurter.dev` ist nur per Doku geprüft (in der Windows-App keine CORS-Hürde, im Browser hängt es an deren CORS-Erlaubnis). ☐

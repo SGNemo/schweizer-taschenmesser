@@ -7,6 +7,7 @@
  * Mail content is processed by local heuristics only – connector code must not import `core/ai`
  * (ESLint), so nothing that was read from a mailbox can reach a model.
  */
+import type { MailProvider } from '@/core/mail/types';
 import type { ComponentType } from 'react';
 import type { Maturity } from '@/core/modules/types';
 import type { PlatformKind } from '@/core/platform/types';
@@ -343,6 +344,8 @@ export interface ConnectorDef {
   setupSteps?: SetupStepDef[];
   calendar?: CalendarCapability;
   mail?: MailCapability;
+  /** Read the whole mailbox (the mail module); the same contract an IMAP connector would implement. */
+  mailbox?: MailProvider;
   nowPlaying?: NowPlayingSource;
   /**
    * Own wording for the client-id form of the card (default: the Google text, incl. its "Testing"
