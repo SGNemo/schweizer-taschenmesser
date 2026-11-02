@@ -20,19 +20,26 @@ export const allManifests: readonly ModuleManifest[] = Object.values(found)
   .sort((a, b) => a.id.localeCompare(b.id));
 
 const PLATFORM_KINDS: readonly string[] = ['web', 'desktop', 'android'];
+export const MATURITIES: readonly string[] = ['stable', 'preview'];
 
 const byOrder = (a: ModuleManifest, b: ModuleManifest) =>
   (a.order ?? 100) - (b.order ?? 100) || a.id.localeCompare(b.id);
 
 const includeDevOnly = import.meta.env.DEV || import.meta.env.VITE_INCLUDE_EXAMPLE === 'true';
 
+/** Build-time part of the filter: retired modules never, dev-only ones only when the build includes them. */
+export const passesBuild = (m: ModuleManifest, devOnlyIncluded = includeDevOnly): boolean =>
+  !m.retired && (!m.devOnly || devOnlyIncluded);
+
 /**
  * Manifests shown in the library and used by every runtime path (dev-only modules are hidden in
  * normal production builds, retired modules always). `allManifests` still has the retired ones:
- * their collections stay in the database schema, sync and backup.
+ * their collections stay in the database schema, sync and backup. Maturity is not applied here:
+ * `./available` `isVisible` does that for catalogues only, so routes and data of an enabled
+ * preview module keep working.
  */
 export const visibleManifests: readonly ModuleManifest[] = allManifests
-  .filter((m) => !m.retired && (!m.devOnly || includeDevOnly))
+  .filter((m) => passesBuild(m))
   .sort(byOrder);
 
 export const isAvailableOn = (m: ModuleManifest, kind: PlatformKind): boolean =>
@@ -78,6 +85,8 @@ export function validateManifest(m: ModuleManifest): string[] {
   for (const p of m.platforms ?? [])
     if (!PLATFORM_KINDS.includes(p)) errors.push(`platform "${p}" is unknown`);
   if (m.platforms?.length === 0) errors.push('platforms must not be empty (omit it for all)');
+  if (!MATURITIES.includes(m.maturity as string))
+    errors.push(`maturity "${String(m.maturity)}" must be 'stable' or 'preview'`);
   if (m.retired) errors.push(...validateRetired(m));
   else if (!m.area || !AREAS.includes(m.area))
     errors.push(`area "${String(m.area)}" is unknown (every module needs one)`);
@@ -108,6 +117,8 @@ export function validateManifest(m: ModuleManifest): string[] {
       errors.push(`widget "${w.id}" has invalid sizes`);
     if (!w.sizes.includes(w.defaultSize))
       errors.push(`widget "${w.id}": defaultSize must be one of sizes`);
+    if (w.maturity !== undefined && w.maturity !== 'preview')
+      errors.push(`widget "${w.id}": maturity can only tighten to 'preview'`);
   }
   for (const v of Object.keys(m.migrations).map(Number)) {
     if (v > m.version) errors.push(`migration ${v} is newer than manifest version ${m.version}`);

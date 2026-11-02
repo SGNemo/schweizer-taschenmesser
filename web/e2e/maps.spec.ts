@@ -1,7 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, openFoldedGroup, ready, showAllWidgets } from './helpers';
+import { enable, openFoldedGroup, ready, showAllWidgets, showPreview } from './helpers';
 import { overpassFixture } from '../src/modules/maps/own/fixtures';
 import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../src/modules/maps/own/sample';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {

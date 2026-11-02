@@ -49,6 +49,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  maturity: 'stable',
   seed: { version: 1, dependsOn: [] },
   // layout: 'content', // page width: 'narrow' | 'content' | 'wide' | 'full' (default 'content')
   area: 'knowledge', // navigation area: plan | money | household | knowledge | vault | system

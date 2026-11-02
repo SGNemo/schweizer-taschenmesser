@@ -64,6 +64,7 @@ const manifest: ModuleManifest = {
   settings: { schema: z.object({}), defaults: {}, fields: [] },
   dataApi: false,
   defaultEnabled: false,
+  maturity: 'stable',
   seed: { version: 1, dependsOn: [], none: 'live-data' },
   layout: 'full',
   order: 190,

@@ -9,6 +9,17 @@ describe('reading comfort settings', () => {
     useUiStore.getState().setLeading('normal');
     useUiStore.getState().setMotion('system');
     useUiStore.getState().setHomeView('calm');
+    useUiStore.getState().setShowPreview(false);
+  });
+
+  it('"In Arbeit anzeigen" is off by default, device-local, and the default removes the key', () => {
+    const ui = useUiStore.getState();
+    expect(ui.showPreview).toBe(false);
+    ui.setShowPreview(true);
+    expect(useUiStore.getState().showPreview).toBe(true);
+    expect(localStorage.getItem('tm-show-preview')).toBe('1');
+    useUiStore.getState().setShowPreview(false);
+    expect(localStorage.getItem('tm-show-preview')).toBeNull();
   });
 
   it('has a third text size, line spacing and an in-app motion switch (device-local, defaults remove the key)', () => {

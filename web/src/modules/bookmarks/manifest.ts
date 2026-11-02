@@ -56,6 +56,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  maturity: 'stable',
   seed: { version: 2, dependsOn: [] },
   layout: 'wide',
   order: 70,

@@ -9,6 +9,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   checkDeleteSource,
+  checkMaturity,
   checkRowSource,
   checkModule,
   checkSettingsSource,
@@ -19,8 +20,10 @@ import { SETTINGS_CATEGORY_IDS } from '../src/core/settings/registry/types.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const modulesDir = join(root, 'src', 'modules');
+const toolsDir = join(root, 'src', 'tools');
 const errors = [];
 let count = 0;
+let toolCount = 0;
 
 for (const id of readdirSync(modulesDir).sort()) {
   const dir = join(modulesDir, id);
@@ -45,6 +48,14 @@ for (const id of readdirSync(modulesDir).sort()) {
   }
 }
 
+// Tools: every manifest names its maturity (docs/howto/new-extension.md).
+for (const id of readdirSync(toolsDir).sort()) {
+  const manifestPath = join(toolsDir, id, 'manifest.ts');
+  if (!statSync(join(toolsDir, id)).isDirectory() || !existsSync(manifestPath)) continue;
+  toolCount++;
+  errors.push(...checkMaturity(`tool ${id}`, readFileSync(manifestPath, 'utf8')));
+}
+
 // Comfort contract (docs/product/comfort): deletes in module screens are undoable, list rows use ItemRow.
 for (const id of readdirSync(modulesDir).sort()) {
   if (id === 'disk' || id === 'example') continue; // disk has its own, stricter delete flow
@@ -63,4 +74,4 @@ if (errors.length > 0) {
   console.error(`check:modules found ${errors.length} problem(s):\n- ${errors.join('\n- ')}`);
   process.exit(1);
 }
-console.log(`check:modules: ${count} modules complete.`);
+console.log(`check:modules: ${count} modules and ${toolCount} tools complete.`);

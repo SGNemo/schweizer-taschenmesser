@@ -49,9 +49,23 @@ function widgetsBlock(src: string): string | undefined {
   return undefined;
 }
 
+const MATURITIES = ['stable', 'preview'];
+
+/**
+ * Every module and tool manifest names its maturity (`maturity: 'stable' | 'preview'`); a missing
+ * or unknown value is a build error on purpose, so nothing ships without the decision.
+ */
+export function checkMaturity(id: string, manifest: string): string[] {
+  const value = /\bmaturity:\s*['"]([a-z]+)['"]/.exec(manifest)?.[1];
+  if (value === undefined)
+    return [`${id}: manifest has no \`maturity\` ('stable' or 'preview' is mandatory)`];
+  return MATURITIES.includes(value) ? [] : [`${id}: unknown maturity "${value}"`];
+}
+
 export function checkModule({ id, manifest, fileExists }: ModuleSource): string[] {
   const errors: string[] = [];
   const fail = (msg: string) => errors.push(`${id}: ${msg}`);
+  errors.push(...checkMaturity(id, manifest));
 
   // Retired modules keep only schema/repo/manifest: no widgets, layout or seed data.
   if (/\bretired:\s*true/.test(manifest)) {

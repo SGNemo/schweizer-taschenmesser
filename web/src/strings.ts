@@ -393,6 +393,12 @@ export const de = {
       fields: 'Felder',
       more: (n: number) => `+ ${n}`,
     },
+    maturity: {
+      badge: 'In Arbeit',
+      show: 'In Arbeit anzeigen',
+      showHint:
+        'Listet auch Module, Werkzeuge, Widgets und Einstellungen, die noch nicht fertig sind, mit dem Hinweis „In Arbeit“; was du schon eingeschaltet hast, bleibt immer sichtbar.',
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:
