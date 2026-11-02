@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { showAllWidgets, showPreview } from '../helpers';
+import { openFoldedGroup, showAllWidgets, showPreview } from '../helpers';
 import { bootDev, seedApp } from './helpers';
 
 /**
@@ -118,6 +118,21 @@ test.describe('mail (demo mails)', () => {
     await expect(unread).toContainText('Ungelesene Threads im Posteingang');
     await expect(page.getByTestId('widget-mail:top')).toContainText('Ihre Rechnung für Oktober');
     await expect(page.getByTestId('widget-mail:invoices')).toContainText('in den letzten 30 Tagen');
+  });
+
+  test('new-mail notifications are off by default and their switch is in the module settings', async ({
+    page,
+  }) => {
+    await page.goto('/settings/module');
+    const section = page.locator('section[aria-labelledby="module-mail"]');
+    await expect(section).toBeVisible();
+    await openFoldedGroup(page, 'module-mail', 'fields');
+    const notify = section
+      .getByRole('switch', { name: /Bei neuen Mails benachrichtigen/ })
+      .or(section.getByRole('checkbox', { name: /Bei neuen Mails benachrichtigen/ }));
+    await expect(notify).not.toBeChecked();
+    await expect(section.getByText(/nur, solange die App läuft/)).toBeVisible();
+    await expect(section.getByLabel('Absender in der Benachrichtigung zeigen')).not.toBeChecked();
   });
 
   test('mail settings: accounts, permission, cache, notifications', async ({ page }) => {

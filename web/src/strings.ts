@@ -5908,6 +5908,16 @@ export const de = {
       confirmMoves: 'Vor dem Archivieren und Beschriften fragen',
       confirmMovesHelp:
         'Der Papierkorb und das Senden fragen immer. Jede Änderung lässt sich danach einige Sekunden zurücknehmen.',
+      notify: 'Bei neuen Mails benachrichtigen',
+      notifyHelp:
+        'Aus. Nemo sieht im gewählten Abstand nach und meldet neue ungelesene Mails mit einer einzigen Benachrichtigung. Sie funktioniert nur, solange die App läuft, ändert nichts im Postfach und verlässt dieses Gerät nicht.',
+      notifyEvery: 'Wie oft nachsehen',
+      every5: 'Alle 5 Minuten',
+      every15: 'Alle 15 Minuten',
+      every30: 'Alle 30 Minuten',
+      every60: 'Jede Stunde',
+      notifyNames: 'Absender in der Benachrichtigung zeigen',
+      notifyNamesHelp: 'Aus: nur die Anzahl. Sonst steht der Name auch auf dem Sperrbildschirm.',
     },
     page: {
       refresh: 'Aktualisieren',
@@ -6000,13 +6010,19 @@ export const de = {
       clearBody: 'Die Mails bleiben bei Google. Sie werden beim nächsten Öffnen neu geladen.',
       notifications: 'Benachrichtigungen',
       notificationsBody:
-        'Noch nicht vorhanden: Die App meldet sich nicht von selbst bei neuen Mails.',
+        'Aus. Schalte sie unter Einstellungen → Module → E-Mail ein. Dann sieht Nemo im gewählten Abstand nach und meldet neue Mails mit einer Benachrichtigung.',
       permissions: 'Berechtigungen pro Konto',
       permRead: 'Lesen',
       permManage: 'Verwalten',
       permSend: 'Senden',
       permOn: 'an',
       permOff: 'aus',
+      notifyActive: (minutes: number) =>
+        `Aktiv: Nemo sieht alle ${minutes} Minuten nach, solange die App läuft.`,
+      notifyLabels: 'Diese Labels zählen',
+      notifyHow:
+        'Die Meldung wird wie andere Erinnerungen behandelt: Ruhezeiten, Stumm und das Limit pro Stunde gelten auch hier.',
+      notifyQuiet: 'Ruhezeiten und Limit einstellen',
       close: 'Schließen',
     },
     link: {
@@ -6106,6 +6122,11 @@ export const de = {
         edit: 'Bearbeiten',
         sent: 'Mail gesendet.',
       },
+    },
+    notify: {
+      title: (n: number) => (n === 1 ? '1 neue E-Mail' : `${n} neue E-Mails`),
+      senders: (names: string[], more: number) =>
+        more > 0 ? `${names.join(', ')} und ${more} weitere` : names.join(', '),
     },
     widget: {
       unread: 'Ungelesen',

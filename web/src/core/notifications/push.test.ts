@@ -133,6 +133,14 @@ describe('buildSchedule', () => {
     expect(items[0]!.at).toBe(NOW + 1000);
   });
 
+  it('never uploads a notification marked local (third-party content such as mail)', async () => {
+    const items = await buildSchedule(
+      [due('plain', NOW + 1000), due('mail-new:1', NOW + 2000, { local: true, body: 'Anna' })],
+      NOW,
+    );
+    expect(items.map((i) => i.key)).toEqual(['plain']);
+  });
+
   it('caps the schedule at 500 items', async () => {
     const many = Array.from({ length: 700 }, (_, i) => due(`k${i}`, NOW + 1 + i));
     expect(await buildSchedule(many, NOW)).toHaveLength(500);

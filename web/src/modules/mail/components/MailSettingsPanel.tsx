@@ -2,13 +2,17 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { listMailAccounts } from '@/core/mail/accounts';
+import { mailLabels } from '@/core/mail/service';
+import type { MailLabel } from '@/core/mail/types';
+import { setSettings, useSettings } from '@/core/settings/settings';
 import { hasFeature } from '@/core/mail/service';
 import type { MailFeature } from '@/core/mail/types';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Dialog } from '@/ui';
+import { Button, Checkbox, Dialog } from '@/ui';
 import { cacheStats, clearMailCache } from '../cache';
+import { settings, type MailSettings } from '../settings';
 import styles from './mail.module.css';
 
 /** Accounts, permission, cache and notifications of the mail module in one place. */
@@ -16,11 +20,40 @@ export function MailSettingsPanel({ open, onClose }: { open: boolean; onClose: (
   const toast = useUiStore((st) => st.toast);
   const accounts = useLiveQuery(() => listMailAccounts(), []) ?? [];
   const [stats, setStats] = useState({ threads: 0, bodies: 0 });
+  const [prefsRaw] = useSettings('module.mail', settings.schema, settings.defaults);
+  const prefs = prefsRaw as MailSettings | undefined;
+  const [labelState, setLabelState] = useState<{ key: string; labels: MailLabel[] } | undefined>();
+  const first = accounts[0];
+  const labels = first && labelState?.key === first.key ? labelState.labels : [];
   const [confirm, setConfirm] = useState(false);
 
   useEffect(() => {
     if (open) void cacheStats().then(setStats);
   }, [open]);
+
+  // The labels to choose from (the first mailbox's; the choice holds for every mailbox with that label).
+  const firstKey = first?.key;
+  useEffect(() => {
+    if (!open || !prefs?.notify || !first) return;
+    let alive = true;
+    void mailLabels(first)
+      .then(
+        (l) =>
+          alive &&
+          setLabelState({
+            key: first.key,
+            labels: l.filter(
+              (x) =>
+                x.kind === 'user' || x.id === 'INBOX' || x.id === 'IMPORTANT' || x.id === 'STARRED',
+            ),
+          }),
+      )
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, prefs?.notify, firstKey]);
 
   async function clear() {
     await clearMailCache();
@@ -90,7 +123,36 @@ export function MailSettingsPanel({ open, onClose }: { open: boolean; onClose: (
           </section>
           <section>
             <h3>{t.mail.panel.notifications}</h3>
-            <p>{t.mail.panel.notificationsBody}</p>
+            {prefs?.notify ? (
+              <>
+                <p>{t.mail.panel.notifyActive(Number(prefs.notifyEvery))}</p>
+                {labels.length > 0 ? (
+                  <fieldset className={styles.labelPick}>
+                    <legend>{t.mail.panel.notifyLabels}</legend>
+                    {labels.map((l) => (
+                      <Checkbox
+                        key={l.id}
+                        label={t.mail.page.labels[l.id] ?? l.name}
+                        checked={prefs.notifyLabels.includes(l.id)}
+                        onChange={(e) =>
+                          void setSettings('module.mail', {
+                            notifyLabels: e.target.checked
+                              ? [...prefs.notifyLabels, l.id]
+                              : prefs.notifyLabels.filter((x) => x !== l.id),
+                          })
+                        }
+                      />
+                    ))}
+                  </fieldset>
+                ) : null}
+                <p className={styles.hint}>{t.mail.panel.notifyHow}</p>
+                <Link to={settingsPath('benachrichtigungen', 'notifications')} onClick={onClose}>
+                  {t.mail.panel.notifyQuiet}
+                </Link>
+              </>
+            ) : (
+              <p>{t.mail.panel.notificationsBody}</p>
+            )}
           </section>
         </div>
       </Dialog>
