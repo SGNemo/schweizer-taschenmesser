@@ -62,21 +62,38 @@ export default function PersonaTool() {
     mailProvider: DEFAULT_MAIL_PROVIDER,
     noticeSeen: false,
   });
+  // The stored value reaches the controls one database round trip after a change. Until then a choice
+  // stays shown (otherwise a select snaps back to the old value for a moment); it stops applying as soon
+  // as the stored value is no longer the one it replaced.
+  const [chosen, setChosen] = useState<Record<string, { to: unknown; from: unknown }>>({});
   if (!stored) return null;
+  const current: Record<string, unknown> = { ...stored };
+  for (const [key, c] of Object.entries(chosen)) {
+    if (current[key] === c.from) current[key] = c.to;
+  }
+  const value = current as typeof stored;
   const options: PersonaOptions = {
     ...DEFAULT_OPTIONS,
-    country: stored.country ?? countryForLang(getLang()),
-    age: stored.age,
-    gender: stored.gender as GenderChoice,
-    bio: stored.bio,
-    passwordSymbols: stored.passwordSymbols,
+    country: value.country ?? countryForLang(getLang()),
+    age: value.age,
+    gender: value.gender as GenderChoice,
+    bio: value.bio,
+    passwordSymbols: value.passwordSymbols,
   };
   return (
     <Generator
       options={options}
-      mailProvider={stored.mailProvider as MailProviderId}
-      noticeSeen={stored.noticeSeen}
-      patch={(p) => void patch(p)}
+      mailProvider={value.mailProvider as MailProviderId}
+      noticeSeen={value.noticeSeen}
+      patch={(p) => {
+        setChosen((o) => ({
+          ...o,
+          ...Object.fromEntries(
+            Object.entries(p).map(([k, to]) => [k, { to, from: stored[k as keyof typeof stored] }]),
+          ),
+        }));
+        void patch(p);
+      }}
     />
   );
 }
