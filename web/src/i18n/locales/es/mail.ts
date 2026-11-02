@@ -28,6 +28,9 @@ export const mail: Strings['mail'] = {
     notifyNames: 'Mostrar remitentes en la notificación',
     notifyNamesHelp:
       'No: solo la cantidad. Si no, el nombre también se ve en la pantalla de bloqueo.',
+    localAi: 'El modelo local puede leer el correo',
+    localAiHelp:
+      'Desactivado. Si se activa, el modelo local (el integrado u Ollama en este ordenador) puede resumir un correo y hacer sugerencias para «Crear a partir de este correo». El texto del correo nunca va a un modelo en la nube ni a la red; si no hay un modelo local listo, no pasa nada. Nada se guarda.',
   },
   page: {
     refresh: 'Actualizar',
@@ -230,6 +233,24 @@ export const mail: Strings['mail'] = {
     title: (n: number) => (n === 1 ? '1 correo nuevo' : `${n} correos nuevos`),
     senders: (names: string[], more: number) =>
       more > 0 ? `${names.join(', ')} y ${more} más` : names.join(', '),
+  },
+  local: {
+    summarize: 'Resumir brevemente',
+    working: 'El modelo local está leyendo el correo …',
+    title: (source: string) => `Resumen del modelo local (${source})`,
+    builtIn: 'integrado',
+    ollama: 'Ollama en este ordenador',
+    notStored: 'No se guarda. El texto del correo se queda en este ordenador.',
+    close: 'Cerrar',
+    none: 'No hay ningún modelo local listo. Configura el modelo integrado u Ollama en este ordenador en Ajustes → IA. Los modelos en la nube no reciben correo.',
+    noneAction: 'Ir a los ajustes de IA',
+    failed: 'El modelo local no pudo dar una respuesta.',
+    suggest: 'Sugerencia del modelo local',
+    suggestion: 'Sugerencia',
+    apply: 'Usarla',
+    discard: 'Descartar',
+    privacy:
+      'El texto del correo solo va al modelo local de este ordenador, nunca a un modelo en la nube.',
   },
   widget: {
     unread: 'Sin leer',

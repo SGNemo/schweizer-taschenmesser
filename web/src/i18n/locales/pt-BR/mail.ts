@@ -27,6 +27,9 @@ export const mail: Strings['mail'] = {
     every60: 'A cada hora',
     notifyNames: 'Mostrar remetentes na notificação',
     notifyNamesHelp: 'Não: só a quantidade. Senão o nome também aparece na tela de bloqueio.',
+    localAi: 'O modelo local pode ler e-mails',
+    localAiHelp:
+      'Desativado. Quando ativo, o modelo local (o integrado ou o Ollama neste computador) pode resumir um e-mail e dar sugestões para «Criar a partir deste e-mail». O texto do e-mail nunca vai para um modelo na nuvem nem para a rede; se nenhum modelo local estiver pronto, nada acontece. Nada disso é salvo.',
   },
   page: {
     refresh: 'Atualizar',
@@ -231,6 +234,24 @@ export const mail: Strings['mail'] = {
     title: (n: number) => (n === 1 ? '1 novo e-mail' : `${n} novos e-mails`),
     senders: (names: string[], more: number) =>
       more > 0 ? `${names.join(', ')} e mais ${more}` : names.join(', '),
+  },
+  local: {
+    summarize: 'Resumir em poucas linhas',
+    working: 'O modelo local está lendo o e-mail …',
+    title: (source: string) => `Resumo do modelo local (${source})`,
+    builtIn: 'integrado',
+    ollama: 'Ollama neste computador',
+    notStored: 'Não é salvo. O texto do e-mail fica neste computador.',
+    close: 'Fechar',
+    none: 'Nenhum modelo local está pronto. Configure o modelo integrado ou o Ollama neste computador em Configurações → IA. Modelos na nuvem não recebem e-mails.',
+    noneAction: 'Ir às configurações de IA',
+    failed: 'O modelo local não conseguiu responder.',
+    suggest: 'Sugestão do modelo local',
+    suggestion: 'Sugestão',
+    apply: 'Usar',
+    discard: 'Descartar',
+    privacy:
+      'O texto do e-mail só vai para o modelo local deste computador, nunca para um modelo na nuvem.',
   },
   widget: {
     unread: 'Não lidos',

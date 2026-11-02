@@ -15,6 +15,7 @@ import { hasFeature, mailDrafts } from '@/core/mail/service';
 import { mailText } from '@/core/mail/prefill';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { LinkDialog } from './LinkDialog';
+import { LocalSummary } from './LocalSummary';
 import { ThreadActions } from './ThreadActions';
 import { LinkMenu } from './LinkMenu';
 import { LinkedEntries } from './LinkedEntries';
@@ -83,10 +84,12 @@ function MessageCard({
   onToggle,
   autoLoadImages,
   onCompose,
+  localAi,
 }: {
   account: MailAccountRef;
   threadId: string;
   link?: string;
+  localAi: boolean;
   message: MailMessage;
   open: boolean;
   onToggle: () => void;
@@ -184,6 +187,7 @@ function MessageCard({
             autoLoadImages={autoLoadImages}
           />
           <Attachments account={account} message={message} />
+          {localAi ? <LocalSummary message={message} /> : null}
           {canCompose ? (
             <div className={styles.row} data-testid="mail-reply">
               {isDraft ? (
@@ -255,6 +259,7 @@ function MessageCard({
             threadId={threadId}
             message={message}
             link={link}
+            localAi={localAi}
             type={linkType}
             onClose={() => setLinkType(undefined)}
           />
@@ -272,6 +277,7 @@ export function ThreadView({
   autoLoadImages,
   labels,
   confirmMoves,
+  localAi = false,
   onChanged,
   onCompose,
   onBack,
@@ -282,6 +288,8 @@ export function ThreadView({
   autoLoadImages: boolean;
   labels: MailLabel[];
   confirmMoves: boolean;
+  /** The local model may read mail (module setting, off by default). */
+  localAi?: boolean;
   /** A change at the service went through: the list should reload. */
   onChanged: () => void;
   onCompose: (state: ComposeState, title: string) => void;
@@ -362,6 +370,7 @@ export function ThreadView({
           open={openIds.includes(m.id) || messages.length === 1}
           autoLoadImages={autoLoadImages}
           onCompose={onCompose}
+          localAi={localAi}
           onToggle={() =>
             setOpenIds((ids) =>
               ids.includes(m.id) ? ids.filter((x) => x !== m.id) : [...ids, m.id],

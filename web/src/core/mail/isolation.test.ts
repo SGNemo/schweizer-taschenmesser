@@ -36,4 +36,26 @@ describe('mail never reaches a model', () => {
       expect(readFileSync(f, 'utf8'), f).not.toMatch(/from '@\/core\/ai/);
     }
   });
+
+  it('the local-model door has no way to a cloud model: no router, no cloud adapters, no cloud notice', () => {
+    const src = readFileSync(join(SRC, 'core', 'mail', 'localAi.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+    expect(src).not.toMatch(
+      /createRouterProvider|createProviderFor|createClaudeProvider|createOpenAiCompatibleProvider|requireNotice|cloud-ai/,
+    );
+    // the only provider adapter it may build is Ollama, and only behind the loopback-only fetch
+    expect(src).toMatch(/createOllamaProvider/);
+    expect(src).toMatch(/loopbackOnly\(deps\.fetch\)/);
+  });
+
+  it('only the mail module reaches the local-model door', () => {
+    const offenders: string[] = [];
+    for (const f of files(SRC)) {
+      if (f.includes(join('core', 'mail')) || f.includes(join('modules', 'mail'))) continue;
+      if (/from '@\/core\/mail\/(localAi|localAssist)'/.test(readFileSync(f, 'utf8')))
+        offenders.push(f);
+    }
+    expect(offenders).toEqual([]);
+  });
 });

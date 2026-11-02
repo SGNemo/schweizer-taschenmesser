@@ -16,6 +16,8 @@ const schema = z.object({
   notifyLabels: z.array(z.string()),
   /** Sender names in the notification; off = only the count. */
   notifyNames: z.boolean(),
+  /** A local model (built-in or Ollama on this computer, never a cloud one) may summarise mail. */
+  localAi: z.boolean(),
 });
 
 export type MailSettings = z.output<typeof schema>;
@@ -30,6 +32,7 @@ export const settings: ModuleSettings = {
     notifyEvery: '15',
     notifyLabels: ['INBOX'],
     notifyNames: false,
+    localAi: false,
   },
   get keywords() {
     return [
@@ -109,6 +112,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.mail.meta.notifyNamesHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'localAi',
+      get label() {
+        return t.mail.meta.localAi;
+      },
+      get help() {
+        return t.mail.meta.localAiHelp;
       },
       type: 'boolean',
     },

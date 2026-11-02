@@ -5946,6 +5946,9 @@ export const de = {
       every60: 'Jede Stunde',
       notifyNames: 'Absender in der Benachrichtigung zeigen',
       notifyNamesHelp: 'Aus: nur die Anzahl. Sonst steht der Name auch auf dem Sperrbildschirm.',
+      localAi: 'Lokales Modell darf Mails lesen',
+      localAiHelp:
+        'Aus. Wenn an, kann das lokale Modell (das eingebaute oder Ollama auf diesem Rechner) eine Mail zusammenfassen und Vorschläge für „Aus dieser Mail anlegen“ machen. Der Mailtext geht nie an ein Cloud-Modell und nie ins Netz; ist kein lokales Modell bereit, passiert nichts. Nichts davon wird gespeichert.',
     },
     page: {
       refresh: 'Aktualisieren',
@@ -6155,6 +6158,24 @@ export const de = {
       title: (n: number) => (n === 1 ? '1 neue E-Mail' : `${n} neue E-Mails`),
       senders: (names: string[], more: number) =>
         more > 0 ? `${names.join(', ')} und ${more} weitere` : names.join(', '),
+    },
+    local: {
+      summarize: 'Kurz zusammenfassen',
+      working: 'Das lokale Modell liest die Mail …',
+      title: (source: string) => `Zusammenfassung vom lokalen Modell (${source})`,
+      builtIn: 'eingebaut',
+      ollama: 'Ollama auf diesem Rechner',
+      notStored: 'Wird nicht gespeichert. Der Mailtext bleibt auf diesem Rechner.',
+      close: 'Schließen',
+      none: 'Kein lokales Modell bereit. Richte unter Einstellungen → KI das eingebaute Modell oder Ollama auf diesem Rechner ein. Cloud-Modelle bekommen keine Mails.',
+      noneAction: 'Zu den KI-Einstellungen',
+      failed: 'Das lokale Modell konnte keine Antwort geben.',
+      suggest: 'Vorschlag vom lokalen Modell',
+      suggestion: 'Vorschlag',
+      apply: 'Übernehmen',
+      discard: 'Verwerfen',
+      privacy:
+        'Der Mailtext geht nur an das lokale Modell auf diesem Rechner, nie an ein Cloud-Modell.',
     },
     widget: {
       unread: 'Ungelesen',

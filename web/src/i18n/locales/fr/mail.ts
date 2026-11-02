@@ -28,6 +28,9 @@ export const mail: Strings['mail'] = {
     notifyNames: 'Afficher les expéditeurs dans la notification',
     notifyNamesHelp:
       'Non : seulement le nombre. Sinon le nom apparaît aussi sur l’écran verrouillé.',
+    localAi: 'Le modèle local peut lire les e-mails',
+    localAiHelp:
+      'Désactivé. Si activé, le modèle local (l’intégré ou Ollama sur cet ordinateur) peut résumer un e-mail et faire des suggestions pour « Créer à partir de cet e-mail ». Le texte de l’e-mail ne va jamais à un modèle dans le cloud ni sur le réseau ; si aucun modèle local n’est prêt, rien ne se passe. Rien n’est enregistré.',
   },
   page: {
     refresh: 'Actualiser',
@@ -238,6 +241,24 @@ export const mail: Strings['mail'] = {
     title: (n: number) => (n === 1 ? '1 nouvel e-mail' : `${n} nouveaux e-mails`),
     senders: (names: string[], more: number) =>
       more > 0 ? `${names.join(', ')} et ${more} autres` : names.join(', '),
+  },
+  local: {
+    summarize: 'Résumer brièvement',
+    working: 'Le modèle local lit l’e-mail …',
+    title: (source: string) => `Résumé du modèle local (${source})`,
+    builtIn: 'intégré',
+    ollama: 'Ollama sur cet ordinateur',
+    notStored: 'Non enregistré. Le texte de l’e-mail reste sur cet ordinateur.',
+    close: 'Fermer',
+    none: 'Aucun modèle local n’est prêt. Configure le modèle intégré ou Ollama sur cet ordinateur sous Réglages → IA. Les modèles dans le cloud ne reçoivent pas d’e-mails.',
+    noneAction: 'Aller aux réglages IA',
+    failed: 'Le modèle local n’a pas pu répondre.',
+    suggest: 'Suggestion du modèle local',
+    suggestion: 'Suggestion',
+    apply: 'L’utiliser',
+    discard: 'Ignorer',
+    privacy:
+      'Le texte de l’e-mail ne va qu’au modèle local de cet ordinateur, jamais à un modèle dans le cloud.',
   },
   widget: {
     unread: 'Non lus',

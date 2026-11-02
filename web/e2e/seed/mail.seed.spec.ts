@@ -135,6 +135,19 @@ test.describe('mail (demo mails)', () => {
     await expect(section.getByLabel('Absender in der Benachrichtigung zeigen')).not.toBeChecked();
   });
 
+  test('the local model may not read mail until switched on, and the button is absent', async ({
+    page,
+  }) => {
+    await page.goto('/settings/module');
+    const section = page.locator('section[aria-labelledby="module-mail"]');
+    await openFoldedGroup(page, 'module-mail', 'fields');
+    await expect(section.getByLabel('Lokales Modell darf Mails lesen')).not.toBeChecked();
+    await page.goto('/mail');
+    await page.getByText('Ihre Rechnung für Oktober').click();
+    await expect(page.getByTitle(/Inhalt der Mail/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kurz zusammenfassen' })).toHaveCount(0);
+  });
+
   test('mail settings: accounts, permission, cache, notifications', async ({ page }) => {
     await page.goto('/mail');
     await page.getByRole('button', { name: 'Mail-Einstellungen' }).click();

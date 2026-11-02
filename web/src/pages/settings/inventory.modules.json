@@ -231,6 +231,11 @@
         "type": "boolean",
         "label": "Absender in der Benachrichtigung zeigen",
         "default": false
+      },
+      "localAi": {
+        "type": "boolean",
+        "label": "Lokales Modell darf Mails lesen",
+        "default": false
       }
     }
   },
