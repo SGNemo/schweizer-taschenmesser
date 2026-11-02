@@ -143,4 +143,5 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 2 „Erinnerungen“ (Ruhezeit, Limit, Später, Morgen-Übersicht, Erinnerungs-Karte, „Woran war ich?“; gestapelt auf Paket 1).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 1 (Jetzt dran, Tagesplan, Fokusmodus, ruhiges „Jetzt wichtig“, Dauer pro ToDo, Zeit bis zum Termin; Einstellungen „Fokus & Aufmerksamkeit“).
 - Auf `develop`/PR: Notizen-Notizblock Paket 1 „Editor“ (TipTap, Markdown-Speicherung + Migration, Schrägstrich-Menü, Schreibmodus, Autospeichern; Pakete 2 Notizbücher/Tabs/Verlauf und 3 Links/Export/KI folgen).
+- Auf `develop`/PR: Rechner-Tab „Plotter“ (bis zu drei Funktionen von x, Zoom und Verschieben per Tasten, ohne Speicherung).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.

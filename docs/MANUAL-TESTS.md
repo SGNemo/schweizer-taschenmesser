@@ -389,3 +389,9 @@ D3. *Limit:* Einstellung „Tempolimit“ auf 200 KB/s: die Anzeige bleibt darun
 D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden: neue heißt „name (1).ext“, die alte bleibt. „Im Ordner zeigen“ markiert die Datei im Explorer, öffnet sie nicht. Eine ausführbare Datei wird nie gestartet. ☐
 D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
 D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
+
+### Rechner-Plotter (Branch `feat/calc-plotter`)
+PL1. *Android-APK:* Rechner → Tab „Plotter“: der Graph füllt die Breite, die Achsenzahlen sind lesbar, Zoom- und Pfeil-Tasten sind gut treffbar, die Bildschirmtastatur verdeckt den Graphen nicht. ☐
+PL2. *Offline vor dem ersten Gebrauch:* ohne vorherigen Online-Start des Rechners zeigt der Plotter die ruhige Fehlermeldung statt eines Graphen (die Bibliothek ist nicht im Vorab-Cache). ☐
+PL3. *Tastatur (Windows):* Graph anklicken oder mit Tab erreichen, Pfeiltasten verschieben, + und − zoomen, 0 setzt zurück; der Fokusrahmen ist sichtbar. ☐
+
