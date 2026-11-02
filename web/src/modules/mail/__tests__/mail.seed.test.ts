@@ -17,6 +17,7 @@ describe('mail seed', () => {
     for (const row of rows.body!) expect(bodySchema.safeParse(row.data).success).toBe(true);
     const emails = JSON.stringify(rows).match(/[\w.+-]+@[\w.-]+/g) ?? [];
     expect(emails.length).toBeGreaterThan(0);
-    for (const e of emails) expect(e.endsWith('example.org')).toBe(true);
+    // the host is example.org itself or a subdomain of it – not just any name ending in that text
+    for (const e of emails) expect(e).toMatch(/@([a-z0-9-]+\.)*example\.org$/);
   });
 });
