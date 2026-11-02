@@ -141,17 +141,25 @@ async fn preview_lists_files_and_selection_downloads_only_those() {
         .unwrap();
     assert_eq!(preview.name, "pack");
     assert_eq!(preview.total, TOTAL);
-    let names: Vec<_> = preview.files.iter().map(|f| f.path.as_str()).collect();
+    // The order inside a torrent is the file system's, so files are picked by name, never by position.
+    let mut names: Vec<_> = preview.files.iter().map(|f| f.path.as_str()).collect();
+    names.sort();
     assert_eq!(names, ["a.bin", "b.bin", "c.bin"]);
+    let index = |name: &str| preview.files.iter().find(|f| f.path == name).unwrap().index;
     assert!(leech.list().is_empty(), "a preview adds nothing");
 
     let out = env.dir("out");
     leech
-        .add(Source::File(file), &out, Some(vec![0, 1]), vec![addr])
+        .add(
+            Source::File(file),
+            &out,
+            Some(vec![index("a.bin"), index("b.bin")]),
+            vec![addr],
+        )
         .await
         .unwrap();
     until("selected files done", || {
-        one(&leech).progress_bytes >= 500_000
+        one(&leech).progress_bytes >= (A + B) as u64
     })
     .await;
     assert_eq!(std::fs::read(out.join("pack/a.bin")).unwrap(), bytes(A, 1));
