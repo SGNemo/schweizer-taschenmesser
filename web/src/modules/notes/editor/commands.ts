@@ -17,19 +17,19 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'h1',
     label: () => t.notes.fmt.h1,
-    keywords: 'h1 heading überschrift titel',
+    keywords: 'h1 heading title',
     run: (e) => void c(e).toggleHeading({ level: 1 }).run(),
   },
   {
     id: 'h2',
     label: () => t.notes.fmt.h2,
-    keywords: 'h2 heading überschrift',
+    keywords: 'h2 heading',
     run: (e) => void c(e).toggleHeading({ level: 2 }).run(),
   },
   {
     id: 'h3',
     label: () => t.notes.fmt.h3,
-    keywords: 'h3 heading überschrift',
+    keywords: 'h3 heading',
     run: (e) => void c(e).toggleHeading({ level: 3 }).run(),
   },
   {
