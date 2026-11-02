@@ -4664,7 +4664,14 @@ export const de = {
       calendarFeature: 'Kalender',
       calendarFeatureHint: 'Termine aus deinen Google-Kalendern anzeigen.',
       mailFeature: 'E-Mails',
-      mailFeatureHint: 'Auf Knopfdruck nach Rechnungen, Abos, Terminen und Verträgen suchen.',
+      mailFeatureHint:
+        'E-Mails im Modul „E-Mail“ lesen und auf Knopfdruck nach Rechnungen, Abos, Terminen und Verträgen suchen. Es wird nur gelesen.',
+      modifyFeature: 'E-Mails verwalten',
+      modifyFeatureHint:
+        'Erlaubt Nemo, Mails als gelesen zu markieren, zu archivieren, zu beschriften, in den Papierkorb zu legen und Entwürfe zu speichern – jedes Mal erst nach deiner Bestätigung, nichts wird endgültig gelöscht. Hinweis: Google gibt mit dieser Berechtigung technisch auch das Senden frei; Nemo sendet trotzdem nur mit „E-Mails senden“ und nach deiner Bestätigung.',
+      sendFeature: 'E-Mails senden',
+      sendFeatureHint:
+        'Erlaubt Nemo, Mails in deinem Namen zu senden (neue Mail, Antwort, Weiterleiten) – nur wenn du „Senden“ bestätigst, mit kurzer Zeit zum Zurückziehen. Ohne diese Option sendet Nemo nichts.',
     },
   },
   pendingImport: {

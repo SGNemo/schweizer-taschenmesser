@@ -111,6 +111,13 @@ export const connectors: Strings['connectors'] = {
     calendarFeature: 'Calendário',
     calendarFeatureHint: 'Mostrar eventos dos seus calendários do Google.',
     mailFeature: 'E-mails',
-    mailFeatureHint: 'Procurar faturas, assinaturas, eventos e contratos com um clique.',
+    mailFeatureHint:
+      'Ler e-mails no módulo «E-mail» e procurar sob demanda faturas, assinaturas, compromissos e contratos. Somente leitura.',
+    modifyFeature: 'Gerenciar e-mails',
+    modifyFeatureHint:
+      'Permite que o Nemo marque e-mails como lidos, arquive, etiquete, mova para a lixeira e salve rascunhos – cada vez só depois da sua confirmação, nada é apagado de vez. Observação: com esta permissão o Google tecnicamente também libera o envio; o Nemo só envia com «Enviar e-mails» ativado e depois da sua confirmação.',
+    sendFeature: 'Enviar e-mails',
+    sendFeatureHint:
+      'Permite que o Nemo envie e-mails em seu nome (novo, resposta, encaminhamento) – só quando você confirma «Enviar», com um curto prazo para desfazer. Sem esta opção o Nemo não envia nada.',
   },
 };

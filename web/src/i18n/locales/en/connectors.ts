@@ -109,6 +109,12 @@ export const connectors: Strings['connectors'] = {
     calendarFeatureHint: 'Show events from your Google calendars.',
     mailFeature: 'Emails',
     mailFeatureHint:
-      'Search for invoices, subscriptions, events and contracts at the press of a button.',
+      'Read mail in the “Mail” module and search on demand for invoices, subscriptions, appointments and contracts. Read-only.',
+    modifyFeature: 'Manage mail',
+    modifyFeatureHint:
+      'Lets Nemo mark mail as read, archive it, label it, move it to the trash and save drafts – each time only after you confirm, nothing is deleted for good. Note: with this permission Google technically also allows sending; Nemo still only sends with “Send mail” switched on and after you confirm.',
+    sendFeature: 'Send mail',
+    sendFeatureHint:
+      'Lets Nemo send mail in your name (new mail, reply, forward) – only when you confirm “Send”, with a short time to take it back. Without this option Nemo sends nothing.',
   },
 };
