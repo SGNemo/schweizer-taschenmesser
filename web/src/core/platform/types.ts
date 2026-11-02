@@ -4,6 +4,8 @@ import type { UpdateService } from '@/core/update/types';
 import type { DiskService } from './disk';
 import type { LocalModelService } from './localModel';
 import type { BrowserService } from './browser';
+import type { CustomTabsService } from './customTabs';
+import type { LaunchService } from './launch';
 import type { DownloadsService } from './downloads';
 import type { TorrentService } from './torrent';
 import type { SystemService } from './system';
@@ -285,6 +287,10 @@ export interface PlatformService {
   torrent: TorrentService;
   /** Isolated tabs of the built-in browser (desktop only). */
   browser: BrowserService;
+  /** The browser on Android: addresses open in a Custom Tab of the system browser. */
+  customTabs: CustomTabsService;
+  /** Magnet link / .torrent file a start was given, and the optional OS association (desktop). */
+  launch: LaunchService;
   /** The built-in local language model (desktop only; stage 1 of the AI entry pipeline). */
   localModel: LocalModelService;
   desktop: DesktopService;

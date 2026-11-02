@@ -31,6 +31,9 @@ D9. *Abbruch:* Scan während der Laufzeit abbrechen (Teilergebnis bleibt nutzbar
 D10. *Datei in Benutzung:* Eine geöffnete Testdatei in einem Testordner: Bericht „Teilweise gelöscht“ mit Grund „Datei in Benutzung“. ☐
 D11. *Bestätigungen:* Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ fragen ein zweites Mal („Wirklich löschen?“, kein Eintippen mehr; ein schneller Doppelklick bestätigt nicht beide Male); Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
 D12. *Aufräum-Helfer:* „Aufräumen“ auf der Startseite listet Temp/Downloads/Browser-Caches (nur vorhandene); „Doppelte Dateien“ findet zwei gleiche Testdateien, ein Exemplar bleibt immer. ☐
+D13. *Zuordnung (Windows, aus):* Downloads → BitTorrent → „Bei Windows eintragen“. Windows-Einstellungen → Standard-Apps zeigt Nemo für „magnet“ und „.torrent“; ein bestehender Standard bleibt unverändert, bis du Nemo wählst. „Eintrag entfernen“ → Nemo verschwindet aus der Liste (Registry: `HKCU\Software\Classes\Nemo.Magnet`, `Nemo.Torrent`, `HKCU\Software\Nemo`, Wert unter `RegisteredApplications` weg). Beim Dev-Preview heißen die Einträge `NemoDev…`. ☐
+D14. *Magnet-Link öffnen:* Nemo als Standard für magnet wählen, in einem Browser einen (Test-)Magnet-Link anklicken: Nemo kommt nach vorn (auch bei schon laufender App), der Dialog „Torrent hinzufügen“ ist vorbefüllt, nichts startet vor „Herunterladen“. Bei ausgeschaltetem Torrent-Teil: Hinweis „Ein Magnet-Link wartet“, nach dem Einschalten (mit Hinweis) öffnet sich der Dialog. Downloads-Modul aus: Angebot zum Einschalten. ☐
+D15. *.torrent-Datei öffnen:* Doppelklick auf eine Test-.torrent (und eine fehlende/über 10 MB große) → Dialog zeigt die erste Datei, die zweite wird stumm ignoriert; mit „Öffnen mit“ gestartet funktioniert dasselbe bei kaltem Start. ☐
 D13. *Im Explorer zeigen / Pfad kopieren* funktionieren (auch bei langen Pfaden). ☐
 D14. *Berechtigungen:* App startet, Updater, Google-Login und lokale API funktionieren weiterhin (alle App-Befehle sind jetzt einzeln freigegeben; `capabilities/desktop.json`). ☐
 D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, RAM, Akku am Laptop, Grafikkarte, lokale IP). ☐
@@ -396,6 +399,8 @@ B5. *Privat:* privater Tab, auf einer Seite anmelden/Cookie setzen, Tab schließ
 B6. *Blocker (Windows):* eine Seite mit vielen Anzeigen: Zähler im Menü „Blocker“ steigt, Fremdserver-Liste füllt sich, „Blocken“ legt eine eigene Regel an, nach „Neu laden“ fehlt dieser Server. Pausieren auf der Seite lädt alles wieder. ☐
 B7. *Suchen auf der Seite:* Strg+F zeigt die Suchleiste von WebView2 (nicht von Nemo gebaut). ☐
 B8. *Merkliste/Notiz:* „In Merkliste speichern“ (Modul an) legt den Eintrag an, „Als Notiz speichern“ öffnet eine neue Notiz mit Titel und Adresse. ☐
+B9. *Android (Custom Tabs, APK nötig):* Browser öffnen, Adresse eingeben → die Seite erscheint in einem Custom Tab (Chrome-Leiste, Schließen-Pfeil zurück in Nemo). Suchbegriff nutzt die gewählte Suchmaschine. Stern setzt ein Lesezeichen; Lesezeichen und „Zuletzt besucht“ öffnen wieder im Custom Tab. Ohne Chrome/Browser mit Custom Tabs öffnet der Standardbrowser. Die Einstellungen zeigen Blocker/HTTP-Warnung nicht. ☐
+B10. *Android: Datenschutz:* Nemo erhält nichts aus dem Custom Tab zurück (Verlauf zeigt nur, was in Nemo geöffnet wurde); „Verlauf speichern“ aus → nichts wird vermerkt. Der Browser erscheint nicht in der Desktop-Liste doppelt. ☐
 
 ### Downloads (Desktop, nur mit echtem Netz und Fenster prüfbar)
 D1. *Download und Prüfsumme:* Modul „Downloads“ einschalten, eine kleine Datei von einer Seite mit veröffentlichter SHA-256 hinzufügen (Prüfsumme einfügen): läuft, wird „Fertig“, „Stimmt überein“. Eine falsche Prüfsumme: „Fehlgeschlagen – Prüfsumme stimmt nicht, Datei wurde gelöscht“. ☐
@@ -404,6 +409,11 @@ D3. *Limit:* Einstellung „Tempolimit“ auf 200 KB/s: die Anzeige bleibt darun
 D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden: neue heißt „name (1).ext“, die alte bleibt. „Im Ordner zeigen“ markiert die Datei im Explorer, öffnet sie nicht. Eine ausführbare Datei wird nie gestartet. ☐
 D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
 D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
+
+### Rechner-Plotter (Branch `feat/calc-plotter`)
+PL1. *Android-APK:* Rechner → Tab „Plotter“: der Graph füllt die Breite, die Achsenzahlen sind lesbar, Zoom- und Pfeil-Tasten sind gut treffbar, die Bildschirmtastatur verdeckt den Graphen nicht. ☐
+PL2. *Offline vor dem ersten Gebrauch:* ohne vorherigen Online-Start des Rechners zeigt der Plotter die ruhige Fehlermeldung statt eines Graphen (die Bibliothek ist nicht im Vorab-Cache). ☐
+PL3. *Tastatur (Windows):* Graph anklicken oder mit Tab erreichen, Pfeiltasten verschieben, + und − zoomen, 0 setzt zurück; der Fokusrahmen ist sichtbar. ☐
 
 ### Torrent (Desktop, nur mit echtem Netz prüfbar; nur legale Inhalte, z. B. eine Linux-Distribution von deren Download-Seite)
 D7. *Aus und Hinweis:* Downloads-Seite, „BitTorrent ist aus“; „Torrent-Teil einschalten“ zeigt den Hinweis (legale Inhalte, hochladen beim Herunterladen, Abmahnung); erst nach „Verstanden“ startet die Engine. Aus- und wieder Einschalten: kein zweiter Hinweis. ☐

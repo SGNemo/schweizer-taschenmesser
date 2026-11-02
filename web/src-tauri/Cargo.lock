@@ -5563,6 +5563,7 @@ dependencies = [
  "taschenmesser-downloader",
  "taschenmesser-local-api",
  "taschenmesser-local-llm",
+ "taschenmesser-os-association",
  "taschenmesser-system-info",
  "taschenmesser-torrent",
  "taschenmesser-vault-bridge",
@@ -5571,6 +5572,7 @@ dependencies = [
  "tauri-plugin-apk-installer",
  "tauri-plugin-autostart",
  "tauri-plugin-clipboard-manager",
+ "tauri-plugin-custom-tabs",
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
  "tauri-plugin-global-shortcut",
@@ -5640,6 +5642,10 @@ dependencies = [
  "ureq",
  "windows 0.61.3",
 ]
+
+[[package]]
+name = "taschenmesser-os-association"
+version = "0.1.0"
 
 [[package]]
 name = "taschenmesser-system-info"
@@ -5836,6 +5842,17 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "tauri-plugin-custom-tabs"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.21",
+ "url",
 ]
 
 [[package]]

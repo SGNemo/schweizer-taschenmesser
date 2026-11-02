@@ -1,4 +1,4 @@
-import type { BigNumber, MathJsInstance } from 'mathjs';
+import type { BigNumber, EvalFunction, MathJsInstance } from 'mathjs';
 import { decimalSeparator, formatLocale, numberFormat } from '@/core/i18n/format';
 import { CalcError, evaluate as evaluateBasic } from './expr';
 import { normalizeNumbers, separatorsFor } from './numbers';
@@ -74,14 +74,19 @@ interface Loaded {
 }
 let loading: Promise<Loaded> | undefined;
 
+/** The same lock-down for every instance: nothing that imports, parses again, defines units or allocates freely. */
+function lockDown(math: Math): void {
+  const blocked = (): never => {
+    throw new CalcError('syntax');
+  };
+  math.import(Object.fromEntries(BLOCKED.map((n) => [n, blocked])), { override: true });
+}
+
 function load(): Promise<Loaded> {
   loading ??= import('mathjs').then(({ create, all }) => {
     const math = create(all!, { number: 'BigNumber', precision: 64 });
     const run = math.evaluate.bind(math);
-    const blocked = (): never => {
-      throw new CalcError('syntax');
-    };
-    math.import(Object.fromEntries(BLOCKED.map((n) => [n, blocked])), { override: true });
+    lockDown(math);
     return { math, run };
   });
   // A failed import is not retried forever: the next call tries again.
@@ -89,6 +94,26 @@ function load(): Promise<Loaded> {
     loading = undefined;
   });
   return loading;
+}
+
+interface PlotLib {
+  math: Math;
+  compile: Math['compile'];
+}
+let plotLoading: Promise<PlotLib> | undefined;
+
+/** Plain double precision (fast, thousands of evaluations per graph) with the same lock-down. */
+function loadPlot(): Promise<PlotLib> {
+  plotLoading ??= import('mathjs').then(({ create, all }) => {
+    const math = create(all!, { number: 'number' });
+    const compile = math.compile.bind(math);
+    lockDown(math);
+    return { math, compile };
+  });
+  plotLoading.catch(() => {
+    plotLoading = undefined;
+  });
+  return plotLoading;
 }
 
 /** Warms the chunk (e.g. when the tool opens) without waiting for it. */
@@ -229,4 +254,61 @@ export async function evaluateExpression(
   for (const [k, v] of scope) if (!wrappers.has(k)) vars.set(k, v);
   vars.set('ans', raw);
   return finish(canonical, value, false);
+}
+
+/** A function of x for the plotter: `NaN` wherever it is not a real number. */
+export type PlotFn = (x: number) => number;
+
+/**
+ * Compiles `input` (a function of `x`, e.g. "sin(x)", "x^2 − 3") once; the result is cheap to call. Typed
+ * errors like the calculator: an unknown name or a syntax error throws `CalcError`. Factorials and the like are
+ * refused (a graph calls the function thousands of times). Without the library (offline before the first use)
+ * there is no graph: `CalcError('offline')`.
+ */
+export async function compilePlotFunction(
+  input: string,
+  angle: AngleMode = 'rad',
+): Promise<PlotFn> {
+  const prepared = prepare(input);
+  if (prepared === undefined) throw new CalcError('syntax');
+  if (HEAVY.test(prepared)) throw new CalcError('range');
+  let lib: PlotLib;
+  try {
+    lib = await loadPlot();
+  } catch {
+    throw new CalcError('offline');
+  }
+  const { math, compile } = lib;
+  const scope = new Map<string, unknown>();
+  if (angle === 'deg') {
+    const k = Math.PI / 180;
+    for (const f of TRIG) {
+      const fn = math[f] as (x: unknown) => unknown;
+      scope.set(f, (x: unknown) => fn(math.isUnit(x) ? x : (x as number) * k));
+    }
+    for (const f of ARC) {
+      const fn = math[f] as (x: unknown) => unknown;
+      scope.set(f, (x: unknown) => {
+        const r = fn(x);
+        return typeof r === 'number' ? r / k : r;
+      });
+    }
+  }
+  let code: EvalFunction;
+  try {
+    code = compile(prepared);
+    scope.set('x', 1);
+    code.evaluate(scope); // unknown names and wrong calls show up now, not once per sample
+  } catch (e) {
+    throw mapError(e);
+  }
+  return (x: number): number => {
+    scope.set('x', x);
+    try {
+      const r: unknown = code.evaluate(scope);
+      return typeof r === 'number' ? r : Number.NaN;
+    } catch {
+      return Number.NaN;
+    }
+  };
 }

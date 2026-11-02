@@ -3,6 +3,8 @@ import { loggedFetch } from '@/core/net/netlog';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeBrowser } from './fakeBrowser';
+import { createFakeCustomTabs } from './fakeCustomTabs';
+import { createFakeLaunch } from './fakeLaunch';
 import { createFakeDownloads } from './fakeDownloads';
 import { createFakeTorrent } from './fakeTorrent';
 import { createFakeSystem } from './fakeSystem';
@@ -323,22 +325,25 @@ export function createWebPlatform(): PlatformService {
           watch: unsupported,
           pickFile: unsupported,
         },
+    launch: createFakeLaunch(isE2eBuild() && e2eKind() === 'desktop'),
+    customTabs: createFakeCustomTabs(isE2eBuild() && e2eKind() === 'android'),
     // E2E builds only: tabs are faked, no page is loaded.
-    browser: isE2eBuild()
-      ? createFakeBrowser()
-      : {
-          supported: false,
-          open: unsupported,
-          navigate: unsupported,
-          back: unsupported,
-          forward: unsupported,
-          reload: unsupported,
-          close: unsupported,
-          show: unsupported,
-          setZoom: unsupported,
-          configure: unsupported,
-          clearData: unsupported,
-        },
+    browser:
+      isE2eBuild() && e2eKind() === 'desktop'
+        ? createFakeBrowser()
+        : {
+            supported: false,
+            open: unsupported,
+            navigate: unsupported,
+            back: unsupported,
+            forward: unsupported,
+            reload: unsupported,
+            close: unsupported,
+            show: unsupported,
+            setZoom: unsupported,
+            configure: unsupported,
+            clearData: unsupported,
+          },
     localModel: noLocalModel,
     desktop: webDesktop,
     share: webShare,
