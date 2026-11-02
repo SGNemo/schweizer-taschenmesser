@@ -57,6 +57,30 @@ const connector: ConnectorDef = {
       },
       scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
     },
+    // Opt-in write permissions of the mail module: off by default, each with its own explanation.
+    // Every action is confirmed in the module first (mark read/unread: undo window).
+    {
+      id: 'mail-modify',
+      get label() {
+        return s.modifyFeature;
+      },
+      get description() {
+        return s.modifyFeatureHint;
+      },
+      scopes: ['https://www.googleapis.com/auth/gmail.modify'],
+      defaultOn: false,
+    },
+    {
+      id: 'mail-send',
+      get label() {
+        return s.sendFeature;
+      },
+      get description() {
+        return s.sendFeatureHint;
+      },
+      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      defaultOn: false,
+    },
   ],
   calendar: googleCalendar,
   mail: googleMail,

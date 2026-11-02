@@ -9,4 +9,7 @@ export const migrations: ModuleManifest['migrations'] = {
       const body = plainToMarkdown(r.body);
       if (body !== r.body) return { body };
     }),
+  // 3: notes gained `notebookId` (null = "Allgemein") and `order`; the notebook collection is new.
+  // Old records stay valid as they are (both fields have defaults).
+  3: async () => {},
 };

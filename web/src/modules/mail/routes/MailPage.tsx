@@ -24,7 +24,11 @@ import {
 import { DEMO_ACCOUNT, type CachedThreadView } from '../cache';
 import { MailError } from '../components/MailError';
 import { MailSettingsPanel } from '../components/MailSettingsPanel';
+import { ComposeDialog } from '../components/ComposeDialog';
+import { PendingSendBar } from '../components/PendingSendBar';
 import { ThreadView } from '../components/ThreadView';
+import { emptyCompose, type ComposeState } from '../composeState';
+import { hasFeature } from '@/core/mail/service';
 import styles from '../components/mail.module.css';
 import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../format';
 import { threadRepo } from '../repo';
@@ -113,6 +117,9 @@ export default function MailPage() {
     setDraft(query);
   }
   const [panel, setPanel] = useState(false);
+  const [compose, setCompose] = useState<
+    { state: ComposeState; title: string; account: MailAccountRef } | undefined
+  >();
   const [fetched, setFetched] = useState<{ key: string; labels: MailLabel[] } | undefined>();
   const labels =
     account && fetched?.key === account.key && account.key !== DEMO_ACCOUNT
@@ -122,6 +129,7 @@ export default function MailPage() {
   const box = useMailbox(account, labelId, query);
   const images = (prefs as { images?: string } | undefined)?.images === 'always';
   const cacheBodies = (prefs as { cacheBodies?: boolean } | undefined)?.cacheBodies ?? true;
+  const confirmMoves = (prefs as { confirmMoves?: boolean } | undefined)?.confirmMoves ?? true;
 
   useEffect(() => {
     if (!account || account.key === DEMO_ACCOUNT) return;
@@ -143,8 +151,19 @@ export default function MailPage() {
     setParams(p);
   }
 
+  const canWrite =
+    !!account && (hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify'));
   const header = (
     <PageHeader title={t.mail.meta.name}>
+      {canWrite && account ? (
+        <Button
+          onClick={() =>
+            setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account })
+          }
+        >
+          {t.mail.write.newMail}
+        </Button>
+      ) : null}
       <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
         <Icon name="settings" />
       </IconButton>
@@ -170,16 +189,39 @@ export default function MailPage() {
       </>
     );
 
+  const writeUi = (
+    <>
+      <PendingSendBar
+        onReopen={(state, acc) =>
+          setCompose({ state, title: t.mail.write.compose.titleNew, account: acc })
+        }
+      />
+      {compose ? (
+        <ComposeDialog
+          account={compose.account}
+          initial={compose.state}
+          title={compose.title}
+          onClose={() => setCompose(undefined)}
+        />
+      ) : null}
+    </>
+  );
+
   if (threadId)
     return (
       <>
         {header}
+        {writeUi}
         <ThreadView
           key={`${account.key}|${threadId}`}
           account={account}
           threadId={threadId}
           cacheBodies={cacheBodies}
           autoLoadImages={images}
+          labels={labels}
+          confirmMoves={confirmMoves}
+          onChanged={box.reload}
+          onCompose={(state, title) => setCompose({ state, title, account })}
           onBack={() => update({ thread: null })}
         />
         <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
@@ -189,6 +231,7 @@ export default function MailPage() {
   return (
     <>
       {header}
+      {writeUi}
       {account.key === DEMO_ACCOUNT ? <p className={styles.notice}>{t.mail.page.demo}</p> : null}
       <form
         className={styles.toolbar}

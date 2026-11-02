@@ -5,7 +5,6 @@
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import type {
   ListRequest,
-  MailAddress,
   MailAttachment,
   MailInlinePart,
   MailLabel,
@@ -14,27 +13,48 @@ import type {
   MailProvider,
   MailThread,
   MailThreadSummary,
+  OutgoingMail,
+  ThreadChange,
 } from '@/core/mail/types';
-import { googleGet, type GoogleResponse } from './http';
+import { parseAddress, parseAddressList } from '@/core/mail/address';
+import { buildRaw } from '@/core/mail/compose';
+import { googleRequest, type GoogleResponse } from './http';
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const PAGE = 25;
 const PARALLEL = 5;
 
-/** GET with one token refresh after a 401 (an access token can expire between two calls). */
-async function gmailGet(
+/** One call with one token refresh after a 401 (an access token can expire between two calls; a 401 means nothing was done). */
+async function gmailCall(
   ctx: ConnectorContext,
-  path: string,
-  params: Record<string, string | string[] | undefined> = {},
+  req: {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    path: string;
+    params?: Record<string, string | string[] | undefined>;
+    body?: unknown;
+  },
 ): Promise<GoogleResponse> {
+  const call = () =>
+    googleRequest(ctx, {
+      method: req.method,
+      url: `${API}${req.path}`,
+      params: req.params,
+      body: req.body,
+    });
   try {
-    return await googleGet(ctx, `${API}${path}`, params);
+    return await call();
   } catch (e) {
     if (!(e instanceof ConnectorError) || e.code !== 'expired') throw e;
     await ctx.accessToken({ refresh: true });
-    return await googleGet(ctx, `${API}${path}`, params);
+    return await call();
   }
 }
+
+const gmailGet = (
+  ctx: ConnectorContext,
+  path: string,
+  params: Record<string, string | string[] | undefined> = {},
+): Promise<GoogleResponse> => gmailCall(ctx, { path, params });
 
 type Json = Record<string, unknown>;
 const obj = (v: unknown): Json => (v && typeof v === 'object' ? (v as Json) : {});
@@ -58,33 +78,7 @@ async function mapLimited<T, R>(items: readonly T[], fn: (item: T) => Promise<R>
 
 /* --------------------------------- addresses & MIME --------------------------------- */
 
-export function parseAddress(raw: string): MailAddress {
-  const m = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(raw);
-  if (m) return { name: m[1]!.trim() || undefined, email: m[2]!.trim() };
-  return { email: raw.trim() };
-}
-
-/** Splits a header list on commas that are not inside quotes or angle brackets. */
-export function parseAddressList(raw: string): MailAddress[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let quoted = false;
-  let current = '';
-  for (const ch of raw) {
-    if (ch === '"') quoted = !quoted;
-    else if (!quoted && ch === '<') depth += 1;
-    else if (!quoted && ch === '>') depth = Math.max(0, depth - 1);
-    if (ch === ',' && !quoted && depth === 0) {
-      parts.push(current);
-      current = '';
-    } else current += ch;
-  }
-  parts.push(current);
-  return parts
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map(parseAddress);
-}
+export { parseAddress, parseAddressList };
 
 export function decodeBase64Url(data: string): Uint8Array {
   const b64 = data.replace(/-/g, '+').replace(/_/g, '/');
@@ -179,6 +173,8 @@ export function parseMessage(raw: unknown): MailMessage {
     html: into.html.length ? into.html.join('\n') : undefined,
     attachments: into.attachments,
     inline: into.inline,
+    rfcMessageId: header(payload, 'Message-ID') || undefined,
+    references: header(payload, 'References') || undefined,
   };
 }
 
@@ -269,6 +265,74 @@ export const gmailProvider: MailProvider = {
   async unread(ctx): Promise<number> {
     const res = obj((await gmailGet(ctx, '/labels/INBOX')).json);
     return typeof res.threadsUnread === 'number' ? res.threadsUnread : 0;
+  },
+
+  /* --------------------------- write side (opt-in, confirmed in the UI) --------------------------- */
+
+  async modify(ctx, threadId: string, change: ThreadChange): Promise<void> {
+    await gmailCall(ctx, {
+      method: 'POST',
+      path: `/threads/${encodeURIComponent(threadId)}/modify`,
+      body: { addLabelIds: change.addLabelIds ?? [], removeLabelIds: change.removeLabelIds ?? [] },
+    });
+  },
+
+  async trash(ctx, threadId): Promise<void> {
+    await gmailCall(ctx, {
+      method: 'POST',
+      path: `/threads/${encodeURIComponent(threadId)}/trash`,
+    });
+  },
+
+  async untrash(ctx, threadId): Promise<void> {
+    await gmailCall(ctx, {
+      method: 'POST',
+      path: `/threads/${encodeURIComponent(threadId)}/untrash`,
+    });
+  },
+
+  async send(ctx, mail: OutgoingMail) {
+    const res = obj(
+      (
+        await gmailCall(ctx, {
+          method: 'POST',
+          path: '/messages/send',
+          body: { raw: buildRaw(mail), ...(mail.threadId ? { threadId: mail.threadId } : {}) },
+        })
+      ).json,
+    );
+    return { id: str(res.id), threadId: str(res.threadId) };
+  },
+
+  async saveDraft(ctx, mail: OutgoingMail, draftId?: string) {
+    const message = { raw: buildRaw(mail), ...(mail.threadId ? { threadId: mail.threadId } : {}) };
+    const res = obj(
+      (
+        await gmailCall(
+          ctx,
+          draftId
+            ? {
+                method: 'PUT',
+                path: `/drafts/${encodeURIComponent(draftId)}`,
+                body: { id: draftId, message },
+              }
+            : { method: 'POST', path: '/drafts', body: { message } },
+        )
+      ).json,
+    );
+    return { id: str(res.id) || draftId || '', messageId: str(obj(res.message).id) };
+  },
+
+  async deleteDraft(ctx, draftId): Promise<void> {
+    await gmailCall(ctx, { method: 'DELETE', path: `/drafts/${encodeURIComponent(draftId)}` });
+  },
+
+  async drafts(ctx) {
+    const res = obj((await gmailGet(ctx, '/drafts', { maxResults: '100' })).json);
+    return arr(res.drafts)
+      .map(obj)
+      .map((d) => ({ id: str(d.id), messageId: str(obj(d.message).id) }))
+      .filter((d) => d.id && d.messageId);
   },
 
   webUrl(threadId, email) {

@@ -9,6 +9,13 @@ import { noteExtensions } from './extensions';
 import { storeImage } from './images';
 import { SlashMenu } from './SlashMenu';
 
+export interface EditorApi {
+  clear: () => void;
+  focus: () => void;
+  /** Replaces the whole text (history restore); goes through the normal autosave. */
+  setMarkdown: (markdown: string) => void;
+}
+
 export interface EditorSurfaceProps {
   /** Markdown the editor starts with. */
   initial: string;
@@ -22,7 +29,9 @@ export interface EditorSurfaceProps {
   /** The editor exists and `apiRef` is filled. */
   onReady?: () => void;
   /** Filled with imperative helpers once the editor exists. */
-  apiRef?: { current: { clear: () => void; focus: () => void } | null };
+  apiRef?: { current: EditorApi | null };
+  /** Scratch pad: offers "move to a new page" for the selection; receives its Markdown (already removed here). */
+  onMoveSelection?: (markdown: string) => void;
 }
 
 /** The rich-text surface (lazy chunk of the notes route). Markdown in, Markdown out. */
@@ -35,6 +44,7 @@ export default function EditorSurface({
   onError,
   apiRef,
   onReady,
+  onMoveSelection,
 }: EditorSurfaceProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   const editorRef = useRef<Editor | null>(null);
@@ -104,6 +114,8 @@ export default function EditorSurface({
           editor.view.focus();
         },
         clear: () => void editor.chain().focus().clearContent(true).run(),
+        setMarkdown: (markdown) =>
+          void editor.chain().setContent(markdown, { contentType: 'markdown' }).run(),
       };
     if (editor) onReady?.();
     // The shell moves focus to the page's main region after a navigation; when that lands after the
@@ -136,7 +148,24 @@ export default function EditorSurface({
   return (
     <div className={styles.surface} data-width={width}>
       <EditorContent editor={editor} className={styles.content} />
-      <BubbleToolbar editor={editor} />
+      <BubbleToolbar
+        editor={editor}
+        onMove={
+          onMoveSelection
+            ? () => {
+                const { from, to } = editor.state.selection;
+                const content = editor.state.doc.slice(from, to).content.toJSON() as unknown[];
+                const markdown = editor.markdown?.serialize({
+                  type: 'doc',
+                  content: content as never,
+                });
+                if (!markdown?.trim()) return;
+                editor.chain().focus().deleteSelection().run();
+                onMoveSelection(markdown.trim());
+              }
+            : undefined
+        }
+      />
       <SlashMenu editor={editor} onImage={() => fileInput.current?.click()} />
       <input
         ref={fileInput}
