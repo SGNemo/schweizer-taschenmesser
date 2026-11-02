@@ -17,6 +17,16 @@ export const mail: Strings['mail'] = {
     confirmMoves: 'Ask before archiving and labelling',
     confirmMovesHelp:
       'The trash and sending always ask. Every change can be undone for a few seconds afterwards.',
+    notify: 'Notify about new mail',
+    notifyHelp:
+      'Off. Nemo looks at the chosen interval and reports new unread mail with a single notification. It only works while the app is running, changes nothing in the mailbox and does not leave this device.',
+    notifyEvery: 'How often to look',
+    every5: 'Every 5 minutes',
+    every15: 'Every 15 minutes',
+    every30: 'Every 30 minutes',
+    every60: 'Every hour',
+    notifyNames: 'Show senders in the notification',
+    notifyNamesHelp: 'Off: only the count. Otherwise the name also shows on the lock screen.',
   },
   page: {
     refresh: 'Refresh',
@@ -103,13 +113,20 @@ export const mail: Strings['mail'] = {
     clearTitle: 'Clear the cache?',
     clearBody: 'The mail stays at Google. It is fetched again the next time you open it.',
     notifications: 'Notifications',
-    notificationsBody: 'Not available yet: the app does not announce new mail on its own.',
+    notificationsBody:
+      'Off. Switch it on under Settings → Modules → Mail. Nemo then looks at the chosen interval and reports new mail with one notification.',
     permissions: 'Permissions per account',
     permRead: 'Read',
     permManage: 'Manage',
     permSend: 'Send',
     permOn: 'on',
     permOff: 'off',
+    notifyActive: (minutes: number) =>
+      `On: Nemo looks every ${minutes} minutes while the app is running.`,
+    notifyLabels: 'These labels count',
+    notifyHow:
+      'The notification is treated like other reminders: quiet hours, mute and the limit per hour apply here too.',
+    notifyQuiet: 'Set quiet hours and limit',
     close: 'Close',
   },
   link: {
@@ -207,6 +224,11 @@ export const mail: Strings['mail'] = {
       edit: 'Edit',
       sent: 'Mail sent.',
     },
+  },
+  notify: {
+    title: (n: number) => (n === 1 ? '1 new mail' : `${n} new mails`),
+    senders: (names: string[], more: number) =>
+      more > 0 ? `${names.join(', ')} and ${more} more` : names.join(', '),
   },
   widget: {
     unread: 'Unread',

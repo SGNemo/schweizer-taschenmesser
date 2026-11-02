@@ -115,6 +115,8 @@ M12. Als gelesen/ungelesen markieren wirkt sofort (in Gmail prüfen) und lässt 
 M13. „E-Mails senden" zusätzlich einschalten, neu anmelden. Neue Mail an dich selbst: „Weiter zum Senden" → Prüfansicht → „Senden bestätigen" → 10 s Wartefenster: „Zurückziehen" bringt den Text zurück (nichts gesendet, in Gmail prüfen); beim zweiten Mal bis zum Ende warten, die Mail kommt an. Antworten bleibt im selben Verlauf (Gmail zeigt es als Antwort), Umlaute und Anhang (PDF, Bild) kommen richtig an. ☐
 M14. Entwurf speichern → erscheint in Gmail unter „Entwürfe"; im Mail-Modul „Entwurf bearbeiten", ändern, speichern (kein zweiter Entwurf), senden (der Entwurf verschwindet). ☐
 M15. Berechtigung in den Google-Kontoeinstellungen widerrufen: jede Aktion meldet „Dafür fehlt eine Berechtigung" mit Link zu den Verbindungen, es wird nichts geändert oder gesendet. ☐
+M16. (Paket 4, `feat/mail-notify`) Modul-Einstellungen E-Mail: „Bei neuen Mails benachrichtigen" ist aus. Einschalten (Windows-Benachrichtigungen für Nemo erlauben), Abstand 5 Minuten. Nach dem ersten Nachsehen kommt **keine** Meldung für alte Mails. Schick dir eine Mail: nach spätestens 5–6 Minuten erscheint „1 neue E-Mail" (ohne Absender, ohne Betreff). Mit „Absender zeigen" steht der Name dabei. ☐
+M17. Mail anderswo lesen, bevor die Meldung kommt: es kommt keine. Mehrere Mails in einem Abstand: eine Meldung mit der Anzahl. In den Ruhezeiten (Einstellungen → Benachrichtigungen) kommt sie erst nach deren Ende. Nur die gewählten Labels zählen (Dialog „Mail-Einstellungen" → Labels). Bei ausgeschalteter App/Netz kommt nichts, und es entsteht kein Stau von Meldungen beim Wiedereinschalten (höchstens eine). ☐
 
 ### Werkzeuge (Phase 13, Schritt 5)
 T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
@@ -240,6 +242,9 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **E5 Android Seitenliste:** Notizbuch anlegen (Farbe, Symbol), Seiten verschieben, „Eigene Reihenfolge“ mit langem Druck auf den Griff sortieren (scrollt die Liste noch?), „Offene Seiten“ oben in der Liste, Zurück-Taste. ☐
 - **E6 Windows-App:** Strg+N öffnet eine neue Seite (Alt+N im Browser), Alt+Z den Schmierzettel; Tabs mit vielen Seiten scrollen seitlich. ☐
 - **E7 Verlauf:** eine Seite zwei Minuten bearbeiten, „Verlauf“ zeigt frühere Stände, Wiederherstellen und mit Strg+Z zurück. ☐
+- **E8 PDF:** Seite → „Exportieren“ → „PDF (Druckansicht)“: Windows-App und Browser öffnen den Druckdialog („Als PDF speichern“), Bilder sind dabei; auf Android öffnet sich kein Druckdialog (bekannte Grenze der WebView) – Markdown/Text gehen. ☐
+- **E9 Ordner-Import:** Ordner mit .md/.txt wählen (Windows und Android): Ordnername wird Notizbuch, zweiter Import desselben Ordners meldet Doppelte. ☐
+- **E10 Verknüpfen:** `[[` tippen (Handy-Tastatur), Titel wählen, Link antippen, Rückverweise unter der Seite; „Notiz ergänze …“ im Assistenten zeigt in der Vorschau den angehängten Text. ☐
 
 ### KI abschalten – nur mit zwei Geräten prüfbar
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
@@ -404,6 +409,11 @@ D3. *Limit:* Einstellung „Tempolimit“ auf 200 KB/s: die Anzeige bleibt darun
 D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden: neue heißt „name (1).ext“, die alte bleibt. „Im Ordner zeigen“ markiert die Datei im Explorer, öffnet sie nicht. Eine ausführbare Datei wird nie gestartet. ☐
 D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
 D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
+
+### Rechner-Plotter (Branch `feat/calc-plotter`)
+PL1. *Android-APK:* Rechner → Tab „Plotter“: der Graph füllt die Breite, die Achsenzahlen sind lesbar, Zoom- und Pfeil-Tasten sind gut treffbar, die Bildschirmtastatur verdeckt den Graphen nicht. ☐
+PL2. *Offline vor dem ersten Gebrauch:* ohne vorherigen Online-Start des Rechners zeigt der Plotter die ruhige Fehlermeldung statt eines Graphen (die Bibliothek ist nicht im Vorab-Cache). ☐
+PL3. *Tastatur (Windows):* Graph anklicken oder mit Tab erreichen, Pfeiltasten verschieben, + und − zoomen, 0 setzt zurück; der Fokusrahmen ist sichtbar. ☐
 
 ### Torrent (Desktop, nur mit echtem Netz prüfbar; nur legale Inhalte, z. B. eine Linux-Distribution von deren Download-Seite)
 D7. *Aus und Hinweis:* Downloads-Seite, „BitTorrent ist aus“; „Torrent-Teil einschalten“ zeigt den Hinweis (legale Inhalte, hochladen beim Herunterladen, Abmahnung); erst nach „Verstanden“ startet die Engine. Aus- und wieder Einschalten: kein zweiter Hinweis. ☐

@@ -10,7 +10,8 @@ import { formatNumber as formatLocaleNumber } from '@/core/i18n/format';
  * the fraction b/100 (240 × 19% = 45,6).
  */
 
-export type CalcErrorCode = 'syntax' | 'divide-by-zero' | 'range' | 'empty' | 'unknown' | 'unit';
+export type CalcErrorCode =
+  'syntax' | 'divide-by-zero' | 'range' | 'empty' | 'unknown' | 'unit' | 'offline';
 
 export class CalcError extends Error {
   constructor(readonly code: CalcErrorCode) {

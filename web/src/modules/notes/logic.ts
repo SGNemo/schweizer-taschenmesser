@@ -129,3 +129,27 @@ export function countByNotebook(
 /** Next free position for a new notebook. */
 export const nextNotebookOrder = (books: readonly { order: number }[]): number =>
   books.reduce((m, b) => Math.max(m, b.order), 0) + 10;
+
+/* ---- search ---- */
+
+/**
+ * The part of the text around the first hit of `query`, for the list while searching ("…Käse und Brot…").
+ * `undefined` when the hit is in the title only (the row shows the title anyway) or there is no query.
+ */
+export function matchSnippet(
+  note: Pick<Note, 'title' | 'body'>,
+  query: string,
+  radius = 40,
+): string | undefined {
+  const q = fold(query.trim());
+  if (!q) return undefined;
+  const plain = markdownToPlain(note.body).replace(/\s+/g, ' ').trim();
+  const folded = fold(plain);
+  const at = folded.indexOf(q);
+  if (at < 0) return undefined;
+  // Folding can change the length (decomposed accents): then the position is only approximate.
+  const pos = folded.length === plain.length ? at : Math.min(at, Math.max(plain.length - 1, 0));
+  const start = Math.max(0, pos - radius);
+  const end = Math.min(plain.length, pos + q.length + radius);
+  return `${start > 0 ? '…' : ''}${plain.slice(start, end)}${end < plain.length ? '…' : ''}`;
+}

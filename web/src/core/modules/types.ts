@@ -200,6 +200,8 @@ export interface AiActionDef {
   fields?: string[];
   /** Fields that must be present before the preview can be confirmed (subset of `fields`). */
   required?: string[];
+  /** `update` only: text fields whose new value is added after the stored text instead of replacing it (subset of `fields`). */
+  append?: string[];
   /** `transition`: the patch applied to the target, e.g. `{ status: 'paid' }`. */
   set?: Record<string, unknown>;
   /** At least one; they are run through validation → preview → undo by the registry test. */
@@ -380,6 +382,11 @@ export interface DueNotification {
    * it themselves.
    */
   quiet?: boolean;
+  /**
+   * Never leaves this device: not uploaded for Web Push (the sync server would see title and text).
+   * For notifications about third-party content such as new mail.
+   */
+  local?: true;
 }
 
 export type NotificationSource = (range: {

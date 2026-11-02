@@ -1,12 +1,18 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
+import { bus } from '@/core/events';
+import { useModuleStates } from '@/core/modules/activation';
+import { offerEnableModule } from '@/core/modules/offerEnable';
 import { useSettings } from '@/core/settings/settings';
+import { useUiStore } from '@/stores/ui';
 import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { useMediaQuery, useOpenParam } from '@/ui';
+import { ExportDialog, type ExportScope } from '../components/ExportDialog';
+import { ImportDialog } from '../components/ImportDialog';
 import { MoveDialog } from '../components/MoveDialog';
 import { NotebookDialog } from '../components/NotebookDialog';
 import { NotePane } from '../components/NotePane';
@@ -21,6 +27,7 @@ import {
   SORT_MODES,
   type SortMode,
 } from '../logic';
+import { backlinks as backlinksOf, findPage, suggestTitles } from '../links';
 import { noteRepo, notebookRepo } from '../repo';
 import type { Note } from '../schema';
 import { type NotesSettings, settings as moduleSettings, settingsSchema } from '../settings';
@@ -78,6 +85,7 @@ export default function NotesPage() {
     () => [...(bookRows ?? [])].sort((a, b) => a.order - b.order || a.createdAt - b.createdAt),
     [bookRows],
   );
+  const moduleStates = useModuleStates();
   const wide = useMediaQuery('(min-width: 900px)');
   const [stored] = useSettings('module.notes', settingsSchema, moduleSettings.defaults as never);
   const prefs = stored ?? (moduleSettings.defaults as NotesSettings);
@@ -114,6 +122,8 @@ export default function NotesPage() {
     book: null,
   });
   const [trashOpen, setTrashOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const setSort = (s: SortMode) => {
     setSortState(s);
@@ -231,6 +241,62 @@ export default function NotesPage() {
     open({ kind: 'note', id: created.id });
   }
 
+  const linkTitles = useCallback((query: string) => suggestTitles(query, notes ?? []), [notes]);
+  async function openLink(target: string) {
+    const existing = findPage(target, notes ?? []);
+    if (existing) return openPage(existing);
+    const created = await noteRepo.create({
+      title: target,
+      body: '',
+      pinned: false,
+      notebookId: newPageBook,
+      order: 0,
+    });
+    useUiStore.getState().toast(t.notes.links.created);
+    open({ kind: 'note', id: created.id });
+  }
+  function sendTodo(text: string) {
+    const send = async () => {
+      await bus.emit('todo.requested', { title: text });
+      useUiStore.getState().toast(t.notes.links.todoAdded);
+    };
+    if (moduleStates?.todos !== true)
+      return offerEnableModule('todos', t.notes.links.todoOff, send);
+    void send();
+  }
+  const created = sel?.kind === 'new' && createdId ? notes?.find((n) => n.id === createdId) : null;
+  const subject =
+    sel?.kind === 'note' ? current : sel?.kind === 'scratch' ? scratchNote : (created ?? null);
+  const backlinkList = subject
+    ? backlinksOf(subject, notes ?? []).map((n) => ({ id: n.id, title: titleOf(n) }))
+    : [];
+
+  // What can be exported: the open page, its notebook (or the one shown), everything.
+  const exportBook = books.find((b) => b.id === (subject?.notebookId ?? newPageBook));
+  const exportScopes: ExportScope[] = [
+    ...(subject
+      ? [
+          {
+            id: 'page',
+            label: t.notes.exportMenu.scopePage,
+            name: titleOf(subject),
+            pages: [subject],
+          },
+        ]
+      : []),
+    ...(exportBook
+      ? [
+          {
+            id: 'book',
+            label: `${t.notes.exportMenu.scopeNotebook}: ${exportBook.name}`,
+            name: exportBook.name,
+            pages: (notes ?? []).filter((n) => n.notebookId === exportBook.id),
+          },
+        ]
+      : []),
+    { id: 'all', label: t.notes.exportMenu.scopeAll, name: t.notes.title, pages: notes ?? [] },
+  ];
+
   const fullscreen = () => {
     const el = document.documentElement;
     if (document.fullscreenElement) void document.exitFullscreen();
@@ -279,6 +345,8 @@ export default function NotesPage() {
               })()
             }
             onOpenTrash={() => setTrashOpen(true)}
+            onExport={() => setExportOpen(true)}
+            onImport={() => setImportOpen(true)}
           />
         ) : null}
         {showPane && !loadingPane ? (
@@ -306,6 +374,14 @@ export default function NotesPage() {
               focusMode={focusMode}
               notebookId={newPageBook}
               onMoveSelection={(md) => void moveSelectionToNewPage(md)}
+              linkTitles={linkTitles}
+              onOpenLink={(target) => void openLink(target)}
+              onTodo={sendTodo}
+              backlinks={backlinkList}
+              onOpenPage={(id) => {
+                const page = notes?.find((n) => n.id === id);
+                if (page) openPage(page);
+              }}
               onToggleFocus={() => setFocusMode((v) => !v)}
               onFullscreen={fullscreen}
               onBack={
@@ -351,6 +427,8 @@ export default function NotesPage() {
         onSaved={(id) => setFilter(id)}
       />
       <TrashDialog open={trashOpen} onClose={() => setTrashOpen(false)} />
+      <ExportDialog open={exportOpen} scopes={exportScopes} onClose={() => setExportOpen(false)} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </>
   );
 }

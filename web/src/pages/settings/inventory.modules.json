@@ -216,6 +216,21 @@
         "type": "boolean",
         "label": "Vor dem Archivieren und Beschriften fragen",
         "default": true
+      },
+      "notify": {
+        "type": "boolean",
+        "label": "Bei neuen Mails benachrichtigen",
+        "default": false
+      },
+      "notifyEvery": {
+        "type": "select",
+        "label": "Wie oft nachsehen",
+        "default": "15"
+      },
+      "notifyNames": {
+        "type": "boolean",
+        "label": "Absender in der Benachrichtigung zeigen",
+        "default": false
       }
     }
   },

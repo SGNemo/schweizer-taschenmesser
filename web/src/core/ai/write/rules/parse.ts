@@ -52,6 +52,8 @@ const toWords = (s: string): Word[] =>
     .filter(Boolean)
     .map((raw) => ({ raw, n: fold(raw).replace(/[^a-z0-9-]/g, '') }));
 
+/** Verbs that add text to an entry instead of changing a value (folded, like the other prefixes). */
+const APPEND_VERBS = ['erganz'];
 const startsWithAny = (w: Word, list: readonly string[]): boolean =>
   w.n.length > 0 && list.some((v) => w.n.startsWith(v));
 
@@ -324,7 +326,21 @@ async function segmentToOp(
     }
     if (!m) return undefined;
     const left = toWords(m[1]!);
+    // "Ergänze die Notiz X um …": the text is added to the entry (the note role), not a rename.
+    const appends = words.some((w) => startsWithAny(w, APPEND_VERBS));
     return forTarget(left, actionsOf(ctx.manifests, 'update'), ctx, (ref, target) => {
+      if (appends) {
+        const field = fieldFor(ref, 'note');
+        const text = joinWords(toWords(m[2]!));
+        return field && text
+          ? {
+              module: ref.manifest.id,
+              action: ref.id,
+              target: { title: target },
+              data: { [field]: text },
+            }
+          : undefined;
+      }
       // A bare number is only an amount where the collection has one ("Gartenplan 2027" is a name).
       const facts = extractFacts(m[2]!, { now, bareAmount: Boolean(fieldFor(ref, 'amount')) });
       const valueRest = joinWords(toWords(facts.rest));
