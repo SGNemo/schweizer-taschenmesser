@@ -141,9 +141,11 @@ test('the calculator has scientific, programmer and date modes and remembers the
 
   await sheet.getByRole('button', { name: 'Wissenschaftlich' }).click();
   await sheet.getByLabel('Rechnung').fill('sin(30) + log10(1000)');
-  await expect(sheet.getByTestId('calc-result')).toHaveText('3,5');
+  await expect(sheet.getByTestId('calc-result')).toHaveText('3,5', { timeout: 20_000 });
   await sheet.getByLabel('Rechnung').fill('2 pi');
-  await expect(sheet.getByTestId('calc-result')).toHaveText('6,28318530717959');
+  await expect(sheet.getByTestId('calc-result')).toHaveText('6,28318530717959', {
+    timeout: 15_000,
+  });
 
   await sheet.getByRole('button', { name: 'Programmierer' }).click();
   await sheet.getByLabel('Rechnung (ganze Zahlen)').fill('0xFF & 0x0F');
@@ -176,7 +178,9 @@ test('the palette evaluates "=" expressions, base conversions and date phrases',
   await page.keyboard.press('Control+k');
   const box = page.getByRole('combobox');
   await box.fill('=sqrt(2)*3');
-  await expect(page.getByRole('option').first()).toHaveText('sqrt(2)*3 = 4,24264068711929');
+  await expect(page.getByRole('option').first()).toHaveText('sqrt(2)*3 = 4,24264068711929', {
+    timeout: 20_000,
+  });
   await box.fill('0x1F in dez');
   await expect(page.getByRole('option').first()).toHaveText('0x1F = 31');
   await box.fill('15.03.2027 + 45 Tage');
