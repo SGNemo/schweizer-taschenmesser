@@ -22,13 +22,7 @@ import {
   type Persona,
   type PersonaOptions,
 } from './logic';
-import { PERSONA_SCOPE } from '@/core/tools/mailProviders';
-import {
-  DEFAULT_MAIL_PROVIDER,
-  MAIL_PROVIDERS,
-  MAIL_PROVIDER_IDS,
-  type MailProviderId,
-} from './mail';
+import { DEFAULT_MAIL_PROVIDER, MAIL_PROVIDERS, type MailProviderId } from './mail';
 
 const s = t.tools.persona;
 
@@ -60,7 +54,7 @@ function valueOf(p: Persona, f: Field): string | undefined {
 }
 
 export default function PersonaTool() {
-  const [stored, patch] = useSettings(PERSONA_SCOPE, schema, {
+  const [stored, patch] = useSettings('tools.persona', schema, {
     age: 'a26',
     gender: 'none',
     bio: false,
@@ -68,27 +62,44 @@ export default function PersonaTool() {
     mailProvider: DEFAULT_MAIL_PROVIDER,
     noticeSeen: false,
   });
+  // The stored value reaches the controls one database round trip after a change. Until then a choice
+  // stays shown (otherwise a select snaps back to the old value for a moment); it stops applying as soon
+  // as the stored value is no longer the one it replaced.
+  const [chosen, setChosen] = useState<Record<string, { to: unknown; from: unknown }>>({});
   if (!stored) return null;
+  const current: Record<string, unknown> = { ...stored };
+  for (const [key, c] of Object.entries(chosen)) {
+    if (current[key] === c.from) current[key] = c.to;
+  }
+  const value = current as typeof stored;
   const options: PersonaOptions = {
     ...DEFAULT_OPTIONS,
-    country: stored.country ?? countryForLang(getLang()),
-    age: stored.age,
-    gender: stored.gender as GenderChoice,
-    bio: stored.bio,
-    passwordSymbols: stored.passwordSymbols,
+    country: value.country ?? countryForLang(getLang()),
+    age: value.age,
+    gender: value.gender as GenderChoice,
+    bio: value.bio,
+    passwordSymbols: value.passwordSymbols,
   };
   return (
     <Generator
       options={options}
-      mailProvider={stored.mailProvider as MailProviderId}
-      noticeSeen={stored.noticeSeen}
-      patch={(p) => void patch(p)}
+      mailProvider={value.mailProvider as MailProviderId}
+      noticeSeen={value.noticeSeen}
+      patch={(p) => {
+        setChosen((o) => ({
+          ...o,
+          ...Object.fromEntries(
+            Object.entries(p).map(([k, to]) => [k, { to, from: stored[k as keyof typeof stored] }]),
+          ),
+        }));
+        void patch(p);
+      }}
     />
   );
 }
 
 function Generator({
-  options: initial,
+  options,
   mailProvider,
   noticeSeen,
   patch,
@@ -100,9 +111,7 @@ function Generator({
 }) {
   const saveAsNote = useSaveAsNote();
   const saveInVault = useSaveInVault();
-  // The choices are kept here so a control shows its new value at once; they are stored in the settings next to it.
-  const [options, setOptions] = useState<PersonaOptions>(initial);
-  const [persona, setPersona] = useState<Persona>(() => generatePersona(initial));
+  const [persona, setPersona] = useState<Persona>(() => generatePersona(options));
   const rows = useMemo(
     () =>
       FIELDS.flatMap((f) => {
@@ -127,9 +136,7 @@ function Generator({
   // The panel stays mounted, so focus stays on the control that was changed.
   const change = (stored: Partial<z.input<typeof schema>>, now: Partial<PersonaOptions>) => {
     patch(stored);
-    const next = { ...options, ...now };
-    setOptions(next);
-    setPersona(generatePersona(next));
+    setPersona(generatePersona({ ...options, ...now }));
   };
 
   return (
@@ -245,7 +252,7 @@ function Generator({
               value={mailProvider}
               onChange={(e) => patch({ mailProvider: e.target.value as MailProviderId })}
             >
-              {MAIL_PROVIDER_IDS.map((id) => (
+              {(Object.keys(MAIL_PROVIDERS) as MailProviderId[]).map((id) => (
                 <option key={id} value={id}>
                   {s.providers[id]}
                 </option>
