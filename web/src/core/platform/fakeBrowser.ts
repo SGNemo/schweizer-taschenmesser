@@ -19,6 +19,8 @@ export function createFakeBrowser(): BrowserService {
     emit({ event: 'loading', tab, loading: true });
     emit({ event: 'url', tab, url });
     emit({ event: 'title', tab, title: `Testseite ${new URL(url).host}` });
+    if (url.includes('download-test'))
+      emit({ event: 'download', tab, url: `${new URL(url).origin}/files/beispiel-datei.zip` });
     if (url.includes('ads-test')) emit({ event: 'blocked', tab, host: 'ads.tracker.test' });
     emit({ event: 'seen', tab, host: 'cdn.thirdparty.test' });
     emit({ event: 'loading', tab, loading: false });

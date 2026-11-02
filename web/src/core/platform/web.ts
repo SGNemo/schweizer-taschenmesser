@@ -3,6 +3,7 @@ import { loggedFetch } from '@/core/net/netlog';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeBrowser } from './fakeBrowser';
+import { createFakeDownloads } from './fakeDownloads';
 import { createFakeSystem } from './fakeSystem';
 import { noLocalModel } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
@@ -288,6 +289,23 @@ export function createWebPlatform(): PlatformService {
           processes: unsupported,
           diskIo: unsupported,
           openTaskManager: unsupported,
+        },
+    // E2E builds only: invented download jobs, no network.
+    downloads: isE2eBuild()
+      ? createFakeDownloads()
+      : {
+          supported: false,
+          watch: unsupported,
+          defaultDir: unsupported,
+          pickDir: unsupported,
+          add: unsupported,
+          pause: unsupported,
+          resume: unsupported,
+          remove: unsupported,
+          setLimit: unsupported,
+          setJobLimit: unsupported,
+          verify: unsupported,
+          reveal: unsupported,
         },
     // E2E builds only: tabs are faked, no page is loaded.
     browser: isE2eBuild()

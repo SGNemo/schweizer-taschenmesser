@@ -106,8 +106,11 @@ export const browser: Strings['browser'] = {
   },
   popupBlocked: 'Um pop-up foi bloqueado.',
   download: {
-    held: 'A página inicia um download. O gerenciador de downloads chega depois; até lá, use o navegador do sistema.',
+    offer: (name: string) => `A página oferece “${name}” para download.`,
+    toManager: 'Abrir no gerenciador de downloads',
     openSystem: 'Abrir no navegador do sistema',
+    dismiss: 'Dispensar',
+    needModule: 'Isso precisa do módulo “Downloads”.',
   },
   clear: {
     title: 'Excluir os dados do navegador?',

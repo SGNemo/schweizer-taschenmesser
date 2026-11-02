@@ -67,6 +67,7 @@ import { supporter } from './supporter';
 import { aiLabels } from './aiLabels';
 import { maps } from './maps';
 import { browser } from './browser';
+import { downloads } from './downloads';
 
 export const ptBR: Strings = {
   appName: 'Nemo',
@@ -137,4 +138,5 @@ export const ptBR: Strings = {
   aiLabels,
   maps,
   browser,
+  downloads,
 };

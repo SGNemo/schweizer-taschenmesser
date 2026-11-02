@@ -4599,6 +4599,7 @@ dependencies = [
  "serde_json",
  "taschenmesser-browser-filter",
  "taschenmesser-disk-scan",
+ "taschenmesser-downloader",
  "taschenmesser-local-api",
  "taschenmesser-local-llm",
  "taschenmesser-system-info",
@@ -4642,6 +4643,17 @@ dependencies = [
  "sha2",
  "windows 0.61.3",
  "windows-core 0.61.2",
+]
+
+[[package]]
+name = "taschenmesser-downloader"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
+ "ureq",
+ "url",
 ]
 
 [[package]]
