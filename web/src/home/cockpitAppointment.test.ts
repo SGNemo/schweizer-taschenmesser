@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CalendarItem } from '@/core/modules/types';
-import { minutesUntil, nextAppointment } from './cockpitStats';
+import { minutesUntil, nextAppointment } from './cockpitAppointment';
 
 const item = (over: Partial<CalendarItem>): CalendarItem => ({
   id: 'x',

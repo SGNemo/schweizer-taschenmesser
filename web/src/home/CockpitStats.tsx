@@ -6,7 +6,7 @@ import { useLiveAttention } from '@/core/modules/liveAttention';
 import { now, pad2, today } from '@/core/time/now';
 import { tCockpit } from '@/strings.cockpit';
 import styles from './CockpitStats.module.css';
-import { minutesUntil, nextAppointment } from './cockpitStats';
+import { minutesUntil, nextAppointment } from './cockpitAppointment';
 
 /** The clock and today's date, re-read every 20 seconds (the minute never lags by more than that). */
 function useNow(): { time: string; date: string; hhmm: string } {
