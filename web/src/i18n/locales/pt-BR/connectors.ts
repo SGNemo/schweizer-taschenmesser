@@ -53,6 +53,15 @@ export const connectors: Strings['connectors'] = {
     'O acesso é revogado no serviço e os dados de login salvos são apagados deste dispositivo.',
   keepData: 'Manter eventos importados',
   deleteData: 'Excluir eventos importados',
+  accounts: 'Contas',
+  accountsHint:
+    'Você pode usar várias contas do Google. Cada uma entra separadamente e pode ser removida separadamente.',
+  addAccount: 'Adicionar outra conta',
+  accountUnnamed: (n: number) => `Conta ${n}`,
+  removeAccount: 'Remover conta',
+  removeAccountTitle: (name: string) => `Remover ${name}?`,
+  removeAccountBody:
+    'O acesso desta conta é revogado no serviço e os dados de login dela são apagados deste dispositivo. As outras contas continuam.',
   client: {
     title: 'Aplicativo Google próprio',
     intro:

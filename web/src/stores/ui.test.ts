@@ -85,3 +85,29 @@ describe('sidebar state', () => {
     expect(localStorage.getItem('tm-nav-closed')).toBeNull();
   });
 });
+
+describe('cockpit flags', () => {
+  afterEach(() => {
+    const ui = useUiStore.getState();
+    ui.setCockpit(false);
+    ui.setCockpitStart(false);
+    ui.setCockpitAwake(false);
+  });
+
+  it('remembers the cockpit, "start in cockpit" and keep-awake on this device; off removes the keys', () => {
+    const ui = useUiStore.getState();
+    expect(ui.cockpit).toBe(false);
+    ui.setCockpit(true);
+    ui.setCockpitStart(true);
+    ui.setCockpitAwake(true);
+    expect(useUiStore.getState().cockpit).toBe(true);
+    expect(localStorage.getItem('tm-cockpit')).toBe('1');
+    expect(localStorage.getItem('tm-cockpit-start')).toBe('1');
+    expect(localStorage.getItem('tm-cockpit-awake')).toBe('1');
+    ui.setCockpit(false);
+    ui.setCockpitStart(false);
+    ui.setCockpitAwake(false);
+    for (const k of ['tm-cockpit', 'tm-cockpit-start', 'tm-cockpit-awake'])
+      expect(localStorage.getItem(k)).toBeNull();
+  });
+});

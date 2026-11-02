@@ -6,12 +6,12 @@ import { NetBlockedError } from '@/core/net/netlog';
 import { createTestDb } from '@/test-utils';
 import { createBuilder, useBuildStore, type BuilderDeps } from '../own/builder';
 import { inlineCompute } from '../own/compute';
-import { tileBbox, tilesCovering } from '../own/cut';
+import { tileBbox, tileId, tilesCovering } from '../own/cut';
 import { overpassBusyFixture, overpassFixture } from '../own/fixtures';
 import { CELL_ZOOM } from '../own/plan';
 import { encodePmtiles } from '../own/pmtiles';
-import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../own/sample';
-import { regionSchema, tileSchema } from '../schema';
+import { SAMPLE_CENTER, SAMPLE_REGION_ID, samplePmtiles, sampleRegion } from '../own/sample';
+import { nameSchema, regionSchema, tileSchema } from '../schema';
 
 const OVERPASS = 'https://overpass-api.de/api/interpreter';
 
@@ -65,11 +65,13 @@ function setup(overrides: Partial<BuilderDeps> = {}) {
   const db = createTestDb();
   const regions = createRepo(tableName('maps', 'region'), regionSchema, db, { local: true });
   const tiles = createRepo(tableName('maps', 'tile'), tileSchema, db, { local: true });
+  const names = createRepo(tableName('maps', 'name'), nameSchema, db, { local: true });
   const fetch = vi.fn(async () => okAnswer()) as unknown as typeof globalThis.fetch;
   const sleep = vi.fn(async (_ms: number) => undefined);
   const deps: BuilderDeps = {
     regions,
     tiles,
+    names,
     fetch,
     headers: () => ({ 'User-Agent': 'Nemo' }),
     overpassUrl: () => OVERPASS,
@@ -84,6 +86,7 @@ function setup(overrides: Partial<BuilderDeps> = {}) {
     db,
     regions,
     tiles,
+    names,
     fetch: fetch as unknown as ReturnType<typeof vi.fn>,
     sleep,
     builder: createBuilder(deps),
@@ -533,5 +536,77 @@ describe('own map from a region file', () => {
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((t) => t.gzip && new Uint8Array(t.bytes)[0] === 0x1f)).toBe(true);
     expect((await regions.get(r.id!))!.credit).toBeUndefined();
+  });
+});
+
+describe('names index of the own map', () => {
+  const FILE = 'https://maps.example/nemostadt.pmtiles';
+  const input = { name: 'Nemostadt', bbox: one, centre: SAMPLE_CENTER, level: 'lean' as const };
+
+  it('is written per cell from the deepest tiles, rebuilt on "Genauer machen", gone with the region', async () => {
+    const { builder, regions, names } = setup();
+    const { id } = await start(builder, input);
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    expect((await regions.get(id))!.indexedAt).toBe(1_700_000_000_000);
+    const lean = await names.active().toArray();
+    expect(lean.length).toBeGreaterThan(0);
+    expect(lean.every((n) => n.regionId === id && n.cell === tileId(cell.z, cell.x, cell.y))).toBe(
+      true,
+    );
+    const byName = new Map(lean.map((n) => [n.name, n]));
+    expect(byName.get('Hauptstraße')).toMatchObject({ kind: 'street', tokens: ['hauptstrasse'] });
+    expect(byName.get('Nemostadt')?.kind).toBe('place');
+    // POIs belong to the full level: not known yet.
+    expect(byName.has('Café Flosse')).toBe(false);
+
+    await builder.upgrade(id);
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    const full = await names.active().toArray();
+    expect(full.some((n) => n.cell === tileId(cell.z, cell.x, cell.y))).toBe(false);
+    expect(full.every((n) => n.regionId === id && n.cell.startsWith('14/'))).toBe(true);
+    expect(full.map((n) => n.name)).toContain('Café Flosse');
+    expect(full.map((n) => n.name)).toContain('Hauptstraße');
+
+    await builder.remove(id);
+    expect(await names.table.count()).toBe(0);
+  });
+
+  it('is written for a region copied from a file as well', async () => {
+    const bytes = samplePmtiles();
+    const fetch = async (_input: unknown, init?: RequestInit) => {
+      const m = /^bytes=(\d+)-(\d+)$/.exec(String((init?.headers as Record<string, string>).Range));
+      const start = Number(m![1]);
+      const end = Math.min(Number(m![2]), bytes.length - 1);
+      return new Response(bytes.slice(start, end + 1), { status: 206 });
+    };
+    const { builder, regions, names } = setup({
+      fetch: fetch as unknown as typeof globalThis.fetch,
+    });
+    const { id } = await start(builder, { ...input, fileUrl: FILE });
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    expect((await regions.get(id))!.indexedAt).toBe(1_700_000_000_000);
+    const rows = await names.active().toArray();
+    expect(rows.map((n) => n.name)).toContain('Nemostadt');
+    expect(rows.every((n) => n.regionId === id)).toBe(true);
+  });
+
+  it('ensureIndexed catches up a finished region without an index from its stored tiles, once', async () => {
+    const { builder, regions, tiles, names } = setup();
+    const { region, tiles: stored } = sampleRegion();
+    await regions.create(region, { id: SAMPLE_REGION_ID });
+    await tiles.createMany(stored.map((t) => ({ id: t.id, data: t.data })));
+    expect((await regions.get(SAMPLE_REGION_ID))!.indexedAt).toBeUndefined();
+
+    await builder.ensureIndexed();
+    const rows = await names.active().toArray();
+    expect(rows.map((n) => n.name)).toContain('Rathaus');
+    expect(rows.map((n) => n.name)).toContain('Amselweg');
+    expect(rows.every((n) => n.regionId === SAMPLE_REGION_ID)).toBe(true);
+    expect((await regions.get(SAMPLE_REGION_ID))!.indexedAt).toBe(1_700_000_000_000);
+
+    // A second run has nothing to do: the rows stay as they are.
+    const before = await names.table.count();
+    await builder.ensureIndexed();
+    expect(await names.table.count()).toBe(before);
   });
 });

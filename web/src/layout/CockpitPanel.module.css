@@ -1,0 +1,44 @@
+/* A module on top of the cockpit: dimmed overview behind, the page in a surface that scrolls on its own. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-fab);
+  display: flex;
+  justify-content: center;
+  background: var(--overlay);
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, var(--page-wide));
+  height: 100dvh;
+  background: var(--bg);
+  box-shadow: var(--shadow-2);
+  outline: none;
+}
+@media (min-width: 900px) {
+  .panel {
+    margin: var(--space-4);
+    height: calc(100dvh - 2 * var(--space-4));
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  padding-top: calc(var(--space-2) + env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.title {
+  font-weight: var(--weight-semibold);
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4) var(--page-gutter) var(--space-6);
+}

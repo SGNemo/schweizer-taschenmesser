@@ -144,6 +144,52 @@ async function mockOsm(page: Page) {
   return seen;
 }
 
+/**
+ * The fixture town goes straight into the module's local tables, in the row shape the repo writes
+ * (envelope + data; nothing of it is ever queued for sync): an own map without a build.
+ */
+async function storeSampleTown(page: Page) {
+  const { id, region, tiles } = sampleRegion();
+  await page.evaluate(
+    async ({ id, region, tiles }) => {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onsuccess = () => resolve(open.result);
+        open.onerror = () => reject(open.error);
+      });
+      const envelope = (key: string) => ({
+        id: key,
+        createdAt: 1_700_000_000_000,
+        updatedAt: 1_700_000_000_000,
+        deviceId: 'e2e',
+        deletedAt: null,
+        _f: {},
+      });
+      const tx = db.transaction(['maps_region', 'maps_tile'], 'readwrite');
+      tx.objectStore('maps_region').put({ ...region, ...envelope(id) });
+      for (const t of tiles)
+        tx.objectStore('maps_tile').put({
+          ...t.data,
+          bytes: new Uint8Array(t.data.bytes).buffer,
+          ...envelope(t.id),
+        });
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+    },
+    {
+      id,
+      region,
+      tiles: tiles.map((t) => ({
+        id: t.id,
+        data: { ...t.data, bytes: Array.from(new Uint8Array(t.data.bytes)) },
+      })),
+    },
+  );
+}
+
 test.describe('Karten & Orte', () => {
   test('the module is off until it is switched on; then the lists open without any request', async ({
     page,
@@ -299,47 +345,7 @@ test.describe('Karten & Orte', () => {
     await enable(page, 'maps');
     await ready(page, '/maps');
 
-    // Package 1 has no builder yet: the fixture town goes straight into the module's local tables,
-    // in the row shape the repo writes (envelope + data; nothing of it is ever queued for sync).
-    const { id, region, tiles } = sampleRegion();
-    await page.evaluate(
-      async ({ id, region, tiles }) => {
-        const db = await new Promise<IDBDatabase>((resolve, reject) => {
-          const open = indexedDB.open('taschenmesser');
-          open.onsuccess = () => resolve(open.result);
-          open.onerror = () => reject(open.error);
-        });
-        const envelope = (key: string) => ({
-          id: key,
-          createdAt: 1_700_000_000_000,
-          updatedAt: 1_700_000_000_000,
-          deviceId: 'e2e',
-          deletedAt: null,
-          _f: {},
-        });
-        const tx = db.transaction(['maps_region', 'maps_tile'], 'readwrite');
-        tx.objectStore('maps_region').put({ ...region, ...envelope(id) });
-        for (const t of tiles)
-          tx.objectStore('maps_tile').put({
-            ...t.data,
-            bytes: new Uint8Array(t.data.bytes).buffer,
-            ...envelope(t.id),
-          });
-        await new Promise<void>((resolve, reject) => {
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => reject(tx.error);
-        });
-        db.close();
-      },
-      {
-        id,
-        region,
-        tiles: tiles.map((t) => ({
-          id: t.id,
-          data: { ...t.data, bytes: Array.from(new Uint8Array(t.data.bytes)) },
-        })),
-      },
-    );
+    await storeSampleTown(page);
 
     await ready(page, '/maps?view=map');
     await expect(page.getByTestId('tile-map')).toBeVisible();
@@ -476,5 +482,32 @@ test.describe('Karten & Orte', () => {
     await test
       .info()
       .attach('own-map-file', { body: await map.screenshot(), contentType: 'image/png' });
+  });
+
+  test('the search answers from the own map first; the words go online only on click', async ({
+    page,
+  }) => {
+    const seen = await mockOsm(page);
+    const nominatim = () => seen.filter((u) => hostOf(u) === 'nominatim.openstreetmap.org');
+    await enable(page, 'maps');
+    await ready(page, '/maps');
+    await storeSampleTown(page);
+    await ready(page, '/maps?view=map');
+    await page.getByLabel('Ort oder Adresse suchen').fill('Amsel');
+    await page.locator('main form').getByRole('button', { name: 'Suchen' }).click();
+    const own = page.getByTestId('map-own-hits');
+    await expect(own).toContainText('Amselweg');
+    await expect(own).toContainText('Straße · Nemostadt (Beispiel)');
+    await expect(page.getByText('Aus deiner Karte')).toBeVisible();
+    expect(nominatim()).toEqual([]);
+    await expect(page.getByTestId('map-hits')).toHaveCount(0);
+    // The words leave the device on this click only.
+    await page.getByTestId('map-search-online').click();
+    await expect(page.getByTestId('map-hits')).toContainText('Erlangen');
+    expect(nominatim()).toHaveLength(1);
+    // A hit of the own map opens the place on the map.
+    await own.getByText('Amselweg').click();
+    await expect(page.getByTestId('map-selection')).toContainText('Amselweg');
+    await expect(page.getByTestId('tile-map')).toBeVisible();
   });
 });

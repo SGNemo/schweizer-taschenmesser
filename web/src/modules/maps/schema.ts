@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NAME_KINDS } from './own/names';
 
 export const PLACE_CATEGORIES = ['home', 'work', 'shop', 'health', 'leisure', 'other'] as const;
 export type PlaceCategory = (typeof PLACE_CATEGORIES)[number];
@@ -83,6 +84,8 @@ export const regionSchema = z.object({
   sourceUrl: z.string().optional(),
   /** Attribution the region file names (plain text), shown with the region. */
   credit: z.string().optional(),
+  /** Epoch ms when the names index of the region was last completed; unset = not indexed yet. */
+  indexedAt: z.number().int().optional(),
 });
 export type Region = z.output<typeof regionSchema>;
 
@@ -97,3 +100,18 @@ export const tileSchema = z.object({
   size: z.number().int().min(0),
 });
 export type Tile = z.output<typeof tileSchema>;
+
+/**
+ * One name the own map knows (a place, street, water, POI or named area) with a position, written per
+ * build cell (`cell` = `z/x/y`) and searched by its words (`tokens`, multi-entry index).
+ */
+export const nameSchema = z.object({
+  regionId: z.string().min(1),
+  cell: z.string().min(1),
+  name: z.string().min(1),
+  tokens: z.array(z.string().min(1)),
+  kind: z.enum(NAME_KINDS),
+  lat: z.number().min(-90).max(90),
+  lon: z.number().min(-180).max(180),
+});
+export type NameRow = z.output<typeof nameSchema>;

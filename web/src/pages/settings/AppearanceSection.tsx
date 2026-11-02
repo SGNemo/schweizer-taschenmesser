@@ -19,7 +19,9 @@ import {
   type TextSizeChoice,
   type ThemeChoice,
 } from '@/stores/ui';
-import { Segmented, SelectField, SettingRow, SettingsGroup } from '@/ui';
+import { getPlatform } from '@/core/platform';
+import { tCockpit } from '@/strings.cockpit';
+import { Segmented, SelectField, SettingRow, SettingsGroup, Switch } from '@/ui';
 import { FoldedGroup } from './FoldedGroup';
 import { PaletteRows } from './PaletteRows';
 
@@ -70,6 +72,11 @@ export function AppearanceSection() {
   const setSidebar = useUiStore((s) => s.setSidebar);
   const colorMode = useUiStore((s) => s.colorMode);
   const setColorMode = useUiStore((s) => s.setColorMode);
+  const cockpitStart = useUiStore((s) => s.cockpitStart);
+  const setCockpitStart = useUiStore((s) => s.setCockpitStart);
+  const cockpitAwake = useUiStore((s) => s.cockpitAwake);
+  const setCockpitAwake = useUiStore((s) => s.setCockpitAwake);
+  const tx = tCockpit.use();
   const r = t.settings.rows;
   const { tier } = useSupporter();
   const chosenPalette = usePaletteStore((p) => p.chosen);
@@ -210,6 +217,28 @@ export function AppearanceSection() {
             onChange={setHomeView}
           />
         </SettingRow>
+        <SettingRow id="appearance--cockpitStart" label={tx.startTitle} description={tx.startHint}>
+          <Switch
+            label={tx.startTitle}
+            labelHidden
+            checked={cockpitStart}
+            onChange={setCockpitStart}
+          />
+        </SettingRow>
+        {getPlatform().kind === 'android' ? (
+          <SettingRow
+            id="appearance--cockpitAwake"
+            label={tx.awakeTitle}
+            description={tx.awakeHint}
+          >
+            <Switch
+              label={tx.awakeTitle}
+              labelHidden
+              checked={cockpitAwake}
+              onChange={setCockpitAwake}
+            />
+          </SettingRow>
+        ) : null}
       </FoldedGroup>
     </SettingsGroup>
   );

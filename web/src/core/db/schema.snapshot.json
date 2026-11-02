@@ -1,5 +1,5 @@
 {
-  "version": 21,
+  "version": 22,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -29,6 +29,7 @@
     "invoices_invoice": "id, updatedAt, dueDate, status",
     "lists_item": "id, updatedAt, listId, done",
     "lists_list": "id, updatedAt, kind",
+    "maps_name": "id, updatedAt, regionId, cell, *tokens",
     "maps_place": "id, updatedAt, createdAt",
     "maps_region": "id, updatedAt, status",
     "maps_route": "id, updatedAt, createdAt",

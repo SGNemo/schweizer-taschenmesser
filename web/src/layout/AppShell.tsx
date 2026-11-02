@@ -31,6 +31,11 @@ import { MoreSheet } from './MoreSheet';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useNavTree } from './useNavItems';
 import { useShortcuts } from './useShortcuts';
+import { CockpitBar } from './CockpitBar';
+import { CockpitPanel } from './CockpitPanel';
+import { COCKPIT_HOME, useCockpit } from './useCockpit';
+import { Home } from '@/home/Home';
+import { PageContainer } from './PageContainer';
 import { useVoiceKey } from './voice/useVoiceKey';
 import { VoiceStatus } from './voice/VoiceStatus';
 import styles from './AppShell.module.css';
@@ -60,6 +65,9 @@ export function AppShell() {
   useNativeShare();
   useShortcuts();
   useVoiceKey();
+  useCockpit();
+  // Cockpit: the overview alone, full width; modules open in a panel on top (CockpitPanel).
+  const cockpit = useUiStore((s) => s.cockpit);
 
   // Global shortcuts: Ctrl/Cmd+K opens the command palette, Ctrl/Cmd+. the tools, Alt+Home goes home.
   useEffect(() => {
@@ -92,6 +100,10 @@ export function AppShell() {
       // PWA / Android shortcut "Schnell erfassen" (`/?capture=1`).
       setQuickAddOpen(true);
       void navigate(location.pathname, { replace: true });
+    } else if (params.get('cockpit')) {
+      // `/?cockpit=1`: straight into the cockpit (screenshots, a launcher shortcut).
+      useUiStore.getState().setCockpit(true);
+      void navigate(COCKPIT_HOME, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the first render of the shell
   }, []);
@@ -105,19 +117,25 @@ export function AppShell() {
     if (area && item) rememberAreaModule(area.id, item.to);
   }, [tree, location.pathname]);
 
-  // Move focus to the main region on navigation (screen readers / keyboard users).
+  // Move focus to the main region on navigation (screen readers / keyboard users); in the cockpit
+  // the panel takes focus itself.
   useEffect(() => {
-    document.getElementById('main')?.focus({ preventScroll: true });
-  }, [location.pathname]);
+    if (!cockpit) document.getElementById('main')?.focus({ preventScroll: true });
+  }, [location.pathname, cockpit]);
 
   const overflowAreas = tree.areas.slice(BOTTOM_AREA_SLOTS);
   // A focus screen (`/<module>/focus/…`) shows one thing: no menus, no quick add, no banners.
-  const focusing = isFocusPath(location.pathname);
+  const focusing = isFocusPath(location.pathname) || cockpit;
   // A page with its own add field has no use for the round quick-add button.
   const hideFab = usePageChromeStore((s) => s.chrome.hideFab);
 
   return (
-    <div className={styles.shell} data-rail={rail} data-focus={focusing ? 'true' : undefined}>
+    <div
+      className={styles.shell}
+      data-rail={rail}
+      data-focus={focusing ? 'true' : undefined}
+      data-cockpit={cockpit ? 'true' : undefined}
+    >
       <a href="#main" className={styles.skip}>
         {t.nav.skipToContent}
       </a>
@@ -143,14 +161,26 @@ export function AppShell() {
           </>
         )}
         <main id="main" tabIndex={-1} className={styles.main}>
-          <Outlet />
+          {cockpit ? (
+            <>
+              <PageContainer variant="full">
+                <Home cockpit />
+              </PageContainer>
+              <CockpitPanel open={location.pathname !== COCKPIT_HOME}>
+                <Outlet />
+              </CockpitPanel>
+            </>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
 
-      {focusing ? null : (
+      {cockpit ? <CockpitBar /> : null}
+      {focusing && !cockpit ? null : (
         <>
-          <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />
-          {hideFab ? null : (
+          {cockpit ? null : <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />}
+          {hideFab || cockpit ? null : (
             <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
           )}
           <QuickAdd />

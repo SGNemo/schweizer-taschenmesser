@@ -54,6 +54,15 @@ export const connectors: Strings['connectors'] = {
     'L’accès est révoqué auprès du service et les identifiants enregistrés sont supprimés de cet appareil.',
   keepData: 'Garder les événements importés',
   deleteData: 'Supprimer les événements importés',
+  accounts: 'Comptes',
+  accountsHint:
+    'Plusieurs comptes Google sont possibles. Chacun se connecte séparément et peut être retiré séparément.',
+  addAccount: 'Ajouter un autre compte',
+  accountUnnamed: (n: number) => `Compte ${n}`,
+  removeAccount: 'Retirer le compte',
+  removeAccountTitle: (name: string) => `Retirer ${name} ?`,
+  removeAccountBody:
+    'L’accès de ce compte est révoqué auprès du service et ses données de connexion sont supprimées de cet appareil. Les autres comptes restent.',
   client: {
     title: 'Votre propre application Google',
     intro:

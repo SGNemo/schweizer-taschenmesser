@@ -50,7 +50,12 @@ export function workerCompute(make: () => WorkerLike = makeBrowserWorker): Compu
     run(req) {
       return new Promise<BuildResult>((resolve, reject) => {
         pending.set(req.id, { resolve, reject });
-        const transfer = req.kind === 'cell' ? [] : req.children.map((c) => c.bytes);
+        const transfer =
+          req.kind === 'cell'
+            ? []
+            : req.kind === 'parent'
+              ? req.children.map((c) => c.bytes)
+              : req.tiles.map((t) => t.bytes);
         ensure().postMessage(req, transfer);
       });
     },
