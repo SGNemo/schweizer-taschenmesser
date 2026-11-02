@@ -1,6 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, showPreview } from './helpers';
 import { mockSpotify, seedConnected } from './spotify-mock';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 /**
  * The Spotify player (library | list | bar) against a mocked Web API: open a playlist and see every song,

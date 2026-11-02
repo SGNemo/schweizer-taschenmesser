@@ -21,9 +21,10 @@ import { Suspense, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { lazyComponent } from '@/core/modules/lazy';
+import { isWidgetVisible, widgetMaturity } from './maturity';
 import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
-import type { WidgetDef, WidgetSize } from '@/core/modules/types';
+import type { Maturity, WidgetDef, WidgetSize } from '@/core/modules/types';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
@@ -81,6 +82,8 @@ import {
 interface Entry extends WidgetDef {
   key: string;
   moduleId: string;
+  /** Module maturity tightened by the widget's own (`home/maturity.ts`); drives the badge. */
+  effectiveMaturity: Maturity;
   Component: ReturnType<typeof lazyComponent>;
 }
 
@@ -101,6 +104,7 @@ const allEntries = (): Entry[] =>
         ...w,
         to: w.to ?? m.routes?.[0]?.path,
         moduleId: m.id,
+        effectiveMaturity: widgetMaturity(m.maturity, w),
         key,
         Component: componentFor(key, w.component),
       };
@@ -134,11 +138,20 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const editing = useUiStore((s) => s.homeEditing);
   const setEditing = useUiStore((s) => s.setHomeEditing);
 
-  const entries = useMemo(
-    () => withoutFolded(allEntries().filter((e) => states?.[e.moduleId])),
-    [states],
-  );
   const layout = saved ?? DEFAULT_LAYOUT;
+  const showPreview = useUiStore((s) => s.showPreview);
+  // Widgets of enabled modules; a widget marked preview only with "In Arbeit anzeigen" or when pinned.
+  const entries = useMemo(
+    () =>
+      withoutFolded(
+        allEntries().filter(
+          (e) =>
+            states?.[e.moduleId] &&
+            isWidgetVisible(e.key, e, { showPreview, pinned: layout.pinned }),
+        ),
+      ),
+    [states, showPreview, layout.pinned],
+  );
   const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
   const homeView = useUiStore((s) => s.homeView);
   const setHomeView = useUiStore((s) => s.setHomeView);
@@ -381,7 +394,12 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
             <li key={e.key}>
               <Switch
                 label={e.title}
-                hint={allManifests.find((m) => m.id === e.moduleId)?.name}
+                hint={[
+                  allManifests.find((m) => m.id === e.moduleId)?.name,
+                  e.effectiveMaturity === 'preview' ? t.settings.maturity.badge : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
                 checked={!layout.hidden.includes(e.key)}
                 onChange={() => void updateLayout({ hidden: toggleHidden(layout, e.key) }, scope)}
               />

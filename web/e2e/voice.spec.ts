@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { dismissNotices, ready } from './helpers';
+import { dismissNotices, ready, showPreview } from './helpers';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 test.beforeEach(({ page }) => dismissNotices(page));
 

@@ -16,6 +16,7 @@ const tool: ToolManifest = {
   group: 'basis',
   offline: true,
   defaultEnabled: true,
+  maturity: 'stable',
   order: 40,
   component: () => import('./Tool'),
   expression(query) {

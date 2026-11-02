@@ -36,6 +36,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Area | Location | Key names |
 |---|---|---|
 | **Module registry** | `web/src/core/modules/registry.ts` (`import.meta.glob('../../modules/*/manifest.ts')`) | `allManifests`, `visibleManifests`, `availableManifestsFor(kind)`, `validateManifest` |
+| **Maturity filter (`maturity`)** | `core/modules/available.ts` `isVisible`/`catalogManifests`/`useCatalogManifests`, `core/tools/state.ts` `isVisible`/`visibleTools`, `core/settings/registry/registry.ts` `isMaturityVisible`, `home/maturity.ts`; switch `stores/ui.ts` `showPreview` (`tm-show-preview`) | catalogues only (library, toolbox, palette, home sheet, settings); `check:modules` requires the field |
 | **Platform filter (`platforms`)** | `manifest.platforms?: PlatformKind[]` (missing = everywhere); runtime code uses `availableManifests()` in `core/modules/available.ts` (asks `getPlatform()`; separate file to avoid an import cycle through the DB). Router, nav, dashboard, library, services, settings all use it. E2E builds can pose as another platform via `localStorage.__tmPlatformKind` (`core/platform/web.ts`). | `availableManifests`, `isAvailableOn` |
 | Manifest types | `web/src/core/modules/types.ts` | `ModuleManifest`, `ModuleContributions`, `CollectionDef`, `PageLayout`, `CalendarItem`, `ExternalCalendarSink` |
 | Contributions (calendar, notifications) | `web/src/core/modules/contributions.ts` | `collectCalendarItems`, `collectNotifications`, `useCalendarItems` |

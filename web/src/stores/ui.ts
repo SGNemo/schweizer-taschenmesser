@@ -68,6 +68,8 @@ const DENSITY_KEY = 'tm-density';
 const LEADING_KEY = 'tm-leading';
 const MOTION_KEY = 'tm-motion';
 const HOME_VIEW_KEY = 'tm-home-view';
+/** "In Arbeit anzeigen": `'1'` while preview modules, tools, widgets and sections are listed (off by default). */
+const SHOW_PREVIEW_KEY = 'tm-show-preview';
 /** Cockpit mode (overview alone on the screen): remembered state, "start in cockpit", keep the screen on (Android). */
 const COCKPIT_KEY = 'tm-cockpit';
 const COCKPIT_START_KEY = 'tm-cockpit-start';
@@ -230,6 +232,13 @@ interface UiState {
   setMotion(motion: MotionChoice): void;
   homeView: HomeViewChoice;
   setHomeView(view: HomeViewChoice): void;
+  /**
+   * "In Arbeit anzeigen" (Settings → Darstellung → Mehr Felder anzeigen): lists what has
+   * `maturity: 'preview'`. Device-local and presentation only: it never writes a module, tool or
+   * widget choice, so switching it changes no stored value.
+   */
+  showPreview: boolean;
+  setShowPreview(on: boolean): void;
   /** Cockpit mode is on (device-local, survives a reload). */
   cockpit: boolean;
   setCockpit(on: boolean): void;
@@ -359,6 +368,11 @@ export const useUiStore = create<UiState>((set) => ({
   setHomeView(homeView) {
     storeChoice(HOME_VIEW_KEY, homeView, homeView === 'calm');
     set({ homeView });
+  },
+  showPreview: readFlag(SHOW_PREVIEW_KEY),
+  setShowPreview(showPreview) {
+    storeChoice(SHOW_PREVIEW_KEY, '1', !showPreview);
+    set({ showPreview });
   },
   cockpit: readFlag(COCKPIT_KEY) || readFlag(COCKPIT_START_KEY),
   setCockpit(cockpit) {

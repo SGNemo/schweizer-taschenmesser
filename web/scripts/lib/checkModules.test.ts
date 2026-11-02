@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkDeleteSource,
+  checkMaturity,
   checkModule,
   checkRowSource,
   checkSettingsSource,
@@ -15,12 +16,34 @@ const manifest = {
   ],
   layout: 'wide',
   platforms: ['desktop'],
+  maturity: 'stable',
   seed: { version: 1, dependsOn: [] },
 };`;
 const has =
   (...files: string[]) =>
   (rel: string) =>
     files.includes(rel);
+
+describe('checkMaturity', () => {
+  it('wants maturity in every module and tool manifest (build error on purpose)', () => {
+    expect(checkMaturity('x', good)).toEqual([]);
+    expect(checkMaturity('x', good.replace("maturity: 'stable',", ''))).toEqual([
+      "x: manifest has no `maturity` ('stable' or 'preview' is mandatory)",
+    ]);
+    expect(checkMaturity('x', good.replace("'stable'", "'preview'"))).toEqual([]);
+    expect(checkMaturity('tool y', good.replace("'stable'", "'beta'")).join()).toContain(
+      'unknown maturity "beta"',
+    );
+    // checkModule reports it too, for modules.
+    expect(
+      checkModule({
+        id: 'x',
+        manifest: good.replace("maturity: 'stable',", ''),
+        fileExists: () => true,
+      }).join(),
+    ).toContain('no `maturity`');
+  });
+});
 
 describe('checkModule', () => {
   it('accepts a complete manifest', () => {
@@ -108,7 +131,7 @@ describe('checkModule: seed contract', () => {
 });
 
 describe('checkModule: retired modules', () => {
-  const retired = `const manifest = { id: 'x', retired: true, widgets: [], seed: { version: 1, dependsOn: [], none: 'retired' } };`;
+  const retired = `const manifest = { id: 'x', retired: true, maturity: 'stable', widgets: [], seed: { version: 1, dependsOn: [], none: 'retired' } };`;
 
   it('need no widget, layout or seed.ts', () => {
     expect(checkModule({ id: 'x', manifest: retired, fileExists: has() })).toEqual([]);

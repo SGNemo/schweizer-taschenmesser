@@ -77,7 +77,14 @@ export function ToolLibrary() {
                     icon={tool.icon}
                     name={tool.name}
                     description={tool.description}
-                    badges={<Badge>{tool.offline ? s.offline : s.online}</Badge>}
+                    badges={
+                      <>
+                        <Badge>{tool.offline ? s.offline : s.online}</Badge>
+                        {tool.maturity === 'preview' ? (
+                          <Badge>{t.settings.maturity.badge}</Badge>
+                        ) : null}
+                      </>
+                    }
                   >
                     <Switch
                       label={s.enable(tool.name)}

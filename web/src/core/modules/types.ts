@@ -77,6 +77,14 @@ export const ALL_WIDGET_SIZES: readonly WidgetSize[] = ['s', 'm', 'l'];
  * `registry.test.ts` and `npm run check:modules`). The component loads lazily, reads its own data
  * with `useLiveQuery`, and shows an empty state with a primary action when there is no data.
  */
+/**
+ * How finished a module, tool, widget or settings section is. `preview` = built and usable, but
+ * hidden from the library, toolbox, palette, home catalogue and settings until "In Arbeit anzeigen"
+ * (Settings → Darstellung → Mehr Felder anzeigen) is on; then it shows with an "In Arbeit" badge.
+ * Only catalogues and default lists hide it: data, routes and anything the user switched on stay.
+ */
+export type Maturity = 'stable' | 'preview';
+
 export interface WidgetDef {
   /** Unique within the module; the stored key is `<moduleId>:<id>`. */
   id: string;
@@ -87,6 +95,11 @@ export interface WidgetDef {
   component: LazyComponent;
   /** Where the title links to (a small arrow in the widget header), usually the module page. */
   to?: string;
+  /**
+   * A widget inherits the module's `maturity`; `'preview'` here tightens it for this widget only
+   * (hidden from the home catalogue until "In Arbeit anzeigen" is on, see `home/maturity.ts`).
+   */
+  maturity?: 'preview';
 }
 
 /* ---- AI schema (compact, sent to the LLM in stage 2; never contains user data) ---- */
@@ -439,6 +452,12 @@ export interface ModuleManifest {
   requires?: string[];
   /** Only listed in the library in dev builds / when VITE_INCLUDE_EXAMPLE=true. */
   devOnly?: boolean;
+  /**
+   * Required. `preview` hides the module from the library, palette and setup catalogues until
+   * "In Arbeit anzeigen" is on (`core/modules/available.ts` `isVisible`); a module the user has
+   * already switched on stays on and reachable. `npm run check:modules` fails without it.
+   */
+  maturity: Maturity;
   /**
    * Test data contract (required): version and dependencies of `seed.ts`, which generates the
    * module's demo data for the Dev-Preview build, E2E tests and screenshots. See `core/seed/`.
