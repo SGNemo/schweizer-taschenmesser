@@ -5,6 +5,8 @@
  * blocked or full, and the editor works without it.
  */
 export interface NoteDraft {
+  /** Id a not yet stored page will be created with. */
+  id?: string;
   title: string;
   body: string;
   at: number;
@@ -26,7 +28,12 @@ export function loadDraft(id: string): NoteDraft | undefined {
     if (!raw) return undefined;
     const v = JSON.parse(raw) as Partial<NoteDraft>;
     return typeof v.title === 'string' && typeof v.body === 'string' && typeof v.at === 'number'
-      ? { title: v.title, body: v.body, at: v.at }
+      ? {
+          title: v.title,
+          body: v.body,
+          at: v.at,
+          ...(typeof v.id === 'string' ? { id: v.id } : {}),
+        }
       : undefined;
   } catch {
     return undefined;

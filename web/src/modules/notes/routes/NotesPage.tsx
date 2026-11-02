@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { now } from '@/core/time/now';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
@@ -38,6 +39,18 @@ const writeLast = (id: string) => {
   }
 };
 
+/**
+ * The app rebuilds its routes when module states change, which can remount this page shortly after it
+ * opened. The chosen page therefore survives a remount: `?new=1` stays in the URL until the user acts,
+ * and the last choice is remembered for a minute (module scope, never stored).
+ */
+let remembered: { sel: Sel; at: number } | null = null;
+const recall = (): Sel | null =>
+  remembered && now() - remembered.at < 60_000 ? remembered.sel : null;
+const remember = (sel: Sel) => {
+  remembered = { sel, at: now() };
+};
+
 export default function NotesPage() {
   const notes = useLiveQuery(() => noteRepo.active().toArray(), []);
   const wide = useMediaQuery('(min-width: 900px)');
@@ -55,12 +68,14 @@ export default function NotesPage() {
   const [query, setQuery] = useState('');
   const [focusMode, setFocusMode] = useState(false);
   const [paneKey, setPaneKey] = useState(0);
-  const [picked, setPicked] = useState<Sel | null>(null);
-  const [seenNew, setSeenNew] = useState(false);
+  const [picked, setPicked] = useState<Sel | null>(() => (wantsNew ? { kind: 'new' } : recall()));
+  const [seenNew, setSeenNew] = useState(wantsNew);
 
   function open(next: Sel) {
     setPaneKey((k) => k + 1);
     setPicked(next);
+    remember(next);
+    if (wantsNew) setParams({}, { replace: true });
     if (next.kind === 'note') writeLast(next.id);
     if (next.kind === 'scratch') writeLast(SCRATCH_ID);
   }
@@ -77,9 +92,6 @@ export default function NotesPage() {
   } else if (!wantsNew && seenNew) {
     setSeenNew(false);
   }
-  useEffect(() => {
-    if (wantsNew) setParams({}, { replace: true });
-  }, [wantsNew, setParams]);
 
   // Default view: the last page (or the scratch pad) is ready to type into at once; on a phone the list comes first.
   const last = readLast();
@@ -156,7 +168,9 @@ export default function NotesPage() {
     </nav>
   );
 
-  const loadingPane = sel?.kind === 'note' && !current && notes !== undefined;
+  // A stored page is shown once the list has loaded (the pane keeps the text it opened with).
+  const waiting = sel?.kind !== 'new' && notes === undefined;
+  const loadingPane = waiting || (sel?.kind === 'note' && !current);
   return (
     <>
       <h1 className="sr-only">{t.notes.title}</h1>
@@ -176,12 +190,20 @@ export default function NotesPage() {
               focusMode={focusMode}
               onToggleFocus={() => setFocusMode((v) => !v)}
               onFullscreen={fullscreen}
-              onBack={wide ? undefined : () => setPicked({ kind: 'list' })}
+              onBack={
+                wide
+                  ? undefined
+                  : () => {
+                      remember({ kind: 'list' });
+                      setPicked({ kind: 'list' });
+                    }
+              }
               onCreated={(id) => {
                 writeLast(id);
-                setPicked({ kind: 'note', id });
+                remember({ kind: 'note', id });
+                if (wantsNew) setParams({}, { replace: true });
               }}
-              onDeleted={() => (wide ? open({ kind: 'scratch' }) : setPicked({ kind: 'list' }))}
+              onDeleted={() => open(wide ? { kind: 'scratch' } : { kind: 'list' })}
               autoFocus={wide || sel.kind === 'new'}
             />
           </div>

@@ -58,12 +58,13 @@ test.describe('desktop layout', () => {
     await enable(page, 'notes');
     await ready(page, '/notes');
     await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await expect(editor(page)).toBeVisible(); // the editor loads lazily
     await page.getByLabel('Titel der Seite').fill('Gartenplan');
     await page.keyboard.press('Enter');
     await page.keyboard.type('Tomaten pflanzen');
-    await expect(page.getByText('Gespeichert')).toBeVisible();
     const list = page.getByRole('navigation', { name: 'Seiten' });
-    await expect(list.getByText('Gartenplan')).toBeVisible();
+    // The list excerpt shows the text once it is stored (autosave).
+    await expect(list.getByText('Tomaten pflanzen')).toBeVisible();
     await list.getByRole('searchbox').fill('tomaten');
     await expect(list.getByText('Gartenplan')).toBeVisible();
     await list.getByRole('searchbox').fill('zzz');

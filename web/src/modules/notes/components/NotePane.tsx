@@ -4,6 +4,7 @@ import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, Icon, IconButton, Skeleton } from '@/ui';
+import { randomId } from '@/core/db/util';
 import { createAutosaver } from '../editor/autosave';
 import { clearDraft, loadDraft, saveDraft } from '../editor/draft';
 import { wordCount } from '../editor/markdown';
@@ -40,7 +41,13 @@ export function NotePane(props: NotePaneProps) {
     existing?.id ?? (scratch ? SCRATCH_ID : null),
   );
   const idRef = useRef<string | null>(pageId);
-  const [draftKey] = useState(pageId ?? 'new');
+  // A page that is not stored yet gets its id up front (kept in the crash draft), so a remount or a
+  // restored draft writes to the same note instead of creating a second one.
+  const [pendingId] = useState<string | null>(() =>
+    pageId ? null : (loadDraft('new')?.id ?? randomId()),
+  );
+  // A page that is not stored yet keeps its draft under `new`; once created it moves to its own key.
+  const draftKey = pageId ?? 'new';
   const [initial] = useState(() => {
     const stored = {
       title: existing?.title ?? prefill?.title ?? '',
@@ -60,6 +67,7 @@ export function NotePane(props: NotePaneProps) {
   const [error, setError] = useState('');
   const readBody = useRef<() => string>(() => initial.body);
   const titleRef = useRef(initial.title);
+  const wantFocus = useRef(false);
   const apiRef = useRef<{ clear: () => void; focus: () => void } | null>(null);
   const callbacks = useRef(props);
   useEffect(() => {
@@ -81,16 +89,18 @@ export function NotePane(props: NotePaneProps) {
         if (id) {
           if (!data.title && !data.body.trim()) return; // never leave a page empty: keep the last text
           await noteRepo.update(id, data);
-        } else if (data.title || data.body.trim()) {
-          const created = await noteRepo.create({ ...data, pinned: false });
-          idRef.current = created.id;
-          setPageId(created.id);
-          callbacks.current.onCreated(created.id);
+        } else if (pendingId && (data.title || data.body.trim())) {
+          if (await noteRepo.table.get(pendingId)) await noteRepo.update(pendingId, data);
+          else await noteRepo.create({ ...data, pinned: false }, { id: pendingId });
+          idRef.current = pendingId;
+          clearDraft('new');
+          setPageId(pendingId);
+          callbacks.current.onCreated(pendingId);
         }
       }
       setWords(wordCount(body));
     },
-    [scratch],
+    [scratch, pendingId],
   );
 
   const [saver] = useState(() => createAutosaver<Snapshot>(() => Promise.resolve()));
@@ -110,28 +120,46 @@ export function NotePane(props: NotePaneProps) {
     saver.schedule(() => ({ title: titleRef.current, body: readBody.current() }));
     clearTimeout(draftTimer.current);
     draftTimer.current = setTimeout(
-      () => saveDraft(draftKey, { title: titleRef.current, body: readBody.current(), at: now() }),
+      () =>
+        saveDraft(draftKey, {
+          id: pendingId ?? undefined,
+          title: titleRef.current,
+          body: readBody.current(),
+          at: now(),
+        }),
       300,
     );
-  }, [draftKey, saver]);
+  }, [draftKey, saver, pendingId]);
   const dirty = useCallback(() => {
     setStatus('saving');
     scheduleSave();
   }, [scheduleSave]);
 
   useEffect(() => {
-    const flush = () => {
-      if (document.visibilityState === 'hidden') void saver.flush();
+    // Leaving or hiding the page: the draft is written synchronously first (an IndexedDB write may not
+    // finish while the page goes away), then the normal save runs.
+    const leave = (onlyWhenHidden: boolean) => {
+      if (onlyWhenHidden && document.visibilityState !== 'hidden') return;
+      if (saver.pending()) {
+        saveDraft(draftKey, {
+          id: pendingId ?? undefined,
+          title: titleRef.current,
+          body: readBody.current(),
+          at: now(),
+        });
+      }
+      void saver.flush();
     };
-    const hide = () => void saver.flush();
-    document.addEventListener('visibilitychange', flush);
-    window.addEventListener('pagehide', hide);
+    const onVisibility = () => leave(true);
+    const onHide = () => leave(false);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onHide);
     return () => {
-      document.removeEventListener('visibilitychange', flush);
-      window.removeEventListener('pagehide', hide);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onHide);
       clearTimeout(draftTimer.current);
     };
-  }, [saver]);
+  }, [saver, draftKey, pendingId]);
 
   // A restored draft is written back right away, so nothing is lost if the tab dies again.
   useEffect(() => {
@@ -170,7 +198,9 @@ export function NotePane(props: NotePaneProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                apiRef.current?.focus();
+                // The editor loads lazily: when it is not there yet, focus it as soon as it is.
+                if (apiRef.current) apiRef.current.focus();
+                else wantFocus.current = true;
               }
             }}
             data-autofocus={initial.title === '' && !initial.body ? true : undefined}
@@ -228,6 +258,11 @@ export function NotePane(props: NotePaneProps) {
           width={prefs.width}
           autoFocus={props.autoFocus}
           apiRef={apiRef}
+          onReady={() => {
+            if (!wantFocus.current) return;
+            wantFocus.current = false;
+            apiRef.current?.focus();
+          }}
           onError={setError}
           onDirty={(read) => {
             readBody.current = read;

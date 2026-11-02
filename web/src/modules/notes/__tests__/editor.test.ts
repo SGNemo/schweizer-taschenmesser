@@ -171,6 +171,11 @@ describe('crash draft', () => {
     expect(loadDraft('p1')).toBeUndefined();
   });
 
+  it('keeps the id a new page will be created with', () => {
+    saveDraft('new', { id: 'abc', title: '', body: 'x', at: 2 });
+    expect(loadDraft('new')).toEqual({ id: 'abc', title: '', body: 'x', at: 2 });
+  });
+
   it('ignores damaged data and unavailable storage', () => {
     localStorage.setItem('tm-notes-draft:bad', '{"title":1}');
     expect(loadDraft('bad')).toBeUndefined();

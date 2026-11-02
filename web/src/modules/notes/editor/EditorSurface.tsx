@@ -1,4 +1,5 @@
 import type { Editor } from '@tiptap/core';
+import { TextSelection } from '@tiptap/pm/state';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef } from 'react';
 import { t } from '@/strings';
@@ -18,6 +19,8 @@ export interface EditorSurfaceProps {
   width: 'narrow' | 'medium' | 'full';
   autoFocus: boolean;
   onError: (message: string) => void;
+  /** The editor exists and `apiRef` is filled. */
+  onReady?: () => void;
   /** Filled with imperative helpers once the editor exists. */
   apiRef?: { current: { clear: () => void; focus: () => void } | null };
 }
@@ -31,6 +34,7 @@ export default function EditorSurface({
   autoFocus,
   onError,
   apiRef,
+  onReady,
 }: EditorSurfaceProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   const editorRef = useRef<Editor | null>(null);
@@ -92,12 +96,40 @@ export default function EditorSurface({
     editorRef.current = editor;
     if (apiRef && editor)
       apiRef.current = {
-        focus: () => void editor.chain().focus('start').run(),
+        // Synchronous (TipTap's own `focus()` is deferred, so fast typing would still land in the title).
+        focus: () => {
+          editor.view.dispatch(
+            editor.state.tr.setSelection(TextSelection.atStart(editor.state.doc)),
+          );
+          editor.view.focus();
+        },
         clear: () => void editor.chain().focus().clearContent(true).run(),
       };
+    if (editor) onReady?.();
+    // The shell moves focus to the page's main region after a navigation; when that lands after the
+    // editor's own autofocus, take focus back (only from the page itself, never from a field).
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (editor && autoFocus) {
+      for (const ms of [50, 250]) {
+        timers.push(
+          setTimeout(() => {
+            const a = document.activeElement;
+            if (
+              !editor.isDestroyed &&
+              !editor.isFocused &&
+              (a === document.body || a?.tagName === 'MAIN')
+            )
+              editor.commands.focus('end');
+          }, ms),
+        );
+      }
+    }
     return () => {
+      timers.forEach(clearTimeout);
       if (apiRef) apiRef.current = null;
     };
+    // `onReady` is a fresh function each render; the editor appearing is the only trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, apiRef]);
 
   if (!editor) return null;
