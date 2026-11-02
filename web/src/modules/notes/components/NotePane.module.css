@@ -82,3 +82,10 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Writing mode and full screen need a second column or a big window: not offered on a phone. */
+@media (max-width: 899px) {
+  .bar .wideOnly {
+    display: none;
+  }
+}

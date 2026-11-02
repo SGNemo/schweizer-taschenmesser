@@ -273,11 +273,16 @@ export function NotePane(props: NotePaneProps) {
           <IconButton
             label={focusMode ? t.notes.writingModeOff : t.notes.writingMode}
             aria-pressed={focusMode}
+            className={styles.wideOnly}
             onClick={props.onToggleFocus}
           >
             <Icon name={focusMode ? 'close' : 'eye'} size={20} />
           </IconButton>
-          <IconButton label={t.notes.fullscreen} onClick={props.onFullscreen}>
+          <IconButton
+            label={t.notes.fullscreen}
+            className={styles.wideOnly}
+            onClick={props.onFullscreen}
+          >
             <Icon name="monitor" size={20} />
           </IconButton>
           {!scratch && pageId ? (
