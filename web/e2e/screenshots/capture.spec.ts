@@ -26,6 +26,7 @@ const SCALE = (process.env.SCREENS_SCALE as 'small' | 'medium' | 'large' | undef
 
 const PAGES: { name: string; path: string }[] = [
   { name: 'dashboard', path: '/' },
+  { name: 'cockpit', path: '/?cockpit=1' },
   { name: 'calendar-month', path: `/calendar?view=month&date=${SEED_TODAY}` },
   { name: 'calendar-week', path: `/calendar?view=week&date=${SEED_TODAY}` },
   { name: 'calendar-day', path: `/calendar?view=day&date=${SEED_TODAY}` },

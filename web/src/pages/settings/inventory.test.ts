@@ -25,6 +25,7 @@ const CORE_KEYS = {
     'tm-read-hint': 'unset',
     'tm-color': 'full',
     'tm-home-view': 'all',
+    'tm-show-preview': 'off',
     'tm-sidebar': 'wide',
     'tm-nav-closed': '[]',
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard, trayToday',

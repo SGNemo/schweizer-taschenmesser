@@ -134,6 +134,12 @@ export const settings: Strings['settings'] = {
     fields: 'Champs',
     more: (n: number) => `+ ${n}`,
   },
+  maturity: {
+    badge: 'En cours',
+    show: 'Afficher ce qui est en cours',
+    showHint:
+      'Affiche aussi les modules, outils, widgets et réglages pas encore terminés, marqués « En cours » ; ce que tu as déjà activé reste toujours visible.',
+  },
   modulesOverview: {
     title: 'Gérer les modules',
     description:

@@ -393,6 +393,12 @@ export const de = {
       fields: 'Felder',
       more: (n: number) => `+ ${n}`,
     },
+    maturity: {
+      badge: 'In Arbeit',
+      show: 'In Arbeit anzeigen',
+      showHint:
+        'Listet auch Module, Werkzeuge, Widgets und Einstellungen, die noch nicht fertig sind, mit dem Hinweis „In Arbeit“; was du schon eingeschaltet hast, bleibt immer sichtbar.',
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:
@@ -4451,6 +4457,15 @@ export const de = {
       'Der Zugriff wird beim Dienst widerrufen und die gespeicherten Anmeldedaten werden von diesem Gerät gelöscht.',
     keepData: 'Übernommene Termine behalten',
     deleteData: 'Übernommene Termine löschen',
+    accounts: 'Konten',
+    accountsHint:
+      'Mehrere Google-Konten sind möglich. Jedes Konto wird einzeln angemeldet und lässt sich einzeln entfernen.',
+    addAccount: 'Weiteres Konto hinzufügen',
+    accountUnnamed: (n: number) => `Konto ${n}`,
+    removeAccount: 'Konto entfernen',
+    removeAccountTitle: (name: string) => `${name} entfernen?`,
+    removeAccountBody:
+      'Der Zugriff dieses Kontos wird beim Dienst widerrufen und seine Anmeldedaten werden von diesem Gerät gelöscht. Die anderen Konten bleiben.',
     client: {
       title: 'Eigene Google-Anwendung',
       intro:
@@ -5439,6 +5454,10 @@ export const de = {
     map: {
       search: 'Ort oder Adresse suchen',
       searchHint: 'Name, Adresse oder Koordinaten – zum Beispiel „Schlossplatz Erlangen“.',
+      ownHits: 'Aus deiner Karte',
+      onlineHits: 'Online gefunden',
+      searchOnline: 'Online weitersuchen',
+      noneOwn: 'Deine Karte kennt dazu nichts.',
       searchButton: 'Suchen',
       searching: 'Suche …',
       noResults: 'Nichts gefunden. Probier eine andere Schreibweise.',
@@ -5536,6 +5555,14 @@ export const de = {
       fileUnreachable:
         'Die Kartendatei ist gerade nicht erreichbar. Die Karte entsteht aus dem Overpass-Dienst.',
       fromFile: 'aus Kartendatei',
+      kinds: {
+        place: 'Ort',
+        street: 'Straße',
+        water: 'Gewässer',
+        poi: 'Einrichtung',
+        area: 'Gebiet',
+        other: 'Eintrag',
+      },
       reasons: {
         busy: 'Der Kartendienst ist gerade ausgelastet. Später weitermachen.',
         network: 'Der Kartendienst ist gerade nicht erreichbar. Später weitermachen.',

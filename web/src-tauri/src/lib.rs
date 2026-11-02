@@ -101,7 +101,9 @@ pub fn run() {
         // OS keystore, biometric gate for the vault key, screenshot protection (Android).
         .plugin(tauri_plugin_secure_store::init())
         // Text and links shared from other Android apps (ACTION_SEND).
-        .plugin(tauri_plugin_share_intent::init());
+        .plugin(tauri_plugin_share_intent::init())
+        // Android: system bars hidden and screen kept on while the cockpit is open.
+        .plugin(tauri_plugin_screen_mode::init());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]

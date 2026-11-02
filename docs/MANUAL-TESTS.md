@@ -4,6 +4,12 @@ Moved unchanged from `docs/STATUS.md` (2026-10-01). Hardware-only checks; the in
 
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
 
+### Cockpit-Modus (`feat/cockpit-mode`) – Gerät nötig
+C1. *Android immersiv:* Übersicht → „Cockpit“: Status- und Navigationsleiste verschwinden, Wischen vom Rand zeigt sie kurz; „Cockpit beenden“ (Griff oben antippen) bringt sie zurück. ☐
+C2. *Bildschirm wach halten (Android):* Einstellungen → Darstellung → Sonstiges → „Bildschirm wach halten“ an; im Cockpit geht der Bildschirm nicht aus, nach dem Beenden wieder normal. ☐
+C3. *Windows F11:* im Cockpit F11 → echtes Vollbild des Fensters, noch einmal F11 oder „Cockpit beenden“ → zurück; F11 außerhalb des Cockpits bleibt ohne Wirkung. ☐
+C4. *Zurück-Geste (Android):* Widget-Titel öffnet das Modul im Panel; Zurück schließt nur das Panel, das Cockpit bleibt. ☐
+
 ### Release 0.3.1 prüfen
 R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release-Seite `v0.3.1`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.1`. ☐
 R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐

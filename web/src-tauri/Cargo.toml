@@ -37,6 +37,8 @@ tauri-plugin-apk-installer = { path = "plugins/apk-installer" }
 tauri-plugin-secure-store = { path = "plugins/secure-store" }
 # Android "Share" target (text and links from other apps); a stub elsewhere.
 tauri-plugin-share-intent = { path = "plugins/share-intent" }
+# Android: immersive mode and keep-awake for the cockpit; a stub elsewhere.
+tauri-plugin-screen-mode = { path = "plugins/screen-mode" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

@@ -101,9 +101,9 @@ export const tLegal = defineBundle(
       },
       maps: {
         title: 'Karten & Orte (optional)',
-        what: 'Beim Öffnen der Karte die Kartenkacheln des gezeigten Ausschnitts (Zoomstufe und Kachelnummern, daraus lässt sich ablesen, welches Gebiet du ansiehst); bei der Ortssuche der eingetippte Suchbegriff; beim Erzeugen einer eigenen Karte die Koordinaten jedes Teilstücks des gewählten Gebiets. Gespeicherte Orte und Routen bleiben auf dem Gerät und gehen nie an die KI.',
+        what: 'Beim Öffnen der Karte die Kartenkacheln des gezeigten Ausschnitts (Zoomstufe und Kachelnummern, daraus lässt sich ablesen, welches Gebiet du ansiehst); bei der Ortssuche der eingetippte Suchbegriff (erst, wenn deine eigene Karte nichts dazu kennt, oder auf „Online weitersuchen“); beim Erzeugen einer eigenen Karte die Koordinaten jedes Teilstücks des gewählten Gebiets. Gespeicherte Orte und Routen bleiben auf dem Gerät und gehen nie an die KI.',
         to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, für die eigene Karte overpass-api.de) oder ein eigener Dienst, den du in den Einstellungen einträgst; mit eingetragener Kartendatei deren Server (je Kachel eine Bereichsanfrage). Der Dienst sieht deine IP-Adresse.',
-        when: 'Nur wenn du den Reiter „Karte“ öffnest oder eine Ortssuche abschickst, nie im Hintergrund. Die Übersicht und die Listen fragen nichts ab. Karten-Apps (OpenStreetMap, Google Maps, Apple Karten) öffnen sich nur auf deinen Klick im Browser. Berechnest du eine Route auf der Karte, gehen Start, Ziel, Zwischenstopps (Koordinaten) und die Fortbewegungsart an routing.openstreetmap.de; suchst du Bus und Bahn, gehen Start, Ziel und die Uhrzeit an api.transitous.org. Erzeugst du eine eigene Karte, gehen je Teilstück die Koordinaten des Gebiets an overpass-api.de, nur solange die App offen ist. Alles nur auf Klick.',
+        when: 'Nur wenn du den Reiter „Karte“ öffnest oder eine Ortssuche abschickst, die deine eigene Karte nicht beantwortet, nie im Hintergrund. Die Übersicht und die Listen fragen nichts ab. Karten-Apps (OpenStreetMap, Google Maps, Apple Karten) öffnen sich nur auf deinen Klick im Browser. Berechnest du eine Route auf der Karte, gehen Start, Ziel, Zwischenstopps (Koordinaten) und die Fortbewegungsart an routing.openstreetmap.de; suchst du Bus und Bahn, gehen Start, Ziel und die Uhrzeit an api.transitous.org. Erzeugst du eine eigene Karte, gehen je Teilstück die Koordinaten des Gebiets an overpass-api.de, nur solange die App offen ist. Alles nur auf Klick.',
       },
       browser: {
         title: 'Browser (optional)',
@@ -174,7 +174,7 @@ export const tLegal = defineBundle(
       maps: {
         title: 'Die Karte lädt Kartenkacheln',
         body: [
-          'Beim Öffnen der Karte lädt Nemo die Kartenkacheln des gezeigten Ausschnitts von OpenStreetMap, bei einer Ortssuche geht der Suchbegriff an dessen Suchdienst. Der Dienst sieht deine IP-Adresse und welches Gebiet du ansiehst. Nie deine gespeicherten Orte.',
+          'Beim Öffnen der Karte lädt Nemo die Kartenkacheln des gezeigten Ausschnitts von OpenStreetMap, bei einer Ortssuche geht der Suchbegriff an dessen Suchdienst, sobald deine eigene Karte nichts dazu kennt. Der Dienst sieht deine IP-Adresse und welches Gebiet du ansiehst. Nie deine gespeicherten Orte.',
           'Die Liste deiner Orte und Routen ist rein lokal. Die Dienste kannst du in den Einstellungen des Moduls ändern.',
         ],
       },
@@ -326,9 +326,9 @@ export const tLegal = defineBundle(
         },
         maps: {
           title: 'Maps & places (optional)',
-          what: 'When you open the map, the map tiles of the shown area (zoom level and tile numbers, which reveal the area you look at); for the place search, the search term you typed; when you build your own map, the coordinates of every piece of the chosen area. Saved places and routes stay on the device and never go to the AI.',
+          what: 'When you open the map, the map tiles of the shown area (zoom level and tile numbers, which reveal the area you look at); for the place search, the search term you typed (only once your own map knows nothing about it, or on “Online weitersuchen”); when you build your own map, the coordinates of every piece of the chosen area. Saved places and routes stay on the device and never go to the AI.',
           to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, for the own map overpass-api.de) or a service of your own that you enter in the settings; with a region file entered, its server (one range request per tile). The service sees your IP address.',
-          when: 'Only when you open the “Karte” tab or submit a place search, never in the background. The Overview and the lists request nothing. Map apps (OpenStreetMap, Google Maps, Apple Maps) open in the browser only when you click. If you calculate a route on the map, start, destination, stops (coordinates) and the way of travel go to routing.openstreetmap.de; if you search bus and train, start, destination and the time go to api.transitous.org. If you build your own map, the coordinates of each piece go to overpass-api.de, only while the app is open. All of it on click only.',
+          when: 'Only when you open the “Karte” tab or submit a place search your own map cannot answer, never in the background. The Overview and the lists request nothing. Map apps (OpenStreetMap, Google Maps, Apple Maps) open in the browser only when you click. If you calculate a route on the map, start, destination, stops (coordinates) and the way of travel go to routing.openstreetmap.de; if you search bus and train, start, destination and the time go to api.transitous.org. If you build your own map, the coordinates of each piece go to overpass-api.de, only while the app is open. All of it on click only.',
         },
         browser: {
           title: 'Browser (optional)',
@@ -399,7 +399,7 @@ export const tLegal = defineBundle(
         maps: {
           title: 'The map loads map tiles',
           body: [
-            'When you open the map, Nemo loads the map tiles of the shown area from OpenStreetMap; for a place search the search term goes to its search service. The service sees your IP address and the area you look at. Never your saved places.',
+            'When you open the map, Nemo loads the map tiles of the shown area from OpenStreetMap; for a place search the search term goes to its search service once your own map knows nothing about it. The service sees your IP address and the area you look at. Never your saved places.',
             'The list of your places and routes is purely local. You can change the services in the module settings.',
           ],
         },
