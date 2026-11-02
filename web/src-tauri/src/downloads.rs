@@ -16,7 +16,7 @@ pub struct Downloads {
     watchers: Arc<Mutex<Vec<Channel<Vec<Job>>>>>,
 }
 
-fn state_file(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn state_file(app: &AppHandle) -> Result<PathBuf, String> {
     #[cfg(windows)]
     if let Some(dir) = std::env::current_exe()
         .ok()

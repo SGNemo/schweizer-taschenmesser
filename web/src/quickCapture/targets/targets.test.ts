@@ -41,6 +41,25 @@ describe('saveCapture', () => {
     expect((await rows('todos_task'))[0]!.note).toBe('Uhrzeit: 15:00');
   });
 
+  it('keeps the free text (e.g. the link to a mail) as the note of todo, event, reminder and invoice', async () => {
+    const note = 'https://mail.google.com/mail/#all/t1';
+    await saveCapture('todo', { title: 'X', time: '15:00', note }, { states: ON });
+    await saveCapture('event', { title: 'E', date: '2026-10-01', note }, { states: ON });
+    await saveCapture('reminder', { title: 'R', note }, { states: ON });
+    await saveCapture('invoice', { title: 'Stadtwerke', amountMinor: 8430, note }, { states: ON });
+    expect((await rows('todos_task'))[0]!.note).toBe(`Uhrzeit: 15:00\n${note}`);
+    const events = await rows('calendar_event');
+    expect(events.map((e) => e.note)).toEqual([note, note]);
+    expect((await rows('invoices_invoice'))[0]!.note).toBe(note);
+  });
+
+  it('writes no note when there is no free text', async () => {
+    await saveCapture('event', { title: 'E', date: '2026-10-01' }, { states: ON });
+    await saveCapture('invoice', { title: 'Stadtwerke', amountMinor: 100 }, { states: ON });
+    expect('note' in (await rows('calendar_event'))[0]!).toBe(false);
+    expect('note' in (await rows('invoices_invoice'))[0]!).toBe(false);
+  });
+
   it('writes a timed event and an all-day event', async () => {
     await saveCapture(
       'event',

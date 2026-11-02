@@ -5,13 +5,17 @@ import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, Icon, IconButton, Skeleton } from '@/ui';
 import { randomId } from '@/core/db/util';
+import { useUiStore } from '@/stores/ui';
 import { createAutosaver } from '../editor/autosave';
+import type { EditorApi } from '../editor/EditorSurface';
 import { clearDraft, loadDraft, saveDraft } from '../editor/draft';
 import { wordCount } from '../editor/markdown';
+import { recordVersion, type Version } from '../editor/versions';
 import { SCRATCH_ID } from '../logic';
 import { noteRepo } from '../repo';
 import type { Note } from '../schema';
 import type { NotesSettings } from '../settings';
+import { HistoryDialog } from './HistoryDialog';
 import styles from './NotePane.module.css';
 
 const EditorSurface = lazy(() => import('../editor/EditorSurface'));
@@ -27,6 +31,10 @@ export interface NotePaneProps {
   onFullscreen: () => void;
   /** Narrow screens: back to the page list. */
   onBack?: () => void;
+  /** Notebook a new page is created in (the notebook currently shown); `null` = "Allgemein". */
+  notebookId: string | null;
+  /** Scratch pad: the selection becomes a new page (receives its Markdown). */
+  onMoveSelection?: (markdown: string) => void;
   onCreated: (id: string) => void;
   onDeleted: () => void;
   autoFocus: boolean;
@@ -65,10 +73,11 @@ export function NotePane(props: NotePaneProps) {
   const [words, setWords] = useState(() => wordCount(initial.body));
   const [pinned, setPinned] = useState(existing?.pinned ?? false);
   const [error, setError] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
   const readBody = useRef<() => string>(() => initial.body);
   const titleRef = useRef(initial.title);
   const wantFocus = useRef(false);
-  const apiRef = useRef<{ clear: () => void; focus: () => void } | null>(null);
+  const apiRef = useRef<EditorApi | null>(null);
   const callbacks = useRef(props);
   useEffect(() => {
     callbacks.current = props;
@@ -78,7 +87,7 @@ export function NotePane(props: NotePaneProps) {
     async ({ title: rawTitle, body }: Snapshot) => {
       const id = idRef.current;
       if (scratch) {
-        const data = { title: t.notes.scratch, body, pinned: true };
+        const data = { title: t.notes.scratch, body, pinned: true, notebookId: null, order: 0 };
         if (id && (await noteRepo.table.get(id))) await noteRepo.update(id, data);
         else if (body.trim()) {
           await noteRepo.create(data, { id: SCRATCH_ID });
@@ -91,7 +100,11 @@ export function NotePane(props: NotePaneProps) {
           await noteRepo.update(id, data);
         } else if (pendingId && (data.title || data.body.trim())) {
           if (await noteRepo.table.get(pendingId)) await noteRepo.update(pendingId, data);
-          else await noteRepo.create({ ...data, pinned: false }, { id: pendingId });
+          else
+            await noteRepo.create(
+              { ...data, pinned: false, notebookId: callbacks.current.notebookId, order: 0 },
+              { id: pendingId },
+            );
           idRef.current = pendingId;
           clearDraft('new');
           setPageId(pendingId);
@@ -99,6 +112,11 @@ export function NotePane(props: NotePaneProps) {
         }
       }
       setWords(wordCount(body));
+      const savedId = idRef.current;
+      if (savedId) {
+        const title = scratch ? t.notes.scratch : rawTitle.trim();
+        void recordVersion(savedId, { title, body, at: now() });
+      }
     },
     [scratch, pendingId],
   );
@@ -166,6 +184,27 @@ export function NotePane(props: NotePaneProps) {
     if (initial.restored) scheduleSave();
   }, [initial.restored, scheduleSave]);
 
+  async function openHistory() {
+    await saver.flush();
+    setHistoryOpen(true);
+  }
+
+  /** Puts an earlier state into the editor; the normal autosave stores it, Ctrl+Z steps back. */
+  async function restoreVersion(v: Version) {
+    await saver.flush();
+    if (pageId) {
+      const current = { title: titleRef.current, body: readBody.current(), at: now() };
+      await recordVersion(pageId, current, { force: true });
+    }
+    if (!scratch) {
+      setTitle(v.title);
+      titleRef.current = v.title;
+    }
+    apiRef.current?.setMarkdown(v.body);
+    setHistoryOpen(false);
+    useUiStore.getState().toast(t.notes.historyRestored);
+  }
+
   async function togglePin() {
     if (!pageId) return;
     await noteRepo.update(pageId, { pinned: !pinned });
@@ -211,6 +250,11 @@ export function NotePane(props: NotePaneProps) {
             <Button variant="ghost" onClick={() => apiRef.current?.clear()}>
               {t.notes.scratchClear}
             </Button>
+          ) : null}
+          {pageId ? (
+            <IconButton label={t.notes.history} onClick={() => void openHistory()}>
+              <Icon name="clock" size={20} />
+            </IconButton>
           ) : null}
           {!scratch && pageId ? (
             <IconButton label={t.notes.pin} aria-pressed={pinned} onClick={() => void togglePin()}>
@@ -258,6 +302,7 @@ export function NotePane(props: NotePaneProps) {
           width={prefs.width}
           autoFocus={props.autoFocus}
           apiRef={apiRef}
+          onMoveSelection={scratch ? props.onMoveSelection : undefined}
           onReady={() => {
             if (!wantFocus.current) return;
             wantFocus.current = false;
@@ -271,6 +316,14 @@ export function NotePane(props: NotePaneProps) {
           onBlur={() => void saver.flush()}
         />
       </Suspense>
+      {pageId ? (
+        <HistoryDialog
+          open={historyOpen}
+          pageId={pageId}
+          onClose={() => setHistoryOpen(false)}
+          onRestore={(v) => void restoreVersion(v)}
+        />
+      ) : null}
       <footer className={styles.foot} aria-live="polite">
         <span>{status === 'saving' ? t.notes.saving : t.notes.saved}</span>
         {prefs.wordCount ? <span>{t.notes.words(words)}</span> : null}

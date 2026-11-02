@@ -27,6 +27,8 @@ mod system;
 #[cfg(desktop)]
 mod texts;
 #[cfg(desktop)]
+mod torrent;
+#[cfg(desktop)]
 mod update;
 #[cfg(desktop)]
 pub mod vault_bridge;
@@ -125,11 +127,20 @@ pub fn run() {
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(downloads::Downloads::default())
+        .manage(torrent::Torrents::default())
         .manage(system::SystemMonitor::default())
         .manage(local_llm::LocalLlm::new())
         .manage(vault_bridge::VaultBridge::default())
         .invoke_handler(tauri::generate_handler![
             downloads::downloads_watch,
+            torrent::torrent_configure,
+            torrent::torrent_stop,
+            torrent::torrent_preview,
+            torrent::torrent_add,
+            torrent::torrent_pause,
+            torrent::torrent_resume,
+            torrent::torrent_remove,
+            torrent::torrent_watch,
             downloads::downloads_default_dir,
             downloads::downloads_add,
             downloads::downloads_pause,

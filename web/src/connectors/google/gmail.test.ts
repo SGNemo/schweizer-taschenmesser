@@ -13,11 +13,17 @@ const hdr = (name: string, value: string) => ({ name, value });
 
 function mock(handler: (url: URL, call: number) => Response) {
   const urls: URL[] = [];
+  const requests: { method: string; url: URL; body: unknown }[] = [];
   const refreshes: boolean[] = [];
   let calls = 0;
-  const fetchFn = (async (input: string) => {
+  const fetchFn = (async (input: string, init?: RequestInit) => {
     const url = new URL(input);
     urls.push(url);
+    requests.push({
+      method: init?.method ?? 'GET',
+      url,
+      body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
+    });
     return handler(url, calls++);
   }) as unknown as typeof fetch;
   const ctx: ConnectorContext = {
@@ -34,7 +40,7 @@ function mock(handler: (url: URL, call: number) => Response) {
     },
     redact: (t) => t,
   };
-  return { ctx, urls, refreshes };
+  return { ctx, urls, refreshes, requests };
 }
 
 const metaThread = (id: string, subject: string, unread: boolean) => ({
@@ -264,5 +270,94 @@ describe('webUrl', () => {
     expect(gmailProvider.webUrl!('abc', 'me@example.org')).toBe(
       'https://mail.google.com/mail/?authuser=me%40example.org#all/abc',
     );
+  });
+});
+
+describe('write side (opt-in, only called after the UI confirmed)', () => {
+  const raw = (body: unknown) => {
+    const r = (body as { raw: string }).raw.replace(/-/g, '+').replace(/_/g, '/');
+    return new TextDecoder().decode(Uint8Array.from(atob(r), (c) => c.charCodeAt(0)));
+  };
+  const mail = {
+    to: [{ email: 'anna@example.org' }],
+    cc: [],
+    bcc: [],
+    subject: 'Hallo',
+    text: 'Text',
+    attachments: [],
+  };
+
+  it('modify posts the label change; trash and untrash use their own endpoints', async () => {
+    const { ctx, requests } = mock(() => json({}));
+    await gmailProvider.modify!(ctx, 't1', { removeLabelIds: ['UNREAD'] });
+    await gmailProvider.modify!(ctx, 't1', { addLabelIds: ['Label_1'], removeLabelIds: ['INBOX'] });
+    await gmailProvider.trash!(ctx, 't1');
+    await gmailProvider.untrash!(ctx, 't1');
+    expect(requests.map((r) => [r.method, r.url.pathname])).toEqual([
+      ['POST', '/gmail/v1/users/me/threads/t1/modify'],
+      ['POST', '/gmail/v1/users/me/threads/t1/modify'],
+      ['POST', '/gmail/v1/users/me/threads/t1/trash'],
+      ['POST', '/gmail/v1/users/me/threads/t1/untrash'],
+    ]);
+    expect(requests[0]!.body).toEqual({ addLabelIds: [], removeLabelIds: ['UNREAD'] });
+    expect(requests[1]!.body).toEqual({ addLabelIds: ['Label_1'], removeLabelIds: ['INBOX'] });
+  });
+
+  it('send posts the raw message; a reply names its thread and the message it answers', async () => {
+    const { ctx, requests } = mock(() => json({ id: 'sent1', threadId: 't9' }));
+    const done = await gmailProvider.send!(ctx, {
+      ...mail,
+      threadId: 't9',
+      inReplyTo: { messageId: '<m1@example.org>', references: '<m1@example.org>' },
+    });
+    expect(done).toEqual({ id: 'sent1', threadId: 't9' });
+    const [req] = requests;
+    expect([req!.method, req!.url.pathname]).toEqual(['POST', '/gmail/v1/users/me/messages/send']);
+    expect((req!.body as { threadId: string }).threadId).toBe('t9');
+    expect(raw(req!.body)).toContain('In-Reply-To: <m1@example.org>');
+    expect(raw(req!.body)).toContain('To: anna@example.org');
+  });
+
+  it('drafts: create, replace, delete and list', async () => {
+    const { ctx, requests } = mock((url) =>
+      url.pathname.endsWith('/drafts') && url.searchParams.has('maxResults')
+        ? json({ drafts: [{ id: 'd1', message: { id: 'm1', threadId: 't1' } }, { id: 'broken' }] })
+        : json({ id: 'd1', message: { id: 'm1' } }),
+    );
+    expect(await gmailProvider.saveDraft!(ctx, mail)).toEqual({ id: 'd1', messageId: 'm1' });
+    expect(await gmailProvider.saveDraft!(ctx, mail, 'd1')).toEqual({ id: 'd1', messageId: 'm1' });
+    await gmailProvider.deleteDraft!(ctx, 'd1');
+    expect(await gmailProvider.drafts!(ctx)).toEqual([{ id: 'd1', messageId: 'm1' }]);
+    expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+      'POST /gmail/v1/users/me/drafts',
+      'PUT /gmail/v1/users/me/drafts/d1',
+      'DELETE /gmail/v1/users/me/drafts/d1',
+      'GET /gmail/v1/users/me/drafts',
+    ]);
+  });
+
+  it('a missing write permission is reported as denied', async () => {
+    const { ctx } = mock(() =>
+      json({ error: { errors: [{ reason: 'insufficientPermissions' }] } }, 403),
+    );
+    await expect(gmailProvider.send!(ctx, mail)).rejects.toMatchObject({ code: 'denied' });
+    await expect(gmailProvider.modify!(ctx, 't1', {})).rejects.toMatchObject({ code: 'denied' });
+  });
+
+  it('refreshes the token once after a 401 on a write, then reports expired', async () => {
+    const ok = mock((_u, call) => (call === 0 ? json({}, 401) : json({ id: 's', threadId: 't' })));
+    await gmailProvider.send!(ok.ctx, mail);
+    expect(ok.refreshes).toEqual([false, true, false]);
+    expect(ok.requests).toHaveLength(2); // the 401 call did nothing, the retry sent once
+    const bad = mock(() => json({}, 401));
+    await expect(gmailProvider.send!(bad.ctx, mail)).rejects.toMatchObject({ code: 'expired' });
+  });
+
+  it('a mail with a header injection never reaches the network', async () => {
+    const { ctx, requests } = mock(() => json({}));
+    await expect(
+      gmailProvider.send!(ctx, { ...mail, subject: 'x\r\nBcc: evil@example.org' }),
+    ).rejects.toThrow();
+    expect(requests).toHaveLength(0);
   });
 });

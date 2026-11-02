@@ -2,7 +2,7 @@ import { t } from '@/strings';
 import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
-import { bodySchema, threadSchema } from './schema';
+import { bodySchema, linkSchema, threadSchema } from './schema';
 import { settings } from './settings';
 
 /**
@@ -36,6 +36,12 @@ const manifest: ModuleManifest = {
       thread: {
         schema: threadSchema,
         indexes: ['accountKey', 'sortKey'],
+        local: true,
+        dataApi: false,
+      },
+      link: {
+        schema: linkSchema,
+        indexes: ['accountKey', 'threadId'],
         local: true,
         dataApi: false,
       },

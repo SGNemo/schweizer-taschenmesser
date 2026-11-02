@@ -295,22 +295,34 @@
       "type": "string",
       "oneOf": [
         {
-          "description": "Enables the take_pending command without any pre-configured scope.",
+          "description": "Enables the set_immersive command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-take-pending",
-          "markdownDescription": "Enables the take_pending command without any pre-configured scope."
+          "const": "allow-set-immersive",
+          "markdownDescription": "Enables the set_immersive command without any pre-configured scope."
         },
         {
-          "description": "Denies the take_pending command without any pre-configured scope.",
+          "description": "Denies the set_immersive command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-take-pending",
-          "markdownDescription": "Denies the take_pending command without any pre-configured scope."
+          "const": "deny-set-immersive",
+          "markdownDescription": "Denies the set_immersive command without any pre-configured scope."
         },
         {
-          "description": "Read (and clear) the text or link another app shared with this one.\n#### This default permission set includes:\n\n- `allow-take-pending`",
+          "description": "Enables the set_keep_awake command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-keep-awake",
+          "markdownDescription": "Enables the set_keep_awake command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_keep_awake command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-keep-awake",
+          "markdownDescription": "Denies the set_keep_awake command without any pre-configured scope."
+        },
+        {
+          "description": "Hide the Android system bars and keep the screen on while the cockpit is open.\n#### This default permission set includes:\n\n- `allow-set-immersive`\n- `allow-set-keep-awake`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Read (and clear) the text or link another app shared with this one.\n#### This default permission set includes:\n\n- `allow-take-pending`"
+          "markdownDescription": "Hide the Android system bars and keep the screen on while the cockpit is open.\n#### This default permission set includes:\n\n- `allow-set-immersive`\n- `allow-set-keep-awake`"
         }
       ]
     }

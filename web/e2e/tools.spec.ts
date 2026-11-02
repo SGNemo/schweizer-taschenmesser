@@ -219,4 +219,46 @@ test('the calculator plots functions, zooms with the keyboard and says what is w
   await sheet.getByLabel('g(x)').fill('foo(x');
   await expect(sheet.getByText('Das kann ich nicht lesen.')).toBeVisible({ timeout: 20_000 });
   await expect(sheet.getByTestId('plot-line-f')).toBeVisible();
+test('the anonymous persona is off by default, invents a persona and opens a disposable-mail site on click', async ({
+  page,
+}) => {
+  await page.goto('/tools');
+  const card = page.getByTestId('tool-persona');
+  await expect(card.getByLabel('Anonyme Persona einschalten')).not.toBeChecked();
+  await card.getByLabel('Anonyme Persona einschalten').click();
+  await expect(card.getByLabel('Anonyme Persona einschalten')).toBeChecked();
+
+  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
+  const sheet = page.getByRole('dialog');
+  await sheet.getByRole('button', { name: 'Anonyme Persona', exact: true }).click();
+  await expect(
+    sheet.getByText('Nur für Seiten, die keine echten Angaben verlangen.'),
+  ).toBeVisible();
+  await sheet.getByRole('button', { name: 'Verstanden' }).click();
+  await expect(sheet.getByText('Nur für Seiten, die keine echten Angaben verlangen.')).toHaveCount(
+    0,
+  );
+
+  const fields = sheet.getByTestId('persona-fields');
+  await expect(fields).toContainText('Passwort');
+  await expect(fields).not.toContainText(/IBAN|Kreditkarte|Ausweis|Steuer/);
+  const password = () => fields.locator('span', { hasText: /^.{16}$/ }).last();
+  const before = await password().textContent();
+  await sheet.getByRole('button', { name: 'Passwort neu würfeln' }).click();
+  await expect(password()).not.toHaveText(before!);
+
+  await sheet.getByLabel('Land').selectOption('us');
+  await expect(fields).toContainText('+1');
+  await expect(fields).toContainText('555 01');
+
+  // Only the link is opened; the app fetches nothing from the provider.
+  let opened = '';
+  await page.context().route('https://www.guerrillamail.com/**', (route) => {
+    opened = route.request().url();
+    return route.fulfill({ status: 200, body: 'ok', contentType: 'text/html' });
+  });
+  const popup = page.waitForEvent('popup');
+  await sheet.getByRole('button', { name: 'Wegwerf-Mail öffnen' }).click();
+  await popup;
+  expect(opened).toContain('guerrillamail.com');
 });
