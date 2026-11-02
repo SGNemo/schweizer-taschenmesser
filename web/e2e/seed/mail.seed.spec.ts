@@ -141,6 +141,14 @@ test.describe('mail (demo mails)', () => {
       await audit(page, `thread (${scheme})`);
       if (out)
         await page.screenshot({ path: `${out}/mail-thread-${info.project.name}-${scheme}.png` });
+      // create from this mail: the menu and the prefilled preview dialog
+      await page.getByRole('button', { name: 'Aus dieser Mail anlegen' }).click();
+      await page.getByRole('menuitem', { name: 'Rechnung' }).click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
+      await audit(page, `create dialog (${scheme})`);
+      if (out)
+        await page.screenshot({ path: `${out}/mail-create-${info.project.name}-${scheme}.png` });
     });
   }
 });
