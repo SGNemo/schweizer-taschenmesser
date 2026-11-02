@@ -7,7 +7,9 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
-| [PR #372](https://github.com/SGNemo/schweizer-taschenmesser/pull/372): Werkzeug „Anonyme Persona“ | ansehen, mergen; Handtests AP1–AP5 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche); offen: Tresor-Eintrag als eigener PR |
+| [PR #372](https://github.com/SGNemo/schweizer-taschenmesser/pull/372): Werkzeug „Anonyme Persona“ | ansehen, mergen; Handtests AP1–AP5 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche, Einstellung) |
+| [PR #381](https://github.com/SGNemo/schweizer-taschenmesser/pull/381): Persona „Im Tresor speichern“ (gestapelt auf #372) | nach #372 mergen (Basis wird automatisch auf `develop` umgestellt); Handtest AP6 in [MANUAL-TESTS](MANUAL-TESTS.md); Änderung am Modul `accounts` nur als Formular-Vorbelegung, keine Krypto |
+| [PR #379](https://github.com/SGNemo/schweizer-taschenmesser/pull/379): Rechner-Tab „Plotter“ | ansehen, mergen; Handtests PL1–PL3 in [MANUAL-TESTS](MANUAL-TESTS.md) |
 | [PR #376](https://github.com/SGNemo/schweizer-taschenmesser/pull/376): zufälliger Passphrasen-Test (Erweiterung und `vault-core`) | ansehen, mergen (nur Tests) |
 | Rechner-Modi (PR #359, gemergt) | Handtests C1–C4 in [MANUAL-TESTS](MANUAL-TESTS.md): Android-Tabs, Offline vor dem ersten Gebrauch, en-US-Eingabe, Verlauf → Notiz |
 | Eigene Karte, Paket 5 (`feat/map-own-search`) | PR reviewen und mergen; Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, dann „Genauer machen“, dann eine Straße der Stadt suchen → „Aus deiner Karte“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser |
