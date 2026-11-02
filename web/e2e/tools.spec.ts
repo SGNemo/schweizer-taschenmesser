@@ -219,6 +219,8 @@ test('the calculator plots functions, zooms with the keyboard and says what is w
   await sheet.getByLabel('g(x)').fill('foo(x');
   await expect(sheet.getByText('Das kann ich nicht lesen.')).toBeVisible({ timeout: 20_000 });
   await expect(sheet.getByTestId('plot-line-f')).toBeVisible();
+});
+
 test('the anonymous persona is off by default, invents a persona and opens a disposable-mail site on click', async ({
   page,
 }) => {
