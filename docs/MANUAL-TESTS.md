@@ -4,6 +4,12 @@ Moved unchanged from `docs/STATUS.md` (2026-10-01). Hardware-only checks; the in
 
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
 
+### Cockpit-Modus (`feat/cockpit-mode`) – Gerät nötig
+C1. *Android immersiv:* Übersicht → „Cockpit“: Status- und Navigationsleiste verschwinden, Wischen vom Rand zeigt sie kurz; „Cockpit beenden“ (Griff oben antippen) bringt sie zurück. ☐
+C2. *Bildschirm wach halten (Android):* Einstellungen → Darstellung → Sonstiges → „Bildschirm wach halten“ an; im Cockpit geht der Bildschirm nicht aus, nach dem Beenden wieder normal. ☐
+C3. *Windows F11:* im Cockpit F11 → echtes Vollbild des Fensters, noch einmal F11 oder „Cockpit beenden“ → zurück; F11 außerhalb des Cockpits bleibt ohne Wirkung. ☐
+C4. *Zurück-Geste (Android):* Widget-Titel öffnet das Modul im Panel; Zurück schließt nur das Panel, das Cockpit bleibt. ☐
+
 ### Release 0.3.1 prüfen
 R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release-Seite `v0.3.1`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.1`. ☐
 R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
@@ -349,3 +355,13 @@ C1. *Android-APK:* Rechner öffnen, alle sechs Tabs durchtippen; die Tab-Leiste 
 C2. *Offline:* App einmal online öffnen, Flugmodus, Rechner öffnen: Wissenschaft (sin, log) geht nur, wenn der Rechner vorher online geöffnet war; sonst Grundrechenarten und der ruhige Hinweis. ☐
 C3. *Sprachen:* Format-Region auf en-US stellen: `1,234.5 + 1` und `1.234,5 + 1` ergeben beide 1235.5, Ergebnis mit Punkt als Dezimalzeichen. ☐
 C4. *Notiz:* Notizen einschalten, Verlauf → „In Notiz übernehmen“ öffnet eine neue Notiz mit den Zeilen. ☐
+
+### Browser (Desktop, nur mit echtem Fenster prüfbar)
+B1. *Tab sitzt im Nemo-Fenster:* Modul „Browser“ in der Bibliothek einschalten, `/browser` öffnen, `example.org` eintippen: die Seite erscheint genau im grauen Rahmen, Fenster vergrößern/verkleinern: sie folgt. Menü („Mehr“) öffnen: die Seite verschwindet, das Menü ist lesbar; schließen: sie ist wieder da. ☐
+B2. *Isolation:* auf einer beliebigen Seite die Entwicklerkonsole (F12 ist aus; Rechtsklick → Untersuchen nur im Debug-Build) – `window.__TAURI_INTERNALS__` ist nicht definiert, `fetch('http://ipc.localhost/…')` bleibt ohne Antwort. ☐
+B3. *HTTP-Warnung:* `http://neverssl.com` → Warnseite mit „Zurück“/„Trotzdem öffnen“; Einstellung „Vor unverschlüsselten Seiten warnen“ aus: öffnet direkt. ☐
+B4. *Pop-ups, Downloads, Rechte:* eine Seite mit `window.open` – kein Fenster, Hinweis „Ein Pop-up wurde blockiert“; ein Download-Link – nichts wird gespeichert, Hinweis mit „Im Systembrowser öffnen“; Kamera/Mikrofon/Standort-Abfrage einer Testseite wird ohne Rückfrage abgelehnt (Windows/WebView2; Linux/macOS: nicht gebaut). ☐
+B5. *Privat:* privater Tab, auf einer Seite anmelden/Cookie setzen, Tab schließen, neuen privaten Tab: nicht mehr angemeldet; Verlauf bleibt leer. Normaler Tab: Anmeldung bleibt nach App-Neustart; „Browserdaten löschen“ entfernt sie. ☐
+B6. *Blocker (Windows):* eine Seite mit vielen Anzeigen: Zähler im Menü „Blocker“ steigt, Fremdserver-Liste füllt sich, „Blocken“ legt eine eigene Regel an, nach „Neu laden“ fehlt dieser Server. Pausieren auf der Seite lädt alles wieder. ☐
+B7. *Suchen auf der Seite:* Strg+F zeigt die Suchleiste von WebView2 (nicht von Nemo gebaut). ☐
+B8. *Merkliste/Notiz:* „In Merkliste speichern“ (Modul an) legt den Eintrag an, „Als Notiz speichern“ öffnet eine neue Notiz mit Titel und Adresse. ☐

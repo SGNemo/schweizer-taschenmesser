@@ -111,6 +111,12 @@ export const settings: Strings['settings'] = {
     fields: 'Fields',
     more: (n: number) => `+ ${n}`,
   },
+  maturity: {
+    badge: 'In progress',
+    show: 'Show work in progress',
+    showHint:
+      'Also lists modules, tools, widgets and settings that are not finished yet, marked “In progress”; what you already switched on always stays visible.',
+  },
   modulesOverview: {
     title: 'Manage modules',
     description:

@@ -7,7 +7,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
-| Eigene Karte, Paket 4 (`feat/map-own-regions`) | PR reviewen und mergen; Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, dann „Genauer machen“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser; danach entscheiden, ob Paket 5 (lokale Suche) folgt |
+| Eigene Karte, Paket 5 (`feat/map-own-search`) | PR reviewen und mergen; Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, dann „Genauer machen“, dann eine Straße der Stadt suchen → „Aus deiner Karte“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser |
 | T6 Kaltstart & Bundle (`claude/busy-darwin-zfoab0`, PR) | PR reviewen und mergen (Reihenfolge 5, vor T3); Handtest: PWA am Handy einmal online öffnen, Flugmodus, App, ein benutztes Werkzeug und die Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
@@ -18,7 +18,9 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Eigene Karte aus OSM-Daten, Paket 1: Speicher + Zeichnen | `feat/map-own-tiles` | `modules/maps/own/*`, `maps/{schema,repo,manifest,settings}.ts`, `TileMap.tsx`, `MapsPage.tsx`, `core/db` (`db:bump` 21), strings `maps` + 4 locales, `e2e/maps.spec.ts` | done, PR open | code | 2026-10-31 |
 | Eigene Karte aus OSM-Daten, Paket 4: eigene Regionsdateien (PMTiles) | `feat/map-own-regions` | `modules/maps/own/{pmtiles,builder,sample,work}.ts`, `maps/{schema,settings}.ts`, `components/RegionsCard.tsx`, `MapsPage.tsx`, strings `maps.settings`/`maps.own` + 4 locales, `strings.legal.ts` (`maps-build`, flows), `pages/settings/inventory.modules.json`, `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
+| Eigene Karte aus OSM-Daten, Paket 5: lokale Suche (Namensindex) | `feat/map-own-search` | `modules/maps/own/{names,search,gzip,builder,work,compute}.ts`, `maps/{schema,manifest,repo,geocode}.ts`, `MapsPage.tsx` + css, `core/db` (`db:bump` → v22, history 21), strings `maps.map`/`maps.own` + 4 locales, `strings.legal.ts` (flows, notice `maps`), `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

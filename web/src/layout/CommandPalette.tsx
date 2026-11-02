@@ -11,7 +11,7 @@ import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { calculate, calculateExpression, type ExpressionAnswer } from '@/core/calc/phrases';
 import { activeManifests } from '@/core/modules/contributions';
 import { useModuleStates } from '@/core/modules/activation';
-import { availableManifests } from '@/core/modules/available';
+import { availableManifests, isVisible } from '@/core/modules/available';
 import { openReminderCenter } from '@/core/notifications/centerStore';
 import { addRecent, readRecent, type RecentEntry } from '@/core/search/recent';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -29,6 +29,8 @@ import { useTools } from '@/core/tools/state';
 import type { ToolAnswer } from '@/core/tools/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import { tCockpit } from '@/strings.cockpit';
+import { enterCockpit, exitCockpit } from './useCockpit';
 import { Button, Dialog, Icon, Keys, type IconName } from '@/ui';
 import { paletteKeys } from '@/core/keyboard/labels';
 import { useShortcutPrefs } from '@/core/keyboard/prefs';
@@ -112,11 +114,13 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const writeMode = useUiStore((s) => s.paletteWrite);
   const [writeSettings] = useAiWriteSettings();
   const states = useModuleStates();
+  const showPreview = useUiStore((s) => s.showPreview);
   const { pathname } = useLocation();
   // Inside a module its entries are the default target of a sentence without a module word.
   const preferModule = availableManifests().find(
     (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
   )?.id;
+  const cockpit = useUiStore((s) => s.cockpit);
   const [query, setQuery] = useState('');
   // "=…" is evaluated by the calculator engine, which loads on first use; the answer belongs to one query.
   const [exprAnswer, setExprAnswer] = useState<{
@@ -205,6 +209,21 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         icon: 'bell',
         run: () => openReminderCenter('random'),
       },
+      {
+        id: 'cockpit',
+        label: cockpit ? tCockpit.get().exit : tCockpit.get().enter,
+        icon: cockpit ? ('minimize' as IconName) : ('maximize' as IconName),
+        run: () => (cockpit ? exitCockpit() : enterCockpit((to) => void navigate(to), pathname)),
+      },
+      {
+        id: 'cockpit-edit',
+        label: tCockpit.get().customize,
+        icon: 'edit' as IconName,
+        run: () => {
+          if (!cockpit) enterCockpit((to) => void navigate(to), pathname);
+          useUiStore.getState().setHomeEditing(true);
+        },
+      },
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },
       {
@@ -251,9 +270,10 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           );
         },
       })),
-      // Modules that are off are still found by name or purpose and lead to their library card.
+      // Modules that are off are still found by name or purpose and lead to their library card
+      // (preview modules only with "In Arbeit anzeigen", like in the library).
       ...availableManifests()
-        .filter((m) => states !== undefined && !states[m.id])
+        .filter((m) => states !== undefined && !states[m.id] && isVisible(m, { showPreview }))
         .map((m) => ({
           id: `library-${m.id}`,
           label: tComfort.get().library.enable(m.name),
@@ -280,6 +300,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     tools,
     devCommands,
     states,
+    showPreview,
     keyHints,
   ]);
 

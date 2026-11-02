@@ -393,6 +393,12 @@ export const de = {
       fields: 'Felder',
       more: (n: number) => `+ ${n}`,
     },
+    maturity: {
+      badge: 'In Arbeit',
+      show: 'In Arbeit anzeigen',
+      showHint:
+        'Listet auch Module, Werkzeuge, Widgets und Einstellungen, die noch nicht fertig sind, mit dem Hinweis „In Arbeit“; was du schon eingeschaltet hast, bleibt immer sichtbar.',
+    },
     modulesOverview: {
       title: 'Module verwalten',
       description:
@@ -4541,6 +4547,15 @@ export const de = {
       'Der Zugriff wird beim Dienst widerrufen und die gespeicherten Anmeldedaten werden von diesem Gerät gelöscht.',
     keepData: 'Übernommene Termine behalten',
     deleteData: 'Übernommene Termine löschen',
+    accounts: 'Konten',
+    accountsHint:
+      'Mehrere Google-Konten sind möglich. Jedes Konto wird einzeln angemeldet und lässt sich einzeln entfernen.',
+    addAccount: 'Weiteres Konto hinzufügen',
+    accountUnnamed: (n: number) => `Konto ${n}`,
+    removeAccount: 'Konto entfernen',
+    removeAccountTitle: (name: string) => `${name} entfernen?`,
+    removeAccountBody:
+      'Der Zugriff dieses Kontos wird beim Dienst widerrufen und seine Anmeldedaten werden von diesem Gerät gelöscht. Die anderen Konten bleiben.',
     client: {
       title: 'Eigene Google-Anwendung',
       intro:
@@ -5529,6 +5544,10 @@ export const de = {
     map: {
       search: 'Ort oder Adresse suchen',
       searchHint: 'Name, Adresse oder Koordinaten – zum Beispiel „Schlossplatz Erlangen“.',
+      ownHits: 'Aus deiner Karte',
+      onlineHits: 'Online gefunden',
+      searchOnline: 'Online weitersuchen',
+      noneOwn: 'Deine Karte kennt dazu nichts.',
       searchButton: 'Suchen',
       searching: 'Suche …',
       noResults: 'Nichts gefunden. Probier eine andere Schreibweise.',
@@ -5626,6 +5645,14 @@ export const de = {
       fileUnreachable:
         'Die Kartendatei ist gerade nicht erreichbar. Die Karte entsteht aus dem Overpass-Dienst.',
       fromFile: 'aus Kartendatei',
+      kinds: {
+        place: 'Ort',
+        street: 'Straße',
+        water: 'Gewässer',
+        poi: 'Einrichtung',
+        area: 'Gebiet',
+        other: 'Eintrag',
+      },
       reasons: {
         busy: 'Der Kartendienst ist gerade ausgelastet. Später weitermachen.',
         network: 'Der Kartendienst ist gerade nicht erreichbar. Später weitermachen.',
@@ -5638,6 +5665,122 @@ export const de = {
       google: 'Google Maps',
       apple: 'Apple Karten',
       geo: 'Karten-App des Geräts',
+    },
+  },
+  browser: {
+    meta: {
+      name: 'Browser',
+      description:
+        'Einfacher Browser mit Tabs, Lesezeichen und privatem Modus. Läuft getrennt von deinen Nemo-Daten.',
+      widget: 'Lesezeichen',
+      widgetEmpty: 'Noch keine Lesezeichen.',
+      widgetAction: 'Browser öffnen',
+    },
+    settings: {
+      engine: 'Suchmaschine',
+      engineCustom: 'Eigene Adresse',
+      customUrl: 'Eigene Such-Adresse',
+      customUrlHelp: 'https://… mit {q} an der Stelle des Suchbegriffs',
+      history: 'Verlauf speichern',
+      httpWarning: 'Vor unverschlüsselten Seiten (HTTP) warnen',
+      blocker: 'Werbe- und Tracker-Blocker',
+      hint: 'Hinweis zum Systembrowser zeigen',
+    },
+    unsupported: {
+      title: 'Den Browser gibt es nur in der Desktop-App',
+      body: 'Hier öffnen Adressen im Browser deines Geräts.',
+    },
+    hint: 'Kein vollwertiger Browser. Für Online-Banking den Systembrowser nutzen.',
+    hintClose: 'Hinweis ausblenden',
+    toolbar: {
+      back: 'Zurück',
+      forward: 'Vor',
+      reload: 'Neu laden',
+      address: 'Adresse oder Suchbegriff',
+      go: 'Öffnen',
+      menu: 'Mehr',
+      newTab: 'Neuer Tab',
+      closeTab: 'Tab schließen',
+      privateTab: 'Privat',
+      untitled: 'Neuer Tab',
+      addBookmark: 'Lesezeichen setzen',
+      removeBookmark: 'Lesezeichen entfernen',
+      tabs: 'Tabs',
+    },
+    start: {
+      title: 'Wohin soll es gehen?',
+      body: 'Gib oben eine Adresse oder einen Suchbegriff ein.',
+      newPrivate: 'Privaten Tab öffnen',
+      bookmarks: 'Lesezeichen',
+      recent: 'Zuletzt besucht',
+      none: 'Noch nichts gespeichert.',
+    },
+    menu: {
+      saveToList: 'In Merkliste speichern',
+      saveAsNote: 'Als Notiz speichern',
+      openSystem: 'Im Systembrowser öffnen',
+      zoomIn: 'Vergrößern',
+      zoomOut: 'Verkleinern',
+      zoomReset: 'Zoom zurücksetzen',
+      zoom: (percent: number) => `Zoom ${percent} %`,
+      bookmarks: 'Lesezeichen',
+      history: 'Verlauf',
+      blocker: 'Blocker',
+      clearData: 'Browserdaten löschen',
+      findHint: 'Auf der Seite suchen: Strg+F',
+      newPrivate: 'Neuer privater Tab',
+      close: 'Menü schließen',
+    },
+    savedToList: 'In der Merkliste gespeichert',
+    listOff: 'Schalte das Modul Merkliste in der Bibliothek ein, um Seiten dorthin zu speichern.',
+    http: {
+      title: 'Diese Seite ist nicht verschlüsselt',
+      body: (host: string) =>
+        `${host} wird über HTTP geladen. Andere im Netzwerk können mitlesen. Gib hier keine Passwörter ein.`,
+      back: 'Zurück',
+      proceed: 'Trotzdem öffnen',
+    },
+    bookmarks: {
+      title: 'Lesezeichen',
+      empty:
+        'Noch keine Lesezeichen. Mit dem Stern in der Leiste speicherst du die aktuelle Seite.',
+      added: 'Lesezeichen gesetzt',
+      removed: 'Lesezeichen entfernt',
+    },
+    history: {
+      title: 'Verlauf',
+      empty: 'Noch kein Verlauf.',
+      off: 'Der Verlauf ist ausgeschaltet. Du kannst ihn in den Einstellungen einschalten.',
+      clear: 'Verlauf löschen',
+      cleared: 'Verlauf gelöscht',
+    },
+    blocker: {
+      title: 'Blocker',
+      intro:
+        'Der Blocker hält bekannte Werbe- und Tracker-Server fern. Er ist nicht vollständig: Server, die du hier blockst, kommen dazu.',
+      off: 'Der Blocker ist ausgeschaltet. Du kannst ihn in den Einstellungen einschalten.',
+      blockedCount: (n: number) => (n === 1 ? '1 Anfrage blockiert' : `${n} Anfragen blockiert`),
+      thirdParties: 'Fremde Server auf dieser Seite',
+      none: 'Diese Seite hat keine fremden Server kontaktiert.',
+      block: 'Blocken',
+      blockHost: (host: string) => `${host} blockieren`,
+      rules: 'Eigene Regeln',
+      noRules: 'Noch keine eigenen Regeln.',
+      removeRule: 'Regel entfernen',
+      ruleAdded: 'Regel gespeichert',
+      pauseSite: 'Auf dieser Seite pausieren',
+      resumeSite: 'Auf dieser Seite wieder einschalten',
+    },
+    popupBlocked: 'Ein Pop-up wurde blockiert.',
+    download: {
+      held: 'Die Seite startet einen Download. Der Download-Manager kommt später; so lange geht es im Systembrowser.',
+      openSystem: 'Im Systembrowser öffnen',
+    },
+    clear: {
+      title: 'Browserdaten löschen?',
+      body: 'Löscht Cookies, Cache und Website-Daten des Browsers und schließt alle Tabs. Lesezeichen und Verlauf bleiben.',
+      confirm: 'Löschen',
+      done: 'Browserdaten gelöscht',
     },
   },
 } as const;

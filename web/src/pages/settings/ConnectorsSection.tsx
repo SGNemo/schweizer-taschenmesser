@@ -1,13 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { createElement, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createContext } from '@/core/connectors/context';
-import { connectors } from '@/core/connectors/registry';
+import { connectors, isVisible } from '@/core/connectors/registry';
 import {
+  addAccount,
   connectOAuth,
   describeError,
   disconnect,
   hasClient,
   listCalendars,
+  removeAccount,
   saveClient,
   selectCalendars,
   selectedCalendarIds,
@@ -110,13 +112,18 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
   const platform = getPlatform();
   const toast = useUiStore((st) => st.toast);
   const status = useConnectorStatus(def.id);
+  const showPreview = useUiStore((st) => st.showPreview);
   const ctx = useMemo(() => createContext(def), [def]);
   const [features, setFeatures] = useState<string[] | undefined>();
-  const [busy, setBusy] = useState<'connect' | 'sync' | undefined>();
+  const [busy, setBusy] = useState<'connect' | 'sync' | 'account' | undefined>();
+  const [removing, setRemoving] = useState<{ id: string; name: string } | undefined>();
   const calendars: ExternalCalendar[] = useLiveQuery(() => storedCalendars(def.id), [def.id]) ?? [];
   const selected: string[] = useLiveQuery(() => selectedCalendarIds(def.id), [def.id]) ?? [];
   const [confirm, setConfirm] = useState(false);
   const [clientVersion, setClientVersion] = useState(0);
+
+  // Preview connectors only with "In Arbeit anzeigen" or while connected (core/connectors/registry.ts).
+  const listed = isVisible(def, { showPreview, connected: status?.state === 'connected' });
 
   const nativeLogin = def.platforms.includes(platform.kind) && platform.oauth.supported;
   const canLogin = def.authType === 'oauth-pkce' && (nativeLogin || browserLoginAvailable(def));
@@ -157,6 +164,18 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     }
   }
 
+  async function addAnother() {
+    setBusy('account');
+    const controller = new AbortController();
+    loginAbort.current = controller;
+    try {
+      if (def.id === 'google') await requireNotice('connector-google');
+      await addAccount(def, active, { signal: controller.signal });
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
   async function syncNow() {
     setBusy('sync');
     try {
@@ -185,6 +204,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     if (on) await syncNow();
   }
 
+  if (!listed) return null;
   return (
     <Card title={def.name} data-testid={`connector-${def.id}`}>
       <div className={styles.form}>
@@ -196,6 +216,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
           <dt>{s.statusLabel}</dt>
           <dd>
             <Badge>{s.status[state] ?? state}</Badge>
+            {def.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
           </dd>
           {status?.lastSyncAt ? (
             <>
@@ -257,6 +278,33 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
           </>
         ) : null}
 
+        {def.multiAccount && connected && nativeLogin ? (
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>{s.accounts}</legend>
+            <p className={styles.muted}>{s.accountsHint}</p>
+            {(status?.accounts ?? []).map((a, i) => {
+              const name = a.email ?? s.accountUnnamed(i + 2);
+              return (
+                <div key={a.id} className={styles.row} data-testid="connector-account">
+                  <span>{name}</span>
+                  <Button onClick={() => setRemoving({ id: a.id, name })}>{s.removeAccount}</Button>
+                </div>
+              );
+            })}
+            <div className={styles.row}>
+              <Button
+                disabled={busy !== undefined || active.length === 0}
+                onClick={() => void addAnother()}
+              >
+                {busy === 'account' ? s.connecting : s.addAccount}
+              </Button>
+              {busy === 'account' ? (
+                <Button onClick={() => loginAbort.current?.abort()}>{s.cancelLogin}</Button>
+              ) : null}
+            </div>
+          </fieldset>
+        ) : null}
+
         {def.settings ? (
           <ExtraSettings def={def} ctx={ctx} onChanged={() => void configurationChanged()} />
         ) : null}
@@ -310,6 +358,24 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
               {s.deleteData}
             </Button>
           </div>
+        </div>
+      </Dialog>
+      <Dialog
+        open={removing !== undefined}
+        onClose={() => setRemoving(undefined)}
+        title={s.removeAccountTitle(removing?.name ?? '')}
+        footer={<Button onClick={() => setRemoving(undefined)}>{t.actions.cancel}</Button>}
+      >
+        <div className={styles.form}>
+          <p>{s.removeAccountBody}</p>
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (removing) void removeAccount(def, removing.id).then(() => setRemoving(undefined));
+            }}
+          >
+            {s.removeAccount}
+          </Button>
         </div>
       </Dialog>
     </Card>

@@ -10,7 +10,16 @@ import { searchSettings } from '@/core/settings/registry/search';
 import { isCategoryId, type SettingsCategoryId } from '@/core/settings/registry/types';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
-import { Button, EmptyState, Icon, Skeleton, TextField, useMediaQuery, type IconName } from '@/ui';
+import {
+  Badge,
+  Button,
+  EmptyState,
+  Icon,
+  Skeleton,
+  TextField,
+  useMediaQuery,
+  type IconName,
+} from '@/ui';
 import { CategoryStatus } from './CategoryStatus';
 import { QuickBar } from './QuickBar';
 import { useSettingsSections } from './useSections';
@@ -249,6 +258,11 @@ export function CategoryPage() {
       )}
       {own.map((s) => (
         <Fragment key={s.id}>
+          {s.maturity === 'preview' ? (
+            <p className={styles.previewBadge} data-testid={`preview-${s.id}`}>
+              <Badge>{t.settings.maturity.badge}</Badge>
+            </p>
+          ) : null}
           {s.render()}
           {s.reset ? (
             <Button

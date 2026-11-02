@@ -18,12 +18,24 @@ export function validateSections(sections: readonly SettingsSectionDef[]): strin
     if (!isCategoryId(s.category as string | undefined))
       errors.push(`section "${s.id}" has no valid category`);
     if (!s.title) errors.push(`section "${s.id}" has no title`);
+    if (s.maturity !== 'stable' && s.maturity !== 'preview')
+      errors.push(`section "${s.id}" needs maturity 'stable' or 'preview'`);
   }
   return errors;
 }
 
 const bySort = (a: SettingsSectionDef, b: SettingsSectionDef) =>
   a.order - b.order || compareText(a.title, b.title);
+
+/**
+ * The maturity rule for sections: a `preview` section shows while "In Arbeit anzeigen" is on or
+ * what it controls is in use (`previewInUse`), so nothing the user switched on becomes unreachable.
+ */
+export const isMaturityVisible = (s: SettingsSectionDef, ctx: SettingsContext): boolean =>
+  s.maturity !== 'preview' ||
+  ctx.showPreview ||
+  ctx.inUse?.[s.id] === true ||
+  s.previewInUse?.(ctx) === true;
 
 /** Visible sections in navigation order (category order, then `order`, then title). */
 export function visibleSections(
@@ -32,7 +44,7 @@ export function visibleSections(
 ): SettingsSectionDef[] {
   const catRank = (c: SettingsCategoryId) => SETTINGS_CATEGORY_IDS.indexOf(c);
   return sections
-    .filter((s) => !s.visibleWhen || s.visibleWhen(ctx))
+    .filter((s) => (!s.visibleWhen || s.visibleWhen(ctx)) && isMaturityVisible(s, ctx))
     .sort((a, b) => catRank(a.category) - catRank(b.category) || bySort(a, b));
 }
 

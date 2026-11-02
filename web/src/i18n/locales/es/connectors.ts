@@ -52,6 +52,15 @@ export const connectors: Strings['connectors'] = {
     'Se revoca el acceso en el servicio y se eliminan de este dispositivo los datos de inicio de sesión guardados.',
   keepData: 'Conservar los eventos importados',
   deleteData: 'Eliminar los eventos importados',
+  accounts: 'Cuentas',
+  accountsHint:
+    'Puedes usar varias cuentas de Google. Cada una inicia sesión por separado y se puede quitar por separado.',
+  addAccount: 'Añadir otra cuenta',
+  accountUnnamed: (n: number) => `Cuenta ${n}`,
+  removeAccount: 'Quitar cuenta',
+  removeAccountTitle: (name: string) => `¿Quitar ${name}?`,
+  removeAccountBody:
+    'Se revoca el acceso de esta cuenta en el servicio y sus datos de inicio de sesión se borran de este dispositivo. Las demás cuentas se mantienen.',
   client: {
     title: 'Aplicación propia de Google',
     intro:

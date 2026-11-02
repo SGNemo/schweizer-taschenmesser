@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, showPreview } from './helpers';
 import { CORS, mockSpotify, seedConnected } from './spotify-mock';
 
 /**
@@ -7,6 +7,9 @@ import { CORS, mockSpotify, seedConnected } from './spotify-mock';
  * itself (browser, redirect on port 38417) is a hand test (docs/MANUAL-TESTS.md S1–S4); here a
  * connected state with invented tokens is written into the app's device-local stores.
  */
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 test.describe('Spotify connector', () => {
   test('settings, Android app: the card explains where signing in works and offers no login', async ({

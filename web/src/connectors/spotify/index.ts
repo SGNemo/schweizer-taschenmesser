@@ -49,6 +49,8 @@ const connector: ConnectorDef = {
   icon: 'play',
   authType: 'oauth-pkce',
   platforms: ['desktop', 'web'],
+  // Desktop OAuth, Premium-only controls and open hand tests (docs/product/next/03-maturity-proposal.md).
+  maturity: 'preview',
   get unavailableHint() {
     return s().browserHint;
   },

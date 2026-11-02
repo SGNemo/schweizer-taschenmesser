@@ -13,6 +13,7 @@ const tool: ToolManifest = {
   group: 'basis',
   offline: false,
   defaultEnabled: true,
+  maturity: 'stable',
   order: 30,
   component: () => import('./Tool'),
 };

@@ -24,8 +24,9 @@ local-llm-vulkan = ["local-llm", "taschenmesser-local-llm/vulkan"]
 tauri-build = { version = "2.7", features = [] }
 
 [dependencies]
-# `tray-icon`: the capture tray menu (src/capture.rs).
-tauri = { version = "2.12", features = ["tray-icon"] }
+# `tray-icon`: the capture tray menu (src/capture.rs). `unstable`: child webviews for the built-in
+# browser (src/browser.rs, `Window::add_child`); revisit when Tauri stabilises multiwebview.
+tauri = { version = "2.12", features = ["tray-icon", "unstable"] }
 tauri-plugin-notification = "2.7"
 tauri-plugin-http = "~2.8"
 tauri-plugin-dialog = "2.8"
@@ -36,6 +37,8 @@ tauri-plugin-apk-installer = { path = "plugins/apk-installer" }
 tauri-plugin-secure-store = { path = "plugins/secure-store" }
 # Android "Share" target (text and links from other apps); a stub elsewhere.
 tauri-plugin-share-intent = { path = "plugins/share-intent" }
+# Android: immersive mode and keep-awake for the cockpit; a stub elsewhere.
+tauri-plugin-screen-mode = { path = "plugins/screen-mode" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
@@ -54,6 +57,8 @@ tauri-plugin-single-instance = "2"
 taschenmesser-local-api = { path = "crates/local-api" }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }
 taschenmesser-system-info = { path = "crates/system-info" }
+# Built-in browser: URL policy and ad/tracker blocker decisions (src/browser.rs).
+taschenmesser-browser-filter = { path = "crates/browser-filter" }
 # Built-in local model (stage 1 of the AI entry pipeline); see the `local-llm` feature.
 taschenmesser-local-llm = { path = "crates/local-llm", optional = true }
 # Browser extension bridge (native messaging host + pipe server; src/vault_bridge.rs).
@@ -61,6 +66,9 @@ taschenmesser-vault-bridge = { path = "crates/vault-bridge" }
 
 # WebView2 runtime detection and the "runtime missing" message box (src/webview2.rs).
 [target.'cfg(windows)'.dependencies]
+# Browser tab request blocking (src/browser_win.rs): the same versions Tauri's webview layer uses.
+webview2-com = "0.39"
+windows_next = { package = "windows", version = "0.62" }
 windows = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_Globalization",

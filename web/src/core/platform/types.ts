@@ -3,6 +3,7 @@ import type { SecretStore } from '@/core/secrets/types';
 import type { UpdateService } from '@/core/update/types';
 import type { DiskService } from './disk';
 import type { LocalModelService } from './localModel';
+import type { BrowserService } from './browser';
 import type { SystemService } from './system';
 
 /**
@@ -54,6 +55,22 @@ export interface BiometricService {
 /** Screen-level protection (Android FLAG_SECURE); a no-op elsewhere. */
 export interface ScreenService {
   setSecure(enabled: boolean): Promise<void>;
+}
+
+/**
+ * What the cockpit needs from the window: full screen (desktop window, browser Fullscreen API),
+ * Android immersive mode (system bars hidden, a swipe shows them briefly) and keeping the screen
+ * on. Every part degrades to a no-op where it does not exist, so callers never branch on the kind.
+ */
+export interface DisplayService {
+  /** True where `setFullscreen` does something (a desktop window, a browser with the Fullscreen API). */
+  readonly fullscreenSupported: boolean;
+  setFullscreen(on: boolean): Promise<void>;
+  isFullscreen(): Promise<boolean>;
+  /** Android only: hide status and navigation bars. */
+  setImmersive(on: boolean): Promise<void>;
+  /** Keep the screen on (Android window flag, browser wake lock). */
+  setKeepAwake(on: boolean): Promise<void>;
 }
 
 /**
@@ -251,6 +268,8 @@ export interface PlatformService {
   secrets: SecretStore;
   biometrics: BiometricService;
   screen: ScreenService;
+  /** Full screen, immersive mode, keep-awake (cockpit). */
+  display: DisplayService;
   oauth: OAuthLoopback;
   localApi: LocalApiService;
   vaultBridge: VaultBridgeService;
@@ -258,6 +277,8 @@ export interface PlatformService {
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */
   system: SystemService;
+  /** Isolated tabs of the built-in browser (desktop only). */
+  browser: BrowserService;
   /** The built-in local language model (desktop only; stage 1 of the AI entry pipeline). */
   localModel: LocalModelService;
   desktop: DesktopService;

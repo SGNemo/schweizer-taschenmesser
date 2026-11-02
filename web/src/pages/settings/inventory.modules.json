@@ -34,6 +34,41 @@
       }
     }
   },
+  "browser": {
+    "scope": "module.browser",
+    "fields": {
+      "engine": {
+        "type": "select",
+        "label": "Suchmaschine",
+        "default": "duckduckgo"
+      },
+      "customUrl": {
+        "type": "text",
+        "label": "Eigene Such-Adresse",
+        "default": ""
+      },
+      "history": {
+        "type": "boolean",
+        "label": "Verlauf speichern",
+        "default": true
+      },
+      "httpWarning": {
+        "type": "boolean",
+        "label": "Vor unverschlüsselten Seiten (HTTP) warnen",
+        "default": true
+      },
+      "blocker": {
+        "type": "boolean",
+        "label": "Werbe- und Tracker-Blocker",
+        "default": true
+      },
+      "hint": {
+        "type": "boolean",
+        "label": "Hinweis zum Systembrowser zeigen",
+        "default": true
+      }
+    }
+  },
   "calendar": {
     "scope": "module.calendar",
     "fields": {
