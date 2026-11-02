@@ -25,6 +25,10 @@ export function validateAiActions(aiSchema: ModuleAiSchema | undefined): string[
     }
     if ((a.kind === 'create' || a.kind === 'update') && fields.length === 0)
       errors.push(`${where}: ${a.kind} needs fields`);
+    for (const f of a.append ?? []) {
+      if (a.kind !== 'update') errors.push(`${where}: append is for update actions only`);
+      else if (!fields.includes(f)) errors.push(`${where}: append "${f}" is not in fields`);
+    }
     if (a.kind === 'transition' && Object.keys(a.set ?? {}).length === 0)
       errors.push(`${where}: transition needs set`);
     if (a.kind === 'delete' && (fields.length > 0 || a.set))

@@ -3545,6 +3545,46 @@ export const de = {
       star: 'Stern',
       globe: 'Welt',
     },
+    links: {
+      menu: 'Seiten verknüpfen',
+      backlinks: 'Verweise auf diese Seite',
+      created: 'Seite angelegt.',
+      toTodo: 'Als ToDo übernehmen',
+      todoOff: 'Dafür muss das Modul „ToDos“ eingeschaltet sein.',
+      todoAdded: 'Als ToDo übernommen.',
+      unlinked: 'Diese Seite gibt es noch nicht – sie wird beim Öffnen angelegt.',
+      newPage: (title: string) => `Neue Seite „${title}“`,
+    },
+    exportMenu: {
+      button: 'Exportieren',
+      title: 'Exportieren',
+      scopePage: 'Diese Seite',
+      scopeNotebook: 'Dieses Notizbuch',
+      scopeAll: 'Alle Seiten',
+      markdown: 'Markdown (.md)',
+      text: 'Text (.txt)',
+      pdf: 'PDF (Druckansicht)',
+      done: 'Exportiert.',
+      empty: 'Nichts zum Exportieren.',
+      printHint: 'Im Druckdialog „Als PDF speichern“ wählen.',
+    },
+    importMenu: {
+      button: 'Importieren',
+      title: 'Dateien importieren',
+      files: 'Dateien wählen',
+      folder: 'Ordner wählen',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten.',
+      none: 'Keine passenden Dateien gefunden.',
+      confirm: 'Importieren',
+      summary: (pages: number, books: number) =>
+        `${pages === 1 ? '1 Seite' : `${pages} Seiten`}${books ? `, ${books === 1 ? '1 Notizbuch' : `${books} Notizbücher`}` : ''} gefunden.`,
+      done: (n: number) => (n === 1 ? '1 Seite importiert.' : `${n} Seiten importiert.`),
+      duplicates: (n: number) =>
+        n === 1
+          ? '1 doppelte Seite wird übersprungen.'
+          : `${n} doppelte Seiten werden übersprungen.`,
+    },
+    snippet: 'Treffer im Text',
   },
 
   pantry: {
