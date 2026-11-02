@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, configure, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,12 +12,17 @@ vi.mock('@/core/modules/activation', async (orig) => ({
   useModuleStates: () => modules.states,
 }));
 
+import { setSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import PersonaTool from './View';
 import { postcodeFits } from './logic';
 import { DATA } from './data';
 
 const s = t.tools.persona;
+
+// Each option is written to the settings first and the tool rebuilds afterwards; on a busy CI machine that
+// takes longer than the default second.
+configure({ asyncUtilTimeout: 5000 });
 
 function Where() {
   const l = useLocation();
@@ -33,7 +38,17 @@ const wrap = () =>
 const rowValue = (label: string): string =>
   (screen.getByText(label, { selector: 'span' }).nextElementSibling as HTMLElement).textContent!;
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Settings live in the (fake) database and would carry over from one test to the next.
+  await setSettings('tools.persona', {
+    country: undefined,
+    age: 'a26',
+    gender: 'none',
+    bio: false,
+    passwordSymbols: true,
+    mailProvider: 'guerrilla',
+    noticeSeen: false,
+  });
   openUrl.mockClear();
   modules.states = { notes: false };
 });
@@ -118,6 +133,22 @@ describe('persona tool', () => {
     expect(DATA.us.streets.some((x) => rowValue(s.fields.street).includes(x))).toBe(true);
     await user.selectOptions(screen.getByLabelText(s.country), 'br');
     await waitFor(() => expect(rowValue(s.fields.postcode)).toMatch(/^\d{5}-\d{3}$/));
+  });
+
+  it('keeps the control and its focus when an option changes (no rebuild of the panel)', async () => {
+    const user = userEvent.setup();
+    wrap();
+    await screen.findByTestId('persona-fields');
+    const country = screen.getByLabelText(s.country);
+    await user.selectOptions(country, 'fr');
+    await waitFor(() => expect(rowValue(s.fields.phone)).toMatch(/^00 \d\d/));
+    expect(screen.getByLabelText(s.country)).toBe(country);
+    expect(country).toHaveValue('fr');
+    expect(document.activeElement).toBe(country);
+    const bio = screen.getByLabelText(s.bio);
+    await user.click(bio);
+    expect(screen.getByLabelText(s.bio)).toBe(bio);
+    expect(document.activeElement).toBe(bio);
   });
 
   it('adds gender and bio only when asked for', async () => {

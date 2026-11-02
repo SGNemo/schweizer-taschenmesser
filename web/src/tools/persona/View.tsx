@@ -73,9 +73,6 @@ export default function PersonaTool() {
   };
   return (
     <Generator
-      // Another country, age, gender, bio or password setting makes a fresh persona right away; the mail
-      // provider and the notice do not.
-      key={JSON.stringify(options)}
       options={options}
       mailProvider={stored.mailProvider as MailProviderId}
       noticeSeen={stored.noticeSeen}
@@ -107,6 +104,12 @@ function Generator({
   );
   const allText = rows.map((r) => `${r.label}: ${r.value}`).join('\n');
   const reroll = (f: Field) => setPersona((p) => rerollField(p, f, options));
+  // A changed country, age, gender, bio or password setting is stored and makes a fresh persona right away.
+  // The panel stays mounted, so focus stays on the control that was changed.
+  const change = (stored: Partial<z.input<typeof schema>>, now: Partial<PersonaOptions>) => {
+    patch(stored);
+    setPersona(generatePersona({ ...options, ...now }));
+  };
 
   return (
     <div className={styles.stack}>
@@ -124,7 +127,10 @@ function Generator({
           <SelectField
             label={s.country}
             value={options.country}
-            onChange={(e) => patch({ country: e.target.value as (typeof COUNTRIES)[number] })}
+            onChange={(e) => {
+              const country = e.target.value as (typeof COUNTRIES)[number];
+              change({ country }, { country });
+            }}
           >
             {COUNTRIES.map((c) => (
               <option key={c} value={c}>
@@ -137,7 +143,10 @@ function Generator({
           <SelectField
             label={s.age}
             value={options.age}
-            onChange={(e) => patch({ age: e.target.value as AgeBandId })}
+            onChange={(e) => {
+              const age = e.target.value as AgeBandId;
+              change({ age }, { age });
+            }}
           >
             {(Object.keys(AGE_BANDS) as AgeBandId[]).map((a) => (
               <option key={a} value={a}>
@@ -150,7 +159,10 @@ function Generator({
           <SelectField
             label={s.gender}
             value={options.gender}
-            onChange={(e) => patch({ gender: e.target.value as GenderChoice })}
+            onChange={(e) => {
+              const gender = e.target.value as GenderChoice;
+              change({ gender }, { gender });
+            }}
           >
             {(['none', 'any', 'f', 'm'] as const).map((g) => (
               <option key={g} value={g}>
@@ -164,12 +176,14 @@ function Generator({
         <Checkbox
           label={s.bio}
           checked={options.bio}
-          onChange={(e) => patch({ bio: e.target.checked })}
+          onChange={(e) => change({ bio: e.target.checked }, { bio: e.target.checked })}
         />
         <Checkbox
           label={s.symbols}
           checked={options.passwordSymbols}
-          onChange={(e) => patch({ passwordSymbols: e.target.checked })}
+          onChange={(e) =>
+            change({ passwordSymbols: e.target.checked }, { passwordSymbols: e.target.checked })
+          }
         />
       </div>
 
