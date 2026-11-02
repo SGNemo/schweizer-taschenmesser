@@ -3,9 +3,9 @@
   "npm": [
     {
       "name": "@anthropic-ai/sdk",
-      "version": "1.1.0",
+      "version": "1.3.0",
       "license": "Apache-2.0",
-      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.1.0"
+      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.3.0"
     },
     {
       "name": "@babel/runtime",
@@ -135,9 +135,9 @@
     },
     {
       "name": "@tauri-apps/plugin-dialog",
-      "version": "2.8.3",
+      "version": "2.8.4",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.3"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.4"
     },
     {
       "name": "@tauri-apps/plugin-fs",
@@ -729,9 +729,9 @@
     },
     {
       "name": "lucide-react",
-      "version": "1.61.0",
+      "version": "1.65.0",
       "license": "ISC",
-      "url": "https://www.npmjs.com/package/lucide-react/v/1.61.0"
+      "url": "https://www.npmjs.com/package/lucide-react/v/1.65.0"
     },
     {
       "name": "marked",
@@ -885,9 +885,9 @@
     },
     {
       "name": "react-router",
-      "version": "8.5.0",
+      "version": "8.5.1",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/react-router/v/8.5.0"
+      "url": "https://www.npmjs.com/package/react-router/v/8.5.1"
     },
     {
       "name": "recharts",
