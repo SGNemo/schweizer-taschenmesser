@@ -4660,7 +4660,7 @@ export const de = {
     google: {
       name: 'Google',
       description:
-        'Kalender lesen und E-Mails nach Rechnungen, Abos, Terminen und Verträgen durchsuchen. Nur lesend.',
+        'Kalender und E-Mails lesen. Verwalten und Senden von E-Mails sind eigene Berechtigungen, die du nur bei Bedarf einschaltest.',
       calendarFeature: 'Kalender',
       calendarFeatureHint: 'Termine aus deinen Google-Kalendern anzeigen.',
       mailFeature: 'E-Mails',

@@ -105,7 +105,7 @@ export const connectors: Strings['connectors'] = {
   google: {
     name: 'Google',
     description:
-      'Lee calendarios y busca en los correos facturas, suscripciones, eventos y contratos. Solo lectura.',
+      'Leer calendarios y correo. Gestionar y enviar correo son permisos aparte que activas solo si los necesitas.',
     calendarFeature: 'Calendario',
     calendarFeatureHint: 'Muestra eventos de tus calendarios de Google.',
     mailFeature: 'Correos',
