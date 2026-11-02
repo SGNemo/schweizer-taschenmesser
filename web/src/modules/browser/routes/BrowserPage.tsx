@@ -273,7 +273,7 @@ export default function BrowserPage() {
       ) : null}
 
       {offer ? (
-        <div className={styles.hint} role="status">
+        <div className={styles.offer} role="status">
           <span>{t.browser.download.offer(offerName(offer.url))}</span>
           <span className={styles.actions}>
             <Button onClick={sendToManager}>{t.browser.download.toManager}</Button>

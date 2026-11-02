@@ -46,6 +46,8 @@ Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `d
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
+Download-Manager (Paket 2, Branch `feat/downloads-http`, gestapelt auf `feat/browser`): HTTP(S)-Downloads mit Fortschritt, Pausieren/Fortsetzen auch nach Neustart, Tempolimit, Prüfsumme, Zielordner; Torrent folgt in Paket 3. Handtests D1–D6 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 Browser + Downloads: Paket 1 „Browser“ (Branch `feat/browser`, Desktop, isolierte Tabs, Blocker, Lesezeichen/Verlauf) ist gebaut, PR gegen `develop` wartet auf Review; Rust-Teil nur per `cargo check` (Windows-Ziel) geprüft, Handtests B1–B8 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Danach: Paket 2 Download-Manager (HTTP), 3 Torrent, 4 Android/Dateizuordnung.
 
 KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); Regel-Trefferquote jetzt an drei Sätzen gemessen (Tuning, Held-out, Blind; erste Blind-Messung 97,4 %, 1 Fehlgriff bei Fragen); PR B (Branch `feat/ai-local-model`): lokales Modell als Stufe 1 (Rust-Laufzeit hinter Cargo-Feature, Einstellungen, Download mit Zustimmung/Prüfsumme, Mess-Harness); Modellwahl steht aus; PR C (Branch `feat/ai-chat-module`, gestapelt auf B): Chat-Modul (mehrere Chats, lokales Modell oder Anbieter, Daten aus Modulen nur freiwillig mit Vorschau, sicheres Markdown, Export). Handtests K1–K4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).

@@ -353,3 +353,11 @@ B5. *Privat:* privater Tab, auf einer Seite anmelden/Cookie setzen, Tab schließ
 B6. *Blocker (Windows):* eine Seite mit vielen Anzeigen: Zähler im Menü „Blocker“ steigt, Fremdserver-Liste füllt sich, „Blocken“ legt eine eigene Regel an, nach „Neu laden“ fehlt dieser Server. Pausieren auf der Seite lädt alles wieder. ☐
 B7. *Suchen auf der Seite:* Strg+F zeigt die Suchleiste von WebView2 (nicht von Nemo gebaut). ☐
 B8. *Merkliste/Notiz:* „In Merkliste speichern“ (Modul an) legt den Eintrag an, „Als Notiz speichern“ öffnet eine neue Notiz mit Titel und Adresse. ☐
+
+### Downloads (Desktop, nur mit echtem Netz und Fenster prüfbar)
+D1. *Download und Prüfsumme:* Modul „Downloads“ einschalten, eine kleine Datei von einer Seite mit veröffentlichter SHA-256 hinzufügen (Prüfsumme einfügen): läuft, wird „Fertig“, „Stimmt überein“. Eine falsche Prüfsumme: „Fehlgeschlagen – Prüfsumme stimmt nicht, Datei wurde gelöscht“. ☐
+D2. *Pausieren, Fortsetzen, Neustart:* großen Download starten, pausieren, Nemo beenden, neu starten: Eintrag steht „Pausiert“ mit dem alten Stand, nichts läuft von selbst; „Fortsetzen“ macht dort weiter (kein neuer Anfang). Auch beim Beenden mitten im Download (Task-Manager): nach dem Start „Pausiert“. ☐
+D3. *Limit:* Einstellung „Tempolimit“ auf 200 KB/s: die Anzeige bleibt darunter; auf 0: wieder volle Geschwindigkeit. ☐
+D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden: neue heißt „name (1).ext“, die alte bleibt. „Im Ordner zeigen“ markiert die Datei im Explorer, öffnet sie nicht. Eine ausführbare Datei wird nie gestartet. ☐
+D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
+D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐

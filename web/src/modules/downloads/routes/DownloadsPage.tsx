@@ -215,7 +215,7 @@ function JobRow({
               : ''}
           </span>
         ) : null}
-        <span className={styles.sub}>{job.dir}</span>
+        {job.state === 'done' ? <span className={styles.sub}>{job.dir}</span> : null}
       </div>
     </ItemRow>
   );

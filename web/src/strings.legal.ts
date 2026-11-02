@@ -111,6 +111,12 @@ export const tLegal = defineBundle(
         to: 'Die Server der Seiten, die du öffnest, und die Suchmaschine deiner Wahl (Standard DuckDuckGo). Sie sehen deine IP-Adresse.',
         when: 'Nur wenn du das Modul „Browser“ einschaltest und eine Adresse oder einen Suchbegriff abschickst oder einem Link folgst, nie im Hintergrund. Der Blocker hält bekannte Werbe- und Tracker-Server fern (nur Windows).',
       },
+      downloads: {
+        title: 'Downloads (optional)',
+        what: 'Die Adresse jedes Downloads, den du hinzufügst, und die üblichen Verbindungsdaten. Die Datei wird nur im gewählten Ordner gespeichert; Nemo öffnet oder startet sie nie. Die Liste der Downloads bleibt auf dem Gerät und geht nie an die KI.',
+        to: 'Der Server, von dem du herunterlädst. Er sieht deine IP-Adresse.',
+        when: 'Nur wenn du das Modul „Downloads“ einschaltest und auf „Herunterladen“ klickst oder einen pausierten Download fortsetzt. Nichts startet von selbst, auch nicht nach einem Neustart.',
+      },
       ip: {
         title: 'Öffentliche IP anzeigen (Windows)',
         what: 'Eine Abfrage deiner öffentlichen IP-Adresse. Das Ergebnis wird nur angezeigt.',
@@ -335,6 +341,12 @@ export const tLegal = defineBundle(
           what: 'The pages you open in the built-in browser: address, cookies and whatever else the page requests, as in any browser; for a search, the search term to the chosen search engine. Bookmarks and history stay on the device, never go to the AI and are not synced. The pages run separately from your Nemo data and cannot see it.',
           to: 'The servers of the pages you open and the search engine of your choice (default DuckDuckGo). They see your IP address.',
           when: 'Only when you switch on the “Browser” module and submit an address or a search term or follow a link, never in the background. The blocker keeps known ad and tracker servers out (Windows only).',
+        },
+        downloads: {
+          title: 'Downloads (optional)',
+          what: 'The address of every download you add, and the usual connection data. The file is only saved in the chosen folder; Nemo never opens or starts it. The list of downloads stays on the device and never goes to the AI.',
+          to: 'The server you download from. It sees your IP address.',
+          when: 'Only when you switch on the “Downloads” module and click “Download” or resume a paused download. Nothing starts by itself, not even after a restart.',
         },
         ip: {
           title: 'Show public IP (Windows)',
