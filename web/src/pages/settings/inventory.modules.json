@@ -116,6 +116,41 @@
         "type": "text",
         "label": "Download-Ordner (leer = Downloads-Ordner des Systems)",
         "default": ""
+      },
+      "torrent": {
+        "type": "boolean",
+        "label": "BitTorrent-Teil einschalten",
+        "default": false
+      },
+      "torrentDht": {
+        "type": "boolean",
+        "label": "Teilnehmer über das DHT-Netz suchen (nötig für Magnet-Links ohne Tracker)",
+        "default": true
+      },
+      "torrentUpnp": {
+        "type": "boolean",
+        "label": "Port am Router automatisch öffnen (UPnP)",
+        "default": false
+      },
+      "torrentUpKb": {
+        "type": "number",
+        "label": "Torrent: Upload-Limit (KB/s, 0 = unbegrenzt)",
+        "default": 0
+      },
+      "torrentDownKb": {
+        "type": "number",
+        "label": "Torrent: Download-Limit (KB/s, 0 = unbegrenzt)",
+        "default": 0
+      },
+      "seedRatio": {
+        "type": "number",
+        "label": "Teilen beenden bei diesem Verhältnis (0 = nie)",
+        "default": 1
+      },
+      "seedMinutes": {
+        "type": "number",
+        "label": "Teilen beenden nach so vielen Minuten (0 = nie)",
+        "default": 0
       }
     }
   },

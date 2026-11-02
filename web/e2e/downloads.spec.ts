@@ -144,3 +144,109 @@ test('a download offered by a web page waits for a click in the manager', async 
   );
   expect((await calls(page)).some((c) => c.startsWith('add:'))).toBe(false);
 });
+
+// ---- BitTorrent part (fake engine: made-up torrents, no peers, no network) ----
+
+const torrentCalls = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as { __tmTorrentCalls?: string[] }).__tmTorrentCalls ?? [],
+  );
+
+const turnOnTorrent = async (page: Page) => {
+  await page.getByRole('button', { name: 'Torrent-Teil einschalten' }).click();
+  // The one-time notice comes first; nothing starts before it is confirmed.
+  const notice = page.getByRole('dialog', { name: 'BitTorrent: bitte kurz lesen' });
+  await expect(notice).toContainText('Linux-Distributionen');
+  expect(await torrentCalls(page)).toEqual([]);
+  await notice.getByRole('button', { name: 'Verstanden' }).click();
+};
+
+test('BitTorrent is off by default; switching it on shows the notice once, then the engine starts', async ({
+  page,
+}) => {
+  await expect(page.getByText('BitTorrent ist aus')).toBeVisible();
+  expect(await torrentCalls(page)).toEqual([]);
+  await audit(page, 'torrent off');
+  await turnOnTorrent(page);
+  await expect(page.getByRole('list', { name: 'BitTorrent' }).getByRole('listitem')).toHaveCount(3);
+  expect((await torrentCalls(page))[0]).toMatch(/^configure:true:false:0:0:1:0$/);
+  // Off again and on again: the notice does not come back.
+  await page.getByRole('button', { name: 'Torrent-Teil ausschalten' }).click();
+  await expect(page.getByText('BitTorrent ist aus')).toBeVisible();
+  await page.getByRole('button', { name: 'Torrent-Teil einschalten' }).click();
+  await expect(page.getByRole('dialog', { name: 'BitTorrent: bitte kurz lesen' })).toHaveCount(0);
+  await expect(page.getByRole('list', { name: 'BitTorrent' })).toBeVisible();
+});
+
+test('torrent rows say state, speed and ratio in words and can pause, resume and be removed', async ({
+  page,
+}) => {
+  await turnOnTorrent(page);
+  const rows = page.getByRole('list', { name: 'BitTorrent' }).getByRole('listitem');
+  await expect(rows).toHaveCount(3);
+  await expect(rows.nth(0)).toContainText('Teilt');
+  await expect(rows.nth(0)).toContainText('Verhältnis 0.60');
+  await expect(rows.nth(1)).toContainText('Lädt');
+  await expect(rows.nth(1)).toContainText('7 Verbindungen');
+  await expect(rows.nth(2)).toContainText('Pausiert');
+  await audit(page, 'torrent list');
+
+  await rows.nth(1).getByRole('button', { name: 'Pausieren' }).click();
+  await rows.nth(2).getByRole('button', { name: 'Fortsetzen' }).click();
+  const calls = await torrentCalls(page);
+  expect(calls).toContain('pause:2');
+  expect(calls).toContain('resume:3');
+
+  await rows.nth(0).getByRole('button', { name: 'Mehr' }).click();
+  await page.getByRole('menuitem', { name: 'Aus der Liste entfernen' }).click();
+  await expect(rows).toHaveCount(2);
+  expect(await torrentCalls(page)).toContain('remove:1:keep');
+
+  await rows.nth(0).getByRole('button', { name: 'Mehr' }).click();
+  await page.getByRole('menuitem', { name: /Mit Dateien löschen/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Dateien löschen?' })).toContainText(
+    'freie-musik-sammlung',
+  );
+  expect(await torrentCalls(page)).not.toContain('remove:2:data');
+  await page.getByRole('button', { name: 'Löschen', exact: true }).click();
+  expect(await torrentCalls(page)).toContain('remove:2:data');
+});
+
+test('adding a torrent: magnet link → file list → choose files and folder → add', async ({
+  page,
+}) => {
+  await turnOnTorrent(page);
+  await page.getByRole('button', { name: 'Torrent hinzufügen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Torrent hinzufügen' });
+  await dialog.getByLabel('Magnet-Link').fill('https://example.org/not-a-magnet');
+  await dialog.getByRole('button', { name: 'Dateien ansehen' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Das ist kein Magnet-Link.');
+  await dialog.getByLabel('Magnet-Link').fill('magnet:?xt=urn:btih:' + 'a'.repeat(40));
+  await dialog.getByRole('button', { name: 'Dateien ansehen' }).click();
+  await expect(dialog.getByRole('heading', { name: 'beispiel-linux-12' })).toBeVisible();
+  await audit(page, 'torrent files');
+  await dialog.getByRole('button', { name: 'Keine' }).click();
+  await expect(dialog.getByText('Wähle mindestens eine Datei.')).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Herunterladen' })).toBeDisabled();
+  await dialog.getByLabel(/beispiel-linux-12\.iso/).check();
+  await dialog.getByRole('button', { name: 'Herunterladen' }).click();
+  await expect(page.getByRole('list', { name: 'BitTorrent' }).getByRole('listitem')).toHaveCount(4);
+  expect((await torrentCalls(page)).some((c) => /^add:magnet:.*:0$/.test(c))).toBe(true);
+});
+
+test('a .torrent file is chosen in the system dialog; the public IP is only asked for on a click', async ({
+  page,
+}) => {
+  await turnOnTorrent(page);
+  await page.getByRole('button', { name: 'Torrent hinzufügen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Torrent hinzufügen' });
+  await dialog.getByRole('button', { name: '.torrent-Datei öffnen' }).click();
+  await expect(dialog.getByText(/beispiel\.torrent/)).toBeVisible();
+  await dialog.getByRole('button', { name: 'Dateien ansehen' }).click();
+  await expect(dialog.getByRole('heading', { name: 'beispiel-linux-12' })).toBeVisible();
+  expect(await torrentCalls(page)).toContain('preview:file');
+  await dialog.getByRole('button', { name: 'Zurück' }).click();
+  await dialog.getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(page.getByText('Deine öffentliche IP-Adresse')).toBeVisible();
+  await expect(page.getByTestId('torrent-ip')).toHaveCount(0);
+});

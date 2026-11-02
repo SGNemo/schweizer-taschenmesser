@@ -16,7 +16,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
   (Saved, note or to-do; only enabled modules are offered). The native Android app (APK) does not have the share target yet.
 - **Quick capture:** one line = one entry, so several things land at once (with a preview row each). In the Android app, long-press the app icon for "Capture", "Search" and "Today", or add the quick-settings tile "Nemo: Capture".
 - **Tools:** the "Tools" button at the top (or **Ctrl+.**) opens the calculator (with percent/VAT and split modes), currency, timer and QR code;
-  more (units, date calculator, time zones, dice, text, images, PDF and **Developer** with Base64/URL, JSON, UUID, hash) can be turned on
+  more (units, date calculator, time zones, dice, anonymous persona, text, images, PDF and **Developer** with Base64/URL, JSON, UUID, hash) can be turned on
   under "Manage tools". In the search (Ctrl+K) a calculation like "240 + 19 %" is computed right away, "Tool: …" opens a
   tool. The former scratch note now lives as the **scratchpad** at the top of Notes (your old text is carried over once).
 - **Import into Notes:** "Set up start data" on the Notes card (Module library) reads Markdown files (e.g. from an Obsidian folder, several at once, or pasted text) and Google Keep exports (the `.json` files from Google Takeout). You see a preview first and untick what you do not want; notes you already have are marked. Titles come from the front matter, the first heading or the file name; tags are kept as `#tags` in the text, Keep checklists become task lists, Keep notes in the trash or archive are left out. ZIP files: unzip them first.

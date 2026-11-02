@@ -5,6 +5,7 @@ import type { DiskService } from './disk';
 import type { LocalModelService } from './localModel';
 import type { BrowserService } from './browser';
 import type { DownloadsService } from './downloads';
+import type { TorrentService } from './torrent';
 import type { SystemService } from './system';
 
 /**
@@ -280,6 +281,8 @@ export interface PlatformService {
   system: SystemService;
   /** HTTP(S) download manager (desktop only). */
   downloads: DownloadsService;
+  /** BitTorrent engine of the download manager (desktop only). */
+  torrent: TorrentService;
   /** Isolated tabs of the built-in browser (desktop only). */
   browser: BrowserService;
   /** The built-in local language model (desktop only; stage 1 of the AI entry pipeline). */

@@ -23,6 +23,8 @@ import styles from './CaptureForm.module.css';
 
 export interface CaptureFormProps {
   initialText?: string;
+  /** Starts with this destination chosen ("create from this mail"); the user can still pick another. */
+  initialType?: CaptureType;
   /** Merged over the parsed fields before saving (e.g. the body of shared text); single entry only. */
   extra?: Partial<CaptureFields>;
   /** Capture window: Tab / Shift+Tab switch the type instead of moving focus. */
@@ -54,6 +56,7 @@ function errorText(e: unknown): string {
  */
 export function CaptureForm({
   initialText = '',
+  initialType,
   extra,
   tabSwitchesType,
   selectInitial,
@@ -66,7 +69,7 @@ export function CaptureForm({
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   const [text, setText] = useState(() => initialText || peekReopenDraft() || '');
-  const [override, setOverride] = useState<CaptureType | undefined>();
+  const [override, setOverride] = useState<CaptureType | undefined>(initialType);
   // Hand-picked targets of single rows in a multi-line capture, keyed by the row's text.
   const [rowOverride, setRowOverride] = useState<Record<string, CaptureType>>({});
   const [confirming, setConfirming] = useState(false);

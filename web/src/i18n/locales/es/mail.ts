@@ -102,6 +102,19 @@ export const mail: Strings['mail'] = {
     notificationsBody: 'Aún no disponible: la app no avisa sola de correos nuevos.',
     close: 'Cerrar',
   },
+  link: {
+    menu: 'Crear a partir de este correo',
+    noModules:
+      'Para crear entradas debe estar activo un módulo adecuado (Tareas, Calendario, Facturas, Marcadores o Notas).',
+    title: (what: string) => `${what} a partir de este correo`,
+    intro: 'Revisa la vista previa. No se guarda nada hasta que pulses «Guardar».',
+    stores: 'Se guarda también: un enlace a este correo.',
+    storesNothing: 'Correo de ejemplo: no se guarda ningún enlace.',
+    excerpt: 'Copiar el principio del correo en la nota',
+    excerptHint: 'Copia las primeras líneas del texto del correo en tu nota.',
+    created: 'Creado a partir de este correo',
+    open: (what: string, title: string) => `Abrir ${what} «${title}»`,
+  },
   widget: {
     unread: 'Sin leer',
     unreadContext: (n: number) =>
