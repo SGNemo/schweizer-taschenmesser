@@ -98,13 +98,25 @@ test.describe('Merkliste', () => {
 
 test('Notizen: create, pin, search', async ({ page }) => {
   await enable(page, 'notes');
+  const editor = page.getByRole('textbox', { name: 'Text der Seite' });
+  // Autosave has no button: leaving the page (or going back to the list) stores the text.
+  const toList = async () => {
+    const back = page.getByRole('button', { name: 'Zurück zur Liste' });
+    if (await back.isVisible()) await back.click();
+  };
   const add = async (title: string, body: string, pin = false) => {
     await open(page, '/notes?new=1');
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Titel').fill(title);
-    await dialog.getByLabel('Text').fill(body);
-    if (pin) await dialog.getByRole('switch', { name: /anheften/ }).click();
-    await save(page);
+    await expect(editor).toBeVisible(); // the editor loads lazily
+    await page.getByLabel('Titel der Seite').fill(title);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(body);
+    // Autosave: wait until the text is stored before pinning or leaving the page.
+    await expect(page.getByText('Gespeichert')).toBeVisible();
+    if (pin) await page.getByRole('button', { name: 'Oben anheften' }).click();
+    await toList();
+    await expect(
+      page.getByRole('navigation', { name: 'Seiten' }).getByText(title).first(),
+    ).toBeVisible();
   };
   await add('Einkaufsideen', 'Käse und Brot');
   await add('WLAN', 'Passwort steht im Router', true);
@@ -112,15 +124,17 @@ test('Notizen: create, pin, search', async ({ page }) => {
   await expect(items.first()).toContainText('Zettel'); // the scratch pad is always on top
   await expect(items.nth(1)).toContainText('WLAN'); // then pinned notes
   await items.first().click();
-  const pad = page.getByRole('dialog', { name: 'Zettel' });
-  await expect(pad.getByLabel('Titel')).toHaveCount(0);
-  await expect(pad.getByRole('button', { name: 'Löschen' })).toHaveCount(0);
-  await pad.getByLabel('Text').fill('Paket abholen');
-  await save(page);
+  await expect(page.getByLabel('Titel der Seite')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Löschen' })).toHaveCount(0);
+  await editor.click();
+  await page.keyboard.type('Paket abholen');
+  await expect(page.getByText('Gespeichert')).toBeVisible();
+  await toList();
   await expect(items.first()).toContainText('Paket abholen');
   await items.first().click();
-  await pad.getByRole('button', { name: 'Zettel leeren' }).click();
-  await save(page);
+  await page.getByRole('button', { name: 'Zettel leeren' }).click();
+  await expect(page.getByText('Gespeichert')).toBeVisible();
+  await toList();
   await expect(items.first()).toContainText('Zettel');
   await expect(items.first()).not.toContainText('Paket abholen');
   await page.getByLabel('Notizen durchsuchen').fill('kase');

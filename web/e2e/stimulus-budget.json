@@ -195,11 +195,11 @@
       "firstScreenActions": 41
     },
     "phone--notes": {
-      "height": 1745,
+      "height": 1125,
       "buttons": 18,
       "links": 10,
       "icons": 16,
-      "firstScreenActions": 22
+      "firstScreenActions": 25
     },
     "phone--pantry": {
       "height": 2153,
@@ -244,10 +244,10 @@
       "firstScreenActions": 38
     },
     "phone--settings-module": {
-      "height": 4533,
-      "buttons": 43,
+      "height": 4664,
+      "buttons": 48,
       "links": 8,
-      "icons": 11,
+      "icons": 12,
       "firstScreenActions": 14
     },
     "phone--subscriptions": {

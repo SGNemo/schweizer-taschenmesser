@@ -2,6 +2,7 @@ import { liveQuery } from 'dexie';
 import { z } from 'zod';
 import { getSettings, settingsRepo } from '@/core/settings/settings';
 import { noteRepo } from './repo';
+import { plainToMarkdown } from './editor/markdown';
 import { SCRATCH_ID } from './logic';
 
 /** The tool "Notizzettel" kept its text in the synced `_settings` scope `tools.scratch`. */
@@ -18,7 +19,7 @@ export async function ensureScratchNote(): Promise<boolean> {
   if (!text.trim()) return false;
   if (await noteRepo.table.get(SCRATCH_ID)) return false;
   await noteRepo.createMany([
-    { id: SCRATCH_ID, data: { title: 'Zettel', body: text, pinned: true } },
+    { id: SCRATCH_ID, data: { title: 'Zettel', body: plainToMarkdown(text), pinned: true } },
   ]);
   return true;
 }
