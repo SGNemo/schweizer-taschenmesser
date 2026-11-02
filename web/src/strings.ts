@@ -6085,6 +6085,17 @@ export const de = {
       },
       turnOff: 'Torrent-Teil ausschalten',
       starting: 'Wird gestartet …',
+      launch: {
+        needModule: 'Dafür braucht es das Modul „Downloads“.',
+        title: 'Magnet-Links und Torrent-Dateien',
+        help: 'Nemo kann sich bei Windows als Programm für Magnet-Links und .torrent-Dateien eintragen. Nur für dich, ohne Admin-Rechte. Ein bestehender Standard wird nicht ersetzt: Wähle Nemo danach selbst unter „Standard-Apps“. Geöffnete Links füllen nur den Dialog vor, nichts startet von selbst.',
+        register: 'Bei Windows eintragen',
+        remove: 'Eintrag entfernen',
+        done: 'Nemo ist bei Windows eingetragen. Wähle es unter „Standard-Apps“ aus.',
+        removed: 'Eintrag entfernt',
+        failed: 'Der Eintrag ließ sich nicht ändern.',
+        pendingOff: 'Ein Magnet-Link wartet. Schalte den BitTorrent-Teil ein, dann geht es weiter.',
+      },
       startFailed: 'Der Torrent-Teil konnte nicht starten.',
       add: {
         button: 'Torrent hinzufügen',

@@ -65,6 +65,8 @@ taschenmesser-browser-filter = { path = "crates/browser-filter" }
 taschenmesser-downloader = { path = "crates/downloader" }
 # BitTorrent engine of the Downloads module (embedded librqbit; src/torrent.rs).
 taschenmesser-torrent = { path = "crates/torrent" }
+# Optional magnet:/.torrent association (Windows registry, launch arguments; src/association.rs).
+taschenmesser-os-association = { path = "crates/os-association" }
 # Timeouts and background tasks of the torrent adapter (the runtime itself is Tauri's).
 tokio = { version = "1", features = ["time", "sync", "rt"] }
 # Built-in local model (stage 1 of the AI entry pipeline); see the `local-llm` feature.
