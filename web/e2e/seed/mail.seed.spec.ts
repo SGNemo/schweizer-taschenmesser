@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { showAllWidgets } from '../helpers';
+import { showAllWidgets, showPreview } from '../helpers';
 import { bootDev, seedApp } from './helpers';
 
 /**
@@ -56,6 +56,7 @@ test.describe('mail (demo mails)', () => {
   test.setTimeout(120_000); // each test loads the seed first
   test.beforeEach(async ({ page }) => {
     await bootDev(page);
+    await showPreview(page);
     await asDesktop(page);
     await seedApp(page, 'medium');
     await enableMail(page);
