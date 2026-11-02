@@ -1635,7 +1635,7 @@ export const de = {
         deg: 'Grad',
         rad: 'Bogenmaß',
         keys: 'Tasten',
-        ans: 'Letztes Ergebnis einsetzen',
+        ans: 'ans: Letztes Ergebnis einsetzen',
         historySearch: 'Verlauf durchsuchen',
         historyEmpty: 'Noch nichts gerechnet.',
         noMatches: 'Nichts gefunden.',

@@ -166,7 +166,7 @@ export default function ExprMode({
               {label}
             </Button>
           ))}
-          <Button size="sm" onClick={() => insert('ans')} aria-label={`ans, ${s.pro.ans}`}>
+          <Button size="sm" onClick={() => insert('ans')} aria-label={s.pro.ans}>
             {'ans'}
           </Button>
           <Button

@@ -53,7 +53,7 @@ export const tools: Strings['tools'] = {
       deg: 'Degrés',
       rad: 'Radians',
       keys: 'Touches',
-      ans: 'Insérer le dernier résultat',
+      ans: 'ans: Insérer le dernier résultat',
       historySearch: 'Rechercher dans l’historique',
       historyEmpty: 'Rien n’a encore été calculé.',
       noMatches: 'Rien trouvé.',

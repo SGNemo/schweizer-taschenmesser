@@ -53,7 +53,7 @@ export const tools: Strings['tools'] = {
       deg: 'Degrees',
       rad: 'Radians',
       keys: 'Keys',
-      ans: 'Insert last result',
+      ans: 'ans: Insert last result',
       historySearch: 'Search history',
       historyEmpty: 'Nothing calculated yet.',
       noMatches: 'Nothing found.',
