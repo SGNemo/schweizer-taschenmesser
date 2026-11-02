@@ -66,6 +66,7 @@ import { example } from './example';
 import { supporter } from './supporter';
 import { aiLabels } from './aiLabels';
 import { maps } from './maps';
+import { mail } from './mail';
 import { browser } from './browser';
 
 export const en: Strings = {
@@ -136,5 +137,6 @@ export const en: Strings = {
   supporter,
   aiLabels,
   maps,
+  mail,
   browser,
 };

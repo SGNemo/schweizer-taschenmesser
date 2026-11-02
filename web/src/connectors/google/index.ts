@@ -1,6 +1,7 @@
 import type { ConnectorDef } from '@/core/connectors/types';
 import { t } from '@/strings';
 import { googleCalendar } from './calendar';
+import { gmailProvider } from './gmail';
 import { googleMail } from './mail';
 import { googleIdentify } from './identify';
 
@@ -59,6 +60,7 @@ const connector: ConnectorDef = {
   ],
   calendar: googleCalendar,
   mail: googleMail,
+  mailbox: gmailProvider,
 };
 
 export default connector;

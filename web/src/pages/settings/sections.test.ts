@@ -47,7 +47,9 @@ describe('registered settings sections', () => {
 
 describe('preview sections (maturity)', () => {
   const PREVIEW = ['localapi', 'share', 'network', 'browser-extension', 'reading', 'voice'];
-  const ids = (c: SettingsContext) => visibleSections(allSettingsSections(), c).map((s) => s.id);
+  // All manifests (not only those of the web platform): desktop-only preview modules count too.
+  const all = allSettingsSections(allManifests.filter((m) => !m.retired));
+  const ids = (c: SettingsContext) => visibleSections(all, c).map((s) => s.id);
 
   it('are hidden by default and listed with "In Arbeit anzeigen"', () => {
     const hidden = ids(ctx());
