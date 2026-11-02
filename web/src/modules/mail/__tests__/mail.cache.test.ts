@@ -76,6 +76,30 @@ describe('mail cache', () => {
     expect(await loadBody('google', 'nope')).toBeUndefined();
   });
 
+  it('reading seed rows never creates the device key (a write, forbidden in a live query)', async () => {
+    await db.table('_secrets').clear();
+    await threadRepo.create(
+      {
+        accountKey: 'demo',
+        threadId: 'd1',
+        sortKey: 1,
+        unread: true,
+        inbox: true,
+        demo: {
+          from: { email: 'x@example.org' },
+          subject: 'Beispiel',
+          snippet: '',
+          messageCount: 1,
+          hasAttachment: false,
+          labelIds: ['INBOX'],
+        },
+      },
+      { id: 'demo|d1' },
+    );
+    expect(await loadThreads('demo')).toHaveLength(1);
+    expect(await db.table('_secrets').count()).toBe(0);
+  });
+
   it('never queues anything for sync', async () => {
     await saveThreads('google', [thread('t1', 5)]);
     await saveBody('google', message);

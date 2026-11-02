@@ -48,6 +48,7 @@ const PAGES: { name: string; path: string }[] = [
     ? [
         { name: 'system', path: '/disk?tab=system' },
         { name: 'disk', path: '/disk' },
+        { name: 'mail', path: '/mail' },
       ]
     : []),
   { name: 'components', path: '/dev/components' },
@@ -63,7 +64,7 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'settings-ueber', path: '/settings/ueber' },
 ];
 
-/** The desktop-only module is off by default: switch it on in IndexedDB (the app has opened the DB by now). */
+/** The desktop-only modules are off by default: switch them on in IndexedDB (the app has opened the DB by now). */
 async function enableDisk(page: Page) {
   await page.evaluate(
     () =>
@@ -73,16 +74,17 @@ async function enableDisk(page: Page) {
         open.onsuccess = () => {
           const db = open.result;
           const tx = db.transaction('_modules', 'readwrite');
-          tx.objectStore('_modules').put({
-            id: 'disk',
-            enabled: true,
-            dataPolicy: null,
-            createdAt: 1,
-            updatedAt: 1,
-            deviceId: 'screens',
-            deletedAt: null,
-            _f: {},
-          });
+          for (const id of ['disk', 'mail'])
+            tx.objectStore('_modules').put({
+              id,
+              enabled: true,
+              dataPolicy: null,
+              createdAt: 1,
+              updatedAt: 1,
+              deviceId: 'screens',
+              deletedAt: null,
+              _f: {},
+            });
           tx.oncomplete = () => {
             db.close();
             resolve();

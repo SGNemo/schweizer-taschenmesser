@@ -66,12 +66,15 @@ export async function loadThreads(
     .filter((r) => r.accountKey === accountKey)
     .toArray();
   rows.sort((a, b) => b.sortKey - a.sortKey);
-  const key = await getDeviceKey();
+  // The key is only fetched for a sealed row: it exists by then, so this stays a plain read (this
+  // function also runs inside a Dexie live query, where creating the key would be a forbidden write).
+  let key: CryptoKey | undefined;
   const out: CachedThreadView[] = [];
   for (const r of rows) {
     let meta: ThreadMeta | undefined = r.demo;
     if (!meta && r.sealed) {
       try {
+        key ??= await getDeviceKey();
         meta = threadMetaSchema.parse(await openJson(key, r.id, r.sealed));
       } catch {
         continue; // sealed with a key this device no longer has: unreadable, so not shown
