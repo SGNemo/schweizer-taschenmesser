@@ -2,6 +2,16 @@
 /// missing from this list cannot be invoked by any window; `tests/commands.rs` compares the list
 /// with the `generate_handler!` block in `src/lib.rs`.
 const COMMANDS: &[&str] = &[
+    "browser_open",
+    "browser_navigate",
+    "browser_back",
+    "browser_forward",
+    "browser_reload",
+    "browser_close",
+    "browser_show",
+    "browser_set_zoom",
+    "browser_configure",
+    "browser_clear_data",
     "check_update",
     "install_update",
     "oauth_listen_start",

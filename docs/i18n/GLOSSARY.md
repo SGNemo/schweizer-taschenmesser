@@ -40,6 +40,7 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 | Merkliste | Saved | Guardados | Enregistrés | Salvos |
 | Merkzettel (one saved item) | Saved item | Elemento guardado | Élément enregistré | Item salvo |
 | Lesezeichen | Bookmarks | Marcadores | Signets | Marcadores |
+| Browser (Modul) | Browser | Navegador | Navigateur | Navegador |
 | Listen | Lists | Listas | Listes | Listas |
 | Einkauf / Packliste / Checkliste | Shopping / Packing list / Checklist | Compra / Lista de equipaje / Lista de control | Courses / Liste de bagages / Liste de contrôle | Compras / Lista de bagagem / Checklist |
 | Vorräte | Pantry | Despensa | Provisions | Despensa |

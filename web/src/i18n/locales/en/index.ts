@@ -67,6 +67,7 @@ import { supporter } from './supporter';
 import { aiLabels } from './aiLabels';
 import { maps } from './maps';
 import { mail } from './mail';
+import { browser } from './browser';
 
 export const en: Strings = {
   appName: 'Nemo',
@@ -137,4 +138,5 @@ export const en: Strings = {
   aiLabels,
   maps,
   mail,
+  browser,
 };
