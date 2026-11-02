@@ -12,6 +12,7 @@ const manifest: ModuleManifest = {
     return t.vault.meta.name;
   },
   icon: 'files',
+  identity: { hue: 'plum', widgetType: 'status' },
   version: 2,
   get description() {
     return t.vault.meta.description;

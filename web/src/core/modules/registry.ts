@@ -1,6 +1,13 @@
 import type { PlatformKind } from '@/core/platform/types';
 import { validateAiActions } from './aiActions';
-import { ALL_WIDGET_SIZES, AREAS, PAGE_LAYOUTS, type ModuleManifest } from './types';
+import {
+  ALL_WIDGET_SIZES,
+  AREAS,
+  MODULE_HUES,
+  PAGE_LAYOUTS,
+  WIDGET_TYPES,
+  type ModuleManifest,
+} from './types';
 
 // Manifests are eager (small); heavy parts (routes, widgets) are lazy inside each manifest.
 const found = import.meta.glob<{ default: ModuleManifest }>('../../modules/*/manifest.ts', {
@@ -84,6 +91,13 @@ export function validateManifest(m: ModuleManifest): string[] {
   else if (!m.area || !AREAS.includes(m.area))
     errors.push(`area "${String(m.area)}" is unknown (every module needs one)`);
   if (m.layout && !PAGE_LAYOUTS.includes(m.layout)) errors.push(`layout "${m.layout}" is unknown`);
+  if (!m.identity) errors.push('identity is required ({ hue, widgetType })');
+  else {
+    if (!MODULE_HUES.includes(m.identity.hue))
+      errors.push(`identity.hue "${String(m.identity.hue)}" is not in the module palette`);
+    if (!WIDGET_TYPES.includes(m.identity.widgetType))
+      errors.push(`identity.widgetType "${String(m.identity.widgetType)}" is not a catalogue type`);
+  }
   for (const r of m.routes) {
     if (r.layout && !PAGE_LAYOUTS.includes(r.layout))
       errors.push(`route "${r.path}" has unknown layout "${r.layout}"`);

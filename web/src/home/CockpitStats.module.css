@@ -37,3 +37,31 @@ a.value:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* A module's figure carries its identity: edge and icon chip in the module hue. */
+.tile[data-hue] {
+  position: relative;
+  overflow: hidden;
+}
+.tile[data-hue]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--module-color);
+}
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.chip {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color) 15%, transparent);
+  color: var(--module-color);
+}

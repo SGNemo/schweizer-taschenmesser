@@ -8,8 +8,36 @@
   gap: 0 var(--space-2);
   margin-bottom: var(--space-3);
 }
+/* Module identity: a 4 px edge in the module's hue along the frame and its icon on a soft chip (A + edge, DECISIONS ui-shell). */
+.frame[data-hue] {
+  position: relative;
+  padding-left: var(--space-3);
+}
+.frame[data-hue]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--radius-full);
+  background: var(--module-color);
+}
+.chip {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color) 15%, transparent);
+  color: var(--module-color);
+  vertical-align: middle;
+}
 .eyebrow {
   grid-area: eyebrow;
+  display: flex;
+  align-items: center;
   margin: 0 0 var(--space-1);
   font-size: var(--text-caps);
   font-weight: var(--weight-semibold);
@@ -45,5 +73,12 @@
   .frame:not([data-tabs]) {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: 'eyebrow actions';
+  }
+  /* One line only: the edge stays, the chip goes (the widget cards and the nav icon still show it). */
+  .frame[data-hue] {
+    padding-left: var(--space-2);
+  }
+  .chip {
+    display: none;
   }
 }

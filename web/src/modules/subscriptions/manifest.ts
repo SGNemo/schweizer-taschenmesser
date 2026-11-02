@@ -12,6 +12,7 @@ const manifest: ModuleManifest = {
     return t.subscriptions.meta.name;
   },
   icon: 'repeat',
+  identity: { hue: 'navy', widgetType: 'dueList' },
   version: 3,
   get description() {
     return t.subscriptions.meta.description;

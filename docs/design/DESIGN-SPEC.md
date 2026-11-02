@@ -84,6 +84,7 @@ Colour carries meaning and is **always paired with an icon or a text label**; ti
 | connected / locked         | `--success` / `--warning`                      | icon + word                 | `StateBadge`                                                                                   |
 | category 1…6               | `--cat-1…6` (≥ 3:1 on surface, light + dark)   | dot **and** name            | chips, calendar stripe; assigned per module with `categoryColor()`                             |
 | navigation area            | `--area-color` (= a `--cat-*`) via `data-area` | area name next to it        | icon colour + thin stripe on the group head (sidebar, rail, bottom bar), module library blocks |
+| module identity            | `--module-color` (= a `--mod-*`) via `data-hue` | module icon + title next to it | icon chip and 4 px left edge on widget cards, module frame and the calendar's today column; active nav icon; first chart series. Off: "Modulfarben" / "Ruhig" → grey |
 
 - No decoration colours: links in widgets are neutral (`--text-muted`, underlined); accent = primary action, active navigation, "today". The active nav item keeps the accent, the area colour only tints the icon.
 - Calendar blocks/chips are neutral (`--surface-2`, own events `--accent-soft`); the kind shows as a 3 px left stripe (`--kind`) and in the title/tooltip. Birthdays/invoices/subscriptions use category stripes, deadlines (`cancel`, `end`, `expiry`) `--warning`, never red.

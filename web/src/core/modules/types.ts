@@ -69,6 +69,49 @@ export interface ModuleContext {
   ): Promise<void>;
 }
 
+/**
+ * Fixed module palette (tokens.css `--mod-<hue>`, light + dark, contrast-checked; `tokens.test.ts`
+ * keeps every hue ≥ 3:1 on the surfaces and ≥ 25° of hue away from the status colours). The
+ * "Ruhig" colour mode and the "Modulfarben" switch turn all of them into the quiet text colour.
+ */
+export const MODULE_HUES = [
+  'sky',
+  'moss',
+  'teal',
+  'ocean',
+  'violet',
+  'plum',
+  'orchid',
+  'indigo',
+  'slate',
+  'navy',
+] as const;
+export type ModuleHue = (typeof MODULE_HUES)[number];
+
+/** Base types of the widget catalogue (`@/ui` widgets, DESIGN-SPEC §4a). */
+export const WIDGET_TYPES = [
+  'kpi',
+  'dueList',
+  'progress',
+  'checklist',
+  'timeline',
+  'tiles',
+  'status',
+  'gauge',
+] as const;
+export type WidgetType = (typeof WIDGET_TYPES)[number];
+
+/**
+ * How a module is recognised at a glance (DECISIONS → ui-shell "Module identity"): its hue from the
+ * palette (icon chip in widget heads, edge of widget cards and the module header, active
+ * navigation icon, chart series) and the catalogue type its main widget is built from. The icon is
+ * `ModuleManifest.icon`. Required: `validateManifest` and `npm run check:modules` enforce it.
+ */
+export interface ModuleIdentity {
+  hue: ModuleHue;
+  widgetType: WidgetType;
+}
+
 export type WidgetSize = 's' | 'm' | 'l';
 export const ALL_WIDGET_SIZES: readonly WidgetSize[] = ['s', 'm', 'l'];
 
@@ -363,6 +406,20 @@ export interface AttentionItem {
 /** Collects what needs attention now; modules may only read their own data. */
 export type AttentionSource = (ctx: { today: string }) => Promise<AttentionItem[]>;
 
+/**
+ * One large figure for the cockpit's "Großanzeige" (`home/CockpitStats`): a formatted value with a
+ * label and a context line, e.g. the balance. Always formatted by the module; never raw numbers.
+ */
+export interface HeadlineFigure {
+  label: string;
+  value: string;
+  /** Context line under the number ("2 Konten · Giro 1.203,10 €"). */
+  detail?: string;
+  /** Route to open when the figure is activated (default: the module page). */
+  to?: string;
+}
+export type HeadlineSource = (ctx: { today: string }) => Promise<HeadlineFigure | undefined>;
+
 export interface ModuleContributions {
   /**
    * Start-data importers of the module ("Startdaten einrichten"). **Required** so new modules think
@@ -375,6 +432,8 @@ export interface ModuleContributions {
   notifications?: () => Promise<{ default: NotificationSource }>;
   /** Items for "Jetzt wichtig" on the home screen (overdue, due today, exceeded, expiring). */
   attention?: () => Promise<{ default: AttentionSource }>;
+  /** One large figure for the cockpit's "Großanzeige" (balance, …); the module formats it. */
+  headline?: () => Promise<{ default: HeadlineSource }>;
   /** The calendar module only: receives events synced by connectors. */
   externalCalendar?: () => Promise<{ default: ExternalCalendarSink }>;
   /**
@@ -403,6 +462,8 @@ export interface ModuleManifest {
   id: string;
   name: string;
   icon: IconName;
+  /** Hue from the module palette and the catalogue type of the main widget (required). */
+  identity: ModuleIdentity;
   /** Integer; bump when `migrations` gains an entry. */
   version: number;
   description: string;

@@ -24,6 +24,7 @@ Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Rund
 
 Handy-Layout (QA P2, `fix/qa-mobile-layout`, Kopf: [Zahlen](product/next/04-header-results.md)): Kopfzeile, Listenzeilen, Hinweise, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi; `e2e/screenshots/mobile-layout.spec.ts`; Gerätetest offen.
 
+Modul-Identität (`feat/module-identity`, Paket 2): Pflichtfeld `identity` im Manifest, Zehner-Palette `--mod-*` (hell/dunkel, kontrast- und abstandsgeprüft), Plättchen + Kante an Widgets, Modulrahmen und Kalender-Heute, Navi-Icon in Modulfarbe, Schalter „Modulfarben“, Cockpit-Großanzeige mit Kontostand (`contributions.headline`).
 Cockpit-Modus (`feat/cockpit-mode`): Übersicht allein im Fenster (F10, Knopf, Palette), schwebende Mini-Leiste, Module als Panel darüber, eigenes Cockpit-Layout (dicht, Großanzeige), F11 Vollbild, Android immersiv + wach halten; Handtests C1–C4 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Modul-Identität folgt als eigenes Paket nach der Varianten-Wahl.
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).

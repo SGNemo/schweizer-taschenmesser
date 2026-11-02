@@ -17,6 +17,9 @@ export const finance: Strings['finance'] = {
   },
   title: 'Finanças',
   balance: 'Saldo',
+  headline: {
+    accounts: (n: number) => (n === 1 ? '1 conta' : `${n} contas`),
+  },
   available: 'Disponível',
   tabs: {
     overview: 'Visão geral',

@@ -12,6 +12,7 @@ const manifest: ModuleManifest = {
     return t.people.meta.name;
   },
   icon: 'users',
+  identity: { hue: 'plum', widgetType: 'dueList' },
   version: 1,
   get description() {
     return t.people.meta.description;
