@@ -156,12 +156,14 @@ test.describe('ten paths', () => {
     await enable(page, 'notes');
     await ready(page, '/notes');
     const s = new Steps(page);
-    await s.tap(page.getByRole('button', { name: 'Notiz hinzufügen' }));
-    const dialog = page.getByRole('dialog');
-    await s.type(dialog.getByLabel('Text'), 'Paket abholen');
-    await s.tap(dialog.getByRole('button', { name: 'Speichern' }));
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page.getByText('Paket abholen').first()).toBeVisible();
+    await s.tap(page.getByRole('button', { name: 'Neue Seite' }));
+    await s.type(page.getByRole('textbox', { name: 'Text der Seite' }), 'Paket abholen');
+    // Autosave: no save button. On a phone the list is behind the page, so go back to it.
+    const back = page.getByRole('button', { name: 'Zurück zur Liste' });
+    if (await back.isVisible()) await back.tap();
+    await expect(
+      page.getByRole('navigation', { name: 'Seiten' }).getByText('Paket abholen').first(),
+    ).toBeVisible();
     await record(info, '5 Notiz anlegen', s.n);
   });
 
@@ -313,28 +315,27 @@ test.describe('Back gesture', () => {
     await expect(page).toHaveURL(/\/dev\/components$/);
   });
 
-  test('a note editor: empty closes at once on Back, with typing it asks first', async ({
-    page,
-  }) => {
+  test('a note page: Back never asks, typed text is already saved', async ({ page }) => {
+    // Notes are a page with autosave now, not a dialog: there is nothing to discard.
     await enable(page, 'notes');
     await ready(page, '/notes');
-    await page.getByRole('button', { name: 'Notiz hinzufügen' }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('button', { name: 'Neue Seite' }).click();
     await page.goBack();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page).toHaveURL(/\/notes$/);
 
-    await page.getByRole('button', { name: 'Notiz hinzufügen' }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Text').fill('Halber Gedanke');
+    await ready(page, '/notes');
+    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    const editor = page.getByRole('textbox', { name: 'Text der Seite' });
+    await editor.click();
+    await page.keyboard.type('Halber Gedanke');
+    // Autosave runs a moment after typing; Back never has to ask because nothing is pending.
+    await expect(page.getByText('Gespeichert')).toBeVisible();
     await page.goBack();
-    await expect(dialog.getByText('Entwurf verwerfen?')).toBeVisible();
-    await page.goBack();
-    await expect(dialog.getByLabel('Text')).toHaveValue('Halber Gedanke');
-    await page.goBack();
-    await dialog.getByRole('button', { name: 'Verwerfen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page).toHaveURL(/\/notes$/);
+
+    await ready(page, '/notes');
+    const list = page.getByRole('navigation', { name: 'Seiten' });
+    await expect(list.getByText('Halber Gedanke').first()).toBeVisible();
   });
 
   test('the "Mehr" sheet: opening a page from it, one Back returns to where it was', async ({

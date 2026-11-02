@@ -489,9 +489,15 @@ function SortableWidget({
         isDragging ? styles.dragging : '',
       ].join(' ')}
       data-testid={`widget-${entry.key}`}
+      data-hue={manifest?.identity.hue}
     >
       <Card>
         <div className={styles.head}>
+          {manifest ? (
+            <span className={styles.chip} aria-hidden="true">
+              <Icon name={manifest.icon} size={16} />
+            </span>
+          ) : null}
           <h2 className={styles.title}>
             {entry.to && !editing ? (
               <Link to={entry.to} className={styles.titleLink}>

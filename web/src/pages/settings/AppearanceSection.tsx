@@ -5,6 +5,7 @@ import {
   ACCENTS,
   COLOR_MODES,
   DENSITIES,
+  MODULE_COLOR_MODES,
   HOME_VIEWS,
   MOTIONS,
   SIDEBARS,
@@ -14,6 +15,7 @@ import {
   type DensityChoice,
   type HomeViewChoice,
   type LeadingChoice,
+  type ModuleColorMode,
   type MotionChoice,
   type SidebarChoice,
   type TextSizeChoice,
@@ -21,6 +23,7 @@ import {
 } from '@/stores/ui';
 import { getPlatform } from '@/core/platform';
 import { tCockpit } from '@/strings.cockpit';
+import { tIdentity } from '@/strings.identity';
 import { Segmented, SelectField, SettingRow, SettingsGroup, Switch } from '@/ui';
 import { FoldedGroup } from './FoldedGroup';
 import { PaletteRows } from './PaletteRows';
@@ -72,6 +75,9 @@ export function AppearanceSection() {
   const setSidebar = useUiStore((s) => s.setSidebar);
   const colorMode = useUiStore((s) => s.colorMode);
   const setColorMode = useUiStore((s) => s.setColorMode);
+  const moduleColors = useUiStore((s) => s.moduleColors);
+  const setModuleColors = useUiStore((s) => s.setModuleColors);
+  const ti = tIdentity.use();
   const cockpitStart = useUiStore((s) => s.cockpitStart);
   const setCockpitStart = useUiStore((s) => s.setCockpitStart);
   const cockpitAwake = useUiStore((s) => s.cockpitAwake);
@@ -103,6 +109,7 @@ export function AppearanceSection() {
           t.settings.accentOptions[accent],
           shownPalette ? t.supporter.palette.names[shownPalette] : t.supporter.palette.standard,
           t.settings.colorOptions[colorMode],
+          `${ti.moduleColors}: ${ti.options[moduleColors]}`,
         ]}
       >
         <SettingRow
@@ -135,6 +142,18 @@ export function AppearanceSection() {
             value={colorMode}
             options={COLOR_MODES.map((v) => ({ value: v, label: t.settings.colorOptions[v] }))}
             onChange={setColorMode}
+          />
+        </SettingRow>
+        <SettingRow
+          id="appearance--moduleColors"
+          label={ti.moduleColors}
+          description={ti.moduleColorsHint}
+        >
+          <Segmented<ModuleColorMode>
+            label={ti.moduleColors}
+            value={moduleColors}
+            options={MODULE_COLOR_MODES.map((v) => ({ value: v, label: ti.options[v] }))}
+            onChange={setModuleColors}
           />
         </SettingRow>
       </FoldedGroup>

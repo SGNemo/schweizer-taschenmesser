@@ -24,6 +24,7 @@ Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Rund
 
 Handy-Layout (QA P2, `fix/qa-mobile-layout`, Kopf: [Zahlen](product/next/04-header-results.md)): Kopfzeile, Listenzeilen, Hinweise, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi; `e2e/screenshots/mobile-layout.spec.ts`; Gerätetest offen.
 
+Modul-Identität (`feat/module-identity`, Paket 2): Pflichtfeld `identity` im Manifest, Zehner-Palette `--mod-*` (hell/dunkel, kontrast- und abstandsgeprüft), Plättchen + Kante an Widgets, Modulrahmen und Kalender-Heute, Navi-Icon in Modulfarbe, Schalter „Modulfarben“, Cockpit-Großanzeige mit Kontostand (`contributions.headline`).
 Cockpit-Modus (`feat/cockpit-mode`): Übersicht allein im Fenster (F10, Knopf, Palette), schwebende Mini-Leiste, Module als Panel darüber, eigenes Cockpit-Layout (dicht, Großanzeige), F11 Vollbild, Android immersiv + wach halten; Handtests C1–C4 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Modul-Identität folgt als eigenes Paket nach der Varianten-Wahl.
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
@@ -128,14 +129,16 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 ## Fertig (eine Zeile je Release; Details: [CHANGELOG](../CHANGELOG.md), Arbeitsprotokoll bis 0.3.1: [archive/2026-10/STATUS-done-until-0.3.1.md](archive/2026-10/STATUS-done-until-0.3.1.md))
 - `v0.2.0` (2026-09-30): Phasen 1–13 (Fundament bis Passwort-Tresor, Sync/Backup, KI-Assistent + Router, Tauri-Shell, Releases, Selbst-Update), KI-Import (JSON, lokale Import-API, `mcp/`).
 - `v0.3.0-beta.1` (2026-09-30) / `v0.3.0` (2026-10-01): Nemo-Rebranding, Einrichtungsassistent, Schnell erfassen, Datenträger/Systeminfo (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge, flaches Design „Klar“, Übersicht + Widgets, Dev-Preview, MIT.
+- Auf `develop`/PR: Rechner mit sechs Modi (Standard, Wissenschaft, Programmierer, Prozent & Finanzen, Datum, Einheiten), mathjs-Engine, Ausdrücke in der Suchleiste (`=…`, `0x1F in dez`, `15.03. + 45 Tage`).
 - Auf `develop` (noch nicht released): Testdaten für alle Module (Seed-Vertrag, Dev-Preview füllt leere App, Einstellungen → Entwickler).
 - Design „Klar 2“: Tokens (#43), Bereiche + Shell (#45), Basis-Komponenten (#48) auf `develop`. Einstellungen: Kategorien + Registry (`feat/settings-overhaul`).
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - Pakete 3–6 (0.5.0–0.9.0): Listen, Unterlagen, Personen, Erinnerungen im Kalender, ToDo-Wiederholung; Paket 6: 15 alte Tabellen entfernt.
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (Erfassen ohne Rückfrage, Eingang sortieren, Suchverlauf, Textgröße/Zeilenabstand/Bewegung, ruhige Übersicht; gestapelt auf Paket 2).
+- Auf PR (`feat/mail-read`): Mail-Modul Paket 1 – Gmail lesen (Posteingang, Labels, Suche, Threads, HTML sicher, Anhänge, Widgets; aus, nur Windows-App).
 - Auf PR (`feat/connector-accounts`): mehrere Google-Konten im Connector-Rahmen (Paket 0 des Mail-Moduls).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 4 „Fortschritt“ („n in Folge“ mit Pausentag, Wochenrückblick, Tag abschließen, Routine-Vorlagen; gestapelt auf Paket 3).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 2 „Erinnerungen“ (Ruhezeit, Limit, Später, Morgen-Übersicht, Erinnerungs-Karte, „Woran war ich?“; gestapelt auf Paket 1).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 1 (Jetzt dran, Tagesplan, Fokusmodus, ruhiges „Jetzt wichtig“, Dauer pro ToDo, Zeit bis zum Termin; Einstellungen „Fokus & Aufmerksamkeit“).
-- Auf `develop`/PR: Rechner mit sechs Modi (Standard, Wissenschaft, Programmierer, Prozent & Finanzen, Datum, Einheiten), mathjs-Engine, Ausdrücke in der Suchleiste (`=…`, `0x1F in dez`, `15.03. + 45 Tage`).
+- Auf `develop`/PR: Notizen-Notizblock Paket 1 „Editor“ (TipTap, Markdown-Speicherung + Migration, Schrägstrich-Menü, Schreibmodus, Autospeichern; Pakete 2 Notizbücher/Tabs/Verlauf und 3 Links/Export/KI folgen).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.

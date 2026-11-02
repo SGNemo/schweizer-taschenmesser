@@ -180,6 +180,7 @@ export async function connectOAuth(
       features: features.map((f) => f.id),
       message: undefined,
       retryAt: undefined,
+      account: def.multiAccount ? await identifyAccount(def) : undefined,
     });
   } catch (e) {
     // A failed extra login must not turn the working first account into an error.
@@ -357,7 +358,7 @@ export async function syncCalendars(def: ConnectorDef): Promise<SyncOutcome> {
   return total;
 }
 
-function failureStatus(e: unknown): Partial<ConnectorStatus> {
+export function failureStatus(e: unknown): Partial<ConnectorStatus> {
   if (e instanceof ConnectorError && e.code === 'expired')
     return { state: 'expired', message: describeError(e) };
   if (e instanceof ConnectorError && e.code === 'rate-limited') {

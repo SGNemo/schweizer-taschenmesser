@@ -11,6 +11,7 @@ const manifest: ModuleManifest = {
     return t.browser.meta.name;
   },
   icon: 'globe',
+  identity: { hue: 'navy', widgetType: 'tiles' },
   version: 1,
   get description() {
     return t.browser.meta.description;

@@ -12,7 +12,8 @@ const manifest: ModuleManifest = {
     return t.notes.meta.name;
   },
   icon: 'note',
-  version: 1,
+  identity: { hue: 'violet', widgetType: 'tiles' },
+  version: 2,
   get description() {
     return t.notes.meta.description;
   },
@@ -52,7 +53,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   maturity: 'stable',
   seed: { version: 2, dependsOn: [] },
-  layout: 'wide',
+  layout: 'full',
   order: 80,
   area: 'knowledge',
   contributions: {

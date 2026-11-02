@@ -66,6 +66,7 @@ import { example } from './example';
 import { supporter } from './supporter';
 import { aiLabels } from './aiLabels';
 import { maps } from './maps';
+import { mail } from './mail';
 import { browser } from './browser';
 
 export const ptBR: Strings = {
@@ -136,5 +137,6 @@ export const ptBR: Strings = {
   supporter,
   aiLabels,
   maps,
+  mail,
   browser,
 };
