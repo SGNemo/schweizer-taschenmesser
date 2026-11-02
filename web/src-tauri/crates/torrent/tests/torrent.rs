@@ -13,6 +13,10 @@ use torrent::{Engine, EngineConfig, SeedLimits, Source, TorrentInfo, TorrentStat
 /// librqbit binds its UDP tracker client to `[::]` and cannot start without IPv6 in the kernel; such a
 /// machine (a minimal container) skips these tests instead of failing them.
 fn no_ipv6() -> bool {
+    // `TORRENT_TESTS_FORCE=1` runs them anyway (a build of librqbit patched for IPv4-only machines).
+    if std::env::var_os("TORRENT_TESTS_FORCE").is_some() {
+        return false;
+    }
     let missing = std::net::UdpSocket::bind("[::]:0").is_err();
     if missing {
         eprintln!("skipped: this machine has no IPv6");
