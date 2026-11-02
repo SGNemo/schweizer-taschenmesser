@@ -120,8 +120,8 @@ test('Notizen: create, pin, search', async ({ page }) => {
   };
   await add('Einkaufsideen', 'Käse und Brot');
   await add('WLAN', 'Passwort steht im Router', true);
-  const items = page.getByRole('list', { name: 'Notizen' }).getByRole('listitem');
-  await expect(items.first()).toContainText('Zettel'); // the scratch pad is always on top
+  const items = page.getByTestId('note-row');
+  await expect(items.first()).toContainText('Schmierzettel'); // the scratch pad is always on top
   await expect(items.nth(1)).toContainText('WLAN'); // then pinned notes
   await items.first().click();
   await expect(page.getByLabel('Titel der Seite')).toHaveCount(0);
@@ -132,10 +132,10 @@ test('Notizen: create, pin, search', async ({ page }) => {
   await toList();
   await expect(items.first()).toContainText('Paket abholen');
   await items.first().click();
-  await page.getByRole('button', { name: 'Zettel leeren' }).click();
+  await page.getByRole('button', { name: 'Schmierzettel leeren' }).click();
   await expect(page.getByText('Gespeichert')).toBeVisible();
   await toList();
-  await expect(items.first()).toContainText('Zettel');
+  await expect(items.first()).toContainText('Schmierzettel');
   await expect(items.first()).not.toContainText('Paket abholen');
   await page.getByLabel('Notizen durchsuchen').fill('kase');
   await expect(items).toHaveCount(1);

@@ -100,8 +100,16 @@ const BODIES: Record<Lang, string[]> = {
     'Definir o tamanho do piso, o preço do chuveiro, a duração da obra e sugerir uma data.',
   ],
 };
+const BOOKS: Record<Lang, string[]> = {
+  de: ['Privat', 'Arbeit', 'Ideen'],
+  en: ['Personal', 'Work', 'Ideas'],
+  es: ['Personal', 'Trabajo', 'Ideas'],
+  fr: ['Perso', 'Travail', 'Idées'],
+  'pt-BR': ['Pessoal', 'Trabalho', 'Ideias'],
+};
+const BOOK_ICONS = ['home', 'target', 'puzzle'];
 const SCRATCH: Record<Lang, { title: string; body: string }> = {
-  de: { title: 'Zettel', body: 'Milch nicht vergessen\nPaket abholen bis Freitag' },
+  de: { title: 'Schmierzettel', body: 'Milch nicht vergessen\nPaket abholen bis Freitag' },
   en: { title: 'Scratch pad', body: 'Don’t forget milk\nPick up parcel by Friday' },
   es: { title: 'Nota rápida', body: 'No olvidar la leche\nRecoger el paquete antes del viernes' },
   fr: { title: 'Pense-bête', body: 'Ne pas oublier le lait\nRécupérer le colis avant vendredi' },
@@ -113,7 +121,13 @@ function seed(ctx: SeedContext): SeedRows {
   const bodies = BODIES[ctx.lang];
   const scratch = SCRATCH[ctx.lang];
   const n = ctx.count({ small: 4, medium: 10, large: 200 });
+  const books = BOOKS[ctx.lang];
+  const bookId = (i: number) => ctx.id('notes', 'notebook', i);
   return {
+    notebook: books.map((name, i) => ({
+      id: bookId(i),
+      data: { name, tone: i + 1, icon: BOOK_ICONS[i]!, order: (i + 1) * 10 },
+    })),
     note: [
       // The fixed scratch pad (see logic.ts SCRATCH_ID).
       {
@@ -122,6 +136,8 @@ function seed(ctx: SeedContext): SeedRows {
           title: scratch.title,
           body: scratch.body,
           pinned: true,
+          notebookId: null,
+          order: 0,
         },
       },
       ...Array.from({ length: n }, (_, i) => ({
@@ -130,6 +146,9 @@ function seed(ctx: SeedContext): SeedRows {
           title: i < titles.length ? titles[i]! : `${ctx.rng.pick(titles)} (${i})`,
           body: ctx.rng.pick(bodies),
           pinned: i < 2,
+          // Every fourth page stays in "Allgemein"; the rest spread over the three notebooks.
+          notebookId: i % 4 === 3 ? null : bookId(i % 3),
+          order: (i + 1) * 10,
         },
       })),
     ],
