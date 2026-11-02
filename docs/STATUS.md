@@ -24,6 +24,8 @@ Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Rund
 
 Handy-Layout (QA P2, `fix/qa-mobile-layout`, Kopf: [Zahlen](product/next/04-header-results.md)): Kopfzeile, Listenzeilen, Hinweise, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi; `e2e/screenshots/mobile-layout.spec.ts`; Gerätetest offen.
 
+Cockpit-Modus (`feat/cockpit-mode`): Übersicht allein im Fenster (F10, Knopf, Palette), schwebende Mini-Leiste, Module als Panel darüber, eigenes Cockpit-Layout (dicht, Großanzeige), F11 Vollbild, Android immersiv + wach halten; Handtests C1–C4 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Modul-Identität folgt als eigenes Paket nach der Varianten-Wahl.
+
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
 
 KI-Erinnerungen per Satz (`feat/ai-reminder-voice`): „Erinner mich um 15 Uhr an die Wäsche“, „in 20 Minuten Pizza rausnehmen“ → Erinnerung mit Benachrichtigung (Regeln, 0 Token, Zeiten rechnet der Code), Vorschau mit großer Uhrzeit, „Speichern“/„Ändern“; Handtest: Satz per Sprache auf dem Android-Gerät, Benachrichtigung zur Zeit.

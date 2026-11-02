@@ -42,6 +42,7 @@ export type FKeyAction =
   | 'palette'
   | 'today'
   | 'focus'
+  | 'cockpit'
   | 'settings'
   | 'tool:timer'
   | 'tool:calc'
@@ -56,10 +57,14 @@ export const FKEY_ACTIONS: readonly FKeyAction[] = [
   'tool:timer',
   'tool:calc',
   'tool:screenshot',
+  'cockpit',
   'settings',
 ];
 
-/** Seven keys for eight actions: the screenshot tool starts without a key (it is off by default). */
+/**
+ * Seven keys for nine actions: the screenshot tool starts without a key (it is off by default) and
+ * the settings page has none since F10 went to the cockpit (Ctrl+K "Einstellungen" is one keystroke away).
+ */
 export const DEFAULT_FKEYS: Readonly<Record<FKeyAction, string>> = {
   quickAdd: 'F2',
   palette: 'F3',
@@ -68,7 +73,8 @@ export const DEFAULT_FKEYS: Readonly<Record<FKeyAction, string>> = {
   'tool:timer': 'F8',
   'tool:calc': 'F9',
   'tool:screenshot': '',
-  settings: 'F10',
+  cockpit: 'F10',
+  settings: '',
 };
 
 /** The tool id of a `tool:<id>` action. */

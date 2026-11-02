@@ -68,6 +68,10 @@ const DENSITY_KEY = 'tm-density';
 const LEADING_KEY = 'tm-leading';
 const MOTION_KEY = 'tm-motion';
 const HOME_VIEW_KEY = 'tm-home-view';
+/** Cockpit mode (overview alone on the screen): remembered state, "start in cockpit", keep the screen on (Android). */
+const COCKPIT_KEY = 'tm-cockpit';
+const COCKPIT_START_KEY = 'tm-cockpit-start';
+const COCKPIT_AWAKE_KEY = 'tm-cockpit-awake';
 
 function readChoice<T extends string>(key: string, values: readonly T[]): T {
   try {
@@ -226,6 +230,15 @@ interface UiState {
   setMotion(motion: MotionChoice): void;
   homeView: HomeViewChoice;
   setHomeView(view: HomeViewChoice): void;
+  /** Cockpit mode is on (device-local, survives a reload). */
+  cockpit: boolean;
+  setCockpit(on: boolean): void;
+  /** Open the overview as the cockpit when the app starts (device-local). */
+  cockpitStart: boolean;
+  setCockpitStart(on: boolean): void;
+  /** Keep the screen on while the cockpit is open (device-local; Android). */
+  cockpitAwake: boolean;
+  setCockpitAwake(on: boolean): void;
   /** Desktop sidebar: wide (248 px) or rail (76 px); below 1200 px the rail is automatic. */
   sidebar: SidebarChoice;
   setSidebar(sidebar: SidebarChoice): void;
@@ -346,6 +359,21 @@ export const useUiStore = create<UiState>((set) => ({
   setHomeView(homeView) {
     storeChoice(HOME_VIEW_KEY, homeView, homeView === 'calm');
     set({ homeView });
+  },
+  cockpit: readFlag(COCKPIT_KEY) || readFlag(COCKPIT_START_KEY),
+  setCockpit(cockpit) {
+    storeChoice(COCKPIT_KEY, '1', !cockpit);
+    set({ cockpit });
+  },
+  cockpitStart: readFlag(COCKPIT_START_KEY),
+  setCockpitStart(cockpitStart) {
+    storeChoice(COCKPIT_START_KEY, '1', !cockpitStart);
+    set({ cockpitStart });
+  },
+  cockpitAwake: readFlag(COCKPIT_AWAKE_KEY),
+  setCockpitAwake(cockpitAwake) {
+    storeChoice(COCKPIT_AWAKE_KEY, '1', !cockpitAwake);
+    set({ cockpitAwake });
   },
   sidebar: readChoice(SIDEBAR_KEY, SIDEBARS),
   setSidebar(sidebar) {

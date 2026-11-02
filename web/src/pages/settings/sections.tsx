@@ -2,6 +2,7 @@
  * The core part of the settings registry: every section the app itself provides, each in exactly one
  * category. Modules contribute theirs through `manifest.settings` (see `useSections.ts`).
  */
+import { tCockpit } from '@/strings.cockpit';
 import { Link } from 'react-router';
 import type { SettingsSectionDef } from '@/core/settings/registry/types';
 import {
@@ -232,6 +233,24 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
         get description() {
           return s.rows.homeViewHint;
+        },
+      },
+      {
+        key: 'cockpitStart',
+        get label() {
+          return tCockpit.get().startTitle;
+        },
+        get description() {
+          return tCockpit.get().startHint;
+        },
+      },
+      {
+        key: 'cockpitAwake',
+        get label() {
+          return tCockpit.get().awakeTitle;
+        },
+        get description() {
+          return tCockpit.get().awakeHint;
         },
       },
     ],

@@ -73,6 +73,7 @@
     "apk-installer:default",
     "secure-store:default",
     "share-intent:default",
+    "screen-mode:default",
     {
       "identifier": "http:default",
       "allow": [

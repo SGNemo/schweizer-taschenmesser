@@ -16,11 +16,18 @@ export const homeLayoutSchema = z.object({
   sizes: z.record(z.string(), z.enum(ALL_WIDGET_SIZES as [WidgetSize, ...WidgetSize[]])),
   /** Keys pinned by the user: they stay visible in the calm view. Absent in older records = none. */
   pinned: z.array(z.string()).default([]),
+  /** Cockpit only: tighter grid with more columns. Absent = off. */
+  dense: z.boolean().optional(),
+  /** Cockpit only: large figures (time, next appointment, "Jetzt wichtig") above the widgets. Absent = off. */
+  stats: z.boolean().optional(),
 });
 
 export type HomeLayout = z.output<typeof homeLayoutSchema>;
 
 export const HOME_SCOPE = 'home';
+/** The cockpit's own arrangement (order, sizes, hidden, dense, stats), stored apart from the overview. */
+export const COCKPIT_SCOPE = 'cockpit';
+export type LayoutScope = typeof HOME_SCOPE | typeof COCKPIT_SCOPE;
 /** The scope used before the home screen existed ("Übersicht" customisation); migrated, not deleted. */
 export const LEGACY_DASHBOARD_SCOPE = 'dashboard';
 export const DEFAULT_LAYOUT: HomeLayout = { order: [], hidden: [], sizes: {}, pinned: [] };
@@ -67,6 +74,7 @@ function mapLegacyKeys(layout: HomeLayout): HomeLayout {
     Object.entries(layout.sizes).map(([k, v]) => [LEGACY_WIDGET_KEYS[k] ?? k, v]),
   );
   return {
+    ...layout,
     order: map(layout.order),
     hidden: map(layout.hidden),
     sizes,
@@ -86,29 +94,38 @@ export function resolveLayout(
   return mapLegacyKeys(migrateLegacyLayout(legacy));
 }
 
-export async function loadLayout(): Promise<HomeLayout> {
-  const [home, legacy] = await Promise.all([
-    settingsRepo.get(HOME_SCOPE),
-    settingsRepo.get(LEGACY_DASHBOARD_SCOPE),
+/** The layout of a scope; only the overview falls back to the legacy dashboard record. */
+export async function loadLayout(scope: LayoutScope = HOME_SCOPE): Promise<HomeLayout> {
+  const [stored, legacy] = await Promise.all([
+    settingsRepo.get(scope),
+    scope === HOME_SCOPE ? settingsRepo.get(LEGACY_DASHBOARD_SCOPE) : undefined,
   ]);
-  return resolveLayout(home, legacy);
+  return resolveLayout(stored, legacy);
 }
 
 /** Live layout; `undefined` until loaded. */
-export const useHomeLayout = (): HomeLayout | undefined => useLiveQuery(() => loadLayout(), []);
+export const useHomeLayout = (scope: LayoutScope = HOME_SCOPE): HomeLayout | undefined =>
+  useLiveQuery(() => loadLayout(scope), [scope]);
 
 /** Writes the complete layout (so the first edit also completes the migration). */
-export async function saveLayout(layout: HomeLayout): Promise<void> {
-  await settingsRepo.upsert(HOME_SCOPE, homeLayoutSchema.parse(layout));
+export async function saveLayout(
+  layout: HomeLayout,
+  scope: LayoutScope = HOME_SCOPE,
+): Promise<void> {
+  await settingsRepo.upsert(scope, homeLayoutSchema.parse(layout));
 }
 
 /** Patches the layout on top of what is stored (or migrated). */
-export async function updateLayout(patch: Partial<HomeLayout>): Promise<void> {
-  await saveLayout({ ...(await loadLayout()), ...patch });
+export async function updateLayout(
+  patch: Partial<HomeLayout>,
+  scope: LayoutScope = HOME_SCOPE,
+): Promise<void> {
+  await saveLayout({ ...(await loadLayout(scope)), ...patch }, scope);
 }
 
 /** Back to the defaults: manifest order, everything visible, default sizes. */
-export const resetLayout = (): Promise<void> => saveLayout(DEFAULT_LAYOUT);
+export const resetLayout = (scope: LayoutScope = HOME_SCOPE): Promise<void> =>
+  saveLayout(DEFAULT_LAYOUT, scope);
 
 /** Default first positions of widgets without a saved position: "Jetzt dran", then the time to the next appointment. */
 export const FRONT_WIDGETS: readonly string[] = ['todos:next', 'calendar:next'];
