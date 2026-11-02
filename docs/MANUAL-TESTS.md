@@ -405,6 +405,11 @@ D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden:
 D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
 D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
 
+### Rechner-Plotter (Branch `feat/calc-plotter`)
+PL1. *Android-APK:* Rechner → Tab „Plotter“: der Graph füllt die Breite, die Achsenzahlen sind lesbar, Zoom- und Pfeil-Tasten sind gut treffbar, die Bildschirmtastatur verdeckt den Graphen nicht. ☐
+PL2. *Offline vor dem ersten Gebrauch:* ohne vorherigen Online-Start des Rechners zeigt der Plotter die ruhige Fehlermeldung statt eines Graphen (die Bibliothek ist nicht im Vorab-Cache). ☐
+PL3. *Tastatur (Windows):* Graph anklicken oder mit Tab erreichen, Pfeiltasten verschieben, + und − zoomen, 0 setzt zurück; der Fokusrahmen ist sichtbar. ☐
+
 ### Torrent (Desktop, nur mit echtem Netz prüfbar; nur legale Inhalte, z. B. eine Linux-Distribution von deren Download-Seite)
 D7. *Aus und Hinweis:* Downloads-Seite, „BitTorrent ist aus“; „Torrent-Teil einschalten“ zeigt den Hinweis (legale Inhalte, hochladen beim Herunterladen, Abmahnung); erst nach „Verstanden“ startet die Engine. Aus- und wieder Einschalten: kein zweiter Hinweis. ☐
 D8. *Magnet und Datei:* Magnet-Link einer Linux-Distribution einfügen → „Dateien ansehen“ (kann etwas dauern) → Dateien wählen, Ordner wählen → lädt; dasselbe mit der `.torrent`-Datei der Distribution („.torrent-Datei öffnen“). Mehrere Dateien landen in `Ordner/<Name>/`. ☐
