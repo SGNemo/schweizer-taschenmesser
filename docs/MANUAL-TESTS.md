@@ -105,6 +105,8 @@ M5. Zweites Google-Konto hinzufügen (Verbindungen → „Weiteres Konto hinzuf�
 M6. Netz aus: die zuletzt gesehenen Köpfe erscheinen mit dem Hinweis „Kein Netz". Token widerrufen (Google-Kontoeinstellungen): Hinweis „abgelaufen" mit Link zu den Verbindungen. ☐
 M7. Mail-Einstellungen → „Zwischenspeicher leeren"; danach ist die Liste erst nach dem Laden wieder gefüllt. Der Cache ist nicht im Sync (zweites Gerät zeigt nichts davon) und nicht im Backup. ☐
 M8. Das HTML-Fenster funktioniert im Windows-Fenster (WebView2) wie im Browser: Mail wird angezeigt, kein Skript läuft. ☐
+M9. (Paket 2, `feat/mail-link`) Eine echte Rechnungsmail öffnen → „Aus dieser Mail anlegen" → Rechnung: Empfänger, Betrag und Fälligkeit sind vorbefüllt (stimmen sie bei deinen Mails?). Es wird erst mit „Speichern" etwas angelegt; die Rechnung enthält den Link zur Mail (öffnet die Mail im Browser). ☐
+M10. Dasselbe für Termin (Datum/Uhrzeit aus einer Einladung), ToDo, Erinnerung (morgen 9:00), Merkliste, Notiz. Bei der Notiz kommt der Mailtext nur mit dem Häkchen hinein. In der Mail steht danach „Aus dieser Mail angelegt" mit Link in das Modul; löschst du den Eintrag, verschwindet der Verweis. ☐
 
 ### Werkzeuge (Phase 13, Schritt 5)
 T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
@@ -397,3 +399,9 @@ D9. *Anzeige und Limits:* Zustand, Fortschritt, Verbindungen, Laden/Teilen pro S
 D10. *Teilen und Neustart:* nach dem Download „Teilt“; Verhältnis 1,0 gesetzt → nach Erreichen „Fertig, Teilen beendet“. Nemo beenden und neu starten (auch hart per Task-Manager): alle Torrents stehen „Pausiert“, nichts lädt oder teilt von selbst. ☐
 D11. *Entfernen:* „Aus der Liste entfernen“ lässt die Dateien, „Mit Dateien löschen“ fragt nach und löscht sie. ☐
 D12. *IP und Ausschalten:* „IP-Adresse anzeigen“ fragt erst auf den Klick (api.ipify.org). „Torrent-Teil ausschalten“ beendet die Engine; kein Netzverkehr der Torrents mehr (Ressourcenmonitor). Rechner ohne IPv6 (selten): „konnte nicht starten“. ☐
+
+### Anonyme Persona (Branch `feat/tool-anonymous-persona`)
+P1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
+P2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
+P3. *Telefon:* Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
+P4. *Android:* die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐

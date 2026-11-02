@@ -139,10 +139,12 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - Pakete 3–6 (0.5.0–0.9.0): Listen, Unterlagen, Personen, Erinnerungen im Kalender, ToDo-Wiederholung; Paket 6: 15 alte Tabellen entfernt.
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (Erfassen ohne Rückfrage, Eingang sortieren, Suchverlauf, Textgröße/Zeilenabstand/Bewegung, ruhige Übersicht; gestapelt auf Paket 2).
+- Auf PR (`feat/mail-link`): Mail-Modul Paket 2 – aus einer Mail Rechnung, Termin, ToDo, Erinnerung, Merkliste oder Notiz anlegen (Vorschau, Link im Eintrag, Rückverweis).
 - Auf PR (`feat/mail-read`): Mail-Modul Paket 1 – Gmail lesen (Posteingang, Labels, Suche, Threads, HTML sicher, Anhänge, Widgets; aus, nur Windows-App).
 - Auf PR (`feat/connector-accounts`): mehrere Google-Konten im Connector-Rahmen (Paket 0 des Mail-Moduls).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 4 „Fortschritt“ („n in Folge“ mit Pausentag, Wochenrückblick, Tag abschließen, Routine-Vorlagen; gestapelt auf Paket 3).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 2 „Erinnerungen“ (Ruhezeit, Limit, Später, Morgen-Übersicht, Erinnerungs-Karte, „Woran war ich?“; gestapelt auf Paket 1).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 1 (Jetzt dran, Tagesplan, Fokusmodus, ruhiges „Jetzt wichtig“, Dauer pro ToDo, Zeit bis zum Termin; Einstellungen „Fokus & Aufmerksamkeit“).
 - Auf `develop`/PR: Notizen-Notizblock Paket 1 „Editor“ (TipTap, Markdown-Speicherung + Migration, Schrägstrich-Menü, Schreibmodus, Autospeichern; Pakete 2 Notizbücher/Tabs/Verlauf und 3 Links/Export/KI folgen).
+- Auf `develop`/PR: Werkzeug „Anonyme Persona“ (erfundene Angaben für Anmeldungen, Wegwerf-Mail-Link, als Notiz speichern; Tresor-Eintrag offen).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
