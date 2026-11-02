@@ -105,6 +105,12 @@ export const tLegal = defineBundle(
         to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, für die eigene Karte overpass-api.de) oder ein eigener Dienst, den du in den Einstellungen einträgst; mit eingetragener Kartendatei deren Server (je Kachel eine Bereichsanfrage). Der Dienst sieht deine IP-Adresse.',
         when: 'Nur wenn du den Reiter „Karte“ öffnest oder eine Ortssuche abschickst, nie im Hintergrund. Die Übersicht und die Listen fragen nichts ab. Karten-Apps (OpenStreetMap, Google Maps, Apple Karten) öffnen sich nur auf deinen Klick im Browser. Berechnest du eine Route auf der Karte, gehen Start, Ziel, Zwischenstopps (Koordinaten) und die Fortbewegungsart an routing.openstreetmap.de; suchst du Bus und Bahn, gehen Start, Ziel und die Uhrzeit an api.transitous.org. Erzeugst du eine eigene Karte, gehen je Teilstück die Koordinaten des Gebiets an overpass-api.de, nur solange die App offen ist. Alles nur auf Klick.',
       },
+      browser: {
+        title: 'Browser (optional)',
+        what: 'Die Seiten, die du im eingebauten Browser öffnest: Adresse, Cookies und was die Seite sonst anfordert, wie in jedem Browser; bei der Suche der Suchbegriff an die gewählte Suchmaschine. Lesezeichen und Verlauf bleiben auf dem Gerät, gehen nie an die KI und werden nicht synchronisiert. Die Seiten laufen getrennt von deinen Nemo-Daten und sehen sie nicht.',
+        to: 'Die Server der Seiten, die du öffnest, und die Suchmaschine deiner Wahl (Standard DuckDuckGo). Sie sehen deine IP-Adresse.',
+        when: 'Nur wenn du das Modul „Browser“ einschaltest und eine Adresse oder einen Suchbegriff abschickst oder einem Link folgst, nie im Hintergrund. Der Blocker hält bekannte Werbe- und Tracker-Server fern (nur Windows).',
+      },
       ip: {
         title: 'Öffentliche IP anzeigen (Windows)',
         what: 'Eine Abfrage deiner öffentlichen IP-Adresse. Das Ergebnis wird nur angezeigt.',
@@ -323,6 +329,12 @@ export const tLegal = defineBundle(
           what: 'When you open the map, the map tiles of the shown area (zoom level and tile numbers, which reveal the area you look at); for the place search, the search term you typed; when you build your own map, the coordinates of every piece of the chosen area. Saved places and routes stay on the device and never go to the AI.',
           to: 'OpenStreetMap (tile.openstreetmap.org, nominatim.openstreetmap.org, for the own map overpass-api.de) or a service of your own that you enter in the settings; with a region file entered, its server (one range request per tile). The service sees your IP address.',
           when: 'Only when you open the “Karte” tab or submit a place search, never in the background. The Overview and the lists request nothing. Map apps (OpenStreetMap, Google Maps, Apple Maps) open in the browser only when you click. If you calculate a route on the map, start, destination, stops (coordinates) and the way of travel go to routing.openstreetmap.de; if you search bus and train, start, destination and the time go to api.transitous.org. If you build your own map, the coordinates of each piece go to overpass-api.de, only while the app is open. All of it on click only.',
+        },
+        browser: {
+          title: 'Browser (optional)',
+          what: 'The pages you open in the built-in browser: address, cookies and whatever else the page requests, as in any browser; for a search, the search term to the chosen search engine. Bookmarks and history stay on the device, never go to the AI and are not synced. The pages run separately from your Nemo data and cannot see it.',
+          to: 'The servers of the pages you open and the search engine of your choice (default DuckDuckGo). They see your IP address.',
+          when: 'Only when you switch on the “Browser” module and submit an address or a search term or follow a link, never in the background. The blocker keeps known ad and tracker servers out (Windows only).',
         },
         ip: {
           title: 'Show public IP (Windows)',
