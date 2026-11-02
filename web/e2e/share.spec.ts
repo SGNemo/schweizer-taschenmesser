@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, showPreview } from './helpers';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 test('a share file made with a code opens with that code, wrong codes are refused', async ({
   page,

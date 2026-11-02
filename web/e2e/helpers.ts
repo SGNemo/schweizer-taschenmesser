@@ -132,3 +132,16 @@ export async function pickTodosList(page: Page, name: string) {
   const menu = await openTodosMenu(page);
   await menu.getByRole('menuitemcheckbox', { name, exact: true }).click();
 }
+
+/**
+ * Switches "In Arbeit anzeigen" on for this page (device-local `tm-show-preview`, see
+ * `stores/ui.ts`), so modules, tools, connectors and settings sections with `maturity: 'preview'`
+ * are listed. Call it before the first navigation; a page that is already open is reloaded.
+ */
+export async function showPreview(page: Page) {
+  await page.addInitScript(() => localStorage.setItem('tm-show-preview', '1'));
+  if (!page.url().startsWith('about:')) {
+    await page.evaluate(() => localStorage.setItem('tm-show-preview', '1'));
+    await page.reload();
+  }
+}

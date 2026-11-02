@@ -4,6 +4,7 @@
  * ones are on and their order), and never import modules or the database (ESLint).
  */
 import type { ComponentType } from 'react';
+import type { Maturity } from '@/core/modules/types';
 import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
@@ -32,7 +33,14 @@ export interface ToolManifest {
   group: ToolGroup;
   /** Works without a network connection (shown as a badge in the library). */
   offline: boolean;
+  /** On without user action; `false` = off but listed ("aus, aber sichtbar"). */
   defaultEnabled: boolean;
+  /**
+   * Required. `preview` hides the tool from the toolbox, library, palette and settings until
+   * "In Arbeit anzeigen" is on (`core/tools/state.ts` `isVisible`); a tool the user switched on
+   * explicitly stays listed. `npm run check:modules` fails without it.
+   */
+  maturity: Maturity;
   /** Lower = earlier. */
   order: number;
   component: () => Promise<{ default: ComponentType }>;

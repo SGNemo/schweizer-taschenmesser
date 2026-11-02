@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openFoldedGroup, openMoreFocus, ready } from './helpers';
+import { openFoldedGroup, openMoreFocus, ready, showPreview } from './helpers';
 import { mockSpotify, seedConnected } from './spotify-mock';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {

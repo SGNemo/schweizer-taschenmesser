@@ -11,7 +11,7 @@ import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { calculate } from '@/core/calc/phrases';
 import { activeManifests } from '@/core/modules/contributions';
 import { useModuleStates } from '@/core/modules/activation';
-import { availableManifests } from '@/core/modules/available';
+import { availableManifests, isVisible } from '@/core/modules/available';
 import { openReminderCenter } from '@/core/notifications/centerStore';
 import { addRecent, readRecent, type RecentEntry } from '@/core/search/recent';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -114,6 +114,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const writeMode = useUiStore((s) => s.paletteWrite);
   const [writeSettings] = useAiWriteSettings();
   const states = useModuleStates();
+  const showPreview = useUiStore((s) => s.showPreview);
   const { pathname } = useLocation();
   // Inside a module its entries are the default target of a sentence without a module word.
   const preferModule = availableManifests().find(
@@ -251,9 +252,10 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           );
         },
       })),
-      // Modules that are off are still found by name or purpose and lead to their library card.
+      // Modules that are off are still found by name or purpose and lead to their library card
+      // (preview modules only with "In Arbeit anzeigen", like in the library).
       ...availableManifests()
-        .filter((m) => states !== undefined && !states[m.id])
+        .filter((m) => states !== undefined && !states[m.id] && isVisible(m, { showPreview }))
         .map((m) => ({
           id: `library-${m.id}`,
           label: tComfort.get().library.enable(m.name),
@@ -280,6 +282,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     tools,
     devCommands,
     states,
+    showPreview,
     keyHints,
   ]);
 
