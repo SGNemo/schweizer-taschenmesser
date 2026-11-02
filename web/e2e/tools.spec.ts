@@ -140,6 +140,8 @@ test('the calculator has scientific, programmer and date modes and remembers the
   await sheet.getByRole('button', { name: 'Rechner' }).click();
 
   await sheet.getByRole('button', { name: 'Wissenschaftlich' }).click();
+  // The tab is stored in the settings first; typing before the scientific keys are there would be lost.
+  await expect(sheet.getByRole('button', { name: 'asin' })).toBeVisible();
   await sheet.getByLabel('Rechnung').fill('sin(30) + log10(1000)');
   await expect(sheet.getByTestId('calc-result')).toHaveText('3,5', { timeout: 20_000 });
   await sheet.getByLabel('Rechnung').fill('2 pi');
