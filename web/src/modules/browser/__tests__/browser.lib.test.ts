@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveInput } from '../lib/omnibox';
 import { SEARCH_ENGINES, engineTemplate, isValidTemplate } from '../lib/searchEngines';
-import { displayUrl, hostOf, isWebUrl, urlKind } from '../lib/urlPolicy';
+import { displayUrl, hostOf, isWebUrl, offerName, urlKind } from '../lib/urlPolicy';
 
 const T = SEARCH_ENGINES[0]!.template;
 
@@ -51,5 +51,7 @@ describe('urlPolicy', () => {
     expect(hostOf('https://www.a.test/x')).toBe('www.a.test');
     expect(displayUrl('https://www.a.test/')).toBe('a.test');
     expect(displayUrl('https://www.a.test/p/q')).toBe('a.test/p/q');
+    expect(offerName('https://a.test/files/mein%20buch.pdf?x=1')).toBe('mein buch.pdf');
+    expect(offerName('https://a.test/')).toBe('a.test');
   });
 });

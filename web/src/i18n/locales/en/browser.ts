@@ -105,8 +105,11 @@ export const browser: Strings['browser'] = {
   },
   popupBlocked: 'A pop-up was blocked.',
   download: {
-    held: 'The page starts a download. The download manager comes later; until then use the system browser.',
+    offer: (name: string) => `The page offers “${name}” for download.`,
+    toManager: 'Open in the download manager',
     openSystem: 'Open in system browser',
+    dismiss: 'Dismiss',
+    needModule: 'That needs the “Downloads” module.',
   },
   clear: {
     title: 'Delete browser data?',

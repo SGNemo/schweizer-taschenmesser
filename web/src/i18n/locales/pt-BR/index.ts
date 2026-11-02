@@ -68,6 +68,7 @@ import { aiLabels } from './aiLabels';
 import { maps } from './maps';
 import { mail } from './mail';
 import { browser } from './browser';
+import { downloads } from './downloads';
 
 export const ptBR: Strings = {
   appName: 'Nemo',
@@ -139,4 +140,5 @@ export const ptBR: Strings = {
   maps,
   mail,
   browser,
+  downloads,
 };

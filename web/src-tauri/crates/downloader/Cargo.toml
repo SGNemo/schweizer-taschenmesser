@@ -1,0 +1,18 @@
+[package]
+name = "taschenmesser-downloader"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "HTTP(S) download manager core for the Downloads module: jobs, pause/resume (Range, also after a restart), speed limits, checksum. Never runs a file. No Tauri, so it is unit-tested on any machine."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "downloader"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+ureq = { version = "3", default-features = false, features = ["rustls", "gzip"] }
+url = "2"

@@ -105,8 +105,11 @@ export const browser: Strings['browser'] = {
   },
   popupBlocked: 'Une fenêtre contextuelle a été bloquée.',
   download: {
-    held: 'La page lance un téléchargement. Le gestionnaire de téléchargements arrive plus tard ; d’ici là, utilisez le navigateur du système.',
+    offer: (name: string) => `La page propose « ${name} » en téléchargement.`,
+    toManager: 'Ouvrir dans le gestionnaire de téléchargements',
     openSystem: 'Ouvrir dans le navigateur du système',
+    dismiss: 'Ignorer',
+    needModule: 'Cela nécessite le module « Téléchargements ».',
   },
   clear: {
     title: 'Supprimer les données du navigateur ?',

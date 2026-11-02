@@ -11,6 +11,8 @@ mod capture;
 #[cfg(desktop)]
 mod disk;
 #[cfg(desktop)]
+mod downloads;
+#[cfg(desktop)]
 mod local_api;
 #[cfg(desktop)]
 mod local_llm;
@@ -122,10 +124,22 @@ pub fn run() {
         .manage(oauth::OAuthListener::default())
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
+        .manage(downloads::Downloads::default())
         .manage(system::SystemMonitor::default())
         .manage(local_llm::LocalLlm::new())
         .manage(vault_bridge::VaultBridge::default())
         .invoke_handler(tauri::generate_handler![
+            downloads::downloads_watch,
+            downloads::downloads_default_dir,
+            downloads::downloads_add,
+            downloads::downloads_pause,
+            downloads::downloads_resume,
+            downloads::downloads_remove,
+            downloads::downloads_set_limit,
+            downloads::downloads_set_job_limit,
+            downloads::downloads_global_limit,
+            downloads::downloads_verify,
+            downloads::downloads_reveal,
             browser::browser_open,
             browser::browser_navigate,
             browser::browser_back,

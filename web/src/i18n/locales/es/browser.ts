@@ -106,8 +106,11 @@ export const browser: Strings['browser'] = {
   },
   popupBlocked: 'Se bloqueó una ventana emergente.',
   download: {
-    held: 'La página inicia una descarga. El gestor de descargas llegará más adelante; mientras tanto usa el navegador del sistema.',
+    offer: (name: string) => `La página ofrece «${name}» para descargar.`,
+    toManager: 'Abrir en el gestor de descargas',
     openSystem: 'Abrir en el navegador del sistema',
+    dismiss: 'Descartar',
+    needModule: 'Para eso hace falta el módulo «Descargas».',
   },
   clear: {
     title: '¿Borrar los datos del navegador?',

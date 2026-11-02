@@ -104,6 +104,21 @@
       }
     }
   },
+  "downloads": {
+    "scope": "module.downloads",
+    "fields": {
+      "limitKb": {
+        "type": "number",
+        "label": "Tempolimit für alle Downloads (KB/s, 0 = unbegrenzt)",
+        "default": 0
+      },
+      "folder": {
+        "type": "text",
+        "label": "Download-Ordner (leer = Downloads-Ordner des Systems)",
+        "default": ""
+      }
+    }
+  },
   "example": {
     "scope": "module.example",
     "fields": {
