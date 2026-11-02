@@ -124,6 +124,13 @@ describe('local blobs', () => {
     expect(await blobKeys()).toEqual(['a']);
   });
 
+  it('leaves the pictures of notes alone when it prunes', async () => {
+    await putBlob('a', new Blob(['x']));
+    await putBlob('notes:img:one', new Blob(['png']));
+    expect(await pruneBlobs(new Set())).toBe(1);
+    expect(await blobKeys()).toEqual(['notes:img:one']);
+  });
+
   it('never enters the sync outbox', async () => {
     await putBlob('a', new Blob(['secret']));
     expect(await db.table('_outbox').count()).toBe(0);

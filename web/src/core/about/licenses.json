@@ -3,9 +3,9 @@
   "npm": [
     {
       "name": "@anthropic-ai/sdk",
-      "version": "1.1.0",
+      "version": "1.3.0",
       "license": "Apache-2.0",
-      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.1.0"
+      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.3.0"
     },
     {
       "name": "@babel/runtime",
@@ -36,6 +36,24 @@
       "version": "3.2.2",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/@dnd-kit/utilities/v/3.2.2"
+    },
+    {
+      "name": "@floating-ui/core",
+      "version": "1.8.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@floating-ui/core/v/1.8.0"
+    },
+    {
+      "name": "@floating-ui/dom",
+      "version": "1.8.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@floating-ui/dom/v/1.8.0"
+    },
+    {
+      "name": "@floating-ui/utils",
+      "version": "0.2.12",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@floating-ui/utils/v/0.2.12"
     },
     {
       "name": "@fontsource-variable/inter",
@@ -117,9 +135,9 @@
     },
     {
       "name": "@tauri-apps/plugin-dialog",
-      "version": "2.8.3",
+      "version": "2.8.4",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.3"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-dialog/v/2.8.4"
     },
     {
       "name": "@tauri-apps/plugin-fs",
@@ -144,6 +162,216 @@
       "version": "2.7.2",
       "license": "MIT OR Apache-2.0",
       "url": "https://www.npmjs.com/package/@tauri-apps/plugin-opener/v/2.7.2"
+    },
+    {
+      "name": "@tiptap/core",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/core/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-blockquote",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-blockquote/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-bold",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-bold/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-bubble-menu",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-bubble-menu/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-bullet-list",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-bullet-list/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-code",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-code/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-code-block",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-code-block/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-code-block-lowlight",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-code-block-lowlight/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-document",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-document/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-dropcursor",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-dropcursor/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-floating-menu",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-floating-menu/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-gapcursor",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-gapcursor/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-hard-break",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-hard-break/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-heading",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-heading/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-highlight",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-highlight/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-horizontal-rule",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-horizontal-rule/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-image",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-image/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-italic",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-italic/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-link",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-link/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-list",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-list/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-list-item",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-list-item/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-list-keymap",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-list-keymap/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-ordered-list",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-ordered-list/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-paragraph",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-paragraph/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-strike",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-strike/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-table",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-table/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-task-item",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-task-item/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-task-list",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-task-list/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-text",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-text/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extension-underline",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extension-underline/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/extensions",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/extensions/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/markdown",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/markdown/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/pm",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/pm/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/react",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/react/v/3.32.2"
+    },
+    {
+      "name": "@tiptap/starter-kit",
+      "version": "3.32.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@tiptap/starter-kit/v/3.32.2"
     },
     {
       "name": "@types/d3-array",
@@ -200,6 +428,12 @@
       "url": "https://www.npmjs.com/package/@types/d3-timer/v/3.0.2"
     },
     {
+      "name": "@types/hast",
+      "version": "3.0.5",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@types/hast/v/3.0.5"
+    },
+    {
       "name": "@types/react",
       "version": "19.3.0",
       "license": "MIT",
@@ -210,6 +444,18 @@
       "version": "19.3.0",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/@types/react-dom/v/19.3.0"
+    },
+    {
+      "name": "@types/trusted-types",
+      "version": "2.0.7",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@types/trusted-types/v/2.0.7"
+    },
+    {
+      "name": "@types/unist",
+      "version": "3.0.3",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/@types/unist/v/3.0.3"
     },
     {
       "name": "@types/use-sync-external-store",
@@ -252,6 +498,12 @@
       "version": "2.1.1",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/clsx/v/2.1.1"
+    },
+    {
+      "name": "complex.js",
+      "version": "2.4.3",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/complex.js/v/2.4.3"
     },
     {
       "name": "cookie-es",
@@ -338,10 +590,28 @@
       "url": "https://www.npmjs.com/package/date-fns/v/4.4.0"
     },
     {
+      "name": "decimal.js",
+      "version": "10.6.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/decimal.js/v/10.6.0"
+    },
+    {
       "name": "decimal.js-light",
       "version": "2.5.1",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/decimal.js-light/v/2.5.1"
+    },
+    {
+      "name": "dequal",
+      "version": "2.0.3",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/dequal/v/2.0.3"
+    },
+    {
+      "name": "devlop",
+      "version": "1.1.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/devlop/v/1.1.0"
     },
     {
       "name": "dexie",
@@ -356,16 +626,34 @@
       "url": "https://www.npmjs.com/package/dexie-react-hooks/v/4.4.0"
     },
     {
+      "name": "dompurify",
+      "version": "3.4.17",
+      "license": "(MPL-2.0 OR Apache-2.0)",
+      "url": "https://www.npmjs.com/package/dompurify/v/3.4.17"
+    },
+    {
       "name": "es-toolkit",
       "version": "1.52.0",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/es-toolkit/v/1.52.0"
     },
     {
+      "name": "escape-latex",
+      "version": "1.2.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/escape-latex/v/1.2.0"
+    },
+    {
       "name": "eventemitter3",
       "version": "5.0.4",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/eventemitter3/v/5.0.4"
+    },
+    {
+      "name": "fast-equals",
+      "version": "5.4.5",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/fast-equals/v/5.4.5"
     },
     {
       "name": "fast-sha256",
@@ -380,10 +668,28 @@
       "url": "https://www.npmjs.com/package/fastest-levenshtein/v/1.0.16"
     },
     {
+      "name": "fraction.js",
+      "version": "5.3.4",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/fraction.js/v/5.3.4"
+    },
+    {
       "name": "hash-wasm",
       "version": "4.12.0",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/hash-wasm/v/4.12.0"
+    },
+    {
+      "name": "highlight.js",
+      "version": "11.11.2",
+      "license": "BSD-3-Clause",
+      "url": "https://www.npmjs.com/package/highlight.js/v/11.11.2"
+    },
+    {
+      "name": "highlight.js",
+      "version": "11.12.0",
+      "license": "BSD-3-Clause",
+      "url": "https://www.npmjs.com/package/highlight.js/v/11.12.0"
     },
     {
       "name": "immer",
@@ -398,22 +704,58 @@
       "url": "https://www.npmjs.com/package/internmap/v/2.0.3"
     },
     {
+      "name": "javascript-natural-sort",
+      "version": "0.7.1",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/javascript-natural-sort/v/0.7.1"
+    },
+    {
       "name": "json-schema-to-ts",
       "version": "3.1.1",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/json-schema-to-ts/v/3.1.1"
     },
     {
+      "name": "linkifyjs",
+      "version": "4.4.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/linkifyjs/v/4.4.0"
+    },
+    {
+      "name": "lowlight",
+      "version": "3.3.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/lowlight/v/3.3.0"
+    },
+    {
       "name": "lucide-react",
-      "version": "1.61.0",
+      "version": "1.65.0",
       "license": "ISC",
-      "url": "https://www.npmjs.com/package/lucide-react/v/1.61.0"
+      "url": "https://www.npmjs.com/package/lucide-react/v/1.65.0"
+    },
+    {
+      "name": "marked",
+      "version": "17.0.6",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/marked/v/17.0.6"
+    },
+    {
+      "name": "mathjs",
+      "version": "15.2.0",
+      "license": "Apache-2.0",
+      "url": "https://www.npmjs.com/package/mathjs/v/15.2.0"
     },
     {
       "name": "minisearch",
       "version": "7.2.0",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/minisearch/v/7.2.0"
+    },
+    {
+      "name": "orderedmap",
+      "version": "2.1.1",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/orderedmap/v/2.1.1"
     },
     {
       "name": "otpauth",
@@ -432,6 +774,84 @@
       "version": "1.17.1",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/pdf-lib/v/1.17.1"
+    },
+    {
+      "name": "prosemirror-changeset",
+      "version": "2.4.5",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-changeset/v/2.4.5"
+    },
+    {
+      "name": "prosemirror-commands",
+      "version": "1.7.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-commands/v/1.7.2"
+    },
+    {
+      "name": "prosemirror-dropcursor",
+      "version": "1.8.4",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-dropcursor/v/1.8.4"
+    },
+    {
+      "name": "prosemirror-gapcursor",
+      "version": "1.4.1",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-gapcursor/v/1.4.1"
+    },
+    {
+      "name": "prosemirror-history",
+      "version": "1.5.1",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-history/v/1.5.1"
+    },
+    {
+      "name": "prosemirror-inputrules",
+      "version": "1.5.1",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-inputrules/v/1.5.1"
+    },
+    {
+      "name": "prosemirror-keymap",
+      "version": "1.2.3",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-keymap/v/1.2.3"
+    },
+    {
+      "name": "prosemirror-model",
+      "version": "1.25.12",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-model/v/1.25.12"
+    },
+    {
+      "name": "prosemirror-schema-list",
+      "version": "1.6.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-schema-list/v/1.6.0"
+    },
+    {
+      "name": "prosemirror-state",
+      "version": "1.4.4",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-state/v/1.4.4"
+    },
+    {
+      "name": "prosemirror-tables",
+      "version": "1.8.5",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-tables/v/1.8.5"
+    },
+    {
+      "name": "prosemirror-transform",
+      "version": "1.12.4",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-transform/v/1.12.4"
+    },
+    {
+      "name": "prosemirror-view",
+      "version": "1.42.9",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/prosemirror-view/v/1.42.9"
     },
     {
       "name": "qrcode-generator",
@@ -465,9 +885,9 @@
     },
     {
       "name": "react-router",
-      "version": "8.5.0",
+      "version": "8.5.1",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/react-router/v/8.5.0"
+      "url": "https://www.npmjs.com/package/react-router/v/8.5.1"
     },
     {
       "name": "recharts",
@@ -494,16 +914,34 @@
       "url": "https://www.npmjs.com/package/reselect/v/5.2.0"
     },
     {
+      "name": "rope-sequence",
+      "version": "1.3.4",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/rope-sequence/v/1.3.4"
+    },
+    {
       "name": "scheduler",
       "version": "0.28.0",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/scheduler/v/0.28.0"
     },
     {
+      "name": "seedrandom",
+      "version": "3.0.5",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/seedrandom/v/3.0.5"
+    },
+    {
       "name": "standardwebhooks",
       "version": "1.1.1",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/standardwebhooks/v/1.1.1"
+    },
+    {
+      "name": "tiny-emitter",
+      "version": "2.1.0",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/tiny-emitter/v/2.1.0"
     },
     {
       "name": "tiny-invariant",
@@ -542,6 +980,12 @@
       "url": "https://www.npmjs.com/package/tslib/v/2.8.1"
     },
     {
+      "name": "typed-function",
+      "version": "4.2.2",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/typed-function/v/4.2.2"
+    },
+    {
       "name": "use-sync-external-store",
       "version": "1.7.0",
       "license": "MIT",
@@ -552,6 +996,12 @@
       "version": "37.3.6",
       "license": "MIT AND ISC",
       "url": "https://www.npmjs.com/package/victory-vendor/v/37.3.6"
+    },
+    {
+      "name": "w3c-keyname",
+      "version": "2.2.8",
+      "license": "MIT",
+      "url": "https://www.npmjs.com/package/w3c-keyname/v/2.2.8"
     },
     {
       "name": "zod",

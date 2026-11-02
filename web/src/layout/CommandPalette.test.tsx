@@ -118,6 +118,31 @@ describe('command palette', () => {
     expect(useUiStore.getState().paletteOpen).toBe(true); // copying does not close it
   });
 
+  it('answers "=" expressions with the full engine, and base and date phrases', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    const box = await screen.findByRole('combobox');
+    await user.type(box, '=sqrt(2)*3');
+    expect(
+      await screen.findByRole('option', { name: /sqrt\(2\)\*3 = 4,24264068711929/ }),
+    ).toBeVisible();
+    await user.clear(box);
+    await user.type(box, '0x1F in dez');
+    expect(screen.getByRole('option', { name: /0x1F = 31/ })).toBeVisible();
+    await user.clear(box);
+    await user.type(box, '15.03.2027 + 45 Tage');
+    expect(screen.getByRole('option', { name: /15\.03\.2027 \+ 45 Tage = / })).toBeVisible();
+    await user.clear(box);
+    await user.type(box, '=2 +');
+    expect(
+      await screen.findByRole('option', { name: new RegExp(t.tools.calc.errors.syntax!) }),
+    ).toBeVisible();
+  });
+
   it('does not treat a plain number as a calculation', async () => {
     const user = userEvent.setup();
     render(

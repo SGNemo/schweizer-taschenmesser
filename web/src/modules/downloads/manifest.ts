@@ -14,6 +14,7 @@ const manifest: ModuleManifest = {
     return t.downloads.meta.name;
   },
   icon: 'download',
+  identity: { hue: 'navy', widgetType: 'progress' },
   version: 1,
   get description() {
     return t.downloads.meta.description;

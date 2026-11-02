@@ -28,7 +28,7 @@ function ItemRow({
   const toast = useUiStore((s) => s.toast);
   const id = item.moduleId;
   return (
-    <li className={styles.row} data-area={item.area}>
+    <li className={styles.row} data-area={item.area} data-hue={item.hue}>
       <NavLink to={item.to} className={styles.link}>
         <Icon name={item.icon} />
         <span>{item.label}</span>

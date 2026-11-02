@@ -164,6 +164,21 @@
       }
     }
   },
+  "mail": {
+    "scope": "module.mail",
+    "fields": {
+      "images": {
+        "type": "select",
+        "label": "Bilder in Mails",
+        "default": "ask"
+      },
+      "cacheBodies": {
+        "type": "boolean",
+        "label": "Geöffnete Mails zwischenspeichern",
+        "default": true
+      }
+    }
+  },
   "maps": {
     "scope": "module.maps",
     "fields": {
@@ -206,6 +221,21 @@
         "type": "text",
         "label": "Kartendatei (Adresse)",
         "default": ""
+      }
+    }
+  },
+  "notes": {
+    "scope": "module.notes",
+    "fields": {
+      "width": {
+        "type": "select",
+        "label": "Breite des Schreibbereichs",
+        "default": "narrow"
+      },
+      "wordCount": {
+        "type": "boolean",
+        "label": "Wortzahl anzeigen",
+        "default": true
       }
     }
   },

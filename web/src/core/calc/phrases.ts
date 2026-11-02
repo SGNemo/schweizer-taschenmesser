@@ -2,14 +2,63 @@
  * The calculator of the command palette: recognises arithmetic ("12*3,5", "240 + 19%") and the few
  * German phrases people type ("19% von 240", "30 von 200 in prozent"). Strictly local, no network.
  */
+import { dateTimeFormat, decimalSeparator } from '@/core/i18n/format';
+import { today } from '@/core/time/dates';
 import { t } from '@/strings';
+import { datePhrase } from './dates';
+import { copyValue, evaluateExpression } from './engine';
 import { CalcError, evaluate, formatNumber } from './expr';
+import { baseConversion } from './programmer';
 
 export interface CalcAnswer {
-  /** The number, for copying. */
-  value: number;
+  /** What Enter copies: no thousands separators, so it pastes into any field. */
+  copy: string;
   /** "240 + 19% = 285,6" */
   text: string;
+}
+
+const plainNumber = (value: number): string => String(value).replace('.', decimalSeparator());
+
+/** "Monday, 29 April 2026" in the format locale. */
+const longDate = (iso: string): string =>
+  dateTimeFormat({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(
+    new Date(`${iso}T12:00:00`),
+  );
+
+/** Answers that need no library: "0x1F in dez", "15.03. + 45 Tage", "15.03. bis 30.04.". */
+function phrase(s: string): CalcAnswer | undefined {
+  const base = baseConversion(s);
+  if (base) return base;
+  const date = datePhrase(s, today(), longDate, t.tools.dates.between);
+  if (date) return date;
+  return undefined;
+}
+
+/**
+ * "=sqrt(2)*3": everything the calculator can do (functions, variables are per session so not here).
+ * The library loads on first use; offline it falls back to plain arithmetic. An error is an answer
+ * with `error` set, so the palette can say what is wrong instead of staying silent.
+ */
+export type ExpressionAnswer =
+  | { text: string; copy: string; error?: undefined }
+  | { error: string; text?: undefined; copy?: undefined };
+
+export async function calculateExpression(input: string): Promise<ExpressionAnswer | undefined> {
+  const body = input.trim().replace(/^=\s*/, '');
+  if (!input.trim().startsWith('=') || body === '') return undefined;
+  const quick = phrase(body);
+  if (quick) return quick;
+  try {
+    const r = await evaluateExpression(body);
+    return {
+      text: `${body} = ${r.display}`,
+      copy: copyValue(r),
+    };
+  } catch (e) {
+    if (e instanceof CalcError)
+      return { error: t.tools.calc.errors[e.code] ?? t.tools.calc.errors.syntax! };
+    throw e;
+  }
 }
 
 const NUM = String.raw`(-?[0-9][0-9.,]*)`;
@@ -36,13 +85,15 @@ export function looksLikeCalculation(input: string): boolean {
 
 export function calculate(input: string): CalcAnswer | undefined {
   const s = input.trim();
+  const quick = phrase(s);
+  if (quick) return quick;
   if (!looksLikeCalculation(s)) return undefined;
   try {
     const of = OF.exec(s);
     if (of) {
       const value = evaluate(`${of[2]}*${of[1]}%`);
       return {
-        value,
+        copy: plainNumber(value),
         text: t.tools.calc.percentOf(
           formatNumber(num(of[1]!)),
           formatNumber(num(of[2]!)),
@@ -57,12 +108,12 @@ export function calculate(input: string): CalcAnswer | undefined {
       if (whole === 0) return undefined;
       const value = evaluate(`${share[1]}/${share[2]}*100`);
       return {
-        value,
+        copy: plainNumber(value),
         text: t.tools.calc.shareOf(formatNumber(part), formatNumber(whole), formatNumber(value)),
       };
     }
     const value = evaluate(s);
-    return { value, text: `${s} = ${formatNumber(value)}` };
+    return { copy: plainNumber(value), text: `${s} = ${formatNumber(value)}` };
   } catch (e) {
     if (e instanceof CalcError) return undefined;
     throw e;

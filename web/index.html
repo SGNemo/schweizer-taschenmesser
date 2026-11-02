@@ -76,6 +76,8 @@
         if (rst === 'bold' || rst === 'color') document.documentElement.dataset.readStyle = rst;
         if (localStorage.getItem('tm-color') === 'calm')
           document.documentElement.dataset.color = 'calm';
+        if (localStorage.getItem('tm-module-colors') === 'off')
+          document.documentElement.dataset.moduleColors = 'off';
         if (localStorage.getItem('tm-motion') === 'reduce')
           document.documentElement.dataset.motion = 'reduce';
         if (localStorage.getItem('tm-density') === 'compact')

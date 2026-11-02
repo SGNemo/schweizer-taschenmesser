@@ -17,6 +17,7 @@ const manifest: ModuleManifest = {
     return t.chat.meta.name;
   },
   icon: 'sparkles',
+  identity: { hue: 'sky', widgetType: 'tiles' },
   version: 1,
   dataApi: false,
   get description() {

@@ -13,6 +13,7 @@ const manifest: ModuleManifest = {
     return t.invoices.meta.name;
   },
   icon: 'receipt',
+  identity: { hue: 'ocean', widgetType: 'dueList' },
   version: 3,
   get description() {
     return t.invoices.meta.description;

@@ -71,10 +71,14 @@ async function addNote(page: Page) {
   await moduleSwitch(card).click();
   await expect(card.getByText('Aktiv', { exact: true })).toBeVisible();
   await ready(page, '/notes?new=1');
-  const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Titel').fill('Erste Notiz');
-  await dialog.getByLabel('Text').fill('Erfundener Text');
-  await save(page);
+  await expect(page.getByRole('textbox', { name: 'Text der Seite' })).toBeVisible(); // lazy editor
+  await page.getByLabel('Titel der Seite').fill('Erste Notiz');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Erfundener Text');
+  // Autosave: the page list shows the text once it is stored.
+  await expect(
+    page.getByRole('navigation', { name: 'Seiten' }).getByText('Erfundener Text'),
+  ).toBeVisible();
 }
 
 test('fresh install: setup, sync, one entry per core module, backup/restore, language, diagnostics', async ({
