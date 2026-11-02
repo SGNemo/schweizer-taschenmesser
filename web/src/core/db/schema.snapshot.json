@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 23,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -15,6 +15,9 @@
     "accounts_entry": "id, updatedAt",
     "accounts_vault": "id, updatedAt",
     "bookmarks_item": "id, updatedAt, done, kind, *tags",
+    "browser_blockrule": "id, updatedAt, createdAt",
+    "browser_bookmark": "id, updatedAt, createdAt",
+    "browser_history": "id, updatedAt, createdAt",
     "budgets_budget": "id, updatedAt, categoryId",
     "budgets_deposit": "id, updatedAt, goalId, date",
     "budgets_goal": "id, updatedAt, deadline",

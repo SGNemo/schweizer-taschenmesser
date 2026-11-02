@@ -4597,6 +4597,7 @@ dependencies = [
  "minisign-verify",
  "serde",
  "serde_json",
+ "taschenmesser-browser-filter",
  "taschenmesser-disk-scan",
  "taschenmesser-local-api",
  "taschenmesser-local-llm",
@@ -4618,7 +4619,17 @@ dependencies = [
  "tauri-plugin-share-intent",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
+ "webview2-com",
  "windows 0.61.3",
+ "windows 0.62.2",
+]
+
+[[package]]
+name = "taschenmesser-browser-filter"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "url",
 ]
 
 [[package]]
