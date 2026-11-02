@@ -26,7 +26,10 @@ describe('browser module', () => {
 
   it('widget: empty state offers the browser', async () => {
     view();
-    expect(await screen.findByRole('link', { name: /Browser öffnen/ })).toHaveAttribute('href', '/browser');
+    expect(await screen.findByRole('link', { name: /Browser öffnen/ })).toHaveAttribute(
+      'href',
+      '/browser',
+    );
   });
 
   it('widget: lists saved pages', async () => {

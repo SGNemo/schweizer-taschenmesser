@@ -77,7 +77,11 @@ function onEvent(e: BrowserEvent): void {
   if (!tab) return;
   switch (e.event) {
     case 'url':
-      patch(e.tab, { url: e.url, blocked: e.url === tab.url ? tab.blocked : 0, hosts: e.url === tab.url ? tab.hosts : [] });
+      patch(e.tab, {
+        url: e.url,
+        blocked: e.url === tab.url ? tab.blocked : 0,
+        hosts: e.url === tab.url ? tab.hosts : [],
+      });
       void remember(tab, e.url);
       break;
     case 'title': {
@@ -130,7 +134,14 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
     if (!tab.opened) {
       patch(id, { opened: true, url, loading: true });
       await browser.open(
-        { tab: id, url, bounds: get().bounds, privateTab: tab.isPrivate, zoom: tab.zoom, allowHttp },
+        {
+          tab: id,
+          url,
+          bounds: get().bounds,
+          privateTab: tab.isPrivate,
+          zoom: tab.zoom,
+          allowHttp,
+        },
         onEvent,
       );
     } else {
@@ -153,7 +164,9 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
     const tab = get().tabs.find((x) => x.id === id);
     if (!tab) return;
     const zoom =
-      delta === 'reset' ? 1 : Math.min(3, Math.max(0.25, Math.round((tab.zoom + delta) * 100) / 100));
+      delta === 'reset'
+        ? 1
+        : Math.min(3, Math.max(0.25, Math.round((tab.zoom + delta) * 100) / 100));
     patch(id, { zoom });
     if (tab.opened) await getPlatform().browser.setZoom(id, zoom);
   },

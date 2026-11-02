@@ -42,7 +42,9 @@ async function enableBrowser(page: Page) {
 }
 
 const calls = (page: Page) =>
-  page.evaluate(() => (window as unknown as { __tmBrowserCalls?: string[] }).__tmBrowserCalls ?? []);
+  page.evaluate(
+    () => (window as unknown as { __tmBrowserCalls?: string[] }).__tmBrowserCalls ?? [],
+  );
 
 const menu = (page: Page) => page.locator('main').getByRole('button', { name: 'Mehr' });
 
@@ -120,6 +122,8 @@ test('blocker panel lists third-party servers and saves an own rule', async ({ p
   await expect(page.getByText('1 Anfrage blockiert')).toBeVisible();
   await expect(page.getByText('cdn.thirdparty.test')).toBeVisible();
   await page.getByRole('button', { name: 'Blocken' }).click();
-  await expect(page.getByRole('list', { name: 'Eigene Regeln' })).toContainText('cdn.thirdparty.test');
+  await expect(page.getByRole('list', { name: 'Eigene Regeln' })).toContainText(
+    'cdn.thirdparty.test',
+  );
   await audit(page, 'blocker');
 });

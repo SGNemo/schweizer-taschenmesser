@@ -29,7 +29,10 @@ function seed(ctx: SeedContext): SeedRows {
       };
     }),
     blockrule: [
-      { id: ctx.id('browser', 'blockrule', 0), data: { kind: 'domain', value: 'ads.tracker.test' } },
+      {
+        id: ctx.id('browser', 'blockrule', 0),
+        data: { kind: 'domain', value: 'ads.tracker.test' },
+      },
     ],
   };
 }

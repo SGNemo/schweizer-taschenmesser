@@ -29,7 +29,8 @@ export default function BrowserPage() {
   const { tabs, activeId, pausedHosts } = useBrowserTabs();
   const tab = tabs.find((x) => x.id === activeId) ?? null;
   const [view, setView] = useState<View>('page');
-  const [input, setInput] = useState('');
+  // What the user is typing; shown instead of the tab's address until the next navigation.
+  const [draft, setDraft] = useState<{ tab: number | null; text: string } | null>(null);
   const [hintOpen, setHintOpen] = useState(true);
   const area = useRef<HTMLDivElement>(null);
 
@@ -44,8 +45,8 @@ export default function BrowserPage() {
   const current = tab && tab.opened ? tab.url : '';
   const marked = marks?.find((m) => m.url === current);
 
-  // The address bar follows the tab.
-  useEffect(() => setInput(current), [current, activeId]);
+  const input = draft && draft.tab === activeId ? draft.text : current;
+  const setInput = (text: string) => setDraft({ tab: activeId, text });
 
   // Tell the native side what to hold back and block.
   useEffect(() => {
@@ -64,6 +65,7 @@ export default function BrowserPage() {
       if (!res) return;
       const target = id ?? useBrowserTabs.getState().newTab();
       setView('page');
+      setDraft(null);
       await useBrowserTabs.getState().go(target, res.url, allowHttp);
     },
     [activeId, template],
@@ -74,7 +76,7 @@ export default function BrowserPage() {
     const url = params.get('url');
     if (!url || !platform.supported) return;
     setParams({}, { replace: true });
-    if (isWebUrl(url)) void open(url, useBrowserTabs.getState().newTab());
+    if (isWebUrl(url)) queueMicrotask(() => void open(url, useBrowserTabs.getState().newTab()));
   }, [params, platform, open, setParams]);
 
   // Place the native tab exactly over the area; hide it whenever a Nemo panel is shown.
@@ -108,7 +110,10 @@ export default function BrowserPage() {
   );
 
   const toast = useUiStore.getState().toast;
-  const hosts = useMemo(() => (tab?.hosts ?? []).filter((h) => h !== hostOf(current)), [tab, current]);
+  const hosts = useMemo(
+    () => (tab?.hosts ?? []).filter((h) => h !== hostOf(current)),
+    [tab, current],
+  );
 
   async function toggleBookmark() {
     if (!tab || !isWebUrl(current)) return;
@@ -130,7 +135,11 @@ export default function BrowserPage() {
 
   function saveAsNote() {
     if (!tab || !isWebUrl(current)) return;
-    const q = new URLSearchParams({ new: '1', title: tab.title || displayUrl(current), text: current });
+    const q = new URLSearchParams({
+      new: '1',
+      title: tab.title || displayUrl(current),
+      text: current,
+    });
     void navigate(`/notes?${q.toString()}`);
   }
 
@@ -148,7 +157,9 @@ export default function BrowserPage() {
     );
   }
 
-  const mark = tab?.isPrivate ? <span className={styles.private}>{t.browser.toolbar.privateTab}</span> : null;
+  const mark = tab?.isPrivate ? (
+    <span className={styles.private}>{t.browser.toolbar.privateTab}</span>
+  ) : null;
 
   return (
     <div className={styles.root}>
@@ -258,7 +269,11 @@ export default function BrowserPage() {
               lead={<Icon name="bookmark" />}
               onOpen={saveToList}
             />
-            <ItemRow title={t.browser.menu.saveAsNote} lead={<Icon name="note" />} onOpen={saveAsNote} />
+            <ItemRow
+              title={t.browser.menu.saveAsNote}
+              lead={<Icon name="note" />}
+              onOpen={saveAsNote}
+            />
             <ItemRow
               title={t.browser.menu.openSystem}
               lead={<Icon name="external" />}
@@ -301,20 +316,34 @@ export default function BrowserPage() {
                 setView('page');
               }}
             />
-            <ItemRow title={t.browser.menu.bookmarks} lead={<Icon name="star" />} onOpen={() => setView('bookmarks')} />
-            <ItemRow title={t.browser.menu.history} lead={<Icon name="clock" />} onOpen={() => setView('history')} />
+            <ItemRow
+              title={t.browser.menu.bookmarks}
+              lead={<Icon name="star" />}
+              onOpen={() => setView('bookmarks')}
+            />
+            <ItemRow
+              title={t.browser.menu.history}
+              lead={<Icon name="clock" />}
+              onOpen={() => setView('history')}
+            />
             <ItemRow
               title={t.browser.menu.blocker}
               meta={tab?.blocked ? t.browser.blocker.blockedCount(tab.blocked) : undefined}
               lead={<Icon name="eye" />}
               onOpen={() => setView('blocker')}
             />
-            <ItemRow title={t.browser.menu.clearData} lead={<Icon name="trash" />} onOpen={() => setView('clear')} />
+            <ItemRow
+              title={t.browser.menu.clearData}
+              lead={<Icon name="trash" />}
+              onOpen={() => setView('clear')}
+            />
           </ItemList>
         ) : view === 'bookmarks' ? (
           <div className={styles.panel}>
             <h2>{t.browser.bookmarks.title}</h2>
-            {marks && marks.length === 0 ? <p className={styles.muted}>{t.browser.bookmarks.empty}</p> : null}
+            {marks && marks.length === 0 ? (
+              <p className={styles.muted}>{t.browser.bookmarks.empty}</p>
+            ) : null}
             <ItemList label={t.browser.bookmarks.title}>
               {(marks ?? []).map((m) => (
                 <ItemRow
@@ -325,7 +354,12 @@ export default function BrowserPage() {
                   actions={
                     <IconButton
                       label={t.actions.delete}
-                      onClick={() => void deleteWithUndo(() => bookmarkRepo.remove(m.id), t.browser.bookmarks.removed)}
+                      onClick={() =>
+                        void deleteWithUndo(
+                          () => bookmarkRepo.remove(m.id),
+                          t.browser.bookmarks.removed,
+                        )
+                      }
                     >
                       <Icon name="trash" />
                     </IconButton>
@@ -338,7 +372,9 @@ export default function BrowserPage() {
           <div className={styles.panel}>
             <h2>{t.browser.history.title}</h2>
             {!prefs.history ? <p className={styles.muted}>{t.browser.history.off}</p> : null}
-            {visits && visits.length === 0 ? <p className={styles.muted}>{t.browser.history.empty}</p> : null}
+            {visits && visits.length === 0 ? (
+              <p className={styles.muted}>{t.browser.history.empty}</p>
+            ) : null}
             <ItemList label={t.browser.history.title}>
               {(visits ?? []).map((v) => (
                 <ItemRow
@@ -354,7 +390,8 @@ export default function BrowserPage() {
                 <Button
                   onClick={() =>
                     void deleteWithUndo(async () => {
-                      for (const v of await historyRepo.active().toArray()) await historyRepo.remove(v.id);
+                      for (const v of await historyRepo.active().toArray())
+                        await historyRepo.remove(v.id);
                     }, t.browser.history.cleared)
                   }
                 >
@@ -381,20 +418,26 @@ export default function BrowserPage() {
                   </div>
                 ) : null}
                 <h3>{t.browser.blocker.thirdParties}</h3>
-                {hosts.length === 0 ? <p className={styles.muted}>{t.browser.blocker.none}</p> : null}
+                {hosts.length === 0 ? (
+                  <p className={styles.muted}>{t.browser.blocker.none}</p>
+                ) : null}
                 <ItemList label={t.browser.blocker.thirdParties}>
                   {hosts.map((h) => (
                     <ItemRow
                       key={h}
                       title={h}
-                      end={<Button onClick={() => void blockHost(h)}>{t.browser.blocker.block}</Button>}
+                      end={
+                        <Button onClick={() => void blockHost(h)}>{t.browser.blocker.block}</Button>
+                      }
                     />
                   ))}
                 </ItemList>
               </>
             ) : null}
             <h3>{t.browser.blocker.rules}</h3>
-            {rules && rules.length === 0 ? <p className={styles.muted}>{t.browser.blocker.noRules}</p> : null}
+            {rules && rules.length === 0 ? (
+              <p className={styles.muted}>{t.browser.blocker.noRules}</p>
+            ) : null}
             <ItemList label={t.browser.blocker.rules}>
               {(rules ?? []).map((r) => (
                 <ItemRow
@@ -438,7 +481,9 @@ export default function BrowserPage() {
             <h2>{t.browser.http.title}</h2>
             <p>{t.browser.http.body(hostOf(tab.held))}</p>
             <div className={styles.actions}>
-              <Button onClick={() => useBrowserTabs.getState().dismissHeld(tab.id)}>{t.browser.http.back}</Button>
+              <Button onClick={() => useBrowserTabs.getState().dismissHeld(tab.id)}>
+                {t.browser.http.back}
+              </Button>
               <Button variant="primary" onClick={() => void open(tab.held!, tab.id, true)}>
                 {t.browser.http.proceed}
               </Button>
@@ -449,10 +494,17 @@ export default function BrowserPage() {
             <h2>{t.browser.start.title}</h2>
             <p className={styles.muted}>{t.browser.start.body}</p>
             <h3>{t.browser.start.bookmarks}</h3>
-            {marks && marks.length === 0 ? <p className={styles.muted}>{t.browser.start.none}</p> : null}
+            {marks && marks.length === 0 ? (
+              <p className={styles.muted}>{t.browser.start.none}</p>
+            ) : null}
             <ItemList label={t.browser.start.bookmarks}>
               {(marks ?? []).slice(0, 8).map((m) => (
-                <ItemRow key={m.id} title={m.title} meta={displayUrl(m.url)} onOpen={() => void open(m.url)} />
+                <ItemRow
+                  key={m.id}
+                  title={m.title}
+                  meta={displayUrl(m.url)}
+                  onOpen={() => void open(m.url)}
+                />
               ))}
             </ItemList>
             <div className={styles.actions}>

@@ -5625,7 +5625,8 @@ export const de = {
     },
     bookmarks: {
       title: 'Lesezeichen',
-      empty: 'Noch keine Lesezeichen. Mit dem Stern in der Leiste speicherst du die aktuelle Seite.',
+      empty:
+        'Noch keine Lesezeichen. Mit dem Stern in der Leiste speicherst du die aktuelle Seite.',
       added: 'Lesezeichen gesetzt',
       removed: 'Lesezeichen entfernt',
     },

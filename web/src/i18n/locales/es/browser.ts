@@ -91,7 +91,8 @@ export const browser: Strings['browser'] = {
     intro:
       'El bloqueador mantiene fuera servidores conocidos de anuncios y rastreadores. No es completo: los servidores que bloquees aquí se añaden.',
     off: 'El bloqueador está desactivado. Puedes activarlo en los ajustes.',
-    blockedCount: (n: number) => (n === 1 ? '1 solicitud bloqueada' : `${n} solicitudes bloqueadas`),
+    blockedCount: (n: number) =>
+      n === 1 ? '1 solicitud bloqueada' : `${n} solicitudes bloqueadas`,
     thirdParties: 'Otros servidores en esta página',
     none: 'Esta página no contactó con otros servidores.',
     block: 'Bloquear',

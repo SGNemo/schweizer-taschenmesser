@@ -8,7 +8,10 @@ const T = SEARCH_ENGINES[0]!.template;
 describe('omnibox', () => {
   it('opens addresses, searches the rest', () => {
     expect(resolveInput('example.org', T)).toEqual({ kind: 'url', url: 'https://example.org/' });
-    expect(resolveInput('http://example.org/a', T)).toEqual({ kind: 'url', url: 'http://example.org/a' });
+    expect(resolveInput('http://example.org/a', T)).toEqual({
+      kind: 'url',
+      url: 'http://example.org/a',
+    });
     expect(resolveInput('localhost:8080/x', T)?.url).toBe('https://localhost:8080/x');
     expect(resolveInput('wetter in bern', T)).toEqual({
       kind: 'search',
@@ -17,7 +20,12 @@ describe('omnibox', () => {
     expect(resolveInput('   ', T)).toBeNull();
   });
   it('never turns dangerous schemes into addresses', () => {
-    for (const x of ['javascript:alert(1)', 'file:///etc/passwd', 'data:text/html,x', 'tauri://localhost']) {
+    for (const x of [
+      'javascript:alert(1)',
+      'file:///etc/passwd',
+      'data:text/html,x',
+      'tauri://localhost',
+    ]) {
       expect(resolveInput(x, T)?.kind).toBe('search');
     }
   });
