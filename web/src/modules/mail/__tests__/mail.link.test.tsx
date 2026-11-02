@@ -15,7 +15,8 @@ const LINK = 'https://mail.google.com/mail/?authuser=me%40example.org#all/t1';
 const account: MailAccountRef = { key: 'google', connectorId: 'google', email: 'me@example.org' };
 const threadMock = vi.fn();
 
-vi.mock('@/core/mail/service', () => ({
+vi.mock('@/core/mail/service', async (orig) => ({
+  ...(await orig<Record<string, unknown>>()),
   mailThread: (...a: unknown[]) => threadMock(...a),
   mailAttachment: vi.fn(),
   mailWebUrl: (ref: MailAccountRef) => (ref.key === 'demo' ? undefined : LINK),
@@ -48,6 +49,10 @@ const view = (acc: MailAccountRef = account) =>
         threadId="t1"
         cacheBodies={false}
         autoLoadImages={false}
+        labels={[]}
+        confirmMoves
+        onChanged={() => undefined}
+        onCompose={() => undefined}
         onBack={() => undefined}
       />
     </MemoryRouter>,

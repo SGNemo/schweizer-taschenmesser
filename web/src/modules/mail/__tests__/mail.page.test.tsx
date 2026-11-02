@@ -20,7 +20,8 @@ const threadMock = vi.fn();
 const attachmentMock = vi.fn();
 
 vi.mock('@/core/mail/accounts', () => ({ listMailAccounts: async () => accounts }));
-vi.mock('@/core/mail/service', () => ({
+vi.mock('@/core/mail/service', async (orig) => ({
+  ...(await orig<Record<string, unknown>>()),
   mailLabels: async () => [
     { id: 'INBOX', name: 'INBOX', kind: 'system', unread: 2 },
     { id: 'Label_1', name: 'Belege', kind: 'user' },

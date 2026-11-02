@@ -211,6 +211,11 @@
         "type": "boolean",
         "label": "Geöffnete Mails zwischenspeichern",
         "default": true
+      },
+      "confirmMoves": {
+        "type": "boolean",
+        "label": "Vor dem Archivieren und Beschriften fragen",
+        "default": true
       }
     }
   },

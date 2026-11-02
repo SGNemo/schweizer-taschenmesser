@@ -6,3 +6,5 @@
 - Finding (not mine): axe `label-content-name-mismatch` on every `GroupedList` toggle ("Heute 2" vs aria-label "Heute einklappen") shows on `/invoices` with seed data too; the a11y e2e does not see it because it runs without data. Mail's seed e2e disables that one rule.
 - Demo inbox: rows with account `demo` (seed) appear only while no real account is connected.
 - Manual tests: `docs/MANUAL-TESTS.md` "E-Mail lesen" (M1–M8) need a real Google account on Windows.
+
+- (package 3 `feat/mail-write`) Write side: `MailProvider` optional write methods, gated per feature in `core/mail/service.ts`; send window in `modules/mail/pendingSend.ts` (module-level store, `PendingSendBar` is rendered by the mail page only). RTL `findBy*`/`user-event` hang under vitest fake timers (RTL only knows jest's): use `fireEvent` and `act` there. Package 4 (notifications) polls with the read permission only; package 5 (local model) must never get write access.
