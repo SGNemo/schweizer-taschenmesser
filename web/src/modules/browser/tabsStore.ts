@@ -30,6 +30,8 @@ interface TabsState {
   bounds: BrowserBounds;
   /** Sites (host) where the blocker is paused; lives for the session only. */
   pausedHosts: string[];
+  /** A page started a download; the browser page asks what to do with the address. */
+  offer: { url: string } | null;
   newTab(isPrivate?: boolean): number;
   setActive(id: number): void;
   setBounds(bounds: BrowserBounds): void;
@@ -40,6 +42,7 @@ interface TabsState {
   zoomBy(id: number, delta: number | 'reset'): Promise<void>;
   togglePause(host: string): void;
   dismissHeld(id: number): void;
+  dismissOffer(): void;
 }
 
 let counter = 0;
@@ -100,10 +103,8 @@ function onEvent(e: BrowserEvent): void {
       useUiStore.getState().toast(t.browser.popupBlocked);
       break;
     case 'download':
-      useUiStore.getState().toast(t.browser.download.held, {
-        label: t.browser.download.openSystem,
-        run: () => void getPlatform().app.openUrl(e.url),
-      });
+      // Never saved by the webview: the address is offered to the Downloads module (a click starts it).
+      useBrowserTabs.setState({ offer: { url: e.url } });
       break;
     case 'blocked':
       patch(e.tab, { blocked: tab.blocked + 1 });
@@ -119,6 +120,7 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
   activeId: null,
   bounds: { x: 0, y: 0, width: 800, height: 600 },
   pausedHosts: [],
+  offer: null,
   newTab(isPrivate = false) {
     const id = ++counter;
     set((s) => ({ tabs: [...s.tabs, blank(id, isPrivate)], activeId: id }));
@@ -178,4 +180,5 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
     }));
   },
   dismissHeld: (id) => patch(id, { held: null }),
+  dismissOffer: () => set({ offer: null }),
 }));

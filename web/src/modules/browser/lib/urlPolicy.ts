@@ -32,3 +32,14 @@ export function displayUrl(url: string): string {
 export function isWebUrl(url: string): boolean {
   return urlKind(url) !== 'other';
 }
+
+/** File name shown in the download offer: last path segment of the address, or the host. */
+export function offerName(url: string): string {
+  try {
+    const u = new URL(url);
+    const last = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() ?? '');
+    return last || u.hostname;
+  } catch {
+    return url;
+  }
+}

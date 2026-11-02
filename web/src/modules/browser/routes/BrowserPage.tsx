@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useNavigate, useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
+import { offerEnableModule } from '@/core/modules/offerEnable';
 import { getPlatform } from '@/core/platform';
 import { useSettings } from '@/core/settings/settings';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -11,7 +12,7 @@ import { t } from '@/strings';
 import { Button, EmptyState, Icon, IconButton, ItemList, ItemRow, TextField } from '@/ui';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
-import { displayUrl, hostOf, isWebUrl } from '../lib/urlPolicy';
+import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
 import { useBrowserTabs } from '../tabsStore';
@@ -26,7 +27,7 @@ export default function BrowserPage() {
   const states = useModuleStates();
   const [stored] = useSettings('module.browser', settings.schema, settings.defaults);
   const prefs = (stored ?? settings.defaults) as BrowserPrefs;
-  const { tabs, activeId, pausedHosts } = useBrowserTabs();
+  const { tabs, activeId, pausedHosts, offer } = useBrowserTabs();
   const tab = tabs.find((x) => x.id === activeId) ?? null;
   const [view, setView] = useState<View>('page');
   // What the user is typing; shown instead of the tab's address until the next navigation.
@@ -141,6 +142,16 @@ export default function BrowserPage() {
       text: current,
     });
     void navigate(`/notes?${q.toString()}`);
+  }
+
+  function sendToManager() {
+    if (!offer) return;
+    const go = () => {
+      useBrowserTabs.getState().dismissOffer();
+      void navigate(`/downloads?add=${encodeURIComponent(offer.url)}`);
+    };
+    if (states?.downloads) go();
+    else offerEnableModule('downloads', t.browser.download.needModule, go);
   }
 
   async function blockHost(host: string) {
@@ -258,6 +269,21 @@ export default function BrowserPage() {
           <IconButton label={t.browser.hintClose} onClick={() => setHintOpen(false)}>
             <Icon name="close" />
           </IconButton>
+        </div>
+      ) : null}
+
+      {offer ? (
+        <div className={styles.hint} role="status">
+          <span>{t.browser.download.offer(offerName(offer.url))}</span>
+          <span className={styles.actions}>
+            <Button onClick={sendToManager}>{t.browser.download.toManager}</Button>
+            <Button onClick={() => void getPlatform().app.openUrl(offer.url)}>
+              {t.browser.download.openSystem}
+            </Button>
+            <Button onClick={() => useBrowserTabs.getState().dismissOffer()}>
+              {t.browser.download.dismiss}
+            </Button>
+          </span>
         </div>
       ) : null}
 

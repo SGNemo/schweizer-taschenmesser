@@ -5656,14 +5656,107 @@ export const de = {
     },
     popupBlocked: 'Ein Pop-up wurde blockiert.',
     download: {
-      held: 'Die Seite startet einen Download. Der Download-Manager kommt später; so lange geht es im Systembrowser.',
+      offer: (name: string) => `Die Seite bietet „${name}“ zum Download an.`,
+      toManager: 'Im Download-Manager öffnen',
       openSystem: 'Im Systembrowser öffnen',
+      dismiss: 'Verwerfen',
+      needModule: 'Dafür braucht es das Modul „Downloads“.',
     },
     clear: {
       title: 'Browserdaten löschen?',
       body: 'Löscht Cookies, Cache und Website-Daten des Browsers und schließt alle Tabs. Lesezeichen und Verlauf bleiben.',
       confirm: 'Löschen',
       done: 'Browserdaten gelöscht',
+    },
+  },
+  downloads: {
+    meta: {
+      name: 'Downloads',
+      description:
+        'Lädt Dateien herunter: Fortschritt, Pausieren, Fortsetzen, Tempolimit und Prüfsumme. Nichts wird automatisch geöffnet.',
+      widget: 'Laufende Downloads',
+      widgetEmpty: 'Keine Downloads.',
+      widgetAction: 'Download hinzufügen',
+      widgetSummary: (running: number, waiting: number) =>
+        waiting > 0
+          ? `${running} laufen · ${waiting} warten oder sind pausiert`
+          : running === 1
+            ? '1 läuft'
+            : `${running} laufen`,
+    },
+    settings: {
+      limitKb: 'Tempolimit für alle Downloads (KB/s, 0 = unbegrenzt)',
+      folder: 'Download-Ordner (leer = Downloads-Ordner des Systems)',
+    },
+    unsupported: {
+      title: 'Den Download-Manager gibt es nur in der Desktop-App',
+      body: 'Auf diesem Gerät lädt der Browser deines Geräts Dateien herunter.',
+    },
+    hint: 'Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.',
+    add: {
+      button: 'Download hinzufügen',
+      title: 'Download hinzufügen',
+      url: 'Adresse (http:// oder https://)',
+      folder: 'Ordner',
+      pick: 'Ordner wählen',
+      hash: 'Prüfsumme (optional, SHA-256 oder SHA-512)',
+      hashHelp: 'Nach dem Download wird die Datei damit verglichen.',
+      submit: 'Herunterladen',
+      cancel: 'Abbrechen',
+      http: 'Diese Adresse ist nicht verschlüsselt (HTTP).',
+    },
+    errors: {
+      scheme: 'Nur Adressen mit http:// oder https:// gehen.',
+      url: 'Das ist keine gültige Adresse.',
+      dir: 'Den Ordner gibt es nicht.',
+      hash: 'Die Prüfsumme muss 64 (SHA-256) oder 128 (SHA-512) Zeichen aus 0–9 und a–f haben.',
+      other: 'Das hat nicht geklappt.',
+    },
+    state: {
+      queued: 'Wartet',
+      running: 'Lädt',
+      paused: 'Pausiert',
+      done: 'Fertig',
+      failed: 'Fehlgeschlagen',
+    },
+    failed: {
+      http: 'Der Server hat die Datei nicht geliefert.',
+      io: 'Die Datei konnte nicht geschrieben werden.',
+      checksum: 'Die Prüfsumme stimmt nicht. Die Datei wurde gelöscht.',
+      size: 'Die Datei ist unvollständig angekommen.',
+    },
+    row: {
+      progress: (done: string, total: string) => `${done} von ${total}`,
+      unknownTotal: (done: string) => `${done} geladen`,
+      speed: (perSecond: string) => `${perSecond}/s`,
+      limited: (perSecond: string) => `Limit ${perSecond}/s`,
+    },
+    actions: {
+      pause: 'Pausieren',
+      resume: 'Fortsetzen',
+      retry: 'Erneut versuchen',
+      reveal: 'Im Ordner zeigen',
+      remove: 'Aus der Liste entfernen',
+      removeData: 'Mit Datei löschen',
+      more: 'Mehr',
+    },
+    checksum: {
+      label: 'SHA-256',
+      verify: 'Prüfsumme vergleichen',
+      verifyTitle: 'Prüfsumme vergleichen',
+      field: 'Prüfsumme (SHA-256 oder SHA-512)',
+      match: 'Stimmt überein',
+      mismatch: 'Stimmt nicht überein',
+      submit: 'Vergleichen',
+    },
+    deleteData: {
+      title: 'Datei löschen?',
+      body: (name: string) => `„${name}“ wird vom Datenträger gelöscht, auch eine unfertige Datei.`,
+      confirm: 'Löschen',
+    },
+    empty: {
+      title: 'Noch keine Downloads',
+      body: 'Füge eine Adresse ein oder lade im Browser etwas herunter. Nichts wird automatisch geöffnet.',
     },
   },
 } as const;
