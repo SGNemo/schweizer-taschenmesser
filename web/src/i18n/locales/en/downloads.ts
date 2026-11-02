@@ -18,6 +18,14 @@ export const downloads: Strings['downloads'] = {
   settings: {
     limitKb: 'Speed limit for all downloads (KB/s, 0 = unlimited)',
     folder: 'Download folder (empty = the system Downloads folder)',
+    torrent: 'Switch the BitTorrent part on',
+    torrentDht:
+      'Find participants through the DHT network (needed for magnet links without a tracker)',
+    torrentUpnp: 'Open the port on the router automatically (UPnP)',
+    torrentUpKb: 'Torrent: upload limit (KB/s, 0 = unlimited)',
+    torrentDownKb: 'Torrent: download limit (KB/s, 0 = unlimited)',
+    seedRatio: 'Stop sharing at this ratio (0 = never)',
+    seedMinutes: 'Stop sharing after this many minutes (0 = never)',
   },
   unsupported: {
     title: 'The download manager is only available in the desktop app',
@@ -88,5 +96,82 @@ export const downloads: Strings['downloads'] = {
   empty: {
     title: 'No downloads yet',
     body: 'Paste an address or download something in the browser. Nothing is opened automatically.',
+  },
+  torrent: {
+    title: 'BitTorrent',
+    intro:
+      'Magnet links and .torrent files that you paste or open yourself. Nemo searches for nothing and recommends no sites.',
+    hint: 'Only for legal content. While you download you upload at the same time.',
+    off: {
+      title: 'BitTorrent is off',
+      body: 'The torrent part is switched off. A short notice comes first when you switch it on.',
+      turnOn: 'Switch the torrent part on',
+    },
+    turnOff: 'Switch the torrent part off',
+    starting: 'Starting …',
+    startFailed: 'The torrent part could not start.',
+    add: {
+      button: 'Add a torrent',
+      title: 'Add a torrent',
+      magnet: 'Magnet link',
+      magnetPlaceholder: 'magnet:?xt=urn:btih:…',
+      or: 'or',
+      openFile: 'Open a .torrent file',
+      chosen: 'File chosen',
+      look: 'Look at the files',
+      looking: 'Looking for sources … this can take a moment.',
+      files: 'Files',
+      all: 'All',
+      none: 'None',
+      selected: 'Selected',
+      pickOne: 'Choose at least one file.',
+      submit: 'Download',
+      back: 'Back',
+    },
+    errors: {
+      off: 'The torrent part is off.',
+      file: 'That is not a valid .torrent file (10 MB at most).',
+      notMagnet: 'That is not a magnet link.',
+      timeout: 'No sources found. Check the link or try again later.',
+      alreadyAdded: 'This torrent is already in the list.',
+      dir: 'The folder does not exist.',
+      other: 'That did not work.',
+    },
+    state: {
+      starting: 'Starting',
+      downloading: 'Downloading',
+      seeding: 'Sharing',
+      paused: 'Paused',
+      done: 'Done, sharing ended',
+      error: 'Error',
+    },
+    row: {
+      peers: (n: number) => (n === 1 ? '1 connection' : `${n} connections`),
+      down: (speed: string) => `Down ${speed}/s`,
+      up: (speed: string) => `Up ${speed}/s`,
+      ratio: (ratio: string) => `Ratio ${ratio}`,
+    },
+    actions: {
+      pause: 'Pause',
+      resume: 'Resume',
+      remove: 'Remove from list',
+      removeData: 'Delete with files',
+    },
+    deleteData: {
+      title: 'Delete the files?',
+      body: (name: string) =>
+        `“${name}” is deleted from the disk together with all downloaded files.`,
+      confirm: 'Delete',
+    },
+    ip: {
+      title: 'Your public IP address',
+      note: 'While you download, other participants see your IP address. You can see it here too (one request to api.ipify.org, only on a click).',
+      button: 'Show IP address',
+      failed: 'The lookup did not work.',
+    },
+    empty: {
+      title: 'No torrents yet',
+      body: 'Add a magnet link or a .torrent file that you have yourself.',
+    },
   },
 };

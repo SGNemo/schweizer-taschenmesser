@@ -6,3 +6,4 @@ for the next chat:
 - Tools may not import each other: shared pure logic goes to `core/<topic>/` (see `core/calc/units.ts`, `dates.ts`).
 - A new dependency needs `npm run gen:licenses` (a test checks the licence list).
 - `check:docs` fails on `docs/qa/*/REPORT.md` budgets before this branch; not caused by it.
+- Persona tool (`tools/persona`) reuses `useSaveAsNote`; a vault entry is not built (needs a prefill inside `accounts`, see docs/decisions/tools.md).

@@ -102,6 +102,19 @@ export const mail: Strings['mail'] = {
     notificationsBody: 'Not available yet: the app does not announce new mail on its own.',
     close: 'Close',
   },
+  link: {
+    menu: 'Create from this mail',
+    noModules:
+      'To create entries a matching module must be on (To-dos, Calendar, Invoices, Bookmarks or Notes).',
+    title: (what: string) => `${what} from this mail`,
+    intro: 'Check the preview. Nothing is saved until you press “Save”.',
+    stores: 'Saved along with it: a link to this mail.',
+    storesNothing: 'Sample mail: no link is saved.',
+    excerpt: 'Copy the start of the mail into the note',
+    excerptHint: 'Copies the first lines of the mail text into your note.',
+    created: 'Created from this mail',
+    open: (what: string, title: string) => `Open ${what} “${title}”`,
+  },
   widget: {
     unread: 'Unread',
     unreadContext: (n: number) =>

@@ -103,6 +103,19 @@ export const mail: Strings['mail'] = {
     notificationsBody: 'Ainda não disponível: o app não avisa sozinho sobre novos e-mails.',
     close: 'Fechar',
   },
+  link: {
+    menu: 'Criar a partir deste e-mail',
+    noModules:
+      'Para criar entradas, um módulo adequado precisa estar ativo (Tarefas, Calendário, Faturas, Favoritos ou Notas).',
+    title: (what: string) => `${what} a partir deste e-mail`,
+    intro: 'Confira a prévia. Nada é salvo até você tocar em «Salvar».',
+    stores: 'Salvo junto: um link para este e-mail.',
+    storesNothing: 'E-mail de exemplo: nenhum link é salvo.',
+    excerpt: 'Copiar o início do e-mail para a nota',
+    excerptHint: 'Copia as primeiras linhas do texto do e-mail para a sua nota.',
+    created: 'Criado a partir deste e-mail',
+    open: (what: string, title: string) => `Abrir ${what} «${title}»`,
+  },
   widget: {
     unread: 'Não lidos',
     unreadContext: (n: number) =>

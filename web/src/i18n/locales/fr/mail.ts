@@ -109,6 +109,19 @@ export const mail: Strings['mail'] = {
       'Pas encore disponible : l’app ne signale pas d’elle-même les nouveaux e-mails.',
     close: 'Fermer',
   },
+  link: {
+    menu: 'Créer à partir de cet e-mail',
+    noModules:
+      'Pour créer des entrées, un module adapté doit être actif (Tâches, Calendrier, Factures, Favoris ou Notes).',
+    title: (what: string) => `${what} à partir de cet e-mail`,
+    intro: 'Vérifie l’aperçu. Rien n’est enregistré avant d’appuyer sur « Enregistrer ».',
+    stores: 'Enregistré en même temps : un lien vers cet e-mail.',
+    storesNothing: 'E-mail d’exemple : aucun lien n’est enregistré.',
+    excerpt: 'Copier le début de l’e-mail dans la note',
+    excerptHint: 'Copie les premières lignes du texte de l’e-mail dans ta note.',
+    created: 'Créé à partir de cet e-mail',
+    open: (what: string, title: string) => `Ouvrir ${what} « ${title} »`,
+  },
   widget: {
     unread: 'Non lus',
     unreadContext: (n: number) =>
