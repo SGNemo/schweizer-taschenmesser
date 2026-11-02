@@ -17,6 +17,17 @@ export const mail: Strings['mail'] = {
     confirmMoves: 'Preguntar antes de archivar y etiquetar',
     confirmMovesHelp:
       'La papelera y el envío siempre preguntan. Cada cambio se puede deshacer durante unos segundos.',
+    notify: 'Avisar de correo nuevo',
+    notifyHelp:
+      'Desactivado. Nemo mira cada cierto tiempo y avisa del correo nuevo sin leer con una sola notificación. Solo funciona mientras la app está abierta, no cambia nada en el buzón y no sale de este dispositivo.',
+    notifyEvery: 'Cada cuánto mirar',
+    every5: 'Cada 5 minutos',
+    every15: 'Cada 15 minutos',
+    every30: 'Cada 30 minutos',
+    every60: 'Cada hora',
+    notifyNames: 'Mostrar remitentes en la notificación',
+    notifyNamesHelp:
+      'No: solo la cantidad. Si no, el nombre también se ve en la pantalla de bloqueo.',
   },
   page: {
     refresh: 'Actualizar',
@@ -103,13 +114,20 @@ export const mail: Strings['mail'] = {
     clearTitle: '¿Vaciar la caché?',
     clearBody: 'Los correos siguen en Google. Se vuelven a cargar la próxima vez que los abras.',
     notifications: 'Notificaciones',
-    notificationsBody: 'Aún no disponible: la app no avisa sola de correos nuevos.',
+    notificationsBody:
+      'Desactivado. Actívalo en Ajustes → Módulos → Correo. Nemo mirará cada cierto tiempo y avisará del correo nuevo con una notificación.',
     permissions: 'Permisos por cuenta',
     permRead: 'Leer',
     permManage: 'Gestionar',
     permSend: 'Enviar',
     permOn: 'sí',
     permOff: 'no',
+    notifyActive: (minutes: number) =>
+      `Activo: Nemo mira cada ${minutes} minutos mientras la app está abierta.`,
+    notifyLabels: 'Cuentan estas etiquetas',
+    notifyHow:
+      'El aviso se trata como otros recordatorios: las horas de silencio, el modo mudo y el límite por hora también se aplican.',
+    notifyQuiet: 'Ajustar silencio y límite',
     close: 'Cerrar',
   },
   link: {
@@ -207,6 +225,11 @@ export const mail: Strings['mail'] = {
       edit: 'Editar',
       sent: 'Correo enviado.',
     },
+  },
+  notify: {
+    title: (n: number) => (n === 1 ? '1 correo nuevo' : `${n} correos nuevos`),
+    senders: (names: string[], more: number) =>
+      more > 0 ? `${names.join(', ')} y ${more} más` : names.join(', '),
   },
   widget: {
     unread: 'Sin leer',

@@ -17,6 +17,17 @@ export const mail: Strings['mail'] = {
     confirmMoves: 'Demander avant d’archiver et d’étiqueter',
     confirmMovesHelp:
       'La corbeille et l’envoi demandent toujours. Chaque modification peut être annulée pendant quelques secondes.',
+    notify: 'Prévenir des nouveaux e-mails',
+    notifyHelp:
+      'Désactivé. Nemo regarde à l’intervalle choisi et signale les nouveaux e-mails non lus par une seule notification. Cela ne marche que pendant que l’app tourne, ne change rien dans la boîte et ne quitte pas cet appareil.',
+    notifyEvery: 'Fréquence de vérification',
+    every5: 'Toutes les 5 minutes',
+    every15: 'Toutes les 15 minutes',
+    every30: 'Toutes les 30 minutes',
+    every60: 'Toutes les heures',
+    notifyNames: 'Afficher les expéditeurs dans la notification',
+    notifyNamesHelp:
+      'Non : seulement le nombre. Sinon le nom apparaît aussi sur l’écran verrouillé.',
   },
   page: {
     refresh: 'Actualiser',
@@ -109,13 +120,19 @@ export const mail: Strings['mail'] = {
     clearBody: 'Les e-mails restent chez Google. Ils sont rechargés à la prochaine ouverture.',
     notifications: 'Notifications',
     notificationsBody:
-      'Pas encore disponible : l’app ne signale pas d’elle-même les nouveaux e-mails.',
+      'Désactivé. Active-le sous Réglages → Modules → Courrier. Nemo regarde alors à l’intervalle choisi et signale les nouveaux e-mails par une notification.',
     permissions: 'Autorisations par compte',
     permRead: 'Lire',
     permManage: 'Gérer',
     permSend: 'Envoyer',
     permOn: 'oui',
     permOff: 'non',
+    notifyActive: (minutes: number) =>
+      `Actif : Nemo regarde toutes les ${minutes} minutes pendant que l’app tourne.`,
+    notifyLabels: 'Ces libellés comptent',
+    notifyHow:
+      'La notification est traitée comme les autres rappels : heures calmes, sourdine et limite par heure s’appliquent aussi.',
+    notifyQuiet: 'Régler heures calmes et limite',
     close: 'Fermer',
   },
   link: {
@@ -216,6 +233,11 @@ export const mail: Strings['mail'] = {
       edit: 'Modifier',
       sent: 'E-mail envoyé.',
     },
+  },
+  notify: {
+    title: (n: number) => (n === 1 ? '1 nouvel e-mail' : `${n} nouveaux e-mails`),
+    senders: (names: string[], more: number) =>
+      more > 0 ? `${names.join(', ')} et ${more} autres` : names.join(', '),
   },
   widget: {
     unread: 'Non lus',
