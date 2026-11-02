@@ -19,8 +19,19 @@ import styles from '../accounts.module.css';
 import { GeneratorPanel } from './GeneratorPanel';
 import { StrengthMeter } from './StrengthMeter';
 
-/** `draft.password` pre-fills a new entry (from the generator dialog). */
-export type EntryTarget = DecryptedEntry | { draft: true; password?: string } | null;
+/**
+ * `draft.password` pre-fills a new entry (from the generator dialog); `draft.prefill` fills title, user name,
+ * password and notes (an entry a tool handed over, see `core/handoff/vaultEntry.ts`). It is only the form's
+ * starting values: saving goes through `saveEntry` like any entry.
+ */
+export interface EntryPrefill {
+  title?: string;
+  username?: string;
+  password?: string;
+  notes?: string;
+}
+export type EntryTarget =
+  DecryptedEntry | { draft: true; password?: string; prefill?: EntryPrefill } | null;
 
 export function EntryForm({
   target,
@@ -32,7 +43,11 @@ export function EntryForm({
   onSaved?: (id: string) => void;
 }) {
   const existing = target && 'id' in target ? target : null;
-  const draftPassword = target && 'draft' in target ? target.password : undefined;
+  const draft = target && 'draft' in target ? target : undefined;
+  const prefill: EntryPrefill | undefined = draft
+    ? { ...draft.prefill, password: draft.prefill?.password ?? draft.password }
+    : undefined;
+  const draftPassword = prefill?.password;
   return (
     <Dialog
       open={target !== null}
@@ -41,9 +56,9 @@ export function EntryForm({
     >
       {target ? (
         <Fields
-          key={existing?.id ?? `new-${draftPassword ?? ''}`}
+          key={existing?.id ?? `new-${draftPassword ?? ''}-${prefill?.title ?? ''}`}
           existing={existing}
-          initialPassword={draftPassword}
+          prefill={prefill}
           onClose={onClose}
           onSaved={onSaved}
         />
@@ -54,21 +69,21 @@ export function EntryForm({
 
 function Fields({
   existing,
-  initialPassword,
+  prefill,
   onClose,
   onSaved,
 }: {
   existing: DecryptedEntry | null;
-  initialPassword?: string;
+  prefill?: EntryPrefill;
   onClose: () => void;
   onSaved?: (id: string) => void;
 }) {
   const d = existing?.data;
-  const [title, setTitle] = useState(d?.title ?? '');
-  const [username, setUsername] = useState(d?.username ?? '');
-  const [password, setPassword] = useState(d?.password ?? initialPassword ?? '');
+  const [title, setTitle] = useState(d?.title ?? prefill?.title ?? '');
+  const [username, setUsername] = useState(d?.username ?? prefill?.username ?? '');
+  const [password, setPassword] = useState(d?.password ?? prefill?.password ?? '');
   const [url, setUrl] = useState(d?.url ?? '');
-  const [notes, setNotes] = useState(d?.notes ?? '');
+  const [notes, setNotes] = useState(d?.notes ?? prefill?.notes ?? '');
   const [tags, setTags] = useState((d?.tags ?? []).join(', '));
   const [totp, setTotp] = useState(d?.totp?.secret ?? '');
   const [favorite, setFavorite] = useState(d?.favorite ?? false);

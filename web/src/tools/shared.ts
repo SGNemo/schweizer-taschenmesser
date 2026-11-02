@@ -1,5 +1,6 @@
 /** Small helpers the tools share. */
 import { useNavigate } from 'react-router';
+import { HANDOFF_PARAM, offerVaultEntry, type VaultEntryHandoff } from '@/core/handoff/vaultEntry';
 import { useModuleStates } from '@/core/modules/activation';
 import { formatNumber } from '@/core/i18n/format';
 import { evaluate, CalcError } from '@/core/calc/expr';
@@ -69,5 +70,22 @@ export function useSaveAsNote(): ((title: string, text: string) => void) | undef
     void navigate(
       `/notes?new=1&title=${encodeURIComponent(title)}&text=${encodeURIComponent(text)}`,
     );
+  };
+}
+
+/**
+ * "Save in the vault": the entry goes to the vault form through an in-memory handoff (`core/handoff`), never
+ * through the URL (only the flag `?handoff=1` is there). `undefined` while the vault module is off, so the
+ * button is simply not offered. The vault page opens its normal "new entry" form with the values filled in;
+ * if the vault is locked, the form waits behind the unlock for a few minutes.
+ */
+export function useSaveInVault(): ((entry: VaultEntryHandoff) => void) | undefined {
+  const navigate = useNavigate();
+  const states = useModuleStates();
+  if (!states?.['accounts']) return undefined;
+  return (entry) => {
+    offerVaultEntry(entry);
+    useUiStore.getState().closeTools();
+    void navigate(`/accounts?${HANDOFF_PARAM}=1`);
   };
 }

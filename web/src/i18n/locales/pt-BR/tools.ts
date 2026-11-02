@@ -431,6 +431,7 @@ export const tools: Strings['tools'] = {
     rerollAll: 'Gerar de novo',
     copyAll: 'Copiar tudo',
     saveNote: 'Salvar como nota',
+    saveVault: 'Salvar no cofre',
     noteTitle: 'Persona anônima',
     noteWarn: 'A nota inclui também a senha e não é criptografada.',
     mail: 'Abrir e-mail descartável',

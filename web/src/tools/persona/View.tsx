@@ -6,7 +6,7 @@ import { getPlatform } from '@/core/platform';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { Button, Checkbox, Icon, IconButton, SelectField } from '@/ui';
-import { copyWithToast, useSaveAsNote } from '../shared';
+import { copyWithToast, useSaveAsNote, useSaveInVault } from '../shared';
 import styles from '../tools.module.css';
 import { COUNTRIES } from './data';
 import {
@@ -99,6 +99,7 @@ function Generator({
   patch: (p: Partial<z.input<typeof schema>>) => void;
 }) {
   const saveAsNote = useSaveAsNote();
+  const saveInVault = useSaveInVault();
   // The choices are kept here so a control shows its new value at once; they are stored in the settings next to it.
   const [options, setOptions] = useState<PersonaOptions>(initial);
   const [persona, setPersona] = useState<Persona>(() => generatePersona(initial));
@@ -110,6 +111,16 @@ function Generator({
       }),
     [persona],
   );
+  // Vault: name, user name and password in their own fields, everything else as the (encrypted) note.
+  const vaultEntry = {
+    title: `${s.noteTitle}: ${persona.firstName} ${persona.lastName}`,
+    username: persona.username,
+    password: persona.password,
+    notes: rows
+      .filter((r) => r.field !== 'username' && r.field !== 'password')
+      .map((r) => `${r.label}: ${r.value}`)
+      .join('\n'),
+  };
   const allText = rows.map((r) => `${r.label}: ${r.value}`).join('\n');
   const reroll = (f: Field) => setPersona((p) => rerollField(p, f, options));
   // A changed country, age, gender, bio or password setting is stored and makes a fresh persona right away.
@@ -219,6 +230,9 @@ function Generator({
         <Button onClick={() => void copyWithToast(allText)}>{s.copyAll}</Button>
         {saveAsNote ? (
           <Button onClick={() => saveAsNote(s.noteTitle, allText)}>{s.saveNote}</Button>
+        ) : null}
+        {saveInVault ? (
+          <Button onClick={() => saveInVault(vaultEntry)}>{s.saveVault}</Button>
         ) : null}
       </div>
       {saveAsNote ? <p className={styles.muted}>{s.noteWarn}</p> : null}

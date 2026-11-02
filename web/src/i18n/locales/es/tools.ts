@@ -432,6 +432,7 @@ export const tools: Strings['tools'] = {
     rerollAll: 'Generar de nuevo',
     copyAll: 'Copiar todo',
     saveNote: 'Guardar como nota',
+    saveVault: 'Guardar en la bóveda',
     noteTitle: 'Persona anónima',
     noteWarn: 'La nota incluye también la contraseña y no está cifrada.',
     mail: 'Abrir correo desechable',

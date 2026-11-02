@@ -2019,6 +2019,7 @@ export const de = {
       rerollAll: 'Neu würfeln',
       copyAll: 'Alles kopieren',
       saveNote: 'Als Notiz speichern',
+      saveVault: 'Im Tresor speichern',
       noteTitle: 'Anonyme Persona',
       noteWarn: 'Die Notiz enthält auch das Passwort und ist nicht verschlüsselt.',
       mail: 'Wegwerf-Mail öffnen',
