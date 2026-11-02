@@ -1,8 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { enable, ready } from './helpers';
 
-const editor = (page: import('@playwright/test').Page) =>
-  page.getByRole('textbox', { name: 'Text der Seite' });
+const editor = (page: Page) => page.getByRole('textbox', { name: 'Text der Seite' });
 
 test.describe('desktop layout', () => {
   test.skip(({ isMobile }) => isMobile, 'list and page side by side');

@@ -6,7 +6,21 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import { Placeholder } from '@tiptap/extensions';
 import { Markdown } from '@tiptap/markdown';
 import StarterKit from '@tiptap/starter-kit';
-import { common, createLowlight } from 'lowlight';
+import bash from 'highlight.js/lib/languages/bash';
+import css from 'highlight.js/lib/languages/css';
+import csharp from 'highlight.js/lib/languages/csharp';
+import go from 'highlight.js/lib/languages/go';
+import java from 'highlight.js/lib/languages/java';
+import javascript from 'highlight.js/lib/languages/javascript';
+import json from 'highlight.js/lib/languages/json';
+import markdown from 'highlight.js/lib/languages/markdown';
+import python from 'highlight.js/lib/languages/python';
+import rust from 'highlight.js/lib/languages/rust';
+import sql from 'highlight.js/lib/languages/sql';
+import typescript from 'highlight.js/lib/languages/typescript';
+import xml from 'highlight.js/lib/languages/xml';
+import yaml from 'highlight.js/lib/languages/yaml';
+import { createLowlight } from 'lowlight';
 import { t } from '@/strings';
 import { NoteImage } from './imageNode';
 
@@ -48,26 +62,22 @@ const ToneHighlight = Highlight.extend({
   },
 });
 
-const lowlight = createLowlight();
-for (const name of [
-  'bash',
-  'css',
-  'javascript',
-  'json',
-  'markdown',
-  'python',
-  'rust',
-  'sql',
-  'typescript',
-  'xml',
-  'yaml',
-  'java',
-  'csharp',
-  'go',
-] as const) {
-  const grammar = common[name];
-  if (grammar) lowlight.register(name, grammar);
-}
+const lowlight = createLowlight({
+  bash,
+  css,
+  csharp,
+  go,
+  java,
+  javascript,
+  json,
+  markdown,
+  python,
+  rust,
+  sql,
+  typescript,
+  xml,
+  yaml,
+});
 
 /** Highlight attributes are typed as `{ color }` by TipTap; ours carry a `tone` instead. */
 export const toneAttrs = (tone: HighlightTone) => ({ tone }) as unknown as { color: string };
