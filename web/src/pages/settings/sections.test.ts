@@ -8,6 +8,7 @@ const ctx = (over: Partial<SettingsContext> = {}): SettingsContext => ({
   platform: 'desktop',
   isDev: false,
   isModuleEnabled: () => true,
+  showPreview: false,
   ...over,
 });
 
@@ -40,5 +41,34 @@ describe('registered settings sections', () => {
     const visible = visibleSections(sections, ctx({ isModuleEnabled: (id) => id !== 'todos' }));
     expect(visible.map((s) => s.id)).not.toContain('module-todos');
     expect(visible.map((s) => s.id)).toContain('module-calendar');
+  });
+});
+
+describe('preview sections (maturity)', () => {
+  const PREVIEW = ['localapi', 'share', 'network', 'browser-extension', 'reading', 'voice'];
+  const ids = (c: SettingsContext) => visibleSections(allSettingsSections(), c).map((s) => s.id);
+
+  it('are hidden by default and listed with "In Arbeit anzeigen"', () => {
+    const hidden = ids(ctx());
+    for (const id of PREVIEW) expect(hidden, id).not.toContain(id);
+    const shown = ids(ctx({ showPreview: true }));
+    for (const id of PREVIEW) expect(shown, id).toContain(id);
+  });
+
+  it('stay reachable while in use, one by one', () => {
+    for (const id of ['localapi', 'share', 'network', 'reading', 'voice']) {
+      expect(ids(ctx({ inUse: { [id]: true } })), id).toContain(id);
+    }
+  });
+
+  it('an enabled preview module keeps its settings section', () => {
+    const preview = allManifests.filter(
+      (m) => m.maturity === 'preview' && m.settings.fields.length > 0,
+    );
+    expect(preview.map((m) => m.id)).toContain('chat');
+    for (const m of preview) {
+      expect(ids(ctx({ isModuleEnabled: (id) => id === m.id }))).toContain(`module-${m.id}`);
+      expect(ids(ctx({ isModuleEnabled: () => false }))).not.toContain(`module-${m.id}`);
+    }
   });
 });

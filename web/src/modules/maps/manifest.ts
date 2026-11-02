@@ -56,6 +56,7 @@ const manifest: ModuleManifest = {
   aiSchema,
   settings,
   defaultEnabled: false,
+  maturity: 'preview',
   seed: { version: 1, dependsOn: [] },
   layout: 'wide',
   area: 'plan',

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { createElement, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createContext } from '@/core/connectors/context';
-import { connectors } from '@/core/connectors/registry';
+import { connectors, isVisible } from '@/core/connectors/registry';
 import {
   addAccount,
   connectOAuth,
@@ -112,6 +112,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
   const platform = getPlatform();
   const toast = useUiStore((st) => st.toast);
   const status = useConnectorStatus(def.id);
+  const showPreview = useUiStore((st) => st.showPreview);
   const ctx = useMemo(() => createContext(def), [def]);
   const [features, setFeatures] = useState<string[] | undefined>();
   const [busy, setBusy] = useState<'connect' | 'sync' | 'account' | undefined>();
@@ -120,6 +121,9 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
   const selected: string[] = useLiveQuery(() => selectedCalendarIds(def.id), [def.id]) ?? [];
   const [confirm, setConfirm] = useState(false);
   const [clientVersion, setClientVersion] = useState(0);
+
+  // Preview connectors only with "In Arbeit anzeigen" or while connected (core/connectors/registry.ts).
+  const listed = isVisible(def, { showPreview, connected: status?.state === 'connected' });
 
   const nativeLogin = def.platforms.includes(platform.kind) && platform.oauth.supported;
   const canLogin = def.authType === 'oauth-pkce' && (nativeLogin || browserLoginAvailable(def));
@@ -200,6 +204,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     if (on) await syncNow();
   }
 
+  if (!listed) return null;
   return (
     <Card title={def.name} data-testid={`connector-${def.id}`}>
       <div className={styles.form}>
@@ -211,6 +216,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
           <dt>{s.statusLabel}</dt>
           <dd>
             <Badge>{s.status[state] ?? state}</Badge>
+            {def.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
           </dd>
           {status?.lastSyncAt ? (
             <>

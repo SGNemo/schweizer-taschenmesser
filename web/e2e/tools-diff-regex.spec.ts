@@ -1,4 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { showPreview } from './helpers';
+
+// Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
+test.beforeEach(({ page }) => showPreview(page));
 
 /** Both tools are off by default: switch one on in the library, then open it from the toolbar. */
 async function openTool(page: Page, id: string, name: string) {
