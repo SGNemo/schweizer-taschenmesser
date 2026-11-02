@@ -130,6 +130,7 @@ export default function MailPage() {
   const images = (prefs as { images?: string } | undefined)?.images === 'always';
   const cacheBodies = (prefs as { cacheBodies?: boolean } | undefined)?.cacheBodies ?? true;
   const confirmMoves = (prefs as { confirmMoves?: boolean } | undefined)?.confirmMoves ?? true;
+  const localAi = (prefs as { localAi?: boolean } | undefined)?.localAi ?? false;
 
   useEffect(() => {
     if (!account || account.key === DEMO_ACCOUNT) return;
@@ -220,6 +221,7 @@ export default function MailPage() {
           autoLoadImages={images}
           labels={labels}
           confirmMoves={confirmMoves}
+          localAi={localAi}
           onChanged={box.reload}
           onCompose={(state, title) => setCompose({ state, title, account })}
           onBack={() => update({ thread: null })}

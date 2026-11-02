@@ -27,6 +27,9 @@ export const mail: Strings['mail'] = {
     every60: 'Every hour',
     notifyNames: 'Show senders in the notification',
     notifyNamesHelp: 'Off: only the count. Otherwise the name also shows on the lock screen.',
+    localAi: 'Local model may read mail',
+    localAiHelp:
+      'Off. When on, the local model (the built-in one or Ollama on this computer) can summarise a mail and make suggestions for “Create from this mail”. The mail text never goes to a cloud model or onto the network; if no local model is ready, nothing happens. None of it is stored.',
   },
   page: {
     refresh: 'Refresh',
@@ -229,6 +232,23 @@ export const mail: Strings['mail'] = {
     title: (n: number) => (n === 1 ? '1 new mail' : `${n} new mails`),
     senders: (names: string[], more: number) =>
       more > 0 ? `${names.join(', ')} and ${more} more` : names.join(', '),
+  },
+  local: {
+    summarize: 'Summarise briefly',
+    working: 'The local model is reading the mail …',
+    title: (source: string) => `Summary from the local model (${source})`,
+    builtIn: 'built-in',
+    ollama: 'Ollama on this computer',
+    notStored: 'Not stored. The mail text stays on this computer.',
+    close: 'Close',
+    none: 'No local model is ready. Set up the built-in model or Ollama on this computer under Settings → AI. Cloud models do not get mail.',
+    noneAction: 'Go to AI settings',
+    failed: 'The local model could not give an answer.',
+    suggest: 'Suggestion from the local model',
+    suggestion: 'Suggestion',
+    apply: 'Use it',
+    discard: 'Discard',
+    privacy: 'The mail text only goes to the local model on this computer, never to a cloud model.',
   },
   widget: {
     unread: 'Unread',
