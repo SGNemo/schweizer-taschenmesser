@@ -36,9 +36,10 @@ test('the share page offers only enabled modules and prefills the target', async
   await backSettled(page);
   await page.goto(share);
   await page.getByTestId('share-notes').click();
-  await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('Schöner Weg');
-  await expect(page.getByRole('dialog').getByLabel('Text')).toHaveValue(/wandern\.example/);
-  await page.getByRole('dialog').getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(page.getByLabel('Titel der Seite')).toHaveValue('Schöner Weg');
+  await expect(page.getByRole('textbox', { name: 'Text der Seite' })).toContainText(
+    /wandern\.example/,
+  );
 
   await backSettled(page);
   await page.goto(share);

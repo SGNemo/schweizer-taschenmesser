@@ -159,6 +159,21 @@
       }
     }
   },
+  "notes": {
+    "scope": "module.notes",
+    "fields": {
+      "width": {
+        "type": "select",
+        "label": "Breite des Schreibbereichs",
+        "default": "narrow"
+      },
+      "wordCount": {
+        "type": "boolean",
+        "label": "Wortzahl anzeigen",
+        "default": true
+      }
+    }
+  },
   "pantry": {
     "scope": "module.pantry",
     "fields": {

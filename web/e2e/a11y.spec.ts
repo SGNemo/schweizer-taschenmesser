@@ -261,7 +261,6 @@ for (const scheme of ['light', 'dark'] as const) {
       for (const url of [
         '/invoices?new=1',
         '/bookmarks?new=1',
-        '/notes?new=1',
         '/vault?new=1',
         '/people?new=1',
         '/budgets?tab=goals&new=1',
@@ -271,6 +270,11 @@ for (const scheme of ['light', 'dark'] as const) {
         await expect(page.getByRole('dialog'), url).toBeVisible();
         await audit(page, `${url} (${scheme})`);
       }
+
+      // The notes page opens a page to write on, not a dialog.
+      await page.goto('/notes?new=1');
+      await expect(page.getByRole('textbox', { name: 'Text der Seite' })).toBeVisible();
+      await audit(page, `/notes?new=1 (${scheme})`);
     });
   });
 }
