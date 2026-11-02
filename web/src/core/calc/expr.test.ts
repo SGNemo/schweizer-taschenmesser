@@ -114,12 +114,12 @@ describe('calculator phrases', () => {
       expect(looksLikeCalculation(no), no).toBe(false);
   });
 
-  it('answers with text and a copyable value', () => {
-    expect(calculate('12*3,5')).toEqual({ value: 42, text: '12*3,5 = 42' });
-    expect(calculate('240 + 19%')).toMatchObject({ value: 285.6 });
-    expect(calculate('19% von 240')).toEqual({ value: 45.6, text: '19% von 240 = 45,6' });
-    expect(calculate('19 prozent von 1.000')).toMatchObject({ value: 190 });
-    expect(calculate('30 von 200 in prozent')).toEqual({ value: 15, text: '30 von 200 = 15%' });
+  it('answers with text and a copyable value (decimal comma, no grouping)', () => {
+    expect(calculate('12*3,5')).toEqual({ copy: '42', text: '12*3,5 = 42' });
+    expect(calculate('240 + 19%')).toMatchObject({ copy: '285,6' });
+    expect(calculate('19% von 240')).toEqual({ copy: '45,6', text: '19% von 240 = 45,6' });
+    expect(calculate('19 prozent von 1.000')).toMatchObject({ copy: '190' });
+    expect(calculate('30 von 200 in prozent')).toEqual({ copy: '15', text: '30 von 200 = 15%' });
   });
 
   it('gives no answer for errors', () => {

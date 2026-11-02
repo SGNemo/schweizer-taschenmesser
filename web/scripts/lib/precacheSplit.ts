@@ -17,6 +17,8 @@ export const ONLINE_ROOTS: readonly RegExp[] = [
   /(^|[\\/])src[\\/]tools[\\/][^\\/]+[\\/]View\.tsx$/,
   /(^|[\\/])src[\\/]modules[\\/]chat[\\/]routes[\\/]ChatView\.tsx$/,
   /node_modules[\\/]@zxcvbn-ts[\\/]/,
+  // The calculator engine; offline before its first use the plain arithmetic parser answers instead.
+  /node_modules[\\/]mathjs[\\/]/,
 ];
 
 export const isOnlineRoot = (moduleId: string | null | undefined): boolean =>

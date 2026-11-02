@@ -1,4 +1,6 @@
 /** Small helpers the tools share. */
+import { useNavigate } from 'react-router';
+import { useModuleStates } from '@/core/modules/activation';
 import { formatNumber } from '@/core/i18n/format';
 import { evaluate, CalcError } from '@/core/calc/expr';
 import { useUiStore } from '@/stores/ui';
@@ -51,4 +53,21 @@ export function writeStored(key: string, value: string): void {
 export async function copyWithToast(text: string): Promise<void> {
   const ok = await copyText(text);
   if (ok) useUiStore.getState().toast(t.tools.calc.copied);
+}
+
+/**
+ * "Save as note": the notes page opens with title and text prefilled (the same route the share page
+ * uses), so a tool never touches the notes module or the database. `undefined` while the notes module
+ * is off, so the button is simply not offered.
+ */
+export function useSaveAsNote(): ((title: string, text: string) => void) | undefined {
+  const navigate = useNavigate();
+  const states = useModuleStates();
+  if (!states?.['notes']) return undefined;
+  return (title, text) => {
+    useUiStore.getState().closeTools();
+    void navigate(
+      `/notes?new=1&title=${encodeURIComponent(title)}&text=${encodeURIComponent(text)}`,
+    );
+  };
 }

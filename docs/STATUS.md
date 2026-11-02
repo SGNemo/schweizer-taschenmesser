@@ -129,6 +129,7 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 ## Fertig (eine Zeile je Release; Details: [CHANGELOG](../CHANGELOG.md), Arbeitsprotokoll bis 0.3.1: [archive/2026-10/STATUS-done-until-0.3.1.md](archive/2026-10/STATUS-done-until-0.3.1.md))
 - `v0.2.0` (2026-09-30): Phasen 1–13 (Fundament bis Passwort-Tresor, Sync/Backup, KI-Assistent + Router, Tauri-Shell, Releases, Selbst-Update), KI-Import (JSON, lokale Import-API, `mcp/`).
 - `v0.3.0-beta.1` (2026-09-30) / `v0.3.0` (2026-10-01): Nemo-Rebranding, Einrichtungsassistent, Schnell erfassen, Datenträger/Systeminfo (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge, flaches Design „Klar“, Übersicht + Widgets, Dev-Preview, MIT.
+- Auf `develop`/PR: Rechner mit sechs Modi (Standard, Wissenschaft, Programmierer, Prozent & Finanzen, Datum, Einheiten), mathjs-Engine, Ausdrücke in der Suchleiste (`=…`, `0x1F in dez`, `15.03. + 45 Tage`).
 - Auf `develop` (noch nicht released): Testdaten für alle Module (Seed-Vertrag, Dev-Preview füllt leere App, Einstellungen → Entwickler).
 - Design „Klar 2“: Tokens (#43), Bereiche + Shell (#45), Basis-Komponenten (#48) auf `develop`. Einstellungen: Kategorien + Registry (`feat/settings-overhaul`).
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
