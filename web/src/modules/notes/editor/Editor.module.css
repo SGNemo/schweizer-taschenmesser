@@ -280,3 +280,19 @@
   padding: var(--space-3);
   color: var(--text-muted);
 }
+
+.content :global(.ProseMirror .wikilink) {
+  color: var(--info-ink);
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.content :global(.ProseMirror .wikilink:hover),
+.content :global(.ProseMirror .wikilink:focus-visible) {
+  background: var(--info-soft);
+  outline: none;
+}
+.content :global(.ProseMirror .wikilink.ProseMirror-selectednode) {
+  background: var(--info-soft);
+}

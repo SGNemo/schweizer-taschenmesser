@@ -102,3 +102,19 @@ describe('manual order', () => {
     expect(nextNotebookOrder([{ order: 10 }, { order: 30 }])).toBe(40);
   });
 });
+
+describe('search snippet', () => {
+  const long = `${'Anfang '.repeat(30)}Käse und Brot${' Ende'.repeat(30)}`;
+  it('shows the text around the first hit, ignoring case and accents', async () => {
+    const { matchSnippet } = await import('../logic');
+    const s = matchSnippet({ title: 'Einkauf', body: long }, 'kase');
+    expect(s).toContain('Käse und Brot');
+    expect(s!.startsWith('…') && s!.endsWith('…')).toBe(true);
+    expect(s!.length).toBeLessThan(120);
+  });
+  it('has nothing to show for a title-only hit or an empty query', async () => {
+    const { matchSnippet } = await import('../logic');
+    expect(matchSnippet({ title: 'Käse', body: 'Brot' }, 'käse')).toBeUndefined();
+    expect(matchSnippet({ title: 'x', body: 'Brot' }, '  ')).toBeUndefined();
+  });
+});

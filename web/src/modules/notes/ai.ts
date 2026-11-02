@@ -30,13 +30,22 @@ export const aiSchema: ModuleAiSchema = {
       kind: 'update',
       collection: 'note',
       label: 'Notiz ändern',
-      description: 'Titel einer Notiz ändern',
+      description:
+        'Titel einer Notiz ändern, sie anheften oder Text unten anhängen (der bestehende Text bleibt)',
       fields: ['title', 'body', 'pinned'],
+      // Text for a note is only ever added after the stored one, never replaced.
+      append: ['body'],
+      parse: { keywords: ['notiz'], roles: { note: 'body' } },
       examples: [
         {
           input: 'Benenne die Notiz Idee für den Garten in Gartenplan um',
           target: 'Idee für den Garten',
           output: { title: 'Gartenplan' },
+        },
+        {
+          input: 'Ergänze die Notiz Idee für den Garten um Tomaten und Gurken',
+          target: 'Idee für den Garten',
+          output: { body: 'Tomaten und Gurken' },
         },
       ],
     },

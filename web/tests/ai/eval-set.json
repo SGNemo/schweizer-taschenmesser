@@ -2123,6 +2123,36 @@
       ]
     },
     {
+      "id": "not-u02",
+      "input": "Ergänze die Notiz Gartenplan um Tomaten und Gurken",
+      "tags": ["update"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "update",
+          "data": {
+            "body": "Tomaten und Gurken"
+          },
+          "target": "Gartenplan"
+        }
+      ]
+    },
+    {
+      "id": "not-u03",
+      "input": "Ergaenze die Notiz Gartenplan um Radieschen",
+      "tags": ["update", "typo"],
+      "expect": [
+        {
+          "module": "notes",
+          "action": "update",
+          "data": {
+            "body": "Radieschen"
+          },
+          "target": "Gartenplan"
+        }
+      ]
+    },
+    {
       "id": "not-d01",
       "input": "Lösche die Notiz Urlaubsideen",
       "tags": ["delete"],
