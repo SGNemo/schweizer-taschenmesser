@@ -22,6 +22,7 @@ import {
   excerpt,
   filterByNotebook,
   isScratch,
+  matchSnippet,
   type NotebookFilter,
   orderPatches,
   searchNotes,
@@ -58,6 +59,8 @@ export interface PageListProps {
   onDelete: (page: Page) => void;
   onReorder: (patches: { id: string; order: number }[]) => void;
   onOpenTrash: () => void;
+  onExport: () => void;
+  onImport: () => void;
 }
 
 const titleOf = (n: Page) => (isScratch(n) ? t.notes.scratch : displayTitle(n) || t.notes.untitled);
@@ -233,6 +236,14 @@ export function PageList(p: PageListProps) {
           <Icon name="trash" size={16} />
           {t.notes.trash}
         </Button>
+        <Button variant="ghost" onClick={p.onExport} data-testid="notes-export">
+          <Icon name="download" size={16} />
+          {t.notes.exportMenu.button}
+        </Button>
+        <Button variant="ghost" onClick={p.onImport} data-testid="notes-import">
+          <Icon name="upload" size={16} />
+          {t.notes.importMenu.button}
+        </Button>
       </div>
     </nav>
   );
@@ -258,7 +269,7 @@ function PageRow({
     <Row
       id={page.id}
       title={titleOf(page)}
-      meta={excerpt(page)}
+      meta={(p.query.trim() && matchSnippet(page, p.query)) || excerpt(page)}
       pinned={page.pinned}
       book={book}
       active={p.activeId === page.id}

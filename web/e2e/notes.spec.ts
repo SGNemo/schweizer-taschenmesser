@@ -220,6 +220,123 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
   });
 });
 
+test.describe('notebook (links, search, export, import, to-do)', () => {
+  test.skip(({ isMobile }) => isMobile, 'list and page side by side');
+  const rows = (page: Page) => page.getByTestId('note-row');
+  async function addPage(page: Page, title: string, text: string) {
+    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await expect(editor(page)).toBeVisible(); // the editor loads lazily
+    await page.getByLabel('Titel der Seite').fill(title);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(text);
+    await expect(page.getByText('Gespeichert')).toBeVisible();
+  }
+
+  test('[[ links pages, a click opens the target, the target lists its backlinks', async ({
+    page,
+  }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(page, 'Zielseite', 'Inhalt des Ziels');
+    await addPage(page, 'Startseite', 'Siehe');
+    await editor(page).click();
+    await page.keyboard.press('End');
+    await page.keyboard.type(' [[Ziel');
+    await expect(page.getByRole('option', { name: 'Zielseite' })).toBeVisible();
+    await page.keyboard.press('Enter');
+    const link = editor(page).locator('.wikilink');
+    await expect(link).toHaveText('Zielseite');
+    await expect(rows(page).filter({ hasText: '[[' })).toHaveCount(0); // stored as a link, shown as text
+    await link.click();
+    await expect(page.getByLabel('Titel der Seite')).toHaveValue('Zielseite');
+    const back = page.getByRole('navigation', { name: 'Verweise auf diese Seite' });
+    await expect(back.getByRole('button', { name: 'Startseite' })).toBeVisible();
+    await back.getByRole('button', { name: 'Startseite' }).click();
+    await expect(page.getByLabel('Titel der Seite')).toHaveValue('Startseite');
+  });
+
+  test('an unknown link creates its page when clicked', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(page, 'Anfang', 'Weiter bei [[Neues Ziel]] ');
+    await editor(page).locator('.wikilink').click();
+    await expect(page.getByLabel('Titel der Seite')).toHaveValue('Neues Ziel');
+    await expect(rows(page).filter({ hasText: 'Neues Ziel' }).first()).toBeVisible();
+  });
+
+  test('searching shows the text around the hit', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(
+      page,
+      'Beete',
+      `${'Erde lockern, '.repeat(8)}dann Gurken säen ${'und gießen. '.repeat(8)}`,
+    );
+    await page.getByRole('searchbox').fill('gurken');
+    const row = rows(page).filter({ hasText: 'Beete' });
+    await expect(row).toContainText('dann Gurken säen');
+    await expect(row).toContainText('…');
+  });
+
+  test('a page exports as Markdown with its title', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(page, 'Exportseite', 'Inhalt zum Mitnehmen');
+    await page.getByTestId('notes-export').click();
+    const dialog = page.getByRole('dialog', { name: 'Exportieren' });
+    const download = page.waitForEvent('download');
+    await dialog.getByRole('button', { name: 'Markdown (.md)' }).click();
+    const file = await download;
+    expect(file.suggestedFilename()).toBe('Exportseite.md');
+    const path = await file.path();
+    const { readFileSync } = await import('node:fs');
+    expect(readFileSync(path, 'utf8')).toContain('# Exportseite\n\nInhalt zum Mitnehmen');
+  });
+
+  test('import takes several files and a folder (folder = notebook), duplicates are skipped', async ({
+    page,
+  }, info) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    const { mkdirSync, writeFileSync } = await import('node:fs');
+    const dir = info.outputPath('Reisen');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(`${dir}/Rom.md`, '# Rom\n\nColosseum besuchen');
+    writeFileSync(`${dir}/Packliste.txt`, 'Socken\nZahnbürste');
+
+    await page.getByTestId('notes-import').click();
+    const dialog = page.getByRole('dialog', { name: 'Dateien importieren' });
+    await dialog.locator('input[type=file][webkitdirectory]').setInputFiles(dir);
+    await expect(dialog.getByRole('status')).toContainText('2 Seiten, 1 Notizbuch');
+    await dialog.getByRole('button', { name: 'Importieren' }).click();
+    await expect(page.getByRole('button', { name: /^Reisen · 2/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Reisen · 2/ }).click();
+    await expect(rows(page).filter({ hasText: 'Colosseum besuchen' })).toBeVisible();
+
+    // The same folder again: nothing new.
+    await page.getByTestId('notes-import').click();
+    await page
+      .getByRole('dialog', { name: 'Dateien importieren' })
+      .locator('input[type=file][webkitdirectory]')
+      .setInputFiles(dir);
+    await expect(page.getByRole('dialog', { name: 'Dateien importieren' })).toContainText(
+      '2 doppelte Seiten',
+    );
+  });
+
+  test('a selected checklist item becomes a to-do', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes?new=1');
+    await expect(editor(page)).toBeFocused();
+    await page.keyboard.type('- [ ] Fahrrad ölen');
+    await page.keyboard.press('Shift+Home');
+    await page.getByRole('button', { name: 'Als ToDo übernehmen' }).click();
+    await expect(page.getByText('Als ToDo übernommen.')).toBeVisible();
+    await ready(page, '/todos');
+    await expect(page.getByText('Fahrrad ölen').first()).toBeVisible();
+  });
+});
+
 test.describe('phone viewport', () => {
   test.use({ viewport: { width: 390, height: 800 } });
 

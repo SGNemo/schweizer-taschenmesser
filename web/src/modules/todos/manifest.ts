@@ -87,6 +87,7 @@ const manifest: ModuleManifest = {
     ],
     calendarItems: () => import('./calendar'),
     aiCreateDefaults: () => import('./aiDefaults'),
+    services: () => import('./services'),
   },
 };
 
