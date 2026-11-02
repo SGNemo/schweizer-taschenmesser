@@ -5448,6 +5448,10 @@ export const de = {
     map: {
       search: 'Ort oder Adresse suchen',
       searchHint: 'Name, Adresse oder Koordinaten – zum Beispiel „Schlossplatz Erlangen“.',
+      ownHits: 'Aus deiner Karte',
+      onlineHits: 'Online gefunden',
+      searchOnline: 'Online weitersuchen',
+      noneOwn: 'Deine Karte kennt dazu nichts.',
       searchButton: 'Suchen',
       searching: 'Suche …',
       noResults: 'Nichts gefunden. Probier eine andere Schreibweise.',
@@ -5545,6 +5549,14 @@ export const de = {
       fileUnreachable:
         'Die Kartendatei ist gerade nicht erreichbar. Die Karte entsteht aus dem Overpass-Dienst.',
       fromFile: 'aus Kartendatei',
+      kinds: {
+        place: 'Ort',
+        street: 'Straße',
+        water: 'Gewässer',
+        poi: 'Einrichtung',
+        area: 'Gebiet',
+        other: 'Eintrag',
+      },
       reasons: {
         busy: 'Der Kartendienst ist gerade ausgelastet. Später weitermachen.',
         network: 'Der Kartendienst ist gerade nicht erreichbar. Später weitermachen.',

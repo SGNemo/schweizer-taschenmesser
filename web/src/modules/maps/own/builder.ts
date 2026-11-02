@@ -5,7 +5,8 @@
  * is a click; a build found running after a restart is set to "paused" and offers "Weiter". One
  * region at a time, a short breath between requests, a few retries with growing pauses when the
  * donated server is busy, then a calm pause with a reason. With a region file (PMTiles on an own host)
- * the tiles are copied from the file instead, cell by cell, with range requests.
+ * the tiles are copied from the file instead, cell by cell, with range requests. Every written cell
+ * also refreshes the names index (`maps_name`) the search field answers from.
  */
 import { create } from 'zustand';
 import type { Repo } from '@/core/db/repo';
@@ -13,10 +14,12 @@ import { NetBlockedError } from '@/core/net/netlog';
 import { getPlatform } from '@/core/platform';
 import { now } from '@/core/time/now';
 import { identify } from '../agent';
-import { regionRepo, tileRepo } from '../repo';
-import type { MapLevel, Region, Tile } from '../schema';
+import { nameRepo, regionRepo, tileRepo } from '../repo';
+import type { MapLevel, NameRow, Region, Tile } from '../schema';
 import { defaultCompute, type Compute } from './compute';
 import { tileId, tilesCovering, type Bbox, type LonLat, type TileAddress } from './cut';
+import { gunzip } from './gzip';
+import { tokensOf, type NameEntry } from './names';
 import { DEFAULT_OVERPASS_URL, overpassQuery } from './overpass';
 import { openPmtiles, plainAttribution, type Pmtiles } from './pmtiles';
 import { STORED_ZOOMS, capBbox, cellBbox, planRegion } from './plan';
@@ -36,6 +39,7 @@ export const useBuildStore = create<BuildState>(() => ({}));
 export interface BuilderDeps {
   regions: Repo<Region>;
   tiles: Repo<Tile>;
+  names: Repo<NameRow>;
   fetch: typeof fetch;
   headers: () => Record<string, string>;
   overpassUrl: () => string;
@@ -80,6 +84,11 @@ export interface Builder {
   removeAll(): Promise<void>;
   /** After a restart: a region that was "building" when the app closed waits for "Weiter". */
   settle(): Promise<void>;
+  /**
+   * Builds the names index of finished regions that have none yet (built before the index existed)
+   * from their stored tiles. Local work only; one run at a time.
+   */
+  ensureIndexed(): Promise<void>;
 }
 
 const DEFAULT_RETRY = [5_000, 15_000, 45_000];
@@ -98,6 +107,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
   let pumping = false;
   let compute: Compute | undefined;
   let requestId = 0;
+  let indexing: Promise<void> | undefined;
 
   /** The opened region file, shared between regions; a failed open is not remembered. */
   function openFile(url: string): Promise<Pmtiles> {
@@ -166,6 +176,57 @@ export function createBuilder(deps: BuilderDeps): Builder {
     return tiles.reduce((n, t) => n + t.bytes.byteLength, 0);
   }
 
+  /** Replaces what a cell knows by name (purged by cell, so a rebuilt cell never keeps stale names). */
+  async function writeNames(
+    regionId: string,
+    cell: TileAddress,
+    entries: NameEntry[],
+  ): Promise<void> {
+    const cellId = tileId(cell.z, cell.x, cell.y);
+    const old = await deps.names.table.where('cell').equals(cellId).primaryKeys();
+    if (old.length > 0) await deps.names.purge(old);
+    if (entries.length === 0) return;
+    await deps.names.createMany(
+      entries.map((e, i) => ({
+        id: `${cellId}#${i}`,
+        data: {
+          regionId,
+          cell: cellId,
+          name: e.name,
+          tokens: tokensOf(e.name),
+          kind: e.kind,
+          lat: e.lat,
+          lon: e.lon,
+        },
+      })),
+    );
+  }
+
+  async function purgeNames(regionId: string): Promise<void> {
+    const ids = await deps.names.table.where('regionId').equals(regionId).primaryKeys();
+    if (ids.length > 0) await deps.names.purge(ids);
+  }
+
+  /** The names of stored or copied tiles (the deepest zoom of a cell), read off the page. */
+  async function namesOfTiles(tiles: TileBytes[]): Promise<NameEntry[]> {
+    const plain: TileBytes[] = [];
+    for (const t of tiles) {
+      try {
+        plain.push(
+          t.gzip
+            ? { ...t, bytes: await gunzip(t.bytes), gzip: false }
+            : { ...t, bytes: t.bytes.slice(0) },
+        );
+      } catch {
+        // An unreadable tile has no names to offer.
+      }
+    }
+    if (plain.length === 0) return [];
+    compute ??= deps.compute();
+    const res = await compute.run({ kind: 'names', id: ++requestId, tiles: plain });
+    return res.kind === 'names' ? res.names : [];
+  }
+
   /** The tiles of a region file for the given addresses, a few at a time, each tried like a cell. */
   async function readFileTiles(
     file: Pmtiles,
@@ -227,6 +288,11 @@ export function createBuilder(deps: BuilderDeps): Builder {
         return;
       }
       bytes += await writeTiles(id, read.tiles);
+      await writeNames(
+        id,
+        cells[i]!,
+        await namesOfTiles(read.tiles.filter((t) => t.z === region.zooms.max)),
+      );
       await deps.regions.update(id, { cells: { done: i + 1, total }, bytes });
     }
     // The overview comes from the file as well (it holds the lower zooms already).
@@ -246,6 +312,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
       cells: { done: total, total },
       bytes: await bytesOf(id),
       builtAt: deps.clock(),
+      indexedAt: deps.clock(),
     });
   }
 
@@ -294,6 +361,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
         return;
       }
       bytes += await writeTiles(id, res.tiles);
+      await writeNames(id, cells[i]!, res.names);
       await deps.regions.update(id, { cells: { done: i + 1, total }, bytes });
       if (i + 1 < total) await deps.sleep(deps.cellGapMs ?? DEFAULT_GAP);
     }
@@ -325,6 +393,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
       cells: { done: total, total },
       bytes: await bytesOf(id),
       builtAt: deps.clock(),
+      indexedAt: deps.clock(),
     });
   }
 
@@ -436,6 +505,8 @@ export function createBuilder(deps: BuilderDeps): Builder {
           const c = plan.cells[i]!;
           return skip.has(tileId(c.z - 1, c.x >> 1, c.y >> 1));
         });
+      // The full cells are new cells: the lean cells' names go, the index is rebuilt with them.
+      await purgeNames(id);
       await deps.regions.update(id, {
         level: 'full',
         zooms: STORED_ZOOMS.full,
@@ -444,6 +515,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
         cells: { done: 0, total: plan.cells.length - skipCells.length },
         status: 'paused',
         reason: undefined,
+        indexedAt: undefined,
       });
       await builder.start(id);
     },
@@ -477,6 +549,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
       }
       const ids = (await deps.tiles.table.where('regionId').equals(id).toArray()).map((t) => t.id);
       await deps.tiles.purge(ids);
+      await purgeNames(id);
       await deps.regions.purge([id]);
       removed.delete(id);
       paused.delete(id);
@@ -490,6 +563,40 @@ export function createBuilder(deps: BuilderDeps): Builder {
         if (r.status === 'building' && r.id !== active)
           await deps.regions.update(r.id, { status: 'paused' });
       }
+    },
+    ensureIndexed() {
+      indexing ??= (async () => {
+        for (const region of await deps.regions.active().toArray()) {
+          if (region.status !== 'done' || region.indexedAt) continue;
+          const skip = new Set(region.skipCells ?? []);
+          const cells = tilesCovering(region.bbox, region.cellZoom).filter(
+            (c) => !skip.has(tileId(c.z, c.x, c.y)),
+          );
+          for (const cell of cells) {
+            if (removed.has(region.id)) break;
+            const deepest = tilesUnder(cell, region.zooms.max).filter(
+              (t) => t.z === region.zooms.max,
+            );
+            const rows = await deps.tiles.table.bulkGet(deepest.map((t) => tileId(t.z, t.x, t.y)));
+            const tiles = rows
+              .filter(
+                (r): r is NonNullable<typeof r> =>
+                  r !== undefined && r.deletedAt === null && r.regionId === region.id,
+              )
+              .map((r) => ({ z: r.z, x: r.x, y: r.y, bytes: r.bytes, gzip: r.gzip }));
+            await writeNames(region.id, cell, await namesOfTiles(tiles));
+          }
+          if (!removed.has(region.id) && (await deps.regions.get(region.id)))
+            await deps.regions.update(region.id, { indexedAt: deps.clock() });
+        }
+        if (!useBuildStore.getState().active) {
+          compute?.dispose();
+          compute = undefined;
+        }
+      })().finally(() => {
+        indexing = undefined;
+      });
+      return indexing;
     },
   };
   return builder;
@@ -508,6 +615,7 @@ export function getBuilder(): Builder {
   shared ??= createBuilder({
     regions: regionRepo,
     tiles: tileRepo,
+    names: nameRepo,
     fetch: (input, init) => getPlatform().fetch(input, init),
     headers: () => identify().headers ?? {},
     overpassUrl: () => currentOverpassUrl,
