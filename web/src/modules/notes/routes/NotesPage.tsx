@@ -1,8 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
+import { bus } from '@/core/events';
+import { useModuleStates } from '@/core/modules/activation';
+import { offerEnableModule } from '@/core/modules/offerEnable';
 import { useSettings } from '@/core/settings/settings';
+import { useUiStore } from '@/stores/ui';
 import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
@@ -21,6 +25,7 @@ import {
   SORT_MODES,
   type SortMode,
 } from '../logic';
+import { backlinks as backlinksOf, findPage, suggestTitles } from '../links';
 import { noteRepo, notebookRepo } from '../repo';
 import type { Note } from '../schema';
 import { type NotesSettings, settings as moduleSettings, settingsSchema } from '../settings';
@@ -78,6 +83,7 @@ export default function NotesPage() {
     () => [...(bookRows ?? [])].sort((a, b) => a.order - b.order || a.createdAt - b.createdAt),
     [bookRows],
   );
+  const moduleStates = useModuleStates();
   const wide = useMediaQuery('(min-width: 900px)');
   const [stored] = useSettings('module.notes', settingsSchema, moduleSettings.defaults as never);
   const prefs = stored ?? (moduleSettings.defaults as NotesSettings);
@@ -231,6 +237,34 @@ export default function NotesPage() {
     open({ kind: 'note', id: created.id });
   }
 
+  const linkTitles = useCallback((query: string) => suggestTitles(query, notes ?? []), [notes]);
+  async function openLink(target: string) {
+    const existing = findPage(target, notes ?? []);
+    if (existing) return openPage(existing);
+    const created = await noteRepo.create({
+      title: target,
+      body: '',
+      pinned: false,
+      notebookId: newPageBook,
+      order: 0,
+    });
+    useUiStore.getState().toast(t.notes.links.created);
+    open({ kind: 'note', id: created.id });
+  }
+  function sendTodo(text: string) {
+    const send = async () => {
+      await bus.emit('todo.requested', { title: text });
+      useUiStore.getState().toast(t.notes.links.todoAdded);
+    };
+    if (moduleStates?.todos !== true)
+      return offerEnableModule('todos', t.notes.links.todoOff, send);
+    void send();
+  }
+  const subject = sel?.kind === 'note' ? current : sel?.kind === 'scratch' ? scratchNote : null;
+  const backlinkList = subject
+    ? backlinksOf(subject, notes ?? []).map((n) => ({ id: n.id, title: titleOf(n) }))
+    : [];
+
   const fullscreen = () => {
     const el = document.documentElement;
     if (document.fullscreenElement) void document.exitFullscreen();
@@ -306,6 +340,14 @@ export default function NotesPage() {
               focusMode={focusMode}
               notebookId={newPageBook}
               onMoveSelection={(md) => void moveSelectionToNewPage(md)}
+              linkTitles={linkTitles}
+              onOpenLink={(target) => void openLink(target)}
+              onTodo={sendTodo}
+              backlinks={backlinkList}
+              onOpenPage={(id) => {
+                const page = notes?.find((n) => n.id === id);
+                if (page) openPage(page);
+              }}
               onToggleFocus={() => setFocusMode((v) => !v)}
               onFullscreen={fullscreen}
               onBack={

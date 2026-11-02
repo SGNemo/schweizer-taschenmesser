@@ -35,6 +35,15 @@ export interface NotePaneProps {
   notebookId: string | null;
   /** Scratch pad: the selection becomes a new page (receives its Markdown). */
   onMoveSelection?: (markdown: string) => void;
+  /** Titles for the `[[` menu. */
+  linkTitles: (query: string) => string[];
+  /** A `[[link]]` was clicked: open the page, or create it. */
+  onOpenLink: (target: string) => void;
+  /** The selection becomes a to-do. */
+  onTodo: (text: string) => void;
+  /** Pages that link to this one. */
+  backlinks: { id: string; title: string }[];
+  onOpenPage: (id: string) => void;
   onCreated: (id: string) => void;
   onDeleted: () => void;
   autoFocus: boolean;
@@ -303,6 +312,9 @@ export function NotePane(props: NotePaneProps) {
           autoFocus={props.autoFocus}
           apiRef={apiRef}
           onMoveSelection={scratch ? props.onMoveSelection : undefined}
+          linkTitles={props.linkTitles}
+          onOpenLink={props.onOpenLink}
+          onTodo={props.onTodo}
           onReady={() => {
             if (!wantFocus.current) return;
             wantFocus.current = false;
@@ -316,6 +328,21 @@ export function NotePane(props: NotePaneProps) {
           onBlur={() => void saver.flush()}
         />
       </Suspense>
+      {props.backlinks.length > 0 ? (
+        <nav className={styles.backlinks} aria-label={t.notes.links.backlinks}>
+          <span className={styles.backlinksLabel}>{t.notes.links.backlinks}</span>
+          {props.backlinks.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              className={styles.backlink}
+              onClick={() => props.onOpenPage(b.id)}
+            >
+              {b.title}
+            </button>
+          ))}
+        </nav>
+      ) : null}
       {pageId ? (
         <HistoryDialog
           open={historyOpen}

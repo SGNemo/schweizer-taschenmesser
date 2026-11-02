@@ -22,6 +22,7 @@ import {
   excerpt,
   filterByNotebook,
   isScratch,
+  matchSnippet,
   type NotebookFilter,
   orderPatches,
   searchNotes,
@@ -258,7 +259,7 @@ function PageRow({
     <Row
       id={page.id}
       title={titleOf(page)}
-      meta={excerpt(page)}
+      meta={(p.query.trim() && matchSnippet(page, p.query)) || excerpt(page)}
       pinned={page.pinned}
       book={book}
       active={p.activeId === page.id}
