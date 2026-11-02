@@ -42,6 +42,8 @@ async function audit(page: Page, label: string) {
   // known finding of the shared component (it shows on /invoices with seed data too), not of mail.
   const results = await new AxeBuilder({ page })
     .disableRules(['label-content-name-mismatch'])
+    // the mail body is third-party content in a script-free sandbox; axe cannot enter it (and hangs trying)
+    .exclude('iframe[title^="Inhalt der Mail"]')
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
   expect(
