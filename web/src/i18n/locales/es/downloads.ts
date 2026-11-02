@@ -109,6 +109,17 @@ export const downloads: Strings['downloads'] = {
     },
     turnOff: 'Desactivar la parte de torrents',
     starting: 'Iniciando …',
+    launch: {
+      needModule: 'Esto necesita el módulo «Descargas».',
+      title: 'Enlaces magnet y archivos torrent',
+      help: 'Nemo puede registrarse en Windows como programa para enlaces magnet y archivos .torrent. Solo para ti, sin derechos de administrador. No se sustituye ningún valor predeterminado existente: elige Nemo tú mismo en «Aplicaciones predeterminadas». Un enlace abierto solo rellena el cuadro de diálogo; nada empieza solo.',
+      register: 'Registrar en Windows',
+      remove: 'Quitar el registro',
+      done: 'Nemo está registrado en Windows. Elígelo en «Aplicaciones predeterminadas».',
+      removed: 'Registro eliminado',
+      failed: 'No se pudo cambiar el registro.',
+      pendingOff: 'Hay un enlace magnet esperando. Activa la parte de BitTorrent para continuar.',
+    },
     startFailed: 'La parte de torrents no pudo iniciarse.',
     add: {
       button: 'Añadir un torrent',

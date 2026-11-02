@@ -3,6 +3,8 @@
 //! `PlatformService` interface. Keep it thin: logic belongs into the (tested) TypeScript side.
 
 #[cfg(desktop)]
+mod association;
+#[cfg(desktop)]
 mod browser;
 #[cfg(windows)]
 mod browser_win;
@@ -89,7 +91,9 @@ pub fn run() {
     // waited for the previous process after a self-update, so an update relaunch is not mistaken
     // for a second instance.
     #[cfg(desktop)]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        // A second start with a magnet link or .torrent file (the OS association) hands it over.
+        association::remember(app, &args);
         capture::show_main(app);
     }));
 
@@ -119,6 +123,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![capture::AUTOSTART_FLAG]),
         ))
+        .manage(association::Launch::default())
         .manage(browser::BrowserState::default())
         .manage(capture::CaptureState::default())
         .on_window_event(capture::on_window_event)
@@ -133,6 +138,9 @@ pub fn run() {
         .manage(vault_bridge::VaultBridge::default())
         .invoke_handler(tauri::generate_handler![
             downloads::downloads_watch,
+            association::launch_take_pending,
+            association::association_status,
+            association::association_set,
             torrent::torrent_configure,
             torrent::torrent_stop,
             torrent::torrent_preview,
@@ -238,6 +246,8 @@ pub fn run() {
         if let Some(dir) = capture::app_data_folder(app.handle()) {
             panic_log::install(dir.join("logs"));
         }
+        // Started with a magnet link or .torrent file (OS association): the page fetches it once loaded.
+        association::remember(app.handle(), &std::env::args().collect::<Vec<_>>());
         capture::setup(app)
     });
 

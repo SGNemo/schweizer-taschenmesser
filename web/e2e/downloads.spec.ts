@@ -250,3 +250,38 @@ test('a .torrent file is chosen in the system dialog; the public IP is only aske
   await expect(page.getByText('Deine öffentliche IP-Adresse')).toBeVisible();
   await expect(page.getByTestId('torrent-ip')).toHaveCount(0);
 });
+
+// ---- magnet link / .torrent file from outside (optional OS association) ----
+
+test('a magnet link the app was started with waits for the torrent part, then pre-fills the dialog', async ({
+  page,
+}) => {
+  const magnet = 'magnet:?xt=urn:btih:' + 'b'.repeat(40);
+  await page.evaluate((m) => localStorage.setItem('__tmLaunchPending', m), magnet);
+  await page.reload();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Ein Magnet-Link wartet' }),
+  ).toBeVisible();
+  // Nothing was added or started by itself.
+  expect(await torrentCalls(page)).toEqual([]);
+  await turnOnTorrent(page);
+  const dialog = page.getByRole('dialog', { name: 'Torrent hinzufügen' });
+  await expect(dialog.getByLabel('Magnet-Link')).toHaveValue(magnet);
+  await audit(page, 'prefilled dialog');
+  expect((await torrentCalls(page)).some((c) => c.startsWith('add:'))).toBe(false);
+});
+
+test('registering with Windows is a click and can be undone', async ({ page }) => {
+  await turnOnTorrent(page);
+  const calls = () =>
+    page.evaluate(
+      () => (window as unknown as { __tmBrowserCalls?: string[] }).__tmBrowserCalls ?? [],
+    );
+  await expect(page.getByText('Ein bestehender Standard wird nicht ersetzt')).toBeVisible();
+  expect(await calls()).not.toContain('association:on');
+  await page.getByRole('button', { name: 'Bei Windows eintragen' }).click();
+  await expect.poll(calls).toContain('association:on');
+  await page.getByRole('button', { name: 'Eintrag entfernen' }).click();
+  await expect.poll(calls).toContain('association:off');
+  await audit(page, 'association');
+});

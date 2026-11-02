@@ -1,6 +1,7 @@
 import { SafeModeBanner } from './SafeModeBanner';
 import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
+import { useLaunchOpen } from '@/quickCapture/launchOpen';
 import { useNativeShare } from '@/quickCapture/nativeShare';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -63,6 +64,7 @@ export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   useNativeShare();
+  useLaunchOpen();
   useShortcuts();
   useVoiceKey();
   useCockpit();

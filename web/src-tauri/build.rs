@@ -3,6 +3,9 @@
 /// with the `generate_handler!` block in `src/lib.rs`.
 const COMMANDS: &[&str] = &[
     "downloads_watch",
+    "launch_take_pending",
+    "association_status",
+    "association_set",
     "torrent_configure",
     "torrent_stop",
     "torrent_preview",

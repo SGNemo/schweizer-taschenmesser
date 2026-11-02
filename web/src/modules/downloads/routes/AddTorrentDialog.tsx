@@ -29,10 +29,13 @@ const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 export function AddTorrentDialog({
   open,
   defaultFolder,
+  initial,
   onClose,
 }: {
   open: boolean;
   defaultFolder: string;
+  /** Pre-fills the first step (magnet link or `.torrent` path); the user still reviews and confirms. */
+  initial?: { kind: 'magnet' | 'file'; value: string } | null;
   onClose: () => void;
 }) {
   const platform = getPlatform().torrent;
@@ -51,8 +54,8 @@ export function AddTorrentDialog({
     setWasOpen(open);
     if (open) {
       setStep('input');
-      setMagnet('');
-      setFilePath(null);
+      setMagnet(initial?.kind === 'magnet' ? initial.value : '');
+      setFilePath(initial?.kind === 'file' ? initial.value : null);
       setPreview(null);
       setError(null);
       setDir(defaultFolder);

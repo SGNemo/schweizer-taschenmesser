@@ -16,6 +16,7 @@ import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
 import { useBrowserTabs } from '../tabsStore';
+import ExternalBrowser from './ExternalBrowser';
 import styles from './BrowserPage.module.css';
 
 type View = 'page' | 'menu' | 'bookmarks' | 'history' | 'blocker' | 'clear';
@@ -158,6 +159,8 @@ export default function BrowserPage() {
     await blockruleRepo.create({ kind: 'domain', value: host });
     toast(t.browser.blocker.ruleAdded);
   }
+
+  if (!platform.supported && getPlatform().customTabs.supported) return <ExternalBrowser />;
 
   if (!platform.supported) {
     return (

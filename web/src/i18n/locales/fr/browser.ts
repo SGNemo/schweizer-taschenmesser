@@ -103,6 +103,12 @@ export const browser: Strings['browser'] = {
     pauseSite: 'Mettre en pause sur ce site',
     resumeSite: 'Réactiver sur ce site',
   },
+  external: {
+    hint: 'Les pages s’ouvrent dans le navigateur de votre appareil (Custom Tab). Les onglets, la recherche dans la page et le zoom sont ceux du navigateur ; Nemo conserve vos favoris et votre historique.',
+    failed: 'Impossible d’ouvrir l’adresse.',
+    noBookmarks:
+      'Pas encore de favoris. Ouvrez une adresse, puis touchez l’étoile pour l’enregistrer.',
+  },
   popupBlocked: 'Une fenêtre contextuelle a été bloquée.',
   download: {
     offer: (name: string) => `La page propose « ${name} » en téléchargement.`,
