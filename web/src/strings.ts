@@ -5571,6 +5571,132 @@ export const de = {
       geo: 'Karten-App des Geräts',
     },
   },
+  mail: {
+    meta: {
+      name: 'E-Mail',
+      description:
+        'Posteingang, Suche und Mails lesen – nur lesend, ohne Cloud-KI. Nutzt dein Google-Konto aus den Verbindungen.',
+      quickAdd: 'E-Mail: Posteingang öffnen',
+      images: 'Bilder in Mails',
+      imagesHelp:
+        'Externe Bilder verraten dem Absender, dass du die Mail geöffnet hast. Standard: erst nach Klick laden.',
+      imagesAsk: 'Erst nach Klick laden',
+      imagesAlways: 'Immer laden',
+      cacheBodies: 'Geöffnete Mails zwischenspeichern',
+      cacheBodiesHelp:
+        'Verschlüsselt auf diesem Gerät, nicht im Sync und nicht in Backups. Ohne diese Option wird jede Mail beim Öffnen neu geladen.',
+    },
+    page: {
+      refresh: 'Aktualisieren',
+      loading: 'Mails werden geladen …',
+      more: 'Mehr laden',
+      searchLabel: 'Suchen',
+      searchPlaceholder: 'Suchen, z. B. from:name has:attachment',
+      searchHint:
+        'Es gilt die Gmail-Suchsyntax: from:, to:, subject:, has:attachment, newer_than:7d, label:…',
+      searchEnd: 'Suche beenden',
+      account: 'Konto',
+      accountN: (n: number) => `Konto ${n}`,
+      label: 'Ordner',
+      empty: 'Keine Mails in dieser Ansicht.',
+      emptySearch: 'Nichts gefunden.',
+      settings: 'Mail-Einstellungen',
+      unread: (n: number) => (n === 1 ? '1 ungelesen' : `${n} ungelesen`),
+      messages: (n: number) => (n === 1 ? '1 Nachricht' : `${n} Nachrichten`),
+      demo: 'Beispiel-Mails (Testdaten). Verbinde Gmail, um deine eigenen zu sehen.',
+      cached: 'Kein Netz: gezeigt wird der zuletzt gespeicherte Stand.',
+      groups: {
+        today: 'Heute',
+        yesterday: 'Gestern',
+        week: 'Diese Woche',
+        older: 'Älter',
+      },
+      noSubject: '(ohne Betreff)',
+      labels: {
+        INBOX: 'Posteingang',
+        STARRED: 'Markiert',
+        IMPORTANT: 'Wichtig',
+        SENT: 'Gesendet',
+        DRAFT: 'Entwürfe',
+        TRASH: 'Papierkorb',
+        SPAM: 'Spam',
+      } as Record<string, string>,
+    },
+    connect: {
+      title: 'Noch kein Mail-Konto verbunden',
+      body: 'Verbinde dein Google-Konto in den Einstellungen und schalte „E-Mail“ ein. Nemo liest nur: Es wird nichts gesendet, gelöscht oder verschoben.',
+      action: 'Zu den Verbindungen',
+    },
+    errors: {
+      expired: 'Die Anmeldung bei Google ist abgelaufen.',
+      denied:
+        'Dafür fehlt die Berechtigung. Schalte in den Verbindungen „E-Mail“ ein und melde dich neu an.',
+      'rate-limited': 'Google bremst gerade. Bitte in ein paar Minuten noch einmal versuchen.',
+      network: 'Keine Verbindung zum Mail-Dienst.',
+      generic: 'Die Mails konnten nicht geladen werden.',
+      action: 'Zu den Verbindungen',
+    } as Record<string, string>,
+    view: {
+      back: 'Zur Liste',
+      from: 'Von',
+      to: 'An',
+      cc: 'Kopie',
+      attachments: 'Anhänge',
+      download: (name: string) => `${name} herunterladen`,
+      saved: 'Anhang gespeichert.',
+      downloadLabel: 'Herunterladen',
+      downloadFailed: 'Der Anhang konnte nicht geladen werden.',
+      blockedImages: (n: number) =>
+        n === 1 ? '1 externes Bild blockiert' : `${n} externe Bilder blockiert`,
+      loadImages: 'Bilder laden',
+      loadingImages: 'Bilder werden geladen …',
+      trackers: (n: number) =>
+        n === 1 ? '1 Tracking-Pixel entfernt' : `${n} Tracking-Pixel entfernt`,
+      noBody: '(kein Text)',
+      frameTitle: (subject: string) => `Inhalt der Mail: ${subject}`,
+      readOnly: 'Nemo liest nur: Der Ungelesen-Status ändert sich dadurch nicht.',
+      openInGmail: 'In Gmail öffnen',
+      expand: (who: string) => `Nachricht von ${who} aufklappen`,
+      loadFailed: 'Die Mail konnte nicht geladen werden.',
+    },
+    panel: {
+      title: 'Mail-Einstellungen',
+      accounts: 'Konten',
+      noAccounts: 'Kein Konto verbunden.',
+      accountsHint: 'Konten werden in den Verbindungen angemeldet und entfernt.',
+      manage: 'Verbindungen öffnen',
+      scopes: 'Berechtigung',
+      scopesBody:
+        'Gelesen wird mit der Google-Berechtigung „Gmail lesen“ (gmail.readonly). Schreibende Rechte wie Archivieren oder Antworten gibt es noch nicht; sie würden später einzeln und mit Erklärung zugeschaltet.',
+      cache: 'Zwischenspeicher',
+      cacheBody: (threads: number, bodies: number) =>
+        `${threads} Mail-Köpfe und ${bodies} geöffnete Mails, verschlüsselt auf diesem Gerät. Nicht im Sync, nicht in Backups.`,
+      clear: 'Zwischenspeicher leeren',
+      cleared: 'Zwischenspeicher gelöscht.',
+      clearTitle: 'Zwischenspeicher leeren?',
+      clearBody: 'Die Mails bleiben bei Google. Sie werden beim nächsten Öffnen neu geladen.',
+      notifications: 'Benachrichtigungen',
+      notificationsBody:
+        'Noch nicht vorhanden: Die App meldet sich nicht von selbst bei neuen Mails.',
+      close: 'Schließen',
+    },
+    widget: {
+      unread: 'Ungelesen',
+      unreadContext: (n: number) =>
+        n === 0
+          ? 'Posteingang ist leer'
+          : n === 1
+            ? 'Ungelesener Thread im Posteingang'
+            : 'Ungelesene Threads im Posteingang',
+      important: 'Wichtigste Mails',
+      importantSummary: (n: number) => (n === 1 ? '1 ungelesen' : `${n} ungelesen`),
+      invoices: 'Rechnungsmails',
+      invoicesContext: (days: number) => `in den letzten ${days} Tagen`,
+      empty: 'Noch keine Mails.',
+      emptyAction: 'E-Mail öffnen',
+      link: 'E-Mail öffnen',
+    },
+  },
 } as const;
 
 /** Shape every translation must have: same keys, strings for strings, same function signatures. */

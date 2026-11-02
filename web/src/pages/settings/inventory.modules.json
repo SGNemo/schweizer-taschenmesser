@@ -114,6 +114,21 @@
       }
     }
   },
+  "mail": {
+    "scope": "module.mail",
+    "fields": {
+      "images": {
+        "type": "select",
+        "label": "Bilder in Mails",
+        "default": "ask"
+      },
+      "cacheBodies": {
+        "type": "boolean",
+        "label": "Geöffnete Mails zwischenspeichern",
+        "default": true
+      }
+    }
+  },
   "maps": {
     "scope": "module.maps",
     "fields": {

@@ -66,6 +66,7 @@ import { example } from './example';
 import { supporter } from './supporter';
 import { aiLabels } from './aiLabels';
 import { maps } from './maps';
+import { mail } from './mail';
 
 export const es: Strings = {
   appName: 'Nemo',
@@ -135,4 +136,5 @@ export const es: Strings = {
   supporter,
   aiLabels,
   maps,
+  mail,
 };
