@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { mailAttachment, mailThread, mailWebUrl } from '@/core/mail/service';
 import type { MailLinkType } from '@/core/mail/prefill';
-import type { MailAccountRef, MailErrorCode, MailMessage } from '@/core/mail/types';
+import type { MailAccountRef, MailErrorCode, MailLabel, MailMessage } from '@/core/mail/types';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Icon, Skeleton } from '@/ui';
 import { DEMO_ACCOUNT, loadThreadBodies, saveBody } from '../cache';
 import { fullWhen, personName, subjectOf } from '../format';
+import { formatAddress } from '@/core/mail/address';
+import { forwardFields, replyFields } from '@/core/mail/reply';
+import { hasFeature, mailDrafts } from '@/core/mail/service';
+import { mailText } from '@/core/mail/prefill';
+import { emptyCompose, type ComposeState } from '../composeState';
 import { LinkDialog } from './LinkDialog';
+import { ThreadActions } from './ThreadActions';
 import { LinkMenu } from './LinkMenu';
 import { LinkedEntries } from './LinkedEntries';
 import { MailFrame } from './MailFrame';
@@ -76,6 +82,7 @@ function MessageCard({
   open,
   onToggle,
   autoLoadImages,
+  onCompose,
 }: {
   account: MailAccountRef;
   threadId: string;
@@ -84,7 +91,36 @@ function MessageCard({
   open: boolean;
   onToggle: () => void;
   autoLoadImages: boolean;
+  onCompose: (state: ComposeState, title: string) => void;
 }) {
+  const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
+  const isDraft = message.labelIds.includes('DRAFT');
+  const quoteBody = (message.text ?? mailText(message, 3000)).slice(0, 3000);
+  const quoteHeader = t.mail.write.compose.quoteHeader(
+    fullWhen(message.date),
+    personName(message.from),
+  );
+
+  async function editDraft() {
+    let draftId: string | undefined;
+    try {
+      draftId = (await mailDrafts(account)).find((d) => d.messageId === message.id)?.id;
+    } catch {
+      // without the id the draft is saved as a new one; the old one stays in Gmail
+    }
+    onCompose(
+      emptyCompose({
+        to: message.to.map(formatAddress).join(', '),
+        cc: message.cc.map(formatAddress).join(', '),
+        subject: message.subject,
+        text: message.text ?? mailText(message),
+        threadId: message.threadId,
+        draftId,
+      }),
+      t.mail.write.compose.titleDraft,
+    );
+  }
+
   const [cid, setCid] = useState<Record<string, string>>({});
   const [linkType, setLinkType] = useState<MailLinkType | undefined>();
 
@@ -148,6 +184,71 @@ function MessageCard({
             autoLoadImages={autoLoadImages}
           />
           <Attachments account={account} message={message} />
+          {canCompose ? (
+            <div className={styles.row} data-testid="mail-reply">
+              {isDraft ? (
+                <Button onClick={() => void editDraft()}>{t.mail.write.editDraft}</Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={() =>
+                      onCompose(
+                        emptyCompose(
+                          replyFields(message, {
+                            all: false,
+                            me: account.email,
+                            quoteHeader,
+                            body: quoteBody,
+                          }),
+                        ),
+                        t.mail.write.compose.titleReply,
+                      )
+                    }
+                  >
+                    {t.mail.write.reply}
+                  </Button>
+                  {message.to.length + message.cc.length > 1 ? (
+                    <Button
+                      onClick={() =>
+                        onCompose(
+                          emptyCompose(
+                            replyFields(message, {
+                              all: true,
+                              me: account.email,
+                              quoteHeader,
+                              body: quoteBody,
+                            }),
+                          ),
+                          t.mail.write.compose.titleReply,
+                        )
+                      }
+                    >
+                      {t.mail.write.replyAll}
+                    </Button>
+                  ) : null}
+                  <Button
+                    onClick={() =>
+                      onCompose(
+                        emptyCompose(
+                          forwardFields(message, {
+                            header: t.mail.write.compose.forwardHeader(
+                              formatAddress(message.from),
+                              fullWhen(message.date),
+                              message.subject,
+                            ),
+                            body: quoteBody,
+                          }),
+                        ),
+                        t.mail.write.compose.titleForward,
+                      )
+                    }
+                  >
+                    {t.mail.write.forward}
+                  </Button>
+                </>
+              )}
+            </div>
+          ) : null}
           <LinkMenu onPick={setLinkType} />
           <LinkDialog
             account={account}
@@ -169,15 +270,25 @@ export function ThreadView({
   threadId,
   cacheBodies,
   autoLoadImages,
+  labels,
+  confirmMoves,
+  onChanged,
+  onCompose,
   onBack,
 }: {
   account: MailAccountRef;
   threadId: string;
   cacheBodies: boolean;
   autoLoadImages: boolean;
+  labels: MailLabel[];
+  confirmMoves: boolean;
+  /** A change at the service went through: the list should reload. */
+  onChanged: () => void;
+  onCompose: (state: ComposeState, title: string) => void;
   onBack: () => void;
 }) {
   const [messages, setMessages] = useState<MailMessage[] | undefined>();
+  const [unreadNow, setUnreadNow] = useState<boolean | undefined>();
   const [error, setError] = useState<MailErrorCode | undefined>();
   const [openIds, setOpenIds] = useState<string[]>([]);
 
@@ -224,6 +335,18 @@ export function ThreadView({
           </Button>
         ) : null}
       </div>
+      {messages ? (
+        <ThreadActions
+          account={account}
+          threadId={threadId}
+          unread={unreadNow ?? messages.some((m) => m.unread)}
+          labels={labels}
+          confirmMoves={confirmMoves}
+          onUnread={setUnreadNow}
+          onChanged={onChanged}
+          onLeave={onBack}
+        />
+      ) : null}
       {messages === undefined ? <Skeleton height="6rem" /> : <h2>{subject}</h2>}
       {error ? <MailError code={error} /> : null}
       {messages?.length === 0 && !error ? (
@@ -238,6 +361,7 @@ export function ThreadView({
           message={m}
           open={openIds.includes(m.id) || messages.length === 1}
           autoLoadImages={autoLoadImages}
+          onCompose={onCompose}
           onToggle={() =>
             setOpenIds((ids) =>
               ids.includes(m.id) ? ids.filter((x) => x !== m.id) : [...ids, m.id],
@@ -246,7 +370,9 @@ export function ThreadView({
         />
       ))}
       <LinkedEntries accountKey={account.key} threadId={threadId} />
-      <p className={styles.hint}>{t.mail.view.readOnly}</p>
+      {hasFeature(account, 'mail-modify') ? null : (
+        <p className={styles.hint}>{t.mail.view.readOnly}</p>
+      )}
     </div>
   );
 }

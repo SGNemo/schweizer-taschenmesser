@@ -6,13 +6,15 @@ const schema = z.object({
   /** `ask`: external images stay blocked until "Bilder laden"; `always`: load them. */
   images: z.enum(['ask', 'always']),
   cacheBodies: z.boolean(),
+  /** Ask before archiving and labelling (the trash and sending always ask). */
+  confirmMoves: z.boolean(),
 });
 
 export type MailSettings = z.output<typeof schema>;
 
 export const settings: ModuleSettings = {
   schema,
-  defaults: { images: 'ask', cacheBodies: true },
+  defaults: { images: 'ask', cacheBodies: true, confirmMoves: true },
   get keywords() {
     return [
       t.mail.meta.name,
@@ -46,6 +48,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.mail.meta.cacheBodiesHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'confirmMoves',
+      get label() {
+        return t.mail.meta.confirmMoves;
+      },
+      get help() {
+        return t.mail.meta.confirmMovesHelp;
       },
       type: 'boolean',
     },

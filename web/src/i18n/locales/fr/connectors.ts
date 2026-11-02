@@ -108,10 +108,17 @@ export const connectors: Strings['connectors'] = {
   google: {
     name: 'Google',
     description:
-      'Lire les calendriers et chercher des factures, abonnements, événements et contrats dans les e-mails. Lecture seule.',
+      'Lire les calendriers et les e-mails. Gérer et envoyer des e-mails sont des autorisations distinctes que tu n’actives qu’au besoin.',
     calendarFeature: 'Calendrier',
     calendarFeatureHint: 'Afficher les événements de vos agendas Google.',
     mailFeature: 'E-mails',
-    mailFeatureHint: 'Chercher sur demande des factures, abonnements, événements et contrats.',
+    mailFeatureHint:
+      'Lire les e-mails dans le module « Courrier » et chercher sur demande des factures, abonnements, rendez-vous et contrats. Lecture seule.',
+    modifyFeature: 'Gérer les e-mails',
+    modifyFeatureHint:
+      'Permet à Nemo de marquer des e-mails comme lus, de les archiver, de les étiqueter, de les mettre à la corbeille et d’enregistrer des brouillons – chaque fois seulement après ta confirmation, rien n’est supprimé définitivement. Remarque : avec cette autorisation, Google permet techniquement aussi l’envoi ; Nemo n’envoie quand même qu’avec « Envoyer des e-mails » activé et après ta confirmation.',
+    sendFeature: 'Envoyer des e-mails',
+    sendFeatureHint:
+      'Permet à Nemo d’envoyer des e-mails en ton nom (nouveau, réponse, transfert) – seulement quand tu confirmes « Envoyer », avec un court délai pour annuler. Sans cette option, Nemo n’envoie rien.',
   },
 };

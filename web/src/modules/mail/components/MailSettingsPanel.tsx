@@ -2,6 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { listMailAccounts } from '@/core/mail/accounts';
+import { hasFeature } from '@/core/mail/service';
+import type { MailFeature } from '@/core/mail/types';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -55,6 +57,24 @@ export function MailSettingsPanel({ open, onClose }: { open: boolean; onClose: (
           <section>
             <h3>{t.mail.panel.scopes}</h3>
             <p>{t.mail.panel.scopesBody}</p>
+            {accounts.length > 0 ? (
+              <>
+                <p className={styles.meta}>{t.mail.panel.permissions}</p>
+                <ul data-testid="mail-permissions">
+                  {accounts.map((a, i) => {
+                    const on = (f: MailFeature) =>
+                      hasFeature(a, f) ? t.mail.panel.permOn : t.mail.panel.permOff;
+                    return (
+                      <li key={a.key}>
+                        {a.email ?? t.mail.page.accountN(i + 1)}: {t.mail.panel.permRead}{' '}
+                        {t.mail.panel.permOn}, {t.mail.panel.permManage} {on('mail-modify')},{' '}
+                        {t.mail.panel.permSend} {on('mail-send')}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : null}
           </section>
           <section>
             <h3>{t.mail.panel.cache}</h3>
