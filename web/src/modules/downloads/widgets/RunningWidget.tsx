@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { ProgressList } from '@/ui';
 import { formatBytes, isActive, percent } from '../lib/format';
@@ -7,12 +8,13 @@ import { ensureWatching, useJobs } from '../store';
 /** Downloads that are still to do: bar, percent and speed per file; names are the user's own. */
 export default function RunningWidget() {
   useEffect(ensureWatching, []);
+  const supported = getPlatform().downloads.supported;
   const jobs = useJobs((s) => s.jobs);
   const open = (jobs ?? []).filter((j) => isActive(j.state));
   const running = open.filter((j) => j.state === 'running').length;
   return (
     <ProgressList
-      loading={!jobs}
+      loading={supported && !jobs}
       empty={t.downloads.meta.widgetEmpty}
       emptyAction={{ label: t.downloads.meta.widgetAction, to: '/downloads?add=' }}
       summary={
