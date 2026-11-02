@@ -52,6 +52,9 @@ async function audit(page: Page, label: string) {
   ).toEqual([]);
 }
 
+// MAIL_MOBILE=1: the same flows at an Android phone's viewport (screenshots)
+if (process.env.MAIL_MOBILE) test.use({ viewport: { width: 412, height: 915 } });
+
 test.describe('mail (demo mails)', () => {
   test.setTimeout(120_000); // each test loads the seed first
   test.beforeEach(async ({ page }) => {
