@@ -5747,6 +5747,9 @@ export const de = {
       cacheBodies: 'Geöffnete Mails zwischenspeichern',
       cacheBodiesHelp:
         'Verschlüsselt auf diesem Gerät, nicht im Sync und nicht in Backups. Ohne diese Option wird jede Mail beim Öffnen neu geladen.',
+      confirmMoves: 'Vor dem Archivieren und Beschriften fragen',
+      confirmMovesHelp:
+        'Der Papierkorb und das Senden fragen immer. Jede Änderung lässt sich danach einige Sekunden zurücknehmen.',
     },
     page: {
       refresh: 'Aktualisieren',
@@ -5792,7 +5795,7 @@ export const de = {
     errors: {
       expired: 'Die Anmeldung bei Google ist abgelaufen.',
       denied:
-        'Dafür fehlt die Berechtigung. Schalte in den Verbindungen „E-Mail“ ein und melde dich neu an.',
+        'Dafür fehlt eine Berechtigung. Schalte sie in den Verbindungen ein (E-Mails lesen, verwalten oder senden) und melde dich neu an.',
       'rate-limited': 'Google bremst gerade. Bitte in ein paar Minuten noch einmal versuchen.',
       network: 'Keine Verbindung zum Mail-Dienst.',
       generic: 'Die Mails konnten nicht geladen werden.',
@@ -5829,7 +5832,7 @@ export const de = {
       manage: 'Verbindungen öffnen',
       scopes: 'Berechtigung',
       scopesBody:
-        'Gelesen wird mit der Google-Berechtigung „Gmail lesen“ (gmail.readonly). Schreibende Rechte wie Archivieren oder Antworten gibt es noch nicht; sie würden später einzeln und mit Erklärung zugeschaltet.',
+        'Standardmäßig wird nur gelesen („E-Mails“, gmail.readonly). Verwalten (markieren, archivieren, Papierkorb, Entwürfe) und Senden sind zwei weitere Berechtigungen, die du in den Verbindungen einzeln einschaltest und mit denen du dich neu anmeldest. Nemo ändert oder sendet nur nach deiner Bestätigung.',
       cache: 'Zwischenspeicher',
       cacheBody: (threads: number, bodies: number) =>
         `${threads} Mail-Köpfe und ${bodies} geöffnete Mails, verschlüsselt auf diesem Gerät. Nicht im Sync, nicht in Backups.`,
@@ -5840,6 +5843,12 @@ export const de = {
       notifications: 'Benachrichtigungen',
       notificationsBody:
         'Noch nicht vorhanden: Die App meldet sich nicht von selbst bei neuen Mails.',
+      permissions: 'Berechtigungen pro Konto',
+      permRead: 'Lesen',
+      permManage: 'Verwalten',
+      permSend: 'Senden',
+      permOn: 'an',
+      permOff: 'aus',
       close: 'Schließen',
     },
     link: {
@@ -5854,6 +5863,91 @@ export const de = {
       excerptHint: 'Kopiert die ersten Zeilen des Mailtexts in deine Notiz.',
       created: 'Aus dieser Mail angelegt',
       open: (what: string, title: string) => `${what} „${title}“ öffnen`,
+    },
+    write: {
+      newMail: 'Neue Mail',
+      archive: 'Archivieren',
+      trash: 'In den Papierkorb',
+      more: 'Weitere Aktionen',
+      markRead: 'Als gelesen markieren',
+      markUnread: 'Als ungelesen markieren',
+      label: 'Label setzen …',
+      reply: 'Antworten',
+      replyAll: 'Allen antworten',
+      forward: 'Weiterleiten',
+      editDraft: 'Entwurf bearbeiten',
+      undo: 'Rückgängig',
+      undone: 'Zurückgenommen.',
+      failed: 'Die Änderung ist nicht angekommen. Es wurde nichts geändert.',
+      done: {
+        read: 'Als gelesen markiert.',
+        unread: 'Als ungelesen markiert.',
+        archived: 'Archiviert.',
+        trashed: 'In den Papierkorb gelegt.',
+        labelled: (name: string) => `Label „${name}“ gesetzt.`,
+      },
+      confirm: {
+        archiveTitle: 'Mail archivieren?',
+        archiveBody:
+          'Der Verlauf verlässt den Posteingang und bleibt unter „Alle Mails“. Du kannst es gleich zurücknehmen.',
+        trashTitle: 'In den Papierkorb legen?',
+        trashBody:
+          'Google löscht Mails im Papierkorb erst nach 30 Tagen. Bis dahin kannst du sie zurückholen, und du kannst es gleich zurücknehmen.',
+        labelTitle: 'Label setzen',
+        labelBody:
+          'Das gewählte Label wird dem ganzen Verlauf hinzugefügt. Du kannst es gleich zurücknehmen.',
+        labelPick: 'Label',
+        labelNone: '– Label wählen –',
+        labelConfirm: 'Label setzen',
+      },
+      compose: {
+        titleNew: 'Neue Mail',
+        titleReply: 'Antworten',
+        titleForward: 'Weiterleiten',
+        titleDraft: 'Entwurf',
+        to: 'An',
+        cc: 'Kopie (Cc)',
+        bcc: 'Blindkopie (Bcc)',
+        moreRecipients: 'Blindkopie',
+        subject: 'Betreff',
+        body: 'Text',
+        attach: 'Anhang hinzufügen',
+        attachments: 'Anhänge',
+        attachNote:
+          'Anhänge einer Mail werden beim Weiterleiten nicht mitgeschickt; füge sie hier selbst hinzu.',
+        removeAttachment: (name: string) => `Anhang ${name} entfernen`,
+        fileTooLarge: (names: string) => `Zu groß für einen Anhang (höchstens 15 MB): ${names}`,
+        invalidAddress: (list: string) => `Das ist keine E-Mail-Adresse: ${list}`,
+        noRecipient: 'Gib mindestens einen Empfänger an.',
+        tooLarge: 'Die Mail ist mit den Anhängen zu groß (höchstens etwa 18 MB).',
+        noSendPermission: 'Zum Senden schalte in den Verbindungen „E-Mails senden“ ein.',
+        discard: 'Verwerfen',
+        saveDraft: 'Entwurf speichern',
+        draftSaved: 'Entwurf gespeichert.',
+        send: 'Weiter zum Senden',
+        quoteHeader: (when: string, name: string) => `Am ${when} schrieb ${name}:`,
+        forwardHeader: (from: string, when: string, subject: string) =>
+          `---------- Weitergeleitete Nachricht ----------\nVon: ${from}\nDatum: ${when}\nBetreff: ${subject}\n`,
+      },
+      review: {
+        title: 'Vor dem Senden prüfen',
+        noSubject: '(ohne Betreff)',
+        emptyBody: '(ohne Text)',
+        hint: 'Die Mail geht erst nach einer kurzen Wartezeit hinaus. Bis dahin kannst du sie zurückziehen.',
+        back: 'Zurück zur Mail',
+        confirm: 'Senden bestätigen',
+      },
+      pending: {
+        waiting: (to: string, seconds: number) => `Mail an ${to} wird in ${seconds} s gesendet.`,
+        sending: (to: string) => `Mail an ${to} wird gesendet …`,
+        failed: (to: string) =>
+          `Die Mail an ${to} konnte nicht gesendet werden. Sie wurde nicht zugestellt.`,
+        sendNow: 'Jetzt senden',
+        withdraw: 'Zurückziehen',
+        retry: 'Erneut versuchen',
+        edit: 'Bearbeiten',
+        sent: 'Mail gesendet.',
+      },
     },
     widget: {
       unread: 'Ungelesen',

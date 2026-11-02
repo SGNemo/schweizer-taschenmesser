@@ -14,6 +14,9 @@ export const mail: Strings['mail'] = {
     cacheBodies: 'Garder les e-mails ouverts en cache',
     cacheBodiesHelp:
       'Chiffré sur cet appareil, non synchronisé et hors des sauvegardes. Sans cela, chaque e-mail est rechargé à l’ouverture.',
+    confirmMoves: 'Demander avant d’archiver et d’étiqueter',
+    confirmMovesHelp:
+      'La corbeille et l’envoi demandent toujours. Chaque modification peut être annulée pendant quelques secondes.',
   },
   page: {
     refresh: 'Actualiser',
@@ -59,7 +62,7 @@ export const mail: Strings['mail'] = {
   errors: {
     expired: 'La connexion à Google a expiré.',
     denied:
-      'L’autorisation manque pour cela. Active « Courrier » dans Connexions et reconnecte-toi.',
+      'Une autorisation manque pour cela. Active-la dans Connexions (lire, gérer ou envoyer des e-mails) et reconnecte-toi.',
     'rate-limited': 'Google ralentit les requêtes. Réessaie dans quelques minutes.',
     network: 'Pas de connexion au service de messagerie.',
     generic: 'Les e-mails n’ont pas pu être chargés.',
@@ -96,7 +99,7 @@ export const mail: Strings['mail'] = {
     manage: 'Ouvrir Connexions',
     scopes: 'Autorisation',
     scopesBody:
-      'La lecture utilise l’autorisation Google « Lire Gmail » (gmail.readonly). Il n’y a pas encore d’autorisations d’écriture comme archiver ou répondre ; elles seraient activées une à une, avec une explication.',
+      'Par défaut les e-mails sont seulement lus (« E-mails », gmail.readonly). Gérer (marquer, archiver, corbeille, brouillons) et envoyer sont deux autorisations de plus que tu actives une à une dans Connexions et pour lesquelles tu te reconnectes. Nemo ne modifie ou n’envoie qu’après ta confirmation.',
     cache: 'Cache',
     cacheBody: (threads: number, bodies: number) =>
       `${threads} en-têtes et ${bodies} e-mails ouverts, chiffrés sur cet appareil. Non synchronisés, hors des sauvegardes.`,
@@ -107,6 +110,12 @@ export const mail: Strings['mail'] = {
     notifications: 'Notifications',
     notificationsBody:
       'Pas encore disponible : l’app ne signale pas d’elle-même les nouveaux e-mails.',
+    permissions: 'Autorisations par compte',
+    permRead: 'Lire',
+    permManage: 'Gérer',
+    permSend: 'Envoyer',
+    permOn: 'oui',
+    permOff: 'non',
     close: 'Fermer',
   },
   link: {
@@ -121,6 +130,92 @@ export const mail: Strings['mail'] = {
     excerptHint: 'Copie les premières lignes du texte de l’e-mail dans ta note.',
     created: 'Créé à partir de cet e-mail',
     open: (what: string, title: string) => `Ouvrir ${what} « ${title} »`,
+  },
+  write: {
+    newMail: 'Nouvel e-mail',
+    archive: 'Archiver',
+    trash: 'Mettre à la corbeille',
+    more: 'Autres actions',
+    markRead: 'Marquer comme lu',
+    markUnread: 'Marquer comme non lu',
+    label: 'Ajouter un libellé …',
+    reply: 'Répondre',
+    replyAll: 'Répondre à tous',
+    forward: 'Transférer',
+    editDraft: 'Modifier le brouillon',
+    undo: 'Annuler',
+    undone: 'Annulé.',
+    failed: 'La modification n’est pas passée. Rien n’a été changé.',
+    done: {
+      read: 'Marqué comme lu.',
+      unread: 'Marqué comme non lu.',
+      archived: 'Archivé.',
+      trashed: 'Mis à la corbeille.',
+      labelled: (name: string) => `Libellé « ${name} » ajouté.`,
+    },
+    confirm: {
+      archiveTitle: 'Archiver cet e-mail ?',
+      archiveBody:
+        'La conversation quitte la boîte de réception et reste dans « Tous les messages ». Tu peux l’annuler tout de suite.',
+      trashTitle: 'Mettre à la corbeille ?',
+      trashBody:
+        'Google ne supprime les e-mails de la corbeille qu’après 30 jours. D’ici là tu peux les récupérer, et tu peux l’annuler tout de suite.',
+      labelTitle: 'Ajouter un libellé',
+      labelBody:
+        'Le libellé choisi est ajouté à toute la conversation. Tu peux l’annuler tout de suite.',
+      labelPick: 'Libellé',
+      labelNone: '– Choisir un libellé –',
+      labelConfirm: 'Ajouter le libellé',
+    },
+    compose: {
+      titleNew: 'Nouvel e-mail',
+      titleReply: 'Répondre',
+      titleForward: 'Transférer',
+      titleDraft: 'Brouillon',
+      to: 'À',
+      cc: 'Cc',
+      bcc: 'Cci',
+      moreRecipients: 'Copie cachée',
+      subject: 'Objet',
+      body: 'Texte',
+      attach: 'Ajouter une pièce jointe',
+      attachments: 'Pièces jointes',
+      attachNote:
+        'Les pièces jointes d’un e-mail ne sont pas transférées avec lui ; ajoute-les toi-même ici.',
+      removeAttachment: (name: string) => `Retirer la pièce jointe ${name}`,
+      fileTooLarge: (names: string) =>
+        `Trop volumineux pour une pièce jointe (15 Mo maximum) : ${names}`,
+      invalidAddress: (list: string) => `Ce n’est pas une adresse e-mail : ${list}`,
+      noRecipient: 'Indique au moins un destinataire.',
+      tooLarge: 'L’e-mail avec ses pièces jointes est trop volumineux (environ 18 Mo maximum).',
+      noSendPermission: 'Pour envoyer, active « Envoyer des e-mails » dans Connexions.',
+      discard: 'Abandonner',
+      saveDraft: 'Enregistrer le brouillon',
+      draftSaved: 'Brouillon enregistré.',
+      send: 'Continuer pour envoyer',
+      quoteHeader: (when: string, name: string) => `Le ${when}, ${name} a écrit :`,
+      forwardHeader: (from: string, when: string, subject: string) =>
+        `---------- Message transféré ----------\nDe : ${from}\nDate : ${when}\nObjet : ${subject}\n`,
+    },
+    review: {
+      title: 'Vérifier avant l’envoi',
+      noSubject: '(sans objet)',
+      emptyBody: '(sans texte)',
+      hint: 'L’e-mail ne part qu’après une courte attente. D’ici là tu peux le retirer.',
+      back: 'Retour à l’e-mail',
+      confirm: 'Confirmer l’envoi',
+    },
+    pending: {
+      waiting: (to: string, seconds: number) =>
+        `L’e-mail pour ${to} sera envoyé dans ${seconds} s.`,
+      sending: (to: string) => `Envoi de l’e-mail pour ${to} …`,
+      failed: (to: string) => `L’e-mail pour ${to} n’a pas pu être envoyé. Il n’a pas été remis.`,
+      sendNow: 'Envoyer maintenant',
+      withdraw: 'Retirer',
+      retry: 'Réessayer',
+      edit: 'Modifier',
+      sent: 'E-mail envoyé.',
+    },
   },
   widget: {
     unread: 'Non lus',
