@@ -8,7 +8,7 @@ import {
   type CompletionRequest,
   type CompletionResult,
 } from '../providers/types';
-import { clearAll, ctxFor, seed, TODAY, useFixedClock } from '../testing';
+import { clearAll, CORE_IDS, ctxFor, seed, TODAY, useFixedClock } from '../testing';
 import { loadUsageRows, totalsByStage } from '../usage';
 import { commitOps, undoGroup } from './commit';
 import { prepareProposal } from './prepare';
@@ -253,6 +253,31 @@ describe('targets, changes and deletions', () => {
     expect(await count('todos_task')).toBe(before - 1);
     await undoGroup(done.groupId, { manifests: ctx().known });
     expect(await count('todos_task')).toBe(before);
+  });
+
+  it('adds text to a note instead of replacing it, and undoes it', async () => {
+    const { noteRepo } = await import('@/modules/notes/repo');
+    const note = await noteRepo.create({
+      title: 'Gartenplan',
+      body: 'Beete umgraben',
+      pinned: false,
+      notebookId: null,
+      order: 0,
+    });
+    const withNotes = ctxFor([...CORE_IDS, 'notes']);
+    const proposal = await parseWrite('Ergänze die Notiz Gartenplan um Tomaten pflanzen', {
+      ...rules(),
+      manifests: withNotes.manifests,
+    });
+    expect(proposal?.ops[0]).toMatchObject({ module: 'notes', action: 'update' });
+    const [op] = await prepareProposal(proposal!.ops, withNotes);
+    expect(op).toMatchObject({ kind: 'update', targetId: note.id, ready: true });
+    expect(op!.data).toEqual({ body: 'Beete umgraben\n\nTomaten pflanzen' });
+
+    const done = await commitOps([op!], { manifests: ctx().known, source: 'test' });
+    expect((await noteRepo.get(note.id))?.body).toBe('Beete umgraben\n\nTomaten pflanzen');
+    await undoGroup(done.groupId, { manifests: ctx().known });
+    expect((await noteRepo.get(note.id))?.body).toBe('Beete umgraben');
   });
 
   it('does not overwrite an entry that changed after the preview', async () => {

@@ -59,6 +59,8 @@ export interface PageListProps {
   onDelete: (page: Page) => void;
   onReorder: (patches: { id: string; order: number }[]) => void;
   onOpenTrash: () => void;
+  onExport: () => void;
+  onImport: () => void;
 }
 
 const titleOf = (n: Page) => (isScratch(n) ? t.notes.scratch : displayTitle(n) || t.notes.untitled);
@@ -233,6 +235,14 @@ export function PageList(p: PageListProps) {
         <Button variant="ghost" onClick={p.onOpenTrash}>
           <Icon name="trash" size={16} />
           {t.notes.trash}
+        </Button>
+        <Button variant="ghost" onClick={p.onExport}>
+          <Icon name="download" size={16} />
+          {t.notes.exportMenu.button}
+        </Button>
+        <Button variant="ghost" onClick={p.onImport}>
+          <Icon name="upload" size={16} />
+          {t.notes.importMenu.button}
         </Button>
       </div>
     </nav>

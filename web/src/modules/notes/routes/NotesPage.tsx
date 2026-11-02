@@ -11,6 +11,8 @@ import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { useMediaQuery, useOpenParam } from '@/ui';
+import { ExportDialog, type ExportScope } from '../components/ExportDialog';
+import { ImportDialog } from '../components/ImportDialog';
 import { MoveDialog } from '../components/MoveDialog';
 import { NotebookDialog } from '../components/NotebookDialog';
 import { NotePane } from '../components/NotePane';
@@ -120,6 +122,8 @@ export default function NotesPage() {
     book: null,
   });
   const [trashOpen, setTrashOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const setSort = (s: SortMode) => {
     setSortState(s);
@@ -265,6 +269,32 @@ export default function NotesPage() {
     ? backlinksOf(subject, notes ?? []).map((n) => ({ id: n.id, title: titleOf(n) }))
     : [];
 
+  // What can be exported: the open page, its notebook (or the one shown), everything.
+  const exportBook = books.find((b) => b.id === (subject?.notebookId ?? newPageBook));
+  const exportScopes: ExportScope[] = [
+    ...(subject
+      ? [
+          {
+            id: 'page',
+            label: t.notes.exportMenu.scopePage,
+            name: titleOf(subject),
+            pages: [subject],
+          },
+        ]
+      : []),
+    ...(exportBook
+      ? [
+          {
+            id: 'book',
+            label: `${t.notes.exportMenu.scopeNotebook}: ${exportBook.name}`,
+            name: exportBook.name,
+            pages: (notes ?? []).filter((n) => n.notebookId === exportBook.id),
+          },
+        ]
+      : []),
+    { id: 'all', label: t.notes.exportMenu.scopeAll, name: t.notes.title, pages: notes ?? [] },
+  ];
+
   const fullscreen = () => {
     const el = document.documentElement;
     if (document.fullscreenElement) void document.exitFullscreen();
@@ -313,6 +343,8 @@ export default function NotesPage() {
               })()
             }
             onOpenTrash={() => setTrashOpen(true)}
+            onExport={() => setExportOpen(true)}
+            onImport={() => setImportOpen(true)}
           />
         ) : null}
         {showPane && !loadingPane ? (
@@ -393,6 +425,8 @@ export default function NotesPage() {
         onSaved={(id) => setFilter(id)}
       />
       <TrashDialog open={trashOpen} onClose={() => setTrashOpen(false)} />
+      <ExportDialog open={exportOpen} scopes={exportScopes} onClose={() => setExportOpen(false)} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </>
   );
 }

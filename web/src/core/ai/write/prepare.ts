@@ -12,6 +12,7 @@ import { formatFieldValue, fieldLabel } from '../query/format';
 import { AiQueryError, type ExecContext } from '../query/types';
 import { coerceValue, findField, findModule } from '../query/validate';
 import { aiModules } from '../scope';
+import { applyAppend } from './append';
 import { findTarget } from './targets';
 import type { DiffLine, PreparedOp, ProposedOp } from './types';
 import { t } from '@/strings';
@@ -166,7 +167,7 @@ export async function prepareOp(
   }
 
   // update / transition / delete act on an existing entry.
-  const patch =
+  const rawPatch =
     def.kind === 'transition'
       ? { ...def.set }
       : def.kind === 'update'
@@ -194,18 +195,19 @@ export async function prepareOp(
     if (found.match) target = (await table.get(found.match.id)) ?? undefined;
   }
 
-  const missing = def.kind === 'update' && Object.keys(patch).length === 0 ? ['change'] : [];
+  const missing = def.kind === 'update' && Object.keys(rawPatch).length === 0 ? ['change'] : [];
   if (!target) {
     return {
       ...base,
       candidates,
-      data: patch,
-      lines: diff(manifest, def.collection, patch),
+      data: rawPatch,
+      lines: diff(manifest, def.collection, rawPatch),
       missing,
       needsTarget: true,
       ready: false,
     };
   }
+  const patch = def.kind === 'update' ? applyAppend(rawPatch, target, def.append) : rawPatch;
   const targetTitle = String(target[schema.titleField] ?? '');
   if (def.kind === 'delete') {
     const before = stripEnvelope(target);
