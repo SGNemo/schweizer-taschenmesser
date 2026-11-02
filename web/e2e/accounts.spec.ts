@@ -224,3 +224,54 @@ test('the vault search key focuses the search, but only while unlocked', async (
   expect(page.url()).toBe(before);
   await expect(page.getByRole('button', { name: 'Neues Passwort' })).toHaveCount(0);
 });
+
+test('the anonymous persona is handed to the vault form: filled in, saved encrypted, nothing in the address', async ({
+  page,
+}) => {
+  test.setTimeout(90_000); // the vault is created twice with Argon2id
+  await setUp(page);
+
+  // switch the tool on, invent a persona, hand it to the vault
+  await page.goto('/tools');
+  const card = page.getByTestId('tool-persona');
+  await card.getByLabel('Anonyme Persona einschalten').click();
+  await expect(card.getByLabel('Anonyme Persona einschalten')).toBeChecked();
+  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
+  const sheet = page.getByRole('dialog');
+  await sheet.getByRole('button', { name: 'Anonyme Persona', exact: true }).click();
+  const fields = sheet.getByTestId('persona-fields');
+  await expect(fields).toContainText('Passwort');
+  await sheet.getByRole('button', { name: 'Im Tresor speichern' }).click();
+
+  // The page load above locked the vault (the keys live in memory only): the entry waits behind the unlock.
+  await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
+  await page.getByRole('button', { name: 'Entsperren' }).click();
+
+  // the vault page opens its normal form with the values filled in; only a flag was in the address
+  const form = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+  await expect(form).toBeVisible({ timeout: 20_000 });
+  await expect(page).toHaveURL(/\/accounts$/);
+  const title = await form.getByLabel('Name', { exact: true }).inputValue();
+  const username = await form.getByLabel('Benutzername').inputValue();
+  const password = await form.getByLabel('Passwort', { exact: true }).inputValue();
+  expect(title).toMatch(/^Anonyme Persona: /);
+  expect(username).toMatch(/^[a-z0-9._]{4,}$/);
+  expect(password).toHaveLength(16);
+  await expect(form.getByLabel('Notizen')).toContainText('Geburtsdatum: ');
+  await form.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('dialog', { name: 'Zugang hinzufügen' })).toHaveCount(0);
+  await expect(page.getByText(title).first()).toBeVisible();
+
+  // at rest: ciphertext only, and the hand-over is gone after a reload
+  const stored = await storedText(page);
+  expect(stored).not.toContain(password);
+  expect(stored).not.toContain(username);
+  expect(stored).not.toContain(title);
+  await page.goto('/accounts?handoff=1');
+  await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
+  await page.getByRole('button', { name: 'Entsperren' }).click();
+  await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(page.getByRole('dialog', { name: 'Zugang hinzufügen' })).toHaveCount(0);
+});

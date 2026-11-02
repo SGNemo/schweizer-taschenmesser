@@ -1,3 +1,9 @@
+import {
+  clearVaultEntry,
+  HANDOFF_PARAM,
+  peekVaultEntry,
+  vaultEntryVersion,
+} from '@/core/handoff/vaultEntry';
 import { compareText } from '@/core/i18n/format';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -83,9 +89,26 @@ function Unlocked() {
   const data = useEntries();
   const [query, setQuery] = useState('');
   const [detailId, setDetailId] = useState<string | null>(null);
+  // `?handoff=1`: a tool (anonymous persona) handed over a new entry; the form opens with it filled in. It is
+  // only read here (and forgotten right below), never stored; saving works like for any entry. Also works when
+  // this page is already open: a new offer has a new version.
+  const [params, setParams] = useSearchParams();
   const [form, setForm] = useState<EntryTarget>(null);
+  const [takenVersion, setTakenVersion] = useState(-1);
+  const handoffFlag = params.get(HANDOFF_PARAM) === '1';
+  const handed = handoffFlag ? peekVaultEntry() : undefined;
+  if (handed && vaultEntryVersion() !== takenVersion) {
+    setTakenVersion(vaultEntryVersion());
+    setForm({ draft: true, prefill: handed });
+  }
+  useEffect(() => {
+    if (!handoffFlag) return;
+    clearVaultEntry();
+    const next = new URLSearchParams(params);
+    next.delete(HANDOFF_PARAM);
+    setParams(next, { replace: true });
+  }, [handoffFlag, params, setParams]);
   // `?tools=1` (setup "Umzug": Bitwarden): open import & export right away.
-  const [params] = useSearchParams();
   const [tools, setTools] = useState(params.get('tools') === '1');
   const [generator, setGenerator] = useState(false);
   const [bridge, setBridge] = useState(false);

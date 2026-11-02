@@ -13,6 +13,7 @@ vi.mock('@/core/modules/activation', async (orig) => ({
 }));
 
 import { setSettings } from '@/core/settings/settings';
+import { clearVaultEntry, peekVaultEntry } from '@/core/handoff/vaultEntry';
 import { t } from '@/strings';
 import PersonaTool from './View';
 import { postcodeFits } from './logic';
@@ -179,6 +180,36 @@ describe('persona tool', () => {
     cleanup();
     wrap();
     await waitFor(() => expect(screen.getByLabelText(s.mailProvider)).toHaveValue('tenminute'));
+  });
+
+  it('offers "save in the vault" only while the vault is on, and hands the entry over in memory only', async () => {
+    const user = userEvent.setup();
+    clearVaultEntry();
+    const first = wrap();
+    await screen.findByTestId('persona-fields');
+    expect(screen.queryByRole('button', { name: s.saveVault })).toBeNull();
+    first.unmount();
+    modules.states = { accounts: true };
+    wrap();
+    const username = await waitFor(() => rowValue(s.fields.username));
+    const password = rowValue(s.fields.password);
+    const first1 = rowValue(s.fields.firstName);
+    const last = rowValue(s.fields.lastName);
+    await user.click(await screen.findByRole('button', { name: s.saveVault }));
+    // only the flag is in the address
+    const where = screen.getByTestId('where').textContent!;
+    expect(where).toBe('/accounts?handoff=1');
+    expect(where).not.toContain(password);
+    // the entry: name, user name, password in their own fields, the rest as notes without user name and password
+    const handed = peekVaultEntry()!;
+    expect(handed.title).toBe(`${s.noteTitle}: ${first1} ${last}`);
+    expect(handed.username).toBe(username);
+    expect(handed.password).toBe(password);
+    expect(handed.notes).toContain(`${s.fields.city}: `);
+    expect(handed.notes).toContain(`${s.fields.birth}: `);
+    expect(handed.notes).not.toContain(password);
+    expect(handed.notes).not.toContain(`${s.fields.username}: `);
+    clearVaultEntry();
   });
 
   it('offers "save as note" only while Notizen is on, and hands over the lines', async () => {

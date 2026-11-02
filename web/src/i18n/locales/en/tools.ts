@@ -457,6 +457,7 @@ export const tools: Strings['tools'] = {
     rerollAll: 'Re-roll all',
     copyAll: 'Copy all',
     saveNote: 'Save as note',
+    saveVault: 'Save in the vault',
     noteTitle: 'Anonymous persona',
     noteWarn: 'The note includes the password and is not encrypted.',
     mail: 'Open disposable mail',

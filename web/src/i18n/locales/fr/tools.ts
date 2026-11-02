@@ -463,6 +463,7 @@ export const tools: Strings['tools'] = {
     rerollAll: 'Tout regénérer',
     copyAll: 'Tout copier',
     saveNote: 'Enregistrer en note',
+    saveVault: 'Enregistrer dans le coffre-fort',
     noteTitle: 'Persona anonyme',
     noteWarn: 'La note contient aussi le mot de passe et n’est pas chiffrée.',
     mail: 'Ouvrir un e-mail jetable',

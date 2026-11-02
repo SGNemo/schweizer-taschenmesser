@@ -61,6 +61,7 @@ import { tWeather } from '@/strings.weather';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 import { SetupSection } from './SetupSection';
 import { SyncSection } from './SyncSection';
+import { PersonaSection } from './PersonaSection';
 import { ToolsSection } from './ToolsSection';
 import { UpdateSection } from './UpdateSection';
 
@@ -526,6 +527,22 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       return s.searchWords.tools;
     },
     render: () => <ToolsSection />,
+  },
+  {
+    id: 'tools-persona',
+    category: 'werkzeuge',
+    maturity: 'stable',
+    order: 20,
+    get title() {
+      return t.tools.persona.name;
+    },
+    get description() {
+      return t.tools.persona.mailHint;
+    },
+    get keywords() {
+      return s.searchWords.persona;
+    },
+    render: () => <PersonaSection />,
   },
   {
     id: 'notifications',

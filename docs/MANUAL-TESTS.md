@@ -424,7 +424,9 @@ D11. *Entfernen:* „Aus der Liste entfernen“ lässt die Dateien, „Mit Datei
 D12. *IP und Ausschalten:* „IP-Adresse anzeigen“ fragt erst auf den Klick (api.ipify.org). „Torrent-Teil ausschalten“ beendet die Engine; kein Netzverkehr der Torrents mehr (Ressourcenmonitor). Rechner ohne IPv6 (selten): „konnte nicht starten“. ☐
 
 ### Anonyme Persona (Branch `feat/tool-anonymous-persona`)
-P1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
-P2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
-P3. *Telefon:* Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
-P4. *Android:* die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐
+AP1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
+AP2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
+AP3. *Telefon:* Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
+AP4. *Android:* die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐
+AP5. *Einstellungen:* Einstellungen → Werkzeuge → „Anonyme Persona“: Anbieter ändern; im Werkzeug zeigt „Wegwerf-Mail öffnen“ den gleichen Anbieter und öffnet dessen Seite. ☐
+AP6. *Tresor:* Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang hinzufügen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Speichern“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
