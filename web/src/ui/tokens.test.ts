@@ -97,6 +97,35 @@ describe('design tokens', () => {
           }
         }
       });
+      it('module hues are visible on surface and surface-2 and never read as a state colour', () => {
+        const hueOf = (hex: string): number => {
+          const [r, g, b] = hex
+            .replace('#', '')
+            .match(/../g)!
+            .map((h) => parseInt(h, 16) / 255);
+          const max = Math.max(r!, g!, b!);
+          const min = Math.min(r!, g!, b!);
+          const d = max - min;
+          if (d === 0) return 0;
+          const h =
+            max === r ? ((g! - b!) / d) % 6 : max === g ? (b! - r!) / d + 2 : (r! - g!) / d + 4;
+          return (h * 60 + 360) % 360;
+        };
+        const apart = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+        const hues = Object.keys(t).filter((k) => k.startsWith('--mod-'));
+        expect(hues).toHaveLength(10);
+        for (const key of hues) {
+          text(key, '--surface', 3);
+          text(key, '--surface-2', 3);
+          // Slate is the grey of the palette: it has no hue to keep apart.
+          if (key === '--mod-slate') continue;
+          for (const status of ['--danger', '--accent', '--warning', '--success'])
+            expect(
+              apart(hueOf(t[key]!), hueOf(t[status]!)),
+              `${key} (${t[key]}) too close to ${status} (${t[status]})`,
+            ).toBeGreaterThanOrEqual(25);
+        }
+      });
       it('page background and text on the filled accent', () => {
         text('--accent', '--bg');
         text('--accent-contrast', '--accent');
@@ -121,6 +150,16 @@ describe('design tokens', () => {
       expect(light[`--${s}-ink`], `--${s}-ink`).toMatch(/^color-mix\(/);
     }
     expect(css).not.toMatch(/--accent-2/);
+  });
+
+  it('the calm colour mode and the module-colours switch grey out every module hue; every hue has a data-hue rule', () => {
+    const calm = block(":root[data-color='calm']");
+    const off = block(":root[data-module-colors='off']");
+    for (const key of Object.keys(light).filter((k) => k.startsWith('--mod-'))) {
+      expect(calm[key], `${key} in calm`).toBe('var(--text-3)');
+      expect(off[key], `${key} with module colours off`).toBe('var(--text-3)');
+      expect(css, `data-hue rule for ${key}`).toContain(`[data-hue='${key.slice(6)}']`);
+    }
   });
 
   it('radii follow the spec (8 / 12 / 16 / 20)', () => {

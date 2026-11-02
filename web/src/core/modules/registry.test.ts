@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { allManifests, availableManifestsFor, isAvailableOn, validateManifest } from './registry';
+import { MODULE_HUES, WIDGET_TYPES } from './types';
 
 describe('module registry', () => {
   it('discovers manifests', () => {
@@ -36,6 +37,35 @@ describe('module registry', () => {
     // Retired ids stay in allManifests (schema, sync, backup) but never reach runtime lists.
     for (const m of allManifests.filter((x) => x.retired))
       expect(availableManifestsFor('desktop').map((x) => x.id)).not.toContain(m.id);
+  });
+
+  it('requires an identity with a palette hue and a catalogue widget type', () => {
+    const base = allManifests[0]!;
+    expect(validateManifest({ ...base, identity: undefined as never })).toHaveLength(1);
+    expect(
+      validateManifest({ ...base, identity: { hue: 'mauve' as never, widgetType: 'kpi' } }),
+    ).toHaveLength(1);
+    expect(
+      validateManifest({ ...base, identity: { hue: 'teal', widgetType: 'chart' as never } }),
+    ).toHaveLength(1);
+  });
+
+  it('no two modules of one navigation area share a hue (the palette has ten; areas are small)', () => {
+    const seen = new Map<string, string>();
+    for (const m of allManifests.filter((x) => !x.retired && x.area)) {
+      const key = `${m.area}:${m.identity.hue}`;
+      expect(
+        seen.get(key),
+        `${m.id} and ${seen.get(key)} share "${m.identity.hue}" in ${m.area}`,
+      ).toBeUndefined();
+      seen.set(key, m.id);
+    }
+  });
+
+  it('the static checker (npm run check:modules) knows the same hues and widget types', async () => {
+    const lib = await import('../../../scripts/lib/checkModules');
+    expect(lib.HUES).toEqual([...MODULE_HUES]);
+    expect(lib.WIDGET_TYPES).toEqual([...WIDGET_TYPES]);
   });
 
   it('rejects bad manifests', () => {

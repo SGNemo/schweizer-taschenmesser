@@ -12,6 +12,7 @@ const manifest: ModuleManifest = {
     return t.finance.meta.name;
   },
   icon: 'wallet',
+  identity: { hue: 'teal', widgetType: 'kpi' },
   version: 3,
   get description() {
     return t.finance.meta.description;
@@ -65,6 +66,7 @@ const manifest: ModuleManifest = {
       },
     ],
     services: () => import('./services'),
+    headline: () => import('./headline'),
     aiCreateDefaults: () => import('./aiDefaults'),
     aiComputed: () => import('./aiComputed'),
   },

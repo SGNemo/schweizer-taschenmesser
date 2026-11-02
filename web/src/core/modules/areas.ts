@@ -1,7 +1,7 @@
 import type { IconName } from '@/ui/icons';
 import { t } from '@/strings';
 import type { ModuleStates } from './activation';
-import { AREAS, type AreaId, type ModuleManifest } from './types';
+import { AREAS, type AreaId, type ModuleHue, type ModuleManifest } from './types';
 
 /** Path of each area page; it redirects to the module last used there (see `areaTarget`). */
 export const AREA_PATHS: Record<AreaId, string> = {
@@ -34,6 +34,8 @@ export interface NavItem {
   moduleId?: string;
   /** Area of the module; drives the icon colour (`data-area`). */
   area?: AreaId;
+  /** Module hue (`manifest.identity`): the active item's icon takes it (`data-hue`). */
+  hue?: ModuleHue;
 }
 
 export interface NavArea {
@@ -65,6 +67,7 @@ export function moduleNavItems(manifests: readonly ModuleManifest[], states: Mod
             icon: m.icon,
             moduleId: m.id,
             area: m.area!,
+            hue: m.identity?.hue,
           } satisfies NavItem,
         })),
     );

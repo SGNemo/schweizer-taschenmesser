@@ -2448,6 +2448,9 @@ export const de = {
     },
     title: 'Finanzen',
     balance: 'Kontostand',
+    headline: {
+      accounts: (n: number) => (n === 1 ? '1 Konto' : `${n} Konten`),
+    },
     available: 'Verfügbar',
     tabs: {
       overview: 'Übersicht',

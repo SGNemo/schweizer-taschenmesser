@@ -210,6 +210,8 @@
 }
 .weekDay.todayCell {
   border-color: var(--accent);
+  /* Today also carries the calendar's own edge (module identity); the accent border still says "today". */
+  border-left: 4px solid var(--module-color, var(--accent));
 }
 .weekDayEmpty {
   display: flex;

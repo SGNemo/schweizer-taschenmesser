@@ -8,6 +8,8 @@ import type {
   CalendarItem,
   DateRange,
   DueNotification,
+  HeadlineFigure,
+  ModuleHue,
   ModuleManifest,
 } from './types';
 
@@ -119,6 +121,40 @@ export function useAttentionItems(): AttentionItem[] | undefined {
     .join(',');
   return useLiveQuery(
     async () => (states ? collectAttention(today(), activeManifests(states)) : undefined),
+    [key, states === undefined],
+  );
+}
+
+/** Large figures of all given (active) modules for the cockpit, in manifest order; a failing module is skipped. */
+export async function collectHeadlines(
+  day: string,
+  manifests: readonly ModuleManifest[],
+): Promise<(HeadlineFigure & { moduleId: string; hue: ModuleHue })[]> {
+  const figures = await Promise.all(
+    manifests.map(async (m) => {
+      const load = m.contributions?.headline;
+      if (!load) return undefined;
+      try {
+        const figure = await (await load()).default({ today: day });
+        return figure ? { ...figure, moduleId: m.id, hue: m.identity.hue } : undefined;
+      } catch (e) {
+        console.error(`[headline] source "${m.id}" failed`, e);
+        return undefined;
+      }
+    }),
+  );
+  return figures.filter((f) => f !== undefined);
+}
+
+/** Live headline figures; `undefined` while loading. */
+export function useHeadlines():
+  (HeadlineFigure & { moduleId: string; hue: ModuleHue })[] | undefined {
+  const states = useModuleStates();
+  const key = activeManifests(states)
+    .map((m) => m.id)
+    .join(',');
+  return useLiveQuery(
+    async () => (states ? collectHeadlines(today(), activeManifests(states)) : undefined),
     [key, states === undefined],
   );
 }

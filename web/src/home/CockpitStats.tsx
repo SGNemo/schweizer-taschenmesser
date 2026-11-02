@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { dateTimeFormat } from '@/core/i18n/format';
-import { rankAttention, useAttentionItems, useCalendarItems } from '@/core/modules/contributions';
+import {
+  rankAttention,
+  useAttentionItems,
+  useCalendarItems,
+  useHeadlines,
+} from '@/core/modules/contributions';
+import { getManifest } from '@/core/modules/registry';
+import { Icon } from '@/ui';
 import { useLiveAttention } from '@/core/modules/liveAttention';
 import { now, pad2, today } from '@/core/time/now';
 import { tCockpit } from '@/strings.cockpit';
@@ -37,6 +44,7 @@ export function CockpitStats() {
   const attention = useAttentionItems();
   const live = useLiveAttention((s) => s.bySource);
   const open = rankAttention([...(attention ?? []), ...Object.values(live).flat()]).length;
+  const headlines = useHeadlines() ?? [];
   return (
     <section className={styles.strip} aria-label={tx.stats} data-testid="cockpit-stats">
       <div className={styles.tile}>
@@ -69,6 +77,25 @@ export function CockpitStats() {
           {open === 0 ? tx.attentionNone : tx.attentionCount(open)}
         </span>
       </div>
+      {headlines.map((h) => (
+        <div
+          key={h.moduleId}
+          className={styles.tile}
+          data-hue={h.hue}
+          data-testid={`cockpit-headline-${h.moduleId}`}
+        >
+          <span className={styles.label}>
+            <span className={styles.chip} aria-hidden="true">
+              <Icon name={getManifest(h.moduleId)?.icon ?? 'puzzle'} size={14} />
+            </span>
+            {h.label}
+          </span>
+          <Link to={h.to ?? `/${h.moduleId}`} className={styles.value}>
+            {h.value}
+          </Link>
+          {h.detail ? <span className={styles.context}>{h.detail}</span> : null}
+        </div>
+      ))}
     </section>
   );
 }
