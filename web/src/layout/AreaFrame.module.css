@@ -74,4 +74,11 @@
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: 'eyebrow actions';
   }
+  /* One line only: the edge stays, the chip goes (the widget cards and the nav icon still show it). */
+  .frame[data-hue] {
+    padding-left: var(--space-2);
+  }
+  .chip {
+    display: none;
+  }
 }
