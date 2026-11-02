@@ -6,6 +6,12 @@ import { redactWith } from './redact';
 import { ConnectorError, type ConnectorContext, type ConnectorDef } from './types';
 
 export const secretName = (id: string, name: string) => `oauth:${id}:${name}`;
+/**
+ * Key of one login: the connector id for the first account (existing keystore entries stay valid),
+ * `<id>#<accountId>` for additional ones. Client id/secret always belong to the connector itself.
+ */
+export const accountKey = (id: string, accountId?: string) =>
+  accountId ? `${id}#${accountId}` : id;
 export const connectorSecret = (id: string, name: string) => `connector:${id}:${name}`;
 
 /** Access tokens live in memory only (they expire within an hour anyway). */
@@ -15,38 +21,43 @@ export function forgetAccessToken(id: string): void {
   tokenCache.delete(id);
 }
 
-export async function loadClient(id: string) {
+export async function loadClient(id: string, accountId?: string) {
   const { secrets } = getPlatform();
   return {
     clientId: await secrets.get(secretName(id, 'client-id')),
     clientSecret: await secrets.get(secretName(id, 'client-secret')),
-    refreshToken: await secrets.get(secretName(id, 'refresh')),
+    refreshToken: await secrets.get(secretName(accountKey(id, accountId), 'refresh')),
   };
 }
 
-export function createContext(def: ConnectorDef, now: () => number = Date.now): ConnectorContext {
+export function createContext(
+  def: ConnectorDef,
+  now: () => number = Date.now,
+  accountId?: string,
+): ConnectorContext {
+  const key = accountKey(def.id, accountId);
   const platform = getPlatform();
   const literals: (string | undefined)[] = [];
   const redact = (text: string) => redactWith(text, literals);
 
   async function accessToken(opts?: { refresh?: boolean }): Promise<string> {
-    const cached = opts?.refresh ? undefined : tokenCache.get(def.id);
+    const cached = opts?.refresh ? undefined : tokenCache.get(key);
     if (cached && cached.expiresAt - 60_000 > now()) return cached.token;
     if (!def.oauth) throw new ConnectorError('unsupported', 'no oauth');
-    const { clientId, clientSecret, refreshToken } = await loadClient(def.id);
+    const { clientId, clientSecret, refreshToken } = await loadClient(def.id, accountId);
     literals.push(clientId, clientSecret, refreshToken);
     if (!clientId || !refreshToken) throw new ConnectorError('expired', 'not signed in');
     const tokens = await refreshTokens(
       { fetch: platform.fetch, endpoints: def.oauth, clientId, clientSecret },
       refreshToken,
     );
-    tokenCache.set(def.id, {
+    tokenCache.set(key, {
       token: tokens.accessToken,
       expiresAt: now() + tokens.expiresIn * 1000,
     });
     // Google may rotate the refresh token; keep the newest one.
     if (tokens.refreshToken && tokens.refreshToken !== refreshToken)
-      await platform.secrets.set(secretName(def.id, 'refresh'), tokens.refreshToken);
+      await platform.secrets.set(secretName(key, 'refresh'), tokens.refreshToken);
     return tokens.accessToken;
   }
 
@@ -73,5 +84,6 @@ export function createContext(def: ConnectorDef, now: () => number = Date.now): 
       delete: (name) => platform.secrets.delete(connectorSecret(def.id, name)),
     },
     redact,
+    accountId,
   };
 }

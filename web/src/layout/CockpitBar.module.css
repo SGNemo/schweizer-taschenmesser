@@ -1,0 +1,105 @@
+/* Floating mini bar of the cockpit: a thin grip at the top edge, the bar slides down over the widgets. */
+.host {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: var(--z-nav);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.grip {
+  pointer-events: auto;
+  order: 2;
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  /* A real 44 px target that only draws a thin pill; it sits just below the top edge. */
+  height: var(--touch);
+  margin-top: calc(-1 * var(--space-5));
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--text-3);
+}
+.grip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -4px;
+  border-radius: var(--radius-full);
+}
+.gripLine {
+  display: block;
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+  opacity: 0.7;
+}
+.bar {
+  pointer-events: auto;
+  order: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: min(100%, var(--page-content));
+  padding: var(--space-2) var(--space-3);
+  padding-top: calc(var(--space-2) + env(safe-area-inset-top));
+  background: var(--surface);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-100%);
+  opacity: 0;
+  transition:
+    transform var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.host[data-open='true'] .bar {
+  transform: none;
+  opacity: 1;
+}
+/* Keyboard users reach the bar with Tab even while it is hidden: it is only moved, never display:none. */
+.host:not([data-open='true']) .bar:focus-within {
+  transform: none;
+  opacity: 1;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+.search:hover {
+  border-color: var(--accent);
+}
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 599px) {
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+.clock {
+  padding: 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}

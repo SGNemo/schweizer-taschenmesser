@@ -7,6 +7,7 @@ import { noLocalModel } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
 import type {
+  DisplayService,
   DesktopService,
   PlatformKind,
   PlatformService,
@@ -147,6 +148,45 @@ export const webDesktop: DesktopService = {
 /** The PWA receives shares through its web manifest (`share_target`), not through this service. */
 export const webShare: ShareService = { supported: false, takePending: async () => undefined };
 
+/** Browser: the Fullscreen API and the screen wake lock; immersive mode does not exist here. */
+export function createWebDisplay(
+  doc: Document | undefined = typeof document === 'undefined' ? undefined : document,
+): DisplayService {
+  const supported = typeof doc?.documentElement?.requestFullscreen === 'function';
+  return {
+    fullscreenSupported: supported,
+    async setFullscreen(on) {
+      if (!supported || !doc) return;
+      try {
+        if (on && !doc.fullscreenElement) await doc.documentElement.requestFullscreen();
+        else if (!on && doc.fullscreenElement) await doc.exitFullscreen();
+      } catch {
+        // Refused without a user gesture or by the embedder; the cockpit works without it.
+      }
+    },
+    isFullscreen: async () => !!doc?.fullscreenElement,
+    setImmersive: async () => undefined,
+    setKeepAwake: createWakeLock(),
+  };
+}
+
+/** `navigator.wakeLock` where it exists; released again on `false`. */
+function createWakeLock(): DisplayService['setKeepAwake'] {
+  let lock: WakeLockSentinel | undefined;
+  return async (on) => {
+    try {
+      if (on && !lock && typeof navigator !== 'undefined')
+        lock = await navigator.wakeLock?.request('screen');
+      else if (!on && lock) {
+        await lock.release();
+        lock = undefined;
+      }
+    } catch {
+      lock = undefined; // not granted (hidden tab, battery saver): nothing to hold
+    }
+  };
+}
+
 export function createWebPlatform(): PlatformService {
   return {
     kind: isE2eBuild() ? e2eKind() : 'web',
@@ -193,6 +233,7 @@ export function createWebPlatform(): PlatformService {
       remove: async () => undefined,
     },
     screen: { setSecure: async () => undefined },
+    display: createWebDisplay(),
     // No listening sockets in a browser: OAuth logins that need a loopback redirect are desktop-only.
     oauth: { supported: false, start: unsupported },
     // E2E builds only: a stand-in for the native server (the branch is removed from other builds).

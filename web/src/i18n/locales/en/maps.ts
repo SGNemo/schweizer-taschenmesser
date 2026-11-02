@@ -83,6 +83,10 @@ export const maps: Strings['maps'] = {
   map: {
     search: 'Find a place or address',
     searchHint: 'Name, address or coordinates – for example “Schlossplatz Erlangen”.',
+    ownHits: 'From your map',
+    onlineHits: 'Found online',
+    searchOnline: 'Search online as well',
+    noneOwn: 'Your map knows nothing about that.',
     searchButton: 'Search',
     searching: 'Searching …',
     noResults: 'Nothing found. Try another spelling.',
@@ -179,6 +183,14 @@ export const maps: Strings['maps'] = {
     fileUnreachable:
       'The region file cannot be reached right now. The map is built from the Overpass service.',
     fromFile: 'from region file',
+    kinds: {
+      place: 'Place',
+      street: 'Street',
+      water: 'Water',
+      poi: 'Venue',
+      area: 'Area',
+      other: 'Entry',
+    },
     reasons: {
       busy: 'The map service is busy right now. Continue later.',
       network: 'The map service cannot be reached right now. Continue later.',

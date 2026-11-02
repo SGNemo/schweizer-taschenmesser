@@ -46,7 +46,8 @@ import { createLocalTiles } from '../own/local';
 import { tileId, tilesCovering } from '../own/cut';
 import { CELL_ZOOM, regionName, viewportBbox } from '../own/plan';
 import { watchTheme } from '../own/theme';
-import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
+import { searchOwn, type OwnHit } from '../own/search';
+import { nameRepo, placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 import { connectionPath, fetchConnections } from '../transit';
 import { describeStep, fetchPlan, isDrivingMode, splitDuration, type Plan } from '../routing';
 import type { Endpoint, Place, Route } from '../schema';
@@ -229,6 +230,7 @@ export default function MapsPage() {
   const [ready, setReady] = useState(false);
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<Hit[]>();
+  const [ownHits, setOwnHits] = useState<Hit[]>();
   const [searching, setSearching] = useState<'idle' | 'busy' | 'error'>('idle');
   const [note, setNote] = useState('');
   const [shown, setShown] = useState<Shown>();
@@ -288,21 +290,80 @@ export default function MapsPage() {
     setTab('map');
   }
 
+  const online = () => searchPlaces(query, { baseUrl: searchUrl, lang: getLang().split('-')[0]! });
+
+  /** A hit of the own map as the list shows it: the name, kind and region underneath. */
+  function ownToHit(h: OwnHit, regionNames: Map<string, string>): Hit {
+    const region = regionNames.get(h.regionId);
+    const kind = t.maps.own.kinds[h.kind];
+    return {
+      label: h.name,
+      lat: h.lat,
+      lon: h.lon,
+      detail: region ? `${kind} · ${region}` : kind,
+      own: true,
+    };
+  }
+
+  /**
+   * The own map answers first (nothing leaves the device); the online search follows only when the
+   * own map knows nothing, and never by itself with "Nur eigene Karte". Coordinates need no service.
+   */
   async function search(e: FormEvent) {
     e.preventDefault();
     if (query.trim().length < 2) return;
     setSearching('busy');
     setNote('');
+    setHits(undefined);
+    setOwnHits(undefined);
     try {
       await requireNotice('maps');
       setReady(true);
-      setHits(await searchPlaces(query, { baseUrl: searchUrl, lang: getLang().split('-')[0]! }));
+      if (parseCoordinates(query)) {
+        setHits(await online());
+      } else {
+        await builder.ensureIndexed();
+        const own = await searchOwn(query, nameRepo, { lat: view.lat, lon: view.lon });
+        const regionNames = new Map(
+          (await regionRepo.active().toArray()).map((r) => [r.id, r.name] as const),
+        );
+        setOwnHits(own.map((h) => ownToHit(h, regionNames)));
+        if (own.length === 0 && !offlineOnly) setHits(await online());
+      }
       setSearching('idle');
     } catch {
       setHits(undefined);
       setSearching('error');
     }
   }
+
+  /** "Online weitersuchen": the same words go to the search service, on this click only. */
+  async function searchOnline() {
+    setSearching('busy');
+    try {
+      setHits(await online());
+      setSearching('idle');
+    } catch {
+      setHits(undefined);
+      setSearching('error');
+    }
+  }
+
+  const hitList = (list: Hit[], testId: string) => (
+    <ul className={styles.hits} data-testid={testId}>
+      {list.map((h) => (
+        <li key={`${h.lat},${h.lon},${h.label}`}>
+          <button type="button" className={styles.hit} onClick={() => choose(h)}>
+            <Icon name="mapPin" size={18} />
+            <span className={styles.hitText}>
+              {h.label}
+              {h.detail ? <span className={styles.hitDetail}>{h.detail}</span> : null}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
 
   /** Only on click and after the notice: asks the routing service, then shows the line on the map. */
   async function calculate(r: Stored<Route>) {
@@ -356,6 +417,7 @@ export default function MapsPage() {
 
   function choose(h: Hit) {
     setHits(undefined);
+    setOwnHits(undefined);
     setQuery('');
     setSelected({ lat: h.lat, lon: h.lon, label: h.label, ...(h.bbox ? { bbox: h.bbox } : {}) });
     setMapView({ lat: h.lat, lon: h.lon, zoom: 16 });
@@ -585,19 +647,31 @@ export default function MapsPage() {
           </form>
           <p className={styles.note}>{t.maps.map.searchHint}</p>
           {searching === 'error' ? <p className={styles.note}>{t.maps.map.unreachable}</p> : null}
-          {hits && hits.length === 0 ? <p className={styles.note}>{t.maps.map.noResults}</p> : null}
-          {hits && hits.length > 0 ? (
-            <ul className={styles.hits} data-testid="map-hits">
-              {hits.map((h) => (
-                <li key={`${h.lat},${h.lon},${h.label}`}>
-                  <button type="button" className={styles.hit} onClick={() => choose(h)}>
-                    <Icon name="mapPin" size={18} />
-                    <span>{h.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {ownHits && ownHits.length > 0 ? (
+            <>
+              <p className={styles.note}>{t.maps.map.ownHits}</p>
+              {hitList(ownHits, 'map-own-hits')}
+            </>
           ) : null}
+          {ownHits && ownHits.length === 0 && !hits && searching === 'idle' ? (
+            <p className={styles.note}>{t.maps.map.noneOwn}</p>
+          ) : null}
+          {ownHits && !hits && searching === 'idle' ? (
+            <div>
+              <Button
+                variant="secondary"
+                onClick={() => void searchOnline()}
+                data-testid="map-search-online"
+              >
+                {t.maps.map.searchOnline}
+              </Button>
+            </div>
+          ) : null}
+          {hits && ownHits && ownHits.length > 0 ? (
+            <p className={styles.note}>{t.maps.map.onlineHits}</p>
+          ) : null}
+          {hits && hits.length === 0 ? <p className={styles.note}>{t.maps.map.noResults}</p> : null}
+          {hits && hits.length > 0 ? hitList(hits, 'map-hits') : null}
           {note ? <p className={styles.note}>{note}</p> : null}
 
           {ready && regions && prefs ? (

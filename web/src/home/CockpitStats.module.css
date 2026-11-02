@@ -1,0 +1,39 @@
+/* Three large figures above the cockpit grid; same anatomy as the KPI widget (label → value → context). */
+.strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--grid-gap);
+  margin-bottom: var(--grid-gap);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+.label {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.value {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+  line-height: 1.1;
+  color: inherit;
+  text-decoration: none;
+}
+a.value:hover {
+  text-decoration: underline;
+}
+.context {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

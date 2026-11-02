@@ -29,6 +29,8 @@ import { useTools } from '@/core/tools/state';
 import type { ToolAnswer } from '@/core/tools/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
+import { tCockpit } from '@/strings.cockpit';
+import { enterCockpit, exitCockpit } from './useCockpit';
 import { Button, Dialog, Icon, Keys, type IconName } from '@/ui';
 import { paletteKeys } from '@/core/keyboard/labels';
 import { useShortcutPrefs } from '@/core/keyboard/prefs';
@@ -117,6 +119,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const preferModule = availableManifests().find(
     (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
   )?.id;
+  const cockpit = useUiStore((s) => s.cockpit);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const listId = useId();
@@ -186,6 +189,21 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         label: t.palette.randomReminder,
         icon: 'bell',
         run: () => openReminderCenter('random'),
+      },
+      {
+        id: 'cockpit',
+        label: cockpit ? tCockpit.get().exit : tCockpit.get().enter,
+        icon: cockpit ? ('minimize' as IconName) : ('maximize' as IconName),
+        run: () => (cockpit ? exitCockpit() : enterCockpit((to) => void navigate(to), pathname)),
+      },
+      {
+        id: 'cockpit-edit',
+        label: tCockpit.get().customize,
+        icon: 'edit' as IconName,
+        run: () => {
+          if (!cockpit) enterCockpit((to) => void navigate(to), pathname);
+          useUiStore.getState().setHomeEditing(true);
+        },
       },
       { id: 'library', label: t.nav.library, icon: 'grid', run: go('/library') },
       { id: 'settings', label: t.nav.settings, icon: 'settings', run: go('/settings') },

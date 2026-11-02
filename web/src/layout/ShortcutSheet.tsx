@@ -7,6 +7,7 @@ import { useVoicePrefs } from '@/core/voice/settings';
 import { voiceSupport } from '@/core/voice/support';
 import { t } from '@/strings';
 import { tKeys } from '@/strings.keys';
+import { tCockpit } from '@/strings.cockpit';
 import { useUiStore } from '@/stores/ui';
 import { Dialog } from '@/ui';
 import styles from './ShortcutSheet.module.css';
@@ -87,6 +88,7 @@ export function ShortcutSheet() {
         <>
           <h3 className={styles.group}>{tx.sheetFkeys}</h3>
           <Rows items={fgroup} />
+          <p className={styles.hint}>{tCockpit.get().shortcutEsc}</p>
         </>
       ) : null}
     </Dialog>

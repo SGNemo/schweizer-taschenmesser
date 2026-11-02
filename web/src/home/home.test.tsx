@@ -7,7 +7,7 @@ import { getManifest } from '@/core/modules/registry';
 import type { ModuleManifest } from '@/core/modules/types';
 import { settingsRepo } from '@/core/settings/settings';
 import { AutoWidgetBody, countableCollections, widgetsOf } from './AutoWidget';
-import { HOME_SCOPE, loadLayout, resetLayout, updateLayout } from './layout';
+import { COCKPIT_SCOPE, HOME_SCOPE, loadLayout, resetLayout, updateLayout } from './layout';
 
 beforeEach(async () => {
   await db.table('_settings').clear();
@@ -16,6 +16,29 @@ beforeEach(async () => {
 });
 
 describe('home layout storage', () => {
+  it('keeps the cockpit layout apart from the overview (own scope, own dense/stats flags)', async () => {
+    await updateLayout({ sizes: { 'todos:open': 'l' } });
+    await updateLayout({ hidden: ['finance:balance'], dense: true, stats: true }, COCKPIT_SCOPE);
+    expect(await loadLayout()).toMatchObject({ sizes: { 'todos:open': 'l' }, hidden: [] });
+    expect((await loadLayout()).dense).toBeUndefined();
+    expect(await loadLayout(COCKPIT_SCOPE)).toEqual({
+      order: [],
+      hidden: ['finance:balance'],
+      sizes: {},
+      pinned: [],
+      dense: true,
+      stats: true,
+    });
+    await resetLayout(COCKPIT_SCOPE);
+    expect(await loadLayout(COCKPIT_SCOPE)).toEqual({
+      order: [],
+      hidden: [],
+      sizes: {},
+      pinned: [],
+    });
+    expect(await settingsRepo.get(HOME_SCOPE)).toMatchObject({ sizes: { 'todos:open': 'l' } });
+  });
+
   it('migrates the old dashboard record on the first edit and leaves it untouched', async () => {
     await settingsRepo.upsert('dashboard', { order: ['todos:open'], hidden: ['finance:balance'] });
     expect(await loadLayout()).toEqual({

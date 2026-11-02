@@ -44,6 +44,47 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+/* Cockpit: a little tighter; "dense" packs one column more at every step and a fifth from 120 rem. */
+.cockpit {
+  --grid-gap: var(--space-3);
+  --widget-unit: 5rem;
+}
+.dense {
+  --grid-gap: var(--space-2);
+}
+@container page (min-width: 36rem) {
+  .dense {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container page (min-width: 56rem) {
+  .dense {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container page (min-width: 76rem) {
+  .dense {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@container page (min-width: 96rem) {
+  .dense {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+@container page (min-width: 120rem) {
+  .dense {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+/* Edit mode in the cockpit: the tools sit in a small row where the page header would be. */
+.cockpitTools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
 .widget {
   position: relative;
   min-width: 0;

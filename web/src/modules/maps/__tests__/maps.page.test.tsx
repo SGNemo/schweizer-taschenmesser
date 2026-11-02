@@ -11,7 +11,7 @@ import { clearTileCache } from '../tiles';
 import { resetBuilder } from '../own/builder';
 import { overpassFixture } from '../own/fixtures';
 import { encodePmtiles } from '../own/pmtiles';
-import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../own/sample';
+import { SAMPLE_CENTER, SAMPLE_REGION_ID, samplePmtiles, sampleRegion } from '../own/sample';
 import { placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 
 // jsdom has no canvas: the own map's drawing is a tiny PNG stand-in here (the renderer has its own tests).
@@ -153,6 +153,7 @@ beforeEach(async () => {
   await db.table('maps_route').clear();
   await db.table('maps_region').clear();
   await db.table('maps_tile').clear();
+  await db.table('maps_name').clear();
   await db.table('_settings').clear();
   resetBuilder();
 });
@@ -669,5 +670,73 @@ describe('own map from a region file', () => {
     expect(screen.getByText(/Die Kartendatei deckt dieses Gebiet nicht ab/)).toBeTruthy();
     expect(fileRequests()).toHaveLength(1);
     expect(overpassRequests().length).toBeGreaterThan(0);
+  });
+});
+
+describe('own map search (names index)', () => {
+  const nominatimRequests = () =>
+    requests.filter((u) => hostOf(u) === 'nominatim.openstreetmap.org');
+
+  async function storeSample() {
+    const { id, region, tiles } = sampleRegion();
+    await regionRepo.create(region, { id });
+    await tileRepo.createMany(tiles.map((t) => ({ id: t.id, data: t.data })));
+  }
+  async function submit(text: string) {
+    const input = await screen.findByLabelText('Ort oder Adresse suchen');
+    fireEvent.change(input, { target: { value: text } });
+    fireEvent.submit(input.closest('form')!);
+  }
+  const slow = { timeout: 5000 };
+
+  it('answers from the own map first and requests nothing; the hit opens the place', async () => {
+    await storeSample();
+    open('/maps?view=map');
+    await submit('Amsel');
+    const own = await screen.findByTestId('map-own-hits', undefined, slow);
+    expect(screen.getByText('Aus deiner Karte')).toBeTruthy();
+    expect(own).toHaveTextContent('Amselweg');
+    expect(own).toHaveTextContent('Straße · Nemostadt (Beispiel)');
+    expect(nominatimRequests()).toEqual([]);
+    expect(screen.getByTestId('map-search-online')).toBeTruthy();
+    expect(screen.queryByTestId('map-hits')).toBeNull();
+    // The region was built before the index existed: indexed on the way, from its stored tiles.
+    expect((await regionRepo.get(SAMPLE_REGION_ID))!.indexedAt).toBeTruthy();
+    fireEvent.click(within(own).getByText('Amselweg'));
+    const card = await screen.findByTestId('map-selection');
+    expect(card).toHaveTextContent('Amselweg');
+    expect(screen.queryByTestId('map-own-hits')).toBeNull();
+  });
+
+  it('"Online weitersuchen" sends the words to the search service, only then', async () => {
+    await storeSample();
+    open('/maps?view=map');
+    await submit('Amsel');
+    await screen.findByTestId('map-own-hits', undefined, slow);
+    fireEvent.click(screen.getByTestId('map-search-online'));
+    const online = await screen.findByTestId('map-hits', undefined, slow);
+    expect(online).toHaveTextContent('Erlangen');
+    expect(screen.getByText('Online gefunden')).toBeTruthy();
+    expect(nominatimRequests()).toHaveLength(1);
+    expect(screen.queryByTestId('map-search-online')).toBeNull();
+  });
+
+  it('what the own map does not know goes online by itself, unless the map is offline-only', async () => {
+    await storeSample();
+    open('/maps?view=map');
+    await submit('Schlossplatz Erlangen');
+    await screen.findByTestId('map-hits', undefined, slow);
+    expect(nominatimRequests()).toHaveLength(1);
+    expect(screen.queryByTestId('map-own-hits')).toBeNull();
+    expect(screen.queryByTestId('map-search-online')).toBeNull();
+    cleanup();
+
+    requests.length = 0;
+    await setSettings('module.maps', { offlineOnly: true });
+    open('/maps?view=map');
+    await submit('Schlossplatz Erlangen');
+    await screen.findByText('Deine Karte kennt dazu nichts.', undefined, slow);
+    expect(nominatimRequests()).toEqual([]);
+    expect(screen.getByTestId('map-search-online')).toBeTruthy();
   });
 });

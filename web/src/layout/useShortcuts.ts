@@ -11,6 +11,7 @@ import { t } from '@/strings';
 import { tKeys } from '@/strings.keys';
 import { useUiStore } from '@/stores/ui';
 import { useNavTree } from './useNavItems';
+import { enterCockpit, exitCockpit } from './useCockpit';
 
 /** Mounts the global keyboard shortcuts once (see `core/keyboard/shortcuts.ts` for the table). */
 export function useShortcuts(): void {
@@ -93,6 +94,10 @@ function runFKeyAction(action: FKeyAction, { navigate, tools }: Latest): void {
       return void navigate('/settings');
     case 'focus':
       return void startFocus(navigate);
+    case 'cockpit':
+      return ui.cockpit
+        ? exitCockpit()
+        : enterCockpit((to) => void navigate(to), window.location.pathname);
   }
 }
 
