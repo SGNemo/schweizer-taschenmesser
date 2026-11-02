@@ -9,6 +9,6 @@ mod engine;
 mod seed;
 mod types;
 
-pub use engine::{Engine, EngineConfig};
+pub use engine::{Engine, EngineConfig, MAX_TORRENT_FILE};
 pub use seed::SeedLimits;
 pub use types::{FileEntry, Preview, Source, TorrentInfo, TorrentState};

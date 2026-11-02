@@ -5582,6 +5582,7 @@ dependencies = [
  "tauri-plugin-share-intent",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
+ "tokio",
  "webview2-com",
  "windows 0.61.3",
  "windows 0.62.2",
@@ -5656,6 +5657,7 @@ dependencies = [
  "anyhow",
  "librqbit",
  "serde",
+ "serde_json",
  "tokio",
 ]
 
