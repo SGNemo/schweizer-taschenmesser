@@ -148,9 +148,7 @@ function MessageCard({
             autoLoadImages={autoLoadImages}
           />
           <Attachments account={account} message={message} />
-          <div className={styles.row}>
-            <LinkMenu onPick={setLinkType} />
-          </div>
+          <LinkMenu onPick={setLinkType} />
           <LinkDialog
             account={account}
             threadId={threadId}

@@ -15,16 +15,20 @@ export function LinkMenu({ onPick }: { onPick: (type: MailLinkType) => void }) {
 
   if (!states) return null;
   if (types.length === 0) return <p className={styles.hint}>{t.mail.link.noModules}</p>;
+  // The menu opens towards the start of the line, so the trigger sits at its end, next to what it does.
   return (
-    <RowMenu
-      label={t.mail.link.menu}
-      open={open}
-      onOpenChange={setOpen}
-      items={types.map((type) => ({
-        id: type,
-        label: t.quickCapture.type[type],
-        onSelect: () => onPick(type),
-      }))}
-    />
+    <div className={styles.linkRow}>
+      <span className={styles.meta}>{t.mail.link.menu}</span>
+      <RowMenu
+        label={t.mail.link.menu}
+        open={open}
+        onOpenChange={setOpen}
+        items={types.map((type) => ({
+          id: type,
+          label: t.quickCapture.type[type],
+          onSelect: () => onPick(type),
+        }))}
+      />
+    </div>
   );
 }
