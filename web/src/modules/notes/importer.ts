@@ -2,12 +2,10 @@ import { parseGoogleKeep } from '@/core/io/googleKeep';
 import { parseMarkdownNote, parseMarkdownNotes, type ParsedNote } from '@/core/io/markdownNote';
 import type { ImportCandidate, ImportInput, ImporterRuntime } from '@/core/importer/types';
 import { t } from '@/strings';
+import { noteKey } from './exchange';
 import { noteRepo } from './repo';
 
-const norm = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
-
-/** Same title and the same first 80 characters of text = the same note. */
-export const noteKey = (title: string, body: string) => `${norm(title)}|${norm(body).slice(0, 80)}`;
+export { noteKey } from './exchange';
 
 function candidate(note: ParsedNote): ImportCandidate {
   const firstLine = note.body.split('\n').find((l) => l.trim()) ?? '';

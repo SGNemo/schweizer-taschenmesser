@@ -237,6 +237,9 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **E5 Android Seitenliste:** Notizbuch anlegen (Farbe, Symbol), Seiten verschieben, „Eigene Reihenfolge“ mit langem Druck auf den Griff sortieren (scrollt die Liste noch?), „Offene Seiten“ oben in der Liste, Zurück-Taste. ☐
 - **E6 Windows-App:** Strg+N öffnet eine neue Seite (Alt+N im Browser), Alt+Z den Schmierzettel; Tabs mit vielen Seiten scrollen seitlich. ☐
 - **E7 Verlauf:** eine Seite zwei Minuten bearbeiten, „Verlauf“ zeigt frühere Stände, Wiederherstellen und mit Strg+Z zurück. ☐
+- **E8 PDF:** Seite → „Exportieren“ → „PDF (Druckansicht)“: Windows-App und Browser öffnen den Druckdialog („Als PDF speichern“), Bilder sind dabei; auf Android öffnet sich kein Druckdialog (bekannte Grenze der WebView) – Markdown/Text gehen. ☐
+- **E9 Ordner-Import:** Ordner mit .md/.txt wählen (Windows und Android): Ordnername wird Notizbuch, zweiter Import desselben Ordners meldet Doppelte. ☐
+- **E10 Verknüpfen:** `[[` tippen (Handy-Tastatur), Titel wählen, Link antippen, Rückverweise unter der Seite; „Notiz ergänze …“ im Assistenten zeigt in der Vorschau den angehängten Text. ☐
 
 ### KI abschalten – nur mit zwei Geräten prüfbar
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).

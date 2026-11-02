@@ -23,6 +23,7 @@ import yaml from 'highlight.js/lib/languages/yaml';
 import { createLowlight } from 'lowlight';
 import { t } from '@/strings';
 import { NoteImage } from './imageNode';
+import { WikiLink } from './wikiLinkNode';
 
 /** Highlight colours = semantic tokens (`--<tone>-soft`); the text stays readable without colour. */
 export const HIGHLIGHT_TONES = ['accent', 'success', 'warning', 'danger', 'info'] as const;
@@ -83,12 +84,14 @@ const lowlight = createLowlight({
 export const toneAttrs = (tone: HighlightTone) => ({ tone }) as unknown as { color: string };
 
 /** The editor schema for notes; Markdown is the stored format (see `markdown.ts`). */
-export function noteExtensions(): Extensions {
+/** `onNavigate` is called when a `[[link]]` is clicked; the plain schema (tests, export) needs none. */
+export function noteExtensions(onNavigate: (target: string) => void = () => undefined): Extensions {
   return [
     StarterKit.configure({ heading: { levels: [1, 2, 3] }, codeBlock: false }),
     CodeBlockLowlight.configure({ lowlight }),
     ToneHighlight.configure({ multicolor: true }),
     NoteImage,
+    WikiLink.configure({ onNavigate }),
     Table,
     TableRow,
     TableHeader,
