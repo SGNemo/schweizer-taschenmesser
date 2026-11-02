@@ -137,6 +137,7 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - Pakete 3–6 (0.5.0–0.9.0): Listen, Unterlagen, Personen, Erinnerungen im Kalender, ToDo-Wiederholung; Paket 6: 15 alte Tabellen entfernt.
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (Erfassen ohne Rückfrage, Eingang sortieren, Suchverlauf, Textgröße/Zeilenabstand/Bewegung, ruhige Übersicht; gestapelt auf Paket 2).
+- Auf PR (`feat/mail-link`): Mail-Modul Paket 2 – aus einer Mail Rechnung, Termin, ToDo, Erinnerung, Merkliste oder Notiz anlegen (Vorschau, Link im Eintrag, Rückverweis).
 - Auf PR (`feat/mail-read`): Mail-Modul Paket 1 – Gmail lesen (Posteingang, Labels, Suche, Threads, HTML sicher, Anhänge, Widgets; aus, nur Windows-App).
 - Auf PR (`feat/connector-accounts`): mehrere Google-Konten im Connector-Rahmen (Paket 0 des Mail-Moduls).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 4 „Fortschritt“ („n in Folge“ mit Pausentag, Wochenrückblick, Tag abschließen, Routine-Vorlagen; gestapelt auf Paket 3).

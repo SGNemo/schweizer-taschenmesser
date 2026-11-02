@@ -105,6 +105,8 @@ M5. Zweites Google-Konto hinzufügen (Verbindungen → „Weiteres Konto hinzuf�
 M6. Netz aus: die zuletzt gesehenen Köpfe erscheinen mit dem Hinweis „Kein Netz". Token widerrufen (Google-Kontoeinstellungen): Hinweis „abgelaufen" mit Link zu den Verbindungen. ☐
 M7. Mail-Einstellungen → „Zwischenspeicher leeren"; danach ist die Liste erst nach dem Laden wieder gefüllt. Der Cache ist nicht im Sync (zweites Gerät zeigt nichts davon) und nicht im Backup. ☐
 M8. Das HTML-Fenster funktioniert im Windows-Fenster (WebView2) wie im Browser: Mail wird angezeigt, kein Skript läuft. ☐
+M9. (Paket 2, `feat/mail-link`) Eine echte Rechnungsmail öffnen → „Aus dieser Mail anlegen" → Rechnung: Empfänger, Betrag und Fälligkeit sind vorbefüllt (stimmen sie bei deinen Mails?). Es wird erst mit „Speichern" etwas angelegt; die Rechnung enthält den Link zur Mail (öffnet die Mail im Browser). ☐
+M10. Dasselbe für Termin (Datum/Uhrzeit aus einer Einladung), ToDo, Erinnerung (morgen 9:00), Merkliste, Notiz. Bei der Notiz kommt der Mailtext nur mit dem Häkchen hinein. In der Mail steht danach „Aus dieser Mail angelegt" mit Link in das Modul; löschst du den Eintrag, verschwindet der Verweis. ☐
 
 ### Werkzeuge (Phase 13, Schritt 5)
 T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
