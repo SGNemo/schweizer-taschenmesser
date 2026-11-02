@@ -4,7 +4,8 @@
  */
 import { loadAiConfig, keyName } from '@/core/ai/config';
 import { AUTO_PASSPHRASE_SECRET } from '@/core/backup/safety';
-import { connectorSecret, secretName } from '@/core/connectors/context';
+import { accountKey, connectorSecret, secretName } from '@/core/connectors/context';
+import { loadStatus } from '@/core/connectors/state';
 import { connectors } from '@/core/connectors/registry';
 import { parseHeader, vaultSealName } from '@/core/crypto';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
@@ -14,8 +15,20 @@ import type { SecretStore } from '@/core/secrets/types';
 /** Secrets kept outside the database (OS keystore or device key) that belong to this device's data. */
 export async function deviceSecretNames(database: TaschenmesserDB = defaultDb): Promise<string[]> {
   const ai = await loadAiConfig(database).catch(() => ({ providers: [] as { id: string }[] }));
+  const extraAccounts = (
+    await Promise.all(
+      connectors
+        .filter((c) => c.multiAccount)
+        .map(async (c) =>
+          ((await loadStatus(c.id, database).catch(() => undefined))?.accounts ?? []).map((a) =>
+            secretName(accountKey(c.id, a.id), 'refresh'),
+          ),
+        ),
+    )
+  ).flat();
   return [
     ...ai.providers.map((p) => keyName(p.id)),
+    ...extraAccounts,
     AUTO_PASSPHRASE_SECRET,
     ...connectors.flatMap((c) => [
       secretName(c.id, 'client-id'),
