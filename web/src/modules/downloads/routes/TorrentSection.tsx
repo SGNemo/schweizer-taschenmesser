@@ -3,6 +3,7 @@ import { requireNotice } from '@/core/legal/notices';
 import { getPlatform } from '@/core/platform';
 import type { TorrentInfo } from '@/core/platform/torrent';
 import { useSettings } from '@/core/settings/settings';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import {
   Button,
@@ -24,13 +25,39 @@ import { TorrentIp } from './TorrentIp';
 
 type Status = 'starting' | 'ready' | 'failed';
 
+/** A magnet link or `.torrent` file path that arrived from outside (OS association, browser). */
+export interface TorrentIncoming {
+  kind: 'magnet' | 'file';
+  value: string;
+}
+
+/** Recognises the two things the torrent part takes; anything else is a plain download address. */
+export function asTorrentSource(value: string): TorrentIncoming | null {
+  const v = value.trim();
+  if (/^magnet:\?/i.test(v)) return { kind: 'magnet', value: v };
+  if (/\.torrent$/i.test(v) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(v))
+    return { kind: 'file', value: v };
+  return null;
+}
+
 /** The BitTorrent part of the Downloads page. Off until the user switches it on (after the notice). */
-export function TorrentSection({ prefs }: { prefs: DownloadsPrefs }) {
+export function TorrentSection({
+  prefs,
+  incoming,
+  onIncomingHandled,
+}: {
+  prefs: DownloadsPrefs;
+  incoming: TorrentIncoming | null;
+  onIncomingHandled: () => void;
+}) {
   const platform = getPlatform().torrent;
   const [, setPrefs] = useSettings('module.downloads', settings.schema, settings.defaults);
   const torrents = useTorrents((s) => s.torrents);
   const [status, setStatus] = useState<Status>('starting');
   const [adding, setAdding] = useState(false);
+  // What the dialog starts with; it only pre-fills, the user still reviews the files and confirms.
+  const [initial, setInitial] = useState<TorrentIncoming | null>(null);
+  const [launchRegistered, setLaunchRegistered] = useState(false);
   const [deleting, setDeleting] = useState<TorrentInfo | null>(null);
 
   const limits = {
@@ -62,6 +89,36 @@ export function TorrentSection({ prefs }: { prefs: DownloadsPrefs }) {
     };
   }, [platform, prefs.torrent, dht, upnp, limitKey]);
 
+  // Something arrived from outside: once the engine is up, the add dialog opens with it.
+  useEffect(() => {
+    if (!incoming || !prefs.torrent || status !== 'ready') return;
+    queueMicrotask(() => {
+      setInitial(incoming);
+      setAdding(true);
+      onIncomingHandled();
+    });
+  }, [incoming, prefs.torrent, status, onIncomingHandled]);
+
+  const launch = getPlatform().launch;
+  useEffect(() => {
+    if (!launch.supported || !prefs.torrent) return;
+    void launch.isRegistered().then(setLaunchRegistered, () => undefined);
+  }, [launch, prefs.torrent]);
+
+  async function toggleAssociation() {
+    try {
+      await launch.setRegistered(!launchRegistered);
+      setLaunchRegistered(!launchRegistered);
+      useUiStore
+        .getState()
+        .toast(
+          launchRegistered ? t.downloads.torrent.launch.removed : t.downloads.torrent.launch.done,
+        );
+    } catch {
+      useUiStore.getState().toast(t.downloads.torrent.launch.failed);
+    }
+  }
+
   if (!platform.supported) return null;
 
   if (!prefs.torrent) {
@@ -70,6 +127,7 @@ export function TorrentSection({ prefs }: { prefs: DownloadsPrefs }) {
         <h2>{t.downloads.torrent.title}</h2>
         <EmptyState title={t.downloads.torrent.off.title}>
           {t.downloads.torrent.off.body}
+          {incoming ? <p role="status">{t.downloads.torrent.launch.pendingOff}</p> : null}
           <div className={styles.bar}>
             <Button variant="primary" onClick={() => void turnOn()}>
               {t.downloads.torrent.off.turnOn}
@@ -121,10 +179,22 @@ export function TorrentSection({ prefs }: { prefs: DownloadsPrefs }) {
         ))}
       </ItemList>
 
+      {launch.supported ? (
+        <div>
+          <h3>{t.downloads.torrent.launch.title}</h3>
+          <p className={styles.hint}>{t.downloads.torrent.launch.help}</p>
+          <Button onClick={() => void toggleAssociation()}>
+            {launchRegistered
+              ? t.downloads.torrent.launch.remove
+              : t.downloads.torrent.launch.register}
+          </Button>
+        </div>
+      ) : null}
       <TorrentIp />
       <AddTorrentDialog
         open={adding}
         defaultFolder={prefs.folder}
+        initial={initial}
         onClose={() => setAdding(false)}
       />
       <Dialog

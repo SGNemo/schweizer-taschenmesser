@@ -180,7 +180,8 @@ export async function buildSchedule(
   key?: CryptoKey,
 ): Promise<ScheduleItem[]> {
   const unique = new Map<string, DueNotification>();
-  for (const n of due) if (n.at > from && !unique.has(n.key)) unique.set(n.key, n);
+  // `local` notifications (about third-party content such as mail) are never uploaded.
+  for (const n of due) if (n.at > from && !n.local && !unique.has(n.key)) unique.set(n.key, n);
   const items = [...unique.values()].sort((a, b) => a.at - b.at).slice(0, MAX_ITEMS);
   return Promise.all(
     items.map(async (n) => {

@@ -1,0 +1,3 @@
+[default]
+description = "Open an http(s) address in a Custom Tab."
+permissions = ["allow-open"]

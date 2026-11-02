@@ -1631,12 +1631,37 @@ export const de = {
         syntax: 'Das kann ich nicht lesen. Prüfe Zahlen, Rechenzeichen und Klammern.',
         unknown: 'Diesen Namen kenne ich nicht. Variablen legst du mit a = 5 an.',
         unit: 'Diese Einheiten passen nicht zusammen oder sind unbekannt.',
+        offline:
+          'Für den Graphen fehlt noch die Rechenbibliothek. Sie wird beim ersten Öffnen mit Verbindung geladen.',
         'divide-by-zero': 'Durch null teilen geht nicht.',
         range: 'Das Ergebnis ist zu groß oder nicht definiert.',
         empty: 'Gib eine Rechnung ein.',
       } as Record<string, string>,
       modesLabel: 'Modus',
       pro: {
+        plot: {
+          optional: 'optional, z. B. x^2 − 3',
+          xFrom: 'x von',
+          xTo: 'x bis',
+          yAuto: 'y-Bereich automatisch',
+          yFrom: 'y von',
+          yTo: 'y bis',
+          badRange: 'Der Bereich passt nicht: „von“ muss kleiner sein als „bis“.',
+          empty: 'Gib eine Funktion von x ein, zum Beispiel sin(x).',
+          noValues: 'In diesem Bereich hat die Funktion keine Werte.',
+          moveGroup: 'Ausschnitt verschieben und zoomen',
+          zoomIn: 'Hineinzoomen',
+          zoomOut: 'Herauszoomen',
+          left: 'Nach links',
+          right: 'Nach rechts',
+          up: 'Nach oben',
+          down: 'Nach unten',
+          reset: 'Zurücksetzen',
+          legend: 'Funktionen im Graphen',
+          hint: 'Funktionen von x, z. B. sin(x) oder x^2 − 3. Im Graphen: Pfeiltasten verschieben, + und − zoomen, 0 setzt zurück.',
+          chart: (xFrom: string, xTo: string, yFrom: string, yTo: string) =>
+            `Funktionsgraph, x von ${xFrom} bis ${xTo}, y von ${yFrom} bis ${yTo}`,
+        },
         live: 'Ergebnis (live)',
         angle: 'Winkel',
         deg: 'Grad',
@@ -1727,6 +1752,7 @@ export const de = {
         finance: 'Prozent & Finanzen',
         date: 'Datum',
         units: 'Einheiten',
+        plot: 'Plotter',
       } as Record<string, string>,
       percent: {
         part: 'Prozentwert',
@@ -5910,6 +5936,16 @@ export const de = {
       confirmMoves: 'Vor dem Archivieren und Beschriften fragen',
       confirmMovesHelp:
         'Der Papierkorb und das Senden fragen immer. Jede Änderung lässt sich danach einige Sekunden zurücknehmen.',
+      notify: 'Bei neuen Mails benachrichtigen',
+      notifyHelp:
+        'Aus. Nemo sieht im gewählten Abstand nach und meldet neue ungelesene Mails mit einer einzigen Benachrichtigung. Sie funktioniert nur, solange die App läuft, ändert nichts im Postfach und verlässt dieses Gerät nicht.',
+      notifyEvery: 'Wie oft nachsehen',
+      every5: 'Alle 5 Minuten',
+      every15: 'Alle 15 Minuten',
+      every30: 'Alle 30 Minuten',
+      every60: 'Jede Stunde',
+      notifyNames: 'Absender in der Benachrichtigung zeigen',
+      notifyNamesHelp: 'Aus: nur die Anzahl. Sonst steht der Name auch auf dem Sperrbildschirm.',
     },
     page: {
       refresh: 'Aktualisieren',
@@ -6002,13 +6038,19 @@ export const de = {
       clearBody: 'Die Mails bleiben bei Google. Sie werden beim nächsten Öffnen neu geladen.',
       notifications: 'Benachrichtigungen',
       notificationsBody:
-        'Noch nicht vorhanden: Die App meldet sich nicht von selbst bei neuen Mails.',
+        'Aus. Schalte sie unter Einstellungen → Module → E-Mail ein. Dann sieht Nemo im gewählten Abstand nach und meldet neue Mails mit einer Benachrichtigung.',
       permissions: 'Berechtigungen pro Konto',
       permRead: 'Lesen',
       permManage: 'Verwalten',
       permSend: 'Senden',
       permOn: 'an',
       permOff: 'aus',
+      notifyActive: (minutes: number) =>
+        `Aktiv: Nemo sieht alle ${minutes} Minuten nach, solange die App läuft.`,
+      notifyLabels: 'Diese Labels zählen',
+      notifyHow:
+        'Die Meldung wird wie andere Erinnerungen behandelt: Ruhezeiten, Stumm und das Limit pro Stunde gelten auch hier.',
+      notifyQuiet: 'Ruhezeiten und Limit einstellen',
       close: 'Schließen',
     },
     link: {
@@ -6108,6 +6150,11 @@ export const de = {
         edit: 'Bearbeiten',
         sent: 'Mail gesendet.',
       },
+    },
+    notify: {
+      title: (n: number) => (n === 1 ? '1 neue E-Mail' : `${n} neue E-Mails`),
+      senders: (names: string[], more: number) =>
+        more > 0 ? `${names.join(', ')} und ${more} weitere` : names.join(', '),
     },
     widget: {
       unread: 'Ungelesen',
@@ -6229,6 +6276,12 @@ export const de = {
       ruleAdded: 'Regel gespeichert',
       pauseSite: 'Auf dieser Seite pausieren',
       resumeSite: 'Auf dieser Seite wieder einschalten',
+    },
+    external: {
+      hint: 'Seiten öffnen im Browser deines Geräts (Custom Tab). Tabs, Suche auf der Seite und Zoom sind die des Browsers; Nemo behält deine Lesezeichen und den Verlauf.',
+      failed: 'Die Adresse ließ sich nicht öffnen.',
+      noBookmarks:
+        'Noch keine Lesezeichen. Öffne eine Adresse und tippe auf den Stern, um sie zu speichern.',
     },
     popupBlocked: 'Ein Pop-up wurde blockiert.',
     download: {
@@ -6353,6 +6406,17 @@ export const de = {
       },
       turnOff: 'Torrent-Teil ausschalten',
       starting: 'Wird gestartet …',
+      launch: {
+        needModule: 'Dafür braucht es das Modul „Downloads“.',
+        title: 'Magnet-Links und Torrent-Dateien',
+        help: 'Nemo kann sich bei Windows als Programm für Magnet-Links und .torrent-Dateien eintragen. Nur für dich, ohne Admin-Rechte. Ein bestehender Standard wird nicht ersetzt: Wähle Nemo danach selbst unter „Standard-Apps“. Geöffnete Links füllen nur den Dialog vor, nichts startet von selbst.',
+        register: 'Bei Windows eintragen',
+        remove: 'Eintrag entfernen',
+        done: 'Nemo ist bei Windows eingetragen. Wähle es unter „Standard-Apps“ aus.',
+        removed: 'Eintrag entfernt',
+        failed: 'Der Eintrag ließ sich nicht ändern.',
+        pendingOff: 'Ein Magnet-Link wartet. Schalte den BitTorrent-Teil ein, dann geht es weiter.',
+      },
       startFailed: 'Der Torrent-Teil konnte nicht starten.',
       add: {
         button: 'Torrent hinzufügen',

@@ -382,6 +382,11 @@ export interface DueNotification {
    * it themselves.
    */
   quiet?: boolean;
+  /**
+   * Never leaves this device: not uploaded for Web Push (the sync server would see title and text).
+   * For notifications about third-party content such as new mail.
+   */
+  local?: true;
 }
 
 export type NotificationSource = (range: {

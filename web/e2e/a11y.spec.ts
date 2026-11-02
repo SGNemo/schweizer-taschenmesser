@@ -157,6 +157,33 @@ for (const scheme of ['light', 'dark'] as const) {
       }
     });
 
+    test('tools: every tab of the calculator, including the plotter', async ({ page }) => {
+      test.setTimeout(90_000);
+      await page.goto('/');
+      await expect(page.locator('main h1')).toBeVisible();
+      await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
+      const sheet = page.getByRole('dialog');
+      await sheet.getByRole('button', { name: 'Rechner', exact: true }).click();
+      await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
+      for (const tab of [
+        'Wissenschaftlich',
+        'Programmierer',
+        'Prozent & Finanzen',
+        'Datum',
+        'Einheiten',
+        'Plotter',
+      ]) {
+        await sheet.getByRole('button', { name: tab, exact: true }).click();
+        await expect(sheet.getByRole('button', { name: tab, exact: true })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
+        if (tab === 'Plotter')
+          await expect(sheet.getByTestId('plot-line-f')).toBeVisible({ timeout: 20_000 });
+        await audit(page, `calculator tab ${tab} (${scheme})`);
+      }
+    });
+
     test('settings: AI providers (list, expanded form)', async ({ page }) => {
       await page.goto('/settings/ki');
       const section = page.locator('section[aria-labelledby="ai"]');

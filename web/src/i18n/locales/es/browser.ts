@@ -104,6 +104,11 @@ export const browser: Strings['browser'] = {
     pauseSite: 'Pausar en este sitio',
     resumeSite: 'Volver a activar en este sitio',
   },
+  external: {
+    hint: 'Las páginas se abren en el navegador de tu dispositivo (Custom Tab). Las pestañas, la búsqueda en la página y el zoom son del navegador; Nemo guarda tus marcadores y tu historial.',
+    failed: 'No se pudo abrir la dirección.',
+    noBookmarks: 'Aún no hay marcadores. Abre una dirección y toca la estrella para guardarla.',
+  },
   popupBlocked: 'Se bloqueó una ventana emergente.',
   download: {
     offer: (name: string) => `La página ofrece «${name}» para descargar.`,

@@ -1,0 +1,13 @@
+[package]
+name = "taschenmesser-os-association"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Optional, user-triggered Windows registration of the app as a possible handler for magnet: links and .torrent files, plus the check of launch arguments. No Tauri, so it is tested on any machine."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "os_association"
+
+[dependencies]

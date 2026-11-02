@@ -55,6 +55,8 @@ Download-Manager (Paket 2, Branch `feat/downloads-http`, gestapelt auf `feat/bro
 
 Browser + Downloads: Paket 1 „Browser“ (Branch `feat/browser`, Desktop, isolierte Tabs, Blocker, Lesezeichen/Verlauf) ist gebaut, PR gegen `develop` wartet auf Review; Rust-Teil nur per `cargo check` (Windows-Ziel) geprüft, Handtests B1–B8 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Danach: Paket 2 Download-Manager (HTTP), 3 Torrent, 4 Android/Dateizuordnung.
 
+Browser + Downloads Paket 4 (Branch `feat/browser-android`, gestapelt auf Paket 3): Android-Browser über Chrome Custom Tabs (Kotlin-Plugin, nicht auf Hardware gebaut) und optionale Windows-Zuordnung für `magnet:`/`.torrent` (aus, nur auf Klick); Handtests B9–B10 und D13–D15 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); Regel-Trefferquote jetzt an drei Sätzen gemessen (Tuning, Held-out, Blind; erste Blind-Messung 97,4 %, 1 Fehlgriff bei Fragen); PR B (Branch `feat/ai-local-model`): lokales Modell als Stufe 1 (Rust-Laufzeit hinter Cargo-Feature, Einstellungen, Download mit Zustimmung/Prüfsumme, Mess-Harness); Modellwahl steht aus; PR C (Branch `feat/ai-chat-module`, gestapelt auf B): Chat-Modul (mehrere Chats, lokales Modell oder Anbieter, Daten aus Modulen nur freiwillig mit Vorschau, sicheres Markdown, Export). Handtests K1–K4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), Entwurf [design/READABILITY-PLAN.md](design/READABILITY-PLAN.md).
@@ -141,6 +143,7 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Paket 1 „Aufräumen“ (0.4.0, `feat/cleanup-package-1`): Module stillgelegt, Werkzeuge 18 → 12, Zettel, „Dieser PC“.
 - Pakete 3–6 (0.5.0–0.9.0): Listen, Unterlagen, Personen, Erinnerungen im Kalender, ToDo-Wiederholung; Paket 6: 15 alte Tabellen entfernt.
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 3 „Erfassen, Ruhe, Wiederfinden“ (Erfassen ohne Rückfrage, Eingang sortieren, Suchverlauf, Textgröße/Zeilenabstand/Bewegung, ruhige Übersicht; gestapelt auf Paket 2).
+- Auf PR (`feat/mail-notify`): Mail-Modul Paket 4 – optionale Benachrichtigung bei neuen Mails (Intervall, Labels, ruhig und lokal; nur bei laufender App).
 - Auf PR (`feat/mail-write`, gestapelt auf `feat/mail-link`): Mail-Modul Paket 3 – optional markieren, archivieren, beschriften, Papierkorb, antworten/weiterleiten/neue Mail, Entwürfe; jede Änderung mit Bestätigung oder Undo.
 - Auf PR (`feat/mail-link`): Mail-Modul Paket 2 – aus einer Mail Rechnung, Termin, ToDo, Erinnerung, Merkliste oder Notiz anlegen (Vorschau, Link im Eintrag, Rückverweis).
 - Auf PR (`feat/mail-read`): Mail-Modul Paket 1 – Gmail lesen (Posteingang, Labels, Suche, Threads, HTML sicher, Anhänge, Widgets; aus, nur Windows-App).
@@ -149,5 +152,6 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 2 „Erinnerungen“ (Ruhezeit, Limit, Später, Morgen-Übersicht, Erinnerungs-Karte, „Woran war ich?“; gestapelt auf Paket 1).
 - Auf `develop`/PR: Fokus- und Aufmerksamkeitshilfen Paket 1 (Jetzt dran, Tagesplan, Fokusmodus, ruhiges „Jetzt wichtig“, Dauer pro ToDo, Zeit bis zum Termin; Einstellungen „Fokus & Aufmerksamkeit“).
 - Auf `develop`/PR: Notizen-Notizblock Paket 1 „Editor“ (TipTap, Markdown-Speicherung + Migration, Schrägstrich-Menü, Schreibmodus, Autospeichern; Paket 2 „Seiten“ (Notizbücher, Seitenliste mit Sortierung/Anheften/Verschieben, Tabs, Verlauf, Papierkorb-Ansicht, Alt+N); Paket 3 „Verknüpfen und Austausch“ (`[[Links]]` mit Rückverweisen, Trefferauszug, Export md/txt/PDF-Druckansicht, Import von Dateien und Ordnern, Widget, KI „ergänze die Notiz“, Auswahl → ToDo)).
+- Auf `develop`/PR: Rechner-Tab „Plotter“ (bis zu drei Funktionen von x, Zoom und Verschieben per Tasten, ohne Speicherung).
 - Auf `develop`/PR: Werkzeug „Anonyme Persona“ (erfundene Angaben für Anmeldungen, Wegwerf-Mail-Link, als Notiz oder Tresor-Eintrag speichern).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.

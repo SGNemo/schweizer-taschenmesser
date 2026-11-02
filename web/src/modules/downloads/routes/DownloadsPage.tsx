@@ -21,7 +21,7 @@ import {
 import { formatBytes, percent } from '../lib/format';
 import { settings, type DownloadsPrefs } from '../settings';
 import { ensureWatching, useJobs } from '../store';
-import { TorrentSection } from './TorrentSection';
+import { TorrentSection, asTorrentSource, type TorrentIncoming } from './TorrentSection';
 import styles from './DownloadsPage.module.css';
 
 const ERRORS = ['scheme', 'url', 'dir', 'hash'] as const;
@@ -34,6 +34,8 @@ export default function DownloadsPage() {
   const prefs = (stored ?? settings.defaults) as DownloadsPrefs;
 
   const [adding, setAdding] = useState<string | null>(null);
+  // A magnet link / .torrent path from `?add=` (OS association, browser): the torrent dialog takes it.
+  const [incoming, setIncoming] = useState<TorrentIncoming | null>(null);
   const [verifying, setVerifying] = useState<DownloadJob | null>(null);
   const [deleting, setDeleting] = useState<DownloadJob | null>(null);
 
@@ -51,7 +53,8 @@ export default function DownloadsPage() {
     if (!params.has('add')) return;
     const url = params.get('add') ?? '';
     setParams({}, { replace: true });
-    queueMicrotask(() => setAdding(url));
+    const torrent = asTorrentSource(url);
+    queueMicrotask(() => (torrent ? setIncoming(torrent) : setAdding(url)));
   }, [params, setParams]);
 
   if (!platform.supported) {
@@ -90,7 +93,11 @@ export default function DownloadsPage() {
         ))}
       </ItemList>
 
-      <TorrentSection prefs={prefs} />
+      <TorrentSection
+        prefs={prefs}
+        incoming={incoming}
+        onIncomingHandled={() => setIncoming(null)}
+      />
 
       <AddDialog
         open={adding !== null}

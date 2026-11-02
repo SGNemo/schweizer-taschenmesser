@@ -7,11 +7,20 @@ import styles from '../tools.module.css';
 import DateMode from './DateMode';
 import ExprMode from './ExprMode';
 import FinanceMode from './FinanceMode';
+import PlotMode from './PlotMode';
 import ProgrammerMode from './ProgrammerMode';
 import UnitsMode from './UnitsMode';
 
 const s = t.tools.calc;
-export const MODES = ['standard', 'scientific', 'programmer', 'finance', 'date', 'units'] as const;
+export const MODES = [
+  'standard',
+  'scientific',
+  'programmer',
+  'finance',
+  'date',
+  'units',
+  'plot',
+] as const;
 export type Mode = (typeof MODES)[number];
 
 /** Which tab was open last and the angle unit; per device user preferences, synced like other settings. */
@@ -45,6 +54,8 @@ export default function CalcTool() {
         <FinanceMode />
       ) : mode === 'date' ? (
         <DateMode />
+      ) : mode === 'plot' ? (
+        <PlotMode />
       ) : (
         <UnitsMode />
       )}

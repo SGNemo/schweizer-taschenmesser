@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CalcError } from './expr';
 import { evaluateExpression, localize } from './engine';
 
@@ -182,5 +182,84 @@ describe('lock-down', () => {
     const c = await code(input);
     expect(c).not.toBe('no error');
     expect(c.startsWith('other:')).toBe(false);
+  });
+});
+
+describe('plot functions', () => {
+  it('compile once and give NaN where there is no real value', async () => {
+    const { compilePlotFunction } = await import('./engine');
+    const sq = await compilePlotFunction('x^2 - 3');
+    expect(sq(2)).toBe(1);
+    expect(sq(0)).toBe(-3);
+    const root = await compilePlotFunction('sqrt(x)');
+    expect(root(4)).toBe(2);
+    expect(root(-4)).toBeNaN(); // complex → no real value
+    const inv = await compilePlotFunction('1 / x');
+    expect(inv(0)).toBe(Number.POSITIVE_INFINITY);
+    expect(inv(4)).toBe(0.25);
+  });
+  it('uses degrees or radians for the trigonometry', async () => {
+    const { compilePlotFunction } = await import('./engine');
+    expect((await compilePlotFunction('sin(x)', 'deg'))(30)).toBeCloseTo(0.5, 12);
+    expect((await compilePlotFunction('sin(x)', 'rad'))(Math.PI / 6)).toBeCloseTo(0.5, 12);
+    expect((await compilePlotFunction('asin(x)', 'deg'))(0.5)).toBeCloseTo(30, 10);
+  });
+  it('reads locale input and the usual symbols', async () => {
+    const { compilePlotFunction } = await import('./engine');
+    expect((await compilePlotFunction('2,5 × x'))(2)).toBe(5);
+    expect((await compilePlotFunction('x²'))(3)).toBe(9);
+    expect((await compilePlotFunction('2π'))(0)).toBeCloseTo(Math.PI * 2, 12);
+  });
+  it('reports what is wrong with typed errors', async () => {
+    const { compilePlotFunction } = await import('./engine');
+    const code = async (s: string) => {
+      try {
+        await compilePlotFunction(s);
+      } catch (e) {
+        return e instanceof CalcError ? e.code : `other:${String(e)}`;
+      }
+      return 'no error';
+    };
+    expect(await code('')).toBe('empty');
+    expect(await code('sin(')).toBe('syntax');
+    expect(await code('foo(x)')).toBe('unknown');
+    expect(await code('y + 1')).toBe('unknown');
+    expect(await code('x!')).toBe('range');
+    expect(await code('gamma(x)')).toBe('range');
+  });
+  it('keeps the lock-down', async () => {
+    const { compilePlotFunction } = await import('./engine');
+    for (const s of [
+      'import({a: 1})',
+      'evaluate("1+1")',
+      'range(1; 1000000)',
+      'zeros(100000)',
+      '[1, 2]',
+      'cos.constructor("return 1")()',
+    ]) {
+      let failed: boolean;
+      try {
+        const f = await compilePlotFunction(s);
+        failed = Number.isNaN(f(1));
+      } catch {
+        failed = true;
+      }
+      expect(failed, s).toBe(true);
+    }
+  });
+});
+
+describe('plot functions without the library', () => {
+  it('say so (offline) instead of pretending the input is wrong', async () => {
+    vi.resetModules();
+    vi.doMock('mathjs', () => {
+      throw new Error('offline');
+    });
+    const fresh = await import('./engine');
+    const { CalcError: FreshError } = await import('./expr');
+    await expect(fresh.compilePlotFunction('sin(x)')).rejects.toMatchObject({ code: 'offline' });
+    await expect(fresh.compilePlotFunction('sin(x)')).rejects.toBeInstanceOf(FreshError);
+    vi.doUnmock('mathjs');
+    vi.resetModules();
   });
 });

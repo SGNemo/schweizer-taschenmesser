@@ -97,6 +97,9 @@ const manifest: ModuleManifest = {
   area: 'knowledge',
   contributions: {
     onboarding: noOnboarding,
+    // New-mail notifications: off until switched on in the module settings.
+    services: () => import('./notifyService'),
+    notifications: () => import('./notifications'),
     quickAdd: [
       {
         id: 'open',

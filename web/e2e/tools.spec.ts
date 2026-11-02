@@ -189,6 +189,38 @@ test('the palette evaluates "=" expressions, base conversions and date phrases',
   await expect(page.getByRole('option').first()).toContainText('29. April 2027');
 });
 
+test('the calculator plots functions, zooms with the keyboard and says what is wrong', async ({
+  page,
+}) => {
+  await openSheet(page);
+  const sheet = page.getByRole('dialog');
+  await sheet.getByRole('button', { name: 'Rechner', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Plotter', exact: true }).click();
+  const line = sheet.getByTestId('plot-line-f');
+  await expect(line).toBeVisible({ timeout: 20_000 });
+  const before = await line.getAttribute('d');
+  expect(before!.length).toBeGreaterThan(100);
+
+  // a second function, with its own legend entry
+  await sheet.getByLabel('g(x)').fill('x^2 / 10');
+  await expect(sheet.getByTestId('plot-line-g')).toBeVisible({ timeout: 20_000 });
+  await expect(sheet.getByRole('list', { name: 'Funktionen im Graphen' })).toContainText(
+    'g(x) = x^2 / 10',
+  );
+
+  // keyboard on the graph: + zooms in, 0 resets
+  await sheet.getByTestId('plot').focus();
+  await page.keyboard.press('+');
+  await expect(sheet.getByRole('textbox', { name: 'x von' })).toHaveValue('-8');
+  await page.keyboard.press('0');
+  await expect(sheet.getByRole('textbox', { name: 'x von' })).toHaveValue('-10');
+
+  // a typo is named next to its field, the other function stays
+  await sheet.getByLabel('g(x)').fill('foo(x');
+  await expect(sheet.getByText('Das kann ich nicht lesen.')).toBeVisible({ timeout: 20_000 });
+  await expect(sheet.getByTestId('plot-line-f')).toBeVisible();
+});
+
 test('the anonymous persona is off by default, invents a persona and opens a disposable-mail site on click', async ({
   page,
 }) => {
