@@ -4,6 +4,8 @@
     "connectors.ics.name",
     "invoices.meta.settings.remindTimeHelp",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
+    "notes.exportMenu.text",
     "pantry.meta.settings.remindTimeHelp",
     "people.gift.url",
     "people.meta.settings.remindTimeHelp",
@@ -20,6 +22,7 @@
   "es": [
     "ai.local.testSentence",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
     "setup.steps.migrate.origins.obsidian.title",
     "tools.timezones.zones.America/Argentina/Buenos_Aires",
     "tools.timezones.zones.America/Sao_Paulo"
@@ -27,6 +30,7 @@
   "fr": [
     "ai.local.testSentence",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
     "setup.steps.migrate.origins.obsidian.title",
     "tools.timezones.zones.America/Argentina/Buenos_Aires",
     "tools.timezones.zones.America/Los_Angeles",
@@ -37,6 +41,7 @@
   "pt-BR": [
     "ai.local.testSentence",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
     "setup.steps.migrate.origins.obsidian.title",
     "tools.timezones.zones.America/Argentina/Buenos_Aires",
     "tools.timezones.zones.America/Los_Angeles",

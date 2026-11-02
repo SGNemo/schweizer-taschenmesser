@@ -116,6 +116,60 @@ const SCRATCH: Record<Lang, { title: string; body: string }> = {
   'pt-BR': { title: 'Rascunho', body: 'Não esquecer o leite\nBuscar a encomenda até sexta' },
 };
 
+/** Pages that show the formatting: checklist, table, highlight, link, headings, list, quote, code. */
+const FORMATTED: Record<Lang, { plan: [string, string]; guide: [string, string] }> = {
+  de: {
+    plan: [
+      'Beispiel: Wochenplan mit Checkliste',
+      '## Diese Woche\n\n- [x] Einkauf erledigt\n- [ ] Paket abholen\n- [ ] ==Steuerunterlagen sortieren==\n\n| Tag | Plan |\n| --- | --- |\n| Mo | Sport |\n| Mi | Elternabend |\n\nMehr dazu: [[%LINK%]]',
+    ],
+    guide: [
+      'Beispiel: Formatierung',
+      "# Überschrift 1\n\n## Überschrift 2\n\n**Fett**, *kursiv*, ~~durchgestrichen~~ und `Code`.\n\n1. Erster Schritt\n2. Zweiter Schritt\n\n> Ein Zitat zum Merken.\n\n```ts\nconst gruss = 'Hallo';\n```",
+    ],
+  },
+  en: {
+    plan: [
+      'Example: weekly plan with checklist',
+      '## This week\n\n- [x] Groceries done\n- [ ] Pick up parcel\n- [ ] ==Sort tax papers==\n\n| Day | Plan |\n| --- | --- |\n| Mon | Sport |\n| Wed | Parents’ evening |\n\nMore: [[%LINK%]]',
+    ],
+    guide: [
+      'Example: formatting',
+      "# Heading 1\n\n## Heading 2\n\n**Bold**, *italic*, ~~strikethrough~~ and `code`.\n\n1. First step\n2. Second step\n\n> A quote to remember.\n\n```ts\nconst greeting = 'Hello';\n```",
+    ],
+  },
+  es: {
+    plan: [
+      'Ejemplo: plan semanal con lista',
+      '## Esta semana\n\n- [x] Compra hecha\n- [ ] Recoger el paquete\n- [ ] ==Ordenar los papeles de impuestos==\n\n| Día | Plan |\n| --- | --- |\n| Lun | Deporte |\n| Mié | Reunión de padres |\n\nMás: [[%LINK%]]',
+    ],
+    guide: [
+      'Ejemplo: formato',
+      "# Título 1\n\n## Título 2\n\n**Negrita**, *cursiva*, ~~tachado~~ y `código`.\n\n1. Primer paso\n2. Segundo paso\n\n> Una cita para recordar.\n\n```ts\nconst saludo = 'Hola';\n```",
+    ],
+  },
+  fr: {
+    plan: [
+      'Exemple : plan de la semaine avec liste',
+      '## Cette semaine\n\n- [x] Courses faites\n- [ ] Récupérer le colis\n- [ ] ==Trier les papiers d’impôts==\n\n| Jour | Plan |\n| --- | --- |\n| Lun | Sport |\n| Mer | Réunion de parents |\n\nPlus : [[%LINK%]]',
+    ],
+    guide: [
+      'Exemple : mise en forme',
+      "# Titre 1\n\n## Titre 2\n\n**Gras**, *italique*, ~~barré~~ et `code`.\n\n1. Première étape\n2. Deuxième étape\n\n> Une citation à retenir.\n\n```ts\nconst salut = 'Bonjour';\n```",
+    ],
+  },
+  'pt-BR': {
+    plan: [
+      'Exemplo: plano da semana com lista',
+      '## Esta semana\n\n- [x] Compras feitas\n- [ ] Buscar a encomenda\n- [ ] ==Organizar os papéis do imposto==\n\n| Dia | Plano |\n| --- | --- |\n| Seg | Esporte |\n| Qua | Reunião de pais |\n\nMais: [[%LINK%]]',
+    ],
+    guide: [
+      'Exemplo: formatação',
+      "# Título 1\n\n## Título 2\n\n**Negrito**, *itálico*, ~~tachado~~ e `código`.\n\n1. Primeiro passo\n2. Segundo passo\n\n> Uma citação para lembrar.\n\n```ts\nconst ola = 'Olá';\n```",
+    ],
+  },
+};
+
 function seed(ctx: SeedContext): SeedRows {
   const titles = TITLES[ctx.lang];
   const bodies = BODIES[ctx.lang];
@@ -123,6 +177,18 @@ function seed(ctx: SeedContext): SeedRows {
   const n = ctx.count({ small: 4, medium: 10, large: 200 });
   const books = BOOKS[ctx.lang];
   const bookId = (i: number) => ctx.id('notes', 'notebook', i);
+  const formatted = FORMATTED[ctx.lang];
+  const link = titles[6]!; // the recipe page: the example links to it
+  const showcase = [formatted.plan, formatted.guide].map(([title, body], k) => ({
+    id: ctx.id('notes', 'note', n + k),
+    data: {
+      title,
+      body: body.replace('%LINK%', link),
+      pinned: false,
+      notebookId: bookId(k === 0 ? 0 : 2),
+      order: (n + k + 1) * 10,
+    },
+  }));
   return {
     notebook: books.map((name, i) => ({
       id: bookId(i),
@@ -151,6 +217,7 @@ function seed(ctx: SeedContext): SeedRows {
           order: (i + 1) * 10,
         },
       })),
+      ...showcase,
     ],
   };
 }

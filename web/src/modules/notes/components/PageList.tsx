@@ -236,11 +236,11 @@ export function PageList(p: PageListProps) {
           <Icon name="trash" size={16} />
           {t.notes.trash}
         </Button>
-        <Button variant="ghost" onClick={p.onExport}>
+        <Button variant="ghost" onClick={p.onExport} data-testid="notes-export">
           <Icon name="download" size={16} />
           {t.notes.exportMenu.button}
         </Button>
-        <Button variant="ghost" onClick={p.onImport}>
+        <Button variant="ghost" onClick={p.onImport} data-testid="notes-import">
           <Icon name="upload" size={16} />
           {t.notes.importMenu.button}
         </Button>

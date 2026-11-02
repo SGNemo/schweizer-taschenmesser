@@ -264,7 +264,9 @@ export default function NotesPage() {
       return offerEnableModule('todos', t.notes.links.todoOff, send);
     void send();
   }
-  const subject = sel?.kind === 'note' ? current : sel?.kind === 'scratch' ? scratchNote : null;
+  const created = sel?.kind === 'new' && createdId ? notes?.find((n) => n.id === createdId) : null;
+  const subject =
+    sel?.kind === 'note' ? current : sel?.kind === 'scratch' ? scratchNote : (created ?? null);
   const backlinkList = subject
     ? backlinksOf(subject, notes ?? []).map((n) => ({ id: n.id, title: titleOf(n) }))
     : [];
