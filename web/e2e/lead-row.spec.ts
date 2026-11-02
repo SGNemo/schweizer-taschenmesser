@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { backSettled, ready } from './helpers';
 
 test.describe('Appointment editor: "Erinnern" row (V05)', () => {
   test('quick choices, calm permission hint, remembered default only preselects', async ({
@@ -23,6 +23,9 @@ test.describe('Appointment editor: "Erinnern" row (V05)', () => {
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
+    // Closing the dialog is a pending back traversal; navigating before it settles aborts the load
+    // (`net::ERR_ABORTED`) on slow runners.
+    await backSettled(page);
     await page.goto('/calendar?new=1');
     const again = page.getByRole('dialog').getByRole('group', { name: 'Erinnern' });
     await expect(again.getByRole('button', { name: '1 h' })).toHaveAttribute(
