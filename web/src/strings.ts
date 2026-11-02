@@ -5835,6 +5835,19 @@ export const de = {
         'Noch nicht vorhanden: Die App meldet sich nicht von selbst bei neuen Mails.',
       close: 'Schließen',
     },
+    link: {
+      menu: 'Aus dieser Mail anlegen',
+      noModules:
+        'Zum Anlegen muss ein passendes Modul aktiv sein (ToDos, Kalender, Rechnungen, Merkliste oder Notizen).',
+      title: (what: string) => `${what} aus dieser Mail`,
+      intro: 'Prüfe die Vorschau. Gespeichert wird erst mit „Speichern“.',
+      stores: 'Wird mit gespeichert: ein Link zu dieser Mail.',
+      storesNothing: 'Beispiel-Mail: es wird kein Link gespeichert.',
+      excerpt: 'Anfang der Mail in die Notiz übernehmen',
+      excerptHint: 'Kopiert die ersten Zeilen des Mailtexts in deine Notiz.',
+      created: 'Aus dieser Mail angelegt',
+      open: (what: string, title: string) => `${what} „${title}“ öffnen`,
+    },
     widget: {
       unread: 'Ungelesen',
       unreadContext: (n: number) =>

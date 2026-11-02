@@ -87,6 +87,26 @@ test.describe('mail (demo mails)', () => {
     await expect(page.getByText('Ihre Rechnung für Oktober')).toBeVisible();
   });
 
+  test('creates an invoice from a mail: preview first, link back in the thread', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    await page.getByText('Ihre Rechnung für Oktober').click();
+    await page.getByRole('button', { name: 'Aus dieser Mail anlegen' }).click();
+    await page.getByRole('menuitem', { name: 'Rechnung' }).click();
+    const dialog = page.getByRole('dialog');
+    // prefilled from the mail text; the preview shows what would be saved, nothing is saved yet
+    await expect(dialog.getByRole('textbox')).toHaveValue(/Stadtwerke Musterstadt 84,30 €/);
+    await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
+    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await expect(dialog).toHaveCount(0);
+    // the way back from the thread
+    await expect(page.getByTestId('mail-linked')).toContainText('Rechnung: Stadtwerke Musterstadt');
+    await page.getByTestId('mail-linked').getByRole('link').click();
+    await expect(page).toHaveURL(/\/invoices/);
+    await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
+  });
+
   test('widgets show unread count, top mails and invoice mails', async ({ page }) => {
     await showAllWidgets(page);
     await page.goto('/');

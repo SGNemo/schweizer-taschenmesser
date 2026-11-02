@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { mailAttachment, mailThread, mailWebUrl } from '@/core/mail/service';
+import type { MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailErrorCode, MailMessage } from '@/core/mail/types';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
@@ -8,6 +9,9 @@ import { useUiStore } from '@/stores/ui';
 import { Button, Icon, Skeleton } from '@/ui';
 import { DEMO_ACCOUNT, loadThreadBodies, saveBody } from '../cache';
 import { fullWhen, personName, subjectOf } from '../format';
+import { LinkDialog } from './LinkDialog';
+import { LinkMenu } from './LinkMenu';
+import { LinkedEntries } from './LinkedEntries';
 import { MailFrame } from './MailFrame';
 import { MailError } from './MailError';
 import styles from './mail.module.css';
@@ -66,18 +70,23 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
 
 function MessageCard({
   account,
+  threadId,
+  link,
   message,
   open,
   onToggle,
   autoLoadImages,
 }: {
   account: MailAccountRef;
+  threadId: string;
+  link?: string;
   message: MailMessage;
   open: boolean;
   onToggle: () => void;
   autoLoadImages: boolean;
 }) {
   const [cid, setCid] = useState<Record<string, string>>({});
+  const [linkType, setLinkType] = useState<MailLinkType | undefined>();
 
   useEffect(() => {
     if (!open || account.key === DEMO_ACCOUNT || message.inline.length === 0) return;
@@ -139,6 +148,17 @@ function MessageCard({
             autoLoadImages={autoLoadImages}
           />
           <Attachments account={account} message={message} />
+          <div className={styles.row}>
+            <LinkMenu onPick={setLinkType} />
+          </div>
+          <LinkDialog
+            account={account}
+            threadId={threadId}
+            message={message}
+            link={link}
+            type={linkType}
+            onClose={() => setLinkType(undefined)}
+          />
         </div>
       ) : null}
     </article>
@@ -215,6 +235,8 @@ export function ThreadView({
         <MessageCard
           key={m.id}
           account={account}
+          threadId={threadId}
+          link={web}
           message={m}
           open={openIds.includes(m.id) || messages.length === 1}
           autoLoadImages={autoLoadImages}
@@ -225,6 +247,7 @@ export function ThreadView({
           }
         />
       ))}
+      <LinkedEntries accountKey={account.key} threadId={threadId} />
       <p className={styles.hint}>{t.mail.view.readOnly}</p>
     </div>
   );
