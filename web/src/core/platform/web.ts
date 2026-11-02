@@ -3,6 +3,7 @@ import { loggedFetch } from '@/core/net/netlog';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeBrowser } from './fakeBrowser';
+import { createFakeCustomTabs } from './fakeCustomTabs';
 import { createFakeDownloads } from './fakeDownloads';
 import { createFakeTorrent } from './fakeTorrent';
 import { createFakeSystem } from './fakeSystem';
@@ -323,8 +324,9 @@ export function createWebPlatform(): PlatformService {
           watch: unsupported,
           pickFile: unsupported,
         },
+    customTabs: createFakeCustomTabs(isE2eBuild() && e2eKind() === 'android'),
     // E2E builds only: tabs are faked, no page is loaded.
-    browser: isE2eBuild()
+    browser: isE2eBuild() && e2eKind() === 'desktop'
       ? createFakeBrowser()
       : {
           supported: false,

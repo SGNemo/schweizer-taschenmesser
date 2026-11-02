@@ -43,6 +43,7 @@ import { createVaultBridge } from './vaultBridge';
 import { createShare } from './share';
 import { createLocalModel } from './localModel';
 import { createBrowser } from './browser';
+import { createCustomTabs } from './customTabs';
 import { createDownloads } from './downloads';
 import { createTorrent } from './torrent';
 import { createSystem } from './system';
@@ -214,6 +215,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     disk: createDisk(kind === 'desktop'),
     system: createSystem(kind === 'desktop'),
     browser: createBrowser(kind === 'desktop'),
+    customTabs: createCustomTabs(kind === 'android'),
     downloads: createDownloads(kind === 'desktop'),
     torrent: createTorrent(kind === 'desktop'),
     localModel: createLocalModel(kind === 'desktop'),

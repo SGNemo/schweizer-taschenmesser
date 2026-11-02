@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Android 11+ hides other apps from this one unless it declares what it wants to see: Custom Tabs
+      are launched through a browser that supports them, so the plugin asks for the browsers that
+      answer the standard "open a web address" intent. Nothing else about other apps is visible.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+</manifest>

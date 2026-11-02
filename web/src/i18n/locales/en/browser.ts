@@ -103,6 +103,11 @@ export const browser: Strings['browser'] = {
     pauseSite: 'Pause on this site',
     resumeSite: 'Turn back on for this site',
   },
+  external: {
+    hint: 'Pages open in your device’s browser (a Custom Tab). Tabs, search on the page and zoom are the browser’s; Nemo keeps your bookmarks and history.',
+    failed: 'Couldn’t open the address.',
+    noBookmarks: 'No bookmarks yet. Open an address, then tap the star to save it.',
+  },
   popupBlocked: 'A pop-up was blocked.',
   download: {
     offer: (name: string) => `The page offers “${name}” for download.`,

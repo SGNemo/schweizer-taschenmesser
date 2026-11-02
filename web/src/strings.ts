@@ -5956,6 +5956,12 @@ export const de = {
       pauseSite: 'Auf dieser Seite pausieren',
       resumeSite: 'Auf dieser Seite wieder einschalten',
     },
+    external: {
+      hint: 'Seiten öffnen im Browser deines Geräts (Custom Tab). Tabs, Suche auf der Seite und Zoom sind die des Browsers; Nemo behält deine Lesezeichen und den Verlauf.',
+      failed: 'Die Adresse ließ sich nicht öffnen.',
+      noBookmarks:
+        'Noch keine Lesezeichen. Öffne eine Adresse und tippe auf den Stern, um sie zu speichern.',
+    },
     popupBlocked: 'Ein Pop-up wurde blockiert.',
     download: {
       offer: (name: string) => `Die Seite bietet „${name}“ zum Download an.`,

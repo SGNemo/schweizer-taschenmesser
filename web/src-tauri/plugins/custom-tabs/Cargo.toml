@@ -1,0 +1,19 @@
+[package]
+name = "tauri-plugin-custom-tabs"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Android only: opens an http(s) address in a Chrome Custom Tab (the system browser inside the app, with its own cookies and settings; nothing flows back). Desktop builds compile a stub."
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+links = "tauri-plugin-custom-tabs"
+
+[dependencies]
+tauri = { version = "2.12" }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+url = "2"
+
+[build-dependencies]
+tauri-plugin = { version = "2.7", features = ["build"] }
