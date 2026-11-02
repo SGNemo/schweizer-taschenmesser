@@ -2,6 +2,17 @@
 /// missing from this list cannot be invoked by any window; `tests/commands.rs` compares the list
 /// with the `generate_handler!` block in `src/lib.rs`.
 const COMMANDS: &[&str] = &[
+    "downloads_watch",
+    "downloads_default_dir",
+    "downloads_add",
+    "downloads_pause",
+    "downloads_resume",
+    "downloads_remove",
+    "downloads_set_limit",
+    "downloads_set_job_limit",
+    "downloads_global_limit",
+    "downloads_verify",
+    "downloads_reveal",
     "browser_open",
     "browser_navigate",
     "browser_back",
