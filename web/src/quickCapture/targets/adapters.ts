@@ -21,6 +21,12 @@ function date(value: string | undefined): string | undefined {
   return value;
 }
 
+/** The free text of a capture (e.g. the link to the mail it came from) as the record's `note`; empty parts are left out. */
+function noteOf(...parts: (string | undefined)[]): { note?: string } {
+  const text = parts.filter((p): p is string => !!p?.trim()).join('\n');
+  return text ? { note: text } : {};
+}
+
 const todos: CaptureTarget = {
   type: 'todo',
   moduleId: 'todos',
@@ -31,7 +37,7 @@ const todos: CaptureTarget = {
     ...(f.date ? { dueDate: date(f.date) } : {}),
     ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
     ...(f.priority ? { priority: f.priority } : {}),
-    ...(f.time ? { note: t.quickCapture.todoTimeNote(f.time) } : {}),
+    ...noteOf(f.time ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
   }),
 };
 
@@ -51,6 +57,7 @@ const calendar: CaptureTarget = {
       ...(f.time && f.endTime ? { endTime: f.endTime } : {}),
       ...(overnight ? { endDate: addDaysStr(startDate, 1) } : {}),
       ...(f.recurrence ? { recurrence: f.recurrence } : {}),
+      ...noteOf(f.note),
     };
   },
 };
@@ -68,6 +75,7 @@ const reminders: CaptureTarget = {
     startTime: f.time ?? '09:00',
     notify: { minutesBefore: 0, enabled: true },
     ...(f.recurrence ? { recurrence: f.recurrence } : {}),
+    ...noteOf(f.note),
   }),
 };
 
@@ -136,6 +144,7 @@ const invoices: CaptureTarget = {
       amountMinor: f.amountMinor,
       dueDate: date(f.date ?? ctx.today),
       status: 'open',
+      ...noteOf(f.note),
     };
   },
 };

@@ -86,6 +86,140 @@ test.describe('desktop layout', () => {
   });
 });
 
+test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
+  test.skip(({ isMobile }) => isMobile, 'list and page side by side');
+
+  /** Creates a page with a title and text and waits until autosave has stored it (the list shows the text). */
+  async function addPage(page: Page, title: string, text: string) {
+    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await expect(editor(page)).toBeVisible(); // the editor loads lazily
+    await page.getByLabel('Titel der Seite').fill(title);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(text);
+    await expect(rows(page).filter({ hasText: text })).toBeVisible();
+  }
+  const rows = (page: Page) => page.getByTestId('note-row');
+
+  test('a notebook gets its pages, pages move between notebooks, counts follow', async ({
+    page,
+  }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await page.getByRole('button', { name: 'Neues Notizbuch' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Neues Notizbuch' });
+    await dialog.getByLabel('Name').fill('Arbeit');
+    await dialog.getByRole('button', { name: 'Farbe 2' }).click();
+    await dialog.getByRole('button', { name: 'Ziel' }).click();
+    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    const chip = (name: RegExp) => page.getByRole('button', { name });
+    await expect(chip(/^Arbeit · 0/)).toHaveAttribute('aria-pressed', 'true');
+
+    // A page created while the notebook is shown lands in it.
+    await addPage(page, 'Protokoll', 'Montag besprochen');
+    await expect(chip(/^Arbeit · 1/)).toBeVisible();
+    await chip(/^Allgemein/).click();
+    await expect(rows(page).filter({ hasText: 'Montag besprochen' })).toHaveCount(0);
+    await chip(/^Alle Seiten/).click();
+    await expect(rows(page).filter({ hasText: 'Montag besprochen' })).toBeVisible();
+
+    // Move it to "Allgemein" through the row menu.
+    await rows(page)
+      .filter({ hasText: 'Montag besprochen' })
+      .getByRole('button', { name: 'Seite: weitere Aktionen' })
+      .click();
+    await page.getByRole('menuitem', { name: 'In Notizbuch verschieben' }).click();
+    await page
+      .getByRole('dialog', { name: 'Verschieben nach' })
+      .getByRole('button', { name: 'Allgemein' })
+      .click();
+    await expect(chip(/^Arbeit · 0/)).toBeVisible();
+    await expect(chip(/^Allgemein · 1/)).toBeVisible();
+  });
+
+  test('open pages become tabs, a tab closes without touching the page', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(page, 'Erste', 'Text eins');
+    await addPage(page, 'Zweite', 'Text zwei');
+    const tabs = page.getByRole('navigation', { name: 'Offene Seiten' });
+    await expect(tabs.getByRole('button', { name: 'Erste', exact: true })).toBeVisible();
+    await expect(tabs.getByRole('button', { name: 'Zweite', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await tabs.getByRole('button', { name: 'Erste', exact: true }).click();
+    await expect(editor(page)).toContainText('Text eins');
+    await tabs.getByRole('button', { name: 'Erste schließen' }).click();
+    await expect(rows(page).filter({ hasText: 'Text eins' })).toBeVisible();
+  });
+
+  test('history keeps earlier states and restores one', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(page, 'Verlauf', 'erste Fassung');
+    await editor(page).click();
+    await page.keyboard.press('End');
+    await page.keyboard.type(' und mehr');
+    await expect(rows(page).filter({ hasText: 'und mehr' })).toBeVisible();
+    await page.getByRole('button', { name: 'Verlauf', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Frühere Stände' });
+    await expect(dialog.getByRole('listitem')).toHaveCount(1);
+    await expect(dialog.getByText('erste Fassung')).toBeVisible();
+    await dialog.getByRole('button', { name: 'Diesen Stand wiederherstellen' }).click();
+    await expect(editor(page)).toHaveText('erste Fassung');
+  });
+
+  test('a deleted page comes back from the trash', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(page, 'Flüchtig', 'bald weg');
+    await page.getByRole('button', { name: 'Löschen' }).click();
+    await expect(rows(page).filter({ hasText: 'bald weg' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Papierkorb' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Gelöschte Seiten' });
+    await expect(dialog.getByText('Flüchtig')).toBeVisible();
+    await dialog.getByRole('button', { name: 'Wiederherstellen' }).click();
+    await expect(dialog.getByText('Der Papierkorb ist leer.')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(rows(page).filter({ hasText: 'bald weg' })).toBeVisible();
+  });
+
+  test('Alt+N opens a new page, Alt+Z the scratch pad; sorting by title orders the list', async ({
+    page,
+  }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await addPage(page, 'Zebra', 'gestreift');
+    await page.keyboard.press('Alt+n');
+    await expect(page.getByLabel('Titel der Seite')).toHaveValue('');
+    await page.getByLabel('Titel der Seite').fill('Apfel');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('rund');
+    await expect(rows(page).filter({ hasText: 'rund' })).toBeVisible();
+    await page.keyboard.press('Alt+z');
+    await expect(page.getByRole('heading', { name: 'Schmierzettel', level: 2 })).toBeVisible();
+
+    await page.getByLabel('Sortierung').selectOption({ label: 'Titel' });
+    const titles = await rows(page)
+      .locator('span')
+      .filter({ hasText: /^(Apfel|Zebra)$/ })
+      .allTextContents();
+    expect(titles).toEqual(['Apfel', 'Zebra']);
+  });
+
+  test('a selection of the scratch pad moves into a new page', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await editor(page).click();
+    await page.keyboard.type('Einkauf Brot');
+    await page.keyboard.press('Shift+Home');
+    await page.getByRole('button', { name: 'In neue Seite verschieben' }).click();
+    await expect(editor(page)).toContainText('Einkauf Brot');
+    await expect(page.getByLabel('Titel der Seite')).toHaveValue('');
+    await expect(rows(page).filter({ hasText: 'Einkauf Brot' })).toBeVisible();
+  });
+});
+
 test.describe('phone viewport', () => {
   test.use({ viewport: { width: 390, height: 800 } });
 
@@ -99,6 +233,6 @@ test.describe('phone viewport', () => {
     await page.keyboard.type('Unterwegs notiert');
     await expect(page.getByText('Gespeichert')).toBeVisible();
     await page.getByRole('button', { name: 'Zurück zur Liste' }).click();
-    await expect(list.getByText('Unterwegs notiert')).toBeVisible();
+    await expect(list.getByText('Unterwegs notiert').first()).toBeVisible();
   });
 });

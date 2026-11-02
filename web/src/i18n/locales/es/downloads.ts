@@ -18,6 +18,14 @@ export const downloads: Strings['downloads'] = {
   settings: {
     limitKb: 'Límite de velocidad para todas las descargas (KB/s, 0 = sin límite)',
     folder: 'Carpeta de descargas (vacío = la carpeta Descargas del sistema)',
+    torrent: 'Activar la parte de BitTorrent',
+    torrentDht:
+      'Buscar participantes a través de la red DHT (necesario para enlaces magnet sin tracker)',
+    torrentUpnp: 'Abrir el puerto del router automáticamente (UPnP)',
+    torrentUpKb: 'Torrent: límite de subida (KB/s, 0 = sin límite)',
+    torrentDownKb: 'Torrent: límite de bajada (KB/s, 0 = sin límite)',
+    seedRatio: 'Dejar de compartir con esta proporción (0 = nunca)',
+    seedMinutes: 'Dejar de compartir tras estos minutos (0 = nunca)',
   },
   unsupported: {
     title: 'El gestor de descargas solo está en la app de escritorio',
@@ -88,5 +96,82 @@ export const downloads: Strings['downloads'] = {
   empty: {
     title: 'Aún no hay descargas',
     body: 'Pega una dirección o descarga algo en el navegador. Nada se abre automáticamente.',
+  },
+  torrent: {
+    title: 'BitTorrent',
+    intro:
+      'Enlaces magnet y archivos .torrent que pegas o abres tú. Nemo no busca nada y no recomienda sitios.',
+    hint: 'Solo para contenido legal. Mientras descargas, subes a la vez.',
+    off: {
+      title: 'BitTorrent está desactivado',
+      body: 'La parte de torrents está desactivada. Al activarla aparece antes un breve aviso.',
+      turnOn: 'Activar la parte de torrents',
+    },
+    turnOff: 'Desactivar la parte de torrents',
+    starting: 'Iniciando …',
+    startFailed: 'La parte de torrents no pudo iniciarse.',
+    add: {
+      button: 'Añadir un torrent',
+      title: 'Añadir un torrent',
+      magnet: 'Enlace magnet',
+      magnetPlaceholder: 'magnet:?xt=urn:btih:…',
+      or: 'o',
+      openFile: 'Abrir un archivo .torrent',
+      chosen: 'Archivo elegido',
+      look: 'Ver los archivos',
+      looking: 'Buscando fuentes … puede tardar un momento.',
+      files: 'Archivos',
+      all: 'Todos',
+      none: 'Ninguno',
+      selected: 'Seleccionado',
+      pickOne: 'Elige al menos un archivo.',
+      submit: 'Descargar',
+      back: 'Atrás',
+    },
+    errors: {
+      off: 'La parte de torrents está desactivada.',
+      file: 'Eso no es un archivo .torrent válido (10 MB como máximo).',
+      notMagnet: 'Eso no es un enlace magnet.',
+      timeout: 'No se encontraron fuentes. Revisa el enlace o inténtalo más tarde.',
+      alreadyAdded: 'Este torrent ya está en la lista.',
+      dir: 'La carpeta no existe.',
+      other: 'No ha funcionado.',
+    },
+    state: {
+      starting: 'Iniciando',
+      downloading: 'Descargando',
+      seeding: 'Compartiendo',
+      paused: 'En pausa',
+      done: 'Listo, compartir terminado',
+      error: 'Error',
+    },
+    row: {
+      peers: (n: number) => (n === 1 ? '1 conexión' : `${n} conexiones`),
+      down: (speed: string) => `Bajada ${speed}/s`,
+      up: (speed: string) => `Subida ${speed}/s`,
+      ratio: (ratio: string) => `Proporción ${ratio}`,
+    },
+    actions: {
+      pause: 'Pausar',
+      resume: 'Reanudar',
+      remove: 'Quitar de la lista',
+      removeData: 'Eliminar con los archivos',
+    },
+    deleteData: {
+      title: '¿Eliminar los archivos?',
+      body: (name: string) =>
+        `«${name}» se elimina del disco junto con todos los archivos descargados.`,
+      confirm: 'Eliminar',
+    },
+    ip: {
+      title: 'Tu dirección IP pública',
+      note: 'Mientras descargas, otros participantes ven tu dirección IP. Aquí también puedes verla (una consulta a api.ipify.org, solo al hacer clic).',
+      button: 'Mostrar la dirección IP',
+      failed: 'La consulta no ha funcionado.',
+    },
+    empty: {
+      title: 'Aún no hay torrents',
+      body: 'Añade un enlace magnet o un archivo .torrent que tengas tú.',
+    },
   },
 };

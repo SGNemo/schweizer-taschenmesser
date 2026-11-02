@@ -63,10 +63,10 @@
     },
     "desktop--notes": {
       "height": 800,
-      "buttons": 41,
+      "buttons": 62,
       "links": 27,
-      "icons": 60,
-      "firstScreenActions": 50
+      "icons": 81,
+      "firstScreenActions": 55
     },
     "desktop--pantry": {
       "height": 800,
@@ -196,10 +196,10 @@
     },
     "phone--notes": {
       "height": 1125,
-      "buttons": 18,
+      "buttons": 35,
       "links": 10,
-      "icons": 16,
-      "firstScreenActions": 25
+      "icons": 32,
+      "firstScreenActions": 31
     },
     "phone--pantry": {
       "height": 2153,

@@ -94,6 +94,40 @@ export async function loadThreads(
   return out;
 }
 
+/**
+ * After a confirmed change at the service (mark read, archive, label, trash): the same change in the
+ * saved header, so the list is right before the next refresh. A thread that left the inbox keeps its row
+ * (it still belongs to other labels).
+ */
+export async function patchCachedThread(
+  accountKey: string,
+  thread: string,
+  change: { addLabelIds?: string[]; removeLabelIds?: string[] },
+): Promise<void> {
+  const id = threadId(accountKey, thread);
+  const row = await threadRepo.get(id);
+  if (!row) return;
+  let meta: ThreadMeta | undefined = row.demo;
+  const key = await getDeviceKey();
+  if (!meta && row.sealed) {
+    try {
+      meta = threadMetaSchema.parse(await openJson(key, id, row.sealed));
+    } catch {
+      return;
+    }
+  }
+  if (!meta) return;
+  const labels = new Set(meta.labelIds);
+  for (const l of change.removeLabelIds ?? []) labels.delete(l);
+  for (const l of change.addLabelIds ?? []) labels.add(l);
+  const next = { ...meta, labelIds: [...labels] };
+  await threadRepo.update(id, {
+    unread: labels.has('UNREAD'),
+    inbox: labels.has('INBOX'),
+    ...(row.demo ? { demo: next } : { sealed: await sealJson(key, id, next) }),
+  });
+}
+
 export async function saveBody(accountKey: string, message: MailMessage): Promise<void> {
   const id = threadId(accountKey, message.id);
   const key = await getDeviceKey();

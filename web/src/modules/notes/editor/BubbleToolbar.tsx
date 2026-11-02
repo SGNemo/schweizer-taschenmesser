@@ -11,7 +11,7 @@ import { HIGHLIGHT_TONES, toneAttrs } from './extensions';
 const URL_HINT = 'https://';
 
 /** Floating toolbar for a selection; every button is ≥ 44 px and has a text label for screen readers. */
-export function BubbleToolbar({ editor }: { editor: Editor }) {
+export function BubbleToolbar({ editor, onMove }: { editor: Editor; onMove?: () => void }) {
   const [mode, setMode] = useState<'main' | 'tone' | 'link'>('main');
   const [url, setUrl] = useState('');
   const on = useEditorState({
@@ -67,6 +67,9 @@ export function BubbleToolbar({ editor }: { editor: Editor }) {
               () => setMode('tone'),
               <Icon name="star" size={18} />,
             )}
+            {onMove
+              ? btn(t.notes.moveSelection, false, onMove, <Icon name="plus" size={18} />)
+              : null}
             {btn(
               t.notes.fmt.link,
               on.link,

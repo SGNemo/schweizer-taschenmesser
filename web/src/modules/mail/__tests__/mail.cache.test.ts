@@ -2,7 +2,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import type { MailMessage, MailThreadSummary } from '@/core/mail/types';
-import { cacheStats, clearMailCache, loadBody, loadThreads, saveBody, saveThreads } from '../cache';
+import {
+  cacheStats,
+  clearMailCache,
+  loadBody,
+  loadThreads,
+  patchCachedThread,
+  saveBody,
+  saveThreads,
+} from '../cache';
 import { bodyRepo, threadRepo } from '../repo';
 
 const thread = (
@@ -44,6 +52,22 @@ beforeEach(async () => {
 });
 
 describe('mail cache', () => {
+  it('follows a confirmed change: read, archived, labelled (header stays sealed)', async () => {
+    await saveThreads('google', [thread('t1', 5)]);
+    await patchCachedThread('google', 't1', { removeLabelIds: ['UNREAD'] });
+    expect((await loadThreads('google'))[0]).toMatchObject({ unread: false, labelIds: ['INBOX'] });
+    await patchCachedThread('google', 't1', {
+      removeLabelIds: ['INBOX'],
+      addLabelIds: ['Label_1'],
+    });
+    expect((await loadThreads('google'))[0]).toMatchObject({ labelIds: ['Label_1'] });
+    expect(await loadThreads('google', { labelId: 'INBOX' })).toEqual([]);
+    expect(JSON.stringify(await db.table('mail_thread').toArray())).not.toContain(
+      'Geheimer Betreff',
+    );
+    await patchCachedThread('google', 'unknown', { addLabelIds: ['X'] }); // nothing there: no error
+  });
+
   it('keeps sender, subject, preview and body only sealed in the stored rows', async () => {
     await saveThreads('google', [thread('t1', 5)]);
     await saveBody('google', message);

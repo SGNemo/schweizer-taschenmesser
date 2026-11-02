@@ -50,3 +50,21 @@ export const bodySchema = z.object({
     .optional(),
 });
 export type CachedBody = z.output<typeof bodySchema>;
+
+export const LINK_TYPES = ['invoice', 'event', 'todo', 'reminder', 'bookmark', 'note'] as const;
+
+/**
+ * "This entry was created from that mail": the way back from a thread to what came out of it (device-local,
+ * like the cache). Only ids and the destination; the entry's title is read from the entry itself, so a
+ * rename or a delete there is followed.
+ */
+export const linkSchema = z.object({
+  accountKey: z.string(),
+  threadId: z.string(),
+  messageId: z.string(),
+  type: z.enum(LINK_TYPES),
+  moduleId: z.string(),
+  collection: z.string(),
+  entryId: z.string(),
+});
+export type MailLink = z.output<typeof linkSchema>;

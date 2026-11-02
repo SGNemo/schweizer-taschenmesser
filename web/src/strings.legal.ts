@@ -117,6 +117,12 @@ export const tLegal = defineBundle(
         to: 'Der Server, von dem du herunterlädst. Er sieht deine IP-Adresse.',
         when: 'Nur wenn du das Modul „Downloads“ einschaltest und auf „Herunterladen“ klickst oder einen pausierten Download fortsetzt. Nichts startet von selbst, auch nicht nach einem Neustart.',
       },
+      torrent: {
+        title: 'BitTorrent (optional)',
+        what: 'Beim Herunterladen und Teilen: deine IP-Adresse und die Kennung (Info-Hash) des Torrents gegenüber anderen Teilnehmern und den Trackern aus dem Magnet-Link oder der Torrent-Datei; mit eingeschaltetem DHT außerdem Anfragen nach Teilnehmern im DHT-Netz. Was du lädst, bietest du anderen zugleich an. Die Liste deiner Torrents bleibt auf dem Gerät und geht nie an die KI.',
+        to: 'Andere Teilnehmer (Peers), die Tracker aus dem Magnet-Link oder der Torrent-Datei und DHT-Knoten (zum Start dht.transmissionbt.com und dht.libtorrent.org). Mit „Port am Router öffnen“ zusätzlich dein Router im lokalen Netz (UPnP). Alle sehen deine IP-Adresse.',
+        when: 'Nur wenn du den Torrent-Teil eingeschaltet und den Hinweis bestätigt hast. Die Engine startet, wenn du dann die Seite „Downloads“ öffnest; ein gespeicherter Torrent bleibt pausiert, bis du ihn fortsetzt. Das Teilen endet bei dem Verhältnis oder der Zeit, die du eingestellt hast. Die eigene öffentliche IP wird nur auf Klick abgefragt (api.ipify.org, siehe „ip“).',
+      },
       ip: {
         title: 'Öffentliche IP anzeigen (Windows)',
         what: 'Eine Abfrage deiner öffentlichen IP-Adresse. Das Ergebnis wird nur angezeigt.',
@@ -203,6 +209,13 @@ export const tLegal = defineBundle(
         body: [
           'Für jedes Teilstück gehen die Koordinaten des Gebiets an den Overpass-Dienst von OpenStreetMap (overpass-api.de), der die Kartendaten liefert. Der Dienst sieht deine IP-Adresse und welches Gebiet du dir erzeugst. Nie deine Orte, Routen oder Notizen.',
           'Es passiert nur auf deinen Klick und nur, solange die App offen ist; danach liegt die Karte auf deinem Gerät. Der Dienst ist gespendet und für leichte Nutzung gedacht. Du kannst ihn in den Einstellungen des Moduls ändern. Hast du dort eine eigene Kartendatei eingetragen, kommen die Teile von diesem Server statt vom Overpass-Dienst.',
+        ],
+      },
+      'downloads-torrent': {
+        title: 'BitTorrent: bitte kurz lesen',
+        body: [
+          'Nutze BitTorrent nur für legale Inhalte, zum Beispiel Linux-Distributionen, freie Software oder eigene Dateien. Urheberrechtsverletzungen sind strafbar und werden abgemahnt; das kann teuer werden.',
+          'Beim Herunterladen lädst du zugleich hoch: Andere Teilnehmer sehen deine IP-Adresse. Nemo sucht nichts und empfiehlt keine Seiten; du gibst Magnet-Links und Torrent-Dateien selbst ein.',
         ],
       },
       supporter: {
@@ -348,6 +361,12 @@ export const tLegal = defineBundle(
           to: 'The server you download from. It sees your IP address.',
           when: 'Only when you switch on the “Downloads” module and click “Download” or resume a paused download. Nothing starts by itself, not even after a restart.',
         },
+        torrent: {
+          title: 'BitTorrent (optional)',
+          what: 'While downloading and sharing: your IP address and the identifier (info hash) of the torrent towards other participants and the trackers named in the magnet link or torrent file; with DHT switched on also requests for participants in the DHT network. What you download you offer to others at the same time. The list of your torrents stays on the device and never goes to the AI.',
+          to: 'Other participants (peers), the trackers from the magnet link or torrent file and DHT nodes (to start with dht.transmissionbt.com and dht.libtorrent.org). With "open port on the router" also your router on the local network (UPnP). All of them see your IP address.',
+          when: 'Only when you switched the torrent part on and confirmed the notice. The engine starts when you then open the "Downloads" page; a saved torrent stays paused until you resume it. Sharing ends at the ratio or time you set. Your own public IP is only looked up on a click (api.ipify.org, see "ip").',
+        },
         ip: {
           title: 'Show public IP (Windows)',
           what: 'A request for your public IP address. The result is only displayed.',
@@ -434,6 +453,13 @@ export const tLegal = defineBundle(
           body: [
             'For every piece, the coordinates of the area go to the Overpass service of OpenStreetMap (overpass-api.de), which delivers the map data. The service sees your IP address and which area you build. Never your places, routes or notes.',
             'It happens only on your click and only while the app is open; afterwards the map lives on your device. The service is donated and meant for light use. You can change it in the module settings. If you entered your own region file there, the pieces come from that server instead of the Overpass service.',
+          ],
+        },
+        'downloads-torrent': {
+          title: 'BitTorrent: please read',
+          body: [
+            'Use BitTorrent only for legal content, for example Linux distributions, free software or your own files. Copyright infringement is a punishable offence and is met with cease-and-desist letters; that can be expensive.',
+            'While you download you upload at the same time: other participants see your IP address. Nemo searches for nothing and recommends no sites; you enter magnet links and torrent files yourself.',
           ],
         },
         supporter: {
