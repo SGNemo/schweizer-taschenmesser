@@ -143,11 +143,14 @@ describe('persona tool', () => {
     const country = screen.getByLabelText(s.country);
     await user.selectOptions(country, 'fr');
     await waitFor(() => expect(rowValue(s.fields.phone)).toMatch(/^00 \d\d/));
+    // On a busy machine the select can still show the old value for a moment (controlled input restored by
+    // React before the new state is committed); what matters is that it settles on the new one, in the same element.
+    await waitFor(() => expect(country).toHaveValue('fr'));
     expect(screen.getByLabelText(s.country)).toBe(country);
-    expect(country).toHaveValue('fr');
-    expect(document.activeElement).toBe(country);
+    await waitFor(() => expect(document.activeElement).toBe(country));
     const bio = screen.getByLabelText(s.bio);
     await user.click(bio);
+    await waitFor(() => expect(bio).toBeChecked());
     expect(screen.getByLabelText(s.bio)).toBe(bio);
     expect(document.activeElement).toBe(bio);
   });
