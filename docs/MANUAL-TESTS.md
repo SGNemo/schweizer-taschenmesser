@@ -392,6 +392,14 @@ D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden:
 D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
 D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
 
+### Torrent (Desktop, nur mit echtem Netz prüfbar; nur legale Inhalte, z. B. eine Linux-Distribution von deren Download-Seite)
+D7. *Aus und Hinweis:* Downloads-Seite, „BitTorrent ist aus“; „Torrent-Teil einschalten“ zeigt den Hinweis (legale Inhalte, hochladen beim Herunterladen, Abmahnung); erst nach „Verstanden“ startet die Engine. Aus- und wieder Einschalten: kein zweiter Hinweis. ☐
+D8. *Magnet und Datei:* Magnet-Link einer Linux-Distribution einfügen → „Dateien ansehen“ (kann etwas dauern) → Dateien wählen, Ordner wählen → lädt; dasselbe mit der `.torrent`-Datei der Distribution („.torrent-Datei öffnen“). Mehrere Dateien landen in `Ordner/<Name>/`. ☐
+D9. *Anzeige und Limits:* Zustand, Fortschritt, Verbindungen, Laden/Teilen pro Sekunde, Verhältnis; Einstellungen → Torrent-Limits setzen: die Anzeige bleibt darunter. ☐
+D10. *Teilen und Neustart:* nach dem Download „Teilt“; Verhältnis 1,0 gesetzt → nach Erreichen „Fertig, Teilen beendet“. Nemo beenden und neu starten (auch hart per Task-Manager): alle Torrents stehen „Pausiert“, nichts lädt oder teilt von selbst. ☐
+D11. *Entfernen:* „Aus der Liste entfernen“ lässt die Dateien, „Mit Dateien löschen“ fragt nach und löscht sie. ☐
+D12. *IP und Ausschalten:* „IP-Adresse anzeigen“ fragt erst auf den Klick (api.ipify.org). „Torrent-Teil ausschalten“ beendet die Engine; kein Netzverkehr der Torrents mehr (Ressourcenmonitor). Rechner ohne IPv6 (selten): „konnte nicht starten“. ☐
+
 ### Anonyme Persona (Branch `feat/tool-anonymous-persona`)
 P1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
 P2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
