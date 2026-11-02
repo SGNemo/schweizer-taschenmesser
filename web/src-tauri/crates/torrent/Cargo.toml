@@ -1,0 +1,18 @@
+[package]
+name = "taschenmesser-torrent"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "BitTorrent engine for the Downloads module (embedded librqbit): magnet links and .torrent files the user provides, file selection, limits, seeding limits. Never searches, never lists sites. No Tauri, so it is tested on any machine."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "torrent"
+
+[dependencies]
+# rustls instead of OpenSSL; no HTTP API / web UI of librqbit (nothing listens for HTTP).
+librqbit = { version = "9.1", default-features = false, features = ["rust-tls"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "time", "sync", "macros"] }
+anyhow = "1"
