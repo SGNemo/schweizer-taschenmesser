@@ -4,6 +4,8 @@
     "connectors.ics.name",
     "invoices.meta.settings.remindTimeHelp",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
+    "notes.exportMenu.text",
     "pantry.meta.settings.remindTimeHelp",
     "people.gift.url",
     "people.meta.settings.remindTimeHelp",
@@ -22,6 +24,7 @@
   "es": [
     "ai.local.testSentence",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
     "setup.steps.migrate.origins.obsidian.title",
     "tools.persona.providers.guerrilla",
     "tools.persona.providers.tenminute",
@@ -31,6 +34,7 @@
   "fr": [
     "ai.local.testSentence",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
     "setup.steps.migrate.origins.obsidian.title",
     "tools.persona.providers.guerrilla",
     "tools.persona.providers.tenminute",
@@ -43,6 +47,7 @@
   "pt-BR": [
     "ai.local.testSentence",
     "maps.apps.google",
+    "notes.exportMenu.markdown",
     "setup.steps.migrate.origins.obsidian.title",
     "tools.persona.providers.guerrilla",
     "tools.persona.providers.tenminute",

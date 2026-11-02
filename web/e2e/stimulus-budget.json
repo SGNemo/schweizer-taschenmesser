@@ -63,9 +63,9 @@
     },
     "desktop--notes": {
       "height": 800,
-      "buttons": 62,
+      "buttons": 68,
       "links": 27,
-      "icons": 81,
+      "icons": 85,
       "firstScreenActions": 55
     },
     "desktop--pantry": {
@@ -196,9 +196,9 @@
     },
     "phone--notes": {
       "height": 1125,
-      "buttons": 35,
+      "buttons": 41,
       "links": 10,
-      "icons": 32,
+      "icons": 36,
       "firstScreenActions": 31
     },
     "phone--pantry": {

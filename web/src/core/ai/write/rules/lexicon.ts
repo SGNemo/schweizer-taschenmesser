@@ -55,6 +55,7 @@ export const UPDATE_PREFIXES = [
   'erhoh',
   'erhoeh',
   'verlanger',
+  'erganz',
 ];
 /** Whole words only: "anderen" is not "ändere". */
 export const UPDATE_WORDS = ['andere', 'aendere', 'andern', 'aendern'];

@@ -1,13 +1,15 @@
 import type { Editor } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
 import { EditorContent, useEditor } from '@tiptap/react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { t } from '@/strings';
 import { BubbleToolbar } from './BubbleToolbar';
+import { LinkMenu } from './LinkMenu';
 import styles from './Editor.module.css';
 import { noteExtensions } from './extensions';
 import { storeImage } from './images';
 import { SlashMenu } from './SlashMenu';
+import { createNavRelay } from './wikiLinkNode';
 
 export interface EditorApi {
   clear: () => void;
@@ -32,7 +34,15 @@ export interface EditorSurfaceProps {
   apiRef?: { current: EditorApi | null };
   /** Scratch pad: offers "move to a new page" for the selection; receives its Markdown (already removed here). */
   onMoveSelection?: (markdown: string) => void;
+  /** Page titles for the `[[` menu (matching `query`). */
+  linkTitles?: (query: string) => string[];
+  /** A `[[link]]` was clicked. */
+  onOpenLink?: (target: string) => void;
+  /** The selection (checklist item or any text) becomes a to-do. */
+  onTodo?: (text: string) => void;
 }
+
+const noTitles = (): string[] => [];
 
 /** The rich-text surface (lazy chunk of the notes route). Markdown in, Markdown out. */
 export default function EditorSurface({
@@ -45,9 +55,16 @@ export default function EditorSurface({
   apiRef,
   onReady,
   onMoveSelection,
+  linkTitles,
+  onOpenLink,
+  onTodo,
 }: EditorSurfaceProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   const editorRef = useRef<Editor | null>(null);
+  const [relay] = useState(createNavRelay);
+  useEffect(() => {
+    relay.set(onOpenLink ?? (() => undefined));
+  }, [relay, onOpenLink]);
 
   const insertImages = useCallback(
     async (files: File[]) => {
@@ -68,7 +85,7 @@ export default function EditorSurface({
   );
 
   const editor = useEditor({
-    extensions: noteExtensions(),
+    extensions: noteExtensions(relay.navigate),
     content: initial,
     contentType: 'markdown',
     autofocus: autoFocus ? 'end' : false,
@@ -150,6 +167,18 @@ export default function EditorSurface({
       <EditorContent editor={editor} className={styles.content} />
       <BubbleToolbar
         editor={editor}
+        onTodo={
+          onTodo
+            ? () => {
+                const { from, to } = editor.state.selection;
+                const text = editor.state.doc
+                  .textBetween(from, to, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+                if (text) onTodo(text.slice(0, 200));
+              }
+            : undefined
+        }
         onMove={
           onMoveSelection
             ? () => {
@@ -166,6 +195,7 @@ export default function EditorSurface({
             : undefined
         }
       />
+      <LinkMenu editor={editor} titles={linkTitles ?? noTitles} />
       <SlashMenu editor={editor} onImage={() => fileInput.current?.click()} />
       <input
         ref={fileInput}
