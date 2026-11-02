@@ -16,6 +16,7 @@ export const NOTICE_IDS = [
   'maps-route',
   'maps-transit',
   'maps-build',
+  'downloads-torrent',
   'supporter',
 ] as const;
 export type NoticeId = (typeof NOTICE_IDS)[number];

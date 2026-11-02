@@ -19,7 +19,16 @@ export async function ensureScratchNote(): Promise<boolean> {
   if (!text.trim()) return false;
   if (await noteRepo.table.get(SCRATCH_ID)) return false;
   await noteRepo.createMany([
-    { id: SCRATCH_ID, data: { title: 'Zettel', body: plainToMarkdown(text), pinned: true } },
+    {
+      id: SCRATCH_ID,
+      data: {
+        title: 'Zettel',
+        body: plainToMarkdown(text),
+        pinned: true,
+        notebookId: null,
+        order: 0,
+      },
+    },
   ]);
   return true;
 }

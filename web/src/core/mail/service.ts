@@ -12,10 +12,14 @@ import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import type {
   ListRequest,
   MailAccountRef,
+  MailDraftRef,
+  MailFeature,
   MailLabel,
   MailPage,
   MailProvider,
   MailThread,
+  OutgoingMail,
+  ThreadChange,
 } from './types';
 
 function resolve(ref: MailAccountRef): { provider: MailProvider; ctx: ConnectorContext } {
@@ -59,3 +63,52 @@ export const mailUnread = (ref: MailAccountRef): Promise<number> =>
 export function mailWebUrl(ref: MailAccountRef, threadId: string): string | undefined {
   return getConnector(ref.connectorId)?.mailbox?.webUrl?.(threadId, ref.email);
 }
+
+/* ---------------------------------- write side (opt-in) ---------------------------------- */
+
+/** Did the user switch this permission on for the account? (Set at login: the token carries its scope.) */
+export const hasFeature = (ref: MailAccountRef, feature: MailFeature): boolean =>
+  ref.features?.includes(feature) ?? false;
+
+/**
+ * Every write goes through here: no call leaves for an account whose permission is off (`denied`, which
+ * the UI explains), and none for a provider that cannot do it (`unsupported`). The callers in `modules/mail`
+ * only run after the user confirmed.
+ */
+async function write<T>(
+  ref: MailAccountRef,
+  feature: MailFeature,
+  fn: (p: MailProvider, ctx: ConnectorContext) => Promise<T> | undefined,
+): Promise<T> {
+  if (!hasFeature(ref, feature)) throw new ConnectorError('denied', 'permission is off');
+  return call(ref, async (p, ctx) => {
+    const run = fn(p, ctx);
+    if (!run) throw new ConnectorError('unsupported', 'not offered by this mailbox');
+    return run;
+  });
+}
+
+export const mailModify = (
+  ref: MailAccountRef,
+  threadId: string,
+  change: ThreadChange,
+): Promise<void> => write(ref, 'mail-modify', (p, ctx) => p.modify?.(ctx, threadId, change));
+export const mailTrash = (ref: MailAccountRef, threadId: string): Promise<void> =>
+  write(ref, 'mail-modify', (p, ctx) => p.trash?.(ctx, threadId));
+export const mailUntrash = (ref: MailAccountRef, threadId: string): Promise<void> =>
+  write(ref, 'mail-modify', (p, ctx) => p.untrash?.(ctx, threadId));
+export const mailSend = (
+  ref: MailAccountRef,
+  mail: OutgoingMail,
+): Promise<{ id: string; threadId: string }> =>
+  write(ref, 'mail-send', (p, ctx) => p.send?.(ctx, mail));
+export const mailSaveDraft = (
+  ref: MailAccountRef,
+  mail: OutgoingMail,
+  draftId?: string,
+): Promise<MailDraftRef> =>
+  write(ref, 'mail-modify', (p, ctx) => p.saveDraft?.(ctx, mail, draftId));
+export const mailDeleteDraft = (ref: MailAccountRef, draftId: string): Promise<void> =>
+  write(ref, 'mail-modify', (p, ctx) => p.deleteDraft?.(ctx, draftId));
+export const mailDrafts = (ref: MailAccountRef): Promise<MailDraftRef[]> =>
+  call(ref, async (p, ctx) => (p.drafts ? p.drafts(ctx) : []));

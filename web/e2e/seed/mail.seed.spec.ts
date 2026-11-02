@@ -52,6 +52,9 @@ async function audit(page: Page, label: string) {
   ).toEqual([]);
 }
 
+// MAIL_MOBILE=1: the same flows at an Android phone's viewport (screenshots)
+if (process.env.MAIL_MOBILE) test.use({ viewport: { width: 412, height: 915 } });
+
 test.describe('mail (demo mails)', () => {
   test.setTimeout(120_000); // each test loads the seed first
   test.beforeEach(async ({ page }) => {
@@ -85,6 +88,26 @@ test.describe('mail (demo mails)', () => {
     // back to the list
     await page.getByRole('button', { name: 'Zur Liste' }).click();
     await expect(page.getByText('Ihre Rechnung für Oktober')).toBeVisible();
+  });
+
+  test('creates an invoice from a mail: preview first, link back in the thread', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    await page.getByText('Ihre Rechnung für Oktober').click();
+    await page.getByRole('button', { name: 'Aus dieser Mail anlegen' }).click();
+    await page.getByRole('menuitem', { name: 'Rechnung' }).click();
+    const dialog = page.getByRole('dialog');
+    // prefilled from the mail text; the preview shows what would be saved, nothing is saved yet
+    await expect(dialog.getByRole('textbox')).toHaveValue(/Stadtwerke Musterstadt 84,30 €/);
+    await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
+    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await expect(dialog).toHaveCount(0);
+    // the way back from the thread
+    await expect(page.getByTestId('mail-linked')).toContainText('Rechnung: Stadtwerke Musterstadt');
+    await page.getByTestId('mail-linked').getByRole('link').click();
+    await expect(page).toHaveURL(/\/invoices/);
+    await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
   });
 
   test('widgets show unread count, top mails and invoice mails', async ({ page }) => {
@@ -121,6 +144,14 @@ test.describe('mail (demo mails)', () => {
       await audit(page, `thread (${scheme})`);
       if (out)
         await page.screenshot({ path: `${out}/mail-thread-${info.project.name}-${scheme}.png` });
+      // create from this mail: the menu and the prefilled preview dialog
+      await page.getByRole('button', { name: 'Aus dieser Mail anlegen' }).click();
+      await page.getByRole('menuitem', { name: 'Rechnung' }).click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
+      await audit(page, `create dialog (${scheme})`);
+      if (out)
+        await page.screenshot({ path: `${out}/mail-create-${info.project.name}-${scheme}.png` });
     });
   }
 });

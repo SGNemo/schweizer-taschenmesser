@@ -44,6 +44,7 @@ import { createShare } from './share';
 import { createLocalModel } from './localModel';
 import { createBrowser } from './browser';
 import { createDownloads } from './downloads';
+import { createTorrent } from './torrent';
 import { createSystem } from './system';
 import { createSecureParts } from './secureStore';
 import { createUpdater } from './updater';
@@ -214,6 +215,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     system: createSystem(kind === 'desktop'),
     browser: createBrowser(kind === 'desktop'),
     downloads: createDownloads(kind === 'desktop'),
+    torrent: createTorrent(kind === 'desktop'),
     localModel: createLocalModel(kind === 'desktop'),
     desktop: createDesktopService(kind === 'desktop'),
     share: createShare(kind === 'android'),

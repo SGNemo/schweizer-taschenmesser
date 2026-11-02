@@ -4,6 +4,7 @@ import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeBrowser } from './fakeBrowser';
 import { createFakeDownloads } from './fakeDownloads';
+import { createFakeTorrent } from './fakeTorrent';
 import { createFakeSystem } from './fakeSystem';
 import { noLocalModel } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
@@ -306,6 +307,21 @@ export function createWebPlatform(): PlatformService {
           setJobLimit: unsupported,
           verify: unsupported,
           reveal: unsupported,
+        },
+    // E2E builds only: invented torrents, no peers, no network.
+    torrent: isE2eBuild()
+      ? createFakeTorrent()
+      : {
+          supported: false,
+          configure: unsupported,
+          stop: unsupported,
+          preview: unsupported,
+          add: unsupported,
+          pause: unsupported,
+          resume: unsupported,
+          remove: unsupported,
+          watch: unsupported,
+          pickFile: unsupported,
         },
     // E2E builds only: tabs are faked, no page is loaded.
     browser: isE2eBuild()

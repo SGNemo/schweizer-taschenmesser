@@ -21,6 +21,7 @@ import {
 import { formatBytes, percent } from '../lib/format';
 import { settings, type DownloadsPrefs } from '../settings';
 import { ensureWatching, useJobs } from '../store';
+import { TorrentSection } from './TorrentSection';
 import styles from './DownloadsPage.module.css';
 
 const ERRORS = ['scheme', 'url', 'dir', 'hash'] as const;
@@ -88,6 +89,8 @@ export default function DownloadsPage() {
           />
         ))}
       </ItemList>
+
+      <TorrentSection prefs={prefs} />
 
       <AddDialog
         open={adding !== null}

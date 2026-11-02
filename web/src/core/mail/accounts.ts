@@ -16,7 +16,12 @@ export async function listMailAccounts(): Promise<MailAccountRef[]> {
     const status = await loadStatus(def.id);
     if (!usable(status.state) && status.state !== 'expired') continue;
     if (status.features.includes('mail'))
-      out.push({ key: def.id, connectorId: def.id, email: status.account });
+      out.push({
+        key: def.id,
+        connectorId: def.id,
+        email: status.account,
+        features: status.features,
+      });
     for (const a of status.accounts ?? [])
       if (a.features.includes('mail'))
         out.push({
@@ -24,6 +29,7 @@ export async function listMailAccounts(): Promise<MailAccountRef[]> {
           connectorId: def.id,
           accountId: a.id,
           email: a.email,
+          features: a.features,
         });
   }
   return out;

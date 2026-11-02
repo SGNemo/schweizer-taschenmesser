@@ -105,10 +105,17 @@ export const connectors: Strings['connectors'] = {
   google: {
     name: 'Google',
     description:
-      'Lee calendarios y busca en los correos facturas, suscripciones, eventos y contratos. Solo lectura.',
+      'Leer calendarios y correo. Gestionar y enviar correo son permisos aparte que activas solo si los necesitas.',
     calendarFeature: 'Calendario',
     calendarFeatureHint: 'Muestra eventos de tus calendarios de Google.',
     mailFeature: 'Correos',
-    mailFeatureHint: 'Busca facturas, suscripciones, eventos y contratos con un clic.',
+    mailFeatureHint:
+      'Leer el correo en el módulo «Correo» y buscar a petición facturas, suscripciones, citas y contratos. Solo lectura.',
+    modifyFeature: 'Gestionar el correo',
+    modifyFeatureHint:
+      'Permite a Nemo marcar correos como leídos, archivarlos, etiquetarlos, moverlos a la papelera y guardar borradores – cada vez solo tras tu confirmación, nada se borra definitivamente. Nota: con este permiso Google técnicamente también permite enviar; Nemo solo envía con «Enviar correo» activado y tras tu confirmación.',
+    sendFeature: 'Enviar correo',
+    sendFeatureHint:
+      'Permite a Nemo enviar correo en tu nombre (nuevo, respuesta, reenvío) – solo cuando confirmas «Enviar», con un breve plazo para retirarlo. Sin esta opción Nemo no envía nada.',
   },
 };

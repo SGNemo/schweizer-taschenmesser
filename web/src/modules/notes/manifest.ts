@@ -2,7 +2,7 @@ import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { onboarding } from './onboarding';
-import { noteSchema } from './schema';
+import { noteSchema, notebookSchema } from './schema';
 import { settings } from './settings';
 import { t } from '@/strings';
 
@@ -13,7 +13,7 @@ const manifest: ModuleManifest = {
   },
   icon: 'note',
   identity: { hue: 'violet', widgetType: 'tiles' },
-  version: 2,
+  version: 3,
   get description() {
     return t.notes.meta.description;
   },
@@ -34,6 +34,11 @@ const manifest: ModuleManifest = {
         indexes: ['pinned'],
         example: { title: 'Geschenkideen', body: 'Buch, Kerze, Tee' },
       },
+      notebook: {
+        schema: notebookSchema,
+        indexes: [],
+        example: { name: 'Garten und Haus', tone: 2, icon: 'home' },
+      },
     },
   },
   migrations,
@@ -52,7 +57,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: [] },
+  seed: { version: 3, dependsOn: [] },
   layout: 'full',
   order: 80,
   area: 'knowledge',
