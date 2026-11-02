@@ -227,6 +227,9 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **E2 Windows-App:** Strg+B/I, Tab/Shift+Tab in Listen, Strg+Z/Y; Vollbild; Bild aus der Zwischenablage einfügen und nach Neustart noch da. ☐
 - **E3 Absturz:** Seite mit viel Text, Tab/Fenster hart beenden (Task-Manager), neu öffnen: Text ist da (ggf. Hinweis „wiederhergestellt“). ☐
 - **E4 Große Seite:** 100.000 Zeichen einfügen (z. B. langer Markdown-Text): Tippen und Scrollen bleibt flüssig auf dem Handy? ☐
+- **E5 Android Seitenliste:** Notizbuch anlegen (Farbe, Symbol), Seiten verschieben, „Eigene Reihenfolge“ mit langem Druck auf den Griff sortieren (scrollt die Liste noch?), „Offene Seiten“ oben in der Liste, Zurück-Taste. ☐
+- **E6 Windows-App:** Strg+N öffnet eine neue Seite (Alt+N im Browser), Alt+Z den Schmierzettel; Tabs mit vielen Seiten scrollen seitlich. ☐
+- **E7 Verlauf:** eine Seite zwei Minuten bearbeiten, „Verlauf“ zeigt frühere Stände, Wiederherstellen und mit Strg+Z zurück. ☐
 
 ### KI abschalten – nur mit zwei Geräten prüfbar
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
