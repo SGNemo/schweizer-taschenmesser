@@ -84,10 +84,34 @@ describe('passphrase generator', () => {
     const words = await loadWordlist();
     expect(words).toHaveLength(7776);
     expect(new Set(words).size).toBe(7776);
-    const phrase = generatePassphrase(words, DEFAULT_PASSPHRASE_OPTIONS);
-    const parts = phrase.split('-');
+    // Four words of the list contain a hyphen (drop-down, felt-tip, t-shirt, yo-yo), so the number of words is
+    // counted with a separator that cannot occur in the list; the default separator is checked on its own.
+    expect(DEFAULT_PASSPHRASE_OPTIONS.separator).toBe('-');
+    const parts = generatePassphrase(words, {
+      ...DEFAULT_PASSPHRASE_OPTIONS,
+      separator: ' ',
+    }).split(' ');
     expect(parts).toHaveLength(5);
     for (const p of parts) expect(words).toContain(p);
+    const joined = generatePassphrase(words, DEFAULT_PASSPHRASE_OPTIONS);
+    expect(joined.split('-').length).toBeGreaterThanOrEqual(5);
+    expect(joined.startsWith('-') || joined.endsWith('-')).toBe(false);
+  });
+
+  it('counts words, not hyphens, when a hyphenated word of the list is drawn', async () => {
+    const words = await loadWordlist();
+    const yoyo = words.indexOf('yo-yo');
+    expect(yoyo).toBeGreaterThanOrEqual(0);
+    const always = { int: () => yoyo };
+    const joined = generatePassphrase(words, DEFAULT_PASSPHRASE_OPTIONS, always);
+    expect(joined).toBe(Array(5).fill('yo-yo').join('-'));
+    expect(joined.split('-')).toHaveLength(10); // what a test that splits at the separator would see
+    const spaced = generatePassphrase(
+      words,
+      { ...DEFAULT_PASSPHRASE_OPTIONS, separator: ' ' },
+      always,
+    );
+    expect(spaced.split(' ')).toHaveLength(5);
   });
 
   it('supports capitalisation, a number and a separator; entropy grows with words', async () => {

@@ -10,8 +10,17 @@ describe('generate', () => {
     expect(g.level).toBe(4);
   });
   it('makes a passphrase from the word list', async () => {
+    // Four words of the list contain a hyphen (drop-down, felt-tip, t-shirt, yo-yo), so the number of words is
+    // counted with a separator that cannot occur in the list; the default separator is checked on its own.
+    expect(DEFAULT_GEN.passphrase.separator).toBe('-');
+    const spaced = await generate({
+      ...DEFAULT_GEN,
+      mode: 'passphrase',
+      passphrase: { ...DEFAULT_GEN.passphrase, separator: ' ' },
+    });
+    expect(spaced.value.split(' ')).toHaveLength(5);
     const g = await generate({ ...DEFAULT_GEN, mode: 'passphrase' });
-    expect(g.value.split('-')).toHaveLength(5);
+    expect(g.value.split('-').length).toBeGreaterThanOrEqual(5);
     expect(g.level).toBeGreaterThanOrEqual(2);
   });
   it('never uses Math.random', async () => {
