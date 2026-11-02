@@ -49,6 +49,8 @@ Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `d
 
 Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
+Torrent-Teil (Paket 3, Branch `feat/downloads-torrent`): eingebettete BitTorrent-Engine (`librqbit`), nur Magnet-Links und `.torrent`-Dateien, die du selbst einfügst/öffnest; aus bis zum einmaligen Hinweis, Dateiauswahl, Limits, Teilen endet bei Verhältnis/Zeit, nichts startet nach einem Neustart von selbst; nur mit Mock-Daten getestet, Handtests D7–D12 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Danach: Paket 4 (Android Custom Tabs, `magnet:`/`.torrent`-Zuordnung).
+
 Download-Manager (Paket 2, Branch `feat/downloads-http`, gestapelt auf `feat/browser`): HTTP(S)-Downloads mit Fortschritt, Pausieren/Fortsetzen auch nach Neustart, Tempolimit, Prüfsumme, Zielordner; Torrent folgt in Paket 3. Handtests D1–D6 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Browser + Downloads: Paket 1 „Browser“ (Branch `feat/browser`, Desktop, isolierte Tabs, Blocker, Lesezeichen/Verlauf) ist gebaut, PR gegen `develop` wartet auf Review; Rust-Teil nur per `cargo check` (Windows-Ziel) geprüft, Handtests B1–B8 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Danach: Paket 2 Download-Manager (HTTP), 3 Torrent, 4 Android/Dateizuordnung.
