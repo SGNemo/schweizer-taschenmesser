@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { PageLayout } from '@/core/modules/types';
+import type { ModuleHue, PageLayout } from '@/core/modules/types';
 import styles from './PageContainer.module.css';
 
 /**
@@ -10,12 +10,19 @@ import styles from './PageContainer.module.css';
  */
 export function PageContainer({
   variant = 'content',
+  hue,
   children,
 }: {
   variant?: PageLayout;
+  /** Module pages: the module's hue (`manifest.identity`), read by the header, charts and empty states via `--module-color`. */
+  hue?: ModuleHue;
   children: ReactNode;
 }) {
-  return <div className={`${styles.page} ${styles[variant]}`}>{children}</div>;
+  return (
+    <div className={`${styles.page} ${styles[variant]}`} data-hue={hue}>
+      {children}
+    </div>
+  );
 }
 
 /** Suspense fallback that fills the page area instead of a stray line of text. */

@@ -99,6 +99,30 @@
   gap: var(--space-2);
   margin-bottom: var(--space-3);
 }
+/* Module identity on a widget: the module's icon on a soft chip and a 4 px edge in its hue (always with the title). */
+.chip {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color) 15%, transparent);
+  color: var(--module-color);
+}
+.widget[data-hue] > section {
+  position: relative;
+  overflow: hidden;
+}
+.widget[data-hue] > section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--module-color);
+}
 .title {
   flex: 1;
   font-size: var(--text-md);

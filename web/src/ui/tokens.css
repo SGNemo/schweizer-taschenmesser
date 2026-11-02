@@ -121,6 +121,19 @@
   --cat-4: #8a5a00;
   --cat-5: #a0305f;
   --cat-6: #3f6b1f;
+  /* Module palette (core/modules/types.ts MODULE_HUES): icon chip, card edge, active nav icon, chart
+     series of one module. ≥ 3:1 on surface and surface-2; ≥ 25° of hue away from danger/accent/
+     warning/success so a module colour is never mistaken for a state (tokens.test.ts). */
+  --mod-sky: #1f5fa8;
+  --mod-moss: #4f6d1a;
+  --mod-teal: #12766f;
+  --mod-ocean: #1d6b7a;
+  --mod-violet: #7a4aa8;
+  --mod-plum: #a0305f;
+  --mod-orchid: #8a3a8f;
+  --mod-indigo: #4a52b8;
+  --mod-slate: #55636b;
+  --mod-navy: #2b3f8c;
   --overlay: rgb(0 0 0 / 0.45);
   /* Level 1: cards, widgets, panels (no border). Level 2: menus, dialogs, sheets, FAB, toast. */
   --shadow-1: 0 1px 2px rgb(23 31 36 / 0.06), 0 8px 24px rgb(23 31 36 / 0.07);
@@ -170,6 +183,16 @@
   --cat-4: #e8b85a;
   --cat-5: #f0a0c0;
   --cat-6: #a9d26f;
+  --mod-sky: #7cc7e8;
+  --mod-moss: #a9d26f;
+  --mod-teal: #4fb3ad;
+  --mod-ocean: #6fd6d0;
+  --mod-violet: #c9a8ea;
+  --mod-plum: #f0a0c0;
+  --mod-orchid: #e3a3e0;
+  --mod-indigo: #a7adf5;
+  --mod-slate: #a9b7c0;
+  --mod-navy: #9db0f0;
   --overlay: rgb(0 0 0 / 0.55);
   --shadow-1:
     0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3);
@@ -207,6 +230,16 @@
     --cat-4: #e8b85a;
     --cat-5: #f0a0c0;
     --cat-6: #a9d26f;
+    --mod-sky: #7cc7e8;
+    --mod-moss: #a9d26f;
+    --mod-teal: #4fb3ad;
+    --mod-ocean: #6fd6d0;
+    --mod-violet: #c9a8ea;
+    --mod-plum: #f0a0c0;
+    --mod-orchid: #e3a3e0;
+    --mod-indigo: #a7adf5;
+    --mod-slate: #a9b7c0;
+    --mod-navy: #9db0f0;
     --overlay: rgb(0 0 0 / 0.55);
     --shadow-1:
       0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35),
@@ -339,6 +372,29 @@
   --success: var(--text-muted);
   --warning: var(--text-muted);
   --info: var(--text-muted);
+  --mod-sky: var(--text-3);
+  --mod-moss: var(--text-3);
+  --mod-teal: var(--text-3);
+  --mod-ocean: var(--text-3);
+  --mod-violet: var(--text-3);
+  --mod-plum: var(--text-3);
+  --mod-orchid: var(--text-3);
+  --mod-indigo: var(--text-3);
+  --mod-slate: var(--text-3);
+  --mod-navy: var(--text-3);
+}
+/* "Modulfarben" off (Einstellungen → Darstellung → Farben): the identity stays (chip, edge, icon), in grey. */
+:root[data-module-colors='off'] {
+  --mod-sky: var(--text-3);
+  --mod-moss: var(--text-3);
+  --mod-teal: var(--text-3);
+  --mod-ocean: var(--text-3);
+  --mod-violet: var(--text-3);
+  --mod-plum: var(--text-3);
+  --mod-orchid: var(--text-3);
+  --mod-indigo: var(--text-3);
+  --mod-slate: var(--text-3);
+  --mod-navy: var(--text-3);
 }
 
 /* Navigation areas: one category hue per area for icons, the thin group stripe and the library tiles (always next to the area name; "Ruhig" turns them grey via --cat-*). */
@@ -359,4 +415,40 @@
 }
 [data-area='system'] {
   --area-color: var(--cat-6);
+}
+
+/* Module identity (manifest `identity.hue`): `data-hue` on a widget card, a module page, a nav item. Inside
+   it `--module-color` is the hue and the first chart series follows it (always next to the module's icon or name). */
+[data-hue='sky'] {
+  --module-color: var(--mod-sky);
+}
+[data-hue='moss'] {
+  --module-color: var(--mod-moss);
+}
+[data-hue='teal'] {
+  --module-color: var(--mod-teal);
+}
+[data-hue='ocean'] {
+  --module-color: var(--mod-ocean);
+}
+[data-hue='violet'] {
+  --module-color: var(--mod-violet);
+}
+[data-hue='plum'] {
+  --module-color: var(--mod-plum);
+}
+[data-hue='orchid'] {
+  --module-color: var(--mod-orchid);
+}
+[data-hue='indigo'] {
+  --module-color: var(--mod-indigo);
+}
+[data-hue='slate'] {
+  --module-color: var(--mod-slate);
+}
+[data-hue='navy'] {
+  --module-color: var(--mod-navy);
+}
+[data-hue] {
+  --viz-1: var(--module-color);
 }

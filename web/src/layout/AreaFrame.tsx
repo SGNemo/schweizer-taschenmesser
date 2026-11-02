@@ -49,11 +49,26 @@ export function AreaFrame({ children }: { children: ReactNode }) {
   const tree = useNavTree();
   const { pathname } = useLocation();
   const area = areaOfPath(tree, pathname);
+  const manifest = availableManifests().find(
+    (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
+  );
   if (!area || isFocusPath(pathname)) return <>{children}</>;
   return (
     <>
-      <div className={styles.frame} data-tabs={area.items.length > 1 ? 'true' : undefined}>
-        <p className={styles.eyebrow}>{area.label}</p>
+      <div
+        className={styles.frame}
+        data-tabs={area.items.length > 1 ? 'true' : undefined}
+        data-hue={manifest?.identity.hue}
+        data-testid="module-frame"
+      >
+        <p className={styles.eyebrow}>
+          {manifest ? (
+            <span className={styles.chip} aria-hidden="true">
+              <Icon name={manifest.icon} size={16} />
+            </span>
+          ) : null}
+          {area.label}
+        </p>
         {area.items.length > 1 ? (
           <div className={styles.tabs}>
             <Tabs

@@ -86,7 +86,11 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           return {
             path: r.path.replace(/^\//, ''),
             element: (
-              <PageContainer key={m.id} variant={r.layout ?? m.layout ?? 'content'}>
+              <PageContainer
+                key={m.id}
+                variant={r.layout ?? m.layout ?? 'content'}
+                hue={m.identity.hue}
+              >
                 <AreaFrame>
                   <ModuleErrorBoundary manifest={m}>
                     <Suspense fallback={<PageFallback />}>

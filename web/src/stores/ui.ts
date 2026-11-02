@@ -54,6 +54,10 @@ export type ReadCover = (typeof READ_COVERS)[number];
 /** `calm` keeps colour only for overdue and today (tokens.css `data-color`). */
 export const COLOR_MODES = ['full', 'calm'] as const;
 export type ColorMode = (typeof COLOR_MODES)[number];
+/** Module colours (tokens.css `data-module-colors`): `off` keeps chip, edge and icon but in grey. */
+export const MODULE_COLOR_MODES = ['on', 'off'] as const;
+export type ModuleColorMode = (typeof MODULE_COLOR_MODES)[number];
+const MODULE_COLORS_KEY = 'tm-module-colors';
 const READ_AID_KEY = 'tm-read-aid';
 const READ_SHARE_KEY = 'tm-read-share';
 const READ_STYLE_KEY = 'tm-read-style';
@@ -156,6 +160,12 @@ export function applyReadAid(on: boolean, cover: ReadCover): void {
   else delete el.dataset.readAid;
 }
 
+export function applyModuleColors(mode: ModuleColorMode): void {
+  const el = document.documentElement;
+  if (mode === 'on') delete el.dataset.moduleColors;
+  else el.dataset.moduleColors = mode;
+}
+
 export function applyColorMode(mode: ColorMode): void {
   const el = document.documentElement;
   if (mode === 'full') delete el.dataset.color;
@@ -224,6 +234,8 @@ interface UiState {
   readHintSeen: boolean;
   markReadHintSeen(): void;
   colorMode: ColorMode;
+  moduleColors: ModuleColorMode;
+  setModuleColors(mode: ModuleColorMode): void;
   setColorMode(mode: ColorMode): void;
   /** In-app switch for "less motion"; "system" follows the operating system. */
   motion: MotionChoice;
@@ -342,6 +354,12 @@ export const useUiStore = create<UiState>((set) => ({
   markReadHintSeen() {
     storeChoice(READ_HINT_KEY, '1', false);
     set({ readHintSeen: true });
+  },
+  moduleColors: readChoice(MODULE_COLORS_KEY, MODULE_COLOR_MODES),
+  setModuleColors(moduleColors) {
+    storeChoice(MODULE_COLORS_KEY, moduleColors, moduleColors === 'on');
+    applyModuleColors(moduleColors);
+    set({ moduleColors });
   },
   colorMode: readChoice(COLOR_MODE_KEY, COLOR_MODES),
   setColorMode(colorMode) {

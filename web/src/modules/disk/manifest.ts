@@ -15,6 +15,7 @@ const manifest: ModuleManifest = {
     return t.disk.meta.name;
   },
   icon: 'disk',
+  identity: { hue: 'slate', widgetType: 'gauge' },
   version: 1,
   get description() {
     return t.disk.meta.description;

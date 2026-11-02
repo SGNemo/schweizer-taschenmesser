@@ -12,6 +12,29 @@ export interface ModuleSource {
 
 const PLATFORMS = ['web', 'desktop', 'android'];
 const LAYOUTS = ['narrow', 'content', 'wide', 'full'];
+/** Keep in step with `MODULE_HUES` / `WIDGET_TYPES` in `src/core/modules/types.ts` (pinned by the registry test). */
+export const HUES = [
+  'sky',
+  'moss',
+  'teal',
+  'ocean',
+  'violet',
+  'plum',
+  'orchid',
+  'indigo',
+  'slate',
+  'navy',
+];
+export const WIDGET_TYPES = [
+  'kpi',
+  'dueList',
+  'progress',
+  'checklist',
+  'timeline',
+  'tiles',
+  'status',
+  'gauge',
+];
 
 /** The text of the `widgets: [ … ]` array (balanced brackets), or undefined. */
 function widgetsBlock(src: string): string | undefined {
@@ -61,6 +84,18 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
   const layout = /\blayout:\s*['"]([a-z]+)['"]/.exec(manifest)?.[1];
   if (!layout && !devOnly) fail('manifest has no `layout`');
   if (layout && !LAYOUTS.includes(layout)) fail(`unknown layout "${layout}"`);
+
+  // Identity: `identity: { hue, widgetType }` from the fixed lists (docs/decisions/ui-shell.md).
+  const identity = /\bidentity:\s*\{([^}]*)\}/.exec(manifest)?.[1];
+  if (identity === undefined) fail('manifest has no `identity: { hue, widgetType }`');
+  else {
+    const hue = /\bhue:\s*['"]([a-z]+)['"]/.exec(identity)?.[1];
+    const type = /\bwidgetType:\s*['"]([a-zA-Z]+)['"]/.exec(identity)?.[1];
+    if (!hue || !HUES.includes(hue))
+      fail(`identity.hue "${hue ?? ''}" is not in the module palette`);
+    if (!type || !WIDGET_TYPES.includes(type))
+      fail(`identity.widgetType "${type ?? ''}" is not a catalogue type`);
+  }
 
   const platforms = /\bplatforms:\s*\[([^\]]*)\]/.exec(manifest)?.[1];
   if (platforms !== undefined) {

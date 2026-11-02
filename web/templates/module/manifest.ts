@@ -12,6 +12,9 @@ const manifest: ModuleManifest = {
     return t.__ID__.meta.name;
   },
   icon: 'puzzle',
+  // Hue from the module palette (sky | moss | teal | ocean | violet | plum | orchid | indigo | slate | navy)
+  // and the catalogue type of the main widget (kpi | dueList | progress | checklist | timeline | tiles | status | gauge).
+  identity: { hue: 'slate', widgetType: 'kpi' },
   version: 1,
   get description() {
     return t.__ID__.meta.description;

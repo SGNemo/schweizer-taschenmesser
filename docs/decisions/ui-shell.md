@@ -10,6 +10,13 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Master–detail** from a 1200 px viewport (was 1500); panel `clamp(22rem, 30%, 30rem)`, 32 rem from 2200 px. Modules adopt `SplitView` per module in the design-5 PRs.
 - **Page switches** crossfade for 120 ms (no slide); the full motion pass stays Phase 6.
 
+## Module identity (2026-11-02, PR `feat/module-identity`)
+- **Chosen look: "Plättchen" plus edge.** The maintainer picked variant A (icon chip in the module hue) and added the 4 px left edge of variant C: both on widget cards, the module frame (`AreaFrame`) and the calendar's today column; the active navigation icon takes the hue, the text keeps the accent. Area colours stay only on group heads. No tinted header bands, no per-module motifs.
+- **Contract:** `ModuleManifest.identity: { hue, widgetType }` is required (`validateManifest`, `check:modules`, generator template). `hue` comes from the fixed ten-hue palette `--mod-*` (light + dark; ≥ 3:1 on the surfaces, ≥ 25° of hue away from danger/accent/warning/success so a module colour can never read as a state; slate is the grey). `widgetType` names the catalogue base type of the main widget. No two modules of one area share a hue (registry test).
+- **Application through tokens only:** `data-hue` on a widget card, a module page (`PageContainer`) and a nav item sets `--module-color`; inside it the first chart series follows the module. Semantic colours keep priority: urgency stripes and badges are unchanged and sit inside the card, the edge sits on its border.
+- **Off switch:** Einstellungen → Darstellung → Farben → "Modulfarben" (`tm-module-colors`, `data-module-colors='off'`) and the "Ruhig" mode both turn every hue into `--text-3`; chip, edge and icon stay, so the module is still recognisable without colour.
+- **Cockpit figures from modules:** `contributions.headline` (one formatted figure per module; finance = balance) feeds the cockpit's "Großanzeige" with the module's chip and edge.
+
 ## Cockpit mode (2026-11-01, PR `feat/cockpit-mode`)
 - **A shell flag, not a route.** `cockpit` lives in the UI store (device-local, remembered; "Mit Cockpit starten" optional). The shell drops its chrome and renders the overview as the background; every other path shows in a panel on top with the router as the single source of truth (`navigate('/')` closes it), so deep links, quick capture targets and `?new=1` keep working and no module is rendered twice.
 - **Own layout scope** `cockpit` in `_settings` (same schema as `home` plus `dense`, `stats`); the overview's arrangement is never touched from the cockpit.
