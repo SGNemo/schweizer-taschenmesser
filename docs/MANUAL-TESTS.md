@@ -499,3 +499,13 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **TD2 Ansichten und Tags:** „Heute“, „Demnächst“, „Irgendwann“ zeigen je die richtigen Aufgaben; eine Aufgabe mit „Beginnt am“ in der Zukunft fehlt in „Alle“ und „Heute“ und steht unter „Demnächst“ („ab …“); Tag-Chips (unter „Mehr Felder anzeigen“) filtern. ☐
 - **TD3 Checkliste, Verknüpfung, Projekt:** in der Aufgabe Checklistenpunkte anlegen/abhaken (Zähler in der Zeile); im Kalender „Als ToDo merken“: die Aufgabe hat „Termin: …“ und öffnet den Termin; eine Liste als „Projekt“ markieren zeigt den Fortschrittsbalken. ☐
 
+### Haushalt & Tresor (Branch `feat/household-vault-identity`) – nur auf Geräten prüfbar
+
+- **HT1 Barcode-Scanner (Android, Chrome/PWA und APK):** Vorräte → „Scannen“, Kamera erlauben, einen Barcode einer Packung zeigen: unbekannt → neuer Vorrat mit der Nummer; danach dieselbe Packung nochmal: „einer mehr“. Wo die Kamera-Erkennung fehlt (APK-WebView?), erscheint der Hinweis und die Nummer lässt sich tippen. Kamera geht beim Schließen aus. ☐
+- **HT2 Kontakte-Datei:** Personen → Einrichtung/Import → „Aus Kontakte- oder Kalenderdatei“: eine .vcf aus Google Kontakte/iCloud und eine .ics eines Geburtstagskalenders; Vorschau prüfen, nichts doppelt. ☐
+- **HT3 Gratulieren:** Person mit Telefon und Mail: WhatsApp (mit Nummer), Anrufen und E-Mail öffnen auf Windows und Android die richtige App. ☐
+- **HT4 Wetter am Ziel:** Packliste mit Ziel (eine Stadt) und Datum in den nächsten 7 Tagen → „Wetter am Ziel prüfen“: erst der Hinweis „Verstanden“, dann Wort, Grad, Regen % und ein Packhinweis; ohne Netz die ruhige Meldung. ☐
+- **HT5 Geschenk aus Merkliste:** Merkliste → Menü → „Als Geschenkidee“ (Personen an), bei einer Person „Für … übernehmen“. ☐
+- **HT6 Tresor-Kopf:** Passwörter entsperren: „Entsperrt“ mit „Sperrt automatisch in etwa n Min.“, nach Inaktivität „Gesperrt“; Ruhig-Modus und „weniger Bewegung“: nichts bewegt sich. „Passwörter prüfen“ zeigt nur Titel, nie ein Passwort. ☐
+- **HT7 Notfallblatt:** „Notfallblatt“ → „Als Datei speichern“, Datei öffnen und drucken: Schritte, Datum, Anzahl, kein Geheimnis. ☐
+

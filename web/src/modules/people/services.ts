@@ -1,4 +1,7 @@
+import { bus } from '@/core/events';
 import { settingsRepo, setSettings } from '@/core/settings/settings';
+import { addIdea } from './inbox';
+import { safeUrl } from './logic';
 
 /** One-time carry-over of the birthday reminder settings of the retired `birthdays` module. */
 export async function carryOverSettings(): Promise<void> {
@@ -13,5 +16,15 @@ export async function carryOverSettings(): Promise<void> {
 
 export default function start(): () => void {
   void carryOverSettings();
-  return () => undefined;
+  // Only http(s) links are kept; the title is trimmed to what a gift title can hold.
+  return bus.on('gift.requested', (req) => {
+    const title = req.title.trim().slice(0, 200);
+    if (!title) return;
+    const url = req.url ? safeUrl(req.url) : undefined;
+    return addIdea({
+      title,
+      ...(url ? { url } : {}),
+      ...(req.priceCents !== undefined ? { priceCents: req.priceCents } : {}),
+    });
+  });
 }

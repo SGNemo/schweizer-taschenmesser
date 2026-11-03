@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'avatarRing',
   },
-  version: 1,
+  version: 2,
   get description() {
     return t.people.meta.description;
   },
@@ -63,7 +63,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'wide',
   order: 100,
   area: 'plan',

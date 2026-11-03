@@ -10,7 +10,10 @@ import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import {
+  Badge,
   Button,
+  Chip,
+  Chips,
   EmptyState,
   Icon,
   ItemList,
@@ -21,7 +24,12 @@ import {
   useSplitView,
 } from '@/ui';
 import { BridgeDialog, PairingDialog } from '../components/BridgeDialog';
+import { AuditDialog } from '../components/AuditDialog';
+import { EmergencySheet } from '../components/EmergencySheet';
 import { EntryDetail, EntryPanel } from '../components/EntryDetail';
+import { MonogramTile } from '../components/MonogramTile';
+import { VaultDoor } from '../components/VaultDoor';
+import { useBridgeConfig } from '@/core/vaultbridge/config';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
 import { GeneratorDialog } from '../components/GeneratorDialog';
 import { LockScreen } from '../components/LockScreen';
@@ -35,7 +43,14 @@ import styles from '../accounts.module.css';
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-export function searchEntries(entries: readonly DecryptedEntry[], query: string): DecryptedEntry[] {
+export function searchEntries(
+  entries: readonly DecryptedEntry[],
+  query: string,
+  group: string = 'all',
+): DecryptedEntry[] {
+  entries = entries.filter(
+    (e) => group === 'all' || (group === '*fav' ? e.data.favorite : e.data.tags.includes(group)),
+  );
   const q = fold(query.trim());
   const shown = q
     ? entries.filter((e) => {
@@ -69,6 +84,7 @@ export default function AccountsPage() {
   if (!header) return <PageHeader title={t.accounts.title} />;
   return (
     <>
+      {header.state === 'ready' ? <VaultDoor unlocked={session.status === 'unlocked'} /> : null}
       <PageHeader title={t.accounts.title}>
         {session.status === 'unlocked' ? (
           <Button onClick={lockVault}>
@@ -112,6 +128,10 @@ function Unlocked() {
   const [tools, setTools] = useState(params.get('tools') === '1');
   const [generator, setGenerator] = useState(false);
   const [bridge, setBridge] = useState(false);
+  const [audit, setAudit] = useState(false);
+  const [emergency, setEmergency] = useState(false);
+  const [group, setGroup] = useState('all');
+  const bridgeConfig = useBridgeConfig();
   const searchBox = useRef<HTMLInputElement>(null);
   // `?find=n` (vault search key): focus the search field.
   const find = params.get('find');
@@ -121,7 +141,15 @@ function Unlocked() {
   // Wide screens: list and detail side by side (same detail content, just not in a dialog).
   const panel = useSplitView();
 
-  const shown = useMemo(() => searchEntries(data?.entries ?? [], query), [data, query]);
+  const shown = useMemo(
+    () => searchEntries(data?.entries ?? [], query, group),
+    [data, query, group],
+  );
+  const tags = useMemo(
+    () => [...new Set((data?.entries ?? []).flatMap((e) => e.data.tags))].sort(compareText),
+    [data],
+  );
+  const hasFavorites = (data?.entries ?? []).some((e) => e.data.favorite);
   const detail = data?.entries.find((e) => e.id === detailId) ?? null;
 
   if (!data) return null;
@@ -144,10 +172,36 @@ function Unlocked() {
         </Button>
         <Button onClick={() => setGenerator(true)}>{t.accounts.generator.newPassword}</Button>
         <Button onClick={() => setTools(true)}>{t.accounts.tools.open}</Button>
+        <Button onClick={() => setAudit(true)}>{t.accounts.audit.open}</Button>
+        <Button onClick={() => setEmergency(true)}>{t.accounts.emergency.open}</Button>
         {getPlatform().vaultBridge.supported ? (
-          <Button onClick={() => setBridge(true)}>{t.accounts.bridge.open}</Button>
+          <>
+            <Button onClick={() => setBridge(true)}>{t.accounts.bridge.open}</Button>
+            <Badge tone={bridgeConfig?.enabled ? 'success' : 'neutral'}>
+              {bridgeConfig?.enabled ? t.accounts.head.bridgeOn : t.accounts.head.bridgeOff}
+            </Badge>
+          </>
         ) : null}
       </div>
+      {tags.length > 0 || hasFavorites ? (
+        <Chips label={t.accounts.groups.label}>
+          <Chip
+            label={t.accounts.groups.all}
+            selected={group === 'all'}
+            onClick={() => setGroup('all')}
+          />
+          {hasFavorites ? (
+            <Chip
+              label={t.accounts.groups.favorites}
+              selected={group === '*fav'}
+              onClick={() => setGroup('*fav')}
+            />
+          ) : null}
+          {tags.map((tag) => (
+            <Chip key={tag} label={tag} selected={group === tag} onClick={() => setGroup(tag)} />
+          ))}
+        </Chips>
+      ) : null}
       {data.broken.length > 0 ? (
         <div className={styles.banner} role="status">
           <p>{t.accounts.undecryptable(data.broken.length)}</p>
@@ -184,6 +238,7 @@ function Unlocked() {
             <ItemRow
               key={e.id}
               title={e.data.title}
+              lead={<MonogramTile title={e.data.title} />}
               meta={e.data.username || undefined}
               onOpen={() => setDetailId(e.id)}
             />
@@ -206,6 +261,18 @@ function Unlocked() {
           setGenerator(false);
           setForm({ draft: true, password });
         }}
+      />
+      <AuditDialog
+        open={audit}
+        onClose={() => setAudit(false)}
+        entries={data.entries}
+        onOpenEntry={setDetailId}
+      />
+      <EmergencySheet
+        open={emergency}
+        onClose={() => setEmergency(false)}
+        entryCount={data.entries.length}
+        onBackup={() => setTools(true)}
       />
       <BridgeDialog open={bridge} onClose={() => setBridge(false)} />
       <PairingDialog />

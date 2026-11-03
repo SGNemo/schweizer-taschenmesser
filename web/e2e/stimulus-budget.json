@@ -188,10 +188,10 @@
       "firstScreenActions": 29
     },
     "phone--lists": {
-      "height": 1423,
-      "buttons": 43,
+      "height": 2078,
+      "buttons": 49,
       "links": 9,
-      "icons": 29,
+      "icons": 34,
       "firstScreenActions": 39
     },
     "phone--notes": {
@@ -265,8 +265,8 @@
       "firstScreenActions": 31
     },
     "phone--vault": {
-      "height": 4858,
-      "buttons": 49,
+      "height": 5549,
+      "buttons": 55,
       "links": 9,
       "icons": 14,
       "firstScreenActions": 26

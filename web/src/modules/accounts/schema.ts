@@ -31,6 +31,11 @@ export const entryDataSchema = z.object({
   tags: z.array(z.string()).default([]),
   totp: totpSchema.optional(),
   favorite: z.boolean().default(false),
+  /** Day the password was last set 'YYYY-MM-DD' (inside the encrypted entry); only used for the age hint. */
+  changedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 export type EntryData = z.output<typeof entryDataSchema>;
 export type EntryDraft = z.input<typeof entryDataSchema>;

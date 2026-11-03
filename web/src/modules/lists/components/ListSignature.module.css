@@ -1,0 +1,71 @@
+.receipt {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 9rem;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--surface);
+  color: var(--text);
+  border-top: 0.25rem solid var(--module-color);
+  /* jagged lower edge */
+  --zig: 0.5rem;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    var(--zig) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--zig)
+    100%;
+  padding-bottom: calc(var(--space-4) + var(--zig));
+}
+.line {
+  font-size: var(--text-sm);
+}
+.sum {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-lg);
+}
+.case {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.body {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 3rem;
+  height: 2.25rem;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border: 2px solid var(--module-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: color-mix(in srgb, var(--module-color) 35%, var(--surface));
+}
+.handle {
+  position: absolute;
+  top: -0.5rem;
+  left: 50%;
+  width: 1.25rem;
+  height: 0.5rem;
+  translate: -50% 0;
+  border: 2px solid var(--module-color);
+  border-bottom: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.text {
+  display: grid;
+}
+.sub {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+@media (max-width: 600px) {
+  .receipt {
+    min-width: 0;
+  }
+}
