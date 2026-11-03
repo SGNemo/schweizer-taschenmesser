@@ -12,6 +12,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tSettings3 } from '@/strings.settings3';
 import { sameValue } from './changed';
+import { recordGroup, withoutHistory } from './history';
 import { readValues, valuesSchema, writeValues, ALL_VALUE_KEYS, type Values } from './values';
 import { getSettings, setSettings, useSettings } from './settings';
 
@@ -25,8 +26,8 @@ export const profileSchema = z.object({
 });
 export type Profile = z.infer<typeof profileSchema>;
 
-const profilesSettingsSchema = z.object({ items: z.array(profileSchema).max(MAX_PROFILES) });
-const DEFAULT_PROFILES = { items: [] as Profile[] };
+export const profilesSettingsSchema = z.object({ items: z.array(profileSchema).max(MAX_PROFILES) });
+export const DEFAULT_PROFILES = { items: [] as Profile[] };
 
 export type BuiltinId = 'quiet' | 'work' | 'evening';
 export const BUILTIN_IDS: readonly BuiltinId[] = ['quiet', 'work', 'evening'];
@@ -105,13 +106,15 @@ export async function applyProfile(
   profile: Profile,
   how: 'manual' | 'schedule' = 'manual',
 ): Promise<void> {
-  const before = await writeValues(profile.values);
+  // Many keys, one history entry: the profile switch itself.
+  const before = await withoutHistory(() => writeValues(profile.values));
+  recordGroup(tSettings3.get().history.profile(profile.name), { values: before });
   const p = tSettings3.get().profiles;
   useUiStore
     .getState()
     .toast(how === 'schedule' ? p.scheduleApplied(profile.name) : p.applied(profile.name), {
       label: t.ui.undo,
-      run: () => void writeValues(before),
+      run: () => void withoutHistory(() => writeValues(before)),
     });
 }
 
