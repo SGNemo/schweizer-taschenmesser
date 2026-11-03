@@ -165,9 +165,14 @@ export const defaultDeps: ProxyDeps = {
         };
       resolve = settle(resolve);
       reject = settle(reject);
+      // The request is built from the parts that `checkUrl` and `checkedAddress` already vetted
+      // (scheme, host name, port, path and query) and never from the caller's URL object itself.
       const req = client.request(
-        url,
         {
+          protocol: url.protocol,
+          hostname: url.hostname.replace(/^\[|\]$/g, ''),
+          port: url.port || undefined,
+          path: `${url.pathname}${url.search}`,
           method: 'GET',
           headers,
           timeout: timeoutMs,

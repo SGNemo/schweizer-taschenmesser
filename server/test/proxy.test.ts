@@ -318,6 +318,37 @@ describe('proxyFetch', () => {
       ).rejects.toMatchObject({ code: 'blocked' });
     });
 
+    it('a blocked address never reaches the fetcher: not as the first hop, not as a redirect target', async () => {
+      const spy = fakeDeps({
+        'evil.example.test': ['10.0.0.5'],
+        'mixed.example.test': ['93.184.216.34', '169.254.169.254'],
+        'hop.example.test': {
+          status: 302,
+          headers: { location: 'https://evil.example.test/x' },
+          body: Buffer.alloc(0),
+        },
+      });
+      for (const kind of ['feed', 'page', 'image'] as const) {
+        for (const target of [
+          'https://evil.example.test/x',
+          'https://mixed.example.test/x',
+          'http://127.0.0.1/x',
+          'http://[::1]/x',
+          'https://hop.example.test/x',
+        ]) {
+          await expect(
+            proxyFetch(target, {}, spy.deps, kind),
+            `${kind} ${target}`,
+          ).rejects.toMatchObject({
+            code: 'blocked',
+          });
+        }
+      }
+      // only the harmless first hop of the redirect chain was ever fetched, never a blocked address
+      expect(spy.fetched.every((f) => f.url.startsWith('https://hop.example.test/'))).toBe(true);
+      expect(spy.fetched.some((f) => /^(10\.|127\.|169\.254\.|::1)/.test(f.address))).toBe(false);
+    });
+
     it('sends a matching Accept header', async () => {
       const { deps, fetched } = fakeDeps({ 'a.example.test': html() });
       await proxyFetch('https://a.example.test/x', {}, deps, 'page');
@@ -367,6 +398,24 @@ describe('the real fetcher (against a local server, address given directly)', ()
     expect(r.status).toBe(200);
     expect(r.headers.etag).toBe('"abc"');
     expect(r.body.toString()).toBe(ICS);
+  });
+
+  it('sends the path and query of the address it was given, to the pinned address and port', async () => {
+    let seenUrl: string | undefined;
+    const port = await serve((req, res) => {
+      seenUrl = req.url;
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.end('ok');
+    });
+    const r = await defaultDeps.fetch({
+      url: new URL(`http://feed.example.test:${port}/a/b%20c.ics?x=1&y=%C3%A4`),
+      address: '127.0.0.1',
+      headers: { host: `feed.example.test:${port}` },
+      timeoutMs: 2000,
+      maxBytes: MAX_PROXY_BYTES,
+    });
+    expect(r.status).toBe(200);
+    expect(seenUrl).toBe('/a/b%20c.ics?x=1&y=%C3%A4');
   });
 
   it('stops reading at the size limit', async () => {
