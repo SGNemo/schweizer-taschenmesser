@@ -96,7 +96,7 @@ test('the look preview shows while the colour scheme or text group is open, not 
   await ready(page, '/settings/darstellung');
   await expect(page.getByTestId('look-preview').first()).toBeHidden();
   await openAppearanceGroup(page, 'text');
-  await expect(page.getByTestId('look-preview').first()).toBeVisible();
+  await expect(page.getByTestId('appearance-group-text').getByTestId('look-preview')).toBeVisible();
 });
 
 test('a weaker vault choice gets a calm note, a stronger one none', async ({ page }) => {

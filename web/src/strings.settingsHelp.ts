@@ -44,6 +44,8 @@ export const tFieldHelp = defineBundle(
       'Beendet das Teilen, sobald du so viel hochgeladen hast wie dieses Vielfache des Heruntergeladenen; 0 heißt nie.',
     'downloads.seedMinutes': 'Beendet das Teilen nach dieser Zeit; 0 heißt nie.',
     'example.showDone': 'Zeigt erledigte Einträge weiter in der Liste.',
+    'finance.forecastHorizon':
+      'Wie weit der Ausblick vorausrechnet: bis Monatsende, 30 oder 90 Tage.',
     'finance.includeOpenInvoices':
       'Zieht offene Rechnungen vom verfügbaren Betrag ab, damit du siehst, was wirklich frei ist.',
     'mail.notifyEvery': 'So oft sieht die App nach neuen Mails, solange sie läuft.',
@@ -91,6 +93,8 @@ export const tFieldHelp = defineBundle(
         'Stops sharing once you have uploaded this multiple of what you downloaded; 0 means never.',
       'downloads.seedMinutes': 'Stops sharing after this long; 0 means never.',
       'example.showDone': 'Keeps finished entries in the list.',
+      'finance.forecastHorizon':
+        'How far the outlook looks ahead: to the end of the month, 30 or 90 days.',
       'finance.includeOpenInvoices':
         'Subtracts open invoices from the available amount so you see what is really free.',
       'mail.notifyEvery': 'How often the app looks for new mail while it is running.',
@@ -141,6 +145,7 @@ export const tFieldHelp = defineBundle(
         'Deja de compartir cuando hayas subido este múltiplo de lo descargado; 0 significa nunca.',
       'downloads.seedMinutes': 'Deja de compartir pasado este tiempo; 0 significa nunca.',
       'example.showDone': 'Mantiene las entradas terminadas en la lista.',
+      'finance.forecastHorizon': 'Hasta dónde llega la previsión: hasta fin de mes, 30 o 90 días.',
       'finance.includeOpenInvoices':
         'Resta las facturas abiertas del importe disponible para que veas lo que está realmente libre.',
       'mail.notifyEvery': 'Cada cuánto busca la app correo nuevo mientras está en marcha.',
@@ -196,6 +201,8 @@ export const tFieldHelp = defineBundle(
         'Arrête le partage dès que vous avez envoyé ce multiple de ce que vous avez téléchargé ; 0 signifie jamais.',
       'downloads.seedMinutes': 'Arrête le partage après ce temps ; 0 signifie jamais.',
       'example.showDone': 'Garde les entrées terminées dans la liste.',
+      'finance.forecastHorizon':
+        'Jusqu’où va la prévision : jusqu’à la fin du mois, 30 ou 90 jours.',
       'finance.includeOpenInvoices':
         'Déduit les factures ouvertes du montant disponible pour que vous voyiez ce qui est vraiment libre.',
       'mail.notifyEvery':
@@ -250,6 +257,7 @@ export const tFieldHelp = defineBundle(
         'Para de compartilhar quando você tiver enviado este múltiplo do que baixou; 0 significa nunca.',
       'downloads.seedMinutes': 'Para de compartilhar depois deste tempo; 0 significa nunca.',
       'example.showDone': 'Mantém as entradas concluídas na lista.',
+      'finance.forecastHorizon': 'Até onde vai a previsão: até o fim do mês, 30 ou 90 dias.',
       'finance.includeOpenInvoices':
         'Desconta as faturas em aberto do valor disponível para você ver o que está realmente livre.',
       'mail.notifyEvery': 'Com que frequência o app procura e-mails novos enquanto está aberto.',
