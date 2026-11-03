@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v3 – ToDos</title>
+<link rel="stylesheet" href="v3.css">
+<style>body{--mod:var(--mod-moss);--mod2:var(--mod-lime)}
+.add{display:flex;gap:10px;align-items:center}.add .search{flex:1;height:44px;border-radius:var(--r-md)}
+</style></head>
+<body data-active="todos" data-area="plan">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame">
+  <section class="head compact fokus"><span class="pattern plan"></span>
+    <div class="left"><div class="eyebrow"><span class="plate" data-i="todo"></span>Planen · ToDos</div>
+      <div class="focusline" style="margin-top:6px"><div class="cnt">11<small>heute</small></div><div class="task">Als Nächstes: Urlaubsantrag einreichen<small>Arbeit · etwa 5 Min · danach noch 2 Dinge für heute, etwa 80 Min</small></div><a class="btn primary">Anfangen · 5 Min</a></div></div>
+    <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+  </section>
+  <nav class="subnav" data-area="plan"></nav>
+  <div class="add"><div class="search"><span data-i="plus"></span>Neue Aufgabe … (Enter zum Hinzufügen)</div><a class="btn ghost icon"><span data-i="more"></span></a></div>
+  <div class="toolbar"><span class="chip on">Alle</span><span class="chip">Heute</span><span class="chip">Demnächst</span><span class="chip">Irgendwann</span><span class="chip">Erledigt</span><span class="chip">Board</span><span class="spacer"></span><span class="chip">#haus</span><span class="chip">#arbeit</span><span class="chip"><span data-i="people"></span>Anna</span></div>
+  <div class="list">
+    <div class="grp">Heute · 3</div>
+    <div class="row"><span class="cb"></span><span class="grow">Urlaubsantrag einreichen<span class="sub">Arbeit · etwa 5 Min · <span class="badge today">heute</span></span></span><a class="btn ghost" style="height:34px;font-size:.875rem">Anfangen</a><span data-i="more" style="color:var(--text-3)"></span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Fenster putzen<span class="sub">Haushalt · 30 Min</span></span><span data-i="more" style="color:var(--text-3)"></span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Zahnbürsten kaufen<span class="sub">Einkäufe &amp; Besorgungen · 15 Min · #haus</span></span><span data-i="more" style="color:var(--text-3)"></span></div>
+    <div class="grp">Diese Woche · 4</div>
+    <div class="row"><span class="cb"></span><span class="grow">Recherche 16<span class="sub">Einkäufe &amp; Besorgungen · <span class="badge danger">● Hoch</span> · Do 1. Okt</span></span><span data-i="more" style="color:var(--text-3)"></span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Bücher aussortieren 18<span class="sub">Projekt Balkon · Fr 2. Okt</span></span><span data-i="more" style="color:var(--text-3)"></span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Vorräte prüfen 2<span class="sub">Einkäufe &amp; Besorgungen · 0/2 Schritte · Sa 3. Okt</span></span><span data-i="more" style="color:var(--text-3)"></span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Reisekosten abrechnen<span class="sub">Arbeit · Mo 5. Okt</span></span><span data-i="more" style="color:var(--text-3)"></span></div>
+    <div class="grp" style="display:flex;align-items:center;gap:8px"><span data-i="chevd" style="color:var(--text-3)"></span>Wartet noch · 8 <span class="meta" style="font-weight:400">Schon länger offen, nicht dringend.</span><span style="flex:1"></span><a class="btn ghost" style="height:32px;font-size:.8125rem">Neu planen</a></div>
+  </div>
+</div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+<script src="shell.js"></script>
+</body></html>

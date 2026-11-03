@@ -4,7 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
-Fundament v3 (`feat/identity-v3-foundation`, Runde 1 = Diagnose, PR offen): Layout-Rahmen (zentrierte Inseln neben vollen Seiten, Tabs im Kopf schneiden ab), Streifen, gleiche Köpfe/Widgets, Übersichtskopf, Sidebar; Belege in [design/identity-v3/01-DIAGNOSIS.md](design/identity-v3/01-DIAGNOSIS.md); wartet auf vier Antworten, dann Konzept und Varianten (Runde 2).
+Fundament v3 (`feat/identity-v3-foundation`, Runde 2 = Konzept und drei Varianten, PR #414 offen): Diagnose in [design/identity-v3/01-DIAGNOSIS.md](design/identity-v3/01-DIAGNOSIS.md), Konzept (Layout-Rahmen, Streifen-Regel, neun Kopf-Varianten, Palette v3, Widget-Formen, Sidebar, Übersichtskopf) in [design/identity-v3/02-CONCEPT.md](design/identity-v3/02-CONCEPT.md), Mockups A/B/C in `design/identity-v3/mockups/`; wartet auf die Wahl der Variante, dann Runde 3 (Umsetzung, Sonnet).
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
