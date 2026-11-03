@@ -109,6 +109,8 @@ Recommendation: **B**, with two guards from A: body text never on a tint, and th
 grey. B is the only variant where the Übersicht reads as a set of different apps at a glance (sheet
 `uebersicht--desktop-light.png`); C is the fallback if B feels loud on a 2560 screen after a week of use.
 
+**Picked (2026-11-03): B** with the two guards; round 3 implements it.
+
 ## 6. Decisions to record (superseding v1 "Module identity", 2026-11-02)
 
 - Tinted head bands and per-module signatures are **in**; the v1 chip and edge stay as the fallback for the "Ruhig"
