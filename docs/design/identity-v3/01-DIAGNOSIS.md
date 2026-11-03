@@ -7,7 +7,9 @@ cockpit), library, tools, settings; 1280×720 · 1536×864 (1920 at 125 % Window
 (disk, mail, browser, downloads on), the phone as the PWA. Beside the full shots: a crop of every module head and every
 overview widget (contact sheets `grid-heads--*.png`, `grid-widgets--*.png`) and `measure--<viewport>.json` (document and
 `main` horizontal overflow, page container width and variant, elements beyond the window or beyond the page).
-Screenshots stay out of the repo (size); the contact sheets were handed over in the chat.
+Screenshots stay out of the repo (size); the contact sheets were handed over in the chat. (In this run the weather
+place was not picked at 2560 and 3440 px – the data-flow notice came late – so those two show the module's empty state;
+the mock now waits longer.)
 
 ## 1. Layout frame: what the measurements say
 
@@ -151,8 +153,9 @@ area icons without the module hue.
   row under the head because its `PageTitle` moved into the head and left the menu behind (`1920x1080--todos.png`).
 - **Dark mode** keeps all of the above; the head gradient at 40 % → 10 % reads darker than the page on every hue and the
   stripes become brighter than the text (see `dark-readoff/`).
-- **Reading aid** on: heads and tab rows get the emphasis too at 75 % coverage (`*-readon/`), the module chip labels
-  and the figures do not (correct), the agenda text list becomes two emphasised columns.
+- **Reading aid** on (75 % coverage, `*-readon/`): the page h1 inside the head is split like running text
+  ("**Kal**ender", "**Über**sicht"), while eyebrow, tabs, figures and the time column stay plain (correct); the agenda
+  list and the widget titles are emphasised. A head whose title is the module's name should be exempt like a figure.
 - **"Ruhig" colour mode** (`tm-color=calm`): all hues → `--text-3`, tint 12 % → 5 %; the heads become grey slabs of the
   same height and the stripes stay as grey stripes (`*--calendar-calm-colour.png`): shape alone does not identify a
   module today.
