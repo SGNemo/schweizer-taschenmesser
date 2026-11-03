@@ -5,7 +5,7 @@ import { mockSpotify, seedConnected } from '../spotify-mock';
 
 /**
  * Manual tooling (playwright.screens.config.ts, project `plain`): screenshots of the two modules that open as
- * dialogs from the overview (weather, Spotify player) with invented API answers. Output: SCREENS_DIR.
+ * pages (weather, music; before identity v2 they were dialogs) with invented API answers. Output: SCREENS_DIR.
  */
 const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/current';
 const VIEWPORTS = [
@@ -110,7 +110,7 @@ async function mockWeather(page: Page) {
   );
 }
 
-test('capture weather and Spotify dialogs', async ({ browser }) => {
+test('capture weather and music pages', async ({ browser }) => {
   mkdirSync(OUT, { recursive: true });
   for (const vp of VIEWPORTS) {
     const context = await browser.newContext({
@@ -136,28 +136,23 @@ test('capture weather and Spotify dialogs', async ({ browser }) => {
       .getByRole('button', { name: 'Suchen', exact: true })
       .click();
     await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click();
-    await ready(page, '/');
-    await page.getByTestId('weather-line').click();
+    await ready(page, '/weather');
     await expect(page.getByTestId('weather-preview')).toBeVisible();
     await page.waitForTimeout(600);
     await page.screenshot({ path: `${OUT}/${vp.name}--weather.png` });
-    await page.keyboard.press('Escape');
 
     // Spotify, playing.
     await seedConnected(page, ['show', 'control', 'playlists', 'library', 'history']);
-    await ready(page, '/');
-    await page.getByTestId('now-playing-open').click();
-    await expect(page.getByTestId('spotify-player')).toBeVisible();
+    await ready(page, '/music');
+    await expect(page.getByTestId('music-now')).toBeVisible();
     await page.waitForTimeout(800);
     await page.screenshot({ path: `${OUT}/${vp.name}--spotify-playing.png` });
-    await page.keyboard.press('Escape');
 
     // Spotify, no active device: 204 answers for the player.
     spotify.player = () => ({ status: 204 });
     spotify.state = () => ({ status: 204 });
-    await ready(page, '/');
-    await page.getByTestId('now-playing-open').click();
-    await expect(page.getByTestId('spotify-player')).toBeVisible();
+    await ready(page, '/music');
+    await expect(page.getByTestId('music-nodevice')).toBeVisible();
     await page.waitForTimeout(800);
     await page.screenshot({ path: `${OUT}/${vp.name}--spotify-nodevice.png` });
     await context.close();
