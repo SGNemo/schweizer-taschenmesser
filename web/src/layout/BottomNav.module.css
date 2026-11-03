@@ -27,10 +27,10 @@
   cursor: pointer;
 }
 .link[aria-current='page'] {
-  color: var(--accent);
+  color: var(--text);
   font-weight: var(--weight-semibold);
 }
-/* Active marker: a small bar above the icon. */
+/* Active marker: a small bar above the icon, in the area's colour (identity v3). */
 .link[aria-current='page']::before {
   content: '';
   position: absolute;
@@ -38,7 +38,10 @@
   width: 28px;
   height: 3px;
   border-radius: var(--radius-full);
-  background: var(--accent);
+  background: var(--area-color, var(--accent));
+}
+.link[aria-current='page'] > svg {
+  color: var(--area-color, var(--accent));
 }
 @media (min-width: 900px) {
   .bottom {

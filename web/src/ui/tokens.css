@@ -71,7 +71,7 @@
   /* List row height and grid gap; changed by phone width and by the density setting below. */
   --row-h: 2.75rem;
   --grid-gap: var(--space-5);
-  --sidebar-w: 15.5rem; /* 248 px at 16 px root */
+  --sidebar-w: 16.25rem; /* 260 px at 16 px root */
   --bottom-nav-h: 64px;
   /* Page widths (see layout/PageContainer) and the fluid gutter around the page. */
   --page-narrow: 45rem;

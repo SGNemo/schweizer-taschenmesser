@@ -3,16 +3,47 @@ import { setFavourite } from '@/core/settings/nav';
 import { areaOfPath, type NavArea, type NavItem, type NavTree } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Icon, Wordmark } from '@/ui';
+import { Icon, Logo, OverlayScroll, Wordmark } from '@/ui';
 import { SupporterBadge } from './SupporterBadge';
 import styles from './Sidebar.module.css';
 
 interface Props {
   tree: NavTree;
-  /** 76 px icon rail instead of the 248 px sidebar. */
+  /** 64 px icon rail instead of the 260 px sidebar. */
   rail: boolean;
   /** The rail is forced by the viewport width, so there is nothing to expand to. */
   canExpand: boolean;
+}
+
+/**
+ * The favourites as a compact bar of icon chips in the module hues (identity v3); the current module has a ring.
+ * They are set with the pin on a module's row below, or in Settings → Darstellung → Favoriten.
+ */
+function FavouriteBar({ items }: { items: NavItem[] }) {
+  const { pathname } = useLocation();
+  return (
+    <>
+      <h2 className={styles.heading}>{t.nav.favourites}</h2>
+      <ul className={styles.favbar}>
+        {items.map((i) => (
+          <li key={i.to} className={styles.fav}>
+            <Link
+              to={i.to}
+              className={styles.favLink}
+              data-hue={i.hue}
+              aria-label={i.label}
+              title={i.label}
+              aria-current={
+                pathname === i.to || pathname.startsWith(`${i.to}/`) ? 'page' : undefined
+              }
+            >
+              <Icon name={i.icon} size={20} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
 }
 
 function ItemRow({
@@ -36,7 +67,7 @@ function ItemRow({
       {id ? (
         <button
           type="button"
-          className={styles.star}
+          className={styles.pin}
           aria-pressed={favourite}
           aria-label={
             favourite ? t.nav.removeFavourite(item.label) : t.nav.addFavourite(item.label)
@@ -48,13 +79,14 @@ function ItemRow({
             });
           }}
         >
-          <Icon name="star" size={16} />
+          <Icon name="pin" size={16} />
         </button>
       ) : null}
     </li>
   );
 }
 
+/** One area as a quiet block (tinted in the area colour) with its modules; the head folds it. */
 function AreaGroup({ area, shown }: { area: NavArea; shown: string[] }) {
   const closed = useUiStore((s) => s.closedAreas.includes(area.id));
   const toggle = useUiStore((s) => s.toggleAreaOpen);
@@ -69,7 +101,6 @@ function AreaGroup({ area, shown }: { area: NavArea; shown: string[] }) {
         aria-label={t.nav.toggleArea(area.label)}
         onClick={() => toggle(area.id)}
       >
-        <Icon name={area.icon} />
         <span>{area.label}</span>
         <span className={styles.chevron} data-open={!closed}>
           <Icon name="chevronRight" size={16} />
@@ -91,21 +122,19 @@ function AreaGroup({ area, shown }: { area: NavArea; shown: string[] }) {
   );
 }
 
+/** An icon of the collapsed rail: the name is the tooltip and the accessible name, nothing else takes width. */
 function RailLink({
   to,
   icon,
   label,
   active,
   area,
-  fullLabel,
 }: {
   to: string;
   icon: NavItem['icon'];
   label: string;
   active: boolean;
   area?: NavItem['area'];
-  /** Full name when `label` is shortened to fit the rail. */
-  fullLabel?: string;
 }) {
   return (
     <li data-area={area}>
@@ -113,11 +142,10 @@ function RailLink({
         to={to}
         className={styles.railLink}
         aria-current={active ? 'page' : undefined}
-        aria-label={fullLabel}
-        title={fullLabel}
+        aria-label={label}
+        title={label}
       >
         <Icon name={icon} size={22} />
-        <span>{label}</span>
       </Link>
     </li>
   );
@@ -140,7 +168,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
         void navigate('/');
       }}
     >
-      <Wordmark height={rail ? 28 : 44} title={t.appName} />
+      {rail ? <Logo size={32} /> : <Wordmark height={44} title={t.appName} />}
     </a>
   );
 
@@ -167,8 +195,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
           <RailLink
             to="/library"
             icon="grid"
-            label={t.nav.libraryShort}
-            fullLabel={t.nav.library}
+            label={t.nav.library}
             active={pathname.startsWith('/library')}
           />
           <RailLink
@@ -200,30 +227,22 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
       {brand}
       <SupporterBadge placement="sidebar" />
       <nav aria-label={t.nav.main} className={styles.nav}>
-        <ul className={styles.list}>
-          <li className={styles.row}>
-            <NavLink to="/" end className={`${styles.link} ${styles.home}`}>
-              <Icon name="home" />
-              <span>{t.nav.home}</span>
-            </NavLink>
-          </li>
-        </ul>
-        {tree.favourites.length > 0 ? (
-          <>
-            <h2 className={styles.heading}>{t.nav.favourites}</h2>
-            <ul className={styles.list}>
-              {tree.favourites.map((i) => (
-                <ItemRow key={i.to} item={i} favourite shown={shown} />
-              ))}
-            </ul>
-          </>
-        ) : null}
-        <h2 className={styles.heading}>{t.nav.areasHeading}</h2>
-        {tree.areas.map((a) => (
-          <AreaGroup key={a.id} area={a} shown={shown} />
-        ))}
+        {tree.favourites.length > 0 ? <FavouriteBar items={tree.favourites} /> : null}
+        <OverlayScroll>
+          <ul className={styles.list}>
+            <li className={styles.row}>
+              <NavLink to="/" end className={`${styles.link} ${styles.home}`}>
+                <Icon name="home" />
+                <span>{t.nav.home}</span>
+              </NavLink>
+            </li>
+          </ul>
+          {tree.areas.map((a) => (
+            <AreaGroup key={a.id} area={a} shown={shown} />
+          ))}
+        </OverlayScroll>
       </nav>
-      <ul className={styles.list}>
+      <ul className={`${styles.list} ${styles.footer}`}>
         <li className={styles.row}>
           <NavLink to="/library" className={styles.link}>
             <Icon name="grid" />

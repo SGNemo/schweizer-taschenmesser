@@ -19,7 +19,7 @@ export function PageContainer({
   children: ReactNode;
 }) {
   return (
-    <div className={`${styles.page} ${styles[variant]}`} data-hue={hue}>
+    <div className={`${styles.page} ${styles[variant]}`} data-hue={hue} data-testid="page">
       {children}
     </div>
   );

@@ -1,7 +1,11 @@
+/* Sidebar v3 (identity v3, docs/design/identity-v3/02-CONCEPT.md § 6): brand, a favourites bar, the areas as quiet tinted blocks
+   with their modules, a filled capsule for the active one, the footer; collapsed it is an icon rail with tooltips. The module hue
+   is the icon's colour and the capsule's fill; the text stays --text (AA on every hue, tokens.test.ts). No stars, no edge stripes. */
 .brand {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  padding: 0 var(--space-2);
   color: var(--text);
   text-decoration: none;
   border-radius: var(--radius-md);
@@ -11,8 +15,9 @@
 }
 .nav {
   flex: 1;
-  overflow-y: auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .list {
   list-style: none;
@@ -23,7 +28,7 @@
   gap: var(--space-hair);
 }
 .heading {
-  margin: var(--space-4) 0 var(--space-1);
+  margin: var(--space-2) 0 var(--space-1);
   padding: 0 var(--space-3);
   font-size: var(--text-caps);
   font-weight: var(--weight-semibold);
@@ -31,10 +36,39 @@
   text-transform: uppercase;
   color: var(--text-3);
 }
+/* Favourites: up to five icon chips in one bar. */
+.favbar {
+  display: flex;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  padding: var(--space-1);
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.fav {
+  flex: 1;
+  min-width: 0;
+}
+.favLink {
+  display: grid;
+  place-items: center;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 12%, transparent);
+  color: var(--module-color);
+}
+.favLink:hover {
+  background: color-mix(in srgb, var(--module-color) 20%, transparent);
+}
+.favLink[aria-current='page'] {
+  box-shadow: inset 0 0 0 2px var(--module-color);
+}
 .row {
+  position: relative;
   display: flex;
   align-items: center;
-  position: relative;
 }
 .link {
   flex: 1;
@@ -62,7 +96,16 @@
   background: var(--surface-2);
   color: var(--text);
 }
-.link[aria-current='page'] {
+/* The module's icon in its hue, the active entry a capsule filled with it (text --text). */
+.row[data-hue] .link > svg {
+  color: var(--module-color);
+}
+.row[data-hue] .link[aria-current='page'] {
+  background: color-mix(in srgb, var(--module-color) 16%, var(--surface));
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+.row:not([data-hue]) .link[aria-current='page'] {
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: var(--weight-semibold);
@@ -70,30 +113,35 @@
 .home {
   color: var(--text);
 }
+/* An area: a block tinted in the area colour (3-6 %, off in "Ruhig"), a small caps head that folds it. */
 .group {
-  margin-top: var(--space-1);
+  margin-top: var(--space-2);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--area-color, var(--text-3)) var(--group-tint), transparent);
 }
 .groupHead {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  justify-content: space-between;
   width: 100%;
-  min-height: var(--touch);
+  min-height: 2rem;
   padding: 0 var(--space-3);
   border: 0;
   border-radius: var(--radius-md);
   background: none;
-  color: var(--text);
+  /* --text-muted, not --text-3: the head sits on the area's tint and keeps 4.5:1 there (AA). */
+  color: var(--text-muted);
   font: inherit;
-  font-weight: var(--weight-medium);
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   text-align: left;
   cursor: pointer;
 }
 .groupHead:hover {
-  background: var(--surface-2);
-}
-.groupHead span:first-of-type {
-  flex: 1;
+  color: var(--text);
 }
 .chevron {
   display: grid;
@@ -103,17 +151,14 @@
 .chevron[data-open='true'] {
   transform: rotate(90deg);
 }
-.group .list {
-  padding-left: var(--space-3);
-}
-/* Favourite star: shown on hover/focus of the row (and always for a favourite or without hover). */
-.star {
-  flex: none;
+/* The pin sets a favourite: on hover or keyboard focus of the row, quietly present on a favourite, always on touch. */
+.pin {
+  position: absolute;
+  right: var(--space-1);
   display: grid;
   place-items: center;
-  width: var(--touch);
-  height: var(--touch);
-  margin-left: calc(var(--touch) * -1);
+  width: 2rem;
+  height: 2rem;
   border: 0;
   border-radius: var(--radius-md);
   background: none;
@@ -121,44 +166,47 @@
   cursor: pointer;
   opacity: 0;
 }
-.star svg {
+.pin svg {
   fill: none;
 }
-.star[aria-pressed='true'] {
-  opacity: 1;
-  color: var(--accent);
+.pin[aria-pressed='true'] {
+  opacity: 0.7;
+  color: var(--text);
 }
-.star[aria-pressed='true'] svg {
+.pin[aria-pressed='true'] svg {
   fill: currentColor;
 }
-.row:hover .star,
-.star:focus-visible {
+.row:hover .pin,
+.pin:focus-visible {
   opacity: 1;
 }
+.pin:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
 @media (hover: none) {
-  .star {
-    opacity: 1;
+  .pin {
+    opacity: 0.7;
   }
 }
-.link:has(+ .star) {
-  padding-right: var(--touch);
+.link:has(+ .pin) {
+  padding-right: 2.25rem;
 }
+.footer {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
+/* Rail: icons only. The name is the tooltip (title) and the accessible name; the active area is a capsule in its colour. */
 .railLink {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-hair);
+  display: grid;
+  place-items: center;
   width: 100%;
-  min-height: 56px;
-  padding: var(--space-1) 0;
+  min-height: 3rem;
   border: 0;
   border-radius: var(--radius-md);
   background: none;
   color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-caps);
-  font-weight: var(--weight-medium);
   text-decoration: none;
   cursor: pointer;
 }
@@ -166,22 +214,14 @@
   background: var(--surface-2);
   color: var(--text);
 }
+li[data-area] .railLink > svg {
+  color: var(--area-color);
+}
 .railLink[aria-current='page'] {
   background: var(--accent-soft);
   color: var(--accent);
 }
-
-/* Module identity: the active entry is tinted in the module's hue, its icon takes the hue; the text stays --text (AA). */
-.row[data-hue] .link[aria-current='page'] {
-  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+li[data-area] .railLink[aria-current='page'] {
+  background: color-mix(in srgb, var(--area-color) 16%, var(--surface));
   color: var(--text);
-}
-.row[data-hue] .link[aria-current='page'] > svg {
-  color: var(--module-color);
-}
-/* Area colour: icon only (never the text) plus a thin stripe on the group head. The active item keeps the accent. */
-.row[data-area] .link:not([aria-current='page']) > svg,
-li[data-area] .railLink:not([aria-current='page']) > svg,
-.group[data-area] .groupHead > svg:first-child {
-  color: var(--area-color);
 }

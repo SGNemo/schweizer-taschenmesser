@@ -40,7 +40,7 @@ beforeEach(async () => {
 });
 
 describe('sidebar', () => {
-  it('shows favourites, then the areas with their modules; the star marks favourites', () => {
+  it('shows the favourites as a bar of icon chips, then the areas with their modules; the pin marks favourites', () => {
     render(
       <MemoryRouter initialEntries={['/calendar']}>
         <Sidebar tree={tree} rail={false} canExpand />
@@ -48,17 +48,36 @@ describe('sidebar', () => {
     );
     const nav = screen.getByRole('navigation', { name: t.nav.main });
     expect(within(nav).getByRole('heading', { name: t.nav.favourites })).toBeVisible();
-    // A favourite is listed twice (favourites and its area); both stars say so.
-    const stars = within(nav).getAllByRole('button', { name: t.nav.removeFavourite('ToDos') });
-    expect(stars).toHaveLength(2);
-    for (const star of stars) expect(star).toHaveAttribute('aria-pressed', 'true');
+    // A favourite is an icon chip (name and tooltip only) and a row in its area; the pin sits on the row.
+    const chip = within(nav).getAllByRole('link', { name: 'ToDos' })[0]!;
+    expect(chip).toHaveAttribute('title', 'ToDos');
+    expect(chip).toHaveTextContent('');
+    const pins = within(nav).getAllByRole('button', { name: t.nav.removeFavourite('ToDos') });
+    expect(pins).toHaveLength(1);
+    expect(pins[0]).toHaveAttribute('aria-pressed', 'true');
     expect(
       within(nav).getByRole('button', { name: t.nav.addFavourite('Kalender') }),
     ).toHaveAttribute('aria-pressed', 'false');
+    // No stars any more.
+    expect(nav.querySelector('[data-icon="star"], svg.star')).toBeNull();
     expect(within(nav).getAllByRole('link', { name: 'Kalender' })[0]).toHaveAttribute(
       'aria-current',
       'page',
     );
+  });
+
+  it('the navigation list scrolls in an overlay area, the footer stays below it', () => {
+    render(
+      <MemoryRouter initialEntries={['/calendar']}>
+        <Sidebar tree={tree} rail={false} canExpand />
+      </MemoryRouter>,
+    );
+    const nav = screen.getByRole('navigation', { name: t.nav.main });
+    expect(within(nav).getByTestId('overlay-scroll')).toBeVisible();
+    // Bibliothek, Einstellungen and Einklappen are outside the scrolled area.
+    expect(within(nav).queryByRole('link', { name: t.nav.settings })).toBeNull();
+    expect(screen.getByRole('link', { name: t.nav.settings })).toBeVisible();
+    expect(screen.getByRole('button', { name: t.nav.collapseSidebar })).toBeVisible();
   });
 
   it('folds an area and remembers it', async () => {
@@ -82,6 +101,12 @@ describe('sidebar', () => {
     );
     expect(screen.getByRole('link', { name: 'Geld' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Planen' })).toHaveAttribute('href', '/planen');
+    // Collapsed: icons only, the name is the tooltip (and the accessible name); no visible label takes width.
+    for (const name of ['Planen', 'Geld', t.nav.home, t.nav.library, t.nav.settings]) {
+      const link = screen.getByRole('link', { name });
+      expect(link).toHaveAttribute('title', name);
+      expect(link).toHaveTextContent('');
+    }
     await user.click(screen.getByRole('button', { name: t.nav.expandSidebar }));
     expect(useUiStore.getState().sidebar).toBe('wide');
   });
