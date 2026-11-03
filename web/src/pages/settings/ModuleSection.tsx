@@ -16,7 +16,7 @@ const prefersSegmented = (f: SettingField) =>
   f.options.length <= 4 &&
   f.options.every((o) => o.label.length <= 14);
 
-function FieldRow({
+export function FieldRow({
   sectionId,
   field: f,
   value,

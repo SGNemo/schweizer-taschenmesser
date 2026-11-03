@@ -5,13 +5,20 @@ const isPhone = (info: { project: { name: string } }) => info.project.name === '
 const categoryNav = (page: Page) =>
   page.getByRole('navigation', { name: 'Einstellungs-Kategorien' });
 
-test('desktop: /settings opens the first category; the list navigates and Back works', async ({
+test('desktop: /settings is the overview; the list navigates and Back works', async ({
   page,
 }, info) => {
   test.skip(isPhone(info), 'master-detail layout is desktop only');
   await ready(page, '/settings');
-  await expect(page).toHaveURL(/\/settings\/allgemein$/);
+  await expect(page).toHaveURL(/\/settings$/);
   const nav = categoryNav(page);
+  await expect(nav.getByRole('link', { name: 'Überblick' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(page.getByTestId('settings-overview').getByRole('link')).toHaveCount(8);
+  await nav.getByRole('link', { name: 'Allgemein' }).click();
+  await expect(page).toHaveURL(/\/settings\/allgemein$/);
   await expect(nav.getByRole('link', { name: 'Allgemein' })).toHaveAttribute(
     'aria-current',
     'page',
@@ -27,6 +34,38 @@ test('desktop: /settings opens the first category; the list navigates and Back w
   await expect(page).toHaveURL(/\/settings\/allgemein$/);
   // The developer category does not exist in a stable build.
   await expect(nav.getByRole('link', { name: 'Entwickler' })).toHaveCount(0);
+});
+
+test('an overview card jumps into its category; the category shows a breadcrumb and sub-groups', async ({
+  page,
+}, info) => {
+  await ready(page, '/settings');
+  await page.getByTestId('overview-sync').click();
+  await expect(page).toHaveURL(/\/settings\/sync$/);
+  if (isPhone(info)) return;
+  await expect(
+    page.getByTestId('settings-breadcrumb').getByRole('link', { name: 'Einstellungen' }),
+  ).toBeVisible();
+  // Two levels: the open category lists its groups under its link.
+  await categoryNav(page).getByRole('link', { name: 'Allgemein' }).click();
+  await expect(page.getByTestId('subnav-allgemein')).toBeVisible();
+  await page.getByTestId('subnav-allgemein').getByRole('link', { name: 'Eingabe' }).click();
+  await expect(page).toHaveURL(/\/settings\/allgemein#shortcuts$/);
+});
+
+test('module settings are a page per module with the same blocks; the old anchor arrives there', async ({
+  page,
+}) => {
+  await ready(page, '/settings/module');
+  const link = page.locator('[data-testid^="module-link-"]').first();
+  await expect(link).toBeVisible();
+  const testId = (await link.getAttribute('data-testid'))!;
+  const id = testId.replace('module-link-', '');
+  await link.click();
+  await expect(page).toHaveURL(new RegExp(`/settings/module/${id}$`));
+  await expect(page.getByTestId('module-settings-head')).toHaveAttribute('data-hue', /.+/);
+  await page.goto(`/settings/module#module-${id}`);
+  await expect(page).toHaveURL(new RegExp(`/settings/module/${id}#module-${id}$`));
 });
 
 test('phone: the categories are the first level, the back link returns to the list', async ({
@@ -99,16 +138,19 @@ test('the command palette reaches a single setting', async ({ page }, info) => {
 
 test('module settings are reachable; the vault settings sit under Sicherheit', async ({ page }) => {
   await ready(page, '/settings/module');
-  const todos = page.locator('section[aria-labelledby="module-todos"]');
-  await expect(page.getByTestId('module-todos-group-fields')).not.toHaveAttribute('open', '');
-  await openFoldedGroup(page, 'module-todos', 'fields');
-  await expect(todos.getByRole('switch', { name: 'Erledigte Aufgaben anzeigen' })).toBeVisible();
+  await page.getByTestId('module-link-todos').click();
+  await expect(page).toHaveURL(/\/settings\/module\/todos$/);
+  await expect(
+    page
+      .getByTestId('module-settings-todos')
+      .getByRole('switch', { name: 'Erledigte Aufgaben anzeigen' }),
+  ).toBeVisible();
   await enable(page, 'accounts');
   await ready(page, '/settings/sicherheit');
   await openFoldedGroup(page, 'module-accounts', 'fields');
   await expect(page.getByRole('group', { name: 'Tresor sperren nach Inaktivität' })).toBeVisible();
   await ready(page, '/settings/module');
-  await expect(page.locator('section[aria-labelledby="module-accounts"]')).toHaveCount(0);
+  await expect(page.getByTestId('module-link-accounts')).toHaveCount(0);
 });
 
 test('Über Nemo shows the version and the facts of this installation', async ({ page }) => {

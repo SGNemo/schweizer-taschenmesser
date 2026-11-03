@@ -5,9 +5,12 @@ Settings live on `/settings/<category>`. The page, the search, the palette ("Ein
 ## Categories (route ids)
 `allgemein` · `darstellung` · `module` · `werkzeuge` · `benachrichtigungen` · `sicherheit` · `sync` · `ki` · `verbindungen` · `schnellerfassung` · `updates` · `entwickler` (Dev-Preview only) · `ueber`. Titles and texts: `t.settings.cat` in `strings.ts`. A new category = add the id to `SETTINGS_CATEGORY_IDS` (`registry/types.ts`), icon in `categories.ts`, texts in `strings.ts`, an entry in `e2e/a11y.spec.ts`, a line in DECISIONS.
 
+## Where it appears (settings v2)
+`/settings` is the **overview** (eight status cards: look, security, sync, AI, notifications, updates, storage, modules; `pages/settings/SettingsOverview.tsx`). A category page has a breadcrumb (wide windows), its **groups** as the second level of the navigation (`registry/groups.ts`: a section names its `group`, core sections are placed in that file) and, from 1440 px, a table of contents on the right. Optional section props: `group`, `level` (`basic`|`advanced`), `scope` (`local`|`synced`|`mixed`).
+
 ## A module setting (usual case)
 1. Add the field to `modules/<id>/settings.ts` (`schema`, `defaults`, `fields`: `boolean` → switch, `select` ≤ 4 short options → segmented, else select, `number`/`text` → input saved on blur). Keys and defaults never change silently: `pages/settings/inventory.test.ts` pins them (a deliberate change needs a migration and `npx vitest run -u pages/settings/inventory.test.ts`).
-2. It appears under **Module → <module name>**. Another category: `category: 'sicherheit'` (accounts does), plus optional `order` and German `keywords` for the search.
+2. It appears on the module's own page **Module → <module name>** (`/settings/module/<id>`, `ModuleSettingsPage`), in the fixed blocks General · Display · Notifications · Data · Advanced. Place a field with the optional `group: 'display'|'notifications'|'data'|'general'` and `level: 'advanced'` (default: General, basic; `check:modules` rejects unknown values). Start data and "Schema kopieren" always sit in Data. Links: `settingsPath('module', 'module-<id>', fieldKey)` gives the page URL. Another category: `category: 'sicherheit'` (accounts does), plus optional `order` and German `keywords` for the search.
 3. Texts (label, `help`) come from `strings.ts`; `help` is the one-line description in the row.
 
 ## A section of your own (core feature, tool, connector UI)

@@ -158,7 +158,7 @@ describe('settings paths', () => {
 
 describe('module pages and groups', () => {
   it('links a module section to the module page, other sections to their category', () => {
-    expect(settingsPath('module', 'module-todos')).toBe('/settings/module/todos');
+    expect(settingsPath('module', 'module-todos')).toBe('/settings/module/todos#module-todos');
     expect(settingsPath('module', 'module-todos', 'showDone')).toBe(
       '/settings/module/todos#module-todos--showDone',
     );

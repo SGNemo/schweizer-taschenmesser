@@ -1,0 +1,57 @@
+/* Overview cards: tokens only. Status is text; the accent marks "needs a look", never red. */
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--space-3);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 7rem;
+  height: 100%;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+}
+.card:hover {
+  border-color: var(--accent);
+}
+.card[data-attention='true'] {
+  border-color: var(--accent);
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.title {
+  flex: 1;
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+.status {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+.context {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}

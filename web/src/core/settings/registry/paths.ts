@@ -19,10 +19,10 @@ export function settingsPath(
   sectionId?: string,
   fieldKey?: string,
 ): string {
-  // A module's settings are a page of their own: `/settings/module/<id>#module-<id>--<field>`.
+  // A module's settings are a page of their own: `/settings/module/<id>#module-<id>[--<field>]` (the hash highlights the head or the row).
   const moduleId = moduleIdOfSection(category, sectionId);
   if (moduleId) {
-    return `/settings/module/${moduleId}${fieldKey ? `#${sectionId}--${fieldKey}` : ''}`;
+    return `/settings/module/${moduleId}#${sectionId}${fieldKey ? `--${fieldKey}` : ''}`;
   }
   const hash = sectionId ? `#${sectionId}${fieldKey ? `--${fieldKey}` : ''}` : '';
   return `/settings/${category}${hash}`;
