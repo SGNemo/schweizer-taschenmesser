@@ -194,6 +194,16 @@
       }
     }
   },
+  "habits": {
+    "scope": "module.habits",
+    "fields": {
+      "remindersEnabled": {
+        "type": "boolean",
+        "label": "Erinnerungen der Gewohnheiten",
+        "default": true
+      }
+    }
+  },
   "invoices": {
     "scope": "module.invoices",
     "fields": {

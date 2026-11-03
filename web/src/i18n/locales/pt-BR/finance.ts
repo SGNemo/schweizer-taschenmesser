@@ -56,7 +56,7 @@ export const finance: Strings['finance'] = {
       allCategories: 'Todas as categorias',
       minAmount: 'Valor a partir de',
       maxAmount: 'Valor até',
-      more: 'Mais filtros',
+      more: 'Mais',
       reset: 'Limpar filtros',
       withTransfers: 'Mostrar transferências',
     },
@@ -81,6 +81,8 @@ export const finance: Strings['finance'] = {
     forecast: {
       title: 'Perspectiva',
       horizon: 'Período da perspectiva',
+      showDetails: 'Detalhes',
+      hideDetails: 'Menos',
       month: 'Até o fim do mês',
       d30: '30 dias',
       d90: '90 dias',

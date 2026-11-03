@@ -98,6 +98,9 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
 
     await ready(page, '/finance?tab=overview');
     await expect(page.getByTestId('forecast-end')).toHaveCount(0); // nothing planned until month end
+    // The outlook's switch and list are a power view: they appear in Erweitert.
+    await page.getByRole('switch', { name: 'Mehr Felder anzeigen' }).click();
+    await page.getByTestId('forecast-toggle').click();
     await page.getByRole('button', { name: '30 Tage' }).click();
     await expect(page.getByTestId('forecast-lowest')).toContainText('01.10.2026');
   });

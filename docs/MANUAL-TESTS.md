@@ -319,6 +319,10 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SO5 Zurücksetzen:** Darstellung → Farbschema „Dunkel“: unten erscheint „Vom Standard abweichend“ mit dem Zurücksetzen-Knopf; ein Modul (z. B. Aufgaben): Schalter ändern, „Geändert · Auf Standard“ stellt zurück, „Rückgängig“ bringt es wieder. ☐
 - **SO6 Vorschau und Hinweis:** Darstellung → Text öffnen: die Vorschau folgt Schriftgröße und Dichte; Benachrichtigungen → „Erinnerungen in der App einblenden“ an: Beispielkarte oben/unten rechts; Tresor: „30 Minuten“ zeigt den ruhigen Hinweis. ☐
 
+- **SO7 Profile am Handy und am PC:** Einstellungen → Allgemein → Verwalten: „Abends“ schaltet dunkel + ruhige Farben + Ruhezeit; das Profil trägt „Aktiv“, „Rückgängig“ im Hinweis stellt alles zurück; ein Zeitplan (z. B. in 2 Minuten) schaltet bei offener App um, ein Umschalten von Hand davor oder danach bleibt bis zum nächsten Zeitpunkt. ☐
+- **SO8 Datei mit Einstellungen:** exportieren (Android: „Speichern unter“, Windows: Dialog), die Datei im Texteditor ansehen: keine Adressen, Tokens, Tresor- oder Supporter-Werte; auf einem zweiten Gerät übernehmen: Vorschau, dann „Übernehmen“ und „Rückgängig“. ☐
+- **SO9 Änderungsverlauf:** drei Einstellungen ändern, „Rückgängig“ in der Liste nimmt genau diese zurück; Schalter „Änderungen merken“ aus: nichts wird mehr notiert; „Verlauf löschen“ leert die Liste. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
@@ -520,19 +524,25 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 
 ## Geld-Gruppe: Finanzen (Paket 1)
 
-- **G1 Umbuchung:** Finanzen → Buchungen → „Umbuchung“: von Girokonto auf Sparkonto 50 €. Beide Salden ändern sich, „Einnahmen“ und „Ausgaben“ des Monats nicht; die Zeile zeigt „Girokonto → Sparkonto“. Zeile öffnen, löschen: beide Hälften verschwinden, „Rückgängig“ bringt beide zurück. ☐
+- **G1 Umbuchung:** Finanzen → Konten → „Umbuchung“ (oder Buchungen → „Mehr“ im Erweitert-Modus): von Girokonto auf Sparkonto 50 €. Beide Salden ändern sich, „Einnahmen“ und „Ausgaben“ des Monats nicht; die Zeile zeigt „Girokonto → Sparkonto“. Zeile öffnen, löschen: beide Hälften verschwinden, „Rückgängig“ bringt beide zurück. ☐
 - **G2 Aufteilen:** neue Ausgabe 50 €, „Mehr Felder“ → „Auf mehrere Kategorien aufteilen“, 32 € + 18 €: die Übersicht zählt beide Kategorien, die Liste zeigt „2 Kategorien“. Mit falscher Summe lässt sich nicht speichern (Hinweis „… zu verteilen“). ☐
 - **G3 Unterkategorie:** Kategorien → neue Kategorie mit „Oberkategorie“ und Symbol: sie erscheint eingerückt, die Übersicht rechnet sie in die Oberkategorie. ☐
-- **G4 Ausblick und Jahr:** Übersicht → Ausblick: wiederkehrende Buchung, Abo-Abbuchungen und offene Rechnungen erscheinen mit Datum; „30 Tage“ / „90 Tage“ wechseln. Zeitraum „Jahr“: zwölf Monate, Sparquote. ☐
-- **G5 CSV-Export:** Buchungen → „Als CSV exportieren“ (Windows-Speichern-Dialog, Android-Teilen): Datei öffnet sich in Excel/LibreOffice mit Semikolon-Spalten, Beträge mit Punkt. ☐
+- **G4 Ausblick und Jahr:** Übersicht → Ausblick (zwei Sätze; „Mehr Felder anzeigen“ → „Details“): wiederkehrende Buchung, Abo-Abbuchungen und offene Rechnungen erscheinen mit Datum; „30 Tage“ / „90 Tage“ wechseln. Zeitraum „Jahr“: zwölf Monate, Sparquote. ☐
+- **G5 CSV-Export:** Buchungen → „Mehr“ → „Als CSV exportieren“ (Windows-Speichern-Dialog, Android-Teilen): Datei öffnet sich in Excel/LibreOffice mit Semikolon-Spalten, Beträge mit Punkt. ☐
 - **G6 Hell/dunkel/Ruhig:** Finanzen-Seite (Kopf, Karten, Ausblick) in Hell, Dunkel und „Ruhig“, Handy 412 px: lesbar, nichts läuft über. ☐
+- **PM1 Orte-Liste:** Karten & Orte → Orte: Kategorie-Chips, Suchfeld und „Zuletzt/Name“ ändern die Liste; fixierte Orte stehen oben; „Navigieren“ öffnet den Ort in OpenStreetMap (Android: in der Karten-App deiner Wahl). ☐
+- **PM2 Ort aus Termin:** Termin mit Ort öffnen → „Als Ort merken“: Karte-Tab mit dem Ort im Suchfeld; erst „Suchen“ fragt (zuerst eigene Karte), dann Treffer wählen → „Ort speichern“. ☐
+
 
 ## Geld-Gruppe: Rechnungen (Paket 2)
 - **G7 Teilzahlung:** Rechnung 100 € öffnen, Teilzahlung 40 €: „Noch 60,00 € offen“, die Liste zeigt „Teilweise bezahlt“, Finanzen hat eine Buchung −40 €. Zweite Teilzahlung über den Rest: die Rechnung ist „Bezahlt“, Summe der Buchungen = 100 €. Teilzahlung entfernen: Buchung weg, Rechnung wieder offen. ☐
 - **G8 Zahlungsdaten:** IBAN eintragen (Mehr Felder), in der Zeile „⋯“ → „Zahlungsdaten kopieren“, im Banking einfügen: Empfänger, IBAN in Vierergruppen, Verwendungszweck, offener Betrag. Falsche Prüfziffer: ruhiger Hinweis, speichern geht trotzdem. Windows und Android. ☐
 - **G9 Beleg:** Foto und PDF anhängen (Android: Kamera/Dateien), Vorschau und „Beleg herunterladen“; auf einem zweiten synchronisierten Gerät steht „liegt hier nicht“. ☐
 - **G10 Kopf:** Beleg-Karte hell, dunkel, „Ruhig“, 412 px: Summe, Anzahl, nächste Fälligkeit lesbar, gezackter Rand ohne Bewegung. ☐
-
+- **PH1 Wasser trinken:** Modul-Bibliothek → Gewohnheiten einschalten; „Gewohnheit hinzufügen“ → Vorlage „Wasser trinken“ speichern; „+1“ zählt ein Glas ohne Hinweisfeld, Strg+Z nimmt es zurück; die Benachrichtigungen kommen alle 2 Stunden zwischen 9 und 19 Uhr mit „3 von 8 Gläser“ und hören auf, sobald 8 erreicht sind (Android: App geschlossen, Erinnerung kommt trotzdem). ☐
+- **PH2 Pausentag und Verlauf:** an einer Gewohnheit „⋯“ → „Pausentag“: die Karte wird grau, es kommt keine Erinnerung, im Verlauf ist der Tag schraffiert und die Quote („x von y geplanten Tagen“) sinkt nicht; „Pausentag aufheben“ stellt ihn zurück. ☐
+- **PH3 Aus-Schalter:** Einstellungen → Gewohnheiten → „Erinnerungen“ aus: keine Benachrichtigung mehr, Ringe und Verlauf bleiben; Ruhige Zeiten verschieben die Erinnerungen wie bei anderen Modulen. ☐
+- **PH4 Kopf und Widget:** Kopf zeigt je einen Ring pro heutige Gewohnheit (hell, dunkel, „Ruhig“, 412 px, mit Text); das Übersichts-Widget zeigt „x von y geschafft“ und „+1 …“. ☐
 ## Geld-Gruppe: Abos (Paket 3)
 - **G11 Kacheln und Kopf:** Abos hell, dunkel, „Ruhig“, 412 px: Kachel mit Monogramm und der Kopf mit der nächsten Abbuchung lesbar, jede Kachel behält ihre Farbe, nichts bewegt sich. ☐
 - **G12 Probezeit:** Abo mit „Probezeit endet am“ in drei Tagen: Chip „Probezeit“, Erinnerung am gewählten Tag (Windows, Android), Eintrag im Kalender. ☐

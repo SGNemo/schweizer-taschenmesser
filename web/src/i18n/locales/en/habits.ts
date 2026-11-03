@@ -1,0 +1,106 @@
+import type { Strings } from '@/strings';
+
+export const habits: Strings['habits'] = {
+  meta: {
+    name: 'Habits',
+    description:
+      'Daily and weekly goals with rings – a tick or a number like "8 glasses", with rest days, history and reminders that stop once the day\'s goal is met.',
+    quickAdd: 'Habit',
+    widget: 'Today',
+    settings: {
+      remindersEnabled: 'Habit reminders',
+      remindersHelp: 'Off: no reminders come, the rings stay.',
+    },
+  },
+  title: 'Habits',
+  tabs: { label: 'View', today: 'Today', history: 'History', archive: 'Archive' },
+  empty: 'No habits yet.',
+  emptyHint:
+    'Start small: for example "Drink water" with a number and a reminder in a time window.',
+  add: 'Add habit',
+  edit: 'Edit habit',
+  form: {
+    name: 'Name',
+    kind: 'Type',
+    yesno: 'Yes/No',
+    count: 'Number',
+    target: 'Goal per day',
+    unit: 'Unit (e.g. glasses)',
+    period: 'Rhythm',
+    day: 'Daily',
+    week: 'Several times a week',
+    weeklyTimes: 'Times per week',
+    weekdays: 'Weekdays',
+    weekdaysHint: 'No selection = every day.',
+    reminder: 'Reminder',
+    reminderOff: 'Off',
+    reminderTime: 'At a time',
+    reminderWindow: 'In a time window',
+    at: 'Time',
+    from: 'From',
+    to: 'Until',
+    every: 'Every (minutes)',
+    reminderHint:
+      "In a time window the app reminds you until the day's goal is met – and not after that.",
+    templates: 'Templates',
+  },
+  templates: {
+    water: { name: 'Drink water', unit: 'glasses' },
+    walk: { name: 'Go for a walk', unit: '' },
+    stretch: { name: 'Stretch', unit: '' },
+    pill: { name: 'Take medication', unit: '' },
+  },
+  today: {
+    progress: (n: number, target: number, unit?: string) =>
+      `${n} of ${target}${unit ? ` ${unit}` : ''}`,
+    done: 'Done',
+    plus: '+1',
+    minus: '−1',
+    markDone: 'Done',
+    undo: 'Undo',
+    rest: 'Rest day',
+    restOn: 'Rest day: today does not count.',
+    restOff: 'Remove rest day',
+    weekProgress: (done: number, of: number) => `${done} of ${of} this week`,
+    plusFor: (name: string) => `+1 ${name}`,
+    minusFor: (name: string) => `−1 ${name}`,
+    nothing: 'Nothing planned today.',
+  },
+  history: {
+    pick: 'Habit',
+    last30: 'Last 30 days',
+    ofDays: (done: number, of: number) => `${done} of ${of} planned days`,
+    ofWeeks: (done: number, of: number) => `${done} of ${of} weeks met`,
+    perWeekday: 'By weekday',
+    best: (n: number) => `Longest run: ${n}`,
+    grid: 'The last year, one column per week',
+    legend: { done: 'Done', partial: 'Partly', open: 'Open', rest: 'Rest day', off: 'Not planned' },
+    noData: 'Nothing counts in this period yet.',
+    cell: (date: string, state: string, count: number) =>
+      `${date}: ${state}${count > 0 ? `, ${count}` : ''}`,
+  },
+  archive: {
+    empty: 'Nothing archived.',
+    archived: 'Archived.',
+    restored: 'Active again.',
+    archiveAction: 'Archive',
+    restoreAction: 'Restore',
+  },
+  notify: {
+    body: (n: number, target: number, unit?: string) =>
+      `${n} of ${target}${unit ? ` ${unit}` : ''}`,
+  },
+  widget: {
+    summary: (done: number, of: number) => `${done} of ${of} done`,
+    detail: (n: number, target: number, unit?: string) =>
+      `${n} of ${target}${unit ? ` ${unit}` : ''}`,
+    plusFor: (name: string) => `+1 ${name}`,
+    empty: 'No habits yet.',
+    addAction: 'Add a habit',
+  },
+  head: {
+    label: 'Today',
+    value: (done: number, of: number) => `${done}/${of}`,
+    none: 'Nothing planned',
+  },
+};

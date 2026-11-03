@@ -103,3 +103,54 @@
   max-height: 16rem;
   overflow-y: auto;
 }
+
+/* Plan group package 3: pin head, places bar. */
+.pinHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: var(--text-sm);
+  max-width: 22rem;
+}
+.pinRings {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  color: var(--module-color);
+  /* Two quiet rings around the pin: static, in the module hue. */
+  box-shadow:
+    0 0 0 0.35rem color-mix(in srgb, var(--module-color) 14%, transparent),
+    0 0 0 0.7rem color-mix(in srgb, var(--module-color) 7%, transparent);
+}
+.placesBar {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.catChip {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.catChip[aria-pressed='true'] {
+  border-color: var(--text);
+  font-weight: 600;
+}

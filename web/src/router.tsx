@@ -68,7 +68,6 @@ function AreaRedirect({ area }: { area: NavArea }) {
 /** Old paths: retired modules lead to the home screen, merged pages to their new place. */
 const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   news: '/',
-  habits: '/',
   timetrack: '/',
   shopping: '/lists',
   packing: '/lists',

@@ -76,6 +76,7 @@ export const tSettings2 = defineBundle(
       network: 'Netzwerk und Zugriff',
       app: 'Die App',
       legal: 'Rechtliches',
+      manage: 'Verwalten',
       support: 'Hilfe und Zurücksetzen',
     },
     nav: {
@@ -213,6 +214,7 @@ export const tSettings2 = defineBundle(
         network: 'Network and access',
         app: 'The app',
         legal: 'Legal',
+        manage: 'Manage',
         support: 'Help and reset',
       },
       nav: {
@@ -349,6 +351,7 @@ export const tSettings2 = defineBundle(
         network: 'Red y acceso',
         app: 'La app',
         legal: 'Aviso legal',
+        manage: 'Gestionar',
         support: 'Ayuda y restablecer',
       },
       nav: {
@@ -485,6 +488,7 @@ export const tSettings2 = defineBundle(
         network: 'Réseau et accès',
         app: 'L’application',
         legal: 'Mentions légales',
+        manage: 'Gérer',
         support: 'Aide et réinitialisation',
       },
       nav: {
@@ -622,6 +626,7 @@ export const tSettings2 = defineBundle(
         network: 'Rede e acesso',
         app: 'O app',
         legal: 'Informações legais',
+        manage: 'Gerenciar',
         support: 'Ajuda e redefinição',
       },
       nav: {

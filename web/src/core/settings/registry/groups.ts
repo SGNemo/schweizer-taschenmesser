@@ -7,7 +7,7 @@ import type { SettingsCategoryId, SettingsSectionDef } from './types';
 
 /** Group ids per category, in display order (texts: `tSettings2.groups`). */
 export const CATEGORY_GROUPS: Partial<Record<SettingsCategoryId, readonly string[]>> = {
-  allgemein: ['profile', 'input', 'data'],
+  allgemein: ['profile', 'manage', 'input', 'data'],
   darstellung: ['look', 'reading', 'more'],
   ki: ['switch', 'providers', 'usage'],
   verbindungen: ['services', 'network'],
@@ -17,6 +17,9 @@ export const CATEGORY_GROUPS: Partial<Record<SettingsCategoryId, readonly string
 /** Core section id → group id. */
 const SECTION_GROUP: Readonly<Record<string, string>> = {
   general: 'profile',
+  profiles: 'manage',
+  'settings-transfer': 'manage',
+  'settings-history': 'manage',
   shortcuts: 'input',
   'recently-deleted': 'data',
   appearance: 'look',

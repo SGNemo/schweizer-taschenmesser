@@ -57,7 +57,7 @@ export const finance: Strings['finance'] = {
       allCategories: 'All categories',
       minAmount: 'Amount from',
       maxAmount: 'Amount to',
-      more: 'More filters',
+      more: 'More',
       reset: 'Reset filters',
       withTransfers: 'Show transfers',
     },
@@ -82,6 +82,8 @@ export const finance: Strings['finance'] = {
     forecast: {
       title: 'Outlook',
       horizon: 'Outlook period',
+      showDetails: 'Details',
+      hideDetails: 'Less',
       month: 'Until month end',
       d30: '30 days',
       d90: '90 days',
