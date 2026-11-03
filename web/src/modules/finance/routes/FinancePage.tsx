@@ -92,7 +92,7 @@ export default function FinancePage() {
   return (
     <>
       <div className={styles.header}>
-        <PageTitle title={t.finance.title} />
+        <PageTitle title={t.finance.title} spacer />
         <div className={patternStyles.hstackCenter}>
           <AdvancedToggle moduleId="finance" />
           <Button

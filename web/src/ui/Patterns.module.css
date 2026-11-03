@@ -637,3 +637,9 @@ button.chip[aria-pressed='true'] {
 .done [data-rr] {
   color: inherit;
 }
+
+/* Stands where a page title was in a header row, so the row's actions keep their place after the title moved into the module head. */
+.titleSpacer {
+  flex: 1 1 0;
+  min-width: 0;
+}

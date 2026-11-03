@@ -59,7 +59,7 @@ export default function SubscriptionsPage() {
   return (
     <>
       <div className={styles.header}>
-        <PageTitle title={t.subscriptions.title} />
+        <PageTitle title={t.subscriptions.title} spacer />
         <AdvancedToggle moduleId="subscriptions" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />

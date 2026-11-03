@@ -15,11 +15,17 @@ import styles from './Patterns.module.css';
  * The page title (h1). Inside a module page it renders into the module head (`layout/ModuleShell` hero), anywhere else
  * where it is called. Pages that lay out their own header use this instead of a bare `<h1>`.
  */
-export function PageTitle({ title }: { title: string }) {
+export function PageTitle({ title, spacer = false }: { title: string; spacer?: boolean }) {
   const hero = useHeroTargets();
   const heading = <h1>{title}</h1>;
   if (!hero) return heading;
-  return hero.title ? createPortal(heading, hero.title) : null;
+  return (
+    <>
+      {/* The title left its flex row (a header with actions): this keeps the actions where they were, on the right. */}
+      {spacer ? <span className={styles.titleSpacer} aria-hidden="true" /> : null}
+      {hero.title ? createPortal(heading, hero.title) : null}
+    </>
+  );
 }
 
 export function PageHeader({

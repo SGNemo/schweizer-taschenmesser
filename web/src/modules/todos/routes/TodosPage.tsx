@@ -474,7 +474,7 @@ export default function TodosPage() {
   return (
     <>
       <div className={styles.header}>
-        <PageTitle title={t.todos.title} />
+        <PageTitle title={t.todos.title} spacer />
         <RowMenu
           label={t.todos.moreOptions}
           open={menuOpen}

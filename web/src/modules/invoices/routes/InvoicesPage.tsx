@@ -129,7 +129,7 @@ export default function InvoicesPage() {
   return (
     <>
       <div className={styles.header}>
-        <PageTitle title={t.invoices.title} />
+        <PageTitle title={t.invoices.title} spacer />
         <AdvancedToggle moduleId="invoices" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />

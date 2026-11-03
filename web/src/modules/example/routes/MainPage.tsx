@@ -44,7 +44,7 @@ export default function MainPage() {
 
   return (
     <>
-      <PageTitle title={t.example.name} />
+      <PageTitle title={t.example.name} spacer />
       <form
         ref={form}
         onSubmit={add}
