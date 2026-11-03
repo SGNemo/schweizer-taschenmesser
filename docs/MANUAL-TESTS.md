@@ -485,11 +485,18 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **M5 Ruhig-Modus:** Einstellungen → Darstellung → Farben → „Ruhig“: Köpfe, Widget-Bänder, Himmel und Karten werden grau; Aufbau und Signatur bleiben erkennbar. ☐
 - **M6 Musik schaltet sich beim Verbinden ein:** Spotify unter Verbindungen verbinden: „Musik“ ist danach aktiv (Hinweis „Jetzt aktiv“), erscheint unter Wissen und als Widget. Wer „Musik“ in der Bibliothek ausgeschaltet hat und neu verbindet, bekommt es nicht wieder eingeschaltet. ☐
 
+- **PK1 Kalender-Ansichten:** Kalender → „Jahr“: zwölf Monate, Tag antippen öffnet die Tagesansicht; „Agenda“: nächste 30 Tage, nur Tage mit Einträgen. Einstellungen → Kalender → „Feiertage anzeigen“ → Bayern: Heilige Drei Könige 6.1. erscheint im Monat (unterstrichen/als Text), mit „Aus“ verschwindet er. ☐
+- **PK2 Einzelner Termin einer Serie:** wiederkehrenden Termin öffnen → „Nur den Termin am … entfernen“: nur dieser Tag fehlt, Rückgängig stellt ihn wieder her, die Benachrichtigung dieses Tages bleibt aus. ☐
+- **PK3 Als ToDo merken:** Termin öffnen → „Als ToDo merken“: Aufgabe im Eingang mit dem Datum als Fälligkeit (ToDos aktiv). Überschneidende Termine (Wochenansicht ≥ 1400 px) haben gestrichelten Rand. ☐
+- **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
+- **PK5 Mehrere Kalender:** „Mehr Felder anzeigen“ → „Kalender verwalten“: „Arbeit“ und „Familie“ anlegen/umfärben; Chips blenden Termine ein/aus; im Termin-Dialog das Feld „Kalender“; einen Kalender löschen: seine Termine bleiben sichtbar. ☐
+- **PK6 Erinnerungen:** Zeitring zeigt „Nächste Erinnerung in …“; „Erledigte entfernen“ räumt nur Beendete/Pausierte auf (Rückgängig); Termin mit „Erinnern“ → „Zusätzlich erinnern“ (Mehr Felder): zwei Benachrichtigungen. ☐
+
 ## Geld-Gruppe: Finanzen (Paket 1)
+
 - **G1 Umbuchung:** Finanzen → Buchungen → „Umbuchung“: von Girokonto auf Sparkonto 50 €. Beide Salden ändern sich, „Einnahmen“ und „Ausgaben“ des Monats nicht; die Zeile zeigt „Girokonto → Sparkonto“. Zeile öffnen, löschen: beide Hälften verschwinden, „Rückgängig“ bringt beide zurück. ☐
 - **G2 Aufteilen:** neue Ausgabe 50 €, „Mehr Felder“ → „Auf mehrere Kategorien aufteilen“, 32 € + 18 €: die Übersicht zählt beide Kategorien, die Liste zeigt „2 Kategorien“. Mit falscher Summe lässt sich nicht speichern (Hinweis „… zu verteilen“). ☐
 - **G3 Unterkategorie:** Kategorien → neue Kategorie mit „Oberkategorie“ und Symbol: sie erscheint eingerückt, die Übersicht rechnet sie in die Oberkategorie. ☐
 - **G4 Ausblick und Jahr:** Übersicht → Ausblick: wiederkehrende Buchung, Abo-Abbuchungen und offene Rechnungen erscheinen mit Datum; „30 Tage“ / „90 Tage“ wechseln. Zeitraum „Jahr“: zwölf Monate, Sparquote. ☐
 - **G5 CSV-Export:** Buchungen → „Als CSV exportieren“ (Windows-Speichern-Dialog, Android-Teilen): Datei öffnet sich in Excel/LibreOffice mit Semikolon-Spalten, Beträge mit Punkt. ☐
 - **G6 Hell/dunkel/Ruhig:** Finanzen-Seite (Kopf, Karten, Ausblick) in Hell, Dunkel und „Ruhig“, Handy 412 px: lesbar, nichts läuft über. ☐
-

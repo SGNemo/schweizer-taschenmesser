@@ -10,6 +10,8 @@ import { DATE_RE, TIME_RE } from '@/core/time/dates';
 export const notifySchema = z.object({
   minutesBefore: z.number().int().min(0).max(10080),
   enabled: z.boolean(),
+  /** Further lead times (minutes before the start) that notify as well, e.g. a day before and an hour before. */
+  extraMinutes: z.array(z.number().int().min(0).max(10080)).optional(),
 });
 export type Notify = z.output<typeof notifySchema>;
 
@@ -32,6 +34,10 @@ export const eventSchema = z
     /** The person or client the entry is for (People module); only the id, never sent to an AI. */
     personId: z.string().optional().meta({ internal: true }),
     recurrence: recurrenceSchema.optional(),
+    /** Occurrence dates (YYYY-MM-DD) of a recurring event that are skipped ("nur diesen Termin löschen"). */
+    exdates: z.array(z.string().regex(DATE_RE)).optional(),
+    /** Id of the named calendar the event belongs to; missing = none. */
+    calendarId: z.string().optional(),
     notify: notifySchema.optional(),
     /** A reminder answered with "Genommen" instead of "Erledigt" (medication, vitamins); nothing is counted. */
     taken: z.boolean().optional(),
@@ -51,6 +57,20 @@ export const eventSchema = z
   );
 
 export type CalendarEvent = z.output<typeof eventSchema>;
+
+/**
+ * A named calendar of the user ("Arbeit", "Familie"). `tone` is an index into the fixed category
+ * palette (`categoryColor`); the name always travels with the colour. An event without `calendarId`
+ * belongs to no named calendar and is always shown.
+ */
+export const calendarSchema = z.object({
+  name: z.string().min(1),
+  tone: z.number().int().min(0).max(5).default(0),
+  /** Switched off = its events are left out of every view (they are not deleted). */
+  visible: z.boolean().default(true),
+  order: z.number().int().default(0),
+});
+export type CalendarList = z.output<typeof calendarSchema>;
 
 /**
  * An event copied from an outside calendar (Google, an ICS subscription). Read-only in the UI;

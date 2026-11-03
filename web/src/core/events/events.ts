@@ -23,7 +23,7 @@ export interface EventMap {
   /** Something is running low (pantry). The shopping list adds the item unless it is already open there. */
   'shopping.requested': { name: string; quantity?: string };
   /** Something becomes a to-do (a checklist item in a note). The todos module adds it to the inbox. */
-  'todo.requested': { title: string; note?: string };
+  'todo.requested': { title: string; note?: string; dueDate?: string };
   'module.enabled': { moduleId: string };
   'module.disabled': { moduleId: string; policy: DataPolicy };
 }

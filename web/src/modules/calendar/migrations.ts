@@ -7,4 +7,8 @@ import type { ModuleManifest } from '@/core/modules/types';
 export const migrations: ModuleManifest['migrations'] = {
   // 2: events gained the optional `personId` ("Für"); old records stay valid as they are.
   2: async () => {},
+  // 3: events gained the optional `exdates` (skipped occurrences of a recurring event).
+  3: async () => {},
+  // 4: named calendars (`calendar_calendar`) and the optional `calendarId` on events; nothing to rewrite.
+  4: async () => {},
 };

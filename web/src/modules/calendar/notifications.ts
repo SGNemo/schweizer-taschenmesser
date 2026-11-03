@@ -34,12 +34,26 @@ const source: NotificationSource = async ({ from, to }) => {
   const inRange = (at: number) => at > from && at <= to;
   for (const e of events) {
     const time = e.allDay || !e.startTime ? prefs.allDayNotifyTime : e.startTime;
+    const skipped = new Set(e.exdates ?? []);
     for (const date of datesInRange(e.startDate, e.recurrence, fromDate, toDate)) {
+      if (skipped.has(date)) continue;
       const start = toEpoch(date, time);
       const at = start - e.notify!.minutesBefore * MINUTE_MS;
       const key = `event:${e.id}:${date}T${time}`;
       const url = `/calendar?view=day&date=${date}`;
       if (inRange(at)) out.push({ key, at, title: e.title, body: e.note, url, taken: e.taken });
+      for (const extra of new Set(e.notify!.extraMinutes ?? [])) {
+        if (extra === e.notify!.minutesBefore) continue;
+        const extraAt = start - extra * MINUTE_MS;
+        if (inRange(extraAt))
+          out.push({
+            key: `${key}:x${extra}`,
+            at: extraAt,
+            title: e.title,
+            body: t.calendar.stageBody(extra, time),
+            url,
+          });
+      }
       if (focus.staggered)
         for (const stage of focus.stages) {
           if (stage === e.notify!.minutesBefore) continue;
