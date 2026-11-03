@@ -3,6 +3,7 @@ import { getPlatform, type DesktopService, type HotkeyError } from '@/core/platf
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { readPrefs } from './device';
+import { logError } from '@/core/diagnostics/logError';
 
 /** Minutes of the tray's "Timer 25 Minuten". */
 export const TRAY_TIMER_MIN = 25;
@@ -103,7 +104,7 @@ export async function startQuickCaptureDesktop(): Promise<void> {
   } catch {
     // The shell is older than this frontend or the call was refused; the app still works.
   }
-  void startTrayToday(desktop).catch(() => undefined);
+  void startTrayToday(desktop).catch(logError('tray-today'));
   if (prefs.hotkey) {
     const error = await applyHotkey(prefs.hotkey);
     if (error) {

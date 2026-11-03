@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router';
 import { markAway, recordContext } from '@/core/focus/context';
 import { now } from '@/core/time/now';
+import { logError } from '@/core/diagnostics/logError';
 
 /** Headless: remembers the current place for "Woran war ich?" and marks when the app is left. */
 export function ResumeTracker() {
@@ -14,7 +15,7 @@ export function ResumeTracker() {
         void recordContext(
           pathname + search,
           document.querySelector('main h1')?.textContent ?? '',
-        ).catch(() => undefined),
+        ).catch(logError('resume')),
       400,
     );
     return () => clearTimeout(id);
@@ -22,9 +23,9 @@ export function ResumeTracker() {
 
   useEffect(() => {
     const leave = () => {
-      if (document.visibilityState === 'hidden') void markAway(now()).catch(() => undefined);
+      if (document.visibilityState === 'hidden') void markAway(now()).catch(logError('resume'));
     };
-    const gone = () => void markAway(now()).catch(() => undefined);
+    const gone = () => void markAway(now()).catch(logError('resume'));
     document.addEventListener('visibilitychange', leave);
     window.addEventListener('pagehide', gone);
     return () => {
