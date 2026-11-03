@@ -279,7 +279,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
 
   // 1. Load the test set (write throughput of createMany in chunks of 500).
   await page.goto('/settings/entwickler');
-  await expect(page.locator('main h1')).toBeVisible();
+  await expect(page.locator('main h1')).toBeVisible({ timeout: 120_000 });
   const section = page.locator('section[aria-labelledby="developer"]');
   // `xl` is not offered in the UI on purpose (measurements only): add the option to the select.
   await section.getByLabel('Umfang').evaluate((el, v) => {
@@ -355,7 +355,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
 
   // 3. Open every module (client-side navigation from the overview).
   await page.goto('/');
-  await expect(page.locator('main h1')).toBeVisible();
+  await expect(page.locator('main h1')).toBeVisible({ timeout: 120_000 });
   await settle(page, 0);
   const modules: Record<string, Step & { h1: string }> = {};
   for (const id of MODULES) {
@@ -372,7 +372,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
 
   // 4. Search (command palette): type the query, wait until all reads are done.
   await page.goto('/');
-  await expect(page.locator('main h1')).toBeVisible();
+  await expect(page.locator('main h1')).toBeVisible({ timeout: 120_000 });
   const searches: Record<string, Step> = {};
   for (const q of SEARCHES) {
     const runs: Step[] = [];
@@ -401,7 +401,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
   result.backupFileMb = Math.round((json.length / 1048576) * 10) / 10;
 
   await page.goto('/settings/entwickler');
-  await expect(page.locator('main h1')).toBeVisible();
+  await expect(page.locator('main h1')).toBeVisible({ timeout: 120_000 });
   const removeStart = Date.now();
   await page.getByTestId('seed-remove').click();
   await expect(page.getByTestId('seed-status')).toHaveCount(0, { timeout: 900_000 });
@@ -411,7 +411,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
 
   if (phone) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   await page.goto('/settings/sync');
-  await expect(page.locator('main h1')).toBeVisible();
+  await expect(page.locator('main h1')).toBeVisible({ timeout: 120_000 });
   const restoreStart = Date.now();
   await page.locator('#backup-file').setInputFiles(file);
   await expect(page.getByTestId('backup-contents')).toContainText('Einträge in', {
