@@ -32,6 +32,8 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Save as to-do',
   asTodoDone: 'Saved as to-do.',
   skipOccurrence: (date: string) => `Remove only the one on ${date}`,
+  movedToast: 'Event moved.',
+  dragRecurring: 'Change repeating events in the editor.',
   calendars: {
     group: 'Calendars',
     manage: 'Manage calendars',

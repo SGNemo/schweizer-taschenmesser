@@ -5,6 +5,7 @@ import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
 import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
 import { personName, usePeople } from '@/core/people/people';
+import type { Slot } from '../dragMath';
 import type { HolidayId } from '../holidays';
 import { groupByDate, monthWeeks, weekNumberOf } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
@@ -18,6 +19,9 @@ interface ViewProps {
   onOpenItem: (item: CalendarItem) => void;
   /** Public holidays of the shown range (empty when the setting is off). */
   holidays?: Map<string, HolidayId>;
+  /** Hour-grid editing (wide screens): move / stretch an event, draw a new slot. */
+  onMoveItem?: (item: CalendarItem, slot: Slot) => void;
+  onCreateSlot?: (date: string, startTime: string, endTime: string) => void;
 }
 
 /** From this width week and day switch from plain lists to the hour grid. */
@@ -144,13 +148,24 @@ export function WeekView({
   onPickDay,
   onOpenItem,
   holidays,
+  onMoveItem,
+  onCreateSlot,
 }: Omit<ViewProps, 'date'> & { days: string[] }) {
   const byDate = groupByDate(items);
   const now = today();
   const grid = useMediaQuery(TIME_GRID_QUERY);
   const people = usePeople();
   if (grid)
-    return <TimeGrid days={days} items={items} onPickDay={onPickDay} onOpenItem={onOpenItem} />;
+    return (
+      <TimeGrid
+        days={days}
+        items={items}
+        onPickDay={onPickDay}
+        onOpenItem={onOpenItem}
+        onMoveItem={onMoveItem}
+        onCreateSlot={onCreateSlot}
+      />
+    );
   return (
     <div className={styles.week}>
       {days.map((d) => {
@@ -197,12 +212,21 @@ export function DayView({
   items,
   onOpenItem,
   onAdd,
+  onMoveItem,
+  onCreateSlot,
 }: Omit<ViewProps, 'onPickDay'> & { onAdd: (date: string) => void }) {
   const grid = useMediaQuery(TIME_GRID_QUERY);
   const people = usePeople();
   if (grid)
     return (
-      <TimeGrid days={[date]} items={items} onPickDay={() => undefined} onOpenItem={onOpenItem} />
+      <TimeGrid
+        days={[date]}
+        items={items}
+        onPickDay={() => undefined}
+        onOpenItem={onOpenItem}
+        onMoveItem={onMoveItem}
+        onCreateSlot={onCreateSlot}
+      />
     );
   return (
     <div>

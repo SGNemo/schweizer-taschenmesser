@@ -35,7 +35,7 @@ import { changeWithUndo, deleteWithUndo, undoableWithToast } from '@/core/undo/w
 
 export type EventTarget =
   | Stored<CalendarEvent>
-  | { draft: { startDate: string; kind?: EventKind; startTime?: string } }
+  | { draft: { startDate: string; kind?: EventKind; startTime?: string; endTime?: string } }
   | null;
 
 export { NOTIFY_LEADS } from './LeadRow';
@@ -114,7 +114,7 @@ function Form({
           ? ''
           : '09:00'),
     endDate: existing?.endDate ?? '',
-    endTime: existing?.endTime ?? '',
+    endTime: existing?.endTime ?? ('draft' in target ? (target.draft.endTime ?? '') : ''),
     location: existing?.location ?? '',
     note: existing?.note ?? '',
     personId: existing?.personId ?? '',

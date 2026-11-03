@@ -3,6 +3,8 @@ import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
+import { changeWithUndo } from '@/core/undo/withToast';
+import { useUiStore } from '@/stores/ui';
 import type { CalendarItem } from '@/core/modules/types';
 import { useWeekStart } from '@/core/settings/core';
 import { useAdvanced } from '@/core/settings/comfort';
@@ -24,6 +26,7 @@ import { Agenda } from '../components/Agenda';
 import { AgendaView } from '../components/AgendaView';
 import { CalendarsBar } from '../components/CalendarsBar';
 import { YearView } from '../components/YearView';
+import type { Slot } from '../dragMath';
 import { holidayMap, type HolidayRegion } from '../holidays';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
@@ -115,6 +118,28 @@ export default function CalendarPage() {
       setOccurrence(item.date);
       if (ev) setTarget(ev);
     } else if (item.to) void navigate(item.to);
+  }
+
+  async function moveItem(item: CalendarItem, slot: Slot) {
+    const id = eventIdOf(item.id);
+    const ev = await eventRepo.get(id);
+    if (!ev) return;
+    // A series is changed in the editor, where "only this one" is a deliberate choice.
+    if (ev.recurrence) {
+      useUiStore.getState().toast(t.calendar.dragRecurring);
+      return;
+    }
+    await changeWithUndo(
+      () =>
+        eventRepo.update(id, {
+          startDate: slot.date,
+          startTime: slot.startTime,
+          ...(slot.endTime ? { endTime: slot.endTime } : {}),
+          // A one-day timed event keeps no end date.
+          endDate: undefined,
+        }),
+      t.calendar.movedToast,
+    );
   }
 
   if (!view) return null;
@@ -241,6 +266,10 @@ export default function CalendarPage() {
             <WeekView
               days={eachDay(range.from, range.to)}
               items={list}
+              onMoveItem={(i, slot) => void moveItem(i, slot)}
+              onCreateSlot={(d, startTime, endTime) =>
+                setTarget({ draft: { startDate: d, startTime, endTime } })
+              }
               holidays={holidays}
               onPickDay={(d) => go({ view: 'day', date: d })}
               onOpenItem={(i) => void openItem(i)}
@@ -249,6 +278,10 @@ export default function CalendarPage() {
             <DayView
               date={date}
               items={list}
+              onMoveItem={(i, slot) => void moveItem(i, slot)}
+              onCreateSlot={(d, startTime, endTime) =>
+                setTarget({ draft: { startDate: d, startTime, endTime } })
+              }
               onOpenItem={(i) => void openItem(i)}
               onAdd={(d) => setTarget({ draft: { startDate: d } })}
             />

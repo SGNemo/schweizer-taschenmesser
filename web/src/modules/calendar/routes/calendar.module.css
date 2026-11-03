@@ -789,3 +789,38 @@ button.itemRow:hover {
 .calSwatch[aria-pressed='true'] {
   border-color: var(--text);
 }
+
+/* Dragging in the hour grid: the press target is the whole event, the bottom edge stretches it. */
+.tgItem[data-dragging='true'] {
+  z-index: 3;
+  outline: 2px solid var(--accent);
+  box-shadow: var(--shadow-2, 0 2px 8px color-mix(in srgb, var(--text) 25%, transparent));
+}
+.tgItem {
+  touch-action: none;
+  user-select: none;
+}
+.tgResize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.5rem;
+  cursor: ns-resize;
+}
+.tgDraw {
+  position: absolute;
+  top: calc(var(--start) / 60 * var(--hour));
+  height: calc(var(--minutes) / 60 * var(--hour));
+  left: 2px;
+  right: 2px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tgItem {
+    transition: none;
+  }
+}
