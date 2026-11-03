@@ -39,6 +39,12 @@ export const people: Strings['people'] = {
   remindOwn: 'Recordatorio para esta persona (días antes)',
   remindOwnHint: 'Déjalo vacío para usar el ajuste del módulo.',
   budget: 'Presupuesto de regalo (opcional)',
+  inbox: {
+    title: 'Ideas de tus marcadores',
+    hint: 'Marcaste estos enlaces como ideas de regalo. Elige para quién los quieres.',
+    take: (name: string) => `Usar para ${name}`,
+    dismiss: 'Descartar',
+  },
   wishSubject: 'Feliz cumpleaños',
   budgetLine: (budget: string, amount: string, over: boolean) =>
     over ? `Presupuesto ${budget}, te pasas ${amount}` : `Presupuesto ${budget}, quedan ${amount}`,

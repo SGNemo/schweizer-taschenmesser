@@ -115,6 +115,8 @@ export const lists: Strings['lists'] = {
   price: 'Preço (opcional)',
   recurring: 'Comprar sempre',
   recurringHint: 'Continua na lista depois de “Remover comprados”, só desmarcado.',
+  toPantry: (n: number) => `Passar para a despensa (${n})`,
+  toPantryDone: (n: number) => `${n} passados para a despensa.`,
   recurringBadge: 'Recorrente',
   category: 'Categoria (opcional)',
   categoryNow: 'Novos itens vão para a categoria',

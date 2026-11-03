@@ -1,6 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
+import { bus } from '@/core/events';
+import { useModuleStates } from '@/core/modules/activation';
+import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -70,6 +73,7 @@ export default function ListsPage() {
   const [listTarget, setListTarget] = useState<ListTarget>(null);
   const [templates, setTemplates] = useState(false);
   const [category, setCategory] = useState('');
+  const moduleStates = useModuleStates();
   const toast = useUiStore((x) => x.toast);
   const form = useRef<HTMLFormElement>(null);
 
@@ -173,6 +177,20 @@ export default function ListsPage() {
     } catch {
       // the share sheet was closed: nothing to do
     }
+  }
+
+  /** Bought goods go to the pantry (amount added to the item of that name), then the bought entries are cleared. */
+  async function toPantry() {
+    if (!current) return;
+    const bought = shown.filter((i) => i.done);
+    await whenServicesSettled();
+    for (const i of bought)
+      await bus.emit('pantry.restock', {
+        name: i.name,
+        ...(i.quantity ? { quantity: i.quantity } : {}),
+      });
+    await clearDone(current.id);
+    void toast(t.lists.toPantryDone(bought.length));
   }
 
   async function sendToBuy() {
@@ -331,6 +349,9 @@ export default function ListsPage() {
                   </Button>
                 </>
               )}
+              {isShopping && doneCount > 0 && moduleStates?.pantry === true ? (
+                <Button onClick={() => void toPantry()}>{t.lists.toPantry(doneCount)}</Button>
+              ) : null}
               {toBuy.length > 0 ? (
                 <Button onClick={() => void sendToBuy()}>{t.lists.buyMissing(toBuy.length)}</Button>
               ) : null}

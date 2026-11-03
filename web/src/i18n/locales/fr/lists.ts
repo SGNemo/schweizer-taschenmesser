@@ -117,6 +117,8 @@ export const lists: Strings['lists'] = {
   price: 'Prix (facultatif)',
   recurring: 'Toujours racheter',
   recurringHint: 'Reste sur la liste après « Retirer les achats », simplement décoché.',
+  toPantry: (n: number) => `Mettre dans les provisions (${n})`,
+  toPantryDone: (n: number) => `${n} ajoutés aux provisions.`,
   recurringBadge: 'Récurrent',
   category: 'Catégorie (facultatif)',
   categoryNow: 'Les nouvelles entrées vont dans la catégorie',

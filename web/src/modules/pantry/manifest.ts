@@ -75,6 +75,7 @@ const manifest: ModuleManifest = {
       },
     ],
     calendarItems: () => import('./calendar'),
+    services: () => import('./services'),
     notifications: () => import('./notifications'),
   },
 };

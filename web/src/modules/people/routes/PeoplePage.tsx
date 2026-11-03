@@ -38,7 +38,9 @@ import {
   totals,
   whenLabel,
 } from '../logic';
+import { inboxSchema, removeIdea, SCOPE as INBOX_SCOPE } from '../inbox';
 import { giftRepo, personRepo } from '../repo';
+import { useSettings } from '@/core/settings/settings';
 import type { Gift, Person } from '../schema';
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -272,6 +274,8 @@ function PersonDetail({
   gifts: Stored<Gift>[];
   onBack: () => void;
 }) {
+  const [inbox] = useSettings(INBOX_SCOPE, inboxSchema, { ideas: [] });
+  const ideas = inbox?.ideas ?? [];
   const [editing, setEditing] = useState<PersonTarget>(null);
   const [gift, setGift] = useState<GiftTarget>(null);
   const day = today();
@@ -331,6 +335,46 @@ function PersonDetail({
             budgetLeft(person.giftBudgetCents, gifts) < 0,
           )}
         </p>
+      ) : null}
+      {ideas.length > 0 ? (
+        <section aria-label={t.people.inbox.title} data-testid="gift-inbox">
+          <h2>{t.people.inbox.title}</h2>
+          <p>{t.people.inbox.hint}</p>
+          <ItemList label={t.people.inbox.title}>
+            {ideas.map((idea, index) => (
+              <ItemRow
+                key={`${idea.title}|${idea.url ?? ''}`}
+                title={idea.title}
+                meta={idea.url}
+                end={
+                  <span className={patternStyles.hstackTight}>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        void giftRepo
+                          .create({
+                            personId: person.id,
+                            title: idea.title,
+                            status: 'idea',
+                            ...(idea.url ? { url: idea.url } : {}),
+                            ...(idea.priceCents !== undefined
+                              ? { priceCents: idea.priceCents }
+                              : {}),
+                          })
+                          .then(() => removeIdea(index))
+                      }
+                    >
+                      {t.people.inbox.take(person.name)}
+                    </Button>
+                    <Button size="sm" onClick={() => void removeIdea(index)}>
+                      {t.people.inbox.dismiss}
+                    </Button>
+                  </span>
+                }
+              />
+            ))}
+          </ItemList>
+        </section>
       ) : null}
       <h2>{t.people.giftsHeading}</h2>
       <Button variant="primary" onClick={() => setGift({ draft: true })}>

@@ -115,6 +115,8 @@ export const lists: Strings['lists'] = {
   price: 'Price (optional)',
   recurring: 'Buy again and again',
   recurringHint: 'Stays on the list after “Remove bought”, just unticked.',
+  toPantry: (n: number) => `Move to pantry (${n})`,
+  toPantryDone: (n: number) => `${n} moved to the pantry.`,
   recurringBadge: 'Recurring',
   category: 'Category (optional)',
   categoryNow: 'New entries go to category',
