@@ -4605,6 +4605,50 @@ export const de = {
     },
     add: 'Zugang hinzufügen',
     edit: 'Zugang bearbeiten',
+    head: {
+      locked: 'Gesperrt',
+      unlocked: 'Entsperrt',
+      autoLock: (min: number) =>
+        min <= 0
+          ? 'Sperrt automatisch in unter einer Minute'
+          : `Sperrt automatisch in etwa ${min} Min.`,
+      bridgeOn: 'Browser-Erweiterung: an',
+      bridgeOff: 'Browser-Erweiterung: aus',
+    },
+    groups: { label: 'Gruppen', all: 'Alle', favorites: 'Favoriten' },
+    audit: {
+      open: 'Passwörter prüfen',
+      title: 'Passwörter prüfen',
+      intro:
+        'Alles wird nur hier auf diesem Gerät gerechnet. Es werden keine Passwörter angezeigt, gesendet oder gespeichert.',
+      running: (done: number, total: number) => `Prüfe ${done} von ${total} …`,
+      nothing: 'Nichts aufgefallen. Gut so.',
+      weak: (n: number) => `Schwach (${n})`,
+      reused: (n: number) => `Mehrfach verwendet (${n})`,
+      old: (n: number) => `Älter als ein Jahr (${n})`,
+      unavailable:
+        'Die Stärkeprüfung braucht einmal Internet, um ihre Wörterbücher zu laden. Wiederverwendung und Alter wurden trotzdem geprüft.',
+      openEntry: 'Öffnen',
+    },
+    emergency: {
+      open: 'Notfallblatt',
+      title: 'Notfallblatt',
+      intro:
+        'Ein Blatt mit den Schritten für den Notfall. Es enthält keine Passwörter. Drucke es aus und bewahre es getrennt vom Gerät auf.',
+      heading: 'Notfallblatt: Passwort-Tresor',
+      entries: (n: number) => `Einträge im Tresor: ${n}`,
+      date: (d: string) => `Stand: ${d}`,
+      steps: [
+        'Lege regelmäßig ein verschlüsseltes Backup an (Werkzeuge → Backup) und bewahre die Datei an einem zweiten Ort auf.',
+        'Das Master-Passwort steht nicht in diesem Blatt und kann nicht zurückgesetzt werden. Hinterlege es getrennt, z. B. bei einer Vertrauensperson.',
+        'Neues Gerät: App installieren, Tresor mit dem Backup wiederherstellen, mit dem Master-Passwort entsperren.',
+        'Ist das Master-Passwort verloren, sind die Daten nicht mehr lesbar.',
+      ],
+      save: 'Als Datei speichern',
+      file: 'notfallblatt-tresor.html',
+      saved: 'Notfallblatt gespeichert.',
+      backup: 'Zum Backup',
+    },
     search: 'Passwörter durchsuchen',
     empty: 'Noch keine Zugänge.',
     emptyFiltered: 'Nichts gefunden.',
