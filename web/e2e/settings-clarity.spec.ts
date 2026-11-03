@@ -109,3 +109,13 @@ test('a weaker vault choice gets a calm note, a stronger one none', async ({ pag
   await lock.getByRole('button', { name: '5 Minuten', exact: true }).click();
   await expect(page.getByTestId('note-autoLockLong')).toHaveCount(0);
 });
+
+test('the reset button of a changed field does not take the name of the field input', async ({
+  page,
+}) => {
+  // A spec that finds a field by its label must still find exactly one element after the change.
+  await ready(page, '/settings/module/todos');
+  await page.getByRole('switch', { name: 'Erledigte Aufgaben anzeigen' }).click();
+  await expect(page.getByTestId('reset-field-module-todos--showDone')).toBeVisible();
+  await expect(page.getByLabel('Erledigte Aufgaben anzeigen')).toHaveCount(1);
+});

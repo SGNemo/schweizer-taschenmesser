@@ -95,7 +95,7 @@ export function FieldRow({
               variant="ghost"
               size="sm"
               onClick={reset}
-              aria-label={c.resetFieldNamed(f.label)}
+              title={c.resetFieldNamed(f.label)}
               data-testid={`reset-field-${id}`}
             >
               {c.field} · {c.resetField}
