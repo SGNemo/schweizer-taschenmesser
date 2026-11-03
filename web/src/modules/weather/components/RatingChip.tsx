@@ -1,7 +1,7 @@
 import type { Rating } from '@/core/weather/logic';
 import { tWeather } from '@/strings.weather';
 import { Icon, type IconName } from '@/ui';
-import styles from './WeatherPreview.module.css';
+import styles from '../routes/weather.module.css';
 
 // "Ungemütlich" gets the umbrella, not the warning triangle: that one is reserved for overdue things
 // (`ui/semantics.ts`), and neither weather nor air quality is ever urgent.

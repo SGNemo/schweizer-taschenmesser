@@ -65,8 +65,31 @@
 }
 .title:empty,
 .extra:empty,
-.figure:empty {
+.figure:empty,
+.notice:empty {
   display: none;
+}
+.notice {
+  margin-bottom: var(--space-3);
+}
+/* Full-bleed layer behind the head's content (the sky); the head's own children sit above it. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.backdrop:empty {
+  display: none;
+}
+.frame > :not(.backdrop) {
+  position: relative;
+}
+/* A night sky is dark whatever the theme: the head's text switches to the light ink (tokens.css --sky-night-ink). */
+.frame:has([data-sky='night']) {
+  --text: var(--sky-night-ink);
+  color: var(--text);
 }
 .title h1 {
   margin: var(--space-1) 0 0;

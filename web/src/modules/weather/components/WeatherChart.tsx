@@ -3,16 +3,25 @@ import { dateTimeFormat } from '@/core/i18n/format';
 import type { HourRow } from '@/core/weather/api';
 import { rateHour, type Rating } from '@/core/weather/logic';
 import { tWeather } from '@/strings.weather';
+import { tWeatherPage } from '@/strings.weatherPage';
 import styles from './WeatherChart.module.css';
 
-const HEIGHT = 232;
 const PAD = { left: 34, right: 14, top: 22 };
-const TEMP_H = 112;
-const RAIN_TOP = PAD.top + TEMP_H + 16;
 const RAIN_H = 34;
-const STRIP_Y = RAIN_TOP + RAIN_H + 8;
 const STRIP_H = 8;
-const LABEL_Y = STRIP_Y + STRIP_H + 16;
+/** Vertical layout; `large` (the module page) draws the temperature band taller. */
+function geometry(large: boolean) {
+  const tempH = large ? 176 : 112;
+  const rainTop = PAD.top + tempH + 16;
+  const stripY = rainTop + RAIN_H + 8;
+  return {
+    tempH,
+    rainTop,
+    stripY,
+    labelY: stripY + STRIP_H + 16,
+    height: stripY + STRIP_H + 16 + 8,
+  };
+}
 
 export const RATING_COLOR: Record<Rating, string> = {
   good: 'var(--success)',
@@ -61,8 +70,22 @@ function smoothPath(pts: readonly [number, number][]): string {
  * as bars underneath and one small strip with the rating of every hour. Drawn by hand in SVG; the
  * text rows below the picture carry every number, so the picture itself is `role="img"`.
  */
-export function WeatherChart({ hours }: { hours: readonly HourRow[] }) {
+export function WeatherChart({
+  hours,
+  large = false,
+}: {
+  hours: readonly HourRow[];
+  large?: boolean;
+}) {
   const tx = tWeather.use();
+  const tp = tWeatherPage.use();
+  const {
+    tempH: TEMP_H,
+    rainTop: RAIN_TOP,
+    stripY: STRIP_Y,
+    labelY: LABEL_Y,
+    height: HEIGHT,
+  } = geometry(large);
   const [ref, width] = useWidth<HTMLDivElement>();
   if (hours.length < 2) return null;
 
@@ -77,6 +100,18 @@ export function WeatherChart({ hours }: { hours: readonly HourRow[] }) {
   const pts = hours.map((h, i): [number, number] => [x(i), y(h.temp)]);
   const line = smoothPath(pts);
   const area = `${line}L${x(hours.length - 1).toFixed(1)},${PAD.top + TEMP_H}L${PAD.left},${PAD.top + TEMP_H}Z`;
+  // Wind as a dashed line on its own scale in the same band (km/h, 0 at the bottom): the legend and the row texts carry the numbers.
+  const winds = hours.map((h) => h.wind).filter((w): w is number => w != null);
+  const windMax = Math.max(20, ...winds);
+  const windLine =
+    winds.length === hours.length
+      ? hours
+          .map(
+            (h, i) =>
+              `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${(PAD.top + TEMP_H - ((h.wind ?? 0) / windMax) * (TEMP_H * 0.55)).toFixed(1)}`,
+          )
+          .join('')
+      : '';
   const minI = temps.indexOf(Math.min(...temps));
   const maxI = temps.indexOf(Math.max(...temps));
   const ticks = [lo, Math.round((lo + hi) / 2), hi];
@@ -128,6 +163,7 @@ export function WeatherChart({ hours }: { hours: readonly HourRow[] }) {
             </text>
           </g>
         ))}
+        {winds.length > 1 ? <path className={styles.wind} d={windLine} /> : null}
         <path className={styles.area} d={area} />
         <path className={styles.line} d={line} />
         {marks.map((i) => (
@@ -180,6 +216,16 @@ export function WeatherChart({ hours }: { hours: readonly HourRow[] }) {
         <li>
           <span className={`${styles.swatch} ${styles.swatchLine}`} aria-hidden="true" />
           {tx.legendTemp}
+        </li>
+        {windLine ? (
+          <li>
+            <span className={`${styles.swatch} ${styles.swatchWind}`} aria-hidden="true" />
+            {tp.legendWind}
+          </li>
+        ) : null}
+        <li>
+          <span className={`${styles.swatch} ${styles.swatchNight}`} aria-hidden="true" />
+          {tp.legendNight}
         </li>
         <li>
           <span className={`${styles.swatch} ${styles.swatchRain}`} aria-hidden="true" />

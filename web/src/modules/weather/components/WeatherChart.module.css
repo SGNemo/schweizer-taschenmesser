@@ -15,7 +15,7 @@
 }
 .night {
   fill: var(--text);
-  opacity: 0.06;
+  opacity: 0.1;
 }
 .line {
   fill: none;
@@ -73,4 +73,19 @@
 }
 .swatchRain {
   background: var(--info);
+}
+.wind {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+}
+.swatchWind {
+  height: 0;
+  border-top: 2px dashed var(--text-3);
+  background: none;
+}
+.swatchNight {
+  background: color-mix(in srgb, var(--text) 12%, transparent);
 }

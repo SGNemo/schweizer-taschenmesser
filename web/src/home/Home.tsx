@@ -57,7 +57,6 @@ import { ResumeCard } from './ResumeCard';
 import { NowPlayingLine } from './NowPlayingLine';
 import { useNowPlayingAvailable } from './useNowPlaying';
 import { tSpotify } from '@/strings.spotify';
-import { WeatherLine } from './WeatherLine';
 
 import styles from './Home.module.css';
 import {
@@ -267,7 +266,6 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       {cockpit && !editing && layout.stats ? <CockpitStats /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
       {!editing && !layout.hidden.includes(AGENDA_KEY) ? <AgendaBlock /> : null}
-      {!editing && !cockpit ? <WeatherLine /> : null}
       {!editing && !layout.hidden.includes(NOWPLAYING_KEY) ? <NowPlayingLine /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
