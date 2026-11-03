@@ -46,7 +46,6 @@ function OverviewCard({ to, icon, title, status, context, testId, attention }: C
             <Icon name={icon} />
           </span>
           <span className={styles.title}>{title}</span>
-          <Icon name="chevronRight" />
         </span>
         <span className={styles.status}>{status}</span>
         {context ? <span className={styles.context}>{context}</span> : null}

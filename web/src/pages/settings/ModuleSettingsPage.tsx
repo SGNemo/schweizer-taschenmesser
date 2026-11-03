@@ -173,7 +173,6 @@ export function ModuleList() {
                   {counts?.[m.id] ? o.changed(counts[m.id]!) : o.default}
                 </span>
               </span>
-              <Icon name="chevronRight" />
             </Link>
           </li>
         ))}
