@@ -31,7 +31,7 @@ test('start-data wizard: paste lines → preview → import → undo', async ({ 
   await expect(page.getByRole('checkbox', { name: 'Fahrrad reparieren' })).toHaveCount(0);
 
   // The batch stays undoable from the "recently imported" list.
-  await page.goto('/settings/module');
+  await page.goto('/settings/module/todos');
   await page
     .locator('section[aria-labelledby="module-todos"]')
     .getByRole('button', { name: 'Importieren' })
@@ -68,7 +68,7 @@ test('JSON fallback: paste → preview with a bad entry → import → repeat is
   await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
 
   // The same data again is recognised.
-  await page.goto('/settings/module');
+  await page.goto('/settings/module/todos');
   await page
     .locator('section[aria-labelledby="module-todos"]')
     .getByRole('button', { name: 'Importieren' })

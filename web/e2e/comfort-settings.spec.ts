@@ -50,7 +50,10 @@ test('context gear: from a widget straight to the module settings, section highl
   await widget.hover();
   await widget.getByTestId('settings-link').click();
   await expect(page).toHaveURL(/\/settings\/module\/example#module-example$/);
-  await expect(page.getByTestId('module-settings-head')).toHaveAttribute('data-highlight', 'true');
+  await expect(page.locator('section[aria-labelledby="module-example"]')).toHaveAttribute(
+    'data-highlight',
+    'true',
+  );
 });
 
 test('reset a section: back to the default, undo brings the value back', async ({ page }) => {

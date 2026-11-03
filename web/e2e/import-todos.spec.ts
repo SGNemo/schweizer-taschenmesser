@@ -95,7 +95,7 @@ test('Google Tasks JSON: own list per source list, completed tasks left out, rep
   await expect(page.getByRole('checkbox', { name: 'Alte Quittung' })).toHaveCount(0);
 
   // The same file again: everything is already there.
-  const again = await openWizard(page, '/settings/module');
+  const again = await openWizard(page, '/settings/module/todos');
   await again
     .getByLabel('In diese Liste')
     .selectOption({ label: 'Je Quell-Liste eine eigene Liste' });

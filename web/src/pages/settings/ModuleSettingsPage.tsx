@@ -46,7 +46,6 @@ function ModuleHead({ manifest, changed }: { manifest: ModuleManifest; changed?:
   const o = tSettings2.use().modulePage;
   return (
     <header
-      id={`module-${manifest.id}`}
       className={styles.head}
       data-hue={manifest.identity.hue}
       data-testid="module-settings-head"
@@ -55,7 +54,9 @@ function ModuleHead({ manifest, changed }: { manifest: ModuleManifest; changed?:
         <Icon name={manifest.icon} size={20} />
       </span>
       <div className={styles.headText}>
-        <h2 className={styles.name}>{manifest.name}</h2>
+        <h2 id={`module-${manifest.id}`} className={styles.name}>
+          {manifest.name}
+        </h2>
         <p className={styles.desc}>{manifest.description}</p>
       </div>
       {changed ? <Badge>{o.changed(changed)}</Badge> : null}
@@ -104,7 +105,11 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
       />
     ));
   return (
-    <div className={styles.page} data-testid={`module-settings-${manifest.id}`}>
+    <section
+      aria-labelledby={sectionId}
+      className={styles.page}
+      data-testid={`module-settings-${manifest.id}`}
+    >
       <ModuleHead manifest={manifest} changed={changed} />
       {blocks.map((b) => {
         const title = o.blocks[b.group];
@@ -138,7 +143,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
           </SettingsGroup>
         );
       })}
-    </div>
+    </section>
   );
 }
 

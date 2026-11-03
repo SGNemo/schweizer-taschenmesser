@@ -184,7 +184,7 @@ test.describe('bank statement', () => {
     // The finance page creates its default account after the title is shown; the statement import
     // needs one ("Lege zuerst ein Konto an."), so do not leave before it exists.
     await waitForRows(page, 'finance_account');
-    await page.goto('/settings/module');
+    await page.goto('/settings/module/finance');
     await page
       .locator('section[aria-labelledby="module-finance"]')
       .getByRole('button', { name: 'Importieren' })
@@ -202,7 +202,7 @@ test.describe('bank statement', () => {
     await expect(page.getByText('Filmfreund GmbH').first()).toBeVisible();
     await expect(page.getByText('Beispiel AG').first()).toBeVisible();
 
-    await page.goto('/settings/module');
+    await page.goto('/settings/module/finance');
     await page
       .locator('section[aria-labelledby="module-finance"]')
       .getByRole('button', { name: 'Importieren' })
