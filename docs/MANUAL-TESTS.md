@@ -530,3 +530,9 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **G4 Ausblick und Jahr:** Übersicht → Ausblick: wiederkehrende Buchung, Abo-Abbuchungen und offene Rechnungen erscheinen mit Datum; „30 Tage“ / „90 Tage“ wechseln. Zeitraum „Jahr“: zwölf Monate, Sparquote. ☐
 - **G5 CSV-Export:** Buchungen → „Als CSV exportieren“ (Windows-Speichern-Dialog, Android-Teilen): Datei öffnet sich in Excel/LibreOffice mit Semikolon-Spalten, Beträge mit Punkt. ☐
 - **G6 Hell/dunkel/Ruhig:** Finanzen-Seite (Kopf, Karten, Ausblick) in Hell, Dunkel und „Ruhig“, Handy 412 px: lesbar, nichts läuft über. ☐
+
+## Geld-Gruppe: Rechnungen (Paket 2)
+- **G7 Teilzahlung:** Rechnung 100 € öffnen, Teilzahlung 40 €: „Noch 60,00 € offen“, die Liste zeigt „Teilweise bezahlt“, Finanzen hat eine Buchung −40 €. Zweite Teilzahlung über den Rest: die Rechnung ist „Bezahlt“, Summe der Buchungen = 100 €. Teilzahlung entfernen: Buchung weg, Rechnung wieder offen. ☐
+- **G8 Zahlungsdaten:** IBAN eintragen (Mehr Felder), in der Zeile „⋯“ → „Zahlungsdaten kopieren“, im Banking einfügen: Empfänger, IBAN in Vierergruppen, Verwendungszweck, offener Betrag. Falsche Prüfziffer: ruhiger Hinweis, speichern geht trotzdem. Windows und Android. ☐
+- **G9 Beleg:** Foto und PDF anhängen (Android: Kamera/Dateien), Vorschau und „Beleg herunterladen“; auf einem zweiten synchronisierten Gerät steht „liegt hier nicht“. ☐
+- **G10 Kopf:** Beleg-Karte hell, dunkel, „Ruhig“, 412 px: Summe, Anzahl, nächste Fälligkeit lesbar, gezackter Rand ohne Bewegung. ☐

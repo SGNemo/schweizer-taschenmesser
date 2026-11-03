@@ -15,7 +15,8 @@ import {
 } from './repo';
 
 /** Transaction ids derived from invoice ids make bookings idempotent and convergent across devices. */
-export const invoiceTransactionId = (invoiceId: string): string => `inv-${invoiceId}`;
+export const invoiceTransactionId = (invoiceId: string, paymentId?: string): string =>
+  paymentId ? `inv-${invoiceId}-${paymentId}` : `inv-${invoiceId}`;
 
 /** Books (or updates) the expense for a paid invoice. */
 export async function bookInvoiceExpense(p: {
@@ -25,9 +26,11 @@ export async function bookInvoiceExpense(p: {
   paidAt: string;
   note?: string;
   currency?: string;
+  /** Set for a part payment: it gets its own booking next to the one for the rest. */
+  paymentId?: string;
 }): Promise<void> {
   await ensureDefaults();
-  const id = invoiceTransactionId(p.invoiceId);
+  const id = invoiceTransactionId(p.invoiceId, p.paymentId);
   const existing = await transactionRepo.table.get(id);
   if (existing) {
     if (existing.deletedAt !== null) await transactionRepo.restore(id);
@@ -110,13 +113,25 @@ export default function start(): () => void {
     // Only while Finances is on (this service runs only then) and the user keeps the invoice
     // setting on; an existing booking of this invoice is left to `bookInvoiceExpense` (idempotent).
     if (!(await paidInvoiceBookingOn())) return;
+    // Part payments covered everything: nothing is left to book (and an earlier booking of the rest goes).
+    if (p.amountMinor < 1) return removeInvoiceExpense(p.invoiceId);
     if (!(await transactionRepo.table.get(invoiceTransactionId(p.invoiceId))))
       if (await coveredByRepeatingBooking(p)) return;
     await bookInvoiceExpense(p);
   });
   const offUnpaid = bus.on('invoice.unpaid', ({ invoiceId }) => removeInvoiceExpense(invoiceId));
+  const offPayment = bus.on('invoice.payment', async (p) => {
+    if (!(await paidInvoiceBookingOn())) return;
+    await bookInvoiceExpense({ ...p, paidAt: p.date });
+  });
+  const offPaymentRemoved = bus.on('invoice.paymentRemoved', async ({ invoiceId, paymentId }) => {
+    const id = invoiceTransactionId(invoiceId, paymentId);
+    if (await transactionRepo.get(id)) await transactionRepo.remove(id);
+  });
   return () => {
     offPaid();
     offUnpaid();
+    offPayment();
+    offPaymentRemoved();
   };
 }
