@@ -137,4 +137,4 @@ export const getFocusSettings = (): Promise<FocusSettings> =>
   getSettings(FOCUS_SCOPE, focusSettingsSchema, DEFAULT_FOCUS);
 
 export const patchFocusSettings = (patch: Partial<FocusSettings>): Promise<void> =>
-  setSettings(FOCUS_SCOPE, patch);
+  setSettings(FOCUS_SCOPE, patch, DEFAULT_FOCUS);

@@ -234,6 +234,25 @@
       "data": {
         "name": "Anna Muster"
       }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Wasser trinken",
+        "kind": "count",
+        "target": 8,
+        "unit": "Gläser"
+      }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Spazieren gehen",
+        "kind": "yesno",
+        "target": 1
+      }
     }
   ],
   "cases": [
@@ -3176,6 +3195,32 @@
       "input": "Wie lange läuft mein Handytarif?",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "hab-h01",
+      "input": "Neue Gewohnheit Zähne flossen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Zähne flossen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-h02",
+      "input": "Archiviere die Gewohnheit Spazieren gehen",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "archive",
+          "target": "Spazieren gehen"
+        }
+      ]
     }
   ]
 }

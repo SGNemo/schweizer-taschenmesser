@@ -61,6 +61,10 @@ import { tSettings4 } from '@/strings.settings4';
 import { AccessibilitySection } from './AccessibilitySection';
 import { NotificationSourcesSection } from './NotificationSourcesSection';
 import { StorageSection } from './StorageSection';
+import { tSettings3 } from '@/strings.settings3';
+import { HistorySection } from './HistorySection';
+import { ProfilesSection } from './ProfilesSection';
+import { TransferSection } from './TransferSection';
 import { tWeather } from '@/strings.weather';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 import { SetupSection } from './SetupSection';
@@ -938,6 +942,71 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       return tSettings4.get().storage.keywords;
     },
     render: () => <StorageSection />,
+  },
+  {
+    id: 'profiles',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 20,
+    get title() {
+      return tSettings3.get().profiles.title;
+    },
+    get description() {
+      return tSettings3.get().profiles.description;
+    },
+    get keywords() {
+      return tSettings3.get().keywords.profiles;
+    },
+    get fields() {
+      const p = tSettings3.get().profiles;
+      return [
+        { key: 'save', label: p.saveTitle },
+        { key: 'schedules', label: p.scheduleTitle, description: p.scheduleHint },
+      ];
+    },
+    render: () => <ProfilesSection />,
+  },
+  {
+    id: 'settings-transfer',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 21,
+    get title() {
+      return tSettings3.get().transfer.title;
+    },
+    get description() {
+      return tSettings3.get().transfer.description;
+    },
+    get keywords() {
+      return tSettings3.get().keywords.transfer;
+    },
+    get fields() {
+      const x = tSettings3.get().transfer;
+      return [
+        { key: 'export', label: x.export, description: x.excluded },
+        { key: 'import', label: x.import },
+      ];
+    },
+    render: () => <TransferSection />,
+  },
+  {
+    id: 'settings-history',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 22,
+    get title() {
+      return tSettings3.get().history.title;
+    },
+    get description() {
+      return tSettings3.get().history.description;
+    },
+    get keywords() {
+      return tSettings3.get().keywords.history;
+    },
+    get fields() {
+      return [{ key: 'on', label: tSettings3.get().history.on }];
+    },
+    render: () => <HistorySection />,
   },
   {
     id: 'shortcuts',

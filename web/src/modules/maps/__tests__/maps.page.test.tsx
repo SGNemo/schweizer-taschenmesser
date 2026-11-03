@@ -742,3 +742,58 @@ describe('own map search (names index)', () => {
     expect(screen.getByTestId('map-search-online')).toBeTruthy();
   });
 });
+
+describe('places tab (plan group)', () => {
+  const full = (name: string, category: string, extra: Record<string, unknown> = {}) =>
+    placeRepo.create({
+      name,
+      lat: 49.6,
+      lon: 11,
+      category: category as never,
+      pinned: false,
+      ...extra,
+    });
+
+  it('filters by category and search words, pinned first', async () => {
+    await full('Wochenmarkt', 'shop', { address: 'Hugenottenplatz' });
+    await full('Büro', 'work', { pinned: true });
+    await full('Zahnarzt', 'health');
+    open();
+    await screen.findByText('Wochenmarkt');
+    const names = () =>
+      within(screen.getByRole('list'))
+        .getAllByRole('listitem')
+        .map((li) => li.textContent ?? '');
+    expect(names()[0]).toContain('Büro');
+    fireEvent.click(screen.getByRole('button', { name: 'Einkaufen' }));
+    await waitFor(() => expect(screen.queryByText('Zahnarzt')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Alle' }));
+    fireEvent.change(screen.getByLabelText('Orte durchsuchen'), { target: { value: 'hugenott' } });
+    await waitFor(() => expect(screen.queryByText('Büro')).toBeNull());
+    expect(screen.getByText('Wochenmarkt')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Orte durchsuchen'), { target: { value: 'nichts' } });
+    expect(await screen.findByText('Keine passenden Orte.')).toBeTruthy();
+  });
+
+  it('has a Navigieren button per place that opens the place in another map app, nothing else is requested', async () => {
+    await full('Büro', 'work');
+    open();
+    await screen.findByText('Büro');
+    const opened: string[] = [];
+    const platform = createWebPlatform();
+    setPlatform({
+      ...platform,
+      app: { ...platform.app, openUrl: async (u: string) => void opened.push(u) },
+    } as PlatformService);
+    fireEvent.click(screen.getByRole('button', { name: 'Zu Büro navigieren' }));
+    expect(opened).toHaveLength(1);
+    expect(opened[0]).toContain('openstreetmap.org');
+    expect(requests).toEqual([]);
+  });
+
+  it('?q= (from an appointment) fills the search field on the map tab and does not search by itself', async () => {
+    open('/maps?q=Praxis%20am%20Markt');
+    expect(await screen.findByLabelText('Ort oder Adresse suchen')).toHaveValue('Praxis am Markt');
+    expect(requests.filter((u) => u.includes('nominatim'))).toEqual([]);
+  });
+});

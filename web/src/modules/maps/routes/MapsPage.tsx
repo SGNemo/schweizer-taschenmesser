@@ -21,12 +21,15 @@ import {
   useOpenParam,
   type RowMenuItem,
 } from '@/ui';
+import { PinHead } from '../components/PinHead';
 import { PlaceEditor, type PlaceTarget } from '../components/PlaceEditor';
 import { RouteEditor, type RouteTarget } from '../components/RouteEditor';
 import { RegionsCard } from '../components/RegionsCard';
 import { TileMap, type MapMarker, type TileResolver } from '../components/TileMap';
 import { TransitCard, type Trip } from '../components/TransitCard';
+import { HeroSlot } from '@/ui/identity';
 import { searchPlaces, MapsError, type Hit } from '../geocode';
+import { lastPlace, viewPlaces, type PlaceSort } from '../placesView';
 import { CATEGORY_ICON, MODE_ICON } from '../icons';
 import {
   MAP_APPS,
@@ -50,7 +53,13 @@ import { searchOwn, type OwnHit } from '../own/search';
 import { nameRepo, placeRepo, regionRepo, routeRepo, tileRepo } from '../repo';
 import { connectionPath, fetchConnections } from '../transit';
 import { describeStep, fetchPlan, isDrivingMode, splitDuration, type Plan } from '../routing';
-import type { Endpoint, Place, Route } from '../schema';
+import {
+  PLACE_CATEGORIES,
+  type Endpoint,
+  type Place,
+  type PlaceCategory,
+  type Route,
+} from '../schema';
 import {
   offlineOnlyOf,
   servicesOf,
@@ -228,7 +237,12 @@ export default function MapsPage() {
   const [selected, setSelected] = useState<Selection>();
   const [mapView, setMapView] = useState<View>();
   const [ready, setReady] = useState(false);
-  const [query, setQuery] = useState('');
+  // `?q=` (an appointment's location) prefills the map search on arrival; nothing runs until the button is pressed.
+  const [query, setQuery] = useState(() => params.get('q') ?? '');
+  // The places tab: its own filter, never mixed up with the map search.
+  const [placeQuery, setPlaceQuery] = useState('');
+  const [category, setCategory] = useState<PlaceCategory | 'all'>('all');
+  const [sort, setSort] = useState<PlaceSort>('recent');
   const [hits, setHits] = useState<Hit[]>();
   const [ownHits, setOwnHits] = useState<Hit[]>();
   const [searching, setSearching] = useState<'idle' | 'busy' | 'error'>('idle');
@@ -236,6 +250,10 @@ export default function MapsPage() {
   const [shown, setShown] = useState<Shown>();
   const [trip, setTrip] = useState<Trip>();
   const searchInput = useRef<HTMLInputElement>(null);
+  const shownPlaces = useMemo(
+    () => viewPlaces(places ?? [], { category, query: placeQuery, sort }),
+    [places, category, placeQuery, sort],
+  );
   const view = mapView ?? fitView(places ?? [], 800, 480) ?? GERMANY;
 
   // "Hier erweitern": offered when the shown area has cells no own map holds yet (checked calmly,
@@ -267,6 +285,15 @@ export default function MapsPage() {
   // `?new=1` (Quick-Add): the map tab with the search field ready.
   useEffect(() => {
     if (!params.get('new')) return;
+    setParams({ view: 'map' }, { replace: true });
+    setTimeout(() => searchInput.current?.focus(), 50);
+  }, [params, setParams]);
+
+  // `?q=` (from an appointment's location): the map tab with the words in the search field – the
+  // search itself only runs when the user presses the button.
+  useEffect(() => {
+    const q = params.get('q');
+    if (!q) return;
     setParams({ view: 'map' }, { replace: true });
     setTimeout(() => searchInput.current?.focus(), 50);
   }, [params, setParams]);
@@ -562,6 +589,11 @@ export default function MapsPage() {
 
   return (
     <>
+      {places ? (
+        <HeroSlot>
+          <PinHead last={lastPlace(places)?.name} />
+        </HeroSlot>
+      ) : null}
       <PageHeader title={t.maps.meta.name}>
         <Button variant="primary" onClick={() => setRouteTarget({ draft: true })}>
           <Icon name="route" size={18} />
@@ -583,19 +615,82 @@ export default function MapsPage() {
             </Button>
           </EmptyState>
         ) : (
-          <ItemList>
-            {(places ?? []).map((p) => (
-              <ItemRow
-                key={p.id}
-                title={p.name}
-                meta={[t.maps.categories[p.category], p.address].filter(Boolean).join(' · ')}
-                lead={<Icon name={CATEGORY_ICON[p.category]} size={20} />}
-                onOpen={() => show({ lat: p.lat, lon: p.lon, label: p.name, place: p })}
-                menu={placeMenu(p)}
-                menuLabel={t.maps.meta.name}
+          <>
+            <div className={styles.placesBar}>
+              <TextField
+                label={t.maps.placesBar.search}
+                value={placeQuery}
+                onChange={(e) => setPlaceQuery(e.target.value)}
+                type="search"
+                autoComplete="off"
               />
-            ))}
-          </ItemList>
+              <div className={styles.chipRow} role="group" aria-label={t.maps.place.category}>
+                {(
+                  [
+                    'all',
+                    ...PLACE_CATEGORIES.filter((c) => (places ?? []).some((p) => p.category === c)),
+                  ] as const
+                ).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={styles.catChip}
+                    aria-pressed={category === c}
+                    onClick={() => setCategory(c)}
+                  >
+                    {c === 'all' ? t.maps.placesBar.all : t.maps.categories[c]}
+                  </button>
+                ))}
+              </div>
+              <div className={styles.chipRow} role="group" aria-label={t.maps.placesBar.sortLabel}>
+                {(['recent', 'name'] as const).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    className={styles.catChip}
+                    aria-pressed={sort === k}
+                    onClick={() => setSort(k)}
+                  >
+                    {t.maps.placesBar[k]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {shownPlaces.length === 0 ? (
+              <p className={styles.note}>{t.maps.placesBar.none}</p>
+            ) : null}
+            <ItemList>
+              {shownPlaces.map((p) => (
+                <ItemRow
+                  key={p.id}
+                  title={p.name}
+                  meta={[t.maps.categories[p.category], p.address].filter(Boolean).join(' · ')}
+                  lead={<Icon name={CATEGORY_ICON[p.category]} size={20} />}
+                  onOpen={() => show({ lat: p.lat, lon: p.lon, label: p.name, place: p })}
+                  end={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={t.maps.placesBar.navigateTo(p.name)}
+                      onClick={() =>
+                        openUrl(
+                          placeLink(isAndroid() ? 'geo' : 'osm', {
+                            lat: p.lat,
+                            lon: p.lon,
+                            label: p.name,
+                          }),
+                        )
+                      }
+                    >
+                      {t.maps.placesBar.navigate}
+                    </Button>
+                  }
+                  menu={placeMenu(p)}
+                  menuLabel={t.maps.meta.name}
+                />
+              ))}
+            </ItemList>
+          </>
         )
       ) : null}
 
