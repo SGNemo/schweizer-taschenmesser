@@ -166,6 +166,7 @@ test.describe('Music page', () => {
     await main.getByRole('button', { name: /Tiefer Fokus/ }).click();
     await expect(page.getByTestId('module-frame')).toHaveAttribute('data-hue', 'orchid');
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
     await expect(page.getByTestId('player-toggle')).toBeInViewport();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,

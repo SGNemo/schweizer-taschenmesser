@@ -39,7 +39,7 @@ export function PageHeader({
         {views || children ? (
           <div className={styles.header} data-in-head="true">
             {views ? <div className={styles.headerViews}>{views}</div> : null}
-            {children}
+            {children ? <div className={styles.headerEnd}>{children}</div> : null}
           </div>
         ) : null}
       </>

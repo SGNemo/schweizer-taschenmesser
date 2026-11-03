@@ -117,7 +117,6 @@ export function AreaFrame({ children }: { children: ReactNode }) {
           data-shape={id?.shape}
           data-type={id?.type}
           data-signature={id?.signature}
-          data-collapsed={collapsed ? 'true' : undefined}
           style={style}
           data-testid="module-frame"
         >
@@ -163,6 +162,19 @@ export function AreaFrame({ children }: { children: ReactNode }) {
             <WriteButton pathname={pathname} />
             <ModuleSettingsLink pathname={pathname} />
           </div>
+        </div>
+      ) : null}
+      {framed ? (
+        <div
+          className={styles.compact}
+          data-visible={collapsed ? 'true' : undefined}
+          data-hue={id?.hue}
+          style={style}
+          aria-hidden="true"
+          data-testid="module-compact"
+        >
+          {manifest ? <Icon name={manifest.icon} size={16} /> : null}
+          <span className={styles.compactName}>{targets.title?.textContent || manifest?.name}</span>
         </div>
       ) : null}
       {children}

@@ -254,7 +254,7 @@ test.describe('Weather module', () => {
     await ready(page, '/weather');
     await page.getByTestId('weather-add-place').click();
     await page.getByLabel('Ort suchen').fill('Bern');
-    await page.getByRole('button', { name: 'Suchen', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Suchen', exact: true }).click();
     await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click();
     // The mocked search offers only Bern, which is the main place: nothing is added twice.
     await expect(page.getByText('Dieser Ort ist schon dabei.')).toBeVisible();

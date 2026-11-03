@@ -7,8 +7,15 @@
   margin-bottom: var(--space-4);
 }
 .header[data-in-head='true'] {
-  /* The title moved into the module head: the row keeps views left and actions right. */
+  /* The title moved into the module head: the row keeps views left and the actions on the right. */
   justify-content: flex-start;
+}
+.headerEnd {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-left: auto;
 }
 .headerViews {
   /* Wraps under the title instead of being squeezed (a cut-off switch on a phone); the segment itself never scrolls. */
