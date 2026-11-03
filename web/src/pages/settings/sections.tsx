@@ -16,62 +16,66 @@ import {
 import { t } from '@/strings';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
-import { SettingRow, SettingsGroup } from '@/ui';
-import { DeveloperSection } from '@/layout/devTools';
-import { Suspense } from 'react';
 import {
   AboutSection,
   AboutUpdatesSection,
+  AccessibilitySection,
+  AdvancedSection,
+  AiSection,
+  AiStatsSection,
+  AiSwitchSection,
+  AiWriteSection,
+  AppearanceSection,
+  CalmRemindersSection,
+  ConnectorsSection,
   DeviceResetSection,
   DiagnosticsSection,
+  FavouritesSection,
+  FocusSection,
+  GeneralSection,
+  HistorySection,
+  LegalImprintSection,
+  LegalLicensesSection,
+  LegalPrivacySection,
   LinksSection,
-} from './AboutSections';
-import { AiSection } from './AiSection';
-import { AiSwitchSection } from './AiSwitchSection';
-import { AppearanceSection } from './AppearanceSection';
-import { SupporterSection } from './SupporterSection';
+  LocalApiSection,
+  LocalModelSection,
+  ModelLicensesSection,
+  NetworkSection,
+  NotificationSourcesSection,
+  NotificationsSection,
+  PersonaSection,
+  ProfilesSection,
+  QuickCaptureSection,
+  ReadingSection,
+  RecentlyDeletedSection,
+  SetupSection,
+  ShareSection,
+  ShortcutsSection,
+  StorageSection,
+  SupporterSection,
+  ToolsSection,
+  TransferSection,
+  UpdateSection,
+  VoiceSection,
+  WeatherSection,
+} from './sectionChunks';
+// Sync and Backup are the sections a person opens offline on purpose (e.g. to see why a change is
+// queued): they stay in the start bundle, every other section loads when it is opened.
 import { BackupSection } from './BackupSection';
-import { AiStatsSection } from './AiStatsSection';
-import { AiWriteSection } from './AiWriteSection';
-import { CalmRemindersSection } from './CalmRemindersSection';
-import { NetworkSection } from './NetworkSection';
-import { ShareSection } from './ShareSection';
+import { SyncSection } from './SyncSection';
+import { SettingRow, SettingsGroup } from '@/ui';
+import { DeveloperSection } from '@/layout/devTools';
+import { Suspense } from 'react';
 import { tShare } from '@/strings.share';
 import { tNet } from '@/strings.netlog';
 import { tTrash } from '@/strings.trash';
-import { RecentlyDeletedSection } from './RecentlyDeletedSection';
-import { ConnectorsSection } from './ConnectorsSection';
-import { FavouritesSection } from './FavouritesSection';
 import { tAdvanced } from '@/strings.advanced';
-import { AdvancedSection } from './AdvancedSection';
-import { FocusSection } from './FocusSection';
-import { GeneralSection } from './GeneralSection';
-import { LocalApiSection } from './LocalApiSection';
-import { LocalModelSection } from './LocalModelSection';
-import { LegalImprintSection, LegalLicensesSection, LegalPrivacySection } from './LegalSections';
-import { ModelLicensesSection } from './ModelLicensesSection';
-import { NotificationsSection } from './NotificationsSection';
-import { ReadingSection } from './ReadingSection';
-import { QuickCaptureSection } from './QuickCaptureSection';
-import { ShortcutsSection } from './ShortcutsSection';
-import { VoiceSection } from './VoiceSection';
-import { WeatherSection } from './WeatherSection';
 import { tKeys } from '@/strings.keys';
 import { tSettings4 } from '@/strings.settings4';
-import { AccessibilitySection } from './AccessibilitySection';
-import { NotificationSourcesSection } from './NotificationSourcesSection';
-import { StorageSection } from './StorageSection';
 import { tSettings3 } from '@/strings.settings3';
-import { HistorySection } from './HistorySection';
-import { ProfilesSection } from './ProfilesSection';
-import { TransferSection } from './TransferSection';
 import { tWeather } from '@/strings.weather';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
-import { SetupSection } from './SetupSection';
-import { SyncSection } from './SyncSection';
-import { PersonaSection } from './PersonaSection';
-import { ToolsSection } from './ToolsSection';
-import { UpdateSection } from './UpdateSection';
 
 const s = t.settings;
 

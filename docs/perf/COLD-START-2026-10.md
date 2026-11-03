@@ -99,5 +99,5 @@ Chromium remembers a failed dynamic import for the page. Proof: `web/e2e/offline
 - The cloud model SDK stays precached (an offline import would bypass `core/ai/providers/claude.ts`' error mapping).
 - No automatic reload anywhere; back online, a reload happens only on "Erneut versuchen".
 - The first vault open fetches the dictionaries in the background only online and without the browser's data saver.
-- Settings stay in the start bundle (offline without a worker must not depend on timing); the other split-off parts
-  stay precached and show a calm note offline without a worker.
+- Settings sections: superseded 2026-11-03, see `docs/decisions/ui-shell.md` (sections load when opened, Sync and Backup
+  stay eager); the other split-off parts stay precached and show a calm note offline without a worker.

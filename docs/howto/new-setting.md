@@ -50,3 +50,6 @@ Where a setting matters (widget, module header, dialog) show `<SettingsLink to={
 
 ## Checks
 `npx vitest run src/core/settings src/pages/settings`, `npm run check:modules`, `npx playwright test e2e/settings.spec.ts e2e/a11y.spec.ts -g settings`. Secrets (keys, tokens) stay in `getPlatform().secrets`; never show them in clear text.
+
+## Section components are lazy
+A new core section's component goes through `pages/settings/sectionChunks.ts` (`lazyOnline` wrapper), never a direct import in `sections.tsx`; metadata (title, keywords, fields) stays cheap and string-bundle based. Exception: sections that must work offline without a service worker (Sync, Backup).
