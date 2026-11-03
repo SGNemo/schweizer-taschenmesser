@@ -206,6 +206,11 @@
         "type": "boolean",
         "label": "Abo-Abbuchungen bis Monatsende abziehen",
         "default": true
+      },
+      "forecastHorizon": {
+        "type": "select",
+        "label": "Ausblick: Zeitraum",
+        "default": "month"
       }
     }
   },

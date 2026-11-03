@@ -18,8 +18,9 @@ const manifest: ModuleManifest = {
     head: 'figure',
     surface: 'gradient',
     signature: 'todayCard',
+    feedback: 'tick',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.todos.meta.description;
   },
@@ -74,7 +75,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: true,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: [] },
+  seed: { version: 3, dependsOn: [] },
   layout: 'wide',
   order: 20,
   area: 'plan',

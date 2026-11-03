@@ -506,6 +506,9 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
 - **PK5 Mehrere Kalender:** „Mehr Felder anzeigen“ → „Kalender verwalten“: „Arbeit“ und „Familie“ anlegen/umfärben; Chips blenden Termine ein/aus; im Termin-Dialog das Feld „Kalender“; einen Kalender löschen: seine Termine bleiben sichtbar. ☐
 - **PK6 Erinnerungen:** Zeitring zeigt „Nächste Erinnerung in …“; „Erledigte entfernen“ räumt nur Beendete/Pausierte auf (Rückgängig); Termin mit „Erinnern“ → „Zusätzlich erinnern“ (Mehr Felder): zwei Benachrichtigungen. ☐
+- **TD1 Board im echten Browser:** ToDos → „Board“: eine Karte mit der Maus auf eine andere Spalte ziehen (Heute, Demnächst, Irgendwann, Erledigt); Rückgängig stellt sie zurück; das Ziehen geht auf Chrome und Firefox, auf Android funktioniert das „⋯“-Menü („Verschieben nach …“). ☐
+- **TD2 Ansichten und Tags:** „Heute“, „Demnächst“, „Irgendwann“ zeigen je die richtigen Aufgaben; eine Aufgabe mit „Beginnt am“ in der Zukunft fehlt in „Alle“ und „Heute“ und steht unter „Demnächst“ („ab …“); Tag-Chips (unter „Mehr Felder anzeigen“) filtern. ☐
+- **TD3 Checkliste, Verknüpfung, Projekt:** in der Aufgabe Checklistenpunkte anlegen/abhaken (Zähler in der Zeile); im Kalender „Als ToDo merken“: die Aufgabe hat „Termin: …“ und öffnet den Termin; eine Liste als „Projekt“ markieren zeigt den Fortschrittsbalken. ☐
 
 ### Haushalt & Tresor (Branch `feat/household-vault-identity`) – nur auf Geräten prüfbar
 
@@ -517,3 +520,12 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **HT6 Tresor-Kopf:** Passwörter entsperren: „Entsperrt“ mit „Sperrt automatisch in etwa n Min.“, nach Inaktivität „Gesperrt“; Ruhig-Modus und „weniger Bewegung“: nichts bewegt sich. „Passwörter prüfen“ zeigt nur Titel, nie ein Passwort. ☐
 - **HT7 Notfallblatt:** „Notfallblatt“ → „Als Datei speichern“, Datei öffnen und drucken: Schritte, Datum, Anzahl, kein Geheimnis. ☐
 
+
+## Geld-Gruppe: Finanzen (Paket 1)
+
+- **G1 Umbuchung:** Finanzen → Buchungen → „Umbuchung“: von Girokonto auf Sparkonto 50 €. Beide Salden ändern sich, „Einnahmen“ und „Ausgaben“ des Monats nicht; die Zeile zeigt „Girokonto → Sparkonto“. Zeile öffnen, löschen: beide Hälften verschwinden, „Rückgängig“ bringt beide zurück. ☐
+- **G2 Aufteilen:** neue Ausgabe 50 €, „Mehr Felder“ → „Auf mehrere Kategorien aufteilen“, 32 € + 18 €: die Übersicht zählt beide Kategorien, die Liste zeigt „2 Kategorien“. Mit falscher Summe lässt sich nicht speichern (Hinweis „… zu verteilen“). ☐
+- **G3 Unterkategorie:** Kategorien → neue Kategorie mit „Oberkategorie“ und Symbol: sie erscheint eingerückt, die Übersicht rechnet sie in die Oberkategorie. ☐
+- **G4 Ausblick und Jahr:** Übersicht → Ausblick: wiederkehrende Buchung, Abo-Abbuchungen und offene Rechnungen erscheinen mit Datum; „30 Tage“ / „90 Tage“ wechseln. Zeitraum „Jahr“: zwölf Monate, Sparquote. ☐
+- **G5 CSV-Export:** Buchungen → „Als CSV exportieren“ (Windows-Speichern-Dialog, Android-Teilen): Datei öffnet sich in Excel/LibreOffice mit Semikolon-Spalten, Beträge mit Punkt. ☐
+- **G6 Hell/dunkel/Ruhig:** Finanzen-Seite (Kopf, Karten, Ausblick) in Hell, Dunkel und „Ruhig“, Handy 412 px: lesbar, nichts läuft über. ☐

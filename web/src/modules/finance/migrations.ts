@@ -9,4 +9,7 @@ export const migrations: ModuleManifest['migrations'] = {
   2: () => Promise.resolve(),
   // 3: optional `currency` on accounts; an account without one is in euro, so nothing is rewritten.
   3: () => Promise.resolve(),
+  // 4: optional `kind` on accounts, `parentId`/`icon` on categories, `transferId`/`splits` and the
+  // `weekly` repeat on bookings; all absent means "as before", so nothing is rewritten.
+  4: () => Promise.resolve(),
 };
