@@ -379,6 +379,16 @@
       }
     }
   },
+  "timetrack": {
+    "scope": "module.timetrack",
+    "fields": {
+      "idleMinutes": {
+        "type": "number",
+        "label": "Nachfrage bei Leerlauf (Minuten, 0 = aus)",
+        "default": 15
+      }
+    }
+  },
   "todos": {
     "scope": "module.todos",
     "fields": {
