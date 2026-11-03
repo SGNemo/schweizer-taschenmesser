@@ -3,11 +3,13 @@ import {
   eventIdOf,
   expandEvent,
   groupByDate,
+  isView,
   monthWeeks,
   rangeFor,
   shiftDate,
   splitDay,
   viewTitle,
+  weekNumberOf,
 } from './views';
 import type { CalendarItem } from '@/core/modules/types';
 import { eventSchema } from './schema';
@@ -52,6 +54,26 @@ describe('calendar views', () => {
     ]);
     expect(map.get('2026-01-01')).toHaveLength(2);
     expect(map.get('2026-01-02')).toHaveLength(1);
+  });
+});
+
+describe('year and agenda views', () => {
+  it('covers the whole year / the next 30 days', () => {
+    expect(rangeFor('year', '2026-06-15')).toEqual({ from: '2026-01-01', to: '2026-12-31' });
+    expect(rangeFor('agenda', '2026-11-03')).toEqual({ from: '2026-11-03', to: '2026-12-02' });
+  });
+  it('shifts by a year / 30 days and titles them', () => {
+    expect(shiftDate('year', '2026-06-15', 1)).toBe('2027-06-01');
+    expect(shiftDate('agenda', '2026-11-03', 1)).toBe('2026-12-03');
+    expect(viewTitle('year', '2026-06-15')).toBe('2026');
+  });
+  it('knows the new views and the ISO week number of a row', () => {
+    expect(isView('year')).toBe(true);
+    expect(isView('agenda')).toBe(true);
+    expect(isView('decade')).toBe(false);
+    expect(weekNumberOf('2026-11-02')).toBe('45');
+    // Sunday-first row starting 1 Nov takes the week of Monday 2 Nov.
+    expect(weekNumberOf('2026-11-01', 7)).toBe('45');
   });
 });
 

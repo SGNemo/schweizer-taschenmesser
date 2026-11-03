@@ -20,6 +20,9 @@ import {
   useSplitView,
 } from '@/ui';
 import { Agenda } from '../components/Agenda';
+import { AgendaView } from '../components/AgendaView';
+import { YearView } from '../components/YearView';
+import { holidayMap, type HolidayRegion } from '../holidays';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
 import { RemindersTab } from '../components/RemindersTab';
@@ -48,6 +51,12 @@ const VIEW_LABEL: Record<CalendarView, string> = {
   get day() {
     return t.calendar.day;
   },
+  get agenda() {
+    return t.calendar.agenda;
+  },
+  get year() {
+    return t.calendar.year;
+  },
 };
 
 export default function CalendarPage() {
@@ -70,6 +79,9 @@ export default function CalendarPage() {
   const date = rawDate && DATE_RE.test(rawDate) ? rawDate : today();
   const range = rangeFor(view ?? 'month', date, weekStart);
   const items = useCalendarItems(range);
+  const region = ((prefs as { holidayRegion?: HolidayRegion } | null)?.holidayRegion ??
+    'off') as HolidayRegion;
+  const holidays = holidayMap(range.from, range.to, region);
   const forPerson = usePersonFilter();
 
   function go(next: { view?: CalendarView; date?: string }) {
@@ -198,14 +210,24 @@ export default function CalendarPage() {
 
       <div className={styles.body}>
         <SplitView
-          enabled={split}
+          enabled={split && view !== 'agenda'}
           asideLabel={t.calendar.agenda}
           aside={<Agenda date={date} onOpenItem={(i) => void openItem(i)} />}
         >
-          {view === 'month' ? (
+          {view === 'year' ? (
+            <YearView
+              date={date}
+              items={list}
+              holidays={holidays}
+              onPickDay={(d) => go({ view: 'day', date: d })}
+            />
+          ) : view === 'agenda' ? (
+            <AgendaView items={list} holidays={holidays} onOpenItem={(i) => void openItem(i)} />
+          ) : view === 'month' ? (
             <MonthView
               date={date}
               items={list}
+              holidays={holidays}
               onPickDay={(d) => go({ view: 'day', date: d })}
               onOpenItem={(i) => void openItem(i)}
             />
@@ -213,6 +235,7 @@ export default function CalendarPage() {
             <WeekView
               days={eachDay(range.from, range.to)}
               items={list}
+              holidays={holidays}
               onPickDay={(d) => go({ view: 'day', date: d })}
               onOpenItem={(i) => void openItem(i)}
             />

@@ -5,7 +5,8 @@ import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
 import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
 import { personName, usePeople } from '@/core/people/people';
-import { groupByDate, monthWeeks } from '../views';
+import type { HolidayId } from '../holidays';
+import { groupByDate, monthWeeks, weekNumberOf } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
 import { TimeGrid } from './TimeGrid';
 import styles from '../routes/calendar.module.css';
@@ -15,6 +16,8 @@ interface ViewProps {
   items: CalendarItem[];
   onPickDay: (date: string) => void;
   onOpenItem: (item: CalendarItem) => void;
+  /** Public holidays of the shown range (empty when the setting is off). */
+  holidays?: Map<string, HolidayId>;
 }
 
 /** From this width week and day switch from plain lists to the hour grid. */
@@ -28,7 +31,7 @@ function useChipLimit(): number {
   return h1300 ? 7 : h1000 ? 5 : h800 ? 4 : 3;
 }
 
-export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
+export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: ViewProps) {
   const byDate = groupByDate(items);
   const now = today();
   const MAX_CHIPS = useChipLimit();
@@ -40,6 +43,9 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
       <table className={styles.month}>
         <thead>
           <tr>
+            <th scope="col" className={styles.weekNo}>
+              {t.calendar.weekNoShort}
+            </th>
             {(weekStart === 7 ? [7, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 7]).map((wd) => (
               <th key={wd} scope="col">
                 {weekdayShort(wd)}
@@ -50,8 +56,12 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
         <tbody>
           {monthWeeks(date, weekStart).map((week) => (
             <tr key={week[0]}>
+              <th scope="row" className={styles.weekNo}>
+                {weekNumberOf(week[0]!, weekStart)}
+              </th>
               {week.map((d) => {
                 const list = byDate.get(d) ?? [];
+                const holiday = holidays?.get(d);
                 const inMonth = d.slice(0, 7) === date.slice(0, 7);
                 return (
                   <td
@@ -61,11 +71,19 @@ export function MonthView({ date, items, onPickDay, onOpenItem }: ViewProps) {
                     <button
                       type="button"
                       className={styles.dayNum}
-                      aria-label={t.calendar.dayLabel(formatDay(d, 'EEEE, d. MMMM'), list.length)}
+                      aria-label={
+                        t.calendar.dayLabel(formatDay(d, 'EEEE, d. MMMM'), list.length) +
+                        (holiday ? `, ${t.calendar.holidays[holiday]}` : '')
+                      }
                       onClick={() => onPickDay(d)}
                     >
                       {Number(d.slice(8, 10))}
                     </button>
+                    {holiday ? (
+                      <span className={styles.cellHoliday} title={t.calendar.holidayLabel}>
+                        {t.calendar.holidays[holiday]}
+                      </span>
+                    ) : null}
                     {!wide && list[0] ? (
                       <span className={styles.cellLabel}>
                         {list[0].time ? `${list[0].time} ` : ''}
@@ -125,6 +143,7 @@ export function WeekView({
   items,
   onPickDay,
   onOpenItem,
+  holidays,
 }: Omit<ViewProps, 'date'> & { days: string[] }) {
   const byDate = groupByDate(items);
   const now = today();
@@ -148,6 +167,9 @@ export function WeekView({
               <button type="button" className={styles.linkBtn} onClick={() => onPickDay(d)}>
                 {formatDay(d, 'EEEE, d. MMMM')}
               </button>
+              {holidays?.get(d) ? (
+                <span className={styles.holidayTag}>{t.calendar.holidays[holidays.get(d)!]}</span>
+              ) : null}
             </h3>
             {empty ? (
               <span className={styles.muted}>{t.calendar.nothing}</span>
