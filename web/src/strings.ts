@@ -5268,7 +5268,7 @@ export const de = {
       title: 'Import, Export & Sicherheit',
       import: 'Importieren',
       export: 'Exportieren',
-      csvImport: 'Bitwarden-CSV importieren',
+      csvImport: 'CSV importieren (Bitwarden, KeePass, 1Password)',
       csvExport: 'Als Bitwarden-CSV exportieren (Klartext!)',
       csvWarning:
         'Die CSV-Datei enthält alle Passwörter unverschlüsselt. Bewahre sie nur so kurz wie nötig auf und lösche sie danach sicher.',
@@ -5281,7 +5281,7 @@ export const de = {
       backupPasswordImport: 'Passwort des Backups',
       importDone: (added: number, duplicates: number, skipped: number) =>
         `${added} importiert${duplicates ? `, ${duplicates} bereits vorhanden` : ''}${skipped ? `, ${skipped} übersprungen (nicht unterstützter Typ)` : ''}.`,
-      importFailedCsv: 'Das ist keine Bitwarden-CSV-Datei.',
+      importFailedCsv: 'Diese CSV-Datei kenne ich nicht (erwartet: Bitwarden, KeePass oder 1Password).',
       importFailedBackup:
         'Backup konnte nicht geöffnet werden (falsches Passwort oder beschädigte Datei).',
       exported: 'Export gespeichert.',

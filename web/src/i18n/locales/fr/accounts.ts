@@ -239,7 +239,7 @@ export const accounts: Strings['accounts'] = {
     title: 'Import, export et sécurité',
     import: 'Importer',
     export: 'Exporter',
-    csvImport: 'Importer un CSV Bitwarden',
+    csvImport: 'Importer un CSV (Bitwarden, KeePass, 1Password)',
     csvExport: 'Exporter en CSV Bitwarden (texte en clair !)',
     csvWarning:
       'Le fichier CSV contient tous les mots de passe non chiffrés. Ne le conservez que le temps nécessaire, puis supprimez-le de façon sûre.',
@@ -252,7 +252,7 @@ export const accounts: Strings['accounts'] = {
     backupPasswordImport: 'Mot de passe de la sauvegarde',
     importDone: (added: number, duplicates: number, skipped: number) =>
       `${added} ${added <= 1 ? 'importé' : 'importés'}${duplicates ? `, ${duplicates} déjà ${duplicates <= 1 ? 'présent' : 'présents'}` : ''}${skipped ? `, ${skipped} ${skipped <= 1 ? 'ignoré' : 'ignorés'} (type non pris en charge)` : ''}.`,
-    importFailedCsv: 'Ce n’est pas un fichier CSV Bitwarden.',
+    importFailedCsv: 'Ce fichier CSV n’est pas reconnu (attendu : Bitwarden, KeePass ou 1Password).',
     importFailedBackup:
       'Impossible d’ouvrir la sauvegarde (mot de passe incorrect ou fichier endommagé).',
     exported: 'Export enregistré.',

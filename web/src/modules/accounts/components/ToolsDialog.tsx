@@ -14,7 +14,7 @@ import { StrengthMeter } from './StrengthMeter';
 import { isWeakScore, WeakPasswordHelp } from './WeakPasswordHelp';
 import type { Score } from '../strength';
 import { exportEncryptedBackup, importEncryptedBackup, withoutDuplicates } from '../backup';
-import { CsvFormatError, exportBitwardenCsv, importBitwardenCsv } from '../csv';
+import { CsvFormatError, exportBitwardenCsv, importVaultCsv } from '../csv';
 import type { EntryData } from '../schema';
 import {
   changeMasterPassword,
@@ -157,7 +157,7 @@ function Body({ entries, onClose }: { entries: readonly DecryptedEntry[]; onClos
             const text = await pickText('.csv,text/csv');
             if (text === undefined) return;
             try {
-              const { entries: incoming, skipped } = importBitwardenCsv(text);
+              const { entries: incoming, skipped } = importVaultCsv(text);
               await importEntries(incoming, entries, skipped);
             } catch (e) {
               if (e instanceof CsvFormatError) setError(tl.importFailedCsv);

@@ -2,7 +2,13 @@
  * Bitwarden-compatible CSV (the "Export vault → .csv" format) for moving in and out. The file holds
  * every secret in plain text – the UI asks for confirmation before exporting one.
  */
-import { parseCsv as parseCsvCore, toCsv as toCsvCore } from '@/core/io/csv';
+import { normalizeHeader, parseCsv as parseCsvCore, toCsv as toCsvCore } from '@/core/io/csv';
+import {
+  ALIASES,
+  detectVaultCsv,
+  type VaultCsvFormat,
+  type VaultField,
+} from '@/importers/vault-csv/header';
 import { entryDataSchema, type EntryData } from './schema';
 import { parseTotpInput, totpUri } from './totp';
 
@@ -70,6 +76,60 @@ export function importBitwardenCsv(text: string): CsvImport {
     );
   }
   return { entries, skipped };
+}
+
+export interface VaultCsvImport extends CsvImport {
+  format: VaultCsvFormat;
+}
+
+export function importVaultCsv(text: string): VaultCsvImport {
+  const [header, ...rows] = parseCsv(text);
+  const format = header ? detectVaultCsv(header) : undefined;
+  if (!header || !format) throw new CsvFormatError();
+  if (format === 'bitwarden') return { ...importBitwardenCsv(text), format };
+
+  const keys = header.map(normalizeHeader);
+  const col = (field: VaultField) => {
+    const hit = ALIASES[field].find((n) => keys.includes(n));
+    return hit === undefined ? -1 : keys.indexOf(hit);
+  };
+  const idx = Object.fromEntries(
+    (Object.keys(ALIASES) as VaultField[]).map((f) => [f, col(f)]),
+  ) as Record<VaultField, number>;
+  const get = (row: string[], f: VaultField) => (idx[f] >= 0 ? (row[idx[f]] ?? '') : '');
+
+  const entries: EntryData[] = [];
+  let skipped = 0;
+  for (const row of rows) {
+    const title = get(row, 'title').trim();
+    const archived = /^(?:true|1|yes)$/i.test(get(row, 'archived').trim());
+    if (!title || archived) {
+      skipped++;
+      continue;
+    }
+    // KeePass groups are paths ("Root/Internet/Shops"): the last part is the folder.
+    const group = get(row, 'group').split('/').pop()!.trim();
+    const tags = [
+      ...(group && group.toLowerCase() !== 'root' ? [group] : []),
+      ...get(row, 'tags')
+        .split(/[;,]/)
+        .map((x) => x.trim())
+        .filter(Boolean),
+    ];
+    entries.push(
+      entryDataSchema.parse({
+        title,
+        username: get(row, 'username'),
+        password: get(row, 'password'),
+        url: get(row, 'url').split(/\r?\n/)[0]!.trim(),
+        notes: get(row, 'notes'),
+        tags,
+        favorite: /^(?:true|1|yes)$/i.test(get(row, 'favorite').trim()),
+        totp: parseTotpInput(get(row, 'totp')),
+      }),
+    );
+  }
+  return { entries, skipped, format };
 }
 
 export function exportBitwardenCsv(entries: readonly EntryData[]): string {
