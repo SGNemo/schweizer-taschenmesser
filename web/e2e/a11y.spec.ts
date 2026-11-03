@@ -26,6 +26,7 @@ const MODULES = [
   'people',
   'lists',
   'maps',
+  'habits',
   'weather',
   'music',
 ];
@@ -98,6 +99,7 @@ const PAGES = [
   ['settings-ueber', '/settings/ueber'],
   ['calendar', '/calendar'],
   ['todos', '/todos'],
+  ['habits', '/habits'],
   ['calendar reminders', '/calendar?tab=reminders'],
   ['finance', '/finance'],
   ['finance transactions', '/finance?tab=transactions'],

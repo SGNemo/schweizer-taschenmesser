@@ -1,0 +1,172 @@
+.viewBar {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  margin-bottom: var(--space-4);
+}
+.chip {
+  flex: none;
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.chip[aria-pressed='true'] {
+  border-color: var(--text);
+  font-weight: 600;
+}
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--shape-soft, var(--radius-md));
+  background: var(--surface);
+}
+.cardRest {
+  background: var(--surface-2);
+}
+.name {
+  margin: 0;
+  font-weight: 600;
+}
+.meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.pop {
+  display: inline-flex;
+  animation: ring-pop 200ms ease-out;
+}
+@keyframes ring-pop {
+  50% {
+    transform: scale(1.12);
+  }
+}
+.headRings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.headRing {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  max-width: 5rem;
+  font-size: var(--text-xs);
+  color: var(--text);
+  text-align: center;
+}
+.section {
+  margin-top: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+}
+.sectionTitle {
+  margin: 0;
+  font-size: var(--text-base);
+}
+.heat {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 0.8rem);
+  grid-auto-columns: 0.8rem;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+.cell {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+.cell[data-state='done'] {
+  background: var(--module-color);
+}
+.cell[data-state='partial'] {
+  background: color-mix(in srgb, var(--module-color) 40%, var(--surface));
+}
+.cell[data-state='open'] {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+/* A rest day is hatched, so it differs from "open" without relying on colour. */
+.cell[data-state='rest'] {
+  background: repeating-linear-gradient(45deg, var(--surface-2) 0 2px, var(--surface) 2px 4px);
+  border-color: var(--border);
+}
+.cell[data-state='off'] {
+  background: transparent;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.weekdays {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+.weekdayRow {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 3rem;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.bar {
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  background: var(--module-color);
+}
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.form {
+  display: grid;
+  gap: var(--space-3);
+}
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
