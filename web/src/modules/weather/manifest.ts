@@ -1,6 +1,5 @@
 import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
-import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { settings } from './settings';
 
@@ -12,7 +11,7 @@ import { settings } from './settings';
 const manifest: ModuleManifest = {
   id: 'weather',
   get name() {
-    return tWeather.get().title;
+    return tWeatherPage.get().name;
   },
   icon: 'cloudSun',
   identity: {
@@ -27,14 +26,14 @@ const manifest: ModuleManifest = {
   },
   version: 1,
   get description() {
-    return tWeather.get().description;
+    return tWeatherPage.get().description;
   },
   maturity: 'stable',
   routes: [
     {
       path: '/weather',
       get label() {
-        return tWeather.get().title;
+        return tWeatherPage.get().name;
       },
       nav: true,
       component: () => import('./routes/WeatherPage'),

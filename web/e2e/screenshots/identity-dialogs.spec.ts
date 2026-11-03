@@ -32,7 +32,13 @@ async function mockWeather(page: Page) {
     route.fulfill({
       json: {
         results: [
-          { name: 'Bern', admin1: 'Bern', country: 'Schweiz', latitude: 46.9481, longitude: 7.4474 },
+          {
+            name: 'Bern',
+            admin1: 'Bern',
+            country: 'Schweiz',
+            latitude: 46.9481,
+            longitude: 7.4474,
+          },
         ],
       },
     }),

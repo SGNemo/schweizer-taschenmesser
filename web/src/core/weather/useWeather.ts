@@ -59,7 +59,7 @@ export function useWeather(needsPreview = false): WeatherView | undefined {
       mounted.current = false;
     };
   }, []);
-  const asked = useRef<string>();
+  const asked = useRef<string | undefined>(undefined);
   useEffect(() => {
     const online = typeof navigator === 'undefined' || navigator.onLine !== false;
     if (!active || !shouldFetch(hit, key, now(), online, readTried(), needsPreview)) return;

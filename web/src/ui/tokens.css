@@ -277,11 +277,11 @@
     --mod-indigo: #a7adf5;
     --mod-slate: #a9b7c0;
     --mod-navy: #9db0f0;
-  --sky-day-0: #1c3a5c;
-  --sky-day-1: #2e5a86;
-  --sky-rain-0: #1d2733;
-  --sky-rain-1: #3a4b5c;
-  --sky-cloud: rgb(255 255 255 / 0.22);
+    --sky-day-0: #1c3a5c;
+    --sky-day-1: #2e5a86;
+    --sky-rain-0: #1d2733;
+    --sky-rain-1: #3a4b5c;
+    --sky-cloud: rgb(255 255 255 / 0.22);
     --overlay: rgb(0 0 0 / 0.55);
     --shadow-1:
       0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35),

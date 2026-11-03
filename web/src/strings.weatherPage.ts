@@ -3,6 +3,9 @@ import { defineBundle } from '@/core/i18n/bundle';
 /** Texts of the weather module's page and widget (the settings section and shared words stay in `strings.weather.ts`). */
 export const tWeatherPage = defineBundle(
   {
+    name: 'Wetter',
+    description:
+      'Eine eigene Seite für das Wetter deines Ortes: jetzt, die nächsten Stunden, sieben Tage, Luft und Pollen, auf Wunsch mehrere Orte.',
     widget: 'Wetter heute',
     widgetEmpty: 'Noch kein Ort gewählt.',
     widgetAction: 'Ort wählen',
@@ -42,6 +45,9 @@ export const tWeatherPage = defineBundle(
   },
   {
     en: {
+      name: 'Weather',
+      description:
+        'A page of its own for the weather at your place: now, the next hours, seven days, air and pollen, several places if you like.',
       widget: 'Weather today',
       widgetEmpty: 'No place chosen yet.',
       widgetAction: 'Choose a place',
@@ -80,6 +86,9 @@ export const tWeatherPage = defineBundle(
       summary: (place: string, temp: number, word: string) => `${place}: ${temp}° ${word}`,
     },
     es: {
+      name: 'El tiempo',
+      description:
+        'Una página propia para el tiempo de tu lugar: ahora, las próximas horas, siete días, aire y polen, varios lugares si quieres.',
       widget: 'El tiempo hoy',
       widgetEmpty: 'Aún no has elegido un lugar.',
       widgetAction: 'Elegir lugar',
@@ -118,6 +127,9 @@ export const tWeatherPage = defineBundle(
       summary: (place: string, temp: number, word: string) => `${place}: ${temp}° ${word}`,
     },
     fr: {
+      name: 'Météo',
+      description:
+        'Une page à part pour la météo de ton lieu : maintenant, les prochaines heures, sept jours, air et pollen, plusieurs lieux si tu veux.',
       widget: 'Météo du jour',
       widgetEmpty: 'Aucun lieu choisi pour le moment.',
       widgetAction: 'Choisir un lieu',
@@ -157,6 +169,9 @@ export const tWeatherPage = defineBundle(
       summary: (place: string, temp: number, word: string) => `${place} : ${temp}° ${word}`,
     },
     'pt-BR': {
+      name: 'Tempo',
+      description:
+        'Uma página própria para o tempo do seu lugar: agora, as próximas horas, sete dias, ar e pólen, vários lugares se quiser.',
       widget: 'Tempo hoje',
       widgetEmpty: 'Nenhum lugar escolhido ainda.',
       widgetAction: 'Escolher lugar',
