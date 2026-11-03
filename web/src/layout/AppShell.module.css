@@ -112,16 +112,8 @@
   }
 }
 
-/* Identity v2: a thin stripe in the active module's hue along the sidebar's edge ("Ruhig"/"Modulfarben: Aus" grey it via --mod-*). */
+/* Identity v2: a thin stripe in the active module's hue along the sidebar's edge ("Ruhig"/"Modulfarben: Aus" grey it via --mod-*).
+   An inset shadow, so the sidebar's own positioning and stacking stay untouched. */
 .sidebar[data-hue] {
-  position: relative;
-}
-.sidebar[data-hue]::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: 3px;
-  background: var(--module-color);
-  opacity: 0.9;
-  pointer-events: none;
+  box-shadow: inset -3px 0 0 var(--module-color);
 }

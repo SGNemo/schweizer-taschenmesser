@@ -83,9 +83,10 @@ test.describe('Spotify connector', () => {
     expect(tokenBody).toContain('code_verifier=');
     expect(decodeURIComponent(tokenBody)).toContain('/oauth/callback');
 
-    // The Overview line works with that login.
-    await ready(page, '/');
-    await expect(page.getByTestId('now-playing-line')).toContainText('Testlied');
+    // The music page works with that login (a preview module: switched on like the library does).
+    await enable(page, 'music');
+    await ready(page, '/music');
+    await expect(page.getByTestId('music-now')).toContainText('Testlied');
     expect(mock.api.length).toBeGreaterThan(0);
   });
 

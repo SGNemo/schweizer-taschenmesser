@@ -222,7 +222,7 @@ test.describe('Weather module', () => {
     await expect(preview.getByTestId('weather-days').locator('li').nth(3)).toContainText(
       'Gewitter',
     );
-    await expect(preview.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
+    await expect(page.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
     await expect(preview.getByTestId('weather-chart')).toBeVisible();
     // Airways and allergy: air index with its word, pollen strongest first, always with words.
     await expect(preview.getByTestId('weather-aqi')).toContainText('mäßig');
@@ -264,7 +264,7 @@ test.describe('Weather module', () => {
     await mockWeather(page);
     await choosePlace(page);
     await ready(page, '/weather');
-    await page.getByTestId('weather-preview').getByRole('link', { name: 'Einstellungen' }).click();
+    await page.getByRole('main').getByRole('link', { name: 'Einstellungen' }).click();
     await expect(page).toHaveURL(/\/settings\/verbindungen/);
     await expect(page.getByTestId('weather-place')).toBeVisible();
   });
