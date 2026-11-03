@@ -12,12 +12,12 @@ import {
   TextArea,
   TextField,
 } from '@/ui';
-import { parseCount } from '../logic';
+import { isEan, parseCount } from '../logic';
 import { itemRepo } from '../repo';
 import { PLACES, type PantryItem, type Place } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
 
-export type ItemTarget = Stored<PantryItem> | { draft: true } | null;
+export type ItemTarget = Stored<PantryItem> | { draft: true; ean?: string } | null;
 
 export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: () => void }) {
   const existing = target && 'id' in target ? target : null;
@@ -27,29 +27,46 @@ export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: (
       onClose={onClose}
       title={existing ? t.pantry.edit : t.pantry.add}
     >
-      {target ? <Fields key={existing?.id ?? 'new'} existing={existing} onClose={onClose} /> : null}
+      {target ? (
+        <Fields
+          key={existing?.id ?? 'new'}
+          existing={existing}
+          prefillEan={'draft' in target ? target.ean : undefined}
+          onClose={onClose}
+        />
+      ) : null}
     </Dialog>
   );
 }
 
 function Fields({
   existing,
+  prefillEan,
   onClose,
 }: {
   existing: Stored<PantryItem> | null;
+  prefillEan?: string;
   onClose: () => void;
 }) {
   const [name, setName] = useState(existing?.name ?? '');
   const [place, setPlace] = useState<Place>(existing?.place ?? 'pantry');
   const [count, setCount] = useState(String(existing?.count ?? 1));
+  const [ean, setEan] = useState(existing?.ean ?? prefillEan ?? '');
+  const [unit, setUnit] = useState(existing?.unit ?? '');
   const [minCount, setMinCount] = useState(
     existing?.minCount === undefined ? '' : String(existing.minCount),
   );
   const [expires, setExpires] = useState(existing?.expires ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
-  const [errors, setErrors] = useState<{ name?: string; count?: string; minCount?: string }>({});
+  const [errors, setErrors] = useState<{
+    name?: string;
+    count?: string;
+    minCount?: string;
+    ean?: string;
+  }>({});
 
   async function save() {
+    if (ean.trim() && !isEan(ean.trim())) return setErrors({ ean: t.pantry.scan.badCode });
     const c = parseCount(count);
     const m = minCount.trim() === '' ? null : parseCount(minCount);
     const next = {
@@ -63,6 +80,8 @@ function Fields({
       name: name.trim(),
       place,
       count: c,
+      unit: unit.trim() || undefined,
+      ean: ean.trim() || undefined,
       minCount: m ?? undefined,
       expires: expires || undefined,
       note: note.trim() || undefined,
@@ -100,6 +119,13 @@ function Fields({
           error={errors.count}
           inputMode="numeric"
         />
+        <TextField
+          label={t.pantry.unit}
+          hint={t.pantry.unitHint}
+          value={unit}
+          onChange={(e) => setUnit(e.target.value)}
+          maxLength={12}
+        />
       </Split>
       <TextField
         label={t.pantry.expires}
@@ -107,13 +133,20 @@ function Fields({
         value={expires}
         onChange={(e) => setExpires(e.target.value)}
       />
-      <AdvancedFields moduleId="pantry" hasData={!!minCount || !!note}>
+      <AdvancedFields moduleId="pantry" hasData={!!minCount || !!note || !!ean}>
         <TextField
           label={t.pantry.minCount}
           hint={t.pantry.minCountHint}
           value={minCount}
           onChange={(e) => setMinCount(e.target.value)}
           error={errors.minCount}
+          inputMode="numeric"
+        />
+        <TextField
+          label={t.pantry.ean}
+          value={ean}
+          onChange={(e) => setEan(e.target.value)}
+          error={errors.ean}
           inputMode="numeric"
         />
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />

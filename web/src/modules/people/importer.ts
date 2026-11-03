@@ -2,6 +2,7 @@ import { parseDayMonth } from '@/core/io/dates';
 import { parseLines } from '@/core/io/textLines';
 import type { ImportCandidate, ImporterRuntime } from '@/core/importer/types';
 import { t } from '@/strings';
+import { parseContactsFile } from './contactsImport';
 import { personRepo } from './repo';
 
 const keyOf = (name: string, month: number, day: number) =>
@@ -24,6 +25,24 @@ export function parseBirthdayLine(
 
 const runtime: ImporterRuntime = {
   parse(_id, input) {
+    if (input.kind === 'file') {
+      const people = parseContactsFile(input.fileName, input.text).slice(0, 2000);
+      return {
+        candidates: people.map((p): ImportCandidate => ({
+          collection: 'person',
+          data: {
+            name: p.name,
+            birthday: { month: p.month, day: p.day, ...(p.year ? { year: p.year } : {}) },
+            ...(p.phone ? { phone: p.phone } : {}),
+            ...(p.email ? { email: p.email } : {}),
+          },
+          label: p.name,
+          detail: `${String(p.day).padStart(2, '0')}.${String(p.month).padStart(2, '0')}.${p.year ?? ''}`,
+          dedupeKey: keyOf(p.name, p.month, p.day),
+        })),
+        notes: people.length === 0 ? [t.onboarding.birthdays.fileNone] : [],
+      };
+    }
     if (input.kind !== 'text') return { candidates: [], notes: [] };
     const candidates: ImportCandidate[] = [];
     let skipped = 0;

@@ -241,6 +241,17 @@ const TEXTS: Record<Lang, Texts> = {
   },
 };
 
+const SECTION_CYCLE = ['dairy', 'bakery', 'produce'] as const;
+
+/** Where the first packing list goes and its two categories, per language. */
+const TRIP: Record<Lang, { place: string; cats: [string, string] }> = {
+  de: { place: 'Ostsee', cats: ['Kleidung', 'Technik'] },
+  en: { place: 'Baltic coast', cats: ['Clothes', 'Tech'] },
+  es: { place: 'Costa del Báltico', cats: ['Ropa', 'Tecnología'] },
+  fr: { place: 'Côte de la Baltique', cats: ['Vêtements', 'Technologie'] },
+  'pt-BR': { place: 'Costa do Báltico', cats: ['Roupas', 'Tecnologia'] },
+};
+
 /** Names with a leading number become quantity + name, like the real parser does it. */
 function parse(text: string): { name: string; quantity?: string } {
   const m = text.match(/^(\d+(?:\s?g)?)\s+(.+)$/);
@@ -271,6 +282,10 @@ function seed(ctx: SeedContext): SeedRows {
         ...(quantity ? { quantity } : {}),
         done: i % 3 === 2,
         order: i,
+        // Most people never assign sections: only the first entries have one (the list stays calm).
+        ...(i < 6 ? { section: SECTION_CYCLE[i % SECTION_CYCLE.length]! } : {}),
+        ...(i % 2 === 0 ? { priceCents: 99 + ((i * 37) % 400) } : {}),
+        ...(i % 5 === 0 ? { recurring: true } : {}),
       },
     });
   }
@@ -278,11 +293,26 @@ function seed(ctx: SeedContext): SeedRows {
   for (let l = 0; l < packing; l++) {
     const src = PACKING[l]!;
     const listId = ctx.id('lists', 'list', `pack-${l}`);
-    listRows.push({ id: listId, data: { name: src.name, kind: 'packing', order: l + 1 } });
+    listRows.push({
+      id: listId,
+      data: {
+        name: src.name,
+        kind: 'packing',
+        order: l + 1,
+        ...(l === 0 ? { tripDate: ctx.day(12), place: TRIP[ctx.lang].place } : {}),
+      },
+    });
     src.items.forEach((name, idx) =>
       itemRows.push({
         id: ctx.id('lists', 'item', `pack-${l}-${idx}`),
-        data: { listId, name, done: idx < 2, order: idx },
+        data: {
+          listId,
+          name,
+          done: idx < 2,
+          order: idx,
+          ...(l === 0 ? { category: TRIP[ctx.lang].cats[idx % 2]! } : {}),
+          ...(l === 0 && idx === 5 ? { toBuy: true } : {}),
+        },
       }),
     );
   }

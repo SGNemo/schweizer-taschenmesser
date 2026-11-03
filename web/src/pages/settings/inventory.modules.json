@@ -317,6 +317,11 @@
         "label": "Als „läuft bald ab“ zeigen ab (Tage vorher)",
         "default": 3
       },
+      "autoRestock": {
+        "type": "boolean",
+        "label": "Automatisch auf die Einkaufsliste, wenn der Mindestbestand erreicht ist",
+        "default": true
+      },
       "remindDaysBefore": {
         "type": "number",
         "label": "Erinnerung vor Ablauf (Tage)",

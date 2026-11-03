@@ -1,0 +1,49 @@
+.door {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.frame {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 2.75rem;
+  height: 3.5rem;
+  border: 3px solid var(--module-color);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--surface-2);
+}
+.leaf {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: block;
+  width: 100%;
+  background: color-mix(in srgb, var(--module-color) 28%, var(--surface));
+  transform-origin: right center;
+}
+/* shut: the leaf fills the frame; ajar: it is narrower, a gap shows (no animation, the state just changes) */
+.door[data-state='open'] .leaf {
+  width: 40%;
+}
+.knob {
+  position: absolute;
+  top: 50%;
+  left: 0.3rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--text);
+}
+.text {
+  display: grid;
+}
+.state {
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+}
+.sub {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

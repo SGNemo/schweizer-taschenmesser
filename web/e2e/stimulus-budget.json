@@ -91,31 +91,31 @@
     },
     "desktop--settings": {
       "height": 800,
-      "buttons": 59,
-      "links": 38,
-      "icons": 73,
-      "firstScreenActions": 56
+      "buttons": 40,
+      "links": 47,
+      "icons": 80,
+      "firstScreenActions": 62
     },
     "desktop--settings-benachrichtigungen": {
       "height": 800,
       "buttons": 63,
-      "links": 38,
-      "icons": 71,
-      "firstScreenActions": 58
+      "links": 40,
+      "icons": 73,
+      "firstScreenActions": 56
     },
     "desktop--settings-darstellung": {
       "height": 800,
       "buttons": 112,
-      "links": 38,
-      "icons": 72,
-      "firstScreenActions": 79
+      "links": 43,
+      "icons": 74,
+      "firstScreenActions": 76
     },
     "desktop--settings-module": {
       "height": 800,
-      "buttons": 80,
-      "links": 39,
-      "icons": 74,
-      "firstScreenActions": 57
+      "buttons": 40,
+      "links": 55,
+      "icons": 87,
+      "firstScreenActions": 60
     },
     "desktop--subscriptions": {
       "height": 800,
@@ -188,10 +188,10 @@
       "firstScreenActions": 29
     },
     "phone--lists": {
-      "height": 1423,
-      "buttons": 43,
+      "height": 2078,
+      "buttons": 49,
       "links": 9,
-      "icons": 29,
+      "icons": 34,
       "firstScreenActions": 39
     },
     "phone--notes": {
@@ -223,10 +223,10 @@
       "firstScreenActions": 31
     },
     "phone--settings": {
-      "height": 1662,
+      "height": 2263,
       "buttons": 15,
-      "links": 19,
-      "icons": 36,
+      "links": 27,
+      "icons": 44,
       "firstScreenActions": 26
     },
     "phone--settings-benachrichtigungen": {
@@ -244,11 +244,11 @@
       "firstScreenActions": 36
     },
     "phone--settings-module": {
-      "height": 4722,
-      "buttons": 45,
-      "links": 8,
-      "icons": 14,
-      "firstScreenActions": 14
+      "height": 1898,
+      "buttons": 5,
+      "links": 22,
+      "icons": 25,
+      "firstScreenActions": 16
     },
     "phone--subscriptions": {
       "height": 1848,
@@ -265,8 +265,8 @@
       "firstScreenActions": 28
     },
     "phone--vault": {
-      "height": 4858,
-      "buttons": 49,
+      "height": 5549,
+      "buttons": 55,
       "links": 9,
       "icons": 14,
       "firstScreenActions": 26

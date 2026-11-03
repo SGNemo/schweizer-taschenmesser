@@ -23,6 +23,13 @@ export const personSchema = z.object({
   birthday: birthdaySchema.optional(),
   note: z.string().optional(),
   tags: z.array(z.string()).default([]),
+  /** Optional contact details: only used to open "congratulate" links, never sent anywhere by the app. */
+  phone: z.string().trim().max(40).optional(),
+  email: z.string().trim().max(120).optional(),
+  /** Reminder lead time for this person in days; without it the module setting applies. */
+  remindDaysBefore: z.number().int().min(0).max(30).optional(),
+  /** Gift budget for the next birthday, in cents. */
+  giftBudgetCents: z.number().int().min(0).max(99_999_999).optional(),
 });
 
 export type Person = z.output<typeof personSchema>;

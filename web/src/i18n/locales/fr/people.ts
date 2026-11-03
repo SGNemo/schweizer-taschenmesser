@@ -33,6 +33,25 @@ export const people: Strings['people'] = {
   inDays: (n: number) => (n <= 1 ? `Dans ${n} jour` : `Dans ${n} jours`),
   congratulate: (name: string) => `Souhaiter l’anniversaire de ${name} par WhatsApp`,
   wish: (name: string) => `Joyeux anniversaire, ${name} ! 🎂`,
+  invalidExtra: 'Saisis le budget comme un montant et l’avance en jours entiers.',
+  phone: 'Téléphone (facultatif)',
+  email: 'E-mail (facultatif)',
+  remindOwn: 'Rappel pour cette personne (jours avant)',
+  remindOwnHint: 'Laisse vide pour utiliser le réglage du module.',
+  budget: 'Budget cadeau (facultatif)',
+  inbox: {
+    title: 'Idées de tes favoris',
+    hint: 'Tu as marqué ces liens comme idées de cadeau. Choisis pour qui les garder.',
+    take: (name: string) => `Garder pour ${name}`,
+    dismiss: 'Écarter',
+  },
+  wishSubject: 'Joyeux anniversaire',
+  budgetLine: (budget: string, amount: string, over: boolean) =>
+    over ? `Budget ${budget}, dépassé de ${amount}` : `Budget ${budget}, reste ${amount}`,
+  congratsVia: { whatsapp: 'WhatsApp', tel: 'Appeler', mail: 'Écrire un e-mail' } as Record<
+    string,
+    string
+  >,
   search: 'Rechercher des personnes',
   empty: 'Aucune personne pour l’instant. Ajoutez des anniversaires et des idées cadeaux.',
   emptyFiltered: 'Aucun résultat.',

@@ -124,3 +124,60 @@ export function openGiftsWithPerson<G extends Gift, P extends { id: string }>(
     return person ? [{ gift, person }] : [];
   });
 }
+
+export interface CongratsLink {
+  id: 'whatsapp' | 'tel' | 'mail';
+  url: string;
+}
+
+/**
+ * Ways to congratulate. WhatsApp always works (the contact is picked there unless a number is known),
+ * a phone call and a mail only with the matching detail. Only digits and "+" survive in a number, a mail
+ * address must look like one: nothing typed in a note can turn into another kind of link.
+ */
+export function congratsLinks(
+  person: Pick<Person, 'phone' | 'email'>,
+  text: string,
+  subject: string,
+): CongratsLink[] {
+  const digits = (person.phone ?? '').replace(/[^\d+]/g, '');
+  const phone = /^\+?\d{5,}$/.test(digits) ? digits : undefined;
+  const mail =
+    person.email && /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(person.email)
+      ? person.email
+      : undefined;
+  return [
+    {
+      id: 'whatsapp',
+      url: phone
+        ? `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(text)}`
+        : `https://wa.me/?text=${encodeURIComponent(text)}`,
+    },
+    ...(phone ? [{ id: 'tel' as const, url: `tel:${phone}` }] : []),
+    ...(mail
+      ? [
+          {
+            id: 'mail' as const,
+            url: `mailto:${mail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`,
+          },
+        ]
+      : []),
+  ];
+}
+
+/** One or two capital letters for the avatar: first letters of the first and the last word. */
+export function monogram(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '?';
+  const first = [...words[0]!][0]!;
+  const last = words.length > 1 ? [...words[words.length - 1]!][0]! : '';
+  return (first + last).toLocaleUpperCase();
+}
+
+/** How close the birthday is as 0..1 for the ring (1 = today, 0 = a month or more away). */
+export const closeness = (days: number, window = 30): number =>
+  Math.max(0, Math.min(1, 1 - days / window));
+
+/** Budget left for the person: budget minus what was bought or given (may be negative). */
+export const budgetLeft = (budgetCents: number, gifts: readonly Gift[]): number =>
+  budgetCents - totals(gifts).spentCents;

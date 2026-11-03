@@ -23,6 +23,7 @@ export function TotpCode({ config }: { config: TotpConfig }) {
   return (
     <div className={styles.detailRow}>
       <span>
+        <TotpRing left={code.secondsLeft} period={config.period} />{' '}
         <span className={styles.detailLabel}>{t.accounts.fields.totp}</span>
         <span className={[styles.detailValue, styles.code].join(' ')} data-testid="totp-code">
           {grouped}
@@ -47,4 +48,23 @@ function safe(config: TotpConfig): Code | undefined {
   } catch {
     return undefined; // an invalid secret must not break the detail view
   }
+}
+
+/** Ring that empties as the code runs out. Decoration: the seconds are also in the text beside it. */
+function TotpRing({ left, period }: { left: number; period: number }) {
+  const pct = Math.max(0, Math.min(100, Math.round((left / period) * 100)));
+  return (
+    <span
+      aria-hidden="true"
+      data-testid="totp-ring"
+      style={{
+        display: 'inline-block',
+        width: '1.25rem',
+        height: '1.25rem',
+        borderRadius: 'var(--radius-full)',
+        verticalAlign: 'middle',
+        background: `conic-gradient(var(--module-color) ${pct}%, var(--surface-2) 0)`,
+      }}
+    />
+  );
 }

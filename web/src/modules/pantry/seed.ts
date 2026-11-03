@@ -19,6 +19,7 @@ const BASE: {
   count: number;
   min?: number;
   exp?: number;
+  unit?: Record<Lang, string>;
   note?: Record<Lang, string>;
 }[] = [
   {
@@ -156,6 +157,7 @@ const BASE: {
     place: 'pantry',
     count: 3,
     exp: 300,
+    unit: L('Pck.', 'packs', 'paq.', 'paq.', 'pcts.'),
   },
 ];
 
@@ -172,6 +174,7 @@ function seed(ctx: SeedContext): SeedRows {
           name: round === 0 ? name : `${name} (${round + 1})`,
           place: b.place,
           count: b.count,
+          ...(b.unit ? { unit: b.unit[ctx.lang] } : {}),
           ...(b.min !== undefined ? { minCount: b.min } : {}),
           ...(b.exp !== undefined ? { expires: ctx.day(b.exp + round * 5) } : {}),
           ...(b.note ? { note: b.note[ctx.lang] } : {}),

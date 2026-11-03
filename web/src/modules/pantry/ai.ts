@@ -10,6 +10,7 @@ export const aiSchema: ModuleAiSchema = {
         name: 'text',
         place: 'enum:fridge|freezer|pantry|other',
         count: 'num',
+        unit: 'text',
         expires: 'date',
       },
       dateField: 'expires',
@@ -22,8 +23,8 @@ export const aiSchema: ModuleAiSchema = {
       kind: 'create',
       collection: 'item',
       label: 'Vorrat anlegen',
-      description: 'Vorrat mit Ort, Anzahl und Ablaufdatum',
-      fields: ['name', 'place', 'count', 'expires'],
+      description: 'Vorrat mit Ort, Anzahl, Einheit und Ablaufdatum',
+      fields: ['name', 'place', 'count', 'unit', 'expires'],
       required: ['name'],
       parse: {
         keywords: ['vorrat', 'vorräte', 'kühlschrank', 'tiefkühl'],
@@ -47,7 +48,7 @@ export const aiSchema: ModuleAiSchema = {
       collection: 'item',
       label: 'Vorrat ändern',
       description: 'Anzahl, Ort oder Ablaufdatum ändern',
-      fields: ['name', 'place', 'count', 'expires'],
+      fields: ['name', 'place', 'count', 'unit', 'expires'],
       examples: [
         {
           input: 'Ändere den Vorrat Joghurt auf 12.10.',

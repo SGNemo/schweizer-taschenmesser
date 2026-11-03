@@ -27,16 +27,31 @@ import {
   useOpenParam,
 } from '@/ui';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
-import { applyFilter, daysLeft, expiryState, needsRestock, sortItems, type Filter } from '../logic';
+import {
+  applyFilter,
+  countLabel,
+  crossedMinimum,
+  daysLeft,
+  expiryState,
+  findByEan,
+  needsRestock,
+  sortItems,
+  type Filter,
+} from '../logic';
+import { ScanDialog } from '../components/ScanDialog';
+import { ShelfSignature, type ShelfCounts } from '../components/ShelfSignature';
 import { itemRepo } from '../repo';
 import { PLACES } from '../schema';
 import { settings as moduleSettings, settingsSchema } from '../settings';
 import styles from '@/pages/Page.module.css';
+import lamp from './PantryPage.module.css';
 
 export default function PantryPage() {
   const items = useLiveQuery(() => itemRepo.active().toArray(), []);
   const [prefs] = useSettings('module.pantry', settingsSchema, moduleSettings.defaults as never);
   const soonDays = (prefs as { soonDays?: number } | undefined)?.soonDays ?? 3;
+  const autoRestock = (prefs as { autoRestock?: boolean } | undefined)?.autoRestock ?? true;
+  const [scanning, setScanning] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [target, setTarget] = useState<ItemTarget>(null);
   useOpenParam((id) => itemRepo.get(id), setTarget);
@@ -68,6 +83,38 @@ export default function PantryPage() {
   };
   const low = (items ?? []).filter(needsRestock);
 
+  /** One piece used: when that takes the stock down to its minimum the item goes on the shopping list by itself. */
+  const consume = (i: NonNullable<typeof items>[number]) => {
+    const next = Math.max(0, i.count - 1);
+    void changeWithUndo(() => itemRepo.update(i.id, { count: next }));
+    if (autoRestock && moduleStates?.lists === true && crossedMinimum(i, next))
+      void whenServicesSettled()
+        .then(() => bus.emit('shopping.requested', { name: i.name }))
+        .then(() => toast(t.pantry.autoRestocked(i.name)));
+  };
+
+  /** A scanned number: the item that has it gets one more, an unknown number starts a new item with it. */
+  const onCode = (code: string) => {
+    setScanning(false);
+    const known = findByEan(items ?? [], code);
+    if (known) {
+      void changeWithUndo(
+        () => itemRepo.update(known.id, { count: Math.min(9999, known.count + 1) }),
+        t.pantry.scan.added(known.name),
+      );
+    } else setTarget({ draft: true, ean: code });
+  };
+
+  const counts = useMemo(() => {
+    const out = Object.fromEntries(PLACES.map((p) => [p, { items: 0, flagged: 0 }])) as ShelfCounts;
+    for (const i of items ?? []) {
+      out[i.place].items += 1;
+      if (['expired', 'soon'].includes(expiryState(i, day, soonDays)) || needsRestock(i))
+        out[i.place].flagged += 1;
+    }
+    return out;
+  }, [items, day, soonDays]);
+
   const shown = useMemo(
     () => sortItems(applyFilter(items ?? [], filter, day, soonDays), day, soonDays),
     [items, filter, day, soonDays],
@@ -86,11 +133,13 @@ export default function PantryPage() {
     <>
       <PageHeader title={t.pantry.title}>
         <AdvancedToggle moduleId="pantry" />
+        <Button onClick={() => setScanning(true)}>{t.pantry.scan.open}</Button>
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.pantry.add}
         </Button>
       </PageHeader>
+      <ShelfSignature counts={counts} />
       <NowStrip modules={['pantry']} />{' '}
       <Segmented
         label={t.pantry.filter}
@@ -133,7 +182,8 @@ export default function PantryPage() {
                     title={i.name}
                     meta={
                       <>
-                        {t.pantry.countOf(i.count)}
+                        <span className={lamp.dot} data-state={state} aria-hidden="true" />
+                        {countLabel(i, t.pantry.countOf)}
                         {state === 'ok' && text ? ` · ${text}` : ''}
                       </>
                     }
@@ -141,17 +191,10 @@ export default function PantryPage() {
                     end={
                       <span className={patternStyles.hstackTight}>
                         {state === 'expired' || state === 'soon' ? (
-                          <Badge tone="accent">{text}</Badge>
+                          <Badge tone={state === 'expired' ? 'danger' : 'warning'}>{text}</Badge>
                         ) : null}
                         {needsRestock(i) ? <Badge>{t.pantry.lowStock}</Badge> : null}
-                        <IconButton
-                          label={t.pantry.minus(i.name)}
-                          onClick={() =>
-                            void changeWithUndo(() =>
-                              itemRepo.update(i.id, { count: Math.max(0, i.count - 1) }),
-                            )
-                          }
-                        >
+                        <IconButton label={t.pantry.minus(i.name)} onClick={() => consume(i)}>
                           <span aria-hidden="true">−</span>
                         </IconButton>
                         <IconButton
@@ -177,6 +220,7 @@ export default function PantryPage() {
           </section>
         );
       })}
+      <ScanDialog open={scanning} onClose={() => setScanning(false)} onCode={onCode} />
       <ItemEditor target={openTarget} onClose={close} />
     </>
   );

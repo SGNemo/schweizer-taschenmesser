@@ -82,6 +82,49 @@ export const accounts: Strings['accounts'] = {
   },
   add: 'Adicionar acesso',
   edit: 'Editar acesso',
+  head: {
+    locked: 'Bloqueado',
+    unlocked: 'Desbloqueado',
+    autoLock: (min: number) =>
+      min <= 0
+        ? 'Bloqueia sozinho em menos de um minuto'
+        : `Bloqueia sozinho em cerca de ${min} min`,
+    bridgeOn: 'Extensão do navegador: ativada',
+    bridgeOff: 'Extensão do navegador: desativada',
+  },
+  groups: { label: 'Grupos', all: 'Todas', favorites: 'Favoritas' },
+  audit: {
+    open: 'Verificar senhas',
+    title: 'Verificar senhas',
+    intro: 'Tudo é calculado aqui, neste aparelho. Nenhuma senha é mostrada, enviada ou guardada.',
+    running: (done: number, total: number) => `Verificando ${done} de ${total} …`,
+    nothing: 'Nada de especial. Ótimo.',
+    weak: (n: number) => `Fracas (${n})`,
+    reused: (n: number) => `Usadas mais de uma vez (${n})`,
+    old: (n: number) => `Com mais de um ano (${n})`,
+    unavailable:
+      'A verificação de força precisa de internet uma vez para carregar seus dicionários. Reutilização e idade foram verificadas mesmo assim.',
+    openEntry: 'Abrir',
+  },
+  emergency: {
+    open: 'Folha de emergência',
+    title: 'Folha de emergência',
+    intro:
+      'Uma folha com os passos para uma emergência. Ela não contém senhas. Imprima e guarde separada do aparelho.',
+    heading: 'Folha de emergência: cofre de senhas',
+    entries: (n: number) => `Entradas no cofre: ${n}`,
+    date: (d: string) => `Data: ${d}`,
+    steps: [
+      'Faça um backup criptografado regularmente (Ferramentas → Backup) e guarde o arquivo em um segundo lugar.',
+      'A senha mestra não está nesta folha e não pode ser redefinida. Guarde-a separada, por exemplo com uma pessoa de confiança.',
+      'Aparelho novo: instale o app, restaure o cofre pelo backup e desbloqueie com a senha mestra.',
+      'Se a senha mestra for perdida, os dados não podem mais ser lidos.',
+    ],
+    save: 'Salvar como arquivo',
+    file: 'folha-emergencia-cofre.html',
+    saved: 'Folha de emergência salva.',
+    backup: 'Ir para o backup',
+  },
   search: 'Pesquisar senhas',
   empty: 'Nenhum acesso ainda.',
   emptyFiltered: 'Nada encontrado.',
