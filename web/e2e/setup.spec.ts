@@ -412,7 +412,9 @@ test('"Umzug von einer anderen App": checklist row → Google → ToDos importer
   await google.getByRole('button', { name: 'ToDos importieren' }).click();
 
   const importDialog = page.getByRole('dialog', { name: /^Importieren:/ });
-  await importDialog.getByRole('button', { name: /Aus Todoist, Google Tasks oder Microsoft To Do/ }).click();
+  await importDialog
+    .getByRole('button', { name: /Aus Todoist, Google Tasks oder Microsoft To Do/ })
+    .click();
   const chooser = page.waitForEvent('filechooser');
   await importDialog.getByRole('button', { name: 'Datei wählen …' }).click();
   await (await chooser).setFiles('src/core/io/__fixtures__/google-tasks.json');
