@@ -488,3 +488,13 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **PK2 Einzelner Termin einer Serie:** wiederkehrenden Termin öffnen → „Nur den Termin am … entfernen“: nur dieser Tag fehlt, Rückgängig stellt ihn wieder her, die Benachrichtigung dieses Tages bleibt aus. ☐
 - **PK3 Als ToDo merken:** Termin öffnen → „Als ToDo merken“: Aufgabe im Eingang mit dem Datum als Fälligkeit (ToDos aktiv). Überschneidende Termine (Wochenansicht ≥ 1400 px) haben gestrichelten Rand. ☐
 
+### Haushalt & Tresor (Branch `feat/household-vault-identity`) – nur auf Geräten prüfbar
+
+- **HT1 Barcode-Scanner (Android, Chrome/PWA und APK):** Vorräte → „Scannen“, Kamera erlauben, einen Barcode einer Packung zeigen: unbekannt → neuer Vorrat mit der Nummer; danach dieselbe Packung nochmal: „einer mehr“. Wo die Kamera-Erkennung fehlt (APK-WebView?), erscheint der Hinweis und die Nummer lässt sich tippen. Kamera geht beim Schließen aus. ☐
+- **HT2 Kontakte-Datei:** Personen → Einrichtung/Import → „Aus Kontakte- oder Kalenderdatei“: eine .vcf aus Google Kontakte/iCloud und eine .ics eines Geburtstagskalenders; Vorschau prüfen, nichts doppelt. ☐
+- **HT3 Gratulieren:** Person mit Telefon und Mail: WhatsApp (mit Nummer), Anrufen und E-Mail öffnen auf Windows und Android die richtige App. ☐
+- **HT4 Wetter am Ziel:** Packliste mit Ziel (eine Stadt) und Datum in den nächsten 7 Tagen → „Wetter am Ziel prüfen“: erst der Hinweis „Verstanden“, dann Wort, Grad, Regen % und ein Packhinweis; ohne Netz die ruhige Meldung. ☐
+- **HT5 Geschenk aus Merkliste:** Merkliste → Menü → „Als Geschenkidee“ (Personen an), bei einer Person „Für … übernehmen“. ☐
+- **HT6 Tresor-Kopf:** Passwörter entsperren: „Entsperrt“ mit „Sperrt automatisch in etwa n Min.“, nach Inaktivität „Gesperrt“; Ruhig-Modus und „weniger Bewegung“: nichts bewegt sich. „Passwörter prüfen“ zeigt nur Titel, nie ein Passwort. ☐
+- **HT7 Notfallblatt:** „Notfallblatt“ → „Als Datei speichern“, Datei öffnen und drucken: Schritte, Datum, Anzahl, kein Geheimnis. ☐
+
