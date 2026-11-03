@@ -319,6 +319,10 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SO5 Zurücksetzen:** Darstellung → Farbschema „Dunkel“: unten erscheint „Vom Standard abweichend“ mit dem Zurücksetzen-Knopf; ein Modul (z. B. Aufgaben): Schalter ändern, „Geändert · Auf Standard“ stellt zurück, „Rückgängig“ bringt es wieder. ☐
 - **SO6 Vorschau und Hinweis:** Darstellung → Text öffnen: die Vorschau folgt Schriftgröße und Dichte; Benachrichtigungen → „Erinnerungen in der App einblenden“ an: Beispielkarte oben/unten rechts; Tresor: „30 Minuten“ zeigt den ruhigen Hinweis. ☐
 
+- **SO10 Meldungen pro Modul:** Einstellungen → Benachrichtigungen → Erweitert → „Meldungen pro Modul“: „Hinweis zur Zeit“ für ein Modul ausschalten, eine Erinnerung dieses Moduls in 2 Minuten setzen: sie erscheint in der Glocke, aber nicht als Hinweis (Android: auch nicht als Systemmeldung); wieder einschalten: sie kommt wieder. ☐
+- **SO11 Speicher:** Einstellungen → Allgemein → Speicher: die Größe passt ungefähr zum Gerät; „Zwischenspeicher leeren“ mit Bestätigung, danach Werkzeuge (z. B. Rechner) mit Internet neu öffnen: lädt wieder; die App selbst bleibt offline nutzbar. ☐
+- **SO12 Barrierefreiheit:** Einstellungen → Barrierefreiheit am Handy: Textgröße „Sehr groß“ und Bewegung „Weniger“ wirken sofort, Lesehilfe und Fokus sind hier zu finden; ein alter Link (Darstellung → Fokus) führt hierher. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
