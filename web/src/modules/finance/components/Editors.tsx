@@ -1,16 +1,26 @@
 import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { currencyOf, formatMoneyInput, isCurrencyCode, parseMoney } from '@/core/money';
-import { today } from '@/core/time/dates';
+import {
+  currencyOf,
+  formatMoney,
+  formatMoneyInput,
+  isCurrencyCode,
+  parseMoney,
+} from '@/core/money';
+import { formatDay, today } from '@/core/time/dates';
 import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
-import { lastUsedFor } from '../logic';
+import { lastUsedFor, splitsValid } from '../logic';
+import { findPossibleDuplicate } from '../analysis';
+import { CATEGORY_ICONS, categoryIcon } from '../categoryIcon';
+import { SplitEditor, rowsToSplits, splitsToRows, type SplitRow } from './SplitEditor';
 import {
   AdvancedFields,
   Button,
   CurrencyField,
   Dialog,
+  Icon,
   patternStyles,
   Segmented,
   SelectField,
@@ -20,7 +30,9 @@ import {
 import { accountRepo, categoryRepo, deleteAccount, transactionRepo } from '../repo';
 import {
   BOOKING_REPEATS,
+  ACCOUNT_KINDS,
   type Account,
+  type AccountKind,
   type BookingRepeat,
   type Category,
   type Transaction,
@@ -30,6 +42,9 @@ import styles from '../routes/finance.module.css';
 import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
 type Kind = 'expense' | 'income';
+
+const parentName = (cats: { id: string; name: string }[], id: string): string =>
+  cats.find((c) => c.id === id)?.name ?? '';
 
 function Actions({
   onDelete,
@@ -131,9 +146,19 @@ function TransactionForm({
   const [note, setNote] = useState(existing?.note ?? '');
   const [repeat, setRepeat] = useState<BookingRepeat | ''>(existing?.repeat ?? '');
   const [error, setError] = useState('');
+  const [splitRows, setSplitRows] = useState<SplitRow[]>(
+    existing?.splits?.length ? splitsToRows(existing.splits) : [],
+  );
+  const [dupAsked, setDupAsked] = useState(false);
   const categories = data.categories
     .filter((c) => c.kind === kind)
     .sort((a, b) => compareText(a.name, b.name));
+
+  const draftAmount = parseMoney(amount);
+  const twinNow =
+    !existing && dupAsked && draftAmount
+      ? findPossibleDuplicate(data.txs, { accountId, kind, amountMinor: draftAmount, date, payee })
+      : undefined;
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -143,9 +168,28 @@ function TransactionForm({
       return;
     }
     if (!accountId) return;
+    const splits = splitRows.length > 0 ? rowsToSplits(splitRows) : [];
+    if (splitRows.length > 0 && !splitsValid(amountMinor, splits)) {
+      const rest = amountMinor - splits.reduce((sum, p) => sum + p.amountMinor, 0);
+      setError(
+        rest > 0
+          ? t.finance.ext.split.rest(formatMoney(rest, accountCurrency))
+          : t.finance.ext.split.over(formatMoney(-rest, accountCurrency)),
+      );
+      return;
+    }
+    // A booking that looks like one already there: say so once, the second save goes through.
+    const twin = existing
+      ? undefined
+      : findPossibleDuplicate(data.txs, { accountId, kind, amountMinor, date, payee });
+    if (twin && !dupAsked) {
+      setDupAsked(true);
+      return;
+    }
     const values = {
       accountId,
       categoryId: categories.some((c) => c.id === categoryId) ? categoryId : undefined,
+      splits: splits.length > 0 ? splits : undefined,
       kind,
       amountMinor,
       date,
@@ -220,24 +264,62 @@ function TransactionForm({
             </option>
           ))}
         </SelectField>
-        <SelectField
-          label={t.finance.category}
-          value={categoryId}
-          onChange={(e) => {
-            setCategoryId(e.target.value);
-            setAutoFilled(false);
-          }}
-        >
-          <option value="">{t.finance.noCategory}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </SelectField>
+        {splitRows.length === 0 ? (
+          <SelectField
+            label={t.finance.category}
+            value={categoryId}
+            onChange={(e) => {
+              setCategoryId(e.target.value);
+              setAutoFilled(false);
+            }}
+          >
+            <option value="">{t.finance.noCategory}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.parentId ? `${parentName(data.categories, c.parentId)} › ${c.name}` : c.name}
+              </option>
+            ))}
+          </SelectField>
+        ) : (
+          <p className={styles.muted}>{t.finance.ext.split.parts(splitRows.length)}</p>
+        )}
       </div>
+      {splitRows.length > 0 ? (
+        <SplitEditor
+          rows={splitRows}
+          onChange={setSplitRows}
+          totalMinor={draftAmount ?? 0}
+          currency={accountCurrency}
+          categories={categories.map((c) => ({
+            id: c.id,
+            name: c.parentId ? `${parentName(data.categories, c.parentId)} › ${c.name}` : c.name,
+          }))}
+        />
+      ) : null}
+      {twinNow ? (
+        <p role="status" className={styles.muted}>
+          {t.finance.ext.duplicateHint(twinNow.payee ?? '', formatDay(twinNow.date, 'P'))}
+        </p>
+      ) : null}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
-      <AdvancedFields moduleId="finance" hasData={!!repeat}>
+      <AdvancedFields moduleId="finance" hasData={!!repeat || splitRows.length > 0}>
+        {kind === 'expense' || splitRows.length > 0 ? (
+          <Button
+            variant="ghost"
+            onClick={() =>
+              setSplitRows(
+                splitRows.length > 0
+                  ? []
+                  : [
+                      { categoryId, amount: amount },
+                      { categoryId: '', amount: '' },
+                    ],
+              )
+            }
+          >
+            {splitRows.length > 0 ? t.finance.ext.split.off : t.finance.ext.split.toggle}
+          </Button>
+        ) : null}
         <SelectField
           label={t.finance.repeat}
           value={repeat}
@@ -320,6 +402,7 @@ function AccountForm({
     existing ? formatMoneyInput(existing.openingBalanceMinor) : '0,00',
   );
   const [currency, setCurrency] = useState(currencyOf(existing));
+  const [accountKind, setAccountKind] = useState<AccountKind | ''>(existing?.kind ?? '');
   const [error, setError] = useState('');
 
   async function save(e: FormEvent) {
@@ -340,12 +423,14 @@ function AccountForm({
         name: name.trim(),
         openingBalanceMinor,
         currency: stored,
+        kind: accountKind || undefined,
       });
     else
       await accountRepo.create({
         name: name.trim(),
         openingBalanceMinor,
         currency: stored,
+        kind: accountKind || undefined,
         order: 'draft' in target ? target.order : 0,
       });
     onClose();
@@ -370,6 +455,18 @@ function AccountForm({
         }}
         error={error}
       />
+      <SelectField
+        label={t.finance.ext.accountKind.label}
+        value={accountKind}
+        onChange={(e) => setAccountKind(e.target.value as AccountKind | '')}
+      >
+        <option value="">–</option>
+        {ACCOUNT_KINDS.map((k) => (
+          <option key={k} value={k}>
+            {t.finance.ext.accountKind[k]}
+          </option>
+        ))}
+      </SelectField>
       <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
       {existing ? <p className={styles.muted}>{t.finance.deleteAccountHint}</p> : null}
       <Actions
@@ -382,13 +479,17 @@ function AccountForm({
 
 /* ----------------------------------- Category ------------------------------------ */
 
-export type CategoryTarget = Stored<Category> | { draft: true; kind: Kind } | null;
+export type CategoryTarget =
+  Stored<Category> | { draft: true; kind: Kind; parentId?: string } | null;
 
 export function CategoryEditor({
   target,
+  categories,
   onClose,
 }: {
   target: CategoryTarget;
+  /** All categories: the parent picker offers the top-level ones of the same kind. */
+  categories: Stored<Category>[];
   onClose: () => void;
 }) {
   const existing = target && 'id' in target ? target : null;
@@ -399,7 +500,12 @@ export function CategoryEditor({
       title={existing ? t.finance.editCategory : t.finance.addCategory}
     >
       {target ? (
-        <CategoryForm key={existing?.id ?? 'new'} target={target} onClose={onClose} />
+        <CategoryForm
+          key={existing?.id ?? 'new'}
+          target={target}
+          categories={categories}
+          onClose={onClose}
+        />
       ) : null}
     </Dialog>
   );
@@ -407,9 +513,11 @@ export function CategoryEditor({
 
 function CategoryForm({
   target,
+  categories,
   onClose,
 }: {
   target: NonNullable<CategoryTarget>;
+  categories: Stored<Category>[];
   onClose: () => void;
 }) {
   const existing = 'id' in target ? target : null;
@@ -418,10 +526,26 @@ function CategoryForm({
     existing?.kind ?? ('draft' in target ? target.kind : 'expense'),
   );
 
+  const [parentId, setParentId] = useState(
+    existing?.parentId ?? ('draft' in target ? (target.parentId ?? '') : ''),
+  );
+  const [icon, setIcon] = useState(existing?.icon ?? '');
+  // One level only: a category with children cannot become a child itself.
+  const hasChildren = existing ? categories.some((c) => c.parentId === existing.id) : false;
+  const parents = categories
+    .filter((c) => c.kind === kind && !c.parentId && c.id !== existing?.id)
+    .sort((a, b) => compareText(a.name, b.name));
+
   async function save(e: FormEvent) {
     e.preventDefault();
-    if (existing) await categoryRepo.update(existing.id, { name: name.trim(), kind });
-    else await categoryRepo.create({ name: name.trim(), kind });
+    const values = {
+      name: name.trim(),
+      kind,
+      parentId: parents.some((p) => p.id === parentId) ? parentId : undefined,
+      icon: icon || undefined,
+    };
+    if (existing) await categoryRepo.update(existing.id, values);
+    else await categoryRepo.create(values);
     onClose();
   }
 
@@ -442,6 +566,47 @@ function CategoryForm({
         <option value="expense">{t.finance.expenseOne}</option>
         <option value="income">{t.finance.incomeOne}</option>
       </SelectField>
+      {!hasChildren ? (
+        <SelectField
+          label={t.finance.ext.category.parent}
+          value={parentId}
+          onChange={(e) => setParentId(e.target.value)}
+        >
+          <option value="">{t.finance.ext.category.noParent}</option>
+          {parents.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </SelectField>
+      ) : null}
+      <fieldset className={styles.iconPick}>
+        <legend>{t.finance.ext.category.icon}</legend>
+        <div role="radiogroup" aria-label={t.finance.ext.category.icon} className={styles.iconGrid}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={icon === ''}
+            className={`${styles.iconChoice} ${icon === '' ? styles.iconChosen : ''}`}
+            onClick={() => setIcon('')}
+          >
+            {t.finance.ext.category.iconAuto}
+          </button>
+          {CATEGORY_ICONS.map((i) => (
+            <button
+              key={i}
+              type="button"
+              role="radio"
+              aria-checked={icon === i}
+              aria-label={i}
+              className={`${styles.iconChoice} ${icon === i ? styles.iconChosen : ''}`}
+              onClick={() => setIcon(i)}
+            >
+              <Icon name={categoryIcon({ id: '', name: '', icon: i })} size={18} />
+            </button>
+          ))}
+        </div>
+      </fieldset>
       {existing ? <p className={styles.muted}>{t.finance.deleteCategoryHint}</p> : null}
       <Actions
         onClose={onClose}

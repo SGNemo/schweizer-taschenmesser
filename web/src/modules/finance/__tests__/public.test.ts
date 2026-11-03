@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
-import { expensesByCategory, listExpenseCategories } from '../public';
+import { expensesByCategory, listExpenseCategories, plannedExpensesByCategory } from '../public';
 import { accountRepo, categoryRepo, transactionRepo } from '../repo';
 
 beforeEach(async () => {
@@ -73,5 +73,64 @@ describe('finance public read API', () => {
     expect(Object.fromEntries(await expensesByCategory('2026-09', 'MXN'))).toEqual({
       food: 99999,
     });
+  });
+
+  it('counts split parts per category, skips transfers and names the parent of a sub-category', async () => {
+    await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 }, { id: 'a' });
+    await categoryRepo.create({ name: 'Essen', kind: 'expense' }, { id: 'food' });
+    await categoryRepo.create(
+      { name: 'Markt', kind: 'expense', parentId: 'food' },
+      { id: 'market' },
+    );
+    const base = { accountId: 'a', kind: 'expense', date: '2026-09-10' } as const;
+    await transactionRepo.create({
+      ...base,
+      amountMinor: 1000,
+      categoryId: 'food',
+      splits: [
+        { categoryId: 'market', amountMinor: 700 },
+        { categoryId: 'food', amountMinor: 300 },
+      ],
+    });
+    await transactionRepo.create({ ...base, amountMinor: 5000, transferId: 't1' });
+    expect(Object.fromEntries(await expensesByCategory('2026-09'))).toEqual({
+      market: 700,
+      food: 300,
+    });
+    const cats = await listExpenseCategories();
+    expect(cats.find((c) => c.id === 'market')?.parentId).toBe('food');
+    expect(cats.find((c) => c.id === 'food')).not.toHaveProperty('parentId');
+  });
+
+  it('plans the not yet booked follow-ups of repeating expenses per category', async () => {
+    await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 }, { id: 'a' });
+    await transactionRepo.create({
+      accountId: 'a',
+      kind: 'expense',
+      amountMinor: 85000,
+      date: '2026-09-01',
+      categoryId: 'home',
+      repeat: 'monthly',
+    });
+    await transactionRepo.create({
+      accountId: 'a',
+      kind: 'expense',
+      amountMinor: 500,
+      date: '2026-09-02',
+      categoryId: 'fun',
+      repeat: 'weekly',
+    });
+    // 2026-09-15 … 2026-09-30: no monthly follow-up (next is 10-01), weekly on 09-09, 09-16, 09-23, 09-30.
+    expect(Object.fromEntries(await plannedExpensesByCategory('2026-09-15', '2026-09-30'))).toEqual(
+      {
+        fun: 1500,
+      },
+    );
+    expect(Object.fromEntries(await plannedExpensesByCategory('2026-10-01', '2026-10-31'))).toEqual(
+      {
+        home: 85000,
+        fun: 2000,
+      },
+    );
   });
 });

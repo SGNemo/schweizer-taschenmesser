@@ -388,3 +388,107 @@
   background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
   color: var(--module-color);
 }
+
+/* ---- money group: transfers, splits, categories, filters, year, outlook ---- */
+.splitBox {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.splitBox legend {
+  padding: 0 var(--space-2);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.splitRow {
+  display: grid;
+  grid-template-columns: 1fr 9rem auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.iconPick {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.iconPick legend {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  padding: 0 0 var(--space-1);
+}
+
+.iconGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.iconChoice {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.iconChosen {
+  border-color: var(--module-color, var(--accent));
+  box-shadow: inset 0 0 0 1px var(--module-color, var(--accent));
+}
+
+.filterBox {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+}
+
+.childRow {
+  padding-inline-start: var(--space-5);
+}
+
+.forecastList {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.forecastList li {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr auto;
+  gap: var(--space-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.forecastList b {
+  text-align: end;
+}
+
+.delta {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.toolbarRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+
+.toolbarRow button {
+  white-space: nowrap;
+}

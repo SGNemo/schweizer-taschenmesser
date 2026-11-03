@@ -1,6 +1,8 @@
 import { compareText } from '@/core/i18n/format';
 import { useState } from 'react';
-import { currencyOf, formatMoney } from '@/core/money';
+import { currencyOf, formatMoney, parseMoney } from '@/core/money';
+import { getPlatform } from '@/core/platform';
+import { useUiStore } from '@/stores/ui';
 import { useCurrency } from '../currency';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -13,12 +15,17 @@ import {
   ItemRow,
   patternStyles,
   Segmented,
+  SelectField,
+  Switch,
   TextField,
 } from '@/ui';
 import { transactionRepo } from '../repo';
 import { AccountEditor, CategoryEditor, type AccountTarget, type CategoryTarget } from './Editors';
 import { RulesList } from './RulesList';
-import { balances, filterTransactions, signed, type TxFilter } from '../logic';
+import { balances, filterTransactions, isTransfer, signed, type TxFilter } from '../logic';
+import { applyBookingFilter, type BookingFilter } from '../analysis';
+import { bookingsCsv } from '../export';
+import { TransferEditor, transferPair, type TransferTarget } from './TransferEditor';
 import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
 import type { Transaction } from '../schema';
@@ -38,22 +45,69 @@ export function TransactionsTab({
   const currency = useCurrency();
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<TxFilter['kind']>('all');
+  const [more, setMore] = useState(false);
+  const [extra, setExtra] = useState<{
+    accountId: string;
+    categoryId: string;
+    min: string;
+    max: string;
+    withTransfers: boolean;
+  }>({ accountId: '', categoryId: '', min: '', max: '', withTransfers: true });
+  const [transfer, setTransfer] = useState<TransferTarget>(null);
   const category = new Map(data.categories.map((c) => [c.id, c.name]));
   const account = new Map(data.accounts.map((a) => [a.id, a.name]));
   // A text search looks through all months ("where was that booking"); the kind chips stay in the month.
   const searching = query.trim() !== '';
+  const advancedFilter: BookingFilter = {
+    accountId: extra.accountId || undefined,
+    categoryId: extra.categoryId || undefined,
+    minMinor: parseMoney(extra.min) ?? undefined,
+    maxMinor: parseMoney(extra.max) ?? undefined,
+    withTransfers: extra.withTransfers,
+  };
+  const narrowed =
+    extra.accountId !== '' ||
+    extra.categoryId !== '' ||
+    extra.min !== '' ||
+    extra.max !== '' ||
+    !extra.withTransfers;
   const inMonth = filterTransactions(
-    searching ? data.txs : data.txs.filter((x) => x.date.slice(0, 7) === month),
+    applyBookingFilter(
+      searching ? data.txs : data.txs.filter((x) => x.date.slice(0, 7) === month),
+      advancedFilter,
+      data.categories,
+    ),
     { query, kind },
     (id) => (id ? category.get(id) : undefined),
   ).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
-  const filtering = searching || kind !== 'all';
+  const filtering = searching || kind !== 'all' || narrowed;
   if (data.txs.length === 0 || (inMonth.length === 0 && !filtering))
     return (
-      <EmptyState title={t.finance.noTransactions}>
-        <StartDataButton moduleId="finance" />
-      </EmptyState>
+      <>
+        <EmptyState title={t.finance.noTransactions}>
+          <StartDataButton moduleId="finance" />
+          {data.accounts.length > 1 ? (
+            <Button variant="ghost" onClick={() => setTransfer({ draft: true })}>
+              {t.finance.ext.transfer.button}
+            </Button>
+          ) : null}
+        </EmptyState>
+        <TransferEditor target={transfer} data={data} onClose={() => setTransfer(null)} />
+      </>
     );
+
+  async function exportCsv() {
+    const e = t.finance.ext.export;
+    const csv = bookingsCsv(
+      inMonth,
+      (id) => account.get(id) ?? '',
+      (id) => (id ? (category.get(id) ?? '') : ''),
+      { header: e.header, expense: e.expense, income: e.income, transfer: e.transfer },
+    );
+    const name = `${e.file}-${searching || narrowed ? 'filter' : month}.csv`;
+    if ((await getPlatform().saveFile({ fileName: name, data: csv, mime: 'text/csv' })) === 'saved')
+      useUiStore.getState().toast(e.done);
+  }
 
   const days = [...new Set(inMonth.map((x) => x.date))];
   const dayFormat = searching ? 'EEEE, d. MMMM yyyy' : 'EEEE, d. MMMM';
@@ -65,6 +119,86 @@ export function TransactionsTab({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
+      <div className={styles.toolbarRow}>
+        <Button
+          variant="ghost"
+          onClick={() => setTransfer({ draft: true })}
+          disabled={data.accounts.length < 2}
+        >
+          <Icon name="repeat" size={18} />
+          {t.finance.ext.transfer.button}
+        </Button>
+        <Button variant="ghost" onClick={() => void exportCsv()} disabled={inMonth.length === 0}>
+          {t.finance.ext.export.button}
+        </Button>
+        <Button variant="ghost" aria-expanded={more} onClick={() => setMore(!more)}>
+          {t.finance.ext.filter.more}
+          {narrowed ? ' •' : ''}
+        </Button>
+      </div>
+      {more ? (
+        <div className={styles.filterBox}>
+          <div className={styles.split}>
+            <SelectField
+              label={t.finance.ext.filter.account}
+              value={extra.accountId}
+              onChange={(e) => setExtra({ ...extra, accountId: e.target.value })}
+            >
+              <option value="">{t.finance.ext.filter.allAccounts}</option>
+              {data.accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label={t.finance.ext.filter.category}
+              value={extra.categoryId}
+              onChange={(e) => setExtra({ ...extra, categoryId: e.target.value })}
+            >
+              <option value="">{t.finance.ext.filter.allCategories}</option>
+              {data.categories
+                .filter((c) => !c.parentId)
+                .sort((a, b) => compareText(a.name, b.name))
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+            </SelectField>
+          </div>
+          <div className={styles.split}>
+            <TextField
+              label={t.finance.ext.filter.minAmount}
+              inputMode="decimal"
+              value={extra.min}
+              onChange={(e) => setExtra({ ...extra, min: e.target.value })}
+            />
+            <TextField
+              label={t.finance.ext.filter.maxAmount}
+              inputMode="decimal"
+              value={extra.max}
+              onChange={(e) => setExtra({ ...extra, max: e.target.value })}
+            />
+          </div>
+          <Switch
+            label={t.finance.ext.filter.withTransfers}
+            checked={extra.withTransfers}
+            onChange={(v) => setExtra({ ...extra, withTransfers: v })}
+          />
+          {narrowed ? (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                setExtra({ accountId: '', categoryId: '', min: '', max: '', withTransfers: true })
+              }
+            >
+              {t.finance.ext.filter.reset}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      <TransferEditor target={transfer} data={data} onClose={() => setTransfer(null)} />
       <Segmented
         label={t.finance.filterKind}
         value={kind}
@@ -86,9 +220,27 @@ export function TransactionsTab({
             {inMonth
               .filter((x) => x.date === d)
               .map((x) => {
-                const title =
-                  x.payee || x.note || (x.categoryId && category.get(x.categoryId)) || '–';
-                const remove = () => void deleteWithUndo(() => transactionRepo.remove(x.id));
+                const isTr = isTransfer(x);
+                const pair = isTr ? transferPair(data, x) : undefined;
+                const title = isTr
+                  ? t.finance.ext.transfer.label
+                  : x.payee || x.note || (x.categoryId && category.get(x.categoryId)) || '–';
+                const metaCategory = isTr
+                  ? pair
+                    ? t.finance.ext.transfer.meta(
+                        account.get(pair.out.accountId) ?? '–',
+                        account.get(pair.in.accountId) ?? '–',
+                      )
+                    : (account.get(x.accountId) ?? '–')
+                  : x.splits?.length
+                    ? t.finance.ext.split.parts(x.splits.length)
+                    : (x.categoryId && category.get(x.categoryId)) || t.finance.noCategory;
+                const remove = () =>
+                  void deleteWithUndo(() =>
+                    pair
+                      ? transactionRepo.removeMany([pair.out.id, pair.in.id])
+                      : transactionRepo.remove(x.id),
+                  );
                 return (
                   <ItemRow
                     key={x.id}
@@ -101,12 +253,12 @@ export function TransactionsTab({
                       </span>
                     }
                     title={title}
-                    meta={`${(x.categoryId && category.get(x.categoryId)) || t.finance.noCategory} · ${account.get(x.accountId) ?? '–'}${x.repeat ? ` · ${t.finance.repeatMeta(t.finance.repeatOptions[x.repeat])}` : ''}`}
-                    onOpen={() => onOpen(x)}
+                    meta={`${metaCategory}${isTr ? '' : ` · ${account.get(x.accountId) ?? '–'}`}${x.repeat ? ` · ${t.finance.repeatMeta(t.finance.repeatOptions[x.repeat])}` : ''}`}
+                    onOpen={() => (pair ? setTransfer(pair) : onOpen(x))}
                     onSwipeLeft={remove}
                     swipeLeftLabel={t.actions.delete}
                     menu={[
-                      ...data.categories
+                      ...(isTr ? [] : data.categories)
                         .filter((c) => c.kind === x.kind && c.id !== x.categoryId)
                         .sort((a, b) => compareText(a.name, b.name))
                         .map((c) => ({
@@ -122,7 +274,7 @@ export function TransactionsTab({
                     ]}
                     end={
                       <span
-                        className={`${styles.amount} ${x.kind === 'income' ? styles.income : ''}`}
+                        className={`${styles.amount} ${x.kind === 'income' && !isTr ? styles.income : ''}`}
                       >
                         {x.kind === 'income' ? '+' : '−'}
                         {formatMoney(Math.abs(signed(x)), currency)}
@@ -159,6 +311,9 @@ export function AccountsTab({ data }: { data: FinanceData }) {
             <button type="button" className={styles.row} onClick={() => setTarget(a)}>
               <span className={styles.rowMain}>
                 <span className={styles.rowTitle}>{a.name}</span>
+                {a.kind ? (
+                  <span className={styles.rowMeta}>{t.finance.ext.accountKind[a.kind]}</span>
+                ) : null}
               </span>
               <span className={styles.amount} data-testid={`balance-${a.name}`}>
                 {formatMoney(map.get(a.id) ?? 0, currencyOf(a))}
@@ -178,35 +333,53 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
     { kind: 'expense' as const, title: t.finance.expenseCategories },
     { kind: 'income' as const, title: t.finance.incomeCategories },
   ];
+  const byName = (a: { name: string }, b: { name: string }) => compareText(a.name, b.name);
+  const row = (c: FinanceData['categories'][number], child: boolean) => (
+    <li key={c.id} className={child ? styles.childRow : undefined}>
+      <button type="button" className={styles.row} onClick={() => setTarget(c)}>
+        <span className={styles.catIcon} aria-hidden="true">
+          <Icon name={categoryIcon(c)} size={16} />
+        </span>
+        <span className={styles.rowMain}>
+          <span className={styles.rowTitle}>{c.name}</span>
+        </span>
+      </button>
+    </li>
+  );
   return (
     <>
-      {groups.map((g) => (
-        <section key={g.kind} aria-label={g.title}>
-          <h3 className={styles.sectionTitle}>{g.title}</h3>
-          <ul className={styles.list}>
-            {data.categories
-              .filter((c) => c.kind === g.kind)
-              .sort((a, b) => compareText(a.name, b.name))
-              .map((c) => (
-                <li key={c.id}>
-                  <button type="button" className={styles.row} onClick={() => setTarget(c)}>
-                    <span className={styles.rowMain}>
-                      <span className={styles.rowTitle}>{c.name}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-          </ul>
-          <div style={{ marginTop: 'var(--space-3)' }}>
-            <Button onClick={() => setTarget({ draft: true, kind: g.kind })}>
-              <Icon name="plus" size={18} />
-              {t.finance.addCategory}
-            </Button>
-          </div>
-        </section>
-      ))}
+      {groups.map((g) => {
+        const all = data.categories.filter((c) => c.kind === g.kind);
+        const ids = new Set(all.map((c) => c.id));
+        // A child whose parent is gone is shown as a top-level one.
+        const tops = all.filter((c) => !c.parentId || !ids.has(c.parentId)).sort(byName);
+        return (
+          <section key={g.kind} aria-label={g.title}>
+            <h3 className={styles.sectionTitle}>{g.title}</h3>
+            <ul className={styles.list}>
+              {tops.flatMap((c) => [
+                row(c, false),
+                ...all
+                  .filter((k) => k.parentId === c.id)
+                  .sort(byName)
+                  .map((k) => row(k, true)),
+              ])}
+            </ul>
+            <div className={patternStyles.hstack} style={{ marginTop: 'var(--space-3)' }}>
+              <Button onClick={() => setTarget({ draft: true, kind: g.kind })}>
+                <Icon name="plus" size={18} />
+                {t.finance.addCategory}
+              </Button>
+            </div>
+          </section>
+        );
+      })}
       <RulesList categories={data.categories} />
-      <CategoryEditor target={target} onClose={() => setTarget(null)} />
+      <CategoryEditor
+        target={target}
+        categories={data.categories}
+        onClose={() => setTarget(null)}
+      />
     </>
   );
 }
