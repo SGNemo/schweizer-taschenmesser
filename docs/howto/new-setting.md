@@ -53,3 +53,6 @@ Where a setting matters (widget, module header, dialog) show `<SettingsLink to={
 
 ## Section components are lazy
 A new core section's component goes through `pages/settings/sectionChunks.ts` (`lazyOnline` wrapper), never a direct import in `sections.tsx`; metadata (title, keywords, fields) stays cheap and string-bundle based. Exception: sections that must work offline without a service worker (Sync, Backup).
+
+## Search
+Sub-groups, sections and settings are found without extra work; give a new setting a real `label`, a core section its `keywords` and, for everyday words, an entry in `strings.comfort` `synonyms` (all five languages, the test checks the keys). A module setting shows its page block in the path (`group`/`level` in `manifest.settings.fields`). Only the quick switches (`core/settings/quick.ts`) can be changed inside a hit; do not add security settings there.

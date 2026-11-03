@@ -18,7 +18,8 @@ describe('quick switches', () => {
     expect(QUICK_SETTINGS.map((q) => q.id).sort()).toEqual(
       ['color', 'density', 'homeView', 'readAid', 'theme'].sort(),
     );
-    for (const q of QUICK_SETTINGS) expect(q.path).toMatch(/^\/settings\/darstellung#/);
+    for (const q of QUICK_SETTINGS)
+      expect(q.path).toMatch(/^\/settings\/(darstellung|barrierefreiheit)#/);
   });
 
   it('each option is readable back after writing it', () => {

@@ -15,6 +15,7 @@ import { isDevBuild } from '@/core/update/buildInfo';
 import { useVoicePrefs } from '@/core/voice/settings';
 import { useUiStore } from '@/stores/ui';
 import { createElement } from 'react';
+import { blockOf } from '@/core/settings/moduleBlocks';
 import { ModuleSection } from './sectionChunks';
 import { CORE_SECTIONS } from './sections';
 
@@ -44,7 +45,12 @@ export function moduleSections(
     title: m.name,
     description: m.description,
     keywords: m.settings.keywords,
-    fields: m.settings.fields.map((f) => ({ key: f.key, label: f.label, description: f.help })),
+    fields: m.settings.fields.map((f) => ({
+      key: f.key,
+      label: f.label,
+      description: f.help,
+      block: blockOf(f),
+    })),
     visibleWhen: (ctx: SettingsContext) => ctx.isModuleEnabled(m.id),
     // Inherits the module's maturity; an enabled preview module keeps its settings reachable.
     maturity: m.maturity,

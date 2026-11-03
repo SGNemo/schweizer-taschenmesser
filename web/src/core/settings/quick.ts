@@ -57,7 +57,7 @@ export const QUICK_SETTINGS: readonly QuickSetting[] = [
   },
   {
     id: 'readAid',
-    path: settingsPath('darstellung', 'reading', 'aid'),
+    path: settingsPath('barrierefreiheit', 'reading', 'aid'),
     label: () => tComfort.get().quick.readAid,
     options: () => [
       { value: 'on', label: tComfort.get().quick.on },

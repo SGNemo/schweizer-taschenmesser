@@ -72,6 +72,8 @@ export interface SettingsFieldRef {
   key: string;
   label: string;
   description?: string;
+  /** Block of a module's settings page this setting sits in (module settings only; shown in the search path). */
+  block?: ModuleFieldGroup;
 }
 
 export interface SettingsSectionDef {
