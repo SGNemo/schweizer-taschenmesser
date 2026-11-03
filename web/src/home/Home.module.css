@@ -109,7 +109,7 @@
   height: 1.75rem;
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
-  color: var(--text);
+  color: var(--module-color);
 }
 .widget[data-hue] > section {
   position: relative;
@@ -123,9 +123,6 @@
     color-mix(in srgb, var(--module-color) calc(var(--head-tint-0) * 0.65), var(--surface)),
     color-mix(in srgb, var(--module-color) calc(var(--head-tint-1) * 0.8), var(--surface)) 85%
   );
-}
-.widget[data-hue] .chip svg {
-  color: var(--module-color);
 }
 .title {
   flex: 1;
