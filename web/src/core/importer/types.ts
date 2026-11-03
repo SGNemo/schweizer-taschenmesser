@@ -245,7 +245,7 @@ export interface ImportBatch {
   /** Absent on rows written before the local API existed: then committed (or undone). */
   status?: BatchStatus;
   /** Where it came from: the wizard (default) or the local AI import API. */
-  origin?: 'wizard' | 'api' | 'assistant';
+  origin?: 'wizard' | 'api' | 'assistant' | 'automation';
   /** Changes of existing records made by this batch. */
   updates?: BatchUpdate[];
   /** Records the batch soft-deleted (assistant batches); undo restores them. */

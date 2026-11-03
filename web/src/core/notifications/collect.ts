@@ -3,6 +3,7 @@
  * end of a focus round), passed through the calm policy (quiet hours, limit per hour). All channels
  * (in-app scheduler, Android schedule, Web Push upload) call this, so they agree.
  */
+import { automationDue } from '@/core/automation/notices';
 import { focusEndDue } from '@/core/focus/notify';
 import { collectNotifications } from '@/core/modules/contributions';
 import type { DueNotification, ModuleManifest } from '@/core/modules/types';
@@ -29,12 +30,13 @@ export async function collectDue(
 ): Promise<DueNotification[]> {
   const wide = { from: range.from - WIDEN_MS, to: range.to };
   const settings = await getFocusSettings();
-  const [fromModules, snoozed, focus] = await Promise.all([
+  const [fromModules, snoozed, focus, rules] = await Promise.all([
     collectNotifications(wide, manifestsForChannel(manifests, settings.notifyChannels, channel)),
     getSnoozed().catch(() => []),
     focusEndDue().catch(() => []),
+    automationDue(wide).catch(() => []),
   ]);
-  const own = [...snoozedDue(snoozed, wide, getPlatform().kind), ...focus];
+  const own = [...snoozedDue(snoozed, wide, getPlatform().kind), ...focus, ...rules];
   const adjusted = applyPolicy(
     [...fromModules, ...own],
     {

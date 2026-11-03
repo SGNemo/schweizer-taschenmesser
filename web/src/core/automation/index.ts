@@ -1,0 +1,8 @@
+export * from './types';
+export { processEvent, runRuleNow, undoRun, type EngineDeps, type RunReport } from './engine';
+export { startWriteEvents, emitDomainEvent, eventsOf } from './ingest';
+export { startAutomationScheduler, runTick, type Detector } from './scheduler';
+export { automationDue } from './notices';
+export { useAutomationLog, listLog } from './log';
+export * from './settings';
+export { TEMPLATES, resolveRules, type RuleTemplate } from './templates';
