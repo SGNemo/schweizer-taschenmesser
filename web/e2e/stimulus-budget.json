@@ -113,8 +113,8 @@
     "desktop--settings-module": {
       "height": 800,
       "buttons": 40,
-      "links": 55,
-      "icons": 87,
+      "links": 62,
+      "icons": 97,
       "firstScreenActions": 60
     },
     "desktop--subscriptions": {
@@ -246,8 +246,8 @@
     "phone--settings-module": {
       "height": 2088,
       "buttons": 5,
-      "links": 22,
-      "icons": 25,
+      "links": 26,
+      "icons": 29,
       "firstScreenActions": 16
     },
     "phone--subscriptions": {
