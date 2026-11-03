@@ -21,7 +21,7 @@ export interface LiveDeps extends TickDeps {
   refresh: () => Promise<void>;
 }
 
-export function createDeps(): LiveDeps {
+export function createDeps(onLoaded?: (enabled: boolean) => void): LiveDeps {
   let manifests: ModuleManifest[] = [];
   let registry: AutomationRegistry | undefined;
   let rules: Rule[] = [];
@@ -38,6 +38,7 @@ export function createDeps(): LiveDeps {
     rules = registry ? resolveRules(settings).filter((r) => isRunnable(r, registry!)) : [];
     types = new Set(rules.flatMap((r) => (r.trigger.kind === 'event' ? [r.trigger.type] : [])));
     loadedAt = Date.now();
+    onLoaded?.(enabled);
   };
   const refresh = (): Promise<void> => (loading ??= load().finally(() => (loading = undefined)));
   const fresh = async () => {
@@ -65,13 +66,23 @@ export function createDeps(): LiveDeps {
 }
 
 export function startAutomation(): () => void {
-  const deps: EngineDeps & LiveDeps = createDeps();
-  void deps.refresh();
-  const stopEvents = startWriteEvents(deps, {
-    wants: deps.wants,
-    watched: deps.watched,
-    derive: deps.derive,
+  // The write listener exists only while the master switch is on, so with automations off every
+  // write stays as cheap as before (no row copies, no events). A switch change is picked up by the
+  // next tick (within a minute).
+  let stopEvents: (() => void) | undefined;
+  const deps: EngineDeps & LiveDeps = createDeps((enabled) => {
+    if (enabled && !stopEvents) {
+      stopEvents = startWriteEvents(deps, {
+        wants: deps.wants,
+        watched: deps.watched,
+        derive: deps.derive,
+      });
+    } else if (!enabled && stopEvents) {
+      stopEvents();
+      stopEvents = undefined;
+    }
   });
+  void deps.refresh();
   // Domain events other modules report on the bus (`mail.invoiceReceived`).
   const offBus = bus.on('automation.event', (e) => {
     if (!deps.wants(e.type)) return;
@@ -81,7 +92,7 @@ export function startAutomation(): () => void {
   });
   const stopTick = startAutomationScheduler(deps);
   return () => {
-    stopEvents();
+    stopEvents?.();
     offBus();
     stopTick();
   };
