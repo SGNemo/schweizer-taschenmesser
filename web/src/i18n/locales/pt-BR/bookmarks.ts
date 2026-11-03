@@ -11,7 +11,10 @@ export const bookmarks: Strings['bookmarks'] = {
     quickAdd: 'Item salvo',
     settings: {
       view: 'Visualização',
+      viewHelp: 'Mostra os itens salvos como lista ou como mural de cartões.',
       sort: 'Ordenação',
+      sortHelp:
+        'Define o que vem primeiro em cada grupo: mais recentes, por título, por tipo ou iniciados.',
       linkPreview: 'Carregar prévia de links',
       linkPreviewHint:
         'Ao salvar um link, busca o título, a descrição e uma imagem pequena diretamente da página do link. Essa página saberá que você salvou o link. Padrão: desativado.',

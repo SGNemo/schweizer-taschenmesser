@@ -1,6 +1,7 @@
 import { formatTotals, sumByCurrency } from '@/core/money';
 import type { AttentionSource } from '@/core/modules/types';
 import { t } from '@/strings';
+import { remainingMinor } from './logic';
 import { invoiceRepo } from './repo';
 
 /** Overdue invoices (danger) and invoices due today (accent). */
@@ -8,7 +9,8 @@ const source: AttentionSource = async ({ today }) => {
   const open = (await invoiceRepo.active().toArray()).filter((i) => i.status === 'open');
   const overdue = open.filter((i) => i.dueDate < today);
   const due = open.filter((i) => i.dueDate === today);
-  const sum = (list: typeof open) => formatTotals(sumByCurrency(list));
+  const sum = (list: typeof open) =>
+    formatTotals(sumByCurrency(list.map((i) => ({ ...i, amountMinor: remainingMinor(i) }))));
   return [
     ...(overdue.length
       ? [

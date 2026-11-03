@@ -1,7 +1,8 @@
 import type { Stored } from '@/core/db/types';
 import { bus } from '@/core/events';
 import { today } from '@/core/time/dates';
-import { nextDueDate } from './logic';
+import { randomId } from '@/core/db/util';
+import { fullyCovered, nextDueDate, remainingMinor } from './logic';
 import { invoiceRepo } from './repo';
 import type { Invoice } from './schema';
 
@@ -9,7 +10,8 @@ async function announcePaid(invoice: Stored<Invoice>): Promise<void> {
   await bus.emit('invoice.paid', {
     invoiceId: invoice.id,
     payee: invoice.payee,
-    amountMinor: invoice.amountMinor,
+    // Part payments were announced (and booked) on their own: this carries what was still open.
+    amountMinor: remainingMinor(invoice),
     paidAt: invoice.paidAt ?? today(),
     note: invoice.note,
     ...(invoice.currency ? { currency: invoice.currency } : {}),
@@ -41,6 +43,9 @@ async function createNext(invoice: Stored<Invoice>): Promise<void> {
     note: invoice.note,
     repeat: invoice.repeat,
     repeatOf: invoice.id,
+    // The bank details stay for the next one; payments, reminder level and the file belong to this one.
+    ...(invoice.iban ? { iban: invoice.iban } : {}),
+    ...(invoice.bic ? { bic: invoice.bic } : {}),
   });
 }
 
@@ -59,7 +64,49 @@ export async function markOpen(id: string): Promise<void> {
 }
 
 /** Saves edits. Editing a paid invoice re-announces it so the booked expense stays in sync. */
-export async function saveInvoice(id: string | null, data: Invoice): Promise<void> {
+export async function saveInvoice(id: string | null, data: Invoice): Promise<Stored<Invoice>> {
   const saved = id ? await invoiceRepo.update(id, data) : await invoiceRepo.create(data);
   if (saved.status === 'paid') await announcePaid(saved);
+  return saved;
+}
+
+/**
+ * Records a part payment (capped at what is still open) and tells finance to book it. The payment
+ * that covers the rest marks the invoice as paid (and creates the next one of a repeating invoice).
+ */
+export async function addPayment(
+  id: string,
+  amountMinor: number,
+  date: string = today(),
+): Promise<{ id: string; amountMinor: number } | undefined> {
+  const invoice = await invoiceRepo.get(id);
+  if (!invoice || invoice.status !== 'open') return undefined;
+  const amount = Math.min(amountMinor, remainingMinor(invoice));
+  if (amount < 1) return undefined;
+  const payment = { id: randomId(), date, amountMinor: amount };
+  const updated = await invoiceRepo.update(id, {
+    payments: [...(invoice.payments ?? []), payment],
+  });
+  await bus.emit('invoice.payment', {
+    invoiceId: id,
+    paymentId: payment.id,
+    payee: invoice.payee,
+    amountMinor: amount,
+    date,
+    note: invoice.note,
+    ...(invoice.currency ? { currency: invoice.currency } : {}),
+  });
+  if (fullyCovered(updated)) await markPaid(id, date);
+  return payment;
+}
+
+/** Removes a part payment again (finance removes its booking); a paid invoice becomes open. */
+export async function removePayment(id: string, paymentId: string): Promise<void> {
+  const invoice = await invoiceRepo.get(id);
+  if (!invoice) return;
+  const payments = (invoice.payments ?? []).filter((p) => p.id !== paymentId);
+  if (payments.length === (invoice.payments ?? []).length) return;
+  await invoiceRepo.update(id, { payments: payments.length ? payments : undefined });
+  await bus.emit('invoice.paymentRemoved', { invoiceId: id, paymentId });
+  if (invoice.status === 'paid') await markOpen(id);
 }

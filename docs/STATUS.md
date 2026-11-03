@@ -6,6 +6,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Einstellungen v2, Paket 2 (`feat/settings-clarity`): Erweitert-Falte pro Kategorie, Geltungsbereich je Abschnitt, „Vom Standard abweichend“ mit Zurücksetzen je Feld/Modul/Abschnitt, Vorschauen (Aussehen, Erinnerungskarte), Sicherheitshinweise, Erklärungssatz für jede Modul-Einstellung; Handtests SO4–SO6 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 Einstellungen v2, Paket 1 (`feat/settings-overhaul`): Überblick mit acht Karten, Untergruppen als zweite Ebene, Breadcrumb, Inhaltsverzeichnis ab 1440 px, Modul-Unterseiten `/settings/module/<id>`; Pakete 2–4 (Verständlichkeit, neue Möglichkeiten, Suche) folgen nach Freigabe; Handtests SO1–SO3 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Haushalt & Tresor (`feat/household-vault-identity`): Vorräte, Listen, Personen, Unterlagen und Passwörter mit eigener Signatur und mehr Funktionen (Einheit/Barcode, Ladenbereiche/Preise/Reise-Wetter, Kontaktdateien/Budget, +1 Jahr, Passwort-Check); Beschreibung [howto/household-vault.md](howto/household-vault.md), Handtests HT1–HT7 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
@@ -170,5 +171,7 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `develop`/PR: Notizen-Notizblock Paket 1 „Editor“ (TipTap, Markdown-Speicherung + Migration, Schrägstrich-Menü, Schreibmodus, Autospeichern; Paket 2 „Seiten“ (Notizbücher, Seitenliste mit Sortierung/Anheften/Verschieben, Tabs, Verlauf, Papierkorb-Ansicht, Alt+N); Paket 3 „Verknüpfen und Austausch“ (`[[Links]]` mit Rückverweisen, Trefferauszug, Export md/txt/PDF-Druckansicht, Import von Dateien und Ordnern, Widget, KI „ergänze die Notiz“, Auswahl → ToDo)).
 - Auf `develop`/PR: Rechner-Tab „Plotter“ (bis zu drei Funktionen von x, Zoom und Verschieben per Tasten, ohne Speicherung).
 - Auf `develop`/PR: Werkzeug „Anonyme Persona“ (erfundene Angaben für Anmeldungen, Wegwerf-Mail-Link, als Notiz oder Tresor-Eintrag speichern).
+- Auf `develop`/PR: Befehlspalette lädt erst beim ersten Öffnen (Startpfad 667 → 636 KB gzip, 86 → 82 Anfragen).
 - Auf `develop`/PR: Geld-Gruppe Paket 1 „Finanzen“ (Umbuchungen, Aufteilung auf Kategorien, Unterkategorien mit Symbol, Filter, Jahresansicht, Vormonatsvergleich, Ausblick aus Wiederkehrendem/Abos/Rechnungen, CSV-Export, Widget „Ausgabe +“); Pakete Rechnungen, Abos, Budgets folgen.
+- Auf `develop`/PR: Geld-Gruppe Paket 2 „Rechnungen“ (Teilzahlungen mit eigener Buchung je Teil, Mahnstufen, Zahlungsdaten kopieren mit IBAN-Prüfung, Beleg-Anhang nur auf diesem Gerät, Beleg-Kopf mit gezacktem Rand, Ansicht „Alle“).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.

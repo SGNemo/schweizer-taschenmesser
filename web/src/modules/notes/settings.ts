@@ -40,6 +40,9 @@ export const settings: ModuleSettings = {
       get label() {
         return t.notes.meta.settings.view;
       },
+      get help() {
+        return t.notes.meta.settings.viewHelp;
+      },
       type: 'select',
       get options() {
         return [

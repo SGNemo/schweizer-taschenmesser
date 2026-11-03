@@ -11,7 +11,10 @@ export const bookmarks: Strings['bookmarks'] = {
     quickAdd: 'Elemento guardado',
     settings: {
       view: 'Vista',
+      viewHelp: 'Muestra lo guardado como lista o como tablón de tarjetas.',
       sort: 'Orden',
+      sortHelp:
+        'Define qué va primero en cada grupo: lo más reciente, por título, por tipo o lo empezado.',
       linkPreview: 'Cargar vista previa de enlaces',
       linkPreviewHint:
         'Al guardar un enlace, obtiene su título, descripción y una imagen pequeña directamente de la página enlazada. Esa página sabrá que guardaste el enlace. Por defecto: desactivado.',

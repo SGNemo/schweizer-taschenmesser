@@ -102,3 +102,106 @@
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
   }
 }
+
+/* ---- money group: receipt signature, part payments, payment data, attachment ---- */
+.receipt {
+  position: relative;
+  min-width: 14rem;
+  max-width: 18rem;
+  padding: var(--space-4) var(--space-4) calc(var(--space-4) + 10px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  background: var(--surface);
+  color: var(--text);
+  border-top: 3px solid var(--module-color, var(--text-muted));
+  /* The jagged lower edge: a zigzag mask (decoration; the text above is the content). */
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    14px 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+}
+
+.receiptEmpty {
+  border-top-color: var(--text-muted);
+  color: var(--text-muted);
+}
+
+.receiptLabel {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.receiptSum {
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.receiptLine {
+  font-size: var(--text-sm);
+}
+
+.paymentBox,
+.attachBox {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.paymentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.paymentList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.attachImage {
+  max-width: 100%;
+  max-height: 16rem;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.attachActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* The open sum stands in the head (receipt); this copy stays in the DOM for tests only. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Phone: the receipt keeps the sum, the two detail lines wait on the page (less to look at above the list). */
+@media (max-width: 899px) {
+  .receipt {
+    min-width: 0;
+    padding-block: var(--space-2) calc(var(--space-2) + 8px);
+  }
+
+  .receiptLine {
+    display: none;
+  }
+}

@@ -9,6 +9,7 @@ export interface EventMap {
   'invoice.paid': {
     invoiceId: string;
     payee: string;
+    /** What was still open when the invoice was paid (the whole amount without part payments; 0 when part payments covered it). */
     amountMinor: number;
     /** 'YYYY-MM-DD' */
     paidAt: string;
@@ -18,6 +19,20 @@ export interface EventMap {
   };
   /** A paid invoice was reopened. Finance removes the expense it booked. */
   'invoice.unpaid': { invoiceId: string };
+  /** A part of an invoice was paid. Finance books an expense `inv-<invoiceId>-<paymentId>`; `invoice.paid` then carries only the rest. */
+  'invoice.payment': {
+    invoiceId: string;
+    paymentId: string;
+    payee: string;
+    amountMinor: number;
+    /** 'YYYY-MM-DD' */
+    date: string;
+    note?: string;
+    /** ISO 4217 code; none means euro. */
+    currency?: string;
+  };
+  /** A part payment was removed again. Finance removes the expense it booked for it. */
+  'invoice.paymentRemoved': { invoiceId: string; paymentId: string };
   /** Something wants to be remembered (a news article, a shared link). The bookmarks module stores it. */
   'bookmark.requested': {
     title: string;

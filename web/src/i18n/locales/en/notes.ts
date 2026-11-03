@@ -15,6 +15,7 @@ export const notes: Strings['notes'] = {
       widthFull: 'Full width',
       wordCount: 'Show word count',
       view: 'Page list view',
+      viewHelp: 'Shows the pages in the list as rows or as cards with a text preview.',
     },
   },
   title: 'Notes',

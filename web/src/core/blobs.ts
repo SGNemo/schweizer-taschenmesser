@@ -37,7 +37,7 @@ export const blobKeys = (database: TaschenmesserDB = defaultDb): Promise<string[
 
 /** Keys of other features (`notes:img:<id>`, …) live in the same table; the vault never prunes them. */
 const isForeignKey = (key: string): boolean =>
-  key.startsWith('notes:') || key.startsWith('bookmarks:');
+  key.startsWith('notes:') || key.startsWith('invoices:') || key.startsWith('bookmarks:');
 
 /** Removes files whose key is not in `keep` (e.g. documents deleted on another device). */
 export async function pruneBlobs(

@@ -22,6 +22,9 @@ export const settings: ModuleSettings = {
       get label() {
         return t.bookmarks.meta.settings.view;
       },
+      get help() {
+        return t.bookmarks.meta.settings.viewHelp;
+      },
       type: 'select',
       get options() {
         return [
@@ -34,6 +37,9 @@ export const settings: ModuleSettings = {
       key: 'sort',
       get label() {
         return t.bookmarks.meta.settings.sort;
+      },
+      get help() {
+        return t.bookmarks.meta.settings.sortHelp;
       },
       type: 'select',
       get options() {

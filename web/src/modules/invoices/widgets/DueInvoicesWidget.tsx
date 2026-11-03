@@ -4,7 +4,7 @@ import { today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
 import { DueList } from '@/ui';
-import { openTotalText, sortInvoices } from '../logic';
+import { openTotalText, remainingMinor, sortInvoices } from '../logic';
 import { payWithUndo } from '../quickActions';
 import { invoiceRepo } from '../repo';
 
@@ -30,7 +30,7 @@ export default function DueInvoicesWidget() {
       entries={rows.map(({ i, s }) => ({
         key: i.id,
         title: i.payee,
-        amount: formatMoney(i.amountMinor, i.currency),
+        amount: formatMoney(remainingMinor(i), i.currency),
         tone: s.tone,
         label: s.label,
         action: { label: `${t.invoices.markPaid}: ${i.payee}`, run: () => void payWithUndo(i.id) },

@@ -11,7 +11,10 @@ export const bookmarks: Strings['bookmarks'] = {
     quickAdd: 'Saved item',
     settings: {
       view: 'View',
+      viewHelp: 'Shows the saved items as a list or as a pinboard of cards.',
       sort: 'Sorting',
+      sortHelp:
+        'Sets what comes first in each group: newest, by title, by type, or started items first.',
       linkPreview: 'Load link previews',
       linkPreviewHint:
         'When you save a link, fetches its title, description and a small picture directly from the linked page. That page then learns that you saved the link. Default: off.',

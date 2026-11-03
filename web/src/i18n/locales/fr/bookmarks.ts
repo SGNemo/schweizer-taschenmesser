@@ -11,7 +11,10 @@ export const bookmarks: Strings['bookmarks'] = {
     quickAdd: 'Enregistré',
     settings: {
       view: 'Affichage',
+      viewHelp: 'Affiche les éléments gardés en liste ou en tableau de cartes.',
       sort: 'Tri',
+      sortHelp:
+        'Définit ce qui vient en premier dans chaque groupe : les plus récents, par titre, par type ou les commencés.',
       linkPreview: 'Charger les aperçus de liens',
       linkPreviewHint:
         "À l'enregistrement d'un lien, récupère son titre, sa description et une petite image directement depuis la page liée. Cette page saura alors que vous avez enregistré le lien. Par défaut : désactivé.",

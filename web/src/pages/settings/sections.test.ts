@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
+import { META_SECTION_IDS, levelOf, scopeOf } from '@/core/settings/registry/meta';
 import { visibleSections } from '@/core/settings/registry/registry';
 import { SETTINGS_CATEGORY_IDS, type SettingsContext } from '@/core/settings/registry/types';
 import { allSettingsSections } from './useSections';
@@ -74,5 +75,37 @@ describe('preview sections (maturity)', () => {
       expect(ids(ctx({ isModuleEnabled: (id) => id === m.id }))).toContain(`module-${m.id}`);
       expect(ids(ctx({ isModuleEnabled: () => false }))).not.toContain(`module-${m.id}`);
     }
+  });
+});
+
+describe('section placement (scope, Erweitert)', () => {
+  const all = allSettingsSections(allManifests.filter((m) => !m.retired));
+
+  it('names only sections that exist', () => {
+    const ids = new Set(all.map((s) => s.id));
+    for (const id of META_SECTION_IDS) expect(ids.has(id), id).toBe(true);
+  });
+
+  it('keeps what is needed daily in Basis: nothing about the look, sync, backup, notifications or the vault is Erweitert', () => {
+    for (const id of [
+      'appearance',
+      'reading',
+      'focus',
+      'sync',
+      'backup',
+      'notifications',
+      'calm-reminders',
+      'general',
+      'updates',
+      'module-accounts',
+    ]) {
+      expect(levelOf({ id }), id).toBe('basic');
+    }
+  });
+
+  it('labels module settings as synced and the look as device-local', () => {
+    expect(scopeOf({ id: 'module-todos' })).toBe('synced');
+    expect(scopeOf({ id: 'appearance' })).toBe('local');
+    expect(scopeOf({ id: 'licenses' })).toBeUndefined();
   });
 });

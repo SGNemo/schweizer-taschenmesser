@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 import { t } from '@/strings';
 import { Chip, Chips, Segmented, SettingRow, SettingsGroup, Switch, TextField } from '@/ui';
 import { FoldedGroup } from './FoldedGroup';
+import { ReminderPreview } from './SettingExtras';
 import styles from './settings.module.css';
 
 type BoolKey = {
@@ -87,6 +88,7 @@ export function CalmRemindersSection() {
                   onChange={(x) => void patch({ inAppSeconds: Number(x) })}
                 />
               </SettingRow>
+              <ReminderPreview position={v.inAppPosition} />
             </>
           ) : null}
         </>,

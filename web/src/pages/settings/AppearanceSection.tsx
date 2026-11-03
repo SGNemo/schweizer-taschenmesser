@@ -26,6 +26,7 @@ import { tCockpit } from '@/strings.cockpit';
 import { tIdentity } from '@/strings.identity';
 import { Segmented, SelectField, SettingRow, SettingsGroup, Switch } from '@/ui';
 import { FoldedGroup } from './FoldedGroup';
+import { LookPreview } from './SettingExtras';
 import { PaletteRows } from './PaletteRows';
 
 const THEMES = [
@@ -93,6 +94,7 @@ export function AppearanceSection() {
   return (
     <SettingsGroup id="appearance" title={t.settings.appearance}>
       <FoldedGroup id="theme" title={g.theme} current={[THEME_LABELS[theme]()]}>
+        <LookPreview />
         <SettingRow id="appearance--theme" label={t.settings.theme} description={r.themeHint}>
           <Segmented<ThemeChoice>
             label={t.settings.theme}
@@ -166,6 +168,7 @@ export function AppearanceSection() {
           t.settings.densityOptions[density],
         ]}
       >
+        <LookPreview />
         <SettingRow
           id="appearance--textSize"
           label={t.settings.textSize}

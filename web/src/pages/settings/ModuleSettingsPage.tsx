@@ -12,7 +12,9 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { getSettings, useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { tSettings2 } from '@/strings.settings2';
-import { Badge, EmptyState, Icon, SettingRow, SettingsGroup } from '@/ui';
+import { useUiStore } from '@/stores/ui';
+import { tComfort } from '@/strings.comfort';
+import { Badge, Button, EmptyState, Icon, SettingRow, SettingsGroup } from '@/ui';
 import { FieldRow } from './ModuleSection';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
@@ -42,8 +44,17 @@ function useChangedCounts(
 }
 
 /** Module identity in the page head: chip in the module hue (grey in "Ruhig"), name, one line. */
-function ModuleHead({ manifest, changed }: { manifest: ModuleManifest; changed?: number }) {
+function ModuleHead({
+  manifest,
+  changed,
+  onResetAll,
+}: {
+  manifest: ModuleManifest;
+  changed?: number;
+  onResetAll?: () => void;
+}) {
   const o = tSettings2.use().modulePage;
+  const c = tSettings2.use().changed;
   return (
     <header
       className={styles.head}
@@ -60,6 +71,11 @@ function ModuleHead({ manifest, changed }: { manifest: ModuleManifest; changed?:
         <p className={styles.desc}>{manifest.description}</p>
       </div>
       {changed ? <Badge>{o.changed(changed)}</Badge> : null}
+      {changed && onResetAll ? (
+        <Button variant="ghost" onClick={onResetAll} data-testid="module-reset-all">
+          {c.resetModule}
+        </Button>
+      ) : null}
       <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
         {o.library}
       </Link>
@@ -88,12 +104,22 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
   const { schema, defaults, fields } = manifest.settings;
   const [values, patch] = useSettings(`module.${manifest.id}`, schema, defaults);
+  const toast = useUiStore((st) => st.toast);
   if (!values) return null;
   const v = values as Record<string, unknown>;
   const sectionId = `module-${manifest.id}`;
   const startData = hasStartData(manifest);
   const blocks = fieldBlocks(fields, startData);
-  const changed = changedKeys(fields, v, defaults).length;
+  const changedList = changedKeys(fields, v, defaults);
+  const changed = changedList.length;
+  const resetAll = () => {
+    const before = Object.fromEntries(changedList.map((k) => [k, v[k]]));
+    void patch(Object.fromEntries(changedList.map((k) => [k, defaults[k]])));
+    toast(tComfort.get().reset.done(manifest.name), {
+      label: t.ui.undo,
+      run: () => void patch(before),
+    });
+  };
   const rows = (list: typeof fields) =>
     list.map((f) => (
       <FieldRow
@@ -101,6 +127,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
         sectionId={sectionId}
         field={f}
         value={v[f.key]}
+        defaultValue={defaults[f.key]}
         onChange={(value) => void patch({ [f.key]: value })}
       />
     ));
@@ -110,7 +137,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
       className={styles.page}
       data-testid={`module-settings-${manifest.id}`}
     >
-      <ModuleHead manifest={manifest} changed={changed} />
+      <ModuleHead manifest={manifest} changed={changed} onResetAll={resetAll} />
       {blocks.map((b) => {
         const title = o.blocks[b.group];
         const body = (
