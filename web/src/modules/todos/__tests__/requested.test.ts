@@ -29,4 +29,15 @@ describe('todo.requested', () => {
     expect(task?.dueDate).toBe('2026-11-10');
     stop();
   });
+
+  it('keeps the link to the place it came from', async () => {
+    const stop = start();
+    await bus.emit('todo.requested', {
+      title: 'Zahnarzt vorbereiten',
+      link: { kind: 'event', id: 'ev1', label: 'Zahnarzt' },
+    });
+    const [task] = await taskRepo.active().toArray();
+    expect(task?.links).toEqual([{ kind: 'event', id: 'ev1', label: 'Zahnarzt' }]);
+    stop();
+  });
 });

@@ -21,6 +21,7 @@ export async function addRequested(req: {
     order: 0,
     ...(req.note?.trim() ? { note: req.note.trim() } : {}),
     ...(req.dueDate ? { dueDate: req.dueDate } : {}),
+    ...(req.link ? { links: [req.link] } : {}),
   });
 }
 

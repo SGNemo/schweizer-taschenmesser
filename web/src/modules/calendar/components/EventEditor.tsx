@@ -386,6 +386,7 @@ function Form({
                 await bus.emit('todo.requested', {
                   title: existing.title,
                   dueDate: occurrence ?? existing.startDate,
+                  link: { kind: 'event', id: existing.id, label: existing.title },
                   ...(existing.note ? { note: existing.note } : {}),
                 });
                 useUiStore.getState().toast(t.calendar.asTodoDone);
