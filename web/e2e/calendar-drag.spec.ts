@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
 
 // The hour grid (and so dragging) exists from 1400 px; phones use lists.
 test.use({ viewport: { width: 1600, height: 1000 } });
 
-async function createEvent(page: import('@playwright/test').Page) {
+async function createEvent(page: Page) {
   await ready(page, '/calendar?new=1');
   const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
   await dialog.getByLabel('Titel').fill('Ziehtest');
