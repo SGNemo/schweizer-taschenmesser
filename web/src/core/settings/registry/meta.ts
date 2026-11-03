@@ -47,7 +47,12 @@ const SECTION_SCOPE: Readonly<Record<string, SettingsScope>> = {
  * the connection log, anything that can be switched on and run (local API) and the Basis/Erweitert
  * switch itself stay in Basis.
  */
-const ADVANCED_SECTIONS: ReadonlySet<string> = new Set(['ai-local', 'ai-stats', 'model-licenses']);
+const ADVANCED_SECTIONS: ReadonlySet<string> = new Set([
+  'notification-sources',
+  'ai-local',
+  'ai-stats',
+  'model-licenses',
+]);
 
 /** Module settings live in the synced `_settings` table. */
 const isModuleSection = (id: string) => id.startsWith('module-');
