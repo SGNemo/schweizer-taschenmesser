@@ -36,6 +36,9 @@ export const settings: ModuleSettings = {
         return t.subscriptions.ext.trial.remindDaysBefore;
       },
       type: 'number',
+      get help() {
+        return t.subscriptions.ext.trial.remindDaysBeforeHelp;
+      },
     },
     {
       key: 'remindTime',

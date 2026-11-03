@@ -25,6 +25,7 @@ export const subscriptions: Strings['subscriptions'] = {
       reminderBody: (date: string, price: string) => `Until ${date}. Then ${price}.`,
       calendar: (name: string) => `Trial ends: ${name}`,
       remindDaysBefore: 'Reminder before the trial ends (days)',
+      remindDaysBeforeHelp: '0 = on the last day of the trial',
     },
     status: { ended: 'Ended' },
     payment: { label: 'Paid with', placeholder: 'e.g. direct debit checking account' },

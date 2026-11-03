@@ -29,6 +29,7 @@ export const subscriptions: Strings['subscriptions'] = {
       reminderBody: (date: string, price: string) => `Até ${date}. Depois ${price}.`,
       calendar: (name: string) => `Fim do teste: ${name}`,
       remindDaysBefore: 'Lembrete antes do fim do teste (dias)',
+      remindDaysBeforeHelp: '0 = no último dia do teste',
     },
     status: { ended: 'Encerrada' },
     payment: { label: 'Pago com', placeholder: 'p. ex. débito em conta corrente' },

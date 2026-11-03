@@ -2788,6 +2788,7 @@ export const de = {
         reminderBody: (date: string, price: string) => `Bis ${date}. Danach ${price}.`,
         calendar: (name: string) => `Probezeit endet: ${name}`,
         remindDaysBefore: 'Erinnerung vor Ende der Probezeit (Tage)',
+        remindDaysBeforeHelp: '0 = am letzten Tag der Probezeit',
       },
       status: { ended: 'Beendet' },
       payment: { label: 'Bezahlt mit', placeholder: 'z. B. Lastschrift Girokonto' },
