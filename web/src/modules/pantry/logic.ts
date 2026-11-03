@@ -56,3 +56,13 @@ export function parseCount(text: string): number | undefined {
   if (!/^\d{1,4}$/.test(v)) return undefined;
   return Number(v);
 }
+
+/** The count with its unit, e.g. "2 kg"; `fallback` formats a bare count (the pieces wording). */
+export const countLabel = (
+  item: Pick<PantryItem, 'count' | 'unit'>,
+  fallback: (n: number) => string,
+): string => (item.unit ? `${item.count} ${item.unit}` : fallback(item.count));
+
+/** True when taking one away moved the stock from above the minimum down to it (or below). */
+export const crossedMinimum = (item: PantryItem, next: number): boolean =>
+  item.minCount !== undefined && item.count > item.minCount && next <= item.minCount;

@@ -42,6 +42,7 @@ function Fields({
   const [name, setName] = useState(existing?.name ?? '');
   const [place, setPlace] = useState<Place>(existing?.place ?? 'pantry');
   const [count, setCount] = useState(String(existing?.count ?? 1));
+  const [unit, setUnit] = useState(existing?.unit ?? '');
   const [minCount, setMinCount] = useState(
     existing?.minCount === undefined ? '' : String(existing.minCount),
   );
@@ -63,6 +64,7 @@ function Fields({
       name: name.trim(),
       place,
       count: c,
+      unit: unit.trim() || undefined,
       minCount: m ?? undefined,
       expires: expires || undefined,
       note: note.trim() || undefined,
@@ -99,6 +101,13 @@ function Fields({
           onChange={(e) => setCount(e.target.value)}
           error={errors.count}
           inputMode="numeric"
+        />
+        <TextField
+          label={t.pantry.unit}
+          hint={t.pantry.unitHint}
+          value={unit}
+          onChange={(e) => setUnit(e.target.value)}
+          maxLength={12}
         />
       </Split>
       <TextField

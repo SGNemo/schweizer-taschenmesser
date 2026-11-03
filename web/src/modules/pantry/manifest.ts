@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'shelf',
   },
-  version: 1,
+  version: 2,
   get description() {
     return t.pantry.meta.description;
   },
@@ -58,7 +58,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'content',
   order: 95,
   area: 'household',
