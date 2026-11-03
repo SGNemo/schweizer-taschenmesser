@@ -364,6 +364,20 @@ export const onboarding: Strings['onboarding'] = {
         'Bilhetes para os pais',
       ],
     },
+    business: {
+      name: 'Viagem a trabalho',
+      note: 'De um a três dias fora',
+      items: [
+        'Notebook e carregador',
+        'Cartões de visita',
+        'Documento de identidade',
+        'Passagem de trem ou avião',
+        'Reserva de hotel',
+        'Terno ou roupa social',
+        'Cabo de carregamento',
+        'Caderno e caneta',
+      ],
+    },
   },
   papers: {
     label: 'Documentos importantes',

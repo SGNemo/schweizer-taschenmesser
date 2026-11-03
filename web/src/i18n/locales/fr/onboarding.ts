@@ -372,6 +372,20 @@ export const onboarding: Strings['onboarding'] = {
         'Mots pour les parents',
       ],
     },
+    business: {
+      name: 'Voyage d’affaires',
+      note: 'Un à trois jours sur place',
+      items: [
+        'Ordinateur portable et chargeur',
+        'Cartes de visite',
+        'Pièce d’identité',
+        'Billet de train ou d’avion',
+        'Réservation d’hôtel',
+        'Costume ou tenue professionnelle',
+        'Câble de charge',
+        'Carnet et stylo',
+      ],
+    },
   },
   papers: {
     label: 'Papiers importants',

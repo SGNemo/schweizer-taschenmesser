@@ -348,6 +348,20 @@ export const onboarding: Strings['onboarding'] = {
         'Comunicados para los padres',
       ],
     },
+    business: {
+      name: 'Viaje de trabajo',
+      note: 'De uno a tres días fuera',
+      items: [
+        'Portátil y cargador',
+        'Tarjetas de visita',
+        'Documento de identidad',
+        'Billete de tren o avión',
+        'Reserva de hotel',
+        'Traje o ropa de trabajo',
+        'Cable de carga',
+        'Libreta y bolígrafo',
+      ],
+    },
   },
   papers: {
     label: 'Papeles importantes',

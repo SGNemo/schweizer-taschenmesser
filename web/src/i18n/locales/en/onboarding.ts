@@ -342,6 +342,20 @@ export const onboarding: Strings['onboarding'] = {
         'Letters for parents',
       ],
     },
+    business: {
+      name: 'Business trip',
+      note: 'One to three days away',
+      items: [
+        'Laptop and charger',
+        'Business cards',
+        'ID',
+        'Train or flight ticket',
+        'Hotel booking',
+        'Suit or business clothes',
+        'Charging cable',
+        'Notebook and pen',
+      ],
+    },
   },
   papers: {
     label: 'Important papers',
