@@ -40,6 +40,7 @@ import {
   suggestNames,
   totals,
 } from '../logic';
+import { TripWeather } from '../components/TripWeather';
 import { ReceiptSignature, SuitcaseSignature } from '../components/ListSignature';
 import {
   addItem,
@@ -361,6 +362,9 @@ export default function ListsPage() {
               </IconButton>
             </div>
           </div>
+          {isPacking && current.place && current.tripDate ? (
+            <TripWeather place={current.place} tripDate={current.tripDate} />
+          ) : null}
           {current.kind !== 'shopping' && stats.total > 0 ? (
             <div className={styles.progress} data-testid="lists-progress">
               <p>
