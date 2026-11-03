@@ -32,6 +32,25 @@ export const downloads: Strings['downloads'] = {
     body: 'Sur cet appareil, le navigateur de votre appareil télécharge les fichiers.',
   },
   hint: 'Les fichiers vont uniquement dans le dossier choisi. Nemo ne les ouvre ni ne les lance jamais.',
+  filter: {
+    label: 'Afficher',
+    all: 'Tous',
+    active: 'En cours',
+    done: 'Terminés',
+    problems: 'Problèmes',
+    none: 'Rien dans cet affichage.',
+  },
+  band: {
+    idle: 'Rien en cours',
+    one: '1 en cours',
+    many: (n: number) => `${n} en cours`,
+    context: (speed: string) => `à ${speed}/s`,
+    contextIdle: 'Les nouveaux téléchargements apparaissent ici.',
+  },
+  folder: {
+    show: 'Afficher le dossier de destination',
+    help: 'Affiche le dernier téléchargement lancé dans son dossier.',
+  },
   add: {
     button: 'Ajouter un téléchargement',
     title: 'Ajouter un téléchargement',
@@ -65,6 +84,7 @@ export const downloads: Strings['downloads'] = {
     size: 'Le fichier est arrivé incomplet.',
   },
   row: {
+    eta: (d: string) => `encore ${d}`,
     progress: (done: string, total: string) => `${done} sur ${total}`,
     unknownTotal: (done: string) => `${done} téléchargés`,
     speed: (perSecond: string) => `${perSecond}/s`,

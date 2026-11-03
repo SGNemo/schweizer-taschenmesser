@@ -16,9 +16,22 @@ import {
   ItemRow,
   PageHeader,
   Progress,
+  Segmented,
   TextField,
 } from '@/ui';
-import { formatBytes, percent } from '../lib/format';
+import { HeroSlot } from '@/ui/identity';
+import { MEANINGS } from '@/ui/semantics';
+import type { IconName } from '@/ui/icons';
+import { ArrowBand } from '../components/ArrowBand';
+import {
+  bandSummary,
+  etaSeconds,
+  formatBytes,
+  formatEta,
+  matchesFilter,
+  percent,
+  type JobFilter,
+} from '../lib/format';
 import { settings, type DownloadsPrefs } from '../settings';
 import { ensureWatching, useJobs } from '../store';
 import { TorrentSection, asTorrentSource, type TorrentIncoming } from './TorrentSection';
@@ -33,6 +46,7 @@ export default function DownloadsPage() {
   const [stored] = useSettings('module.downloads', settings.schema, settings.defaults);
   const prefs = (stored ?? settings.defaults) as DownloadsPrefs;
 
+  const [filter, setFilter] = useState<JobFilter>('all');
   const [adding, setAdding] = useState<string | null>(null);
   // A magnet link / .torrent path from `?add=` (OS association, browser): the torrent dialog takes it.
   const [incoming, setIncoming] = useState<TorrentIncoming | null>(null);
@@ -68,22 +82,75 @@ export default function DownloadsPage() {
     );
   }
 
+  const all = jobs ?? [];
+  const summary = bandSummary(all);
+  const shown = all.filter((j) => matchesFilter(j.state, filter));
+  // The most recently started job (highest id) opens its folder: the quick way to the target folder.
+  const latest = all.reduce<DownloadJob | undefined>(
+    (a, j) => (!a || j.id > a.id ? j : a),
+    undefined,
+  );
+
   return (
     <>
+      <HeroSlot area="figure">
+        <ArrowBand
+          figure={
+            summary.running === 0
+              ? t.downloads.band.idle
+              : summary.running === 1
+                ? t.downloads.band.one
+                : t.downloads.band.many(summary.running)
+          }
+          context={
+            summary.running > 0
+              ? `${summary.percent} % · ${t.downloads.band.context(formatBytes(summary.speedBps))}`
+              : t.downloads.band.contextIdle
+          }
+          percent={summary.running > 0 ? summary.percent : 0}
+        />
+      </HeroSlot>
       <PageHeader title={t.downloads.meta.name} />
       <p className={styles.hint}>{t.downloads.hint}</p>
       <div className={styles.bar}>
         <Button variant="primary" onClick={() => setAdding('')}>
           {t.downloads.add.button}
         </Button>
+        {latest ? (
+          <Button
+            onClick={() => void platform.reveal(latest.id)}
+            title={t.downloads.folder.help}
+            data-testid="show-folder"
+          >
+            <Icon name="external" size={18} />
+            {t.downloads.folder.show}
+          </Button>
+        ) : null}
+        {all.length > 0 ? (
+          <Segmented
+            label={t.downloads.filter.label}
+            value={filter}
+            options={[
+              { value: 'all', label: t.downloads.filter.all },
+              { value: 'active', label: t.downloads.filter.active },
+              { value: 'done', label: t.downloads.filter.done },
+              { value: 'problems', label: t.downloads.filter.problems },
+            ]}
+            onChange={(v) => setFilter(v as JobFilter)}
+          />
+        ) : null}
       </div>
 
       {jobs && jobs.length === 0 ? (
         <EmptyState title={t.downloads.empty.title}>{t.downloads.empty.body}</EmptyState>
       ) : null}
 
+      {jobs && jobs.length > 0 && shown.length === 0 ? (
+        <p className={styles.hint}>{t.downloads.filter.none}</p>
+      ) : null}
+
       <ItemList label={t.downloads.meta.name}>
-        {(jobs ?? []).map((j) => (
+        {shown.map((j) => (
           <JobRow
             key={j.id}
             job={j}
@@ -145,9 +212,10 @@ function JobRow({
   const sizes = job.total
     ? t.downloads.row.progress(formatBytes(job.done), formatBytes(job.total))
     : t.downloads.row.unknownTotal(formatBytes(job.done));
+  const eta = etaSeconds(job);
   const speed =
     job.state === 'running' && job.speedBps > 0
-      ? ` · ${t.downloads.row.speed(formatBytes(job.speedBps))}`
+      ? ` · ${t.downloads.row.speed(formatBytes(job.speedBps))}${eta !== null ? ` · ${t.downloads.row.eta(formatEta(eta))}` : ''}`
       : '';
   const failed =
     job.state === 'failed'
@@ -161,7 +229,7 @@ function JobRow({
     <ItemRow
       title={job.fileName}
       meta={`${t.downloads.state[job.state]} · ${sizes}${speed}`}
-      lead={<Icon name="download" />}
+      lead={<StateIcon state={job.state} />}
       actions={
         <>
           {canPause ? (
@@ -228,6 +296,23 @@ function JobRow({
         {job.state === 'done' ? <span className={styles.sub}>{job.dir}</span> : null}
       </div>
     </ItemRow>
+  );
+}
+
+const STATE_ICON: Record<DownloadJob['state'], IconName> = {
+  queued: 'clock',
+  running: 'download',
+  paused: 'pause',
+  done: 'check',
+  failed: 'alert',
+};
+
+/** The state as an icon; only a failed job is coloured (red), the word is in the row's context line. */
+function StateIcon({ state }: { state: DownloadJob['state'] }) {
+  return (
+    <span style={state === 'failed' ? { color: MEANINGS.overdue.color } : undefined}>
+      <Icon name={STATE_ICON[state]} />
+    </span>
   );
 }
 

@@ -79,6 +79,23 @@ test('list shows progress, state and checksum in words; the page is accessible',
   await audit(page, 'downloads page');
 });
 
+test('the band counts what runs, the filter shows the history, the folder button reveals the last job', async ({
+  page,
+}) => {
+  await expect(page.getByTestId('arrow-band')).toContainText('1 läuft');
+  const rows = list(page).getByRole('listitem');
+  await page.getByRole('button', { name: 'Fertig', exact: true }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('handbuch.pdf');
+  await page.getByRole('button', { name: 'Probleme', exact: true }).click();
+  await expect(rows).toHaveCount(0);
+  await expect(page.getByText('Nichts in dieser Ansicht.')).toBeVisible();
+  await page.getByRole('button', { name: 'Alle', exact: true }).click();
+  await expect(rows).toHaveCount(3);
+  await page.getByTestId('show-folder').click();
+  expect(await calls(page)).toEqual(['reveal:3']);
+});
+
 test('pause, resume and remove call the manager; deleting the file asks first', async ({
   page,
 }) => {

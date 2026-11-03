@@ -6436,6 +6436,25 @@ export const de = {
       body: 'Auf diesem Gerät lädt der Browser deines Geräts Dateien herunter.',
     },
     hint: 'Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.',
+    filter: {
+      label: 'Anzeige',
+      all: 'Alle',
+      active: 'Läuft',
+      done: 'Fertig',
+      problems: 'Probleme',
+      none: 'Nichts in dieser Ansicht.',
+    },
+    band: {
+      idle: 'Nichts läuft',
+      one: '1 läuft',
+      many: (n: number) => `${n} laufen`,
+      context: (speed: string) => `mit ${speed}/s`,
+      contextIdle: 'Neue Downloads erscheinen hier.',
+    },
+    folder: {
+      show: 'Zielordner zeigen',
+      help: 'Zeigt den zuletzt gestarteten Download in seinem Ordner.',
+    },
     add: {
       button: 'Download hinzufügen',
       title: 'Download hinzufügen',
@@ -6469,6 +6488,7 @@ export const de = {
       size: 'Die Datei ist unvollständig angekommen.',
     },
     row: {
+      eta: (d: string) => `noch ${d}`,
       progress: (done: string, total: string) => `${done} von ${total}`,
       unknownTotal: (done: string) => `${done} geladen`,
       speed: (perSecond: string) => `${perSecond}/s`,
