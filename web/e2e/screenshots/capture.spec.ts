@@ -30,6 +30,8 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'calendar-month', path: `/calendar?view=month&date=${SEED_TODAY}` },
   { name: 'calendar-week', path: `/calendar?view=week&date=${SEED_TODAY}` },
   { name: 'calendar-day', path: `/calendar?view=day&date=${SEED_TODAY}` },
+  { name: 'calendar-agenda', path: `/calendar?view=agenda&date=${SEED_TODAY}` },
+  { name: 'calendar-year', path: `/calendar?view=year&date=${SEED_TODAY}` },
   { name: 'todos', path: '/todos' },
   { name: 'reminders', path: '/calendar?tab=reminders' },
   { name: 'finance-overview', path: '/finance?tab=overview' },

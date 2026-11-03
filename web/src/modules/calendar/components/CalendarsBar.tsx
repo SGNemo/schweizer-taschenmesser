@@ -49,7 +49,7 @@ export function CalendarsBar({ advanced }: { advanced: boolean }) {
           ))}
         </div>
       ) : null}
-      {advanced || calendars.length > 0 ? (
+      {advanced ? (
         <Button variant="ghost" onClick={() => setDialog('list')}>
           {t.calendar.calendars.manage}
         </Button>
