@@ -36,7 +36,7 @@ const manifest: ModuleManifest = {
   dataSchema: {
     collections: {
       event: { schema: eventSchema, indexes: ['startDate'] },
-      calendar: { schema: calendarSchema, indexes: ['order'] },
+      calendar: { schema: calendarSchema, indexes: ['order'], dataApi: false },
       external: { schema: externalEventSchema, indexes: ['startDate', 'source'], dataApi: false },
     },
   },
