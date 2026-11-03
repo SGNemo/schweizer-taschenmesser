@@ -19,6 +19,8 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { SETTINGS_CATEGORIES } from '@/core/settings/registry/categories';
 import { searchSettings, type SettingsSearchResult } from '@/core/settings/registry/search';
 import { applyQuick, QUICK_SETTINGS } from '@/core/settings/quick';
+import { applyProfile, builtinProfiles } from '@/core/settings/profiles';
+import { tSettings3 } from '@/strings.settings3';
 import { formatMuteEnd, MUTE_PRESETS, muteUntil, setMute } from '@/core/notifications/mute';
 import { now } from '@/core/time/now';
 import { normalize } from '@/core/text/normalize';
@@ -241,6 +243,13 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           void getPlatform().app.openUrl(`${HELP_URL}/faq${getLang() === 'de' ? '.de' : ''}.md`),
       },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
+      // "Profil: Ruhig" switches a built-in profile on the spot (own profiles live in Settings and the quick bar).
+      ...builtinProfiles().map((profile) => ({
+        id: `profile-${profile.id}`,
+        label: `${tSettings3.get().profiles.switchLabel}: ${profile.name}`,
+        icon: 'settings' as IconName,
+        run: () => void applyProfile(profile),
+      })),
       // One command per value of a quick switch: "Farbschema: Dunkel" changes it on the spot.
       ...QUICK_SETTINGS.flatMap((q) =>
         q.options().map((o) => ({

@@ -70,6 +70,7 @@ import { mail } from './mail';
 import { browser } from './browser';
 import { downloads } from './downloads';
 import { timetrack } from './timetrack';
+import { habits } from './habits';
 
 export const en: Strings = {
   appName: 'Nemo',
@@ -143,4 +144,5 @@ export const en: Strings = {
   browser,
   downloads,
   timetrack,
+  habits,
 };

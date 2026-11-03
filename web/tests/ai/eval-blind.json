@@ -234,6 +234,25 @@
       "data": {
         "name": "Anna Muster"
       }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Wasser trinken",
+        "kind": "count",
+        "target": 8,
+        "unit": "Gläser"
+      }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Spazieren gehen",
+        "kind": "yesno",
+        "target": 1
+      }
     }
   ],
   "cases": [
@@ -2158,6 +2177,32 @@
       "input": "Vergleiche meine Ausgaben von August und September",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "hab-b01",
+      "input": "Gewohnheit anlegen Tagebuch schreiben",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Tagebuch schreiben"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-b02",
+      "input": "Gewohnheit Wasser trinken archivieren",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "archive",
+          "target": "Wasser trinken"
+        }
+      ]
     }
   ]
 }

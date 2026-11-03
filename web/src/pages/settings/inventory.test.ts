@@ -30,6 +30,13 @@ const CORE_KEYS = {
     'tm-nav-closed': '[]',
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard, trayToday',
     'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
+    'tm-profile-schedules':
+      '[] (profile schedules: profileId, days, time; core/settings/profiles.ts)',
+    'tm-profile-last': 'unset (key of the schedule that ran last, so it runs once per day)',
+    'tm-profile-applied': 'unset (id of the profile switched on last on this device)',
+    'tm-settings-history':
+      '[] (last 30 changes with what takes them back; never vault/supporter/AI switch; core/settings/history.ts)',
+    'tm-settings-history-on': 'on (switch "Änderungen merken"; stored only when off)',
     'tm-settings-adv':
       '{} (open state of the "Erweitert" fold per settings category; core/settings/foldState.ts)',
     'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
@@ -49,6 +56,7 @@ const CORE_KEYS = {
     hideSetupHint: false,
   },
   '_settings scope nav': { favourites: ['calendar', 'todos', 'finance'] },
+  '_settings scope profiles': { items: [] },
   '_settings scope tools': { enabled: 'per tool', order: 'per tool' },
   '_settings scope quickCapture': { defaultType: 'todo' },
   '_settings scope focus': {
