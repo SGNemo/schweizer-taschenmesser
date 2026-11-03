@@ -1,0 +1,52 @@
+.leaf {
+  display: grid;
+  justify-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  flex: none;
+  text-align: center;
+}
+.month {
+  width: 100%;
+  padding: var(--space-1);
+  background: var(--module-color);
+  color: var(--surface);
+  font-size: var(--text-caps);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:global(:root[data-theme='dark']) .month {
+  color: var(--bg);
+}
+.day {
+  padding-top: var(--space-1);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: var(--font-num);
+}
+.weekday {
+  padding-bottom: var(--space-2);
+  font-size: var(--text-caps);
+  color: var(--text-3);
+}
+.sm {
+  width: 3.25rem;
+}
+.sm .day {
+  font-size: var(--text-xl);
+  padding-bottom: var(--space-1);
+}
+.md {
+  width: 4.5rem;
+}
+.lg {
+  width: 6rem;
+}
+.lg .day {
+  font-size: var(--text-3xl);
+}

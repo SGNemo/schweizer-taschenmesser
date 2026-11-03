@@ -1,0 +1,92 @@
+/* Sky gradient: the one place with an illustrated background (ui/tokens.css `--sky-*`). Fills its positioned parent. */
+.sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--sky-day-0), var(--sky-day-1));
+}
+.sky[data-sky='rain'] {
+  background: linear-gradient(180deg, var(--sky-rain-0), var(--sky-rain-1));
+}
+.sky[data-sky='night'] {
+  background: linear-gradient(180deg, var(--sky-night-0), var(--sky-night-1));
+}
+.sun,
+.moon {
+  position: absolute;
+  right: 12%;
+  top: 14%;
+  width: 5.75rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+}
+.sun {
+  background: radial-gradient(
+    circle,
+    var(--sky-sun-core) 0 38%,
+    var(--sky-sun) 40% 60%,
+    transparent 62%
+  );
+}
+.moon {
+  width: 3.5rem;
+  background: radial-gradient(circle at 35% 35%, var(--sky-night-ink) 0 55%, transparent 58%);
+  opacity: 0.85;
+}
+.cloud {
+  position: absolute;
+  right: 6%;
+  top: 40%;
+  width: 10rem;
+  height: 3.25rem;
+  border-radius: 2.5rem;
+  background: var(--sky-cloud);
+  box-shadow:
+    2.5rem -1.1rem 0 0.5rem var(--sky-cloud),
+    -0.6rem -0.6rem 0 0.1rem var(--sky-cloud);
+}
+.horizon {
+  position: absolute;
+  inset: auto 0 0;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--surface) 30%, transparent)
+  );
+}
+/* Round swatch (a widget in the calm overview, a chip). */
+.compact {
+  position: relative;
+  inset: auto;
+  width: 3.5rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-1);
+}
+.compact .sun {
+  width: 1.4rem;
+  right: 18%;
+  top: 16%;
+}
+.compact .moon {
+  width: 1.2rem;
+}
+.compact .cloud {
+  width: 2rem;
+  height: 0.7rem;
+  right: 12%;
+  top: 52%;
+  box-shadow: 0.5rem -0.25rem 0 0.1rem var(--sky-cloud);
+}
+/* "Ruhig" colour mode and "Modulfarben: Aus": the sky is a grey wash, no illustration colours. */
+:global(:root[data-color='calm']) .sky,
+:global(:root[data-module-colors='off']) .sky {
+  background: color-mix(in srgb, var(--text-3) 18%, var(--surface));
+}
+:global(:root[data-color='calm']) .sun,
+:global(:root[data-module-colors='off']) .sun {
+  background: radial-gradient(circle, var(--text-3) 0 40%, transparent 62%);
+  opacity: 0.35;
+}

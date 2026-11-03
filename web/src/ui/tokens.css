@@ -134,6 +134,38 @@
   --mod-indigo: #4a52b8;
   --mod-slate: #55636b;
   --mod-navy: #2b3f8c;
+  /* Module head (identity v2, docs/design/MODULE-IDENTITY.md): the hero's gradient from the module hue (+ optional
+     second hue as --module-color-2) over the surface. Text in the head is always --text (≥ 4.5:1 on every hue, tokens.test.ts);
+     the tint never sits behind body text. "Ruhig" and "Modulfarben: Aus" flatten it to a neutral wash. */
+  --head-tint-0: 40%;
+  --head-tint-1: 10%;
+  --head-gradient: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--module-color) var(--head-tint-0), var(--surface)) 0%,
+    color-mix(
+        in srgb,
+        var(--module-color-2, var(--module-color)) var(--head-tint-1),
+        var(--surface)
+      )
+      72%
+  );
+  --head-flat: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  /* Card corners per module (identity.shape). */
+  --shape-soft: 16px;
+  --shape-round: 20px;
+  --shape-sharp: 10px;
+  /* Sky (weather head and widget, ui/identity/Sky): gradients by condition and daytime. Text on them is --text; night
+     sets its own light ink because the page may be in the light theme (tokens.test.ts checks both). */
+  --sky-day-0: #6fb3e8;
+  --sky-day-1: #cfe7f7;
+  --sky-rain-0: #5b6f84;
+  --sky-rain-1: #9db0c0;
+  --sky-night-0: #101a33;
+  --sky-night-1: #2a3b66;
+  --sky-night-ink: #eceff1;
+  --sky-sun: #ffd36a;
+  --sky-sun-core: #fff5c8;
+  --sky-cloud: rgb(255 255 255 / 0.75);
   --overlay: rgb(0 0 0 / 0.45);
   /* Level 1: cards, widgets, panels (no border). Level 2: menus, dialogs, sheets, FAB, toast. */
   --shadow-1: 0 1px 2px rgb(23 31 36 / 0.06), 0 8px 24px rgb(23 31 36 / 0.07);
@@ -193,6 +225,11 @@
   --mod-indigo: #a7adf5;
   --mod-slate: #a9b7c0;
   --mod-navy: #9db0f0;
+  --sky-day-0: #1c3a5c;
+  --sky-day-1: #2e5a86;
+  --sky-rain-0: #1d2733;
+  --sky-rain-1: #3a4b5c;
+  --sky-cloud: rgb(255 255 255 / 0.22);
   --overlay: rgb(0 0 0 / 0.55);
   --shadow-1:
     0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3);
@@ -240,6 +277,11 @@
     --mod-indigo: #a7adf5;
     --mod-slate: #a9b7c0;
     --mod-navy: #9db0f0;
+  --sky-day-0: #1c3a5c;
+  --sky-day-1: #2e5a86;
+  --sky-rain-0: #1d2733;
+  --sky-rain-1: #3a4b5c;
+  --sky-cloud: rgb(255 255 255 / 0.22);
     --overlay: rgb(0 0 0 / 0.55);
     --shadow-1:
       0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35),
@@ -382,6 +424,8 @@
   --mod-indigo: var(--text-3);
   --mod-slate: var(--text-3);
   --mod-navy: var(--text-3);
+  --head-tint-0: 12%;
+  --head-tint-1: 5%;
 }
 /* "Modulfarben" off (Einstellungen → Darstellung → Farben): the identity stays (chip, edge, icon), in grey. */
 :root[data-module-colors='off'] {
@@ -395,6 +439,8 @@
   --mod-indigo: var(--text-3);
   --mod-slate: var(--text-3);
   --mod-navy: var(--text-3);
+  --head-tint-0: 12%;
+  --head-tint-1: 5%;
 }
 
 /* Navigation areas: one category hue per area for icons, the thin group stripe and the library tiles (always next to the area name; "Ruhig" turns them grey via --cat-*). */

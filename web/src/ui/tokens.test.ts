@@ -162,6 +162,36 @@ describe('design tokens', () => {
     }
   });
 
+  it('module head (identity v2): text stays AA on the hue gradient for every hue, both themes; calm and off flatten the tint', () => {
+    const tint0 = Number.parseInt(light['--head-tint-0']!, 10) / 100;
+    expect(tint0).toBeGreaterThan(0.2);
+    for (const [name, t] of [
+      ['light', light],
+      ['dark', dark],
+    ] as const)
+      for (const key of Object.keys(t).filter((k) => k.startsWith('--mod-'))) {
+        const start = mix(t[key]!, t['--surface']!, tint0);
+        expect(
+          ratio(t['--text']!, start),
+          `${name} ${key} --text on the head`,
+        ).toBeGreaterThanOrEqual(4.5);
+        // The hue itself (icon chip, tab underline, figure accents) is UI on the tinted head: ≥ 3:1 against --text is irrelevant,
+        // it must stay distinguishable from the head: ≥ 1.5:1 on it, and ≥ 3:1 on the plain surface (checked above).
+        expect(ratio(t[key]!, start), `${name} ${key} on its own head`).toBeGreaterThanOrEqual(1.5);
+      }
+    const calm = block(":root[data-color='calm']");
+    const off = block(":root[data-module-colors='off']");
+    for (const b of [calm, off]) {
+      expect(Number.parseInt(b['--head-tint-0']!, 10)).toBeLessThanOrEqual(15);
+      expect(Number.parseInt(b['--head-tint-1']!, 10)).toBeLessThanOrEqual(8);
+    }
+    expect([light['--shape-soft'], light['--shape-round'], light['--shape-sharp']]).toEqual([
+      '16px',
+      '20px',
+      '10px',
+    ]);
+  });
+
   it('radii follow the spec (8 / 12 / 16 / 20)', () => {
     expect([
       light['--radius-sm'],
