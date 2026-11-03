@@ -32,6 +32,8 @@ export const eventSchema = z
     /** The person or client the entry is for (People module); only the id, never sent to an AI. */
     personId: z.string().optional().meta({ internal: true }),
     recurrence: recurrenceSchema.optional(),
+    /** Occurrence dates (YYYY-MM-DD) of a recurring event that are skipped ("nur diesen Termin löschen"). */
+    exdates: z.array(z.string().regex(DATE_RE)).optional(),
     notify: notifySchema.optional(),
     /** A reminder answered with "Genommen" instead of "Erledigt" (medication, vitamins); nothing is counted. */
     taken: z.boolean().optional(),

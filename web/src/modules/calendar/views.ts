@@ -11,16 +11,22 @@ import type { CalendarItem, DateRange } from '@/core/modules/types';
 import { datesInRange } from '@/core/recurrence/expand';
 import type { CalendarEvent } from './schema';
 
-export type CalendarView = 'month' | 'week' | 'day';
-export const VIEWS: CalendarView[] = ['month', 'week', 'day'];
+export type CalendarView = 'month' | 'week' | 'day' | 'agenda' | 'year';
+export const VIEWS: CalendarView[] = ['month', 'week', 'day', 'agenda', 'year'];
+
+/** Days the agenda list reaches ahead of the shown date. */
+export const AGENDA_DAYS = 30;
 
 export function isView(v: string | null): v is CalendarView {
-  return v === 'month' || v === 'week' || v === 'day';
+  return v !== null && (VIEWS as string[]).includes(v);
 }
 
 /** The visible date range of a view around `date` (month view includes the surrounding weeks). */
 export function rangeFor(view: CalendarView, date: string, weekStart: 1 | 7 = 1): DateRange {
   if (view === 'day') return { from: date, to: date };
+  if (view === 'agenda') return { from: date, to: addDaysStr(date, AGENDA_DAYS - 1) };
+  if (view === 'year')
+    return { from: `${date.slice(0, 4)}-01-01`, to: `${date.slice(0, 4)}-12-31` };
   if (view === 'week') {
     const from = startOfWeekStr(date, weekStart);
     return { from, to: addDaysStr(from, 6) };
@@ -34,6 +40,8 @@ export function rangeFor(view: CalendarView, date: string, weekStart: 1 | 7 = 1)
 export function shiftDate(view: CalendarView, date: string, dir: 1 | -1): string {
   if (view === 'day') return addDaysStr(date, dir);
   if (view === 'week') return addDaysStr(date, 7 * dir);
+  if (view === 'agenda') return addDaysStr(date, AGENDA_DAYS * dir);
+  if (view === 'year') return addMonthsStr(startOfMonthStr(date), 12 * dir);
   return addMonthsStr(startOfMonthStr(date), dir);
 }
 
@@ -49,11 +57,21 @@ export function monthWeeks(date: string, weekStart: 1 | 7 = 1): string[][] {
 
 export function viewTitle(view: CalendarView, date: string, weekStart: 1 | 7 = 1): string {
   if (view === 'month') return formatDay(date, 'LLLL yyyy');
+  if (view === 'year') return formatDay(date, 'yyyy');
+  if (view === 'agenda') {
+    const { from, to } = rangeFor('agenda', date, weekStart);
+    return `${formatDay(from, 'd. MMM')} – ${formatDay(to, 'd. MMM yyyy')}`;
+  }
   if (view === 'day') return formatDay(date, 'EEEE, d. MMMM yyyy');
   const { from, to } = rangeFor('week', date, weekStart);
   // Sunday-first weeks take the ISO week number of their Monday, not of the Sunday before it.
   const kw = weekStart === 7 ? addDaysStr(from, 1) : from;
   return `${formatDay(kw, "'KW' II")} · ${formatDay(from, 'd. MMM')} – ${formatDay(to, 'd. MMM yyyy')}`;
+}
+
+/** ISO week number of the week a row starts with; Sunday-first rows take the Monday after. */
+export function weekNumberOf(weekFirstDay: string, weekStart: 1 | 7 = 1): string {
+  return formatDay(weekStart === 7 ? addDaysStr(weekFirstDay, 1) : weekFirstDay, 'II');
 }
 
 export function groupByDate(items: CalendarItem[]): Map<string, CalendarItem[]> {
@@ -77,7 +95,13 @@ export function expandEvent(
 ): CalendarItem[] {
   const span = e.endDate ? daysBetween(e.startDate, e.endDate) : 0;
   // An occurrence starting up to `span` days before the range can still reach into it.
-  const starts = datesInRange(e.startDate, e.recurrence, addDaysStr(range.from, -span), range.to);
+  const skipped = e.exdates?.length ? new Set(e.exdates) : null;
+  const starts = datesInRange(
+    e.startDate,
+    e.recurrence,
+    addDaysStr(range.from, -span),
+    range.to,
+  ).filter((s) => !skipped?.has(s));
   const items: CalendarItem[] = [];
   for (const start of starts) {
     for (let k = 0; k <= span; k++) {

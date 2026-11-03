@@ -484,3 +484,7 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **M4 Wetterhinweis und Himmel:** echten Ort wählen: der Himmel passt zu Wetter und Tageszeit (nachts hell auf dunkel). Bei Gewitter/Sturm in der Vorhersage erscheint oben ein Hinweis mit dem Satz „keine amtliche Warnung“. Zweiten Ort über „Ort hinzufügen“ ergänzen, per Chip umschalten, mit × entfernen. ☐
 - **M5 Ruhig-Modus:** Einstellungen → Darstellung → Farben → „Ruhig“: Köpfe, Widget-Bänder, Himmel und Karten werden grau; Aufbau und Signatur bleiben erkennbar. ☐
 - **M6 Musik schaltet sich beim Verbinden ein:** Spotify unter Verbindungen verbinden: „Musik“ ist danach aktiv (Hinweis „Jetzt aktiv“), erscheint unter Wissen und als Widget. Wer „Musik“ in der Bibliothek ausgeschaltet hat und neu verbindet, bekommt es nicht wieder eingeschaltet. ☐
+- **PK1 Kalender-Ansichten:** Kalender → „Jahr“: zwölf Monate, Tag antippen öffnet die Tagesansicht; „Agenda“: nächste 30 Tage, nur Tage mit Einträgen. Einstellungen → Kalender → „Feiertage anzeigen“ → Bayern: Heilige Drei Könige 6.1. erscheint im Monat (unterstrichen/als Text), mit „Aus“ verschwindet er. ☐
+- **PK2 Einzelner Termin einer Serie:** wiederkehrenden Termin öffnen → „Nur den Termin am … entfernen“: nur dieser Tag fehlt, Rückgängig stellt ihn wieder her, die Benachrichtigung dieses Tages bleibt aus. ☐
+- **PK3 Als ToDo merken:** Termin öffnen → „Als ToDo merken“: Aufgabe im Eingang mit dem Datum als Fälligkeit (ToDos aktiv). Überschneidende Termine (Wochenansicht ≥ 1400 px) haben gestrichelten Rand. ☐
+

@@ -27,7 +27,7 @@ export interface EventMap {
   /** A saved link could be a gift idea (bookmarks). The people module keeps it until the reader picks a person. */
   'gift.requested': { title: string; url?: string; priceCents?: number };
   /** Something becomes a to-do (a checklist item in a note). The todos module adds it to the inbox. */
-  'todo.requested': { title: string; note?: string };
+  'todo.requested': { title: string; note?: string; dueDate?: string };
   'module.enabled': { moduleId: string };
   'module.disabled': { moduleId: string; policy: DataPolicy };
 }

@@ -1,13 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
+import { bus } from '@/core/events';
 import { mapsUrl } from '@/core/links';
+import { useUiStore } from '@/stores/ui';
 import { getPlatform } from '@/core/platform';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { copyData } from '@/core/db/copy';
 import { PersonField } from '@/core/people/PersonField';
-import { addDaysStr } from '@/core/time/dates';
+import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { tDraft } from '@/strings.draft';
 import {
@@ -28,7 +30,7 @@ import { eventRepo } from '../repo';
 import { LeadRow, NOTIFY_LEADS, leadLabel } from './LeadRow';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
-import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
+import { changeWithUndo, deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 
 export type EventTarget =
   | Stored<CalendarEvent>
@@ -41,9 +43,12 @@ export function EventEditor({
   target,
   onClose,
   onDuplicated,
+  occurrence,
 }: {
   target: EventTarget;
   onClose: () => void;
+  /** The occurrence date the entry was opened from (recurring events: "only this one"). */
+  occurrence?: string | null;
   /** The copy made by "Duplizieren"; the page opens it for editing. */
   onDuplicated?: (copy: Stored<CalendarEvent>) => void;
 }) {
@@ -68,6 +73,7 @@ export function EventEditor({
           target={target}
           onClose={onClose}
           onDuplicated={onDuplicated}
+          occurrence={occurrence ?? undefined}
         />
       ) : null}
     </Dialog>
@@ -81,9 +87,11 @@ function Form({
   target,
   onClose,
   onDuplicated,
+  occurrence,
 }: {
   target: NonNullable<EventTarget>;
   onClose: () => void;
+  occurrence?: string;
   onDuplicated?: (copy: Stored<CalendarEvent>) => void;
 }) {
   const existing = 'id' in target ? target : null;
@@ -325,6 +333,34 @@ function Form({
           <span />
         )}
         <span className={patternStyles.hstack}>
+          {existing && !reminder ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                await bus.emit('todo.requested', {
+                  title: existing.title,
+                  dueDate: occurrence ?? existing.startDate,
+                  ...(existing.note ? { note: existing.note } : {}),
+                });
+                useUiStore.getState().toast(t.calendar.asTodoDone);
+              }}
+            >
+              {t.calendar.asTodo}
+            </Button>
+          ) : null}
+          {existing?.recurrence && occurrence ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                const skipped = [...new Set([...(existing.exdates ?? []), occurrence])].sort();
+                await changeWithUndo(() => eventRepo.update(existing.id, { exdates: skipped }));
+                draft.clear();
+                onClose();
+              }}
+            >
+              {t.calendar.skipOccurrence(formatDay(occurrence, 'd. MMM'))}
+            </Button>
+          ) : null}
           {existing ? (
             <Button
               variant="ghost"
