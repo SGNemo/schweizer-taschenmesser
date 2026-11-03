@@ -259,6 +259,10 @@ async function buildBackupJson(page: Page): Promise<string> {
 test('data volume: ' + SCALE, async ({ page }, info) => {
   const phone = info.project.name === 'pixel-7';
   const result: Record<string, unknown> = { profile: info.project.name, scale: SCALE, runs: RUNS };
+  const save = () => {
+    mkdirSync(OUT, { recursive: true });
+    writeFileSync(`${OUT}/${LABEL}-${info.project.name}.json`, JSON.stringify(result, null, 2));
+  };
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
   await page.addInitScript(idbProbe);
@@ -322,10 +326,14 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
     runs: starts,
   };
   result.heapAfterHomeMb = await heapMb(cdp);
+  save();
 
   const capture: number[] = [];
   for (let i = 0; i < RUNS; i++) {
     await page.goto('/?capture=1', { waitUntil: 'commit' });
+    await page
+      .screenshot({ path: info.outputPath(`capture-${i}-early.png`) })
+      .catch(() => undefined);
     await page.waitForFunction(
       () =>
         Boolean(
@@ -343,6 +351,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
     );
   }
   result.quickCaptureFocusMs = median(capture);
+  save();
 
   // 3. Open every module (client-side navigation from the overview).
   await page.goto('/');
@@ -359,6 +368,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
   }
   result.modules = modules;
   result.heapAfterModulesMb = await heapMb(cdp);
+  save();
 
   // 4. Search (command palette): type the query, wait until all reads are done.
   await page.goto('/');
@@ -379,6 +389,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
     searches[q] = summarise(runs);
   }
   result.searches = searches;
+  save();
 
   // 5. Backup and restore. Seeded rows are left out of real backups, so the seed rows are exported
   //    as a backup file first, the seed is removed, the file is restored and a backup is downloaded.
