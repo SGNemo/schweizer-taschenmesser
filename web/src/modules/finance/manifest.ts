@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'bankCard',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.finance.meta.description;
   },
@@ -56,7 +56,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: true,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: [] },
+  seed: { version: 3, dependsOn: [] },
   layout: 'wide',
   order: 40,
   area: 'money',

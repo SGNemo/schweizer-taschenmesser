@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router';
 import { useAdvanced } from '@/core/settings/comfort';
 import { DEFAULT_CURRENCY } from '@/core/money';
 import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates';
+import { YearView } from '../components/YearView';
 import { t } from '@/strings';
 import {
   AdvancedToggle,
@@ -67,8 +68,14 @@ export default function FinancePage() {
   const rawMonth = params.get('month');
   const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : monthOf(today());
 
-  function go(next: { tab?: Tab; month?: string; cur?: string }) {
+  const period = params.get('period') === 'year' ? 'year' : 'month';
+  const rawYear = Number(params.get('year'));
+  const year = Number.isInteger(rawYear) && rawYear > 1900 ? rawYear : Number(today().slice(0, 4));
+
+  function go(next: { tab?: Tab; month?: string; cur?: string; period?: string; year?: number }) {
     const p = new URLSearchParams(params);
+    if (next.period) p.set('period', next.period);
+    if (next.year) p.set('year', String(next.year));
     if (next.cur) p.set('cur', next.cur);
     if (next.tab) p.set('tab', next.tab);
     if (next.month) p.set('month', next.month);
@@ -134,7 +141,35 @@ export default function FinancePage() {
         </div>
       ) : null}
 
-      {tab === 'overview' || tab === 'transactions' ? (
+      {tab === 'overview' ? (
+        <div className={styles.tabs}>
+          <Segmented
+            label={t.finance.ext.period.label}
+            value={period}
+            options={[
+              { value: 'month' as const, label: t.finance.ext.period.month },
+              { value: 'year' as const, label: t.finance.ext.period.year },
+            ]}
+            onChange={(v) => go({ period: v })}
+          />
+        </div>
+      ) : null}
+
+      {tab === 'overview' && period === 'year' ? (
+        <div className={styles.filter} role="group" aria-label={t.finance.ext.period.year}>
+          <IconButton label={t.finance.ext.period.prevYear} onClick={() => go({ year: year - 1 })}>
+            <span aria-hidden="true">‹</span>
+          </IconButton>
+          <span className={styles.monthLabel} aria-live="polite" data-testid="year-label">
+            {year}
+          </span>
+          <IconButton label={t.finance.ext.period.nextYear} onClick={() => go({ year: year + 1 })}>
+            <span aria-hidden="true">›</span>
+          </IconButton>
+        </div>
+      ) : null}
+
+      {tab === 'transactions' || (tab === 'overview' && period === 'month') ? (
         <div className={styles.filter} role="group" aria-label={t.finance.month}>
           <IconButton
             label={t.finance.prevMonth}
@@ -163,7 +198,7 @@ export default function FinancePage() {
         <CurrencyContext.Provider value={currency}>
           {/* Wide screens: the month's bookings sit next to the overview instead of a tab away. */}
           <SplitView
-            enabled={wideScreen && tab === 'overview'}
+            enabled={wideScreen && tab === 'overview' && period === 'month'}
             asideLabel={t.finance.tabs.transactions}
             aside={
               <Card title={t.finance.tabs.transactions}>
@@ -171,9 +206,10 @@ export default function FinancePage() {
               </Card>
             }
           >
-            {tab === 'overview' ? (
+            {tab === 'overview' && period === 'month' ? (
               <OverviewTab data={view} month={month} narrow={wideScreen} />
             ) : null}
+            {tab === 'overview' && period === 'year' ? <YearView data={view} year={year} /> : null}
             {tab === 'transactions' ? (
               <TransactionsTab data={view} month={month} onOpen={setTarget} />
             ) : null}

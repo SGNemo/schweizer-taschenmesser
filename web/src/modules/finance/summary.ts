@@ -4,10 +4,11 @@ import { DEFAULT_CURRENCY, sumMinor } from '@/core/money';
 import { useSettings } from '@/core/settings/settings';
 import { endOfMonthStr, today } from '@/core/time/dates';
 // Sanctioned cross-module read access (see CLAUDE.md): only the public.ts of these two modules.
-import { sumOpenInvoices } from '@/modules/invoices/public';
+import { listOpenInvoices, sumOpenInvoices } from '@/modules/invoices/public';
 import { listSubscriptionCharges } from '@/modules/subscriptions/public';
 import { accountRepo, categoryRepo, transactionRepo } from './repo';
 import { availability, balances, sortAccounts } from './logic';
+import { buildForecast, horizonEnd, type Forecast, type ForecastHorizon } from './forecast';
 import type { FinanceData } from './types';
 import { settings } from './settings';
 
@@ -69,4 +70,36 @@ export function useAvailability(
 export function totalBalance(data: FinanceData | undefined): number | undefined {
   if (!data) return undefined;
   return sumMinor(balances(data.accounts, data.txs, today()).values());
+}
+
+/**
+ * The outlook for the shown accounts: today's balance plus repeating bookings, subscription charges
+ * and open invoices until the end of the horizon. Parts of disabled modules are left out.
+ */
+export function useForecast(
+  data: FinanceData | undefined,
+  currency: string,
+  horizon: ForecastHorizon,
+): Forecast | undefined {
+  const states = useModuleStates();
+  const subsOn = Boolean(states?.subscriptions);
+  const invoicesOn = Boolean(states?.invoices);
+  const day = today();
+  const to = horizonEnd(day, horizon);
+  const extra = useLiveQuery(async () => {
+    const [charges, invoices] = await Promise.all([
+      subsOn ? listSubscriptionCharges(day, to, currency) : [],
+      invoicesOn ? listOpenInvoices() : [],
+    ]);
+    return { charges, invoices: invoices.filter((i) => i.currency === currency) };
+  }, [subsOn, invoicesOn, day, to, currency]);
+  if (!data || !extra) return undefined;
+  return buildForecast({
+    balanceMinor: totalBalance(data) ?? 0,
+    today: day,
+    to,
+    repeatHeads: data.txs.filter((x) => x.repeat && !x.transferId),
+    subscriptionCharges: extra.charges,
+    openInvoices: extra.invoices,
+  });
 }

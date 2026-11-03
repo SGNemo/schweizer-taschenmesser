@@ -13,7 +13,17 @@ const PAD = 6;
  * The month as one area: the balance at the end of each day, in the module hue. A line with its fill, the start and end value
  * as text ("a context line for every number"); the booking list beside it carries every single value.
  */
-export function MonthCurve({ points }: { points: DayPoint[] }) {
+export function MonthCurve({
+  points,
+  title = t.finance.balanceCurve,
+  fromLabel = t.finance.curveFrom,
+  testId = 'month-curve',
+}: {
+  points: DayPoint[];
+  title?: string;
+  fromLabel?: string;
+  testId?: string;
+}) {
   const currency = useCurrency();
   if (points.length < 2) return null;
   const values = points.map((p) => p.balanceMinor);
@@ -30,21 +40,21 @@ export function MonthCurve({ points }: { points: DayPoint[] }) {
   const last = points[points.length - 1]!.balanceMinor;
   return (
     <Card>
-      <h2 className={styles.chartTitle}>{t.finance.balanceCurve}</h2>
+      <h2 className={styles.chartTitle}>{title}</h2>
       <svg
         className={styles.curve}
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         role="img"
         aria-label={t.finance.curveLabel(formatMoney(first, currency), formatMoney(last, currency))}
-        data-testid="month-curve"
+        data-testid={testId}
       >
         <path d={area} className={styles.curveFill} />
         <path d={line} className={styles.curveLine} vectorEffect="non-scaling-stroke" />
       </svg>
       <div className={styles.curveFoot}>
         <span>
-          {t.finance.curveFrom} · {formatMoney(first, currency)}
+          {fromLabel} · {formatMoney(first, currency)}
         </span>
         <span className={last >= first ? styles.income : undefined}>
           {formatMoney(last, currency)}
