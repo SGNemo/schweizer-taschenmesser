@@ -194,6 +194,7 @@ export default function BrowserPage() {
 
   return (
     <div className={styles.root}>
+      <PageTitle title={t.browser.meta.name} />
       <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">
         {tabs.map((x) => (
           <div key={x.id} className={`${styles.tab} ${x.id === activeId ? styles.tabActive : ''}`}>

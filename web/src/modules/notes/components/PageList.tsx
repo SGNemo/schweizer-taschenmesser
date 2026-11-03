@@ -186,15 +186,17 @@ export function PageList(p: PageListProps) {
         ) : null}
       </div>
 
-      <Segmented
-        label={t.notes.view.label}
-        value={p.view}
-        options={[
-          { value: 'list', label: t.notes.view.list },
-          { value: 'cards', label: t.notes.view.cards },
-        ]}
-        onChange={(v) => p.onView(v === 'cards' ? 'cards' : 'list')}
-      />
+      <div className={styles.viewSwitch}>
+        <Segmented
+          label={t.notes.view.label}
+          value={p.view}
+          options={[
+            { value: 'list', label: t.notes.view.list },
+            { value: 'cards', label: t.notes.view.cards },
+          ]}
+          onChange={(v) => p.onView(v === 'cards' ? 'cards' : 'list')}
+        />
+      </div>
 
       <SelectField
         label={t.notes.sort}

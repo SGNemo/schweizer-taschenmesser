@@ -5,29 +5,23 @@
   background: var(--surface);
   color: var(--text);
   box-shadow: var(--shadow-1);
-  /* perforation: small round bites along every edge */
+  /* perforation: round bites along every edge. The mask is a solid core plus four edge strips whose tiles
+     are cut by a circle on the outer edge (union of the layers, so nothing outside the strips is lost). */
   --bite: 0.3rem;
   --gap: 0.9rem;
+  --mask-core: linear-gradient(#000, #000) center / calc(100% - 2 * var(--bite))
+    calc(100% - 2 * var(--bite)) no-repeat;
+  --mask-top: radial-gradient(circle var(--bite) at 50% 0, transparent 98%, #000) top / var(--gap)
+    var(--bite) repeat-x;
+  --mask-bottom: radial-gradient(circle var(--bite) at 50% 100%, transparent 98%, #000) bottom /
+    var(--gap) var(--bite) repeat-x;
+  --mask-left: radial-gradient(circle var(--bite) at 0 50%, transparent 98%, #000) left /
+    var(--bite) var(--gap) repeat-y;
+  --mask-right: radial-gradient(circle var(--bite) at 100% 50%, transparent 98%, #000) right /
+    var(--bite) var(--gap) repeat-y;
   -webkit-mask:
-    radial-gradient(circle var(--bite) at 50% 0, transparent 98%, #000) top / var(--gap) 51%
-      repeat-x,
-    radial-gradient(circle var(--bite) at 50% 100%, transparent 98%, #000) bottom / var(--gap) 51%
-      repeat-x,
-    radial-gradient(circle var(--bite) at 0 50%, transparent 98%, #000) left / 51% var(--gap)
-      repeat-y,
-    radial-gradient(circle var(--bite) at 100% 50%, transparent 98%, #000) right / 51% var(--gap)
-      repeat-y;
-  mask:
-    radial-gradient(circle var(--bite) at 50% 0, transparent 98%, #000) top / var(--gap) 51%
-      repeat-x,
-    radial-gradient(circle var(--bite) at 50% 100%, transparent 98%, #000) bottom / var(--gap) 51%
-      repeat-x,
-    radial-gradient(circle var(--bite) at 0 50%, transparent 98%, #000) left / 51% var(--gap)
-      repeat-y,
-    radial-gradient(circle var(--bite) at 100% 50%, transparent 98%, #000) right / 51% var(--gap)
-      repeat-y;
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
+    var(--mask-core), var(--mask-top), var(--mask-bottom), var(--mask-left), var(--mask-right);
+  mask: var(--mask-core), var(--mask-top), var(--mask-bottom), var(--mask-left), var(--mask-right);
 }
 /* the frame inside the perforation, in the module hue */
 .edge {

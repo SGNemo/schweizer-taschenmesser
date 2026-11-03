@@ -164,3 +164,8 @@
 .cards .meta {
   -webkit-line-clamp: 4;
 }
+
+/* the list column scrolls: its controls must not be squeezed */
+.viewSwitch {
+  flex: none;
+}
