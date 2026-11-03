@@ -104,3 +104,61 @@
   background: var(--surface-2);
   border-radius: var(--radius-sm);
 }
+
+/* Tab strip in the module hue: the active tab carries the colour as an underline and a light tint; text stays --text. */
+.tabs {
+  border-bottom: 1px solid var(--border);
+}
+.tabActive {
+  background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
+  border-color: var(--border);
+  border-bottom: 3px solid var(--module-color);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.address input {
+  font-family: var(--font-mono);
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.tile:hover {
+  border-color: var(--module-color);
+}
+.tileMark {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  background: var(--head-tint-1, var(--surface-2));
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+.tileLabel {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}

@@ -10,6 +10,9 @@ export const browser: Strings['browser'] = {
     widgetAction: 'Ouvrir le navigateur',
   },
   settings: {
+    tabPreview: 'Aperçus des onglets ouverts',
+    tabPreviewHelp:
+      "Recharge le titre et l'image d'aperçu de chaque onglet ouvert, sans connexion ni cookies. Le site voit une seconde requête. Les onglets privés ne sont jamais inclus. Par défaut : désactivé.",
     engine: 'Moteur de recherche',
     engineCustom: 'Adresse personnalisée',
     customUrl: 'Adresse de recherche personnalisée',
@@ -25,6 +28,25 @@ export const browser: Strings['browser'] = {
   },
   hint: 'Pas un navigateur complet. Pour la banque en ligne, utilisez le navigateur du système.',
   hintClose: 'Masquer le conseil',
+  tabs: {
+    title: 'Onglets ouverts',
+    openAll: 'Afficher tous les onglets',
+    back: 'Retour à la page',
+    none: 'Aucun onglet ouvert.',
+    new: 'Nouvel onglet',
+    private: 'Privé',
+    close: (title: string) => `Fermer l'onglet : ${title}`,
+  },
+  reader: {
+    title: 'Mode lecture',
+    loading: 'Chargement de la page …',
+    failed:
+      'Cette page ne peut pas être lue comme texte. Restez sur la page ou ouvrez-la dans le navigateur du système.',
+    note: "Nemo recharge la page sans connexion et sans cookies et n'affiche que le texte.",
+    unavailable:
+      'Le mode lecture fonctionne pour les pages https dans les onglets normaux, pas dans les onglets privés.',
+    back: 'Retour à la page',
+  },
   toolbar: {
     back: 'Précédent',
     forward: 'Suivant',
@@ -49,6 +71,7 @@ export const browser: Strings['browser'] = {
     none: 'Rien d’enregistré pour l’instant.',
   },
   menu: {
+    reader: 'Mode lecture',
     saveToList: 'Enregistrer dans Enregistrés',
     saveAsNote: 'Enregistrer comme note',
     openSystem: 'Ouvrir dans le navigateur du système',

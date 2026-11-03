@@ -10,6 +10,9 @@ export const browser: Strings['browser'] = {
     widgetAction: 'Abrir o navegador',
   },
   settings: {
+    tabPreview: 'Imagens de prévia das abas abertas',
+    tabPreviewHelp:
+      'Carrega novamente o título e a imagem de prévia de cada aba aberta, sem login nem cookies. O site vê uma segunda solicitação. Abas privadas nunca são incluídas. Padrão: desativado.',
     engine: 'Mecanismo de busca',
     engineCustom: 'Endereço próprio',
     customUrl: 'Endereço de busca próprio',
@@ -25,6 +28,24 @@ export const browser: Strings['browser'] = {
   },
   hint: 'Não é um navegador completo. Para o internet banking, use o navegador do sistema.',
   hintClose: 'Ocultar a dica',
+  tabs: {
+    title: 'Abas abertas',
+    openAll: 'Mostrar todas as abas',
+    back: 'Voltar para a página',
+    none: 'Nenhuma aba aberta.',
+    new: 'Nova aba',
+    private: 'Privada',
+    close: (title: string) => `Fechar aba: ${title}`,
+  },
+  reader: {
+    title: 'Modo leitura',
+    loading: 'Carregando a página …',
+    failed:
+      'Esta página não pode ser lida como texto. Fique na página ou abra-a no navegador do sistema.',
+    note: 'O Nemo carrega a página mais uma vez sem login e sem cookies e mostra só o texto.',
+    unavailable: 'O modo leitura funciona para páginas https em abas normais, não em privadas.',
+    back: 'Voltar para a página',
+  },
   toolbar: {
     back: 'Voltar',
     forward: 'Avançar',
@@ -49,6 +70,7 @@ export const browser: Strings['browser'] = {
     none: 'Nada salvo ainda.',
   },
   menu: {
+    reader: 'Modo leitura',
     saveToList: 'Salvar em Salvos',
     saveAsNote: 'Salvar como nota',
     openSystem: 'Abrir no navegador do sistema',

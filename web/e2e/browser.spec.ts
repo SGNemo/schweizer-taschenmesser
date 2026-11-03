@@ -127,3 +127,33 @@ test('blocker panel lists third-party servers and saves an own rule', async ({ p
   );
   await audit(page, 'blocker');
 });
+
+test('the tab strip carries the module hue; the tab overview lists every tab as a card', async ({
+  page,
+}) => {
+  await expect(page.getByTestId('tab-strip')).toBeVisible();
+  await page.getByRole('button', { name: 'Neuer Tab' }).click();
+  await go(page, 'example.org');
+  await expect(page.getByRole('button', { name: /Testseite example\.org/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Alle Tabs anzeigen' }).click();
+  await expect(page.getByRole('heading', { name: 'Offene Tabs' })).toBeVisible();
+  await expect(page.getByTestId('tab-card')).toHaveCount(1);
+  await audit(page, 'tab overview');
+  await page
+    .getByTestId('tab-card')
+    .getByRole('button', { name: /^Testseite example\.org/ })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Offene Tabs' })).toHaveCount(0);
+});
+
+test('a saved page shows as a tile on the start page; reader mode is offered for https pages', async ({
+  page,
+}) => {
+  await go(page, 'https://example.org/a');
+  await page.getByRole('button', { name: 'Lesezeichen setzen' }).click();
+  await page.getByRole('button', { name: 'Neuer Tab' }).click();
+  await expect(page.getByRole('list', { name: 'Lesezeichen' }).getByRole('button')).toHaveCount(1);
+  await go(page, 'https://example.org/b');
+  await menu(page).click();
+  await expect(page.getByRole('button', { name: 'Lesemodus' })).toBeVisible();
+});

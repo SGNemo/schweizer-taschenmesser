@@ -10,6 +10,9 @@ export const browser: Strings['browser'] = {
     widgetAction: 'Open browser',
   },
   settings: {
+    tabPreview: 'Preview pictures for open tabs',
+    tabPreviewHelp:
+      'Loads the title and preview picture of each open tab again, without login or cookies. The site sees a second request. Private tabs are never included. Default: off.',
     engine: 'Search engine',
     engineCustom: 'Custom address',
     customUrl: 'Custom search address',
@@ -25,6 +28,23 @@ export const browser: Strings['browser'] = {
   },
   hint: 'Not a full browser. Use the system browser for online banking.',
   hintClose: 'Hide hint',
+  tabs: {
+    title: 'Open tabs',
+    openAll: 'Show all tabs',
+    back: 'Back to the page',
+    none: 'No tabs open.',
+    new: 'New tab',
+    private: 'Private',
+    close: (title: string) => `Close tab: ${title}`,
+  },
+  reader: {
+    title: 'Reader mode',
+    loading: 'Loading the page …',
+    failed: 'This page cannot be read as text. Stay on the page or open it in the system browser.',
+    note: 'Nemo loads the page once more without login and without cookies and shows only the text.',
+    unavailable: 'Reader mode works for https pages in normal tabs, not in private ones.',
+    back: 'Back to the page',
+  },
   toolbar: {
     back: 'Back',
     forward: 'Forward',
@@ -49,6 +69,7 @@ export const browser: Strings['browser'] = {
     none: 'Nothing saved yet.',
   },
   menu: {
+    reader: 'Reader mode',
     saveToList: 'Save to Saved',
     saveAsNote: 'Save as note',
     openSystem: 'Open in system browser',
