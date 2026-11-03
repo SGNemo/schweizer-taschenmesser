@@ -4,8 +4,10 @@ import {
   carryIn,
   effectiveLimit,
   familyOf,
+  goalPace,
   goalPlan,
   goalProgress,
+  paceReachedOn,
   projectedSpend,
   spentInMonths,
 } from '../compute';
@@ -250,5 +252,38 @@ describe('savings goals', () => {
   it('has no plan without a rate or once reached', () => {
     expect(goalPlan({ ...goal, monthlyRateMinor: undefined }, 0, '2026-03-01')).toBeUndefined();
     expect(goalPlan(goal, 120000, '2026-03-01')).toBeUndefined();
+  });
+});
+
+describe('goal pace since the start (expectation table)', () => {
+  it.each([
+    ['three months', '2026-01-01', '2026-04-01', 30000, 10000],
+    ['less than a month counts as one', '2026-03-01', '2026-03-10', 9000, 9000],
+    ['start day itself', '2026-01-01', '2026-01-01', 5000, 5000],
+    ['a full year', '2026-01-01', '2027-01-01', 120000, 10000],
+    ['half a cent rounds up', '2026-01-01', '2026-03-01', 10001, 5001],
+    ['leap year (366 days)', '2028-01-01', '2029-01-01', 120000, 10000],
+  ] as const)('%s', (_n, startDate, today, saved, expected) => {
+    expect(goalPace({ startDate }, saved, today)).toBe(expected);
+  });
+  it('has no pace without a start, in the future, or without savings', () => {
+    expect(goalPace({}, 5000, '2026-04-01')).toBeUndefined();
+    expect(goalPace({ startDate: '2026-05-01' }, 5000, '2026-04-01')).toBeUndefined();
+    expect(goalPace({ startDate: '2026-01-01' }, 0, '2026-04-01')).toBeUndefined();
+    expect(goalPace({ startDate: '2026-01-01' }, -500, '2026-04-01')).toBeUndefined();
+  });
+});
+
+describe('month the target is reached at the pace so far (expectation table)', () => {
+  it.each([
+    ['nine more months', 120000, 30000, 10000, '2026-04-01', '2027-01-01'],
+    ['rounds the last month up', 100000, 30000, 30000, '2026-04-01', '2026-07-01'],
+    ['month end is kept', 50000, 20000, 10000, '2026-01-31', '2026-04-30'],
+  ] as const)('%s', (_n, targetMinor, saved, pace, today, expected) => {
+    expect(paceReachedOn({ targetMinor }, saved, pace, today)).toBe(expected);
+  });
+  it('has no date once reached or without a pace', () => {
+    expect(paceReachedOn({ targetMinor: 1000 }, 1000, 500, '2026-04-01')).toBeUndefined();
+    expect(paceReachedOn({ targetMinor: 1000 }, 0, 0, '2026-04-01')).toBeUndefined();
   });
 });

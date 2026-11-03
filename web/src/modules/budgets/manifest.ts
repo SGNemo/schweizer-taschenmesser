@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'envelope',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.budgets.meta.description;
   },
@@ -57,7 +57,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: ['finance'] },
+  seed: { version: 3, dependsOn: ['finance'] },
   layout: 'wide',
   order: 130,
   area: 'money',

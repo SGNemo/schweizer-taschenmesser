@@ -118,6 +118,8 @@ function seed(ctx: SeedContext): SeedRows {
         ...(base[4] ? { note: base[4][ctx.lang] } : {}),
         // Two goals carry a planned rate, so the plan line (reached in … / after the target date) shows.
         ...(i < 2 ? { monthlyRateMinor: base[3] } : {}),
+        // The saving began when the oldest deposit was made, so the average pace shows.
+        startDate: ctx.day(-30 * depositMonths),
       },
     });
     for (let k = 0; k < depositMonths; k++) {

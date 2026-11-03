@@ -6,7 +6,14 @@ export const aiSchema: ModuleAiSchema = {
   collections: {
     goal: {
       label: 'Sparziel',
-      fields: { name: 'text', targetMinor: 'money', deadline: 'date', note: 'text' },
+      fields: {
+        name: 'text',
+        targetMinor: 'money',
+        deadline: 'date',
+        monthlyRateMinor: 'money',
+        startDate: 'date',
+        note: 'text',
+      },
       dateField: 'deadline',
       titleField: 'name',
       searchable: ['name', 'note'],
@@ -18,7 +25,7 @@ export const aiSchema: ModuleAiSchema = {
       collection: 'goal',
       label: 'Sparziel anlegen',
       description: 'Sparziel mit Zielbetrag und optionaler Frist',
-      fields: ['name', 'targetMinor', 'deadline', 'note'],
+      fields: ['name', 'targetMinor', 'deadline', 'monthlyRateMinor', 'startDate', 'note'],
       required: ['name', 'targetMinor'],
       parse: { keywords: ['sparziel', 'sparen'] },
       examples: [
@@ -33,7 +40,7 @@ export const aiSchema: ModuleAiSchema = {
       collection: 'goal',
       label: 'Sparziel ändern',
       description: 'Zielbetrag, Frist oder Name ändern',
-      fields: ['name', 'targetMinor', 'deadline', 'note'],
+      fields: ['name', 'targetMinor', 'deadline', 'monthlyRateMinor', 'startDate', 'note'],
       examples: [
         {
           input: 'Ändere das Sparziel Urlaub auf 2.000 €',
