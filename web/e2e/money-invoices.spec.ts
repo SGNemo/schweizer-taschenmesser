@@ -34,7 +34,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     await addInvoice(page, 'Stadtwerke', '100,00', '2026-10-05');
     await page.getByRole('button', { name: /^Stadtwerke/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
-    await dialog.getByLabel('Betrag der Teilzahlung').fill('40,00');
+    await dialog.getByLabel('Gezahlte Summe').fill('40,00');
     await dialog.getByRole('button', { name: 'Teilzahlung erfassen' }).click();
     await expect(dialog.getByTestId('payment-rest')).toContainText(/60,00\s€/);
     await dialog.getByRole('button', { name: 'Abbrechen' }).click();
@@ -52,7 +52,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     await ready(page, '/invoices');
     await page.getByRole('button', { name: /^Stadtwerke/ }).click();
     const again = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
-    await again.getByLabel('Betrag der Teilzahlung').fill('60,00');
+    await again.getByLabel('Gezahlte Summe').fill('60,00');
     await again.getByRole('button', { name: 'Teilzahlung erfassen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByTestId('open-total')).toHaveText(/0,00\s€/);
@@ -64,7 +64,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     await addInvoice(page, 'Stadtwerke', '100,00', '2026-10-05');
     await page.getByRole('button', { name: /^Stadtwerke/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
-    await dialog.getByLabel('Betrag der Teilzahlung').fill('150,00');
+    await dialog.getByLabel('Gezahlte Summe').fill('150,00');
     await dialog.getByRole('button', { name: 'Teilzahlung erfassen' }).click();
     await expect(dialog.getByRole('alert')).toContainText(/Höchstens 100,00\s€/);
   });

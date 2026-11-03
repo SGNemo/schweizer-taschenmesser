@@ -2661,7 +2661,7 @@ export const de = {
         title: 'Teilzahlungen',
         none: 'Noch keine Teilzahlung.',
         add: 'Teilzahlung erfassen',
-        amount: 'Betrag der Teilzahlung',
+        amount: 'Gezahlte Summe',
         date: 'Gezahlt am',
         remove: 'Teilzahlung entfernen',
         row: (amount: string, date: string) => `${amount} am ${date}`,

@@ -13,7 +13,7 @@ export const invoices: Strings['invoices'] = {
       title: 'Part payments',
       none: 'No part payment yet.',
       add: 'Record a part payment',
-      amount: 'Amount of the part payment',
+      amount: 'Sum paid',
       date: 'Paid on',
       remove: 'Remove part payment',
       row: (amount: string, date: string) => `${amount} on ${date}`,

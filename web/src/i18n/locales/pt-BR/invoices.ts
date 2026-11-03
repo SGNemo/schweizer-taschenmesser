@@ -13,7 +13,7 @@ export const invoices: Strings['invoices'] = {
       title: 'Pagamentos parciais',
       none: 'Ainda não há pagamento parcial.',
       add: 'Registrar um pagamento parcial',
-      amount: 'Valor do pagamento parcial',
+      amount: 'Valor pago',
       date: 'Pago em',
       remove: 'Remover pagamento parcial',
       row: (amount: string, date: string) => `${amount} em ${date}`,
