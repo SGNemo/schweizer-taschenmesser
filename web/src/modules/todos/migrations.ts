@@ -9,4 +9,6 @@ export const migrations: ModuleManifest['migrations'] = {
   2: async () => {},
   // 3: tasks gained the optional `personId` ("Für"); old records stay valid as they are.
   3: async () => {},
+  // 4: tasks gained the optional `startDate`, `tags`, `checklist`, `links`; lists the optional `kind` (project). Nothing to rewrite.
+  4: async () => {},
 };

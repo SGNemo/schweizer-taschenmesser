@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'todayCard',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.todos.meta.description;
   },
