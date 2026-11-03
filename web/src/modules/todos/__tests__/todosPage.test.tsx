@@ -70,10 +70,11 @@ describe('ToDos views', () => {
   it('filters by tag', async () => {
     await taskRepo.create({ ...base, title: 'Rasen mähen', tags: ['garten'] });
     await taskRepo.create({ ...base, title: 'Steuer', tags: ['papier'] });
-    draw('/todos');
+    draw('/todos?tag=garten');
+    expect(await screen.findByText('Rasen mähen')).toBeVisible();
+    expect(screen.queryByText('Steuer')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Alle Tags' }));
     expect(await screen.findByText('Steuer')).toBeVisible();
-    await userEvent.click(screen.getByRole('button', { name: '#garten · 1' }));
-    await waitFor(() => expect(screen.queryByText('Steuer')).toBeNull());
     expect(screen.getByText('Rasen mähen')).toBeVisible();
   });
 

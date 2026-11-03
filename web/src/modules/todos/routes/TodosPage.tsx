@@ -630,7 +630,8 @@ export default function TodosPage() {
           ))}
         </div>
       </div>
-      {tagList.length > 0 ? (
+      {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
+      {tagList.length > 0 && (advanced || tag) ? (
         <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>
           <button
             type="button"
