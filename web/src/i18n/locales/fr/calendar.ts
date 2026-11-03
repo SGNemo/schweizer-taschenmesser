@@ -32,6 +32,8 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Garder comme tâche',
   asTodoDone: 'Gardé comme tâche.',
   skipOccurrence: (date: string) => `Retirer uniquement celui du ${date}`,
+  movedToast: 'Événement déplacé.',
+  dragRecurring: 'Modifiez les événements récurrents dans l’éditeur.',
   calendars: {
     group: 'Agendas',
     manage: 'Gérer les agendas',

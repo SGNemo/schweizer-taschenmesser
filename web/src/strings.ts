@@ -1497,6 +1497,8 @@ export const de = {
     asTodo: 'Als ToDo merken',
     asTodoDone: 'Als ToDo gemerkt.',
     skipOccurrence: (date: string) => `Nur den Termin am ${date} entfernen`,
+    movedToast: 'Termin verschoben.',
+    dragRecurring: 'Wiederkehrende Termine änderst du im Editor.',
     calendars: {
       group: 'Kalender',
       manage: 'Kalender verwalten',

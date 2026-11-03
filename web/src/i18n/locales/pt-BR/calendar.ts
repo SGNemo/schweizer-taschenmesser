@@ -32,6 +32,8 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Salvar como tarefa',
   asTodoDone: 'Salvo como tarefa.',
   skipOccurrence: (date: string) => `Remover apenas o de ${date}`,
+  movedToast: 'Compromisso movido.',
+  dragRecurring: 'Altere compromissos recorrentes no editor.',
   calendars: {
     group: 'Calendários',
     manage: 'Gerenciar calendários',
