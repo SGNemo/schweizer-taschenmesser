@@ -119,7 +119,7 @@ export function TransactionsTab({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <div className={patternStyles.hstackCenter}>
+      <div className={styles.toolbarRow}>
         <Button
           variant="ghost"
           onClick={() => setTransfer({ draft: true })}
