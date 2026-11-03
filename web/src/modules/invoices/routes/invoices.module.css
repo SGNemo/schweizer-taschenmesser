@@ -193,3 +193,15 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Phone: the receipt keeps the sum, the two detail lines wait on the page (less to look at above the list). */
+@media (max-width: 899px) {
+  .receipt {
+    min-width: 0;
+    padding-block: var(--space-2) calc(var(--space-2) + 8px);
+  }
+
+  .receiptLine {
+    display: none;
+  }
+}
