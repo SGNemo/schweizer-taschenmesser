@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v2 – Wetter</title>
+<link rel="stylesheet" href="identity.css">
+<style>
+body{--mod:var(--mod-indigo);--mod2:var(--mod-sky-2)}
+.warn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-md);background:color-mix(in srgb,var(--warning) 14%,var(--surface));color:var(--warning);font-weight:600;font-size:.9375rem}
+.warn span{color:var(--text);font-weight:500}
+.hero{min-height:200px}
+.hero .cond{font-size:1.125rem;color:var(--text-2);margin-top:4px}
+.hero .fig{font-weight:300;letter-spacing:-.045em}
+html[data-v=A] .hero .fig{font-weight:600;letter-spacing:-.03em}
+.hero .fig .deg{font-weight:300}
+.top3{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.top3 .k{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--r-md);background:color-mix(in srgb,var(--surface) 72%,transparent);font-weight:600;font-size:.9375rem;backdrop-filter:blur(6px)}
+.top3 .k .ic{color:var(--mod)}
+.rest{margin-top:12px;font-size:.875rem;color:var(--text-2)}
+.hero .sky{z-index:0}.hero > *:not(.sky){position:relative;z-index:1}
+html[data-v=A] .hero .sky{display:none}
+html[data-v=C] .hero .sky{opacity:.55}
+html[data-v=C] .hero .sky .sun,html[data-v=C] .hero .sky .cloud{opacity:.8}
+.swatch-row{display:flex;align-items:center;gap:14px}
+html:not([data-v=A]) .sky-swatch{display:none}
+.hours{display:flex;gap:10px;overflow:hidden}
+.hcard{flex:0 0 92px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--shadow-1);padding:10px 8px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.hcard .t{font-size:.8125rem;color:var(--text-3);font-family:var(--mono)}
+html[data-v=A] .hcard .t{font-family:var(--font)}
+.hcard .ic{width:22px;height:22px;color:var(--mod)}
+.hcard .tmp{font-weight:700;font-size:1.0625rem}
+.hcard .rain{width:100%;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.hcard .rain i{display:block;height:100%;background:var(--info)}
+.hcard .rp{font-size:.75rem;color:var(--info)}
+.hcard.now{outline:2px solid var(--mod);outline-offset:-2px}
+.chart{padding:var(--s4) var(--s5)}
+.chart svg{width:100%;height:260px;display:block}
+.legend{display:flex;gap:16px;font-size:.8125rem;color:var(--text-3);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.days .row{gap:14px}
+.days .dn{width:4.5rem;font-weight:600}.days .dc{width:7rem;color:var(--text-2);font-size:.875rem}
+.days .bar{flex:1;display:flex;align-items:center;gap:8px;font-size:.875rem;font-variant-numeric:tabular-nums}
+.days .track{flex:1;height:8px;border-radius:4px;background:var(--surface-2);position:relative}
+.days .track i{position:absolute;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,var(--info),var(--warning))}
+.days .rp{width:3.5rem;text-align:right;color:var(--info);font-size:.8125rem}
+.aq .row{min-height:36px}
+.aq .v{font-weight:600;font-variant-numeric:tabular-nums}
+.sunarc{height:70px;position:relative;border-bottom:1px solid var(--border);margin:8px 0 6px}
+.sunarc::before{content:'';position:absolute;left:10%;right:10%;bottom:-1px;height:120px;border:2px dashed var(--border-strong);border-bottom:0;border-radius:120px 120px 0 0;opacity:.6}
+.sunarc i{position:absolute;left:34%;bottom:40px;width:14px;height:14px;border-radius:50%;background:var(--warning)}
+html[data-device=mobile] .hours{overflow-x:auto}
+html[data-device=mobile] .top3 .k{padding:8px 10px;font-size:.875rem}
+html[data-device=mobile] .hero{min-height:0}
+html[data-device=mobile] .hero .fig{font-size:4rem}
+html[data-device=mobile] .hero .fig small{display:block;margin-top:6px;font-size:1rem}
+html[data-device=mobile] .sky .sun{width:56px;height:56px;right:8%;top:8%}
+html[data-device=mobile] .sky .cloud{width:90px;height:30px;right:4%;top:22%;box-shadow:22px -10px 0 5px rgb(255 255 255/.75)}
+html[data-device=mobile] .warn{font-size:.875rem;padding:8px 12px}
+html[data-device=mobile] .warn span{display:block;font-size:.8125rem}
+html[data-device=mobile] .rest{font-size:.8125rem}
+</style></head>
+<body data-active="weather" data-area="planen">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame wide">
+  <div class="warn"><span style="color:var(--warning);font-weight:600">⚠ Wetterwarnung</span> <span>Freitag: Sturmböen bis 70 km/h ab 14 Uhr · Deutscher Wetterdienst</span></div>
+  <section class="hero">
+    <div class="sky"><div class="sun"></div><div class="cloud"></div><div class="horizon"></div></div>
+    <div class="collapsed"><span>Bern</span><span class="num">14°</span><span class="meta">leicht bewölkt · ab 15 Uhr Regen</span></div>
+    <div>
+      <p class="eyebrow"><span class="modchip" id="chip"></span>Planen · Wetter</p>
+      <h1>Bern</h1>
+      <div class="tabs"><b>Heute</b><span>7 Tage</span><span>Karte</span></div>
+      <div class="swatch-row" style="margin-top:14px">
+        <div class="sky-swatch"><div class="sky"><div class="sun"></div><div class="cloud"></div></div></div>
+        <div>
+          <div class="fig">14<span class="deg">°</span> <small>fühlt sich an wie 12°</small></div>
+          <p class="cond">leicht bewölkt · Dienstag, 10:00</p>
+        </div>
+      </div>
+      <div class="top3">
+        <span class="k"><svg class="ic" viewBox="0 0 24 24"><path d="M7 15a4 4 0 0 1 .5-8A6 6 0 0 1 19 8a3.5 3.5 0 0 1 0 7zM8 19l-1 2M12 19l-1 2M16 19l-1 2"/></svg>Regen ab 15 Uhr · 80 %</span>
+        <span class="k"><svg class="ic" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8a2 2 0 1 1-2 2"/></svg>Wind 14 km/h</span>
+        <span class="k"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>UV 3 · mäßig</span>
+      </div>
+      <p class="rest">8° / 15° · Luftfeuchte 70 % · Böen 30 km/h · Sonne 07:05–18:51 · Beste Zeit draußen 10–15 Uhr</p>
+    </div>
+    <div class="actions"><span class="chip on">Bern</span><span class="chip">Zürich</span><span class="chip">+ Ort</span></div>
+  </section>
+  <div class="toolbar">
+    <div class="seg"><span class="on">Übersicht</span><span>Stunden</span><span>Tage</span></div>
+    <span class="chip">Alle Stunden</span>
+    <span class="chip">Allergie an</span>
+    <span class="spacer"></span>
+    <span class="meta">Stand 09:50 · Open-Meteo</span>
+  </div>
+  <div class="body with-aside">
+    <div style="display:flex;flex-direction:column;gap:var(--s5);min-width:0">
+      <div class="hours" id="hours"></div>
+      <div class="card chart">
+        <h3>Nächste 24 Stunden · Temperatur, Regen, Wind</h3>
+        <svg viewBox="0 0 1000 260" preserveAspectRatio="none" id="svg"></svg>
+        <div class="legend"><span><i style="background:var(--text)"></i>Temperatur</span><span><i style="background:var(--info)"></i>Regen</span><span><i style="background:var(--text-3)"></i>Wind (gestrichelt)</span><span><i style="background:var(--surface-2);border:1px solid var(--border)"></i>Nacht</span></div>
+      </div>
+      <div class="card days">
+        <h3>7 Tage</h3>
+        <div id="days"></div>
+      </div>
+    </div>
+    <aside class="aside">
+      <div class="card aq">
+        <h3>Atemwege &amp; Allergie</h3>
+        <div class="row"><span class="light"><i class="ok"></i><i class="mid"></i><i></i></span><span class="grow">Luftqualität <span class="sub">Europäischer Index 52</span></span><span class="v">mäßig</span></div>
+        <div class="row"><span class="light"><i></i><i></i><i class="bad"></i></span><span class="grow">Birke <span class="sub">120 Pollen/m³</span></span><span class="v">hoch</span></div>
+        <div class="row"><span class="light"><i class="ok"></i><i></i><i></i></span><span class="grow">Gräser <span class="sub">3 Pollen/m³</span></span><span class="v">niedrig</span></div>
+        <div class="row"><span class="light"><i class="ok"></i><i></i><i></i></span><span class="grow">Feinstaub PM2,5 <span class="sub">12 µg/m³</span></span><span class="v">gut</span></div>
+        <p class="meta" style="margin-top:10px">Orientierung, keine ärztliche Beratung.</p>
+      </div>
+      <div class="card">
+        <h3>Sonne</h3>
+        <div class="sunarc"><i></i></div>
+        <div style="display:flex;justify-content:space-between;font-size:.875rem;color:var(--text-2)"><span>↑ 07:05</span><span>5 h Sonnenschein</span><span>↓ 18:51</span></div>
+      </div>
+      <div class="card">
+        <h3>Weitere Orte</h3>
+        <div class="row"><span class="grow">Zürich <span class="sub">Regen · 12°</span></span><span class="num">9° / 13°</span></div>
+        <div class="row"><span class="grow">Lissabon <span class="sub">sonnig · 24°</span></span><span class="num">18° / 26°</span></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+</div>
+<script src="shell.js"></script>
+<script>
+document.getElementById('chip').innerHTML = ICONS.sun;
+const sunI = ICONS.sun, cloudI = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8A6 6 0 0 1 19 11a3.5 3.5 0 0 1 0 7z"/></svg>', rainI = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 15a4 4 0 0 1 .5-8A6 6 0 0 1 19 8a3.5 3.5 0 0 1 0 7zM8 19l-1 2M12 19l-1 2M16 19l-1 2"/></svg>';
+const hours = [['10','14°',0,sunI,1],['11','15°',0,sunI],['12','15°',0,cloudI],['13','15°',10,cloudI],['14','14°',40,cloudI],['15','13°',80,rainI],['16','12°',70,rainI],['17','12°',30,cloudI],['18','11°',10,cloudI],['19','11°',0,cloudI],['20','10°',0,cloudI],['21','10°',0,cloudI]];
+document.getElementById('hours').innerHTML = hours.map(([t,tmp,r,ic,now]) => `<div class="hcard${now?' now':''}"><span class="t">${t}:00</span>${ic}<span class="tmp">${tmp}</span><span class="rain"><i style="width:${r}%"></i></span><span class="rp">${r? r+' %':'&nbsp;'}</span></div>`).join('');
+const days = [['Heute','leicht bewölkt',8,15,80],['Mi.','Regen',9,14,70],['Do.','klar',6,17,0],['Fr.','Gewitter',7,12,90],['Sa.','bedeckt',8,13,10],['So.','Schnee',1,5,40],['Mo.','heiter',7,16,0]];
+document.getElementById('days').innerHTML = days.map(([d,c,lo,hi,r]) => `<div class="row"><span class="dn">${d}</span><span class="dc">${c}</span><span class="bar"><span>${lo}°</span><span class="track"><i style="left:${(lo+2)/20*100}%;right:${100-(hi+2)/20*100}%"></i></span><span>${hi}°</span></span><span class="rp">${r? r+' %':''}</span></div>`).join('');
+// chart
+const W=1000,H=260,temps=[10,10,11,12,13,14,15,15,15,15,14,13,12,12,11,11,10,10,10,10,11,12,13,14],rain=[0,0,0,0,0,0,0,0,0,10,40,80,70,30,10,0,0,0,0,0,0,0,0,0],wind=[12,12,13,14,14,15,16,18,20,22,22,20,18,16,14,12,12,12,12,13,14,15,15,16];
+const x=i=>i/23*W, y=t=>H-60-(t-5)/15*(H-100);
+let s=`<rect x="${x(10.5)}" y="0" width="${x(23)-x(10.5)}" height="${H-30}" fill="var(--surface-2)" opacity=".7"/>`;
+s+=`<text x="${x(11)}" y="18" font-size="12" fill="var(--text-3)">Nacht ab 18:51</text>`;
+s+=rain.map((r,i)=>`<rect x="${x(i)-9}" y="${H-30-r*1.3}" width="18" height="${r*1.3}" rx="3" fill="var(--info)" opacity=".8"/>`).join('');
+s+=`<path d="${wind.map((w,i)=>(i?'L':'M')+x(i)+' '+(H-40-w*3)).join(' ')}" fill="none" stroke="var(--text-3)" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+const pts=temps.map((t,i)=>x(i)+' '+y(t)).join(' L ');
+s+=`<path d="M ${pts} L ${W} ${H-30} L 0 ${H-30} Z" fill="var(--mod)" opacity=".10"/>`;
+s+=`<path d="M ${pts}" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linejoin="round"/>`;
+s+=[0,6,12,18,23].map(i=>`<text x="${x(i)}" y="${H-8}" font-size="12" text-anchor="${i===0?'start':i===23?'end':'middle'}" fill="var(--text-3)">${(10+i)%24} Uhr</text>`).join('');
+s+=`<text x="${x(7)}" y="${y(15)-10}" font-size="13" font-weight="600" text-anchor="middle" fill="var(--text)">15°</text><text x="${x(0)+4}" y="${y(10)-10}" font-size="13" font-weight="600" fill="var(--text)">10°</text>`;
+document.getElementById('svg').innerHTML=s;
+</script>
+</body></html>
