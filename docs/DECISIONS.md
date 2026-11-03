@@ -23,5 +23,6 @@ Index. Each area file holds one bullet per decision (**what** – why, with date
 | Supporter mode | [decisions/supporter.md](decisions/supporter.md) | cosmetic only, Ed25519 codes verified offline, status derived from the code, Cloudflare Worker issuer |
 | Languages | [decisions/language.md](decisions/language.md) | English docs source with German `*.de.md` copies, brand claim per language, app UI in five languages |
 | Website | [decisions/website.md](decisions/website.md) | static `site/` (Astro), Cloudflare Pages from the repo, no tracking, release data at build time, tokens pinned to the app |
+| Automations | [decisions/automation.md](decisions/automation.md) | rules as data, closed action list (no delete/send/pay), vault excluded, writes through the assistant contract + group undo, fixed ids, write hook + detectors, guards, calm notices |
 | Chats and docs process | [decisions/meta.md](decisions/meta.md) | scribble folder (develop only, CI guard on main), `chats:status` overlap check, stimulus budget (warning only) |
 | Legal notices | [decisions/legal.md](decisions/legal.md) | placeholders instead of invented details, one-time notices at the place of use, generated + allowlisted licence list |

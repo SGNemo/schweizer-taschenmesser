@@ -8,6 +8,7 @@ Fundament v3 (`feat/identity-v3-foundation`, Runden 1+2 fertig, PR #414 offen): 
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Automatisierungen, Paket 1 von 3 (`feat/automations-1-engine`): Regel-Engine in `core/automation` (Auslöser, Bedingungen, Aktionen, Schleifenschutz, Limits, Trockenlauf, Protokoll, Rückgängig); noch ohne Oberfläche und Vorlagen (Pakete 2 und 3).
 Einstellungen v2, Paket 4 (`feat/settings-search`): Suche findet Untergruppen, zeigt den ganzen Pfad (bei Modulen mit Seitenblock), Schnellschalter direkt im Treffer, Synonyme für die neuen Abschnitte in 5 Sprachen.
 Einstellungen: Abschnitte laden beim Öffnen (`feat/settings-split`, Startpaket −55 KB gzip, Sync und Backup bleiben im Startpaket).
 Einstellungen v2, Paket 3b (`feat/settings-control`): Meldungen pro Modul und Kanal (Glocke / Hinweis zur Zeit), Speicher-Seite mit Zwischenspeicher leeren, Kategorie Barrierefreiheit (Lesehilfe und Fokus ziehen um, alte Links folgen), feste Kürzel sichtbar und für globale Kürzel gesperrt; Handtests SO10–SO12 in [MANUAL-TESTS.md](MANUAL-TESTS.md); danach der Bundle-Split.
