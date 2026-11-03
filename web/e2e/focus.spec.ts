@@ -160,7 +160,7 @@ test.describe('Focus and attention aids', () => {
     await expect(page.getByText('Die Vorschläge sind ausgeschaltet.')).toBeVisible();
     await expect(page.getByTestId('next-card')).toHaveCount(0);
 
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openFoldedGroup(page, 'focus', 'aids');
     const timeToNext = section.getByRole('switch', { name: 'Zeit bis zum nächsten Termin' });
     await expect(timeToNext).toHaveAttribute('aria-checked', 'true');

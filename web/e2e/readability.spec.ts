@@ -31,7 +31,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
   test('the reading aid is off by default, applies at once, survives a reload and does not move the layout', async ({
     page,
   }) => {
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openFoldedGroup(page, 'reading', 'aid');
     const preview = page.getByTestId('reading-preview');
     await expect(preview.locator('[data-rs]')).toHaveCount(0);
@@ -60,7 +60,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
   });
 
   test('Alt+L switches the reading aid', async ({ page }) => {
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openFoldedGroup(page, 'reading', 'aid');
     await page.keyboard.press('Alt+KeyL');
     await expect(page.getByText('Lesehilfe ist an')).toBeVisible();
@@ -133,7 +133,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     await ready(page, '/invoices');
     // 25 % (default): only running text – headings and buttons are plain.
     await expect(page.locator('main h1 [data-rs]')).toHaveCount(0);
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openFoldedGroup(page, 'reading', 'aid');
     const cover = page.getByRole('group', { name: 'Umfang' });
     await cover.getByRole('button', { name: '50 %' }).click();

@@ -22,7 +22,7 @@ test('the pantry page says what runs low; the switch in the settings hides the r
 }) => {
   await enable(page, 'pantry');
   // The strips are off by default (calm defaults): switch them on first.
-  await ready(page, '/settings/darstellung');
+  await ready(page, '/settings/barrierefreiheit');
   await openMoreFocus(page);
   const toggle = page
     .locator('section[aria-labelledby="focus"]')
@@ -36,7 +36,7 @@ test('the pantry page says what runs low; the switch in the settings hides the r
   await addLowItem(page);
   await expect(page.getByTestId('now-strip')).toContainText('1 Vorrat geht zur Neige');
 
-  await ready(page, '/settings/darstellung');
+  await ready(page, '/settings/barrierefreiheit');
   await openMoreFocus(page);
   // The switch shows the default (off) until the stored value is loaded: wait for "on" before
   // clicking, or the click lands on the stale default and writes "on" again.

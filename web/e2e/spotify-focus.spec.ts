@@ -18,7 +18,7 @@ async function addTodo(page: Page, title: string) {
 }
 
 async function openMusicRow(page: Page) {
-  await ready(page, '/settings/darstellung');
+  await ready(page, '/settings/barrierefreiheit');
   await openMoreFocus(page);
   await openFoldedGroup(page, 'focus', 'music');
   return page.getByTestId('focus-group-music');
@@ -39,7 +39,7 @@ const player = (api: string[]) => api.filter((c) => c.startsWith('PUT ') || c.st
 test.describe('Spotify music in the focus round', () => {
   test('the row is not there without Spotify', async ({ page }) => {
     await mockSpotify(page);
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
     await expect(page.getByTestId('focus-group-music')).toHaveCount(0);
   });
@@ -47,7 +47,7 @@ test.describe('Spotify music in the focus round', () => {
   test('connected with "Anzeigen" only: no row either (nothing to steer)', async ({ page }) => {
     await mockSpotify(page);
     await seedConnected(page, ['show']);
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
     await expect(page.getByTestId('focus-group-music')).toHaveCount(0);
   });
@@ -134,7 +134,7 @@ test.describe('Spotify music in the focus round', () => {
     await addTodo(page, 'Etwas tun');
     await startRound(page);
     await expect(page.getByTestId('focus-music-status')).toBeVisible();
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
     await expect(page.getByTestId('focus-group-music')).toHaveCount(0);
   });
