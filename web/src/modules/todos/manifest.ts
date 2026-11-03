@@ -14,9 +14,10 @@ const manifest: ModuleManifest = {
   icon: 'checklist',
   identity: {
     hue: 'moss',
+    hue2: 'lime',
     widgetType: 'checklist',
-    head: 'figure',
-    surface: 'gradient',
+    widget: 'fokus',
+    head: 'fokus',
     signature: 'todayCard',
     feedback: 'tick',
   },

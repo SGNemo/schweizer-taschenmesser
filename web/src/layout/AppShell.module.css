@@ -23,6 +23,9 @@
 }
 .main {
   /* Width is decided per page by <PageContainer>; the shell only provides the fluid gutter. */
+  /* The module head is a band that bleeds through these paddings up to the shell's edges (layout/AreaFrame). */
+  --frame-bleed-x: var(--page-gutter);
+  --frame-bleed-top: var(--space-5);
   display: flex;
   flex-direction: column;
   /* Room for the bottom bar plus the "+" button (56 px, 16 px above the bar), so it never covers the last field. */
@@ -110,10 +113,4 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-/* Identity v2: a thin stripe in the active module's hue along the sidebar's edge ("Ruhig"/"Modulfarben: Aus" grey it via --mod-*).
-   An inset shadow, so the sidebar's own positioning and stacking stay untouched. */
-.sidebar[data-hue] {
-  box-shadow: inset -3px 0 0 var(--module-color);
 }

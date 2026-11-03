@@ -16,6 +16,7 @@ import {
   checkSettingsSource,
   checkWidgetSource,
 } from './lib/checkModules.ts';
+import { checkIdentityGroups, identityFacts, readHueTable } from './lib/checkIdentity.ts';
 import { validateAiActions } from '../src/core/modules/aiActions.ts';
 import {
   MODULE_FIELD_GROUPS,
@@ -27,6 +28,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const modulesDir = join(root, 'src', 'modules');
 const toolsDir = join(root, 'src', 'tools');
 const errors = [];
+const identities = [];
 let count = 0;
 let toolCount = 0;
 
@@ -38,6 +40,7 @@ for (const id of readdirSync(modulesDir).sort()) {
   const manifest = readFileSync(manifestPath, 'utf8');
   const fileExists = (rel) => existsSync(join(dir, rel));
   errors.push(...checkModule({ id, manifest, fileExists }));
+  identities.push(identityFacts(id, manifest));
   const settingsPath = join(dir, 'settings.ts');
   const settingsSource = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : manifest;
   errors.push(...checkSettingsSource(id, settingsSource, SETTINGS_CATEGORY_IDS));
@@ -53,6 +56,14 @@ for (const id of readdirSync(modulesDir).sort()) {
     if (file) errors.push(...checkWidgetSource(id, m[1], readFileSync(file, 'utf8')));
   }
 }
+
+// Identity v3: one hue per module and area, hues keep their distance, neighbours differ in head variant.
+errors.push(
+  ...checkIdentityGroups(
+    identities,
+    readHueTable(readFileSync(join(root, 'src', 'ui', 'tokens.css'), 'utf8')),
+  ),
+);
 
 // Tools: every manifest names its maturity (docs/howto/new-extension.md).
 for (const id of readdirSync(toolsDir).sort()) {

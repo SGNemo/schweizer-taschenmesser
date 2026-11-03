@@ -18,9 +18,10 @@ const manifest: ModuleManifest = {
   icon: 'mail',
   identity: {
     hue: 'teal',
+    hue2: 'ocean',
     widgetType: 'kpi',
-    head: 'compact',
-    surface: 'gradient',
+    widget: 'kennzahl',
+    head: 'kennzahl',
     signature: 'stamp',
   },
   version: 1,

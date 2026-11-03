@@ -14,9 +14,10 @@ const manifest: ModuleManifest = {
   icon: 'calendar',
   identity: {
     hue: 'sky',
+    hue2: 'ocean',
     widgetType: 'timeline',
-    head: 'compact',
-    surface: 'gradient',
+    widget: 'zeitleiste',
+    head: 'zeit',
     signature: 'calendarLeaf',
   },
   version: 4,

@@ -12,9 +12,19 @@ const manifest: ModuleManifest = {
     return t.__ID__.meta.name;
   },
   icon: 'puzzle',
-  // Hue from the module palette (sky | moss | teal | ocean | violet | plum | orchid | indigo | slate | navy)
-  // and the catalogue type of the main widget (kpi | dueList | progress | checklist | timeline | tiles | status | gauge).
-  identity: { hue: 'slate', widgetType: 'kpi' },
+  // Identity v3 (docs/design/identity-v3/02-CONCEPT.md, docs/design/MODULE-IDENTITY.md): the hue from the palette
+  // (lime | moss | fern | teal | ocean | sky | cobalt | indigo | violet | orchid | slate; free in the area, 25° apart),
+  // the catalogue type of the main widget (kpi | dueList | progress | checklist | timeline | tiles | status | gauge), the
+  // widget's shape (kennzahl | zeitleiste | fortschritt | cover | himmel | kacheln | status | notiz | fokus | faellig | checkliste),
+  // the head variant (kennzahl | zeit | fortschritt | cover | himmel | regal | tresor | schreib | fokus; not the same as the
+  // neighbour module's in the area) and the signature inside the head ('none' until you build one).
+  identity: {
+    hue: 'slate',
+    widgetType: 'kpi',
+    widget: 'kennzahl',
+    head: 'schreib',
+    signature: 'none',
+  },
   version: 1,
   get description() {
     return t.__ID__.meta.description;

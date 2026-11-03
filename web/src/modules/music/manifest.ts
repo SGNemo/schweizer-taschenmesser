@@ -17,9 +17,10 @@ const manifest: ModuleManifest = {
   icon: 'music',
   identity: {
     hue: 'orchid',
+    hue2: 'violet',
     widgetType: 'status',
+    widget: 'cover',
     head: 'cover',
-    surface: 'gradient',
     signature: 'coverTone',
     type: 'mono',
   },

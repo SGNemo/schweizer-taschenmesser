@@ -19,9 +19,10 @@ const manifest: ModuleManifest = {
   icon: 'sparkles',
   identity: {
     hue: 'sky',
+    hue2: 'cobalt',
     widgetType: 'tiles',
-    head: 'compact',
-    surface: 'gradient',
+    widget: 'notiz',
+    head: 'fokus',
     signature: 'bubble',
   },
   version: 1,

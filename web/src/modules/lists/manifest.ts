@@ -14,9 +14,10 @@ const manifest: ModuleManifest = {
   icon: 'cart',
   identity: {
     hue: 'orchid',
+    hue2: 'violet',
     widgetType: 'checklist',
-    head: 'compact',
-    surface: 'gradient',
+    widget: 'checkliste',
+    head: 'kennzahl',
     signature: 'receipt',
   },
   version: 2,
