@@ -13,6 +13,8 @@ async function createEvent(page: Page) {
   await dialog.getByLabel('Ende', { exact: true }).fill('11:00');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  // The editor closes with an in-app URL change; a goto issued in the same instant can be aborted.
+  await page.waitForLoadState('networkidle');
   await page.goto('/calendar?view=day&date=2026-11-03');
 }
 
