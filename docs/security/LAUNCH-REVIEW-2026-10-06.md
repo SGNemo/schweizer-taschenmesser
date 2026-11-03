@@ -23,9 +23,9 @@ No critical finding. Production dependency audits are clean (`npm audit --omit=d
 | N4 | medium | sync | Server responses are not validated on the client (malicious server → stuck or corrupted sync) | S |
 | V1 | medium | vault | "Alle Daten löschen" leaves the biometric seal of the vault DEK in the OS store | S |
 | V2 | medium | vault | Windows Hello is a consent gate only: the DEK is stored readable in Credential Manager (documented design limit) | L |
-| V5 | medium | backup | Backup import writes record values unvalidated, no file size cap | M |
+| V5 | medium | backup | Backup import writes record values unvalidated, no file size cap | M *(V5 done, [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))* |
 | T1 | medium | tauri | CSP lacks `base-uri`, `object-src`, `form-action`, `frame-src`; `connect-src` any host (S12) | S |
-| T2 | medium | android | `allowBackup` / cleartext of the generated manifest never asserted (S15) | S (CI) |
+| T2 | medium | android | `allowBackup` / cleartext of the generated manifest never asserted (S15) | S (CI) *(T2 done: allowBackup off, cleartext only reported, [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))* |
 | X2 | medium | bridge | "First instance flag → Nemo refuses to listen" not implemented on Windows: creation failure is retried as a non-first instance | M |
 | X4 | medium | extension | Overlay host is an ordinary `<div>`: same-origin page script can hide or move it (UI redress) | M |
 | A1 | medium | ai | Router fallback can resend a chat with attached data to another provider (incl. "may train" tiers) | S/M |
@@ -90,7 +90,7 @@ Status of the earlier items: S3, S4, S7, S8, S17 fixed as described; S1 mitigate
 - **N7 (low)** `docs/user/sync-server.md:80-81`, `core/sync/crypto.ts:1-4` still say PBKDF2.
 - **N8 (low)** `app.ts:155-190, 326-330`: device tokens may create the vault and revoke other devices (intended; document in `docs/user/sicherheit.md`).
 - **N9 (low)** `docker-compose.yml` publishes `${PORT:-8787}:8787` on all interfaces, CORS default `*`, base image by tag. Good: `USER node`, HEALTHCHECK, `/data` owned by node. Fix: document `127.0.0.1:` bind behind `tailscale serve`, Dependabot docker digests.
-- N10 (info) server backup file written with default mode (directory 0700) → `chmod 0600`. N11 (info) no `setErrorHandler`; Fastify's default returns `error.message` on unexpected exceptions. N12 (info) ops for unknown collections skipped with the cursor advancing (data gap after upgrades, not security).
+- N10 (info) server backup file written with default mode (directory 0700) → `chmod 0600`. N11 (info) no `setErrorHandler`; Fastify's default returns `error.message` on unexpected exceptions. N12 (info) ops for unknown collections skipped with the cursor advancing (data gap after upgrades, not security). *(N11 done, [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))*
 
 Done well: all SQL parameterised; schemas `additionalProperties:false` with HLC/collection/device patterns and size limits; device tokens 256-bit, SHA-256 stored, constant-time, revocation immediate; SSRF proxy exemplary (per-hop DNS, pinned socket, v4-mapped/NAT64/6to4, ≤3 re-checked redirects, feed content types, CSP sandbox); E2E AES-GCM with AAD per field; KDF floor and ceiling against a hostile server; `hardening.test.ts:503` asserts no secrets leave the device.
 
@@ -101,7 +101,7 @@ Note: `modules/vault/` is the documents module ("Unterlagen"); the password mana
 - **V2 (medium, documented)** `desktop.rs:93-129`, `desktop/hello.rs:4-6`, decision `docs/decisions/distribution.md:13`: Windows Hello gates consent, the DEK itself is readable by any process in the session. Android is bound correctly (`CryptoObject`, `setUserAuthenticationParameters(0, BIOMETRIC_STRONG)`, invalidation on enrolment). Option: wrap the DEK with a Hello-backed `KeyCredentialManager` signature. Effort L; keep the UI hint meanwhile.
 - **V3 (low)** `modules/accounts/copy.ts:8-11` → `core/platform/web.ts:44-66`: timer only; the lock subscription (`service.ts:24-26`) ends bridge sessions but leaves the clipboard. Fix: `clipboard.clearSensitive()` on lock.
 - **V4 (low)** `core/platform/tauri/index.ts:136-143` uses the plugin `writeText`; no `EXTRA_IS_SENSITIVE` on Android 13+. Fix: small Kotlin command in `secure-store`.
-- **V5 (medium)** `core/backup/backup.ts:15-19` validates `id`, `deletedAt`, `_f` only; `apply.ts:94-107` writes every `_f` key via `bulkPut`; `BackupSection.tsx:96` reads the whole file without a limit. Prototype pollution is blocked (`ops.ts:12,45-53`), only known synced tables are restored, `_secrets`/`_meta`/`_outbox`/`_blobs` excluded. Residual: records of arbitrary shape in any module table incl. `_settings`/`_modules`. Fix: validate the data part against the collection schema (skip and count invalid rows in the preview), refuse files > 64 MB before parse.
+- **V5 (medium)** `core/backup/backup.ts:15-19` validates `id`, `deletedAt`, `_f` only; `apply.ts:94-107` writes every `_f` key via `bulkPut`; `BackupSection.tsx:96` reads the whole file without a limit. Prototype pollution is blocked (`ops.ts:12,45-53`), only known synced tables are restored, `_secrets`/`_meta`/`_outbox`/`_blobs` excluded. Residual: records of arbitrary shape in any module table incl. `_settings`/`_modules`. Fix: validate the data part against the collection schema (skip and count invalid rows in the preview), refuse files > 64 MB before parse. *(V5 done, [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))*
 - **V6 (low)** `core/crypto/kdf.ts:32` allows m = 1 GiB, t = 32, p = 16 from a synced header (`accounts_vault.header` is one synced field) or an import file: minutes of work or WASM OOM on a phone. Fix: lower the ceiling (256 MiB, t ≤ 10, p ≤ 4); existing headers use 64 MiB/t=3.
 - **V7 (low)** `core/sync/crypto.ts:23-28` `atob` throws `DOMException`; `modules/accounts/backup.ts:40` and `ToolsDialog.tsx:172-176` catch `CryptoError` only. Fix: wrap → `CryptoError('malformed')`.
 - **V8 (low)** `SecureStorePlugin.kt:246-270`: pref present, alias gone → new key, `AEADBadTagException` → reject → `LockScreen.tsx:15-20` has no catch. Fix: answer `invalidated`, catch in `LockScreen`, remove the stale seal.
@@ -126,7 +126,7 @@ Done well: domain-separated Ed25519 message, fixed layout with length checks, un
 
 ### Updater, disk deletion, Tauri shell, Android
 - **T1 (medium, S12)** `web/src-tauri/tauri.conf.json:24`: no `base-uri`, `object-src`, `form-action`, `frame-src`; `connect-src … https: http:`. Fix: append `base-uri 'self'; object-src 'none'; form-action 'none'; frame-src 'none'` (no iframes in the tree) plus a Vitest reading the config. Dropping `http:` would break plain-HTTP sync/feeds – decision.
-- **T2 (medium, S15)** `release.yml:306-310`, `dev-preview.yml:295-297`: `tauri android init --ci` then icons only; `allowBackup`/`usesCleartextTraffic` never asserted. Fix: grep-assert or sed-patch after init (CI change).
+- **T2 (medium, S15)** `release.yml:306-310`, `dev-preview.yml:295-297`: `tauri android init --ci` then icons only; `allowBackup`/`usesCleartextTraffic` never asserted. Fix: grep-assert or sed-patch after init (CI change). *(T2 done: allowBackup off, cleartext only reported, [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))*
 - **T3 (low, S13/S18)** `ApkInstallerPlugin.kt:69-72, 119-120, 136-168`: `https://` only, digest optional, any file under the cache dir. The TS caller restricts (`core/update/github.ts:220-234`, `updater.ts:124-126`). Fix: in `plugins/apk-installer/src/mobile.rs:207` require 64-hex `sha256` and host `github.com` + release path prefix (Rust unit test).
 - **T4 (low)** `web/src-tauri/src/update.rs:37`: `DEV_MANIFEST_PATH` accepted without `is_dev_identifier`; asset URL check `#[cfg(windows)]` only (`:131-139`). Signature verification still blocks foreign binaries. Fix: pass `dev` in, reject the dev path for stable, check assets on all desktop OSes.
 - **T5 (low)** `oauth.rs:114, 154-170`: one connection at a time, 5 s read timeout → a stray local client delays the real redirect. Fix: thread per stream or 1 s timeout.
@@ -193,14 +193,14 @@ Verified OK: PKCE S256, 24-byte state, one-shot loopback listener, constant resp
 | X1, X3, X5, X6, X7, X8 | Fixed (`ipc.rs` SQOS flag; shared rate bucket for `secret`/`compare`/`create`/`update`, one session per extension, untrusted submits ignored; opaque origins; lint; OTP ignore). X1 needs the Windows hand test. |
 | X2, X4, X9 | Open: X2 and X4 need a larger change (documented in VAULT-EXTENSION.md), X9 documented. |
 | N1–N8, N10 | Fixed (encryption preselected, passphrase ≥ 12, drift bound client + server with the `clock` error, Zod-validated responses, push endpoint block list, proxy deadline, docs, backup mode 0600). N9, N11, N12 open (docs/server ops). |
-| V1, V3, V6, V7, V8, V11 | Fixed. V2 (Hello wrapping), V4 (Android clipboard flag), V5 (backup row validation), V9, V10 open. |
+| V1, V3, V6, V7, V8, V11 | Fixed. V2 (Hello wrapping), V4 (Android clipboard flag), V5 (backup row validation), V9, V10 open. *(V5, V10, T2 and N11 done: [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))* |
 | T1, T3, T4 | Fixed. T2 (Android manifest assertion) still needs the CI step on a real `tauri android init` run; T5–T8 open. |
 | L1, L2 | Fixed. L3–L7 info only. |
 | A1, A2, A3, A4, A6 | Fixed. A5 (re-hash model at load) open. |
 | W1, W2, W3, W5 | Fixed. W4, W6–W8 info only. |
 | P1, P3, P4 (partly), P6 | Fixed: all Actions SHA-pinned (`scripts/lib/actionsPinned.test.ts`), signed previews only from `develop`, dry runs unsigned, `cargo --locked` for desktop builds, gitleaks built per run. `choco install vulkan-sdk` stays unpinned (version list not reachable from here). |
 | P2 | Wired: `dev-preview.yml` signs with `TAURI_DEV_SIGNING_PRIVATE_KEY` and verifies against `tauri.dev.conf.json`; the maintainer creates the pair (`keys.mjs updater --dev`) and sets pubkey + secrets, otherwise the dev-preview job stops with a clear error. |
-| P5, P7–P13 | Open / info. P13 (site deploy hook `if`) to be checked in a run log. |
+| P5, P7–P13 | Open / info. P13 (site deploy hook `if`) to be checked in a run log. *(P13 fixed in [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417), still check a run log)* |
 | D1–D5 | Fixed in README, `docs/user/sicherheit.md`, website privacy pages, SECURITY.md. The controller name on the website is still the placeholder. |
 
 ## Plan for phase 2 (approved 2026-10-07)
