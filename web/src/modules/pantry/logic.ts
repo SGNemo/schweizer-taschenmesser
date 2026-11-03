@@ -66,3 +66,19 @@ export const countLabel = (
 /** True when taking one away moved the stock from above the minimum down to it (or below). */
 export const crossedMinimum = (item: PantryItem, next: number): boolean =>
   item.minCount !== undefined && item.count > item.minCount && next <= item.minCount;
+
+/** EAN-8, UPC-A (12) or EAN-13 digits with a correct check digit. */
+export function isEan(code: string): boolean {
+  if (!/^\d{8}$|^\d{12,13}$/.test(code)) return false;
+  const digits = [...code].map(Number);
+  const check = digits.pop()!;
+  // From the right (before the check digit) the weights are 3, 1, 3, 1 …
+  const sum = digits.reverse().reduce((s, d, i) => s + d * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+/** The item that carries this barcode, if any. */
+export const findByEan = <T extends Pick<PantryItem, 'ean'>>(
+  items: readonly T[],
+  code: string,
+): T | undefined => items.find((i) => i.ean === code);

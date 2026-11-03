@@ -33,10 +33,12 @@ import {
   crossedMinimum,
   daysLeft,
   expiryState,
+  findByEan,
   needsRestock,
   sortItems,
   type Filter,
 } from '../logic';
+import { ScanDialog } from '../components/ScanDialog';
 import { ShelfSignature, type ShelfCounts } from '../components/ShelfSignature';
 import { itemRepo } from '../repo';
 import { PLACES } from '../schema';
@@ -49,6 +51,7 @@ export default function PantryPage() {
   const [prefs] = useSettings('module.pantry', settingsSchema, moduleSettings.defaults as never);
   const soonDays = (prefs as { soonDays?: number } | undefined)?.soonDays ?? 3;
   const autoRestock = (prefs as { autoRestock?: boolean } | undefined)?.autoRestock ?? true;
+  const [scanning, setScanning] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [target, setTarget] = useState<ItemTarget>(null);
   useOpenParam((id) => itemRepo.get(id), setTarget);
@@ -90,6 +93,18 @@ export default function PantryPage() {
         .then(() => toast(t.pantry.autoRestocked(i.name)));
   };
 
+  /** A scanned number: the item that has it gets one more, an unknown number starts a new item with it. */
+  const onCode = (code: string) => {
+    setScanning(false);
+    const known = findByEan(items ?? [], code);
+    if (known) {
+      void changeWithUndo(
+        () => itemRepo.update(known.id, { count: Math.min(9999, known.count + 1) }),
+        t.pantry.scan.added(known.name),
+      );
+    } else setTarget({ draft: true, ean: code });
+  };
+
   const counts = useMemo(() => {
     const out = Object.fromEntries(PLACES.map((p) => [p, { items: 0, flagged: 0 }])) as ShelfCounts;
     for (const i of items ?? []) {
@@ -118,6 +133,7 @@ export default function PantryPage() {
     <>
       <PageHeader title={t.pantry.title}>
         <AdvancedToggle moduleId="pantry" />
+        <Button onClick={() => setScanning(true)}>{t.pantry.scan.open}</Button>
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.pantry.add}
@@ -204,6 +220,7 @@ export default function PantryPage() {
           </section>
         );
       })}
+      <ScanDialog open={scanning} onClose={() => setScanning(false)} onCode={onCode} />
       <ItemEditor target={openTarget} onClose={close} />
     </>
   );

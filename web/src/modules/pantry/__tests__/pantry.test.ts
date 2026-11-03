@@ -125,3 +125,18 @@ describe('unit and automatic restock', () => {
     expect(crossedMinimum(item({ count: 2 }), 1)).toBe(false); // no minimum
   });
 });
+
+describe('barcodes', () => {
+  it('accepts EAN-13, EAN-8 and UPC-A with a correct check digit only', async () => {
+    const { isEan, findByEan } = await import('../logic');
+    expect(isEan('4006381333931')).toBe(true); // EAN-13
+    expect(isEan('96385074')).toBe(true); // EAN-8
+    expect(isEan('036000291452')).toBe(true); // UPC-A
+    expect(isEan('4006381333932')).toBe(false); // wrong check digit
+    expect(isEan('12345')).toBe(false);
+    expect(isEan('40063813339a1')).toBe(false);
+    const items = [item({ ean: '4006381333931' })];
+    expect(findByEan(items, '4006381333931')).toBe(items[0]);
+    expect(findByEan(items, '96385074')).toBeUndefined();
+  });
+});
